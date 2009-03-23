@@ -171,9 +171,10 @@ cdoc    Also returns the lat/lon/time info from all the levels
 
               if(ht_in .le. ht_prev)then
                   write(6,*)
-     1              ' ERROR: sounding (.snd) ht levels out of sequence '      
+     1             ' WARNING: sounding (.snd) ht levels out of sequence'       
      1                     ,i_pr,n_good_levels,ht_prev,ht_in
-                  goto515
+                  write(6,*)' Keep just the lower part of this sounding'
+                  goto 516
               endif
 
               ht_prev = ht_in
@@ -410,9 +411,10 @@ cdoc    Returns sounding wind, T, Td data from the SND file
 
               if(ht_in .le. ht_prev)then
                   write(6,*)
-     1              ' ERROR: sounding (.snd) ht levels out of sequence '      
+     1             ' WARNING: sounding (.snd) ht levels out of sequence'       
      1                     ,i_pr,n_good_levels,ht_prev,ht_in
-                  goto515
+                  write(6,*)' Keep just the lower part of this sounding'
+                  goto 516
               endif
 
               ht_prev = ht_in
@@ -654,7 +656,8 @@ c
       return
       end
 
-	subroutine read_sfc_snd(i4time,atime_s,n_obs_g,n_obs_b, ! regular SND
+	subroutine read_sfc_snd(i4time,atime_s,
+     &       n_obs_g,n_obs_b,                                            ! I/O
      &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
      &       lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
      &       alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
@@ -738,24 +741,25 @@ c
         do i_pr = 1,n_profiles
             l_good_snd = .false.
 
+            ilevel_best_wind      = 0
+            ilevel_best_temp      = 0
+            ilevel_best_mslp      = 0
+            ilevel_best_stnp      = 0
+
             if(nlevels_obs_pr(i_pr) .gt. 0)then 
               if(elev_pr(i_pr) .ne. elev_msg)then ! assume station elev present
                 height_best_wind_diff = 99999.
                 height_best_wind      = r_missing_data
                 ob_best_wind          = r_missing_data
-                ilevel_best_wind      = 0
 
                 height_best_temp_diff = 99999.
                 height_best_temp      = r_missing_data
                 ob_best_temp          = r_missing_data
                 ob_best_dwpt          = r_missing_data
-                ilevel_best_temp      = 0
 
                 ob_best_mslp          = r_missing_data
-                ilevel_best_mslp      = 0
 
                 ob_best_stnp          = r_missing_data
-                ilevel_best_stnp      = 0
 
 !               Find closest temp and wind obs to levels to 2m and 10m above
 !               station elevation, respectivtly
@@ -855,6 +859,8 @@ c
 
                 lat_s(n_obs_b) = lat_pr(i_pr)
                 lon_s(n_obs_b) = lon_pr(i_pr)
+                call sfci4_to_sfchhmm(i4time_ob_pr(i_pr)
+     1                               ,obstime(n_obs_b),istatus) ! assign obstime
                 elev_s(n_obs_b) = elev_pr(i_pr)
                 stations(n_obs_b) = c5_name(i_pr)
                 reptype(n_obs_b) = obstype(i_pr)
