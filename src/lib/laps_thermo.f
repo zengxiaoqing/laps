@@ -265,12 +265,6 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
      #  ,DD85,FF85,DD50,FF50
         REAL LCL,LI,K_INDEX
 
-        EXTERNAL LIB$INIT_TIMER,
-     1           LIB$SHOW_TIMER,
-     1           my_show_timer
-
-        ISTAT = LIB$INIT_TIMER()
-
 !       Initialize pbe array
         do i = 1,MXL
             pbe(i) = 0.
@@ -437,8 +431,6 @@ C  ALTERNATIVE OUTPUTTING
         enddo ! i
 C
  9999   CONTINUE
-
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                                 ISTAT = LIB$SHOW_TIMER(my_show_timer)
 
         RETURN
         END

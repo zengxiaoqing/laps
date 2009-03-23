@@ -93,47 +93,6 @@ C
 C
 C==========================================
 C
-        subroutine LIB$SHOW_TIMER(my_show_timer)
-!	Linda Wharton 26 Oct 1998 commented declaration of istatus never used
-C       integer istatus
-C
-        write(6,10)
-10      format('Called Lib$show_Timer')
-C
-
-C       istatus = system('date')
-        i4time = i4time_now_gg()
-        write(6,*)' TIMER: ',i4time
-
-        return
-        end
-C
-C==========================================
-C
-        FUNCTION LIB$INIT_TIMER()
-C
-c       WRITE(*,20)
-20      format('Called LIB$INIT_TIMER')
-C
-        LIB$INIT_TIMER = 1
-
-        return
-        end
-C
-C==========================================
-C
-        FUNCTION lib$set_logical()
-C
-c       WRITE(*,20)
-20      format('Called LIB$INIT_TIMER')
-C
-        lib$set_logical = 1
-
-        return
-        end
-C
-C==========================================
-C
         FUNCTION ltest_log_gg()
 C
 c       WRITE(*,20)
@@ -143,49 +102,6 @@ C
 
         return
         end
-C
-C==========================================
-C
-        FUNCTION lib$set_symbol()
-C
-c       WRITE(*,20)
-20      format('Called LIB$INIT_TIMER')
-C
-        lib$set_symbol = 1
-
-        return
-        end
-C
-C==========================================
-C
-C       Subroutine lib$find_file(C_filespec,C_fname,I_context)
-C
-Cd      write(*,30)
-C30     format('Called Lib$find_file')
-C
-C       return
-C       end
-C
-C==========================================
-C
-C       Subroutine lib$signal(istatus)
-C       integer istatus
-C
-Cd      write(*,40)
-C40     format('Called lib$signal')
-C
-C       return
-C       end
-C
-C==========================================
-C
-C       subroutine lib$find_file_end(i_context)
-C
-Cd      write(*,50)
-C50     format('Called lib$find_file_end')
-C
-C       return
-C       end
 C
 C==========================================
 C
