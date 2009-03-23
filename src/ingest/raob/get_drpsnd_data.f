@@ -1,7 +1,7 @@
       subroutine get_drpsnd_data
      +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
      +                   ,i4time_drpsnd_earliest,i4time_drpsnd_latest       
-     +                   ,filename
+     +                   ,filename,isnd_staname
      +                   ,lun_out
      +                   ,istatus)
 
@@ -92,7 +92,7 @@ C
       call read_drpsnd_data(nf_fid, manLevel, recNum, sigTLevel,
      +     sigWLevel, tropLevel, i4time_sys, ilaps_cycle_time, NX_L,
      +     NY_L, i4time_drpsnd_earliest, i4time_drpsnd_latest, 
-     +     nlvl_out, lun_out, istatus)
+     +     nlvl_out, lun_out, isnd_staname, istatus)
 
       return
       end
@@ -101,7 +101,7 @@ C
       subroutine read_drpsnd_data(nf_fid, manLevel, recNum, sigTLevel,
      +     sigWLevel, tropLevel, i4time_sys, ilaps_cycle_time, NX_L,
      +     NY_L, i4time_drpsnd_earliest, i4time_drpsnd_latest, nlvl_out,
-     +     lun_out, istatus)
+     +     lun_out, isnd_staname, istatus)
 
 
       include 'netcdf.inc'
@@ -126,9 +126,11 @@ C
       integer wmostanum(recNum)
       real staelev(recNum)
       CHARACTER*1 staName(6,recNum)
+      character*6 c6_staname
       real wdMan_r(manLevel,recNum)
       real prMan_r(manLevel,recNum)
       real wdSigW_r(sigWLevel,recNum)
+      real htSigW(sigWLevel, recNum)
 
       logical l_closest_time, l_closest_time_i, l_in_domain
       real lat_a(NX_L,NY_L)
@@ -161,6 +163,8 @@ C
 !     Write All Dropsondes to LAPS SND file
 
       r_nc_missing_data = 1e20
+
+      htSigW = r_missing_data
 
       n_snd = recNum
 
@@ -240,8 +244,11 @@ C
           staelev(isnd) = -999.
           c8_obstype = 'DROPSND'
 
+          isnd_staname = isnd_staname + 1
+          write(c6_staname,1)isnd_staname
+ 1        format('D',i4.4,1x)
           do i = 1,6
-              staname(i,isnd) = ' '
+              staname(i,isnd) = c6_staname(i:i)
           enddo 
 
 !         Convert arrays from integer to real
@@ -262,7 +269,8 @@ C
      1                       ,nummand,htman,prman_r,tpman,tdman      
      1                       ,wdMan_r,wsMan
      1                       ,numsigt,prsigt,tpsigt,tdsigt
-     1                       ,numsigw,htsigw,wdSigW_r,wssigw,nlvl_out 
+     1                       ,numsigw,prsigw,htsigw,wdSigW_r,wssigw
+     1                       ,nlvl_out 
      1                       ,manLevel,sigTLevel,sigWLevel,istatus)
 
           go to 999
