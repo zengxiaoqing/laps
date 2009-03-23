@@ -116,9 +116,9 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         integer itop_array_cty_vv(ni,nj)
 
 
-        EXTERNAL        LIB$INIT_TIMER,
-     1                  LIB$SHOW_TIMER,
-     1                  my_show_timer
+!       EXTERNAL        LIB$INIT_TIMER,
+!    1                  LIB$SHOW_TIMER,
+!    1                  my_show_timer
 
         include 'laps_cloud.inc'
 
