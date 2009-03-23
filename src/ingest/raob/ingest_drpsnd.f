@@ -126,6 +126,7 @@
       if(istatus .ne. 1)goto 997
 
       i4_drpsnd_window = max(i4_wind_ob,i4_temp_ob)
+      isnd_staname = 0
 
 !     Loop through dropsonde files and choose ones in time window
       write(6,*)' # of files using filename format ',c8_drpsnd_format      
@@ -218,7 +219,7 @@
                   call get_drpsnd_data(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_drpsnd_earliest,i4time_drpsnd_latest
-     1                ,filename_in,lun_out,istatus)
+     1                ,filename_in,isnd_staname,lun_out,istatus)
 
               elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
                   call avapsread_sub(filename_in, lun_out
