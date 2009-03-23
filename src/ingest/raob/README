@@ -116,6 +116,7 @@ snd_main                                        ingest_sounding.f
                 read_drpsnd_data                      "  
                     read_drpsnd_netcdf                "    
                     sort_and_write              ingest_raob_sub.f 
+                        write_snd               lib/write_snd.f
             avapsread_sub                       avapsread_sub.f
             combine_snd_file                    ingest_drpsnd.f
             get_drpsnd_data_cwb                 ingest_drpsnd_sub_cwb.f 
