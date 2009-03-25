@@ -219,9 +219,16 @@ if (! $opt_l ){
 }
 $ENV{PATH}.=":@NETCDF@/bin";
 
-my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cycle_time');
-$cycle_time[0]=~/^(\d+),/;
-my $cycle_time = ($1>0)?$1:3600;
+my @cycle_array=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time","$LAPS_DATA_ROOT"); 
+
+my $cycle_time;
+
+if (@cycle_array[0] > 0){
+    $cycle_time = @cycle_array[0];
+} else {
+    $cycle_time = 3600;
+}
+
 $cycle_time = $opt_c if($opt_c>0);
 
 my $cycle_time_min = int($cycle_time/60);
@@ -329,6 +336,8 @@ my $sched_lockfile = "$LAPS_LOCK_PATH/sched\.lock";
 system("touch $sched_lockfile");
 
 system("uname -ns");
+
+print "cycle time in minutes is $cycle_time_min\n";
 
 if($opt_M eq "stmas_mg.x"){
     print  "cp $LAPS_DATA_ROOT/cdl/lsx_mesowave.cdl $LAPS_DATA_ROOT/cdl/lsx.cdl\n";
