@@ -41,7 +41,7 @@ cdis
      1                           NZ_L, MAX_RADARS, L_RADARS,
      1                           r_missing_data,
      1                           laps_cycle_time,zoom,density,
-     1                           plot_parms,namelist_parms)
+     1                           plot_parms,namelist_parms,ifield_found)
 
 !       1995        Steve Albers         Original Version
 !       1995 Dec 8  Steve Albers         Automated pressure range
@@ -259,6 +259,8 @@ cdis
 !       i_image: whether this particular plot is an image
         common /image/ n_image, i_image 
 
+        common /plot_field_cmn/ i_plotted_field
+
 !       COMMON /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
 
         character asc9_tim_3dw*9, asc_tim_24*24
@@ -279,6 +281,9 @@ c       include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
 
         data mode_lwc/2/
+
+        ifield_found = 0
+        i_plotted_field = 0
 
         call find_domain_name(c_dataroot,c10_grid_fname,istatus)
 
@@ -725,7 +730,7 @@ c       include 'satellite_dims_lvd.inc'
                     if(c_field .ne. 'w ' .and. c_field .ne. 'ob')then
                       write(6,*)' Calling get_uv_2d for ',ext
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,ext
-     1                              ,NX_L,NY_L,fcst_hhmm,istatus)
+     1                             ,NX_L,NY_L,fcst_hhmm,c_model,istatus)      
                       call make_fnam_lp(i4time_3dw,asc9_tim_3dw,istatus)
 
                       if(c_type_i .eq. 'wf')then
@@ -901,7 +906,8 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
-            else if(c_field(1:1) .eq. 'u')then
+            else if(c_field(1:1) .eq. 'u' .or. 
+     1              c_field(1:1) .eq. 'U')then
                 if(c_type_i .eq. 'wf')then
                     c19_label = ' U  Diff        M/S'
                     call mklabel(k_mb,c19_label,c_label)
@@ -946,7 +952,8 @@ c       include 'satellite_dims_lvd.inc'
 
                 call move(u_2d,field_2d,NX_L,NY_L)
 
-            else if(c_field .eq. 'v' .or. c_field .eq. 'vi')then
+            else if(c_field .eq. 'v' .or. c_field .eq. 'V' .or. 
+     1                                    c_field .eq. 'vi')then
                 if(c_type_i .eq. 'wf')then
                     c19_label = ' V  Diff        M/S'
                     call mklabel(k_mb,c19_label,c_label)
@@ -6124,16 +6131,26 @@ c             if(cint.eq.0.0)cint=0.1
 
         endif ! c_field
 
+!       Set ifield_found except for intermediate query values
+        if(i_plotted_field .eq. 1)then
+            write(6,*)' setting ifield_found to 1 in hsect '
+            ifield_found = 1
+        else
+            write(6,*)' not setting ifield_found in hsect'
+        endif
+
         goto1200
 
-9000    if(c_display .eq. 'm' .or. c_display .eq. 'p')then
-            call frame
-        else
-            if(c_display .eq. 't')then
-            elseif(c_display .eq. 'r')then
-                call frame2(c_display)
-            else
+9000    if (.false.) then ! special frame calls
+            if(c_display .eq. 'm' .or. c_display .eq. 'p')then
                 call frame
+            else
+                if(c_display .eq. 't')then
+                elseif(c_display .eq. 'r')then
+                    call frame2(c_display)
+                else
+                    call frame
+                endif
             endif
         endif
 
@@ -6158,6 +6175,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         common /MCOLOR/mini,maxi
 
+        common /plot_field_cmn/ i_plotted_field
+
         real lat(NX_L,NY_L),lon(NX_L,NY_L)
 
         character c_label*(*),asc_tim_9*9,c_metacode*2,asc_tim_24*24
@@ -6172,6 +6191,8 @@ c             if(cint.eq.0.0)cint=0.1
         include 'icolors.inc'
 
         write(6,*)' Subroutine plot_cont...',clow,chigh,cint,scale
+
+        i_plotted_field = 1
 
         Y_SPACING = 3
 
