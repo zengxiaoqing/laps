@@ -174,9 +174,10 @@
 
       !  Build the input file name.   the input file.
 
-      IF ((TRIM(ext(loop)) .NE. 'lw3' ).AND. &
+      IF ((TRIM(ext(loop)) .NE. 'lw3' ).AND. & ! list of balance files
           (TRIM(ext(loop)) .NE. 'lt1' ).AND. &
           (TRIM(ext(loop)) .NE. 'lq3' ).AND. &
+          (TRIM(ext(loop)) .NE. 'lsx' ).AND. &
           (TRIM(ext(loop)) .NE. 'lh3' )) THEN
         input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
             TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
@@ -209,7 +210,7 @@
           PRINT '(A)', 'File not available, cannot do hotstart.'
           hotstart = .false.
           CYCLE file_loop
-        ELSE IF (ext(loop).EQ.'l1s') THEN
+        ELSE IF (ext(loop).EQ.'lm2') THEN
           PRINT '(A)', 'File not available, cannot do snowcover.'
           CYCLE file_loop
         ELSE
