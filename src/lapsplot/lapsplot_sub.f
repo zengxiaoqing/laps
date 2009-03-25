@@ -214,11 +214,13 @@ cdis
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
      1                         MAX_RADARS,L_RADARS,r_missing_data,
      1                         laps_cycle_time,zoom,density,
-     1                         plot_parms,namelist_parms)
+     1                         plot_parms,namelist_parms,ifield_found)       
 
             if(ifield_found .eq. 1)then
                 write(6,*)' Field found - calling frame'
                 call frame
+            else
+                write(6,*)' Field not found - not calling frame'
             endif
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
@@ -259,6 +261,8 @@ cdis
             if(ifield_found .eq. 1)then
                 write(6,*)' Field found - calling frame'
                 call frame
+            else
+                write(6,*)' Field not found - not calling frame'
             endif
 
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
