@@ -52,6 +52,17 @@
         parameter     (maxbgmodels=10)
         character*9   c_fdda_mdl_src(maxbgmodels)
 
+        integer max_fcst_times
+        parameter (max_fcst_times=10)
+
+        integer max_regions
+        parameter (max_regions=10)
+
+        integer il(maxbgmodels,max_fcst_times,max_regions)
+        integer ih(maxbgmodels,max_fcst_times,max_regions)
+        integer jl(maxbgmodels,max_fcst_times,max_regions)
+        integer jh(maxbgmodels,max_fcst_times,max_regions)
+
         character EXT*31, directory*255, c_model*10
 
         character*10  units_2d
@@ -66,6 +77,7 @@
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
         integer nthr_a(n_fields) ! number of thresholds for each field
+        character*2 c2_region
 
         data ext_fcst_a /'fua'/        
         data ext_anal_a /'lps'/        
@@ -84,11 +96,24 @@
 
         i4_initial = i4time_sys
 
+        lun_in = 21
+
 !       Get fdda_model_source from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
 
         write(6,*)' n_fdda_models = ',n_fdda_models
         write(6,*)' c_fdda_mdl_src = ',c_fdda_mdl_src
+
+!       Read in data file with region points
+        call read_region_info(maxbgmodels,max_fcst_times,max_regions
+     1                       ,n_models,n_fcst_times,n_regions
+     1                       ,il,ih,jl,jh,lun_in)
+
+        if(n_fdda_models .ne. n_models)then
+            write(6,*)' ERROR n_models differs from n_fdda_models '
+     1                       ,n_models,n_fdda_models
+            stop
+        endif
 
         do ifield = 1,n_fields
 
@@ -118,133 +143,170 @@
      1                                       //'/'
 !           len_cont = len_verif + 6 + lenvar + len_model
 
-            do ihr_fcst = 0,12
+            do ihr_fcst = 0,6
 
-              i4_valid = i4_initial + ihr_fcst * 3600
+              itime = ihr_fcst + 1
 
-              call make_fnam_lp(i4_valid,a9time_valid,istatus)
+              do iregion = 1,n_regions ! 1 for testing
 
-              write(6,*)
-              write(6,*)' Histograms for forecast hour ',ihr_fcst
+                ilow  = il(imodel,itime,iregion)
+                ihigh = ih(imodel,itime,iregion)
+                jlow  = jl(imodel,itime,iregion)
+                jhigh = jh(imodel,itime,iregion)
 
-              lun_out = 11
+                i4_valid = i4_initial + ihr_fcst * 3600
 
-!             Add c_model to this?
-              hist_file = hist_dir(1:len_hist)//'/'//a9time_valid
-     1                                        //'.hist'     
+                call make_fnam_lp(i4_valid,a9time_valid,istatus)
 
-              write(6,*)hist_file
+                write(6,*)
+                write(6,*)' Histograms for forecast hour ',ihr_fcst
+     1                   ,' Region = ',iregion
 
-              open(11,file=hist_file,status='unknown')
+                lun_out = 11
 
-!             Read analyzed reflectivity
-              ext = ext_anal_a(ifield)
-              call get_laps_3d(i4_valid,NX_L,NY_L,NZ_L
-     1            ,ext,var_2d,units_2d,comment_2d,var_anal_3d,istatus)
-              if(istatus .ne. 1)then
-                  write(6,*)' Error reading 3D REF Analysis'
-                  return
-              endif
+                write(c2_region,1)iregion
+ 1              format(i2.2)
 
-!             Read forecast reflectivity
-              ext = ext_fcst_a(ifield)
-              call get_directory(ext,directory,len_dir)
-              DIRECTORY=directory(1:len_dir)//c_model(1:len_model)//'/'
+!               Add c_model to this?
+                hist_file = hist_dir(1:len_hist)//'/'//a9time_valid       
+     1                                          //'_'//c2_region     
+     1                                          //'.hist'     
 
-              call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
+                write(6,*)'hist_file = ',hist_file
+
+                open(lun_out,file=hist_file,status='unknown')
+
+                if(iregion .eq. 1)then
+
+!                 Read analyzed reflectivity
+                  ext = ext_anal_a(ifield)
+                  call get_laps_3d(i4_valid,NX_L,NY_L,NZ_L
+     1             ,ext,var_2d,units_2d,comment_2d,var_anal_3d,istatus)
+                  if(istatus .ne. 1)then
+                        write(6,*)' Error reading 3D REF Analysis'
+                        return
+                  endif
+
+!                 Read forecast reflectivity
+                  ext = ext_fcst_a(ifield)
+                  call get_directory(ext,directory,len_dir)
+                  DIRECTORY=directory(1:len_dir)//c_model(1:len_model)
+     1                                          //'/'
+
+                  call get_lapsdata_3d(i4_initial,i4_valid
+     1                          ,NX_L,NY_L,NZ_L       
      1                          ,directory,var_2d
      1                          ,units_2d,comment_2d,var_fcst_3d
      1                          ,istatus)
-              if(istatus .ne. 1)then
-                  write(6,*)' Error reading 3D REF Forecast'
-                  return
-              endif
+                  if(istatus .ne. 1)then
+                       write(6,*)' Error reading 3D REF Forecast'
+                       return
+                  endif
 
-!             Calculate "and" mask
-              do k = 1,NZ_L
-              do i = 1,NX_L
-              do j = 1,NY_L
-                lmask_and_3d(i,j,k) = .false.
-                if(var_anal_3d(i,j,k) .ne. r_missing_data .and. 
-     1             var_anal_3d(i,j,k) .ge. thresh_var .and.
-     1             var_fcst_3d(i,j,k) .ne. r_missing_data .and.
-     1             var_fcst_3d(i,j,k) .ge. thresh_var           )then
-                    lmask_and_3d(i,j,k) = .true.
-                endif
-              enddo ! j
-              enddo ! i
-              enddo ! k
+!                 Calculate "and" mask
+                  do k = 1,NZ_L
+                  do i = 1,NX_L
+                  do j = 1,NY_L
+                     lmask_and_3d(i,j,k) = .false.
+                     if(var_anal_3d(i,j,k) .ne. r_missing_data .and. 
+     1                  var_anal_3d(i,j,k) .ge. thresh_var .and.
+     1                  var_fcst_3d(i,j,k) .ne. r_missing_data .and.
+     1                  var_fcst_3d(i,j,k) .ge. thresh_var        )then
+                         lmask_and_3d(i,j,k) = .true.
+                     endif
+                  enddo ! j
+                  enddo ! i
+                  enddo ! k
 
-!             Calculate "or" mask
-              do k = 1,NZ_L
-              do i = 1,NX_L
-              do j = 1,NY_L
-                lmask_or_3d(i,j,k) = .false.
-                if((var_anal_3d(i,j,k) .ne. r_missing_data .and. 
-     1              var_anal_3d(i,j,k) .ge. thresh_var) .OR.
-     1             (var_fcst_3d(i,j,k) .ne. r_missing_data .and.
-     1              var_fcst_3d(i,j,k) .ge. thresh_var)          )then       
-                    lmask_or_3d(i,j,k) = .true.
-                endif
-              enddo ! j
-              enddo ! i
-              enddo ! k
+!                 Calculate "or" mask
+                  do k = 1,NZ_L
+                  do i = 1,NX_L
+                  do j = 1,NY_L
+                     lmask_or_3d(i,j,k) = .false.
+                     if((var_anal_3d(i,j,k) .ne. r_missing_data .and. 
+     1                   var_anal_3d(i,j,k) .ge. thresh_var) .OR.
+     1                  (var_fcst_3d(i,j,k) .ne. r_missing_data .and.
+     1                   var_fcst_3d(i,j,k) .ge. thresh_var)       )then       
+                         lmask_or_3d(i,j,k) = .true.
+                     endif
+                  enddo ! j
+                  enddo ! i
+                  enddo ! k
 
-              write(lun_out,*)
-              write(lun_out,*)' NO mask is in place'
-
-              write(lun_out,*)
-              write(lun_out,*)' Calling radarhist for analysis at '
-     1                        ,a9time_valid
-              call radarhist(NX_L,NY_L,NZ_L,var_anal_3d,lmask_all_3d
-     1                     ,lun_out)       
-
-              write(lun_out,*)
-              write(lun_out,*)' Calling radarhist for',ihr_fcst
-     1               ,' hr forecast valid at ',a9time_valid
-              call radarhist(NX_L,NY_L,NZ_L,var_fcst_3d,lmask_all_3d
-     1                    ,lun_out)
-
-              write(lun_out,*)
-              write(lun_out,*)
-     1    ' 3-D AND mask is in place with dbz threshold of ',thresh_var       
-
-              write(lun_out,*)
-              write(lun_out,*)' Calling radarhist for analysis at '
-     1                      ,a9time_valid
-              call radarhist(NX_L,NY_L,NZ_L,var_anal_3d,lmask_and_3d
-     1                      ,lun_out)
-
-              write(lun_out,*)
-              write(lun_out,*)' Calling radarhist for',ihr_fcst
-     1               ,' hr forecast valid at ',a9time_valid
-              call radarhist(NX_L,NY_L,NZ_L,var_fcst_3d,lmask_and_3d
-     1                    ,lun_out)
-
-              nthr = nthr_a(ifield)
-
-!             Calculate contingency tables
-              do idbz = 1,nthr
-                rdbz = float(idbz*20)
+                endif ! iregion .eq. 1
 
                 write(lun_out,*)
-                write(lun_out,*)' Calculate contingency table for '
-     1                         ,rdbz,' dbz'
-                call contingency_table(var_anal_3d,var_fcst_3d
-     1                                ,NX_L,NY_L,NZ_L,rdbz,lun_out
-     1                                ,contable)
+                write(lun_out,*)' REGION/IRANGE/JRANGE ',iregion
+     1                         ,ilow,ihigh,jlow,jhigh
+
+                write(lun_out,*)
+                write(lun_out,*)' NO mask is in place'
+
+                write(lun_out,*)
+                write(lun_out,*)
+     1                ' Calling radarhist for analysis at ',a9time_valid 
+                call radarhist(NX_L,NY_L,NZ_L,var_anal_3d
+     1                        ,ilow,ihigh,jlow,jhigh
+     1                        ,lmask_all_3d,lun_out)       
+
+                write(lun_out,*)
+                write(lun_out,*)' Calling radarhist for',ihr_fcst
+     1                    ,' hr forecast valid at ',a9time_valid
+                call radarhist(NX_L,NY_L,NZ_L,var_fcst_3d
+     1                        ,ilow,ihigh,jlow,jhigh
+     1                        ,lmask_all_3d,lun_out)
+
+                write(lun_out,*)
+                write(lun_out,*)
+     1    ' 3-D AND mask is in place with dbz threshold of ',thresh_var       
+
+                write(lun_out,*)
+                write(lun_out,*)
+     1                ' Calling radarhist for analysis at ',a9time_valid       
+                call radarhist(NX_L,NY_L,NZ_L,var_anal_3d
+     1                        ,ilow,ihigh,jlow,jhigh
+     1                        ,lmask_and_3d,lun_out)
+
+                write(lun_out,*)
+                write(lun_out,*)' Calling radarhist for',ihr_fcst
+     1               ,' hr forecast valid at ',a9time_valid
+                call radarhist(NX_L,NY_L,NZ_L,var_fcst_3d
+     1                        ,ilow,ihigh,jlow,jhigh
+     1                        ,lmask_and_3d,lun_out)
+
+                nthr = nthr_a(ifield)
+
+!               Calculate contingency tables
+                do idbz = 1,nthr
+                  rdbz = float(idbz*20)
+
+                  write(lun_out,*)
+                  write(lun_out,*)' Calculate contingency table for '
+     1                           ,rdbz,' dbz'
+                  write(lun_out,*)' region = ',iregion
+     1                           ,ilow,ihigh,jlow,jhigh
+                  call contingency_table(var_anal_3d,var_fcst_3d
+     1                                  ,NX_L,NY_L,NZ_L,rdbz,lun_out
+     1                                  ,ilow,ihigh,jlow,jhigh
+     1                                  ,contable)
 
 
-!               Calculate/Write Skill Scores
-                call skill_scores(contable,lun_out)
+!                 Calculate/Write Skill Scores
+                  call skill_scores(contable,lun_out)
 
-!               Calculate Contingency Table (3-D)
-                call calc_contable(i4_initial,i4_valid
+                  if(iregion .eq. 1)then
+
+!                     Calculate Contingency Table (3-D)
+                      call calc_contable_3d(i4_initial,i4_valid
      1                       ,var_anal_3d,var_fcst_3d
      1                       ,rdbz,contable,NX_L,NY_L,NZ_L
      1                       ,cont_4d(1,1,1,idbz))
 
-              enddo ! idbz
+                  endif ! iregion = 1
+
+                enddo ! idbz
+
+              enddo ! iregion
 
 !             Write Contingency Tables (3-D)
               call put_contables(i4_initial,i4_valid,nthr
@@ -264,4 +326,50 @@
 
         return
 
+        end
+
+
+        subroutine read_region_info(
+     1                        maxbgmodels,max_fcst_times,max_regions
+     1                       ,n_models,n_fcst_times,n_regions
+     1                       ,il,ih,jl,jh,lun_in)
+
+        integer il(maxbgmodels,max_fcst_times,max_regions)
+        integer ih(maxbgmodels,max_fcst_times,max_regions)
+        integer jl(maxbgmodels,max_fcst_times,max_regions)
+        integer jh(maxbgmodels,max_fcst_times,max_regions)
+
+        character*150 static_dir,static_file
+
+!       Read in data file with region points
+        call get_directory('static',static_dir,len_static)
+        static_file = static_dir(1:len_static)//'/verif_regions.dat'
+        open(lun_in,file=static_file,status='old')
+
+        read(lun_in,*)n_regions
+        read(lun_in,*)n_fcst_times
+        read(lun_in,*)n_models
+
+        do ir = 1,n_regions
+            do if = 1,n_fcst_times
+                read(lun_in,*)
+                read(lun_in,*)i_fcst_time
+
+                if(if .ne. (i_fcst_time+1))then
+                    write(6,*)' ERROR in read_region_info '
+                    write(6,*)' if differs from i_fcst_time+1: '
+     1                        ,if,i_fcst_time,i_fcst_time+1
+                    stop
+                endif
+
+                do im = 1,n_models
+                    read(lun_in,*)il(im,if,ir),jl(im,if,ir)
+                    read(lun_in,*)ih(im,if,ir),jh(im,if,ir)
+                enddo ! im
+
+            enddo ! if
+        enddo ! ir
+        close(lun_in)
+
+        return
         end
