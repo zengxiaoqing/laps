@@ -2,6 +2,8 @@
 
 #umask 000
 
+echo "start lapsplot_gifs.sh"
+
 proc=$1
 WINDOW=$2
 LAPS_GIFS=$3
@@ -102,6 +104,8 @@ CTRANS=$NCARG_ROOT/bin/ctrans
 
 date -u
 
+echo "lapsplot_gifs.sh: netpbm = $netpbm"
+
 #We assume we are running this script in LINUX and convert will not properly do AVS X on LINUX
 if test "$netpbm" = "yes" && test "$animate" != "yes"; then 
     date
@@ -121,19 +125,22 @@ elif test "$netpbm" = "yes" && test "$animate" = "yes"; then
     $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun
 
 #   Convert multiframe raster image to animated gif
-#   pushd $SCRATCH_DIR/$proc
-        $NCARG_ROOT/bin/rassplit gmeta_$proc.sun
+    $NCARG_ROOT/bin/rassplit gmeta_$proc.sun
 
-#       foreach file (gmeta_$proc.*.sun)
-#           ls $file
-#           rasttopnm $file | ppmtogif > $file.gif
-#       end 
-#       convert -delay 50 -loop 0 *.gif $SCRATCHDIR/gmeta_$proc.gif
+#   Convert sun to gif images so convert works better on new server
+    for file in `ls gmeta_$proc.*.sun`; do
+        ls $file
+        rasttopnm $file | ppmtogif > $file.gif
+    done
 
-        echo "convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
-        convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
+    echo "convert -delay 50 -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
+    convert -delay 50 -loop 0 *.gif             $SCRATCH_DIR/gmeta_$proc.gif
 
-#   popd
+#   This option may be more direct though it isn't working on the new server
+#   echo "convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
+#   convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
+
+    ls -l $SCRATCH_DIR/gmeta_$proc.gif
 
     date -u
 
