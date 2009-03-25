@@ -42,7 +42,8 @@ cdis
 
 
       include 'lapsplot.inc'
-C 
+C         
+
 C Define error file, Fortran unit number, and workstation type,
 C and workstation ID.
 C 
@@ -53,6 +54,10 @@ C
 
       logical log_scaling, l_integral, l_discrete, l_divisible
       logical l_set_contours
+
+      common /plot_field_cmn/ i_plotted_field
+
+      i_plotted_field = 1
 
       write(6,*)' Subroutine ccpfil for solid fill plot...'
 
