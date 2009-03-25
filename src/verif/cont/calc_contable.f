@@ -1,5 +1,5 @@
 
-        subroutine calc_contable(i4_initial,i4_valid,
+        subroutine calc_contable_3d(i4_initial,i4_valid,
      1             o,f,thresh,contable,ni,nj,nk,
      1             cont_3d)  
 
