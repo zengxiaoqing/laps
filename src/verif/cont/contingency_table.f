@@ -1,6 +1,8 @@
 
         subroutine contingency_table(o,f,ni,nj,nk,thresh
-     1                              ,lun_out,contable)       
+     1                              ,lun_out
+     1                              ,ilow,ihigh,jlow,jhigh
+     1                              ,contable)       
 
         real o(ni,nj,nk)
         real f(ni,nj,nk)
@@ -12,8 +14,8 @@
         contable = 0 ! initialize
 
         do k = 1,nk
-        do i = 1,ni
-        do j = 1,nj
+        do i = ilow,ihigh
+        do j = jlow,jhigh
             if(o(i,j,k) .ge. thresh)then
                 index1 = 0
             else
