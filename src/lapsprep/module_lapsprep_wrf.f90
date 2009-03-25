@@ -80,7 +80,7 @@ MODULE lapsprep_wrf
   PUBLIC output_metgrid_format
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
+SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
                                lwc, rai, sno, ice, pic, snocov,tskin)
 
   !  Subroutine of lapsprep that will build a file the
@@ -113,6 +113,8 @@ CONTAINS
   REAL, ALLOCATABLE  :: d2d(:,:)
   REAL, ALLOCATABLE  :: p_pa(:)
   INTEGER            :: k,yyyyddd
+  INTEGER            :: istatus
+  REAL               :: r_missing_data
  
   ! Allocate a scratch 2d array
   ALLOCATE (d2d (x,y) )
@@ -283,7 +285,7 @@ CONTAINS
   CALL write_gribprep_header(field,units,desc,p_pa(z3+1))
   WRITE ( output_unit ) tskin
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), &
-       ' Min: ', MINVAL(tskin), ' Max: ', MAXVAL(d2d)
+       ' Min: ', MINVAL(tskin), ' Max: ', MAXVAL(tskin)
 
   ! Sea-level Pressure field
   field = 'PMSL     '
@@ -309,6 +311,13 @@ CONTAINS
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(psfc),&
             ' Max: ', MAXVAL(psfc)
 
+  call get_r_missing_data(r_missing_data,istatus)
+	print*,'output_gribprep_format r_missing_data ',r_missing_data
+  if(istatus .ne. 1)then
+      write(6,*)' Bad status for r_missing_data'
+      stop
+  endif
+
   IF (MINVAL(snocov).GE.0) THEN
     ! Water equivalent snow depth
     field = 'SNOWCOVR '
@@ -319,10 +328,16 @@ CONTAINS
     PRINT *, 'DESC =  ',desc
     CALL write_gribprep_header(field,units,desc,p_pa(z3+1))
 
-    ! Conver from fraction to mask using namelist entry snow_thresh
 
-    d2d =  0.
-    WHERE(snocov .GE. snow_thresh) d2d = 1.0
+!   Initialize output snow cover field to missing value
+    d2d=-999.
+
+!   Convert from fraction to mask using namelist entry snow_thresh
+    if(snow_thresh .le. 1.0)then
+        WHERE(snocov .ge. snow_thresh .AND. snocov .ne. r_missing_data) d2d = 1.0
+        WHERE(snocov .lt. snow_thresh .AND. snocov .ne. r_missing_data) d2d = 0.0
+    endif
+
     WRITE ( output_unit ) d2d
     PRINT '(A,F9.1,A,F9.2,A,F9.2)', 'Level (Pa):', p_pa(z3+1), &
         ' Min: ', MINVAL(d2d),&
@@ -486,6 +501,8 @@ CONTAINS
   REAL, ALLOCATABLE  :: d2d(:,:)
   REAL, ALLOCATABLE  :: p_pa(:)
   INTEGER            :: k,yyyyddd
+  INTEGER            :: istatus
+  REAL               :: r_missing_data
 
   ! Allocate a scratch 2d array
   ALLOCATE (d2d (x,y) )
@@ -682,6 +699,13 @@ CONTAINS
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(psfc),&
             ' Max: ', MAXVAL(psfc)
 
+  call get_r_missing_data(r_missing_data,istatus)
+	print*,'output_metgrid_format r_missing_data ',r_missing_data
+  if(istatus .ne. 1)then
+      write(6,*)' Bad status for r_missing_data'
+      stop
+  endif
+
   IF (MINVAL(snocov).GE.0) THEN
     ! Water equivalent snow depth
     field = 'SNOWCOVR '
@@ -692,10 +716,14 @@ CONTAINS
     PRINT *, 'DESC =  ',desc
     CALL write_metgrid_header(field,units,desc,p_pa(z3+1))
 
-    ! Conver from fraction to mask using namelist entry snow_thresh
+!   Initialize output snow cover field to missing value
+    d2d=-999.
 
-    d2d =  0.
-    WHERE(snocov .GE. snow_thresh) d2d = 1.0
+!   Set snow cover output for non-missing input values (if snow_thresh parameter <= 1.0)
+    if(snow_thresh .LE. 1.0)then 
+        WHERE(snocov .NE. r_missing_data) d2d = snocov
+    endif
+
     WRITE ( output_unit ) d2d
     PRINT '(A,F9.1,A,F9.2,A,F9.2)', 'Level (Pa):', p_pa(z3+1), &
         ' Min: ', MINVAL(d2d),&
