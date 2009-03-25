@@ -19,14 +19,14 @@
         integer contable(0:1,0:1)
 
 !       Write contingency tables as an ASCII free format file
-        write(6,*)' Write out 3-D contingency table (ASCII) in '
-     1             ,cont_dir
+!       write(6,*)' Write out 3-D contingency table (ASCII) in '
+!    1             ,cont_dir
 
-        call s_len(cont_dir,lend)
-        filename = cont_dir(1:lend)//'cont3d'
-        open(12,file=filename,status = 'unknown')
-        write(12,*)cont_4d
-        close(12)
+!       call s_len(cont_dir,lend)
+!       filename = cont_dir(1:lend)//'cont3d'
+!       open(12,file=filename,status = 'unknown')
+!       write(12,*)cont_4d
+!       close(12)
 
 !       Write NetCDF contingency table with a call to 'write_laps'
         if(.true.)then
