@@ -339,10 +339,10 @@ gr2);
 
      if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
         print "using LAPS_DATA_ROOT nest7grid.parms for fdda dirs\n";
-        @fdda_dirs = &laps_tools::get_nl_value('nest7grid.parms','fdda_model_source_cmn',$LAPS_DATA_ROOT);
+        @fdda_dirs = &laps_tools::get_nl_value('nest7grid.parms','fdda_model_source',$LAPS_DATA_ROOT);
      }elsif(-e "$LAPS_SRC_ROOT/data"){
             print "using LAPS_SRC_ROOT nest7grid.parms for fdda dirs\n";
-            @fdda_dirs = &laps_tools::get_nl_value('nest7grid.parms','fdda_model_source_cmn',"$LAPS_SRC_ROOT/data");
+            @fdda_dirs = &laps_tools::get_nl_value('nest7grid.parms','fdda_model_source',"$LAPS_SRC_ROOT/data");
      }else{
            print "file nest7grid.parms not available in dataroot or source root\n";
            print "for acquiring fdda directories.  Terminating.\n";
@@ -370,6 +370,7 @@ gr2);
      $hist_dirs[$ii] = 'verif/REF/hist';
      $cont_dirs[$ii] = 'verif/REF/cont';
      foreach (@fdda_dirs){
+#       print "$_\n";         
         if($_ ne "lga"){
               $ii++;
               $hist_dirs[$ii]=$hist_dirs[0]."/".$_;
