@@ -1,6 +1,6 @@
 
         subroutine get_uv_2d(i4time,k_level,uv_2d,ext,imax,jmax
-     1                      ,fcst_hhmm,istatus)
+     1                      ,fcst_hhmm,c_model,istatus)
 
 !       97-Aug-17     Ken Dritz     Used commenting to (temporarily) hardwire
 !                                   VERTICAL_GRID to 'PRESSURE' (without
