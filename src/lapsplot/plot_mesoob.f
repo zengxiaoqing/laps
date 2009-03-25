@@ -85,6 +85,13 @@ cdis
 
         logical l_parse
 
+        common /plot_field_cmn/ i_plotted_field
+  
+        i_plotted_field = 1
+
+        ANGD = 0.
+        CNTR = 0.
+
         call get_sfc_badflag(badflag,istatus)
 
         lun = 42
@@ -584,6 +591,8 @@ c
 
         obs_size = plot_parms%contour_line_width
 
+        ANGD = 0.
+
 !       At zoom=1-zoom_max, make the obs plot larger if there are few obs
 !       zoom_eff is inversely related to plot size
         zoom_max = 1.5
@@ -617,6 +626,8 @@ c
         nrj = min(max(nint(rj),1),jmax)
         rot = projrot_latlon(lat(nri,nrj)
      1                      ,lon(nri,nrj),istatus) / 57.295
+
+!       write(6,*)' lat/lon/rot ',lat(nri,nrj),lon(nri,nrj),rot
 
 !       Convert ri and rj to x1 and y1 (U and V)
 !       call supcon(alat,alon,x1,y1)
