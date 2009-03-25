@@ -1,8 +1,10 @@
 
 verif_radar_main                                        verif_cont.f
     verif_radar                                              "
+        get_fdda_model_source
+        read_region_info                                verif_cont.f
         radarhist                                       hist.f
         contingency_table                               contingency_table.f
         skill_scores                                    skill_scores.f
-        calc_contable                                   calc_contable.f
+        calc_contable_3d                                calc_contable.f
         put_contables                                   put_contables.f
