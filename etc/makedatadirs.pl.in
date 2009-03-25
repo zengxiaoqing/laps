@@ -24,7 +24,7 @@ sub help_sub{
     print "   --install_root = Root directory of the installed binaries (eg., @prefix@)\n";
     print "   --dataroot     = Root directory of the installed data (eg., @prefix@/data)\n";
     print "   --srcroot      = Root directory of the source code    (eg., @top_srcdir@)\n";
-    print "   --system_type  = System type; either LAPS or WRFSI\n";
+    print "   --system_type  = System type; either 'laps' or 'wrfsi'\n";
     print "   --cleandirs    = No argument needed. Removes lapsprd and rebuilds it.\n";
     print "   --help         = print this message and exit\n";
     exit;
