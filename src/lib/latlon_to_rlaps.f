@@ -1060,6 +1060,8 @@ cdoc  Calculate actual grid spacing at any given lat/lon location
 cdoc  Calculate actual grid spacing (x,y directions) at any given lat/lon 
 cdoc  location. This works for conformal or 'latlon' grids
 
+      include 'trigd.inc'
+
       character*6 c6_maproj
 
       call get_standard_latitudes(slat1,slat2,istatus)
