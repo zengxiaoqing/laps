@@ -62,11 +62,6 @@ then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=1056x885
 
-elif test "$2" = "wide"
-then
-    WINDOW=0.0:0.08:1.0:0.92
-    RESOLUTION=1056x885
-
 elif test "$2" = "glaps"
 then
     WINDOW=0.0:0.14:1.0:0.86
@@ -77,12 +72,12 @@ then
     WINDOW=0.0:0.0796:1.0:0.9204
     RESOLUTION=3193x2681
 
-elif test "$2" = "wide"
+elif test "$4" = "wide"
 then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=1056x885
 
-elif test "$2" = "wide2"
+elif test "$4" = "wide2"
 then
     WINDOW=0.0:0.14:1.0:0.86
     RESOLUTION=1200x885
