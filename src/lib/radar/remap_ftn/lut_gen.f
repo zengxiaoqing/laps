@@ -193,6 +193,7 @@ c
      :                   ,azi_deg,sl_range_m,elev_deg
      :                  ,rlat_radar,rlon_radar,rheight_radar)
 
+!         This implies use of the standard atmosphere
           iz_grid = nint(height_to_zcoord(height_grid,istatus))
           gate_elev_to_z_lut(igate_lut,ielev) = min(iz_grid,NZ_L)
 
