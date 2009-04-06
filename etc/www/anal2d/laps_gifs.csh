@@ -147,7 +147,9 @@ echo "Generating SFC Theta(e) Product"; date -u
 setenv prod fwi
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-if ($LAPS_DATA_ROOT != "/data/lapb/projects/stmas/conus_ruc13") then
+# Check for existence of 3D products
+if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
+    -e $LAPS_DATA_ROOT/lapsprd/balance/lt1/$datetime.lt1) then
 
 #   PBE Graphic Product
     echo "Generating Graphical PBE Product"; date -u
@@ -227,7 +229,9 @@ if ($LAPS_DATA_ROOT != "/data/lapb/projects/stmas/conus_ruc13") then
     $LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 1056x885
 
 else
-    echo "Skipping non-surface based products..."
+    echo "$LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 file not present"
+    echo "$LAPS_DATA_ROOT/lapsprd/balance/lt1/$datetime.lt1 file not present"
+    echo "skipping non-surface based products..."
 
 endif
 
