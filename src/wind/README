@@ -6,10 +6,12 @@
  
 program laps_wind                              main.f
     read_namelist_laps                         lib/modules/mem_namelist.f90
-    lapswind_anal                              main_sub.f
-        get_laps_3dgrid
-        get_modelfg_3d
+    lapswind_anal                              main_sub.F
+        get_grid_spacing_actual_xy
+            get_sigma
         get_multiradar_vel
+        get_fg_wind_new                        lib/wind/get_fg_wind.f
+            get_fg_var                                 "
         get_wind_3d_obs                        lib/wind/get_wind_obs.f
             get_fg_wind_new                    lib/wind/get_fg_wind.f
             read_profiles                      lib/wind/read_profiles.f
@@ -27,6 +29,7 @@ program laps_wind                              main.f
         get_fnorm_max
         laps_anl                               windanal.f
             compare_wind                       comparisons.f
+            calc_qced_obs                      windanal.f
             qc_radar_obs                       qcradar.f
             insert_derived_radar_obs           insert_radar_obs.f
                 filter_radar_obs                  "
