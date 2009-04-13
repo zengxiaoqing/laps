@@ -999,6 +999,9 @@ csms$ignore end
      &  qced_file, 
      &  n_qc_total_good)
 
+       use mem_namelist, only : qc_thresh_wind_def, qc_thresh_wind_pin,
+     &                          qc_thresh_wind_cdw, qc_thresh_wind_pro 
+
 !      QC the obs and place in different arrays 
 
        real        , intent(in ) :: u_laps_bkg(imax,jmax,kmax)
@@ -1062,7 +1065,7 @@ csms$>       qced_type, qced_file, n_qc_total_good, out>: default=ignore) begin
       n_qc_prof_good = 0
       n_qc_total_good = 0
 
-      qc_thresh = 30. ! Threshold speed for throwing out the ob
+      qc_thresh = qc_thresh_wind_def ! Threshold speed for throwing out the ob
 
       if(.true.)then ! l_point_struct
 
@@ -1093,17 +1096,17 @@ csms$>       qced_type, qced_file, n_qc_total_good, out>: default=ignore) begin
 
 !              Stricter QC check for pireps
      1                       .OR. 
-     1         (speed_diff .gt. 10. .and. 
+     1         (speed_diff .gt. qc_thresh_wind_pin .and. 
      1                              obs_file(i_ob) .eq. 'pin')        
 
 !              Stricter QC check for Cloud Drift Winds
      1                       .OR. 
-     1         (speed_diff .gt. 10. .and. 
+     1         (speed_diff .gt. qc_thresh_wind_cdw .and. 
      1                              obs_file(i_ob) .eq. 'cdw')        
 
 !              Stricter QC check for profilers
      1                       .OR. 
-     1         (speed_diff .gt. 22. .and. 
+     1         (speed_diff .gt. qc_thresh_wind_pro .and. 
      1                              obs_file(i_ob) .eq. 'pro')        
 
 !              Withhold observations for independent verification
