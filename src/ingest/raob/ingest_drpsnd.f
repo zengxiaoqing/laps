@@ -1,6 +1,6 @@
 
       subroutine ingest_drpsnd(path_to_raw_drpsnd,c8_drpsnd_format
-     1                        ,lun_out)       
+     1                        ,l_fill_ht,lun_out)                  ! I       
 
 !     Steve Albers FSL   2003     Original Version
 
@@ -26,7 +26,7 @@
       character*40 c_vars_req
       character*(*) path_to_raw_drpsnd
 
-      logical l_parse
+      logical l_parse, l_fill_ht
 
 !     Define interval to be used (between timestamps) for creation of SND files
       integer i4_snd_interval
@@ -219,7 +219,8 @@
                   call get_drpsnd_data(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_drpsnd_earliest,i4time_drpsnd_latest
-     1                ,filename_in,isnd_staname,lun_out,istatus)
+     1                ,filename_in,isnd_staname,lun_out,l_fill_ht
+     1                ,istatus)
 
               elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
                   call avapsread_sub(filename_in, lun_out
@@ -325,7 +326,9 @@
       mode = 1
       n_profiles = 0
 
-      l_fill_ht = .false.
+      l_fill_ht = .false. ! decide whether to fill in heights that are read in
+                          ! from the SND file 
+
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus .ne. 1)return
       heights_3d = r_missing_data
