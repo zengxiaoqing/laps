@@ -4,7 +4,7 @@
 #$ -l h_rt=04:30:00
 #$ -S /bin/sh
 #$ -cwd
-#$ -pe wcomp 1
+#$ -pe comp 1
 #exit
 
 export LAPSROOT=/home/oplapb/builds/laps
