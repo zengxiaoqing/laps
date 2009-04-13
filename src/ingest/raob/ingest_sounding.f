@@ -54,12 +54,17 @@
        character*8 c8_raob_format, c8_drpsnd_format, c8_project
        character*13 filename13,cvt_i4time_wfo_fname13
 
+       logical l_fill_ht
+
+       l_fill_ht = .true. ! default value
+
        call get_snd_parms(path_to_raw_raob,path_to_local_raob
      1                   ,path_to_raw_drpsnd
      1                   ,path_to_raw_satsnd
      1                   ,path_to_raw_poessnd
      1                   ,path_to_raw_tower
      1                   ,path_to_raw_radiometer
+     1                   ,l_fill_ht
      1                   ,istatus)       
 
        if(istatus .ne. 1)goto999
@@ -77,7 +82,7 @@
            write(6,*)
            write(6,*)' Call ingest_raob, format=',c8_raob_format
            call ingest_raob(path_to_raw_raob,c8_raob_format,i4time_sys
-     1                     ,lun_out)
+     1                     ,l_fill_ht,lun_out)
 
            call s_len(c8_project,lenc8)
 
@@ -99,20 +104,20 @@
            write(6,*)
            write(6,*)' Call ingest_drpsnd, format=',c8_drpsnd_format       
            call ingest_drpsnd(path_to_raw_drpsnd,c8_drpsnd_format
-     1                       ,lun_out)
+     1                       ,l_fill_ht,lun_out)
 
        else ! RSA project
            c8_raob_format = 'WFO'
            write(6,*)
            write(6,*)' Call ingest_raob, format=',c8_raob_format
            call ingest_raob(path_to_raw_raob,c8_raob_format,i4time_sys
-     1                     ,lun_out)
+     1                     ,l_fill_ht,lun_out)
 
            c8_raob_format = 'RSA'
            write(6,*)
            write(6,*)' Call ingest_raob, format=',c8_raob_format
            call ingest_raob(path_to_local_raob,c8_raob_format,i4time_sys
-     1                     ,lun_out)
+     1                     ,l_fill_ht,lun_out)
 
            write(6,*)
            write(6,*)' Call tower_driver_sub'
@@ -186,6 +191,7 @@
      1                         ,path_to_raw_poessnd
      1                         ,path_to_raw_tower
      1                         ,path_to_raw_radiometer
+     1                         ,l_fill_ht
      1                         ,istatus)
 
        character*150 path_to_raw_raob,path_to_local_raob
@@ -196,10 +202,13 @@
 
        character*200 path_to_raw_tower
 
+       logical l_fill_ht
+
        namelist /snd_nl/ path_to_raw_raob,path_to_local_raob
      1                  ,path_to_raw_satsnd
      1                  ,path_to_raw_poessnd,path_to_raw_tower
-     1                  ,path_to_raw_drpsnd,path_to_raw_radiometer       
+     1                  ,path_to_raw_drpsnd,path_to_raw_radiometer 
+     1                  ,l_fill_ht      
  
        character*150 static_dir,filename
  
