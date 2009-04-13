@@ -441,8 +441,15 @@ for ($g=1; $g<=$ngrid; $g++) {
 
 if ($project eq "DWR") {     # move lfmp_tom.* to wrfprd from $LAPSROOT/etc
   $phys = $ENV{phys};
-  $command = "mv /home/$user/lfmp_$phys* $modelroot/$date/wrfprd";
-  system("$command");
+  opendir (HOME, "/home/$user");
+  my @homedir = readdir(HOME);
+  closedir(HOME);
+  foreach (@homedir) {
+    if ( index($_,"lfmp_$phys") != -1) {
+      $command = "mv $_ $modelroot/$date/wrfprd";
+      system("$command");
+    }
+  }
 }
 
 exit;
