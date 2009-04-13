@@ -118,7 +118,11 @@ real    :: weight_bkg_const_wind  &
           ,rms_thresh_wind &
           ,stdev_thresh_radial &
           ,r0_barnes_max_m &
-          ,brns_conv_rate_wind
+          ,brns_conv_rate_wind &
+          ,qc_thresh_wind_def &
+          ,qc_thresh_wind_pin &
+          ,qc_thresh_wind_cdw &
+          ,qc_thresh_wind_pro 
 integer :: thresh_2_radarobs_lvl_unfltrd  &
           ,thresh_4_radarobs_lvl_unfltrd  &
           ,thresh_9_radarobs_lvl_unfltrd  &
@@ -232,7 +236,11 @@ namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
                   ,rms_thresh_wind  &
                   ,max_pr,max_pr_levels,max_wind_obs &
                   ,r0_barnes_max_m &
-                  ,brns_conv_rate_wind
+                  ,brns_conv_rate_wind &
+                  ,qc_thresh_wind_def &
+                  ,qc_thresh_wind_pin &
+                  ,qc_thresh_wind_cdw &
+                  ,qc_thresh_wind_pro 
 
 namelist /surface_analysis/  &
                   use_lso_qc,skip_internal_qc, itheta  &

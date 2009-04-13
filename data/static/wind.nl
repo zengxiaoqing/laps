@@ -15,6 +15,10 @@
  max_wind_obs=110000,
  r0_barnes_max_m=240000.,
  brns_conv_rate_wind = 0.8,
+ qc_thresh_wind_def = 30.,
+ qc_thresh_wind_pin = 10.,
+ qc_thresh_wind_cdw = 10.,
+ qc_thresh_wind_pro = 22.,
  /
 
 c WIND PARAMETERS
@@ -74,4 +78,11 @@ c                   to the background
 c
 c brns_conv_rate_wind - rate of radius reduction for each telescoping Barnes 
 c                       interation
-
+c
+c The following thresholds QC the winds according to the vector difference
+c between observation and background.
+c
+c qc_thresh_wind_def - default threshold
+c qc_thresh_wind_pin - threshold for acars and other point observations
+c qc_thresh_wind_cdw - threshold for cloud drift winds
+c qc_thresh_wind_pro - threshold for wind profilers
