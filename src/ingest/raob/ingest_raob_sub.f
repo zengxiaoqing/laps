@@ -2,10 +2,11 @@
       subroutine get_raob_data(
      1                         i4time_sys,ilaps_cycle_time,NX_L,NY_L
      1                        ,i4time_raob_earliest,i4time_raob_latest       
-     1                        ,filename,lun_out
+     1                        ,filename,lun_out,l_fill_ht
      1                        ,istatus)
 
       character*170 filename
+      logical l_fill_ht
 
 !...........................................................................
 
@@ -123,7 +124,7 @@ C
 !.............................................................................
      1                        ,i4time_sys,ilaps_cycle_time,NX_L,NY_L
      1                        ,i4time_raob_earliest,i4time_raob_latest  
-     1                        ,lun_out     
+     1                        ,l_fill_ht,lun_out     
      1                        ,istatus)
 
 
@@ -137,7 +138,7 @@ C
 !.............................................................................
      1                        ,i4time_sys,ilaps_cycle_time,NX_L,NY_L
      1                        ,i4time_raob_earliest,i4time_raob_latest       
-     1                        ,lun_out     
+     1                        ,l_fill_ht,lun_out     
      1                        ,istatus)
 !.............................................................................
 
@@ -171,6 +172,7 @@ C
 
       character*9 a9time_syn, a9time_release, a9time_raob, a9time_sys
       character*8 c8_obstype
+      logical l_fill_ht
 
       call get_r_missing_data(r_missing_data,istatus)
       if (istatus .ne. 1) then
@@ -289,7 +291,7 @@ C
 
           c8_obstype = 'RAOB'
 
-          call sort_and_write(i4time_sys,lun_out
+          call sort_and_write(i4time_sys,lun_out,l_fill_ht              ! I
      1                       ,recNum,isnd,r_missing_data,a9time_raob
      1                       ,c8_obstype
      1                       ,wmostanum,staname,stalat,stalon,staelev
@@ -312,7 +314,7 @@ C
       end
 
 
-      subroutine sort_and_write(i4time_sys,lun_out
+      subroutine sort_and_write(i4time_sys,lun_out,l_fill_ht            ! I
      1                       ,NREC,isnd,r_missing_data,a9time_raob
      1                       ,c8_obstype
      1                       ,wmostanum,staname,stalat,stalon,staelev
@@ -369,10 +371,10 @@ C
       REAL      htout_sort                     (NLVL_OUT)
       REAL      tpout                          (NLVL_OUT)
       REAL      tpout_sort_c                   (NLVL_OUT)
-      REAL      tpout_c_z                      (NLVL_OUT)
+      REAL      tpout_c_zman                   (NLVL_OUT)
       REAL      tdout                          (NLVL_OUT)  ! Dewpoint Depress
       REAL      tdout_sort_c                   (NLVL_OUT)  ! Dewpoint Deg C
-      REAL      tdout_c_z                      (NLVL_OUT)  ! Dewpoint Deg C
+      REAL      tdout_c_zman                   (NLVL_OUT)  ! Dewpoint Deg C
       REAL      wdout                          (NLVL_OUT)
       REAL      wdout_sort                     (NLVL_OUT)
       REAL      wsout                          (NLVL_OUT)
@@ -384,9 +386,13 @@ C
       character*8 c8_obstype
       character*132 c_line
 
+      logical l_fill_ht, l_fill_ht_a(NLVL_OUT)
+
 !     Generate info for Sorting/QC, write original mandatory data to log file
       write(6,*)
       n_good_levels = 0
+
+      l_fill_ht_a = .false.
 
       write(6,*)' Subroutine sort_and_write - initial mandatory data'       
       if(nummand(isnd) .le. manLevel)then
@@ -451,23 +457,23 @@ C
           wsout(i) = wsman_good(ilevel)
       enddo
 
-!     Generate best current sounding for subsequent use in height integration
-      n_good_z = 0
+!     Generate sounding from Man lvls for subsequent use in height integration
+      n_good_zman = 0
       tdout_ref = 10.
       do i = 1,n_good_man
           if(abs(tpout(i)) .le. 500.)then ! good t value
-              tpout_c_z(i) = k_to_c(tpout(i))
-              n_good_z = n_good_z + 1
+              tpout_c_zman(i) = k_to_c(tpout(i))
+              n_good_zman = n_good_zman + 1
 
               if(abs(tdout(i)) .le. 500.)then ! good td value
-                  tdout_c_z(i) = tpout_c_z(i) - tdout(i)
-!                 tdout_c_z(i) = k_to_c(tdout(i))
+                  tdout_c_zman(i) = tpout_c_zman(i) - tdout(i)
+!                 tdout_c_zman(i) = k_to_c(tdout(i))
 
                   tdout_ref = tdout(i)
 
               else ! generate approximate moisture value for height integration
-                  tdout_c_z(i) = tpout_c_z(i) - 10.
-!                 tdout_c_z(i) = tpout_c_z(i) - tdout_ref
+                  tdout_c_zman(i) = tpout_c_zman(i) - 10.
+!                 tdout_c_zman(i) = tpout_c_zman(i) - tdout_ref
 
               endif ! good td value
           endif ! good t value
@@ -479,7 +485,7 @@ C
           call check_nan(htsigw(ilevel,isnd),istat_nan)
           if(htsigw(ilevel,isnd) .lt. 90000. .and.
      1       htsigw(ilevel,isnd) .ne. 0.     .and.
-     1       istat_nan .eq. 1                      )then
+     1       istat_nan .eq. 1                      )then ! height is valid
               n_good_levels = n_good_levels + 1
               write(6,*) htsigw(ilevel,isnd),r_missing_data
      1                  ,r_missing_data,r_missing_data
@@ -494,12 +500,14 @@ C
               wsout(n_good_levels) = wssigw(ilevel,isnd)
 
           elseif(prsigw(ilevel,isnd) .lt. 2000. .and.
-     1           prsigw(ilevel,isnd) .gt. 0.            )then
+     1           prsigw(ilevel,isnd) .gt. 0.            )then ! pres is valid
 
 !           Attempt to calculate height based on good mandatory level data
-            if(n_good_z .gt. 0)then
-                ht_calc = z(prsigw(ilevel,isnd)
-     1                     ,prout,tpout_c_z,tdout_c_z,n_good_z)
+            if(n_good_zman .gt. 0)then
+                ht_calc = z(prsigw(ilevel,isnd),prman_good
+     1                     ,tpout_c_zman,tdout_c_zman,n_good_zman)  
+
+                ht_ref = htout(1)     
 
                 if(nanf(ht_calc) .eq. 1 
      1         .or. ht_calc .gt. 99999. .or. ht_calc .lt. -1000.)then
@@ -507,9 +515,11 @@ C
                 endif
 
                 if(ht_calc .ne. -1.0)then ! valid height returned
-                    ht_calc = ht_calc + htout(1)
+                    ht_calc = ht_calc + ht_ref
 
                     n_good_levels = n_good_levels + 1
+                    l_fill_ht_a(n_good_levels) = .true.
+
                     write(6,*) ht_calc,prsigw(ilevel,isnd)
      1                        ,tpsigt(ilevel,isnd),tdsigt(ilevel,isnd)
      1                        ,r_missing_data,r_missing_data
@@ -522,7 +532,7 @@ C
                     wdout(n_good_levels) = wdsigw(ilevel,isnd)
                     wsout(n_good_levels) = wssigw(ilevel,isnd)
                 endif ! valid height
-            endif ! n_good_z > 0
+            endif ! n_good_zman > 0
           endif ! htsigw/prsigw in bounds
         enddo
       else
@@ -537,19 +547,47 @@ C
      1       prsigt(ilevel,isnd) .gt. 0.            )then
 
 !           Attempt to calculate height based on good mandatory level data
-            if(n_good_z .gt. 0)then
-                ht_calc = z(prsigt(ilevel,isnd)
-     1                     ,prout,tpout_c_z,tdout_c_z,n_good_z)
+            if(n_good_zman .gt. 0)then
+                ht_calc = z(prsigt(ilevel,isnd),prman_good
+     1                     ,tpout_c_zman,tdout_c_zman,n_good_zman)
+
+                ht_ref = htout(1)
 
                 if(nanf(ht_calc) .eq. 1 
      1         .or. ht_calc .gt. 99999. .or. ht_calc .lt. -1000.)then
                     ht_calc = -1.0        ! flag value for invalid height
                 endif
 
+                if(ht_calc .eq. -1.0)then ! invalid height returned
+
+!                   We may be above the highest mandatory level, so calculate 
+!                   layer thickness/ht with reference to previous sigT level
+
+                    if(ilevel .gt. 1)then
+                        p1 = prout(n_good_levels)
+                        p2 = prsigt(ilevel,isnd)
+                        t1 = tpout(n_good_levels)
+                        t2 = tpsigt(ilevel,isnd)
+                        td1 = tdout(n_good_levels)
+                        td2 = tdsigt(ilevel,isnd)
+                        h1 = htout(n_good_levels)
+                        call calc_new_ht(p1,p2,t1,t2,td1,td2       ! I
+     1                                  ,r_missing_data            ! I
+     1                                  ,h1,h2)                    ! I/O
+                        if(h2 .ne. r_missing_data)then
+                            ht_ref = 0.
+                            ht_calc = h2
+                        endif
+                    endif
+
+                endif
+
                 if(ht_calc .ne. -1.0)then ! valid height returned
-                    ht_calc = ht_calc + htout(1)
+                    ht_calc = ht_calc + ht_ref
 
                     n_good_levels = n_good_levels + 1
+                    l_fill_ht_a(n_good_levels) = .true.
+
                     write(6,*) ht_calc,prsigt(ilevel,isnd)
      1                        ,tpsigt(ilevel,isnd),tdsigt(ilevel,isnd)
      1                        ,r_missing_data,r_missing_data
@@ -562,7 +600,8 @@ C
                     wdout(n_good_levels) = r_missing_data
                     wsout(n_good_levels) = r_missing_data
                 endif ! valid height
-            endif ! n_good_z > 0
+
+            endif ! n_good_zman > 0
           endif ! prsigt in bounds
         enddo ! ilevel
       else
@@ -617,6 +656,7 @@ C
 
           if(idupe .gt. 0)then
               do j = idupe,n_good_levels-1
+                l_fill_ht_a(indx(j)) = l_fill_ht_a(indx(j+1))
                 htout(indx(j)) = htout(indx(j+1))
                 prout(indx(j)) = prout(indx(j+1))
                 tpout(indx(j)) = tpout(indx(j+1))
@@ -635,6 +675,10 @@ C
           ilevel = indx(i)
 
           htout_sort(i) = htout(ilevel)
+          if((.not. l_fill_ht) .AND. l_fill_ht_a(ilevel))then
+              htout_sort(i) = r_missing_data
+          endif 
+
           prout_sort(i) = prout(ilevel)
 
           if(tpout(ilevel) .eq. 99999. .or.
@@ -1221,3 +1265,67 @@ C
 
       return
       end
+
+      subroutine calc_new_ht(p1,p2,t1,t2,td1,td2       ! I
+     1                      ,r_missing_data            ! I
+     1                      ,h1,h2)                    ! I/O
+
+!     Use the hypsometric equation to calculate the height at the top of
+!     a layer
+
+      real pr_z(2)
+      real tp_z(2)
+      real td_z(2)
+
+      h2 = r_missing_data
+
+!     Apply QC and fill arrays
+      if(p1 .lt. 2000. .and. p1 .gt. 0.)then
+          pr_z(1) = p1
+      else
+          return
+      endif
+
+      if(p2 .lt. 2000. .and. p2 .gt. 0.)then
+          pr_z(2) = p2
+      else
+          return
+      endif
+
+      if(t1 .gt. 100. .and. t1 .lt. 400.)then
+          tp_z(1) = t1
+      else
+          return
+      endif
+
+      if(t2 .gt. 100. .and. t2 .lt. 400.)then
+          tp_z(2) = t2
+      else
+          return
+      endif
+
+      if(td1 .gt. 100. .and. td1 .lt. 400.)then
+          td_z(1) = td1
+      else
+          return
+      endif
+
+      if(td2 .gt. 100. .and. td2 .lt. 400.)then
+          td_z(2) = td2
+      else
+          return
+      endif
+
+      if(h1 .gt. 90000. .or. h1 .le. -1000.)then
+          return
+      endif
+
+      thk = z(p2,pr_z,tp_z,td_z,2)
+
+      if(thk .ne. -1.0)then
+          h2 = h1 + thk
+      endif
+
+      return
+      end
+
