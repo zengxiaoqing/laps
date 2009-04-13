@@ -2,12 +2,14 @@
      +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
      +                   ,i4time_drpsnd_earliest,i4time_drpsnd_latest       
      +                   ,filename,isnd_staname
-     +                   ,lun_out
+     +                   ,lun_out,l_fill_ht
      +                   ,istatus)
 
       include 'netcdf.inc'
 
       character*(*) filename
+
+      logical l_fill_ht
 
       integer manLevel, recNum, sigTLevel, sigWLevel,
      +     tropLevel,nf_fid, nf_vid, nf_status, nlvl_out
@@ -92,7 +94,7 @@ C
       call read_drpsnd_data(nf_fid, manLevel, recNum, sigTLevel,
      +     sigWLevel, tropLevel, i4time_sys, ilaps_cycle_time, NX_L,
      +     NY_L, i4time_drpsnd_earliest, i4time_drpsnd_latest, 
-     +     nlvl_out, lun_out, isnd_staname, istatus)
+     +     nlvl_out, lun_out, l_fill_ht, isnd_staname, istatus)
 
       return
       end
@@ -101,7 +103,7 @@ C
       subroutine read_drpsnd_data(nf_fid, manLevel, recNum, sigTLevel,
      +     sigWLevel, tropLevel, i4time_sys, ilaps_cycle_time, NX_L,
      +     NY_L, i4time_drpsnd_earliest, i4time_drpsnd_latest, nlvl_out,
-     +     lun_out, isnd_staname, istatus)
+     +     lun_out, l_fill_ht, isnd_staname, istatus)
 
 
       include 'netcdf.inc'
@@ -132,7 +134,7 @@ C
       real wdSigW_r(sigWLevel,recNum)
       real htSigW(sigWLevel, recNum)
 
-      logical l_closest_time, l_closest_time_i, l_in_domain
+      logical l_closest_time, l_closest_time_i, l_in_domain, l_fill_ht       
       real lat_a(NX_L,NY_L)
       real lon_a(NX_L,NY_L)
       real topo_a(NX_L,NY_L)
@@ -261,7 +263,7 @@ C
               wdSigW_r(ilev,isnd) = wdSigW(ilev,isnd)
           enddo ! l
 
-          call sort_and_write(i4time_sys,lun_out
+          call sort_and_write(i4time_sys,lun_out,l_fill_ht
      1                       ,recNum,isnd,r_missing_data,a9time_drpsnd
      1                       ,c8_obstype
      1                       ,wmostanum,staname,latitude,longitude
