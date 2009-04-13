@@ -6,6 +6,7 @@
  path_to_raw_poessnd='/public/data/madis/point/POES/netcdf',
  path_to_raw_satsnd='/public/data/sat/nesdis/goes12/sounding/binary/',
  path_to_raw_radiometer='/public/data/madis/point/radiometer/netcdf',
+ l_fill_ht=.true.,
  /
 c SOUNDING ingest (ingest_sounding.exe)
 c
@@ -36,3 +37,9 @@ c
 c For most values of 'c8_project' this refers to the path containing GOES 
 c sounding data. If 'c8_project' is set to 'AFWA' the path refers to AFWA
 c satellite sounding data instead.
+c
+c
+c 'l_fill_ht'
+c
+c Flag to decide whether to calculate heights from the hypsometric equation if
+c they aren't reported in the raw sounding data
