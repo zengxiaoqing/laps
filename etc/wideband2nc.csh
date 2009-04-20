@@ -63,6 +63,8 @@ if ($MODETIME == "realtime") then
 #   Name of executable that converts from Nexrad format to NetCDF
     setenv NEXRAD_2_NETCDF ArchiveNexrad2NetCDF_latest_static
 
+    setenv A9TIME `head -2 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
+
 else # archive case
 
 #   Access additional command line args
@@ -77,6 +79,8 @@ else # archive case
     echo "HOUR=$HOUR"
     echo "YYDDD=$YYDDD"
     echo "MONTH=$MONTH"
+
+    setenv A9TIME $YYDDD$HOUR\00
 
 #   This could be done if 'systime.dat' is updated actively by 'casererun.pl'
 #   setenv YEAR `head -5 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c8-11`
@@ -94,6 +98,9 @@ else # archive case
     setenv NEXRAD_2_NETCDF ArchiveNexrad2NetCDF
 
 endif
+
+#Name of NetCDF CDL file
+setenv CDL wsr88d_super_res_wideband.cdl
 
 echo " "
 
@@ -167,7 +174,7 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
                       echo "processing output file $HOUR$MINUTE$SUFFIX that does not yet exist"
                       $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
                                               -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf \
-                                              -c $INSTALLROOT/cdl/wsr88d_wideband.cdl \
+                                              -c $INSTALLROOT/cdl/$CDL \
                                               -t $INPUTROOT/$RADAR/$file
                   endif
 
@@ -195,19 +202,31 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 #         This works with the archived radar data (e.g. for IHOP)
           echo "Generating radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
-#         Filename convention for /public
-#         find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-#                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
-
 #         Filename convention for NCDC
-          ls -l $INPUTROOT
+#         ls -l $INPUTROOT
           ls -l $INPUTROOT/*$RADAR$YEAR$MONTH$DATE*
           setenv COUNT_NCDC `ls -1 $INPUTROOT/*$RADAR$YEAR$MONTH$DATE* | wc -l`
           if ($COUNT_NCDC != "0") then
             echo " "
-            echo "checking NCDC file format"
-            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-                                    -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
+            echo "running this command for NCDC file format..."
+
+#           Process low res data
+            setenv CDL wsr88d_low_res_wideband.cdl
+
+            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_??????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
+            echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
+
+            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_??????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+                                    -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
+
+#           Process super res data
+            setenv CDL wsr88d_super_res_wideband.cdl
+
+            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_??????\_V03*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
+            echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
+
+            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_??????\_V03*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+                                    -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
 
             echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
             setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
@@ -220,8 +239,8 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
             pushd $INPUTROOT/$RADAR
             foreach file (*)
               echo " "
-              echo "checking Archive-II file $INPUTROOT/$RADAR/$file"
-              $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t $INPUTROOT/$RADAR/$file
+              echo "running conversion for Archive-II (public) file $INPUTROOT/$RADAR/$file"
+              $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t $INPUTROOT/$RADAR/$file
             end
           endif
       else
