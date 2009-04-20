@@ -451,6 +451,47 @@ cdoc    Called from lapsplot
      1   rlat_radar,rlon_radar,rheight_radar,radar_name,                 ! O
      1   n_ref_grids,istatus_2dref,istatus_3dref)                        ! O
 
+!       Now a jacket routine without 'closest_radar' in the argument list
+
+        real grid_ra_ref(imax,jmax,kmax)
+        real heights_3d(imax,jmax,kmax)
+
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
+
+        real closest_radar(imax,jmax)
+
+        character*31 radarext
+        character*4 radar_name
+
+        logical l_low_fill,l_high_fill,l_apply_map
+
+        call read_radar_3dref_new(i4time_radar,                          ! I
+     1   i4_tol,i4_ret,                                                  ! I/O
+     1   l_apply_map,ref_missing,                                        ! I
+     1   imax,jmax,kmax,radarext,                                        ! I
+     1   lat,lon,topo,l_low_fill,l_high_fill,                            ! I
+     1   heights_3d,                                                     ! I
+     1   grid_ra_ref,                                                    ! O
+     1   closest_radar,                                                  ! O
+     1   rlat_radar,rlon_radar,rheight_radar,radar_name,                 ! O
+     1   n_ref_grids,istatus_2dref,istatus_3dref)                        ! O
+
+        return
+        end
+
+        subroutine read_radar_3dref_new(i4time_radar,                    ! I
+     1   i4_tol,i4_ret,                                                  ! I/O
+     1   l_apply_map,ref_missing,                                        ! I
+     1   imax,jmax,kmax,radarext,                                        ! I
+     1   lat,lon,topo,l_low_fill,l_high_fill,                            ! I
+     1   heights_3d,                                                     ! I
+     1   grid_ra_ref,                                                    ! O
+     1   closest_radar,                                                  ! O
+     1   rlat_radar,rlon_radar,rheight_radar,radar_name,                 ! O
+     1   n_ref_grids,istatus_2dref,istatus_3dref)                        ! O
+
 cdoc    Steve Albers Feb 1998   This routine will read in a 3D radar
 cdoc                            reflectivity field. It is a jacket that
 cdoc                            calls read_multiradar_3dref.
@@ -462,6 +503,8 @@ cdoc                            calls read_multiradar_3dref.
         real lat(imax,jmax)
         real lon(imax,jmax)
         real topo(imax,jmax)
+
+        real closest_radar(imax,jmax)
 
 !       If a grid "overall" has the following...
 !       2dref=1, 3dref=1 - echo top from radar has better confidence than
@@ -511,7 +554,7 @@ cdoc                            calls read_multiradar_3dref.
      1   heights_3d,
      1   grid_ra_ref,
      1   rlat_radar,rlon_radar,rheight_radar,radar_name,
-     1   iqc_2dref,                                                     ! O
+     1   iqc_2dref,closest_radar,                                       ! O
      1   n_ref_grids,n_2dref,n_3dref,istatus_2dref_a,istatus_3dref_a)       
 
  900    if(    n_2dref .eq. imax*jmax)then    ! Full coverage
@@ -544,7 +587,7 @@ cdoc                            calls read_multiradar_3dref.
      1   heights_3d,                                                    ! I
      1   grid_ra_ref,                                                   ! O
      1   rlat_radar,rlon_radar,rheight_radar,radar_name,                ! O
-     1   iqc_2dref,                                                     ! O
+     1   iqc_2dref,closest_radar,                                       ! O
      1   n_ref_grids,n_2dref,n_3dref,istatus_2dref_a,istatus_3dref_a)   ! O 
 
 !       Steve Albers Nov 1998   This routine will read in a 3D radar
@@ -564,6 +607,7 @@ cdoc                            calls read_multiradar_3dref.
         real radar_2dref(imax,jmax)
         real closest_vxx(imax,jmax)
         real closest_vrc(imax,jmax)
+        real closest_radar(imax,jmax)
 
         real lat(imax,jmax)
         real lon(imax,jmax)
@@ -613,6 +657,7 @@ cdoc                            calls read_multiradar_3dref.
         endif
 
         closest_vxx = r_missing_data
+        closest_radar = r_missing_data
 
 !       Initialize 3d reflectivity array with default value
         grid_ra_ref = r_missing_data ! ref_base 
@@ -807,8 +852,11 @@ cdoc                            calls read_multiradar_3dref.
 !                          (useful for precip type, get_low_ref)
 
                 if(l_low_fill .or. l_high_fill)then
+                    
                     do i = 1,imax
                     do j = 1,jmax
+
+                        closest_radar(i,j) = closest_vxx(i,j)
 
 !                       Set distant 3D radar points to msg to select NOWRAD/vrc
                         if(closest_vxx(i,j) .ne. r_missing_data
@@ -825,7 +873,11 @@ cdoc                            calls read_multiradar_3dref.
                                     grid_ra_ref(i,j,k)=radar_2dref(i,j)      
 !                               endif
                             enddo ! k
+
+                            closest_radar(i,j) = closest_vrc(i,j)
+
                         endif ! istatus_3dref_a = 0
+
                     enddo ! j
                     enddo ! i
 
