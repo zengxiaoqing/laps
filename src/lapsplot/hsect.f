@@ -95,7 +95,7 @@ cdis
         character*9 c9_string,a9_start,a9_end
         character*20 colortable
         character infile*255
-        character*20 c_model
+        character*40 c_model
         character*200 new_dataroot
 
         character i4_to_byte
@@ -2567,6 +2567,10 @@ c
      1                        ,c_display,lat,lon,jdot,NX_L        
      1                        ,NY_L,r_missing_data,laps_cycle_time)
 
+                    write(6,*)' Cp ref to field_2d to support diff'       
+                    call move(grid_ra_ref(1,1,k_level,1),
+     1                        field_2d,NX_L,NY_L) ! Supports the diff option
+
                 else
                     plot_parms%icol_barbs = +1 ! keep future barbs plots bright
 
@@ -2581,6 +2585,10 @@ c
      1                                    ,i_overlay,'hsect')       
                     call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
      1                                 ,namelist_parms,plot_parms)
+
+                    write(6,*)' Cp ref to field_2d to support diff'       
+                    call move(grid_ra_ref(1,1,k_level,1),
+     1                        field_2d,NX_L,NY_L) ! Supports the diff option
 
                 endif
 
@@ -7170,7 +7178,7 @@ c             if(cint.eq.0.0)cint=0.1
         character*9   c_fdda_mdl_src(maxbgmodels)
         character*(*) directory
         character*(*) ext
-        character*20  c_model
+        character*40  c_model
         character*10  cmds
         character*1   cansw
         character*150 c_filenames(maxfiles)
@@ -7189,7 +7197,11 @@ c             if(cint.eq.0.0)cint=0.1
 
         call get_directory(ext,directory,len_dir)
 
-        if(l_parse(ext,'lga') .or. l_parse(ext,'lgb'))go to 900 ! use LGA/LGB
+        if(l_parse(ext,'lga') .or. l_parse(ext,'lgb'))then ! use LGA/LGB
+            c_model = ' '
+            write(6,*)' lga/lgb ext - setting c_model to blank'
+            go to 900 
+        endif
 
 !       Get fdda_model_source from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
@@ -7230,6 +7242,8 @@ c             if(cint.eq.0.0)cint=0.1
         read(5,206)c_model
  206    format(a)
 
+        write(6,*)' c_model = ',c_model
+
         call s_len(c_model,len_model)
 
         DIRECTORY=directory(1:len_dir)//c_model(1:len_model)//'/'
@@ -7239,7 +7253,7 @@ c             if(cint.eq.0.0)cint=0.1
         call get_file_names(directory,nfiles,c_filenames
      1                     ,maxfiles,istatus)
 
-        write(6,*)' Available files in ',directory(1:len_dir)
+        write(6,*)' Available files in ',trim(directory)
         if(nfiles .ge. 1)then
             do i = 1,nfiles
                 call s_len(c_filenames(i),len_fname)
