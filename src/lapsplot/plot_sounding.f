@@ -1,7 +1,7 @@
 
         subroutine plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                          ,r_missing_data,laps_cycle_time,maxstns
-     1                          ,plot_parms,namelist_parms)       
+     1                          ,i_overlay,plot_parms,namelist_parms)       
 
         include 'lapsplot.inc'
 
@@ -41,8 +41,6 @@
         character*11 c_pw
 
         integer i_overlay
-        save i_overlay
-        data i_overlay /0/
 
         include 'icolors.inc'
 
