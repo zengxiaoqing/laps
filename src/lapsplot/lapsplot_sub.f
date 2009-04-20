@@ -178,6 +178,7 @@ cdis
         endif
 
         ifield_found = 1
+        i_overlay = 0
 
         IF(     c_section .eq. 'h' .or. c_section .eq. 'H' 
      1     .or. c_section .eq. '1'
@@ -268,7 +269,7 @@ cdis
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
             call plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                        ,r_missing_data,laps_cycle_time,maxstns
-     1                        ,plot_parms,namelist_parms)       
+     1                        ,i_overlay,plot_parms,namelist_parms)       
 
             if(ifield_found .eq. 1)then
                 write(6,*)' Field found - calling frame'
