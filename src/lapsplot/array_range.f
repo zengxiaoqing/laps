@@ -66,6 +66,38 @@ cdis
        write(6,*)' rmax/rmin after scaling = ',rmax,rmin
 
        range = (rmax-rmin) / (sqrt(zoom) * density)
+       call range2cint(range,cint)
+
+       range_eff = rmax-rmin
+       call range2cint(range_eff,cint_eff)
+
+       cint_2 = cint * 2.
+
+!      if(cint .ge. 1.0)then
+!          if(rmin .ge. 0.)then
+!              clow  = int(rmin)/int(cint_2) * int(cint_2)
+!              chigh = int(rmax)/int(cint) * int(cint) + int(cint)
+!          else ! rmin < 0. (perhaps more generic)
+
+!              This is using an effective cint value that is independent of 
+!              zoom/density
+               clow =  nint(rmin/cint_eff - 0.5) * cint_eff 
+               chigh = nint(rmax/cint_eff - 0.5) * cint_eff + cint_eff
+
+!          endif
+!      else
+!          clow =  int(rmin/cint) * cint 
+!          chigh = int(rmax/cint) * cint + cint
+!      endif
+ 
+       write(6,*)' range/zoom/clow/chigh/cint/scale = '
+     1            ,range,zoom,clow,chigh,cint,scale      
+
+       return
+       end
+
+
+       subroutine range2cint(range,cint)
 
        if(range .gt. 20000)then
            cint = 5000.
@@ -94,18 +126,6 @@ cdis
        else ! range < 1          
            cint = 0.1
        endif
-
-       cint_2 = cint * 2.
-
-       if(cint .ge. 1.0)then
-           clow  = int(rmin)/int(cint_2) * int(cint_2)
-           chigh = int(rmax)/int(cint) * int(cint) + int(cint)
-       else
-           clow =  nint(rmin/cint) * cint - cint
-           chigh = nint(rmax/cint) * cint + cint
-       endif
- 
-       write(6,*)' range/zoom/cint/scale = ',range,zoom,cint,scale      
 
        return
        end
