@@ -6,15 +6,15 @@ main                                                     laps_accum.f
         get_precip_inc                                   get_precip_accum.f
             get_precip_radar                                    "
                 get_fracs                                       "
-                read_radar_3dref                                "
-                get_low_ref                                     "
-                zr                                              "
-                zs                                              "
-                cpt_pcp_type_3d                                 "
+                read_radar_3dref_new                     lib/getradar.f
+                get_low_ref                              lib/get_lowref.f
+                zr                                       lib/zr.f
+                zs                                       lib/zs.f
+                cpt_pcp_type_3d                          lib/get_cloud_deriv.f
                 get_sfc_preciptype                              "
                 nowrad_virga_correction                         "
             get_modelfg_2d                               lib/laps_routines.f
-            compare_gauge_values                         get_precip_accum.f
+            blend_gauge_data                             blend_gauge_data.f
                 read_sfc_precip                          lib/read_surface_obs.f
                 precip_barnes_jacket                     precip_barnes_jacket.f
                     precip_barnes_sfc                           "
