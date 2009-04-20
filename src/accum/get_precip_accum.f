@@ -23,6 +23,7 @@
 
 !       Local
         real pcp_bkg_m(imax,jmax)      ! background field for gauge analysis
+        real closest_radar(imax,jmax)  ! M
 	character var_req*4
 
         call get_precip_radar(i4time_beg,i4time_end         ! Input
@@ -32,23 +33,24 @@
      1          ,ilaps_cycle_time,grid_spacing_cen_m        ! Input
      1          ,radarext_3d_accum                          ! Input
      1          ,snow_accum,precip_accum,frac_sum           ! Outputs
+     1          ,closest_radar                              ! Output
      1          ,istatus)                                   ! Output
 
-!       Read precip first guess (LGB/FSF). Try 'R01' and 'PCP' variables
-	var_req = 'R01'
+!       Read precip first guess (LGB/FSF). Try 'R01' variable
+        var_req = 'R01'
         call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m
      1                     ,istat_bkg)       
 
-        if(istat_bkg .ne. 1)then
-	    var_req = 'PCP'
-            call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m     
-     1                         ,istat_bkg)       
-        endif
+!       if(istat_bkg .ne. 1)then
+!           var_req = 'PCP'
+!           call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m     
+!    1                         ,istat_bkg)       
+!       endif
 
-        if(istat_bkg .ne. 1)then
-            write(6,*)' No model first guess precip, using zero field'       
-            pcp_bkg_m = 0.
-        endif
+!       if(istat_bkg .ne. 1)then
+!           write(6,*)' No model first guess precip, using zero field'       
+!           pcp_bkg_m = 0.
+!       endif
 
 !       Compare to gauge values
         if(ilaps_cycle_time .eq. 3600)then
@@ -58,11 +60,12 @@
             call get_r_missing_data(r_missing_data,istatus)
             if(istatus .ne. 1)return
 
-            call compare_gauge_values(i4time_end,imax,jmax,maxsta  ! I
+            call blend_gauge_data(    i4time_end,imax,jmax,maxsta  ! I
      1                               ,r_missing_data               ! I
      1                               ,lat,lon                      ! I
      1                               ,pcp_bkg_m                    ! I
      1                               ,ilaps_cycle_time             ! I
+     1                               ,closest_radar                ! I
      1                               ,precip_accum)                ! I/O
         endif
 
@@ -76,6 +79,7 @@
      1          ,ilaps_cycle_time,grid_spacing_cen_m        ! Input
      1          ,radarext_3d_accum                          ! Input
      1          ,snow_accum,precip_accum,frac_sum           ! Outputs
+     1          ,closest_radar                              ! Output
      1          ,istatus)                                   ! Output
 
 !       Steve Albers 1991
@@ -99,6 +103,7 @@
 !       Output
         real snow_accum(imax,jmax)   ! M
         real precip_accum(imax,jmax) ! M
+        real closest_radar(imax,jmax) ! M
 
 !       Local
         real precip_rateave(imax,jmax)
@@ -527,13 +532,14 @@
 
             i4_tol_radar = 1200
 
-            call read_radar_3dref(i4time_radar,                 ! I
+            call read_radar_3dref_new(i4time_radar,             ! I
      1       i4_tol_radar,i4_ret,                               ! I/O
      1       .true.,r_missing_data,imax,jmax,kmax,              ! I
      1       ext_local,lat,lon,topo,
      1       .true.,.false.,
      1       height_3d,
      1       grid_ra_ref,
+     1       closest_radar,                                     ! O
      1       rlat_radar,rlon_radar,rheight_radar,radar_name,
      1       n_ref,istatus_2dref,istatus_3dref)
 
@@ -722,146 +728,6 @@
 
         write(6,*)' Radar snow_accum(im,jm) = ',snow_accum(im,jm)
         write(6,*)' Radar precip_accum(im,jm) = ',precip_accum(im,jm)
-
-        return
-        end
-
-        subroutine compare_gauge_values(i4time,ni,nj,maxsta        ! I
-     1                                 ,r_missing_data             ! I
-     1                                 ,lat,lon                    ! I
-     1                                 ,pcp_bkg_m                  ! I
-     1                                 ,ilaps_cycle_time           ! I
-     1                                 ,precip_accum)              ! I/O
-
-
-!       Write out comparison of LAPS accumulation to gauge values where
-!       measurements of both exist. Zero values are allowed though non-missing
-!       values are required for both gridded and gauge values.
-
-        include 'read_sfc.inc'
-        include 'constants.inc'
-
-        real precip_accum(ni,nj) ! input radar analysis
-        real pcp_2d_in(ni,nj)    ! locally computed gauge analysis (IN)
-        real pcp_bkg_m(ni,nj)    ! background field for gauge analysis (M)
-        real pcp_bkg_in(ni,nj)   ! background field for gauge analysis (IN)
-        real wt_bkg_a(ni,nj)     ! background weight for gauge analysis
-        real lat(ni,nj)
-        real lon(ni,nj)
-
-        real pcp_gauge(maxsta)   ! relevant time of accumulation is selected
-        character*5 c_field
-
-        integer ilaps(maxsta),jlaps(maxsta)
-
-        write(6,*)
-        write(6,*)' Subroutine compare_gauge_values (1hr pcp inches)...'
-        write(6,*)' #  Name        Gauge Analyzed'
-
-        call read_sfc_precip(i4time,btime,n_obs_g,n_obs_b,
-     &           stations,provider,lat_s,lon_s,elev_s,
-     &           pcp1,pcp3,pcp6,pcp24,
-     &           snow,maxsta,jstatus)
-
-        call get_sfc_badflag(badflag,istatus)
-
-        n_gauge_noradar = 0
-
-!       Loop through obs and write out precip values (when gauge reports precip)
-        do iob = 1,n_obs_b
-
-!           Fill gauge array according to cycle time
-            if(ilaps_cycle_time .eq. 3600)then
-                pcp_gauge(iob) = pcp1(iob)
-                c_field = 'pcp1'
-            elseif(ilaps_cycle_time .eq. 10800)then
-                pcp_gauge(iob) = pcp3(iob)
-                c_field = 'pcp3'
-            elseif(ilaps_cycle_time .eq. 21600)then
-                pcp_gauge(iob) = pcp6(iob)
-                c_field = 'pcp6'
-            elseif(ilaps_cycle_time .eq. 86400)then
-                pcp_gauge(iob) = pcp24(iob)
-                c_field = 'pcp24'
-            else
-                pcp_gauge(iob) = badflag
-                c_field = 'none'
-            endif
-
-!           Obtain LAPS i,j at ob location
-            call latlon_to_rlapsgrid(lat_s(iob),lon_s(iob),lat,lon
-     1                              ,ni,nj,ri,rj
-     1                              ,istatus)
-            if(istatus.ne.1)goto20
-
-            ilaps(iob) = nint(ri)
-            jlaps(iob) = nint(rj)
-
-            if(ilaps(iob) .ge. 1 .and. ilaps(iob) .le. ni .and. 
-     1         jlaps(iob) .ge. 1 .and. jlaps(iob) .le. nj      )then
-
-!               Convert from meters to inches
-                pcp_laps_m = precip_accum(ilaps(iob),jlaps(iob))
-
-                if(pcp_laps_m .ne. r_missing_data)then
-                    pcp_laps_in = precip_accum(ilaps(iob),jlaps(iob)) 
-     1                          * ft_per_m * 12.       
-                else
-                    pcp_laps_in = r_missing_data
-                endif
-
-                if(pcp_gauge(iob) .ge. 0.)then
-                   if(pcp_laps_in .ne. r_missing_data)then
-                      write(6,11)iob,stations(iob)(1:10)
-     1                          ,pcp_gauge(iob),pcp_laps     
-11                    format(i6,1x,a,2f7.3,' RADAR')             
-                   else
-                      write(6,12)iob,stations(iob)(1:10)
-     1                          ,pcp_gauge(iob),lat_s(iob),lon_s(iob)    
-12                    format(i6,1x,a,f7.3,2f8.2,' NORADAR')             
-                      n_gauge_noradar = n_gauge_noradar + 1
-                   endif
-                endif
-
-            endif
-
-20          continue
-
-        enddo ! iob
-
-        if(.true.)then ! analyze gauge values
-
-            write(6,*)' Performing a gauge only analysis for testing'
-
-            wt_bkg_a = 5e28
-            pcp_bkg_in = pcp_bkg_m * in_per_m
-
-            call precip_barnes_jacket(           c_field              ! I
-     1                                           ,ilaps,jlaps         ! I
-     1                                           ,pcp_gauge           ! I
-     1                                           ,maxsta              ! I
-     1                                           ,pcp_bkg_in          ! I
-     1                                           ,badflag,ni,nj       ! I
-     1                                           ,topo,ldf            ! I
-     1                                           ,wt_bkg_a            ! I
-     1                                           ,pcp_2d_in,istatus)  ! O
-
-!           Substitute gauge analysis in radar gap areas
-            n_barnes = 0
-            do i = 1,ni
-            do j = 1,nj
-                if(precip_accum(i,j) .eq. r_missing_data)then 
-                    n_barnes = n_barnes + 1
-                    precip_accum(i,j) = pcp_2d_in(i,j) * meters_per_inch   
-                endif
-            enddo ! j
-            enddo ! i
-
-            write(6,*)' Number of gridpoints outside radar = ',n_barnes       
-            write(6,*)' Number of gauges outside radar = '
-     1               ,n_gauge_noradar     
-
-        endif
 
         return
         end
