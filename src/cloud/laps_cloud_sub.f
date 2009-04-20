@@ -65,57 +65,6 @@ cdis
      1             sys_no_data    =3, ! no data
      1             sys_abort_prod =4) ! failed to make a prod
 
-!       1991     Steve Albers - Original Version
-!       1993 Mar Steve Albers - Add LMT product
-!       1995 Jul Steve Albers - Fix coverage threshold on cloud base
-!                               Added cloud ceiling
-!                               Added sfc or 2-D cloud type.
-!       1995 Nov 1  S. Albers - Add diagnostic output of cloud ceiling
-!                               in precip type comparisons
-!       1995 Nov 2  S. Albers - Use SAO's to add drizzle in sfc "thresholded"
-!                               precip type calculation (lct-PTT)
-!       1995 Nov 10 S. Albers - Better handling of cloud tops at top of domain
-!                               when "three-dimensionalizing" radar data
-!       1995 Nov 29 S. Albers - Improve use of SAO's to add snow in PTT field.
-!                               Cloud ceiling threshold replaced with
-!                               thresholds on cloud cover and sfc dewpoint
-!                               depression.
-!       1995 Dec 4  S. Albers - Use SAO's to add rain in sfc "thresholded"
-!                               precip type calculation (lct-PTT)
-!       1995 Dec 13 S. Albers - Now calls get_radar_ref
-!       1996 Aug 22 S. Albers - Now calls read_radar_3dref
-!       1996 Oct 10 S. Albers - Max SAO cloud cover is now 1.00 + some other
-!                               misc cleanup.
-!       1997 Jul 31 K. Dritz  - Removed include of lapsparms.for.
-!       1997 Jul 31 K. Dritz  - Added call to get_i_perimeter.
-!       1997 Jul 31 K. Dritz  - Removed PARAMETER statements for IX_LOW,
-!                               IX_HIGH, IY_LOW, and IY_HIGH, and instead
-!                               compute them dynamically (they are not used
-!                               as array bounds, only passed in a call).
-!       1997 Jul 31 K. Dritz  - Added NX_L, NY_L as dummy arguments.
-!       1997 Jul 31 K. Dritz  - Added call to get_r_missing_data.
-!       1997 Jul 31 K. Dritz  - Removed PARAMETER statements for default_base,
-!                               default_top, and default_ceiling, and instead
-!                               compute them dynamically.
-!       1997 Jul 31 K. Dritz  - Removed PARAMETER statement for Nhor.  Now
-!                               initialize c1_name_array dynamically instead
-!                               of with a DATA statement.
-!       1997 Jul 31 K. Dritz  - Added NZ_L as dummy argument.
-!       1997 Jul 31 K. Dritz  - Added N_PIREP, maxstns, and max_cld_snd as
-!                               dummy arguments.  Removed the PARAMETER
-!                               statement for max_cld_snd.
-!       1997 Jul 31 K. Dritz  - Added call to get_ref_base.
-!       1997 Aug 01 K. Dritz  - Compute NX_DIM_LUT, NY_DIM_LUT, and n_fnorm as
-!                               they were previously computed in barnes_r5.
-!       1997 Aug 01 K. Dritz  - Added NX_DIM_LUT, NY_DIM_LUT, IX_LOW, IX_HIGH,
-!                               IY_LOW, IY_HIGH, and n_fnorm as arguments in
-!                               call to barnes_r5.
-!       1997 Aug 01 K. Dritz  - Added maxstns, IX_LOW, IX_HIGH, IY_LOW, and
-!                               IY_HIGH as arguments in call to insert_sao.
-!       1997 Aug 01 K. Dritz  - Also now pass r_missing_data to barnes_r5.
-!       1997 Aug 01 K. Dritz  - Pass r_missing_data to insert_sat.
-!       1997 Aug 01 K. Dritz  - Pass ref_base to rfill_evap.
-
         include 'cloud.inc'
 
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
@@ -228,6 +177,7 @@ cdis
         character*4 radar_name
         character*31 radarext_3d_cloud
         real radar_ref_3d(NX_L,NY_L,NZ_L)
+        real closest_radar(NX_L,NY_L)
         integer istat_radar_2dref_a(NX_L,NY_L)
         integer istat_radar_3dref_a(NX_L,NY_L)
         logical lstat_radar_3dref_orig_a(NX_L,NY_L)
@@ -588,7 +538,7 @@ C READ IN RADAR DATA
      1                 heights_3d,                                       ! I
      1                 radar_ref_3d,                                     ! O
      1                 rlat_radar,rlon_radar,rheight_radar,radar_name,   ! O
-     1                 iqc_2dref,                                        ! O
+     1                 iqc_2dref,closest_radar,                          ! O
      1                 n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a,  ! O  
      1                 istat_radar_3dref_a)                              ! O
 
