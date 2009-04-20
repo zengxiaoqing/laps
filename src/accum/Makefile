@@ -23,7 +23,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
 
 EXE = accum.exe
 
-SRC=get_precip_accum.f  laps_accum.f  laps_accum_sub.f precip_barnes_jacket.f
+SRC=get_precip_accum.f  laps_accum.f  laps_accum_sub.f precip_barnes_jacket.f blend_gauge_data.f
 
 all: exe
 
