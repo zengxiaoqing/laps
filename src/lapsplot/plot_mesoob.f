@@ -742,11 +742,17 @@ c
             endif
  32         continue
 
-        elseif(iflag_cv .eq. 3)then ! Sfc T & Solar Radiation plot
+        elseif(iflag_cv .eq. 3)then ! Sfc T, RH & Solar Radiation plot
 !           Plot Temperature       
             if(t.gt.-75. .and. t.lt.140.) then 
                write(t1,100,err=40) nint(t)
                CALL PCLOQU(u-du_t,v+dv,t1,charsize,ANGD,CNTR)
+            endif
+
+!           Plot Sfc RH (td variable)
+            if(td.ge.0. .and. td.le.100.) then
+               write(td1,100,err=30) nint(td)
+               CALL PCLOQU(u-du_t,v-dv,td1,charsize,ANGD,CNTR)
             endif
 
 !           Plot Solar Radiation (pressure variable)
