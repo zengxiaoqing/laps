@@ -138,7 +138,7 @@ cdis
         character*31  ext
         character*10  units_2d
         character*125 comment_2d
-        character*20 c_model
+        character*40 c_model
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(NX_C,1)
@@ -756,6 +756,9 @@ c read in laps lat/lon and topo
 
             scale = 1.
             cint = 0.
+
+            call contour_settings(field_vert,NX_C,NZ_C
+     1               ,clow,chigh,cint,zoom,density,scale)      
 
             i_contour = 1
             idiff = 1
@@ -2284,6 +2287,43 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             i_contour = 1
             c_label = 'LAPS Theta(e) Sat   X-Sect  Deg K'
 
+        elseif(c_field .eq. 'be')then
+            var_2d = 'T3'
+            call make_fnam_lp(i4time_ref,a9time,istatus)
+            ext='lt1'
+
+            call get_directory('balance',directory,lend)
+            directory=directory(1:lend)//'lt1/'
+
+            call get_3dgrid_dname(directory
+     1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
+     1           ,ext,var_2d,units_2d
+     1           ,comment_2d,NX_L,NY_L,NZ_L,temp_3d,istatus)       
+
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+
+            call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
+     1                                                    ,istatus)
+            call interp_3d(pres_3d,pres_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+
+            do k = 1,NZ_L
+            do i = 1,NX_C
+                field_vert(i,k) =
+     1           OS(field_vert(i,k)-273.15,pres_vert(i,k)/100.) + 273.15       
+            enddo ! i
+            enddo ! k
+
+            clow = +250.
+            chigh = +450.
+            cint = 5. / density
+            i_contour = 1
+            c_label = 'LAPS Theta(e) Sat (Balanced) Deg K'
+
         elseif(c_field .eq. 'tw')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
@@ -2879,8 +2919,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                         call set(0.10,0.90,0.05,0.95
      1                          ,0.10,0.90,0.05,0.95,1) ! Orig
 
-                        write(6,*)' calling contour line plot, scale:'       
-     1                            ,scale,clow,chigh,cint
+                        write(6,*)' arguments for conrec_line, '
+     1                           ,'clow/chigh/cint:'       
+     1                            ,clow,chigh,cint
 
                         call conrec_line(field_vert3,NX_P,NX_P,NX_P
      1                             ,clow,chigh,cint,plot_parms
@@ -4088,7 +4129,7 @@ c
         character*9   c_fdda_mdl_src(maxbgmodels)
         character*(*) directory
         character*(*) ext
-        character*20  c_model
+        character*40  c_model
         character*10  cmds
         character*1   cansw
         character*150 c_filenames(1000)
