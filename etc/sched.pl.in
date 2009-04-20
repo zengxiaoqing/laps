@@ -74,15 +74,12 @@
 # -f                   Run followup script to generate GIF images for the web.
 #                      The argument value is a shorthand name for the domain and
 #                      can be given a dummy value if the FSL Gizmo server is invisible
-#                      to you. In this event, consider setting the value to 'wide' if
-#                      the aspect ratio (width/length) exceeds 1.192.
+#                      to you. 
 #                      
 # -F                   Run followup script to generate GIF images for the web.
 #                      No other executables are run. The argument value is a shorthand 
 #                      name for the domain and can be given a dummy value if the GSD
-#                      Gizmo server is invisible to you. In this event, consider setting 
-#                      the value to 'wide' if the aspect ratio (width/length) exceeds 1.192.
-#                      Purger is not run.
+#                      Gizmo server is invisible to you. 
 #                      
 # -T                   Run with analysis only executables, useful with the
 #                      test dataset that comes with the LAPS software release.
@@ -218,6 +215,19 @@ if (! $opt_l ){
   $fxa_sys =  &Get_env'fxa; #'
 }
 $ENV{PATH}.=":@NETCDF@/bin";
+
+# Calculate aspect ratio and set aspect keyword
+my @xdim=&laps_tools::get_nl_value("nest7grid.parms","nx_l","$LAPS_DATA_ROOT"); 
+my @ydim=&laps_tools::get_nl_value("nest7grid.parms","ny_l","$LAPS_DATA_ROOT"); 
+my $aspect_ratio = (@xdim[0]-1.0) / (@ydim[0]-1.0);
+my $aspect_word;
+if ($aspect_ratio > 1.40) {
+    $aspect_word = "wide2";
+} elsif ($aspect_ratio > 1.192) {
+    $aspect_word = "wide";
+} else {
+    $aspect_word = "square";
+}
 
 my @cycle_array=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time","$LAPS_DATA_ROOT"); 
 
@@ -578,9 +588,9 @@ foreach $exe (@LAPS_EXE){
                 print TFILE "echo 'Running www images postprocessing' >> $LAPS_LOG_PATH/runtime.log\n";
 
                 if($opt_f){ 
-                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
+                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
                 }else{ # $opt_F
-                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
+                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
                 }
             }
 
@@ -671,10 +681,10 @@ if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
 
 if($opt_f && (! $opt_q) && (! $opt_Q) ){ 
     print LOG $t." Running www images postprocessing\n";
-    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
+    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
 }elsif($opt_F && (! $opt_q) && (! $opt_Q) ){
     print LOG $t." Running www images postprocessing\n";
-    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
+    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
 }
 
 close(LOG);
