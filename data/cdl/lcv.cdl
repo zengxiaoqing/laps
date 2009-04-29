@@ -88,6 +88,19 @@ netcdf lcv {
             alb:LAPS_var="ALB";
             alb:lvl_coord=" ";
             alb:LAPS_units=" ";
+                	        
+        //	reflectivity-qc
+	float                                  
+            rqc(record,z,y,x);
+            rqc:navigation_dim = "nav";
+            rqc:record = "valtime, reftime";
+            rqc:_FillValue = 1.e+37f;
+            rqc:long_name="laps reflectivity qc";
+            rqc:units="none";
+            rqc:valid_range= 2.f, 3.f;
+            rqc:LAPS_var="RQC";
+            rqc:lvl_coord=" ";
+            rqc:LAPS_units=" ";
 
 
         //	LAPS variables
@@ -105,6 +118,7 @@ netcdf lcv {
             s8a_comment(record,z,namelen),
             s3a_comment(record,z,namelen),
             alb_comment(record,z,namelen),
+            rqc_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -133,6 +147,10 @@ netcdf lcv {
         short
             alb_fcinv(record, z);
             alb_fcinv:_FillValue= 0s;
+              	
+        short
+            rqc_fcinv(record, z);
+            rqc_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
