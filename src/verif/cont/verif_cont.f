@@ -44,6 +44,8 @@
 
         real var_anal_3d(NX_L,NY_L,NZ_L)
         real var_fcst_3d(NX_L,NY_L,NZ_L)
+        real rqc(NX_L,NY_L)
+
         logical lmask_and_3d(NX_L,NY_L,NZ_L)
         logical lmask_or_3d(NX_L,NY_L,NZ_L)
         logical lmask_all_3d(NX_L,NY_L,NZ_L)
@@ -91,7 +93,6 @@
 
         real cont_4d(NX_L,NY_L,NZ_L,maxthr)
 
-        lmask_all_3d = .true.
         thresh_var = 20. ! lowest threshold for this variable
 
         i4_initial = i4time_sys
@@ -187,6 +188,16 @@
                         return
                   endif
 
+                  if(var_2d .eq. 'REF')then ! also read radar quality
+                      ext = 'lcv'
+                      call get_laps_2d(i4_valid,NX_L,NY_L,NZ_L,ext
+     1                       ,'RQC',units_2d,comment_2d,rqc,istatus)      
+                      if(istatus .ne. 1)then
+                          write(6,*)' Error reading 2D RQC Analysis'
+                          return
+                      endif
+                  endif
+
 !                 Read forecast reflectivity
                   ext = ext_fcst_a(ifield)
                   call get_directory(ext,directory,len_dir)
@@ -214,6 +225,9 @@
      1                  var_fcst_3d(i,j,k) .ge. thresh_var        )then
                          lmask_and_3d(i,j,k) = .true.
                      endif
+                     if(rqc(i,j) .ne. 3.0)then
+                         lmask_and_3d(i,j,k) = .false.
+                     endif
                   enddo ! j
                   enddo ! i
                   enddo ! k
@@ -229,6 +243,9 @@
      1                   var_fcst_3d(i,j,k) .ge. thresh_var)       )then       
                          lmask_or_3d(i,j,k) = .true.
                      endif
+                     if(rqc(i,j) .ne. 3.0)then
+                         lmask_or_3d(i,j,k) = .false.
+                     endif
                   enddo ! j
                   enddo ! i
                   enddo ! k
@@ -241,6 +258,11 @@
 
                 write(lun_out,*)
                 write(lun_out,*)' NO mask is in place'
+
+                lmask_all_3d = .true.
+                do k = 1,NZ_L
+                    where(rqc .ne. 3.0)lmask_all_3d(:,:,k) = .false.
+                enddo ! k
 
                 write(lun_out,*)
                 write(lun_out,*)
