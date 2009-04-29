@@ -55,7 +55,7 @@ cdis
      1                         ,l_use_39,latency_co2                   
      1                         ,pct_req_lvd_s8a                        
      1                         ,i4_sat_window,i4_sat_window_offset     
-     1                         ,l_use_metars,l_use_radar
+     1                         ,l_use_metars,l_use_radar,iwrite_output
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                sys_abort_prod
@@ -185,7 +185,7 @@ cdis
         real heights_3d(NX_L,NY_L,NZ_L)
 
 !       Output array declarations
-        real out_array_3d(NX_L,NY_L,6)
+        real out_array_3d(NX_L,NY_L,7)
 
 !       real snow_2d(NX_L,NY_L)
 
@@ -270,6 +270,7 @@ cdis
         real ref_mt_2d(NX_L,NY_L)
         real dbz_low_2d(NX_L,NY_L)
         real dbz_max_2d(NX_L,NY_L)
+        real rqc_2d(NX_L,NY_L)
 
 !       SFC precip and cloud type (LCT file)
         real r_pcp_type_thresh_2d(NX_L,NY_L)
@@ -548,6 +549,10 @@ C READ IN RADAR DATA
         else
             write(6,*)' Lesser quality 2d radar (e.g. narrowband)'      
         endif
+
+        rqc_2d = 0.
+        where (istat_radar_2dref_a .eq. 1)rqc_2d = 2.
+        where (istat_radar_3dref_a .eq. 1)rqc_2d = 3.
 
 !       else
 !           write(6,*)'radar data outside time window'
@@ -1259,17 +1264,18 @@ C       EW SLICES
 
 
 !       Write out LCB file (Cloud Base, Top, and Ceiling fields)
-        ext = 'lcb'
-        call get_directory(ext,directory,len_dir)
+        if(iwrite_output .ge. 1)then
+            ext = 'lcb'
+            call get_directory(ext,directory,len_dir)
 
-        call move(cloud_base    ,out_array_3d(1,1,1),NX_L,NY_L)
-        call move(cloud_top     ,out_array_3d(1,1,2),NX_L,NY_L)
-        call move(cloud_ceiling ,out_array_3d(1,1,3),NX_L,NY_L)
+            call move(cloud_base    ,out_array_3d(1,1,1),NX_L,NY_L)
+            call move(cloud_top     ,out_array_3d(1,1,2),NX_L,NY_L)
+            call move(cloud_ceiling ,out_array_3d(1,1,3),NX_L,NY_L)
 
-        call put_clouds_2d(i4time,directory,ext,NX_L,NY_L
+            call put_clouds_2d(i4time,directory,ext,NX_L,NY_L
      1                                  ,out_array_3d,istatus)
-        if(istatus .eq. 1)j_status(n_lcb) = ss_normal
-
+            if(istatus .eq. 1)j_status(n_lcb) = ss_normal
+        endif ! iwrite_output
 
 !       This is where we will eventually split the routines, additional data
 !       is necessary for more derived fields
@@ -1304,44 +1310,50 @@ C       EW SLICES
 
 
 !       Write LCV file
-        do i = 1,NX_L
-        do j = 1,NY_L
-            cvr_water_temp(i,j) = r_missing_data
-        enddo ! j
-        enddo ! i
+        if(iwrite_output .ge. 1)then
+            do i = 1,NX_L
+            do j = 1,NY_L
+                cvr_water_temp(i,j) = r_missing_data
+            enddo ! j
+            enddo ! i
 
-        ext = 'lcv'
-        var_a(1) = 'LCV'
-        var_a(2) = 'CSC'
-        var_a(3) = 'CWT'
-        var_a(4) = 'S8A'
-        var_a(5) = 'S3A'
-        var_a(6) = 'ALB'
-        units_a(1) = 'UNDIM'
-        units_a(2) = 'UNDIM'
-        units_a(3) = 'K'
-        units_a(4) = 'K'
-        units_a(5) = 'K'
-        units_a(6) = ' '
-        comment_a(1) = 'LAPS Cloud Cover'
-        comment_a(2) = 'LAPS Cloud Analysis Implied Snow Cover'
-        comment_a(3) = 'LAPS Clear Sky Water Temp'
-        comment_a(4) = comment_tb8
-        comment_a(5) = comment_t39
-        comment_a(6) = comment_alb
+            ext = 'lcv'
+            var_a(1) = 'LCV'
+            var_a(2) = 'CSC'
+            var_a(3) = 'CWT'
+            var_a(4) = 'S8A'
+            var_a(5) = 'S3A'
+            var_a(6) = 'ALB'
+            var_a(7) = 'RQC'
+            units_a(1) = 'UNDIM'
+            units_a(2) = 'UNDIM'
+            units_a(3) = 'K'
+            units_a(4) = 'K'
+            units_a(5) = 'K'
+            units_a(6) = ' '
+            units_a(7) = ' '
+            comment_a(1) = 'LAPS Cloud Cover'
+            comment_a(2) = 'LAPS Cloud Analysis Implied Snow Cover'
+            comment_a(3) = 'LAPS Clear Sky Water Temp'
+            comment_a(4) = comment_tb8
+            comment_a(5) = comment_t39
+            comment_a(6) = comment_alb
+            comment_a(7) = 'LAPS Radar Quality'
 
 
-        call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
-        call move(cvr_snow_cycle,out_array_3d(1,1,2),NX_L,NY_L)
-        call move(cvr_water_temp,out_array_3d(1,1,3),NX_L,NY_L)
-        call move(tb8_k         ,out_array_3d(1,1,4),NX_L,NY_L)
-        call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
-        call move(albedo        ,out_array_3d(1,1,6),NX_L,NY_L)
+            call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
+            call move(cvr_snow_cycle,out_array_3d(1,1,2),NX_L,NY_L)
+            call move(cvr_water_temp,out_array_3d(1,1,3),NX_L,NY_L)
+            call move(tb8_k         ,out_array_3d(1,1,4),NX_L,NY_L)
+            call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
+            call move(albedo        ,out_array_3d(1,1,6),NX_L,NY_L)
+            call move(rqc_2d        ,out_array_3d(1,1,7),NX_L,NY_L)
 
-        call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1          comment_a,out_array_3d,NX_L,NY_L,6,istatus)
+            call put_laps_multi_2d(i4time,ext,var_a,units_a,
+     1              comment_a,out_array_3d,NX_L,NY_L,7,istatus)
 
-        if(istatus .eq. 1)j_status(n_lcv) = ss_normal
+            if(istatus .eq. 1)j_status(n_lcv) = ss_normal
+        endif ! iwrite_output
 
 500     continue
 
