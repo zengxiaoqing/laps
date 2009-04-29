@@ -140,6 +140,7 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 # mkdir -p $INSTALLROOT/$RADAR/log
 
   echo " "
+  echo "New radar / cycle time..."
   echo "Look for logs in $OUTPUTROOT/$RADAR/log..."
   echo "Look for output in $OUTPUTROOT/$RADAR/netcdf..."
   echo " "
@@ -192,7 +193,7 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
   else # archive case
 #     Test for existence of output data already present?
-      echo "listing of output files for this hour "$YYDDD$HOUR
+      echo "listing of pre-existing output files for this hour "$YYDDD$HOUR
       echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
 
       setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
@@ -204,28 +205,35 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
 #         Filename convention for NCDC
 #         ls -l $INPUTROOT
-          ls -l $INPUTROOT/*$RADAR$YEAR$MONTH$DATE*
-          setenv COUNT_NCDC `ls -1 $INPUTROOT/*$RADAR$YEAR$MONTH$DATE* | wc -l`
+          ls -l $INPUTROOT/*$RADAR$YEAR$MONTH$DATE\_$HOUR*
+          setenv COUNT_NCDC `ls -1 $INPUTROOT/*$RADAR$YEAR$MONTH$DATE\_$HOUR* | wc -l`
           if ($COUNT_NCDC != "0") then
             echo " "
-            echo "running this command for NCDC file format..."
+            echo "running command(s) for NCDC file format(s)..."
 
-#           Process low res data
-            setenv CDL wsr88d_low_res_wideband.cdl
+#           Process low res data (parse compressed hhmmss files by hour)
+            setenv CDL wsr88d_low_res_wideband.cdl 
 
-            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_??????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
+            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
             echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
 
-            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_??????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
                                     -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
 
-#           Process super res data
-            setenv CDL wsr88d_super_res_wideband.cdl
-
-            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_??????\_V03*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
+#           Process low res data (parse uncompressed hhmmss files by hour)
+            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
             echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
 
-            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_??????\_V03*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+                                    -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
+
+#           Process super res data (parse hhmmss files by hour)
+            setenv CDL wsr88d_super_res_wideband.cdl
+
+            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V03*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
+            echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
+
+            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V03*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
                                     -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
 
             echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
@@ -235,16 +243,19 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
 # If using data from the /public archive, the previous find command should return a COUNT of 0.
 # Then try to use the foreach command from the realtime portion of the loop above.
-          else
-            pushd $INPUTROOT/$RADAR
-            foreach file (*)
-              echo " "
-              echo "running conversion for Archive-II (public) file $INPUTROOT/$RADAR/$file"
-              $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t $INPUTROOT/$RADAR/$file
-            end
+#         else
+#           pushd $INPUTROOT/$RADAR
+#           foreach file (*)
+#             echo " "
+#             echo "running conversion for Archive-II (public) file $INPUTROOT/$RADAR/$file"
+#             $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t $INPUTROOT/$RADAR/$file
+#           end
+
           endif
+
       else
           echo "Pre-existing output: skipped radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
+
       endif
 
   endif
