@@ -261,11 +261,12 @@ if ($opt_m eq "ruc") {
         chdir "./links";
         system ("pwd");
         foreach (@filelist){
-            ($fname,$suffix) = split(".",$_);
+            ($fname,$suffix) = split('\.',$_);
 #           symlink "../$_", "$fname";
             print  ("ln -s ../$_ $fname");
             system ("ln -s ../$_ $fname");
         }
+        unlink "links";
 
     }
 
@@ -278,7 +279,7 @@ if ($opt_m eq "ruc") {
     system("rm \*\.tar");
     $t=gmtime(); 
 
-} else { # gfs
+} elsif ($opt_m eq "gfs") {
 
     print $t." Get gfs valid in 24 hour interval !!!!!\n";
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*00000000 $public/data/grids/gfs/grib/");
