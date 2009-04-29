@@ -15,7 +15,7 @@
  local_obs_thresh=0,
  l_allow_empty_lso=.false.,
  l_multiple_reports=.false.,
- itest_madis_qc=1,
+ itest_madis_qc=15,
  n_cycles=1,
  nominal_latency=-1,
  /
@@ -97,8 +97,8 @@ c                       along with MADIS subjective black list
 c                     2 means level 1,2,3 tests are all applied along with
 c                       the MADIS subjective black list
 c                    15 means level 1 test for MADIS QC flags and the spatial
-c                       statistical QC check 
-c                       
+c                       statistical QC check along with MADIS subjective black 
+c                       list
 c
 c 'n_cycles' - number of time cycles to process LSO data for, looking back
 c              in time from the current 'systime'
