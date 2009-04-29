@@ -589,8 +589,7 @@ c
           if(ltest_madis_qc)
      1        call madis_qc_r(temp_f,temperatureDD(i),level_qc,badflag)       
           if(ltest_madis_qcb)
-!    1        call madis_qc_b(temp_f,temperatureQCR(i),ibmask,0,badflag) ! oper
-     1        call madis_qc_b(temp_f,temperatureQCR(i),ibmask,1,badflag) ! test
+     1        call madis_qc_b(temp_f,temperatureQCR(i),ibmask,0,badflag) 
 c       
 	  dewp_k = dewpoint(i)
           call sfc_climo_qc_r('td_k',dewp_k)
@@ -633,6 +632,14 @@ c
 		spd = badflag
 	     endif
 	  endif
+          if(ltest_madis_qc)
+     1        call madis_qc_r(dir,windDirDD(i),level_qc,badflag)        
+          if(ltest_madis_qcb)
+     1        call madis_qc_b(dir,windDirQCR(i),ibmask,1,badflag)        
+          if(ltest_madis_qc)
+     1        call madis_qc_r(spd,windSpeedDD(i),level_qc,badflag)        
+          if(ltest_madis_qcb)
+     1        call madis_qc_b(spd,windSpeedQCR(i),ibmask,1,badflag)        
 	  if(spd .ne. badflag) spd = 1.94254 * spd !m/s to kt
 c
 	  dirgust = windDirMax(i)
