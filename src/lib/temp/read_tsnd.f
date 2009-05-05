@@ -84,6 +84,7 @@ c                               not exactly match the LAPS analysis time.
         integer num_pr(max_snd)
         integer nlevels(max_snd),nlevels_good(max_snd)
         real ob_pr_ht_obs(max_snd,max_snd_levels)
+        real ob_pr_pr_obs(max_snd,max_snd_levels)
         real ob_pr_t_obs(max_snd,max_snd_levels)
         real elev_tsnd(max_snd)
 
@@ -210,6 +211,8 @@ c                               not exactly match the LAPS analysis time.
 
                     ob_pr_ht_obs(i_tsnd,nlevels_good(i_tsnd)) = ht_in       
                     ob_pr_t_obs(i_tsnd,nlevels_good(i_tsnd)) =  t_in
+                    ob_pr_pr_obs(i_tsnd,nlevels_good(i_tsnd)) = 
+     1                                                 r_missing_data
 
 c                   write(6,311,err=312)ista,i_tsnd
 c       1                ,ob_pr_ht_obs(i_tsnd,nlevels_good(i_tsnd))
@@ -252,6 +255,7 @@ c311                format(1x,i6,i4,5f8.1)
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
                     call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs, ! I
+     1                          ob_pr_pr_obs,                          ! I
      1                          t_diff,temp_bkg_3d,                    ! I
      1                          ob_pr_t(i_tsnd,level),                 ! O
      1                          i_tsnd,iwrite,                         ! I
@@ -261,6 +265,7 @@ c311                format(1x,i6,i4,5f8.1)
      1                          imax,jmax,kmax,                        ! I
      1                          max_snd,max_snd_levels,                ! I
      1                          r_missing_data,                        ! I
+     1                          pres_3d,                               ! I
      1                          heights_3d)                            ! I
 
 c                   write(6,411,err=412)ista,i_tsnd,level
@@ -424,7 +429,8 @@ c
      1             .and.  level      .le. max_snd_levels )then
                     nlevels_good(i_tsnd) = nlevels_good(i_tsnd) + 1       
 
-                    ob_pr_ht_obs(i_tsnd,nlevels_good(i_tsnd)) = ht_in       
+                    ob_pr_ht_obs(i_tsnd,nlevels_good(i_tsnd)) = ht_in
+                    ob_pr_pr_obs(i_tsnd,nlevels_good(i_tsnd)) = pr_in       
                     ob_pr_t_obs(i_tsnd,nlevels_good(i_tsnd)) 
      1                  =  t_in + 273.15
 
@@ -493,6 +499,7 @@ c611                format(1x,i6,i4,5f8.1)
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
                     call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs, ! I
+     1                         ob_pr_pr_obs,                           ! I
      1                         t_diff,temp_bkg_3d,                     ! I
      1                         ob_pr_t(i_tsnd,level),                  ! O
      1                         i_tsnd,iwrite,                          ! I
@@ -502,6 +509,7 @@ c611                format(1x,i6,i4,5f8.1)
      1                         imax,jmax,kmax,                         ! I
      1                         max_snd,max_snd_levels,                 ! I
      1                         r_missing_data,                         ! I
+     1                         pres_3d,                                ! I
      1                         heights_3d)                             ! I
 
 c                   write(6,711,err=712)ista,i_tsnd,level
