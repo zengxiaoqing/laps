@@ -99,50 +99,19 @@ cdis
 
             nc = 2
 
-            if(jmax .gt. 230)then
-                isize = 0
-                iskip = 6
-            elseif(jmax .gt. 190)then
-                isize = 0
-                iskip = 5
-            elseif(jmax .gt. 150)then
-                isize = 0
-                iskip = 4
-            elseif(imax .gt. 110 .or. jmax .gt. 110)then
-                isize = 0
-                iskip = 3
-            elseif(imax .gt. 75 .or. jmax .gt. 75)then
-                isize = 0
-                iskip = 2
-            else
-                isize = 1
-                iskip = 2
-            endif
+            iskip = max( nint( (jmax / 30) / plot_parms%zoom), 1)
 
         elseif(c2_field .eq. 'tp' .or. c2_field .eq. 'py')then
-            l_new = .false.
+            l_new = .true.
 
             nc = 1
 
-            if(jmax .gt. 100)then
-                iskip = nint(float(jmax)/100.) + 1
-                isize = 0
-            elseif(imax .gt. 90 .or. jmax .gt. 90)then
-                iskip = 2
-                isize = 1
-            elseif(imax .gt. 75 .or. jmax .gt. 75)then
-                iskip = 1
-                isize = 0
-            else
-                iskip = 1
-                isize = 1
-            endif
+            iskip = max( nint( (jmax / 60) / plot_parms%zoom), 1)
 
         endif
 
         if(l_new)then
             size_z = size / plot_parms%zoom
-            iskip = max( nint( (jmax / 30) / plot_parms%zoom), 1)
             write(6,*)' size_z, iskip = ',size_z,iskip
             call get_border(imax,jmax,x_1,x_2,y_1,y_2)
             call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax),1)
