@@ -50,8 +50,8 @@ cdoc    Also returns the lat/lon/time info from all the levels
 
         IPR_TIMES_LVLS = MAX_PR*MAX_PR_LEVELS
 
-        write(6,*)' Subroutine read_snd_data: ',MAX_PR,MAX_PR_LEVELS
-     1                                         ,IPR_TIMES_LVLS
+        write(6,*)' Subroutine read_snd_data2: ',MAX_PR,MAX_PR_LEVELS   
+     1                                          ,IPR_TIMES_LVLS
 
         if(IPR_TIMES_LVLS .gt. 1000000)then
             write(6,*)' Warning, large allocation for IPR_TIMES_LVLS' 
@@ -397,6 +397,14 @@ cdoc    Returns sounding wind, T, Td data from the SND file
               else
                   l_good_level = .false.
               endif
+
+          elseif(mode .eq. 3)then
+              if(ht_in .ne. r_missing_data)then           
+                  l_good_level = .true.
+              else
+                  l_good_level = .false.
+              endif
+
           endif ! mode
 
           if(l_good_level)then           
@@ -425,10 +433,17 @@ cdoc    Returns sounding wind, T, Td data from the SND file
               ob_pr_di_obs(n_good_levels) = di_in
               ob_pr_sp_obs(n_good_levels) = sp_in
 
-              call disp_to_uv(ob_pr_di_obs(n_good_levels),
+	      if ((ob_pr_di_obs(n_good_levels) .eq. r_missing_data) 
+     1	        .or. (ob_pr_sp_obs(n_good_levels) .eq. r_missing_data)) 
+     1          then
+                ob_pr_u_obs(i_pr,n_good_levels) = r_missing_data
+                ob_pr_v_obs(i_pr,n_good_levels) = r_missing_data
+              else
+                call disp_to_uv(ob_pr_di_obs(n_good_levels),
      1                        ob_pr_sp_obs(n_good_levels),
      1                        ob_pr_u_obs(i_pr,n_good_levels),
      1                        ob_pr_v_obs(i_pr,n_good_levels))
+              endif
 
 !             write(6,311,err=312)ista,i_pr
 !    1        ,ob_snd_ht_obs(i_pr,level)
@@ -713,7 +728,7 @@ c
         n_good_snd = 0
         ext = 'snd'
         lun = 44
-        mode = 2
+        mode = 3
 
         call read_snd_data(lun,i4time,ext                              ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
