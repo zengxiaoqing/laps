@@ -132,6 +132,11 @@ if ($6 != w) then
     echo "chmod"
     chmod -R g+w $LAPS_SRC_ROOT
 
+    cd $LAPSINSTALLROOT
+
+    uname -p >& uname.out
+    uname -n >> uname.out
+
   endif
 
 else
