@@ -322,6 +322,7 @@ cdis
         if(istatus .ne. 1)return
 
         call rd_acars_t(i4time,heights_3d,temp_3d                   ! I
+     1                       ,pres_3d                               ! I
      1                       ,MAX_ACARS                             ! I
      1                       ,n_good_acars                          ! O
      1                       ,'pin'                                 ! I
@@ -339,6 +340,7 @@ cdis
 
         if(.false.)then ! Read in surface obs
             call rd_sfc_t(i4time,heights_3d,temp_3d                 ! I
+     1                       ,pres_3d                               ! I
      1                       ,MAX_SFC                               ! I
      1                       ,n_good_sfc                            ! O
      1                       ,'dum'                                 ! I
