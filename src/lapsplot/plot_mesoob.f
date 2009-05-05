@@ -302,6 +302,10 @@ cdis
      1                     '   Sfc Temp, Soil Moisture & Solar Rad'    
             endif
 
+            if(c_field(1:2) .eq. 'ow')then
+                c_label = 'Sfc Obs      (wind)'
+            endif
+
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call write_label_lplot(ni,nj,c_label,asc_tim_9
      1                            ,plot_parms,namelist_parms
@@ -324,6 +328,16 @@ cdis
      1         ysta .lt. 1. .or. ysta .gt. float(nj)          )then       
                     goto80
             endif
+
+            if(c_field(1:2) .eq. 'ow')then ! plot wind only
+                if(dd_s(i) .eq. badflag .or. ff_s(i) .eq. badflag)then       
+                    goto80
+                else
+                    t_s(i) = badflag
+                    td_s(i) = badflag
+                endif
+            endif
+
 !           call supcon(lat_s(i),lon_s(i),usta,vsta)
 
 !           IFLAG = 0        --        Station locations only
@@ -748,31 +762,34 @@ c
                write(t1,100,err=40) nint(t)
                CALL PCLOQU(u-du_t,v+dv,t1,charsize,ANGD,CNTR)
             endif
+ 40         continue
 
 !           Plot Sfc RH (td variable)
             if(td.ge.0. .and. td.le.100.) then
-               write(td1,100,err=30) nint(td)
+               write(td1,100,err=50) nint(td)
                CALL PCLOQU(u-du_t,v-dv,td1,charsize,ANGD,CNTR)
             endif
+ 50         continue
 
 !           Plot Solar Radiation (pressure variable)
             if(p .gt. 0. .and. p .lt. 10000.) then
                if(p .ge. 1000.)then
                    p = p - 1000.
                    ip = ifix( p )
-                   write(p1,201,err=40) ip
+                   write(p1,201,err=60) ip
  201               format(i3.3)
                else
                    ip = ifix( p )
-                   write(p1,202,err=40) ip
+                   write(p1,202,err=60) ip
  202               format(i3)
                endif
                CALL PCLOQU(u+du_p,v+dv,p1,charsize,ANGD,CNTR)
             endif
 
+ 60         continue
+
         endif
 c
- 40     continue
 
         call sflush
 
