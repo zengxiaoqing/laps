@@ -738,8 +738,7 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
         function rlevel_of_logfield(value,field_3d,ni,nj,nk,i,j,istatus)       
 
 cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
-cdoc    Log vertical interpolation is used. Warning: under construction
-cdoc    as log code is not yet in place.
+cdoc    Log vertical interpolation is used. 
 
         implicit real (a-z)
 
@@ -792,7 +791,9 @@ cdoc    as log code is not yet in place.
                 if( (field_3d(i,j,k+1) - value) * rsign .ge. 0. .and.
      1              (field_3d(i,j,k)   - value) * rsign .le. 0.  )then
                     thickness = field_3d(i,j,k+1) - field_3d(i,j,k)
-                    fraction = (value - field_3d(i,j,k))/thickness
+
+                    fraction = log(value/field_3d(i,j,k)) / 
+     1                         log(field_3d(i,j,k+1)/field_3d(i,j,k))
 
                     rlevel_of_logfield = k + fraction
 
