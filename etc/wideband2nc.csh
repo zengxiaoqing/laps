@@ -197,7 +197,7 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
       echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
 
       setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
-      echo "Number of pre-existing files is $COUNT"
+      echo "# of pre-existing output files is $COUNT"
 
       if ($COUNT == "0" || $SKIP != "yes") then
 #         This works with the archived radar data (e.g. for IHOP)
@@ -238,7 +238,7 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
             echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
             setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
-            echo "Number of files generated is $COUNT"
+            echo "Updated # of output files is $COUNT"
             echo "Finished radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
 # If using data from the /public archive, the previous find command should return a COUNT of 0.
