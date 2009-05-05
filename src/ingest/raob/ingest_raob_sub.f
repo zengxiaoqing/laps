@@ -568,8 +568,8 @@ C
                         p2 = prsigt(ilevel,isnd)
                         t1 = tpout(n_good_levels)
                         t2 = tpsigt(ilevel,isnd)
-                        td1 = tdout(n_good_levels)
-                        td2 = tdsigt(ilevel,isnd)
+                        td1 = tpout(n_good_levels)-tdout(n_good_levels)
+                        td2 = tpsigt(ilevel,isnd) -tdsigt(ilevel,isnd)
                         h1 = htout(n_good_levels)
                         call calc_new_ht(p1,p2,t1,t2,td1,td2       ! I
      1                                  ,r_missing_data            ! I
@@ -641,16 +641,22 @@ C
               idupe_pr = 0
 
 !             We would like to retain the mandatory report that also has winds
-              if(wdout(indx(i)) .ne. r_missing_data)then
+              if(wdout(indx(i)) .ne. r_missing_data .and.
+     1           tpout(indx(i)) .ne. r_missing_data)then
+                  idupe_pr = i-1 ! Previous Sig T level can be removed
+              elseif(wdout(indx(i-1)) .ne. r_missing_data .and.
+     1               tpout(indx(i-1)) .ne. r_missing_data)then
+                  idupe_pr = i   ! Current Sig T level can be removed
+              elseif(wdout(indx(i)) .ne. r_missing_data)then
                   idupe_pr = i-1 ! Previous Sig T level can be removed
               elseif(wdout(indx(i-1)) .ne. r_missing_data)then
-                  idupe_pr = i   ! Previous Sig T level can be removed
+                  idupe_pr = i   ! Current Sig T level can be removed
               endif
             
-              write(6,*)' Duplicate pr level detected'
+              write(6,*)' Remove duplicate pr level'
      1                  ,i,idupe_pr,prout(indx(i))
 
-!             idupe = idupe_pr
+              idupe = idupe_pr
 
           endif ! duplicate level
 
