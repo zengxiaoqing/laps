@@ -31,6 +31,7 @@ cdis
 cdis 
 
         subroutine interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,        ! I
+     1                             ob_pr_pr_obs,                        ! I
      1                             t_diff,temp_bkg_3d,                  ! I
      1                             t_interp,                            ! O
      1                             i_pr,iwrite,level,l_3d,              ! I
@@ -38,15 +39,17 @@ cdis
      1                             lat_pr,lon_pr,i_ob,j_ob,             ! I
      1                             ni,nj,nk,                            ! I
      1                             max_rs,max_rs_levels,r_missing_data, ! I
+     1                             pres_3d,                             ! I
      1                             heights_3d)                          ! I
 
 !       Profiler Stuff
         real lat_pr(max_rs)
         real lon_pr(max_rs)
 
-!       RASS Observations
+!       Sounding Observations
         integer nlevels_obs(max_rs)
         real ob_pr_ht_obs(max_rs,max_rs_levels)
+        real ob_pr_pr_obs(max_rs,max_rs_levels) ! mb
         real ob_pr_t_obs(max_rs,max_rs_levels)
 
         logical l_3d ! If true, we require obs to be near a vertical level
@@ -56,7 +59,10 @@ cdis
                      ! level. Only multiple level obs are allowed.
 
         real heights_3d(ni,nj,nk)
+        real pres_3d(ni,nj,nk)
         real temp_bkg_3d(ni,nj,nk)
+
+        character*2 c2_obtype
 
         t_interp = r_missing_data
 
@@ -68,9 +74,27 @@ cdis
             do i_obs = 1,nlevels_obs(i_pr)
 
               height_ob = ob_pr_ht_obs(i_pr,i_obs)
+              if(height_ob .eq. r_missing_data)then
+                  write(6,*)
+     1                  ' ERROR: ob ht missing in interp_tobs_to_laps'    
+                  stop
+              endif
 
-              rk_ob = height_to_zcoord2(height_ob,heights_3d,ni,nj,nk       
-     1                                 ,i_ob,j_ob,istatus)
+!             Experimental use of observation pressure
+              if(.false.)then
+!             if(ob_pr_pr_obs(i_pr,i_obs) .ne. r_missing_data)then
+                c2_obtype = 'pr'
+                pres_ob_pa = ob_pr_pr_obs(i_pr,i_obs) * 100.
+                rk_ob = rlevel_of_logfield(pres_ob_pa,pres_3d,ni,nj,nk
+     1                                    ,i_ob,j_ob,istatus)
+
+
+              else
+                c2_obtype = 'ht'
+                rk_ob = height_to_zcoord2(height_ob,heights_3d,ni,nj,nk       
+     1                                   ,i_ob,j_ob,istatus)
+
+              endif
 
               rk_delt = rk_ob - float(level)
 
@@ -99,28 +123,56 @@ cdis
                      return
                  endif
 
-                 t_lapse = ( temp_bkg_3d(i_ob,j_ob,k2) - 
-     1                       temp_bkg_3d(i_ob,j_ob,level) ) 
-     1                   / ( heights_3d(i_ob,j_ob,k2)     - 
-     1                       heights_3d(i_ob,j_ob,level)     ) 
+                 if(c2_obtype .eq. 'ht')then
 
-                 temp_ob = ob_pr_t_obs(i_pr,i_obs)
-                 height_ob_diff = height_ob 
-     1                          - heights_3d(i_ob,j_ob,level)   
+                     t_lapse = ( temp_bkg_3d(i_ob,j_ob,k2) - 
+     1                           temp_bkg_3d(i_ob,j_ob,level) ) 
+     1                       / ( heights_3d(i_ob,j_ob,k2)     - 
+     1                           heights_3d(i_ob,j_ob,level)     ) 
 
-!                The temperature ob now has an "interpolated" or corrected
-!                value by applying the model lapse rate between the ob and 
-!                the laps grid level. The new value is the estimated temperature
-!                at the laps grid point.
+                     temp_ob = ob_pr_t_obs(i_pr,i_obs)
+                     height_ob_diff = height_ob 
+     1                              - heights_3d(i_ob,j_ob,level)   
 
-                 t_interp = temp_ob - height_ob_diff * t_lapse
+!                    The temperature ob now has an "interpolated" or corrected
+!                    value by applying the model lapse rate between the ob and 
+!                    the laps grid level. The new value is the estimated 
+!                    temperature at the laps grid point.
 
-                 if(iwrite .eq. 1)
-     1               write(6,1)level,rk_ob,height_ob,temp_ob,t_lapse
-     1                        ,t_interp      
- 1               format(' level rk_ob height_ob temp_ob t_lapse '
-     1                 ,'t_interp'     
-     1                  /i5,f8.3,f10.1,f8.3,f10.6,f8.3)
+                     t_interp = temp_ob - height_ob_diff * t_lapse
+
+                     if(iwrite .eq. 1)
+     1                   write(6,1)level,rk_ob,height_ob,temp_ob,t_lapse
+     1                            ,t_interp      
+ 1                   format(' level rk_ob height_ob temp_ob t_lapse '
+     1                     ,'t_interp'     
+     1                      /i5,f8.3,f10.1,f8.3,f10.6,f8.3)
+
+                 else ! 'pr' obtype 
+                     t_lapse = ( temp_bkg_3d(i_ob,j_ob,k2) - 
+     1                           temp_bkg_3d(i_ob,j_ob,level) ) 
+     1                       / ( pres_3d(i_ob,j_ob,k2)     - 
+     1                           pres_3d(i_ob,j_ob,level)     ) 
+
+                     temp_ob = ob_pr_t_obs(i_pr,i_obs)
+                     pres_ob_diff = pres_ob_pa 
+     1                              - pres_3d(i_ob,j_ob,level)   
+
+!                    The temperature ob now has an "interpolated" or corrected
+!                    value by applying the model lapse rate between the ob and 
+!                    the laps grid level. The new value is the estimated 
+!                    temperature at the laps grid point.
+
+                     t_interp = temp_ob - pres_ob_diff * t_lapse
+
+                     if(iwrite .eq. 1)
+     1                   write(6,2)level,rk_ob,pres_ob_pa,temp_ob
+     1                            ,t_lapse,t_interp      
+ 2                   format(' level rk_ob height_ob temp_ob t_lapse '
+     1                     ,'t_interp'     
+     1                      /i5,f8.3,f10.1,f8.3,f10.6,f8.3)
+
+                 endif
 
 !                Correct for the time lag
                  t_interp = t_interp + t_diff
