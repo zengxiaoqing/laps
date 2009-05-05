@@ -30,6 +30,7 @@ cdis
 cdis 
 cdis 
         subroutine rd_acars_t(i4time,heights_3d,temp_bkg_3d         ! I
+     1                       ,pres_3d                               ! I
      1                       ,MAX_ACARS                             ! I
      1                       ,n_good_acars                          ! O
      1                       ,ext_in                                ! I
@@ -61,6 +62,7 @@ cdis
 !******************************************************************************
 
         real heights_3d(ni,nj,nk)
+        real pres_3d(ni,nj,nk)
         real temp_bkg_3d(ni,nj,nk)
 
         real u_maps_inc(ni,nj,nk)
@@ -220,8 +222,11 @@ cdis
                         t_diff = 0.
 !                       call get_time_term(t_diff)
 
+                        pres_ob = r_missing_data
+
                         call interp_tobs_to_laps(
      1                             elev_geo,temp_ob,                     ! I
+     1                             pres_ob,                              ! I
      1                             t_diff,temp_bkg_3d,                   ! I
      1                             t_interp,                             ! O
      1                             1,iwrite,k_grid,.true.,               ! I
@@ -229,6 +234,7 @@ cdis
      1                             lat_pr,lon_pr,i_grid,j_grid,          ! I
      1                             ni,nj,nk,                             ! I
      1                             1,1,r_missing_data,                   ! I
+     1                             pres_3d,                              ! I
      1                             heights_3d)                           ! I
 
                         if(t_interp .eq. r_missing_data)then
