@@ -296,13 +296,13 @@ while ($i4time70<=$i4time70_end)
 
 # purge_wideband first - not needed in the loop
 #-------------------------------------------------------
-        $command = "@PERL@ $INSTALL_ROOT/etc/purge_wideband.pl $purgewl $purgewh $wideband_2_netcdf";
-        if(-e $wideband_2_netcdf){
-           print "Running $command\n";
-           run_sys::run_sys($command);
-        }else{
-           print "Not purging wideband; Directory does not exist. $wideband_2_netcdf\n";
-        }
+#       $command = "@PERL@ $INSTALL_ROOT/etc/purge_wideband.pl $purgewl $purgewh $wideband_2_netcdf";
+#       if(-e $wideband_2_netcdf){
+#          print "Running $command\n";
+#          run_sys::run_sys($command);
+#       }else{
+#          print "Not purging wideband; Directory does not exist. $wideband_2_netcdf\n";
+#       }
 
         $i4time70_wideband = $i4time70 - 2*$cycle_time;
         while ($i4time70_wideband <= $i4time70){
@@ -336,7 +336,7 @@ while ($i4time70<=$i4time70_end)
 
 #                 We can potentially read some time information from 'systime.dat' internally from 'wideband2nc.csh' so fewer command line args would be needed.
 #                 With this alternate scenario the 'systime.dat' info can be updated for each hour that we would want to process Archive-II data.
-                  $command ="$INSTALL_ROOT/etc/wideband2nc.csh $DATA_ROOT yes no $INSTALL_ROOT archive $wideband_2_netcdf $yearw $mow $dyw $hrw $yrw$dddw";
+                  $command ="$INSTALL_ROOT/etc/wideband2nc.csh $DATA_ROOT no no $INSTALL_ROOT archive $wideband_2_netcdf $yearw $mow $dyw $hrw $yrw$dddw";
                }
 
                print "Running $command\n";
