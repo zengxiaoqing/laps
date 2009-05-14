@@ -18,8 +18,8 @@ program laps_wind                              main.f
                 read_pro_data                  lib/read_pro_data.f
                 read_snd_data                  lib/read_snd_data.f
                 get_time_term                  lib/wind/rdpoint.f    
-                interp_prof                    lib/interp_prof.f
-            remap_profiles                     lib/get_wind_obs.f
+                interp_prof                    lib/wind/interp_prof.f
+            remap_profiles                     lib/wind/get_wind_obs.f
             rdsfc                              lib/wind/rdsfc.f
             rdpoint                            lib/wind/rdpoint.f
                 read_acars_ob                  lib/read_acars_ob.f
