@@ -17,19 +17,26 @@
       accuracy = float(hits + correct_negatives) / float(total)
       bias = float(hits + false_alarms) / float(hits + misses)
 
-      hits_random = ((hits + misses) * (hits + false_alarms)) / total
+      pod = float(hits) / float(hits + misses)
+      far = float(false_alarms) / 
+     1      float(hits + false_alarms)      
+
+      hits_random = float((hits + misses) * (hits + false_alarms)) 
+     1            / float(total)
       ets = (hits - hits_random) / 
      1      (hits + misses + false_alarms - hits_random)
 
       write(lun_out,*)' Hits = ',hits
       write(lun_out,*)' Misses = ',misses
       write(lun_out,*)' False Alarms = ',false_alarms
+      write(lun_out,*)' POD = ',pod
+      write(lun_out,*)' FAR = ',far
       write(lun_out,*)' Correct Negatives = ',correct_negatives
       write(lun_out,*)' Total = ',total
 
       write(lun_out,*)' Accuracy = ',accuracy
       write(lun_out,*)' Bias = ',bias
       write(lun_out,*)' ETS = ',ets
-   
+
       return
       end
