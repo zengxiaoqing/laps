@@ -1,11 +1,14 @@
 
         subroutine contingency_table(o,f,ni,nj,nk,thresh
-     1                              ,lun_out
-     1                              ,ilow,ihigh,jlow,jhigh
-     1                              ,contable)       
+     1                              ,lun_out                  ! I
+     1                              ,ilow,ihigh,jlow,jhigh    ! I
+     1                              ,lmask_rqc_3d             ! I
+     1                              ,contable)                ! O
 
         real o(ni,nj,nk)
         real f(ni,nj,nk)
+
+        logical lmask_rqc_3d(ni,nj,nk)
 
 !       First index is observed, second index is forecast
 !       0 is Yes, 1 is No
@@ -16,6 +19,9 @@
         do k = 1,nk
         do i = ilow,ihigh
         do j = jlow,jhigh
+
+          if(lmask_rqc_3d(i,j,k))then
+
             if(o(i,j,k) .ge. thresh)then
                 index1 = 0
             else
@@ -29,6 +35,8 @@
             endif
 
             contable(index1,index2) = contable(index1,index2) + 1
+
+          endif
 
         enddo ! j
         enddo ! i
