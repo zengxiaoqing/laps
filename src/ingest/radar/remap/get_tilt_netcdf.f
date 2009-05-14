@@ -419,29 +419,31 @@ C
 C     Variable        NETCDF Long Name
 C      Z_scale  "Reflectivity scale value"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'Z_scale',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'Z_scale',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var Z_scale'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Z_scale)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var Z_scale'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var Z_scale'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      Z_offset  "Reflectivity offset value"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'Z_offset',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'Z_offset',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var Z_offset'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Z_offset)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var Z_offset'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var Z_offset'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -517,29 +519,31 @@ C
 C     Variable        NETCDF Long Name
 C      V_scale  "Velocity scale value"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'V_scale',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'V_scale',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var V_scale'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,V_scale)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var V_scale'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var V_scale'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      V_offset  "Velocity offset value"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'V_offset',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'V_offset',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var V_offset'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,V_offset)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var V_offset'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var V_offset'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
