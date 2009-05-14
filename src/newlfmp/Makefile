@@ -86,7 +86,7 @@ all:			$(EXE)
 
 $(EXE):			$(FOBJS) $(COBJS) $(FMOD)
 			$(FC) $(FREE) -o $@ $(FFLAGS) $(FOBJS) $(COBJS) \
-			$(EXTMODS) $(GRIBLIB) $(GRIB2LIB) $(LAPSLIB) $(HDF5LIB) $(OTHERLIBS) $(EXTMODS) $(INC) -lz -lm
+			$(EXTMODS) $(GRIBLIB) $(GRIB2LIB) $(LAPSLIB) $(HDF5LIB) $(OTHERLIBS) $(EXTMODS) $(INC) -lm
 
 debug:	
 	 ($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
