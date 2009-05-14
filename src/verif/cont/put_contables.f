@@ -36,13 +36,11 @@
             comment_2d = ' LAPS radar verification contingency table'
 
             do ithr = 1,nthr
-              if(ithr .eq. 1)then
-                  var_2d = 't20'
-              elseif(ithr .eq. 2)then
-                  var_2d = 't40'
-              else
-                  var_2d = 't60'
-              endif
+              idbz = 10 + ithr*10
+              write(var_2d,1)idbz
+ 1            format('t',i2.2)
+
+              write(6,*)' 3D contingency table var = ',var_2d
 
               do k = 1,nk
 
