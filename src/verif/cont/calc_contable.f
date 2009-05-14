@@ -1,7 +1,8 @@
 
         subroutine calc_contable_3d(i4_initial,i4_valid,
-     1             o,f,thresh,contable,ni,nj,nk,
-     1             cont_3d)  
+     1             o,f,thresh,ni,nj,nk,                    ! I
+     1             lmask_rqc_3d,r_missing_data,            ! I
+     1             cont_3d)                                ! O
 
         character*150 cont_dir,filename
         character*31 ext
@@ -10,12 +11,14 @@
         real f(ni,nj,nk)
         real cont_3d(ni,nj,nk)
 
-        integer contable(0:1,0:1)
+        logical lmask_rqc_3d(ni,nj,nk)
 
 !       Calculate 3-D contingency table
         do k = 1,nk
         do i = 1,nj
         do j = 1,ni
+  
+          if(lmask_rqc_3d(i,j,k))then
 
             if(o(i,j,k) .ge. thresh)then
                 index1 = 0
@@ -32,6 +35,11 @@
             rcont = index1*2 + index2
 
             cont_3d(i,j,k) = rcont
+
+          else
+            cont_3d(i,j,k) = r_missing_data
+ 
+          endif
 
         enddo ! j
         enddo ! i
