@@ -25,8 +25,14 @@
            write (6,*) 'Error getting r_missing_data'
            go to 999
         endif
+
+        call get_laps_cycle_time(laps_cycle_time,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting laps_cycle_time'
+           go to 999
+        endif
           
-        call verif_radar(i4time,a9time,
+        call verif_radar(i4time,a9time,laps_cycle_time,
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
@@ -36,7 +42,7 @@
 
         end
           
-        subroutine verif_radar(i4time_sys,a9time,
+        subroutine verif_radar(i4time_sys,a9time,laps_cycle_time,
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
@@ -47,8 +53,7 @@
         real rqc(NX_L,NY_L)
 
         logical lmask_and_3d(NX_L,NY_L,NZ_L)
-        logical lmask_or_3d(NX_L,NY_L,NZ_L)
-        logical lmask_all_3d(NX_L,NY_L,NZ_L)
+        logical lmask_rqc_3d(NX_L,NY_L,NZ_L)
 
         integer       maxbgmodels
         parameter     (maxbgmodels=10)
@@ -84,12 +89,12 @@
         data ext_fcst_a /'fua'/        
         data ext_anal_a /'lps'/        
         data var_a      /'REF'/        
-        data nthr_a     /3/        
+        data nthr_a     /5/        
 
         integer contable(0:1,0:1)
 
         integer maxthr
-        parameter (maxthr=3)
+        parameter (maxthr=5)
 
         real cont_4d(NX_L,NY_L,NZ_L,maxthr)
 
@@ -103,7 +108,8 @@
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
 
         write(6,*)' n_fdda_models = ',n_fdda_models
-        write(6,*)' c_fdda_mdl_src = ',c_fdda_mdl_src
+        write(6,*)' c_fdda_mdl_src = '
+     1            ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
 
 !       Read in data file with region points
         call read_region_info(maxbgmodels,max_fcst_times,max_regions
@@ -144,9 +150,9 @@
      1                                       //'/'
 !           len_cont = len_verif + 6 + lenvar + len_model
 
-            do ihr_fcst = 0,6
+            do itime_fcst = 0,6
 
-              itime = ihr_fcst + 1
+              itime = itime_fcst + 1
 
               do iregion = 1,n_regions ! 1 for testing
 
@@ -155,12 +161,12 @@
                 jlow  = jl(imodel,itime,iregion)
                 jhigh = jh(imodel,itime,iregion)
 
-                i4_valid = i4_initial + ihr_fcst * 3600
+                i4_valid = i4_initial + itime_fcst * laps_cycle_time
 
                 call make_fnam_lp(i4_valid,a9time_valid,istatus)
 
                 write(6,*)
-                write(6,*)' Histograms for forecast hour ',ihr_fcst
+                write(6,*)' Histograms for forecast hour ',itime_fcst
      1                   ,' Region = ',iregion
 
                 lun_out = 11
@@ -190,8 +196,8 @@
 
                   if(var_2d .eq. 'REF')then ! also read radar quality
                       ext = 'lcv'
-                      call get_laps_2d(i4_valid,NX_L,NY_L,NZ_L,ext
-     1                       ,'RQC',units_2d,comment_2d,rqc,istatus)      
+                      call get_laps_2d(i4_valid,ext,'RQC',units_2d
+     1                                ,comment_2d,NX_L,NY_L,rqc,istatus)
                       if(istatus .ne. 1)then
                           write(6,*)' Error reading 2D RQC Analysis'
                           return
@@ -215,6 +221,8 @@
                   endif
 
 !                 Calculate "and" mask
+                  n_rqc_and = 0
+                  n_rqc_and_pot = 0
                   do k = 1,NZ_L
                   do i = 1,NX_L
                   do j = 1,NY_L
@@ -225,30 +233,39 @@
      1                  var_fcst_3d(i,j,k) .ge. thresh_var        )then
                          lmask_and_3d(i,j,k) = .true.
                      endif
-                     if(rqc(i,j) .ne. 3.0)then
-                         lmask_and_3d(i,j,k) = .false.
+                     if(lmask_and_3d(i,j,k))then
+                         n_rqc_and_pot = n_rqc_and_pot + 1
+                         if(rqc(i,j) .ne. 3.0)then
+                             n_rqc_and = n_rqc_and + 1
+                             lmask_and_3d(i,j,k) = .false.
+                         endif
                      endif
                   enddo ! j
                   enddo ! i
                   enddo ! k
 
-!                 Calculate "or" mask
+!                 Calculate "rqc" mask
+                  lmask_rqc_3d = .true.
+                  n_rqc_all = 0
+                  n_rqc_all_pot = 0
                   do k = 1,NZ_L
                   do i = 1,NX_L
                   do j = 1,NY_L
-                     lmask_or_3d(i,j,k) = .false.
-                     if((var_anal_3d(i,j,k) .ne. r_missing_data .and. 
-     1                   var_anal_3d(i,j,k) .ge. thresh_var) .OR.
-     1                  (var_fcst_3d(i,j,k) .ne. r_missing_data .and.
-     1                   var_fcst_3d(i,j,k) .ge. thresh_var)       )then       
-                         lmask_or_3d(i,j,k) = .true.
-                     endif
-                     if(rqc(i,j) .ne. 3.0)then
-                         lmask_or_3d(i,j,k) = .false.
-                     endif
+                    n_rqc_all_pot = n_rqc_all_pot + 1
+                    if(rqc(i,j) .ne. 3.0)then
+                        n_rqc_all = n_rqc_all + 1
+                        lmask_rqc_3d(i,j,k) = .false.
+                    endif
                   enddo ! j
                   enddo ! i
                   enddo ! k
+
+                  write(6,*)' Number of QC points (and/all)'
+     1                     ,itime_fcst,n_rqc_and,n_rqc_all
+                  write(6,*)' Percentage of QC points (and/all)'
+     1                     ,itime_fcst
+     1                     ,float(n_rqc_and)/float(n_rqc_and_pot) * 100.
+     1                     ,float(n_rqc_all)/float(n_rqc_all_pot) * 100.
 
                 endif ! iregion .eq. 1
 
@@ -259,24 +276,19 @@
                 write(lun_out,*)
                 write(lun_out,*)' NO mask is in place'
 
-                lmask_all_3d = .true.
-                do k = 1,NZ_L
-                    where(rqc .ne. 3.0)lmask_all_3d(:,:,k) = .false.
-                enddo ! k
-
                 write(lun_out,*)
                 write(lun_out,*)
      1                ' Calling radarhist for analysis at ',a9time_valid 
                 call radarhist(NX_L,NY_L,NZ_L,var_anal_3d
      1                        ,ilow,ihigh,jlow,jhigh
-     1                        ,lmask_all_3d,lun_out)       
+     1                        ,lmask_rqc_3d,lun_out)       
 
                 write(lun_out,*)
-                write(lun_out,*)' Calling radarhist for',ihr_fcst
+                write(lun_out,*)' Calling radarhist for',itime_fcst
      1                    ,' hr forecast valid at ',a9time_valid
                 call radarhist(NX_L,NY_L,NZ_L,var_fcst_3d
      1                        ,ilow,ihigh,jlow,jhigh
-     1                        ,lmask_all_3d,lun_out)
+     1                        ,lmask_rqc_3d,lun_out)
 
                 write(lun_out,*)
                 write(lun_out,*)
@@ -290,7 +302,7 @@
      1                        ,lmask_and_3d,lun_out)
 
                 write(lun_out,*)
-                write(lun_out,*)' Calling radarhist for',ihr_fcst
+                write(lun_out,*)' Calling radarhist for',itime_fcst
      1               ,' hr forecast valid at ',a9time_valid
                 call radarhist(NX_L,NY_L,NZ_L,var_fcst_3d
      1                        ,ilow,ihigh,jlow,jhigh
@@ -299,18 +311,21 @@
                 nthr = nthr_a(ifield)
 
 !               Calculate contingency tables
+!               Radar QC (rqc) should be added perhaps via l_mask_all
+!                              (or call l_mask_all l_mask_qconly)
                 do idbz = 1,nthr
-                  rdbz = float(idbz*20)
+                  rdbz = float(idbz*10) + 10
 
                   write(lun_out,*)
                   write(lun_out,*)' Calculate contingency table for '
      1                           ,rdbz,' dbz'
                   write(lun_out,*)' region = ',iregion
      1                           ,ilow,ihigh,jlow,jhigh
-                  call contingency_table(var_anal_3d,var_fcst_3d
-     1                                  ,NX_L,NY_L,NZ_L,rdbz,lun_out
-     1                                  ,ilow,ihigh,jlow,jhigh
-     1                                  ,contable)
+                  call contingency_table(var_anal_3d,var_fcst_3d     ! I
+     1                                  ,NX_L,NY_L,NZ_L,rdbz,lun_out ! I
+     1                                  ,ilow,ihigh,jlow,jhigh       ! I
+     1                                  ,lmask_rqc_3d                ! I
+     1                                  ,contable)                   ! O
 
 
 !                 Calculate/Write Skill Scores
@@ -321,8 +336,9 @@
 !                     Calculate Contingency Table (3-D)
                       call calc_contable_3d(i4_initial,i4_valid
      1                       ,var_anal_3d,var_fcst_3d
-     1                       ,rdbz,contable,NX_L,NY_L,NZ_L
-     1                       ,cont_4d(1,1,1,idbz))
+     1                       ,rdbz,NX_L,NY_L,NZ_L                    ! I
+     1                       ,lmask_rqc_3d,r_missing_data            ! I
+     1                       ,cont_4d(1,1,1,idbz))                   ! O
 
                   endif ! iregion = 1
 
@@ -336,7 +352,7 @@
 
               close (lun_out) 
 
-            enddo ! ihr_fcst
+            enddo ! itime_fcst
 
           endif ! c_model .ne. lga
 
