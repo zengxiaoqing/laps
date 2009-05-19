@@ -1380,7 +1380,7 @@ c read in laps lat/lon and topo
             enddo ! k
 
             clow = -100.
-            chigh = +1000.
+            chigh = +100.
             cint = 2. / density
 
             i_contour = 1
@@ -2696,7 +2696,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             if(i_image .eq. 1)then
                 clow = 0.
-                chigh = 1.
+                if(c_field .eq. 'sn')then
+                    chigh = 5.
+                elseif(c_field .eq. 'rn')then
+                    chigh = 2.
+                else
+                    chigh = 1.
+                endif
                 cint = 0.1 
 !               cint = 0.0 ! this should force a dynamic setting of clow/chigh
                 colortable = 'linear' 
