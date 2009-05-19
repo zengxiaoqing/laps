@@ -461,10 +461,10 @@ if($err == 0) {
 #     $domain =~ /(.*)/;
 #     $domain_safe = $1;
 
-      if($domain ne $domain_first){
-          printf LAPSPLOT "fc\n"; 
-          printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
-      }
+#     if($domain ne $domain_first){
+#         printf LAPSPLOT "fc\n"; 
+#         printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
+#     }
 
       foreach $source (@sources) {
         $sounding = 0;
@@ -634,6 +634,10 @@ if($err == 0) {
                           $zoom_lapsplot = $zoom_safe * ( $npix/885. );
 
                           printf LAPSPLOT "$zoom_lapsplot,$density_safe,$thickness_safe,$xcen_safe,$ycen_safe,$zoom_safe,$size_safe\n";
+
+                          printf LAPSPLOT "fc\n"; 
+                          printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
+
                       }
                   }
 
@@ -1244,8 +1248,18 @@ if($err == 0) {
                               printf LAPSPLOT "f\n"; 
                               printf LAPSPLOT "$source\n"; 
                               printf LAPSPLOT "$hhmm\n";
+                          }elsif("$field" eq "PCP_RAI" ){ 
+                              printf LAPSPLOT "rni\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n"; 
+                              printf LAPSPLOT "$hhmm\n";
                           }elsif("$field" eq "pcp_sno" ){ 
                               printf LAPSPLOT "sn\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n"; 
+                              printf LAPSPLOT "$hhmm\n";
+                          }elsif("$field" eq "PCP_SNO" ){ 
+                              printf LAPSPLOT "sni\n"; 
                               printf LAPSPLOT "f\n"; 
                               printf LAPSPLOT "$source\n"; 
                               printf LAPSPLOT "$hhmm\n";
@@ -1904,6 +1918,18 @@ if($err == 0) {
 #                           printf LAPSPLOT " \n"; 
 #                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
 
+                        }elsif("$field" eq "u" || "$field" eq "U") { 
+                            printf LAPSPLOT "ow\n"; 
+                            printf LAPSPLOT " \n"; 
+
+                        }elsif("$field" eq "v" || "$field" eq "V") { 
+                            printf LAPSPLOT "ow\n"; 
+                            printf LAPSPLOT " \n"; 
+
+                        }elsif("$field" =~ "wind" || "$field" =~ "WIND") { 
+                            printf LAPSPLOT "ow\n"; 
+                            printf LAPSPLOT " \n"; 
+
                         }elsif("$field" eq "vis_alb"){ 
                             printf LAPSPLOT "lv\n"; 
                             printf LAPSPLOT "$hhmm\n"; 
@@ -2293,6 +2319,9 @@ if($err == 0) {
                         { printf LAPSPLOT "hei\n"; }
                     elsif("$field" eq "helicity") 
                         { printf LAPSPLOT "he\n"; }
+                    elsif("$field" eq "WTBLB0") 
+                        { printf LAPSPLOT "si\n"; 
+                          printf LAPSPLOT "wb0\n"; }
                     elsif("$field" eq "wtblb0") 
                         { printf LAPSPLOT "s\n"; 
                           printf LAPSPLOT "wb0\n"; }
@@ -2510,6 +2539,9 @@ if($err == 0) {
                     }elsif("$field" eq "vort" ) { 
                         printf LAPSPLOT "vo\n"; 
                         printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "VORT" ) { 
+                        printf LAPSPLOT "voi\n"; 
+                        printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "vort_adv" ) { 
                         printf LAPSPLOT "va\n"; 
                         printf LAPSPLOT "a\n"; 
@@ -2581,8 +2613,14 @@ if($err == 0) {
                     }elsif("$field" eq "pcp_rai" ){ # LWC
                         printf LAPSPLOT "rn\n"; 
                         printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "PCP_RAI" ){ # LWC
+                        printf LAPSPLOT "rni\n"; 
+                        printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "pcp_sno" ){ # LWC
                         printf LAPSPLOT "sn\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "PCP_SNO" ){ # LWC
+                        printf LAPSPLOT "sni\n"; 
                         printf LAPSPLOT "a\n"; 
                     }else{ 
                         print "$source $level $field not available\n"; 
