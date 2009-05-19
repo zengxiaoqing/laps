@@ -242,6 +242,9 @@ c
 	write(6,305) filename(1:9), use
  305	format(' Getting surface data at: ',a9,' from ',a6)
 c
+c Zero out values
+        n_obs_g = 0
+        n_obs_b = 0
 	if(use_lso_qc .ne. 1) then
 	   call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b,      !regular LSO
      &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
