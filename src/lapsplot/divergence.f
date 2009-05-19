@@ -138,12 +138,14 @@ cdis
         subroutine vorticity_abs(uanl,vanl,vort,lat,lon,ni,nj
      1                          ,l_grid_north,r_missing_data)
 
-        real lat(ni,nj),lon(ni,nj)
-        real uanl(ni,nj),vanl(ni,nj)
-        real coriolis(ni,nj)
-        real vort(ni,nj)
-        real div(ni,nj)
-        real dx(ni,nj), dy(ni,nj)
+        real lat(ni,nj),lon(ni,nj)                           ! I
+        real uanl(ni,nj),vanl(ni,nj)                         ! I
+        real coriolis(ni,nj)                                 ! L
+        real vort(ni,nj)                                     ! O
+        real div(ni,nj)                                      ! L
+        real dx(ni,nj), dy(ni,nj)                            ! L
+
+        logical l_grid_north                                 ! I
 
         call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
 
@@ -180,3 +182,58 @@ c
         return
         end
 
+
+
+        subroutine calc_potvort(i4time,uanl,vanl,temp_3d,potvort,lat,lon       
+     1                    ,ni,nj,nk,l_grid_north,r_missing_data,istatus)       
+
+        real lat(ni,nj),lon(ni,nj)                           ! I
+        real uanl(ni,nj,nk),vanl(ni,nj,nk)                   ! I
+        real temp_3d(ni,nj,nk)                               ! I
+        real vort_2d(ni,nj)                                  ! L
+        real theta(ni,nj,nk)                                 ! L
+        real pres_3d(ni,nj,nk)                               ! L
+        real dtheta_dp(ni,nj,nk)                             ! L
+        real potvort(ni,nj,nk)                               ! O
+
+        logical l_grid_north                                 ! I
+
+!       Obtain 3D pressure field
+        call get_pres_3d(i4time,ni,nj,nk,pres_3d,istatus)
+        if(istatus .ne. 1)return
+
+!       Calculate theta
+        do k = 1,nk
+        do i = 1,ni
+        do j = 1,nj
+            theta(i,j,k) = o(temp_3d(i,j,k),pres_3d(i,j,k))
+        enddo ! j
+        enddo ! i
+        enddo ! k
+
+!       Calculate dtheta / dp
+        do k = 2,nk-1
+            kp1 = k+1
+            km1 = k-1
+            do i = 1,ni
+            do j = 1,nj
+                dtheta = theta(i,j,kp1) - theta(i,j,km1)              
+                dp     = pres_3d(i,j,kp1) - pres_3d(i,j,km1)
+                dtheta_dp(i,j,k) = dtheta / dp
+            enddo ! j
+            enddo ! i
+        enddo ! k
+        dtheta_dp(:,:,1)  = dtheta_dp(:,:,2)
+        dtheta_dp(:,:,nk) = dtheta_dp(:,:,nk-1)
+
+
+!       Calculate absolute vorticity
+        do k = 1,nk
+            call vorticity_abs(uanl(:,:,k),vanl(:,:,k),vort_2d
+     1                   ,lat,lon,ni,nj
+     1                   ,l_grid_north,r_missing_data)
+            potvort(:,:,k) = vort * dtheta_dp(:,:,k) ! multiply this by G
+        enddo ! k
+
+        return
+        end
