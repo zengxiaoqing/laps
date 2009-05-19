@@ -54,7 +54,8 @@ main                                           laps_sfc.f
             vortdiv                            lib/util/windfields.f
             meso_anl                           lib/laps_routines.f
             vlog2vis                           visibility.f
-            enhance_vis                             "
+            hum                                lib/hum.f
+            enhance_vis                        visibility.f
                 get_vismods                         "
             lp_fire_danger                     lib/laps_routines.f
             heat_index                              "
