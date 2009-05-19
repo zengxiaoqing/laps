@@ -702,17 +702,18 @@ c
             if(p .gt. 0. .and. p .lt. 10000.) then
                if(p .ge. 1000.) p = p - 1000.
                ip = ifix( p )
-               write(p1,101,err=40) ip
+               write(p1,101,err=140) ip
  101           format(i3.3)
 !              call pwrity(u+du_p,v+dv,p1,3,jsize,0,0)
                CALL PCLOQU(u+du_p,v+dv,p1,charsize,ANGD,CNTR)
             endif
+ 140        continue
 
 !           Plot Gusts (FSL WWW)
             if(iflag .eq. 1)then 
                if(gust .gt. 40)then
                    ig = int(gust)
-                   write(p1,102,err=40) ig
+                   write(p1,102,err=150) ig
                    call setusv_dum(2HIN,4)
                    dg = 3.0 * du
 !                  call pwrity(u,v+dg,p1,3,jsize,0,0)          ! On Top
@@ -721,6 +722,7 @@ c
                    call setusv_dum(2HIN,icol_in)
                endif
             endif           
+ 150        continue
 
         elseif(iflag_cv .eq. 1)then ! C&V plot
 !           Plot outer circle (use p for the number of layers?)
