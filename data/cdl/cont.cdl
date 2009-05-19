@@ -23,6 +23,20 @@ netcdf lw3 {
             t20:lvl_coord="HPA ";
 	    t20:LAPS_units="NONE";
                 	        
+        //	contingency table for 30 dbz threshold
+
+	float                                  
+            t30(record,z,y,x);
+            t30:navigation_dim = "nav";
+            t30:record = "valtime, reftime";
+            t30:_FillValue = 1.e+37f;
+            t30:long_name="cont tbl for 30dbz thresh";
+            t30:units="meters / second";
+            t30:valid_range= -200.f, 200.f;
+            t30:LAPS_var="T30";
+            t30:lvl_coord="HPA ";
+	    t30:LAPS_units="NONE";
+                	        
         //	contingency table for 40 dbz threshold
 
 	float                                  
@@ -37,6 +51,20 @@ netcdf lw3 {
             t40:lvl_coord="HPA ";
 	    t40:LAPS_units="NONE";
 
+        //	contingency table for 50 dbz threshold
+
+	float                                  
+            t50(record,z,y,x);
+            t50:navigation_dim = "nav";
+            t50:record = "valtime, reftime";
+            t50:_FillValue = 1.e+37f;
+            t50:long_name="cont tbl for 50dbz thresh";
+            t50:units="meters / second";
+            t50:valid_range= -200.f, 200.f;
+            t50:LAPS_var="T50";
+            t50:lvl_coord="HPA ";
+	    t50:LAPS_units="NONE";
+                	        
         //	contingency table for 60 dbz threshold
 
 	float                                  
@@ -61,7 +89,9 @@ netcdf lw3 {
 
         char
             t20_comment(record,z,namelen),
+            t30_comment(record,z,namelen),
             t40_comment(record,z,namelen),
+            t50_comment(record,z,namelen),
             t60_comment(record,z,namelen),
             asctime(record,namelen);
 
@@ -73,9 +103,17 @@ netcdf lw3 {
             t20_fcinv:_FillValue= 0s;
               	
         short
+            t30_fcinv(record, z);
+            t30_fcinv:_FillValue= 0s;
+              	
+        short
             t40_fcinv(record, z);
             t40_fcinv:_FillValue= 0s;
                 	
+        short
+            t50_fcinv(record, z);
+            t50_fcinv:_FillValue= 0s;
+              	
         short
             t60_fcinv(record, z);
             t60_fcinv:_FillValue= 0s;
