@@ -244,6 +244,7 @@ close LAPSPRD;
 @frames_list[9] = "10";
 @frames_list[10] = "11";
 @frames_list[11] = "12";
+@frames_list[12] = "13";
 
 ##Here's new stuff (sort of)------------------
 
@@ -408,6 +409,8 @@ print <<"EOF";
 <option $selected{'VIS_ALB'}> VIS_ALB
 <option $selected{'REFLCT'}>  REFLCT
 <option $selected{'REF_MAX'}> REF_MAX
+<option $selected{'PCP_RAI'}> PCP_RAI
+<option $selected{'PCP_SNO'}> PCP_SNO
 <option $selected{'PCP_INC'}> PCP_INC
 <option $selected{'PCP_STO'}> PCP_STO
 <option $selected{'PRCP_H2O'}> PRCP_H2O
