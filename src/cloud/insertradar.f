@@ -416,6 +416,10 @@ c                   write(6,*)' khigh = ',kk
         enddo ! j
         enddo ! i
 
+!       Blank out echoes less than "useable"
+        where (grid_ra_ref .lt. ref_base_useable)grid_ra_ref = ref_base       
+        where (dbz_max_2d  .lt. ref_base_useable)dbz_max_2d  = ref_base       
+
 999     return
 
         end
