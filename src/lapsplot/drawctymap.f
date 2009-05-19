@@ -198,6 +198,7 @@ c
        character*6 c_vnt_units
        character*7 c_units_type
        character*7 c_pbl_depth_units
+       character*10 c_ob_color
        logical l_discrete,l_sphere,l_low_fill,l_high_fill       
        real time_zone
 
@@ -210,6 +211,7 @@ c
      1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
      1                       ,dist_plot_ua, dist_plot_sfc
+     1                       ,c_ob_color
 
 !      Set defaults
        latlon_int = 0
@@ -222,6 +224,7 @@ c
        iraster = 0
        l_sphere = .false.
        icol_barbs = 0
+       c_ob_color = 'default'
  
        call get_directory('static',static_dir,len_dir)
 
@@ -244,6 +247,7 @@ c
        namelist_parms%c_units_type = c_units_type
        namelist_parms%c_pbl_depth_units = c_pbl_depth_units
        namelist_parms%chigh_sfcwind = chigh_sfcwind
+       namelist_parms%c_ob_color = c_ob_color
        namelist_parms%l_discrete = l_discrete
        namelist_parms%l_sphere = l_sphere
        namelist_parms%l_low_fill = l_low_fill
