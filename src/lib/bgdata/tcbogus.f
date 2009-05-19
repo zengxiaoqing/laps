@@ -109,7 +109,7 @@
       endif
 
       call s_len(filename,l)
-       print *,' test cyclone bogusing',filename
+       print *,' test cyclone bogusing',filename,l,jx,ix,nz
 
 !      if (bgmodel.eq.3 .and. filename(l-15:l-14).eq.'nf') then
       if (bgmodel.eq.3 .and. cwb_type.eq.'nf') then
@@ -898,6 +898,25 @@
        enddo
       enddo
 
+!**********************penny**************************
+      rovcp=287./1004.
+      print *, 'Penny test!'
+      do i=1,ix-1
+       do j=1,jx-1
+        ps=psealc(i,j)
+!        to(i,j,1)=to(i,j,2)*((ps/1000.)**rovcp)
+        to(i,j,1)=to(i,j,3)*((ps/925.)**rovcp)
+        if (to(i,j,1) .lt. 283.15) then
+        print *, to(i,j,1)-273.15,ps,i,j,'sfct'
+        endif
+        to(i,j,2)=to(i,j,3)*((1000./925.)**rovcp)
+        if (to(i,j,2) .lt. 283.15) then
+        print *, to(i,j,2)-273.15,p1000,i,j,'1000t'
+        endif
+       enddo
+      enddo
+********************************************************
+
 ! After bogusing
        do kk=1,kx
         do ii=1,ix
@@ -932,11 +951,11 @@
       subroutine lc_param11(s,cone,xmin,ymin,dx,dy,
      *                    nx,ny,nz,lat1,lat2,lon0,sw,ne)
 
-      real   s,cone,r,
+      real s,cone,r,
      .       xmin,xmax,ymin,ymax,
      .       dx,dy
 c
-      real   lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
+      real lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       integer nx,ny,nz           !No. of LC domain grid points
 c_______________________________________________________________________________
