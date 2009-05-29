@@ -161,7 +161,9 @@ c
 
       Integer       x,y,z,record
 
-      Real        grid_ra_ref(nx_l,ny_l,nz_l,n_radars)
+!     Real        grid_ra_ref(nx_l,ny_l,nz_l,n_radars)
+      real, allocatable, dimension(:,:,:,:) :: grid_ra_ref
+
       Real        grid_mosaic_3dref(nx_l,ny_l,nz_l)
       Real        grid_mosaic_2dref(nx_l,ny_l)
       Real        lat(nx_l,ny_l)
@@ -248,6 +250,13 @@ c
 c---------------------------------------------------------
 c Start
 c
+
+      allocate(grid_ra_ref(nx_l,ny_l,nz_l,n_radars),STAT=istat_alloc)             
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate grid_ra_ref'      
+                      stop
+      endif
+
       istatus = 0
       l_low_level=.false.
 
@@ -509,7 +518,7 @@ c ----------------------------------------------------------
                       if(istatus .ne. 1 .and. istatus.ne.-1)then
                           write(6,*)' Error reading dis array ',i
                           istatus = 0
-                          return
+                          goto 1000
                       endif
 
                   else
@@ -531,7 +540,7 @@ c ----------------------------------------------------------
                           if(istatus .ne. 1 .and. istatus.ne.-1)then
                               write(6,*)' Error reading dis array ',i
                               istatus = 0
-                              return
+                              goto 1000
                           endif
 
                       else
@@ -571,7 +580,7 @@ c this subroutine does not yet use the imosaic_3d parameter.
      &                         dist_multiradar_2d,                        ! I  
      &                         grid_mosaic_2dref,grid_mosaic_3dref,       ! I/O
      &                         closest_radar_m,istatus)                   ! O
-             if(istatus .ne. 1)return
+             if(istatus .ne. 1)goto 1000
 
              I4_elapsed = ishow_timer()
 
@@ -735,7 +744,7 @@ c
      1                   ' Error: too many radars for comment output'
                          write(6,*)' Limit is ',i_radar-1
                          istatus = 0
-                         return
+                         goto 1000
 
                      endif
 
@@ -773,5 +782,7 @@ c
 
 998   write(6,*)'Error using systime.dat'
 
-1000  return
+1000  deallocate(grid_ra_ref)
+
+      return
       end
