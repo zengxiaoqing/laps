@@ -223,6 +223,7 @@ select(STDOUT); $| = 1;
   $mo += 1;
   $cmo = sprintf("%02d", $mo);
   $chr = sprintf("%02d", $hr);
+  $cday = sprintf("%02d", $day);
   $cmin = sprintf("%02d", $min);
   my $cEndWin = $yr.$cmo.$cday."_".$chr.$cmin;
   print "End of time window: $cEndWin\n";
