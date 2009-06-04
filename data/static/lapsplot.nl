@@ -2,12 +2,13 @@
  latlon_int=0,
  continent_line_width=1.0,
  c3_time_zone='UTC',
- c_institution='NOAA/ESRL',
+ c_institution='NOAA/ESRL LAPS',
  time_zone=0.,
  c_vnt_units='KT-FT',
  c_units_type='english',
  c_pbl_depth_units='metric',
  chigh_sfcwind=50.,
+ c_ob_color='default',
  l_discrete=.false.,
  l_sphere=.false.,
  l_low_fill=.true.,
@@ -32,7 +33,8 @@ c                        continental, state, and county) will be suppressed.
 c
 c c3_time_zone - initials representing time zone (up to 3 characters)
 c
-c c_institution - institution used in label (up to 9 characters)
+c c_institution - institution used in label (up to 30 characters, though they
+c                 may be truncated for cross-sections down to 14)
 c
 c time_zone - local time minus UTC in hours (real number)
 c
@@ -45,6 +47,8 @@ c c_pbl_depth_units - PBL depth units ('english' or 'metric')
 c
 c chigh_sfcwind - maximum of colorbar range for surface wind speed plots
 c                 (recommended values are 50., 100., 200.)
+c
+c c_ob_color - color to plot surface obs 'default', or 'white'
 c
 c l_discrete - default type of image colortable, '.false.' means more
 c              continuous colors, '.true.' means fewer more discrete colors
