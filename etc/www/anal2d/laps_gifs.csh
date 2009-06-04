@@ -1,6 +1,6 @@
 #!/bin/csh
 
-#laps_gifs.csh
+echo "Starting laps_gifs.csh..."
 
 #Set umask to 000 because oplapb is not in the same group as the rest of us
 umask 000
@@ -24,8 +24,10 @@ echo "WINDOW ="$WINDOW
 echo "RESOLUTION ="$RESOLUTION
 echo "DOMAIN_SUFFIX ="$DOMAIN_SUFFIX
 
+setenv LAPSINSTALLROOT $7/..
+
 if (-e /w3/lapb) then
-#   In-house at FSL
+#   In-house at NOAA/ESRL/GSD/FAB
     setenv SERVER_ROOT /w3/lapb
     setenv WWW_DOMAIN domains/$DOMAIN_SUFFIX
     setenv LAPS_GIFS     $WEB_ROOT/www/anal2d
@@ -42,14 +44,22 @@ if (-e /w3/lapb) then
     ls -l /w3/lapb/domains/$DOMAIN_SUFFIX
     echo " "
 
+#   Check whether lapsplot.exe exists for Linux runs
+    if (! -e $EXE_DIR/lapsplot.exe) then
+        echo "pointing to 32-bit binary for lapsplot.exe"
+        setenv EXE_DIR /usr/nfs/lapb/builds32/laps/bin
+    endif
+
 else
-#   External to FSL
+#   External to NOAA/ESRL/GSD/FAB
     setenv SERVER_ROOT $LAPS_DATA_ROOT                
     mkdir -p $SERVER_ROOT
     setenv WWW_DOMAIN lapsprd/www              
-    setenv LAPS_GIFS     $EXE_DIR/../etc/www/anal2d
+    setenv LAPS_GIFS     $LAPSINSTALLROOT/etc/www/anal2d
 
 endif
+
+setenv SCRIPTDIR $LAPSINSTALLROOT/etc/www/anal2d
 
 if (-d $LAPS_DATA_ROOT) then
     echo "$LAPS_DATA_ROOT exists"
@@ -89,8 +99,6 @@ if (-e ~oplapb/www/laps_anal) then
     echo " "
 endif
 
-setenv SCRATCH_DIR   $LAPS_GIFS
-#setenv EXE_DIR       /usr/nfs/lapb/parallel/laps/bin
 setenv TIME_DIR      $LAPS_DATA_ROOT/time
 
 date -u
@@ -120,32 +128,32 @@ date -u
 # Wind Graphic Product
 echo "Generating Graphical Wind Product"; date -u
 setenv prod wd0
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+$SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # TT Graphic Product
 echo "Generating Graphical TT Product"; date -u
 setenv prod tt
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+$SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # TD Graphic Product
 echo "Generating Graphical TD Product"; date -u
 setenv prod td
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+$SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # Sfc RH
 echo "Generating SFC RH Product"; date -u
 setenv prod rh
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+$SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # DPD
 echo "Generating Dewpoint Depression Product"; date -u
 setenv prod pbl
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+$SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # Sfc Theta(e)
 echo "Generating SFC Theta(e) Product"; date -u
 setenv prod fwi
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+$SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # Check for existence of 3D products
 if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
@@ -154,79 +162,79 @@ if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
 #   PBE Graphic Product
     echo "Generating Graphical PBE Product"; date -u
     setenv prod pbe
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   NBE Graphic Product
     echo "Generating Graphical NBE Product"; date -u
     setenv prod nbe
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   H5 Graphic Product
     echo "Generating Graphical Wind Product"; date -u
     setenv prod h5b
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Storm Total Graphic Product (Precip or Snow)
     echo "Generating Graphical Storm Total Product (Precip or Snow)"; date -u
     setenv prod sto
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Analysis Cycle Precip (Rain or Snow)
     echo "Generating Graphical Analysis Cycle Precip Product (Rain or Snow)"; date -u
     setenv prod p01
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Precip Type Graphic Product
     echo "Generating Graphical Precip Type Product"; date -u
     setenv prod ptt
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Snow Cover Graphic Product
     echo "Generating Graphical Snow Cover Product"; date -u
     setenv prod sc
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Total Precipitable Water Product
     echo "Generating Graphical Total Precipitable Water Product"; date -u
     setenv prod pw
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   LI times Omega Product
     echo "Generating Graphical LI times Omega Product"; date -u
     setenv prod liw
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Low Level Radar Reflectivity Product
     echo "Generating Graphical Low Level Radar Reflectivity Product"; date -u
     setenv prod llr
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
  
 #   Sfc FW
     echo "Generating SFC FW Product"; date -u
     setenv prod fw
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Ventilation Index & PBL Mean Wind
     echo "Generating Ventilation Index & PBL Mean Wind"; date -u
     setenv prod vnt
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Haines Mid
     echo "Mid-Level Haines Index"; date -u
     setenv prod ham
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Haines High
     echo "High-Level Haines Index"; date -u
     setenv prod hah
-    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   X-sect
     echo "Generating X-Sect Product"; date -u
     setenv prod xct
-#   $LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 732x614
-#   $LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 792x664
-    $LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 1056x885
+#   $SCRIPTDIR/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 732x614
+#   $SCRIPTDIR/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 792x664
+    $SCRIPTDIR/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 1056x885
 
 else
     echo "$LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 file not present"
@@ -245,3 +253,4 @@ echo `head -2 $TIME_DIR/c_time.dat | tail -1`" 7200" > $WWW_DIR/anal2d/recent/ti
 echo "Running purger of LAPS gif files, AGE = "$AGE
 $SERVER_ROOT/purgers/laps_purge.com $WWW_DIR $AGE > $SERVER_ROOT/purgers/$DOMAIN_SUFFIX.out
 
+echo "Finishing laps_gifs.csh..."
