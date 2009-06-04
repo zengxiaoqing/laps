@@ -2412,6 +2412,20 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 call mk_fcst_xlabel('Specific Humidity',fcst_hhmm
      1                          ,ext(1:3),'g/kg',c_model,c_label)       
 
+            elseif(c_prodtype .eq. 'N')then
+                ext = 'lq3'
+                call get_directory('balance',directory,len_dir)
+                directory = directory(1:len_dir)//'lq3/'
+
+                call get_3dgrid_dname(directory
+     1             ,i4time_ref,1000000000,i4time_nearest
+     1             ,ext,var_2d,units_2d
+     1             ,comment_2d,NX_L,NY_L,NZ_L,q_3d,istatus)       
+
+                call make_fnam_lp(i4time_nearest,a9time,istatus)
+
+                c_label = 'Balanced Specific Humidity (g/kg) '
+
             endif
 
             call interp_3d(q_3d,field_vert,xlow,xhigh,ylow,yhigh,
