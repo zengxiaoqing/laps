@@ -48,9 +48,12 @@ cd $WWW_DIR/anal2d
 
 ulimit -t 300
 
-ls -l $EXE_DIR/lapsplot.exe
-
-echo "Running $EXE_DIR/lapsplot.exe"; date -u
+if test -r $EXE_DIR/lapsplot.exe; then
+    echo "Running $EXE_DIR/lapsplot.exe"; date -u
+else
+    echo "ERROR: $EXE_DIR/lapsplot.exe not found"
+    exit
+fi
 
 head -2 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c2-10     > $SCRATCH_DIR/lapsplot.$prod.tmp
 
@@ -61,16 +64,16 @@ elif test -r $SCRATCH_DIR/lapsplot.$prod; then
     echo "Input to lapsplot.exe (local) = $SCRATCH_DIR/lapsplot.$prod"
     cat     $SCRATCH_DIR/lapsplot.$prod                            >> $SCRATCH_DIR/lapsplot.$prod.tmp
 else
-    echo "Input to lapsplot.exe (non-local www) = $LAPS_ETC/lapsplot.$prod"
-    cat     $LAPS_ETC/lapsplot.$prod                               >> $SCRATCH_DIR/lapsplot.$prod.tmp
+    echo "ERROR: lapsplot.$prod not found under $LAPS_DATA_ROOT or $SCRATCH_DIR"
+    exit
 fi
 
 $EXE_DIR/lapsplot.exe                                           < $SCRATCH_DIR/lapsplot.$prod.tmp
 
 ls -l gmeta
 
-# Test whether we are at FSL on 'gizmo'
-if test -r /data/lapb; then
+# Test whether we are on NOAA/ESRL/GSD/FAB machines
+if test -r /data/fab; then
     netpbm=no
 else
     netpbm=yes
@@ -205,3 +208,4 @@ else # this can be modified for your own server location
      ln -s /w3/lapb/domains/$DOMAIN_SUFFIX/../../looper/files.cgi files.cgi
 fi
 
+echo "Finish laps_gifs_sub.sh..."
