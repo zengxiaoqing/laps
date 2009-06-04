@@ -6858,7 +6858,9 @@ c             if(cint.eq.0.0)cint=0.1
 
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
 
-                if(iflag .eq. 2)then ! obs with station locations?
+                if(namelist_parms%c_ob_color .eq. 'white')then
+                    call setusv_dum(2hIN,1)                     ! White
+                elseif(iflag .eq. 2)then ! obs with station locations?
                     call setusv_dum(2hIN,icolors(i_overlay))
                 else                 ! station locations by themselves
                     call setusv_dum(2hIN,34)                    ! Grey
@@ -6999,7 +7001,7 @@ c             if(cint.eq.0.0)cint=0.1
         character*(*) c_label
         character*24 asc_tim_24,asc_tim_24_in
         character*4 c4_grid
-        character*5 c5_sect
+        character*5 c5_sect,c5_grid
         character*9 a9time
         character*19 c_ul ! Max length of c_institution + 10
 
@@ -7045,7 +7047,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         call setusv_dum('  ',7)
 
-!       Add resolution for Top Label
+!       Add grid resolution for Top Label (short format)
         call get_grid_spacing_cen(grid_spacing_m,istatus)
 
         if(grid_spacing_m .ge. 999.5)then ! 1-km or greater
@@ -7068,6 +7070,19 @@ c             if(cint.eq.0.0)cint=0.1
             endif
         endif
 
+!       Grid resolution (long format)
+        if(grid_spacing_m .ge. 999.5 .AND. grid_spacing .le. 9950.)then       
+            ihundreds = nint(grid_spacing_m / 100.)
+            if(((ihundreds/10) * 10) .ne. ihundreds)then
+                write(c5_grid,3)nint(grid_spacing_m / 100.) / 10.0
+ 3              format(f3.1,'km')
+            else
+                c5_grid = c4_grid
+            endif
+        else
+            c5_grid = c4_grid
+        endif
+
 !       Top Label               
         iy = y_2 * 1024
 !       ix = 170 
@@ -7079,8 +7094,28 @@ c             if(cint.eq.0.0)cint=0.1
         endif
 
         call s_len2(namelist_parms%c_institution,len_inst)
-        c_ul = namelist_parms%c_institution(1:len_inst)//' LAPS '
-     1         //c4_grid
+
+        if(c5_sect .eq. 'xsect')then
+            len_inst = min(len_inst,14)
+
+            if(len_inst .le. 9)then
+                c_ul = namelist_parms%c_institution(1:len_inst)
+     1                 //' LAPS '//c4_grid
+            else
+                c_ul = namelist_parms%c_institution(1:len_inst)//' '
+     1                 //c4_grid
+            endif
+
+        else
+            if(len_inst .le. 9)then
+                c_ul = namelist_parms%c_institution(1:len_inst)
+     1                 //' LAPS '//c5_grid
+            else
+                c_ul = namelist_parms%c_institution(1:len_inst)//' '
+     1                 //c5_grid
+            endif
+
+        endif
 
         CALL PCHIQU (cpux(ix),cpux(iy),c_ul,rsize,0,-1.0)   
 
