@@ -194,7 +194,7 @@ c
  
        character*150 static_dir,filename
        character*3 c3_time_zone
-       character*9 c_institution
+       character*30 c_institution
        character*6 c_vnt_units
        character*7 c_units_type
        character*7 c_pbl_depth_units
