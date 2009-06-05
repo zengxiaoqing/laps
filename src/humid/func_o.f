@@ -68,7 +68,7 @@ c   the imager or sounding instrument can be used with the software without
 c   further recompilation.
 
       implicit none
-      include 'Constants.inc'
+      include 'constants_optran.inc'
       
 c     parameter variables
       

@@ -103,7 +103,7 @@ c
 
       use module_sfc_structure
       implicit none
-      include 'Constants.inc'
+      include 'constants_optran.inc'
       include 'grid_fname.cmn'
 
 c     include 'lapsparms.for'

@@ -106,7 +106,7 @@ cdis
 	Implicit None
         save
 
-	Include 'Constants.inc'
+	Include 'constants_optran.inc'
 
 *	Input
 	Integer Nlev  	! number of levels
@@ -397,7 +397,7 @@ c	Write(6,*) IOs
 *
 	Implicit None
 
-	Include 'Constants.inc'
+	Include 'constants_optran.inc'
 
 *	Input variables
 	Integer Nlev		! number of levels in input atmosphere
@@ -617,7 +617,7 @@ c	Write(6,*) IOs
 
 	Implicit None
 
-	Include 'Constants.inc'
+	Include 'constants_optran.inc'
 
 *	Input
 	Integer Nlev		! number of atmospheric levels
@@ -981,7 +981,7 @@ c	Write(6,*) IOs
 
 	Implicit None
 
-	Include 'Constants.inc'
+	Include 'constants_optran.inc'
 
 	Logical First 		! set .true. for initial invocation
 	Real WW(0:Nw)		! standard absorber profile
@@ -1064,7 +1064,7 @@ c	Write(6,*) IOs
 	Implicit None
         save
 
-	Include 'Constants.inc'
+	Include 'constants_optran.inc'
 
 	Integer Nprofiles	! number of profiles to use
 				! this is the dimension of MaxAbsorber
