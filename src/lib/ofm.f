@@ -70,7 +70,7 @@ c      USE module_sfc_structure
 
       save
       
-      Include '../include/Constants.inc'
+      Include '../include/constants_optran.inc'
       
       include '../include/trans.inc'
       
