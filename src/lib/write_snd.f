@@ -41,6 +41,8 @@
       data nsnd_total/0/
       save nsnd_total,i4time_sys
 
+      common /write_snd_data/ cloud_base_temp,cloud_integrated_liquid      
+
 !............................................................................
 
 !     Get RAOB Time Window
@@ -109,17 +111,33 @@
 
 !       Write Sounding Header
 
-        write(6,511,err=990)
+        if(c8_obstype(isnd) .ne. 'RADIOMTR')then
+            write(6,511,err=990)
      1             iwmo_out,nlvl(isnd)
      1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
      1            ,c5_sta,a9time_ob(isnd,1),c8_obstype(isnd)
 
-        write(lun_out,511,err=990)
+            write(lun_out,511,err=990)
      1             iwmo_out,nlvl(isnd)
      1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
      1            ,c5_sta,a9time_ob(isnd,1),c8_obstype(isnd)
 
-  511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
+        else
+            write(6,511,err=990)
+     1             iwmo_out,nlvl(isnd)
+     1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
+     1            ,c5_sta,a9time_ob(isnd,1),c8_obstype(isnd)
+     1            ,cloud_base_temp,cloud_integrated_liquid
+
+            write(lun_out,511,err=990)
+     1             iwmo_out,nlvl(isnd)
+     1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
+     1            ,c5_sta,a9time_ob(isnd,1),c8_obstype(isnd)
+     1            ,cloud_base_temp,cloud_integrated_liquid
+
+        endif
+
+  511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8,f8.1,f8.5)
 
         do lvl = 1,nlvl(isnd)
 
