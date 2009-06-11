@@ -88,7 +88,7 @@ c
 	character     atime*24, filename9*9
         character*7   madis_dirs(3)
 
-        logical l_allow_empty_lso,l_multiple_reports
+        logical l_allow_empty_lso,l_multiple_reports,l_dupe_names
 
         ISTAT = INIT_TIMER()
 
@@ -131,6 +131,7 @@ c
      1                           ,itest_madis_qc
      1                           ,maxobs
      1                           ,l_allow_empty_lso,l_multiple_reports
+     1                           ,l_dupe_names
      1                           ,local_obs_thresh, i4wait_local_obs_max
      1                           ,n_cycles,nominal_latency
      1                           ,istatus)
@@ -179,6 +180,7 @@ c
      1                           ,itest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso,l_multiple_reports
+     1                           ,l_dupe_names
      1                           ,local_obs_thresh, i4wait_local_obs_max
      1                           ,i4time_proc,filename9,atime
      1                           ,istatus)
@@ -201,6 +203,7 @@ c
      1                           ,itest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso,l_multiple_reports
+     1                           ,l_dupe_names
      1                           ,local_obs_thresh, i4wait_local_obs_max
      1                           ,i4time_sys,filename9,atime
      1                           ,istatus)
@@ -245,7 +248,7 @@ c
         data local_obs_thresh_switch /1,0,0/
 
         logical l_allow_empty_lso,l_string_contains
-        logical l_identical_a(maxsta),l_multiple_reports
+        logical l_identical_a(maxsta),l_multiple_reports,l_dupe_names
 c
 c.....	Start here.  
 c
@@ -625,7 +628,8 @@ c       Call subroutine to check for duplicate obs
         call check_for_dupes(      maxsta,n_obs_b,stations
      1                            ,store_1,store_2,store_3
      1                            ,store_4,store_5,store_6
-     1                            ,store_7,badflag,l_identical_a)
+     1                            ,store_7,badflag,l_identical_a
+     1                            ,l_dupe_names)
 
         I4_elapsed = ishow_timer()
 
@@ -764,6 +768,7 @@ c
      1                         ,itest_madis_qc
      1                         ,maxobs
      1                         ,l_allow_empty_lso,l_multiple_reports
+     1                         ,l_dupe_names
      1                         ,local_obs_thresh, i4wait_local_obs_max
      1                         ,n_cycles,nominal_latency
      1                         ,istatus)
@@ -775,7 +780,7 @@ c
        character*200 path_to_tower_data
        character*8   metar_format
        character*7   madis_dirs(3)
-       logical l_allow_empty_lso,l_multiple_reports
+       logical l_allow_empty_lso,l_multiple_reports,l_dupe_names
 
        namelist /obs_driver_nl/ path_to_metar
      1                         ,path_to_local_data
@@ -789,6 +794,7 @@ c
      1                         ,madis_dirs
      1                         ,l_allow_empty_lso
      1                         ,l_multiple_reports
+     1                         ,l_dupe_names
      1                         ,maxobs
      1                         ,local_obs_thresh
      1                         ,i4wait_local_obs_max
@@ -999,10 +1005,11 @@ c
         subroutine check_for_dupes(maxsta,n_obs_b,stations
      1                            ,store_1,store_2,store_3
      1                            ,store_4,store_5,store_6
-     1                            ,store_7,badflag,l_identical_a)
+     1                            ,store_7,badflag,l_identical_a
+     1                            ,l_dupe_names)
 
 	character  stations(maxsta)*20
-        logical l_identical_a(maxsta),l_identical
+        logical l_identical_a(maxsta),l_identical,l_dupe_names
 
 	real    store_1(maxsta,4), 
      &          store_2(maxsta,3), 
@@ -1044,7 +1051,8 @@ c
 
                     call s_len(stations(i),leni)
 !                   call s_len(stations(j),lenj)
-                    if(stations(i) .eq. stations(j) .and. 
+                    if(l_dupe_names .and.
+     1                 stations(i) .eq. stations(j) .and. 
      1                 leni .gt. 0                  .and. 
      1                 stations(i)(1:3) .ne. 'UNK'       )then
                         write(6,*)' Names are identical: '
