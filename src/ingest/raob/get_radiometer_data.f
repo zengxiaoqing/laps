@@ -180,6 +180,8 @@ C
       real lon_a(NX_L,NY_L)
       real topo_a(NX_L,NY_L)
 
+      common /write_snd_data/ cloud_base_temp,cloud_integrated_liquid
+
       call get_r_missing_data(r_missing_data,istatus)
       if (istatus .ne. 1) then
           write (6,*) 'Error getting r_missing_data'
@@ -264,6 +266,12 @@ C
      +                        ,level,nlevels_snd)
 
           if(integratedVapor(iob) .gt. .06)nlevels_snd=0
+
+          cloud_base_temp = cloudBaseTemp(iob)
+          cloud_integrated_liquid = integratedLiquid(iob)
+
+          write(6,*)' cloud_base_temp/liq = ',cloud_base_temp
+     1                                       ,cloud_integrated_liquid
 
           l_closest_time = l_closest_time_i(iwmostanum,a9time_ob_r
      1                                     ,recNum,iob,i4time_sys
