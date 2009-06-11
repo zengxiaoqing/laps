@@ -51,6 +51,9 @@ c                      'max_radars_cmn'. Using '-1' is potentially recommended
 c                      only if one type of radar data is being used.
 c
 c 'max_times'        - Maxiumum number of volume times to process for each radar
+c                      This should be set to a large number (e.g. 999) for 
+c                      archive runs and a much smaller number for real-time to
+c                      help with load balancing.
 c
 c 'path_to_radar_a'  - Full path to each directory containing a set of input
 c                      radar tilts/volumes. 
