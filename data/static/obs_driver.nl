@@ -15,6 +15,7 @@
  local_obs_thresh=0,
  l_allow_empty_lso=.false.,
  l_multiple_reports=.false.,
+ l_dupe_names=.true.,
  itest_madis_qc=15,
  n_cycles=1,
  nominal_latency=-1,
@@ -90,6 +91,11 @@ c                         only the observation within the time window that is
 c                         closest to the current 'systime' for each station
 c                      - .true. means we will select all reports from a given
 c                         station falling within the time window
+c
+c 'l_dupe_names' - .true. means subroutine 'check_for_dupes' will check and
+c                  set to missing any stations that duplicate the name of
+c                  a prior station in the list. It is recommended to set this
+c                  to .false. if 'l_multiple_reports' is set to .true.
 c
 c 'itest_madis_qc' -  0 means we do not test MADIS QC flags
 c                     1 means level 1 test for MADIS QC flags with local data
