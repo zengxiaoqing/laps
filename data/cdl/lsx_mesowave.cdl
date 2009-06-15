@@ -93,6 +93,20 @@ netcdf lsx {
             td:LAPS_var="TD";
             td:lvl_coord="AGL ";
             td:LAPS_units="K";
+ 
+        //      Relative humidity       //
+
+        float
+            rh(record,z,y,x);
+            rh:navigation_dim = "nav";
+            rh:record = "valtime, reftime";
+            rh:_FillValue = 1.e+37f;
+            rh:long_name="relative humidity";
+            rh:units="meters";
+            rh:valid_range= -20000.f, 20000.f;
+            rh:LAPS_var="RH";
+            rh:lvl_coord="AGL";
+            rh:LAPS_units="M";
 
         //      MSL Pressure            //
 
@@ -163,6 +177,20 @@ netcdf lsx {
             vor:LAPS_var="VOR";
             vor:lvl_coord="AGL";
             vor:LAPS_units="/S";
+
+        //      mixing ratio            //
+
+        float
+            mr(record,z,y,x);
+            mr:navigation_dim = "nav";
+            mr:record = "valtime, reftime";
+            mr:_FillValue = 1.e+37f;
+            mr:long_name="mixing ratio";
+            mr:units="grams/kikogram";
+            mr:valid_range= -20000.f, 20000.f;
+            mr:LAPS_var="MR";
+            mr:lvl_coord="AGL";
+            mr:LAPS_units="G/KG";
  
         //      moisture convergence            //
 
