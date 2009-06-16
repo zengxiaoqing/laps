@@ -112,7 +112,7 @@ SUBROUTINE PrPstLSX
   INTEGER :: sts	! Return status
 
   REAL, EXTERNAL :: EPT
-  REAL :: tmp,dew
+  REAL :: tmp,dew,td_c,pr_m
   REAL :: gdx(numgrd(1),numgrd(2))	! Grid spacing (X)
   REAL :: gdy(numgrd(1),numgrd(2))	! Grid spacing (Y)
   REAL :: gdp(numgrd(1),numgrd(2))	! Pressure in mb
@@ -133,6 +133,8 @@ SUBROUTINE PrPstLSX
 
   INTEGER :: L1S_lvl(2)			! Number of levels of each field
 
+  ! Mixing ratio function from TD and P:
+  REAL :: WMR
 
   ! Time frame to write out:
   DO itm = numgrd(3)-numfic(3),max0(1,numgrd(3)-numfic(3)-2),-1	! Time frame
@@ -378,6 +380,25 @@ SUBROUTINE PrPstLSX
     dat(1:ngd(1),1:ngd(2),nvr) = &
       gdt(numfic(1)+1:numgrd(1)-numfic(1), &
 	  numfic(2)+1:numgrd(2)-numfic(2))
+  ENDIF
+  ! Found necessary variables for mixing ratio:
+  IF ((idx(2) .NE. 0) .AND. (idx(3) .NE. 0)) THEN
+    nvr = nvr+1
+    IF (nvr .GT. LSXVAR) THEN
+      WRITE(*,2)
+      STOP
+    ENDIF
+    vnm(nvr) = 'MR '
+    vun(nvr) = 'G/KG'
+    cmt(nvr) = 'mixing ratio'
+    ! Mixing ratio from td and p:
+    DO j=1,ngd(2)
+      DO i=1,ngd(1)
+        td_c = analys(i,j,itm,idx(2))-temp_0	! Dewpoint in celsius
+        pr_m = analys(i,j,itm,idx(3))/100.0	! Pressure in mb
+        dat(i,j,nvr) = WMR(pr_m,td_c)
+      ENDDO
+    ENDDO
   ENDIF
   ! Found necessary variables for relative humidity:
   IF ((idx(1) .NE. 0) .AND. (idx(2) .NE. 0)) THEN
