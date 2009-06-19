@@ -1239,9 +1239,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            Network      Database(s)          file   frequency     cdl(s)
            -------      -----------          ----   ---------  -----------
            NPN wind     NIMBUS/AWIPS/MADIS/  PRO     404 MHz     wpdn60.cdl
-                        FTP                                      wpdn06.cdl
+                                                                 wpdn06.cdl
 
-           NPN RASS     NIMBUS/FTP           LRS                 rass60.cdl
+           NPN RASS     NIMBUS               LRS                 rass60.cdl
                                                                  rass06.cdl
 
            BLP wind     NIMBUS               PRO     915 MHz     wpdn60.cdl
@@ -1250,11 +1250,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            BLP RASS     NIMBUS               LRS                 rass60.cdl
                                                                  rass30.cdl*
 
-           BLP wind     RSA/MADIS-MAP        PRO     915 MHz     
+           BLP wind     MADIS-MAP/RSA        PRO     915 MHz     
                                                       50 MHz
                                                       SODAR
 
-           BLP RASS     RSA/MADIS-MAP        LRS     915 MHz
+           BLP RASS     MADIS-MAP/RSA        LRS     915 MHz
                                                       50 MHz            
 
            * Indicates that the data with this cdl is available, but our
@@ -1265,10 +1265,6 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            GSD with some restrictions. This data, in 'WFO/AWIPS' NetCDF format,
            is distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/
-
-           Another method to obtain NPN wind and RASS files is from the FTP
-           server mentioned above, more specifically at this location...
-           ftp://oak.fsl.noaa.gov/outgoing/npn/ 
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
