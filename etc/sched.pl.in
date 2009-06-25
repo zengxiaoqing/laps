@@ -152,6 +152,7 @@ if(defined $opt_s){ # "surface only"
                   ingest_lrs.exe lvd_sat_ingest.exe
                   obs_convert.exe
                   mosaic_radar.x
+                  stmas_mg.x
                   STMAS3D.exe);
 
 }elsif($opt_V eq "GSI_Post"){ # GSI analysis
