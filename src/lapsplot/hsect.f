@@ -3881,8 +3881,8 @@ c    1                                  ,field_3d,istatus) ! q_3d
 
               else
                  clow = 0.
-                 chigh = +20.
-                 cint = 0.2
+                 chigh = +25.
+                 cint = 1.0
 c                cint = -1.
 
                  call make_fnam_lp(i4time_heights,asc9_tim,istatus)
@@ -4037,8 +4037,8 @@ c
      1                         //' '//ext(1:3)//' Q  (x1e3)',c_label)
 
                     clow = 0.
-                    chigh = +40.
-                    cint = 0.2
+                    chigh = +25.
+                    cint = 1.0
 c                   cint = -1.
 
                     scale = 1e-3
@@ -4047,7 +4047,7 @@ c                   cint = -1.
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'moist')
+     1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
                     call move(sh_2d,field_2d,NX_L,NY_L) ! supports diff option
 
@@ -5318,7 +5318,7 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
-        elseif(c_type .eq. 'mr')then
+        elseif(c_type(1:2) .eq. 'mr')then
             var_2d = 'MR'
 
             if(i_balance .eq. 1)then
@@ -5339,16 +5339,22 @@ c                   cint = -1.
 
             c_label = 'Sfc Mixing Ratio      (g/kg)     '
 
-            clow = -100.
-            chigh = +100.
-            cint = 2.
+            clow = 0.
+            chigh = +25.
+            cint = 1.
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1        asc9_tim,namelist_parms,plot_parms,
-     1        c_label,i_overlay,c_display,lat,lon,jdot,
-     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,1e-0,clow,chigh,cint,
+!    1        asc9_tim,namelist_parms,plot_parms,
+!    1        c_label,i_overlay,c_display,lat,lon,jdot,
+!    1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,1e-0
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
         elseif(c_type(1:2) .eq. 'dv')then
             var_2d = 'DIV'
@@ -7003,7 +7009,7 @@ c             if(cint.eq.0.0)cint=0.1
         character*4 c4_grid
         character*5 c5_sect,c5_grid
         character*9 a9time
-        character*19 c_ul ! Max length of c_institution + 10
+        character*20 c_ul 
 
         common /image/ n_image
         common /icol_index/ icol_common
@@ -7053,7 +7059,7 @@ c             if(cint.eq.0.0)cint=0.1
         if(grid_spacing_m .ge. 999.5)then ! 1-km or greater
             igrid_spacing = nint(grid_spacing_m/1000.)
             if(igrid_spacing .le. 99 .and. igrid_spacing .ge. 1
-     1                                .and. c5_sect .ne. 'xsect'  )then       
+     1                               .and. c5_sect .ne. 'xsect'  )then       
                 write(c4_grid,1)igrid_spacing
  1              format(i2,'km')
             else
@@ -7071,7 +7077,8 @@ c             if(cint.eq.0.0)cint=0.1
         endif
 
 !       Grid resolution (long format)
-        if(grid_spacing_m .ge. 999.5 .AND. grid_spacing .le. 9950.)then       
+        if(grid_spacing_m .ge. 999.5 .AND. 
+     1     grid_spacing_m .le. 9950.       )then             
             ihundreds = nint(grid_spacing_m / 100.)
             if(((ihundreds/10) * 10) .ne. ihundreds)then
                 write(c5_grid,3)nint(grid_spacing_m / 100.) / 10.0
@@ -7106,7 +7113,7 @@ c             if(cint.eq.0.0)cint=0.1
      1                 //c4_grid
             endif
 
-        else
+        else ! hsect
             if(len_inst .le. 9)then
                 c_ul = namelist_parms%c_institution(1:len_inst)
      1                 //' LAPS '//c5_grid
