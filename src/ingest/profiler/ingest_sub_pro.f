@@ -81,9 +81,12 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
         character*200 fnam_in
         character*180 dir_in
         character*255 c_filespec
+
+        include 'lapsparms.for'
+
         integer max_files
 
-        parameter(max_files = 3000)
+        parameter(max_files = MAX_INGEST_FILES)
         character*255 c_filenames(max_files)
 
         integer wsmr_wmo_id
