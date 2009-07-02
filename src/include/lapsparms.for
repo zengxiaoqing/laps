@@ -7,6 +7,10 @@
         integer*4  MAX_BACKGROUND_FILES
         parameter (MAX_BACKGROUND_FILES = 2000)     
 
+!       Ingest
+        integer*4  MAX_INGEST_FILES
+        parameter (MAX_INGEST_FILES = 10000)     
+
         integer      MAXBGMODELS
         parameter    (MAXBGMODELS=11) 
 
