@@ -1,5 +1,6 @@
 
-	subroutine locpost_radar(ni,nj,lat,lon,lun,lun_out,istatus)
+	subroutine locpost_radar(ni,nj,lat,lon,topo,ldf
+     1                          ,lun,lun_out,istatus)
 
         character*200 static_dir,cfg_fname,line,radars_fn
         character*4 c4_name
@@ -7,6 +8,7 @@
         character*7 c7_chars
 
         real lat(ni,nj),lon(ni,nj)
+        real topo(ni,nj),ldf(ni,nj)
 
         write(6,*)' Subroutine locpost_radar...'
 
@@ -39,6 +41,8 @@
         do ih = 1,13
             read(lun,*)
         enddo
+
+        write(lun_out,*)'radar  perimeter  ocean      i      j'
 
         do il = 1,200
             read(lun,11,err=999,end=999)line
@@ -97,10 +101,23 @@
 
             dist_outside_km = dist_outside * grid_spacing_m / 1000.
 
+!           Find nearest ocean to radar site
+            grid_dist_min = 9999.
+            do ii = 1,ni
+            do jj = 1,nj
+                if(ldf(ii,jj) .lt. .01 .and. topo(ii,jj) .lt. 10.)then
+                    grid_dist = sqrt((ri-ii)**2 + (rj-jj)**2) 
+     1                          * (grid_spacing_m / 1000.)
+                    grid_dist_min = min(grid_dist,grid_dist_min)
+                endif
+            enddo ! jj
+            enddo ! ii
+            dist_ocean_min = grid_dist_min 
+
             if(dist_outside_km .le. 100.)then
-                write(lun_out,21)c4_name,dist_outside_km
+                write(lun_out,21)c4_name,dist_outside_km,dist_ocean_min       
      1                          ,nint(ri),nint(rj)
- 21		format(1x,a4,f9.2,2i7)
+ 21		format(1x,a4,f9.2,2x,f9.1,2i7)
             endif
 
         enddo ! il
