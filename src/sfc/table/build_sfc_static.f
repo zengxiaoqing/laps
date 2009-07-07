@@ -37,6 +37,8 @@ c
 
         real, allocatable, dimension(:,:) :: lat
         real, allocatable, dimension(:,:) :: lon
+        real, allocatable, dimension(:,:) :: topo
+        real, allocatable, dimension(:,:) :: ldf
 
         call get_grid_dim_xy(NX_L, NY_L, istatus)
         if (istatus .ne. 1) then
@@ -44,9 +46,7 @@ c
             stop
         endif
 
-        call build_sfc_static_sub(NX_L,NY_L)
-
-!       Allocate static arrays (lat, lon, topo)
+!       Allocate static arrays (lat, lon, topo, ldf)
         allocate( lat(NX_L,NY_L), STAT=istat_alloc )
         if(istat_alloc .ne. 0)then
             write(6,*)' ERROR: Could not allocate lat'
@@ -59,7 +59,19 @@ c
             stop
         endif
 
-!       Read static arrays (lat, lon, topo)
+        allocate( topo(NX_L,NY_L), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate topo'
+            stop
+        endif
+
+        allocate( ldf(NX_L,NY_L), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate ldf'
+            stop
+        endif
+
+!       Read static arrays (lat, lon, topo, ldf)
         call read_static_grid(NX_L,NY_L,'LAT',lat,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS LAT'
@@ -72,14 +84,29 @@ c
             stop
         endif
 
+        call read_static_grid(NX_L,NY_L,'AVG',topo,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting LAPS AVG'
+            stop
+        endif
+
+        call read_static_grid(NX_L,NY_L,'LDF',ldf,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting LAPS LDF'
+            stop
+        endif
+
+        call build_sfc_static_sub(NX_L,NY_L,lat,lon,topo)
+
         lun = 31
         lun_out = 19
 
-        call locpost_radar(NX_L,NY_L,lat,lon,lun,lun_out,istatus)
+        call locpost_radar(NX_L,NY_L,lat,lon,topo,ldf
+     1                    ,lun,lun_out,istatus)
 
         end
 
-	subroutine build_sfc_static_sub(ni,nj)
+	subroutine build_sfc_static_sub(ni,nj,lat,lon,topo)
 c
 c*****************************************************************************
 c
@@ -137,18 +164,6 @@ c
 !	dir_s = './' 
         call get_directory('static',dir_s,len)
         ext_s = 'nest7grid' 
-c
-	var_s = 'LAT'
-	call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      lat,  grid_spacing,istatus)
-c
-	var_s = 'LON'
-	call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      lon,  grid_spacing,istatus)
-c
-	var_s = 'AVG'
-	call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      topo, grid_spacing,istatus)
 c
 	imax = ni
 	jmax = nj
