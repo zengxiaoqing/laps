@@ -3749,7 +3749,10 @@ Source directory: laps/src/soil
 ------ 3.3.9 ---------------------BALANCE------------------------------------
 
 Process: qbalpe.exe - "Quasi-geostrophic balance of height, wind and clouds.
-     (author: John McGinley/John Smart/John Snook - John.R.Smart AT noaa.gov)
+
+     authors: John McGinley/John Smart/John Snook/Ed Tollerud
+
+     contact: Edward.Tollerud AT noaa.gov
 
         LAPS quasi-geostrophic balance of height and wind with temp adjustment.
         Cloud fields are now balanced with the other fields.
