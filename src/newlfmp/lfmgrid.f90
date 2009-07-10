@@ -24,6 +24,8 @@ integer :: domnum,fcsttime,precip_dt=3600  ! in seconds
 
 character(len=256) :: filename,filename0
 character(len=32)  :: mtype
+character(len=20)  :: c_m2z='rams'
+
 
 ! Point forecast variables.
 
