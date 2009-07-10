@@ -17,11 +17,17 @@ c     the code in remap_process is configured.
 c
       parameter (MAX_GATES_LUT = MAX_GATES)
 
+      real     ELEV_INTERVAL
+      parameter (ELEV_INTERVAL = 0.1)
+
       real     MAX_ELEV
       parameter (MAX_ELEV = 20.0)
 
+      real     MIN_ELEV
+      parameter (MIN_ELEV = 0.0)
+
       integer  LUT_ELEVS,LUT_GATES
-      parameter (LUT_ELEVS = 200) ! Normally 10 times the MAX_ELEV
+      parameter (LUT_ELEVS = nint((MAX_ELEV-MIN_ELEV)/ELEV_INTERVAL) )         
 c
 c     This can be set to be less than MAX_GATES if it is desired to save
 c     memory space in the lookup tables. If that is done, it should be
@@ -42,9 +48,6 @@ c
       parameter (LUT_RANGES = 460)
       parameter (LUT_AZIMUTHS = 720) 
 
-      real     ELEV_INTERVAL
-      parameter (ELEV_INTERVAL = MAX_ELEV / LUT_ELEVS)
-c
 c     For normal scans, this is the ratio of gate spacing in the radar
 c     to that in the lookup table.
 c
