@@ -1,7 +1,7 @@
 subroutine lfm_namelist(lfmprd_dir)
 
 ! Read namelist variables.
-! Default values are set in lfmgrid.
+! Default values are set in lfmgrid
 
 use lfmgrid
 
@@ -16,7 +16,7 @@ namelist/lfmpost_nl/out_cdf,out_grib,out_v5d            &
                    ,make_micro,make_firewx,make_points  &
                    ,verbose,realtime,write_to_lapsdir   &
                    ,make_donefile                       &
-                   ,precip_dt
+                   ,precip_dt,c_m2z
 
 nlfile=trim(lfmprd_dir)//'/../static/lfmpost.nl'
 open(1,file=trim(nlfile),form='formatted',status='old',iostat=istatus)
@@ -872,6 +872,8 @@ end
 subroutine lfm_reflectivity(nx,ny,nz,rho,hgt,rainmr,icemr,snowmr,graupelmr  &
                            ,refl,max_refl,echo_tops)
 
+use lfmgrid
+
 ! Subroutine to compute estimated radar reflectivity from
 ! the precipitation mixing ratios.  Will also return 
 ! column max reflectivity and echo tops.  The estimation
@@ -899,21 +901,39 @@ do i=1,nx
 
 ! Compute the basic reflectivity using RAMS reflectivity algorithm.
 
-      w=264083.11*(rainmr(i,j,k)  &
-       +0.2*(icemr(i,j,k)+snowmr(i,j,k))  &
-       +2.0*graupelmr(i,j,k))
-      w=max(1.,w)
-      refl(i,j,k)=17.8*alog10(w)
+      if(c_m2z == 'rams') then
 
-      if (refl(i,j,k).eq.0.) then
-          refl(i,j,k)=-10.0
-      endif 	
+      	w=264083.11*(rainmr(i,j,k)  &
+        	+0.2*(icemr(i,j,k)+snowmr(i,j,k))  &
+        	+2.0*graupelmr(i,j,k))
+       	w=max(1.,w)
+      	refl(i,j,k)=17.8*alog10(w)
+
+        if (refl(i,j,k).eq.0.) then
+            refl(i,j,k)=-10.0
+        endif 
+
+      elseif (c_m2z == 'kessler') then
+
+        refl(i,j,k) =17300.0 * &
+                    (rho(i,j,k) * 1000.0 * &
+                    MAX(0.0,rainmr(i,j,k)))**svnfrth
+
+        ! Add the ice component
+        refl(i,j,k)=refl(i,j,k) + &
+                    38000.0*(rho(i,j,k) * 1000.0 * &
+                    MAX(0.0,icemr(i,j,k)+snowmr(i,j,k)+graupelmr(i,j,k)))**2.2
+
+          ! Convert to dBZ
+          refl(i,j,k) = 10.*ALOG10(MAX(refl(i,j,k),1.0))
+      endif
+ 	
 
 
 ! Since we are going from the ground up, we can 
 ! check threshold and set echo top.
 
-      if (refl(i,j,k) >= max_top_thresh) echo_tops(i,j)=hgt(i,j,k) 
+     if (refl(i,j,k) >= max_top_thresh) echo_tops(i,j)=hgt(i,j,k) 
    enddo
 
 ! Compute the max value in the column
