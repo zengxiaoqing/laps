@@ -348,9 +348,9 @@ if (make_micro) then
       allocate(tvsig(lx,ly,nz),rhomoistsig(lx,ly,nz))
       tvsig=htsig*(1.+0.61*hmrsig)
       rhomoistsig=hpsig/(r*tvsig)
-      call lfm_reflectivity(lx,ly,nz,rhomoistsig,hzsig  &
+      call lfm_reflectivity(rhomoistsig,hzsig  &
                            ,hrainmr_sig,hcldicemr_sig,hsnowmr_sig,hgraupelmr_sig  &
-                           ,hrefl_sig,max_refl,echo_tops)
+                           ,hrefl_sig)
       refl_sfc(:,:)=hrefl_sig(:,:,1)
       deallocate(tvsig,rhomoistsig)
       if (verbose) then
@@ -869,8 +869,8 @@ end
 
 !===============================================================================
 
-subroutine lfm_reflectivity(nx,ny,nz,rho,hgt,rainmr,icemr,snowmr,graupelmr  &
-                           ,refl,max_refl,echo_tops)
+subroutine lfm_reflectivity(rho,hgt,rainmr,icemr,snowmr,graupelmr  &
+                           ,refl)
 
 use lfmgrid
 
@@ -885,10 +885,9 @@ use lfmgrid
   
 implicit none
 
-integer :: nx,ny,nz,i,j,k
+integer :: i,j,k
 real, parameter :: svnfrth=7.0/4.0,max_top_thresh=5.0
 real :: w
-real, dimension(nx,ny) :: max_refl,echo_tops
 real, dimension(nx,ny,nz) :: rho,hgt,rainmr,icemr,snowmr,graupelmr,refl
 
 max_refl=0.0
