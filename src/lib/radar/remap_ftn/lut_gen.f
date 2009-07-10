@@ -141,7 +141,7 @@ c
 
       DO ielev = 0,lut_elevs
 
-        elev_deg = ielev * elev_interval
+        elev_deg = min_elev + (ielev * elev_interval)
         coselev = cosd(elev_deg)
 
         DO igate_lut = 1,lut_gates
@@ -181,7 +181,7 @@ c
 c
       DO 200 ielev = 0,lut_elevs
  
-        elev_deg = ielev * elev_interval
+        elev_deg = min_elev + (ielev * elev_interval)
  
         DO 180 igate_lut = 1,lut_gates
 
