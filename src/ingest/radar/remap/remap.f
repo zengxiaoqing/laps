@@ -223,7 +223,7 @@ c
       character string_time(9)
       character full_fname(91)
       integer initial_ray                ! flag for first ray in volume 
-      integer alls_well, read_next, knt_bad_stat
+      integer alls_well, knt_bad_stat
       integer i_angle, past_angle
       integer past_scan, past_tilt
       integer len_fname
@@ -319,7 +319,6 @@ c
       initial_ray  = 1
       n_rays=0 
       write_and_exit = 0
-      read_next = 1
       alls_well = 1
 
 !     Allocate Velocity arrays
@@ -377,27 +376,8 @@ c
       do while(alls_well .eq. 1) 
 
 
-!       Begin loop to fill buffer arrays with data from the circular buffer.
-!       Call remap routines and reset pointers at the end of a volume scan  
-
-!       if (read_next .eq. 1) then
-        if (.false.) then
-          if(VERBOSE .eq. 1)then
-            write(6,*)'  Calling read_radial '
-          endif
-
-          io_stat=read_radial() 
-          if(io_stat .eq. 1) then
-            write(6,*)'  Read_radial returned double eof '
-            write_and_exit = 1
-          endif
-
-          if(VERBOSE .eq. 1)then
-            write(6,*)'  Back from read_radial '
-          endif
-
-        else
-          read_next = 1
+!         Begin loop to fill buffer arrays with data from the circular buffer.
+!         Call remap routines and reset pointers at the end of a volume scan  
 
 ! Test for existence of velocity data.
 ! Do we also need to test for reflectivity data?   
@@ -604,6 +584,15 @@ c
      :               vel_nyquist,
      :               istatus_tilt)
 
+!             QC check that elevation angle is within lookup table range
+              if(Elevation_deg .lt. MIN_ELEV)then
+                 write(6,*)
+     1               ' Warning: Elevation_deg < MIN_ELEV in remap_sub'
+     1                         ,Elevation_deg,MIN_ELEV
+                 istatus = 0
+                 goto 900 ! return
+              endif
+
               call remap_process(
      1            i_tilt_proc_curr,i_last_scan,i_first_scan,             ! I
      :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,  ! O
@@ -651,11 +640,9 @@ c
 
               n_rays = 0 
               initial_ray = 1
-              read_next = 0
 
             endif ! test for end of tilt 
           endif   ! close velocity status block 
-        endif     ! close read_next block
       enddo       ! close infinite while loop    (increment tilt)
 
  900  continue
