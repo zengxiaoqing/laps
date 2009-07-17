@@ -492,6 +492,11 @@ SUBROUTINE PrPstLSX
   CALL WRITE_LAPS_DATA(i4t,dir,ext,ngd(1),ngd(2),nvr,nvr, &
      		       vnm,lvl,crd,vun,cmt,dat,sts)
 
+  ! Write data to a lsx file under balance:
+  dir(len-3:len+8) = 'balance/lsx/'
+  CALL WRITE_LAPS_DATA(i4t,dir(1:len+8),ext,ngd(1),ngd(2),nvr,nvr, &
+     		       vnm,lvl,crd,vun,cmt,dat,sts)
+
   !====================
   !  Write to L1S file:
   !====================
