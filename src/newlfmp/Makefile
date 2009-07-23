@@ -36,8 +36,10 @@
 SRCROOT=../..
 EXTMODS=-L$(SRCROOT)/src/lib/modules -lmodules
 DBEXTMODS=-L$(SRCROOT)/src/lib/modules -ldebugmodules
-LAPSLIB=-L$(SRCROOT)/src/lib llaps
+LAPSLIB=-L$(SRCROOT)/src/lib -llaps
 DBLAPSLIB=-L$(SRCROOT)/src/lib -ldebuglaps
+SYNPLIB=-L$(SRCROOT)/src/lib/radar/synp -lsynp
+DBSYNPLIB=-L$(SRCROOT)/src/lib/radar/synp -ldebugsynp
 GRIBLIB=-L$(SRCROOT)/src/lib/grib -lgrib
 DBGRIBLIB=-L$(SRCROOT)/src/lib/grib -ldebuggrib
 GRIB2LIB=-L$(SRCROOT)/src/lib/grib2 -lgrib2
@@ -80,18 +82,19 @@ FMOD = constants.o \
        mm5util.o \
        nmmutil.o \
        st4util.o \
-       wrfutil.o
+       wrfutil.o 
 
 all:			$(EXE)
 
 $(EXE):			$(FOBJS) $(COBJS) $(FMOD)
 			$(FC) $(FREE) -o $@ $(FFLAGS) $(FOBJS) $(COBJS) \
-			$(EXTMODS) $(GRIBLIB) $(GRIB2LIB) $(LAPSLIB) $(HDF5LIB) $(OTHERLIBS) $(EXTMODS) $(INC) -lm
+			$(GRIBLIB) $(GRIB2LIB) $(LAPSLIB) $(HDF5LIB) $(OTHERLIBS) $(EXTMODS) $(SYNPLIB) $(INC) -lm
 
 debug:	
 	 ($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
          "FFLAGS        =       $(DBFLAGS)"     \
  	 "LAPSLIB	=	$(DBLAPSLIB)" 	\
+ 	 "SYNPLIB	=	$(DBSYNPLIB)" 	\
          "GRIBLIB       =       $(DBGRIBLIB)"    \
          "GRIB2LIB      =       $(DBGRIB2LIB)"   \
          "FFLAGS90 	=	$(DBFLAGS90)"    \
@@ -117,7 +120,7 @@ ptfcst.o:		lfmgrid.o
 
 lfmwrite.o:		lfmgrid.o
 
-$(EXE):			$(SRCROOT)/src/lib/liblaps.a $(SRCROOT)/src/lib/modules/libmodules.a
+$(EXE):			$(SRCROOT)/src/lib/liblaps.a $(SRCROOT)/src/lib/modules/libmodules.a $(SRCROOT)/src/lib/radar/synp/libsynp.a
 
 clean:
 			$(RM) *.o $(EXE) core
