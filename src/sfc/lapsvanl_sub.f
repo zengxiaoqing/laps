@@ -91,7 +91,7 @@ c
 c
 c	print *,' Calculating the solution for streamfunction'
 	call zero(phi,imax,jmax)
-	call leib(phi,ter,100,.1,imax,jmax,z,b,c,z,z,dx,dy)
+	call leib_2d(phi,ter,100,.1,imax,jmax,z,b,c,z,z,dx,dy)
 c
 c.....	Adjust the winds.
 c
@@ -110,7 +110,7 @@ c
 	end
 c
 c
-	subroutine frict(fu,fv,u,v,uo,vo,imax,jmax,ak,akk)
+	subroutine frict_2d(fu,fv,u,v,uo,vo,imax,jmax,ak,akk)
 c
 	real fu(imax,jmax),fv(imax,jmax),u(imax,jmax),v(imax,jmax)
 	real vo(imax,jmax),uo(imax,jmax),akk(imax,jmax)
@@ -128,7 +128,7 @@ c
 	end
 c
 c
-	subroutine nonlin(nu,nv,u,v,uo,vo,imax,jmax,dx,dy)
+	subroutine nonlin_2d(nu,nv,u,v,uo,vo,imax,jmax,dx,dy)
 c
 	real nu(imax,jmax),nv(imax,jmax),u(imax,jmax),v(imax,jmax)
 	real uo(imax,jmax),vo(imax,jmax),dx(imax,jmax),dy(imax,jmax)
@@ -158,7 +158,7 @@ c
 	end
 c
 c
-	subroutine leib(sol,force,itmax,erf,imax,jmax,a,b,c,d,e,
+	subroutine leib_2d(sol,force,itmax,erf,imax,jmax,a,b,c,d,e,
      &                   dx,dy)
 c
 c.....  Relaxation routine.
@@ -169,7 +169,7 @@ c
 	real b(imax,jmax),c(imax,jmax),d(imax,jmax),e(imax,jmax)
 	real dx(imax,jmax), dy(imax,jmax)
 c
-	call tagit('leib', 19990813)
+	call tagit('leib_2d', 19990813)
 	ovr = 1.
 	reslmm = 0.
 	erb = 0.

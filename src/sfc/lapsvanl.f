@@ -909,8 +909,8 @@ c	  open(51,file='../static/drag_coef.dat',
 	  read(51) akk
 	  close(51)
           ro=.667  ! ro is V/fL where L is ave data distance *4
-	  call nonlin(nu,nv,u,v,u_bk_ms,v_bk_ms,imax,jmax,dx,dy)
-	  call frict(fu,fv,u,v,u_bk_ms,v_bk_ms,imax,jmax,ak,akk)
+	  call nonlin_2d(nu,nv,u,v,u_bk_ms,v_bk_ms,imax,jmax,dx,dy)
+	  call frict_2d(fu,fv,u,v,u_bk_ms,v_bk_ms,imax,jmax,ak,akk)
 c
 c.....	compute forcing function
 c
@@ -938,7 +938,7 @@ c
 	  scale=0.
 c
 	  call zero(z, ni,nj)
-	  call leib(p_a,f,itmax,erf,imax,jmax,z,z,z,z,a,dx,dy)
+	  call leib_2d(p_a,f,itmax,erf,imax,jmax,z,z,z,z,a,dx,dy)
 c
 	  write(6,1200) filename,ro,gam,del,dt
 1200	  format(1x,'wind and pressure analysis for ',a9/1x,' with ro, 
