@@ -348,9 +348,9 @@ if (make_micro) then
       allocate(tvsig(lx,ly,nz),rhomoistsig(lx,ly,nz))
       tvsig=htsig*(1.+0.61*hmrsig)
       rhomoistsig=hpsig/(r*tvsig)
-      call lfm_reflectivity(rhomoistsig,hzsig  &
+      call lfm_reflectivity(lx,ly,nz,rhomoistsig,hzsig  &
                            ,hrainmr_sig,hcldicemr_sig,hsnowmr_sig,hgraupelmr_sig  &
-                           ,hrefl_sig)
+                           ,hrefl_sig,htsig,hpsig,hmrsig,max_refl,echo_tops)
       refl_sfc(:,:)=hrefl_sig(:,:,1)
       deallocate(tvsig,rhomoistsig)
       if (verbose) then
@@ -869,10 +869,11 @@ end
 
 !===============================================================================
 
-subroutine lfm_reflectivity(rho,hgt,rainmr,icemr,snowmr,graupelmr  &
-                           ,refl)
+subroutine lfm_reflectivity(nx,ny,nz,rho,hgt,rainmr,icemr,snowmr,graupelmr  &
+                           ,refl,tmp,p,qv,max_refl,echo_tops)
 
-use lfmgrid
+use lfmgrid, ONLY: c_m2z
+use src_versuch, ONLY: versuch
 
 ! Subroutine to compute estimated radar reflectivity from
 ! the precipitation mixing ratios.  Will also return 
@@ -885,10 +886,17 @@ use lfmgrid
   
 implicit none
 
-integer :: i,j,k
+integer :: nx,ny,nz,i,j,k
 real, parameter :: svnfrth=7.0/4.0,max_top_thresh=5.0
 real :: w
+real, dimension(nx,ny) :: max_refl,echo_tops
 real, dimension(nx,ny,nz) :: rho,hgt,rainmr,icemr,snowmr,graupelmr,refl
+real, dimension(nx,ny,nz) :: tmp,p,qv
+
+! Local arrays
+
+real, dimension(nx,ny,nz) :: zhhx,ahhx,zhvx,zvhx,zvvx    ! versuch outputs
+real, dimension(nx,ny,nz) :: delahvx,kkdp,rhohvx         ! versuch outputs
 
 max_refl=0.0
 echo_tops=1.0e37
@@ -912,6 +920,8 @@ do i=1,nx
             refl(i,j,k)=-10.0
         endif 
 
+! Compute the basic reflectivity using Kessler reflectivity algorithm.
+
       elseif (c_m2z == 'kessler') then
 
         refl(i,j,k) =17300.0 * &
@@ -923,16 +933,49 @@ do i=1,nx
                     38000.0*(rho(i,j,k) * 1000.0 * &
                     MAX(0.0,icemr(i,j,k)+snowmr(i,j,k)+graupelmr(i,j,k)))**2.2
 
-          ! Convert to dBZ
-          refl(i,j,k) = 10.*ALOG10(MAX(refl(i,j,k),1.0))
-      endif
- 	
+        ! Convert to dBZ
+        refl(i,j,k) = 10.*ALOG10(MAX(refl(i,j,k),1.0))
 
+
+! Computing the reflectivity by using the synpolrad code
+
+
+      elseif (c_m2z == 'synp') then
+
+        call versuch(rainmr(i,j,k),snowmr(i,j,k),graupelmr(i,j,k),tmp(i,j,k) &   ! I
+                    ,zhhx(i,j,k)                                             &   ! O
+                    ,ahhx(i,j,k)                                             &   ! O
+                    ,zhvx(i,j,k),zvhx(i,j,k),zvvx(i,j,k)                     &   ! O
+                    ,p(i,j,k)                                                &   ! I
+                    ,qv(i,j,k)                                               &   ! I
+                    ,delahvx(i,j,k),kkdp(i,j,k),rhohvx(i,j,k))                   ! O 
+
+!       qr = specific rain   (kg/kg)
+!       qs = specific snow (kg/kg)
+!       qg = specific graupel (kg/kg)
+!       t  = temperature (K)
+!       p  = pressure (Pa) - druck
+!       qv = specific water vapor (kg/kg) - qd
+
+!       intent(out):
+!       zhh = reflectivity-hh (Z), not in dBZ
+!       zhv
+!       zvh
+!       zvv
+!       kappa = extinction coeff (km-1) - ahhx
+!       delahv   = specific differential attenuationa (dB km-1)
+!       kkdp   = specific differential phase (degree km-1)
+!       rhohv = hv-vh cross correlation coeffcient (n/a)
+
+!       Convert to dBZ
+        refl(i,j,k) = 10.*ALOG10(MAX(zhhx(i,j,k),1.0))
+
+      endif ! c_m2z (reflectivity algorithm)
 
 ! Since we are going from the ground up, we can 
 ! check threshold and set echo top.
 
-     if (refl(i,j,k) >= max_top_thresh) echo_tops(i,j)=hgt(i,j,k) 
+      if (refl(i,j,k) >= max_top_thresh) echo_tops(i,j)=hgt(i,j,k) 
    enddo
 
 ! Compute the max value in the column
