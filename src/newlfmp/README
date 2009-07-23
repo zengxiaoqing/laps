@@ -5,8 +5,8 @@ MODULE diagram for new lfmpost
    ------------                              ----
 
 lfmpost                                      lfmpost.f90
-    lfm_namelist
-    get_native_dims                          lfmutil.f90
+    lfm_namelist                             lfmutil.f90
+    get_native_dims                              "
         get_mm5_dims                         mm5util.f90 
         get_wrf_dims                         wrfutil.f90 
         get_nmm_dims                         nmmutil.f90 
@@ -23,7 +23,9 @@ lfmpost                                      lfmpost.f90
         gdtost_lfm                               "
             binom_lfm                            "
     lfm_derived                              lfmutil.f90
-        fill_precip                              " 
+        lfm_reflectivity                         "
+            versuch                          lib/radar/synp/src_versuch.f90
+        fill_precip                          lfmutil.f90
         wintprec                                 "       
         snowfall                                 "
         model_pblhgt                             "

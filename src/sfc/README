@@ -47,10 +47,10 @@ main                                           laps_sfc.f
                 barnes_multivariate_sfc        barnes_multivariate_sfc.f
             barnes_multivariate_sfc_jacket          "
                 barnes_multivariate_sfc             "
-            nonlin                             lib/laps_routines.f
+            nonlin                             lapsvanl_sub.f
             frict                                   "
             leib                                    "
-            stats                                   "
+            stats                              lib/laps_routines.f
             vortdiv                            lib/util/windfields.f
             meso_anl                           lib/laps_routines.f
             vlog2vis                           visibility.f
