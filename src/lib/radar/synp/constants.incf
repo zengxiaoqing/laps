@@ -1,0 +1,99 @@
+!************
+! constants 
+!************
+     real*8 :: pi
+         real*4     :: &
+       vlght,      & ! Lichtgeschwindigkeit
+           t0,         & ! absolute zero for temperature
+           r,          & ! gas constant for dry air
+           rd,         & ! gas constant for water vapor
+           rdrd,       & ! r / rd
+           emrdrd,     & ! 1 - r/rd
+           rddrm1,     & ! r/rd - 1
+           wcp,        & ! specific heat for dry air
+           wcpr,       & ! 1 / wcp
+           rdwcp,      & ! r / wcp
+           gamma_c,    & ! 1 / (1 - rdwcp)   ( = cp/cv)
+           wlk,        & ! evaporation heat
+           wlf,        & ! freezing heat
+           wls,        & ! sublimation heat
+           g,          & ! acceleration due to gravity
+           gq,         & ! g * g
+           gh,         & ! g / 2
+           edg,        & ! 1 / g
+           rerd,       & ! mean radius of the earth
+           stag,       & ! mean star day
+           rhf,        & ! density of water
+           sigma,      & ! Boltzmann-constant
+           soko,       & ! solar constant
+           rho(3),     & ! density of pure water, pure ice and dry snow
+
+           b11,         & ! variables for computing the saturation steam pressure
+           b2w,        & ! over water (w) and ice (e)
+           b2e,        & !           -- " --
+           b3,         & !           -- " --
+           b4w,        & !           -- " --
+           b4e,        & !           -- " --
+           b234w,      & ! b2w * (b3 - b4w)
+           uc1,        & ! variable for computing the rate of cloud cover in 
+           uc2,        & ! the unsaturated case
+           ucl,        & !           -- " --
+           rhde,       & ! variable for computing the snow covered ground
+           aks2,       & ! variable for horizontal diffusion of second order
+           aks4,       & ! variable for horizontal diffusion of fourth order
+           akt,        & ! von Karman-constant
+
+           gasabs        ! absorbtion by water vapour and oxygen [dB/km]      
+
+
+! physical constants and related variables
+! ----------------------------------------
+      vlght    = 3.e8
+      pi       = 3.14159265358979e0
+      t0       = 273.15
+      r        = 287.05
+      rd       = 461.51
+      rdrd     = r / rd 
+      emrdrd   = 1.0 - rdrd
+      rddrm1   = rd/r - 1.0
+      wcp      = 1005.0
+      wcpr     = 1.0 / wcp
+      rdwcp    = r / wcp
+      gamma_c  = 1.0 / (1.0 - rdwcp)
+      wlk      = 2.501E6
+      wlf      = 0.334E6
+      wls      = 2.835E6
+      g        = 9.80665
+      gq       = g * g
+      gh       = g * 0.5
+      edg      = 1.0 / g
+      rerd     = 6371.229E3
+      stag     = 86164.09054
+      rhf      = 1000.0
+      sigma   = 5.6697E-8
+      soko     = 1368.0
+      rho(1)   = 1000. !density of pure water [kg/m**3]
+      rho(2)   = 916.  !density of pure ice [kg/m**3]
+      rho(3)   = 300.  !density of dry snow [kg/m**3] (Ulaby, p.2060)
+        
+
+! constants for parametrizations
+! ------------------------------
+
+      b11       = 610.78
+      b2w      = 17.2693882
+      b2e      = 21.8745584
+      b3       = 273.16
+      b4w      = 35.86
+      b4e      = 7.66
+      b234w    = b2w * (b3 - b4w)
+      uc1      = 0.8
+      ucl      = 1.00
+      rhde     = 1.0 / 5.0 * 1000.0
+      akt      = 0.4
+
+
+! free parameters
+! ---------------
+
+      gasabs = 0.016

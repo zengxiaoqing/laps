@@ -1,0 +1,8 @@
+! yen: ie, je, ke have no effects on results, they just have to be there
+INTEGER*4, PARAMETER :: &
+  ie =  86, &
+  je =  72, &
+  ke =  50
+
+REAL :: &
+  freq = 5.5027

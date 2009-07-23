@@ -1,0 +1,115 @@
+ 
+INTEGER, Parameter :: mst = 9, &
+    mdr = 2,&
+    mca=20,&
+    mca2=mca*mca,&
+    mrank=100,&
+    mrank1=30,& !30
+    m2rank=2*mrank1, &
+    mds = 2
+    
+
+Integer :: iscshp
+
+
+REAL :: glrdr(mdr,2),&
+    glbdy(12),&
+    glcad(2,6),&
+     szlow(mst),&
+    sdtyp(mst),& 
+    sdidv(mst),&
+    sznum(mst), &
+    szupp(mst),&
+    sdgno(mst),&
+    sdgmm(mst),&
+    sdgml(mst),&
+    glszd(mst,9),&
+    refreclm,&
+    refimclm,&
+    refresnow,&
+    refimsnow,&
+    refreagg, &
+        refimagg,&
+    refregr,&
+    refimgr,&
+    refreha,&
+    refimha,&
+    refreair,&
+    refimair,&
+    refreplt,&
+    refimplt, &
+    refrep,&
+    refimp,&
+    refrewi, &
+    refimwi, &
+    refreiw,&
+    refimiw, &
+    scmixgr, &
+    gradens, &
+    aggdens, &
+    snowdens,&
+    clmdens,&
+    pltdens, &
+    haildens, &
+    scmixwater, &
+    scmixwatermod, &
+    scmixhaice, &
+    scmixagg, &
+    scmixg,&
+    scmixh,&
+    scmixsnow, &
+    scmixha, &
+        scmixclm, &
+        scmixplt, &
+    scmixhawater, &
+    epsreha, &
+    dsz, &
+    epsimha, &
+    szmin(9),&
+    szmax(9), &
+    szpar, &
+    sctmp
+real*8:: aovrb
+    
+real ::    zcoef, &
+    rain_gam, &
+    water_gam,&
+    zhh(mdr),&
+    zvv(mdr),&
+    zhv(mdr),&
+    zvh(mdr),&
+    zdr(mdr),&
+    ldrh(mdr),&
+    ldrv(mdr),&
+    dph(mdr),&
+    dpv(mdr),&
+    rhohv(mdr),&
+    delhv(mdr),&
+    cdrl(mdr),&
+    orttl(mdr),&
+    aldl(mdr),&
+    dpl(mdr),&
+    cdrr(mdr),&
+    orttr(mdr),&
+    aldr(mdr),&
+    dpr(mdr),&
+    zhhdb(mdr),&
+        kdp(mdr),&
+    ahh(mdr),&
+    avv(mdr),&
+    delahv(mdr)
+
+
+
+Complex :: epsmat,&
+       epsinc, &
+       epseff,&
+           ctmp, &
+       epsair, &
+       epsp, &
+       epshail, &
+       epswi, &
+       epsiw
+
+Complex*16 :: aaa(m2rank,m2rank),&
+              b(m2rank,m2rank)

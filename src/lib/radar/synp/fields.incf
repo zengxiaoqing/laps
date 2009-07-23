@@ -1,0 +1,164 @@
+      integer*4, parameter :: &
+
+        ang = 9000,           & !maximum number of angle increments 
+        scanres = 10,         & !azimuthal scan resolution [1/10 degree]
+        qe = 50,             & !maximum number of range bins per radar ray 
+        nsp = 360*qe            !maximum number of simulated points 
+
+!--------------------------------------------------------------------------
+
+      character (len=2)    :: &
+        dd,hh,mm                !simulated day, hour and minute
+
+!--------------------------------------------------------------------------
+
+      integer*4                 :: &
+
+        az,                        & !azimuth angle [1/10 degree]
+        el,                        & !elevation angle [1/100 degree] 
+        ca,ce,kul,win,stop,iend,   & !local scalars
+        i,j,k,l,m,                 & !loop indices
+        ihh,imm,                   & !     "
+        azscan,elscan,             & !     "
+        ilm,jlm,irad,jrad,ibon,    & !     "
+        q,qmax(0:ang),             & !(maximum) range bin number per angle
+        xgp,ygp,                   & !grid point numbers (simulated point)        
+        nzr,                       & !counter for linear regression
+        refhit,                    & !number of range bins inside a circular
+                                     !area around each LM-pixel
+        ku,kl,                     & !upper and lower vertical LM gp
+        im,xgmin(0:qe),            & !i component of the grid point with the
+                                     !minimum distance to the straight line [ ]
+        jm,ygmin(0:qe),            & !j component of the grid point with the
+                                     !minimum distance to the straight line [ ]
+        km,zgmin(0:qe),            & !k component of the grid point with the
+                                     !minimum distance to the straight line [ ]
+        ixs,iys,izs                  !3 components of the grid point with the
+                                     !minimum distance to the radar site [ ]
+
+!--------------------------------------------------------------------------
+
+      logical                   :: &
+        lref                         !used in src_sim.f90 and refrac.incf    
+
+!--------------------------------------------------------------------------
+ 
+      real*4                    :: & 
+        deltaxy,deltaz,            & !local scalars for anomal propagation [m]
+        x1,x2,y1,y2,z1,z2,d1,d2,d3,d4,   & !local scalars for the area mean [m]
+        dgmin,                     & !shortest distance between grid point
+                                     !(a,b,c) and the straight line [m]
+        rvx,rvy,rvz,               & !3 components of the direction vector [m]
+        hsim(ke+1),                & !geometrical height (bilinear inter-
+                                     !polated) [m]
+        dummy,                     & !dummy scalar
+        dist,                      & !distance [m]
+        w1,w2,                     & !weighting factors []
+        refsum,                    & !reflectivity sum inside a circular area
+                                     !around each LM-pixel [mm^6/m^3]
+        refradth                     !reflectivity threshold of the DWD 
+                                     !radar composite [dBZ]
+
+! variables at radar (composite) points
+real*4, allocatable, dimension(:,:) :: &
+        latrad,                & !latitude [degree] 
+        lonrad,                & !longitude [degree]
+        refrad                  !radar reflectivity (DWD) [dBZ]
+real*4 :: refbon(nsp),               & !radar reflectivity (Bonn) [dBZ]
+
+! variables at simulated points
+        rainsim,snowsim,           & !rain and snow rate [mm/h]
+        precsim,precsimzr(nsp),    & !surface precipitation rate [mm/h]
+        qwsim                     !specific water vapour content [kg/kg]
+!real*8:: &
+!        xxsim(0:qe), &                 !radar distance in x direction [m]
+!    yysim(0:qe)
+real*4:: &
+        xsim(0:qe), &                 !radar distance in x direction [m]
+    ysim(0:qe)
+real*4 :: &
+        xrhi(0:ang,0:qe),          & !                "                
+        yrhi(0:ang,0:qe),          & !                "
+        zsim(0:qe),                & !radar distance in z direction [m]
+        zrhi(0:ang,0:qe),          & !                "          
+        dqplus(0:qe),dq(0:qe),     & !total way (increment) of the radar 
+                                     !ray [m]
+        latsim(0:ang,0:qe),        & !latitude [degree] 
+        lonsim(0:ang,0:qe),        & !longitude [degree]
+        refsim(0:ang,0:qe),        & !radar reflectivity [mm^6/m^3] or [dBZ]
+!    refsimtm(0:ang,0:qe),       &
+        refsimzr(nsp),             & !                  "
+        extsim(0:ang,0:qe),        & !total extinction coefficient [Np/m]
+        cextlm                       !total extinction [Np]
+
+! variables at LM grid points
+real*4, pointer, dimension(:,:) :: &
+        latlm,lonlm !latitude and longitude [degree]
+real*4 :: refsim_gr(0:ie,0:je)     ,      & !simulated radar reflectivity [dBZ]
+!    refsimtm_gr(0:ie,0:je)    ,&
+          refrad_gr(0:ie,0:je)                 !observed radar reflectivity [dBZ]       
+real*4, pointer, dimension(:,:,:)::&
+        p,             & !air pressure [Pa]
+        t,             & !temperature [K]  
+    vel,         &!vertical velocity   
+        qd,            & !specific water vapour content [kg/kg]
+        qw,            & !specific cloud water content [kg/m^3]
+        reflm,         & !radar reflectivity [mm^6/m^3] or [dBZ]
+        extlm,         & !total extinction coefficient [Np/m]
+        h,             & !geometrical height [m]
+        hhl,           & !geometrical height (half levels) [m]         
+! the precipitation fluxes/rates
+        prrs,          & !precipitation flux, scale rain [kg/m^2s]
+        prrk,          & !precipitation flux, conv. rain [kg/m^2s]
+        prss,          & !precipitation flux, scale snow [kg/m^2s]
+        prsk,          & !precipitation flux, conv. snow [kg/m^2s]
+        rain,          & !total rain rate [mm/h]
+        snow,&
+    tmatrix, &
+    tmatrixx,&
+    diff, &
+    zzdr, &
+    ldr, &
+    qci, &           !cloud ice content
+    qcigr, &
+    noc ,&             !number concentration of ice
+    uvel, &             !zonal wind
+    vvel               !meridional wind
+
+integer, pointer, dimension(:,:,:) :: classic
+    
+real, pointer, dimension(:,:) :: niederschlag, &
+    regen, &
+    schnee         !total snow rate [mm/h]
+
+real*4::&
+! variables for linear regression
+        offset,grad,               & !offset and gradient
+        soffset,sgrad,             & !offset and gradient error (sigma)        
+        dprecm,                    & !mean deviation between the modeled 
+                                     !surface precipitation rate and the 
+                                     !simulated precipitation rate (according 
+                                     !to the MP Z-R relation)  
+
+! scan variables
+        el_ppi,                    & !elevation angle of the azimuth scan
+                                     ![degree]
+        azstart,                   & !first simulated azimuth angle 
+                                     ![1/10 degree]
+        azstop,                    & !last simulated azimuth angle 
+                                     ![1/10 degree]
+        az_rhi,                    & !azimuth angle of the elevation scan
+                                     ![degree]
+        elstart,                   & !first simulated elevation angle
+                                     ![degree]   
+        elstop                       !last simulated elevation angle
+                                     ![degree]
+
+!--------------------------------------------------------------------------
+
+      double precision, pointer, dimension(:,:,:)          :: &
+        n                      !real part of the refraction index [ ]
+      double precision:: & 
+    bwin1,bwin2                  !angles of incidence and refraction
+                                     !according to Snellius ['Bogenmass']
+!--------------------------------------------------------------------------
