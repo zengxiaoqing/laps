@@ -1,4 +1,4 @@
-      program qbalpe_main_sfc  !10/08, E.T.
+      program qbalpe_main_sfc
 c
       implicit none
 c
@@ -716,6 +716,9 @@ c     write out input laps vs balanced laps at center grid point
 
       endif
       deallocate(lapsphi,lapsu,lapsv,omo)
+c temporary revision, ed Tollerud, set npass to work on 64 bit machines, 0709********
+      npass=0
+c end temporary revision, 0709*********
 c adjust surface temps to account for poor phi estimates below ground 
       call sfctempadj(tb,lapstemp,p,ps,nx,ny,nz,npass)  
 
