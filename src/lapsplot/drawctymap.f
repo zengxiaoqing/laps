@@ -206,7 +206,7 @@ c
      1                       ,c3_time_zone,time_zone
      1                       ,c_institution,c_vnt_units
      1                       ,c_units_type,c_pbl_depth_units
-     1                       ,chigh_sfcwind
+     1                       ,chigh_sfcwind,chigh_cape
      1                       ,l_discrete, l_sphere
      1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
@@ -224,6 +224,7 @@ c
        iraster = 0
        l_sphere = .false.
        icol_barbs = 0
+       chigh_cape = 7000.
        c_ob_color = 'default'
  
        call get_directory('static',static_dir,len_dir)
@@ -247,6 +248,7 @@ c
        namelist_parms%c_units_type = c_units_type
        namelist_parms%c_pbl_depth_units = c_pbl_depth_units
        namelist_parms%chigh_sfcwind = chigh_sfcwind
+       namelist_parms%chigh_cape = chigh_cape
        namelist_parms%c_ob_color = c_ob_color
        namelist_parms%l_discrete = l_discrete
        namelist_parms%l_sphere = l_sphere
