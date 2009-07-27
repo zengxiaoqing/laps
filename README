@@ -88,6 +88,7 @@
          3.3.2.1 .....................  SURFACE ANALYSIS RUNTIME PARAMETERS
          3.3.2.2 .....................  SURFACE ANALYSIS QUALITY CONTROL
          3.3.2.3 .....................  SURFACE ANALYSIS VERIFICATION
+         3.3.2.4 .....................  STMAS-2D
          3.3.3 ..................  TEMP 
          3.3.4 ..................  CLOUD
          3.3.5 ..................  WATER VAPOR (HUMIDITY PROCESSING)
@@ -1470,6 +1471,10 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      2) "traditional" LAPS surface analysis only
 
         prompt> perl sched.pl -M laps_sfc.x [other regular options]
+
+     3) STMAS-3D 
+
+        prompt> perl sched.pl -V STMAS3D [other regular options]
 
                ---  2.5  Test data case  ---
 
@@ -3173,7 +3178,7 @@ Parameter namelist file: 'static/surface_analysis.nl'
         compensate for temporal changes in data density. The log file for this
         new program is in 'sfc_qc.log'. 
 
---------- 3.3.2.3 ------SURFACE ANALYSIS VERIFICATION -------------------
+--------- 3.3.2.3 ------SURFACE ANALYSIS VERIFICATION-------------------
 
         Verification statistics for the surface analyses are written to the
         'log/qc/laps_sfc.ver.hhmm' files. These contain information of
@@ -3182,6 +3187,12 @@ Parameter namelist file: 'static/surface_analysis.nl'
         an ob may have been rejected in the analysis by the final "spline 
         standard deviation" check yet still have a non-missing value listed
         in the QC files. 
+
+--------- 3.3.2.4 ---------------STMAS-2D--------------------------------
+
+Source directory: laps/src/mesowave/stmas_mg
+
+Author: Yuanfu Xie (Yuanfu.Xie AT noaa.gov)
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
 
@@ -3800,12 +3811,8 @@ Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc.
 
 Process: STMAS3D.exe - Space-Time Mesoscale Analysis System in 3D
 
-   This analysis can substitute for 'wind.exe' and 'temp.exe' mentioned
-   above.
-
-Outputs:
-        lt1          3d grid    ht and t field
-        lw3          3d grid    u3, v3 and om field (grid north)
+   This analysis can be run with the other appropriate executables by 
+   using the -V STMAS3D option in 'sched.pl'
 
 ------- 3.4  ----  Model Initialization & Postprocessing ---------------------
 
