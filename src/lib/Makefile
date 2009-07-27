@@ -114,6 +114,7 @@ SRC	= machine_dependent.F \
           pcpcnc.f \
           prof_cdf.f \
           psatoz.f \
+          put_sfc_bal.f \
           qc.f \
           qc_field_3d.f \
           radar_qc.f \
