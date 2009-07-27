@@ -8,6 +8,7 @@
  c_units_type='english',
  c_pbl_depth_units='metric',
  chigh_sfcwind=50.,
+ chigh_cape=7000.,
  c_ob_color='default',
  l_discrete=.false.,
  l_sphere=.false.,
@@ -47,6 +48,9 @@ c c_pbl_depth_units - PBL depth units ('english' or 'metric')
 c
 c chigh_sfcwind - maximum of colorbar range for surface wind speed plots
 c                 (recommended values are 50., 100., 200.)
+c
+c chigh_cape - maximum of colorbar range for CAPE plots
+c              (recommended values are 7000., 3500.)
 c
 c c_ob_color - color to plot surface obs 'default', or 'white'
 c
