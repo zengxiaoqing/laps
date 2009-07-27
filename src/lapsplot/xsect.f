@@ -679,7 +679,7 @@ c read in laps lat/lon and topo
 95     format(
      1  /'  Field - (add "i" for image):'
      1  /
-     1  /'          [WIND: di,sp,u,v,om,dv,vo,va,vc (barbs)'
+     1  /'          [WIND: di,sp,u,v,om,dv,vo,pv,va,vc (barbs)'
      1  /
      1  /'           TEMP: [t,pt,tb,pb] (T, Theta, T Blnc, Theta Blnc)'       
      1  /
@@ -777,6 +777,7 @@ c read in laps lat/lon and topo
      1    .or. c_field .eq. 'u ' .or. c_field      .eq. 'v '
      1    .or. c_field .eq. 'w ' .or. c_field      .eq. 'dv'
      1    .or. c_field .eq. 'vo' .or. c_field      .eq. 'va' 
+     1    .or. c_field .eq. 'pv'
      1    .or. c_field .eq. 'vc' .or. c_field(1:2) .eq. 'om' )then
 
             call input_product_info(i4time_ref              ! I
@@ -1363,7 +1364,8 @@ c read in laps lat/lon and topo
             do k = 1,NZ_L
                 call vorticity_abs(u_3d(1,1,k),v_3d(1,1,k)
      1                            ,field_3d(1,1,k),lat,lon
-     1                            ,NX_L,NY_L,.true.,r_missing_data)       
+     1                            ,NX_L,NY_L,dx,dy
+     1                            ,.true.,r_missing_data)       
             enddo
 
             call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
@@ -1395,12 +1397,70 @@ c read in laps lat/lon and topo
                 c_label = 'LAPS Abs Vort  (Fcst)    [1e-5/s]'
             endif
 
+        elseif(c_field .eq. 'pv' )then
+!           Read 3D Temperature
+            write(6,*)' Obtaining 3D temperature'
+            if(c_prodtype .eq. 'A')then
+                iflag_temp = 1 ! Returns Ambient Temp (K)
+
+                call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+
+            elseif(c_prodtype .eq. 'B' .or. 
+     1             c_prodtype .eq. 'F')then
+                var_2d = 'T3'
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+            else
+                write(6,*)' Sorry, temperature source not yet supported'       
+                goto100
+
+            endif
+
+            call calc_potvort(i4time_ref,u_3d,v_3d,temp_3d,field_3d
+     1                       ,lat,lon,NX_L,NY_L,NZ_L,0,.true.
+     1                       ,dx,dy,r_missing_data,istatus)       
+
+            call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            do k = NZ_C,1,-1
+              do i = 1,NX_C
+                if(field_vert(i,k) .eq. r_missing_data)then
+                    field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                else
+                    field_vert(i,k) = field_vert(i,k) * 1e6
+                endif
+              enddo ! i
+            enddo ! k
+
+            clow = -10.
+            chigh = +10.
+            cint = 2. / density
+
+            i_contour = 1
+
+            if       (c_prodtype .eq. 'N')then
+                c_label = 'LAPS PVort  (Bal)    PVU '
+            elseif   (c_prodtype .eq. 'A')then
+                c_label = 'LAPS PVort  (Anal)   PVU '
+            elseif   (c_prodtype .eq. 'B')then
+                c_label = 'LAPS PVort  (Bkgnd)  PVU '
+            elseif   (c_prodtype .eq. 'F')then
+                c_label = 'LAPS PVort  (Fcst)   PVU '
+            endif
+
         elseif(c_field .eq. 'va' )then
-            call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
             do k = 1,NZ_L
                 call vorticity_abs(u_3d(1,1,k),v_3d(1,1,k)
      1                            ,field_2d,lat,lon
-     1                            ,NX_L,NY_L,.true.,r_missing_data)       
+     1                            ,NX_L,NY_L
+     1                            ,dx,dy,.true.,r_missing_data)       
 
                 call cpt_advection(field_2d,u_3d(1,1,k),v_3d(1,1,k)
      1                            ,dx,dy,NX_L,NY_L
@@ -2432,7 +2492,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             clow = 0.
-            chigh = +20.
+            chigh = +25.
             cint = 1.0 / density
 !           cint = -1.
             i_contour = 1
