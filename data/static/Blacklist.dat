@@ -1,4 +1,5 @@
- 00114
+ 00113
+ PIKES                 001  WND
  BLDER                 001  WND
  KARL                  001  WND
  KFCS                  003  ALT  STP  MSL
@@ -84,7 +85,6 @@
  K5PTT                 002  DEW  HUM
  K5KIO                 003  DEW  TMP  HUM
  K5JCT                 003  TMP  DEW  HUM
- AWS                   101  WND
  DSOTO                 002  DEW  HUM
  KBBEJ                 001  TMP
  KKIES                 001  TMP
@@ -93,7 +93,6 @@
  KLLMS                 002  DEW  HUM
  KPRSE                 001  TMP 
  KSASM                 002  DEW  HUM
- RAWS                  101  WND
  GLOBE                 101  WND
  SCHLNET               101  WND
  WXLAB                 101  WND
