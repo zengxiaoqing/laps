@@ -25,6 +25,7 @@ LIBDIRS = src/lib/modules \
           src/lib/opt90 \
           src/lib/powell  \
           src/lib/radar/remap_ftn \
+          src/lib/radar/synp \
           src/lib/radar/wsi_ingest \
           src/lib/satellite \
           src/lib/temp   \
