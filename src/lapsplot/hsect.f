@@ -319,6 +319,9 @@ c       include 'satellite_dims_lvd.inc'
 !       Surface Wind Range
         chigh_sfcwind = namelist_parms%chigh_sfcwind
 
+!       CAPE Range
+        chigh_cape = namelist_parms%chigh_cape
+
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus) 
 
         call get_max_radar_files(max_radar_files,istatus)      
@@ -712,7 +715,7 @@ c       include 'satellite_dims_lvd.inc'
                 else if(k_level .gt. 0)then
                     write(6,103)
 103                 format(/
-     1                       '  Field [di,sp,u,v,om,dv,vo,va,vc'      
+     1                       '  Field [di,sp,u,v,om,dv,vo,pv,va,vc'      
      1                      ,' (barbs), ob (obs))]'   
      1                                          ,14x,'? ',$)
                     read(lun,15)c_field
@@ -759,7 +762,22 @@ c       include 'satellite_dims_lvd.inc'
  
                     endif ! c_field = 'w'
 
-                endif
+                    if(c_field .eq. 'pv')then ! read 3D temperature field
+                      if(c_type_i .eq. 'wd')then
+                        ext = 'lt1'
+                        call get_temp_3d(i4time_ref,i4time_nearest
+     1                                  ,1,NX_L,NY_L,NZ_L
+     1                                  ,temp_3d,istatus)
+                        if(istatus .ne. 1)goto1200
+                      elseif(c_type_i .eq. 'wb')then
+                        ext = 'fua'
+                      elseif(c_type_i .eq. 'wr')then
+                       ext = 'fsf'
+                      endif
+
+                    endif ! pv field
+
+                endif ! k_level > 0
 
             elseif(k_level .eq. -1)then ! Read mean winds from 2d grids
 
@@ -1223,7 +1241,7 @@ c       include 'satellite_dims_lvd.inc'
 
             elseif(c_field .eq. 'vo')then ! Display Vorticity Field
                 call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
-     1                         ,.true.,r_missing_data)
+     1                            ,dx,dy,.true.,r_missing_data)
 
                 if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' VORT (diff) 1e-5/s'
@@ -1253,8 +1271,48 @@ c       include 'satellite_dims_lvd.inc'
                 chigh = +80.
                 cint = 5.
 
-!               call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
-!    1                               ,zoom,density,scale)
+                call plot_field_2d(i4time_3dw,c_type_i,field_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'spectral')
+
+            elseif(c_field .eq. 'pv')then ! Display Potential Vorticity Field
+
+!               This should also read in the 3D temperature field
+                call calc_potvort(i4time,u_2d,v_2d,temp_3d,field_3d
+     1                           ,lat,lon,NX_L,NY_L,NZ_L,k_level,.true.
+     1                           ,dx,dy,r_missing_data,istatus)       
+
+                field_2d = field_3d(:,:,1)
+
+                if(c_type_i(1:2) .eq. 'wf')then
+                    c19_label = ' PVORT (diff)  PVU '
+                    call mklabel(k_mb,c19_label,c_label)
+                elseif(c_type_i(1:2) .eq. 'wb')then
+                    c19_label = ' PVORT (lga)   PVU '
+                    call mklabel(k_mb,c19_label,c_label)
+                elseif(c_type_i(1:2) .eq. 'wr')then
+                    c19_label = ' PVORT (fua)   PVU '
+
+!                   Note that c_model is blank in this case
+                    call mk_fcst_hlabel(k_mb,'PVort',fcst_hhmm
+     1                                 ,ext(1:3),'PVU'
+     1                                 ,c_model,c_label)
+
+                elseif(c_type_i(1:2) .eq. 'bw')then
+                    c19_label = ' PVORT (bal)   PVU '
+                    call mklabel(k_mb,c19_label,c_label)
+                else
+                    c19_label = ' PVORT (anal)  PVU '
+                    call mklabel(k_mb,c19_label,c_label)
+                endif
+
+                scale = 1e-6
+                
+                clow = -5.
+                chigh = +5.
+                cint = 1.
 
                 call plot_field_2d(i4time_3dw,c_type_i,field_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -1262,11 +1320,9 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
-
             elseif(c_field .eq. 'va')then ! Vorticity Advection Field
                 call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
-     1                         ,.true.,r_missing_data)
-                call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
+     1                            ,dx,dy,.true.,r_missing_data)
                 call cpt_advection(field_2d,u_2d,v_2d,dx,dy,NX_L,NY_L
      1                            ,field2_2d)
                 call mklabel(k_mb,' VORT ADV 1e-9/s**2',c_label)
@@ -3772,7 +3828,7 @@ c
 
               c_label = 'CAPE                (J/KG)       '
               clow = 0.
-              chigh = 7000.
+              chigh = chigh_cape
               cint = +500.
 
           elseif(c_type(1:2) .eq. 'ne')then
@@ -3904,7 +3960,7 @@ c                cint = -1.
               if(c_type(1:2).eq.'rb')then
                  var_2d = 'RHL'
                  write(6,*)' Reading rhl / ',var_2d
-                 call mklabel(k_mb,' LAPS RH     (liq) %'
+                 call mklabel(k_mb,' Balanced RH (liq) %'
      1                                 ,c_label)
                  call get_directory('balance',directory,lend)
                  directory=directory(1:lend)//'lh3/'
@@ -4855,7 +4911,7 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'PBE')then
 !                   call condition_cape(NX_L,NY_L,'pei',r_missing_data
 !    1                                 ,field_2d)
-                    call ccpfil(field_2d,NX_L,NY_L,0.0,7000.
+                    call ccpfil(field_2d,NX_L,NY_L,0.0,chigh_cape
      1                         ,'cpe',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'NBE')then
