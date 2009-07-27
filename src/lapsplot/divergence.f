@@ -135,7 +135,7 @@ cdis
         end
 
 
-        subroutine vorticity_abs(uanl,vanl,vort,lat,lon,ni,nj
+        subroutine vorticity_abs(uanl,vanl,vort,lat,lon,ni,nj,dx,dy
      1                          ,l_grid_north,r_missing_data)
 
         real lat(ni,nj),lon(ni,nj)                           ! I
@@ -143,17 +143,27 @@ cdis
         real coriolis(ni,nj)                                 ! L
         real vort(ni,nj)                                     ! O
         real div(ni,nj)                                      ! L
-        real dx(ni,nj), dy(ni,nj)                            ! L
+        real dx(ni,nj), dy(ni,nj)                            ! O
 
         logical l_grid_north                                 ! I
 
-        call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
+        data init/0/
+        save init
 
+        if(init .eq. 0)then ! call this only once to save time
+            write(6,*)'     call get_grid_spacing_array'
+            call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
+            init = 1
+        endif
+
+        write(6,*)'     call vortdiv'
         call vortdiv(uanl,vanl,vort,div,ni,nj,dx,dy)
 
+        write(6,*)'     call get_coriolis_rotation'
         call get_coriolis_rotation(ni,nj,lat,coriolis)
 
-        call add(vort,coriolis,vort,ni,nj)
+!       call add(vort,coriolis,vort,ni,nj)
+        vort = vort + coriolis 
 
         return
         end
@@ -185,18 +195,25 @@ c
 
 
         subroutine calc_potvort(i4time,uanl,vanl,temp_3d,potvort,lat,lon       
-     1                    ,ni,nj,nk,l_grid_north,r_missing_data,istatus)       
+     1                         ,ni,nj,nk,k_in,l_grid_north,dx,dy
+     1                         ,r_missing_data,istatus)       
+
+        include 'constants.inc'
 
         real lat(ni,nj),lon(ni,nj)                           ! I
         real uanl(ni,nj,nk),vanl(ni,nj,nk)                   ! I
         real temp_3d(ni,nj,nk)                               ! I
         real vort_2d(ni,nj)                                  ! L
+        real dx(ni,nj)                                       ! O
+        real dy(ni,nj)                                       ! O
         real theta(ni,nj,nk)                                 ! L
         real pres_3d(ni,nj,nk)                               ! L
         real dtheta_dp(ni,nj,nk)                             ! L
         real potvort(ni,nj,nk)                               ! O
 
         logical l_grid_north                                 ! I
+
+        write(6,*)' Subroutine calc_potvort'
 
 !       Obtain 3D pressure field
         call get_pres_3d(i4time,ni,nj,nk,pres_3d,istatus)
@@ -228,11 +245,31 @@ c
 
 
 !       Calculate absolute vorticity
-        do k = 1,nk
-            call vorticity_abs(uanl(:,:,k),vanl(:,:,k),vort_2d
-     1                   ,lat,lon,ni,nj
+        if(k_in .gt. 0)then ! 2D
+            kstart = k_in
+            kend = k_in
+        else                ! 3D where k_in = 0
+            kstart = 1
+            kend = nk
+        endif
+
+        do k = kstart,kend
+            write(6,*)' calling vorticity_abs for level ',k
+            call vorticity_abs(uanl(1,1,k),vanl(1,1,k),vort_2d
+     1                   ,lat,lon,ni,nj,dx,dy
      1                   ,l_grid_north,r_missing_data)
-            potvort(:,:,k) = vort * dtheta_dp(:,:,k) ! multiply this by G
+
+!           See http://www-das.uwyo.edu/~geerts/cwx/notes/chap12/pot_vort.html
+
+            if(k_in .gt. 0)then     ! just returning 2d field (for efficiency)
+                write(6,*)'     calculating 2D potvort'
+                potvort(:,:,1) = vort_2d(:,:) * dtheta_dp(:,:,k) 
+     1                                        * grav       
+            elseif(k_in .eq. 0)then ! return 3D field
+                write(6,*)'     calculating 3D potvort'
+                potvort(:,:,k) = vort_2d(:,:) * dtheta_dp(:,:,k) 
+     1                                        * grav       
+            endif
         enddo ! k
 
         return
