@@ -884,7 +884,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 elseif(c8_obstype(1:3) .eq. 'RAO')then  ! RAOB
                     icol_in = 7  ! Yellow
                 elseif(c8_obstype(1:3) .eq. 'RAD')then  ! Radiometer
-                    icol_in = 7  ! Yellow
+                    icol_in = 5  ! Orange
                 elseif(c8_obstype(1:3) .eq. 'DRO')then  ! Dropsonde
                     icol_in = 14 ! Royal Blue
                 elseif(c8_obstype(1:2) .eq. 'SA')then   ! SATSND
@@ -951,7 +951,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         write(6,*)' Plot Dewpoint Obs, size_td = ',size_temp
 
         lun = 32
-        ext = 'tmg'
+        ext = 'hmg'
         call get_directory(ext,directory,len_dir)
 
         filename = directory(1:len_dir)//filename13(i4time,ext(1:3))
@@ -1060,6 +1060,32 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 141     continue
 
         close(32)
+
+        return
+        end
+
+        subroutine plot_td_sndobs(k_level,i4time,imax,jmax,kmax
+     1                        ,r_missing_data,lat,lon,topo,zoom
+     1                        ,plot_parms)
+
+        include 'lapsplot.inc'
+
+!       call  read_tdsnd(i4time_sys,heights_3d,temp_bkg_3d,  ! Input
+!    1                   pres_3d,                                 ! Input
+!    1                   lat_tdsnd,lon_tdsnd,                     ! Output
+!    1                   lat,lon,                                 ! Input
+!    1                   max_snd,max_snd_levels,                  ! Input
+!    1                   ob_pr_td,inst_err_tdsnd,                 ! Output
+!    1                   c5_name,c8_sndtype,                      ! Output
+!    1                   l_read_raob,l_3d,                        ! Input
+!    1                   i4_window_raob_file,                     ! Input
+!    1                   bias_htlow,                              ! Output
+!    1                   n_tdsnd,                                 ! Output
+!    1                   ilaps_cycle_time,                        ! Input
+!    1                   imax,jmax,kmax,                          ! Input
+!    1                   r_missing_data,                          ! Input
+!    1                   istatus)                                 ! Output
+
 
         return
         end
