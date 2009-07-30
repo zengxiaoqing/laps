@@ -136,11 +136,11 @@ elif test "$netpbm" = "yes" && test "$animate" = "yes"; then
     done
 
     echo "convert -delay 50 -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
-    convert -delay 50 -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
+    convert -delay 75 -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
 
 #   This option may be more direct though it isn't working on the new server
 #   echo "convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
-#   convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
+#   convert -delay 75 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
 
     ls -l $SCRATCH_DIR/gmeta_$proc.gif
 
