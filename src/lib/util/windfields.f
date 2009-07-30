@@ -29,24 +29,75 @@ cdis
 cdis 
 cdis 
 cdis 
-        subroutine get_grid_spacing_array(lat,lon,imax,jmax,dx,dy)
+      subroutine get_grid_spacing_array(rlat,rlon,ni,nj
+     1                                 ,grid_spacing_actual_mx
+     1                                 ,grid_spacing_actual_my)
 
-        real lat(imax,jmax)
-        real lon(imax,jmax)
-        real dx(imax,jmax)
-        real dy(imax,jmax)
+cdoc  Calculate actual grid spacing (x,y directions) at any given lat/lon 
+cdoc  location. This works for conformal or 'latlon' grids
 
-        do j=1,jmax
-        do i=1,imax
-           call get_grid_spacing_actual(lat(i,j),lon(i,j)
-     &             ,grid_spacing_actual_m,istatus)
-           dy(i,j) = grid_spacing_actual_m
-           dx(i,j) = grid_spacing_actual_m
-        enddo !i
-        enddo !j
+      include 'trigd.inc'
 
-        return
-        end
+      real rlat(ni,nj),rlon(ni,nj)                                     ! I
+      real grid_spacing_actual_mx(ni,nj),grid_spacing_actual_my(ni,nj) ! O
+
+      character*6 c6_maproj
+
+      write(6,*)' Subroutine get_grid_spacing_array'
+
+      call get_standard_latitudes(slat1,slat2,istatus)
+      if(istatus .ne. 1)then
+          stop
+      endif
+
+      call get_grid_spacing(grid_spacing_m,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)
+     1 ' Error calling get_grid_spacing from get_grid_spacing_actual_xy'       
+          stop
+      endif
+
+      call get_c6_maproj(c6_maproj,istatus)
+      if(istatus .ne. 1)then
+          stop
+      endif
+
+      if(c6_maproj .ne. 'latlon')then
+          if(c6_maproj .eq. 'plrstr')then
+              call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+     1                                     ,grid_spacing_proj_m)
+          else
+              grid_spacing_proj_m = grid_spacing_m
+          endif
+
+          do i = 1,ni
+          do j = 1,nj
+              call get_sigma(rlat(i,j),rlon(i,j),sigma,istatus)
+              if(istatus .ne. 1)then
+                  write(6,*)
+     1        ' Error calling get_sigma from get_grid_spacing_actual'       
+                  stop
+              endif
+
+              grid_spacing_actual_mx(i,j) = grid_spacing_proj_m / sigma       
+              grid_spacing_actual_my(i,j) = grid_spacing_proj_m / sigma
+          enddo ! j
+          enddo ! i
+
+      else
+          do i = 1,ni
+          do j = 1,nj
+              grid_spacing_actual_mx(i,j) = grid_spacing_m 
+     1                                    * cosd(rlat(i,j))
+              grid_spacing_actual_my(i,j) = grid_spacing_m 
+          enddo ! j
+          enddo ! i
+
+      endif
+
+      return
+      end
+
 c
 c=====  Here are John's subroutines...(abandon hope, ye who enter)
 c
