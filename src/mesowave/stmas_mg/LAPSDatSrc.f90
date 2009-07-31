@@ -157,6 +157,9 @@ SUBROUTINE LAPSConf
     ENDDO
   ENDDO
 
+  ! Get reduced pressure level:
+  call GET_LAPS_REDP(rdplvl,err)
+
   ! time step:
   grdspc(3) = lapsdt
 
@@ -511,6 +514,7 @@ SUBROUTINE LAPSOBSV(m)
                 t_c = f_to_c(tmp(k))
                 d_c = dwpt(t_c,rhd(k))
                 rawobs(1,numobs(j)+k,j) = c_to_f(d_c)
+                dew(k) = rawobs(1,numobs(j)+k,j) ! Replace dew with one from RH
                 ! obs expect accuracy:
                 t_c = f_to_c(tmpea(k))
                 d_c = dwpt(t_c,rhdea(k))
@@ -545,11 +549,12 @@ SUBROUTINE LAPSOBSV(m)
 	      prs = badsfc
 	    ENDIF
 
-	    ! Convert to reduced pressure:
-	    IF (prs .NE. badsfc) THEN
+	    ! Convert to reduced pressure at the reduced pressure level, rdplvl:
+	    IF (prs .NE. badsfc .AND. tmp(k) .NE. badsfc &
+               .AND. dew(k) .NE. badsfc .AND. elv(k) .NE. badsfc) THEN
 	      CALL REDUCE_P(tmp(k),dew(k),prs,elv(k), &
 		lapses(1),lapses(2), &
-		rawobs(1,numobs(j)+k,j),0.0,badsfc)
+		rawobs(1,numobs(j)+k,j),rdplvl,badsfc)
 	    ELSE
 	      rawobs(1,numobs(j)+k,j) = badsfc
             ENDIF
