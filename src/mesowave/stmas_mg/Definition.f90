@@ -98,10 +98,11 @@ MODULE Definition
   INTEGER, ALLOCATABLE, DIMENSION(:) &
 	  :: i4prev		! LAPStimes
 
-  REAL :: mising		! Laps bad data flag
+  REAL   :: mising		! Laps bad data flag
   REAL   :: badsfc		! Laps bad sfc flag
   REAL   :: thresh(MAXVAR)	! Threshold for obs agaist bkg
   REAL   :: pnlt_v(MAXVAR)	! Penalty of each variable !added by min-ken hsieh, used in STMASAna
+  REAL   :: rdplvl		! Reduced Pressure level definted in LAPS
   REAL, ALLOCATABLE, DIMENSION(:,:) &
 	 :: latgrd,longrd,topogr! Grid Lat/Lon/topo
   REAL, ALLOCATABLE, DIMENSION(:,:,:) &
