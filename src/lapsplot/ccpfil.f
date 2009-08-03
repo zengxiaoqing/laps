@@ -164,10 +164,10 @@ C
 
             endif
 
-!           Prevent overshoot beyond colortable (except for CAPE/CIN/discrete)
+!           Prevent overshoot beyond colortable (except for discrete)
             if(c5_sect .eq. 'hsect')then
               if(ZREG(i,j) .gt. scale_loc     .and. 
-     1             colortable(1:3) .ne. 'cpe' .and.
+!    1             colortable(1:3) .ne. 'cpe' .and.
      1             (.not. l_integral)               )then
                 ZREG(i,j) = scale_loc
               endif
@@ -241,7 +241,7 @@ C
               else
                   l_discrete = .false.
               endif
-          elseif(colortable .eq. 'cpe' .and. scale_h_in .eq. 7000.)then       
+          elseif(colortable .eq. 'cpe')then       
               if(l_divisible)then
                   l_discrete = plot_parms%l_discrete
               else
@@ -266,7 +266,7 @@ C
 
           ncols = nint(range / colorbar_int)
 
-          write(6,*)' l_discrete case, ncols = '
+          write(6,*)' l_discrete case: range/colorbar_int/ncols = '
      1             ,range,colorbar_int,ncols  
       endif
 
@@ -800,7 +800,7 @@ C
 
       call get_colorbar_int(range,colorbar_int,l_divisible)
 
-      if(scale_l .eq. -20. .or. scale_h .eq. 7000. 
+      if(scale_l .eq. -20. .or. colortable .eq. 'cpe' 
      1                     .or. nint(range) .eq. 8000    ! PBL
      1                     .or. l_integral               ! e.g. HAH, HAM, CWI
      1                     .or. l_discrete               
@@ -1225,27 +1225,29 @@ c     Restore original color table
 
       logical l_divisible
 
-      if(range .gt. 13000.)then
+      if(range .ge. 13000.)then
           colorbar_int = 2000.
-      elseif(range .gt. 2500.)then
+      elseif(range .ge. 4000.)then
           colorbar_int = 1000.
-      elseif(range .gt. 1000.)then
+      elseif(range .ge. 2500.)then
+          colorbar_int = 500.
+      elseif(range .ge. 1000.)then
           colorbar_int = 400.
-      elseif(range .gt. 700.)then
+      elseif(range .ge. 700.)then
           colorbar_int = 100.
-      elseif(range .gt. 200.)then
+      elseif(range .ge. 200.)then
           colorbar_int = 50.
-      elseif(range .gt. 190.)then
+      elseif(range .ge. 190.)then
           colorbar_int = 20.
-      elseif(range .gt. 45.)then
+      elseif(range .ge. 45.)then
           colorbar_int = 10.
-      elseif(range .gt. 25.)then
+      elseif(range .ge. 25.)then
           colorbar_int = 5.
-      elseif(range .gt. 10.)then
+      elseif(range .ge. 10.)then
           colorbar_int = 2.
-      elseif(range .gt. 6.)then
+      elseif(range .ge. 6.)then
           colorbar_int = 1.
-      elseif(range .gt. 1.5)then
+      elseif(range .ge. 1.5)then
           colorbar_int = 0.5
       else !
           colorbar_int = 0.1
@@ -1259,6 +1261,9 @@ c     Restore original color table
       else
           l_divisible = .false.
       endif
+
+      write(6,*)' returning from get_colorbar_int ',range,colorbar_int       
+
       return
       end
 
