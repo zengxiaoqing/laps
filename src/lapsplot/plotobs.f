@@ -930,7 +930,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         subroutine plot_td_obs(k_level,i4time,imax,jmax,kmax
      1                        ,r_missing_data,lat,lon,topo,zoom
-     1                        ,plot_parms)
+     1                        ,plot_parms,k_mb,mode)
 
         include 'lapsplot.inc'
 
@@ -942,7 +942,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         logical l_found_file
 
-!       Plot Temperature Obs  ***********************************************
+!       Plot Dewpoint Obs  ***********************************************
 
 !       size_temp = 8. * float(max(imax,jmax)) / 300.
         size_temp = 1.1 ! 3.33
@@ -1024,7 +1024,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 elseif(c8_obstype(1:3) .eq. 'RAO')then  ! RAOB
                     icol_in = 7  ! Yellow
                 elseif(c8_obstype(1:3) .eq. 'RAD')then  ! Radiometer
-                    icol_in = 7  ! Yellow
+                    icol_in = 5  ! Orange
                 elseif(c8_obstype(1:3) .eq. 'DRO')then  ! Dropsonde
                     icol_in = 17 ! Lavender
                 elseif(c8_obstype(1:2) .eq. 'GO')then   ! GOES Satellite
@@ -1038,6 +1038,11 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 call setusv_dum(2hIN,icol_in)
 
                 iflag_cv = 0
+
+                if(mode .eq. 2)then ! convert from td to q
+                    svp = es(t_c)
+                    t_c = (svp / float(k_mb)) * 1000.
+                endif
 
                 call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
      1                          ,lat,lon,imax,jmax,size_temp
@@ -1070,22 +1075,61 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         include 'lapsplot.inc'
 
-!       call  read_tdsnd(i4time_sys,heights_3d,temp_bkg_3d,  ! Input
-!    1                   pres_3d,                                 ! Input
-!    1                   lat_tdsnd,lon_tdsnd,                     ! Output
-!    1                   lat,lon,                                 ! Input
-!    1                   max_snd,max_snd_levels,                  ! Input
-!    1                   ob_pr_td,inst_err_tdsnd,                 ! Output
-!    1                   c5_name,c8_sndtype,                      ! Output
-!    1                   l_read_raob,l_3d,                        ! Input
-!    1                   i4_window_raob_file,                     ! Input
-!    1                   bias_htlow,                              ! Output
-!    1                   n_tdsnd,                                 ! Output
-!    1                   ilaps_cycle_time,                        ! Input
-!    1                   imax,jmax,kmax,                          ! Input
-!    1                   r_missing_data,                          ! Input
-!    1                   istatus)                                 ! Output
+        integer max_snd,max_snd_levels
+        parameter (max_snd = 10000)
+        parameter (max_snd_levels = 200)
 
+        real heights_3d(imax,jmax,kmax)
+        real pres_3d(imax,jmax,kmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
+         
+        real dum1_3d(imax,jmax,kmax) ! dummy variable
+
+!       Arrays returned from read_tdsnd
+        real lat_tdsnd(max_snd)
+        real lon_tdsnd(max_snd)
+        real bias_htlow(max_snd)
+        real ob_pr_td(max_snd,kmax) ! Vertically interpolated TSND temp
+        real inst_err_tdsnd(max_snd)
+        character*5 c5_name(max_snd) 
+        character*8 c8_sndtype(max_snd) 
+
+        write(6,*)' Subroutine plot_td_sndobs'
+
+        i4_window_raob_file = 3600
+        ilaps_cycle_time = 3600
+
+        call get_pres_3d(i4time,imax,jmax,kmax,pres_3d,istatus)
+
+!       Set up standard atmosphere for heights
+        do k = 1,kmax
+        do i = 1,imax
+        do j = 1,jmax
+            heights_3d(i,j,k) = psatoz(pres_3d(i,j,k)*.01) 
+        enddo ! j
+        enddo ! i
+        enddo ! k
+       
+
+        call  read_tdsnd(i4time,heights_3d,dum1_3d,               ! Input
+     1                   pres_3d,                                 ! Input
+     1                   lat_tdsnd,lon_tdsnd,                     ! Output
+     1                   lat,lon,                                 ! Input
+     1                   max_snd,max_snd_levels,                  ! Input
+     1                   ob_pr_td,inst_err_tdsnd,                 ! Output
+     1                   c5_name,c8_sndtype,                      ! Output
+     1                   .true.,.false.,                          ! Input
+     1                   i4_window_raob_file,                     ! Input
+     1                   bias_htlow,                              ! Output
+     1                   n_tdsnd,                                 ! Output
+     1                   ilaps_cycle_time,                        ! Input
+     1                   imax,jmax,kmax,                          ! Input
+     1                   r_missing_data,                          ! Input
+     1                   istatus)                                 ! Output
+
+        write(6,*)' back from read_tdsnd, # soundings = ',n_tdsnd
 
         return
         end
