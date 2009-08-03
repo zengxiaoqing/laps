@@ -58,13 +58,22 @@ print "\n";
 
 # RAOBs
 
-print "RAOBS:\n";
+print "RAOBS (Soundings):\n";
 @greplines = grep /raob switch off/, @lines;
 foreach (@greplines) {print "$_";}
 @greplines = grep /No usable RAOB data/, @lines;
 foreach (@greplines) {print "$_";}
 @greplines = grep /Number of RAOBs considered/, @lines;
 foreach (@greplines) {print "$_";}
+@raobtypes = qw(RAOB GOES11 GOES12 POESSND RADIOMTR);
+foreach $raobtype (@raobtypes) {
+    @greplines  = grep /$raobtype/, @lines;
+    @greplines2 = grep /accepting/, @greplines;
+    $numlines = @greplines2;
+    if($numlines > 0){
+        print "    $numlines $raobtype obs accepted\n";
+    }
+}
 print "\n";
 
 # GPS
