@@ -13,11 +13,13 @@ FFLAGS=$(DBFLAGS)
 LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  \
+           $(SRCROOT)/src/lib/temp/libtemp.a  \
            $(SRCROOT)/src/lib/modules/libmodules.a  
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
+             $(SRCROOT)/src/lib/temp/libdebugtemp.a  \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
 .SUFFIXES:
@@ -37,6 +39,7 @@ SRC= lapsplot_main.f \
      getuv2d.f \
      logit.f \
      plotobs.f \
+     read_tdsnd.f \
      plottype.f \
      plotwinds_2d.f \
      plotgrid_2d.f \
