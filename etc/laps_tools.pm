@@ -331,7 +331,7 @@ rdr/007/vrc rdr/007/raw rdr/008/vrc rdr/008/raw rdr/009/vrc rdr/009/raw
 rdr/wideband
 ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/wps lapsprep/cdf dprep stats 
 balance balance/lt1 balance/lw3 balance/lh3 balance/lq3 balance/lsx balance/air balance/pln
-grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc
+grid ram rsf lsq tmg hmg lst pbl model model/varfiles model/output model/sfc
 verif verif/noBal verif/Bal verif/Bkgd 
 verif/REF
 verif/REF/hist verif/REF/cont 
