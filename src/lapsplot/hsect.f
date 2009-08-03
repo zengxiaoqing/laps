@@ -289,6 +289,7 @@ c       include 'satellite_dims_lvd.inc'
         ndim_read = 2
 
         ialloc_vel = 0
+        i4time_temp = 0
 
         icen = NX_L/2+1
         jcen = NY_L/2+1
@@ -409,8 +410,9 @@ c       include 'satellite_dims_lvd.inc'
 
         write(6,12)
  12     format(
-     1       /'     HUMIDITY: [br,fr,lq,rb] (lga;fua;lq3;bal)'
-     1       /'               [pw] Precipitable H2O'       
+     1       /'     HUMIDITY: [br,fr,lq,rb] (lga;fua;lq3;bal)'       
+     1       /'               [ho,qo](tdobs;qobs)'            
+     1       /'               [pw] Precipitable H2O'            
      1       /
      1       /'     CLOUDS/PRECIP: [ci] Cloud Ice,'
      1       ,' [ls] Cloud LWC'
@@ -769,13 +771,63 @@ c       include 'satellite_dims_lvd.inc'
      1                                  ,1,NX_L,NY_L,NZ_L
      1                                  ,temp_3d,istatus)
                         if(istatus .ne. 1)goto1200
+                      elseif(c_type_i.eq.'bw')then
+                        ext = 'lt1'
+                        call get_temp_3d(i4time_ref,i4time_nearest
+     1                                  ,4,NX_L,NY_L,NZ_L
+     1                                  ,temp_3d,istatus)
+                        if(istatus .ne. 1)goto1200
                       elseif(c_type_i .eq. 'wb')then
-                        ext = 'fua'
+                        ext = 'lga'
+                        var_2d = 'T3'
+                        call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory,c_model       ! O
+     1                             ,i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim                ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+                        if(istatus.ne.1)goto1200 
+                        call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,istatus)
+                        IF(istatus .ne. 1)THEN
+                          write(6,*)' Error Reading Grid ',var_2d,' '
+     1                                                    ,ext,istatus       
+                          goto1200
+                        endif
                       elseif(c_type_i .eq. 'wr')then
-                       ext = 'fsf'
+                        ext = 'fua'
+                        var_2d = 'T3'
+                        call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory,c_model       ! O
+     1                             ,i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim                ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+                        if(istatus.ne.1)goto1200
+                        call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,istatus)
+                        IF(istatus .ne. 1)THEN
+                          write(6,*)' Error Reading Grid ',var_2d,' '
+     1                                                    ,ext,istatus       
+                          goto1200
+                        endif
                       endif
 
-                    endif ! pv field
+                    endif ! pv field temperature read
 
                 endif ! k_level > 0
 
@@ -1312,7 +1364,7 @@ c       include 'satellite_dims_lvd.inc'
                 
                 clow = -5.
                 chigh = +5.
-                cint = 1.
+                cint = 0.5
 
                 call plot_field_2d(i4time_3dw,c_type_i,field_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -1572,6 +1624,7 @@ c       include 'satellite_dims_lvd.inc'
      1                          .or. c_type .eq. 'ov' ! Sky Cover, Visibility
      1                          .or. c_type .eq. 'op' ! Precip 
      1                          .or. c_type .eq. 'og' ! Soil/Water T
+     1                          .or. c_type .eq. 'oh' ! Humidity (GPS-PW)
      1                          .or. c_type .eq. 'ow' ! Wind Only
      1                          .or. c_type .eq. 'qf' ! QC Air T,Td in F
      1                          .or. c_type .eq. 'qc' ! QC Air T,Td in C
@@ -3874,6 +3927,7 @@ c
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
           else ! image plot
+              where(field_2d .eq. r_missing_data)field_2d = 0.
               call ccpfil(field_2d,NX_L,NY_L,clow,chigh,'cpe'
      1                   ,n_image,scale,'hsect',plot_parms
      1                   ,namelist_parms)    
@@ -4200,7 +4254,7 @@ c                   cint = -1.
      1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
-     1                             ,asc9_tim              ! O
+     1                             ,asc9_tim                ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
@@ -4312,9 +4366,37 @@ c                   cint = -1.
      1                        * laps_cycle_time
             endif
 
+!           Plot temperature obs from the TMG file
             call plot_temp_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                        ,r_missing_data,lat,lon,topo,zoom
      1                        ,plot_parms)
+
+        elseif(c_type .eq. 'ho' .or. c_type .eq. 'qo')then
+            write(6,1513)
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
+
+            if(i4time_temp .eq. 0)then
+                i4time_temp = (i4time_ref / laps_cycle_time) 
+     1                        * laps_cycle_time
+            endif
+
+!           Read dewpoint obs from the SND file (and make hmg file)
+            write(6,*)' Reading SND file to make HMG file'
+            call plot_td_sndobs(k_level,i4time_temp,NX_L,NY_L,NZ_L
+     1                         ,r_missing_data,lat,lon,topo,zoom
+     1                         ,plot_parms)
+
+            if(c_type .eq. 'ho')then
+                mode = 1
+            else
+                mode = 2
+            endif
+
+!           Use this if the HMG file becomes available
+            write(6,*)' Plotting HMG file'
+            call plot_td_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
+     1                      ,r_missing_data,lat,lon,topo,zoom
+     1                      ,plot_parms,k_mb,mode)
 
         elseif(c_type(1:2) .eq. 'ht'.or. c_type(1:2) .eq. 'bh')then
             write(6,1513)
