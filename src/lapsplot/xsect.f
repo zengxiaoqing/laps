@@ -1402,7 +1402,11 @@ c read in laps lat/lon and topo
             write(6,*)' Obtaining 3D temperature'
             if(c_prodtype .eq. 'A')then
                 iflag_temp = 1 ! Returns Ambient Temp (K)
+                call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
+            elseif(c_prodtype .eq. 'N')then
+                iflag_temp = 4 ! Returns Balanced Temp (K)
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
