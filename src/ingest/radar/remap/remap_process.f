@@ -384,7 +384,8 @@ c
 c
 c     Find elevation index in look up table
 c
-      ielev = nint((elevation_deg * LUT_ELEVS)/MAX_ELEV)
+      ielev = nint(((elevation_deg-MIN_ELEV) * LUT_ELEVS)
+     1                  /(MAX_ELEV-MIN_ELEV)                 )
       ielev = max(ielev,0)
       ielev = min(ielev,LUT_ELEVS)
       write(6,*)' REMAP_PROCESS > elev index = ',ielev
@@ -461,7 +462,7 @@ c
 
             IF (k .eq. 0) GO TO 180
 
-            IF (k .lt. k_low)then
+            IF (k .lt. k_low .and. elevation_deg .ge. 0.)then
                 write(6,*)' Error: inconsistent k values - ',k,k_low
                 stop
             ENDIF
