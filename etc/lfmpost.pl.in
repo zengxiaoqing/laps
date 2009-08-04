@@ -393,8 +393,8 @@ for ($g=1; $g<=$ngrid; $g++) {
 
       if (! $opt_q) {  #run *with* qsub
         chdir "$modelroot/$date";
-        print "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/$grid\n";
-        $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/$grid > $lfmpostlog";
+        print "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid\n";
+        $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $lfmpostlog";
 
 #  make .sh script to submit to qsub
         open (QS, ">qsub_lfmpost_$yyyy$mm$dd$hh.sh");
@@ -426,7 +426,7 @@ for ($g=1; $g<=$ngrid; $g++) {
         print "Finish qsub_wait: $now\n";
         
       } else {  #run without qsub
-        $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $lfmpostlog";
+        $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $lfmpostlog";
         print "$command\n";
         system ("$command");
       }
