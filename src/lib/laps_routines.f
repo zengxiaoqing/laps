@@ -1839,20 +1839,21 @@ c
 	return
 	end
 
-        subroutine pstn_anal(back_mp,back_sp,mslp_bk,mslp,ni,nj
+        subroutine pstn_anal(back_mp,back_sp,prin_bk,prin,ni,nj
      1                      ,stnp_bk,stnp)
 
 !       This routine solves for the 'stnp' analysis by assuming that ratio
-!       stnp/stnp_bk is equal to mslp/mslp_bk. This provides an indirect
+!       stnp/stnp_bk is equal to prin/prin_bk. This provides an indirect
 !       way to get the observations to modify the STNP background to
-!       come up with a STNP analysis. We are thus feeding off of any MSLP obs
-!       that contributed to the MSLP analysis.
+!       come up with a STNP analysis. We are thus feeding off of any PRIN obs
+!       that contributed to the PRIN analysis.
 
         integer back_mp,back_sp
 
-        real mslp_bk(ni,nj)                                    ! I
-        real mslp(ni,nj)                                       ! I
-        real mslp_diff(ni,nj)                                  ! L
+!       PRIN is input pressure array, either MSLP or REDP fields
+        real prin_bk(ni,nj)                                    ! I
+        real prin(ni,nj)                                       ! I
+        real prin_diff(ni,nj)                                  ! L
         
         real stnp_bk(ni,nj)                                    ! I
         real stnp(ni,nj)                                       ! I/O
@@ -1862,7 +1863,7 @@ c
 
         call get_r_missing_data(r_missing_data,istatus)
 
-!       Check bounds of mslp/stnp fields
+!       Check bounds of prin/stnp fields
         if(back_sp .eq. 1)then
             call array_minmax(stnp_bk,ni,nj,rmin,rmax,r_missing_data)
             if(rmin .lt. 300. .or. rmax .gt. 1100)then
@@ -1872,23 +1873,24 @@ c
             endif
         endif
 
-        call array_minmax(mslp,ni,nj,rmin,rmax,r_missing_data)
+        call array_minmax(prin,ni,nj,rmin,rmax,r_missing_data)
         if(rmin .lt. 850. .or. rmax .gt. 1100)then
-            write(6,*)' Warning: MSLP analysis range out of bounds'      
+            write(6,*)' Warning: input P analysis range out of bounds'      
      1               ,rmin,rmax
         endif
 
         if(back_mp .eq. 1)then
-            call array_minmax(mslp_bk,ni,nj,rmin,rmax,r_missing_data)
+            call array_minmax(prin_bk,ni,nj,rmin,rmax,r_missing_data)
             if(rmin .lt. 850. .or. rmax .gt. 1100)then
-                write(6,*)' Warning: MSLP bkgnd range out of bounds'      
+                write(6,*)' Warning: input P bkgnd range out of bounds'       
      1                   ,rmin,rmax
             endif
 
-            call diff(mslp,mslp_bk,mslp_diff,ni,nj)
-            call array_minmax(mslp_diff,ni,nj,rmin,rmax,r_missing_data)       
+            call diff(prin,prin_bk,prin_diff,ni,nj)
+            call array_minmax(prin_diff,ni,nj,rmin,rmax,r_missing_data)       
             if(rmin .lt. -50. .or. rmax .gt. +50.)then
-                write(6,*)' Warning: MSLP bkg diff range out of bounds'       
+                write(6,*)
+     1                  ' Warning: input P bkg diff range out of bounds'       
      1                   ,rmin,rmax
             endif
         endif
@@ -1899,15 +1901,15 @@ c
         endif
 
 !       Adjust stnp field
-        write(6,*)' Performing stnp adjustment using mslp/mslp_bk'
+        write(6,*)' Performing stnp adjustment using prin/prin_bk'
 
         do i = 1,ni
         do j = 1,nj
-            if(       mslp_bk(ni,nj) .ne. r_missing_data       
-     1          .and. mslp(ni,nj)    .ne. r_missing_data              
+            if(       prin_bk(ni,nj) .ne. r_missing_data       
+     1          .and. prin(ni,nj)    .ne. r_missing_data              
      1          .and. stnp_bk(ni,nj) .ne. r_missing_data   )then
 
-                stnp(i,j) = ( mslp(i,j) / mslp_bk(i,j) ) * stnp_bk(i,j)       
+                stnp(i,j) = ( prin(i,j) / prin_bk(i,j) ) * stnp_bk(i,j)       
 
             else
                 stnp(i,j) = stnp_bk(i,j)
