@@ -818,9 +818,14 @@ C
 C TH: End hack.
 C
 c
-!       Call routine to check pres arrays and adjust psfc based on mslp/mslp_bk
-        call pstn_anal(back_mp,back_sp,mslp_bk,mslp,imax,jmax
-     1                ,sp_bk,psfc)       
+!       Call routine to check pres arrays and adjust psfc 
+        if(.false.)then ! adjust based on mslp/mslp_bk
+            call pstn_anal(back_mp,back_sp,mslp_bk,mslp,imax,jmax
+     1                    ,sp_bk,psfc)       
+        else           ! adjust based on rp/rp_bk
+            call pstn_anal(back_rp,back_sp,rp_bk,rp,imax,jmax
+     1                    ,sp_bk,psfc)       
+        endif
 	name = 'NOPLOT'	
 
 	print *,' '
