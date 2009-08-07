@@ -380,6 +380,7 @@ print <<"EOF";
 <option $selected{'V'}> V
 <option $selected{'DIV'}> DIV
 <option $selected{'VORT'}> VORT
+<option $selected{'PVORT'}> PVORT
 <option $selected{'OMEGA'}> OMEGA
 <option $selected{'C_OMEGA'}> C_OMEGA
 <option $selected{'MCONV'}> MCONV
@@ -435,6 +436,7 @@ print <<"EOF";
 <option $selected{'v'}> v
 <option $selected{'div'}> div
 <option $selected{'vort'}> vort
+<option $selected{'pvort'}> pvort
 <option $selected{'vort_adv'}> vort_adv
 <option $selected{'omega'}> omega
 <option $selected{'c_omega'}> c_omega
@@ -442,6 +444,7 @@ print <<"EOF";
 <option $selected{'msl_p'}> msl_p
 <option $selected{'red_p'}> red_p
 <option $selected{'stn_p'}> stn_p
+<option $selected{'alt_p'}> alt_p
 <option $selected{'p_prime'}> p_prime
 <option $selected{'theta'}> theta
 <option $selected{'thetae'}> thetae
