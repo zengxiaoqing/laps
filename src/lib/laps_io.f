@@ -1069,6 +1069,32 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         return
         end
 
+        subroutine lapsprd_file_exist(i4time,ext,l_exist,istatus)
+
+        character*(*)    ext
+        character*150    directory
+        character*13 filename13
+
+        logical l_exist
+
+!       Test for proper length of extension
+        call s_len(ext,len_ext)
+        if(len_ext .ne. 3)then
+           write(6,*)' Error in open_lapsprd_file: ext has length'
+     1               ,len_ext
+           istatus = 0
+           return
+        endif
+
+        call get_directory(ext,directory,len_dir)
+
+        inquire(file=directory(1:len_dir)//filename13(i4time,ext(1:3))
+     1         ,exist=l_exist)
+
+ 999    istatus = 1
+        return
+        end
+
         subroutine open_lapsprd_file(lun,i4time,ext,istatus)
 
 !       1997   Steve Albers
