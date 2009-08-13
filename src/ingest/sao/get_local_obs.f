@@ -707,8 +707,8 @@ c
 c..... Solar Radiation
 c
          solar_rad = solarRadiation(i)                         
-         if(solar_rad .le. badflag) then          !  bad?
-            solar_rad = badflag                   !  bag
+         if(solar_rad .le. badflag .or. solar_rad .ge. 2000.) then !  bad?
+            solar_rad = badflag                                    !  bag
          endif
 c
 c..... Sea Surface Temperature
