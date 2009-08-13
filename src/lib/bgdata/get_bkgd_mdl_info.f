@@ -138,7 +138,7 @@ c     USE laps_static
       print*,'cmodel = ',TRIM(cmodel)
       print*,'-----------------------'
 
-      istatus=1
+      istatus=-4	! Yuanfu: change it to -4 for exit if no bgmodel and cmodel match bk data
 
       call s_len(fullname,lenfn)
 
