@@ -71,6 +71,8 @@
 c OVERALL LAPS PARAMETERS
 c Many of these are stored in the common block in 'lapsparms.cmn'
 c
+c c6_maproj - map projection 'lambrt', 'plrstr', or 'merctr'
+c
 c NX_L - number of grid points in the horizontal direction
 c 
 c NY_L - number of grid points in the vertical direction
@@ -88,10 +90,11 @@ c l_compress_radar - Compress "vxx" radar files using run-length encoding.
 c                    Note that this is experimental and departs from the 
 c                    NetCDF file convention
 c
-c l_use_tamdar - Flag to decide on the use of TAMDAR ACARS data. This flag
-c                functions only when the NIMBUS database is being used.
-c                For the WFO database, the TAMDAR data is always allowed 
-c                through if it is available.
+c l_use_tamdar - Flag to decide to block the use of TAMDAR ACARS research data. 
+c                This flag functions only when the NIMBUS database is being 
+c                used. Operational TAMDAR is always allowed. For the WFO 
+c                database, the research & operational TAMDAR data are always 
+c                allowed through if they are available.
 c
 c c_raddat_type - selects type of NOWRAD radar data ('wsi', or 'wfo') used by 
 c                 the 'vrc_driver.x' program
