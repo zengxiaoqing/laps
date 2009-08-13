@@ -1,7 +1,7 @@
 &lapsprep_nl
   hotstart = .true.,
   balance  = .true., 
-  hydrometeor_scale_factor_pcp = 0.0,
+  hydrometeor_scale_factor_pcp = 5.0,
   hydrometeor_scale_factor_cld = 0.5,
   output_format = 'wps',
   snow_thresh = 1.1,
@@ -25,6 +25,8 @@ c    A factor which scales the hydrometeor concentrations for a grid
 c    spacing. (hydrometeor_scale = hydrometeor_scale_factor/dx)
 c    Note that dx is in kilometers. This is the scale that LAPS input values
 c    are multiplied by to account for sub-grid scale effects.
+c    For setting the internal hydrometeor scale to 1.0, the scale factor should
+c    be equal to the grid resolution in km.
 c
 c  output_format:
 c    List of character strings, one specifying each output format to
