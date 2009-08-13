@@ -80,7 +80,7 @@ cdis
         character ext_uc*31
         character*255 c_filespec
 
-        logical l_read_raob,l_3d,l_string_contains
+        logical l_read_raob,l_3d,l_string_contains,l_exist
 
 !       Initialize
 
@@ -110,6 +110,14 @@ cdis
         i4_window_rass_file = 3600
 
         ext = 'hmg'
+
+        call lapsprd_file_exist(i4time_sys,ext,l_exist,istatus)
+        if(l_exist)then
+            write(6,*)' HMG file already exists, exiting read_tdsnd'
+            istatus = 1
+            return
+        endif
+
         if(iwrite_output .ge. 1)then
             call open_lapsprd_file(32,i4time_sys,ext,istatus)
             if(istatus .ne. 1)return
@@ -336,8 +344,17 @@ c       1                ,t_diff
 711                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
                     if(iwrite_output .ge. 1)then
-712                     write(32,*)ri-1.,rj-1.,level-1       
-     1                      ,ob_pr_td(i_tdsnd,level),c8_sndtype(i_tdsnd)       
+712                     if(c8_sndtype(i_tdsnd)(1:3) .ne. 'GPS'  .and.
+     1                     c8_sndtype(i_tdsnd)(1:4) .ne. 'RAOB' .and.
+     1                     c8_sndtype(i_tdsnd)(1:4) .ne. 'RADI'  )then
+                            write(32,*)ri-1.,rj-1.,level-1       
+     1                      ,ob_pr_td(i_tdsnd,level),c8_sndtype(i_tdsnd) 
+     1                      ,' NONAME'
+                        else
+                            write(32,*)ri-1.,rj-1.,level-1       
+     1                      ,ob_pr_td(i_tdsnd,level),c8_sndtype(i_tdsnd) 
+     1                      ,' ',c5_name(i_tdsnd)      
+                        endif
                     endif
                 enddo ! level
 
