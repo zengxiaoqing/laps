@@ -37,12 +37,16 @@ C*  atmosphere in millibars.
 
       Implicit None
 
-      Real T0,gamma,p0,p11,z11,c1,c2,z,Flag,Flg
+      include 'constants.inc' ! psamslpa, gamma
+
+      Real T0,p0,p11,z11,c1,c2,z,Flag,Flg
 
       Data Flag,Flg/99999.,99998./
-      Data T0,gamma,p0/288.,.0065,1013.2/
+      Data T0/288./
       Data c1,c2/5.256,14600./
       Data z11,p11/11000.,226.0971/
+
+      p0 = psamslpa / 100.
 
       If (Z.gt.Flg) Then
           ZtoPsa=Flag
