@@ -664,6 +664,8 @@ c
         du_t = 3.0 * du
         du_p = 3.0 * du
 
+        call pcsetr('CE',0.)
+
         charsize = .0040 / zoom_eff
 
         if(iflag_cv .eq. 0)then ! Normal obs plot
