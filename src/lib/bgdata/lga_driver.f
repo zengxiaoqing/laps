@@ -395,6 +395,9 @@ c
 
       if(istatus.ne.1)then
          print*,'Error getting background model information'
+         ! Yuanfu: Check istatus and show hint for users
+         if (istatus .eq. -4) 
+     &     print*,'Check background.nl for bgmodel and cmodel'
          return
       endif
 
