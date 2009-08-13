@@ -934,11 +934,13 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         include 'lapsplot.inc'
 
-        character*3 ext
+        character*3 ext, t1
         character*8 c8_obstype
         character*150 directory
         character*150 filename
         character*13 filename13
+        character*100 cline
+        character*10 c_staname
 
         logical l_found_file
 
@@ -948,7 +950,14 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         size_temp = 1.1 ! 3.33
 
         write(6,*)
-        write(6,*)' Plot Dewpoint Obs, size_td = ',size_temp
+
+        if(mode .eq. 1)then
+            write(6,*)' Plot Dewpoint Obs, size_td = ',size_temp
+        elseif(mode .eq. 2)then
+            write(6,*)' Plot SH Obs (from dewpoint), size_td = ',size_temp
+        elseif(mode .eq. 3)then
+            write(6,*)' Plot PW Obs, size_td = ',size_temp
+        endif                   
 
         lun = 32
         ext = 'hmg'
@@ -974,7 +983,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         nobs_temp = 0
 
         do while (.true.) ! Count the dewpoint obs
-            read(32,*,end=41,err=36)ri,rj,rk,t_k,c8_obstype
+            read(32,*,end=41,err=36)ri,rj,rk,t_k,c8_obstype,c_staname
  36         continue
 
             k = nint(rk)
@@ -1001,7 +1010,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 42      write(6,*)' Number of dewpoint obs = ',nobs_temp
 
         do while (l_found_file) ! Plot the dewpoint obs
-            read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype
+            read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype,c_staname       
 150         continue
 
             k = nint(rk)
@@ -1026,12 +1035,16 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 elseif(c8_obstype(1:3) .eq. 'RAD')then  ! Radiometer
                     icol_in = 5  ! Orange
                 elseif(c8_obstype(1:3) .eq. 'DRO')then  ! Dropsonde
-                    icol_in = 17 ! Lavender
-                elseif(c8_obstype(1:2) .eq. 'GO')then   ! GOES Satellite
-                    icol_in = 17 ! Lavender
+                    icol_in = 14 ! Royal Blue
                 elseif(c8_obstype(1:2) .eq. 'SA')then   ! SATSND
                     icol_in = 17 ! Lavender
-                else                                    ! ACARS
+                elseif(c8_obstype(1:4) .eq. 'GOES')then ! GOES Satellite
+                    icol_in = 17 ! Lavender
+                elseif(c8_obstype(1:4) .eq. 'POES')then ! POES Satellite
+                    icol_in = 16 ! Dark violet
+                elseif(c8_obstype(1:5) .eq. 'METAR')then ! METAR
+                    icol_in = 11 ! Green
+                else                                    ! ACARS / GPS
                     icol_in = 3  ! Red
                 endif
 
@@ -1044,16 +1057,51 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                     t_c = (svp / float(k_mb)) * 1000.
                 endif
 
-                call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
-     1                          ,lat,lon,imax,jmax,size_temp
-     1                          ,zoom,nobs_temp
-     1                          ,icol_in,du_loc,wx
-     1                          ,iflag,iflag_cv,namelist_parms
-     1                          ,plot_parms)
+                if(mode .eq. 3)then ! plot GPS PW (using td variable)
+                    iflag_cv = 3
+                    td = t_k
+                endif
 
+                obs_size = plot_parms%contour_line_width
 
-                write(6,111,err=121)ri,rj,t_c,c8_obstype
-111             format(1x,3f8.1,1x,a8)
+                zoom_max = 1.5
+                if(zoom .lt. zoom_max)then
+                    if(nobs_temp .gt. 30)then
+                        zoom_eff = 1.0                 ! smaller obs 
+                    else
+                        zoom_eff = zoom / zoom_max     ! larger obs
+                    endif
+                else
+                    zoom_eff = zoom / zoom_max         ! larger obs
+                endif
+
+                zoom_eff = zoom_eff / obs_size
+
+                du = float(jmax) / 252.
+                du2 = (du / zoom_eff) * 0.6
+                xsta = ri
+                ysta = rj
+                ANGD = 0.
+                CNTR = 0.
+                charsize = .0040 / zoom_eff
+
+!               Plot station name & location
+                if(c_staname .ne. 'NONAME')then 
+                    call s_len(c_staname,len_name)
+                    CALL PCHIQU(xsta, ysta-du2*3.5, 
+     1                          c_staname(1:len_name),
+     1                          charsize,ANGD,CNTR)      
+                endif
+
+!               Plot ob
+                write(t1,100,err=20) nint(t_c)
+ 20             call left_justify(t1)
+                call s_len(t1,len_t1)
+                CALL PCMEQU(xsta,ysta,t1(1:len_t1),charsize,ANGD,CNTR)
+ 100            format(i3)
+
+                write(6,111,err=121)ri,rj,t_c,t1,c8_obstype,c_staname
+111             format(1x,3f8.1,1x,a8,1x,a10)
 121             continue
 
               endif ! t_k .ne. r_missing_data
