@@ -394,7 +394,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /'     RADAR: [ra] Intermediate VRC, [rf] Anal/Fcst fields'       
      1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1      /
-     1      /'     SFC: [p,pm,ps,pp,tf,tc,df,dc,ws,wp,vv,hu,ta'         
+     1      /'     SFC: [p,pm,ps,al,pp,tf,tc,df,dc,ws,wp,vv,hu,ta'          
      1      ,',th,te,vo,mr,mc,dv,ha,ma]'
      1      /'          [sp,cs,vs,tw,fw,hi,gf]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
@@ -411,7 +411,7 @@ c       include 'satellite_dims_lvd.inc'
         write(6,12)
  12     format(
      1       /'     HUMIDITY: [br,fr,lq,rb] (lga;fua;lq3;bal)'       
-     1       /'               [ho,qo](tdobs;qobs)'            
+     1       /'               [ho,qo,wv](tdobs;qobs;pwobs)'            
      1       /'               [pw] Precipitable H2O'            
      1       /
      1       /'     CLOUDS/PRECIP: [ci] Cloud Ice,'
@@ -3956,15 +3956,15 @@ c
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             write(6,1615)
-1615        format(10x,'plot rh or q [r/q]  ? ',$)
+1615        format(10x,'plot rh, q, or td [r/q/d]  ? ',$)
             read(5,*)qtype
 
-            if(qtype.eq.'q')then
+            if(qtype .eq. 'q' .or. qtype .eq. 'd')then ! Q or Td
 
               var_2d = 'SH '
               ext = 'lq3'
 
-              if(c_type(1:2).eq.'rb')then
+              if(c_type(1:2).eq.'rb')then ! balanced
                  call get_directory('balance',directory,lend)
                  directory=directory(1:lend)//'lq3/'
                  call get_2dgrid_dname(directory
@@ -3972,30 +3972,36 @@ c
      1             ,ext,var_2d,units_2d,comment_2d
      1             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-                 call mklabel(k_mb,' Spec Hum  (Bal) ',c_label)
-              else
+                 if(qtype .eq. 'q')then
+                   call mklabel(k_mb,' Spec Hum  (Bal) g/kg',c_label)
+                 else
+                   call mklabel(k_mb,' Dewpoint  (Bal) ',c_label)
+                 endif
+
+              else ! analysis
                  call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                             ,i4time_heights
      1                             ,ext,var_2d,units_2d,comment_2d
      1                             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-c                call get_laps_3dgrid
-c    1           (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
-c    1          ,ext,var_2d,units_2d,comment_2d
-c    1                                  ,field_3d,istatus) ! q_3d
-                 call mklabel(k_mb,' LAPS Spec Hum x1e3',c_label)
+                 if(qtype .eq. 'q')then
+                   call mklabel(k_mb,' Spec Hum (Anal) g/kg',c_label)
+                 else
+                   call mklabel(k_mb,' Dewpoint (Anal) ',c_label)
+                 endif
+
               endif   
 
               if(istatus.ne.1 .and. istatus.ne.-1)then
                  print*,'No plotting for the requested time period'
 
               else
+
+                if(qtype .eq. 'q')then
                  clow = 0.
                  chigh = +25.
                  cint = 1.0
 c                cint = -1.
-
-                 call make_fnam_lp(i4time_heights,asc9_tim,istatus)
 
                  scale = 1e-3
 
@@ -4006,10 +4012,34 @@ c                cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
+                else ! dewpoint
+                  write(6,*)' Calculate analysis tdew - level ',k_level
+                  do i = 1,NX_L
+                  do j = 1,NY_L
+!                     field_2d(i,j) = make_td(
+!    1                                pres_3d(i,j,k_level)*.01,99.
+!    1                               ,field_2d(i,j)*.001,-132.)
+                      field_2d(i,j) = tdew(pres_3d(i,j,k_level)*.01
+     1                                    ,field_2d(i,j))
+                  enddo ! j
+                  enddo ! i                       
+
+                  clow = -100.
+                  chigh = +30.
+                  cint = 10.
+
+                  call plot_field_2d(i4time_heights,c_type_i,field_2d
+     1                        ,1.
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
+
+                endif 
+
               endif
 
-            elseif(qtype .eq. 'r')then
-
+            elseif(qtype .eq. 'r')then ! RH
               ext = 'lh3'
               if(c_type(1:2).eq.'rb')then
                  var_2d = 'RHL'
@@ -4022,7 +4052,6 @@ c                cint = -1.
      1             ,i4time_ref,laps_cycle_time*100,i4time_heights
      1             ,ext,var_2d,units_2d,comment_2d
      1             ,NX_L,NY_L,field_2d,k_mb,istatus)
-
 
               else
                  write(6,1616)
@@ -4046,10 +4075,6 @@ c                cint = -1.
      1                             ,ext,var_2d,units_2d,comment_2d
      1                             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-c                call get_laps_3dgrid(i4time_ref,1000000
-c    1                ,i4time_nearest,NX_L,NY_L,NZ_L
-c    1                ,ext,var_2d,units_2d,comment_2d
-c    1                ,field_3d,istatus)
                  if(qtype .eq. '3')then
                     call mklabel(k_mb,' LAPS RH     (rh3) %'
      1                                 ,c_label)
@@ -4057,7 +4082,8 @@ c    1                ,field_3d,istatus)
                     call mklabel(k_mb,' LAPS RH     (liq) %'
      1                                 ,c_label)
                  endif
-              endif 
+              endif
+ 
               if(istatus.ne. 1)then
                  print*,'No plotting for the requested time period'
               else
@@ -4160,6 +4186,29 @@ c                   cint = -1.
      1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
                     call move(sh_2d,field_2d,NX_L,NY_L) ! supports diff option
+
+                elseif(qtype .eq. 'd' .and. istat_sh .eq. 1)then
+                    write(6,*)' Calculate Model tdew'
+                    do i = 1,NX_L
+                    do j = 1,NY_L
+!                       field_2d(i,j) = make_td(
+!    1                                  pres_3d(i,j,k_level)*.01,99.
+!    1                                 ,sh_2d(i,j)*.001,-132.)
+                        field_2d(i,j) = tdew(pres_3d(i,j,k_level)*.01
+     1                                      ,sh_2d(i,j))
+                    enddo ! j
+                    enddo ! i                       
+
+                    clow = -100.
+                    chigh = +30.
+                    cint = 10.
+
+                    call plot_field_2d(i4_valid,c_type_i,field_2d       
+     1                                ,1.
+     1                                ,namelist_parms,plot_parms
+     1                                ,clow,chigh,cint,c_label
+     1                                ,i_overlay,c_display,lat,lon,jdot
+     1                                ,NX_L,NY_L,r_missing_data,'moist')
 
                 elseif(qtype .eq. 'r')then
                     if(istat_sh .eq. 1 .and. istat_rh .ne. 1)then
@@ -4381,7 +4430,7 @@ c                   cint = -1.
             endif
 
 !           Read dewpoint obs from the SND file (and make hmg file)
-            write(6,*)' Reading SND file to make HMG file'
+            write(6,*)' Reading SND file and making HMG file'
             call plot_td_sndobs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                         ,r_missing_data,lat,lon,topo,zoom
      1                         ,plot_parms)
@@ -4392,8 +4441,25 @@ c                   cint = -1.
                 mode = 2
             endif
 
-!           Use this if the HMG file becomes available
+!           Plot obs from the HMG file 
             write(6,*)' Plotting HMG file'
+            call plot_td_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
+     1                      ,r_missing_data,lat,lon,topo,zoom
+     1                      ,plot_parms,k_mb,mode)
+
+        elseif(c_type .eq. 'wv')then
+            k_level = 0
+            k_mb = 0
+
+            if(i4time_temp .eq. 0)then
+                i4time_temp = (i4time_ref / laps_cycle_time) 
+     1                        * laps_cycle_time
+            endif
+
+            mode = 3
+
+!           Use this if the HMG file becomes available
+            write(6,*)' Plotting GPS obs from HMG file'
             call plot_td_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                      ,r_missing_data,lat,lon,topo,zoom
      1                      ,plot_parms,k_mb,mode)
@@ -5172,7 +5238,7 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
-        elseif(c_type .eq. 'ps')then ! Surface Pressure
+        elseif(c_type .eq. 'ps' .or. c_type .eq. 'al')then ! Surface Pressure
             var_2d = 'PS'
 
             if(i_balance .eq. 1)then
@@ -5191,7 +5257,20 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c_label = 'Surface Pressure        (mb)     '
+            if(c_type .eq. 'ps')then
+                c_label = 'Surface Pressure        (mb)     '
+            else ! convert to altimeter setting
+                c_label = 'Altimeter Setting       (mb)     '
+                do i = 1,NX_L
+                do j = 1,NY_L
+!                   Find standard atmosphere P at this elevation
+                    pstd_pa = ztopsa(topo(i,j)) * 100.
+                    pstn_pa = field_2d(i,j)
+                    alt_pa  = psamslpa * (pstn_pa / pstd_pa)
+                    field_2d(i,j) = alt_pa
+                enddo ! j
+                enddo ! i
+            endif
 
 !           Add balance to label
             call s_len2(c_label,len_c_label)
