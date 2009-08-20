@@ -350,17 +350,22 @@ if (make_micro) then
       rhomoistsig=hpsig/(r*tvsig)
       call lfm_reflectivity(lx,ly,nz,rhomoistsig,hzsig  &
                            ,hrainmr_sig,hcldicemr_sig,hsnowmr_sig,hgraupelmr_sig  &
-                           ,hrefl_sig,htsig,hpsig,hmrsig,max_refl,echo_tops)
+                           ,hrefl_sig,hzdr_sig,hldr_sig,htsig,hpsig,hmrsig        &
+                           ,max_refl,echo_tops)
       refl_sfc(:,:)=hrefl_sig(:,:,1)
       deallocate(tvsig,rhomoistsig)
       if (verbose) then
         print*,' '
         print *,'After lfm_reflectivity.'
         print *,'Min/Max hrefl_sig =',minval(hrefl_sig),maxval(hrefl_sig)
+        print *,'Min/Max hzdr_sig =',minval(hzdr_sig),maxval(hzdr_sig)
+        print *,'Min/Max hldr_sig =',minval(hldr_sig),maxval(hldr_sig)
         print *,'Min/Max refl_sfc =',minval(refl_sfc),maxval(refl_sfc)
       endif
    else
       hrefl_sig=rmsg
+      hzdr_sig=rmsg
+      hldr_sig=rmsg
       max_refl=rmsg
       echo_tops=rmsg
    endif
@@ -870,7 +875,7 @@ end
 !===============================================================================
 
 subroutine lfm_reflectivity(nx,ny,nz,rho,hgt,rainmr,icemr,snowmr,graupelmr  &
-                           ,refl,tmp,p,qv,max_refl,echo_tops)
+                           ,refl,zdr,ldr,tmp,p,qv,max_refl,echo_tops)
 
 use lfmgrid, ONLY: c_m2z
 use src_versuch, ONLY: versuch
@@ -891,6 +896,7 @@ real, parameter :: svnfrth=7.0/4.0,max_top_thresh=5.0
 real :: w
 real, dimension(nx,ny) :: max_refl,echo_tops
 real, dimension(nx,ny,nz) :: rho,hgt,rainmr,icemr,snowmr,graupelmr,refl
+real, dimension(nx,ny,nz) :: zdr,ldr
 real, dimension(nx,ny,nz) :: tmp,p,qv
 
 ! Local arrays
@@ -898,9 +904,13 @@ real, dimension(nx,ny,nz) :: tmp,p,qv
 real, dimension(nx,ny,nz) :: zhhx,ahhx,zhvx,zvhx,zvvx    ! versuch outputs
 real, dimension(nx,ny,nz) :: delahvx,kkdp,rhohvx         ! versuch outputs
 
+real :: zvvxmax,zhhxmax
+
 max_refl=0.0
 echo_tops=1.0e37
 refl=0.0
+zdr=0.0
+ldr=0.0
 
 do j=1,ny
 do i=1,nx
@@ -968,7 +978,11 @@ do i=1,nx
 !       rhohv = hv-vh cross correlation coeffcient (n/a)
 
 !       Convert to dBZ
-        refl(i,j,k) = 10.*ALOG10(MAX(zhhx(i,j,k),1.0))
+        zvvxmax = MAX(zvvx(i,j,k),1.0)
+        zhhxmax = MAX(zhhx(i,j,k),1.0)
+        refl(i,j,k) = 10.*ALOG10(zhhxmax)
+        zdr(i,j,k)  = 10.*ALOG10(zhhx(i,j,k)/zvvxmax)
+        ldr(i,j,k)  = 10.*ALOG10(zvhx(i,j,k)/zhhxmax)
 
       endif ! c_m2z (reflectivity algorithm)
 
