@@ -73,7 +73,7 @@ real, pointer, dimension(:,:,:) :: &
        hpsig    ,hzsig    ,htsig    ,hmrsig   ,husig     &
       ,hvsig    ,hwsig    ,htkesig                       &
       ,hcldliqmr_sig,hcldicemr_sig,hrainmr_sig,hsnowmr_sig,hgraupelmr_sig  &
-      ,hrefl_sig
+      ,hrefl_sig,hzdr_sig,hldr_sig 
 
 ! Laps isobaric grid variables.
 
@@ -82,6 +82,7 @@ real, pointer, dimension(:,:,:) ::  &
        zprs         ,rhprs        ,tprs         ,shprs        ,uprs          &
       ,vprs         ,tkeprs       ,wprs         ,omprs        ,cldliqmr_prs  &
       ,cldicemr_prs ,rainmr_prs   ,snowmr_prs   ,graupelmr_prs,refl_prs      &
+      ,zdr_prs      ,ldr_prs                                                 &
       ,pcptype_prs  
 
 integer,            allocatable, dimension(:) :: lvls3d
@@ -226,6 +227,8 @@ if (make_micro) then
    hsnowmr_sig   =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
    hgraupelmr_sig=>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
    hrefl_sig     =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+   hzdr_sig     =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+   hldr_sig     =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 endif
 
 return
@@ -270,6 +273,8 @@ if (make_micro) then
    snowmr_prs   =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='SNO'; com3d(ct:ct+lz-1)='Snow Concentration'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
    graupelmr_prs=>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='PIC'; com3d(ct:ct+lz-1)='Graupel Concentration'  ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
    refl_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='REF'; com3d(ct:ct+lz-1)='Sim. Radar Reflectivity'; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   zdr_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='ZDR'; com3d(ct:ct+lz-1)='Sim. Radar ZDR'; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   ldr_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='LDR'; com3d(ct:ct+lz-1)='Sim. Radar LDR'; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
    pcptype_prs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='PTY'; com3d(ct:ct+lz-1)='Precip. Type'           ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
 endif
 
@@ -291,6 +296,8 @@ if (out_grib) then
       gribitua(ct)=.true.; paramua(ct)=171; scalep10(ct)=6 ; ct=ct+1  ! snowmr_prs
       gribitua(ct)=.true.; paramua(ct)=179; scalep10(ct)=6 ; ct=ct+1  ! graupelmr_prs
       gribitua(ct)=.true.; paramua(ct)=128; scalep10(ct)=0 ; ct=ct+1  ! refl_prs
+!      gribitua(ct)=.true.; paramua(ct)=128; scalep10(ct)=0 ; ct=ct+1  ! zdr_prs
+!      gribitua(ct)=.true.; paramua(ct)=128; scalep10(ct)=0 ; ct=ct+1  ! ldr_prs
       gribitua(ct)=.true.; paramua(ct)=136; scalep10(ct)=0 ; ct=ct+1  ! pcptype_prs
    endif
 endif
