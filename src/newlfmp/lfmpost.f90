@@ -223,6 +223,10 @@ if (trim(mtype) /= 'st4') then
     print*,' '
     print*,'lfm_reflectivity pressure max/min: ',maxval(refl_prs),minval(refl_prs)
     print*,'lfm_reflectivity hsig max/min: ',maxval(hrefl_sig),minval(hrefl_sig)
+    print*,'lfm_reflectivity pressure max/min: ',maxval(zdr_prs),minval(zdr_prs)
+    print*,'lfm_reflectivity hsig max/min: ',maxval(hzdr_sig),minval(hzdr_sig)
+    print*,'lfm_reflectivity pressure max/min: ',maxval(ldr_prs),minval(ldr_prs)
+    print*,'lfm_reflectivity hsig max/min: ',maxval(hldr_sig),minval(hldr_sig)
  endif
 
 ! Create point forecasts, if requested.
