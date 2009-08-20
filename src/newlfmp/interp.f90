@@ -143,6 +143,8 @@ if (make_micro) then
    if (minval(hsnowmr_sig)    < rmsg) call vinterp_single(logp,hsnowmr_sig,snowmr_prs)
    if (minval(hgraupelmr_sig) < rmsg) call vinterp_single(logp,hgraupelmr_sig,graupelmr_prs)
    if (minval(hrefl_sig)      < rmsg) call vinterp_single(logp,hrefl_sig,refl_prs)
+   if (minval(hzdr_sig)      < rmsg) call vinterp_single(logp,hzdr_sig,zdr_prs)
+   if (minval(hldr_sig)      < rmsg) call vinterp_single(logp,hldr_sig,ldr_prs)
 endif
 
 deallocate(logp)
