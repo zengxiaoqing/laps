@@ -13,6 +13,8 @@
 
           logical l_debug,l_geoalt
 
+          real latitude, longitude
+
           l_debug = .false.
 
           call open_ext(lun,i4time_sys,ext(1:3),istatus)       
