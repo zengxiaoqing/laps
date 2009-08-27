@@ -203,6 +203,7 @@ C
                      write(lun,1)a9_timeObs,a9_recptTime 
  1        format(' Time - prp/rcvd:'/1x,a9,2x,a9) 
 
+!         l_geoalt is implicitly false with pressure altitude data
           if(l_debug)write(6,2)latitude(i),longitude(i),altitude(i)
           write(lun,2)          latitude(i),longitude(i),altitude(i)
  2        format(' Lat, lon, altitude'/f8.3,f10.3,f8.0)  
