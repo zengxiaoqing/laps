@@ -424,7 +424,8 @@ C Black
       CALL GSCR (1,24,.0,.7,.0)
 ! Dark Gray
       CALL GSCR (1,25,.1,.1,.1)
-      CALL GSCR (1,26,.3,.3,.5)
+! Pale Orange
+      CALL GSCR (1,26,.6,.3,.1)
 C Orchid
       CALL GSCR (1,27, 0.85, 0.45, 0.8)
       CALL GSCR (1,28,.0,.0,.95)
