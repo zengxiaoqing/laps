@@ -56,6 +56,8 @@ c
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
+        use mem_namelist, ONLY: l_dev_ck
+
 	real t_s(mxstn), td_s(mxstn), dd_s(mxstn), ff_s(mxstn)
 	real ddg_s(mxstn), ffg_s(mxstn), vis_s(mxstn)
 	real pstn_s(mxstn), pmsl_s(mxstn), alt_s(mxstn)
@@ -260,19 +262,21 @@ c
 c
 c.....  standard deviation check
 c
-	call time_ck(stn,n_obs_b,stn_l,n_obs_b_l,ivals)
-cc	call dev_ck( 5, n_meso_pos, n_obs_b, elev_s, rely, 
+        if(l_dev_ck)then
+	  call time_ck(stn,n_obs_b,stn_l,n_obs_b_l,ivals)
+cc	  call dev_ck( 5, n_meso_pos, n_obs_b, elev_s, rely, 
 cc     +	       n_obs_b_l, elev_l, rely_l, ivals)
-	call dev_ck( 7, n_meso_pos, n_obs_b, t_s, rely, 
+	  call dev_ck( 7, n_meso_pos, n_obs_b, t_s, rely, 
      +	       n_obs_b_l, t_l, rely_l, ivals)
-	call dev_ck( 8, n_meso_pos, n_obs_b, td_s, rely, 
+	  call dev_ck( 8, n_meso_pos, n_obs_b, td_s, rely, 
      +	       n_obs_b_l, td_l, rely_l, ivals)
-	call dev_ck(13, n_meso_pos, n_obs_b, pstn_s, rely, 
+	  call dev_ck(13, n_meso_pos, n_obs_b, pstn_s, rely, 
      +	       n_obs_b_l, pstn_l, rely_l, ivals)
-	call dev_ck(14, n_meso_pos, n_obs_b, pmsl_s, rely, 
+	  call dev_ck(14, n_meso_pos, n_obs_b, pmsl_s, rely, 
      +	       n_obs_b_l, pmsl_l, rely_l, ivals)
-	call dev_ck(15, n_meso_pos, n_obs_b, alt_s, rely, 
+	  call dev_ck(15, n_meso_pos, n_obs_b, alt_s, rely, 
      +	       n_obs_b_l, alt_l, rely_l, ivals)
+        endif
 c
 c.....  model background checks
 c
