@@ -97,7 +97,7 @@ cdis
      1  mspkt/.518/
 
         Character
-     1  c_obs_type*1,c_map*1,c_mode*1,c_anl*1,c_radial*1,
+     1  c_obs_type*1,c_map*1,c_mode*1,c_anl*1,c_radial*1,c_pin*1,
      1  STRING,wx*25
 
         common /plotobs/ c_obs_type,c_map,c_mode,c_anl,c_radial
@@ -650,9 +650,17 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         close(32)
 
 !       Plot Pirep winds  ***********************************************
-911     write(6,*)
-        write(6,*)' ACARS/CDW Winds'
-         
+911     write(6,96)
+ 96     format(' Plot ACARS / Pireps Winds?     [y,n,<RET>=y] ? ',$)
+        if(l_ask_questions)read(lun_in,211)c_pin
+        write(6,*)
+        if(c_pin(1:1) .eq. 'n')then
+            write(6,*)' Plotting WISDOM / Cloud Drift Winds'
+            write(6,*)' ACARS / Pireps Winds - not plotted'
+        else
+            write(6,*)' ACARS / Pireps / WISDOM / Cloud Drift Winds'
+        endif
+
         lun = 32
         ext = 'pig'
         call get_directory(ext,directory,len_dir)
@@ -672,12 +680,16 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 if(k .eq. k_level)then
                     if(c3_obsext .eq. 'pin')then
                         call setusv_dum(2hIN,12) ! Aqua
+                    elseif(c3_obsext .eq. 'wis')then
+                        call setusv_dum(2hIN,5)  ! Orange
                     else
                         call setusv_dum(2hIN,8)  ! Green-Yellow
                     endif
                 else
                     if(c3_obsext .eq. 'pin')then
                         call setusv_dum(2hIN,15) ! Slate Blue
+                    elseif(c3_obsext .eq. 'wis')then
+                        call setusv_dum(2hIN,26) ! Pale Orange
                     else
                         call setusv_dum(2hIN,34) ! Grey
                     endif
@@ -698,10 +710,13 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 endif
 
-                call check_ob_density(riob_a,rjob_a,1000000
-     1                               ,iob,ri,rj,dist_plot,l_plot)
+!               Check if ACARS/Pireps are included
+                if(c3_obsext .ne. 'pin' .OR. c_pin(1:1) .eq. 'y')then 
 
-                if(l_plot)then
+                  call check_ob_density(riob_a,rjob_a,1000000
+     1                                 ,iob,ri,rj,dist_plot,l_plot)
+
+                  if(l_plot)then ! passes density criteria
                     iob = iob + 1
                     riob_a(iob) = ri
                     rjob_a(iob) = rj
@@ -711,10 +726,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 921                 format(1x,3f8.1,4x,f7.0,f7.0,2x,a3)
                     call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_pirep,aspect,'true')
-                else
+                  else
                     write(6,922)ri,rj,rk,max(dir,-99.),spd_kt,c3_obsext
 922                 format(1x,3f8.1,4x,f7.0,f7.0,2x,a3,' not plotted')
-                endif
+                  endif
+ 
+                endif ! ACARS/Pireps are included
 
             endif ! k .eq. k_level
 
@@ -727,7 +744,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 
 !       Plot MODEL winds  ***********************************************
-        write(6,*)
+930     write(6,*)
         write(6,*)' MODEL Winds'
 
         call setusv_dum(2hIN,203)
@@ -794,6 +811,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         include 'lapsplot.inc'
 
+        character*1 c_pin
         character*3 ext
         character*8 c8_obstype
         character*150 directory
@@ -809,6 +827,11 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         write(6,*)
         write(6,*)' Plot Temperature Obs, size_temp = ',size_temp
+
+        write(6,96)
+ 96     format(' Plot ACARS Temps?     [y,n,<RET>=y] ? ',$)
+        read(5,211)c_pin
+ 211    format(a1)
 
         lun = 32
         ext = 'tmg'
@@ -903,17 +926,23 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 iflag_cv = 0
 
-                call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
-     1                          ,lat,lon,imax,jmax,size_temp
-     1                          ,zoom,nobs_temp
-     1                          ,icol_in,du_loc,wx
-     1                          ,iflag,iflag_cv,namelist_parms
-     1                          ,plot_parms)
+                if(icol_in .ne. 3 .or. c_pin .eq. 'y')then ! filter out ACARS?
+                  call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
+     1                            ,lat,lon,imax,jmax,size_temp
+     1                            ,zoom,nobs_temp
+     1                            ,icol_in,du_loc,wx
+     1                            ,iflag,iflag_cv,namelist_parms
+     1                            ,plot_parms)
 
 
-                write(6,111,err=121)ri,rj,t_c,c8_obstype
-111             format(1x,3f8.1,1x,a8)
-121             continue
+                  write(6,111,err=121)ri,rj,t_c,c8_obstype
+111               format(1x,3f8.1,1x,a8)
+121               continue
+
+                else
+                  write(6,*)' access restricted for ',c8_obstype
+
+                endif
 
               endif ! t_k .ne. r_missing_data
 
