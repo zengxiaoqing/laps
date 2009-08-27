@@ -195,13 +195,13 @@ c
 
 
         subroutine calc_potvort(i4time,uanl,vanl,temp_3d,potvort,lat,lon       
-     1                         ,ni,nj,nk,k_in,l_grid_north,dx,dy
+     1                         ,ni,nj,nk,nkuv,k_in,l_grid_north,dx,dy
      1                         ,r_missing_data,istatus)       
 
         include 'constants.inc'
 
         real lat(ni,nj),lon(ni,nj)                           ! I
-        real uanl(ni,nj,nk),vanl(ni,nj,nk)                   ! I
+        real uanl(ni,nj,nkuv),vanl(ni,nj,nkuv)               ! I
         real temp_3d(ni,nj,nk)                               ! I
         real vort_2d(ni,nj)                                  ! L
         real dx(ni,nj)                                       ! O
@@ -254,17 +254,34 @@ c
         endif
 
         do k = kstart,kend
-            write(6,*)' calling vorticity_abs for level ',k
-            call vorticity_abs(uanl(1,1,k),vanl(1,1,k),vort_2d
+            if(k_in .gt. 0)then ! 2D
+                kuv = 1
+            else                ! 3D where k_in = 0
+                kuv = k
+            endif
+
+            write(6,*)' calling vorticity_abs for kuv = ',kuv
+            call vorticity_abs(uanl(1,1,kuv),vanl(1,1,kuv),vort_2d
      1                   ,lat,lon,ni,nj,dx,dy
      1                   ,l_grid_north,r_missing_data)
 
 !           See http://www-das.uwyo.edu/~geerts/cwx/notes/chap12/pot_vort.html
 
             if(k_in .gt. 0)then     ! just returning 2d field (for efficiency)
-                write(6,*)'     calculating 2D potvort'
-                potvort(:,:,1) = vort_2d(:,:) * dtheta_dp(:,:,k) 
-     1                                        * grav       
+                write(6,*)'     calculating 2D potvort - with debugging'       
+                do i = 1,ni
+                do j = 1,nj
+                    potvort(i,j,1) = vort_2d(i,j) * dtheta_dp(i,j,k) 
+     1                                            * grav       
+                    if(i .eq. ni/2)then ! debug
+                        write(6,*)i,j,vort_2d(i,j)
+     1                           ,uanl(i,j,1),vanl(i,j,1)
+     1                           ,dtheta_dp(i,j,k)
+     1                           ,potvort(i,j,1)
+                    endif
+                enddo ! j
+                enddo ! i
+
             elseif(k_in .eq. 0)then ! return 3D field
                 write(6,*)'     calculating 3D potvort'
                 potvort(:,:,k) = vort_2d(:,:) * dtheta_dp(:,:,k) 
