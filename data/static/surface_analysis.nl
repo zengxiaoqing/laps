@@ -1,6 +1,7 @@
  &surface_analysis
  use_lso_qc = 0,
  skip_internal_qc = 0,
+ l_dev_ck = .true.,
  l_require_lso = .false.,
  itheta=-1,
  del=3.24e6,
@@ -46,6 +47,9 @@ c.....                        internal QC routine; a "0" uses
 c.....                        it.  Note that the internal QC is potentially 
 c.....                        used only when "use_lso_qc" is set to zero.)
 c.....
+c
+c      l_dev_ck: boolean flag that turns on or off the "Hartsough" QC checks
+c                that are a subset of the "internal" QC
 c
 c      l_require_lso: boolean flag to indicate whether an LSO file (with obs)
 c                     is required in order to generate an LSX surface analysis
