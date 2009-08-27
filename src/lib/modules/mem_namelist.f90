@@ -136,7 +136,7 @@ integer              :: nplevs
 
 ! surface_analysis variables
 integer  ::  use_lso_qc,skip_internal_qc, itheta
-logical  ::  l_require_lso
+logical  ::  l_require_lso, l_dev_ck
 real     ::  del, gam, ak &
             ,bad_t, bad_td, bad_u, bad_v, bad_p  &
             ,bad_mp, bad_th, bad_the &
@@ -244,7 +244,7 @@ namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
 
 namelist /surface_analysis/  &
                   use_lso_qc,skip_internal_qc, itheta  &
-                  ,l_require_lso  &
+                  ,l_require_lso, l_dev_ck  &
                   ,del, gam, ak &
                   ,bad_t, bad_td, bad_u, bad_v, bad_p  &
                   ,bad_mp, bad_th, bad_the &
