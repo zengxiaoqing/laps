@@ -131,6 +131,8 @@ cdis
         parameter (KWND = 3)
         real u_2d(NX_L,NY_L) ! WRT True North
         real v_2d(NX_L,NY_L) ! WRT True North
+        real u_2d1(NX_L,NY_L,1) ! WRT True North
+        real v_2d1(NX_L,NY_L,1) ! WRT True North
         real w_2d(NX_L,NY_L)
         real liw(NX_L,NY_L)
 !       real helicity(NX_L,NY_L)
@@ -1332,11 +1334,13 @@ c       include 'satellite_dims_lvd.inc'
             elseif(c_field .eq. 'pv')then ! Display Potential Vorticity Field
 
 !               This should also read in the 3D temperature field
-                call calc_potvort(i4time,u_2d,v_2d,temp_3d,field_3d
-     1                           ,lat,lon,NX_L,NY_L,NZ_L,k_level,.true.
-     1                           ,dx,dy,r_missing_data,istatus)       
+                u_2d1(:,:,1) = u_2d(:,:)
+                v_2d1(:,:,1) = v_2d(:,:)
+                call calc_potvort(i4time,u_2d1,v_2d1,temp_3d,field_3d       
+     1                           ,lat,lon,NX_L,NY_L,NZ_L,1,k_level
+     1                           ,.true.,dx,dy,r_missing_data,istatus)       
 
-                field_2d = field_3d(:,:,1)
+                field_2d(:,:) = field_3d(:,:,1)
 
                 if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' PVORT (diff)  PVU '

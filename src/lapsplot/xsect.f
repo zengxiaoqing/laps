@@ -1427,7 +1427,7 @@ c read in laps lat/lon and topo
             endif
 
             call calc_potvort(i4time_ref,u_3d,v_3d,temp_3d,field_3d
-     1                       ,lat,lon,NX_L,NY_L,NZ_L,0,.true.
+     1                       ,lat,lon,NX_L,NY_L,NZ_L,NZ_L,0,.true.       
      1                       ,dx,dy,r_missing_data,istatus)       
 
             call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
