@@ -299,8 +299,12 @@ cdis
                         point_v(n_point_obs) = v_temp - v_diff
 
                         if(iwrite_output .ge. 1)then
-                            write(lun_pig,91)ri,rj,rk,dd,ff,ext_in       
- 91                         format(1x,5f8.1,1x,a3)
+                            if(ext_in .eq. 'pin' .and. l_geoalt)then
+                                write(lun_pig,91)ri,rj,rk,dd,ff,'wis'
+ 91                             format(1x,5f8.1,1x,a3)
+                            else
+                                write(lun_pig,91)ri,rj,rk,dd,ff,ext_in
+                            endif
                         endif
 
                         if(iwrite .eq. 1)write(6,101)xlat,xlon,dd,ff,rk
