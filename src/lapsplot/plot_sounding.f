@@ -33,7 +33,7 @@
         character*10  units_2d
         character*125 comment_2d
         character*9 a9time
-        character*4 fcst_hhmm
+        character*5 fcst_hhmm
         character*3 c3_string
         character*4 c4_string
         character*33 c33_label
@@ -334,6 +334,7 @@
         pw_sfc   = pw_2d(isound,jsound)
 
         write(6,*)' Sfc P = ', p_sfc_pa
+        write(6,*)' Sfc T (c) = ', k_to_c(t_sfc_k)
         write(6,*)' TPW = ', pw_sfc
 
 !       Read Wind (a la xsect)
