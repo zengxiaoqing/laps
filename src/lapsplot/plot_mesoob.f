@@ -606,6 +606,7 @@ c
         obs_size = plot_parms%contour_line_width
 
         ANGD = 0.
+        CNTR = 0.
 
 !       At zoom=1-zoom_max, make the obs plot larger if there are few obs
 !       zoom_eff is inversely related to plot size
