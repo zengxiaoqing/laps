@@ -24,6 +24,7 @@ LIBDIRS = src/lib/modules \
           src/lib/nav \
           src/lib/opt90 \
           src/lib/powell  \
+          src/lib/radar/moving \
           src/lib/radar/remap_ftn \
           src/lib/radar/rutil \
           src/lib/radar/synp \
