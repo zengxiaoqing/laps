@@ -282,6 +282,11 @@ SUBROUTINE PrPstLSX
       dat(1:ngd(1),1:ngd(2),nvr) = &
 	analys(numfic(1)+1:numgrd(1)-numfic(1), &
 	       numfic(2)+1:numgrd(2)-numfic(2),itm,iwv)
+
+      ! Write surface wind to lwm for plot purpose:
+      CALL PUT_LAPS_MULTI_2D(i4t,'lwm',vnm(nvr-1),vun(nvr-1),cmt(nvr-1), &
+                             dat(1,1,nvr-1),ngd(1),ngd(2),2,sts)
+
       nvr = nvr+1
       vnm(nvr) = 'VOR'
       vun(nvr) = '/S '
@@ -515,7 +520,6 @@ SUBROUTINE PrPstLSX
   ! Write data to a lsx file:
   CALL WRITE_LAPS_DATA(i4t,dir,ext,ngd(1),ngd(2),2,2, &
      		       L1S_vnm,L1S_lvl,L1S_crd,L1S_vun,L1S_cmt,L1S,sts)
-
   ! End of writing a series of time frames:
   ENDDO
 
