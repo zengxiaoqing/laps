@@ -10,7 +10,7 @@
  weight_bkg_const_wind=5e28,
  weight_radar=0.25,
  rms_thresh_wind=1.0,
- max_pr=1500,
+ max_pr=3000,
  max_pr_levels=300,
  max_wind_obs=110000,
  r0_barnes_max_m=240000.,
