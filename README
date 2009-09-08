@@ -3519,7 +3519,6 @@ Inputs:                                          '*' = essential input
         lso     inter data      Sfc (METAR) obs - for precip type verification
 
 	lw3	3d grid		3-D winds (U and V are wrt GRID NORTH)
-	lwm	2d grid		surface winds
         vrc/v01/vrz             2-D or 3-D radar reflectivity
 
 Outputs: 
@@ -3630,8 +3629,6 @@ Outputs:
                                 LCL (Lifted Condensation Level)
 
                                 WB0 (Wet Bulb Zero)
-
-	lwm	2d grid		interpolated surface winds (U and V - grid N)
 
 	lhe	2d grid		Helicity (Storm Relative Environmental). This 
                                 is integrated from the sfc to 3km AGL. It
