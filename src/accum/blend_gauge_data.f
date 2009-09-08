@@ -168,6 +168,8 @@
 
         enddo ! iob
 
+        wt_bkg_a = 5e28
+
         if(n_msg .gt. 0)then       ! do gauge only analysis
             write(6,*)' Background/radar field has missing points'
             write(6,*)' Performing gauge only analysis'  
@@ -189,7 +191,6 @@
 
             write(6,*)' Performing gauge increment analysis'
 
-            wt_bkg_a = 5e28
             pcp_cmb_in = pcp_cmb_m * in_per_m
 
             call precip_barnes_jacket(           c_field              ! I
