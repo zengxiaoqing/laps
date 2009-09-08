@@ -356,7 +356,7 @@ if ($opt_m eq "ruc") {
 }	
 
 # Satellite data
-if ( ( $opt_s eq "8" || $opt_s eq "11" || $opt_s eq "12") && $type eq "3D") {
+if ( ( $opt_s eq "8" || $opt_s eq "10" || $opt_s eq "11" || $opt_s eq "12") && $type eq "3D") {
     my $sat;
     my $satpath;
 
@@ -369,7 +369,7 @@ if ( ( $opt_s eq "8" || $opt_s eq "11" || $opt_s eq "12") && $type eq "3D") {
 
 #   Changing the path based on the choice of satellite!
 
-    if ($opt_s eq "11") {
+    if ($opt_s eq "10" || $opt_s eq "11") {
 	$satpath = "fsl-pacus"
     } else {
     	$satpath = "fsl-conus"
