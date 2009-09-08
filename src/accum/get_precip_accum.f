@@ -199,9 +199,9 @@
             if(nscans_vrc .gt. nscans_vrz)then
                 ext_local = 'vrc'
             elseif(nscans_vrc .lt. nscans_vrz)then
-                ext_local = 'all'
+                ext_local = 'vrz'
             else ! equal case
-                ext_local = 'vrc' ! or 'all'
+                ext_local = 'vrc' ! or 'vrz'
             endif
 
             write(6,*)
