@@ -1423,7 +1423,7 @@ c
         character*4 LVL_COORD_2d
 
         integer max_lvd_files
-        parameter (max_lvd_files=10)
+        parameter (max_lvd_files=20)
 
         real field_2d(imax,jmax)
         real field_2d_save(imax,jmax,max_lvd_files)
@@ -1477,6 +1477,8 @@ c
         jf=0
 
         print*,'Number of files returned get_file_times',i_nbr_files_ret
+
+!       Calculate minimum time difference of unselected files from desired time
 50      i4_diff_min = 999999999
         do j = 1,i_nbr_files_ret
            i4_diff = abs(i4times(j) - i4time_needed)
@@ -1485,6 +1487,7 @@ c
            endif
         enddo ! j
 
+!       Check whether any unselected files lie within the time window
         if(i4_diff_min .gt. i4tol)then
            write(6,*)' No remaining files found within ',i4tol
      1              ,' sec time window ',ext(1:5),var_2d
@@ -1498,6 +1501,8 @@ c          return
         do j=1,i_nbr_files_ret
 
            i4_diff=abs(i4times(j)-i4time_needed)
+
+!          Select file that has minimum time diff (of unselected)
            if(i4_diff.eq.i4_diff_min.and.
      1            i_selected(j).eq.0.and.
      1            i4_diff.le.i4tol)               then
@@ -1526,6 +1531,12 @@ c
               else   !  istatus = 1, check for domain cover maxima
 
                  jf=jf+1
+                 if(jf .gt. max_lvd_files)then
+                     write(6,*)' ERROR in get_laps_lvd: jf > '
+     1                        ,max_lvd_files
+                     stop
+                 endif
+
                  imiss=0
                  do il = 1,imax
                  do jl = 1,jmax
