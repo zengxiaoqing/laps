@@ -132,6 +132,16 @@ foreach (@lines) {
     else {
       $found2 = 1; $nclouddriftwinds = $1 - $nacars; last; } } }
 
+$searchstring = "# of WISDOM obs =";
+$found3 = 0;
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    $found3 = 1;
+    $nwisdom = $1 + 0; 
+    $nacars = $nacars - $nwisdom
+  }
+}
+
 print "\nACARS:  ";
 if ($found1 == 1) {print "$nacars \n";}
 else {print "none \n";}
@@ -140,6 +150,10 @@ print "\nCloud-drift winds:  ";
 if ($found2 == 1) {print "$nclouddriftwinds \n";}
 else {print "none \n";}
 print "\n";
+
+print "\nWISDOM:  ";
+if ($found3 == 1) {print "$nwisdom \n";}
+else {print "none \n";}
 
 print "Observation QC:\n";
 @greplines = grep /QC/, @lines;
