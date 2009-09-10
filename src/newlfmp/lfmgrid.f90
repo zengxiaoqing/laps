@@ -80,7 +80,7 @@ real, pointer, dimension(:,:,:) :: &
 real, allocatable, dimension(:) :: lprs,lprsl
 real, pointer, dimension(:,:,:) ::  &
        zprs         ,rhprs        ,tprs         ,shprs        ,uprs          &
-      ,vprs         ,tkeprs       ,wprs         ,omprs        ,cldliqmr_prs  &
+      ,vprs         ,wprs         ,omprs        ,cldliqmr_prs  &
       ,cldicemr_prs ,rainmr_prs   ,snowmr_prs   ,graupelmr_prs,refl_prs      &
       ,zdr_prs      ,ldr_prs                                                 &
       ,pcptype_prs  
@@ -242,8 +242,8 @@ implicit none
 
 integer :: ct
 
-nvar3dout=9
-if (make_micro) nvar3dout=nvar3dout+7
+nvar3dout=8
+if (make_micro) nvar3dout=nvar3dout+9
 
 allocate(pgrid(lx,ly,nvar3dout*lz),name3d(nvar3dout*lz),units3d(nvar3dout*lz)  &
         ,lvltype3d(nvar3dout*lz),com3d(nvar3dout*lz),lvls3d(nvar3dout*lz))
@@ -262,20 +262,20 @@ tprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='T3 '; com3d(ct:ct+lz-1)
 shprs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='SH '; com3d(ct:ct+lz-1)='Specific Humidity'         ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
 uprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='U3 '; com3d(ct:ct+lz-1)='U-component Wind'          ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
 vprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='V3 '; com3d(ct:ct+lz-1)='V-component Wind'          ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-tkeprs=>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='TKE'; com3d(ct:ct+lz-1)='Turbulent Kinetic Energy'  ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+!tkeprs=>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='TKE'; com3d(ct:ct+lz-1)='Turbulent Kinetic Energy'  ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
 wprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='W3 '; com3d(ct:ct+lz-1)='Vertical Velocity'         ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
 omprs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='OM '; com3d(ct:ct+lz-1)='Pressure Vertical Velocity'; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
 
 if (make_micro) then
-   cldliqmr_prs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='LWC'; com3d(ct:ct+lz-1)='Cloud Liquid Water'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   cldicemr_prs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='ICE'; com3d(ct:ct+lz-1)='Cloud Ice'              ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   rainmr_prs   =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='RAI'; com3d(ct:ct+lz-1)='Rain Concentration'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   snowmr_prs   =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='SNO'; com3d(ct:ct+lz-1)='Snow Concentration'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   graupelmr_prs=>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='PIC'; com3d(ct:ct+lz-1)='Graupel Concentration'  ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   refl_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='REF'; com3d(ct:ct+lz-1)='Sim. Radar Reflectivity'; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   zdr_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='ZDR'; com3d(ct:ct+lz-1)='Sim. Radar ZDR'; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   ldr_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='LDR'; com3d(ct:ct+lz-1)='Sim. Radar LDR'; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   pcptype_prs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='PTY'; com3d(ct:ct+lz-1)='Precip. Type'           ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   cldliqmr_prs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='LWC'; com3d(ct:ct+lz-1)='Cloud Liq.'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   cldicemr_prs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='ICE'; com3d(ct:ct+lz-1)='Cloud Ice'      ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   rainmr_prs   =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='RAI'; com3d(ct:ct+lz-1)='Rain Conc.'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   snowmr_prs   =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='SNO'; com3d(ct:ct+lz-1)='Snow Conc.'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   graupelmr_prs=>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='PIC'; com3d(ct:ct+lz-1)='Graupel Conc.'  ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   refl_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='REF'; com3d(ct:ct+lz-1)='Radar Ref.'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   zdr_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='ZDR'; com3d(ct:ct+lz-1)='Radar ZDR'       ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   ldr_prs     =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='LDR'; com3d(ct:ct+lz-1)='Radar LDR'       ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+   pcptype_prs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='PTY'; com3d(ct:ct+lz-1)='Precip. Type'   ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
 endif
 
 if (out_grib) then
@@ -286,7 +286,7 @@ if (out_grib) then
    gribitua(ct)=.true.; paramua(ct)=51 ; scalep10(ct)=8 ; ct=ct+1  ! shprs
    gribitua(ct)=.true.; paramua(ct)=33 ; scalep10(ct)=1 ; ct=ct+1  ! uprs
    gribitua(ct)=.true.; paramua(ct)=34 ; scalep10(ct)=1 ; ct=ct+1  ! vprs
-   gribitua(ct)=.true.; paramua(ct)=158; scalep10(ct)=3 ; ct=ct+1  ! tkeprs
+!   gribitua(ct)=.true.; paramua(ct)=158; scalep10(ct)=3 ; ct=ct+1  ! tkeprs
    gribitua(ct)=.true.; paramua(ct)=40 ; scalep10(ct)=3 ; ct=ct+1  ! wprs
    gribitua(ct)=.true.; paramua(ct)=39 ; scalep10(ct)=3 ; ct=ct+1  ! omprs
    if (make_micro) then
