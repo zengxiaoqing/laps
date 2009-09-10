@@ -104,6 +104,8 @@ cdis
 
         real r_missing_data
 
+        n_wisdom = 0
+
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1) then
           write(6,*) 'Cannot access r_missing_data value'
@@ -202,7 +204,7 @@ cdis
 !                   Point ob is in horizontal domain
 
                     if(ext_in .eq. 'pin')then
-                       if(l_geoalt)then ! ACARS elev is geometric height MSL
+                       if(l_geoalt)then ! elev is geometric height MSL (WISDOM)
                           rk = height_to_zcoord2(elev,heights_3d
      1                        ,ni,nj,nk,i_grid,j_grid,istatus_rk)
                           if(istatus_rk .ne. 1)then
@@ -302,6 +304,7 @@ cdis
                             if(ext_in .eq. 'pin' .and. l_geoalt)then
                                 write(lun_pig,91)ri,rj,rk,dd,ff,'wis'
  91                             format(1x,5f8.1,1x,a3)
+                                n_wisdom = n_wisdom + 1
                             else
                                 write(lun_pig,91)ri,rj,rk,dd,ff,ext_in
                             endif
@@ -375,6 +378,10 @@ cdis
 
 900     write(6,*)' End of RDPOINT ',ext_in,' file: '
      1           ,'Cumulative # obs = ',n_point_obs
+
+        if(n_wisdom .gt. 0)then
+            write(6,*)'# of WISDOM obs = ',n_wisdom_obs
+        endif
 
         close(lun_in)
         close(lun_pig)
