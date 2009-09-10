@@ -130,6 +130,7 @@ SUBROUTINE PrPstLSX
   CHARACTER*3 :: L1S_vnm(2)		! Variable names
   CHARACTER*3 :: L1S_vun(2)		! Units
   CHARACTER*3 :: L1S_crd(2)		! Coordinates
+  CHARACTER*3 :: LWM_vnm(2)		! Variable names
 
   INTEGER :: L1S_lvl(2)			! Number of levels of each field
 
@@ -284,7 +285,9 @@ SUBROUTINE PrPstLSX
 	       numfic(2)+1:numgrd(2)-numfic(2),itm,iwv)
 
       ! Write surface wind to lwm for plot purpose:
-      CALL PUT_LAPS_MULTI_2D(i4t,'lwm',vnm(nvr-1),vun(nvr-1),cmt(nvr-1), &
+      LWM_vnm(1) = 'SU '
+      LWM_vnm(2) = 'SV '
+      CALL PUT_LAPS_MULTI_2D(i4t,'lwm',LWM_vnm,vun(nvr-1),cmt(nvr-1), &
                              dat(1,1,nvr-1),ngd(1),ngd(2),2,sts)
 
       nvr = nvr+1
