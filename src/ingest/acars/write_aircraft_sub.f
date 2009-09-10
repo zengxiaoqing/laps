@@ -5,6 +5,7 @@
      1                          ,i4time_latest            
      1                          ,latitude,longitude,altitude
      1                          ,windDir,windSpeed
+     1                          ,temperature,relHumidity
      1                          ,l_geoalt)
 
           character*(*) ext 
@@ -81,6 +82,35 @@
 
               write(lun,4)int(windDir),windSpeed
  4            format(' Wind:'/' ', i3, ' deg @ ', f6.1, ' m/s')     
+
+          endif
+
+!         Test/Write Temperature
+          if(abs(temperature) .lt. 400.)then
+              if(l_debug)write(6,13)temperature
+                         write(lun,13)temperature
+ 13           format(' Temp:'/1x,f10.1)
+       
+          else
+              if(l_debug)write(6,*)' Temperature is suspect - reject'
+     1                             , temperature
+
+          endif
+
+!         Test/Write Relative Humidity
+          if(relHumidity     .ge. 0.   .and. 
+     1       relHumidity     .le. 1.00 
+!    1       waterVaporQC(i) .le. 2    .and.
+!    1       waterVaporQC(i) .ge. 0             
+     1                                       )then
+              if(l_debug)write(6,23)relHumidity
+!             if(l_debug)write(6,*)' RH QC value = ',waterVaporQC(i)
+              write(lun,23)relHumidity
+ 23           format(' RH:'/1x,f10.3)
+
+          else
+              if(l_debug)write(6,*)' RH rejected: '
+     1                             ,relHumidity ! ,waterVaporQC(i)
 
           endif
 
