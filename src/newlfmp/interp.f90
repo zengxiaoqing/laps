@@ -134,7 +134,7 @@ if (minval(hmrsig)  < rmsg) call vinterp_single(logp,hmrsig,shprs)
 if (minval(husig)   < rmsg) call vinterp_single(logp,husig,uprs)
 if (minval(hvsig)   < rmsg) call vinterp_single(logp,hvsig,vprs)
 if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
-if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
+!if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
 
 if (make_micro) then
    if (minval(hcldliqmr_sig)  < rmsg) call vinterp_single(logp,hcldliqmr_sig,cldliqmr_prs)
