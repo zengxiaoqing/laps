@@ -94,37 +94,46 @@ C
       include 'netcdf.inc'
       integer QCcheckNum, maxStaticIds, nInventoryBins, recNum,nf_fid,
      +     nf_vid, nf_status
-      integer firstInBin(nInventoryBins), firstOverflow,
-     +     globalInventory, invTime(recNum), inventory(maxStaticIds),
-     +     isOverflow(recNum), lastInBin(nInventoryBins),
-     +     lastRecord(maxStaticIds), latitudeQCA(recNum),
-     +     latitudeQCR(recNum), longitudeQCA(recNum),
-     +     longitudeQCR(recNum), nStaticIds, prevRecord(recNum),
-     +     secondsStage1_2(recNum), windDirQCA(recNum),
-     +     windDirQCR(recNum), windSpeedQCA(recNum),
-     +     windSpeedQCR(recNum)
+      integer cutdownFlag(recNum), firstInBin(nInventoryBins),
+     +     firstOverflow, globalInventory, invTime(recNum),
+     +     inventory(maxStaticIds), isOverflow(recNum),
+     +     lastInBin(nInventoryBins), lastRecord(maxStaticIds),
+     +     latitudeQCA(recNum), latitudeQCR(recNum),
+     +     longitudeQCA(recNum), longitudeQCR(recNum), nStaticIds,
+     +     pressureQCA(recNum), pressureQCR(recNum),
+     +     prevRecord(recNum), relHumidityQCA(recNum),
+     +     relHumidityQCR(recNum), secondsStage1_2(recNum),
+     +     temperatureQCA(recNum), temperatureQCR(recNum),
+     +     windDirQCA(recNum), windDirQCR(recNum),
+     +     windSpeedQCA(recNum), windSpeedQCR(recNum)
       real circularError(recNum), elevation(recNum), latitude(recNum),
      +     latitudeQCD( QCcheckNum, recNum), longitude(recNum),
      +     longitudeQCD( QCcheckNum, recNum), mobileElev(recNum),
-     +     mobileLat(recNum), mobileLon(recNum), windDir(recNum),
+     +     mobileLat(recNum), mobileLon(recNum), pressure(recNum),
+     +     pressureQCD( QCcheckNum, recNum), relHumidity(recNum),
+     +     relHumidityQCD( QCcheckNum, recNum), temperature(recNum),
+     +     temperatureQCD( QCcheckNum, recNum), windDir(recNum),
      +     windDirQCD( QCcheckNum, recNum), windSpeed(recNum),
      +     windSpeedQCD( QCcheckNum, recNum)
       double precision observationTime(recNum), receivedTime(recNum),
      +     reportTime(recNum)
-      character*11 stationType(recNum)
-      character latitudeDD(recNum)
+      character pressureDD(recNum)
       character*11 dataProvider(recNum)
       character longitudeDD(recNum)
       character windDirDD(recNum)
-      character*512 rawMessage(recNum)
-      character*24 staticIds(maxStaticIds)
       character*60 QCT(QCcheckNum)
       character*6 handbook5Id(recNum)
-      character*12 providerId(recNum)
-      character windSpeedDD(recNum)
-      character*4 homeWFO(recNum)
-      character*6 stationId(recNum)
       character*51 stationName(recNum)
+      character*11 stationType(recNum)
+      character latitudeDD(recNum)
+      character relHumidityDD(recNum)
+      character*512 rawMessage(recNum)
+      character temperatureDD(recNum)
+      character*24 staticIds(maxStaticIds)
+      character windSpeedDD(recNum)
+      character*12 providerId(recNum)
+      character*6 stationId(recNum)
+      character*4 homeWFO(recNum)
 
 !     Declarations for 'write_pin' call
       integer iwmostanum(recNum)
@@ -147,18 +156,23 @@ C
       endif
 
       call read_wisdom_netcdf(nf_fid, QCcheckNum, maxStaticIds, 
-     +     nInventoryBins, recNum, firstInBin, firstOverflow, 
-     +     globalInventory, invTime, inventory, isOverflow, 
-     +     lastInBin, lastRecord, latitudeQCA, latitudeQCR, 
-     +     longitudeQCA, longitudeQCR, nStaticIds, prevRecord, 
-     +     secondsStage1_2, windDirQCA, windDirQCR, windSpeedQCA, 
+     +     nInventoryBins, recNum, cutdownFlag, firstInBin, 
+     +     firstOverflow, globalInventory, invTime, inventory, 
+     +     isOverflow, lastInBin, lastRecord, latitudeQCA, 
+     +     latitudeQCR, longitudeQCA, longitudeQCR, nStaticIds, 
+     +     pressureQCA, pressureQCR, prevRecord, relHumidityQCA, 
+     +     relHumidityQCR, secondsStage1_2, temperatureQCA, 
+     +     temperatureQCR, windDirQCA, windDirQCR, windSpeedQCA, 
      +     windSpeedQCR, circularError, elevation, latitude, 
      +     latitudeQCD, longitude, longitudeQCD, mobileElev, 
-     +     mobileLat, mobileLon, windDir, windDirQCD, windSpeed, 
-     +     windSpeedQCD, QCT, dataProvider, handbook5Id, homeWFO, 
-     +     latitudeDD, longitudeDD, providerId, rawMessage, 
-     +     staticIds, stationId, stationName, stationType, windDirDD, 
-     +     windSpeedDD, observationTime, receivedTime, reportTime)
+     +     mobileLat, mobileLon, pressure, pressureQCD, relHumidity, 
+     +     relHumidityQCD, temperature, temperatureQCD, windDir, 
+     +     windDirQCD, windSpeed, windSpeedQCD, QCT, dataProvider, 
+     +     handbook5Id, homeWFO, latitudeDD, longitudeDD, pressureDD, 
+     +     providerId, rawMessage, relHumidityDD, staticIds, 
+     +     stationId, stationName, stationType, temperatureDD, 
+     +     windDirDD, windSpeedDD, observationTime, receivedTime, 
+     +     reportTime)
 C
 C The netcdf variables are filled - your pin write call may go here
 C
@@ -177,7 +191,7 @@ C
       do iob = 1,recNum
           l_geoalt = .true.
 
-!         QC flag checks can be added here if desired
+!         MADIS QC flag checks can be added here if desired
 
           call write_aircraft_sub(lun_out,'pin'
      1                           ,a9time_ob_r(iob),a9time_ob_r(iob)
@@ -187,6 +201,7 @@ C
      1                           ,latitude(iob),longitude(iob)
      1                           ,elevation(iob)
      1                           ,windDir(iob),windSpeed(iob)
+     1                           ,temperature(iob),relHumidity(iob)
      1                           ,l_geoalt)
 
       enddo ! iob
@@ -196,53 +211,67 @@ C
 C  Subroutine to read the file "MADIS - WISDOM" 
 C
       subroutine read_wisdom_netcdf(nf_fid, QCcheckNum, maxStaticIds, 
-     +     nInventoryBins, recNum, firstInBin, firstOverflow, 
-     +     globalInventory, invTime, inventory, isOverflow, 
-     +     lastInBin, lastRecord, latitudeQCA, latitudeQCR, 
-     +     longitudeQCA, longitudeQCR, nStaticIds, prevRecord, 
-     +     secondsStage1_2, windDirQCA, windDirQCR, windSpeedQCA, 
+     +     nInventoryBins, recNum, cutdownFlag, firstInBin, 
+     +     firstOverflow, globalInventory, invTime, inventory, 
+     +     isOverflow, lastInBin, lastRecord, latitudeQCA, 
+     +     latitudeQCR, longitudeQCA, longitudeQCR, nStaticIds, 
+     +     pressureQCA, pressureQCR, prevRecord, relHumidityQCA, 
+     +     relHumidityQCR, secondsStage1_2, temperatureQCA, 
+     +     temperatureQCR, windDirQCA, windDirQCR, windSpeedQCA, 
      +     windSpeedQCR, circularError, elevation, latitude, 
      +     latitudeQCD, longitude, longitudeQCD, mobileElev, 
-     +     mobileLat, mobileLon, windDir, windDirQCD, windSpeed, 
-     +     windSpeedQCD, QCT, dataProvider, handbook5Id, homeWFO, 
-     +     latitudeDD, longitudeDD, providerId, rawMessage, 
-     +     staticIds, stationId, stationName, stationType, windDirDD, 
-     +     windSpeedDD, observationTime, receivedTime, reportTime)
+     +     mobileLat, mobileLon, pressure, pressureQCD, relHumidity, 
+     +     relHumidityQCD, temperature, temperatureQCD, windDir, 
+     +     windDirQCD, windSpeed, windSpeedQCD, QCT, dataProvider, 
+     +     handbook5Id, homeWFO, latitudeDD, longitudeDD, pressureDD, 
+     +     providerId, rawMessage, relHumidityDD, staticIds, 
+     +     stationId, stationName, stationType, temperatureDD, 
+     +     windDirDD, windSpeedDD, observationTime, receivedTime, 
+     +     reportTime)
 C
       include 'netcdf.inc'
       integer QCcheckNum, maxStaticIds, nInventoryBins, recNum,nf_fid, 
      +     nf_vid, nf_status
-      integer firstInBin(nInventoryBins), firstOverflow,
-     +     globalInventory, invTime(recNum), inventory(maxStaticIds),
-     +     isOverflow(recNum), lastInBin(nInventoryBins),
-     +     lastRecord(maxStaticIds), latitudeQCA(recNum),
-     +     latitudeQCR(recNum), longitudeQCA(recNum),
-     +     longitudeQCR(recNum), nStaticIds, prevRecord(recNum),
-     +     secondsStage1_2(recNum), windDirQCA(recNum),
-     +     windDirQCR(recNum), windSpeedQCA(recNum),
-     +     windSpeedQCR(recNum)
+      integer cutdownFlag(recNum), firstInBin(nInventoryBins),
+     +     firstOverflow, globalInventory, invTime(recNum),
+     +     inventory(maxStaticIds), isOverflow(recNum),
+     +     lastInBin(nInventoryBins), lastRecord(maxStaticIds),
+     +     latitudeQCA(recNum), latitudeQCR(recNum),
+     +     longitudeQCA(recNum), longitudeQCR(recNum), nStaticIds,
+     +     pressureQCA(recNum), pressureQCR(recNum),
+     +     prevRecord(recNum), relHumidityQCA(recNum),
+     +     relHumidityQCR(recNum), secondsStage1_2(recNum),
+     +     temperatureQCA(recNum), temperatureQCR(recNum),
+     +     windDirQCA(recNum), windDirQCR(recNum),
+     +     windSpeedQCA(recNum), windSpeedQCR(recNum)
       real circularError(recNum), elevation(recNum), latitude(recNum),
      +     latitudeQCD( QCcheckNum, recNum), longitude(recNum),
      +     longitudeQCD( QCcheckNum, recNum), mobileElev(recNum),
-     +     mobileLat(recNum), mobileLon(recNum), windDir(recNum),
+     +     mobileLat(recNum), mobileLon(recNum), pressure(recNum),
+     +     pressureQCD( QCcheckNum, recNum), relHumidity(recNum),
+     +     relHumidityQCD( QCcheckNum, recNum), temperature(recNum),
+     +     temperatureQCD( QCcheckNum, recNum), windDir(recNum),
      +     windDirQCD( QCcheckNum, recNum), windSpeed(recNum),
      +     windSpeedQCD( QCcheckNum, recNum)
       double precision observationTime(recNum), receivedTime(recNum),
      +     reportTime(recNum)
-      character*11 stationType(recNum)
-      character latitudeDD(recNum)
+      character pressureDD(recNum)
       character*11 dataProvider(recNum)
       character longitudeDD(recNum)
       character windDirDD(recNum)
-      character*512 rawMessage(recNum)
-      character*24 staticIds(maxStaticIds)
       character*60 QCT(QCcheckNum)
       character*6 handbook5Id(recNum)
+      character*51 stationName(recNum)
+      character*11 stationType(recNum)
+      character latitudeDD(recNum)
+      character relHumidityDD(recNum)
+      character*512 rawMessage(recNum)
+      character*24 staticIds(maxStaticIds)
+      character temperatureDD(recNum)
       character*12 providerId(recNum)
       character windSpeedDD(recNum)
       character*4 homeWFO(recNum)
       character*6 stationId(recNum)
-      character*51 stationName(recNum)
 
 
 C   Variables of type REAL
@@ -365,6 +394,84 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
+C     pressure      "pressure"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'pressure',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for pressure'
+      else
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,pressure)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for pressure'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     pressureQCD   "pressure QC departures"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'pressureQCD',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for pressureQCD'
+      else
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,pressureQCD)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for pressureQCD'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     relHumidity   "relHumidity"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'relHumidity',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for relHumidity'
+      else
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,relHumidity)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for relHumidity'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     relHumidityQCD"relHumidity QC departures"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'relHumidityQCD',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for relHumidityQCD'
+      else
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,relHumidityQCD)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for relHumidityQCD'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     temperature   "temperature"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'temperature',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for temperature'
+      else
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,temperature)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for temperature'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     temperatureQCD"temperature QC departures"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'temperatureQCD',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for temperatureQCD'
+      else
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,temperatureQCD)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for temperatureQCD'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
 C     windDir       "wind direction"
 C
       nf_status=NF_INQ_VARID(nf_fid,'windDir',nf_vid)
@@ -418,6 +525,19 @@ C
 
 C   Variables of type INT
 C
+C
+C     Variable        NETCDF Long Name
+C     cutdownFlag   "cutdown flag"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'cutdownFlag',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for cutdownFlag'
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,cutdownFlag)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for cutdownFlag'
+       endif
+      endif
 C
 C     Variable        NETCDF Long Name
 C     firstInBin    
@@ -589,6 +709,32 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
+C     pressureQCA   "pressure QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'pressureQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for pressureQCA'
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,pressureQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for pressureQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     pressureQCR   "pressure QC results word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'pressureQCR',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for pressureQCR'
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,pressureQCR)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for pressureQCR'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
 C     prevRecord    
 C
       nf_status=NF_INQ_VARID(nf_fid,'prevRecord',nf_vid)
@@ -602,6 +748,32 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
+C     relHumidityQCA"relHumidity QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'relHumidityQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for relHumidityQCA'
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,relHumidityQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for relHumidityQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     relHumidityQCR"relHumidity QC results word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'relHumidityQCR',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for relHumidityQCR'
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,relHumidityQCR)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for relHumidityQCR'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
 C     secondsStage1_2
 C
       nf_status=NF_INQ_VARID(nf_fid,'secondsStage1_2',nf_vid)
@@ -611,6 +783,32 @@ C
        nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,secondsStage1_2)
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for secondsStage1_2'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     temperatureQCA"temperature QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'temperatureQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for temperatureQCA'
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,temperatureQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for temperatureQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     temperatureQCR"temperature QC results word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'temperatureQCR',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for temperatureQCR'
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,temperatureQCR)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for temperatureQCR'
        endif
       endif
 C
@@ -791,6 +989,19 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
+C     pressureDD    "pressure QC summary value"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'pressureDD',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for pressureDD'
+      else
+       nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,pressureDD)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for pressureDD'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
 C     providerId    "Data Provider station Id"
 C
       nf_status=NF_INQ_VARID(nf_fid,'providerId',nf_vid)
@@ -813,6 +1024,19 @@ C
        nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,rawMessage)
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for rawMessage'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     relHumidityDD "relHumidity QC summary value"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'relHumidityDD',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for relHumidityDD'
+      else
+       nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,relHumidityDD)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for relHumidityDD'
        endif
       endif
 C
@@ -865,6 +1089,19 @@ C
        nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,stationType)
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for stationType'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     temperatureDD "temperature QC summary value"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'temperatureDD',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for temperatureDD'
+      else
+       nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,temperatureDD)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for temperatureDD'
        endif
       endif
 C
