@@ -574,7 +574,8 @@ do k=1,lz
 do j=1,ly
 do i=1,lx
  tvprs = tprs(i,j,k) * (1. + 0.61*shprs(i,j,k))
- omprs(i,j,k) = -(lprsl(k)*wprs(i,j,k)*grav)/(r*tvprs) * 100. ! Pa/Mb
+!YHL  omprs(i,j,k) = -(lprsl(k)*wprs(i,j,k)*grav)/(r*tvprs) * 100. ! Pa/Mb
+ omprs(i,j,k) = -(lprs(k)*wprs(i,j,k)*grav)/(r*tvprs)  ! changed by Steve. A, Huiling Yuan 9/11/2009
 enddo
 enddo
 enddo
