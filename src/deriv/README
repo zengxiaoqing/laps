@@ -48,22 +48,12 @@ laps_deriv_main                                         laps_deriv.f
             ventilation_index                           fire_fields.f
             critical_fwi                                    "
             pbl_mean_wind                                   "
+        upslope_mflux                                   lib/up_mflux.f
 
 ...............................................................................
 
 
 cloud_deriv_subs.f:        subroutine put_laps_multi_3d_append(i4time,EXT,var_2d,units_2d,
-fire_fields.f:      subroutine fire_fields(ni,nj,nk,temp_3d,td_3d                 ! I
-fire_fields.f:      write(6,*)' Subroutine fire_fields (under construction)'
-fire_fields.f:       subroutine cpt_fire_fields(ni,nj,nk,pres_3d_pa,temp_3d,td_3d  ! I
-fire_fields.f:       write(6,*)' Subroutine cpt_fire_fields...'
-fire_fields.f:       subroutine ventilation_index(u_3d,v_3d,pbl_top_pa,pbl_depth_m      ! I
-fire_fields.f:       write(6,*)' Subroutine ventilation_index'
-fire_fields.f:        subroutine pbl_mean_wind(uanl,vanl,topo,pbl_top_pa        ! I
-fire_fields.f:       subroutine critical_fwi(rh_sfc,u_sfc,v_sfc                         ! I
-fireweatherindex.f:!     subroutine fireweatherindex(tmk,prs,qvp,ght,ter,sfp,tgk,
-fireweatherindex.f:      subroutine fireweatherindex(t_sfc_k,rh_sfc,p_sfc_mb,u10,v10
-hainesindex.f:      subroutine hainesindex(prs,tmk,tdk,haines,miy,mjx,mkzh,prsb,prst)
 laps_deriv.f:        subroutine laps_deriv(i4time,
 laps_deriv.f: 999    write(6,*)' End of subroutine laps_deriv'
 laps_deriv.f:       subroutine get_deriv_parms(mode_evap,l_bogus_radar_w,istatus)
