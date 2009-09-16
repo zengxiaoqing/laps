@@ -38,6 +38,7 @@ cdoc  pressure grid. This does not support an arbitrary vertical grid.
 
       do k = 1,nk
         if(pressures(k) .le. 0. .or. pressures(k) .gt. 150000.)goto902       
+        if(pressures(k) .ne. int(pressures(k)/100.) * 100.)goto903
         pres_1d_out(k) = pressures(k)
       enddo                  ! k
 
@@ -59,6 +60,12 @@ cdoc  pressure grid. This does not support an arbitrary vertical grid.
       return
 
   902 print*,'error in pressures_nl values in ',filename
+      write(*,pressures_nl)
+      istatus = 0
+      return
+
+  903 print*,'error in pressures_nl values in ',filename
+      print*,'values should be an integral multiple of 100 Pa'
       write(*,pressures_nl)
       istatus = 0
       return
