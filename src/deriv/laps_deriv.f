@@ -93,6 +93,7 @@ cdis
         real temp_sfc_k(NX_L,NY_L)
         real pres_sfc_pa(NX_L,NY_L)
         real rh_sfc_pct(NX_L,NY_L)
+        real tpw_2d(NX_L,NY_L)         ! units are M
         real u_sfc_ms(NX_L,NY_L)
         real v_sfc_ms(NX_L,NY_L)
 
@@ -101,6 +102,8 @@ cdis
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
+        real dx(NX_L,NY_L)
+        real dy(NX_L,NY_L)
 
         character*31 EXT
 
@@ -225,6 +228,17 @@ cdis
             go to 999
         endif
 
+!       Read in tpw data
+        var_2d = 'TPW'
+        ext = 'lh4'
+        call get_laps_2d(i4time,ext,var_2d,units_2d,comment_2d
+     1                  ,NX_L,NY_L,tpw_2d,istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' LAPS TPW not available'
+            go to 999
+        endif
+
         write(6,*)
         write(6,*)' Calling laps_deriv_sub'
         call laps_deriv_sub(i4time,              ! I
@@ -309,6 +323,12 @@ cdis
             write(6,*)' Skipping call to fire_fields'
 
         endif
+
+!       Calculate upslope component of moisture flux (PSD conventions)
+        call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
+	call up_mflux(NX_L,NY_L,NZ_L,topo,dx,dy
+     1                     ,u_3d,v_3d,tpw_2d,upslope_flux
+     1                     ,heights_3d,r_missing_data)
 
  999    write(6,*)' End of subroutine laps_deriv'
 
