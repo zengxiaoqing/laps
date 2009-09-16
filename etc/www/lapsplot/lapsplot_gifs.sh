@@ -9,7 +9,7 @@ uname -a
 proc=$1
 WINDOW=$2
 LAPS_GIFS=$3
-LAPSPLOT_IN=$4
+delay=$4
 EXE_DIR=$5
 export LAPS_DATA_ROOT=$6
 export NCARG_ROOT=$7
@@ -17,6 +17,7 @@ animate=$8
 RESOLUTION=$9
 
 SCRATCH_DIR=$LAPS_GIFS/scratch
+LAPSPLOT_IN=$SCRATCH_DIR/lapsplot.in_$proc
 
 uscore="_"
 MACHINE=`uname -s`
@@ -37,8 +38,12 @@ echo "latest ="$latest
 echo "RESOLUTION ="$RESOLUTION
 echo "LAPSPLOT_IN ="$LAPSPLOT_IN
 echo "animate ="$animate
+echo "delay ="$delay
 
-limit cputime 1000
+echo " "
+echo "setting ulimit"
+ulimit -t 1000
+ulimit -t
 
 mkdir -p /scratch/lapb/www
 mkdir -p $SCRATCH_DIR/$proc
@@ -135,12 +140,12 @@ elif test "$netpbm" = "yes" && test "$animate" = "yes"; then
         rasttopnm $file | ppmtogif > $file.gif
     done
 
-    echo "convert -delay 50 -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
-    convert -delay 75 -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
+    echo "convert -delay $delay -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
+    convert -delay $delay -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
 
 #   This option may be more direct though it isn't working on the new server
-#   echo "convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
-#   convert -delay 75 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
+#   echo "convert -delay $delay -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
+#   convert -delay $delay -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
 
     ls -l $SCRATCH_DIR/gmeta_$proc.gif
 
