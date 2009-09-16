@@ -193,6 +193,8 @@ c  triple dimension
         do j = 1,m
         do i = 1,n
         if(var3(i,j,k).ne.var3(i,j,k)) then ! NaN detected
+c LW added for testing
+         write(6,*) 'NaN found: ',i,j,k
          istatus = 0
          return
         endif
