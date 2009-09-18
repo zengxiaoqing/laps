@@ -648,7 +648,7 @@ cdis
       subroutine get_temp_obstype(c_obstype,i_obstype,mode)
 
       integer n_obstypes
-      parameter (n_obstypes = 10)
+      parameter (n_obstypes = 11)
       character*8 c_obstype_a(n_obstypes),c_obstype
 
       data c_obstype_a /
@@ -661,7 +661,8 @@ cdis
      1     'GOES11  ',
      1     'GOES12  ',
      1     'POESSND ',
-     1     'SATSND  '/
+     1     'SATSND  ',
+     1     'WISDOM  '/
      
       if(mode .eq. 1)then ! Convert c_obstype to i_obstype
 
