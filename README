@@ -179,18 +179,19 @@
 
                       --- 2.1.1  NetCDF library  ---
  
-     The NetCDF package is required for laps, it is available via internet at 
+     The netCDF package is required for laps, it is available via internet at 
      'http://www.unidata.ucar.edu/packages/netcdf/'
-     netcdf 3.3.1 or higher is required.
-     Once netCDF is properly installed, check that the 'ncdump' and 'ncgen' 
-     programs are in your path (e.g. 'which ncdump'), so that 'configure' 
-     will find them and provide the laps package with the proper path. 
+     netCDF 3.3.1 or a higher 3.x is required. Note that netCDF versions 4.x
+     aren't yet supported. Once netCDF is properly installed, check that the 
+     'ncdump' and 'ncgen' programs are in your path (e.g. 'which ncdump'), so 
+     that 'configure' will find them and provide the laps package with the 
+     proper path. 
 
      NetCDF is a general format structure. The detailed format of each data 
      file is self-describing (via 'ncdump'), and is mirrored in a separate 
      static file called the CDL. This CDL can be GSD's version or someone elses.
 
-     The NetCDF library contains C routines that are to be linked with the
+     The netCDF library contains C routines that are to be linked with the
      LAPS FORTRAN routines. Please see the discussion in section 2.2.2.1 for
      details on troubleshooting this.
    
@@ -268,7 +269,7 @@
                    http://ngwww.ucar.edu
 
      The 'lapsplot.exe' executable is an interactive program that reads in
-     the NetCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
+     the netCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
      file can be displayed using other NCAR graphics utilities like 'ctrans'
      and 'idt'. 
 
@@ -374,7 +375,7 @@
      with DEGRIBLIBS, DEGRIBFLAGS and CDEGRIBFLAGS values allowing the lga 
      software to build to read both GRIB1 and GRIB2-formatted files. Without 
      these three specific compression libraries available, lga is built to 
-     read only GRIB1-formatted files in addition to NetCDF-formatted files. 
+     read only GRIB1-formatted files in addition to netCDF-formatted files. 
 
      See source directory: $LAPS_SRC_ROOT/src/lib/degrib/README_LIBS file 
      for additional information.
@@ -576,17 +577,17 @@
      an edit of 'src/include/makefile.inc' to allow compiling FORTRAN debug 
      versions of the software.
 
-     On some platforms (e.g. Linux) the linking of FORTRAN programs to NetCDF
+     On some platforms (e.g. Linux) the linking of FORTRAN programs to netCDF
      and other C library routines may need adjustment. This relates to the 
      existence and number of underscores in the C routine names when called by
      FORTRAN routines. Fixes for this may include a combination of changing 
      the number of underscores in the C routines, changing the CPPFLAGS for 
      LAPS, or changing the FFLAGS for LAPS. 
 
-     As an example, with errors linking to NetCDF "nf" routines, you might 
-     rebuild the NetCDF C library with a different number of underscores and/or
+     As an example, with errors linking to netCDF "nf" routines, you might 
+     rebuild the netCDF C library with a different number of underscores and/or
      adjust the FFLAGS according to the man page in your FORTRAN compiler.   
-     On a Linux-Intel machine the NetCDF library can be rebuilt with the 
+     On a Linux-Intel machine the netCDF library can be rebuilt with the 
      following flags...
      <pre>
      FC=pgf90
@@ -952,15 +953,15 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      http://laps.noaa.gov/doc/slide1_v3.gif
 
      The default LAPS ingest code obtains "raw" data, generally from the GSD 
-     NIMBUS system. The raw data can either be in ASCII, NetCDF (as point 
-     data), or NetCDF (as gridded data - generally not on the LAPS grid). Note
+     NIMBUS system. The raw data can either be in ASCII, netCDF (as point 
+     data), or netCDF (as gridded data - generally not on the LAPS grid). Note
      that the ingest code is also generally compatable with raw SBN/NOAAPORT 
-     data as stored in NetCDF files on the WFO-Advanced system. The ingest 
+     data as stored in netCDF files on the WFO-Advanced system. The ingest 
      code processes the raw data and outputs the LAPS "intermediate" data 
      files. The intermediate files are generally in ASCII for point data and 
-     NetCDF format for gridded data that have now been remapped onto the LAPS 
+     netCDF format for gridded data that have now been remapped onto the LAPS 
      grid. Most ingest code is located under the 'src/ingest directory'. When 
-     NetCDf format is used for the raw data, a cdl file for the raw data is 
+     netCDf format is used for the raw data, a cdl file for the raw data is 
      sometimes included in the source code directory.
   
      Depending on the data source, you may generally prefer one of three 
@@ -976,13 +977,13 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
          2) Run a process independent of the LAPS ingest code that creates
             the intermedate data file. 
 
-         3) Convert your raw data to appropriate NetCDF formats then run the 
-            LAPS ingest code as is. The CDLs and sample raw/NIMBUS NetCDF files
+         3) Convert your raw data to appropriate netCDF formats then run the 
+            LAPS ingest code as is. The CDLs and sample raw/NIMBUS netCDF files
             supplied with our test dataset can serve as a guide to writing the 
             software to do this. If the CDL is unavailable, doing 'ncdump -h'
             on the actual data file will yield equivalent information. We 
             generally do not maintain or support any software for writing 
-            "raw" NetCDF files as this is done external to LAPS. Sometimes by 
+            "raw" netCDF files as this is done external to LAPS. Sometimes by 
             posting a message to 'laps-users' you can obtain information from 
             other LAPS users as to how they may have implemented this step.
 
@@ -1029,30 +1030,30 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      entry of "fdda_model_source" = 'lga'.
 
      The acceptable models and formats for the background model are listed in
-     'data/static/background.nl'. Many models can be accepted in NetCDF format.
+     'data/static/background.nl'. Many models can be accepted in netCDF format.
      A new capability in LAPS is to process GRIB input without first converting
-     to NetCDF format. For Grib data to be decoded an associated Vtable.XXX 
+     to netCDF format. For Grib data to be decoded an associated Vtable.XXX 
      needs to be found in directory 'data/static/Variable_Tables'. The Vtable
      can be configured for either GRIB-1 or GRIB-2. However we are unable to 
      guarentee that any model specified in 'background.nl' will work without
      some software modification.  
 
      RUC grids are ftp'ed from NCEP to GSD, then converted at GSD from 
-     GRIB to NetCDF. This NetCDF file is the input for the LAPS ingest
+     GRIB to netCDF. This netCDF file is the input for the LAPS ingest
      process that writes "lga". For more information on RUC check the 
      following URL for more RUC info:  'http://maps.fsl.noaa.gov/'
 
      RUC is also available from UNIDATA and distributed to universities 
      through private companies like Alden. 
 
-     The conversion from GRIB to NetCDF is done outside of LAPS by GSD's 
+     The conversion from GRIB to netCDF is done outside of LAPS by GSD's 
      Information and Technology Services (ITS) group (in the NIMBUS system).
      Having the CDL should mostly be sufficient along with general knowledge 
-     of NetCDF for writing out the data. Beyond that, you may wish to contact 
+     of netCDF for writing out the data. Beyond that, you may wish to contact 
      the ITS group for more info (see the reference to them in section 3.2.1).
      The Atlanta, Sterling, and Seattle WFOs have followed a more direct route,
      going from the RUC/Eta to the intermediate "lga" file, bypassing the 
-     NetCDF file on the model grid. This includes RUC on isobaric surfaces. 
+     netCDF file on the model grid. This includes RUC on isobaric surfaces. 
 
                  ----   2.3.1.1 Acquiring Model Background Data ---
 
@@ -1129,7 +1130,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            (vrc)                 - Low-level reflectivity from single or 
                                    multiple radars. For example, our ingest 
                                    at GSD processes WSI-NOWRAD, stored at GSD 
-                                   in NetCDF, to create the 'vrc' intermediate 
+                                   in netCDF, to create the 'vrc' intermediate 
                                    file. Narrowband single-tilt data from AWIPS
                                    is also stored in 'vrc' files.
 
@@ -1191,7 +1192,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                        ----   2.3.3  Surface Data ---
 
      Sfc Obs (lso): GSD uses surface data as input with the default being GSD's
-           NIMBUS NetCDF format. A few other METAR formats are now being 
+           NIMBUS netCDF format. A few other METAR formats are now being 
            supported as listed in the 'static/obs_driver.nl' namelist. The GSD
            code is in the '.../src/ingest/sao' directory, and includes routines
            to read and reformat various surface data types (METAR/SYNOP, mesonet
@@ -1207,7 +1208,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            Paths to the datasets are specified in the 'obs_driver.nl' file. 
            The surface data, including many of the types mentioned above, over 
            much of the world are available in realtime from GSD with some 
-           restrictions. This data, generally in 'WFO/AWIPS' NetCDF format, are
+           restrictions. This data, generally in 'WFO/AWIPS' netCDF format, are
            distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/. The supported MADIS LDAD surface
            observation datasets are 'mesonet' and 'urbanet'.
@@ -1220,7 +1221,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                       ----   2.3.4  Wind Profiler / RASS ---
 
      Profilers/RASS (pro/lrs) - The raw data are obtained from GSD's NIMBUS 
-           database and/or AWIPS in NetCDF format where they are stored in 
+           database and/or AWIPS in netCDF format where they are stored in 
            four different directories. The data originally come from GSD's 
            Demonstration Branch (DB) from two main networks. The 30+ NPN 
            (National Profiler Network - NOAAnet) profiler network is located 
@@ -1263,20 +1264,20 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 </pre>                 
 
            The NPN wind profiler data is available via another route from 
-           GSD with some restrictions. This data, in 'WFO/AWIPS' NetCDF format,
+           GSD with some restrictions. This data, in 'WFO/AWIPS' netCDF format,
            is distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
-     PIREPS (pin) - We are ingesting GSD NIMBUS and WFO/AWIPS (NetCDF) pirep 
+     PIREPS (pin) - We are ingesting GSD NIMBUS and WFO/AWIPS (netCDF) pirep 
            files to translate the cloud layers from voice pilot reports into 
            intermediate "PIN" files.
 
-     ACARS (pin) - We are ingesting GSD NIMBUS, WFO/AWIPS (NetCDF) and AFWA 
+     ACARS (pin) - We are ingesting GSD NIMBUS, WFO/AWIPS (netCDF) and AFWA 
            databases for ACARS data to translate the automated aircraft 
            observations. The wind, temperature and humidity obs are appended 
-           to our intermediate "PIN" file. A NIMBUS equivalent NetCDF database 
+           to our intermediate "PIN" file. A NIMBUS equivalent netCDF database 
            is available (with some restrictions) on the Web via MADIS at
            http://www-sdd.fsl.noaa.gov/MADIS/
 
@@ -1288,7 +1289,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      RAOBs (snd):
            GSD NIMBUS, WFO/AWIPS, CWB, or AFWA databases. These are available 
            in real-time from GSD with some restrictions. RAOB data in 
-           'WFO/AWIPS' NetCDF format is distributed via GSD's MADIS project at 
+           'WFO/AWIPS' netCDF format is distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/
 
      Dropsondes (snd):
@@ -1297,7 +1298,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            SND format to be used as input (so far just for the "AIRDROP" 
            project). For the SND input option, the ingest program simply does a
            time windowing of the raw data. We may include modules for other 
-           (e.g. NetCDF) databases in the future, such as NIMBUS or WFO/AWIPS.
+           (e.g. netCDF) databases in the future, such as NIMBUS or WFO/AWIPS.
 
      Radiometers (snd):
            A radiometer ingest module has been developed for the MADIS
@@ -1306,7 +1307,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                       ----   2.3.7  Satellite ---
 
      Satellite Image Ingest (lvd): GOES data ingest. Data is stored at
-           GSD in NetCDF or AWIPS/NOAAPORT/SBN data (also in NetCDF). Ingest of
+           GSD in netCDF or AWIPS/NOAAPORT/SBN data (also in netCDF). Ingest of
            Air Force Weather Agency (AFWA) satellite data is also possible.  
            Raw GVAR satellite data can be ingested and navigated using GIMLOC 
            routines. Further details can be found in the file 
@@ -1334,11 +1335,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                       ----   2.3.8  GPS ---
 
      GPS:
-           LAPS uses GPS data from NIMBUS NetCDF files. The precipitable water
+           LAPS uses GPS data from NIMBUS netCDF files. The precipitable water
            is used in the humidity analysis and surface observations are
            read into the surface analyses.
 
-           There is a second format known as (LDAD) NetCDF that carries GPS 
+           There is a second format known as (LDAD) netCDF that carries GPS 
            data. This format can supply GPS surface data to the LAPS 
            intermediate 'lso' file. LAPS does not yet read precipitable water 
            from the LDAD format.
@@ -1346,29 +1347,29 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                       ----   2.3.9  Other Data Sources ---
 
      Radar VAD Algorithm winds (pro)
-           GSD NIMBUS NetCDF database, from WSR-88D algorithm output. GSD 
+           GSD NIMBUS netCDF database, from WSR-88D algorithm output. GSD 
            obtains this from NCEP and does not presently redistribute it.
 
      SODAR data (pro) - This is treated in a similar manner to wind profilers 
            and can be processed by LAPS ingest to appear in the PRO file.
            This is available as part of the RSA project at Kennedy and
-           Vandenberg Space Centers and comes into NetCDF format via 
+           Vandenberg Space Centers and comes into netCDF format via 
            AWIPS/LDAD.
 
      Met Tower data (snd) - This is treated in a similar manner to RAOBs
            and can be processed by LAPS ingest to appear in the SND file.
            This is available as part of the RSA project at Kennedy and
-           Vandenberg Space Centers and comes into NetCDF format via 
+           Vandenberg Space Centers and comes into netCDF format via 
            AWIPS/LDAD.
 
      Radiometric Profiler (snd):
-           We have an interface to radiometric profilers (in NetCDF via NIMBUS)
+           We have an interface to radiometric profilers (in netCDF via NIMBUS)
            that can be used for the temperature and humidity analyses.
 
      Cloud Drift Winds (cdw):
            We are ingesting the ASCII satellite cloud-drift wind files
            for use in the wind analysis. These come from NESDIS (via NIMBUS)
-           as well as from CWB and AFWA. We can also utilize NetCDF files from
+           as well as from CWB and AFWA. We can also utilize netCDF files from
            MADIS.
 
                ---  2.4  Running LAPS Analyses  ---
@@ -1566,7 +1567,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      Raw data formats and filename conventions are consistent with the default
      namelist settings taken from the repository. This is generally in NIMBUS 
-     (self describing NetCDF) format with associated file naming conventions. 
+     (self describing netCDF) format with associated file naming conventions. 
      A typical filename on NIMBUS looks like this: '0606701000100o' meaning 
      'yydddhhmmHHMM' where 'ddd' is the day of year, 'hhmm' is the time of day 
      and 'HHMM' is the file recurrence interval. The 'o' at the end means that
@@ -1606,8 +1607,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      Once the laps library is compiled (as outlined above), laps grids can
      be read. There are three levels of software that can access the data.
 <pre>
-     1. Lowest Level - NetCDF c routine calls (not recommended unless you're
-                                               a NetCDF hacker)
+     1. Lowest Level - netCDF c routine calls (not recommended unless you're
+                                               a netCDF hacker)
 
      2. Medium Level - READ_LAPS_DATA - look at the source code in 
         lib/readlapsdata.f for the arguments.
@@ -1801,7 +1802,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
 </pre>
 
-        When you run ./etc/localize_domain.pl, the NetCDF static 
+        When you run ./etc/localize_domain.pl, the netCDF static 
         file 'static.nest7grid' will be automatically generated by process
         'gridgen_model.exe'. This contains grids of latitude, longitude, 
         elevation, and land (vs. water) fraction.
@@ -2144,7 +2145,7 @@ Inputs:
 
 <pre>
 Outputs:
-	static/static.nest7grid   NetCDF grid   geography data mapped to LAPS 
+	static/static.nest7grid   netCDF grid   geography data mapped to LAPS 
                                                 grid
                                    
                                    'LAT'       latitude in degrees
@@ -2283,7 +2284,7 @@ Inputs:
         $LAPS_SRC_ROOT/src/lib/degrib/README_LIBS file for detailed information.
 
         For some models you might want to do a
-        separate conversion of GRIB to NetCDF prior to running LGA. One software
+        separate conversion of GRIB to netCDF prior to running LGA. One software
         option for this is available from the GSD/ITS group as described in
         section 3 of this web document at the following URL:
 
@@ -2359,7 +2360,7 @@ file 'src/include/lso_formats.inc'.
 The routines are pretty well commented, and should be enough to tell you what 
 you need to know if you want to make a decoder that outputs an LSO-type 
 formatted file directly. This direct route would allow you to bypass the
-step of producing "raw" NetCDF surface observation data. 
+step of producing "raw" netCDF surface observation data. 
 
 Here are a few recommended settings for the observation type
 variables (reportType and autoStationType) 
@@ -2397,7 +2398,7 @@ Outputs:
          lso_qc	ascii	QC'd LAPS surface obs file: METAR, Mesonet and 
                         Buoy/ship obs. 
 
-         lsq    NetCDF  QC'd LAPS surface obs in NIMBUS NetCDF format
+         lsq    netCDF  QC'd LAPS surface obs in NIMBUS netCDF format
 
          lsq/monster*.dat' are binary files that contains internalinformation 
          about the data history
@@ -2498,7 +2499,7 @@ the Blacklist.dat file.
 
 Primarily, offending datasets are from stations received through LDAD. To find
 the provider for a given station you can look in the "log/sfc.wgi.*" files or
-in the input LDAD NetCDF files. 
+in the input LDAD netCDF files. 
 
 For AWIPS users a list of these stations are kept in ~ldad/data on your AWIPS 
 system.  Each .txt file in ~ldad/data will have a .desc file associated with 
@@ -2519,29 +2520,29 @@ Initiation: Completion of volume scan
 
 Inputs:
 	Wideband Radar Data (reflectivity and velocity in polar coordinates,
-        in NetCDF format) These have one tilt per file and at least 4 tilts
+        in netCDF format) These have one tilt per file and at least 4 tilts
         per volume scan (all with the same volume timestamp in the filenames).
         This data can be obtained from a WSR 88-D Level-II data feed or the
-        equivalent. A description of how we obtain these Polar NetCDF files 
+        equivalent. A description of how we obtain these Polar netCDF files 
         for Level-II is at 'http://laps.noaa.gov/albers/remapper_raw.html'.
 
         Note that narrowband reflectivity data (e.g. WSR 88D Level-III RPG) 
         can also be used as long as it is converted to the required polar 
-        coordinate, NetCDF format. This is in fact being done for the AWIPS 
+        coordinate, netCDF format. This is in fact being done for the AWIPS 
         implementation of LAPS for a low-level tilt from a single radar, via 
         the 'etc/LapsRadar.pl' script running in the AWIPS environment. The 
         comment section at the top of this script explains how this 4 bit
         processing of reflectivity data works. 'etc/LapsRadar.pl' runs two 
         executables. The first executable 'tfrNarrowband2netCDF' from AWIPS, 
-        writes out the polar NetCDF files in the directory 
+        writes out the polar netCDF files in the directory 
         '$LAPS_DATA_ROOT/lapsprd/rdr/???/raw' where ??? is the radar number.
         The second executable 'remap_polar_netcdf.exe' is run as part of LAPS.
         We haven't been using Level-III velocity data since it is of limited
         4-bit resolution and we're running only with the lowest tilt at present.
 
-        For both Level-II and Level-III the polar NetCDF files are named 
+        For both Level-II and Level-III the polar netCDF files are named 
         according to 'yydddhhmm_elevxx' where 'xx' is the tilt number. 
-        Sample polar NetCDF files including a CDL may be found at:
+        Sample polar netCDF files including a CDL may be found at:
         http://laps.noaa.gov/software/radar/wideband/
 
 Outputs (LAPS intermediate files - depending on input parameters):
@@ -2641,18 +2642,18 @@ Process: PRO (ingest_pro.exe) LAPS Wind Profile Ingest
 Author: Steve Albers (Steve.Albers AT noaa.gov)
 
 <pre>
-Inputs: (located in separate NetCDF directories)
+Inputs: (located in separate netCDF directories)
 	NPN 404-MHz profiler wind data in netCDF format 
             NetCDF CDLs from both GSD-NIMBUS and AWIPS/MADIS are accepted. 
 
 	Boundary layer 915-MHz profiler wind data in netCDF format
             (GSD-NIMBUS/DD, AWIPS-LDAD & MADIS-MAP CDLs).
 
-        50-MHz profiler in NetCDF (AWIPS-LDAD & MADIS-MAP CDLs). 
+        50-MHz profiler in netCDF (AWIPS-LDAD & MADIS-MAP CDLs). 
 
-	Doppler Radar VADs in NetCDF (GSD-NIMBUS CDL) format
+	Doppler Radar VADs in netCDF (GSD-NIMBUS CDL) format
 
-        SODAR data in NetCDF format (AWIPS-LDAD & MADIS-MAP CDLs).
+        SODAR data in netCDF format (AWIPS-LDAD & MADIS-MAP CDLs).
 
 Output: (feeds wind)
 	pro   inter data   wind profile direction and speed (ASCII-true North)
@@ -2735,7 +2736,7 @@ Inputs:
         ACARS data 
             NetCDF files using GSD-NIMBUS CDLs 
                 Uses pressure altitude
-                Hourly NetCDF filename convention is 'yydddhh00q.cdf'
+                Hourly netCDF filename convention is 'yydddhh00q.cdf'
 
             NetCDF files using MADIS CDLs
                 Same format as GSD-NIMBUS
@@ -2774,17 +2775,17 @@ Author: Steve Albers (Steve.Albers AT noaa.gov)
 <pre>
 Inputs:
 	RAOB in various formats:
-                                 (GSD-NIMBUS CDL - NetCDF)
-                                 (WFO/AWIPS CDL - NetCDF)
+                                 (GSD-NIMBUS CDL - netCDF)
+                                 (WFO/AWIPS CDL - netCDF)
                                  (AFWA and CWB ASCII formats also allowed)
 
         Satellite Soundings (GOES binary, MADIS POES, or AFWA format)
 
         Dropsonde (AVAPS, CWB, or SND format)
 
-        Radiometer (GSD-MADIS CDL - NetCDF)
+        Radiometer (GSD-MADIS CDL - netCDF)
 
-        Met Tower (LDAD NetCDF)
+        Met Tower (LDAD netCDF)
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)   sounding temp, dewpoint, wind (true N)
@@ -2833,7 +2834,7 @@ Author: Steve Albers (Steve.Albers AT noaa.gov)
 <pre>
 Inputs:
 	GOES cloud drift winds in NESDIS (ASCII) format
-        MADIS NetCDF format
+        MADIS netCDF format
         AFWA & CWB formats are also allowed.
 
 Outputs: (Feeds wind.exe)
@@ -3954,7 +3955,7 @@ Process: wfoprep.exe - Processes AWIPS/WFO large-scale model forecast files
                        into formats that can be used as lateral boundary
                        conditions to initialize a local forecast model 
                        (e.g., MM5, RAMS [SMF], WRF). The input files come from
-                       the SBN and are in NetCDF format.
+                       the SBN and are in netCDF format.
    
      (author: Brent Shaw)
 
@@ -4094,9 +4095,9 @@ Source directory: 'laps/src/newlfmp'
 LAPS Variables and netCDF File Organization
         (author: Linda Wharton - Linda.S.Wharton AT noaa.gov)
 
-LAPS output is written in NetCDF format as summarized below. Each file 
+LAPS output is written in netCDF format as summarized below. Each file 
 extension goes into a separate directory under '$LAPS_DATA_ROOT/lapsprd/'.
-Note that NetCDF information on the units of the fields, etc. is contained in 
+Note that netCDF information on the units of the fields, etc. is contained in 
 the '$LAPS_DATA_ROOT/cdl/*.cdl' files.
 
 
@@ -4207,7 +4208,7 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
        		     MV   mv       1  Mean wind v (grid east)
            	
 		LIW  LIW  liw      1  log(LI*omega)
-		     W    w	   1  600mb omega
+		     UMF  umf	   1  Upslope Component of Moisture Flux
 
 		LMR  R    mxrf     1  Max Radar Reflectivity
 
