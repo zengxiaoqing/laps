@@ -904,6 +904,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 if(c8_obstype(1:3) .eq. 'RAS')then      ! RASS
                     icol_in = 12 ! Aqua
+                elseif(c8_obstype(1:3) .eq. 'WIS')then  ! WISDOM Balloons
+                    icol_in = 12 ! Aqua
                 elseif(c8_obstype(1:3) .eq. 'RAO')then  ! RAOB
                     icol_in = 7  ! Yellow
                 elseif(c8_obstype(1:3) .eq. 'RAD')then  ! Radiometer
