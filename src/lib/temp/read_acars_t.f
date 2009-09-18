@@ -113,9 +113,6 @@ cdis
             return
         endif
 
-        c8_acars_type = 'ACARS'
-        call get_temp_obstype(c8_acars_type,itype_acars,1)
-
         write(6,*)
         write(6,*)'             Reading ACARS Obs: ',ext_in
         write(6,*)
@@ -243,9 +240,15 @@ cdis
                             return
                         endif
 
+                        if(l_geoalt)then ! elev is geometric altitude MSL
+                            c8_acars_type = 'WISDOM'
+                        else
+                            c8_acars_type = 'ACARS'
+                        endif
+
                         if(iwrite_output .ge. 1)then
                             write(lun_tmg,*)ri,rj,k_grid
-     1                                     ,t_interp,'ACARS'      
+     1                                     ,t_interp,c8_acars_type
                         endif
 
 !                       Calculate observation bias
@@ -265,6 +268,9 @@ cdis
                                 istatus = 0
                                 return
                             endif
+
+                            call get_temp_obstype(c8_acars_type
+     1                                           ,itype_acars,1)
 
 !                           Insert ob into data structure
                             temp_obs(n_obs,i_ri) = i_grid
