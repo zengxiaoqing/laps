@@ -80,7 +80,7 @@ C***************** Declarations **************************************
         real weight_sfc
 
         integer max_obstypes
-        parameter (max_obstypes=10)
+        parameter (max_obstypes=11)
 
         character*4 cgrid
         character*12 c_obstype_a(max_obstypes)
