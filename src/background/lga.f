@@ -211,7 +211,7 @@ c
      +         .and. (no_infinite_loops.le.nbgmodels))
 
 
-         print *,'HERE:',lga_status, i, bg_files,reject_cnt
+         print *,'HERE (lga):',lga_status, i, bg_files,reject_cnt
 c        if(i.eq.nbgmodels)i=0
          if(reject_cnt.gt.bg_files )then    !.and. bg_files.gt.0) then
             i=i+1

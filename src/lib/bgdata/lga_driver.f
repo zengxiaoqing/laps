@@ -374,7 +374,7 @@ c
 c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
-      print *,'in lga_sub'
+      print *,'in lga_driver'
       linterp=.true.
       lga_status=0
 
@@ -398,6 +398,7 @@ c
          ! Yuanfu: Check istatus and show hint for users
          if (istatus .eq. -4) 
      &     print*,'Check background.nl for bgmodel and cmodel'
+         print*,'Returning from lga_driver'
          return
       endif
 
