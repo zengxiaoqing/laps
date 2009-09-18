@@ -52,6 +52,7 @@ if (defined ($opt_q)) {
   print "---------------------------------------------------------------------\n";
 }
 
+my $d0_directory; #used to determine of d0$grid needs to be appended to $lapsdataroot when calling lfmpost.exe
 my $command;
 my $lfmpostlog;
 my $phys = "";
@@ -391,10 +392,21 @@ for ($g=1; $g<=$ngrid; $g++) {
       }
       $lfmpostlog = "$lfmpostlog$yyyy$initmm$initdd"."_$inithh"."_$cFcstNum.log";
 
+#LW check to see if the directory $lapsdataroot/d0$grid exists.
+#  If it does, append "d0$grid" to $lapsdataroot as an argument to pass into lfmpost.exe
+      $d0_directory = 0; #assume "d0$grid" directory not there
+      if (-d $lapsdataroot/d0$grid) {
+        $d0_directory = 1; # "d0$grid" directory exists..append d0$grid onto $lapsdataroot
+      }
+
       if (! $opt_q) {  #run *with* qsub
         chdir "$modelroot/$date";
-        print "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid\n";
-        $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $lfmpostlog";
+        if ($d0_directory == 1) {
+          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $lfmpostlog";
+        } else {
+          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $lfmpostlog";
+        }
+        print "$command\n";
 
 #  make .sh script to submit to qsub
         open (QS, ">qsub_lfmpost_$yyyy$mm$dd$hh.sh");
@@ -426,7 +438,11 @@ for ($g=1; $g<=$ngrid; $g++) {
         print "Finish qsub_wait: $now\n";
         
       } else {  #run without qsub
-        $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $lfmpostlog";
+        if ($d0_directory == 1) {
+          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $lfmpostlog";
+        } else {
+          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $lfmpostlog";
+        }
         print "$command\n";
         system ("$command");
       }
