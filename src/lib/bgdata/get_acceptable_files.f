@@ -76,12 +76,18 @@ C
       bg_files=0
        
       call s_len(bgpath,len)
-      if(bgpath(len:len).ne.'/')then
-         len=len+1
-         bgpath(len:len)='/'
-      endif
+      if(len .gt. 0)then
+         if(bgpath(len:len).ne.'/')then
+            len=len+1
+            bgpath(len:len)='/'
+         endif
 
-      cfilespec=bgpath(1:len)//'*'
+         cfilespec=bgpath(1:len)//'*'
+    
+      else
+         cfilespec=' '
+
+      endif
 
       do i=1,256
          null_string(i:i) = char(0)
