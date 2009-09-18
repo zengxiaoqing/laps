@@ -395,7 +395,7 @@ for ($g=1; $g<=$ngrid; $g++) {
 #LW check to see if the directory $lapsdataroot/d0$grid exists.
 #  If it does, append "d0$grid" to $lapsdataroot as an argument to pass into lfmpost.exe
       $d0_directory = 0; #assume "d0$grid" directory not there
-      if (-d $lapsdataroot/d0$grid) {
+      if (-d "$lapsdataroot/d0$grid") {
         $d0_directory = 1; # "d0$grid" directory exists..append d0$grid onto $lapsdataroot
       }
 
