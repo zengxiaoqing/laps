@@ -18,4 +18,5 @@ program main                                     puttmpanal_drv.f
                 analyze_tobs                     lib/temp/insert_tobs.f
                     barnes_univariate_shell           " 
                         barnes_multivariate   
+                        compare_temp             lib/temp/compare_temp.f
         write_temp_anal                          lib/temp/puttmpanal.f      
