@@ -1,0 +1,160 @@
+#!@PERL@
+
+# Script to generate lapsplot gifs for HMT domain
+
+require 5;
+use strict;
+
+# Setup command line options:
+#    -a model configuration (e.g. schultz)
+#    -d domain (e.g. dwr)
+#    -r laps dataroot
+#    -f forecast output interval (hours)
+#    -c cycle frequency (hours)
+#    -l forecast length (hours)
+
+use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l);
+use Getopt::Std;
+
+getopts('a:d:r:f:c:l:');
+
+print "user defined paths\n";
+my $domain = $opt_d;
+my $model = "wrf-$opt_a";
+$ENV{LAPSINSTALLROOT}="/usr/nfs/lapb/builds64/laps";
+my $dataroot = $opt_r;
+my $followup = "/usr/nfs/common/lapb/www/followup_fcst.sh $domain $model $dataroot";
+my $followup_fire =  "/usr/nfs/common/lapb/www/followup_fcst_fire.sh $domain $model $dataroot";
+my $followup_ua =  "/usr/nfs/common/lapb/www/followup_fcst_ua.sh $domain $model $dataroot";
+my $followup_hmt =  "/usr/nfs/common/lapb/www/followup_fcst_hmt_xsect.sh $domain $model $dataroot";
+
+my $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
+my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 36 $domain $model\n";
+my $timeout =  10800 ; # Seconds to wait before giving up after starting
+my $output_inc = $opt_f;  # Forecast output interval (hours)
+my $cycle_freq = $opt_c;  # Cycle frequency in hours
+my $init_base_hr = 0;     # Earliest cycle each day in GMT hour
+my $fcst_len = $opt_l;    # Forecast length (hours)
+
+my $fsf_subdir = "lapsprd/fsf/wrf-$opt_a";
+my $fua_subdir = "lapsprd/fua/wrf-$opt_a";
+
+my $sleep_time = 300; # Number of seconds to sleep between attempts to copy
+
+# END OF USER DEFINED PARAMS
+
+# Call purger
+print "call purger\n";
+print "$purger\n";
+system("$purger");
+
+print "setup fsf/fua pathnames\n";
+my $local_fsf = "$dataroot/$fsf_subdir";
+my $local_fua = "$dataroot/$fua_subdir";
+
+# Set up cycle to process based on system time (UTC)
+
+print "setup time parameters\n";
+#beka my $systime_now = time-3600;
+my $systime_now = time;
+my $cyc_freq_sec = $cycle_freq * 3600;
+my $init_base_sec = $init_base_hr * 3600;
+my $remainder = ($systime_now - $init_base_sec) % $cyc_freq_sec;
+my $cycle_sec = $systime_now - $remainder;
+
+# Unique to NMM downscale of GFS 60-84.
+#$cycle_sec = $cycle_sec + 60*3600;
+
+# Convert the cycle time in seconds to normal parameters
+
+my @monthtxt = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+my ($cycsec,$cycmin,$cychour,$cycmday,$cycmon,$cycyear,$cycwday,$cycyday,
+    $cycisdt) = gmtime($cycle_sec);
+
+print "convert time parameters\n";
+my $cycyear4 = $cycyear + 1900;
+$cycyear = $cycyear - 100;
+$cycyear = "0".$cycyear while(length($cycyear)< 2);
+$cycyday++;
+$cycyday = "0".$cycyday while(length($cycyday)<3);
+$cychour = "0".$cychour while(length($cychour)<2);
+$cycmin = "0".$cycmin while(length($cycmin)<2);
+my $cycmontxt = $monthtxt[$cycmon];
+$cycmon++;
+$cycmon="0".$cycmon while (length($cycmon)<2);
+$cycmday = "0".$cycmday while(length($cycmday)<2);
+my $www_time = $cycmday."-".$cycmontxt."-".$cycyear4." ".$cychour.$cycmin;
+my $cycle = $cycyear.$cycyday.$cychour."00";
+
+print "Cycle to get: $cycle\n";
+print "laps_fsf: $local_fsf\n";
+print "laps_fua: $local_fsf\n";
+
+# Create the list of file times we need to get
+
+my $num_files = int($fcst_len/$output_inc)+1;
+
+my $fcsthr = 0;
+my @times;
+while ($fcsthr <= $fcst_len) {
+  $fcsthr = "0".$fcsthr while (length($fcsthr)<2);
+  push @times, $cycle.$fcsthr."00";
+  $fcsthr = $fcsthr + $output_inc;
+}
+
+my @times_new;
+my @fsffiles_new;
+# Time to start the loop to get all of the files
+my $timeaccum = 0; 
+my $times_rem = $num_files;
+my $arrpos;
+my ($remfile, $result);
+my $www_flag = 0;
+while (($timeaccum < $timeout)and($times_rem > 0)){
+  $arrpos = 0;
+  @times_new = @times; 
+  foreach (@times) {
+    if (-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua"){
+      my $validtime;
+      print "Ready to process $_ ... \n" ;
+      if (/^\d\d\d\d\d(\d\d)\d\d(\d\d)\d\d$/){
+        my $basehr=$1;
+        my $fcsthr=$2;
+        $validtime = $basehr + $fcsthr;
+        if ($validtime > 24) {$validtime = $validtime % 24 }
+        $validtime = "0".$validtime while (length($validtime)<2);
+        $validtime = $validtime."00";
+      }
+      $result=system("$followup $_ $validtime");
+#      $result=system("$followup_fire $_ $validtime");
+#      $result=system("$followup_ua $_ $validtime");
+      $result=system("$followup_hmt $_ $validtime");
+      system("rm -f $local_fsf/$_.fsf.done");
+#      system("rm -f $local_fua/$_.fua.done"); 
+     if (! $www_flag){
+        open(ST, ">$w3recent/systime.dat");
+        print ST "$www_time\n";
+        close (ST);
+        $www_flag =1;
+      }
+      print "done.\n";
+      splice @times_new, $arrpos, 1;
+      $timeaccum = 0;
+    }else{
+       print "Not ready (both fua and fsf). $local_fsf/$_.fsf\n";
+       $arrpos++;
+    }
+  }
+  @times = @times_new;
+  $times_rem = @times;
+
+  if ($times_rem > 0){
+    print "Sleeping for $sleep_time\n";
+    sleep $sleep_time;
+    $timeaccum = $timeaccum + $sleep_time;
+    print "Total time since beginning of loop: $timeaccum\n";  
+  }else{
+    print "All fua/fsf files processed\n";
+  }
+}
+exit;  
