@@ -9,6 +9,7 @@ my $LAPSROOT;
 
 # Setup command line options:
 #    -l laps_data_root (default = environment variable)
+#       the ending "d0*" part can optionally be omitted...particularly for multiple nests
 #    -m model type (default = wrf)
 #    -r model root (default = environment variable)
 #    -d init date (yyyy-mm-dd-hhmm, default = current hour)
