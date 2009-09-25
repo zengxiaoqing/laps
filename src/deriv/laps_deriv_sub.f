@@ -233,6 +233,8 @@ cdis
 
         character*2 c2_precip_types(0:10)
 
+        character*20 c_z2m
+
         data c2_precip_types
      1  /'  ','Rn','Sn','Zr','Sl','Ha','L ','ZL','  ','  ','  '/
 
@@ -344,6 +346,7 @@ cdis
      1                       vv_to_height_ratio_Cu,                  ! O
      1                       vv_to_height_ratio_Sc,                  ! O
      1                       vv_for_St,                              ! O
+     1                       c_z2m,                                  ! O
      1                       thresh_cvr_cty_vv,thresh_cvr_lwc,       ! O
      1                       twet_snow,                              ! O
      1                       istatus)                                ! O
@@ -931,6 +934,7 @@ c read in laps lat/lon and topo
 !           Calculate 3D Precip Concentration in kg/m**3
             call cpt_pcp_cnc(radar_ref_3d,temp_3d,cldpcp_type_3d    ! Input
      1                                  ,NX_L,NY_L,NZ_L     ! Input
+     1                                  ,c_z2m              ! Input
      1                                  ,pcpcnc             ! Output
      1                                  ,raicnc             ! Output
      1                                  ,snocnc             ! Output
