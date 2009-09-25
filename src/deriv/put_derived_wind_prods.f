@@ -43,6 +43,9 @@ cdis
      1    ,max_radars,r_missing_data                              ! Input
      1    ,i4time_sys                                             ! Input
      1    ,dbz_max_2d,istat_lps                                   ! Input
+     1    ,lat,lon,topo                                           ! Input
+     1    ,tpw_2d                                                 ! Input
+     1    ,heights_3d                                             ! Input
      1    ,uanl,vanl)                                             ! Output
 
 !       1997 Jun     Ken Dritz      Added NX_L, NY_L, NZ_L, and max_radars
@@ -64,7 +67,8 @@ cdis
 
 !       Array Variables
         real lat(imax,jmax),lon(imax,jmax),topo(imax,jmax)
-        real rland_frac(imax,jmax)
+        real dx(NX_L,NY_L)
+        real dy(NX_L,NY_L)
 
         real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)
      1        ,wanl_2d(imax,jmax)
@@ -85,6 +89,9 @@ cdis
 
 !       Stuff for helicity
         real helicity(NX_L,NY_L)
+
+        real tpw_2d(NX_L,NY_L)         ! units are M
+        real upslope_flux(NX_L,NY_L)         
 
 !       Dummy arrays
         real dum1_2d(NX_L,NY_L)
@@ -150,13 +157,6 @@ cdis
 
         I4_elapsed = ishow_timer()
 
-        call get_laps_domain_95(NX_L,NY_L,lat,lon,topo,rland_frac
-     1                                      ,grid_spacing_m,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error getting LAPS domain'
-            return
-        endif
-
 !       Read in 3D U/V wind data
         ext = 'lw3'
         var_2d = 'U3'
@@ -178,18 +178,6 @@ cdis
             write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
         else
             write(6,*)' Error getting laps_cycle_time'
-            return
-        endif
-
-        write(6,*)' Getting LT1 Heights' 
-        var_2d = 'HT' 
-        ext = 'lt1'
-
-        call get_laps_3d(i4time_sys
-     1                  ,NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,heights_3d,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Warning: LAPS 3D Heights not available'       
             return
         endif
 
@@ -487,6 +475,12 @@ ccc202              format('H',i2)
 
         I4_elapsed = ishow_timer()
 
+!       Calculate upslope component of moisture flux (PSD conventions)
+        call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
+	call up_mflux(NX_L,NY_L,NZ_L,topo,dx,dy
+     1                     ,uanl,vanl,tpw_2d,upslope_flux
+     1                     ,heights_3d,r_missing_data)
+
         if(.true.)then ! LIW
 
 !           Calculate Li * 600mb Omega
@@ -519,17 +513,20 @@ ccc202              format('H',i2)
                 call cpt_liw(lifted,wanl_2d,imax,jmax,liw)
 
                 call move(liw    ,field_array(1,1,1),NX_L,NY_L)
-                call move(wanl_2d,field_array(1,1,2),NX_L,NY_L)
+!               call move(wanl_2d,field_array(1,1,2),NX_L,NY_L)
+                call move(upslope_flux,field_array(1,1,2),NX_L,NY_L)        
 
 !               Write out LIW field
 !               Note that these arrays start off with 0 as the first index
                 var_a(0) = 'LIW'
-                var_a(1) = 'W'
+                var_a(1) = 'UMF'
                 ext = 'liw'
                 units_a(0) = 'K-Pa/s'
-                units_a(1) = 'Pa/s  '
+!               units_a(1) = 'Pa/s  '
+                units_a(1) = 'M**2/s'
                 comment_a(0) = 'Log LAPS Li * 600mb Omega'
-                comment_a(1) = 'LAPS 600mb Omega'
+!               comment_a(1) = 'LAPS 600mb Omega'
+                comment_a(1) = 'Upslope component of moisture flux'
 
                 call put_laps_multi_2d(i4time_sys,ext,var_a,units_a
      1                    ,comment_a,field_array,imax,jmax,2,istatus)
