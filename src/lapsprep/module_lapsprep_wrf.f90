@@ -58,7 +58,7 @@ MODULE lapsprep_wrf
   USE setup
   USE laps_static
   USE date_pack
-  USE constants
+  USE lapsprep_constants
   IMPLICIT NONE
 
   PRIVATE

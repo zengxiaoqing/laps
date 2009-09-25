@@ -35,7 +35,7 @@
 !dis 
 
 
-MODULE constants
+MODULE lapsprep_constants
    REAL , PARAMETER :: pi              = 3.14159265358
 !  REAL , PARAMETER :: radius_of_earth = 6370. ! MM5
    REAL , PARAMETER :: radius_of_earth = 6367. ! LAPS
@@ -50,4 +50,4 @@ MODULE constants
    REAL, PARAMETER :: lwc_min = autoconv_lwc2rai*0.2
    REAL, PARAMETER :: ice_min = autoconv_ice2sno*0.2
    REAL, PARAMETER :: lcp_min = 0.6  ! Changed to be consistent with lq3
-END MODULE constants
+END MODULE lapsprep_constants

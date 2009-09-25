@@ -62,7 +62,7 @@
 
     ! Module declarations
 
-    USE constants
+    USE lapsprep_constants
     USE setup
     USE laps_static
     USE lapsprep_mm5
