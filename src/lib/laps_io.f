@@ -619,6 +619,8 @@ cdoc    Returns a 3-D fcst grid. Inputs include directory, initial and valid tim
 
 !       Steve Albers            1990
 
+        use mem_namelist, ONLY: lvl_coord_cdf
+
         include      'bgdata.inc'
 
         character*150 DIRECTORY
@@ -693,8 +695,19 @@ c          endif
                 lvl_3d(k) = zcoord_of_level(k)/10
                 lvl_coord_3d(k) = 'MSL'
             elseif(ltest_vertical_grid('PRESSURE'))then
-                lvl_3d(k) = nint(zcoord_of_level(k))/100
-                lvl_coord_3d(k) = 'MB'
+                if(lvl_coord_cdf(1:3) .eq. 'HPA')then
+                    lvl_3d(k) = nint(zcoord_of_level(k))/100
+                    lvl_coord_3d(k) = 'MB' ! informational
+                elseif(lvl_coord_cdf(1:3) .eq. 'PA')then
+                    lvl_3d(k) = nint(zcoord_of_level(k))
+                    lvl_coord_3d(k) = 'PA' ! informational
+                else
+                    write(6,*)
+     1               ' Error, pressure units not supported '
+     1               ,lvl_coord_cdf
+                    istatus = 0
+                    return
+                endif
             else
                 write(6,*)' Error, vertical grid not supported,'
      1                   ,' this routine supports PRESSURE or HEIGHT'
