@@ -102,8 +102,6 @@ cdis
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
-        real dx(NX_L,NY_L)
-        real dy(NX_L,NY_L)
 
         character*31 EXT
 
@@ -306,6 +304,9 @@ cdis
      1          ,max_radars_dum,r_missing_data               ! Input
      1          ,i4time                                      ! Input
      1          ,dbz_max_2d,istat_lps                        ! Input
+     1          ,lat,lon,topo                                ! Input
+     1          ,tpw_2d                                      ! Input
+     1          ,heights_3d                                  ! Input
      1          ,u_3d,v_3d)                                  ! Output
 
         write(6,*)
@@ -324,12 +325,6 @@ cdis
 
         endif
 
-!       Calculate upslope component of moisture flux (PSD conventions)
-        call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
-	call up_mflux(NX_L,NY_L,NZ_L,topo,dx,dy
-     1                     ,u_3d,v_3d,tpw_2d,upslope_flux
-     1                     ,heights_3d,r_missing_data)
-
  999    write(6,*)' End of subroutine laps_deriv'
 
         return
@@ -342,6 +337,7 @@ cdis
      1                            vv_to_height_ratio_Cu,                  ! O
      1                            vv_to_height_ratio_Sc,                  ! O
      1                            vv_for_St,                              ! O
+     1                            c_z2m,                                  ! O
      1                            thresh_cvr_cty_vv,thresh_cvr_lwc,       ! O
      1                            twet_snow,                              ! O
      1                            istatus)                                ! O
@@ -351,16 +347,22 @@ cdis
        Real vv_for_St
        Real thresh_cvr_cty_vv,thresh_cvr_lwc,twet_snow
 
+       character*20 c_z2m
+
        logical l_bogus_radar_w, l_deep_vv
 
        namelist /deriv_nl/ mode_evap, l_bogus_radar_w, l_deep_vv,
      1                     vv_to_height_ratio_Cu,
      1                     vv_to_height_ratio_Sc,
      1                     vv_for_St,
+     1                     c_z2m,
      1                     thresh_cvr_cty_vv,thresh_cvr_lwc,
      1                     twet_snow
  
        character*150 static_dir,filename
+
+!      Set default value(s)
+       c_z2m = 'albers'
  
        call get_directory('static',static_dir,len_dir)
 
