@@ -42,6 +42,7 @@ include 'lapsparms.for'
         integer iwrite_output
 
         character*40  vertical_grid
+        character*10  lvl_coord_cdf
         character*50  c50_lowres_directory
         character*6   c6_maproj
         character*8   radarext_3d
@@ -92,9 +93,10 @@ include 'lapsparms.for'
         ,vert_rad_pirep,vert_rad_prof                        &
         ,silavwt_parm,toptwvl_parm                           &
         ,iwrite_output                                       &
-        ,vertical_grid,c50_lowres_directory,c6_maproj        &
-        ,radarext_3d,radarext_3d_accum                       &
         ,aircraft_time_window                                &
+        ,vertical_grid,lvl_coord_cdf                         &
+        ,c50_lowres_directory,c6_maproj                      &
+        ,radarext_3d,radarext_3d_accum                       &
         ,path_to_raw_pirep                                   &
         ,path_to_raw_rass,path_to_raw_profiler               &
         ,path_to_raw_blprass,path_to_raw_blpprofiler         &
@@ -207,9 +209,10 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,vert_rad_pirep,vert_rad_prof      &
                   ,silavwt_parm,toptwvl_parm &
                   ,iwrite_output &
-                  ,vertical_grid,c50_lowres_directory,c6_maproj &
-                  ,radarext_3d,radarext_3d_accum &
                   ,aircraft_time_window &
+                  ,vertical_grid,lvl_coord_cdf &
+                  ,c50_lowres_directory,c6_maproj &
+                  ,radarext_3d,radarext_3d_accum &
                   ,path_to_raw_pirep &
                   ,path_to_raw_rass,path_to_raw_profiler &
                   ,path_to_raw_blprass,path_to_raw_blpprofiler &
@@ -321,6 +324,9 @@ elseif (namelist_name == 'pressures') then
    read(12,pressures_nl)
    
 elseif (namelist_name == 'lapsparms') then
+
+!  default values
+   lvl_coord_cdf = 'HPA'
 
    read (12, lapsparms_nl, err=901)
    
