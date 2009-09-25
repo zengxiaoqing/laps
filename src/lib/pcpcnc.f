@@ -33,6 +33,7 @@ cdis
 
         subroutine cpt_pcp_cnc(ref_3d,temp_3d,cldpcp_type_3d  ! Input
      1                                  ,ni,nj,nk     ! Input
+     1                                  ,c_z2m        ! Input
      1                                  ,pcp_cnc_3d   ! Output (kg/m^3)
      1                                  ,rai_cnc_3d   ! Output (rain)
      1                                  ,sno_cnc_3d   ! Output (snow)
@@ -41,6 +42,8 @@ cdis
         real temp_3d(ni,nj,nk)
         real ref_3d(ni,nj,nk)
         integer cldpcp_type_3d(ni,nj,nk)
+
+        character*20 c_z2m
 
         real pcp_cnc_3d(ni,nj,nk)
         real rai_cnc_3d(ni,nj,nk)
@@ -54,9 +57,10 @@ cdis
             call zr(ref_3d(1,1,k),ni,nj,rate_3d(1,1,k))
         enddo ! k
 
-        do j = 1,nj
-        do i = 1,ni
-        do k = 1,nk
+        if(c_z2m .eq. 'albers')then
+          do j = 1,nj
+          do i = 1,ni
+          do k = 1,nk
             pressure = pressure_of_level(k)
             ipcp_type = cldpcp_type_3d(i,j,k) / 16   ! Pull out precip type
             if(ipcp_type .ne. 0)then
@@ -93,9 +97,62 @@ cdis
 
             endif ! ipcp_type .ne. 0
 
-        enddo ! k
-        enddo ! i
-        enddo ! j
+          enddo ! k
+          enddo ! i
+          enddo ! j
+
+        elseif(c_z2m .eq. 'kessler')then 
+          do j = 1,nj
+          do i = 1,ni
+          do k = 1,nk
+
+!           Compute the basic reflectivity 
+!           refl(i,j,k) =17300.0 * &
+!                 (rho(i,j,k) * 1000.0 * &
+!                  MAX(0.0,rainmr(i,j,k)))**svnfrth
+
+!           Add the ice component
+!           refl(i,j,k)=refl(i,j,k) + &
+!                 38000.0*(rho(i,j,k) * 1000.0 * &
+!                 MAX(0.0,icemr(i,j,k)+snowmr(i,j,k)+graupelmr(i,j,k)))**2.2
+
+            if(ipcp_type .ne. 0)then
+                if(ipcp_type .eq. 1 .or. ipcp_type .eq. 3)then     ! rain or zr
+                    a = 17300.
+                    z = 10.**(ref_3d(i,j,k)/10.)
+                    rho_q = (z/a)**(4./7.)
+                    pcp_cnc_3d(i,j,k) = rho_q
+                    rai_cnc_3d(i,j,k) = rho_q
+
+                elseif(ipcp_type .eq. 2)then                       ! snow
+                    b = 38000.
+                    z = 10.**(ref_3d(i,j,k)/10.)
+                    rho_q = (z/b)**(1./2.2)
+                    pcp_cnc_3d(i,j,k) = rho_q
+                    sno_cnc_3d(i,j,k) = rho_q
+
+                elseif(ipcp_type .eq. 4 .or. ipcp_type .eq. 5)then ! IP or Hail
+                    b = 38000.
+                    z = 10.**(ref_3d(i,j,k)/10.)
+                    rho_q = (z/b)**(1./2.2)
+                    pcp_cnc_3d(i,j,k) = rho_q
+                    pic_cnc_3d(i,j,k) = rho_q
+
+                endif
+
+            else  ! ipcp_type = 0
+                pcp_cnc_3d(i,j,k) = 0.
+                rai_cnc_3d(i,j,k) = 0.
+                sno_cnc_3d(i,j,k) = 0.
+                pic_cnc_3d(i,j,k) = 0.
+
+            endif
+
+          enddo ! k
+          enddo ! i
+          enddo ! j
+
+        endif
 
         end
 
