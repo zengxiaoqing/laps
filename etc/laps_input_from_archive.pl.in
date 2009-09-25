@@ -15,6 +15,8 @@
 #
 # -s desired satellite (e.g. use 8 for goes8)
 #
+# -i option to get only image data from satellites
+#
 # -S skip all standard data download from the MSS
 #
 # -T (optional) analysis type (2D or 3D), default is "3D"
@@ -31,9 +33,9 @@ use Time::Local;
 
 # Define command line variables
 # opt_t: time (GMT) of LAPS analysis in YYYYMMDD
-use vars qw($opt_p $opt_t $opt_m $opt_g $opt_s $opt_S $opt_T);
+use vars qw($opt_p $opt_t $opt_m $opt_g $opt_s $opt_i $opt_S $opt_T);
 
-getopts('p:t:m:s:g:ST:');
+getopts('p:t:m:s:ig:ST:');
 
 my $public = $opt_p;
 my ($analysis_yr, $analysis_mo, $analysis_dy, );
@@ -400,90 +402,93 @@ if ( ( $opt_s eq "8" || $opt_s eq "10" || $opt_s eq "11" || $opt_s eq "12") && $
     system("rm \*\.tar"); 
     $t=gmtime(); 
 
-#   Cloud drift winds (OLD)
-    print $t." Get goes$opt_s cloud-drift\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/cloud-drift/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/cloud-drift/ascii/");
-    chdir "$public/data/sat/nesdis/goes$opt_s\/wind/cloud-drift/ascii/";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+    if (! defined $opt_i) { 
+#       Cloud drift winds (OLD)
+        print $t." Get goes$opt_s cloud-drift\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/cloud-drift/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/cloud-drift/ascii/");
+        chdir "$public/data/sat/nesdis/goes$opt_s\/wind/cloud-drift/ascii/";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-    print $t." Get goes$opt_s vapor-drift\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/vapor-drift/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/vapor-drift/ascii/");
-    chdir "$public/data/sat/nesdis/goes$opt_s\/wind/vapor-drift/ascii/";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+        print $t." Get goes$opt_s vapor-drift\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/vapor-drift/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/vapor-drift/ascii/");
+        chdir "$public/data/sat/nesdis/goes$opt_s\/wind/vapor-drift/ascii/";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-    print $t." Get goes$opt_s visible cloud drift\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/visible/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/visible/ascii/");
-    chdir "$public/data/sat/nesdis/goes$opt_s\/wind/visible/ascii/";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+        print $t." Get goes$opt_s visible cloud drift\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/visible/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/visible/ascii/");
+        chdir "$public/data/sat/nesdis/goes$opt_s\/wind/visible/ascii/";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-    print $t." Get goes$opt_s sounder$opt_s cloud drift\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/sounder$opt_s\/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/sounder$opt_s\/ascii/");
-    chdir "$public/data/sat/nesdis/goes$opt_s\/wind/sounder$opt_s\/ascii/";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+        print $t." Get goes$opt_s sounder$opt_s cloud drift\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/sounder$opt_s\/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/sounder$opt_s\/ascii/");
+        chdir "$public/data/sat/nesdis/goes$opt_s\/wind/sounder$opt_s\/ascii/";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-#   Cloud drift winds (NEW)
-    print $t." Get madis cloud drift winds (3hr)\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/HDW/netcdf/\* $public/data/madis/point/HDW/netcdf/");
-    chdir "$public/data/madis/point/HDW/netcdf//";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+#       Cloud drift winds (NEW)
+        print $t." Get madis cloud drift winds (3hr)\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/HDW/netcdf/\* $public/data/madis/point/HDW/netcdf/");
+        chdir "$public/data/madis/point/HDW/netcdf//";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-    print $t." Get madis cloud drift winds (1hr)\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/HDW1h/netcdf/\* $public/data/madis/point/HDW1h/netcdf/");
-    chdir "$public/data/madis/point/HDW1h/netcdf//";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+        print $t." Get madis cloud drift winds (1hr)\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/HDW1h/netcdf/\* $public/data/madis/point/HDW1h/netcdf/");
+        chdir "$public/data/madis/point/HDW1h/netcdf//";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-#   POES Soundings
-    print $t." Get madis POES soundings\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/POES/netcdf/\* $public/data/madis/point/POES/netcdf/");
-    chdir "$public/data/madis/point/POES/netcdf//";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+#       POES Soundings
+        print $t." Get madis POES soundings\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/POES/netcdf/\* $public/data/madis/point/POES/netcdf/");
+        chdir "$public/data/madis/point/POES/netcdf//";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-#   Data for the LQ3 analysis
-    print $t." Get goes$opt_s tpw\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/tpw/sfov_ihop/ascii/\* $public/data/sat/nesdis/goes$opt_s\/tpw/sfov_ihop/ascii/");
-    chdir "$public/data/sat/nesdis/goes$opt_s\/tpw/sfov_ihop/ascii/";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+#       Data for the LQ3 analysis
+        print $t." Get goes$opt_s tpw\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/tpw/sfov_ihop/ascii/\* $public/data/sat/nesdis/goes$opt_s\/tpw/sfov_ihop/ascii/");
+        chdir "$public/data/sat/nesdis/goes$opt_s\/tpw/sfov_ihop/ascii/";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-    print $t." Get goes$opt_s sounding\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/sounding/binary/\* $public/data/sat/nesdis/goes$opt_s\/sounding/binary/");
-    chdir "$public/data/sat/nesdis/goes$opt_s\/sounding/binary/";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+        print $t." Get goes$opt_s sounding\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/sounding/binary/\* $public/data/sat/nesdis/goes$opt_s\/sounding/binary/");
+        chdir "$public/data/sat/nesdis/goes$opt_s\/sounding/binary/";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-    print $t." Get goes$opt_s raw-sounder\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes$opt_s\/raw/sounding/scan-area/netcdf/\* $public/data/sat/fsl-gs/goes$opt_s\/raw/sounding/scan-area/netcdf/");
-    chdir "$public/data/sat/fsl-gs/goes$opt_s\/raw/sounding/scan-area/netcdf/";
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar"); 
-    $t=gmtime(); 
+        print $t." Get goes$opt_s raw-sounder\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes$opt_s\/raw/sounding/scan-area/netcdf/\* $public/data/sat/fsl-gs/goes$opt_s\/raw/sounding/scan-area/netcdf/");
+        chdir "$public/data/sat/fsl-gs/goes$opt_s\/raw/sounding/scan-area/netcdf/";
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+        system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+        system("rm \*\.tar"); 
+        $t=gmtime(); 
 
-}
+    } # get non image data from satellites
+
+} # get satellite data
 
 exit;
