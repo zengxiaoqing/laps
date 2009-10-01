@@ -137,6 +137,18 @@ if($returnAddress =~ /137\.75\.10\.102/) {
    $beka = 0;
 }
 
+# Set access level
+my $lvl_access;
+if($returnAddress =~ /noaa\.gov/) {
+   $lvl_access = 2;
+} else {
+   $lvl_access = 1;
+}
+
+if(! -e "/w3/lapb"){ # Being run outside of ESRL/GSD/FAB
+   $lvl_access = 2;
+}
+
 #print "beka = $returnAddress $beka ";
 
 $default_title="FSL/LAPS Data Display (On-the-fly)";
@@ -179,6 +191,7 @@ $ENV{'file_in'} = $file_in;
 $density=$input{'density'};
 $thickness=$input{'thickness'};
 $frames=$input{'frames'};
+$delay=$input{'delay'};
 #$ENV{'NewZoom'} = $NewZoom;
 $a9time=$input{'a9time'};
 $forecast_time=$input{'forecast_time'};
@@ -253,6 +266,10 @@ $density_safe = $1;
 my $thickness_safe;
 $thickness =~ /(.*)/;
 $thickness_safe = $1;
+
+my $delay_safe;
+$delay =~ /(.*)/;
+$delay_safe = $1;
 
 my $frames_safe;
 $frames =~ /(.*)/;
@@ -356,7 +373,7 @@ foreach $source (@sources) {
 
 #print "<h2>n_fields_uc = $n_fields_uc</h2>";
 
-if($n_fields_uc > 1){
+if($n_fields_uc > 1 && $n_sources_fields > 0 && (@fields[0] != "CLDCLV" || @fields[1] != "REFLCT") ){ # exception for cloud/radar combo
     print "<h2>Error: only 1 upper case field should be selected (image montages not yet supported)...</h2>";
     $err=1;
 }else{
@@ -364,7 +381,7 @@ if($n_fields_uc > 1){
         print "<h2>Error: only 1 related source should be selected with an uppercase field (image montages not yet supported)...</h2>";
         $err=1;
     }
-    if($n_fields_uc == 1 && $n_levels > 1){
+    if($n_sources_fields > 0 && $n_fields_uc == 1 && $n_levels > 1){
         print "<h2>Error: only 1 level should be selected with an uppercase field (image montages not yet supported)...</h2>";
         $err=1;
     }
@@ -1385,9 +1402,9 @@ if($err == 0) {
                               printf LAPSPLOT "$hhmm\n";
       
                           }elsif("$field" eq "WINDSPD" ) { 
-                              printf LAPSPLOT "wr\n"; 
+                              printf LAPSPLOT "wri\n"; 
                               printf LAPSPLOT "$level\n"; 
-                              printf LAPSPLOT "spi\n"; 
+                              printf LAPSPLOT "sp\n"; 
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
 
@@ -1446,6 +1463,7 @@ if($err == 0) {
                         printf LAPSPLOT "pv\n"; 
                         printf LAPSPLOT "$source\n";
                         printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$source\n";
                         printf LAPSPLOT "$hhmm\n";
 
                     }elsif("$field" eq "PVORT" ) { 
@@ -1454,6 +1472,7 @@ if($err == 0) {
                         printf LAPSPLOT "pv\n"; 
                         printf LAPSPLOT "$source\n";
                         printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$source\n";
                         printf LAPSPLOT "$hhmm\n";
 
                     }elsif("$field" eq "vort_adv" ) { 
@@ -2126,6 +2145,9 @@ if($err == 0) {
                             printf LAPSPLOT "og\n"; 
                             printf LAPSPLOT " \n"; 
 
+                        }elsif("$field" eq "prcp_h2o" || "$field" eq "PRCP_H2O"){ 
+                            printf LAPSPLOT "wv\n"; 
+
                         }elsif($units eq "english"){
                             printf LAPSPLOT "of\n"; 
                             if("$field" eq "stn_p" ) { 
@@ -2160,9 +2182,10 @@ if($err == 0) {
                     }
 
                 }else{                                                                                 # Obs Aloft
-                    if("$field" eq "temp" || "$field" eq "TEMP") { 
+                    if(("$field" eq "temp" || "$field" eq "TEMP") && $lvl_access == 2) { 
                         printf LAPSPLOT "to\n"; 
                         printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "y\n"; 
 
                     }elsif("$field" eq "dewpoint" || "$field" eq "DEWPOINT") { 
                         printf LAPSPLOT "ho\n"; 
@@ -2172,37 +2195,45 @@ if($err == 0) {
                         printf LAPSPLOT "qo\n"; 
                         printf LAPSPLOT "$level\n"; 
 
-                    }elsif("$field" eq "wind" ) { 
+                    }elsif("$field" eq "wind" && $lvl_access == 2) { 
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "ob\n"; 
                         printf LAPSPLOT "0\n"; 
                         printf LAPSPLOT "y\n"; 
                         printf LAPSPLOT "r\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "y\n"; 
 
-                    }elsif("$field" eq "u" || "$field" eq "U") { 
+                    }elsif(("$field" eq "u" || "$field" eq "U") && $lvl_access == 2) { 
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "ob\n"; 
                         printf LAPSPLOT "0\n"; 
                         printf LAPSPLOT "y\n"; 
                         printf LAPSPLOT "r\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "y\n"; 
 
-                    }elsif("$field" eq "v" || "$field" eq "V") { 
+                    }elsif(("$field" eq "v" || "$field" eq "V") && $lvl_access == 2) { 
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "ob\n"; 
                         printf LAPSPLOT "0\n"; 
                         printf LAPSPLOT "y\n"; 
                         printf LAPSPLOT "r\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "y\n"; 
 
-                    }elsif("$field" eq "windspd" || "$field" eq "WINDSPD") { 
+                    }elsif(("$field" eq "windspd" || "$field" eq "WINDSPD") && $lvl_access == 2) { 
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "ob\n"; 
                         printf LAPSPLOT "0\n"; 
                         printf LAPSPLOT "y\n"; 
                         printf LAPSPLOT "r\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "y\n"; 
 
                     }elsif("$field" eq "reflct" ) { 
                         printf LAPSPLOT "rv\n"; 
@@ -2225,7 +2256,7 @@ if($err == 0) {
                         printf LAPSPLOT "$level\n"; 
 
 		    }else{
-                        print "$source $level mb $field not available<br>\n"; 
+                        print "$source $level mb $field not available $lvl_access<br>\n"; 
 
 	            } # if field
 
@@ -2433,6 +2464,8 @@ if($err == 0) {
                         { printf LAPSPLOT "hei\n"; }
                     elsif("$field" eq "helicity") 
                         { printf LAPSPLOT "he\n"; }
+                    elsif("$field" eq "umf") 
+                        { printf LAPSPLOT "um\n"; }
                     elsif("$field" eq "WTBLB0") 
                         { printf LAPSPLOT "si\n"; 
                           printf LAPSPLOT "wb0\n"; }
@@ -2804,6 +2837,14 @@ if($err == 0) {
                         printf LAPSPLOT "lq\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "q\n"; 
+                    }elsif("$field" eq "radial_vel") { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "ob\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "n\n"; 
+                        printf LAPSPLOT "n\n"; 
                     }elsif("$field" eq "wind" ) { # LW3
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
@@ -3140,6 +3181,15 @@ if($err == 0) {
                               printf LAPSPLOT "pbi\n"; 
                               printf LAPSPLOT "$level\n"; 
 
+                          }elsif("$field" eq "radial_vel") { 
+                              printf LAPSPLOT "wd\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "ob\n"; 
+                              printf LAPSPLOT "0\n"; 
+                              printf LAPSPLOT "y\n"; 
+                              printf LAPSPLOT "n\n"; 
+                              printf LAPSPLOT "n\n"; 
+
                           }elsif("$field" eq "wind" ) { 
                               printf LAPSPLOT "bw\n"; 
                               printf LAPSPLOT "$level\n"; 
@@ -3225,6 +3275,18 @@ if($err == 0) {
                           }elsif("$field" eq "c_omega" ) { 
                               printf LAPSPLOT "co\n"; 
                               printf LAPSPLOT "$level\n"; 
+
+                          }elsif("$field" eq "REFLCT" ) { 
+                              printf LAPSPLOT "rf\n"; 
+                              printf LAPSPLOT "rfi\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+
+                          }elsif("$field" eq "reflct" ) { 
+                              printf LAPSPLOT "rf\n"; 
+                              printf LAPSPLOT "rf\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
 
                           }elsif("$field" eq "cld_type" ) { 
                               printf LAPSPLOT "cy\n"; 
@@ -3428,7 +3490,7 @@ if($err == 0) {
 
   if ($wgi_only == 0) {
 #   print  "$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root $animate $resolution\n";
-    system("$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2> $web_root/$ScratchDir/lapsplot.err_$$"); 
+    system("$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2> $web_root/$ScratchDir/lapsplot.err_$$"); 
     system("rm -f $request_root/lapsplot/lapsplot.in; ln -s $web_root/$ScratchDir/lapsplot.in_$$ $request_root/lapsplot/lapsplot.in; rm -f $request_root/lapsplot/lapsplot.out; ln -s $web_root/$ScratchDir/lapsplot.out_$$ $request_root/lapsplot/lapsplot.out; rm -f $request_root/lapsplot/lapsplot.err; ln -s $web_root/$ScratchDir/lapsplot.err_$$ $request_root/lapsplot/lapsplot.err");
     print<<"EOI";
     <A HREF=\"/$ScratchDir/gmeta_$$.gm\">gmeta file</A>
@@ -3452,6 +3514,8 @@ EOI
   }
 
 # print " test output: write selected.in file \n"; 
+# print "forecast_time = $forecast_time ";
+# print "hhmm = $hhmm ";
 
 
 # Write a selected.in file
@@ -3464,7 +3528,7 @@ EOI
   printf SELECTED "@fields\n";
   printf SELECTED "@pressure_levels\n";
   printf SELECTED "$a9time\n";
-  printf SELECTED "$hhmm\n";
+  printf SELECTED "$forecast_time\n";
   printf SELECTED "$zoom_safe\n";
   printf SELECTED "$xcen_safe\n";
   printf SELECTED "$ycen_safe\n";
@@ -3473,6 +3537,7 @@ EOI
 # printf SELECTED "$size_safe\n";
   printf SELECTED "$npix_safe\n";
   printf SELECTED "$frames_orig\n";
+  printf SELECTED "$delay_safe\n";
   close SELECTED;
 
   system("rm -f $request_root/lapsplot/selected.in; ln -s $web_root/$ScratchDir/selected.in_$$ $request_root/lapsplot/selected.in");
@@ -3522,6 +3587,7 @@ EOI
   $density_safe = 1.0;
   $thickness_safe = 1;
   $frames_safe = 1;
+  $delay_safe = 75;
 # $size_safe = 1;
   $npix_safe = 885;
   @domains = "co";
@@ -3544,6 +3610,7 @@ EOI
 # printf SELECTED "$size_safe\n";
   printf SELECTED "$npix_safe\n";
   printf SELECTED "$frames_safe\n";
+  printf SELECTED "$delay_safe\n";
   close SELECTED;
 
   system("rm -f $request_root/lapsplot/selected.in; ln -s $web_root/$ScratchDir/selected.in_$$ $request_root/lapsplot/selected.in");

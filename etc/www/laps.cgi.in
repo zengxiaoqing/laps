@@ -172,6 +172,10 @@ my $default_frames = @lines[12];
 $default_frames =~ s/ //g;
 chomp $default_frames;
 
+my $default_delay = @lines[13];
+$default_frames =~ s/ //g;
+chomp $default_frames;
+
 $n_choices=7;
 
 &ReadParse(*default);
@@ -230,6 +234,8 @@ close LAPSPRD;
 @thickness_list[0] = "1";
 @thickness_list[1] = "2";
 @thickness_list[2] = "3";
+@thickness_list[3] = "4";
+@thickness_list[4] = "5";
 #print "@thickness_list\n";
 
 @frames_list[0] = "1";
@@ -245,6 +251,13 @@ close LAPSPRD;
 @frames_list[10] = "11";
 @frames_list[11] = "12";
 @frames_list[12] = "13";
+
+@delay_list[0] = "25";
+@delay_list[1] = "50";
+@delay_list[2] = "75";
+@delay_list[3] = "100";
+@delay_list[4] = "125";
+@delay_list[5] = "150";
 
 ##Here's new stuff (sort of)------------------
 
@@ -424,6 +437,7 @@ print <<"EOF";
 <option $selected{'LONG_WAVE'}> LONG_WAVE
 <option $selected{'SHRT_WAVE'}> SHRT_WAVE
 <option $selected{'GG'}> GG
+<option $selected{'radial_vel'}> radial_vel
 <option $selected{'ht'}> ht
 <option $selected{'temp'}> temp
 <option $selected{'sfct'}> sfct
@@ -452,6 +466,7 @@ print <<"EOF";
 <option $selected{'cape'}> cape
 <option $selected{'cin'}> cin
 <option $selected{'helicity'}> helicity
+<option $selected{'umf'}> umf
 <option $selected{'vsblty'}> vsblty
 <option $selected{'heatindex'}> heatindex
 <option $selected{'firewx'}> firewx
@@ -623,7 +638,7 @@ print <<"EOF";
 
 
 <br>
-<A HREF="frames.html"># Frames:</A>
+<A HREF="frames.html"># Frames / Delay:</A>
 <br>
 
 <select name="frames">
@@ -634,6 +649,20 @@ EOF
 
     if($frames == $default_frames ) { print "<option selected>$frames\n"; } 
     else               { print "<option>$frames\n"; } 
+
+  }
+
+print <<"EOF";
+</select>
+
+<select name="delay">
+EOF
+  #display available frame counts
+
+  foreach $delay (@delay_list) {
+
+    if($delay == $default_delay ) { print "<option selected>$delay\n"; } 
+    else               { print "<option>$delay\n"; } 
 
   }
 
