@@ -402,7 +402,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
      1      /'          [st,mw] obs/mesowx locations'    
      1      /'          [bs] Sfc background/forecast'
-     1      /10x,'[li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
+     1      /10x,'[li,lw,he,pe,ne,um] li, li*w, helcty, CAPE, CIN, UMF'
      1      /10x,'[s] Other Stability Indices, [sm] Soil Moisture'
      1      /
      1      /'     TEMP: [t,tb,tr,to,bt] (LAPS,LGA,FUA,OBS,BAL)'       
@@ -1399,64 +1399,18 @@ c       include 'satellite_dims_lvd.inc'
             write(6,*)
             write(6,*)'    Looking for laps li*w data:'
 
-            if(lapsplot_pregen)then
-                ext = 'liw'
-                call get_directory(ext,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
-                call get_file_time(c_filespec,i4time_ref,i4time_3dw)
-                call make_fnam_lp(I4time_3dw,asc9_tim,istatus)
+            ext = 'liw'
+            call get_directory(ext,directory,len_dir)
+            c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+            call get_file_time(c_filespec,i4time_ref,i4time_3dw)
+            call make_fnam_lp(I4time_3dw,asc9_tim,istatus)
 
-                write(6,*)' Getting pregenerated Li * omega file'
+            write(6,*)' Getting pregenerated Li * omega file'
 
-                var_2d = 'LIW'
-                ext = 'liw'
-                call get_laps_2d(i4time_3dw,ext,var_2d
+            var_2d = 'LIW'
+            call get_laps_2d(i4time_3dw,ext,var_2d
      1          ,units_2d,comment_2d,NX_L,NY_L,liw,istatus) ! K-Pa/s
 
-            else ! Calculate LI * omega on the fly
-                write(6,*)'    Looking for 3D laps wind data:'
-                ext = 'lw3'
-                call get_directory(ext,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
-                call get_file_time(c_filespec,i4time_ref,i4time_3dw)
-                call make_fnam_lp(I4time_3dw,asc9_tim,istatus)
-
-                var_2d = 'OM'
-                ext = 'lw3'
-                lvl_2d = 600
-                call get_laps_2dgrid(i4time_3dw,0,i4time_nearest,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,w_2d,lvl_2d,istatus)
-
-!               Read in LI data
-                var_2d = 'LI'
-                ext = 'lst'
-                call get_laps_2dgrid(i4time_3dw,laps_cycle_time
-     1                              ,i4time_nearest,ext,var_2d
-     1                              ,units_2d,comment_2d,NX_L,NY_L
-     1                              ,field_2d,0,istatus)
-
-                if(istatus .ne. 1)then
-                    write(6,*)' Error reading Lifted Index data'
-                    stop
-                endif
-
-                call cpt_liw(field_2d,w_2d,NX_L,NY_L,liw) ! K-Pa/s
-
-            endif ! Pregenerated LI * omega field
-
-!           Logarithmically scale the values for display
-!           do j = 1,NY_L,1
-!           do i = 1,NX_L,1
-
-!               if(liw(i,j) .ge. 3.16)then
-!                   liw(i,j) = alog10(liw(i,j))
-!               elseif(liw(i,j) .ge. 0.)then
-!                   liw(i,j) = liw(i,j) * 0.5/3.16
-!               endif
-
-!           enddo ! j
-!           enddo ! i
 
             chigh = 50.
 
@@ -1465,6 +1419,32 @@ c       include 'satellite_dims_lvd.inc'
      1              'sfc LI X 600mb omega  Pa-K/s     ',i_overlay
      1              ,c_display,lat,lon,jdot
      1              ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+        elseif(c_type .eq. 'um')then ! 
+
+            write(6,*)
+            write(6,*)'    Looking for upslope moisture flux:'
+
+            ext = 'liw'
+            call get_directory(ext,directory,len_dir)
+            c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+            call get_file_time(c_filespec,i4time_ref,i4time_3dw)
+            call make_fnam_lp(I4time_3dw,asc9_tim,istatus)
+
+            write(6,*)' Getting pregenerated Li * omega file'
+
+            var_2d = 'UMF'
+            call get_laps_2d(i4time_3dw,ext,var_2d
+     1          ,units_2d,comment_2d,NX_L,NY_L,field_2d,istatus) ! K-Pa/s
+
+            chigh = 50.
+
+            c_label = 'Upslope Moisture Flux (m**2/s)'
+            call plot_field_2d(i4time_3dw,c_type,field_2d,1.0
+     1                        ,namelist_parms,plot_parms
+     1                        ,+10.,-10.,2.,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
         elseif(c_type_i .eq. 'li')then ! Read in Li 'field_2d' from 3d grids
             if(lapsplot_pregen)then
@@ -7387,19 +7367,26 @@ c             if(cint.eq.0.0)cint=0.1
 !       Set for zoom
         zfrac = 1.0 / plot_parms%zoom_wdw
 
-        frame_factx = 1.0 / 0.75
-        frame_facty = 1.0 / 0.8
+!       Note that "square" case works for aspect ratio up to 1.192
+        frame_factx = 1.0  ! / 0.75
+        frame_facty = 1.0  ! / 0.8
 
         zxcen = (0.5 + ((plot_parms%xcen - 0.5) * frame_factx)) * 1023.
         zycen = (0.5 + ((plot_parms%ycen - 0.5) * frame_facty)) * 1023.
 
-        if(plot_parms%zoom_wdw .gt. 1.0)then
-            write(6,*)'frame_factors,zxcen,zycen'
-     1               ,frame_factx,frame_facty,zxcen,zycen
+!       If Zoom is one, coordinates are original ix,iy
+!       As zoom goes towards infinity coordinates go zxcen,zycen
+!       ix = nint( (float(ix) * zfrac) + zxcen * (1.0 - zfrac))
+        ix = zxcen + (float(ix-512) / plot_parms%zoom_wdw)
+!       iy = nint( (float(iy) * zfrac) + zycen * (1.0 - zfrac))
+!       iy = nint(                       zycen) ! for testing
+        iy = zycen + (float(iy-512) / plot_parms%zoom_wdw)
+
+        if(plot_parms%zoom_wdw .gt. 0.0)then
+            write(6,*)'frame_factxy,zxcen,zycen,ixy'
+     1               ,frame_factx,frame_facty,zxcen,zycen,ix,iy
         endif
 
-        ix = nint( (float(ix) * zfrac) + zxcen * (1.0 - zfrac))
-        iy = nint( (float(iy) * zfrac) + zycen * (1.0 - zfrac))
         rsize_zoom = rsize/plot_parms%zoom_wdw
 
         if(len_label .gt. 0)then
@@ -7407,6 +7394,18 @@ c             if(cint.eq.0.0)cint=0.1
      1                  ,rsize_zoom,0,-1.0)      
         else
             write(6,*)' Note that label has zero length...'
+        endif
+
+        if(.false.)then ! another test
+            do ry = 0.0,1.0,.10
+                iy = nint(ry * 1023.)
+                write(c_label,11)iy
+11              format(i4)
+                len_label = 4
+                write(6,*)' test label ',c_label(1:4),ix,iy
+                CALL PCHIQU (cpux(ix),cpux(iy),c_label(1:len_label)
+     1                  ,rsize_zoom,0,-1.0)      
+            enddo
         endif
 
 !       Time on Bottom Right
@@ -7418,8 +7417,10 @@ c             if(cint.eq.0.0)cint=0.1
         iy = y_1 * 1024
 
 !       Set for zoom
-        ix = nint( (float(ix) * zfrac) + zxcen * (1.0 - zfrac))
-        iy = nint( (float(iy) * zfrac) + zycen * (1.0 - zfrac))
+!       ix = nint( (float(ix) * zfrac) + zxcen * (1.0 - zfrac))
+        ix = zxcen + (float(ix-512) / plot_parms%zoom_wdw)
+!       iy = nint( (float(iy) * zfrac) + zycen * (1.0 - zfrac))
+        iy = zycen + (float(iy-512) / plot_parms%zoom_wdw)
 
         call downcase(asc_tim_24(5:10),asc_tim_24(5:10))
         CALL PCHIQU (cpux(ix),cpux(iy),'VT '//asc_tim_24(1:17)
