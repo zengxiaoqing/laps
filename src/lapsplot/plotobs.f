@@ -98,7 +98,7 @@ cdis
 
         Character
      1  c_obs_type*1,c_map*1,c_mode*1,c_anl*1,c_radial*1,c_pin*1,
-     1  STRING,wx*25
+     1  c_sfcpro*1,STRING,wx*25
 
         common /plotobs/ c_obs_type,c_map,c_mode,c_anl,c_radial
 
@@ -470,34 +470,34 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
  30     continue
 
-!       Plot Mesonet winds  ***********************************************
-        if(.false.)then
+!       Plot Sfc/METAR winds  ***********************************************
+        write(6,97)
+97      format(' Plot SFC / Profiler Winds?     [y,n,<RET>=y] ? ',$)
+        if(l_ask_questions)read(lun_in,211)c_sfcpro
 
-        write(6,*)' Mesonet Data'
+        if(c_sfcpro(1:1) .ne. 'n')then
 
-        call setusv_dum(2hIN,14) ! RoyalBlue
+50          write(6,*)' Sfc/METAR Data'
 
-        lun = 32
-        ext = 'msg'
-        call get_directory(ext,directory,len_dir)
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1  ,status='old',err=50)
+            call setusv_dum(2hIN,14) ! RoyalBlue
 
-!35     read(32,*,end=40)alat,alon,dir,speed_ms,retheight
-35      read(32,*,end=40)ri,rj,rk,dir,speed_ms
-        ri = ri + 1.
-        rj = rj + 1.
-        rk = rk + 1.
+            lun = 32
+            ext = 'sag'
+            call get_directory(ext,directory,len_dir)
+            open(lun,file=directory(1:len_dir)//
+     1           filename13(i4time,ext(1:3)),status='old',err=811)
 
-        k = nint(rk)
+55          read(32,*,end=60)ri,rj,rk,dir,speed_ms
+            k = nint(rk)
 
-        if(k_level .gt. 0)then
-            wt_vert = weight_vertical(retheight,k_level,istatus)
-        else
-            wt_vert = 0.
-        endif
+            if(k_level .gt. 0)then
+                wt_vert = weight_vertical(retheight,k_level,istatus)
+            else
+                wt_vert = 0.
+            endif
 
-        if(abs(k - k_level) .le. vert_rad_meso .or. k_level .eq. 0)then
+            if(abs(k - k_level) .le. vert_rad_sao .or. k_level .eq. 0
+     1                                                           )then
 
                 if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
      1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
@@ -509,145 +509,95 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 endif
 
-                write(6,111)ri,rj,max(dir,-99.)
-     1                  ,speed_ms,k,wt_vert,aspect
+                write(6,111)ri,rj,max(dir,-99.),speed_ms
+     1                     ,k,wt_vert,aspect      
 
-!               call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
-!               call latlon_ram_laps(alat,alon,x,y,init,'p')
+                if(k .eq. k_level)then
+                    call setusv_dum(2hIN,12) ! Aqua
+                else
+                    call setusv_dum(2hIN,15) ! Slate Blue
+                endif
 
                 spd_kt = SPEED_ms  / mspkt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_meso,aspect,'true')
 
-        endif ! k .eq. k_level
+            endif ! k .eq. k_level
 
-        goto35
+            goto55
 
-40      continue
+60          continue
 
-        close(32)
+            close(32)
 
-        endif ! .false.
+            call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
 
-!       Plot Sfc/METAR winds  ***********************************************
-50      write(6,*)' Sfc/METAR Data'
-
-        call setusv_dum(2hIN,14) ! RoyalBlue
-
-        lun = 32
-        ext = 'sag'
-        call get_directory(ext,directory,len_dir)
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1  ,status='old',err=811)
-
-55      read(32,*,end=60)ri,rj,rk,dir,speed_ms
-        k = nint(rk)
-
-        if(k_level .gt. 0)then
-            wt_vert = weight_vertical(retheight,k_level,istatus)
-        else
-            wt_vert = 0.
-        endif
-
-        if(abs(k - k_level) .le. vert_rad_sao .or. k_level .eq. 0)then
-
-            if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
-     1         nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
-
-                aspect = aspect_a(nint(ri),nint(rj))
-
-            else
-                aspect = 1.0
-
-            endif
-
-            write(6,111)ri,rj,max(dir,-99.)
-     1                     ,speed_ms,k,wt_vert,aspect
-
-            if(k .eq. k_level)then
-                call setusv_dum(2hIN,12) ! Aqua
-            else
-                call setusv_dum(2hIN,15) ! Slate Blue
-            endif
-
-            spd_kt = SPEED_ms  / mspkt
-
-            call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_meso,aspect,'true')
-
-        endif ! k .eq. k_level
-
-        goto55
-
-60      continue
-
-        close(32)
-
-        call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
-
-!       Plot Profile winds  ***********************************************
-811     write(6,*)
-        write(6,*)
+!           Plot Profile winds  ***********************************************
+811         write(6,*)
+            write(6,*)
      1          ' Profile Winds (e.g. Profiler, Tower, Raob, Dropsonde)'       
 
-        lun = 32
-        ext = 'prg'
-        call get_directory(ext,directory,len_dir)
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1  ,status='old',err=911)
+            lun = 32
+            ext = 'prg'
+            call get_directory(ext,directory,len_dir)
+            open(lun,file=directory(1:len_dir)//
+     1           filename13(i4time,ext(1:3)),status='old',err=911)
 
-        do while (.true.)
-            read(32,*,end=41,err=39)ri,rj,rk,dir,speed_ms,c8_obstype
- 33         format(1x,5f10.0,1x,a8)
+            do while (.true.)
+                read(32,*,end=41,err=39)ri,rj,rk,dir,speed_ms,c8_obstype       
+ 33             format(1x,5f10.0,1x,a8)
 
-            k = nint(rk)
-!           write(6,*)k,alat,alon,retheight,dir,speed_ms
-!           k_sfc = nint(height_to_zcoord(topo(i,j),istatus))
-            k_sfc = 2
+                k = nint(rk)
+!               write(6,*)k,alat,alon,retheight,dir,speed_ms
+!               k_sfc = nint(height_to_zcoord(topo(i,j),istatus))
+                k_sfc = 2
 
-            if(k .eq. k_level
+                if(k .eq. k_level
      1    .or. k_level .eq. 0 .and. k .eq. k_sfc
      1   .and. dir .ne. r_missing_data
      1   .and. speed_ms .ne. r_missing_data
      1                                                  )then
 
-!               call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
-!               call latlon_ram_laps(alat,alon,x,y,init,'p')
+!                   call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
+!                   call latlon_ram_laps(alat,alon,x,y,init,'p')
 
-                spd_kt = SPEED_ms  / mspkt
+                    spd_kt = SPEED_ms  / mspkt
 
-                if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
-     1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+                    if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1                 nint(rj) .ge. 1 .AND. nint(rj) .le. jmax  )then
 
-                    aspect = aspect_a(nint(ri),nint(rj))
+                        aspect = aspect_a(nint(ri),nint(rj))
 
-                else
-                    aspect = 1.0
+                    else
+                        aspect = 1.0
 
-                endif
+                    endif
 
-                if(c8_obstype(1:4) .eq. 'RAOB')then
-                    call setusv_dum(2hIN,3)  ! Red
-                else
-                    call setusv_dum(2hIN,17) ! Lavender
-                endif
+                    if(c8_obstype(1:4) .eq. 'RAOB')then
+                        call setusv_dum(2hIN,3)  ! Red
+                    else
+                        call setusv_dum(2hIN,17) ! Lavender
+                    endif
 
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_prof,aspect,'true')
-                write(6,311,err=38)ri,rj,dir,spd_kt,aspect,c8_obstype
-311             format(1x,2f8.1,4x,f7.0,f7.0,f8.3,1x,a8)
-38              continue
+                    call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                              ,size_prof,aspect,'true')
+                    write(6,311,err=38)ri,rj,dir,spd_kt,aspect
+     1                                ,c8_obstype
+311                 format(1x,2f8.1,4x,f7.0,f7.0,f8.3,1x,a8)
+38                  continue
 
-            endif ! k .eq. k_level
+                endif ! k .eq. k_level
 
-39          continue
+39              continue
 
-        enddo
+            enddo
 
-41      continue
+41          continue
 
-        close(32)
+            close(32)
+
+        endif ! plot sfc and profiler winds
 
 !       Plot Pirep winds  ***********************************************
 911     write(6,96)
