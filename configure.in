@@ -427,6 +427,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/change-center.pl
           etc/cloud.pl
           etc/cronfile.pl
+          etc/followup_fcst.pl
           etc/fxalogdir.pl
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
@@ -465,6 +466,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/models/lfmpost_scp_fuafsf.pl
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
+          etc/www/laps_products.cgi
           gui/make_gui.pl
           gui/install_perlTk.sh
           gui/guiTk/ui_system_tools.pl)

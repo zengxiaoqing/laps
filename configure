@@ -3121,6 +3121,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/change-center.pl
           etc/cloud.pl
           etc/cronfile.pl
+          etc/followup_fcst.pl
           etc/fxalogdir.pl
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
@@ -3159,6 +3160,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/models/lfmpost_scp_fuafsf.pl
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
+          etc/www/laps_products.cgi
           gui/make_gui.pl
           gui/install_perlTk.sh
           gui/guiTk/ui_system_tools.pl src/include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
@@ -3269,6 +3271,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/change-center.pl
           etc/cloud.pl
           etc/cronfile.pl
+          etc/followup_fcst.pl
           etc/fxalogdir.pl
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
@@ -3307,6 +3310,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/models/lfmpost_scp_fuafsf.pl
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
+          etc/www/laps_products.cgi
           gui/make_gui.pl
           gui/install_perlTk.sh
           gui/guiTk/ui_system_tools.pl"}
