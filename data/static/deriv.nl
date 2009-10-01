@@ -5,6 +5,7 @@
  vv_to_height_ratio_Cu=0.5,
  vv_to_height_ratio_Sc=0.05,
  vv_for_St=.01,
+ c_z2m='albers'
  thresh_cvr_cty_vv=0.65,
  thresh_cvr_lwc=0.65,
  twet_snow=+1.3,
@@ -36,6 +37,9 @@ c                         routine (units are 10^-3 inverse seconds)
 c
 c vv_for_St   - parameter for the cloud omega (vv.f/cloud_bogus_w) routine
 c                         (units are meters/second)
+c
+c c_z2m - parameter for converting from radar reflectivity to precipitating
+c         hydrometeor concentrations ('albers','kessler')
 c
 c thresh_cvr_cty_vv - cloud cover threshold used for cloud type and cloud omega
 c                     a lower value will increase the extent and magnitude of
