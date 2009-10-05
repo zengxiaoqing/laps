@@ -9,6 +9,8 @@
       real f(n1) , nfmissing
       character*(*) fname
 
+      print*,'HERE: in read_netcdf_real A, n1=',n1
+
       istatus=0
       nf_status = NF_INQ_VARID(nf_fid,fname,nf_vid)
       if(nf_status.ne.NF_NOERR) then
@@ -17,9 +19,12 @@
         istatus = 1
         return
       endif
+
       if(start(1).eq.0.and.count(1).eq.0) then
+         print*,'HERE: in read_netcdf_real B1'
          nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,f)
       else
+         print*,'HERE: in read_netcdf_real B2',start,count
          nf_status = NF_GET_VARA_REAL(nf_fid,nf_vid,start,count,f)
       endif
       if(nf_status.ne.NF_NOERR) then
@@ -28,6 +33,8 @@
         istatus = 1
         return
       endif
+
+      print*,'HERE: in read_netcdf_real C'
 
       if(fname.ne.'isoLevel')then
          nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue'

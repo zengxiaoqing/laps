@@ -534,7 +534,8 @@ c
       start(4)=n
       count(4)=1
 
-      print*,'read ht'
+      print*,'read ht ',ncid,nxbg*nybg*count(3),start,count,rcode
+      print*,'nxbg/nybg/nzbght ',nxbg,nybg,nzbght
       cvar='gh'
       call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),data,start
      +     ,count,rcode)
