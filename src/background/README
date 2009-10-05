@@ -15,7 +15,8 @@ program lga                                      lga.f
       read_bgdata                                bgdata/readbgdata.f
          read_fuafsf_cdf   
          get_lapsdata_3d
-         read_sbn_grids                          bgdata/read_sbn_grids.f
+         read_sbn_grids                          bgdata/read_sbn_grids.f 
+             read_netcdf_real                    bgdata/read_netcdf_field.f
       vinterp
       hinterp_field
       write_lga                                  bgdata/writelgalgb.f
