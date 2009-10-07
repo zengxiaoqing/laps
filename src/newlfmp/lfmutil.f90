@@ -953,7 +953,7 @@ do i=1,nx
 
       elseif (c_m2z == 'synp') then
 
-        call versuch(rainmr(i,j,k),snowmr(i,j,k),graupelmr(i,j,k),tmp(i,j,k) &   ! I
+        call versuch(rainmr(i,j,k),icemr(i,j,k)+snowmr(i,j,k),graupelmr(i,j,k),tmp(i,j,k) &   ! I
                     ,zhhx(i,j,k)                                             &   ! O
                     ,ahhx(i,j,k)                                             &   ! O
                     ,zhvx(i,j,k),zvhx(i,j,k),zvvx(i,j,k)                     &   ! O
