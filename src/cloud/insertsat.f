@@ -52,6 +52,7 @@ c
      1  solar_alt,solar_ha,solar_dec,                                    ! I
      1  lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,                  ! I
      1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
+     1  t_modelfg,sh_modelfg,                                            ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
      1  t_gnd_k,                                                         ! O
      1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,                              ! O
@@ -115,6 +116,8 @@ c
         real solar_alt(imax,jmax)
         real solar_ha(imax,jmax)
         real temp_3d(imax,jmax,klaps)
+        real t_modelfg(imax,jmax,klaps)
+        real sh_modelfg(imax,jmax,klaps)
         real t_sfc_k(imax,jmax)
         real cvr_snow(imax,jmax)
         real pres_sfc_pa(imax,jmax)
