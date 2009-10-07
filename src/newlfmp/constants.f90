@@ -14,7 +14,7 @@ module constants
    real, parameter :: mps2mph=2.237
    real, parameter :: pi=3.141592654
    real, parameter :: p0=100000.0
-   real, parameter :: r=287.04
+   real, parameter :: r=287.04         ! 287.058 in Wikipedia
    real, parameter :: rv=461.5
    real, parameter :: t0=273.15
    real, parameter :: xmiss=-99999.9
