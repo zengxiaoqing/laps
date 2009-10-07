@@ -219,6 +219,8 @@ real           :: T_grid(4), lam_grid(21), lam_low, lam_high, lam
 real           :: ri_real_final, ri_im_final, T_high, T_low, testre, testtt, wo1, testim
 complex        :: ri(4,21)
 integer :: kk
+character*255 :: static_dir
+integer :: len_dir
 include 'constants.incf'
 
 !*************************************************************************
@@ -258,7 +260,8 @@ epswtr=cmplx(estamf1*(1.0+xx1*sin(alpha1*pi/2.0))/yy1+einf1, -estamf1*xx1*cos(al
 
 tempx = temp
 if (temp .gt. -1.) tempx = -1.5
-open(unit=88, file='warren84.tab', status='old')
+call get_directory('static',static_dir,len_dir)
+open(unit=88, file=static_dir(1:len_dir)//'/warren84.tab', status='old')
  read(88,*) T_grid
  T_grid = T_grid 
 !print*, T_grid
