@@ -130,6 +130,7 @@ cdis
         real, allocatable, dimension(:,:,:) :: cldcv1
         real, allocatable, dimension(:,:,:) :: cf_modelfg
         real, allocatable, dimension(:,:,:) :: t_modelfg
+        real, allocatable, dimension(:,:,:) :: sh_modelfg
 !       REAL cldcv1(NX_L,NY_L,KCLOUD)
 !       REAL cf_modelfg(NX_L,NY_L,KCLOUD)
 !       REAL t_modelfg(NX_L,NY_L,KCLOUD)
@@ -295,6 +296,11 @@ cdis
         allocate( t_modelfg(NX_L,NY_L,KCLOUD), STAT=istat_alloc )
         if(istat_alloc .ne. 0)then
             write(6,*)' ERROR: Could not allocate t_modelfg'
+        endif
+
+        allocate( sh_modelfg(NX_L,NY_L,KCLOUD), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate sh_modelfg'
         endif
 
         allocate( cld_snd(max_cld_snd,KCLOUD), STAT=istat_alloc )
@@ -513,7 +519,8 @@ C READ IN LAPS HEIGHTS
         endif
 
 C OBTAIN MODEL FIRST GUESS CLOUD COVER FIELD
-        call get_modelfg(cf_modelfg,t_modelfg,default_clear_cover
+        call get_modelfg(cf_modelfg,t_modelfg,sh_modelfg
+     1           ,default_clear_cover
      1           ,temp_3d,heights_3d,cld_hts
      1              ,i4time,ilaps_cycle_time
      1                  ,NX_L,NY_L,NZ_L,KCLOUD
@@ -756,6 +763,7 @@ C READ IN SATELLITE DATA
      1       lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,            ! I
      1       rlaps_land_frac,                                           ! I
      1       topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,               ! I
+     1       t_modelfg,sh_modelfg,                                      ! I
      1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,             ! I
      1       t_gnd_k,                                                   ! O
      1       cldtop_co2_m,cldtop_tb8_m,cldtop_m,                        ! O
@@ -1369,6 +1377,7 @@ C       EW SLICES
         deallocate(cldcv1)
         deallocate(cf_modelfg)
         deallocate(t_modelfg)
+        deallocate(sh_modelfg)
         deallocate(cld_snd)
         deallocate(wt_snd)
 
