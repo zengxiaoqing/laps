@@ -38,6 +38,7 @@ cdis
 cdis
 
         subroutine get_modelfg(cf_modelfg,t_modelfg                      ! O
+     1                        ,model_q_3d                                ! O
      1                        ,default_clear_cover                       ! I
      1                        ,temp_3d,heights_3d,cld_hts                ! I
      1                        ,i4time_needed,ilaps_cycle_time            ! I
@@ -60,8 +61,7 @@ cdis
         real cf_modelfg(ni,nj,KCLOUD)      ! Output
         real t_modelfg(ni,nj,KCLOUD)       ! Output
         real cld_hts(KCLOUD)               ! Input
-
-        real model_q_3d(ni,nj,klaps)       ! Local
+        real model_q_3d(ni,nj,klaps)       ! Output
 
         real model_lwc_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
         real model_ice_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
