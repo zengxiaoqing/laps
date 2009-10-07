@@ -130,10 +130,20 @@ c
         call s_len(gps_format, len_gps_format)
         if(gps_format(1:len_gps_format) .eq. 'NIMBUS' .or. ! FSL NetCDF format
      1     gps_format(1:len_gps_format) .eq. 'CWB'   )then ! CWB NetCDF format
-            i4time_file = i4time_sys - 900
-            call make_fnam_lp(i4time_file,a9time_file,istatus)
             call s_len(path_to_gps_data,len_path)
+
+            call get_file_time(path_to_gps_data(1:len_path)
+     1                        ,i4time_sys,i4time_nearest)
+            if(abs(i4time_sys - i4time_nearest) .le. 900)then
+                i4time_file = i4time_nearest
+            else
+                write(6,*)'No data available within 900s of systime'
+                goto990
+            endif
 c
+!           i4time_file = i4time_sys - 900
+            call make_fnam_lp(i4time_file,a9time_file,istatus)
+
             if(gps_format(1:len_gps_format) .eq. 'NIMBUS') then
                data_file = path_to_gps_data(1:len_path)//a9time_file
      1                                                 //'0030o.nc'
