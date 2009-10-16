@@ -281,11 +281,12 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 5.1 successfully incorporates'
-      write (6,*) '1) state variables passed into this routine'
-      write (6,*) '2) state variables not modified (except for q)'
-      write (6,*) '3) input option to write output file in subroutine'
-      write (6,*) '4) namelist passed into subroutine from driver'
+      write (6,*) 'Release 5.2 successfully incorporates'
+      write (6,*) '1) Bug fix for no cloud situation'
+      write (6,*) '2) state variables passed into this routine'
+      write (6,*) '3) state variables not modified (except for q)'
+      write (6,*) '4) input option to write output file in subroutine'
+      write (6,*) ' '
 
 
       call get_directory(extpw,dirpw,len)
@@ -1010,9 +1011,13 @@ c     make call to TIROS moisture insertion
 
 
 c     make call to variational solution, radiance no longer a prerequisite
+c     
+c     if cloud dependence is off, then assign c_istatus = 1 to force code to run
 
 
-      if(c_istatus.eq.1 .and. t_istatus.eq.1) then
+      if(c_istatus.eq.1 .and. t_istatus .eq.1
+     1     .or.
+     1     cloud_d.eq.0 .and. t_istatus .eq.1) then
          
          write (6,*) 'Begin variational assimilation'
          call variational (
