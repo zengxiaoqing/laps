@@ -205,7 +205,7 @@ implicit none
 
 integer :: ct
 
-allocate(hgrid(lx,ly,(nvar3d+1)*nz))
+allocate(hgrid(lx,ly,(nvar3d+3)*nz))  ! Huiling Yuan, changed on 10/19/2009
 
 hgrid=rmsg
 
