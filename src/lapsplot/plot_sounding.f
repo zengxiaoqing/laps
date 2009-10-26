@@ -20,6 +20,8 @@
         real rh_vert(NZ_L)
         real sh_vert(NZ_L)
         real td_vert(NZ_L)
+        real lwc_vert(NZ_L)
+        real ice_vert(NZ_L)
 
         real pres_1d(NZ_L)
         real logp_1d(NZ_L), logp_bottom, logp_top, logp, logp_sfc
@@ -233,11 +235,67 @@
                 p_mb        = pres_1d(iz)/100.
                 q_gkg       = sh_vert(iz) * 1000.
                 td_vert(iz) = make_td(p_mb,t_c,q_gkg,t_ref)
+                rh_vert(iz) = hum(t_c,td_vert(iz))
             enddo ! iz
 
             istat_td = 1
 
         endif
+
+!       Read Cloud Liquid
+        istat_lwc = 0
+        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+            var_2d = 'LWC'
+            ext = 'lwc'
+            call get_laps_3dgrid
+     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_lwc)
+        endif
+
+        if(istat_lwc .eq. 1)then
+            call interp_3d(field_3d,lwc_vert,xsound,xsound
+     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
+     1                    ,r_missing_data)
+        else
+            lwc_vert = -999.
+        endif
+
+!       Read Cloud Ice
+        istat_ice = 0
+        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+            var_2d = 'ICE'
+            ext = 'lwc'
+            call get_laps_3dgrid
+     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_ice)
+        endif
+
+        if(istat_ice .eq. 1)then
+            call interp_3d(field_3d,ice_vert,xsound,xsound
+     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
+     1                    ,r_missing_data)
+        else
+            ice_vert = -999.
+        endif
+
+        write(6,*)
+        write(6,*)' ASCII SOUNDING DATA at '//c16_latlon//'    '//a9time 
+        write(6,*)
+        write(6,*)' lvl    p(mb)     t(c)'//
+     1            '      td(c)      rh(%)    cld liq  cld ice'   
+        write(6,*)'                                                 '
+     1          //'g/m**3   g/m**3'
+        do iz = 1,NZ_L
+            write(6,1)iz,
+     1                pres_1d(iz)/100.,
+     1                k_to_c(temp_vert(iz)), 
+     1                td_vert(iz),
+     1                rh_vert(iz),
+     1                lwc_vert(iz)*1000.,
+     1                ice_vert(iz)*1000.
+ 1          format(i4,6f10.2)
+        enddo ! iz
+        write(6,*)
 
 !       Read in sfc data (pressure, temp, dewpoint, tpw)
         if(c_prodtype .eq. 'A')then ! Read LSX
@@ -310,7 +368,6 @@
      1                              ,istat_sfc)
             if(istat_sfc .ne. 1)goto100
 
-
             var_2d = 'DSF'
             call get_lapsdata_2d(i4_initial,i4_valid
      1                              ,directory,var_2d
@@ -319,6 +376,15 @@
      1                              ,td_2d
      1                              ,istat_sfc)
             if(istat_sfc .ne. 1)goto100
+
+            var_2d = 'TPW'
+            call get_lapsdata_2d(i4_initial,i4_valid
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d
+     1                              ,NX_L,NY_L
+     1                              ,pw_2d
+     1                              ,istat_sfc)
+            if(istat_sfc .ne. 1)pw_2d = r_missing_data
 
         else
             istat_sfc = 0
@@ -556,12 +622,14 @@
         endif
 
 !       Plot TPW value
-        ix = 800
-        iy = 180
-        rsize = .010
-        write(c_pw,890)pw_sfc*100. ! convert M to CM
- 890    format('IWV = ',f5.2)
-        CALL PCHIQU (cpux(ix),cpux(iy),c_pw,rsize,0,-1.0)
+        if(pw_sfc .ne. r_missing_data)then
+            ix = 800
+            iy = 180
+            rsize = .010
+            write(c_pw,890)pw_sfc*100. ! convert M to CM
+ 890        format('IWV = ',f5.2)
+            CALL PCHIQU (cpux(ix),cpux(iy),c_pw,rsize,0,-1.0)
+        endif
 
         write(6,*)' Sounding has been plotted...'
 
