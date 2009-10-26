@@ -424,7 +424,7 @@ c       include 'satellite_dims_lvd.inc'
      1       ,' [cb,ct] Cld Base/Top (MSL)'      
      1       /'         [cv/cg] Cloud Cover (2-D)'
      1       ,' [cy,py] Cloud/Precip Type'
-     1       /'         [pc,rn,sn] Precip Conc, [sa/pa] Snow/Pcp Accum,'
+     1       /'         [pc,rn,sn,pi] Pcp Conc, [sa/pa] Snow/Pcp Accum,'      
      1       ,' [sc/csc] Snow Cvr'
      1      //'     STATIC INFO: [gg] '
      1       /'     [lv(d),lr(lsr),v3,v5,po,lc] lvd; lsr; VCF; '             
@@ -1439,8 +1439,8 @@ c       include 'satellite_dims_lvd.inc'
 
             chigh = 50.
 
-            c_label = 'Upslope Moisture Flux (m**2/s)'
-            call plot_field_2d(i4time_3dw,c_type,field_2d,1.0
+            c_label = 'Upslope Moisture Flux (cm-m/s)'
+            call plot_field_2d(i4time_3dw,c_type,field_2d,.01
      1                        ,namelist_parms,plot_parms
      1                        ,+10.,-10.,2.,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
@@ -3249,7 +3249,8 @@ c
         elseif(c_type .  eq. 'la' .or. c_type   .eq. 'lj' .or.
      1         c_type   .eq. 'sj' .or. c_type_i .eq. 'ls' .or.
      1         c_type_i .eq. 'ci' .or. c_type_i .eq. 'pc' .or.
-     1         c_type_i .eq. 'rn' .or. c_type_i .eq. 'sn'     )then
+     1         c_type_i .eq. 'rn' .or. c_type_i .eq. 'sn' .or.
+     1         c_type_i .eq. 'pi'                             )then
             write(6,1514)
 1514        format('     Enter Level in mb; OR [-1] for max in column'
      1                          ,21x,'? ',$)
@@ -3258,8 +3259,7 @@ c
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
-            if(c_type .eq. 'la')then
-                iflag_slwc = 1 ! Returns Adiabatic LWC
+            if(c_type .eq. 'la')then ! Returns Adiabatic LWC
                 if(k_level .gt. 0)then
                     call mklabel(k_mb,
      1          ' Adiabt LWC  g/m^3 ',c_label)
@@ -3267,8 +3267,7 @@ c
                     c_label = 'Maximum Adiabatic LWC g/m^3      '
                 endif
 
-            elseif(c_type .eq. 'lj')then
-                iflag_slwc = 2 ! Returns Adjusted LWC
+            elseif(c_type .eq. 'lj')then ! Returns Adjusted LWC
                 if(k_level .gt. 0)then
                     call mklabel(k_mb,
      1          ' Adjstd LWC  g/m^3 ',c_label)
@@ -3276,8 +3275,7 @@ c
                     c_label = 'Maximum Adjusted  LWC g/m^3      '
                 endif
 
-            elseif(c_type .eq. 'sj')then
-                iflag_slwc = 3 ! Returns Adjusted SLWC
+            elseif(c_type .eq. 'sj')then ! Returns Adjusted SLWC
                 if(k_level .gt. 0)then
                     call mklabel(k_mb,
      1          ' Adjstd SLWC g/m^3 ',c_label)
@@ -3285,8 +3283,7 @@ c
                     c_label = 'Maximum Adjusted SLWC g/m^3      '
                 endif
 
-            elseif(c_type_i .eq. 'ls')then
-                iflag_slwc = 13 ! Returns New Smith - Feddes LWC
+            elseif(c_type_i .eq. 'ls')then ! Returns New Smith - Feddes LWC
                 if(k_level .gt. 0)then
                     call mklabel(k_mb,
      1                             ' Cloud LWC g/m^3   ',c_label)
@@ -3294,8 +3291,7 @@ c
                     c_label = 'Column Max LWC        g/m^3      '
                 endif
 
-            elseif(c_type_i .eq. 'ci')then
-                iflag_slwc = 13 ! Returns Cloud Ice
+            elseif(c_type_i .eq. 'ci')then ! Returns Cloud Ice
                 if(k_level .gt. 0)then
                     call mklabel(k_mb,
      1                             ' Cloud ICE g/m^3   ',c_label)
@@ -3321,6 +3317,12 @@ c
      1                             ' Precip Snow g/m^3 ',c_label)
                 endif
 
+            elseif(c_type_i .eq. 'pi')then
+                if(k_level .gt. 0)then
+                    call mklabel(k_mb,
+     1                             ' Precip Ice g/m^3 ',c_label)
+                endif
+
             endif
 
             call input_product_info(i4time_ref              ! I
@@ -3342,9 +3344,11 @@ c
             elseif(c_type_i .eq. 'sn')then
                 var_2d = 'SNO'
             elseif(c_type_i .ne. 'ci')then
-                var_2d = 'LWC'
-            else
                 var_2d = 'ICE'
+            elseif(c_type_i .ne. 'pi')then
+                var_2d = 'PIC'
+            else
+                var_2d = 'LWC'
             endif
 
             if(c_prodtype .eq. 'A')then
