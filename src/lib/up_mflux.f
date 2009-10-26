@@ -120,8 +120,10 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 !             Calculate upslope moisture flux (m**2/s)
 	      upslope_flux(i,j) = dvh * tpw_2d(i,j)
 
-            else
-              upslope_flux(i,j) = r_missing_data
+            else ! assume cos(theta) = 1, so we just want moisture flux
+              dvh = sqrt(ubar**2 + vbar**2)
+
+	      upslope_flux(i,j) = dvh * tpw_2d(i,j)
 
             endif
 
