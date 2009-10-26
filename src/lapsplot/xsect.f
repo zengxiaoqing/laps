@@ -2686,34 +2686,26 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             i4time_lwc = i4_valid
 
-            if(c_prodtype .eq. 'A')then   
-                if(c_field .eq. 'la')then
-                    iflag_slwc = 1
-                    c_label = 'LAPS Adiabatic LWC      g/m^3    '
-                elseif(c_field .eq. 'lj')then
-                    iflag_slwc = 2
-                    c_label = 'LAPS Adjusted  LWC      g/m^3    '
-                elseif(c_field .eq. 'sj')then
-                    iflag_slwc = 3
-                    c_label = 'LAPS Adjusted  SLWC     g/m^3    '
-                elseif(c_field .eq. 'ls')then
-                    iflag_slwc = 13
-                    c_label = 'LAPS Smith-Feddes LWC   g/m^3    '
-                elseif(c_field .eq. 'ci')then
-                    iflag_slwc = 13
-                    c_label = 'LAPS Cloud Ice          g/m^3    '
-                elseif(c_field .eq. 'ss')then
-                    iflag_slwc = 14
-                    c_label = 'LAPS Smith-Feddes SLWC  g/m^3    '
-                elseif(c_field .eq. 'pc')then
-                    c_label = 'LAPS Precip Concen      g/m^3    '
-                elseif(c_field .eq. 'rn')then
-                    c_label = 'LAPS Rain Concen        g/m^3    '
-                elseif(c_field .eq. 'sn')then
-                    c_label = 'LAPS Snow Concen        g/m^3    '
-                elseif(c_field .eq. 'ic')then
-                    c_label = 'LAPS Ice Concen         g/m^3    '
-                endif
+            if(c_field .eq. 'la')then
+                c_label = 'LAPS Adiabatic LWC      g/m^3    '
+            elseif(c_field .eq. 'lj')then
+                c_label = 'LAPS Adjusted  LWC      g/m^3    '
+            elseif(c_field .eq. 'sj')then
+                c_label = 'LAPS Adjusted  SLWC     g/m^3    '
+            elseif(c_field .eq. 'ls')then
+                c_label = 'LAPS Smith-Feddes LWC   g/m^3    '
+            elseif(c_field .eq. 'ci')then
+                c_label = 'LAPS Cloud Ice          g/m^3    '
+            elseif(c_field .eq. 'ss')then
+                c_label = 'LAPS Smith-Feddes SLWC  g/m^3    '
+            elseif(c_field .eq. 'pc')then
+                c_label = 'LAPS Precip Concen      g/m^3    '
+            elseif(c_field .eq. 'rn')then
+                c_label = 'LAPS Rain Concen        g/m^3    '
+            elseif(c_field .eq. 'sn')then
+                c_label = 'LAPS Snow Concen        g/m^3    '
+            elseif(c_field .eq. 'ic')then
+                c_label = 'LAPS Ice Concen         g/m^3    '
             endif
 
             l_pregen = lapsplot_pregen
@@ -2729,7 +2721,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             elseif(c_field .eq. 'sn')then
                 var_2d = 'SNO'
             elseif(c_field .eq. 'ic')then
-                var_2d = 'ICE'
+                var_2d = 'PIC'
             endif
 
             if(c_prodtype .eq. 'A')then   
@@ -2775,7 +2767,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             if(i_image .eq. 1)then
                 clow = 0.
                 if(c_field .eq. 'sn')then
-                    chigh = 5.
+                    chigh = 2.
                 elseif(c_field .eq. 'rn')then
                     chigh = 2.
                 else
@@ -2796,7 +2788,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         elseif(c_field .eq. 'ix')then
 
-            iflag_slwc = 13
             c_label = '    LAPS Icing Index             '
 
             i4time_lrp = i4time_ref/laps_cycle_time * laps_cycle_time
@@ -2830,7 +2821,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call make_fnam_lp(i4time_cloud,a9time,istatus)
 
         elseif(c_field .eq. 'mv')then
-            iflag_slwc = 0
             c_label = 'LAPS Mean Volume Diameter  m^-6  '
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
@@ -2863,7 +2853,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call make_fnam_lp(i4time_cloud,a9time,istatus)
 
         elseif(c_field .eq. 'tc')then
-            iflag_slwc = 0
             c_label = '        LAPS Cloud Type          '
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
@@ -2882,7 +2871,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call make_fnam_lp(i4time_nearest,a9time,istatus)
 
         elseif(c_field .eq. 'tp')then
-            iflag_slwc = 0
             c_label = 'LAPS Precip Type                  '
 
             i4time_pcp = i4time_ref
@@ -2908,7 +2896,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call make_fnam_lp(i4time_radar,a9time,istatus)
 
         elseif(c_field .eq. 'ix')then
-            iflag_slwc = 0
             c_label = '     LAPS Icing Severity Index   '
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
