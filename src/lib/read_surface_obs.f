@@ -130,7 +130,8 @@ c.....	Read the cloud data if we have any.
 c
 	  if(kkk_s(k) .gt. 0) then
 	    do ii=1,kkk_s(k)
-  	      read(11,917) store_cldamt(k,ii), store_cldht(k,ii)   !layer cloud amount and height
+  	      read(11,917) store_cldamt(k,ii), store_cldht(k,ii) ! layer cloud amount and height
+                                                                 ! (meters MSL)
 	    enddo !ii
 	  endif
 c
@@ -869,7 +870,8 @@ c.....	Read the cloud data if we have any.
 c
 	  if(kkk_s(k) .gt. 0) then
 	    do ii=1,kkk_s(k)
-  	      read(11,917) store_cldamt(k,ii), store_cldht(k,ii)   !layer cloud amount and height
+  	      read(11,917) store_cldamt(k,ii), store_cldht(k,ii) ! layer cloud amount and height
+                                                                 ! (meters MSL)
 	    enddo !ii
 	  endif
 c
