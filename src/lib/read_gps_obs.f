@@ -135,6 +135,7 @@ C
         ! Check if recNum is larger than space allocated:
         if (gps_i+recNum .gt. gps_n) then
           print *,' Too many GPS obs, increase your gps_num and rerun!'
+     1	gps_i+recNum,' > ',gps_n
           stop
         endif
 
