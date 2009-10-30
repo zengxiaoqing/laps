@@ -1337,7 +1337,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      GPS:
            LAPS uses GPS data from NIMBUS netCDF files. The precipitable water
            is used in the humidity analysis and surface observations are
-           read into the surface analyses.
+           read into the surface analyses. STMAS is being designed to use
+           the signal delay directly instead of the PW.
 
            There is a second format known as (LDAD) netCDF that carries GPS 
            data. This format can supply GPS surface data to the LAPS 
@@ -4104,11 +4105,11 @@ the '$LAPS_DATA_ROOT/cdl/*.cdl' files.
                 File LAPS CDF    Num
 		Ext  Var  Var    Lvl  Field
 
-Process surface:LSX  U    su       1  Surface wind u (grid north)
-       		     V    sv       1  Surface wind v (grid east)
+Process surface:LSX  U    su       1  Surface (10m) wind u (grid north)
+       		     V    sv       1  Surface (10m) wind v (grid east)
         	     P    fp       1  Reduced Pressure (constant height sfc)
         	     PP   pp       1  Perturbation Pressure (if available)
-            	     T    st       1  Temp 
+            	     T    st       1  Temp (2m)
 		     TD   std      1  Dewpt Temp
                      TGD  tgd      1  Ground Temp (land surface/SST)
         	     VV   vv	   1  Vertical Velocity
