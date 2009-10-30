@@ -354,6 +354,14 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
             call refr_storage(ilev, field, scr2d, map%nx, map%ny)
             !write (*,* ) m, idx, field, units(1:5), Desc(1:20), ilev
 
+              if(map%nx .gt. nx .OR. map%ny .gt. ny &
+                                .OR. idx    .gt. nz)then      
+                  write(6,*)' WARNING: get_lapsbg array bounds issue'
+                  write(6,*)' map%nx/map%ny/nx/ny = ' & 
+                             ,map%nx/map%ny,nx,ny      
+                  write(6,*)' idx/nz = ',idx,nz                            
+              endif
+
               if (field.eq.'HGT') then
                  htbg(:,:,idx) = scr2d
               elseif (field.eq.'GEOPT') then
