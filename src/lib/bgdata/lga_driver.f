@@ -800,7 +800,7 @@ c
             enddo
             enddo
  
-           endif
+           endif ! bgmodel = 4 or 9
 c
            do kk=nz_laps,1,-1
             if (pr(kk) .ge. 300.) goto 20
@@ -883,11 +883,11 @@ c       ----------------------------
            enddo search_tsfc_missing
 
 c
-           if(lgrid_missing)then
+          if(lgrid_missing)then
 
-              print*,'Error: bkgd domain size insufficient'
+           print*,'Error: bkgd domain size insufficient'
 
-           else
+          else
                  
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,htvi,ht,bgmodel)
@@ -925,12 +925,12 @@ c ****** Check for missing value flag in any of the fields.
 c ****** Check for NaN's in any of the fields.
 c
            deallocate(htvi,   !Height (m)
-     .              tpvi,   !Temperature (K)
-     .              shvi,   !Specific humidity (kg/kg)
-     .              uwvi,   !U-wind (m/s)
-     .              vwvi,   !V-wind (m/s)
-     .              wwvi,   !W-wind (pa/s)
-     .              msgpt)
+     .                tpvi,   !Temperature (K)
+     .                shvi,   !Specific humidity (kg/kg)
+     .                uwvi,   !U-wind (m/s)
+     .                vwvi,   !V-wind (m/s)
+     .                wwvi,   !W-wind (pa/s)
+     .                msgpt)
            do k=1,nz_laps
             do j=1,ny_laps
                do i=1,nx_laps
@@ -952,11 +952,12 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
      +                  ,sh(i,j,k), uw(i,j,k),vw(i,j,k),ww(i,j,k)
 
                      reject_cnt=reject_cnt+1
-                     reject_names(reject_cnt)=bg_names(ii)
+!                    reject_names(reject_cnt)=bg_names(ii)
 
                      print*,'reject_cnt/reject_names'
                      print*,'cnt/time: ',reject_cnt
-     +,reject_names(reject_cnt)
+     +                     ,' UNKNOWN reject_name'
+!    +                     ,reject_names(reject_cnt)
 
                      lga_status = -nf
 
@@ -1024,8 +1025,8 @@ c ****** Horizontally interpolate background surface data to LAPS grid points.
 c
            itstatus(3)=init_timer()
 
-           if(bgmodel.ne.1.and.bgmodel.ne.9)then
-           if(bgmodel.ne.3)then
+           if(bgmodel.ne.1.and.bgmodel.ne.9 .AND.
+     1                         bgmodel.ne.3      )then
 
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
@@ -1072,15 +1073,14 @@ c
                print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
             endif
 
-           else
+           else ! bgmodel = 1,3,9
 
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .                  grx,gry,prbg_sfc,pr_sfc,bgmodel)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .                  grx,gry,mslpbg,mslp,bgmodel)
 
-           endif
-           endif
+           endif ! bgmodel .NE. 1,3,9
 
            deallocate (htbg_sfc)
            deallocate (prbg_sfc)
@@ -1198,34 +1198,34 @@ c rotate them to the LAPS (output) domain as necessary.
            print*,'After rotation: elapsed time (sec): ',itstatus_rot
            print*
 
-          endif !if grx/gry from init_hinterp are defined
+          endif !if grx/gry from init_hinterp are defined (lgrid_missing)
 
          else !linterp is false
 
 c this is a grid compatible fua file
 
-           ht=htbg
-           tp=tpbg
-           sh=shbg
-           uw=uwbg
-           vw=vwbg
-           ww=wwbg
-           pr_sfc=prbg_sfc
-           mslp=mslpbg
-c          td_sfc=tdbg_sfc
-           td_sfc=shbg_sfc
-           tp_sfc=tpbg_sfc
-           ht_sfc=htbg_sfc
-           sh_sfc=shbg_sfc
-           uw_sfc=uwbg_sfc
-           vw_sfc=vwbg_sfc
-           pcp_sfc=pcpbg
+          ht=htbg
+          tp=tpbg
+          sh=shbg
+          uw=uwbg
+          vw=vwbg
+          ww=wwbg
+          pr_sfc=prbg_sfc
+          mslp=mslpbg
+c         td_sfc=tdbg_sfc
+          td_sfc=shbg_sfc
+          tp_sfc=tpbg_sfc
+          ht_sfc=htbg_sfc
+          sh_sfc=shbg_sfc
+          uw_sfc=uwbg_sfc
+          vw_sfc=vwbg_sfc
+          pcp_sfc=pcpbg
 c
 c LAPS_FUA doesn't require interp but we still want to recompute
 c pr_sfc, tp_sfc and sh_sfc using high res terrain
 c
 
-           if(cmodel.eq.'LAPS_FUA')then
+          if(cmodel.eq.'LAPS_FUA')then
               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc
      &,td_sfc,tp_sfc,sh_sfc,topo,pr,nx_laps,ny_laps,nz_laps,pr_sfc)
               call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
@@ -1249,22 +1249,22 @@ c
               call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,vw_sfc)
 
-           endif !(cmodel .eq. 'LAPS_FUA')
+          endif !(cmodel .eq. 'LAPS_FUA')
 
-           deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
+          deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +        ,prbght, prbguv, prbgsh, prbgww )
-           deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
+          deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
      +        ,vwbg_sfc,tdbg_sfc, tpbg_sfc, t_at_sfc, mslpbg, pcpbg)
 
          endif !(linterp)
 
-       itstatus(4)=init_timer()
-       bgvalid=time_bg(nf)+valid_bg(nf)
+         itstatus(4)=init_timer()
+         bgvalid=time_bg(nf)+valid_bg(nf)
 
 c
 c Write LGA
 c ---------
-       if(.not.lgb_only)then
+         if(.not.lgb_only)then
 
           call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
      .bgvalid,cmodel,missingflag,pr,ht,tp,sh,uw,vw,ww,istatus)
@@ -1273,12 +1273,12 @@ c ---------
              return
           endif
 
-       endif
+         endif
 c         
 c Write LGB
 c ---------
 
-        if(bgmodel.ne.7)then
+         if(bgmodel.ne.7)then
           do j=1,ny_laps
           do i=1,nx_laps
             if(pr_sfc(i,j) .lt. missingflag) then
@@ -1304,14 +1304,14 @@ c              sfcgrid(i,j,kk+4)=missingflag
           print*,'Elapsed time - write grids (sec): ',itstatus(4)
           print*
 
-        endif
+         endif
 
-        lga_status = 1
+         lga_status = 1
 c
        endif !istatus_prep(nf) -> if the background file was properly read
                                  !and no bad data was found
 
-      enddo  !Main loop through two model backgrounds
+      enddo ! Main loop through two model backgrounds (nf)
 
 c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
