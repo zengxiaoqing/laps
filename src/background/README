@@ -17,7 +17,10 @@ program lga                                      lga.f
          get_lapsdata_3d
          read_sbn_grids                          bgdata/read_sbn_grids.f 
              read_netcdf_real                    bgdata/read_netcdf_field.f
+         degrib_data                             degrib/readgrib.F90
+             get_lapsbg                          degrib/output.F90
       vinterp
+      init_hinterp
       hinterp_field
       write_lga                                  bgdata/writelgalgb.f
          write_laps
