@@ -20,6 +20,7 @@ echo "#$ -l h_rt=04:30:00"      >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
 echo "#$ -pe wcomp 1"           >> $script
+echo "#$ -o $projectpath/$run/qlfmp.log                          >> $script
 echo "#exit"                    >> $script
 echo " "                        >> $script
 echo "projectpath=$projectpath" >> $script
@@ -28,6 +29,7 @@ echo "lbc=$lbc"                 >> $script
 echo "physics=$physics"         >> $script
 echo "nest=$nest"               >> $script
 echo " "                        >> $script
+#cat /home/oplapb/builds/laps/etc/models/qsub_lfmpost.sh.footer >> $script
 echo "export LAPSROOT=/home/oplapb/builds/laps"                 >> $script
 echo "export LAPS_DATA_ROOT=$projectpath/laps"                  >> $script
 echo "export WRF_DATAROOT=$projectpath/$run"                    >> $script
@@ -51,8 +53,8 @@ echo " "
 echo " Running this qsub script...."
 cat $script
 echo " "
-echo " using this command..."
-echo "qsub $script > $log 2>&1"
+echo " using this command and log file..."
+echo "qsub $script $log"
 
 qsub $script > $log 2>&1
 
