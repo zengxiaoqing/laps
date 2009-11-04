@@ -34,14 +34,24 @@
 
         integer ilaps(maxsta),jlaps(maxsta)
 
-        logical l_bias_ratio
+        logical l_accum_fg,l_accum_radar,l_accum_gauge
+        logical l_accum_bias_ratio ! Apply bias correction as a constant ratio
+                                   ! (given we are analyzing radar/fg & gauges)
 
-        l_bias_ratio = .true.
+        logical l_gauge_only ! Gauge only analysis
+
+        l_accum_fg = .false.
+        l_accum_radar = .true.
+        l_accum_gauge = .true.
+
+        l_gauge_only = (.not. l_accum_fg) .AND. (.not. l_accum_radar) 
+     1                                    .AND.        l_accum_gauge
+        l_accum_bias_ratio = .true. 
 
 !       Combine background and radar field given radar gap areas
         n_radar = 0
         n_bkg = 0
-        n_msg = 0
+        n_msg_rdr_bkg = 0
 
         do i = 1,ni
         do j = 1,nj
@@ -55,7 +65,7 @@
             
             else
                 pcp_cmb_m(i,j) = r_missing_data
-                n_msg = n_msg + 1
+                n_msg_rdr_bkg = n_msg_rdr_bkg + 1
 
             endif
         enddo ! j
@@ -66,7 +76,7 @@
  
         write(6,*)' Number of radar points = ',n_radar
         write(6,*)' Number of background points = ',n_bkg
-        write(6,*)' Number of missing points = ',n_msg
+        write(6,*)' Number of missing points = ',n_msg_rdr_bkg
 
         write(6,*)
         write(6,*)'   #  Name        Gauge Analyzed  Range'
@@ -133,7 +143,7 @@
                 if(pcp_gauge(iob) .ge. 0.)then
                    if(pcp_laps_in .ne. r_missing_data)then
                       write(6,11)iob,stations(iob)(1:10)
-     1                          ,pcp_gauge(iob),pcp_laps     
+     1                          ,pcp_gauge(iob),pcp_laps_in     
      1                          ,closest_radar_km
 11                    format(i6,1x,a,2f7.3,f10.1,' RADAR/FG')             
                    else
@@ -146,7 +156,7 @@
                 endif
 
 !               Other QC can be done here if needed by setting to badflag
-                if(l_bias_ratio .and. n_msg .eq. 0)then
+                if(l_accum_bias_ratio .and. n_msg_rdr_bkg .eq. 0)then
                    if(pcp_gauge(iob) .gt. 0. .AND. 
      1                pcp_laps_in .ne. r_missing_data .AND.
      1                pcp_laps_in .gt. 0.)then
@@ -170,8 +180,11 @@
 
         wt_bkg_a = 5e28
 
-        if(n_msg .gt. 0)then       ! do gauge only analysis
-            write(6,*)' Background/radar field has missing points'
+        if(n_msg_rdr_bkg .gt. 0 .or. l_gauge_only)then ! do gauge only analysis
+            if(n_msg_rdr_bkg .gt. 0)then            
+                write(6,*)' Background/radar field has missing points'
+            endif
+
             write(6,*)' Performing gauge only analysis'  
             call precip_barnes_jacket(           c_field              ! I
      1                                           ,ilaps,jlaps         ! I
@@ -187,7 +200,7 @@
 
             precip_accum_m = max(precip_accum_m,0.)
  
-        elseif(.not. l_bias_ratio)then ! analyze gauge values via increments
+        elseif(.not. l_accum_bias_ratio)then ! analyze gauge values via increments
 
             write(6,*)' Performing gauge increment analysis'
 
@@ -208,7 +221,7 @@
 
             precip_accum_m = max(precip_accum_m,0.)
                                                                         
-        elseif(l_bias_ratio)then ! perform gauge bias analysis
+        elseif(l_accum_bias_ratio)then ! perform gauge bias analysis
             write(6,*)' Performing gauge bias analysis'
             one = 1.0
             call precip_barnes_jacket(           c_field              ! I
