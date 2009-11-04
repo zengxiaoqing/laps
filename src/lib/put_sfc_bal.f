@@ -3,6 +3,7 @@
 
        subroutine put_sfc_bal(i4time,t_bal,ht_bal,u_bal,v_bal         ! Input
      1                       ,topo,ni,nj,nk                           ! Input
+!    1                       ,rlat,rlon                               ! Input
      1                       ,istatus                              )  ! Output
 
        real ht_bal(ni,nj,nk)
@@ -11,10 +12,15 @@
        real t_bal(ni,nj,nk)
 
        real topo(ni,nj),rk_terrain(ni,nj)
+       real rlat(ni,nj), rlon(ni,nj)
 
        real u_bal_sfc(ni,nj)
        real v_bal_sfc(ni,nj)
        real t_bal_sfc(ni,nj)
+
+       real div_bal_sfc(ni,nj)
+       real vort_bal_sfc(ni,nj)
+       real dx(ni,nj), dy(ni,nj)
 
        real mslp_bal_sfc(ni,nj)
        real redp_bal_sfc(ni,nj)
@@ -125,6 +131,11 @@
        enddo ! j
        enddo ! i
 
+!      Recalculate Vorticity and Divergence
+!      call get_grid_spacing_array(rlat,rlon,,ni,nj,dx,dy)
+!      call vortdiv(u_bal_sfc,v_bal_sfc,vort_bal_sfc,div_bal_sfc
+!    1             ,ni,nj,dx,dy)
+
 !      Perform interpolation for Temperature
        do j = 1,nj
        do i = 1,ni
@@ -185,6 +196,8 @@
        data(:,:,9) = mslp_bal_sfc
        data(:,:,3) = redp_bal_sfc
        data(:,:,13) = stnp_bal_sfc
+!      data(:,:,14) = vort_bal_sfc
+!      data(:,:,17) = div_bal_sfc
 
 !      Write balanced LSX file
        call get_directory('balance/lsx',dir_out,len_dir_out)
