@@ -401,7 +401,8 @@ c       include 'satellite_dims_lvd.inc'
      1      /'          [sp,cs,vs,tw,fw,hi,gf]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
      1      /'          [st,mw] obs/mesowx locations'    
-     1      /'          [bs] Sfc background/forecast'
+     1      /'          [bs] Sfc background/forecast, '
+     1                ,'[by,bn] Balance Toggle'
      1      /10x,'[li,lw,he,pe,ne,um] li, li*w, helcty, CAPE, CIN, UMF'
      1      /10x,'[s] Other Stability Indices, [sm] Soil Moisture'
      1      /
@@ -1420,8 +1421,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ,c_display,lat,lon,jdot
      1              ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'um')then ! 
-
+        elseif(c_type_i .eq. 'um')then 
             write(6,*)
             write(6,*)'    Looking for upslope moisture flux:'
 
@@ -1439,12 +1439,14 @@ c       include 'satellite_dims_lvd.inc'
 
             chigh = 50.
 
+            plot_parms%iraster = 1
+
             c_label = 'Upslope Moisture Flux (cm-m/s)'
             call plot_field_2d(i4time_3dw,c_type,field_2d,.01
      1                        ,namelist_parms,plot_parms
-     1                        ,+10.,-10.,2.,c_label
+     1                        ,-40.,+80.,10.,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'spectral')
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
 
         elseif(c_type_i .eq. 'li')then ! Read in Li 'field_2d' from 3d grids
             if(lapsplot_pregen)then
@@ -3021,6 +3023,7 @@ c
                     cint = -0.01
                 endif
                 chigh = 10.
+                colortable = 'acc'
             else ! 'sa'
                 if(abs(r_hours) .gt. 1.0)then
                     cint = -0.5
@@ -3028,6 +3031,7 @@ c
                     cint = -0.5
                 endif
                 chigh = 20.
+                colortable = 'sno'
             endif
 
             call condition_precip(NX_L,NY_L,c_type,accum_2d,scale
@@ -3037,7 +3041,7 @@ c
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'acc')
+     1                        ,NX_L,NY_L,r_missing_data,colortable)
 
         elseif( c_type .eq. 'rx')then
             write(6,1311)
@@ -5103,15 +5107,17 @@ c                   cint = -1.
      1                 var_2d(2:3) .eq. 'TO')then
                     if(var_2d(1:1) .eq. 'R')then
                         chigh = +10.
+                        colortable = 'acc'
                     else
                         chigh = +20.
+                        colortable = 'sno'
                     endif
 
                     call condition_precip(NX_L,NY_L,'pai',field_2d
      1                                   ,scale,.01)      
 
                     call ccpfil(field_2d,NX_L,NY_L,0.,chigh ! *scale
-     1                         ,'acc',n_image,scale,'hsect' 
+     1                         ,colortable,n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
 
                 elseif(var_2d .eq. 'LCV')then
@@ -5492,8 +5498,10 @@ c                   cint = -1.
 
             if(i_balance .eq. 1)then
                 ext = 'balance'
+                c_label = 'Sfc Rel Vorticity (Balanced)  (1e-5/s)'
             else
                 ext = 'lsx'
+                c_label = 'Sfc Rel Vorticity   (1e-5/s)'
             endif
 
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -5505,8 +5513,6 @@ c                   cint = -1.
                 write(6,*)' Error Reading Surface ',var_2d
                 goto1200
             endif
-
-            c_label = 'Sfc Rel Vorticity   (1e-5/s)     '
 
             clow = -80.
             chigh = +80.
