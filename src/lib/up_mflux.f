@@ -53,12 +53,12 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 	do i=2,ni-1
 
 !         Controlling layer (defined relative to topography)
-          ht_lo  = 1200. + topo(i,j)
-          ht_hi  = 3200. + topo(i,j)
+          ht_lo  =  750. + topo(i,j)
+          ht_hi  = 1250. + topo(i,j)
 
           if(topo(i,j) .le. ht_lo)then
 
-!           Calculate mean wind over the layer       
+!           Calculate mass weighted mean wind over the height layer       
             rk_lo = rlevel_of_field(ht_lo,ht_3d,ni,nj,nk,i,j,istatus) 
             rk_hi = rlevel_of_field(ht_hi,ht_3d,ni,nj,nk,i,j,istatus)  
 
