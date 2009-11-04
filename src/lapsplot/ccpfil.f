@@ -61,14 +61,15 @@ C
 
       write(6,*)' Subroutine ccpfil for solid fill plot...'
 
-      if(colortable(1:3) .eq. 'acc')then
+      if(colortable(1:3) .eq. 'acc' .or. colortable(1:3) .eq. 'sno')then       
           l_set_contours = .true.             ! For testing
 !         l_set_contours = .false.            ! Operational
       else
           l_set_contours = .false.
       endif
 
-      if(colortable(1:3) .eq. 'acc' .and. (.not. l_set_contours))then       
+      if( (colortable(1:3) .eq. 'acc' .or. colortable(1:3) .eq. 'sno')
+     1                        .AND. (.not. l_set_contours)         )then       
           log_scaling = .true.
       else
           log_scaling = .false.
@@ -340,8 +341,12 @@ C Set up color table
       write(6,*)' ccpfil_sub - scale,scale_loc = ',scale,scale_loc
 C      
       if(l_set_contours)then
-          if(colortable .eq. 'acc')then
-              call get_pcp_vals(maxvals,namelist_parms,nvals,vals)
+          if(colortable .eq. 'acc')then       
+              call get_pcp_vals(maxvals,namelist_parms,nvals,vals,1)
+          endif
+
+          if(colortable .eq. 'sno')then       
+              call get_pcp_vals(maxvals,namelist_parms,nvals,vals,2)
           endif
 
           ncols = nvals - 1
@@ -679,7 +684,8 @@ C
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,plot_parms,istatus)
 
-      elseif(colortable .eq. 'green' .or. colortable .eq. 'acc')then       
+      elseif(colortable .eq. 'green' .or. colortable .eq. 'acc'
+     1  .or. colortable .eq. 'sno'                            )then       
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,plot_parms,istatus)
 
@@ -688,7 +694,7 @@ C
 
       endif
 
-      if(colortable .eq. 'acc')then ! Set colortable ends
+      if(colortable .eq. 'acc' .or. colortable .eq. 'sno')then ! Set colortable ends
           do i = 1,1
 !         do i = 1,3
               call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
@@ -1052,13 +1058,20 @@ c     Restore original color table
 !         Other fractions
 
           if(l_set_contours)then
-              call get_pcp_vals(maxvals,namelist_parms,nvals,vals)
+              if(colortable .eq. 'acc')then
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals,1)       
+              elseif(colortable .eq. 'sno')then
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals,2)       
+              endif
+
               do i = 1,nvals
                   frac_a(i) = float(i-1) / float(nvals-1)
               enddo ! i
               nfrac = nvals
 
-          elseif(log_scaling .and. colortable .eq. 'acc')then
+          elseif(log_scaling .AND. 
+     1          (colortable .eq. 'acc' .or. colortable .eq. 'sno')
+     1                                                             )then
               frac_a(1) = 0.125
               frac_a(2) = 0.230
               frac_a(3) = 0.330
@@ -1268,13 +1281,14 @@ c     Restore original color table
       end
 
      
-      subroutine get_pcp_vals(maxvals,namelist_parms,nvals,vals)
+      subroutine get_pcp_vals(maxvals,namelist_parms,nvals,vals,itype)
 
       include 'lapsplot.inc'
 
       real vals(maxvals)
 
-      if(namelist_parms%c_units_type .eq. 'english')then ! (inches)
+      if(itype .eq. 1)then
+        if(namelist_parms%c_units_type .eq. 'english')then ! (inches)
           vals(1) = 0.
           vals(2) = .01
           vals(3) = .02
@@ -1291,7 +1305,7 @@ c     Restore original color table
           vals(14) = 7.0
           vals(15) = 10.0
 
-      else ! metric (mm)
+        else ! metric (mm)
           vals(1) = 0.
           vals(2) = .2
           vals(3) = .5
@@ -1308,6 +1322,44 @@ c     Restore original color table
           vals(14) = 200.
           vals(15) = 400.
 
+        endif
+
+      else ! snow
+        if(namelist_parms%c_units_type .eq. 'english')then ! (inches)
+          vals(1) = 0.
+          vals(2) = .1
+          vals(3) = .5
+          vals(4) = 1.0
+          vals(5) = 2.0
+          vals(6) = 3.0
+          vals(7) = 4.0
+          vals(8) = 6.0
+          vals(9) = 8.0
+          vals(10) = 10.0
+          vals(11) = 12.0
+          vals(12) = 15.0
+          vals(13) = 20.0
+          vals(14) = 30.0
+          vals(15) = 40.0
+
+        else ! metric (mm)
+          vals(1) = 0.
+          vals(2) = .2
+          vals(3) = .5
+          vals(4) = 1.0
+          vals(5) = 2.0
+          vals(6) = 5.0
+          vals(7) = 10.
+          vals(8) = 20.
+          vals(9) = 30.
+          vals(10) = 50.
+          vals(11) = 75.
+          vals(12) = 100.
+          vals(13) = 150.
+          vals(14) = 200.
+          vals(15) = 400.
+
+        endif
       endif
 
       nvals = 15
