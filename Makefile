@@ -173,8 +173,8 @@ install_ibm: mkdirs mkdatadirs
 
 mkdirs:
 	mkdir -p $(INSTALLROOT)
-	ls -l  $(SRCROOT)/util; cp -r $(SRCROOT)/util $(INSTALLROOT) ; ls -l $(INSTALLROOT)/util 
-	ls -l  $(SRCROOT)/etc;  cp -r $(SRCROOT)/etc  $(INSTALLROOT) ; ls -l $(INSTALLROOT)/etc 
+	ls -l  $(SRCROOT)/util; cp -pr $(SRCROOT)/util $(INSTALLROOT) ; ls -l $(INSTALLROOT)/util 
+	ls -l  $(SRCROOT)/etc;  cp -pr $(SRCROOT)/etc  $(INSTALLROOT) ; ls -l $(INSTALLROOT)/etc 
 
 mkdatadirs:
 	$(PERL) $(SRCROOT)/etc/makedatadirs.pl --srcroot=$(SRCROOT) --installroot=$(INSTALLROOT) \
