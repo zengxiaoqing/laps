@@ -76,6 +76,7 @@ include 'lapsparms.for'
         character*200 path_to_sst
 
         logical*1    l_compress_radar,l_use_tamdar,l_3dvar,l_pad1
+        logical*1    l_accum_fg, l_accum_radar, l_accum_gauge
 
 
         common  /lapsparms/ iflag_lapsparms &
@@ -111,7 +112,8 @@ include 'lapsparms.for'
         ,path_to_soiltemp1deg,path_to_albedo,path_to_sst     &
         ,path_to_maxsnoalb,path_to_islope                    &
         ,fdda_model_source                                   &
-        ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1        
+        ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1        &
+        ,l_accum_fg,l_accum_radar,l_accum_gauge
 
 ! wind_nl variables
 logical :: l_use_raob, l_use_cdw, l_use_radial_vel
@@ -199,6 +201,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,nk_laps,standard_latitude,standard_latitude2    &    
                   ,standard_longitude,NX_L, NY_L, I_PERIMETER &
                   ,l_compress_radar,l_use_tamdar,l_3dvar &
+                  ,l_accum_fg, l_accum_radar, l_accum_gauge &
                   ,grid_spacing_m,grid_cen_lat,grid_cen_lon &
                   ,laps_cycle_time &
                   ,i2_missing_data, r_missing_data, MAX_RADARS &

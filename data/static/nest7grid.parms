@@ -26,6 +26,9 @@
  c_raddat_type='wsi',
  radarext_3d='all',
  radarext_3d_accum='xxx',
+ l_accum_fg=.false.',
+ l_accum_radar=.true.,
+ l_accum_gauge=.true.,
  
  path_to_topt30s='/data/lapb/projects/geog/world_topo_30s',
  path_to_landuse30s='/data/lapb/projects/geog/landuse_30s',
@@ -85,6 +88,13 @@ c
 c path_to_soil_2m - this parameter is not yet active since we do not yet
 c                   supply the soil type database. It is there only for
 c                   software testing at this time.
+c
+c l_accum_fg - use first guess model info in the precip accumulation analysis
+c
+c l_accum_radar - use radar in the precip accumulation analysis
+c
+c l_accum_gauge - use rain gauges in the precip accumulation analysis 
+c                 (beyond point pair comparisons that are done regardless)
 c
 c l_compress_radar - Compress "vxx" radar files using run-length encoding.
 c                    Note that this is experimental and departs from the 
