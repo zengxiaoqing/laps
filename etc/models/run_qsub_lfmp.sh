@@ -20,7 +20,7 @@ echo "#$ -l h_rt=04:30:00"      >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
 echo "#$ -pe wcomp 1"           >> $script
-echo "#$ -o $projectpath/$run/qlfmp.log                          >> $script
+echo "#$ -o $projectpath/$run/qlfmp.log"                          >> $script
 echo "#exit"                    >> $script
 echo " "                        >> $script
 echo "projectpath=$projectpath" >> $script
@@ -43,8 +43,8 @@ echo "maxWaitSec=3600"                                          >> $script
 echo "maxHrsRun=4"                                              >> $script
 echo "project=DWR"                                              >> $script
 echo " echo 'Running this lfmpost.pl command...'"               >> $script
-echo " echo '/usr/bin/perl $LAPSROOT/etc/lfmpost.pl -m $model -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q' " >> $script
-echo "       /usr/bin/perl $LAPSROOT/etc/lfmpost.pl -m $model -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q"   >> $script
+echo " echo '/usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m $model -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q' " >> $script
+echo "       /usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m $model -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q"   >> $script
 echo " "                                                        >> $script
 echo " "                                                        >> $script
 echo " exit 0"                                                  >> $script
@@ -53,8 +53,8 @@ echo " "
 echo " Running this qsub script...."
 cat $script
 echo " "
-echo " using this command and log file..."
-echo "qsub $script $log"
+echo " using this command..."
+echo "qsub $script > $log 2>&1"
 
 qsub $script > $log 2>&1
 
