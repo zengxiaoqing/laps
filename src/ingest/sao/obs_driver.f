@@ -79,6 +79,9 @@ c            user to enter the run time.
 c
 c******************************************************************************
 c
+        integer n_madis_dirs
+        parameter (n_madis_dirs = 10)
+
         character*200 path_to_metar
         character*200 path_to_local_data
         character*200 path_to_buoy_data
@@ -86,7 +89,7 @@ c
         character*200 path_to_tower_data
         character*8   metar_format, c8_project
 	character     atime*24, filename9*9
-        character*7   madis_dirs(3)
+        character*10  madis_dirs(n_madis_dirs)
 
         logical l_allow_empty_lso,l_multiple_reports,l_dupe_names
 
@@ -115,6 +118,7 @@ c
         if(istatus .ne. 1)stop
 
         metar_format = 'default'
+        madis_dirs = ' '
 
 !       Note that metar_format is updated only when fully specified in namelist
         call get_obs_driver_parms(
@@ -176,7 +180,7 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
-     1                           ,madis_dirs
+     1                           ,madis_dirs,n_madis_dirs
      1                           ,itest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso,l_multiple_reports
@@ -199,7 +203,7 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
-     1                           ,madis_dirs
+     1                           ,madis_dirs,n_madis_dirs
      1                           ,itest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso,l_multiple_reports
@@ -208,7 +212,7 @@ c
      1                           ,i4time_sys,filename9,atime
      1                           ,istatus)
 c        
-        integer ni, nj, maxsta, maxobs 
+        integer ni, nj, maxsta, maxobs, n_madis_dirs
 c
 	real    lat(ni,nj), lon(ni,nj), topo(ni,nj)
 	real  store_1(maxsta,4), 
@@ -222,7 +226,7 @@ c
 c
         integer    wmoid(maxsta), jstatus
         integer    dpchar(maxsta), narg, iargc
-        integer    local_obs_thresh_switch(3)
+        integer    local_obs_thresh_switch(n_madis_dirs)
 c
         character  stations(maxsta)*20, provider(maxsta)*11
         character  weather(maxsta)*25 
@@ -242,15 +246,17 @@ c
         character*200 path_to_tower_data
         character*8   metar_format, c8_project
         character*8   a9_to_a8, a8_time
-        character*7   madis_dirs(3)
+        character*10  madis_dirs(n_madis_dirs)
 
 !       data madis_dirs /'mesonet','urbanet','hfmetar'/
-        data local_obs_thresh_switch /1,0,0/
 
         logical l_allow_empty_lso,l_string_contains
         logical l_identical_a(maxsta),l_multiple_reports,l_dupe_names
 c
 c.....	Start here.  
+c
+        local_obs_thresh_switch = 0
+        local_obs_thresh_switch(1) = 1
 c
         call get_ibadflag(ibadflag,istatus)
         if(istatus .ne. 1)return
@@ -437,11 +443,14 @@ c
 
                 n_local_g = 0
 
-                do imadis = 1,3
+                do imadis = 1,n_madis_dirs
 
+                  call s_len(madis_dirs(imadis),len_madis)
+                  if(len_madis .gt. 0)then
+               
 	            path_to_madis_data = path_to_local_data(1:len_path)      
-     1                                   //'/'//madis_dirs(imadis)
-     1                                   //'/'//'netCDF/'
+     1                           //'/'//madis_dirs(imadis)(1:len_madis)
+     1                           //'/'//'netCDF/'
 
 !                   Wait for 'mesonet' with no waiting for 'urbanet'
                     local_obs_thresh_madis = local_obs_thresh * 
@@ -477,6 +486,8 @@ c
                        write(6,*)' ERROR: nn > maxsta ',nn,maxsta
                        return
                     endif
+
+                  endif ! directory length > 0
 
                 enddo ! imadis
 
@@ -773,13 +784,16 @@ c
      1                         ,n_cycles,nominal_latency
      1                         ,istatus)
 
+       integer n_madis_dirs
+       parameter (n_madis_dirs = 10)
+
        character*200 path_to_metar
        character*200 path_to_local_data
        character*200 path_to_buoy_data
        character*200 path_to_gps_data
        character*200 path_to_tower_data
        character*8   metar_format
-       character*7   madis_dirs(3)
+       character*10  madis_dirs(n_madis_dirs)
        logical l_allow_empty_lso,l_multiple_reports,l_dupe_names
 
        namelist /obs_driver_nl/ path_to_metar
