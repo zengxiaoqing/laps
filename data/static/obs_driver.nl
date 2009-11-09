@@ -9,7 +9,7 @@
  ick_metar_time=0,
  itime_before=900,
  itime_after=900,
- madis_dirs='mesonet','urbanet','hfmetar',
+ madis_dirs='mesonet','urbanet','hfmetar','nepp','crn','hcn',
  maxobs=160000,
  i4wait_local_obs_max=0,
  local_obs_thresh=0,
@@ -69,8 +69,7 @@ c.....      observation time from 15 min before to 5 min after the analysis
 c.....      time to be included in the LSO file, use 900 and 300 for 
 c.....      time_beforeand time_after, respectively.
 c
-c 'madis_dirs' - first entry should be 'mesonet' and the other two can be turned
-c                off for testing if desired by setting them to a dummy name
+c 'madis_dirs' - first entry should be 'mesonet'
 c
 c 'maxobs' - max number of surface stations in raw data
 c
