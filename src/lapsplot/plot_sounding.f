@@ -17,11 +17,15 @@
         real lon(NX_L,NY_L)
 
         real temp_vert(NZ_L)
+        real ht_vert(NZ_L)
         real rh_vert(NZ_L)
         real sh_vert(NZ_L)
         real td_vert(NZ_L)
         real lwc_vert(NZ_L)
         real ice_vert(NZ_L)
+        real rain_vert(NZ_L)
+        real snow_vert(NZ_L)
+        real pice_vert(NZ_L)
 
         real pres_1d(NZ_L)
         real logp_1d(NZ_L), logp_bottom, logp_top, logp, logp_sfc
@@ -278,24 +282,59 @@
             ice_vert = -999.
         endif
 
-        write(6,*)
-        write(6,*)' ASCII SOUNDING DATA at '//c16_latlon//'    '//a9time 
-        write(6,*)
-        write(6,*)' lvl    p(mb)     t(c)'//
-     1            '      td(c)      rh(%)    cld liq  cld ice'   
-        write(6,*)'                                                 '
-     1          //'g/m**3   g/m**3'
-        do iz = 1,NZ_L
-            write(6,1)iz,
-     1                pres_1d(iz)/100.,
-     1                k_to_c(temp_vert(iz)), 
-     1                td_vert(iz),
-     1                rh_vert(iz),
-     1                lwc_vert(iz)*1000.,
-     1                ice_vert(iz)*1000.
- 1          format(i4,6f10.2)
-        enddo ! iz
-        write(6,*)
+!       Read Precipitating Rain
+        istat_rain = 0
+        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+            var_2d = 'RAI'
+            ext = 'lwc'
+            call get_laps_3dgrid
+     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_rain)
+        endif
+
+        if(istat_rain .eq. 1)then
+            call interp_3d(field_3d,rain_vert,xsound,xsound
+     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
+     1                    ,r_missing_data)
+        else
+            rain_vert = -999.
+        endif
+
+!       Read Precipitating Snow
+        istat_snow = 0
+        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+            var_2d = 'SNO'
+            ext = 'lwc'
+            call get_laps_3dgrid
+     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_snow)
+        endif
+
+        if(istat_snow .eq. 1)then
+            call interp_3d(field_3d,snow_vert,xsound,xsound
+     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
+     1                    ,r_missing_data)
+        else
+            snow_vert = -999.
+        endif
+
+!       Read Precipitating Ice
+        istat_pice = 0
+        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+            var_2d = 'PIC'
+            ext = 'lwc'
+            call get_laps_3dgrid
+     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_pice)
+        endif
+
+        if(istat_pice .eq. 1)then
+            call interp_3d(field_3d,pice_vert,xsound,xsound
+     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
+     1                    ,r_missing_data)
+        else
+            pice_vert = -999.
+        endif
 
 !       Read in sfc data (pressure, temp, dewpoint, tpw)
         if(c_prodtype .eq. 'A')then ! Read LSX
@@ -392,6 +431,31 @@
 
         endif
 
+        write(6,*)
+        write(6,102)c16_latlon,isound,jsound,a9time
+ 102    format(' ASCII SOUNDING DATA at lat,lon =',a16
+     1        ,'   i,j = ',2i5,5x,' time: ',a9)     
+        write(6,*)
+        write(6,*)' lvl    p(mb)     t(c)'//
+     1            '      td(c)      rh(%)    cld liq  cld ice'//   
+     1            '    rain      snow      pcpice'
+        write(6,*)'                                                '
+     1          //'g/m**3    g/m**3    g/m**3    g/m**3    g/m**3'
+        do iz = 1,NZ_L
+            write(6,1)iz,
+     1                pres_1d(iz)/100.,
+     1                k_to_c(temp_vert(iz)), 
+     1                td_vert(iz),
+     1                rh_vert(iz),
+     1                lwc_vert(iz)*1000.,
+     1                ice_vert(iz)*1000.,
+     1                rain_vert(iz)*1000.,
+     1                snow_vert(iz)*1000.,
+     1                pice_vert(iz)*1000.
+ 1          format(i4,4f10.2,5f10.3)
+        enddo ! iz
+        write(6,*)
+
 !       Convert sfc variables
         p_sfc_pa = pres_2d(isound,jsound)
         logp_sfc = log(p_sfc_pa)
@@ -402,6 +466,7 @@
         write(6,*)' Sfc P = ', p_sfc_pa
         write(6,*)' Sfc T (c) = ', k_to_c(t_sfc_k)
         write(6,*)' TPW = ', pw_sfc
+        write(6,*)
 
 !       Read Wind (a la xsect)
 
