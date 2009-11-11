@@ -679,6 +679,8 @@ c
 	character dum*132
 c
 	jstatus = 0
+        n_obs_g = 0
+        n_obs_b = 0
 c
 c.....	Get the file.
 c
