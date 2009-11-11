@@ -61,7 +61,7 @@ cdis
 
         real riob_a(1000000)
         real rjob_a(1000000)
-        logical l_plot
+        logical l_plot, l_plot_thisob
 
         character*150 directory
         character*31 ext,c3_obsext
@@ -601,12 +601,16 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 !       Plot Pirep winds  ***********************************************
 911     write(6,96)
- 96     format(' Plot ACARS / Pireps Winds?     [y,n,<RET>=y] ? ',$)
+ 96     format(' Plot ACARS / Pireps Winds?     [y,w,n,<RET>=y] ? ',$)
         if(l_ask_questions)read(lun_in,211)c_pin
         write(6,*)
         if(c_pin(1:1) .eq. 'n')then
             write(6,*)' Plotting WISDOM / Cloud Drift Winds'
             write(6,*)' ACARS / Pireps Winds - not plotted'
+        elseif(c_pin(1:1) .eq. 'w')then
+            write(6,*)' Plotting WISDOM Balloon Winds'
+            write(6,*)
+     1           ' ACARS / Pireps / Cloud Drift Winds - not plotted'      
         else
             write(6,*)' ACARS / Pireps / WISDOM / Cloud Drift Winds'
         endif
@@ -662,7 +666,21 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 !               Check if ACARS/Pireps are included
                 if(c3_obsext .ne. 'pin' .OR. c_pin(1:1) .eq. 'y')then 
+                    l_plot_thisob = .true.
+                else
+                    l_plot_thisob = .false.
+                endif
 
+!               Option for plotting WISDOM only
+                if(c_pin(1:1) .eq. 'w')then
+                    if(c3_obsext .eq. 'wis')then 
+                        l_plot_thisob = .true.
+                    else
+                        l_plot_thisob = .false.
+                    endif
+                endif                        
+
+                if(l_plot_thisob)then 
                   call check_ob_density(riob_a,rjob_a,1000000
      1                                 ,iob,ri,rj,dist_plot,l_plot)
 
