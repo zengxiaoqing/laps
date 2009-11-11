@@ -102,6 +102,7 @@ cdis
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
+        real ldf(NX_L,NY_L)
 
         character*31 EXT
 
@@ -260,14 +261,14 @@ cdis
         istat_lps = 0 ! Temporary until this is wired in'
         istat_twet_snow = 1 ! if we get this far the read was successful
 
-        if(istat_twet_snow .eq. 1)then
-            call get_domain_laps(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo       
-     1                          ,grid_spacing_m,istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Error getting LAPS domain'
-                go to 999
-            endif
+        call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
+     1                         ,ldf,grid_spacing_m,istatus)       
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting LAPS domain'
+            go to 999
+        endif
 
+        if(istat_twet_snow .eq. 1)then
             call get_laps_cycle_time(laps_cycle_time,istatus)
             if (istatus .ne. 1) then
                 write (6,*) 'Error getting LAPS cycle time'
@@ -304,7 +305,7 @@ cdis
      1          ,max_radars_dum,r_missing_data               ! Input
      1          ,i4time                                      ! Input
      1          ,dbz_max_2d,istat_lps                        ! Input
-     1          ,lat,lon,topo                                ! Input
+     1          ,lat,lon,topo,ldf                            ! Input
      1          ,tpw_2d                                      ! Input
      1          ,heights_3d                                  ! Input
      1          ,u_3d,v_3d)                                  ! Output
