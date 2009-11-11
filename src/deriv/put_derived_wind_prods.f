@@ -43,7 +43,7 @@ cdis
      1    ,max_radars,r_missing_data                              ! Input
      1    ,i4time_sys                                             ! Input
      1    ,dbz_max_2d,istat_lps                                   ! Input
-     1    ,lat,lon,topo                                           ! Input
+     1    ,lat,lon,topo,ldf                                       ! Input
      1    ,tpw_2d                                                 ! Input
      1    ,heights_3d                                             ! Input
      1    ,uanl,vanl)                                             ! Output
@@ -67,6 +67,7 @@ cdis
 
 !       Array Variables
         real lat(imax,jmax),lon(imax,jmax),topo(imax,jmax)
+        real ldf(imax,jmax)      
         real dx(NX_L,NY_L)
         real dy(NX_L,NY_L)
 
@@ -477,7 +478,7 @@ ccc202              format('H',i2)
 
 !       Calculate upslope component of moisture flux (PSD conventions)
         call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
-	call up_mflux(NX_L,NY_L,NZ_L,topo,dx,dy
+	call up_mflux(NX_L,NY_L,NZ_L,topo,ldf,dx,dy
      1                     ,uanl,vanl,tpw_2d,upslope_flux
      1                     ,heights_3d,r_missing_data)
 
