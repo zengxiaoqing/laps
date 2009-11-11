@@ -330,6 +330,11 @@ c**************new routine as adapted at FSL**************************
 
 !       topo = 0.             ! Just for testing (also switch to pres_sfc_pa)?
 
+!       Calculate the mass weighted mean wind for the PBL. Inputs are the
+!       lower and upper bounds in terms of pressure. Fractional levels are 
+!       not accounted for - only whole levels between the pressure bounds
+!       are integrated.
+
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
 
