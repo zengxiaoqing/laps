@@ -41,14 +41,16 @@ laps_deriv_main                                         laps_deriv.f
             li_laps                                         "
             put_laps_multi_2d                           lib/laps_io.f
         put_derived_wind_prods                          put_derived_wind_prods.f
+            mean_wind_bunkers                           lib/util/meanwind.f
+            helicity_laps
+            up_mflux                                    lib/up_mflux.f
         fire_fields                                     fire_fields.f
             cpt_fire_fields                                 "
             hainesindex                                 hainesindex.f
             fireweatherindex                            fireweatherindex.f
             ventilation_index                           fire_fields.f
+                pbl_mean_wind                               "
             critical_fwi                                    "
-            pbl_mean_wind                                   "
-        upslope_mflux                                   lib/up_mflux.f
 
 ...............................................................................
 
