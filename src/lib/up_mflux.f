@@ -31,13 +31,14 @@ cdis
 cdis 
 c
 c
-	subroutine up_mflux(ni,nj,nk,topo,dx,dy
+	subroutine up_mflux(ni,nj,nk,topo,ldf,dx,dy
      1                     ,u_3d,v_3d,tpw_2d,upslope_flux
      1                     ,ht_3d,r_missing_data)
 
 c       Compute upslope moisture flux (using conventions in the PSD flux tool) 
 
 	real topo(ni,nj)                 ! I Terrain elevation (m)
+	real ldf(ni,nj)                  ! I Land Fraction
 	real dx(ni,nj)                   ! I Grid spacing in X direction (m)
 	real dy(ni,nj)                   ! I Grid spacing in Y direction (m)
         real u_3d(ni,nj,nk)              ! I U wind component in Grid X direction
@@ -46,9 +47,6 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
         real tpw_2d(ni,nj)               ! I
         real upslope_flux(ni,nj)         ! O
 
-        real u_2d(ni,nj)
-        real v_2d(ni,nj)
-        
 	do j=2,nj-1
 	do i=2,ni-1
 
@@ -70,21 +68,26 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
             u_lo = u_3d(i,j,k_lo)*(1.-frac_lo)+u_3d(i,j,k_lo+1)*frac_lo
             v_lo = v_3d(i,j,k_lo)*(1.-frac_lo)+v_3d(i,j,k_lo+1)*frac_lo     
 
-            ubar_lyr = (u_lo + u_3d(i,j,k_lo+1)) / 2.
-            vbar_lyr = (v_lo + v_3d(i,j,k_lo+1)) / 2.
+            ubar_llyr = (u_lo + u_3d(i,j,k_lo+1)) / 2.
+            vbar_llyr = (v_lo + v_3d(i,j,k_lo+1)) / 2.
  
-            ubar_sum = ubar_lyr
-            vbar_sum = vbar_lyr
+            ubar_sum = ubar_llyr * (1. - frac_lo)
+            vbar_sum = vbar_llyr * (1. - frac_lo)
 
             sumk = 1. - frac_lo
 
 !           Middle part
-            do k = k_lo+1,k_hi
+            do k = k_lo+1,k_hi-1
                 ubar_lyr = (u_3d(i,j,k) + u_3d(i,j,k+1)) / 2.
                 vbar_lyr = (v_3d(i,j,k) + v_3d(i,j,k+1)) / 2. 
                 ubar_sum = ubar_sum + ubar_lyr
                 vbar_sum = vbar_sum + vbar_lyr
                 sumk = sumk + 1.0
+                if(i .eq. 10)then ! write debugging info
+                    write(6,1)k,u_3d(i,j,k),u_3d(i,j,k+1),ubar_lyr
+     1                                                   ,ubar_sum    
+ 1		    format(30x,i5,4f10.4)
+                endif
             enddo ! k
 
 !           Upper part  
@@ -92,11 +95,11 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
             u_hi = u_3d(i,j,k_hi)*(1.-frac_hi)+u_3d(i,j,k_hi+1)*frac_hi
             v_hi = v_3d(i,j,k_hi)*(1.-frac_hi)+v_3d(i,j,k_hi+1)*frac_hi     
 
-            ubar_lyr = (u_3d(i,j,k_hi) + u_hi) / 2.
-            vbar_lyr = (v_3d(i,j,k_hi) + v_hi) / 2.
+            ubar_hlyr = (u_3d(i,j,k_hi) + u_hi) / 2.
+            vbar_hlyr = (v_3d(i,j,k_hi) + v_hi) / 2.
 
-            ubar_sum = ubar_sum + ubar_lyr
-            vbar_sum = vbar_sum + vbar_lyr
+            ubar_sum = ubar_sum + (ubar_hlyr * frac_hi)
+            vbar_sum = vbar_sum + (vbar_hlyr * frac_hi)
 
             sumk = sumk + frac_hi
 
@@ -112,7 +115,18 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 
             terrain_slope = sqrt(dterdx**2 + dterdy**2)
 
-            if(terrain_slope .gt. .001)then ! machine/terrain epsilon threshold
+!           if(terrain_slope .gt. .001)then ! machine/terrain epsilon threshold
+
+            if(ldf(i,j) .lt. .01 .and. topo(i,j) .lt. 10.)then ! ocean
+
+!             Assume cos(theta) = 1, so we just want moisture flux
+
+              dvh = sqrt(ubar**2 + vbar**2)
+
+	      upslope_flux(i,j) = dvh * tpw_2d(i,j)
+
+            else 
+
 !             Calculate upslope wind component (m/s)
 !             This is normalized by the terrain slope
               dvh = (ubar * dterdx + vbar * dterdy) / terrain_slope
@@ -120,12 +134,14 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 !             Calculate upslope moisture flux (m**2/s)
 	      upslope_flux(i,j) = dvh * tpw_2d(i,j)
 
-            else ! assume cos(theta) = 1, so we just want moisture flux
-              dvh = sqrt(ubar**2 + vbar**2)
-
-	      upslope_flux(i,j) = dvh * tpw_2d(i,j)
-
             endif
+
+            if(i .eq. 10)then ! write debugging info
+              write(6,2)j,rk_lo,rk_hi,u_lo,u_hi,ubar_llyr,ubar_hlyr
+     1                   ,ubar_sum,ubar,sumk
+     1                   ,upslope_flux(i,j)
+ 2	      format(i5,11f10.4)
+            endif 
 
           else
             upslope_flux(i,j) = r_missing_data
@@ -139,3 +155,96 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 	return
 	end
 
+
+c
+c
+	subroutine mean_wind_hlyr(ni,nj,nk,ht_lower,ht_upper
+     1                     ,u_3d,v_3d,tpw_2d,upslope_flux
+     1                     ,ht_3d,r_missing_data)
+
+c       Compute mean wind over a 2D height layer 
+
+        real ht_lower(ni,nj)         ! I
+        real ht_upper(ni,nj)         ! I
+        real u_3d(ni,nj,nk)          ! I U wind component in Grid X direction
+        real v_3d(ni,nj,nk)          ! I V wind component in Grid Y direction
+        real ht_3d(ni,nj,nk)         ! I
+
+        real umean_2d(ni,nj)         ! O
+        real vmean_2d(ni,nj)         ! O
+        
+	do j=1,nj
+	do i=1,ni
+
+!         Controlling layer (defined relative to topography)
+          ht_lo  = ht_lower(i,j)
+          ht_hi  = ht_upper(i,j)
+
+          if(.true.)then
+
+!           Calculate mass weighted mean wind over the height layer       
+            rk_lo = rlevel_of_field(ht_lo,ht_3d,ni,nj,nk,i,j,istatus)        
+            rk_hi = rlevel_of_field(ht_hi,ht_3d,ni,nj,nk,i,j,istatus)  
+
+!           rk_lo = rlevel_of_logfield(ht_lo,ht_3d,ni,nj,nk,i,j,istatus)        
+!           rk_hi = rlevel_of_logfield(ht_hi,ht_3d,ni,nj,nk,i,j,istatus)  
+
+            k_lo = int(rk_lo)
+            k_hi = int(rk_hi)
+
+!           Lower part
+            frac_lo = rk_lo - float(k_lo)
+            u_lo = u_3d(i,j,k_lo)*(1.-frac_lo)+u_3d(i,j,k_lo+1)*frac_lo
+            v_lo = v_3d(i,j,k_lo)*(1.-frac_lo)+v_3d(i,j,k_lo+1)*frac_lo     
+
+            ubar_llyr = (u_lo + u_3d(i,j,k_lo+1)) / 2.
+            vbar_llyr = (v_lo + v_3d(i,j,k_lo+1)) / 2.
+ 
+            ubar_sum = ubar_llyr
+            vbar_sum = vbar_llyr
+
+            sumk = 1. - frac_lo
+
+!           Middle part
+            do k = k_lo+1,k_hi-1
+                ubar_lyr = (u_3d(i,j,k) + u_3d(i,j,k+1)) / 2.
+                vbar_lyr = (v_3d(i,j,k) + v_3d(i,j,k+1)) / 2. 
+                ubar_sum = ubar_sum + ubar_lyr
+                vbar_sum = vbar_sum + vbar_lyr
+                sumk = sumk + 1.0
+!               if(i .eq. 10)then ! write debugging info
+!                   write(6,1)k,u_3d(i,j,k),u_3d(i,j,k+1),ubar_lyr
+!    1                                                   ,ubar_sum    
+!1		    format(30x,i5,4f10.4)
+!               endif
+            enddo ! k
+
+!           Upper part  
+            frac_hi = rk_hi - float(k_hi)
+            u_hi = u_3d(i,j,k_hi)*(1.-frac_hi)+u_3d(i,j,k_hi+1)*frac_hi
+            v_hi = v_3d(i,j,k_hi)*(1.-frac_hi)+v_3d(i,j,k_hi+1)*frac_hi     
+
+            ubar_hlyr = (u_3d(i,j,k_hi) + u_hi) / 2.
+            vbar_hlyr = (v_3d(i,j,k_hi) + v_hi) / 2.
+
+            ubar_sum = ubar_sum + ubar_hlyr
+            vbar_sum = vbar_sum + vbar_hlyr
+
+            sumk = sumk + frac_hi
+
+!           Divide to get the means
+            umean_2d(i,j) = ubar_sum / sumk
+            vmean_2d(i,j) = vbar_sum / sumk            
+
+!           if(i .eq. 10)then ! write debugging info
+!             write(6,2)j,rk_lo,rk_hi,u_lo,u_hi,ubar_llyr,ubar_hlyr
+!    1                                         ,ubar_sum,ubar,sumk
+!2	      format(i5,10f10.4)
+!           endif 
+
+          endif
+	enddo !i
+	enddo !j
+
+	return
+	end
