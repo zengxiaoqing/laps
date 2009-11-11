@@ -325,6 +325,10 @@ c       include 'satellite_dims_lvd.inc'
 !       CAPE Range
         chigh_cape = namelist_parms%chigh_cape
 
+!       Upslope Moisture Flux
+        umf_l =  -40.
+        umf_h = +120.
+
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus) 
 
         call get_max_radar_files(max_radar_files,istatus)      
@@ -850,7 +854,7 @@ c       include 'satellite_dims_lvd.inc'
      1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
-     1                             ,asc9_tim            ! O
+     1                             ,asc9_tim                ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
@@ -1437,16 +1441,14 @@ c       include 'satellite_dims_lvd.inc'
             call get_laps_2d(i4time_3dw,ext,var_2d
      1          ,units_2d,comment_2d,NX_L,NY_L,field_2d,istatus) ! K-Pa/s
 
-            chigh = 50.
-
             plot_parms%iraster = 1
 
             c_label = 'Upslope Moisture Flux (cm-m/s)'
             call plot_field_2d(i4time_3dw,c_type,field_2d,.01
      1                        ,namelist_parms,plot_parms
-     1                        ,-40.,+80.,10.,c_label
+     1                        ,umf_l,umf_h,10.,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'moist')
+     1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
         elseif(c_type_i .eq. 'li')then ! Read in Li 'field_2d' from 3d grids
             if(lapsplot_pregen)then
@@ -4968,6 +4970,10 @@ c                   cint = -1.
                 scale = 1e-2    ! Convert from M (mm) to cm (inverse)
                 units_2d = 'cm'
 
+            elseif(var_2d .eq. 'UMF')then       
+                scale = 1e-2    
+                units_2d = 'cm-m/s'
+
             elseif(var_2d .eq. 'PDM')then 
                 if(namelist_parms%c_pbl_depth_units .eq. 'english')then       
                     units_2d = 'FT'
@@ -5068,6 +5074,10 @@ c                   cint = -1.
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'TPW')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,7.0
+     1                         ,'tpw',n_image,scale,'hsect' 
+     1                         ,plot_parms,namelist_parms) 
+                elseif(var_2d .eq. 'UMF')then
+                    call ccpfil(field_2d,NX_L,NY_L,umf_l,umf_h
      1                         ,'tpw',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'VNT')then
@@ -6085,7 +6095,7 @@ c                   cint = -1.
 
               if(cstatic .eq. 'tni')then
                 write(6,*)' calling solid fill plot'
-                scale = 3000.
+                scale = 4000.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image
      1                     ,1e0,'hsect',plot_parms,namelist_parms)     
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
