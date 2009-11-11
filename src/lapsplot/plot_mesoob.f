@@ -625,7 +625,7 @@ c
 
         relsize = relsize_in / zoom_eff
 
-        du_b=(imax)/300. * relsize
+        du_b=(jmax)/240. * relsize
 
         jsize = nint(0.4 * relsize) - 1
 
