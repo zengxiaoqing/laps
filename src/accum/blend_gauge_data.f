@@ -42,7 +42,7 @@
 
         l_accum_fg = .false.
         l_accum_radar = .true.
-        l_accum_gauge = .true.
+        l_accum_gauge = .false.
 
         l_gauge_only = (.not. l_accum_fg) .AND. (.not. l_accum_radar) 
      1                                    .AND.        l_accum_gauge
@@ -144,13 +144,14 @@
                    if(pcp_laps_in .ne. r_missing_data)then
                       write(6,11)iob,stations(iob)(1:10)
      1                          ,pcp_gauge(iob),pcp_laps_in     
-     1                          ,closest_radar_km
-11                    format(i6,1x,a,2f7.3,f10.1,' RADAR/FG')             
+     1                          ,closest_radar_km,provider(iob)
+11                    format(i6,1x,a,2f7.3,f10.1,1x,a11,' RADAR/FG')           
                    else
                       write(6,12)iob,stations(iob)(1:10)
      1                          ,pcp_gauge(iob),lat_s(iob),lon_s(iob)    
-     1                          ,closest_radar_km
-12                    format(i6,1x,a,f7.3,2f8.2,f10.1,' NORADAR/FG')          
+     1                          ,closest_radar_km,provider(iob)
+12                    format(i6,1x,a,f7.3,2f8.2,f10.1,1x,a11
+     1                                               ,' NORADAR/FG')          
                       n_gauge_noradar = n_gauge_noradar + 1
                    endif
                 endif
