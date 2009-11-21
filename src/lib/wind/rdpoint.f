@@ -380,7 +380,7 @@ cdis
      1           ,'Cumulative # obs = ',n_point_obs
 
         if(n_wisdom .gt. 0)then
-            write(6,*)'# of WISDOM obs = ',n_wisdom_obs
+            write(6,*)'# of WISDOM obs = ',n_wisdom
         endif
 
         close(lun_in)
