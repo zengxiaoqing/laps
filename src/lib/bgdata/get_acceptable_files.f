@@ -529,6 +529,7 @@ c     endif
 
       call get_fname_length(names(1),lenf)
       fullname=bgpath(1:len)//names(1)(1:lenf)
+
       if(bgmodel.eq.0) then
          call get_laps_dimensions(nz,istatus)
          call get_grid_dim_xy(nx,ny,istatus)
@@ -543,6 +544,12 @@ c     endif
       else if(bgmodel.eq.9) then
          call get_conus_dims(fullname,NX,NY,NZ)
          print *,'nws:',NX,NY,NZ
+      endif
+
+      if(bgmodel .eq. 13 .and. lenf .ne. 13 .and. lenf .ne. 14)then
+         write(6,*)' WARNING: filename length appears incorrect ',lenf
+         write(6,*)' for example ',fullname(1:len+lenf)
+         write(6,*)' remove .grib extension if present and/or use links'       
       endif
 
       return
