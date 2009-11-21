@@ -143,7 +143,7 @@ c
            if(directory(len+1:len_dir).eq.'lgb')then
               ext_int='lgb'
 
-           else
+           else ! maybe fsf (determine extension from directory name)
 
 c             do l=1,nfdda
 c                if(directory(len+1:len_dir).eq.
@@ -151,18 +151,18 @@ c    &fdda_model_source(l))then
 
               mark=0
               search_dir: do l=len_dir,1,-1
-                 if(directory(l:l).ne.'/')then
+                 if(directory(l:l).ne.'/')then 
                     mark=mark+1
                  else
                     exit search_dir
                  endif
               enddo search_dir
                     
-              ext_int=directory(len_dir-mark-3:len_dir-mark-1)
+              ext_int=directory(len_dir-mark+1:len_dir)
 
 c                endif
 c             enddo
-           endif
+           endif ! directory is lgb
 
 c          if(ext_int.eq.' ')then
 c             print*,'Unknown lapsprd extension'
