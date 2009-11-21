@@ -5,13 +5,15 @@
 program lga                                      lga.f
    get_background_info
    get_bkgd_files                                
-   get_acceptable_files                          bgdata/get_acceptable_files.
+   get_acceptable_files                          bgdata/get_acceptable_files.f
    advance_analysis
    lga_driver                                    bgdata/lga_driver.f
       get_bkgd_mdl_info                          bgdata/get_bkgd_mdl_info.f
          get_sbn_dims                            bgdata/read_sbn_grids.f
          get_attribute_sbn                       bgdata/get_attr_sbn.f
          get_ruc2_dims                           bgdata/readruc2_pub.f
+         readavnpublicdims
+         degrib_nav                              degrib/readgrib.F90
       read_bgdata                                bgdata/readbgdata.f
          read_fuafsf_cdf   
          get_lapsdata_3d
