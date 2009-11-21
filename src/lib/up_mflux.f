@@ -47,65 +47,24 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
         real tpw_2d(ni,nj)               ! I
         real upslope_flux(ni,nj)         ! O
 
+        real ht_lower(ni,nj)             ! L
+        real ht_upper(ni,nj)             ! L
+        real umean_2d(ni,nj)             ! L
+        real vmean_2d(ni,nj)             ! L
+
+        ht_lower(:,:)  =  750. + topo(:,:)
+        ht_upper(:,:)  = 1250. + topo(:,:)
+
+	call mean_wind_hlyr(ni,nj,nk,ht_lower,ht_upper
+     1                     ,u_3d,v_3d,ht_3d,umean_2d,vmean_2d)
+
 	do j=2,nj-1
 	do i=2,ni-1
 
-!         Controlling layer (defined relative to topography)
-          ht_lo  =  750. + topo(i,j)
-          ht_hi  = 1250. + topo(i,j)
+          if(topo(i,j) .lt. ht_lower(i,j))then
 
-          if(topo(i,j) .le. ht_lo)then
-
-!           Calculate mass weighted mean wind over the height layer       
-            rk_lo = rlevel_of_field(ht_lo,ht_3d,ni,nj,nk,i,j,istatus) 
-            rk_hi = rlevel_of_field(ht_hi,ht_3d,ni,nj,nk,i,j,istatus)  
-
-            k_lo = int(rk_lo)
-            k_hi = int(rk_hi)
-
-!           Lower part
-            frac_lo = rk_lo - float(k_lo)
-            u_lo = u_3d(i,j,k_lo)*(1.-frac_lo)+u_3d(i,j,k_lo+1)*frac_lo
-            v_lo = v_3d(i,j,k_lo)*(1.-frac_lo)+v_3d(i,j,k_lo+1)*frac_lo     
-
-            ubar_llyr = (u_lo + u_3d(i,j,k_lo+1)) / 2.
-            vbar_llyr = (v_lo + v_3d(i,j,k_lo+1)) / 2.
- 
-            ubar_sum = ubar_llyr * (1. - frac_lo)
-            vbar_sum = vbar_llyr * (1. - frac_lo)
-
-            sumk = 1. - frac_lo
-
-!           Middle part
-            do k = k_lo+1,k_hi-1
-                ubar_lyr = (u_3d(i,j,k) + u_3d(i,j,k+1)) / 2.
-                vbar_lyr = (v_3d(i,j,k) + v_3d(i,j,k+1)) / 2. 
-                ubar_sum = ubar_sum + ubar_lyr
-                vbar_sum = vbar_sum + vbar_lyr
-                sumk = sumk + 1.0
-                if(i .eq. 10)then ! write debugging info
-                    write(6,1)k,u_3d(i,j,k),u_3d(i,j,k+1),ubar_lyr
-     1                                                   ,ubar_sum    
- 1		    format(30x,i5,4f10.4)
-                endif
-            enddo ! k
-
-!           Upper part  
-            frac_hi = rk_hi - float(k_hi)
-            u_hi = u_3d(i,j,k_hi)*(1.-frac_hi)+u_3d(i,j,k_hi+1)*frac_hi
-            v_hi = v_3d(i,j,k_hi)*(1.-frac_hi)+v_3d(i,j,k_hi+1)*frac_hi     
-
-            ubar_hlyr = (u_3d(i,j,k_hi) + u_hi) / 2.
-            vbar_hlyr = (v_3d(i,j,k_hi) + v_hi) / 2.
-
-            ubar_sum = ubar_sum + (ubar_hlyr * frac_hi)
-            vbar_sum = vbar_sum + (vbar_hlyr * frac_hi)
-
-            sumk = sumk + frac_hi
-
-!           Divide to get the means
-            ubar = ubar_sum / sumk
-            vbar = vbar_sum / sumk            
+            ubar = umean_2d(i,j)
+            vbar = vmean_2d(i,j)
 
 !           Determine terrain slope
 	    dterdx = (topo(i,j)+topo(i,j-1)-topo(i-1,j)-topo(i-1,j-1)
@@ -116,6 +75,7 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
             terrain_slope = sqrt(dterdx**2 + dterdy**2)
 
 !           if(terrain_slope .gt. .001)then ! machine/terrain epsilon threshold
+
 
             if(ldf(i,j) .lt. .01 .and. topo(i,j) .lt. 10.)then ! ocean
 
@@ -129,7 +89,11 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 
 !             Calculate upslope wind component (m/s)
 !             This is normalized by the terrain slope
-              dvh = (ubar * dterdx + vbar * dterdy) / terrain_slope
+              if(terrain_slope .gt. 0.)then
+                  dvh = (ubar * dterdx + vbar * dterdy) / terrain_slope
+              else
+                  dvh = 0.
+              endif
 
 !             Calculate upslope moisture flux (m**2/s)
 	      upslope_flux(i,j) = dvh * tpw_2d(i,j)
@@ -159,8 +123,7 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 c
 c
 	subroutine mean_wind_hlyr(ni,nj,nk,ht_lower,ht_upper
-     1                     ,u_3d,v_3d,tpw_2d,upslope_flux
-     1                     ,ht_3d,r_missing_data)
+     1                           ,u_3d,v_3d,ht_3d,umean_2d,vmean_2d)       
 
 c       Compute mean wind over a 2D height layer 
 
@@ -200,8 +163,8 @@ c       Compute mean wind over a 2D height layer
             ubar_llyr = (u_lo + u_3d(i,j,k_lo+1)) / 2.
             vbar_llyr = (v_lo + v_3d(i,j,k_lo+1)) / 2.
  
-            ubar_sum = ubar_llyr
-            vbar_sum = vbar_llyr
+            ubar_sum = ubar_llyr * (1. - frac_lo)
+            vbar_sum = vbar_llyr * (1. - frac_lo)
 
             sumk = 1. - frac_lo
 
@@ -227,8 +190,8 @@ c       Compute mean wind over a 2D height layer
             ubar_hlyr = (u_3d(i,j,k_hi) + u_hi) / 2.
             vbar_hlyr = (v_3d(i,j,k_hi) + v_hi) / 2.
 
-            ubar_sum = ubar_sum + ubar_hlyr
-            vbar_sum = vbar_sum + vbar_hlyr
+            ubar_sum = ubar_sum + (ubar_hlyr * frac_hi)
+            vbar_sum = vbar_sum + (vbar_hlyr * frac_hi)
 
             sumk = sumk + frac_hi
 
