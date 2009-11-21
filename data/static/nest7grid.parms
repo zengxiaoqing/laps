@@ -26,7 +26,7 @@
  c_raddat_type='wsi',
  radarext_3d='all',
  radarext_3d_accum='xxx',
- l_accum_fg=.false.',
+ l_accum_fg=.false.,
  l_accum_radar=.true.,
  l_accum_gauge=.true.,
  
