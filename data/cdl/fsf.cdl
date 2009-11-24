@@ -477,6 +477,19 @@ netcdf fsf {
             lhf:lvl_coord="AGL";
             lhf:LAPS_units="w/m{-2}";
 
+        //      Predicted upslope component of moisture flux //
+        //      bigfile name = not used
+        float
+            umf(record,z,y,x);
+            umf:_FillValue = 1.e+37f;
+            umf:long_name="Upslope Component of Moisture Flux";
+            umf:units="Meters**2/second";
+            umf:valid_range= -1000.f, 1000.f;
+            umf:LAPS_var="UMF";
+            umf:lvl_coord="AGL";
+            umf:LAPS_units="M**2/S";
+
+
         //      Predicted PBL height //
         //      bigfile name = not used
         float
@@ -625,6 +638,7 @@ netcdf fsf {
             swo_comment(record,z,namelen),
             shf_comment(record,z,namelen),
             lhf_comment(record,z,namelen),
+            umf_comment(record,z,namelen),
             blh_comment(record,z,namelen),
             tgd_comment(record,z,namelen),
             upb_comment(record,z,namelen),
@@ -792,6 +806,10 @@ netcdf fsf {
         short
             lhf_fcinv(record, z);
             lhf_fcinv:_FillValue= 0s;
+
+        short
+            umf_fcinv(record, z);
+            umf_fcinv:_FillValue= 0s;
 
         short
             blh_fcinv(record, z);
