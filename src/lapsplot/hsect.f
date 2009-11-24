@@ -1448,7 +1448,7 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,namelist_parms,plot_parms
      1                        ,umf_l,umf_h,10.,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'tpw')
+     1                        ,NX_L,NY_L,r_missing_data,'upflux')
 
         elseif(c_type_i .eq. 'li')then ! Read in Li 'field_2d' from 3d grids
             if(lapsplot_pregen)then
@@ -5078,7 +5078,7 @@ c                   cint = -1.
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'UMF')then
                     call ccpfil(field_2d,NX_L,NY_L,umf_l,umf_h
-     1                         ,'tpw',n_image,scale,'hsect' 
+     1                         ,'upflux',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'VNT')then
                     if(c_vnt_units .eq. 'KT-FT')then
@@ -6091,10 +6091,18 @@ c                   cint = -1.
               clow = -400.
               chigh = +5000.
               cint = +200.
-              c_label = 'Static Terrain (m)         '
+              c_label = 'Static Terrain (m)'
+
+              topomax = -9999.
+              do i = 1,NX_L
+              do j = 1,NY_L
+                  topomax = max(topomax,topo(i,j))
+              enddo ! j
+              enddo ! i
 
               if(cstatic .eq. 'tni')then
-                write(6,*)' calling solid fill plot'
+                write(6,*)' calling solid fill plot - max terrain = '       
+     1                   ,topomax
                 scale = 4000.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image
      1                     ,1e0,'hsect',plot_parms,namelist_parms)     
