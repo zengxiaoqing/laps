@@ -233,6 +233,8 @@ C
               l_discrete = plot_parms%l_discrete
           elseif(colortable .eq. 'tpw')then
               l_discrete = plot_parms%l_discrete
+          elseif(colortable .eq. 'upflux')then
+              l_discrete = plot_parms%l_discrete
           elseif(colortable .eq. 'hues'  .or. 
      1           colortable .eq. 'omega' .or.
      1           colortable .eq. 'temp'
@@ -582,7 +584,7 @@ C
 !             endif
 !         endif
 
-      elseif(colortable .eq. 'tpw')then
+      elseif(colortable .eq. 'tpw' .or. colortable .eq. 'upflux')then       
           if(.not. l_discrete)then
               ncols = 79
           endif
@@ -813,6 +815,7 @@ C
      1                     .or. colortable .eq. 'spectral' 
      1                     .or. colortable .eq. 'spectralr' 
      1                     .or. colortable .eq. 'tpw'    ! TPW
+     1                     .or. colortable .eq. 'upflux' ! Upslope Moist Flux
      1                     .or. colortable .eq. 'vnt'    ! VNT
      1                     .or. l_divisible              ! divisible colorbars
      1                     .or. colortable .eq. 'temp'
