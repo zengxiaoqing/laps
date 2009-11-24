@@ -219,6 +219,22 @@ real, allocatable, dimension(:,:) :: pcp_06,pcp_init,fallen_precip_type
 real, allocatable, dimension(:,:,:) :: htdsig,hrhsig,hthetasig,hthetaesig,hzsigf  &
                                       ,condmr_sig,rhodrysig,tvsig,rhomoistsig
 
+!beka
+real :: dx(lx,ly),dy(lx,ly)  
+real :: r_missing_data
+!beka
+
+character*256  directory
+real           rspacing_dum
+character*125   comment_2d
+character*10    units_2d
+character*50    ext
+integer        len_dir,istatus
+character*3    var_2d
+real :: ldf(lx,ly),lat(lx,ly),lon(lx,ly),avg(lx,ly)
+
+integer ::        status
+
 !cj Variables to compute omega, added 6/21/2007
 real :: tvprs
 
@@ -369,6 +385,7 @@ if (make_micro) then
       max_refl=rmsg
       echo_tops=rmsg
    endif
+
 
 ! Do some QC on cloud species fields.
 
@@ -626,6 +643,44 @@ if (verbose) then
       print*,'Min/Max fosberg   = ',minval(fwi_index),maxval(fwi_index)
    endif
 endif
+
+!Beka moisture flux
+
+        ext = 'nest7grid'
+
+	call get_directory(ext,directory,len_dir)
+        var_2d='ldf'  
+	call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
+                             units_2d,comment_2d,ldf,      &
+                             rspacing_dum,istatus)
+
+        var_2d='avg'
+        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
+                             units_2d,comment_2d,avg,      &
+                             rspacing_dum,istatus)
+
+        var_2d='lat'
+        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
+                             units_2d,comment_2d,lat,      &
+                             rspacing_dum,istatus)
+
+        var_2d='lon'
+        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
+                             units_2d,comment_2d,lon,      &
+                             rspacing_dum,istatus)
+
+        call get_grid_spacing_array(lat,lon,lx,ly,dx,dy)
+
+
+        call up_mflux(lx,ly,lz,avg,ldf,dx,dy                 &
+                     ,husig,hvsig,totpcpwater,upflux           &
+                     ,hzsig,r_missing_data)
+
+
+	write(*,*)upflux,totpcpwater
+
+	write(*,*)'beka beka beka'
+
 
 return
 end

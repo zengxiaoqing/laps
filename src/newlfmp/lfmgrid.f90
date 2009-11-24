@@ -61,7 +61,7 @@ real, pointer, dimension(:,:) ::  &
        nzsfc    ,npsfc    ,ntsfc    ,nmrsfc   ,nusfc     &
       ,nvsfc    ,nwsfc    ,nground_t,npblhgt  ,npcp_tot  &
       ,nlwout   ,nswout   ,nlwdown  ,nswdown  ,nshflux   &
-      ,nlhflux
+      ,nlhflux  
 real, pointer, dimension(:,:,:) :: &
        npsig    ,nzsig    ,ntsig    ,nmrsig   ,nusig     &
       ,nvsig    ,nwsig    ,ntkesig                       &
@@ -106,7 +106,7 @@ real, pointer, dimension(:,:) ::  &
       ,srhel        ,uhel         ,cape         ,cin          ,liftedind   &
       ,visibility   ,heatind      ,lwout        ,swout        ,lwdown      &
       ,swdown       ,shflux       ,lhflux       ,vnt_index    ,ham_index   &
-      ,hah_index    ,fwi_index
+      ,hah_index    ,fwi_index    ,upflux
 integer,            allocatable, dimension(:) :: lvls2d
 character(len=3),   allocatable, dimension(:) :: name2d
 character(len=10),  allocatable, dimension(:) :: units2d
@@ -314,7 +314,7 @@ implicit none
 integer :: ct
 
 if (trim(mtype) /= 'st4') then
-  nvar2dout=44
+  nvar2dout=45
   if (make_micro) nvar2dout=nvar2dout+5
   if (make_firewx) nvar2dout=nvar2dout+6
 
@@ -349,6 +349,8 @@ if (trim(mtype) /= 'st4') then
   swdown     =>sgrid(1:lx,1:ly,ct); name2d(ct)='SWI'; com2d(ct)='Incoming SW Radiation'      ; ct=ct+1
   shflux     =>sgrid(1:lx,1:ly,ct); name2d(ct)='SHF'; com2d(ct)='Sensible Heat Flux'         ; ct=ct+1
   lhflux     =>sgrid(1:lx,1:ly,ct); name2d(ct)='LHF'; com2d(ct)='Latent Heat Flux'           ; ct=ct+1
+  upflux     =>sgrid(1:lx,1:ly,ct); name2d(ct)='UMF'; com2d(ct)='Upslope Moisture Flux'      ; ct=ct+1
+
 
   thetasfc   =>sgrid(1:lx,1:ly,ct); name2d(ct)='TH '; com2d(ct)='Sfc Potential Temperature'       ; ct=ct+1
   thetaesfc  =>sgrid(1:lx,1:ly,ct); name2d(ct)='THE'; com2d(ct)='Sfc Equiv. Potential Temperature'; ct=ct+1
@@ -414,6 +416,7 @@ if (trim(mtype) /= 'st4') then
      gribit(ct)=.true.; param(ct)=111; leveltype(ct)=1  ; level1(ct)=0 ; level2(ct)=0; timerange(ct)=0; scalep10(ct)=0 ; ct=ct+1  ! swdown
      gribit(ct)=.true.; param(ct)=122; leveltype(ct)=1  ; level1(ct)=0 ; level2(ct)=0; timerange(ct)=0; scalep10(ct)=0 ; ct=ct+1  ! shflux
      gribit(ct)=.true.; param(ct)=121; leveltype(ct)=1  ; level1(ct)=0 ; level2(ct)=0; timerange(ct)=0; scalep10(ct)=0 ; ct=ct+1  ! lhflux
+!     gribit(ct)=.true.; param(ct)=121; leveltype(ct)=1  ; level1(ct)=0 ; level2(ct)=0; timerange(ct)=0; scalep10(ct)=0 ; ct=ct+1  ! upflux
 
      gribit(ct)=.true.; param(ct)=13 ; leveltype(ct)=105; level1(ct)=2 ; level2(ct)=0; timerange(ct)=0; scalep10(ct)=1 ; ct=ct+1  ! thetasfc
      gribit(ct)=.true.; param(ct)=14 ; leveltype(ct)=105; level1(ct)=2 ; level2(ct)=0; timerange(ct)=0; scalep10(ct)=1 ; ct=ct+1  ! thetaesfc
