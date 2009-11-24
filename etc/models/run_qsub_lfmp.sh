@@ -1,15 +1,20 @@
 #!/bin/sh --login
 
-projectpath=$1 # Example: /lfs0/projects/hmtb/dwr_domains
-model=$2       # Example: wrf
-physics=$3     # Example: tom
-lbc=$4         # Example: gfs1
-nest=$5        # Example: 1 or -2
+projectpath=$1  # Example: /lfs0/projects/hmtb/dwr_domains
+model=$2        # Example: wrf
+physics=$3      # Example: tom
+lbc=$4          # Example: gfs1
+nest=$5         # Example: 1 or -2
+lapsdataroot=$6 # Example: /lfs0/projects/hmtb/dwr_domains/laps_psd   
+fcstIncrMin=$7  # Example: 60
+numFcsts=$8     # Example: 13
 
 run=$model\-$physics\-$lbc
 mkdir -p $projectpath/$run
 
 log=$projectpath/$run/lfmpost_run.log
+
+rm -f $projectpath/$run/qlfmp.log
 
 # Build qsub script
 script=$projectpath/$run/qsub_lfmpost.sh
@@ -31,14 +36,14 @@ echo "nest=$nest"               >> $script
 echo " "                        >> $script
 #cat /home/oplapb/builds/laps/etc/models/qsub_lfmpost.sh.footer >> $script
 echo "export LAPSROOT=/home/oplapb/builds/laps"                 >> $script
-echo "export LAPS_DATA_ROOT=$projectpath/laps"                  >> $script
+echo "export LAPS_DATA_ROOT=$lapsdataroot"                      >> $script
 echo "export WRF_DATAROOT=$projectpath/$run"                    >> $script
 echo "export NETCDF=/opt/netcdf/3.6.2-pgi-7.1-3"                >> $script
 echo "export PATH=\$PATH:/opt/netcdf/3.6.2-pgi-7.1-3/bin"       >> $script
 echo "export phys=$physics"                                     >> $script
 echo " "                                                        >> $script
-echo "numFcsts=40"                                              >> $script
-echo "fcstIncrMin=180"                                          >> $script
+echo "fcstIncrMin=$fcstIncrMin"                                 >> $script
+echo "numFcsts=$numFcsts"                                       >> $script
 echo "maxWaitSec=3600"                                          >> $script
 echo "maxHrsRun=4"                                              >> $script
 echo "project=DWR"                                              >> $script
