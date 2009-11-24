@@ -9,6 +9,7 @@ require 5;
 use strict;
 
 # Setup command line options:
+#    -m model (e.g. wrf,arw)
 #    -a model configuration (e.g. schultz)
 #    -d domain (e.g. dwr)
 #    -r laps dataroot
@@ -16,15 +17,15 @@ use strict;
 #    -c cycle frequency (hours)
 #    -l forecast length (hours)
 
-use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l);
+use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m);
 use Getopt::Std;
 
-getopts('a:d:r:f:c:l:');
+getopts('a:d:r:f:c:l:m:');
 
 print "Running followup_fcst.pl...\n";
 print "user defined paths\n";
 my $domain = $opt_d;
-my $model = "wrf-$opt_a";
+my $model = "$opt_m-$opt_a";
 $ENV{LAPSINSTALLROOT}="/usr/nfs/lapb/builds64/laps";
 my $dataroot = $opt_r;
 
@@ -95,20 +96,20 @@ $window="$xlow:$ylow:$xhigh:$yhigh";
 print "window is $window<br>\n";
 
 my $followup = "/usr/nfs/common/lapb/www/followup_fcst.sh $domain $model $dataroot $window $resolution";
-my $followup_fire =  "/usr/nfs/common/lapb/www/followup_fcst_fire.sh $domain $model $dataroot $window $resolution";
-my $followup_ua =  "/usr/nfs/common/lapb/www/followup_fcst_ua.sh $domain $model $dataroot $window $resolution";
-my $followup_hmt =  "/usr/nfs/common/lapb/www/followup_fcst_hmt_xsect.sh $domain $model $dataroot $window $resolution";
+#my $followup_fire =  "/usr/nfs/common/lapb/www/followup_fcst_fire.sh $domain $model $dataroot $window $resolution";
+#my $followup_ua =  "/usr/nfs/common/lapb/www/followup_fcst_ua.sh $domain $model $dataroot $window $resolution";
+my $followup_xsect =  "/usr/nfs/common/lapb/www/followup_fcst_xsect.sh $domain $model $dataroot";
 
 my $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
 my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 36 $domain $model\n";
-my $timeout =  10800 ; # Seconds to wait before giving up after starting
-my $output_inc = $opt_f;  # Forecast output interval (hours)
-my $cycle_freq = $opt_c;  # Cycle frequency in hours
-my $init_base_hr = 0;     # Earliest cycle each day in GMT hour
-my $fcst_len = $opt_l;    # Forecast length (hours)
+my $output_inc = $opt_f;     # Forecast output interval (hours)
+my $cycle_freq = $opt_c;     # Cycle frequency in hours
+my $timeout = $opt_c*3600;   # Seconds to wait before giving up after starting
+my $init_base_hr = 0;        # Earliest cycle each day in GMT hour
+my $fcst_len = $opt_l;       # Forecast length (hours)
 
-my $fsf_subdir = "lapsprd/fsf/wrf-$opt_a";
-my $fua_subdir = "lapsprd/fua/wrf-$opt_a";
+my $fsf_subdir = "lapsprd/fsf/$opt_m-$opt_a";
+my $fua_subdir = "lapsprd/fua/$opt_m-$opt_a";
 
 my $sleep_time = 300; # Number of seconds to sleep between attempts to copy
 
@@ -199,7 +200,7 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
       $result=system("$followup $_ $validtime");
 #      $result=system("$followup_fire $_ $validtime");
 #      $result=system("$followup_ua $_ $validtime");
-      $result=system("$followup_hmt $_ $validtime");
+      $result=system("$followup_xsect $_ $validtime");
       system("rm -f $local_fsf/$_.fsf.done");
 #      system("rm -f $local_fua/$_.fua.done"); 
      if (! $www_flag){
@@ -219,11 +220,13 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
   @times = @times_new;
   $times_rem = @times;
 
+  my $t=gmtime(); 
+
   if ($times_rem > 0){
     print "Sleeping for $sleep_time\n";
     sleep $sleep_time;
     $timeaccum = $timeaccum + $sleep_time;
-    print "Total time since beginning of loop: $timeaccum\n";  
+    print $t." Total time since beginning of loop: $timeaccum\n";  
   }else{
     print "All fua/fsf files processed\n";
   }
