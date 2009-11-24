@@ -149,11 +149,12 @@ else {print "none \n";}
 print "\nCloud-drift winds:  ";
 if ($found2 == 1) {print "$nclouddriftwinds \n";}
 else {print "none \n";}
-print "\n";
 
 print "\nWISDOM:  ";
 if ($found3 == 1) {print "$nwisdom \n";}
 else {print "none \n";}
+
+print "\n";
 
 print "Observation QC:\n";
 @greplines = grep /QC/, @lines;
