@@ -86,10 +86,10 @@ which tar
 
 if test "$EXPAND" = noexpand; then
     echo "current directory is `pwd`"
-    echo "making tar file $LAPS_DATA_ROOT/lapstar_$YYDDDHH.tar"
-    echo "tar cvf $LAPS_DATA_ROOT/laps_$time.tar -T $LAPS_DATA_ROOT/lapstar.txt"
-          tar cvf $LAPS_DATA_ROOT/laps_$time.tar -T $LAPS_DATA_ROOT/lapstar.txt
-    ls -l $LAPS_DATA_ROOT/laps_$time.tar
+    echo "making tar file $LAPS_DATA_ROOT/laps_$time.tar.gz"
+    echo "tar cvfz $LAPS_DATA_ROOT/laps_$time.tar.gz -T $LAPS_DATA_ROOT/lapstar.txt"
+          tar cvfz $LAPS_DATA_ROOT/laps_$time.tar.gz -T $LAPS_DATA_ROOT/lapstar.txt
+    ls -l $LAPS_DATA_ROOT/laps_$time.tar.gz
 
 else
     echo "cp to $LAPS_DATA_ROOT/lapstar_$YYDDDHH expanded directory"
