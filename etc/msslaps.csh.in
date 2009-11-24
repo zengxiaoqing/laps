@@ -29,9 +29,9 @@ cd $LAPS_DATA_ROOT
 
 @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH $DATE noexpand nostatic 48 112
 
-mssMkdir -p $MSSPATH/$MONTH
+mssMkdir -p $MSSPATH/$YYYY/$MONTH
 
-mssPut laps_$YYDDDHHMM.tar $MSSPATH/$MONTH
+mssPut laps_$YYDDDHHMM.tar* $MSSPATH/$YYYY/$MONTH
 
-rm -f laps_$YYDDDHHMM.tar
+rm -f laps_$YYDDDHHMM.tar*
 
