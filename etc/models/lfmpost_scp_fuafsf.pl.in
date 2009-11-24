@@ -337,7 +337,7 @@ for ($n=0; $n<$nfcst; $n++) {
 
 # $msspath = "/mss/fsl/frd/lapb/hmt_2008";
   $msspath = $opt_M;
-  $mssfullpath = "$msspath/$mm/$date_a9";
+  $mssfullpath = "$msspath/$yyyy/$mm/$date_a9";
 
   my $mss_cmd;
 
