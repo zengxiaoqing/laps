@@ -1,14 +1,4 @@
 
-   Please note that this README was written for an older version of the
-   LVD software. It should probably be updated so that it reflects
-   the newly redesigned LVD software and namelist.
-
-
-..............................................................................
-
-
-                                              J. Smart
-                                              2-22-99
 
    The lvd code is written to process the block of satellite data
 that covers a laps domain. The software is dynamic and uses i/j start
@@ -56,20 +46,14 @@ and most everything else is taken care of automatically.
 The lvd output is in a specific satellite_id subdirectory (currently
 there are four satellites known, one is obsolete: goes08, goes09 [obsolete],
 goes10 and GMS).  lvd  processes more that one satellite simultaneously
-depending on ISATS.  The satellite data format is activated with namelist
-parameter ITYPES. There is a maximum of 4 satellite data format types (GVAR
+depending on CSATID settings. The satellite data format is activated with namelist
+parameter CSATTYPES. There is a maximum of 4 satellite data format types (GVAR
 [gvr], WFO [wfo], FSL-public [cdf], and AFWA [gwc]). lvd can process all
 four data formats for any satellite simultaneously with the appropriate
-settings of ISATS and ITYPES. For example, to process GOES08 GVAR data,
-one sets ISATS=1,0,0,0,  and ITYPES=1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,.  If
-one wishes to also turn on WFO GOES08 format then set ITYPES as follows:
-ITYPES=1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,.  One more example is if one
-wishes to process both GOES08 and GOES10 AFWA (gwc) data then it follows:
-ISATS=1,0,1,0,
-ITYPES=0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,.
+namelist settings of CSATID and CSATTYPES. 
 
 A similar functionality exists for the channel processing which uses
-namelist parameter ICHANNELS. The GOES imagers have five channels which
+namelist parameter CCHANNELTYPES. The GOES imagers have five channels which
 defines the maximum number of channels possible.  lvd can process any
 one of these five, including all five. Other satellites may have fewer
 channels but the channel switch conforms to the GOES channels as follows:
