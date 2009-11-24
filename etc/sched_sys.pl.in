@@ -139,7 +139,7 @@ if($opt_f eq "mm"){
    }
 
    my $ddd = substr($yydddhhmm,2,3);
-   my @mmmdd=&time::JJJ2MMDD($ddd,$yy);
+   my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
    my $mm = @mmmdd[0];
    $mm="0".$mm if(length($mm)<2);
 
