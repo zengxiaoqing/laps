@@ -38,6 +38,8 @@ EXTMODS=-L$(SRCROOT)/src/lib/modules -lmodules
 DBEXTMODS=-L$(SRCROOT)/src/lib/modules -ldebugmodules
 LAPSLIB=-L$(SRCROOT)/src/lib -llaps
 DBLAPSLIB=-L$(SRCROOT)/src/lib -ldebuglaps
+UTILLIB=-L$(SRCROOT)/src/lib -llaps
+DBUTILLIB=-L$(SRCROOT)/src/lib -ldebuglaps
 SYNPLIB=-L$(SRCROOT)/src/lib/radar/synp -lsynp
 DBSYNPLIB=-L$(SRCROOT)/src/lib/radar/synp -ldebugsynp
 GRIBLIB=-L$(SRCROOT)/src/lib/grib -lgrib
@@ -88,12 +90,13 @@ all:			$(EXE)
 
 $(EXE):			$(FOBJS) $(COBJS) $(FMOD)
 			$(FC) $(FREE) -o $@ $(FFLAGS) $(FOBJS) $(COBJS) \
-			$(LAPSLIB) $(HDF5LIB) $(OTHERLIBS) $(SYNPLIB) $(EXTMODS) $(GRIBLIB) $(GRIB2LIB) $(INC) -lm
+			$(LAPSLIB) $(UTILLIB) $(HDF5LIB) $(OTHERLIBS) $(SYNPLIB) $(EXTMODS) $(GRIBLIB) $(GRIB2LIB) $(INC) -lm
 
 debug:	
 	 ($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
          "FFLAGS        =       $(DBFLAGS)"     \
  	 "LAPSLIB	=	$(DBLAPSLIB)" 	\
+ 	 "UTILLIB	=	$(DBUTILLIB)" 	\
  	 "SYNPLIB	=	$(DBSYNPLIB)" 	\
          "GRIBLIB       =       $(DBGRIBLIB)"    \
          "GRIB2LIB      =       $(DBGRIB2LIB)"   \
