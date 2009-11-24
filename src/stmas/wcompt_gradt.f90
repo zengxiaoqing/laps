@@ -1,0 +1,354 @@
+MODULE WCOMPT_GRADT
+!*************************************************
+! CALCULATE THE VERTICAL VELOCITY AND IT'S GRADIENTS TO CONTROL VARIABLES
+! HISTORY: JANUARY 2008, SEPARATED FROM INPUT_BG_OBS MODULE by ZHONGJIE HE.
+!*************************************************
+
+  USE PRMTRS_STMAS
+
+  PUBLIC  WCOMPGERNL, WWGRADIENT
+
+!***************************************************
+!!COMMENT:
+!   THIS MODULE IS USED BY THE MODULE OF COSTFUN_GRAD TO CALCULATE THE VERTICAL VELOCITY AND GRADIENTS TO CONTROL VARIABLES.
+!   SUBROUTINES:
+!      WCOMPGERNL: CALCULATE VERTICAL VELOCITIES AT EACH GRID POINTS.
+!      WWGRADIENT: CALCULATE THE GRADIENT OF VERTICAL VELOCITIES TO CONTROL VARIABLES.
+!***************************************************
+CONTAINS
+
+SUBROUTINE WCOMPGERNL
+!*************************************************
+! CALCULATE THE VERTICAL VELOCITY WWW FOR GENERAL COORDINATE 
+! HISTORY : JANUARY 2008, MODIFIED FROM WEI LI'S PROGRAM BY ZHONGJIE HE
+!
+!*************************************************
+
+  IMPLICIT NONE
+! --------------------
+  INTEGER  :: I,J,K,T,I1,I2,J1,J2,UU,VV,ZZ,K2,K1
+  REAL     :: HT(NUMGRID(1),NUMGRID(2),NUMGRID(3),NUMGRID(4)),SZ
+! ---------------------
+! DECLARE :
+!          'HT' IS THE TEMPORARY ARRAY TO SAVE HEIGHT OF EACH GRID POINT
+!          'UU', 'VV' AND 'ZZ' ARE INDEXES OF THE CONTRAL VARIABLES FOR U, V AND HEIGHT RESPECTIVELY
+! --------------------
+
+  UU=U_CMPNNT
+  VV=V_CMPNNT
+  ZZ=PRESSURE
+  DO K=1,NUMGRID(3)
+  DO T=1,NUMGRID(4)
+  DO J=1,NUMGRID(2)
+  DO I=1,NUMGRID(1)
+    WWW(I,J,K,T)=0.0
+  ENDDO
+  ENDDO
+  ENDDO
+  ENDDO
+
+  IF(IFPCDNT.EQ.0 .OR. IFPCDNT.EQ.2) THEN         ! FOR SIGMA AND HEIGHT COORDINATE
+    DO T=1,NUMGRID(4)
+    DO K=1,NUMGRID(3)
+    DO J=1,NUMGRID(2)
+    DO I=1,NUMGRID(1)
+      HT(I,J,K,T)=ZZZ(I,J,K,T)
+    ENDDO
+    ENDDO
+    ENDDO
+    ENDDO
+    SZ=SCP(PSL)
+  ELSE                                            ! FOR PRESSURE COORDINATE
+    DO T=1,NUMGRID(4)
+    DO K=1,NUMGRID(3)
+    DO J=1,NUMGRID(2)
+    DO I=1,NUMGRID(1)
+      HT(I,J,K,T)=PPP(K)
+    ENDDO
+    ENDDO
+    ENDDO
+    ENDDO
+    SZ=SCP(PSL)
+  ENDIF
+
+  DO K=2,NUMGRID(3)
+  DO T=1,NUMGRID(4)
+  DO J=1,NUMGRID(2)
+  DO I=1,NUMGRID(1)
+    I1=MAX0(I-1,1)
+    I2=MIN0(I+1,NUMGRID(1))
+    J1=MAX0(J-1,1)
+    J2=MIN0(J+1,NUMGRID(2))
+    
+    WWW(I,J,K,T)=WWW(I,J,K-1,T)-(HT(I,J,K,T)-HT(I,J,K-1,T))*SZ/2.0 &
+                *((GRDANALS(I2,J,K-1,T,UU)-GRDANALS(I1,J,K-1,T,UU) &
+                  +GRDBKGND(I2,J,K-1,T,UU)-GRDBKGND(I1,J,K-1,T,UU)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*COSD(DEG(I,J)) &
+                 +(GRDANALS(I,J2,K-1,T,VV)-GRDANALS(I,J1,K-1,T,VV) &
+                  +GRDBKGND(I,J2,K-1,T,VV)-GRDBKGND(I,J1,K-1,T,VV)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*COSD(DEG(I,J)) &
+                 +(GRDANALS(I2,J,K  ,T,UU)-GRDANALS(I1,J,K  ,T,UU) &
+                  +GRDBKGND(I2,J,K  ,T,UU)-GRDBKGND(I1,J,K  ,T,UU)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*COSD(DEG(I,J)) &
+                 +(GRDANALS(I,J2,K  ,T,VV)-GRDANALS(I,J1,K  ,T,VV) &
+                  +GRDBKGND(I,J2,K  ,T,VV)-GRDBKGND(I,J1,K  ,T,VV)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*COSD(DEG(I,J)) &
+                 -(GRDANALS(I,J2,K-1,T,UU)-GRDANALS(I,J1,K-1,T,UU) &
+                  +GRDBKGND(I,J2,K-1,T,UU)-GRDBKGND(I,J1,K-1,T,UU)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*SIND(DEG(I,J)) &
+                 +(GRDANALS(I2,J,K-1,T,VV)-GRDANALS(I1,J,K-1,T,VV) &
+                  +GRDBKGND(I2,J,K-1,T,VV)-GRDBKGND(I1,J,K-1,T,VV)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*SIND(DEG(I,J)) &
+                 -(GRDANALS(I,J2,K  ,T,UU)-GRDANALS(I,J1,K  ,T,UU) &
+                  +GRDBKGND(I,J2,K  ,T,UU)-GRDBKGND(I,J1,K  ,T,UU)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*SIND(DEG(I,J)) &
+                 +(GRDANALS(I2,J,K  ,T,VV)-GRDANALS(I1,J,K  ,T,VV) &
+                  +GRDBKGND(I2,J,K  ,T,VV)-GRDBKGND(I1,J,K  ,T,VV)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*SIND(DEG(I,J)))
+
+    IF(IFPCDNT.EQ.0) THEN                                          !     FOR SIGMA
+      WWW(I,J,K,T)=WWW(I,J,K,T)-(HT(I,J,K,T)-HT(I,J,K-1,T))*SZ/2.0 &
+                *((GRDANALS(I,J,K,T,UU)-GRDANALS(I,J,K-1,T,UU)  &
+                  +GRDBKGND(I,J,K,T,UU)-GRDBKGND(I,J,K-1,T,UU))  &
+                 /(HT(I,J,K,T)-HT(I,J,K-1,T))  &
+                 *(HT(I2,J,K,T)-HT(I1,J,K,T)+HT(I2,J,K-1,T)-HT(I1,J,K-1,T)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*COSD(DEG(I,J))  &
+                 +(GRDANALS(I,J,K,T,VV)-GRDANALS(I,J,K-1,T,VV)  &
+                  +GRDBKGND(I,J,K,T,VV)-GRDBKGND(I,J,K-1,T,VV))  &
+                 /(HT(I,J,K,T)-HT(I,J,K-1,T))  &
+                 *(HT(I,J2,K,T)-HT(I,J1,K,T)+HT(I,J2,K-1,T)-HT(I,J1,K-1,T)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*COSD(DEG(I,J))  &
+                - (GRDANALS(I,J,K,T,UU)-GRDANALS(I,J,K-1,T,UU)  &
+                  +GRDBKGND(I,J,K,T,UU)-GRDBKGND(I,J,K-1,T,UU))  &
+                 /(HT(I,J,K,T)-HT(I,J,K-1,T))  &
+                 *(HT(I,J2,K,T)-HT(I,J1,K,T)+HT(I,J2,K-1,T)-HT(I,J1,K-1,T)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*SIND(DEG(I,J))  &
+                 +(GRDANALS(I,J,K,T,VV)-GRDANALS(I,J,K-1,T,VV)  &
+                  +GRDBKGND(I,J,K,T,VV)-GRDBKGND(I,J,K-1,T,VV))  &
+                 /(HT(I,J,K,T)-HT(I,J,K-1,T))  &
+                 *(HT(I2,J,K,T)-HT(I1,J,K,T)+HT(I2,J,K-1,T)-HT(I1,J,K-1,T)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*SIND(DEG(I,J)) )
+    ENDIF
+  ENDDO
+  ENDDO
+  ENDDO
+  ENDDO
+
+  IF(IFPCDNT.EQ.1) THEN                                          !     FOR PRESSURE
+    DO K=2,NUMGRID(3)
+    DO T=1,NUMGRID(4)
+    DO J=1,NUMGRID(2)
+    DO I=1,NUMGRID(1)
+      K1=K-1
+      K2=MIN(K+1,NUMGRID(3))
+      WWW(I,J,K,T)=WWW(I,J,K,T)   &
+                  *(GRDANALS(I,J,K2,T,ZZ)-GRDANALS(I,J,K1,T,ZZ)      &
+                   +GRDBKGND(I,J,K2,T,ZZ)-GRDBKGND(I,J,K1,T,ZZ))     &
+                  /(HT(I,J,K2,T)-HT(I,J,K1,T))*SCL(ZZ)*Z_TRANS/SCP(PSL)
+    ENDDO
+    ENDDO
+    ENDDO
+    ENDDO
+  ENDIF
+  RETURN
+END SUBROUTINE WCOMPGERNL
+
+SUBROUTINE WWGRADIENT(CC,ST)
+!*************************************************
+! CALCULATE THE GRADIENT OF DW/DU, DW/DV AND DW/DZ
+! HISTORY : JANUARY 25 2008, CODED BY ZHONGJIE HE
+!*************************************************
+! --------------------
+  IMPLICIT NONE
+! --------------------
+  INTEGER           :: I,J,K,T,I1,I2,J1,J2,K1,K2,UU,VV,ZZ,M,N,S,O,NO
+  REAL              :: Z1,Z2,Z3,Z4,SZ
+  INTEGER           :: NP(MAXDIMS)
+  REAL              :: HT(NUMGRID(1),NUMGRID(2),NUMGRID(3),NUMGRID(4))
+  REAL ,INTENT(IN)  :: CC(NGPTOBS,NALLOBS)
+  INTEGER,INTENT(IN):: ST
+  REAL              :: SG(NUMGRID(1),NUMGRID(2)),CG(NUMGRID(1),NUMGRID(2)),ZP(NUMGRID(1),NUMGRID(2),NUMGRID(3),NUMGRID(4))
+  REAL              :: XSCLE,YSCLE,XCOEFC,YCOEFC,XCOEFS,YCOEFS
+! ---------------------
+! DECLARE :
+!          'CC' IS THE COEFFICENT USED TO CALCULATE GW
+!          'HT' IS THE TEMPORARY ARRAY TO SAVE HEIGHT OF EACH GRID POINT
+!          'NP' IS THE INDEX OF THE GRID THAT INVOLVES THE OBSERVATION
+!          'SG' AND 'CG' ARE THE COS AND SIN VALUES OF DEG RESPECTIVELY
+!          'UU', 'VV' AND 'ZZ' ARE INDEXES OF THE CONTRAL VARIABLES FOR U, V AND HEIGHT RESPECTIVELY
+!          'ST' IS THE INDEX OF THE OBSERVATION STATE
+! ---------------------
+
+  UU=U_CMPNNT
+  VV=V_CMPNNT
+  ZZ=PRESSURE
+  IF(NALLOBS.EQ.0)RETURN
+
+  IF(IFPCDNT.EQ.0 .OR. IFPCDNT.EQ.2) THEN           ! FOR SIGMA AND HEIGHT COORDINATE
+    DO T=1,NUMGRID(4)
+    DO K=1,NUMGRID(3)
+    DO J=1,NUMGRID(2)
+    DO I=1,NUMGRID(1)
+      HT(I,J,K,T)=ZZZ(I,J,K,T)
+      ZP(I,J,K,T)=1.0
+    ENDDO
+    ENDDO
+    ENDDO
+    ENDDO
+    SZ=SCP(PSL)
+  ELSE                                              ! FOR PRESSURE COORDINATE
+    DO T=1,NUMGRID(4)
+    DO K=1,NUMGRID(3)
+    DO J=1,NUMGRID(2)
+    DO I=1,NUMGRID(1)
+      HT(I,J,K,T)=PPP(K)
+    ENDDO
+    ENDDO
+    ENDDO
+    ENDDO
+    SZ=SCP(PSL)
+
+!   THE FOLLOWING IS CODED FOR THE CASE OF OMIGA
+    DO T=1,NUMGRID(4)
+    DO K=1,NUMGRID(3)
+    DO J=1,NUMGRID(2)
+    DO I=1,NUMGRID(1)
+      K1=MAX(K-1,1)
+      K2=MIN(K+1,NUMGRID(3))
+      ZP(I,J,K,T)=(GRDANALS(I,J,K2,T,ZZ)-GRDANALS(I,J,K1,T,ZZ)      &
+                  +GRDBKGND(I,J,K2,T,ZZ)-GRDBKGND(I,J,K1,T,ZZ))     &
+                  /(HT(I,J,K2,T)-HT(I,J,K1,T))*SCL(ZZ)*Z_TRANS/SCP(PSL)
+    ENDDO
+    ENDDO
+    ENDDO
+    ENDDO
+
+  ENDIF
+
+
+  DO J=1,NUMGRID(2)
+  DO I=1,NUMGRID(1)
+    SG(I,J)=SIND(DEG(I,J))
+    CG(I,J)=COSD(DEG(I,J))
+  ENDDO
+  ENDDO
+
+  XSCLE=SZ/SCP(XSL)/2.0
+  YSCLE=SZ/SCP(YSL)/2.0
+
+! THIS DO LOOP IS TO CALCULATE THE GRADIENT OF VERTICAL VELOCITY TO THE CONTROL VARIABLE OF U AND V, THE HORIZONTAL VELOCITY.
+  O=0
+  DO S=1,ST-1
+    O=O+NOBSTAT(S)
+  ENDDO
+  S=ST
+  DO NO=1,NOBSTAT(S)
+    O=O+1
+    DO N=1,MAXDIMS
+      NP(N)=OBSIDXPC(N,O)
+    ENDDO
+    M=0
+    DO T=NP(4),MIN0(NP(4)+1,NUMGRID(4))
+    DO K=NP(3),MIN0(NP(3)+1,NUMGRID(3))
+    DO J=NP(2),MIN0(NP(2)+1,NUMGRID(2))
+    DO I=NP(1),MIN0(NP(1)+1,NUMGRID(1))
+      M=M+1
+      I1=MAX0(I-1,1)
+      I2=MIN0(I+1,NUMGRID(1))
+      J1=MAX0(J-1,1)
+      J2=MIN0(J+1,NUMGRID(2))
+      XCOEFC=CC(M,O)/(XXX(I2,J)-XXX(I1,J))*XSCLE*CG(I,J)*ZP(I,J,K,T)
+      YCOEFC=CC(M,O)/(YYY(I,J2)-YYY(I,J1))*YSCLE*CG(I,J)*ZP(I,J,K,T)
+      XCOEFS=CC(M,O)/(XXX(I2,J)-XXX(I1,J))*XSCLE*SG(I,J)*ZP(I,J,K,T)
+      YCOEFS=CC(M,O)/(YYY(I,J2)-YYY(I,J1))*YSCLE*SG(I,J)*ZP(I,J,K,T)
+      DO K1=2,K
+        Z2=HT(I,J,K1  ,T)
+        Z1=HT(I,J,K1-1,T)
+        
+        GRADINT(I2,J,K1-1,T,UU)=GRADINT(I2,J,K1-1,T,UU)-(Z2-Z1)*XCOEFC
+        GRADINT(I1,J,K1-1,T,UU)=GRADINT(I1,J,K1-1,T,UU)+(Z2-Z1)*XCOEFC
+        GRADINT(I,J2,K1-1,T,VV)=GRADINT(I,J2,K1-1,T,VV)-(Z2-Z1)*YCOEFC
+        GRADINT(I,J1,K1-1,T,VV)=GRADINT(I,J1,K1-1,T,VV)+(Z2-Z1)*YCOEFC
+        GRADINT(I2,J,K1  ,T,UU)=GRADINT(I2,J,K1  ,T,UU)-(Z2-Z1)*XCOEFC
+        GRADINT(I1,J,K1  ,T,UU)=GRADINT(I1,J,K1  ,T,UU)+(Z2-Z1)*XCOEFC
+        GRADINT(I,J2,K1  ,T,VV)=GRADINT(I,J2,K1  ,T,VV)-(Z2-Z1)*YCOEFC
+        GRADINT(I,J1,K1  ,T,VV)=GRADINT(I,J1,K1  ,T,VV)+(Z2-Z1)*YCOEFC
+        GRADINT(I,J2,K1-1,T,UU)=GRADINT(I,J2,K1-1,T,UU)+(Z2-Z1)*YCOEFS
+        GRADINT(I,J1,K1-1,T,UU)=GRADINT(I,J1,K1-1,T,UU)-(Z2-Z1)*YCOEFS
+        GRADINT(I2,J,K1-1,T,VV)=GRADINT(I2,J,K1-1,T,VV)-(Z2-Z1)*XCOEFS
+        GRADINT(I1,J,K1-1,T,VV)=GRADINT(I1,J,K1-1,T,VV)+(Z2-Z1)*XCOEFS
+        GRADINT(I,J2,K1  ,T,UU)=GRADINT(I,J2,K1  ,T,UU)+(Z2-Z1)*YCOEFS
+        GRADINT(I,J1,K1  ,T,UU)=GRADINT(I,J1,K1  ,T,UU)-(Z2-Z1)*YCOEFS
+        GRADINT(I2,J,K1  ,T,VV)=GRADINT(I2,J,K1  ,T,VV)-(Z2-Z1)*XCOEFS
+        GRADINT(I1,J,K1  ,T,VV)=GRADINT(I1,J,K1  ,T,VV)+(Z2-Z1)*XCOEFS
+      ENDDO
+
+      IF(IFPCDNT.EQ.0) THEN
+      DO K1=2,K
+        Z1=HT(I1,J,K1  ,T)
+        Z2=HT(I2,J,K1  ,T)
+        Z3=HT(I1,J,K1-1,T)
+        Z4=HT(I2,J,K1-1,T)
+        GRADINT(I,J,K1  ,T,UU)=GRADINT(I,J,K1  ,T,UU)-(Z2-Z1+Z4-Z3)*XCOEFC
+        GRADINT(I,J,K1-1,T,UU)=GRADINT(I,J,K1-1,T,UU)+(Z2-Z1+Z4-Z3)*XCOEFC
+        GRADINT(I,J,K1  ,T,VV)=GRADINT(I,J,K1  ,T,VV)-(Z2-Z1+Z4-Z3)*XCOEFS
+        GRADINT(I,J,K1-1,T,VV)=GRADINT(I,J,K1-1,T,VV)+(Z2-Z1+Z4-Z3)*XCOEFS
+      ENDDO
+      DO K1=2,K
+        Z1=HT(I,J1,K1  ,T)
+        Z2=HT(I,J2,K1  ,T)
+        Z3=HT(I,J1,K1-1,T)
+        Z4=HT(I,J2,K1-1,T)
+        GRADINT(I,J,K1  ,T,VV)=GRADINT(I,J,K1  ,T,VV)-(Z2-Z1+Z4-Z3)*YCOEFC
+        GRADINT(I,J,K1-1,T,VV)=GRADINT(I,J,K1-1,T,VV)+(Z2-Z1+Z4-Z3)*YCOEFC
+        GRADINT(I,J,K1  ,T,UU)=GRADINT(I,J,K1  ,T,UU)+(Z2-Z1+Z4-Z3)*YCOEFS
+        GRADINT(I,J,K1-1,T,UU)=GRADINT(I,J,K1-1,T,UU)-(Z2-Z1+Z4-Z3)*YCOEFS
+      ENDDO
+      ENDIF
+
+    ENDDO
+    ENDDO
+    ENDDO
+    ENDDO
+  ENDDO
+
+
+! THE FOLLOWING STATEMENT IS TO CALCULATE THE GRADIENT OF VERTICAL VELOCITY TO THE VARIABLE OF HEIGHT, THIS IS ONLY NECESSARY FOR THE CASE OF PRESURE VERTICAL COORDINATE.
+
+  IF(IFPCDNT.EQ.1) THEN
+    O=0
+    DO S=1,ST-1
+      O=O+NOBSTAT(S)
+    ENDDO
+    S=ST
+    DO NO=1,NOBSTAT(S)
+      O=O+1
+      DO N=1,MAXDIMS
+        NP(N)=OBSIDXPC(N,O)
+      ENDDO
+      M=0
+      DO T=NP(4),MIN0(NP(4)+1,NUMGRID(4))
+      DO K=NP(3),MIN0(NP(3)+1,NUMGRID(3))
+      DO J=NP(2),MIN0(NP(2)+1,NUMGRID(2))
+      DO I=NP(1),MIN0(NP(1)+1,NUMGRID(1))
+        M=M+1
+        I1=MAX0(I-1,1)
+        I2=MIN0(I+1,NUMGRID(1))
+        J1=MAX0(J-1,1)
+        J2=MIN0(J+1,NUMGRID(2))
+
+        K1=MAX(K-1,1)
+        K2=MIN(K+1,NUMGRID(3))
+        GRADINT(I,J,K1,T,ZZ)=GRADINT(I,J,K1,T,ZZ)+WWW(I,J,K,T)/ZP(I,J,K,T)*(-1.0/(PPP(K2)-PPP(K1))/SCP(PSL))*CC(M,O)
+        GRADINT(I,J,K2,T,ZZ)=GRADINT(I,J,K2,T,ZZ)+WWW(I,J,K,T)/ZP(I,J,K,T)*( 1.0/(PPP(K2)-PPP(K1))/SCP(PSL))*CC(M,O)
+
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDDO
+    ENDDO
+  ENDIF
+  
+END SUBROUTINE WWGRADIENT
+
+END MODULE WCOMPT_GRADT
