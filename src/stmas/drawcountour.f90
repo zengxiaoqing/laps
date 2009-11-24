@@ -1,0 +1,98 @@
+MODULE DRAWCOUNTOUR
+!*************************************************
+! DRAW COUNTOUR PICTURE FOR SUFER SOFTWARE
+! HISTORY: FEBRUARY 2008, SEPARATED FROM THE INPUT_BG_OBS MODULE by ZHONGJIE HE.
+!*************************************************
+
+  USE PRMTRS_STMAS
+
+  PUBLIC   DRCONTOUR, DRCONTOUR_2D
+
+CONTAINS
+
+SUBROUTINE DRCONTOUR(OX,EX,OY,EY,ND,NG,UV,FN)
+!*************************************************
+! DRAW RADIAL WIND (AFFILIATE)
+! HISTORY: AUGUST 2007, CODED by WEI LI.
+!*************************************************
+  IMPLICIT NONE
+! --------------------
+  INTEGER  :: ND,NG(NUMDIMS),IU,I,J,K
+  REAL  :: MN,MX,OX,EX,OY,EY
+  REAL  :: UV(NG(1),NG(2),NG(3))
+  CHARACTER(LEN=6) :: FN
+! --------------------
+  K=2 !(NG(3)+1)/2
+  IU=2
+  OPEN(IU,FILE=FN,STATUS='UNKNOWN')
+  MX=-100000000.0
+  MN=100000000.0
+  DO I=1,NG(1)
+  DO J=1,NG(2)
+    IF(UV(I,J,K).LT.9000.0)THEN
+      IF(UV(I,J,K).GT.MX)MX=UV(I,J,K)
+      IF(UV(I,J,K).LT.MN)MN=UV(I,J,K)
+    ENDIF
+  ENDDO
+  ENDDO
+  WRITE(IU,'(A4)')'DSAA'
+  WRITE(IU,'(2I4)')NG(1),NG(2)
+  WRITE(IU,*)OX,EX
+  WRITE(IU,*)OY,EY
+  WRITE(IU,*)MN,MX
+  DO I=1,NG(1)
+  DO J=1,NG(2)
+    IF(UV(I,J,K).GT.9000.0)UV(I,J,K)=2.E38
+  ENDDO
+  ENDDO
+  DO J=1,NG(2)
+    WRITE(IU,*)(UV(I,J,K),I=1,NG(1))
+  ENDDO
+  CLOSE(IU)
+  RETURN
+END SUBROUTINE DRCONTOUR
+
+
+SUBROUTINE DRCONTOUR_2D(OX,EX,OY,EY,IM,JM,UV,FN)
+!*************************************************
+! DRAW RADIAL WIND (AFFILIATE)
+! HISTORY: AUGUST 2007, CODED by WEI LI.
+!*************************************************
+  IMPLICIT NONE
+! --------------------
+  INTEGER  :: IU,I,J,K,IM,JM
+  REAL  :: MN,MX,OX,EX,OY,EY
+  REAL  :: UV(IM,JM)
+  CHARACTER(LEN=6) :: FN
+! --------------------
+  IU=2
+  OPEN(IU,FILE=FN,STATUS='UNKNOWN')
+  MX=-100000000.0
+  MN=100000000.0
+  DO I=1,IM
+  DO J=1,JM
+    IF(UV(I,J).LT.9000.0)THEN
+      IF(UV(I,J).GT.MX)MX=UV(I,J)
+      IF(UV(I,J).LT.MN)MN=UV(I,J)
+    ENDIF
+  ENDDO
+  ENDDO
+  WRITE(IU,'(A4)')'DSAA'
+  WRITE(IU,'(2I4)')IM,JM
+  WRITE(IU,*)OX,EX
+  WRITE(IU,*)OY,EY
+  WRITE(IU,*)MN,MX
+  DO I=1,IM
+  DO J=1,JM
+    IF(UV(I,J).GT.9000.0)UV(I,J)=2.E38
+  ENDDO
+  ENDDO
+  DO J=1,JM
+    WRITE(IU,*)(UV(I,J),I=1,IM)
+  ENDDO
+  CLOSE(IU)
+  RETURN
+END SUBROUTINE DRCONTOUR_2D
+
+END MODULE DRAWCOUNTOUR
+
