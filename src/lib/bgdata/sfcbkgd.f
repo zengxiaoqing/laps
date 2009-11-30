@@ -11,6 +11,9 @@ C                 JMX      DIMENSION N-S
 C                 KX       NUMBER OF VERTICAL LEVELS
 C                 p        LAPS Pressure levels     1D
 C                 tdsfc    LAPS Dew Point Temp      2D
+c
+c Compute surface variables on hi-res terrain using first 3D model level
+c above the LAPS terrain.
 
 c
 c J. Smart    09-22-98:	Original Version: This is used to compute
@@ -57,6 +60,8 @@ c if bgmodel = 9      then no surface fields input. Compute all from 3d
 c                     fields. q3d used. (NOS - ETA)
 c otherwise tdsfc is input with q
 c 
+      write(6,*)' Subroutine sfcbkgd, bgmodel = ',bgmodel
+
       t_ref=-132.0
       if(bgmodel.eq.3.or.bgmodel.eq.9)then
          do k=1,kx
@@ -69,11 +74,14 @@ c
          enddo
 
          badflag=0.
+         write(6,*)' Interp 3D T and RH to hi-res terrain, tdsfc is RH?'
          call interp_to_sfc(ter,rh3d,height,imx,jmx,kx,
-     &                      badflag,tdsfc)
+     &                      badflag,tdsfc) ! Here tdsfc temporarily is RH
          call interp_to_sfc(ter,t,height,imx,jmx,kx,badflag,
      &                      tsfc)
       endif
+
+      write(6,*)' Compute sfc fields using 3D model data'
 
       do j=1,jmx
       do i=1,imx

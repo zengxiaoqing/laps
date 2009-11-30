@@ -13,6 +13,8 @@ C                 KX       NUMBER OF VERTICAL LEVELS
 C                 p        LAPS Pressure levels     1D
 C                 tdsfc    LAPS Dew Point Temp      2D
 c                 td_sfc   ANALYZED DEW POINT TEMP  2D
+c
+c Compute surface variables on hi-res terrain using 2D model surface data. 
 
 c
 c J. Smart    09-22-98:	Original Version: This is used to compute
@@ -44,7 +46,7 @@ c
       REAL       HEIGHTSFC   ( IMX, JMX )
       REAL       P           ( KX )
       REAL       PSFC        ( IMX , JMX )
-      REAL       TSFC        ( IMX , JMX )
+      REAL       TSFC        ( IMX , JMX )               ! I/O
       REAL       Q           ( IMX , JMX , KX )
       REAL       rh3d        ( IMX , JMX , KX )
       REAL       rh2d        ( IMX , JMX )
@@ -64,6 +66,8 @@ c if bgmodel = 9      then no surface fields input. Compute all from 3d
 c                     fields. q3d used. (NOS - ETA)
 c otherwise tdsfc is input with q
 c 
+      write(6,*)' Subroutine sfcbkgd_sfc, bgmodel = ',bgmodel
+
       t_ref=-132.0
       if(bgmodel.eq.3.or.bgmodel.eq.9)then
          do k=1,kx
@@ -76,11 +80,14 @@ c
          enddo
 
          badflag=0.
+         write(6,*)' Interp 3D T and RH to hi-res terrain, tdsfc is RH?'
          call interp_to_sfc(ter,rh3d,height,imx,jmx,kx,
-     &                      badflag,tdsfc)
+     &                      badflag,tdsfc) ! Here tdsfc temporarily is RH
          call interp_to_sfc(ter,t,height,imx,jmx,kx,badflag,
      &                      tsfc)
       endif
+
+      write(6,*)' Compute sfc fields using 2D model surface data'
 
       do j=1,jmx
       do i=1,imx
@@ -94,7 +101,7 @@ c
 c
 c
 c recompute psfc with moisture consideration. snook's orig code.
-c              it=tdsfc(i,j)*100.
+c              it=tdsfc(i,j)*100.         
 c              it=min(45000,max(15000,it))
 c              xe=esat(it)
 c              qsfc=0.622*xe/(p_sfc-xe)
