@@ -357,15 +357,34 @@ if($opt_M eq "stmas_mg.x"){
 }
 
 my $t=gmtime(); 
-my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
+my $sys;
 
 if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r || defined $opt_t){
     print $t." Running purger\n";
+    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
     $sys .= "-r " if($opt_r);
     $sys .= "-m $opt_m " if($opt_m);
     $sys .= "-t $opt_t " if($opt_t);
     $sys .= " $LAPS_DATA_ROOT/lapsprd";
+    print $sys."\n";
+    system($sys);
 
+    print $t." Running purger in fua to bypass possible soft link\n";
+    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
+    $sys .= "-r " if($opt_r);
+    $sys .= "-m $opt_m " if($opt_m);
+    $sys .= "-t $opt_t " if($opt_t);
+    $sys .= " $LAPS_DATA_ROOT/lapsprd/fua";
+    print $sys."\n";
+    system($sys);
+
+    print $t." Running purger in fsf to bypass possible soft link\n";
+    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
+    $sys .= "-r " if($opt_r);
+    $sys .= "-m $opt_m " if($opt_m);
+    $sys .= "-t $opt_t " if($opt_t);
+    $sys .= " $LAPS_DATA_ROOT/lapsprd/fsf";
+    print $sys."\n";
     system($sys);
 }
 # for CWB/Taiwan, we need to update file tcbogus.nl and deal
