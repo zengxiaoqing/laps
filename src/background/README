@@ -18,12 +18,19 @@ program lga                                      lga.f
          read_fuafsf_cdf   
          get_lapsdata_3d
          read_sbn_grids                          bgdata/read_sbn_grids.f 
-             read_netcdf_real                    bgdata/read_netcdf_field.f
+            read_netcdf_real                     bgdata/read_netcdf_field.f
          degrib_data                             degrib/readgrib.F90
-             get_lapsbg                          degrib/output.F90
+            get_lapsbg                           degrib/output.F90
       vinterp
       init_hinterp
-      hinterp_field
+      hinterp_field                              lib/gridconv.f
+      sfcbkgd_sfc                                bgdata/sfcbkgd_sfc.f
+         compute_sfc_bgfields_sfc                        "
+      sfcbkgd                                    bgdata/sfcbkgd.f
+         interp_to_sfc                           util/interp_to_sfc.f
+         compute_sfc_bgfields                    bgdata/sfcbkgd.f
+      interp_to_sfc                              util/interp_to_sfc.f
+      sfcbkgd                                    bgdata/sfcbkgd.f
       write_lga                                  bgdata/writelgalgb.f
          write_laps
    lga_driver_wrfarw

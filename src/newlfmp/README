@@ -29,7 +29,15 @@ lfmpost                                      lfmpost.f90
         wintprec                                 "       
         snowfall                                 "
         model_pblhgt                             "
-    lfm_vinterp
+        helicity                                 "
+        updraft_helicity                         "
+        capecin                                  "
+        height_tw                                "
+        ventilation                              "
+        haines_layer                             "
+        fosberg_fwi                              "
+        up_mflux                             lib/up_mflux.f
+    lfm_vinterp                              interp.f90
     output_laps                              lfmwrite.f90
         write_laps_lfm                       lib/writelapslfm.f
     grib_sfc_vars                            lfmwrite.f90
