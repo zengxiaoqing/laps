@@ -147,8 +147,8 @@ c
      .          topo(nx_laps,ny_laps),       !LAPS avg terrain
      .          grx(nx_laps,ny_laps),        !hinterp factor
      .          gry(nx_laps,ny_laps),        !hinterp factor
-     .          ht_sfc(nx_laps,ny_laps),
-     .          td_sfc(nx_laps,ny_laps),
+     .          ht_sfc(nx_laps,ny_laps),     !first guess terrain
+     .          td_sfc(nx_laps,ny_laps),     !2m dewpoint
      .          tp_sfc(nx_laps,ny_laps),     !2m surface temperature
      .          t_sfc (nx_laps,ny_laps),     !sea/land surface temp
      .          Tdsfc(nx_laps,ny_laps),
@@ -1028,6 +1028,8 @@ c
            if(bgmodel.ne.1.and.bgmodel.ne.9 .AND.
      1                         bgmodel.ne.3      )then
 
+            write(6,*)' Calling hinterp_field for surface variables'
+
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
@@ -1051,11 +1053,11 @@ c Because not all model backgrounds have t_at_sfc (ground and/or sst)
 c then no need to hinterp unless it exists.
 c
             if(lhif_tsfc)then
-               print*,'Horizontally Interpolate T at Sfc'
+               print*,'Horizontally Interpolate T at Sfc (tgd)'        
                call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .           grx,gry,t_at_sfc,t_sfc,bgmodel)
             else
-               print*,'DO NOT Horizontally Interpolate T at Sfc'
+               print*,'DO NOT Horizontally Interpolate T at Sfc (tgd)'       
                t_sfc=missingflag
             endif
 c
@@ -1098,7 +1100,7 @@ c... Only ETA48_CONUS and namelist switch "luse_sfc_bkgd" enable the use
 c... of subroutine sfcbkgd_sfc. This routine uses the 2m Td and sfc_press
 c... 2D arrays directly from the background model.
 
-           if(cmodel.eq.'ETA48_CONUS' .and. luse_sfc_bkgd)then
+           if(luse_sfc_bkgd)then ! tested only for ETA48_CONUS
               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
      .            ,sh_sfc,topo,pr,nx_laps, ny_laps, nz_laps, pr_sfc)
            else
@@ -1121,6 +1123,7 @@ c fix sfc Td to not be greater than T at points determined above
 c
 c..... Do the winds
 c
+           write(6,*)' Interpolate 3D winds to the hi-res surface'
            call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,uw_sfc)
            call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
@@ -1244,6 +1247,7 @@ c
 c
 c..... Do the winds
 c
+              write(6,*)' Interpolate 3D winds to the hi-res surface'
               call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,uw_sfc)
               call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
