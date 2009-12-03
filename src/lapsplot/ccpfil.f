@@ -455,6 +455,10 @@ C
       endif       
 
       if(l_raster .and. (.not. l_set_contours))then ! do raster image
+
+!         Try and reset things borrowing from the regular image section
+          call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+
           cmn = (0.0           ) * abs(scale_loc) + 2.0*cis
           cmx = (1.0+col_offset) * abs(scale_loc) + 2.0*cis       
           crange = cmx-cmn
