@@ -15,6 +15,7 @@
         real pw_2d(NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
         real temp_vert(NZ_L)
         real ht_vert(NZ_L)
@@ -45,6 +46,8 @@
         character*33 c33_label
         character*16 c16_latlon
         character*11 c_pw
+        character*20 c20_x, c20_y
+        logical l_latlon, l_parse
 
         integer i_overlay
 
@@ -55,24 +58,6 @@
         skewt(t_c,logp) = t_c - (logp - logp_bottom) * 32.
 
         n_image = 0
-
-        write(6,*)' Input x grid point for sounding...'
-
-        read(5,*)xsound
-
-        write(6,*)' Input y grid point for sounding...'
-
-        read(5,*)ysound
-
-        tlow_c = -30.
-        thigh_c = +50.
-
-!       Get 3-D pressure field
-        call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
-        if(istatus .ne. 1)go to 900
-
-        isound = nint(xsound)
-        jsound = nint(ysound)
 
         ext = 'static'
 
@@ -92,6 +77,61 @@
             write(6,*)' Error reading LAPS static-lon'
             return
         endif
+
+        var_2d='AVG'
+        call read_static_grid(NX_L,NY_L,var_2d,topo,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading LAPS static-topo'
+            return
+        endif
+
+ 80     write(6,*)
+        write(6,*)' Input x grid point (or latitude) for sounding...'
+        read(5,*)c20_x
+
+        call s_len(c20_x,lenx)
+        l_latlon = l_parse(c20_x(1:lenx),'l')
+
+        if(l_latlon)then ! x value was flagged as latitude with "l" at the end 
+            read(c20_x(1:lenx-1),*)soundlat
+
+            write(6,*)' Input longitude for sounding...'       
+            read(5,*)c20_y
+            call s_len(c20_y,leny)
+            if(l_parse(c20_y(1:leny),'l'))then
+                read(c20_y(1:leny-1),*)soundlon
+            else
+                read(c20_y(1:leny),*)soundlon
+            endif
+
+            call latlon_to_rlapsgrid(soundlat,soundlon,lat,lon
+     1                              ,NX_L,NY_L,xsound,ysound,istatus)       
+
+            if(istatus .ne. 1)then
+                return
+            endif
+
+            if(xsound .lt. 1. .or. xsound .gt. float(NX_L) .OR.
+     1         ysound .lt. 1. .or. ysound .gt. float(NY_L)    )then
+                write(6,*)' Station is outside domain - try again...'
+                return
+            endif
+
+        else
+            read(c20_x(1:lenx),*)xsound
+            write(6,*)' Input y grid point for sounding...'
+            read(5,*)ysound
+        endif
+
+        tlow_c = -30.
+        thigh_c = +50.
+
+!       Get 3-D pressure field
+        call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
+        if(istatus .ne. 1)go to 900
+
+        isound = nint(xsound)
+        jsound = nint(ysound)
 
         rlat = lat(isound,jsound)
         rlon = lon(isound,jsound)
@@ -239,7 +279,7 @@
                 p_mb        = pres_1d(iz)/100.
                 q_gkg       = sh_vert(iz) * 1000.
                 td_vert(iz) = make_td(p_mb,t_c,q_gkg,t_ref)
-                rh_vert(iz) = hum(t_c,td_vert(iz))
+                rh_vert(iz) = humidity(t_c,td_vert(iz))
             enddo ! iz
 
             istat_td = 1
@@ -462,10 +502,12 @@
         t_sfc_k  = t_2d(isound,jsound)
         td_sfc_k = td_2d(isound,jsound)
         pw_sfc   = pw_2d(isound,jsound)
+        topo_sfc = topo(isound,jsound)
 
-        write(6,*)' Sfc P = ', p_sfc_pa
+        write(6,*)' Sfc P (mb) = ', p_sfc_pa/100.
+     1           ,' Terrain Height (m)= ',topo_sfc 
         write(6,*)' Sfc T (c) = ', k_to_c(t_sfc_k)
-        write(6,*)' TPW = ', pw_sfc
+        write(6,*)' TPW (cm) = ', pw_sfc*100.
         write(6,*)
 
 !       Read Wind (a la xsect)
