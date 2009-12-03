@@ -28,7 +28,7 @@
  radarext_3d_accum='xxx',
  l_accum_fg=.false.,
  l_accum_radar=.true.,
- l_accum_gauge=.true.,
+ l_accum_gauge=.false.,
  
  path_to_topt30s='/data/lapb/projects/geog/world_topo_30s',
  path_to_landuse30s='/data/lapb/projects/geog/landuse_30s',
