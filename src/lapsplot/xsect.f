@@ -656,6 +656,11 @@ c read in laps lat/lon and topo
                 write(6,86)xsta,ysta
 86              format(/2x,'Waypt x,y = ',2f7.2)
 
+                nxsta = nint(xsta)
+                nysta = nint(ysta)
+                write(6,96)lat(nxsta,nysta),lon(nxsta,nysta)
+96              format('  Waypt lat/lon = ',2f9.3)
+
             else
                 write(6,87)c3_sta,xsta,ysta
 87              format(/2x,a3,' x,y =   ',2f7.2)
