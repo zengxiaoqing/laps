@@ -110,13 +110,17 @@ c smooth_fields
 c     Set to .true. to turn on 2dx smoother (should not normally be
 c     required).
 c
-c luse_sfc_bkgd = true/false.  If true then lga uses 2m model variables for T, Td and P
-c                 for lgb 2d fields. If false, lga interpolates hydrostatically
-c                 using the 3d grids (laps) to derive sfc variables for lgb.  Currently
-c                 only active for bgpath = /public/data/grids/eta/48km_nat_isobaric/netcdf
-c                 (or identical type netcdf file) and cmodel = eta48conus (bgmodel = 2).
-c                 When = true, lgb fields are only slightly better (ie., verify better with
+c luse_sfc_bkgd = .true./.false.  If TRUE then lga uses 2m model variables for T, Td and P
+c                 for lgb 2d fields. If FALSE, lga interpolates hydrostatically using 
+c                 the 3d grids (laps) to derive sfc variables for lgb. This flag has been 
+c                 tested only for bgpath = /public/data/grids/eta/48km_nat_isobaric/netcdf
+c                 (or identical type netcdf file) and cmodel = ETA48_CONUS (bgmodel = 2).
+c                 When TRUE, lgb fields are only slightly better (ie., verify better with
 c                 sfc obs).
+c
+c                 Note that for cmodel of LAPS_FUA or LAPS surface fields are always
+c                 used and this flag is ignored. For other models we are currently
+c                 reviewing whether this flag gives acceptable results when set to TRUE.
 c
 c Namelist section 2: interp_controls
 c     These variables are not active atm.
