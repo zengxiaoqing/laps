@@ -64,6 +64,7 @@ if ($grid[1] < 0) {
       $grid[$n] = $n;
    }
 }
+print "Number of nests = $ngrid\n";
 
 # Define model data directories.
 
@@ -182,6 +183,8 @@ my $inittime = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + $decade;
 my $endsec = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + 23400;
 my $current_sec = timegm(gmtime);
 my $new_cycle_min;
+my $g,@grid;
+my $grid;
 
 # Loop through each forecast time for JETTY copy
 for ($n=0; $n<$nfcst; $n++) {
@@ -205,11 +208,17 @@ for ($n=0; $n<$nfcst; $n++) {
 
   print "fua_file = $fua_file\n";
 
-  while ( !(-e "$modelroot/$date/wrfprd/d01/fua/$fua_file")) {
+# Add counting for multiple domains
+
+  print "ngrid = $ngrid\n";
+  for ($g=1; $g<=$ngrid; $g++) {
+    $grid = $grid[$g];
+
+    while ( !(-e "$modelroot/$date/wrfprd/d01/fua/$fua_file")) {
          print "file does not exist\n";
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FUA timed out after $elapsed seconds: maxwait = $maxwait\n\n";
-            print "    fua_file = $modelroot/$date/wrfprd/d01/fua/$fua_file\n";
+            print "    fua_file = $modelroot/$date/wrfprd/d0$grid/fua/$fua_file\n";
             if (! defined ($opt_e)){
                 exit;
             }
@@ -217,15 +226,15 @@ for ($n=0; $n<$nfcst; $n++) {
          }
          $elapsed += $waitinc;
          sleep $waitinc;
-  }
+    }
 
-  print "fsf_file = $fsf_file\n";
+    print "fsf_file = $fsf_file\n";
 
-  while ( !(-e "$modelroot/$date/wrfprd/d01/fsf/$fsf_file")) {
+    while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file")) {
          print "file does not exist\n";
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FSF timed out after $elapsed seconds: maxwait = $maxwait\n\n";
-            print "    fsf_file = $modelroot/$date/wrfprd/d01/fsf/$fsf_file\n";
+            print "    fsf_file = $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
             if (! $opt_e){
                 exit;
             }
@@ -233,37 +242,38 @@ for ($n=0; $n<$nfcst; $n++) {
          }
          $elapsed += $waitinc;
          sleep $waitinc;
-  }
+    }
 
-  print "found it, inittime: $inittime\n";
-  print "elapsed time is $elapsed\n";
-  system ("ls -l $modelroot/$date/wrfprd/d01/fua/$fua_file");
-  system ("ls -l $modelroot/$date/wrfprd/d01/fsf/$fsf_file");
-  sleep 10;
-  $elapsed = 0;
+    print "found it, inittime: $inittime\n";
+    print "elapsed time is $elapsed\n";
+    system ("ls -l $modelroot/$date/wrfprd/d0$grid/fua/$fua_file");
+    system ("ls -l $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file");
+    sleep 10;
+    $elapsed = 0;
 
-# Send to remote directory
-  system ("date");
-  my $scp_cmd;
+#   Send to remote directory
+    system ("date");
+    my $scp_cmd;
 
-  if ($opt_a eq "noSubDir") {
-    $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fua/$fua_file $lapsprd/fua";
-  }else {
-    $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fua/$fua_file $lapsprd/fua/$opt_m-$opt_a";
-  }
-  print "Running command: $scp_cmd\n";
-  system ($scp_cmd);
-  system ("date");
+    if ($opt_a eq "noSubDir") {
+      $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua";
+    }else {
+      $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$opt_m-$opt_a";
+    }
+    print "Running command: $scp_cmd\n";
+    system ($scp_cmd);
+    system ("date");
 
-  if ($opt_a eq "noSubDir") {
-    $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $lapsprd/fsf";
-  }else {
-    $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $lapsprd/fsf/$opt_m-$opt_a";
-  }
-  print "Running command: $scp_cmd\n";
-  system ($scp_cmd);
-  system ("date");
-}
+    if ($opt_a eq "noSubDir") {
+      $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf";
+    }else {
+      $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$opt_m-$opt_a";
+    }
+    print "Running command: $scp_cmd\n";
+    system ($scp_cmd);
+    system ("date");
+  } # grid loop
+} # forecast time loop
 
 if(! defined $opt_M){
     print "no MSS copy is needed\n";
@@ -292,11 +302,11 @@ for ($n=0; $n<$nfcst; $n++) {
 
   print "fua_file = $fua_file\n";
 
-  while ( !(-e "$modelroot/$date/wrfprd/d01/fua/$fua_file")) {
+  while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file")) {
          print "file does not exist\n";
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FUA timed out after $elapsed seconds: maxwait = $maxwait\n\n";
-            print "    fua_file = $modelroot/$date/wrfprd/d01/fua/$fua_file\n";
+            print "    fua_file = $modelroot/$date/wrfprd/d0$grid/fua/$fua_file\n";
             if (! defined ($opt_e)){
                 exit;
             }
@@ -308,11 +318,11 @@ for ($n=0; $n<$nfcst; $n++) {
 
   print "fsf_file = $fsf_file\n";
 
-  while ( !(-e "$modelroot/$date/wrfprd/d01/fsf/$fsf_file")) {
+  while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file")) {
          print "file does not exist\n";
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FSF timed out after $elapsed seconds: maxwait = $maxwait\n\n";
-            print "    fsf_file = $modelroot/$date/wrfprd/d01/fsf/$fsf_file\n";
+            print "    fsf_file = $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
             if (! $opt_e){
                 exit;
             }
@@ -324,8 +334,8 @@ for ($n=0; $n<$nfcst; $n++) {
 
   print "found it, inittime: $inittime\n";
   print "elapsed time is $elapsed\n";
-  system ("ls -l $modelroot/$date/wrfprd/d01/fua/$fua_file");
-  system ("ls -l $modelroot/$date/wrfprd/d01/fsf/$fsf_file");
+  system ("ls -l $modelroot/$date/wrfprd/d0$grid/fua/$fua_file");
+  system ("ls -l $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file");
   sleep 10;
   $elapsed = 0;
 
@@ -345,20 +355,28 @@ for ($n=0; $n<$nfcst; $n++) {
   print "Running command: $mss_cmd\n";
   system ($mss_cmd);
 
-  $mss_cmd = "cp $modelroot/$date/wrfprd/d01/fua/$fua_file $mssfullpath/fua/$opt_m-$opt_a";
-  print "Running command: $mss_cmd\n";
-  system ($mss_cmd);
-  system ("date");
+# Add counting for multiple domains
 
-  $mss_cmd = "mkdir -p $mssfullpath/fsf/$opt_m-$opt_a";
-  print "Running command: $mss_cmd\n";
-  system ($mss_cmd);
+  print "ngrid = $ngrid\n";
+  for ($g=1; $g<=$ngrid; $g++) {
+    $grid = $grid[$g];
 
-  $mss_cmd = "cp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $mssfullpath/fsf/$opt_m-$opt_a";
-  print "Running command: $mss_cmd\n";
-  system ($mss_cmd);
-  system ("date");
+    $mss_cmd = "cp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $mssfullpath/fua/$opt_m-$opt_a";
+    print "Running command: $mss_cmd\n";
+    system ($mss_cmd);
+    system ("date");
 
-}
+    $mss_cmd = "mkdir -p $mssfullpath/fsf/$opt_m-$opt_a";
+    print "Running command: $mss_cmd\n";
+    system ($mss_cmd);
+
+    $mss_cmd = "cp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $mssfullpath/fsf/$opt_m-$opt_a";
+    print "Running command: $mss_cmd\n";
+    system ($mss_cmd);
+    system ("date");
+
+  } # grid loop
+
+} # forecast time loop
 
 exit;
