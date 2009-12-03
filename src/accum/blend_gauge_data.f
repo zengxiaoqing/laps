@@ -13,6 +13,8 @@
 !       using rain gauges. If the radar/background field has any missing values
 !       a gauge only analysis is done instead.
 
+        use mem_namelist, only: l_accum_fg, l_accum_radar, l_accum_gauge
+
         include 'read_sfc.inc'
         include 'constants.inc'
 
@@ -34,15 +36,10 @@
 
         integer ilaps(maxsta),jlaps(maxsta)
 
-        logical l_accum_fg,l_accum_radar,l_accum_gauge
         logical l_accum_bias_ratio ! Apply bias correction as a constant ratio
                                    ! (given we are analyzing radar/fg & gauges)
 
         logical l_gauge_only ! Gauge only analysis
-
-        l_accum_fg = .false.
-        l_accum_radar = .true.
-        l_accum_gauge = .false.
 
         l_gauge_only = (.not. l_accum_fg) .AND. (.not. l_accum_radar) 
      1                                    .AND.        l_accum_gauge
