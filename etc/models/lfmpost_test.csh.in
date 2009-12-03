@@ -1,0 +1,25 @@
+#!/bin/csh
+
+
+# Edit mainly these 3 lines
+setenv RUN       2009112512 # Model Run Initialization Time
+setenv VALIDTIME 2009112512 # Model Run Valid Time
+setenv WRFDIR    /w3/jet/fab/wrf5km            
+
+# Parse Valid Time
+setenv YY  `echo $VALIDTIME  | cut -c3-4`
+setenv MON `echo $VALIDTIME  | cut -c5-6`
+setenv DD  `echo $VALIDTIME  | cut -c7-8`
+setenv HH  `echo $VALIDTIME  | cut -c9-10`
+setenv MM 00
+
+echo         `@PERL@ @prefix@/etc/systime.pl $YY $MON $DD $HH $MM | head -1` 
+setenv CTIME `@PERL@ @prefix@/etc/systime.pl $YY $MON $DD $HH $MM | head -1` 
+
+setenv USCORE _
+setenv ENDPART :00:00
+
+echo  "lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_d01_20$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME 0 $WRFDIR"
+
+lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_d01_20$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME 0 $WRFDIR
+
