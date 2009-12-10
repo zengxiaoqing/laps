@@ -17,7 +17,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -r model root (default = environment variable)
 #    -d init date (yyyymmddhh, default = current hour)
 #    -g model grid to process (default = 1, negative value does all grids)
-#    -f number of forecasts (default = 12)
+#    -f number of forecasts including initial time (default = 12)
 #    -i forecast increment (minutes, default = 60)
 #    -s start forecast time (hours, default = 0)
 #    -p model prefix (default = model dependent)
@@ -214,8 +214,9 @@ for ($n=0; $n<$nfcst; $n++) {
   for ($g=1; $g<=$ngrid; $g++) {
     $grid = $grid[$g];
 
-    while ( !(-e "$modelroot/$date/wrfprd/d01/fua/$fua_file")) {
-         print "file does not exist\n";
+    while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file")) {
+         print "file does not exist $modelroot/$date/wrfprd/d0$grid/fua/$fua_file\n";
+         system ("date");
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FUA timed out after $elapsed seconds: maxwait = $maxwait\n\n";
             print "    fua_file = $modelroot/$date/wrfprd/d0$grid/fua/$fua_file\n";
@@ -231,7 +232,8 @@ for ($n=0; $n<$nfcst; $n++) {
     print "fsf_file = $fsf_file\n";
 
     while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file")) {
-         print "file does not exist\n";
+         print "file does not exist $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
+         system ("date");
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FSF timed out after $elapsed seconds: maxwait = $maxwait\n\n";
             print "    fsf_file = $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
