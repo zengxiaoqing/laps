@@ -45,6 +45,7 @@ echo " "
 echo "Create list of lapsprd output files to be potentially tarred up for Web access"
 
 HH=`echo $time  | cut -c6-7`
+HHMM=`echo $time  | cut -c6-9`
 YYDDDHH=`echo $time  | cut -c1-7`
 
 echo "Tarring up LAPS in $LAPS_DATA_ROOT for $time"
@@ -70,8 +71,11 @@ find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD_$HH"      -print >> lapsta
 # Log & Wgi files
 find ./log     -type f -name "*.???.$YYDDDHH??" -print   >> lapstar.txt
 
+# Sfc Verification file
+ls -1 log/qc/laps_sfc.ver.$HHMM                          >> lapstar.txt
+
 # Static files
-if test "$STATIC" = static; then
+if test "$STATIC" = static; then                         
     echo "including static files"
     ls -1 static/static.nest7grid                        >> lapstar.txt
     ls -1 static/*.nl                                    >> lapstar.txt
@@ -87,8 +91,10 @@ which tar
 if test "$EXPAND" = noexpand; then
     echo "current directory is `pwd`"
     echo "making tar file $LAPS_DATA_ROOT/laps_$time.tar.gz"
+
     echo "tar cvfz $LAPS_DATA_ROOT/laps_$time.tar.gz -T $LAPS_DATA_ROOT/lapstar.txt"
           tar cvfz $LAPS_DATA_ROOT/laps_$time.tar.gz -T $LAPS_DATA_ROOT/lapstar.txt
+
     ls -l $LAPS_DATA_ROOT/laps_$time.tar.gz
 
 else
