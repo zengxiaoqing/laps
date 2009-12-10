@@ -511,7 +511,7 @@ c
 
 c                 reject_cnt=reject_cnt+1
 c                 reject_names(reject_cnt)=names(j)
-                  names(j)=' '
+c                 names(j)=' '           ! commented out 12/2009 by SA
 
 c                 print*,'reject_cnt/reject_names'
 c                 print*,'cnt/time: ',reject_cnt
