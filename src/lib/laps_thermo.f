@@ -1287,7 +1287,7 @@ cdoc    Quick way to get Theta(e) using lookup table
         integer len_dir
 
         integer pres2_low,pres2_high,pres2_interval,n_pres2
-        parameter (pres2_low = 500)
+        parameter (pres2_low = 250)
         parameter (pres2_high = 1100)
         parameter (pres2_interval = 10)
 
@@ -1325,9 +1325,10 @@ cdoc    Quick way to get Theta(e) using lookup table
             goto20
 10          write(6,*)' Generating thetae_lut.dat - no valid file exists
      1'
+            close(11)
 
             open(12,file=directory(1:len_dir)//'thetae_lut.dat'
-     1                          ,form='unformatted',status='new')
+     1                     ,form='unformatted',status='unknown')
             i = 0
             do t = t_low,t_high,t_interval
 
