@@ -62,6 +62,8 @@
         nyy = (ny-1)*nstep+1
        endif
 
+       write(6,*)' calling get_con_str, nxx/nyy = ',nxx,nyy
+
 !      Determine convective and stratiform regions
        call get_con_str(nx,ny,nz,nxx,nyy,radar_ref_3d,
      1                  pres_3d,temp_3d,str_con_index,
