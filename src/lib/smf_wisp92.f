@@ -89,6 +89,11 @@ cc   -------------------------------------------------------------
             kctop1=kctop+1
         endif
 100   continue
+
+      if(kctop .eq. 0)then
+        istatus = 0
+        return
+      endif
 cc   -------------------------------------------------------------
 cc
 cc   obtain cloud base and top conditions
@@ -304,6 +309,7 @@ cc   -----------------------------------------------------------------
  9005 format(2x,'Predicted LWC',8x,'Observed LWC',/)
  9014 format(1x,8e15.8)
  9015 format(1x,'j=',i3,'adiabatic lwc =',f12.6,'altitude =',f8.1)
+      istatus = 1
       return
       end
 
