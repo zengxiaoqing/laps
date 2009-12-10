@@ -362,11 +362,11 @@ c    &         pressure_pa, prsQcFlag,                            ! O
       real        soilMoisture(maxobs)
       real        dd(maxlvls,maxobs), ff(maxlvls,maxobs)
       real        temp_k, rh_pct,stationP,ws,wd
-      integer       tempQcFlag(maxlvls,maxobs)
-      integer       prsQcFlag(maxlvls,maxobs)
-      integer       rhQcFlag(maxlvls,maxobs)
-      integer       wsQcFlag(maxlvls,maxobs)
-      integer       wdQcFlag(maxlvls,maxobs)
+      integer       tempQcFlag(maxobs,maxlvls)
+      integer       prsQcFlag(maxobs,maxlvls)
+      integer       rhQcFlag(maxobs,maxlvls)
+      integer       wsQcFlag(maxobs,maxlvls)
+      integer       wdQcFlag(maxobs,maxlvls)
       integer       smQcFlag(maxobs)
       integer       tempQF, prsQF, rhQF, wsQF, wdQF
       real        height_m(maxobs,maxlvls)
