@@ -1450,7 +1450,14 @@ cdoc                            calls read_multiradar_3dref.
         read(comment_3d(1),101)n_radars
  101    format(25x,i3)
 
-        write(6,*)' n_radars/max_radars = ',n_radars,max_radars
+        if(n_radars .le. max_radars)then
+            write(6,*)' n_radars/max_radars = ',n_radars,max_radars       
+        else
+            write(6,*)' ERROR in read_vrz_3dref: n_radars > max_radars'       
+     1           ,n_radars,max_radars
+            istatus = 0
+            return
+        endif
 
 !       Read comments from 3 columns each 40 characters wide
         do i_radar = 1,n_radars
