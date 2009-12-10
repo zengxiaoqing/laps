@@ -119,24 +119,23 @@
            call ingest_raob(path_to_local_raob,c8_raob_format,i4time_sys
      1                     ,l_fill_ht,lun_out)
 
-           write(6,*)
-           write(6,*)' Call tower_driver_sub'
-           maxobs = 6000
-           itime_before = 900
-           itime_after = 900
-
-           call get_max_stations(maxsta, istatus)
-           if(istatus .ne. 1)stop
-
-           call tower_driver_sub(ni,nj,lun_out
-     1                           ,maxobs,laps_cycle_time
-     1                           ,path_to_raw_tower
-     1                           ,itime_before,itime_after
-     1                           ,maxsta
-     1                           ,istatus)
-
        endif ! RSA project
- 
+
+       write(6,*)
+       write(6,*)' Call tower_driver_sub'
+       maxobs = 6000
+       itime_before = 900
+       itime_after = 900
+
+       call get_max_stations(maxsta, istatus)
+       if(istatus .ne. 1)stop
+
+       call tower_driver_sub(ni,nj,lun_out
+     1                      ,maxobs,laps_cycle_time
+     1                      ,path_to_raw_tower
+     1                      ,itime_before,itime_after
+     1                      ,maxsta
+     1                      ,istatus)
 
 !      Satellite soundings -- added goes (7/26/04 db)
 
