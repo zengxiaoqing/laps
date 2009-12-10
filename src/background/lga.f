@@ -286,11 +286,13 @@ c             print*,'Finished in advance_analyses'
              print *, laps_cycle_time
              print *
 
-             if(luse_sfc_bkgd.and.cmodel.ne.'ETA48_CONUS')then
-                print*,'Error: Inconsistency Found'
-                print*,'Error: If you set namelist parameter luse_sfc_'
-                print*,'bkgd=true then cmodel must eq to ETA48_CONUS'
-                stop
+             if(luse_sfc_bkgd .and. cmodel.ne.'ETA48_CONUS'
+!    1                        .and. cmodel.ne.'FMI_NETCDF_LL'
+     1                        .and. cmodel.ne.'LAPS_FUA'
+     1                        .and. cmodel.ne.'LAPS'
+     1                                                       )then
+                print*,'WARNING: ',cmodel,
+     1             ' is experimental when turning on luse_sfc_bkgd'
              endif
 c
 c *** Call lga driver and, if necessary, interpolate acceptable files.
