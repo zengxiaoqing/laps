@@ -1,1 +1,1 @@
-CAPE SurfaceTempWind Sfc_RelHum Precip Radar Cloud LiftedIndex_SfcDewPt
+CAPE SurfaceTempWind Precip Radar Cloud LiftedIndex_SfcDewPt Moist_Flux
