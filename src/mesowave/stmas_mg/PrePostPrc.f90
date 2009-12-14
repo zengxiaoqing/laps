@@ -285,10 +285,10 @@ SUBROUTINE PrPstLSX
 	       numfic(2)+1:numgrd(2)-numfic(2),itm,iwv)
 
       ! Write surface wind to lwm for plot purpose:
-      LWM_vnm(1) = 'SU '
-      LWM_vnm(2) = 'SV '
-      CALL PUT_LAPS_MULTI_2D(i4t,'lwm',LWM_vnm,vun(nvr-1),cmt(nvr-1), &
-                             dat(1,1,nvr-1),ngd(1),ngd(2),2,sts)
+      ! LWM_vnm(1) = 'SU '
+      ! LWM_vnm(2) = 'SV '
+      ! CALL PUT_LAPS_MULTI_2D(i4t,'lwm',LWM_vnm,vun(nvr-1),cmt(nvr-1), &
+      !                        dat(1,1,nvr-1),ngd(1),ngd(2),2,sts)
 
       nvr = nvr+1
       vnm(nvr) = 'VOR'
