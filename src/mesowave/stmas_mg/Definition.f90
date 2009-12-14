@@ -223,7 +223,8 @@ SUBROUTINE Grid2Obs(indx,coef,obsv,nobs,wght,stna,ngrd,dxyt,domn)
       coef(1:6,nib) = coef(1:6,i)
 
     ELSE
-	print*,'Grid2Obs: Obs out of the analysi domain ',obsv(2:4,i),i,domn
+	if (verbal .eq. 1) &
+         print*,'Grid2Obs: Obs out of the analysi domain ',obsv(2:4,i),i,domn
 
     ENDIF
   ENDDO
