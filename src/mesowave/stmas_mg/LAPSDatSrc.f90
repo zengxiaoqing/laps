@@ -254,7 +254,7 @@ SUBROUTINE LAPSBKGD
           ENDIF
         ENDDO
       ELSE
-        bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
+        bkgrnd(1:numgrd(1),1:numgrd(2),1:numtmf,j) = 0.0
       ENDIF
     ELSE IF (varnam(j) .EQ. 'PCP3') THEN        ! precip 3hr bkg        added by min-ken hsieh
       ! assign zero fields:
@@ -761,6 +761,7 @@ SUBROUTINE RmvDupls
         nob = nob+1
         rawobs(1:4,nob,i) = rawobs(1:4,j,i)
 	weight(nob,i) = weight(j,i)
+	stanam(nob,i) = stanam(j,i)		!Added by Yuanfu: stanam for STMASVer
       ENDIF
     ENDDO
     numobs(i) = nob
@@ -927,7 +928,7 @@ SUBROUTINE Thrshold
 	  coeffs(1:6,numobs(i),i) = coeffs(1:6,j,i)
 	  bkgobs(numobs(i),i) = bkgobs(j,i)
         ELSE
-          print*,'Thresh out: ',rawobs(1,j,i),bkgobs(j,i),thresh(i),j,i
+          print*,'Thresh out: ',rawobs(1,j,i),bkgobs(j,i),thresh(i),j,i,stanam(j,i)
         ENDIF
       ENDDO
     ENDIF
