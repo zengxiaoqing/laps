@@ -46,8 +46,7 @@ SRC=Definition.f90 \
     MemoryMngr.f90 \
     PrePostPrc.f90 \
     STMASAnalz.f90 \
-    STMAS_MAIN.f90 \
-    sroutines.o
+    STMAS_MAIN.f90
     
 
 all: exe
