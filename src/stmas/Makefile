@@ -77,8 +77,7 @@ STMAS= \
         costfun_grad.f90 \
         stmas4d_core_lbfgs.f90 \
         output_anals.f90 \
-        main.f90 \
-        sroutines.o
+        main.f90
 
 STMAS_CG= \
         prmtrs_stmas.f90 \
