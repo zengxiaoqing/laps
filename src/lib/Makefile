@@ -144,6 +144,7 @@ SRC	= machine_dependent.F \
           smf_wisp92.f \
           smooth_cross_laps.f \
           snooze_gg.f \
+          sroutines.f \
           ssh2.f \
           subcon.f \
           sunfuncs.f \
