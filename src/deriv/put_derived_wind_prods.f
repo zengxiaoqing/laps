@@ -509,32 +509,33 @@ ccc202              format('H',i2)
 
             if(istatus .ne. 1 .or. istat_omega .ne. 1)then
                 write(6,*)' Error reading Lifted Index / OM data'
+                liw = r_missing_data
 
             else ! Good Li Data
                 call cpt_liw(lifted,wanl_2d,imax,jmax,liw)
 
-                call move(liw    ,field_array(1,1,1),NX_L,NY_L)
-!               call move(wanl_2d,field_array(1,1,2),NX_L,NY_L)
-                call move(upslope_flux,field_array(1,1,2),NX_L,NY_L)        
-
-!               Write out LIW field
-!               Note that these arrays start off with 0 as the first index
-                var_a(0) = 'LIW'
-                var_a(1) = 'UMF'
-                ext = 'liw'
-                units_a(0) = 'K-Pa/s'
-!               units_a(1) = 'Pa/s  '
-                units_a(1) = 'M**2/s'
-                comment_a(0) = 'Log LAPS Li * 600mb Omega'
-!               comment_a(1) = 'LAPS 600mb Omega'
-                comment_a(1) = 'Upslope component of moisture flux'
-
-                call put_laps_multi_2d(i4time_sys,ext,var_a,units_a
-     1                    ,comment_a,field_array,imax,jmax,2,istatus)
-
-                istat_liw = istatus
-
             endif
+
+            call move(liw    ,field_array(1,1,1),NX_L,NY_L)
+!           call move(wanl_2d,field_array(1,1,2),NX_L,NY_L)
+            call move(upslope_flux,field_array(1,1,2),NX_L,NY_L)        
+
+!           Write out LIW field
+!           Note that these arrays start off with 0 as the first index
+            var_a(0) = 'LIW'
+            var_a(1) = 'UMF'
+            ext = 'liw'
+            units_a(0) = 'K-Pa/s'
+!           units_a(1) = 'Pa/s  '
+            units_a(1) = 'M**2/s'
+            comment_a(0) = 'Log LAPS Li * 600mb Omega'
+!           comment_a(1) = 'LAPS 600mb Omega'
+            comment_a(1) = 'Upslope component of moisture flux'
+
+            call put_laps_multi_2d(i4time_sys,ext,var_a,units_a
+     1                ,comment_a,field_array,imax,jmax,2,istatus)
+
+            istat_liw = istatus
 
         endif
 
