@@ -99,14 +99,14 @@ c
      &                   td(k), td_ea(k),        !dew point, dew point exp. accuracy (Deg F)
      &                   rh(k), rh_ea(k)         !Rel hum, rh expected accuracy (%)
 c
-	  read(11,907)   dd(k), ff(k),           !wind dir (deg), wind speed (kt)
-     &                   ddg(k), ffg(k),         !wind gust dir, wind gust speed
-     &                   dd_ea(k), ff_ea(k)      !dir expected accuracy, spd exp accuracy
+	  read(11,907)   dd(k), ff(k),           !wind dir (deg), wind speed (knots)
+     &                   ddg(k), ffg(k),         !wind gust dir (deg), wind gust speed (knots)
+     &                   dd_ea(k), ff_ea(k)      !dir expected accuracy (deg), spd exp accuracy (knots)
 c
 	  read(11,909)   alt(k),                 !altimeter (mb)
      &                   stnp(k),                !station pressure (mb)
      &                   mslp(k),                !MSL pressure (mb)
-     &                   delpch(k),              !3-h press change character
+     &                   delpch(k),              !3-h press change character (FMH-1 Manual, Sec 12.7.2)
      &                   delp(k),                !3-h pressure change (mb)
      &                   p_ea(k), alt_ea(k)      !pressure exp accuracy, alt exp accuracy
 c
