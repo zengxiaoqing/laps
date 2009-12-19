@@ -705,7 +705,7 @@ back=.true.
 nc=index(filename,'/',back)
 
 if (fcsttime > 0) then
-   if (nc > 0) filename0=filename(1:nc)
+   if (nc > 0) filename0=filename(1:nc)//'/'//domnum_fstr
    write(atime,'(i10)') max(0,fcsttime-precip_dt)
    filename0=trim(filename0)//trim(adjustl(atime))//'.pcp'
 
@@ -741,7 +741,7 @@ endif
 
 ! Create new intermediate filename for current accumulated precip data.
 
-if (nc > 0) filename0=filename(1:nc)
+if (nc > 0) filename0=filename(1:nc)//'/'//domnum_fstr
 write(atime,'(i10)') fcsttime
 filename0=trim(filename0)//trim(adjustl(atime))//'.pcp'
 
