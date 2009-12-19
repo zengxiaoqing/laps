@@ -146,9 +146,9 @@ setenv prod rh
 $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # DPD
-echo "Generating Dewpoint Depression Product"; date -u
-setenv prod pbl
-$SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+# echo "Generating Dewpoint Depression Product"; date -u
+# setenv prod pbl
+# $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # Sfc Theta(e)
 echo "Generating SFC Theta(e) Product"; date -u
@@ -208,9 +208,19 @@ if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
     echo "Generating Graphical Low Level Radar Reflectivity Product"; date -u
     setenv prod llr
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Upslope Moisture Flux
+    echo "Generating Ventilation Index & PBL Mean Wind"; date -u
+    setenv prod umf
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Ground Temperature
+    echo "Generating Ground Temperatuer"; date -u
+    setenv prod tgd
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
  
-#   Sfc FW
-    echo "Generating SFC FW Product"; date -u
+#   Sfc Fireweather
+    echo "Generating SFC Fireweather Product"; date -u
     setenv prod fw
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
@@ -220,14 +230,14 @@ if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Haines Mid
-    echo "Mid-Level Haines Index"; date -u
-    setenv prod ham
-    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+#   echo "Mid-Level Haines Index"; date -u
+#   setenv prod ham
+#   $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Haines High
-    echo "High-Level Haines Index"; date -u
-    setenv prod hah
-    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+#   echo "High-Level Haines Index"; date -u
+#   setenv prod hah
+#   $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   X-sect
     echo "Generating X-Sect Product"; date -u
