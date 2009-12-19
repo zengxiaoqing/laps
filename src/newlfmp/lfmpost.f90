@@ -51,6 +51,8 @@ read(atime,'(i16)',err=900) laps_reftime
 read(afcst,'(i16)',err=900) laps_valtime
 fcsttime=laps_valtime
 laps_valtime=laps_reftime+laps_valtime
+write(domnum_fstr,'("d",i2.2)') domnum
+
 
 ! Convert mtype to lower case and check for valid model type.
 
@@ -69,6 +71,7 @@ endif
 print*,' '
 print*,'LAPS forecast model postprocessing for ',trim(mtype),' file:'
 print*,'   '//trim(filename)
+print*,'nest = ',domnum_fstr
 
 ! Read namelist.
 
