@@ -101,10 +101,9 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
             endif
 
             if(i .eq. 10)then ! write debugging info
-              write(6,2)j,rk_lo,rk_hi,u_lo,u_hi,ubar_llyr,ubar_hlyr
-     1                   ,ubar_sum,ubar,sumk
+              write(6,2)j,ubar,vbar,dvh,tpw_2d(i,j)
      1                   ,upslope_flux(i,j)
- 2	      format(i5,11f10.4)
+ 2	      format(i5,5f10.4)
             endif 
 
           else
@@ -202,7 +201,7 @@ c       Compute mean wind over a 2D height layer
 !           if(i .eq. 10)then ! write debugging info
 !             write(6,2)j,rk_lo,rk_hi,u_lo,u_hi,ubar_llyr,ubar_hlyr
 !    1                                         ,ubar_sum,ubar,sumk
-!2	      format(i5,10f10.4)
+!	      format(i5,9f10.4)
 !           endif 
 
           endif
