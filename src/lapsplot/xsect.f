@@ -90,6 +90,7 @@ cdis
         logical iflag_mvd,iflag_icing_index,iflag_cloud_type
         logical iflag_snow_potential,iflag_bogus_w
         logical l_low_fill, l_high_fill
+        logical l_latlon, l_parse
 
         data lapsplot_pregen /.true./
 
@@ -444,6 +445,7 @@ c read in laps lat/lon and topo
      1        '[1 to ',i3,'; 1 = S Edge, '
      1        ,i3,' = Center, '
      1        ,i3,' = N Edge]   OR '//
+     1        6x,' Enter Latitude of Way Point              OR'/
      1        6x,' CLASS:       wig,ftc,lov,elb,flg'/
      1        6x,' RADIOMETERS: ptv,stp,elb,eri'/
      1        6x,' RADARS:      mhr,cp3,chl,und'/
@@ -640,6 +642,36 @@ c read in laps lat/lon and topo
             enddo
 
             if(.not. l_sta)then ! Get I,J of Waypoint
+              call s_len(c20_sta,lenx)
+              l_latlon = l_parse(c20_sta(1:lenx),'l')
+
+              if(l_latlon)then ! x value was flagged as latitude with "l" at the end 
+                  read(c20_sta(1:lenx-1),*)waylat
+
+                  write(6,*)' Input longitude for way point...'       
+                  read(5,*)c20_sta
+                  call s_len(c20_sta,leny)
+                  if(l_parse(c20_sta(1:leny),'l'))then
+                      read(c20_sta(1:leny-1),*)waylon
+                  else
+                      read(c20_sta(1:leny),*)waylon
+                  endif
+
+                  call latlon_to_rlapsgrid(waylat,waylon,lat,lon
+     1                              ,NX_L,NY_L,xsta,ysta,istatus)       
+
+                  if(istatus .ne. 1)then
+                      return
+                  endif
+
+                  if(xsta .lt. 1. .or. xsta .gt. float(NX_L) .OR.
+     1               ysta .lt. 1. .or. ysta .gt. float(NY_L)   )then      
+                      write(6,*)
+     1                       ' Station is outside domain - try again...'
+                      return
+                  endif
+
+              else ! I/J mode
                 read(c20_sta,*,err=85)xsta,ysta
 
                 write(6,86)xsta,ysta
@@ -660,6 +692,8 @@ c read in laps lat/lon and topo
                 nysta = nint(ysta)
                 write(6,96)lat(nxsta,nysta),lon(nxsta,nysta)
 96              format('  Waypt lat/lon = ',2f9.3)
+
+              endif
 
             else
                 write(6,87)c3_sta,xsta,ysta
