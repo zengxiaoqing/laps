@@ -24,7 +24,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -w maximum wait time (seconds, default = 0);
 #    -M path to Mass Store if desired
 #    -x <blank> if present an awips bigfile will be created
-#    -e avoid exiting if a particular file is missing
+#    -e avoid exiting if a particular file is missing (position as last argument or supply dummy value)
 
 use vars qw($opt_a $opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_x $opt_e);
 #getopt('l:m:a:r:d:g:f:i:s:p:w:M:xe');
@@ -210,11 +210,14 @@ for ($n=0; $n<$nfcst; $n++) {
 
 # Add counting for multiple domains
 
+  my $skip;
+
   print "ngrid = $ngrid\n";
   for ($g=1; $g<=$ngrid; $g++) {
     $grid = $grid[$g];
 
-    while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file")) {
+    $skip = 0;
+    while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file") && $skip==0) {
          print "file does not exist $modelroot/$date/wrfprd/d0$grid/fua/$fua_file\n";
          system ("date");
          if ($elapsed >= $maxwait) {
@@ -224,14 +227,17 @@ for ($n=0; $n<$nfcst; $n++) {
                 exit;
             }
             print " Skip exit, look for next file...\n";
+            $skip=1;
+         }else{
+            $elapsed += $waitinc;
+            sleep $waitinc;
          }
-         $elapsed += $waitinc;
-         sleep $waitinc;
     }
 
     print "fsf_file = $fsf_file\n";
 
-    while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file")) {
+    $skip = 0;
+    while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file") && $skip==0) {
          print "file does not exist $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
          system ("date");
          if ($elapsed >= $maxwait) {
@@ -241,9 +247,11 @@ for ($n=0; $n<$nfcst; $n++) {
                 exit;
             }
             print " Skip exit, look for next file...\n";
+            $skip=1;
+         }else{
+            $elapsed += $waitinc;
+            sleep $waitinc;
          }
-         $elapsed += $waitinc;
-         sleep $waitinc;
     }
 
     print "found it, inittime: $inittime\n";
