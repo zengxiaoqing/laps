@@ -46,6 +46,8 @@ PROGRAM laps2grib
   CHARACTER(LEN=256)          :: g2file, g2file_tmp
   CHARACTER(LEN=512)          :: syscmd
 
+  LOGICAL                     :: lrun_laps2grib
+
   ! Print banner
   print *, "======================================================"
   print *, "********** ",vtag," **********"
@@ -62,7 +64,12 @@ PROGRAM laps2grib
  
   ! Read the laps2grib namelist
   CALL read_laps2grib_nl(laps_data_root)
- 
+
+  if(.not. lrun_laps2grib)then
+      write(6,*)'lrun_laps2grib is set to FALSE - stopping program'
+      stop
+  endif
+
   ! Set up projection
   CALL get_laps_proj(laps_data_root) 
   CALL get_laps_plevels(laps_data_root)
