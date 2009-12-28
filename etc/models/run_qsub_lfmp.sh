@@ -1,7 +1,7 @@
 #!/bin/sh --login
 
 projectpath=$1  # Example: /lfs0/projects/hmtb/dwr_domains
-model=$2        # Example: wrf
+model=$2        # Example: wrf, arw, nmm
 physics=$3      # Example: tom
 lbc=$4          # Example: gfs1
 nest=$5         # Example: 1 or -2
@@ -11,6 +11,8 @@ numFcsts=$8     # Example: 13
 
 run=$model\-$physics\-$lbc
 mkdir -p $projectpath/$run
+
+modelenv=wrf
 
 log=$projectpath/$run/lfmpost_run.log
 
@@ -48,8 +50,8 @@ echo "maxWaitSec=3600"                                          >> $script
 echo "maxHrsRun=4"                                              >> $script
 echo "project=DWR"                                              >> $script
 echo " echo 'Running this lfmpost.pl command...'"               >> $script
-echo " echo '/usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m $model -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q' " >> $script
-echo "       /usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m $model -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q"   >> $script
+echo " echo '/usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m $modelenv -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q' " >> $script
+echo "       /usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m $modelenv -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q"   >> $script
 echo " "                                                        >> $script
 echo " "                                                        >> $script
 echo " exit 0"                                                  >> $script
