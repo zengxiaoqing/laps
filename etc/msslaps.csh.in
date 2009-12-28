@@ -25,6 +25,8 @@ setenv YYYY `echo $YYYYMMDD_HHMM  | cut -c1-4`
 
 setenv DATE `echo $YYYYMMDD_HHMM  | cut -c7-8`
 
+echo "MSSFULLPATH = $MSSPATH/$YYYY/$MONTH"
+
 cd $LAPS_DATA_ROOT
 
 @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH $DATE noexpand nostatic 48 112
