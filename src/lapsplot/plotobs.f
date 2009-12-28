@@ -880,6 +880,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                     icol_in = 5  ! Orange
                 elseif(c8_obstype(1:3) .eq. 'DRO')then  ! Dropsonde
                     icol_in = 14 ! Royal Blue
+                elseif(c8_obstype(1:3) .eq. 'TOW')then  ! Tower
+                    icol_in = 14 ! Royal Blue
                 elseif(c8_obstype(1:2) .eq. 'SA')then   ! SATSND
                     icol_in = 17 ! Lavender
                 elseif(c8_obstype(1:4) .eq. 'GOES')then ! GOES Satellite
