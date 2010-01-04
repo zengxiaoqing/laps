@@ -43,9 +43,9 @@ c tdbg_sfc is then horizontally interpolated to LAPS grid (td_sfc)
 c ht_sfc and td_sfc are passed into subroutine sfcbkgd -> now called sfcbkgd_sfc (JRS)
 c KML: END
 
-c
-c     use mem_namelist, ONLY: read_namelist_laps
-c
+ 
+      use mem_namelist, ONLY: vertical_grid
+ 
       implicit none
       include 'bgdata.inc'
       real     badflag
@@ -130,6 +130,7 @@ c
       real, allocatable :: uwvi(:,:,:)
       real, allocatable :: vwvi(:,:,:)
       real, allocatable :: wwvi(:,:,:)
+      real, allocatable :: prvi(:,:,:)
 
       integer, allocatable :: msgpt(:,:)
 c
@@ -141,7 +142,8 @@ c
      .          uw(nx_laps,ny_laps,nz_laps), !!U-wind (m/s)
      .          vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
      .          ww(nx_laps,ny_laps,nz_laps), !W-wind (pa/s)
-     .          pr(nz_laps),                 !LAPS pressures
+     .          pr1d_mb(nz_laps),            !LAPS pressures
+     .          ht1d(nz_laps),               !LAPS ht (SIGMA_HT grid only)
      .          lat(nx_laps,ny_laps),        !LAPS lat
      .          lon(nx_laps,ny_laps),        !LAPS lon
      .          topo(nx_laps,ny_laps),       !LAPS avg terrain
@@ -164,6 +166,7 @@ c
       real, allocatable :: rp_lvl(:,:)       !Reduced pressure lvl
       real, allocatable :: rp_tp(:,:)        !Reduced pressure temp (holder)
       real, allocatable :: rp_sh(:,:)        !Reduced pressure sh   (holder)
+      real, allocatable :: pr3d(:,:,:)       !Pressure 3D on LAPS Grid
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
@@ -456,18 +459,28 @@ c
       call get_directory('lga',outdir,len_dir)
       print *,'writing to dir ',outdir(1:len_dir)
 c
-c *** get LAPS pressure levels.  Using pressures.nl
+c *** get LAPS pressure OR height levels.  Using pressures.nl / heights.nl
 c
-c     print*,'get pressures from pressure.nl'
-      call get_pres_1d(i4time_now,nz_laps,pr,istatus)
-      if(istatus.ne.1)then
-         print*,'Error returned from get_pres_1d'
-         print*,'Check pressures.nl or nk_laps in nest7grid.parms'
-         stop
+      if(vertical_grid .ne. 'SIGMA_HT')then
+          print*,'get 1d pressures'
+          call get_pres_1d(i4time_now,nz_laps,pr1d_mb,istatus)
+          if(istatus.ne.1)then
+             print*,'Error returned from get_pres_1d'
+             print*,'Check pressures.nl or nk_laps in nest7grid.parms'
+             stop
+          endif
+          do k = 1,nz_laps
+             pr1d_mb(k)=pr1d_mb(k)/100.
+          enddo
+      else
+          print*,'get 1d heights'
+          call get_ht_1d(nz_laps,ht1d,istatus)
+          if(istatus.ne.1)then
+             print*,'Error returned from get_ht_1d'
+             print*,'Check heights.nl or nk_laps in nest7grid.parms'
+             stop
+          endif
       endif
-      do k = 1,nz_laps
-         pr(k)=pr(k)/100.
-      enddo
 c
 c *** Determine which of the "bg_names" has not already been processed
 c
@@ -727,11 +740,28 @@ c
      .               vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
      .               wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
 
-           call vinterp(nz_laps,nx_bg,ny_bg
-     .       ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
-     .       ,pr,prbght,prbgsh,prbguv,prbgww
-     .       ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
-     .       ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
+           if(vertical_grid .ne. 'SIGMA_HT')then
+             call vinterp(nz_laps,nx_bg,ny_bg
+     .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     .         ,pr1d_mb,prbght,prbgsh,prbguv,prbgww
+     .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
+     .         ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
+           else
+             allocate(prvi(nx_bg,ny_bg,nz_laps))
+
+!            We want to model 'sigma_ht' vertical levels on the model 
+!            horizontal grid to construct the 'htvi' array. The 'ht_sfc' 
+!            model terrain can be used.
+
+             call get_ht_3d(nx_bg,ny_bg,nz_laps,ht_sfc,htvi
+     1                     ,istatus)
+
+             call vinterp_ht(nz_laps,nx_bg,ny_bg
+     .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     .         ,htvi,prbght,prbgsh,prbguv,prbgww 
+     .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
+     .         ,prvi,tpvi,shvi,uwvi,vwvi,wwvi) 
+           endif
 
            itstatus(1)=ishow_timer()
            print*,' Vinterp elapsed time (sec): ',itstatus(1)
@@ -803,7 +833,7 @@ c
            endif ! bgmodel = 4 or 9
 c
            do kk=nz_laps,1,-1
-            if (pr(kk) .ge. 300.) goto 20
+            if (pr1d_mb(kk) .ge. 300.) goto 20
            enddo
 20         continue
            if (smooth_fields) THEN
@@ -889,8 +919,14 @@ c
 
           else
                  
-           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,htvi,ht,bgmodel)
+           if(vertical_grid .ne. 'SIGMA_HT')then
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .                           grx,gry,htvi,ht,bgmodel)
+           else
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .                           grx,gry,prvi,pr3d,bgmodel)
+           endif
+
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,uwvi,uw,bgmodel)
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
@@ -931,25 +967,39 @@ c
      .                vwvi,   !V-wind (m/s)
      .                wwvi,   !W-wind (pa/s)
      .                msgpt)
+        
+           if(vertical_grid .eq. 'SIGMA_HT')then
+               deallocate(prvi)   !3-D Interpolated Pressure (pa)
+           endif
+
            do k=1,nz_laps
             do j=1,ny_laps
                do i=1,nx_laps
                   if((abs(ht(i,j,k)) .gt. 100000.) .or.
      +                   (ht(i,j,k)  .lt.-3000)  .or.
-     +                   (tp(i,j,k)  .gt. 1000.) .or.
-     +                   (tp(i,j,k)  .le. 0.) .or.
+     +                   (tp(i,j,k)  .gt. 500.) .or.
+     +                   (tp(i,j,k)  .lt. 150.) .or.
      +               (abs(sh(i,j,k)) .gt. 1.) .or.
      +               (abs(uw(i,j,k)) .gt. 150.) .or.
-     +               (abs(vw(i,j,k)) .gt. 150.) )then
-c    +             .or.(abs(ww(i,j,k)) .gt. 10.) )then
+     +               (abs(vw(i,j,k)) .gt. 150.)       )then
+
+c    +             .or.(abs(ww(i,j,k)) .gt. 10.)      )then
 c
 c ww may be missing from some models! Don't stop just because of that.
 c                  if (max(ht(i,j,k),tp(i,j,k),sh(i,j,k),
-c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
+c    .                     uw(i,j,k),vw(i,j,k)) .ge. missingflag)then       
 
-               print*,'ERROR: Missing or bad value detected: ',i,j,k
-               print*,'ht/tp/sh/uw/vw/ww: ',ht(i,j,k),tp(i,j,k)
-     +                  ,sh(i,j,k), uw(i,j,k),vw(i,j,k),ww(i,j,k)
+                     print*,
+     + 'ERROR: interpolated values exceed allowed ranges at gridpoint: '
+     +                      ,i,j,k           
+                     print*,'ht/tp/sh/uw/vw/ww: ',ht(i,j,k),tp(i,j,k)        
+     +                      ,sh(i,j,k), uw(i,j,k),vw(i,j,k),ww(i,j,k)
+
+                     if(bgmodel .eq. 13)then
+                        print*,'Check input model data with GRIB viewer'
+                     else
+                        print*,'Check input model data'
+                     endif
 
                      reject_cnt=reject_cnt+1
 !                    reject_names(reject_cnt)=bg_names(ii)
@@ -1102,9 +1152,9 @@ c... 2D arrays directly from the background model.
 
            if(luse_sfc_bkgd)then ! tested only for ETA48_CONUS
               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
-     .            ,sh_sfc,topo,pr,nx_laps, ny_laps, nz_laps, pr_sfc)
+     .           ,sh_sfc,topo,pr1d_mb,nx_laps, ny_laps, nz_laps, pr_sfc)      
            else
-              call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr,
+              call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr1d_mb,
      .            nx_laps, ny_laps, nz_laps, pr_sfc)
            endif
 
@@ -1152,7 +1202,7 @@ c
 c always use sfcbkgd (as opposed to sfcbkgd_sfc) to compute reduced pressure
 c because this version uses the 3D analysis info for computations.
 c
-           call sfcbkgd(0,tp,sh,ht,rp_tp,rp_sh,rp_lvl,pr
+           call sfcbkgd(0,tp,sh,ht,rp_tp,rp_sh,rp_lvl,pr1d_mb
      1,nx_laps, ny_laps, nz_laps, rp_sfc)
 
            deallocate (rp_lvl,rp_tp,rp_sh)
@@ -1165,7 +1215,7 @@ c
            do j=1,ny_laps
            do i=1,nx_laps
             if(tp(i,j,k).gt.100.0)then
-               shsat=ssh2(pr(k),tp(i,j,k)-273.15,
+               shsat=ssh2(pr1d_mb(k),tp(i,j,k)-273.15,
      .             tp(i,j,k)-273.15,-132.0)*0.001
                sh(i,j,k)=max(1.0e-6,min(sh(i,j,k),shsat))
             else
@@ -1230,7 +1280,7 @@ c
 
           if(cmodel.eq.'LAPS_FUA')then
               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc
-     &,td_sfc,tp_sfc,sh_sfc,topo,pr,nx_laps,ny_laps,nz_laps,pr_sfc)
+     &,td_sfc,tp_sfc,sh_sfc,topo,pr1d_mb,nx_laps,ny_laps,nz_laps,pr_sfc)      
               call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
@@ -1270,11 +1320,20 @@ c Write LGA
 c ---------
          if(.not.lgb_only)then
 
-          call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
-     .bgvalid,cmodel,missingflag,pr,ht,tp,sh,uw,vw,ww,istatus)
-          if(istatus.ne.1)then
+          if(vertical_grid .ne. 'SIGMA_HT')then
+            call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
+     .bgvalid,cmodel,missingflag,pr1d_mb,ht,tp,sh,uw,vw,ww,istatus)
+            if(istatus.ne.1)then
              print*,'Error writing lga - returning to main'
              return
+            endif
+          else
+            call write_lgap(nx_laps,ny_laps,nz_laps,time_bg(nf),
+     .bgvalid,cmodel,missingflag,ht,pr3d,tp,sh,uw,vw,ww,istatus)
+            if(istatus.ne.1)then
+             print*,'Error writing lga - returning to main'
+             return
+            endif
           endif
 
          endif
@@ -1351,7 +1410,7 @@ c interp 3D fields
             if(.not.lgb_only)then
 
                call time_interp(outdir,ext,
-     +           nx_laps,ny_laps,nz_laps,6,pr,
+     +           nx_laps,ny_laps,nz_laps,6,pr1d_mb,
      +           i4time_bg_valid(i),i4time_bg_valid(i-1),
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))
@@ -1365,7 +1424,7 @@ c interp 3D fields
 
 c interp 2D fields
                call time_interp(outdir,ext,
-     +           nx_laps,ny_laps,1,10,pr(1),
+     +           nx_laps,ny_laps,1,10,pr1d_mb(1),
      +           i4time_bg_valid(i),i4time_bg_valid(i-1),
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))
