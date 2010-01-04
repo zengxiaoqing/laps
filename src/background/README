@@ -27,6 +27,8 @@ program lga                                      lga.f
          vinterp_sub                                     "
       init_hinterp
       hinterp_field                              lib/gridconv.f
+         gdtost                                          "
+            binom                                        "
       sfcbkgd_sfc                                bgdata/sfcbkgd_sfc.f
          compute_sfc_bgfields_sfc                        "
       sfcbkgd                                    bgdata/sfcbkgd.f
