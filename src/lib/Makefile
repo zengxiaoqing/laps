@@ -62,6 +62,7 @@ SRC	= machine_dependent.F \
           get_file_names.f \
           get_file_time.f \
           get_heights_hydrostatic.f \
+          get_ht_3d.f \
           get_local_towerobs.f \
           get_lowref.f \
           get_maps_lapsgrid.f \
