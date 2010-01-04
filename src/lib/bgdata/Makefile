@@ -30,7 +30,7 @@ SRC= bkgd_stn_interp.f   bkgd_util.f            es_table.f             \
      read_netcdf_field.f read_sbn_grids.f       readdgprep.f           \
      readnogaps.f        readruc60native.f      rdmodelindex.f         \
      sfcbkgd.f           sfcbkgd_sfc.f          tcbogus.f              \
-     vinterp.f                                                         \
+     vinterp.f           vinterp_ht.f                                  \
      writelgalgb.f read_unidata_grids.f
 
 
