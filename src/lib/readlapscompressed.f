@@ -39,11 +39,13 @@ C
       character*(*)   comment_req_o(kdim)   !OUTPUT Comments for requested fields
       character*(125) comment_req_l(kdim,nf)!LOCAL  Comments for requested fields
 
-      real        data_o(iimax,jjmax,kdim)       !OUTPUT data
-      real        data_l(iimax,jjmax,kdim,nf)    !LOCAL data
+      real        data_o(iimax,jjmax,kdim)               !OUTPUT data
+!     real        data_l(iimax,jjmax,kdim,nf)            !LOCAL data
 
-      integer, allocatable, dimension(:) :: array1 !LOCAL Compressed array
-      real,    allocatable, dimension(:) :: array2 !LOCAL Compressed array
+      real,    allocatable, dimension(:,:,:,:) :: data_l !LOCAL data
+
+      integer, allocatable, dimension(:) :: array1       !LOCAL Compressed array
+      real,    allocatable, dimension(:) :: array2       !LOCAL Compressed array
 C
       integer fn_length,
      1          flag,                   !Print flag (1 = off)
@@ -152,6 +154,12 @@ C To fix this, call read_laps instead
 
       n_cmprs_max = ngrids
 
+      allocate(data_l(iimax,jjmax,kdim,nf),STAT=istat_alloc)
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate data_l'
+          stop
+      endif
+
       call runlength_decode(ngrids,n_cmprs,array1,array2        ! I
      1                     ,data_l                              ! O
      1                     ,istatus)                            ! O
@@ -190,7 +198,8 @@ C
 C ****  Return normally.
 C
         istatus=error(1)
-999     return
+999     deallocate(data_l)
+        return
 C
 C ****  Error trapping.
 C
