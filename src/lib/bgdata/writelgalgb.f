@@ -193,6 +193,201 @@ c --------------------------------------------------------------
 c
 c -------------------------------------------------------------------------------
 c
+      subroutine write_lgap(nx_laps,ny_laps,nz_laps,bgtime,bgvalid,
+     .cmodel,missingflag,ht,pr,tp,sh,uw,vw,ww,istatus)
+
+      implicit none
+
+      integer nx_laps,ny_laps,nz_laps
+      integer i,j,k,ic,lendir
+      integer bgtime,bgvalid
+      integer istatus
+      integer warncnt
+      integer ip(nz_laps)
+
+      real    missingflag
+      real    ht(nz_laps)
+      real    pr(nx_laps,ny_laps,nz_laps), !Height (m)
+     .        tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
+     .        sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
+     .        uw(nx_laps,ny_laps,nz_laps), !U-wind (m/s)
+     .        vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
+     .        ww(nx_laps,ny_laps,nz_laps)  !W-wind (pa/s)
+
+      character*256 outdir
+      character*31  ext
+      character*3   var(nz_laps)
+      character*4   lvl_coord(nz_laps)
+      character*10  units(nz_laps)
+      character*125 comment(nz_laps)
+      character*(*) cmodel
+
+      ext='lga'
+      call get_directory('lga',outdir,lendir)
+
+      call s_len(cmodel,ic)
+      do k=1,nz_laps                 ! Pressure
+         do j=1,ny_laps
+         do i=1,nx_laps
+            if(pr(i,j,k) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+               print*,'Missingflag at ',i,j,k,' in pr'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+c only need to do some of these once.
+         ip(k)=int(ht(k))
+         var(k)='P  '
+         lvl_coord(k)='m   '
+         units(k)='Pascals'
+         comment(k)=cmodel(1:ic)//' interpolated to LAPS height.'
+      enddo
+      print*,'P'
+      call write_laps(bgtime,bgvalid,outdir,ext,
+     .                nx_laps,ny_laps,nz_laps,nz_laps,var,
+     .                ip,lvl_coord,units,comment,ht,istatus)
+      if (istatus .ne. 1) then
+          print *,'Error writing interpolated data to LAPS database.'
+          return
+      endif
+
+      do k=1,nz_laps                 ! Temperature
+         do j=1,ny_laps
+         do i=1,nx_laps
+            if(tp(i,j,k) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+               print*,'Missingflag at ',i,j,k,' in tp'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         var(k)='T3 '
+         units(k)='Kelvin'
+      enddo
+      print*,'T3'
+      call write_laps(bgtime,bgvalid,outdir,ext,
+     .                nx_laps,ny_laps,nz_laps,nz_laps,var,
+     .                ip,lvl_coord,units,comment,tp,istatus)
+      if (istatus .ne. 1) then
+          print *,'Error writing interpolated data to LAPS database.'
+          return
+      endif
+
+      do k=1,nz_laps                 ! Specific humidity
+         do j=1,ny_laps
+         do i=1,nx_laps
+            if(sh(i,j,k) .ge. missingflag .and. warncnt.lt.100) 
+     +           then
+               print*,'Missingflag at ',i,j,k,' in sh'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         var(k)='SH '
+         units(k)='kg/kg'
+      enddo
+      print*,'SH'
+      call write_laps(bgtime,bgvalid,outdir,ext,
+     .                nx_laps,ny_laps,nz_laps,nz_laps,var,
+     .                ip,lvl_coord,units,comment,sh,istatus)
+      if (istatus .ne. 1) then
+          print *,'Error writing interpolated data to LAPS database.'
+          return
+      endif
+
+      do k=1,nz_laps                 ! u-component wind
+         do j=1,ny_laps
+         do i=1,nx_laps
+            if(uw(i,j,k) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+               print*,'Missingflag at ',i,j,k,' in uw'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         var(k)='U3 '
+         units(k)='m/s'
+      enddo
+      print*,'U3'
+      call write_laps(bgtime,bgvalid,outdir,ext,
+     .                nx_laps,ny_laps,nz_laps,nz_laps,var,
+     .                ip,lvl_coord,units,comment,uw,istatus)
+      if (istatus .ne. 1) then
+          print *,'Error writing interpolated data to LAPS database.'
+          return
+      endif
+
+      do k=1,nz_laps                 ! v-component wind
+         do j=1,ny_laps
+         do i=1,nx_laps
+            if(vw(i,j,k) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+               print*,'Missingflag at ',i,j,k,' in vw'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         var(k)='V3 '
+      enddo
+      print*,'V3'
+      call write_laps(bgtime,bgvalid,outdir,ext,
+     .                nx_laps,ny_laps,nz_laps,nz_laps,var,
+     .                ip,lvl_coord,units,comment,vw,istatus)
+      if (istatus .ne. 1) then
+          print *,'Error writing interpolated data to LAPS database.'
+          return
+      endif
+c
+c if LAPS is background then we'll allow writing missing ww data.
+c --------------------------------------------------------------
+      if(cmodel.eq.'LAPS')then
+         do k=1,nz_laps                 ! w-component wind
+            do j=1,ny_laps
+            do i=1,nx_laps
+             if(ww(i,j,k) .ge. missingflag .and. warncnt.lt.50)
+     +              then
+               print*,'Missingflag at ',i,j,k,' in ww'
+               warncnt=warncnt+1
+             endif
+            enddo
+            enddo
+            var(k)='OM '
+            units(k)='pa/s'
+         enddo
+
+
+      else
+
+         do k=1,nz_laps                 ! w-component wind
+            do j=1,ny_laps
+            do i=1,nx_laps
+             if(ww(i,j,k) .ge. missingflag .and. warncnt.lt.100)
+     +              then
+               print*,'Missingflag at ',i,j,k,' in ww'
+               warncnt=warncnt+1
+             endif
+            enddo
+            enddo
+            var(k)='OM '
+            units(k)='pa/s'
+         enddo
+      endif
+
+      print*,'OM'
+      call write_laps(bgtime,bgvalid,outdir,ext,
+     .                nx_laps,ny_laps,nz_laps,nz_laps,var,
+     .                ip,lvl_coord,units,comment,ww,istatus)
+      if (istatus .ne. 1) then
+          print *,'Error writing interpolated data to LAPS database.'
+          return
+      endif
+
+      return
+      end
+c
+c -------------------------------------------------------------------------------
+c
       subroutine write_lgb(nx_laps,ny_laps,bgtime,bgvalid,cmodel
      .,missflag,uw_sfc,vw_sfc,tp_sfc,t_sfc,qsfc,pr_sfc,mslp,td_sfc
      .,rp_sfc,pcp_sfc,istatus)
