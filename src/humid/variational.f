@@ -142,7 +142,9 @@ c     parameter list variables
 
 c internal variables
 
-      real covar (19,19,93,65),covar_temp(19,19,93,65)
+c      real covar (19,19,93,65),covar_temp(19,19,93,65)
+      real, dimension (:,:,:,:), allocatable :: covar
+      real, dimension (:,:,:,:), allocatable :: covar_temp
       integer l
       integer :: istatus
       integer :: i4time_sat
@@ -173,8 +175,10 @@ c climate model variables
 c dynamic dependent variables
 
       real :: ch3(ii,jj),ch4(ii,jj),ch5(ii,jj)
-      real :: mr(ii,jj,kk)
-      real :: t_l(kk,ii,jj), mr_l (kk,ii,jj),p_l(kk,ii,jj)
+c      real :: mr(ii,jj,kk)
+      real, dimension (:,:,:), allocatable:: mr
+c      real :: t_l(kk,ii,jj), mr_l (kk,ii,jj),p_l(kk,ii,jj)
+      real, dimension (:,:,:), allocatable :: t_l,mr_l,p_l
 
       real :: model_t(40,ii,jj), model_mr(40,ii,jj)
 
@@ -329,10 +333,18 @@ c     misc variables
 
 c     code *******************************************************************
 
+c     allocate temp arrays
+      allocate (mr (ii,jj,kk))
+      allocate (t_l (kk,ii,jj))
+      allocate (mr_l (kk,ii,jj))
+      allocate (p_l (kk,ii,jj))
+
 
 c     read covariance data ----set for nam model ---------------------------------------
 
       if (covar_switch .ne. 0 ) then
+c     allocate temp covar arrays
+      allocate (covar(19,19,93,65),covar_temp(19,19,93,65))
          level7 = 7  !Okyeon needs to determine 700 level
          level5 = 11  !need to determine 500 level
          covar_s = covar_switch
@@ -453,6 +465,10 @@ c     use f90 construct to make arrays identical
 
 
          endif
+
+c     deallocate covar temp arrays
+      deallocate (covar)
+      deallocate (covar_temp)
 
       endif
 
@@ -1435,6 +1451,12 @@ c     fill field_display_btemps with missing data flag where not zero
 c     all done using optran90 need to deallocate the coefficient arrays
 
       call optran_deallocate (istatus)
+
+c     deallocate temp arrays
+      deallocate (mr)
+      deallocate (t_l)
+      deallocate (mr_l)
+      deallocate (p_l)
     
 
       return

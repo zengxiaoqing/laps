@@ -109,7 +109,8 @@ c     parameter variables
      1     ssh2                 !function
 c     1        make_ssh !function type
 
-      real sat(ii,jj,kk)        !saturation ssh at each location
+c      real sat(ii,jj,kk)        !saturation ssh at each location
+      real, dimension (:,:,:), allocatable :: sat
       
       
       real
@@ -144,9 +145,12 @@ c     rams stuff--------
       
 c     ------------------
       
-      real data_in(ii,jj,kk), delta_moisture(kk), avg_moisture(kk)
-      real data_start(ii,jj,kk)
-      real data_pre_bound (ii,jj,kk)
+      real delta_moisture(kk), avg_moisture(kk)
+      real, dimension (:,:,:), allocatable :: data_in
+c      real data_start(ii,jj,kk)
+      real, dimension (:,:,:), allocatable :: data_start
+c      real data_pre_bound (ii,jj,kk)
+      real, dimension (:,:,:), allocatable :: data_pre_bound
       real diff_data(ii*jj)
       real ave,adev,sdev,var,skew,curt
       
@@ -165,17 +169,21 @@ c     ------------------
 
       character*3 desired_field
    
-      real plevel(kk), p_3d(ii,jj,kk),p_3di(ii,jj,kk)
+      real plevel(kk), p_3di(ii,jj,kk)
+      real, dimension (:,:,:), allocatable :: p_3d
       integer mlevel(kk)
 
 c     CLOUD variables
 
-      real :: qadjust (ii,jj,kk)
+C      real :: qadjust (ii,jj,kk)
+      real, dimension (:,:,:), allocatable :: qadjust
 
 c     SND variables
 
-      real q_snd (ii,jj,kk)
-      real weight_snd(ii,jj,kk)
+C      real q_snd (ii,jj,kk)
+      real, dimension (:,:,:), allocatable :: q_snd
+c      real weight_snd(ii,jj,kk)
+      real, dimension (:,:,:), allocatable :: weight_snd
 
 c     gps variables
 
@@ -246,6 +254,15 @@ c----------------------code   ------------------
 c     initialization
 c
 
+c     allocate arrays
+      allocate (sat (ii,jj,kk))
+      allocate (data_in (ii,jj,kk))
+      allocate (data_start (ii,jj,kk))
+      allocate (data_pre_bound (ii,jj,kk))
+      allocate (p_3d (ii,jj,kk))
+      allocate (qadjust (ii,jj,kk))
+      allocate (q_snd (ii,jj,kk))
+      allocate (weight_snd (ii,jj,kk))
 
 c     define PI
       pi = acos(-1.0)
@@ -1326,7 +1343,18 @@ c---------------------------end write output section
       
       call report_change (data_start, data, p_3d,mdf,ii,jj,kk)
 
-      p_3d = p_3d / 0.01 ! convert 3d array to Pa
+c     no need to modify p_3d any longer, array to be destroyed
+c      p_3d = p_3d / 0.01 ! convert 3d array to Pa
+
+c     deallocate (destroy) arrays no longer needed in this routine
+      deallocate (sat)
+      deallocate (data_in)
+      deallocate (data_start)
+      deallocate (data_pre_bound)
+      deallocate (p_3d)
+      deallocate (qadjust)
+      deallocate (q_snd)
+      deallocate (weight_snd)
       
       return
       
