@@ -1,5 +1,5 @@
  &background_nl
- bgpaths='/public/data/fsl/13kmruc/ruc_presm20/grib/',
+ bgpaths='/public/data/fsl/13kmruc/ruc_presm/grib/',
 '/public/data/fsl/13kmruc/ruc_presm20/grib/',
 '/public/data/grids/ruc/hyb_A236/netcdf',
  bgmodels=13,13,5,
