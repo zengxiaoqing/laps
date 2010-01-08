@@ -15,6 +15,7 @@
 !    Subroutine CCLOSE                                                        !
 !                                                                             !
 ! Kevin Manning, NCAR/MMM  - original 'pregrid' code, 1998-2001               !
+! Paula McCaslin, NOAA
 ! adapted for SI, 2004                                                        !
 ! adapted for WPS, 2006                                                       !
 ! adapted for LAPS, 2007                                                      !
@@ -76,15 +77,10 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 !        "Linked in png and jpeg libraries for Grib Edition 2")
 #else
      val_std = .true.
-     call mprintf(val_std,STDOUT,"WARNING - Grib2 data detected. Code expected Grib1")
-     call mprintf(val_std,STDOUT,"\t- since include/makefile.inc variable DEGRIBFLAGS")
-     call mprintf(val_std,STDOUT,"\t- did NOT contain -DUSE_PNG and -DUSE_JPEG2000.\n")
-     call mprintf(val_std,STDOUT,"\t- Only read Grib1 data formated files...or...rebuild")
-     call mprintf(val_std,STDOUT,"\t- degrib code to read Grib2 data by setting DEGRIBFLAGS")
-     call mprintf(val_std,STDOUT,"\t- and running make in directories w3lib, g2lib and")
-     call mprintf(val_std,STDOUT,"\t- degrib. Three external libraries are also necessary, ")
-     call mprintf(val_std,STDOUT,"\t- set DEGRIBLIBS to -ljasper, -lpng -lz, if these libs ")
-     call mprintf(val_std,STDOUT,"\t- are available on your system. See the README file.")
+     call mprintf(val_std,STDOUT,"WARNING - Grib2 data detected. Code, as built, expected Grib1")
+     call mprintf(val_std,STDOUT,"\t- Three external libs are necessary Grib2 decoding version to be compiled: ")
+     call mprintf(val_std,STDOUT,"\t- -ljasper, -lpng -lz. If these libs are NOT found with the configuration")
+     call mprintf(val_std,STDOUT,"\t- scripts then the build scripts CANNOT build Grib2. See the README file.")
      call mprintf(val_std,STDOUT,"\t*** stopping readgrib ***")
      val_std = .false.
      stop
@@ -109,6 +105,10 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
                  ! Read one record at a time from GRIB1 (and older Editions) 
                  call rd_grib1(nunit1, gribflnm, level, field, &
                       hdate, ierr, iuarr, debug_level)
+
+                call cclose(iuarr(nunit1), debug_level, ierr)
+                iuarr(nunit1) = 0
+
               else 
 
                  ! Read one file of records from GRIB2.
@@ -186,7 +186,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
         write(*, *) "ne corner ", ne1, ne2
         write(*, *) "longitude spans ", diff_lon, " degrees; global ", cross_dateline
         write(*, *) "---------- "
-        
+
 
         istatus=1
         !if (ierr.eq.1) print*, "iERR ", ierr !istatus=0
