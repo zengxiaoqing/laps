@@ -51,7 +51,8 @@ c
      1  istat_vis_added_a,                                               ! O
      1  solar_alt,solar_ha,solar_dec,                                    ! I
      1  lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,                  ! I
-     1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
+     1  rlaps_land_frac,                                                 ! I
+     1  topo,heights_3d,temp_3d,t_sfc_k,td_sfc_k,pres_sfc_pa,            ! I
      1  t_modelfg,sh_modelfg,                                            ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
      1  t_gnd_k,                                                         ! O
@@ -119,6 +120,7 @@ c
         real t_modelfg(imax,jmax,klaps)
         real sh_modelfg(imax,jmax,klaps)
         real t_sfc_k(imax,jmax)
+        real td_sfc_k(imax,jmax)
         real cvr_snow(imax,jmax)
         real pres_sfc_pa(imax,jmax)
         real heights_3d(imax,jmax,klaps)
@@ -137,6 +139,8 @@ c
         real cldtop_tb8_m(imax,jmax)
 
 !       Local
+        real P(1),T(1),TD(1),LCL_AGL,TLCL_PBE,PLCL_PBE ! used for LCL (abdel)
+	real lcl_2d(imax,jmax)
 
         real k_terrain(imax,jmax)
         real zcoords_1d(klaps)
@@ -163,6 +167,18 @@ c
         data nidelt/3/,njdelt/3/
 
         write(6,*)' Subroutine insert_sat...'
+
+!       Calculate LCL
+        do j=1,jmax
+        do i=1,imax
+            p(1)=pres_sfc_pa(i,j)/100.
+            t(1)=t_sfc_k(i,j)-273.15
+            td(1)=td_sfc_k(i,j)-273.15
+
+            CALL LCL_fast(P(1),T(1),TD(1),LCL_AGL,TLCL_PBE,PLCL_PBE)       
+            lcl_2d(i,j)=LCL_AGL+topo(i,j)
+        enddo
+        enddo 
 
         r_missing_ht = 1e30
 
@@ -521,7 +537,12 @@ c
           IF(l_cloud_present) then ! Insert satellite clouds
 
 !           Set initial satellite cloud base
-            htbase_init=cldtop_m(i,j) - thk_def
+            if(lcl_2d(i,j) .lt. cldtop_m(i,j))then
+	        htbase_init=max(lcl_2d(i,j),cldtop_m(i,j) - thk_def)
+            else 
+                htbase_init=cldtop_m(i,j) - thk_def
+            endif
+
             htbase = htbase_init
 
 !           Initialize lowest SAO cloud base & highest SAO/CO2 top
