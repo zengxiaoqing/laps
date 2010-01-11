@@ -298,12 +298,22 @@ foreach(@cdl_list){
    close(CDL);
 }
 #
-# localize optran coefficients
+# localize optran coefficients and check/update lga.cdl
 #
-  if($WHICH_TYPE eq "laps"){
-     print "Localizing Optran Coefficients based on moisture_switch.nl namelist settings\n";
-     run_sys::run_sys("@PERL@ $INSTALL_ROOT/etc/localize_optran.pl $INSTALL_ROOT/bin/ $DATA_ROOT/static");
-  }
+if($WHICH_TYPE eq "laps"){
+   print "Localizing Optran Coefficients based on moisture_switch.nl namelist settings\n";
+   run_sys::run_sys("@PERL@ $INSTALL_ROOT/etc/localize_optran.pl $INSTALL_ROOT/bin/ $DATA_ROOT/static");
+
+   my $vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
+
+   if($vertical_grid eq "SIGMA_HT")(
+      print "$vertical_grid grid - copy in pressure version of lga.cdl\n";
+      run_sys::run_sys("cp $DATA_ROOT/cdl/lga_p.cdl $DATA_ROOT/cdl/lga.cdl");
+   }else{
+      print "Vertical grid is $vertical_grid - use default CDL files\n";
+   }
+
+}
 
 #
 # run gridgen model if necessary
