@@ -1,7 +1,7 @@
 
       REAL    , PARAMETER :: grav = 9.81  ! acceleration due to gravity (m {s}^-2)
 
-      REAL    , PARAMETER :: r_d          = 287.
+      REAL    , PARAMETER :: r_d          = 287.    ! AMS glossary value, 287.058 in Wikipedia
       REAL    , PARAMETER :: r_v          = 461.6
       REAL    , PARAMETER :: cp           = 7.*r_d/2.
       REAL    , PARAMETER :: cv           = cp-r_d
