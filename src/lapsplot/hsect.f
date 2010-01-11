@@ -4144,7 +4144,7 @@ c
             if(istat_rh .eq. 1)then
                 istat_rh = 0
                 do i=1,NX_L
-                do j=1,NX_L
+                do j=1,NY_L
                     if(rh_2d(i,j) .ne. r_missing_data)then
                         istat_rh = 1
                     endif
