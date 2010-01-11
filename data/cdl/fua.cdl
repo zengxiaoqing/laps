@@ -93,18 +93,6 @@ netcdf fua {
             sh:lvl_coord="HPA";
 	    sh:LAPS_units="KG/KG";
                 	        
-        //	LAPS Fcst relative humidity
-        //      bigfile name = rh
-	float                                  
-            rh3(record,z,y,x);
-            rh3:_FillValue = 1.e+37f;
-            rh3:long_name="LAPS Fcst relative humidity";
-            rh3:units="percent";
-            rh3:valid_range= 0.f, 100.f;
-            rh3:LAPS_var="RH3";
-            rh3:lvl_coord="HPA";
-	    rh3:LAPS_units="PERCENT";
-                	        
         //      LAPS Fcst cloud liquid water       //
         //      bigfile name = cw
         float
@@ -230,7 +218,6 @@ netcdf fua {
             om_comment(record,z,namelen), 
             t3_comment(record,z,namelen),
             sh_comment(record,z,namelen),
-            rh3_comment(record,z,namelen),
             lwc_comment(record,z,namelen),
             ice_comment(record,z,namelen),
             rai_comment(record,z,namelen),
@@ -270,10 +257,6 @@ netcdf fua {
         short
             sh_fcinv(record, z);
             sh_fcinv:_FillValue= 0s;
-              	
-        short
-            rh3_fcinv(record, z);
-            rh3_fcinv:_FillValue= 0s;
               	
         short
             lwc_fcinv(record, z);
