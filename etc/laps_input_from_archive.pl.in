@@ -45,6 +45,8 @@ use vars qw($opt_p $opt_t $opt_m $opt_g $opt_s $opt_i $opt_S $opt_T);
 
 getopts('p:t:m:s:ig:ST:');
 
+require "@prefix@/etc/laps_tools.pm";
+
 my $public = $opt_p;
 my ($analysis_yr, $analysis_mo, $analysis_dy, );
 print "$public\n";
@@ -373,32 +375,39 @@ if ($opt_m eq "ruc") {
 
         $gfs_anal="/mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/0_259920_0";
 
-        system ("mssGet --verbose $gfs_anal/\*00000000.tar.gz $public/data/grids/gfs/grib/");
-        system ("mssGet --verbose $gfs_anal/\*00060000.tar.gz $public/data/grids/gfs/grib/");
-        system ("mssGet --verbose $gfs_anal/\*00120000.tar.gz $public/data/grids/gfs/grib/");
-        system ("mssGet --verbose $gfs_anal/\*00180000.tar.gz $public/data/grids/gfs/grib/");
+        system ("mssGet --verbose $gfs_anal/\*.tar.gz $public/data/grids/gfs/grib/");
 
         chdir "$public/data/grids/gfs/grib/";
         system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
         system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
         system("rm \*\.tar"); 
 
-#       print " Obtaining 03 hour forecasts...\n";
+        $gfs_fcst="/mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/0_259920_0";
+        chdir "$public/data/grids/gfs/grib/";
 
-#       $gfs_fcst="/mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/0_259920_0";
+        print $t." Obtaining subset of forecasts from 0000 hour run...\n";
 
-#       system ("mssGet --verbose $gfs_anal/\*00000000.tar.gz $public/data/grids/gfs/grib/");
-#       system ("mssGet --verbose $gfs_anal/\*00060000.tar.gz $public/data/grids/gfs/grib/");
-#       system ("mssGet --verbose $gfs_anal/\*00120000.tar.gz $public/data/grids/gfs/grib/");
-#       system ("mssGet --verbose $gfs_anal/\*00180000.tar.gz $public/data/grids/gfs/grib/");
+        my $anal_hhmm,$fcst_hhhh;
 
 #       Convert from yymmdd to yyddd for untarring individual forecasts
+        my $doy = &laps_tools::get_julian_day($analysis_dy,$analysis_mo,$analysis_yr); 
+        $doy="0".$doy while(length($doy)< 3);
+        my $yy  = substr($analysis_yr,2,2);
 
-#       chdir "$public/data/grids/gfs/grib/";
-#       system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
-#       system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-#       system("rm \*\.tar"); 
+        foreach $anal_hhmm ("0000","0600","1200","1800"){
 
+            print   "mssGet --verbose $gfs_fcst/$analysis_yr$analysis_mo$analysis_dy$anal_hhmm.tar.gz $public/data/grids/gfs/grib/\n";
+            system ("mssGet --verbose $gfs_fcst/$analysis_yr$analysis_mo$analysis_dy$anal_hhmm.tar.gz $public/data/grids/gfs/grib/");
+
+            my $fcst_hh03 = "0003";
+            my $fcst_hh06 = "0006";
+
+#           system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+            print   "find -mindepth 1 -maxdepth 1 -name \"\*\.tar\\.gz\" -exec tar -xvf {} $yy$doy$anal_hhmm$fcst_hh03 $yy$doy$anal_hhmm$fcst_hh06 \\;\n";
+            system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\\.gz\" -exec tar -xvf {} $yy$doy$anal_hhmm$fcst_hh03 $yy$doy$anal_hhmm$fcst_hh06 \\;");
+
+            system("rm \*\.tar.gz"); 
+        }
     }
 
     if (defined $opt_g) {
