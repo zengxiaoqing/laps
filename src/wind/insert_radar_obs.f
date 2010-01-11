@@ -88,7 +88,11 @@
       data l_multi_doppler_new /.true./ ! Flag for new CWB routine
       data l_first_call /.true./ ! Flag for new CWB routine
 
-      allocate ( n_superob(imax,jmax,kmax,max_radars) )
+      allocate ( n_superob(imax,jmax,kmax,max_radars),STAT=istat_alloc )      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate n_superob'
+          stop
+      endif
 
       if(l_first_call)then
           l_write_dxx = .true.
