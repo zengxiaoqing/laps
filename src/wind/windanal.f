@@ -98,12 +98,15 @@ cdis
 
 !     Final pass analyzed winds
       real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)             ! Output
-      real varbuff(imax,jmax,kmax,n_var)                         ! Equiv Abv
+
+      real, allocatable, dimension(:,:,:,:) :: varbuff           ! Local
+!     real varbuff(imax,jmax,kmax,n_var)                         ! Local
 
 !     3D array of observation weights, depends on data type
 !     The choices are outlined below
       real    wt_p(imax,jmax,kmax)                               ! Input
-      real    wt_p_radar(imax,jmax,kmax)                         ! Local
+!     real    wt_p_radar(imax,jmax,kmax)                         ! Local
+      real, allocatable, dimension(:,:,:) :: wt_p_radar          ! Local
 
 !     Model background field
       real u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
@@ -150,8 +153,9 @@ cdis
       real, allocatable, dimension(:,:,:) :: pres_3d                 ! Local
 
 !     Note that aerr is only a dummy ATTM 
+!     real aerr(imax,jmax,kmax,n_var)                                ! Local
+      real, allocatable, dimension(:,:,:,:) :: aerr                  ! Local
       real, allocatable, dimension(:,:,:,:) :: varobs_diff_spread    ! Local
-      real aerr(imax,jmax,kmax,n_var)                                ! Local
 
       integer n_obs_lvl(kmax)                                        ! Local
       logical  l_analyze(kmax) ! This depends on presence of radar obs ! Local
@@ -279,7 +283,19 @@ csms$serial end
      1                  ,i4time                                       ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
+      allocate( aerr(imax,jmax,kmax,n_var), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate aerr'
+          stop
+      endif
+
       aerr = weight_bkg_const ! set array to constant weight for now
+
+      allocate( varbuff(imax,jmax,kmax,n_var), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate varbuff'
+          stop
+      endif
 
       call barnes_multivariate(varbuff                                ! O
      1        ,n_var,ncnt_total,obs_point_qced                        ! I
@@ -301,6 +317,12 @@ csms$serial end
               return
           endif
       enddo ! ivar
+
+      allocate( wt_p_radar(imax,jmax,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate wt_p_radar'
+          stop
+      endif
 
       wt_p_radar = wt_p
 
@@ -766,6 +788,10 @@ csms$serial(default=ignore)  begin
 csms$serial end
 
       endif ! n_radars
+
+      deallocate(aerr)
+      deallocate(varbuff)
+      deallocate(wt_p_radar)
 
 csms$serial(default=ignore)  begin              
 
