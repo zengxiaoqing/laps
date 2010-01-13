@@ -154,49 +154,23 @@ cdoc    or mercator projection.
 cdoc    This routine assumes a polar stereographic, lambert conformal,
 cdoc    or mercator projection.
 
-        include 'trigd.inc'
+        use mem_namelist, ONLY: c6_maproj
+     1                  ,slat1=>standard_latitude
+     1                  ,slat2=>standard_latitude2
+     1                  ,polat=>standard_latitude2
+     1                  ,slon=>standard_longitude
 
-        character*6  c6_maproj
+        include 'trigd.inc'
 
         include 'grid_fname.cmn'
 
-        call get_c6_maproj(c6_maproj,istatus)
-        if(istatus.ne.1)then
-           print*,'Error from get_c6_maproj'
-           return
-        endif
-
         if(c6_maproj .eq. 'plrstr')then ! polar stereo
-            call get_standard_latitudes(slat1,polat,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_latitudes'
-               return
-            endif
-            call get_standard_longitude(slon,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_longitude'
-               return
-            endif
-c           slat1 = standard_latitude
-c           polat = standard_latitude2
-c           slon = standard_longitude
-
             call latlon_to_uv_ps(rlat,rlon,slat1,polat,slon,u,v)
 
         elseif(c6_maproj .eq. 'lambrt')then ! lambert
-            call get_standard_latitudes(slat1,slat2,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_latitudes'
-               return
-            endif
             if(abs(slat2).eq.90. .and. slat2.ne.slat1)then
                print*,'Error: lambert slat2 = 90.'
                istatus=1
-               return
-            endif
-            call get_standard_longitude(slon,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_longitude'
                return
             endif
 c           slat1 = standard_latitude
@@ -206,11 +180,6 @@ c           slon = standard_longitude
             call latlon_to_uv_lc(rlat,rlon,slat1,slat2,slon,u,v)
 
         elseif(c6_maproj .eq. 'merctr')then ! mercator
-            call get_standard_latitude(slat1,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_latitudes'
-               return
-            endif
             call get_grid_center(cenlat_dum,cenlon,istatus)
             if(istatus.ne.1)then
                print*,'Error returned from get_grid_center'
@@ -338,6 +307,12 @@ c           cenlon = grid_cen_lon_cmn
         
         subroutine uv_to_latlon(u,v,rlat,rlon,istatus)
 
+        use mem_namelist, ONLY: c6_maproj
+     1                  ,slat1=>standard_latitude
+     1                  ,slat2=>standard_latitude2
+     1                  ,polat=>standard_latitude2
+     1                  ,slon=>standard_longitude
+
 !       1997            Steve Albers 
 
 !       This routine assumes a polar stereographic, lambert conformal,
@@ -345,27 +320,9 @@ c           cenlon = grid_cen_lon_cmn
 
         include 'trigd.inc'
 
-        character*6  c6_maproj
-
         include 'grid_fname.cmn'
 
-        call get_c6_maproj(c6_maproj,istatus)
-        if(istatus.ne.1)then
-           print*,'Error from get_c6_maproj'
-           return
-        endif
-
         if(c6_maproj .eq. 'plrstr')then ! polar stereo
-            call get_standard_latitudes(slat1,polat,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_latitudes'
-               return
-            endif
-            call get_standard_longitude(slon,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_longitude'
-               return
-            endif
 c           slat1 = standard_latitude
 c           polat = standard_latitude2
 c           slon = standard_longitude
@@ -373,16 +330,6 @@ c           slon = standard_longitude
             call uv_to_latlon_ps(u,v,slat1,polat,slon,rlat,rlon)
 
         elseif(c6_maproj .eq. 'lambrt')then ! lambert
-            call get_standard_latitudes(slat1,slat2,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_latitudes'
-               return
-            endif
-            call get_standard_longitude(slon,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_longitude'
-               return
-            endif
 c           slat1 = standard_latitude
 c           slat2 = standard_latitude2
 c           slon = standard_longitude
@@ -390,11 +337,6 @@ c           slon = standard_longitude
             call uv_to_latlon_lc(u,v,slat1,slat2,slon,rlat,rlon)
 
         elseif(c6_maproj .eq. 'merctr')then ! mercator
-            call get_standard_latitude(slat1,istatus)
-            if(istatus.ne.1)then
-               print*,'Error returned from get_standard_latitudes'
-               return
-            endif
             call get_grid_center(cenlat_dum,cenlon,istatus)
             if(istatus.ne.1)then
                print*,'Error returned from get_grid_center'
