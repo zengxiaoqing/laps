@@ -1432,41 +1432,44 @@ c
 c
       include 'bgdata.inc'
       yyy=missingflag
-      if (x2 .gt. 1.e19 .or. x3 .gt. 1.e19 .or.
-     .    y2 .gt. 1.e19 .or. y3 .gt. 1.e19) return
+      if ( .not. (x2 .gt. 1.e19 .or. x3 .gt. 1.e19 .or.
+     .            y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
 c
-      wt1=(xxx-x3)/(x2-x3)
-      wt2=1.0-wt1
+         wt1=(xxx-x3)/(x2-x3)
+         wt2=1.0-wt1
 c
-      if (y4 .lt. 1.e19 .and. x4 .lt. 1.e19) then
-c        yz22=(xxx-x3)*(xxx-x4)/((x2-x3)*(x2-x4))
-         yz22=wt1*(xxx-x4)/(x2-x4)
-c        yz23=(xxx-x2)*(xxx-x4)/((x3-x2)*(x3-x4))
-         yz23=wt2*(xxx-x4)/(x3-x4)
-         yz24=(xxx-x2)*(xxx-x3)/((x4-x2)*(x4-x3))
-      else
-         yz22=wt1
-         yz23=wt2
-         yz24=0.0
+         if (y4 .lt. 1.e19 .and. x4 .lt. 1.e19) then
+c           yz22=(xxx-x3)*(xxx-x4)/((x2-x3)*(x2-x4))
+            yz22=wt1*(xxx-x4)/(x2-x4)
+c           yz23=(xxx-x2)*(xxx-x4)/((x3-x2)*(x3-x4))
+            yz23=wt2*(xxx-x4)/(x3-x4)
+            yz24=(xxx-x2)*(xxx-x3)/((x4-x2)*(x4-x3))
+         else
+            yz22=wt1
+            yz23=wt2
+            yz24=0.0
+         endif
+c
+         if (y1 .lt. 1.e19 .and. x1 .lt. 1.e19) then
+            yz11=(xxx-x2)*(xxx-x3)/((x1-x2)*(x1-x3))
+c           yz12=(xxx-x1)*(xxx-x3)/((x2-x1)*(x2-x3))
+            yz12=wt1*(xxx-x1)/(x2-x1)
+c           yz13=(xxx-x1)*(xxx-x2)/((x3-x1)*(x3-x2))
+            yz13=wt2*(xxx-x1)/(x3-x1)
+         else
+            yz11=0.0
+            yz12=wt1
+            yz13=wt2
+         endif
+c
+         if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
+            yyy=wt1*y2+wt2*y3
+         else
+            yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)
+     1         +wt2*(yz22*y2+yz23*y3+yz24*y4)
+         endif
+c
       endif
-c
-      if (y1 .lt. 1.e19 .and. x1 .lt. 1.e19) then
-         yz11=(xxx-x2)*(xxx-x3)/((x1-x2)*(x1-x3))
-c        yz12=(xxx-x1)*(xxx-x3)/((x2-x1)*(x2-x3))
-         yz12=wt1*(xxx-x1)/(x2-x1)
-c        yz13=(xxx-x1)*(xxx-x2)/((x3-x1)*(x3-x2))
-         yz13=wt2*(xxx-x1)/(x3-x1)
-      else
-         yz11=0.0
-         yz12=wt1
-         yz13=wt2
-      endif
-c
-      if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
-         yyy=wt1*y2+wt2*y3
-      else
-         yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)+wt2*(yz22*y2+yz23*y3+yz24*y4)
-      endif
-c
+
       return
       end
