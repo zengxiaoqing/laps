@@ -95,8 +95,8 @@ c        ewtitle=ewtitle2//ewtitle1
             num_tiles_needed=num_tiles_needed+1
 
             if(num_tiles_needed .gt. maxtiles_loc)then
-                print*,'more tiles needed than array allocation'
-     1                ,maxtiles_loc
+                print*,'more tiles needed than array allocation A'
+     1                ,num_tiles_needed,maxtiles_loc
                 istatus = 0
                 return
             endif
@@ -115,7 +115,8 @@ c        ewtitle=ewtitle2//ewtitle1
             ctile_name_list(itile_ns)=ctilenamelist(itile_ns)
          enddo
       else
-         print*,'more tiles than array allocation'
+         print*,'more tiles than array allocation B'
+     1         ,num_tiles_needed,maxtiles
          istatus = 0
       endif
 
