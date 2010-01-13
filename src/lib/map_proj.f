@@ -444,27 +444,15 @@ C
 
       subroutine xy_to_uv(x,y,erad,u,v)
 
+      use mem_namelist, ONLY: c6_maproj,slat1=>standard_latitude
+     1                                 ,slat2=>standard_latitude2
+     1                                 ,grid_spacing_m
+
       include 'trigd.inc'
 
-      character*6 c6_maproj
       real n 
 
-      call get_c6_maproj(c6_maproj,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' xy_to_uv: Error obtaining c6_maproj'
-          stop
-      endif
-
-      call get_standard_latitudes(slat1,slat2,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' xy_to_uv: Error obtaining standard lats'
-          stop
-      endif
-
       if(c6_maproj .eq. 'plrstr')then     ! Haltiner & Williams 1-21
-          call get_grid_spacing(grid_spacing_m,istatus)
-          if(istatus .ne. 1)stop
-
           call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
      1                                 ,grid_spacing_proj_m)
           factor = 1. + sind(phi0)
@@ -499,27 +487,14 @@ C
 
       subroutine uv_to_xy(u,v,erad,x,y)
 
+      use mem_namelist, ONLY: c6_maproj,slat1=>standard_latitude
+     1                                 ,slat2=>standard_latitude2
+     1                                 ,grid_spacing_m
       include 'trigd.inc'
 
-      character*6 c6_maproj
       real n 
 
-      call get_c6_maproj(c6_maproj,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' uv_to_xy: Error obtaining c6_maproj'
-          stop
-      endif
-
-      call get_standard_latitudes(slat1,slat2,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' uv_to_xy: Error obtaining standard lats'
-          stop
-      endif
-
       if(c6_maproj .eq. 'plrstr')then     ! Haltiner & Williams 1-21
-          call get_grid_spacing(grid_spacing_m,istatus)
-          if(istatus .ne. 1)stop
-
           call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
      1                                 ,grid_spacing_proj_m)
           factor = 1. + sind(phi0)
