@@ -768,12 +768,24 @@ c mass c-stagger (#4); staggered in both x and y.
 C*****************************************************************
         write(6,*)
         write(6,*)'Corner points.'
-        write(6,701,err=702)1,1,lats(1,1,ns),      lons(1,1,ns)
-        write(6,701,err=702)nnxp,1,lats(nnxp,1,ns),lons(nnxp,1,ns)   
-        write(6,701,err=702)1,nnyp,lats(1,nnyp,ns),lons(1,nnyp,ns)   
+
+        call latlon_to_xy(lats(1,1,ns),lons(1,1,ns)      ,erad,xco,yco)
+        write(6,701,err=702)1,1,   lats(1,1,ns)   ,lons(1,1,ns),xco,yco 
+
+        call latlon_to_xy(lats(nnxp,1,ns),lons(nnxp,1,ns),erad,xco,yco)
+        write(6,701,err=702)nnxp,1,lats(nnxp,1,ns),lons(nnxp,1,ns)
+     +                                                         ,xco,yco   
+
+        call latlon_to_xy(lats(1,nnyp,ns),lons(1,nnyp,ns),erad,xco,yco)
+        write(6,701,err=702)1,nnyp,lats(1,nnyp,ns),lons(1,nnyp,ns)
+     +                                                         ,xco,yco   
+
+        call latlon_to_xy(lats(nnxp,nnyp,ns),lons(nnxp,nnyp,1)
+     +                                                   ,erad,xco,yco)
         write(6,701,err=702)nnxp,nnyp,lats(nnxp,nnyp,ns)
-     +,lons(nnxp,nnyp,1)   
- 701    format(' lat/lon at ',i5,',',i5,' =',2f12.5)
+     +                                       ,lons(nnxp,nnyp,1),xco,yco   
+
+ 701    format(' lat/lon/x/y at ',i5,',',i5,' =',2f12.5,2f12.0)
  702    continue
 
         call check_domain(lats(1,1,ns),lons(1,1,ns),nnxp,nnyp
