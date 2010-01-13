@@ -116,6 +116,8 @@ c
       integer lbgp
       integer nbgmodels
       integer idum,jdum,kdum
+      integer n_written
+      character*14 c_ftimes_written(100)
 c
 c-------------------------------------------------------------------------------
 c
@@ -175,6 +177,8 @@ c
      +' (itime_inc) = ',itime_inc
 
       ltime=.true.
+
+      n_written = 0
 
       do itime_inc=-1,+1
 
@@ -300,6 +304,7 @@ c
              call lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .          reject_names,names,max_files,accepted_files,
+     .          n_written,c_ftimes_written,
      .          i4time_now_lga, smooth_fields,lgb_only,lga_status)
 
            endif
@@ -344,6 +349,11 @@ c             lga_status = -99
          print*,'ERROR: LGA infinite loop condition found'
       endif
 c
+      print*,'Number of lga/lgb files written = ',n_written
+      do i = 1,n_written
+          print*,c_ftimes_written(i)
+      enddo ! i
+
       if(lga_status.eq.0) goto 965
       print *,'LGA...Normal completion.'
       stop

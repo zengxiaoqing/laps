@@ -35,6 +35,7 @@ c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd
      .    ,laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt
      .    ,reject_names,bg_names,max_files,accepted_files
+     .    ,n_written,c_ftimes_written
      .    ,i4time_now,smooth_fields,lgb_only,lga_status)
 
 c KML: CHANGES MADE APRIL 2004
@@ -78,8 +79,12 @@ c
       character*256 reject_names(max_files)
       character*132 cmodel
       character*150 static_dir,filename
-      
+
       integer warncnt
+      
+      integer n_written, iw
+      character*14 c_ftimes_written(100), a14_time
+
 c sfc namelist stuff. for reduced pressure calc
       integer use_lso_qc, skip_internal_qc, itheta
       logical l_require_lso, luse_sfc_bkgd
@@ -575,6 +580,21 @@ c     print*,'process new model background'
 
       do nf=1,nbg
  
+       bgvalid=time_bg(nf)+valid_bg(nf)
+
+!      Check a14_time and compare to previously written files
+       call make_fnam_lp(time_bg(nf),a14_time(1:9),istatus)       
+       call make_fcst_time(bgvalid,time_bg(nf),a14_time(10:14)
+     1                    ,istatus)       
+
+       do iw = 1,n_written
+         if(a14_time .eq. c_ftimes_written(iw))then
+             write(6,*)' NOTE: skipping redundant file time '
+     1                ,a14_time
+             goto900
+         endif
+       enddo ! iw
+
 c Removal of this if/loop causes already existing lga files to be overwritten
 c possibly with the same data.  However the error frequency on SBN may warrent
 c this extra work.  
@@ -1313,8 +1333,6 @@ c
          endif !(linterp)
 
          itstatus(4)=init_timer()
-         bgvalid=time_bg(nf)+valid_bg(nf)
-
 c
 c Write LGA
 c ---------
@@ -1369,10 +1387,15 @@ c              sfcgrid(i,j,kk+4)=missingflag
 
          endif
 
+         n_written = n_written + 1
+         c_ftimes_written(n_written) = a14_time
+
          lga_status = 1
 c
        endif !istatus_prep(nf) -> if the background file was properly read
                                  !and no bad data was found
+
+ 900   continue
 
       enddo ! Main loop through two model backgrounds (nf)
 
