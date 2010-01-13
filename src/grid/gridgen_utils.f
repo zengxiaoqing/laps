@@ -30,7 +30,7 @@ c A-c staggers contained within these arrays.
       character c_dataroot*255
       character c10_grid_fname*10
 
-      integer istatus
+      integer istatus,itstatus,ishow_timer
 
       print*,'calculate lat/lon at stagger grid points.'
 
@@ -89,18 +89,26 @@ c Get X/Y for lower left corner
 C
 C*****************************************************************
 C*  Convert it to lat/lon using the library routines.            *
+         itstatus=ishow_timer()
 
          Do J = 1,nnyp
-         Do I = 1,nnxp
+           Do I = 1,nnxp
 
-            call xy_to_latlon(xtn(i,k),ytn(j,k),erad ! ,90.,std_lon
+             call xy_to_latlon(xtn(i,k),ytn(j,k),erad ! ,90.,std_lon     
      1                                     ,lats(I,J,k),lons(I,J,k))
 
-c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
-         enddo
+c            print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
+           enddo
+           if(j .eq. (j/50)*50)then
+             print*,'completed row ',j
+           endif
          enddo
 
       enddo
+
+      print*,'completed compute_latlon routine'
+ 
+      itstatus=ishow_timer()
 
       istatus = 1
 
@@ -147,6 +155,13 @@ c ----------------------------------------------
          YTN(J)=.5*(YMN(J)+YMN(J-1))
  660  CONTINUE
       YTN(1)=1.5*YMN(1)-.5*YMN(2)
+
+      write(6,*)' Results at end of get_xytn:'
+      write(6,*)' deltax/deltay = ',deltax,deltay
+      write(6,*)' xmn bounds = ',xmn(1),xmn(nnxp)
+      write(6,*)' ymn bounds = ',ymn(1),ymn(nnyp)
+      write(6,*)' xtn bounds = ',xtn(1),xtn(nnxp)
+      write(6,*)' ytn bounds = ',ytn(1),ytn(nnyp)
 
       return
       end
@@ -986,6 +1001,7 @@ C
            stop
        endif
 
+!      Calculate xy coordinates at domain center
        call latlon_to_xy(LAT,LON,ERAD,XDIF,YDIF)
 
        X=XDIF+(1.-DIR*FLOAT(NX)/2.)*DX
