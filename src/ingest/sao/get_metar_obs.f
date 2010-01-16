@@ -205,7 +205,9 @@ c
      &                           .AND. 
      &                    cnt .le. minutes_to_wait_for_metars
      &                           .AND.
-     &                    i4time_file .eq. i4time_file_a        )
+     &                    i4time_file .eq. i4time_file_a        
+     &                           .AND.
+     &                    i4time_file .le. i4time_now_gg()        )
 c
 	            INQUIRE(FILE=data_file,EXIST=exists)
                     if(.not. exists) then
