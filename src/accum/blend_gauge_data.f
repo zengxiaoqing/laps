@@ -198,7 +198,9 @@
 
             precip_accum_m = max(precip_accum_m,0.)
  
-        elseif(.not. l_accum_bias_ratio)then ! analyze gauge values via increments
+        elseif((.not. l_accum_bias_ratio) .and. l_accum_gauge)then 
+
+!           Analyze gauge values via increments
 
             write(6,*)' Performing gauge increment analysis'
 
@@ -219,7 +221,10 @@
 
             precip_accum_m = max(precip_accum_m,0.)
                                                                         
-        elseif(l_accum_bias_ratio)then ! perform gauge bias analysis
+        elseif(l_accum_bias_ratio .and. l_accum_gauge)then 
+
+!           Perform gauge bias analysis
+
             write(6,*)' Performing gauge bias analysis'
             one = 1.0
             call precip_barnes_jacket(           c_field              ! I
