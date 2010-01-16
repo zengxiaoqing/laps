@@ -4684,6 +4684,12 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
+!           Add balance to label
+            call s_len2(c_label,len_c_label)
+            if(i_balance .eq. 1)then
+                c_label = c_label(1:len_c_label)//' (Bal)'
+            endif
+
             if(c_type(3:3) .ne. 'i')then ! contour plot
                 call contour_settings(field_2d,NX_L,NY_L
      1                               ,clow,chigh,cint,zoom,density,1.)       
@@ -5045,6 +5051,10 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'DSF')then
                     call ccpfil(field_2d,NX_L,NY_L,sfctdf_h,sfctdf_l
      1                         ,'hues',n_image,scale,'hsect'
+     1                         ,plot_parms,namelist_parms) 
+                elseif(var_2d .eq. 'SLP')then
+                    call ccpfil(field_2d,NX_L,NY_L,1040.,960.
+     1                         ,'spectral',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'LWO')then
                     call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
