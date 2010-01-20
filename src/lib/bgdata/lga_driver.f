@@ -53,6 +53,7 @@ c KML: END
       include 'laps_sfc.inc'
 c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
+     .        nx_lp  ,ny_lp,               !LAPS pressure grid dimensions
      .        nx_bg  ,ny_bg,               !Background model grid dimensions
      .        nzbg_ht,nzbg_tp,nzbg_sh,
      .        nzbg_uv,nzbg_ww,
@@ -171,7 +172,7 @@ c
       real, allocatable :: rp_lvl(:,:)       !Reduced pressure lvl
       real, allocatable :: rp_tp(:,:)        !Reduced pressure temp (holder)
       real, allocatable :: rp_sh(:,:)        !Reduced pressure sh   (holder)
-      real, allocatable :: pr3d(:,:,:)       !Pressure 3D on LAPS Grid
+      real, allocatable :: prgd(:,:,:)       !Pressure 3D/1D on LAPS Grid
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
@@ -466,7 +467,7 @@ c
 c
 c *** get LAPS pressure OR height levels.  Using pressures.nl / heights.nl
 c
-      if(vertical_grid .ne. 'SIGMA_HT')then
+      if(vertical_grid .eq. 'PRESSURE')then ! PRESSURE
           print*,'get 1d pressures'
           call get_pres_1d(i4time_now,nz_laps,pr1d_mb,istatus)
           if(istatus.ne.1)then
@@ -474,10 +475,15 @@ c
              print*,'Check pressures.nl or nk_laps in nest7grid.parms'
              stop
           endif
+          nx_lp = 1
+          ny_lp = 1
+          allocate (prgd(nx_lp,ny_lp,nz_laps))
           do k = 1,nz_laps
              pr1d_mb(k)=pr1d_mb(k)/100.
+             prgd(1,1,k)=pr1d_mb(k)/100.
           enddo
-      else
+
+      elseif(vertical_grid .eq. 'SIGMA_HT')then
           print*,'get 1d heights'
           call get_ht_1d(nz_laps,ht1d,istatus)
           if(istatus.ne.1)then
@@ -485,6 +491,22 @@ c
              print*,'Check heights.nl or nk_laps in nest7grid.parms'
              stop
           endif
+          nx_lp = nx_laps
+          ny_lp = ny_laps
+          allocate (prgd(nx_lp,ny_lp,nz_laps))
+
+      elseif(vertical_grid .eq. 'SIGMA_P')then
+          print*,'get 1d heights'
+!         call get_sigma_1d(nz_laps,sigma1d,istatus)
+          if(istatus.ne.1)then
+             print*,'Error returned from get_sigma_1d'
+             print*,'Check sigmas.nl or nk_laps in nest7grid.parms'
+             stop
+          endif
+          nx_lp = nx_laps
+          ny_lp = ny_laps
+          allocate (prgd(nx_lp,ny_lp,nz_laps))
+
       endif
 c
 c *** Determine which of the "bg_names" has not already been processed
@@ -591,6 +613,7 @@ c     print*,'process new model background'
          if(a14_time .eq. c_ftimes_written(iw))then
              write(6,*)' NOTE: skipping redundant file time '
      1                ,a14_time
+             lga_status = 1
              goto900
          endif
        enddo ! iw
@@ -944,7 +967,7 @@ c
      .                           grx,gry,htvi,ht,bgmodel)
            else
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .                           grx,gry,prvi,pr3d,bgmodel)
+     .                           grx,gry,prvi,prgd,bgmodel)
            endif
 
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
@@ -1347,7 +1370,7 @@ c ---------
             endif
           else
             call write_lgap(nx_laps,ny_laps,nz_laps,time_bg(nf),
-     .bgvalid,cmodel,missingflag,ht,pr3d,tp,sh,uw,vw,ww,istatus)
+     .bgvalid,cmodel,missingflag,ht,prgd,tp,sh,uw,vw,ww,istatus)
             if(istatus.ne.1)then
              print*,'Error writing lga - returning to main'
              return
@@ -1398,6 +1421,8 @@ c
  900   continue
 
       enddo ! Main loop through two model backgrounds (nf)
+
+      deallocate (prgd)
 
 c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
