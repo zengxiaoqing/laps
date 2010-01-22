@@ -117,7 +117,7 @@ $(POST): $(GSIPO) $(LAPSLIBS) $(HUMIDLIB)
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-debug: $(STMAS) $(STMAS_CG)
+debug: $(STMAS) #$(STMAS_CG)
 	$(RM) $(ANA) $(ANA_CG);
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS) $(BUFRLIB)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
