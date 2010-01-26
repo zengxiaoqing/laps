@@ -186,6 +186,7 @@ c     namelist data
      1     path2covar
 
       
+      integer i,j,k
 
 c  code
 
@@ -505,6 +506,31 @@ c     initialize data field with special missing data flag for sh
          write(6,*) 'NaN detected from RUC/MAPS...abort'
          go to 666
       endif
+
+
+c     check for "constant" input field and abort"
+      
+      do k = 1,kk
+
+c     test levels independently
+
+        do i = 1,ii
+          do j = 1,jj
+
+            if (data(1,1,k).ne.data(i,j,k)) then
+c     test is passed
+               go to 555 ! jump out of kill loop
+            endif
+
+          enddo ! jj
+        enddo ! ii
+         write(6,*) 'Data in SH input array are all EQUAL in value'
+         write(6,*) 'Assuming such a constant field is an ERROR'
+         write(6,*) 'Aborting LQ3 run'
+         go to 666
+555      continue  ! made it past kill loop for all same data
+         write (6,*) 'Success in variable SH field, level ',k
+      enddo ! kk
 
 
 
