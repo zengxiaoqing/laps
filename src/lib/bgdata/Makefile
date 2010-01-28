@@ -20,7 +20,7 @@ DEBUGLIB = libdebugbgdata.a
 
 
 
-SRC= bkgd_stn_interp.f   bkgd_util.f            es_table.f             \
+SRC= bkgd_util.f            es_table.f             \
      get_acceptable_files.f get_bkgd_mdl_info.f get_attr_sbn.f         \
      getdims_lapsprd.f   lapsio.f               lga_driver.f           \
      lga_interp_subs.f   lprep_eta_conusc.f     lprep_ruc2_pub.f       \
