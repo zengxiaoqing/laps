@@ -139,3 +139,67 @@ cdoc  height grid or other type of arbitrary vertical grid.
       end
       
 
+ 
+      subroutine get_sigma_1d(nk,sigma_1d_out,istatus)
+
+cdoc  Returns a 1-D grid of sigmas.
+
+      include 'grid_fname.cmn'                          ! grid_fnam_common
+
+      integer nk       
+      real sigma_1d_out(nk)      
+
+      integer max_sigma
+      parameter (max_sigma=150) 
+
+      real sigmas(max_sigma)
+
+      integer init
+      data init /0/
+
+      save init, sigmas
+
+      namelist /sigmas_nl/ sigmas
+
+      character*150 static_dir,filename
+
+      if(init .eq. 0)then
+          call get_directory(grid_fnam_common,static_dir,len_dir)
+
+          filename = static_dir(1:len_dir)//'/sigmas.nl'
+ 
+          open(1,file=filename,status='old',err=900)
+          read(1,sigmas_nl,err=901)
+          close(1)
+
+          init = 1
+
+      endif ! init = 0
+
+      do k = 1,nk
+        sigma_1d_out(k) = sigmas(k)
+      enddo                  ! k
+
+      do k = 2,nk
+        if(sigmas(k) .le. sigmas(k-1))goto902 
+      enddo                  ! k
+
+!     write(6,*)' Success in get_sigma_1d'
+      istatus = 1
+      return
+
+  900 print*,'error opening file ',filename
+      istatus = 0
+      return
+
+  901 print*,'error reading sigmas_nl in ',filename
+      write(*,sigmas_nl)
+      istatus = 0
+      return
+
+  902 print*,'error in sigmas_nl values in ',filename
+      write(*,sigmas_nl)
+      istatus = 0
+      return
+
+      end      
