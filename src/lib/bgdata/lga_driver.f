@@ -148,8 +148,9 @@ c
      .          uw(nx_laps,ny_laps,nz_laps), !!U-wind (m/s)
      .          vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
      .          ww(nx_laps,ny_laps,nz_laps), !W-wind (pa/s)
-     .          pr1d_mb(nz_laps),            !LAPS pressures
+     .          pr1d_mb(nz_laps),            !LAPS pressures (mb)
      .          ht1d(nz_laps),               !LAPS ht (SIGMA_HT grid only)
+     .          sigma1d(nz_laps),            !LAPS ht (SIGMA_P grid only)
      .          lat(nx_laps,ny_laps),        !LAPS lat
      .          lon(nx_laps,ny_laps),        !LAPS lon
      .          topo(nx_laps,ny_laps),       !LAPS avg terrain
@@ -172,7 +173,7 @@ c
       real, allocatable :: rp_lvl(:,:)       !Reduced pressure lvl
       real, allocatable :: rp_tp(:,:)        !Reduced pressure temp (holder)
       real, allocatable :: rp_sh(:,:)        !Reduced pressure sh   (holder)
-      real, allocatable :: prgd(:,:,:)       !Pressure 3D/1D on LAPS Grid
+      real, allocatable :: prgd(:,:,:)       !Pressure 3D/1D on LAPS Grid (mb)
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
@@ -281,13 +282,13 @@ c
          integer       istatus
        end subroutine
 
-       subroutine vinterp(nz_laps,nx,ny,
+       subroutine vinterp(nz_laps,nx,ny,nx_lp,ny_lp,
      .	nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
      .  prlaps, prbght,prbgsh,prbguv,prbgww,
      .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
      .  htvi,tpvi,shvi,uwvi,vwvi,wwvi)
 
-         integer nx,ny
+         integer nx,ny,nx_lp,ny_lp
          integer nzbg_ht
          integer nzbg_tp
          integer nzbg_sh
@@ -497,7 +498,7 @@ c
 
       elseif(vertical_grid .eq. 'SIGMA_P')then
           print*,'get 1d heights'
-!         call get_sigma_1d(nz_laps,sigma1d,istatus)
+          call get_sigma_1d(nz_laps,sigma1d,istatus)
           if(istatus.ne.1)then
              print*,'Error returned from get_sigma_1d'
              print*,'Check sigmas.nl or nk_laps in nest7grid.parms'
@@ -505,6 +506,8 @@ c
           endif
           nx_lp = nx_laps
           ny_lp = ny_laps
+
+!         Convert 1D sigma levels to 3D pressures (with surface pressure)
           allocate (prgd(nx_lp,ny_lp,nz_laps))
 
       endif
@@ -784,7 +787,7 @@ c
      .               wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
 
            if(vertical_grid .ne. 'SIGMA_HT')then
-             call vinterp(nz_laps,nx_bg,ny_bg
+             call vinterp(nz_laps,nx_bg,ny_bg,nx_lp,ny_lp
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .         ,pr1d_mb,prbght,prbgsh,prbguv,prbgww
      .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
@@ -1361,14 +1364,14 @@ c Write LGA
 c ---------
          if(.not.lgb_only)then
 
-          if(vertical_grid .ne. 'SIGMA_HT')then
+          if(vertical_grid .eq. 'PRESSURE')then
             call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
      .bgvalid,cmodel,missingflag,pr1d_mb,ht,tp,sh,uw,vw,ww,istatus)
             if(istatus.ne.1)then
              print*,'Error writing lga - returning to main'
              return
             endif
-          else
+          else ! SIGMA_HT, SIGMA_P
             call write_lgap(nx_laps,ny_laps,nz_laps,time_bg(nf),
      .bgvalid,cmodel,missingflag,ht,prgd,tp,sh,uw,vw,ww,istatus)
             if(istatus.ne.1)then
