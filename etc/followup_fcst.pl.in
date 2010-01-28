@@ -198,12 +198,12 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
         $validtime = $validtime."00";
       }
       $result=system("$followup $_ $validtime");
-#      $result=system("$followup_fire $_ $validtime");
-#      $result=system("$followup_ua $_ $validtime");
+#     $result=system("$followup_fire $_ $validtime");
+#     $result=system("$followup_ua $_ $validtime");
       $result=system("$followup_xsect $_ $validtime");
       system("rm -f $local_fsf/$_.fsf.done");
-#      system("rm -f $local_fua/$_.fua.done"); 
-     if (! $www_flag){
+#     system("rm -f $local_fua/$_.fua.done"); 
+      if (! $www_flag){
         open(ST, ">$w3recent/systime.dat");
         print ST "$www_time\n";
         close (ST);
@@ -213,8 +213,8 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
       splice @times_new, $arrpos, 1;
       $timeaccum = 0;
     }else{
-       print "Not ready (both fua and fsf). $local_fsf/$_.fsf\n";
-       $arrpos++;
+      print "Not ready (both fua and fsf). $local_fsf/$_.fsf\n";
+      $arrpos++;
     }
   }
   @times = @times_new;
@@ -228,6 +228,7 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
     $timeaccum = $timeaccum + $sleep_time;
     print $t." Total time since beginning of loop: $timeaccum\n";  
   }else{
+    system("touch $w3recent/../finish.txt");
     print "All fua/fsf files processed\n";
   }
 }
