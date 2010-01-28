@@ -32,7 +32,7 @@ my $stringGMT = time2str($plusOneHour);
 $returnAddress = ($ENV{'REMOTE_HOST'} || $ENV{REMOTE_ADDR} ||
                   "(Unknown requestor)");
 
-$default_title="FSL/LAPS Data Display (Experimental)";
+$default_title="ESRL/GSD/LAPS Data Display (Experimental)";
 ###^^^^^^^^^^^^^^^^^^^^^
 
 # $web_root is where the '$web_root/domains/[list of domains]/private_data'
@@ -176,11 +176,11 @@ my $default_delay = @lines[13];
 $default_frames =~ s/ //g;
 chomp $default_frames;
 
-$n_choices=7;
+$n_choices=8;
 
 &ReadParse(*default);
 $default_title=$default{'title'} ||
-    "FSL/LAPS Data Display (Experimental)";
+    "ESRL/GSD/LAPS Data Display (Experimental)";
 
 #$default_density   = $default{'density'} || 1.0;
 $default_CenterLat = $default{'CenterLat'} || "  ";
@@ -251,6 +251,8 @@ close LAPSPRD;
 @frames_list[10] = "11";
 @frames_list[11] = "12";
 @frames_list[12] = "13";
+@frames_list[13] = "24";
+@frames_list[14] = "auto";
 
 @delay_list[0] = "25";
 @delay_list[1] = "50";
@@ -287,8 +289,7 @@ select multiple pressure levels.<br>
 <INPUT NAME="a9time" VALUE="$default_time" size=9>
 <br>
 <p>
-<strong><A HREF="fcst.html">Forecast Time:</A></strong> [hhmm]
-<br>
+<strong><A HREF="fcst.html">Forecast Time:</A></strong> 
 (blank=latest)
 <INPUT NAME="forecast_time" VALUE="$default_hhmm" size=9> 
 
@@ -302,7 +303,7 @@ select multiple pressure levels.<br>
 <br>
 
 
-<select name="domains" size=7 multiple>
+<select name="domains" size=$n_choices multiple>
 EOF
 
 # display available domains
@@ -388,15 +389,16 @@ print <<"EOF";
 <option $selected{'DEWPOINT'}> DEWPOINT
 <option $selected{'RH'}> RH
 <option $selected{'SH'}> SH
-<option $selected{'WINDSPD'}> WINDSPD
-<option $selected{'U'}> U
-<option $selected{'V'}> V
-<option $selected{'DIV'}> DIV
-<option $selected{'VORT'}> VORT
-<option $selected{'PVORT'}> PVORT
-<option $selected{'OMEGA'}> OMEGA
+<option $selected{'WIND_SPD'}> WIND_SPD
+<option $selected{'WIND_U'}> WIND_U
+<option $selected{'WIND_V'}> WIND_V
+<option $selected{'WIND_DIV'}> WIND_DIV
+<option $selected{'WIND_VORT'}> WIND_VORT
+<option $selected{'WIND_PVORT'}> WIND_PVORT
+<option $selected{'WIND_OMEGA'}> WIND_OMEGA
 <option $selected{'C_OMEGA'}> C_OMEGA
 <option $selected{'MCONV'}> MCONV
+<option $selected{'P_MSL'}> P_MSL
 <option $selected{'P_PRIME'}> P_PRIME
 <option $selected{'THETA'}> THETA
 <option $selected{'THETAE'}> THETAE
@@ -404,6 +406,7 @@ print <<"EOF";
 <option $selected{'CAPE'}> CAPE
 <option $selected{'CIN'}> CIN
 <option $selected{'HELICITY'}> HELICITY
+<option $selected{'UMFLUX'}> UMFLUX
 <option $selected{'VSBLTY'}> VSBLTY
 <option $selected{'HEATINDEX'}> HEATINDEX
 <option $selected{'FIREWX'}> FIREWX
@@ -425,6 +428,7 @@ print <<"EOF";
 <option $selected{'REF_MAX'}> REF_MAX
 <option $selected{'PCP_RAI'}> PCP_RAI
 <option $selected{'PCP_SNO'}> PCP_SNO
+<option $selected{'PCP_ICE'}> PCP_ICE
 <option $selected{'PCP_INC'}> PCP_INC
 <option $selected{'PCP_STO'}> PCP_STO
 <option $selected{'PRCP_H2O'}> PRCP_H2O
@@ -445,17 +449,17 @@ print <<"EOF";
 <option $selected{'rh'}> rh
 <option $selected{'sh'}> sh
 <option $selected{'wind'}> wind
-<option $selected{'windspd'}> windspd
-<option $selected{'u'}> u
-<option $selected{'v'}> v
-<option $selected{'div'}> div
-<option $selected{'vort'}> vort
-<option $selected{'pvort'}> pvort
-<option $selected{'vort_adv'}> vort_adv
-<option $selected{'omega'}> omega
+<option $selected{'wind_spd'}> wind_spd
+<option $selected{'wind_u'}> wind_u
+<option $selected{'wind_v'}> wind_v
+<option $selected{'wind_div'}> wind_div
+<option $selected{'wind_vort'}> wind_vort
+<option $selected{'wind_pvort'}> wind_pvort
+<option $selected{'wind_vort_adv'}> wind_vort_adv
+<option $selected{'wind_omega'}> wind_omega
 <option $selected{'c_omega'}> c_omega
 <option $selected{'mconv'}> mconv
-<option $selected{'msl_p'}> msl_p
+<option $selected{'p_msl'}> p_msl
 <option $selected{'red_p'}> red_p
 <option $selected{'stn_p'}> stn_p
 <option $selected{'alt_p'}> alt_p
@@ -466,7 +470,7 @@ print <<"EOF";
 <option $selected{'cape'}> cape
 <option $selected{'cin'}> cin
 <option $selected{'helicity'}> helicity
-<option $selected{'umf'}> umf
+<option $selected{'umflux'}> umflux
 <option $selected{'vsblty'}> vsblty
 <option $selected{'heatindex'}> heatindex
 <option $selected{'firewx'}> firewx
@@ -489,6 +493,7 @@ print <<"EOF";
 <option $selected{'pcp_cnc'}> pcp_cnc
 <option $selected{'pcp_rai'}> pcp_rai
 <option $selected{'pcp_sno'}> pcp_sno
+<option $selected{'pcp_ice'}> pcp_ice
 <option $selected{'pcp_typ'}> pcp_typ
 <option $selected{'pcp_inc'}> pcp_inc
 <option $selected{'pcp_sto'}> pcp_sto
@@ -595,13 +600,13 @@ print <<"EOF";
 <!--<p>-->
 <center>
 <strong>
-<input type="submit" value="Load">
-<input type="reset" value="Clear">
+<input type="submit" value="Load" style="font-size: 0.9em;">
+<input type="reset" value="Clear" style="font-size: 0.9em;">
 </center>
 </strong>
 <br>
 
-Density:
+<label style="color: blue;"> Density:</label>
 <br>
 <select name="density">
 EOF
@@ -680,18 +685,31 @@ print <<"EOF";
 <IMG SRC="/albers/colorbar.gif">
 
 <p>
+
+<SCRIPT language="javascript">
+function loop(title,image_dir,window_name) {
+var open_string='/looper/Looper.cgi?title='+title+'&image_dir='+image_dir;
+window.open(open_string,window_name,'width=1069,height=951,resizable');
+}
+</SCRIPT>
+
 <h4>
 <!--
 <A HREF="http://www.fsl.noaa.gov/fsl/docs/wthr/fsl-weather.html">FSL Wx</A>
 |
 -->
-<A HREF="/cgi/LAPB.homepage.cgi">LAPS home</A>
+<A HREF="http://esrl.noaa.gov/gsd/fab/">FAB Home</A>
+|
+<A HREF="http://laps.noaa.gov">LAPS</A>
 |
 <A HREF="/cgi/laps_products.cgi">
 Realtime LAPS Products</A>
 |
 <A HREF="/forecasts/laps_products.cgi">
 Forecasts</A>
+|
+<a href="javascript:loop('On-The-Fly','pub_onthefly')">
+Java Loop</A> <FONT COLOR="#EE9900">(NEW)</FONT>
 |
 Log Info:
 <A HREF="lapsplot/lapsplot.in">
