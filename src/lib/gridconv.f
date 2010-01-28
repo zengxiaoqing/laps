@@ -1428,6 +1428,49 @@ c
 c
 c===============================================================================
 c
+      SUBROUTINE GDTOST2(A,IX,IY,STAX,STAY,STAVAL)
+*  SUBROUTINE TO RETURN STATIONS BACK-INTERPOLATED VALUES(STAVAL)
+*  FROM UNIFORM GRID POINTS USING OVERLAPPING-QUADRATICS.
+*  GRIDDED VALUES OF INPUT ARRAY A DIMENSIONED A(IX,IY),WHERE
+*  IX=GRID POINTS IN X, IY = GRID POINTS IN Y .  STATION
+*  LOCATION GIVEN IN TERMS OF GRID RELATIVE STATION X (STAX)
+*  AND STATION COLUMN.
+*  VALUES GREATER THAN 1.0E30 INDICATE MISSING DATA.
+*
+      real A(IX,IY),R(4),SCR(4),stax,stay,staval
+     +  ,fixm2,fiym2,yy,xx
+      IY1=INT(STAY)-1
+      IY2=IY1+3
+      IX1=INT(STAX)-1
+      IX2=IX1+3
+      STAVAL=1E30
+      FIYM2=FLOAT(IY1)-1
+      FIXM2=FLOAT(IX1)-1
+      II=0
+      DO 100 I=IX1,IX2
+      II=II+1
+      IF(I.GE.1.AND.I.LE.IX) GO TO 101
+      SCR(II)=1E30
+      GO TO 100
+101   JJ=0
+      DO 111 J=IY1,IY2
+      JJ=JJ+1
+      IF(J.GE.1.AND.J.LE.IY) GO TO 112
+      R(JJ)=1E30
+      GO TO 111
+112   R(JJ)=A(I,J)
+111   CONTINUE
+      YY=STAY-FIYM2
+      CALL BINOM(1.,2.,3.,4.,R(1),R(2),R(3),R(4),YY,SCR(II))
+100   CONTINUE
+      XX=STAX-FIXM2
+      CALL BINOM(1.,2.,3.,4.,SCR(1),SCR(2),SCR(3),SCR(4),XX,STAVAL)
+      RETURN
+      END
+c
+cc ------------------------------------------------------------------
+c
+
       subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
 c
       include 'bgdata.inc'
