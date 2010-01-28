@@ -1,5 +1,5 @@
 
-      subroutine vinterp(nz_laps,nx,ny,
+      subroutine vinterp(nz_laps,nx,ny,nx_lp,ny_lp,
      .	nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
      .  prlaps, prbght,prbgsh,prbguv,prbgww,
      .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
@@ -8,7 +8,8 @@ c
       implicit none
       include 'bgdata.inc'
 c
-      integer nx,ny
+      integer nx,ny,nx_lp,ny_lp
+      integer ip,jp
       integer nzbg_ht
       integer nzbg_tp
       integer nzbg_sh
@@ -47,14 +48,14 @@ c
      .       vwvi(nx,ny,nz_laps), !v-wind (m/s)
      .       wwvi(nx,ny,nz_laps)  !w-wind (omega [pa/s])
 c
-      real   prlaps(nz_laps),prilaps,fact1,fact2
+      real   prlaps(nx_lp,ny_lp,nz_laps),prilaps,fact1,fact2
       real   datmsg,datmsg1,datmsg2
       integer i,j,k,kk,lencm
 
       interface
          subroutine vinterp_sub(msngflag
-     .,nx,ny,nz,nzbg,pr,prbg,bgdata,bgdatavi)
-         integer    nx,ny,nz
+     .,nx,ny,nx_lp,ny_lp,nz,nzbg,pr,prbg,bgdata,bgdatavi)
+         integer    nx,nx_lp,ny_lp,ny,nz
          integer    nzbg
          real  ::   pr(nz)
          real  ::   prbg(nx,ny,nzbg)
@@ -84,20 +85,22 @@ c individual fields (like sh, u/v and ww).
 
       datmsg = 0.
       do k=1,nz_laps
-         prilaps=1./prlaps(k)
          do j=1,ny
             do i=1,nx
+               ip = min(i,nx_lp)
+               jp = min(j,ny_lp)
+               prilaps=1./prlaps(ip,jp,k)
                do kk=1,nzbght
 
 c lowest bg pressure level is above analysis lowest pressure levels
-                  if (prlaps(k) .gt. prbght(i,j,1)) then
+                  if (prlaps(ip,jp,k) .gt. prbght(i,j,1)) then
                      datmsg = max(htbg(i,j,1),tpbg(i,j,1))
 
                      if (datmsg .lt. missingflag) then
                         fact2=14.642857*alog(prbght(i,j,1)*prilaps)
 
                         tpvi(i,j,k)=tpbg(i,j,1)
-     +                       +(prlaps(k)-prbght(i,j,1))*0.056
+     +                       +(prlaps(ip,jp,k)-prbght(i,j,1))*0.056
 
                         htvi(i,j,k)=htbg(i,j,1)
      +                       +(tpvi(i,j,k)+tpbg(i,j,1))*fact2
@@ -109,7 +112,7 @@ c lowest bg pressure level is above analysis lowest pressure levels
                      goto 10
 
 c highest bg pressure level is below analysis highest pressure level
-                  elseif (prlaps(k) .lt. prbght(i,j,nzbght)) then
+                  elseif (prlaps(ip,jp,k) .lt. prbght(i,j,nzbght)) then       
 
                      datmsg = max(htbg(i,j,nzbght),tpbg(i,j,nzbght))
 
@@ -125,7 +128,7 @@ c highest bg pressure level is below analysis highest pressure level
                      goto 10
 
 c analysis pressure of level equals bg pressure of level
-                  elseif (prlaps(k) .eq. prbght(i,j,kk)) then
+                  elseif (prlaps(ip,jp,k) .eq. prbght(i,j,kk)) then
                      datmsg = max(htbg(i,j,kk),tpbg(i,j,kk))
                      if (datmsg .lt. missingflag) then
                         htvi(i,j,k)=htbg(i,j,kk)
@@ -137,8 +140,8 @@ c analysis pressure of level equals bg pressure of level
                      goto 10
 
 c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
-                  elseif (prlaps(k) .lt. prbght(i,j,kk) .and. 
-     +                    prlaps(k) .gt. prbght(i,j,kk+1)) then
+                  elseif (prlaps(ip,jp,k) .lt. prbght(i,j,kk) .and. 
+     +                    prlaps(ip,jp,k) .gt. prbght(i,j,kk+1)) then
 
                      datmsg1 = max(htbg(i,j,kk),tpbg(i,j,kk))
                      datmsg2 = max(htbg(i,j,kk+1),tpbg(i,j,kk+1))
@@ -146,7 +149,7 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
                      if (datmsg1 .lt. missingflag.and.
      .                   datmsg2 .lt. missingflag)then
 
-                        fact1=alog(prlaps(k)/prbght(i,j,kk))/
+                        fact1=alog(prlaps(ip,jp,k)/prbght(i,j,kk))/
      .                       alog(prbght(i,j,kk+1)/prbght(i,j,kk))
                         fact2=14.642857*alog(prbght(i,j,kk)*prilaps)
 
@@ -168,27 +171,28 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
 c
 c second loops for remaining variables
 c
-      call vinterp_sub(missingflag,nx,ny,nz_laps,nzbgsh
+      call vinterp_sub(missingflag,nx,ny,nx_lp,ny_lp,nz_laps,nzbgsh
      .                     ,prlaps,prbgsh,shbg,shvi)
-      call vinterp_sub(missingflag,nx,ny,nz_laps,nzbguv
+      call vinterp_sub(missingflag,nx,ny,nx_lp,ny_lp,nz_laps,nzbguv
      .                     ,prlaps,prbguv,uwbg,uwvi)
-      call vinterp_sub(missingflag,nx,ny,nz_laps,nzbguv
+      call vinterp_sub(missingflag,nx,ny,nx_lp,ny_lp,nz_laps,nzbguv
      .                     ,prlaps,prbguv,vwbg,vwvi)
-      call vinterp_sub(missingflag,nx,ny,nz_laps,nzbgww
+      call vinterp_sub(missingflag,nx,ny,nx_lp,ny_lp,nz_laps,nzbgww
      .                     ,prlaps,prbgww,wwbg,wwvi)
 
       return
       end
 
-      subroutine vinterp_sub(msngflag,nx,ny,nz,nzbg
+      subroutine vinterp_sub(msngflag,nx,ny,nx_lp,ny_lp,nz,nzbg
      .          ,pr,prbg,bgdata,bgdatavi)
 
       implicit none
 
-      integer  nx,ny,nz
+      integer  nx,ny,nx_lp,ny_lp,nz
+      integer  ip,jp
       integer  nzbg
 
-      real, intent(in)  ::   pr(nz)
+      real, intent(in)  ::   pr(nx_lp,ny_lp,nz)
       real, intent(in)  ::   prbg(nx,ny,nzbg)
       real, intent(in)  ::   bgdata(nx,ny,nzbg)
       real, intent(out) ::   bgdatavi(nx,ny,nz)
@@ -201,11 +205,13 @@ c
       do k=1,nz
          do j=1,ny
             do i=1,nx
+               ip = min(i,nx_lp)
+               jp = min(j,ny_lp)
                do kk=1,nzbg
 
 
 c lowest bg pressure level is above analysis lowest pressure levels
-                  if (pr(k) .gt. prbg(i,j,1)) then
+                  if (pr(ip,jp,k) .gt. prbg(i,j,1)) then
 
                      if (bgdata(i,j,1) .lt. msngflag) then
                         bgdatavi(i,j,k)=bgdata(i,j,1)
@@ -216,7 +222,7 @@ c lowest bg pressure level is above analysis lowest pressure levels
 
 
 c highest bg pressure level is below analysis highest pressure level
-                  elseif (pr(k) .lt. prbg(i,j,nzbg)) then
+                  elseif (pr(ip,jp,k) .lt. prbg(i,j,nzbg)) then
 
                      if (bgdata(i,j,nzbg) .lt. msngflag) then
                         bgdatavi(i,j,k)=bgdata(i,j,nzbg)
@@ -226,7 +232,7 @@ c highest bg pressure level is below analysis highest pressure level
                      goto 20
 
 c analysis pressure of level equals bg pressure of level
-                  elseif (pr(k) .eq. prbg(i,j,kk)) then
+                  elseif (pr(ip,jp,k) .eq. prbg(i,j,kk)) then
                      if (bgdata(i,j,kk) .lt. msngflag) then
                         bgdatavi(i,j,k)=bgdata(i,j,kk)
                      else
@@ -235,13 +241,13 @@ c analysis pressure of level equals bg pressure of level
                      goto 20
 
 c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
-                  elseif (pr(k) .lt. prbg(i,j,kk) .and.
-     +                    pr(k) .gt. prbg(i,j,kk+1)) then
+                  elseif (pr(ip,jp,k) .lt. prbg(i,j,kk) .and.
+     +                    pr(ip,jp,k) .gt. prbg(i,j,kk+1)) then
 
                      if (bgdata(i,j,kk)   .lt. msngflag.and.
      .                   bgdata(i,j,kk+1) .lt. msngflag)then
 
-                        fact=(pr(k)-prbg(i,j,kk))/
+                        fact=(pr(ip,jp,k)-prbg(i,j,kk))/
      .                       (prbg(i,j,kk+1)-prbg(i,j,kk))
 
                         bgdatavi(i,j,k)=bgdata(i,j,kk)
