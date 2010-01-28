@@ -103,8 +103,12 @@ echo "RESOLUTION="$RESOLUTION
 mkdir -p $WEB_DATA 
 mkdir -p $WEB_DATA/anal2d
 AGE=+7 
+
+LOG=$WEB_DATA/anal2d/laps_gifs.log.$utc_hour$utc_min
+echo "Additional log info in "$LOG
+
 $WEB_NFS/www/anal2d/laps_gifs.csh $LAPS_DATA_ROOT $WEB_NFS $WINDOW $RESOLUTION $2 $AGE $LAPS_ROOT/bin \
-       1> $WEB_DATA/anal2d/laps_gifs.log 2> $WEB_DATA/anal2d/laps_gifs.err
+       1> $LOG 2>&1
 
 rm -f /tmp/GSEG0*
 rm -f /tmp/GSEG1*
