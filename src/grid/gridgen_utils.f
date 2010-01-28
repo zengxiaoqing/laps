@@ -938,7 +938,7 @@ C
 !  N      --- THE NUMBER OF BYTES IN CHR                    
 !  ISPVAL --- DEFAULT VALUE FOR THE NEGATIVE INTEGER.      
 !                                                       
-        CHARACTER*(*) :: CHR                                
+        CHARACTER*2 :: CHR                                
         integer  N, II1, II2, JJ, ISN, M, NBIT, MSHFT, IA2, ispval
         INTEGER  BIT_1, BIT_2                            
 !                                                    
