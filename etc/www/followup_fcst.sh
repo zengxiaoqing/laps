@@ -38,12 +38,14 @@ export LAPS_ETC
 mkdir -p $WWW_DIR/fcst2d
 mkdir -p $WWW_DIR/fcst2d/$model
 
-if [[ $model = "wrf-nmm" || $model = "wrf-fer" ]]
-then
-    set -A products CAPE SurfaceTempWind Sfc_RelHum Precip LiftedIndex_SfcDewPt 
-else
-    set -A products CAPE SurfaceTempWind Sfc_RelHum Precip Radar Cloud LiftedIndex_SfcDewPt 
-fi
+#if [[ $model = "wrf-nmm" || $model = "wrf-fer" ]]
+#then
+#    set -A products CAPE SurfaceTempWind Sfc_RelHum Precip LiftedIndex_SfcDewPt 
+#else
+#    set -A products CAPE SurfaceTempWind Sfc_RelHum Precip Radar Cloud LiftedIndex_SfcDewPt 
+#fi
+
+set -A products `cat $LAPS_DATA_ROOT/static/www/fcst2d/followup_hsect_prods.txt`
 
 #Call for each product
 for prod in ${products[*]}
