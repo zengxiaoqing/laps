@@ -215,8 +215,8 @@ c
 c     set namelist parameters to defaults 
       covar_switch = 0
       print_switch = 0
-      cloud_switch = 1
-      cloud_d = 1
+      cloud_switch = 0
+      cloud_d = 0
       raob_switch = 0
       raob_lookback = 0
       endian = 1 ! big endian is default

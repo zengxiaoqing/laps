@@ -298,11 +298,12 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 5.2 successfully incorporates'
-      write (6,*) '1) Bug fix for no cloud situation'
-      write (6,*) '2) state variables passed into this routine'
-      write (6,*) '3) state variables not modified (except for q)'
-      write (6,*) '4) input option to write output file in subroutine'
+      write (6,*) 'Release 5.3 successfully incorporates'
+      write (6,*) '1) Test of input field for bad data (forced abort)'
+      write (6,*) '2) Bug fix for no cloud situation'
+      write (6,*) '3) state variables passed into this routine'
+      write (6,*) '4) state variables not modified (except for q)'
+      write (6,*) '5) input option to write output file in subroutine'
       write (6,*) ' '
 
 
