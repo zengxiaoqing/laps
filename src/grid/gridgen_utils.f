@@ -132,17 +132,20 @@ c ----------------------------------------------
       real    ymn(nnyp)
       real    xtn(nnxp)
       real    ytn(nnyp)
+      real    ridiff,rjdiff
 
       xmn(1)=xmn1+stagger_ew
       ymn(1)=ymn1+stagger_ns
 
       DO 600 I=2,NNXP
-         XMN(I)=XMN(I-1)+DELTAX
+         RIDIFF = float(I-1)
+         XMN(I)=XMN(1)+RIDIFF*DELTAX
  600  CONTINUE
       XMN(NNXP)=2*XMN(NNXP-1)-XMN(NNXP-2)
  
       DO 610 J=2,NNYP
-         YMN(J)=YMN(J-1)+DELTAY
+         RJDIFF = float(J-1)
+         YMN(J)=YMN(1)+RJDIFF*DELTAY
  610  CONTINUE
       YMN(NNYP)=2*YMN(NNYP-1)-YMN(NNYP-2)
  
