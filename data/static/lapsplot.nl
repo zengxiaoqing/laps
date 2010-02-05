@@ -10,6 +10,7 @@
  chigh_sfcwind=50.,
  chigh_cape=7000.,
  c_ob_color='default',
+ i_background_color=2,
  l_discrete=.false.,
  l_sphere=.false.,
  l_low_fill=.true.,
@@ -53,6 +54,8 @@ c chigh_cape - maximum of colorbar range for CAPE plots
 c              (recommended values are 7000., 3500.)
 c
 c c_ob_color - color to plot surface obs 'default', or 'white'
+c
+c i_background_color - 1 is white background, 2 is black background
 c
 c l_discrete - default type of image colortable, '.false.' means more
 c              continuous colors, '.true.' means fewer more discrete colors
