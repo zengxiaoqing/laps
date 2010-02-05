@@ -355,11 +355,11 @@ C If the area is defined by 3 or more points, fill it
         return
         end
 
-      SUBROUTINE COLOR
+      SUBROUTINE COLOR(iwhite)
 !     write(6,*)' White or Black background. [Enter 1/2]    ?   :'
 !     accept 5, iwhite
 !5     format (i)
-      iwhite = 2
+!     iwhite = 2
 
 C    BACKGROUND COLOR
 C  The background is white here for better visibility on paper
@@ -419,7 +419,8 @@ C Lavender
       CALL GSCR(1, 17, 1.00, 0.65, 1.0)
 C Black
       CALL GSCR (1,21,0.,0.,0.)
-      CALL GSCR (1,22,0.,.7,0.)
+C Quasi Black
+      CALL GSCR (1,22,0.05,0.05,0.05)
       CALL GSCR (1,23,.0,.0,.7)
       CALL GSCR (1,24,.0,.7,.0)
 ! Dark Gray
