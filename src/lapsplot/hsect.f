@@ -6738,8 +6738,8 @@ c             if(cint.eq.0.0)cint=0.1
 
                 if(n_image .ge. 1 .and. 
      1             plot_parms%icol_barbs .lt. +1)then
-                    call setusv_dum(2hIN,0)
-                    write(6,*)' Plotting black wind barbs'
+                    call setusv_dum(2hIN,22)
+                    write(6,*)' Plotting quasi black wind barbs'
      1                       ,n_image,plot_parms%icol_barbs
                 else
                     call setusv_dum(2hIN,icolors(i_overlay))
