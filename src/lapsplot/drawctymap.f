@@ -211,7 +211,7 @@ c
      1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
      1                       ,dist_plot_ua, dist_plot_sfc
-     1                       ,c_ob_color
+     1                       ,c_ob_color, i_background_color
 
 !      Set defaults
        latlon_int = 0
@@ -226,6 +226,7 @@ c
        icol_barbs = 0
        chigh_cape = 7000.
        c_ob_color = 'default'
+       i_background_color = 2
  
        call get_directory('static',static_dir,len_dir)
 
@@ -250,6 +251,7 @@ c
        namelist_parms%chigh_sfcwind = chigh_sfcwind
        namelist_parms%chigh_cape = chigh_cape
        namelist_parms%c_ob_color = c_ob_color
+       namelist_parms%i_background_color = i_background_color
        namelist_parms%l_discrete = l_discrete
        namelist_parms%l_sphere = l_sphere
        namelist_parms%l_low_fill = l_low_fill
