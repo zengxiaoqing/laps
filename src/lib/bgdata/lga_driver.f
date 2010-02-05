@@ -507,7 +507,6 @@ c
           nx_lp = nx_laps
           ny_lp = ny_laps
 
-!         Convert 1D sigma levels to 3D pressures (with surface pressure)
           allocate (prgd(nx_lp,ny_lp,nz_laps))
 
       endif
@@ -968,8 +967,17 @@ c
            if(vertical_grid .ne. 'SIGMA_HT')then
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,htvi,ht,bgmodel)
-           else
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+           else ! PRESSURE or SIGMA_P
+              if(vertical_grid .eq. 'SIGMA_P')then
+                 call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .                              grx,gry,prbg_sfc,pr_sfc,bgmodel)
+
+!                Convert 1D sigma levels to 3D pressures (with surface pressure)
+                 call get_sigmap_3d(pr_sfc,sigma1d,prgd,nx_laps,ny_laps       
+     1                             ,nz_laps,istatus)
+              endif
+
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,       
      .                           grx,gry,prvi,prgd,bgmodel)
            endif
 
