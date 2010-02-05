@@ -109,25 +109,6 @@ cdis
      1    ' It will be located in ./gmeta'
         endif
 
-        if(.true.)then       ! testcode
-!           call GOPKS(6,10000)
-!           call GOPWK(1,51,3)
-!           call GACWK(1)
-
-            CALL GOPKS (6,IDUM)
-            CALL GOPWK (1,2,1)
-            CALL GACWK (1)
-
-            write(6,*)' Calling COLOR'
-            call color
-
-            write(6,*)' Calling GOPWK'
-            CALL GOPWK (9,1,3)
-
-        else
-            call OPNGKS
-        endif
-
 !       Read namelist parameters
         call get_lapsplot_parms(namelist_parms,istatus)       
 
@@ -140,6 +121,26 @@ cdis
         plot_parms%obs_size = 1.0
         plot_parms%ncols = 0.
         plot_parms%icol_barbs = namelist_parms%icol_barbs
+
+        if(.true.)then       ! testcode
+!           call GOPKS(6,10000)
+!           call GOPWK(1,51,3)
+!           call GACWK(1)
+
+            CALL GOPKS (6,IDUM)
+            CALL GOPWK (1,2,1)
+            CALL GACWK (1)
+
+            write(6,*)' Calling COLOR'
+            iwhite = namelist_parms%i_background_color
+            call color(iwhite)
+
+            write(6,*)' Calling GOPWK'
+            CALL GOPWK (9,1,3)
+
+        else
+            call OPNGKS
+        endif
 
 !       Supply reference time for matching the data
         lun = 5
