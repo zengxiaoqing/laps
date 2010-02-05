@@ -20,6 +20,7 @@
           integer mode_supmap
           integer icol_barbs
           integer iraster
+          integer i_background_color
 
           character*3 c3_time_zone
           character*30 c_institution
