@@ -10,11 +10,11 @@ Param| Type |Level1|Level2| Name     | Units   | Description                    
  129 | 102  |   1  |      | PMSL     | Pa      | Sea-level Pressure                      |  0  |  3  |  1  | 101 |
    1 |   1  |   1  |      | PSFC     | Pa      | Surface Pressure                        |  0  |  3  |  0  |   1 |
    7 |   1  |   1  |      | HGT_SFC  | m       | Height            at sfc                |  0  |  3  |  5  |   1 |
-  11 |   1  |   1  |      | TT_SKIN  | K       | Temperature       at sfc (skin)         |  0  |  0  |  0  |   1 |
+  11 | 109  |   1  |      | TT_SKIN  | K       | Temperature       at sfc (skin)         |  0  |  0  |  0  |   1 |
   65 |   1  |   1  |      | WEASD    | kg/m2   | Water Equiv Accumulated Snow Depth      |  0  |  1  | 13  |   1 |
  136 |   7  |   1  |      | VSS_T    | 1/s     | Vertical Speed sheer at Trop            |  0  |  2  |192  |   7 |
   54 | 200  |   1  |      | PWAT     | kg/m2   | Precipitable water (Entire column)      |  0  |  1  |  3  | 200 |
-  11 | 105  |   2  |      | TT_SFC   | K       | Temperature       at  2 m               |  0  |  0  |  0  | 103 |
+  11 |   1  |   1  |      | TT_SFC   | K       | Temperature       at  2 m               |  0  |  0  |  0  | 103 |
   52 | 105  |   2  |      | RH_SFC   | %       | Relative Humidity at  2 m               |  0  |  1  |  1  | 103 |
   51 | 105  |   2  |      | SH_SFC   | %       | Specific Humidity at  2 m               |  0  |  1  |  0  | 105 |
   33 | 105  |  10  |      | UU_SFC   | m s-1   | U                 at 10 m               |  0  |  2  |  2  | 103 |
