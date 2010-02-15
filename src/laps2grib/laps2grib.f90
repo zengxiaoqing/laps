@@ -46,8 +46,6 @@ PROGRAM laps2grib
   CHARACTER(LEN=256)          :: g2file, g2file_tmp
   CHARACTER(LEN=512)          :: syscmd
 
-  LOGICAL                     :: lrun_laps2grib
-
   ! Print banner
   print *, "======================================================"
   print *, "********** ",vtag," **********"
