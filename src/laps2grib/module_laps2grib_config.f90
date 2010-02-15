@@ -17,6 +17,7 @@ MODULE laps2grib_config
   CHARACTER(LEN=512)             :: output_path
   INTEGER                        :: center_id, subcenter_id
   INTEGER                        :: process_id,prod_status
+  LOGICAL                     :: lrun_laps2grib
 
 CONTAINS 
   
@@ -170,7 +171,7 @@ CONTAINS
       IMPLICIT NONE
       CHARACTER(LEN=*), INTENT(IN)   :: laps_data_root
       CHARACTER(LEN=256)             :: nl_file
-      LOGICAL                        :: file_exists,lrun_laps2grib
+      LOGICAL                        :: file_exists
       NAMELIST /laps2grib_nl/ output_path,center_id,subcenter_id,&
                               process_id, prod_status,lrun_laps2grib
 
