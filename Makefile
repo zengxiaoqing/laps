@@ -71,6 +71,7 @@ EXEDIRS = src/accum \
           src/soil \
           src/temp \
           src/verif/point \
+          src/verif/cont \
           src/wind \
 	  src/var \
 	  src/stmas
