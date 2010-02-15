@@ -87,7 +87,7 @@ mmb
 include 'parameter.incf'
 include 'constants.incf'
 
-
+      idr = 1 ! initialize in case it gets skipped over later
 
 
        !LM gibt Temperatur in Kelvin aus, deshalb umrechnen
