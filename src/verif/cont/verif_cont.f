@@ -57,10 +57,10 @@
 
         integer       maxbgmodels
         parameter     (maxbgmodels=10)
-        character*9   c_fdda_mdl_src(maxbgmodels)
+        character*30  c_fdda_mdl_src(maxbgmodels)
 
         integer max_fcst_times
-        parameter (max_fcst_times=10)
+        parameter (max_fcst_times=200)
 
         integer max_regions
         parameter (max_regions=10)
@@ -70,7 +70,7 @@
         integer jl(maxbgmodels,max_fcst_times,max_regions)
         integer jh(maxbgmodels,max_fcst_times,max_regions)
 
-        character EXT*31, directory*255, c_model*10
+        character EXT*31, directory*255, c_model*30
 
         character*10  units_2d
         character*125 comment_2d
@@ -116,7 +116,7 @@
      1                       ,n_models,n_fcst_times,n_regions
      1                       ,il,ih,jl,jh,lun_in)
 
-        if(n_fdda_models .ne. n_models)then
+        if(n_fdda_models .ne. n_models + 1)then
             write(6,*)' ERROR n_models differs from n_fdda_models '
      1                       ,n_models,n_fdda_models
             stop
@@ -150,7 +150,7 @@
      1                                       //'/'
 !           len_cont = len_verif + 6 + lenvar + len_model
 
-            do itime_fcst = 0,6
+            do itime_fcst = 0,n_fcst_times
 
               itime = itime_fcst + 1
 
@@ -166,8 +166,8 @@
                 call make_fnam_lp(i4_valid,a9time_valid,istatus)
 
                 write(6,*)
-                write(6,*)' Histograms for forecast hour ',itime_fcst
-     1                   ,' Region = ',iregion
+                write(6,*)' Histograms for forecast time step '
+     1                   ,itime_fcst,' Region = ',iregion
 
                 lun_out = 11
 
@@ -260,9 +260,9 @@
                   enddo ! i
                   enddo ! k
 
-                  write(6,*)' Number of QC points (and/all)'
+                  write(6,*)' Time, # of QC (2D) points (and/all)'
      1                     ,itime_fcst,n_rqc_and,n_rqc_all
-                  write(6,*)' Percentage of QC points (and/all)'
+                  write(6,*)' Time, % of QC (2D) points (and/all)'
      1                     ,itime_fcst
      1                     ,float(n_rqc_and)/float(n_rqc_and_pot) * 100.
      1                     ,float(n_rqc_all)/float(n_rqc_all_pot) * 100.
