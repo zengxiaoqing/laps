@@ -31,9 +31,19 @@ echo " "                        >> $script
 echo "projectpath=$projectpath" >> $script
 
 if test "$model" = arw; then
-    echo "model=wrf"            >> $script
+    echo "model=wrf"                                              >> $script
+    echo "export WRF_DATAROOT=$projectpath/$run"                  >> $script
+elif test "$model" = nmm; then
+    echo "model=$model"                                           >> $script
+    echo "export WRF_DATAROOT=$projectpath/$run"                  >> $script
+elif test "$model" = wrf; then
+    echo "model=$model"                                           >> $script
+    echo "export WRF_DATAROOT=$projectpath/$run"                  >> $script
+elif test "$model" = mm5; then
+    echo "model=$model"                                           >> $script
+    echo "export MM5_DATAROOT=$projectpath/$run"                  >> $script
 else
-    echo "model=$model"         >> $script
+    echo "model=$model"                                           >> $script
 fi
 
 echo "lbc=$lbc"                 >> $script
@@ -43,9 +53,6 @@ echo " "                        >> $script
 
 echo "export LAPSROOT=/home/oplapb/builds/laps"                 >> $script
 echo "export LAPS_DATA_ROOT=$lapsdataroot"                      >> $script
-
-# Only used for MM5 model
-echo "export MM5_DATAROOT=$projectpath/$run"                    >> $script
 
 echo "export NETCDF=/opt/netcdf/3.6.2-pgi-7.1-3"                >> $script
 echo "export PATH=\$PATH:/opt/netcdf/3.6.2-pgi-7.1-3/bin"       >> $script
