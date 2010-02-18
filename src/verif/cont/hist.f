@@ -52,7 +52,7 @@
      1                 ,'      bin5      bin6      bin7      bin8  '     
      1                 ,'    bin9     bin10'   
         do k = klow,khigh
-            write(lun_out,2)k,(ihist_2d(k,bin),bin=1,nbins)
+            write(lun_out,2)k,(ihist_2d(k,ibin),ibin=1,nbins)
  2          format(i4,2x,10i10)
         enddo ! k
 
