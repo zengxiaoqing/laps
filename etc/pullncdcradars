@@ -1,0 +1,50 @@
+#!/bin/csh
+
+umask 002
+
+# First argument is your subdirectory on staging (under username) 
+
+# Second argument is the HAS ID number you received by email for downloading
+
+setenv dir /scratch/staging/fab/`whoami`/$1
+
+setenv HAS $2 
+
+if ($1 == "") then
+    echo " "
+    echo "Usage: pullncdcradars subdir HASid"
+    echo " "
+    exit
+endif
+
+mkdir -p $dir
+
+cd $dir
+
+wget -r -l 2 ftp3.ncdc.noaa.gov/pub/has/$HAS/
+
+setenv outdir $dir/ftp3.ncdc.noaa.gov/pub/has/$HAS
+
+cd $outdir
+
+# Untar any tar files present
+echo " "
+echo "Looking for tarfiles in $outdir"
+
+ls -l $outdir
+foreach tarfile (*.tar)
+    echo " "
+    echo "Untarring $tarfile"
+    tar -xvf $tarfile
+    rm $tarfile
+end
+
+echo " "
+echo "Look for the results of this download in $outdir"
+
+ls -l $outdir
+
+echo " "
+echo "Summary of this and previously downloaded directories..."
+
+ls -l $dir/ftp3.ncdc.noaa.gov/pub/has
