@@ -56,7 +56,7 @@ include 'lapsparms.for'
         character*200 path_to_wsi_3d_radar
         character*200 path_to_qc_acars
         character*200 path_to_wisdom
-        character*9   fdda_model_source(maxbgmodels)
+        character*30  fdda_model_source(maxbgmodels)
         character*8   c8_project
         character*8   c8_blpfmt
         character*3   c_raddat_type
