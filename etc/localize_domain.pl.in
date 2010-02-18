@@ -185,16 +185,30 @@ if($xdim[0] <=0 || $ydim[0] <= 0 || $zdim<=0){
 }
 
 my @plines;
+my $vertical_grid;
+
 if( $WHICH_TYPE eq "laps"){
-    if(-e "$DATA_ROOT/static/pressures.nl"){
-       open(PRES,"$DATA_ROOT/static/pressures.nl");
+    my $vertical_namelist;
+    $vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
+
+    if($vertical_grid eq "SIGMA_HT"){
+        $vertical_namelist = "heights.nl";
+    }elsif($vertical_grid eq "SIGMA_P"){
+        $vertical_namelist = "sigmas.nl";
+    }else{
+        $vertical_namelist = "pressures.nl";
+    }
+
+    if(-e "$DATA_ROOT/static/$vertical_namelist"){
+       open(PRES,"$DATA_ROOT/static/$vertical_namelist");
        @plines = <PRES>;
        close (PRES);
        $zdim = $#plines-2;
        &laps_tools::update_nl($DATA_ROOT,"nest7grid.parms","NK_LAPS",$zdim);
+       print "localize_domain.pl: updated number of levels to $zdim using $vertical_namelist in $DATA_ROOT/static\n";
     }else{
        print " ********** WARNING ***************\n";
-       print "could not find file pressures.nl in $DATA_ROOT/static\n";
+       print "could not find file $vertical_namelist in $DATA_ROOT/static\n";
        print "check nest7grid.parms to insure nk_laps is properly set\n";
     }
 }
@@ -304,7 +318,7 @@ if($WHICH_TYPE eq "laps"){
    print "Localizing Optran Coefficients based on moisture_switch.nl namelist settings\n";
    run_sys::run_sys("@PERL@ $INSTALL_ROOT/etc/localize_optran.pl $INSTALL_ROOT/bin/ $DATA_ROOT/static");
 
-   my $vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
+   $vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
 
    if($vertical_grid eq "SIGMA_HT"){
       print "$vertical_grid grid - copy in pressure version of lga.cdl\n";
