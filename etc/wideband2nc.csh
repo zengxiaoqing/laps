@@ -6,7 +6,9 @@
 #A cron line can be constructed that is analogous to this: 
 #00,05,10,15,20,25,30,35,40,45,50,55   * * * *  /usr/bin/perl /usr/nfs/lapb/builds/laps/etc/laps_driver.pl wideband2nc.csh /usr/nfs/lapb/builds/laps /data/lapb/projects/smg/rt 
 
-#In archive mode, this script can be run using 'casererun.pl' with appropriate command line arguments.  
+#In archive mode, this script can be run using 'casererun.pl' with appropriate command line arguments.
+
+#NCDC files should already be untarred, though it's OK if they are compressed as .Z files.
 
 #Bring in command line arguments
 setenv LAPS_DATA_ROOT $1
