@@ -573,6 +573,8 @@ c.....  current time).
 c
 c.....  Temperature, dewpoint and RH.
 c
+          write(6,*)' Testing ',stationId(i)
+
 	  temp_k = temperature(i) 
 	  if(tempChangeTime(i) .gt. 0.) then ! implies that it is a good value
 	     if( abs(observationTime(i) - tempChangeTime(i)) 
