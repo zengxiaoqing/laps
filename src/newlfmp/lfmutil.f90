@@ -436,22 +436,12 @@ allocate(pcp_06(lx,ly))
 call fill_precip(pcp_init,pcp_06,snow_tot)
 
 ! fcsttime is in seconds
-! nmm zeroes accumulated precipitation after every 6-hour period
-! 6-hours is 6*3600, 7-hours is 6*3600 + 3600 remainder
+! change nmm, nmm zeroes accumulated precipitation every interval period
 
 if (fcsttime > 0) then
    if (trim(mtype) == 'nmm') then
-     if (mod(fcsttime,6*3600)==3600) then
        pcp_inc=pcp_tot
        print*, 'pcp_inc from pcp_tot: ',trim(mtype)
-       print*, 'fcsttime: ',fcsttime
-       print*,maxval(pcp_inc),maxval(pcp_tot)
-     else
-       pcp_inc=pcp_tot-pcp_06
-       print*, 'pcp_inc from pcp_06: ',trim(mtype)
-       print*, 'fcsttime: ',fcsttime
-       print*,maxval(pcp_inc),maxval(pcp_tot),maxval(pcp_06)
-     endif
    else
      pcp_inc=pcp_tot-pcp_init
      print*, 'pcp_inc from pcp_init: ',trim(mtype)
