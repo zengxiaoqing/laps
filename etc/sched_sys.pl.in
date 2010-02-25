@@ -31,7 +31,7 @@
 #                                               mm            (month)
 #                                               yyyymmdd_hhmm (13 character date)
 #
-# -c                   cycle time to use for rounding purposes (hours)
+# -c                   cycle time to use for rounding purposes (seconds)
 # 
 # -D                   $LAPS_DATA_ROOT (optional for accessing cycle time)
                
@@ -119,7 +119,7 @@ if(defined $opt_A){
 #  - If archive time is defined and set to i4time70, then yydddhhmm corresponds exactly to archive_time
 #
 
-my $yydddhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time,'1');
+my $yydddhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
 
 if($opt_f eq "mm"){
    my $ddd = substr($yydddhhmm,2,3);
