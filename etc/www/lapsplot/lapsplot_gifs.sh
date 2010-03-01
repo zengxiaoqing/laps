@@ -140,6 +140,8 @@ elif test "$netpbm" = "yes" && test "$animate" = "yes"; then
         rasttopnm $file | ppmtogif > $file.gif
     done
 
+    ls -l gmeta_$proc.*.sun.gif
+
     echo "convert -delay $delay -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
     convert -delay $delay -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
 
@@ -147,13 +149,21 @@ elif test "$netpbm" = "yes" && test "$animate" = "yes"; then
 #   echo "convert -delay $delay -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
 #   convert -delay $delay -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
 
-    ls -l $SCRATCH_DIR/gmeta_$proc.gif
+    echo " "
+    echo "Listing of $SCRATCH_DIR/$proc animation images"
+    ls -1r gmeta*.gif | tee files.txt
+    ln -s -f /w3/lapb/looper/files.cgi files.cgi
 
     date -u
 
 #   Cleanup
     echo "Cleanup"
-    mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rm -f $SCRATCH_DIR/$proc/gmeta*; rmdir $SCRATCH_DIR/$proc &
+#   mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rm -f $SCRATCH_DIR/$proc/gmeta*; rmdir $SCRATCH_DIR/$proc &
+    mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rm -f gmeta; rm -f $SCRATCH_DIR/$proc/*.sun & 
+
+#   echo " "
+#   echo "Cleaned up listing of $SCRATCH_DIR/$proc"
+#   ls -l $SCRATCH_DIR/$proc
 
 elif test "$ext2" = "x"; then
     date -u
