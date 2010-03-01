@@ -267,6 +267,12 @@
      1                     ,float(n_rqc_and)/float(n_rqc_and_pot) * 100.
      1                     ,float(n_rqc_all)/float(n_rqc_all_pot) * 100.
 
+                  if(n_rqc_all .eq. n_rqc_all_pot)then
+                      write(6,*)' WARNING, 100% failed 3D radar QC test'
+                      write(6,*)' Radar data is apparently all 2D'
+                      write(6,*)' Histograms will be zeroed out'
+                  endif
+
                 endif ! iregion .eq. 1
 
                 write(lun_out,*)
