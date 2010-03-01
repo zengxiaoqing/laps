@@ -36,7 +36,7 @@ foreach tarfile (*.tar)
     echo " "
     echo "Untarring $tarfile"
     tar -xvf $tarfile
-    rm $tarfile
+    rm -f $tarfile
 end
 
 echo " "
