@@ -81,6 +81,12 @@ C
           l_integral = .false.
       endif
 
+      if(colortable .eq. 'tpw')then
+          power = 0.7
+      else
+          power = 1.0
+      endif
+
       n_image = n_image + 1
 
       call get_r_missing_data(r_missing_data,istatus)
@@ -129,11 +135,11 @@ C
           scale_loc = scale_h - scale_l
 
       elseif(.not. l_set_contours)then
-          scale_loc = scale_h - scale_l
+          scale_loc = (scale_h - scale_l)**power
 
           ZREG = field_in - scale_l                      ! Array subtraction
 
-!         Adjust field values (missing data or reverse cases)
+!         Adjust field values (missing data or reverse cases or power law)
           do i = 1,MREG
           do j = 1,NREG
             if(field_in(i,j) .eq. r_missing_data)then
@@ -160,8 +166,12 @@ C
 
               endif
 
-            elseif(ireverse .eq. 1)then
-              ZREG(i,j) = scale_loc - ZREG(i,j)
+            else ! valid data 
+              if(ireverse .eq. 1)then
+                ZREG(i,j) = scale_loc - (ZREG(i,j)**power)
+              else                       
+                ZREG(i,j) = ZREG(i,j)**power
+              endif
 
             endif
 
@@ -280,7 +290,7 @@ C
      1                               ,namelist_parms                   ! I
      1                               ,LMAP,log_scaling,l_set_contours  ! I
      1                               ,colortable                       ! I
-     1                               ,ncols                            ! I/O
+     1                               ,ncols,power                      ! I/O
      1                               ,l_discrete,c5_sect               ! I
      1                               ,icol_offset)      
 C      
@@ -298,7 +308,7 @@ c     Call local colorbar routine
       write(6,*)' Drawing colorbar: ',MREG,NREG
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
       call colorbar(MREG, NREG, namelist_parms, 
-     1              ncols, ireverse_colorbar, log_scaling,             ! I
+     1              ncols, ireverse_colorbar, log_scaling, power,      ! I
      1              scale_l, scale_h, colortable, scale,icol_offset,
      1              c5_sect, l_discrete, l_integral, l_set_contours,
      1              colorbar_int)
@@ -315,7 +325,7 @@ c     Call local colorbar routine
      1                                ,namelist_parms                  ! I
      1                                ,LMAP,log_scaling,l_set_contours
      1                                ,colortable                      ! I
-     1                                ,ncols                           ! I/O
+     1                                ,ncols,power                     ! I/O
      1                                ,l_discrete,c5_sect              ! I
      1                                ,icol_offset)      
 
@@ -358,7 +368,7 @@ C
      1                         ,plot_parms                           ! I
      1                         ,ncols                                ! I/O
      1                         ,l_discrete,ireverse,c5_sect
-     1                         ,l_set_contours,colortable
+     1                         ,l_set_contours,colortable,power
      1                         ,MREG,NREG,log_scaling,icol_offset)
 C      
 C Initialize Areas
@@ -507,7 +517,7 @@ C
       
       SUBROUTINE set_image_colortable(IWKID,plot_parms,ncols
      1                               ,l_discrete,ireverse,c5_sect
-     1                               ,l_set_contours,colortable
+     1                               ,l_set_contours,colortable,power
      1                               ,MREG,NREG,log_scaling,icol_offset)    
 
       include 'lapsplot.inc'
@@ -551,7 +561,7 @@ C
           endif
 
           call generate_colortable(ncols,'hues',IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
           if(colortable .eq. 'ref')then
               do i = 1,3
@@ -574,7 +584,7 @@ C
           endif
 
           call generate_colortable(ncols,'cpe',IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
           do i = 1,1
               call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
@@ -590,11 +600,11 @@ C
 
       elseif(colortable .eq. 'tpw' .or. colortable .eq. 'upflux')then       
           if(.not. l_discrete)then
-              ncols = 79
+              ncols = 179 ! previous good value was 79 (139)      
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
       elseif(colortable .eq. 'moist')then
           if(.not. l_discrete)then
@@ -602,7 +612,7 @@ C
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
       elseif(            colortable .eq. 'spectral' 
      1              .or. colortable .eq. 'spectralr'      )then       
@@ -620,7 +630,7 @@ C
           endif
 
           call generate_colortable(ncols,'spectral',IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
       elseif(colortable .eq. 'haines')then       
           ncols = 5 
@@ -672,7 +682,7 @@ C
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
       elseif(colortable .eq. 'vnt')then       
           if(.not. l_discrete)then
@@ -680,7 +690,7 @@ C
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
       elseif(colortable .eq. 'temp')then       
           if(.not. l_discrete)then
@@ -688,12 +698,12 @@ C
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
       elseif(colortable .eq. 'green' .or. colortable .eq. 'acc'
      1  .or. colortable .eq. 'sno'                            )then       
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
+     1                            ,power,plot_parms,istatus)
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable
@@ -786,7 +796,7 @@ C
 
 
       subroutine colorbar(ni,nj,namelist_parms
-     1                   ,ncols,ireverse,log_scaling
+     1                   ,ncols,ireverse,log_scaling,power
      1                   ,scale_l,scale_h
      1                   ,colortable,scale,icol_offset,c5_sect
      1                   ,l_discrete,l_integral,l_set_contours          ! I
@@ -864,9 +874,9 @@ C
           x2   = xlow + frac*xrange 
 
           if(ireverse .eq. 0)then
-              rcol = 0.5 + float(ncols) * frac
+              rcol = 0.5 + float(ncols) * (frac**power)
           else
-              rcol = 0.5 + float(ncols) * (1.0 - frac)
+              rcol = 0.5 + float(ncols) * ((1.0 - frac)**power)
           endif
 
           icol = nint(rcol)
@@ -1155,7 +1165,7 @@ c     Restore original color table
 
 
       subroutine generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                              ,plot_parms,istatus)
+     1                              ,power,plot_parms,istatus)
 
 !     Generate colortable from ramp information stored in a file
 !     Number of colors is passed in
@@ -1193,7 +1203,8 @@ c     Restore original color table
 
       nramp = nramp + 1
 
-      frac_a(nramp) = frac
+      frac_a(nramp) = frac**power
+      write(6,*)' generate_colortable ',nramp,power,frac,frac_a(nramp)
       hue_a(nramp) = hue
       sat_a(nramp) = sat
       rint_a(nramp) = rint
