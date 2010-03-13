@@ -41,6 +41,7 @@ cdis
      1                  ,standard_longitude
      1                  ,NX_L,NY_L,NZ_L,NX_C,NZ_C,NX_P,NX_T
      1                  ,r_missing_data,laps_cycle_time,maxstns      
+     1                  ,dyn_low,dyn_high
      1                  ,density,plot_parms,namelist_parms,ifield_found)       
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
@@ -796,8 +797,16 @@ c read in laps lat/lon and topo
             scale = 1.
             cint = 0.
 
-            call contour_settings(field_vert,NX_C,NZ_C
-     1               ,clow,chigh,cint,zoom,density,scale)      
+            if(dyn_low  .eq. r_missing_data .or. 
+     1         dyn_high .eq. r_missing_data)then ! initialize range
+                call contour_settings(field_vert,NX_C,NZ_C
+     1                   ,clow,chigh,cint,zoom,density,scale)      
+                dyn_low  = clow  ! save for subsequent times
+                dyn_high = chigh ! save for subsequent times
+            else ! use previously initialized values
+                clow  = dyn_low
+                chigh = dyn_high
+            endif
 
             i_contour = 1
             idiff = 1
