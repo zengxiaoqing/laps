@@ -41,6 +41,7 @@ cdis
      1                           NZ_L, MAX_RADARS, L_RADARS,
      1                           r_missing_data,
      1                           laps_cycle_time,zoom,density,
+     1                           dyn_low,dyn_high,
      1                           plot_parms,namelist_parms,ifield_found)
 
 !       1995        Steve Albers         Original Version
@@ -509,15 +510,28 @@ c       include 'satellite_dims_lvd.inc'
             else ! image plot
                 plot_parms%iraster = -1
 
-                call array_range(field_2d_diff,NX_L,NY_L,rmin,rmax
-     1                          ,r_missing_data)
+                if(dyn_low  .eq. r_missing_data .or. 
+     1             dyn_high .eq. r_missing_data)then ! initialize range
+                    call array_range(field_2d_diff,NX_L,NY_L,rmin,rmax
+     1                              ,r_missing_data)
 
-                rmin = rmin/scale
-                rmax = rmax/scale
+                    rmin = rmin/scale
+                    rmax = rmax/scale
 
-                rscale = max(abs(rmin),abs(rmax))
-                rmin = -rscale
-                rmax = +rscale
+                    rscale = max(abs(rmin),abs(rmax))
+                    rmin = -rscale
+                    rmax = +rscale
+                    dyn_low  = rmin ! save for subsequent times
+                    dyn_high = rmax ! save for subsequent times
+
+                else ! use previously initialized values
+                    rmin = dyn_low
+                    rmax = dyn_high
+
+                endif
+
+                write(6,*)' ccpfil for diff plot range = ',rmin,rmax
+     1                                                    ,scale
 
                 call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,'hues'
      1                     ,n_image,scale,'hsect',plot_parms
@@ -4921,13 +4935,44 @@ c                   cint = -1.
 !           endif
 
             level=0
-            CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
-     1         ,NX_L,NY_L,1,1,VAR_2d,level,LVL_COORD_2d
-     1         ,UNITS_2d,COMMENT_2d,field_2d,ISTATUS)
 
-            IF(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Grid ',var_2d,' ',ext,istatus       
-                goto1200
+            if(var_2d .ne. 'MSF')then
+                CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
+     1             ,NX_L,NY_L,1,1,VAR_2d,level,LVL_COORD_2d
+     1             ,UNITS_2d,COMMENT_2d,field_2d,ISTATUS)
+
+                IF(istatus .ne. 1)THEN
+                    write(6,*)' Error Reading Grid ',var_2d,' ',ext
+     1                                              ,istatus       
+                    goto1200
+                endif
+            else
+                CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
+     1             ,NX_L,NY_L,1,1,'DSF',level,LVL_COORD_2d
+     1             ,UNITS_2d,COMMENT_2d,td_2d,ISTATUS)
+
+                IF(istatus .ne. 1)THEN
+                    write(6,*)' Error Reading Grid DSF ',ext,istatus       
+                    goto1200
+                endif
+
+                CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
+     1             ,NX_L,NY_L,1,1,'PSF',level,LVL_COORD_2d
+     1             ,UNITS_2d,COMMENT_2d,field_2d,ISTATUS)
+
+                IF(istatus .ne. 1)THEN
+                    write(6,*)' Error Reading Grid PSF ',ext,istatus  
+                    goto1200
+                endif
+
+!               Calculate mixing ratio from dewpoint and pressure
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = w( k_to_c(td_2d(i,j))
+     1                                ,field_2d(i,j)/100. ) * 1e-3
+                enddo ! j
+                enddo ! i
+
             endif
 
             scale = 1. ! Default value
@@ -4979,6 +5024,11 @@ c                   cint = -1.
             elseif(var_2d .eq. 'UMF')then       
                 scale = 1e-2    
                 units_2d = 'cm-m/s'
+
+            elseif(var_2d .eq. 'MSF')then       
+                scale = 1e-3  ! calculated field 
+                units_2d = 'g/kg'
+                comment_2d = 'Sfc Mixing Ratio'
 
             elseif(var_2d .eq. 'PDM')then 
                 if(namelist_parms%c_pbl_depth_units .eq. 'english')then       
@@ -5084,6 +5134,10 @@ c                   cint = -1.
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'TPW')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,7.0
+     1                         ,'tpw',n_image,scale,'hsect' 
+     1                         ,plot_parms,namelist_parms) 
+                elseif(var_2d .eq. 'MSF')then
+                    call ccpfil(field_2d,NX_L,NY_L,0.,25.0
      1                         ,'tpw',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'UMF')then
@@ -5568,6 +5622,8 @@ c                   cint = -1.
                 goto1200
             endif
 
+            field_2d = field_2d * .001
+
             c_label = 'Sfc Mixing Ratio      (g/kg)     '
 
             clow = 0.
@@ -5581,7 +5637,7 @@ c                   cint = -1.
 !    1        c_label,i_overlay,c_display,lat,lon,jdot,
 !    1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-            call plot_field_2d(i4time_pw,c_type,field_2d,1e-0
+            call plot_field_2d(i4time_pw,c_type,field_2d,1e-3
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
@@ -6122,7 +6178,11 @@ c                   cint = -1.
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
      1                             ,namelist_parms,plot_parms)
               else
-                call plot_cont(topo,1e0,
+                scale = 1.
+                call contour_settings(topo,NX_L,NY_L
+     1               ,clow,chigh,cint,zoom,density,scale)      
+
+                call plot_cont(topo,scale,
      1               clow,chigh,cint,asc9_tim,
      1               namelist_parms,plot_parms,c_label,      
      1               i_overlay,c_display,lat,lon,jdot,
