@@ -29,6 +29,14 @@
        real pres_3d(ni,nj,nk)
        real pres_1d(nk)
 
+       real td_bal_sfc(ni,nj)
+       real rh_bal_sfc(ni,nj) ! 0-1
+       real mr_bal_sfc(ni,nj)
+       real sat_t(ni,nj)
+       real sat_td(ni,nj)
+
+       real k_to_c
+
        character*150 dir_in,dir_out
 
        integer n_sfc
@@ -189,14 +197,42 @@
        enddo ! i
        enddo ! j
 
+!      Recalculate moisture variables (td,rh,mr)
+       td_bal_sfc = data(:,:,5) 
+
+!      Constrain dewpoint
+       do i = 1,ni
+       do j = 1,nj
+
+!          Calculate RH from Td and T
+           if(td_bal_sfc(i,j) .ne. r_missing_data .and.
+     1        t_bal_sfc(i,j)  .ne. r_missing_data        )then
+
+!             Avoid supersaturation
+              td_bal_sfc(i,j) = min(td_bal_sfc(i,j),t_bal_sfc(i,j)) 
+
+           endif
+
+       enddo ! j
+       enddo ! i
+
+!      Calculate humidity
+       call hum(t_bal_sfc,td_bal_sfc,rh_bal_sfc,ni,nj,sat_t,sat_td)
+
+!      Note W = 622. * x / (p-x), where x is ambient vapor pressure in mb
+       mr_bal_sfc = (622. * sat_td) / (stnp_bal_sfc/100. - sat_td)
+
 !      Substitute balanced fields in data array
        data(:,:,1) = u_bal_sfc
        data(:,:,2) = v_bal_sfc
        data(:,:,4) = t_bal_sfc
+       data(:,:,5) = td_bal_sfc
+       data(:,:,7) = rh_bal_sfc * 100. ! convert to percent
        data(:,:,9) = mslp_bal_sfc
        data(:,:,3) = redp_bal_sfc
        data(:,:,13) = stnp_bal_sfc
 !      data(:,:,14) = vort_bal_sfc
+       data(:,:,15) = mr_bal_sfc
 !      data(:,:,17) = div_bal_sfc
 
 !      Write balanced LSX file
