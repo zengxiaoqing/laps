@@ -95,6 +95,9 @@ cdis
            stop
         endif
 
+        dyn_low = r_missing_data
+        dyn_high = r_missing_data
+
 !       read(5,2)c_display
 2       format(a1)
         c_display = 'r'
@@ -216,6 +219,7 @@ cdis
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
      1                         MAX_RADARS,L_RADARS,r_missing_data,
      1                         laps_cycle_time,zoom,density,
+     1                         dyn_low,dyn_high,
      1                         plot_parms,namelist_parms,ifield_found)       
 
             if(ifield_found .eq. 1)then
@@ -258,6 +262,7 @@ cdis
      1                ,standard_longitude,NX_L,NY_L,NZ_L
      1                ,NX_C,NZ_L,NXSECT,NX_T      
      1                ,r_missing_data,laps_cycle_time,maxstns
+     1                ,dyn_low,dyn_high
      1                ,density,plot_parms,namelist_parms,ifield_found)       
 
             if(ifield_found .eq. 1)then
