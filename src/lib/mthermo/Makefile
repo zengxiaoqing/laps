@@ -31,7 +31,7 @@ DEBUGLIB = libdebugmthermo.a
 SRC= alcl.f     es.f       esrw.f     os.f       ptlcl.f    thm.f      tv.f   \
      ct.f       esat.f     esw.f      ow.f       satlft.f   tlcl.f     tw.f   \
      dewpt.f    esgg.f     heatl.f    pccl.f     ssh.f      tlcl1.f    w.f    \
-     dpt.f      esice.f    hum.f      pcon.f     tcon.f     tmlaps.f   wmr.f  \
+     dpt.f      esice.f    humidity.f pcon.f     tcon.f     tmlaps.f   wmr.f  \
      dwpt.f     esilo.f    o.f        powt.f     tda.f      tmr.f      wobf.f \
      ept.f      eslo.f     oe.f       precpw.f   te.f       tsa.f      z.f        tdew.f
 
