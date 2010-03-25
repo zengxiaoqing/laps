@@ -20,6 +20,7 @@ include 'lapsparms.for'
         real grid_spacing_m
         real grid_cen_lat
         real grid_cen_lon
+        real earth_radius 
         integer    laps_cycle_time
         integer i2_missing_data
         real    r_missing_data
@@ -84,6 +85,7 @@ include 'lapsparms.for'
         ,nk_laps,standard_latitude,standard_latitude2        &
         ,standard_longitude,NX_L, NY_L, I_PERIMETER          &
         ,grid_spacing_m,grid_cen_lat,grid_cen_lon            &
+        ,earth_radius                                        &
         ,laps_cycle_time                                     &
         ,i2_missing_data, r_missing_data, MAX_RADARS         &
         ,ref_base,ref_base_useable,r_hybrid_first_gate       &
@@ -203,6 +205,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,l_compress_radar,l_use_tamdar,l_3dvar &
                   ,l_accum_fg, l_accum_radar, l_accum_gauge &
                   ,grid_spacing_m,grid_cen_lat,grid_cen_lon &
+                  ,earth_radius &
                   ,laps_cycle_time &
                   ,i2_missing_data, r_missing_data, MAX_RADARS &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
@@ -316,6 +319,8 @@ elseif (namelist_name == 'RAMS') then
    
 elseif (namelist_name == 'LAPS') then
    ! Set some default values
+
+   earth_radius = 6370. ! WRF value
 !  proc_grids = 0 ; proc_grids(1) = 1 
    
    ! Read LAPS grid point information
