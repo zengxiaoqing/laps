@@ -40,7 +40,12 @@ c   this function returns the mixing ratio (grams of water vapor per
 c   kilogram of dry air) given the temperature t (celsius) and pressure
 c   (millibars). the formula is quoted in most meteorological texts.
 c
-c	baker,schlatter	17-may-1982	original version
+c   if t is the ambient temperature the routine returns saturation mixing
+c   ratio. if t is the dewpoint temperature the routine returns the actual
+c   mixing ratio.
+c
+c	baker,schlatter	    17-may-1982	original version
+c       steve albers               2010 updated comments
 c
 	x= esat(t)
 	w= 622.*x/(p-x)
