@@ -64,7 +64,7 @@ c
       integer   ishow_timer
       integer   init_timer
       integer   itstatus(10)
-      integer   itstatus_rot
+      integer   itstatus_rot,istat_alloc
       integer   icnt
       integer   igrx,igry
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
@@ -149,7 +149,6 @@ c
      .          vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
      .          ww(nx_laps,ny_laps,nz_laps), !W-wind (pa/s)
      .          pr1d_mb(nz_laps),            !LAPS pressures (mb)
-     .          ht1d(nz_laps),               !LAPS ht (SIGMA_HT grid only)
      .          sigma1d(nz_laps),            !LAPS ht (SIGMA_P grid only)
      .          lat(nx_laps,ny_laps),        !LAPS lat
      .          lon(nx_laps,ny_laps),        !LAPS lon
@@ -478,26 +477,23 @@ c
           endif
           nx_lp = 1
           ny_lp = 1
-          allocate (prgd(nx_lp,ny_lp,nz_laps))
+          allocate (prgd(nx_lp,ny_lp,nz_laps), STAT=istat_alloc)
+          if(istat_alloc .ne. 0)then
+              write(6,*)' ERROR: Could not allocate prgd'
+              stop
+          endif
           do k = 1,nz_laps
              pr1d_mb(k)=pr1d_mb(k)/100.
              prgd(1,1,k)=pr1d_mb(k)/100.
           enddo
 
       elseif(vertical_grid .eq. 'SIGMA_HT')then
-          print*,'get 1d heights'
-          call get_ht_1d(nz_laps,ht1d,istatus)
-          if(istatus.ne.1)then
-             print*,'Error returned from get_ht_1d'
-             print*,'Check heights.nl or nk_laps in nest7grid.parms'
-             stop
-          endif
           nx_lp = nx_laps
           ny_lp = ny_laps
           allocate (prgd(nx_lp,ny_lp,nz_laps))
 
       elseif(vertical_grid .eq. 'SIGMA_P')then
-          print*,'get 1d heights'
+          print*,'get 1d sigmas'
           call get_sigma_1d(nz_laps,sigma1d,istatus)
           if(istatus.ne.1)then
              print*,'Error returned from get_sigma_1d'
@@ -1076,7 +1072,7 @@ c    .                     uw(i,j,k),vw(i,j,k)) .ge. missingflag)then
      +                          ,mslpbg
      +                          ,pcpbg)
 
-                     return
+                     goto 999 ! deallocate/return
 
                   endif
                enddo
@@ -1087,42 +1083,42 @@ c
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array ht'
             lga_status = -nf
-            return
+            goto 999 ! deallocate/return
            endif
 c
            call check_nan3 (tp,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array tp'
             lga_status = -nf
-            return
+            goto 999 ! deallocate/return
            endif
 c
            call check_nan3 (sh,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array sh'
             lga_status = -nf
-            return
+            goto 999 ! deallocate/return
            endif
 c
            call check_nan3 (uw,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array uw'
             lga_status = -nf
-            return
+            goto 999 ! deallocate/return
            endif
 c
            call check_nan3 (vw,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array vw'
             lga_status = -nf
-            return
+            goto 999 ! deallocate/return
            endif
 c
            call check_nan3 (ww,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array vw'
             lga_status = -nf
-            return
+            goto 999 ! deallocate/return
            endif
 c
 c ****** Horizontally interpolate background surface data to LAPS grid points.
@@ -1532,6 +1528,8 @@ c      lga_status = 1
       print*,'Total time elapsed lga: '
       print*,'(sec) :',itstatus(1)+itstatus(2)+itstatus(3)
      &+itstatus(4)+itstatus(5)
+
+ 999  if (allocated(prgd))deallocate(prgd)
 
       return
       end
