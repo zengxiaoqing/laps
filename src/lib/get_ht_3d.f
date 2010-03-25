@@ -84,7 +84,7 @@ cdoc  height grid or other type of arbitrary vertical grid.
 
       call get_ht_1d(nk,ht_1d,istatus)
 
-      sigma_htop = 60000.
+      sigma_htop = 20000.
       sigma_hbot =     0.
 
       if(istatus .eq. 1)then
@@ -144,10 +144,13 @@ cdoc  height grid or other type of arbitrary vertical grid.
 
 cdoc  Returns a 1-D grid of sigmas.
 
+      use mem_namelist, ONLY: vertical_grid
+
       include 'grid_fname.cmn'                          ! grid_fnam_common
 
       integer nk       
-      real sigma_1d_out(nk)      
+      real sigma_1d_out(nk)
+      real ht_1d(nk)      
 
       integer max_sigma
       parameter (max_sigma=150) 
@@ -162,6 +165,19 @@ cdoc  Returns a 1-D grid of sigmas.
       namelist /sigmas_nl/ sigmas
 
       character*150 static_dir,filename
+
+      if(vertical_grid .eq. 'SIGMA_HT')then ! get heights and convert to sigma
+          sigma_htop = 20000.
+          sigma_hbot =     0.
+
+          call get_ht_1d(nk,ht_1d,istatus)
+     1                    
+          do k = 1,nk
+              sigma_1d_out(k) = ht_1d(k) / (sigma_htop - sigma_hbot)
+          enddo ! k
+
+          return
+      endif
 
       if(init .eq. 0)then
           call get_directory(grid_fnam_common,static_dir,len_dir)
