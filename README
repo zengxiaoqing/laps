@@ -58,6 +58,8 @@
          2.7.3 ..................  Domain Resolution 
          2.7.4 ..................  Terrain Smoothing/Filtering  
          2.8 ..............  CHANGING THE VERTICAL DOMAIN
+         2.8.1 ..................  Sigma Height Grid
+         2.8.2 ..................  Sigma Pressure Grid
          2.9 ..............  CHANGING THE CYCLE TIME 
          2.10 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
          2.11 .............  LVD (SATELLITE INGEST) CHANGES
@@ -1918,9 +1920,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
         Update the list of pressures that go in sequence from higher to lower
         pressures (bottom to top) 
 
-     Note that the vertical grid uses pressure coordinates and that the 
-     vertical pressure interval can vary between levels. Of course, the 
-     top pressure should be greater than zero mb. The bottom level should 
+     Note that the default vertical grid uses constant pressure coordinates and 
+     that the vertical pressure interval can vary between levels. Of course, 
+     the top pressure should be greater than zero mb. The bottom level should 
      extend below the terrain and below the observations. The pressure
      values must be in multiples of 100 pascals, corresponding to an integer
      number of millibars.
@@ -1939,6 +1941,22 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
    Note: If you are feeding LAPS output into an AWIPS workstation, then
    additional workstation related changes may be needed.
+
+------ 2.8.1 ------ Sigma Height Grid ---------------
+
+   UNDER DEVELOPMENT
+
+   Similar to 2.8 except that one changes the 'vertical_grid' parameter in
+   'nest7grid.parms'. Also the 'heights.nl' namelist is used instead of
+   'pressures.nl'. Note the heights in this namelist are scaled sigma values
+   where the namelist (idealized) height = sigma * (height_top - height_bottom)
+
+   Presently the height_top and height_bottom values are hard wired to 20000.
+   and 0. meters, respectively.
+
+------ 2.8.2 ------ Sigma Pressure Grid ---------------
+
+   UNDER DEVELOPMENT
 
 -------- 2.9 ----- CHANGING THE CYCLE TIME -----------------------------------
 
@@ -3930,9 +3948,10 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
                  'wrf'. 
  
       balance:   Set to '.true.' if you wish to use the 
-                 wind and temperature analysis files from the
-                 balance package.  This will only work if
-                 LAPS is running the balance package.
+                 wind and temperature, height, and surface 
+                 analysis files from the balance package.  
+                 This will only work if LAPS is running the 
+                 balance package.
 
       adjust_rh: Set to '.true.' if you wish to use the 
                  adjusted RH analysis from the balance
