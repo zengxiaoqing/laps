@@ -319,8 +319,6 @@ elseif (namelist_name == 'RAMS') then
    
 elseif (namelist_name == 'LAPS') then
    ! Set some default values
-
-   earth_radius = 6370. ! WRF value
 !  proc_grids = 0 ; proc_grids(1) = 1 
    
    ! Read LAPS grid point information
@@ -334,6 +332,7 @@ elseif (namelist_name == 'pressures') then
 elseif (namelist_name == 'lapsparms') then
 
 !  default values
+   earth_radius = 6370000. ! WRF value
    lvl_coord_cdf = 'HPA'
 
    read (12, lapsparms_nl, err=901)
