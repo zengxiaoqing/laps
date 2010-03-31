@@ -359,6 +359,8 @@ c read in laps lat/lon and topo
             return
         endif
 
+        call get_grid_spacing_cen(grid_spacing_m,istatus)
+
         i_graphics_overlay = 0
         i_label_overlay = 0
         i_map = 0
@@ -606,26 +608,17 @@ c read in laps lat/lon and topo
         else ! Try to get an azimuth for the X-Sect
             read(c3_type,*,err=85)azi_xsect
 
-            if(.true.)then
-                write(6,113)
-113             format(/'     Waypoint for X-Sect: '/
-     1        6x,' CLASS:       wig,ftc,lov,elb,flg'/
-     1        6x,' RADIOMETERS: ptv,stp,elb,eri'/
-     1        6x,' RADARS:      mhr,cp3,chl,und'/
-     1        6x,' SAOs:        bjc,den,apa,cos,cys,lar,lic,ako,gld,lhx,
+            write(6,113)
+113         format(/'     Waypoint for X-Sect: '/
+     1      6x,' CLASS:       wig,ftc,lov,elb,flg'/
+     1      6x,' RADIOMETERS: ptv,stp,elb,eri'/
+     1      6x,' RADARS:      mhr,cp3,chl,und'/
+     1      6x,' SAOs:        bjc,den,apa,cos,cys,lar,lic,ako,gld,lhx,
      1gxy'/
-     1        6x,' VORs:        kiw'/
-     1        6x,' MESONET:     bou'/
-     1        ' ',5x,'                     OR I,J location:',27x,'? ',$)       
-
-            else ! Storm Fest
-                write(6,1130)
-1130             format(/'     Waypoint for X-Sect: '/
-     1        6x,' SAOs:        okc,mkc,ict,dsm,gri'/
-     1        '$',5x,'                     OR I,J location:',27x,'? ')
-
-            endif
-
+     1      6x,' VORs:        kiw'/
+     1      6x,' MESONET:     bou'/
+     1      7x,'lat/lon (e.g. 40.0l,-105.l) OR I,J location:'
+     1                                               ,4x,'? ',$)       
             read(lun,130)c20_sta
 130         format(a20)
             c3_sta = c20_sta(1:3)
@@ -643,20 +636,17 @@ c read in laps lat/lon and topo
             enddo
 
             if(.not. l_sta)then ! Get I,J of Waypoint
-              call s_len(c20_sta,lenx)
-              l_latlon = l_parse(c20_sta(1:lenx),'l')
+              call s_len2(c20_sta,lenxy)
+              l_latlon = l_parse(c20_sta(1:lenxy),'l')
 
-              if(l_latlon)then ! x value was flagged as latitude with "l" at the end 
-                  read(c20_sta(1:lenx-1),*)waylat
+              if(l_latlon)then ! xy values flagged as with "l" at the end 
+                  do is = 1,lenxy
+                      if(c20_sta(is:is) .eq. 'l')then
+                          c20_sta(is:is) = ' '
+                      endif
+                  enddo 
 
-                  write(6,*)' Input longitude for way point...'       
-                  read(5,*)c20_sta
-                  call s_len(c20_sta,leny)
-                  if(l_parse(c20_sta(1:leny),'l'))then
-                      read(c20_sta(1:leny-1),*)waylon
-                  else
-                      read(c20_sta(1:leny),*)waylon
-                  endif
+                  read(c20_sta,*,err=85)waylat,waylon
 
                   call latlon_to_rlapsgrid(waylat,waylon,lat,lon
      1                              ,NX_L,NY_L,xsta,ysta,istatus)       
@@ -1091,7 +1081,6 @@ c read in laps lat/lon and topo
 !               cint = 0.
                 cint = 10. 
 
-                call get_grid_spacing_cen(grid_spacing_m,istatus)
                 if(grid_spacing_m .ge. 5000.)then
                     chigh = 40.
                     clow = -40.
@@ -3259,8 +3248,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             size_mini = .05
             size_mini_x = size_mini * width * 0.8 ! aspect ratio of xsect
             size_mini_y = size_mini * r_height
-!           rleft_mini  = rleft + width    * .68
-            rleft_mini  = rleft + width    * .26
+            rleft_mini  = rleft + width    * .28 ! .26
             bottom_mini = top   + r_height * .025
             xl = rleft_mini  + x_1 * size_mini_x
             xh = rleft_mini  + x_2 * size_mini_x
@@ -3502,6 +3490,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                call label_other_stations(i4time_label,standard_longitude       
      1                                  ,y,xsta,lat,lon,NX_L,NY_L
+     1                                  ,grid_spacing_m
      1                                  ,xlow,xhigh,ylow,yhigh
      1                                  ,NX_C,bottom,r_height,maxstns)
 
@@ -3525,6 +3514,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                call label_other_stations(i4time_label,standard_longitude       
      1                                  ,y,xsta,lat,lon,NX_L,NY_L
+     1                                  ,grid_spacing_m
      1                                  ,xlow,xhigh,ylow,yhigh,NX_C
      1                                  ,bottom,r_height,maxstns)
 
@@ -3984,6 +3974,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         subroutine label_other_stations(i4time,standard_longitude,y,xsta
      1          ,lat,lon,ni,nj
+     1          ,grid_spacing_m
      1          ,xlow,xhigh,ylow,yhigh,nx_c,bottom,r_height,maxstns)
 
 !       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
@@ -4097,14 +4088,16 @@ c
                     xdelt = xclo - xsta
                     ydelt = yclo - ysta
 
-                    call xy_to_met_xm(xdelt,ydelt,ran,azi,istatus)
+                    call xy_to_met_xm(xdelt,ydelt,rang,azi,istatus)
+
+                    ran = rang * (grid_spacing_m / 1000.) ! station dist in km
 
                     azi = azi + (lon_s(i) - standard_longitude)
 
                     i_cardinal_pt = mod(int((azi+22.5)/45.),8) + 1
 
                     if(icompass(i_cardinal_pt)(2:2) .eq. ' ')then
-                        write(c9_string,2038)nint(ran*10.)
+                        write(c9_string,2038)nint(ran)
      1                    ,icompass(i_cardinal_pt),stations(i)(1:3)
 2038                    format(i2,a2,a3)
 !                       call pwrity ((stapos+0.6), y, c9_string
@@ -4112,7 +4105,7 @@ c
                         call pcmequ ((stapos+0.8), y, c9_string
      1                               , .0060, 0, 0)
                     else
-                        write(c9_string,2039)nint(ran*10.)
+                        write(c9_string,2039)nint(ran)
      1                    ,icompass(i_cardinal_pt),stations(i)(1:3)
 2039                    format(i2,a2,' ',a3)
 
