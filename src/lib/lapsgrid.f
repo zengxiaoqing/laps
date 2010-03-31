@@ -1652,18 +1652,37 @@ c
       return
       end
 c
-
+c-----------------------------------------------------------------------
+c
       subroutine get_earth_radius(erad,istatus)
 
-      include 'constants.inc'
+      use mem_namelist, only : earth_radius
 
-      erad = eradius
+      include 'grid_fname.cmn'             ! grid_fnam_common
+
+      integer init
+      data init/0/
+      save init
+
+      if(iflag_lapsparms .ne. 1 .or. init .eq. 0)then 
+          call get_laps_config(grid_fnam_common,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)
+     1            ' ERROR, get_laps_config not successfully called'      
+              return
+          endif
+          init = 1
+      endif
+
+      erad = earth_radius
 
       istatus = 1
 
       return
       end
-
+c
+c-----------------------------------------------------------------------
+c
       subroutine get_fdda_model_source(fdda_model_source_ret
      1,n_fdda_models,istatus)
 
