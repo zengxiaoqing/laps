@@ -1,6 +1,32 @@
 
 
-   The lvd code is written to process the block of satellite data
+   LVD MODULE OUTLINE
+   __________________
+
+   lvd_sat_ingest                        lvd_sat_ingest.f
+       config_satellite_lvd
+       compute_nav_ll                    compute_nav_llij.f
+           genlvdlut_lvd                 lib/satellite/genlvdlut_lvd.f
+       lvd_driver_sub                    lvd_driver_sub.f
+           readlut                       readlut.f
+           lvd_file_specifier
+           getcdf_satdat                 getcdf_satdat.f
+               lvd_file_specifier
+               readsatdat                readsatdat.f
+                   lvd_file_specifier
+                   readcdf               readcdf.f         
+           genbtemplut
+           lvd_file_specifier
+           read_gvarimg_cnt2btemp_lut   
+           btemp_convert_asc
+           process_ir_satellite          satir_process.f
+               satdat2laps_ir            satir2laps.f        
+           loadlapsdata
+           write_laps_data
+           check_for_new_ctp
+           write_laps_data
+
+The lvd code is written to process the block of satellite data
 that covers a laps domain. The software is dynamic and uses i/j start
 end values contained in satellite_lvd.nl. lvd uses a complex namelist
 file: data/static/satellite_lvd.nl which is rewritten when the
