@@ -7346,8 +7346,6 @@ c             if(cint.eq.0.0)cint=0.1
 !       Top label
         y_2 = y_2 + .0225 ! .025
 
-        rsize = .013
-
         icol_save = icol_common
 
         call setusv_dum('  ',7)
@@ -7358,7 +7356,7 @@ c             if(cint.eq.0.0)cint=0.1
         if(grid_spacing_m .ge. 999.5)then ! 1-km or greater
             igrid_spacing = nint(grid_spacing_m/1000.)
             if(igrid_spacing .le. 99 .and. igrid_spacing .ge. 1
-     1                               .and. c5_sect .ne. 'xsect'  )then       
+     1                               .and. c5_sect .ne. 'xsectx'  )then       
                 write(c4_grid,1)igrid_spacing
  1              format(i2,'km')
             else
@@ -7367,7 +7365,7 @@ c             if(cint.eq.0.0)cint=0.1
         else                              ! < 1-km
             igrid_spacing = nint(grid_spacing_m)
             if(igrid_spacing .le. 999 .and. igrid_spacing .ge. 1
-     1                                .and. c5_sect .ne. 'xsect'  )then       
+     1                                .and. c5_sect .ne. 'xsectx' )then       
                 write(c4_grid,2)igrid_spacing
  2              format(i3,'m')
             else
@@ -7395,8 +7393,10 @@ c             if(cint.eq.0.0)cint=0.1
 
         if(c5_sect .eq. 'hsect')then
             ix = 70
+            rsize = .013
         else
-            ix = 90
+            ix = 70
+            rsize = .011
         endif
 
         call s_len2(namelist_parms%c_institution,len_inst)
