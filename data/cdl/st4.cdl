@@ -1,0 +1,145 @@
+netcdf st4 {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	    x = 301,
+	    y = 313,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //      Stage IV precipitation
+
+        float
+            ppt(record,z,y,x);
+            ppt:navigation_dim = "nav";
+            ppt:record = "valtime, reftime";
+            ppt:_FillValue = 1.e+37f;
+            ppt:long_name="Stage IV precipitation";
+            ppt:units="m";
+            ppt:valid_range= 0.f, 10000.f;
+            ppt:LAPS_var="PPT";
+            ppt:lvl_coord="MSL";
+            ppt:LAPS_units="m";
+                	        
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            ppt_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            ppt_fcinv(record, z);
+            ppt_fcinv:_FillValue= 0s;
+              	              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "meters";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "meters";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS st4 file - 2D precipitation";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS vrc file - 2D radar";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
