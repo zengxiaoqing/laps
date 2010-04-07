@@ -276,6 +276,7 @@ c     assign local variables to passed in variable to protect them pressure only
       td = gtd
       p_3d = p_3di
       idotj = ii*jj
+      gps_count = 0 ! removes undefind condition if gps data not acquired.
 
 
 
