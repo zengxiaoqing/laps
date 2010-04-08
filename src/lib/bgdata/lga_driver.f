@@ -602,14 +602,15 @@ c     print*,'process new model background'
  
        bgvalid=time_bg(nf)+valid_bg(nf)
 
-!      Check a14_time and compare to previously written files
+!      Check a14_time and compare to previously processed files
        call make_fnam_lp(time_bg(nf),a14_time(1:9),istatus)       
        call make_fcst_time(bgvalid,time_bg(nf),a14_time(10:14)
      1                    ,istatus)       
 
+!      We might also check whether the file already resides on disk
        do iw = 1,n_written
          if(a14_time .eq. c_ftimes_written(iw))then
-             write(6,*)' NOTE: skipping redundant file time '
+             write(6,*)' NOTE: skipping already processed file time '
      1                ,a14_time
              lga_status = 1
              goto900
@@ -619,18 +620,20 @@ c     print*,'process new model background'
 c Removal of this if/loop causes already existing lga files to be overwritten
 c possibly with the same data.  However the error frequency on SBN may warrent
 c this extra work.  
-       if(.false.) then
+       if(.true.)then
         do i=1,lga_files
-         if (fname_bg(nf) .eq. lga_names(i)(1:9) .and.
-     .     af_bg(nf)(3:4) .eq. lga_names(i)(10:11)) then
+         if (fname_bg(nf)   .eq. lga_names(i)(1:9) .and.
+     .       af_bg(nf)(3:4) .eq. lga_names(i)(10:11)     ) then
                   
            print *,i,lga_names(i),':',fname_bg(nf),':',af_bg(nf)
            call get_lga_source(nx_laps,ny_laps,nz_laps
      +                 ,fname_bg(nf),af_bg(nf),comment(1))
 
            if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
-              print *,'LGA file exists, not making one. ',lga_names(i)
+              print *,'Note that LGA file exists. ',lga_names(i)
+c             print *,'LGA file exists, not making one. ',lga_names(i)
 c             lga_status=1
+c             goto900
            else
               print *,'Overwritting LGA file ',lga_names(i)
      +             ,'from model ',comment(1)(1:i),' with a new '
