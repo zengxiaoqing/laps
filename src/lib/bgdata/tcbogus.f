@@ -1,5 +1,6 @@
       subroutine tcbogus(jx,ix,nz,ht,tp,rh_c,uw,vw,
      +                   pss,tps,rhs,uws,vws,mslp,
+     +                   lat1,lat2,lon0,sw,ne,dskm,glat,glon,
      +                   pressures_pa,filename,bgmodel,cwb_type)
 !
 !     Bogusing balanced tropical cyclones based on Rankin Vortex
@@ -23,6 +24,7 @@
 !
 !      Guo-Ji Jian (CWB,Taiwan)       June, 2002
 !      wen-ho Wang modify slightly     Sep, 2004
+!      Steve Albers (more general inputs)   2010
 
       parameter(max_no=3)
       parameter(kb=7,k300=8,k850=4)
