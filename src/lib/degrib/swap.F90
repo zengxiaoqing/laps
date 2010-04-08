@@ -9,7 +9,7 @@ subroutine swap4(in,nn)
 
   logical*1, dimension(4) :: ia
   integer :: i
-  do i=1,nn,4
+  do i=1,nn-3,4
      ia = in(i+3:i:-1)
      in(i:i+3) = ia
   enddo
