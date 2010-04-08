@@ -21,12 +21,14 @@ program lga                                      lga.f
             read_netcdf_real                     bgdata/read_netcdf_field.f
          read_ruc2_hybb                          bgdata/readruc2_pub.f      #5
          lprep_ruc2_hybrid
+         read_dgprep                             bgdata/readdgprep.f
+             tcbogus                             bgdata/tcbogus.f
          degrib_data                             degrib/readgrib.F90
             get_lapsbg                           degrib/output.F90          #13
       vinterp                                    bgdata/vinterp.f 
          vinterp_sub                                     "
-      init_hinterp
-      hinterp_field                              lib/gridconv.f
+      init_hinterp                               lib/gridconv.f
+      hinterp_field                                      "
          gdtost                                          "
             binom                                        "
       sfcbkgd_sfc                                bgdata/sfcbkgd_sfc.f
