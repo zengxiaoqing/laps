@@ -69,6 +69,8 @@ c     real   rp_init
       real   rfill
       real   rmx2d,rmn2d
 
+      real   lat1,lat2,lon0,dskm,glat(nx,ny),glon(nx,ny),sw(2),ne(2)       
+
       integer imx,jmx,imn,jmn
 
 c
@@ -297,8 +299,15 @@ c           enddo
 
       if(ldo_tcbogus)then
 
+!        Add call to get_bkgd_mdl_info for lat1,lat2,lon0,sw,ne,dskm
+
+!        Add call to init_hinterp to get glat,glon
+
+!        Right now the bogusing assumes a Lambert Conformal Projection
+
          call tcbogus(nx,ny,nz,ht,tp,sh,uw,vw,ht_sfc,
      +             tp_sfc,td_sfc,uw_sfc,vw_sfc,mslp,
+     +             lat1,lat2,lon0,sw,ne,dskm,glat,glon,
      +             prk,filename,bgmodel,cwb_type)
 
       endif
