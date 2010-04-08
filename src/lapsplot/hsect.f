@@ -6236,15 +6236,23 @@ c                   cint = -1.
                  return
               endif
               clow = 0.
-              chigh = 20.
+              chigh = 24.
               cint = 1.
               c_label = 'Static Land Use           '
-              call plot_cont(static_grid,1e0,
-     1               clow,chigh,cint,asc9_tim,
-     1               namelist_parms,plot_parms,c_label,      
-     1               i_overlay,c_display,lat,lon,jdot,
-     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+!             call plot_cont(static_grid,1e0,
+!    1               clow,chigh,cint,asc9_tim,
+!    1               namelist_parms,plot_parms,c_label,      
+!    1               i_overlay,c_display,lat,lon,jdot,
+!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               i4time_topo = 0
+
+              plot_parms%iraster = 1
+
+              call plot_field_2d(i4time_topo,c_field,static_grid,1e0       
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
            elseif(cstatic(1:2) .eq. 'al')then
 
