@@ -221,8 +221,11 @@ cdis
         real, allocatable, dimension(:,:,:,:) :: out_array_4d
         real out_array_3d(NX_L,NY_L,NZ_L)
 
-        real slwc(NX_L,NY_L,NZ_L),slwc_int(NX_L,NY_L)
-        real cice(NX_L,NY_L,NZ_L)
+        real, allocatable, dimension(:,:,:) :: slwc
+        real, allocatable, dimension(:,:,:) :: slwc_int
+        real, allocatable, dimension(:,:,:) :: cice
+!       real slwc(NX_L,NY_L,NZ_L),slwc_int(NX_L,NY_L)
+!       real cice(NX_L,NY_L,NZ_L)
 
         real pcpcnc(NX_L,NY_L,NZ_L)
         real raicnc(NX_L,NY_L,NZ_L)
@@ -335,6 +338,24 @@ cdis
 
         write(6,*)' Welcome to the laps_deriv_sub (derived cloud prods)'       
 
+        allocate( slwc(NX_L,NY_L,NZ_L), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate slwc'
+            stop
+        endif
+
+        allocate( slwc_int(NX_L,NY_L,NZ_L), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate slwc_int'
+            stop
+        endif
+
+        allocate( cice(NX_L,NY_L,NZ_L), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate cice'
+            stop
+        endif
+
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error calling get_r_missing_data'
@@ -382,7 +403,7 @@ c Determine the source of the radar data
             radarext_3d_cloud = c_values_req(1:3)
         else
             write(6,*)' Error getting radarext_3d'
-            return
+            goto 9999
         endif
 
 !       radarext_3d_cloud = radarext_3d
@@ -395,7 +416,7 @@ c read in laps lat/lon and topo
      1           ,rlaps_land_frac,grid_spacing_cen_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
-            return
+            goto 9999
         endif
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
@@ -403,11 +424,11 @@ c read in laps lat/lon and topo
             write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
         else
             write(6,*)' Error getting laps_cycle_time'
-            return
+            goto 9999
         endif
 
         call get_pres_3d(i4time,NX_L,NY_L,NZ_L,pres_3d,istatus)
-        if(istatus .ne. 1)return
+        if(istatus .ne. 1)goto 9999
 
         n_lc3 = 1
         n_lps = 2
@@ -459,7 +480,7 @@ c read in laps lat/lon and topo
      1                         ,clouds_3d,cld_hts,cld_pres_1d,istatus)
             if(istatus .ne. 1 .or. i4time .ne. i4time_lc3)then
                 write(6,*)' Error reading 3D Clouds'
-                return
+                goto 999
             endif
 
 !           Read in data (lps - radar_ref_3d)
@@ -530,7 +551,7 @@ c read in laps lat/lon and topo
             I4_elapsed = ishow_timer()
 
             call get_c8_project(c8_project,istatus)
-            if(istatus .ne. 1)return
+            if(istatus .ne. 1)goto 999
 
             do i = 1,n_obs_pos_b 
 
@@ -598,7 +619,7 @@ c read in laps lat/lon and topo
      1                istatus)                                             ! O
         if(istatus .ne. 1)then
             write(6,*)' Bad status return from get_cloud_deriv'
-            return
+            goto 999
         endif
 
         I4_elapsed = ishow_timer()
@@ -611,7 +632,7 @@ c read in laps lat/lon and topo
 
         if(istatus .ne. 1)then
             write(6,*)' Bad status return from insert_thin_lwc_ice'
-            return
+            goto 999
         endif
 
         I4_elapsed = ishow_timer()
@@ -747,7 +768,7 @@ c read in laps lat/lon and topo
             call sao_rain_correction(r_pcp_type_thresh_2d,NX_L,NY_L
      1              ,n_obs_pos_b,obstype,wx_s,lat_s,lon_s,maxstns
      1              ,ri_s,rj_s,lat,lon
-     1              ,t_sfc_k,td_sfc_k
+     1              ,t_sfc_k,td_sfc_k,twet_snow
      1              ,dbz_low_2d
      1              ,cvr_max,r_missing_data)
 
@@ -758,7 +779,7 @@ c read in laps lat/lon and topo
             call sao_snow_correction(r_pcp_type_thresh_2d,NX_L,NY_L
      1              ,n_obs_pos_b,obstype,wx_s,lat_s,lon_s,maxstns
      1              ,ri_s,rj_s,lat,lon
-     1              ,t_sfc_k,td_sfc_k
+     1              ,t_sfc_k,td_sfc_k,twet_snow
      1              ,dbz_low_2d
      1              ,cvr_max,r_missing_data)
 
@@ -1143,6 +1164,10 @@ c read in laps lat/lon and topo
         do i = iprod_start,iprod_end
             write(6,*)' ',exts(i),' ',j_status(i),' ',i
         enddo ! i
+
+9999    deallocate( slwc )
+        deallocate( slwc_int )
+        deallocate( cice )
 
         write(6,*)' End of laps_deriv_sub'
 
