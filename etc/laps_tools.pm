@@ -1000,8 +1000,8 @@ sub systime{
         $mday = '0'.$mday if(length($mday)<2);
     }
 #
-# This resets to the top of the cycle
-# ---------------------------------------
+# This resets to the top of the cycle (for cycles <= 1 hour)
+# ----------------------------------------------------------
     if($archive_time==0){
        my $minute=$min;
        my $i=0;
