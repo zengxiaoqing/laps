@@ -66,7 +66,7 @@ find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> l
 
 # Lapsprep files (use MINAGE/MAXAGE)
 #find ./lapsprd/lapsprep    -name "LAPS*" ! -cmin +90 -cmin +30 -print >> lapstar.txt
-find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD_$HH"      -print >> lapstar.txt
+find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD\_$HH"      -print >> lapstar.txt
 
 # Log & Wgi files
 find ./log     -type f -name "*.???.$YYDDDHH??" -print   >> lapstar.txt
