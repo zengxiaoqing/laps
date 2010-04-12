@@ -58,7 +58,7 @@ MODULE lapsprep_wrf
   USE setup
   USE laps_static
   USE date_pack
-  USE lapsprep_constants
+! USE lapsprep_constants
   IMPLICIT NONE
 
   PRIVATE
@@ -842,16 +842,26 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   CHARACTER(LEN=46),INTENT(IN)  :: desc
   REAL, INTENT(IN)              :: level
   LOGICAL, PARAMETER            :: wind = .false.
+  REAL                          :: radius_of_earth_m,radius_of_earth_km
+  INTEGER                       :: istatus
  
+  call get_earth_radius(radius_of_earth_m,istatus)
+  radius_of_earth_km = radius_of_earth_m / 1000.
+  print*,'write_metgrid_header radius_of_earth_km ',radius_of_earth_km
+  if(istatus .ne. 1)then
+      write(6,*)' Bad status for radius_of_earth_km'
+      stop
+  endif
+
   WRITE ( output_unit ) gp_version_wps
   WRITE ( output_unit ) hdate,xfcst,source,field,units,desc,level,x,y,llflag
   SELECT CASE (llflag)
     CASE(1)
-      WRITE ( output_unit ) knownloc,la1,lo1,dx,dy,latin1,radius_of_earth
+      WRITE ( output_unit ) knownloc,la1,lo1,dx,dy,latin1,radius_of_earth_km
     CASE(3)
-      WRITE ( output_unit ) knownloc,la1,lo1,dx,dy,lov,latin1,latin2,radius_of_earth
+      WRITE ( output_unit ) knownloc,la1,lo1,dx,dy,lov,latin1,latin2,radius_of_earth_km
     CASE(5)
-      WRITE ( output_unit ) knownloc,la1,lo1,dx,dy,lov,latin1,radius_of_earth
+      WRITE ( output_unit ) knownloc,la1,lo1,dx,dy,lov,latin1,radius_of_earth_km
   END SELECT
   WRITE ( output_unit) wind
 
