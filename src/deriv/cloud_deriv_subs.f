@@ -348,7 +348,7 @@ cdis
         subroutine sao_snow_correction(pcp_type_2d,ni,nj
      1              ,n_obs_pos_b,obstype,wx_s,lat_s,lon_s,maxstns
      1              ,ri_s,rj_s,lat,lon
-     1              ,t_sfc_k,td_sfc_k
+     1              ,t_sfc_k,td_sfc_k,twet_snow
      1              ,dbz_low_2d
      1              ,cvr_max,r_missing_data)
 
@@ -366,6 +366,8 @@ cdis
         real ri_s(maxstns), rj_s(maxstns)
         real lat(ni,nj),lon(ni,nj)
 
+        integer ipresent_s(maxstns)
+
 !       Declarations for LSO file stuff
         real lat_s(maxstns), lon_s(maxstns)
         character wx_s(maxstns)*8, obstype(maxstns)*8
@@ -375,6 +377,7 @@ cdis
         write(6,*)' Adding snow information from SAOs'
 
         n_valid_sta = 0
+        ipresent_s = 0
 
 !       Set Up I's and J's of the SAOs
         do ista = 1,n_obs_pos_b
@@ -389,10 +392,13 @@ cdis
             if(    i_sta .ge. 1 .and. i_sta .le. ni
      1       .and. j_sta .ge. 1 .and. j_sta .le. nj)then
 
-!               Does this station report precip?
+!               Does this station report precip and snow?
                 if(wx_s(ista)(1:7) .ne. 'UNKNOWN')then
                     l_valid_sta(ista) = .true.
                     n_valid_sta = n_valid_sta + 1
+                    call parse_wx_pcp(wx_s(ista),'S',ipresent_s(ista)
+     1                               ,istatus)    
+
                 endif
             endif
         enddo
@@ -402,16 +408,25 @@ cdis
         n_cvr= 0
         n_moist = 0
         n_no_pcp = 0
+        n_cold = 0
         n_s = 0
 
         do i = 1,ni
         do j = 1,nj
             if(cvr_max(i,j) .gt. 0.5)then ! Ample Cloud Cover
               n_cvr = n_cvr + 1
+
               if( (t_sfc_k(i,j) - td_sfc_k(i,j)) .lt. 10.)then ! Moist air
                 n_moist = n_moist + 1
+
                 if(pcp_type_2d(i,j) .eq. 0.)then ! No snow diagnosed at grid pt
-                    n_no_pcp = n_no_pcp + 1
+                  n_no_pcp = n_no_pcp + 1
+
+!                 Approx Wet Bulb Temp
+                  tw_c = 0.5 * (t_sfc_k(i,j)
+     1                       + td_sfc_k(i,j)) - 273.15
+                  if(tw_c .le. twet_snow)then ! cold enough for snow
+                    n_cold = n_cold + 1
 
 !                   Determine nearest station to the grid point
 !                   Must be inside the domain
@@ -442,24 +457,17 @@ cdis
 !                       Parse nearest station
                         i_s = 0
 
-                        call parse_wx_pcp(wx_s(ista_nearest),'S'
-     1                                              ,ipresent,istatus)       
-                        if(ipresent .eq. 1)i_s = 1
+                        if(ipresent_s(ista_nearest) .eq. 1)i_s = 1
 
                         if(i_s .eq. 1)then ! S present
                             if(dbz_at_sta .le. 0.)then ! Station has no echo
-!                               Approx Wet Bulb Temp
-                                tw_c = 0.5 * (t_sfc_k(i,j)
-     1                                     + td_sfc_k(i,j)) - 273.15
-                                if(tw_c .gt. 1.3)then
-                                else
-                                    n_s = n_s + 1
-                                    pcp_type_2d(i,j) = 2.0 ! Snow
-                                endif
+                                n_s = n_s + 1
+                                pcp_type_2d(i,j) = 2.0 ! Snow
                             endif
                         endif ! S present
                     endif ! we found a reporting station
 
+                  endif ! cold enough for snow
                 endif ! no snow diagnosed
               endif ! moist air
             endif ! ample cloud cover
@@ -469,6 +477,7 @@ cdis
         write(6,*)' # of grid points with cvr > 0.5 = ',n_cvr
         write(6,*)' # of grid points also with T-Td < 10 = ',n_moist
         write(6,*)' # of grid points also with no precip = ',n_no_pcp
+        write(6,*)' # of grid points also cold enough = ',n_cold
         write(6,*)' # of grid points with snow added =     ',n_s
 
         return
@@ -478,7 +487,7 @@ cdis
         subroutine sao_rain_correction(pcp_type_2d,ni,nj
      1              ,n_obs_pos_b,obstype,wx_s,lat_s,lon_s,maxstns
      1              ,ri_s,rj_s,lat,lon
-     1              ,t_sfc_k,td_sfc_k
+     1              ,t_sfc_k,td_sfc_k,twet_snow
      1              ,dbz_low_2d
      1              ,cvr_max,r_missing_data)
 
@@ -586,7 +595,7 @@ cdis
      1                                     + td_sfc_k(i,j)) - 273.15
 
                                 if(ipresent_zr .eq. 0)then     ! Stn has rain
-                                    if(tw_c .gt. 1.3)then
+                                    if(tw_c .gt. twet_snow)then
                                         n_r = n_r + 1
                                         pcp_type_2d(i,j) = 1.0 ! rain
                                     else ! Wet bulb below zero (indeterminate)
