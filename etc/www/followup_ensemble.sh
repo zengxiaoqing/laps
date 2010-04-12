@@ -46,7 +46,7 @@ do
   echo " "
   echo "Looping through $prod with call to laps_gifs_sub_fcst.sh"
   startdate=`date -u +%H:%M:%S`
-  $LAPS_ETC/laps_gifs_sub_fcst.sh $prod $WINDOW $LAPS_ETC $WWW_DIR $model $LAPS_DATA_ROOT $latest $datetime $RESOLUTION $domain $model
+  $LAPS_ETC/laps_gifs_sub_spaghetti.sh $prod $WINDOW $LAPS_ETC $WWW_DIR $model $LAPS_DATA_ROOT $latest $datetime $RESOLUTION $domain $model
   enddate=`date -u +%H:%M:%S`
   echo "Timing info for $prod: $startdate $enddate"
 done
