@@ -24,6 +24,8 @@ getopts('a:d:r:f:c:l:m:');
 
 print "Running followup_fcst.pl...\n";
 print "user defined paths\n";
+print "model: $opt_m\n";
+print "model configuration: $opt_a\n";
 my $domain = $opt_d;
 my $model = "$opt_m-$opt_a";
 $ENV{LAPSINSTALLROOT}="@prefix@";
@@ -99,7 +101,7 @@ my $followup = "@prefix@/etc/www/followup_fcst.sh $domain $model $dataroot $wind
 #my $followup_fire =  "/usr/nfs/common/lapb/www/followup_fcst_fire.sh $domain $model $dataroot $window $resolution";
 #my $followup_ua =  "/usr/nfs/common/lapb/www/followup_fcst_ua.sh $domain $model $dataroot $window $resolution";
 my $followup_xsect =  "@prefix@/etc/www/followup_fcst_xsect.sh $domain $model $dataroot";
-my $followup_spaghetti = "@prefix@/etc/www/followup_fcst_spaghetti.sh $domain $model $dataroot";
+my $followup_spaghetti = "@prefix@/etc/www/followup_ensemble.sh $domain $model $dataroot $window $resolution";
 
 my $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
 my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 36 $domain $model\n";
@@ -199,7 +201,9 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
         $validtime = $validtime."00";
       }
       if ($opt_a eq "spaghetti") {
-#         $result=system("$followup_spaghetti $_ $validtime");
+          my $command = "$followup_spaghetti $_ $validtime";
+          print "running spaghetti command: $command";
+          $result=system("$command");
       } else {
           $result=system("$followup $_ $validtime");
 #         $result=system("$followup_fire $_ $validtime");
