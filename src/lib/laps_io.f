@@ -150,15 +150,14 @@ c                if(directory(len+1:len_dir).eq.
 c    &fdda_model_source(l))then
 
               mark=0
-              search_dir: do l=len_dir,1,-1
-                 if(directory(l:l).ne.'/')then 
-                    mark=mark+1
-                 else
+              search_dir: do l=len_dir-1,1,-1
+                 if(directory(l:l).eq.'/')then 
+                    mark=l
                     exit search_dir
                  endif
               enddo search_dir
                     
-              ext_int=directory(len_dir-mark+1:len_dir)
+              ext_int=directory(mark-3:mark-1)
 
 c                endif
 c             enddo
