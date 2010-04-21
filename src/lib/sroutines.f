@@ -5108,7 +5108,7 @@ c     constant times a vector plus a vector.
 c     uses unrolled loops for increments equal to one.
 c     jack dongarra, linpack, 3/11/78.
 c
-      real dx(1),dy(1),da
+      real dx(n),dy(n),da
       integer i,incx,incy,ix,iy,m,mp1,n
 c
       if(n.le.0)return
@@ -5155,7 +5155,7 @@ c     copies a vector, x, to a vector, y.
 c     uses unrolled loops for increments equal to one.
 c     jack dongarra, linpack, 3/11/78.
 c
-      real dx(1),dy(1)
+      real dx(n),dy(n)
       integer i,incx,incy,ix,iy,m,mp1,n
 c
       if(n.le.0)return
@@ -5204,7 +5204,7 @@ c     forms the dot product of two vectors.
 c     uses unrolled loops for increments equal to one.
 c     jack dongarra, linpack, 3/11/78.
 c
-      real dx(1),dy(1),dtemp
+      real dx(n),dy(n),dtemp
       integer i,incx,incy,ix,iy,m,mp1,n
 c
       ddot = 0.0d0
@@ -5248,7 +5248,7 @@ c
       end
       subroutine dpofa(a,lda,n,info)
       integer lda,n,info
-      real a(lda,1)
+      real a(lda,n)
 c
 c     dpofa factors a real symmetric positive definite
 c     matrix.
@@ -5325,7 +5325,7 @@ c     uses unrolled loops for increment equal to one.
 c     jack dongarra, linpack, 3/11/78.
 c     modified 3/93 to return if incx .le. 0.
 c
-      real da,dx(1)
+      real da,dx(n)
       integer i,incx,m,mp1,n,nincx
 c
       if( n.le.0 .or. incx.le.0 )return
@@ -5362,7 +5362,7 @@ c
       end
       subroutine dtrsl(t,ldt,n,b,job,info)
       integer ldt,n,job,info
-      real t(ldt,1),b(1)
+      real t(ldt,n),b(n)
 c
 c
 c     dtrsl solves systems of the form
