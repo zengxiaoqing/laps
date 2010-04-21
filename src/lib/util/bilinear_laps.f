@@ -57,7 +57,7 @@ cdoc    point.
         if(j .eq. jmax)j=j-1
 
         if(i .ge. 1 .and. i .le. imax .and.
-     1   j .ge. 1 .and. j .le. jmax) then
+     1     j .ge. 1 .and. j .le. jmax) then
 
             fraci = ri - i
             fracj = rj - j
@@ -99,7 +99,7 @@ cdoc    grid.
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Error in bilinear_laps_extrap'
+            write(6,*)' Error in bilinear_interp_extrap'
             return
         endif
 
@@ -164,3 +164,150 @@ c standard bilinear interpolation
         return
         end
 
+        subroutine bilinear_laps_3do(ri_a,rj_a,imax,jmax,nx_laps,ny_laps
+     1                             ,nz_laps,array_3d,result)
+
+cdoc    Interpolate 3-d array to find the field values at fractional grid
+cdoc    points.
+
+        real array_3d(imax,jmax,nz_laps)                 ! I
+        real ri_a(nx_laps,ny_laps),rj_a(nx_laps,ny_laps) ! I
+        real result(nx_laps,ny_laps,nz_laps)             ! O
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error in bilinear_laps: STOP'
+            stop
+        endif
+
+        do k  = 1,nz_laps
+        do il = 1,nx_laps
+        do jl = 1,ny_laps
+
+          ri = ri_a(il,jl)
+
+          i = int(ri)
+          if(i .eq. imax)i=i-1
+
+          rj = rj_a(il,jl)
+
+          j = int(rj)
+          if(j .eq. jmax)j=j-1
+
+          if(i .ge. 1 .and. i .le. imax .and.
+     1       j .ge. 1 .and. j .le. jmax) then
+
+            fraci = ri - i
+            fracj = rj - j
+
+            Z1=array_3d(i  , j  ,k)
+            Z2=array_3d(i+1, j  ,k)
+            Z3=array_3d(i+1, j+1,k)
+            Z4=array_3d(i  , j+1,k)
+
+            if(  z1 .ne. r_missing_data
+     1     .and. z2 .ne. r_missing_data
+     1     .and. z3 .ne. r_missing_data
+     1     .and. z4 .ne. r_missing_data)then
+
+                result(il,jl,k) =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
+     1                          - (Z2+Z4-Z3-Z1)*fraci*fracj
+
+            else
+                result(il,jl,k) = r_missing_data
+
+            endif
+
+          else
+            result(il,jl,k) = r_missing_data
+
+          endif
+
+        enddo ! j
+        enddo ! i  
+        enddo ! k
+
+        return
+        end
+
+        subroutine bilinear_laps_3d(ri_a,rj_a,imax,jmax,nx_laps,ny_laps
+     1                             ,nz_laps,array_3d,result)
+
+cdoc    Interpolate 3-d array to find the field values at fractional grid
+cdoc    points. Hopefully it's more efficient to call bilinear_laps_2d.
+
+        real array_3d(imax,jmax,nz_laps)                 ! I
+        real ri_a(nx_laps,ny_laps),rj_a(nx_laps,ny_laps) ! I
+        real result(nx_laps,ny_laps,nz_laps)             ! O
+
+        do k = 1,nk
+           call bilinear_laps_2d(ri_a,rj_a,imax,jmax,nx_laps,ny_laps
+     1                          ,array_3d(1,1,k),result(1,1,k))
+        enddo ! k
+
+        return
+        end
+
+        subroutine bilinear_laps_2d(ri_a,rj_a,imax,jmax,nx_laps,ny_laps
+     1                             ,array_2d,result)
+
+cdoc    Interpolate 2-d array to find the field values at fractional grid
+cdoc    points.
+
+        real array_2d(imax,jmax)                         ! I
+        real ri_a(nx_laps,ny_laps),rj_a(nx_laps,ny_laps) ! I
+        real result(nx_laps,ny_laps)                     ! O
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error in bilinear_laps_2d: STOP'
+            stop
+        endif
+
+        do il = 1,nx_laps
+        do jl = 1,ny_laps
+
+          ri = ri_a(il,jl)
+
+          i = int(ri)
+          if(i .eq. imax)i=i-1
+
+          rj = rj_a(il,jl)
+
+          j = int(rj)
+          if(j .eq. jmax)j=j-1
+
+          if(i .ge. 1 .and. i .le. imax .and.
+     1       j .ge. 1 .and. j .le. jmax) then
+
+            fraci = ri - i
+            fracj = rj - j
+
+            Z1=array_2d(i  , j  )
+            Z2=array_2d(i+1, j  )
+            Z3=array_2d(i+1, j+1)
+            Z4=array_2d(i  , j+1)
+
+            if(  z1 .ne. r_missing_data
+     1     .and. z2 .ne. r_missing_data
+     1     .and. z3 .ne. r_missing_data
+     1     .and. z4 .ne. r_missing_data)then
+
+                result(il,jl) =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
+     1                          - (Z2+Z4-Z3-Z1)*fraci*fracj
+
+            else
+                result(il,jl) = r_missing_data
+
+            endif
+
+          else
+            result(il,jl) = r_missing_data
+
+          endif
+
+        enddo ! j
+        enddo ! i  
+
+        return
+        end
