@@ -5,11 +5,11 @@ subroutine swap4(in,nn)
 !    words
   implicit none
   integer, intent(in) :: nn ! number of bytes to be swapped
-  logical*1 , dimension(nn) , intent(inout) :: in  ! Array to be swapped
+  logical*1 , dimension(nn+3) , intent(inout) :: in  ! Array to be swapped
 
   logical*1, dimension(4) :: ia
   integer :: i
-  do i=1,nn-3,4
+  do i=1,nn,4
      ia = in(i+3:i:-1)
      in(i:i+3) = ia
   enddo
