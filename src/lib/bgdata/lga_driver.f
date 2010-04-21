@@ -228,6 +228,7 @@ c
       logical smooth_fields
       logical lgrid_missing
       logical lhif_tsfc
+      logical wrapped, l_bilinear
 
       data ntime/0/
       data ext/'lga'/
@@ -396,6 +397,24 @@ c
       endif
       cfname=bgpath(1:bglen)//bg_names(1)
       call s_len(cfname,lncf)
+
+C WNI Add a section to identify wrapped grid and set the wrapped flag
+      wrapped = .FALSE.              ! WNI
+      IF (   bgmodel .eq. 6 .or.     ! WNI
+     .       bgmodel .eq. 8 .or.     ! WNI
+     .      (bgmodel .eq. 13 .and. cmodel(1:ic) .eq. 'GFS')   .or.  ! SCA
+     .      (bgmodel .eq. 13 .and. cmodel(1:ic) .eq. 'ECMWF') .or.  ! SCA
+     .      (bgmodel .eq. 13 .and. cmodel(1:ic) .eq. 'FIM')   .or.  ! SCA
+     .       bgmodel .eq. 10.) THEN  ! WNI
+        wrapped = .true.             ! WNI
+      ENDIF                          ! WNI
+C WNI END ADDITON
+
+      if(lgb_only .and. (.not. wrapped))then
+          l_bilinear = .true.
+      else
+          l_bilinear = .false.
+      endif
 
       call get_bkgd_mdl_info(bgmodel,cmodel,cfname
      &,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv
@@ -620,8 +639,8 @@ c     print*,'process new model background'
 c Removal of this if/loop causes already existing lga files to be overwritten
 c possibly with the same data.  However the error frequency on SBN may warrent
 c this extra work.  
-       if(.true.)then
-        do i=1,lga_files
+       if(nlga .gt. 0)then
+        do i=1,nlga
          if (fname_bg(nf)   .eq. lga_names(i)(1:9) .and.
      .       af_bg(nf)(3:4) .eq. lga_names(i)(10:11)     ) then
                   
