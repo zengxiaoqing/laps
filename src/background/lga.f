@@ -72,7 +72,7 @@ c
      .          nx_bg,ny_bg,nz_bg,
      .          lga_status                   !status returned from lga_driver
 c                                            ! 1=good 0=bad
-      integer   np
+      integer   np,ntmin,ntmax
 c
 c
 c------------------> BACKGROUND GRID DATA PATH <--------------------------------
@@ -173,14 +173,19 @@ c
          print*,'Using i4time now'
       endif
 
-      print*,'Time adjustment calc from namelist itime_inc',
-     +' (itime_inc) = ',itime_inc
+      if(lgb_only)then
+          ntmin = 0
+          ntmax = 0
+      else
+          ntmin = -1
+          ntmax = +1
+      endif
 
       ltime=.true.
 
       n_written = 0
 
-      do itime_inc=-1,+1
+      do itime_inc=ntmin,ntmax
 
        print*
        print*,'----------------------------------------------'
