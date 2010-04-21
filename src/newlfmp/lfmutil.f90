@@ -989,12 +989,15 @@ do i=1,nx
                     38000.0*(rho(i,j,k) * 1000.0 * &
                     MAX(0.0,icemr(i,j,k)+snowmr(i,j,k)+graupelmr(i,j,k)))**2.2
 
-        ! Convert to dBZ
+        ! Convert to dBZ (with a lower limit of zero, given the max application)
         refl(i,j,k) = 10.*ALOG10(MAX(refl(i,j,k),1.0))
 
+        ! Set zero reflectivity to -10
+        if (refl(i,j,k).eq.0.) then
+            refl(i,j,k)=-10.0
+        endif 
 
 ! Computing the reflectivity by using the synpolrad code
-
 
       elseif (c_m2z == 'synp') then
 
