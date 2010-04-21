@@ -1084,8 +1084,17 @@ c read in laps lat/lon and topo
         enddo
         enddo
 
-        call put_laps_multi_3d(i4time,ext,var_a,units_a,comment_a
-     1                  ,out_array_4d,NX_L,NY_L,NZ_L,2,istatus)
+        do i = 1,2
+           if(i .eq. 1)then
+               ext = 'pty'
+           else
+               ext = 'cty'
+ 
+           endif
+           call put_laps_3d(i4time,ext,var_a(i),units_a(i)
+     1                     ,comment_a(i),out_array_4d(1,1,1,i)
+     1                     ,NX_L,NY_L,NZ_L)
+        enddo ! i
 
         j_status(n_lty) = istatus
 
