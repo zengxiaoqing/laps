@@ -131,6 +131,8 @@ C            THROUGH THE 0-6 KM MEAN WIND.
 
         write(6,*)' Top level of mean wind computation = ',khigh
 
+!       Mean wind (mass weighted) is calculated for whole levels within the 
+!       range.
         do j = 1,jmax
           do i = 1,imax
              klow(i,j) =
