@@ -550,11 +550,22 @@ SUBROUTINE LAPSOBSV(m)
 	    ENDIF
 
 	    ! Convert to reduced pressure at the reduced pressure level, rdplvl:
-	    IF (prs .NE. badsfc .AND. tmp(k) .NE. badsfc &
-               .AND. dew(k) .NE. badsfc .AND. elv(k) .NE. badsfc) THEN
-	      CALL REDUCE_P(tmp(k),dew(k),prs,elv(k), &
-		lapses(1),lapses(2), &
-		rawobs(1,numobs(j)+k,j),rdplvl,badsfc)
+            IF (prs .NE. badsfc) THEN
+              IF (ABS(elv(k)-rdplvl) .LE. 10) THEN 
+                ! Elevation is close (10m hardcoded) to the reduced level, 
+                ! use pressure as reduced pressure:
+                rawobs(1,numobs(j)+k,j) = prs
+              ELSE
+                ! Use reduce_p to reduce prs to the reduced pressure level:
+	        IF (tmp(k) .NE. badsfc .AND. dew(k) .NE. badsfc .AND. &
+                    elv(k) .NE. badsfc) THEN
+	          CALL REDUCE_P(tmp(k),dew(k),prs,elv(k), &
+		                lapses(1),lapses(2), &
+		                rawobs(1,numobs(j)+k,j),rdplvl,badsfc)
+                ELSE
+	          rawobs(1,numobs(j)+k,j) = badsfc
+                ENDIF
+              ENDIF
 	    ELSE
 	      rawobs(1,numobs(j)+k,j) = badsfc
             ENDIF
