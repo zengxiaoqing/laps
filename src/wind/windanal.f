@@ -58,7 +58,6 @@ cdis
      1     ,heights_3d                                                 ! I
      1     ,i4_loop_total                                              ! O
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding  ! I
-!    1     ,n_iter_wind_in
      1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar! I
      1     ,istatus)
 
@@ -199,16 +198,7 @@ csms$serial(default=ignore)  begin
      1            l_withheld_only,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
-csms$serial end
-
       rms_thresh_norm = rms_thresh_wind          
-
-      n_iter_wind = 1
-
-      do iter = 1,n_iter_wind
-
-csms$serial(<wt_p_radar, 
-csms$>       rms_thresh, rep_pres_intvl, out>:default=ignore)  begin
 
 !     Subtract the background from the non-radar obs, then apply QC thresholds
 !     and spread the obs vertically.
@@ -843,7 +833,7 @@ csms$serial(default=ignore)  begin
           endif
       enddo ! k
 
-      if(iter .eq. n_iter_wind)then
+      if(.true.)then
 !         Compare 1st pass analysis to obs
           call compare_wind(
      1            upass1,vpass1,'PS1 ',
@@ -861,12 +851,6 @@ csms$serial(default=ignore)  begin
       write(6,*)' Deallocate upass1, vpass1'
       deallocate(upass1)
       deallocate(vpass1)
-
-csms$serial end
-
-      enddo ! n_iter_wind
-
-csms$serial(default=ignore)  begin              
 
 !     Compare final analysis to QC'd obs
       call compare_wind(
