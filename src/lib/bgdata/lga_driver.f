@@ -565,14 +565,17 @@ c
 c
 c ok, since we've processed it, lets add it to the reject list
 c
-
-c                 reject_cnt=reject_cnt+1
-c                 reject_names(reject_cnt)=names(j)
+                  reject_cnt=reject_cnt+1
+                  reject_names(reject_cnt)=names(j)
 c                 names(j)=' '           ! commented out 12/2009 by SA
 
-c                 print*,'reject_cnt/reject_names'
-c                 print*,'cnt/time: ',reject_cnt
-c    +,reject_names(reject_cnt)
+                  print*,'reject_cnt/reject_names'
+                  print*,'cnt/time: '
+     +                  ,reject_names(reject_cnt)
+
+                  print *,'NOTE that LGA/LGB file exists: ',lga_names(k)
+!                 lga_status = 1
+!                 goto 900
 
                endif
             enddo
@@ -639,24 +642,24 @@ c     print*,'process new model background'
 c Removal of this if/loop causes already existing lga files to be overwritten
 c possibly with the same data.  However the error frequency on SBN may warrent
 c this extra work.  
-       if(nlga .gt. 0)then
+       if(nlga .gt. 0 .and. .false.)then
         do i=1,nlga
-         if (fname_bg(nf)   .eq. lga_names(i)(1:9) .and.
-     .       af_bg(nf)(3:4) .eq. lga_names(i)(10:11)     ) then
+         print *,i,lga_names(i),':',fname_bg(nf),':',af_bg(nf),' test'       
+         if (fname_bg(nf) .eq. lga_names(i)(bglen+1:bglen+13)) then
                   
            print *,i,lga_names(i),':',fname_bg(nf),':',af_bg(nf)
-           call get_lga_source(nx_laps,ny_laps,nz_laps
+           call get_lgb_source(nx_laps,ny_laps             
      +                 ,fname_bg(nf),af_bg(nf),comment(1))
 
            if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
-              print *,'Note that LGA file exists. ',lga_names(i)
+              print *,'Note that LGB file exists. ',lga_names(i)
 c             print *,'LGA file exists, not making one. ',lga_names(i)
 c             lga_status=1
 c             goto900
            else
-              print *,'Overwritting LGA file ',lga_names(i)
-     +             ,'from model ',comment(1)(1:i),' with a new '
-     +             ,'one from model ',cmodel(1:ic)
+              print *,'Overwritting LGA/LGB files ',lga_names(i)
+     +             ,'from model ',comment(1)(1:i),' with new '
+     +             ,'ones from model ',cmodel(1:ic)
            endif
          endif
         enddo          
@@ -1579,3 +1582,29 @@ c
       source = comment(1:12)
       return
       end
+c
+c=========================================================
+c
+      subroutine get_lgb_source(nx,ny,fname,af,source)
+      character*9 fname
+      character*4 af
+      character*10 units
+      character*125 comment
+      character*12 source
+      integer ihour, bgtime, nx,ny
+      real dumb2(nx,ny)
+
+      call i4time_fname_lp(fname,bgtime,istatus)
+      read(af,'(2i2)') ihour,imin
+      bgvalidtime = bgtime + ihour*3600 + imin*60
+      call get_lapsdata_2d(bgtime,bgvalidtime,'lgb ','TSF',units
+     .                    ,comment,nx,ny,dumb2,istatus)
+      if(istatus.lt.1) then
+         stop 'error returned from get_lapsdata_2d'
+      endif
+
+      source = comment(1:12)
+      return
+      end
+
+
