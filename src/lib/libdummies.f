@@ -32,6 +32,54 @@ cdis
 C
 C==========================================
 C
+        function rshow_timer()
+
+        common /timer/ i4time_start,sec_start,icount_start
+
+        real sec_elapsed
+        character*24 atime
+
+        integer init
+        data init/0/
+        save init
+
+        CALL SYSTEM_CLOCK(ICOUNT,ICOUNT_RATE,ICOUNT_MAX)
+        T1 = float(ICOUNT) / float(ICOUNT_RATE)
+
+        if(init .eq. 0)then
+            sec_start = T1
+            icount_start = icount
+            write(6,*)'Initializing rshow_timer, COUNT = ',ICOUNT             
+            init = 1
+            rshow_timer = 0.
+        else
+            i4time_now = i4time_now_gg()
+            call cv_i4tim_asc_lp(i4time_now,atime,istatus)
+
+            sec_elapsed = float(ICOUNT - ICOUNT_START)/
+     1                    float(ICOUNT_RATE)                  
+!           write(6,*)' COUNT = ',ICOUNT
+
+!           write(6,1)sec_elapsed,1./float(ICOUNT_RATE)
+!1          format(' Elapsed seconds = ',f10.3,5x
+!    1             ,'resolution = ',f10.6)       
+
+            min_elapsed = int(sec_elapsed / 60.)
+            sec_remainder = sec_elapsed - float(min_elapsed*60)
+            write(6,2,err=99)min_elapsed,sec_remainder,atime(1:20)
+     1                      ,1./float(ICOUNT_RATE)
+ 2          format(1x,'Elapsed time -',i6,':',f6.3,5x,a20
+     1            ,'     resolution = ',f8.6)
+
+ 99         rshow_timer = sec_elapsed    
+        endif
+
+        return
+
+        end
+C
+C==========================================
+C
         function ishow_timer()
 
         integer sec_elapsed
