@@ -19,6 +19,7 @@ DEBUGLIB = libdebuglaps.a
 #
 
 SRC	= machine_dependent.F \
+          barnes_multivariate.F \
           cio.c \
 	  rwl_v3.c \
           fort2c_str.c \
@@ -32,7 +33,6 @@ SRC	= machine_dependent.F \
           array_diagnosis.f \
           atan3.f \
           atan3d.f \
-          barnes_multivariate.f \
           bilinear_interp.f \
           block_data.f \
           climate_sm.f \
