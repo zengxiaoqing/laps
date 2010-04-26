@@ -4317,6 +4317,11 @@ c
 
         len_model_max = 7
 
+!       Initialize with blanks
+        do i = 1,100
+            c_label(i:i) = ' '
+        enddo ! i
+
 !       call downcase(units_2d,units_2d)
 
         call s_len2(comment_2d,len_fcst)
