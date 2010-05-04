@@ -351,7 +351,7 @@ c                   the analysis domain
 
                call gdtost(image_ir,elem_dim,line_dim,
      .             r_llij_lut_ri(i,j),r_llij_lut_rj(i,j)
-     .            ,sa(i,j),0)
+     .            ,sa(i,j),.false.)
            
                sc(i,j)=sa(i,j)
                sT(i,j)=sa(i,j)
