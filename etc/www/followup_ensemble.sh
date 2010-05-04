@@ -16,8 +16,9 @@ model=$2
 LAPS_DATA_ROOT=$3
 WINDOW=$4
 RESOLUTION=$5
-datetime=$6
-utc_hhmm=$7
+LAPSINSTALLROOT=$6
+datetime=$7
+utc_hhmm=$8
 
 echo "WINDOW = $WINDOW"
 echo "RESOLUTION = $RESOLUTION"
@@ -46,7 +47,7 @@ do
   echo " "
   echo "Looping through $prod with call to laps_gifs_sub_fcst.sh"
   startdate=`date -u +%H:%M:%S`
-  $LAPS_ETC/laps_gifs_sub_spaghetti.sh $prod $WINDOW $LAPS_ETC $WWW_DIR $model $LAPS_DATA_ROOT $latest $datetime $RESOLUTION $domain $model
+  $LAPSINSTALLROOT/etc/www/lapsplot/laps_gifs_sub_spaghetti.sh $prod $WINDOW $LAPS_ETC $WWW_DIR $model $LAPS_DATA_ROOT $latest $datetime $RESOLUTION $domain $model
   enddate=`date -u +%H:%M:%S`
   echo "Timing info for $prod: $startdate $enddate"
 done
