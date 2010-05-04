@@ -369,6 +369,7 @@ if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r
     print $sys."\n";
     system($sys);
 
+    $t=gmtime();
     print $t." Running purger in fua to bypass possible soft link\n";
     $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
     $sys .= "-r " if($opt_r);
@@ -378,6 +379,7 @@ if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r
     print $sys."\n";
     system($sys);
 
+    $t=gmtime();
     print $t." Running purger in fsf to bypass possible soft link\n";
     $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
     $sys .= "-r " if($opt_r);
@@ -413,7 +415,9 @@ $execount = 0;
 $scriptcount = 0;
 
 $nexe = @LAPS_EXE;
-print "Number of executables = $nexe\n";
+
+$t=gmtime();
+print $t." Number of executables = $nexe\n";
 
 foreach $exe (@LAPS_EXE){
 
@@ -478,6 +482,7 @@ foreach $exe (@LAPS_EXE){
                 }else{   
                    $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script_name.pl $LAPS_LOG_PATH 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1";
                 }
+                $t=gmtime();
                 print $t." Running what-got-in script $wgi_script_name.pl\n";
                 &forksub($sys,$lockfile);
             }
@@ -649,9 +654,9 @@ foreach $exe (@LAPS_EXE){
 
 $t = gmtime;
 my $date = `date`;
-print "$date\n";
+print "$date";
 
-print LOG "$t\n";
+print LOG "$t finshed executables\n";
 unlink "$sched_lockfile";
 
 if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
@@ -701,11 +706,19 @@ if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
 }
 
 if($opt_f && (! $opt_q) && (! $opt_Q) ){ 
-    print LOG $t." Running www images postprocessing\n";
+    print     $t." Running www images followup_ncarg.sh\n";
+#   print LOG $t." Running www images followup_ncarg.sh\n";
     system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
+    $t = gmtime;
+    print     $t." Finished www images postprocessing\n";
+    print LOG $t." Finished www images postprocessing\n";
 }elsif($opt_F && (! $opt_q) && (! $opt_Q) ){
-    print LOG $t." Running www images postprocessing\n";
+    print     $t." Running www images followup_ncarg.sh\n";
+#   print LOG $t." Running www images followup_ncarg.sh\n";
     system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
+    $t = gmtime;
+    print     $t." Finished www images postprocessing\n";
+    print LOG $t." Finished www images postprocessing\n";
 }
 
 close(LOG);
