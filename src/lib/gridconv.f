@@ -1093,7 +1093,7 @@ c
 c===============================================================================
 c
       subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
-     .     lat,lon,grx,gry,bgmodel,cmodel)
+     .     lat,lon,grx,gry,bgmodel,cmodel,wrapped)
 
 c
       implicit none
@@ -1102,6 +1102,8 @@ c
 c
       real lat(nx_laps,ny_laps),lon(nx_laps,ny_laps),
      .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps) 
+
+      logical wrapped
 c
       integer i,j,k
       integer istatus
@@ -1228,7 +1230,7 @@ CWNI           endif
 CWNI        enddo
 CWNI     enddo
 
-      elseif( bgmodel.eq.13) then !PTM
+      elseif( wrapped ) then ! SCA
               
 
 
@@ -1275,12 +1277,13 @@ c
       end
 
       subroutine hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz,
-     .     grx,gry,fvi,flaps,bgmodel)
-
+     .     grx,gry,fvi,flaps,wrapped)
 c
       implicit none
 c
-      integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
+      integer nx_bg,ny_bg,nx_laps,ny_laps,nz        
+
+      logical wrapped
 c
 c *** Input vertically interpolated field.
 c *** Output Laps field
@@ -1308,7 +1311,7 @@ c
             if(grx(i,j).lt.r_missing_data.and. 
      .         gry(i,j).lt.r_missing_data)then
                call gdtost(fvi(1,1,k),nx_bg,ny_bg,
-     .              grx(i,j),gry(i,j),flaps(i,j,k),bgmodel)
+     .              grx(i,j),gry(i,j),flaps(i,j,k),wrapped)
             else
                flaps(i,j,k)=r_missing_data
             endif
@@ -1321,7 +1324,7 @@ c
 c
 c===============================================================================
 c
-      subroutine gdtost(ab,ix,iy,stax,stay,staval,bgmodel)
+      subroutine gdtost(ab,ix,iy,stax,stay,staval,wrapped)
 c
 c *** Subroutine to return stations back-interpolated values(staval)
 c        from uniform grid points using overlapping-quadratics.
@@ -1332,21 +1335,10 @@ c        and station column.
 c *** Values greater than 1.0e30 indicate missing data.
 c
       dimension ab(ix,iy),r(4),scr(4)
-      integer bgmodel
       logical wrapped ! WNI added
       include 'bgdata.inc'
 c_______________________________________________________________________________
 c
-CWNI  Add a section to identify wrapped grid and set the wrapped flag
-      wrapped = .FALSE.              ! WNI
-      IF (bgmodel .eq. 6 .or.        ! WNI
-     .       bgmodel .eq. 8 .or.     ! WNI
-     .       bgmodel .eq. 13 .or.    ! PTM
-     .       bgmodel .eq. 10.) THEN  ! WNI
-        wrapped = .true.             ! WNI
-      ENDIF                          ! WNI
-C WNI END ADDITON
-
       iy1=int(stay)-1
       if(stay.lt.1.0)iy1=1.0
       iy2=iy1+3
@@ -1475,13 +1467,12 @@ c
 c
       include 'bgdata.inc'
       yyy=missingflag
-      if ( .not. (x2 .gt. 1.e19 .or. x3 .gt. 1.e19 .or.
-     .            y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
+      if ( .not. (y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
 c
          wt1=(xxx-x3)/(x2-x3)
          wt2=1.0-wt1
 c
-         if (y4 .lt. 1.e19 .and. x4 .lt. 1.e19) then
+         if (y4 .lt. 1.e19) then
 c           yz22=(xxx-x3)*(xxx-x4)/((x2-x3)*(x2-x4))
             yz22=wt1*(xxx-x4)/(x2-x4)
 c           yz23=(xxx-x2)*(xxx-x4)/((x3-x2)*(x3-x4))
@@ -1493,7 +1484,7 @@ c           yz23=(xxx-x2)*(xxx-x4)/((x3-x2)*(x3-x4))
             yz24=0.0
          endif
 c
-         if (y1 .lt. 1.e19 .and. x1 .lt. 1.e19) then
+         if (y1 .lt. 1.e19) then
             yz11=(xxx-x2)*(xxx-x3)/((x1-x2)*(x1-x3))
 c           yz12=(xxx-x1)*(xxx-x3)/((x2-x1)*(x2-x3))
             yz12=wt1*(xxx-x1)/(x2-x1)
