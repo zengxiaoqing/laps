@@ -448,7 +448,7 @@ c
       print*,'lon0= ',lon0
 
       call init_hinterp(nxst,nyst,nx_dom,ny_dom,'LL',
-     .dom_lats_in,dom_lons_in,grx,gry,bgmodel,'     ')
+     .dom_lats_in,dom_lons_in,grx,gry,bgmodel,'     ',.true.)
 
       print*,'grid rx/ry computed'
       print*,'SW: grx/gry    1,1: ',grx(1,1),gry(1,1)
