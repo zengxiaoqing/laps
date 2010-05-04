@@ -348,11 +348,12 @@ c
        end subroutine
 
        subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
-     .     lat,lon,grx,gry,bgmodel,cmodel)
+     .     lat,lon,grx,gry,bgmodel,cmodel,wrapped)
 
          character  gproj*2
          character  cmodel*132
          integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
+         logical wrapped
          real   lat(nx_laps,ny_laps)
      .         ,lon(nx_laps,ny_laps)
      .         ,grx(nx_laps,ny_laps)
@@ -361,9 +362,10 @@ c
        end subroutine
 
        subroutine hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz
-     .,grx,gry,fvi,flaps,bgmodel)
+     .,grx,gry,fvi,flaps,wrapped)
 
-         integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
+         integer nx_bg,ny_bg,nx_laps,ny_laps,nz          
+         logical wrapped
          real   fvi(nx_bg,ny_bg,nz)
      .         ,flaps(nx_laps,ny_laps,nz)
      .         ,grx(nx_laps,ny_laps)
@@ -939,7 +941,7 @@ c
            itstatus(2)=init_timer()
 
            call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
-     .        lat,lon,grx,gry,bgmodel,cmodel)
+     .        lat,lon,grx,gry,bgmodel,cmodel,wrapped)
 
            print*,'LAPS (Input) Grid Corners'
            print*, 'SW: grx(1,1)/gry(1,1) ', grx(1,1),gry(1,1)
@@ -987,11 +989,11 @@ c
                  
            if(vertical_grid .ne. 'SIGMA_HT')then
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .                           grx,gry,htvi,ht,bgmodel)
+     .                           grx,gry,htvi,ht,wrapped)
            else ! PRESSURE or SIGMA_P
               if(vertical_grid .eq. 'SIGMA_P')then
                  call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .                              grx,gry,prbg_sfc,pr_sfc,bgmodel)
+     .                              grx,gry,prbg_sfc,pr_sfc,wrapped)
 
 !                Convert 1D sigma levels to 3D pressures (with surface pressure)
                  call get_sigmap_3d(pr_sfc,sigma1d,prgd,nx_laps,ny_laps       
@@ -999,36 +1001,43 @@ c
               endif
 
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,       
-     .                           grx,gry,prvi,prgd,bgmodel)
+     .                           grx,gry,prvi,prgd,wrapped)
            endif
 
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,uwvi,uw,bgmodel)
+     .        grx,gry,uwvi,uw,wrapped)
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,vwvi,vw,bgmodel)
+     .        grx,gry,vwvi,vw,wrapped)
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,tpvi,tp,bgmodel)
+     .        grx,gry,tpvi,tp,wrapped)
+           
+           if(.not. l_bilinear) then                                  
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .                           grx,gry,uwvi,uw,wrapped)
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .                           grx,gry,vwvi,vw,wrapped)
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .                           grx,gry,tpvi,tp,wrapped)
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .                           grx,gry,shvi,sh,wrapped)
 
-           if(bgmodel.eq.2.and.cmodel(1:ic).eq.'ORSM_HKO'.and.
-     .       .false.)then
-              print*,'use bilinear interp for ',cmodel(1:ic)
-              do k=1,nz_laps
-              do j=1,ny_laps
-              do i=1,nx_laps
-                 call bilinear_laps(grx(i,j),gry(i,j),nx_bg,ny_bg
-     .                             ,shvi(1,1,k),sh(i,j,k)) 
-                 call bilinear_laps(grx(i,j),gry(i,j),nx_bg,ny_bg
-     .                             ,wwvi(1,1,k),ww(i,j,k))
-              enddo
-              enddo
-              enddo
            else
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .           grx,gry,shvi,sh,bgmodel)
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .           grx,gry,wwvi,ww,bgmodel)
+              print*,'use bilinear_laps_3d for ',cmodel(1:ic)
+              call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
+     .                             ,nx_laps,ny_laps,nz_laps,uwvi,uw)
+              call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
+     .                             ,nx_laps,ny_laps,nz_laps,vwvi,vw)
+              call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
+     .                             ,nx_laps,ny_laps,nz_laps,tpvi,tp)
+              call bilinear_laps_3d(grx,gry,nx_bg,ny_bg  
+     .                             ,nx_laps,ny_laps,nz_laps,shvi,sh)
            endif
 
+           if(.not. lgb_only)then ! skip ww for sfc only option
+                call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .             grx,gry,wwvi,ww,wrapped)
+           endif
+          
            itstatus(2)=ishow_timer()
            print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
 c
@@ -1156,23 +1165,23 @@ c
             write(6,*)' Calling hinterp_field for surface variables'
 
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
+     .        grx,gry,htbg_sfc,ht_sfc,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,tdbg_sfc,td_sfc,bgmodel)
+     .        grx,gry,tdbg_sfc,td_sfc,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,tpbg_sfc,tp_sfc,bgmodel)
+     .        grx,gry,tpbg_sfc,tp_sfc,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,shbg_sfc,sh_sfc,bgmodel)
+     .        grx,gry,shbg_sfc,sh_sfc,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,uwbg_sfc,uw_sfc,bgmodel)
+     .        grx,gry,uwbg_sfc,uw_sfc,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,vwbg_sfc,vw_sfc,bgmodel)
+     .        grx,gry,vwbg_sfc,vw_sfc,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,prbg_sfc,pr_sfc,bgmodel)
+     .        grx,gry,prbg_sfc,pr_sfc,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,mslpbg,mslp,bgmodel)
+     .        grx,gry,mslpbg,mslp,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,pcpbg,pcp_sfc,bgmodel)
+     .        grx,gry,pcpbg,pcp_sfc,wrapped)
 c
 c Because not all model backgrounds have t_at_sfc (ground and/or sst)
 c then no need to hinterp unless it exists.
@@ -1180,7 +1189,7 @@ c
             if(lhif_tsfc)then
                print*,'Horizontally Interpolate T at Sfc (tgd)'        
                call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .           grx,gry,t_at_sfc,t_sfc,bgmodel)
+     .           grx,gry,t_at_sfc,t_sfc,wrapped)
             else
                print*,'DO NOT Horizontally Interpolate T at Sfc (tgd)'       
                t_sfc=missingflag
@@ -1203,9 +1212,9 @@ c
            else ! bgmodel = 1,3,9
 
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .                  grx,gry,prbg_sfc,pr_sfc,bgmodel)
+     .                  grx,gry,prbg_sfc,pr_sfc,wrapped)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .                  grx,gry,mslpbg,mslp,bgmodel)
+     .                  grx,gry,mslpbg,mslp,wrapped)
 
            endif ! bgmodel .NE. 1,3,9
 
