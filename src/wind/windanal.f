@@ -183,6 +183,8 @@ cdis
       l_variational = .false.
       l_withheld_only = .false.
 
+      single_ratio = 0.4
+
       ialloc_varobs_diff_spread = 0
 
 csms$serial(default=ignore)  begin              
@@ -287,6 +289,7 @@ csms$serial end
           stop
       endif
 
+!     No Radar Data
       call barnes_multivariate(varbuff                                ! O
      1        ,n_var,ncnt_total,obs_point_qced                        ! I
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
@@ -481,13 +484,14 @@ csms$serial end
      1                  ,i4time                                       ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
+!             Single Doppler Added
               call barnes_multivariate(varbuff                           ! O
      1           ,n_var,ncnt_total,obs_barnes                            ! I
      1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1           ,aerr,i4_loop_total                                     ! I/O 
      1           ,wt_p_radar,fnorm_dum,n_fnorm_dum                       ! I
      1           ,l_analyze_dum,.false.,rms_thresh                       ! I
-     1           ,r0_barnes_max_m,brns_conv_rate_wind                    ! I
+     1           ,r0_barnes_max_m*single_ratio,brns_conv_rate_wind       ! I
      1           ,topo_dum,rland_frac_dum,1,1                            ! I
      1           ,n_obs_lvl,istatus)                                     ! O
 
@@ -611,6 +615,7 @@ csms$serial end
      1                  ,i4time                                         ! I
      1                  ,rms_inst,rms_thresh)                           ! O
 
+!             Multi-Doppler Added
               call barnes_multivariate(varbuff                          ! O
      1          ,n_var,ncnt_total                                       ! I
      1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl! I   
@@ -752,6 +757,7 @@ csms$insert      print *, 'got to 10 processor=',me
      1                  ,i4time                                       ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
+!         Single and Multi-Doppler radar added
           call barnes_multivariate(varbuff                            ! O
      1       ,n_var,ncnt_total,obs_barnes                             ! I
      1       ,imax,jmax,kmax                                          ! I
@@ -759,7 +765,7 @@ csms$insert      print *, 'got to 10 processor=',me
      1       ,aerr,i4_loop_total                                      ! I/O 
      1       ,wt_p_radar,fnorm_dum,n_fnorm_dum                        ! I
      1       ,l_analyze_dum,.false.,rms_thresh                        ! I
-     1       ,r0_barnes_max_m,brns_conv_rate_wind                     ! I
+     1       ,r0_barnes_max_m*single_ratio,brns_conv_rate_wind        ! I
      1       ,topo_dum,rland_frac_dum,1,1                             ! I
      1       ,n_obs_lvl,istatus)                                      ! O
 
