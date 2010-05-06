@@ -30,14 +30,15 @@ cdis
 cdis
 cdis
 
-        subroutine get_cloud_deriv(ni,nj,nk,clouds_3d,cld_hts,
-     1                          temp_3d,rh_3d_pct,heights_3d,pres_3d,
-     1                          istat_radar,radar_3d,grid_spacing_cen_m,       
-     1                          l_mask_pcptype,
-     1                          ibase_array_lwc,itop_array_lwc,
+        subroutine get_cloud_deriv(ni,nj,nk,clouds_3d,cld_hts,            ! I
+     1                          temp_3d,rh_3d_pct,heights_3d,pres_3d,     ! I
+     1                          istat_radar,                              ! I/O
+     1                          radar_3d,grid_spacing_cen_m,              ! I  
+     1                          l_mask_pcptype,                           ! O
+     1                          ibase_array_lwc,itop_array_lwc,           ! O
      1                          iflag_slwc,slwc_3d,cice_3d,
      1                          thresh_cvr_cty_vv,thresh_cvr_lwc,
-     1                          l_flag_cloud_type,cldpcp_type_3d,
+     1                          l_flag_cloud_type,cldpcp_type_3d,         ! I/O
      1                          l_flag_mvd,mvd_3d,
      1                          l_flag_icing_index,icing_index_3d,
      1                          vv_to_height_ratio_Cu,                    ! I
@@ -46,6 +47,7 @@ cdis
      1                          l_flag_bogus_w,omega_3d,l_bogus_radar_w,
      1                          l_deep_vv,                                ! I
      1                          twet_snow,                                ! I
+     1                          l_flag_pcp_type,                          ! I
      1                          istatus)                                  ! O
 
 !       Steve Albers
@@ -107,6 +109,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         integer iflag_slwc
         logical   l_flag_cloud_type,l_flag_mvd,l_flag_icing_index
      1           ,l_flag_bogus_w,l_cloud,l_bogus_radar_w,l_deep_vv
+     1           ,l_flag_pcp_type
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(ni,nj)
@@ -579,14 +582,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         I4_elapsed = ishow_timer()
 
 !       Simulate Radar Data
-        if(.true.)then
-!           istat_radar = 1
-            do i = 1,ni
-            do j = 1,nj
-                l_mask_pcptype(i,j) = .false.
-            enddo ! j
-            enddo ! i
-        endif
+        istat_radar = 1
+        l_mask_pcptype = .false.
 
         if(istat_radar .eq. 1)then ! Get 3D precip type
 
