@@ -1092,8 +1092,9 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
 
               if(.true. .and. n .le. 20)then
                   write(6,501)n,i,j,k,kk,vertical_weight,time_wt
-     1                       ,obs_barnes(n)%value(1)       
- 501              format(5i5,2f8.4,f8.2)
+     1                       ,obs_barnes(n)%value(1)
+     1                       ,r0_vert_ob,exponent       
+ 501              format(5i5,2f8.4,f8.2,2f8.4)
               endif
 
               weight_term = obs_barnes(n)%weight * vertical_weight 
