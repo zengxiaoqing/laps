@@ -789,7 +789,7 @@
 !      common/partemwv/refrc,eps,wvnm,kxysym
 !      common/abtmtrxs/tmat(m2rank,m2rank),a(m2rank,m2rank)
     real :: CRTNM
-      real*16  r1,r2,ssnr1,ssnr2,x
+      real*8  r1,r2,ssnr1,ssnr2,x
       complex*16 c1,c2,cj
 !       write(*,*) 'hallo'
       cj=cmplx(0.0,-1.0)
