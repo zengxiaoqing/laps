@@ -180,6 +180,7 @@
                 obs_barnes_valid(n_obs_valid)%k = obs_barnes(iob)%k
                 obs_barnes_valid(n_obs_valid)%weight 
      1                                        = obs_barnes(iob)%weight
+                obs_barnes_valid(n_obs_valid)%vert_rad_rat = 1.
                 obs_barnes_valid(n_obs_valid)%i4time
      1                                        = obs_barnes(iob)%i4time
                 obs_barnes_valid(n_obs_valid)%value(1) 
