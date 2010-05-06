@@ -5,6 +5,8 @@ laps_deriv_main                                         laps_deriv.f
     laps_deriv                                              "
         laps_deriv_sub                                  laps_deriv_sub.f
             get_deriv_parms                             laps_deriv.f
+            get_clouds_3dgrid                           lib/getcld3d.f
+            interp_height_pres_fast                         "
             get_cloud_deriv                             lib/get_cloud_deriv.f
                 get_stability                               "
                 get_cloudtype                               "
