@@ -150,7 +150,7 @@ cdis
         logical l_flag_cloud_type
         logical l_flag_icing_index
         logical l_flag_bogus_w, l_bogus_radar_w, l_deep_vv
-        logical l_flag_snow_potential
+        logical l_flag_pcp_type        
         logical l_parse
 
         logical l_sao_lso
@@ -217,8 +217,6 @@ cdis
         integer cldpcp_type_3d(NX_L,NY_L,NZ_L) ! Also contains 3D precip type
 
 !       Output array declarations
-!       real out_array_4d(NX_L,NY_L,NZ_L,2)
-        real, allocatable, dimension(:,:,:,:) :: out_array_4d
         real out_array_3d(NX_L,NY_L,NZ_L)
 
         real, allocatable, dimension(:,:,:) :: slwc
@@ -598,7 +596,10 @@ c read in laps lat/lon and topo
         l_flag_cloud_type = .true.
         l_flag_icing_index = .true.
         l_flag_bogus_w = .true.
-        l_flag_snow_potential = .true.
+        l_flag_pcp_type = .true.
+
+!       if(.not. l_flag_cloud_type)then ! Read in instead
+!       endif
 
         call get_cloud_deriv(
      1                NX_L,NY_L,NZ_L,clouds_3d,cld_hts,
@@ -616,6 +617,7 @@ c read in laps lat/lon and topo
      1                l_flag_bogus_w,w_3d,l_bogus_radar_w,                 ! I
      1                l_deep_vv,                                           ! I
      1                twet_snow,                                           ! I
+     1                l_flag_pcp_type,                                     ! I
      1                istatus)                                             ! O
         if(istatus .ne. 1)then
             write(6,*)' Bad status return from get_cloud_deriv'
@@ -623,6 +625,58 @@ c read in laps lat/lon and topo
         endif
 
         I4_elapsed = ishow_timer()
+
+        if(l_flag_cloud_type)then
+
+!           Write 3D Cloud Type
+!           4 most significant bits are precip type, other 4 are cloud type
+            do k = 1,NZ_L
+            do j = 1,NY_L
+            do i = 1,NX_L
+                iarg = cldpcp_type_3d(i,j,k)
+                out_array_3d(i,j,k) = iarg - iarg/16*16         ! 'CTY'
+            enddo
+            enddo
+            enddo
+
+            ext = 'cty'
+            var = 'CTY'
+            units = 'NONE'
+            comment = 
+     1         'Cloud Type: (1-10) - St,Sc,Cu,Ns,Ac,As,Cs,Ci,Cc,Cb'
+            call put_laps_3d(i4time,ext,var,units
+     1                      ,comment,out_array_3d             
+     1                      ,NX_L,NY_L,NZ_L)
+
+            I4_elapsed = ishow_timer()
+
+        endif ! l_flag_cloud_type
+
+!       Calculate "SFC" cloud type
+!       Now this is simply the cloud type of the lowest significant
+!       (> 0.65 cvr) layer present. If a CB is present, it is used instead.
+        do i = 1,NX_L
+        do j = 1,NY_L
+            r_cld_type_2d(i,j) = 0
+
+!           Pick lowest "significant" layer
+            do k = NZ_L,1,-1
+                cld_type_3d = out_array_3d(i,j,k)
+                if(cld_type_3d .gt. 0)then
+                    r_cld_type_2d(i,j) = cld_type_3d
+                endif
+            enddo ! k
+
+!           Pick a CB if present
+            do k = NZ_L,1,-1
+                cld_type_3d = out_array_3d(i,j,k)
+                if(cld_type_3d .eq. 10)then
+                    r_cld_type_2d(i,j) = cld_type_3d
+                endif
+            enddo ! k
+
+        enddo ! j
+        enddo ! i
 
         write(6,*)
         write(6,*)' Inserting thin clouds into LWC/ICE fields'
@@ -710,7 +764,6 @@ c read in laps lat/lon and topo
      1                             ,NX_L,NY_L,NZ_L)
 
 !           Compute thresholded precip type
-
             do i = 1,NX_L
             do j = 1,NY_L
                 iarg = i2_pcp_type_2d(i,j)
@@ -1008,13 +1061,6 @@ c read in laps lat/lon and topo
         comment_a(5) = 'Snow Content'
         comment_a(6) = 'Precipitating Ice Content'
 
-!       call move_3d(slwc(1,1,1)  ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L)       
-!       call move_3d(cice(1,1,1)  ,out_array_4d(1,1,1,2),NX_L,NY_L,NZ_L)
-!       call move_3d(pcpcnc(1,1,1),out_array_4d(1,1,1,3),NX_L,NY_L,NZ_L)
-!       call move_3d(raicnc(1,1,1),out_array_4d(1,1,1,4),NX_L,NY_L,NZ_L)
-!       call move_3d(snocnc(1,1,1),out_array_4d(1,1,1,5),NX_L,NY_L,NZ_L)
-!       call move_3d(piccnc(1,1,1),out_array_4d(1,1,1,6),NX_L,NY_L,NZ_L)
-
         call put_laps_3d_multi(i4time,ext,var_a,units_a,comment_a
      1                        ,slwc,cice
      1                        ,pcpcnc,raicnc
@@ -1056,77 +1102,26 @@ c read in laps lat/lon and topo
 
         j_status(n_lrp) = ss_normal
 
-!       Write out Cloud/3D Precip Type Field
-        ext = 'lty'
-        var_a(1) = 'PTY'
-        var_a(2) = 'CTY'
-        units_a(1) = 'NONE'
-        units_a(2) = 'NONE'
-        comment_a(1) = 'Precip Type: 0-None,1-Rain,2-Snow,3-ZR,4-IP,5-Ha
-     1il'
-        comment_a(2) = 'Cloud Type: (1-10) - St,Sc,Cu,Ns,Ac,As,Cs,Ci,Cc,
-     1Cb'
-
-        allocate( out_array_4d(NX_L,NY_L,NZ_L,2), STAT=istat_alloc )
-        if(istat_alloc .ne. 0)then
-            write(6,*)' ERROR: Could not allocate out_array_4d'
-            stop
-        endif
-
+!       Write 3D Precip Type
 !       4 most significant bits are precip type, other 4 are cloud type
         do k = 1,NZ_L
         do j = 1,NY_L
         do i = 1,NX_L
             iarg = cldpcp_type_3d(i,j,k)
-            out_array_4d(i,j,k,1) = iarg/16                   ! 'PTY'
-            out_array_4d(i,j,k,2) = iarg - iarg/16*16         ! 'CTY'
+            out_array_3d(i,j,k) = iarg/16                   ! 'PTY'
         enddo
         enddo
         enddo
 
-        do i = 1,2
-           if(i .eq. 1)then
-               ext = 'pty'
-           else
-               ext = 'cty'
- 
-           endif
-           call put_laps_3d(i4time,ext,var_a(i),units_a(i)
-     1                     ,comment_a(i),out_array_4d(1,1,1,i)
-     1                     ,NX_L,NY_L,NZ_L)
-        enddo ! i
-
-        j_status(n_lty) = istatus
+        ext = 'pty'
+        var = 'PTY'
+        units = 'NONE'
+        comment = 'Precip Type: 0-None,1-Rain,2-Snow,3-ZR,4-IP,5-Hail'
+        call put_laps_3d(i4time,ext,var,units
+     1                  ,comment,out_array_3d(1,1,1)
+     1                  ,NX_L,NY_L,NZ_L)
 
         I4_elapsed = ishow_timer()
-
-!       Calculate "SFC" cloud type
-!       Now this is simply the cloud type of the lowest significant
-!       (> 0.65 cvr) layer present. If a CB is present, it is used instead.
-        do i = 1,NX_L
-        do j = 1,NY_L
-            r_cld_type_2d(i,j) = 0
-
-!           Pick lowest "significant" layer
-            do k = NZ_L,1,-1
-                cld_type_3d = out_array_4d(i,j,k,2)
-                if(cld_type_3d .gt. 0)then
-                    r_cld_type_2d(i,j) = cld_type_3d
-                endif
-            enddo ! k
-
-!           Pick a CB if present
-            do k = NZ_L,1,-1
-                cld_type_3d = out_array_4d(i,j,k,2)
-                if(cld_type_3d .eq. 10)then
-                    r_cld_type_2d(i,j) = cld_type_3d
-                endif
-            enddo ! k
-
-        enddo ! j
-        enddo ! i
-
-        deallocate( out_array_4d )
 
 !       Write sfc precip and cloud type
         var_a(1) = 'PTY'
