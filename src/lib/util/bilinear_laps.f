@@ -240,7 +240,7 @@ cdoc    points. Hopefully it's more efficient to call bilinear_laps_2d.
         real ri_a(nx_laps,ny_laps),rj_a(nx_laps,ny_laps) ! I
         real result(nx_laps,ny_laps,nz_laps)             ! O
 
-        do k = 1,nk
+        do k = 1,nz_laps
            call bilinear_laps_2d(ri_a,rj_a,imax,jmax,nx_laps,ny_laps
      1                          ,array_3d(1,1,k),result(1,1,k))
         enddo ! k
