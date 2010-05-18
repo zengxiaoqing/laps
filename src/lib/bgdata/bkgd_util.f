@@ -1,5 +1,5 @@
       subroutine rotate_lga_winds(ldir,bgmodel,cmodel,fullname
-     1,gproj,nx,ny,nz,lon,uw3d,vw3d,uw2d,vw2d)
+     1,gproj,nx,ny,nz,lon,uw3d,vw3d,uw2d,vw2d,lgb_only)
 
       use mem_namelist
       implicit none
@@ -10,18 +10,19 @@
       integer nx,ny,nz
       integer i,j,k
       integer bgmodel
-      integer istatus
-      logical ldir
+      integer istatus,istatus_rot,ishow_timer
+      logical ldir,lgb_only
       real    u_true,v_true
       real    u_grid,v_grid
+      real    u_true_2d(nx,ny),v_true_2d(nx,ny)
+      real    u_grid_2d(nx,ny),v_grid_2d(nx,ny)
       real    lon(nx,ny)
       real    uw3d(nx,ny,nz)
       real    vw3d(nx,ny,nz)
       real    uw2d(nx,ny)
       real    vw2d(nx,ny)
       real    angle(nx,ny,2)  !both grid to true N and true to grid N.
-      real    latitude
-      real    projrot_latlon
+      real    latitude(nx,ny),projrot_latlon(nx,ny)
 
 c
 c reset or restore common projection parameters
@@ -32,21 +33,27 @@ c
 c build look-up-tables for rotation angles in 2D grid and
 c apply this to grid winds
 c
+      istatus_rot=ishow_timer()
+
       latitude = -999. ! Since lat is not yet passed in
+      call projrot_latlon_2d(latitude,lon,nx,ny,projrot_latlon,istatus)
+
       do j = 1, ny
       do i = 1, nx
-
-         angle(i,j,1)= -projrot_latlon(latitude,lon(i,j),istatus)  !grid 2 true
+         angle(i,j,1)= -projrot_latlon(i,j)                        !grid 2 true
          angle(i,j,2)= -angle(i,j,1)                               !true 2 grid
+      enddo
+      enddo
 
-      enddo
-      enddo
+      write(6,*)'rotate_lga_winds - built lookup table'
+      istatus_rot=ishow_timer()
 
       if(ldir)then   !from grid to true North
 c 3d
-         do k = 1, nz
-         do j = 1, ny
-         do i = 1, nx
+        if(.not. lgb_only)then
+          do k = 1, nz
+          do j = 1, ny
+          do i = 1, nx
 
             call     rotate_vec(uw3d(i,j,k),
      1                          vw3d(i,j,k),
@@ -56,30 +63,26 @@ c 3d
             uw3d(i,j,k) = u_true
             vw3d(i,j,k) = v_true
 
-         enddo
-         enddo
-         enddo
+          enddo
+          enddo
+          enddo
+        endif
 c 2d
-         do j = 1, ny
-         do i = 1, nx
+        call   rotate_vec_2d(uw2d,
+     1                       vw2d,
+     1                       u_true_2d,
+     1                       v_true_2d,
+     1                       angle(1,1,1),nx,ny)
 
-            call     rotate_vec(uw2d(i,j),
-     1                          vw2d(i,j),
-     1                          u_true,
-     1                          v_true,
-     1                          angle(i,j,1))
-
-            uw2d(i,j) = u_true
-            vw2d(i,j) = v_true
-
-         enddo
-         enddo
+        uw2d = u_true_2d
+        vw2d = v_true_2d
 
       else !rotate from true to grid N.
 c 3d
-         do k = 1, nz
-         do j = 1, ny
-         do i = 1, nx
+        if(.not. lgb_only)then
+          do k = 1, nz
+          do j = 1, ny
+          do i = 1, nx
 
             call     rotate_vec(uw3d(i,j,k),
      1                          vw3d(i,j,k),
@@ -89,31 +92,33 @@ c 3d
             uw3d(i,j,k) = u_grid
             vw3d(i,j,k) = v_grid
 
-         enddo
-         enddo
-         enddo
+          enddo
+          enddo
+          enddo
+        endif
 c 2d
-         do j = 1, ny
-         do i = 1, nx
-            call     rotate_vec(uw2d(i,j),
-     1                          vw2d(i,j),
-     1                          u_grid,
-     1                          v_grid,
-     1                          angle(i,j,2))
+        call rotate_vec_2d(uw2d,
+     1                     vw2d,
+     1                     u_grid_2d,
+     1                     v_grid_2d,
+     1                     angle(1,1,2),nx,ny)
 
-            uw2d(i,j) = u_grid
-            vw2d(i,j) = v_grid
-         enddo
-         enddo
+        uw2d = u_grid_2d
+        vw2d = v_grid_2d
 
       endif
+
+      write(6,*)'end of rotate_lga_winds, lgb_only = ',lgb_only
+      istatus_rot=ishow_timer()
+
       return
       end
 c
 c=======================================================================
 c
       subroutine rotate_background_uv(nx,ny,nz,lon,bgmodel,cmodel
-     +,fullname,gproj,slon0,slat1,slat2,uw,vw,uw_sfc,vw_sfc,istatus)
+     +,fullname,gproj,slon0,slat1,slat2,uw,vw,uw_sfc,vw_sfc,lgb_only
+     +,istatus)
 c
 c
 c
@@ -144,6 +149,7 @@ c     call get_c6_maproj(c6_maproj,istatus)
 c     call get_standard_longitude(std_lon,istatus)
 c     call get_standard_latitudes(std_lat1,std_lat2,istatus)
 
+      logical lgb_only
 
       print*,'Rotate u/v components'
       print*
@@ -177,7 +183,7 @@ c std_lon by virtue of library routines.
             print*,'Rotate grid-north (bkgd) to true-north (LAPS)'
 
             call rotate_lga_winds(.true.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
          endif
 c ----------------------------------------------------------------
@@ -192,7 +198,7 @@ c ----------------------------------------------------------------
             print*,'Rotate true-north (bkgd) to grid-north (LAPS)'
 
             call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
          elseif(gproj.eq.'PS')then
 
@@ -212,11 +218,11 @@ c currently we are only considering polar stereo, not local stereo.
 
                 print*,'Rotate grid-north (bkgd) to true-north'
                 call rotate_lga_winds(.true.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
                 print*,'Rotate true-north to grid-north (LAPS)'
                 call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
              endif
 
@@ -230,12 +236,12 @@ c background is lambert
              print*,'Rotate grid-north (bkgd) to true-north'
 
              call rotate_lga_winds(.true.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
              print*,'Rotate true-north to grid-north (LAPS)'
 
              call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
          endif
 
@@ -253,7 +259,7 @@ c ----------------------------------------------------------------
             print*,'Rotate true-north (bkgd) to grid-north (LAPS)'   ! because MC/LL/LE grids are true north
 
             call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
          elseif(gproj.eq.'PS'.or.gproj.eq.'LC')then
 
@@ -263,12 +269,12 @@ c ----------------------------------------------------------------
             print*,'Rotate grid-north (bkgd) to true-north'
 
             call rotate_lga_winds(.true.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
              print*,'Rotate true-north to grid-north (LAPS)'
 
              call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
-     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc,lgb_only)
 
          endif
 
