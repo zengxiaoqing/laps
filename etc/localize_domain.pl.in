@@ -335,13 +335,17 @@ if($WHICH_TYPE eq "laps"){
 
 my $command;
 if( !defined $no_ggm ){
+    if( ($varx*$vary) > 6000000){
+        print "Large domain - using small version of nest7grid CDL file to help keep static file size under 2GB\n";
+	run_sys::run_sys("cp $DATA_ROOT/data/cdl/nest7grid_small.cdl $DATA_ROOT/cdl/nest7grid.cdl");
+    }
     if(defined $qspn && $q_sub eq "q"){
        $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -q $qspn -n rt gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
     }elsif(defined $qspn && $q_sub eq "Q"){
        if( substr($ENV{HOSTTYPE},0,4) eq "i386"){
-          $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n ncomp -w gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
+          $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n serial -w gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
        }else{
-          $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n ecomp -w gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
+          $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n serial -w gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
        }
     }else{
        $command = "$INSTALL_ROOT/bin/gridgen_model.exe";
