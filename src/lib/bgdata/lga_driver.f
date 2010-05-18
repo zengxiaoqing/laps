@@ -432,6 +432,9 @@ C WNI END ADDITON
          return
       endif
 
+      istatus=ishow_timer()
+      write(6,*)' Returned from get_bkgd_mdl_info'
+
       llapsfua=.false.
       if(bgmodel.eq.0)then
          if(cmodel(1:ic).eq.'MODEL_FUA'.or.
@@ -713,14 +716,17 @@ c             goto900
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
      +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,istatus_prep(nf))
 
-           if(.false.)then
+       istatus=ishow_timer()
+       write(6,*)' Returned from read_bgdata'
+
+       if(.false.)then
            print*,'After read'
            do k=1,nzbg_ww
               rmaxvv=maxval(wwbg(:,:,k))
               rminvv=minval(wwbg(:,:,k))
               print*,'k Max/Min vv ',k,rmaxvv,rminvv
            enddo
-           endif
+       endif
 
        if (istatus_prep(nf) .ne. 0) then
 
@@ -987,10 +993,12 @@ c
 
           else
                  
-           if(vertical_grid .ne. 'SIGMA_HT')then
+           if(vertical_grid .ne. 'SIGMA_HT')then ! PRESSURE or SIGMA_P
+              itstatus(2)=ishow_timer()
+              print*,'use hinterp_field for HT ',cmodel(1:ic)
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,htvi,ht,wrapped)
-           else ! PRESSURE or SIGMA_P
+           else 
               if(vertical_grid .eq. 'SIGMA_P')then
                  call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .                              grx,gry,prbg_sfc,pr_sfc,wrapped)
@@ -1003,13 +1011,6 @@ c
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,       
      .                           grx,gry,prvi,prgd,wrapped)
            endif
-
-           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,uwvi,uw,wrapped)
-           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,vwvi,vw,wrapped)
-           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,tpvi,tp,wrapped)
            
            if(.not. l_bilinear) then                                  
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
@@ -1022,13 +1023,23 @@ c
      .                           grx,gry,shvi,sh,wrapped)
 
            else
-              print*,'use bilinear_laps_3d for ',cmodel(1:ic)
+              itstatus(2)=ishow_timer()
+              print*,'use bilinear_laps_3d for U ',cmodel(1:ic)
               call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,uwvi,uw)
+
+              itstatus(2)=ishow_timer()
+              print*,'use bilinear_laps_3d for V ',cmodel(1:ic)
               call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,vwvi,vw)
+
+              itstatus(2)=ishow_timer()
+              print*,'use bilinear_laps_3d for T ',cmodel(1:ic)
               call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,tpvi,tp)
+
+              itstatus(2)=ishow_timer()
+              print*,'use bilinear_laps_3d for Q ',cmodel(1:ic)
               call bilinear_laps_3d(grx,gry,nx_bg,ny_bg  
      .                             ,nx_laps,ny_laps,nz_laps,shvi,sh)
            endif
@@ -1325,7 +1336,7 @@ c rotate them to the LAPS (output) domain as necessary.
 
            call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
      &,bgmodel,cmodel,fullname,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc
-     &,istatus)
+     &,lgb_only,istatus)
            if(istatus.ne.1)then
               print*,'Error in rotate_background_uv '
               return
