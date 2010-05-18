@@ -97,7 +97,7 @@ c
       character*256 bgpath
       integer bgmodels(maxbgmodels)
       integer bgmodel
-      integer istatus
+      integer istatus, init_timer
  
       character*13 cvt_i4time_wfo_fname13
 c
@@ -140,6 +140,7 @@ c
 c Read information from static/nest7grid.parms
 
       print *,'istatus ',istatus
+      istatus=init_timer()
       call get_grid_dim_xy(nx_laps,ny_laps,istatus)
       call get_laps_dimensions(nz_laps,istatus)
       call get_laps_cycle_time(laps_cycle_time,istatus)
