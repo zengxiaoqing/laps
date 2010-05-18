@@ -14,6 +14,7 @@ program lga                                      lga.f
          get_ruc2_dims                           bgdata/readruc2_pub.f
          readavnpublicdims
          degrib_nav                              degrib/readgrib.F90
+      get_lgb_source                             bgdata/lga_driver.f
       read_bgdata                                bgdata/readbgdata.f
          read_fuafsf_cdf   
          get_lapsdata_3d
@@ -36,10 +37,17 @@ program lga                                      lga.f
       sfcbkgd                                    bgdata/sfcbkgd.f
          interp_to_sfc                           util/interp_to_sfc.f
          compute_sfc_bgfields                    bgdata/sfcbkgd.f
+      rotate_background_uv                       bgdata/bkgd_util.f
+         rotate_lga_winds                                "
       interp_to_sfc                              util/interp_to_sfc.f
       sfcbkgd                                    bgdata/sfcbkgd.f
       time_interp                                bgdata/lga_interp_subs.f
       write_lga                                  bgdata/writelgalgb.f
          write_laps
-   lga_driver_wrfarw
+   lga_driver_wrfarw                             wrf/lga_driver_wrfarw.f90
+      get_acceptable_wrf
+      wrf2lga                                    wrf/module_wrf_lga.f90
+         vinterp_wrfarw2p                                "
+         hinterp_wrf2lga                                 "
+            interpolate_standard                 lib/modules/module_horiz_interp.f90
 
