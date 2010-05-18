@@ -98,7 +98,7 @@ cdis
 
         logical l_packed_output 
         logical l_use_co2_mode1, l_use_co2_mode2
-        logical l_evap_radar
+        logical l_evap_radar, l_get_cloudtype
         logical l_trust_narrowband ! should narrowband be trusted (i.e. not 
                                    ! QC'd out) in the absence of other data?
 
@@ -203,10 +203,13 @@ cdis
         real dum3_array(NX_L,NY_L)
         real dum4_array(NX_L,NY_L)
 
-      ! Used for "Potential" Precip Type
+!       Arguments for calling get_cloud_deriv
         logical l_mask_pcptype(NX_L,NY_L)
         integer ibase_array(NX_L,NY_L)
         integer itop_array(NX_L,NY_L)
+        logical   l_flag_cloud_type,l_flag_mvd,l_flag_icing_index
+     1           ,l_flag_bogus_w,l_bogus_radar_w,l_deep_vv
+     1           ,l_flag_pcp_type
 
         logical l_unresolved(NX_L,NY_L)
 
@@ -1364,6 +1367,38 @@ C       EW SLICES
         endif ! iwrite_output
 
 500     continue
+
+        l_get_cloudtype = .false.
+
+        if(l_get_cloudtype)then ! Compute just the cloud type
+!           call get_pres_3d(i4time,NX_L,NY_L,NZ_L,pres_3d,istatus)
+            l_flag_cloud_type = .true.
+            l_flag_mvd = .false.
+            l_flag_icing_index = .false.
+            l_flag_bogus_w = .false.
+            l_deep_vv = .false.
+!           call get_cloud_deriv(NX_L,NY_L,NZ_L,clouds_3d,cld_hts         ! I
+!!   1                          temp_3d,rh_3d_dum,heights_3d,pres_3d,     ! I
+!!   1                          istat_radar,radar_3d,grid_spacing_cen_m,  ! I  
+!    1                          l_mask_pcptype,                           ! O
+!    1                          ibase_array,itop_array,                   ! O
+!!   1                          iflag_slwc,slwc_3d,cice_3d,
+!!   1                          thresh_cvr_cty_vv,thresh_cvr_lwc,
+!!   1                          l_flag_cloud_type,cldpcp_type_3d,         ! I/O
+!!   1                          l_flag_mvd,mvd_3d,
+!!   1                          l_flag_icing_index,icing_index_3d,
+!!   1                          vv_to_height_ratio_Cu,                    ! I
+!!   1                          vv_to_height_ratio_Sc,                    ! I
+!!   1                          vv_for_St,                                ! I
+!!   1                          l_flag_bogus_w,omega_3d,l_bogus_radar_w,
+!    1                          l_deep_vv,                                ! I
+!    1                          twet_snow_dum,                            ! I
+!!   1                          l_flag_pcp_type,                          ! I
+!!   1                          istatus)                                  ! O
+
+!           Write CTY field          
+
+        endif
 
 999     continue
 
