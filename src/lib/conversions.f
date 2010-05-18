@@ -1216,6 +1216,20 @@ cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
       return
       end
 
+      subroutine rotate_vec_2d(u1,v1,u2,v2,angle,ni,nj)
+
+cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
+
+      real u1(ni,nj),v1(ni,nj),u2(ni,nj),v2(ni,nj),angle(ni,nj)
+
+      include 'trigd.inc'
+
+      u2(:,:) =  u1(:,:) * cosd(angle(:,:)) + v1(:,:) * sind(angle(:,:))
+      v2(:,:) = -u1(:,:) * sind(angle(:,:)) + v1(:,:) * cosd(angle(:,:))
+
+      return
+      end
+
 
         subroutine   disp_to_uv(dir,
      1                          speed,
