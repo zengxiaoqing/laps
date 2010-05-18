@@ -288,7 +288,10 @@ if(defined $opt_p){
    &laps_tools::update_nl($LAPS_DATA_ROOT,"balance.nl","ADV_ANAL_BY_T_MIN",$opt_p);
 }
 
-my $node_type = "ncomp";
+my $node_type_multi  = "comp";
+#my $node_type_single = "comp";
+my $node_type_single = "serial";
+my $node_type;
 
 #
 #  - The second argument is the time delay in hours to 
@@ -496,14 +499,20 @@ foreach $exe (@LAPS_EXE){
 
         $sms_path = "SMSINSTALLROOT";
 
+        if($opt_n){
+            $node_type_multi = $opt_n;
+        }
+
         if($exe =~ "wind"){
             $nodes_current = 1; # 4
         }else{
             $nodes_current = 1;
         }
 
-        if($opt_n){
-            $node_type = $opt_n;
+        if($nodes_current == 1){
+            $node_type = $node_type_single;
+        }else{
+            $node_type = $node_type_multi;
         }
 
         if($execount < $nexe){ # Not yet at end of the list
@@ -538,7 +547,12 @@ foreach $exe (@LAPS_EXE){
                     print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$wall_time_hr:$wall_time_min:00 -A $opt_q\n";
                 }elsif($opt_Q){ 
                     print TFILE "#\$ -pe $node_type $nodes_current\n";
-                    print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                    if($node_type eq "serial"){
+                        print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=3.6G\n";
+#                       print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                    }else{
+                        print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                    }
                     print TFILE "#\$ -A $opt_Q\n";
                     print TFILE "#\$ -S /bin/sh\n";
                     print TFILE "#\$ -cwd\n";
