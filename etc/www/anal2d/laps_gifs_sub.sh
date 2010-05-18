@@ -119,7 +119,7 @@ echo "netpbm=$netpbm"
 
 if test -r /opt/ncarg/bin/ctrans; then
     date
-    echo "Running ctrans and netpbm programs to make gmeta_$prod.gif file on EJET using SSH to IJET"
+    echo "Running ctrans and netpbm programs to make gmeta_$prod.gif file on JET"
     COMFILE=$LAPS_DATA_ROOT/myctrans
     echo "COMFILE = $COMFILE"
     echo "#!/bin/csh" > $COMFILE                     
@@ -134,12 +134,18 @@ if test -r /opt/ncarg/bin/ctrans; then
     cp gmeta gmeta_$prod
 
 elif test "$netpbm" = "yes"; then 
+    if test -r /whome; then
+        CTRANS=/opt/ncl/5.1.0_bin/bin/ctrans
+    else
+        CTRANS=$NCARG_ROOT/bin/ctrans
+    fi
+
     date
     echo "Running $NCARG_ROOT/bin/ctrans and netpbm programs to make gmeta_$prod.gif file"
     which rasttopnm
     which ppmtogif
-    echo "$NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif"
-          $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
+    echo "$CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif"
+          $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
     date
 
 else
