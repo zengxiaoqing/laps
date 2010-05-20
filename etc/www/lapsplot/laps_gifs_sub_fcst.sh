@@ -16,6 +16,8 @@ RESOLUTION=$9
 domain=$10
 model=$11
 
+echo " "
+echo "start laps_gifs_sub_fcst.sh..."
 
 uscore="_"
 MACHINE=`uname -n`
@@ -47,7 +49,6 @@ mkdir -p $SCRATCH_DIR
 mkdir -p $ARCHIVE
 mkdir -p $RECENT
 
-echo "script laps_gifs_sub_fcst.sh..."
 echo "prod ="$prod
 echo "WINDOW ="$WINDOW
 echo "NCARG_ROOT ="$NCARG_ROOT
@@ -78,7 +79,8 @@ if test $LEN_DATETIME = "13" || test $LEN_DATETIME = "14"; then
     echo "cycle="$cycle
     echo "fcsthr="$fcsthr
     cat /dev/null > $SCRATCH_DIR/lapsplot.$prod.tmp
-    for fname in $LAPS_ETC/lapsplot.$prod.?
+#   for fname in $LAPS_ETC/lapsplot.$prod.?
+    for fname in $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.?
     do
       cat $fname >> $SCRATCH_DIR/lapsplot.$prod.tmp
       cat $SCRATCH_DIR/datetime >> $SCRATCH_DIR/lapsplot.$prod.tmp
