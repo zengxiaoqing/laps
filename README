@@ -281,12 +281,14 @@
      graphics. The environment variable $NCARG_ROOT should be set when
      configuring, compiling, or running 'lapsplot.exe'. 
      
-     Before running 'configure', check that 'ncargf77' is in your path.
-     If you are using a compiler other than 'f77', check after running 
-     'configure' to see that the right thing was done by inspecting 'NCARGFC' 
-     and 'FC' within 'src/include/makefile.inc'. If configure wants you to use 
-     'ncargf90', you may consider soft linking 'ncargf90' to the 'ncargf77' 
-     script or copying 'ncargf77' to a new location and calling it 'ncargf90'. 
+     Before running 'configure', check that 'ncargf77' and/or 'ncargf90' is in 
+     your path. If you are using a compiler other than 'f77', check after 
+     running 'configure' to see that the right thing was done by inspecting 
+     'NCARGFC' and 'FC' within 'src/include/makefile.inc'. 'NCARGFC' should 
+     point to either the 'ncargf90' or 'ncargf77' script. If configure wants 
+     to use 'ncargf90' and you don't yet have one, then consider making a soft 
+     link called 'ncargf90' that points to the 'ncargf77' script, or copying 
+     'ncargf77' to a new location and calling it 'ncargf90'. 
 
      If you only have an 'ncarg90' script (i.e. no 'ncargf77'), you may want 
      to also make a script called 'ncargf77' that lists the 'f77' compiler.
@@ -2164,6 +2166,13 @@ can be gotten directly from GSD)
    mailing us a CD or DVD. Alternatively if you have the untarred 
    $LAPS_DATA_ROOT files on your web server we can browse through the 
    directories for the log and product files as needed to help diagnose the run.
+
+   If the $LAPS_DATA_ROOT is large it can be pared down as there is a script 
+   called 'etc/tarlapstime.sh' that works by just tarring up the current hour's
+   worth of files. If you need to narrow this down further just the inputs to 
+   the particular analysis would be needed as shown in section 3 of the README.
+   Also, things like the 'cdl', 'time' and 'static' subdirectories should be 
+   included. 
 
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
