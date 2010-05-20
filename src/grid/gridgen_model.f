@@ -60,7 +60,7 @@ c*********************************************************************
         integer lf
         character c6_maproj*6
         character c8_maproj*8
-        character c10_grid_fname*10
+        character c10_grid_f*10 ! Type of domain (nest7grid, wrfsi)/
         character c_dataroot*200
         character cstaticdir*200
         logical   localize
@@ -88,14 +88,14 @@ c*********************************************************************
            stop
         endif
 
-        call find_domain_name(c_dataroot,c10_grid_fname,istatus)
+        call find_domain_name(c_dataroot,c10_grid_f,istatus)
         if(istatus .ne. 1)then
             write(6,*) 'Error: find domain name - stop'
             stop
         endif
-        call s_len(c10_grid_fname,lf)
+        call s_len(c10_grid_f,lf)
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
            call get_num_domains(num_domains,istatus)
            if(istatus.ne.1)then
               print *,'Error returned: get_num_domains'
@@ -116,7 +116,7 @@ c
            call get_directory('static',cstaticdir,len_dir)
 
            call rd_static_attr(cstaticdir,nest
-     .,c10_grid_fname,nx_dom,ny_dom,Dx,Dy,La1,Lo1,Latin1
+     .,c10_grid_f,nx_dom,ny_dom,Dx,Dy,La1,Lo1,Latin1
      .,Latin2,LoV,c8_maproj,istatus)
 
 c -------------------------------------------------------------------------
@@ -125,7 +125,7 @@ c set, will return variable "localize" = .true.
 c -------------------------------------------------------------------------
  
            call eval_localization(cstaticdir,nest,localize
-     .,c10_grid_fname,La1,Lo1,istatus)
+     .,c10_grid_f,La1,Lo1,istatus)
 
            call get_parent_id(iparent_id,istatus)
 
@@ -199,7 +199,7 @@ c Get X/Y for nested grid center
 
            if(istatus.ne.1)then
               print*,'Error getting namelist info for',
-     +': ',c10_grid_fname(1:lf)
+     +': ',c10_grid_f(1:lf)
               stop
            endif
 
@@ -348,10 +348,11 @@ c
         character*200 c_dataroot
         character*200 cdl_dir
         character*180 static_dir 
-        character*10  c10_grid_fname 
+        character*10  c10_grid_f           ! Type of domain (nest7grid, wrfsi)
+        character*10  c10_grid_fname       ! Actual filename, cdl (nest7grid for now)
         character*6   c6_maproj
         character*1   cdatatype
-        integer len,lf,lfn,ns
+        integer len,lf,lfn,ns,avgelem,zinelem
         integer ishow_timer,init_timer
         integer itstatus
 
@@ -396,13 +397,13 @@ C*********************************************************************
 
         itstatus = init_timer()
 
-        call find_domain_name(c_dataroot,c10_grid_fname,istatus)
+        call find_domain_name(c_dataroot,c10_grid_f,istatus)
         if(istatus .ne. 1)then
             write(6,*) 'Error: returned fro find_domain_name '
             return
         endif
 
-        call s_len(c10_grid_fname,lf)
+        call s_len(c10_grid_f,lf)
 
 !mp  - need to know map projection information from the start
         call get_c6_maproj(c6_maproj,istatus)
@@ -415,16 +416,15 @@ C*********************************************************************
 
 c add 12 for albedo month 1 - 12.
 c add 1 more for islope JS: 2-25-03
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
-
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
 !mp
-	IF (c6_maproj .eq. 'rotlat') THEN
-          write(6,*) 'ngrids set to 103'
-          ngrids=103 !!!
-        ELSE !normal
-           ngrids=112     !97+12   ! 2d grids (including %dist for landuse
-                                   ! and two soiltype categories, green frac, albedo and others).
-	ENDIF
+            IF (c6_maproj .eq. 'rotlat') THEN
+               write(6,*) 'ngrids set to 103'
+               ngrids=103 !!!
+            ELSE !normal
+               ngrids=112     !97+12   ! 2d grids (including %dist for landuse
+                                       ! and two soiltype categories, green frac, albedo and others).
+	    ENDIF
 
         else
            ngrids=38      !26+12   doesn't include terrain slope index and other stuff.
@@ -809,7 +809,7 @@ C*****************************************************************
        elseif(mode.eq.3)then
 
            print*,'get perimeter of grid'
-           call get_domain_perimeter_grid(nnxp,nnyp,c10_grid_fname
+           call get_domain_perimeter_grid(nnxp,nnyp,c10_grid_f
      1                  ,lats(1,1,ns),lons(1,1,ns)
      1                  ,1.0,rnorth,south,east,west,istatus)
            print*,'static dir = ',static_dir(1:lens)
@@ -992,7 +992,7 @@ c
 	ENDIF
 
        ilndmsk=12  !land mask is 12 for both wrfsi and laps
-       if(c10_grid_fname(1:lf).eq.'wrfsi')then
+       if(c10_grid_f(1:lf).eq.'wrfsi')then
 
 	 IF (c6_maproj .ne. 'rotlat') THEN
 
@@ -1095,7 +1095,7 @@ c **********************************************
 c for WRFSI we'll bilinearly interpolate to get the topo
 c from the non-staggered topo
 
-       if(c10_grid_fname(1:lf).eq.'wrfsi')then
+       if(c10_grid_f(1:lf).eq.'wrfsi')then
 
 	IF (c6_maproj .ne. 'rotlat') THEN
 
@@ -1193,7 +1193,7 @@ c      print *,'# of grid pts using blended terrain data = ',icount_ramp
 C
 C Output Section for topo, lat-lons and corners
 C -----------------------------------------------
-       if(c10_grid_fname(1:lf).eq.'wrfsi')then
+       if(c10_grid_f(1:lf).eq.'wrfsi')then
          if(c6_maproj.ne.'rotlat')then
           write(cnest,'(i2.2)')nest
           clatlon='latlon.d'//cnest//'.dat'            !binary non-staggered lat-lon file
@@ -1222,7 +1222,7 @@ C -----------------------------------------------
        endif
 
        call s_len(static_dir,len)
-       if(c10_grid_fname(1:lf).eq.'wrfsi')then
+       if(c10_grid_f(1:lf).eq.'wrfsi')then
 
          if(c6_maproj.ne.'rotlat')then
            in=0
@@ -1382,13 +1382,13 @@ c
 
 	ENDIF
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
 	
-	IF (c6_maproj .ne. 'rotlat') THEN
+	    IF (c6_maproj .ne. 'rotlat') THEN
 		idx=10
-	ELSE
+	    ELSE
 		idx=5
-	ENDIF
+	    ENDIF
 
 	else ! not wrfsi
 		idx=4
@@ -1428,7 +1428,7 @@ c
         if(istatus_soil.ne.1)then
            print*
            print*,' Soil type data not processed completely'
-           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           if(c10_grid_f(1:lf).eq.'wrfsi')then
              print*,' File(s) missing for soil type top layer data'
              print*,' Error:  Static file not created'
              print*
@@ -1457,9 +1457,9 @@ c
                                                                                 
         ENDIF
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
 
-        IF (c6_maproj .ne. 'rotlat') THEN
+         IF (c6_maproj .ne. 'rotlat') THEN
 c
 c make water points = 0 for adjust_geog. later we'll put it back to original
 c
@@ -1477,14 +1477,14 @@ c
            do j=1,16
               data(:,:,i+j)=GEODAT3D(:,:,j)
            enddo
-	ELSE
+	 ELSE
            idxstl=8
            data(:,:,8)=GEODAT2D
            I=42
            do j=1,16
               data(:,:,i+j)=GEODAT3D(:,:,j)
            enddo
-        ENDIF
+         ENDIF
 
         else
 c
@@ -1520,7 +1520,7 @@ c
         if(istatus_soil.ne.1)then
            print*
            print*,' Bottom layer soil data not processed completely'
-           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           if(c10_grid_f(1:lf).eq.'wrfsi')then
              print*,' File(s) missing for soil type bot layer data'
              print*,' Error:  Static file not created'
              print*
@@ -1546,9 +1546,9 @@ c
 c
 c soiltype bottom layer ... 68 thru 83
 c
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
 
-        IF (c6_maproj .ne. 'rotlat') THEN
+          IF (c6_maproj .ne. 'rotlat') THEN
 c
 c make water points = 0 for adjust_geog. After, put it back to original.
 c
@@ -1566,14 +1566,14 @@ c
             do j=1,16
                data(:,:,i+j)=GEODAT3D(:,:,j)
             enddo
-	ELSE
+	  ELSE
             idxsbl=9
 	    data(:,:,9)=GEODAT2D
             i=58
             do j=1,16
                data(:,:,i+j)=GEODAT3D(:,:,j)
             enddo
-        ENDIF
+          ENDIF
 
         else
 c
@@ -1603,7 +1603,7 @@ c
         allocate  (GEODAT3D(nnxp,nnyp,12),stat=istat)
         if(istat.ne.0)then
            print*,'Error allocating data object GEODAT3D ',istat
-           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           if(c10_grid_f(1:lf).eq.'wrfsi')then
               print*,'Error: Aborting process'
               print*,'Error: Maybe not enough memory'
               print*,'Error: Cannot allocate GEODAT3D'
@@ -1636,7 +1636,7 @@ c
 	do N=1,12
 	do J=1,NNYP
 	do I=1,NNXP
-	GEODAT3D(I,J,N)=GEODAT3D(I,J,N)/100.
+	    GEODAT3D(I,J,N)=GEODAT3D(I,J,N)/100.
 	enddo
 	enddo
 	enddo
@@ -1648,7 +1648,7 @@ c
         if(istatus_grn.ne.1)then
          print*
          print*,'greenness fraction data not processed completely'
-         if(c10_grid_fname(1:lf).eq.'wrfsi')then
+         if(c10_grid_f(1:lf).eq.'wrfsi')then
             print*,' Error: File(s) missing for green frac data'
             print*,' Error: Static file not created'
             print*
@@ -1662,7 +1662,7 @@ c
          GEODAT3D=r_missing_data
         endif
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
 
            IF (c6_maproj .ne. 'rotlat') THEN
 
@@ -1691,7 +1691,7 @@ c    &,istatus)
 c
 c annual max/min greenness fraction in domain
 c --------------------------------------------
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
            dommaxgf=0.0
            dommingf=99.0
            print*,' compute max/min greenness frac at grid points'
@@ -1762,7 +1762,7 @@ c
         if(istatus_tmp.ne.1)then
          print* 
          print*,'soiltemp data not processed completely' 
-         if(c10_grid_fname(1:lf).eq.'wrfsi')then 
+         if(c10_grid_f(1:lf).eq.'wrfsi')then 
             print*,' Error:  File(s) missing for soiltemp data' 
             print*,' Error:  Static file not created'
             print*
@@ -1778,7 +1778,7 @@ c
         endif
 
         idst=25
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then 
+        if(c10_grid_f(1:lf).eq.'wrfsi')then 
 
             IF (c6_maproj .ne. 'rotlat') THEN
 
@@ -1840,7 +1840,7 @@ c
         if(istatus_slp.ne.1)then
            print*
            print*,' ter slope category data not processed completely'
-           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           if(c10_grid_f(1:lf).eq.'wrfsi')then
              print*,' Error: File(s) missing for islope data'
              print*,' Error: Static file not created'
              print*
@@ -1859,7 +1859,7 @@ c point but islope indicates water, force islope = 1.
         where(GEODAT2D .eq. 8)GEODAT2D=13.0
         where(GEODAT2D .eq. 9)GEODAT2D=0.0
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
 	
 	   IF (c6_maproj .ne. 'rotlat') THEN
 
@@ -1884,7 +1884,7 @@ c point but islope indicates water, force islope = 1.
 
         if(istatus.ne.1)then
            print*,' Warning: Processing incomplete: adjust_geog_data'
-           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           if(c10_grid_f(1:lf).eq.'wrfsi')then
               print*,'Error: wrfsi static file not generated'
               return
            endif
@@ -1967,7 +1967,7 @@ c force water points to 0.08 albedo
            where(data(:,:,ilndmsk).eq.0.0)GEODAT3D(:,:,k)=0.08
         enddo
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
         IF (c6_maproj .ne. 'rotlat') THEN
            ialb=96
 	ELSE
@@ -2013,7 +2013,7 @@ c
 
         if(istatus_alb.ne.1)then
          print*
-         if(c10_grid_fname(1:lf).eq.'wrfsi')then
+         if(c10_grid_f(1:lf).eq.'wrfsi')then
             print*,'--------------- WRFSI ------------------'
             print*,'Error: Max Snow Albedo not processed completely'
             print*,'Error: Static file not created '
@@ -2030,7 +2030,7 @@ c
         where(data(:,:,ilndmsk).eq.0.0)GEODAT2D=0.08
         where(data(:,:,ilnduse).eq.24.0)GEODAT2D=0.7
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
 
 	IF (c6_maproj .ne. 'rotlat') THEN
            mxsnalb=47
@@ -2052,7 +2052,7 @@ c ------------------------------------------------------------------------------
 c Let's compare the grids to landmask to assess their consistency (or lack thereof)
 c ---------------------------------------------------------------------------------
 
-       if(c10_grid_fname(1:lf).eq.'wrfsi')then
+       if(c10_grid_f(1:lf).eq.'wrfsi')then
         print*,'Total number of gridpoints (nx*ny) = ',nnxp*nnyp
         print*
         do i=1,10
@@ -2078,7 +2078,7 @@ c ------------------------------------------------------------------------------
         if(.not.allocated(var))allocate (var(ngrids)
      +,comment(ngrids))
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
 
 	IF (c6_maproj .ne. 'rotlat') THEN
 
@@ -2208,13 +2208,13 @@ c          call move(topt_stag_out,data(1,1,i+8),nnxp,nnyp) !18
 
 !mp
         if (c6_maproj .ne. 'rotlat') then
-          if(c10_grid_fname(1:lf).eq.'wrfsi')then
-             filename=c10_grid_fname(1:lf)//'.d'//cnest//'.cdl'
+          if(c10_grid_f(1:lf).eq.'wrfsi')then
+             filename=c10_grid_f(1:lf)//'.d'//cnest//'.cdl'
           else
-             filename = c10_grid_fname(1:lf)//'.cdl'
+             filename = c10_grid_f(1:lf)//'.cdl'
           endif
         else
-          filename = c10_grid_fname(1:lf)//'.rotlat.cdl'
+          filename = c10_grid_f(1:lf)//'.rotlat.cdl'
         endif
 
 	write(6,*) 'using filename: ', filename
@@ -2227,7 +2227,7 @@ c          call move(topt_stag_out,data(1,1,i+8),nnxp,nnyp) !18
         if(.not.exist)then
            print*,'Error: Could not find file '
      +           ,cdl_dir(1:lcdl)//filename(1:lfn)
-           print*,'c10_grid_fname: ',c10_grid_fname(1:lf)
+           print*,'c10_grid_f: ',c10_grid_f(1:lf)
            istatus = 0
            return
         endif
@@ -2254,10 +2254,27 @@ c          call move(topt_stag_out,data(1,1,i+8),nnxp,nnyp) !18
 	write(6,*) 'call put_laps_static ', ngrids
 
 	write(6,*) 'model= ', model
+
+        c10_grid_fname = 'nest7grid'
+        call s_len(c10_grid_fname,len_fname)
+
+!       Do zin calc (note this is last [kmax] element in data array)
+        if(c10_grid_fname(1:len_fname).eq.'nest7grid')then
+          avgelem=3
+          zinelem=ngrids
+          write(6,*)' Calculating zin field in array element ',zinelem
+          do i = 1,nnxp
+          do j = 1,nnyp
+              psa = ztopsa(data(i,j,avgelem)) ! This is the AVG data (3rd element)
+              data(i,j,zinelem) = (20.0 - ((psa - 100.0) * 0.02))
+          enddo ! j
+          enddo ! i
+        endif
+
         call put_laps_static(grid_spacing_m,model,comment,var
      1,data,nnxp,nnyp,ngrids,ngrids,std_lat,std_lat2,std_lon
      1,c6_maproj,deltax,deltay,mdlat,mdlon,lli,llj,iuri,iurj
-     1,iparent_id,iratio_to_parent,nest)
+     1,iparent_id,iratio_to_parent,nest,c10_grid_fname)
 
         istatus = istat_chk
 
