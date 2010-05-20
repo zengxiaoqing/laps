@@ -64,6 +64,7 @@ C  BEGIN SUBROUTINE
 	write(6,*) 'dir= ', dir
 	write(6,*) 'laps_dom_file= ', laps_dom_file
 	write(6,*) 'file_name= ', file_name
+        write(6,*)' n_grids= ',n_grids
 	write(6,*) 'f_len= ', f_len
       call make_static_fname(dir,laps_dom_file,file_name,f_len,status)
 	write(6,*) 'after make_static_fname'
