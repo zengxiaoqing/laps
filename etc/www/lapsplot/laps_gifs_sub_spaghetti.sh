@@ -16,6 +16,8 @@ RESOLUTION=$9
 domain=$10
 model=$11
 
+echo " "
+echo "start laps_gifs_sub_spaghetti.sh..."
 
 uscore="_"
 MACHINE=`uname -n`
@@ -47,7 +49,6 @@ mkdir -p $SCRATCH_DIR
 mkdir -p $ARCHIVE
 mkdir -p $RECENT
 
-echo "script laps_gifs_sub_fcst.sh..."
 echo "prod ="$prod
 echo "WINDOW ="$WINDOW
 echo "NCARG_ROOT ="$NCARG_ROOT
@@ -77,17 +78,23 @@ if test $LEN_DATETIME = "13" || test $LEN_DATETIME = "14"; then
     echo $datetime >> $SCRATCH_DIR/datetime 
     echo "cycle="$cycle
     echo "fcsthr="$fcsthr
-    cat $LAPS_ETC/lapsplot.$prod.1 > $SCRATCH_DIR/lapsplot.$prod.tmp
+    cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.1 > $SCRATCH_DIR/lapsplot.$prod.tmp
 
 #   Append each model & datetime with product segment 2
-    for modeldir in $LAPS_DATA_ROOT/lapsprd/fua/*-*
+    cd $LAPS_DATA_ROOT/lapsprd/fua 
+
+    for modeldir in *-*
     do
-      cat $modeldir >> $SCRATCH_DIR/lapsplot.$prod.tmp
+#     cat $modeldir >> $SCRATCH_DIR/lapsplot.$prod.tmp
+      echo "modeldir = $modeldir"
+      echo $modeldir >> $SCRATCH_DIR/lapsplot.$prod.tmp
       cat $SCRATCH_DIR/datetime >> $SCRATCH_DIR/lapsplot.$prod.tmp
-      cat $LAPS_ETC/lapsplot.$prod.2 >> $SCRATCH_DIR/lapsplot.$prod.tmp
+      cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.2 >> $SCRATCH_DIR/lapsplot.$prod.tmp
     done
 
-    cat $LAPS_ETC/lapsplot.$prod.3 > $SCRATCH_DIR/lapsplot.$prod.tmp
+    cd $SCRATCH_DIR
+
+    cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.3 >> $SCRATCH_DIR/lapsplot.$prod.tmp
 
     LAPSPLOT_IN=$SCRATCH_DIR/lapsplot.$prod.tmp
 
