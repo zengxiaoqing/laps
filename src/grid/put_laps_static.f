@@ -1,10 +1,11 @@
-
+ 
       subroutine put_laps_static(grid_spacing,model,comment,var
      1                          ,data,imax,jmax,mkmax,ngrids
      1                          ,std_lat,std_lat2,std_lon      
      1                          ,c6_maproj,deltax,deltay,center_lat
      1                          ,center_lon,lli,llj,uri,urj
-     1                          ,parent_id,ratio_2_parent,nest)
+     1                          ,parent_id,ratio_2_parent,nest
+     1                          ,c10_grid_fname)
  
       include 'trigd.inc' 
 
@@ -28,8 +29,8 @@ C
       CHARACTER*(*)	COMMENT(mkmax)	!Comments for each field
       character*(*)     model
       character*80      origin          !Run time parameter - c80_description
-      character*10      c10_grid_fname  !The name associated with static files,
-!                                        namelists (ie., 'nest7grid'), cdl's, etc.
+      character*10  c10_grid_f          ! Type of domain (nest7grid, wrfsi)
+      character*10  c10_grid_fname      ! Actual filename, cdl (nest7grid for now)
 !mp      character*9       laps_dom_file
       character*16       laps_dom_file
       character*6       c6_maproj       !Map projection
@@ -37,7 +38,6 @@ C
       character*2       cnest           !domain number (including MOAD)
       integer len,lf 
       integer avgelem
-      integer zinelem
       integer parent_id,ratio_2_parent
       integer uri,urj,lli,llj
       integer indxt,indxl,indxlat,indxlon
@@ -45,15 +45,13 @@ C
 
       call get_directory('static',dir_out,len) 
       kmax = ngrids
-      zinelem = ngrids
-      kdim = kmax
 
-      call find_domain_name(cdataroot,c10_grid_fname,istatus)
+      call find_domain_name(cdataroot,c10_grid_f,istatus)
       if(istatus.ne.1)then
          print*,'Error returned from find_domain_name'
          return
       endif
-      call s_len(c10_grid_fname,lf)
+      call s_len(c10_grid_f,lf)
 
       call get_c80_description(origin,istatus)
 
@@ -65,13 +63,9 @@ C
          stop
       endif
 
-! for LAPS, AVG data is elem 3, otherwise 9 (for WRFSI) 18 for rotlat.
-! and "avgelem" is a misnamed variable for wrfsi.
-
-      avgelem=3
       laps_dom_file = c10_grid_fname(1:len_fname)
 
-      if(c10_grid_fname(1:lf).eq.'wrfsi')then
+      if(c10_grid_f(1:lf).eq.'wrfsi')then
         IF (c6_maproj .ne. 'rotlat') THEN
          indxt=51  !c-stagger
          indxl=12
@@ -108,14 +102,6 @@ c       lo2=data(imax,jmax,2)
 
       print*,'Static domain file name: ',laps_dom_file
 
-!     Do zin calc (note this is last [kmax] element in data array)
-      do i = 1,imax
-      do j = 1,jmax
-          psa = ztopsa(data(i,j,avgelem)) ! This is the AVG data (3rd element)
-          data(i,j,zinelem) = (20.0 - ((psa - 100.0) * 0.02))
-      enddo ! j
-      enddo ! i
-
 !     Calculate deltax_cdf and deltay_cdf
       deltax_cdf = deltax
       deltay_cdf = deltay
@@ -139,9 +125,15 @@ c       lo2=data(imax,jmax,2)
 
       write(6,*) dir_out(1:len),len
 	
-	write(6,*) 'calling wrt_laps_static'
+      write(6,*)' List of vars:'
+      do i = 1,kmax
+          write(6,11)i,var(i),comment(i)(1:60)
+11        format(i4,1x,a3,1x,a60)
+      enddo
 
-	call s_len(laps_dom_file,lapslen)
+      write(6,*) 'calling wrt_laps_static, kmax = ',kmax
+
+      call s_len(laps_dom_file,lapslen)
 
       call wrt_laps_static (dir_out(1:len),laps_dom_file(1:lapslen),
      1                      imax,jmax,
@@ -151,7 +143,7 @@ c       lo2=data(imax,jmax,2)
      1                      c6_maproj,la1,lo1,la2,lo2,
      1                      center_lat, center_lon,lli,llj,uri,
      1                      urj,parent_id,ratio_2_parent,istatus)
-	write(6,*) 'return wrt_laps_static ', istatus
+      write(6,*) 'return wrt_laps_static ', istatus
       if(istatus .ne. 1)then
           write (6,*)'ERROR wrt_laps_static: status = ',istatus
       else
@@ -159,7 +151,7 @@ c       lo2=data(imax,jmax,2)
 
 
           call rd_laps_static(dir_out(1:len),laps_dom_file(1:lapslen)
-     1,imax,jmax,kdim,var,units,comment,data,grid_spacing
+     1,imax,jmax,kmax,var,units,comment,data,grid_spacing
      1,istatus)
           if(istatus .eq. 1)then
              write (6,*)'rd_laps_static: status = ',istatus
