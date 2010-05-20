@@ -199,8 +199,8 @@
     dy    = in_dy
 
     ! Remap the data to the LAPS domain
-    CALL init_hinterp(inxdim,inydim,outxdim,outydim,'PS',outlat,outlon,grx,gry,0,cmodel)
-    CALL hinterp_field(inxdim,inydim,outxdim,outydim,1,grx,gry,indata,outdata,0)
+    CALL init_hinterp(inxdim,inydim,outxdim,outydim,'PS',outlat,outlon,grx,gry,0,cmodel,.false.)
+    CALL hinterp_field(inxdim,inydim,outxdim,outydim,1,grx,gry,indata,outdata,.false.)
 
     ! Quality control negative values produced by the cubic interpolation 
     Do xcount = 1,outxdim ! Loop over x and y 
