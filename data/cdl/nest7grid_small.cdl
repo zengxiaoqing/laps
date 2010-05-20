@@ -1,0 +1,670 @@
+netcdf static {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+
+//   change these next two variables if grid size is to be adjusted
+	x = 125,
+	y = 105,
+
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	Grid latitudes
+
+	float                                  
+            lat(record,z,y,x);
+            lat:navigation_dim = "nav";
+            lat:record = "valtime, reftime";
+            lat:_FillValue = 1.e+37f;
+            lat:long_name="Grid latitudes";
+            lat:units="degrees";
+            lat:valid_range= -90.f, 90.f;
+	    lat:LAPS_units="DEGREES";
+                	        
+        //	Grid longitudes
+
+	float                                  
+            lon(record,z,y,x);
+            lon:navigation_dim = "nav";
+            lon:record = "valtime, reftime";
+            lon:_FillValue = 1.e+37f;
+            lon:long_name="Grid longitudes";
+            lon:units="degrees";
+            lon:valid_range= -180.f, 180.f;
+	    lon:LAPS_units="DEGREES";
+                	        
+        //	Grid average elevation 
+
+	float                                  
+            avg(record,z,y,x);
+            avg:navigation_dim = "nav";
+            avg:record = "valtime, reftime";
+            avg:_FillValue = 1.e+37f;
+            avg:long_name="Analysis grid average elevation";
+            avg:units="meters MSL";
+            avg:valid_range= -200.f, 5000.f;
+	    avg:LAPS_units="METERS MSL";
+                	        
+        //	Grid std dev of elevation
+
+	float                                  
+            std(record,z,y,x);
+            std:navigation_dim = "nav";
+            std:record = "valtime, reftime";
+            std:_FillValue = 1.e+37f;
+            std:long_name="LAPS grid std dev of elevation";
+            std:units="meters";
+            std:valid_range= -5000.f, 5000.f;
+	    std:LAPS_units="METERS";
+                	        
+        //	Grid envelope	
+
+	float                                  
+            env(record,z,y,x);
+            env:navigation_dim = "nav";
+            env:record = "valtime, reftime";
+            env:_FillValue = 1.e+37f;
+            env:long_name="LAPS grid envelope";
+            env:units="meters MSL";
+            env:valid_range= -5000.f, 5000.f;
+	    env:LAPS_units="METERS MSL";
+                	        
+        //	elevation for AVS
+
+	float                                  
+            zin(record,z,y,x);
+            zin:navigation_dim = "nav";
+            zin:record = "valtime, reftime";
+            zin:_FillValue = 1.e+37f;
+            zin:long_name="elevation for AVS";
+            zin:units="AVS index";
+            zin:valid_range= 0.f, 20.f;
+	    zin:LAPS_units="none";
+                	        
+        //      land fractions	
+
+	float                                  
+            ldf(record,z,y,x);
+            ldf:navigation_dim = "nav";
+            ldf:record = "valtime, reftime";
+            ldf:_FillValue = 1.e+37f;
+            ldf:long_name="land fraction";
+            ldf:units="none";
+            ldf:valid_range= 0.f, 1.f;
+	    ldf:LAPS_units="none";
+
+        //	land-water mask
+
+	float                                  
+            lnd(record,z,y,x);
+            lnd:navigation_dim = "nav";
+            lnd:record = "valtime, reftime";
+            lnd:_FillValue = 1.e+37f;
+            lnd:long_name="land (1) water (0) mask";
+            lnd:units="none";
+            lnd:valid_range= 0.f, 1.f;
+	    lnd:LAPS_units="none";
+ 
+        //	landuse dominant category
+
+	float                                  
+            use(record,z,y,x);
+            use:navigation_dim = "nav";
+            use:record = "valtime, reftime";
+            use:_FillValue = 1.e+37f;
+            use:long_name="land use dominant category";
+            use:units="none";
+            use:valid_range= 1.f, 24.f;
+	    use:LAPS_units="none";
+                	        
+        //      albedo climo
+
+        float
+            alb(record,z,y,x);
+            alb:navigation_dim = "nav";
+            alb:record = "valtime, reftime";
+            alb:_FillValue = 1.e+37f;
+            alb:long_name="albedo climatology";
+            alb:units="none";
+            alb:valid_range= 0.f, 1.f;
+            alb:LAPS_units="none";
+
+        //      mean longitudinal terrain slope
+
+        float
+            sln(record,z,y,x);
+            sln:navigation_dim = "nav";
+            sln:record = "valtime, reftime";
+            sln:_FillValue = 1.e+37f;
+            sln:long_name="mean longitudinal slope";
+            sln:units="m/m";
+            sln:valid_range= -1.f, 1.f;
+            sln:LAPS_units="M/M";
+
+        //      mean latitudinal terrain slope
+
+        float
+            slt(record,z,y,x);
+            slt:navigation_dim = "nav";
+            slt:record = "valtime, reftime";
+            slt:_FillValue = 1.e+37f;
+            slt:long_name="mean latitudinal slope";
+            slt:units="m/m";
+            slt:valid_range= -1.f, 1.f;
+            slt:LAPS_units="M/M";
+
+        //      top layer dominant category soiltype
+
+        float
+            stl(record,z,y,x);
+            stl:navigation_dim = "nav";
+            stl:record = "valtime, reftime";
+            stl:_FillValue = 1.e+37f;
+            stl:long_name="top layer (0-30cm) dom cat soiltype";
+            stl:units="categorical";
+            stl:valid_range= 0.f, 16.f;
+            stl:LAPS_units="categorical";
+
+        //      bottom layer dominant category soiltype
+
+        float
+            sbl(record,z,y,x);
+            sbl:navigation_dim = "nav";
+            sbl:record = "valtime, reftime";
+            sbl:_FillValue = 1.e+37f;
+            sbl:long_name="bottom layer (30-90cm) dom cat soiltype";
+            sbl:units="categorical";
+            sbl:valid_range= 0.f, 16.f;
+            sbl:LAPS_units="categorical";
+
+        //      greeness fraction - January
+
+        float
+            g01(record,z,y,x);
+            g01:navigation_dim = "nav";
+            g01:record = "valtime, reftime";
+            g01:_FillValue = 1.e+37f;
+            g01:long_name="greeness fraction - January";
+            g01:units="categorical";
+            g01:valid_range= 0.f, 1.f;
+            g01:LAPS_units="categorical";
+
+        //      greeness fraction - February
+
+        float
+            g02(record,z,y,x);
+            g02:navigation_dim = "nav";
+            g02:record = "valtime, reftime";
+            g02:_FillValue = 1.e+37f;
+            g02:long_name="greeness fraction - February";
+            g02:units="categorical";
+            g02:valid_range= 0.f, 1.f;
+            g02:LAPS_units="categorical";
+
+        //      greeness fraction - March
+
+        float
+            g03(record,z,y,x);
+            g03:navigation_dim = "nav";
+            g03:record = "valtime, reftime";
+            g03:_FillValue = 1.e+37f;
+            g03:long_name="greeness fraction - March";
+            g03:units="categorical";
+            g03:valid_range= 0.f, 1.f;
+            g03:LAPS_units="categorical";
+
+        //      greeness fraction - April
+
+        float
+            g04(record,z,y,x);
+            g04:navigation_dim = "nav";
+            g04:record = "valtime, reftime";
+            g04:_FillValue = 1.e+37f;
+            g04:long_name="greeness fraction - April";
+            g04:units="categorical";
+            g04:valid_range= 0.f, 1.f;
+            g04:LAPS_units="categorical";
+
+        //      greeness fraction - May
+
+        float
+            g05(record,z,y,x);
+            g05:navigation_dim = "nav";
+            g05:record = "valtime, reftime";
+            g05:_FillValue = 1.e+37f;
+            g05:long_name="greeness fraction - May";
+            g05:units="categorical";
+            g05:valid_range= 0.f, 1.f;
+            g05:LAPS_units="categorical";
+
+        //      greeness fraction - June
+
+        float
+            g06(record,z,y,x);
+            g06:navigation_dim = "nav";
+            g06:record = "valtime, reftime";
+            g06:_FillValue = 1.e+37f;
+            g06:long_name="greeness fraction - June";
+            g06:units="categorical";
+            g06:valid_range= 0.f, 1.f;
+            g06:LAPS_units="categorical";
+
+        //      greeness fraction - July
+
+        float
+            g07(record,z,y,x);
+            g07:navigation_dim = "nav";
+            g07:record = "valtime, reftime";
+            g07:_FillValue = 1.e+37f;
+            g07:long_name="greeness fraction - July";
+            g07:units="categorical";
+            g07:valid_range= 0.f, 1.f;
+            g07:LAPS_units="categorical";
+
+        //      greeness fraction - August
+
+        float
+            g08(record,z,y,x);
+            g08:navigation_dim = "nav";
+            g08:record = "valtime, reftime";
+            g08:_FillValue = 1.e+37f;
+            g08:long_name="greeness fraction - August";
+            g08:units="categorical";
+            g08:valid_range= 0.f, 1.f;
+            g08:LAPS_units="categorical";
+
+        //      greeness fraction - September
+
+        float
+            g09(record,z,y,x);
+            g09:navigation_dim = "nav";
+            g09:record = "valtime, reftime";
+            g09:_FillValue = 1.e+37f;
+            g09:long_name="greeness fraction - September";
+            g09:units="categorical";
+            g09:valid_range= 0.f, 1.f;
+            g09:LAPS_units="categorical";
+
+        //      greeness fraction - October
+
+        float
+            g10(record,z,y,x);
+            g10:navigation_dim = "nav";
+            g10:record = "valtime, reftime";
+            g10:_FillValue = 1.e+37f;
+            g10:long_name="greeness fraction - October";
+            g10:units="categorical";
+            g10:valid_range= 0.f, 1.f;
+            g10:LAPS_units="categorical";
+
+        //      greeness fraction - November
+
+        float
+            g11(record,z,y,x);
+            g11:navigation_dim = "nav";
+            g11:record = "valtime, reftime";
+            g11:_FillValue = 1.e+37f;
+            g11:long_name="greeness fraction - November";
+            g11:units="categorical";
+            g11:valid_range= 0.f, 1.f;
+            g11:LAPS_units="categorical";
+
+        //      greeness fraction - December
+
+        float
+            g12(record,z,y,x);
+            g12:navigation_dim = "nav";
+            g12:record = "valtime, reftime";
+            g12:_FillValue = 1.e+37f;
+            g12:long_name="greeness fraction - December";
+            g12:units="categorical";
+            g12:valid_range= 0.f, 1.f;
+            g12:LAPS_units="categorical";
+
+        //      Terrain Adjusted Mean Annual Soil Temp 
+
+        float
+            tmp(record,z,y,x);
+            tmp:navigation_dim = "nav";
+            tmp:record = "valtime, reftime";
+            tmp:_FillValue = 1.e+37f;
+            tmp:long_name="Terrain Adjusted Mean Annual Soil Temp";
+            tmp:units="categorical";
+            tmp:valid_range= 200.f, 350.f;
+            tmp:LAPS_units="categorical";
+
+        //      albedo - January
+
+        float
+            a01(record,z,y,x);
+            a01:navigation_dim = "nav";
+            a01:record = "valtime, reftime";
+            a01:_FillValue = 1.e+37f;
+            a01:long_name="climatological albedo - January";
+            a01:units="unitless";
+            a01:valid_range= 0.f, 1.f;
+            a01:LAPS_units="fractional";
+
+        //      albedo - February
+
+        float
+            a02(record,z,y,x);
+            a02:navigation_dim = "nav";
+            a02:record = "valtime, reftime";
+            a02:_FillValue = 1.e+37f;
+            a02:long_name="climatological albedo - February";
+            a02:units="unitless";
+            a02:valid_range= 0.f, 1.f;
+            a02:LAPS_units="fractional";
+
+        //      albedo - March
+
+        float
+            a03(record,z,y,x);
+            a03:navigation_dim = "nav";
+            a03:record = "valtime, reftime";
+            a03:_FillValue = 1.e+37f;
+            a03:long_name="climatological albedo - March";
+            a03:units="unitless";
+            a03:valid_range= 0.f, 1.f;
+            a03:LAPS_units="fractional";
+
+        //      albedo - April
+
+        float
+            a04(record,z,y,x);
+            a04:navigation_dim = "nav";
+            a04:record = "valtime, reftime";
+            a04:_FillValue = 1.e+37f;
+            a04:long_name="climatological albedo - April";
+            a04:units="unitless";
+            a04:valid_range= 0.f, 1.f;
+            a04:LAPS_units="fractional";
+
+        //      albedo - May
+
+        float
+            a05(record,z,y,x);
+            a05:navigation_dim = "nav";
+            a05:record = "valtime, reftime";
+            a05:_FillValue = 1.e+37f;
+            a05:long_name="climatological albedo - May";
+            a05:units="unitless";
+            a05:valid_range= 0.f, 1.f;
+            a05:LAPS_units="fractional";
+
+        //      albedo - June
+
+        float
+            a06(record,z,y,x);
+            a06:navigation_dim = "nav";
+            a06:record = "valtime, reftime";
+            a06:_FillValue = 1.e+37f;
+            a06:long_name="climatological albedo - June";
+            a06:units="unitless";
+            a06:valid_range= 0.f, 1.f;
+            a06:LAPS_units="fractional";
+
+        //      albedo - July
+
+        float
+            a07(record,z,y,x);
+            a07:navigation_dim = "nav";
+            a07:record = "valtime, reftime";
+            a07:_FillValue = 1.e+37f;
+            a07:long_name="climatological albedo - July";
+            a07:units="unitless";
+            a07:valid_range= 0.f, 1.f;
+            a07:LAPS_units="fractional";
+
+        //      albedo - August
+
+        float
+            a08(record,z,y,x);
+            a08:navigation_dim = "nav";
+            a08:record = "valtime, reftime";
+            a08:_FillValue = 1.e+37f;
+            a08:long_name="climatological albedo - August";
+            a08:units="unitless";
+            a08:valid_range= 0.f, 1.f;
+            a08:LAPS_units="fractional";
+
+        //      albedo - September
+
+        float
+            a09(record,z,y,x);
+            a09:navigation_dim = "nav";
+            a09:record = "valtime, reftime";
+            a09:_FillValue = 1.e+37f;
+            a09:long_name="climatological albedo - September";
+            a09:units="unitless";
+            a09:valid_range= 0.f, 1.f;
+            a09:LAPS_units="fractional";
+
+        //      albedo - October
+
+        float
+            a10(record,z,y,x);
+            a10:navigation_dim = "nav";
+            a10:record = "valtime, reftime";
+            a10:_FillValue = 1.e+37f;
+            a10:long_name="climatological albedo - October";
+            a10:units="unitless";
+            a10:valid_range= 0.f, 1.f;
+            a10:LAPS_units="fractional";
+
+        //      albedo - November
+
+        float
+            a11(record,z,y,x);
+            a11:navigation_dim = "nav";
+            a11:record = "valtime, reftime";
+            a11:_FillValue = 1.e+37f;
+            a11:long_name="climatological albedo - November";
+            a11:units="unitless";
+            a11:valid_range= 0.f, 1.f;
+            a11:LAPS_units="fractional";
+
+        //      albedo - December
+
+        float
+            a12(record,z,y,x);
+            a12:navigation_dim = "nav";
+            a12:record = "valtime, reftime";
+            a12:_FillValue = 1.e+37f;
+            a12:long_name="climatological albedo - November";
+            a12:units="unitless";
+            a12:valid_range= 0.f, 1.f;
+            a12:LAPS_units="fractional";
+
+
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            n_grids;
+ 
+        float
+	    grid_spacing;
+
+        char
+            lat_comment(record,z,namelen),
+            lon_comment(record,z,namelen),
+            avg_comment(record,z,namelen),
+            std_comment(record,z,namelen),
+            env_comment(record,z,namelen),
+            zin_comment(record,z,namelen),
+            ldf_comment(record,z,namelen),
+            lnd_comment(record,z,namelen),
+            use_comment(record,z,namelen),
+            alb_comment(record,z,namelen),
+            sln_comment(record,z,namelen),
+            slt_comment(record,z,namelen),
+            stl_comment(record,z,namelen),
+            sbl_comment(record,z,namelen),
+            g01_comment(record,z,namelen),
+            g02_comment(record,z,namelen),
+            g03_comment(record,z,namelen),
+            g04_comment(record,z,namelen),
+            g05_comment(record,z,namelen),
+            g06_comment(record,z,namelen),
+            g07_comment(record,z,namelen),
+            g08_comment(record,z,namelen),
+            g09_comment(record,z,namelen),
+            g10_comment(record,z,namelen),
+            g11_comment(record,z,namelen),
+            g12_comment(record,z,namelen),
+            tmp_comment(record,z,namelen),
+            a01_comment(record,z,namelen),
+            a02_comment(record,z,namelen),
+            a03_comment(record,z,namelen),
+            a04_comment(record,z,namelen),
+            a05_comment(record,z,namelen),
+            a06_comment(record,z,namelen),
+            a07_comment(record,z,namelen),
+            a08_comment(record,z,namelen),
+            a09_comment(record,z,namelen),
+            a10_comment(record,z,namelen),
+            a11_comment(record,z,namelen),
+            a12_comment(record,z,namelen),
+            asctime(namelen);
+
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        //      nice name for grid
+        char
+            grid_name(namelen);
+
+        //      nice name for process using static file
+
+        char
+            process_name(namelen);
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "meters";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "meters";
+  
+        float   La1(nav);
+                La1:long_name = "latitude SW corner";
+                La1:units = "degrees_north";
+ 
+        float   Lo1(nav);
+                Lo1:long_name = "longitude SW corner";
+                Lo1:units = "degrees_east" ;
+   
+        float   La2(nav);
+                La2:long_name = "latitude NE corner";
+                La2:units = "degrees_north";
+ 
+        float   Lo2(nav);
+                Lo2:long_name = "longitude NE corner";
+                Lo2:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_east";
+  
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_east";
+
+        float   center_lat(nav);
+                center_lat:long_name = "center latitude of grid" ;
+                center_lat:units = "degrees -90,+90";
+
+        float   center_lon(nav);
+                center_lon:long_name = "center longitude of grid" ;
+                center_lon:units = "degrees -180,+180";
+
+        long    SW_i(nav);
+                SW_i:long_name = "Southwest corner i of mother domain" ;
+                SW_i:units = "integer";
+
+        long    SW_j(nav);
+                SW_j:long_name = "Southwest corner j of mother domain" ;
+                SW_j:units = "integer";
+
+        long    NE_i(nav);
+                NE_i:long_name = "Northeast corner i of mother domain" ;
+                NE_i:units = "integer";
+
+        long    NE_j(nav);
+                NE_j:long_name = "Northeast corner j of mother domain" ;
+                NE_j:units = "integer";
+
+        long    Parent_ID(nav);
+                Parent_ID:long_name = "Parent ID of mother domain" ;
+                Parent_ID:units = "integer";
+
+        long    Ratio_to_Parent(nav);
+                Ratio_to_Parent:long_name = "Ratio of grid points relative to mother domain" ;
+                Ratio_to_Parent:units = "integer";
+
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        // end of navigation variables
+
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS static file";
+        :version = 3.1;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS static";
+        x_dim           = "x";
+        y_dim           = "y";
+
+}                       
