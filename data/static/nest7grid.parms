@@ -13,7 +13,8 @@
  NY_L=209,                         
 
  vertical_grid='PRESSURE',
- nk_laps=41,                         
+ nk_laps=41,
+ earth_radius = 6370000.                         
 
  laps_cycle_time=3600,           
  max_radar_files_nl=20000,
@@ -55,7 +56,7 @@
  ref_base_useable=0., 
  r_hybrid_first_gate=0.,
  maxstns=100000,         
- N_PIREP=3000,         
+ N_PIREP=10000,         
  max_snd_grid=3000,
  max_snd_levels=300,
  redp_lvl=0.,
@@ -84,6 +85,8 @@ c vertical_grid - type of vertical grid coordinate
 c                 'PRESSURE' means constant pressure grid, uses pressures.nl
 c                 'SIGMA_P' means sigma pressure grid, uses sigmas.nl (under development)
 c                 'SIGMA_HT' means sigma height grid, uses heights.nl (under development)
+c
+c earth_radius - assumed spherical earth radius in meters
 c
 c laps_cycle_time - LAPS cycle time in seconds. This is the interval
 c                   between successive LAPS analyses and should correspond
@@ -190,7 +193,9 @@ c                     one for 4DDA (as a substitute for lga/lgb input
 c                     to the analyses). Examples are 'mm5', 'eta', etc. 
 c                     This corresponds to the available 'lapsprd/fua/*'
 c                     subdirectories. Lapsplot will plot only among those
-c                     listed elements.
+c                     listed elements. The list of models (other than lga)
+c                     is used for reference during localization and 
+c                     verification.
 c
 c iwrite_output - flag to write out all little files or just a restricted set
 c                 (1)  means write out all little files
