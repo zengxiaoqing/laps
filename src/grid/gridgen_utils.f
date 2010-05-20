@@ -354,6 +354,8 @@ c
       character*(*)  comment(nf)
       character*2    cat
 
+      write(6,*)' get_gridgen_var: ngrids = ',ngrids
+
       if(ngrids.eq.38)then  !this is the LAPS analysis section
 
          var(1)    = 'LAT'
