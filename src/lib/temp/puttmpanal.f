@@ -290,7 +290,7 @@ cdis
         I4_elapsed = ishow_timer()
 
 !       Insert Surface Temp at Lowest Levels
-        blayer_thk_pres = 5000. 
+        blayer_thk_pres = 2500. 
 
         write(6,*)' Inserting Surface Data in Lower Levels'
      1             ,blayer_thk_pres
