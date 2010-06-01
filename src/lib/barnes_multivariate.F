@@ -164,7 +164,6 @@ cdis
      1                     ,wt_b                             ! Input
      1                     ,n_var,max_obs,obs_barnes         ! Input
      1                     ,imax,jmax,kmax,grid_spacing_m    ! Inputs
-     1                     ,fnorm_dum,n_fnorm_dum            ! Inputs
      1                     ,iter,i4time_sys                  ! Input
      1                     ,weight_bkg_min                   ! Input
      1                     ,rtol,r_missing_data              ! Input
@@ -235,7 +234,6 @@ cdis
      1                     ,wt_b                              ! Input
      1                     ,n_var,max_obs,obs_barnes_buff     ! Input
      1                     ,imax,jmax,kmax,grid_spacing_m     ! Inputs
-     1                     ,fnorm_dum,n_fnorm_dum             ! Inputs
      1                     ,iter,i4time_sys                   ! Input
      1                     ,weight_bkg_min                    ! Input
      1                     ,rtol,r_missing_data               ! Input
@@ -338,7 +336,6 @@ cdis
      1                     ,wt_b                            ! Input
      1                     ,n_var,max_obs,obs_barnes        ! Input
      1                     ,imax,jmax,kmax,grid_spacing_m   ! Inputs
-     1                     ,fnorm_dum,n_fnorm_dum           ! Inputs
      1                     ,iter,i4time_sys                 ! Input
      1                     ,weight_bkg_const                ! Input
      1                     ,rtol,r_missing_data             ! Input
@@ -366,8 +363,6 @@ cdis
       real, INTENT(IN) :: wt_b(imax,jmax,kmax,n_var)  ! Input (for now)
 
       real, INTENT(IN) :: grid_spacing_m        
-      real, INTENT(IN) :: fnorm_dum       
-      integer, INTENT(IN) :: n_fnorm_dum   
       integer, INTENT(IN) :: i4time_sys,iter
 
 !     Weight for Model Background. Recommended values: 0. to 1e+30.
@@ -399,7 +394,6 @@ cdis
 !     These have a kmax dimension at least temporarily
       integer n_cross_in
 
-      real    wt_lut(-(imax-1):(imax-1),-(jmax-1):(jmax-1))
       real    fnorm_lut(-(imax-1):(imax-1),-(jmax-1):(jmax-1))
       real    fnorm_lut_jj(jmax)
 
@@ -438,8 +432,8 @@ cdis
       r0_barnes_max = r0_barnes_max_m / grid_spacing_m
 
 !     Check for possibility of illegal value in fnorm LUT
-      write(6,*)'r0_value_min,fnorm_max,n_fnorm_dum'
-     1          ,r0_value_min,fnorm_max,n_fnorm_dum
+      write(6,*)'r0_value_min,fnorm_max'
+     1          ,r0_value_min,fnorm_max
 
       write(6,*)'r0_barnes_max,r0_barnes_max_m'
      1          ,r0_barnes_max,r0_barnes_max_m
@@ -450,15 +444,14 @@ cdis
       write(6,*)'weight_bkg_const,fnorm_0,ratio'
      1          ,weight_bkg_const,fnorm_0,weight_bkg_const/fnorm_0
 
-!     Create a lookup table for wt_lut
+!     Create a lookup table for fnorm_lut
       do i = -(imax-1),(imax-1)
       do j = -(jmax-1),(jmax-1)
-          wt_lut(i,j) = i*i+j*j
           if(.true.)then      ! l_3d
 !             Nominal radius_sq of influence divided by 
 !             desired radius_sq of influence
               ratio_norm_sq = r0_norm_sq / r0_barnes_max**2
-              i_subscript = 0.5 + (wt_lut(i,j)*ratio_norm_sq)
+              i_subscript = 0.5 + (float(i*i+j*j)*ratio_norm_sq)
 
 !             Horizontal Weight (Scaled by e^70 ~= 2.5e30)
               fnorm_lut(i,j) = fnorm_calc(i_subscript,r0_norm_sq,
@@ -502,7 +495,7 @@ cdis
      1         ,imax,jmax,kmax                                              ! I
      1         ,wt_b                                                        ! I
      1         ,i4time_sys                                                  ! I
-     1         ,r_missing_data                                              ! I
+     1         ,r_missing_data,r0_vert_grid                                 ! I
      1         ,ncnt_total,idelt,jdelt,kdelt                                ! I
      1         ,fnorm_lut                                                   ! I
      1         ,var)                                                        ! O
@@ -896,12 +889,6 @@ csms$parallel end
       function fnorm_calc(iii,r0_norm_sq,exp_offset,expm80)
 
       real exp_offset
-
-!     When the distance = r0_norm, the fnorm is effectively 1
-!     call get_fnorm_max(imax,jmax                                    ! I
-!    1                  ,r0_norm,r0_value_min_dum,fnorm_max_dum)      ! O
-
-!     r0_norm_sq = r0_norm**2
 
       dist_norm_sq = (float(iii)/r0_norm_sq)
       arg = dist_norm_sq - exp_offset
