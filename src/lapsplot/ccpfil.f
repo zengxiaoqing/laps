@@ -459,7 +459,7 @@ C
           l_raster = .false.
       endif
 
-      if(plot_parms%zoom .gt. 1.0)then
+      if(plot_parms%zoom_wdw .gt. 1.0)then
           l_raster = .false.
           write(6,*)' turn off raster plot for zoomed field'
       endif       
