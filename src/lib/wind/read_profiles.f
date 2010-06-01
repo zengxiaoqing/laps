@@ -429,7 +429,7 @@ c
      1                               MAX_PR,MAX_PR_LEVELS,         ! I
      1                               n_vel_grids,istatus)          ! I/O
 
-                    if(idebug .eq. 1)write(6,411,err=412)ista,i_pr,level
+                    if(idebug .eq. 1)write(6,411,err=412)i_pr,level
      1                              ,ob_pr_ht(i_pr,level)
      1                              ,ob_pr_di(i_pr,level)
      1                              ,ob_pr_sp(i_pr,level)
@@ -437,7 +437,7 @@ c
      1                              ,ob_pr_v(i_pr,level)
      1                              ,u_diff
      1                              ,v_diff
-411                 format(1x,i6,2i4,f8.1,6f7.1)
+411                 format(1x,2i4,f8.1,6f7.1)
 
 412                 if(iwrite_output .ge. 1)then
                         write(32,313,err=414)ri,rj,float(level)
