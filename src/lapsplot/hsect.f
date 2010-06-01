@@ -592,14 +592,6 @@ c       include 'satellite_dims_lvd.inc'
                 ext = 'balance'
             endif
 
-            if(c_type_i.eq.'bw'.or.c_type_i.eq.'bo')then
-               call get_filespec(ext,1,c_filespec,istatus)
-               ext='lw3'
-               call s_len(c_filespec,ilen)
-               c_filespec=c_filespec(1:ilen)//ext(1:3)//'/*.'//ext
-            else
-               call get_filespec(ext,2,c_filespec,istatus)
-            endif
 
             if(c_type_i .eq. 'wd')then
                 write(6,13)
@@ -612,6 +604,20 @@ c       include 'satellite_dims_lvd.inc'
             endif
 
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
+
+!!! Move and add by Huiling Yuan and Steve Albers to avoid 'lwm' empty direcotry, May 25, 2010
+            if(c_type_i.eq.'bw'.or.c_type_i.eq.'bo')then
+               call get_filespec(ext,1,c_filespec,istatus)
+               ext='lw3'
+               call s_len(c_filespec,ilen)
+               c_filespec=c_filespec(1:ilen)//ext(1:3)//'/*.'//ext
+            else
+               if(k_level .ge. 1 .and. ext(1:3) .eq. 'lwm')then
+                 ext='lw3'
+               endif
+               call get_filespec(ext,2,c_filespec,istatus)
+            endif
+!!!  End move block to avoid 'lwm' empty directory 
 
             if(c_type_i.ne.'lo' .and. c_type_i .ne. 'fo' 
      1                          .and. c_type_i .ne. 'wr'
