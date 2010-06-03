@@ -286,8 +286,8 @@ for ($g=1; $g<=$ngrid; $g++) {
    if (! -e "$model_output_dir/d$dom") {
      print "$model_output_dir/d$dom does not exist...creating\n";
      mkdir ("$model_output_dir/d$dom",0775);
-     mkdir ("$model_output_dir/d$dom/fua",0775);
-     mkdir ("$model_output_dir/d$dom/fsf",0775);
+#    mkdir ("$model_output_dir/d$dom/fua",0775);
+#    mkdir ("$model_output_dir/d$dom/fsf",0775);
      if (! -e "$model_output_dir/d$dom") {
        print "ERROR...$model_output_dir/d$dom not created!!!!\n";
      }
@@ -300,11 +300,21 @@ for ($g=1; $g<=$ngrid; $g++) {
        print "NOTE: d01 created in new extra pass.\n";
      }
    }
-   if (! -e "$model_output_dir/d$dom/fua") {
-     mkdir ("$model_output_dir/d$dom/fua",0775);
-   }
-   if (! -e "$model_output_dir/d$dom/fsf") {
-     mkdir ("$model_output_dir/d$dom/fsf",0775);
+   if (! -e "$lapsdataroot/time/systime.dat") {
+       if (! -e "$model_output_dir/d$dom/fua") {
+         mkdir ("$model_output_dir/d$dom/fua",0775);
+       }
+       if (! -e "$model_output_dir/d$dom/fsf") {
+         mkdir ("$model_output_dir/d$dom/fsf",0775);
+       }
+   }else{ # local laps being run on JET
+       print "Attempt to create fua/fsf links since we have a local LAPS on JET\n";
+       if (! -e "$model_output_dir/d$dom/fua") {
+         system ("ln -s $lapsdataroot/lapsprd/fua/wrf-$opt_y $model_output_dir/d$dom/fua");
+       }
+       if (! -e "$model_output_dir/d$dom/fsf") {
+         system ("ln -s $lapsdataroot/lapsprd/fsf/wrf-$opt_y $model_output_dir/d$dom/fsf");
+       }
    }
 
 #LW modified to catch last forecast...don't count analysis as part of $nfcst
