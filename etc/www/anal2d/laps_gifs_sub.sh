@@ -28,6 +28,8 @@ echo "PATH=$PATH"
 
 cd
 if test -r etc/ncarg_root; then
+    echo "Getting NCARG_ROOT from ~/etc/ncarg_root"
+    ls -l etc/ncarg_root
     export NCARG_ROOT=`cat etc/ncarg_root`
 fi
 
@@ -136,16 +138,23 @@ if test -r /opt/ncarg/bin/ctrans; then
 elif test "$netpbm" = "yes"; then 
     if test -r /whome; then
         CTRANS=/opt/ncl/5.1.0_bin/bin/ctrans
+    elif test -r /usr/local/ncarg-5.0.0-pgi-64-SLES10; then
+        CTRANS=/usr/local/ncarg-5.0.0-pgi-64-SLES10/bin/ctrans
+    elif test -r /usr/local/ncarg-5.0.0; then
+        CTRANS=/usr/local/ncarg-5.0.0/bin/ctrans
+    elif test -r /usr/local/apps/ncarg-4.3.1.LINUX9; then
+        CTRANS=/usr/local/apps/ncarg-4.3.1.LINUX9/bin/ctrans
     else
         CTRANS=$NCARG_ROOT/bin/ctrans
     fi
 
     date
-    echo "Running $NCARG_ROOT/bin/ctrans and netpbm programs to make gmeta_$prod.gif file"
+    echo "Running $CTRANS and netpbm programs to make gmeta_$prod.gif file"
     which rasttopnm
     which ppmtogif
     echo "$CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif"
           $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
+    ls -l $SCRATCH_DIR/gmeta_$prod.gif
     date
 
 else
