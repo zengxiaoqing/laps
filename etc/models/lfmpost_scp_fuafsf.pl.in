@@ -23,12 +23,13 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -p model prefix (default = model dependent)
 #    -w maximum wait time (seconds, default = 0);
 #    -M path to Mass Store if desired
+#    -S skip JETTY copy (just do Mass Store if that is chosen)
 #    -x <blank> if present an awips bigfile will be created
 #    -e avoid exiting if a particular file is missing (position as last argument or supply dummy value)
 
-use vars qw($opt_a $opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_x $opt_e);
-#getopt('l:m:a:r:d:g:f:i:s:p:w:M:xe');
-getopt('lmardgfispwMxe');
+use vars qw($opt_a $opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e);
+#getopt('l:m:a:r:d:g:f:i:s:p:w:M:Sxe');
+getopt('lmardgfispwMSxe');
 
 # Obtain perl module from LAPSINSTALLROOT
 require "@prefix@/etc/laps_tools.pm";
@@ -187,7 +188,8 @@ my $g,@grid;
 my $grid;
 
 # Loop through each forecast time for JETTY copy
-for ($n=0; $n<$nfcst; $n++) {
+if (! $opt_S){ # test for skipping JETTY copy
+ for ($n=0; $n<$nfcst; $n++) {
   print "loop increment is $n\n";
   $current_sec = timegm(gmtime);
   if ( $current_sec > $endsec && (! defined($opt_d)) )
@@ -283,7 +285,12 @@ for ($n=0; $n<$nfcst; $n++) {
     system ($scp_cmd);
     system ("date");
   } # grid loop
-} # forecast time loop
+ } # forecast time loop
+
+}else{ # Skip JETTY copy
+ print "Skipping JETTY Copy\n";
+
+} # test of $opt_S 
 
 if(! defined $opt_M){
     print "no MSS copy is needed\n";
