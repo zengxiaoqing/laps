@@ -88,7 +88,7 @@ if test $LEN_DATETIME = "13" || test $LEN_DATETIME = "14"; then
 #     cat $modeldir >> $SCRATCH_DIR/lapsplot.$prod.tmp
       echo "modeldir = $modeldir"
       echo $modeldir >> $SCRATCH_DIR/lapsplot.$prod.tmp
-      cat $SCRATCH_DIR/datetime >> $SCRATCH_DIR/lapsplot.$prod.tmp
+      tail -1 $SCRATCH_DIR/datetime >> $SCRATCH_DIR/lapsplot.$prod.tmp
       cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.2 >> $SCRATCH_DIR/lapsplot.$prod.tmp
     done
 
@@ -146,9 +146,21 @@ else
 fi
 
 if test "$netpbm" = "yes"; then
+    if test -r /whome; then
+        CTRANS=/opt/ncl/5.1.0_bin/bin/ctrans
+    elif test -r /usr/local/apps/ncarg-4.3.1.LINUX9; then
+        CTRANS=/usr/local/apps/ncarg-4.3.1.LINUX9/bin/ctrans
+    else
+        CTRANS=$NCARG_ROOT/bin/ctrans
+    fi
+
     date
-    echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file"
-    $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
+    echo "Running $CTRANS and netpbm programs to make gmeta_$prod.gif file"
+    which rasttopnm
+    which ppmtogif
+    echo "$CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif"
+          $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
+    ls -l $SCRATCH_DIR/gmeta_$prod.gif
     date
 
 else
