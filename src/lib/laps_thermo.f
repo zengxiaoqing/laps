@@ -2136,6 +2136,7 @@ C   PRESSURE FOR DRY AIR.
         real PWB0           ! Output: pressure of the wet bulb level
         real HWB0           ! Output: height of the wet bulb level (kft agl)
 
+        IO = 0
  	IOUT=MIN(IO,1)                                                          
  	IF(WB(1).GE.twet_c)GOTO150                                                  
 !	IF(IO.GE.2)WRITE(6,87)                                                  
