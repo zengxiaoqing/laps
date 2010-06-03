@@ -372,25 +372,30 @@ if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r
     print $sys."\n";
     system($sys);
 
-    $t=gmtime();
-    print $t." Running purger in fua to bypass possible soft link\n";
-    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
-    $sys .= "-r " if($opt_r);
-    $sys .= "-m $opt_m " if($opt_m);
-    $sys .= "-t $opt_t " if($opt_t);
-    $sys .= " $LAPS_DATA_ROOT/lapsprd/fua";
-    print $sys."\n";
-    system($sys);
+    if(-l "$LAPS_DATA_ROOT/lapsprd/fua"){
+        $t=gmtime();
+        print $t." Running purger in fua to bypass soft link\n";
+        $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
+        $sys .= "-r " if($opt_r);
+        $sys .= "-m $opt_m " if($opt_m);
+        $sys .= "-t $opt_t " if($opt_t);
+        $sys .= " $LAPS_DATA_ROOT/lapsprd/fua";
+        print $sys."\n";
+        system($sys);
+    }
 
-    $t=gmtime();
-    print $t." Running purger in fsf to bypass possible soft link\n";
-    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
-    $sys .= "-r " if($opt_r);
-    $sys .= "-m $opt_m " if($opt_m);
-    $sys .= "-t $opt_t " if($opt_t);
-    $sys .= " $LAPS_DATA_ROOT/lapsprd/fsf";
-    print $sys."\n";
+    if(-l "$LAPS_DATA_ROOT/lapsprd/fsf"){
+        $t=gmtime();
+        print $t." Running purger in fsf to bypass soft link\n";
+        $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
+        $sys .= "-r " if($opt_r);
+        $sys .= "-m $opt_m " if($opt_m);
+        $sys .= "-t $opt_t " if($opt_t);
+        $sys .= " $LAPS_DATA_ROOT/lapsprd/fsf";
+        print $sys."\n";
     system($sys);
+    }
+
 }
 # for CWB/Taiwan, we need to update file tcbogus.nl and deal
 # with previous lga files in the event the contents of tcbogus.nl has changed.
@@ -547,9 +552,8 @@ foreach $exe (@LAPS_EXE){
                     print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$wall_time_hr:$wall_time_min:00 -A $opt_q\n";
                 }elsif($opt_Q){ 
                     print TFILE "#\$ -pe $node_type $nodes_current\n";
-                    if($node_type eq "serial"){
-                        print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=3.6G\n";
-#                       print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                    if($node_type eq "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
+                        print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=6.0G\n";
                     }else{
                         print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
                     }
