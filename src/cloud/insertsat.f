@@ -512,7 +512,7 @@ c
                             endif
                         endif
                       else ! Band 8 nearly matches ground, clear it
-!                       Insure that "black (or grey) stratus" is not present
+!                       Ensure that "black (or grey) stratus" is not present
                         temp_thresh = 
      1                            min(t_gnd_k(i,j),t_sfc_k(i,j)-10.0)       
                         if(temp_grid_point .lt. temp_thresh)then
@@ -842,6 +842,9 @@ c
      1                   ,l_no_sao_vis,istat_vis_potl_a(i,j)
 322             format(1x,2i4,' WARNING: htbase/cover = '
      1                ,i2,f7.0,f7.2,2f7.0,l2,i2)       
+                if(cover .lt. -0.0001)then
+                    write(6,*)' ERROR, cover << 0.'
+                endif
 323             continue
             endif
 
@@ -1241,6 +1244,10 @@ c
 2           continue
         endif
 
+        if(cover_new_f .lt. -0.0001)then
+            write(6,*)' WARNING: corrected cover << 0. ',i,j,cover_new_f
+        endif
+
         return
         end
 
@@ -1261,6 +1268,12 @@ c
             write(6,*)' tb8_k,t_gnd_k,t_cld,band8_cover'
      1                 ,tb8_k,t_gnd_k,t_cld,band8_cover
             band8_cover = 1.0 
+            istatus = 0
+        elseif(band8_cover .lt. 0.0)then
+            write(6,*)' WARNING: resetting band8_cover up to 0.0'
+            write(6,*)' tb8_k,t_gnd_k,t_cld,band8_cover'
+     1                 ,tb8_k,t_gnd_k,t_cld,band8_cover
+            band8_cover = 0.0 
             istatus = 0
         endif
 
