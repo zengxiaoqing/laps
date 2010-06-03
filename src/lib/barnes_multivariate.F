@@ -381,8 +381,8 @@ cdis
 
 !     ....................Declare Local variables.............................
 
-      integer l,i,ii,j,jj,k,n,i_subscript
-      real r0_norm_sq,r0_value,ratio_norm_sq
+      integer l,i,ii,j,jj,k,n
+      real r0_norm_sq,r0_value,ratio_norm_sq,r_subscript
 
       real, allocatable, dimension(:,:,:,:) :: sum_var              ! Local
       real, allocatable, dimension(:,:,:) :: sumwt                  ! Local
@@ -439,7 +439,7 @@ cdis
      1          ,r0_barnes_max,r0_barnes_max_m
       write(6,*)'r0_vert_grid',r0_vert_grid
 
-      fnorm_0 = fnorm_calc(0,r0_norm_sq,exp_offset,expm80)
+      fnorm_0 = fnorm_calc(0.,r0_norm_sq,exp_offset,expm80)
 
       write(6,*)'weight_bkg_const,fnorm_0,ratio'
      1          ,weight_bkg_const,fnorm_0,weight_bkg_const/fnorm_0
@@ -451,10 +451,10 @@ cdis
 !             Nominal radius_sq of influence divided by 
 !             desired radius_sq of influence
               ratio_norm_sq = r0_norm_sq / r0_barnes_max**2
-              i_subscript = 0.5 + (float(i*i+j*j)*ratio_norm_sq)
+              r_subscript = float(i*i+j*j) * ratio_norm_sq
 
 !             Horizontal Weight (Scaled by e^70 ~= 2.5e30)
-              fnorm_lut(i,j) = fnorm_calc(i_subscript,r0_norm_sq,
+              fnorm_lut(i,j) = fnorm_calc(r_subscript,r0_norm_sq,
      1                                    exp_offset,expm80)
           endif         
       enddo
@@ -886,11 +886,11 @@ csms$parallel end
         end
 
       
-      function fnorm_calc(iii,r0_norm_sq,exp_offset,expm80)
+      function fnorm_calc(rrr,r0_norm_sq,exp_offset,expm80)
 
       real exp_offset
 
-      dist_norm_sq = (float(iii)/r0_norm_sq)
+      dist_norm_sq = rrr / r0_norm_sq
       arg = dist_norm_sq - exp_offset
 
 !     Give a floor to the exponential to prevent underflow
