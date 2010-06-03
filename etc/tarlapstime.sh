@@ -9,13 +9,13 @@
 
 # Third command line argument is year (YYYY)
 
-# Fourth command line argument is month
+# Fourth command line argument is month (MM)
 
-# Fifth command line argument is date of the month
+# Fifth command line argument is date of the month (DD)
 
 # Sixth argument is for expanded output [expand,noexpand]
 
-# Seventh argument is for static files [static,nostatic]
+# Seventh argument is for including static files [static,nostatic]
 
 # Eighth argument is minimum age (minutes) to keep LGA/LGB files
 
