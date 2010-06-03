@@ -28,6 +28,7 @@ main                                                     laps_cloud.f
             correlation                                      "
             cloud_top                                        "
             correct_cover                                    "
+                get_band8_cover                              "
             compare_radiation                                "
                 apply_correction                             "
                 cvr_to_tb8_effective                         "
