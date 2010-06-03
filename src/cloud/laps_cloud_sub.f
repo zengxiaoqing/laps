@@ -301,7 +301,7 @@ cdis
             write(6,*)' ERROR: Could not allocate t_modelfg'
         endif
 
-        allocate( sh_modelfg(NX_L,NY_L,KCLOUD), STAT=istat_alloc )
+        allocate( sh_modelfg(NX_L,NY_L,NZ_L), STAT=istat_alloc )
         if(istat_alloc .ne. 0)then
             write(6,*)' ERROR: Could not allocate sh_modelfg'
         endif
@@ -2003,8 +2003,8 @@ C       EW SLICES
                     endif
 
                 elseif(clouds_0d .lt. 0.0)then 
-                    if(cloud_0d .lt. -1e4)then
-                        write(6,*)' Error, clouds_0d < 0',i,j,k
+                    if(clouds_0d .lt. -0.0001)then
+                        write(6,*)' Error, clouds_0d << 0',i,j,k
      1                                    ,clouds_0d   
                         stop
                     else 
