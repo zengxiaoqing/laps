@@ -1,7 +1,5 @@
 #!/bin/ksh
 
-
-
 #Do for each domain/model/time
 #!/bin/sh
 
@@ -44,8 +42,7 @@ set -A products `cat $LAPS_DATA_ROOT/static/www/fcst2d/followup_spaghetti_prods.
 #Call for each product
 for prod in ${products[*]}
 do
-  echo " "
-  echo "Looping through $prod with call to laps_gifs_sub_fcst.sh"
+  echo "Looping through $prod with call to laps_gifs_sub_spaghetti.sh"
   startdate=`date -u +%H:%M:%S`
   $LAPSINSTALLROOT/etc/www/lapsplot/laps_gifs_sub_spaghetti.sh $prod $WINDOW $LAPS_ETC $WWW_DIR $model $LAPS_DATA_ROOT $latest $datetime $RESOLUTION $domain $model
   enddate=`date -u +%H:%M:%S`

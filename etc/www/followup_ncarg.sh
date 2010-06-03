@@ -100,6 +100,7 @@ echo "WEB_DATA="$WEB_DATA
 echo "LAPSROOT="$LAPS_ROOT
 echo "WINDOW="$WINDOW
 echo "RESOLUTION="$RESOLUTION
+echo "NCARG_ROOT="$NCARG_ROOT
 mkdir -p $WEB_DATA 
 mkdir -p $WEB_DATA/anal2d
 AGE=+7 
