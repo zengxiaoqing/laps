@@ -138,6 +138,7 @@ if test "$netpbm" = "yes"; then
     date
     echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file"
     $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
+    ls -l $SCRATCH_DIR/gmeta_$prod.gif
     date
 
 else
