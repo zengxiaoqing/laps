@@ -239,11 +239,13 @@ SUBROUTINE PrPstLSX
       dat(1:ngd(1),1:ngd(2),nvr) = &
 	analys(numfic(1)+1:numgrd(1)-numfic(1), &
 	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)
-      nvr = nvr+1
-      vnm(nvr) = 'PP '
-      vun(nvr) = 'PA '
-      cmt(nvr) = '0  M REDUCED PRESSURE CHANGE'
-      CALL PresChng(dat(1,1,nvr-1),ngd,dat(1,1,nvr))
+      IF (press_pert .EQ. 1) THEN
+        nvr = nvr+1
+        vnm(nvr) = 'PP '
+        vun(nvr) = 'PA '
+        cmt(nvr) = '0  M REDUCED PRESSURE CHANGE'
+        CALL PresChng(dat(1,1,nvr-1),ngd,dat(1,1,nvr))
+      ENDIF
     CASE ("SFCP")	! Surface pressure
       IF (nvr+1 .GT. LSXVAR) THEN
 	WRITE(*,2)
