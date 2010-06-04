@@ -123,6 +123,7 @@ MODULE Definition
   INTEGER :: lndsea(MAXVAR)     ! Land/sea process! added by min-ken hsieh, used in AddBkgrd
   INTEGER :: slevel(MAXVAR)     ! Starting level of analysis! added by min-ken hsieh, used in STMASAna
   INTEGER :: verbal		! Print message option
+  INTEGER :: press_pert		! 1: compute pressure perturbation
   INTEGER :: savdat		! Save background and obs
   INTEGER :: saveid		! Index for saving variable
   INTEGER :: numobs(MAXVAR)	! Maximum number of obs
@@ -167,7 +168,7 @@ MODULE Definition
 	 :: stanam 		!store stn name for each variable
 
   ! Namelists:
-  NAMELIST /STMAS/numfic,numtmf,numgrd,numvar,savdat,saveid,verbal
+  NAMELIST /STMAS/numfic,numtmf,numgrd,numvar,savdat,saveid,verbal,press_pert
   NAMELIST /STMAS/qc_val,qc_std
   NAMELIST /STMAS/maxitr,stmasi,penalt,stmasr
 
