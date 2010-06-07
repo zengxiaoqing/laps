@@ -1,7 +1,7 @@
 
 !       integer icolors(8)/252,245,202,15,110,253,205,206/
-        integer icolors(8)
-        data icolors/11,5,13,3,8,9,10,16/
+        integer icolors(9)
+        data icolors/11,5,13,3,8,9,10,16,17/
 
 !       icolors_tt(0)  = deep blue    (   )     Map background
 !       icolors_tt(1)  = green        (   )     Overlay 1
