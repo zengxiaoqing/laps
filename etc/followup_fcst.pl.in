@@ -101,7 +101,7 @@ my $followup = "@prefix@/etc/www/followup_fcst.sh $domain $model $dataroot $wind
 #my $followup_fire =  "/usr/nfs/common/lapb/www/followup_fcst_fire.sh $domain $model $dataroot $window $resolution";
 #my $followup_ua =  "/usr/nfs/common/lapb/www/followup_fcst_ua.sh $domain $model $dataroot $window $resolution";
 my $followup_xsect =  "@prefix@/etc/www/followup_fcst_xsect.sh $domain $model $dataroot";
-my $followup_spaghetti = "@prefix@/etc/www/followup_ensemble.sh $domain $model $dataroot $window $resolution @prefix@";
+my $followup_spaghetti = "@prefix@/etc/www/followup_ensemble.sh $domain ensemble $dataroot $window $resolution @prefix@";
 
 my $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
 my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 36 $domain $model\n";
