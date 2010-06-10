@@ -320,7 +320,7 @@ if($WHICH_TYPE eq "laps"){
 
    $vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
 
-   if($vertical_grid eq "SIGMA_HT"){
+   if($vertical_grid eq "SIGMA_HT" || $vertical_grid eq "SIGMA_P"){
       print "$vertical_grid grid - copy in pressure version of lga.cdl\n";
       run_sys::run_sys("cp $DATA_ROOT/cdl/lga_p.cdl $DATA_ROOT/cdl/lga.cdl");
    }else{
