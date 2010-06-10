@@ -85,16 +85,17 @@ if test $LEN_DATETIME = "13" || test $LEN_DATETIME = "14"; then
 
     for modeldir in *-*
     do
+      cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.2 >> $SCRATCH_DIR/lapsplot.$prod.tmp
 #     cat $modeldir >> $SCRATCH_DIR/lapsplot.$prod.tmp
       echo "modeldir = $modeldir"
       echo $modeldir >> $SCRATCH_DIR/lapsplot.$prod.tmp
       tail -1 $SCRATCH_DIR/datetime >> $SCRATCH_DIR/lapsplot.$prod.tmp
-      cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.2 >> $SCRATCH_DIR/lapsplot.$prod.tmp
+      cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.3 >> $SCRATCH_DIR/lapsplot.$prod.tmp
     done
 
     cd $SCRATCH_DIR
 
-    cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.3 >> $SCRATCH_DIR/lapsplot.$prod.tmp
+    cat $LAPS_DATA_ROOT/static/www/fcst2d/lapsplot.$prod.4 >> $SCRATCH_DIR/lapsplot.$prod.tmp
 
     LAPSPLOT_IN=$SCRATCH_DIR/lapsplot.$prod.tmp
 
