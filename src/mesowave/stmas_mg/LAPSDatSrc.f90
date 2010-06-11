@@ -1572,7 +1572,7 @@ SUBROUTINE JbGridpt
       kc = (INT(qc_obs(4,jo,iv))-domain(1,3))/lapsdt+1
       km = max0(kc-1,1)
       kp = min0(kc+1,numgrd(3))
-      IF ((kc .LT. 1) .OR. (kc .GT. numgrd(3))) THEN
+      IF ((verbal .EQ. 1) .AND. ((kc .LT. 1) .OR. (kc .GT. numgrd(3)))) THEN
         PRINT*,'Obs out of range: ',iv,jo,qc_obs(4,jo,iv),domain(1,3)
         CYCLE
       ENDIF
