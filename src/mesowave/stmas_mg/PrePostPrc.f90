@@ -57,6 +57,11 @@ SUBROUTINE PrPstNLs
   OPEN(unit=11,file=dir(1:dirlen+12),form='formatted')
   READ(11,NML=STMAS,IOSTAT=ios)
   CLOSE(11)
+  ! Check the numtmf consistent to numgrd
+  IF (numtmf .NE. numgrd(3)) THEN
+    PRINT*,'STMAS>PrPstNLs: Error in stmas_mg.nl, numtmf does not match numgrd'
+    STOP
+  ENDIF
 
   ! Check the limit for number of variables to be analyzed:
   IF (numvar .GT. MAXVAR) THEN
