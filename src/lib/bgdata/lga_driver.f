@@ -48,12 +48,13 @@ c KML: END
       use mem_namelist, ONLY: vertical_grid
  
       implicit none
+      real    prtop ! pa
       include 'bgdata.inc'
       real     badflag
       include 'laps_sfc.inc'
 c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
-     .        nx_lp  ,ny_lp,               !LAPS pressure grid dimensions
+     .        nx_pr  ,ny_pr,               !LAPS pressure grid dimensions
      .        nx_bg  ,ny_bg,               !Background model grid dimensions
      .        nzbg_ht,nzbg_tp,nzbg_sh,
      .        nzbg_uv,nzbg_ww,
@@ -88,7 +89,7 @@ c
 
 c sfc namelist stuff. for reduced pressure calc
       integer use_lso_qc, skip_internal_qc, itheta
-      logical l_require_lso, luse_sfc_bkgd
+      logical l_require_lso, luse_sfc_bkgd, ltest_vertical_grid
       logical lgb_only
       real    redp_lvl,del,gam,ak
       real    bad_t,bad_td,bad_u,bad_v,bad_p
@@ -102,7 +103,7 @@ c
 c
 c *** sfc background arrays.
 c
-      real, allocatable  :: prbg_sfc(:,:)
+      real, allocatable  :: prbg_sfc(:,:)    !In Pascals
       real, allocatable  :: uwbg_sfc(:,:)
       real, allocatable  :: vwbg_sfc(:,:)
       real, allocatable  :: shbg_sfc(:,:)
@@ -128,7 +129,7 @@ c
       real, allocatable  :: wwbg(:,:,:)      !Background omega (m/s)
 c
 c *** Intermediate arrays for background data vertically
-c     interpolated to LAPS isobaric levels.
+c     interpolated to LAPS isobaric levels (on the model horizontal grid).
 c
       real, allocatable :: htvi(:,:,:)
       real, allocatable :: tpvi(:,:,:)
@@ -136,7 +137,7 @@ c
       real, allocatable :: uwvi(:,:,:)
       real, allocatable :: vwvi(:,:,:)
       real, allocatable :: wwvi(:,:,:)
-      real, allocatable :: prvi(:,:,:)
+      real, allocatable :: prvi(:,:,:) ! Pressure (mb)                 
 
       integer, allocatable :: msgpt(:,:)
 c
@@ -148,8 +149,9 @@ c
      .          uw(nx_laps,ny_laps,nz_laps), !!U-wind (m/s)
      .          vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
      .          ww(nx_laps,ny_laps,nz_laps), !W-wind (pa/s)
+     .          pr1d_pa(nz_laps),            !LAPS pressures (pa)
      .          pr1d_mb(nz_laps),            !LAPS pressures (mb)
-     .          sigma1d(nz_laps),            !LAPS ht (SIGMA_P grid only)
+     .          sigma1d(nz_laps),            !LAPS vert grid (SIGMA_P grid only)
      .          lat(nx_laps,ny_laps),        !LAPS lat
      .          lon(nx_laps,ny_laps),        !LAPS lon
      .          topo(nx_laps,ny_laps),       !LAPS avg terrain
@@ -172,7 +174,7 @@ c
       real, allocatable :: rp_lvl(:,:)       !Reduced pressure lvl
       real, allocatable :: rp_tp(:,:)        !Reduced pressure temp (holder)
       real, allocatable :: rp_sh(:,:)        !Reduced pressure sh   (holder)
-      real, allocatable :: prgd(:,:,:)       !Pressure 3D/1D on LAPS Grid (mb)
+      real, allocatable :: prgd_pa(:,:,:)    !Pressure 3D/1D on LAPS Grid (Pa)
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
@@ -280,44 +282,6 @@ c
          integer       nzbg_uv
          integer       nzbg_ww
          integer       istatus
-       end subroutine
-
-       subroutine vinterp(nz_laps,nx,ny,nx_lp,ny_lp,
-     .	nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
-     .  prlaps, prbght,prbgsh,prbguv,prbgww,
-     .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
-     .  htvi,tpvi,shvi,uwvi,vwvi,wwvi)
-
-         integer nx,ny,nx_lp,ny_lp
-         integer nzbg_ht
-         integer nzbg_tp
-         integer nzbg_sh
-         integer nzbg_uv
-         integer nzbg_ww
-
-         integer nz_laps
-
-         real    ::  prbght(nx,ny,nzbg_ht)
-         real    ::  prbgsh(nx,ny,nzbg_sh)
-         real    ::  prbguv(nx,ny,nzbg_uv)
-         real    ::  prbgww(nx,ny,nzbg_ww)
-         real    ::  tpbg(nx,ny,nzbg_tp)
-         real    ::  htbg(nx,ny,nzbg_ht)
-         real    ::  shbg(nx,ny,nzbg_sh)
-         real    ::  uwbg(nx,ny,nzbg_uv)
-         real    ::  vwbg(nx,ny,nzbg_uv)
-         real    ::  wwbg(nx,ny,nzbg_ww)
-
-
-         real    ::  tpvi(nx,ny,nz_laps)
-         real    ::  htvi(nx,ny,nz_laps)
-         real    ::  shvi(nx,ny,nz_laps)
-         real    ::  uwvi(nx,ny,nz_laps)
-         real    ::  vwvi(nx,ny,nz_laps)
-         real    ::  wwvi(nx,ny,nz_laps)
-c
-         real    ::  prlaps(nz_laps)
- 
        end subroutine
 
        subroutine get_bkgd_mdl_info(bgmodel
@@ -493,28 +457,27 @@ c *** get LAPS pressure OR height levels.  Using pressures.nl / heights.nl
 c
       if(vertical_grid .eq. 'PRESSURE')then ! PRESSURE
           print*,'get 1d pressures'
-          call get_pres_1d(i4time_now,nz_laps,pr1d_mb,istatus)
+          call get_pres_1d(i4time_now,nz_laps,pr1d_pa,istatus)
           if(istatus.ne.1)then
              print*,'Error returned from get_pres_1d'
              print*,'Check pressures.nl or nk_laps in nest7grid.parms'
              stop
           endif
-          nx_lp = 1
-          ny_lp = 1
-          allocate (prgd(nx_lp,ny_lp,nz_laps), STAT=istat_alloc)
-          if(istat_alloc .ne. 0)then
-              write(6,*)' ERROR: Could not allocate prgd'
-              stop
-          endif
-          do k = 1,nz_laps
-             pr1d_mb(k)=pr1d_mb(k)/100.
-             prgd(1,1,k)=pr1d_mb(k)/100.
-          enddo
+          pr1d_mb(:)=pr1d_pa(:)/100.  ! Pa to mb
+
+          nx_pr = 1
+          ny_pr = 1
+!         allocate (prgd_pa(nx_pr,ny_pr,nz_laps), STAT=istat_alloc)
+!         if(istat_alloc .ne. 0)then
+!             write(6,*)' ERROR: Could not allocate prgd_pa'
+!             stop
+!         endif
+!         prgd_pa(1,1,:)=pr1d_pa(:)   ! 1D Pa
 
       elseif(vertical_grid .eq. 'SIGMA_HT')then
-          nx_lp = nx_laps
-          ny_lp = ny_laps
-          allocate (prgd(nx_lp,ny_lp,nz_laps))
+          nx_pr = nx_bg
+          ny_pr = ny_bg
+          allocate (prgd_pa(nx_pr,ny_pr,nz_laps))
 
       elseif(vertical_grid .eq. 'SIGMA_P')then
           print*,'get 1d sigmas'
@@ -524,10 +487,10 @@ c
              print*,'Check sigmas.nl or nk_laps in nest7grid.parms'
              stop
           endif
-          nx_lp = nx_laps
-          ny_lp = ny_laps
+          nx_pr = nx_bg
+          ny_pr = ny_bg
 
-          allocate (prgd(nx_lp,ny_lp,nz_laps))
+          allocate (prgd_pa(nx_laps,ny_laps,nz_laps))
 
       endif
 c
@@ -787,7 +750,7 @@ c         convert to wfo if necessary
      +               prbgsh, 
      +               prbgww, 
      +               htbg_sfc, 
-     +               prbg_sfc,
+!    +               prbg_sfc,
      +               shbg_sfc, 
      +               uwbg_sfc, 
      +               vwbg_sfc, 
@@ -814,13 +777,32 @@ c
      .               vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
      .               wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
 
-           if(vertical_grid .ne. 'SIGMA_HT')then
-             call vinterp(nz_laps,nx_bg,ny_bg,nx_lp,ny_lp
+           if(vertical_grid .eq. 'PRESSURE')then 
+             call vinterp(nz_laps,nx_bg,ny_bg,nx_pr,ny_pr
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .         ,pr1d_mb,prbght,prbgsh,prbguv,prbgww
      .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .         ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
-           else
+
+           elseif(vertical_grid .eq. 'SIGMA_P')then
+!            LAPS pressure should be on model grid (prvi grid). We want to 
+!            model 'sigma_p' vertical levels on the model grid to construct 
+!            the 3D 'prvi' array. The 'prbg_sfc' model terrain is used. 
+
+             allocate(prvi(nx_bg,ny_bg,nz_laps))
+
+             prtop = 100. ! Top of sigma grid in mb
+
+             call get_sigmap_3d(prbg_sfc/100.,prtop,sigma1d,prvi
+     1                         ,nx_bg,ny_bg,nz_laps,istatus)
+
+             call vinterp(nz_laps,nx_bg,ny_bg,nx_pr,ny_pr
+     .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     .         ,prvi,prbght,prbgsh,prbguv,prbgww
+     .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
+     .         ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
+
+           elseif(vertical_grid .eq. 'SIGMA_HT')then
              allocate(prvi(nx_bg,ny_bg,nz_laps))
 
 !            We want to model 'sigma_ht' vertical levels on the model 
@@ -835,6 +817,11 @@ c
      .         ,htvi,prbght,prbgsh,prbguv,prbgww 
      .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .         ,prvi,tpvi,shvi,uwvi,vwvi,wwvi) 
+
+           else
+             write(6,*)' Vertical grid not supported'
+             stop
+
            endif
 
            itstatus(1)=ishow_timer()
@@ -990,6 +977,7 @@ c
           if(lgrid_missing)then
 
            print*,'Error: bkgd domain size insufficient'
+           goto 999 ! return
 
           else
                  
@@ -998,18 +986,21 @@ c
               print*,'use hinterp_field for HT ',cmodel(1:ic)
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,htvi,ht,wrapped)
-           else 
-              if(vertical_grid .eq. 'SIGMA_P')then
+
+              if(vertical_grid .eq. 'SIGMA_P')then ! generate 3D P     
                  call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .                              grx,gry,prbg_sfc,pr_sfc,wrapped)
 
 !                Convert 1D sigma levels to 3D pressures (with surface pressure)
-                 call get_sigmap_3d(pr_sfc,sigma1d,prgd,nx_laps,ny_laps       
-     1                             ,nz_laps,istatus)
+                 call get_sigmap_3d(pr_sfc,prtop,sigma1d,prgd_pa
+     1                             ,nx_laps,ny_laps,nz_laps,istatus)       
               endif
 
+           else ! SIGMA_HT
+!             Check pressure units on this 
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,       
-     .                           grx,gry,prvi,prgd,wrapped)
+     .                           grx,gry,prvi,prgd_pa,wrapped)
+
            endif
            
            if(.not. l_bilinear) then                                  
@@ -1063,8 +1054,9 @@ c
      .                wwvi,   !W-wind (pa/s)
      .                msgpt)
         
-           if(vertical_grid .eq. 'SIGMA_HT')then
-               deallocate(prvi)   !3-D Interpolated Pressure (pa)
+           if(vertical_grid .eq. 'SIGMA_HT' .or. 
+     1        vertical_grid .eq. 'SIGMA_P'       )then
+               deallocate(prvi)   !3-D Interpolated Pressure (mb)
            endif
 
            do k=1,nz_laps
@@ -1246,8 +1238,15 @@ c... of subroutine sfcbkgd_sfc. This routine uses the 2m Td and sfc_press
 c... 2D arrays directly from the background model.
 
            if(luse_sfc_bkgd)then ! tested only for ETA48_CONUS
-              call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
-     .           ,sh_sfc,topo,pr1d_mb,nx_laps, ny_laps, nz_laps, pr_sfc)      
+             if(vertical_grid .eq. 'PRESSURE')then
+               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
+     .           ,sh_sfc,topo,pr1d_pa,nx_laps, ny_laps, nz_laps, pr_sfc
+     .           ,nx_pr,ny_pr)      
+             elseif(vertical_grid .eq. 'SIGMA_P')then
+               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
+     .           ,sh_sfc,topo,prgd_pa,nx_laps, ny_laps, nz_laps, pr_sfc
+     .           ,nx_pr,ny_pr)      
+             endif
            else
               call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr1d_mb,
      .            nx_laps, ny_laps, nz_laps, pr_sfc)
@@ -1268,11 +1267,25 @@ c fix sfc Td to not be greater than T at points determined above
 c
 c..... Do the winds
 c
-           write(6,*)' Interpolate 3D winds to the hi-res surface'
-           call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
-     &                         nz_laps,missingflag,uw_sfc)
-           call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
-     &                         nz_laps,missingflag,vw_sfc)
+           if(ltest_vertical_grid('PRESSURE'))then
+               write(6,*)' Interpolate 3D winds to the hi-res surface'
+               call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
+     &                            nz_laps,missingflag,uw_sfc)
+               call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
+     &                            nz_laps,missingflag,vw_sfc)
+           elseif(ltest_vertical_grid('SIGMA_P'))then
+               write(6,*)' Use lowest level 3-D sigma winds for the sfc'
+               if(sigma1d(1) .eq. 1.0)then ! lowest sigma is at the sfc
+                   uw_sfc(:,:) = uw(:,:,1)
+                   vw_sfc(:,:) = vw(:,:,1)
+               else
+                   write(6,*)' ERROR: Unable to interpolate to sfc'
+                   stop
+               endif
+           else
+               write(6,*)' ERROR: Unable to interpolate to sfc'
+               stop
+           endif
 c
 c..... Compute reduced pressure using reduced pressure level from
 c      surface namelist file
@@ -1373,9 +1386,10 @@ c LAPS_FUA doesn't require interp but we still want to recompute
 c pr_sfc, tp_sfc and sh_sfc using high res terrain
 c
 
-          if(cmodel.eq.'LAPS_FUA')then
+          if(cmodel.eq.'LAPS_FUA')then ! SIGMA_P option needed  
               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc
-     &,td_sfc,tp_sfc,sh_sfc,topo,pr1d_mb,nx_laps,ny_laps,nz_laps,pr_sfc)      
+     &,td_sfc,tp_sfc,sh_sfc,topo,pr1d_mb,nx_laps,ny_laps,nz_laps,pr_sfc
+     &                        ,nx_pr,ny_pr)      
               call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
@@ -1420,9 +1434,16 @@ c ---------
              print*,'Error writing lga - returning to main'
              return
             endif
-          else ! SIGMA_HT, SIGMA_P
+          elseif(vertical_grid .eq. 'SIGMA_P')then 
+            call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
+     .bgvalid,cmodel,missingflag,sigma1d,ht,tp,sh,uw,vw,ww,istatus)
+            if(istatus.ne.1)then
+             print*,'Error writing lga - returning to main'
+             return
+            endif
+          elseif(vertical_grid .eq. 'SIGMA_HT')then 
             call write_lgap(nx_laps,ny_laps,nz_laps,time_bg(nf),
-     .bgvalid,cmodel,missingflag,ht,prgd,tp,sh,uw,vw,ww,istatus)
+     .bgvalid,cmodel,missingflag,sigma1d,prgd_pa,tp,sh,uw,vw,ww,istatus)
             if(istatus.ne.1)then
              print*,'Error writing lga - returning to main'
              return
@@ -1474,7 +1495,7 @@ c
 
       enddo ! Main loop through two model backgrounds (nf)
 
-      deallocate (prgd)
+      if (allocated(prgd_pa))deallocate (prgd_pa)
 
 c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
@@ -1574,7 +1595,9 @@ c      lga_status = 1
       print*,'(sec) :',itstatus(1)+itstatus(2)+itstatus(3)
      &+itstatus(4)+itstatus(5)
 
- 999  if (allocated(prgd))deallocate(prgd)
+ 999  if (allocated(prgd_pa)) deallocate(prgd_pa)
+      if (allocated(prbg_sfc))deallocate(prbg_sfc)
+      if (allocated(prvi))deallocate(prvi)
 
       return
       end
