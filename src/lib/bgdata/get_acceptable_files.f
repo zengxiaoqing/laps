@@ -24,7 +24,7 @@
       character*3   c_fa_ext
       character*200 fullname
       character*256 cfilespec
-      integer istatus
+      integer istatus, idebug
       integer i4time_fa
       integer sbnvaltimes
       logical use_analysis
@@ -66,6 +66,8 @@ C
       print*, '-----------------------------'
       print*, 'get_acceptable_files: 11-03-05'
       print*, '-----------------------------'
+
+      idebug = 0
 
       call get_laps_cycle_time(laps_cycle_time,istatus)
 
@@ -362,13 +364,16 @@ c ------------------------------------------------------------------------------
          if(i4timeinit(n).le.i4time_anal .and.
      +i4timeinit(n)+forecast_length*3600 .gt. i4time_anal)then   !let "forecast_length" window on init time qualify
 
+            if(idebug .ge. 1)print*  
             print*,'Found bkgd init that corresp to anal: ',bkgd(n)
+     1            ,' i4timeinit = ',i4timeinit(n)
             print*,'Num of fcst = ',ifcst_bkgd(n)
 
 c this separate (near identical section) is due to local model having ffff = hhmm format
 c whereas the second section below is ffff = hhhh.
 
-            if(cmodel.eq.'LAPS_FUA'.or.cmodel.eq.'MODEL_FUA')then
+            if(cmodel.eq.'LAPS_FUA'.or.cmodel.eq.'MODEL_FUA'
+     +                             .or.cmodel.eq.'HRRR')then
 
 c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel = 0 need this switch.
 
@@ -405,21 +410,29 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
                 af=fcst(n,jj)
                 read(af,'(i4)',err=888) ihour
                 valid_time_2=i4timeinit(n)+ihour*3600
+                if(idebug.ge.1)write(6,*)bkgd(n),fcst(n,jj-1),' '
+     1                                  ,bkgd(n),fcst(n,jj)  ,' '
+     1                        ,valid_time_1,i4time_anal,valid_time_2
+
                 if(valid_time_1.le.i4time_anal.and.
      +             valid_time_2.ge.i4time_anal)then
+
                  if(abs(i4timeinit(n)-i4time_anal).lt.i4time_min_diff)
      +then
                     i4time_min_diff=abs(i4timeinit(n)-i4time_anal)
                     indx_for_best_init=n
                     indx_for_best_fcst=jj-1
                  endif
+
                  print*,'Found fcsts bounding anal'
                  print*, "Index/init/fcst = ",n
      1                   , indx_for_best_init                
      1                   , indx_for_best_fcst                
                  print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
                  print*,'Full name 2: ', bkgd(n),fcst(n,jj)
+                 write(6,*)valid_time_1,i4time_anal,valid_time_2
                  print*
+
                 endif
              enddo
 
