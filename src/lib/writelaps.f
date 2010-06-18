@@ -157,12 +157,22 @@ C
 
       call upcase(v_g, v_g)
   
-      if (v_g .ne. 'PRESSURE') goto 920
+      if (v_g .eq. 'PRESSURE') then     
+        call get_pres_1d(i4_valtime,n_levels,pr,istatus)
+        do j = 1,n_levels
+          pr(j)=pr(j)/100.
+        enddo
 
-      call get_pres_1d(i4_valtime,n_levels,pr,istatus)
-      do j = 1,n_levels
-         pr(j)=pr(j)/100.
-      enddo
+      elseif (v_g .eq. 'SIGMA_P') then
+        call get_sigma_1d(n_levels,pr,istatus)
+        do j = 1,n_levels
+          pr(j)=pr(j)*1000.
+        enddo
+
+      else
+        goto 920
+
+      endif
 
 C **** Special case where write_laps is called with fua or fsf extension
       if (ext .eq. 'fua') then
@@ -178,6 +188,7 @@ C **** Special case where write_laps is called with fua or fsf extension
           enddo
         endif
       endif
+
       if (ext .eq. 'fsf') then
         n_levels = 1
         cdl_levels(1) = 0
