@@ -10,8 +10,8 @@
       integer warncnt
       integer ip(nz_laps)
 
-      real    missingflag
-      real    pr(nz_laps)
+      real    missingflag 
+      real    pr(nz_laps)                  !Pressure or Sigma-P grid levels
       real    ht(nx_laps,ny_laps,nz_laps), !Height (m)
      .        tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
      .        sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
@@ -26,6 +26,11 @@
       character*10  units(nz_laps)
       character*125 comment(nz_laps)
       character*(*) cmodel
+
+      character*40   v_g
+
+      call get_vertical_grid(v_g,istatus)
+      call upcase(v_g, v_g)
 
       ext='lga'
       call get_directory('lga',outdir,lendir)
@@ -42,11 +47,18 @@
          enddo
          enddo
 c only need to do some of these once.
-         ip(k)=int(pr(k))
+         if (v_g .eq. 'PRESSURE') then     
+            ip(k)=int(pr(k)) ! integer mb
+            lvl_coord(k)='mb  '
+            comment(k)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
+         elseif (v_g .eq. 'SIGMA_P') then
+            ip(k)=nint(pr(k)*1000.) ! integer sigma * 1000
+            lvl_coord(k)='    '
+            comment(k)=cmodel(1:ic)//' interpolated to LAPS SIGMA P'
+         endif
+
          var(k)='HT '
-         lvl_coord(k)='mb  '
          units(k)='Meters'
-         comment(k)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
       enddo
       print*,'HT'
       call write_laps(bgtime,bgvalid,outdir,ext,
@@ -206,8 +218,8 @@ c
       integer ip(nz_laps)
 
       real    missingflag
-      real    ht(nz_laps)
-      real    pr(nx_laps,ny_laps,nz_laps), !Height (m)
+      real    ht(nz_laps)                  !Sigma if SIGMA_P grid
+      real    pr(nx_laps,ny_laps,nz_laps), !Pressure (Pa)
      .        tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
      .        sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
      .        uw(nx_laps,ny_laps,nz_laps), !U-wind (m/s)
@@ -237,13 +249,13 @@ c
          enddo
          enddo
 c only need to do some of these once.
-         ip(k)=int(ht(k))
-         var(k)='P  '
-         lvl_coord(k)='m   '
+         ip(k)=nint(ht(k)*1000.)
+         var(k)='P3 '
+         lvl_coord(k)='    '
          units(k)='Pascals'
-         comment(k)=cmodel(1:ic)//' interpolated to LAPS height.'
+         comment(k)=cmodel(1:ic)//' interpolated to LAPS sigma.'
       enddo
-      print*,'P'
+      print*,'P3'
       call write_laps(bgtime,bgvalid,outdir,ext,
      .                nx_laps,ny_laps,nz_laps,nz_laps,var,
      .                ip,lvl_coord,units,comment,ht,istatus)
