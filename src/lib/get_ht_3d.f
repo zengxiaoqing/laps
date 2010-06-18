@@ -196,8 +196,9 @@ cdoc  Returns a 1-D grid of sigmas.
         sigma_1d_out(k) = sigmas(k)
       enddo                  ! k
 
+!     QC check
       do k = 2,nk
-        if(sigmas(k) .le. sigmas(k-1))goto902 
+        if(sigmas(k) .ge. sigmas(k-1))goto902 
       enddo                  ! k
 
 !     write(6,*)' Success in get_sigma_1d'
