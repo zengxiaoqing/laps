@@ -104,23 +104,24 @@ cdoc  pressure grid or other type of arbitrary vertical grid.
       end
       
 
-      subroutine get_sigmap_3d(pres_sfc,sigma_1d,pres_3d,ni,nj,nk
+      subroutine get_sigmap_3d(pres_sfc,prtop,sigma_1d,pres_3d,ni,nj,nk
      1                        ,istatus)
 
 cdoc  Returns a 3-D grid of pressures. This is useful if we have a non-uniform
-cdoc  pressure grid or other type of arbitrary vertical grid.
+cdoc  pressure grid or other type of arbitrary vertical grid. Consistent 
+cdoc  pressure units should be used.
 
-      integer ni,nj,nk       
-      real sigma_1d(nk)       ! Sigma (non-dimensional)
-      real pres_sfc(ni,nj)    ! Surface pressure (mb)  
-      real pres_3d(ni,nj,nk)  ! 3D pressure (mb)
+      integer ni,nj,nk        !                              I
+      real pres_sfc(ni,nj)    ! Surface pressure             I
+      real prtop              ! Top Pressure                 I
+      real sigma_1d(nk)       ! Sigma (non-dimensional)      I
+      real pres_3d(ni,nj,nk)  ! 3D pressure                  O
 
-      prtop = 100. ! Top of sigma grid in millibars
-
+!     Sigma is defined to be 1. at the ground and 0. at 'prtop'
       do k = 1,nk
           do j = 1,nj
           do i = 1,ni
-              pres_3d(i,j,k) = pres_sfc(i,j) - 
+              pres_3d(i,j,k) = prtop + 
      1                       ((pres_sfc(i,j) - prtop) * sigma_1d(k))
           enddo               ! i
           enddo               ! j
