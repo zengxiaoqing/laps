@@ -506,6 +506,7 @@ c -----------------------------------------------------------------
          sw(2)=+112.545
          ne(1)=32.384
          ne(2)=+131.172
+         istatus = 1
        elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_NF')then
          nxbg = 145
          nybg = 139
@@ -523,6 +524,7 @@ c -----------------------------------------------------------------
          sw(2)=+109.24
          ne(1)=34.987
          ne(2)=+131.60
+         istatus = 1
        elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_NF15'.or.
      &        cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_GFS')then
          nxbg = 181
@@ -541,6 +543,7 @@ c -----------------------------------------------------------------
          sw(2)=+109.7727
          ne(1)=35.26665
          ne(2)=+137.7342
+         istatus = 1
        elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_NF45')then
          nxbg = 221
          nybg = 127
@@ -558,6 +561,7 @@ c -----------------------------------------------------------------
          sw(2)=+77.9186
          ne(1)=42.92812
          ne(2)=+180.2034
+         istatus = 1
        elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_TFS')then
          nxbg = 229
          nybg = 181
@@ -575,6 +579,7 @@ c -----------------------------------------------------------------
          sw(2)=+82.854
          ne(1)=+52.219
          ne(2)=+199.610
+         istatus = 1
        else
          print*,'bgmodel = 3, but unknown cmodel spec'
          print*,'cmodel = ',cmodel(1:nclen)
