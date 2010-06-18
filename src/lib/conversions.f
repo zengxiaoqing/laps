@@ -199,9 +199,9 @@ cdoc    Note that this routine works with the real atmosphere.
 cdoc    When the vertical grid is pressure (e.g.), the height is converted to
 cdoc    pressure, then the interpolation to the vertical grid is performed.
 cdoc    Thus if the height is midway between two LAPS levels in height space,
-cdoc    the value of 'height_to_zcoord3' will not have a fraction of 0.5.
+cdoc    the value of 'height_to_zcoord2' will not have a fraction of 0.5.
 cdoc    If the pressure is midway between two LAPS levels, then the
-cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
+cdoc    value of 'height_to_zcoord2' will have a fraction of 0.5.
 
         implicit real (a-z)
 
@@ -209,17 +209,31 @@ cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
         real heights_3d(ni,nj,nk)
 
-        logical ltest_vertical_grid
+        logical ltest_vertical_grid,l_valid_grid
 
         data k_ref /1/
         save k_ref
 
-        if(ltest_vertical_grid('HEIGHT'))then
-           print*, 'Call is obsolete, please report this message to '
-           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!          height_to_zcoord2 = height_m / HEIGHT_INTERVAL
+        data init /0/
+        save init,l_valid_grid
 
-        elseif(ltest_vertical_grid('PRESSURE'))then
+        if(init .eq. 0)then ! Do this just one time for efficiency
+           l_valid_grid = .false.
+           if(ltest_vertical_grid('HEIGHT'))then
+              print*, 'HEIGHT grid not supported in height_to_zcoord2'
+!             height_to_zcoord2 = height_m / HEIGHT_INTERVAL
+              istatus = 0
+              return
+           elseif(ltest_vertical_grid('PRESSURE'))then
+              l_valid_grid = .true.
+           elseif(ltest_vertical_grid('SIGMA_P'))then
+              l_valid_grid = .true.
+           else
+           endif
+           init = 1
+        endif
+
+        if(l_valid_grid)then ! valid (pressure) grid with 3-D heights supplied
             height_to_zcoord2 = nk+1 ! Default value is off the grid
 
             k = k_ref
@@ -659,12 +673,7 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
         data k_ref /1/
         save k_ref
 
-        if(ltest_vertical_grid('HEIGHT'))then
-            print*, 'Call is obsolete, please report this message to '       
-            print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!           rlevel_of_field = value / HEIGHT_INTERVAL
-
-        elseif(ltest_vertical_grid('PRESSURE'))then
+        if(.true.)then                            
             if(field_3d(i,j,nk) .gt. field_3d(i,j,1))then
                 rsign = 1.0
                 isign = 1
@@ -717,12 +726,6 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
             rlevel_of_field = 0
             write(6,*)' Error, iteration limit in rlevel_of_field'
-            istatus = 0
-            return
-
-        else
-            write(6,*)' Error, vertical grid not supported,'
-     1               ,' this routine supports PRESSURE or HEIGHT'
             istatus = 0
             return
 
@@ -836,11 +839,24 @@ cdoc    Works only for constant pressure levels.
 
         real, allocatable, dimension(:) :: pres_1d
 
-        logical ltest_vertical_grid
+        logical ltest_vertical_grid,l_valid_grid
 
-        if(ltest_vertical_grid('HEIGHT'))then
+        data init /0/
+        save init,l_valid_grid
 
-        elseif(ltest_vertical_grid('PRESSURE'))then
+        if(init .eq. 0)then ! Do this just one time for efficiency
+           l_valid_grid = .false.
+           if(ltest_vertical_grid('HEIGHT'))then
+              print*, 'HEIGHT grid not supported in height_to_zcoord2'
+              istatus = 0
+              return
+           elseif(ltest_vertical_grid('PRESSURE'))then
+              l_valid_grid = .true.
+           endif
+           init = 1
+        endif
+
+        if(l_valid_grid)then
             call get_laps_dimensions(nk,istatus)
             if(istatus .ne. 1)stop
 
