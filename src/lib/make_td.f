@@ -43,6 +43,8 @@ c
 c   Author:  Dan Birkenheuer
 c   
 c   Date:    28 September 1993
+c
+c   QC checks added by S. Albers in 2010
 c   
 c   
 
@@ -126,6 +128,13 @@ c second test for too little a q for routine to work.
 c now find the appropriate td that gives us internal_q = q
 
 c assign common variables for func call
+        if(p .gt. 1500. .or. p .le. 0.)then
+            write(6,*)' p out of bounds in make_td ',p
+        endif
+        if(t .gt. 1000. .or. t .lt. -274.)then
+            write(6,*)' t out of bounds in make_td ',t
+        endif
+        
         pc = p
         tc = t
         qc = q
