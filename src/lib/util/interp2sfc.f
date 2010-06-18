@@ -55,7 +55,7 @@ c
       real sfc_2d(ni,nj), field_3d(ni,nj,nk), heights_3d(ni,nj,nk)
       real interp_2d(ni,nj)
 c
-      write(6,*)' Interpolating 3-d field to 2-d surface.'
+      write(6,*)' Interpolate 3-d field to 2-d surface (interp_to_sfc)'
 
 c
 c..... Interpolate from the 3-d grid to the 2-d surface at each point.
