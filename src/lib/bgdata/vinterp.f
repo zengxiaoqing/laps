@@ -1,5 +1,5 @@
 
-      subroutine vinterp(nz_laps,nx,ny,nx_lp,ny_lp,
+      subroutine vinterp(nz_laps,nx,ny,nx_pr,ny_pr,
      .	nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
      .  prlaps, prbght,prbgsh,prbguv,prbgww,
      .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
@@ -8,7 +8,9 @@ c
       implicit none
       include 'bgdata.inc'
 c
-      integer nx,ny,nx_lp,ny_lp
+      integer nx,ny
+      integer nx_pr,ny_pr ! either model background dims, or 1,1 based on 
+                          ! vertical grid
       integer ip,jp
       integer nzbg_ht
       integer nzbg_tp
@@ -48,14 +50,15 @@ c
      .       vwvi(nx,ny,nz_laps), !v-wind (m/s)
      .       wwvi(nx,ny,nz_laps)  !w-wind (omega [pa/s])
 c
-      real   prlaps(nx_lp,ny_lp,nz_laps),prilaps,fact1,fact2
+!     3D pressures on the model grid (or input as a 1D constant pressure array)
+      real   prlaps(nx_pr,ny_pr,nz_laps),prilaps,fact1,fact2
       real   datmsg,datmsg1,datmsg2
       integer i,j,k,kk,lencm
 
       interface
          subroutine vinterp_sub(msngflag
-     .,nx,ny,nx_lp,ny_lp,nz,nzbg,pr,prbg,bgdata,bgdatavi)
-         integer    nx,nx_lp,ny_lp,ny,nz
+     .,nx,ny,nx_pr,ny_pr,nz,nzbg,pr,prbg,bgdata,bgdatavi)
+         integer    nx,nx_pr,ny_pr,ny,nz
          integer    nzbg
          real  ::   pr(nz)
          real  ::   prbg(nx,ny,nzbg)
@@ -87,8 +90,8 @@ c individual fields (like sh, u/v and ww).
       do k=1,nz_laps
          do j=1,ny
             do i=1,nx
-               ip = min(i,nx_lp)
-               jp = min(j,ny_lp)
+               ip = min(i,nx_pr) ! Collapse indices to 1,1 for 1D 'prlaps' input
+               jp = min(j,ny_pr) 
                prilaps=1./prlaps(ip,jp,k)
                do kk=1,nzbght
 
@@ -171,28 +174,28 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
 c
 c second loops for remaining variables
 c
-      call vinterp_sub(missingflag,nx,ny,nx_lp,ny_lp,nz_laps,nzbgsh
+      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr,nz_laps,nzbgsh
      .                     ,prlaps,prbgsh,shbg,shvi)
-      call vinterp_sub(missingflag,nx,ny,nx_lp,ny_lp,nz_laps,nzbguv
+      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr,nz_laps,nzbguv
      .                     ,prlaps,prbguv,uwbg,uwvi)
-      call vinterp_sub(missingflag,nx,ny,nx_lp,ny_lp,nz_laps,nzbguv
+      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr,nz_laps,nzbguv
      .                     ,prlaps,prbguv,vwbg,vwvi)
-      call vinterp_sub(missingflag,nx,ny,nx_lp,ny_lp,nz_laps,nzbgww
+      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr,nz_laps,nzbgww
      .                     ,prlaps,prbgww,wwbg,wwvi)
 
       return
       end
 
-      subroutine vinterp_sub(msngflag,nx,ny,nx_lp,ny_lp,nz,nzbg
+      subroutine vinterp_sub(msngflag,nx,ny,nx_pr,ny_pr,nz,nzbg
      .          ,pr,prbg,bgdata,bgdatavi)
 
       implicit none
 
-      integer  nx,ny,nx_lp,ny_lp,nz
+      integer  nx,ny,nx_pr,ny_pr,nz
       integer  ip,jp
       integer  nzbg
 
-      real, intent(in)  ::   pr(nx_lp,ny_lp,nz)
+      real, intent(in)  ::   pr(nx_pr,ny_pr,nz)
       real, intent(in)  ::   prbg(nx,ny,nzbg)
       real, intent(in)  ::   bgdata(nx,ny,nzbg)
       real, intent(out) ::   bgdatavi(nx,ny,nz)
@@ -205,8 +208,8 @@ c
       do k=1,nz
          do j=1,ny
             do i=1,nx
-               ip = min(i,nx_lp)
-               jp = min(j,ny_lp)
+               ip = min(i,nx_pr) ! Collapse indices to 1,1 for 1D 'prlaps' input
+               jp = min(j,ny_pr)
                do kk=1,nzbg
 
 
