@@ -254,9 +254,9 @@ if($opt_q || $opt_Q){
 
     chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
     if(defined $opt_w){
-       $command = "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_$exe.sh";
+       $command = "\@PBSHOME\@/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_$exe.sh";
     }else{
-       $command = "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_$exe.sh";
+       $command = "\@PBSHOME\@/bin/qsub $LAPS_LOG_PATH/run_qsub_$exe.sh";
     }
     print "Executing $command\n";
     system("$command");
