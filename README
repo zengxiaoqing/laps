@@ -62,10 +62,9 @@
          2.8.2 ..................  Sigma Pressure Grid
          2.9 ..............  CHANGING THE CYCLE TIME 
          2.10 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
-         2.11 .............  LVD (SATELLITE INGEST) CHANGES
-         2.12 .............  OTHER RUNTIME PARAMETERS
-         2.13 .............  Detecting and Reporting Installation Errors
-         2.13.1 .................. Runtime Monitoring
+         2.11 .............  OTHER RUNTIME PARAMETERS
+         2.12 .............  Detecting and Reporting Installation Errors
+         2.12.1 .................. Runtime Monitoring
      3.0 ............  Description of LAPS Processes
          3.1 ..............  Localization Processes
          3.1.1 ..................  Gridgen_model (static.nest7grid generation)
@@ -369,12 +368,27 @@
 
                --- 2.1.9  GRIB2 external libraries (optional) ---
 
-     We have added support for the background models read by lga to now 
-     include GRIB-formatted files. External compression libraries required 
-     for decoding GRIB2-formatted files are libjasper.a, libpng.a, and libz.a
-     and are usually found in /usr/lib. It is recommended to have a system 
-     administrator download and install these external libraries if they 
-     are not already on your system. 
+     The background models read by lga include GRIB1 and GRIB2-formatted files. 
+
+     The external compression libraries required for decoding GRIB2-formatted 
+     files are libjasper.a, libpng.a, and libz.a. They are usually found in 
+     /usr/lib or /usr/lib64. It is recommended to have a system administrator 
+     install these external libraries if they are not already on your system. 
+     (JPEG2000 and other image compression algorithms are built into GRIB2. 
+     Library support for JPEG2000 is provided via the JasPer library. The 
+     implementation of JPEG2000 compression reduces file sizes up to 80%.)
+
+     If the JasPer library is placed in a location other than the system area 
+     (/usr/lib) then set an environment variable LD_LIBRARY_PATH for lga to run
+     and set an environment variable CPP_INCLUDE_PATH for lga to build:
+     	e.g. setenv LD_LIBRARY_PATH /opt/jasper/1.900.1/lib
+     	and setenv CPP_INCLUDE_PATH /opt/jasper/1.900.1/include
+
+     (The unix/linux system command 'ldd' command prints the shared library 
+     dependancies on an executable; running 'ldd lga.exe' is a helpful 
+     command in the situation when you download the LAPS precompiled binaries
+     and need more information about shared libraries required by lga.exe.)
+
 
      The 'configure' script will determine if these libraries are present. 
      If all are found, 'configure' prepares the file 'src/include/makefile.inc' 
@@ -382,6 +396,7 @@
      software to build to read both GRIB1 and GRIB2-formatted files. Without 
      these three specific compression libraries available, lga is built to 
      read only GRIB1-formatted files in addition to netCDF-formatted files. 
+
 
      See source directory: $LAPS_SRC_ROOT/src/lib/degrib/README_LIBS file 
      for additional information.
@@ -2066,14 +2081,7 @@ and is also available on line that describes this new technique.  (refer to:
 http://laps.fsl.noaa.gov/birk/papers/tech_memos/GSD_Tech_Memo_32.pdf or a copy 
 can be gotten directly from GSD)
 
------- 2.11 -------------LVD (SATELLITE INGEST) CHANGES------------------------
-
-   There may be some parameters in the satellite code that change when 
-   the domain is moved. The latest info documented in the file
-   './src/ingest/satellite/lvd/README'. Please contact John Smart 
-   (John.R.Smart@noaa.gov) for more details. 
-
------- 2.12 ----------------OTHER RUNTIME PARAMETERS---------------------------
+------ 2.11 ----------------OTHER RUNTIME PARAMETERS---------------------------
 
    It is worthwhile to check the 'nest7grid.parms' and other namelist
    files in 'data/static' to make sure all the runtime parameters are
@@ -2100,7 +2108,7 @@ can be gotten directly from GSD)
                        normalization.
 </pre>
 
------- 2.13 -----Detecting and Reporting Installation Errors-------------------
+------ 2.12 -----Detecting and Reporting Installation Errors-------------------
 
    To determine how well LAPS was installed, verify that all (31 at last check)
    executables were built OK ('bin' directory) with no errors in the output 
@@ -2129,7 +2137,7 @@ can be gotten directly from GSD)
    The entire output of localize_domain.pl (found in $LAPS_DATA_ROOT/log/localize_domain.log*)
 </pre>
 
-                   ----  2.13.1 Runtime Monitoring ---
+                   ----  2.12.1 Runtime Monitoring ---
 
    To see how well LAPS is running, check if output files are being placed in 
    the various 'lapsprd' subdirectories. A graphical product monitor that can 
@@ -2198,7 +2206,7 @@ can be gotten directly from GSD)
 
 Package: gridgen_model.exe - Writes static file, run by localization script. 
                                  
-Contact: John Smart - John.R.Smart@noaa.gov 
+Contact: Steve Albers - Steve.Albers@noaa.gov 
 
 Inputs:
 	Geography databases (topography, land fraction, landuse, soiltype top/bot)
@@ -2336,7 +2344,7 @@ As mentioned above, a flow chart for the ingest processes may be found at
 ------ 3.2.1 -------------------- LGA Model ---------------------------------
 
 Package: lga.exe - ingest background model data 
-             (contact: John Smart - John.R.Smart@noaa.gov).
+             (contact: Steve Albers - Steve.Albers@noaa.gov).
 
         LGA 	LAPS analysis grids from RUC or other analysis/forecast grids.
 
@@ -2642,7 +2650,7 @@ Sample Input/Output: May be available in the test data case.
 
 Process: VRC (vrc_driver.x) 
 
-Author John Smart (John.R.Smart@noaa.gov)
+Author Steve Albers (Steve.Albers@noaa.gov)
 
 Parameter namelist file: 'static/vrc.nl'
 
