@@ -335,6 +335,9 @@ fi
 dnl Hardwired MULTI_EXEC for now
 CPPFLAGS="$CPPFLAGS -DMULTI_EXEC"
 
+dnl Hardwired for WJET for now
+PBSHOME="/usr/local/fsl"
+
 dnl For Grib decoder software some W3 libs need to have
 dnl architecture defined as -DCRAY90 -DHP -DSGI -DLINUX
 dnl -DLINUXF90 -DVPP5000 (Fujitsu) -DIBM4 -DIBM8 -DALPHA -DMAC
@@ -361,6 +364,7 @@ AC_SUBST(ARCHIVE)
 AC_SUBST(FC_USE_TRIGD)
 AC_SUBST(DEGRIBFLAGS)
 AC_SUBST(CDEGRIBFLAGS)
+AC_SUBST(PBSHOME)
 
 dnl Checks for programs.
 dnl AC_PROG_AWK
