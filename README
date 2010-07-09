@@ -717,6 +717,9 @@
                             albedo_ncep/A90S000W
                             albedo_ncep/AHEADER
 
+     We are currently working on a procedure to access higher resolution
+     terrain and land use data from the USGS (at least to 1 arcsec).
+
      Soil Type and Other Optional Databases:
 
           The laps process 'gridgen_model' described below in section
