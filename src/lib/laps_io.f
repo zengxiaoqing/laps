@@ -1859,7 +1859,8 @@ c     include 'bgdata.inc'
       do i=1,maxbgmodels
          if(cmodel(i).ne.' ')then
             if(cmodel(i).eq.'RUC40_NATIVE'.or.
-     +         cmodel(i).eq.'RUC20_NATIVE')then
+     +         cmodel(i).eq.'RUC20_NATIVE'.or.
+     +         cmodel(i).eq.'RUC'              )then
                nbgm=nbgm+1
                bgmodelnames(nbgm)='ruc'
             endif
