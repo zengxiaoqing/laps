@@ -1285,7 +1285,8 @@ c
 
       logical wrapped
 c
-c *** Input vertically interpolated field.
+c *** Input vertically interpolated field - 2D should be slightly faster than
+c     'hinterp_field_3d'
 c *** Output Laps field
 c
       real fvi(nx_bg,ny_bg,nz),
@@ -1296,6 +1297,8 @@ c
       integer istatus
       real    r_missing_data
 c
+
+      write(6,*)' Subroutine hinterp_field'
 
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus.ne.1)then
@@ -1310,7 +1313,7 @@ c
          do i=1,nx_laps
             if(grx(i,j).lt.r_missing_data.and. 
      .         gry(i,j).lt.r_missing_data)then
-               call gdtost(fvi(1,1,k),nx_bg,ny_bg,
+               call gdtost_i(fvi(1,1,k),nx_bg,ny_bg,
      .              grx(i,j),gry(i,j),flaps(i,j,k),wrapped)
             else
                flaps(i,j,k)=r_missing_data
@@ -1321,6 +1324,512 @@ c
 c
       return
       end
+
+      subroutine hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz,
+     .     grx,gry,fvi,flaps,wrapped)
+c
+!     implicit none
+c
+      include 'bgdata.inc'
+
+      integer nx_bg,ny_bg,nx_laps,ny_laps,nz        
+
+      dimension r(4,nz),scr(4,nz),staval(nz)
+
+      logical wrapped
+c
+c *** Input vertically interpolated field - optimized for 3D.
+c *** Output Laps field
+c
+      real fvi(nx_bg,ny_bg,nz),
+     .       flaps(nx_laps,ny_laps,nz),
+     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
+c
+      integer i,j,k
+      integer istatus
+      real    r_missing_data
+c
+      write(6,*)' Subroutine hinterp_field_3d'
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne.1)then
+         print*,'Error getting r_missing_data - hinterp_field'
+         return
+      endif
+c
+c *** Horizontally interpolate variable.
+c
+      ix = nx_bg
+      iy = ny_bg
+
+      do jl=1,ny_laps
+      do il=1,nx_laps
+        if(grx(il,jl).lt.r_missing_data.and. 
+     .     gry(il,jl).lt.r_missing_data)then
+!         call gdtost_i(fvi(1,1,k),nx_bg,ny_bg,
+!    .         grx(i,j),gry(i,j),flaps(i,j,k),wrapped)
+!         subroutine gdtost_i(ab,ix,iy,stax,stay,staval,wrapped)
+
+          stax = grx(il,jl)
+          stay = gry(il,jl)
+
+            
+!         dimension ab(ix,iy),r(4),scr(4)
+!         logical wrapped ! WNI added
+!         include 'bgdata.inc'
+c_______________________________________________________________________________
+c
+          iy1=int(stay)-1
+          if(stay.lt.1.0)iy1=1.0
+          iy2=iy1+3
+          ix1=int(stax)-1
+          if(stax.lt.1.0) THEN 
+            IF (wrapped) THEN   ! WNI
+              ix1 = ix1 + ix
+            ELSE ! WNI
+              ix1=1.0
+            ENDIF ! WNI
+          endif ! WNI
+          ix2=ix1+3
+          fiym2=float(iy1)-1
+          fixm2=float(ix1)-1
+
+            ii=0
+
+            do iii=ix1,ix2
+               i=iii
+c
+c ****** Account for wrapping around effect of global data at Greenwich.
+c
+               if (wrapped) then    ! WNI
+                  if (i .lt. 1) i=i+ix  
+                  if (i .gt. ix) i=i-ix
+               endif
+
+               ii=ii+1
+               if (i .ge. 1 .and. i .le. ix) then 
+                  jj=0
+                  do jjj=iy1,iy2
+                     j=jjj
+c
+c ************ Account for N-S wrapping effect of global data.
+c
+                     if (wrapped) THEN  !WNI
+                        if (j .lt. 1) then
+                           j=2-j
+                           i=i-ix/2
+                           if (i .lt. 1) i=i+ix
+                           if (i .gt. ix) i=i-ix
+                        endif
+                        if (j .gt. iy) then
+                           j=2*iy-j
+                           i=i-ix/2
+                           if (i .lt. 1) i=i+ix
+                           if (i .gt. ix) i=i-ix
+                        endif
+                     endif
+
+                     jj=jj+1
+
+                     if (j .ge. 1 .and. j .le. iy) then
+                        r(jj,:)=fvi(i,j,:) ! ab(i,j)
+                     else
+                        r(jj,:)=missingflag
+                     endif
+                  enddo
+                  yy=stay-fiym2
+
+                  if (yy .eq. 2.0) then
+                    scr(ii,:)=r(2,:)
+                  else
+      
+                    staval(:)=missingflag
+                    xxx=yy
+                    wt1=(xxx-3.)/(-1.)
+                    wt2=1.0-wt1
+                    yz22_temp=wt1*(xxx-4.)/(-2.)
+                    yz23_temp=wt2*(xxx-4.)/(-1.)
+                    yz24_temp=(xxx-2.)*(xxx-3.)/2.
+
+                    yz11_temp=(xxx-2.)*(xxx-3.)/(2.)
+                    yz12_temp=wt1*(xxx-1.)/(1.)
+                    yz13_temp=wt2*(xxx-1.)/(2.)
+
+                    do k=1,nz
+
+!                    call binom(1.,2.,3.,4.,r(1),r(2),r(3),r(4),yy,scr(ii)) (now inlined)
+!                    subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
+                     y1 = r(1,k)
+                     y2 = r(2,k)
+                     y3 = r(3,k)
+                     y4 = r(4,k)
+c
+                     yyy=missingflag
+                     if ( .not. (y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
+c
+c
+                       if (y4 .lt. 1.e19) then
+                         yz22=yz22_temp
+                         yz23=yz23_temp
+                         yz24=yz24_temp
+                       else
+                         yz22=wt1
+                         yz23=wt2
+                         yz24=0.0
+                       endif
+c
+                       if (y1 .lt. 1.e19) then
+                         yz11=yz11_temp
+                         yz12=yz12_temp
+                         yz13=yz13_temp
+                       else
+                         yz11=0.0
+                         yz12=wt1
+                         yz13=wt2
+                       endif
+c
+                       if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
+                         yyy=wt1*y2+wt2*y3
+                       else
+                         yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)
+     1                      +wt2*(yz22*y2+yz23*y3+yz24*y4)
+                       endif
+                     endif
+
+                     scr(ii,k) = yyy
+!                    return
+!                    end
+                    enddo ! k
+                  endif
+               else 
+                  scr(ii,:)=missingflag
+               endif ! i is valid
+            enddo ! iii
+
+            xx=stax-fixm2
+            if (xx .eq. 2.0) then
+              staval(:)=scr(2,:)
+            else
+
+!             call binom(1.,2.,3.,4.,scr(1),scr(2),scr(3),scr(4),xx,staval) (now inlined)
+!             subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
+
+              xxx=xx
+              wt1=(xxx-3.)/(-1.)
+              wt2=1.0-wt1
+              yz22_temp=wt1*(xxx-4.)/(-2.)
+              yz23_temp=wt2*(xxx-4.)/(-1.)
+              yz24_temp=(xxx-2.)*(xxx-3.)/2.
+
+              yz11_temp=(xxx-2.)*(xxx-3.)/(2.)
+              yz12_temp=wt1*(xxx-1.)/(1.)
+              yz13_temp=wt2*(xxx-1.)/(2.)
+
+              do k=1,nz
+
+               y1 = scr(1,k)
+               y2 = scr(2,k)
+               y3 = scr(3,k)
+               y4 = scr(4,k)
+c
+               yyy=missingflag
+               if ( .not. (y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
+c
+                 wt1=(xxx-3.)/(-1.)
+                 wt2=1.0-wt1
+c
+                 if (y4 .lt. 1.e19) then
+                   yz22=yz22_temp
+                   yz23=yz23_temp
+                   yz24=yz24_temp
+                 else
+                   yz22=wt1
+                   yz23=wt2
+                   yz24=0.0
+                 endif
+c
+                 if (y1 .lt. 1.e19) then
+                   yz11=yz11_temp
+                   yz12=yz12_temp
+                   yz13=yz13_temp
+                 else
+                   yz11=0.0
+                   yz12=wt1
+                   yz13=wt2
+                 endif
+c
+                 if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
+                   yyy=wt1*y2+wt2*y3
+                 else
+                   yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)
+     1                +wt2*(yz22*y2+yz23*y3+yz24*y4)
+                 endif
+               endif
+
+               staval(k) = yyy
+!              return
+!              end
+
+             enddo ! k
+
+            endif ! xx = 2
+c
+            if(staval(1).eq.missingflag)then
+               print*,'Here: staval = missingflag'
+            endif
+
+            flaps(il,jl,:) = staval(:)
+!           return
+!           end
+
+        else
+          flaps(il,jl,:)=r_missing_data
+        endif
+
+      enddo ! il
+      enddo ! jl
+c
+      return
+      end
+
+
+      subroutine hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,nz,
+     .     grx,gry,fvi,flaps,wrapped)
+c
+!     implicit none
+c
+      include 'bgdata.inc'
+
+      integer nx_bg,ny_bg,nx_laps,ny_laps,nz        
+
+      dimension r(4),scr(4)
+
+      logical wrapped
+c
+c *** Input vertically interpolated field.
+c *** Output Laps field
+c
+      real fvi(nx_bg,ny_bg,nz),
+     .       flaps(nx_laps,ny_laps,nz),
+     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
+c
+      integer i,j,k
+      integer istatus
+      real    r_missing_data
+c
+      write(6,*)' Subroutine hinterp_field_2d'
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne.1)then
+         print*,'Error getting r_missing_data - hinterp_field'
+         return
+      endif
+c
+c *** Horizontally interpolate variable.
+c
+      ix = nx_bg
+      iy = ny_bg
+
+      do k=1,nz
+        do jl=1,ny_laps
+        do il=1,nx_laps
+          if(grx(il,jl).lt.r_missing_data.and. 
+     .       gry(il,jl).lt.r_missing_data)then
+!           call gdtost_i(fvi(1,1,k),nx_bg,ny_bg,
+!    .           grx(i,j),gry(i,j),flaps(i,j,k),wrapped)
+!           subroutine gdtost_i(ab,ix,iy,stax,stay,staval,wrapped)
+
+            stax = grx(il,jl)
+            stay = gry(il,jl)
+            
+!           dimension ab(ix,iy),r(4),scr(4)
+!           logical wrapped ! WNI added
+!           include 'bgdata.inc'
+c_______________________________________________________________________________
+c
+            iy1=int(stay)-1
+            if(stay.lt.1.0)iy1=1.0
+            iy2=iy1+3
+            ix1=int(stax)-1
+            if(stax.lt.1.0) THEN 
+              IF (wrapped) THEN   ! WNI
+                ix1 = ix1 + ix
+              ELSE ! WNI
+                ix1=1.0
+              ENDIF ! WNI
+            endif ! WNI
+            ix2=ix1+3
+            staval=missingflag
+            fiym2=float(iy1)-1
+            fixm2=float(ix1)-1
+            ii=0
+            do iii=ix1,ix2
+               i=iii
+c
+c ****** Account for wrapping around effect of global data at Greenwich.
+c
+               if (wrapped) then    ! WNI
+                  if (i .lt. 1) i=i+ix  
+                  if (i .gt. ix) i=i-ix
+               endif
+
+               ii=ii+1
+               if (i .ge. 1 .and. i .le. ix) then 
+                  jj=0
+                  do jjj=iy1,iy2
+                     j=jjj
+c
+c ************ Account for N-S wrapping effect of global data.
+c
+                     if (wrapped) THEN  !WNI
+                        if (j .lt. 1) then
+                           j=2-j
+                           i=i-ix/2
+                           if (i .lt. 1) i=i+ix
+                           if (i .gt. ix) i=i-ix
+                        endif
+                        if (j .gt. iy) then
+                           j=2*iy-j
+                           i=i-ix/2
+                           if (i .lt. 1) i=i+ix
+                           if (i .gt. ix) i=i-ix
+                        endif
+                     endif
+
+                     jj=jj+1
+                     if (j .ge. 1 .and. j .le. iy) then
+                        r(jj)=fvi(i,j,k) ! ab(i,j)
+                     else
+                        r(jj)=missingflag
+                     endif
+                  enddo
+                  yy=stay-fiym2
+                  if (yy .eq. 2.0) then
+                     scr(ii)=r(2)
+                  else
+      
+!                    call binom(1.,2.,3.,4.,r(1),r(2),r(3),r(4),yy,scr(ii)) (now inlined)
+!                    subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
+                     y1 = r(1)
+                     y2 = r(2)
+                     y3 = r(3)
+                     y4 = r(4)
+                     xxx=yy
+c
+                     yyy=missingflag
+                     if ( .not. (y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
+c
+                       wt1=(xxx-3.)/(-1.)
+                       wt2=1.0-wt1
+c
+                       if (y4 .lt. 1.e19) then
+                         yz22=wt1*(xxx-4.)/(-2.)
+                         yz23=wt2*(xxx-4.)/(-1.)
+                         yz24=(xxx-2.)*(xxx-3.)/2.
+                       else
+                         yz22=wt1
+                         yz23=wt2
+                         yz24=0.0
+                       endif
+c
+                       if (y1 .lt. 1.e19) then
+                         yz11=(xxx-2.)*(xxx-3.)/(2.)
+                         yz12=wt1*(xxx-1.)/(1.)
+                         yz13=wt2*(xxx-1.)/(2.)
+                       else
+                         yz11=0.0
+                         yz12=wt1
+                         yz13=wt2
+                       endif
+c
+                       if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
+                         yyy=wt1*y2+wt2*y3
+                       else
+                         yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)
+     1                      +wt2*(yz22*y2+yz23*y3+yz24*y4)
+                       endif
+                     endif
+
+                     scr(ii) = yyy
+!                    return
+!                    end
+
+                  endif
+               else 
+                  scr(ii)=missingflag
+               endif
+            enddo
+            xx=stax-fixm2
+            if (xx .eq. 2.0) then
+               staval=scr(2)
+            else
+!              call binom(1.,2.,3.,4.,scr(1),scr(2),scr(3),scr(4),xx,staval) (now inlined)
+!              subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
+               y1 = scr(1)
+               y2 = scr(2)
+               y3 = scr(3)
+               y4 = scr(4)
+               xxx=xx
+c
+               yyy=missingflag
+               if ( .not. (y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
+c
+                 wt1=(xxx-3.)/(-1.)
+                 wt2=1.0-wt1
+c
+                 if (y4 .lt. 1.e19) then
+                   yz22=wt1*(xxx-4.)/(-2.)
+                   yz23=wt2*(xxx-4.)/(-1.)
+                   yz24=(xxx-2.)*(xxx-3.)/(+2.)
+                 else
+                   yz22=wt1
+                   yz23=wt2
+                   yz24=0.0
+                 endif
+c
+                 if (y1 .lt. 1.e19) then
+                   yz11=(xxx-2.)*(xxx-3.)/(+2.)
+                   yz12=wt1*(xxx-1.)/(1.)
+                   yz13=wt2*(xxx-1.)/(2.)
+                 else
+                   yz11=0.0
+                   yz12=wt1
+                   yz13=wt2
+                 endif
+c
+                 if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
+                   yyy=wt1*y2+wt2*y3
+                 else
+                   yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)
+     1                +wt2*(yz22*y2+yz23*y3+yz24*y4)
+                 endif
+               endif
+
+               staval = yyy
+!              return
+!              end
+
+            endif
+c
+            if(staval.eq.missingflag)then
+               print*,'Here: staval = missingflag'
+            endif
+
+            flaps(il,jl,k) = staval
+!           return
+!           end
+
+          else
+            flaps(il,jl,k)=r_missing_data
+          endif
+        enddo
+        enddo
+      enddo
+c
+      return
+      end
+c
+
 c
 c===============================================================================
 c
@@ -1417,6 +1926,195 @@ c
       endif
       return
       end
+
+c
+c===============================================================================
+c
+      subroutine gdtost_i(ab,ix,iy,stax,stay,staval,wrapped)
+c
+c *** Subroutine to return stations back-interpolated values(staval)
+c        from uniform grid points using overlapping-quadratics.
+c        gridded values of input array a dimensioned ab(ix,iy), where
+c        ix = grid points in x, iy = grid points in y.  Station
+c        location given in terms of grid relative station x (stax)
+c        and station column.
+c *** Values greater than 1.0e30 indicate missing data.
+c
+      dimension ab(ix,iy),r(4),scr(4)
+      logical wrapped ! WNI added
+      include 'bgdata.inc'
+c_______________________________________________________________________________
+c
+      iy1=int(stay)-1
+      if(stay.lt.1.0)iy1=1.0
+      iy2=iy1+3
+      ix1=int(stax)-1
+      if(stax.lt.1.0) THEN 
+        IF (wrapped) THEN   ! WNI
+          ix1 = ix1 + ix
+        ELSE ! WNI
+          ix1=1.0
+        ENDIF ! WNI
+      endif ! WNI
+      ix2=ix1+3
+      staval=missingflag
+      fiym2=float(iy1)-1
+      fixm2=float(ix1)-1
+      ii=0
+      do iii=ix1,ix2
+         i=iii
+c
+c ****** Account for wrapping around effect of global data at Greenwich.
+c
+         if (wrapped) then    ! WNI
+            if (i .lt. 1) i=i+ix  
+            if (i .gt. ix) i=i-ix
+         endif
+
+         ii=ii+1
+         if (i .ge. 1 .and. i .le. ix) then 
+            jj=0
+            do jjj=iy1,iy2
+               j=jjj
+c
+c ************ Account for N-S wrapping effect of global data.
+c
+               if (wrapped) THEN  !WNI
+                  if (j .lt. 1) then
+                     j=2-j
+                     i=i-ix/2
+                     if (i .lt. 1) i=i+ix
+                     if (i .gt. ix) i=i-ix
+                  endif
+                  if (j .gt. iy) then
+                     j=2*iy-j
+                     i=i-ix/2
+                     if (i .lt. 1) i=i+ix
+                     if (i .gt. ix) i=i-ix
+                  endif
+               endif
+
+               jj=jj+1
+               if (j .ge. 1 .and. j .le. iy) then
+                  r(jj)=ab(i,j)
+               else
+                  r(jj)=missingflag
+               endif
+            enddo
+            yy=stay-fiym2
+            if (yy .eq. 2.0) then
+               scr(ii)=r(2)
+            else
+
+!              call binom(1.,2.,3.,4.,r(1),r(2),r(3),r(4),yy,scr(ii)) (now inlined)
+!              subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
+               y1 = r(1)
+               y2 = r(2)
+               y3 = r(3)
+               y4 = r(4)
+               xxx=yy
+c
+               yyy=missingflag
+               if ( .not. (y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
+c
+                 wt1=(xxx-3.)/(-1.)
+                 wt2=1.0-wt1
+c
+                 if (y4 .lt. 1.e19) then
+                   yz22=wt1*(xxx-4.)/(-2.)
+                   yz23=wt2*(xxx-4.)/(-1.)
+                   yz24=(xxx-2.)*(xxx-3.)/2.
+                 else
+                   yz22=wt1
+                   yz23=wt2
+                   yz24=0.0
+                 endif
+c
+                 if (y1 .lt. 1.e19) then
+                   yz11=(xxx-2.)*(xxx-3.)/(2.)
+                   yz12=wt1*(xxx-1.)/(1.)
+                   yz13=wt2*(xxx-1.)/(2.)
+                 else
+                   yz11=0.0
+                   yz12=wt1
+                   yz13=wt2
+                 endif
+c
+                 if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
+                   yyy=wt1*y2+wt2*y3
+                 else
+                   yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)
+     1                +wt2*(yz22*y2+yz23*y3+yz24*y4)
+                 endif
+               endif
+
+               scr(ii) = yyy
+!              return
+!              end
+
+            endif
+         else 
+            scr(ii)=missingflag
+         endif
+      enddo
+      xx=stax-fixm2
+      if (xx .eq. 2.0) then
+         staval=scr(2)
+      else
+!        call binom(1.,2.,3.,4.,scr(1),scr(2),scr(3),scr(4),xx,staval) (now inlined)
+!        subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
+         y1 = scr(1)
+         y2 = scr(2)
+         y3 = scr(3)
+         y4 = scr(4)
+         xxx=xx
+c
+         yyy=missingflag
+         if ( .not. (y2 .gt. 1.e19 .or. y3 .gt. 1.e19) )then
+c
+           wt1=(xxx-3.)/(-1.)
+           wt2=1.0-wt1
+c
+           if (y4 .lt. 1.e19) then
+             yz22=wt1*(xxx-4.)/(-2.)
+             yz23=wt2*(xxx-4.)/(-1.)
+             yz24=(xxx-2.)*(xxx-3.)/(+2.)
+           else
+             yz22=wt1
+             yz23=wt2
+             yz24=0.0
+           endif
+c
+           if (y1 .lt. 1.e19) then
+             yz11=(xxx-2.)*(xxx-3.)/(+2.)
+             yz12=wt1*(xxx-1.)/(1.)
+             yz13=wt2*(xxx-1.)/(2.)
+           else
+             yz11=0.0
+             yz12=wt1
+             yz13=wt2
+           endif
+c
+           if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
+             yyy=wt1*y2+wt2*y3
+           else
+             yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)
+     1          +wt2*(yz22*y2+yz23*y3+yz24*y4)
+           endif
+         endif
+
+         staval = yyy
+!        return
+!        end
+
+      endif
+c
+      if(staval.eq.missingflag)then
+         print*,'Here: staval = missingflag'
+      endif
+      return
+      end
+
 c
 c===============================================================================
 c
