@@ -122,5 +122,7 @@ c                 Note that for cmodel of LAPS_FUA or LAPS surface fields are al
 c                 used and this flag is ignored. For other models we are currently
 c                 reviewing whether this flag gives acceptable results when set to TRUE.
 c
+c                 For a Sigma-P grid this should always be set to TRUE.
+c
 c Namelist section 2: interp_controls
 c     These variables are not active atm.
