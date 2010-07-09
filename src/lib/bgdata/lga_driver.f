@@ -325,18 +325,6 @@ c
 
        end subroutine
 
-       subroutine hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz
-     .,grx,gry,fvi,flaps,wrapped)
-
-         integer nx_bg,ny_bg,nx_laps,ny_laps,nz          
-         logical wrapped
-         real   fvi(nx_bg,ny_bg,nz)
-     .         ,flaps(nx_laps,ny_laps,nz)
-     .         ,grx(nx_laps,ny_laps)
-     .         ,gry(nx_laps,ny_laps)
-
-       end subroutine
-
        subroutine filter_2dx(field,ix,iy,iz,smth)
          integer ix,iy,iz
          real field(ix,iy,iz)
@@ -480,6 +468,12 @@ c
           allocate (prgd_pa(nx_pr,ny_pr,nz_laps))
 
       elseif(vertical_grid .eq. 'SIGMA_P')then
+          if(.not. luse_sfc_bkgd)then ! test for valid setting
+             write(6,*)' ERROR: luse_sfc_bkgd is FALSE in namelist'
+             write(6,*)' This should be TRUE for a SIGMA_P grid'
+             stop
+          endif
+
           print*,'get 1d sigmas'
           call get_sigma_1d(nz_laps,sigma1d,istatus)
           if(istatus.ne.1)then
@@ -984,11 +978,11 @@ c
            if(vertical_grid .ne. 'SIGMA_HT')then ! PRESSURE or SIGMA_P
               itstatus(2)=ishow_timer()
               print*,'use hinterp_field for HT ',cmodel(1:ic)
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+              call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,       
      .                           grx,gry,htvi,ht,wrapped)
 
               if(vertical_grid .eq. 'SIGMA_P')then ! generate 3D P     
-                 call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+                 call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .                              grx,gry,prbg_sfc,pr_sfc,wrapped)
 
 !                Convert 1D sigma levels to 3D pressures (with surface pressure)
@@ -998,46 +992,46 @@ c
 
            else ! SIGMA_HT
 !             Check pressure units on this 
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,       
+              call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps, 
      .                           grx,gry,prvi,prgd_pa,wrapped)
 
            endif
            
            if(.not. l_bilinear) then                                  
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+              call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,uwvi,uw,wrapped)
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+              call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,vwvi,vw,wrapped)
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+              call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,tpvi,tp,wrapped)
-              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+              call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,shvi,sh,wrapped)
 
            else
               itstatus(2)=ishow_timer()
               print*,'use bilinear_laps_3d for U ',cmodel(1:ic)
-              call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
+              call bilinear_laps_3df(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,uwvi,uw)
 
               itstatus(2)=ishow_timer()
               print*,'use bilinear_laps_3d for V ',cmodel(1:ic)
-              call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
+              call bilinear_laps_3df(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,vwvi,vw)
 
               itstatus(2)=ishow_timer()
               print*,'use bilinear_laps_3d for T ',cmodel(1:ic)
-              call bilinear_laps_3d(grx,gry,nx_bg,ny_bg
+              call bilinear_laps_3df(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,tpvi,tp)
 
               itstatus(2)=ishow_timer()
               print*,'use bilinear_laps_3d for Q ',cmodel(1:ic)
-              call bilinear_laps_3d(grx,gry,nx_bg,ny_bg  
+              call bilinear_laps_3df(grx,gry,nx_bg,ny_bg  
      .                             ,nx_laps,ny_laps,nz_laps,shvi,sh)
            endif
 
            if(.not. lgb_only)then ! skip ww for sfc only option
-                call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .             grx,gry,wwvi,ww,wrapped)
+                call hinterp_field_3d(nx_bg,ny_bg,
+     .             nx_laps,ny_laps,nz_laps,grx,gry,wwvi,ww,wrapped)
            endif
           
            itstatus(2)=ishow_timer()
@@ -1167,36 +1161,39 @@ c
 
             write(6,*)' Calling hinterp_field for surface variables'
 
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,htbg_sfc,ht_sfc,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,tdbg_sfc,td_sfc,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,tpbg_sfc,tp_sfc,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,shbg_sfc,sh_sfc,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,uwbg_sfc,uw_sfc,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,vwbg_sfc,vw_sfc,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,prbg_sfc,pr_sfc,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,mslpbg,mslp,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,pcpbg,pcp_sfc,wrapped)
+
 c
 c Because not all model backgrounds have t_at_sfc (ground and/or sst)
 c then no need to hinterp unless it exists.
 c
             if(lhif_tsfc)then
                print*,'Horizontally Interpolate T at Sfc (tgd)'        
-               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+               call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .           grx,gry,t_at_sfc,t_sfc,wrapped)
             else
                print*,'DO NOT Horizontally Interpolate T at Sfc (tgd)'       
                t_sfc=missingflag
             endif
+
+            itstatus(3)=ishow_timer()
 c
 c check for T > Td before sfc p computation. Due to large scale
 c interpolation we can have slightly larger (fractional) Td than T.
@@ -1212,11 +1209,13 @@ c
                print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
             endif
 
+            itstatus(3)=ishow_timer()
+
            else ! bgmodel = 1,3,9
 
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .                  grx,gry,prbg_sfc,pr_sfc,wrapped)
-            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .                  grx,gry,mslpbg,mslp,wrapped)
 
            endif ! bgmodel .NE. 1,3,9
@@ -1286,6 +1285,9 @@ c
                write(6,*)' ERROR: Unable to interpolate to sfc'
                stop
            endif
+
+           itstatus(3)=ishow_timer()
+
 c
 c..... Compute reduced pressure using reduced pressure level from
 c      surface namelist file
@@ -1314,10 +1316,13 @@ c
      1,nx_laps, ny_laps, nz_laps, rp_sfc)
 
            deallocate (rp_lvl,rp_tp,rp_sh)
+
+           itstatus(3)=ishow_timer()
 c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
 c
+           write(6,*)' Eliminate supersaturations'
            icnt=0
            do k=1,nz_laps
            do j=1,ny_laps
