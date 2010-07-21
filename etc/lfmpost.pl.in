@@ -310,10 +310,18 @@ for ($g=1; $g<=$ngrid; $g++) {
    }else{ # local laps being run on JET
        print "Attempt to create fua/fsf links since we have a local LAPS on JET\n";
        if (! -e "$model_output_dir/d$dom/fua") {
-         system ("ln -s $lapsdataroot/lapsprd/fua/wrf-$opt_y $model_output_dir/d$dom/fua");
+         if (defined ($opt_y)) {
+           system ("ln -s $lapsdataroot/lapsprd/fua/wrf-$opt_y $model_output_dir/d$dom/fua");
+         } else {
+           system ("ln -s $lapsdataroot/lapsprd/fua $model_output_dir/d$dom/fua");
+         }
        }
        if (! -e "$model_output_dir/d$dom/fsf") {
-         system ("ln -s $lapsdataroot/lapsprd/fsf/wrf-$opt_y $model_output_dir/d$dom/fsf");
+         if (defined ($opt_y)) {
+           system ("ln -s $lapsdataroot/lapsprd/fsf/wrf-$opt_y $model_output_dir/d$dom/fsf");
+         } else {
+           system ("ln -s $lapsdataroot/lapsprd/fsf $model_output_dir/d$dom/fsf");
+         }
        }
    }
 
