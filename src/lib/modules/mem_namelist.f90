@@ -34,6 +34,7 @@ include 'lapsparms.for'
         integer max_snd_grid
         integer max_snd_levels
         real redp_lvl
+        real prtop
         integer vert_rad_meso
         integer vert_rad_sao
         integer vert_rad_pirep
@@ -91,7 +92,7 @@ include 'lapsparms.for'
         ,ref_base,ref_base_useable,r_hybrid_first_gate       &
         ,maxstns,N_PIREP                                     &
         ,max_snd_grid,max_snd_levels                         &
-        ,redp_lvl                                            &
+        ,redp_lvl,prtop                                      &
         ,vert_rad_meso,vert_rad_sao                          &
         ,vert_rad_pirep,vert_rad_prof                        &
         ,silavwt_parm,toptwvl_parm                           &
@@ -210,7 +211,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,i2_missing_data, r_missing_data, MAX_RADARS &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
-                  ,max_snd_grid,max_snd_levels,redp_lvl &
+                  ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
                   ,vert_rad_meso,vert_rad_sao &
                   ,vert_rad_pirep,vert_rad_prof      &
                   ,silavwt_parm,toptwvl_parm &
@@ -334,6 +335,7 @@ elseif (namelist_name == 'lapsparms') then
 !  default values
    earth_radius = 6370000. ! WRF value
    lvl_coord_cdf = 'HPA'
+   prtop = 10000.          ! 100mb for SIGMA_P grid
 
    read (12, lapsparms_nl, err=901)
    
