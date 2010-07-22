@@ -138,12 +138,12 @@ if test -r /opt/ncarg/bin/ctrans; then
 elif test "$netpbm" = "yes"; then 
     if test -r /whome; then
         CTRANS=/opt/ncl/5.1.0_bin/bin/ctrans
+    elif test -r /usr/local/apps/ncarg-4.3.1.LINUX9; then
+        CTRANS=/usr/local/apps/ncarg-4.3.1.LINUX9/bin/ctrans
     elif test -r /usr/local/ncarg-5.0.0-pgi-64-SLES10; then
         CTRANS=/usr/local/ncarg-5.0.0-pgi-64-SLES10/bin/ctrans
     elif test -r /usr/local/ncarg-5.0.0; then
         CTRANS=/usr/local/ncarg-5.0.0/bin/ctrans
-    elif test -r /usr/local/apps/ncarg-4.3.1.LINUX9; then
-        CTRANS=/usr/local/apps/ncarg-4.3.1.LINUX9/bin/ctrans
     else
         CTRANS=$NCARG_ROOT/bin/ctrans
     fi
