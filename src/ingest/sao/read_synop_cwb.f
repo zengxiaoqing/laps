@@ -1,13 +1,13 @@
       subroutine read_synop_cwb ( filename, maxSkyCvr, maxobs,
-     ~                          i4time_sys, path_to_local,            
-     ~                          altm, stnTp, td, tdTths, elev,
-     ~                          lats, lons, t24max, t24min,
-     ~                          pcp1hr, pcp24hr, pcp3hr, pcp6hr, 
-     ~                          prsWth, p, pc, pcc, rptTp, rh,
-     ~                          mslp, skyCvr, skyLyrBs, snowCvr, sr, st,       
-     ~                          stname, tTths, t, timeObs, vis,
-     ~                          dd, wgdd, ff, wgff, wmoId, badflag,
-     ~                          num, istatusSynop )
+     &                          i4time_sys, path_to_local,            
+     &                          altm, stnTp, td, tdTths, elev,
+     &                          lats, lons, t24max, t24min,
+     &                          pcp1hr, pcp24hr, pcp3hr, pcp6hr, 
+     &                          prsWth, p, pc, pcc, rptTp, rh,
+     &                          mslp, skyCvr, skyLyrBs, snowCvr, sr, st,       
+     &                          stname, tTths, t, timeObs, vis,
+     &                          dd, wgdd, ff, wgff, wmoId, badflag,
+     &                          num, istatusSynop )
 
       integer, parameter :: maxSynop = 150
       integer, parameter :: maxMso =    60
@@ -46,7 +46,9 @@
       real  pcp1hrMso(maxMso), pcp3hrMso(maxMso), pcp6hrMso(maxMso)
       real  pcp24hrMso(maxMso), ddMso(maxMso), ffMso(maxMso)
       real  wgddMso(maxMso), wgffMso(maxMso), pMso(maxMso)
-      real  mslpMso(maxMso), pcMso(maxMso), srMso(maxMso), stMso(maxMso)       
+      real  mslpMso(maxMso), pcMso(maxMso), srMso(maxMso), stMso(maxMso)           
+
+
 
       rptTp   = 'SYNOP'
       stnTp   = 'UNK'
@@ -93,14 +95,14 @@
       nq= maxSynop
 
       call read_synop_cwb_sub ( filename, maxSkyCvr, maxSynop,
-     ~     altm(1:nq), stnTp(1:nq), td(1:nq), tdTths(1:nq), elev(1:nq),
-     ~     lats(1:nq), lons(1:nq), t24max(1:nq), t24min(1:nq),
-     ~     pcp1hr(1:nq), pcp24hr(1:nq), pcp3hr(1:nq), pcp6hr(1:nq), 
-     ~     prsWth(1:nq), pc(1:nq), pcc(1:nq), rptTp(1:nq), mslp(1:nq),
-     ~     skyCvr(1:maxSkyCvr,1:nq), skyLyrBs(1:maxSkyCvr,1:nq),
-     ~     snowCvr(1:nq), stname(1:nq), tTths(1:nq), t(1:nq),
-     ~     timeObs(1:nq), vis(1:nq), dd(1:nq), wgff(1:nq), ff(1:nq),
-     ~     wmoId(1:nq), badflag, numSynop, istatusSynop )
+     &     altm(1:nq), stnTp(1:nq), td(1:nq), tdTths(1:nq), elev(1:nq),
+     &     lats(1:nq), lons(1:nq), t24max(1:nq), t24min(1:nq),
+     &     pcp1hr(1:nq), pcp24hr(1:nq), pcp3hr(1:nq), pcp6hr(1:nq), 
+     &     prsWth(1:nq), pc(1:nq), pcc(1:nq), rptTp(1:nq), mslp(1:nq),
+     &     skyCvr(1:maxSkyCvr,1:nq), skyLyrBs(1:maxSkyCvr,1:nq),
+     &     snowCvr(1:nq), stname(1:nq), tTths(1:nq), t(1:nq),
+     &     timeObs(1:nq), vis(1:nq), dd(1:nq), wgff(1:nq), ff(1:nq),
+     &     wmoId(1:nq), badflag, numSynop, istatusSynop )
 
       do i= 1,numSynop
          write(stnNo(i),'(i5)') wmoId(i)      
@@ -114,15 +116,29 @@
       path_to_local= path_to_local(1:len_inpath)//'mso/'
 
       call read_meso_cwb ( path_to_local, maxMso, badflag, ibadflag, 
-     ~                     i4time_sys, timeObsMso, rptTpMso, stnTpMso,
-     ~                     stnNoMso, latsMso, lonsMso, elevMso,
-     ~                     tMso, t24maxMso, t24minMso, tdMso, rhMso, 
-     ~                     pcp1hrMso, pcp3hrMso, pcp6hrMso, pcp24hrMso,
-     ~                     ddMso, ffMso, wgddMso, wgffMso, pMso, 
-     ~                     mslpMso, pccMso, pcMso, srMso, stMso, 
-     ~                     numMso, istatusMso )
+     &                     i4time_sys, timeObsMso, rptTpMso, stnTpMso,
+     &                     stnNoMso, latsMso, lonsMso, elevMso,
+     &                     tMso, t24maxMso, t24minMso, tdMso, rhMso, 
+     &                     pcp1hrMso, pcp3hrMso, pcp6hrMso, pcp24hrMso,
+     &                     ddMso, ffMso, wgddMso, wgffMso, pMso, 
+     &                     mslpMso, pccMso, pcMso, srMso, stMso, 
+     &                     numMso, istatusMso )
 
 c                    combine synop data and mesonet data 
+      do i= 1,numMso ! added by Shuyuan20100707 for checking meso RH values
+         if(rhMso(i)>101) then
+             rhMso(i)=  badflag       
+         endif
+      enddo
+c
+
+      do i= 1,numSynop ! added by Shuyuan20100707 for checking synop RH data 
+         if(rh(i)>101) then
+             rh(i)=  badflag       
+         endif
+      enddo
+
+      
       k= numSynop
       do i= 1,numMso
          flag= 0
@@ -176,14 +192,23 @@ c
             t24max(k)=  t24maxMso(i)
             t24min(k)=  t24minMso(i)
             rh(k)=      rhMso(i)
-            rh(k)=      rhMso(i)
+
             pcp1hr(k)=  pcp1hrMso(i)
             pcp24hr(k)= pcp24hrMso(i)
             pcp3hr(k)=  pcp3hrMso(i)
             pcp6hr(k)=  pcp6hrMso(i)
             p(k)=       pMso(i)
-            pc(k)=      pcMso(i)
-            pcc(k)=     pccMso(i)
+c         add if shuyuan  20100707 
+            if(pcMso(i)>0.5  .and. pcMso(i)<1000)  then
+              pc(k)=  pcMso(i)
+            else
+            pc(k)=badflag
+            endif 
+            if(pccMso(i)>-10000  .and. pccMso(i)<10000)  then   
+              pcc(k)=     pccMso(i)
+            else
+              pcc(k)=badflag
+            endif
             mslp(k)=    mslpMso(i)
             t(k)=       tMso(i)
             dd(k)=      ddMso(i)
@@ -202,15 +227,15 @@ c
 
 
       subroutine read_synop_cwb_sub (
-     ~     filename, maxSkyCover, recNum, altimeter,
-     ~     autoStationType, dewpoint, dpFromTenths, elevation,
-     ~     latitude, longitude, maxTemp24Hour, minTemp24Hour,
-     ~     precip1Hour, precip24Hour, precip3Hour, precip6Hour,
-     ~     presWeather, pressChange3Hour, pressChangeChar,
-     ~     reportType, seaLevelPress, skyCover, skyLayerBase,
-     ~     snowCover, stationName, tempFromTenths, temperature,
-     ~     timeObs, visibility, windDir, windGust, windSpeed, wmoId,
-     ~     badflag, staNum, istatus )
+     &     filename, maxSkyCover, recNum, altimeter,
+     &     autoStationType, dewpoint, dpFromTenths, elevation,
+     &     latitude, longitude, maxTemp24Hour, minTemp24Hour,
+     &     precip1Hour, precip24Hour, precip3Hour, precip6Hour,
+     &     presWeather, pressChange3Hour, pressChangeChar,
+     &     reportType, seaLevelPress, skyCover, skyLayerBase,
+     &     snowCover, stationName, tempFromTenths, temperature,
+     &     timeObs, visibility, windDir, windGust, windSpeed, wmoId,
+     &     badflag, staNum, istatus )
 
       integer  maxSkyCover, recNum
 
@@ -885,13 +910,16 @@ c                                quality control
          mslp(num)= slp *100.                          ! millibar -> pascal
       endif
  
-      pcc(num)= ipcc 
+      ! Shuyuan & Yuanfu: We found rpc and ipcc are un-initialized
+      ! and are not read from the meso file. We remove the pcc and pc assignment
 
-      if ( rpc <= 0 ) then
-         pc(num)= badflag
-      else
-         pc(num)= rpc *100.                            ! millibar -> pascal 
-      endif
+c      pcc(num)= ipcc 
+
+c      if ( rpc <= 0 ) then
+c         pc(num)= badflag
+c      else
+c         pc(num)= rpc *100.                            ! millibar -> pascal 
+c      endif
  
       if ( rt <= -90 ) then
          t(num)= badflag
@@ -919,17 +947,18 @@ c                                quality control
          ff(num)= rspd                                 ! unit : m/s 
       endif
  
-      if ( rwgff < 0 ) then
-         wgff(num)= badflag
-      else
-         wgff(num)= rwgff                              ! unit : m/s
-      endif
+      ! Shuyuan & Yuanfu: rwgff/wgdd are never initialized (gust wind)
+c      if ( rwgff < 0 ) then
+c         wgff(num)= badflag
+c      else
+c         wgff(num)= rwgff                              ! unit : m/s
+c      endif
  
-      if ( iwgdd > 36 .or. iwgdd < 0 ) then
-         wgdd(num)= badflag
-      else
-         wgdd(num)= float(iwgdd * 10)                  ! unit : deg
-      endif
+c      if ( iwgdd > 36 .or. iwgdd < 0 ) then
+c         wgdd(num)= badflag
+c      else
+c         wgdd(num)= float(iwgdd * 10)                  ! unit : deg
+c      endif
  
       if ( rpcp < 0 ) then
          pcp1hr(num)= badflag
@@ -937,23 +966,27 @@ c                                quality control
          pcp1hr(num)= rpcp *0.001                      ! millimeter -> meter
       endif
  
+      ! Shuyuan & Yuanfu: rsr is never initialized (gust wind)
       if ( rsr < 0 ) then
          sr(num)= badflag
       else
          sr(num)= rsr /1000. /3600.                    ! conv mJ/m/m to watt/m/m
       endif
  
-      if ( irh < 0 ) then
-         rh(num)= badflag
-      else
-         rh(num)= float(irh)                           ! unit : %
-      endif
+      ! Shuyuan & Yuanfu: We found another un-initialized variable - irh
+      ! We have to remove the following for now:
+c      if ( irh < 0 ) then
+c         rh(num)= badflag
+c      else
+c         rh(num)= float(irh)                           ! unit : %
+c      endif
  
-      if ( rst < 0 ) then
-         st(num)= badflag
-      else
-         st(num)= rst                                  ! degC -> degK
-      endif
+      ! Shuyuan & Yuanfu: rst is never initialized variable
+c      if ( rst < 0 ) then
+c         st(num)= badflag
+c      else
+c         st(num)= rst                                  ! degC -> degK
+c      endif
  
 c                          Go back for the next ob.
       if ( flag == 0 )  num_keep= num 
