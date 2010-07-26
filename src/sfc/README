@@ -20,6 +20,8 @@ main                                           laps_sfc.f
         qcdata                                 qc_data.f
             dev_ck                                  "
             bkg_chk                                 "
+        read_sfc_verif_history                 lib/laps_routines.f
+        sfc_verif_qc                                "
         mdat_laps                              mdatlaps.f
             splie2                                  "
             splin2                                  "
