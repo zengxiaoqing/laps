@@ -141,6 +141,7 @@ cdis
         character*10  units_2d
         character*125 comment_2d
         character*40 c_model
+        character*200 new_dataroot
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(NX_C,1)
@@ -771,6 +772,24 @@ c read in laps lat/lon and topo
 
         call interp_2d(topo,terrain_vert1d,xlow,xhigh,ylow,yhigh,
      1                 NX_L,NY_L,NX_C,r_missing_data)
+
+        if(c_field(1:2) .eq. 'fc')then ! force config with new dataroot
+            write(6,*)' Enter new dataroot:'
+            read(lun,17)new_dataroot
+ 17         format(a)
+            call s_len(new_dataroot,lenroot)
+            call force_get_laps_config(new_dataroot(1:lenroot),istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Bad status returned from force_laps_config'
+                return
+            endif
+            if(c_field(1:3) .eq. 'fcf')then
+                call frame
+                i_overlay = 0
+                n_image = 0
+            endif
+            goto 100
+        endif
 
         if(c_field(1:2) .eq. 'df' .and. idiff .eq. 0)then
             if(ifield_found .eq. 0)then
