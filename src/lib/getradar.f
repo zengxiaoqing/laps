@@ -761,8 +761,10 @@ cdoc                            calls read_multiradar_3dref.
 !                   endif
 !               endif
 
-                if(l_low_fill .or. l_high_fill .or. 
-     1             radarext(1:3) .eq. 'vrz'                )then
+!               Set status flags and closest 'vxx'
+!               if(l_low_fill .or. l_high_fill .or. 
+!    1             radarext(1:3) .eq. 'vrz'                )then
+                if(.true.)then
                     do j = 1,jmax
                     do i = 1,imax
                         istat_g = 0
@@ -851,7 +853,8 @@ cdoc                            calls read_multiradar_3dref.
 !               Conditionally fill up the 3D reflectivity array 
 !                          (useful for precip type, get_low_ref)
 
-                if(l_low_fill .or. l_high_fill)then
+!               if(l_low_fill .or. l_high_fill)then
+                if(.true.)then
                     
                     do i = 1,imax
                     do j = 1,jmax
