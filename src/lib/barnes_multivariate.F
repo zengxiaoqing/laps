@@ -42,7 +42,6 @@ cdis
      1                     ,r0_barnes_max_m,barnes_conv_rate      ! Input
      1                     ,topo,ldf,ni_stat,nj_stat              ! Input
      1                     ,n_obs_lvl,istatus)                    ! Outputs
-
       integer max_obs
 
 !     ....................Declare I/O variables...............................
@@ -82,7 +81,6 @@ cdis
 
 !     This static data is used only in the case of the sfc analysis
       real topo(ni_stat,nj_stat), ldf(ni_stat,nj_stat)              ! Input
-
       ialloc = 0
 
       l_struct = .not. l_not_struct
@@ -349,6 +347,9 @@ cdis
 
 !     ....................Declare I/O variables...............................
 
+#ifdef USEMPI
+      use mem_grid, ONLY: IstartIend,nPEs,rank,recvcounts,displs
+#endif
       implicit none
 
       integer, INTENT(IN) :: n_var,max_obs                      
@@ -358,7 +359,7 @@ cdis
 
       integer, INTENT(IN) :: imax,jmax,kmax                         
 
-      real, INTENT(OUT) :: var(imax,jmax,kmax,n_var)                             ! Output
+      real, INTENT(OUT) :: var(imax,jmax,kmax,n_var)        ! Output
 
       real, INTENT(IN) :: wt_b(imax,jmax,kmax,n_var)  ! Input (for now)
 
@@ -376,7 +377,7 @@ cdis
 
 !     This static data is used only in the case of the sfc analysis
       real, INTENT(IN) :: topo(ni_stat,nj_stat), ldf(ni_stat,nj_stat)
-      integer, INTENT(IN) :: ni_stat,nj_stat
+      integer, INTENT(IN)  :: ni_stat,nj_stat
       integer, INTENT(OUT) :: istatus                               
 
 !     ....................Declare Local variables.............................
@@ -384,6 +385,12 @@ cdis
       integer l,i,ii,j,jj,k,n
       real r0_norm_sq,r0_value,ratio_norm_sq,r_subscript
 
+#ifdef USEMPI
+      integer ibuf(4*ncnt_total+10)
+      real    rbuf((2+max_var)*ncnt_total+2)
+      real buffer(imax*jmax*kmax*n_var)
+      real, allocatable, dimension(:,:,:,:) :: local_var            ! Local
+#endif
       real, allocatable, dimension(:,:,:,:) :: sum_var              ! Local
       real, allocatable, dimension(:,:,:) :: sumwt                  ! Local
 
@@ -412,6 +419,12 @@ cdis
       integer kk_lower_pair, kk_higher_pair,klow,jhigh,khigh,kk,kmin,kkh
       integer kdelt,jdelt,ilow,jlow
       integer ihigh,idelt,istat_alloc
+#ifdef USEMPI
+      integer flag,ierr,count
+      integer :: offset,ioffset,joffset,koffset,noffset,IMAXlocal
+      integer :: ip,r
+      include 'mpif.h'
+#endif
 
       parameter (exp_offset = 70.)
 
@@ -490,6 +503,75 @@ cdis
       write(6,*)'   n    i    j    k   kk  vert_wt  time_wt  value'
 
 #ifdef USEMPI
+      flag=1
+      call mpi_bcast(flag,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      if( ierr /= 0) then
+        print*,'MPI_BCAST flag error',ierr,count,rank
+        stop
+      endif
+!     Pack and send integer buffer
+      ibuf(1)  = n_var
+      ibuf(2)  = max_obs
+      ibuf(3)  = imax
+      ibuf(4)  = jmax
+      ibuf(5)  = kmax
+      ibuf(6)  = i4time_sys
+      ibuf(7)  = ncnt_total
+      ibuf(8)  = idelt
+      ibuf(9)  = jdelt
+      ibuf(10) = kdelt
+      call mpi_bcast(ibuf,10,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      if( ierr /= 0) then
+        print*,'MPI_BCAST ibuf(10) error',ierr,rank
+        stop
+      endif
+      do n=1,ncnt_total
+        ibuf(4*(n-1)+1) = obs_barnes(n)%i
+        ibuf(4*(n-1)+2) = obs_barnes(n)%j
+        ibuf(4*(n-1)+3) = obs_barnes(n)%k
+        ibuf(4*(n-1)+4) = obs_barnes(n)%i4time
+      enddo
+      count = 4*ncnt_total
+      call mpi_bcast(ibuf,count,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      if( ierr /= 0) then
+        print*,'MPI_BCAST ibuf error',ierr,count,rank
+        stop
+      endif
+!     Pack and send real buffer
+      rbuf(1) = r_missing_data
+      rbuf(2) = r0_vert_grid
+      count   = 2
+      do n=1,ncnt_total
+        rbuf(count+1:count+max_var) = obs_barnes(n)%value(1:max_var)
+        rbuf(count+1      +max_var) = obs_barnes(n)%vert_rad_rat 
+        rbuf(count+2      +max_var) = obs_barnes(n)%weight
+        count                       = count+2+max_var
+      enddo
+      call mpi_bcast(rbuf,count,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+      if( ierr /= 0) then
+        print*,'MPI_BCAST rbuf error',ierr,count,rank
+        stop
+      endif
+!Send arrays
+      count = imax*jmax*kmax*n_var
+      call mpi_bcast(wt_b,count,MPI_REAL,0,MPI_COMM_WORLD,ierr) !optimization: send only decomposed part to each PE
+      if( ierr /= 0) then
+        print*,'MPI_BCAST wb_t error',ierr,count,rank
+        stop
+      endif
+      count = (2*(imax-1)+1)*(2*(jmax-1)+1)
+      call mpi_bcast(fnorm_lut,count,MPI_REAL,0,MPI_COMM_WORLD,ierr) !optimization: send only decomposed part to each PE
+      if( ierr /= 0) then
+        print*,'MPI_BCAST fnorm_lut error',ierr,count,rank
+        stop
+      endif
+      allocate(local_var(IstartIend(1,0):IstartIend(2,0),jmax,
+     1                         kmax,n_var), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+        print*,'ERROR: Could not allocate local_var',istat_alloc,rank
+        print*,IstartIend(1,rank),IstartIend(2,rank),jmax,kmax,n_var
+        stop
+      endif
       call analyze_weights_mpi(
      1          n_var,max_obs,obs_barnes                                    ! I
      1         ,imax,jmax,kmax                                              ! I
@@ -498,8 +580,42 @@ cdis
      1         ,r_missing_data,r0_vert_grid                                 ! I
      1         ,ncnt_total,idelt,jdelt,kdelt                                ! I
      1         ,fnorm_lut                                                   ! I
-     1         ,var)                                                        ! O
+     1         ,IstartIend(1,0),IstartIend(2,0)                             ! I
+     1         ,local_var)                                                  ! O
+      call mpi_gatherv(local_var,recvcounts(rank),MPI_REAL,buffer,
+     1                 recvcounts,displs,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+      if( ierr /= 0) then
+        print*,'MPI_GATHERV error',ierr,recvcounts(rank),rank
+        stop
+      endif
 
+!     Copy buffer, with re-ordering, into var
+      ioffset = 0
+      do r=0,nPEs-1
+        IMAXlocal = IstartIend(2,r)-IstartIend(1,r)+1
+        noffset = 0
+        do n=1,n_var
+          koffset = 0
+          do k=1,kmax
+            joffset = 0
+            do j=1,jmax
+              do i=IstartIend(1,r),IstartIend(2,r)
+                ip           = i-ioffset
+                offset       = joffset+koffset+noffset
+!      write(6,99) i,ip,j,k,n,displs(r),offset,ip+displs(r)+offset
+!99    format(5i5,3i10)
+                var(i,j,k,n) = buffer(ip+displs(r)+offset)
+              enddo
+              joffset=joffset+IMAXlocal
+            enddo !j
+            koffset=koffset+IMAXlocal*jmax
+          enddo   !k
+          noffset=noffset+IMAXlocal*jmax*kmax
+        enddo     !n
+        ioffset=ioffset+IMAXlocal
+      enddo       !r
+
+      deallocate(local_var)
 #else
 
       allocate(sum_var(max_var,imax,jmax,kmax),STAT=istat_alloc)
@@ -523,7 +639,7 @@ cdis
           j = obs_barnes(n)%j
           k = obs_barnes(n)%k
 
-          ilow  = max(i-idelt,1)
+          ilow  = max(i-idelt,1   )
           ihigh = min(i+idelt,imax)
           jlow  = max(j-jdelt,1)
           jhigh = min(j+jdelt,jmax)
@@ -792,7 +908,6 @@ csms$parallel end
 #endif
 
       istatus = 1
-
       return
       end
 
@@ -1001,6 +1116,7 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
      1         ,r_missing_data,r0_vert_grid                                 ! I
      1         ,ncnt_total,idelt,jdelt,kdelt                                ! I
      1         ,fnorm_lut                                                   ! I
+     1         ,Istart,Iend                                                 ! I
      1         ,var)                                                        ! O
 
       implicit none
@@ -1020,13 +1136,14 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
       real, INTENT(IN) :: wt_b(imax,jmax,kmax,n_var)         
 
       real, INTENT(IN)::fnorm_lut(-(imax-1):(imax-1),-(jmax-1):(jmax-1))     
+      integer,intent(IN) :: Istart,Iend                         ! Input
 
-      real, INTENT(OUT) :: var(imax,jmax,kmax,n_var)                             ! Output
+      real, INTENT(OUT) :: var(Istart:Iend,jmax,kmax,n_var)     ! Output
 
 !     Local declarations
 
-      real, allocatable, dimension(:,:,:,:) :: sum_var              ! Local
-      real, allocatable, dimension(:,:,:) :: sumwt                  ! Local
+      real, allocatable, dimension(:,:,:,:) :: sum_var          ! Local
+      real, allocatable, dimension(:,:,:) :: sumwt              ! Local
       real varl(2)
 
       real exponent,vertical_weight,time_wt,weight_term,r0_vert_ob
@@ -1037,13 +1154,13 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
 
 !     Start executable statements
 
-      allocate(sum_var(max_var,imax,jmax,kmax),STAT=istat_alloc)
+      allocate(sum_var(max_var,Istart:Iend,jmax,kmax),STAT=istat_alloc)
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate sum_var'
           stop
       endif
 
-      allocate(sumwt(imax,jmax,kmax),STAT=istat_alloc)
+      allocate(sumwt(Istart:Iend,jmax,kmax),STAT=istat_alloc)
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate sumwt'
           stop
@@ -1057,14 +1174,12 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
           i = obs_barnes(n)%i
           j = obs_barnes(n)%j
           k = obs_barnes(n)%k
-
-          ilow  = max(i-idelt,1)
-          ihigh = min(i+idelt,imax)
+          ilow  = max(i-idelt,Istart)
+          ihigh = min(i+idelt,Iend)
           jlow  = max(j-jdelt,1)
           jhigh = min(j+jdelt,jmax)
           klow  = max(k-kdelt,1)
           khigh = min(k+kdelt,kmax)
-
           call get_time_wt(i4time_sys,obs_barnes(n)%i4time,time_wt
      1                    ,istatus)
 
@@ -1105,7 +1220,7 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
 !     Divide the weights
       do k=1,kmax
           do j=1,jmax
-          do i=1,imax
+          do i=Istart,Iend
               do l = 1,n_var
                   if(sumwt(i,j,k) + wt_b(i,j,k,l) .eq. 0.)then
                       var(i,j,k,l) = r_missing_data
