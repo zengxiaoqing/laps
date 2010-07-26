@@ -161,6 +161,22 @@ c
         integer rely(26,mxstn)
 	character stn3(mxstn)*3
 c
+c       Stuff for surface verification history
+        integer mo,mf,mt
+        parameter (mo=100000)
+        parameter (mf=10)
+        parameter (mt=24)
+
+        character*5 stn_a(mo)
+        real bkg_a(mo,mf,mt)
+        real obs_a(mo,mf,mt)
+        real diff_a(mo,mf,mt)
+        real bias_a(mo,mf) 
+        real obs_mean(mo,mf)      
+        real obs_std(mo,mf) 
+
+        real lapse_t, lapse_td
+c
 c.....  Stuff for intermediate grids (old LGS file)
 c
 	real u1(ni,nj), v1(ni,nj)
@@ -319,13 +335,17 @@ c
             endif
 
 !           Put obs into data structure 
-            obs(i)%stn3    = stn3(i)
-            obs(i)%stn20   = stations(i)
-            obs(i)%t_f     = t_s(i)
-            obs(i)%t_ea_f  = t_ea(i)
-            obs(i)%td_f    = td_s(i)
-            obs(i)%td_ea_f = td_ea(i)
-            obs(i)%sfct_f  = sfct(i)
+            obs(i)%stn3      = stn3(i)
+            obs(i)%stn20     = stations(i)
+            obs(i)%t_f       = t_s(i)
+            obs(i)%t_ea_f    = t_ea(i)
+            obs(i)%td_f      = td_s(i)
+            obs(i)%td_ea_f   = td_ea(i)
+            obs(i)%sfct_f    = sfct(i)
+            obs(i)%dd_deg    = dd_s(i)
+            obs(i)%dd_ea_deg = dd_ea(i)
+            obs(i)%ff_kt     = ff_s(i)
+            obs(i)%ff_ea_kt  = ff_ea(i)
         enddo ! i
 
         if(i_rh_convert .gt. 0)then
@@ -627,7 +647,7 @@ c
 	     print *, 'QC: Bad T at ',stations(mm),' with rely/value '       
      1              ,rely(7,mm),t_s(mm)
 	     t_s(mm) = badflag
-             obs(i)%t_f = badflag
+             obs(mm)%t_f = badflag
 	  endif
  121	enddo  !mm
 
@@ -636,23 +656,25 @@ c
 	     print *, 'QC: Bad TD at ',stations(mm)
      1              ,' with rely/value ',rely(8,mm),td_s(mm)
 	     td_s(mm) = badflag
-             obs(i)%td_f = badflag
+             obs(mm)%td_f = badflag
 	  endif
  122	enddo  !mm
 
 	do mm=1,n_obs_b
 	  if(rely(9,mm) .lt. 0) then	! wind direction
-	   print *, 'QC: Bad DIR at ',stations(mm),' with rely/value '       
-     1            ,rely(9,mm),dd_s(mm)
-	    dd_s(mm) = badflag
+	     print *, 'QC: Bad DIR at ',stations(mm),' with rely/value '       
+     1              ,rely(9,mm),dd_s(mm)
+	     dd_s(mm) = badflag
+             obs(mm)%dd_deg = badflag
 	  endif
  123	enddo  !mm
 
 	do mm=1,n_obs_b
 	  if(rely(10,mm) .lt. 0) then	! wind speed
-	      print *, 'QC: Bad SPD at ',stations(mm)
+             print *, 'QC: Bad SPD at ',stations(mm)
      1               ,' with rely/value ',rely(10,mm),ff_s(mm)
-	      ff_s(mm) = badflag
+	     ff_s(mm) = badflag
+             obs(mm)%ff_kt = badflag
 	  endif
  124	enddo  !mm
 
@@ -681,6 +703,136 @@ c
  128	enddo  !mm
 
  521	continue                          
+
+        I4_elapsed = ishow_timer()
+
+        if(.true.)then
+!           Just experimental for now
+            call read_sfc_verif_history(51,r_missing_data
+     1                                 ,mo,mf,mt
+     1                                 ,stn_a,bkg_a,obs_a,diff_a,nsta)
+
+            I4_elapsed = ishow_timer()
+
+ 	    call sfc_verif_qc(r_missing_data
+     1                       ,mo,mf,mt
+     1                       ,stn_a,bkg_a,obs_a,diff_a,nsta
+     1                       ,bias_a,obs_mean,obs_std)
+
+            I4_elapsed = ishow_timer()
+
+!           Apply QC information                            
+            iv_t   = 1
+            iv_td  = 2
+            iv_spd = 5
+            iv_dir = 9
+
+            lapse_t = -.01167
+            lapse_td = -.007
+
+            do mm = 1,n_obs_b
+              do ista = 1,nsta
+                if(stations(mm)(1:5) .eq. stn_a(ista))then
+                   goto 130
+                endif
+              enddo 
+              goto 140
+130           continue
+              if(mm .le. 50)then
+                write(6,*)' Found a QC match',mm,ista,stn_a(ista)
+              endif
+
+!             Test biases and flag ob using expected accuracy info
+
+!             Temperature bias
+              if(bias_a(ista,iv_t) .ne. r_missing_data)then
+                biast_corr  = bias_a(ista,iv_t)  
+     1                      - lapse_t *obs(mm)%elev_diff
+
+                if(abs(biast_corr) .gt. 8.0)then
+                  if(t_s(mm) .ne. badflag)then
+                    obs(mm)%t_ea_f = abs(biast_corr)
+                    t_ea(mm)       = abs(biast_corr)
+                    write(6,135)mm,ista,obs(mm)%i,obs(mm)%j
+     1                       ,stn_a(ista),biast_corr
+     1                       ,bias_a(ista,iv_t),obs(mm)%elev_diff
+     1                       ,obs(mm)%ldf
+135		    format(' setting t_ea based on bias '
+     1                    ,i6,i6,4x,2i5,1x,a5,1x,2f8.2,f8.1,f7.2)
+                  endif                
+                endif
+              endif
+
+!             Dewpoint bias
+              if(bias_a(ista,iv_td) .ne. r_missing_data)then
+                biastd_corr = bias_a(ista,iv_td) 
+     1                      - lapse_td*obs(mm)%elev_diff
+      
+                if(abs(biastd_corr) .gt. 8.0)then
+                  if(td_s(mm) .ne. badflag)then
+                    obs(mm)%td_ea_f = abs(biastd_corr)
+                    td_ea(mm)       = abs(biastd_corr)
+                    write(6,136)mm,ista,obs(mm)%i,obs(mm)%j
+     1                       ,stn_a(ista),biastd_corr
+     1                       ,bias_a(ista,iv_td),obs(mm)%elev_diff
+136		    format(' setting td_ea based on bias'
+     1                    ,i6,i6,4x,2i5,1x,a5,1x,2f8.2,f8.1)
+                  endif                
+!                 if(abs(biastd_corr) .gt. 1000.)then
+!                   do it = 1,mt              
+!                     write(6,*)' td processing error',it 
+!    1                         ,bkg_a(ista,iv_td,it)
+!    1                         ,obs_a(ista,iv_td,it)
+!    1                         ,diff_a(ista,iv_td,it)
+!                   enddo
+!                 endif
+                endif
+              endif
+
+!             Stuck wind direction
+              if(obs_std(ista,iv_dir) .ne. r_missing_data)then
+                if(obs_std(ista,iv_dir)  .lt. 1.0 .and. 
+     1             obs_mean(ista,iv_spd) .gt. 0.)then
+                  if(dd_s(mm) .ne. badflag)then
+                    obs(mm)%dd_ea_deg = 180.                  
+                    dd_ea(mm)         = 180.                 
+                    write(6,137)mm,ista,obs(mm)%i,obs(mm)%j
+     1                       ,stn_a(ista),obs_mean(ista,iv_dir) 
+137		    format(' stuck wind direction for   '
+     1                    ,i6,i6,4x,2i5,1x,a5,1x,f8.1,'deg')
+                    do it = 1,mt              
+                      write(6,*)' stuck time ',it 
+     1                         ,obs_a(ista,iv_dir,it)
+     1                         ,obs_a(ista,iv_spd,it)
+                    enddo
+                  endif
+                endif
+              endif
+
+!             Stuck wind speed
+              if(obs_mean(ista,iv_spd) .ne. r_missing_data)then
+                if(obs_mean(ista,iv_spd) .le. 0.01)then   
+                  if(ff_s(mm) .ne. badflag)then
+                    obs(mm)%ff_ea_kt = 50.                  
+                    ff_ea(mm)        = 50.                 
+                    write(6,138)mm,ista,obs(mm)%i,obs(mm)%j
+     1                       ,stn_a(ista),obs_mean(ista,iv_spd)               
+138		    format(' stuck wind speed for       '
+     1                    ,i6,i6,4x,2i5,1x,a5,1x,f8.1,'kt')
+                    do it = 1,mt              
+                      write(6,*)' stuck time ',it 
+     1                         ,obs_a(ista,iv_dir,it)
+     1                         ,obs_a(ista,iv_spd,it)
+                    enddo
+                  endif
+                endif
+              endif
+
+140         enddo ! mm
+
+            I4_elapsed = ishow_timer()
+
+        endif
 c
 c.....  QC the backgrounds.  If Td > T, set Td = T...temporary fix until LGB
 c.....  can do this....
@@ -707,7 +859,7 @@ c
      &     lon,topo,x1a,x2a,y2a,redp_lvl,
      &     lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, 
      &     alt_s, pred_s, vis_s, stations, rii, rjj, ii, jj, n_obs_b, 
-     &     n_sao_g,
+     &     n_sao_g, obs,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk,
      &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, 
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
