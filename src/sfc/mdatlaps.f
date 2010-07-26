@@ -35,7 +35,7 @@ c
      &    lat,lon,topo,x1a,x2a,y2a,redp_lvl,
      &     lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, alt_s, 
      &     pred_s,
-     &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g,
+     &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g, obs,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
      &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, 
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
@@ -117,6 +117,9 @@ c
 	include 'laps_sfc.inc'
 c
 c..... Stuff for the sfc data and other station info (LSO +)
+
+        include 'sfcob.inc'
+        type (sfcob) obs(mxstn)
 c
 	real lon_s(mxstn), elev_s(mxstn)
 	real t_s(mxstn), td_s(mxstn), dd_s(mxstn), ff_s(mxstn)
