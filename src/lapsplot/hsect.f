@@ -476,6 +476,11 @@ c       include 'satellite_dims_lvd.inc'
                 write(6,*)' Bad status returned from force_laps_config'
                 return
             endif
+            if(c_type(1:3) .eq. 'fcf')then
+                call frame
+                i_overlay = 0
+                n_image = 0
+            endif
             goto 1200
         endif
 
