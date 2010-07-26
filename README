@@ -1388,14 +1388,19 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      GPS:
            LAPS uses GPS data from NIMBUS netCDF files. The precipitable water
-           is used in the humidity analysis and surface observations are
-           read into the surface analyses. STMAS is being designed to use
-           the signal delay directly instead of the PW.
+           is used in the humidity analysis. STMAS is being designed to use
+           the signal delay directly instead of the PW. These NIMBUS files
+           are available online at ftp://gpsftp.fsl.noaa.gov - though the files 
+           would have to be renamed to correspond to the internal ESRL 
+           convention.
 
-           There is a second format known as (LDAD) netCDF that carries GPS 
-           data. This format can supply GPS surface data to the LAPS 
-           intermediate 'lso' file. LAPS does not yet read precipitable water 
-           from the LDAD format.
+           There are plans to make files similar to the NIMBUS ones available 
+           in AWIPS-II, though again filenaming conventions may need to be
+           addressed.
+
+           MADIS (LDAD) mesonet files also carry the GPS PW and related data,
+           including surface obs. LAPS does not yet read precipitable water 
+           from this format.
 
                       ----   2.3.9  Other Data Sources ---
 
@@ -4212,7 +4217,7 @@ Process surface:LSX  U    su       1  Surface (10m) wind u (grid north)
 		     SPD  spd	   1  Surface Wind Speed
 		     CSS  cssi     1  CSSI
 		     VIS  vis 	   1  Surface Visibility
-                     FWX  fwx      1  Fire Danger
+                     FWX  fwx      1  Fire Danger (LAPS / Kelsch)
 		     HI   hi       1  Heat Index
 
 Process temp:   LT1  T3   t	  21  Temperature
@@ -4352,6 +4357,8 @@ LAPS Fcst Model:
                      HI   hi       1  Fcst Model Heat index
                      SWO  swo      1  Fcst Model Outgoing Shortwave Radiation
                      LWO  lwo      1  Fcst Model Outgoing Longwave Radiation
+                     FWI  fwi      1  Fcst Model Fosberg fire weather index
+                     FWX  fwx      1  Fcst Model Kelsch fire weather index
 
                 RSM  LSM  lsm     11  Fcst Model Soil Moisture
 
@@ -4378,6 +4385,7 @@ Process lga.exe (background model):
                      SH   sh      21  Model specific humidity
                      U3   u       21  Model u wind component (grid north)
                      V3   v       21  Model v wind component (grid east)
+                     OM   om      21  Model vertical velocity (Pascals/second)
 
 		LGB  USF  usf 	   1  Model Surface wind u (grid north)
 	             VSF  vsf 	   1  Model Surface wind v (grid east)
@@ -4388,6 +4396,7 @@ Process lga.exe (background model):
                      PSF  psf      1  Model Surface pressure
                      RSF  rsf      1  Model Specific Humidity
 		     P	  p 	   1  Model reduced pressure
+                     PCP  pcp      1  Model Precipitation
 
 Process LH1: 	LH1  PW   pw	   1  Precipitable Water Vapor
 
