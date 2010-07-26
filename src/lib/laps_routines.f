@@ -2402,3 +2402,283 @@ c
 	return
 	end
 c
+
+	subroutine read_sfc_verif_history(lun,r_missing_data             ! I
+     1                                   ,mo,mf,mt                       ! I
+     1                                   ,stn_a,bkg_a,obs_a,diff_a,nsta) ! O
+
+        character*150 dirname,filename
+        character*17 basename
+        character*100  line
+        character*5    stn
+
+        integer mo,mf,mt
+
+        character*5 stn_a(mo)
+        real bkg_a(mo,mf,mt)
+        real obs_a(mo,mf,mt)
+        real diff_a(mo,mf,mt)
+
+        integer mapcount(mo)
+
+        write(6,*)' Subroutine read_sfc_verif_history'
+
+        call get_sfc_badflag(badflag,istatus)
+
+        bkg_a = r_missing_data
+        obs_a = r_missing_data
+        diff_a = r_missing_data
+
+        nsta = 0
+        ifield = 0
+
+!       dirname = '/data/fab/parallel/laps/data/log/qc'
+!       call s_len(dirname,lend)
+        call get_directory('log',dirname,lend)
+        dirname = dirname(1:lend)//'/qc'
+        lend = lend + 3
+
+        do itime = 1,mt
+
+          write(basename,11)itime-1
+ 11	  format('laps_sfc.ver.',i2.2,'00')
+
+          filename = dirname(1:lend)//'/'//basename
+
+          write(6,*)' Open ',filename
+
+          open(lun,file=filename,status='old',err=950)
+
+          ifound_last = 0
+          iblock = 0
+          mapcount = 0 ! array
+
+ 100	  read(lun,101,err=990,end=900)line
+ 101	  format(a)
+
+          call s_len2(line,lenl)
+
+          if(itime .le. 1 .and. ifield .le. 2 .and. nsta .le. 50)then
+              write(6,102)lenl,line(1:65)
+ 102	      format(24x,' newline is ',i3,a)
+          endif
+
+          if(lenl .eq. 56)then
+ 	    read(line,905) i, stn(1:5), ilaps, jlaps, 
+     1                      bkg, ob, diff
+ 905	    format(4x,i5,1x,a5,1x,i4,1x,i4,1x,3f10.2)
+            ifound = 1
+          else
+            ifound = 0
+          endif
+
+          if(ifound_last .eq. 0 .and. ifound .eq. 1)then
+            I4_elapsed = ishow_timer()
+            iblock = iblock + 1
+            write(6,*)' Start text block',iblock
+            nmap = 0
+            nsearch = 0
+            nnew = 0
+
+          elseif(ifound_last .eq. 1 .and. ifound .eq. 0)then
+            write(6,104)iblock,nmap,nsearch,nsta,nnew
+104         format(' End text block',i4,3x     
+     1            ,' nmap/nsearch/nsta/nnew=',4i7)                     
+
+          endif
+      
+          if(ifound .eq. 1 .and. iblock .ne. (iblock/2)*2 )then
+            ifield = iblock/2 + 1
+
+            if(itime .eq. 1 .and. ifield .eq. 1)then
+              nsta = nsta + 1
+              ista = nsta
+              stn_a(ista) = stn(1:5)
+              nnew = nnew + 1
+              if(nnew .le. 50)then
+                  write(6,*)' new station = ',nsta,stn_a(ista)
+              endif
+              mapcount(i) = nsta
+
+            else ! repeating loop   
+              if(mapcount(i) .eq. 0)then ! search for station in list
+                do ii = 1,nsta
+                  if(stn_a(ii) .eq. stn)then ! match                
+                     ista = ii
+                     goto120
+                  endif
+                enddo
+
+                nsta = nsta + 1          ! no match, add station to list
+                ista = nsta
+                stn_a(ista) = stn(1:5)
+                nnew = nnew + 1
+                if(nnew .le. 50)then
+                  write(6,*)' new station = ',nsta,stn_a(ista)
+                endif                                             
+
+ 120            mapcount(i) = ista
+    	        nsearch = nsearch + 1
+
+              else ! obtain station number from mapcount
+                ista = mapcount(i) 
+                nmap = nmap + 1
+
+              endif
+
+            endif
+
+            if(ifield .le. mf)then
+                if(itime .le. 1 .and. ifield .le. 2 
+     1                          .and. nsta .le. 50)then
+                  write(6,103)iblock,ifield,ista,line(1:56)
+ 103	          format(1x,' place text in odd block ',i3,i3,i6,1x,a)
+                endif
+
+                if(diff .ne. badflag)then
+                  bkg_a(ista,ifield,itime)  = bkg
+                  obs_a(ista,ifield,itime)  = ob
+                  diff_a(ista,ifield,itime) = diff
+                endif
+            else ! skip rest of fields
+                write(6,*)' Skipping rest of fields for this time'
+                goto 900
+                
+            endif
+
+          endif
+
+          ifound_last = ifound
+
+          goto 100
+
+ 900	  continue ! end of file
+
+          close(lun)
+
+          goto 960
+
+ 950	  write(6,*)' Error opening itime ',itime
+
+ 960	  write(6,*)' end time: itime/nsta = ',itime,nsta
+          write(6,*)
+
+        enddo ! itime
+
+ 990	continue
+
+        return
+        end
+
+	subroutine sfc_verif_qc(r_missing_data                  ! I
+     1                         ,mo,mf,mt                        ! I
+     1                         ,stn_a,bkg_a,obs_a,diff_a,nsta   ! I
+     1                         ,bias_a,obs_mean,obs_std)        ! O
+
+!       Calculate obs minus background statistics, and obs statistics
+
+!       Note that wind directions are inserted into the 'obs_a' array for output
+
+        character*5 stn_a(mo)
+        real bkg_a(mo,mf,mt)
+        real obs_a(mo,mf,mt)
+        real diff_a(mo,mf,mt)
+
+        real bias_a(mo,mf)
+        real obs_mean(mo,mf)
+        real obs_std(mo,mf)
+
+        write(6,*)' Subroutine sfc_verif_qc'
+
+        bias_a = r_missing_data
+        obs_mean = r_missing_data
+        obs_std = r_missing_data
+
+!       Field array indices
+        iv_t = 1
+        iv_td = 2
+        iv_u = 3
+        iv_v = 4
+        iv_spd = 5
+        iv_mslp = 6
+        iv_redp = 7
+        iv_tgd = 8
+        iv_dir = 9
+
+        do ifield = 1,2 ! t and td
+          do ista = 1,nsta
+            icount = 0
+            diff_sum   = 0.
+            diff_sumsq = 0.
+            do itime = 1,mt
+              if(diff_a(ista,ifield,itime) .ne. r_missing_data)then
+                icount = icount + 1             
+                diff_sum   = diff_sum   + diff_a(ista,ifield,itime)             
+                diff_sumsq = diff_sumsq + diff_a(ista,ifield,itime)**2
+              endif
+            enddo
+
+            frac = float(icount) / float(mt)
+
+            if(frac .ge. 0.5)then ! enough reports to process station stats
+              bias = diff_sum / float(icount)
+              bias_a(ista,ifield) = bias
+              if(ista .le. 50)then
+                write(6,*)stn_a(ista),frac
+     1                   ,' bias = ',bias                        
+              endif
+            else 
+              if(ista .le. 50)then
+                write(6,*)stn_a(ista),frac
+              endif
+            endif
+
+          enddo ! ista
+        enddo ! ifield
+
+!       Obtain wind direction
+        write(6,*)' Obtaining wind directions'
+        do ista = 1,nsta
+          do itime = 1,mt
+            u = obs_a(ista,iv_u,itime)
+            v = obs_a(ista,iv_v,itime)
+            if(u .ne. r_missing_data .and. v .ne. r_missing_data)then
+               dir = atan3d(-u,-v)
+               obs_a(ista,iv_dir,itime) = dir
+            endif 
+          enddo 
+        enddo
+
+!       Compute standard deviation of wind direction/speed
+        do ifield = 5,9,4
+          do ista = 1,nsta
+            icount = 0
+            sum   = 0.
+            sumsq = 0.
+            do itime = 1,mt
+              if(obs_a(ista,ifield,itime) .ne. r_missing_data)then
+                icount = icount + 1             
+                sum   = sum   + obs_a(ista,ifield,itime)             
+                sumsq = sumsq + obs_a(ista,ifield,itime)**2
+              endif
+            enddo ! itime
+
+            frac = float(icount) / float(mt)
+
+!           (stddev ala the IDL code)
+!           MEAN[*,*] = SUM[*,*] / nmembers
+            if(icount .ge. 2 .and. frac .ge. 0.5)then
+              rmean = sum / float(icount)
+              obs_mean(ista,ifield) = rmean
+
+!             SPREAD[*,*] = SQRT( (SUMSQ[*,*] / nmembers ) - MEAN[*,*]^2.0 )
+              obs_std(ista,ifield) = 
+     1          sqrt( (sumsq / float(icount)) - rmean**2)
+
+            endif
+
+          enddo ! ista
+        enddo ! ifield
+
+        return
+        end
