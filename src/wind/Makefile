@@ -39,7 +39,7 @@ SRC= main_sub.F \
      multiwind_yesZ.f \
      windanal.f
 
-MAIN=main.f
+MAIN=main.F
 
 LIB=libwind.a
 
