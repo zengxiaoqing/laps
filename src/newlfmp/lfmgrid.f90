@@ -107,7 +107,7 @@ real, pointer, dimension(:,:) ::  &
       ,srhel        ,uhel         ,cape         ,cin          ,liftedind   &
       ,visibility   ,heatind      ,lwout        ,swout        ,lwdown      &
       ,swdown       ,shflux       ,lhflux       ,vnt_index    ,ham_index   &
-      ,hah_index    ,fwi_index    ,upflux
+      ,hah_index    ,fwi_index    ,fwx_index    ,upflux
 integer,            allocatable, dimension(:) :: lvls2d
 character(len=3),   allocatable, dimension(:) :: name2d
 character(len=10),  allocatable, dimension(:) :: units2d
@@ -317,7 +317,7 @@ integer :: ct
 if (trim(mtype) /= 'st4') then
   nvar2dout=45
   if (make_micro) nvar2dout=nvar2dout+5
-  if (make_firewx) nvar2dout=nvar2dout+6
+  if (make_firewx) nvar2dout=nvar2dout+7
 
   allocate(sgrid(lx,ly,nvar2dout),name2d(nvar2dout),units2d(nvar2dout)  &
         ,lvltype2d(nvar2dout),com2d(nvar2dout),lvls2d(nvar2dout))     
@@ -397,6 +397,7 @@ if (trim(mtype) /= 'st4') then
      ham_index=>sgrid(1:lx,1:ly,ct); name2d(ct)='HAM'; com2d(ct)='Mid-Level Haines Index' ; ct=ct+1
      hah_index=>sgrid(1:lx,1:ly,ct); name2d(ct)='HAH'; com2d(ct)='High-Level Haines Index'; ct=ct+1
      fwi_index=>sgrid(1:lx,1:ly,ct); name2d(ct)='FWI'; com2d(ct)='Fosberg Fire Wx Index'  ; ct=ct+1
+     fwx_index=>sgrid(1:lx,1:ly,ct); name2d(ct)='FWX'; com2d(ct)='LAPS/Kelsch Fire Wx Index'  ; ct=ct+1
   endif
 
   if (out_grib) then
@@ -462,6 +463,7 @@ if (trim(mtype) /= 'st4') then
         gribit(ct)=.false.                                                                                               ; ct=ct+1  ! ham_index
         gribit(ct)=.false.                                                                                               ; ct=ct+1  ! hah_index
         gribit(ct)=.false.                                                                                               ; ct=ct+1  ! fwi_index
+        gribit(ct)=.false.                                                                                               ; ct=ct+1  ! fwx_index
      endif
   endif
 else
