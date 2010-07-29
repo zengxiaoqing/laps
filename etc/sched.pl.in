@@ -509,7 +509,7 @@ foreach $exe (@LAPS_EXE){
         }
 
         if($exe =~ "wind"){
-            $nodes_current = 1; # 4
+            $nodes_current = 8; # 1
         }else{
             $nodes_current = 1;
         }
@@ -555,7 +555,11 @@ foreach $exe (@LAPS_EXE){
                     if($node_type eq "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
                         print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=6.0G\n";
                     }else{
-                        print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                        if($nodes_current > 1){
+                            print TFILE "#\$ -l h_rt=00:15:00\n";
+                        }else{ 
+                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                        }
                     }
                     print TFILE "#\$ -A $opt_Q\n";
                     print TFILE "#\$ -S /bin/sh\n";
@@ -575,12 +579,12 @@ foreach $exe (@LAPS_EXE){
                     print TFILE "  \n";
                 }
 
-                if($nodes_current > 1){
-                    print TFILE "export GMPIENVVAR=LAPS_DATA_ROOT:LAPS_SRC_ROOT\n";
-                    print TFILE "SMS_SERVER_MODE=serverless\n";
-                    print TFILE "export SMS_SERVER_MODE\n";
-                    print TFILE "$sms_path/bin/sysSrvr $nodes_current &\n";
-                }
+#               if($nodes_current > 1){
+#                   print TFILE "export GMPIENVVAR=LAPS_DATA_ROOT:LAPS_SRC_ROOT\n";
+#                   print TFILE "SMS_SERVER_MODE=serverless\n";
+#                   print TFILE "export SMS_SERVER_MODE\n";
+#                   print TFILE "$sms_path/bin/sysSrvr $nodes_current &\n";
+#               }
 
                 print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
                 print TFILE "  \n";
@@ -603,10 +607,11 @@ foreach $exe (@LAPS_EXE){
         }
 
         if($nodes_current > 1){
-            print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh\n";
-            print TFILE_SUB "umask 002\n";
-            print TFILE_SUB "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
-            print TFILE_SUB "$LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+#           print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh\n";
+            print TFILE "mpirun -np $nodes_current $LAPSROOT/../../builds_mpi/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+#           print TFILE_SUB "umask 002\n";
+#           print TFILE_SUB "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
+#           print TFILE_SUB "$LAPSROOT/../../builds_mpi/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
             print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
             print TFILE "error=\$?\n";
