@@ -416,8 +416,8 @@ c
                 if(l_string_contains(c8_sndtype(i_tsnd),'RADIO'
      1                                                 ,istatus))then        
                     ht_agl = ht_in - elev_tsnd(i_tsnd)
-                    if(ht_agl .gt. 3000.)then
-                        i_qc = 0 ! Reject radiometer temps more than 3000m agl
+                    if(ht_agl .gt. 1000.)then
+                        i_qc = 0 ! Reject radiometer temps more than 1000m agl
                         write(6,*)' rejecting upper level radiometer'        
      1                           ,level,ht_agl
                     endif                    
