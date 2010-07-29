@@ -232,11 +232,39 @@ character*50    ext
 integer        len_dir,istatus
 character*3    var_2d
 real :: ldf(lx,ly),lat(lx,ly),lon(lx,ly),avg(lx,ly)
+real :: windspeed(lx,ly),soil_moist(lx,ly),snow_cover(lx,ly)
 
+integer ::        ismoist,isnow
 integer ::        status
 
 !cj Variables to compute omega, added 6/21/2007
 real :: tvprs
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Beka!!!!!!!!!!!!! obtaining ldf, lat and lon !!!!!!!!!!!!!!!!!!!!
+
+        ext = 'nest7grid'
+
+        call get_directory(ext,directory,len_dir)
+        var_2d='ldf'
+        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
+                             units_2d,comment_2d,ldf,      &
+                             rspacing_dum,istatus)
+        var_2d='avg'
+        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
+                             units_2d,comment_2d,avg,      &
+                             rspacing_dum,istatus)
+
+        var_2d='lat'
+        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
+                             units_2d,comment_2d,lat,      &
+                             rspacing_dum,istatus)
+
+        var_2d='lon'
+        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
+                             units_2d,comment_2d,lon,      &
+                             rspacing_dum,istatus)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ! Extrapolate a surface temp if not available.
 
@@ -572,6 +600,19 @@ if (make_firewx) then
 ! Fosberg FWI.
 
    call fosberg_fwi(tsfc,rhsfc,usfc,vsfc,lx,ly,fwi_index)
+
+! Kelsch FWX.
+   do i = 1,lx
+   do j = 1,ly
+       windspeed(i,j)=sqrt(usfc(i,j)**2+vsfc(i,j)**2)
+   enddo ! j
+   enddo ! i
+   ismoist = 0
+   isnow = 0
+   call lp_fire_danger (lx,ly,rhsfc,tsfc,windspeed, &
+                        soil_moist,snow_cover,zsfc,ldf,  &
+                        ismoist,isnow,fwx_index,istatus)
+
 endif
 
 deallocate(hrhsig,htdsig)
@@ -631,33 +672,11 @@ if (verbose) then
       print*,'Min/Max md haines = ',minval(ham_index),maxval(ham_index)
       print*,'Min/Max up haines = ',minval(hah_index),maxval(hah_index)
       print*,'Min/Max fosberg   = ',minval(fwi_index),maxval(fwi_index)
+      print*,'Min/Max laps/kelsch = ',minval(fwx_index),maxval(fwx_index)
    endif
 endif
 
 !Beka moisture flux
-
-        ext = 'nest7grid'
-
-	call get_directory(ext,directory,len_dir)
-        var_2d='ldf'  
-	call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
-                             units_2d,comment_2d,ldf,      &
-                             rspacing_dum,istatus)
-
-        var_2d='avg'
-        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
-                             units_2d,comment_2d,avg,      &
-                             rspacing_dum,istatus)
-
-        var_2d='lat'
-        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
-                             units_2d,comment_2d,lat,      &
-                             rspacing_dum,istatus)
-
-        var_2d='lon'
-        call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
-                             units_2d,comment_2d,lon,      &
-                             rspacing_dum,istatus)
 
         call get_grid_spacing_array(lat,lon,lx,ly,dx,dy)
 
