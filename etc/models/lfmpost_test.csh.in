@@ -1,10 +1,32 @@
-#!/bin/csh
+#!@CSH@
 
+setenv LAPSINSTALLROOT @prefix@
+setenv LAPS_DATA_ROOT  /data/fab/projects/dwr
 
 # Edit mainly these 3 lines
-setenv RUN       2009112512 # Model Run Initialization Time
-setenv VALIDTIME 2009112512 # Model Run Valid Time
-setenv WRFDIR    /w3/jet/fab/wrf5km            
+setenv RUN       2010072612 # Model Run Initialization Time
+setenv VALIDTIME 2010072612 # Model Run Valid Time
+setenv WRFDIR    /w3/jet/fab/wrfdwr            
+setenv NEST      d01
+
+# Set up directory structure and bring over the data
+
+mkdir -p $WRFDIR/$RUN/wrfprd/$NEST/fua
+mkdir -p $WRFDIR/$RUN/wrfprd/$NEST/fsf
+mkdir -p $WRFDIR/$RUN/static
+mkdir -p $WRFDIR/static
+mkdir -p $WRFDIR/cdl
+
+#scp jetscp.rdhpcs.noaa.gov:/lfs0/projects/hmtb/dwr_domains/arw-fer-gep1/$RUN/wrfprd/wrfout"*" $WRFDIR/$RUN/wrfprd
+
+#scp jetscp.rdhpcs.noaa.gov:/lfs0/projects/hmtb/dwr_domains/laps/$NEST/static/static.nest7grid    $WRFDIR/static
+cp $LAPS_DATA_ROOT/static/lfmpost.nl          $WRFDIR/$RUN/static
+cp $LAPS_DATA_ROOT/static/static.nest7grid    $WRFDIR/static
+cp $LAPS_DATA_ROOT/static/*.nl                $WRFDIR/static
+cp $LAPS_DATA_ROOT/static/*.parms             $WRFDIR/static
+cp $LAPS_DATA_ROOT/static/corners.dat         $WRFDIR/static
+cp $LAPS_DATA_ROOT/cdl/fua.cdl                $WRFDIR/cdl
+cp $LAPS_DATA_ROOT/cdl/fsf.cdl                $WRFDIR/cdl
 
 # Parse Valid Time
 setenv YY  `echo $VALIDTIME  | cut -c3-4`
@@ -13,13 +35,16 @@ setenv DD  `echo $VALIDTIME  | cut -c7-8`
 setenv HH  `echo $VALIDTIME  | cut -c9-10`
 setenv MM 00
 
-echo         `@PERL@ @prefix@/etc/systime.pl $YY $MON $DD $HH $MM | head -1` 
-setenv CTIME `@PERL@ @prefix@/etc/systime.pl $YY $MON $DD $HH $MM | head -1` 
+echo         `@PERL@ $LAPSINSTALLROOT/etc/systime.pl $YY $MON $DD $HH $MM | head -1` 
+setenv CTIME `@PERL@ $LAPSINSTALLROOT/etc/systime.pl $YY $MON $DD $HH $MM | head -1` 
 
 setenv USCORE _
 setenv ENDPART :00:00
+setenv CC 20
 
-echo  "lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_d01_20$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME 0 $WRFDIR"
+cd $LAPSINSTALLROOT/bin
 
-lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_d01_20$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME 0 $WRFDIR
+echo  "lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_$NEST$USCORE$CC$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME 0 $WRFDIR"
+
+       lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_$NEST$USCORE$CC$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME 0 $WRFDIR
 
