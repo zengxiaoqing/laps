@@ -289,7 +289,7 @@ select multiple pressure levels.<br>
 <INPUT NAME="a9time" VALUE="$default_time" size=9>
 <br>
 <p>
-<strong><A HREF="fcst.html">Forecast Time:</A></strong> 
+<strong><A HREF="fcst.html">Initial Time:</A></strong> 
 (blank=latest)
 <INPUT NAME="forecast_time" VALUE="$default_hhmm" size=9> 
 
@@ -389,6 +389,7 @@ print <<"EOF";
 <option $selected{'DEWPOINT'}> DEWPOINT
 <option $selected{'RH'}> RH
 <option $selected{'SH'}> SH
+<option $selected{'MR'}> MR
 <option $selected{'WIND_SPD'}> WIND_SPD
 <option $selected{'WIND_U'}> WIND_U
 <option $selected{'WIND_V'}> WIND_V
@@ -448,6 +449,7 @@ print <<"EOF";
 <option $selected{'dewpoint'}> dewpoint
 <option $selected{'rh'}> rh
 <option $selected{'sh'}> sh
+<option $selected{'mr'}> mr
 <option $selected{'wind'}> wind
 <option $selected{'wind_spd'}> wind_spd
 <option $selected{'wind_u'}> wind_u
