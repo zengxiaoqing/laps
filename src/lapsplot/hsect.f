@@ -478,6 +478,8 @@ c       include 'satellite_dims_lvd.inc'
             endif
             if(c_type(1:3) .eq. 'fcf')then
                 call frame
+                call get_lapsplot_parms(namelist_parms,istatus)
+!               ifield_found = 0 ! latest experiment
                 i_overlay = 0
                 n_image = 0
             endif
@@ -1275,6 +1277,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call get_grid_spacing_cen(grid_spacing_m,istatus)
                 if(grid_spacing_m .ge. 5000.)then
+                    plot_parms%iraster = 1
                     chigh = 40.
                     clow = -40.
                 else
@@ -5100,7 +5103,7 @@ c                   cint = -1.
      1                        ,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
             
-            else                  ! Surface background images
+            else                  ! Surface background / forecast images
                 if(var_2d .eq. 'LLR' .or. var_2d .eq. 'LMR')then
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
      1                         ,n_image,scale,'hsect',plot_parms
@@ -5172,6 +5175,10 @@ c                   cint = -1.
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'FWI')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,40.
+     1                         ,'spectralr',n_image,scale,'hsect' 
+     1                         ,plot_parms,namelist_parms) 
+                elseif(var_2d .eq. 'FWX')then
+                    call ccpfil(field_2d,NX_L,NY_L,0.,20.
      1                         ,'spectralr',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'PTP')then
