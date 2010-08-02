@@ -235,6 +235,10 @@ c
 	   if(dd_s(i).eq.badflag .or. ff_s(i).eq.badflag) then
 	      uu(i) = badflag
 	      vv(i) = badflag
+           elseif(obs(i)%dd_ea_deg .gt. 30. .or. ! withhold based on accuracy
+     1            obs(i)%ff_ea_kt  .gt. 10.)then
+	      uu(i) = badflag
+	      vv(i) = badflag
 	   else
               rlat_dum = -999.
 	      dd_rot = dd_s(i) - projrot_latlon( rlat_dum , lon_s(i)
@@ -442,7 +446,10 @@ c
 	print *,'----------------------------------'
 	do k=1,n_obs_b
 	  if(pstn_s(k).le.badflag .or. t_s(k).le.badflag 
-     &                           .or. td_s(k).le.badflag) then
+     &                           .or. td_s(k).le.badflagthen
+!    &                           .or. obs(i)%t_ea_f  .gt. 8.0
+!    &                           .or. obs(i)%td_ea_f .gt. 8.0
+     &                                                       )then
 	    pred_s(k) = badflag
 !           pmsl_s(k) = badflag
 	  else
