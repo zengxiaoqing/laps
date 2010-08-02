@@ -36,8 +36,8 @@
      1           ,c_field      
 
 !       Transfer from 'obs' data structure to 'obs_barnes' data structure
-        if(c_field .eq. 'tgd')then
-            rinst_err = 1.5
+        if(c_field .eq. 'tgd' .or. .true.)then
+            rinst_err = 1.5 ! set eventually according to expected accuracy
         endif
 
         call get_sfcob_field(obs,mxstn,'tgd',ob_full,istatus)
