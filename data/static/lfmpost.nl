@@ -5,7 +5,7 @@ out_grib=.false.,
 out_v5d=.false.,
 
 make_micro=.true.,
-make_firewx=.false.,
+make_firewx=.true.,
 
 verbose=.true.,
 realtime=.true.,
