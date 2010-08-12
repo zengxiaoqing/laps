@@ -224,6 +224,8 @@ netcdf fua {
             sno_comment(record,z,namelen),
             pic_comment(record,z,namelen),
             ref_comment(record,z,namelen),
+            zdr_comment(record,z,namelen),
+            ldr_comment(record,z,namelen),
             pty_comment(record,z,namelen),
             asctime(record,namelen);
 
@@ -281,6 +283,14 @@ netcdf fua {
         short
             ref_fcinv(record, z);
             ref_fcinv:_FillValue= 0s;
+
+        short
+            zdr_fcinv(record, z);
+            zdr_fcinv:_FillValue= 0s;
+
+        short
+            ldr_fcinv(record, z);
+            ldr_fcinv:_FillValue= 0s;
 
         short
             pty_fcinv(record, z);
