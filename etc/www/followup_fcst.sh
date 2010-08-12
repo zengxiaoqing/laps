@@ -38,6 +38,14 @@ export LAPS_ETC
 mkdir -p $WWW_DIR/fcst2d
 mkdir -p $WWW_DIR/fcst2d/$model
 
+cd $WWW_DIR                            
+if (! -e private_data) then
+    mkdir -p private_data/static
+    cd private_data/static
+    ln -s $LAPS_DATA_ROOT/static/nest7grid.parms nest7grid.parms
+fi
+ls -l $WWW_DIR/private_data/static/nest7grid.parms
+
 #if [[ $model = "wrf-nmm" || $model = "wrf-fer" ]]
 #then
 #    set -A products CAPE SurfaceTempWind Sfc_RelHum Precip LiftedIndex_SfcDewPt 
