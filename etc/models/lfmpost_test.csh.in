@@ -5,7 +5,7 @@ setenv LAPS_DATA_ROOT  /data/fab/projects/dwr
 
 # Edit mainly these 3 lines
 setenv RUN       2010072612 # Model Run Initialization Time
-setenv VALIDTIME 2010072612 # Model Run Valid Time
+setenv FCSTTIME  0          # Model Forecast Time (seconds)
 setenv WRFDIR    /w3/jet/fab/wrfdwr            
 setenv NEST      d01
 
@@ -29,10 +29,10 @@ cp $LAPS_DATA_ROOT/cdl/fua.cdl                $WRFDIR/cdl
 cp $LAPS_DATA_ROOT/cdl/fsf.cdl                $WRFDIR/cdl
 
 # Parse Valid Time
-setenv YY  `echo $VALIDTIME  | cut -c3-4`
-setenv MON `echo $VALIDTIME  | cut -c5-6`
-setenv DD  `echo $VALIDTIME  | cut -c7-8`
-setenv HH  `echo $VALIDTIME  | cut -c9-10`
+setenv YY  `echo $RUN  | cut -c3-4`
+setenv MON `echo $RUN  | cut -c5-6`
+setenv DD  `echo $RUN  | cut -c7-8`
+setenv HH  `echo $RUN  | cut -c9-10`
 setenv MM 00
 
 echo         `@PERL@ $LAPSINSTALLROOT/etc/systime.pl $YY $MON $DD $HH $MM | head -1` 
@@ -44,7 +44,7 @@ setenv CC 20
 
 cd $LAPSINSTALLROOT/bin
 
-echo  "lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_$NEST$USCORE$CC$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME 0 $WRFDIR"
+echo  "lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_$NEST$USCORE$CC$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME $FCSTTIME $WRFDIR"
 
-       lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_$NEST$USCORE$CC$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME 0 $WRFDIR
+       lfmpost.exe wrf $WRFDIR/$RUN/wrfprd/wrfout_$NEST$USCORE$CC$YY-$MON-$DD$USCORE$HH$ENDPART 1 $CTIME $FCSTTIME $WRFDIR
 
