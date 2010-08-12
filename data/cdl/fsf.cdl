@@ -484,7 +484,7 @@ netcdf fsf {
             umf:_FillValue = 1.e+37f;
             umf:long_name="Upslope Component of Moisture Flux";
             umf:units="Meters**2/second";
-            umf:valid_range= -1000.f, 1000.f;
+            umf:valid_range= -600.f, 600.f;
             umf:LAPS_var="UMF";
             umf:lvl_coord="AGL";
             umf:LAPS_units="M**2/S";
