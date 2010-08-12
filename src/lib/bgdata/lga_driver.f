@@ -370,6 +370,8 @@ C WNI END ADDITON
           l_bilinear = .false.
       endif
 
+      istatus=ishow_timer()
+
       call get_bkgd_mdl_info(bgmodel,cmodel,cfname
      &,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv
      &,nzbg_ww ,gproj,dlat,dlon,cenlat,cenlon,dx,dy
@@ -496,12 +498,19 @@ c
 
       do j=1,accepted_files
          call i4time_fname_lp(names(j)(1:9),bg_times(j),istatus)
-         if(llapsfua)then
+         imin=0
+         if(llapsfua)then ! may need > 100 hour support
             read(bg_names(j)(10:11),'(i2)')ihour
+            read(bg_names(j)(12:13),'(i2)')imin
          else
-            read(bg_names(j)(12:13),'(i2)')ihour
+            if(cmodel(1:ic) .eq. 'HRRR')then
+               read(bg_names(j)(10:11),'(i2)')ihour
+               read(bg_names(j)(12:13),'(i2)')imin       
+            else
+               read(bg_names(j)(12:13),'(i2)')ihour
+            endif
          endif
-         bg_valid(j)=ihour*3600
+         bg_valid(j)=ihour*3600+imin*60
          i4time_bg_valid(j)=bg_times(j)+bg_valid(j)
       enddo
 
@@ -727,6 +736,7 @@ c         convert to wfo if necessary
                    print*,'reject_cnt/reject_names'
                    print*,'cnt/time: ',reject_cnt
      +,reject_names(reject_cnt)
+                   print*,'fullname',fullname
                 endif
              enddo
           endif
@@ -1430,6 +1440,8 @@ c
 c
 c Write LGA
 c ---------
+         write(6,*)' Writing lga and/or lgb:',time_bg(nf),valid_bg(nf)
+     1                                       ,bgvalid
          if(.not.lgb_only)then
 
           if(vertical_grid .eq. 'PRESSURE')then
