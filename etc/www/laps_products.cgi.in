@@ -125,7 +125,7 @@ sub parse_directory($)
     
     chdir $directory or die "cannot chdir to $directory: $!";
     
-    @model_dates = glob "0*"; # model_dates holds the dates/times of the forecast model 
+    @model_dates = glob "[0-9]*"; # model_dates holds the dates/times of the forecast model 
 	   
     foreach my $datetime (@model_dates)
     {
@@ -210,6 +210,7 @@ EOHTML
 &access_config_file();
 my @domain_names = keys (%all_domains);
 @domain_names = sort (@domain_names);
+my $domain_prev = "  ";
 foreach (@domain_names) # parse through each domain
 {
     # create variable to contain specific information about that domain
@@ -220,8 +221,12 @@ foreach (@domain_names) # parse through each domain
     
     # print the beginning of the table row for this domain
 
-    print '<tr class="tableinfo" bgcolor="#66cccc">';
-    print "<td><u><b>$domain_name</b></u></td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>";
+    if($domain_name ne $domain_prev){
+        print '<tr class="tableinfo" bgcolor="#66cccc">';
+        print "<td><u><b>$domain_name</b></u></td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>";
+    }
+
+    $domain_prev = $domain_name;
     
     foreach (@domain_models)
     {
@@ -234,28 +239,55 @@ foreach (@domain_names) # parse through each domain
 	my @point_fcst = split(/\|/, $point_fcst_raw);
 	print "<tr class='tableinfo' bgcolor='#ffffff'><td>&nbsp;</td><td><a href='laps_products.cgi?model_selection=$domain_directory/fcst2d/$_'>$model_name</a></td>"; # print each domain
 	
-	# then the model initialization data (LAPS Diabatic, etc)
+	# then the model initialization data (LAPS Analysis, etc)
 	if (scalar(@init) == 1)
 	{
-	    print "<td>$init[0]</td>"; 
+	    print "<td width=10>$init[0]</td>"; 
 	}
 	elsif (scalar(@init) > 1)
 	{
-	    print "<td><a href='$webroot$init[1]'>$init[0]</a></td>";
+	    print "<td width=10><a href='$webroot$init[1]'>$init[0]</a></td>";
 	}
 	
 	# whether we have point forecast data available on the web
 
 	if (scalar(@point_fcst) == 1)
 	{
-	    print "<td>$point_fcst[0]</td>";
+	    print "<td width=10>$point_fcst[0]</td>";
 	}
 	elsif (scalar(@point_fcst) > 1)
 	{
-	    print "<td><a href='$webroot$point_fcst[1]'>$point_fcst[0]</a></td>";
+	    print "<td width=10><a href='$webroot$point_fcst[1]'>$point_fcst[0]</a></td>";
 	}
-	
-	print '<td><font color="#009900">';
+
+        my $minage;
+        if($domain_name =~ "PSD"){
+            $minage = 1.02; 
+        }elsif ($domain_name =~ "HWT") {
+            $minage = 12.02;
+        }else{
+            $minage = 6.02;
+        }        
+
+        stat("${directoryroot}domains/${domain_directory}/fcst2d/${_}/recent/systime.dat");
+        my $systimeage = 24*(-M _);
+
+        stat("${directoryroot}domains/${domain_directory}/fcst2d/${_}/latest.txt");
+        my $latestage = 24*(-M _);
+
+        stat("${directoryroot}domains/${domain_directory}/fcst2d/${_}/finish.txt");
+        my $finishage = 24*(-M _);
+  
+        if($systimeage > $minage){ 
+	    print '<td width=15><font color="#990000">';          # RED
+        }else{                     
+            if($latestage > 0.5 && $finishage > $latestage){ 
+	        print '<td width=15><font color="#996600">';      # ORANGE
+            }else{
+	        print '<td width=15><font color="#009900">';      # GREEN
+            }
+        }
+
 	open FILE, "${directoryroot}domains/${domain_directory}/fcst2d/${_}/recent/systime.dat";
 
 	# and when this model data was generated
@@ -307,6 +339,8 @@ sub selection_made
       $xdim = $xdim[0];
       $ydim = $ydim[0];
 #     print "xdim,ydim is $xdim,$ydim<br>\n";
+    }else{
+      print "ERROR: could not find $laps_data_root/static/$domain_nl<br>\n";
     }
 
     my $aspect_ratio = ($xdim-1.0) / ($ydim-1.0);
@@ -327,13 +361,20 @@ sub selection_made
         $xsize = $ysize;
     }
 
+#   if(param('model_selection') =~ "Xsect"){
+#       $xsize=int($ysize*1056./885.);
+#   }
+
     my $width_topa = int(($xsize/664.) * 0.9065 * 196.) + 17; 
     my $width_topc = int(($xsize/664.) * 0.9065 * 535.) + 17; 
-    my $width_bota = int(($xsize/664.) * 1.05 * 400.) + 17; 
-#    my $width_botb = int(($xsize/664.) * 0.99 * 231.) + 17; 
-    my $width_botb = int($xsize - $width_bota) + 0; 
+#   my $width_bota = int(($xsize/664.) * 1.05 * 400.) + 17; 
+    my $width_botb = int(($xsize/664.) * 1.15 * 231.) + 17; 
+#   my $width_botb = int($xsize - $width_bota) + 0; 
+    my $width_bota = int($xsize - $width_botb) - 0; 
 
 #   print "xsize,ysize is $xsize,$ysize<br>\n";
+
+#   print "width_bota,width_botb is $width_bota,$width_botb<br>\n";
 
     &parse_directory($model_dir); # parse the given directory and build our hash
     print << "EOHTML1";
@@ -360,6 +401,18 @@ sub selection_made
 <tr>
 
 EOHTML1
+
+print << "EOHTML1A";
+<script type="text/javascript">
+
+//<![CDATA[
+    var width_image = $xsize;
+    var height_image =$ysize;
+
+//]]>
+</script>
+
+EOHTML1A
 
 #std HTML form data: for changing modes
 
@@ -525,7 +578,7 @@ print '<td background="interface_images/imgcontrol_bg.gif" align="left" colspan=
     print '<td width=10></td>';
     print '<SCRIPT LANGUAGE = "JavaScript">';
     print 'function populate_hour() {';
-    my $i = "1";
+    $i = "1";
     my $imgtext = "";
     foreach my $date (@model_dates)
     {
@@ -536,7 +589,14 @@ print '<td background="interface_images/imgcontrol_bg.gif" align="left" colspan=
 	    
 	    foreach my $img (@{$model_hash{$date}{$param}})
 	    {
-		$imgtext = substr($img, 0, 2);
+                if(length($img) > 8){
+                    $imgtext = substr($img, 0, 3);
+                }else{
+                    $imgtext = substr($img, 0, 2);
+                }
+#               $imgtext = substr($img, 0, 2);
+#               $imgtext = $img;
+
 		print "document.imgSelectionForm.hour.options[$i] = new Option('$imgtext', '$img');\n";
 		$i++;
 	    }
@@ -569,7 +629,7 @@ print '<td background="interface_images/imgcontrol_bg.gif" align="left" colspan=
 </form>
 
 <table cellpadding="0" cellspacing="0" border="0" align="center">
-<tr width="780" align="right">
+<tr width="$xsize+50" align="right">
 
 <td valign="bottom"><a name="img_top"><img src="interface_images/topBarA.gif" height=42 width=$width_topa border="0"></a></td>
 <td valign="bottom"><img src="interface_images/topBarC.gif" height=42 width=$width_topc> </td>
@@ -589,14 +649,14 @@ print '<td background="interface_images/imgcontrol_bg.gif" align="left" colspan=
 
 
 <table cellpadding="0" cellspacing="0" border="0" align="center">
-<tr width="780">
+<tr width="$xsize+50">
                         <td><img src="interface_images/botBarA.gif" width=$width_bota height=47></td>
 
                         <td background="interface_images/botBarB.gif" width=$width_botb valign="top" align="center">
                                 <table cellpadding="0" cellspacing="0" width=$width_botb height="28">
                                         <tr><td><a name = "bot_img"><img src="interface_images/botBarB_top.gif" border="0"></a></td></tr>
                                         <tr>
-                                        	<td height=28 align="top" background="interface_images/botBarB_bot.gif"><a href="#bot_img" title="Loop Controls :: HEAD" onclick="if (loopMode()) loopHead();"><img name="loop_head" src="interface_images/loop_head.gif" border=0></a><a href="#bot_img" title="Loop Controls :: REV" onclick="if (loopMode()) loopRev();"><img name="loop_rev" src="interface_images/loop_rev.gif" border=0></a><a href="#bot_img" title="Loop Controls :: PLAY" onclick="if (loopMode()) loopPlay();"><img name="loop_play" src="interface_images/loop_play.gif" border=0></a><a href="#bot_img" title="Loop Controls :: STOP" onclick="if (loopMode()) loopStop();"><img name="loop_stop" src="interface_images/loop_stop.gif" border=0></a><a href="#bot_img" title="Loop Controls :: FWD" onclick="if (loopMode()) loopFwd();"><img name="loop_fwd" src="interface_images/loop_fwd.gif" border=0></a><a href="#bot_img" title="Loop Controls :: TAIL" onclick="if (loopMode()) loopTail();"><img name="loop_tail" src="interface_images/loop_tail.gif" border=0></a><a href="#bot_img" title="Loop Controls :: INC SPEED" onclick="if (loopMode()) loopIncSpeed();"><img name="loop_incspeed" src="interface_images/loop_incspeed.gif" border=0></a><a href="#bot_img" title="Loop Controls :: DEC SPEED" onclick="if (loopMode()) loopDecSpeed();"><img name="loop_decspeed" src="interface_images/loop_decspeed.gif" border="0"></a><a href="#bot_img" title="Loop Controls :: INC FIRST/LAST DELAY" onclick="if (loopMode()) loopIncDelay();"><img name="loop_incdelay" src="interface_images/loop_incdelay.gif" border="0"></a><a href="#bot_img" title="Loop Controls :: DEC FIRST/LAST DELAY" onclick="if (loopMode()) loopDecDelay();"><img name="loop_decdelay" src="interface_images/loop_decdelay.gif" border="0"></a></td>
+                                        <td height=28 align="top" background="interface_images/botBarB_bot.gif"><a href="#bot_img" title="Loop Controls :: HEAD" onclick="if (loopMode()) loopHead();"><img name="loop_head" src="interface_images/loop_head.gif" border=0></a><a href="#bot_img" title="Loop Controls :: REV" onclick="if (loopMode()) loopRev();"><img name="loop_rev" src="interface_images/loop_rev.gif" border=0></a><a href="#bot_img" title="Loop Controls :: PLAY" onclick="if (loopMode()) loopPlay();"><img name="loop_play" src="interface_images/loop_play.gif" border=0></a><a href="#bot_img" title="Loop Controls :: STOP" onclick="if (loopMode()) loopStop();"><img name="loop_stop" src="interface_images/loop_stop.gif" border=0></a><a href="#bot_img" title="Loop Controls :: FWD" onclick="if (loopMode()) loopFwd();"><img name="loop_fwd" src="interface_images/loop_fwd.gif" border=0></a><a href="#bot_img" title="Loop Controls :: TAIL" onclick="if (loopMode()) loopTail();"><img name="loop_tail" src="interface_images/loop_tail.gif" border=0></a><a href="#bot_img" title="Loop Controls :: INC SPEED" onclick="if (loopMode()) loopIncSpeed();"><img name="loop_incspeed" src="interface_images/loop_incspeed.gif" border=0></a><a href="#bot_img" title="Loop Controls :: DEC SPEED" onclick="if (loopMode()) loopDecSpeed();"><img name="loop_decspeed" src="interface_images/loop_decspeed.gif" border="0"></a><a href="#bot_img" title="Loop Controls :: INC FIRST/LAST DELAY" onclick="if (loopMode()) loopIncDelay();"><img name="loop_incdelay" src="interface_images/loop_incdelay.gif" border="0"></a><a href="#bot_img" title="Loop Controls :: DEC FIRST/LAST DELAY" onclick="if (loopMode()) loopDecDelay();"><img name="loop_decdelay" src="interface_images/loop_decdelay.gif" border="0"></a></td>
                                         </tr>
                                 </table>
                         </td>
