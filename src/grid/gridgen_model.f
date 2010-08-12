@@ -1323,10 +1323,10 @@ c write both non-stagger and stagger data for wrfsi, non-rotlat
 
          is=1
          idxt=3
-         filename=static_dir(1:len)//clatlon
-         open(10,file=filename,status='unknown',form='unformatted')
-         filename=static_dir(1:len)//ctopo
-         open(11,file=filename,status='unknown',form='unformatted')
+!        filename=static_dir(1:len)//clatlon
+!        open(10,file=filename,status='unknown',form='unformatted')
+!        filename=static_dir(1:len)//ctopo
+!        open(11,file=filename,status='unknown',form='unformatted')
          filename=static_dir(1:len)//corners
          open(15,file=filename,status='unknown')
          filename=static_dir(1:len)//ctopog
@@ -1334,10 +1334,10 @@ c write both non-stagger and stagger data for wrfsi, non-rotlat
          filename=static_dir(1:len)//clatlon2d
          open(667,file=filename)
 
-         write(10)lats(1:nnxp,1:nnyp,is),lons(1:nnxp,1:nnyp,is)
-         close(10)
-         write(11)data(:,:,idxt)
-         close(11)
+!        write(10)lats(1:nnxp,1:nnyp,is),lons(1:nnxp,1:nnyp,is)
+!        close(10)
+!        write(11)data(:,:,idxt)
+!        close(11)
          write(15,*)lats(1,1,is),lons(1,1,is)
          write(15,*)lats(1,nnyp,is),lons(1,nnyp,is)
          write(15,*)lats(nnxp,1,is),lons(nnxp,1,is)
@@ -1370,15 +1370,17 @@ c
 c this function allows variable amounts of smoothing of
 c the land fraction data depending on grid spacing
 c
-        iter=min(10,int(8000./deltax))
+!       iter=min(10,int(8000./deltax))
+        iter = 0
 
-	 IF (c6_maproj .ne. 'rotlat') THEN
+	IF (c6_maproj .ne. 'rotlat') THEN
         
-        print*,'Filter land fraction with 2dx ',iter
-        do k=1,iter
-           call filter_2dx(GEODAT2D,nnxp,nnyp,1, 0.5)
-           call filter_2dx(GEODAT2D,nnxp,nnyp,1,-0.5)
-        enddo
+          print*,'Filter land fraction with 2dx ',iter
+          do k=1,iter
+             call filter_2dx(GEODAT2D,nnxp,nnyp,1, 0.5)
+             call filter_2dx(GEODAT2D,nnxp,nnyp,1,-0.5)
+             GEODAT2D = max(GEODAT2D,0.) 
+          enddo
 
 	ENDIF
 
