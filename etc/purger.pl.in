@@ -20,10 +20,10 @@
 #
 use strict;
 use English;
-use vars qw($opt_r $opt_t $opt_m);
+use vars qw($opt_r $opt_t $opt_m $opt_d);
 use Getopt::Std;
 
-getopts('rt:m:');
+getopts('rt:m:d:');
 
 
 my $DATAROOT=shift || die "LAPS_DATA_ROOT required (generally appended by /lapsprd)";
@@ -130,8 +130,15 @@ if($min_files>0){
     $clean_dirs{'model/varfiles'} = (0.25<$hist_time)?0.25:$hist_time;;
     $clean_dirs{'../log'} = $log_time;
 
-    if(open(OVERRIDES,"$DATAROOT/../static/purger.dat")){
-      foreach(<OVERRIDES>){
+    my $purger_datfile;
+    if($opt_d){
+       $purger_datfile = $opt_d;
+    }else{
+       $purger_datfile = "$DATAROOT/../static/purger.dat";
+    }
+
+    if(open(OVERRIDES,"$purger_datfile")){
+       foreach(<OVERRIDES>){
 	next if(/^\#/);
 	if(/^\s*(\S+)\s+(\S+)\s+(\S+)/){
           my $what =  $1;
@@ -144,8 +151,8 @@ if($min_files>0){
 	  }
 	  print "Setting purge for $what from purger.dat to $clean_dirs{$what}\n";
 	}
-      }
-      close(OVERRIDES);
+       }
+       close(OVERRIDES);
     }
 
 }
