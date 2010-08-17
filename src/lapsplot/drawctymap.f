@@ -206,7 +206,7 @@ c
      1                       ,c3_time_zone,time_zone
      1                       ,c_institution,c_vnt_units
      1                       ,c_units_type,c_pbl_depth_units
-     1                       ,chigh_sfcwind,chigh_cape
+     1                       ,chigh_sfcwind,chigh_3dwind,chigh_cape
      1                       ,l_discrete, l_sphere
      1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
@@ -249,6 +249,7 @@ c
        namelist_parms%c_units_type = c_units_type
        namelist_parms%c_pbl_depth_units = c_pbl_depth_units
        namelist_parms%chigh_sfcwind = chigh_sfcwind
+       namelist_parms%chigh_3dwind = chigh_3dwind
        namelist_parms%chigh_cape = chigh_cape
        namelist_parms%c_ob_color = c_ob_color
        namelist_parms%i_background_color = i_background_color
