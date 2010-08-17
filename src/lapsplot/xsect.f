@@ -350,6 +350,8 @@ cdis
                                 ! the use of iraster
         plot_parms%l_discrete = namelist_parms%l_discrete
 
+        chigh_3dwind = 100. ! point to parameter when that's ready
+
         lapsplot_pregen = .true.
 
 c read in laps lat/lon and topo
@@ -774,21 +776,72 @@ c read in laps lat/lon and topo
      1                 NX_L,NY_L,NX_C,r_missing_data)
 
         if(c_field(1:2) .eq. 'fc')then ! force config with new dataroot
-            write(6,*)' Enter new dataroot:'
-            read(lun,17)new_dataroot
- 17         format(a)
-            call s_len(new_dataroot,lenroot)
-            call force_get_laps_config(new_dataroot(1:lenroot),istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Bad status returned from force_laps_config'
-                return
+          write(6,*)' Enter new dataroot:'
+          read(lun,17)new_dataroot
+ 17       format(a)
+          call s_len(new_dataroot,lenroot)
+          call force_get_laps_config(new_dataroot(1:lenroot),istatus)
+          if(istatus .ne. 1)then
+            write(6,*)' Bad status returned from force_laps_config'
+            return
+          endif
+          if(c_field(1:3) .eq. 'fcf')then ! montage case generally
+
+!-------------splice
+
+!           Contour in the terrain surface
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, bottom, top,1)
+            n_div = 20
+            call setusv_dum(2hIN,3)
+
+!           Read in sfc pressure
+            i4time_tol = 43200
+            var_2d = 'PS'
+            ext = 'lsx'
+            call get_laps_2dgrid(i4time_ref,i4time_tol,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,pres_2d,0,istatus)
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading Surface Pressure Analysis'
+                write(6,*)
+     1        ' Converting Terrain to Sfc Pressure with Std Atmosphere'            
+                istat_sfc_pres = 0
+            else
+                call interp_2d(pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
+     1                         NX_L,NY_L,NX_C,r_missing_data)
+                istat_sfc_pres = 1
             endif
-            if(c_field(1:3) .eq. 'fcf')then
-                call frame
-                i_overlay = 0
-                n_image = 0
-            endif
-            goto 100
+
+            do i = 1,NX_C
+                xcoord(i) = i
+                if(istat_sfc_pres .eq. 1)then
+                    ycoord(i) = max(zcoord_of_pressure(pres_1d(i)),1.0)
+                else
+                    ycoord(i) = 
+     1              max(height_to_zcoord(terrain_vert1d(i),istatus),1.0)      
+                endif
+
+                if(i .gt. 1)then
+                    do j = 0,n_div
+                        frac = float(j) / float(n_div)
+                        ybottom = bottom
+                        ytop = ycoord(i-1) * (1.-frac) + ycoord(i)*frac
+                        xval = float(i-1) + frac
+                        call line(xval,ybottom,xval,ytop)
+                    enddo ! j
+                endif
+            enddo ! i
+
+            call setusv_dum(2hIN,7)
+
+!-----------end of splice
+            call frame
+            i_graphics_overlay = 0
+            i_label_overlay = 0 ! i_label_overlay - 1
+            n_image = 0
+          endif ! c_field = 'fcf'
+          goto 100
         endif
 
         if(c_field(1:2) .eq. 'df' .and. idiff .eq. 0)then
@@ -1233,8 +1286,8 @@ c read in laps lat/lon and topo
             enddo ! i
             enddo ! k
 
-            clow =  -200.
-            chigh = +200.
+            clow =  -chigh_3dwind
+            chigh = +chigh_3dwind
             if(i_image .eq. 0)then
                 cint = 10. / density
             else
@@ -1276,8 +1329,8 @@ c read in laps lat/lon and topo
             enddo ! i
             enddo ! k
 
-            clow =  -200.
-            chigh = +200.
+            clow =  -chigh_3dwind
+            chigh = +chigh_3dwind
             if(i_image .eq. 0)then
                 cint = 10. / density
             else
@@ -1320,7 +1373,7 @@ c read in laps lat/lon and topo
             enddo ! k
 
             clow =  0.
-            chigh = +200.
+            chigh = chigh_3dwind
             if(i_image .eq. 0)then
                 cint = 10. / density
             else
