@@ -95,6 +95,11 @@ C
       write(6,*)' input array range: ',rmin,rmax
       write(6,*)' input scale: ',scale
 
+      if(rmin .eq. 0. .and. rmax .eq. 0. .and. c5_sect .eq. 'xsect')then
+          write(6,*)' Note, Xsect background may be non-black - return'
+          return
+      endif
+
 !     if(n_image .gt. 1)then
 !         write(6,*)' Image was already plotted - returning from ccpfil'
 !         return
