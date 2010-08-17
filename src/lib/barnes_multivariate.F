@@ -76,6 +76,7 @@ cdis
 !     Max Barnes radius (meters). Recommended values: 120000. to 300000.
 !                                 Best value: 240000.
       real r0_barnes_max_m
+      real fac,dfac
 
       logical ltest_vertical_grid,l_rms_exceeded
 
@@ -100,11 +101,14 @@ cdis
 
 !     Find minimum value of wt_b array
       weight_bkg_min = r_missing_data
-
+!     fac = 4.0E+28
+!     dfac = 2.0E+28/(n_var*kmax*jmax*imax)
       do l = 1,n_var
       do k = 1,kmax
       do j = 1,jmax
       do i = 1,imax
+ !        wt_b(i,j,k,l) = fac
+ !        fac = fac + dfac
           weight_bkg_min = min(wt_b(i,j,k,l),weight_bkg_min) 
       enddo ! i
       enddo ! j
@@ -389,6 +393,7 @@ cdis
       integer ibuf(4*ncnt_total+10)
       real    rbuf((2+max_var)*ncnt_total+2)
       real buffer(imax*jmax*kmax*n_var)
+      real wt_b_local(imax,jmax,kmax,n_var)  
       real, allocatable, dimension(:,:,:,:) :: local_var            ! Local
 #endif
       real, allocatable, dimension(:,:,:,:) :: sum_var              ! Local
@@ -552,30 +557,55 @@ cdis
         print*,'MPI_BCAST rbuf error',ierr,count,rank
         stop
       endif
+!     Copy wt_b, with re-ordering, into buffer
+      ioffset = 0
+      do r=0,nPEs-1
+        IMAXlocal = IstartIend(2,r)-IstartIend(1,r)+1
+        noffset = 0
+        do n=1,n_var
+          koffset = 0
+          do k=1,kmax
+            joffset = 0
+            do j=1,jmax
+              do i=IstartIend(1,r),IstartIend(2,r)
+                ip     = i-ioffset
+                offset = joffset+koffset+noffset
+                buffer(ip+displs(r)+offset) = wt_b(i,j,k,n)
+              enddo
+              joffset=joffset+IMAXlocal
+            enddo !j
+            koffset=koffset+IMAXlocal*jmax
+          enddo   !k
+          noffset=noffset+IMAXlocal*jmax*kmax
+        enddo     !n
+        ioffset=ioffset+IMAXlocal
+      enddo       !r
+
 !Send arrays
-      count = imax*jmax*kmax*n_var
-      call mpi_bcast(wt_b,count,MPI_REAL,0,MPI_COMM_WORLD,ierr) !optimization: send only decomposed part to each PE
+      call mpi_scatterv(buffer,recvcounts,displs,MPI_REAL,wt_b_local,
+     1               recvcounts(rank),MPI_REAL,0,MPI_COMM_WORLD,ierr)
       if( ierr /= 0) then
-        print*,'MPI_BCAST wb_t error',ierr,count,rank
+        print*,'MPI_SCATTERV error in barnes',ierr,rank,recvcounts(rank)
         stop
       endif
       count = (2*(imax-1)+1)*(2*(jmax-1)+1)
-      call mpi_bcast(fnorm_lut,count,MPI_REAL,0,MPI_COMM_WORLD,ierr) !optimization: send only decomposed part to each PE
+      call mpi_bcast(fnorm_lut,count,MPI_REAL,0,MPI_COMM_WORLD,ierr)
       if( ierr /= 0) then
-        print*,'MPI_BCAST fnorm_lut error',ierr,count,rank
+        print*,'MPI_BCAST fnorm_lut error in barnes',ierr,count,rank
         stop
       endif
       allocate(local_var(IstartIend(1,0):IstartIend(2,0),jmax,
      1                         kmax,n_var), STAT=istat_alloc )
       if(istat_alloc .ne. 0)then
-        print*,'ERROR: Could not allocate local_var',istat_alloc,rank
+        print*,'ERROR: Could not allocate local_var in barnes',
+     1         istat_alloc,rank
         print*,IstartIend(1,rank),IstartIend(2,rank),jmax,kmax,n_var
         stop
       endif
       call analyze_weights_mpi(
      1          n_var,max_obs,obs_barnes                                    ! I
      1         ,imax,jmax,kmax                                              ! I
-     1         ,wt_b                                                        ! I
+     1         ,wt_b_local                                                  ! I
      1         ,i4time_sys                                                  ! I
      1         ,r_missing_data,r0_vert_grid                                 ! I
      1         ,ncnt_total,idelt,jdelt,kdelt                                ! I
@@ -585,7 +615,7 @@ cdis
       call mpi_gatherv(local_var,recvcounts(rank),MPI_REAL,buffer,
      1                 recvcounts,displs,MPI_REAL,0,MPI_COMM_WORLD,ierr)
       if( ierr /= 0) then
-        print*,'MPI_GATHERV error',ierr,recvcounts(rank),rank
+        print*,'MPI_GATHERV error in barnes',ierr,recvcounts(rank),rank
         stop
       endif
 
@@ -602,8 +632,6 @@ cdis
               do i=IstartIend(1,r),IstartIend(2,r)
                 ip           = i-ioffset
                 offset       = joffset+koffset+noffset
-!      write(6,99) i,ip,j,k,n,displs(r),offset,ip+displs(r)+offset
-!99    format(5i5,3i10)
                 var(i,j,k,n) = buffer(ip+displs(r)+offset)
               enddo
               joffset=joffset+IMAXlocal
@@ -1133,7 +1161,7 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
 
       real, INTENT(IN) :: r_missing_data,r0_vert_grid
 
-      real, INTENT(IN) :: wt_b(imax,jmax,kmax,n_var)         
+      real, INTENT(IN) :: wt_b(Istart:Iend,jmax,kmax,n_var)         
 
       real, INTENT(IN)::fnorm_lut(-(imax-1):(imax-1),-(jmax-1):(jmax-1))     
       integer,intent(IN) :: Istart,Iend                         ! Input

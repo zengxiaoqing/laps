@@ -94,7 +94,7 @@ cdis
 
       integer,allocatable :: ibuf(:)
       real   ,allocatable :: rbuf(:)
-      real   ,allocatable,dimension(:,:,:,:) :: wt_b,local_var
+      real   ,allocatable,dimension(:,:,:,:) :: wt_b_local,local_var
       real   ,allocatable :: fnorm_lut(:,:)
       real :: buffer !argument to mpi_gatherv ignored on non-root
 
@@ -237,42 +237,44 @@ cdis
          deallocate(rbuf)
 
 !        Receive arrays
-         allocate(wt_b(imax,jmax,kmax,n_var), STAT=istat_alloc )
+         allocate(wt_b_local(imax,jmax,kmax,n_var), STAT=istat_alloc )
          if(istat_alloc .ne. 0)then
-           print*,' ERROR: Could not allocate wt_b',istat_alloc,rank
-           print*,imax,jmax,kmax,n_var
+           print*,' ERROR: Could not allocate wt_b_local in main',
+     1              istat_alloc
+           print*,rank,imax,jmax,kmax,n_var
            stop
          endif
          allocate(fnorm_lut(-(imax-1):(imax-1),-(jmax-1):(jmax-1)), 
      1                                           STAT=istat_alloc )
          if(istat_alloc .ne. 0)then
-           print*,' ERROR: Could not allocate fnorm_lut',istat_alloc,
-     1              rank,imax,jmax
+           print*,' ERROR: Could not allocate fnorm_lut in main',
+     1              istat_alloc,rank,imax,jmax
            stop
          endif
-         count = imax*jmax*kmax*n_var
-         call mpi_bcast(wt_b,count,MPI_REAL,0,MPI_COMM_WORLD,ierr) !optimization: send only decomposed part to each PE
+         call mpi_scatterv(buffer,recvcounts,displs,MPI_REAL,wt_b_local,
+     1                  recvcounts(rank),MPI_REAL,0,MPI_COMM_WORLD,ierr)
          if( ierr /= 0) then
-           print*,'MPI_BCAST wt_b error',ierr,count,rank
-           stop
+          print*,'MPI_SCATTERV error in main',ierr,rank,recvcounts(rank)
+          stop
          endif
          count = (2*(imax-1)+1)*(2*(jmax-1)+1)
-         call mpi_bcast(fnorm_lut,count,MPI_REAL,0,MPI_COMM_WORLD,ierr) !optimization: send only decomposed part to each PE
+         call mpi_bcast(fnorm_lut,count,MPI_REAL,0,MPI_COMM_WORLD,ierr)
          if( ierr /= 0) then
-           print*,'MPI_BCAST fnorm_lut error',ierr,count,rank
+           print*,'MPI_BCAST fnorm_lut error in main',ierr,count,rank
            stop
          endif
          allocate(local_var(IstartIend(1,rank):IstartIend(2,rank),jmax,
      1                                  kmax,n_var), STAT=istat_alloc )
          if(istat_alloc .ne. 0)then
-           print*,'ERROR: Could not allocate local_var',istat_alloc,rank
+           print*,'ERROR: Could not allocate local_var in main',
+     1            istat_alloc,rank
            print*,IstartIend(1,rank),IstartIend(2,rank),jmax,kmax,n_var
            stop
          endif
          call analyze_weights_mpi(
      1        n_var,max_obs,obs_barnes                                    ! I
      1       ,imax,jmax,kmax                                              ! I
-     1       ,wt_b                                                        ! I
+     1       ,wt_b_local                                                  ! I
      1       ,i4time_sys                                                  ! I
      1       ,r_missing_data_local,r0_vert_grid                           ! I
      1       ,ncnt_total,idelt,jdelt,kdelt                                ! I
@@ -286,7 +288,7 @@ cdis
            stop
          endif
 
-         deallocate(wt_b,fnorm_lut,obs_barnes,local_var)
+         deallocate(wt_b_local,fnorm_lut,obs_barnes,local_var)
        enddo !while
        call MPI_FINALIZE(ierr)
        stop
