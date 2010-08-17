@@ -96,10 +96,10 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E);
+            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -292,6 +292,7 @@ my $node_type_multi  = "comp";
 #my $node_type_single = "comp";
 my $node_type_single = "serial";
 my $node_type;
+my $qsub_mode = "single"; # "multi" or "single"
 
 #
 #  - The second argument is the time delay in hours to 
@@ -369,6 +370,7 @@ if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r
     $sys .= "-m $opt_m " if($opt_m);
     $sys .= "-t $opt_t " if($opt_t);
     $sys .= " $LAPS_DATA_ROOT/lapsprd";
+    $sys .= " 1> $LAPS_LOG_PATH/purger.log 2>&1 &";
     print $sys."\n";
     system($sys);
 
@@ -379,7 +381,9 @@ if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r
         $sys .= "-r " if($opt_r);
         $sys .= "-m $opt_m " if($opt_m);
         $sys .= "-t $opt_t " if($opt_t);
+        $sys .= "-d $LAPS_DATA_ROOT/static/purger.dat ";
         $sys .= " $LAPS_DATA_ROOT/lapsprd/fua";
+        $sys .= " 1> $LAPS_LOG_PATH/purger_fua.log 2>&1 &";
         print $sys."\n";
         system($sys);
     }
@@ -391,7 +395,9 @@ if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r
         $sys .= "-r " if($opt_r);
         $sys .= "-m $opt_m " if($opt_m);
         $sys .= "-t $opt_t " if($opt_t);
+        $sys .= "-d $LAPS_DATA_ROOT/static/purger.dat ";
         $sys .= " $LAPS_DATA_ROOT/lapsprd/fsf";
+        $sys .= " 1> $LAPS_LOG_PATH/purger_fsf.log 2>&1 &";
         print $sys."\n";
     system($sys);
     }
@@ -509,7 +515,10 @@ foreach $exe (@LAPS_EXE){
         }
 
         if($exe =~ "wind"){
-            $nodes_current = 8; # 1
+            $nodes_current = 1;
+            if(defined $opt_P){
+                $nodes_current = $opt_P;
+            }
         }else{
             $nodes_current = 1;
         }
@@ -523,7 +532,7 @@ foreach $exe (@LAPS_EXE){
         if($execount < $nexe){ # Not yet at end of the list
             if($nodes_last != $nodes_current){ # of nodes has changed OR we are starting
 
-                if($execount > 1){ # after start
+                if($execount > 1 && $qsub_mode eq "multi"){ # after start - close qsub script
                     print TFILE "  \n";
                     print TFILE "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$scriptnext.sh 1> $LAPS_LOG_PATH/$qsub_name\_$scriptnext.log 2>&1\n";
                     print TFILE "  \n";
@@ -534,13 +543,16 @@ foreach $exe (@LAPS_EXE){
                 }
 
 #               Start new qsub_wait script
-                $scriptcount = $scriptcount + 1;
-                $scriptnext = $scriptcount + 1;
+                if($execount == 1 || $qsub_mode eq "multi"){ 
+                    $scriptcount = $scriptcount + 1;
+                    $scriptnext = $scriptcount + 1;
 
-                print $t." Opening $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh starting with executable # $execount\n";
-                open(TFILE,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh");
-                open(TFILE_SUB,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
-                print TFILE "#!/bin/sh\n";
+                    print $t." Opening $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh starting with executable # $execount\n";
+                    open(TFILE,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh");
+                    open(TFILE_SUB,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
+                    print TFILE "#!/bin/sh\n";
+
+                }
 
                 my $wall_time_hr  = int( ( $cycle_time_min / 60.) + $extend_time  ); 
 
@@ -551,25 +563,36 @@ foreach $exe (@LAPS_EXE){
                     $wall_time_hr="0".$wall_time_hr if(length($wall_time_hr)<2);
                     print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$wall_time_hr:$wall_time_min:00 -A $opt_q\n";
                 }elsif($opt_Q){ 
-                    print TFILE "#\$ -pe $node_type $nodes_current\n";
-                    if($node_type eq "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
-                        print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=6.0G\n";
-                    }else{
-                        if($nodes_current > 1){
-                            print TFILE "#\$ -l h_rt=00:15:00\n";
-                        }else{ 
+                    if($qsub_mode eq "multi" || ! defined($opt_P)){
+                        print TFILE "#\$ -pe $node_type $nodes_current\n";
+                        if($node_type eq "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
+                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=6.0G\n";
+                        }else{
+                            if($nodes_current > 1){
+                                print TFILE "#\$ -l h_rt=00:15:00\n";
+                            }else{ 
+                                print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                            }
+                        }
+                    }else{ # qsub in "single" mode with $opt_P defined for multiple processors
+                        if($execount == 1){
+                            print TFILE "#\$ -pe comp $opt_P\n";
                             print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
                         }
                     }
-                    print TFILE "#\$ -A $opt_Q\n";
-                    print TFILE "#\$ -S /bin/sh\n";
-                    print TFILE "#\$ -cwd\n";
+                    if($execount == 1 || $qsub_mode eq "multi"){
+                        print TFILE "#\$ -A $opt_Q\n";
+                        print TFILE "#\$ -S /bin/sh\n";
+                        print TFILE "#\$ -cwd\n";
+                    }
                 }
 
-                print TFILE "  \n";
-                print TFILE "umask 002\n";
-                print TFILE "cd $LAPS_LOG_PATH\n";
-                print TFILE "  \n";
+                if($execount == 1 || $qsub_mode eq "multi"){
+                    print TFILE "  \n";
+                    print TFILE "umask 002\n";
+                    print TFILE "cd $LAPS_LOG_PATH\n";
+                    print TFILE "  \n";
+                }
 
                 if($node_type eq "rt"){
                     print TFILE "export PBS_SERVER_LIST=@PBSHOME@/lib/server.rt\n";
@@ -586,8 +609,10 @@ foreach $exe (@LAPS_EXE){
 #                   print TFILE "$sms_path/bin/sysSrvr $nodes_current &\n";
 #               }
 
-                print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
-                print TFILE "  \n";
+                if($execount == 1 || $qsub_mode eq "multi"){
+                    print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
+                    print TFILE "  \n";
+                }
 
 #               print TFILE "date >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
 #               print TFILE "  \n";
