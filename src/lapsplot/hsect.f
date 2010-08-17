@@ -284,6 +284,10 @@ c       include 'satellite_dims_lvd.inc'
 
         data mode_lwc/2/
 
+        integer i_first
+        save i_first
+        data i_first /1/
+
         ifield_found = 0
         i_plotted_field = 0
 
@@ -492,6 +496,73 @@ c       include 'satellite_dims_lvd.inc'
      1                                          ,NX_L,NY_L)       
 
             c_label = 'difference field (b - a)'
+
+!           Use scale from the most recent plot?
+!           scale = 1.
+            write(6,*)' scale/cint: ',scale,cint   
+
+            if(.false.)then ! experimental
+                colortable = 'hues'
+                call plot_field_2d(i4time_3dw,c_type,field_2d_diff,scale       
+     1                            ,namelist_parms,plot_parms
+     1                            ,clow,chigh,cint,c_label
+     1                            ,i_overlay,c_display,lat,lon,jdot
+     1                            ,NX_L,NY_L,r_missing_data,colortable)       
+
+            elseif(c_type(3:3) .ne. 'i')then ! contour plot
+                call contour_settings(field_2d_diff,NX_L,NY_L
+     1               ,clow,chigh,cint,zoom,density,scale)      
+
+                call plot_cont(field_2d_diff,scale,clow,chigh,cint,
+     1               asc9_tim,namelist_parms,plot_parms,       
+     1               c_label,i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            else ! image plot
+                plot_parms%iraster = -1
+
+                if(dyn_low  .eq. r_missing_data .or. 
+     1             dyn_high .eq. r_missing_data)then ! initialize range
+                    call array_range(field_2d_diff,NX_L,NY_L,rmin,rmax
+     1                              ,r_missing_data)
+
+                    rmin = rmin/scale
+                    rmax = rmax/scale
+
+                    rscale = max(abs(rmin),abs(rmax))
+                    rmin = -rscale
+                    rmax = +rscale
+                    dyn_low  = rmin ! save for subsequent times
+                    dyn_high = rmax ! save for subsequent times
+
+                else ! use previously initialized values
+                    rmin = dyn_low
+                    rmax = dyn_high
+
+                endif
+
+                write(6,*)' ccpfil for diff plot range = ',rmin,rmax
+     1                                                    ,scale
+
+                call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,'hues'
+     1                     ,n_image,scale,'hsect',plot_parms
+     1                     ,namelist_parms)    
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
+     1                                ,plot_parms,namelist_parms
+     1                                ,i_overlay,'hsect')       
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
+     1                             ,namelist_parms,plot_parms)     
+
+            endif
+
+        elseif(c_type(1:2) .eq. 'mn')then
+            write(6,*)' Plotting sum field of last two entries'       
+            call diff_miss(field_2d,field_2d_buf,field_2d_diff
+     1                                          ,NX_L,NY_L)       
+
+            c_label = 'sum field (b + a)'
 
 !           Use scale from the most recent plot?
 !           scale = 1.
@@ -2948,7 +3019,7 @@ c
             ext = 'l1s'
             call get_directory(ext,directory,len_dir)
 
-!           Cycle over at :28 after (if input time is not on the hour)
+!           Cycle over at :28 after (if input time is not on the hour)?
             if(i4time_ref .ne. (i4time_ref / 3600) * 3600)then
                 i4time_ref1 = (i4time_ref-1680)/laps_cycle_time
      1                                        * laps_cycle_time
@@ -2959,7 +3030,7 @@ c
             if(r_hours .eq. -99.)then ! Storm Total
                 write(6,*)' Getting Storm Total Accum from file'
                 c9_string = 'Storm Tot'
-                call get_laps_2dgrid(i4time_ref1,10000000,i4time_stm_tot
+                call get_laps_2dgrid(i4time_ref,10000000,i4time_stm_tot
      1                  ,ext,var_2d
      1                  ,units_2d,comment_2d,NX_L,NY_L,accum_2d,0
      1                                                  ,istatus)
@@ -2968,13 +3039,22 @@ c
      1s)
                 istatus = 1
                 num_hr_accum = (i4time_stm_tot - i4time_reset) / 3600
+                num_mn_accum = ((i4time_stm_tot - i4time_reset) - 
+     1                           num_hr_accum*3600) / 60
                 i4time_accum = i4time_stm_tot
                 i4time_end = i4time_stm_tot
                 i4time_start = i4time_reset
 
 !               encode(7,2017,c7_string)min(num_hr_accum,999)
-                write(c7_string,2017)min(num_hr_accum,999)
-2017            format(i4,' Hr')
+                if(num_mn_accum .eq. 0)then
+                    write(c7_string,2017)min(num_hr_accum,999)
+2017                format(i4,' Hr')
+                else
+                    write(c7_string,2018)min(num_hr_accum,999)
+     1                                  ,num_mn_accum
+2018                format(i2,'h',i2,'m ')
+                endif
+     
                 if(c_type(1:2) .eq. 'sa')then
                     if(c_units_type .eq. 'english')then
                         c_label = 'Stm Tot Snow Acc (in)'//c7_string
@@ -3144,6 +3224,11 @@ c
                 enddo ! j
                 enddo ! i
 
+                scale = 1.
+                call contour_settings(field_2d,NX_L,NY_L
+     1                           ,clow,chigh,cint
+     1                           ,zoom,density,scale)
+
             elseif(c_type_i .eq. 'pb')then
                 iflag_temp = 3 ! Returns Balanced Potential Temperature
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
@@ -3158,6 +3243,11 @@ c
                 enddo ! j
                 enddo ! i
 
+                scale = 1.
+                call contour_settings(field_2d,NX_L,NY_L
+     1                           ,clow,chigh,cint
+     1                           ,zoom,density,scale)
+
             elseif(c_type_i .eq. 't ')then
                 call get_temp_2d(i4time_ref,lagt,i4time_nearest
      1                          ,k_mb,NX_L,NY_L,temp_2d,istatus)
@@ -3170,6 +3260,34 @@ c
 
                 call mklabel(k_mb,' Temperature      C'
      1                        ,c_label)       
+
+                write(6,*)' k_mb for T plot = ',k_mb
+                if(k_mb .eq. 300)then 
+                    cint = 5.
+                    clow = -60.
+                    chigh = -30.
+                elseif(k_mb .eq. 500)then
+                    cint = 5.
+                    clow = -40.
+                    chigh = 0.
+                elseif(k_mb .eq. 700)then
+                    cint = 5.
+                    clow = -30.
+                    chigh = +30.
+                elseif(k_mb .eq. 850)then
+                    cint = 5.
+                    clow = -10.
+                    chigh = +30.
+                elseif(k_mb .eq. 1000)then
+                    cint = 5.
+                    clow = 0.
+                    chigh = +40.
+                else
+                    scale = 1.
+                    call contour_settings(field_2d,NX_L,NY_L
+     1                           ,clow,chigh,cint
+     1                           ,zoom,density,scale)
+                endif
 
             elseif(c_type_i .eq. 'bt')then
                 var_2d = 'T3'
@@ -3191,6 +3309,11 @@ c
                 call mklabel(k_mb,' Temp (Bal)       C'
      1                        ,c_label)
 
+                scale = 1.
+                call contour_settings(field_2d,NX_L,NY_L
+     1                           ,clow,chigh,cint
+     1                           ,zoom,density,scale)
+
             endif
 
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
@@ -3207,10 +3330,6 @@ c
 !               chigh = 0.
 !               cint = 5.
 !           endif
-
-            scale = 1.
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                           ,zoom,density,scale)
 
             call plot_field_2d(i4time_nearest,c_type
      1                        ,field_2d,scale
@@ -4397,6 +4516,7 @@ c                   cint = -1.
                 enddo ! j
                 enddo ! i
 
+                write(6,*)' k_mb for T fua/lga plot = ',k_mb
                 if(k_mb .eq. 300)then 
                     cint = 5.
                     clow = -60.
@@ -4409,6 +4529,14 @@ c                   cint = -1.
                     cint = 5.
                     clow = -30.
                     chigh = +30.
+                elseif(k_mb .eq. 850)then
+                    cint = 5.
+                    clow = -10.
+                    chigh = +30.
+                elseif(k_mb .eq. 1000)then
+                    cint = 5.
+                    clow = 0.
+                    chigh = +40.
                 else
                     call contour_settings(field_2d,NX_L,NY_L
      1                                   ,clow,chigh,cint
@@ -5061,7 +5189,8 @@ c                   cint = -1.
                 comment_2d = 'Brightness Temperature'
                 units_2d = 'Deg K'
 
-            elseif(units_2d(1:4) .eq. 'NONE')then
+            elseif(units_2d(1:4) .eq. 'NONE' .or.
+     1             units_2d(1:4) .eq. 'none'      )then
                 units_2d = '          '
 
             endif
