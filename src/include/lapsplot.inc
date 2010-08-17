@@ -14,6 +14,7 @@
           real dist_plot_ua
           real dist_plot_sfc
           real chigh_sfcwind
+          real chigh_3dwind
           real chigh_cape
 
           integer latlon_int

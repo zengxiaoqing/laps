@@ -8,6 +8,7 @@
  c_units_type='english',
  c_pbl_depth_units='metric',
  chigh_sfcwind=50.,
+ chigh_3dwind=200.,
  chigh_cape=7000.,
  c_ob_color='default',
  i_background_color=2,
@@ -49,6 +50,9 @@ c c_pbl_depth_units - PBL depth units ('english' or 'metric')
 c
 c chigh_sfcwind - maximum of colorbar range for surface wind speed plots
 c                 (recommended values are 50., 100., 200.)
+c
+c chigh_3dwind - maximum of colorbar range for 3-D wind plots
+c                (recommended values are 100., 200.)
 c
 c chigh_cape - maximum of colorbar range for CAPE plots
 c              (recommended values are 7000., 3500.)
