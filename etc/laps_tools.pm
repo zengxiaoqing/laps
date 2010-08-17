@@ -294,6 +294,7 @@ sub mkdatadirs{
   my (@datadirs, @lapsprddirs);
   my (@fua_dirs, @fsf_dirs);
   my (@hist_dirs, @cont_dirs);
+  my (@ensm_dirs);
   my (@fdda_dirs);
   my (@lga_dirs, @lgb_dirs);
   my (@bkgd_dirs);
@@ -337,6 +338,8 @@ grid ram rsf lsq tmg hmg lst pbl model model/varfiles model/output model/sfc
 verif verif/noBal verif/Bal verif/Bkgd 
 verif/REF
 verif/REF/hist verif/REF/cont 
+ensemble
+ensemble/mean
 gr2);
 
      if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
@@ -368,7 +371,7 @@ gr2);
      print "fsf dirs: @fsf_dirs\n";
 
      print "adding fdda_model_source subdirectories to verif hist/cont dirs\n";
-     my $ii = 0;
+     $ii = 0;
      $hist_dirs[$ii] = 'verif/REF/hist';
      $cont_dirs[$ii] = 'verif/REF/cont';
      foreach (@fdda_dirs){
@@ -381,6 +384,8 @@ gr2);
      }
      print "hist dirs: @hist_dirs\n";
      print "cont dirs: @cont_dirs\n";
+
+
 
      print "adding background model subdirectories to lapsprd dirs\n";
      $lga_dirs[0]='lga';
@@ -430,7 +435,6 @@ gr2);
   foreach (@cont_dirs) {
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
-
   return;
 }
 1;
@@ -449,7 +453,7 @@ sub get_bkgd_models{
       chomp $models;
       @models = split(",",$models);
       for ($i=0; $i<=$#models; $i++){
-         @models[$i]=~s/'//g;
+         $models[$i]=~s/'//g;
       }
       last; 
    }
@@ -858,8 +862,8 @@ sub a9time_to_i4time {
   my ($yyyy) = "20".substr($a9time,0,2);
   my ($jjj) = substr($a9time,2,3);
   my (@mmddd) = &JJJ2MMDD($jjj,$yyyy);
-  my ($mon)  = @mmddd[0]; 
-  my ($mday) = @mmddd[1]; 
+  my ($mon)  = $mmddd[0]; 
+  my ($mday) = $mmddd[1]; 
   my ($hour) = substr($a9time,5,2);
   my ($min)  = substr($a9time,7,2);
   my ($sec)  = 0;
@@ -884,18 +888,18 @@ sub i4time_to_a9time {
 
   my (@a9time) = &i4time_to_date($unixtime);
 
-  my ($yyyy) = @a9time[0];
+  my ($yyyy) = $a9time[0];
   my ($yy) = substr($yyyy,2,2);
 
-  my ($mon)  = @a9time[1];
+  my ($mon)  = $a9time[1];
 
-  my ($mday) = @a9time[2];
+  my ($mday) = $a9time[2];
   $mday = "0".$mday while(length($mday)<2);
 
-  my ($hour) = @a9time[3];
+  my ($hour) = $a9time[3];
   $hour = "0".$hour while(length($hour)<2);
 
-  my ($min) = @a9time[4];
+  my ($min) = $a9time[4];
   $min = "0".$min while(length($min)<2);
 
   my (@mmddd,$jjj); 
