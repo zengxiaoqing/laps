@@ -602,10 +602,10 @@ c     convert filename to i4time_sat
                if(ch3(i,j).le.0.0 .or. ch4(i,j).le.0.0 .or.
      1              ch5(i,j).le.0.0) then
                   istatus = 0
-                  write(6,*) 'Zero value radiance discovered'
-                  write(6,*) 'IMAGER DATA'
-                  write(6,*) '   aborting satellite moisture'
-                  write(6,*) '   data untrustworthy'
+c                  write(6,*) 'Zero value radiance discovered'
+c                  write(6,*) 'IMAGER DATA'
+c                  write(6,*) '   aborting satellite moisture'
+c                  write(6,*) '   data untrustworthy'
                   goes_good  = 0
                endif
             enddo
