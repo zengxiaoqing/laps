@@ -20,7 +20,7 @@ setenv TEMPLATEDIR        $4
 #using a special perl script to circumvent @INC problems (e.g. at CWB).
 setenv NEWPERL            $5
 
-#Last argument $6
+# Argument $6
 #    a - do entire install 
 #    p - does binary (configure/install) setup only
 #    w - does window localization only
@@ -37,6 +37,11 @@ setenv NEWPERL            $5
 #setenv TEMPLATEDIR        /pj/fsl/albers/src/template
 #setenv NEWPERL            /pj/fsl/albers/bin/perl
 #setenv NEWPERL            `which perl`
+
+if ($7 == intel) then
+  echo "module switch intel"
+  module switch intel
+endif
 
 #Configure/install?
 if ($6 != w) then
