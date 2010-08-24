@@ -166,18 +166,6 @@ if(@sources[0] =~ "wrf" || @sources[0] =~ "arw" || @sources[0] =~ "nmm") {
 
 print "<head><title>$default_title</title></head>";
 
-@fields = split("\0",$input{'fields'});
-$n_fields = @fields;
-print "$n_fields field(s) selected: ";
-print "@fields....";
-$out_fields="[" . join(',',@fields) . "]";
-$n_fields_uc = 0;
-foreach $field (@fields) {
-    if ($field eq uc($field)){
-        $n_fields_uc++
-    }
-}
-
 @pressure_levels = split("\0",$input{'pressure_levels'});
 $n_levels = @pressure_levels;
 print "$n_levels level(s) selected: ";
@@ -185,6 +173,21 @@ print "@pressure_levels....";
 $out_levels="[" . join(',',@pressure_levels) . "]";
 $ENV{'pressure_levels'} = $out_levels;
 $ENV{'n_levels'}= $n_levels;
+
+@fields = split("\0",$input{'fields'});
+$n_fields = @fields;
+print "$n_fields field(s) selected: ";
+print "@fields....";
+$out_fields="[" . join(',',@fields) . "]";
+$n_fields_uc = 0;
+foreach $field (@fields) {
+    if ($field eq uc($field) && ! ($field eq "REFLCT" && $out_levels =~ "xsect") ){
+        $n_fields_uc++
+    }
+}
+
+print "n_fields_uc = $n_fields_uc ";
+print "out_levels = $out_levels ";
 
 #$ENV{'file'} = $file;
 $ENV{'file_in'} = $file_in;
@@ -218,7 +221,7 @@ $domain = @domains[0];
 
 $err=0;
 $montage=0;
-
+my $nmontage = 1;
 
 my $domain_first;
 $domain =~ /(.*)/;
@@ -378,17 +381,18 @@ if($n_fields_uc > 1 && $n_sources_fields > 0 && (@fields[0] != "CLDCLV" || @fiel
     print "<h2>Error: only 1 upper case field should be selected (image montages not yet supported)...</h2>";
     $err=1;
 }else{
-    if($n_domains == 1 && $n_fields_uc == 1 && $n_sources_fields > 1){
+    if($n_domains == 1 && $n_sources_fields >  1 && ($n_fields_uc == 1 || $n_fields > 1) ){
+#   if($n_domains == 1 && $n_sources_fields >  1 && ($n_fields_uc == 1                 ) ){
         print "<h2>Montage multiple sources (under construction)...</h2>";
 #       $err=1;
         $montage=1;
     }
-    if($n_domains == 1 && $n_fields_uc >  1 && $n_sources_fields == 1){
+    if($n_domains == 1 && $n_sources_fields == 1 && $n_fields_uc >  1){
         print "<h2>Montage multiple fields (under construction)...</h2>";
 #       $err=1;
         $montage=1;
     }
-    if($n_sources_fields > 0 && $n_fields_uc == 1 && $n_levels > 1){
+    if(                   $n_sources_fields > 0 && $n_fields_uc == 1 && $n_levels > 1){
         print "<h2>Montage multiple levels (under construction)...</h2>";
 #       $err=1;
         $montage=1;
@@ -767,24 +771,37 @@ if($err == 0) {
                       }
                   }
 
-                  if($sect eq "hsect"){
-#                     if($montage == 1 && $domain ne $domain_first && $field eq uc($field)){ 
+                  if($sect eq "hsect" || $sect eq "xsect"){
+#                     print "checking for montage <br>\n";
+#                     if($montage == 1 && $domain ne $domain_first && $field eq uc($field) && ! ($field eq "REFLECT" && $out_levels =~ "xsect") ){ 
                       if(    $montage == 1 && $domain ne $domain_first && $source eq $sources[0] && $field eq $fields[0]){ # montage multiple domains
                           print "multiple domains field/field(0) is $field $fields[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
                           $animate = "yes";
+                          if($a9time_safe == $a9time_orig){
+                              $nmontage++;
+                          }
                       }elsif($montage == 1 && $domain eq $domain_first && $source ne $sources[0] && $field eq $fields[0]){ # montage multiple sources
                           print "multiple sources field/field(0) is $field $fields[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
                           $animate = "yes";
-                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field ne $fields[0] && $field eq uc($field)){ # montage multiple fields
+                          if($a9time_safe == $a9time_orig){
+                              $nmontage++;
+                          }
+                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field ne $fields[0] && $field eq uc($field) && $field ne "REFLCT"){ # montage multiple fields
                           print "multiple fields field/field(0) is $field $fields[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
                           $animate = "yes";
+                          if($a9time_safe == $a9time_orig){
+                              $nmontage++;
+                          }
                       }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field eq $fields[0] && $level ne $pressure_levels[0]){ # montage multiple levels
                           print "multiple levels level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
                           $animate = "yes";
+                          if($a9time_safe == $a9time_orig){
+                              $nmontage++;
+                          }
                       }else{
                           printf LAPSPLOT "fc\n"; 
                       }
@@ -1072,6 +1089,20 @@ if($err == 0) {
                               printf LAPSPLOT "$source\n"; 
                               printf LAPSPLOT "$hhmm\n";
                               printf LAPSPLOT "llr\n"; 
+
+                          }elsif("$field" eq "CLD_LIQ"){ 
+                              printf LAPSPLOT "lsi\n"; 
+                              printf LAPSPLOT "-1\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+
+                          }elsif("$field" eq "cld_liq"){ 
+                              printf LAPSPLOT "ls\n"; 
+                              printf LAPSPLOT "-1\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
 
                           }elsif("$field" eq "FIREWX" ) { 
                               printf LAPSPLOT "bs\n"; 
@@ -1612,8 +1643,7 @@ if($err == 0) {
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
 
-                          }elsif("$field" eq "wind" ) { 
-                              printf LAPSPLOT "wr\n"; 
+                          }elsif("$field" eq "wind" ) {                               printf LAPSPLOT "wr\n"; 
                               printf LAPSPLOT "$level\n"; 
                               printf LAPSPLOT "vc\n"; 
                               printf LAPSPLOT "$source\n";
@@ -2871,6 +2901,14 @@ if($err == 0) {
                     elsif("$field" eq "reflct"){ 
                         printf LAPSPLOT "rf\n"; 
                         printf LAPSPLOT "lr\n"; }
+                    elsif("$field" eq "CLD_LIQ"){ 
+                        printf LAPSPLOT "lsi\n"; 
+                        printf LAPSPLOT "-1\n"; 
+                        printf LAPSPLOT "a\n"; }
+                    elsif("$field" eq "cld_liq"){ 
+                        printf LAPSPLOT "ls\n"; 
+                        printf LAPSPLOT "-1\n"; 
+                        printf LAPSPLOT "a\n"; }
                     elsif("$field" eq "SNOW_CVR"){ 
                         printf LAPSPLOT "sci\n";} 
                     elsif("$field" eq "snow_cvr"){ 
@@ -3053,6 +3091,12 @@ if($err == 0) {
                         printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "PCP_SNO" ){ # LWC
                         printf LAPSPLOT "sni\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "pcp_ice" ){ # LWC
+                        printf LAPSPLOT "ic\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "PCP_ICE" ){ # LWC
+                        printf LAPSPLOT "ici\n"; 
                         printf LAPSPLOT "a\n"; 
                     }else{ 
                         print "$source $level $field not available\n"; 
@@ -3858,7 +3902,7 @@ if($err == 0) {
   if ($wgi_only == 0) {
 #   print  "$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root $animate $resolution\n";
     if ($montage == 1) {
-        $animate = "montage";
+        $animate = "$nmontage";
     } 
     system("$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2> $web_root/$ScratchDir/lapsplot.err_$$"); 
     system("rm -f $request_root/lapsplot/lapsplot.in; ln -s $web_root/$ScratchDir/lapsplot.in_$$ $request_root/lapsplot/lapsplot.in; rm -f $request_root/lapsplot/lapsplot.out; ln -s $web_root/$ScratchDir/lapsplot.out_$$ $request_root/lapsplot/lapsplot.out; rm -f $request_root/lapsplot/lapsplot.err; ln -s $web_root/$ScratchDir/lapsplot.err_$$ $request_root/lapsplot/lapsplot.err; rm -f $request_root/lapsplot/loop; ln -s $web_root/$ScratchDir/$$ $request_root/lapsplot/loop");
