@@ -76,6 +76,7 @@ C       character*1 submode
         character*200 fnam_in 
         character*180 dir_in
         character*255 c_filespec
+        character*5 c5_data_interval
 
         integer wsmr_wmo_id
         integer error_code
@@ -168,8 +169,41 @@ C
             return
         endif
 
+        call get_laps_cycle_time(laps_cycle_time,istatus)
+        if (istatus .ne. 1) then
+           write(6,*)'Error getting laps_cycle_time'
+           return
+        else
+           write(6,*)'laps_cycle_time = ',laps_cycle_time
+        endif
+
+!       Do we want hourly or 6 minute profiler data?
+        if(laps_cycle_time .le. 900)then
+            c5_data_interval = '0015o'
+            write(6,*)' Using 15 minute data'
+            i4time_desired = (i4time_sys / 900) * 900
+            i4_avg_wdw_sec = 900 ! default value
+        elseif(laps_cycle_time .lt. 3600)then
+            c5_data_interval = '0030o'
+            write(6,*)' Using 30 minute data'
+            i4time_desired = (i4time_sys / 1800) * 1800
+            i4_avg_wdw_sec = 1800 ! default value
+        else
+            c5_data_interval = '0100o'
+            write(6,*)' Using hourly data'
+            i4time_desired = i4time_sys
+            i4_avg_wdw_sec = 3600 ! default value
+        endif
+
 C       Wait for the data
-        c_filespec = dir_in(1:len_dir_in)//'*0100o'
+!       c_filespec = dir_in(1:len_dir_in)//'*0100o'
+        if(len_dir_in .gt. 0)then
+            c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
+        else
+            write(6,*)' path_to_blp_rass has zero length'
+            istatus = 0
+            return
+        endif
 
         write(6,*)c_filespec(1:80)
 
@@ -180,7 +214,7 @@ C       Wait for the data
         i4_wait_period = i4time_stop_waiting - i4time_now
 
         i4_check_interval = 10
-        i4_total_wait = min(300,i4_wait_period)
+        i4_total_wait = min(0,i4_wait_period) ! Turn off wait
         i4_thresh_age = 3600
 
         open(31,file='zzzz', status = 'old', err=10)
@@ -205,7 +239,7 @@ C       Wait for the data
 
 C       READ IN THE RAW RASS DATA
 
-        fnam_in = dir_in(1:len_dir_in)//asc9_tim//'0100o'
+        fnam_in = dir_in(1:len_dir_in)//asc9_tim//c5_data_interval
         call s_len(fnam_in,len_fnam_in)
         write(6,*)fnam_in(1:len_fnam_in)
         CALL PROF_CDF_OPEN(fnam_in(1:len_fnam_in),cdfid,status)
