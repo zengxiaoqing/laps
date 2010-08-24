@@ -11,7 +11,7 @@ c     USE laps_static
 
       include 'grid_fname.cmn'
 
-      character*200 fullname
+      character*200 fullname, fpathname, fpathname_save
       character*200 cfname_internal
       character*200 outdir
       character*200 vtable
@@ -20,13 +20,13 @@ c     USE laps_static
       character*13  fname13
       character*13  fname9_to_wfo_fname13
       character*4   cf
-      character*2   gproj
-      character*1   cgrddef
+      character*2   gproj, gproj_save
+      character*1   cgrddef,cgrddef_save
       
       integer       i,j,l
       integer       istatus
-      integer       nxbg,nybg,nzbg
-      integer       nzbg_ht
+      integer       nxbg,nybg,nzbg,nxbg_save,nybg_save
+      integer       nzbg_ht,nzbg_ht_save
       integer       nzbg_tp
       integer       nzbg_sh
       integer       nzbg_uv
@@ -36,13 +36,13 @@ c     USE laps_static
       integer       record
       integer       n_valtimes
 
-      real          Lat0,Lat1
-      real          Lon0,Lov
+      real          Lat0,Lat1,Lat0_save,Lat1_save
+      real          Lon0,Lov,Lon0_save
       real          La1in,La2in
       real          Lo1in,Lo2in
       real          La1,Lo1,La2,Lo2
-      real          dlat,dlon
-      real          sw(2),ne(2)
+      real          dlat,dlon,dlat_save,dlon_save
+      real          sw(2),ne(2),sw_save(2),ne_save(2)
       real          latdxdy,londxdy
       real          rlon00,rlat00
       real          latnxny,lonnxny
@@ -50,7 +50,14 @@ c     USE laps_static
       real          dxbg,dybg
       real          rotation
 
-      logical       cross_dateline 
+      logical       cross_dateline,cross_dateline_save 
+
+      save fpathname_save,nxbg_save, nybg_save, nzbg_ht_save,
+     &     gproj_save,dlat_save,dlon_save,Lat0_save,Lat1_save,Lon0_save,       
+     &     cgrddef_save,cross_dateline_save,
+     &     sw_save,ne_save
+
+      data fpathname_save /'NULL'/
 
       interface
 
@@ -626,14 +633,55 @@ c --------------------
          call get_directory('static',outdir,lenfn)    
          vtable=outdir(1:lenfn)//'Variable_Tables/Vtable.'//cmodel
 
-         call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
+!        Determine basename and compare to saved one
+         call get_directory_length(fullname,lenfn)
+         fpathname = fullname(1:lenfn)
+        
+         if(fpathname .ne. fpathname_save)then
+!          fullname, vtable are assumed as inputs, the rest outputs
+           call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
      &     gproj,dlat,dlon,Lat0,Lat1,Lon0,cgrddef,cross_dateline,
      &     sw(1),sw(2),ne(1),ne(2),istatus)
 
-           nzbg_tp=nzbg_ht
-           nzbg_sh=nzbg_ht
-           nzbg_uv=nzbg_ht
-           nzbg_ww=nzbg_ht
+!          Save variables if we need them later
+           fpathname_save = fpathname
+           nxbg_save = nxbg
+           nybg_save = nybg
+           nzbg_ht_save = nzbg_ht
+           gproj_save = gproj
+           dlat_save = dlat
+           dlon_save = dlon
+           Lat0_save = Lat0
+           Lat1_save = Lat1
+           Lon0_save = Lon0
+           cgrddef_save = cgrddef
+           cross_dateline_save = cross_dateline
+           sw_save = sw
+           ne_save = ne
+
+         else
+           write(6,*)' Obtaining DEGRIB_NAV info from saved variables'
+           nxbg = nxbg_save
+           nybg = nybg_save
+           nzbg_ht = nzbg_ht_save
+           gproj = gproj_save
+           dlat = dlat_save
+           dlon = dlon_save
+           Lat0 = Lat0_save
+           Lat1 = Lat1_save
+           Lon0 = Lon0_save
+           cgrddef = cgrddef_save
+           cross_dateline = cross_dateline_save
+           sw = sw_save
+           ne = ne_save
+           istatus = 1
+
+         endif
+
+         nzbg_tp=nzbg_ht
+         nzbg_sh=nzbg_ht
+         nzbg_uv=nzbg_ht
+         nzbg_ww=nzbg_ht
 
       endif
 
