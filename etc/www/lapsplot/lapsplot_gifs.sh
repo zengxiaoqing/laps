@@ -114,7 +114,7 @@ date -u
 echo "lapsplot_gifs.sh: netpbm = $netpbm"
 
 #We assume we are running this script in LINUX and convert will not properly do AVS X on LINUX
-if test "$netpbm" = "yes" && test "$animate" != "yes"; then 
+if test "$netpbm" = "yes" && test "$animate" = "no"; then 
     date
 #   echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$proc.gif file"
     echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$proc.gif"
@@ -126,7 +126,7 @@ if test "$netpbm" = "yes" && test "$animate" != "yes"; then
     echo "Cleanup"
     mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rmdir $SCRATCH_DIR/$proc &
 
-elif test "$netpbm" = "yes" && test "$animate" = "yes"; then 
+elif test "$netpbm" = "yes" && test "$animate" != "no"; then 
     date
     echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun"
     $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun
@@ -142,8 +142,28 @@ elif test "$netpbm" = "yes" && test "$animate" = "yes"; then
 
     ls -l gmeta_$proc.*.sun.gif
 
-    echo "convert -delay $delay -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
-    convert -delay $delay -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
+    if test "$animate" = "yes"; then
+        echo "convert -delay $delay -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
+        convert -delay $delay -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
+    else
+        numimages=`ls -1 *.gif | wc -l`
+        echo "numimages = $numimages"
+
+        nmontage=$animate
+
+        echo "nmontage = $nmontage"
+
+        x20=x20
+
+        if test "$numimages" != "3"; then
+            echo "montage *.gif -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif"
+            montage *.gif -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif
+        else
+            echo "montage *.gif -mode Concatenate            $SCRATCH_DIR/gmeta_$proc.gif"
+            montage *.gif -mode Concatenate            $SCRATCH_DIR/gmeta_$proc.gif
+        fi    
+
+    fi
 
 #   This option may be more direct though it isn't working on the new server
 #   echo "convert -delay $delay -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
