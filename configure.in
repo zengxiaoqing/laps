@@ -286,7 +286,7 @@ if test $? -eq 0
 then
     FFLAGS="$FFLAGS -w90 -w95 -cm"
     LITTLEFLAGS="$LITTLEFLAGS -w90 -w95 -cm"
-    DBFLAGS="$DBFLAGS -O0 -traceback -check all -ftrapuv"
+    DBFLAGS="$DBFLAGS -O0 -traceback -ftrapuv"
     FREE="-FR"
     C_OPT="-O3"
     F_OPT="-O3"
@@ -468,6 +468,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/xferData.pl
           etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
+          etc/models/lfmpost_test.csh
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
           etc/www/laps_products.cgi
