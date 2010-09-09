@@ -1424,7 +1424,7 @@ c       include 'satellite_dims_lvd.inc'
                 endif
 
                 scale = 1e-5
-                
+             
                 clow = -20.
                 chigh = +80.
                 cint = 5.
@@ -3496,9 +3496,11 @@ c
                 var_2d = 'RAI'
             elseif(c_type_i .eq. 'sn')then
                 var_2d = 'SNO'
-            elseif(c_type_i .ne. 'ci')then
+            elseif(c_type_i .eq. 'ls')then
+                var_2d = 'LWC'
+            elseif(c_type_i .eq. 'ci')then
                 var_2d = 'ICE'
-            elseif(c_type_i .ne. 'pi')then
+            elseif(c_type_i .eq. 'pi')then
                 var_2d = 'PIC'
             else
                 var_2d = 'LWC'
@@ -3541,11 +3543,11 @@ c
      1                                 UNITS_2d,COMMENT_2d,
      1                                 field_2d,istatus)
 
-                else
+                else ! Get 3D grid
                     call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
      1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d,grid_ra_ref
+     1                              ,units_2d,comment_2d,field_3d
      1                              ,istatus)
                 endif
 
@@ -3631,13 +3633,19 @@ c
 
                call subcon(column_max,1e-30,field_2d,NX_L,NY_L)
 
-               call plot_cont(field_2d,1e-3,
-     1                        clow,chigh,cint,asc9_tim,
-     1                        namelist_parms,plot_parms,c_label,
-     1                        i_overlay,c_display,lat,lon,
-     1                        jdot,NX_L,NY_L,r_missing_data,
-     1                        laps_cycle_time)
+!              call plot_cont(field_2d,1e-3,
+!    1                        clow,chigh,cint,asc9_tim,
+!    1                        namelist_parms,plot_parms,c_label,
+!    1                        i_overlay,c_display,lat,lon,
+!    1                        jdot,NX_L,NY_L,r_missing_data,
+!    1                        laps_cycle_time)
 
+               call plot_field_2d(i4time_lwc,c_type
+     1                        ,field_2d,1e-3
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'linear')
             endif
 
         elseif(c_type .eq. 'mv' .or. c_type .eq. 'ic')then
@@ -5735,9 +5743,16 @@ c                   cint = -1.
                 goto1200
             endif
 
-            clow = -80.
-            chigh = +80.
-            cint = 5.
+            if(grid_spacing_m .le. 1500)then
+                clow = -160.
+                chigh = +160.
+                cint = 10.
+            else
+                clow = -80.
+                chigh = +80.
+                cint = 5.
+            endif
+
             scale = 1e-5
 
             plot_parms%iraster = 1
@@ -5811,9 +5826,15 @@ c                   cint = -1.
 
             c_label = 'Sfc Divergence  (x 1e-5 s-1)     '
 
-            chigh = +40.
-            clow = -40.
-            cint = 10.
+            if(grid_spacing_m .le. 1500.)then
+                chigh = +80.
+                clow = -80.
+                cint = 20.
+            else
+                chigh = +40.
+                clow = -40.
+                cint = 10.
+            endif
 
             scale = 1e-5
 !           call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
@@ -6187,6 +6208,7 @@ c                   cint = -1.
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else
+                where(field_2d .eq. r_missing_data)field_2d = 0.
                 call ccpfil(field_2d,NX_L,NY_L,clow,chigh_img,'linear'
      1                     ,n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)       
@@ -8073,11 +8095,14 @@ c             if(cint.eq.0.0)cint=0.1
         call s_len2(c_model,len_model)
         call upcase(c_model,c_model)
 
-        if(k_mb .gt. 0)then ! 3D field
+        if(k_mb .gt. 0)then      ! 3D field
             write(c_label,102)k_mb
 102         format(I4,' hPa ')
             ic = 10  ! Position where comment info should begin
-        else                ! sfc field
+        elseif(k_mb .eq. -1)then ! Column Max                
+            c_label(1:8) = 'Col Max '
+            ic = 9
+        else                     ! sfc field
             ic = 1   ! Position where comment info should begin
         endif
 
