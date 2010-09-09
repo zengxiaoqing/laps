@@ -1,5 +1,7 @@
 
-subroutine kessler_mr2z(nx,ny,nz,rho,rainmr,icemr,snowmr,graupelmr  &
+subroutine kessler_mr2z(nx,ny,nz &
+                       ,rho &                                ! kg/m^3
+                       ,rainmr,icemr,snowmr,graupelmr  &
                        ,refl)
 
 ! Subroutine to compute estimated radar reflectivity (Z) from
