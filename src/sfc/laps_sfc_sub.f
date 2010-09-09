@@ -710,7 +710,8 @@ c
 !           Just experimental for now
             call read_sfc_verif_history(51,r_missing_data
      1                                 ,mo,mf,mt
-     1                                 ,stn_a,bkg_a,obs_a,diff_a,nsta)
+     1                                 ,stn_a,bkg_a,obs_a,diff_a,nsta
+     1                                 ,istatus)
 
             I4_elapsed = ishow_timer()
 
