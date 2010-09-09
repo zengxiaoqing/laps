@@ -2405,7 +2405,8 @@ c
 
 	subroutine read_sfc_verif_history(lun,r_missing_data             ! I
      1                                   ,mo,mf,mt                       ! I
-     1                                   ,stn_a,bkg_a,obs_a,diff_a,nsta) ! O
+     1                                   ,stn_a,bkg_a,obs_a,diff_a,nsta  ! O
+     1                                   ,istatus)
 
         character*150 dirname,filename
         character*17 basename
@@ -2422,6 +2423,8 @@ c
         integer mapcount(mo)
 
         write(6,*)' Subroutine read_sfc_verif_history'
+
+        ierr = 0
 
         call get_sfc_badflag(badflag,istatus)
 
@@ -2464,15 +2467,27 @@ c
           endif
 
           if(lenl .eq. 56)then
- 	    read(line,905) i, stn(1:5), ilaps, jlaps, 
+ 	    read(line,905,err=906) i, stn(1:5), ilaps, jlaps, 
      1                      bkg, ob, diff
  905	    format(4x,i5,1x,a5,1x,i4,1x,i4,1x,3f10.2)
             ifound = 1
+
+            goto 910
+
+ 906	    ierr = ierr + 1
+            if(ierr .le. 100)then
+                write(6,*)' Error reading line with length 56:'
+                write(6,*)line
+            endif
+
+            goto 100 ! try another line
+
           else
             ifound = 0
+
           endif
 
-          if(ifound_last .eq. 0 .and. ifound .eq. 1)then
+ 910	  if(ifound_last .eq. 0 .and. ifound .eq. 1)then
             I4_elapsed = ishow_timer()
             iblock = iblock + 1
             write(6,*)' Start text block',iblock
@@ -2482,7 +2497,7 @@ c
 
           elseif(ifound_last .eq. 1 .and. ifound .eq. 0)then
             write(6,104)iblock,nmap,nsearch,nsta,nnew
-104         format(' End text block',i4,3x     
+ 104        format(' End text block',i4,3x     
      1            ,' nmap/nsearch/nsta/nnew=',4i7)                     
 
           endif
