@@ -56,10 +56,11 @@ cdis
        character*3 laps_radar_ext, c3_radar_subdir
        character*8 radar_subdir, c8_fname_format
        logical l_multi_tilt,l_exist,l_output,l_realtime
-       character*13 a9_to_rsa13
+       character*13 a13_time
+       integer cvt_wfo_fname13_i4time
        integer Z_bin, V_bin, radial
 
-       save a9_time, i_nbr_files_raw, i_nbr_files_2nd
+       save a9_time, i_nbr_files_raw, i_nbr_files_2nd, i_nbr_files_vol
        save i4times_raw, i4times_lapsprd, i_nbr_lapsprd_files
 
        include 'remap_dims.inc'
@@ -105,7 +106,7 @@ cdis
 
        c8_fname_format = 'UNKNOWN'
 c
-c      Determine filename extension
+c      Determine output filename extension
        write(6,*)' radar_init: laps_ext = ',laps_radar_ext
        if(laps_radar_ext(1:1) .ne. 'v')then ! Sanity check
            laps_radar_ext = 'v01'
@@ -146,6 +147,21 @@ c      Determine filename extension
      1                      ,istatus
                    return
                endif
+
+               i_nbr_files_vol = 0
+
+               if(i_nbr_files_2nd .eq. 0)then ! try for volume files
+                   c_filespec = path_to_radar(1:len_path)//'/*.nc'
+                   call get_file_names(c_filespec,i_nbr_files_vol
+     1                                ,c_fnames,max_files,istatus)
+                   if(istatus .ne. 1)then
+                       write(6,*)
+     1                       ' istatus returned from get_file_names ='        
+     1                        ,istatus
+                       return
+                   endif
+               endif
+
            endif
 
            call s_len(c_filespec,lenspec)
@@ -155,21 +171,44 @@ c      Determine filename extension
 
            I4_elapsed = ishow_timer()
 
-           if(i_nbr_files_2nd .gt. 0)then
-               l_multi_tilt = .true.
-               write(6,*)' We have multiple tilt data'
-           else
-               l_multi_tilt = .false.
-               write(6,*)' We have single tilt data'
-           endif
- 
-!          Get i4times of 01 elevation raw files
-           c2_tilt = '01'
-           c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
+           if(i_nbr_files_vol .gt. 0)then
+               write(6,*)' We have volume data'
+               c_filespec = path_to_radar(1:len_path)//'/*.nc'
 
-           if(itimes .eq. 1)then
-               call get_file_times(c_filespec,max_files,c_fnames
-     1                            ,i4times_raw,i_nbr_files_raw,istatus)
+               if(itimes .eq. 1)then ! determine file times
+                   do i = 1,i_nbr_files_vol
+                       if(i .eq. 1)then
+                           call get_directory_length(c_fnames(i),lend)
+                           call s_len(c_fnames(i),len_fname)
+                           lenf = len_fname - lend
+                       endif
+                       a13_time = c_fnames(i)(lend+5:lend+17)
+                       write(6,*)' a13_time = ',a13_time
+                       i4times_raw(i) = cvt_wfo_fname13_i4time(a13_time)
+                   enddo ! i
+               endif
+
+               i_nbr_files_raw = i_nbr_files_vol
+
+           else
+               if(i_nbr_files_2nd .gt. 0)then
+                   l_multi_tilt = .true.
+                   write(6,*)' We have multiple tilt data'
+               else
+                   l_multi_tilt = .false.
+                   write(6,*)' We have single tilt data'
+               endif
+ 
+!              Get i4times of 01 elevation raw files
+               c2_tilt = '01'
+               c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
+
+               if(itimes .eq. 1)then
+                   call get_file_times(c_filespec,max_files,c_fnames
+     1                                ,i4times_raw,i_nbr_files_raw
+     1                                ,istatus)
+               endif
+
            endif
 
            write(6,*)' # of 1st tilt raw files = ',i_nbr_files_raw
@@ -224,7 +263,7 @@ c      Determine filename extension
 
            i4time_process = 0
 
-           if(l_realtime)then
+           if(l_realtime .and. i_nbr_files_vol .eq. 0)then
                needed_raw_files = 2
                latest_raw_file = i_nbr_files_raw-1
            else
@@ -291,9 +330,13 @@ c      Determine filename extension
        i_skip = 0
 
 !      Test existence of raw 'yyjjjhhmm_elevtt / yyyymmdd_hhmm.elevtt' input
- 200   call check_input_file(path_to_radar,a9_time,i_tilt_proc      ! I
-     1                      ,c8_fname_format                        ! I
-     1                      ,filename,l_exist)                      ! O     
+ 200   if(i_nbr_files_vol .eq. 0)then
+           call check_input_file(path_to_radar,a9_time,i_tilt_proc      ! I
+     1                          ,c8_fname_format                        ! I
+     1                          ,filename,l_exist)                      ! O     
+       else
+           l_exist = .true.
+       endif
 
        if(l_exist)then ! these calls will fill the variables in 
                        ! 'netcdfio_radar_common.inc'
