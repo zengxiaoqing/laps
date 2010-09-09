@@ -45,12 +45,14 @@ cdis
 
         character*20 c_z2m
 
-        real pcp_cnc_3d(ni,nj,nk)
-        real rai_cnc_3d(ni,nj,nk)
-        real sno_cnc_3d(ni,nj,nk)
-        real pic_cnc_3d(ni,nj,nk)
+        real pcp_cnc_3d(ni,nj,nk) ! kg/m^3
+        real rai_cnc_3d(ni,nj,nk) ! kg/m^3
+        real sno_cnc_3d(ni,nj,nk) ! kg/m^3
+        real pic_cnc_3d(ni,nj,nk) ! kg/m^3
 
         real rate_3d(ni,nj,nk)
+
+        npcp = 0
 
 !       Get 3D precip rates one layer at a time with ZR routine
         do k = 1,nk
@@ -62,7 +64,9 @@ cdis
           do i = 1,ni
           do k = 1,nk
             pressure = pressure_of_level(k)
+
             ipcp_type = cldpcp_type_3d(i,j,k) / 16   ! Pull out precip type
+
             if(ipcp_type .ne. 0)then
 !                call cpt_fall_velocity(ipcp_type,pressure,temp_3d(i,j,k)
 !     1                                                  ,fall_velocity)
@@ -71,6 +75,8 @@ cdis
      1                                 ,ref_3d(i,j,k),fall_velocity)
                 call cpt_concentration(rate_3d(i,j,k),fall_velocity
      1                                          ,pcp_cnc_3d(i,j,k))
+
+                npcp = npcp + 1
 
                 if(ipcp_type .eq. 1 .or. ipcp_type .eq. 3)then     ! rain or zr
                     rai_cnc_3d(i,j,k) = pcp_cnc_3d(i,j,k)
@@ -106,6 +112,8 @@ cdis
           do i = 1,ni
           do k = 1,nk
 
+            ipcp_type = cldpcp_type_3d(i,j,k) / 16   ! Pull out precip type
+
 !           Compute the basic reflectivity 
 !           refl(i,j,k) =17300.0 * &
 !                 (rho(i,j,k) * 1000.0 * &
@@ -117,26 +125,27 @@ cdis
 !                 MAX(0.0,icemr(i,j,k)+snowmr(i,j,k)+graupelmr(i,j,k)))**2.2
 
             if(ipcp_type .ne. 0)then
+                npcp = npcp + 1
                 if(ipcp_type .eq. 1 .or. ipcp_type .eq. 3)then     ! rain or zr
                     a = 17300.
                     z = 10.**(ref_3d(i,j,k)/10.)
-                    rho_q = (z/a)**(4./7.)
-                    pcp_cnc_3d(i,j,k) = rho_q
-                    rai_cnc_3d(i,j,k) = rho_q
+                    rho_q = (z/a)**(4./7.)                         ! g/m^3
+                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    rai_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
 
                 elseif(ipcp_type .eq. 2)then                       ! snow
                     b = 38000.
                     z = 10.**(ref_3d(i,j,k)/10.)
-                    rho_q = (z/b)**(1./2.2)
-                    pcp_cnc_3d(i,j,k) = rho_q
-                    sno_cnc_3d(i,j,k) = rho_q
+                    rho_q = (z/b)**(1./2.2)                        ! g/m^3
+                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    sno_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
 
                 elseif(ipcp_type .eq. 4 .or. ipcp_type .eq. 5)then ! IP or Hail
                     b = 38000.
                     z = 10.**(ref_3d(i,j,k)/10.)
-                    rho_q = (z/b)**(1./2.2)
-                    pcp_cnc_3d(i,j,k) = rho_q
-                    pic_cnc_3d(i,j,k) = rho_q
+                    rho_q = (z/b)**(1./2.2)                        ! g/m^3
+                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    pic_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
 
                 endif
 
@@ -152,8 +161,14 @@ cdis
           enddo ! i
           enddo ! j
 
+        else
+          write(6,*)' Error - unknown value of c_z2m in pcpcnc ',c_z2m
+
         endif
 
+        write(6,*)' npcp/max = ',npcp,maxval(pcp_cnc_3d)
+
+        return
         end
 
         subroutine cpt_fall_velocity(ipcp_type,p,t,dbz,fall_velocity)
