@@ -195,6 +195,8 @@ cdoc     and other info about the files.
          integer i4_contains_early  ! Earliest contained ob relative to filetime
          integer i4_contains_late   ! Latest contained ob relative to filetime
          integer intvl              ! Regular time interval of files
+        
+         character*9 a9_ob_b,a9_ob_a,a9_ft_b,a9_ft_a
 
 !        Range of file times we want to read
          i4time_file_b = i4time_ob_b - i4_contains_late
@@ -203,6 +205,14 @@ cdoc     and other info about the files.
 !        Range of filenames at fixed intervals
          i4time_file_b = ( (i4time_file_b + intvl - 1) / intvl)*intvl     
          i4time_file_a = ( (i4time_file_a            ) / intvl)*intvl
+
+         call make_fnam_lp(i4time_ob_b,a9_ob_b,istatus)
+         call make_fnam_lp(i4time_ob_a,a9_ob_a,istatus)
+         call make_fnam_lp(i4time_file_b,a9_ft_b,istatus)
+         call make_fnam_lp(i4time_file_a,a9_ft_a,istatus)
+
+         write(6,1)a9_ob_b,a9_ob_a,a9_ft_b,a9_ft_a                    
+1        format(1x,'obs range ',2a10,' filetime range ',2a10)
 
          return
          end
