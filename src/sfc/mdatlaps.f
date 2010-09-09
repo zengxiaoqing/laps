@@ -126,6 +126,7 @@ c
 	real pstn_s(mxstn), pmsl_s(mxstn), alt_s(mxstn)
 	real vis_s(mxstn)
 	real rii(mxstn), rjj(mxstn)
+        real zero_ea(mxstn) ! dummy
 c
 	integer ii(mxstn), jj(mxstn)
 c
@@ -204,6 +205,7 @@ c
 	delt = 0.035
         fill_val = 1.e37
         smsng = 1.e37
+        zero_ea = 0.
 c
 c.....  Zero out the sparse obs arrays.
 c
@@ -532,48 +534,50 @@ c
 	call put_winds(uu,vv,mxstn,n_obs_b,u1,v1,wwu,wwv,icnt,
      &                 imax,jmax,rii,rjj,ii,jj,badflag)
 	icnt_t = icnt
+
+        ea_thr = 999. ! lower this to enable QC for each variable
 c
 c.....	Temperatures:
 c
 	print *,' put_thermo for T:'
-	call put_thermo(t_s,mxstn,n_obs_b,t1,wt,icnt,
-     &                  imax,jmax,ii,jj,badflag)
+	call put_thermo(t_s,obs(:)%t_ea_f,mxstn,n_obs_b,t1,wt,icnt,
+     &                  imax,jmax,ii,jj,ea_thr,badflag)
 c
 c.....	Dew points: 
 c
 	print *,' put_thermo for TD:'
-	call put_thermo(td_s,mxstn,n_obs_b,td1,wtd,icnt,
-     &                  imax,jmax,ii,jj,badflag)
+	call put_thermo(td_s,obs(:)%td_ea_f,mxstn,n_obs_b,td1,wtd,icnt,
+     &                  imax,jmax,ii,jj,ea_thr,badflag)
 c
 c.....	Put the reduced pressure on the grid
 c
 	print *,' put_thermo for P:'
-	call put_thermo(pred_s,mxstn,n_obs_b,rp1,wp,icnt,
-     &                  imax,jmax,ii,jj,badflag)
+	call put_thermo(pred_s,zero_ea,mxstn,n_obs_b,rp1,wp,icnt,
+     &                  imax,jmax,ii,jj,ea_thr,badflag)
 c
 c.....	Put the station pressure on the grid
 c
 	print *,' put_thermo for PS:'
-	call put_thermo(pstn_s,mxstn,n_obs_b,sp1,wsp,icnt,
-     &                  imax,jmax,ii,jj,badflag)
+	call put_thermo(pstn_s,zero_ea,mxstn,n_obs_b,sp1,wsp,icnt,
+     &                  imax,jmax,ii,jj,ea_thr,badflag)
 c
 c.....	Put the MSL pressure on the grid
 c
 	print *,' put_thermo for MSL:'
-	call put_thermo(pmsl_s,mxstn,n_obs_b,mslp1,wmslp,icnt,
-     &                  imax,jmax,ii,jj,badflag)
+	call put_thermo(pmsl_s,zero_ea,mxstn,n_obs_b,mslp1,wmslp,icnt,
+     &                  imax,jmax,ii,jj,ea_thr,badflag)
 c
 c.....	Visibility:
 c
 	print *,' put_thermo for VIS:'
-	call put_thermo(vis_s,mxstn,n_obs_b,vis1,wvis,icnt,
-     &                  imax,jmax,ii,jj,badflag)
+	call put_thermo(vis_s,zero_ea,mxstn,n_obs_b,vis1,wvis,icnt,
+     &                  imax,jmax,ii,jj,ea_thr,badflag)
 c
 c.....	Station elevation:
 c
 	print *,' put_thermo for ELEV:'
-	call put_thermo(elev_s,mxstn,n_obs_b,elev1,welev,icnt,
-     &                  imax,jmax,ii,jj,badflag)
+	call put_thermo(elev_s,zero_ea,mxstn,n_obs_b,elev1,welev,icnt,
+     &                  imax,jmax,ii,jj,ea_thr,badflag)
 c
 c.....	Now find the values at the gridpts.
 c       Divide by the weights to average multiple obs on a gridpoint if needed
@@ -808,8 +812,8 @@ c
 	end
 c
 c
-	subroutine put_thermo(var_in,max_stn,num_sta,x,w,icnt,
-     &                        ni,nj,ii,jj,badflag)
+	subroutine put_thermo(var_in,ea_in,max_stn,num_sta,x,w,icnt,
+     &                        ni,nj,ii,jj,ea_thr,badflag)
 c
 c*******************************************************************************
 c
@@ -840,6 +844,7 @@ c
 c*******************************************************************************
 c
 	real var_in(max_stn), x(ni,nj), w(ni,nj)
+        real ea_in(max_stn)
         integer ii(max_stn), jj(max_stn)
 c
 	zeros = 1.e-30
@@ -858,6 +863,7 @@ c
           if(ixx.lt.1 .or. ixx.gt.ni) go to 10
           if(iyy.lt.1 .or. iyy.gt.nj) go to 10
 	  if(var_in(ista) .eq. badflag) go to 10
+	  if(ea_in(ista) .gt. ea_thr) go to 10
 	  if(var_in(ista) .eq. 0.) var_in(ista) = zeros
 	  x(ixx,iyy) = var_in(ista) + x(ixx,iyy)
 	  w(ixx,iyy) = w(ixx,iyy) + 1.
