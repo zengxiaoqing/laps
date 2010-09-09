@@ -11,11 +11,13 @@ main                                                remap.f
         get_longitude                                  "
         lut_gen                                     lut_gen.f
         radar_init (1st call)                       netcdfio.f
+            check_input_file                           "
             get_tilt_netcdf_hdr                     get_tilt_netcdf.f
             get_tilt_netcdf_data                       "
         get_data_field                              netcdfio.f
         fill_common                                 remap_ftn/fill_common.f
         radar_init (2nd call)                       netcdfio.f
+            check_input_file                           "
             get_tilt_netcdf_hdr                     get_tilt_netcdf.f
             get_tilt_netcdf_data                       "
         read_data_88d                               remap_ftn/readdata.f
