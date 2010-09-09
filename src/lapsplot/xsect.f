@@ -350,7 +350,7 @@ cdis
                                 ! the use of iraster
         plot_parms%l_discrete = namelist_parms%l_discrete
 
-        chigh_3dwind = 100. ! point to parameter when that's ready
+        chigh_3dwind = namelist_parms%chigh_3dwind
 
         lapsplot_pregen = .true.
 
