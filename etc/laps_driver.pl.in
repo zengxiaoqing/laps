@@ -41,7 +41,7 @@
 # -w                   Submits via qsub_wait to wait for processes to finish before exiting
 #                      (default without -w submits via qsub to background)
 #
-# -n                   Node type to be used with -q (default=ncomp)
+# -n                   Node type to be used with -q (default=hcomp)
 #
 # -e  e1,e2,...        Environment variables (if any) to pass into the executable
 #
@@ -210,7 +210,7 @@ my $lockfile = "$LAPS_LOCK_PATH/\.lock$exe\.$$";
 
 my $command;
 my $t;
-my $node_type = "ncomp";
+my $node_type = "hcomp";
 
 if($opt_q || $opt_Q){
     if($opt_n){
