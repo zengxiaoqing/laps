@@ -162,7 +162,7 @@ cdis
         real cldcv_sao(NX_L,NY_L,KCLOUD)
         real cld_pres_1d(KCLOUD)
         real pressures_pa(NZ_L)
-!       real pres_3d(NX_L,NY_L,NZ_L)
+        real pres_3d(NX_L,NY_L,NZ_L)
         real wtcldcv(NX_L,NY_L,KCLOUD)
 
         real CVHZ(NX_L,NY_L)
@@ -752,6 +752,8 @@ C READ IN SATELLITE DATA
 !       Cloud cover QC check
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
+        call get_pres_3d(i4time,NX_L,NY_L,NZ_L,pres_3d,istatus)
+
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
      1       tb8_k,istat_tb8,                                           ! I
@@ -766,7 +768,7 @@ C READ IN SATELLITE DATA
      1       lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,            ! I
      1       rlaps_land_frac,                                           ! I
      1       topo,heights_3d,temp_3d,t_sfc_k,td_sfc_k,pres_sfc_pa,      ! I
-     1       t_modelfg,sh_modelfg,                                      ! I
+     1       t_modelfg,sh_modelfg,pres_3d,                              ! I
      1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,             ! I
      1       t_gnd_k,                                                   ! O
      1       cldtop_co2_m,cldtop_tb8_m,cldtop_m,                        ! O
@@ -1371,7 +1373,6 @@ C       EW SLICES
         l_get_cloudtype = .false.
 
         if(l_get_cloudtype)then ! Compute just the cloud type
-!           call get_pres_3d(i4time,NX_L,NY_L,NZ_L,pres_3d,istatus)
             l_flag_cloud_type = .true.
             l_flag_mvd = .false.
             l_flag_icing_index = .false.
