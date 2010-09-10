@@ -39,7 +39,7 @@ setenv NEWPERL            $5
 #setenv NEWPERL            `which perl`
 
 if ($7 == intel) then
-  echo "module switch intel"
+  echo "module switch pgi intel"
   module switch intel
 endif
 
