@@ -136,7 +136,7 @@ if test -r /opt/ncarg/bin/ctrans; then
     cp gmeta gmeta_$prod
 
 elif test "$netpbm" = "yes"; then 
-    if test -r /whome; then
+    if test -r /whomenull; then
         CTRANS=/opt/ncl/5.1.0_bin/bin/ctrans
     elif test -r /usr/local/apps/ncarg-4.3.1.LINUX9; then
         CTRANS=/usr/local/apps/ncarg-4.3.1.LINUX9/bin/ctrans
