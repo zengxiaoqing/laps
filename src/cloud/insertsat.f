@@ -53,7 +53,7 @@ c
      1  lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,                  ! I
      1  rlaps_land_frac,                                                 ! I
      1  topo,heights_3d,temp_3d,t_sfc_k,td_sfc_k,pres_sfc_pa,            ! I
-     1  t_modelfg,sh_modelfg,                                            ! I
+     1  t_modelfg,sh_modelfg,pres_3d,                                    ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
      1  t_gnd_k,                                                         ! O
      1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,                              ! O
@@ -118,7 +118,8 @@ c
         real solar_ha(imax,jmax)
         real temp_3d(imax,jmax,klaps)
         real t_modelfg(imax,jmax,klaps)
-        real sh_modelfg(imax,jmax,klaps)
+	real sh_modelfg(imax,jmax,klaps)
+        real pres_3d(imax,jmax,klaps)
         real t_sfc_k(imax,jmax)
         real td_sfc_k(imax,jmax)
         real cvr_snow(imax,jmax)
@@ -350,7 +351,7 @@ c
           if(idebug .eq. 1)then
               write(6,111,err=112)i,j,k_to_f(tb8_k(i,j))
      1                               ,k_to_f(t_gnd_k(i,j))
-111           format(1x,2i4,' tb8/sfc',12x,f8.1,8x,f8.1)
+111           format(/1x,2i4,' tb8/sfc',12x,f8.1,8x,f8.1)
 112       endif
 
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
@@ -364,6 +365,7 @@ c
      1     ,cloud_frac_vis_a,istat_vis_potl_a(i,j)                        ! I
      1     ,cloud_frac_vis_s                                              ! I
      1     ,lstat_co2_a(i,j)                                              ! I
+     1     ,t_modelfg,sh_modelfg                                          ! I
      1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
      1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
      1     ,cldtop_m(i,j),l_cloud_present                                 ! O
@@ -679,6 +681,7 @@ c
      1            ,cloud_frac_vis_a,istat_vis_potl_a(i,j)                ! I
      1            ,cloud_frac_vis_s                                      ! I
      1            ,lstat_co2_a(i,j)                                      ! I
+     1            ,t_modelfg,sh_modelfg                                  ! I
      1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
      1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
      1            ,cldtop_m(i,j),l_cloud_present                         ! O
@@ -903,6 +906,7 @@ c
      1  ,cloud_frac_vis_a,istat_vis_potl                               ! I
      1  ,cloud_frac_vis_s                                              ! I
      1  ,lstat_co2                                                     ! I
+     1  ,t_modelfg,sh_modelfg                                          ! I
      1  ,n_valid_co2,n_missing_co2,cldtop_co2_m,istat_co2              ! O
      1  ,cldtop_tb8_m,l_tb8                                            ! O
      1  ,cldtop_m,l_cloud_present                                      ! O
@@ -926,6 +930,8 @@ c
         integer i,j,imax,jmax,klaps           ! Input
         real t_gnd_k(imax,jmax)               ! Input
         real pres_sfc_pa(imax,jmax)           ! Input
+        real t_modelfg(imax,jmax,klaps)       ! Input
+        real sh_modelfg(imax,jmax,klaps)      ! Input
         real thresh_ir_diff1                  ! Input
         real topo                             ! Input
         real r_missing_data                   ! Input
@@ -1013,7 +1019,10 @@ c
      1                           ,istat_vis_potl                       ! I
      1                           ,cldtop_temp_k,istatus)               ! O
 
-!           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point)
+!           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point).
+!           A condition could be added that the lower crossing point has higher RH.
+!           A "near fit" of TB8 and temp could also be considered if the RH is high.
+
             temp_above = temp_3d(i,j,klaps)
 
             do kl = klaps-1,k_terrain,-1
