@@ -40,6 +40,11 @@
 #
 # -Q  P                Use QSUB_WAIT (with SGE on jet/ijet) where P is the project name
 #
+# -n                   Node type to be used with -q (default=[hserial,hcomp] depending 
+#                                                    on number of nodes)
+#
+# -P                   Number of processors for wind analysis (default=1)
+#
 # -M                   Runs just the executables for the surface analysis. The argument value
 #                      denotes the name of the surface analysis executable (e.g. 'stmas_mg.x' 
 #                      'laps_sfc.x', or 'recurs_iter.x')
@@ -47,8 +52,6 @@
 # -s                   Runs surface analysis only (equivalent to '-M laps_sfc.x')
 #
 # -K                   Runs just the executables for the Kalman filter
-#
-# -n                   Node type to be used with -q (default=ncomp)
 #
 # -w                   Option for creating the WFO big file when LAPS is 
 #                      running outside of the WFO environment.
@@ -288,10 +291,18 @@ if(defined $opt_p){
    &laps_tools::update_nl($LAPS_DATA_ROOT,"balance.nl","ADV_ANAL_BY_T_MIN",$opt_p);
 }
 
-my $node_type_multi  = "comp";
 #my $node_type_single = "comp";
-my $node_type_single = "serial";
+my $node_type_single = "hserial";
+my $node_type_multi  = "hcomp";
+if($opt_n){
+    $node_type_multi = $opt_n;
+}
+
 my $node_type;
+
+
+# "single" consolidates everything into one SGE script, "multi" submits a separate qsub when the 
+# number of nodes changes.
 my $qsub_mode = "single"; # "multi" or "single"
 
 #
@@ -510,10 +521,6 @@ foreach $exe (@LAPS_EXE){
 
         $sms_path = "SMSINSTALLROOT";
 
-        if($opt_n){
-            $node_type_multi = $opt_n;
-        }
-
         if($exe =~ "wind"){
             $nodes_current = 1;
             if(defined $opt_P){
@@ -565,7 +572,7 @@ foreach $exe (@LAPS_EXE){
                 }elsif($opt_Q){ 
                     if($qsub_mode eq "multi" || ! defined($opt_P)){
                         print TFILE "#\$ -pe $node_type $nodes_current\n";
-                        if($node_type eq "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
+                        if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
                             print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=6.0G\n";
                         }else{
                             if($nodes_current > 1){
@@ -576,7 +583,7 @@ foreach $exe (@LAPS_EXE){
                         }
                     }else{ # qsub in "single" mode with $opt_P defined for multiple processors
                         if($execount == 1){
-                            print TFILE "#\$ -pe comp $opt_P\n";
+                            print TFILE "#\$ -pe $node_type_multi $opt_P\n";
                             print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
                         }
                     }
@@ -633,7 +640,7 @@ foreach $exe (@LAPS_EXE){
 
         if($nodes_current > 1){
 #           print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh\n";
-            print TFILE "mpirun -np $nodes_current $LAPSROOT/../../builds_mpi/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            print TFILE "mpirun -np $nodes_current $LAPSROOT/../../builds_mpi/laps/bin/$exe $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log 2>&1\n";
 #           print TFILE_SUB "umask 002\n";
 #           print TFILE_SUB "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 #           print TFILE_SUB "$LAPSROOT/../../builds_mpi/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
