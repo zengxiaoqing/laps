@@ -43,6 +43,7 @@ c  SAT_SKIP = 2,      process every 2nd, 3rd, 10th... whatever gridpoint
 c  GVAP_SWITCH = 1,    gvap on/off
 c  IHOP_flag = 1,     (off = 0), (normally on = 1) on for nesdis off for cimss
 c  TIME_DIFF = 70800,  gvap latency seconds
+c  GPS_SWITCH = 1,   (off = 0, 1 = public, default, 2 = MADIS)
 c  SFC_MIX = 0,        surface mixing on/off
 c  MOD_4DDA_1 = 0,     4dda airforce compounded drying factor on/off
 c  MOD_4DDA_FACTOR = 0.02,  drying value (+ = drying)
