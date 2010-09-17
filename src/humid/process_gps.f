@@ -44,7 +44,7 @@ cdis
 cdis
       subroutine  process_gps (ii,jj,gps_data_out,gps_data_weights,
      1     tpw,glat,glon,time_diff,gps_points,idotj,gps_count,
-     1     path,filetime,istatus)
+     1     path,filetime,gps_switch,istatus)
 
       implicit none
 
@@ -52,7 +52,7 @@ c     input variables
 
 
       character*9 filetime
-      integer ii,jj,istatus
+      integer ii,jj,istatus,gps_switch
       integer time_diff         !time allowed for latency (sec)
       real gps_data_out(ii,jj),tpw(ii,jj)
       real glat(ii,jj), glon(ii,jj)

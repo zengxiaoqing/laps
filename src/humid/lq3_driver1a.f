@@ -890,7 +890,7 @@ c     gps data inserstion step (bias correction to gvap only)
 
          call process_gps (ii,jj,gps_data,gps_w,
      1        tpw,lat,lon,time_diff,gps_points,idotj,gps_count,
-     1        path_to_gps,filename,istatus_gps)
+     1        path_to_gps,filename,gps_switch,istatus_gps)
 
          else
             write (6,*) 'MADIS data under construction'
