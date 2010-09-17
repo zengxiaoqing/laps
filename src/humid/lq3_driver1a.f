@@ -882,13 +882,19 @@ c     gps data inserstion step (bias correction to gvap only)
 
       istatus_gps = 0
 
-      if (gps_switch .eq. 1) then
+      if (gps_switch .ge. 1) then
 
          write(6,*) 'Initiate bias correction of gps data'
+
+         if(gps_switch.eq.1) then ! local version
 
          call process_gps (ii,jj,gps_data,gps_w,
      1        tpw,lat,lon,time_diff,gps_points,idotj,gps_count,
      1        path_to_gps,filename,istatus_gps)
+
+         else
+            write (6,*) 'MADIS data under construction'
+         endif
          
 c     gvap data insertion step
          
