@@ -335,6 +335,7 @@ cdis
                 else
                     t_s(i) = badflag
                     td_s(i) = badflag
+                    write(6,*)' Wind only ',i,dd_s(i),ff_s(i),ffg_s(i)
                 endif
             endif
 
@@ -713,16 +714,17 @@ c
  140        continue
 
 !           Plot Gusts (FSL WWW)
-            if(iflag .eq. 1)then 
-               if(gust .gt. 40)then
+            if(iflag .ge. 1)then 
+               if(gust .gt. 20)then
                    ig = int(gust)
                    write(p1,102,err=150) ig
-                   call setusv_dum(2HIN,4)
+!                  call setusv_dum(2HIN,4)
                    dg = 3.0 * du
 !                  call pwrity(u,v+dg,p1,3,jsize,0,0)          ! On Top
 !                  call pwrity(u+du_p,v-dv,p1,3,jsize,0,0)     ! Lower Right
+                   CALL PCLOQU(u+du_p,v-dv,p1,charsize,ANGD,CNTR)
  102               format('G',i2)
-                   call setusv_dum(2HIN,icol_in)
+!                  call setusv_dum(2HIN,icol_in)
                endif
             endif           
  150        continue
