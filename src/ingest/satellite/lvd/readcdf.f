@@ -63,12 +63,12 @@ C
       INTEGER   Nx
       INTEGER   Ny
       INTEGER   Nz
-      REAL      La1     (record)
-      REAL      Lo1     (record)
-      REAL      Dx      (record)
-      REAL      Dy      (record)
-      REAL      Latin   (record)
-      REAL      LoV     (record)
+      REAL      La1     
+      REAL      Lo1     
+      REAL      Dx      
+      REAL      Dy      
+      REAL      Latin   
+      REAL      LoV     
       REAL      poLat
       REAL      La2,Lo2,level
       INTEGER START(10)
