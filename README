@@ -32,6 +32,7 @@
          2.2.6.2 .....................  Localization Method 2
          2.2.6.3 .....................  Localization with LAPS GUI
          2.2.7 ..................  WRF Domain Wizard LAPS Support
+         2.2.8 ..................  MPI support for LAPS wind analysis
          2.3 ..............  Raw data ingest 
          2.3.1 ..................  Model Background (lga/lgb)
          2.3.1.1 .....................  Acquiring Model Background Data
@@ -174,7 +175,7 @@
      SunOS (Solaris) 5.6               Requires f90
      IRIX64          6.5               Requires f90
      DEC (Alpha)
-     LINUX (i386,i686,x86_64)          pgf90 is suggested, ifort being tested
+     LINUX (i386,i686,x86_64)          pgf90 is suggested, ifort & gfortran being tested
      LINUX (Alpha)                     fort is suggested  
 </pre>
 
@@ -978,6 +979,19 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      http://www.wrfportal.org/DomainWizard.html
 
+               --- 2.2.8 MPI support for LAPS wind analysis ---
+
+     There is capability to compile and run the wind analysis (wind.exe) using
+     MPI. We do this by doing a separate software build with 'mpif90' and then
+     'sched.pl' runs the serial versions of most things while running the 
+     parallelized version of the wind analysis. To build LAPS using 'mpif90' 
+     edit the 'makefile.inc' file, between running 'configure' and 'make',
+     adding -DUSEMPI into the CPPFLAGS.
+
+     The 'sched' script presently submits multiple processor jobs using the 
+     SGE queueing environment. We may consider adding an option to 'sched.pl' to
+     run/submit directly with 'mpirun' if that would be useful.
+
                   ---  2.3    Raw data ingest   ---
 
      There is a layer of "raw" data ingest code that may have to be modified
@@ -1364,7 +1378,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            McIDAS to the GVAR netCDF (lvd input). The package can be found 
            online at this URL:
 
-           ftp://aftp.fsl.noaa.gov/divisions/fd/sat/McArea2NetCDF.tar
+           ftp://aftp.fsl.noaa.gov/divisions/fd/bob/McArea2NetCDF.tar
 
            Some work has been done to ingest Meteosat Second Generation data
            into LAPS as can be seen here:
