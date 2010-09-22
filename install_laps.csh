@@ -40,7 +40,8 @@ setenv NEWPERL            $5
 
 if ($7 == intel) then
   echo "module switch pgi intel"
-  module switch intel
+  module switch pgi intel
+  which ifort
 endif
 
 #Configure/install?
