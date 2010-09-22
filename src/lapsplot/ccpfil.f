@@ -315,7 +315,7 @@ C
 c     Call local colorbar routine
       write(6,*)' Drawing colorbar: ',MREG,NREG
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-      call colorbar(MREG, NREG, namelist_parms, 
+      call colorbar(MREG, NREG, namelist_parms, plot_parms, 
      1              ncols, ireverse_colorbar, log_scaling, power,      ! I
      1              scale_l, scale_h, colortable, scale,icol_offset,
      1              c5_sect, l_discrete, l_integral, l_set_contours,
@@ -339,7 +339,7 @@ c     Call local colorbar routine
 
       include 'lapsplot.inc'
 
-      PARAMETER (LRWK=300000,LIWK=300000,NWRK=300000
+      PARAMETER (LRWK=600000,LIWK=600000,NWRK=600000
      1          ,NOGRPS=5)       
       REAL ZREG(MREG,NREG),RWRK(LRWK), XWRK(NWRK), YWRK(NWRK)
       INTEGER MREG,NREG,IWRK(LIWK)
@@ -492,7 +492,8 @@ C
      1              MREG, NREG, COLIA)
 
       else                                           ! regular contour fill
-          write(6,*)' Regular image contour fill without raster'
+          write(6,*)' Regular image contour fill without raster ' 
+     1             ,l_raster,l_set_contours
 
           CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      
@@ -803,7 +804,7 @@ C
       end
 
 
-      subroutine colorbar(ni,nj,namelist_parms
+      subroutine colorbar(ni,nj,namelist_parms,plot_parms 
      1                   ,ncols,ireverse,log_scaling,power
      1                   ,scale_l,scale_h
      1                   ,colortable,scale,icol_offset,c5_sect
@@ -868,18 +869,34 @@ C
       ylow =  y_2 + .01
       yhigh = y_2 + .03
 
+!     Set for zoom
+      zoom_colorbar = plot_parms%zoom_wdw
+
+!     Note that "square" case works for aspect ratio up to 1.192
+      write(6,*)'colorbar zoom = ',zoom_colorbar        
+
+      write(6,*)'colorbar location before zoom ',xlow,xhigh,ylow,yhigh
+
+      call zoomit(plot_parms,zoom_colorbar,xlow,ylow,xlowz,ylowz)
+      call zoomit(plot_parms,zoom_colorbar,xhigh,yhigh,xhighz,yhighz)
+
+      write(6,*)'colorbar location after zoom ',
+     1          xlowz,xhighz,ylowz,yhighz
+
 !     Set up for number of lines in colorbar
       ilow = 1
       ihigh = 2000
 
-      xrange = xhigh - xlow
+      xrange  = xhigh  - xlow 
+      xrangez = xhighz - xlowz
+
       irange = ihigh - ilow
 
 !     Put Colorbar
       do i = ilow,ihigh
           frac = float(i-ilow) / float(irange)
-          x1   = xlow + frac*xrange 
-          x2   = xlow + frac*xrange 
+          x1   = xlowz + frac*xrangez 
+          x2   = xlowz + frac*xrangez 
 
           if(ireverse .eq. 0)then
               rcol = 0.5 + float(ncols) * (frac**power)
@@ -891,8 +908,8 @@ C
 
           call setusv_dum(2hIN,icol+icol_offset)
 
-          y1 = ylow
-          y2 = yhigh
+          y1 = ylowz
+          y2 = yhighz
           call line(x1,y1,x2,y2)
       enddo ! i
 
@@ -902,10 +919,10 @@ c     Restore original color table
 !     Write labels at middle and ends of colorbar
       call setusv_dum(2hIN,34) ! Gray
 
-      call line(xlow,ylow,xhigh,ylow)
-      call line(xlow,yhigh,xhigh,yhigh)
-      call line(xlow,ylow,xlow,yhigh)
-      call line(xhigh,ylow,xhigh,yhigh)
+      call line(xlowz,ylowz,xhighz,ylowz)
+      call line(xlowz,yhighz,xhighz,yhighz)
+      call line(xlowz,ylowz,xlowz,yhighz)
+      call line(xhighz,ylowz,xhighz,yhighz)
 
       call setusv_dum(2hIN,7)  ! Yellow
 
@@ -932,7 +949,10 @@ c     Restore original color table
 
 !         ixl = 353 + nint(.05 * 1024.)
           ixl = nint((xlow - .005) * 1024.)
-          CALL PCHIQU (  cpux(ixl),cpux(iy),ch_low,rsize ,0,+1.0)
+!         write(6,*)' cpux = ',xlow,ixl,iy,cpux(ixl),cpux(iy)
+          call zoomit(plot_parms,zoom_colorbar
+     1               ,cpux(ixl),cpux(iy),rxl,ry)
+          CALL PCHIQU (rxl,ry,ch_low,rsize/zoom_colorbar ,0,+1.0)
           write(6,*)' Colorbar left edge = ',ch_low
 
 !         Right Edge
@@ -957,7 +977,9 @@ c     Restore original color table
           call left_justify(ch_high)
 
           ixh = ixl + 525 ! 878
-          CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
+          call zoomit(plot_parms,zoom_colorbar
+     1               ,cpux(ixh),cpux(iy),rxh,ry)
+          CALL PCHIQU (rxh,ry,ch_high,rsize/zoom_colorbar,0,-1.0)
           write(6,*)' Colorbar right edge = ',ch_high
 
       endif ! l_integral
@@ -999,7 +1021,10 @@ c     Restore original color table
           call s_len(ch_mid,len_mid)
 
           ixm = (ixl+ixh)/2
-          CALL PCHIQU (cpux(ixm),cpux(iy),ch_mid(1:len_mid),rsize,0,0.0)       
+          call zoomit(plot_parms,zoom_colorbar
+     1               ,cpux(ixm),cpux(iy),rxm,ry)
+          CALL PCHIQU (rxm,ry,ch_mid(1:len_mid),rsize/zoom_colorbar
+     1                ,0,0.0)       
           write(6,*)' Colorbar midpoint = ',ch_mid(1:len_mid)
 
       endif
@@ -1037,7 +1062,9 @@ c     Restore original color table
 
                   y1 = ylow
                   y2 = yhigh
-                  call line(x1,y1,x2,y2)
+                  call zoomit(plot_parms,zoom_colorbar,x1,y1,x1z,y1z)
+                  call zoomit(plot_parms,zoom_colorbar,x2,y2,x2z,y2z)
+                  call line(x1z,y1z,x2z,y2z)
               endif
 
               if(loop_count .eq. (loop_count/1) * 1 )then ! number every line
@@ -1066,14 +1093,16 @@ c     Restore original color table
 
                   ixm = ixl + (ixh-ixl)*frac
 
+                  call zoomit(plot_parms,zoom_colorbar
+     1                       ,cpux(ixm),cpux(iy),rxm,ry)
                   if(l_integral)then
                       if(rlabel .eq. float(nint(rlabel)))then
-                          CALL PCHIQU (cpux(ixm),cpux(iy)
-     1                        ,ch_frac(1:len_frac),rsize,0 , 0.0)       
+                          CALL PCHIQU (rxm,ry,ch_frac(1:len_frac)       
+     1                                ,rsize/zoom_colorbar,0 , 0.0)    
                       endif
                   else
-                      CALL PCHIQU (cpux(ixm),cpux(iy)
-     1                    ,ch_frac(1:len_frac),rsize,0 , 0.0)       
+                      CALL PCHIQU (rxm,ry,ch_frac(1:len_frac)          
+     1                            ,rsize/zoom_colorbar,0 , 0.0)       
                   endif
 
               endif ! loop_count
@@ -1161,8 +1190,10 @@ c     Restore original color table
               call s_len(ch_frac,len_frac)
 
               ixm = ixl + (ixh-ixl)*frac
-              CALL PCHIQU (cpux(ixm),cpux(iy),ch_frac(1:len_frac)
-     1                    ,rsize,0 , 0.0)       
+              call zoomit(plot_parms,zoom_colorbar
+     1                   ,cpux(ixm),cpux(iy),rxm,ry)
+              CALL PCHIQU (rxm,ry,ch_frac(1:len_frac)
+     1                    ,rsize/zoom_colorbar,0 , 0.0)       
           enddo ! ifrac
 
 
@@ -1389,6 +1420,22 @@ c     Restore original color table
       endif
 
       nvals = 15
+
+      return
+      end
+
+      subroutine zoomit(plot_parms,zoom,x,y,x_out,y_out)
+
+      include 'lapsplot.inc'
+
+      frame_factx = 1.0  ! / 0.75
+      zxcen = (0.5 + ((plot_parms%xcen - 0.5) * frame_factx))
+      zycen = (0.5 + ((plot_parms%ycen - 0.5) * frame_factx))
+      x_out = zxcen + ((x-0.5) / zoom)
+      y_out = zycen + ((y-0.5) / zoom)
+
+      write(6,*)' zoomit before ',zoom,x,y 
+      write(6,*)' zoomit after ',zoom,x_out,y_out 
 
       return
       end
