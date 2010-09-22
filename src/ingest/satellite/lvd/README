@@ -10,18 +10,25 @@
            genlvdlut_lvd                 lib/satellite/genlvdlut_lvd.f 
                get_lut_lambert 
                gen_gvarimage_lut         lib/satellite/gen_lut_gvar.f
+                   update_gvarimg_parms  lib/satellite/update_gvarimg_parms
+                       sat_sublatlon
+                           time50        lib/goesinav/gimloc.f
+                   time50                     "
                get_lut_mercator
                get_lut_ps
        lvd_driver_sub                    lvd_driver_sub.f
            readlut                       readlut.f
-           lvd_file_specifier
+           lvd_file_specifier            lvd_file_specifier.f
            getcdf_satdat                 getcdf_satdat.f
-               lvd_file_specifier
+               lvd_file_specifier        lvd_file_specifier.f
                readsatdat                readsatdat.f
-                   lvd_file_specifier
+                   lvd_file_specifier    lvd_file_specifier.f
                    readcdf               readcdf.f         
-           genbtemplut
-           lvd_file_specifier
+           genbtemplut                   genbtemplut.f
+           satdatfill                    satdatfill.f
+               satdatfill1                   "  
+                   readcdf               satfill1.f
+           lvd_file_specifier            lvd_file_specifier.f
            read_gvarimg_cnt2btemp_lut   
            btemp_convert_asc
            process_ir_satellite          satir_process.f
