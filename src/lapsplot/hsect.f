@@ -5174,6 +5174,7 @@ c                   cint = -1.
             elseif(var_2d .eq. 'UMF')then       
                 scale = 1e-2    
                 units_2d = 'cm-m/s'
+                plot_parms%iraster = 1
 
             elseif(var_2d .eq. 'MSF')then       
                 scale = 1e-3  ! calculated field 
@@ -5839,6 +5840,7 @@ c                   cint = -1.
             scale = 1e-5
 !           call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
 !    1                           ,zoom,density,scale)
+            plot_parms%iraster = 1
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
