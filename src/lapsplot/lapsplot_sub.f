@@ -163,8 +163,9 @@ cdis
 1111    format(a)
 
         if(c_section .eq. 'nt')then
-            write(6,*)' Setting namelist_parms%iraster to -1'
-            namelist_parms%iraster = -1
+!           write(6,*)' Setting namelist_parms%iraster to -1'
+!           write(6,*)' Raster may not work with multiple frames'
+!           namelist_parms%iraster = -1
             goto1090
         endif
 
