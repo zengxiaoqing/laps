@@ -177,7 +177,7 @@
       IF ((TRIM(ext(loop)) .NE. 'lw3' ).AND. & ! list of balance files
           (TRIM(ext(loop)) .NE. 'lt1' ).AND. &
           (TRIM(ext(loop)) .NE. 'lq3' ).AND. &
-          (TRIM(ext(loop)) .NE. 'lsx' ).AND. &
+!         (TRIM(ext(loop)) .NE. 'lsx' ).AND. &
           (TRIM(ext(loop)) .NE. 'lh3' )) THEN
         input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
             TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
