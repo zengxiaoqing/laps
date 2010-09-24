@@ -114,8 +114,12 @@
        do i = 1,ni
            klow = max(rk_terrain(i,j),1.)
            khigh = klow + 1
-           fraclow = float(khigh) - rk_terrain(i,j)
-           frachigh = 1.0 - fraclow
+           fraclow  = 0. ! float(khigh) - rk_terrain(i,j)
+           frachigh = 1. ! 1.0 - fraclow
+
+           if(u_bal(i,j,khigh) .eq. 1e-30)then
+               khigh = khigh + 1
+           endif
 
            if( u_bal(i,j,klow)  .eq. r_missing_data
      1    .or. v_bal(i,j,klow)  .eq. r_missing_data
