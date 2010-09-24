@@ -68,8 +68,10 @@ c
       integer   itstatus_rot,istat_alloc
       integer   icnt
       integer   igrx,igry
+      integer ixmin, ixmax, iymin, iymax
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
       real diff, diff_mx, diff_mn
+      real xmin, xmax, ymin, ymax
 
       real Lon0,Lat0,Lat1,dlat,dlon
       real sw(2),ne(2)
@@ -774,6 +776,57 @@ c
 
            itstatus(1)=init_timer()
 
+c ****** Horizontally interpolate background data to LAPS grid points. ********
+c
+           itstatus(2)=init_timer()
+
+!          Get bounding box of hinterp to restrict vinterp range
+           call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
+     .        lat,lon,grx,gry,bgmodel,cmodel,wrapped)
+
+           print*,'LAPS (Input) Grid Corners'
+           print*, 'SW: grx(1,1)/gry(1,1) ', grx(1,1),gry(1,1)
+           print*, 'SE: grx(nx,1)/gry(nx,1) '
+     +, grx(nx_laps,1),gry(nx_laps,1)
+           print*, 'NW: grx(1,ny/gry(1,ny) ',
+     + grx(1,ny_laps),gry(1,ny_laps)
+           print*, 'NE: grx(nx,ny)/gry(nx,ny) '
+     +, grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
+           print*
+
+c
+c ***** Check if bkgd model domain satisfies analysis domain **********
+c       ----------------------------------------------------
+           lgrid_missing=.false.
+           xmin = 999999.
+           ymin = 999999.
+           xmax =-999999.
+           ymax =-999999.
+           search_grid_missing: do i=1,nx_laps
+            do j=1,ny_laps
+             if(grx(i,j).eq.missingflag .or.
+     .           gry(i,j).eq.missingflag)then
+                 lgrid_missing=.true.
+                 exit search_grid_missing
+             else    
+                 xmin = min(grx(i,j),xmin)
+                 xmax = max(grx(i,j),xmax)
+                 ymin = min(gry(i,j),ymin)
+                 ymax = max(gry(i,j),ymax)
+             endif
+            enddo
+           enddo search_grid_missing
+
+           print*,'LAPS (Input) Grid Bounding Box'
+           print*,'Xrange ',xmin,xmax
+           print*,'Yrange ',ymin,ymax
+
+!          Add a perimeter to account for hinterp spline
+           ixmin = max(int(xmin)-5,1)
+           ixmax = min(int(xmax)+5,nx_bg)
+           iymin = max(int(ymin)-5,1)
+           iymax = min(int(ymax)+5,ny_bg)
+c
            allocate( htvi(nx_bg,ny_bg,nz_laps),   !Height (m)
      .               tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
      .               shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
@@ -783,6 +836,7 @@ c
 
            if(vertical_grid .eq. 'PRESSURE')then 
              call vinterp(nz_laps,nx_bg,ny_bg,nx_pr,ny_pr
+     .         ,ixmin,ixmax,iymin,iymax
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .         ,pr1d_mb,prbght,prbgsh,prbguv,prbgww
      .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
@@ -801,6 +855,7 @@ c
      1                         ,nx_bg,ny_bg,nz_laps,istatus)
 
              call vinterp(nz_laps,nx_bg,ny_bg,nx_pr,ny_pr
+     .         ,ixmin,ixmax,iymin,iymax
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .         ,prvi,prbght,prbgsh,prbguv,prbgww
      .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
@@ -932,38 +987,6 @@ c
             enddo
             enddo
            endif
-c
-c ****** Horizontally interpolate background data to LAPS grid points. ********
-c
-           itstatus(2)=init_timer()
-
-           call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
-     .        lat,lon,grx,gry,bgmodel,cmodel,wrapped)
-
-           print*,'LAPS (Input) Grid Corners'
-           print*, 'SW: grx(1,1)/gry(1,1) ', grx(1,1),gry(1,1)
-           print*, 'SE: grx(nx,1)/gry(nx,1) '
-     +, grx(nx_laps,1),gry(nx_laps,1)
-           print*, 'NW: grx(1,ny/gry(1,ny) ',
-     + grx(1,ny_laps),gry(1,ny_laps)
-           print*, 'NE: grx(nx,ny)/gry(nx,ny) '
-     +, grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
-           print*
-
-
-c
-c ***** Check if bkgd model domain satisfies analysis domain **********
-c       ----------------------------------------------------
-           lgrid_missing=.false.
-           search_grid_missing: do i=1,nx_laps
-            do j=1,ny_laps
-             if(grx(i,j).eq.missingflag .or.
-     .           gry(i,j).eq.missingflag)then
-                 lgrid_missing=.true.
-                 exit search_grid_missing
-             endif
-            enddo
-           enddo search_grid_missing
 c
 c ***** Check if t_at_sfc is defined **********
 c       ----------------------------
