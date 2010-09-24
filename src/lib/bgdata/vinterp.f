@@ -1,5 +1,6 @@
 
       subroutine vinterp(nz_laps,nx,ny,nx_pr,ny_pr,
+     .  ixmin,ixmax,iymin,iymax,
      .	nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
      .  prlaps, prbght,prbgsh,prbguv,prbgww,
      .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
@@ -12,6 +13,7 @@ c
       integer nx_pr,ny_pr ! either model background dims, or 1,1 based on 
                           ! vertical grid
       integer ip,jp
+      integer ixmin, ixmax, iymin, iymax ! bounding box of needed gridpoints
       integer nzbg_ht
       integer nzbg_tp
       integer nzbg_sh
@@ -57,7 +59,8 @@ c
 
       interface
          subroutine vinterp_sub(msngflag
-     .,nx,ny,nx_pr,ny_pr,nz,nzbg,pr,prbg,bgdata,bgdatavi)
+     .,nx,ny,nx_pr,ny_pr,ixmin,ixmax,iymin,iymax
+     .,nz,nzbg,pr,prbg,bgdata,bgdatavi)
          integer    nx,nx_pr,ny_pr,ny,nz
          integer    nzbg
          real  ::   pr(nz)
@@ -88,8 +91,8 @@ c individual fields (like sh, u/v and ww).
 
       datmsg = 0.
       do k=1,nz_laps
-         do j=1,ny
-            do i=1,nx
+         do j=iymin,iymax ! 1,ny
+            do i=ixmin,ixmax ! 1,nx
                ip = min(i,nx_pr) ! Collapse indices to 1,1 for 1D 'prlaps' input
                jp = min(j,ny_pr) 
                prilaps=1./prlaps(ip,jp,k)
@@ -174,24 +177,30 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
 c
 c second loops for remaining variables
 c
-      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr,nz_laps,nzbgsh
+      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr
+     .                     ,ixmin,ixmax,iymin,iymax,nz_laps,nzbgsh
      .                     ,prlaps,prbgsh,shbg,shvi)
-      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr,nz_laps,nzbguv
+      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr
+     .                     ,ixmin,ixmax,iymin,iymax,nz_laps,nzbguv
      .                     ,prlaps,prbguv,uwbg,uwvi)
-      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr,nz_laps,nzbguv
+      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr
+     .                     ,ixmin,ixmax,iymin,iymax,nz_laps,nzbguv
      .                     ,prlaps,prbguv,vwbg,vwvi)
-      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr,nz_laps,nzbgww
+      call vinterp_sub(missingflag,nx,ny,nx_pr,ny_pr
+     .                     ,ixmin,ixmax,iymin,iymax,nz_laps,nzbgww
      .                     ,prlaps,prbgww,wwbg,wwvi)
 
       return
       end
 
-      subroutine vinterp_sub(msngflag,nx,ny,nx_pr,ny_pr,nz,nzbg
+      subroutine vinterp_sub(msngflag,nx,ny,nx_pr,ny_pr
+     .          ,ixmin,ixmax,iymin,iymax,nz,nzbg
      .          ,pr,prbg,bgdata,bgdatavi)
 
       implicit none
 
       integer  nx,ny,nx_pr,ny_pr,nz
+      integer  ixmin,ixmax,iymin,iymax ! bounding box of needed gridpoints
       integer  ip,jp
       integer  nzbg
 
@@ -206,8 +215,8 @@ c
       integer  i,j,k,kk
 
       do k=1,nz
-         do j=1,ny
-            do i=1,nx
+         do j=iymin,iymax ! 1,ny
+            do i=ixmin,ixmax ! 1,nx
                ip = min(i,nx_pr) ! Collapse indices to 1,1 for 1D 'prlaps' input
                jp = min(j,ny_pr)
                do kk=1,nzbg
