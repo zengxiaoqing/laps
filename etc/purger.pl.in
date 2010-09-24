@@ -194,7 +194,7 @@ if ($#subdirs == 0){
 }
 
 foreach $dir (keys(%clean_dirs)){
-    my(@filelist,@listoffiles,$i,$j);
+    my(@fullfilelist,@filelist,@corelist,@listoffiles,$i,$j);
     opendir(DIR,$dir);
 
 #original constructs
@@ -206,7 +206,15 @@ foreach $dir (keys(%clean_dirs)){
 
 # possibly more generic form for gathering filenames to purge (JS 11-5-00). 
 
-    @filelist = grep(/\d\d\d\d/, readdir(DIR));
+    @fullfilelist = readdir(DIR);
+    @filelist = grep(/\d\d\d\d/, @fullfilelist);
+    if($dir =~ "log"){
+        @corelist = grep(/core/, @fullfilelist);
+        print "Adding corelist @corelist to filelist\n";
+#       system("ls -l $dir/core*");
+        push (@filelist,@corelist);
+#       print "filelist is @filelist\n";
+    }
 
     closedir(DIR);
     next unless(-d $dir);
