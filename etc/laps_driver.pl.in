@@ -228,7 +228,7 @@ if($opt_q || $opt_Q){
         if($exe eq "gridgen_model.exe"){ # allow localization to have more time
             print TFILE "#\$ -l h_rt=01:00:00\n";
         }else{
-            print TFILE "#\$ -l h_rt=00:10:00,h_vmem=1.35G\n";
+            print TFILE "#\$ -l h_rt=00:10:00,h_vmem=1.60G\n";
         }
         print TFILE "#\$ -A $opt_Q\n";
         print TFILE "#\$ -S /bin/sh\n";
