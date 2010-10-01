@@ -240,7 +240,9 @@ SUBROUTINE PrPstLSX
       nvr = nvr+1
       vnm(nvr) = 'P  '
       vun(nvr) = 'PA '
-      cmt(nvr) = '0  M REDUCED PRESSURE'
+      write(cmt(nvr),11) int(rdplvl),' M REDUCED PRESSURE'
+ 11   format(i5,a19)
+      ! cmt(nvr) = '0  M REDUCED PRESSURE'
       dat(1:ngd(1),1:ngd(2),nvr) = &
 	analys(numfic(1)+1:numgrd(1)-numfic(1), &
 	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)
