@@ -444,6 +444,8 @@ c
 
       real  Emission_angle_d
 
+      real cosd, sind
+
 c================================================================
         au_m = 149000000.
 C   Compute equatorial coordinates of point on sfc of earth
