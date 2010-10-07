@@ -120,7 +120,7 @@ c
             write(6,*)'    Filename: ',c_filename(1:n-1)
 
             call readcdf(csat_id,csat_type,c_type,
-     &                   nx2,ny2,
+!    &                   nx2,ny2,
      &                   record,
      &                   n_elems,n_lines,
      &                   image_prev,
