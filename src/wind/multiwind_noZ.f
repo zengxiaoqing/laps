@@ -31,6 +31,7 @@ c    O     ier              integer    =0, success message.
 c                                      =1, n < 1, or n > 4.
 c                                      =2, ht() > height or ht() > 30000 meters.
 c                                      =3, sqrt( (x-xx())**2+(y-yy())**2 ) < 1. meter.
+c                                      =4, single Doppler method used due to ambiguities
 c
 c Date :
 c   May. 14, 2004 (S.-M. Deng)
@@ -168,7 +169,7 @@ c*  For multi-radar (n=4), to compute horizontal wind.
       rms=sqrt( (u-u0)**2 + (v-v0)**2 )
       return
 
- 100  continue
+ 100  continue ! single Doppler method with best fit radar
       rms=rmsmax
       do i=1,n
          vt=( u0*yb(i)-v0*xa(i) )/d(i)
@@ -181,6 +182,8 @@ c*  For multi-radar (n=4), to compute horizontal wind.
              v=vv(i) 
          endif
       enddo
+
+      ier = 4
 
       return
       end
