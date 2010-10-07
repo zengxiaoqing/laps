@@ -622,7 +622,7 @@ csms$serial end
      1          ,aerr,i4_loop_total                                     ! I/O 
      1          ,wt_p_radar,fnorm_dum,n_fnorm_dum                       ! I
      1          ,l_analyze_dum,.false.,rms_thresh                       ! I
-     1          ,r0_barnes_max_m,brns_conv_rate_wind                    ! I
+     1          ,r0_barnes_max_m*single_ratio,brns_conv_rate_wind       ! I
      1          ,topo_dum,rland_frac_dum,1,1                            ! I
      1          ,n_obs_lvl,istatus)                                     ! O
 
