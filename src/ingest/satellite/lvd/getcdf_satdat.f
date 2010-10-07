@@ -595,7 +595,7 @@ c
 
          else
             call wait_for_satdat(chtype,i4time_data(nft),ntm(nft),
-     &path_to_raw_sat,max_channel,nchannels,c_mtype(1,nft),lvis_flag)
+     &path_to_raw_sat(1),max_channel,nchannels,c_mtype(1,nft),lvis_flag)
          endif
 
       elseif(nft_tmp.lt.nft)then
@@ -606,7 +606,7 @@ c
      &path_to_raw_sat,max_channel,nchannels,c_mtype(1,nft),lvis_flag)
          else
             call wait_for_satdat(chtype,i4time_data(nft),ntm(nft),
-     &path_to_raw_sat,max_channel,nchannels,c_mtype(1,nft),lvis_flag)
+     &path_to_raw_sat(1),max_channel,nchannels,c_mtype(1,nft),lvis_flag)
          endif
 
       else
