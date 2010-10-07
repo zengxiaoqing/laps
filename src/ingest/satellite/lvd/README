@@ -21,13 +21,19 @@
            lvd_file_specifier            lvd_file_specifier.f
            getcdf_satdat                 getcdf_satdat.f
                lvd_file_specifier        lvd_file_specifier.f
+               wait_for_satdat           wait_for_satdat.f
                readsatdat                readsatdat.f
                    lvd_file_specifier    lvd_file_specifier.f
                    readcdf               readcdf.f         
+           read_gms_hko                  read_gms_hko.f
+               get_satdat_attributes     getsat_attributes.f
+           read_gms_taiwan               read_gms_hko.f
+               get_satdat_attributes     getsat_attributes.f
            genbtemplut                   genbtemplut.f
+               get_satdat_attributes     getsat_attributes.f
            satdatfill                    satdatfill.f
-               satdatfill1                   "  
-                   readcdf               satfill1.f
+               satdatfill1               satfill1.f
+                   readcdf               readcdf.f
            lvd_file_specifier            lvd_file_specifier.f
            read_gvarimg_cnt2btemp_lut   
            btemp_convert_asc
