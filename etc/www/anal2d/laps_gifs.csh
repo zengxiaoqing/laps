@@ -49,8 +49,8 @@ if (-e /w3/lapb) then
 
 #   Check whether lapsplot.exe exists for Linux runs
     if (! -e $EXE_DIR/lapsplot.exe) then
-        echo "pointing to 32-bit binary for lapsplot.exe"
-        setenv EXE_DIR /usr/nfs/lapb/builds32/laps/bin
+        echo "pointing to 64-bit binary for lapsplot.exe"
+        setenv EXE_DIR /usr/nfs/lapb/builds64/laps/bin
     endif
 
 else
