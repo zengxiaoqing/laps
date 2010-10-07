@@ -129,6 +129,7 @@ c     Character     cmode*10
       character     ct*3,csattype*3,cty*3
       Character     image_type*2
       character     c6_maproj_ret*6
+      character     cchantype*3
 c
 c The technique used here is to make a slightly larger domain
 c (1 grid point larger on each side) and use this to compute
@@ -155,10 +156,10 @@ c     save lfirst
 c
 c ---------------------------------------------------------
       istatus = 0
-      nc=index(c_channel_types(kchl,jtype,isat),' ')-1
+      cchantype = c_channel_types(kchl,jtype,isat)
+      call s_len(cchantype,nc)
       if(nc.le.0)nc=3
-      call lvd_file_specifier(c_channel_types(kchl,jtype,isat),
-     &indx,istatus)
+      call lvd_file_specifier(cchantype,indx,istatus)
 
       csattype  = c_sat_types(jtype,isat)
 
@@ -201,7 +202,7 @@ c get current nav parameters for file header
 c
       call update_gvarimg_parms(c_sat_id(isat),
      &                         csattype,l_cell_afwa,
-     &             c_channel_types(kchl,jtype,isat),
+     &                         cchantype,
      &             path_to_raw_sat(kchl,jtype,isat),
      &                         ewCycles,ewIncs,
      &                         nsCycles,nsIncs,
@@ -305,7 +306,7 @@ c
       endif
 
       deltay=deltax
-      call POLAR_GP(mdlat,mdlon,XMN,YMN,deltax,deltay,nxe,nye)
+      call POLAR_GPG(mdlat,mdlon,XMN(1),YMN(1),deltax,deltay,nxe,nye)
 
       do i=2,nxe
          xmn(i)=xmn(i-1)+deltax
@@ -450,7 +451,7 @@ c
 c METEOSAT
 c
         cdir=path_to_raw_sat(kchl,jtype,isat)
-        cty=c_channel_types(kchl,jtype,isat)
+        cty=cchantype                             
         n=index(cdir,' ')-1
         cname=c_afwa_fname(c_sat_id(isat),cty)
         call s_len(cname,nl)
@@ -755,7 +756,7 @@ c     endif
 
 c -------------------
 
-       SUBROUTINE POLAR_GP(LAT,LON,X,Y,DX,DY,NX,NY)
+       SUBROUTINE POLAR_GPG(LAT,LON,X,Y,DX,DY,NX,NY)
 C
       include 'trigd.inc'
        REAL   LAT,LON,X,Y,DX,DY,
