@@ -504,7 +504,8 @@ c       WRITE(6,15)
 
  	    IF(WB(N).LT.TD(N))WB(N)=TD(N)                            
  	    IF(WB(N).GT.T(N)) WB(N)=T(N)                             
- 	    IF(IO.GE.2.AND.IFL.EQ.0)WRITE(6,3)N,P(N),T(N),TD(N),Q(N),WB(N) 
+ 	    IF(IO.GE.2.AND.IFL.EQ.0)
+     1         WRITE(6,3)N,P(N),T(N),TD(N),Q(N),WB(N)     
             IFL=0                                                            
  3	    FORMAT(' LVL(',I2,')',3F10.1,F11.6,F10.2)                      
  100	CONTINUE                                                             
