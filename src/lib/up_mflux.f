@@ -56,7 +56,8 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
         ht_upper(:,:)  = 1250. + topo(:,:)
 
 	call mean_wind_hlyr(ni,nj,nk,ht_lower,ht_upper
-     1                     ,u_3d,v_3d,ht_3d,umean_2d,vmean_2d)
+     1                     ,u_3d,v_3d,ht_3d,umean_2d,vmean_2d
+     1                     ,r_missing_data)
 
 	do j=2,nj-1
 	do i=2,ni-1
@@ -122,7 +123,8 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 c
 c
 	subroutine mean_wind_hlyr(ni,nj,nk,ht_lower,ht_upper
-     1                           ,u_3d,v_3d,ht_3d,umean_2d,vmean_2d)       
+     1                           ,u_3d,v_3d,ht_3d,umean_2d,vmean_2d
+     1                           ,r_missing_data)       
 
 c       Compute mean wind over a 2D height layer 
 
@@ -134,6 +136,9 @@ c       Compute mean wind over a 2D height layer
 
         real umean_2d(ni,nj)         ! O
         real vmean_2d(ni,nj)         ! O
+
+        umean_2d = r_missing_data
+        vmean_2d = r_missing_data
         
 	do j=1,nj
 	do i=1,ni
@@ -145,8 +150,13 @@ c       Compute mean wind over a 2D height layer
           if(.true.)then
 
 !           Calculate mass weighted mean wind over the height layer       
-            rk_lo = rlevel_of_field(ht_lo,ht_3d,ni,nj,nk,i,j,istatus)        
-            rk_hi = rlevel_of_field(ht_hi,ht_3d,ni,nj,nk,i,j,istatus)  
+            rk_lo = rlevel_of_field(ht_lo,ht_3d(i,j,:),1,1,nk,1,1
+     1                             ,istatus)        
+            if(istatus .ne. 1)goto 900
+
+            rk_hi = rlevel_of_field(ht_hi,ht_3d(i,j,:),1,1,nk,1,1  
+     1                             ,istatus)        
+            if(istatus .ne. 1)goto 900
 
 !           rk_lo = rlevel_of_logfield(ht_lo,ht_3d,ni,nj,nk,i,j,istatus)        
 !           rk_hi = rlevel_of_logfield(ht_hi,ht_3d,ni,nj,nk,i,j,istatus)  
@@ -205,6 +215,9 @@ c       Compute mean wind over a 2D height layer
 !           endif 
 
           endif
+
+900       continue
+
 	enddo !i
 	enddo !j
 
