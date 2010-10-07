@@ -40,6 +40,7 @@ c
       integer	  nelems, nlines
       integer     nft,ntm(maxchannels)
       integer     i4time_data(max_files)
+      integer     nx,ny
       real        image_11u(nelems_ir,nlines_ir,nimages)
       real        image_12u(nelems_ir,nlines_ir,nimages)
       real        image_vis(nelems_vis,nlines_vis,nimages)
@@ -55,7 +56,7 @@ c
       do k = 1,nchannels
 
          call getsat_attributes(csatid, csattype, chtype(k)
-     &,istart,iend,jstart,jend,istatus)
+     &,istart,iend,jstart,jend,nx,ny,istatus)
 
          call lvd_file_specifier(chtype(k),ispec,istatus)
          if(istatus.ne.0)then
