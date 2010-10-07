@@ -794,6 +794,9 @@ c
      .                    ,dx,dy
      .                    ,drlatc,drlonc
      .                    ,dglat, dglon
+
+      double precision     dcosd
+
       real  r
  
       integer nx,ny,nz             !No. of LL domain grid points
