@@ -696,9 +696,10 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
             elseif((value - field_3d(i,j,1)) * rsign .lt. 0.)then
                 rlevel_of_field = 0
-                write(6,102)k_ref,value,field_3d(i,j,1)
+                write(6,102)isign,value,field_3d(i,j,1),field_3d(i,j,nk)
 102             format('  Warning: below domain in rlevel_of_field,'
-     1                ,' k_ref,h,h(1)',i3,2e11.4)
+     1                ,' isign,h,h(1),h(nk)',i3,3e11.4)
+                write(6,*)i,j,field_3d(i,j,:)
                 istatus = 0
                 return
 
@@ -1236,9 +1237,9 @@ cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
 
 cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
 
-      real u1(ni,nj),v1(ni,nj),u2(ni,nj),v2(ni,nj),angle(ni,nj)
-
       include 'trigd.inc'
+
+      real u1(ni,nj),v1(ni,nj),u2(ni,nj),v2(ni,nj),angle(ni,nj)
 
       u2(:,:) =  u1(:,:) * cosd(angle(:,:)) + v1(:,:) * sind(angle(:,:))
       v2(:,:) = -u1(:,:) * sind(angle(:,:)) + v1(:,:) * cosd(angle(:,:))
