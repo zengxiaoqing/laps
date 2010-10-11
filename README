@@ -176,6 +176,7 @@
      IRIX64          6.5               Requires f90
      DEC (Alpha)
      LINUX (i386,i686,x86_64)          pgf90 is suggested, ifort & gfortran being tested
+     LINUX (Mac)                       pgf90 is being tested
      LINUX (Alpha)                     fort is suggested  
 </pre>
 
@@ -3291,6 +3292,8 @@ Parameter namelist file: 'static/surface_analysis.nl'
 Source directory: laps/src/mesowave/stmas_mg
 
 Author: Yuanfu Xie (Yuanfu.Xie AT noaa.gov)
+
+Parameter namelist files: static/stmas3d.nl, static/nest7grid.parms 
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
 
