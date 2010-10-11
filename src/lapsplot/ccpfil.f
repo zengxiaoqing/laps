@@ -84,8 +84,10 @@ C
       if(colortable .eq. 'tpw')then
           power = 0.7
       else
-          power = 1.0
+          power = plot_parms%color_power
       endif
+
+      write(6,*)' Colortable power = ',power
 
       n_image = n_image + 1
 
@@ -95,8 +97,11 @@ C
       write(6,*)' input array range: ',rmin,rmax
       write(6,*)' input scale: ',scale
       write(6,*)' scaled range: ',rmin/scale,rmax/scale
+     1                                      ,(rmax/scale)**power
 
-      if(rmin .eq. 0. .and. rmax/scale .le. 0.05 
+!     The 0.05 empirically relates to the inverse number of colors
+!     as plots apparently must span a full color interval
+      if(rmin .eq. 0. .and. (rmax/scale)**power .le. 0.05 
      1                .and. c5_sect .eq. 'xsect')then
           write(6,*)' Note, Xsect background may be non-black - return'
           write(6,*)' scale_l_in,scale_h_in = ',scale_l_in,scale_h_in
