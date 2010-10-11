@@ -195,9 +195,15 @@ cdis
         include 'icolors.inc'
 
         integer N_CONTOURS
-        parameter (N_CONTOURS = 23)
+        parameter (N_CONTOURS = 29)
         real factor(N_CONTOURS)
         data factor/
+     1  .00001,
+     1  .00002,
+     1  .00005,
+     1  .0001,
+     1  .0002,
+     1  .0005,
      1  .001,
      1  .002,
      1  .005,
@@ -303,6 +309,7 @@ cdis
         ifield_found = 0
 
         zoom = 1.0
+        denslogthr = sqrt(10.) ** (-(log(density) / log(2.)))
 
 !       sizem = 1.0
         sizel = 2.0
@@ -746,6 +753,8 @@ c read in laps lat/lon and topo
         istatus = 1
 
         if(c_field(1:2) .eq. 'q ')goto9999
+
+        plot_parms%color_power = 1.0
 
 !       c4_log = 'x '//c_field
 !       if(lun .eq. 5)call logit(c4_log)
@@ -2885,13 +2894,18 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 cint = 0.1 
 !               cint = 0.0 ! this should force a dynamic setting of clow/chigh
                 colortable = 'linear' 
+                plot_parms%color_power = 0.5
             else
                 clow = 0.
                 chigh = 0.
                 if(c_field .eq. 'pc')then
-                    cint = -0.005 * 2. ** (-density)
+                    cint = -0.005 * denslogthr            
                 else
-                    cint = -0.005 * 2. ** (-density)
+                    if(c_prodtype .eq. 'F')then
+                        cint = -0.0001 * denslogthr            
+		    else
+                        cint = -0.005 * denslogthr                
+                    endif
                 endif
             endif
 
@@ -3176,6 +3190,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
               else
                 write(6,*)' logarithmic contour line plot, cint = ',cint
+                write(6,*)' density, denslogthr = ',density,denslogthr
                 call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
