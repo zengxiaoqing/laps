@@ -680,13 +680,24 @@ endif
 
         call get_grid_spacing_array(lat,lon,lx,ly,dx,dy)
 
+!       print *,'Min/Max zsig =',minval(hzsig),maxval(hzsig)
+!       write(6,*)'lx,ly,lz',lx,ly,lz
 
-        call up_mflux(lx,ly,lz,avg,ldf,dx,dy                 &
+!       do i = 1,lx
+!       do j = 1,ly
+!           if(hzsig(i,j,1) .gt. hzsig(i,j,lz))then
+!               write(6,*)'hzsig QC issue ',i,j 
+!           endif
+!       enddo ! j
+!       enddo ! i
+
+        call up_mflux(lx,ly,nz,avg,ldf,dx,dy                 &
                      ,husig,hvsig,totpcpwater,upflux           &
-                     ,hzsig,r_missing_data)
+                     ,hzsig,rmsg)              
 
+!       write(*,*)'upflux/totpcpwater fields'
 
-	write(*,*)upflux,totpcpwater
+!       write(*,*)upflux,totpcpwater
 
 	write(*,*)'beka beka beka'
 
