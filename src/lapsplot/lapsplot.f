@@ -89,7 +89,7 @@ cdis
      1                  /
 
 
-        real cint,cbase,cvalue,clow,chigh
+        real cint,cvalue,clow,chigh
 
         integer
      1  jlts,
@@ -153,8 +153,6 @@ cdis
             else ! Special Contouring
                 call conrec_line(field,ni,ni,nj,0.,1e8,1e8,plot_parms
      1                          ,-1,0,-1848,0)       
-                cbase = 1e-4
-
                 do i = 1,N_CONTOURS
                     cvalue = factor(i)
                     if( cvalue .ge. abs(cint) )then
@@ -228,7 +226,7 @@ cdis
      1                  /
 
 
-        real cint,cbase,cvalue,clow,chigh
+        real cint,cvalue,clow,chigh
 
         integer
      1  jlts,
