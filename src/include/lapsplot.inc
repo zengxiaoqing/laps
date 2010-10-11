@@ -47,6 +47,7 @@
           real ycen
           real zoom_wdw
           real obs_size
+          real color_power
 
           integer contour_line_width
           integer ncols
