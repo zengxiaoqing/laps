@@ -470,6 +470,8 @@ c       include 'satellite_dims_lvd.inc'
             goto 1200
         endif
 
+        plot_parms%color_power = 1.
+
         if(c_type(1:2) .eq. 'fc')then ! force config with new dataroot
             write(6,*)' Enter new dataroot:'
             read(lun,17)new_dataroot
