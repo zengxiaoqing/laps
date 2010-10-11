@@ -229,6 +229,9 @@ if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nswdown)
 icode=nf_inq_varid(ncid,'GLW',nid)
 if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlwdown)
 
+icode=nf_inq_varid(ncid,'OLR',nid)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlwout)
+
 icode=nf_inq_varid(ncid,'LH',nid)
 if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlhflux)
 
