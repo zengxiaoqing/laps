@@ -306,6 +306,17 @@ EOF
 
 fi  
 
+dnl  Check to see if we are running the gfortran
+dnl  compiler. If so, set flags appropriately.
+
+grep 'gfortran' << EOF
+$FC
+EOF
+if test $? -eq 0
+then
+    FFLAGS="$FFLAGS -fd-lines-as-comments"
+fi
+
 echo "CFLAGS = $CFLAGS"
 echo "DBCFLAGS = $DBCFLAGS"
 echo "FFLAGS = $FFLAGS"
