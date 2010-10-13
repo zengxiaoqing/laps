@@ -28,6 +28,7 @@ EXE = cloud.exe
 
 SRC=array_plot.f \
     barnes_r5.f \
+    compare_analysis_to_rad.f \
     get_fg_cloud.f \
     get_istat_39.f \
     get_sat_data.f \
