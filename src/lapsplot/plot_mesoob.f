@@ -120,7 +120,7 @@ cdis
             call read_cloud_obs(i4time,maxsta,                           ! I
      &            n_obs_b,stations,reptype,                              ! O
      &            autostntype,                                           ! O
-     &            lat_s,lon_s,elev_s,wx_s,t_s,td_s,vis_s,                ! O
+     &            lat_s,lon_s,elev_s,wx_s,t_s,td_s,vis_s,solar_s,        ! O
      &            kloud_s,store_amt,store_hgt,obstime,istatus)           ! O
 
             write(6,*)'      n_obs_b:',n_obs_b       
