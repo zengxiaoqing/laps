@@ -45,6 +45,7 @@ cdis
      1          ,n_obs_b,lat_sta_ret,lon_sta_ret,c_stations
      1          ,wx,t,td                                                  ! O
      1          ,elev                                                     ! O
+     1          ,rad,solar_ea                                             ! O
      1          ,istatus                                                  ! O
      1          ,maxstns,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH)
 
@@ -87,6 +88,7 @@ cdis
 
 !       Arrays for reading in the SAO data from the LSO files
         Real   elev(maxstns),t(maxstns),td(maxstns)
+        real   rad(maxstns),solar_ea(maxstns)
         real   ht_base_ret(maxstns,5)
 c
         Integer   n_cloud_layers_ret(maxstns)
@@ -145,7 +147,7 @@ c
      1   n_obs_b,c_stations,obstype,atype,                         ! O
      1   lat_sta_ret,lon_sta_ret,elev,wx,t,td,                     ! O
      1   n_cloud_layers_ret,amt_ret,ht_base_ret,                   ! O
-     1   obstime,istatus)                                          ! O
+     1   rad,solar_ea,obstime,istatus)                             ! O
 
         if(istatus .ne. 1)then
             write(6,*)' Bad status returned from reading SAO data'
