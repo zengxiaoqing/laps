@@ -256,7 +256,7 @@ cdis
         real ffg_s(maxstns), vis_s(maxstns)
         real pstn_s(maxstns),pmsl_s(maxstns),alt_s(maxstns)
         real store_hgt(maxstns,5),ceil(maxstns),lowcld(maxstns)
-        real cover_a(maxstns),rad_s(maxstns)
+        real cover_a(maxstns),rad_s(maxstns),solar_ea(maxstns)
         integer obstime(maxstns),kloud(maxstns),idp3(maxstns)
         character store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
         character wx_s(maxstns)*8
@@ -617,6 +617,7 @@ C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
      1  ,n_obs_pos_b,lat_s,lon_s,c_stations    ! returned for precip type comp
      1  ,wx_s,t_s,td_s                         !    "      "    "     "
      1  ,elev_s                                ! ret for comparisons
+     1  ,rad_s,solar_ea                        !  "   "       "   
      1  ,istat_sfc,maxstns,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH)
 
         if(istat_sfc .ne. 1)then
@@ -1321,6 +1322,11 @@ C       EW SLICES
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns)
 
+
+        call compare_analysis_to_rad(NX_L,NY_L,cvr_sao_max,solar_alt
+     1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
+     1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
+     1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns)
 
 !       Write LCV file
         if(iwrite_output .ge. 1)then
