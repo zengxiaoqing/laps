@@ -5,7 +5,8 @@ main                                                     laps_cloud.f
         get_cloud_parms                                      "
         get_modelfg                                      get_fg_cloud.f
         insert_sao                                       insertsao.f
-            read_surface_sa                                  
+            read_surface_sa                              lib/read_surface_sa.f
+                read_cloud_obs                               "
             modify_sounding
             get_layer_cover
             spread2
@@ -40,7 +41,8 @@ main                                                     laps_cloud.f
         put_clouds_3d
         put_clouds_2d
         cloud_snow_cvr
-        compare_analysis_to_saos
+        compare_analysis_to_saos                         laps_cloud_sub.f
+        compare_analysis_to_rad                          compare_analysis_to_rad.f
         array_plot
         get_cloud_deriv                                  lib/get_cloud_deriv.f
 
