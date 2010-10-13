@@ -594,7 +594,9 @@ c
 
 	  else
 	     do k=1,5
-		if(cvr(k,i)(1:1) .ne. ' ' .and.        ! Valid layer coverage
+                call s_len(cvr(k,i),lenc)   
+!               if(cvr(k,i)(1:1) .ne. ' ' .and.        ! Valid layer coverage
+		if(lenc .gt. 0            .and.        ! Valid layer coverage
      1             cvr(k,i)(1:2) .ne. '-9'       )then ! CWB error check
                     k_layers = k_layers + 1       
                 endif
@@ -620,7 +622,7 @@ c
      1             ht(ii,i) .eq. badflag        ) then ! Check for bad height
                write(6,*)' WARNING in get_metar_obs: '      
      1                   ,' reject cloud ob, height = '
-     1                   ,ht(ii,i),stname(i)
+     1                   ,ht(ii,i),stname(i),k_layers
                ht(ii,i) = badflag
                k_layers = 0
 
