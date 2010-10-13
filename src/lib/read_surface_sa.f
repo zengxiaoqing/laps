@@ -42,7 +42,7 @@ c
      &   n_obs_b,stn,reptype,atype,                                   ! O
      &   lat,lon,elev,wx,t,td,                                        ! O
      &   kloud,store_amt,store_hgt,                                   ! O
-     &   obstime,istatus)                                             ! O
+     &   solar,solar_ea,obstime,istatus)                              ! O
 c
 cdoc    This routine calls 'read_surface_data' and is used primarily to read
 cdoc    in cloud info along the lines of the arrays in the "old" LSO format.
@@ -61,7 +61,7 @@ c
 	real alt(maxsta), alt_ea(maxsta), delp(maxsta)
 	real pstn(maxsta), pmsl(maxsta), p_ea(maxsta)
 	real vis(maxsta), vis_ea(maxsta)
-	real rad(maxsta), solar_ea(maxsta)
+	real solar(maxsta), solar_ea(maxsta)
 	real sfct(maxsta), sfct_ea(maxsta)
 	real sfcm(maxsta), sfcm_ea(maxsta)
 	real pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
@@ -111,7 +111,8 @@ c
         if(.false.)then
 	   call read_surface_data(i4time,atime,n_obs_g,n_obs_b,time,
      &    wmoid,stations,provider,wx_in,reptype,atype,lat,lon,
-     &    elev,t,td,rh,dd,ff,ddg,ffg,alt,pstn,pmsl,delpch,delp,vis,rad,
+     &    elev,t,td,rh,dd,ff,ddg,ffg,alt,pstn,pmsl,delpch,delp,vis,
+     &    solar,
      &    sfct,sfcm,pcp1,pcp3,pcp6,pcp24,snow,kloud,max24t,min24t,t_ea,
      &    td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,sfct_ea,
      &    sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
@@ -122,7 +123,7 @@ c
            call read_cloud_obs(i4time,maxsta,                      ! I
      &      n_obs_b,stations,reptype,                              ! O
      &      atype,                                                 ! O
-     &      lat,lon,elev,wx_in,t,td,vis,                           ! O
+     &      lat,lon,elev,wx_in,t,td,vis,solar,                     ! O
      &      kloud,store_amt,store_hgt,obstime,jstatus)             ! O
 
         endif
@@ -174,7 +175,7 @@ c
      &   n_obs_b_out,stations_out,reptype_out,                        ! O
      &   autostntype_out,                                             ! O
      &   lat_s_out,lon_s_out,elev_s_out,wx_s_out,t_s_out,td_s_out,    ! O
-     &   vis_s_out,                                                   ! O
+     &   vis_s_out,solar_s_out,                                       ! O
      &   kloud_s_out,store_amt_out,store_hgt_out,obstime_out,istatus) ! O
 c
 c       The argument list is or should be consistent with 'read_sfc.inc' except
@@ -191,6 +192,7 @@ c.....  Output arrays (duplicate declarations with _out suffix)
 c
 	real lat_s_out(maxsta), lon_s_out(maxsta), elev_s_out(maxsta)
 	real t_s_out(maxsta), td_s_out(maxsta), vis_s_out(maxsta)
+        real solar_s_out(maxsta)
 
 	real store_hgt_out(maxsta,5) 
 
@@ -246,6 +248,7 @@ c.....  Place main cloud obs into output arrays
         t_s_out = t_s
         td_s_out = td_s
         vis_s_out = vis_s
+        solar_s_out = solar_s
         kloud_s_out = kloud_s
         store_amt_out = store_amt
         store_hgt_out = store_hgt
@@ -297,6 +300,7 @@ c                Check that station is not near other "on time" stations
                  t_s_out(n_obs_b_out) = t_s(i)
                  td_s_out(n_obs_b_out) = td_s(i)
                  vis_s_out(n_obs_b_out) = vis_s(i)
+                 solar_s_out(n_obs_b_out) = solar_s(i)
                  kloud_s_out(n_obs_b_out) = kloud_s(i)
                  store_amt_out(n_obs_b_out,:) = store_amt(i,:)
                  store_hgt_out(n_obs_b_out,:) = store_hgt(i,:)
