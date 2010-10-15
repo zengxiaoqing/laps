@@ -1,11 +1,12 @@
 #!@CSH@
 
 setenv LAPSINSTALLROOT @prefix@
-setenv LAPS_DATA_ROOT  /data/fab/projects/dwr
+setenv LAPS_DATA_ROOT  /data/fab/projects/dwr   
 
 # Edit mainly these 3 lines
-setenv RUN       2010072612 # Model Run Initialization Time
-setenv FCSTTIME  0          # Model Forecast Time (seconds)
+setenv RUN       2010072612 # Model Run Initial Time          
+setenv VTIME     2010072615 # Model Run Valid Time
+setenv FCSTTIME  10800      # Model Forecast Time (seconds)
 setenv WRFDIR    /w3/jet/fab/wrfdwr            
 setenv NEST      d01
 
@@ -29,10 +30,10 @@ cp $LAPS_DATA_ROOT/cdl/fua.cdl                $WRFDIR/cdl
 cp $LAPS_DATA_ROOT/cdl/fsf.cdl                $WRFDIR/cdl
 
 # Parse Valid Time
-setenv YY  `echo $RUN  | cut -c3-4`
-setenv MON `echo $RUN  | cut -c5-6`
-setenv DD  `echo $RUN  | cut -c7-8`
-setenv HH  `echo $RUN  | cut -c9-10`
+setenv YY  `echo $VTIME | cut -c3-4`
+setenv MON `echo $VTIME | cut -c5-6`
+setenv DD  `echo $VTIME | cut -c7-8`
+setenv HH  `echo $VTIME | cut -c9-10`
 setenv MM 00
 
 echo         `@PERL@ $LAPSINSTALLROOT/etc/systime.pl $YY $MON $DD $HH $MM | head -1` 
