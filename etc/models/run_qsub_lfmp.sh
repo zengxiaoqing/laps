@@ -24,7 +24,7 @@ echo "#$ -A hmtb"               >> $script
 echo "#$ -l h_rt=04:30:00"      >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
-echo "#$ -pe wcomp 1"           >> $script
+echo "#$ -pe hserial 1"           >> $script
 echo "#$ -o $projectpath/$run/qlfmp.log"                          >> $script
 echo "#exit"                    >> $script
 echo " "                        >> $script
