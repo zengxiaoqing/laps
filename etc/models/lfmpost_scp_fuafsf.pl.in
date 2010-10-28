@@ -268,18 +268,18 @@ if (! $opt_S){ # test for skipping JETTY copy
     my $scp_cmd;
 
     if ($opt_a eq "noSubDir") {
-      $scp_cmd = "ssh fe1 scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua";
+      $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua";
     }else {
-      $scp_cmd = "ssh fe1 scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$opt_m-$opt_a";
+      $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$opt_m-$opt_a";
     }
     print "Running command: $scp_cmd\n";
     system ($scp_cmd);
     system ("date");
 
     if ($opt_a eq "noSubDir") {
-      $scp_cmd = "ssh fe1 scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf";
+      $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf";
     }else {
-      $scp_cmd = "ssh fe1 scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$opt_m-$opt_a";
+      $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$opt_m-$opt_a";
     }
     print "Running command: $scp_cmd\n";
     system ($scp_cmd);
