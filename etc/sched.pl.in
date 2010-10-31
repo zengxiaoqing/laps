@@ -157,7 +157,8 @@ if(defined $opt_s){ # "surface only"
                   mosaic_radar.x
                   stmas_mg.x
                   STMAS3D.exe
-                  cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe lapsprep.exe);
+                  cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
+                  qbalpe.exe  lapsprep.exe laps2grib.exe);
 
 }elsif($opt_V eq "GSI_Post"){ # GSI analysis
     @LAPS_EXE = qw(GSI_Post.exe
