@@ -172,9 +172,11 @@ my $default_frames = @lines[12];
 $default_frames =~ s/ //g;
 chomp $default_frames;
 
+#print " | default_frames read in is $default_frames\n";
+
 my $default_delay = @lines[13];
-$default_frames =~ s/ //g;
-chomp $default_frames;
+$default_delay =~ s/ //g;
+chomp $default_delay;
 
 $n_choices=8;
 
@@ -253,6 +255,8 @@ close LAPSPRD;
 @frames_list[12] = "13";
 @frames_list[13] = "24";
 @frames_list[14] = "auto";
+@frames_list[15] = "auto3";
+@frames_list[16] = "auto6";
 
 @delay_list[0] = "25";
 @delay_list[1] = "50";
@@ -310,7 +314,7 @@ EOF
   foreach $file (@domainlist) {
 
     if($file ne "anal2d" && $file ne "fcst2d" && $file ne "t2" && $file ne "." && $file ne ".."){
-      if(-e "$DomainDir/$file/private_data/lapsprd"){
+      if(-e "$DomainDir/$file/private_data/static/pressures.nl"){
 #      if($file eq $default_domain ) { 
 #          print "<option selected>$file\n"; 
            print "<option $selected{$file}> $file\n";
@@ -369,6 +373,8 @@ foreach $model (@modellist) {
 print <<"EOF";
 <option $selected{'DIFF'}> DIFF
 <option $selected{'diff'}> diff
+<option $selected{'MEAN'}> MEAN
+<option $selected{'mean'}> mean
 <option $selected{'obs'}> obs
 <option $selected{'obs_qc'}> obs_qc
 <option $selected{'what-got-in'}> what-got-in
@@ -440,7 +446,8 @@ print <<"EOF";
 <option $selected{'LE_FLUX'}> LE_FLUX
 <option $selected{'SE_FLUX'}> SE_FLUX
 <option $selected{'LONG_WAVE'}> LONG_WAVE
-<option $selected{'SHRT_WAVE'}> SHRT_WAVE
+<option $selected{'SW_DOWN'}> SW_DOWN
+<option $selected{'SW_OUT'}> SW_OUT
 <option $selected{'GG'}> GG
 <option $selected{'radial_vel'}> radial_vel
 <option $selected{'ht'}> ht
@@ -645,7 +652,7 @@ print <<"EOF";
 
 
 <br>
-<A HREF="frames.html"># Frames / Delay:</A>
+<A HREF="frames.html"># Frames / Delay: </A>selected is $default_frames
 <br>
 
 <select name="frames">
@@ -654,9 +661,11 @@ EOF
 
   foreach $frames (@frames_list) {
 
-    if($frames == $default_frames ) { print "<option selected>$frames\n"; } 
-    else               { print "<option>$frames\n"; } 
-
+    if($frames == $default_frames ) { 
+        print "<option selected>$frames\n"; 
+    }else{ 
+        print "<option>$frames\n"; 
+    } 
   }
 
 print <<"EOF";

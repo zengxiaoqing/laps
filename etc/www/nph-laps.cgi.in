@@ -222,6 +222,7 @@ $domain = @domains[0];
 $err=0;
 $montage=0;
 my $nmontage = 1;
+my $ntimes = 1;
 
 my $domain_first;
 $domain =~ /(.*)/;
@@ -280,6 +281,8 @@ $frames =~ /(.*)/;
 $frames_safe = $1;
 my $frames_orig = $frames_safe;
 
+print "frames_orig = $frames_orig<br>";
+
 my $size_safe;
 $size_safe = $thickness_safe;
 
@@ -317,12 +320,18 @@ if($domain_first =~ "tw_" || $domain_first =~ "tai" || $domain_first =~ "th" || 
 # Obtain cycle time 
 my $cycle_time;
 my @cycle_array;
-if ($frames_safe > 1 || $frames_safe eq "auto"){ 
+if ($frames_safe > 1 || $frames_safe =~ "auto"){ 
     if(-e "$laps_data_root/static/nest7grid.parms"){
         $domain_nl = "nest7grid.parms";
         $nl_var="laps_cycle_time";
         @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
-        $cycle_time=@cycle_array[0];
+        if($frames_safe eq "auto6"){
+            $cycle_time=@cycle_array[0] * 6;
+        }elsif($frames_safe eq "auto3"){
+            $cycle_time=@cycle_array[0] * 3;
+        }else{
+            $cycle_time=@cycle_array[0];
+        }
     }
     $animate = "yes";
 }
@@ -367,7 +376,7 @@ EOI
 
 my $n_sources_fields = 0;
 foreach $source (@sources) {
-    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "WRF" || "$source" =~ "bkgnd" || "$source" =~ "spin" || "$source" =~ "hot" ){
+    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "WRF" || "$source" =~ "bkgnd" || "$source" =~ "spin" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep" ){
         $n_sources_fields++
     }
     if($source eq "bkgnd" || $source eq "analysis" || $source eq "balanced" ){
@@ -415,12 +424,12 @@ if($err == 0) {
 # Determine if one of the sources is a forecast, if so obtain $a9time from the $systime
   $fcst=0;
   foreach $source (@sources) {
-    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "WRF" || "$source" =~ "bkgnd" || "$source" =~ "spin" || "$source" =~ "hot" ){
+    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "WRF" || "$source" =~ "bkgnd" || "$source" =~ "spin" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep" ){
         $fcst=1;
     }
   }
 
-  if($frames_safe eq "auto"){
+  if($frames_safe =~ "auto"){
     $frames_safe = 1;
     if(length($forecast_time) > 8){
 
@@ -472,6 +481,7 @@ if($err == 0) {
 
     if($frames != $frames_safe){ 
         printf LAPSPLOT "nt\n";
+        $ntimes++;
     }
 
 #   Print a9time (either with a value or blank)
@@ -795,7 +805,7 @@ if($err == 0) {
                           if($a9time_safe == $a9time_orig){
                               $nmontage++;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field eq $fields[0] && $level ne $pressure_levels[0]){ # montage multiple levels
+                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level ne $pressure_levels[0]){ # montage multiple levels
                           print "multiple levels level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
                           $animate = "yes";
@@ -813,7 +823,7 @@ if($err == 0) {
                   $overlay = $overlay + 1;
                   $sounding = $sounding + 1;
 
-                  if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "WRF" || "$source" =~ "spin" || "$source" =~ "hot"){
+                  if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "WRF" || "$source" =~ "spin" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep"){
                       if("$level" eq "sfc/2d"){                # fsf sfc forecast
                           if   ("$field" eq "p_msl" ) { 
                               printf LAPSPLOT "bs\n"; 
@@ -1307,7 +1317,14 @@ if($err == 0) {
                               printf LAPSPLOT "$hhmm\n";
                               printf LAPSPLOT "lwoi\n"; 
       
-                          }elsif("$field" eq "SHRT_WAVE" ) { 
+                          }elsif("$field" eq "SW_DOWN" ) { 
+                              printf LAPSPLOT "bs\n"; 
+                              printf LAPSPLOT "fsf\n"; 
+                              printf LAPSPLOT "$source\n"; 
+                              printf LAPSPLOT "$hhmm\n";
+                              printf LAPSPLOT "swii\n"; 
+
+                          }elsif("$field" eq "SW_OUT" ) { 
                               printf LAPSPLOT "bs\n"; 
                               printf LAPSPLOT "fsf\n"; 
                               printf LAPSPLOT "$source\n"; 
@@ -1887,8 +1904,12 @@ if($err == 0) {
                             printf LAPSPLOT "c\n"; 
                         }
 
-                    }elsif("$field" eq "wind" ) { # lgb
+                    }elsif("$field" eq "wind" ) { # lgb / lwm
                         printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "vc\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "0\n"; 
                         printf LAPSPLOT "vc\n"; 
                         printf LAPSPLOT "$hhmm\n";
@@ -2429,7 +2450,7 @@ if($err == 0) {
                             printf LAPSPLOT "og\n"; 
                             printf LAPSPLOT " \n"; 
 
-                        }elsif("$field" eq "SHRT_WAVE"){ 
+                        }elsif("$field" eq "SW_DOWN"){ 
                             printf LAPSPLOT "og\n"; 
                             printf LAPSPLOT " \n"; 
 
@@ -2609,6 +2630,10 @@ if($err == 0) {
 
                 if("$level" eq "sfc/2d"){            # Surface analyses
                     if("$field" eq "CLD_CVR"){ 
+                        printf LAPSPLOT "cg\n";  
+                        printf LAPSPLOT "0\n"; 
+
+                    }elsif("$field" eq "SW_DOWN" ){ 
                         printf LAPSPLOT "cg\n";  
                         printf LAPSPLOT "0\n"; 
 
@@ -2811,6 +2836,9 @@ if($err == 0) {
                     elsif("$field" eq "VIS_ALB"){ 
                         printf LAPSPLOT "lci\n"; 
                         printf LAPSPLOT "alb\n";} 
+                    elsif("$field" eq "LONG_WAVE"){ 
+                        printf LAPSPLOT "lci\n"; 
+                        printf LAPSPLOT "s8a\n";} 
                     elsif("$field" eq "SAT_11U"){ 
                         printf LAPSPLOT "lci\n"; 
                         printf LAPSPLOT "s8a\n";} 
@@ -3304,35 +3332,35 @@ if($err == 0) {
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "vc\n"; 
                           }elsif("$field" eq "wind_u" ) { 
-                              printf LAPSPLOT "wd\n"; 
+                              printf LAPSPLOT "bw\n"; 
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "u\n"; 
                           }elsif("$field" eq "WIND_U" ) { 
-                              printf LAPSPLOT "wdi\n"; 
+                              printf LAPSPLOT "bwi\n"; 
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "u\n"; 
                           }elsif("$field" eq "wind_v" ) { 
-                              printf LAPSPLOT "wd\n"; 
+                              printf LAPSPLOT "bw\n"; 
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "v\n"; 
                           }elsif("$field" eq "WIND_V" ) { 
-                              printf LAPSPLOT "wdi\n"; 
+                              printf LAPSPLOT "bwi\n"; 
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "v\n"; 
                           }elsif("$field" eq "wind_spd" ) { 
-                              printf LAPSPLOT "wd\n"; 
+                              printf LAPSPLOT "bw\n"; 
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "sp\n"; 
                           }elsif("$field" eq "WIND_SPD" ) { 
-                              printf LAPSPLOT "wdi\n"; 
+                              printf LAPSPLOT "bwi\n"; 
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "sp\n"; 
                           }elsif("$field" eq "wind_div" ) { 
-                              printf LAPSPLOT "wd\n"; 
+                              printf LAPSPLOT "bw\n"; 
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "dv\n"; 
                           }elsif("$field" eq "WIND_DIV" ) { 
-                              printf LAPSPLOT "wdi\n"; 
+                              printf LAPSPLOT "bwi\n"; 
                               printf LAPSPLOT "0\n"; 
                               printf LAPSPLOT "dv\n"; 
                           }elsif("$field" eq "temp"){     
@@ -3902,7 +3930,10 @@ if($err == 0) {
   if ($wgi_only == 0) {
 #   print  "$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root $animate $resolution\n";
     if ($montage == 1) {
-        $animate = "$nmontage";
+#       print "ntimes/animate = $ntimes $animate\n";
+        if ($ntimes > 1) {
+            $animate = "$nmontage";
+        }
     } 
     system("$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2> $web_root/$ScratchDir/lapsplot.err_$$"); 
     system("rm -f $request_root/lapsplot/lapsplot.in; ln -s $web_root/$ScratchDir/lapsplot.in_$$ $request_root/lapsplot/lapsplot.in; rm -f $request_root/lapsplot/lapsplot.out; ln -s $web_root/$ScratchDir/lapsplot.out_$$ $request_root/lapsplot/lapsplot.out; rm -f $request_root/lapsplot/lapsplot.err; ln -s $web_root/$ScratchDir/lapsplot.err_$$ $request_root/lapsplot/lapsplot.err; rm -f $request_root/lapsplot/loop; ln -s $web_root/$ScratchDir/$$ $request_root/lapsplot/loop");
@@ -3931,6 +3962,8 @@ EOI
 # print "forecast_time = $forecast_time ";
 # print "hhmm = $hhmm ";
 
+
+#print "<br>writing frames_orig to selected.in = $frames_orig";
 
 # Write a selected.in file
   $logFile = "$web_root/$ScratchDir/selected.in_$$";
