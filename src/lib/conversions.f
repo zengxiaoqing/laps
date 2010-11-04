@@ -1237,12 +1237,15 @@ cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
 
 cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
 
-      include 'trigd.inc'
+      parameter (pi = 3.1415926535897932)
+      parameter (rpd = pi / 180.)
 
       real u1(ni,nj),v1(ni,nj),u2(ni,nj),v2(ni,nj),angle(ni,nj)
 
-      u2(:,:) =  u1(:,:) * cosd(angle(:,:)) + v1(:,:) * sind(angle(:,:))
-      v2(:,:) = -u1(:,:) * sind(angle(:,:)) + v1(:,:) * cosd(angle(:,:))
+      u2(:,:) =  u1(:,:) * cos(angle(:,:)*rpd) 
+     1         + v1(:,:) * sin(angle(:,:)*rpd)
+      v2(:,:) = -u1(:,:) * sin(angle(:,:)*rpd) 
+     1         + v1(:,:) * cos(angle(:,:)*rpd)
 
       return
       end
