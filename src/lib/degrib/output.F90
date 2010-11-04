@@ -335,6 +335,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
      real :: vwbg(nx,ny,nz)
      real :: wwbg(nx,ny,nz)
 
+     include 'constants.inc' ! for grav
+
      call get_plvls(plvl, maxlvl, nlvl)
 
      NLOOP : do m = 1, maxvar
@@ -365,7 +367,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
               if (field.eq.'HGT') then
                  htbg(:,:,idx) = scr2d
               elseif (field.eq.'GEOPT') then
-                 htbg(:,:,idx) = scr2d
+                 htbg(:,:,idx) = scr2d / grav
               elseif (field.eq.'TT') then
                  tpbg(:,:,idx) = scr2d
               elseif (field.eq.'RH') then
