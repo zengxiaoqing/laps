@@ -270,8 +270,8 @@
      Lapsplot is an optional plotting program, thus NCAR graphics is optional. 
      If you wish to build the lapsplot process, access to NCAR graphics 
      libraries is needed so you will be able to run the 'ncargf77' command in
-     the LAPS Makefiles. You can download the free NCAR graphics software at 
-     the URL shown below. Note that NCAR graphics libraries should be built 
+     the LAPS Makefiles. You can download the free NCAR graphics (NCL) software 
+     at the URL shown below. Note that NCAR graphics libraries should be built 
      against the same FORTRAN compiler being used in LAPS.
 
                    http://ngwww.ucar.edu
@@ -305,9 +305,12 @@
 
      In order to get 'lapsplot' to compile and link properly it may be 
      necessary to edit your own version of 'ncargf90' or even the original 
-     'ncargf77' script. A possible alternative to fixing 'ncargf77/ncargf90' 
-     is to edit 'src/include/makefile.inc' with the full path for 'NCARGFC', 
-     and appropriate compiler for 'FC' (and possibly compiler flags) for your 
+     'ncargf77' script. Check that the proper FORTRAN compiler, load flags,
+     and load libraries are set in the script. 
+
+     A possible alternative to fixing 'ncargf77/ncargf90' is to edit 
+     'src/include/makefile.inc' with the full path for 'NCARGFC', and 
+     appropriate compiler for 'FC' (and possibly compiler flags) for your 
      system (after running configure).
 
      At times the linking of 'lapsplot' may show undefined references to 
@@ -357,19 +360,47 @@
                    http://netpbm.sourceforge.net/
 
      We have the option of making pre-generated GIF images that can be displayed
-     on the web by invoking the 'sched.pl -f' command line argument. Please see
-     section 2.4 for more info on 'sched.pl'. The associated web related scripts 
-     (for analyses) such as 'etc/www/followup_ncarg.sh' are in the repository. 
-     These "wrapper" scripts run 'lapsplot.exe' and output a set of GIF images 
-     in a directory tree that can be accessed via the web. The set of web image
-     products are defined with configuration files in 'static/www/lapsplot.*'.
-     Color tables are specified in 'static/www/*.lut'. Other user definable
-     plotting parameters are located in 'static/lapsplot.nl'. 
+     on the web by invoking the 'sched.pl -f dummy' command line argument. 
+     Please see section 2.4 for more info on 'sched.pl'. The associated web
+     related scripts (for analyses) such as 'etc/www/followup_ncarg.sh' are in 
+     the repository. These "wrapper" scripts run 'lapsplot.exe' and output a 
+     set of GIF images in a directory tree that can be accessed via the web. 
+     The set of web image products are defined with configuration files in
+     'static/www/lapsplot.*'. Color tables are specified in 'static/www/*.lut'.
+     Other user definable plotting parameters are located in 
+     'static/lapsplot.nl'.
 
      A separate web related script is our "on-the-fly" page that is contained
-     in 'etc/www/nph-laps.cgi'. This CGI/PERL script can be run on a web
-     server with hopefully just a few modifications. This also calls a set
-     of scripts that wrap around 'lapsplot.exe'.
+     in 'etc/www/nph-laps.cgi'. This CGI/PERL script can be run via a web
+     server. This also calls a set of scripts that wrap around 'lapsplot.exe'.
+     The file system(s) running LAPS should be made visible on your web server.
+     After running 'configure' the following steps will help in setting up
+     this web page. 
+
+     1) edit 'etc/www/nph-laps.cgi' and set $web_root to be the root directory
+        of the web server
+
+     2) edit 'etc/www/laps.cgi' and set $web_root to be the root directory
+        of the web server
+
+     3) mkdir -p $web_root/request
+
+     4) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/nph-laps.cgi .
+
+     5) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/laps.cgi .
+
+     6) mkdir -p $web_root/domains
+
+     7) For each $LAPS_DATA_ROOT (foo):
+  
+     a) mkdir -p $web_root/domains/foo                   
+
+     b) cd $web_root/domains/foo; ln -s $LAPS_DATA_ROOT private_data
+
+     At this point you should hopefully be able to use a web browser and
+     run the "on-the-fly" page with something like this URL:
+
+     http://yourdomain.something/request/nph-laps.cgi 
 
                --- 2.1.9  GRIB2 external libraries (optional) ---
 
@@ -383,18 +414,6 @@
      Library support for JPEG2000 is provided via the JasPer library. The 
      implementation of JPEG2000 compression reduces file sizes up to 80%.)
 
-     If the JasPer library is placed in a location other than the system area 
-     (/usr/lib) then set an environment variable LD_LIBRARY_PATH for lga to run
-     and set an environment variable CPP_INCLUDE_PATH for lga to build:
-     	e.g. setenv LD_LIBRARY_PATH /opt/jasper/1.900.1/lib
-     	and setenv CPP_INCLUDE_PATH /opt/jasper/1.900.1/include
-
-     (The unix/linux system command 'ldd' command prints the shared library 
-     dependancies on an executable; running 'ldd lga.exe' is a helpful 
-     command in the situation when you download the LAPS precompiled binaries
-     and need more information about shared libraries required by lga.exe.)
-
-
      The 'configure' script will determine if these libraries are present. 
      If all are found, 'configure' prepares the file 'src/include/makefile.inc' 
      with DEGRIBLIBS, DEGRIBFLAGS and CDEGRIBFLAGS values allowing the lga 
@@ -402,10 +421,24 @@
      these three specific compression libraries available, lga is built to 
      read only GRIB1-formatted files in addition to netCDF-formatted files. 
 
+     There may be some occasions where the Jasper library isn't detected
+     automatically by 'configure'. For example, if the Jasper library is                       
+     placed in a location other than the system area (/usr/lib) then one can 
+     set an environment variable CPP_INCLUDE_PATH for lga to build like this:                                  
+      	    setenv CPP_INCLUDE_PATH /opt/jasper/1.900.1/include
+
+     After running 'configure', the DEGRIBLIBS value in 'makefile.inc' can 
+     be manually edited to include the path information for the Jasper
+     library. Similarly the flags -DUSE_JPEG2000 and -DUSE_PNG can be added
+     to the value of DEGRIBFLAGS.
+
+     The unix/linux system command 'ldd' command prints the shared library 
+     dependancies on an executable; running 'ldd lga.exe' is a helpful 
+     command in the situation when you download the LAPS precompiled binaries
+     and need more information about shared libraries required by lga.exe. 
 
      See source directory: $LAPS_SRC_ROOT/src/lib/degrib/README_LIBS file 
      for additional information.
-
 
      ------------- 2.2 Installation Procedure Summary ------------------
 
@@ -465,8 +498,8 @@
                  ingest/
              etc/                                                (laps scripts)
              bin/                                                 (executables)
-             data/           (default $LAPS_DATA_ROOT, can be moved/duplicated 
-                                   original data tree that comes with tar file)
+             data/    (original data tree that comes with tar file,
+                       replicated and merged with templates during localization)
                  lapsprd/
                      product_list/                                (laps output)
                  log/
@@ -483,9 +516,9 @@
      In many UNIX environments, large data files are stored on a "data" disk 
      and the source code is stored on a smaller "home" disk. Below is a
      typical laps directory structure for that setup. We recommend using
-     something like this setup, especially if you are constructing and
-     localizing with your own domain and parameters that are different from 
-     our default Colorado setup.
+     something like this setup for most LAPS users. This type of separation                          
+     makes it easier to update the LAPS source code while maintaining your
+     data intact.
 
      <pre>
      /home_disk/
@@ -506,7 +539,7 @@
              landuse_30s
          raw_data/                                     (optional raw test data)
          laps/                     
-             data*/                        ($LAPS_DATA_ROOT, can be duplicated)
+             data*/               ($LAPS_DATA_ROOT, set up during localization)
                  lapsprd/
                      product_list/                                (laps output)
                  log/
@@ -873,29 +906,29 @@ setenv LAPS_DATA_ROOT "any new or existing LAPS_DATA_ROOT"
 
 cd $LAPSINSTALLROOT
 
-a) perl window_domain_rt.pl -w laps:   
+a) perl window_domain_rt.pl -s $LAPS_SRC_ROOT -i $LAPSINSTALLROOT 
+              -d $LAPS_DATA_ROOT -t "full path to template directory" -w laps -c
+
+   result: all required information is provided on the command line.
+           Window will use the command line info instead of getting 
+           The paths from the environment.
+
+b) perl window_domain_rt.pl -w laps:   
 
    result: lapsprd and log saved; operational namelists and cdl's are copied
            into $LAPS_DATA_ROOT/static; $LAPSINSTALLROOT/bin/gridgen_model.exe
            runs to regenerate static.nest7grid. "Saved" lapsprd and log are
            restored into $LAPS_DATA_ROOT.
   
-b) perl window_domain_rt.pl -c -w laps:
+c) perl window_domain_rt.pl -c -w laps:
   
-   result: same as a) although lapsprd and log are removed and regenerated by
+   result: same as b) although lapsprd and log are removed and regenerated by
            "etc/makedatadirs.pm"
   
-c) perl window_domain_rt.pl -t "full path to template directory" -w laps
+d) perl window_domain_rt.pl -t "full path to template directory" -w laps
   
-   result: similar to a) but namelist specifics are copied to $LAPS_DATA_ROOT/
+   result: similar to b) but namelist specifics are copied to $LAPS_DATA_ROOT/
            static and merged with full namelists in $LAPSINSTALLROOT.
-
-d) perl window_domain_rt.pl -s $LAPS_SRC_ROOT -i $LAPSINSTALLROOT 
-               -d $LAPS_DATA_ROOT -t "full path to template directory" -w laps
-
-   result: similar to c) except all required information is provided on the
-           command line. Window will use the command line info instead of 
-           getting the paths from the environment.
 
 setenv LAPS_SRC_ROOT /awips/laps
 setenv LAPSINSTALLROOT /data/fxa/laps_data
@@ -974,8 +1007,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                --- 2.2.7 WRF Domain Wizard LAPS Support ---
 
      The WRF Domain Wizard can be used to help specify correctly navigated 
-     LAPS domain map parameters. When the Wizard is run it optionally writes 
-     out 'nest7grid.parms' files for each nest that can be used as input 
+     LAPS domain map parameters. When the Wizard is run it will write out  
+     a 'nest7grid.parms' file for each nest that can be used as input 
      "templates" for LAPS localization. 
 
      http://www.wrfportal.org/DomainWizard.html
@@ -1162,15 +1195,18 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html
 
      --- How Do Users Name The GRIB Data Files? ---
-     For LAPS initialization at NOAA/ESRL, we have a process that automatically
+     For LAPS ingest at NOAA/ESRL, we have a process that automatically
      downloads GRIB files to a designated directory. For example, 
-     /data/grid/gfs/global_0p5deg/, /data/grid/gfs/global_1p0deg/, and 
-     /data/grid/gfs/conus211/ are three directories for the GFS global 
+     '/data/grid/gfs/global_0p5deg/', '/data/grid/gfs/global_1p0deg/', and 
+     '/data/grid/gfs/conus211/' are three directories for the GFS global 
      0.5 degree, global 1.0 degree and CONUS 211 domains. The files within 
      these directories are renamed from the complex patterns listed above to 
-     filenames with the following pattern: YYJJJHHMMFFFF. So, a file for GFS 
-     CONUS 211 on Jul 23, 2008, 12 UTC, 6 forecast would be named 
-     /data/grid/gfs/conus211/grib/08205120006.
+     filenames with the following pattern: 'YYJJJHHMMhhhh'. Here the 'hhhh' 
+     part represents the number of hours into the forecast. Thus a file for GFS 
+     CONUS 211 initialized on Jul 23 2008 at 1200 UTC, with a 6 hour forecast 
+     would be named '/data/grid/gfs/conus211/grib/0820512000006'. The HRRR
+     model follows a slightly different convention of 'YYJJJHHMMhhmm', so 
+     that forecasts of under one hour can be represented.
 
      --- How Does lga.exe Know Where To Find The Data? ---
      For lga.exe, the acceptable models, directory paths and file formats are 
@@ -1250,27 +1286,35 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
       
                        ----   2.3.3  Surface Data ---
 
-     Sfc Obs (lso): GSD uses surface data as input with the default being GSD's
-           NIMBUS netCDF format. A few other METAR formats are now being 
-           supported as listed in the 'static/obs_driver.nl' namelist. The GSD
+     Sfc Obs (lso): GSD uses surface observations as input with the default 
+           being GSD's NIMBUS netCDF format.
+ 
+           Surface observations of various types, covering much of the
+           world are available in realtime from GSD's MADIS system (with some
+           restrictions). This data, generally in 'WFO/AWIPS' netCDF format, 
+           are distributed via the MADIS server at 
+           http://www-sdd.fsl.noaa.gov/MADIS/. The supported MADIS surface
+           observation datasets include 'metar' (METAR/SYNOP), 'maritime'
+           (Buoy/Ship), 'mesonet', 'urbanet', and others. This is an excellent  
+           source of surface observations for most users outside of ESRL/GSD
+           to start with. To request a real-time data stream please go to
+           the MADIS data application page at this link:
+           http://www-sdd.fsl.noaa.gov/MADIS/data_application.html 
+
+           A few other METAR/SYNOP formats are now being supported in LAPS        
+           software as listed in the 'static/obs_driver.nl' namelist. The GSD
            code is in the '.../src/ingest/sao' directory, and includes routines
            to read and reformat various surface data types (METAR/SYNOP, mesonet
            or local/LDAD, buoy/ship or maritime, and GPS/profiler surface obs).
            There is a subroutine tree outline in the 'src/ingest/sao/README' 
            file including information on the supported data formats for each 
-           observation type. Users may need to modify/write the necessary 
-           routines to read their data formats to be able to output the ASCII 
-           LSO file. Looking in detail at the routines in the 'src/ingest/sao'
-           directory may provide enough information to get you started on any
-           needed modifications. 
+           observation type. Paths to the datasets are specified in the 
+           'obs_driver.nl' file. 
 
-           Paths to the datasets are specified in the 'obs_driver.nl' file. 
-           The surface data, including many of the types mentioned above, over 
-           much of the world are available in realtime from GSD with some 
-           restrictions. This data, generally in 'WFO/AWIPS' netCDF format, are
-           distributed via GSD's MADIS project at 
-           http://www-sdd.fsl.noaa.gov/MADIS/. The supported MADIS LDAD surface
-           observation datasets are 'mesonet' and 'urbanet'.
+           Users may need to modify/write the necessary routines to read other
+           data formats to be able to output the ASCII LSO file. Looking in 
+           detail at the routines in the 'src/ingest/sao' directory may provide
+           enough information to get you started on any needed modifications.
 
            Note that only observations reasonably near the standard shelter
            height (2 meters, except 10 meters for wind) should be included in 
@@ -1407,10 +1451,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      GPS:
            LAPS uses GPS data from NIMBUS netCDF files. The precipitable water
            is used in the humidity analysis. STMAS is being designed to use
-           the signal delay directly instead of the PW. These NIMBUS files
-           are available online at ftp://gpsftp.fsl.noaa.gov - though the files 
-           would have to be renamed to correspond to the internal ESRL 
-           convention.
+           the signal delay directly instead of the PW. The netCDF files
+           are available online at ftp://gpsftp.fsl.noaa.gov where they
+           are named according to 'GPSIPW_CDF_YYDDDHHMM0030o.nc'. The leading
+           'GPSIPW_CDF_' of the names would have to be stripped off to be
+           used in LAPS/STMAS.
 
            There are plans to make files similar to the NIMBUS ones available 
            in AWIPS-II, though again filenaming conventions may need to be
@@ -1418,7 +1463,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
            MADIS (LDAD) mesonet files also carry the GPS PW and related data,
            including surface obs. LAPS does not yet read precipitable water 
-           from this format.
+           from this format. If you receive MADIS mesonet data and would
+           like to see an interface to the MADIS PW data please contact us.
 
                       ----   2.3.9  Other Data Sources ---
 
