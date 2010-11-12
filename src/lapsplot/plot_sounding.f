@@ -12,6 +12,8 @@
         real pres_2d(NX_L,NY_L)
         real t_2d(NX_L,NY_L)
         real td_2d(NX_L,NY_L)
+        real u_2d(NX_L,NY_L)
+        real v_2d(NX_L,NY_L)
         real pw_2d(NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
@@ -19,6 +21,8 @@
 
         real temp_vert(NZ_L)
         real ht_vert(NZ_L)
+        real u_vert(NZ_L)
+        real v_vert(NZ_L)
         real rh_vert(NZ_L)
         real sh_vert(NZ_L)
         real td_vert(NZ_L)
@@ -306,7 +310,7 @@
 
 !       Read Cloud Ice
         istat_ice = 0
-        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+        if(c_prodtype .eq. 'A')then ! Read Cloud Ice
             var_2d = 'ICE'
             ext = 'lwc'
             call get_laps_3dgrid
@@ -324,7 +328,7 @@
 
 !       Read Precipitating Rain
         istat_rain = 0
-        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+        if(c_prodtype .eq. 'A')then ! Read Precipitating Rain
             var_2d = 'RAI'
             ext = 'lwc'
             call get_laps_3dgrid
@@ -342,7 +346,7 @@
 
 !       Read Precipitating Snow
         istat_snow = 0
-        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+        if(c_prodtype .eq. 'A')then ! Read Precipitating Snow
             var_2d = 'SNO'
             ext = 'lwc'
             call get_laps_3dgrid
@@ -360,7 +364,7 @@
 
 !       Read Precipitating Ice
         istat_pice = 0
-        if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+        if(c_prodtype .eq. 'A')then ! Read Precipitating Ice
             var_2d = 'PIC'
             ext = 'lwc'
             call get_laps_3dgrid
@@ -376,7 +380,43 @@
             pice_vert = -999.
         endif
 
-!       Read in sfc data (pressure, temp, dewpoint, tpw)
+!       Read 3-D U wind component
+        istat_u = 0
+        if(c_prodtype .eq. 'A')then ! Read 3-D U wind
+            var_2d = 'U3'
+            ext = 'lw3'
+            call get_laps_3dgrid
+     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_u)
+        endif
+
+        if(istat_u .eq. 1)then
+            call interp_3d(field_3d,u_vert,xsound,xsound
+     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
+     1                    ,r_missing_data)
+        else
+            u_vert = -999.
+        endif
+
+!       Read 3-D V wind component
+        istat_v = 0
+        if(c_prodtype .eq. 'A')then ! Read 3-D V wind
+            var_2d = 'V3'
+            ext = 'lw3'
+            call get_laps_3dgrid
+     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_v)
+        endif
+
+        if(istat_v .eq. 1)then
+            call interp_3d(field_3d,v_vert,xsound,xsound
+     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
+     1                    ,r_missing_data)
+        else
+            u_vert = -999.
+        endif
+
+!       Read in sfc data (pressure, temp, dewpoint, u, v, tpw)
         if(c_prodtype .eq. 'A')then ! Read LSX
             ext = 'lsx'
 
@@ -396,6 +436,18 @@
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,td_2d,0,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
+            var_2d = 'U'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,u_2d,0,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
+            var_2d = 'V'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,v_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto100
 
             ext = 'lh4'
@@ -478,7 +530,7 @@
         write(6,*)
         write(6,*)' lvl    p(mb)     t(c)'//
      1            '      td(c)      rh(%)    cld liq  cld ice'//   
-     1            '    rain      snow      pcpice'
+     1            '    rain      snow      pcpice   u (m/s)   v (m/s)'       
         write(6,*)'                                                '
      1          //'g/m**3    g/m**3    g/m**3    g/m**3    g/m**3'
         do iz = 1,NZ_L
