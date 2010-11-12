@@ -5072,6 +5072,8 @@ c                   cint = -1.
  724        format(a)
             call upcase(var_2d,var_2d)
 
+            write(6,*)' Variable selected is ',var_2d
+
             call s_len(var_2d,len_var)
             if(var_2d(len_var:len_var) .eq. 'I' .and. 
      1         var_2d(1:len_var) .ne. 'FWI'     .and.
@@ -5087,6 +5089,8 @@ c                   cint = -1.
 !           endif
 
             level=0
+
+            write(6,*)' var_2d is ',var_2d
 
             if(var_2d .ne. 'MSF')then
                 CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
@@ -5197,8 +5201,23 @@ c                   cint = -1.
                 endif
 
             elseif(var_2d .eq. 'LWO')then ! Temporary fix for FSF inconsistency
-                comment_2d = 'Brightness Temperature'
-                units_2d = 'Deg K'
+!               comment_2d = 'Brightness Temperature'
+!               units_2d = 'Deg K'
+
+                comment_2d = 'OLR'
+                units_2d = 'w/m**2'
+
+!               Convert OLR radiance to brightness temperature
+!               write(6,*)' Converting radiance to brightness temp'
+!               do i = 1,NX_L
+!               do j = 1,NY_L
+!                   if(field_2d(i,j) .ne. r_missing_data)then
+!                       field_2d(i,j) = rad_to_temp(field_2d(i,j))       
+!                   endif
+!               enddo ! j
+!               enddo ! i
+!               where(field_2d(:,:) .ne. r_missing_data)
+!    !                field_2d(:,:) = rad_to_temp(field_2d(:,:))
 
             elseif(units_2d(1:4) .eq. 'NONE' .or.
      1             units_2d(1:4) .eq. 'none'      )then
@@ -5261,7 +5280,8 @@ c                   cint = -1.
      1                         ,'spectral',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'LWO')then
-                    call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
+!                   call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
+                    call ccpfil(field_2d,NX_L,NY_L,313.15,100.15
      1                         ,'linear',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'SWO')then
