@@ -487,3 +487,5 @@ AC_OUTPUT(src/include/trigd.inc
           gui/install_perlTk.sh
           gui/guiTk/ui_system_tools.pl)
 
+chmod +x etc/www/nph-laps.cgi
+chmod +x etc/www/laps.cgi
