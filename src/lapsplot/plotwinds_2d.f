@@ -39,6 +39,8 @@ cdis
         subroutine plot_winds_2d(u,v,interval,size_in,zoom
      1          ,imax,jmax,lat,lon,r_missing_data,namelist_parms)
 
+        include 'trigd.inc'
+
         include 'lapsplot.inc'
 
         real u(imax,jmax),v(imax,jmax)
