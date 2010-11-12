@@ -42,7 +42,7 @@ cdis
         include 'lapsplot.inc'
 
         character*1 c_display
-        integer SYS$TRNLOG,ASKI4T
+        integer ASKI4T
         character*9 asc9_tim
         character*4 RM
         character*35 TIME
