@@ -222,6 +222,8 @@ real, allocatable, dimension(:,:,:) :: htdsig,hrhsig,hthetasig,hthetaesig,hzsigf
 !beka
 real :: dx(lx,ly),dy(lx,ly)  
 real :: r_missing_data
+real :: stefan_boltzmann, b_olr
+
 !beka
 
 character*256  directory
@@ -701,6 +703,10 @@ endif
 
 	write(*,*)'beka beka beka'
 
+        stefan_boltzmann = 5.67e-8
+        b_olr = 0.25
+        bt11u(:,:) = (lwout(:,:) / stefan_boltzmann) ** b_olr
+         
 
 return
 end

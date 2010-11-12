@@ -107,7 +107,7 @@ real, pointer, dimension(:,:) ::  &
       ,srhel        ,uhel         ,cape         ,cin          ,liftedind   &
       ,visibility   ,heatind      ,lwout        ,swout        ,lwdown      &
       ,swdown       ,shflux       ,lhflux       ,vnt_index    ,ham_index   &
-      ,hah_index    ,fwi_index    ,fwx_index    ,upflux
+      ,hah_index    ,fwi_index    ,fwx_index    ,upflux       ,bt11u
 integer,            allocatable, dimension(:) :: lvls2d
 character(len=3),   allocatable, dimension(:) :: name2d
 character(len=10),  allocatable, dimension(:) :: units2d
@@ -315,7 +315,7 @@ implicit none
 integer :: ct
 
 if (trim(mtype) /= 'st4') then
-  nvar2dout=45
+  nvar2dout=46
   if (make_micro) nvar2dout=nvar2dout+5
   if (make_firewx) nvar2dout=nvar2dout+7
 
@@ -351,6 +351,7 @@ if (trim(mtype) /= 'st4') then
   shflux     =>sgrid(1:lx,1:ly,ct); name2d(ct)='SHF'; com2d(ct)='Sensible Heat Flux'         ; ct=ct+1
   lhflux     =>sgrid(1:lx,1:ly,ct); name2d(ct)='LHF'; com2d(ct)='Latent Heat Flux'           ; ct=ct+1
   upflux     =>sgrid(1:lx,1:ly,ct); name2d(ct)='UMF'; com2d(ct)='Upslope Moisture Flux'      ; ct=ct+1
+  bt11u      =>sgrid(1:lx,1:ly,ct); name2d(ct)='S8A'; com2d(ct)='11u Brightness Temperature' ; ct=ct+1
 
 
   thetasfc   =>sgrid(1:lx,1:ly,ct); name2d(ct)='TH '; com2d(ct)='Sfc Potential Temperature'       ; ct=ct+1
