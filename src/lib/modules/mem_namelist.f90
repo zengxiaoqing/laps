@@ -29,6 +29,8 @@ include 'lapsparms.for'
         real ref_base_useable
         real r_hybrid_first_gate
         real aircraft_time_window
+        real hydrometeor_scale_pcp
+        real hydrometeor_scale_cld
         integer  maxstns
         integer  N_PIREP
         integer max_snd_grid
@@ -212,6 +214,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
                   ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
+                  ,hydrometeor_scale_pcp,hydrometeor_scale_cld &
                   ,vert_rad_meso,vert_rad_sao &
                   ,vert_rad_pirep,vert_rad_prof      &
                   ,silavwt_parm,toptwvl_parm &
