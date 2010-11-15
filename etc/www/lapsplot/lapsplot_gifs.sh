@@ -45,7 +45,7 @@ echo "setting ulimit"
 ulimit -t 1000
 ulimit -t
 
-mkdir -p /scratch/lapb/www
+#mkdir -p /scratch/lapb/www
 mkdir -p $SCRATCH_DIR/$proc
 cd $SCRATCH_DIR/$proc
 
