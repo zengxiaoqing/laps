@@ -116,7 +116,8 @@ my $all_roots_equal = "F";
 if(! defined($LAPS_DATA_ROOT) ){$LAPS_DATA_ROOT = "$LAPSINSTALLROOT/data";
    if($LAPS_SRC_ROOT eq $LAPSINSTALLROOT){
       $all_roots_equal = "T";
-      print "WARNING: All lapsroots are equal\n";
+      print "WARNING: All lapsroots are equal - exiting\n";
+      exit;
    }
 }
 
@@ -131,7 +132,8 @@ if($LAPS_SRC_ROOT eq $LAPSINSTALLROOT && $all_roots_equal ne "T"){
    $DATAROOT = substr($DATAROOT,0,$strlen-1) if(substr($DATAROOT,$strlen,$strlen) eq "/");
    if("$DATAROOT"."$DOMAIN_NAME" eq $LAPS_SRC_ROOT){
       $all_roots_equal = "T";
-      print "WARNING: All lapsroots are equal\n";
+      print "WARNING: All lapsroots are equal - exiting\n";
+      exit;
    }
 }
 
