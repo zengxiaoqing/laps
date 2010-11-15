@@ -14,8 +14,8 @@ open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
 
 use Cwd 'chdir'; #from the camel book(387): "override chdir; keep PWD up to date"
 
-use lib "@prefix@/etc/www"; # Set this to your path for 'cgi-lib.pl'
-require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www OR /w3/utilities
+use lib "@prefix@/etc/www"; # Path for 'cgi-lib.pl'
+require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www (formerly /w3/utilities)
 
 use lib "@prefix@/etc"; # Set this to your path for 'laps_tools.pm'
 require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
@@ -41,7 +41,7 @@ $web_root = "/w3/lapb";
 
 # request_root is where the '$request_root/lapsplot/scratch' directory tree
 # should be set up
-$request_root = "/w3/lapb/request";
+$request_root = "$web_root/request";
 
 $filename = "$request_root/lapsplot/selected.in";
 open(FILE,$filename) or die "Can't open $filename.";
@@ -693,7 +693,7 @@ print <<"EOF";
 
 </FORM>
 
-<IMG SRC="/albers/colorbar.gif">
+<IMG SRC="@prefix@/etc/www/colorbar.gif">
 
 <p>
 
