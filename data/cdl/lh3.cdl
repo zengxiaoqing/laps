@@ -18,7 +18,7 @@ netcdf lh3 {
             rh3:_FillValue = 1.e+37f;
             rh3:long_name="relative humidity";
             rh3:units="percent";
-            rh3:valid_range= 0.f, 0.100f;
+            rh3:valid_range= 0.f, 1.000f;
             rh3:LAPS_var="RH3";
             rh3:lvl_coord="HPA ";
 	    rh3:LAPS_units="PERCENT";
@@ -32,7 +32,7 @@ netcdf lh3 {
             rhl:_FillValue = 1.e+37f;
             rhl:long_name="relative humidity from liquid";
             rhl:units="percent";
-            rhl:valid_range= 0.f, 0.100f;
+            rhl:valid_range= 0.f, 1.000f;
             rhl:LAPS_var="RHL";
             rhl:lvl_coord="HPA ";
             rhl:LAPS_units="PERCENT";
