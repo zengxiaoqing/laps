@@ -29,6 +29,7 @@
           character*7 c_units_type
           character*7 c_pbl_depth_units
           character*10 c_ob_color
+          character*20 btemp_colortable
 
 	end type namelist_type
 
