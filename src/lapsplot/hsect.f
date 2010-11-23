@@ -94,7 +94,7 @@ cdis
         character*4 c4_log
         character*7 c7_string
         character*9 c9_string,a9_start,a9_end
-        character*20 colortable
+        character*20 colortable, btemp_table
         character infile*255
         character*40 c_model
         character*200 new_dataroot
@@ -248,7 +248,7 @@ cdis
         real rh_2d(NX_L,NY_L)
         real sh_2d(NX_L,NY_L)
 
-        real k_to_f, k_to_c
+        real k_to_f, k_to_c, c_to_k
         real make_rh
 
         include 'laps_cloud.inc'
@@ -323,6 +323,10 @@ c       include 'satellite_dims_lvd.inc'
 
         sfctdc_h =  50.
         sfctdc_l = -30.
+
+        btemp_l = -50.
+        btemp_h = +40.
+        btemp_table = 'linear'
 
 !       Surface Wind Range
         chigh_sfcwind = namelist_parms%chigh_sfcwind
@@ -1641,8 +1645,12 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type .eq. 'tw')then
-            i4time_temp = i4time_ref / laps_cycle_time * laps_cycle_time
-
+	    if (laps_cycle_time.eq.0)then
+	        i4time_temp=i4time_ref
+	    else
+                i4time_temp = i4time_ref / laps_cycle_time 
+     1                                   * laps_cycle_time
+            endif
 !           Read in surface temp data
             var_2d = 'T'
 
@@ -2014,6 +2022,7 @@ c
               goto1200
              endif
 
+             colortable = 'linear'
              if(ilvd.gt.1)then
               c_label='B-Temps (C): '//c_sat_id(k)//'/'//var_2d
               vasmx=-255.
@@ -2031,8 +2040,9 @@ c
               chigh = +40.
               cint = (vasmx-vasmn)/10.
               scale = 1e0
-              scale_l = +40.          ! for image plots
-              scale_h = -50.          ! for image plots
+              scale_l = btemp_h       ! for image plots
+              scale_h = btemp_l       ! for image plots
+              colortable = btemp_table
              elseif(var_2d.eq.'ALB')then
               c_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
@@ -2051,7 +2061,7 @@ c
              call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
              if(l_plot_image)then
-                 call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear'
+                 call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,colortable
      1                ,n_image,scale,'hsect',plot_parms,namelist_parms)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call setusv_dum(2hIN,7)
@@ -2345,11 +2355,17 @@ c
 
             if(c_type .eq. 'ra')mode = 1
             if(c_type .eq. 'cl')mode = 2
-
-            i4time_tmp1 = (i4time_ref)/laps_cycle_time * laps_cycle_time
-            i4time_tmp2 = (i4time_ref-2400)/laps_cycle_time 
-     1                  * laps_cycle_time
-
+cabdel	    
+            if (laps_cycle_time.eq.0)then
+	        i4time_tmp1= i4time_file
+                i4time_tmp2=i4time_ref-2400
+            else
+                i4time_tmp1 = (i4time_ref)/laps_cycle_time 
+     1                      * laps_cycle_time
+                i4time_tmp2 = (i4time_ref-2400)/laps_cycle_time 
+     1                      * laps_cycle_time
+        endif
+cabdel	
             if(c_type .eq. 'rr')then
                 if(i4time_ref .ne. i4time_tmp1)then
                     i4time_get = i4time_tmp2
@@ -2685,10 +2701,15 @@ c
             elseif(c_field(1:2) .eq. 'lr')then ! Low Lvl Reflectivity data
                 if(c_type .eq. 'rf')then
                     write(6,*)' Getting analyzed lmt file'
-
-                    i4time_hour = (i4time_radar+laps_cycle_time/2)
+                     
+c abdel       
+                    if (laps_cycle_time.eq.0)then
+	                i4time_hour= (i4time_radar+laps_cycle_time/2)
+	            else
+                        i4time_hour = (i4time_radar+laps_cycle_time/2)      
      1                              /laps_cycle_time * laps_cycle_time
-
+	            endif
+cabdel	
                     var_2d = 'LLR'
                     ext = 'lmt'
                     call get_laps_2dgrid(i4time_ref,laps_cycle_time*100       
@@ -2860,9 +2881,12 @@ c
      1                             ,namelist_parms,plot_parms)
 
             elseif(c_field .eq. 'mt')then ! Do Max Tops
-                i4time_hour = (i4time_radar+laps_cycle_time/2)
-     1                          /laps_cycle_time * laps_cycle_time
-
+	        if (laps_cycle_time.eq.0)then
+	           i4time_hour = (i4time_radar+laps_cycle_time/2)
+	        else
+                   i4time_hour = (i4time_radar+laps_cycle_time/2)
+     1                           /laps_cycle_time * laps_cycle_time
+                endif
                 var_2d = 'LMT'
                 ext = 'lmt'
                 call get_laps_2dgrid(i4time_hour,laps_cycle_time*100
@@ -2916,8 +2940,14 @@ c
 
                     var_2d = 'R06'
                     ext = 'lmr'
-                    i4time_hour = (i4time_radar+laps_cycle_time/2)
-     1                          /laps_cycle_time * laps_cycle_time
+c abdel       
+                    if (laps_cycle_time.eq.0)then	
+	    	        i4time_hour = (i4time_radar+laps_cycle_time/2)
+		    else  
+                        i4time_hour = (i4time_radar+laps_cycle_time/2)
+     1                              /laps_cycle_time * laps_cycle_time
+                    endif
+Cabdel
                     call make_fnam_lp(i4time_hour,asc9_tim_r,istatus)
                     call get_laps_2d(i4time_hour,ext,var_2d,units_2d
      1                    ,comment_2d,NX_L,NY_L,radar_array_adv,istatus)       
@@ -3411,9 +3441,12 @@ c
      1                          ,21x,'? ',$)
 
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
-
-            i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
-
+c abdel       
+            if (laps_cycle_time.eq.0)then
+	        i4time_lwc = i4time_ref
+	    else
+                i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
+	    endif
             if(c_type .eq. 'la')then ! Returns Adiabatic LWC
                 if(k_level .gt. 0)then
                     call mklabel(k_mb,
@@ -3653,10 +3686,14 @@ c
         elseif(c_type .eq. 'mv' .or. c_type .eq. 'ic')then
             write(6,1514)
 
-            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
-
-            i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
-
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L) 
+c abdel       
+            if (laps_cycle_time.eq.0)then	
+	        i4time_lwc = i4time_ref
+	    else
+                i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
+	    endif
+c abdel
             if(c_type .eq. 'mv')then
                 if(k_level .gt. 0)then
                     call mklabel(k_mb
@@ -3877,9 +3914,12 @@ c
      1                       ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
                k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
             endif
-
-            i4time_pcp = i4time_ref/laps_cycle_time * laps_cycle_time
-
+c abdel       
+            if(laps_cycle_time.eq.0)then 
+               i4time_pcp = i4time_ref
+	    else     
+               i4time_pcp = i4time_ref/laps_cycle_time * laps_cycle_time
+	    endif
             l_precip_pregen = .true.
 
             call input_product_info(i4time_pcp              ! I
@@ -4570,7 +4610,9 @@ c                   cint = -1.
             write(6,1513)
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
-            if(i4time_temp .eq. 0)then
+            if(laps_cycle_time .eq. 0)then
+	    i4time_temp = i4time_ref 
+	    else
                 i4time_temp = (i4time_ref / laps_cycle_time) 
      1                        * laps_cycle_time
             endif
@@ -4584,7 +4626,9 @@ c                   cint = -1.
             write(6,1513)
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
-            if(i4time_temp .eq. 0)then
+            if(laps_cycle_time.eq. 0)then
+	    i4time_temp = i4time_ref
+	    else
                 i4time_temp = (i4time_ref / laps_cycle_time) 
      1                        * laps_cycle_time
             endif
@@ -4611,7 +4655,9 @@ c                   cint = -1.
             k_level = 0
             k_mb = 0
 
-            if(i4time_temp .eq. 0)then
+            if(laps_cycle_time .eq. 0)then
+	    i4time_temp = i4time_ref
+	    else
                 i4time_temp = (i4time_ref / laps_cycle_time) 
      1                        * laps_cycle_time
             endif
@@ -5278,6 +5324,11 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'SLP')then
                     call ccpfil(field_2d,NX_L,NY_L,1040.,960.
      1                         ,'spectral',n_image,scale,'hsect' 
+     1                         ,plot_parms,namelist_parms) 
+                elseif(var_2d .eq. 'S8A')then
+                    call ccpfil(field_2d,NX_L,NY_L
+     1                         ,c_to_k(btemp_h),c_to_k(btemp_l)
+     1                         ,btemp_table,n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'LWO')then
 !                   call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
@@ -6936,9 +6987,13 @@ c             if(cint.eq.0.0)cint=0.1
 
             c_metacode = 'c '
             i_overlay = 1
-
-            i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
-!       1                                            -laps_cycle_time
+c abdel	    
+            if (laps_cycle_time.eq.0)then
+	      i4time_plot = i4time_file
+            else
+              i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
+            endif
+c abdel	  
             call setusv_dum(2hIN,34)
 
             iflag = 0
@@ -7199,8 +7254,13 @@ c             if(cint.eq.0.0)cint=0.1
             c_metacode = 'c '
             i_overlay = 1
 
-            i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
-!       1                                            -laps_cycle_time
+c abdel       
+            if (laps_cycle_time.eq.0)then
+               i4time_plot = i4time_file
+	    else
+               i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
+!       1                                               -laps_cycle_time
+            endif
             call setusv_dum(2hIN,34)
 
             iflag = 0
@@ -7317,9 +7377,13 @@ c             if(cint.eq.0.0)cint=0.1
 
             c_metacode = 'c '
             i_overlay = 1
-
-            i4time_plot = i4time_file ! /laps_cycle_time*laps_cycle_time
+c abdel       
+            if (laps_cycle_time.eq.0)then
+	        i4time_plot = i4time_file
+	    else
+                i4time_plot = i4time_file ! /laps_cycle_time*laps_cycle_time
 !       1                                            -laps_cycle_time
+	    endif
 
             call setusv_dum(2hIN,34) ! Grey
 !           call setusv_dum(2HIN,11)
@@ -8189,7 +8253,9 @@ c             if(cint.eq.0.0)cint=0.1
         endif
 
         i4time_interval = i4time_end - i4time_start
-
+C    abdel       
+        if (laps_cycle_time.eq.0) i4time_interval = 0
+	    
         if(i4time_interval .ne. 
      1       (i4time_interval/laps_cycle_time) *laps_cycle_time)then
             write(6,*)' ERROR: Interval is not an integral # of cycles'
