@@ -1019,12 +1019,26 @@ c
      1                           ,istat_vis_potl                       ! I
      1                           ,cldtop_temp_k,istatus)               ! O
 
-!           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point).
-!           A condition could be added that the lower crossing point has higher RH.
-!           A "near fit" of TB8 and temp could also be considered if the RH is high.
+!           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point)
 
+! abdel added this when the model is the brighteness temp is too cold than the model a klaps level
+	               
+	    if (cldtop_temp_k .le. temp_3d(i,j,klaps))then             
+                frac_k = (temp_3d(i,j,klaps) - temp_3d(i,j,klaps-1))
+     1                 /  (cldtop_temp_k     - temp_3d(i,j,klaps))
+              
+                arg = heights_3d(i,j,klaps) + frac_k *
+     1               (heights_3d(i,j,klaps) - heights_3d(i,j,klaps-1))
+
+                if(arg .ge. topo)then
+                    cldtop_tb8_m = arg
+                endif
+            endif 
+		
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! original version
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
             temp_above = temp_3d(i,j,klaps)
-
             do kl = klaps-1,k_terrain,-1
 
                 if( (temp_3d(i,j,kl) - cldtop_temp_k) *
