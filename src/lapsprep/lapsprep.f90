@@ -96,7 +96,7 @@
     ! Miscellaneous local variables
                                         
     INTEGER :: out_loop, loop , var_loop , i, j, k, kbot,istatus
-    LOGICAL :: file_present
+    LOGICAL :: file_present, in_prebal_list
     REAL    :: rhmod, lwcmod, shmod, icemod
     REAL    :: rhadj
     REAL    :: lwc_limit
@@ -172,13 +172,32 @@
         CYCLE file_loop
       ENDIF
 
-      !  Build the input file name.   the input file.
+      !  Determine based on extension whether to use prebalanced directories
 
-      IF ((TRIM(ext(loop)) .NE. 'lw3' ).AND. & ! list of balance files
-          (TRIM(ext(loop)) .NE. 'lt1' ).AND. &
-          (TRIM(ext(loop)) .NE. 'lq3' ).AND. &
-!         (TRIM(ext(loop)) .NE. 'lsx' ).AND. &
-          (TRIM(ext(loop)) .NE. 'lh3' )) THEN
+      if(use_sfc_bal)then
+          IF ((TRIM(ext(loop)) .NE. 'lw3' ).AND. & ! list of balance files
+              (TRIM(ext(loop)) .NE. 'lt1' ).AND. &
+              (TRIM(ext(loop)) .NE. 'lq3' ).AND. &
+              (TRIM(ext(loop)) .NE. 'lsx' ).AND. &
+              (TRIM(ext(loop)) .NE. 'lh3' )) THEN
+              in_prebal_list = .true.
+          ELSE
+              in_prebal_list = .false.
+          ENDIF
+      else ! false
+          IF ((TRIM(ext(loop)) .NE. 'lw3' ).AND. & ! list of balance files
+              (TRIM(ext(loop)) .NE. 'lt1' ).AND. &
+              (TRIM(ext(loop)) .NE. 'lq3' ).AND. &
+!             (TRIM(ext(loop)) .NE. 'lsx' ).AND. &
+              (TRIM(ext(loop)) .NE. 'lh3' )) THEN
+              in_prebal_list = .true.
+          ELSE
+              in_prebal_list = .false.
+          ENDIF
+      endif
+
+      !  Build the input file name.   the input file.
+      IF (in_prebal_list) THEN
         input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
             TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
             TRIM(ext(loop))
