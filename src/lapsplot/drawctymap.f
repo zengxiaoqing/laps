@@ -45,11 +45,22 @@ c
      +       polat,polon,rrot
 
 c
+!abdel      
+      DOUBLE PRECISION GRSP,DPOLAT,DPOLON,DSW(2),DNE(2)
+      INTEGER IRGL
+      
+      DATA GRSP,IRGL / 1.D0 , 0  /
+      PARAMETER (NCRA=10000,NGPS=10,LRWK=2*NCRA)
+
+      DIMENSION XCRA(NCRA),YCRA(NCRA)
+      DIMENSION RWRK(LRWK)     
+      EQUIVALENCE (RWRK(1),XCRA(1)),(RWRK(NCRA+1),YCRA(1))
+! abdel     
+
       integer jproj,jjlts,jgrid,jus,jdot,ier
 c
       COMMON/SUPMP9/DS,DI,DSRDI
-      common /zoom/       zoom
-
+      common /zoom/       zoom 
 !     DI = 50.
 !     polat=90.
 
@@ -60,6 +71,7 @@ c
       pl4(1)=ne(2)
       jjlts=-2
       jgrid=0
+ 
 
 !     call get_lapsplot_parms(namelist_parms,istatus)       
 
@@ -109,7 +121,21 @@ c
                   call mpsetr('GR',float(jgrid))
                   call mapgrd()
               endif
+c abdel	      
           elseif(mode_supmap .eq. 4)then
+              write(6,*)' Calling SUB submap=4 for europe...'
+              DPOLAT=polat
+              DPOLON=polon
+              DSW(1)=sw(1)
+              DSW(2)=sw(2)
+              DNE(1)=ne(1)
+              DNE(2)=ne(2)
+              CALL MDPROJ ('ST',DPOLAT,DPOLON,0.D0)
+              CALL MDPSET ('CO',DSW(1),DSW(2),DNE(1),DNE(2))
+              CALL MAPSTD ('GR',GRSP)
+              CALL MDRGOL (IRGL,RWRK,LRWK)    
+          
+          elseif(mode_supmap .eq. 5)then
               write(6,*)' Accessing RANGS database...'
               write(6,*)' Not yet supported - stop' 
               stop
@@ -120,7 +146,7 @@ c
 
           jgrid=0                        ! Do not draw subsequent lat/lon lines
 
-      else
+       else
           write(6,*)' Omitting counties ',domsize
      1             ,namelist_parms%continent_line_width
 
@@ -153,11 +179,27 @@ c
               call mpsetr('GR',float(jgrid))
               call mapgrd()
           endif
+c abdel	  
       elseif(mode_supmap .eq. 4)then
+            write(6,*)' Calling SUB submap=4 for europe...'
+            DPOLAT=polat
+            DPOLON=polon
+            DSW(1)=sw(1)
+            DSW(2)=sw(2)
+            DNE(1)=ne(1)
+            DNE(2)=ne(2)
+            CALL MDPROJ ('ST',DPOLAT,DPOLON,0.D0)
+            CALL MDPSET ('CO',DSW(1),DSW(2),DNE(1),DNE(2))
+            CALL MAPSTD ('GR',GRSP)
+            CALL MDRGOL (IRGL,RWRK,LRWK)	  
+	  
+      else
           write(6,*)' Accessing RANGS database...'
           write(6,*)' Not yet supported - stop' 
           stop
+
       endif
+
       if(ier .ne. 0)write(6,*)' ier = ',ier
 
       call sflush
@@ -166,7 +208,7 @@ c
       call setusv_dum(2HIN,icol_sta)
 
       jgrid=0                                ! Do not draw lat/lon lines
-
+       
       if(mode_supmap .eq. 1)then
           write(6,*)' Plotting Continents ',mode_supmap,jgrid
           jus=-1
@@ -199,6 +241,7 @@ c
        character*7 c_units_type
        character*7 c_pbl_depth_units
        character*10 c_ob_color
+       character*20 btemp_colortable
        logical l_discrete,l_sphere,l_low_fill,l_high_fill       
        real time_zone
 
@@ -212,6 +255,7 @@ c
      1                       ,mode_supmap, iraster, icol_barbs
      1                       ,dist_plot_ua, dist_plot_sfc
      1                       ,c_ob_color, i_background_color
+     1                       ,btemp_colortable
 
 !      Set defaults
        latlon_int = 0
@@ -227,6 +271,7 @@ c
        chigh_cape = 7000.
        c_ob_color = 'default'
        i_background_color = 2
+       btemp_colortable = 'linear'
  
        call get_directory('static',static_dir,len_dir)
 
@@ -252,6 +297,7 @@ c
        namelist_parms%chigh_3dwind = chigh_3dwind
        namelist_parms%chigh_cape = chigh_cape
        namelist_parms%c_ob_color = c_ob_color
+       namelist_parms%btemp_colortable = btemp_colortable
        namelist_parms%i_background_color = i_background_color
        namelist_parms%l_discrete = l_discrete
        namelist_parms%l_sphere = l_sphere
@@ -276,3 +322,21 @@ c
        return
 
        end
+cabdel       
+              SUBROUTINE MDRGDI (DINM)
+C
+C This is a user-replaceable routine that returns the name of the
+C directory in which the RANGS/GSHHS data files have been placed.
+C
+       CHARACTER*(*) DINM
+
+C Fitxer bo
+C Return the name of the directory where the RANGS/GSHHS data reside.
+C
+       DINM='/usr/local/ncarg/lib/ncarg/database/RANGS_GSHHS'
+C
+C Done.
+C
+       RETURN
+
+       END
