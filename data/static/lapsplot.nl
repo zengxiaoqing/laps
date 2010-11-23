@@ -76,7 +76,9 @@ c               plots (vxx files)
 c
 c mode_supmap - (1) use map database in 'data/static/ncarg/*'
 c               (3) use ezmap database in 'NCARG_ROOT/lib/ncarg/database'
-c               (4) use rangs database linked into 'data/static/ncarg/rangs/*'
+c               (4) use rangs database with a default location of 
+c                   'NCARG_ROOT/lib/ncarg/database/RANGS_GSHHS'
+c                   see http://ncl.ucar.edu/Document/Graphics/rangs.shtml
 c
 c iraster - (0)  use default settings for raster image plots (vs contour fill)
 c           (+1) use faster raster image plots whenever possible    
