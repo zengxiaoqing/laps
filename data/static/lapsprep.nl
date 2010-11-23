@@ -1,6 +1,7 @@
 &lapsprep_nl
   hotstart = .true.,
   balance  = .true., 
+  use_sfc_bal = .false., 
   hydrometeor_scale_factor_pcp = 5.0,
   hydrometeor_scale_factor_cld = 0.5,
   output_format = 'wps',
@@ -16,9 +17,14 @@ c    Logical flag, set to true to pull in the five hydrometeor species
 c    into the output files.  
 c
 c  balance:
-c    Logical flag, set to true to use the balanced wind, temp, height, sfc 
-c    fields.  Normally set to true if hotstart is true. If this is set
-c    to true then lrunbal in balance.nl should also be set to true. 
+c    Logical flag, set to true to use the balanced wind, temp, height, and
+c    potentially sfc fields.  Normally set to .true. if 'hotstart' is true. If 
+c    this is set to .true. then 'lrunbal' in 'balance.nl' should also be set to 
+c    .true.. 
+c
+c  use_sfc_bal:
+c    Logical flag, set this to use balanced surface fields (active only when 
+c    when 'balance' is set to .true.)
 c
 c  hydrometeor_scale_factor:	
 c    A factor which scales the hydrometeor concentrations for a grid
