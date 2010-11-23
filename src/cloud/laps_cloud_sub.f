@@ -2010,7 +2010,7 @@ C       EW SLICES
                     endif
 
                 elseif(clouds_0d .lt. 0.0)then 
-                    if(clouds_0d .lt. -0.0001)then
+                    if(clouds_0d .lt. -0.0005)then
                         write(6,*)' Error, clouds_0d << 0',i,j,k
      1                                    ,clouds_0d   
                         stop
