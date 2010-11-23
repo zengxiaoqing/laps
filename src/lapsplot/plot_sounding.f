@@ -533,20 +533,6 @@
      1            '    rain      snow      pcpice   u (m/s)   v (m/s)'       
         write(6,*)'                                                '
      1          //'g/m**3    g/m**3    g/m**3    g/m**3    g/m**3'
-        do iz = 1,NZ_L
-            write(6,1)iz,
-     1                pres_1d(iz)/100.,
-     1                k_to_c(temp_vert(iz)), 
-     1                td_vert(iz),
-     1                rh_vert(iz),
-     1                lwc_vert(iz)*1000.,
-     1                ice_vert(iz)*1000.,
-     1                rain_vert(iz)*1000.,
-     1                snow_vert(iz)*1000.,
-     1                pice_vert(iz)*1000.
- 1          format(i4,4f10.2,5f10.3)
-        enddo ! iz
-        write(6,*)
 
 !       Convert sfc variables
         p_sfc_pa = pres_2d(isound,jsound)
@@ -555,6 +541,26 @@
         td_sfc_k = td_2d(isound,jsound)
         pw_sfc   = pw_2d(isound,jsound)
         topo_sfc = topo(isound,jsound)
+
+        do iz = 1,NZ_L
+            iz_test = min((iz+1),NZ_L)
+            if(pres_1d(iz_test)/100. .lt. p_sfc_pa/100.)then
+                write(6,1)iz,
+     1                pres_1d(iz)/100.,
+     1                k_to_c(temp_vert(iz)), 
+     1                td_vert(iz),
+     1                rh_vert(iz),
+     1                lwc_vert(iz)*1000.,
+     1                ice_vert(iz)*1000.,
+     1                rain_vert(iz)*1000.,
+     1                snow_vert(iz)*1000.,
+     1                pice_vert(iz)*1000.,
+     1                u_vert(iz),
+     1                v_vert(iz)
+ 1              format(i4,4f10.2,5f10.3,2f10.1)
+            endif
+        enddo ! iz
+        write(6,*)
 
         write(6,*)' Sfc P (mb) = ', p_sfc_pa/100.
      1           ,' Terrain Height (m)= ',topo_sfc 
