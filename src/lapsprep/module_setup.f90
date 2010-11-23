@@ -48,7 +48,7 @@ MODULE setup
    REAL, PARAMETER     :: missingflag = 1.e37
    ! Namelist items
 
-   LOGICAL            :: hotstart,balance,make_sfc_uv
+   LOGICAL            :: hotstart,balance,make_sfc_uv,use_sfc_bal
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
    REAL               :: snow_thresh, lwc2vapor_thresh
@@ -97,6 +97,7 @@ CONTAINS
 
       NAMELIST /lapsprep_nl/ hotstart      , &
                          balance           , &
+                         use_sfc_bal       , &
 	    hydrometeor_scale_factor_pcp   , &
 	    hydrometeor_scale_factor_cld   , &
                          make_sfc_uv       , &
@@ -118,6 +119,7 @@ CONTAINS
       make_sfc_uv = .false.
       rai_frac = 1.0
       sno_frac = 1.0
+      use_sfc_bal = .false.
  
       ! Open the namelist
 
