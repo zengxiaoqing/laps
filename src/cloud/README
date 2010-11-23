@@ -4,6 +4,7 @@ main                                                     laps_cloud.f
     laps_cloud_sub                                       laps_cloud_sub.f
         get_cloud_parms                                      "
         get_modelfg                                      get_fg_cloud.f
+            rh_to_cldcv                                  lib/rh2cld.f
         insert_sao                                       insertsao.f
             read_surface_sa                              lib/read_surface_sa.f
                 read_cloud_obs                               "
