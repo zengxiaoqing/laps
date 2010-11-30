@@ -355,7 +355,7 @@ c             lga_status = -99
          print*,'ERROR: LGA infinite loop condition found'
       endif
 c
-      print*,'Number of lga/lgb files written = ',n_written
+      print*,'Number of hinterp lga/lgb files written = ',n_written
       do i = 1,n_written
           print*,c_ftimes_written(i)
       enddo ! i
