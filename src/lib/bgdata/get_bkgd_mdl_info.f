@@ -10,11 +10,13 @@ c     USE laps_static
       implicit none
 
       include 'grid_fname.cmn'
+      include 'bgdata.inc'
 
       character*200 fullname, fpathname, fpathname_save
+      character*200 fpathname_a(maxbgmodels)
       character*200 cfname_internal
       character*200 outdir
-      character*200 vtable
+      character*200 vtable,headers_file
       character*132 cmodel
       character*30  projname
       character*13  fname13
@@ -31,7 +33,7 @@ c     USE laps_static
       integer       nzbg_sh
       integer       nzbg_uv
       integer       nzbg_ww
-      integer       lenfn,nclen,lenn,leng
+      integer       lenfn,nclen,leng,lenh,lenhf,nheaders,lenp,iheader
       integer       bgmodel
       integer       record
       integer       n_valtimes
@@ -50,7 +52,7 @@ c     USE laps_static
       real          dxbg,dybg
       real          rotation
 
-      logical       cross_dateline,cross_dateline_save 
+      logical       cross_dateline,cross_dateline_save, l_valid_header 
 
       save fpathname_save,nxbg_save, nybg_save, nzbg_ht_save,
      &     gproj_save,dlat_save,dlon_save,Lat0_save,Lat1_save,Lon0_save,       
@@ -627,21 +629,94 @@ c --------------------
       if(bgmodel.eq.13)
      &then
 
-         write(*,*) "CALL DEGRIB_NAV:" 
-         write(*,*) " grib filename", fullname
-
          call get_directory('static',outdir,lenfn)    
          vtable=outdir(1:lenfn)//'Variable_Tables/Vtable.'//cmodel
 
-!        Determine basename and compare to saved one
+!        Determine basename and compare to saved and/or read in ones
          call get_directory_length(fullname,lenfn)
          fpathname = fullname(1:lenfn)
+
+         if(fpathname_save .ne. fpathname)then ! header info not saved in memory
+
+!          Read header information                     
+!          This is just for testing right now. It's possible that more than
+!          just the header info is needed and we may still have to call
+!          DEGRIB_NAV at least once to do some internal processing.
+
+           write(6,*)' Checking header file info'
+           l_valid_header = .false.
+           call s_len(outdir,lenh)
+           headers_file=outdir(1:lenh)//'/Variable_Tables/headers.txt'       
+           call s_len(headers_file,lenhf)
+           write(6,*)' Read headers file = ',headers_file(1:lenhf)
+           open(22,file=headers_file(1:lenhf),status='old',err=97)
+           read(22,*,err=98)nheaders
+           do iheader = 1,nheaders
+             read(22,11,err=98)fpathname_a(iheader)
+11           format(a)
+!            write(6,*)' test - header path = ',iheader,  
+!    1                 fpathname_a(iheader)             
+             read(22,*,err=98)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
+     1         ,Lat0,Lat1,Lon0
+     1         ,cgrddef,cross_dateline,sw,ne
+
+             if(fpathname_a(iheader) .eq. fpathname)then ! valid header
+                 l_valid_header = .true. ! can be turned off  
+                 goto 99
+             else
+                 write(6,*)' No header match '
+                 write(6,*)fpathname_a(iheader)
+                 write(6,*)fpathname
+             endif
+           enddo ! iheader
+
+           goto 99
+
+ 97        write(6,*)' Error opening header info'
+           goto 100
+
+ 98        write(6,*)' Error reading header info'
+           goto 100
+
+ 99        write(6,*)' Header info successfully read in'
+100        close(22)
         
-         if(fpathname .ne. fpathname_save)then
-!          fullname, vtable are assumed as inputs, the rest outputs
-           call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
-     &     gproj,dlat,dlon,Lat0,Lat1,Lon0,cgrddef,cross_dateline,
-     &     sw(1),sw(2),ne(1),ne(2),istatus)
+           if(l_valid_header)then
+             write(6,*)' Valid DEGRIB_NAV header info has been read in'
+             call s_len(fpathname,lenp)
+             write(6,11)fpathname(1:lenp)
+             write(6,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
+     1         ,Lat0,Lat1,Lon0
+     1         ,cgrddef,cross_dateline,sw,ne
+             istatus = 1
+ 
+             call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
+     &       gproj,dlat,dlon,Lat0,Lat1,Lon0,cgrddef,cross_dateline,
+     &       sw(1),sw(2),ne(1),ne(2),.false.,istatus)
+
+           else ! call degrib_nav to obtain header info
+!            fullname, vtable are assumed as inputs, the rest outputs
+             write(*,*) "CALL DEGRIB_NAV:" 
+             write(*,*) " grib filename", fullname
+
+             call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
+     &       gproj,dlat,dlon,Lat0,Lat1,Lon0,cgrddef,cross_dateline,
+     &       sw(1),sw(2),ne(1),ne(2),.true.,istatus)
+
+!            Write header information into a file for later retrieval
+             call s_len(outdir,lenh)
+             headers_file=outdir(1:lenh)//'/Variable_Tables/headers.txt'       
+             call s_len(headers_file,lenhf)
+             write(6,*)' Write headers file = ',headers_file(1:lenhf)
+             open(22,file=headers_file(1:lenhf),status='unknown')
+             nheaders = 1
+             write(22,*)nheaders
+             write(22,11)fpathname
+             write(22,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon,Lat0,Lat1,Lon0
+     1       ,cgrddef,cross_dateline,sw,ne
+             close(22)
+
+           endif ! call degrib_nav
 
 !          Save variables if we need them later
            fpathname_save = fpathname
