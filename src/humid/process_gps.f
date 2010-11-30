@@ -72,26 +72,61 @@ c     input variables
 
       integer i,j
 
-      call read_gps (path, filetime, time_diff,
-     1     gps_tpw, gps_error, gps_lat,
-     1     gps_lon, gps_num, gps_n,
-     1     istatus)
+c     call to normal public read left intact (gps_switch 1)
 
-      if (
-     1     istatus .ne. 1
-     1     .or.
-     1    gps_num .eq. 0
-     1     ) then               ! failure
-
-         write(6,*) 'failure to acquire gvap data'
-         istatus = 0
+      if (gps_switch .eq. 1 ) then ! routine data read
+         
+         
+         call read_gps (path, filetime, time_diff,
+     1        gps_tpw, gps_error, gps_lat,
+     1        gps_lon, gps_num, gps_n,
+     1        istatus)
+         
+         if (
+     1        istatus .ne. 1
+     1        .or.
+     1        gps_num .eq. 0
+     1        ) then            ! failure
+            
+            write(6,*) 'failure to acquire gvap data'
+            istatus = 0
          return                 !istatus = fail
-
+         
       else
-
+         
          write(6,*) gps_num, ' number of stations read in file'
-
+         
       endif
+      
+      elseif (gps_switch .eq. 2) then ! madis read
+
+         call read_madis_gps (path, filetime, time_diff,
+     1        gps_tpw, gps_error, gps_lat,
+     1        gps_lon, gps_num, gps_n,
+     1        istatus)
+         
+         if (
+     1        istatus .ne. 1
+     1        .or.
+     1        gps_num .eq. 0
+     1        ) then            ! failure
+            
+            write(6,*) 'failure to acquire gvap data'
+            istatus = 0
+            return              !istatus = fail
+            
+         else
+            
+            write(6,*) gps_num, ' number of stations read in file'
+            
+         endif
+         
+      endif !  end figuring out which gps to read
+      
+      
+
+
+c     carry on as before with gps processing
 
       call analz_gps (gps_lat,gps_lon,gps_tpw,gps_num,glat,
      1     glon,gps_data_out,

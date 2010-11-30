@@ -43,7 +43,7 @@ SRC=module_sfc_structure.f    analq.f            lq3_driver1a.f     rsr.f \
     analz_gvap.f       report_change.f \
     process_gps.f      read_gps.f         int_layerpw.f      cloud_sat.f \
     get_newest_file.f  weight_field.f     analz_gps.f        sigma_to_laps.f \
-    int_ipw.f          test_cloud.f  \
+    int_ipw.f          test_cloud.f	  read_madis_gps.f  \
     precip_water_profile.f \
     bias_correction.f  snd_step.f         analz_snd.f       impact_assess.f
 

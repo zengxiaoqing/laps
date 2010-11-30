@@ -299,12 +299,13 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 5.3 successfully incorporates'
-      write (6,*) '1) Test of input field for bad data (forced abort)'
-      write (6,*) '2) Bug fix for no cloud situation'
-      write (6,*) '3) state variables passed into this routine'
-      write (6,*) '4) state variables not modified (except for q)'
-      write (6,*) '5) input option to write output file in subroutine'
+      write (6,*) 'Release 5.4 successfully incorporates'
+      write (6,*) '1) Ability to read MADIS files for GPS data'
+      write (6,*) '2) Test of input field for bad data (forced abort)'
+      write (6,*) '3) Bug fix for no cloud situation'
+      write (6,*) '4) state variables passed into this routine'
+      write (6,*) '5) state variables not modified (except for q)'
+      write (6,*) '6) input option to write output file in subroutine'
       write (6,*) ' '
 
 
@@ -540,6 +541,8 @@ c     routine
 
       if (gps_switch .eq. 1) then
          write(6,*) 'Using GPS IPW data'
+      elseif(gps_switch.eq.2) then
+         write (6,*) 'using GPS madis data'
       else
          write(6,*) 'GPS data not used'
       endif
@@ -886,7 +889,7 @@ c     gps data inserstion step (bias correction to gvap only)
 
          write(6,*) 'Initiate bias correction of gps data'
 
-         if(gps_switch.eq.1) then ! local version
+         if(gps_switch.ge.1) then ! local version
 
          call process_gps (ii,jj,gps_data,gps_w,
      1        tpw,lat,lon,time_diff,gps_points,idotj,gps_count,

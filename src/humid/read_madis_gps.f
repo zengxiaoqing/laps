@@ -43,7 +43,7 @@ cdis
 cdis
 cdis
 
-      subroutine read_gps (path, filename, time_diff,
+      subroutine read_madis_gps (path, filename, time_diff,
      1     gps_tpw, gps_error, gps_lat, 
      1     gps_lon,gps_num,
      1     gps_n, istatus)
@@ -62,11 +62,11 @@ c     parameter list variables
       integer time_diff
       character*256 path 
       character*9 filename
-      character*9 filefound
+      character*13 filefound, cvt_i4time_wfo_fname13
       
 
 c     internal
-      integer istatus, ptg_index
+      integer istatus, ptg_index,i4time
       integer file_name_length
 
       integer recNum, nf_fid, nf_vid, nf_status
@@ -78,33 +78,29 @@ c     internal
 
 c     prep code
       call s_len(path, ptg_index)
-
-      file_name_length = 14
-      desired_ext = 'nc'
-
-
-      call get_newest_file (filename, time_diff,file_name_length,
-     1     path,ptg_index,filefound,desired_ext, de_index,
-     1     extension, extension_index, istatus)
-
-c     prep filename to fit
-
-
+c     create i4time locally from input filename (time) reference variable
+      call i4time_fname_lp (filename, i4time, istatus)
+c     adjust time to read prior hour (madis data of current hour will NOT
+c     contain any data
+      i4time = i4time - 3600 ! 3600 = 1 hour, subtraction, one hour earlier
+c     create filefound (wfo mode name) from local i4time just generated
+      filefound = cvt_i4time_wfo_fname13(i4time)
 C
-C  Open netcdf File for reading
+C  Open desired netcdf File for reading
 C
       nf_status = NF_OPEN(path(1:ptg_index)//'/'//
-     1     filefound//'0030o.'//extension(1:extension_index),
+     1     filefound,
      1     NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          istatus = 0
-         write(6,*) 'failure getting GPS data'
+         write(6,*) 'failure getting MADIS GPS data'
          return
       else
          istatus = 1
    
       endif
+
 C
 C  Fill all dimension values
 C
@@ -123,9 +119,11 @@ C
         print *,'dim recNum'
         istatus = 0
       endif
-      call read_gps_data (nf_fid , recNum, gps_tpw, gps_error, 
+      call read_madis_gps_data (nf_fid , recNum, gps_tpw, gps_error, 
      1     gps_lat, gps_lon,
      1     gps_n,gps_num)
+
+      
 
       return
       end
@@ -133,7 +131,7 @@ C
  
 C
 C
-      subroutine read_gps_data (nf_fid, recNum, gps_tpw, gps_error, 
+      subroutine read_madis_gps_data (nf_fid,recNum,gps_tpw,gps_error, 
      1     gps_lat, gps_lon,
      1     gps_n,gps_num)
       include 'netcdf.inc'
@@ -144,68 +142,94 @@ c     parameter list variables
       real gps_lat(gps_n)
       real gps_lon(gps_n)
 c
-      integer recNum, nf_fid, nf_vid, nf_status,i
+      integer recNum, nf_fid, nf_vid, nf_status,i,j
       character*80 staLongNam(recNum)
       character*5 staNam(recNum)
       real formalError(recNum), staLat(recNum), staLon(recNum), 
      +   waterVapor(recNum)
-      call read_gps_basics (nf_fid , recNum, formalError, staLat,
-     +    staLon, staLongNam, staNam, waterVapor)
+      double precision observationTime(recNum),latestTime
+
+      call read_gps_madis_basics (nf_fid , recNum, formalError, staLat,
+     +    staLon,  waterVapor, observationTime)
 C
 C The netcdf variables are filled - your code goes here
 C
+c     okay for the madis problem we are almost home.  we now have to 
+c     make a subtle mod to the old reader to make it look like the old reader
+c     in the old reader, the recNum was the total number of data, now
+c     that is not the case.  since madis uses recNum differently.
 
-      gps_num = recNum
-      do i = 1, recNum
-         gps_tpw(i) = waterVapor(i)
-         gps_error(i) = formalError(i)
-         gps_lat(i) = staLat(i)
-         gps_lon(i) = staLon(i)
+c     but in the old code we did introduce gps_num and now we will actually 
+c     use it as intended.
+
+      latestTime = 0.
+
+      do j = 1, recNum
+         if(waterVapor(j) .lt. 10000.) then ! good data
+            if (latestTime .le. observationTime(j)) then
+               latestTime = observationTime(j)
+            endif
+         endif
       enddo
 
+c     at this point latestTime is the desired time to trap
+
+      i = 0
+      do j = 1, recNum
+         
+         if (waterVapor(j) .lt. 10000. .and.
+     +        latestTime .eq. observationTime(j)) then ! presume good data
+            i = i +1
+            gps_tpw(i) = waterVapor(j)
+            gps_error(i) = formalError(j)
+            gps_lat(i) = staLat(j)
+            gps_lon(i) = staLon(j)
+         endif
+      enddo
+
+      gps_num = i
+      
       return
       end
-      subroutine read_gps_basics (nf_fid , recNum, formalError, staLat,
-     +    staLon, staLongNam, staNam, waterVapor)
+
+
+
+      subroutine read_gps_madis_basics (nf_fid , recNum, formalError, 
+     +     latitude, longitude, totalColumnPWV, observationTime)
+
       include 'netcdf.inc'
       integer recNum, nf_fid, nf_vid, nf_status
 
-      character*80 staLongNam(recNum)
-      character*5 staNam(recNum)
-      real formalError(recNum), staLat(recNum), staLon(recNum), 
-     +   waterVapor(recNum)
+
+
+      real formalError(recNum), totalColumnPWV(recNum),
+     +     latitude(recNum), longitude(recNum)
+      double precision observationTime(recNum)
 C
-C     Variable        NETCDF Long Name
-C      staLongNam   "Station Location" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'staLongNam',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var staLongNam'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,staLongNam)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ staLongNam '
-      endif
-C
-C     Variable        NETCDF Long Name
-C      staNam       "Alphanumeric station name" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'staNam',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var staNam'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,staNam)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ staNam '
-      endif
+
+
 C
 C     Variable        NETCDF Long Name
 C      formalError  "Formal Error" 
 C
+
+c     gather observation time
+
+        nf_status = NF_INQ_VARID(nf_fid,'observationTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var observationTime'
+      endif
+        nf_status = NF_GET_VAR_Double(nf_fid,nf_vid,observationTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in NF_GET_VAR_ observationTime '
+      endif
+
+
+c     get formal error
+
+
         nf_status = NF_INQ_VARID(nf_fid,'formalError',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
@@ -220,12 +244,12 @@ C
 C     Variable        NETCDF Long Name
 C      staLat       "Station Latitude" 
 C
-        nf_status = NF_INQ_VARID(nf_fid,'staLat',nf_vid)
+        nf_status = NF_INQ_VARID(nf_fid,'latitude',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var staLat'
       endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,staLat)
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,latitude)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in NF_GET_VAR_ staLat '
@@ -234,12 +258,12 @@ C
 C     Variable        NETCDF Long Name
 C      staLon       "Station Longitude" 
 C
-        nf_status = NF_INQ_VARID(nf_fid,'staLon',nf_vid)
+        nf_status = NF_INQ_VARID(nf_fid,'longitude',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var staLon'
       endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,staLon)
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,longitude)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in NF_GET_VAR_ staLon '
@@ -248,12 +272,12 @@ C
 C     Variable        NETCDF Long Name
 C      waterVapor   "Water Vapor" 
 C
-        nf_status = NF_INQ_VARID(nf_fid,'waterVapor',nf_vid)
+        nf_status = NF_INQ_VARID(nf_fid,'totalColumnPWV',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var waterVapor'
       endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,waterVapor)
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,totalColumnPWV)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in NF_GET_VAR_ waterVapor '
