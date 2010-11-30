@@ -55,7 +55,7 @@ c
 !     3D pressures on the model grid (or input as a 1D constant pressure array)
       real   prlaps(nx_pr,ny_pr,nz_laps),prilaps,fact1,fact2
       real   datmsg,datmsg1,datmsg2
-      integer i,j,k,kk,lencm
+      integer i,j,k,kk,lencm,istatus,ishow_timer
 
       interface
          subroutine vinterp_sub(msngflag
@@ -77,6 +77,8 @@ c first loop is required for getting the heights and temps.
 c currently only SBN grids have variable pressure levels for
 c individual fields (like sh, u/v and ww).
 
+      write(6,*)' Start vinterp'
+
       if(nzbg_ht.ne.nzbg_tp)then
          print*,'vinterp requires nzbg_ht=nzbg_tp'
          print*,'no interp performed. terminating'
@@ -96,45 +98,47 @@ c individual fields (like sh, u/v and ww).
                ip = min(i,nx_pr) ! Collapse indices to 1,1 for 1D 'prlaps' input
                jp = min(j,ny_pr) 
                prilaps=1./prlaps(ip,jp,k)
-               do kk=1,nzbght
 
 c lowest bg pressure level is above analysis lowest pressure levels
-                  if (prlaps(ip,jp,k) .gt. prbght(i,j,1)) then
-                     datmsg = max(htbg(i,j,1),tpbg(i,j,1))
+               if (prlaps(ip,jp,k) .gt. prbght(i,j,1)) then
+                  datmsg = max(htbg(i,j,1),tpbg(i,j,1))
 
-                     if (datmsg .lt. missingflag) then
-                        fact2=14.642857*alog(prbght(i,j,1)*prilaps)
+                  if (datmsg .lt. missingflag) then
+                     fact2=14.642857*alog(prbght(i,j,1)*prilaps)
 
-                        tpvi(i,j,k)=tpbg(i,j,1)
-     +                       +(prlaps(ip,jp,k)-prbght(i,j,1))*0.056
+                     tpvi(i,j,k)=tpbg(i,j,1)
+     +                    +(prlaps(ip,jp,k)-prbght(i,j,1))*0.056
 
-                        htvi(i,j,k)=htbg(i,j,1)
-     +                       +(tpvi(i,j,k)+tpbg(i,j,1))*fact2
+                     htvi(i,j,k)=htbg(i,j,1)
+     +                    +(tpvi(i,j,k)+tpbg(i,j,1))*fact2
 
-                     else
-                        htvi(i,j,k)=missingflag
-                        tpvi(i,j,k)=missingflag
-                     endif
-                     goto 10
+                  else
+                     htvi(i,j,k)=missingflag
+                     tpvi(i,j,k)=missingflag
+                  endif
+                  goto 10
 
 c highest bg pressure level is below analysis highest pressure level
-                  elseif (prlaps(ip,jp,k) .lt. prbght(i,j,nzbght)) then       
+               elseif (prlaps(ip,jp,k) .lt. prbght(i,j,nzbght)) then       
 
-                     datmsg = max(htbg(i,j,nzbght),tpbg(i,j,nzbght))
+                  datmsg = max(htbg(i,j,nzbght),tpbg(i,j,nzbght))
 
-                     if (datmsg .lt. missingflag) then
-                      fact2=29.285714*alog(prbght(i,j,nzbght)*prilaps)
-                        tpvi(i,j,k)=tpbg(i,j,nzbght)
-                        htvi(i,j,k)=htbg(i,j,nzbght)
-     +                       +tpbg(i,j,nzbg_ht)*fact2
-                     else
-                        htvi(i,j,k)=missingflag
-                        tpvi(i,j,k)=missingflag
-                     endif
-                     goto 10
+                  if (datmsg .lt. missingflag) then
+                   fact2=29.285714*alog(prbght(i,j,nzbght)*prilaps)
+                     tpvi(i,j,k)=tpbg(i,j,nzbght)
+                     htvi(i,j,k)=htbg(i,j,nzbght)
+     +                    +tpbg(i,j,nzbg_ht)*fact2
+                  else
+                     htvi(i,j,k)=missingflag
+                     tpvi(i,j,k)=missingflag
+                  endif
+                  goto 10
 
+               endif
+
+               do kk=1,nzbght
 c analysis pressure of level equals bg pressure of level
-                  elseif (prlaps(ip,jp,k) .eq. prbght(i,j,kk)) then
+                  if (prlaps(ip,jp,k) .eq. prbght(i,j,kk)) then
                      datmsg = max(htbg(i,j,kk),tpbg(i,j,kk))
                      if (datmsg .lt. missingflag) then
                         htvi(i,j,k)=htbg(i,j,kk)
@@ -169,11 +173,15 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
                      endif
                      goto 10
                   endif
-               enddo
+               enddo ! kk
  10            continue
             enddo
          enddo
       enddo
+
+      istatus=ishow_timer()
+
+      write(6,*)' calls to vinterp_sub'
 c
 c second loops for remaining variables
 c
@@ -219,32 +227,33 @@ c
             do i=ixmin,ixmax ! 1,nx
                ip = min(i,nx_pr) ! Collapse indices to 1,1 for 1D 'prlaps' input
                jp = min(j,ny_pr)
-               do kk=1,nzbg
-
 
 c lowest bg pressure level is above analysis lowest pressure levels
-                  if (pr(ip,jp,k) .gt. prbg(i,j,1)) then
+               if (pr(ip,jp,k) .gt. prbg(i,j,1)) then
 
-                     if (bgdata(i,j,1) .lt. msngflag) then
-                        bgdatavi(i,j,k)=bgdata(i,j,1)
-                     else
-                        bgdatavi(i,j,k)=msngflag
-                     endif
-                     goto 20
+                  if (bgdata(i,j,1) .lt. msngflag) then
+                     bgdatavi(i,j,k)=bgdata(i,j,1)
+                  else
+                     bgdatavi(i,j,k)=msngflag
+                  endif
+                  goto 20
 
 
 c highest bg pressure level is below analysis highest pressure level
-                  elseif (pr(ip,jp,k) .lt. prbg(i,j,nzbg)) then
+               elseif (pr(ip,jp,k) .lt. prbg(i,j,nzbg)) then
 
-                     if (bgdata(i,j,nzbg) .lt. msngflag) then
-                        bgdatavi(i,j,k)=bgdata(i,j,nzbg)
-                     else
-                        bgdatavi(i,j,k)=msngflag
-                     endif
-                     goto 20
+                  if (bgdata(i,j,nzbg) .lt. msngflag) then
+                     bgdatavi(i,j,k)=bgdata(i,j,nzbg)
+                  else
+                     bgdatavi(i,j,k)=msngflag
+                  endif
+                  goto 20
 
+               endif
+
+               do kk=1,nzbg
 c analysis pressure of level equals bg pressure of level
-                  elseif (pr(ip,jp,k) .eq. prbg(i,j,kk)) then
+                  if (pr(ip,jp,k) .eq. prbg(i,j,kk)) then
                      if (bgdata(i,j,kk) .lt. msngflag) then
                         bgdatavi(i,j,k)=bgdata(i,j,kk)
                      else
@@ -269,9 +278,9 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
                      endif
                      goto 20
                   endif
-               enddo
+               enddo ! kk
  20            continue
-            enddo
+            enddo 
          enddo
       enddo
 c
