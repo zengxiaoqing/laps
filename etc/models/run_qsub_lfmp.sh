@@ -54,8 +54,8 @@ echo " "                        >> $script
 echo "export LAPSROOT=/home/oplapb/builds/laps"                 >> $script
 echo "export LAPS_DATA_ROOT=$lapsdataroot"                      >> $script
 
-echo "export NETCDF=/opt/netcdf/3.6.2-pgi-7.1-3"                >> $script
-echo "export PATH=\$PATH:/opt/netcdf/3.6.2-pgi-7.1-3/bin"       >> $script
+echo "export NETCDF=/opt/netcdf/3.6.3-pgi"                >> $script
+echo "export PATH=\$PATH:/opt/netcdf/3.6.3-pgi/bin"       >> $script
 echo "export phys=$physics"                                     >> $script
 echo " "                                                        >> $script
 echo "fcstIncrMin=$fcstIncrMin"                                 >> $script
