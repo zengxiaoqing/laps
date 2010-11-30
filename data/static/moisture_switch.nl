@@ -50,4 +50,4 @@ c  MOD_4DDA_FACTOR = 0.02,  drying value (+ = drying)
 c  T_REF = -132.0,     reference temp in C where all is ice
 c  PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
 c  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
-c  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
+c  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'  madis path different if (2) above selected
