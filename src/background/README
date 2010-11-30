@@ -14,6 +14,10 @@ program lga                                      lga.f
          get_ruc2_dims                           bgdata/readruc2_pub.f
          readavnpublicdims
          degrib_nav                              degrib/readgrib.F90
+            parse_table
+            rd_grib1
+            rd_grib2
+            map_set
       get_lgb_source                             bgdata/lga_driver.f
       read_bgdata                                bgdata/readbgdata.f
          read_fuafsf_cdf   
@@ -50,8 +54,10 @@ program lga                                      lga.f
       sfcbkgd_sfc (LAPS_FUA)                     bgdata/sfcbkgd_sfc.f    ! 1417
       interp_to_sfc                              util/interp_to_sfc.f    ! 1436
       write_lga                                  bgdata/writelgalgb.f
-         write_laps
-      write_lgap
+         write_laps                              lib/writelaps.f
+      write_lgb                                  bgdata/writelgalgb.f
+         write_laps                              lib/writelaps.f
+      write_lgap                                 bgdata/writelgalgb.f
       time_interp                                bgdata/lga_interp_subs.f
    lga_driver_wrfarw                             wrf/lga_driver_wrfarw.f90
       get_acceptable_wrf
