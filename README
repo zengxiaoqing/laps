@@ -244,8 +244,8 @@
 
      For Solaris & HP-UX platforms, 'f90' works well.
 
-     For Linux platforms (i386,i686,x86_64), 'pgf90' is suggested
-                                             'ifort' is being tested
+     For Linux platforms (i386,i686,x86_64), 'pgf90' is suggested while
+                         'ifort' and 'gfortran' are being tested
 
      For Linux platforms (Alpha chip), 'fort' is suggested (normal serial use).
 
@@ -383,19 +383,25 @@
      2) edit 'etc/www/laps.cgi' and set $web_root to be the root directory
         of the web server
 
-     3) mkdir -p $web_root/request
+     3) edit 'etc/www/nph-laps.cgi' and set $ncarg_root to be the root directory
+        of the NCL/NCAR Graphics installation
 
-     4) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/nph-laps.cgi .
+     4) mkdir -p $web_root/request
 
-     5) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/laps.cgi .
+     5) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/nph-laps.cgi .
 
-     6) mkdir -p $web_root/domains
+     6) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/laps.cgi .
 
-     7) For each $LAPS_DATA_ROOT (foo):
+     7) mkdir -p $web_root/domains
+
+     8) For each $LAPS_DATA_ROOT (foo):
   
      a) mkdir -p $web_root/domains/foo                   
 
      b) cd $web_root/domains/foo; ln -s $LAPS_DATA_ROOT private_data
+
+     9) edit 'etc/www/nph-laps.cgi' and set $default_domain to be your
+        favorite domain 'foo' established in step (8)
 
      At this point you should hopefully be able to use a web browser and
      run the "on-the-fly" page with something like this URL:
@@ -2033,7 +2039,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
 ------ 2.8.1 ------ Sigma Height Grid ---------------
 
-   UNDER DEVELOPMENT
+   UNDER DEVELOPMENT - mainly for STMAS-3D
 
    Similar to 2.8 except that one changes the 'vertical_grid' parameter in
    'nest7grid.parms'. Also the 'heights.nl' namelist is used instead of
@@ -2045,7 +2051,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
 ------ 2.8.2 ------ Sigma Pressure Grid ---------------
 
-   UNDER DEVELOPMENT
+   UNDER DEVELOPMENT - mainly for STMAS-3D
+
+   Similar to 2.8 except that one changes the 'vertical_grid' parameter in
+   'nest7grid.parms'. Also the 'sigmas.nl' namelist is used instead of
+   'pressures.nl'. 
 
 -------- 2.9 ----- CHANGING THE CYCLE TIME -----------------------------------
 
@@ -3644,6 +3654,61 @@ humidity field at each pressure level for which they are designated.  The
 modified specific humidity field is then advanced to the final analysis step.
 
 Reference: http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi
+
+   GPS ASSIMILATION ALGORITHM:
+   
+   One of many terms in the humidity variational minimization step, the
+   GPS total water is used to constrain the integrated water computed
+   every iteration.  Like the other terms in the functional used in the
+   variational minimization, this term will reach a relative minimum when
+   the state variables and specifically Q, best match this and other
+   observations in a simultaneous manner (simultaneous here is respect to
+   heterogeneous observational fit and not the more traditional state
+   variable multi-variate solution sense).
+   
+   The GPS algorithm traditionally read internal GSD netCDF files for
+   input.  It now has the capability (12/2010) to read MADIS surface data
+   files for GPS data.  The MADIS data are typically built every 5 minutes,
+   so to read GPS data from these files, one should look back to the prior
+   hour's MADIS file for the most recent GPS data.  This is due to the
+   fact that typically the GPS data are not ready for use until about Ω
+   hour after acquisition time.  So for a typical "20-min after the hour"
+   LAPS run, the current hour's MADIS file will not contain any GPS data.
+   
+   The software is currently tuned to open the prior hour's MADIS file and
+   seek the "latest" GPS data that can be found in that file.  This step
+   is required since the MADIS file will be adding GPS data to it as it
+   arrives and by the end of a given hour, MADIS files will contain 2
+   different GPS ingests.
+   
+   Therefore the user, should be aware that if a LAPS start time other
+   than 20-min past the hour is chosen, the software may have to be
+   changed to acquire the most recent data.  Right now things should be
+   pretty stable in this regard.  If one starts LAPS at the top of the
+   hour, say 16 UT, this module will read the 15UT MADIS file for GPS data.
+   It will likely find the "latest" data in that file to have been written
+   about 15:20 UT.   This is what the traditional read of internal GPS
+   files would have returned.
+   
+   Furthermore, if the LAPS system starts at 20-min after the hour, the
+   same 15UT MADIS file will be opened and the GPS data read will be from
+   about 15:45UT.  Again, the routine will find the same that the
+   traditional GPS file read would acquire.  On the other hand, if one
+   were to run at 15:50UT, there is a chance to miss the latest GPS data.
+   The code as now written will open the 14UT MADIS file for data, when in
+   fact the 15UT MADIS file may at this time contain data from 15:20UT.
+   On the other hand, if this mistake is made, the data obtained will
+   likely be nearly within the nearest hour of analysis time (14:50UT) and
+   depending on the cycle time, may or may not be a critical issue.  The
+   user will have to determine whether this can be tolerated.
+   
+   Cautions for STMAS:  When reading GPS data in a 4DVAR context, GPS data
+   reading will have to spend more time concerned with the actual data
+   time associated with the GPS data.  In this regard, multiple MADIS
+   files will likely need to be opened, their contents matched with their
+   respective observation times, and then the data will need to be
+   temporarily stored, sorted, and processed according to the needs of
+   4DVAR.
 
 
 ------ 3.3.6 ---------------------DERIV---------------------------------------
