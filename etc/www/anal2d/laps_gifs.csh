@@ -94,11 +94,12 @@ if (-e $SERVER_ROOT/looper) then
 endif
 
 #Set up scripts for pregenerated pages
-if (-e ~oplapb/www/laps_anal) then
+setenv OPLAPB /home/fab/oplapb
+if (-e $OPLAPB/www/laps_anal) then
     echo "updating pregenerated page directory..."
     echo $DOMAIN_SUFFIX > ~oplapb/www/laps_anal/domain_$DOMAIN_SUFFIX
-    chmod 666 ~oplapb/www/laps_anal/domain_$DOMAIN_SUFFIX
-    ls -l ~oplapb/www/laps_anal/domain_$DOMAIN_SUFFIX
+    chmod 666 $OPLAPB/www/laps_anal/domain_$DOMAIN_SUFFIX
+    ls -l $OPLAPB/www/laps_anal/domain_$DOMAIN_SUFFIX
     echo " "
 endif
 
