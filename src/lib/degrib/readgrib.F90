@@ -24,7 +24,7 @@
 
 subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
                       gproj, dx, dy, truelat1, truelat2, stdlon, cgrddef, &
-                      cross_dateline, sw1, sw2, ne1, ne2, istatus)
+                      cross_dateline, sw1, sw2, ne1, ne2, l_full_run, istatus)
 
   use table
   use gridinfo
@@ -63,6 +63,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   type(proj_info) :: proj  ! Declared via "USE map_utils" 
   logical :: val_std = .false.
   logical :: cross_dateline 
+  logical :: l_full_run
 
 ! -----------------
 ! Determine GRIB Edition number
@@ -94,6 +95,11 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 ! and 'maxvar' is incremented with each variable found.
 
   call parse_table(vtablefn, debug_level,vtable_columns)
+
+  if (.not. l_full_run) then  
+      write(6,*)' returning with partial run'
+      return
+  endif
 
         nlvl = 0
         plvl = -999.
