@@ -300,7 +300,7 @@ for ($g=1; $g<=$ngrid; $g++) {
        print "NOTE: d01 created in new extra pass.\n";
      }
    }
-   if (! -e "$lapsdataroot/time/systime.dat") {
+   if (! -e "$lapsdataroot/time/c_time.dat") {
        if (! -e "$model_output_dir/d$dom/fua") {
          mkdir ("$model_output_dir/d$dom/fua",0775);
        }
