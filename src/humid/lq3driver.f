@@ -190,6 +190,9 @@ c     namelist data
 
 c  code
 
+      write (6,*) 'LQ3 Starting now'
+      write (6,*)
+
 
       iout = 1 ! have subroutine generate output files
 
@@ -207,6 +210,9 @@ c  code
          write(6,*)' error in get_laps_config'
          stop
       endif
+
+
+      write (6,*) ' ALL directory information has been read'
 
 
 
@@ -247,6 +253,9 @@ c     set namelist parameters to defaults
       
       close (23)
 
+      write (6,*)
+      write (6,*) 'NAMELIST has been read'
+
 
 c-----------------------end filling namelist ---
 
@@ -268,7 +277,8 @@ c     get horizontal dimensions ii,jj
          stop
       endif
 
-
+      write (6,*) 
+      write (6,*) ' grid dimensions are, ',ii,jj
 
 
 
@@ -281,22 +291,41 @@ c     get vertical dimension kk
          stop
       endif
 
+      write (6,*)
+      write (6,*) 'vertical dimension is: ',kk
+      write (6,*)
 
 
+      write(6,*) 'ALLOCATING ARRAYS NOW top level driver'
 c     allocate arrays now dimensions known
       allocate (lat(ii,jj),lon(ii,jj))
+      write(6,*) 'lat lon done'
       allocate (lt1dat(ii,jj,kk))
+      write (6,*) 'lt1dat done'
       allocate (lvl_coordlt1(kk))
+      write(6,*) 'lvl_coordlt1 done'
       allocate (commentlt1(kk))
+      write(6,*) 'commentlt1 done'
       allocate (unitslt1(kk))
+      write (6,*) 'unitslt1 done'
       allocate (varlt1(kk))
+      write (6,*) 'varlt1 done'
       allocate (lvllm(kk))
+      write (6,*) 'lvllm done'
       allocate (p_3d(ii,jj,kk)) ! pressure allocated here (needed for lt1 get)
+      write (6,*) 'p_3d done'
       allocate (data(ii,jj,kk))
+      write (6,*) 'data done'
       allocate (cg(ii,jj,kk))
+      write (6,*) 'cg done'
       allocate (gt(ii,jj))
+      write (6,*) 'gt done'
       allocate (gp(ii,jj))
+      write (6,*) 'gp done'
       allocate (gtd(ii,jj))
+      write (6,*) 'gtd done'
+      write (6,*)
+      write (6,*)
 c     everything after this point can "go to 666" for deallocate stop
 
 
