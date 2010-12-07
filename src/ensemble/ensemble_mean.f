@@ -169,7 +169,6 @@
 
 
 
-        write_to_lapsdir=.true.
         i4_initial = i4time
         lun_in = 21
 
@@ -339,7 +338,7 @@
 
 	  if (istatus /= 1) then
      		print*,'Error writing LAPS 3D (fua) netcdf file.'
- 	  elseif (verbose) then
+ 	  else
      		print*,'Done writing 3d netcdf file.'
   	  endif
 
@@ -349,7 +348,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !       2D fields
-	write(*,*)'We are starting to deal with 2D fields!!!!!!!!!!!!!!!!!'
+	write(*,*)'We are starting to deal with 2D fields!!!!!!!!!!!!!'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         call get_directory('fsf',ensemble_dir,len_ensemble)
@@ -470,7 +469,7 @@
 
           if (istatus /= 1) then
                 print*,'Error writing LAPS 2D (fsf) netcdf file.'
-          elseif (verbose) then
+          else
                 print*,'Done writing 2d netcdf file.'
           endif
 
