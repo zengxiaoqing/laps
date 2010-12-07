@@ -6,13 +6,14 @@
 
 
         character*9 a9time
-	character*300 laps_data_root
+	character*300 laps_data_root,dir_t,filenamet
         character*250 stlaps
         integer      NX_L,NY_L,NZ_L,i4time,i,istatus 
-        integer      model_cycle_time_sec
+        integer      model_cycle_time_sec, len_dir_t
         real         r_missing_data
         integer, parameter :: nprmax=150
 	real, dimension(nprmax) :: pressures
+        integer, parameter :: lun=120
 
 ! Parameter for model cycle interval
         model_cycle_time_sec = 10800
@@ -20,9 +21,21 @@
 
 	call getarg(1,laps_data_root)
 
-        call get_systime(i4time,a9time,istatus)
-        if(istatus .ne. 1)go to 999
-        write(6,*)' systime = ',a9time
+!       call get_systime(i4time,a9time,istatus)
+!       if(istatus .ne. 1)go to 999
+!       write(6,*)' systime = ',a9time
+
+        call get_directory('time',dir_t,istatus)
+        call s_len(dir_t,len_dir_t)
+        filenamet = dir_t(1:len_dir_t)//'/modeltime.dat'
+        open(lun,file=filenamet,status='old')
+        read(lun,*)a9time
+        close(lun)
+        call i4time_fname_lp(a9time,i4time,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting i4time ',a9time
+           go to 999
+        endif
 
         call get_grid_dim_xy(NX_L,NY_L,istatus)
         if (istatus .ne. 1) then
@@ -217,8 +230,10 @@
 
               call s_len(c_model,len_model)
 
-              call get_directory('ensemble',ensemble_dir,len_ensemble)
-              ensm_dir = ensemble_dir(1:len_ensemble)//'/mean/'
+              call get_directory('fua',ensemble_dir,len_ensemble)
+              write(6,*)' ensemble_dir = ',ensemble_dir
+              ensm_dir = ensemble_dir(1:len_ensemble)//'/mean'
+              call s_len(ensm_dir,len_ensm)
 
 !                 Read 3d forecast fields
                   ext = ext_fcst_a(ifield)
@@ -310,8 +325,11 @@
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-     	print*,'Writing LAPS 3D (fua) netcdf file.'
-      call write_laps_lfm(i4_initial,i4_valid,trim(ensm_dir)
+       	print*,'Writing LAPS 3D (fua) netcdf file.'
+       	print*,'Output directory is: ',ensm_dir(1:len_ensm)
+       	print*,'Output directory is: ',trim(ensm_dir)
+       	print*,'CDL Directory is: ',trim(cdl_dir)
+        call write_laps_lfm(i4_initial,i4_valid,trim(ensm_dir)
      1                ,trim(cdl_dir),'fua'                                          
      1                ,NX_L,NY_L,NZ_L*n_fields,NZ_L*n_fields
      1                ,name3d,lvls3d
@@ -334,6 +352,8 @@
 	write(*,*)'We are starting to deal with 2D fields!!!!!!!!!!!!!!!!!'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+        call get_directory('fsf',ensemble_dir,len_ensemble)
+        ensm_dir = ensemble_dir(1:len_ensemble)//'/mean'
 
         do itime_fcst = 0,n_fcst_times
 
