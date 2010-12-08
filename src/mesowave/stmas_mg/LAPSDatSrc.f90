@@ -275,7 +275,11 @@ SUBROUTINE LAPSBKGD
       IF (needbk(j) .EQ. 1) THEN
         DO i=1,numtmf
           CALL GET_MODELFG_2D(i4prev(i),varnam(j),numgrd(1),numgrd(2),bkgrnd(1,1,i,j),err)
-          IF (err .NE. 1) THEN
+          ! Temporarily add a test of TGD. If it is small (<1.0), assume
+          ! laps does not provide good TGD data. When Paula or Steve fix LGA/LGB
+          ! we can change back to test err only!!!
+          ! IF (err .NE. 1) THEN
+          IF (err .NE. 1 .or. bkgrnd(1,1,i,j) .lt. 1.0) THEN
             ! Use t and td and landfactor as used in LAPS sfc:
             it = 0	! search temp read in already
             id = 0	! search dewp read in already
@@ -386,6 +390,9 @@ SUBROUTINE LAPSOBSV(m)
 
   ! No matter what sts value, get_sfc_obtime converts the obstime:
   INTEGER :: ot,sts		! Obstime conversion status 
+
+  INTEGER :: jmin,jmax          ! For checking the min/max obs
+  REAL :: vmin,vmax
 
   REAL :: xyt(3)		! X, Y and T
   REAL :: prs,ALT_2_SFC_PRESS
@@ -655,12 +662,25 @@ SUBROUTINE LAPSOBSV(m)
   ! Check the data ranges:
   IF (verbal .EQ. 1) THEN
     DO i=1,numvar
-      WRITE(*,26) varnam(i), &
-		  MINVAL(rawobs(1,1:numobs(i),i)), &
-		  MAXVAL(rawobs(1,1:numobs(i),i))
+      vmin = 1000.0
+      vmax = -1000.0
+      DO j=1,numobs(i)
+        IF (rawobs(1,j,i) .LT. vmin) THEN
+          vmin = rawobs(1,j,i)
+          jmin = j
+        ENDIF
+        IF (rawobs(1,j,i) .GT. vmax) THEN
+          vmax = rawobs(1,j,i)
+          jmax = j
+        ENDIF
+      ENDDO
+       
+      WRITE(*,26) varnam(i),vmin,jmin,stanam(jmin,i),vmax,jmax,stanam(jmax,i)
+!		  MINVAL(rawobs(1,1:numobs(i),i)), &
+!		  MAXVAL(rawobs(1,1:numobs(i),i))
     ENDDO
   ENDIF
-26 FORMAT('STMAS>LAPSOBSV: ',A4,' min/max values: ', 2F11.2)
+26 FORMAT('STMAS>LAPSOBSV: ',A4,' min/max values: ', F11.2,i4,1x,a6,F11.2,i4,1x,a6)
 
   ! Write out requested obs for testing:
   IF (savdat .EQ. 1) THEN
