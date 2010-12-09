@@ -253,16 +253,38 @@ c     optran 90 coefficient data information
 c----------------------code   ------------------
 c     initialization
 c
+      write (6,*)
+      write (6,*) 'ENTERING MODULE LQ3_DRIVER1A.F'
 
 c     allocate arrays
+      write (6,*) 
+      write (6,*) 'Begin Array allocation'
+
       allocate (sat (ii,jj,kk))
+      write (6,*) 
+      write (6,*) 'SAT array ijk'
       allocate (data_in (ii,jj,kk))
+      write (6,*) 
+      write (6,*) 'DATA_IN array ijk'
       allocate (data_start (ii,jj,kk))
+      write (6,*) 
+      write (6,*) 'DATA_START array ijk'
       allocate (data_pre_bound (ii,jj,kk))
+      write (6,*) 
+      write (6,*) 'DATA_PRE_BOUND array ijk'
       allocate (p_3d (ii,jj,kk))
+      write (6,*) 
+      write (6,*) 'P_3D array ijk'
       allocate (qadjust (ii,jj,kk))
+      write (6,*) 
+      write (6,*) 'QADJIUST array ijk'
       allocate (q_snd (ii,jj,kk))
+      write (6,*) 
+      write (6,*) 'Q_SND array ijk'
       allocate (weight_snd (ii,jj,kk))
+      write (6,*) 
+      write (6,*) 'WEIGHT_SND array ijk'
+      write (6,*)'----------------END ALLOCATION STEPS---------------'
 
 c     define PI
       pi = acos(-1.0)
