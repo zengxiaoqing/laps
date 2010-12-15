@@ -714,7 +714,7 @@ c
  140        continue
 
 !           Plot Gusts (FSL WWW)
-            if(iflag .ge. 1)then 
+            if(iflag .ge. 1 .and. iflag .ne. 3)then ! Not a 'tmg' plot
                if(gust .gt. 20)then
                    ig = int(gust)
                    write(p1,102,err=150) ig
