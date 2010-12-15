@@ -352,7 +352,7 @@ c     loop throught the data and re-assign the "top" layer ll_n(n) of
 c     each radiometer sounding to be under 2km.
 
             do i = 1, ll_n(n)
-               if (meter_ht(i,n).gt.2000.) then ! above limit of use
+               if ((meter_ht(i,n)-meter_ht(1,n)).gt.2000.) then ! above limit of use
                   ll_n(n) = i ! this should maybe terminate loop
                   go to 212 ! preserve assignment
                endif
