@@ -77,8 +77,7 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 
 !           if(terrain_slope .gt. .001)then ! machine/terrain epsilon threshold
 
-
-            if(ldf(i,j) .lt. .01 .and. topo(i,j) .lt. 10.)then ! ocean
+            if(ldf(i,j) .lt. .01 .and. abs(topo(i,j)) .lt. 10.)then ! ocean
 
 !             Assume cos(theta) = 1, so we just want moisture flux
 
