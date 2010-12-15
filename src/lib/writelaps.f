@@ -169,6 +169,13 @@ C
           pr(j)=pr(j)*1000.
         enddo
 
+      elseif (v_g .eq. 'SIGMA_HT') then
+        call get_ht_1d(n_levels,pr,istatus) ! Sigma heights fill the pr array
+        if(istatus .ne. 1)then
+            write(6,*)' Error returned from get_ht_1d'
+            goto 920
+        endif
+
       else
         goto 920
 
@@ -279,6 +286,10 @@ C
 C **** write out netCDF file
 C
       print*,'Writing file: ',file_name
+
+      if (v_g .eq. 'SIGMA_HT') then
+          write(6,*)' cdl_levels = ',cdl_levels
+      endif
 
       call write_cdf_v3 (file_name,ext,var,comment,asctime,cdl_path, 
      1                   static_path,laps_dom_file,ldf_len,fn_length,
