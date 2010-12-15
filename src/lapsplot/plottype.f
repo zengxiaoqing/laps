@@ -69,6 +69,8 @@ cdis
         data c1_precip_types
      1  /' ','R','*','Z','I','H','L','F',' ',' ',' '/
 
+        ANGD = 0.
+
 !       Pull out relavant bits
         do i = 1,imax
         do j = 1,jmax
