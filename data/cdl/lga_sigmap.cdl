@@ -20,7 +20,7 @@ netcdf lga {
             ht:units="meters";
             ht:valid_range= -400.f, 20000.f;
             ht:LAPS_var="HT";
-            ht:lvl_coord="SIGMA_P ";
+            ht:lvl_coord="SIGMA_P";
 	    ht:LAPS_units="METERS";
                 	        
         //      Background temperature
@@ -34,7 +34,7 @@ netcdf lga {
             t3:units="degrees Kelvin";
             t3:valid_range= 100.f, 330.f;
             t3:LAPS_var="T3";
-            t3:lvl_coord="SIGMA_P ";
+            t3:lvl_coord="SIGMA_P";
             t3:LAPS_units="KELVIN";
  
 
