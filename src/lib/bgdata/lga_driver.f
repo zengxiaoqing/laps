@@ -870,6 +870,10 @@ c
 
              call get_ht_3d(nx_bg,ny_bg,nz_laps,ht_sfc,htvi
      1                     ,istatus)
+             if(istatus .ne. 1)then
+                 write(6,*)' Error returned from get_ht_3d'
+                 return
+             endif
 
              call vinterp_ht(nz_laps,nx_bg,ny_bg
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
@@ -1311,12 +1315,18 @@ c
                    uw_sfc(:,:) = uw(:,:,1)
                    vw_sfc(:,:) = vw(:,:,1)
                else
-                   write(6,*)' ERROR: Unable to interpolate to sfc'
+                   write(6,*)' ERROR: Unable to interpolate wind to sfc'
                    stop
                endif
-           else
-               write(6,*)' ERROR: Unable to interpolate to sfc'
-               stop
+           else ! SIGMA_HT
+               write(6,*)' Use lowest level 3-D sigma winds for the sfc'
+               if(.true.)then ! assume lowest sigma is at the sfc
+                   uw_sfc(:,:) = uw(:,:,1)
+                   vw_sfc(:,:) = vw(:,:,1)
+               else
+                   write(6,*)' ERROR: Unable to interpolate wind to sfc'
+                   stop
+               endif
            endif
 
            itstatus(3)=ishow_timer()
