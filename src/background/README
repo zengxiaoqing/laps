@@ -27,6 +27,13 @@ program lga                                      lga.f
          read_ruc2_hybb                          bgdata/readruc2_pub.f      #5
          lprep_ruc2_hybrid
          read_dgprep                             bgdata/readdgprep.f
+             readindexfile                       bgdata/rdmodelindex.f
+             read_avn                            bgdata/readdgprep.f
+             read_nogaps                                 "
+             read_avn_netcdf                             "
+             read_fa                                     "
+             read_fa_nf                                  "
+             read_nf15km                                 "
              tcbogus                             bgdata/tcbogus.f
          degrib_data                             degrib/readgrib.F90
             get_lapsbg                           degrib/output.F90          #13
