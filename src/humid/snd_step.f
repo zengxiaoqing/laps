@@ -42,6 +42,9 @@ cdis
 cdis
 cdis
 cdis
+c
+c
+c
       subroutine snd_step (
      1     i4time,              ! current time I/
      1     p_3d,                !laps pressure grid I/
@@ -84,7 +87,9 @@ c  dynamic dependent parameters
       real lon_s(ll,nnn)        !sounding lon by level (account for drift)
       real t(ll,nnn)            !sounding temp by level (C)
       real rh(ll,nnn)           !sounding RH by level
+      real meter_ht(ll,nnn)     !MSL ht in meters (added for Stick Ware data)
       real p_s(ll,nnn)          !pressure at sounding level l (hPa)
+      character*8 instrument(nnn) !created to track radiometer data 
       real RH_fields(ii,jj,kk)  !analyzed RH field
       
       
@@ -127,7 +132,6 @@ c     normal internal parameters
       real d2r,pi
       real tot_weight,tot_scale_weight,scale_used,weight_avg,counter
       real wt_ck(ii,jj)         ! weight check to test for ample RAOB data
-      real rspacing_dum
       real rmd
       integer x_sum
       real ave(kk),adev(kk),sdev(kk),var(kk),skew(kk),curt(kk)
@@ -141,9 +145,14 @@ c     climate model (for QC)
      1     standard_press(40),
      1     tempertur_guess(40),
      1     mixratio_guess(40)
+
+
+      write (6,*)
+      write (6,*)' BEGIN SND STEP FOR RAOB INSERTION'
+      write (6,*)
       
       
-      
+     
 c     *** begin routine
       
       if (abort .eq. 0) return  ! abort = 1 means run with data
@@ -238,6 +247,15 @@ c     read the header record for main data
 
 
 c     prepare to read individual levels in SND
+         if (n.eq.nnn .or. n.lt.0) then
+            write (6,*) 'n is going to be larger than nnn'
+            write (6,*) 'or n is going to be zero index'
+            write (6,*) n, ' is the value of n'
+            abort = 0
+            return
+         endif
+
+
          n = n + 1               !count as sounding valid header and file
 
          ll_n(n) = 0            !initialize incremental level counter
@@ -246,13 +264,14 @@ c     prepare to read individual levels in SND
 
             ll_n(n) = ll_n(n) + 1 !increment level counter
 
-            read(12,*) rspacing_dum,
+            read(12,*) meter_ht(ll_n(n),n),
      1           p_s (ll_n(n) , n),
      1           t (ll_n(n), n),
      1           td(ll_n(n), n),rdummy,rdummy
 
             if (
-     1           (p_s (ll_n(n),n).ne.rmd)
+     1           ((p_s (ll_n(n),n).ne.rmd).or.(meter_ht(ll_n(n),n)
+     1           .ne.rmd))
      1           .and.
      1           (t (ll_n(n),n).ne.rmd)
      1           .and.
@@ -266,6 +285,7 @@ c     increment counter for next record
 
                lat_s(ll_n(n),n) = lat_r
                lon_s(ll_n(n),n) = lon_r
+               instrument (n) = snd_type
 
             else
 
@@ -273,7 +293,11 @@ c     increment counter for next record
                
             endif
 
+
          enddo !  i !finished with all levels
+
+
+
 
 
 c     levels now known
@@ -288,8 +312,13 @@ c     reject on time condition (one hour lookback)
                write(6,*) 'accepting.. ', r_filename,' ',
      1              snd_type
             endif
+
          else                   ! accept implicitly
             write(6,*) 'accepting.. time exact ', snd_type
+         endif
+
+         if (ll_n(n) .eq. 0) then
+            n =n-1              ! no data in vertical test for blank radiometer data
          endif
 
       enddo  ! dummy isound loop (n determined)
@@ -308,6 +337,33 @@ c     invoke vaiable nn which is total number of soundings read
       endif
 
 c     -------end Select SND modify n section  (see SND interface document 1.0)
+c
+c------------------------- modify radiometer soundings ------------------------
+
+      do n = 1, nn
+         if (instrument(n) .eq. 'RADIOMTR' ) then
+            write (6,*) 'n is radiometer', n
+            write (6,*) 'calling hypsometric equation for pressure'
+            call hypso (meter_ht(1,n),t(1,n),rmd,ll_n(n),p_s(1,n),abort)
+
+c     now perform second correction for Radiometrics data.... data
+c     is only good up until 2km or 2000 meters.  Starting with the surface
+c     loop throught the data and re-assign the "top" layer ll_n(n) of
+c     each radiometer sounding to be under 2km.
+
+            do i = 1, ll_n(n)
+               if (meter_ht(i,n).gt.2000.) then ! above limit of use
+                  ll_n(n) = i ! this should maybe terminate loop
+                  go to 212 ! preserve assignment
+               endif
+            enddo               ! hight limit correction
+ 212        continue
+
+         endif
+
+      enddo                     !radiometer correction for p and ht
+
+
 
 c     ++++++++++++++++++++Placeholder for QC step+++++++++++++++++++++++++++++
 c     if there is eventually a QC step as there was for the old RAOB step, it would
@@ -408,6 +464,7 @@ c     data(i,j,k) is now in g/kg sh for introduction to variational scheme
       write (6,*) 'Success finishing SND_step.f'
       return
  18   Write (6,*) 'Error reading or operning file, abort'
+      write (6,*) 'SND Step routine has failed'
       abort = 0
       return
       end

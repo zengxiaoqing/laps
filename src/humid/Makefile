@@ -40,7 +40,7 @@ SRC=module_sfc_structure.f    analq.f            lq3_driver1a.f     rsr.f \
     get_rad.f          lh3_compress.f     writef_sp.f \
     getmapsdf.f        locate.f           read_lvd_3_4_5.f   writefile.f \
     moment_b.f         two_d_stats.f      process_gvap.f     read_gvap.f \
-    analz_gvap.f       report_change.f \
+    analz_gvap.f       hypso.f            report_change.f \
     process_gps.f      read_gps.f         int_layerpw.f      cloud_sat.f \
     get_newest_file.f  weight_field.f     analz_gps.f        sigma_to_laps.f \
     int_ipw.f          test_cloud.f	  read_madis_gps.f  \
