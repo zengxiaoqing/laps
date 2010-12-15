@@ -272,6 +272,8 @@ c           enddo
          elseif (cwb_type.eq.'nf15'.or.cwb_type.eq.'gfs'
      &.or.cwb_type.eq.'nf45'.or.cwb_type.eq.'tfs')then
 
+            t_at_sfc = r_missing_data
+
             call read_nf15km(nx,ny,nz,filename,
      &                       ht,tp,sh,uw,vw,ww,        !Note: sh contains 3D rh
      &                       pr_sfc,tp_sfc,td_sfc,     !Note: td_sfc contains sfc rh
