@@ -42,23 +42,31 @@ cdis
      1                      ,b_missing_data                             ! I
      1                      ,i_tilt_proc                                ! I/O
      1                      ,i_last_scan,istatus)                       ! O
+
+       use mem_vol
  
 !      Open/Read Polar NetCDF file for the proper time
        integer max_files
        parameter(max_files=20000)  ! max_radar_files
 
        character*150 path_to_radar,c_filespec,filename,directory
-     1              ,c_fnames(max_files)
+     1              ,c_fnames(max_files),c_fnames_in(max_files)
        character*15 path_to_vrc
        character*9 a9_time
        integer i4times_raw(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
        character*3 laps_radar_ext, c3_radar_subdir
-       character*8 radar_subdir, c8_fname_format
+       character*8 radar_subdir                             
        logical l_multi_tilt,l_exist,l_output,l_realtime
        character*13 a13_time
        integer cvt_wfo_fname13_i4time
        integer Z_bin, V_bin, radial
+
+       character*31 station
+
+!      integer gateR, gateR_HI, gateV, gateV_HI, radialR, radialR_HI,
+!    +     radialV, radialV_HI, scanR, scanR_HI, scanV,
+!    +     scanV_HI,nf_fid, nf_vid, nf_status
 
        save a9_time, i_nbr_files_raw, i_nbr_files_2nd, i_nbr_files_vol
        save i4times_raw, i4times_lapsprd, i_nbr_lapsprd_files
@@ -67,6 +75,12 @@ cdis
        include 'netcdfio_radar_common.inc'
        include 'remap_constants.dat' ! for debugging only? (also for structure)
 !      include 'remap.cmn' ! for debugging only
+
+!      Make this allocatable?
+!      integer   MAX_TILTS   
+!      parameter (MAX_TILTS=10) 
+!      integer   Z_vol(MAX_REF_GATES*MAX_RAY_TILT*MAX_TILTS)
+!      integer   V_vol(MAX_VEL_GATES*MAX_RAY_TILT*MAX_TILTS)
 
 !      This call is still needed for return of 'laps_radar_ext/c3_radar_subdir'
 !      We could change this to pass these in through the 'radar_init' call
@@ -104,7 +118,7 @@ cdis
            return
        endif
 
-       c8_fname_format = 'UNKNOWN'
+!      c8_fname_format = 'UNKNOWN'
 c
 c      Determine output filename extension
        write(6,*)' radar_init: laps_ext = ',laps_radar_ext
@@ -153,10 +167,10 @@ c      Determine output filename extension
                if(i_nbr_files_2nd .eq. 0)then ! try for volume files
                    c_filespec = path_to_radar(1:len_path)//'/*.nc'
                    call get_file_names(c_filespec,i_nbr_files_vol
-     1                                ,c_fnames,max_files,istatus)
+     1                                ,c_fnames_in,max_files,istatus)
                    if(istatus .ne. 1)then
                        write(6,*)
-     1                       ' istatus returned from get_file_names ='        
+     1                       ' istatus returned from get_file_names ='  
      1                        ,istatus
                        return
                    endif
@@ -173,17 +187,19 @@ c      Determine output filename extension
 
            if(i_nbr_files_vol .gt. 0)then
                write(6,*)' We have volume data'
+               c8_fname_format = 'VOLUME'
                c_filespec = path_to_radar(1:len_path)//'/*.nc'
 
                if(itimes .eq. 1)then ! determine file times
                    do i = 1,i_nbr_files_vol
                        if(i .eq. 1)then
-                           call get_directory_length(c_fnames(i),lend)
-                           call s_len(c_fnames(i),len_fname)
+                           call get_directory_length(c_fnames_in(i)
+     1                                              ,lend)
+                           call s_len(c_fnames_in(i),len_fname)
                            lenf = len_fname - lend
                        endif
-                       a13_time = c_fnames(i)(lend+5:lend+17)
-                       write(6,*)' a13_time = ',a13_time
+                       a13_time = c_fnames_in(i)(lend+5:lend+17)
+                       write(6,*)' vol a13_time = ',a13_time
                        i4times_raw(i) = cvt_wfo_fname13_i4time(a13_time)
                    enddo ! i
                endif
@@ -204,7 +220,7 @@ c      Determine output filename extension
                c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
 
                if(itimes .eq. 1)then
-                   call get_file_times(c_filespec,max_files,c_fnames
+                   call get_file_times(c_filespec,max_files,c_fnames_in
      1                                ,i4times_raw,i_nbr_files_raw
      1                                ,istatus)
                endif
@@ -258,6 +274,12 @@ c      Determine output filename extension
            endif
                
            write(6,*)' # of output files = ',i_nbr_lapsprd_files
+
+           if(i_nbr_lapsprd_files .ge. 1)then ! Write latest output filetime
+               call make_fnam_lp(i4times_lapsprd(i_nbr_lapsprd_files)
+     1                          ,a9_time,istatus)
+               write(6,*)' Latest output filetime = ',a9_time
+           endif
            
            I4_elapsed = ishow_timer()
 
@@ -288,6 +310,7 @@ c      Determine output filename extension
 
                write(6,*)' Files accepted up to ',a9_time
 
+               i_process = 0
                do i = latest_raw_file,1,-1
                    if(i .eq. latest_raw_file)then ! Write latest raw filetime
                        call make_fnam_lp(i4times_raw(i),a9_time,istatus)
@@ -307,6 +330,7 @@ c      Determine output filename extension
      1                i4times_raw(i) .le. i4_latest_window
      1                                                           )then
                        i4time_process = i4times_raw(i)
+                       i_process = i
                    endif
 
                enddo
@@ -315,7 +339,7 @@ c      Determine output filename extension
 
            if(i4time_process .ne. 0)then
                call make_fnam_lp(i4time_process,a9_time,istatus)
-               write(6,*)' Processing filetime ',a9_time
+               write(6,*)' Processing file/a9time ',i_process,a9_time
            else
                write(6,*)' No new filetimes to process'
                istatus = 0
@@ -325,24 +349,35 @@ c      Determine output filename extension
        endif ! i_tilt_proc = 1
 
 !      Pull in housekeeping data from 1st tilt
-       write(6,*)' radar_init: looking for file... '
+       write(6,*)' radar_init: looking for file for tilt... '
+     1          ,i_tilt_proc
 
        i_skip = 0
 
 !      Test existence of raw 'yyjjjhhmm_elevtt / yyyymmdd_hhmm.elevtt' input
  200   if(i_nbr_files_vol .eq. 0)then
+           c8_fname_format = 'UNKNOWN'
            call check_input_file(path_to_radar,a9_time,i_tilt_proc      ! I
-     1                          ,c8_fname_format                        ! I
+     1                          ,c8_fname_format                        ! I/O
      1                          ,filename,l_exist)                      ! O     
        else
            l_exist = .true.
+!          filename = path_to_radar(1:len_path)//'/'//a9_time//'.nc'
+           filename = c_fnames_in(i_process)
+           write(6,*)' processing volume directory file # ',i_process
+!          write(6,*)' c_fnames array',(c_fnames_in(i),i=1,i_process)
        endif
 
        if(l_exist)then ! these calls will fill the variables in 
                        ! 'netcdfio_radar_common.inc'
 
+         write(6,*)' c8_fname_format = ',c8_fname_format
+
+         if(c8_fname_format .ne. 'VOLUME')then
+
+           write(6,*)filename
            call get_tilt_netcdf_hdr  (filename,nf_fid
-     1                               ,radarName
+     1                               ,radarName  ! Is this returned?
      1                               ,siteLat                        
      1                               ,siteLon                        
      1                               ,siteAlt                        
@@ -401,6 +436,225 @@ c      Determine output filename extension
 
            write(6,*)' Z/V scale/offset = ',Z_scale,Z_offset
      1                                     ,V_scale,V_offset
+
+         else ! c8_fname_format = 'VOLUME'
+
+           if(i_tilt_proc .eq. 1)then
+               write(6,*)' call get_vol_netcdf_hdr'
+               write(6,*)filename
+
+               call get_vol_netcdf_hdr(filename,
+     +            gateR, gateR_HI, gateV, gateV_HI, radialR, radialR_HI,
+     +            radialV, radialV_HI, scanR, scanR_HI, scanV,
+     +            scanV_HI,nf_fid, nf_vid, nf_status)
+
+               write(6,*)' call get_attribute_vol'  
+
+               call get_attribute_vol(nf_fid,siteLat,siteLon,siteAlt
+     +            ,station
+     +            ,istatus)
+
+               radarName = station
+
+               write(6,*)' lat/lon/alt/name ',siteLat,siteLon,siteAlt
+     1                                       ,radarName
+
+!              Deallocate old volume scan (if needed)
+               if(allocated(Reflectivity))deallocate(Reflectivity)
+               if(allocated(Reflectivity_HI))deallocate(Reflectivity_HI)
+               if(allocated(RadialVelocity))deallocate(RadialVelocity)
+               if(allocated(RadialVelocity_HI)) 
+     1                                     deallocate(RadialVelocity_HI)
+
+               if(allocated(elevationR))deallocate(elevationR)
+               if(allocated(elevationR_HI))deallocate(elevationR_HI)
+               if(allocated(elevationV))deallocate(elevationV)
+               if(allocated(elevationV_HI))deallocate(elevationV_HI)
+
+               if(allocated(azimuthR))deallocate(azimuthR)
+               if(allocated(azimuthR_HI))deallocate(azimuthR_HI)
+               if(allocated(azimuthV))deallocate(azimuthV)
+               if(allocated(azimuthV_HI))deallocate(azimuthV_HI)
+
+               if(allocated(distanceR))deallocate(distanceR)
+               if(allocated(distanceR_HI))deallocate(distanceR_HI)
+               if(allocated(distanceV))deallocate(distanceV)
+               if(allocated(distanceV_HI))deallocate(distanceV_HI)
+
+!              Allocate new volume scan
+               write(6,*)'gateR,radialR,scanR = ',gateR,radialR,scanR
+               allocate(Reflectivity(gateR,radialR,scanR))
+               allocate(elevationR(radialR,scanR))
+               allocate(azimuthR(radialR,scanR))
+               allocate(distanceR(gateR))
+
+               write(6,*)'gateR_HI,radialR_HI,scanR_HI = ',
+     1                    gateR_HI,radialR_HI,scanR_HI
+               allocate(Reflectivity_HI(gateR_HI,radialR_HI,scanR_HI))
+               allocate(elevationR_HI(radialR_HI,scanR_HI))
+               allocate(azimuthR_HI(radialR_HI,scanR_HI))
+               allocate(distanceR_HI(gateR_HI))
+
+               write(6,*)'gateV,radialV,scanV = ',gateV,radialV,scanV
+               allocate(RadialVelocity(gateV,radialV,scanV))
+               allocate(elevationV(radialV,scanV))
+               allocate(azimuthV(radialV,scanV))
+               allocate(distanceV(gateV))              
+
+               write(6,*)'gateV_HI,radialV_HI,scanV_HI = ',
+     1                    gateV_HI,radialV_HI,scanV_HI
+               allocate(RadialVelocity_HI(gateV_HI,radialV_HI,scanV_HI))
+               allocate(elevationV_HI(radialV_HI,scanV_HI))
+               allocate(azimuthV_HI(radialV_HI,scanV_HI))
+               allocate(distanceV_HI(gateV_HI))                   
+
+               write(6,*)' call get_vol_netcdf_data'
+               call get_vol_netcdf_data(nf_fid, gateR, gateR_HI, 
+     +              gateV, gateV_HI,
+     +              radialR, radialR_HI, radialV, radialV_HI, 
+     +              scanR, scanR_HI,
+     +              scanV, scanV_HI, 
+     +              Reflectivity, Reflectivity_HI,
+     +              RadialVelocity, RadialVelocity_HI,
+     +              elevationR, elevationR_HI,
+     +              elevationV, elevationV_HI,
+     +              azimuthR, azimuthR_HI,
+     +              azimuthV, azimuthV_HI, 
+     +              distanceR, distanceR_HI,
+     +              distanceV, distanceV_HI)
+
+           endif ! i_tilt_proc = 1
+
+!          Transfer tilt to tilt arrays
+           write(6,*)' Transfer tilt to tilt arrays'
+
+!          radarName = 'KFTG'
+!          c4_radarname = 'KFTG'
+
+           elevationNumber = i_tilt_proc
+
+!          Note the _HI scans are lowest elevations
+
+!          High elevation (R)
+           if(i_tilt_proc .gt. scanR_HI .and. 
+     1        i_tilt_proc .le. scanR_HI + scanR)then
+               i_array = i_tilt_proc - scanR_HI
+               iscr = 0   
+!              irmax = 0                                ! debug
+               do j = 1,radialR
+                 do i = 1,gateR
+                   iscr = iscr + 1
+                   Z(iscr) = Reflectivity(i,j,i_array)
+!                  if(Z(iscr) .gt. 0)then               ! debug
+!                    irmax = i                          ! debug
+!                  endif                                ! debug
+                 enddo ! i
+!                if(irmax .gt. 0)then                   ! debug
+!                 write(6,*)j,azimuthR(j,i_array),irmax ! debug
+!    1                     ,distanceR(irmax)/1000.      ! debug
+!                endif                                  ! debug
+                 radialAzim(j) = azimuthR(j,i_array)
+               enddo ! j
+               elevationAngle = elevationR(1,i_array)
+               numRadials = radialR
+               firstGateRangeZ = distanceR(1) / 1000.
+               gateSizeZ = (distanceR(2) - distanceR(1)) / 1000.
+               write(6,*)' R i_tilt_proc/i_array/elev/gsp = ',
+     1                     i_tilt_proc,i_array,elevationAngle,gateSizeZ
+           endif
+
+!          Low elevation (R_HI)
+           if(i_tilt_proc .le. scanR_HI)then
+               i_array = i_tilt_proc                   
+               iscr = 0   
+!              irmax = 0                                   ! debug
+               do j = 1,radialR_HI
+                 do i = 1,gateR_HI
+                   iscr = iscr + 1
+!                  Z(iscr) = Reflectivity_HI(i,j,i_array)
+!                  if(Z(iscr) .gt. 0)then                  ! debug
+!                    irmax = i                             ! debug
+!                  endif                                   ! debug
+                 enddo ! i
+!                if(irmax .gt. 0)then                      ! debug
+!                 write(6,*)j,azimuthR_HI(j,i_array),irmax ! debug
+!    1                     ,distanceR_HI(irmax)/1000.      ! debug
+!                endif                                     ! debug
+                 radialAzim(j) = azimuthR_HI(j,i_array)
+               enddo ! j
+               elevationAngle = elevationR_HI(1,i_array)
+               numRadials = radialR_HI
+               firstGateRangeZ = distanceR_HI(1) / 1000.
+               gateSizeZ = (distanceR_HI(2) -  distanceR_HI(1)) / 1000.
+               write(6,*)' R_HI i_tilt_proc/i_array/elev/gsp = ',
+     1                     i_tilt_proc,i_array,elevationAngle,gateSizeZ
+           endif
+ 
+!          High elevation (V)
+           i_v_match = 0
+           do i_v = 1,scanV    
+               if(elevationV(1,i_v) .eq. elevationAngle)then
+                   i_v_match = i_v
+                   write(6,*)' V elevation match ',i_v
+               endif
+           enddo
+
+           if(i_v_match .gt. 0)then                              
+               i_array = i_v_match                     
+               iscr = 0   
+               do j = 1,radialV
+                 do i = 1,gateV
+                   iscr = iscr + 1
+                   V(iscr) = RadialVelocity(i,j,i_array)
+                 enddo ! i
+                 radialAzim(j) = azimuthV(j,i_array)         
+               enddo ! j
+               elevationAngle = elevationV(1,i_array)
+               numRadials = radialV
+               firstGateRangeV = distanceV(1) / 1000.
+               gateSizeV = (distanceV(2) - distanceV(1)) / 1000.
+               write(6,*)' V i_tilt_proc/i_array/elev = ',
+     1                     i_tilt_proc,i_array,elevationAngle
+           endif
+
+!          Low elevation (V_HI)
+           i_v_match = 0
+           do i_v = 1,scanV_HI    
+               if(elevationV_HI(1,i_v) .eq. elevationAngle)then
+                   i_v_match = i_v
+                   write(6,*)' V_HI elevation match ',i_v
+               endif
+           enddo
+
+           if(i_v_match .gt. 0)then                              
+               i_array = i_v_match                     
+               iscr = 0   
+               do j = 1,radialV_HI
+                 do i = 1,gateV_HI
+                   iscr = iscr + 1
+                   V(iscr) = RadialVelocity(i,j,i_array)
+                 enddo ! i
+                 radialAzim(j) = azimuthV_HI(j,i_array)         
+               enddo ! j
+               elevationAngle = elevationV_HI(1,i_array)
+               numRadials = radialV_HI
+               firstGateRangeV = distanceV_HI(1) / 1000.
+               gateSizeV = (distanceV_HI(2) -  distanceV_HI(1)) / 1000. 
+               write(6,*)' V_HI i_tilt_proc/i_array/elev = ',
+     1                     i_tilt_proc,i_array,elevationAngle
+           endif
+
+           if(i_tilt_proc .eq. scanR + scanR_HI)then
+               i_last_scan = 1
+           endif
+
+!          if(i_tilt_proc .eq. scanV + scanV_HI)then
+!              i_last_scan = 1
+!          endif
+
+           istatus = 1
+
+         endif
 
        elseif(i_tilt_proc .le. 20)then
            i_tilt_proc = i_tilt_proc + 1
@@ -878,6 +1132,11 @@ c      Determine output filename extension
            if(l_exist)c8_fname_format = 'WFO'
        endif
 
+!      if(c8_fname_format .eq. 'VOLUME')then
+!          a15_time = fname9_to_wfo_fname15(a9_time)
+!          filename = path_to_radar(1:len_path)//'/KFTG'//a15_time//'_V03.nc'
+!    1                //c2_tilt
+!      endif
 
        call s_len(filename,len_file)
        write(6,*)' check_input_file: ',filename(1:len_file),' ',l_exist       
