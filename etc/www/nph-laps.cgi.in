@@ -332,9 +332,9 @@ if ($frames_safe > 1 || $frames_safe =~ "auto"){
         $domain_nl = "nest7grid.parms";
         $nl_var="laps_cycle_time";
         @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
-        if($frames_safe eq "auto6"){
+        if($frames_safe eq "auto-6"){
             $cycle_time=@cycle_array[0] * 6;
-        }elsif($frames_safe eq "auto3"){
+        }elsif($frames_safe eq "auto-3"){
             $cycle_time=@cycle_array[0] * 3;
         }else{
             $cycle_time=@cycle_array[0];
@@ -373,10 +373,18 @@ if ($n_levels == 0) {
 EOI
 }
 
-if ($frames_safe > 1 && $a9time_safe eq "") {
+if ($frames_safe ne "1" && $a9time_safe eq "") {
     $err=1;
     print<<"EOI";
 <h2>Please select a valid end time for multi-frame image...</h2>
+</body></html>
+EOI
+}
+
+if ($frames_safe ne "1" && length($forecast_time) < 9 && $frames_safe =~ "auto"){
+    $err=1;
+    print<<"EOI";
+<h2>Please select a valid initial time for auto multi-frame image...</h2>
 </body></html>
 EOI
 }
@@ -1266,14 +1274,16 @@ if($err == 0) {
                               printf LAPSPLOT "fsf\n"; 
                               printf LAPSPLOT "$source\n"; 
                               printf LAPSPLOT "$hhmm\n";
-                              printf LAPSPLOT "lwoi\n"; 
+#                             printf LAPSPLOT "lwoi\n"; 
+                              printf LAPSPLOT "s8ai\n"; 
 
                           }elsif("$field" eq "sat_11u" ) { 
                               printf LAPSPLOT "bs\n"; 
                               printf LAPSPLOT "fsf\n"; 
                               printf LAPSPLOT "$source\n"; 
                               printf LAPSPLOT "$hhmm\n";
-                              printf LAPSPLOT "lwo\n"; 
+#                             printf LAPSPLOT "lwo\n"; 
+                              printf LAPSPLOT "s8a\n"; 
 
                           }elsif("$field" eq "VIS_ALB" ) { 
                               printf LAPSPLOT "bs\n"; 
@@ -1889,6 +1899,18 @@ if($err == 0) {
                             printf LAPSPLOT "c\n"; 
                         }
 
+                    }elsif("$field" eq "SH" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "rsfi\n"; 
+
+                    }elsif("$field" eq "sh" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "rsf\n"; 
+
                     }elsif("$field" eq "SFCT" ) { 
                         printf LAPSPLOT "bs\n"; 
                         printf LAPSPLOT "lgb\n"; 
@@ -2296,13 +2318,14 @@ if($err == 0) {
            
             }elsif("$source" eq "obs"){
                 if("$level" eq "sfc/2d"){                                                            # Sfc Obs
-#                   print "$field $obs_sfc \n";
+#                   print "field, obs_sfc = $field $obs_sfc \n";
 
                     if($obs_sfc eq "none" || $field eq "SFCT" || $field eq "sfct" || $field eq "stn_p" || $field eq "alt_p" 
                     || $field eq "p_prime"  || $field eq "P_PRIME"  
                     || $field eq "red_p" || $field eq "ref_max" || $field eq "REF_MAX" 
                     || $field eq "snow_cvr" || $field eq "SNOW_CVR" 
                     || $field eq "cld_cvr" || $field eq "CLD_CVR" 
+                    || $field eq "sw_down" || $field eq "SW_DOWN" 
 #                   || $field eq "umflux" || $field eq "UMFLUX" 
                                                                            ){                        # Overlay always for these
 
@@ -2464,7 +2487,7 @@ if($err == 0) {
                             printf LAPSPLOT "og\n"; 
                             printf LAPSPLOT " \n"; 
 
-                        }elsif("$field" eq "SW_DOWN"){ 
+                        }elsif("$field" eq "SW_DOWN" || "$field" eq "sw_down"){ 
                             printf LAPSPLOT "og\n"; 
                             printf LAPSPLOT " \n"; 
 
@@ -2647,9 +2670,9 @@ if($err == 0) {
                         printf LAPSPLOT "cg\n";  
                         printf LAPSPLOT "0\n"; 
 
-                    }elsif("$field" eq "SW_DOWN" ){ 
-                        printf LAPSPLOT "cg\n";  
-                        printf LAPSPLOT "0\n"; 
+#                   }elsif("$field" eq "SW_DOWN" ){ 
+#                       printf LAPSPLOT "cg\n";  
+#                       printf LAPSPLOT "0\n"; 
 
                     }elsif("$field" eq "CLD_TOP" ){ 
                         printf LAPSPLOT "cti\n"; 
@@ -2853,6 +2876,12 @@ if($err == 0) {
                     elsif("$field" eq "LONG_WAVE"){ 
                         printf LAPSPLOT "lci\n"; 
                         printf LAPSPLOT "s8a\n";} 
+                    elsif("$field" eq "SW_DOWN"){  # LCV
+                        printf LAPSPLOT "lci\n"; 
+                        printf LAPSPLOT "swi\n";} 
+                    elsif("$field" eq "sw_down"){           
+                        printf LAPSPLOT "lc\n"; 
+                        printf LAPSPLOT "swi\n";} 
                     elsif("$field" eq "SAT_11U"){ 
                         printf LAPSPLOT "lci\n"; 
                         printf LAPSPLOT "s8a\n";} 
@@ -3560,8 +3589,10 @@ if($err == 0) {
                               printf LAPSPLOT "n\n"; 
                           }elsif("$field" eq "cld_liq" ){ 
                               printf LAPSPLOT "ls\n"; 
+                              printf LAPSPLOT "a\n"; 
                           }elsif("$field" eq "cld_ice" ){ 
                               printf LAPSPLOT "ci\n"; 
+                              printf LAPSPLOT "a\n"; 
                           }elsif("$field" eq "REFLCT" ){ 
                               printf LAPSPLOT "ri\n"; 
                               printf LAPSPLOT "a\n"; 
@@ -3963,7 +3994,7 @@ EOI
     print<<"EOI";
     <p>
     <center>
-    <IMG SRC="@prefix@/etc/www/colorbar.gif">
+    <IMG SRC="colorbar.gif">
     </body></html>
 
 EOI
