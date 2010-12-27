@@ -171,8 +171,9 @@ chomp $default_npix;
 my $default_frames = @lines[12];
 $default_frames =~ s/ //g;
 chomp $default_frames;
+my @frames_list;
 
-#print " | default_frames read in is $default_frames\n";
+#print " | default_frames read in is $lines[12] @lines[12] $default_frames\n";
 
 my $default_delay = @lines[13];
 $default_delay =~ s/ //g;
@@ -254,9 +255,9 @@ close LAPSPRD;
 @frames_list[11] = "12";
 @frames_list[12] = "13";
 @frames_list[13] = "24";
-@frames_list[14] = "auto";
-@frames_list[15] = "auto3";
-@frames_list[16] = "auto6";
+@frames_list[14] = "auto-1";
+@frames_list[15] = "auto-3";
+@frames_list[16] = "auto-6";
 
 @delay_list[0] = "25";
 @delay_list[1] = "50";
@@ -511,6 +512,7 @@ print <<"EOF";
 <option $selected{'snow_sto'}> snow_sto
 <option $selected{'snow_cvr'}> snow_cvr
 <option $selected{'land_frac'}> land_frac
+<option $selected{'sw_down'}> sw_down  
 <option $selected{'gg'}> gg
 </select>
 </td>
@@ -657,11 +659,12 @@ print <<"EOF";
 
 <select name="frames">
 EOF
-  #display available frame counts
 
+# display available frame counts
   foreach $frames (@frames_list) {
 
-    if($frames == $default_frames ) { 
+    if($frames eq $default_frames ) { 
+#       print "option selected is $default_frames\n";
         print "<option selected>$frames\n"; 
     }else{ 
         print "<option>$frames\n"; 
@@ -693,7 +696,7 @@ print <<"EOF";
 
 </FORM>
 
-<IMG SRC="@prefix@/etc/www/colorbar.gif">
+<IMG SRC="colorbar.gif">
 
 <p>
 
