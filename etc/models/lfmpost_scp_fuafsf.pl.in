@@ -263,6 +263,31 @@ if (! $opt_S){ # test for skipping JETTY copy
     sleep 10;
     $elapsed = 0;
 
+#   Determine size of fua/fsf files
+    my $waitsize = 1;
+
+    my $fuasize;
+    $fuasize = -s "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file";
+    $waitsize = 1;
+    while ($fuasize == 0 && $waitsize <= 5) {
+        print "fua size = $fuasize, wait count = $waitsize\n";
+        sleep 10;
+        $waitsize++;
+        $fuasize = -s "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file";
+    }
+    print "fua size = $fuasize\n";
+
+    my $fsfsize;
+    $fsfsize = -s "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file";
+    $waitsize = 1;
+    while ($fsfsize == 0 && $waitsize <= 5) {
+        print "fsf size = $fsfsize, wait count = $waitsize\n";
+        sleep 10;
+        $waitsize++;
+        $fsfsize = -s "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file";
+    }
+    print "fsf size = $fsfsize\n";
+
 #   Send to remote directory
     system ("date");
     my $scp_cmd;
