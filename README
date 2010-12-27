@@ -822,13 +822,15 @@
      '$LAPS_SRC_ROOT/data/static' directory tree by the localization scripts
      (next step). 
 
-     Templates are normally maintained in a location independent of the LAPS 
-     distribution (e.g. see the template directory in the tree diagrams above).
-     In general, they contain parameters dependent on the local implementation 
-     and relatively independent of software updates. Once you set up the 
-     template directory you'll be ready to run the 'window_domain_rt.pl' script. 
-     Here is an idealized example illustrating the namelist merging process that 
-     is done during the localization...
+     Templates should be maintained in a location separate from the LAPS 
+     distribution and LAPS_DATA_ROOT (e.g. see the template directory in the
+     tree diagrams above). This avoids them being erased during software
+     updates and relocalizations. Thus templates can be thought of as more 
+     permanent, since they contain parameters dependent on the local 
+     implementation and relatively independent of software updates. Once you 
+     set up the template directory you'll be ready to run the 
+     'window_domain_rt.pl' script. Here is an idealized example illustrating the
+     namelist merging process that is done during the localization...
 
 <pre>
         template           repository tar file             localized result
