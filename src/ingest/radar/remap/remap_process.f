@@ -453,8 +453,8 @@ c
                 k = k_eff(i,j)
                 klut = gate_elev_to_z_lut(igate_lut,ielev)
                 if(jray .eq. 1 .and. idebug .ge. 1)then
-                    write(6,*)'igate,k,klut,iran,i,j'
-     1                        ,igate,k,klut,iran,i,j                  
+                    write(6,5)igate,igate_lut,iran,i,j,k,klut
+5                   format(' igate,igate_lut,iran,i,j,k,klut= ',7i6)
                 endif
             else
                 k = gate_elev_to_z_lut(igate_lut,ielev)
