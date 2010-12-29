@@ -32,9 +32,11 @@ cdis
 c
 c===============================================================================
 c
-      subroutine time_interp(dir,ext,nx,ny,nz,ngrids,pr,
+      subroutine time_interp(dir,ext,nx,ny,nz,ngrids,pr,ht_1d,
      .                  i4time_valid1,i4time_valid2,i4time_now,
      .                  time1,fcst1,time2,fcst2)
+
+      use mem_namelist, ONLY: vertical_grid
 c
       implicit none
       include 'bgdata.inc'
@@ -58,7 +60,7 @@ c
 
       logical   lexist
 c
-      real   pr(nz),weight
+      real   pr(nz),ht_1d(nz),weight
 
       real,  allocatable :: 
      .       grid1(:,:,:),
@@ -82,8 +84,13 @@ c_______________________________________________________________________________
 c
       if(ext.eq.'lga') then
          do k=1,nz
-            ip(k)=int(pr(k))
-            var(k,1)='HT '
+            if(vertical_grid .ne. 'SIGMA_HT')then
+               ip(k)=int(pr(k))
+               var(k,1)='HT '
+            else
+               ip(k)= int(ht_1d(k)) 
+               var(k,1)='HT '
+            endif
             var(k,2)='T3 '
             var(k,3)='SH '
             var(k,4)='U3 '
