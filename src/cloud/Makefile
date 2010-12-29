@@ -33,16 +33,14 @@ SRC=array_plot.f \
     get_istat_39.f \
     get_sat_data.f \
     getvis.f \
-    insertpireps.f \
     insertradar.f \
-    insertsao.f \
     insertsat.f \
     insertvis.f \
     insert_co2ctp.f \
     laps_cloud.f \
     laps_cloud_sub.f \
     slice.f \
-    spread.f 
+    stats_1d.f
 
 all: exe
 
