@@ -11,8 +11,10 @@ C                 IMX      DIMENSION E-W
 C                 JMX      DIMENSION N-S
 C                 KX       NUMBER OF VERTICAL LEVELS
 C                 p        LAPS Pressure levels     1D
-C                 tdsfc    LAPS Dew Point Temp      2D
-c                 td_sfc   ANALYZED DEW POINT TEMP  2D
+c                 tsfc     !I/O input model T, output recomputed T
+c                 tdsfc    !I/O input model Td, output  recomputed Td
+c                 td_sfc   !I, model Td
+c                 qsfc     !I/O surface spec hum, Input as q or computed internally
 c
 c Compute surface variables on hi-res terrain using 2D model surface data. 
 
