@@ -2301,6 +2301,11 @@ c
               c_label='3.9u - 11u difference  (K)'
               scale_l = -10           ! for image plots
               scale_h = +10.          ! for image plots
+            elseif(var_2d_in.eq.'SWI')then
+              c_label='Downward Short Wave (W/m**2)'              
+              scale_l = 0.            ! for image plots
+              scale_h = 1000.         ! for image plots
+              colortable = 'spectral'
             else
 !             c_label='VIS counts (normalized) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
@@ -3165,7 +3170,11 @@ Cabdel
                     cint = -0.01
                 endif
                 chigh = 10.
-                colortable = 'acc'
+                if(r_hours .eq. -99.)then 
+                    colortable = 'acc_sto'
+                else
+                    colortable = 'acc_inc'
+                endif
             else ! 'sa'
                 if(abs(r_hours) .gt. 1.0)then
                     cint = -0.5
@@ -3173,7 +3182,11 @@ Cabdel
                     cint = -0.5
                 endif
                 chigh = 20.
-                colortable = 'sno'
+                if(r_hours .eq. -99.)then 
+                    colortable = 'sno_sto'
+                else
+                    colortable = 'sno_inc'
+                endif
             endif
 
             call condition_precip(NX_L,NY_L,c_type,accum_2d,scale
@@ -5233,6 +5246,11 @@ c                   cint = -1.
                 units_2d = 'g/kg'
                 comment_2d = 'Sfc Mixing Ratio'
 
+            elseif(var_2d .eq. 'RSF')then       
+                scale = 1e-3                        
+                units_2d = 'g/kg'
+                comment_2d = 'Sfc Spec Humidity'
+
             elseif(var_2d .eq. 'PDM')then 
                 if(namelist_parms%c_pbl_depth_units .eq. 'english')then       
                     units_2d = 'FT'
@@ -5339,6 +5357,10 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,0.0,500.
      1                         ,'linear',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
+                elseif(var_2d .eq. 'SWI')then
+                    call ccpfil(field_2d,NX_L,NY_L,0.0,1000.
+     1                         ,'linear',n_image,scale,'spectral'
+     1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'PBE')then
 !                   call condition_cape(NX_L,NY_L,'pei',r_missing_data
 !    1                                 ,field_2d)
@@ -5361,7 +5383,7 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,0.,7.0
      1                         ,'tpw',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
-                elseif(var_2d .eq. 'MSF')then
+                elseif(var_2d .eq. 'MSF' .or. var_2d .eq. 'RSF')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,25.0
      1                         ,'tpw',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
@@ -5410,10 +5432,18 @@ c                   cint = -1.
      1                 var_2d(2:3) .eq. 'TO')then
                     if(var_2d(1:1) .eq. 'R')then
                         chigh = +10.
-                        colortable = 'acc'
+                        if(var_2d(2:3) .eq. '01')then
+                            colortable = 'acc_inc'
+                        else
+                            colortable = 'acc_sto'
+                        endif
                     else
                         chigh = +20.
-                        colortable = 'sno'
+                        if(var_2d(2:3) .eq. '01')then
+                            colortable = 'sno_inc'
+                        else
+                            colortable = 'sno_sto'
+                        endif
                     endif
 
                     call condition_precip(NX_L,NY_L,'pai',field_2d
