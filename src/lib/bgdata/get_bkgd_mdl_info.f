@@ -650,13 +650,13 @@ c --------------------
            call s_len(headers_file,lenhf)
            write(6,*)' Read headers file = ',headers_file(1:lenhf)
            open(22,file=headers_file(1:lenhf),status='old',err=97)
-           read(22,*,err=98)nheaders
+           read(22,*,err=98,end=98)nheaders
            do iheader = 1,nheaders
-             read(22,11,err=98)fpathname_a(iheader)
+             read(22,11,err=98,end=98)fpathname_a(iheader)
 11           format(a)
 !            write(6,*)' test - header path = ',iheader,  
 !    1                 fpathname_a(iheader)             
-             read(22,*,err=98)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
+             read(22,*,err=98,end=98)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
      1         ,Lat0,Lat1,Lon0
      1         ,cgrddef,cross_dateline,sw,ne
 
