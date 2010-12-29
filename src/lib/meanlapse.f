@@ -31,7 +31,8 @@ cdis
 cdis
 c
 c
-        subroutine mean_lapse(num_sfc,elev,t,td,a_t,b_t,a_td,b_td,hbar)
+        subroutine mean_lapse_old(num_sfc,elev,t,td,a_t,b_t,a_td,b_td
+     1                           ,hbar)
 c
 c*******************************************************************************
 c
