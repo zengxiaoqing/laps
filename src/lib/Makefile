@@ -88,6 +88,8 @@ SRC	= machine_dependent.F \
           i4time_fname_lp.f \
           ingest_madis_map.f \
           ingest_routines.f \
+          insertpireps.f \
+          insertsao.f \
           interp.f \
           interpolate_3dfield.f \
           laps_io.f \
@@ -101,7 +103,6 @@ SRC	= machine_dependent.F \
           make_td.f \
           make_optran_layers.f \
           map_proj.f \
-          meanlapse.f \
           meanpres.f \
           move.f \
           multar.f \
@@ -145,6 +146,7 @@ SRC	= machine_dependent.F \
           smf_wisp92.f \
           smooth_cross_laps.f \
           snooze_gg.f \
+          spread.f \
           sroutines.f \
           ssh2.f \
           subcon.f \
