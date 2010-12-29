@@ -256,6 +256,8 @@ c abdel
      1                       ,dist_plot_ua, dist_plot_sfc
      1                       ,c_ob_color, i_background_color
      1                       ,btemp_colortable
+     1                       ,i_pcp_sto_colorbar
+     1                       ,i_sno_sto_colorbar
 
 !      Set defaults
        latlon_int = 0
@@ -272,7 +274,8 @@ c abdel
        c_ob_color = 'default'
        i_background_color = 2
        btemp_colortable = 'linear'
- 
+       i_pcp_sto_colorbar = 3
+       i_sno_sto_colorbar = 4 
        call get_directory('static',static_dir,len_dir)
 
        filename = static_dir(1:len_dir)//'/lapsplot.nl'
@@ -308,6 +311,8 @@ c abdel
        namelist_parms%icol_barbs = icol_barbs
        namelist_parms%dist_plot_ua = dist_plot_ua
        namelist_parms%dist_plot_sfc = dist_plot_sfc
+       namelist_parms%i_pcp_sto_colorbar = i_pcp_sto_colorbar
+       namelist_parms%i_sno_sto_colorbar = i_sno_sto_colorbar
 
        istatus = 1
        return
