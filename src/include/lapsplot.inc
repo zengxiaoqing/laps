@@ -22,6 +22,8 @@
           integer icol_barbs
           integer iraster
           integer i_background_color
+          integer i_pcp_sto_colorbar
+          integer i_sno_sto_colorbar
 
           character*3 c3_time_zone
           character*30 c_institution
