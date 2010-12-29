@@ -186,7 +186,7 @@ cdis
         real heights_3d(NX_L,NY_L,NZ_L)
 
 !       Output array declarations
-        real out_array_3d(NX_L,NY_L,7)
+        real out_array_3d(NX_L,NY_L,8)
 
 !       real snow_2d(NX_L,NY_L)
 
@@ -275,6 +275,7 @@ cdis
         real dbz_low_2d(NX_L,NY_L)
         real dbz_max_2d(NX_L,NY_L)
         real rqc_2d(NX_L,NY_L)
+        real swi_2d(NX_L,NY_L)
 
 !       SFC precip and cloud type (LCT file)
         real r_pcp_type_thresh_2d(NX_L,NY_L)
@@ -1322,11 +1323,11 @@ C       EW SLICES
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns)
 
-
-        call compare_analysis_to_rad(NX_L,NY_L,cvr_sao_max,solar_alt
+        call compare_analysis_to_rad(i4time,NX_L,NY_L,cvr_sao_max
+     1  ,solar_alt
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
-     1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns)
+     1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns,swi_2d)
 
 !       Write LCV file
         if(iwrite_output .ge. 1)then
@@ -1344,6 +1345,7 @@ C       EW SLICES
             var_a(5) = 'S3A'
             var_a(6) = 'ALB'
             var_a(7) = 'RQC'
+            var_a(8) = 'SWI'
             units_a(1) = 'UNDIM'
             units_a(2) = 'UNDIM'
             units_a(3) = 'K'
@@ -1351,6 +1353,7 @@ C       EW SLICES
             units_a(5) = 'K'
             units_a(6) = ' '
             units_a(7) = ' '
+            units_a(8) = 'W/M**2'
             comment_a(1) = 'LAPS Cloud Cover'
             comment_a(2) = 'LAPS Cloud Analysis Implied Snow Cover'
             comment_a(3) = 'LAPS Clear Sky Water Temp'
@@ -1358,6 +1361,7 @@ C       EW SLICES
             comment_a(5) = comment_t39
             comment_a(6) = comment_alb
             comment_a(7) = 'LAPS Radar Quality'
+            comment_a(8) = 'Downward Solar Radiation'
 
 
             call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
@@ -1367,9 +1371,10 @@ C       EW SLICES
             call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
             call move(albedo        ,out_array_3d(1,1,6),NX_L,NY_L)
             call move(rqc_2d        ,out_array_3d(1,1,7),NX_L,NY_L)
+            call move(swi_2d        ,out_array_3d(1,1,8),NX_L,NY_L)
 
             call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1              comment_a,out_array_3d,NX_L,NY_L,7,istatus)
+     1              comment_a,out_array_3d,NX_L,NY_L,8,istatus)
 
             if(istatus .eq. 1)j_status(n_lcv) = ss_normal
         endif ! iwrite_output
