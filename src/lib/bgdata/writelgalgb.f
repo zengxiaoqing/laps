@@ -218,7 +218,7 @@ c
       integer ip(nz_laps)
 
       real    missingflag
-      real    ht(nz_laps)                  !Sigma if SIGMA_P grid
+      real    ht(nz_laps)                  !SIGMA_HT height levels
       real    pr(nx_laps,ny_laps,nz_laps), !Pressure (Pa)
      .        tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
      .        sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
@@ -249,16 +249,16 @@ c
          enddo
          enddo
 c only need to do some of these once.
-         ip(k)=nint(ht(k)*1000.)
+         ip(k)=nint(ht(k))
          var(k)='P3 '
          lvl_coord(k)='    '
          units(k)='Pascals'
-         comment(k)=cmodel(1:ic)//' interpolated to LAPS sigma.'
+         comment(k)=cmodel(1:ic)//' interpolated to LAPS sigma_ht.'
       enddo
       print*,'P3'
       call write_laps(bgtime,bgvalid,outdir,ext,
      .                nx_laps,ny_laps,nz_laps,nz_laps,var,
-     .                ip,lvl_coord,units,comment,ht,istatus)
+     .                ip,lvl_coord,units,comment,pr,istatus)
       if (istatus .ne. 1) then
           print *,'Error writing interpolated data to LAPS database.'
           return
