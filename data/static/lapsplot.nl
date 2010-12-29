@@ -16,6 +16,8 @@
  l_sphere=.false.,
  l_low_fill=.true.,
  l_high_fill=.true.,
+ i_pcp_sto_colorbar=3,
+ i_sno_sto_colorbar=4,
  mode_supmap=3,
  iraster=0,
  icol_barbs=0,
@@ -73,6 +75,15 @@ c              plots (vxx files)
 c
 c l_high_fill - do vertical interpolation of individual 3-D radar reflectivity
 c               plots (vxx files)
+c
+c i_pcp_sto_colorbar - set range of storm total precip colorbar
+c               (1) 0-10 inches
+c               (3) 0-25 inches
+c               (2) 0-40 inches
+c
+c i_sno_sto_colorbar - set range of storm total snow colorbar
+c               (2) 0-40  inches
+c               (4) 0-100 inches
 c
 c mode_supmap - (1) use map database in 'data/static/ncarg/*'
 c               (3) use ezmap database in 'NCARG_ROOT/lib/ncarg/database'
