@@ -366,12 +366,22 @@ C Set up color table
       write(6,*)' ccpfil_sub - scale,scale_loc = ',scale,scale_loc
 C      
       if(l_set_contours)then
-          if(colortable .eq. 'acc')then       
-              call get_pcp_vals(maxvals,namelist_parms,nvals,vals,1)
+          if(colortable(1:3) .eq. 'acc')then       
+              if(colortable(4:7) .eq. '_inc')then
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals,1)
+              else
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals
+     1                             ,namelist_parms%i_pcp_sto_colorbar)
+              endif
           endif
 
-          if(colortable .eq. 'sno')then       
-              call get_pcp_vals(maxvals,namelist_parms,nvals,vals,2)
+          if(colortable(1:3) .eq. 'sno')then       
+              if(colortable(4:7) .eq. '_inc')then
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals,2)
+              else
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals
+     1                             ,namelist_parms%i_sno_sto_colorbar)
+              endif
           endif
 
           ncols = nvals - 1
@@ -714,8 +724,8 @@ C
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,power,plot_parms,istatus)
 
-      elseif(colortable .eq. 'green' .or. colortable .eq. 'acc'
-     1  .or. colortable .eq. 'sno'                            )then       
+      elseif(colortable .eq. 'green' .or. colortable(1:3) .eq. 'acc'
+     1  .or. colortable(1:3) .eq. 'sno'                            )then       
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,power,plot_parms,istatus)
 
@@ -724,7 +734,8 @@ C
 
       endif
 
-      if(colortable .eq. 'acc' .or. colortable .eq. 'sno')then ! Set colortable ends
+      if(colortable(1:3) .eq. 'acc' .or. 
+     1   colortable(1:3) .eq. 'sno')then ! Set colortable ends
           do i = 1,1
 !         do i = 1,3
               call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
@@ -747,7 +758,7 @@ C
 
       include 'lapsplot.inc'
 
-      write(6,*)' Subroutine color_ramp.. ',ncol1,ncol2
+      write(6,*)'  subroutine color_ramp.. ',ncol1,ncol2
 
       do icol = ncol1,ncol2
           if(ncol2 .ne. ncol1)then
@@ -765,8 +776,8 @@ C
 
           call hsi_to_rgb(hue,sat,rintens,red,grn,blu)
 
-          write(6,1)icol,hue,sat,rintens,red,grn,blu
- 1        format(i5,6f8.3)
+          write(6,1)icol,frac,hue,sat,rintens,red,grn,blu
+ 1        format(i5,f8.3,3x,'HSI:',3f8.3,3x,'RGB:',3f8.3)
           
           call GSCR(IWKID,icol+icol_offset,red,grn,blu)
       enddo
@@ -1117,10 +1128,20 @@ c     Restore original color table
 !         Other fractions
 
           if(l_set_contours)then
-              if(colortable .eq. 'acc')then
-                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals,1)       
-              elseif(colortable .eq. 'sno')then
-                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals,2)       
+              if(colortable(1:3) .eq. 'acc')then
+                if(colortable(4:7) .eq. '_inc')then
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals,1)
+                else
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals
+     1                             ,namelist_parms%i_pcp_sto_colorbar)
+                endif
+              elseif(colortable(1:3) .eq. 'sno')then
+                if(colortable(4:7) .eq. '_inc')then
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals,2)
+                else
+                  call get_pcp_vals(maxvals,namelist_parms,nvals,vals
+     1                             ,namelist_parms%i_sno_sto_colorbar)
+                endif
               endif
 
               do i = 1,nvals
@@ -1129,8 +1150,8 @@ c     Restore original color table
               nfrac = nvals
 
           elseif(log_scaling .AND. 
-     1          (colortable .eq. 'acc' .or. colortable .eq. 'sno')
-     1                                                             )then
+     1          (colortable(1:3) .eq. 'acc' .or. 
+     1           colortable(1:3) .eq. 'sno'     )  )then
               frac_a(1) = 0.125
               frac_a(2) = 0.230
               frac_a(3) = 0.330
@@ -1236,7 +1257,14 @@ c     Restore original color table
       call get_directory('static',path,lenp)
       call s_len(colortable,lenc)
 
-      filename = path(1:lenp)//'/www/'//colortable(1:lenc)//'.lut'
+      lenc2 = lenc
+      do i = 2,lenc
+          if(colortable(i:i) .eq. '_')then ! truncate at the underscore
+              lenc2 = i-1
+          endif
+      enddo
+
+      filename = path(1:lenp)//'/www/'//colortable(1:lenc2)//'.lut'
 
       call s_len(filename,lenf)
 
@@ -1271,6 +1299,7 @@ c     Restore original color table
      1                         + sat_a(j+1)  *       frac_ramp
                       rint_col = rint_a(j)   * (1. - frac_ramp) 
      1                         + rint_a(j+1) *       frac_ramp
+                      write(6,*)' i/frac_color = ',i,frac_color
                       call color_ramp(i,i,IWKID,icol_offset,plot_parms    
      1                               ,hue_col,sat_col,rint_col
      1                               ,hue_col,sat_col,rint_col)
@@ -1306,7 +1335,7 @@ c     Restore original color table
           colorbar_int = 1000.
       elseif(range .ge. 2500.)then
           colorbar_int = 500.
-      elseif(range .ge. 1000.)then
+      elseif(range .ge. 1200.)then
           colorbar_int = 400.
       elseif(range .ge. 700.)then
           colorbar_int = 100.
@@ -1349,8 +1378,10 @@ c     Restore original color table
 
       real vals(maxvals)
 
-      if(itype .eq. 1)then
-        if(namelist_parms%c_units_type .eq. 'english')then ! (inches)
+      write(6,*)' get_pcp_vals: itype = ',itype
+
+      if(itype .eq. 1)then ! rain
+        if(namelist_parms%c_units_type .eq. 'english')then ! (0-10 inches)
           vals(1) = 0.
           vals(2) = .01
           vals(3) = .02
@@ -1386,8 +1417,8 @@ c     Restore original color table
 
         endif
 
-      else ! snow
-        if(namelist_parms%c_units_type .eq. 'english')then ! (inches)
+      elseif(itype .eq. 2)then ! snow 
+        if(namelist_parms%c_units_type .eq. 'english')then ! (0-40 inches)
           vals(1) = 0.
           vals(2) = .1
           vals(3) = .5
@@ -1403,6 +1434,80 @@ c     Restore original color table
           vals(13) = 20.0
           vals(14) = 30.0
           vals(15) = 40.0
+
+        else ! metric (mm)
+          vals(1) = 0.
+          vals(2) = .2
+          vals(3) = .5
+          vals(4) = 1.0
+          vals(5) = 2.0
+          vals(6) = 5.0
+          vals(7) = 10.
+          vals(8) = 20.
+          vals(9) = 30.
+          vals(10) = 50.
+          vals(11) = 75.
+          vals(12) = 100.
+          vals(13) = 150.
+          vals(14) = 200.
+          vals(15) = 400.
+
+        endif
+
+      elseif(itype .eq. 3)then ! heavy rain
+        if(namelist_parms%c_units_type .eq. 'english')then ! (0-25 inches)
+          vals(1) = 0.
+          vals(2) = .1
+          vals(3) = .2
+          vals(4) = .5
+          vals(5) = 1.0
+          vals(6) = 2.0
+          vals(7) = 3.0
+          vals(8) = 4.0
+          vals(9) = 6.0
+          vals(10) = 8.0
+          vals(11) = 10.0
+          vals(12) = 12.0
+          vals(13) = 15.0
+          vals(14) = 20.0
+          vals(15) = 25.0
+
+        else ! metric (mm)
+          vals(1) = 0.
+          vals(2) = .2
+          vals(3) = .5
+          vals(4) = 1.0
+          vals(5) = 2.0
+          vals(6) = 5.0
+          vals(7) = 10.
+          vals(8) = 20.
+          vals(9) = 30.
+          vals(10) = 50.
+          vals(11) = 75.
+          vals(12) = 100.
+          vals(13) = 150.
+          vals(14) = 200.
+          vals(15) = 400.
+
+        endif
+
+      elseif(itype .eq. 4)then ! heavy snow
+        if(namelist_parms%c_units_type .eq. 'english')then ! (0-100 inches)
+          vals(1) = 0.
+          vals(2) = .1
+          vals(3) = .2
+          vals(4) = .5
+          vals(5) = 1.0
+          vals(6) = 2.0
+          vals(7) = 5.0
+          vals(8) = 10.
+          vals(9) = 15.
+          vals(10) = 20.
+          vals(11) = 30.
+          vals(12) = 40.
+          vals(13) = 50.
+          vals(14) = 70.
+          vals(15) = 100.
 
         else ! metric (mm)
           vals(1) = 0.
