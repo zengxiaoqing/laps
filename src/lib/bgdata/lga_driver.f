@@ -154,6 +154,7 @@ c
      .          pr1d_pa(nz_laps),            !LAPS pressures (pa)
      .          pr1d_mb(nz_laps),            !LAPS pressures (mb)
      .          sigma1d(nz_laps),            !LAPS vert grid (SIGMA_P grid only)
+     .          ht_1d(nz_laps),              !LAPS vert grid (SIGMA_HT grid only)
      .          lat(nx_laps,ny_laps),        !LAPS lat
      .          lon(nx_laps,ny_laps),        !LAPS lon
      .          topo(nx_laps,ny_laps),       !LAPS avg terrain
@@ -161,9 +162,9 @@ c
      .          gry(nx_laps,ny_laps),        !hinterp factor
      .          ht_sfc(nx_laps,ny_laps),     !first guess terrain
      .          td_sfc(nx_laps,ny_laps),     !2m dewpoint
+     .          td_sfc_hi(nx_laps,ny_laps),  !2m dewpoint (on hi-res sfc)
      .          tp_sfc(nx_laps,ny_laps),     !2m surface temperature
      .          t_sfc (nx_laps,ny_laps),     !sea/land surface temp
-     .          Tdsfc(nx_laps,ny_laps),
      .          sh_sfc(nx_laps,ny_laps),
      .          qsfc(nx_laps,ny_laps),
      .          uw_sfc(nx_laps,ny_laps),
@@ -171,7 +172,9 @@ c
      .          pr_sfc(nx_laps,ny_laps),     !Stn pressure
      .          rp_sfc(nx_laps,ny_laps),     !Reduced pressure
      .          mslp(nx_laps,ny_laps),
-     .          pcp_sfc(nx_laps,ny_laps)
+     .          pcp_sfc(nx_laps,ny_laps),
+     .          dum1_2d(nx_laps,ny_laps),
+     .          dum2_2d(nx_laps,ny_laps)
 
       real, allocatable :: rp_lvl(:,:)       !Reduced pressure lvl
       real, allocatable :: rp_tp(:,:)        !Reduced pressure temp (holder)
@@ -181,7 +184,8 @@ c
       real      ssh2,                        !Function name
      .          shsat,cti,
      .          htave,tpave,shave,uwave,vwave,
-     .          rmaxvv,rminvv
+     .          rmaxvv,rminvv,
+     .          td_sfc_c
 c
       integer   ct,  reject_cnt,
      .          ihour,imin,
@@ -874,6 +878,12 @@ c
                  write(6,*)' Error returned from get_ht_3d'
                  return
              endif
+       
+             call get_ht_1d(nz_laps,ht_1d,istatus)
+             if(istatus .ne. 1)then
+                 write(6,*)' Error returned from get_ht_1d'
+                 return
+             endif
 
              call vinterp_ht(nz_laps,nx_bg,ny_bg
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
@@ -1235,7 +1245,7 @@ c
 c check for T > Td before sfc p computation. Due to large scale
 c interpolation we can have slightly larger (fractional) Td than T.
 c
-            call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+            call tdcheck(nx_laps,ny_laps,td_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
             print *,' Dewpoint check (before call sfcbkgd):'
@@ -1274,21 +1284,25 @@ c... of subroutine sfcbkgd_sfc. This routine uses the 2m Td and sfc_press
 c... 2D arrays directly from the background model.
 
            if(luse_sfc_bkgd)then ! tested only for ETA48_CONUS
-             if(vertical_grid .eq. 'PRESSURE')then
+             if(vertical_grid .eq. 'PRESSURE' .or. 
+     .          vertical_grid .eq. 'SIGMA_HT'      )then
                call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
      .           ,sh_sfc,topo,pr1d_pa,nx_laps, ny_laps, nz_laps, pr_sfc
      .           ,nx_pr,ny_pr)      
+               td_sfc_hi = td_sfc
              elseif(vertical_grid .eq. 'SIGMA_P')then
                call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
      .           ,sh_sfc,topo,prgd_pa,nx_laps, ny_laps, nz_laps, pr_sfc
      .           ,nx_pr,ny_pr)      
+               td_sfc_hi = td_sfc
              endif
            else
-              call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr1d_mb,
-     .            nx_laps, ny_laps, nz_laps, pr_sfc)
+              call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,td_sfc
+     .           ,td_sfc_hi, topo
+     .           ,pr1d_mb, nx_laps, ny_laps, nz_laps, pr_sfc)
            endif
 
-           call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+           call tdcheck(nx_laps,ny_laps,td_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
            print *,' Dewpoint check (after call sfcbkgd):'
            print *,'     Dewpt greater than temp at ',icnt,' points.'
@@ -1298,7 +1312,7 @@ c... 2D arrays directly from the background model.
             print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
 c
 c fix sfc Td to not be greater than T at points determined above
-            where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
+            where(td_sfc .gt. tp_sfc)td_sfc=tp_sfc
            endif
 c
 c..... Do the winds
@@ -1355,8 +1369,9 @@ c
 c always use sfcbkgd (as opposed to sfcbkgd_sfc) to compute reduced pressure
 c because this version uses the 3D analysis info for computations.
 c
-           call sfcbkgd(0,tp,sh,ht,rp_tp,rp_sh,rp_lvl,pr1d_mb
-     1,nx_laps, ny_laps, nz_laps, rp_sfc)
+           call sfcbkgd(0,tp,sh,ht,rp_tp,rp_sh
+     1                 ,dum1_2d,dum2_2d,rp_lvl,pr1d_mb
+     1                 ,nx_laps, ny_laps, nz_laps, rp_sfc)
 
            deallocate (rp_lvl,rp_tp,rp_sh)
 
@@ -1438,7 +1453,7 @@ c
               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc
      &,td_sfc,tp_sfc,sh_sfc,topo,pr1d_mb,nx_laps,ny_laps,nz_laps,pr_sfc
      &                        ,nx_pr,ny_pr)      
-              call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+              call tdcheck(nx_laps,ny_laps,td_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
               print *,' Td check (after call sfcbkgd - LAPS_FUA):'
@@ -1449,7 +1464,7 @@ c
 c
 c fix sfc Td to not be greater than T at points determined above
 c
-                 where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
+                 where(td_sfc .gt. tp_sfc)td_sfc=tp_sfc
               endif
 c
 c..... Do the winds
@@ -1493,7 +1508,7 @@ c ---------
             endif
           elseif(vertical_grid .eq. 'SIGMA_HT')then 
             call write_lgap(nx_laps,ny_laps,nz_laps,time_bg(nf),
-     .bgvalid,cmodel,missingflag,sigma1d,prgd_pa,tp,sh,uw,vw,ww,istatus)
+     .bgvalid,cmodel,missingflag,ht_1d,prgd_pa,tp,sh,uw,vw,ww,istatus)
             if(istatus.ne.1)then
              print*,'Error writing lga - returning to main'
              return
@@ -1509,9 +1524,15 @@ c ---------
           do j=1,ny_laps
           do i=1,nx_laps
             if(pr_sfc(i,j) .lt. missingflag) then
+               td_sfc_c = td_sfc_hi(i,j)-273.15
+               if(td_sfc_c .lt. -199.)then
+                   write(6,*)' ERROR, td_sfc_c < -199.'
+                   istatus = 0
+                   return
+               endif
                qsfc(i,j)=ssh2(pr_sfc(i,j)*0.01,
      +                   tp_sfc(i,j)-273.15,
-     +                   sh_sfc(i,j)-273.15,-132.)*0.001
+     +                   td_sfc_c,-132.)*0.001
 c              sfcgrid(i,j,kk+4)=qsfc(i,j)
             else
                qsfc(i,j) = missingflag
@@ -1521,7 +1542,7 @@ c              sfcgrid(i,j,kk+4)=missingflag
           enddo
           call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
      .,cmodel,missingflag,uw_sfc,vw_sfc,tp_sfc,t_sfc,qsfc
-     .,pr_sfc,mslp,sh_sfc,rp_sfc,pcp_sfc,istatus)
+     .,pr_sfc,mslp,td_sfc_hi,rp_sfc,pcp_sfc,istatus)
           if(istatus.ne.1)then
             print*,'Error writing lgb - returning to main'
             return
@@ -1581,7 +1602,7 @@ c interp 3D fields
             if(.not.lgb_only)then
 
                call time_interp(outdir,ext,
-     +           nx_laps,ny_laps,nz_laps,6,pr1d_mb,
+     +           nx_laps,ny_laps,nz_laps,6,pr1d_mb,ht_1d,
      +           i4time_bg_valid(i),i4time_bg_valid(i-1),
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))
@@ -1595,7 +1616,7 @@ c interp 3D fields
 
 c interp 2D fields
                call time_interp(outdir,ext,
-     +           nx_laps,ny_laps,1,10,pr1d_mb(1),
+     +           nx_laps,ny_laps,1,10,pr1d_mb(1),ht_1d(1),
      +           i4time_bg_valid(i),i4time_bg_valid(i-1),
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))
