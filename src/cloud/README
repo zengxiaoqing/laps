@@ -5,14 +5,14 @@ main                                                     laps_cloud.f
         get_cloud_parms                                      "
         get_modelfg                                      get_fg_cloud.f
             rh_to_cldcv                                  lib/rh2cld.f
-        insert_sao                                       insertsao.f
+        insert_sao                                       lib/insertsao.f
             read_surface_sa                              lib/read_surface_sa.f
                 read_cloud_obs                               "
-            modify_sounding
-            get_layer_cover
-            spread2
-        insert_pireps                                    insertpireps.f
-            spread2                                      spread.f
+            modify_sounding                                  "
+            get_layer_cover                              lib/insertsao.f
+            spread2                                      lib/spread.f
+        insert_pireps                                    lib/insertpireps.f
+            spread2                                      lib/spread.f
         insert_co2ctp                                    insert_co2ctp.f
         barnes_r5                                        barnes_r5.f
         qc_clouds_3d                                     laps_cloud_sub.f
@@ -44,6 +44,7 @@ main                                                     laps_cloud.f
         cloud_snow_cvr
         compare_analysis_to_saos                         laps_cloud_sub.f
         compare_analysis_to_rad                          compare_analysis_to_rad.f
+            stats_1d                                     stats_1d.f
         array_plot
         get_cloud_deriv                                  lib/get_cloud_deriv.f
 

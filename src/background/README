@@ -47,12 +47,12 @@ program lga                                      lga.f
          interp_to_sfc                           util/interp2sfc.f
             height_to_zcoord2                    lib/conversions.f
          compute_sfc_bgfields_sfc                bgdata/sfcbkgd_sfc.f
-      sfcbkgd                                    bgdata/sfcbkgd.f        ! 1278
+      sfcbkgd                                    bgdata/sfcbkgd.f        ! 1298
          interp_to_sfc                           util/interp2sfc.f
             height_to_zcoord2                    lib/conversions.f
          compute_sfc_bgfields                    bgdata/sfcbkgd.f              
       interp_to_sfc                              util/interp_to_sfc.f    ! 1299
-      sfcbkgd                                    bgdata/sfcbkgd.f        ! 1340
+      sfcbkgd                                    bgdata/sfcbkgd.f        ! 1370
          interp_to_sfc                           util/interp2sfc.f
             height_to_zcoord2                    lib/conversions.f
          compute_sfc_bgfields                    bgdata/sfcbkgd.f
