@@ -18,5 +18,6 @@ main                                                     laps_accum.f
                 read_sfc_precip                          lib/read_surface_obs.f
                 precip_barnes_jacket                     precip_barnes_jacket.f
                     precip_barnes_sfc                           "
-                        barnes_multivariate_sfc
+                        barnes_multivariate              lib/barnes_multivariate.f
+                regress_precip                           regress_precip.f
         put_precip_2d                                    laps_accum_sub.f
