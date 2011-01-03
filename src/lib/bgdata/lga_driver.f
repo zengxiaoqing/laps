@@ -179,6 +179,7 @@ c
       real, allocatable :: rp_lvl(:,:)       !Reduced pressure lvl
       real, allocatable :: rp_tp(:,:)        !Reduced pressure temp (holder)
       real, allocatable :: rp_sh(:,:)        !Reduced pressure sh   (holder)
+      real, allocatable :: rp_td(:,:)        !Reduced pressure td   (holder)
       real, allocatable :: prgd_pa(:,:,:)    !Pressure 3D/1D on LAPS Grid (Pa)
 c
       real      ssh2,                        !Function name
@@ -778,13 +779,14 @@ c ****** Vertically interpolate background data to LAPS isobaric levels.
 c
          if(linterp)then   ! this switch determines if we are going to h/v-interp or not
 
-           itstatus(1)=init_timer()
+           itstatus(1)=ishow_timer()
 
 c ****** Horizontally interpolate background data to LAPS grid points. ********
 c
-           itstatus(2)=init_timer()
+!          itstatus(2)=ishow_timer()
 
 !          Get bounding box of hinterp to restrict vinterp range
+           write(6,*)' calling init_hinterp'
            call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .        lat,lon,grx,gry,bgmodel,cmodel,wrapped)
 
@@ -831,6 +833,8 @@ c       ----------------------------------------------------
            iymin = max(int(ymin)-5,1)
            iymax = min(int(ymax)+5,ny_bg)
 c
+           istatus=ishow_timer()
+
            allocate( htvi(nx_bg,ny_bg,nz_laps),   !Height (m)
      .               tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
      .               shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
@@ -897,8 +901,9 @@ c
 
            endif
 
-           itstatus(1)=ishow_timer()
-           print*,' Vinterp elapsed time (sec): ',itstatus(1)
+           itstatus(2)=ishow_timer()
+           print*,' Vinterp elapsed time (sec): ',itstatus(2)
+     1                                           -itstatus(1)
 
            deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +,prbght, prbguv, prbgsh, prbgww )
@@ -1055,22 +1060,22 @@ c
      .                           grx,gry,shvi,sh,wrapped)
 
            else
-              itstatus(2)=ishow_timer()
+              istatus=ishow_timer()
               print*,'use bilinear_laps_3d for U ',cmodel(1:ic)
               call bilinear_laps_3df(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,uwvi,uw)
 
-              itstatus(2)=ishow_timer()
+              istatus=ishow_timer()
               print*,'use bilinear_laps_3d for V ',cmodel(1:ic)
               call bilinear_laps_3df(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,vwvi,vw)
 
-              itstatus(2)=ishow_timer()
+              istatus=ishow_timer()
               print*,'use bilinear_laps_3d for T ',cmodel(1:ic)
               call bilinear_laps_3df(grx,gry,nx_bg,ny_bg
      .                             ,nx_laps,ny_laps,nz_laps,tpvi,tp)
 
-              itstatus(2)=ishow_timer()
+              istatus=ishow_timer()        
               print*,'use bilinear_laps_3d for Q ',cmodel(1:ic)
               call bilinear_laps_3df(grx,gry,nx_bg,ny_bg  
      .                             ,nx_laps,ny_laps,nz_laps,shvi,sh)
@@ -1081,8 +1086,9 @@ c
      .             nx_laps,ny_laps,nz_laps,grx,gry,wwvi,ww,wrapped)
            endif
           
-           itstatus(2)=ishow_timer()
-           print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
+           itstatus(3)=ishow_timer()
+           print*,'Hinterp (3D) elapsed time (sec): ',itstatus(3)
+     1                                               -itstatus(2)
 c
 c ****** Check for missing value flag in any of the fields.
 c ****** Check for NaN's in any of the fields.
@@ -1201,7 +1207,7 @@ c
 c
 c ****** Horizontally interpolate background surface data to LAPS grid points.
 c
-           itstatus(3)=init_timer()
+           itstatus(3)=ishow_timer()
 
            if(bgmodel.ne.1.and.bgmodel.ne.9 .AND.
      1                         bgmodel.ne.3      )then
@@ -1227,6 +1233,8 @@ c
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,pcpbg,pcp_sfc,wrapped)
 
+            write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
+            write(6,*)' sh_sfc range = ',minval(sh_sfc),maxval(sh_sfc)
 c
 c Because not all model backgrounds have t_at_sfc (ground and/or sst)
 c then no need to hinterp unless it exists.
@@ -1252,9 +1260,11 @@ c
             print *,'     Dewpt greater than temp at ',icnt,' points.'
 
             if(icnt .gt. 0) then
-               print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
-               print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
+               print*,' Max diff of ',diff_mx,' at ',i_mx,',',j_mx
+               print*,' Min diff of ',diff_mn,' at ',i_mn,',',j_mn
             endif
+
+            write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
 
             itstatus(3)=ishow_timer()
 
@@ -1297,10 +1307,13 @@ c... 2D arrays directly from the background model.
                td_sfc_hi = td_sfc
              endif
            else
+!             write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
               call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,td_sfc
      .           ,td_sfc_hi, topo
      .           ,pr1d_mb, nx_laps, ny_laps, nz_laps, pr_sfc)
            endif
+
+           write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
 
            call tdcheck(nx_laps,ny_laps,td_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
@@ -1317,6 +1330,7 @@ c fix sfc Td to not be greater than T at points determined above
 c
 c..... Do the winds
 c
+           itstatus(3)=ishow_timer()
            if(ltest_vertical_grid('PRESSURE'))then
                write(6,*)' Interpolate 3D winds to the hi-res surface'
                call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
@@ -1356,24 +1370,29 @@ c          call read_namelist_laps('sfc_anal',filename)
            call get_laps_redp(redp_lvl,istatus)
 
            allocate (rp_lvl(nx_laps,ny_laps)
-     1,rp_tp(nx_laps,ny_laps),rp_sh(nx_laps,ny_laps))
+     1              ,rp_tp(nx_laps,ny_laps),rp_sh(nx_laps,ny_laps)
+     1              ,rp_td(nx_laps,ny_laps))
 
            do j=1,ny_laps
            do i=1,nx_laps
               rp_lvl(i,j)=redp_lvl
               rp_tp(i,j)=tp_sfc(i,j)
-              rp_sh(i,j)=sh_sfc(i,j)
+              rp_sh(i,j)=sh_sfc(i,j)                                 
+              rp_td(i,j)=td_sfc(i,j)                                 
+!             rp_sh(i,j)=td_sfc(i,j) ! borrow rp_sh for passing td_sfc
            enddo
            enddo
 c
 c always use sfcbkgd (as opposed to sfcbkgd_sfc) to compute reduced pressure
 c because this version uses the 3D analysis info for computations.
 c
-           call sfcbkgd(0,tp,sh,ht,rp_tp,rp_sh
-     1                 ,dum1_2d,dum2_2d,rp_lvl,pr1d_mb
+           itstatus(3)=ishow_timer()
+           write(6,*)' call sfcbkgd for reduced pressure'
+           call sfcbkgd(bgmodel,tp,sh,ht,rp_tp,rp_sh
+     1                 ,rp_td,dum2_2d,rp_lvl,pr1d_mb
      1                 ,nx_laps, ny_laps, nz_laps, rp_sfc)
 
-           deallocate (rp_lvl,rp_tp,rp_sh)
+           deallocate (rp_lvl,rp_tp,rp_sh,rp_td)
 
            itstatus(3)=ishow_timer()
 c
@@ -1401,14 +1420,15 @@ c
             print*,'         checking for supersaturations'
            endif
 c
-           itstatus(3)=ishow_timer()
-           print*,'Hinterp (2D) elapsed time (sec): ',itstatus(3)
+           itstatus(4)=ishow_timer()
+           print*,'Hinterp (2D) elapsed time (sec): ',itstatus(4)
+     1                                               -itstatus(3)
            print*
 c
 c the wind components are still on the native grid projection;
 c rotate them to the LAPS (output) domain as necessary.
 
-           itstatus_rot=ishow_timer()
+!          itstatus_rot=ishow_timer()
 
            call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
      &,bgmodel,cmodel,fullname,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc
@@ -1418,9 +1438,9 @@ c rotate them to the LAPS (output) domain as necessary.
               return
            endif
 
-           itstatus_rot=ishow_timer()
-           print*,'After rotation: elapsed time (sec): ',itstatus_rot
-           print*
+           istatus=ishow_timer()
+!          print*,'After rotation: elapsed time (sec): ',itstatus_rot
+!          print*
 
           endif !if grx/gry from init_hinterp are defined (lgrid_missing)
 
@@ -1484,7 +1504,7 @@ c
 
          endif !(linterp)
 
-         itstatus(4)=init_timer()
+         itstatus(5)=ishow_timer()
 c
 c Write LGA
 c ---------
@@ -1548,8 +1568,9 @@ c              sfcgrid(i,j,kk+4)=missingflag
             return
           endif
 
-          itstatus(4)=ishow_timer()
-          print*,'Elapsed time - write grids (sec): ',itstatus(4)
+          itstatus(6)=ishow_timer()
+          print*,'Elapsed time - write grids (sec): ',itstatus(6)
+     1                                               -itstatus(5)
           print*
 
          endif
@@ -1572,7 +1593,7 @@ c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
 c
       if(lga_status.eq.1)then
-       itstatus(5)=init_timer()
+       itstatus(7)=ishow_timer()
        do i=1,nbg
           call s_len(bg_names(i),j)
           print*,'bg_name: ',i,bg_names(i)(1:j)
@@ -1631,8 +1652,9 @@ c            endif
             print*,'Time Interpolation Not Necessary!'
          endif
 
-         itstatus(5)=ishow_timer()
-         print*,'Elapsed time - interp grids (sec): ',itstatus(5)
+         itstatus(8)=ishow_timer()
+         print*,'Elapsed time - interp grids (sec): ',itstatus(8)
+     1                                               -itstatus(7)
          print*
 
        elseif(accepted_files.eq.1)then
@@ -1663,8 +1685,9 @@ c      lga_status = 1
       endif
 
       print*,'Total time elapsed lga: '
-      print*,'(sec) :',itstatus(1)+itstatus(2)+itstatus(3)
-     &+itstatus(4)+itstatus(5)
+!     print*,'(sec) :',itstatus(1)+itstatus(2)+itstatus(3)
+!    &+itstatus(4)+itstatus(5)
+      itstatus(10) = ishow_timer()
 
  999  if (allocated(prgd_pa)) deallocate(prgd_pa)
       if (allocated(prbg_sfc))deallocate(prbg_sfc)
