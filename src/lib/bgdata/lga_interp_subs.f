@@ -56,7 +56,7 @@ c
      .          newfcst,
      .          imin,ihour,
      .          i,j,k,kk,
-     .          istatus,nstatus
+     .          istatus,nstatus,ishow_timer
 
       logical   lexist
 c
@@ -82,6 +82,8 @@ c
 
 c_______________________________________________________________________________
 c
+      write(6,*)' Subroutine time_interp...'
+
       if(ext.eq.'lga') then
          do k=1,nz
             if(vertical_grid .ne. 'SIGMA_HT')then
@@ -189,6 +191,7 @@ c
          enddo
          enddo
 c
+!        istatus = ishow_timer()
          comment(1) = 'Time Interpolated: '//comment(1)
          if(ext.eq.'lga')then
             call write_laps(time1,time1+newfcst,dir,ext,

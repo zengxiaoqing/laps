@@ -33,7 +33,7 @@ c
 c build look-up-tables for rotation angles in 2D grid and
 c apply this to grid winds
 c
-      istatus_rot=ishow_timer()
+!     istatus_rot=ishow_timer()
 
       latitude = -999. ! Since lat is not yet passed in
       call projrot_latlon_2d(latitude,lon,nx,ny,projrot_latlon,istatus)
@@ -46,7 +46,7 @@ c
       enddo
 
       write(6,*)'rotate_lga_winds - built lookup table'
-      istatus_rot=ishow_timer()
+!     istatus_rot=ishow_timer()
 
       if(ldir)then   !from grid to true North
 c 3d
@@ -109,7 +109,7 @@ c 2d
       endif
 
       write(6,*)'end of rotate_lga_winds, lgb_only = ',lgb_only
-      istatus_rot=ishow_timer()
+!     istatus_rot=ishow_timer()
 
       return
       end
