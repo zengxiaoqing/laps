@@ -32,6 +32,8 @@
         real lon(ni,nj)
 
         real pcp_gauge(maxsta)    ! relevant time of accumulation is selected
+        real pcp_laps_in_a(maxsta)! radar/first guess precip of paired obs        
+        real gauge_pairs_a(maxsta)! rain gauge reading of paired observations
         character*5 c_field
 
         integer ilaps(maxsta),jlaps(maxsta)
@@ -39,11 +41,16 @@
         logical l_accum_bias_ratio ! Apply bias correction as a constant ratio
                                    ! (given we are analyzing radar/fg & gauges)
 
-        logical l_gauge_only ! Gauge only analysis
+        logical l_regression       ! Apply regression of radar/fg & gauges
+
+        logical l_gauge_only       ! Gauge only analysis
+
+        logical l_qc               ! QC of radar gauge pairs
 
         l_gauge_only = (.not. l_accum_fg) .AND. (.not. l_accum_radar) 
      1                                    .AND.        l_accum_gauge
-        l_accum_bias_ratio = .true. 
+        l_accum_bias_ratio = .false. 
+        l_regression = .true.
 
 !       Combine background and radar field given radar gap areas
         n_radar = 0
@@ -86,6 +93,7 @@
         call get_sfc_badflag(badflag,istatus)
 
         n_gauge_noradar = 0
+        n_pairs = 0
 
 !       Loop through obs and write out precip values (when gauge reports precip)
         do iob = 1,n_obs_b
@@ -139,22 +147,55 @@
 
                 if(pcp_gauge(iob) .ge. 0.)then
                    if(pcp_laps_in .ne. r_missing_data)then
-                      write(6,11)iob,stations(iob)(1:10)
+                      if(pcp_laps_in    .gt. 0. .and. 
+     1                   pcp_gauge(iob) .gt. 0.      )then
+
+                        l_qc = .true.
+                        if(pcp_gauge(iob) .gt. .20 .and.
+     1                    pcp_laps_in / pcp_gauge(iob) .lt. 0.1)then
+                          l_qc = .false.
+                        endif
+
+                        if(l_qc)then
+                          n_pairs = n_pairs + 1
+                          pcp_laps_in_a(n_pairs) = pcp_laps_in
+                          gauge_pairs_a(n_pairs) = pcp_gauge(iob)
+
+                          write(6,12)iob,stations(iob)(1:10)
      1                          ,pcp_gauge(iob),pcp_laps_in     
      1                          ,closest_radar_km,provider(iob)
-11                    format(i6,1x,a,2f7.3,f10.1,1x,a11,' RADAR/FG')           
+12                        format(i6,1x,a,2f7.3,f10.1,1x,a11
+     1                          ,' RADAR/FG VALID PAIR')   
+
+                        else
+                          write(6,13)iob,stations(iob)(1:10)
+     1                          ,pcp_gauge(iob),pcp_laps_in     
+     1                          ,closest_radar_km,provider(iob)
+13                        format(i6,1x,a,2f7.3,f10.1,1x,a11
+     1                          ,' RADAR/FG QC FAILED')           
+
+                        endif
+
+                      else
+                        write(6,14)iob,stations(iob)(1:10)
+     1                          ,pcp_gauge(iob),pcp_laps_in     
+     1                          ,closest_radar_km,provider(iob)
+14                      format(i6,1x,a,2f7.3,f10.1,1x,a11,' RADAR/FG')           
+
+                      endif
                    else
-                      write(6,12)iob,stations(iob)(1:10)
+                      write(6,15)iob,stations(iob)(1:10)
      1                          ,pcp_gauge(iob),lat_s(iob),lon_s(iob)    
      1                          ,closest_radar_km,provider(iob)
-12                    format(i6,1x,a,f7.3,2f8.2,f10.1,1x,a11
+15                    format(i6,1x,a,f7.3,2f8.2,f10.1,1x,a11
      1                                               ,' NORADAR/FG')          
                       n_gauge_noradar = n_gauge_noradar + 1
                    endif
                 endif
 
 !               Other QC can be done here if needed by setting to badflag
-                if(l_accum_bias_ratio .and. n_msg_rdr_bkg .eq. 0)then
+                if(l_accum_bias_ratio .and. n_msg_rdr_bkg .eq. 0
+     1             .and. (.not. l_regression)                    )then
                    if(pcp_gauge(iob) .gt. 0. .AND. 
      1                pcp_laps_in .ne. r_missing_data .AND.
      1                pcp_laps_in .gt. 0.)then
@@ -198,7 +239,8 @@
 
             precip_accum_m = max(precip_accum_m,0.)
  
-        elseif((.not. l_accum_bias_ratio) .and. l_accum_gauge)then 
+        elseif( (.not. l_accum_bias_ratio) .and. l_accum_gauge
+     1           .and. (.not. l_regression) )then 
 
 !           Analyze gauge values via increments
 
@@ -221,13 +263,15 @@
 
             precip_accum_m = max(precip_accum_m,0.)
                                                                         
-        elseif(l_accum_bias_ratio .and. l_accum_gauge)then 
+        elseif(l_regression .and. l_accum_gauge)then 
 
 !           Perform gauge bias analysis
 
             write(6,*)' Performing gauge bias analysis'
-            one = 1.0
-            call precip_barnes_jacket(           c_field              ! I
+
+            if(.false.)then
+                one = 1.0
+                call precip_barnes_jacket(       c_field              ! I
      1                                           ,ilaps,jlaps         ! I
      1                                           ,pcp_gauge           ! I
      1                                           ,maxsta              ! I
@@ -236,10 +280,31 @@
      1                                           ,topo,ldf            ! I
      1                                           ,wt_bkg_a            ! I
      1                                           ,bias_anal,istatus)  ! O
-            write(6,*)' Max Bias Anal: ', MAXVAL(bias_anal)
-            write(6,*)' Min Bias Anal: ', MINVAL(bias_anal)
-            precip_accum_m = pcp_cmb_m * bias_anal
+                write(6,*)' Max Bias Anal: ', MAXVAL(bias_anal)
+                write(6,*)' Min Bias Anal: ', MINVAL(bias_anal)
+                precip_accum_m = pcp_cmb_m * bias_anal
 
+            else ! do regression of radar/gauge pairs (pcp_gauge,pcp_laps_in_a)
+                if(n_pairs .gt. 0)then
+                    write(6,*)' Do regression of radar/gauge pairs '
+     1                       ,n_pairs
+                    call regress_precip(n_pairs,pcp_laps_in_a
+     1                                 ,gauge_pairs_a
+     1                                 ,a_t,b_t,rbar,gbar,istatus)
+                    if(istatus .eq. 1)then
+                        write(6,*)' Apply regression to radar/fg'
+                        precip_accum_m = (pcp_cmb_m * a_t) 
+     1                                 + (b_t * meters_per_inch)
+                        precip_accum_m = max(precip_accum_m,0.)
+                        where(pcp_cmb_m .eq. 0.)precip_accum_m = 0.
+                    else
+                        write(6,*)' regression not applied'
+                    endif
+                else
+                    write(6,*)' no gauge/radar pairs for regression'
+                endif
+
+            endif
 
         else                ! return blended radar/background (no gauges)
             write(6,*)' Returning radar/background blend (no gauges)'
