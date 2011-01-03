@@ -568,8 +568,9 @@ C WNI-BLS
 c        write(*, *) "READBGDATA htbg(3,30,1)", htbg(3,30,1)
 c        write(*, *) "READBGDATA tpbg(3,30,1)", tpbg(3,30,1)
 c        write(*, *) "READBGDATA wwbg(3,30,1)", wwbg(3,30,1)
-c        write(*, *) "READBGDATA tdbg_sfc(3,30)", tdbg_sfc(3,30)
-c        write(*, *) "READBGDATA shbg_sfc(3,30)", shbg_sfc(3,30)
+         write(*, *) "READBGDATA: shbg_sfc/tdbg_sfc is actually rh?"
+         write(*, *) "READBGDATA shbg_sfc(3,30)", shbg_sfc(3,30)
+         write(*, *) "READBGDATA tdbg_sfc(3,30)", tdbg_sfc(3,30)
 c        do j = 1, nzbg_ht 
 c           write(*, *) "READBGDATA pcpbg(3,",j, pcpbg(3,j)
 c        enddo
