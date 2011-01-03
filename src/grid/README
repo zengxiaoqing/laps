@@ -21,6 +21,7 @@ gridgen_model                           gridgen_model.f
                 gdtost2                 lib/gridconv.f 
                     binom                     "
         alt_10by10_all                  alt_all.f
+        read_wrfstatic                  read_wrfstatic.f
         get_gridgen_var                 gridgen_utils.f
         check_domain
         put_laps_static                 put_laps_static.f

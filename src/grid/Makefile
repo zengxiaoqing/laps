@@ -22,7 +22,7 @@ EXE = gridgen_model.exe
 
 SRC   = alt_all.f adjust_geog.f gen_egrid_latlon.f \
         get_tile_list.f gdswiz_comb.f gridgen_utils.f \
-        proc_geodat.f put_laps_static.f \
+        proc_geodat.f read_wrfstatic.f put_laps_static.f \
         rd_static_attr_sub.f
 
 MAIN=gridgen_model.f 
