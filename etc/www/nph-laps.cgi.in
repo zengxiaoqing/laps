@@ -424,7 +424,7 @@ if($n_fields_uc > 1 && $n_sources_fields > 0 && (@fields[0] != "CLDCLV" || @fiel
 }
 
 # Montage for multiple domains
-if($n_domains > 1 && $n_sources_fields == 1 && $n_fields_uc > 0){
+if($n_domains > 1 && ($n_sources_fields == 1 || @sources[0]=~ "obs") && ($n_fields_uc > 0 || @fields[0]=~ "radial_vel") ){
     $montage=1;
 }
 
@@ -806,7 +806,7 @@ if($err == 0) {
                           if($a9time_safe == $a9time_orig){
                               $nmontage++;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $source ne $sources[0] && $field eq $fields[0]){ # montage multiple sources
+                      }elsif($montage == 1 && $domain eq $domain_first && $source ne $sources[0] && $source ne "obs" && $field eq $fields[0]){ # montage multiple sources
                           print "multiple sources field/field(0) is $field $fields[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
                           $animate = "yes";
@@ -2317,17 +2317,19 @@ if($err == 0) {
                 } # if level
            
             }elsif("$source" eq "obs"){
-                if("$level" eq "sfc/2d"){                                                            # Sfc Obs
-#                   print "field, obs_sfc = $field $obs_sfc \n";
+                if("$level" eq "sfc/2d"){                                         # Sfc Obs
+                    print "field, obs_sfc = $field $obs_sfc \n";
 
                     if($obs_sfc eq "none" || $field eq "SFCT" || $field eq "sfct" || $field eq "stn_p" || $field eq "alt_p" 
                     || $field eq "p_prime"  || $field eq "P_PRIME"  
                     || $field eq "red_p" || $field eq "ref_max" || $field eq "REF_MAX" 
                     || $field eq "snow_cvr" || $field eq "SNOW_CVR" 
                     || $field eq "cld_cvr" || $field eq "CLD_CVR" 
+#                   || $field eq "sat_11u" || $field eq "SAT_11U" 
                     || $field eq "sw_down" || $field eq "SW_DOWN" 
 #                   || $field eq "umflux" || $field eq "UMFLUX" 
-                                                                           ){                        # Overlay always for these
+#                   || $nmontage > 0
+                                                                           ){     # Overlay always for these (even when obs_sfc != none)
 
                         if("$field" eq "vsblty" || "$field" eq "VSBLTY") { 
                             printf LAPSPLOT "ov\n"; 
@@ -2351,8 +2353,11 @@ if($err == 0) {
 
                         }elsif("$field" eq "CLD_CVR" ) { 
                             printf LAPSPLOT "ov\n"; 
+                            printf LAPSPLOT "og\n"; 
                             printf LAPSPLOT " \n"; 
-                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+#                           if($montage == 0){
+                                $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+#                           }
 
                         }elsif("$field" eq "cld_cvr" ) { 
                             printf LAPSPLOT "ov\n"; 
@@ -2389,11 +2394,14 @@ if($err == 0) {
 #                           printf LAPSPLOT "n\n";   
 
                         }elsif("$field" eq "VIS_ALB"){ 
-                            printf LAPSPLOT "lv\n"; 
-                            printf LAPSPLOT "$hhmm\n"; 
-                            printf LAPSPLOT "-1\n"; 
-                            printf LAPSPLOT "ALB\n";
-#                           printf LAPSPLOT "n\n";   
+#                           printf LAPSPLOT "lv\n"; 
+#                           printf LAPSPLOT "$hhmm\n"; 
+#                           printf LAPSPLOT "-1\n"; 
+#                           printf LAPSPLOT "ALB\n";
+
+                            printf LAPSPLOT "og\n"; 
+                            printf LAPSPLOT "ov\n"; 
+                            printf LAPSPLOT " \n"; 
 
                        }elsif("$field" eq "sat_11u" ) { 
                            printf LAPSPLOT "lv\n"; 
@@ -2403,11 +2411,15 @@ if($err == 0) {
                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
 
                        }elsif("$field" eq "SAT_11U" ) { 
-                           printf LAPSPLOT "lv\n"; 
-                           printf LAPSPLOT "$hhmm\n"; 
-                           printf LAPSPLOT "-4\n"; 
-                           printf LAPSPLOT "S8A\n"; 
-#                          $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+#                          printf LAPSPLOT "lv\n"; 
+#                          printf LAPSPLOT "$hhmm\n"; 
+#                          printf LAPSPLOT "-4\n"; 
+#                          printf LAPSPLOT "S8A\n"; 
+                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+
+                           printf LAPSPLOT "og\n"; 
+                           printf LAPSPLOT "ov\n"; 
+                           printf LAPSPLOT " \n"; 
 
                        }elsif("$field" eq "sat_12u" ) { 
                            printf LAPSPLOT "lv\n"; 
@@ -2604,6 +2616,12 @@ if($err == 0) {
 		        }
                         printf LAPSPLOT "rfi\n"; 
                         printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "radial_vel" ) { # obs for 1 or more radars 
+                        printf LAPSPLOT "rd\n"; 
+                        printf LAPSPLOT "vi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "$hhmm\n"; 
 
 		    }else{
                         print "$source $level mb $field not available $lvl_access<br>\n"; 
@@ -3239,7 +3257,7 @@ if($err == 0) {
                         printf LAPSPLOT "lq\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "q\n"; 
-                    }elsif("$field" eq "radial_vel") { 
+                    }elsif("$field" eq "radial_vel") { includes obs for all radars
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "ob\n"; 
