@@ -230,7 +230,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   integer :: ntimes
   integer :: ierr
   integer :: grib_version
-  integer :: istatus, i, j, k 
+  integer :: istatus, i, j, k, i4time, ishow_timer 
   integer :: nx, ny, nz, nzsh
   integer :: icn3d, icm(42)
   real, dimension(maxlvl) :: plvl
@@ -241,6 +241,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real    :: it,xe,mrsat,esat
   logical :: readit
   logical :: val_std = .false.
+  logical :: isthere_shsfc
 
 ! *** sfc background arrays.
   real :: prbg_sfc(nx,ny)
@@ -349,6 +350,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
         enddo LOOP0
 
+        i4time = ishow_timer()
 !-----
         call get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz, &
          prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, &
@@ -356,6 +358,8 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
          tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, istatus)
 
 !-----
+
+        i4time = ishow_timer()
 
 ! When we have reached this point, we have either hit the end of file, or 
 ! hit the end of the current date.  Either way, we want to output
@@ -446,20 +450,32 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
  
 ! ------------- convert rh (or sh, if avail) to Td ----------------
+! ------------- also calculate sh if unavailable   ----------------
+
+     i4time = ishow_timer()
 
      print*,'convert rh (or sh, if avail) to Td - sfc'
+
+!    Is this test valid for just GRIB1 or for certain models?
+     isthere_shsfc = (is_there(200101,'SH_SFC') .OR. is_there(200100,'SH_SFC')&
+                                                .OR. is_there(200102,'SH_SFC'))
+     if (isthere_shsfc) then
+         print*,'SH_SFC is available'
+     else
+         print*,'SH_SFC is unavailable according to "is_there" test'
+     endif
+
      k=1
      do j=1,ny
      do i=1,nx
 
         if(tdbg_sfc(i,j).gt.0.0 .and. tdbg_sfc(i,j).lt.100.001)then
            prsfc=prbg_sfc(i,j)/100.
-           if (is_there(200101,'SH_SFC')) then
-              !there is SH_SFC
+           if (isthere_shsfc) then ! there is SH_SFC                     
               qsfc=shbg_sfc(i,j)
-           else
-              !there is no SH_SFC, using RH_SFC
+           else                    ! there is no SH_SFC, using RH_SFC
               qsfc=make_ssh(prsfc,tpbg_sfc(i,j)-273.15,tdbg_sfc(i,j)/100.,t_ref)
+!             shbg_sfc(i,j) = qsfc
            endif
            tdbg_sfc(i,j)=make_td(prsfc,tpbg_sfc(i,j)-273.15,qsfc,t_ref)+273.15
         else
