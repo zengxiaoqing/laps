@@ -386,12 +386,16 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  tpbg_sfc = scr2d
               elseif (field.eq.'TD_SFC') then
                  tdbg_sfc = scr2d 
+                 write(6,*)' Filling tdbg_sfc with TD_SFC'
               elseif (field.eq.'RH_SFC') then
                  shbg_sfc = scr2d
                  tdbg_sfc = scr2d  !See bgdata/readdgprep.f, line 183.
      		                   !write(*, *) "RH_SFC", scr2d(3,30)
+                 write(6,*)' Filling tdbg_sfc with RH_SFC'
+                 write(6,*)' Filling shbg_sfc with RH_SFC'
               elseif (field.eq.'SH_SFC') then
                  shbg_sfc = scr2d
+                 write(6,*)' Filling shbg_sfc with SH_SFC'
               elseif (field.eq.'UU_SFC') then
                  uwbg_sfc = scr2d
               elseif (field.eq.'VV_SFC') then
