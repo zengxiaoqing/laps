@@ -41,7 +41,12 @@
       data nsnd_total/0/
       save nsnd_total,i4time_sys
 
+      integer max_lvls
+      parameter (max_lvls=200)
+      real liquid_a(max_lvls)
+
       common /write_snd_data/ cloud_base_temp,cloud_integrated_liquid      
+     1                       ,liquid_a
 
 !............................................................................
 
@@ -144,7 +149,8 @@
 !         Write Sounding Level (the character array helps keep everything
 !                               in one line when using free format)
 
-          write(c_line,*)height_m(isnd,lvl)," "
+          if(c8_obstype(isnd) .ne. 'RADIOMTR')then
+            write(c_line,*)height_m(isnd,lvl)," "
      1              ,pressure_mb(isnd,lvl)," "
      1              ,temp_c(isnd,lvl)," "
      1              ,dewpoint_c(isnd,lvl)," "
@@ -153,6 +159,18 @@
      1              ,a9time_ob(isnd,lvl)," "
      1              ,stalat(isnd,lvl)," "
      1              ,stalon(isnd,lvl)
+          else
+            write(c_line,*)height_m(isnd,lvl)," "
+     1              ,pressure_mb(isnd,lvl)," "
+     1              ,temp_c(isnd,lvl)," "
+     1              ,dewpoint_c(isnd,lvl)," "
+     1              ,dir_deg(isnd,lvl)," "
+     1              ,spd_mps(isnd,lvl)," "
+     1              ,a9time_ob(isnd,lvl)," "
+     1              ,stalat(isnd,lvl)," "
+     1              ,stalon(isnd,lvl)," "
+     1              ,liquid_a(lvl)
+          endif
           call s_len2(c_line,len_line)
           write(lun_out,521)c_line(1:len_line)
   521     format(a)
