@@ -31,7 +31,7 @@ c
       INTEGER    JMX
       INTEGER    K
       INTEGER    KX
-      INTEGER    it, idebug
+      INTEGER    it, idebug, istatus, ishow_timer
       INTEGER    bgmodel
 
       LOGICAL    lfndz
@@ -61,7 +61,10 @@ c if bgmodel = 9      then no surface fields input. Compute all from 3d
 c                     fields. q3d used. (NOS - ETA)
 c otherwise qsfc_i is used directly              
 c 
+      write(6,*)
       write(6,*)' Subroutine sfcbkgd, bgmodel = ',bgmodel
+      write(6,*)' qsfc_i range = ',minval(qsfc_i),maxval(qsfc_i)
+      write(6,*)' tdsfc_i range = ',minval(tdsfc_i),maxval(tdsfc_i)
 
       t_ref=-132.0
       if(bgmodel.eq.3.or.bgmodel.eq.9)then
@@ -82,6 +85,8 @@ c
          call interp_to_sfc(ter,t,height,imx,jmx,kx,badflag,
      &                      tsfc)
       endif
+
+      istatus = ishow_timer()
 
       write(6,*)' Compute sfc fields using 3D model data'
 
@@ -112,6 +117,10 @@ c
       enddo
       enddo 
       
+      write(6,*)' tdsfc_o range = ',minval(tdsfc_o),maxval(tdsfc_o)
+      write(6,*)' returning from sfcbkgd...'
+      write(6,*)
+
       return
       end
 c
@@ -127,7 +136,9 @@ c
       integer nx,ny,nz
       integer i,j,k            !I, i,j,k coordinate of point for calculation
       integer bgm              !I, model type {if = 0, then tdsfc input = qsfc}
-      integer istatus, idebug
+      integer istatus, idebug, init_td                          
+      data init_td/0/
+      save init_td
 
       real   p(nz)             !I, pressure of levels
       real   ter               !I, Terrain height at i,j
@@ -139,12 +150,12 @@ c
       real   psfc              !O, output surface pressure, pa
       real   tsfc              !I/O input sfc T, output recomputed T
       real   qsfc              !I   input sfc Q                  
-      real   tdsfc             !O   hi-res Td            
+      real   tdsfc             !O   hi-res Td (K)           
 
       real   qsfc_l            !L   surface spec hum, Input as q or computed internally
 
-      real   tbar
-      real   td1,td2
+      real   tbar,tsfc_c
+      real   td1,td2,tdsfc_c
       real   G,R
       real   ssh2,make_ssh,make_td
       real   dz,dzp,dtdz
@@ -163,24 +174,37 @@ c
 c
 c first guess psfc without moisture consideration
 c
-
           tbar=(tsfc+t(i,j,k))*0.5
           dz=height(i,j,k)-ter
           psfc=p(k)*exp(G/(R*tbar)*dz)
 
-!         Calculate qsfc_l according to model
+!         Calculate qsfc_l according to model (bgm=0 for reduced P)
+!         This is used below for virtual temperature and sfc P reduction
           if(bgm.eq.0.or.bgm.eq.6.or.
-     &       bgm.eq.8.or.bgm.eq.12)then                 ! qsfc is Td
-             qsfc_l=ssh2(psfc,tsfc-273.15
-     &                  ,qsfc-273.15,t_ref)*.001   !kg/kg
+     &       bgm.eq.8.or.bgm.eq.12)then                   ! qsfc is Td
+             tsfc_c  = tsfc-273.15
+             tdsfc_c = qsfc-273.15
+             if(tdsfc_c .lt. -200.)then ! a la ssh2 error check
+                 if(init_td .le. 100)write(6,*)
+     1           ' WARNING: setting qsfc_l to zero, tdsfc_c = ',tdsfc_c
+                 init_td = init_td + 1
+!                tdsfc_c = tsfc_c - 30.                                 
+                 qsfc_l = 0.0
+             else
+                 if(idebug .eq. 1)write(6,*)' qsfc is Td: calling ssh2'
+                 qsfc_l=ssh2(psfc,tsfc_c,tdsfc_c,t_ref)*.001 ! kg/kg
+             endif
 
-          elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then  ! qsfc is RH
+          elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then    ! qsfc is RH
+!    1                               .or.bgm.eq.13)then   ! qsfc is RH
+             if(idebug .eq. 1)write(6,*)' qsfc is RH: calling make_ssh'
              qsfc_l=make_ssh(psfc,tsfc-273.15
      &                      ,qsfc/100.,t_ref)*.001 !kg/kg
 
-          else                                          !q
+          else                                            ! qsfc is qsfc
              if(idebug .eq. 1)then
-                 write(6,*)' compute_sfc_bgfields: qsfc_l = qsfc ',qsfc
+                 write(6,*)' compute_sfc_bgfields: qsfc_l = qsfc '
+     1                    ,qsfc
              endif
              qsfc_l=qsfc
           endif
@@ -205,7 +229,7 @@ c dew point temp
              tdsfc=td2+((td1-td2)/dzp)*dz+273.15
 
              if(idebug .eq. 1)then
-                 write(6,*)' k/tdsfc = ',k,tdsfc                                    
+                 write(6,*)' k/tdsfc (C) = ',k,tdsfc               
              endif
 c
           else ! k=1: calculate tsfc,qsfc and psfc
