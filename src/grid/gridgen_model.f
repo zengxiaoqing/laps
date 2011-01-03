@@ -63,7 +63,7 @@ c*********************************************************************
         character c10_grid_f*10 ! Type of domain (nest7grid, wrfsi)/
         character c_dataroot*200
         character cstaticdir*200
-        logical   localize
+        logical   localize, l_topo_wps
         real,     allocatable  ::  mother_lat(:,:)
         real,     allocatable  ::  mother_lon(:,:)
         real,     allocatable  ::  dum2d(:,:)
@@ -345,6 +345,7 @@ c
         character*200 path_to_islope
 
         character*255 filename
+        character*255 filename_wps
         character*200 c_dataroot
         character*200 cdl_dir
         character*180 static_dir 
@@ -464,6 +465,8 @@ cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
            return
         endif
 
+        l_topo_wps = l_parse(path_to_topt30s,'wps')
+
         call get_path_to_soiltype_top(path_to_soiltype_top_30s
      +,istatus)
         if(istatus .ne. 1)then
@@ -515,9 +518,11 @@ cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
            return
         endif
 
-        call s_len(path_to_topt30s,len)
-        print*,'path to topt30s:        ',path_to_topt30s(1:len)
-        path_to_topt30s(len+1:len+2)='/U'
+        if(.not. l_topo_wps)then                        
+           call s_len(path_to_topt30s,len)
+           print*,'path to topt30s:        ',path_to_topt30s(1:len)
+           path_to_topt30s(len+1:len+2)='/U'
+        endif
 
         call s_len(path_to_topt10m,len)
         if(len.gt.0)then
@@ -834,14 +839,16 @@ c type = U
 c
        itstatus=ishow_timer()
        print*
-       print*,' Processing 30s topo data....'
+       print*,' Processing 30s topo data, l_topo_wps = ',l_topo_wps
 
        allocate (topt_30(nnxp,nnyp),
      +           topt_30_s(nnxp,nnyp),
      +           topt_30_ln(nnxp,nnyp),
      +           topt_30_lt(nnxp,nnyp))
 
-       IF (c6_maproj .eq. 'rotlat') THEN
+       if(.not. l_topo_wps)then
+
+        IF (c6_maproj .eq. 'rotlat') THEN
 	 categorical=.false.
 
 	 NCAT=1
@@ -867,22 +874,22 @@ c
          istatus_30s=1
 !mp
 
-       ELSEIF (c6_maproj .eq. 'icshdr') THEN
+        ELSEIF (c6_maproj .eq. 'icshdr') THEN
          allocate  (GEODAT3D(nnxp,nnyp,1))
          call proc_geodat(nnxp,nnyp,1,path_to_topt30s
      +       ,lats(1,1,1),lons(1,1,1),data(1,1,1)
      +       ,GEODAT3D,istatus_30s)
 
-       ELSE
+        ELSE
 
          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
      +   ,ytn(1,1),deltax,deltay,TOPT_30,TOPT_30_S,TOPT_30_LN
      +   ,TOPT_30_LT,PATH_TO_TOPT30S,TOPTWVL,SILAVWT,new_DEM,1
      +   ,istatus_30s)
 
-       ENDIF
+        ENDIF
 
-       if(istatus_30s .ne. 1)then
+        if(istatus_30s .ne. 1)then
 
           print*,'WARNING: File(s) missing for 30s terrain data'
           print*,' >>>> Try Processing 10m topo data <<<<'
@@ -926,7 +933,7 @@ c
 
           endif
 
-       else ! go with 30s topo data since all tiles available
+        else ! go with 30s topo data since all tiles available
 
           print*,'Topo SW and NE corner values'
           print *,'topt_30    =',topt_30(1,1),topt_30(nnxp,nnyp)
@@ -937,7 +944,20 @@ c
           topt_out_lt=topt_30_lt
           icount_30=nnyp*nnxp
           
-       endif !istatus_30s ... data processed ok 
+        endif !istatus_30s ... data processed ok 
+
+       else ! read topo data from wps output netCDF file
+          write(6,*)' calling read_wrfstatic for wps topo'
+          call s_len(path_to_topt30s,lenp)
+          filename_wps = path_to_topt30s(1:lenp)//'/geo_em.d01.nc'
+          call read_wrfstatic(nnxp,nnyp,lat,lon,filename_wps,topt_out
+     1                       ,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' Error - no wrf static data: returning'
+              return
+          endif
+
+       endif
 
        deallocate (topt_30,
      1             topt_30_s,
