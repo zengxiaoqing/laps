@@ -180,7 +180,12 @@ C
       real lon_a(NX_L,NY_L)
       real topo_a(NX_L,NY_L)
 
+      integer max_lvls
+      parameter (max_lvls=200)
+      real liquid_a(max_lvls)
+
       common /write_snd_data/ cloud_base_temp,cloud_integrated_liquid
+     1                       ,liquid_a
 
       call get_r_missing_data(r_missing_data,istatus)
       if (istatus .ne. 1) then
@@ -270,14 +275,24 @@ C
           cloud_base_temp = cloudBaseTemp(iob)
           cloud_integrated_liquid = integratedLiquid(iob)
 
-          write(6,*)' cloud_base_temp/liq = ',cloud_base_temp
-     1                                       ,cloud_integrated_liquid
-
           l_closest_time = l_closest_time_i(iwmostanum,a9time_ob_r
      1                                     ,recNum,iob,i4time_sys
      1                                     ,istatus)
 
           if(nlevels_snd .gt. 0 .and. l_closest_time)then
+              call filter_string(providerId(iob))
+              write(6,*)' valid radiometer near analysis time'
+     1                 ,providerId(iob)
+
+              write(6,*)' cloud_base_temp/liq = ',cloud_base_temp
+     1                  ,cloud_integrated_liquid
+
+              write(6,*)' liquid density:'
+              do ilvl = 1,nlevels_snd
+                  write(6,*)ilvl,height_m(ilvl),liquidDensity(ilvl,iob) 
+                  liquid_a(ilvl) = liquidDensity(ilvl,iob)       
+              enddo ! ilvl
+
 !             call 'write_snd' for a single profile
               call open_ext(lun_out,i4time_sys,'snd',istatus)
 
