@@ -1,21 +1,34 @@
-<h2>Forecast:</h2>
+<h2>Forecast Time:</h2>
 This can be left blank and the web page will automatically find
-the latest forecast (if any are available) valid at the desired time.
-Otherwise, 
-if you want
-a specific forecast run, 
-enter the 'hhmm' format of the forecast time (e.g. 0600). 
+the most recent model forecast valid at the desired time.
+<p>
+If you want
+a specific forecast run 
+enter the model initialization time <strong>yydddhhmm</strong> (e.g. 090011200
+for a Jan 1 12z model run).
+<p>
+Alternately enter the <strong>hhmm</strong> format of the forecast time (e.g. 0600 for a 6-hour forecast). 
 This is the interval of
 time between the model initialization and the forecast valid time.
 
-<h3>Other uses of "forecast" window...</h3>
+
+<h3>Other non-forecast uses of "forecast" window...</h3>
+<center><h4>Radar data</h4></center>
 <p>
-One "trick" is that you can enter 'v01', 'v02' for the forecast and
-display intermediate radar files, if 'obs' is selected
-for the "Source".
+One "trick" is that you can enter 'vrz', 'vrc', 'v01', 'v02', etc., for the forecast and
+display intermediate radar files, if 'obs' and reflectivity are selected
+for the "Source" and "Field", respectively.
+<p>
+A related trick is that you can enter the radar number (or 0 for all), 
+for the forecast and display intermediate radar files, if 'obs' and radial velocity
+are selected for the "Source" and "Field", respectively.
+
+<center><h4>Satellite data</h4></center>
 <p>
 You can also enter the satellite name (e.g. 'goes12') for the forecast and
-display LVD satellite files, if 'obs' is selected for the "Source".
+display intermediate LVD satellite files, if 'obs' is selected for the "Source".
+
+<center><h4>Static geography data</h4></center>
 <p>
 Another trick is that if 'GG/gg' is entered as the 'Field', the type of
 static field can be entered here in the 'Fcst' window (e.g. 'gn' for Green Fraction).
