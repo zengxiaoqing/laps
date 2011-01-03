@@ -235,6 +235,7 @@ C
 C
 C **** write out netCDF file
 C
+      write(6,*)' Writing cdf file: ',file_name(1:fn_length)
       call write_cdf_v3 (file_name,ext,var,comment,asctime,cdldir, 
      1                   static_path,laps_dom_file, lgfc, fn_length,
      1                   ext_len,var_len, 
