@@ -126,13 +126,16 @@ C==========================================
 C
         function init_timer()
 
-        common /timer/ i4time_start
+        character*24 atime
 
+        common /timer/ i4time_start
 !       save i4time_start
 
         i4time_start = i4time_now_gg()
 
-        write(6,*)' Initializing elapsed timer at ',i4time_start
+        call cv_i4tim_asc_lp(i4time_start,atime,istatus)
+
+        write(6,*)'Initializing elapsed timer at ',atime(1:20)  
 
         init_timer = 1
 
