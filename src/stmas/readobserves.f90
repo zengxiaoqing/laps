@@ -4,8 +4,7 @@ MODULE READOBSERVES
 ! HISTORY: JANUARY 2008, CODED by ZHONGJIE HE.
 !*************************************************
   USE PRMTRS_STMAS
-  USE GENERALTOOLS, ONLY : VRTCLPSTN, VRTCLPSTN8, GETOBDATE, INTERPLTN, &
-                           INTERPLTN_XIE, ZPCONVERT, OBSTOGRID
+  USE GENERALTOOLS, ONLY : VRTCLPSTN, VRTCLPSTN8, GETOBDATE, INTERPLTN, INTERPLTN_XIE, ZPCONVERT, OBSTOGRID
   USE READ_BACKGRD, ONLY : BK0, X00, Y00, P00, Z00, T00, HEIGHTU, HEIGHTL
 
   PRIVATE  HANDLEOBS, HT_TO_PRS, LURAO, LUNDX, LUNEW
@@ -27,8 +26,7 @@ MODULE READOBSERVES
 !      RDRADROBS: READ IN DATA OF RADIAL WIND FROM LAPS.
 !      RDBUFROBS: READ IN CONVENTIONAL DATA FROM LAPS.
 !      HANDLEOBS: DETERMINE THE POSITION OF THE OBSERVATION IN THE BACKGROUND FIELD.
-!      HT_TO_PRS: TRANSLATE THE HEIGHT OF THE OBSERVATION TO PRESURE ACCORDING TO 
-!      THE BACKGROUND, USED FOR THE CASE OF PRESURE COORDINATE.
+!      HT_TO_PRS: TRANSLATE THE HEIGHT OF THE OBSERVATION TO PRESURE ACCORDING TO THE BACKGROUND, USED FOR THE CASE OF PRESURE COORDINATE.
 !      RDOBSTEST: JUST A TEST SUBROUTINE FOR READING SOME IDEAL DATAS FOR A TEST CASE.
 !
 !   ARRAYS:
@@ -39,10 +37,8 @@ MODULE READOBSERVES
 !      OBA: AZIMUTH AND TILT ANGLES OF OBSERVATION.
 !
 !   VARIABLE:
-!       X_RADAR: THE LONGITUDE OF RADAR, JUST USED BY output_analysis.f90 TO DRAW 
-!                PICTURES IN THE TEST CASE
-!       Y_RADAR: THE LATITUDE OF RADAR, JUST USED BY output_analysis.f90 TO DRAW 
-!                PICTURES IN THE TEST CASE
+!       X_RADAR: THE LONGITUDE OF RADAR, JUST USED BY output_analysis.f90 TO DRAW PICTURES IN THE TEST CASE
+!       Y_RADAR: THE LATITUDE OF RADAR, JUST USED BY output_analysis.f90 TO DRAW PICTURES IN THE TEST CASE
 !**************************************************
 CONTAINS
 
@@ -57,15 +53,15 @@ SUBROUTINE ALLOCATOB
   INTEGER  :: S,ER
 ! --------------------
 
-  ALLOCATE(OBP(NUMDIMS,NOBSMAX,NUMSTAT+2),STAT=ER)
+  ALLOCATE(OBP(NUMDIMS,NOBSMAX,NUMSTAT+3),STAT=ER)
   IF(ER.NE.0)STOP 'OBP ALLOCATE WRONG'
-  ALLOCATE(OBS(NOBSMAX,NUMSTAT+2),STAT=ER)
+  ALLOCATE(OBS(NOBSMAX,NUMSTAT+3),STAT=ER)
   IF(ER.NE.0)STOP 'OBS ALLOCATE WRONG'
-  ALLOCATE(OBE(NOBSMAX,NUMSTAT+2),STAT=ER)
+  ALLOCATE(OBE(NOBSMAX,NUMSTAT+3),STAT=ER)
   IF(ER.NE.0)STOP 'OBE ALLOCATE WRONG'
-  ALLOCATE(NST(NUMSTAT+2),STAT=ER)
+  ALLOCATE(NST(NUMSTAT+3),STAT=ER)
   IF(ER.NE.0)STOP 'NST ALLOCATE WRONG'
-  DO S=1,NUMSTAT+2
+  DO S=1,NUMSTAT+3
     NST(S)=0
   ENDDO
   ALLOCATE(OBA(NOBSMAX,3),STAT=ER)
@@ -159,6 +155,36 @@ SUBROUTINE RDLAPSRDR
   REAL         :: XRDR,YRDR    ! LONGITUDE AND LATITUDE OF RADAR STATION USED TO CALCULATE AZ AND EA
   REAL         :: RE           ! RADIUS OF EARTH
   !====== END MODIFICATION OF ZHONGJIE HE
+!jhui
+  INTEGER :: TT,TT1,INC1,nn
+  REAL    :: RADREF(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),5)
+  REAL    :: REFSCL
+  REAL    :: lat(FCSTGRD(1),FCSTGRD(2))
+  REAL    :: lon(FCSTGRD(1),FCSTGRD(2))
+  REAL    :: topo(FCSTGRD(1),FCSTGRD(2))
+  REAL    :: rlaps_land_frac(FCSTGRD(1),FCSTGRD(2))
+  REAL    :: grid_spacing_cen_m
+  INTEGER :: istatus, i4_tol,i4_ret,iqc_2dref
+  CHARACTER :: units*10,comment*125,radar_name*4,iext*31,c_filespec*255
+  REAL :: heights_3d(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+  REAL :: radar_ref_3d(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+  REAL :: closest_radar(FCSTGRD(1),FCSTGRD(2))
+  REAL ::  rlat_radar(5), rlon_radar(5),rheight_radar(5)
+  INTEGER :: n_ref_grids,n_2dref,n_3dref
+!  INTEGER :: istat_radar_2dref_a,istat_radar_3dref_a
+!!Variable's defination are not same with fountion read_multiradar_3dref ,modified by shuyuan 20100525
+  INTEGER :: istat_radar_2dref_a(FCSTGRD(1),FCSTGRD(2))
+  INTEGER :: istat_radar_3dref_a(FCSTGRD(1),FCSTGRD(2))
+!! liu 20100525
+  character*40 c_vars_req
+  character*180 c_values_req
+  INTEGER :: i4time_radar
+  REAL     :: tempref
+  
+
+
+
+
 
   INCLUDE 'main_sub.inc'
 
@@ -169,17 +195,15 @@ SUBROUTINE RDLAPSRDR
 
   CLUTTR = .TRUE.               ! TRUE. -- REMOVE 3D RADAR CLUTTER
   TOLTIM = 600		! DEFAULT 10 MINUTE TOLERATE TIME WINDOW
-  IF (FCSTGRD(4) .GT. 1) TOLTIM = T00(FCSTGRD(4))-T00(1)
-
   RE=6365.0E3                   ! ADDED BY ZHONGJIE HE
-
+  IF (FCSTGRD(4) .GT. 1) TOLTIM = T00(FCSTGRD(4))-T00(1)  
   ! GET PRESSURE LEVELS:
   CALL GET_PRES_1D(LAPSI4T,FCSTGRD(3),PRSLVL,STTRAD)
 
   ! READ RADAR DATA CLOSE TO EACH TIME FRAME:
   INC = TOLTIM/(FCSTGRD(4)-1)
-  DO M=1,FCSTGRD(4)
 
+  DO M=1,FCSTGRD(4)
     ! GET UNFOLDED RADAR THROUGH LAPS:
     CALL GET_MULTIRADAR_VEL(ITIME2(1)+(M-1)*INC,INC/2,RADTIM,MAX_RADARS, &
                            NRADAR,RADEXT,RMISSING,CLUTTR, &
@@ -224,8 +248,8 @@ SUBROUTINE RDLAPSRDR
 
             IF (RADVEL(I,J,K,L) .NE. RMISSING) THEN
 
-            !   PRINT*,'RDLAPSRDR: --RADIAL WIND: ', &
-	    !	 RADVEL(I,J,K,L),RADNQY(I,J,K,L),I,J,K,L,XRADAR,YRADAR,NGRDRD(L),VOLNQY(L)
+               PRINT*,'RDLAPSRDR: --RADIAL WIND: ', &
+		 RADVEL(I,J,K,L),RADNQY(I,J,K,L),I,J,K,L,XRADAR,YRADAR,NGRDRD(L),VOLNQY(L)
 
 	       ! COMPUTE AZIMUTH AND ELEVATION ANGLES USING LAPS ROUTINE
 	       ! LATLON_TO_RADAR.
@@ -244,25 +268,82 @@ SUBROUTINE RDLAPSRDR
                IP = 1
                OB=RADVEL(I,J,K,L)		! POSITIVE WIND IS TOWARD THE STATION BY YUANFU
                OE=0.5
+!jhui
+!               OE=0.3
                SID(1:4) = RADNAM(L)
+
                CALL HANDLEOBS_SIGMA(OP,OB,OE,NUMSTAT+1,NALLOBS,IP,AZ,EA,SID)
 
-!============= to check the observation======
-!             OPEN(1,FILE='CHECKOBS.DAT',ACTION='WRITE',POSITION='APPEND')
-!               WRITE(1,'(I5,8F10.2,3I5)') NALLOBS,XRADAR,YRADAR,LATITUDE(I,J),LONGITUD(I,J),PRSLVL(K),RADVEL(I,J,K,L),AZ,EA,I,J,K
-!             CLOSE(1)
-!===========================================
-
-            ENDIF
-
+           ENDIF
           ENDDO	! I
         ENDDO		! J
       ENDDO		! K
-
     ENDDO		! L -- RADAR LEVELS
 
   ENDDO		! M -- TIME FRAMES
   PRINT*,'NUMBER OF RADAR RADIAL WIND TAKEN AS OBS: ',NST(NUMSTAT+1)
+
+
+  call get_laps_domain_95(FCSTGRD(1),FCSTGRD(2),lat,lon,topo &
+                ,rlaps_land_frac,grid_spacing_cen_m,istatus)
+  if(istatus .ne. 1)then
+       write(6,*)' Error getting LAPS domain'
+       return
+  endif
+  write(6,*)' Actual grid spacing in domain center = ',grid_spacing_cen_m
+
+!=======reflectivity==for time cycle ,read multitime data file *.vrz======
+!=========added by shuyuan liu 20100830================== 
+  i4_tol = 900
+  i4_ret = 0
+  ref_base = -10
+  nn =0
+  REFSCL =0.0  
+  iext="vrz"  
+  DO L=1,FCSTGRD(4)  !for L   time          
+     call get_filespec(iext(1:3),2,c_filespec,istatus)
+     call get_file_time(c_filespec,LAPSI4T,i4time_radar)
+
+    ! LAPSI4T=ITIME2(1)+(L-1)*INC   !added by shuyuan 
+     call read_multiradar_3dref(ITIME2(1)+(L-1)*INC,i4_tol,i4_ret,&!I
+                   .true.,ref_base,&                              ! I
+                   FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),iext, &   ! I 
+                   lat,lon,topo,.false.,.false., heights_3d, &  ! I
+                   radar_ref_3d, &                                      ! O
+                   rlat_radar,rlon_radar,rheight_radar,radar_name, &  ! O
+                   iqc_2dref,closest_radar, &                          ! O
+                   n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a, &  ! O
+                   istat_radar_3dref_a)                              ! O
+     DO K = 1, FCSTGRD(3)
+      DO J = 1, FCSTGRD(2)
+       DO I = 1, FCSTGRD(1) 
+       RADREF(I,J,K,L) =0.
+       IF(radar_ref_3d(I,J,K) .GT. 5. .AND. radar_ref_3d(I,J,K) .LT.100) THEN
+            ! modified shuyuan 20100719
+            BK0(I,J,K,L,10)=radar_ref_3d(I,J,K)!! just for test dbz
+            
+            tempref=(radar_ref_3d(I,J,K)-43.1)/17.5
+            tempref=(10.**tempref)       !g/m3
+            RADREF(I,J,K,L) =tempref   
+             ! shuyuan 20100719
+            REFSCL = REFSCL + RADREF(I,J,K,L)**2             
+                   
+            nn = nn + 1
+            OP(2) = LATITUDE(I,J)      ! OP(1): LONGITUDE; OP(2): LATITUDE
+            OP(1) = LONGITUD(I,J)
+            OP(3) = PRSLVL(K)          ! IN PASCAL
+!           OP(4) = RADTIM(L)-ITIME2(1)    ! ACTUAL RADAR TIME
+            OP(4) = T00(L)
+            OB= RADREF(I,J,K,L)         
+            OE=0.01  ! shuyuan   test 0.1 0.01 1 
+            SID(1:3) = "vrz"
+            CALL HANDLEOBS_SIGMA(OP,OB,OE,NUMSTAT+3,NALLOBS,IP,AZ,EA,SID)   
+        ENDIF
+       ENDDO
+      ENDDO
+     ENDDO
+  ENDDO  ! for L
+
 
 END SUBROUTINE RDLAPSRDR
 
@@ -353,8 +434,7 @@ SUBROUTINE RDRADROBS
 
 ! ===============just for test by zhongjie he
       PRINT*, 'LON=',X0,'LAT=',Y0
-      IF(X0-150.GE.118 .AND. X0-150.LE.124 .AND. Y0-20.GE.21. &
-         .AND. Y0-20.LE.25 .AND. NL.GE.100) THEN
+      IF(X0-150.GE.118 .AND. X0-150.LE.124 .AND. Y0-20.GE.21. .AND. Y0-20.LE.25 .AND. NL.GE.100) THEN
         FG=1
       ELSE
         CYCLE
@@ -794,8 +874,7 @@ SUBROUTINE RDBUFROBS
     IF(OS.EQ.PRESSURE) PRINT*, 'THE NUMBER OF OBSERVED PRESSURE DATA IS:',NST(OS)
     IF(OS.EQ.TEMPRTUR) PRINT*, 'THE NUMBER OF OBSERVED TEMPRTUR DATA IS:',NST(OS)
     IF(OS.EQ.HUMIDITY) PRINT*, 'THE NUMBER OF OBSERVED HUMIDITY DATA IS:',NST(OS)
-    IF(OS.EQ.NUMSTAT+1 .AND. NST(NUMSTAT+1).GE.1) &
-      PRINT*, 'THE NUMBER OF RADAR DATA IS:',NST(OS)
+    IF(OS.EQ.NUMSTAT+1 .AND. NST(NUMSTAT+1).GE.1) PRINT*, 'THE NUMBER OF RADAR DATA IS:',NST(OS)
   ENDDO
 
   RETURN
@@ -832,7 +911,17 @@ SUBROUTINE RDBUFROBS_XIE
   CHARACTER*9         :: A9,WFO_FNAME13_TO_FNAME9
   CHARACTER*13	      :: YYYYMMDD_HHMM
   INTEGER             :: LD,I4,N4,ST
+!jhui
+  INTEGER :: data_acar
+  INTEGER :: tw_u, tw_t, tw_sh, tw_p
   EQUIVALENCE(SID,HD(5))
+!jhui
+  data_acar =0
+  tw_u=0
+  tw_t=0
+  tw_sh=0
+  tw_p=0
+
 
   CALL GET_FILESPEC('bufr',2,OD,ST)	! GET PATH TO BUFR DIRECTORY
   CALL GET_FILE_TIME(OD,LAPSI4T,N4)	! GET NEAREST I4TIME INTO N4
@@ -855,6 +944,10 @@ SUBROUTINE RDBUFROBS_XIE
     DO WHILE(IREADSB(LURAO).EQ.0)		! OPEN A SUBSET
 
       CALL UFBINT(LURAO,HD,NH,1,IR,'XOB YOB ELV DHR SID TYP')	! READ HEADER
+!jhui
+      IF ( SID =="ACAR    ") THEN
+      data_acar = data_acar +1
+      END IF
       ! READ OBS:
       CALL UFBINT(LURAO,RA,NR,LN,NL, &
            'XDR YDR PRSS POB POE HRDR UOB VOB WOE ZOB ZOE TOB TOE QOB QOE PMO')
@@ -967,7 +1060,14 @@ SUBROUTINE RDBUFROBS_XIE
           OBP(1,NST(V_CMPNNT),V_CMPNNT) = X-1
           OBP(2,NST(V_CMPNNT),V_CMPNNT) = Y-1
           OBP(3,NST(V_CMPNNT),V_CMPNNT) = Z-1
-          OBP(4,NST(V_CMPNNT),V_CMPNNT) = T/(T00(2)-T00(1)) ! t00(2)-t00(1) Time increment
+          OBP(4,NST(V_CMPNNT),V_CMPNNT) = T/(T00(2)-T00(1))
+!jhui
+          IF ( OBP(1,NST(U_CMPNNT),U_CMPNNT) .GT. 38 .AND. &
+               OBP(1,NST(U_CMPNNT),U_CMPNNT) .LT. 112 .AND. &
+               OBP(2,NST(U_CMPNNT),U_CMPNNT) .GT. 33 .AND. &
+               OBP(2,NST(U_CMPNNT),U_CMPNNT) .LT. 107 ) THEN
+          tw_u = tw_u + 1
+          ENDIF
 
           ! SAVE INCREMENT:
           UU = 0.0
@@ -987,7 +1087,10 @@ SUBROUTINE RDBUFROBS_XIE
           OBS(NST(U_CMPNNT),U_CMPNNT) =RA(7,L)-UU
           OBS(NST(V_CMPNNT),V_CMPNNT) =RA(8,L)-VV
           OBE(NST(U_CMPNNT),U_CMPNNT) =0.5	!RA(9,L)	! WIND ERROR
-          OBE(NST(V_CMPNNT),V_CMPNNT) =0.5	!RA(9,L)	
+          OBE(NST(V_CMPNNT),V_CMPNNT) =0.5	!RA(9,L)
+!jhui	
+!          OBE(NST(U_CMPNNT),U_CMPNNT) =0.3	!RA(9,L)	! WIND ERROR
+!          OBE(NST(V_CMPNNT),V_CMPNNT) =0.3	!RA(9,L)	
           ! SAVE OBS INTO PIG FILE OF LAPS AS WIND DIRECTION AND SPEED:
           ! UU = RA(7,L)
           ! VV = RA(8,L)
@@ -1012,9 +1115,18 @@ SUBROUTINE RDBUFROBS_XIE
           OBP(1,NST(TEMPRTUR),TEMPRTUR) = X-1
           OBP(2,NST(TEMPRTUR),TEMPRTUR) = Y-1
           OBP(3,NST(TEMPRTUR),TEMPRTUR) = Z-1
-          OBP(4,NST(TEMPRTUR),TEMPRTUR) = T/(T00(2)-T00(1)) ! TEMPERATUER OBS LOCATION ! t00(2)-t00(1) time increment
+          OBP(4,NST(TEMPRTUR),TEMPRTUR) = T/(T00(2)-T00(1)) ! TEMPERATUER OBS LOCATION
           OBS(NST(TEMPRTUR),TEMPRTUR) =RA(12,L)+273.15D0	! IN KELVIN
           OBE(NST(TEMPRTUR),TEMPRTUR) =0.5	!RA(13,L)			! OBS ERROR
+!jhui
+!          OBE(NST(TEMPRTUR),TEMPRTUR) =0.3	!RA(13,L)			! OBS ERROR
+!jhui
+          IF ( OBP(1,NST(TEMPRTUR),TEMPRTUR) .GT. 38 .AND. &
+               OBP(1,NST(TEMPRTUR),TEMPRTUR) .LT. 112 .AND. &
+               OBP(2,NST(TEMPRTUR),TEMPRTUR) .GT. 33 .AND. &
+               OBP(2,NST(TEMPRTUR),TEMPRTUR) .LT. 107 ) THEN
+          tw_t = tw_t + 1
+          ENDIF
 
           ! SAVE OBS INNOVATION:
           TT = 0.0
@@ -1048,8 +1160,15 @@ SUBROUTINE RDBUFROBS_XIE
           OBP(1,NST(HUMIDITY),HUMIDITY) = X-1
           OBP(2,NST(HUMIDITY),HUMIDITY) = Y-1
           OBP(3,NST(HUMIDITY),HUMIDITY) = Z-1
-          OBP(4,NST(HUMIDITY),HUMIDITY) = T/(T00(2)-T00(1)) ! HUMIDITY OBS LOCATION ! t00(2)-t00(1) time increment
+          OBP(4,NST(HUMIDITY),HUMIDITY) = T/(T00(2)-T00(1)) ! HUMIDITY OBS LOCATION
 
+!jhui
+          IF ( OBP(1,NST(HUMIDITY),HUMIDITY) .GT. 38 .AND. &
+               OBP(1,NST(HUMIDITY),HUMIDITY) .LT. 112 .AND. &
+               OBP(2,NST(HUMIDITY),HUMIDITY) .GT. 33 .AND. &
+               OBP(2,NST(HUMIDITY),HUMIDITY) .LT. 107 ) THEN
+          tw_sh = tw_sh + 1
+          ENDIF
           ! SAVE OBS INNOVATION:
           TT = 0.0
           DO KK=1,2
@@ -1085,7 +1204,15 @@ SUBROUTINE RDBUFROBS_XIE
           OBP(1,NST(PRESSURE),PRESSURE) = X-1
           OBP(2,NST(PRESSURE),PRESSURE) = Y-1
           OBP(3,NST(PRESSURE),PRESSURE) = Z-1
-          OBP(4,NST(PRESSURE),PRESSURE) = T/(T00(2)-T00(1)) ! HEIGHT OBS LOCATION ! t00(2)-t00(1) time increment
+          OBP(4,NST(PRESSURE),PRESSURE) = T/(T00(2)-T00(1)) ! HEIGHT OBS LOCATION
+
+!jhui
+          IF ( OBP(1,NST(PRESSURE),PRESSURE) .GT. 38 .AND. &
+               OBP(1,NST(PRESSURE),PRESSURE) .LT. 112 .AND. &
+               OBP(2,NST(PRESSURE),PRESSURE) .GT. 33 .AND. &
+               OBP(2,NST(PRESSURE),PRESSURE) .LT. 107 ) THEN
+          tw_p = tw_p + 1
+          ENDIF
 
           ! SAVE OBS INNOVATION:
           TT = 0.0
@@ -1124,26 +1251,17 @@ SUBROUTINE RDBUFROBS_XIE
 !  CLOSE(LUNDX)
 !  CLOSE(LUNEW)
 
-  DO OS=1,NUMSTAT+1
-    IF(OS.EQ.U_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED U DATA IS:',NST(OS)
-    IF(OS.EQ.V_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED V DATA IS:',NST(OS)
-    IF(OS.EQ.W_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED W DATA IS:',NST(OS)
-    IF(OS.EQ.PRESSURE) PRINT*, 'THE NUMBER OF OBSERVED PRESSURE DATA IS:',NST(OS)
-    IF(OS.EQ.TEMPRTUR) PRINT*, 'THE NUMBER OF OBSERVED TEMPRTUR DATA IS:',NST(OS)
-    IF(OS.EQ.HUMIDITY) PRINT*, 'THE NUMBER OF OBSERVED HUMIDITY DATA IS:',NST(OS)
-    IF(OS.EQ.NUMSTAT+1 .AND. NST(NUMSTAT+1).GE.1) PRINT*, 'THE NUMBER OF RADAR DATA IS:',NST(OS)
-  ENDDO
-
+   
   RETURN
 END SUBROUTINE RDBUFROBS_XIE
 
 SUBROUTINE RDBUFROBS_LI
-  !*************************************************
-  ! READ IN OBSERVATION, MODIFIED FROM 'raob2dwl.f'
-  ! HISTORY: SEPTEMBER 2007, CODED by WEI LI.
-  !*************************************************
+!*************************************************
+! READ IN OBSERVATION, MODIFIED FROM 'raob2dwl.f'
+! HISTORY: SEPTEMBER 2007, CODED by WEI LI.
+!*************************************************
   IMPLICIT NONE
-  ! --------------------
+! --------------------
   REAL ,PARAMETER :: MS=10e10
   INTEGER ,PARAMETER :: NH=5,NR=15,LN=255
   CHARACTER(LEN=8)       :: SS,SID
@@ -1172,17 +1290,14 @@ SUBROUTINE RDBUFROBS_LI
   OD(LD-5:LD+3) = A9
   LD = LD+9
 
-  OPEN(2,FILE='CHECK_CONV_OBS.DAT',ACTION='WRITE')      ! JUST FOR CHECK
-  WRITE(2,'(6A12)') 'X','Y','P','U','V','Z'
-  CLOSE(2)
 
   !OPEN(UNIT=LURAO,FILE='072711900.bufr',FORM='UNFORMATTED',STATUS='OLD',ACTION='READ')
   OPEN(UNIT=LURAO,FILE=OD(1:LD),FORM='UNFORMATTED',STATUS='OLD',ACTION='READ')
 
   ! END LAPS OBS INGEST BY YUANFU
 
-  !  OPEN(UNIT=LUNDX,FILE='prepobs_prep.bufrtable',STATUS='OLD',ACTION='READ')
-  !  OPEN(UNIT=LUNEW,FILE='readresult.dat')
+!  OPEN(UNIT=LUNDX,FILE='prepobs_prep.bufrtable',STATUS='OLD',ACTION='READ')
+!  OPEN(UNIT=LUNEW,FILE='readresult.dat')
   CALL OPENBF(LURAO,'IN',LURAO)
   NC=0
   NW=0
@@ -1190,141 +1305,130 @@ SUBROUTINE RDBUFROBS_LI
   IF(IS.NE.1)STOP 'LAPS PARAMETERS ARE WRONG!!!'
   O=0
   DO WHILE(IREADMG(LURAO,SS,DT).EQ.0)
-     DO WHILE(IREADSB(LURAO).EQ.0)
-        CALL UFBINT(LURAO,HD,NH,1,IR,'XOB YOB ELV DHR SID')
-        CALL UFBINT(LURAO,RA,NR,LN,NL, &
-             'XDR YDR PRSS POB POE HRDR UOB VOB WOE ZOB ZOE TOB TOE QOB QOE')
-        DO L=1,NL
-           NW=NW+1
-           ! FOR X LOCATION
-           X=HD(1)
-           IF(RA(1,L).LT.MS)X=RA(1,L)
-           IF(X.GE.MS)CYCLE
-           IF(X.LT.0.0)X=X+360.0
-           ! FOR Y LOCATION
-           Y=HD(2)
-           IF(RA(2,L).LT.MS)Y=RA(2,L)
-           IF(Y.GE.MS)CYCLE
-           ! FOR T LOCATION
-           ! FIT INTO LAPS TIME FRAMES BY YUANFU:
-           I4 = MOD(DT,100)*100
-           WRITE(YYYYMMDD_HHMM,1) 20000000+DT/100,'_',I4
-1          FORMAT(I8,A1,I4)
-           A9 = WFO_FNAME13_TO_FNAME9(YYYYMMDD_HHMM)
-           CALL CV_ASC_I4TIME(A9,I4,ST)
-           IF (I4 .NE. ITIME2(2)) THEN
-              WRITE(*,*) 'Analysis time does not match: ',I4,ITIME2(2)
-              STOP
-           ENDIF
-           T = I4-ITIME2(1)+3600*HD(4)
-           ! FOR P LOCATION
-           IF(RA(3,L).GE.MS.AND.RA(4,L).GE.MS)P=MS !(RA(4,L).GE.MS.OR.RA(5,L).GE.MS)
-           IF(RA(4,L).LT.MS)P=RA(4,L) !.AND.RA(5,L).LT.MS
-           !        IF(RA(3,L).LT.MS)P=RA(3,L)
-           !        IF(RA(3,L).LT.MS.AND.RA(4,L).LT.MS.AND. &
-           !        ABS(RA(3,L)-RA(4,L)).GT.0.001)STOP 'WRONG' !(RA(4,L).LT.MS.AND.RA(5,L).LT.MS)
-           IF(P.LT.MS)P=P*100.0D0
-           ! FOR ZZ OBSERVATION
-           ZZ=HD(3)
-           IF(RA(10,L).LT.MS)ZZ=RA(10,L)
-           ZE=RA(11,L)
-           !        IF(ZE.GE.MS)ZZ=MS
-           ! CHECK P AND ZZ
-           IF(P.GE.MS.AND.ZZ.GE.MS)CYCLE
-           ! TRANSFORM
-           OP(1)=X
-           OP(2)=Y
-           !        IF(P.LT.MS.AND.ZZ.LT.MS)THEN
-           !          CALL HT_TO_PRS(OP(1),OP(2),ZZ,P1,IS)
-           !          IF(IS.EQ.1)WRITE(555,*)OP(1),OP(2),P,P1,P-P1,ZZ
-           !        ENDIF
-           IP=0
-           IF(P.GE.MS)THEN
-              IP=1
-              CALL HT_TO_PRS(OP(1),OP(2),ZZ,P,IS)
-              IF(IS.NE.1)CYCLE
-           ENDIF
-           OP(3)=P
+    DO WHILE(IREADSB(LURAO).EQ.0)
+      CALL UFBINT(LURAO,HD,NH,1,IR,'XOB YOB ELV DHR SID')
+      CALL UFBINT(LURAO,RA,NR,LN,NL, &
+                 'XDR YDR PRSS POB POE HRDR UOB VOB WOE ZOB ZOE TOB TOE QOB QOE')
+      DO L=1,NL
+        NW=NW+1
+! FOR X LOCATION
+        X=HD(1)
+        IF(RA(1,L).LT.MS)X=RA(1,L)
+        IF(X.GE.MS)CYCLE
+        IF(X.LT.0.0)X=X+360.0
+! FOR Y LOCATION
+        Y=HD(2)
+        IF(RA(2,L).LT.MS)Y=RA(2,L)
+        IF(Y.GE.MS)CYCLE
+! FOR T LOCATION
+        ! FIT INTO LAPS TIME FRAMES BY YUANFU:
+        I4 = MOD(DT,100)*100
+        WRITE(YYYYMMDD_HHMM,1) 20000000+DT/100,'_',I4
+ 1	FORMAT(I8,A1,I4)
+        A9 = WFO_FNAME13_TO_FNAME9(YYYYMMDD_HHMM)
+        CALL CV_ASC_I4TIME(A9,I4,ST)
+        IF (I4 .NE. ITIME2(2)) THEN
+          WRITE(*,*) 'Analysis time does not match: ',I4,ITIME2(2)
+          STOP
+        ENDIF
+        T = I4-ITIME2(1)+3600*HD(4)
+! FOR P LOCATION
+        IF(RA(3,L).GE.MS.AND.RA(4,L).GE.MS)P=MS !(RA(4,L).GE.MS.OR.RA(5,L).GE.MS)
+        IF(RA(4,L).LT.MS)P=RA(4,L) !.AND.RA(5,L).LT.MS
+!        IF(RA(3,L).LT.MS)P=RA(3,L)
+!        IF(RA(3,L).LT.MS.AND.RA(4,L).LT.MS.AND. &
+!        ABS(RA(3,L)-RA(4,L)).GT.0.001)STOP 'WRONG' !(RA(4,L).LT.MS.AND.RA(5,L).LT.MS)
+        IF(P.LT.MS)P=P*100.0D0
+! FOR ZZ OBSERVATION
+        ZZ=HD(3)
+        IF(RA(10,L).LT.MS)ZZ=RA(10,L)
+        ZE=RA(11,L)
+!        IF(ZE.GE.MS)ZZ=MS
+! CHECK P AND ZZ
+        IF(P.GE.MS.AND.ZZ.GE.MS)CYCLE
+! TRANSFORM
+        OP(1)=X
+        OP(2)=Y
+        IP=0
+        IF(P.GE.MS)THEN
+          IP=1
+          CALL HT_TO_PRS(OP(1),OP(2),ZZ,P,IS)
+          IF(IS.NE.1)CYCLE
+        ENDIF
+        OP(3)=P
 
-           ! OBS TIME: Yuanfu: CHECK ITS CONSISTENCY WITH BACKGROUND:
-           OP(4) = T
+        ! OBS TIME: Yuanfu: CHECK ITS CONSISTENCY WITH BACKGROUND:
+        OP(4) = T
 
-           ! FOR U COMPONENT OBSERVATION
-           UU=RA(7,L)
-           UE=RA(9,L)
-           ! FOR V COMPONENT OBSERVATION
-           VV=RA(8,L)
-           VE=RA(9,L)
-           ! FOR TEMPERATURE OBSERVATION
-           TT=RA(12,L)
-           TE=RA(13,L)
-           IF(TT.LT.MS)TT=TT+273.15D0
-           ! FOR SPECIFIC HUMIDITY OBSERVATION
-           QQ=RA(14,L)
-           QE=RA(15,L)
-           ! OUTPUT
-           UE=1.0
-           VE=1.0
-           ZE=2.0
-           TE=0.5
-           IF(UU.LT.MS.AND.UE.LT.MS)THEN
-              OB=UU
-              OE=UE
-              OS=U_CMPNNT
-              AZ=0
-              EA=0
-              CALL HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
-           ENDIF
-           IF(VV.LT.MS.AND.VE.LT.MS)THEN
-              OB=VV
-              OE=VE
-              OS=V_CMPNNT
-              AZ=0
-              EA=0
-              CALL HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
-           ENDIF
-           IF(ZZ.LT.MS.AND.ZE.LT.MS)THEN
-              OB=ZZ
-              OE=ZE
-              OS=PRESSURE
-              AZ=0
-              EA=0
-              CALL HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
-           ENDIF
-           IF(TT.LT.MS.AND.TE.LT.MS)THEN
-              OB=TT
-              OE=TE
-              OS=TEMPRTUR
-              AZ=0
-              EA=0
-              CALL HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
-           ENDIF
-           NC=NC+1
-
-           ! ========just for check !
-           OPEN(2,FILE='CHECK_CONV_OBS.DAT',ACTION='WRITE',POSITION='APPEND')
-           WRITE(2,'(7e15.6)') X,Y,P,UU,VV,ZZ,TT
-           CLOSE(2)
-           !=========just for check !
-
-        ENDDO
-     ENDDO
+! FOR U COMPONENT OBSERVATION
+        UU=RA(7,L)
+        UE=RA(9,L)
+! FOR V COMPONENT OBSERVATION
+        VV=RA(8,L)
+        VE=RA(9,L)
+! FOR TEMPERATURE OBSERVATION
+        TT=RA(12,L)
+        TE=RA(13,L)
+        IF(TT.LT.MS)TT=TT+273.15D0
+! FOR SPECIFIC HUMIDITY OBSERVATION
+        QQ=RA(14,L)
+        QE=RA(15,L)
+! OUTPUT
+        UE=1.0
+        VE=1.0
+        ZE=2.0
+        TE=0.5
+        IF(UU.LT.MS.AND.UE.LT.MS)THEN
+          OB=UU
+          OE=UE
+          OS=U_CMPNNT
+	  AZ=0
+	  EA=0
+          CALL HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
+        ENDIF
+        IF(VV.LT.MS.AND.VE.LT.MS)THEN
+          OB=VV
+          OE=VE
+          OS=V_CMPNNT
+	  AZ=0
+	  EA=0
+          CALL HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
+        ENDIF
+        IF(ZZ.LT.MS.AND.ZE.LT.MS)THEN
+          OB=ZZ
+          OE=ZE
+          OS=PRESSURE
+	  AZ=0
+	  EA=0
+          CALL HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
+        ENDIF
+        IF(TT.LT.MS.AND.TE.LT.MS)THEN
+          OB=TT
+          OE=TE
+          OS=TEMPRTUR
+	  AZ=0
+	  EA=0
+          CALL HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
+        ENDIF
+        NC=NC+1
+      ENDDO
+    ENDDO
   ENDDO
   NALLOBS=O
   PRINT*,'THE NUMBER OF LOCATION IS',NW,'AND',NC,'AVAILABLE'
   PRINT*,'RDBUFROBS: NUMBER OF ALL OBS = ',NALLOBS
   CALL CLOSBF(LURAO)
   CLOSE(LURAO)
-  !  CLOSE(LUNDX)
-  !  CLOSE(LUNEW)
+!  CLOSE(LUNDX)
+!  CLOSE(LUNEW)
 
   DO OS=1,NUMSTAT+1
-     IF(OS.EQ.U_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED U DATA IS:',NST(OS)
-     IF(OS.EQ.V_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED V DATA IS:',NST(OS)
-     IF(OS.EQ.W_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED W DATA IS:',NST(OS)
-     IF(OS.EQ.PRESSURE) PRINT*, 'THE NUMBER OF OBSERVED PRESSURE DATA IS:',NST(OS)
-     IF(OS.EQ.TEMPRTUR) PRINT*, 'THE NUMBER OF OBSERVED TEMPRTUR DATA IS:',NST(OS)
-     IF(OS.EQ.NUMSTAT+1 .AND. NST(NUMSTAT+1).GE.1) PRINT*, 'THE NUMBER OF RADAR DATA IS:',NST(OS)
+    IF(OS.EQ.U_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED U DATA IS:',NST(OS)
+    IF(OS.EQ.V_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED V DATA IS:',NST(OS)
+    IF(OS.EQ.W_CMPNNT) PRINT*, 'THE NUMBER OF OBSERVED W DATA IS:',NST(OS)
+    IF(OS.EQ.PRESSURE) PRINT*, 'THE NUMBER OF OBSERVED PRESSURE DATA IS:',NST(OS)
+    IF(OS.EQ.TEMPRTUR) PRINT*, 'THE NUMBER OF OBSERVED TEMPRTUR DATA IS:',NST(OS)
+    IF(OS.EQ.NUMSTAT+1 .AND. NST(NUMSTAT+1).GE.1) PRINT*, 'THE NUMBER OF RADAR DATA IS:',NST(OS)
   ENDDO
 
   RETURN
@@ -1471,16 +1575,6 @@ SUBROUTINE HANDLEOBS(OP,OB,OE,OS,O,IP,AZ,EA)
     OBA(NST(OS),2)=EA
   ENDIF
 
-  ! WRITE TMG FILE FOR RECORDING IN-SITU OBS:
-  ! IF(OS .EQ. TEMPRTUR) &
-  !  WRITE(TMGOBS_CHANNEL,*) OBP(1,NST(OS),OS),OBP(2,NST(OS),OS), &
-  !                           OBP(3,NST(OS),OS),OBS(NST(OS),OS)+273.15D0,'IN-SITU'
-  ! IF(OS .EQ. U_CMPNNT) THEN
-  !   ! TO WIND SPEED AND DIRECTION:
-  !   CALL UV_TO_DISP(OBS(NST(OS),OS),OBS(NST(OS),V_CMPNNT),DI,SP)
-  !   WRITE(PIGOBS_CHANNEL,*) OBP(1,NST(OS),OS),OBP(2,NST(OS),OS), &
-  !                          OBP(3,NST(OS),OS),DI,SP,'IN-SITU'
-  ! ENDIF
 
   RETURN
 END SUBROUTINE HANDLEOBS
@@ -1755,7 +1849,15 @@ SUBROUTINE HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
     OP(3)=(OP(3)-HS)/(HE-HS)
     CALL VRTCLPSTN(FCSTGRD(3),LIMIT_3,Z00,OP(3),P,IS)
   ENDIF
+!jhui
+!  FOR RADAR INGEST DATA that outside 0-3600
+  IF ( OS .GT. NUMSTAT) THEN
+  IF ( OP(4).GT. 3600)  OP(4) = 3600 
+  IF ( OP(4).LT. 0)  OP(4) = 0 
   IF(NUMDIMS.GE.4) CALL VRTCLPSTN(FCSTGRD(4),LIMIT_4,T00,OP(4),TM,IS)
+!  ELSE
+!  IF(NUMDIMS.GE.4) CALL VRTCLPSTN(FCSTGRD(4),LIMIT_4,T00,OP(4),TM,IS)
+  ENDIF
 
   IF(IS.NE.1)RETURN
   DO N=1,MAXDIMS
@@ -1858,6 +1960,8 @@ SUBROUTINE HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
     ENDDO
     ENDDO
     HT=SQRT(TU*TU+TV*TV+TW*TW)
+  ELSEIF(OS.EQ.NUMSTAT+3) THEN        
+    HT =0.0
   ENDIF
 
   IF(OS.EQ.TEMPRTUR.AND.ABS(OB-HT).GE.8.0)RETURN
@@ -1885,22 +1989,7 @@ SUBROUTINE HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
     OBA(NST(OS),1)=AZ
     OBA(NST(OS),2)=EA
   ENDIF
-
-  ! WRITE TMG FILE FOR RECORDING IN-SITU OBS:
-  ! IF(OS .EQ. TEMPRTUR) THEN
-  !   WRITE(TMGOBS_CHANNEL,*) OBP(1,NST(OS),OS),OBP(2,NST(OS),OS), &
-  !                           OBP(3,NST(OS),OS),OBS(NST(OS),OS)+273.15D0,SID
-  ! ENDIF
-
-  ! IF(OS .EQ. V_CMPNNT) THEN
-
-    ! TO WIND SPEED AND DIRECTION:
-    ! PRINT*,'WRITE PIG FILE',PIGOBS_CHANNEL,OBP(1:3,NST(OS),OS),SID
-    ! CALL UV_TO_DISP(OBS(NST(U_CMPNNT),U_CMPNNT),OBS(NST(OS),OS),DI,SP)
-    ! WRITE(PIGOBS_CHANNEL,*) OBP(1,NST(OS),OS),OBP(2,NST(OS),OS), &
-    !                         OBP(3,NST(OS),OS),DI,SP,SID
-  ! ENDIF
-
+  
   RETURN
 END SUBROUTINE HANDLEOBS_SIGMA
 

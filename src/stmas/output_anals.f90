@@ -55,6 +55,13 @@ SUBROUTINE OUTPTLAPS
   CHARACTER*3   :: WN(3)=(/'U3','V3','OM'/)	! WIND NAMES
   CHARACTER*3   :: SN(2)=(/'SU','SV'/)		! WIND NAMES
   CHARACTER*4   :: WU(3)=(/'M/S ','M/S ','PA/S'/) ! WIND UNITS
+  ! added by shuyuan 20100722
+  CHARACTER*3   :: QW(2)=(/'RAI','SNO'/)       ! rain water content   snow water content
+  CHARACTER*3   :: RE=(/'REF'/)		! reflectivity  dbz
+  CHARACTER*125 :: QWC(2)=(/'ROUR','ROUS'/) ! QW COMMENTS
+  CHARACTER*125 :: RC=(/'reflectivity'/) ! reflectivity COMMENTS 
+  character*10   :: units_3D(2)=(/'kg/m**3','kg/m**3'/)
+  !----------------------------------------------------------
   CHARACTER*125 :: WC(3)=(/'3DWIND','3DWIND','3DWIND'/) ! WIND COMMENTS
   CHARACTER*125 :: SC(2)=(/'SFCWIND','SFCWIND'/) ! SFC WIND COMMENTS
   INTEGER       :: I4,ST,IFRAME
@@ -69,7 +76,11 @@ SUBROUTINE OUTPTLAPS
   REAL          :: SF(FCSTGRD(1),FCSTGRD(2),2)	! SURFACE WIND: UV
   REAL          :: SP(FCSTGRD(1),FCSTGRD(2))	! SURFACE PRESSURE
   REAL          :: HEIGHT_TO_ZCOORD3,RM,A,DLNP
+!ADDED BY SHUYUAN 20100722 FOR REFLECTIVITY
+  REAL          :: REF_OUT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+  integer       :: istatus  ,N_3D_FIELDS
 ! --------------------
+  
   DO I=1,FCSTGRD(1)
     XF(I)=(I-1)*1.0D0
   ENDDO
@@ -126,17 +137,21 @@ SUBROUTINE OUTPTLAPS
 
   ! ADD INCREMENT TO BK0:
   DO S=1,NUMSTAT
+    print * ,'------------------------------------------------------'
+    
     DO T=1,FCSTGRD(4)
     DO K=1,FCSTGRD(3)
     DO J=1,FCSTGRD(2)
     DO I=1,FCSTGRD(1)
       BK0(I,J,K,T,S) = BK0(I,J,K,T,S)+ANA(I,J,K,T,S)
+     
     ENDDO
     ENDDO
     ENDDO
     ENDDO
+    print*,'bko_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S))
   ENDDO
-print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,5))
+print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1,5))
 
   CALL GET_GRID_SPACING_ACTUAL(LATITUDE((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1), &
                                 LONGITUD((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1),DS,ST)
@@ -239,6 +254,60 @@ print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fc
                      FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),3,ST)
 
   ! END OF OUTPUT TO LAPS BY YUANFU
+
+! --------ADDED BY SHUYUAN 201007---------------------------------
+! CALCULATE AND OUTPUT REFLECTIVITY
+   T=2
+   DO K=1,FCSTGRD(3)
+    DO J=1,FCSTGRD(2)
+      DO I=1,FCSTGRD(1)
+      REF_OUT(I,J,K)= 0.
+      if(BK0(I,J,K,T,6).GT. 0.0 ) then 
+       !20100907
+      ! REF_OUT(I,J,K)=REF_OUT(I,J,K)+(BK0(I,J,K,T,6))**1.75*17300.
+        REF_OUT(I,J,K)=REF_OUT(I,J,K)+43.1+17.5*ALOG10(BK0(I,J,K,T,6))           
+      else
+       REF_OUT(I,J,K)=0.
+      endif 
+ 
+      if( REF_OUT(I,J,K) .LT. 0.) then
+        REF_OUT(I,J,K)=0.
+      endif    
+      ENDDO
+    ENDDO
+   ENDDO 
+   print*,'ref_max=',maxval(REF_OUT(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3)))
+   call put_laps_3d(LAPSI4T,'lps',RE,'dBZ',RC,REF_OUT(1,1,1),FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+             !RC,BK0(1,1,1,T,10),FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+             
+  !RAIN CONTENT(AIR DENSITY* RAIN WATER MIXING RATIO(kg/m3),
+  !SNOW CONTENT(AIR DENSITY * SNOW WATER MIXING RATIO)
+   N_3D_FIELDS=2   ! variable number
+   istatus=0 
+  !convert rc sc to rour rous 
+   DO K=1,FCSTGRD(3)
+    DO J=1,FCSTGRD(2)
+     DO I=1,FCSTGRD(1)
+     if(BK0(I,J,K,T,6) .NE. 0)then
+     !BK0(I,J,K,T,6)=(BK0(I,J,K,T,6)/17300.)**(4./7.)/1000
+      BK0(I,J,K,T,6)=BK0(I,J,K,T,6)/1000.  !20100907  kg/m3
+     endif
+     if(BK0(I,J,K,T,7) .NE. 0)then
+     !BK0(I,J,K,T,7)=(BK0(I,J,K,T,7)/38000.)**(5./11.)/1000
+      BK0(I,J,K,T,7)=BK0(I,J,K,T,7)/1000.   !20100907
+     endif
+     ENDDO
+    ENDDO
+   ENDDO  
+   print*,'bko6_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,6))
+   print*,'bko7_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,7))
+   ! OUT PUT SNOW CONTENT(SNO) AND RAI   
+   call put_laps_3d_multi_R(LAPSI4T,'lwc',QW,units_3D,QWC ,  &
+              BK0(1,1,1,T,6),BK0(1,1,1,T,7),     &                                                             
+              FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),            &
+              FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),N_3D_FIELDS,istatus)         
+!--END OUTPUT REF RAI SNO  BY SHUYUAN---------------------
+
   CALL BKGMEMRLS
   DEALLOCATE(Z_FCSTGD)
   ! FINALLY RELEASE THE BACKGROUND ARRAYS: BY YUANFU
@@ -555,4 +624,104 @@ SUBROUTINE RADIALWND(IC,JC)
   RETURN
 END SUBROUTINE RADIALWND
 
+
+
+!!added by shuyuan 20100729!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ subroutine put_laps_3d_multi_R(i4time,EXT,var_3d &  ! in 
+             ,units_3d,comment_3d       &            ! in    
+             ,array1,array2              &           ! in                                                 
+             ,NX_L_1,NY_L_1,NZ_L_1     &             ! in   
+             ,NX_L_2,NY_L_2,NZ_L_2      &            ! in                             
+             ,N_3D_FIELDS,istatus)              !in out
+
+   real array1(NX_L_1,NY_L_1,NZ_L_1) !variable for output 
+   real array2(NX_L_2,NY_L_2,NZ_L_2) !variable for output
+       
+   character*125 comment_3D(N_3D_FIELDS) !variable comment 
+   character*10 units_3D(N_3D_FIELDS)    !variable unit
+   character*3 var_3D(N_3D_FIELDS)      !variable name
+   character*(*) EXT                    ! file name suffix and file derictory
+   integer :: l
+
+   write(6,*)' Subroutine put_laps_3d_multi_R...'
+
+   l = 1
+   call put_laps_multi_3d(i4time,EXT,var_3d(l),units_3d(l), &
+        comment_3d(l),array1,NX_L_1,NY_L_1,NZ_L_1,1,istatus)       
+   if(istatus .ne. 1)return
+   if(l .eq. N_3D_FIELDS)return
+
+   l = 2
+   call put_laps_multi_3d_append(i4time,EXT,var_3d(l),units_3d(l),   &    
+        comment_3d(l),array2,NX_L_2,NY_L_2,NZ_L_2,1,istatus)       
+   if(istatus .ne. 1)return
+   if(l .eq. N_3D_FIELDS)return
+
+   write(6,*)' Error: N_3D_FIELDS exceeds limit ',N_3D_FIELDS
+
+   return
+   end
+!!!!from cloud_deriv_subs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ subroutine put_laps_multi_3d_append(i4time,EXT,var_2d,units_2d, &
+                         comment_2d,field_3d,ni,nj,nk,nf,istatus)
+
+        logical ltest_vertical_grid
+
+        character*150 DIRECTORY
+        character*(*) EXT
+
+        character*125 comment_3d(nk*nf),comment_2d(nf)
+        character*10 units_3d(nk*nf),units_2d(nf)
+        character*3 var_3d(nk*nf),var_2d(nf)
+        integer LVL_3d(nk*nf)
+        character*4 LVL_COORD_3d(nk*nf)
+
+        real field_3d(ni,nj,nk,nf)
+
+        istatus = 0
+
+        call get_directory(ext,directory,len_dir)
+
+        do l = 1,nf
+            write(6,11)directory,ext(1:5),var_2d(l)
+11          format(' Writing 3d ',a50,1x,a5,1x,a3)
+        enddo ! l
+
+        do l = 1,nf
+          do k = 1,nk
+
+            iscript_3d = (l-1) * nk + k
+
+            units_3d(iscript_3d)   = units_2d(l)
+            comment_3d(iscript_3d) = comment_2d(l)
+            if(ltest_vertical_grid('HEIGHT'))then
+                lvl_3d(iscript_3d) = zcoord_of_level(k)/10
+                lvl_coord_3d(iscript_3d) = 'MSL'
+            elseif(ltest_vertical_grid('PRESSURE'))then
+
+                lvl_3d(iscript_3d) = nint(zcoord_of_level(k))/100
+                lvl_coord_3d(iscript_3d) = 'HPA'
+            else
+                write(6,*)' Error, vertical grid not supported,'  &
+                         ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
+            endif
+
+            var_3d(iscript_3d) = var_2d(l)
+
+          enddo ! k
+        enddo ! l
+
+        CALL WRITE_LAPS_MULTI(I4TIME,DIRECTORY,EXT,ni,nj, &
+        nk*nf,nk*nf,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,  &
+                           COMMENT_3D,field_3d,ISTATUS)
+
+        if(istatus .ne. 1)return
+
+        istatus = 1
+
+        return
+        end
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE OUTPUT_ANALS

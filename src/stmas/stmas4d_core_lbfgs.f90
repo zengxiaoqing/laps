@@ -60,6 +60,10 @@ SUBROUTINE MGANALYSS
   INTEGER       :: IT,FW
 !                  FW=1: FROM COARSE GRID TO FINE GRID
 !                  FW=0: FROM FINE GRID TO COARSE GRID
+   INTEGER  :: I,J,K,T,S
+ 
+  INTEGER  ::NUM,NO,N,O   !shuyuan 20100901
+  INTEGER  :: NP(MAXDIMS)  !shuyuan 
 !------------------------
 
   PRINT*,'PREPROCSS'
@@ -68,6 +72,7 @@ SUBROUTINE MGANALYSS
   GRDLEVL=0
   IT=0
   FW=1
+  NUM=0
     DO WHILE(.TRUE.)
 
       GRDLEVL=GRDLEVL+1
@@ -119,13 +124,13 @@ SUBROUTINE TMPMEMALC
 ! --------------------
   INTEGER  :: I,J,K,T,S,ER
 ! --------------------
-  ALLOCATE(TMPANALS(NTMPGRD(1),NTMPGRD(2),NTMPGRD(3),NTMPGRD(4),NUMSTAT),STAT=ER)
+  ALLOCATE(TMPANALS(NTMPGRD(1),NTMPGRD(2),NTMPGRD(3),NTMPGRD(4),NUMSTAT+1),STAT=ER)
   IF(ER.NE.0)STOP 'TMPANALS ALLOCATE WRONG'
   DO T=1,NTMPGRD(4)
   DO K=1,NTMPGRD(3)
   DO J=1,NTMPGRD(2)
   DO I=1,NTMPGRD(1)
-    DO S=1,NUMSTAT
+    DO S=1,NUMSTAT+1
       TMPANALS(I,J,K,T,S)=GRDANALS(I,J,K,T,S)
     ENDDO
   ENDDO
@@ -234,6 +239,10 @@ SUBROUTINE GETCOEFFT
   IF(RR.NE.0)OBSRADAR=1.0/(RR*1.0)
   RR=NOBSTAT(NUMSTAT+2)
   IF(RR.NE.0)OBS_SFMR=1.0/(RR*1.0)
+!jhui 
+  RR=NOBSTAT(NUMSTAT+3)
+  IF(RR.NE.0)OBSREF=1.0/(RR*1.0)
+  
   RETURN
 END SUBROUTINE GETCOEFFT
 
@@ -253,11 +262,14 @@ SUBROUTINE MINIMIZER_XIE
   INTEGER    :: I0,IC,IP,IT,ISBMN,N,O,S,T,K,J,I,NO,ER
   INTEGER    :: IS(44),NB(NUMVARS),IW(3*NUMVARS)
   INTEGER    :: NN(MAXDIMS+1),NG(MAXDIMS+1),NC
-  REAL       :: MN(NUMSTAT),MX(NUMSTAT)
+  REAL       :: MN(NUMSTAT+3),MX(NUMSTAT+3)
 
   REAL :: LB(NUMVARS), UB(NUMVARS)
   REAL :: FA, PG, DS(29)
   REAL,ALLOCATABLE :: WA(:)
+
+  REAL  ::temp,temp1,temp2,dif1,dif2,temp0
+  INTEGER::  locx,locy,locz,loct,locv
 ! --------------------
 
   ! ALLOCATE WORKING ARRAY:
@@ -291,7 +303,7 @@ SUBROUTINE MINIMIZER_XIE
     DO N=1,MAXDIMS
       NG(N)=NUMGRID(N)
     ENDDO
-    NG(MAXDIMS+1)=NUMSTAT
+    NG(MAXDIMS+1)=NUMSTAT+1
     O=0
     DO S=1,NUMSTAT
       DO NO=1,NOBSTAT(S)
@@ -318,8 +330,32 @@ SUBROUTINE MINIMIZER_XIE
       MN(V_CMPNNT)=MIN(MN(V_CMPNNT),-1.*OBSVALUE(O))
       MX(V_CMPNNT)=MAX(MX(V_CMPNNT),OBSVALUE(O))
     ENDDO
+!jhui
+!----------------------------------
+!changed by shuyuan 20100722
+!      MN(6) =0.0
+!      MX(6) =0.0
+       
+    S=NUMSTAT+3
+    MN(S) =0.0
+    MX(S) =0.0
+    DO NO=1,NOBSTAT(S)
+      O=O+1
+      MN(S)=MIN(MN(S),OBSVALUE(O))
+      MX(S)=MAX(MX(S),OBSVALUE(O))
+    ENDDO
 
-    DO S=1,NUMSTAT
+    DO S=6,7
+     MN(S) =0.0
+     MX(S) =0.0
+     DO NO=1,NOBSTAT(S)
+      O=O+1
+      MN(S)=0.
+      MX(S)=1000.!just for test
+     ENDDO
+    ENDDO
+!--------------------------------------------------
+    DO S=1,5!!NUMSTAT+1 
       DO T=1,NUMGRID(4)
       DO K=1,NUMGRID(3)
       DO J=1,NUMGRID(2)
@@ -398,6 +434,7 @@ SUBROUTINE MINIMIZER_XIE
     CALL COSTGRADT1
   ELSE                           ! BY ZHONGJIE HE
     CALL WCOMPGERNL
+    
     CALL COSTFUNCT2
     CALL COSTGRADT2
   ENDIF
@@ -435,7 +472,6 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
     ! LBFGS: SINGLE PRECISION
     CALL LBFGSB(NUMVARS,MM,GRDANALS,LB,UB,NB,COSTFUN,GRADINT,FA,WA,IW,TA,IP,ISBMN,CS,LS,IS,DS)
 
-!    WRITE(100,*)GRDLEVL,IT
     IF(GRDLEVL.LE.MIDGRID.AND.IT.GT.COSSTEP)EXIT
     IF(GRDLEVL.GT.MIDGRID.AND.IT.GT.FINSTEP)EXIT
 !    IF(GRDLEVL.EQ.2.AND.IT.EQ.1)CALL CHECK_F_G
@@ -448,6 +484,62 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
         CALL WCOMPGERNL
         CALL COSTFUNCT2
         CALL COSTGRADT2
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!for test
+       temp=0
+      temp0=0
+!      T=2
+!     DO K=1,NUMGRID(3)
+!        DO J=10,NUMGRID(2)
+!        DO I=20,NUMGRID(1)
+    !      I=33
+    !      J=31
+   !       K=7
+!         GRDANALS(I,J,K,T,ROUR_CMPNNT)=GRDANALS(I,J,K,T,ROUR_CMPNNT)+0.01
+!         CALL COSTFUNCT2
+!          temp1=COSTFUN
+!          GRDANALS(I,J,K,T,ROUR_CMPNNT)=GRDANALS(I,J,K,T,ROUR_CMPNNT)-2.0*0.01
+!         CALL COSTFUNCT2
+!         temp2=COSTFUN 
+               
+!          dif1=(temp1-temp2)/(2.0*0.01)
+!          dif2=ABS(dif1-GRADINT(I,J,K,T,ROUR_CMPNNT))
+
+ !         print*,'    GRADINT(I,J,K,T,ROUR_CMPNNT )=   ',GRADINT(I,J,K,2,ROUR_CMPNNT)
+ !          print*,'    costfun1=    ', temp1
+ !          print*,'    costfun2=    ', temp2
+ !          print*,'    dif1=    ', dif1       
+ !          print*,'    dif2=    ', dif2
+ !         if(dif2>temp)then
+ !          temp=dif2
+ !          temp0=dif1
+ !          locx=I
+ !          locy=J
+ !          locz=K
+ !          loct=T 
+ !          if(dif2>0.01)then 
+ !             print*,'    GRADINT(I,J,K,T,ROUR_CMPNNT )=   ',GRADINT(locx,locy,locz,2,ROUR_CMPNNT)
+ !              print*,'    dif1=    ', temp0       
+ !             print*,'    dif2=    ', temp
+ !             print*,'    x=    ', locx
+ !             print*,'    y=    ', locy
+ !             print*,'    z=    ', locz       
+ !             print*,'    t=    ', loct 
+ !             stop
+ !          endif        
+ !          endif
+ !       ENDDO
+ !     ENDDO
+ !    ENDDO  
+    ! print*,'    GRADINT(I,J,K,T,ROUR_CMPNNT )=   ',GRADINT(locx,locy,locz,2,ROUR_CMPNNT)
+   !  print*,'    dif1=    ', temp0       
+  !   print*,'    dif2=    ', temp
+ !     print*,'    x=    ', locx
+  !    print*,'    y=    ', locy
+   !   print*,'    z=    ', locz       
+  !    print*,'    t=    ', loct 
+  !    stop
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!     
+       
       ENDIF
       IC=IC+1
       CYCLE ITERLOOP
@@ -475,6 +567,8 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
   ELSE                           ! BY ZHONGJIE HE
     CALL WCOMPGERNL
     CALL COSTFUNCT2
+    
+    
 !    CALL COSTGRADT2
   ENDIF
 
@@ -544,7 +638,7 @@ SUBROUTINE COAS2FINE_XIE
   DO I=1,NUMGRID(1),IC(1)
     I0 = (I-1)/IC(1)+1
 
-    GRDANALS(I,J,K,T,1:NUMSTAT) = TMPANALS(I0,J0,K0,T0,1:NUMSTAT)
+    GRDANALS(I,J,K,T,1:NUMSTAT+1) = TMPANALS(I0,J0,K0,T0,1:NUMSTAT+1)
   ENDDO
   ENDDO
   ENDDO
@@ -560,8 +654,8 @@ SUBROUTINE COAS2FINE_XIE
     DO J=1,NUMGRID(2),IC(2)
     DO I=2,NUMGRID(1),IC(1)
 
-      GRDANALS(I,J,K,T,1:NUMSTAT) = 0.5*(GRDANALS(I-1,J,K,T,1:NUMSTAT) &
-                                        +GRDANALS(I+1,J,K,T,1:NUMSTAT))
+      GRDANALS(I,J,K,T,1:NUMSTAT+1) = 0.5*(GRDANALS(I-1,J,K,T,1:NUMSTAT+1) &
+                                        +GRDANALS(I+1,J,K,T,1:NUMSTAT+1))
     ENDDO
     ENDDO
     ENDDO
@@ -575,8 +669,8 @@ SUBROUTINE COAS2FINE_XIE
     DO J=2,NUMGRID(2),IC(2)
     DO I=1,NUMGRID(1)
 
-      GRDANALS(I,J,K,T,1:NUMSTAT) = 0.5*(GRDANALS(I,J-1,K,T,1:NUMSTAT) &
-                                        +GRDANALS(I,J+1,K,T,1:NUMSTAT))
+      GRDANALS(I,J,K,T,1:NUMSTAT+1) = 0.5*(GRDANALS(I,J-1,K,T,1:NUMSTAT+1) &
+                                        +GRDANALS(I,J+1,K,T,1:NUMSTAT+1))
     ENDDO
     ENDDO
     ENDDO
@@ -590,8 +684,8 @@ SUBROUTINE COAS2FINE_XIE
     DO J=1,NUMGRID(2)
     DO I=1,NUMGRID(1)
 
-      GRDANALS(I,J,K,T,1:NUMSTAT) = 0.5*(GRDANALS(I,J,K-1,T,1:NUMSTAT) &
-                                        +GRDANALS(I,J,K+1,T,1:NUMSTAT))
+      GRDANALS(I,J,K,T,1:NUMSTAT+1) = 0.5*(GRDANALS(I,J,K-1,T,1:NUMSTAT+1) &
+                                        +GRDANALS(I,J,K+1,T,1:NUMSTAT+1))
     ENDDO
     ENDDO
     ENDDO
@@ -605,8 +699,8 @@ SUBROUTINE COAS2FINE_XIE
     DO J=1,NUMGRID(2)
     DO I=1,NUMGRID(1)
 
-      GRDANALS(I,J,K,T,1:NUMSTAT) = 0.5*(GRDANALS(I,J,K,T-1,1:NUMSTAT) &
-                                        +GRDANALS(I,J,K,T+1,1:NUMSTAT))
+      GRDANALS(I,J,K,T,1:NUMSTAT+1) = 0.5*(GRDANALS(I,J,K,T-1,1:NUMSTAT+1) &
+                                        +GRDANALS(I,J,K,T+1,1:NUMSTAT+1))
     ENDDO
     ENDDO
     ENDDO
@@ -829,7 +923,7 @@ SUBROUTINE FINE2COAS_XIE
   DO I=1,NUMGRID(1)
     I0 = (I-1)*IC(1)+1
 
-    GRDANALS(I,J,K,T,1:NUMSTAT) = TMPANALS(I0,J0,K0,T0,1:NUMSTAT)
+    GRDANALS(I,J,K,T,1:NUMSTAT+1) = TMPANALS(I0,J0,K0,T0,1:NUMSTAT+1)
   ENDDO
   ENDDO
   ENDDO

@@ -59,7 +59,7 @@ SUBROUTINE ALLOCTBKG
 ! --------------------
   INTEGER  :: ER
 ! --------------------
-  ALLOCATE(BK0(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4),NUMSTAT),STAT=ER)
+  ALLOCATE(BK0(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4),NUMSTAT+3),STAT=ER)
   IF(ER.NE.0)STOP 'BK0 ALLOCATE WRONG'
   ALLOCATE(X00(FCSTGRD(1),FCSTGRD(2)),STAT=ER)
   IF(ER.NE.0)STOP 'X00 ALLOCATE WRONG'
@@ -345,6 +345,22 @@ print*,'nonhydrostatic: ',amx,mxi,mxj,mxk
     BK0(I,J,K,T,PRESSURE)=ZZ(I,J,K,T)
     BK0(I,J,K,T,TEMPRTUR)=TT(I,J,K,T)
     BK0(I,J,K,T,HUMIDITY)=QQ(I,J,K,T)
+    !added by shuyuan for ref  20100811
+    BK0(I,J,K,T,ROUR_CMPNNT) =0.0
+    BK0(I,J,K,T,ROUS_CMPNNT) =0.0 
+    ! ROUR and ROUS  are the input variable. when they are caculated in the COSTFUNT2, they have to be changed to 
+    !rc=(17300**(4/7)*ROUR*1000)**(7/4)  rour  kg/m**3
+    !rc=(17300**(4/7)*ROUR)**(7/4)  rour  g/m**3
+    !sc=(38000**(5/11)*ROUS*1000)**(11/5)so the BK0(,,,,6) and BK0(,,,,7) must be converted.
+    !Then the unit of rc and sc and the BK0(,,,,6) and BK0(,,,,7) are db
+
+    !if(BK0(I,J,K,T,ROUR_CMPNNT).NE. 0)then
+      !BK0(I,J,K,T,ROUR_CMPNNT) =17300*(BK0(I,J,K,T,ROUR_CMPNNT)*1000) **1.75
+    !endif
+    !if(BK0(I,J,K,T,ROUS_CMPNNT).NE. 0)then
+      !BK0(I,J,K,T,ROUS_CMPNNT) =38000*(BK0(I,J,K,T,ROUS_CMPNNT)*1000) **2.2
+    !endif
+
   ENDDO
   ENDDO
   ENDDO

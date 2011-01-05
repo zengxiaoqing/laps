@@ -11,7 +11,8 @@ MODULE HYDCOST_GRAD
 
   USE PRMTRS_STMAS
 
-  PUBLIC  HYDROCOST, HYDROGRAD, HYDROCOST_XIE, HYDROGRAD_XIE
+  PUBLIC  HYDROCOST,HYDROGRAD,HYDROCOST_XIE,HYDROGRAD_XIE
+  PUBLIC  HYDROCOST_SHUYUAN,HYDROGRAD_SHUYUAN
 
 !  REAL , PARAMETER ::  R=287
 !  REAL , PARAMETER ::  GRAV=9.8
@@ -204,6 +205,130 @@ SUBROUTINE HYDROGRAD_XIE
   RETURN
 
 END SUBROUTINE HYDROGRAD_XIE
+!=================================================
+SUBROUTINE HYDROCOST_SHUYUAN
+!*************************************************
+! HYDROSTATIC CONDITION PENALTY TERM OF COST FUNCTION, FOR THE CASE OF PRESSURE COORDINATE.
+! HISTORY: MAY 2008, CODED by ZHONGJIE HE.
+!          MODIFIED BY YUANFU XIE FOR PENALIZING
+!          DP/DZ=G*P/(RT).
+!          MODIFIED BY SHUYUAN LIU FOR USING DENSITY 01-09-2010
+!          DP/DZ=G*DEN,DEN=DENV+DENR+DENS
+!*************************************************
+  IMPLICIT NONE
+! --------------------
+  INTEGER  :: I,J,K,T,TT,ZZ,RR,RS
+  REAL     :: HY,DP,DZ,PS,TM
+  REAL     :: R,GRAV,tempr,temps,tempv
+  REAL     :: DEN ,DENV,DENS,DENR! air density
+   
+! --------------------
+  
+  R=287
+  GRAV=9.8
+  TT=TEMPRTUR
+  ZZ=PRESSURE
+  RR=ROUR_CMPNNT
+  RS=ROUS_CMPNNT
+
+  IF(PNLT0HY.LT.1.0E-10) RETURN
+
+  IF(NUMGRID(3).GE.2) THEN
+    DO T=1,NUMGRID(4)
+    DO K=1,NUMGRID(3)-1
+      DP = (PPP(K+1)-PPP(K))*SCP(PSL)
+      PS = 0.5*(PPP(K+1)+PPP(k))*SCP(PSL)+ORIVTCL
+      DO J=1,NUMGRID(2)
+      DO I=1,NUMGRID(1)
+
+        tempr=0.5*(GRDANALS(I,J,K,T,RR)+GRDBKGND(I,J,K,T,RR)+ &
+              GRDANALS(I,J,K+1,T,RR)+GRDBKGND(I,J,K+1,T,RR))*SCL(NUMSTAT+1)        
+
+        DZ = (GRDANALS(I,J,K+1,T,ZZ)-GRDANALS(I,J,K,T,ZZ)+ &
+              GRDBKGND(I,J,K+1,T,ZZ)-GRDBKGND(I,J,K,T,ZZ))*SCL(ZZ)
+        TM = 0.5*(GRDANALS(I,J,K+1,T,TT)+GRDANALS(I,J,K,T,TT)+ &
+                  GRDBKGND(I,J,K+1,T,TT)+GRDBKGND(I,J,K,T,TT))*SCL(TT)
+        HY = DP/DZ+GRAV*(tempr+PS/(R*TM))
+
+        COSTFUN=COSTFUN+0.5*PNLT_HY*HY*HY	! DIVIDE WEIGHT BY YUANFU
+      ENDDO
+      ENDDO
+    ENDDO
+    ENDDO
+  ENDIF
+  RETURN
+END SUBROUTINE HYDROCOST_SHUYUAN
+!========================================
+!========================================
+SUBROUTINE HYDROGRAD_SHUYUAN
+!*************************************************
+! GRADIENT OF HYDROSTATIC CONDITION, CORRESPONDING TO SUBROUTINE HYDROCOST.
+! HISTORY: MAY 2008, CODED by ZHONGJIE HE.
+!
+!          MODIFIED BY YUANFU XIE FOR PENALIZING
+!          DP/DZ+G*P/(RT).
+!          MODIFIED BY SHUYUAN LIU FOR ADDING THE RAIN WATER 2010/09
+!*************************************************
+  IMPLICIT NONE
+! --------------------
+  INTEGER  :: I,J,K,T,TT,ZZ,RR,RS
+  REAL     :: HY,DP,DZ,PS,TM,D1
+  REAL     :: R,GRAV,tempr,temps,tempv
+  REAL     :: DEN,DENV,DENS,DENR! air density
+! --------------------
+  R=287
+  GRAV=9.8
+  TT=TEMPRTUR
+  ZZ=PRESSURE
+  RR=ROUR_CMPNNT
+  RS=ROUS_CMPNNT
+
+  IF(PNLT0HY.LT.1.0E-10) RETURN
+
+  IF(NUMGRID(3).GE.2)THEN
+    DO T=1,NUMGRID(4)
+    DO K=1,NUMGRID(3)-1
+      DP = (PPP(K+1)-PPP(K))*SCP(PSL)
+      PS = 0.5*(PPP(K+1)+PPP(k))*SCP(PSL)+ORIVTCL
+      DO J=1,NUMGRID(2)
+      DO I=1,NUMGRID(1)
+       tempr=0.5*(GRDANALS(I,J,K,T,RR)+GRDBKGND(I,J,K,T,RR)+ &
+              GRDANALS(I,J,K+1,T,RR)+GRDBKGND(I,J,K+1,T,RR))*SCL(NUMSTAT+1)    
+
+        DZ = (GRDANALS(I,J,K+1,T,ZZ)-GRDANALS(I,J,K,T,ZZ)+ &
+              GRDBKGND(I,J,K+1,T,ZZ)-GRDBKGND(I,J,K,T,ZZ))*SCL(ZZ)
+        TM = 0.5*(GRDANALS(I,J,K+1,T,TT)+GRDANALS(I,J,K,T,TT)+ &
+                  GRDBKGND(I,J,K+1,T,TT)+GRDBKGND(I,J,K,T,TT))*SCL(TT)
+        HY = DP/DZ+GRAV*(tempr+PS/(R*TM))
+
+        D1 = -GRAV*PS/(R*TM*TM)  !!TM
+!
+        GRADINT(I,J,K  ,T,TT) = GRADINT(I,J,K  ,T,TT)+PNLT_HY*HY*0.5*D1*SCL(TT)
+!
+        GRADINT(I,J,K+1,T,TT) = GRADINT(I,J,K+1,T,TT)+PNLT_HY*HY*0.5*D1*SCL(TT)
+
+        D1 = -DP/(DZ*DZ)  !!DZ
+!
+        GRADINT(I,J,K  ,T,ZZ) = GRADINT(I,J,K  ,T,ZZ)-PNLT_HY*HY*D1*SCL(ZZ)
+!
+        GRADINT(I,J,K+1,T,ZZ) = GRADINT(I,J,K+1,T,ZZ)+PNLT_HY*HY*D1*SCL(ZZ)
+
+        D1 = GRAV   !!tempr
+        GRADINT(I,J,K  ,T,RR) = GRADINT(I,J,K  ,T,RR)+PNLT_HY*HY*0.5*D1*SCL(NUMSTAT+1)
+!
+        GRADINT(I,J,K+1,T,RR) = GRADINT(I,J,K+1,T,RR)+PNLT_HY*HY*0.5*D1*SCL(NUMSTAT+1)
+!
+      ENDDO
+      ENDDO
+    ENDDO
+    ENDDO
+  ENDIF
+
+  RETURN
+
+END SUBROUTINE HYDROGRAD_SHUYUAN
+!============================================
+
 
 END MODULE HYDCOST_GRAD
 
