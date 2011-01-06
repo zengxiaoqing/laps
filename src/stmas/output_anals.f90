@@ -75,7 +75,7 @@ SUBROUTINE OUTPTLAPS
   REAL          :: W3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2)	! 3D WIND: UV
   REAL          :: SF(FCSTGRD(1),FCSTGRD(2),2)	! SURFACE WIND: UV
   REAL          :: SP(FCSTGRD(1),FCSTGRD(2))	! SURFACE PRESSURE
-  REAL          :: HEIGHT_TO_ZCOORD3,RM,A,DLNP
+  REAL          :: HEIGHT_TO_ZCOORD3,SSH2,RM,A,DLNP
 !ADDED BY SHUYUAN 20100722 FOR REFLECTIVITY
   REAL          :: REF_OUT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
   integer       :: istatus  ,N_3D_FIELDS
@@ -207,6 +207,17 @@ print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fc
 	! T3(I,J,K) = (BK0(I+1,J,K,FCSTGRD(4),2)-BK0(I-1,J,K,FCSTGRD(4),2))/DS- &
         !             (BK0(I,J+1,K,FCSTGRD(4),1)-BK0(I,J-1,K,FCSTGRD(4),1))/DS
         ! T3(I,J,K) = T3(I,J,K)*1.0e4
+      ENDDO
+    ENDDO
+  ENDDO
+
+  ! According a discussion with Dan, specific humidity is adjusted by Q_r (rain content) using ssh2 routine of LAPS:
+  DO K=1,FCSTGRD(3)
+    DO J=1,FCSTGRD(2)
+      DO I=1,FCSTGRD(1)
+        ! Assume saturation: TD = T:
+        IF (BK0(I,J,K,IFRAME,6) .GT. 0.0) &
+          BK0(I,J,K,IFRAME,5) = SSH2(LV(k),BK0(I,J,K,IFRAME,4),BK0(I,J,K,IFRAME,4),-132.0)
       ENDDO
     ENDDO
   ENDDO
