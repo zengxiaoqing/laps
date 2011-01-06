@@ -57,9 +57,9 @@ SUBROUTINE OUTPTLAPS
   CHARACTER*4   :: WU(3)=(/'M/S ','M/S ','PA/S'/) ! WIND UNITS
   ! added by shuyuan 20100722
   CHARACTER*3   :: QW(2)=(/'RAI','SNO'/)       ! rain water content   snow water content
-  CHARACTER*3   :: RE=(/'REF'/)		! reflectivity  dbz
+  CHARACTER*3   :: RE(1)=(/'REF'/)		! reflectivity  dbz
   CHARACTER*125 :: QWC(2)=(/'ROUR','ROUS'/) ! QW COMMENTS
-  CHARACTER*125 :: RC=(/'reflectivity'/) ! reflectivity COMMENTS 
+  CHARACTER*125 :: RC(1)=(/'reflectivity'/) ! reflectivity COMMENTS 
   character*10   :: units_3D(2)=(/'kg/m**3','kg/m**3'/)
   !----------------------------------------------------------
   CHARACTER*125 :: WC(3)=(/'3DWIND','3DWIND','3DWIND'/) ! WIND COMMENTS
@@ -660,7 +660,8 @@ END SUBROUTINE RADIALWND
    write(6,*)' Error: N_3D_FIELDS exceeds limit ',N_3D_FIELDS
 
    return
-   end
+ end subroutine put_laps_3d_multi_R
+
 !!!!from cloud_deriv_subs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  subroutine put_laps_multi_3d_append(i4time,EXT,var_2d,units_2d, &
                          comment_2d,field_3d,ni,nj,nk,nf,istatus)
@@ -722,6 +723,6 @@ END SUBROUTINE RADIALWND
         istatus = 1
 
         return
-        end
+        end subroutine put_laps_multi_3d_append
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE OUTPUT_ANALS
