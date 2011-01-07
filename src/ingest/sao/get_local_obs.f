@@ -87,6 +87,7 @@ c
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_reject(maxobs), ltest_madis_qc, ltest_madis_qcb
         logical l_multiple_reports, l_same_stn
+        logical l_good_global,l_first_solar
 c
 	integer  wmoid(maxsta)
         integer  recNum
@@ -100,13 +101,16 @@ c
 	character  store_cldamt(maxsta,5)*4 
         character*13 filename13, cvt_i4time_wfo_fname13
         character*150 data_file 
+        character*40 string
 c
 c.....  Declarations for call to NetCDF reading routine (from gennet)
 
       include 'netcdf.inc'
       integer maxSensor,nf_fid, nf_vid, nf_status
-      parameter (maxSensor=2) ! Manually added
-      integer altimeterQCR(maxobs), dewpointQCR(maxobs),
+      parameter (maxSensor=2)          ! Manually added
+      parameter (maxPSTEntries=3000)   ! Manually added
+      integer code2PST(maxPSTEntries), code4PST(maxPSTEntries),
+     +     altimeterQCR(maxobs), dewpointQCR(maxobs),
      +     firstOverflow, globalInventory, nStaticIds,
      +     numericWMOid(maxobs), precipAccumQCR(maxobs),
      +     precipIntensity( maxSensor, maxobs),
@@ -140,6 +144,7 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
       character pressChange3HourDD(maxobs)
       character precipRateDD(maxobs)
       character*11 dataProvider(maxobs)
+      character*11 namePST(maxPSTEntries)
       character*6 stationId(maxobs)
       character dewpointDD(maxobs)
       character seaLevelPressureDD(maxobs)
@@ -166,6 +171,9 @@ c
 c
 c.....  Start.
 c
+ 
+        l_first_solar = .true.
+
         if(itest_madis_qc .gt. 0)then
             if(itest_madis_qc .eq. 15)then  ! call DD & QCR checking routines
                 ltest_madis_qc  = .true.    ! for subjective QC reject list
@@ -289,14 +297,46 @@ c
             endif
 
 c
+c Get size of maxPSTEntries
+c
+            nf_status=NF_INQ_DIMID(nf_fid,'maxPSTEntries',nf_vid)
+            if(nf_status.ne.NF_NOERR) then
+              print *, NF_STRERROR(nf_status)
+              print *,'dim maxPSTEntries'
+              numPSTEntries = maxPSTEntries
+
+              nf_status=NF_INQ_DIMLEN(nf_fid,nf_vid,numPSTEntries)
+              if(nf_status.ne.NF_NOERR) then
+                print *, NF_STRERROR(nf_status)
+                print *,'dim maxPSTEntries'
+                numPSTEntries = maxPSTEntries
+              endif
+
+            else
+              numPSTEntries = maxPSTEntries
+
+            endif
+
+            if(numPSTEntries .gt. maxPSTEntries)then
+              write(6,*)' ERROR, maxPSTEntries should be increased '
+     1                 ,maxPSTEntries,numPSTEntries
+              istatus = 0
+              return
+            else
+              write(6,*)' numPSTEntries/maxPSTEntries = ',
+     1                    numPSTEntries,maxPSTEntries
+            endif
+
+c
 c.....  Call the read routine.
 c
             call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
+     +     maxPSTEntries, code2PST, namePST,
      +     altimeterQCR(ix), dewpointQCR(ix), firstOverflow, 
      +     globalInventory, nStaticIds, numericWMOid, 
      +     precipAccumQCR(ix), precipIntensity, 
      +     precipRateQCR(ix), precipType, pressChange3HourQCR(ix), 
-     +     pressChangeChar, relHumidityQCR(ix), seaLevelPressureQCR(ix),       
+     +     pressChangeChar, relHumidityQCR(ix), seaLevelPressureQCR(ix),
      +     stationPressureQCR(ix), temperatureQCR(ix), 
      +     visibilityQCR(ix),       
      +     windDirQCR(ix), windSpeedQCR(ix), altimeter(ix), 
@@ -709,9 +749,80 @@ c
 c..... Solar Radiation
 c
          solar_rad = solarRadiation(i)                         
+!        call filter_string(dataProvider(i))
          if(solar_rad .le. badflag .or. solar_rad .ge. 2000.) then !  bad?
             solar_rad = badflag                                    !  bag
-         endif
+         else ! good solar
+            call s_len2(dataProvider(i),lenp)  
+            write(6,*)' solar dataProvider = '
+     1               ,stationId(i),dataProvider(i)(1:lenp)
+
+            l_good_global = .false.
+
+            do iprov = 1,numPSTEntries                  
+               if(l_firstsolar)write(6,*)iprov,namePST(iprov)           
+
+               if(namePST(iprov) .eq. dataProvider(i)(1:lenp))then
+!                 write(6,*)' match,code2PST = ',code2PST(iprov)
+
+                  l_good_global = .false.
+                  if(code2PST(iprov) .eq. 0)then
+                     string = ' not defined'
+                  elseif(code2PST(iprov) .eq. 1)then
+                     string = ' diffuse 15 min'
+                  elseif(code2PST(iprov) .eq. 2)then
+                     string = ' diffuse 1 hr'  
+                  elseif(code2PST(iprov) .eq. 3)then
+                     string = ' diffuse 24 hr' 
+                  elseif(code2PST(iprov) .eq. 4)then
+                     string = ' direct 15 min'  
+                  elseif(code2PST(iprov) .eq. 5)then
+                     string = ' direct 1 hr'   
+                  elseif(code2PST(iprov) .eq. 6)then
+                     string = ' direct 24 hr'  
+                  elseif(code2PST(iprov) .eq. 7)then
+                     string = ' global 15 min'  
+                     l_good_global = .true.
+                  elseif(code2PST(iprov) .eq. 8)then
+                     string = ' global 1 hr'    
+                  elseif(code2PST(iprov) .eq. 9)then
+                     string = ' global 24 hr'   
+                  elseif(code2PST(iprov) .eq. 10)then
+                     string = ' diffuse 5 min'  
+                  elseif(code2PST(iprov) .eq. 11)then
+                     string = ' direct 5 min'  
+                  elseif(code2PST(iprov) .eq. 12)then
+                     string = ' global 5 min'             
+                     l_good_global = .true.
+                  elseif(code2PST(iprov) .eq. 13)then
+                     string = ' diffuse instantaneous'
+                  elseif(code2PST(iprov) .eq. 14)then
+                     string = ' direct instantaneous'
+                  elseif(code2PST(iprov) .eq. 15)then
+                     string = ' global instantaneous'
+                     l_good_global = .true.
+                  elseif(code2PST(iprov) .eq. 16)then
+                     string = ' diffuse 15 min'
+                  else
+                     string = ' invalid code'
+                  endif ! determine code
+               endif ! found a provider match
+
+            enddo ! iprov
+
+!           write(6,*)' l_good_global = ',l_good_global
+            l_first_solar = .false.
+
+            if(.not. l_good_global)then
+               solar_rad = badflag                        !  bag
+            else
+               call s_len2(string,lens)
+               write(6,*)' Good global solar ' 
+     1                   ,stationId(i),dataProvider(i)(1:lenp)
+     1                   ,string(1:lens)
+            endif
+
+         endif ! solar QC check                    
 c
 c..... Sea Surface Temperature
 c
