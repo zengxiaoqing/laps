@@ -2,6 +2,7 @@ C
 C  Subroutine to read the file "LDAD automated mesonet data " 
 C
       subroutine read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
+     +     maxPSTEntries, code2PST, namePST,
      +     altimeterQCR, dewpointQCR, firstOverflow, globalInventory, 
      +     nStaticIds, numericWMOid, precipAccumQCR, precipIntensity, 
      +     precipRateQCR, precipType, pressChange3HourQCR, 
@@ -25,7 +26,8 @@ C
 C
       include 'netcdf.inc'
       integer maxSensor, recNum,nf_fid, nf_vid, nf_status
-      integer altimeterQCR(recNum), dewpointQCR(recNum),
+      integer code2PST(maxPSTEntries), code4PST(maxPSTEntries),
+     +     altimeterQCR(recNum), dewpointQCR(recNum),
      +     firstOverflow, globalInventory, nStaticIds,
      +     numericWMOid(recNum), precipAccumQCR(recNum),
      +     precipIntensity( maxSensor, recNum),
@@ -61,6 +63,7 @@ C
       character visibilityDD(recNum)
       character windDirDD(recNum)
       character*11 dataProvider(recNum)
+      character*11 namePST(maxPSTEntries)
       character altimeterDD(recNum)
       character*51 stationName(recNum)
       character precipRateDD(recNum)
@@ -1041,6 +1044,21 @@ C
         print *, NF_STRERROR(nf_status),' for windSpeedQCR'
        endif
       endif
+C
+C     Variable        NETCDF Long Name
+C     code2PST      "solarRadiation variable definition"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'code2PST',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for code2PST'
+       print *,'Set code2PST to -99'
+       code2PST = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,code2PST)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for code2PST'
+       endif
+      endif
 
 C   Variables of type DOUBLE
 C
@@ -1379,6 +1397,21 @@ C
        nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,dewpointDD)
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for dewpointDD'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     namePST       "PST Provider or Subprovider name"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'namePST',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for namePST'
+       print *,'Set namePST to " "'
+       namePST = ' '
+      else
+       nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,namePST)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for namePST'
        endif
       endif
 C
