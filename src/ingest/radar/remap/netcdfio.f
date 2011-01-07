@@ -557,6 +557,7 @@ c      Determine output filename extension
                enddo ! j
                elevationAngle = elevationR(1,i_array)
                numRadials = radialR
+               ngates_ref_cdf = gateR
                firstGateRangeZ = distanceR(1) / 1000.
                gateSizeZ = (distanceR(2) - distanceR(1)) / 1000.
                write(6,*)' R i_tilt_proc/i_array/elev/gsp = ',
@@ -571,7 +572,7 @@ c      Determine output filename extension
                do j = 1,radialR_HI
                  do i = 1,gateR_HI
                    iscr = iscr + 1
-!                  Z(iscr) = Reflectivity_HI(i,j,i_array)
+                   Z(iscr) = Reflectivity_HI(i,j,i_array)
 !                  if(Z(iscr) .gt. 0)then                  ! debug
 !                    irmax = i                             ! debug
 !                  endif                                   ! debug
@@ -584,6 +585,7 @@ c      Determine output filename extension
                enddo ! j
                elevationAngle = elevationR_HI(1,i_array)
                numRadials = radialR_HI
+               ngates_ref_cdf = gateR_HI
                firstGateRangeZ = distanceR_HI(1) / 1000.
                gateSizeZ = (distanceR_HI(2) -  distanceR_HI(1)) / 1000.
                write(6,*)' R_HI i_tilt_proc/i_array/elev/gsp = ',
@@ -611,6 +613,7 @@ c      Determine output filename extension
                enddo ! j
                elevationAngle = elevationV(1,i_array)
                numRadials = radialV
+               ngates_vel_cdf = gateV
                firstGateRangeV = distanceV(1) / 1000.
                gateSizeV = (distanceV(2) - distanceV(1)) / 1000.
                write(6,*)' V i_tilt_proc/i_array/elev = ',
@@ -632,12 +635,13 @@ c      Determine output filename extension
                do j = 1,radialV_HI
                  do i = 1,gateV_HI
                    iscr = iscr + 1
-                   V(iscr) = RadialVelocity(i,j,i_array)
+                   V(iscr) = RadialVelocity_HI(i,j,i_array)
                  enddo ! i
                  radialAzim(j) = azimuthV_HI(j,i_array)         
                enddo ! j
                elevationAngle = elevationV_HI(1,i_array)
                numRadials = radialV_HI
+               ngates_vel_cdf = gateV_HI
                firstGateRangeV = distanceV_HI(1) / 1000.
                gateSizeV = (distanceV_HI(2) -  distanceV_HI(1)) / 1000. 
                write(6,*)' V_HI i_tilt_proc/i_array/elev = ',
