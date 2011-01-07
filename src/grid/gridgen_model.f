@@ -63,7 +63,7 @@ c*********************************************************************
         character c10_grid_f*10 ! Type of domain (nest7grid, wrfsi)/
         character c_dataroot*200
         character cstaticdir*200
-        logical   localize, l_topo_wps
+        logical   localize
         real,     allocatable  ::  mother_lat(:,:)
         real,     allocatable  ::  mother_lon(:,:)
         real,     allocatable  ::  dum2d(:,:)
@@ -280,6 +280,7 @@ c
 !mp
 	logical categorical, useland
 !mp
+        logical l_topo_wps, l_parse
 
         integer nnxp,nnyp,mode
         integer ngrids
