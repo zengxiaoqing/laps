@@ -10,7 +10,9 @@
      1        ,t_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
      1        ,dbz_max_2d(ni,nj),solar_alt(ni,nj),swi_2d(ni,nj)
 
-        real cvr_scl_a(ni,nj)
+!       How much the solar radiation varies with changes in cloud fraction
+        real cvr_scl_a(ni,nj) 
+
         real rad_clr(ni,nj)
 
         real airmass_2d(ni,nj)
@@ -92,6 +94,7 @@
 !       Some type of regression to the solar radiation obs can be considered later
         do j = 1,nj
         do i = 1,ni
+!           Set how much solar radiation varies with changes in cloud fraction
             if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then
                 cvr_scl_a(i,j) = 1.0 ! scaling where we have VIS data
             else
@@ -143,6 +146,7 @@
             sumanl = 0.
             sumalt = 0.
             sumresid = 0.
+            sumscl = 0.
             cnt = 0.
 
             sumcld = 0.
@@ -207,12 +211,13 @@
 
 !                       Determine residual of clear sky vs observed radiation
                         resid_s(ista) = 1.0 - rad_ratio
-                        sumresid = sumresid + resid_s(ista) 
 
                     else
                         rad_ratio = 0.
                         cv_solar = 0.
                         cv_diff = 0.
+                        resid_s(ista) = 0.0
+
                     endif
 
                     rad2_s(ista) = rad_s(ista)            
@@ -225,7 +230,7 @@
                     endif
 
 !                   QC checks
-                    if(cvr_max(i_i,i_j) .le. .05 .and. 
+                    if(cvr_max(i_i,i_j) .le. .10 .and. 
      1                 radob_ratio .lt. 0.3      .and.
      1                 swi_s(ista) .ge. 100.           )then
                         c1_c = '-' ! Suspected low
@@ -276,6 +281,8 @@
                     sumanl = sumanl + swi_2d(i_i,i_j)
                     sumcld = sumcld + cvr_max(i_i,i_j)
                     sumalt = sumalt + solar_alt(i_i,i_j)
+                    sumresid = sumresid + resid_s(ista) 
+                    sumscl = sumscl + cvr_scl_a(i_i,i_j)
                     cnt = cnt + 1.
 
                     cvr_s(ista) = cvr_max(i_i,i_j)
@@ -300,8 +307,9 @@
      1          '  means: cloud frac, solar alt = ',f7.2,f8.1,3x,
      1          '  analyzed, observed radiation = ',2f9.2)
 
-                write(6,*)' sensitivity to cloud fraction is '
-     1                   ,sumresid / sumcld
+                write(6,802)sumresid/sumcld, sumscl/cnt
+802             format('  sensitivity of radiation to cloud '
+     1                ,'fraction - measured/used: ',2f8.3)
             endif
 
             write(6,*)
