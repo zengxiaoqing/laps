@@ -2865,7 +2865,13 @@ cabdel
                     enddo ! i_radar
 
                 else ! single radar
-                    call plot_obs(k_level,.false.,asc9_tim
+                    call make_fnam_lp(i4time_radar_a(i_radar)
+     1                               ,asc9_tim_r,istatus)
+
+                    write(6,*)' plotting radar # ',i_radar
+     1                       ,' at ',asc9_tim_r
+
+                    call plot_obs(k_level,.false.,asc9_tim_r
      1                      ,i_radar,i_radar
      1                      ,namelist_parms,plot_parms
      1                      ,NX_L,NY_L,NZ_L,idum1_array,grid_ra_ref
@@ -5359,7 +5365,7 @@ c                   cint = -1.
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'SWI')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1000.
-     1                         ,'linear',n_image,scale,'spectral'
+     1                         ,'spectral',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'PBE')then
 !                   call condition_cape(NX_L,NY_L,'pei',r_missing_data
@@ -5668,7 +5674,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c_label = 'Sfc Rel Humidity   (PERCENT)     '
+            c_label = 'Sfc Rel Humidity   (%)     '
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
@@ -5705,7 +5711,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c_label = 'Soil Moisture Level '//clvl_soil//' (PERCENT) '
+            c_label = 'Soil Moisture Level '//clvl_soil//' (%) '
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
@@ -6235,11 +6241,11 @@ c                   cint = -1.
             if(c_type(1:2) .eq. 'sc')then
                 var_2d = 'SC'
                 ext = 'lm2'
-                c_label = 'Snow Cover Analysis    (percent) '
+                c_label = 'Snow Cover Analysis    (%) '
             else
                 var_2d = 'CSC'
                 ext = 'lcv'
-                c_label = 'SatObs (CSC) Snow Cover (percent)'
+                c_label = 'SatObs (CSC) Snow Cover (%)'
             endif
 
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -8199,6 +8205,11 @@ c abdel
         call s_len2(units_2d,len_units)
         write(6,*)'units_2d = ',units_2d(1:len_units)
 
+        if(l_parse(units_2d,'PERCENT'))then
+            units_2d = '%'
+            len_units = 1
+        endif
+
         call s_len2(c_model,len_model)
 
         call s_len(fcst_hhmm_in,length_fcst_in)
@@ -8243,7 +8254,14 @@ c abdel
         c_label(ist:ist+length_fcst_in+1) = 
      1                fcst_hhmm(1:length_fcst_in)//' '
 
-        if(len_model .gt. 0)then
+        if(c_model(4:4) .eq. '-' .and. 
+     1     len_model .gt. len_model_max)then 
+            len_model_label = len_model - 4
+            len_model_label = min(len_model_label,len_model_max)
+            ims = ist + length_fcst_in + 1
+            ime = ims + len_model_label + 5 
+            c_label(ims:ime) = c_model(5:len_model)//' Fcst'       
+        elseif(len_model .gt. 0)then
             len_model = min(len_model,len_model_max)
             ims = ist + length_fcst_in + 1
             ime = ims + len_model + 4 
