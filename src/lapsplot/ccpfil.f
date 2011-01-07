@@ -1495,11 +1495,11 @@ c     Restore original color table
         if(namelist_parms%c_units_type .eq. 'english')then ! (0-100 inches)
           vals(1) = 0.
           vals(2) = .1
-          vals(3) = .2
-          vals(4) = .5
-          vals(5) = 1.0
-          vals(6) = 2.0
-          vals(7) = 5.0
+          vals(3) = .5
+          vals(4) = 1.0
+          vals(5) = 2.0
+          vals(6) = 4.0
+          vals(7) = 6.0
           vals(8) = 10.
           vals(9) = 15.
           vals(10) = 20.
