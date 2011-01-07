@@ -141,9 +141,6 @@ c
 
         bias = ybar - xbar
 
-        write(6,900)title,bias,std
-900     format(/,2x,a,' bias/rms = ',2f9.2)
-
 !       if(a_t .lt. 0.1 .OR. a_t .gt. 10.)then
 !          write(6,*)' Warning, slope is ill conditioned'
 !          istatus = 0
@@ -151,6 +148,30 @@ c
 c
 c.....  End of routine
 c
+!       Compute correlation coefficient
+        sum1 = 0.
+        sum2 = 0.
+        sum3 = 0.
+        do i = 1,num_sfc
+            if(x(i).ne.badflag .and. y(i).ne.badflag) then     
+                sum1 = sum1 + ( (x(i) - xbar) * (y(i) - ybar) )
+                sum2 = sum2 + (x(i) - xbar)**2
+                sum3 = sum3 + (y(i) - ybar)**2
+            endif
+        enddo ! i
+        denom = sqrt(sum2) * sqrt(sum3)
+
+        if(denom .ne. 0.)then
+            r = sum1 / denom
+        else
+            r = 0.
+        endif
+
+        write(6,*)' regression sums = ',sum1,sum2,sum3
+
+        write(6,900)title,int(cnt),bias,std,r
+900     format(/,2x,a,' N/bias/rms/r = ',i5,2f9.2,f9.3)
+
         return
         end
 
@@ -266,9 +287,6 @@ c
 
         bias = ybar - xbar
 
-        write(6,900)title,bias,std
-900     format(/,2x,a,' bias/rms = ',2f9.2)
-
 !       if(a_t .lt. 0.1 .OR. a_t .gt. 10.)then
 !          write(6,*)' Warning, slope is ill conditioned'
 !          istatus = 0
@@ -276,5 +294,29 @@ c
 c
 c.....  End of routine
 c
+!       Compute correlation coefficient
+        sum1 = 0.
+        sum2 = 0.
+        sum3 = 0.
+        do i = 1,num_pts
+            if(x(i).ne.badflag .and. y(i).ne.badflag) then     
+                sum1 = sum1 + ( (x(i) - xbar) * (y(i) - ybar) )
+                sum2 = sum2 + (x(i) - xbar)**2
+                sum3 = sum3 + (y(i) - ybar)**2
+            endif
+        enddo ! i
+        denom = sqrt(sum2) * sqrt(sum3)
+
+        if(denom .ne. 0.)then
+            r = sum1 / denom
+        else
+            r = 0.
+        endif
+
+        write(6,*)' regression sums = ',sum1,sum2,sum3
+
+        write(6,900)title,int(cnt),bias,std,r
+900     format(/,2x,a,' N/bias/rms/r = ',i5,2f9.2,f9.3)
+
         return
         end
