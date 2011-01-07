@@ -519,6 +519,8 @@ c
                           istn_keep   = i 
                        endif
 
+                       call filter_string(stname(i))
+
                        write(6,*)' Dupe METAR at ',stname(i),timech,i,k
      1                          ,i_diff,k_diff,istn_keep,istn_reject
 
