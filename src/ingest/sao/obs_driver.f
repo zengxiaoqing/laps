@@ -339,7 +339,8 @@ c
         call s_len(metar_format,len_metar_format)
 
         if(    metar_format(1:len_metar_format) .eq. 'NIMBUS'
-     1    .or. metar_format(1:len_metar_format) .eq. 'WFO'        )then
+     1    .or. metar_format(1:len_metar_format) .eq. 'WFO'   
+     1    .or. metar_format(1:len_metar_format) .eq. 'MADIS'    )then       
 
 !           Select the hourly METAR file best suited to our obs time window
 !           Note that an hourly raw file contains obs from 15 before to 45 after
@@ -356,7 +357,8 @@ c
 	        data_file_m = path_to_METAR(1:len_path)
      1                        //a9time_metar_file// '0100o'       
 c        
-            elseif(metar_format(1:len_metar_format) .eq. 'WFO')then
+            elseif(metar_format(1:len_metar_format) .eq. 'WFO'
+     1    .or.     metar_format(1:len_metar_format) .eq. 'MADIS')then
                 filename13=fname9_to_wfo_fname13(a9time_metar_file)       
 
                 len_path = index(path_to_METAR,' ') - 1
@@ -721,7 +723,11 @@ c
             endif
         enddo ! i
 
-        ave_elev_pres = sum_alt_or_stp / float(nalt_or_stp)
+        if(nalt_or_stp .gt. 0)then
+            ave_elev_pres = sum_alt_or_stp / float(nalt_or_stp)
+        else
+            ave_elev_pres = badflag
+        endif
 
         write(6,*)
         write(6,*)' Checking pressure reports in box...'
