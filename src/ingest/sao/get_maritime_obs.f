@@ -164,7 +164,8 @@ c
                 i4_contains_late = 2699
                 i4_file_interval = 3600
 
-            elseif(buoy_format(1:len_buoy_format) .eq. 'WFO')then 
+            elseif(buoy_format(1:len_buoy_format) .eq. 'WFO'
+     1        .or. buoy_format(1:len_buoy_format) .eq. 'MADIS')then         
                 i4_contains_early = 0 
                 i4_contains_late = 3600
                 i4_file_interval = 3600
@@ -191,7 +192,8 @@ c
 	            data_file = path_to_buoy_data(1:len_path)
      1                            //a9time// '0100o'
 
-                elseif(buoy_format(1:len_buoy_format) .eq. 'WFO')then
+                elseif(buoy_format(1:len_buoy_format) .eq. 'WFO'
+     1            .or. buoy_format(1:len_buoy_format) .eq. 'MADIS')then   
                     filename13=fname9_to_wfo_fname13(a9time)       
 
                     len_path = index(path_to_buoy_data,' ') - 1

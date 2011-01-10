@@ -163,7 +163,9 @@ c
 
         if(     l_parse(metar_format,'FSL') 
      1     .or. l_parse(metar_format,'NIMBUS')
-     1     .or. l_parse(metar_format,'WFO')     )then ! FSL NetCDF format
+     1     .or. l_parse(metar_format,'WFO')     
+     1     .or. l_parse(metar_format,'MADIS')     
+     1                                             )then ! NetCDF format
 
             ix = 1
 
@@ -189,7 +191,9 @@ c
 	            data_file = path_to_metar(1:len_path)
      1                            //a9time// '0100o'
 
-                elseif(metar_format(1:len_metar_format) .eq. 'WFO')then
+                elseif(metar_format(1:len_metar_format) .eq. 'WFO'
+     1            .or. metar_format(1:len_metar_format) .eq. 'MADIS'
+     1                                                           )then      
                     filename13=fname9_to_wfo_fname13(a9time)       
                     data_file = path_to_metar(1:len_path) // filename13       
 
