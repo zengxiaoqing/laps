@@ -47,8 +47,8 @@ c                  'c8_project' in 'nest7grid.parms' to specify the METAR
 c                  format. An override to this can be specified as follows:
 c
 c                  'NIMBUS' denotes GSD NetCDF format and NIMBUS file timestamp
-c                  'WFO' denotes AWIPS NetCDF format and WFO file timestamp,
-c                        as well as MADIS
+c                  'MADIS' denotes MADIS NetCDF format and MADIS file timestamp
+c                  'WFO' denotes AWIPS NetCDF format and WFO file timestamp
 c                  'CWB' is Central Weather Bureau in Taiwan
 c                  'AFWA' is Air Force Weather Agency
 c                  'AOML' is this NOAA agency's CSV format data
