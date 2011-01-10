@@ -760,7 +760,7 @@ c
             l_good_global = .false.
 
             do iprov = 1,numPSTEntries                  
-               if(l_firstsolar)write(6,*)iprov,namePST(iprov)           
+               if(l_first_solar)write(6,*)iprov,namePST(iprov)           
 
                if(namePST(iprov) .eq. dataProvider(i)(1:lenp))then
 !                 write(6,*)' match,code2PST = ',code2PST(iprov)
