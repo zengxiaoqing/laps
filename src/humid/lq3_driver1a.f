@@ -321,8 +321,8 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 5.5 (12/15/2010) successfully incorporates'
-      write (6,*) '1) Assimilate Radiometer data moisture profiles'
+      write (6,*) 'Release 5.6 (1/11/2011) successfully incorporates'
+      write (6,*) '1) Assimilate Radiometer data Td  profiles to 10km'
       write (6,*) '2) Ability to read MADIS files for GPS data'
       write (6,*) '3) Test of input field for bad data (forced abort)'
       write (6,*) '4) Bug fix for no cloud situation'
