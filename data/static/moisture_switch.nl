@@ -2,6 +2,7 @@
  COVAR_SWITCH = 0,
  PRINT_SWITCH = 0,
  RAOB_SWITCH = 1,
+ RADIOMETER_SWITCH = 2000,
  RAOB_LOOKBACK = 4500,
  ENDIAN = 1,
  RAOB_RADIUS = 45000.0,
@@ -32,6 +33,7 @@ c   particular applicaton.  Here are the definitions of the current
 c   values used.
 c  PRINT_SWITCH = 0, disables long printouts, now default, use for debugging
 c  RAOB_SWITCH = 0,    raob on/off
+c  RADIOMETER_SWITCH = 2000,  meters from ground level to accept data in vert.
 c  RAOB_LOOKBACK = 3600, raob latency seconds
 c  ENDIAN = 1 (big endian machines [default], =0 little endian machines)
 c  GOES_SWITCH = 12,  goes switch on/off assign sat
