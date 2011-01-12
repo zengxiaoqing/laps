@@ -157,6 +157,7 @@ c     namelist data
       integer covar_switch
       integer print_switch
       integer  raob_switch
+      integer radiometer_switch
       integer  raob_lookback
       real raob_radius
       integer endian  ! 1 = big, 0 = little , big default
@@ -176,7 +177,7 @@ c     namelist data
       integer gps_switch
       character*256 path_to_gvap12,path_to_gvap10,path_to_gps,path2covar
       namelist /moisture_switch_nl/ covar_switch,print_switch,
-     1     raob_switch,
+     1     raob_switch,radiometer_switch,
      1     raob_lookback, endian,
      1     raob_radius, goes_switch, cloud_switch, cloud_d
      1     ,tiros_switch, sounder_switch, sat_skip
@@ -224,6 +225,7 @@ c     set namelist parameters to defaults
       cloud_switch = 0
       cloud_d = 0
       raob_switch = 0
+      radiometer_switch = 2000
       raob_lookback = 0
       endian = 1 ! big endian is default
       raob_radius = 45000.0  ! meters (45km)
@@ -686,6 +688,7 @@ c     call the main humidity algorighm with filled state variables
      1     cloud_switch,
      1     cloud_d,
      1     raob_switch,
+     1     radiometer_switch,
      1     raob_lookback,
      1     endian,
      1     raob_radius,

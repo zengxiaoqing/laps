@@ -49,6 +49,7 @@ cdis
      1     cloud_switch,
      1     cloud_d,
      1     raob_switch,
+     1     radiometer_switch,
      1     raob_lookback,
      1     endian,
      1     raob_radius,
@@ -212,6 +213,7 @@ c     namelist data
       integer covar_switch
       integer print_switch
       integer  raob_switch
+      integer radiometer_switch
       integer  raob_lookback
       real raob_radius
       integer endian  ! 1 = big, 0 = little , big default
@@ -321,8 +323,8 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 5.6 (1/11/2011) successfully incorporates'
-      write (6,*) '1) Assimilate Radiometer data Td  profiles to 10km'
+      write (6,*) 'Release 5.7 (1/12/2011) successfully incorporates'
+      write (6,*) '1) Assimilate Radiometer to namelist level'
       write (6,*) '2) Ability to read MADIS files for GPS data'
       write (6,*) '3) Test of input field for bad data (forced abort)'
       write (6,*) '4) Bug fix for no cloud situation'
@@ -380,6 +382,10 @@ c     routine
          write (6,*) 'Raob switch on... will use raobs if present'
          write (6,*) 'RAOB radius of influ set to..',raob_radius,' m'
       endif
+
+      write (6,*) 'radiometer switch set to height of ,',
+     1     radiometer_switch, ' level (meters)'
+      write (6,*) 'if radiometer not used, this has no effect'
       
       write(6,*) 'RAOB look back set to ', raob_lookback, 'seconds'
       
@@ -819,7 +825,8 @@ c     ****  execute raob step if switch is on
       if(raob_switch.eq.1) then
          write (6,*) 'begin raob insertion'
 
-         call snd_step (i4time,p_3d,raob_lookback, lat,lon,
+         call snd_step (i4time,p_3d,radiometer_switch,
+     1        raob_lookback, lat,lon,
      1        lt1dat, ii,jj,kk, q_snd,weight_snd, 
      1        raob_radius, raob_switch)
              

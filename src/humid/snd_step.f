@@ -48,6 +48,7 @@ c
       subroutine snd_step (
      1     i4time,              ! current time I/
      1     p_3d,                !laps pressure grid I/
+     1     radiometer_switch,   !hight to use data meters I/
      1     snd_lookback,        !paramter indicating time window I/
      1     lat,                 !laps lat grid I/
      1     lon,                 !laps lon grid I/
@@ -73,6 +74,7 @@ c     parameters for sounding acquisition
 c     input parameters (defined above)
 
       integer i4time, ii,jj,kk, snd_lookback, abort
+      integer radiometer_switch
       real q_snd(ii,jj,kk), p_3d (ii,jj,kk)
       real raob_radius
       real weight_field(ii,jj,kk)
@@ -352,7 +354,8 @@ c     loop throught the data and re-assign the "top" layer ll_n(n) of
 c     each radiometer sounding to be under 2km.
 
             do i = 1, ll_n(n)
-               if ((meter_ht(i,n)-meter_ht(1,n)).gt.10000.) then ! above limit of use
+               if ((meter_ht(i,n)-meter_ht(1,n)).gt.radiometer_switch) 
+     1              then        ! above limit of use
                   ll_n(n) = i ! this should maybe terminate loop
                   go to 212 ! preserve assignment
                endif
