@@ -15,6 +15,8 @@
 	real, dimension(nprmax) :: pressures
         integer, parameter :: lun=120
 
+	include 'lapsparms.for'
+
 ! Parameter for model cycle interval
         model_cycle_time_sec = 10800
 !
@@ -125,8 +127,8 @@
 !        logical write_to_lapsdir
 
         integer       i4time, i4_initial, i4_valid
-        integer       maxbgmodels
-        parameter     (maxbgmodels=10)
+!        integer       maxbgmodels
+!        parameter     (maxbgmodels=10)
         character*30  c_fdda_mdl_src(maxbgmodels)
         character*300 lfmprd_dir,laps_data_root
 
@@ -185,7 +187,7 @@
 
 
 !!!!!! test input variables!!!!!!!!!!!!!!!!!!!!!
-        n_fcst_times = 2 
+        n_fcst_times = 1 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !       Get fdda_model_source from static file
@@ -196,19 +198,26 @@
      1            ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
 
         do itime_fcst = 0,n_fcst_times
-    
+
           ct=1
 
           i4_valid = i4_initial + itime_fcst * model_cycle_time_sec
 
           call make_fnam_lp(i4_valid,a9time_valid,istatus)
 
+          write(6,*)
+          write(6,*)
+          write(6,*)' Processing time ',itime_fcst,' ',a9time_valid
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !         3D fields
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-	  mean_fcst_3d=0.
           do ifield = 1,n_fields
+
+           write(6,*)
+
+	   mean_fcst_3d=0.
 
            comment = ' '
            len_com = 1
@@ -231,10 +240,11 @@
 
               call get_directory('fua',ensemble_dir,len_ensemble)
               write(6,*)' ensemble_dir = ',ensemble_dir
-              ensm_dir = ensemble_dir(1:len_ensemble)//'/mean'
+              ensm_dir = ensemble_dir(1:len_ensemble)//'mean/'
               call s_len(ensm_dir,len_ensm)
 
 !                 Read 3d forecast fields
+
                   ext = ext_fcst_a(ifield)
                   call get_directory(ext,directory,len_dir)
                   DIRECTORY=directory(1:len_dir)//c_model(1:len_model)
@@ -251,6 +261,15 @@
                        write(6,*)' Error reading 3D Forecast',c_model
                   else 
                     mean_fcst_3d=mean_fcst_3d+var_fcst_3d
+
+
+                    write(6,*)'min and max vals for '
+     1                                  ,var_a(ifield),c_model,': '
+     1                                  ,minval(var_fcst_3d(:,:,:))
+     1                                  ,maxval(var_fcst_3d(:,:,:))
+
+		    write(*,*)	
+
                     n_models_read = n_models_read + 1
                     call s_len(comment,lencom)
                   comment = comment(1:lencom)//c_model(1:len_model)//','
@@ -277,8 +296,14 @@
          comment = comment(1:lencom)//'models='//c_models_read
          com3d(ct:ct+NZ_L-1)=comment       
          ct=ct+NZ_L
-        
-        enddo ! fields
+       
+         write(6,*)'min and max vals (mean_fcst_3d) for ' 
+     1               ,var_a(ifield),': '
+     1               ,minval(mean_fcst_3d(:,:,:))
+     1               ,maxval(mean_fcst_3d(:,:,:))
+
+ 
+        enddo ! ifields
 
 
 	write(*,*)'n_fdda_models',n_fdda_models
@@ -324,6 +349,11 @@
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+	write(6,*)'min and max vals - mean_fcst_3d_model: '
+     1   ,minval(mean_fcst_3d_model(:,:,:))
+     1   ,maxval(mean_fcst_3d_model(:,:,:))
+	
+
        	print*,'Writing LAPS 3D (fua) netcdf file.'
        	print*,'Output directory is: ',ensm_dir(1:len_ensm)
        	print*,'Output directory is: ',trim(ensm_dir)
@@ -351,8 +381,12 @@
 	write(*,*)'We are starting to deal with 2D fields!!!!!!!!!!!!!'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
         call get_directory('fsf',ensemble_dir,len_ensemble)
-        ensm_dir = ensemble_dir(1:len_ensemble)//'/mean'
+        write(6,*)' ensemble_dir = ',ensemble_dir
+        ensm_dir = ensemble_dir(1:len_ensemble)//'mean/'
+        call s_len(ensm_dir,len_ensm)
+
 
         do itime_fcst = 0,n_fcst_times
 
@@ -383,9 +417,6 @@
               write(6,*)' Processing model ',c_model
 
               call s_len(c_model,len_model)
-
-              call get_directory('ensemble',ensemble_dir,len_ensemble)
-              ensm_dir = ensemble_dir(1:len_ensemble)//'/mean/'
 
 
                   ext = ext_fcst_a_2d(ifield)
