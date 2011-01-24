@@ -41,7 +41,7 @@ cdis
      1                           NZ_L, MAX_RADARS, L_RADARS,
      1                           r_missing_data,
      1                           laps_cycle_time,zoom,density,
-     1                           dyn_low,dyn_high,
+     1                           dyn_low,dyn_high,dx,dy,
      1                           plot_parms,namelist_parms,ifield_found)
 
 !       1995        Steve Albers         Original Version
@@ -1406,6 +1406,13 @@ c       include 'satellite_dims_lvd.inc'
             elseif(c_field .eq. 'vo')then ! Display Vorticity Field
                 call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
      1                            ,dx,dy,.true.,r_missing_data)
+
+                write(6,*)' u range ',minval(u_2d),maxval(u_2d)    
+                write(6,*)' v range ',minval(v_2d),maxval(v_2d)    
+                write(6,*)' dx range ',minval(dx),maxval(dx)    
+                write(6,*)' dy range ',minval(dy),maxval(dy)    
+                write(6,*)' vorticity range ',minval(field_2d)    
+     1                                       ,maxval(field_2d)
 
                 if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' VORT (diff) 1e-5/s'
@@ -7846,8 +7853,12 @@ c abdel
      1                             ,i4_valid                ! O
      1                             ,istatus)                ! O
 
-        integer       maxbgmodels, maxfiles
-        parameter     (maxbgmodels=10)
+        include 'lapsparms.for' ! maxbgmodels
+
+!       integer       maxbgmodels
+!       parameter     (maxbgmodels=10)
+
+        integer       maxfiles
         parameter     (maxfiles=3000)
 
         integer       n_fdda_models
