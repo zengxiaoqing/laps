@@ -58,14 +58,14 @@ c
 c 'path_to_radar_a'  - Full path to each directory containing a set of input
 c                      radar tilts/volumes. 
 c
-c 'path_to_vrc_nl'   - Path used if we have 'vrc' output. Can be either 'rdr' 
-c                      or 'lapsprd'. If we're using the mosaicing program 
-c                      (needed if we have multiple radars), we can set this 
-c                      parameter to the desired value of 'rdr'. If we're not 
-c                      using the mosaicing program we set the parameter to 
-c                      'lapsprd' and the use of only one radar is implied. 
-c                      Additional radars would be overwriting in the same 
-c                      directory which is somewhat undesirable. 
+c 'path_to_vrc_nl'   - Path used if we have 'vrc' output from level III data. 
+c                      Can be either 'rdr' (multiple radars) or 'lapsprd' 
+c                      (with single radar and NOWRAD not present). If we're 
+c                      using the mosaicing program (needed if we have multiple 
+c                      narrowband level III radars), then set this parameter 
+c                      to 'rdr'. If we're not using the mosaicing program we 
+c                      set the parameter to 'lapsprd' and the use of only one 
+c                      radar is assumed. 
 c 
 c 'laps_radar_ext_a' - Extension names representing the type of output that
 c                      will be generated for the set of radars. For each 
