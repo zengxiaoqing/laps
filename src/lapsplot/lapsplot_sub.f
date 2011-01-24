@@ -57,6 +57,9 @@ cdis
 !       integer nk
 !       common /get_packed_data2/ nk
 
+        real, allocatable :: dx(:,:)            
+        real, allocatable :: dy(:,:)            
+
 !       nk = 17 ! A temporary fix as the blockdata won't work
 
         call get_grid_dim_xy(NX_L,NY_L,istatus)
@@ -97,6 +100,8 @@ cdis
 
         dyn_low = r_missing_data
         dyn_high = r_missing_data
+
+        allocate (dx(NX_L,NY_L),dy(NX_L,NY_L))
 
 !       read(5,2)c_display
 2       format(a1)
@@ -220,7 +225,7 @@ cdis
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
      1                         MAX_RADARS,L_RADARS,r_missing_data,
      1                         laps_cycle_time,zoom,density,
-     1                         dyn_low,dyn_high,
+     1                         dyn_low,dyn_high,dx,dy,
      1                         plot_parms,namelist_parms,ifield_found)       
 
             if(ifield_found .eq. 1)then
@@ -263,7 +268,7 @@ cdis
      1                ,standard_longitude,NX_L,NY_L,NZ_L
      1                ,NX_C,NZ_L,NXSECT,NX_T      
      1                ,r_missing_data,laps_cycle_time,maxstns
-     1                ,dyn_low,dyn_high
+     1                ,dyn_low,dyn_high,dx,dy
      1                ,density,plot_parms,namelist_parms,ifield_found)       
 
             if(ifield_found .eq. 1)then
@@ -301,6 +306,8 @@ cdis
         if(c_display .ne. 'v')then
 !           write(6,*)' Saving metacode file in for008.dat'
         endif
+
+        deallocate(dx,dy)
 
         return
 
