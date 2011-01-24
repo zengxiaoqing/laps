@@ -27,7 +27,7 @@
       integer istatus, idebug
       integer i4time_fa
       integer sbnvaltimes
-      logical use_analysis
+      logical use_analysis, use_fcst, l_parse
       character*9   fname,wfo_fname13_to_fname9,fname9
       integer itimes(max_files)
       integer i4time_anal
@@ -63,11 +63,22 @@ C if forecast_length = 0 return files for i4time_anal and the preceeding
 C forecast.  if forecast_length > 0 return all files for i4time_anal
 C to >= i4time_anal+forecast_length
 C      
-      print*, '-----------------------------'
-      print*, 'get_acceptable_files: 11-03-05'
-      print*, '-----------------------------'
+      print*, '----------------------------------------------'
+      print*, 'get_acceptable_files: use_analysis = ',use_analysis
+      print*, '----------------------------------------------'
 
       idebug = 0
+
+!     If later on we want to set use_fcst to .false. then we can use analyses
+!     only similar to what is presently being done with the 'LAPS' option.
+      use_fcst = .true.
+
+      if(use_fcst .eqv. .true. .OR. use_analysis .eqv. .true.)then
+          continue
+      else
+          write(6,*)' ERROR: use_fcst AND use_analysis are false'
+          return
+      endif
 
       call get_laps_cycle_time(laps_cycle_time,istatus)
 
@@ -150,8 +161,10 @@ c     elseif(bgmodel.eq.3)then
             call s_len(names(i),j)
             if(names(i)(lend+1:lend+2).eq.cwb_model_type)then
                nvt=nvt+1
-c              print*
-c              print*,'i/names(i) = ',i,names(i)(1:j)
+!              if(i .eq. 1)then
+!                  print*
+!                  print*,'i/names(i) = ',i,names(i)(1:j)
+!              endif
                call i4time_fname_lp(names(i),i4time_fa,istatus)
                call make_fnam_lp(i4time_fa,fname9,istatus)
                lentodot=index(names(i),'.')
@@ -164,7 +177,7 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
 
          bg_files=nvt
 
-      elseif(cmodel.ne.'LAPS')then
+      elseif(cmodel.ne.'LAPS' .and. use_fcst .eqv. .true.)then
 
          final_time = i4time_anal+3600*max(0,forecast_length)
          call get_file_times(cfilespec,max_files,names,itimes
@@ -184,10 +197,22 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
                call s_len(names(i),j)
             endif
 
+            if(i .eq. 1)then
+                write(6,*)' get_acceptable_files: i,names(i) ',
+     1                                            i,names(i)(1:j)
+            endif
+
             j=j-13
             if (j .ge. 0) then
-               if(index(names(i)(j+1:j+13),'/').eq.0 .and.
+!              if(index(names(i)(j+1:j+13),'/').eq.0 .and.
+!    +              names(i)(j:j).eq.'/') then
+               if(l_parse(names(i)(j+1:j+13),'/') .eqv. .false. .AND.
      +              names(i)(j:j).eq.'/') then
+                
+                  if(i .eq. 1)write(6,*)
+     1            ' index no slash in last 13 chars test was true:'
+     1            ,j,names(i)(j:j),' ',names(i)(j+1:j+13)
+
 CWNI-BLS ... Support for bgmodel = 10, assuming one uses the YYYYMMDD_HHMM
 CWNI-BLS     convention
                   if ((bgmodel .eq. 4).OR.(bgmodel.eq.10)) then
@@ -222,6 +247,10 @@ CWNI-BLS ... Call to new version of get_nvaltimes for Unidata
                   else 
                      bg_names(i)=names(i)(j+1:j+13)
                   endif
+               else
+                  if(i .eq. 1)write(6,*)
+     1            ' index no slash in last 13 chars test was false:'
+     1            ,j,names(i)(j:j),' ',names(i)(j+1:j+13)
                endif
             endif
          enddo
@@ -232,7 +261,7 @@ CWNI-BLS ... Call to new version of get_nvaltimes for Unidata
               names(i) = names_tmp(i)
             ENDDO
          endif
-      else
+      else ! c_model = 'LAPS' (exclusively using analyses)
          print*,'LAPS analysis selected as background'
          print*,'Checking lapsprd/lt1 subdirectory'
          cfilespec=bgpath(1:len)//'/lt1/*'
@@ -281,7 +310,10 @@ c ---------------------------------------------------------------------------
           enddo
 
           if(ij.eq.0)then
-             print*,'All files must be initial files. Return to main'
+             print*,
+     1       'WARNING: all files must be initial files. Return to main'
+             print*,'Consider setting use_analysis parameter to true'
+             print*,'Forecasts should also be added to the analyses'
              deallocate(bgnames_tmp)
              return
           endif
@@ -565,6 +597,9 @@ c     endif
          write(6,*)' remove .grib extension if present and/or use links'       
       endif
 
+      write(6,*)
+     1    ' Normal finish of get_acceptable_files, lenf/names(1) = '  
+     1    ,lenf,TRIM(names(1))
       return
 
 888   print*,'Error decoding fname ',fname
