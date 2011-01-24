@@ -12,7 +12,7 @@
         parameter (MAX_INGEST_FILES = 10000)     
 
         integer      MAXBGMODELS
-        parameter    (MAXBGMODELS=11) 
+        parameter    (MAXBGMODELS=50) 
 
 !       Maximum number of LAPS grid levels
         integer*4 MAX_LVLS
