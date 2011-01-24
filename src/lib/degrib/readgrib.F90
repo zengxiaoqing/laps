@@ -475,7 +475,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
               qsfc=shbg_sfc(i,j)
            else                    ! there is no SH_SFC, using RH_SFC
               qsfc=make_ssh(prsfc,tpbg_sfc(i,j)-273.15,tdbg_sfc(i,j)/100.,t_ref)
-!             shbg_sfc(i,j) = qsfc
+              shbg_sfc(i,j) = qsfc
            endif
            tdbg_sfc(i,j)=make_td(prsfc,tpbg_sfc(i,j)-273.15,qsfc,t_ref)+273.15
         else
