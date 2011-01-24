@@ -41,7 +41,7 @@ cdis
      1                  ,standard_longitude
      1                  ,NX_L,NY_L,NZ_L,NX_C,NZ_C,NX_P,NX_T
      1                  ,r_missing_data,laps_cycle_time,maxstns      
-     1                  ,dyn_low,dyn_high
+     1                  ,dyn_low,dyn_high,dx,dy
      1                  ,density,plot_parms,namelist_parms,ifield_found)       
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
@@ -845,7 +845,15 @@ c read in laps lat/lon and topo
             call setusv_dum(2hIN,7)
 
 !-----------end of splice
+!           call make_xsect_labels(  vxmin, vxmax, vymin, vymax, 
+!    1                               rleft, right, bottom, top,
+!    1                               width, vymin2, vymax2, i_map, 
+!    1                               ibottom, r_height,
+!    1                               xlow,xhigh,ylow,yhigh,
+!    1                               lat_1d, lon_1d, NX_C, NZ_C,
+!    1                               NX_L, NY_L, 1)
             call frame
+            i_map = 0
             i_graphics_overlay = 0
             i_label_overlay = 0 ! i_label_overlay - 1
             n_image = 0
@@ -1478,6 +1486,8 @@ c read in laps lat/lon and topo
                 c_label = 'LAPS Divergence  (Fcst)  [1e-5/s]'
             endif
 
+            plot_parms%iraster = 1
+
         elseif(c_field .eq. 'vo' )then
             do k = 1,NZ_L
                 call vorticity_abs(u_3d(1,1,k),v_3d(1,1,k)
@@ -1514,6 +1524,8 @@ c read in laps lat/lon and topo
             elseif   (c_prodtype .eq. 'F')then
                 c_label = 'LAPS Abs Vort  (Fcst)    [1e-5/s]'
             endif
+
+            plot_parms%iraster = 1
 
         elseif(c_field .eq. 'pv' )then
 !           Read 3D Temperature
@@ -1577,6 +1589,8 @@ c read in laps lat/lon and topo
                 c_label = 'LAPS PVort  (Fcst)   PVU '
             endif
 
+            plot_parms%iraster = 1
+
         elseif(c_field .eq. 'va' )then
             do k = 1,NZ_L
                 call vorticity_abs(u_3d(1,1,k),v_3d(1,1,k)
@@ -1618,6 +1632,8 @@ c read in laps lat/lon and topo
             elseif   (c_prodtype .eq. 'F')then
                 c_label = 'LAPS Vort Adv  (Fcst)  [1e-8/s^2]'
             endif
+
+            plot_parms%iraster = 1
 
         elseif(c_field .eq. 'rf' .or. c_field .eq. 'rg'
      1                           .or. c_field .eq. 'rk')then
@@ -2037,6 +2053,7 @@ c read in laps lat/lon and topo
 !               endif
 !           enddo ! j
 !           enddo ! i
+!           where(field_vert3(:,:).eq.r_missing_data)field_vert3(:,:)=0.
 
             write(6,*)' calling solid fill cloud plot - commented out'       
             colortable = 'linear'
@@ -3154,6 +3171,10 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                       endif
 
 !                       This method remaps well - with large border artifacts
+!                       if(plot_parms%iraster .eq. 1)then
+!                           where(field_vert3(:,:) .eq. r_missing_data)
+!    1                            field_vert3(:,:) = -1. ! dark hues color
+!                       endif
                         call ccpfil(field_vert3,NX_P,NX_P
      1                             ,clow,chigh
      1                             ,colortable,n_image,scale,'xsect'
@@ -3235,7 +3256,17 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         call write_label_lplot(100,94,c_label,a9time,plot_parms
      1                        ,namelist_parms,i_label_overlay,'xsect')       
 
-        if(i_map .eq. 0)then
+!       write(6,*)' not calling make_xsect_labels - 2 ',i_map
+        call make_xsect_labels(      vxmin, vxmax, vymin, vymax, 
+     1                               rleft, right, bottom, top,
+     1                               width, vymin2, vymax2, i_map, 
+     1                               ibottom, r_height,
+     1                               xlow,xhigh,ylow,yhigh,
+     1                               lat_1d, lon_1d, NX_C, NZ_C,
+     1                               NX_L, NY_L, 2)
+
+        if(.false.)then
+!       if(i_map .eq. 0)then
 
             i_map = 1
 
@@ -4319,8 +4350,10 @@ c
      1                             ,i4_valid                ! O
      1                             ,istatus)                ! O
 
-        integer       maxbgmodels
-        parameter     (maxbgmodels=10)
+        include 'lapsparms.for' ! maxbgmodels
+
+!       integer       maxbgmodels
+!       parameter     (maxbgmodels=10)
 
         integer       n_fdda_models
         integer       l,len_dir,lfdda
@@ -4461,6 +4494,162 @@ c
         else
             write(6,*)' mk_fcst_xlabel: label length = ',len_label
         endif
+
+        return
+        end
+
+        subroutine make_xsect_labels(vxmin, vxmax, vymin, vymax, 
+     1                               rleft, right, bottom, top,
+     1                               width, vymin2, vymax2, i_map, 
+     1                               ibottom, r_height,
+     1                               xlow,xhigh,ylow,yhigh,
+     1                               lat_1d, lon_1d, NX_C, NZ_C,
+     1                               NX_L, NY_L, i_pos)
+
+        real xcoord(NX_C),ycoord(NX_C)
+
+        character*4 c4_string
+        character*7 c7_string
+
+        real lat_1d(NX_C)
+        real lon_1d(NX_C)
+
+        write(6,*)' Subroutine make_xsect_labels: i_pos, i_map = '
+     1           ,i_pos,i_map
+
+        if(i_map .eq. 0)then
+
+            i_map = 1
+
+            call setusv_dum(2hIN,7)
+
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, bottom, top,1)
+
+!           This lets us plot outside the main box
+            call set(.00, 1.0, vymin2 , vymax2
+     1             , rleft - width/8., right + width/8.,
+     1               bottom - r_height/8., top + r_height/8.,1)
+
+!           Draw box enclosing graph
+            xcoord(1) = rleft
+            ycoord(1) = bottom
+            xcoord(2) = right
+            ycoord(2) = bottom
+            xcoord(3) = right
+            ycoord(3) = top
+            xcoord(4) = rleft
+            ycoord(4) = top
+            xcoord(5) = xcoord(1)
+            ycoord(5) = ycoord(1)
+            npts = 5
+            call curve (xcoord, ycoord, npts)
+
+!           Label Left Axis
+            if(.true.)then ! Label Pressure on Left Axis
+                if(NZ_C .gt. 60)then
+                    iskip = 2
+                else
+                    iskip = 1
+                endif
+
+                Do i = ibottom,NZ_C
+                    y = i
+                    call line (rleft, y, rleft + width * .015, y )
+
+!                   Pressure
+                    if(i-1 .eq. ((i-1)/iskip)*iskip)then
+                        x = rleft - width * .030
+                        ipres_mb = nint(zcoord_of_level(i)/100.)
+                        write(c4_string,2014)ipres_mb
+                        call pwrity (x, y, c4_string, 4, 0, 0, 0)
+2014                    format(i4)
+                    endif
+
+                end do
+                call pwrity (rleft - .070 * width,bottom + r_height*0.5,
+     1          ' PRESSURE (HPA) ',16,1,90,0)
+!           endif
+
+
+!           if(.not. l_atms)then
+!               Label Height (km - msl) on Right Axis
+                Do i = 0,16
+                    y = height_to_zcoord(i*1000.,istatus)
+
+                    if(y .ge. bottom)then
+                        call line (right, y, right - width * .015, y )
+
+!                       Height
+                        x = right + width * .015
+                        iht_km = i
+                        write(c4_string,2014)iht_km
+                        call pwrity (x, y, c4_string, 4, 0, 0, 0)
+                    endif
+
+                end do
+                call pwrity (right + .070 * width,bottom + r_height*0.5,
+     1          'HEIGHT  (KM MSL)',16,1,270,0)
+            endif
+
+
+!           Put in lat/lon of endpoints
+            x = rleft-1.0
+            y = bottom - r_height * .03
+            write(c7_string,2017)lat_1d(1)
+            call pwrity (x, y, c7_string, 7, 0, 0, 0)
+            y = bottom - r_height * .05
+            write(c7_string,2017)lon_1d(1)
+            call pwrity (x, y, c7_string, 7, 0, 0, 0)
+
+            x = right+1.0
+            y = bottom - r_height * .03
+            write(c7_string,2017)lat_1d(NX_C)
+            call pwrity (x, y, c7_string, 7, 0, 0, 0)
+            y = bottom - r_height * .05
+            write(c7_string,2017)lon_1d(NX_C)
+            call pwrity (x, y, c7_string, 7, 0, 0, 0)
+
+2017        format(f7.2)
+
+!           Put in "minibox"
+            call get_border(NX_L,NY_L,x_1,x_2,y_1,y_2)
+            size_mini = .05
+            size_mini_x = size_mini * width * 0.8 ! aspect ratio of xsect
+            size_mini_y = size_mini * r_height
+            rleft_mini  = rleft + width    * .28 ! .26
+            bottom_mini = top   + r_height * .025
+            xl = rleft_mini  + x_1 * size_mini_x
+            xh = rleft_mini  + x_2 * size_mini_x
+            yl = bottom_mini + y_1 * size_mini_y
+            yh = bottom_mini + y_2 * size_mini_y
+            xcoord(1) = xl  ! UL
+            ycoord(1) = yh
+            xcoord(2) = xh  ! UR
+            ycoord(2) = yh
+            xcoord(3) = xh  ! LR
+            ycoord(3) = yl
+            xcoord(4) = xl  ! LL
+            ycoord(4) = yl
+            xcoord(5) = xcoord(1)
+            ycoord(5) = ycoord(1)
+            npts = 5
+            call curve (xcoord, ycoord, npts)
+
+!           Get X-section line segment
+            xfracl = (xlow  - 1.0) / float(NX_L)
+            xfrach = (xhigh - 1.0) / float(NX_L)
+            yfracl = (ylow  - 1.0) / float(NY_L)
+            yfrach = (yhigh - 1.0) / float(NY_L)
+
+            x1 = xl + xfracl*(xh-xl)
+            x2 = xl + xfrach*(xh-xl)
+            y1 = yl + yfracl*(yh-yl)
+            y2 = yl + yfrach*(yh-yl)
+
+            call line(x1,y1,x2,y2)
+
+        endif ! i_map .eq. 0
 
         return
         end
