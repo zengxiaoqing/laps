@@ -307,6 +307,8 @@ c             print*,'Finished in advance_analyses'
 c
 c *** Call lga driver and, if necessary, interpolate acceptable files.
 c
+             write(6,*)' names(1) = ',TRIM(names(1))
+
              call lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .          reject_names,names,max_files,accepted_files,
