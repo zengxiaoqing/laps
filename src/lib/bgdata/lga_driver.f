@@ -228,7 +228,7 @@ c
       character*4   af_bg(max_files)
       character*10  c_domain_name
       character*200 c_dataroot
-      character*200 cfname
+      character*256 cfname
 
       integer len_dir,ntime, nf
 c
@@ -359,6 +359,11 @@ c
       cfname=bgpath(1:bglen)//bg_names(1)
       call s_len(cfname,lncf)
 
+      write(6,*)' bgpath = ',bgpath(1:bglen)
+      write(6,*)' bg_names(1) = ',TRIM(bg_names(1))
+      write(6,*)' lncf = ',lncf
+      write(6,*)' cfname(1:lncf) = ',cfname(1:lncf)
+
 C WNI Add a section to identify wrapped grid and set the wrapped flag
       wrapped = .FALSE.              ! WNI
       IF (   bgmodel .eq. 6 .or.     ! WNI
@@ -378,6 +383,8 @@ C WNI END ADDITON
       endif
 
       istatus=ishow_timer()
+
+      print *,'calling get_bkgd_mdl_info: cfname = ',cfname
 
       call get_bkgd_mdl_info(bgmodel,cmodel,cfname
      &,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv
@@ -1235,6 +1242,13 @@ c
 
             write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
             write(6,*)' sh_sfc range = ',minval(sh_sfc),maxval(sh_sfc)
+            write(6,*)' mslp range = ',minval(mslp),maxval(mslp)
+
+            if(maxval(mslp) .le. 500.) then
+              print *,' ERROR: MSLP out of allowed range'
+              lga_status = -nf
+              goto 999 ! deallocate/return
+            endif
 c
 c Because not all model backgrounds have t_at_sfc (ground and/or sst)
 c then no need to hinterp unless it exists.
