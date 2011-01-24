@@ -70,7 +70,7 @@
  silavwt_parm=0.,
  c8_project='NIMBUS', 
  c8_blpfmt='default', 
- fdda_model_source='lga',
+ fdda_model_source='lga','wrf-wsm6',
  /
 c OVERALL LAPS PARAMETERS
 c Many of these are stored in the common block in 'lapsparms.cmn'
