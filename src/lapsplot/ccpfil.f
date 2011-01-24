@@ -440,6 +440,9 @@ C
           enddo ! n
           enddo ! m
 
+          write(6,*)' ZREG range ',minval(ZREG),maxval(ZREG)
+          write(6,*)' COLIA range (1) ',icol_min,icol_max
+
           if(icol_min .eq. icol_max)then
               l_uniform_col = .true.
           else
@@ -500,6 +503,17 @@ C
               COLIA(m,n) = int( (ZREG(m,n)-cmn)/cis ) + 3
           enddo ! n
           enddo ! m
+
+          write(6,*)' ZREG range ',minval(ZREG),maxval(ZREG)
+          write(6,*)' COLIA range (2) ',icol_min,icol_max
+
+          call get_r_missing_data(r_missing_data,istatus)
+          if(c5_sect .eq. 'xsect')then
+              where(ZREG(:,:) .eq. r_missing_data)
+     1              COLIA(:,:) = 0
+          endif
+
+          write(6,*)' COLIA range (3) ',minval(COLIA),maxval(COLIA)
 
           write(6,*)' Calling GCA for Raster Fill Plot'
           call get_border(MREG,NREG,x_1,x_2,y_1,y_2)
