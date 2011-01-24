@@ -220,13 +220,51 @@ c
       real     msngflag
       real     fact
 
-      integer  i,j,k,kk
+      integer  i,j,k,kk,kkguess,nguess_eq,nguess_int,noguess
+
+      noguess = 0
+      nguess_eq = 0
+      nguess_int = 0
 
       do k=1,nz
+         kkguess = 1 ! default value
          do j=iymin,iymax ! 1,ny
             do i=ixmin,ixmax ! 1,nx
                ip = min(i,nx_pr) ! Collapse indices to 1,1 for 1D 'prlaps' input
                jp = min(j,ny_pr)
+
+c guessed pressure level
+               kk=kkguess
+
+c analysis pressure of level equals bg pressure of guessed level
+               if (pr(ip,jp,k) .eq. prbg(i,j,kk)) then
+                     if (bgdata(i,j,kk) .lt. msngflag) then
+                         bgdatavi(i,j,k)=bgdata(i,j,kk)
+                     else
+                         bgdatavi(i,j,k)=msngflag
+                     endif
+                     nguess_eq = nguess_eq + 1
+                     goto 20
+
+               elseif (pr(ip,jp,k) .lt. prbg(i,j,kk) .and.
+     +                 pr(ip,jp,k) .gt. prbg(i,j,kk+1)) then
+
+                     if (bgdata(i,j,kk)   .lt. msngflag.and.
+     .                   bgdata(i,j,kk+1) .lt. msngflag)then
+
+                        fact=(pr(ip,jp,k)-prbg(i,j,kk))/
+     .                       (prbg(i,j,kk+1)-prbg(i,j,kk))
+
+                        bgdatavi(i,j,k)=bgdata(i,j,kk)
+     .                       +(bgdata(i,j,kk+1)-bgdata(i,j,kk))*fact
+                     else
+                        bgdatavi(i,j,k)=msngflag
+                     endif
+                     nguess_int = nguess_int + 1
+                     goto 20
+               endif
+
+               noguess = noguess + 1
 
 c lowest bg pressure level is above analysis lowest pressure levels
                if (pr(ip,jp,k) .gt. prbg(i,j,1)) then
@@ -259,6 +297,7 @@ c analysis pressure of level equals bg pressure of level
                      else
                         bgdatavi(i,j,k)=msngflag
                      endif
+                     kkguess=kk
                      goto 20
 
 c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
@@ -276,13 +315,17 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
                      else
                         bgdatavi(i,j,k)=msngflag
                      endif
+                     kkguess=kk
                      goto 20
                   endif
                enddo ! kk
  20            continue
-            enddo 
-         enddo
-      enddo
+            enddo ! i
+         enddo ! j
+      enddo ! k
+
+      write(6,*)' nguess_eq/nguess_int/noguess = ',nguess_eq,nguess_int
+     1                                            ,noguess
 c
       return
 c
