@@ -12,7 +12,8 @@ c     USE laps_static
       include 'grid_fname.cmn'
       include 'bgdata.inc'
 
-      character*200 fullname, fpathname, fpathname_save
+      character*256 fullname
+      character*200 fpathname, fpathname_save
       character*200 fpathname_a(maxbgmodels)
       character*200 cfname_internal
       character*200 outdir
@@ -149,7 +150,9 @@ c     USE laps_static
 
       istatus=-4	! Yuanfu: change it to -4 for exit if no bgmodel and cmodel match bk data
 
+      write(*,*) " grib fullname", trim(fullname)
       call s_len(fullname,lenfn)
+      write(*,*) " grib fullname(1:lenfn)", fullname(1:lenfn)
 
       if(bgmodel.eq.0)then 
        if(cmodel(1:nclen).eq.'MODEL_FUA')then
