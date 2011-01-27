@@ -48,7 +48,7 @@ all: exe
 exe: $(EXE)
 
 $(EXE): $(SRC) $(LAPSLIBS) 
-	$(FC) $(FFLAGS) $(FIXED) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(FC) $(LITTLEFLAGS) $(FIXED) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
