@@ -166,3 +166,9 @@ foreach (@lines) {
    print "  $nlayers layers\n";
   }
 }
+
+print "\n";
+print "Solar Radiation Verification:\n";
+@greplines = grep /gnuplot/, @lines;
+print "$greplines[0]\n";
+
