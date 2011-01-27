@@ -4280,19 +4280,12 @@ Source directory: 'laps/src/newlfmp'
 -------- 4.0 --  Porting code mods from LAPS users back to GSD --------------
 
    We would like to encourage suggestions from LAPS users on how to improve
-   LAPS, both scientifically and in the software itself. In general, we should 
-   follow a carefully orchestrated procedure to port code improvements back 
-   from LAPS users to GSD that may be called "virtual RCS". This is essential 
-   to insure compatability as well as to preserve ongoing code developments 
-   by GSD and various LAPS users. Prior to making the mods, a LAPS user 
-   should "check out" a well defined set of modules from the latest LAPS 
-   release (or developmental code from the GSD in-house "parallel" side). 
-   This is done in close coordination with the GSD code author(s), listed in
-   Section 3. The user can then modify that portion of the code while we 
-   temporarily suspend GSD development on that set of modules. The modified 
-   code can then be ported back to GSD (along with a log of the code mods 
-   suitable for entry into the Revisions logs) for testing and integration 
-   into the next LAPS release. 
+   LAPS, both scientifically and in the software itself. The changes should
+   be made by downloading the most recent source code tree. Edit your changes
+   in the source files, and then retar part or all of the source tree to send
+   back to us. Please state the LAPS version number you had used. Any 
+   documentation pertaining to the reasoning behind the changes would be 
+   appreciated.
 
    In some cases, a less formal process may be easier to go by. Here, the
    user can provide documentation of suggested mods either in descriptive form,
@@ -4303,15 +4296,6 @@ Source directory: 'laps/src/newlfmp'
    software. This can also be useful if the user has an idea of a desired
    functionality within LAPS, but has not actually looked at the software
    details associated with implementing the functionality.
-
-   It should be noted that it can be problematic for us to accept software 
-   modified by users if the mods were not made on the latest developmental
-   GSD version of the particular files. This is because it can be tricky to 
-   reconcile two sets of software that have been allowed to diverge and evolve 
-   independently. The changes that have occurred in both would have to be
-   reconstructed in detail. It is recommended instead that one of the 
-   procedures in the first two paragraphs of this section be followed.
-
 
 -------  5.0 --  LAPS Output Variables and netCDF File Organization -----------
 
