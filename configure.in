@@ -480,6 +480,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
+          etc/verify/cloud_analysis.csh
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
           etc/www/laps_products.cgi
