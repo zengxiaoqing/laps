@@ -33,12 +33,12 @@ my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
 #
 #data_root:       dataroot for post analysis runs output.
 #
-#laps_driver:     run the laps_driver modules (lvd, vrc, lsr, remap, ln3, or all).
 #
 #run_sched:       run LAPS sched.pl: Add in dbl quotes command line variables for sched.
 #                 If there are no variables to pass in for the 'sched' a blank "   " entry is still needed 
 #
 #laps_driver:     activate data ingest via laps_driver.pl routine (satellite, radar, remap)
+#                 run the laps_driver modules (arguments: lvd, vrc, lsr, remap, ln3, or all).
 #
 #driver_args:     Dbl quotes command line variables for laps_driver.
 #
