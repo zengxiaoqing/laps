@@ -157,7 +157,7 @@ real     ::  del, gam, ak &
 
 ! temp_nl variables
 logical  :: l_read_raob_t, l_use_raob_t
-real     :: weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp
+real     :: weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp, radiometer_ht_temp
 integer  :: max_obs, mode_adjust_heights
 
 ! cloud_nl variables
@@ -267,7 +267,7 @@ namelist /surface_analysis/  &
                   
 namelist /temp_nl/ l_read_raob_t, l_use_raob_t, mode_adjust_heights  &
                   ,weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp &
-                  ,max_obs
+                  ,max_obs, radiometer_ht_temp
 
 namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
                    ,l_use_39, l_use_metars, l_use_radar &
@@ -371,6 +371,8 @@ elseif (namelist_name == 'sfc_anal') then
    !  .
 
 elseif (namelist_name == 'temp_anal') then
+
+   radiometer_ht_temp = 2000.
 
    read (12, temp_nl, err=907)
    
