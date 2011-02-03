@@ -1,6 +1,6 @@
 
         subroutine compare_analysis_to_rad(i4time,ni,nj
-     1  ,cvr_sao_max,solar_alt
+     1  ,cvr_sao_max,solar_alt,cvr_snow
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns
@@ -9,6 +9,7 @@
         real cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
      1        ,t_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
      1        ,dbz_max_2d(ni,nj),solar_alt(ni,nj),swi_2d(ni,nj)
+     1        ,cvr_snow(ni,nj)
 
 !       How much the solar radiation varies with changes in cloud fraction
         real cvr_scl_a(ni,nj) 
@@ -27,6 +28,7 @@
 
         character c_stations(maxstns)*(*)
         character stn(maxstns)*20
+        character a24time*24
 
         real lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
         real rad_s(maxstns)
@@ -96,10 +98,17 @@
         do i = 1,ni
 !           Set how much solar radiation varies with changes in cloud fraction
             if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then
-                cvr_scl_a(i,j) = 1.0 ! scaling where we have VIS data
+                if(cvr_snow(i,j) .eq. r_missing_data .OR. 
+     1             cvr_snow(i,j) .le. 0.25                )then 
+                    cvr_scl_a(i,j) = 1.0 ! scaling where we have VIS data
+                else
+                    cvr_scl_a(i,j) = 0.7 ! scaling where we have VIS data & snow cover
+                                         ! 0.6 may work better with higher snow cover
+                endif
             else
-                cvr_scl_a(i,j) = 0.6 ! scaling without VIS data
+                cvr_scl_a(i,j) = 0.7 ! scaling without VIS data (just IR)
             endif
+
             cvr_max(i,j) = min(cvr_max(i,j),1.00)
 
             if(model .eq. 1)then ! simple formula (radiation on horizontal)
@@ -150,6 +159,7 @@
             cnt = 0.
 
             sumcld = 0.
+            sumsnow = 0.
 
             do ista = 1,maxstns  
               stn(ista) = c_stations(ista)(1:3)
@@ -262,7 +272,7 @@
      1                           ,tb8_k(i_i,i_j)
      1                           ,t_gnd_k(i_i,i_j)
      1                           ,t_sfc_k(i_i,i_j)
-     1                           ,cvr_sao_max(i_i,i_j)
+     1                           ,cvr_snow(i_i,i_j)
      1                           ,cvr_max(i_i,i_j)
      1                           ,solar_alt(i_i,i_j)
      1                           ,cvr_9pt
@@ -280,6 +290,7 @@
                     sumobs = sumobs + rad_s(ista)
                     sumanl = sumanl + swi_2d(i_i,i_j)
                     sumcld = sumcld + cvr_max(i_i,i_j)
+                    sumsnow = sumsnow + cvr_snow(i_i,i_j)
                     sumalt = sumalt + solar_alt(i_i,i_j)
                     sumresid = sumresid + resid_s(ista) 
                     sumscl = sumscl + cvr_scl_a(i_i,i_j)
@@ -298,13 +309,19 @@
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
 
+!           Write out line of stats for gnuplot
+            call cv_i4tim_asc_lp(i4time,a24time,istatus)
+            write(6,710)a24time,xbar,ybar,std
+710         format(1x,a24,3f10.3,' gnuplot')
+
 !           Calculate other stats
             if(cnt .gt. 0.)then
                 write(6,*)' sw radiation comparison stats'
                 write(6,*)' obs / anl ratio = ',sumobs/sumanl
-                write(6,801)sumcld/cnt,sumalt/cnt,xbar,ybar
+                write(6,801)sumcld/cnt,sumsnow/cnt,sumalt/cnt,xbar,ybar
 801             format(
-     1          '  means: cloud frac, solar alt = ',f7.2,f8.1,3x,
+     1          '  means: cloud frac, snow cover, solar alt = '
+     1          ,2f7.2,f8.1,3x,
      1          '  analyzed, observed radiation = ',2f9.2)
 
                 write(6,802)sumresid/sumcld, sumscl/cnt
