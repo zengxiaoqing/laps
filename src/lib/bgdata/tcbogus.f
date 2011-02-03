@@ -26,6 +26,8 @@
 !      wen-ho Wang modify slightly     Sep, 2004
 !      Steve Albers (more general inputs)   2010
 
+      include 'trigd.inc'
+
       parameter(max_no=3)
       parameter(kb=7,k300=8,k850=4)
 
