@@ -1324,7 +1324,7 @@ C       EW SLICES
      1  ,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns)
 
         call compare_analysis_to_rad(i4time,NX_L,NY_L,cvr_sao_max
-     1  ,solar_alt
+     1  ,solar_alt,cvr_snow
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns,swi_2d)
@@ -2015,11 +2015,19 @@ C       EW SLICES
                     endif
 
                 elseif(clouds_0d .lt. 0.0)then 
-                    if(clouds_0d .lt. -0.0005)then
+                    if(l_poss_extrap)then
+                        qc_thr = -0.1
+                    else
+                        qc_thr = -0.0005
+                    endif
+                    if(clouds_0d .lt. qc_thr)then
                         write(6,*)' Error, clouds_0d << 0',i,j,k
      1                                    ,clouds_0d   
                         stop
                     else 
+                        write(6,*)
+     1                 ' Warning, clouds_0d < 0 - reset for edge effect'       
+     1                  ,i,j,k,clouds_0d
                         clouds_0d = 0.
                     endif
                 endif
