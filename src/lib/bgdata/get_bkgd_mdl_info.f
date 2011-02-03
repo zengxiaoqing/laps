@@ -150,7 +150,7 @@ c     USE laps_static
 
       istatus=-4	! Yuanfu: change it to -4 for exit if no bgmodel and cmodel match bk data
 
-      write(*,*) " grib fullname", trim(fullname)
+!     write(*,*) " grib fullname", trim(fullname)
       call s_len(fullname,lenfn)
       write(*,*) " grib fullname(1:lenfn)", fullname(1:lenfn)
 
