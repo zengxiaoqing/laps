@@ -118,20 +118,22 @@ cdis
             write(6,*)' No first guess available for ',var_2d
         endif
 
+        write(6,*)' Getting MODEL SH background'
+
 !       Get Model First Guess SH
+        var_2d = 'SH'
+        call get_modelfg_3d(i4time_needed,var_2d,ni,nj,klaps
+     1                     ,model_q_3d,istat_sh)
+
+        if(istat_sh .ne. 1)then
+            write(6,*)' No first guess available for ',var_2d
+            istatus = 0
+            return
+        endif
+
+!       Check status of LWC/ICE from model first guess
         if(istat_lwc .ne. 1 .or. istat_ice .ne. 1)then
-            write(6,*)' Getting MODEL SH background'
-
-!           Get Model First Guess SH
-            var_2d = 'SH'
-            call get_modelfg_3d(i4time_needed,var_2d,ni,nj,klaps
-     1                         ,model_q_3d,istat_sh)
-
-            if(istat_sh .ne. 1)then
-                write(6,*)' No first guess available for ',var_2d
-                istatus = 0
-                return
-            endif
+            continue
 
         else ! We are using model LWC/ICE fields
             call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
