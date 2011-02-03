@@ -303,7 +303,7 @@ select multiple pressure levels.<br>
 
 <td valign=top>
 <strong>
-<A HREF="/domains/anal2d/domains.html">Domain:</A>
+<A HREF="domains.html">Domain:</A>
 </strong>
 <br>
 
@@ -349,7 +349,7 @@ my $asterisk = "*";
 
 if($preferred_model eq "lga"){
     print "<option $selected{$model}> $model\n";  
-    print "*\n";
+##YHL    print "*\n";
 }else{
     print "<option $selected{$model}> $model\n";  
 }
@@ -374,8 +374,6 @@ foreach $model (@modellist) {
 print <<"EOF";
 <option $selected{'DIFF'}> DIFF
 <option $selected{'diff'}> diff
-<option $selected{'MEAN'}> MEAN
-<option $selected{'mean'}> mean
 <option $selected{'obs'}> obs
 <option $selected{'obs_qc'}> obs_qc
 <option $selected{'what-got-in'}> what-got-in
