@@ -240,6 +240,8 @@ cdoc    points.
         real ri_a(nx_laps,ny_laps),rj_a(nx_laps,ny_laps) ! I
         real result(nx_laps,ny_laps,nz_laps)             ! O
 
+        real z1(nz_laps),z2(nz_laps),z3(nz_laps),z4(nz_laps)
+
         write(6,*)' Subroutine bilinear_laps_3df...'
 
         call get_r_missing_data(r_missing_data,istatus)
@@ -248,8 +250,8 @@ cdoc    points.
             stop
         endif
 
-        do il = 1,nx_laps
         do jl = 1,ny_laps
+        do il = 1,nx_laps
 
           ri = ri_a(il,jl)
 
@@ -266,36 +268,33 @@ cdoc    points.
 
             fraci = ri - i
             fracj = rj - j
+            fracij = fraci*fracj
 
-            do k  = 1,nz_laps
+            Z1(:)=array_3d(i  , j  ,:)
+            Z2(:)=array_3d(i+1, j  ,:)
+            Z3(:)=array_3d(i+1, j+1,:)
+            Z4(:)=array_3d(i  , j+1,:)
 
-              Z1=array_3d(i  , j  ,k)
-              Z2=array_3d(i+1, j  ,k)
-              Z3=array_3d(i+1, j+1,k)
-              Z4=array_3d(i  , j+1,k)
+!           result(il,jl,:) 
+!    1                  =  Z1(:)+(Z2(:)-Z1(:))*fraci+(Z4(:)-Z1(:))*fracj
+!    1                  - (Z2(:)+Z4(:)-Z3(:)-Z1(:))*fracij
 
-              if(  z1 .ne. r_missing_data
-     1       .and. z2 .ne. r_missing_data
-     1       .and. z3 .ne. r_missing_data
-     1       .and. z4 .ne. r_missing_data)then
+            result(il,jl,:) 
+     1                  =  Z1(:) * (1.0 - fraci - fracj + fracij)             
+     1                  +  Z2(:) * (      fraci         - fracij) 
+     1                  +  Z3(:) * (                      fracij) 
+     1                  +  Z4(:) * (              fracj - fracij) 
 
-                result(il,jl,k) =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
-     1                          - (Z2+Z4-Z3-Z1)*fraci*fracj
-
-              else
-                result(il,jl,k) = r_missing_data
-
-              endif
-
-            enddo ! k
-
+            where(abs(result(il,jl,:)) .gt. 1e10)
+     1          result(il,jl,:) = r_missing_data
+  
           else
             result(il,jl,:) = r_missing_data
 
           endif
 
-        enddo ! j
         enddo ! i  
+        enddo ! j
 
         return
         end
