@@ -56,6 +56,7 @@ c
       real   prlaps(nx_pr,ny_pr,nz_laps),prilaps,fact1,fact2
       real   datmsg,datmsg1,datmsg2
       integer i,j,k,kk,lencm,istatus,ishow_timer
+      integer kkguess,nguess_eq,nguess_int,noguess
 
       interface
          subroutine vinterp_sub(msngflag
@@ -92,12 +93,63 @@ c individual fields (like sh, u/v and ww).
       nzbgww=nzbg_ww
 
       datmsg = 0.
+
+      noguess = 0
+      nguess_eq = 0
+      nguess_int = 0
+
       do k=1,nz_laps
+         kkguess = 1 ! default value
          do j=iymin,iymax ! 1,ny
             do i=ixmin,ixmax ! 1,nx
                ip = min(i,nx_pr) ! Collapse indices to 1,1 for 1D 'prlaps' input
                jp = min(j,ny_pr) 
                prilaps=1./prlaps(ip,jp,k)
+
+c guessed pressure level
+               kk=kkguess
+
+c analysis pressure of level equals bg pressure of guessed level
+               if (prlaps(ip,jp,k) .eq. prbght(i,j,kk)) then
+                  datmsg = max(htbg(i,j,kk),tpbg(i,j,kk))
+                  if (datmsg .lt. missingflag) then
+                     htvi(i,j,k)=htbg(i,j,kk)
+                     tpvi(i,j,k)=tpbg(i,j,kk)
+                  else
+                     htvi(i,j,k)=missingflag
+                     tpvi(i,j,k)=missingflag
+                  endif
+                  nguess_eq = nguess_eq + 1
+                  goto 10
+
+c analysis pressure of level is inbetween bg pressures of guessed levels kk and kk+1
+               elseif (prlaps(ip,jp,k) .lt. prbght(i,j,kk) .and. 
+     +                 prlaps(ip,jp,k) .gt. prbght(i,j,kk+1)) then
+
+                  datmsg1 = max(htbg(i,j,kk),tpbg(i,j,kk))
+                  datmsg2 = max(htbg(i,j,kk+1),tpbg(i,j,kk+1))
+
+                  if (datmsg1 .lt. missingflag.and.
+     .                datmsg2 .lt. missingflag)then
+
+                     fact1=alog(prlaps(ip,jp,k)/prbght(i,j,kk))/
+     .                     alog(prbght(i,j,kk+1)/prbght(i,j,kk))
+                     fact2=14.642857*alog(prbght(i,j,kk)*prilaps)
+
+                     tpvi(i,j,k)=tpbg(i,j,kk)
+     .                    +(tpbg(i,j,kk+1)-tpbg(i,j,kk))*fact1
+                     htvi(i,j,k)=htbg(i,j,kk)
+     .                    +(tpvi(i,j,k)+tpbg(i,j,kk))*fact2
+                  else
+                     htvi(i,j,k)=missingflag
+                     tpvi(i,j,k)=missingflag
+                  endif
+                  nguess_int = nguess_int + 1
+                  goto 10
+
+               endif
+
+               noguess = noguess + 1
 
 c lowest bg pressure level is above analysis lowest pressure levels
                if (prlaps(ip,jp,k) .gt. prbght(i,j,1)) then
@@ -147,6 +199,7 @@ c analysis pressure of level equals bg pressure of level
                         htvi(i,j,k)=missingflag
                         tpvi(i,j,k)=missingflag
                      endif
+                     kkguess=kk
                      goto 10
 
 c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
@@ -171,6 +224,7 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
                         htvi(i,j,k)=missingflag
                         tpvi(i,j,k)=missingflag
                      endif
+                     kkguess=kk
                      goto 10
                   endif
                enddo ! kk
@@ -178,6 +232,9 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
             enddo
          enddo
       enddo
+
+      write(6,*)' nguess_eq/nguess_int/noguess = ',nguess_eq,nguess_int
+     1                                            ,noguess
 
       istatus=ishow_timer()
 
@@ -246,6 +303,7 @@ c analysis pressure of level equals bg pressure of guessed level
                      nguess_eq = nguess_eq + 1
                      goto 20
 
+c analysis pressure of level is inbetween bg pressures of guessed levels kk and kk+1
                elseif (pr(ip,jp,k) .lt. prbg(i,j,kk) .and.
      +                 pr(ip,jp,k) .gt. prbg(i,j,kk+1)) then
 
