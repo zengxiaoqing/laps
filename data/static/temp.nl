@@ -5,6 +5,7 @@
  weight_bkg_const_temp=5e28,
  pres_mix_thresh=20000.,
  rms_thresh_temp=1.0,
+ radiometer_ht_temp=1000.,
  max_obs=100000,
  /
 
@@ -40,6 +41,9 @@ c                   observations. This controls when to stop the successive
 c                   correction iterations at progressively smaller radii of 
 c                   influence. Lower values tend to put more detail in the 
 c                   analysis in the attempt to fit the obs.
+c
+c radiometer_ht_temp - Only use radiometer data below this altitude in meters
+c                      (AGL)
 c
 c pres_mix_thresh - Depth of allowed mixed layer when the sfc temperature
 c                   analysis is inserted and adiabatically propagated upward. 
