@@ -1,0 +1,407 @@
+netcdf fua {
+
+    dimensions:
+        record = unlimited,
+        z = 21,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	LAPS Fcst pressure
+        //      bigfile name = ??
+	float                                  
+            p3(record,z,y,x);
+            p3:_FillValue = 1.e+37f;
+            p3:long_name="LAPS Fcst pressure";
+            p3:units="meters";
+            p3:valid_range= 0.f, 100000.f;
+            p3:LAPS_var="P3";
+            p3:lvl_coord="SIGMA_M";
+	    p3:LAPS_units="PASCALS";
+                	        
+        //	LAPS Fcst u wind component
+        //      bigfile name = uw
+	float                                  
+            u3(record,z,y,x);
+            u3:_FillValue = 1.e+37f;
+            u3:long_name="LAPS Fcst u wind component";
+            u3:units="m/s";
+            u3:valid_range= -200.f, 200.f;
+            u3:LAPS_var="U3";
+            u3:lvl_coord="SIGMA_M";
+	    u3:LAPS_units="M/S";
+                	        
+        //	LAPS Fcst v wind component
+        //      bigfile name = vw
+	float                                  
+            v3(record,z,y,x);
+            v3:_FillValue = 1.e+37f;
+            v3:long_name="LAPS Fcst v wind component";
+            v3:units="m/s";
+            v3:valid_range= -200.f, 200.f;
+            v3:LAPS_var="V3";
+            v3:lvl_coord="SIGMA_M";
+	    v3:LAPS_units="M/S";
+                	        
+        //	LAPS Fcst w wind component
+        //      bigfile name = ww
+	float                                  
+            w3(record,z,y,x);
+            w3:_FillValue = 1.e+37f;
+            w3:long_name="LAPS Fcst w wind component";
+            w3:units="m/s";
+            w3:valid_range= -100.f, 100.f;
+            w3:LAPS_var="W3";
+            w3:lvl_coord="SIGMA_M";
+	    w3:LAPS_units="M/S";
+
+        //      LAPS Fcst omega wind component
+        //                         
+        float
+            om(record,z,y,x);
+            om:_FillValue = 1.e+37f;
+            om:long_name="LAPS Fcst omega wind component";
+            om:units="Pa/s";
+            om:valid_range= -100.f, 100.f;
+            om:LAPS_var="OM";
+            om:lvl_coord="SIGMA_M";
+            om:LAPS_units="PA/S"; 
+                	        
+        //	LAPS Fcst temperature
+        //      bigfile name = t
+	float                                  
+            t3(record,z,y,x);
+            t3:_FillValue = 1.e+37f;
+            t3:long_name="LAPS Fcst temperature";
+            t3:units="Kelvins";
+            t3:valid_range= 0.f, 500.f;
+            t3:LAPS_var="T3";
+            t3:lvl_coord="SIGMA_M";
+	    t3:LAPS_units="K";
+                	        
+        //	LAPS Fcst specific humidity
+        //      bigfile name = sh
+	float                                  
+            sh(record,z,y,x);
+            sh:_FillValue = 1.e+37f;
+            sh:long_name="LAPS Fcst specific humidity";
+            sh:units="kg/kg";
+            sh:valid_range= 0.f, 0.10f;
+            sh:LAPS_var="SH";
+            sh:lvl_coord="SIGMA_M";
+	    sh:LAPS_units="KG/KG";
+                	        
+        //      LAPS Fcst cloud liquid water       //
+        //      bigfile name = cw
+        float
+            lwc(record,z,y,x) ;
+            lwc:_FillValue = 1.e+37f;
+            lwc:long_name = "LAPS Fcst cloud liquid water" ;
+            lwc:units = "kg/m**3" ;
+            lwc:valid_range = 0.f, .1f ;
+            lwc:LAPS_var = "LWC" ;
+            lwc:lvl_coord = "SIGMA_M" ;
+            lwc:LAPS_units = "KG/M**3" ;
+ 
+        //      LAPS Fcst cloud ice                //
+        //      bigfile name = cice
+        float
+            ice(record,z,y,x) ;
+            ice:_FillValue = 1.e+37f;
+            ice:long_name = "LAPS Fcst cloud ice" ;
+            ice:units = "kg/m**3" ;
+            ice:valid_range = 0.f, .1f ;
+            ice:LAPS_var = "ICE" ;
+            ice:lvl_coord = "SIGMA_M" ;
+            ice:LAPS_units = "KG/M**3" ;
+
+        //      LAPS Fcst rain content               //
+        //      bigfile name = rain
+        float
+            rai(record,z,y,x) ;
+            rai:_FillValue = 1.e+37f;
+            rai:long_name = "LAPS Fcst rain content" ;
+            rai:units = "kg/m**3" ;
+            rai:valid_range = 0.f, .1f ;
+            rai:LAPS_var = "RAI" ;
+            rai:lvl_coord = "SIGMA_M" ;
+            rai:LAPS_units = "KG/M**3" ;
+
+        //      LAPS Fcst snow content               //
+        //      bigfile name = snow
+        float
+            sno(record,z,y,x) ;
+            sno:_FillValue = 1.e+37f;
+            sno:long_name = "LAPS Fcst snow content" ;
+            sno:units = "kg/m**3" ;
+            sno:valid_range = 0.f, .1f ;
+            sno:LAPS_var = "SNO" ;
+            sno:lvl_coord = "SIGMA_M" ;
+            sno:LAPS_units = "KG/M**3" ;
+
+        //      LAPS Fcst precipitating ice content  //
+        //      bigfile name = pice
+        float
+            pic(record,z,y,x) ;
+            pic:_FillValue = 1.e+37f;
+            pic:long_name = "LAPS Fcst precip ice content" ;
+            pic:units = "kg/m**3" ;
+            pic:valid_range = 0.f, 100.f ;
+            pic:LAPS_var = "PIC" ;
+            pic:lvl_coord = "SIGMA_M" ;
+            pic:LAPS_units = "KG/M**3" ;
+
+        //      LAPS Fcst radar refl                //
+        //      bigfile name = rr
+        float
+            ref(record,z,y,x) ;
+            ref:_FillValue = 1.e+37f;
+            ref:long_name = "LAPS Fcst radar refl" ;
+            ref:units = "dBZ" ;
+            ref:valid_range = -20.f, 100.f ;
+            ref:LAPS_var = "REF" ;
+            ref:lvl_coord = "SIGMA_M" ;
+            ref:LAPS_units = "DBZ" ;
+
+        //      LAPS Fcst zdr                //
+        //      bigfile name = zdr
+        float
+            zdr(record,z,y,x) ;
+            zdr:_FillValue = 1.e+37f;
+            zdr:long_name = "LAPS Fcst ZDR" ;
+            zdr:units = "dBZ" ;
+            zdr:valid_range = -20.f, 100.f ;
+            zdr:LAPS_var = "ZDR" ;
+            zdr:lvl_coord = "SIGMA_M" ;
+            zdr:LAPS_units = "DBZ" ;
+
+        //      LAPS Fcst ldr                //
+        //      bigfile name = ldr
+        float
+            ldr(record,z,y,x) ;
+            ldr:_FillValue = 1.e+37f;
+            ldr:long_name = "LAPS Fcst LDR" ;
+            ldr:units = "dBZ" ;
+            ldr:valid_range = -20.f, 100.f ;
+            ldr:LAPS_var = "LDR" ;
+            ldr:lvl_coord = "SIGMA_M" ;
+            ldr:LAPS_units = "DBZ" ;
+
+
+        //      LAPS Fcst precipitation type (coded)       //
+        //      bigfile name = ptyp
+        float
+            pty(record,z,y,x) ;
+            pty:_FillValue = 1.e+37f;
+            pty:long_name = "LAPS Fcst pcp type" ;
+            pty:units = "none" ;
+            pty:valid_range = 0.f, 100.f ;
+            pty:LAPS_var = "PTY" ;
+            pty:lvl_coord = "SIGMA_M" ;
+            pty:LAPS_units = " " ;
+
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            p3_comment(record,z,namelen),
+            u3_comment(record,z,namelen),
+            v3_comment(record,z,namelen),
+            w3_comment(record,z,namelen),
+            om_comment(record,z,namelen), 
+            t3_comment(record,z,namelen),
+            sh_comment(record,z,namelen),
+            lwc_comment(record,z,namelen),
+            ice_comment(record,z,namelen),
+            rai_comment(record,z,namelen),
+            sno_comment(record,z,namelen),
+            pic_comment(record,z,namelen),
+            ref_comment(record,z,namelen),
+            zdr_comment(record,z,namelen),
+            ldr_comment(record,z,namelen),
+            pty_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            p3_fcinv(record, z);
+            p3_fcinv:_FillValue= 0s;
+              	
+        short
+            u3_fcinv(record, z);
+            u3_fcinv:_FillValue= 0s;
+              	
+        short
+            v3_fcinv(record, z);
+            v3_fcinv:_FillValue= 0s;
+              	
+        short
+            w3_fcinv(record, z);
+            w3_fcinv:_FillValue= 0s;
+  
+        short
+            om_fcinv(record, z);
+            om_fcinv:_FillValue= 0s;
+              	
+        short
+            t3_fcinv(record, z);
+            t3_fcinv:_FillValue= 0s;
+              	
+        short
+            sh_fcinv(record, z);
+            sh_fcinv:_FillValue= 0s;
+              	
+        short
+            lwc_fcinv(record, z);
+            lwc_fcinv:_FillValue= 0s;
+              	
+        short
+            ice_fcinv(record, z);
+            ice_fcinv:_FillValue= 0s;
+              	
+        short
+            rai_fcinv(record, z);
+            rai_fcinv:_FillValue= 0s;
+              	
+        short
+            sno_fcinv(record, z);
+            sno_fcinv:_FillValue= 0s;
+              	
+        short
+            pic_fcinv(record, z);
+            pic_fcinv:_FillValue= 0s;
+              	
+        short
+            ref_fcinv(record, z);
+            ref_fcinv:_FillValue= 0s;
+
+        short
+            zdr_fcinv(record, z);
+            zdr_fcinv:_FillValue= 0s;
+
+        short
+            ldr_fcinv(record, z);
+            ldr_fcinv:_FillValue= 0s;
+
+        short
+            pty_fcinv(record, z);
+            pty_fcinv:_FillValue= 0s;
+
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+
+        float   La2(nav);
+                La2:long_name = "last latitude";
+                La2:units = "degrees_north";
+
+        float   Lo2(nav);
+                Lo2:long_name = "last longitude";
+                Lo2:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "meters";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "meters";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS ram file - forecast model 3D data";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS ram file - forecast model 3D data";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
