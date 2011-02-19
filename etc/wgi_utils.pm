@@ -2,7 +2,10 @@ package wgi_utils;
 
 sub which_bkgd
 {
-    @lines=@_;
+    @lines_in=@_;
+
+#   We want the last model read if there is more than one
+    my @lines = reverse sort(@lines_in);
 
 # Determine background model.
 
