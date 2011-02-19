@@ -65,7 +65,7 @@ c                               not exactly match the LAPS analysis time.
 !       1998 Feb Steve Albers   Added feature to calculate the height from
 !                               the pressure if the height is missing.
 
-        use mem_namelist, ONLY: iwrite_output
+        use mem_namelist, ONLY: iwrite_output,radiometer_ht_temp
 
         real surface_rass_buffer
         parameter (surface_rass_buffer = 30.)
@@ -416,7 +416,7 @@ c
                 if(l_string_contains(c8_sndtype(i_tsnd),'RADIO'
      1                                                 ,istatus))then        
                     ht_agl = ht_in - elev_tsnd(i_tsnd)
-                    if(ht_agl .gt. 1000.)then
+                    if(ht_agl .gt. radiometer_ht_temp)then
                         i_qc = 0 ! Reject radiometer temps more than 1000m agl
                         write(6,*)' rejecting upper level radiometer'        
      1                           ,level,ht_agl
