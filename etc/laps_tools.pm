@@ -314,14 +314,20 @@ v13 v14 v15 v16 v17 v18 v19 v20 v21 v22 v23 v24
 v25 v26 v27 v28 v29 v30 v31 v32 v33 v34 v35 v36
 v37 v38 v39 v40 v41 v42 v43 v44 v45 v46 v47 v48
 v49 v50 v51 v52 v53 v54 v55 v56 v57 v58 v59 v60
-v61 v62 v63 v64 v65 v66 v67 v68 v69 v70
+v61 v62 v63 v64 v65 v66 v67 v68 v69 v70 v71 v72
+v73 v74 v75 v76 v77 v78 v79 v80 v81 v82 v83 v84
+v85 v86 v87 v88 v89 v90 v91 v92 v93 v94 v95 v96
+v97 v98 v99 v100 v101 v102 v103 v104 v105 v106
 vdr 
 d01 d02 d03 d04 d05 d06 d07 d08 d09 d10 d11 d12 
 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24
 d25 d26 d27 d28 d29 d30 d31 d32 d33 d34 d35 d36
 d37 d38 d39 d40 d41 d42 d43 d44 d45 d46 d47 d48
 d49 d50 d51 d52 d53 d54 d55 d56 d57 d58 d59 d60
-d61 d62 d63 d64 d65 d66 d67 d68 d69 d70
+d61 d62 d63 d64 d65 d66 d67 d68 d69 d70 d71 d72
+d73 d74 d75 d76 d77 d78 d79 d80 d81 d82 d83 d84
+d85 d86 d87 d88 d89 d90 d91 d92 d93 d94 d95 d96
+d97 d98 d99 d100
 ln3 
 lsr
 lsr/dmsp01 lsr/dmsp02
@@ -338,6 +344,8 @@ grid ram rsf lsq tmg hmg lst pbl model model/varfiles model/output model/sfc
 verif verif/noBal verif/Bal verif/Bkgd 
 verif/REF
 verif/REF/hist verif/REF/cont 
+verif/SWI
+verif/SWI/pt
 ensemble
 ensemble/mean
 gr2);
