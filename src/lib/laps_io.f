@@ -1126,10 +1126,11 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         character*(*)    ext
         character*150    directory
         character*13 filename13
+        character*14 filename14
 
 !       Test for proper length of extension
         call s_len(ext,len_ext)
-        if(len_ext .ne. 3)then
+        if(len_ext .ne. 3 .and. len_ext .ne. 4)then
            write(6,*)' Error in open_lapsprd_file: ext has length'
      1               ,len_ext
            istatus = 0
@@ -1138,8 +1139,13 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
 
         call get_directory(ext,directory,len_dir)
 
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))       
+        if(len_ext .eq. 3)then
+         open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
      1          ,status='unknown',err=998)
+        else ! length of 4
+         open(lun,file=directory(1:len_dir)//filename14(i4time,ext(1:4))
+     1          ,status='unknown',err=998)
+        endif
         go to 999
 
  998    write(6,*)' Error in open_lapsprd_file, cannot open product: '   
@@ -1161,7 +1167,7 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
 
 !       Test for proper length of extension
         call s_len(ext,len_ext)
-        if(len_ext .ne. 3)then
+        if(len_ext .ne. 3 .and. len_ext .ne. 4)then
            write(6,*)' Error in open_lapsprd_file_read: ext has length'       
      1               ,len_ext
            istatus = 0
@@ -1194,7 +1200,7 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         integer istatus
 !       Test for proper length of extension
         call s_len(ext,len_ext)
-        if(len_ext .ne. 3)then
+        if(len_ext .ne. 3 .and. len_ext .ne. 4)then
            write(6,*)' Error in open_lapsprd_file: ext has length'
      1               ,len_ext
            istatus = 0
