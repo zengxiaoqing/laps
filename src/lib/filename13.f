@@ -57,3 +57,32 @@ cdis
         return
 
         end
+
+        function filename14(i4time,ext)
+
+!       Steve Albers            1990
+
+!       This routine constructs a filename from the logical DATE_TIME and
+!       a passed in extension
+
+        character ext*4,filename14*14,cdum14*14
+
+        character*9 asc9_time
+
+        common /laps_diag/ no_laps_diag
+
+        call make_fnam_lp(i4time,asc9_time,istatus)
+
+        cdum14 = asc9_time//'.'//ext
+
+        call downcase(cdum14,cdum14)
+
+        if(no_laps_diag .eq. 0)then
+            write(6,*)' filename14 = ',cdum14
+        endif
+
+        filename14 = cdum14
+
+        return
+
+        end
