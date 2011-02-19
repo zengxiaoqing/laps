@@ -73,7 +73,13 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+
+#ifdef MAC
+#include <malloc/malloc.h>
+#else
 #include <malloc.h>
+#endif 
+
 #include<string.h>
 #include<memory.h>
 #include<errno.h>
