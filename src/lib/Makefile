@@ -149,6 +149,7 @@ SRC	= machine_dependent.F \
           spread.f \
           sroutines.f \
           ssh2.f \
+          stats_1d.f \
           subcon.f \
           sunfuncs.f \
           time_conversions.f \
