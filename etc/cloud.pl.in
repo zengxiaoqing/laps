@@ -169,6 +169,22 @@ foreach (@lines) {
 
 print "\n";
 print "Solar Radiation Verification:\n";
+
+@greplines = grep /sv/, @lines;
+print "@greplines\n";
+
+@greplines = grep /Solar Radiation \(QCed\)/, @lines;
+print "@greplines\n";
+
+@greplines = grep /Residuals vs cloud fraction/, @lines;
+print "@greplines\n";
+
+@greplines = grep /means/, @lines;
+print "@greplines\n";
+
+@greplines = grep /sensitivity/, @lines;
+print "@greplines\n";
+
 @greplines = grep /gnuplot/, @lines;
 print "$greplines[0]\n";
 
