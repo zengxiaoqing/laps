@@ -160,20 +160,32 @@ if($opt_t){
 #  Check for template that hasn't been separated
    if($LAPS_TEMPLATE =~ $LAPS_SRC_ROOT){
       print "Error: Template should be separated from SRCROOT\n";
+      print "Template is $LAPS_TEMPLATE\n";
+      print "SRCROOT is $LAPS_SRC_ROOT\n";
       print "Terminating.\n";exit;
       exit;
    }
 
    if($LAPS_TEMPLATE =~ $LAPSINSTALLROOT){
       print "Error: Template should be separated from INSTALLROOT\n";
+      print "Template is $LAPS_TEMPLATE\n";
+      print "INSTALLROOT is $LAPSINSTALLROOT\n";
       print "Terminating.\n";exit;
       exit;
    }
 
    if($LAPS_TEMPLATE =~ $DATAROOT){
-      print "Error: Template should be separated from DATAROOT\n";
-      print "Terminating.\n";exit;
-      exit;
+      if($opt_c){
+         print "Error: Template should be separated from DATAROOT\n";
+         print "Template is $LAPS_TEMPLATE\n";
+         print "DATAROOT is $DATAROOT\n";
+         print "Terminating.\n";exit;
+         exit;
+      }else{
+         print "Warning: Template should be separated from DATAROOT\n";
+         print "Template is $LAPS_TEMPLATE\n";
+         print "DATAROOT is $DATAROOT\n";
+      }
    }
 
 }else{
