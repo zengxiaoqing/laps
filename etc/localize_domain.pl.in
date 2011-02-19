@@ -323,6 +323,7 @@ if($WHICH_TYPE eq "laps"){
    if($vertical_grid eq "SIGMA_HT"){
       print "$vertical_grid grid - copy in pressure version of lga.cdl\n";
       run_sys::run_sys("cp $DATA_ROOT/cdl/lga_p.cdl $DATA_ROOT/cdl/lga.cdl");
+      run_sys::run_sys("cp $DATA_ROOT/cdl/fua_p.cdl $DATA_ROOT/cdl/fua.cdl");
    }elsif($vertical_grid eq "SIGMA_P"){
       print "$vertical_grid grid - copy in sigmap version of lga.cdl\n";
       run_sys::run_sys("cp $DATA_ROOT/cdl/lga_sigmap.cdl $DATA_ROOT/cdl/lga.cdl");
