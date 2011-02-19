@@ -68,7 +68,7 @@ C
             sec_remainder = sec_elapsed - float(min_elapsed*60)
             write(6,2,err=99)min_elapsed,sec_remainder,atime(1:20)
      1                      ,1./float(ICOUNT_RATE)
- 2          format(1x,'Elapsed time -',i6,':',f6.3,5x,a20
+ 2          format(1x,' Elapsed time -',i6,':',f6.3,5x,a20
      1            ,'     resolution = ',f8.6)
 
  99         rshow_timer = sec_elapsed    
@@ -102,12 +102,12 @@ C
 
         if(sec_elapsed .ge. 10)then
             write(6,1,err=99)min_elapsed,sec_elapsed,atime(1:20)
- 1          format(1x,'Elapsed time -',i6,':',i2,5x,a20)
+ 1          format(1x,' Elapsed time -',i6,':',i2,5x,a20)
         elseif(sec_elapsed .ge. 0)then
             write(6,2,err=99)min_elapsed,sec_elapsed,atime(1:20)
- 2          format(1x,'Elapsed time -',i6,':0',i1,5x,a20)
+ 2          format(1x,' Elapsed time -',i6,':0',i1,5x,a20)
         else
-            write(6,*)'Elapsed time (sec) = ',sec_elapsed
+            write(6,*)' Elapsed time (sec) = ',sec_elapsed
         endif
 
         ishow_timer = i4time_elapsed

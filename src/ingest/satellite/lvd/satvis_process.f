@@ -155,6 +155,7 @@ c
        character*40  domain_name
        character*10  units_2d
        character*125 comment_2d
+       character*9 a9time
 
        logical       lskpnorm
 
@@ -429,7 +430,9 @@ c GVAR Switch
 c=======================================
        elseif(c_sat_type.eq.'gvr'.or.c_sat_type.eq.'gwc')then
 
-          write(6,*)'GVAR Visible data: ',csatid
+          call make_fnam_lp(i4time,a9time,istatus)
+          write(6,*)'GVAR Visible data: ',csatid,' ',a9time
+     1             ,' -------------------------------'
 
           if(csatid.eq.'goes08')then
 
