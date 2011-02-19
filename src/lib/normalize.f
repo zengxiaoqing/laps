@@ -80,6 +80,7 @@ C***Parameter list variables
         Real          sublat_d,sublon_d,range_m
         Integer       i4time,istatus
         real          image(ni,nj)
+        real          image_in(ni,nj)
         logical         l_national
 
 C***Local variables
@@ -95,13 +96,17 @@ C***Local variables
      1          tx_n,ty_n,tz_n,
      1          refx,refy,refz
 
-        Real  normfac,imgtmp,
-     1          solar_factor(maxlut,maxlut),solar_alt_d,XFrac,YFrac,
+! Note that solar_factor and phase_factor originally were declared to maxlut
+        Real  normfac,imgtmp,                                                                               
+     1          solar_factor(ni,nj),solar_alt_d(ni,nj),
+     1          XFrac,YFrac,
      1          SF_UL,SF_UR,SF_LR,SF_LL,SF_U,SF_L,S_F,Weight,
      1                PF_UL,PF_UR,PF_LR,PF_LL,PF_U,PF_L,P_F,RBril,RBrih,
-     1          Phase_factor(maxlut,maxlut),Phase_angle_d(ni,nj),
+     1          Phase_factor(ni,nj),Phase_angle_d(ni,nj),
      1          sat_radius,Emission_angle_d(ni,nj),
      1          Specular_ref_angle_d(ni,nj)       
+
+        Real RBril_a(ni,nj),RBrih_a(ni,nj)
 
         Integer nilut,njlut,I,J,img_i(maxlut),img_j(maxlut),
      1            ilut,jlut,ISpace,JSpace, ni2, nj2
@@ -125,8 +130,8 @@ C***Where's the sun?
 !       meridian and distances in AU.
         rlat = 0.
         rlon = 0.
-        call solar_position(rlat,rlon,i4time,solar_alt_d,solar_dec_d,hr_
-     1angle_d)
+        call solar_position(rlat,rlon,i4time,solar_alt_deg       
+     1                     ,solar_dec_d,hr_angle_d)
         solar_range = 1.
         solar_sublon_d = -hr_angle_d
         RX = cosd(solar_sublon_d) * cosd(solar_dec_d) * solar_range
@@ -189,15 +194,16 @@ C***Fill the solar brightness and phase angle arrays
           i = min(i,ni2)
           img_i(ilut) = i
 
-          call solar_position(lat(i,j),lon(i,j),i4time,solar_alt_d
+          call solar_position(lat(i,j),lon(i,j),i4time
+     1                                  ,solar_alt_d(i,j)
      1                                  ,solar_dec_d,hr_angle_d)
 
 C   Reduce and limit correction at terminator
-          If(solar_alt_d.lt.8.)then
-           solar_alt_d=max(8.-(8.-solar_alt_d)*.5,3.8)
+          If(solar_alt_d(i,j).lt.8.)then
+           solar_alt_d(i,j)=max(8.-(8.-solar_alt_d(i,j))*.5,3.8)
           EndIf
 
-          solar_factor(ilut,jlut)=log(sind(solar_alt_d)/normfac)
+          solar_factor(ilut,jlut)=log(sind(solar_alt_d(i,j))/normfac)
 
 C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
  
@@ -257,16 +263,16 @@ C   Compute Specular Reflection Angle
 
           Phase_factor(ilut,jlut) = cosd(phase_angle_d(i,j))**6
 !    1                    * sind(emission_angle_d(i,j))**1.0
-!    1                    * sind(solar_alt_d)**1.0
+!    1                    * sind(solar_alt_d(i,j))**1.0
      1                    * sind(emission_angle_d(i,j))**0.5
-     1                    * sind(solar_alt_d)**0.25
+     1                    * sind(solar_alt_d(i,j))**0.25
 
           else
           Phase_factor(ilut,jlut) = cosd(phase_angle_d(i,j))**6
 !    1                    * sind(emission_angle_d(i,j))**1.0
-!    1                    * sind(solar_alt_d)**1.0
+!    1                    * sind(solar_alt_d(i,j))**1.0
      1                    * sind(emission_angle_d(i,j))**0.5
-     1                    * sind(solar_alt_d)**0.125
+     1                    * sind(solar_alt_d(i,j))**0.125
 
 
           endif
@@ -283,12 +289,14 @@ C   Compute Specular Reflection Angle
 
               imgtmp=image(i,j)
               if(imgtmp.eq.r_missing_data)imgtmp=-99.00
-              write(lun,50)ilut,jlut,solar_alt_d
+              if(iskip_bilin .ne. 1)then
+                  write(lun,50)ilut,jlut,solar_alt_d(i,j)
      1                  ,emission_angle_d(i,j),phase_angle_d(i,j)
      1                  ,phase_factor(ilut,jlut),imgtmp
      1                  ,specular_ref_angle_d(i,j)
      1                  ,lat(i,j),lon(i,j)
- 50           format(1x,2i5,f7.2,f7.2,f7.2,f6.2,2f6.1,2f7.2,' __')      
+ 50               format(1x,2i5,f7.2,f7.2,f7.2,f6.2,2f6.1,2f7.2,' __')  
+              endif
           endif
 
          EndDo
@@ -301,6 +309,8 @@ C   Compute Specular Reflection Angle
         write(lun,*)' Normalization Lookup Tables complete'
 
 C***Apply the solar brightness normalization to the image
+        if(iskip_bilin .eq. 1)write(lun,*)
+     1    '    I    J    ALT    EMIS   PHA    PF      VIS     SPEC'     
         jlut=1
         JSpace=img_j(jlut+1)-img_j(jlut)
 
@@ -348,7 +358,19 @@ C   Bilinearly interpolate the phase factor from the surrounding points.
 C   Greater (lesser) abs. values of RBriH and RBriL will brighten (darken) the
 C   high and low ends, respectively.  RBriL is modified to make darker land more
 C   uniform in brightness.
-          RBriH=-60.*S_F   -   20.*P_F
+
+!         Original result
+          phase_const1   = 20.                                
+          ph_const2_l = 0. 
+          ph_const2_h = 0. 
+
+!         New result
+!         phase_const1   = 0.                                
+!         ph_const2_l = 10. 
+!         ph_const2_h = 10. 
+
+          RBriH=-60.*S_F   -   phase_const1*P_F
+          RBriH_a(i,j) = RBriH
 
           if(l_national)then
             Weight=18.
@@ -360,18 +382,89 @@ C   uniform in brightness.
             EndIf
           EndIf
 
-          RBriL=-Weight*S_F  -   20.*P_F
+          RBriL=-Weight*S_F  -   phase_const1*P_F
+          RBriL_a(i,j) = RBriL
 
           If(image(i,j) .ne. r_missing_data)then
-            if(i_dir .eq. +1)then
+            imgtmp = image(i,j)
+            image_in(i,j) = image(i,j)
+            if(i_dir .eq. +1)then ! regular normalization
               Call Stretch(68.-RBriL,220.-RBriH,68.,220.,image(i,j))
+              Call Stretch(40.+ph_const2_l*P_F, 114.+ph_const2_h*P_F,
+     1                     40.,                 114.,  image(i,j))
             elseif(i_dir .eq. -1)then
               Call Stretch(68.,220.,68.-RBriL,220.-RBriH,image(i,j))
             endif
+
+            if(iskip_bilin .eq. 1)then ! print output visible counts
+              if(i .eq. i/10*10 .and. j .eq. j/10*10)then
+                write(lun,61)i,j,solar_alt_d(i,j)
+     1                  ,emission_angle_d(i,j),phase_angle_d(i,j)
+     1                  ,phase_factor(ilut,jlut),imgtmp,image(i,j)
+     1                  ,specular_ref_angle_d(i,j)
+     1                  ,lat(i,j),lon(i,j)
+!               write(lun,60)image(i,j)
+!60             format(1x,36x,f7.1)
+ 61             format(1x,2i5,f7.2,f7.2,f7.2,f6.2,3f6.1,2f7.2,' __')  
+              endif
+            endif
+
           endif
 
-         EndDo
-        EndDo
+         EndDo ! j
+        EndDo ! i
+
+!       Examine arrays
+!       phamin = 9.9
+!       do i = 1,ni
+!       do j = 1,nj
+!           phamin = min(phamin,phase_factor(i,j))
+!           if(phase_factor(i,j) .le. 0.005)then
+!               write(6,*)' phase factor zero ',i,j,solar_alt_d(i,j)
+!    1                                             ,phase_angle_d(i,j)
+!    1                                             ,phase_factor(i,j)
+!    1                                             ,' ___'
+!           else
+!               write(6,*)' phase factor zero ',i,j,solar_alt_d(i,j)
+!    1                                             ,phase_angle_d(i,j)
+!    1                                             ,phase_factor(i,j)
+!           endif
+!       enddo ! j
+!       enddo ! i
+
+!       where(phase_factor(:,:) .lt. 0.01)
+!           write(6,*)' Phase_factor is zero ___'
+!       end where
+
+!       write(6,*)' phamin = ',phamin,minval(phase_factor)
+
+        write(lun,70)minval(solar_alt_d),maxval(solar_alt_d)  
+     1              ,minval(solar_factor),maxval(solar_factor)
+70      format(1x,'Solar alt / factor range:   ',2f8.2,3x,2f8.2)
+
+        if(phase_const1 .gt. 0.)then
+            write(lun,71)minval(phase_angle_d),maxval(phase_angle_d)
+     1                  ,minval(phase_factor) * phase_const1
+     1                  ,maxval(phase_factor) * phase_const1
+            write(lun,72) 68.-maxval(RBriL_a), 68.-minval(RBriL_a)  
+     1                  ,220.-maxval(RBriH_a),220.-minval(RBriH_a)
+        else ! assume ph_const2 > 0.
+            write(lun,71)minval(phase_angle_d),maxval(phase_angle_d)
+     1                  ,minval(phase_factor) * ph_const2_l
+     1                  ,maxval(phase_factor) * ph_const2_l
+            write(lun,72) 40. + minval(phase_factor) * ph_const2_l, 
+     1                    40. + maxval(phase_factor) * ph_const2_l,
+     1                   114. + minval(phase_factor) * ph_const2_h,
+     1                   114. + maxval(phase_factor) * ph_const2_h 
+        endif
+
+71      format(1x,'Phase angle / Rbri range:   ',2f8.2,3x,2f8.2)
+
+72      format(1x,'Stretch L H / range:        ',2f8.2,3x,2f8.2)
+
+        write(lun,75)minval(image_in),maxval(image_in)         
+     1              ,minval(image),maxval(image)          
+75      format(1x,'Image in/out range:         ',2f8.2,3x,2f8.2)
 
         istatus = 1
         write(lun,*)' Normalization complete'
