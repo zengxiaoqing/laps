@@ -124,8 +124,8 @@ c             end if
 c                                                               excesses
 c Accumulate extrema
 c
-                   albedo_min = min(albedo,albedo_min)
-                   albedo_max = max(albedo,albedo_max)
+                   albedo_min = min(albedo_out(i,j),albedo_min)
+                   albedo_max = max(albedo_out(i,j),albedo_max)
    
                  else              ! Albedo .eq. missing_data
 
@@ -157,6 +157,7 @@ c
 
         clear_albedo = .2097063
         cloud_albedo = .4485300
+!       cloud_albedo = .40
 
         arg = albedo
 
@@ -169,7 +170,17 @@ c
 
         function cloudfrac_to_albedo(cloud_frac_vis)
 
-        cloudfrac_to_albedo = (cloud_frac_vis + .87808) / 4.18719
+        clear_albedo = .2097063
+        cloud_albedo = .4485300
+!       cloud_albedo = .40
+
+        arg = cloud_frac_vis
+
+        call stretch2(0.,1.,clear_albedo,cloud_albedo,arg)
+
+!       cloudfrac_to_albedo = (cloud_frac_vis + .87808) / 4.18719
+
+        cloudfrac_to_albedo = arg
 
         return
         end
