@@ -41,8 +41,10 @@ cdis
 
       include 'remap_constants.dat'      
 
-      character path_to_radar*150, laps_radar_ext*3
+      character path_to_radar*150, laps_radar_ext*4
      1         ,radar_subdir_dum*3, path_to_vrc*15
+
+      character c_radar_start*10,c_radar_end*10
 
       real, allocatable, dimension(:,:) :: lat,lon,topo
        
@@ -113,6 +115,7 @@ cdis
           do itimes = 1,max_times
               write(6,*)
               write(6,*)' Looping through radar/time # ',i_radar,itimes       
+     1                 ,laps_radar_ext
               call remap_sub(i_radar,itimes
      1                      ,ntimes_radar                              ! I/O 
      1                      ,laps_radar_ext       
@@ -211,7 +214,8 @@ c
       real radar_lon
       real radar_alt
       character*4 rname_ptr
-      character*3 laps_radar_ext, c3_radar_subdir
+      character*4 laps_radar_ext
+      character*3 c3_radar_subdir
       character*(*) path_to_vrc, path_to_radar
 
       real lat(NX_L,NY_L)      
