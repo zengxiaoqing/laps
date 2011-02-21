@@ -3263,25 +3263,7 @@ Parameter namelist file: 'static/surface_analysis.nl'
 	reduced pressure.  This is close to the elevations over the eastern
 	2/3's of the domain, and requires a smaller reduction over the 
         mountains compared to MSL, for example.  Change the namelist variable 
-        in '/data/static/surface_analysis.nl' when you localize LAPS.
-
-   SURFACE THETA CHECK	
-
-        In the 'surface_analysis.nl' file, set the 'itheta' flag for the 
-        surface theta check.  This check adjusts the surface potential 
-        temperatures so they are not greater than the potential temperature at
-        an upper level.  Set this variable equal to the desired upper level 
-        (or if you don't want to do this check):
-
-	                0 = No sfc theta check done
-	                7 = Use 700 mb level
-	                5 = Use 500 mb level
-                       -1 = Automatically choose 5 or 7 based on terrain info
-                            7 is used if center grid point is below 1000m
-                            5 is used if center grid point is above 1000m
-
-	Recommended:  Use 700 mb most places, 500 mb over higher terrain 
-	areas (like Colorado).
+        in '/data/static/nest7grid.parms' when you localize LAPS.
 
 --------- 3.3.2.2 ------SURFACE ANALYSIS QUALITY CONTROL -------------------
 
