@@ -3506,3 +3506,4 @@ test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 chmod +x etc/www/nph-laps.cgi
 chmod +x etc/www/laps.cgi
+chmod +x etc/verif/*.csh

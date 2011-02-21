@@ -490,3 +490,4 @@ AC_OUTPUT(src/include/trigd.inc
 
 chmod +x etc/www/nph-laps.cgi
 chmod +x etc/www/laps.cgi
+chmod +x etc/verif/*.csh
