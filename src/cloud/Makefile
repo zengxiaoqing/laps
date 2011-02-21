@@ -39,8 +39,7 @@ SRC=array_plot.f \
     insert_co2ctp.f \
     laps_cloud.f \
     laps_cloud_sub.f \
-    slice.f \
-    stats_1d.f
+    slice.f
 
 all: exe
 
