@@ -55,7 +55,7 @@ cdis
        character*9 a9_time
        integer i4times_raw(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
-       character*3 laps_radar_ext, c3_radar_subdir
+       character*4 laps_radar_ext, c3_radar_subdir
        character*8 radar_subdir                             
        logical l_multi_tilt,l_exist,l_output,l_realtime
        character*13 a13_time
