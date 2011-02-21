@@ -1727,7 +1727,8 @@ c       include 'satellite_dims_lvd.inc'
      1                          .or. c_type .eq. 'os' ! Stations  
      1                          .or. c_type .eq. 'ov' ! Sky Cover, Visibility
      1                          .or. c_type .eq. 'op' ! Precip 
-     1                          .or. c_type .eq. 'og' ! Soil/Water T
+     1                          .or. c_type .eq. 'og' ! Soil/Water T + Solar Rad
+     1                          .or. c_type .eq. 'or' ! Solar Radiation Only
      1                          .or. c_type .eq. 'oh' ! Humidity (GPS-PW)
      1                          .or. c_type .eq. 'ow' ! Wind Only
      1                          .or. c_type .eq. 'qf' ! QC Air T,Td in F
@@ -6562,7 +6563,7 @@ c             cint = .05
               c_label = 'Interpolated Albedo     '
               asc9_tim=asc9_tim(1:5)//'1800'
 
-              if(cstatic .eq. 'ali')then
+              if(cstatic .eq. 'ali' .or. i_image .eq. 1)then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'linear'
      1                     ,n_image,1e0,'hsect',plot_parms
