@@ -114,7 +114,8 @@ cdis
 
  15         n_obs_b = i-1
 
-        elseif(c_field(1:2) .eq. 'ov')then ! Read Cloud Obs
+        elseif(c_field(1:2) .eq. 'ov' .OR.
+     1         c_field(1:2) .eq. 'or')then ! Read Cloud Obs
             write(6,*)' Calling read_cloud_obs...'
             i4time_lso = i4time
             call read_cloud_obs(i4time,maxsta,                           ! I
@@ -266,6 +267,8 @@ cdis
             iflag_cv = 2
         elseif(c_field(2:2) .eq. 'g')then ! Soil/Water Temp & Solar Radiation
             iflag_cv = 3
+        elseif(c_field(2:2) .eq. 'r')then ! Solar Radiation
+            iflag_cv = 4
         else
             iflag_cv = 0
         endif
@@ -300,6 +303,9 @@ cdis
             elseif(iflag_cv .eq. 3)then
                 c_label(14:51) =  
      1                     '   Sfc Temp, Soil Moisture & Solar Rad'    
+            elseif(iflag_cv .eq. 4)then
+                c_label(14:31) =  
+     1                     '   Solar Radiation'    
             endif
 
             if(c_field(1:2) .eq. 'ow')then
@@ -512,6 +518,27 @@ cdis
                     if(iplotsta .eq. 1)then
 !                       Plot name and Station Location
                         CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
+     1                              charsize,ANGD,CNTR)
+                        call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
+                        call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
+                    endif
+
+                elseif(iflag_cv .eq. 4)then ! Solar Radiation                    
+                    iplotsta = 0
+                    temp = badflag 
+                    dewpoint = badflag
+                    pressure = badflag
+
+                    if(solar_s(i) .ne. badflag .and.
+     1                 solar_s(i) .ge. 0.            )then
+                        write(6,*)' Solar Rad = ',i,solar_s(i),c_staname       
+                        pressure = solar_s(i)
+                        iplotsta = 1
+                    endif
+                  
+                    if(iplotsta .eq. 1)then
+!                       Plot name and Station Location
+                        CALL PCLOQU(xsta, ysta-du2*2.5, c_staname(1:4), 
      1                              charsize,ANGD,CNTR)
                         call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
                         call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
@@ -763,7 +790,7 @@ c
             endif
  32         continue
 
-        elseif(iflag_cv .eq. 3)then ! Sfc T, RH & Solar Radiation plot
+        elseif(iflag_cv .eq. 3 .or. iflag_cv .eq. 4)then ! Sfc T, RH & Solar Radiation plot
 !           Plot Temperature       
             if(t.gt.-75. .and. t.lt.140.) then 
                write(t1,100,err=40) nint(t)
