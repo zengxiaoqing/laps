@@ -13,6 +13,7 @@
 
 !       How much the solar radiation varies with changes in cloud fraction
         real cvr_scl_a(ni,nj) 
+        real cvr_rad(ni,nj) 
 
         real rad_clr(ni,nj)
 
@@ -75,7 +76,7 @@
 
         solar_constant = 1353.
         solar_irradiance = solar_constant * rad_dist_factor
-        transmittance = 0.850 ! catchall for various types of absorption / scattering
+        transmittance = 0.800 ! catchall for various types of absorption / scattering
 
         model = 1
         if(model .eq. 1)then
@@ -94,6 +95,9 @@
 
 !       Calculate solar radiation field
 !       Some type of regression to the solar radiation obs can be considered later
+!       Note that 'cvr_rad' is used instead of 'cvr_max'. Perhaps the criteria here
+!       can be used upstream to improve 'cvr_max', so that the visible satellite can
+!       be used to increase cloud fraction.
         do j = 1,nj
         do i = 1,ni
 !           Set how much solar radiation varies with changes in cloud fraction
@@ -101,19 +105,21 @@
                 if(cvr_snow(i,j) .eq. r_missing_data .OR. 
      1             cvr_snow(i,j) .le. 0.25                )then 
                     cvr_scl_a(i,j) = 1.0 ! scaling where we have VIS data
+                    cvr_rad(i,j) = cloud_frac_vis_a(i,j)
                 else
-                    cvr_scl_a(i,j) = 0.7 ! scaling where we have VIS data & snow cover
-                                         ! 0.6 may work better with higher snow cover
+                    cvr_scl_a(i,j) = 0.6 ! scaling where we have VIS data & snow cover
+                    cvr_rad(i,j) = cvr_max(i,j)
                 endif
             else
                 cvr_scl_a(i,j) = 0.7 ! scaling without VIS data (just IR)
+                cvr_rad(i,j) = cvr_max(i,j)
             endif
 
-            cvr_max(i,j) = min(cvr_max(i,j),1.00)
-
             if(model .eq. 1)then ! simple formula (radiation on horizontal)
-                rad_clr(i,j) = max(rad_zenith_clr 
-     1                       * sind(solar_alt(i,j)),0.)
+                x = solar_alt(i,j)
+!               altfunc = sind(x)
+                altfunc = sind(x)**(1.0 + 0.2 * cosd(x)**9.)
+                rad_clr(i,j) = max(rad_zenith_clr * altfunc,0.)
 
             elseif(model .eq. 2)then ! start to using Laue formula 
                                      ! (normal to sun's rays)
@@ -129,7 +135,7 @@
 
 !           100% cloud cover has (1-cvr_scl) of possible solar radiation
             swi_2d(i,j) = rad_clr(i,j) 
-     1                  * (1.0- (cvr_scl_a(i,j)*cvr_max(i,j)))
+     1                  * (1.0- (cvr_scl_a(i,j)*cvr_rad(i,j)))
         enddo ! i
         enddo ! j
 
@@ -160,6 +166,7 @@
 
             sumcld = 0.
             sumsnow = 0.
+            sumclr = 0.
 
             do ista = 1,maxstns  
               stn(ista) = c_stations(ista)(1:3)
@@ -168,7 +175,7 @@
               swi_s(ista) = r_missing_data 
               rad2_s(ista) = r_missing_data 
 
-              if(rad_s(ista) .gt. 0.)then
+              if(rad_s(ista) .ge. 0.)then ! valid value
                 call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat,lon
      1                          ,ni,nj,ri,rj,istatus)
 
@@ -185,7 +192,7 @@
                         write(6,*)'sv '
                         write(6,*)'sv Sta   i    j   VIS frac tb8_k  '
      1                  //'t_gnd_k t_sfc_k cv_s_mx cvr_mx '
-     1                  //'solalt 9pt  rad_an '
+     1                  //'solalt cv_r rad_an '
      1                  //'rad_ob rad_th ratio cv_sol  df'
                     endif
 
@@ -193,7 +200,7 @@
                     cvr_9pt = 0.
                     do ii = -1,1
                     do jj = -1,1
-                        cvr_9pt = cvr_9pt + cvr_max(i_i+ii,i_j+jj)
+                        cvr_9pt = cvr_9pt + cvr_rad(i_i+ii,i_j+jj)
                     enddo ! jj
                     enddo ! ii
                     cvr_9pt = cvr_9pt / 9.
@@ -202,7 +209,7 @@
                     cvr_25pt = 0.
                     do ii = -2,2
                     do jj = -2,2
-                        cvr_25pt = cvr_25pt + cvr_max(i_i+ii,i_j+jj)
+                        cvr_25pt = cvr_25pt + cvr_rad(i_i+ii,i_j+jj)
                     enddo ! jj
                     enddo ! ii
                     cvr_25pt = cvr_25pt / 25.
@@ -217,7 +224,7 @@
                         cv_solar = (1.0 - rad_ratio)       ! 100% cloud cover 
      1                           / (cvr_scl_a(i_i,i_j))    ! has (1-cvr_scl) of possible
                                                            ! solar radiation
-                        cv_diff = cv_solar - cvr_max(i_i,i_j)
+                        cv_diff = cv_solar - cvr_rad(i_i,i_j)
 
 !                       Determine residual of clear sky vs observed radiation
                         resid_s(ista) = 1.0 - rad_ratio
@@ -240,15 +247,14 @@
                     endif
 
 !                   QC checks
-                    if(cvr_max(i_i,i_j) .le. .10 .and. 
-     1                 radob_ratio .lt. 0.3      .and.
-     1                 swi_s(ista) .ge. 100.           )then
-                        c1_c = '-' ! Suspected low
+                    if(radob_ratio .lt. 0.5      .and.
+     1                 rad_s(ista) .ge. 100.           )then
+                        c1_c = '+' ! Suspected high analysis
                     endif
 
-                    if(radob_ratio .gt. 3.0      .and.      
-     1                 rad_s(ista) .ge. 400.           )then
-                        c1_c = '+' ! Suspected high
+                    if(radob_ratio .gt. 2.0      .and.      
+     1                 rad_s(ista) .ge. 100.           )then
+                        c1_c = '-' ! Suspected low analysis
                     endif
 
                     if(radob_ratio .lt. 0.1 .and. 
@@ -260,7 +266,7 @@
                     if(rad_s(ista) - rad_clr(i_i,i_j) .gt. 500.)then
                        if(rad_clr(i_i,i_j) .gt. 100.)then
                           if(rad_s(ista)/rad_clr(i_i,i_j) .gt. 2.5)then
-                             c1_c = '*'
+                             c1_c = '*' ! QC'd out
                              rad2_s(ista) = r_missing_data
                           endif
                        endif
@@ -275,7 +281,7 @@
      1                           ,cvr_snow(i_i,i_j)
      1                           ,cvr_max(i_i,i_j)
      1                           ,solar_alt(i_i,i_j)
-     1                           ,cvr_9pt
+     1                           ,cvr_rad(i_i,i_j)
 !    1                           ,cvr_25pt
      1                           ,swi_2d(i_i,i_j)
      1                           ,rad_s(ista)
@@ -289,17 +295,18 @@
 
                     sumobs = sumobs + rad_s(ista)
                     sumanl = sumanl + swi_2d(i_i,i_j)
-                    sumcld = sumcld + cvr_max(i_i,i_j)
+                    sumcld = sumcld + cvr_rad(i_i,i_j)
                     sumsnow = sumsnow + cvr_snow(i_i,i_j)
                     sumalt = sumalt + solar_alt(i_i,i_j)
                     sumresid = sumresid + resid_s(ista) 
                     sumscl = sumscl + cvr_scl_a(i_i,i_j)
+                    sumclr = sumclr + rad_clr(i_i,i_j)
                     cnt = cnt + 1.
 
-                    cvr_s(ista) = cvr_max(i_i,i_j)
+                    cvr_s(ista) = cvr_rad(i_i,i_j)
 
 1112            endif ! ob is in domain
-              endif ! ista .ne. 0 (valid value)
+              endif ! valid value                   
             enddo ! isnd
 
             write(6,*)
@@ -309,20 +316,27 @@
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
 
-!           Write out line of stats for gnuplot
+!           Write out line of stats for gnuplot (if data are valid)
             call cv_i4tim_asc_lp(i4time,a24time,istatus)
-            write(6,710)a24time,xbar,ybar,std
-710         format(1x,a24,3f10.3,' gnuplot')
+            if(cnt .gt. 0)then
+                write(6,710)a24time,xbar,ybar,std,sumclr/cnt
+            else
+                write(6,*)' Write missing data due to zero count'
+                pmsg = -99.9
+                write(6,710)a24time,pmsg,pmsg,pmsg,pmsg       
+            endif
+710         format(1x,a24,4f10.3,' gnuplot')
 
 !           Calculate other stats
             if(cnt .gt. 0.)then
                 write(6,*)' sw radiation comparison stats'
                 write(6,*)' obs / anl ratio = ',sumobs/sumanl
                 write(6,801)sumcld/cnt,sumsnow/cnt,sumalt/cnt,xbar,ybar
+     1                     ,sumclr/cnt
 801             format(
      1          '  means: cloud frac, snow cover, solar alt = '
-     1          ,2f7.2,f8.1,3x,
-     1          '  analyzed, observed radiation = ',2f9.2)
+     1          ,2f7.2,f8.1,2x,
+     1          '  analyzed, observed, clr_sky rad =',3f8.1)
 
                 write(6,802)sumresid/sumcld, sumscl/cnt
 802             format('  sensitivity of radiation to cloud '
