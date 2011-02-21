@@ -2016,7 +2016,7 @@ C       EW SLICES
 
                 elseif(clouds_0d .lt. 0.0)then 
                     if(l_poss_extrap)then
-                        qc_thr = -0.1
+                        qc_thr = -0.4
                     else
                         qc_thr = -0.0005
                     endif
