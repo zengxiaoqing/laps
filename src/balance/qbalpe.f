@@ -1852,8 +1852,8 @@ c Restore full winds and heights by adding back in background
 c apply continuity to final winds...done with backgrounds use ub,vb,omb
 c at this point introduc terrain and adjust winds over and around terrain
 c note that these winds will not be balanced
-      call terbnd(u,v,om,nx,ny,nz,ps,p,bnd)
-      call terbnd(ub,vb,omb,nx,ny,nz,ps,p,bnd)
+!     call terbnd(u,v,om,nx,ny,nz,ps,p,bnd)
+!     call terbnd(ub,vb,omb,nx,ny,nz,ps,p,bnd)
        call leib_sub(nx,ny,nz,erf,tau,erru
      .,lat,dx,dy,ps,p,dp,u,ub,v,vb,
      . om,omb,omb,l,lmax)
