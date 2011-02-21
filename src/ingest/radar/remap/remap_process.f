@@ -52,7 +52,7 @@ cdis
      1         Az_Array,MAX_RAY_TILT,Elevation_deg,        !           (input)
      1         vel_nyquist,                                !           (input)
      :         ref_min,min_ref_samples,min_vel_samples,dgr,! Integer (input)
-     :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
+     :         laps_radar_ext,c3_radar_subdir,             ! Char      (input)
      :         path_to_vrc,                                ! Char      (input)
      :         namelist_parms,                             ! Struct    (input)
      :         i_product_i4time,                           ! Integer (input)
@@ -150,7 +150,8 @@ c
       character*3 var_a(max_fields)
       character*125 comment_a(max_fields)
       character*10  units_a(max_fields)
-      character*3 laps_radar_ext, c3_radar_subdir
+      character*4 laps_radar_ext
+      character*3 c3_radar_subdir
       character*(*) path_to_vrc
 
 c
@@ -197,7 +198,7 @@ c
       integer igate_interval
       integer n_vel_grids_final,n_vel_grids_prelim
       integer n_ref_grids,n_ref_grids_qc_fail,nycor
-      integer istatus,istatus_qc,istat_alloc
+      integer istatus,istatus_qc,istat_alloc,len_ext
       integer ishow_timer,i4_elapsed
       integer i_purge
       integer init_ref_gate_hyb,init_ref_gate_actual
@@ -790,7 +791,7 @@ c
 
         I4_elapsed = ishow_timer()
 
-        if(laps_radar_ext .ne. 'vrc')then ! vxx output
+        if(laps_radar_ext(1:3) .ne. 'vrc')then ! vxx output
 
 !           call get_laps_domain(NX_L,NY_L,'nest7grid'
 !    1                          ,lat,lon,topo,istatus)       
@@ -829,20 +830,22 @@ c
             call make_fnam_lp(i_product_i4time,a9time,istatus)
             if(istatus .ne. 1)return
 
+            call s_len(ext,len_ext)
+
             if(l_compress_output)then
-                write(6,865) c4_radarname,ext(1:3),a9time
+                write(6,865) c4_radarname,ext(1:len_ext),a9time
  865            format(
      1             ' REMAP_PROCESS > Calling put_compressed_multi_3d'          
-     1             ,1x,a4,2x,a3,2x,a9)          
+     1             ,1x,a4,2x,a,2x,a9)          
 
                 call put_compressed_multi_3d(i_product_i4time,ext,var_a       
      1                                ,units_a,comment_a,out_array_4d
      1                                ,NX_L,NY_L,NZ_L,nf,istatus)
 
             else
-                write(6,866) c4_radarname,ext(1:3),a9time
+                write(6,866) c4_radarname,ext(1:len_ext),a9time
  866            format(' REMAP_PROCESS > Calling put_laps_multi_3d'
-     1                 ,1x,a4,2x,a3,2x,a9)          
+     1                 ,1x,a4,2x,a,2x,a9)          
 
                 call put_laps_multi_3d(i_product_i4time,ext,var_a
      1                                ,units_a,comment_a,out_array_4d
@@ -896,7 +899,10 @@ c
         character*255 c_filespec
         character c_fnames(MAX_FILES)*80
 
-        c_filespec = '../lapsprd/'//ext(1:3)//'/*.'//ext(1:3)//'*'         
+        call s_len(ext,len_ext)
+
+        c_filespec = '../lapsprd/'//ext(1:len_ext)//'/*.'
+     1                            //ext(1:len_ext)//'*'         
 
         write(6,*)c_filespec
 
