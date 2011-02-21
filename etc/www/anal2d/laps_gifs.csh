@@ -218,10 +218,15 @@ if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
     setenv prod umf
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-#   Ground Temperature
-    echo "Generating Ground Temperatuer"; date -u
-    setenv prod tgd
+#   Solar Radiation    
+    echo "Generating Solar Radiation"; date -u
+    setenv prod sol
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+ 
+#   Ground Temperature
+#   echo "Generating Ground Temperature"; date -u
+#   setenv prod tgd
+#   $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
  
 #   Sfc Fireweather
     echo "Generating SFC Fireweather Product"; date -u
