@@ -31,6 +31,9 @@
 
       call get_max_radar_files(max_radar_files,istatus)
       if(istatus .ne. 1)go to 1000
+
+      call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
+      if(istatus .ne. 1)go to 1000
 c
 c Radar mosaic. There are two types:  wideband remapper (vxx series - rrv output)
 c and rpg narrow band (wfo arena: rdr/./vrc/).
@@ -79,7 +82,7 @@ c namelist items
 50        format(1x,a,10(:,a3,1x))
  
           call mosaic_radar_sub(nx_l,ny_l,nz_l,
-     1         max_radars_mosaic,
+     1         max_radars_mosaic,grid_spacing_cen_m,
      1         n_radars,c_radar_ext,c_radar_mosaic,i_window,
      1         r_missing_data,laps_cycle_time,mosaic_cycle_time,
      1         imosaic_3d,max_radar_files,istatus)
@@ -126,7 +129,7 @@ c namelist items
 !50       format(1x,a,10(:,a3,1x))
  
           call mosaic_radar_sub(nx_l,ny_l,nz_l,
-     1         max_radars_mosaic,
+     1         max_radars_mosaic,grid_spacing_cen_m,
      1         n_radars,c_radar_ext,c_radar_mosaic,i_window,
      1         r_missing_data,laps_cycle_time,mosaic_cycle_time,
      1         imosaic_3d,max_radar_files,istatus)
@@ -141,6 +144,7 @@ c namelist items
       end
 
       subroutine mosaic_radar_sub(nx_l,ny_l,nz_l,mx_radars,
+     1     grid_spacing_cen_m,
      1     n_radars,c_radar_ext,c_mosaic_type,i_window_size,
      1     r_missing_data,laps_cycle_time,mosaic_cycle_time,
      1     imosaic_3d,maxfiles,istatus)
@@ -163,6 +167,7 @@ c
 
 !     Real        grid_ra_ref(nx_l,ny_l,nz_l,n_radars)
       real, allocatable, dimension(:,:,:,:) :: grid_ra_ref
+      real, allocatable, dimension(:,:,:,:) :: grid_ra_ref_offset
 
       Real        grid_mosaic_3dref(nx_l,ny_l,nz_l)
       Real        grid_mosaic_2dref(nx_l,ny_l)
@@ -175,6 +180,7 @@ c
       Real        rheight_radar(n_radars)
       Real        dist_multiradar_2d(nx_l,ny_l,n_radars)
       Real        closest_radar_m(nx_l,ny_l)
+      Real        radius_r, grid_spacing_cen_m
 
       Real        zcoord_of_level
       Integer       lvl_3d(nz_l)
@@ -189,16 +195,21 @@ c
       Character     c_directory*256
       Character     c_mosaic_type*(*)
       Character     c_rad_types(n_radars)
+
       Character     cradars*3
 
       Integer       nfiles_vxx(mx_radars)
+      Integer       ioffset(n_radars),joffset(n_radars)
       Integer       i_ra_count
       Integer       i_window_size
       Integer       len_dir
+      Integer       nx_r,ny_r,igrid_r
 
       Logical       first_time
       Logical       found_data
       Logical       l_low_level
+      Logical       l_offset
+      Parameter (l_offset = .true.)
 
       Integer       i4time_mos
       Integer       i4time_pre
@@ -250,11 +261,28 @@ c
 c---------------------------------------------------------
 c Start
 c
+      if(.not. l_offset)then
+         allocate(grid_ra_ref(nx_l,ny_l,nz_l,n_radars),STAT=istat_alloc)
+         if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate grid_ra_ref'      
+            stop
+         endif
 
-      allocate(grid_ra_ref(nx_l,ny_l,nz_l,n_radars),STAT=istat_alloc)             
-      if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate grid_ra_ref'      
-                      stop
+      else 
+         radius_r = 500000. ! 500km max radar radius
+         igrid_r = int(radius_r / grid_spacing_cen_m) + 1
+         nx_r = min(((2 * igrid_r) + 1),nx_l)
+         ny_r = min(((2 * igrid_r) + 1),ny_l)
+
+         allocate(grid_ra_ref_offset(nx_r,ny_r,nz_l,n_radars)
+     1           ,STAT=istat_alloc)             
+         if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate grid_ra_ref'      
+                        stop
+         else
+            write(6,*)' Allocated grid_ra_ref_offset ',nx_r,ny_r
+         endif
+
       endif
 
       istatus = 0
@@ -469,8 +497,10 @@ c ----------------------------------------------------------
              call getlapsvxx(nx_l,ny_l,nz_l,n_radars,c_radar_id,         ! I
      &          i_ra_count,c_ra_ext,i4time_mos,i_window_size,            ! I
      &          rheight_laps,lat,lon,topo,i4_file_closest,               ! I
+     &          nx_r,ny_r,igrid_r,                                       ! I
      &          rlat_radar,rlon_radar,rheight_radar,n_valid_radars,      ! O
      &          grid_ra_ref,                                             ! O
+     &          grid_ra_ref_offset,ioffset,joffset,l_offset,             ! O
      &          istatus)                                                 ! O
 
           elseif(c_mosaic_type(1:3).eq.'rdr')then ! rd 'vrc' files on LAPS grid
@@ -576,6 +606,8 @@ c this subroutine does not yet use the imosaic_3d parameter.
      &                         c_radar_id,lat,lon,nx_l,ny_l,nz_l,         ! I
      &                         rlat_radar,rlon_radar,rheight_radar,       ! I
      &                         topo,rheight_laps,grid_ra_ref,             ! I
+     &                         grid_ra_ref_offset,ioffset,joffset,        ! I
+     &                         nx_r,ny_r,                                 ! I
      &                         imosaic_3d,                                ! I
      &                         dist_multiradar_2d,                        ! I  
      &                         grid_mosaic_2dref,grid_mosaic_3dref,       ! I/O
@@ -782,7 +814,8 @@ c
 
 998   write(6,*)'Error using systime.dat'
 
-1000  deallocate(grid_ra_ref)
+1000  if(allocated(grid_ra_ref))       deallocate(grid_ra_ref)
+      if(allocated(grid_ra_ref_offset))deallocate(grid_ra_ref_offset)
 
       return
       end
