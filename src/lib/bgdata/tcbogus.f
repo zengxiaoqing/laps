@@ -955,6 +955,8 @@
       subroutine lc_param11(s,cone,xmin,ymin,dx,dy,
      *                    nx,ny,nz,lat1,lat2,lon0,sw,ne)
 
+      include 'trigd.inc'
+
       real s,cone,r,
      .       xmin,xmax,ymin,ymax,
      .       dx,dy
