@@ -3,6 +3,8 @@
      &                            radar_name,lat,lon,nx,ny,nz,            ! I
      &                            rlat_radar,rlon_radar,rheight_radar,    ! I
      &                            topo,rheight_laps,grid_ra_ref,          ! I
+     &                            grid_ra_ref_offset,ioffset,joffset,     ! I
+     &                            nx_r,ny_r,                              ! I
      &                            imosaic_3d,                             ! I
      &                            dist_multiradar_2d,                     ! I  
      &                            grid_mosaic_2dref,grid_mosaic_3dref,    ! I/O
@@ -17,6 +19,7 @@ c
       Real    lat(nx,ny)
       Real    lon(nx,ny)
       Real    grid_ra_ref(nx,ny,nz,maxradars)
+      Real    grid_ra_ref_offset(nx_r,ny_r,nz,maxradars)
       Real    grid_mosaic_2dref(nx,ny)
       Real    dist_multiradar_2d(nx,ny,maxradars)
       Real    closest_radar_m(nx,ny)
@@ -34,13 +37,26 @@ c
       Logical   found_height
       Logical   l_valid
       Logical   l_valid_latlon(maxradars)
+      Logical   l_offset 
+      Parameter (l_offset = .true.)
 
       integer   lr_2d(nx,ny)                     ! closest radar
+      Integer   ioffset(maxradars),joffset(maxradars)
 
       Character*4 radar_name(maxradars)
 
       write(6,*)
       write(6,*)' Subroutine mosaic_ref_multi: imosaic_3d =', imosaic_3d       
+
+!     if(l_offset)then
+!         write(6,*)' grid_ra_ref_offset range: '
+!    1              ,minval(grid_ra_ref_offset)
+!    1              ,maxval(grid_ra_ref_offset)
+!     else
+!         write(6,*)' grid_ra_ref range: '
+!    1              ,minval(grid_ra_ref)
+!    1              ,maxval(grid_ra_ref)
+!     endif
 
       call get_ref_base(ref_base, istatus)
       call get_r_missing_data(r_missing_data, istatus)
@@ -55,7 +71,9 @@ c first find the radar location in ri/rj laps-space.
 c
       istatus = 1
       if(i_ra_count .ge. 1)then ! essentially all the time
-         do k = 1,i_ra_count
+
+!        Determine which radars have valid lat/lon
+         do k = 1,i_ra_count 
             if(rlat_radar(k) .eq. r_missing_data .or.
      1         rlon_radar(k) .eq. r_missing_data      )then
                 write(6,*)' No valid or single lat/lon for radar ',k
@@ -76,13 +94,19 @@ c
                 write(6,*)'Name: ',radar_name(k),ri(k),rj(k),k
                 l_valid_latlon(k) = .true.
 
+                if(l_offset)then
+                    write(6,*)'      offsets ',ioffset(k),joffset(k)               
+                endif
+
             endif
 
          enddo ! radars
 
+!        Loop through all horizontal gridpoints to define best radar array
          icntn=0
          icntp=0
          icntz=0
+         icntb=0
          do j = 1,ny
          do i = 1,nx
 
@@ -92,14 +116,38 @@ c find the valid radar with the minimum distance to the grid point in question.
 c
             lr = 0 
 
+!           Loop through all radars
             do l = 1,i_ra_count
                l_valid = .false.
 
-               do k = 1,nz ! Look for non-missing reflectivity in column
-                  if(grid_ra_ref(i,j,k,l) .ne. r_missing_data)then        
+               if(.not. l_offset)then
+                 do k = 1,nz ! Look for non-missing reflectivity in column
+                   if(grid_ra_ref(i,j,k,l) .ne. r_missing_data)then     
                      l_valid = .true.
-                  endif
-               enddo ! k
+                   endif
+                 enddo ! k
+
+               else ! use offset array
+                 io = i - ioffset(l)
+                 jo = j - joffset(l)
+                 if(io .lt. 1 .or. io .gt. nx_r .or. 
+     1              jo .lt. 1 .or. jo .gt. ny_r)then
+!                  write(6,*)' offset out of domain ',i,j,io,jo
+!    1                      ,ioffset(l),joffset(l),radar_name(l)
+!                  stop
+                   continue
+
+                 else   
+                   do k = 1,nz ! Look for non-missing reflectivity in column
+                     if(grid_ra_ref_offset(io,jo,k,l) .ne. 
+     1                                  r_missing_data)then     
+                       l_valid = .true.
+                     endif
+                   enddo ! k
+
+                 endif ! in bounds of offset array                  
+
+               endif ! use full array (not offset)
 
                if(l_valid_latlon(l))then
                    ridist = float(i)-ri(l)
@@ -132,7 +180,7 @@ c
             if(l .eq. lr_2d(i,j))then ! closest radar at this grid point 
                r_dbzmax=ref_base
 
-               if(.true.)then
+               if(.not. l_offset)then
 !                 Get max ref in column
                   do k=1,nz
                      if(grid_ra_ref(i,j,k,l).ne.ref_base .and.
@@ -148,17 +196,49 @@ c
                      enddo ! k 
 
                   elseif(imosaic_3d .eq. 1)then  ! vrz output only
-                     do k=1,nz 
-                        grid_mosaic_3dref(i,j,k)=grid_ra_ref(i,j,k,l)       
-                     enddo ! k 
+                     grid_mosaic_3dref(i,j,:)=grid_ra_ref(i,j,:,l)   
 
                   elseif(imosaic_3d .eq. 2)then  ! both vrc & vrz
                      do k=1,nz 
                         grid_mosaic_2dref(i,j)=r_dbzmax 
-                        grid_mosaic_3dref(i,j,k)=grid_ra_ref(i,j,k,l)       
+                        grid_mosaic_3dref(i,j,k)=grid_ra_ref(i,j,k,l)   
                      enddo ! k 
 
                   endif ! imosaic_3d
+
+               else ! l_offset
+                 io = i - ioffset(l)
+                 jo = j - joffset(l)
+                 
+                 if(io .ge. 1 .AND. io .le. nx_r .AND.
+     1              jo .ge. 1 .AND. jo .le. ny_r)then
+
+!                  Get max ref in column
+                   do k=1,nz
+                     if(grid_ra_ref_offset(io,jo,k,l).ne.ref_base .and.
+     1                  grid_ra_ref_offset(io,jo,k,l).ne.r_missing_data
+     1                                                             )then
+                        r_dbzmax=max(r_dbzmax,
+     1                               grid_ra_ref_offset(io,jo,k,l))
+                     endif
+                   enddo
+
+                   if(imosaic_3d .eq. 0)then      ! vrc output only
+                     grid_mosaic_2dref(i,j)=r_dbzmax 
+                     grid_mosaic_3dref(i,j,:)=r_dbzmax 
+
+                   elseif(imosaic_3d .eq. 1)then  ! vrz output only
+                     grid_mosaic_3dref(i,j,:)=
+     1               grid_ra_ref_offset(io,jo,:,l)       
+
+                   elseif(imosaic_3d .eq. 2)then  ! both vrc & vrz
+                     grid_mosaic_2dref(i,j)=r_dbzmax 
+                     grid_mosaic_3dref(i,j,:)=
+     1               grid_ra_ref_offset(io,jo,:,l)       
+
+                   endif ! imosaic_3d
+
+                 endif ! in bounds of offset array
 
                endif ! .true.
 
@@ -171,6 +251,8 @@ c
                   else
                      icntp=icntp+1
                   endif
+               else
+                  icntb = icntb + 1
                endif
 
             endif ! .true.
@@ -183,9 +265,10 @@ c
 
       print*,'Statistics for this mosaic'
       print*,'--------------------------'
-      print*,'Num points > 0.0 ',icntp
-      print*,'Num points = 0.0 ',icntz
-      print*,'Num points < 0.0 ',icntn
+      print*,'Num points > 0.0  ',icntp
+      print*,'Num points = 0.0  ',icntz
+      print*,'Num points < 0.0  ',icntn
+      print*,'Num points = base ',icntb
 
       intvl = int(nx/68) + 1
 
