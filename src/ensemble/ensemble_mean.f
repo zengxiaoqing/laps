@@ -187,7 +187,7 @@
 
 
 !!!!!! test input variables!!!!!!!!!!!!!!!!!!!!!
-        n_fcst_times = 1 
+        n_fcst_times = 38 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !       Get fdda_model_source from static file
