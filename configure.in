@@ -233,6 +233,15 @@ then
   W3="-DLINUX"
 fi  
 
+dnl  For W3, test for MAC (Darwin)
+if test "$arch" = "unknown" 
+then
+  if test "`/usr/bin/uname -s`" = "Darwin"
+  then
+    W3="-DMAC"
+  fi
+fi
+
 dnl  For W3, test SWAPBYTE flag
 grep 'SWAPBYTE' << EOF
 $CFLAGS
