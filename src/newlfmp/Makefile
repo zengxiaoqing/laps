@@ -40,8 +40,8 @@ LAPSLIB=-L$(SRCROOT)/src/lib -llaps
 DBLAPSLIB=-L$(SRCROOT)/src/lib -ldebuglaps
 MTHERMOLIB=-L$(SRCROOT)/src/lib/radar/synp -lsynp
 DBMTHERMOLIB=-L$(SRCROOT)/src/lib/radar/synp -ldebugsynp
-UTILLIB=-L$(SRCROOT)/src/lib -llaps
-DBUTILLIB=-L$(SRCROOT)/src/lib -ldebuglaps
+UTILLIB=-L$(SRCROOT)/src/lib/util -lutil
+DBUTILLIB=-L$(SRCROOT)/src/lib/util -ldebugutil
 SYNPLIB=-L$(SRCROOT)/src/lib/radar/synp -lsynp
 DBSYNPLIB=-L$(SRCROOT)/src/lib/radar/synp -ldebugsynp
 GRIBLIB=-L$(SRCROOT)/src/lib/grib -lgrib
@@ -126,7 +126,7 @@ ptfcst.o:		lfmgrid.o
 
 lfmwrite.o:		lfmgrid.o
 
-$(EXE):			$(SRCROOT)/src/lib/liblaps.a $(SRCROOT)/src/lib/modules/libmodules.a $(SRCROOT)/src/lib/radar/synp/libsynp.a
+$(EXE):			$(SRCROOT)/src/lib/util/libutil.a $(SRCROOT)/src/lib/liblaps.a $(SRCROOT)/src/lib/modules/libmodules.a $(SRCROOT)/src/lib/radar/synp/libsynp.a                                          
 
 clean:
 			$(RM) *.o $(EXE) core
