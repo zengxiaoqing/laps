@@ -119,8 +119,8 @@ c             end if
                    endif
 
 !                  Additional stretch
-!                  call stretch2(0.0,1.0,.09,1.0,albedo_out(i,j))
-                   call stretch2(0.0,1.0,.09,1.1,albedo_out(i,j))
+!                  call stretch2(0.0,1.0,.09,1.0 ,albedo_out(i,j))
+                   call stretch2(0.0,1.0,.04,1.15,albedo_out(i,j))      
 c                                                               excesses
 c Accumulate extrema
 c
