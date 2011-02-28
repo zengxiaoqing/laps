@@ -360,14 +360,14 @@ C   high and low ends, respectively.  RBriL is modified to make darker land more
 C   uniform in brightness.
 
 !         Original result
-          phase_const1   = 20.                                
-          ph_const2_l = 0. 
-          ph_const2_h = 0. 
+!         phase_const1   = 20.                                
+!         ph_const2_l = 0. 
+!         ph_const2_h = 0. 
 
 !         New result
-!         phase_const1   = 0.                                
-!         ph_const2_l = 10. 
-!         ph_const2_h = 10. 
+          phase_const1   = 0.                                
+          ph_const2_l = 10. 
+          ph_const2_h = 10. 
 
           RBriH=-60.*S_F   -   phase_const1*P_F
           RBriH_a(i,j) = RBriH
