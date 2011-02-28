@@ -137,7 +137,7 @@
           long long int  namelen, long long int  datanamelen) {
 #endif
 #ifdef MAC
-  int bacio
+  int bacio_
          (int * mode, int * start, int *newpos, int * size, int * no, 
           int * nactual, int * fdes, const char *fname, char *datary, 
           int  namelen, int  datanamelen) {
