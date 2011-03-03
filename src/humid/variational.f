@@ -1087,7 +1087,7 @@ c     cost function data for SND, fill with mixing ratio
             
 c     executed variational search
 
-            ftol = 0.01
+            ftol = 0.05
 
             cost_comment_switch = 1 ! turn on for one print of gps&cloud
 
