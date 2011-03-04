@@ -1,0 +1,57 @@
+# dummy PE to real PE mappings
+
+# Format:  dummy_pe  [<option>]  [<option>] [...]
+# 
+# Options:
+#   c=<N>              Round cpu count up to nearest factor of N.  Default is 2.
+#   maxcpu=<N>         Limit cpu count to N.
+#   pe=<pelist>        Specifies the real PE list to use
+#   masterq=<qlist>    Specify first queue to use
+#   defaultmem=<N>     Default memory size in MBytes.
+#   nocpulimit[=<acc1,acc2,...>]
+#                      Do not enforce per-account cpu limit on the accounts specified.  Default is to enforce.
+#                      If no account list is given, then limit is ignored for all accounts.
+#
+# Note, queues can be separated by commas for the -qmaster line, but
+#  you can only use the * wildcard when specifying the mapping for the pe
+#
+
+# RDHPCS
+
+# nJet
+ncomp   c=8  pe=qncomp
+nserial  c=1  pe=qnserial defaultmem=1024M maxcpu=1
+ntest   c=8  pe=qntest
+
+hserial  c=1 pe=qhserial defaultmem=1024M maxcpu=1
+hcompnew c=8 pe=qhcompnew
+hcomp    c=8 pe=qhcompnew
+
+service c=1 pe=qservice
+mss     c=1 pe=qservice
+
+# 2 entries to be removed...
+newhcomp c=8 pe=qhcompnew
+newncomp c=8 pe=newqncomp
+
+# HFIP
+hfip	c=12  pe=q*jet
+nhfip	c=8  pe=qnjet
+thfip	c=12  pe=qtjet
+ttest	c=12  pe=qttest
+hfipserial	c=1  pe=qhfipserial defaultmem=1024M maxcpu=1
+
+debug   c=8  pe=qhcompnew maxwalltime=00:30:00 maxjobcpus=32 flags=ADVRES:debug
+ndebug   c=8  pe=qnjet maxwalltime=00:30:00 maxjobcpus=128 flags=ADVRES:ndebug
+
+htest   c=8  pe=qhtest
+wgpu    c=8  pe=qwgpu
+tgpu    c=12 pe=qtgpu
+
+# FAA
+faa c=8 pe=qncomp flags=ADVRES:faa
+faaserial c=1 pe=qnserial defaultmem=1024M maxcpu=1 flags=ADVRES:faa
+
+### All old stuff to go away
+
+

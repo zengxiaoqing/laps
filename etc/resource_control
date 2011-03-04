@@ -1,0 +1,1462 @@
+# 1 "resource_control.c"
+# 1 "<built-in>"
+# 1 "<command line>"
+# 1 "resource_control.c"
+/# The entries should be:
+/#
+/#     account.resource = value
+/#
+/#  account is the account group,
+/#     where the defaults are set with defaultpbs
+/#
+/#  resource is the type of resource available:
+/#
+/#      maxwalltime - max walltime (hr:mn:sec)  <qsub>
+/#      defwalltime - default walltime (hr:mn:sec) <qsub>
+/#       maxcputime - max cputime =walltime * cpus (hr:mn:sec) <qsub>
+/#          maxcpus - max cpus for the group  (val) <sched>
+/#          maxjobs - max jobs for the group  (val) <sched>
+/#       maxjobcpus - max cpus for a given job (val) <qsub>
+/#       blockcount - resource reservations w/ high priority (val) <qsub>
+/#       defaultpri - default priority for jobs of this group <qsub>
+/#           maxpri - maximum priority this job can run as (val) <qsub>
+/#       maxnodepri - maximum product of priority and node count this job <qsub>
+/#                    can run as (val) (used for short jobs)
+/#        shorttime - used when priority exceeds maxpri, but nodecount*pri <qsub>
+/#                    is less than maxnodepri
+/#         nodeprop - properties account is allowed to use (colon sep.) <qsub>
+/#                    * implies no restrictions, +prop implies additional 
+/#                    properties (default + prop, or prop + prop)
+/#             data - file system(s) to be used by project (comma separated)
+/#           dquota - quoat on file system(s) (comma separated, corresponding)
+/#            class - group of projects (used by scheduler)
+/#             mail - mail list of users to receive notification. By default
+/#                    this should only be the PI. If others are added, the PI
+/#                    should be first.
+/#           
+/# 
+/#   A negative value mean no limits 
+/#   A missing value should be interpreted as using the default values.
+/#
+
+
+
+
+
+
+ 
+/# HOUR = FILE_HR
+
+/#include "resource_control.inc"
+/#include "/ihome/jetmgmt/accounting/CPP/empprojects.h"
+
+# 1 "/home/jetmgmt/accounting/CPP/empprojects.h" 1
+acb.empproj = BLDR-Grants
+acc-gpu.empproj = NextGenGModel
+am2-cdc.empproj = BLDR-Climate
+aomip.empproj = BLDR-Climate
+ap-fc.empproj = AQ
+arop.empproj = BLDR-Grants
+aspic.empproj = BLDR-Grants
+awmra.empproj = JCSDA
+bluefin.empproj = Climate-SA
+calnexfc.empproj = AQ
+carbon05.empproj = OSRD
+ccasm.empproj = BLDR-Grants
+cfsstrat.empproj = BLDR-Climate
+chem-var.empproj = AQ
+chimera.empproj = BLDR-Climate
+ciaqex.empproj = AQ
+climatt.empproj = Seasonal-Clim-Mod
+cmaq-so4.empproj = BLDR-Grants
+cmat.empproj = BLDR-Grants
+cmit2.empproj = BLDR-Grants
+cmod.empproj = BLDR-Grants
+coamps.empproj = HFIP
+co2.empproj = BLDR-Climate
+crdc.empproj = BLDR-Grants
+crotc.empproj = BLDR-Grants
+crs.empproj = BLDR-Grants
+csdchem.empproj = BLDR-Grants
+csd-wca.empproj = BLDR-Grants
+cwb-lnwp.empproj = BLDR-Grants
+cwbproc.empproj = BLDR-Grants
+dhsurban.empproj = BLDR-Grants
+det.empproj = DTC
+dlaps.empproj = BLDR-Grants
+dtc.empproj = DTC
+dtc-hurr.empproj = HFIP
+eab.empproj = BLDR-Climate
+emcda.empproj = HFIP
+emm.empproj = BLDR-Grants
+ensda.empproj = REANL
+enso.empproj = BLDR-Climate
+epaw.empproj = BLDR-Grants
+esmf.empproj = ESMF
+esupport.empproj = Infrastructure
+etlcm.empproj = BLDR-Grants
+fim.empproj = NextGenGModel
+fim-njet.empproj = NextGenGModel
+fim-ssam.empproj = NextGenGModel
+fire-wx.empproj =  AQ
+forms.empproj = BLDR-Grants
+futextrm.empproj = BLDR-Climate
+gacs.empproj = AQ
+gapp2005.empproj = AQ
+gitm.empproj = BLDR-Grants
+glarctic.empproj = BLDR-Climate
+glrcm.empproj = REANL
+gomtrans.empproj = AQ
+gt-md.empproj = BLDR-Grants
+gtas.empproj = BLDR-Grants
+hfip-ahw.empproj = HFIP
+hfip-hda.empproj = HFIP
+hfipdiag.empproj = HFIP
+hfip-gfdl.empproj = HFIP
+hfip-mef.empproj = HFIP
+hfipose.empproj = HFIP
+hfiprens.empproj = HFIP
+hfipspp.empproj = HFIP
+hfip-psu.empproj = HFIP
+hfip-utah.empproj = HFIP
+hfip-wisc.empproj = HFIP
+hmtb.empproj = HMTB
+hmtr.empproj = HMTB
+hrwccim.empproj = BLDR-Grants
+hur-aoml.empproj = HFIP
+hur-laps.empproj = BLDR-Grants
+hur-osse.empproj = HFIP
+hur-uri.empproj = DTC-Grants
+hwrfv3.empproj = HFIP
+hwrf-vd.empproj = HFIP
+hybda.empproj = HFIP
+idea.empproj = BLDR-Grants
+ihoplaps.empproj = BLDR-Grants
+ihopsims.empproj = BLDR-Grants
+iset.empproj = BLDR-Grants
+isp-1.empproj = BLDR-Climate
+jetmgmt.empproj = Infrastructure
+jmt.empproj = BLDR-Grants
+kfrc.empproj = BLDR-Grants
+lecpbm.empproj = BLDR-Grants
+longsam.empproj = BLDR-Grants
+lrcoup.empproj = BLDR-Grants
+mapp.empproj = BLDR-Grants
+marecomo.empproj = Next Generation Ocean Model RD
+mcica.empproj = BLDR-Grants
+mcwi.empproj = BLDR-Grants
+mdss.empproj = BLDR-Grants
+mef.empproj = AQ
+mm5-laps.empproj = BLDR-Grants
+mmap-drb.empproj = BLDR-Grants
+mmap-emd.empproj = BLDR-Grants
+moderr.empproj = BLDR-Grants
+modis250.empproj = BLDR-Grants
+naos-ruc.empproj = OSRD
+muri.empproj = BLDR-Grants
+naqfc.empproj = AQ
+ncarwrf.empproj = DTC
+neaqs.empproj = AQ
+neo-cp.empproj = HFIP
+nep.empproj = BLDR-Grants
+news2.empproj = BLDR-Grants
+nhra.empproj = Infrastructure
+nim.empproj = NextGenGModel
+noaagrid.empproj = BLDR-GRANTS
+nosint.empproj = BLDR-Grants
+nrelwind.empproj = RapidRef
+nrtrr.empproj = RapidRef
+odvars.empproj = AdvDataAssimRD
+ome.empproj = BLDR-Grants
+pacjet.empproj = RapidRef
+pcm.empproj = RapidRef
+plankton.empproj = ObsSysRD
+ppef.empproj = BLDR-Grants
+profosse.empproj = BLDR-Grants
+qnh.empproj = BLDR-Grants
+rcc21.empproj = BLDR-Climate
+rcmd.empproj = BLDR-Climate
+reanl.empproj = REANL
+refcst.empproj = REANL
+regclim.empproj = BLDR-Climate
+rem.empproj = BLDR-Grants
+renkf.empproj = HFIP
+rtcalnexfc.empproj = AQ
+rtfim.empproj = NextGenGModel
+rtrr.empproj = RapidRef
+rucdev.empproj = RapidRef
+rucihop.empproj = RapidRef
+ruclidar.empproj = RapidRef
+rucsref.empproj = RapidRef
+scd.empproj = BLDR-Grants
+sepp.empproj = BLDR-Grants
+solwind.empproj = BLDR-Grants
+stc.empproj = BLDR-Grants
+stela.empproj = AQ
+stratus.empproj = BLDR-Grants
+strmtrck.empproj = BLDR-Climate
+swift.empproj = BLDR-Grants
+swr.empproj = BLDR-Grants
+texaqs.empproj = AQ
+tcmt.empproj = HFIP
+tsuprop.empproj = BLDR-Grants
+uas-osse.empproj = BLDR-Grants
+usfsfire.empproj = BLDR-Grants
+wiap.empproj = BLDR-Grants
+wof.empproj = BLDR-Grants
+wrf-chem.empproj = AQ
+wrf-chm2.empproj = AQ
+wrf-dte.empproj = DTC-Grants
+wrf-laps.empproj = BLDR-Grants
+wrfhfs.empproj = BLDR-Climate
+wrfhyb.empproj = RapidRef
+wrfijet.empproj = BLDR-Grants
+wrfles.empproj = BLDR-Grants
+wrfmadis.empproj = BLDR-Grants
+wrfruc.empproj = RapidRef
+wsmcsr.empproj = DTC-Grants
+wwados.empproj = BLDR-Climate
+# 49 "resource_control.c" 2
+
+system.timeresource=1801,28801,1000000000
+system.sizeresource=3,18,1000000000
+
+default.defaultpri  = 1
+default.maxpri      = 24
+default.maxnodepri  = 24
+default.shorttime   = 00:30:00
+default.defwalltime = 00:30:00
+default.maxwalltime = 08:00:00
+
+/### This is a modified list, first step in cleanup
+default.nodeprop    = mss:service:wgpu:tgpu
+
+default.data        = None
+default.dquota      = 1
+default.class       = general
+default.mail        = Leslie.B.Hart@noaa.gov,Lee.M.Cohen@noaa.gov
+
+/#of_default.defaultpri  = 0
+/#of_default.class       = overflow
+/#of_default.data        = None
+/#of_default.dquota      = 1
+
+jetmgmt.maxwalltime = 12:00:00
+jetmgmt.maxcputime  = 12:00:00
+jetmgmt.maxjobcpus  = 18000
+jetmgmt.maxcpus     = 18000
+jetmgmt.maxjobs     = 1900
+jetmgmt.defaultpri  =  1 
+jetmgmt.maxpri      = 1000
+jetmgmt.maxnodepri  = 0
+jetmgmt.shorttime   = 00:30:00
+jetmgmt.nodeprop    = *
+jetmgmt.class       = system
+jetmgmt.data = /pan1
+jetmgmt.dquota = 9800
+jetmgmt.mail = jet.mgmt.gsd@noaa.gov
+
+of_jetmgmt.maxwalltime = 12:00:00
+of_jetmgmt.maxcputime  = 12:00:00
+of_jetmgmt.maxjobcpus  = 1000
+of_jetmgmt.maxcpus     = 2000
+of_jetmgmt.maxjobs     = 100
+of_jetmgmt.defaultpri  =  0 
+of_jetmgmt.maxpri      = 1000
+of_jetmgmt.maxnodepri  = 0
+of_jetmgmt.shorttime   = 00:30:00
+of_jetmgmt.nodeprop    = *
+of_jetmgmt.class       = system
+of_jetmgmt.mail = jet.mgmt.gsd@noaa.gov
+
+fd.nodeprop    = *
+
+/# HPCS PROJECTS
+
+acb.maxcpus = 512
+acb.maxjobcpus = 512
+acb.maxjobs = 15
+acb.maxwalltime = 08:00:00
+acb.data = /lfs0
+acb.dquota = 200
+acb.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug:ncomp:nserial:debug
+acb.mail = Jacques.Middlecoff@noaa.gov,Mark.W.Govett@noaa.gov
+
+acc-gpu.maxcpus = 32
+acc-gpu.maxjobcpus = 32
+acc-gpu.maxjobs = 4
+acc-gpu.maxwalltime = 08:00:00
+acc-gpu.data = /pan1
+acc-gpu.dquota = 100
+acc-gpu.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+acc-gpu.mail = Mark.W.Govett@noaa.gov,Jacques.Middlecoff@noaa.gov,Thomas.B.Henderson@noaa.gov,Paul.A.Madden@noaa.gov,Michael.Carpenter@noaa.gov
+
+
+ap-fc.maxcpus = 200
+ap-fc.maxjobcpus = 200
+ap-fc.maxjobs = 3
+ap-fc.maxwalltime = 08:00:00
+ap-fc.data = /pan1
+ap-fc.dquota = 500
+ap-fc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+ap-fc.mail = Georg.A.Grell@noaa.gov
+
+arop.maxcpus = 64
+arop.maxjobcpus = 64 
+arop.maxjobs = 1
+arop.maxwalltime =  08:00:00
+arop.data = /lfs0
+arop.dquota = 2000
+arop.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+arop.mail = mimi.hughes@noaa.gov
+
+awmra.maxcpus = 160
+awmra.maxjobcpus = 160
+awmra.maxjobs = 6
+awmra.maxwalltime = 06:00:00
+awmra.data = /pan1
+awmra.dquota = 500
+awmra.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+awmra.mail = Al.Gasiewski@noaa.gov,bob.l.weber@noaa.gov,timothy.schneider@noaa.gov
+
+bluefin.maxcpus = 120
+bluefin.maxjobcpus = 120
+bluefin.maxjobs = 5
+bluefin.maxwalltime =  08:00:00
+bluefin.data = /lfs0
+bluefin.dquota = 250
+bluefin.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+bluefin.mail = Sang-ki.Lee@noaa.gov
+
+calnexfc.maxcpus = 256
+calnexfc.maxjobcpus = 128
+calnexfc.maxjobs = 2
+calnexfc.maxwalltime =  08:00:00
+calnexfc.data = /pan1
+calnexfc.dquota = 10000
+calnexfc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+calnexfc.mail = Wayne.M.Angevine@noaa.gov
+
+carbon05.maxcpus = 24
+carbon05.maxjobcpus = 24
+carbon05.maxjobs = 10
+carbon05.maxwalltime =  08:00:00
+carbon05.data = /lfs0
+carbon05.dquota = 1000
+carbon05.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+carbon05.mail = mariusz.pagowski@noaa.gov
+
+ccasm.maxcpus = 128
+ccasm.maxjobcpus = 128
+ccasm.maxjobs = 1
+ccasm.data = /pan1,/lfs0
+ccasm.dquota = 400,1500
+ccasm.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+ccasm.mail = Jian-Wen.Bao@noaa.gov
+
+cfsstrat.maxcpus = 304
+cfsstrat.maxjobcpus = 64
+cfsstrat.maxjobs = 10
+cfsstrat.data = /lfs0
+cfsstrat.dquota = 1000
+cfsstrat.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+cfsstrat.mail = judith.perlwitz@noaa.gov,Tao.Zhang@noaa.gov
+
+chem-var.maxcpus = 200
+chem-var.maxjobcpus = 200
+chem-var.maxjobs = 2
+chem-var.maxwalltime =  08:00:00
+chem-var.data = /lfs0
+chem-var.dquota = 3000
+chem-var.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+chem-var.mail = Georg.A.Grell@noaa.gov,Steven.Peckham@noaa.gov,mariusz.pagowski@noaa.gov
+
+chimera.maxcpus = 768
+chimera.maxjobcpus = 256
+chimera.maxjobs = 6
+chimera.maxwalltime =  08:00:00
+chimera.data = /pan1
+chimera.dquota = 1500
+chimera.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+chimera.mail = susan.solomon@noaa.gov,henry.leroy.miller@noaa.gov
+
+ciaqex.maxcpus = 256
+ciaqex.maxjobcpus = 256
+ciaqex.maxjobs = 20
+ciaqex.maxwalltime = 08:00:00
+ciaqex.data = /pan1,/lfs0
+ciaqex.dquota = 1000,6000
+ciaqex.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+ciaqex.mail = Julian.Wang@noaa.gov
+
+climatt.maxcpus = 160
+climatt.maxjobcpus = 32
+climatt.maxjobs = 5
+climatt.maxwalltime =  08:00:00
+climatt.data = /lfs0
+climatt.dquota = 1000
+climatt.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+climatt.mail = martin.hoerling@noaa.gov
+
+cmaq-so4.maxcpus = 32
+cmaq-so4.maxjobcpus = 32
+cmaq-so4.maxjobs = 1
+cmaq-so4.maxwalltime =  08:00:00
+cmaq-so4.data = /lfs0
+cmaq-so4.dquota = 1000
+cmaq-so4.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+cmaq-so4.mail = ariel.stein@noaa.gov
+
+cmat.maxcpus = 32
+cmat.maxjobcpus = 32
+cmat.maxjobs = 1
+cmat.maxwalltime =  08:00:00
+cmat.data = /lfs0
+cmat.dquota = 100
+cmat.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+cmat.mail = alison.dobbin@noaa.gov
+
+cmit2.maxcpus = 144
+cmit2.maxjobcpus = 144
+cmit2.maxjobs = 4
+cmit2.maxwalltime =  08:00:00
+cmit2.data = /lfs0
+cmit2.dquota = 500
+cmit2.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+cmit2.mail = george.millward@noaa.gov,schmitt@ucar.edu
+
+cmod.maxcpus = 512
+cmod.maxjobcpus = 256
+cmod.maxjobs = 5
+cmod.maxwalltime =  08:00:00
+cmod.data = /lfs1
+cmod.dquota = 2000
+cmod.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug:hfip:nhfip:thfip:hfipserial:hfipdebug
+cmod.mail = christopher.w.harrop@noaa.gov
+
+co2.maxcpus = 300
+co2.maxjobcpus = 300
+co2.maxjobs = 40
+co2.walltime =  08:00:00
+co2.data = /pan1,/lfs0
+co2.dquota = 4000,40000
+co2.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+co2.mail = Lori.Bruhwiler@noaa.gov,wouter.peters@noaa.gov,gabrielle.petron@noaa.gov,john.b.miller@noaa.gov,adam.hirsch@noaa.gov,andy.jacobson@noaa.gov,kenneth.masarie@noaa.gov,kevin.schaefer@nsidc.org
+
+/#cron.nodeprop    = wservice
+/#cron.maxcpus = 200
+/#cron.maxjobcpus = 1
+/#cron.maxjobs = 200
+/#cron.maxwalltime = 04:00:00 
+
+coamps.maxcpus = 256
+coamps.maxjobcpus = 256
+coamps.maxjobs = 5
+coamps.maxwalltime =  08:00:00
+coamps.data = /lfs1
+coamps.dquota = 1000
+coamps.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+coamps.mail = james.doyle@nrlmry.navy.mil
+
+crdc.maxcpus = 256
+crdc.maxjobcpus = 256
+crdc.maxjobs = 1
+crdc.walltime =  08:00:00
+crdc.data = /lfs0
+crdc.dquota = 200
+crdc.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+crdc.mail = Eric.A.Kihn@noaa.gov,Kyle.Copeland@faa.gov
+
+crotc.maxcpus = 128
+crotc.maxjobcpus = 128
+crotc.maxjobs = 8
+crotc.walltime =  08:00:00
+crotc.data = /lfs0
+crotc.dquota = 50
+crotc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+crotc.mail = sangik.shin@noaa.gov 
+
+crs.maxcpus = 48
+crs.maxjobcpus = 48
+crs.maxjobs = 12
+crs.maxwalltime = 08:00:00
+crs.data = /lfs0
+crs.dquota = 300
+crs.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+crs.mail = richard.stumpf@noaa.gov,varis.ransi@noaa.gov
+
+csd-wca.maxcpus = 152
+csd-wca.maxjobcpus = 152
+csd-wca.maxjobs = 4
+csd-wca.maxwalltime =  08:00:00
+csd-wca.data = /lfs0
+csd-wca.dquota = 10000
+csd-wca.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+csd-wca.mail =  Stuart.A.McKeen@noaa.gov,siwan.kim@noaa.gov
+
+csdchem.maxcpus = 300
+csdchem.maxjobcpus = 300
+csdchem.maxjobs = 4
+csdchem.maxwalltime =  08:00:00
+csdchem.data = /lfs0
+csdchem.dquota = 5000
+csdchem.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+csdchem.mail = siwan.kim@noaa.gov
+
+cwb-lnwp.maxcpus = 56
+cwb-lnwp.maxjobcpus = 56
+cwb-lnwp.maxjobs = 5
+cwb-lnwp.maxwalltime = 06:00:00
+cwb-lnwp.data = /pan1
+cwb-lnwp.dquota = 100
+cwb-lnwp.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+cwb-lnwp.mail = Steve.Albers@noaa.gov
+
+det.maxcpus = 304
+det.maxjobcpus = 304
+det.maxjobs = 4
+det.maxwalltime =  08:00:00
+det.data = /pan1
+det.dquota = 1000
+det.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+det.mail = Isidora.Jankov@noaa.gov
+
+
+dlaps.maxcpus = 136
+dlaps.maxjobcpus = 80
+dlaps.maxjobs = 6
+dlaps.maxcputime  = 36:00:00
+dlaps.data = /pan1
+dlaps.dquota = 2000
+dlaps.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+dlaps.mail = Christopher.J.Anderson@noaa.gov,Daniel.L.Birkenheuer@noaa.gov
+
+dtc.maxcpus = 64
+dtc.maxjobcpus = 32
+dtc.maxjobs = 2 
+dtc.maxwalltime = 06:00:00
+dtc.data = /lfs0
+dtc.dquota = 200
+dtc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+dtc.mail = nance@ucar.edu,Ligia.Bernardet@noaa.gov
+
+dtc-hurr.maxcpus = 300
+dtc-hurr.maxjobcpus = 300
+dtc-hurr.maxjobs = 30 
+dtc-hurr.maxwalltime = 08:00:00
+dtc-hurr.data = /lfs1,/pan1
+dtc-hurr.dquota = 12000,100
+/#dtc-hurr.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+dtc-hurr.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+dtc-hurr.mail = Ligia.Bernardet@noaa.gov
+
+eab.maxcpus = 16
+eab.maxjobcpus = 16
+eab.maxjobs = 1
+eab.maxwalltime = 8:00:00
+eab.data = /lfs0
+eab.dquota = 600
+eab.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+eab.mail = Joseph.Barsugli@noaa.gov,sangik.shin@noaa.gov
+
+emcda.maxcpus = 800
+emcda.maxjobcpus = 800
+emcda.maxjobs = 100
+emcda.maxwalltime = 08:00:00
+emcda.data = /lfs1
+emcda.dquota = 15000
+emcda.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+emcda.mail = John.Derber@noaa.gov
+
+enso.maxcpus = 240
+enso.maxjobcpus = 120
+enso.maxjobs = 5
+enso.maxwalltime = 08:00:00
+enso.data = /lfs0
+enso.dquota = 750
+enso.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+enso.mail = Chunzai.Wang@noaa.gov,Sang-ki.Lee@noaa.gov
+
+epaw.maxcpus = 64
+epaw.maxjobcpus = 64
+epaw.maxjobs = 1
+epaw.maxwalltime =  08:00:00
+epaw.data = /lfs0
+epaw.dquota = 500
+epaw.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+epaw.mail = amy.solomon@noaa.gov
+
+esmf.maxcpus = 32
+esmf.maxjobcpus = 32
+esmf.maxjobs = 1
+esmf.maxwalltime = 08:00:00
+esmf.data = /lfs0
+esmf.dquota = 500
+esmf.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+esmf.mail = cdeluca@ucar.edu,theurich@sourcespring.net
+
+esupport.maxcpus = 32
+esupport.maxjobcpus = 32
+esupport.maxjobs = 1
+esupport.maxwalltime = 08:00:00
+esupport.data = /lfs0
+esupport.dquota = 100
+esupport.mail = nancy@ucar.edu
+
+etlcm.maxcpus = 2048
+etlcm.maxjobcpus = 256
+etlcm.maxjobs = 8
+etlcm.maxwalltime = 08:00:00
+etlcm.data = /lfs0
+etlcm.dquota = 4500
+etlcm.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+etlcm.mail = Graham.Feingold@noaa.gov,Hongli.Jiang@noaa.gov
+
+fim.maxcpus = 768
+fim.maxjobcpus = 768
+fim.maxjobs = 32
+fim.maxwalltime =  12:00:00
+fim.maxcputime =  12:00:00
+fim.data = /pan1,/lfs0,/lfs1
+fim.dquota = 2000,15000,12000
+fim.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+fim.mail = Stan.Benjamin@noaa.gov,Jacques.Middlecoff@noaa.gov,jin.lee@noaa.gov,susan.r.sahm@noaa.gov,Rainer.Bleck@noaa.gov,Michael.Fiorino@noaa.gov
+
+fim-njet.maxcpus = 5040
+fim-njet.maxjobcpus = 5040
+fim-njet.maxjobs = 32
+fim-njet.maxwalltime =  12:00:00
+fim-njet.maxcputime =  12:00:00
+fim-njet.data = /lfs1
+fim-njet.dquota = 15000
+/#fim-njet.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+fim-njet.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+fim-njet.mail = Stan.Benjamin@noaa.gov,Jacques.Middlecoff@noaa.gov,jin.lee@noaa.gov,susan.r.sahm@noaa.gov,Rainer.Bleck@noaa.gov,Michael.Fiorino@noaa.gov
+
+fim-ssam.maxcpus = 64
+fim-ssam.maxjobcpus = 64
+fim-ssam.maxjobs = 2
+fim-ssam.maxwalltime =  08:00:00
+fim-ssam.maxcputime =  08:00:00
+fim-ssam.data = /lfs0
+fim-ssam.dquota = 250
+fim-ssam.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+fim-ssam.mail = Brandon.Lynge@noaa.gov
+
+fire-wx.maxcpus = 128
+fire-wx.maxjobcpus = 128
+fire-wx.maxjobs = 2
+fire-wx.maxwalltime = 08:00:00
+fire-wx.data = /pan1
+fire-wx.dquota = 5000
+fire-wx.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+fire-wx.mail = Steven.Peckham@noaa.gov
+
+futextrm.maxcpus = 256
+futextrm.maxjobcpus = 256
+futextrm.maxjobs = 1
+futextrm.maxwalltime = 08:00:00
+futextrm.data = /lfs1
+futextrm.dquota = 2000
+futextrm.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+futextrm.mail = kelly.mahoney@noaa.gov
+
+gacs.maxcpus = 96
+gacs.maxjobcpus = 32
+gacs.maxjobs = 3
+gacs.maxwalltime = 08:00:00
+gacs.data = /lfs0
+gacs.dquota = 4000
+gacs.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+gacs.mail = gabrielle.petron@noaa.gov
+
+gapp2005.maxcpus = 128
+gapp2005.maxjobcpus = 64
+gapp2005.maxjobs = 3
+gapp2005.maxwalltime = 08:00:00
+gapp2005.data = /pan1
+gapp2005.dquota = 1000
+gapp2005.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+gapp2005.mail = Georg.A.Grell@noaa.gov,Mariusz.Pagowski@noaa.gov
+
+gitm.maxcpus = 80
+gitm.maxjobcpus = 80
+gitm.maxjobs = 2
+gitm.maxwalltime =  08:00:00
+gitm.data = /lfs0
+gitm.dquota = 300
+gitm.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+gitm.mail = yue.deng@noaa.gov
+
+glarctic.maxcpus = 128
+glarctic.maxjobcpus = 128
+glarctic.maxjobs = 1
+glarctic.maxwalltime =  08:00:00
+glarctic.data = /lfs1
+glarctic.dquota = 500
+glarctic.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+glarctic.mail = jia.wang@noaa.gov
+
+glrcm.maxcpus = 32
+glrcm.maxjobcpus = 32
+glrcm.maxjobs = 1
+glrcm.maxwalltime =  06:00:00
+glrcm.data = /lfs0
+glrcm.dquota = 375
+glrcm.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+glrcm.mail = Brent.Lofgren@noaa.gov
+
+gomtrans.maxcpus = 256
+gomtrans.maxjobcpus = 128
+gomtrans.maxjobs = 2
+gomtrans.maxwalltime =  08:00:00
+gomtrans.data = /pan1
+gomtrans.dquota = 6000
+gomtrans.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+gomtrans.mail = Wayne.M.Angevine@noaa.gov
+
+gt-md.maxcpus = 64
+gt-md.maxjobcpus = 64
+gt-md.maxjobs = 2
+gt-md.maxwalltime =  08:00:00
+gt-md.data = /pan1
+gt-md.dquota = 200
+gt-md.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+gt-md.mail = mihail.codrescu@noaa.gov
+
+gtas.maxcpus = 300
+gtas.maxjobcpus = 128
+gtas.maxjobs = 2
+gtas.maxwalltime =  08:00:00
+gtas.data = /lfs0
+gtas.dquota = 750
+gtas.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+gtas.mail = Ligia.Bernardet@noaa.gov,Richard.Jesuroga@noaa.gov
+
+hfip-ahw.maxcpus = 1008
+hfip-ahw.maxjobcpus = 1008
+hfip-ahw.maxjobs = 4
+hfip-ahw.maxwalltime =  08:00:00
+hfip-ahw.data = /lfs1
+hfip-ahw.dquota = 8000
+/#hfip-ahw.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfip-ahw.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfip-ahw.mail = torn@atmos.albany.edu
+
+hfip-gfdl.maxcpus = 1008
+hfip-gfdl.maxjobcpus = 1008
+hfip-gfdl.maxjobs = 100
+hfip-gfdl.maxwalltime =  08:00:00
+hfip-gfdl.data = /lfs1
+hfip-gfdl.dquota = 10000
+/#hfip-gfdl.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfip-gfdl.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfip-gfdl.mail = morris.bender@noaa.gov
+
+hfip-hda.maxcpus = 2928
+hfip-hda.maxjobcpus = 2928
+hfip-hda.maxjobs = 100
+hfip-hda.maxwalltime =  08:00:00
+hfip-hda.data = /lfs1
+hfip-hda.dquota = 50000
+/#hfip-hda.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfip-hda.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfip-hda.mail = altug.aksoy@noaa.gov
+
+hfipdiag.maxcpus = 256
+hfipdiag.maxjobcpus = 256
+hfipdiag.maxjobs = 1
+hfipdiag.maxwalltime =  08:00:00
+hfipdiag.data = /lfs1
+hfipdiag.dquota = 10000
+/#hfipdiag.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfipdiag.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfipdiag.mail = robert.rogers@noaa.gov
+
+hfip-mef.maxcpus = 516
+hfip-mef.maxjobcpus = 516
+hfip-mef.maxjobs = 1
+hfip-mef.maxwalltime =  08:00:00
+hfip-mef.data = /lfs1
+hfip-mef.dquota = 10000
+/#hfip-mef.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfip-mef.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfip-mef.mail = biswas@met.fsu.edu
+
+hfipose.maxcpus = 144
+hfipose.maxjobcpus = 144
+hfipose.maxjobs = 2
+hfipose.maxwalltime =  08:00:00
+hfipose.data = /lfs1
+hfipose.dquota = 5000
+/#hfipose.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfipose.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfipose.mail = Scott.M.Mackaro@noaa.gov
+
+hfiprens.maxcpus = 1308
+hfiprens.maxjobcpus = 1308
+hfiprens.maxjobs = 20
+hfiprens.maxwalltime =  08:00:00
+hfiprens.data = /lfs1
+hfiprens.dquota = 18000
+/#hfiprens.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfiprens.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+
+hfipspp.maxcpus = 108
+hfipspp.maxjobcpus = 108
+hfipspp.maxjobs = 1
+hfipspp.maxwalltime =  08:00:00
+hfipspp.data = /lfs1
+hfipspp.dquota = 5000
+/#hfipspp.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfipspp.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfipspp.mail = Scott.M.Mackaro@noaa.gov
+
+hfip-psu.maxcpus = 4008
+hfip-psu.maxjobcpus = 4008
+hfip-psu.maxjobs = 10
+hfip-psu.maxwalltime =  08:00:00
+hfip-psu.data = /lfs1
+hfip-psu.dquota = 40000
+/#hfip-psu.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfip-psu.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfip-psu.mail = fzhang@psu.edu
+
+hfip-utah.maxcpus = 1680
+hfip-utah.maxjobcpus = 1680
+hfip-utah.maxjobs = 2
+hfip-utah.maxwalltime =  08:00:00
+hfip-utah.data = /lfs1
+hfip-utah.dquota = 10000
+/#hfip-utah.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hfip-utah.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfip-utah..mail = Zhaoxia.Pu@utah.edu,Zhan.Li@utah.edu
+
+hfip-wisc.maxcpus = 72
+hfip-wisc.maxjobcpus = 72
+hfip-wisc.maxjobs = 10
+hfip-wisc.maxwalltime =  08:00:00
+hfip-wisc.data = /lfs1
+hfip-wisc.dquota = 2000
+/#hfip-wisc.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial
+hfip-wisc.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hfip-wisc.mail = tripoli@aos.wisc.edu
+
+hmtb.maxcpus = 936
+hmtb.maxjobcpus = 300
+hmtb.maxjobs = 96
+hmtb.maxwalltime =  06:00:00
+hmtb.data = /pan1,/lfs0
+hmtb.dquota = 1500,4000
+/#hmtb.nodeprop = *
+hmtb.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+hmtb.mail = Paul.J.Schultz@noaa.gov,Christopher.J.Anderson@noaa.gov,Isidora.jankov@noaa.gov
+ 
+hmtr.maxcpus = 104
+hmtr.maxjobcpus = 104
+hmtr.maxjobs = 5
+hmtr.maxwalltime =  08:00:00
+/#hmtr.nodeprop = *
+hmtr.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+hmtr.data = /pan1
+hmtr.dquota = 650
+hmtr.mail = Paul.J.Schultz@noaa.gov,Christopher.J.Anderson@noaa.gov,Isidora.Jankov@noaa.gov
+
+hur-aoml.maxcpus = 1584
+hur-aoml.maxjobcpus = 1584
+hur-aoml.maxjobs = 12
+hur-aoml.maxwalltime =  08:00:00
+hur-aoml.data = /pan1,/lfs0,/lfs1
+hur-aoml.dquota = 300,5000,80000
+/#hur-aoml.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hur-aoml.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hur-aoml.mail =  Ligia.Bernardet@noaa.gov,gopal@noaa.gov,xuejin.zhang@noaa.gov,christopher.w.harrop@noaa.gov
+
+hur-laps.maxcpus = 132
+hur-laps.maxjobcpus = 132
+hur-laps.maxjobs = 2
+hur-laps.maxwalltime =  08:00:00
+hur-laps.data = /pan1,/lfs1
+hur-laps.dquota = 1500,10000
+hur-laps.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hur-laps.mail = Jin-Young.Kim@noaa.gov
+
+hur-osse.maxcpus = 132
+hur-osse.maxjobcpus = 132
+hur-osse.maxjobs = 1
+hur-osse.maxwalltime =  08:00:00
+hur-osse.data = /lfs1
+hur-osse.dquota = 2000
+/#hur-osse.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hur-osse.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hur-osse.mail =  Sundararaman.G.Gopalakrishnan@noaa.gov,dalin@atmos.umd.edu
+
+hur-uri.maxcpus = 456
+hur-uri.maxjobcpus = 456
+hur-uri.maxjobs = 12
+hur-uri.maxwalltime =  08:00:00
+hur-uri.data = /pan1,/lfs1
+hur-uri.dquota = 400,10000
+hur-uri.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hur-uri.mail =  Ligia.Bernardet@noaa.gov,christopher.w.harrop@noaa.gov,b.thomas@gso.uri.edu
+
+
+hwrfv3.maxcpus = 3000
+hwrfv3.maxjobcpus = 3000
+hwrfv3.maxjobs = 5
+hwrfv3.maxwalltime =  08:00:00
+hwrfv3.data = /lfs1
+hwrfv3.dquota = 20000
+/#hwrfv3.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hwrfv3.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hwrfv3.mail = Samuel.Trahan@noaa.gov,Doris.Pan@noaa.gov
+
+hwrf-vd.maxcpus = 780
+hwrf-vd.maxjobcpus = 360
+hwrf-vd.maxjobs = 40
+hwrf-vd.maxwalltime =  08:00:00
+hwrf-vd.data = /lfs1
+hwrf-vd.dquota = 16000
+/#hwrf-vd.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+hwrf-vd.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hwrf-vd.mail = Samuel.Trahan@noaa.gov,Doris.Pan@noaa.gov
+
+hybda.maxcpus = 800
+hybda.maxjobcpus = 800
+hybda.maxjobs = 80
+hybda.maxwalltime =  08:00:00
+hybda.data = /lfs1
+hybda.dquota = 9000
+hybda.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+hybda.mail = xuguang.wang@ou.edu
+
+idea.maxcpus = 64
+idea.maxjobcpus = 64
+idea.maxjobs = 2
+idea.maxwalltime =  08:00:00
+idea.data = /lfs0
+idea.dquota = 250
+idea.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+idea.mail = Tim.Fuller-Rowell@noaa.gov,houjun.wang@noaa.gov,Naomi.Maruyama@noaa.gov
+
+iset.maxcpus = 260
+iset.maxjobcpus = 260
+iset.maxjobs = 4
+iset.maxwalltime =  08:00:00
+iset.data = /lfs0
+iset.dquota = 500
+iset.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+iset.mail = xuejin_zhang@ncsu.edu,gtang@ncat.edu
+
+isp-1.maxcpus = 200
+isp-1.maxjobcpus = 200
+isp-1.maxjobs = 12
+isp-1.maxwalltime = 08:00:00 
+isp-1.data = /pan1,/lfs0
+isp-1.dquota = 1800,10000
+isp-1.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+isp-1.mail = quan.xiao-wei@noaa.gov,Shiling.Peng@noaa.gov
+
+kfrc.maxcpus = 32
+kfrc.maxjobcpus = 32
+kfrc.maxjobs = 1
+kfrc.maxwalltime = 08:00:00
+kfrc.data = /lfs1
+kfrc.dquota = 500
+kfrc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+kfrc.mail = Brian.O'Gorman@noaa.gov
+
+lecpbm.maxcpus = 128
+lecpbm.maxjobcpus = 128
+lecpbm.maxjobs = 1
+lecpbm.maxwalltime =  08:00:00
+lecpbm.data = /lfs0
+lecpbm.dquota = 100
+lecpbm.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+lecpbm.mail = david.schwab@noaa.gov
+
+longsam.maxcpus = 320
+longsam.maxjobcpus = 320
+longsam.maxjobs = 16
+longsam.maxwalltime =  08:00:00
+longsam.data = /pan1
+longsam.dquota = 2000
+longsam.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+longsam.mail = robert.pincus@noaa.gov,pete.henderson@noaa.gov
+
+lpdm.maxcpus = 32
+lpdm.maxjobcpus = 32
+lpdm.maxjobs = 1 
+lpdm.maxwalltime = 08:00:00
+lpdm.data = /lfs0
+lpdm.dquota = 4000
+lpdm.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+lpdm.mail = gabrielle.petron@noaa.gov
+
+lrcoup.maxcpus = 32
+lrcoup.maxjobcpus = 32
+lrcoup.maxjobs = 1
+lrcoup.maxwalltime = 08:00:00
+lrcoup.data = /pan1
+lrcoup.dquota = 500
+lrcoup.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+lrcoup.mail = kathy.pegion@noaa.gov
+
+marecomo.maxcpus = 32
+marecomo.maxjobcpus = 32
+marecomo.maxjobs = 1
+marecomo.maxwalltime = 06:00:00
+marecomo.data = /pan1
+marecomo.dquota = 3000
+marecomo.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+marecomo.mail = bern.megrey@noaa.gov
+
+mcwi.maxcpus = 200
+mcwi.maxjobcpus = 200
+mcwi.maxjobs = 2
+mcwi.maxwalltime = 08:00:00
+mcwi.data = /pan1
+mcwi.dquota = 3000
+mcwi.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+mcwi.mail =  stefan.tulich@noaa.gov
+
+mef.maxcpus = 128
+mef.maxjobcpus = 128
+mef.maxjobs = 1
+mef.maxwalltime = 06:00:00
+mef.data = /pan1,/lfs0
+mef.dquota = 400,1500
+mef.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+mef.mail = Jian-Wen.Bao@noaa.gov
+
+mm5-laps.maxcpus = 128
+mm5-laps.maxjobcpus = 64
+mm5-laps.maxjobs = 8
+mm5-laps.data = /pan1
+mm5-laps.dquota = 1000
+mm5-laps.class = realTime
+mm5-laps.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+mm5-laps.mail = Steve.Albers@noaa.gov,Linda.Wharton@noaa.gov
+
+mmap-drb.maxcpus = 64
+mmap-drb.maxjobcpus = 64
+mmap-drb.maxjobs = 4
+mmap-drb.maxwalltime = 8:00:00
+mmap-drb.data = /pan1
+mmap-drb.dquota = 500
+mmap-drb.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+mmap-drb.mail = Edward.Myers@noaa.gov
+ 
+mmap-emd.maxcpus = 288
+mmap-emd.maxjobcpus = 96
+mmap-emd.maxjobs = 6
+mmap-emd.maxwalltime = 08:00:00
+mmap-emd.data = /pan1
+mmap-emd.dquota = 1000
+mmap-emd.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+mmap-emd.mail = Edward.Myers@noaa.gov
+
+modis250.maxcpus = 48
+modis250.maxjobcpus = 40
+modis250.maxjobs = 12
+modis250.maxwalltime =  08:00:00
+modis250.data = /lfs0
+modis250.dquota = 2500
+modis250.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+modis250.mail = varis.ransi@noaa.gov
+
+/#muri.maxcpus = 8
+/#muri.maxjobcpus = 8
+/#muri.maxjobs = 1
+/#muri.maxwalltime =  08:00:00
+/#muri.data = /pan1
+/#muri.dquota = 100
+/#muri.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+/#muri.mail = tomoko.matsuo@noaa.gov
+
+naos-ruc.maxcpus = 240
+naos-ruc.maxjobcpus = 240
+naos-ruc.maxjobs = 2
+naos-ruc.maxwalltime = 08:00:00
+naos-ruc.data = /lfs0,/lfs1
+naos-ruc.dquota = 1000,4000
+naos-ruc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+naos-ruc.mail = Barry.E.Schwartz@noaa.gov,Brian.D.Jamison@noaa.gov,Tanya.Smirnova@noaa.gov,susan.r.sahm@noaa.gov
+
+naqfc.maxcpus = 32
+naqfc.maxjobcpus = 32
+naqfc.maxjobs = 1
+naqfc.maxwalltime = 08:00:00
+naqfc.data = /lfs0
+naqfc.dquota = 100
+naqfc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+naqfc.mail = Daewon.Byun@noaa.gov,ariel.stein@noaa.gov
+
+neaqs.maxcpus = 128
+neaqs.maxjobcpus = 128
+neaqs.maxjobs = 1
+neaqs.maxwalltime =  08:00:00
+neaqs.data = /lfs0
+neaqs.dquota = 1800
+neaqs.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+neaqs.mail = serena_chung@wsu.edu,Stuart.A.Mckeen@noaa.gov
+ 
+neo-cp.maxcpus = 512
+neo-cp.maxjobcpus = 512
+neo-cp.maxjobs = 1
+neo-cp.maxwalltime = 08:00:00
+neo-cp.data = /lfs1
+neo-cp.dquota = 500
+neo-cp.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+neo-cp.mail = wallace.a.hogsett@noaa.gov
+ 
+nep.maxcpus = 128
+nep.maxjobcpus = 64
+nep.maxjobs = 4
+nep.maxwalltime = 08:00:00
+nep.data = /lfs0
+nep.dquota = 500
+nep.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+nep.mail = Albert.J.Hermann@noaa.gov
+ 
+news2.maxcpus = 32
+news2.maxjobcpus = 32
+news2.maxjobs = 4
+news2.maxwalltime = 08:00:00
+news2.data = /lfs0,/lfs1
+news2.dquota = 4000,10000
+news2.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+news2.mail = Anneliese.Alexander@noaa.gov
+
+nim.maxcpus = 512
+nim.maxjobcpus = 512
+nim.maxjobs = 8
+nim.maxwalltime = 08:00:00
+nim.data = /pan1,/lfs0
+nim.dquota = 2000,2000
+nim.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+nim.mail = jin.lee@noaa.gov,Jacques.Middlecoff@noaa.gov
+
+nosint.maxcpus = 8
+nosint.maxjobcpus = 8
+nosint.maxjobs = 1
+nosint.maxwalltime = 08:00:00
+nosint.data = /lfs0
+nosint.dquota = 300
+nosint.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+nosint.mail = varis.ransi@noaa.gov
+
+nrelwind.maxcpus = 80
+nrelwind.maxjobcpus = 40
+nrelwind.maxjobs = 4
+/#nrelwind.nodeprop = *
+nrelwind.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+/#nrelwind.data = 
+/#nrelwind.dquota = 
+nrelwind.class       = realTime
+nrelwind.mail = Kevin.Brundage@noaa.gov
+
+nrtrr.maxcpus = 1736
+nrtrr.maxjobcpus = 1736
+nrtrr.maxjobs = 40
+nrtrr.maxwalltime = 08:00:00
+nrtrr.data = /lfs1,/pan1
+nrtrr.dquota = 10000,80000
+/#nrtrr.class       = realTime
+nrtrr.nodeprop = mss:service:wgpu:tgpu:faa:faaserial
+nrtrr.mail = Christopher.W.Harrop@noaa.gov,Steven.Peckham@noaa.gov,Tatiana.Tanya.Smirnova@noaa.gov
+
+odvars.maxcpus = 160
+odvars.maxjobcpus = 160
+odvars.maxjobs = 2
+odvars.maxwalltime =  06:00:00
+odvars.data = /pan1
+odvars.dquota = 1000
+odvars.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+odvars.mail = Yuanfu.Xie@noaa.gov
+ 
+ome.maxcpus = 512
+ome.maxjobcpus = 512
+ome.maxjobs = 5
+ome.maxwalltime = 08:00:00
+ome.data = /pan1,/lfs0
+ome.dquota = 400,1500
+ome.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+ome.mail = Jian-Wen.Bao@noaa.gov,evelyn.grell@noaa.gov
+
+pcm.maxjobcpus = 128
+pcm.maxcpus = 256
+pcm.maxjobs = 12
+/#pcm.nodeprop    = *
+pcm.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+pcm.class       = realTime
+
+plankton.maxcpus = 32
+plankton.maxjobcpus = 32
+plankton.maxjobs = 1
+plankton.maxwalltime =  08:00:00
+plankton.data = /lfs1
+plankton.dquota = 100
+plankton.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+plankton.mail = ron.richter@noaa.gov
+
+ppef.maxcpus = 64
+ppef.maxjobcpus = 64
+ppef.maxjobs = 1
+ppef.maxwalltime =  08:00:00
+ppef.data = /pan1,/lfs0
+ppef.dquota = 1750,1000
+ppef.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+ppef.mail = Isidora.Jankov@noaa.gov,Brad.E.Beechler@noaa.gov
+
+rcc21.maxcpus = 304
+rcc21.maxjobcpus = 304
+rcc21.maxjobs = 15
+rcc21.maxwalltime = 08:00:00
+rcc21.data = /pan1
+rcc21.dquota = 1500
+rcc21.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+rcc21.mail = martin.hoerling@noaa.gov
+
+rcmd.maxcpus = 512
+rcmd.maxjobcpus = 240
+rcmd.maxjobs = 8
+rcmd.maxwalltime =  08:00:00
+rcmd.data = /lfs0
+rcmd.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+rcmd.dquota = 7000
+rcmd.mail =  Christopher.J.Anderson@noaa.gov
+
+reanl.maxcpus = 800
+reanl.maxjobcpus = 800
+reanl.maxjobs = 200
+reanl.maxwalltime = 8:00:00
+reanl.data = /pan1,/lfs0
+reanl.dquota = 3000,2000
+reanl.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+reanl.mail = Jeffrey.S.Whitaker@noaa.gov,Gilbert.P.Compo@noaa.gov
+
+rem.maxcpus = 128
+rem.maxjobcpus = 128
+rem.maxjobs = 1
+rem.maxwalltime = 08:00:00
+rem.data = /pan1,/lfs0
+rem.dquota = 1000,2000
+rem.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+rem.mail = Jian-Wen.Bao@noaa.gov
+
+renkf.maxcpus = 600
+renkf.maxjobcpus = 600
+renkf.maxjobs = 4
+renkf.maxwalltime = 08:00:00
+renkf.data = /lfs1
+renkf.dquota = 12000
+/#renkf.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+renkf.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+renkf.mail = yuanfu.xie@noaa.gov,Scott.M.Mackaro@noaa.gov,Steve.Albers@noaa.gov,Daniel.L.Birkenheuer@noaa.gov
+
+rtcalnexfc.maxcpus = 256
+rtcalnexfc.maxjobcpus = 128
+rtcalnexfc.maxjobs = 2
+rtcalnexfc.maxwalltime =  08:00:00
+rtcalnexfc.data = 
+rtcalnexfc.dquota = 
+rtcalnexfc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+rtcalnexfc.mail = Wayne.M.Angevine@noaa.gov
+
+/# # Temporarily incresed for fimx real time runs
+/# rtfim.maxcpus = 1500
+rtfim.maxcpus = 2500
+rtfim.maxjobcpus = 824
+rtfim.maxjobs = 20
+/# rtfim.maxcpus = 504
+/# rtfim.maxjobcpus = 504
+/# rtfim.maxjobs = 4
+/# rtfim.maxjobs = 12
+rtfim.maxwalltime = 08:00:00
+rtfim.data = /lfs0,/lfs1
+rtfim.dquota = 3000,10000
+rtfim.class       = realTime
+rtfim.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+rtfim.mail = Christopher.W.Harrop@noaa.gov
+
+rtrr.maxcpus = 1400
+rtrr.maxjobcpus = 600
+rtrr.maxjobs = 40
+rtrr.maxwalltime = 08:00:00
+rtrr.data = /pan1,/lfs0
+rtrr.dquota = 2000,12000
+rtrr.class       = realTime
+rtrr.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+rtrr.mail = Christopher.W.Harrop@noaa.gov,Steven.Peckham@noaa.gov,Tatiana.Tanya.Smirnova@noaa.gov
+
+rtvs.mail = Judy.K.Henderson@noaa.gov,Joan.E.Hart@noaa.gov,Andrew.Loughe@noaa.gov,Daniel.S.Schaffer@noaa.gov,Melissa.A.Petty@noaa.gov,Linda.Wharton@noaa.gov
+
+rtruc.data = /lfs0
+rtruc.dquota = 1000
+
+rucdev.maxcpus = 168
+rucdev.maxjobcpus = 168
+rucdev.maxjobs = 12
+/#rucdev.nodeprop = *
+rucdev.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+rucdev.data = /pan1
+rucdev.dquota = 750
+rucdev.class       = realTime
+rucdev.mail = Stan.Benjamin@noaa.gov,Stephen.Weygandt@noaa.gov,Kevin.Brundage@noaa.gov
+
+rucsref.maxcpus = 80
+rucsref.maxjobcpus = 80
+rucsref.maxjobs = 10
+rucsref.data = /lfs0
+rucsref.dquota = 750
+rucsref.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+rucsref.mail = Pengyuan.Li@noaa.gov
+
+sepp.maxcpus = 20000
+sepp.maxjobcpus = 20000
+sepp.maxjobs = 30
+sepp.maxwalltime =  03:00:00
+sepp.data = /lfs1
+sepp.dquota = 2000
+sepp.nodeprop    = *
+/#sepp.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+sepp.mail = leslie.b.hart@noa.gov
+
+
+stc.maxcpus = 64
+stc.maxjobcpus = 32
+stc.maxjobs = 3
+stc.maxwalltime =  08:00:00
+stc.data = /lfs0
+stc.dquota = 1000
+stc.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+stc.mail = wcheng@ocean.washington.edu
+
+stela.maxcpus = 130
+stela.maxjobcpus = 64
+stela.maxjobs = 2
+stela.maxwalltime = 08:00:00
+stela.data = /pan1
+stela.dquota = 2000
+stela.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+stela.mail =  Stuart.A.Mckeen@noaa.gov,jerome.brioude@noaa.gov
+
+
+strmtrck.maxcpus = 196
+strmtrck.maxjobcpus = 58
+strmtrck.maxjobs = 25
+strmtrck.maxwalltime = 08:00:00
+strmtrck.data = /pan1
+strmtrck.dquota = 1500
+strmtrck.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+strmtrck.mail = gilbert.p.compo@noaa.gov
+
+swr.maxcpus = 128
+swr.maxjobcpus = 64
+swr.maxjobs = 12
+swr.maxwalltime = 12:00:00
+swr.data = /pan1
+swr.dquota = 1000
+swr.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+swr.mail = Eric.A.Kihn@noaa.gov,ridley@umich.edu
+
+tcmt.maxcpus = 60 
+tcmt.maxjobcpus = 60 
+tcmt.maxjobs = 50
+tcmt.data = /lfs1
+tcmt.dquota = 750
+/#tcmt.nodeprop = ncomp:nserial:ndebug:hfip:nhfip:thfip:hfipserial:service
+tcmt.nodeprop    = mss:service:wgpu:tgpu:hfip:nhfip:thfip:hfipserial:hfipdebug
+tcmt.mail = nance@ucar.edu
+
+texaqs.maxcpus = 136 
+texaqs.maxjobcpus = 136 
+texaqs.maxjobs = 3
+texaqs.data = /lfs0
+texaqs.dquota = 8000
+texaqs.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+texaqs.mail = Stuart.A.McKeen@noaa.gov,wayne.m.angevine@noaa.gov
+
+uas-osse.maxcpus = 200
+uas-osse.maxjobcpus = 200
+uas-osse.maxjobs = 1
+uas-osse.maxwalltime =  08:00:00
+uas-osse.data = /lfs0,/lfs1
+uas-osse.dquota = 10000,10000
+uas-osse.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+uas-osse.mail = nikki.prive@noaa.gov,Scott.M.Mackaro@noaa.gov
+
+wof.maxcpus = 136
+wof.maxjobcpus = 136
+wof.maxjobs = 2
+wof.maxwalltime = 08:00:00
+wof.data = lfs0
+wof.dquota = 1000
+wof.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+wof.mail =  Scott.Dembek@noaa.gov,Jack.Kain@noaa.gov
+
+wrf-chem.maxcpus = 360
+wrf-chem.maxjobcpus = 360
+wrf-chem.maxjobs = 3
+wrf-chem.maxwalltime = 08:00:00
+wrf-chem.data = /pan1,/lfs0
+wrf-chem.dquota = 2500,10000
+wrf-chem.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+wrf-chem.mail =  Georg.A.Grell@noaa.gov,Steven.Peckham@noaa.gov,Susan.R.Sahm@noaa.gov
+
+wrf-dte.maxcpus = 152
+wrf-dte.maxjobcpus = 128
+wrf-dte.maxjobs = 48
+wrf-dte.maxwalltime = 08:00:00
+wrf-dte.data = /lfs0
+wrf-dte.dquota = 2000
+wrf-dte.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+wrf-dte.mail = Ligia.Bernardet@noaa.gov,mark.w.govett@noaa.gov
+
+wrfhfs.maxcpus = 128
+wrfhfs.maxjobcpus =128
+wrfhfs.maxjobs = 1
+wrfhfs.maxwalltime = 08:00:00
+wrfhfs.data = /pan1
+wrfhfs.dquota = 100
+wrfhfs.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+wrfhfs.mail = gopal@noaa.gov
+
+/#wrfhyb.maxcpus = 200
+/#wrfhyb.maxjobcpus = 90
+/#wrfhyb.maxjobs = 18
+/#wrfhyb.maxwalltime = 08:00:00
+wrfhyb.data = /pan1
+wrfhyb.dquota = 1500
+wrfhyb.mail = xuguang.wang@noaa.gov
+
+wrfles.maxcpus = 136
+wrfles.maxjobcpus = 128
+wrfles.maxjobs = 4
+wrfles.maxwalltime =  08:00:00
+wrfles.data = /lfs0
+wrfles.dquota = 2000
+wrfles.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+wrfles.mail = Christopher.J.Anderson@noaa.gov,Isidora.Jankov@noaa.gov
+
+wrfruc.maxcpus = 400
+wrfruc.maxjobcpus = 400
+wrfruc.maxjobs = 48
+wrfruc.maxwalltime =  08:00:00
+wrfruc.data = /pan1,/lfs0,/lfs1
+wrfruc.dquota = 7200,20000,10000
+wrfruc.nodeprop    = mss:service:wgpu:tgpu:ncomp:nserial:debug
+wrfruc.mail = Stan.Benjamin@noaa.gov,Georg.A.Grell@noaa.gov,Steven.Peckham@noaa.gov,Tatiana.Tanya.Smirnova@noaa.gov,stephen.weygandt@noaa.gov,Ming.Hu@noaa.gov,Joseph.B.Olson@noaa.gov
+wrfrr.data = /pan1
+wrfrr.dquota = 10
+wrfrr.mail = Stan.Benjamin@noaa.gov,Georg.A.Grell@noaa.gov,Steven.Peckham@noaa.gov,Tatiana.Tanya.Smirnova@noaa.gov,stephen.weygandt@noaa.gov,Ming.Hu@noaa.gov,Joseph.B.Olson@noaa.gov
+
+wwados.maxcpus = 90
+wwados.maxjobcpus =90
+wwados.maxjobs = 5
+wwados.maxwalltime = 08:00:00
+wwados.data = /pan1
+wwados.dquota = 1000
+wwados.nodeprop    = mss:service:wgpu:tgpu:hcompnew:hcomp:hserial:debug
+wwados.mail = Joseph.Barsugli@noaa.gov,Jeffrey.Deems@noaa.gov
