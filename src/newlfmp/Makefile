@@ -34,24 +34,26 @@
 #dis   
 
 SRCROOT=../..
-EXTMODS=-L$(SRCROOT)/src/lib/modules -lmodules
-DBEXTMODS=-L$(SRCROOT)/src/lib/modules -ldebugmodules
-LAPSLIB=-L$(SRCROOT)/src/lib -llaps
-DBLAPSLIB=-L$(SRCROOT)/src/lib -ldebuglaps
-MTHERMOLIB=-L$(SRCROOT)/src/lib/radar/synp -lsynp
-DBMTHERMOLIB=-L$(SRCROOT)/src/lib/radar/synp -ldebugsynp
-UTILLIB=-L$(SRCROOT)/src/lib/util -lutil
-DBUTILLIB=-L$(SRCROOT)/src/lib/util -ldebugutil
-SYNPLIB=-L$(SRCROOT)/src/lib/radar/synp -lsynp
-DBSYNPLIB=-L$(SRCROOT)/src/lib/radar/synp -ldebugsynp
-GRIBLIB=-L$(SRCROOT)/src/lib/grib -lgrib
-DBGRIBLIB=-L$(SRCROOT)/src/lib/grib -ldebuggrib
-GRIB2LIB=-L$(SRCROOT)/src/lib/grib2 -lgrib2
-DBGRIB2LIB=-L$(SRCROOT)/src/lib/grib2 -ldebuggrib2
-#NETCDF=/opt/netcdf/3.6.2-pgi-7.1-3
 OTHERLIBS=-L$(NETCDF)/lib -lnetcdf 
 
 include $(SRCROOT)/src/include/makefile.inc
+
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/modules/libmodules.a  \
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
+           $(SRCROOT)/src/lib/util/libutil.a  \
+	   $(SRCROOT)/src/lib/grib/libgrib.a  \
+	   $(SRCROOT)/src/lib/grib2/libgrib2.a  \
+	   $(SRCROOT)/src/lib/radar/synp/libsynp.a
+
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a \
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
+             $(SRCROOT)/src/lib/util/libdebugutil.a  \
+	     $(SRCROOT)/src/lib/grib/libdebuggrib.a  \
+	     $(SRCROOT)/src/lib/grib2/libdebuggrib2.a  \
+	     $(SRCROOT)/src/lib/radar/synp/libdebugsynp.a
+             
 
 # This can be uncommented if desired for the regular 'make' to have the 
 # optimization turned off. An example is with 'xlf' on the IBM where the
@@ -92,7 +94,7 @@ all:			$(EXE)
 
 $(EXE):			$(FOBJS) $(COBJS) $(FMOD)
 			$(FC) $(FREE) -o $@ $(FFLAGS) $(FOBJS) $(COBJS) \
-			$(LAPSLIB) $(MTHERMOLIB) $(UTILLIB) $(HDF5LIB) $(OTHERLIBS) $(SYNPLIB) $(EXTMODS) $(GRIBLIB) $(GRIB2LIB) $(INC) -lm
+			$(LAPSLIBS) $(HDF5LIB) $(OTHERLIBS) $(INC) -lm
 
 debug:	
 	 ($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
