@@ -355,23 +355,29 @@ c      Determine output filename extension
        i_skip = 0
 
 !      Test existence of raw 'yyjjjhhmm_elevtt / yyyymmdd_hhmm.elevtt' input
- 200   if(i_nbr_files_vol .eq. 0)then
+ 200   if(i_nbr_files_vol .eq. 0)then ! tilt data
            c8_fname_format = 'UNKNOWN'
            call check_input_file(path_to_radar,a9_time,i_tilt_proc      ! I
      1                          ,c8_fname_format                        ! I/O
      1                          ,filename,l_exist)                      ! O     
-       else
-           l_exist = .true.
+       else                           ! volume data
+         l_exist = .true.
+         if(i_tilt_proc .eq. 1)then   ! first tilt
 !          filename = path_to_radar(1:len_path)//'/'//a9_time//'.nc'
-           filename = c_fnames_in(i_process)
            write(6,*)' processing volume directory file # ',i_process
+           if(i_process .lt. 0 .or. i_process .gt. max_files)then
+               write(6,*)' ERROR: i_process out of bounds in radar_init'
+               stop
+           endif
+           filename = c_fnames_in(i_process)
 !          write(6,*)' c_fnames array',(c_fnames_in(i),i=1,i_process)
+         endif ! first tilt
        endif
 
        if(l_exist)then ! these calls will fill the variables in 
                        ! 'netcdfio_radar_common.inc'
 
-         write(6,*)' c8_fname_format = ',c8_fname_format
+         write(6,*)' c8_fname_format = ',trim(c8_fname_format)
 
          if(c8_fname_format .ne. 'VOLUME')then
 
@@ -441,7 +447,7 @@ c      Determine output filename extension
 
            if(i_tilt_proc .eq. 1)then
                write(6,*)' call get_vol_netcdf_hdr'
-               write(6,*)filename
+               write(6,*)trim(filename)
 
                call get_vol_netcdf_hdr(filename,
      +            gateR, gateR_HI, gateV, gateV_HI, radialR, radialR_HI,
@@ -457,7 +463,7 @@ c      Determine output filename extension
                radarName = station
 
                write(6,*)' lat/lon/alt/name ',siteLat,siteLon,siteAlt
-     1                                       ,radarName
+     1                                       ,trim(radarName)
 
 !              Deallocate old volume scan (if needed)
                if(allocated(Reflectivity))deallocate(Reflectivity)
@@ -522,6 +528,21 @@ c      Determine output filename extension
      +              azimuthV, azimuthV_HI, 
      +              distanceR, distanceR_HI,
      +              distanceV, distanceV_HI)
+
+!              Use Default values
+               Z_scale  = 2.0
+               Z_offset = 66.
+               V_scale  = 2.0
+               V_offset = 129.
+               resolutionV = 1. / V_scale
+
+               write(6,*)' Z/V scale/offset = ',Z_scale,Z_offset
+     1                                         ,V_scale,V_offset
+
+               write(6,*)' elevationR = '   ,elevationR(1,:)
+               write(6,*)' elevationR_HI = ',elevationR_HI(1,:)
+               write(6,*)' elevationV = '   ,elevationV(1,:)
+               write(6,*)' elevationV_HI = ',elevationV_HI(1,:)
 
            endif ! i_tilt_proc = 1
 
@@ -618,6 +639,8 @@ c      Determine output filename extension
                gateSizeV = (distanceV(2) - distanceV(1)) / 1000.
                write(6,*)' V i_tilt_proc/i_array/elev = ',
      1                     i_tilt_proc,i_array,elevationAngle
+           else
+               write(6,*)' No V match at elev ',elevationAngle
            endif
 
 !          Low elevation (V_HI)
@@ -646,6 +669,8 @@ c      Determine output filename extension
                gateSizeV = (distanceV_HI(2) -  distanceV_HI(1)) / 1000. 
                write(6,*)' V_HI i_tilt_proc/i_array/elev = ',
      1                     i_tilt_proc,i_array,elevationAngle
+           else
+               write(6,*)' No V_HI match at elev ',elevationAngle
            endif
 
            if(i_tilt_proc .eq. scanR + scanR_HI)then
@@ -658,7 +683,10 @@ c      Determine output filename extension
 
            istatus = 1
 
-         endif
+           write(6,*)' End of volume processing for tilt ',i_tilt_proc       
+     1                                                    ,i_last_scan
+
+         endif ! end of volume processing for this tilt
 
        elseif(i_tilt_proc .le. 20)then
            i_tilt_proc = i_tilt_proc + 1
