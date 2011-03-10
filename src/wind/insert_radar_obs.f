@@ -175,7 +175,7 @@ csms$ignore begin
      1                  r_missing_data,                 ! Input
      1                  vr_obs_fltrd(1,1,i_radar),      ! Input/Output
      1                  i_radar_reject(i_radar),        ! Input/Output
-     1                  n_superob,                      ! Input/Output
+     1                  n_superob(1,1,k,i_radar),       ! Input/Output
      1                  n_radarobs_lvl_unfltrd,         ! Output
      1                  n_radarobs_lvl_fltrd,           ! Output
      1                  intvl_rad,                      ! Output
@@ -365,22 +365,31 @@ csms$ignore end
 
         integer n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
         integer n_krn, n_krn_i_m1, n_krn_j_m1, n_krn_i, n_krn_j
-        integer n_superob(imax,jmax),n_superob_tot
+        integer n_superob(imax,jmax),n_superob_tot,n_superob_count
         integer istatus
 
         real vr_obs_unfltrd(imax,jmax)
         real wt_p_radar(imax,jmax)
         real vr_obs_fltrd(imax,jmax)
         real r_missing_data, weight_radar
-        real arg, stdev, xbar, sum, sumsq
+        real arg, stdev, sum, sumsq
         real stdev_thresh_radial
+        real sumi,sumj
+
+!       Superob arrays
+        integer ibar(imax,jmax)
+        integer jbar(imax,jmax)
+        real xbar(imax,jmax)
 
         logical l_found_one, l_imax_odd, l_jmax_odd
         integer i,j,ii,jj,i_radar_reject,n_radarobs_lvl_fltrd
         integer nbox_rmsl_lvl,nbox_rmsh_lvl
 
 csms$ignore begin
-        n_superob = 0 ! initialize array
+        n_superob = 0 ! initialize arrays
+        ibar = 0
+        jbar = 0
+        xbar = 0
 
 !       Count number of unfiltered obs after rejecting obs having non-radar data
         n_radarobs_lvl_unfltrd = 0
@@ -429,6 +438,8 @@ csms$ignore begin
 
         if(  n_radarobs_lvl_unfltrd .gt. thresh_25_radarobs_lvl_unfltrd      
      1  .OR. n_radarobs_lvl_unfltrd .gt. thresh_9_radarobs_lvl_unfltrd       
+     1  .OR. n_radarobs_lvl_unfltrd .gt. thresh_4_radarobs_lvl_unfltrd       
+     1  .OR. n_radarobs_lvl_unfltrd .gt. thresh_2_radarobs_lvl_unfltrd       
      1                                                            )then
          ! Keep only every intvl_rad ob.  
            vr_obs_fltrd = r_missing_data
@@ -453,6 +464,8 @@ csms$ignore begin
                        n_superob(i,j) = n_superob(i,j) + 1
                        sum = sum + vr_obs_unfltrd(ii,jj)
                        sumsq = sumsq + vr_obs_unfltrd(ii,jj)**2
+                       sumi = sumi + ii
+                       sumj = sumj + jj
                     endif
 
                  elseif (vr_obs_unfltrd(ii,jj) .ne. r_missing_data
@@ -462,6 +475,8 @@ csms$ignore begin
                     n_superob(i,j) = 1
                     sum = vr_obs_unfltrd(ii,jj)
                     sumsq = sum**2
+                    sumi = ii
+                    sumj = jj
 
                  else ! all missing in the kernel so far
                     continue
@@ -473,19 +488,21 @@ csms$ignore begin
 
 !             Calculate standard deviation (here dividing by N)
               if(n_superob(i,j) .ge. 2)then
-                 xbar = sum / float(n_superob(i,j))
-                 arg = sumsq - (float(n_superob(i,j)) * xbar**2)
+                 xbar(i,j) = sum / float(n_superob(i,j))
+                 arg = sumsq - (float(n_superob(i,j)) * xbar(i,j)**2)
+                 ibar(i,j) = nint(sumi / float(n_superob(i,j)))
+                 jbar(i,j) = nint(sumj / float(n_superob(i,j)))
                  if(arg .ge. 0.)then
                     stdev = sqrt(arg / float(n_superob(i,j)))       
                  elseif(abs(arg/sumsq) .lt. 1e-6)then
                     write(6,*)' NOTE: stdev arg < 0 ',n_superob(i,j)
-     1                        ,arg,sum,sumsq,xbar
+     1                        ,arg,sum,sumsq,xbar(i,j)
      1                        ,' within machine epsilon'
                     arg = 0.
                     stdev = 0.
                  else
                     write(6,*)' ERROR: stdev arg < 0 ',n_superob(i,j)
-     1                        ,arg,sum,sumsq,xbar
+     1                        ,arg,sum,sumsq,xbar(i,j)
                     stop
                  endif
               endif
@@ -610,6 +627,22 @@ csms$ignore begin
             istatus = 0
             return
         endif
+
+        n_superob_count = 0
+        n_superob_tot = 0
+        do j=1,jmax
+        do i=1,imax
+          if(n_superob(i,j) .gt. 0)then
+            n_superob_count = n_superob_count + 1
+            n_superob_tot = n_superob_tot + n_superob(i,j)
+          endif
+        enddo ! i
+        enddo ! j
+
+!       if(n_superob_count .gt. 0)then
+!           write(6,*)'     2nd Superob check ',n_superob_count
+!    1                                         ,n_superob_tot
+!       endif
 
 csms$ignore end
         istatus = 1
