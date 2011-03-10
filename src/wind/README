@@ -36,8 +36,9 @@ program laps_wind                              main.F
                 multiwind_noz                  multiwind_noZ.f
                 open_dxx                       insert_radar_obs.f
             get_inst_err                       windanal.f
-            barnes_multivariate
-                barnes_multivariate_sub
+            barnes_multivariate                lib/barnes_multivariate.F
+                barnes_multivariate_sub           "
+                get_rms_barnesobs                 "
             compare_wind                       comparisons.f
                 get_obstypes                      "
                 comp_grid_windobs                 "
