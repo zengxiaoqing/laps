@@ -233,12 +233,13 @@ then
   W3="-DLINUX"
 fi  
 
-dnl  For W3, test for MAC (Darwin)
+dnl  For W3 and CFLAGS, test for MAC (Darwin)
 if test "$arch" = "unknown" 
 then
   if test "`/usr/bin/uname -s`" = "Darwin"
   then
     W3="-DMAC"
+    CFLAGS="$CFLAGS -DMAC"
   fi
 fi
 
@@ -498,6 +499,7 @@ AC_OUTPUT(src/include/trigd.inc
           gui/install_perlTk.sh
           gui/guiTk/ui_system_tools.pl)
 
+chmod +x etc/qsub
 chmod +x etc/www/nph-laps.cgi
 chmod +x etc/www/laps.cgi
 chmod +x etc/verif/*.csh
