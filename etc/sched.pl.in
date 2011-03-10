@@ -574,7 +574,7 @@ foreach $exe (@LAPS_EXE){
                     if($qsub_mode eq "multi" || ! defined($opt_P)){
                         print TFILE "#\$ -pe $node_type $nodes_current\n";
                         if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
-                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=6.0G\n";
+                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=10.0G\n";
                         }else{
                             if($nodes_current > 1){
                                 print TFILE "#\$ -l h_rt=00:15:00\n";
