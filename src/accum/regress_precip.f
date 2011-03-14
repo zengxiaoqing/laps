@@ -31,7 +31,7 @@ cdis
 cdis
 c
 c
-        subroutine regress_precip(num_sfc,radar,gauge,b_t,a_t,rbar,gbar
+        subroutine regress_precip(num_sfc,radar,gauge,a_t,b_t,rbar,gbar
      1                           ,istatus)
 c
 c*******************************************************************************
