@@ -32,7 +32,7 @@ cdis
 
       subroutine barnes_multivariate
      1                     (var                                   ! Output
-     1                     ,n_var,max_obs,obs_barnes              ! Input
+     1                     ,n_var,max_obs,obs_barnes_in           ! Input
      1                     ,imax,jmax,kmax,grid_spacing_m         ! Inputs
      1                     ,rep_pres_intvl                        ! Input
      1                     ,wt_b                                  ! Input
@@ -42,7 +42,8 @@ cdis
      1                     ,r0_barnes_max_m,barnes_conv_rate      ! Input
      1                     ,topo,ldf,ni_stat,nj_stat              ! Input
      1                     ,n_obs_lvl,istatus)                    ! Outputs
-      integer max_obs
+
+      integer max_obs ! also is the number of input full obs
 
 !     ....................Declare I/O variables...............................
 
@@ -50,8 +51,9 @@ cdis
       integer n_var                                                 ! Input
 
       include 'barnesob.inc'
-      type (barnesob) :: obs_barnes(max_obs)                          ! Input
-      type (barnesob) :: obs_barnes_buff(max_obs)                     ! Local
+      type (barnesob) :: obs_barnes_in(max_obs)   ! (input)           Input
+      type (barnesob) :: obs_barnes_buff(max_obs) ! (buffer)          Local
+      type (barnesob) :: obs_barnes(max_obs)      ! (superobs)        Local
 
       real    var(imax,jmax,kmax,n_var)                             ! Output
       real, allocatable, dimension(:,:,:,:) :: var_buff             ! Local
@@ -68,7 +70,10 @@ cdis
 
       integer n_fnorm_dum                                           ! Input
       real    fnorm_dum                                             ! Input
-      logical   l_not_struct,l_struct                                 ! Input
+      logical   l_not_struct,l_struct                               ! Input
+
+      logical l_superob 
+      parameter (l_superob = .false.)
 
       integer n_obs_lvl(kmax)                                       ! Phaseout
       integer istatus                                               ! Output
@@ -145,12 +150,26 @@ cdis
      1                      * barnes_conv_rate ** (iter-1)       
 
           if(iter .eq. 1)then
-              if(.not. l_struct)then
-                  write(6,*)' code error'
-                  stop
-              
+
+!             Determine super obs
+              i_ratio_max = 0.1 * (r0_barnes_max_in / grid_spacing_m)
+              i_ratio = max(i_ratio_max,1)
+              if(l_superob .and. kmax .gt. 1 .and. i_ratio .gt. 1)then
+                  call get_barnes_superobs(imax,jmax,kmax,r_missing_data ! I 
+     1                        ,n_var,i_var,max_obs,obs_barnes_in         ! I
+     1                        ,i_ratio,i4time_sys                        ! I
+     1                        ,obs_barnes,ncnt_superobs)                 ! O
+                  ncnt_total = ncnt_superobs
+
               else
+                  write(6,*)' Using all obs - skip superobs routine'
+                  obs_barnes = obs_barnes_in
                   ncnt_total = max_obs
+
+              endif
+
+              if(.true.)then
+!                 ncnt_total = max_obs
                   weight_total = 0.
                   do n = 1,ncnt_total
                       call get_time_wt(i4time_sys,obs_barnes(n)%i4time
@@ -199,6 +218,23 @@ cdis
      1                     , exit iter loop '
      1                     ,iter,r0_barnes_max_in,grid_spacing_m
                   goto900
+              endif
+
+!             Determine superobs
+              i_ratio_max = 0.1 * (r0_barnes_max_in / grid_spacing_m)
+              i_ratio = max(i_ratio_max,1)
+              if(l_superob .and. kmax .gt. 1 .and. i_ratio .gt. 1)then
+                  call get_barnes_superobs(imax,jmax,kmax,r_missing_data ! I 
+     1                        ,n_var,i_var,max_obs,obs_barnes_in         ! I
+     1                        ,i_ratio,i4time_sys                        ! I
+     1                        ,obs_barnes,ncnt_superobs)                 ! O
+                  ncnt_total = ncnt_superobs
+
+              else
+                  write(6,*)' Using all obs - skip superobs routine'
+                  obs_barnes = obs_barnes_in
+                  ncnt_total = max_obs
+
               endif
 
 !             obs_buff = obs-anal            [if iter > 1]
@@ -296,9 +332,10 @@ cdis
           l_rms_exceeded = .false.
 
           do ivar = 1,n_var
+!             Use full (non-superobs) obs set?
               call get_rms_barnesobs(var(1,1,1,ivar)                 ! I
      1                ,imax,jmax,kmax,r_missing_data,nobs            ! I/O 
-     1                ,n_var,ivar,max_obs,obs_barnes,ncnt_total      ! I
+     1                ,n_var,ivar,max_obs,obs_barnes_in,max_obs      ! I
      1                ,rms_obs,rms)                                  ! O
 
               write(6,1)iter,ivar,nobs,rms_obs,rms
@@ -1050,7 +1087,8 @@ csms$parallel end
       subroutine arrays_to_barnesobs(imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varo,weight_3d                   ! I
-     1                              ,n_var,max_obs,obs_barnes         ! I/O
+     1                              ,n_var,max_obs                    ! I
+     1                              ,obs_barnes                       ! O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
 
