@@ -316,7 +316,7 @@ c       write(6,*)' i = ',i
      1                ,twet_snow                                        ! I
      1                ,HWB0,HWB_snow                                    ! O
      1                ,PLCL,LCL,CCL
-     1                ,TCONV,IO,blayr_thk_pa
+     1                ,TCONV,IO
      1                ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI
      1                ,VELNEG,WATER,IHOUR,istatus)
             if(istatus .ne. 1)then
@@ -439,7 +439,7 @@ C
         SUBROUTINE SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT
      1   ,twet_snow,HWB0,HWB_snow
      1   ,PLCL_PBE,LCL_PBE_MSL,CCL  
-     1   ,TCONV,IO,blayr_thk_pa,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50
+     1   ,TCONV,IO,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50
      1   ,PBLI,VELNEG,WATER,IHOUR,istatus)
 
 cdoc    Calculate a variety of stability indices from an input sounding
@@ -583,7 +583,7 @@ C  CALCULATE WET BULB ZERO LEVEL
 
 !       Calculate CAPE/CIN based on sfc parcel
         CALL POTBE(Q,NLEVEL,P(1),T(1),W(1),PLCL_PBE
-     1   ,TLCL_PBE,LCL_PBE_MSL,0.,THETAE,ICP,ICT,IO,PBENEG,PBEPOS
+     1   ,TLCL_PBE,LCL_PBE_MSL,THETAE,ICP,ICT,IO,PBENEG,PBEPOS
      1   ,VELNEG)
 C
         DO 600 I=1,ICP
@@ -621,7 +621,7 @@ C
 C
 C
         SUBROUTINE POTBE(Q,NLEVEL,PMEAN,TMEAN,WMEAN,PLCL
-     #   ,TLCL,LCL,HBLAYR,BLTHTE,ICP,ICT,IO,PBENEG,pos_area_max
+     #   ,TLCL,LCL,BLTHTE,ICP,ICT,IO,PBENEG,pos_area_max
      #   ,VELNEG)
 
 cdoc    Calculate a PBE/LCL related indices from an input sounding
