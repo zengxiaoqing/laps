@@ -845,6 +845,10 @@ if($err == 0) {
                       printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
                   }
 
+                  if($sect eq "sndg"){
+                      printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
+                  }
+
 #                 print "overlay/level/sect is $overlay $level $sect<br>\n";
 
                   $overlay = $overlay + 1;
@@ -1361,12 +1365,22 @@ if($err == 0) {
                               printf LAPSPLOT "swoi\n"; 
 
                           }elsif("$field" eq "HT" ){ 
-                              printf LAPSPLOT "gg\n"; 
-                              printf LAPSPLOT "tni\n"; 
+#                             printf LAPSPLOT "gg\n"; 
+#                             printf LAPSPLOT "tni\n"; 
+                              printf LAPSPLOT "bs\n"; 
+                              printf LAPSPLOT "fsf\n"; 
+                              printf LAPSPLOT "$source\n"; 
+                              printf LAPSPLOT "$hhmm\n";
+                              printf LAPSPLOT "teri\n"; 
 
                           }elsif("$field" eq "ht" ){ 
-                              printf LAPSPLOT "gg\n"; 
-                              printf LAPSPLOT "tn\n"; 
+#                             printf LAPSPLOT "gg\n"; 
+#                             printf LAPSPLOT "tn\n"; 
+                              printf LAPSPLOT "bs\n"; 
+                              printf LAPSPLOT "fsf\n"; 
+                              printf LAPSPLOT "$source\n"; 
+                              printf LAPSPLOT "$hhmm\n";
+                              printf LAPSPLOT "ter\n"; 
 
                           }else{
                               print "$source $level $field not yet available<br>\n"; 
@@ -2365,7 +2379,7 @@ if($err == 0) {
 
                         }elsif("$field" eq "CLD_CVR" ) { 
                             printf LAPSPLOT "ov\n"; 
-                            printf LAPSPLOT "og\n"; 
+                            printf LAPSPLOT "or\n"; 
                             printf LAPSPLOT " \n"; 
 #                           if($montage == 0){
                                 $obs_sfc = "vsblty";   # This is set to prevent station model overlays
@@ -2515,7 +2529,7 @@ if($err == 0) {
                             printf LAPSPLOT " \n"; 
 
                         }elsif("$field" eq "SW_DOWN" || "$field" eq "sw_down"){ 
-                            printf LAPSPLOT "og\n"; 
+                            printf LAPSPLOT "or\n"; 
                             printf LAPSPLOT " \n"; 
 
                         }elsif("$field" eq "prcp_h2o" || "$field" eq "PRCP_H2O"){ 
