@@ -85,6 +85,7 @@ cdis
       type (barnesob) :: obs_point(max_obs)   ! Full Wind Obs  - Non-radar data
       type (barnesob) :: obs_point_qced(max_obs) ! QC'd Obs    - Non-radar data
       type (barnesob) :: obs_radar(max_obs)   ! Full Wind Obs  - Radar data
+      type (barnesob) :: obs_radar_multi(max_obs) ! Full Wind Obs  - Multi-Radar data
       type (barnesob) :: obs_barnes(max_obs)  ! QC'd obs       - All Data
 
       integer n_var                                                ! Input
@@ -421,10 +422,6 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
      1        ,r_missing_data                             ! Input
      1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
-!    1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
-!    1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
-!    1        ,thresh_9_radarobs_lvl_unfltrd              ! Input
-!    1        ,thresh_25_radarobs_lvl_unfltrd             ! Input
      1        ,i4time                                     ! Input
      1        ,lat,lon                                    ! Input
      1        ,rlat_radar,rlon_radar                      ! Input
@@ -458,7 +455,8 @@ csms$serial end
                   call arrays_to_barnesobs(imax,jmax,kmax             ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_radar    ! I
-     1                              ,n_var,max_obs,obs_radar          ! I/O
+     1                              ,n_var,max_obs                    ! I
+     1                              ,obs_radar                        ! O
      1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
                   if(istatus .ne. 1)return
@@ -588,7 +586,8 @@ csms$serial end
                   call arrays_to_barnesobs(imax,jmax,kmax             ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_radar    ! I
-     1                              ,n_var,max_obs,obs_radar          ! I/O
+     1                              ,n_var,max_obs                    ! I
+     1                              ,obs_radar_multi                  ! O
      1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
                   if(istatus .ne. 1)return
@@ -596,14 +595,14 @@ csms$serial end
                   deallocate(varobs_diff_spread)
                   ialloc_varobs_diff_spread = 0
 
-!                 Combine radar (obs_radar) and non-radar (obs_point_qced) 
+!                 Combine radar (obs_radar_multi) and non-radar (obs_point_qced) 
 !                 data structures into new structure (obs_barnes)
                   obs_barnes = obs_point_qced
                   ncnt_total = n_qc_total_good
                   do i = 1,ncnt_radar
                       ncnt_total = ncnt_total + 1
-                      obs_radar(i)%i4time = i4time
-                      obs_barnes(ncnt_total) = obs_radar(i)
+                      obs_radar_multi(i)%i4time = i4time
+                      obs_barnes(ncnt_total) = obs_radar_multi(i)
                       obs_barnes(ncnt_total)%type = 'radar'
                   enddo ! i
 
@@ -729,7 +728,8 @@ csms$insert      print *, 'got to 10 processor=',me
               call arrays_to_barnesobs(imax,jmax,kmax             ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_radar    ! I
-     1                              ,n_var,max_obs,obs_radar          ! I/O
+     1                              ,n_var,max_obs                    ! I
+     1                              ,obs_radar                        ! O
      1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
               if(istatus .ne. 1)return
