@@ -51,6 +51,7 @@
         character*16 c16_latlon
         character*11 c_pw
         character*20 c20_x, c20_y
+        character*255 new_dataroot
         logical l_latlon, l_parse
 
         integer i_overlay
@@ -125,6 +126,26 @@
             read(c20_x(1:lenx),*)xsound
             write(6,*)' Input y grid point for sounding...'
             read(5,*)ysound
+        endif
+
+ 40     if(.true.)then ! force config with new dataroot
+            write(6,*)' Enter new dataroot:'
+            read(5,17)new_dataroot
+ 17         format(a)
+            call s_len(new_dataroot,lenroot)
+
+            if(new_dataroot(1:1) .eq. 'q')then
+                write(6,*)' Unknown dataroot, will quit'
+                go to 900
+            endif
+
+            call force_get_laps_config(new_dataroot(1:lenroot),istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Bad status returned from force_laps_config'
+                return
+            else
+                write(6,*)' Forced config to ',new_dataroot(1:lenroot)
+            endif
         endif
 
         tlow_c = -30.
@@ -798,7 +819,7 @@
 
         write(6,*)' Sounding has been plotted...'
 
-        go to 50
+        go to 40
 
  900    continue
 
