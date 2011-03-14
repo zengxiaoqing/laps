@@ -3022,7 +3022,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             write(6,*)' Reading pregenerated cloud type'
             var_2d = 'CTY'
-            ext =    'lty'
+            ext =    'cty'
             call get_laps_3dgrid(i4time_lwc,86400,i4time_nearest,
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1          ,units_2d,comment_2d,pcp_type_3d,istatus)
@@ -3042,7 +3042,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 write(6,*)' Reading pregenerated precip type'
                 var_2d = 'PTY'
-                ext =    'lty'
+                ext =    'pty'
                 call get_laps_3dgrid(i4time_pcp,86400,i4time_radar,
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1          ,units_2d,comment_2d,pcp_type_3d,istatus)
