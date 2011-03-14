@@ -6,10 +6,6 @@
      1  ,r_missing_data                             ! Input
      1  ,heights_3d                                 ! Input
      1  ,vr_obs_unfltrd                             ! Input
-!    1  ,thresh_2_radarobs_lvl_unfltrd_in           ! Input NL
-!    1  ,thresh_4_radarobs_lvl_unfltrd_in           ! Input NL
-!    1  ,thresh_9_radarobs_lvl_unfltrd_in           ! Input NL
-!    1  ,thresh_25_radarobs_lvl_unfltrd_in          ! Input NL
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar                      ! Input
@@ -68,11 +64,6 @@
 !     Number of unfiltered radar obs associated with each filtered one
 !     integer n_superob(imax,jmax,kmax,max_radars)                 ! Local
       integer, allocatable, dimension(:,:,:,:) :: n_superob        ! Local
-
-!     integer thresh_2_radarobs_lvl_unfltrd_in                     ! Input
-!    1         ,thresh_4_radarobs_lvl_unfltrd_in
-!    1         ,thresh_9_radarobs_lvl_unfltrd_in
-!    1         ,thresh_25_radarobs_lvl_unfltrd_in
 
       integer thresh_2_radarobs_lvl_unfltrd                        ! Local
      1         ,thresh_4_radarobs_lvl_unfltrd
@@ -384,6 +375,10 @@ csms$ignore end
         logical l_found_one, l_imax_odd, l_jmax_odd
         integer i,j,ii,jj,i_radar_reject,n_radarobs_lvl_fltrd
         integer nbox_rmsl_lvl,nbox_rmsh_lvl
+        integer n_superob_box,inew,jnew
+
+        logical l_superob
+        parameter (l_superob = .false.)
 
 csms$ignore begin
         n_superob = 0 ! initialize arrays
@@ -519,77 +514,28 @@ csms$ignore begin
                  nbox_rmsl_lvl = nbox_rmsl_lvl + 1
               endif
 
+              if(l_superob .and. n_superob(i,j) .ge. 2)then ! move ob to superob location
+                 n_superob_box = n_superob(i,j)
+
+!                Clean out obs from box
+                 do jj = j,j+n_krn_i_m1
+                 do ii = i,i+n_krn_j_m1
+                    n_superob(i,j) = 0
+                    vr_obs_fltrd(ii,jj) = r_missing_data
+                 enddo ! ii
+                 enddo ! jj
+
+                 inew = ibar(i,j)
+                 jnew = jbar(i,j)
+                 n_superob(inew,jnew) = n_superob_box
+                 vr_obs_fltrd(inew,jnew) = xbar(i,j)
+              endif
+
            enddo ! i
            enddo ! j
 
            write(6,*)'nbox_rmsl_lvl,nbox_rmsh_lvl = ',
      1                nbox_rmsl_lvl,nbox_rmsh_lvl
-
-        elseif(n_radarobs_lvl_unfltrd .gt. thresh_4_radarobs_lvl_unfltrd
-     1                                                         )then
-           ! Keep only every fourth ob.  Keep one ob out of every `quad'.
-           intvl_rad = 4
-           do j=1,jmax-1,2
-           do i=1,imax-1,2
-              l_found_one = .false.
-              do jj = j,j+1
-              do ii = i,i+1
-                 if  ( l_found_one ) then
-                    vr_obs_fltrd(ii,jj) = r_missing_data
-                    if ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data)then
-                       n_superob(i,j) = n_superob(i,j) + 1
-                    endif
-
-                 elseif ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data
-     1                                                            )then
-                    vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(ii,jj)
-                    l_found_one = .true.
-                    n_superob(i,j) = 1
-
-                 else
-                    vr_obs_fltrd(ii,jj) = r_missing_data
-
-                 endif
-              enddo ! ii
-              enddo ! jj
-           enddo ! i
-
-           if ( l_imax_odd ) then
-              vr_obs_fltrd(imax,j) = r_missing_data
-              vr_obs_fltrd(imax,j+1) = r_missing_data
-           endif
-
-           enddo ! j
-
-           if ( l_imax_odd ) then
-              do i=1,imax
-                 vr_obs_fltrd(i,jmax) = r_missing_data
-              enddo
-           endif
-
-        elseif(n_radarobs_lvl_unfltrd .gt.
-     1         thresh_2_radarobs_lvl_unfltrd)then
-           ! Keep every other ob.  Keep one ob out of every `pair'.
-           intvl_rad = 2
-           do j=1,jmax
-           do i=1,imax
-             vr_obs_fltrd(i,j) = r_missing_data
-             if((i+j) .eq. ((i+j)/2)*2 .and. i .lt. imax)then ! Sum is even
-               l_found_one = .false.
-               do ii = i,i+1
-                 if (vr_obs_unfltrd(ii,j) .ne. r_missing_data) then
-                   if(.not. l_found_one)then
-                      vr_obs_fltrd(ii,j) = vr_obs_unfltrd(ii,j)
-                      l_found_one = .true.
-                      n_superob(i,j) = 1
-                   else ! already found one
-                      n_superob(i,j) = n_superob(i,j) + 1
-                   endif
-                 endif
-               enddo ! ii
-             endif ! On checkerboard
-           enddo ! i
-           enddo ! j
 
         else
            ! Keep every ob
@@ -639,10 +585,10 @@ csms$ignore begin
         enddo ! i
         enddo ! j
 
-!       if(n_superob_count .gt. 0)then
-!           write(6,*)'     2nd Superob check ',n_superob_count
-!    1                                         ,n_superob_tot
-!       endif
+        if(n_superob_count .gt. 0)then
+            write(6,*)'     2nd Superob check ',n_superob_count
+     1                                         ,n_superob_tot
+        endif
 
 csms$ignore end
         istatus = 1
