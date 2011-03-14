@@ -3867,7 +3867,7 @@ c abdel
                     k_level = nint(rlevel_of_field(pressure,pres_3d
      1                            ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
                     k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
-                    ext = 'lty'
+                    ext = 'cty'
                     var_2d = 'CTY'
                     call mklabel
      1                    (k_mb,'     Cloud Type    ',c_label)
@@ -3964,7 +3964,7 @@ c abdel
             if(k_level .gt. 0)then ! Plot Precip Type on const pressure sfc
                 if(c_prodtype .eq. 'A')then
                     write(6,*)' Reading pregenerated precip type field'
-                    ext = 'lty'
+                    ext = 'pty'
                     call get_laps_2dgrid(i4time_pcp,laps_cycle_time
      1                    ,i4time_nearest,ext,var_2d
      1                    ,units_2d,comment_2d,NX_L,NY_L
@@ -4242,9 +4242,11 @@ c                cint = -1.
                   enddo ! j
                   enddo ! i                       
 
+                  call contour_settings(field_2d,NX_L,NY_L
+     1                            ,clow,chigh,cint,zoom,density,scale)      
                   clow = -100.
                   chigh = +30.
-                  cint = 10.
+!                 cint = 10.
 
                   call plot_field_2d(i4time_heights,c_type_i,field_2d
      1                        ,1.
