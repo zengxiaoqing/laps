@@ -55,6 +55,7 @@ SRC	= machine_dependent.F \
           fname_conversions.f \
           gen_bl_file.f \
           gen_btemps.f \
+          get_barnes_superobs.f \
           get_cloud_deriv.f \
           get_dir_length.f \
           get_directory.f \
