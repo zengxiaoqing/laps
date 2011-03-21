@@ -25,7 +25,7 @@ c
 c
         character*200 path_to_metar
         character*200 path_to_local_data
-        character*8   metar_format
+        character*8   tower_format
         character*8   a9_to_a8, a8_time
 
 c       Declared then used in 'get_local_towerobs' for SND purposes
@@ -71,10 +71,11 @@ c
 	write(6,*)'Getting Mesonet Tower Data...'
 c
         ext_s = 'snd'
+        tower_format = 'NIMBUS'
  
         call get_local_towerobs(maxsta,maxlvls,                          ! I
      &                      i4time_sys,lun_out,
-     &                      path_to_local_data,metar_format,
+     &                      path_to_local_data,tower_format,
      &                      ext_s,
      &                      itime_before,itime_after,
 !    &                      grid_east,grid_west,grid_north,grid_south,
