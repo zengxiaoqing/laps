@@ -1,7 +1,7 @@
  &snd_nl
  path_to_raw_raob='/public/data/raob/netcdf',
  path_to_local_raob='/data/fxa/LDAD/rawinsonde/netCDF',
- path_to_raw_tower='/data/fxa/LDAD/mesonet/met-tower/netCDF',
+ path_to_raw_tower='/public/data/tower/public/netcdf',
  path_to_raw_drpsnd='/public/data/dropsonde/netcdf',
  path_to_raw_poessnd='/public/data/madis/point/POES/netcdf',
  path_to_raw_satsnd='/public/data/sat/nesdis/goes12/sounding/binary/',
