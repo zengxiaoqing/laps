@@ -1,7 +1,7 @@
 c
         subroutine get_local_towerobs(maxsta,maxlvls,                    ! I
      &                 i4time_sys,lun_out,
-     &                 path_to_local_data,local_format,ext,
+     &                 path_to_local_data,tower_format,ext,
      &                 itime_before,itime_after,
      &                 lat,lon,ni,nj,                                    ! I
      &                 nsta,                                             ! O
@@ -10,6 +10,7 @@ c
      &                 soilmoist_p,                                      ! O
      &                 istatus)
 
+c       Read tower data from either RSA or NIMBUS netCDF CDLs
 c
 c.....  Input variables/arrays
 c
@@ -19,7 +20,7 @@ c
 
         parameter (maxobs=10000) ! Raw stations in NetCDf files
 
-        character*(*) path_to_local_data, local_format, ext
+        character*(*) path_to_local_data, tower_format, ext
 
         real    lat(ni,nj), lon(ni,nj)
 c
@@ -46,6 +47,7 @@ c
         real     staelev(maxobs)
         real     soilMoisture(maxobs)
         character  c5_staid(maxobs)*5, a9time_ob(maxobs)*9
+        character  a9time*9
 !       character  c8_obstype(maxobs)*8
         real     height_m(maxobs,maxlvls), pressure_mb(maxobs,maxlvls)
         real     temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
@@ -142,19 +144,30 @@ c
         write(6,*)' i4time_file_before,i4time_file_after:'
      1             ,i4time_file_before,i4time_file_after
 
+        write(6,*)' Tower format = ',tower_format
+
         do i4time_file = i4time_file_before, i4time_file_after, +3600       
 
             call s_len(path_to_local_data,len_path)
-            filename13= cvt_i4time_wfo_fname13(i4time_file)
 
-            if(len_path .lt. 1)goto590
- 	    data_file = path_to_local_data(1:len_path)//filename13
+            if(tower_format .eq. 'WFO' .or. tower_format .eq. 'RSA')then
+                filename13= cvt_i4time_wfo_fname13(i4time_file)
+                if(len_path .lt. 1)goto590
+ 	        data_file = path_to_local_data(1:len_path)//'/'
+     1                                                    //filename13
+            else
+                call make_fnam_lp(i4time_file,a9time,istatus)
+                if(len_path .lt. 1)goto590
+ 	        data_file = path_to_local_data(1:len_path)//'/'
+     1                                       //a9time//'0100o'       
+            endif
 
-            write(6,*)' LDAD tower file = ',data_file(1:len_path+13)
+            write(6,*)' LDAD tower file = ',trim(data_file)
+            call s_len(data_file,lenf)
 c
 c.....  Call the read routine.
 c
-	    call read_local_tower(data_file,len_path+13,          ! I 
+	    call read_local_tower(data_file,lenf,                 ! I 
      &         maxobs, maxlvls,                                   ! I
      &         r_missing_data,                                    ! I
      &         nsnd_file, nlvl(ix), lvls_m(1,ix),                 ! O
@@ -542,18 +555,19 @@ c     read var soilMoisture(recNum) -> soilMoisture(maxobs)
       nf_status = NF_INQ_VARID(nf_fid,'soilMoisture',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'finding var soilMoisture'
+        print *,'Warning: could not find var soilMoisture'
+      else
+        nf_status = NF_GET_VARA_REAL(nf_fid,nf_vid,
+     1                               start1,count1,soilMoisture)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'reading var soilMoisture'
+          print *, 'Aborting read'
+          nf_status = NF_CLOSE(nf_fid)
+          istatus = 0
+          return
+        endif 
       endif
-      nf_status = NF_GET_VARA_REAL(nf_fid,nf_vid,
-     1 start1,count1,soilMoisture)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'reading var soilMoisture'
-        print *, 'Aborting read'
-        nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
-      endif 
       
 c     read dim smQcFlag -> smQcFlag
       nf_status = NF_INQ_DIMID(nf_fid,'smQcFlag',nf_vid)
@@ -639,11 +653,13 @@ c       relHumidity, windSpeed, windDir, observationTime
       nf_status = NF_INQ_VARID(nf_fid,'tempQcFlag',tempQc_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'finding var tempQcFlag'
-        print *, 'Aborting read'
+        print *,'Warning: could not find var tempQcFlag'
         nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
+!       istatus = 0
+!       return
+        istat_tempQcFlag = 0
+      else
+        istat_tempQcFlag = 1
       endif
 
 c     read _fillValue for temperature
@@ -651,73 +667,81 @@ c     read _fillValue for temperature
      1                          t_fill)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'reading temperature _FillValue attribute'
+        print *,'use guess for filling temperature _FillValue attribute'
         t_fill = 1.e+38
       endif 
 
       nf_status = NF_INQ_VARID(nf_fid,'stationPressure',sp_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'finding var stationPressure'
-        print *, 'Aborting read'
+        print *,'Warning: could not find var stationPressure'
         nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
+!       istatus = 0
+!       return
+        istat_stationPressure = 0
+      else
+        istat_stationPressure = 1
       endif
 
-      nf_status = NF_INQ_VARID(nf_fid,'prsQcFlag',spQc_id)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'finding var spQcFlag'
-        print *, 'Aborting read'
-        nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
-      endif
+      if(istat_stationPressure .eq. 1)then
+        nf_status = NF_INQ_VARID(nf_fid,'prsQcFlag',spQc_id)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'finding var spQcFlag'
+          print *, 'Aborting read'
+          nf_status = NF_CLOSE(nf_fid)
+          istatus = 0
+          return
+        endif
 
-c     read _fillValue for stationPressure
-      nf_status = NF_INQ_ATTLEN(nf_fid, sp_id,'_FillValue',
-     1                          sp_fill)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'reading stationPressure _FillValue attribute'
-        sp_fill = 3.4028e+38
-      endif 
+c       read _fillValue for stationPressure
+        nf_status = NF_INQ_ATTLEN(nf_fid, sp_id,'_FillValue',
+     1                            sp_fill)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'reading stationPressure _FillValue attribute'
+          sp_fill = 3.4028e+38
+        endif 
+      endif
 
       nf_status = NF_INQ_VARID(nf_fid,'relHumidity',rh_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'finding var relHumidity'
-        print *, 'Aborting read'
+        print *,'Warning: could not find var relHumidity'
         nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
+!       istatus = 0
+!       return
+        istat_relHumidity = 0
+      else
+        istat_relHumidity = 1
       endif
 
-      nf_status = NF_INQ_VARID(nf_fid,'rhQcFlag',rhQc_id)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'finding var rhQcFlag'
-        print *, 'Aborting read'
-        nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
-      endif
+      if(istat_relHumidity .eq. 1)then
+        nf_status = NF_INQ_VARID(nf_fid,'rhQcFlag',rhQc_id)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'finding var rhQcFlag'
+          print *, 'Aborting read'
+          nf_status = NF_CLOSE(nf_fid)
+          istatus = 0
+          return
+        endif
 
-c     read _fillValue for relHumidity
-      nf_status = NF_INQ_ATTLEN(nf_fid, rh_id,'_FillValue',
-     1                          rh_fill)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'reading relHumidity _FillValue attribute'
-        rh_fill = 3.4028e+38
-      endif 
+c       read _fillValue for relHumidity
+        nf_status = NF_INQ_ATTLEN(nf_fid, rh_id,'_FillValue',
+     1                            rh_fill)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'reading relHumidity _FillValue attribute'
+          rh_fill = 3.4028e+38
+        endif 
+      endif
 
       nf_status = NF_INQ_VARID(nf_fid,'windSpeed',ws_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'finding var windSpeed'
-        print *, 'Aborting read'
+        print *,'Error, could not find var windSpeed',NF_NOERR,nf_status
+        print *, 'Aborting read ',nf_fid
         nf_status = NF_CLOSE(nf_fid)
         istatus = 0
         return
@@ -913,30 +937,35 @@ c       convert string to iwmostanum(maxobs) (cvt S to 0 and N to 1)
             height_m(obno,lvl) = lvls_m(lvl,obno)
             index_2(1) = lvl
 c           read stationPressure
-            nf_status = NF_GET_VAR1_REAL(nf_fid,sp_id,index_1,stationP)
-            if(nf_status.ne.NF_NOERR) then
-              print *, NF_STRERROR(nf_status)
-              print *,'reading var stationPressure'
-            endif 
+            if(istat_stationPressure .eq. 1)then
+              nf_status = NF_GET_VAR1_REAL(nf_fid,sp_id,index_1
+     1                                                 ,stationP)
+              if(nf_status.ne.NF_NOERR) then
+                print *, NF_STRERROR(nf_status)
+                print *,'error reading var stationPressure'
+              endif 
 
-c           read prsQcFlag
-            nf_status=NF_GET_VAR1_REAL(nf_fid,spQc_id,index_1,prsQF)
-            if(nf_status.ne.NF_NOERR) then
-              print *, NF_STRERROR(nf_status)
-              print *,'reading var prsQcFlag'
-            endif 
+c             read prsQcFlag
+              nf_status=NF_GET_VAR1_REAL(nf_fid,spQc_id,index_1,prsQF)    
+              if(nf_status.ne.NF_NOERR) then
+                print *, NF_STRERROR(nf_status)
+                print *,'reading var prsQcFlag'
+              endif 
 
-c           write prsQcFlag
-            prsQcFlag(obno,lvl) = prsQF
+c             write prsQcFlag
+              prsQcFlag(obno,lvl) = prsQF
 
-            if(id.eq.1)write(6,*) 'LW o l stationP ',obno,lvl,stationP       
+              if(id.eq.1)write(6,*) 'LW o l stationP ',obno,lvl,stationP       
 
-c           check stationPressure for _FillValue
-            if (stationP .eq. sp_fill) stationP = r_missing_data
-            if (lvl.eq.1) then
-              pressure_pa(obno,lvl) = stationP
+c             check stationPressure for _FillValue
+              if (stationP .eq. sp_fill) stationP = r_missing_data
+              if (lvl.eq.1) then
+                pressure_pa(obno,lvl) = stationP
+              else
+                pressure_pa(obno,lvl) = r_missing_data
+              endif
             else
-              pressure_pa(obno,lvl) = r_missing_data
+                pressure_pa(obno,lvl) = r_missing_data
             endif
 
 c           read var temperature(recNum,lvl) -> temp
@@ -947,15 +976,17 @@ c           read var temperature(recNum,lvl) -> temp
             endif 
 
 c           read var tempQcFlag(recNum,lvl) -> tempQcFlag
-            nf_status = NF_GET_VAR1_REAL(nf_fid,tempQc_id,index_2,
-     1                                   tempQF)
-            if(nf_status.ne.NF_NOERR) then
-              print *, NF_STRERROR(nf_status)
-              print *,'reading var tempQcflag'
-            endif 
+            if(istat_tempQcFlag .eq. 1)then
+                nf_status = NF_GET_VAR1_REAL(nf_fid,tempQc_id,index_2,
+     1                                       tempQF)
+                if(nf_status.ne.NF_NOERR) then
+                  print *, NF_STRERROR(nf_status)
+                  print *,'reading var tempQcflag'
+                endif 
 
-c           write tempQcFlag
-            tempQcFlag(obno,lvl) = tempQF
+c               write tempQcFlag
+                tempQcFlag(obno,lvl) = tempQF
+            endif
 
 c           Convert temp_k to temp_c
             if ((temp_k .eq. -9999.).or.(temp_k .eq. t_fill)) then
