@@ -53,6 +53,9 @@ cdis
      1                        twet_snow,                 ! O
      1                        j_status,istatus)
 
+        use mem_namelist, ONLY: hydrometeor_scale_cld, 
+     1                          hydrometeor_scale_pcp
+
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                  sys_abort_prod
 
@@ -220,10 +223,9 @@ cdis
         real out_array_3d(NX_L,NY_L,NZ_L)
 
         real, allocatable, dimension(:,:,:) :: slwc
-        real, allocatable, dimension(:,:,:) :: slwc_int
         real, allocatable, dimension(:,:,:) :: cice
-!       real slwc(NX_L,NY_L,NZ_L),slwc_int(NX_L,NY_L)
-!       real cice(NX_L,NY_L,NZ_L)
+        real slwc_int(NX_L,NY_L)
+        real rain_int(NX_L,NY_L)
 
         real pcpcnc(NX_L,NY_L,NZ_L)
         real raicnc(NX_L,NY_L,NZ_L)
@@ -339,12 +341,6 @@ cdis
         allocate( slwc(NX_L,NY_L,NZ_L), STAT=istat_alloc )
         if(istat_alloc .ne. 0)then
             write(6,*)' ERROR: Could not allocate slwc'
-            stop
-        endif
-
-        allocate( slwc_int(NX_L,NY_L,NZ_L), STAT=istat_alloc )
-        if(istat_alloc .ne. 0)then
-            write(6,*)' ERROR: Could not allocate slwc_int'
             stop
         endif
 
@@ -1014,6 +1010,14 @@ c read in laps lat/lon and topo
      1                                  ,snocnc             ! Output
      1                                  ,piccnc)            ! Output
 
+!           Calculate Integrated Rainwater
+            write(6,*)
+            write(6,*)' Calculating Integrated Rainwater'
+            call integrate_slwc(raicnc,heights_3d,NX_L,NY_L,NZ_L
+     1                                                     ,rain_int)
+            write(6,*)' Rainwater range is ',minval(rain_int)
+     1                                      ,maxval(rain_int)
+
             I4_elapsed = ishow_timer()
 
             nf = 6
@@ -1023,19 +1027,39 @@ c read in laps lat/lon and topo
 
         endif
 
-!       Convert SLWC and CICE from g/m**3 to kg/m**3
+!       Convert SLWC and CICE from g/m**3 to kg/m**3 and apply scale factor
+        if(hydrometeor_scale_cld .ge. 0.)then
+            ratio_cld =  hydrometeor_scale_cld
+        else
+            ratio_cld = -hydrometeor_scale_cld / 
+     1                  (grid_spacing_cen_m/1000.)
+        endif
+
  700    do k = 1,NZ_L
         do j = 1,NY_L
         do i = 1,NX_L
             if(slwc(i,j,k) .ne. r_missing_data)then
-                slwc(i,j,k) = slwc(i,j,k) / 1e3
+                slwc(i,j,k) = (slwc(i,j,k) * ratio_cld) / 1e3
             endif
             if(cice(i,j,k) .ne. r_missing_data)then
-                cice(i,j,k) = cice(i,j,k) / 1e3
+                cice(i,j,k) = (cice(i,j,k) * ratio_cld) / 1e3
             endif
         enddo 
         enddo
         enddo
+
+!       Apply hydrometeor scale to precip
+        if(hydrometeor_scale_pcp .ge. 0.)then
+            ratio_pcp =  hydrometeor_scale_pcp
+        else
+            ratio_pcp = -hydrometeor_scale_pcp / 
+     1                  (grid_spacing_cen_m/1000.)
+        endif
+
+        pcpcnc = pcpcnc * ratio_pcp
+        raicnc = raicnc * ratio_pcp
+        snocnc = snocnc * ratio_pcp
+        piccnc = piccnc * ratio_pcp
 
 !       Write out Cloud Liquid Water, Cloud Ice and Precip Content Fields
         var_a(1) = 'LWC'
@@ -1170,7 +1194,6 @@ c read in laps lat/lon and topo
         enddo ! i
 
 9999    deallocate( slwc )
-        deallocate( slwc_int )
         deallocate( cice )
 
         write(6,*)' End of laps_deriv_sub'
