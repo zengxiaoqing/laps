@@ -94,6 +94,9 @@
      1                  r_missing_data,
      1                  istatus)
 
+
+       include 'lapsparms.for'
+
        integer, allocatable, dimension(:) :: lvls3d
        integer, allocatable, dimension(:) :: lvls2d
 
