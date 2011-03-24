@@ -260,6 +260,8 @@ END SUBROUTINE get_wrf2_timeinfo
     ! Local variables
     INTEGER   :: rcode,dimid,vid
     INTEGER   :: projcode_wrf
+    INTEGER   :: wrf_version
+    real, allocatable, dimension(:,:) :: dum_2d
 
     ! Initialization
     lat1 = -999.
@@ -298,31 +300,97 @@ END SUBROUTINE get_wrf2_timeinfo
     rcode = NF_INQ_DIMLEN(lun, dimid, nx)
     rcode = NF_INQ_DIMID(lun, "south_north", dimid)
     rcode = NF_INQ_DIMLEN(lun, dimid, ny)
-    rcode = NF_INQ_DIMID(lun, "bottom_top", dimid)
-    rcode = NF_INQ_DIMLEN(lun, dimid, nz)
+
+!   Allocate 
+    ALLOCATE(dum_2d (nx,ny))
 
     SELECT CASE (stag)
       CASE('T')
         rcode = NF_INQ_VARID(lun,"LAT_LL_T",vid)
-        rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+        if(rcode .eq. -49)then ! assume version 3 WRF
+          write(6,*)' Warning: LAT_LL_T not found, looking for XLAT'
+          rcode = NF_INQ_VARID(lun,"XLAT",vid)
+          rcode = NF_GET_VAR_REAL(lun,vid,dum_2d)
+          lat1 = dum_2d(1,1)
+          wrf_version = 3
+        else
+          rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+          wrf_version = 2
+        endif
+
         rcode = NF_INQ_VARID(lun,"LON_LL_T",vid)
-        rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+        if(rcode .eq. -49)then ! assume version 3 WRF
+          write(6,*)' Warning: LON_LL_T not found, looking for XLONG'
+          rcode = NF_INQ_VARID(lun,"XLONG",vid)
+          rcode = NF_GET_VAR_REAL(lun,vid,dum_2d)
+          lon1 = dum_2d(1,1)
+        else
+          rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+        endif
 
       CASE('U')
         rcode = NF_INQ_VARID(lun,"LAT_LL_U",vid)
-        rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+        if(rcode .eq. -49)then ! assume version 3 WRF
+          write(6,*)' Warning: LAT_LL_U not found, looking for XLAT_U'
+          rcode = NF_INQ_VARID(lun,"XLAT_U",vid)
+          rcode = NF_GET_VAR_REAL(lun,vid,dum_2d)
+          lat1 = dum_2d(1,1)
+          wrf_version = 3
+        else
+          rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+          wrf_version = 2
+        endif
+
         rcode = NF_INQ_VARID(lun,"LON_LL_U",vid)
-        rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+        if(rcode .eq. -49)then ! assume version 3 WRF
+          write(6,*)' Warning: LON_LL_U not found, looking for XLONG_U'
+          rcode = NF_INQ_VARID(lun,"XLONG_U",vid)
+          rcode = NF_GET_VAR_REAL(lun,vid,dum_2d)
+          lon1 = dum_2d(1,1)
+        else
+          rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+        endif
         nx = nx + 1
  
       CASE('V')
         rcode = NF_INQ_VARID(lun,"LAT_LL_V",vid)
-        rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+        if(rcode .eq. -49)then ! assume version 3 WRF
+          write(6,*)' Warning: LAT_LL_V not found, looking for XLAT_V'
+          rcode = NF_INQ_VARID(lun,"XLAT_V",vid)
+          rcode = NF_GET_VAR_REAL(lun,vid,dum_2d)
+          lat1 = dum_2d(1,1)
+          wrf_version = 3
+        else
+          rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+          wrf_version = 2
+        endif
+
         rcode = NF_INQ_VARID(lun,"LON_LL_V",vid)
-        rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+        if(rcode .eq. -49)then ! assume version 3 WRF
+          write(6,*)' Warning: LON_LL_V not found, looking for XLONG_V'
+          rcode = NF_INQ_VARID(lun,"XLONG_V",vid)
+          rcode = NF_GET_VAR_REAL(lun,vid,dum_2d)
+          lon1 = dum_2d(1,1)
+        else
+          rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+        endif
         ny = ny + 1
 
     END SELECT
+
+    DEALLOCATE(dum_2d)
+
+!   if(wrf_version .eq. 2)then
+!       write(6,*)' Version 2, looking for bottom_top for nz '
+        rcode = NF_INQ_DIMID(lun, "bottom_top", dimid)
+        rcode = NF_INQ_DIMLEN(lun, dimid, nz)
+!   else
+!       write(6,*)' Version 3, looking for bottom_top_stag for nz '
+!       rcode = NF_INQ_DIMID(lun, "bottom_top_stag", dimid)
+!       rcode = NF_INQ_DIMLEN(lun, dimid, nz)
+!   endif
+
+    write(6,*)' WRF nx,ny,nz = ',nx,ny,nz
 
     RETURN
   END SUBROUTINE get_wrf2_map
@@ -671,7 +739,7 @@ END SUBROUTINE get_wrf2_timeinfo
       PRINT *, 'Mismatch in dimensions: '
       PRINT *, 'NX_IN / NX_REQ : ', nx_in, nx
       PRINT *, 'NY_IN / NY_REQ : ', ny_in, ny
-      PRINT *, 'NZ_IN / NX_REQ : ', nz_in, nz
+      PRINT *, 'NZ_IN / NZ_REQ : ', nz_in, nz
       RETURN
     ENDIF
 
