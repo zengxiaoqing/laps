@@ -4047,26 +4047,77 @@ c abdel
      1             ,lat,lon,idum1_array
      1             ,NX_L,NY_L,laps_cycle_time,jdot)
 
-        elseif(c_type .eq. 'ia' .or. c_type .eq. 'ij'
-     1                          .or. c_type .eq. 'is')then
+        elseif(c_type_i .eq. 'ia' .or. c_type_i .eq. 'ij'
+     1                            .or. c_type_i .eq. 'is')then
 
-          ext = 'lil'
+          call input_product_info(    i4time_ref            ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,2                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+
           var_2d = 'LIL'
-          call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
-     1                         ext,var_2d,units_2d,comment_2d,
-     1                         NX_L,NY_L,column_max,0,istatus)
+          level = 0
+          if(c_prodtype .eq. 'A')then
+              ext = 'lil'
+              call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
+     1                             ext,var_2d,units_2d,comment_2d,
+     1                             NX_L,NY_L,field_2d,0,istatus)
+
+              c_label = 'Integrated Liquid Analyzed (mm) '
+
+          elseif(c_prodtype .eq. 'F')then
+              CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                       EXT,NX_L,NY_L,1,1,       
+     1                       VAR_2d,level,LVL_COORD_2d,
+     1                       UNITS_2d,COMMENT_2d,
+     1                       field_2d,istatus)
+
+              if(istatus .ne. 1)then
+                  write(6,*)' Could not read forecast field'       
+                  goto1200
+              endif
+
+!             c_label(11:33) = ' FSF     '//var_2d(1:4)
+!    1                                    //fcst_hhmm//'      '
+
+              call directory_to_cmodel(directory,c_model)
+
+              call mk_fcst_hlabel(level,comment_2d,fcst_hhmm
+     1                                 ,ext(1:3),units_2d
+     1                                 ,c_model,c_label)
+
+              i4time_cloud = i4_valid
+
+          endif
 
           call make_fnam_lp(i4time_cloud,asc9_tim,istatus)
-          c_label = 'Integrated LWC         (mm)      '
 
           clow = 0.
-          chigh = +0.
+          chigh = +3.
           cint = -0.1
 
-          call plot_cont(column_max,1e-3,
-     1          clow,chigh,cint,asc9_tim,namelist_parms,plot_parms,
-     1          c_label,i_overlay,c_display,lat,lon,jdot,
-     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
+!         call plot_cont(column_max,1e-3,
+!    1          clow,chigh,cint,asc9_tim,namelist_parms,plot_parms,
+!    1          c_label,i_overlay,c_display,lat,lon,jdot,
+!    1          NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+          scale = 1e-3
+
+          call plot_field_2d(i4time_cloud,c_type_i,field_2d
+     1                        ,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
+
 
         elseif(c_type(1:2) .eq. 'pe' .or. c_type(1:2) .eq. 'ne')then        
           ext = 'lst'
@@ -4698,6 +4749,22 @@ c                   cint = -1.
             call plot_td_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                      ,r_missing_data,lat,lon,topo,zoom
      1                      ,plot_parms,k_mb,mode)
+
+        elseif(c_type .eq. 'il')then
+            k_level = 0
+            k_mb = 0
+
+            if(laps_cycle_time .eq. 0)then
+	    i4time_temp = i4time_ref
+	    else
+                i4time_temp = (i4time_ref / laps_cycle_time) 
+     1                        * laps_cycle_time
+            endif
+
+            write(6,*)' Plotting integrated liquid obs from SND file'
+            call plot_il_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
+     1                      ,r_missing_data,lat,lon,topo,zoom
+     1                      ,i_overlay,namelist_parms,plot_parms)
 
         elseif(c_type(1:2) .eq. 'ht'.or. c_type(1:2) .eq. 'bh')then
             write(6,1513)
@@ -5473,6 +5540,10 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
      1                         ,n_image,scale,'hsect',plot_parms
      1                         ,namelist_parms)        
+!               elseif(var_2d .eq. 'LIL')then
+!                   call ccpfil(field_2d,NX_L,NY_L,0.0,2.0,'moist'
+!    1                         ,n_image,scale,'hsect',plot_parms
+!    1                         ,namelist_parms)        
                 elseif(var_2d .eq. 'LHF')then
                     call ccpfil(field_2d,NX_L,NY_L,-100.,+500.
      1                         ,'spectral',n_image,scale,'hsect' 
