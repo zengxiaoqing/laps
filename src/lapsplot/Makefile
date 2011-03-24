@@ -40,6 +40,7 @@ SRC= lapsplot_main.f \
      hsv_to_rgb.f \
      logit.f \
      plotobs.f \
+     plot_il_obs.f \
      read_tdsnd.f \
      plottype.f \
      plotwinds_2d.f \
