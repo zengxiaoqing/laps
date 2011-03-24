@@ -40,6 +40,8 @@
 
         r_ratio = i_ratio
 
+        sumw1 = 0.
+
         do n = 1,max_obs    
 
             ri = obs_barnes(n)%i
@@ -57,12 +59,21 @@
             sumj(i_cell,j_cell,k_cell) = sumj(i_cell,j_cell,k_cell) + rj
             sumo(i_cell,j_cell,k_cell,:) = sumo(i_cell,j_cell,k_cell,:) 
      1                                 + obs_barnes(n)%value(:)
+
+!           Note that time weight is being factored into the superob
+            call get_time_wt(i4time_sys,obs_barnes(n)%i4time
+     1                                 ,time_wt,istatus)
+
             sumw(i_cell,j_cell,k_cell) = sumw(i_cell,j_cell,k_cell) 
-     1                                 + obs_barnes(n)%weight
+     1                                 + obs_barnes(n)%weight * time_wt
             sumv(i_cell,j_cell,k_cell) = sumv(i_cell,j_cell,k_cell) 
      1                                 + obs_barnes(n)%vert_rad_rat
 
+            sumw1 = sumw1 + obs_barnes(n)%weight * time_wt
+
         enddo ! n
+
+        sumw2 = 0.
 
         do k = 1,nk
         do j = 1,nj
@@ -82,6 +93,8 @@
                 superobs_barnes(ncnt_super)%weight = sumw(i,j,k)
                 superobs_barnes(ncnt_super)%i4time = i4time_sys 
                 superobs_barnes(ncnt_super)%vert_rad_rat = vnew 
+
+                sumw2 = sumw2 + superobs_barnes(ncnt_super)%weight
             endif
         enddo ! i
         enddo ! j
@@ -89,6 +102,8 @@
 
         write(6,*)' i_ratio,max_obs,ncnt_super = ',
      1              i_ratio,max_obs,ncnt_super
+
+        write(6,*)' sumw1,sumw2 = ',sumw1,sumw2
 
         return
 
