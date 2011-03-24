@@ -975,7 +975,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         l_found_file = .false.
         go to 42
 
- 32     td = r_missing_data
+ 32     continue
         p = r_missing_data
         dir = r_missing_data
         spd_kt = r_missing_data
@@ -1051,16 +1051,9 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 call setusv_dum(2hIN,icol_in)
 
-                iflag_cv = 0
-
                 if(mode .eq. 2)then ! convert from td to q
                     svp = es(t_c)
                     t_c = (svp / float(k_mb)) * 1000.
-                endif
-
-                if(mode .eq. 3)then ! plot GPS PW (using td variable)
-                    iflag_cv = 3
-                    td = t_k
                 endif
 
                 obs_size = plot_parms%contour_line_width
