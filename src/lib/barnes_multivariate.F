@@ -43,6 +43,8 @@ cdis
      1                     ,topo,ldf,ni_stat,nj_stat              ! Input
      1                     ,n_obs_lvl,istatus)                    ! Outputs
 
+      use mem_namelist, ONLY: l_superob_barnes
+
       integer max_obs ! also is the number of input full obs
 
 !     ....................Declare I/O variables...............................
@@ -71,9 +73,6 @@ cdis
       integer n_fnorm_dum                                           ! Input
       real    fnorm_dum                                             ! Input
       logical   l_not_struct,l_struct                               ! Input
-
-      logical l_superob 
-      parameter (l_superob = .false.)
 
       integer n_obs_lvl(kmax)                                       ! Phaseout
       integer istatus                                               ! Output
@@ -152,9 +151,10 @@ cdis
           if(iter .eq. 1)then
 
 !             Determine super obs
-              i_ratio_max = 0.1 * (r0_barnes_max_in / grid_spacing_m)
+              i_ratio_max = 0.2 * (r0_barnes_max_in / grid_spacing_m)
               i_ratio = max(i_ratio_max,1)
-              if(l_superob .and. kmax .gt. 1 .and. i_ratio .gt. 1)then
+              if(l_superob_barnes .and. kmax .gt. 1 
+     1                            .and. i_ratio .gt. 1)then
                   call get_barnes_superobs(imax,jmax,kmax,r_missing_data ! I 
      1                        ,n_var,i_var,max_obs,obs_barnes_in         ! I
      1                        ,i_ratio,i4time_sys                        ! I
@@ -221,9 +221,10 @@ cdis
               endif
 
 !             Determine superobs
-              i_ratio_max = 0.1 * (r0_barnes_max_in / grid_spacing_m)
+              i_ratio_max = 0.2 * (r0_barnes_max_in / grid_spacing_m)
               i_ratio = max(i_ratio_max,1)
-              if(l_superob .and. kmax .gt. 1 .and. i_ratio .gt. 1)then
+              if(l_superob_barnes .and. kmax .gt. 1 
+     1                            .and. i_ratio .gt. 1)then
                   call get_barnes_superobs(imax,jmax,kmax,r_missing_data ! I 
      1                        ,n_var,i_var,max_obs,obs_barnes_in         ! I
      1                        ,i_ratio,i4time_sys                        ! I
