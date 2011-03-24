@@ -695,7 +695,19 @@ c
 		spdgust = badflag
 	     endif
 	  endif
+
 	  if(spdgust .ne. badflag) spdgust = 1.94254 * spdgust !m/s to kt
+
+	  if(spdgust .ne. badflag .and. spd .ne. badflag)then
+             if(spd .gt. spdgust)then
+                write(6,*)' Speed exceeds Gust at ',trim(stationId(i))       
+     1                                             ,spd,spdgust
+		dir = badflag
+		spd = badflag
+		dirgust = badflag
+		spdgust = badflag
+             endif
+          endif 
 c
 c..... Pressure...Station pressure, MSL and altimeter
 c
