@@ -218,12 +218,12 @@ CONTAINS
      ! Vertically interpolate to pressure levels
      PRINT *, "Allocating arrays for WRF on Pressure"
        ! Allocate wrfp
-     ALLOCATE (ht_wrfp(nxw,nyw,nzw))
-     ALLOCATE (t3_wrfp(nxw,nyw,nzw))
-     ALLOCATE (sh_wrfp(nxw,nyw,nzw))
-     ALLOCATE (u3_wrfp(nxw,nyw,nzw))
-     ALLOCATE (v3_wrfp(nxw,nyw,nzw))
-     ALLOCATE (om_wrfp(nxw,nyw,nzw))
+     ALLOCATE (ht_wrfp(nxw,nyw,nzl))
+     ALLOCATE (t3_wrfp(nxw,nyw,nzl))
+     ALLOCATE (sh_wrfp(nxw,nyw,nzl))
+     ALLOCATE (u3_wrfp(nxw,nyw,nzl))
+     ALLOCATE (v3_wrfp(nxw,nyw,nzl))
+     ALLOCATE (om_wrfp(nxw,nyw,nzl))
      ht_wrfp = rmissingflag
      t3_wrfp = rmissingflag
      u3_wrfp = rmissingflag
