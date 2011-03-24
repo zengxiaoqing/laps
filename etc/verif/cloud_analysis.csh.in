@@ -29,7 +29,7 @@ echo '# time range must be in same format as data file' >> $GNUPLOTFILE
 echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
 echo 'set yrange [0:1000]'                              >> $GNUPLOTFILE
 echo 'set grid'                                         >> $GNUPLOTFILE
-echo 'set datafile missing "-99.9"'                     >> $GNUPLOTFILE
+echo 'set datafile missing "-99.900"'                   >> $GNUPLOTFILE
 echo 'set xlabel "Date Time"'                           >> $GNUPLOTFILE
 echo 'set ylabel "Solar Radiation (W/m**2)"'            >> $GNUPLOTFILE
 echo 'set title "Global Solar Radiation Observed vs Analyzed"' >> $GNUPLOTFILE
