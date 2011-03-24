@@ -6,6 +6,8 @@
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns
      1  ,swi_2d)                                                 ! O
 
+        include 'trigd.inc'
+
         real cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
      1        ,t_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
      1        ,dbz_max_2d(ni,nj),solar_alt(ni,nj),swi_2d(ni,nj)
