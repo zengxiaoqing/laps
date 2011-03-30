@@ -336,7 +336,8 @@ while ($i4time70<=$i4time70_end)
 
 #                 We can potentially read some time information from 'systime.dat' internally from 'wideband2nc.csh' so fewer command line args would be needed.
 #                 With this alternate scenario the 'systime.dat' info can be updated for each hour that we would want to process Archive-II data.
-                  $command ="$INSTALL_ROOT/etc/wideband2nc.csh $DATA_ROOT no no $INSTALL_ROOT archive $wideband_2_netcdf $yearw $mow $dyw $hrw $yrw$dddw";
+#                 $command ="$INSTALL_ROOT/etc/wideband2nc.csh $DATA_ROOT no no $INSTALL_ROOT archive $wideband_2_netcdf $yearw $mow $dyw $hrw $yrw$dddw";
+                  $command ="$INSTALL_ROOT/etc/wideband2nc.csh $DATA_ROOT yes no $INSTALL_ROOT archive $wideband_2_netcdf $yearw $mow $dyw $hrw $yrw$dddw";
                }
 
                print "Running $command\n";
@@ -404,6 +405,7 @@ while ($i4time70<=$i4time70_end)
 
                      }
 
+#remap run matching the systime is skipped, since the previous run will usually catch the window (with 90 minute forward time window)
                      if($i4time70_driver == $i4time70 && $laps_driver_exe =~ /^remap/){last;}
 
                      if(defined $multi_machine){
