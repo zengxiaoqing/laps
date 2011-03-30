@@ -142,6 +142,7 @@ c
                      if(grid_ra_ref_offset(io,jo,k,l) .ne. 
      1                                  r_missing_data)then     
                        l_valid = .true.
+                       goto 50
                      endif
                    enddo ! k
 
@@ -149,7 +150,7 @@ c
 
                endif ! use full array (not offset)
 
-               if(l_valid_latlon(l))then
+ 50            if(l_valid_latlon(l))then
                    ridist = float(i)-ri(l)
                    rjdist = float(j)-rj(l)
                    rijdist=sqrt(ridist*ridist + rjdist*rjdist)
