@@ -31,6 +31,9 @@
  l_accum_radar=.true.,
  l_accum_gauge=.false.,
  
+ l_superob_barnes=.false.,
+ l_mosaic_sat=.false.,
+
  path_to_topt30s='/data/lapb/projects/geog/world_topo_30s',
  path_to_landuse30s='/data/lapb/projects/geog/landuse_30s',
  path_to_soiltype_top30s='/data/lapb/projects/geog/soiltype_top_30s',
@@ -98,6 +101,12 @@ c
 c path_to_soil_2m - this parameter is not yet active since we do not yet
 c                   supply the soil type database. It is there only for
 c                   software testing at this time.
+c
+c l_superob_barnes - use superobing routine for the 3-D wind and temperature 
+c                    analyses
+c
+c l_mosaic_sat - allow mosaicing of multiple satellite LVD inputs (under
+c                development)
 c
 c l_accum_fg - use first guess model info in the precip accumulation analysis
 c
