@@ -2,11 +2,11 @@
 
 umask 002
 
-# First argument is your subdirectory on staging (under username) 
+# First argument is your subdirectory 
 
 # Second argument is the HAS ID number you received by email for downloading
 
-setenv dir /scratch/staging/fab/`whoami`/$1
+setenv dir $1
 
 setenv HAS $2 
 
