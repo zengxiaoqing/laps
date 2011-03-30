@@ -176,7 +176,7 @@
      IRIX64          6.5               Requires f90
      DEC (Alpha)
      LINUX (i386,i686,x86_64)          pgf90 is suggested, ifort & gfortran being tested
-     LINUX (Mac)                       pgf90 is being tested
+     LINUX (MacOS-X)                   pgf90 is being tested
      LINUX (Alpha)                     fort is suggested  
 </pre>
 
@@ -193,11 +193,16 @@
      aren't yet supported. Once netCDF is properly installed, check that the 
      'ncdump' and 'ncgen' programs are in your path (e.g. 'which ncdump'), so 
      that 'configure' will find them and provide the laps package with the 
-     proper path. 
+     proper path. The path setting will also help LAPS programs to run properly.
+     Note that this path specficiation will override anything supplied with the 
+     '--netcdf' command line argument. 
 
      NetCDF is a general format structure. The detailed format of each data 
      file is self-describing (via 'ncdump'), and is mirrored in a separate 
      static file called the CDL. This CDL can be GSD's version or someone elses.
+
+     If possible, check that your netCDF library is built to be compatible
+     with the same FORTRAN compiler that you are using.
 
      The netCDF library contains C routines that are to be linked with the
      LAPS FORTRAN routines. Please see the discussion in section 2.2.2.1 for
