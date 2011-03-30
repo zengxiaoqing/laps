@@ -38,7 +38,7 @@ cdis
 cdis
 
         subroutine get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add ! I
-     1                    ,l_use_vis_partial,lat                    ! I
+     1                    ,l_use_vis_partial,lat,lon                ! I
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
      1                    ,rlaps_land_frac,topo                     ! I
      1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb    ! O
@@ -55,7 +55,7 @@ cdis
         integer ihist_frac_sat(-10:20)
         integer istat_vis_a(ni,nj)            ! Cloud mask based on VIS
 
-        real lat(ni,nj)
+        real lat(ni,nj), lon(ni,nj)
         real sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
         real static_albedo(ni,nj)   ! Static albedo database
         real vis_albedo(ni,nj)
@@ -115,7 +115,7 @@ cdis
         var = 'ALB'
         ilevel = 0
         call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window
-     1                     ,i4time_nearest,EXT,var,units
+     1                     ,i4time_nearest,lat,lon,EXT,var,units
      1                     ,comment,ni,nj,vis_albedo,ilevel,istatus)
         write(6,*)' istatus from vis_albedo data = ',istatus
         if(istatus .ne. 1 .and. istatus .ne. -1)then

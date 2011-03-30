@@ -43,10 +43,15 @@ c
      1  i4_sat_window,i4_sat_window_offset,                              ! I
      1  imax,jmax,r_missing_data,                                        ! I
      1  l_use_39,l_use_co2,latency_co2,                                  ! I
+     1  lat,lon,                                                         ! I
      1  s8a_k,istat_s8a,comment_s8a,                                     ! O
      1  s3a_k,istat_s3a,comment_s3a,                                     ! O
      1  sst_k,istat_sst,comment_sst,                                     ! O
      1  cldtop_co2_pa_a,cloud_frac_co2_a,istat_co2,lstat_co2_a)          ! O
+
+!       Input
+        real lat(imax,jmax)
+        real lon(imax,jmax)
 
 !       Output
         real s8a_k(imax,jmax)
@@ -76,7 +81,7 @@ c
         var = 'S8A'
         ilevel = 0
         call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
-     1                     ,i4time_s8a,EXT,var,units
+     1                     ,i4time_s8a,lat,lon,EXT,var,units
      1                     ,comment_s8a,imax,jmax,s8a_k,ilevel
      1                     ,istat_s8a)      
         if(istat_s8a .ne. 1)then
@@ -121,7 +126,7 @@ c
             var = 'S3A'
             ilevel = 0
             call get_laps_2dvar(i4time_s8a,0       
-     1                         ,i4time_nearest,EXT,var,units
+     1                         ,i4time_nearest,lat,lon,EXT,var,units
      1                         ,comment_s3a,imax,jmax,s3a_k,ilevel
      1                         ,istat_s3a)
             if(istat_s3a .ne. 1)then
