@@ -57,6 +57,7 @@ dnl fi
 dnl
 dnl Find path to netcdf ***required by LAPS***
 dnl
+echo "PATH = $PATH"
 AC_PROG_GENERIC(NETCDF, ncdump, libnetcdf.a, netcdf.inc)
 
 dnl
