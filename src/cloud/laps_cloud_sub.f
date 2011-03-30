@@ -713,6 +713,7 @@ C READ IN SATELLITE DATA
         call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,     ! I
      1                    NX_L,NY_L,r_missing_data,                      ! I
      1                    l_use_39,l_use_co2_mode2,latency_co2,          ! I
+     1                    lat,lon,                                       ! I
      1                    tb8_k,istat_tb8,comment_tb8,                   ! O
      1                    t39_k,istat_t39,comment_t39,                   ! O
      1                    sst_k,istat_sst,comment_sst,                   ! O
@@ -737,7 +738,7 @@ C READ IN SATELLITE DATA
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
         call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add            ! I
-     1              ,l_use_vis_partial,lat                               ! I
+     1              ,l_use_vis_partial,lat,lon                           ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,rlaps_land_frac,topo                                ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
