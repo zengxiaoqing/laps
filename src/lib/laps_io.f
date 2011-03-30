@@ -403,6 +403,7 @@ cdoc    Returns a 2-D grid. Inputs include the directory, ext, and time window.
 
 
         subroutine get_laps_2dvar(i4time_needed,i4tol,i4time_nearest
+     1         ,lat,lon
      1         ,EXT,var_2d,units_2d
      1         ,comment_2d,imax,jmax,field_2d,ilevel,istatus)
 
@@ -413,6 +414,9 @@ cdoc    specified time window.
 !
 !       J Smart                 1998
 cdoc    added lvd subdirectory flexibility. Only one 2d satellite field returned.
+
+!       Steve Albers            2011
+!       Pass in lat/lon so that it can potentally be used for satellite mosaicing
 
         character*9 asc9_tim
 
@@ -426,6 +430,8 @@ cdoc    added lvd subdirectory flexibility. Only one 2d satellite field returned
         character*4 LVL_COORD_2d
 
         real field_2d(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
 
         integer max_files
         parameter (max_files = 20000)
@@ -462,7 +468,7 @@ c
            call get_laps_sat(maxsat,c_sat_id,isats
      1     ,i4time_needed,i4tol,i4time_nearest
      1     ,var_2d,units_2d,comment_2d,imax,jmax
-     1     ,field_2d,istatus)
+     1     ,lat,lon,field_2d,istatus)
 
            if(istatus.ne.1)then
               write(6,*)'No data returned from get_laps_sat'
@@ -1288,12 +1294,14 @@ c
         subroutine get_laps_sat(maxsat,c_sat_id,isats
      1     ,i4time_needed,i4tol,i4time_nearest
      1     ,var_2d,units_2d,comment_2d,imax,jmax
-     1     ,field_2d,istatus)
+     1     ,lat,lon,field_2d,istatus)
 c
 c    J. Smart 2-98.
 cdoc This routine acquires satellite data from the lvd subdirectories
 cdoc and makes decisions about what the best data is to return as the
 cdoc 2d field (for var_2d).
+
+        use mem_namelist, ONLY: l_mosaic_sat, r_missing_data
 c
         implicit none
 
@@ -1301,6 +1309,10 @@ c
 
         real    field_2d_lvd(imax,jmax,maxsat)
         real    field_2d(imax,jmax)
+        real    lat(imax,jmax)
+        real    lon(imax,jmax)
+        real    subpoint_lon_clo(imax,jmax)
+        real    subpoint_lon_sat(maxsat)
 
         integer   isats(maxsat)
         integer   nsats
@@ -1341,7 +1353,7 @@ c       save      i4time_first
 
               if(jstatus.ne.1)then
                  write(6,*)'No data returned from get_laps_lvd',
-     &               ' for ',c_sat_id(i)
+     &                     ' for ',c_sat_id(i)
               else
                  nsats=nsats+1
                  csatid(nsats)=c_sat_id(i)
@@ -1354,7 +1366,36 @@ c
 c this section can make decisions about which satellite data
 c to return in the event there is more than 1 2d field.
 c
-        if(nsats.gt.1)then
+        if(nsats.gt.1 .and. l_mosaic_sat)then
+           write(6,*)'Mosaicing ',nsats,' satellites'
+           subpoint_lon_clo = r_missing_data  ! fill grid 
+           subpoint_lon_sat = -75.            ! fill satellite array (default)
+
+           do i=1,nsats
+              call make_fnam_lp(i4timedata(i),asc9_tim,istatus)
+              write(6,*)'Adding ',var_2d,' for ',csatid(i),
+     &                                       ' ',asc9_tim
+
+              if(trim(csatid(i)) .eq. 'goes12')then
+                  subpoint_lon_sat(i) = -75.
+              elseif(trim(csatid(i)) .eq. 'goes11')then
+                  subpoint_lon_sat(i) = -135.
+              endif
+
+!             Add in satellite if it's lon is closest so far to the grid lon
+              where(field_2d_lvd(:,:,i) .ne. r_missing_data 
+     1                            .AND.
+     1              abs(lon(:,:) - subpoint_lon_sat(i))  .LT.
+     1              abs(lon(:,:) - subpoint_lon_clo(:,:)) 
+     1                                                        )
+                 subpoint_lon_clo(:,:) = subpoint_lon_sat(i)
+                 field_2d(:,:) = field_2d_lvd(:,:,i)
+              end where
+
+           enddo ! i
+           return
+
+        elseif(nsats .gt.1 .and. (.not. l_mosaic_sat))then
            write(6,*)'Found data for ',nsats,' satellites'
            do i=1,nsats
               if(i4timedata(i).eq.i4time_first)then
@@ -1362,7 +1403,7 @@ c
                  call move(field_2d_lvd(1,1,i),field_2d,imax,jmax)
                  i4time_nearest=i4timedata(i)
                  write(6,*)'Returning ',var_2d,' for ',csatid(i),
-     &' ',asc9_tim
+     &                     ' ',asc9_tim
                  return
               endif
            enddo
@@ -1383,7 +1424,7 @@ c
               call move(field_2d_lvd(1,1,imn),field_2d,imax,jmax)
               i4time_nearest=i4timedata(imn)
               write(6,*)'Returning ',var_2d,' for ',csatid(imn),
-     &' ',asc9_tim
+     &                  ' ',asc9_tim
               return
 
            else
@@ -1393,7 +1434,7 @@ c default
               call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
               i4time_nearest=i4timedata(1)
               write(6,*)'Returning ',var_2d,' for ',csatid(1),
-     &' ',asc9_tim
+     &                  ' ',asc9_tim
               return
            endif
 
@@ -1404,8 +1445,10 @@ c default
            i4time_nearest=i4timedata(1)
            write(6,*)'Returning ',var_2d,' for ',csatid(1),' ',asc9_tim
            return
+
         elseif(nsats.le.0)then
            write(6,*)'No lvd fields found. Returning  no data'
+
         endif
 
 
