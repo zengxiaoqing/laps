@@ -47,7 +47,7 @@ c
      &lvl_coord_3d(kmax)*4,units_3d(kmax)*10,
      &comment_3d(kmax)*125
 
-       Character       c_extension_proc(maxradar)*3
+       Character       c_extension_proc(maxradar)*4
        Character*31    ext_a(maxradar)
        Character*4     c_radar_id(maxradar)
        Character*1     c_again
@@ -81,7 +81,7 @@ c
 
          I4_elapsed = ishow_timer()
 
-         EXT = c_extension_proc(kcount)
+         EXT = trim(c_extension_proc(kcount))
 
          i4_diff = i4timefile_proc - i4_file_closest(kcount)
 
@@ -106,6 +106,7 @@ c check laps analysis values
             k=k-1
          else
             write(6,*)'Successful reading radar ',kcount,k,ext
+            I4_elapsed = ishow_timer()
             write(6,*)'radar lat/lon/elev: ',rlat_radar(k),
      &                         rlon_radar(k),rheight_radar(k)
             level=9

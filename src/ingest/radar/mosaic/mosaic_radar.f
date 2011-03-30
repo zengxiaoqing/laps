@@ -7,7 +7,7 @@
       integer   i_window
       integer   imosaic_3d
       integer   i
-      character c_radar_ext(max_radars_mosaic)*3
+      character c_radar_ext(max_radars_mosaic)*4
       character c_radar_mosaic*3, ext_dum*3
 
       call get_laps_config('nest7grid',istatus)
@@ -61,8 +61,13 @@ c namelist items
 
 !         Set c_radar_ext
           do i = 1,n_radars
-              write(c_radar_ext(i),11)i
- 11           format('v',i2.2)
+              if(i .le. 99)then
+                  write(c_radar_ext(i),11)i
+ 11               format('v',i2.2)
+              else
+                  write(c_radar_ext(i),12)i
+ 12               format('v',i3.3)
+              endif
           enddo ! i
 
 !         Duplicate code section
@@ -78,8 +83,9 @@ c namelist items
           print*,'Process parameters'
           print*,'Mosaic type: ',c_radar_mosaic
           print*,'N radars to mosaic: ',n_radars
-          write(6,50)'Radar extensions: ',(c_radar_ext(i),i=1,n_radars)
-50        format(1x,a,10(:,a3,1x))
+          write(6,50)'Radar extensions: '
+     1              ,(trim(c_radar_ext(i)),i=1,n_radars)
+50        format(1x,a,10(:,a,1x))
  
           call mosaic_radar_sub(nx_l,ny_l,nz_l,
      1         max_radars_mosaic,grid_spacing_cen_m,
@@ -108,8 +114,8 @@ c namelist items
 
 !         Set c_radar_ext
           do i = 1,n_radars
-              write(c_radar_ext(i),12)i
- 12           format(i3.3)
+              write(c_radar_ext(i),21)i
+ 21           format(i3.3)
           enddo ! i
 
 !         Duplicate code section
@@ -125,7 +131,8 @@ c namelist items
           print*,'Process parameters'
           print*,'Mosaic type: ',c_radar_mosaic
           print*,'N radars to mosaic: ',n_radars
-          write(6,50)'Radar extensions: ',(c_radar_ext(i),i=1,n_radars)
+          write(6,50)'Radar extensions: '
+     1                    ,(trim(c_radar_ext(i)),i=1,n_radars)
 !50       format(1x,a,10(:,a3,1x))
  
           call mosaic_radar_sub(nx_l,ny_l,nz_l,
@@ -190,8 +197,8 @@ c
       Character     path*200
       Character     atime*24
       Character     a9time*9
-      Character     c_radar_ext(mx_radars)*3
-      Character     c_ra_ext(n_radars)*3
+      Character     c_radar_ext(mx_radars)*4
+      Character     c_ra_ext(n_radars)*4
       Character     c_directory*256
       Character     c_mosaic_type*(*)
       Character     c_rad_types(n_radars)
@@ -314,9 +321,9 @@ c
       do i=1,n_radars
 
          if(c_mosaic_type.eq.'vxx')then
-            call get_directory(c_radar_ext(i),path,lenp)
+            call get_directory(trim(c_radar_ext(i)),path,lenp)
          elseif(c_mosaic_type.eq.'rdr')then
-            path=path_rdr(1:lprdr)//c_radar_ext(i)//'/vrc/'
+            path=path_rdr(1:lprdr)//trim(c_radar_ext(i))//'/vrc/'
             call s_len(path,lenp)
          endif
 
@@ -329,7 +336,7 @@ c
          if(istatus.eq.1)then
             print*,'Success in get_file_names. Numoffiles = ',numoffiles
             if(numoffiles .le. 0)then
-               write(6,*)'No Data Available in: ',c_radar_ext(i)
+               write(6,*)'No Data Available in: ',trim(c_radar_ext(i))
                nfiles_vxx(i)=0
                goto 333
             end if
@@ -339,8 +346,13 @@ c
             do l=1,numoffiles
                nn=index(c_filename_vxx(l,i),' ')
 c              write(6,*)c_filename_vxx(l,i)(1:nn)
-               call cv_asc_i4time(c_filename_vxx(l,i)(nn-13:nn-5),
-     &                            i4timefile_vxx(l,i))
+               if(i .ge. 100)then
+                  call cv_asc_i4time(c_filename_vxx(l,i)(nn-14:nn-6),
+     &                               i4timefile_vxx(l,i))
+               else
+                  call cv_asc_i4time(c_filename_vxx(l,i)(nn-13:nn-5),
+     &                               i4timefile_vxx(l,i))
+               endif
             end do
             nfiles_vxx(i)=numoffiles
          else
@@ -416,7 +428,7 @@ c              write(6,*)c_filename_vxx(l,i)(1:nn)
 
               enddo ! file
 
-              write(6,*)c_radar_ext(i), ' found radar = ', 
+              write(6,*)trim(c_radar_ext(i)), ' found radar = ', 
      1                  .not. first_time       
           enddo ! radar
 
@@ -434,7 +446,7 @@ c
              i4time_data = i4time_mos
              call make_fnam_lp(i4time_data,c_ftime_data,istatus)
              do i=1,i_ra_count
-                print*,'Radar Info: ',i,' ',c_ra_ext(i),' '
+                print*,'Radar Info: ',i,' ',trim(c_ra_ext(i)),' '
      1                ,i4_file_closest(i_ra_count),c_ra_ftime(i)
              enddo
              print*,'Data filetime: ',c_ftime_data
@@ -494,6 +506,8 @@ c ----------------------------------------------------------
 
 !            Read 'vxx' file within time window around 'i4time_mos'
 
+             write(6,*)' Calling getlapsvxx'
+
              call getlapsvxx(nx_l,ny_l,nz_l,n_radars,c_radar_id,         ! I
      &          i_ra_count,c_ra_ext,i4time_mos,i_window_size,            ! I
      &          rheight_laps,lat,lon,topo,i4_file_closest,               ! I
@@ -502,6 +516,8 @@ c ----------------------------------------------------------
      &          grid_ra_ref,                                             ! O
      &          grid_ra_ref_offset,ioffset,joffset,l_offset,             ! O
      &          istatus)                                                 ! O
+
+             I4_elapsed = ishow_timer()
 
           elseif(c_mosaic_type(1:3).eq.'rdr')then ! rd 'vrc' files on LAPS grid
              ext = 'vrc'
@@ -513,7 +529,7 @@ c ----------------------------------------------------------
                                 ! needed (as input) only in this IF block
 
              do i = 1,i_ra_count
-                path=path_rdr(1:lprdr)//c_ra_ext(i)//'/vrc/'
+                path=path_rdr(1:lprdr)//trim(c_ra_ext(i))//'/vrc/'
                 grid_ra_ref(:,:,:,i) = r_missing_data  ! Initialize this 3D ref
 
                 write(6,*)
