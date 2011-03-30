@@ -1093,8 +1093,9 @@ c
 	ilev = -1
 	var_fire = 'LSM'                   ! soil moisture
 	ext_f = 'lm1'
-	call get_laps_2dvar(i4time,i4time_tol,i4time_near,ext_f,var_fire,
-     &                    units_fire,com_fire,imax,jmax,d1,ilev,istatus)
+	call get_laps_2dvar(i4time,i4time_tol,i4time_near,lat,lon,
+     &                      ext_f,var_fire,units_fire,com_fire,
+     &                      imax,jmax,d1,ilev,istatus)
 	if(istatus .ne. 1) then
 	   print *,' Error getting soil moisture.'
 	   ismoist = 0
@@ -1103,8 +1104,9 @@ c
         ilev = 0
 	var_fire = 'SC '                   ! snow cover
 	ext_f = 'lm2'
-	call get_laps_2dvar(i4time,i4time_tol,i4time_near,ext_f,var_fire,
-     &                    units_fire,com_fire,imax,jmax,d2,ilev,istatus)
+	call get_laps_2dvar(i4time,i4time_tol,i4time_near,lat,lon,
+     &                      ext_f,var_fire,units_fire,com_fire,
+     &                      imax,jmax,d2,ilev,istatus)
 	if(istatus .ne. 1) then
 	   print *,' Error getting snow cover.'
 	   isnow = 0

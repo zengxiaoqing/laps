@@ -32,7 +32,7 @@ cdis
 c
 c
 	subroutine mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,
-     &    lat,lon,topo,x1a,x2a,y2a,redp_lvl,
+     &     lat,lon,topo,x1a,x2a,y2a,redp_lvl,
      &     lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, alt_s, 
      &     pred_s,
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g, obs,
@@ -511,7 +511,8 @@ c
 	lvl_v(1) = 0
 	var_v(1) = 'S8W'	! satellite...band 8, warm pixel (K)
 c
-	call get_laps_2dvar(i4time,970,i4time_nearest,ext_v,var_v,
+	call get_laps_2dvar(i4time,970,i4time_nearest,lat,lon,
+     &                      ext_v,var_v,
      &        units_v,comment_v,imax,jmax,tb81,lvl_v,istatus)
 c
 	if(istatus .ne. 1) then
