@@ -270,7 +270,7 @@ cdoc  Reads static/radar_mosaic.nl file
       integer    i_window
       integer    imosaic_3d
       character  c_radar_mosaic_type*3
-      character  c_radar_ext(max_radars_mosaic)*3
+      character  c_radar_ext(max_radars_mosaic)*4
       character  nest7grid*150
 
       namelist /radar_mosaic_nl/c_radar_mosaic_type,n_radars,
