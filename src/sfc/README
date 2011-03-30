@@ -81,7 +81,6 @@ routine.
 
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
 lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
-lapsvanl_sub.f:	subroutine vortdiv(u,v,vort,div,imax,jmax,dx,dy)
 lapsvanl_sub.f:	subroutine channel(u,v,topo,imax,jmax,top,pblht,dx,dy,
 lapsvanl_sub.f:	subroutine meso_anl(u,v,p,t,td,theta,dx,dy,q,qcon,qadv,
 lapsvanl_sub.f:	subroutine barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
@@ -89,10 +88,6 @@ lapsvanl_sub.f:	subroutine bounds(x,imax,jmax)
 lapsvanl_sub.f:	subroutine make_cssi(t,td,pmsl,u,v,cssi,ni,nj,badflag)
 lapsvanl_sub.f:	subroutine windconvert(uwind,vwind,direction,speed,
 lapsvanl_sub.f:	subroutine calc_beta(d,obs_error,beta)
-lapsvanl_sub.f:	subroutine reduce_p(temp,dewp,pres,elev,lapse_t,
-lapsvanl_sub.f:      subroutine verify(field,ob,stn,n_obs_b,title,iunit,
-
-laps_routines.f:c	Changes:	07-20-88	Changed from subroutine to function.
 laps_routines.f:	subroutine find_ij(lat_s,lon_s,lat,lon,numsta,mxsta,
 laps_routines.f:	subroutine extract(a,imax,jmax,i,j,ix,jy)
 laps_routines.f:	subroutine decompwind_gm(dd,ff,ucomp,vcomp,status)
@@ -100,8 +95,4 @@ laps_routines.f:      subroutine stats(x,ni,nj)
 laps_routines.f:	subroutine clouds(imax,jmax,topo,t,smsng,tb8,
 laps_routines.f:      subroutine aplot(field, ni, nj)
 laps_routines.f:       subroutine check_field_2d(x,ni,nj,fill_val,istatus)
-laps_routines.f:	subroutine checknan_pt(x,nan_flag)
-laps_routines.f:	subroutine checknan_1d(x,ni,nan_flag)
-laps_routines.f:	subroutine checknan_2d(x,ni,nj,nan_flag)
-laps_routines.f:	subroutine checknan_3d(x,ni,nj,nk,nan_flag)
 laps_routines.f:      subroutine interp_to_sfc(sfc_2d,field_3d,heights_3d,ni,nj,nk,
