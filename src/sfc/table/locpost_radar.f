@@ -1,9 +1,12 @@
 
-	subroutine locpost_radar(ni,nj,lat,lon,topo,ldf
+	subroutine locpost_radar(ni,nj,lat,lon,topo,ldf     
      1                          ,lun,lun_out,istatus)
 
-        character*200 static_dir,cfg_fname,line,radars_fn
-        character*4 c4_name
+        character*200 static_dir,cfg_fname,line,radars_fn,out_fn
+        character*100 c_remap
+        character*800 c_wideband
+        character*4 c4_name, c4_name_a(200), c4_name_lc
+        character*7 c_vxx
         character*6 c6_chars
         character*7 c7_chars
 
@@ -29,20 +32,39 @@
 
         call get_directory('static',static_dir,len_dir)
 
-        cfg_fname = static_dir(1:len_dir)//'/NexradSite.cfg'
+!       Open NexradSite.cfg for reading
+!       cfg_fname = static_dir(1:len_dir)//'/NexradSite.cfg'
+        cfg_fname = static_dir(1:len_dir)//'/NexradSite.sorted'
         call s_len(cfg_fname,len_fname)
         open(lun,file=cfg_fname(1:len_fname),status='old',err=998)
 
+!       Open radarlist.dat for output
         radars_fn = static_dir(1:len_dir)//'/radarlist.dat'
         call s_len(radars_fn,len_rname)
         open(lun_out,file=radars_fn(1:len_rname),status='unknown'
      1                                          ,err=998)
+
+!       Open widebandlist_radars.txt for output
+        lun_wideband = 41
+        out_fn = static_dir(1:len_dir)//'/widebandlist_radars.txt'
+        call s_len(out_fn,len_name)
+        open(lun_wideband,file=out_fn(1:len_name),status='unknown'
+     1                                           ,err=998)
+
+!       Open remap.nl.part for output
+        lun_remap = 51
+        out_fn = static_dir(1:len_dir)//'/remap.nl.part'           
+        call s_len(out_fn,len_name)
+        open(lun_remap,file=out_fn(1:len_name),status='unknown'
+     1                                        ,err=998)
 
         do ih = 1,13
             read(lun,*)
         enddo
 
         write(lun_out,*)'radar  perimeter  ocean      i      j'
+
+        icount = 0
 
         do il = 1,200
             read(lun,11,err=999,end=999)line
@@ -115,9 +137,20 @@
             dist_ocean_min = grid_dist_min 
 
             if(dist_outside_km .le. 100.)then
+                icount = icount + 1
                 write(lun_out,21)c4_name,dist_outside_km,dist_ocean_min       
      1                          ,nint(ri),nint(rj)
  21		format(1x,a4,f9.2,2x,f9.1,2i7)
+
+!               Write to string for widebandlist
+                is = (icount-1) * 5 + 1
+                ie = is + 4
+                c_wideband(is:ie) = c4_name//' '
+                write(6,*)' c_wideband section: ',c_wideband(is:ie)
+
+!               Save string into array for later use
+                c4_name_a(icount) = c4_name
+
             endif
 
         enddo ! il
@@ -129,10 +162,66 @@
 
  999	continue
 
+!       Write widebandlist to file
+        write(6,*)                               
+        write(6,*)' Full wideband string...'
+        write(6,101)c_wideband(1:ie-1)
+        write(lun_wideband,101)c_wideband(1:ie-1)
+101     format(a)
+
+!       Write to remap.nl.part (n_radars_remap)    
+        if(icount .le. 9)then
+            write(lun_remap,102)icount
+102         format(' n_radars_remap=',i1,',')
+        elseif(icount .le. 99)then
+            write(lun_remap,103)icount
+103         format(' n_radars_remap=',i2,',')
+        elseif(icount .le. 999)then
+            write(lun_remap,104)icount
+104         format(' n_radars_remap=',i3,',')
+        endif
+
+!       Write to remap.nl.part (upper case section)
+        write(lun_remap,*)        
+        write(lun_remap,*)'path_to_radar_a='
+        do i = 1,icount ! upper case section
+            write(c_remap,111)c4_name_a(i)
+111         format("'/widebandroot/",a,"/netcdf',")
+            write(lun_remap,*)trim(c_remap)
+        enddo ! i
+
+!       Write to remap.nl.part (lower case section)
+        write(lun_remap,*)
+        write(lun_remap,*)'path_to_radar_a='
+        do i = 1,icount ! upper case section
+            call downcase(c4_name_a(i),c4_name_lc)
+            write(c_remap,111)c4_name_lc  
+            write(lun_remap,*)trim(c_remap)
+        enddo ! i
+
+!       Write to remap.nl.part (vxx section)
+        write(lun_remap,*)
+        write(lun_remap,*)'laps_radar_ext_a='
+        do i = 1,icount ! upper case section
+            call downcase(c4_name_a(i),c4_name_lc)
+            if(icount .lt. 100)then
+                write(c_vxx,121)i              
+121             format("'v",i2.2,"',")
+            else
+                write(c_vxx,122)               
+122             format("'v",i3.3,"',")
+            endif
+            write(lun_remap,*)trim(c_vxx)         
+        enddo ! i
+
+        write(lun_remap,*)'/'
+
         istatus = 1
 
         close(lun)
         close(lun_out)
+        close(lun_wideband)
+        close(lun_remap)
 
         return
         end
