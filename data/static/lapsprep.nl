@@ -2,13 +2,13 @@
   hotstart = .true.,
   balance  = .true., 
   use_sfc_bal = .false., 
-  hydrometeor_scale_factor_pcp = 5.0,
-  hydrometeor_scale_factor_cld = 0.5,
+  hydrometeor_scale_factor_pcp = 1.0,
+  hydrometeor_scale_factor_cld = 1.0,
   output_format = 'wps',
   snow_thresh = 1.1,
   lwc2vapor_thresh = 1.01,
   make_sfc_uv = .false.,
-	
+  use_laps_skintemp = .false.,	
 /
  
 c
@@ -28,11 +28,12 @@ c    when 'balance' is set to .true.)
 c
 c  hydrometeor_scale_factor:	
 c    A factor which scales the hydrometeor concentrations for a grid
-c    spacing. (hydrometeor_scale = hydrometeor_scale_factor/dx)
-c    Note that dx is in kilometers. This is the scale that LAPS input values
-c    are multiplied by to account for sub-grid scale effects.
-c    For setting the internal hydrometeor scale to 1.0, the scale factor should
-c    be equal to the grid resolution in km.
+c    spacing. (hydrometeor_scale = -hydrometeor_scale_factor/dx)
+c    Note that dx is in kilometers. For negative values, the absolute value
+c    is the scale that LAPS input values are multiplied by to account for 
+c    sub-grid scale effects. For positive values the scale factor is applied
+c    without the grid spacing (dx) term.
+c    
 c
 c  output_format:
 c    List of character strings, one specifying each output format to
@@ -48,7 +49,7 @@ c    Real value, controls the setting of the snow cover flag in the output.
 c    Any value of snow cover fraction from the LAPS analysis (0.->1.0) 
 c    exceeding this threshold will cause the snow cover flag to be set
 c    in the output.  To prevent any snow cover flags from being set, set
-c    this value > 1.0.
+c    this value > 1.0.  THIS FIELD IS NOT OUTPUT FOR "wps" FORMAT
 c
 c  lwc2vapor_thresh:
 c    Real value, controls the conversion of cloud liquid to vapor.  Set
@@ -62,3 +63,7 @@ c  make_sfc_uv:
 c    Logical flag. If set to true, then the surface u/v fields from lsx
 c    will be replaced with winds interpolated from the 3D isobaric 
 c    u/v fields.
+c
+c  use_laps_skintemp:
+c    Logical flag.  If set to true, then the LAPS tsk field will be output
+c    as SKINTEMP (only applies to "wps" format)
