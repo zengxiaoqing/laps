@@ -58,7 +58,7 @@
  ref_base=-10.,       
  ref_base_useable=0., 
  hydrometeor_scale_pcp=1.,
- hydrometeor_scale_cld=1.,
+ hydrometeor_scale_cld=0.2,
  r_hybrid_first_gate=0.,
  maxstns=100000,         
  N_PIREP=10000,         
