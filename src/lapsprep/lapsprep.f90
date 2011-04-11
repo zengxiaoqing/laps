@@ -151,8 +151,17 @@
     ! a grid with radar scaling (approx. 2km)
 
 !beka    hydrometeor_scale = 2./dx  ! dx is in km
-       hydrometeor_scale_pcp = hydrometeor_scale_factor_pcp/dx  ! dx is in km
-       hydrometeor_scale_cld = hydrometeor_scale_factor_cld/dx  ! dx is in km
+    if(hydrometeor_scale_factor_pcp .ge. 0.)then
+       hydrometeor_scale_pcp =  hydrometeor_scale_factor_pcp
+    else
+       hydrometeor_scale_pcp = -hydrometeor_scale_factor_pcp/dx  ! dx is in km
+    endif
+
+    if(hydrometeor_scale_factor_cld .ge. 0.)then
+       hydrometeor_scale_cld =  hydrometeor_scale_factor_cld
+    else
+       hydrometeor_scale_cld = -hydrometeor_scale_factor_cld/dx  ! dx is in km
+    endif
 
 	print *,'beka',hydrometeor_scale_pcp, hydrometeor_scale_factor_pcp
 	print *,'cj',hydrometeor_scale_cld, hydrometeor_scale_factor_cld
