@@ -1540,7 +1540,7 @@ c owing to an artifact of coding the t array is phi
 
       do l=1,lmax
 
-
+       itstatus=ishow_timer()
 
        write(6,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
        print*,'-----------------------------------------------------'
@@ -1561,6 +1561,8 @@ c
       call diagnose(u,nx,ny,nz,268,87,k,7,'CONTINTY U ')
       call diagnose(v,nx,ny,nz,268,87,k,7,'CONTINTY V ')
       enddo
+
+      itstatus=ishow_timer()
 
        if(delo.eq.0.) go to 111
 c move adjusted fields to observation fields 
@@ -1586,6 +1588,8 @@ c                      boundary values(zero perturbation)
         enddo
        enddo 
 
+      itstatus=ishow_timer()
+
       call frict(fu,fv,ub,vb,uo,vo,p,ps,tmp
      .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
       call nonlin(nu,nv,uo,vo,ub,vb,om,omb
@@ -1599,6 +1603,8 @@ c                      boundary values(zero perturbation)
 c *** Compute new phi (t array) using relaxation on eqn. (2).
 c        beta*dldx term is dropped to eliminate coupling with lambda eqn.
 c
+       itstatus=ishow_timer()
+
        fmax=-1.e30
        do 1 it=1,itmax
 
@@ -1720,6 +1726,8 @@ c        without the lagrange multiplier terms.
 c
        call initmxmn(nf,nz
      &,fldmax,fldmin,fldmxi,fldmxj,fldmni,fldmnj)
+
+       itstatus=ishow_timer()
 
        do k=1,nz
         do j=1,ny-1
@@ -1879,7 +1887,7 @@ c move adjusted fields (ub,vb,omb) to solution fields
       return
       end
 c
-c --------------------------------------------------------------b-
+c ----------------------------------------------------------------
 c
       subroutine leib_sub(nx,ny,nz,erf,tau,erru
      .,lat,dx,dy,ps,p,dp,uo,u,vo,v,
@@ -1890,6 +1898,7 @@ c
       integer nx,ny,nz
       integer nxm1,nym1,nzm1
       integer i,j,k,ks,l,lmax
+      integer itstatus,ishow_timer
 
       real      u(nx,ny,nz),uo(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz)
@@ -1923,14 +1932,20 @@ c ****** Compute a/tau (h) term and rhs terms in eqn. (3)
 c
       call fthree(f3,uo,vo,omo,omb,h,erru,tau,
      .   nx,ny,nz,lat,dx,dy,dp)
+
+      itstatus=ishow_timer()
 c
 c ****** Perform 3-d relaxation.
 c
+      itstatus=ishow_timer()
+
       call leibp3(slam,f3,200,erf,h
      .  ,nx,ny,nz,dx,dy,ps,p,dp)
+ 
+      itstatus=ishow_timer()
 c
 c ****** Compute new u, v, omega by adding the lagrange multiplier terms.
-co
+c 
       sum=0
       sum1=0
       cnt=0
@@ -2761,12 +2776,37 @@ c
      .      ,dx2,dx1s,dy2,dy1s,dz,dz2,dz1s
      .      ,aa,cortm,res,cor,corb,corlmm
      .      ,reslm,rho,cor0,cor5
+
+      logical ltest_3d(nx,ny,nz)
 c_______________________________________________________________________________
 c
 c *** Relaxer solver...eqn must be.......                                 
 c        sxx+syy+h*szz-force=0   
 c
-      print *,'leibp3'
+      print *,'start subroutine leibp3'
+
+!     Setup ltest_3d array to help minimize if testing within do loops
+      ltest_3d = .false.
+      do k=2,nz
+        do j=2,ny
+          js=1
+          if(j.eq.ny)js=0
+          do i=2,nx
+            is=1
+            if(i.eq.nx) is=0
+            if (ps(i,j).lt.p(k))then
+              ltest_3d(i,j,k) = .true.
+            else
+              if(ps(i+is,j).lt.p(k)) ltest_3d(i,j,k) = .true.
+              if(ps(i-1 ,j).lt.p(k)) ltest_3d(i,j,k) = .true.
+              if(ps(i,j+js).lt.p(k)) ltest_3d(i,j,k) = .true.
+              if(ps(i,j-1).lt.p(k)) ltest_3d(i,j,k) = .true.
+              if(ps(i,j).lt.p(k-1)) ltest_3d(i,j,k) = .true.
+            endif
+          enddo
+        enddo
+      enddo
+
       ovr=1.0
       erb=0.
       si=1.
@@ -2786,9 +2826,9 @@ c
          ia=0
          corlm=0.
 cbeka changing the loops order
-           do k=2,nz
-           dz=dp(k)
-           dz1s=dz*dz
+         do k=2,nz
+         dz=dp(k)
+         dz1s=dz*dz
 
          do j=2,ny
          js=1
@@ -2801,15 +2841,17 @@ cbeka changing the loops order
 cbeka           do 2 k=2,nz
 cbeka            dz=dp(k)
 cbeka            dz1s=dz*dz
-            if (ps(i,j).lt.p(k)) go to 2 
+            if(ltest_3d(i,j,k))then
+               if (ps(i,j).lt.p(k)) go to 2 
+               if(ps(i+is,j).lt.p(k)) sol(i+1,j,k)=sol(i,j,k)
+               if(ps(i-1 ,j).lt.p(k)) sol(i-1,j,k)=sol(i,j,k)
+               if(ps(i,j+js).lt.p(k)) sol(i,j+1,k)=sol(i,j,k)
+               if(ps(i,j-1).lt.p(k)) sol(i,j-1,k)=sol(i,j,k)
+               if(ps(i,j).lt.p(k-1)) sol(i,j,k-1)=sol(i,j,k)
+            endif
             aa=h(i,j,k)
-            if(ps(i+is,j).lt.p(k)) sol(i+1,j,k)=sol(i,j,k)
-            if(ps(i-1 ,j).lt.p(k)) sol(i-1,j,k)=sol(i,j,k)
-            if(ps(i,j+js).lt.p(k)) sol(i,j+1,k)=sol(i,j,k)
-            if(ps(i,j-1).lt.p(k)) sol(i,j-1,k)=sol(i,j,k)
-            if(ps(i,j).lt.p(k-1)) sol(i,j,k-1)=sol(i,j,k)
             cortm=-2./dx1s-2./dy1s-aa*2./dz1s
-                  res=(sol(i+1,j,k)+sol(i-1,j,k))/dx1s+
+            res= (sol(i+1,j,k)+sol(i-1,j,k))/dx1s+
      .           (sol(i,j+1,k)+sol(i,j-1,k))/dy1s+
      .           aa*(sol(i,j,k+1)+sol(i,j,k-1))/dz1s
      .           +cortm*sol(i,j,k)-force(i,j,k)
@@ -2841,15 +2883,17 @@ c         write(6,1001) it,reslm,corlm,corlmm,erb
          endif
          if(corlm.lt.erf) go to 20
       enddo! on it
+
 20    reslm=corlm*cortm
+
       write(6,1001) it,reslm,corlm,corlmm,erb
       write(6,1002) ovr
 c     write(9,1001) it,reslm,corlm,corlmm,erb
 c     write(9,1002) ovr
-1002       format(1x,'LIEBP3:ovr rlxtn const at fnl ittr = ',e10.4)
+1002       format(1x,'LEIBP3:ovr rlxtn const at fnl ittr = ',e10.4)
 1001       format(1x,'iterations= ',i4,' max residual= ',e10.3,
      .    ' max correction= ',e10.3, ' first iter max cor= ',e10.3,
-     .    'max bndry error= ',e10.3)
+     .    ' max bndry error= ',e10.3)
 c
       return
       end
