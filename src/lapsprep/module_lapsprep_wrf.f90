@@ -561,7 +561,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   PRINT *, 'TRUELAT2 = ', LATIN2
 
  ! Output temperature
-  field = 'T        '
+  field = 'TT       '
   units = 'K                        '
   desc  = 'Temperature                                   '
   PRINT *, 'FIELD = ', field
@@ -579,9 +579,9 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   ENDDO var_t
 
   ! Do u-component of wind
-  field = 'U        '
-  units = 'm s{-1}                  '
-  desc = 'u-component of velocity, rotated to grid      '
+  field = 'UU       '
+  units = 'm s-1                    '
+  desc = 'U                                             '
   PRINT *, 'FIELD = ', field
   PRINT *, 'UNITS = ', units
   PRINT *, 'DESC =  ',desc
@@ -597,9 +597,9 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   ENDDO var_u
 
   ! Do v-component of wind
-  field = 'V        '
-  units = 'm s{-1}                  '
-  desc = 'v-component of velocity, rotated to grid      '
+  field = 'VV       '
+  units = 'm s-1                    '
+  desc = 'V                                             '
   PRINT *, 'FIELD = ', field
   PRINT *, 'UNITS = ', units
   PRINT *, 'DESC =  ',desc
@@ -617,7 +617,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   ! Relative Humidity
   field = 'RH       '
   units = '%                        '
-  desc  = 'Relative humidity                             '
+  desc  = 'Relative Humidity                             '
   PRINT *, 'FIELD = ', field
   PRINT *, 'UNITS = ', units
   PRINT *, 'DESC =  ',desc
@@ -653,7 +653,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   ! Terrain height
   field = 'SOILHGT '
   units = 'm                        '
-  desc  = 'Height of topography                          '
+  desc  = 'Terrain field of source analysis              '
   PRINT *, 'FIELD = ', field
   PRINT *, 'UNITS = ', units
   PRINT *, 'DESC =  ',desc
@@ -664,21 +664,22 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
             ' Max: ', MAXVAL(d2d)
 
   ! Skin temperature
-  field = 'SKINTEMP '
-  units = 'K                        '
-  desc  = 'Skin temperature                              '
-  PRINT *, 'FIELD = ', field
-  PRINT *, 'UNITS = ', units
-  PRINT *, 'DESC =  ',desc
-  CALL write_metgrid_header(field,units,desc,p_pa(z3+1))
-  WRITE ( output_unit ) tskin
-  PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), &
-       ' Min: ', MINVAL(tskin), ' Max: ', MAXVAL(tskin)
-
+  IF (use_laps_skintemp) THEN
+      field = 'SKINTEMP '
+      units = 'K                        '
+      desc  = 'Skin temperature                              '
+      PRINT *, 'FIELD = ', field
+      PRINT *, 'UNITS = ', units
+      PRINT *, 'DESC =  ',desc
+      CALL write_metgrid_header(field,units,desc,p_pa(z3+1))
+      WRITE ( output_unit ) tskin
+      PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), &
+         ' Min: ', MINVAL(tskin), ' Max: ', MAXVAL(tskin)
+  ENDIF
   ! Sea-level Pressure field
   field = 'PMSL     '
   units = 'Pa                       '
-  desc  = 'Sea-level pressure                            '
+  desc  = 'Sea-level Pressure                            '
   PRINT *, 'FIELD = ', field
   PRINT *, 'UNITS = ', units
   PRINT *, 'DESC =  ',desc
@@ -690,7 +691,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   ! Surface Pressure field
   field = 'PSFC     '
   units = 'Pa                       '
-  desc  = 'Surface pressure                              '
+  desc  = 'Surface Pressure                              '
   PRINT *, 'FIELD = ', field
   PRINT *, 'UNITS = ', units
   PRINT *, 'DESC =  ',desc
@@ -706,35 +707,10 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       stop
   endif
 
-  IF (MINVAL(snocov).GE.0) THEN
-    ! Water equivalent snow depth
-    field = 'SNOWCOVR '
-    units = '(DIMENSIONLESS)          '
-    desc  = 'Snow cover flag                               '
-    PRINT *, 'FIELD = ', field
-    PRINT *, 'UNITS = ', units
-    PRINT *, 'DESC =  ',desc
-    CALL write_metgrid_header(field,units,desc,p_pa(z3+1))
-
-!   Initialize output snow cover field to missing value
-    d2d=-999.
-
-!   Set snow cover output for non-missing input values (if snow_thresh parameter <= 1.0)
-    if(snow_thresh .LE. 1.0)then 
-        WHERE(snocov .NE. r_missing_data) d2d = snocov
-    endif
-
-    WRITE ( output_unit ) d2d
-    PRINT '(A,F9.1,A,F9.2,A,F9.2)', 'Level (Pa):', p_pa(z3+1), &
-        ' Min: ', MINVAL(d2d),&
-        ' Max: ', MAXVAL(d2d)
-
-  ENDIF
-
   ! Get cloud species if this is a hot start
   IF (hotstart) THEN
-    field = 'QLIQUID  '
-    units = 'kg kg{-1}               '
+    field = 'QC       '
+    units = 'kg kg-1                 '
     desc  = 'Cloud liquid water mixing ratio             '
     PRINT *, 'FIELD = ', field
     PRINT *, 'UNITS = ', units
@@ -751,8 +727,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
     END DO var_lwc
 
     ! Cloud ice
-    field = 'QICE     '
-    units = 'kg kg{-1}               '
+    field = 'QI       '
+    units = 'kg kg-1                 '
     desc  = 'Cloud ice mixing ratio                      '
     PRINT *, 'FIELD = ', field
     PRINT *, 'UNITS = ', units
@@ -770,8 +746,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
 
 
     ! Cloud rain
-    field = 'QRAIN    '
-    units = 'kg kg{-1}               '
+    field = 'QR       '
+    units = 'kg kg-1                 '
     desc  = 'Rain water mixing ratio                     '
     PRINT *, 'FIELD = ', field
     PRINT *, 'UNITS = ', units
@@ -788,8 +764,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
     END DO var_rai
 
    ! Snow
-    field = 'QSNOW    '
-    units = 'kg kg{-1}               '
+    field = 'QS       '
+    units = 'kg kg-1                 '
     desc  = 'Snow mixing ratio                           '
     PRINT *, 'FIELD = ', field
     PRINT *, 'UNITS = ', units
@@ -806,8 +782,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
     END DO var_sno
 
     ! Graupel
-    field = 'QGRAUPEL '
-    units = 'kg kg{-1}               '
+    field = 'QG       '
+    units = 'kg kg-1                 '
     desc  = 'Graupel mixing ratio                        '
     PRINT *, 'FIELD = ', field
     PRINT *, 'UNITS = ', units
@@ -841,7 +817,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   CHARACTER(LEN=25),INTENT(IN)  :: units
   CHARACTER(LEN=46),INTENT(IN)  :: desc
   REAL, INTENT(IN)              :: level
-  LOGICAL, PARAMETER            :: wind = .false.
+  LOGICAL, PARAMETER            :: is_wind_grid_rel = .true.
   REAL                          :: radius_of_earth_m,radius_of_earth_km
   INTEGER                       :: istatus
  
@@ -863,7 +839,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
     CASE(5)
       WRITE ( output_unit ) knownloc,la1,lo1,dx,dy,lov,latin1,radius_of_earth_km
   END SELECT
-  WRITE ( output_unit) wind
+  WRITE ( output_unit) is_wind_grid_rel
 
   END SUBROUTINE write_metgrid_header
 
