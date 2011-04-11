@@ -156,7 +156,7 @@ c
       logical   l_lut_flag
       logical   l_archive_case
 
-      integer   i,j,k,l,n
+      integer   i,j,k,l,n,ic
       integer   ispec
       integer   nlf
       integer   nlf_prev
@@ -1118,6 +1118,15 @@ c been mapped to the laps domain. AFWA's GMS so far.
      &                     nlf,laps_data,istatus)
 
 311      if(nlf .gt. 0)then
+
+!           Add subpoint to comments
+            write(6,*)' Add subpoint to comments: ',sublat_d,sublon_d
+            do ic = 1,nlf
+                write(c_lvd(ic)(51:100),312)sublat_d,sublon_d
+312             format(' sublat:',e17.8,' sublon:',e17.8)
+!               write(6,*)' i4time = ',i4time_data(ic)
+            enddo ! i
+
             write(6,*)' Writing lvd. Total # of fields: ',nlf
             write(6,*)'    to ',dir_lvd(1:len_lvd)
             call write_laps_data(i4time_data(i),
