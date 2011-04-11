@@ -86,7 +86,7 @@ C***Parameter list variables
 C***Local variables
         integer maxlut
         real rpd
-        Parameter   (maxlut=1400,         ! largest array size allowed
+        Parameter   (maxlut=2500,         ! largest array size allowed
      1          rpd=3.1415926536/180.)
 
         Real*8  TX,TY,TZ,RX,RY,RZ,
