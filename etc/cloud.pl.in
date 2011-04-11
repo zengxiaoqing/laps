@@ -119,6 +119,10 @@ print "\n";
 
 # Radar data
 print "Radar:\n";
+
+@greplines = grep /n_radars/, @lines;
+print "   $greplines[0]";
+
 @greplines = grep /Read radar/, @lines;
 #print "$greplines[0]\n";
 foreach (@greplines) {
@@ -126,6 +130,7 @@ foreach (@greplines) {
   print "    @rest ";
   print "\n";
 }
+
 @greplines = grep /coverage/, @lines;
 print "   $greplines[0]";
 print "\n";
