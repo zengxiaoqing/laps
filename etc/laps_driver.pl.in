@@ -223,16 +223,34 @@ if($opt_q || $opt_Q){
 
     if($opt_q){
         print TFILE "#PBS -lnodes=1:$node_type,walltime=20:00 -A $opt_q\n";
+
     }elsif($opt_Q){ 
+        my @xdim=&laps_tools::get_nl_value("nest7grid.parms","nx_l","$LAPS_DATA_ROOT"); 
+        my @ydim=&laps_tools::get_nl_value("nest7grid.parms","ny_l","$LAPS_DATA_ROOT"); 
+        my @zdim=&laps_tools::get_nl_value("nest7grid.parms","nk_laps","$LAPS_DATA_ROOT"); 
+
+        my $npts = $xdim[0] * $ydim[0] * $zdim[0];
+
         print TFILE "#\$ -pe $node_type 1\n";
+
         if($exe eq "gridgen_model.exe"){ # allow localization to have more time
             print TFILE "#\$ -l h_rt=01:00:00\n";
+
+        }elsif($exe eq "remap_polar_netcdf.exe"){
+            my $vmem_gb = 0.8 + ($npts / 17000000.);
+	    if ($vmem_gb > 12.0) { $vmem_gb = 12.0; }
+            print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
+            print TFILE "#\$ -l h_rt=00:15:00,h_vmem=".$vmem_gb."G\n";
+
         }else{
             print TFILE "#\$ -l h_rt=00:10:00,h_vmem=1.60G\n";
+
         }
+
         print TFILE "#\$ -A $opt_Q\n";
         print TFILE "#\$ -S /bin/sh\n";
         print TFILE "#\$ -cwd\n";
+
     }
 
     print TFILE "  \n";
