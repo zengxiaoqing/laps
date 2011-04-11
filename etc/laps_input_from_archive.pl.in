@@ -9,7 +9,7 @@
 #
 # -t time desired for data (YYYYMMDD)
 #
-# -m desired model background (e.g. ruc or gfs)
+# -m desired model background (i.e. ruc, fim, or gfs)
 #
 # -g degrib model background data (supply installroot for the degrib software)
 #
