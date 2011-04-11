@@ -133,7 +133,7 @@ my $wgi_log;
 if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(obs_driver.x lga.exe 
                   sfc_qc.exe 
-                  laps_sfc.x);
+                  laps_sfc.x laps2grib.exe);
 
 }elsif(defined $opt_K){ # Kalman only
     @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
@@ -344,6 +344,8 @@ if(defined $opt_F){
 
 if(defined $opt_V){
     $qsub_name = $opt_V;    
+}elsif(defined $opt_f){
+    $qsub_name = $opt_f;    
 }else{
     $qsub_name = "run_qsub";    
 }
