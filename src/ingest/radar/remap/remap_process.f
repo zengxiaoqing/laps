@@ -261,18 +261,14 @@ c
         n_obs_vel = 0
         n_output_data = 0
 
-        DO 100 k = 1,NZ_L
-        DO 100 j = 1,NY_L
-        DO 100 i = 1,NX_L
-          grid_rvel(i,j,k) = 0.
-          grid_rvel_sq(i,j,k) = 0.
-          grid_nyq(i,j,k) = 0.
-          grid_ref(i,j,k) = 0.
-          ngrids_vel(i,j,k) = 0
-          ngrids_ref(i,j,k) = 0
-          n_pot_vel(i,j,k) = 0
-          n_pot_ref(i,j,k) = 0
-  100   CONTINUE
+        grid_rvel(:,:,:) = 0.
+        grid_rvel_sq(:,:,:) = 0.
+        grid_nyq(:,:,:) = 0.
+        grid_ref(:,:,:) = 0.
+        ngrids_vel(:,:,:) = 0
+        ngrids_ref(:,:,:) = 0
+        n_pot_vel(:,:,:) = 0
+        n_pot_ref(:,:,:) = 0
 c
 c       Compute maximum height of data needed.
 c
@@ -817,13 +813,9 @@ c
                 stop
             endif
 
-            DO 550 k = 1,NZ_L
-            DO 550 j = 1,NY_L
-            DO 550 i = 1,NX_L
-              out_array_4d(i,j,k,1) = grid_ref(i,j,k)
-              out_array_4d(i,j,k,2) = grid_rvel(i,j,k)
-              out_array_4d(i,j,k,3) = grid_nyq(i,j,k)
-  550       CONTINUE
+            out_array_4d(:,:,:,1) = grid_ref(:,:,:)
+            out_array_4d(:,:,:,2) = grid_rvel(:,:,:)
+            out_array_4d(:,:,:,3) = grid_nyq(:,:,:)
 
             I4_elapsed = ishow_timer()
 
