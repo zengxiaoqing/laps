@@ -15,9 +15,9 @@ c
 c
 c..... First, read the LAPS time and get julian days.
 c
-      read(wfo_fname13(3:4),11) iyr
-      read(wfo_fname13(5:6),11) imm
-      read(wfo_fname13(7:8),11) idy
+      read(wfo_fname13(3:4),11,err=990) iyr
+      read(wfo_fname13(5:6),11,err=990) imm
+      read(wfo_fname13(7:8),11,err=990) idy
  11   format(i2)
 c
 c..... Check for leap year.
@@ -51,6 +51,13 @@ c
       wfo_fname13_to_fname9 = cyr//cjjj//wfo_fname13(10:13)
 c
       return
+
+990   write(6,*)
+     1  ' Error in wfo_fname13_to_fname9, invalid string input: '
+     1  ,wfo_fname13
+
+      return
+ 
       end
 c
 c
