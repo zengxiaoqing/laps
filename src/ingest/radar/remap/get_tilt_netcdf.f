@@ -46,7 +46,6 @@ cdis
      1                               ,numRadials 
      1                               ,elevationNumber
      1                               ,VCP
-     1                               ,nyquist
      1                               ,radialAzim
      1                               ,resolutionV
      1                               ,gateSizeV,gateSizeZ
