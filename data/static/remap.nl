@@ -1,6 +1,7 @@
  &remap_nl
  n_radars_remap=15,
  max_times=5,
+ n_groups=1,
  path_to_vrc_nl='rdr',
  ref_min=0.0,
  min_ref_samples=-1,
@@ -54,6 +55,13 @@ c 'max_times'        - Maxiumum number of volume times to process for each radar
 c                      This should be set to a large number (e.g. 999) for 
 c                      archive runs and a much smaller number for real-time to
 c                      help with load balancing.
+c
+c 'n_groups'         - Number of groups for processing large numbers of radars.
+c                      If this is greater than 1, then a command line argument
+c                      is used to specify which group is being processed. For
+c                      example if 'n_groups' is 2 and 'n_radars_remap' is 20,
+c                      then the command line argument of 2 will process radars
+c                      11 through 20.
 c
 c 'path_to_radar_a'  - Full path to each directory containing a set of input
 c                      radar tilts/volumes. 
