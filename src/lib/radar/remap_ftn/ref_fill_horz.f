@@ -21,7 +21,7 @@
         real radar_dist(ni,nj)
         integer ngrids(ni,nj), ngrids_max
 
-        logical l_fill
+        logical l_fill, l_process(ni,nj)
 
         parameter (ngrids_max = 10)
         real weight_a(-ngrids_max:+ngrids_max,-ngrids_max:+ngrids_max)
@@ -59,6 +59,14 @@
 !           Determine number of gridpoints in potential gaps = f(radar_dist)
             ngrids(i,j) = radar_dist(i,j) * (dgr / 57.) / grid_spacing_m       
 
+            if(ngrids(i,j)   .ge. 1 
+     1                     .AND. 
+     1         radar_dist(i,j) .le. 500000.) then
+                l_process(i,j) = .true.
+            else
+                l_process(i,j) = .false.
+            endif
+
         enddo ! j
         enddo ! i
 
@@ -70,7 +78,8 @@
         enddo ! iw
 
         do k = 1,nk
-            call move(ref_3d(1,1,k),ref_2d_buf,ni,nj) ! Initialize Buffer Array
+!           call move(ref_3d(1,1,k),ref_2d_buf,ni,nj) ! Initialize Buffer Array
+            ref_2d_buf(:,:) = ref_3d(:,:,k)           ! Initialize Buffer Array
             n_add_lvl = 0
 
             do i = 1,ni
@@ -79,11 +88,9 @@
                 n_neighbors_pot = 0
 
 !               Assess neighbors to see if we should fill in this grid point
-                if(   ngrids(i,j)   .ge. 1 
-     1                         .AND. 
-     1                radar_dist(i,j) .le. 500000.
-     1                         .AND. 
-     1                ref_3d(i,j,k) .eq. r_missing_data       )then       
+                if(l_process(i,j))then
+
+                  if(ref_3d(i,j,k) .eq. r_missing_data)then       
 
                     ref_sum = 0.
                     z_sum = 0.
@@ -123,14 +130,14 @@
 
                       enddo ! jj
                     enddo ! ii
+                  endif
+                endif ! l_process
 
-                endif
-
-                if(ngrids(i,j) .le. 1)then
+!               if(ngrids(i,j) .le. 1)then
                     neighbor_thresh = 1
-                else
-                    neighbor_thresh = 1
-                endif
+!               else
+!                   neighbor_thresh = 1
+!               endif
 
                 l_fill = .false.
 
