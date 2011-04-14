@@ -187,13 +187,15 @@ C To fix this, call read_laps instead
 
 !         Assign Units?
 
-          do i = 1,iimax
-          do j = 1,jjmax
-              data_o(i,j,k) = data_l(i,j,k,ifield)
-          enddo ! j
-          enddo ! i
+!         do i = 1,iimax
+!         do j = 1,jjmax
+!             data_o(i,j,k) = data_l(i,j,k,ifield)
+!         enddo ! j
+!         enddo ! i
 
       enddo ! k      
+
+      data_o(:,:,:) = data_l(:,:,:,ifield)
 C
 C ****  Return normally.
 C
