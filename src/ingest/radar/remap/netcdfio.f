@@ -305,7 +305,11 @@ c      Determine output filename extension
      1           ' Looking for earliest unprocessed input file back to '       
      1           ,a9_time
 
-               i4_latest_window = i4time_sys + laps_cycle_time + 1800
+               if(l_realtime)then
+                   i4_latest_window = i4time_now_gg()
+               else
+                   i4_latest_window = i4time_sys + laps_cycle_time + 1800
+               endif
                call make_fnam_lp(i4_latest_window,a9_time,istatus)
 
                write(6,*)' Files accepted up to ',a9_time
@@ -391,7 +395,6 @@ c      Determine output filename extension
      1                               ,numRadials 
      1                               ,elevationNumber
      1                               ,VCP
-     1                               ,nyquist
      1                               ,radialAzim
      1                               ,resolutionV
      1                               ,gateSizeV,gateSizeZ
