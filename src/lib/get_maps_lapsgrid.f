@@ -89,9 +89,9 @@ cdis
 !       2) FDDA/LGA file must be available valid at i4time/i4time_needed
 
         call bgmodel_name(maxbgmodels,nbgm,bgmodelnames,istatus)
-        do i=1,nbgm
-         print*,'bg model derived from from cmodel = ',bgmodelnames(i)
-        enddo
+!       do i=1,nbgm
+!        print*,'bg model derived from from cmodel = ',bgmodelnames(i)
+!       enddo
 
         if(kmax.eq.1)then
            c_bkgd_ext(1)='fsf'
