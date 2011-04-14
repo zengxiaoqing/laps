@@ -654,7 +654,7 @@ c       relHumidity, windSpeed, windDir, observationTime
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'Warning: could not find var tempQcFlag'
-        nf_status = NF_CLOSE(nf_fid)
+!       nf_status = NF_CLOSE(nf_fid)
 !       istatus = 0
 !       return
         istat_tempQcFlag = 0
@@ -675,7 +675,7 @@ c     read _fillValue for temperature
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'Warning: could not find var stationPressure'
-        nf_status = NF_CLOSE(nf_fid)
+!       nf_status = NF_CLOSE(nf_fid)
 !       istatus = 0
 !       return
         istat_stationPressure = 0
@@ -708,7 +708,7 @@ c       read _fillValue for stationPressure
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'Warning: could not find var relHumidity'
-        nf_status = NF_CLOSE(nf_fid)
+!       nf_status = NF_CLOSE(nf_fid)
 !       istatus = 0
 !       return
         istat_relHumidity = 0
@@ -750,11 +750,11 @@ c       read _fillValue for relHumidity
       nf_status = NF_INQ_VARID(nf_fid,'wsQcFlag',wsQc_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'finding var wsQcFlag'
+        print *,'could not find var wsQcFlag'
         print *, 'Aborting read'
-        nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
+!       nf_status = NF_CLOSE(nf_fid)
+!       istatus = 0
+!       return
       endif
 
 c     read _fillValue for windSpeed
@@ -779,11 +779,11 @@ c     read _fillValue for windSpeed
       nf_status = NF_INQ_VARID(nf_fid,'wdQcFlag',wdQc_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'finding var wdQcFlag'
+        print *,'could not find var wdQcFlag'
         print *, 'Aborting read'
-        nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
+!       nf_status = NF_CLOSE(nf_fid)
+!       istatus = 0
+!       return
       endif
 
 c     read _fillValue for windDir
@@ -798,11 +798,19 @@ c     read _fillValue for windDir
       nf_status = NF_INQ_VARID(nf_fid,'observationTime',ot_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'finding var observationTime'
-        print *, 'Aborting read'
-        nf_status = NF_CLOSE(nf_fid)
-        istatus = 0
-        return
+        print *,'could not find observationTime'
+        print *, 'try for timeObs '
+
+        nf_status = NF_INQ_VARID(nf_fid,'timeObs',ot_id)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'could not find timeObs'
+          print *, 'Aborting routine '
+          nf_status = NF_CLOSE(nf_fid)
+          istatus = 0
+          return
+        endif
+
       endif
 
       print *, 'LW nobs = ',nobs
