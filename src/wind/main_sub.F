@@ -166,6 +166,9 @@ cdis
 !       real grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS)
 !       real grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS)
 
+        real, allocatable, dimension(:,:,:,:) :: grid_ra_vel_offset
+        real, allocatable, dimension(:,:,:,:) :: grid_ra_nyq_offset
+
         integer idx_radar_a(MAX_RADARS)
         character*31 ext_radar(MAX_RADARS)
 
@@ -179,9 +182,6 @@ cdis
         save i4_loop_total
         data i4_loop_total/0/
 
-        allocate ( grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS) )
-        allocate ( grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS) )
-
         istat_wind = 0
 
         NZ_L = nk_laps
@@ -192,13 +192,6 @@ cdis
         vanl => wind%vanl
         uanl_sfcitrp => wind%uanl_sfcitrp
         vanl_sfcitrp => wind%vanl_sfcitrp
-
-!sms$serial(<grid_spacing_m, weight_bkg_const_wind, n_radars, 
-!sms$>       grid_ra_vel,grid_ra_nyq,idx_radar_a,    ! Not needed in || region?
-!sms$>       v_nyquist_in,istat_radar_vel,           ! Not needed in || region?
-!sms$>       n_vel_grids,                            ! Not needed in || region?
-!sms$>       rlat_radar,rlon_radar,rheight_radar,    ! Not needed in || region?
-!sms$>                                     out>:default=ignore)  begin
 
         call get_directory('log',fname,len)
         open(15,file=fname(1:len)//'wind_stats.log'
@@ -277,6 +270,49 @@ cdis
 !       i4_tol = max(laps_cycle_time / 2, iradar_cycle_time / 2)
         i4_tol = 900 ! seconds
 
+        l_offset = .false.
+
+        if(.not. l_offset)then
+         allocate(grid_ra_vel(nx_l,ny_l,nz_l,max_radars)
+     1                                      ,STAT=istat_alloc)
+         if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate grid_ra_vel'      
+            stop
+         endif
+
+         allocate(grid_ra_nyq(nx_l,ny_l,nz_l,max_radars)
+     1                                      ,STAT=istat_alloc)
+         if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate grid_ra_nyq'      
+            stop
+         endif
+
+        else 
+         radius_r = 500000. ! 500km max radar radius
+         igrid_r = int(radius_r / grid_spacing_cen_m) + 1
+         nx_r = min(((2 * igrid_r) + 1),nx_l)
+         ny_r = min(((2 * igrid_r) + 1),ny_l)
+
+         allocate(grid_ra_vel_offset(nx_r,ny_r,nz_l,max_radars)
+     1           ,STAT=istat_alloc)             
+         if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate grid_ra_vel'      
+                        stop
+         else
+            write(6,*)' Allocated grid_ra_vel_offset ',nx_r,ny_r
+         endif
+
+         allocate(grid_ra_nyq_offset(nx_r,ny_r,nz_l,max_radars)
+     1           ,STAT=istat_alloc)             
+         if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate grid_ra_nyq'      
+                        stop
+         else
+            write(6,*)' Allocated grid_ra_nyq_offset ',nx_r,ny_r
+         endif
+
+        endif
+
         if(l_use_radial_vel)then
             write(6,*)
             write(6,*)' Reading radial velocity data'
@@ -285,8 +321,11 @@ cdis
      1       ,max_radars                                             ! I
      1       ,n_radars                                               ! O
      1       ,ext_radar                                              ! O
-     1       ,r_missing_data,.true.,NX_L,NY_L,NZ_L                   ! I
+     1       ,r_missing_data,.false.,NX_L,NY_L,NZ_L                  ! I
+!    1       ,nx_r,ny_r,igrid_r                                      ! I
      1       ,grid_ra_vel,grid_ra_nyq,idx_radar_a,v_nyquist_in       ! O
+!    1       ,grid_ra_vel_offset,ioffset,joffset,l_offset,           ! O
+!    1       ,grid_ra_nyq_offset,                                    ! O
      1       ,n_vel_grids                                            ! O
      1       ,rlat_radar,rlon_radar,rheight_radar,radar_name         ! O
      1       ,istat_radar_vel,istat_radar_nyq)                       ! O
@@ -316,6 +355,8 @@ cdis
         write(6,*)
 
 !  ***  Access model first guess*********************************************
+        I4_elapsed = ishow_timer()
+
 #ifdef MULTI_EXEC
         allocate (  u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX) )
         allocate (  v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX) )
@@ -346,6 +387,8 @@ cdis
         enddo ! j
 
 !  ***  Read in Wind Obs **************************************************
+
+        I4_elapsed = ishow_timer()
 
 !       Initialize observation data structure
         do i = 1,max_wind_obs
