@@ -258,6 +258,7 @@ c abdel
      1                       ,btemp_colortable
      1                       ,i_pcp_sto_colorbar
      1                       ,i_sno_sto_colorbar
+     1                       ,montage
 
 !      Set defaults
        latlon_int = 0
