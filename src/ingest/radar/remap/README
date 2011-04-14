@@ -6,16 +6,17 @@ MODULE NAME                                         FILE
 main                                                remap.f
     get_remap_parms                                    "
     remap_sub                                          "
-        get_altitude                                netcdfio.f
-        get_latitude                                   "
-        get_longitude                                  "
-        lut_gen                                     lut_gen.f
         radar_init (1st call)                       netcdfio.f
             check_input_file                           "
             get_tilt_netcdf_hdr                     get_tilt_netcdf.f
             get_tilt_netcdf_data                       "
             get_vol_netcdf_hdr                      get_vol_netcdf.f
             get_vol_netcdf_data                        "
+        get_radarname                               netcdfio.f
+        get_altitude                                   "
+        get_latitude                                   "
+        get_longitude                                  "
+        lut_gen                                     lut_gen.f
         get_first_gate                              netcdfio.f
         get_data_field                                 "
         fill_common                                 remap_ftn/fill_common.f
