@@ -72,7 +72,7 @@ cdoc
         subroutine get_multiradar_vel(
      1   i4time_ref,i4time_tol,i4time_radar_a
      1  ,max_radars,n_radars,ext_a,r_missing_data
-     1  ,l_apply_map,imax,jmax,kmax
+     1  ,l_offset,imax,jmax,kmax
      1  ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a,n_vel_a
      1  ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a
      1  ,istatus_multi_vel,istatus_multi_nyq)
@@ -120,7 +120,7 @@ cdoc    Called from wind/lapsplot
 
         character asc9_tim_radar*9
 
-        logical l_apply_map
+        logical l_apply_map, l_offset
 
         real grid_ra_vel(imax,jmax,kmax,max_radars)
         real grid_ra_nyq(imax,jmax,kmax,max_radars)
@@ -1396,7 +1396,7 @@ cdoc                            calls read_multiradar_3dref.
         character*9 asc9_tim
         character*150 directory
 
-        character*125 comment_3d(kmax),comment_2d
+        character*200 comment_3d(kmax)
         character*40 comment_tmp
         character*10 units_3d(kmax),units_2d
         character*3 var_3d(kmax)
@@ -1463,6 +1463,7 @@ cdoc                            calls read_multiradar_3dref.
         endif
 
 !       Read comments from 3 columns each 40 characters wide
+        nch=40
         do i_radar = 1,n_radars
             if(i_radar .le. (kmax-1) )then       ! read in 1st column
                 ii = i_radar + 1
@@ -1478,7 +1479,7 @@ cdoc                            calls read_multiradar_3dref.
 
             elseif(i_radar .le. 2*(kmax-1) )then ! read in 2nd column
                 ii = i_radar - (kmax-1) + 1
-                comment_tmp = comment_3d(ii)(41:80)
+                comment_tmp = comment_3d(ii)(1*nch+1:nch*2)
                 read(comment_tmp,1)rlat_radar(i_radar)
      1                            ,rlon_radar(i_radar)
      1                            ,rheight_radar(i_radar)
@@ -1490,7 +1491,31 @@ cdoc                            calls read_multiradar_3dref.
 
             elseif(i_radar .le. 3*(kmax-1) )then ! read in 3rd column
                 ii = i_radar - (2*(kmax-1)) + 1
-                comment_tmp = comment_3d(ii)(81:120)
+                comment_tmp = comment_3d(ii)(2*nch+1:nch*3)
+                read(comment_tmp,1)rlat_radar(i_radar)
+     1                            ,rlon_radar(i_radar)
+     1                            ,rheight_radar(i_radar)
+     1                            ,n_ref
+     1                            ,c_radar_id(i_radar)
+
+                write(6,*)' Read radar ',c_radar_id(i_radar)
+     1                   ,' Volume (via 3d-mosaic)'
+
+            elseif(i_radar .le. 4*(kmax-1) )then ! read in 4th column
+                ii = i_radar - (3*(kmax-1)) + 1
+                comment_tmp = comment_3d(ii)(3*nch+1:nch*4)
+                read(comment_tmp,1)rlat_radar(i_radar)
+     1                            ,rlon_radar(i_radar)
+     1                            ,rheight_radar(i_radar)
+     1                            ,n_ref
+     1                            ,c_radar_id(i_radar)
+
+                write(6,*)' Read radar ',c_radar_id(i_radar)
+     1                   ,' Volume (via 3d-mosaic)'
+
+            elseif(i_radar .le. 5*(kmax-1) )then ! read in 5th column
+                ii = i_radar - (4*(kmax-1)) + 1
+                comment_tmp = comment_3d(ii)(4*nch+1:nch*5)
                 read(comment_tmp,1)rlat_radar(i_radar)
      1                            ,rlon_radar(i_radar)
      1                            ,rheight_radar(i_radar)
