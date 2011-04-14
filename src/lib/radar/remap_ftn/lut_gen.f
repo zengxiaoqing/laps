@@ -64,7 +64,7 @@ c
 c     Misc interval variables
 c
       integer i,j,igate_lut,iaz,ielev,iran,iz_grid,istatus,len_dir
-      integer I4_elapsed
+      integer I4_elapsed, lenr
       real rlat_grid,rlon_grid,height_grid
       real rlat_radar,rlon_radar,rheight_radar
       real elev,elev_deg,coselev,azimuth,azi_deg,azimuth_interval
@@ -111,6 +111,17 @@ c
 
       write(6,*)' Radar Name  ',c4_radarname
       write(6,*)' Radar Coords',rlat_radar,rlon_radar,rheight_radar
+
+      call s_len(c4_radarname,lenr)
+      if(lenr .eq. 0)then
+          write(6,*)' Error in lut_gen - no radarname '
+          stop
+      endif
+
+      if(abs(rlat_radar) .gt. 90.)then
+          write(6,*)' Error in lut_gen - invalid radar lat '
+          stop
+      endif
       
       ext = 'dat'
       call get_directory(ext,static_dir,len_dir)
