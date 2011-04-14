@@ -242,7 +242,7 @@ c vrz output definitions
 c
       character     dir_vrz*50
       character     ext_vrz*31
-      character     comment_vrz*125
+      character     comment_vrz*200
       character     units_vrz*10
       character     var_vrz*3
 c
@@ -252,7 +252,7 @@ c
      +             ,var_3d(nz_l)*3
      +             ,lvl_coord_3d(nz_l)*4
      +             ,units_3d(nz_l)*10
-     +             ,comment_3d(nz_l)*125
+     +             ,comment_3d(nz_l)*200
      +             ,comment_tmp*40
 
       character     units_2d*10
@@ -759,6 +759,7 @@ c
                  n_ref = 0
 
 !                Write comments in 3 columns each 40 characters wide
+                 nch=40
                  do i_radar = 1,n_valid_radars
                      if(i_radar .le. (nz_l-1) )then ! write in 1st column
                          ii = i_radar + 1
@@ -776,7 +777,7 @@ c
      1                                      ,n_ref
      1                                      ,c_radar_id(i_radar)
                          ii = i_radar - (nz_l-1) + 1
-                         comment_3d(ii)(41:77) = comment_tmp
+                         comment_3d(ii)(1*nch+1:2*nch-3) = comment_tmp    
 
                      elseif(i_radar .le. 3*(nz_l-1) )then ! write in 3rd column
                          write(comment_tmp,1)rlat_radar(i_radar)
@@ -785,7 +786,25 @@ c
      1                                      ,n_ref
      1                                      ,c_radar_id(i_radar)
                          ii = i_radar - (2*(nz_l-1)) + 1
-                         comment_3d(ii)(81:117) = comment_tmp
+                         comment_3d(ii)(2*nch+1:3*nch-3) = comment_tmp
+
+                     elseif(i_radar .le. 4*(nz_l-1) )then ! write in 4th column
+                         write(comment_tmp,1)rlat_radar(i_radar)
+     1                                      ,rlon_radar(i_radar)
+     1                                      ,rheight_radar(i_radar)
+     1                                      ,n_ref
+     1                                      ,c_radar_id(i_radar)
+                         ii = i_radar - (3*(nz_l-1)) + 1
+                         comment_3d(ii)(3*nch+1:4*nch-3) = comment_tmp
+
+                     elseif(i_radar .le. 5*(nz_l-1) )then ! write in 5th column
+                         write(comment_tmp,1)rlat_radar(i_radar)
+     1                                      ,rlon_radar(i_radar)
+     1                                      ,rheight_radar(i_radar)
+     1                                      ,n_ref
+     1                                      ,c_radar_id(i_radar)
+                         ii = i_radar - (4*(nz_l-1)) + 1
+                         comment_3d(ii)(4*nch+1:5*nch-3) = comment_tmp
 
                      else
                          write(6,*)
@@ -804,17 +823,7 @@ c
      1                                UNITS_3D,COMMENT_3D,
      1                                grid_mosaic_3dref,ISTATUS)       
 
-             else
-                 call put_laps_3d(i4time_data,
-     &                            ext_vrz,
-     &                            var_vrz,
-     &                            units_vrz,
-     &                            comment_vrz,
-     &                            grid_mosaic_3dref,
-     &                            nx_l,ny_l,nz_l)
-
-
-             endif
+            endif
 
           endif
 
