@@ -22,6 +22,7 @@
  iraster=0,
  icol_barbs=0,
  dist_plot_ua=0.,
+ montage=0,
  /
 
 c LAPSPLOT PARAMETERS
@@ -102,3 +103,8 @@ c dist_plot_ua - used to thin out the plotted upper air (ACARS & Cloud Drift
 c                Wind) observations and represents the threshold distance in 
 c                grid points between obs (e.g. 1.0). A value of zero will 
 c                disable the thinning to see all the obs.
+c
+c montage - (0)  use default settings on whether to do montage or animation
+c                with the "on-the-fly" page
+c           (+1) preferentially chooses montages over animations
+c           (-1) preferentially chooses animations over montages
