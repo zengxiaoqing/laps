@@ -293,8 +293,9 @@ c
       write(6,*)' Radar latitude (degrees): ',radar_lat  
       write(6,*)' Radar longitude (degrees): ',radar_lon  
 
-      if(radar_alt .eq. 0. .or. 
-     1   radar_lat .eq. 0. .or. radar_lon .eq. 0.)then
+      if(radar_alt .eq. 0. .OR. 
+     1   radar_lat .eq. 0. .or. radar_lon .eq. 0. .OR.
+     1   abs(radar_lat) .gt. 90.)then
           write(6,*)' ERROR: radar coords not initialized'
           istatus = 0
           return
@@ -695,7 +696,7 @@ c
      1                    ,laps_radar_ext_a,path_to_vrc_nl
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr
      1                    ,abs_vel_min,l_line_ref_qc,l_hybrid_first_gate       
-     1                    ,l_unfold,l_ppi_mode
+     1                    ,l_unfold,l_ppi_mode,n_groups
        character*150 static_dir,filename
 
 !      Default values
