@@ -33,6 +33,7 @@ c
 c===============================================================================
 c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd
+     .    ,mode
      .    ,laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt
      .    ,reject_names,bg_names,max_files,accepted_files
      .    ,n_written,c_ftimes_written
@@ -60,7 +61,7 @@ c
      .        nzbg_uv,nzbg_ww,
      .        max_files, lga_status,
      .        laps_cycle_time,
-     .        bgmodel,nbg,lncf
+     .        bgmodel,nbg,lncf,mode
 
       integer   ishow_timer
       integer   init_timer
@@ -1606,7 +1607,7 @@ c
 c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
 c
-      if(lga_status.eq.1)then
+      if(lga_status.eq.1 .and. mode .gt. 1)then
        itstatus(7)=ishow_timer()
        do i=1,nbg
           call s_len(bg_names(i),j)
@@ -1693,6 +1694,8 @@ c        endif
       elseif(lga_status.eq.0 .and. nbg.eq.0)then
        print*,'bkgd files already exists; no new ones to proc'
 c      lga_status = 1
+      elseif(mode .le. 1)then
+       print*,'spatial interp only was selected, skip time interp'       
       else
        print*,'No time interp when bad data found'
        print*
