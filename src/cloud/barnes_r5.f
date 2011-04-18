@@ -66,7 +66,8 @@ cdis
      1                          ,cf_modelfg(imax,jmax,kmax)
       dimension wt_p(imax,jmax,kmax)
 
-      logical l_perimeter, l_use_snd
+      logical l_perimeter, l_use_snd, l_bterm
+      parameter (l_bterm = .false.) ! limit search radius for soundings
 
       real cld_snd_in(max_cld_snd,kmax)
       real wt_snd_in(max_cld_snd,kmax)
@@ -185,36 +186,95 @@ cdis
       istatus = 1
       exponent_distance_wt = 5.0
 
+      fnrmscl = 1.533 ! simplify later by setting to one?
       iiizero = 0
-      bias_iii = 1e0
-
+      iiione = 0
+      iiifg = 0
+      iiib = 0
       grid_spacing_mc = grid_spacing_m * 10000. / 10080.8 ! For testing
 
       dist_norm = 100000. ! at 100km distance, ob weight = 1.
-      dist_norm_grid = dist_norm / grid_spacing_mc ! Normalized dist per grid pt
+      dist_norm = dist_norm * sqrt(fnrmscl/1.533)
+      dist_norm_grid = dist_norm / grid_spacing_mc ! Normalized dist in grid pts
       dist_norm_grid_sq = dist_norm_grid**2
+
+      iiicorners = ((imax-1)**2 * (jmax-1)**2) * fnrmscl + 1
 
 !     More efficient way to say weight = (d / 100km) ** exponent_distance_wt
       do iii = 1,n_fnorm ! iii is loosely the dist in grid points squared
-        fnorm(iii) = (dist_norm_grid_sq * bias_iii/float(iii)) 
+        fnorm(iii) = (dist_norm_grid_sq / float(iii)) 
      1                                 ** (exponent_distance_wt / 2.0)       
-        if(fnorm(iii) .eq. 0. .and. iiizero .eq. 0)then
-            iiizero = iii
-            write(6,*)' WARNING: fnorm array reached zero, iii=',iiizero
+
+        rnorm = sqrt(float(iii) / dist_norm_grid_sq) ! normalized radius
+        range = (dist_norm * rnorm) / sqrt(fnrmscl)
+
+!       Add ramp so we reach zero earlier
+        if(l_bterm)then
+            b = max( min((6.-rnorm),1.) ,0.)
+            fnorm_orig = fnorm(iii)
+            fnorm(iii) = fnorm(iii) * b
+            if(iii .eq. iiicorners)then
+                write(6,*)'iiicorners/rnorm/b/fnorms/range ',  
+     1          iiicorners,rnorm,b,fnorm_orig,fnorm(iii),range
+            endif
+
+            if(fnorm(iii) .eq. 0. .and. iiizero .eq. 0)then
+                iiizero = iii
+                write(6,*)
+     1          ' fnorm array reached zero, iii/rnorm/b/range/orig=',
+     1            iiizero,rnorm,b,range,fnorm_orig
+            endif
+
+            if(b .lt. 1. .and. iiib .eq. 0)then
+                iiib = iii
+                write(6,*)
+     1          ' b slipped below 1.0, iii/rnorm/b/range/orig=',
+     1            iii,rnorm,b,range,fnorm_orig
+            endif
+
         endif
+
+        if(fnorm(iii) .lt. 1. .and. iiione .eq. 0)then
+            iiione = iii
+            write(6,*)
+     1      ' fnorm array reached one, iii/rnorm/range=',
+     1        iii,rnorm,range
+        endif
+
+        if(fnorm(iii) .lt. weight_modelfg .and. iiifg .eq. 0)then
+            iiifg = iii
+            write(6,*)
+     1      ' fnorm array reached wtmodelfg, iii/rnorm/range/fnorm=',
+     1        iii,rnorm,range,fnorm(iii)
+        endif
+
       enddo
+
+      epsilon = 1e-5
+      weight_epsilon = 1e-5 * (weight_modelfg / float(n_cld_snd))
 
       radius_of_influence_km =  ( weight_modelfg ** 
      1                           (-1./exponent_distance_wt) )
      1                                     * (dist_norm/1000.)
+     1                                     * (1./sqrt(fnrmscl))
+
+      radius_of_influence_eps =  ( weight_epsilon ** 
+     1                           (-1./exponent_distance_wt) )
+     1                                     * (dist_norm/1000.)
+     1                                     * (1./sqrt(fnrmscl))
 
 ! LSW comment added for AWIPS logging 7/1/04
       write(6,*)' Optimizing Model background weight ...'
       write(6,*)' Model background weight  = ',weight_modelfg
+      write(6,*)' dist_norm = ',dist_norm
       write(6,*)' Approx radius of influence (km) = '
      1         ,radius_of_influence_km
       write(6,*)' Min possible ob weight   = ',fnorm(n_fnorm)
       write(6,*)' Max possible ob weight   = ',fnorm(1)
+      write(6,*)' Weight Epsilon   = ',weight_epsilon
+      write(6,*)' Radius of influence (epsilon) = '
+     1                               ,radius_of_influence_eps
+      write(6,*)' l_bterm = ',l_bterm
 
       ncnt=0
       do k=1,kmax
@@ -341,13 +401,11 @@ cdis
          write(6,*)' Ncnt/l_diff_snd = ',ncnt,l_diff_snd
       endif
 
-      radm2=1.533/100.
-
       rr_max = (NX_DIM_LUT-1)**2 + (NY_DIM_LUT-1)**2
-      iii_max = 1.533 * rr_max + 1.
+      iii_max = fnrmscl * rr_max + 1.
 
-      write(6,*)' 1.533/iii_max/n_fnorm = '
-     1           ,1.533,iii_max,n_fnorm
+      write(6,*)' fnrmscl/iii_max/n_fnorm = '
+     1           ,fnrmscl,iii_max,n_fnorm
 
       if(iii_max .gt. n_fnorm)then
           write(6,*)' iii_max is too large, increase n_fnorm'
@@ -360,7 +418,7 @@ cdis
       do i = -NX_DIM_LUT,NX_DIM_LUT
       do j = -NY_DIM_LUT,NY_DIM_LUT
           rr=i*i+j*j
-          iii=1.533*rr+1.
+          iii=fnrmscl*rr+1.
           if(iii .gt. n_fnorm)iii=n_fnorm
           iiilut(i,j) = fnorm(iii)
       enddo
@@ -432,10 +490,30 @@ cdis
 
                   nanl = nanl + 1
 
+                  if(.not. l_bterm)then
+                      ilow = 1
+                      ihigh = imax
+                      jlow = 1
+                      jhigh = jmax
+                  else ! l_bterm
+                      if(nskip .eq. 1)then
+                          rdist_lim = dist_norm_grid * 6.
+                          ilow  = max(int(float(ii)-rdist_lim)  ,1)
+                          ihigh = min(int(float(ii)+rdist_lim)+1,imax)
+                          jlow  = max(int(float(jj)-rdist_lim)  ,1)
+                          jhigh = min(int(float(jj)+rdist_lim)+1,jmax)
+                      else ! nskip .gt. 1 
+                          ilow = 1
+                          ihigh = imax
+                          jlow = 1
+                          jhigh = jmax
+                      endif
+                  endif
+
 !                 Analyze every few grid points
-                  do j=1,jmax,nskip
+                  do j=jlow,jhigh,nskip
                   jmjj = j-jj
-                  do i=1,imax,nskip
+                  do i=ilow,ihigh,nskip
                       weight = iiilut(i-ii,jmjj) * wt_snd(nn,k) 
 
 !                     Obs are being weighted
