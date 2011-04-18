@@ -9,13 +9,15 @@ rsync -rlptgvv --rsh=ssh --delete $LOCAL_DATA_ROOT/lapsprd/www/* $REMOTE_DATA_RO
 
 log=$LOCAL_DATA_ROOT/log/rsync.log.`date +\%H\%M`
 
+echo " rsync non-www files to $REMOTE_DATA_ROOT " > $log
+
 if test "$3" = qsub; then
 
 #   Set up qsub script
     script=$LOCAL_DATA_ROOT/log/qsub_rsync_out.sh
     echo "#!/bin/sh"                 > $script
     echo "#$ -N qsub_rsync_out"     >> $script
-    echo "#$ -A dlaps               >> $script
+    echo "#$ -A dlaps"              >> $script
     echo "#$ -l h_rt=00:30:00"      >> $script
     echo "#$ -S /bin/sh"            >> $script
     echo "#$ -cwd"                  >> $script
@@ -26,7 +28,7 @@ if test "$3" = qsub; then
     echo "LOCAL_DATA_ROOT=$LOCAL_DATA_ROOT" >> $script
     echo "REMOTE_DATA_ROOT=$REMOTE_DATA_ROOT" >> $script
 
-    echo "rsync -rlptgvv --exclude='log/core' --exclude='lapsprd/www' --exclude='lapsprd/lga' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT > \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+    echo "rsync -rlptgvv --exclude='log/core' --exclude='lapsprd/www' --exclude='lapsprd/lga' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
     echo " "
     echo " Running this qsub script...."
@@ -39,7 +41,11 @@ if test "$3" = qsub; then
 
 else
 
-    rsync -rlptgvv --exclude='log/core' --exclude='lapsprd/www' --exclude='lapsprd/lga' --rsh=ssh --delete $LOCAL_DATA_ROOT/* $REMOTE_DATA_ROOT > $log 2>&1         
+    echo " non-qsub case with direct rsync... "         >> $log
+
+    echo " rsync -rlptgvv --exclude='log/core' --exclude='lapsprd/www' --exclude='lapsprd/lga' --rsh=ssh --delete $LOCAL_DATA_ROOT/* $REMOTE_DATA_ROOT >> $log 2>&1" >> $log
+
+    rsync -rlptgvv --exclude='log/core' --exclude='lapsprd/www' --exclude='lapsprd/lga' --rsh=ssh --delete $LOCAL_DATA_ROOT/* $REMOTE_DATA_ROOT >> $log 2>&1         
 
 fi
 
