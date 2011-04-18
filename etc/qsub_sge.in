@@ -1,0 +1,861 @@
+#!/usr/bin/perl
+
+use Time::Local;
+
+my $debug=0;
+
+# What am I invoked as?
+$Q_CMD=`basename $0`;
+if ($Q_CMD=~/^qrsh$/) {
+  $Q_CMD="qrsh -now n";
+  $Q_MODE="SGE";
+} 
+elsif ($Q_CMD=~/^qsub$/) {
+  $Q_CMD="qsub";
+  $Q_MODE="unk";
+}
+elsif ($Q_CMD=~/^qsub.new$/) {
+  $Q_CMD="qsub";
+  $Q_MODE="unk";
+}
+else {
+  die "ERROR! The '$Q_CMD' command is not supported.\n";
+}
+if (grep(/^-I$/,@ARGV)) {
+  $Q_CMD="qrsh -now n";
+  $Q_MODE="PBS";
+}
+
+# Set the SGE_ROOT
+# CCT, this should already be set, this is not needed and wrong
+my $SGE_ROOT;
+if (defined($ENV{"SGE_ROOT"})) {
+        $SGE_ROOT=$ENV{"SGE_ROOT"};
+} else {
+        $SGE_ROOT="/usr/local/sge";
+        $ENV{"SGE_ROOT"}=$SGE_ROOT;
+}
+
+
+# Set the location of the SGE binaries
+$arch=`$SGE_ROOT/util/arch`;
+chop $arch;
+$EXE_ROOT="$SGE_ROOT/bin/$arch";
+
+# Set the location of the qsub/qrsh command
+$QSUB="$EXE_ROOT/$Q_CMD";
+
+# Set the location of the account control files
+$RSRC_CTL="@prefix@/etc/resource_control";
+$ACCT_INFO="@prefix@/etc/accountInfo";
+
+# Location of PE mappings
+$PE_MAP_FILE='@prefix@/etc/pe_mapping';
+#$PE_MAP_FILE='./pe_mapping';
+
+# Initialize option hashes
+@script=();
+%cmd_args=();
+%script_sge_args=();
+%script_pbs_args=();
+%args=();
+%resctl=();
+
+# Extract the script from the cmd line or from STDIN
+&get_script(*ARGV,*script);
+
+# If it's not an interactive job, make a hash of the qsub 
+# options set in the script
+unless ($Q_CMD=~/qrsh/) {
+
+  # Make a hash of the qsub options set in the script
+  open(SCRIPT,$script[0]) || die "ERROR!  Cannot open script named: $script[0]\n";
+  while (<SCRIPT>) {
+    if (/^#\$\s*(.+)/) {
+      @options=split(/\s+/,$1);
+      &parse_opts(*options,*script_sge_args);
+    }
+    elsif (/^#PBS\s*(.+)/) {
+      @options=split(/\s+/,$1);
+      &parse_opts(*options,*script_pbs_args);
+    }
+    else {
+      next;
+    }
+  }
+  close(SCRIPT);
+}
+
+# Make a hash of the qsub options set on the command line
+&parse_opts(*ARGV,*cmd_args);
+
+if (defined($cmd_args{'-debug'})) {
+	$debug=1;
+	delete($cmd_args{'-debug'});
+	print "Debugging enabled\n";
+}
+
+
+# Try to determine whether the syntax is PBS or SGE
+if ($Q_MODE eq "unk") {
+  $mode=get_mode(*cmd_args,*script_sge_args,*script_pbs_args);
+} else {
+  $mode=$Q_MODE;
+}
+
+# Combine the script and command line args, the command line
+# options always override the script directives
+if ($mode eq "PBS") {
+  %args=%script_pbs_args;
+}
+else {
+  %args=%script_sge_args;
+}
+for $arg (keys %cmd_args) {
+  $args{$arg}=$cmd_args{$arg};
+}
+
+# If we are in PBS mode, translate flags to SGE syntax
+if ($mode eq "PBS") {
+  &translate(*args);
+}
+
+# Check for bad options, and exit
+if (defined($args{'-t'})) {
+	print STDERR "\n";
+	print STDERR "Error!  Array jobs are not supported on Jet.\n";
+        print STDERR "  Please email hpcshelp.fsl\@noaa.gov and ask for suggestions on alternate methods.\n";
+	print STDERR "\n";
+	exit(1);
+}
+
+
+# Send options used to logger
+my $name;
+my $tstr;
+if (!defined($args{'-N'})) {
+#	$name=`/bin/basename $script[0]`;
+	$name="script";
+	chomp($name);
+} else {
+	$name=$args{'-N'};
+}
+if (!defined($args{'-l h_rt'})) {
+	$tstr="default";
+} else {
+	$tstr=$args{'-l h_rt'};
+}		
+	
+my $loggerstr=sprintf("user:%s name:%s account:%s pe:%s wc:%s\n", 
+                `whoami`, $name, $args{'-A'}, $args{'-pe'},$tstr);
+
+#### Now wait to log, do it after the qsub
+
+# Make sure a valid account was specified
+&check_account(*args);
+
+# Set -P to same as -A now that account is known to be valid.
+#$args{'-P'} = $args{'-A'};
+$args{'-P'} = "$args{'-A'}_proj";
+
+# Get the resource limits for the account
+&get_resctl(*args,*resctl);
+
+# Make sure a valid node type and cpu count was specified
+&check_nodespec(*args,*resctl);
+
+# Check for invalid wallclock and/or cpu time specs
+&check_timespec(*args,*resctl);
+
+# Check for invalid priority specs
+&check_priority(*args,*resctl);
+
+# Check to ensure user is not submitting more jobs than is allowed
+# This is spectified with maxqjobs in the resource_control file
+&check_max_queued_jobs(*args,*resctl);
+
+# Read in PE map
+my %pemap;
+
+open(IN, $PE_MAP_FILE) || die "ERROR:  Could not open PE Map from $PE_MAP_FILE";
+while(<IN>) {
+	chomp();
+	next if (/^#/);
+ 	my @ar=split(/\s+/,$_);
+	shift(@ar) if ($ar[0] eq "");
+	next if ($#ar == -1);
+	if (!defined($pemap{$ar[0]})) {
+		my $k=$ar[0];
+		shift(@ar);
+		$pemap{$k}=\@ar;
+	}
+}	
+close(IN);	
+
+# Map dummy PE to real PE
+&map_pe(*args, *resctl, *pemap);
+
+if(defined($args{'-D'}))
+{
+  print "Queue alias list:\n";  
+  map {m/[\w\d]+/ && print "$&\n";} grep {! /#/} `cat $PE_MAP_FILE`;   # Not the prettiest way to do this but it's quick.
+  exit;
+}
+
+# Replace "run after" with "pseudo advance reservations"
+# To use "-dl", users must be specified in "qconf -su deadlineusers".
+if(defined($args{'-a'})) {
+        $args{'-dl'} = $args{'-a'};
+        $args{'-R'} = 'y';
+        $args{'-p'} = 23;
+}
+
+# Now, subtract 512 from the priority of every job, to
+# shift the problem from the cannot submit with p>0 now.
+
+$args{'-p'} -= 512;
+
+## For MOAB/Reservation support.  If the -fb option is
+## set, then modify the h_rt time if the h_rt+now is
+## greater than the time specified by -fb
+
+if (defined($args{'-fb'})) {
+# Lets use chris' format for date right now
+	my $endtime;
+	if ($args{'-fb'} =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
+		$endtime=timelocal(0,$5,$4,$3,$2-1,$1);	
+	} else {
+		die "Unable to parse -fb ($args{'-fb'})\n";
+	}
+	
+	my $currtime = time();
+	my @hrttime=split(/:/,$args{'-l h_rt'});
+ 	my $dur=0;
+	foreach my $e (@hrttime) { $dur=$dur*60+$e; }
+	my $newhrt=$endtime-$currtime;
+	if ($newhrt<0) {
+		die "The endtime specified is before now, exiting\n";
+	}
+	if ($currtime+$dur>$endtime) {
+		print "Job cannot finish based on specified -fb time, adjusting -l h_rt to $newhrt seconds\n";
+		$args{'-l h_rt'}=$newhrt;
+	}	
+        delete($args{'-fb'});
+}
+
+# Build the command
+$cmd="$QSUB";
+for $arg (keys %args) {
+  if (substr($arg,0,2) eq "-l") {
+    $cmd.=" $arg=$args{$arg}"; 
+  }
+  else {
+    $cmd.=" $arg $args{$arg}";
+  }
+}
+for $script (@script) {
+ $cmd.=" $script";
+}
+
+print $cmd,"\n" if $debug;
+# Submit the command
+if ($QSUB=~/qrsh -now n$/) {
+  exec($cmd);
+}
+else {
+  $qsub_out=`$cmd`;
+  $qsub_rc = $? >> 8;
+  if ($qsub_rc) {
+     print STDERR "$qsub_out"; 
+  }
+  else {
+     if ($mode eq "PBS") {
+       if ($qsub_out=~/^[yY]our job (\d+) .+ has been submitted/) {
+         print "$1\n";
+       }
+     }
+     else {
+       print "$qsub_out";
+     }
+  }
+}
+
+$SIG{CHLD}='IGNORE';
+if ($pid=fork) {
+  exit($qsub_rc);
+}
+else  {
+  die "Cannot fork: $!" unless defined $pid;
+  if ($qsub_out=~/^[yY]our job (\d+) .+ has been submitted/) {
+    $loggerstr.=" job_id: $1\n";
+  } 
+  else { 
+    $loggerstr.=" job_id: none_found\n";
+  }
+  $cmd="/usr/bin/logger -t QSUB_OPTS \'$loggerstr\'";
+  my $output;
+  ($output,$rc)=check_cmd($cmd,10);
+
+}
+
+#####################################
+#
+# parse_opts
+#
+#####################################
+sub parse_opts {
+
+  local(*line,*hash)=@_;
+
+  while (@line) {
+    $arg=shift @line;
+    if (substr($arg,0,1) eq "-") {
+      $key=$arg;
+      if ($key=~/^-l/) {
+        if ($key=~/^-l(\S+)$/) {
+	  $arg=$1;
+        }
+	else {
+          $arg=shift @line;
+        }    
+        @resources=split(/,/,$arg);
+        for $resource (@resources) {
+          ($name,$value)=split(/=/,$resource);
+          $key="-l $name";
+          $hash{$key}=$value;
+        }
+      }
+      else {
+        $hash{$key}="";
+      }
+    }
+    elsif ($hash{$key} eq "") {
+      $hash{$key}=$arg;
+    }
+    else {
+      $hash{$key}.=" $arg";
+    }
+  }
+}
+
+#####################################
+#
+# get_mode
+#
+#####################################
+sub get_mode {
+
+  local(*cmd_args,*sge_script_args,*pbs_script_args)=@_;
+  @SGE_FLAGS=('-pe','-l h_rt','-l h_cpu', '-l mem_free');
+  @PBS_FLAGS=('-l nodes','-l walltime','-l cput','-I');
+
+  $syntax="UNKNOWN";
+  for $flag (@SGE_FLAGS) {
+    if (grep(/^$flag$/,keys %cmd_args)) {
+      $syntax="SGE";
+    }
+  }
+  if ($syntax eq "UNKNOWN") {
+    for $flag (@PBS_FLAGS) {
+      if (grep(/^$flag$/,keys %cmd_args)) {
+        $syntax="PBS";
+      }
+    }
+  }
+  if ($syntax eq "UNKNOWN") {
+    @flags=keys %sge_script_args;
+    if ($#flags > -1) {
+      $syntax="SGE";
+    }
+  }
+  if ($syntax eq "UNKNOWN") {
+    @flags=keys %pbs_script_args;
+    if ($#flags > -1) {
+      $syntax="PBS";
+    }
+  }
+  if ($syntax eq "UNKNOWN") {
+    $syntax="SGE";
+  }
+  $syntax;
+}
+
+#####################################
+#
+# translate
+#
+#####################################
+sub translate {
+
+  local(*args)=@_;
+
+  for $arg (keys %args) {
+    if ($arg eq "-l nodes") {
+      ($count,$pe)=split(/:/,$args{$arg});
+      $args{'-pe'}="$pe $count";
+      delete $args{$arg};
+    }
+    elsif ($arg eq "-l walltime") {
+      $args{'-l h_rt'}=$args{$arg};
+      delete $args{$arg};
+    }
+    elsif ($arg eq "-l cput") {
+      $args{'-l h_cpu'}=$args{$arg};
+      delete $args{$arg};
+    }
+    elsif ($arg eq "-j") {
+      $args{'-j'}="y";      
+    }
+    elsif ($arg eq "-I") {
+      $QSUB="$EXE_ROOT/qrsh -now n";
+      delete $args{$arg};      
+    }
+  }
+
+}
+
+#####################################
+#
+# get_resctl
+#
+#####################################
+sub get_resctl {
+
+  local(*options,*resctl)=@_;
+
+  # Get the default resource limits
+  open(RESCTL,$RSRC_CTL) || die "Cannot open $RSRC_CTL\n";
+  while (<RESCTL>) {
+    if (/^\s*default\.(\S+)\s*=\s*(\S+)\s*$/) {
+      $resctl{$1}=$2;
+    }
+  }
+  close(RESCTL);
+
+  # Overwrite the default limits with the account limits
+  open(RESCTL,$RSRC_CTL) || die "Cannot open $RSRC_CTL\n";
+  while (<RESCTL>) {
+    if (/^\s*$options{'-A'}\.(\S+)\s*=\s*(\S+)\s*/) {
+      $resctl{$1}=$2;
+    }
+  }
+  close(RESCTL);
+
+  # Set priority to default if not already set
+  if (!defined($options{'-p'})) {
+    $options{'-p'}=$resctl{'defaultpri'};
+  }
+
+  # Set the account to overflow if priority is 0
+  if ($options{'-p'} eq "0") {  
+    $options{'-A'}="overflow";
+  }
+
+  # If the priority is 0, overwrite the standard resource
+  # limits with overflow limits
+  if ($options{'-p'} eq "0") {
+
+    open(RESCTL,$RSRC_CTL) || die "Cannot open $RSRC_CTL\n";
+    while (<RESCTL>) {
+      if (/^\s*of_default\.(\S+)\s*=\s*(\S+)\s*$/) {
+        $resctl{$1}=$2;
+      }
+    }
+    close(RESCTL);
+
+    # Overwrite the default limits with the account limits
+    open(RESCTL,$RSRC_CTL) || die "Cannot open $RSRC_CTL\n";
+    while (<RESCTL>) {
+      if (/^\s*$options{'-A'}\.(\S+)\s*=\s*(\S+)\s*/) {
+        $resctl{$1}=$2;
+      }
+    }
+    close(RESCTL);
+
+  }
+
+
+}
+
+#####################################
+#
+# check_account
+#
+#####################################
+sub check_account {
+
+  local(*opts)=@_;
+
+  # Make sure the account was specified
+  if (! defined($opts{'-A'})) {
+    die "You must specify an account with: -A <account>\n";
+  }
+
+  # Check to make sure the account exists
+  if (`awk '/^$opts{'-A'}:/' $ACCT_INFO` eq "") {
+    die "Account '$opts{'-A'}' does not exist\n";
+  }
+
+  # Get a list of the groups the user is a member of
+  $groups=`id -Gn $ENV{'LOGNAME'}`;
+  chomp $groups;
+
+  # Make sure the user is a member of the account
+  if (!grep(/^$opts{'-A'}$/,split(/\s+/,$groups))) {
+    die "You are not authorized to use the '$opts{'-A'}' account\n";
+  }
+
+}
+
+#####################################
+#
+# check_nodespec
+#
+#####################################
+sub check_nodespec {
+
+  local(*opts,*resctl)=@_;
+
+  # Make sure the node spec was specified
+  if (!defined($opts{'-pe'})) {
+    $msg="You must specify the type and number of nodes with:\n";
+    if ($mode eq "SGE") {
+      $msg.="   -pe <node_type> <node_count>\n";
+    }
+    elsif ($mode eq "PBS") {
+      $msg.="   -l nodes=<node_count>:<node_type>\n";
+    }
+    die $msg;    
+  }
+
+  # Make sure both the node type and node count was specified
+  ($node_type,$node_cnt)=split(/\s+/,$opts{'-pe'});
+  if (($node_type eq "") || ($node_cnt eq "")) {
+    $msg="You must specify the type and number of nodes with:\n";
+    if ($mode eq "SGE") {
+      $msg.="   -pe <node_type> <node_count>\n";
+    }
+    elsif ($mode eq "PBS") {
+      $msg.="   -l nodes=<node_count>:<node_type>\n";
+    }
+    die $msg;    
+  }
+
+  # Make sure the node type is authorized
+  unless ($resctl{'nodeprop'} eq "*") {
+    if (!grep(/^$node_type$/,split(/:/,$resctl{'nodeprop'}))) {
+      die "Account '$opts{'-A'}' is not authorized to use nodes of type '$node_type'\n";
+    }
+  }
+
+  # Make sure the node count is authorized
+  unless ($resctl{'maxjobcpus'} < 0) {
+    if ($node_cnt > $resctl{'maxjobcpus'}) {
+      die "Account '$opts{'-A'}' is not authorized to use more than $resctl{'maxjobcpus'} cpus per job\n";
+    }
+  }
+
+
+#  @sizeresource = split(/,/,$resctl{'sizeresource'});
+#  $nr=0;
+#  while ($nr <= $#sizeresource) {
+#    if ($node_cnt < $sizeresource[$nr]) {
+#      $opts{"-l sizeresource_$nr"} = 1;
+#      $nr=1000000000;
+#    }
+#    $nr++;
+#  }
+
+  # Allow only authorized projects to use Resource Reservations w/ high priority
+  if ($Q_CMD !~ /^qrsh/) {
+    # qrsh doesn't like -R
+    if ($resctl{'blockcount'} == 1) {
+      $opts{'-R'} = 'y';
+      $opts{'-p'} = 23;
+    } else {
+      $opts{'-R'} = 'n';
+    }
+  }
+}
+
+#####################################
+#
+# check_timespec
+#
+#####################################
+sub check_timespec {
+
+  local(*opts,*resctl)=@_;
+
+  # Set wallclock time to default if not already set
+  if (!defined($opts{'-l h_rt'})) {
+    $opts{'-l h_rt'}=$resctl{'defwalltime'};
+  }
+  else {
+
+    # Get the max wallclock seconds
+    ($hour,$minute,$second)=split(/:/,$resctl{'maxwalltime'});
+    $max_wallsecs=3600*$hour+60*$minute+$second;
+
+    # Get the requested wallclock seconds
+    @hms=split(/:/,$opts{'-l h_rt'});
+    $second=pop(@hms);
+    $minute=pop(@hms);
+    $hour=pop(@hms);
+    $req_wallsecs=3600*$hour+60*$minute+$second;
+
+    # Make sure request does not exceed limit
+    if ($req_wallsecs > $max_wallsecs) {
+      die "Account '$opts{'-A'}' can not run jobs with a wallclock time > $resctl{'maxwalltime'}\n";
+    }
+
+  }
+
+#  @timeresource = split(/,/,$resctl{'timeresource'});
+#  $nr=0;
+#  while ($nr <= $#timeresource) {
+#    if ($req_wallsecs< $timeresource[$nr]) {
+#      $opts{"-l timeresource_$nr"} = 1;
+#      $nr=1000000000;
+#    }
+#    $nr++;
+#  }
+
+}
+
+#####################################
+#
+# check_priority
+#
+#####################################
+sub check_priority {
+
+  local(*opts,*resctl)=@_;
+
+  # Make sure priority does not exceed limit
+  if ($opts{'-p'} > $resctl{'maxpri'}) {
+    die "Account '$opts{'-A'}' can not run jobs with priority > $resctl{'maxpri'}\n";
+  }
+}
+#####################################
+#
+# check_max_queued_jobs
+#
+#####################################
+sub check_max_queued_jobs {
+
+  local(*opts,*resctl)=@_;
+
+  my $jobcount;
+  my $maxqjobcount;
+
+  my $cmd="$EXE_ROOT/qstat";
+  my $output=`$cmd`;
+  my $rc = $? >> 8;
+  die "Unable to run $cmd to check jobcount, exiting" if ($rc != 0);
+
+  my @lines=split(/\n/,$output);
+
+  $jobcount=@lines;
+
+  # remove 2 from the headers that are in the output.
+  $jobcount-=2;
+  if (!defined($resctl{'maxqjobs'})) {
+#    $maxqjobcount=10;
+    $maxqjobcount=250;
+  } else {
+    $maxqjobcount=$resctl{'maxqjobs'};
+  }
+
+  # Make sure priority does not exceed limit
+  if ($jobcount >= $maxqjobcount) {
+    die "Account '$opts{'-A'}' can not have more than $maxqjobcount jobs in the queue, Exiting.\n";
+  }
+
+}
+
+#####################################
+#
+# get_script
+#
+#####################################
+sub get_script {
+
+  local(*cmd_line,*script)=@_;
+
+  # A table of known options and the number of args they expect
+  %flag_args=(
+    "-a",       1,
+    "-A",       1,
+    "-cwd",     0,
+    "-e",       1,
+    "-hold_jid", 1,
+    "-I",       0,
+    "-j",       1,
+    "-l",       1,
+    "-m",       1,
+    "-masterq", 1,
+    "-notify",  0,          
+    "-N",       1, 
+    "-o",       1,
+    "-p",       1,
+    "-pe",      2,
+    "-ac",	1,
+    "-b",	1,
+    "-R",       1,
+    "-r",       1,
+    "-S",       1,
+    "-t",       1,
+    "-v",       1,
+    "-V",       0,
+    "-D",       0,
+    "-sync",	1,
+    "-fb",      1,
+    "-debug",   0
+  );
+
+  # Search for the index of the start of the script
+  $found=0;
+  $index=0;
+  while ($index <= $#cmd_line && !$found) {
+
+    $flag=$cmd_line[$index];
+
+    # Special case for -l followed by something other than a space
+    if ($flag=~/^-l\S+$/) {
+      $index++;
+    }      
+    elsif (defined($flag_args{$flag})) {
+      $index+=$flag_args{$flag}+1;
+    }
+    else {
+      $found=1;
+    }
+  }
+
+  # Pop script off of cmd_line and push it onto script
+  @script=();
+  if ($found) {
+    $script_args=$#cmd_line-$index+1;
+    for (1..$script_args) {
+      unshift(@script,pop(@cmd_line));
+    }
+  }
+  else {
+
+    unless ($Q_CMD=~/qrsh/) {
+      # Read script in from STDIN
+      while (<STDIN>) {
+        open(SCRIPT,">>/tmp/sgescr.$$") || die "ERROR: Could not open /tmp/sgescr.$$";
+        print SCRIPT;
+        close(SCRIPT);
+      }
+      $script[0]="/tmp/sgescr.$$"; 
+    }
+
+  }
+
+}
+
+
+#####################################
+#
+# map_pe
+#
+#####################################
+sub map_pe
+{
+  local (*opts, *rsctl, *pemap) = @_;
+
+  # Break -pe option into pe name and cpu count
+  return unless $opts{'-pe'} =~ /(\w+)\s+(\d+)/;
+  my ($pe, $ncpu) = ($1, $2);
+  my $limitcpu = 1;
+  my $new_ncpu = -1;
+
+  foreach my $k (keys %pemap) 
+  {
+    next if ($k ne $pe);
+    my @parts = @{$pemap{$k}};
+	
+    foreach (@parts)
+    {
+      # c=N
+      /^c=(\d+)\b/i && ($new_ncpu = (($ncpu%$1) ? ($ncpu + ($1 - $ncpu%$1)) : $ncpu)); 
+
+     # defaultmem=N, set only if not given
+      /^defaultmem=(\S+)\b/i && !defined($opts{'-l h_vmem'}) && ($opts{'-l h_vmem'} = $1);
+
+      # maxcpu=N, limit CPU count to N
+      /^maxcpu=(\d+)\b/i && ($ncpu = ($ncpu > $1) ? $1 : $ncpu);
+
+      # pe=pe_list
+      /^pe=(.+)/i && ($pe = $1);                                 
+
+	# serial
+	if ((/serial=(\S+)/) && ($ncpu == 1)) {
+		$opts{'-pe'}="$1 $ncpu";
+		&map_pe(*opts, *rsctl, *pemap);
+		return;
+	}
+
+      # masterq=qlist
+      /^masterq=(.+)/i && ($opts{'-masterq'} = $1);        
+
+      # flags, if specified, then set with -ac
+      # Yes, the match should include flags=....
+      /^(flags=.+)/i && ($opts{'-ac'} = $1);        
+    
+    
+      # nocpulimit[=acc1,acc2...]
+      /^nocpulimit(\Z|=(.*,)*$opts{'-A'}\b)/i && ($limitcpu = 0);
+    }
+  }
+
+  if ($new_ncpu == -1) {
+	$new_ncpu = $ncpu;
+  }
+
+  # Reconstruct -pe option
+  $opts{'-pe'} = "$pe $new_ncpu";
+
+#  # Make -l ncpus_<account> option
+#  $limitcpu && ($opts{"-l ncpus_$opts{'-A'}"} = 1); 
+#  # Make -l njobs_<account> option
+#  $limitcpu && ($opts{"-l njobs_$opts{'-A'}"} = 1./$ncpu); 
+
+#  # Make -l ncpus_<class> option
+#  defined($rsctl{class}) || die "No CPU class found.";
+#  $limitcpu && ($opts{"-l ncpus_$rsctl{class}"} = 1);
+
+  close IN;
+}
+
+sub check_cmd {
+
+        my ($cmd,$timeout) = @_;
+
+        my $output;
+        my $rc;
+
+        eval {
+                local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required
+                alarm $timeout;
+                # Do something here
+                $output=`$cmd 2>&1`;
+                $rc=$? >> 8;
+                alarm 0;
+        };
+
+        if ($@) {
+                $output="Alarm timeout";
+                $rc=255;
+                die unless $@ eq "alarm\n"; # propagate unexpected errors
+                # timed out
+        } else {
+                # didn't
+        }
+
+        return ($output, $rc);
+}
+
