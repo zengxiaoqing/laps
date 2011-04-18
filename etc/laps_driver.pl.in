@@ -264,7 +264,7 @@ if($opt_q || $opt_Q){
 
     print " Adding to $LAPS_LOG_PATH/run_qsub_$exe.sh with executable/nodes $exe $opt_q\n";
     print TFILE "  \n";
-    print TFILE "$LAPSROOT/$exedir/$exe $args 1> $LAPS_LOG_PATH/$log 2>&1\n";
+    print TFILE "$LAPSROOT/$exedir/$exe $args 1>> $LAPS_LOG_PATH/$log 2>&1\n";
 
     print TFILE "  \n";
     print $t." Closing $LAPS_LOG_PATH/run_qsub_$exe.sh with executable $exe\n";
