@@ -97,18 +97,19 @@ c
       character*256 bgpath
       integer bgmodels(maxbgmodels)
       integer bgmodel
-      integer istatus, init_timer
+      integer istatus, init_timer, mode, mlen
  
       character*13 cvt_i4time_wfo_fname13
 c
       character*9 a9
+      character*10 c_mode
       integer i4time_now,i4time_latest
       integer i4time_now_lga,i4time_now_gg
       integer i4time_lga
       integer max_files,bg_files
       integer itime_inc
       integer itime
-      parameter (max_files=20000)
+      parameter (max_files=2000)
       character*256 names(max_files)
       character*256 reject_names(max_files)
       integer reject_cnt
@@ -172,6 +173,26 @@ c
       else
          i4time_now = i4time_now_gg()
          print*,'Using i4time now'
+      endif
+
+!     Set mode
+!     1 - spatial interp only
+!     2 - temporal interp only (not yet supported)
+!     3 - both spatial and temporal interp
+
+      call GETENV('LGA_MODE',c_mode)
+      call s_len(c_mode,mlen)
+      if(mlen .gt. 0)then
+          write(6,*)' Obtaining lga mode from environment variable'
+          read(c_mode,*)mode
+      else
+          mode = 3 
+      endif
+
+      write(6,*)' lga mode = ',mode
+
+      if(mode .eq. 1)then ! spatial interp only, process one cycle ahead
+          i4time_now = i4time_now + laps_cycle_time
       endif
 
       if(lgb_only)then
@@ -310,6 +331,7 @@ c
              write(6,*)' names(1) = ',TRIM(names(1))
 
              call lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd,
+     .          mode,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .          reject_names,names,max_files,accepted_files,
      .          n_written,c_ftimes_written,
