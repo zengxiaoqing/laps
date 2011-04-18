@@ -44,7 +44,7 @@ cdis
       character path_to_radar*150, laps_radar_ext*4
      1         ,radar_subdir_dum*3, path_to_vrc*15
 
-      character c_radar_start*10,c_radar_end*10
+      character c_radar_start*10,c_radar_end*10,agroup*10
 
       real, allocatable, dimension(:,:) :: lat,lon,topo
        
@@ -78,7 +78,7 @@ cdis
           stop
       endif
 
-!     This first call returns only 'n_radars_remap'
+!     This first call returns only 'n_radars_remap' and 'namelist_parms'
       call get_remap_parms(0,n_radars_remap,max_times,path_to_radar     ! I/O
      1       ,laps_radar_ext,radar_subdir_dum,path_to_vrc,ref_min       ! O
      1       ,min_ref_samples,min_vel_samples,dgr,namelist_parms        ! O
@@ -95,7 +95,22 @@ cdis
      1             ,n_radars_remap
       endif
 
-      do i_radar = 1,n_radars_remap
+      if(namelist_parms%n_groups .gt. 1)then
+          n_groups = namelist_parms%n_groups
+          call getarg(1,agroup)
+          read(agroup,*)i_group
+          radars_per_group = float(n_radars_remap) * 
+     1                       float(i_group) / float(n_groups)
+          i_radar_start = 1 + nint(float(i_group-1) * radars_per_group)
+          i_radar_end   =     nint(float(i_group  ) * radars_per_group)
+          write(6,*)' Processing radar group ',i_radar_start,i_radar_end
+      else
+          write(6,*)' Processing all radars'
+          i_radar_start = 1
+          i_radar_end = n_radars_remap
+      endif
+
+      do i_radar = i_radar_start,i_radar_end
           write(6,*)
           write(6,*)' Obtaining parameters for radar # ',i_radar
           call get_remap_parms(i_radar,n_radars_remap,max_times       ! I/O
@@ -710,6 +725,14 @@ c
        read(1,remap_nl,err=901)
        close(1)
 
+!      Fill namelist parms
+       namelist_parms%abs_vel_min = abs_vel_min
+       namelist_parms%l_line_ref_qc = l_line_ref_qc 
+       namelist_parms%l_hybrid_first_gate = l_hybrid_first_gate
+       namelist_parms%l_unfold = l_unfold
+       namelist_parms%l_ppi_mode = l_ppi_mode
+       namelist_parms%n_groups   = n_groups
+
        if(i_radar .eq. 0)then
            return
        endif
@@ -759,12 +782,6 @@ c
        write(6,*)' l_hybrid_first_gate = ',l_hybrid_first_gate
        write(6,*)' l_unfold        = ',l_unfold
        write(6,*)' l_ppi_mode      = ',l_ppi_mode
-
-       namelist_parms%abs_vel_min = abs_vel_min
-       namelist_parms%l_line_ref_qc = l_line_ref_qc 
-       namelist_parms%l_hybrid_first_gate = l_hybrid_first_gate
-       namelist_parms%l_unfold = l_unfold
-       namelist_parms%l_ppi_mode = l_ppi_mode
 
        istatus = 1
        return
