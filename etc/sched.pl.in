@@ -45,6 +45,8 @@
 #
 # -P                   Number of processors for wind analysis (default=1)
 #
+# -S                   Specify "single" or "multi" strategy for setting up qsub scripts (default="single")
+#
 # -M                   Runs just the executables for the surface analysis. The argument value
 #                      denotes the name of the surface analysis executable (e.g. 'stmas_mg.x' 
 #                      'laps_sfc.x', or 'recurs_iter.x')
@@ -99,10 +101,10 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P);
+            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -305,6 +307,9 @@ my $node_type;
 # "single" consolidates everything into one SGE script, "multi" submits a separate qsub when the 
 # number of nodes changes.
 my $qsub_mode = "single"; # "multi" or "single"
+if($opt_S){
+    $qsub_mode = $opt_S;
+}
 
 #
 #  - The second argument is the time delay in hours to 
@@ -543,13 +548,18 @@ foreach $exe (@LAPS_EXE){
             if($nodes_last != $nodes_current){ # of nodes has changed OR we are starting
 
                 if($execount > 1 && $qsub_mode eq "multi"){ # after start - close qsub script
-                    print TFILE "  \n";
-                    print TFILE "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$scriptnext.sh 1> $LAPS_LOG_PATH/$qsub_name\_$scriptnext.log 2>&1\n";
-                    print TFILE "  \n";
+#                   print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh before executable # $execount\n";
                     close(TFILE);
-                    close(TFILE_SUB);
-                    system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
+
+#                   print $t." Appending $LAPS_LOG_PATH/$qsub_name\_1.sh before executable/script # $execount $scriptnext\n";
+#                   open(TFILE_FIRST,">>$LAPS_LOG_PATH/$qsub_name\_1.sh");
+#                   print TFILE_FIRST "  \n";
+#                   print TFILE_FIRST "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$scriptnext.sh 1> $LAPS_LOG_PATH/$qsub_name\_$scriptnext.log 2>&1\n";
+#                   close(TFILE_FIRST);
+
+#                   close(TFILE_SUB);
+#                   system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
                 }
 
 #               Start new qsub_wait script
@@ -559,7 +569,7 @@ foreach $exe (@LAPS_EXE){
 
                     print $t." Opening $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh starting with executable # $execount\n";
                     open(TFILE,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh");
-                    open(TFILE_SUB,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
+#                   open(TFILE_SUB,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
                     print TFILE "#!/bin/sh\n";
 
                 }
@@ -621,6 +631,7 @@ foreach $exe (@LAPS_EXE){
 
                 if($execount == 1 || $qsub_mode eq "multi"){
                     print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
+                    print TFILE "export LAPS_A9TIME=$yyjjjhhmm\n";
                     print TFILE "  \n";
                 }
 
@@ -685,13 +696,18 @@ foreach $exe (@LAPS_EXE){
             print TFILE "  \n";
             print $t." Closing $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh with executable # $execount\n";
             close(TFILE);
-            close(TFILE_SUB);
+#           close(TFILE_SUB);
             system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
 
             chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
-            $command = "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_1.sh";
-            print "Executing $command\n";
-            system("$command");
+
+            my $iscript;
+
+            for ($iscript=1; $iscript<=$scriptcount; $iscript++){
+                $command = "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$iscript.sh";
+                print "Executing $command\n";
+                system("$command");
+            }
 
 	}
 
