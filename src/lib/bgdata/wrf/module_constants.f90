@@ -29,7 +29,6 @@ MODULE constants
       REAL,       PARAMETER        :: ROG      = R / GRAV
       REAL,       PARAMETER        :: RVOLV    = RV / LV
       REAL,       PARAMETER        :: rmissing = 1.e9
-      INTEGER,    PARAMETER        :: imissing = NINT(rmissing)
   
 END MODULE constants
 
