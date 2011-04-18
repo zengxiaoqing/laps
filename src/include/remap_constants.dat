@@ -107,6 +107,8 @@ c
           logical l_unfold
           logical l_ppi_mode
 
+          integer n_groups
+
       end type namelist_type
 
       type (namelist_type) namelist_parms
