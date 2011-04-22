@@ -405,7 +405,8 @@ c this separate (near identical section) is due to local model having ffff = hhm
 c whereas the second section below is ffff = hhhh.
 
             if(cmodel.eq.'LAPS_FUA'.or.cmodel.eq.'MODEL_FUA'
-     +                             .or.cmodel.eq.'HRRR')then
+     +                             .or.cmodel.eq.'HRRR'      
+     +                             .or.cmodel.eq.'RR')then
 
 c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel = 0 need this switch.
 

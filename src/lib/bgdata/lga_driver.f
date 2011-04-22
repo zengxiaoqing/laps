@@ -518,7 +518,8 @@ c
             read(bg_names(j)(10:11),'(i2)')ihour
             read(bg_names(j)(12:13),'(i2)')imin
          else
-            if(cmodel(1:ic) .eq. 'HRRR')then
+            if(cmodel(1:ic) .eq. 'HRRR' .or.
+     1         cmodel(1:ic) .eq. 'RR')then
                read(bg_names(j)(10:11),'(i2)')ihour
                read(bg_names(j)(12:13),'(i2)')imin       
             else
