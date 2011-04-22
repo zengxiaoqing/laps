@@ -649,6 +649,7 @@ foreach $exe (@LAPS_EXE){
 
             if($opt_w){ # Bigfile option within qsub environment
                 print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
+                print TFILE "  \n";
             }
         }
 
@@ -683,10 +684,10 @@ foreach $exe (@LAPS_EXE){
                 print TFILE "echo 'Running www images postprocessing' >> $LAPS_LOG_PATH/runtime.log\n";
 
                 if($opt_f){ 
-                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
+                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $yyjjjhhmm $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
                     print TFILE "$LAPSROOT/etc/verif/cloud_analysis.csh $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/cloud_verif.log 2>&1\n";
                 }else{ # $opt_F
-                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
+                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT $yyjjjhhmm $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
                     print TFILE "$LAPSROOT/etc/verif/cloud_analysis.csh $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/cloud_verif.log 2>&1\n";
                 }
             }
@@ -784,7 +785,7 @@ if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
 if($opt_f && (! $opt_q) && (! $opt_Q) ){ 
     print     $t." Running www images followup_ncarg.sh\n";
 #   print LOG $t." Running www images followup_ncarg.sh\n";
-    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
+    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $yyjjjhhmm $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
     system("$LAPSROOT/etc/verif/cloud_analysis.csh $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/cloud_verif.log 2>&1");
     $t = gmtime;
     print     $t." Finished www images postprocessing\n";
@@ -792,7 +793,7 @@ if($opt_f && (! $opt_q) && (! $opt_Q) ){
 }elsif($opt_F && (! $opt_q) && (! $opt_Q) ){
     print     $t." Running www images followup_ncarg.sh\n";
 #   print LOG $t." Running www images followup_ncarg.sh\n";
-    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
+    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT $yyjjjhhmm $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
     system("$LAPSROOT/etc/verif/cloud_analysis.csh $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/cloud_verif.log 2>&1");
     $t = gmtime;
     print     $t." Finished www images postprocessing\n";
