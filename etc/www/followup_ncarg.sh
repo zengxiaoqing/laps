@@ -12,13 +12,19 @@ WEB_DATA=$LAPS_DATA_ROOT/lapsprd/www
 #Input LAPS_ROOT ($LAPSINSTALLROOT)
 LAPS_ROOT=$3
 
+#Input LAPS A9Time (yyydddhhmm)
+LAPS_A9TIME=$4
+
 WEB_NFS=$LAPS_ROOT/etc
 
 SCHED="$LAPS_DATA_ROOT/time"
 cd $SCHED
 
-utc_hour=`head -3 systime.dat | tail -1`
-utc_min=`head -4 systime.dat | tail -1`
+#utc_hour=`head -3 systime.dat | tail -1`
+#utc_min=`head -4 systime.dat | tail -1`
+
+utc_hour=`echo $LAPS_A9TIME | cut -c6-7`
+utc_min=`echo $LAPS_A9TIME | cut -c8-9`
 
 log_min=20
 
@@ -72,12 +78,12 @@ then
     WINDOW=0.0:0.0796:1.0:0.9204
     RESOLUTION=3193x2681
 
-elif test "$4" = "wide"
+elif test "$5" = "wide"
 then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=1056x885
 
-elif test "$4" = "wide2"
+elif test "$5" = "wide2"
 then
     WINDOW=0.0:0.14:1.0:0.86
     RESOLUTION=1200x885
