@@ -99,8 +99,10 @@ cdis
           n_groups = namelist_parms%n_groups
           call getarg(1,agroup)
           read(agroup,*)i_group
-          radars_per_group = float(n_radars_remap) * 
-     1                       float(i_group) / float(n_groups)
+          radars_per_group = float(n_radars_remap) / 
+     1                       float(n_groups)
+          write(6,*)' i_group / radars_per_group = ',i_group
+     1                                              ,radars_per_group
           i_radar_start = 1 + nint(float(i_group-1) * radars_per_group)
           i_radar_end   =     nint(float(i_group  ) * radars_per_group)
           write(6,*)' Processing radar group ',i_radar_start,i_radar_end
