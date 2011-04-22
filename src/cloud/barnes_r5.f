@@ -67,7 +67,7 @@ cdis
       dimension wt_p(imax,jmax,kmax)
 
       logical l_perimeter, l_use_snd, l_bterm
-      parameter (l_bterm = .false.) ! limit search radius for soundings
+      parameter (l_bterm = .true.) ! limit search radius for soundings
 
       real cld_snd_in(max_cld_snd,kmax)
       real wt_snd_in(max_cld_snd,kmax)
