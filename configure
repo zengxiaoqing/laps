@@ -3151,6 +3151,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/lfmpost.pl
           etc/lq3driver.pl
           etc/qsub
+          etc/qsub_sge
           etc/sched.pl
           etc/sched_sys.pl
           etc/realtime.pl
@@ -3305,6 +3306,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/lfmpost.pl
           etc/lq3driver.pl
           etc/qsub
+          etc/qsub_sge
           etc/sched.pl
           etc/sched_sys.pl
           etc/realtime.pl
@@ -3516,7 +3518,7 @@ rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 
-chmod +x etc/qsub
+chmod +x etc/qsub*
 chmod +x etc/www/nph-laps.cgi
 chmod +x etc/www/laps.cgi
 chmod +x etc/verif/*.csh
