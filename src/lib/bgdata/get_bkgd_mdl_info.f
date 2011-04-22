@@ -675,7 +675,7 @@ c --------------------
 
            goto 99
 
- 97        write(6,*)' Error opening header info'
+ 97        write(6,*)' Warning: could not open header info'
            goto 100
 
  98        write(6,*)' Error reading header info'
