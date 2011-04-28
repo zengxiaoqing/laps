@@ -108,7 +108,7 @@ $mon++;
 ($ss,$mm,$hh,$dd,$mon,$yy) = gmtime($filetime);
 $mon++;
 $yy += 1900;
-$filename = sprintf "%4.4d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
+$filename = sprintf "%4.4d%2.2d%2.2d_%2.2d%2.2d", ($yy,$mon,$dd,$hh,$mm);
 if (!$opt_w){
     use File::Copy 'cp';
     cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename") if(-d $FXA_DATA_BACKUP);
@@ -116,6 +116,13 @@ if (!$opt_w){
     print "running $sys\n";
     run_sys::run_sys("$sys");
 }else{
+    # LW check for hwt transfers
+    my $HWT_OUT;
+    if (substr($LAPS_DATA_ROOT,23,6) eq "faa2km") {
+      $HWT_OUT = "/data/fab/projects/hwt/stmas/faa2km";
+      cp("$WFO_FCSTPRD/$filename", "$HWT_OUT/$filename");
+      print "Copied $WFO_FCSTPRD/$filename to $HWT_OUT"
+    }
     if (! $dsunavailable){
       my $ld;
       if ($LAPS_DATA_ROOT =~ /LAPS(\d\d)$/){
