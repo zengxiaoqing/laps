@@ -1,0 +1,27 @@
+#!@CSH@
+
+# arg1 is the LAPS_DATA_ROOT (e.g. /data/fab/projects/dwr)
+# arg2 is the model cycle time (real number seconds, e.g. 21600.0)
+# arg3 is the delay in hours for the modeltime relative to the crontime (e.g. 12.0)
+# arg4 is model forecast time step (integer seconds, e.g. 10800)
+# arg5 is number of forecast times that have a valid analysis to compare with (excluding analysis, e.g. 2)
+
+setenv LAPSINSTALLROOT @prefix@
+setenv LAPS_DATA_ROOT $1
+
+setenv NTIMES $5
+
+perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 > $LAPS_DATA_ROOT/time/modeltime.dat 
+
+# Solar verification.......................................................................................
+
+$LAPSINSTALLROOT/bin/verif_fcst.exe $4 $NTIMES $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log
+
+$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $NTIMES > $LAPS_DATA_ROOT/log/cloud_fcst.log
+
+# Radar verification........................................................................................
+
+setenv LAPS_A9TIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
+
+$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log
+
