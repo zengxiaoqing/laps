@@ -86,7 +86,8 @@ C **** read in compressed file
 C
       lun = 65
 
-      if(.false.)then ! old way
+      itry = 0 ! retry if file is only partially written out
+5     if(.false.)then ! old way
           call open_lapsprd_file_read(lun,i4time,ext,istatus)
           if(istatus .ne. 1)goto 950
       else            ! new way using 'dir'
@@ -103,9 +104,20 @@ C To fix this, call read_laps instead
           open(lun,file=file_name(1:fn_length),status='old',err=950)
       endif
 
-      read(lun,*)kkdim
+10    read(lun,*,err=11)kkdim
+      go to 12
+11    write(6,*)' Warning: could not read kkdim'
+      call sleep(5)
+      itry = itry + 1
+      if(itry .le. 5)then
+          close(lun) 
+          write(6,*)' Retrying the read'
+          go to 5 
+      else
+          go to 960
+      endif
 
-      if(kkdim .ne. kdim * nf)then
+12    if(kkdim .ne. kdim * nf)then
           write(6,*)kkdim,kdim*nf
           go to 980
       endif
@@ -136,8 +148,20 @@ C To fix this, call read_laps instead
       icheck_sum = 0
 
       do i = 1,n_cmprs
-          read(lun,*)array1(i),array2(i)
-          icheck_sum = icheck_sum + array1(i)
+20        read(lun,*,err=21)array1(i),array2(i)
+          go to 22
+21        write(6,*)' Warning: could not read array1/array2'
+          call sleep(5)
+          itry = itry + 1
+          if(itry .le. 5)then
+              close(lun)
+              write(6,*)' Retrying the read'
+              go to 5 
+          else
+              go to 960
+          endif
+
+22        icheck_sum = icheck_sum + array1(i)
       enddo ! i
 
       close(lun)
@@ -212,6 +236,11 @@ C
 C
 950     if (flag .ne. 1)
      1    write (6,*) 'Error opening compressed file...read aborted.'       
+        istatus=error(2)
+        goto 999
+C
+960     if (flag .ne. 1)
+     1    write (6,*) 'Error reading compressed file...read aborted.'       
         istatus=error(2)
         goto 999
 C
