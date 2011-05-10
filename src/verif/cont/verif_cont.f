@@ -48,6 +48,8 @@
      1                  r_missing_data,
      1                  j_status)
 
+        include 'lapsparms.for' ! maxbgmodels
+
         real var_anal_3d(NX_L,NY_L,NZ_L)
         real var_fcst_3d(NX_L,NY_L,NZ_L)
         real rqc(NX_L,NY_L)
@@ -55,8 +57,8 @@
         logical lmask_and_3d(NX_L,NY_L,NZ_L)
         logical lmask_rqc_3d(NX_L,NY_L,NZ_L)
 
-        integer       maxbgmodels
-        parameter     (maxbgmodels=10)
+!       integer       maxbgmodels
+!       parameter     (maxbgmodels=10)
         character*30  c_fdda_mdl_src(maxbgmodels)
 
         integer max_fcst_times
@@ -86,9 +88,10 @@
         integer nthr_a(n_fields) ! number of thresholds for each field
         character*2 c2_region
 
-        data ext_fcst_a /'fua'/        
-        data ext_anal_a /'lps'/        
-        data var_a      /'REF'/        
+!       Specify what is being verified
+        data ext_fcst_a /'fua'/ ! 3-D
+        data ext_anal_a /'lps'/ ! 3-D reflectivity
+        data var_a      /'REF'/ ! 3-D reflectivity       
         data nthr_a     /5/        
 
         integer contable(0:1,0:1)
@@ -104,7 +107,7 @@
 
         lun_in = 21
 
-!       Get fdda_model_source from static file
+!       Get fdda_model_source and 'n_fdda_models' from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
 
         write(6,*)' n_fdda_models = ',n_fdda_models
@@ -116,7 +119,9 @@
      1                       ,n_models,n_fcst_times,n_regions
      1                       ,il,ih,jl,jh,lun_in)
 
-        if(n_fdda_models .ne. n_models + 1)then
+!       In 'nest7grid.parms' model #1 is lga usually
+!       In 'verif_regions.dat' model #1 represents the analysis
+        if(n_fdda_models .ne. n_models)then
             write(6,*)' ERROR n_models differs from n_fdda_models '
      1                       ,n_models,n_fdda_models
             stop
@@ -193,6 +198,9 @@
                         write(6,*)' Error reading 3D REF Analysis'
                         return
                   endif
+
+
+		write(*,*)'beka',i4_valid
 
                   if(var_2d .eq. 'REF')then ! also read radar quality
                       ext = 'lcv'
@@ -394,7 +402,27 @@
         read(lun_in,*)n_fcst_times
         read(lun_in,*)n_models
 
-        do ir = 1,n_regions
+        if(n_regions .eq. 0)then
+          write(6,*)' Filling default region info automatically'
+          n_regions = 1
+          call get_grid_dim_xy(NX_L,NY_L,istatus)
+
+          do ir = 1,n_regions
+            do if = 1,n_fcst_times
+                i_fcst_time = if - 1
+
+                do im = 1,n_models
+                    il(im,if,ir) = 1
+                    ih(im,if,ir) = NX_L
+                    jl(im,if,ir) = 1
+                    jh(im,if,ir) = NY_L
+                enddo ! im
+
+            enddo ! if
+          enddo ! ir
+
+        else
+          do ir = 1,n_regions
             do if = 1,n_fcst_times
                 read(lun_in,*)
                 read(lun_in,*)i_fcst_time
@@ -412,7 +440,9 @@
                 enddo ! im
 
             enddo ! if
-        enddo ! ir
+          enddo ! ir
+        endif
+
         close(lun_in)
 
         return
