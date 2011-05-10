@@ -90,7 +90,8 @@ cdis
 
       l_struct = .not. l_not_struct
 
-      write(6,*)' Subroutine barnes_multivariate..., l_struct=',l_struct      
+      write(6,*)' Subroutine barnes_multivariate..., l_superob_barnes='
+     1                                              ,l_superob_barnes
 
 !     vertical radius of influence in gridpoints
       r0_vert_grid = 0.9 * (5000. / rep_pres_intvl)
