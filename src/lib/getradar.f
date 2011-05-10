@@ -72,8 +72,12 @@ cdoc
         subroutine get_multiradar_vel(
      1   i4time_ref,i4time_tol,i4time_radar_a
      1  ,max_radars,n_radars,ext_a,r_missing_data
-     1  ,l_offset,imax,jmax,kmax
-     1  ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a,n_vel_a
+     1  ,imax,jmax,kmax
+     1  ,nx_r,ny_r,igrid_r                                           ! I
+     1  ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a
+     1  ,ioffset,joffset                                             ! O
+     1  ,l_offset                                                    ! I
+     1  ,n_vel_a
      1  ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a
      1  ,istatus_multi_vel,istatus_multi_nyq)
 
@@ -120,10 +124,14 @@ cdoc    Called from wind/lapsplot
 
         character asc9_tim_radar*9
 
+        Integer       ioffset(max_radars)
+        Integer       joffset(max_radars)
         logical l_apply_map, l_offset
 
-        real grid_ra_vel(imax,jmax,kmax,max_radars)
-        real grid_ra_nyq(imax,jmax,kmax,max_radars)
+        real grid_ra_vel(nx_r,ny_r,kmax,max_radars)
+        real grid_ra_nyq(nx_r,ny_r,kmax,max_radars)
+        real grid_ra_vel_3d(imax,jmax,kmax)
+        real grid_ra_nyq_3d(imax,jmax,kmax)
         integer idx_radar(max_radars)
 
         real rlat_radar_a(max_radars),rlon_radar_a(max_radars)
@@ -185,14 +193,8 @@ cdoc    Called from wind/lapsplot
 
                 idx_radar(n_radars) = i_radar_pot
 
-                do k = 1,kmax
-                do j = 1,jmax
-                do i = 1,imax
-                    grid_ra_vel(i,j,k,n_radars) = r_missing_data
-                    grid_ra_nyq(i,j,k,n_radars) = r_missing_data
-                enddo
-                enddo
-                enddo
+                grid_ra_vel(:,:,:,n_radars) = r_missing_data
+                grid_ra_nyq(:,:,:,n_radars) = r_missing_data
 
                 i4time_radar_a(n_radars) = i4time_radar
 
@@ -201,8 +203,8 @@ cdoc    Called from wind/lapsplot
 
                 call read_radar_vel(i4time_radar,l_apply_map,
      1           imax,jmax,kmax,ext_a(i_radar_pot),
-     1           grid_ra_vel(1,1,1,n_radars),
-     1           grid_ra_nyq(1,1,1,n_radars),v_nyquist_in_a(n_radars),       
+     1           grid_ra_vel_3d,
+     1           grid_ra_nyq_3d,v_nyquist_in_a(n_radars),       
      1           rlat_radar_a(n_radars),rlon_radar_a(n_radars)
      1                      ,rheight_radar_a(n_radars)
      1                      ,radar_name_a(n_radars)
@@ -214,7 +216,73 @@ cdoc    Called from wind/lapsplot
                   ! Don't count in a valid radar
                     idx_radar(n_radars) = 0
                     n_radars = n_radars - 1
-                endif
+
+                else ! valid radar
+
+                    if(l_offset)then
+                      if(rlat_radar_a(n_radars) .eq. r_missing_data .or.
+     1                   rlon_radar_a(n_radars) .eq. r_missing_data  
+     1                                                             )then
+                        write(6,*)
+     1                        ' No valid or single lat/lon for radar '       
+     1                           ,n_radars       
+!    1                           ,' ',radar_name(n_radars)
+!                       l_valid_latlon(n_radars) = .false.
+
+                        ioffset(n_radars) = 0
+                        joffset(n_radars) = 0
+
+                      else
+                        call latlon_to_rlapsgrid(rlat_radar_a(n_radars),
+     &                                           rlon_radar_a(n_radars),
+     &                                           lat,lon,
+     &                                           imax,jmax,
+     &                                           ri,rj,
+     &                                           jstatus)
+                        if(jstatus.ne.1)then
+                            write(6,*)
+     1                   'computing ri/rj for radar (outside domain)'    
+                        endif
+!                       write(6,*)'Name: ',radar_name(n_radars)
+!     1                          ,ri(n_radars),rj(n_radars),n_radars
+!                       l_valid_latlon(n_radars) = .true.
+
+!                       Offset is location of lower left corner of small array in the large array
+                        ioffset(n_radars) = (nint(ri) - igrid_r) - 1
+                        joffset(n_radars) = (nint(rj) - igrid_r) - 1
+                      endif
+
+                      I4_elapsed = ishow_timer()
+
+                      write(6,*)' get_multiradar_vel - offset info '
+     1           ,'ri,rj,ioffset(n_radars),joffset(n_radars),igrid_r : '
+     1            ,ri,rj,ioffset(n_radars),joffset(n_radars),igrid_r
+
+                      nfill = 0  
+
+                      do jo = 1,ny_r
+                        j = jo + joffset(n_radars)
+                        if(j .ge. 1 .and. j .le. jmax)then
+                          do io = 1,nx_r
+                            i = io + ioffset(n_radars)
+                            if(i .ge. 1 .and. i .le. imax)then
+                              grid_ra_vel(io,jo,:,n_radars) = 
+     1                        grid_ra_vel_3d(i,j,:)
+                              nfill = nfill + 1
+                            endif ! in i bounds
+                          enddo ! io
+                        endif ! in j bounds
+                      enddo ! j
+
+                      write(6,*)' nfill = ',nfill
+
+                    else ! fill 4D array with 3D array contents
+                      grid_ra_vel(:,:,:,n_radars) = grid_ra_vel_3d
+                      grid_ra_nyq(:,:,:,n_radars) = grid_ra_nyq_3d
+
+                    endif ! l_offset
+
+                endif ! valid radar
 
                 if(istatus_vel .ne. 1)then
                     istatus_multi_vel = 0
@@ -1398,7 +1466,7 @@ cdoc                            calls read_multiradar_3dref.
 
         character*200 comment_3d(kmax)
         character*40 comment_tmp
-        character*10 units_3d(kmax),units_2d
+        character*10 units_3d(kmax)           
         character*3 var_3d(kmax)
         integer LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
@@ -1426,7 +1494,6 @@ cdoc                            calls read_multiradar_3dref.
 11      format('  read_vrz_3dref: ',a,1x,a,1x,a,1x,a)
 
         do k = 1,kmax
-            units_3d(k)   = units_2d
             if(ltest_vertical_grid('HEIGHT'))then
                 lvl_3d(k) = zcoord_of_level(k)/10
                 lvl_coord_3d(k) = 'MSL'
@@ -1560,6 +1627,52 @@ cdoc                            calls read_multiradar_3dref.
            closest_vxx(i,j)=distmin
         enddo
         enddo
+
+        return
+        end
+
+        subroutine get_l_offset_radar(nx_l,ny_l,grid_spacing_cen_m,     ! I
+     1                                nx_r,ny_r,igrid_r,l_offset_radar) ! O    
+
+        use mem_namelist, only: i_offset_radar
+
+        logical l_offset_radar
+
+        radius_r = 500000. ! 500km max radar radius
+        igrid_r = int(radius_r / grid_spacing_cen_m) + 1
+        nx_r_pot = (2 * igrid_r) + 1
+        ny_r_pot = (2 * igrid_r) + 1
+        write(6,*)' Potential offset radar arrays',i_offset_radar
+     1                                            ,nx_r_pot,nx_l,ny_l
+
+        if(i_offset_radar .eq. 1)then
+            l_offset_radar = .true.
+            if(nx_r_pot**2 .gt. nx_l*ny_l)then ! offset arrays are larger                     
+                write(6,*)' Warning: offset arrays are larger than grid'
+            endif
+            nx_r = nx_r_pot
+            ny_r = ny_r_pot
+        elseif(i_offset_radar .eq. 0)then
+            if(nx_r_pot**2 .gt. nx_l*ny_l)then ! offset arrays are larger                     
+                write(6,*)' Offset arrays are larger than grid'
+                nx_r = nx_l
+                ny_r = ny_l
+                igrid_r = 0 ! dummy value
+                l_offset_radar = .false.
+            else
+                write(6,*)' Offset arrays are within grid'
+                nx_r = nx_r_pot
+                ny_r = ny_r_pot
+                l_offset_radar = .true.
+            endif
+        else ! i_offset_radar = -1
+            nx_r = nx_l
+            ny_r = ny_l
+            igrid_r = 0 ! dummy value
+            l_offset_radar = .false.
+        endif
+
+        write(6,*)' l_offset_radar = ',l_offset_radar,nx_r,ny_r
 
         return
         end
