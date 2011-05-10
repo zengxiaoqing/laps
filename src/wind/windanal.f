@@ -53,6 +53,7 @@ cdis
      1     ,thresh_25_radarobs_lvl_unfltrd                             ! I
      1     ,u_laps_bkg,v_laps_bkg                                      ! I/L
      1     ,imax,jmax,kmax,lat,lon                                     ! I
+     1     ,nx_r,ny_r                                                  ! I
      1     ,i4time,grid_spacing_m                                      ! I
      1     ,r_missing_data                                             ! I
      1     ,heights_3d                                                 ! I
@@ -124,8 +125,8 @@ cdis
       integer max_radars            ! max possible # of radars         Input
 
 !     4D Radial velocity array (all radars)
-      real vr_obs_unfltrd(imax,jmax,kmax,max_radars)                 ! Input
-      real vr_nyq(imax,jmax,kmax,max_radars)                         ! Input
+      real vr_obs_unfltrd(nx_r,ny_r,kmax,max_radars)                 ! Input
+      real vr_nyq(nx_r,ny_r,kmax,max_radars)                         ! Input
       integer idx_radar_a(max_radars)                                ! Input
 
 !     Nyquist velocity (if known and constant) for each radar
@@ -373,6 +374,8 @@ csms$serial(default=ignore)  begin
      1          ,istatus                                    ! Input/Output
      1                                                          )
       enddo ! i_radar
+
+      I4_elapsed = ishow_timer()
 
 !     Perform analysis with radar data added in
       do k = 1,kmax
