@@ -164,6 +164,12 @@ cdis
         real rheight_radar_a(MAX_RADARS)
         integer i4time_radar_a(MAX_RADARS)
         integer n_vel_grids_a(MAX_RADARS)
+        Integer       ioffset(MAX_RADARS)
+        Integer       joffset(MAX_RADARS)
+
+        logical l_offset
+        parameter (l_offset = .false.)
+
         character*4 radar_name,radar_name_a(MAX_RADARS)
         character*31 ext_radar,ext_radar_a(MAX_RADARS)
 
@@ -2472,9 +2478,12 @@ cabdel
 
                   call get_multiradar_vel(
      1                i4time_get,100000000,i4time_radar_a
-     1               ,max_radars,n_radars,ext_radar_a,r_missing_data       
-     1               ,.true.,NX_L,NY_L,NZ_L
+     1               ,max_radars,n_radars,ext_radar_a,r_missing_data   
+     1               ,NX_L,NY_L,NZ_L
+     1               ,nx_r,ny_r,igrid_r                                 ! I
      1               ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a       
+     1               ,ioffset,joffset                                   ! O
+     1               ,l_offset                                          ! I
      1               ,n_vel_grids_a
      1               ,rlat_radar_a,rlon_radar_a,rheight_radar_a
      1               ,radar_name_a      
