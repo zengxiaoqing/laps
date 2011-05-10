@@ -127,6 +127,9 @@ cdis
         character*4 radar_name(max_radars)
         real v_nyquist_in(max_radars)
         integer n_vel_grids(max_radars),i4time_radar_a(max_radars)
+        Integer       ioffset(max_radars)
+        Integer       joffset(max_radars)
+        Logical       l_offset_radar 
 
 !       Stuff for call to LAPS analysis
 !       real upass1(NX_L,NY_L,nk_laps),vpass1(NX_L,NY_L,nk_laps)
@@ -166,8 +169,8 @@ cdis
 !       real grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS)
 !       real grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS)
 
-        real, allocatable, dimension(:,:,:,:) :: grid_ra_vel_offset
-        real, allocatable, dimension(:,:,:,:) :: grid_ra_nyq_offset
+!       real, allocatable, dimension(:,:,:,:) :: grid_ra_vel_offset
+!       real, allocatable, dimension(:,:,:,:) :: grid_ra_nyq_offset
 
         integer idx_radar_a(MAX_RADARS)
         character*31 ext_radar(MAX_RADARS)
@@ -267,50 +270,30 @@ cdis
         enddo
 
 !  ***  Remap Radial Velocities to LAPS Grid  *****************************
+        I4_elapsed = ishow_timer()
+
 !       i4_tol = max(laps_cycle_time / 2, iradar_cycle_time / 2)
         i4_tol = 900 ! seconds
 
-        l_offset = .false.
+        call get_l_offset_radar(nx_l,ny_l,grid_spacing_m,         ! I
+     1                          nx_r,ny_r,igrid_r,l_offset_radar) ! O
 
-        if(.not. l_offset)then
-         allocate(grid_ra_vel(nx_l,ny_l,nz_l,max_radars)
-     1                                      ,STAT=istat_alloc)
-         if(istat_alloc .ne. 0)then
-            write(6,*)' ERROR: Could not allocate grid_ra_vel'      
-            stop
-         endif
-
-         allocate(grid_ra_nyq(nx_l,ny_l,nz_l,max_radars)
-     1                                      ,STAT=istat_alloc)
-         if(istat_alloc .ne. 0)then
-            write(6,*)' ERROR: Could not allocate grid_ra_nyq'      
-            stop
-         endif
-
-        else 
-         radius_r = 500000. ! 500km max radar radius
-         igrid_r = int(radius_r / grid_spacing_cen_m) + 1
-         nx_r = min(((2 * igrid_r) + 1),nx_l)
-         ny_r = min(((2 * igrid_r) + 1),ny_l)
-
-         allocate(grid_ra_vel_offset(nx_r,ny_r,nz_l,max_radars)
+        allocate(grid_ra_vel(nx_r,ny_r,nz_l,max_radars)
      1           ,STAT=istat_alloc)             
-         if(istat_alloc .ne. 0)then
+        if(istat_alloc .ne. 0)then
             write(6,*)' ERROR: Could not allocate grid_ra_vel'      
                         stop
-         else
-            write(6,*)' Allocated grid_ra_vel_offset ',nx_r,ny_r
-         endif
+        else
+            write(6,*)' Allocated grid_ra_vel ',nx_r,ny_r
+        endif
 
-         allocate(grid_ra_nyq_offset(nx_r,ny_r,nz_l,max_radars)
+        allocate(grid_ra_nyq(nx_r,ny_r,nz_l,max_radars)
      1           ,STAT=istat_alloc)             
-         if(istat_alloc .ne. 0)then
+        if(istat_alloc .ne. 0)then
             write(6,*)' ERROR: Could not allocate grid_ra_nyq'      
                         stop
-         else
-            write(6,*)' Allocated grid_ra_nyq_offset ',nx_r,ny_r
-         endif
-
+        else
+            write(6,*)' Allocated grid_ra_nyq ',nx_r,ny_r
         endif
 
         if(l_use_radial_vel)then
@@ -321,11 +304,11 @@ cdis
      1       ,max_radars                                             ! I
      1       ,n_radars                                               ! O
      1       ,ext_radar                                              ! O
-     1       ,r_missing_data,.false.,NX_L,NY_L,NZ_L                  ! I
-!    1       ,nx_r,ny_r,igrid_r                                      ! I
+     1       ,r_missing_data,NX_L,NY_L,NZ_L                          ! I
+     1       ,nx_r,ny_r,igrid_r                                      ! I
      1       ,grid_ra_vel,grid_ra_nyq,idx_radar_a,v_nyquist_in       ! O
-!    1       ,grid_ra_vel_offset,ioffset,joffset,l_offset,           ! O
-!    1       ,grid_ra_nyq_offset,                                    ! O
+     1       ,ioffset,joffset                                        ! O
+     1       ,l_offset_radar                                         ! I
      1       ,n_vel_grids                                            ! O
      1       ,rlat_radar,rlon_radar,rheight_radar,radar_name         ! O
      1       ,istat_radar_vel,istat_radar_nyq)                       ! O
@@ -508,6 +491,7 @@ cdis
      1       ,thresh_25_radarobs_lvl_unfltrd                            ! I
      1       ,u_laps_fg,v_laps_fg                                       ! I/L
      1       ,NX_L,NY_L,NZ_L,lat,lon                                    ! I
+     1       ,nx_r,ny_r                                                 ! I
      1       ,i4time_sys,grid_spacing_m                                 ! I
      1       ,r_missing_data                                            ! I
      1       ,heights_3d                                                ! I
