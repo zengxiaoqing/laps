@@ -8,7 +8,7 @@
   snow_thresh = 1.1,
   lwc2vapor_thresh = 1.01,
   make_sfc_uv = .false.,
-  use_laps_skintemp = .false.,	
+  use_laps_skintemp = .true.,	
 /
  
 c
