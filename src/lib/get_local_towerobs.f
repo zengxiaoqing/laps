@@ -573,12 +573,12 @@ c     read dim smQcFlag -> smQcFlag
       nf_status = NF_INQ_DIMID(nf_fid,'smQcFlag',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'Error finding dim smQcFlag' 
+        print *,'could not find dim smQcFlag' 
       endif
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,smQcFlag)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'Error reading dim smQcFlag'
+        print *,'could not read dim smQcFlag'
       endif
 
 c LW
