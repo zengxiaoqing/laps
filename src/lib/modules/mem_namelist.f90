@@ -44,6 +44,7 @@ include 'lapsparms.for'
         real silavwt_parm
         real toptwvl_parm
         integer iwrite_output
+        integer i_offset_radar
 
         character*40  vertical_grid
         character*10  lvl_coord_cdf
@@ -207,11 +208,11 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,standard_longitude,NX_L, NY_L, I_PERIMETER &
                   ,l_compress_radar,l_use_tamdar,l_3dvar &
                   ,l_accum_fg, l_accum_radar, l_accum_gauge &
-                  ,l_superob_barnes ,l_mosaic_sat &
+                  ,l_superob_barnes, l_mosaic_sat &
                   ,grid_spacing_m,grid_cen_lat,grid_cen_lon &
                   ,earth_radius &
                   ,laps_cycle_time &
-                  ,i2_missing_data, r_missing_data, MAX_RADARS &
+                  ,i2_missing_data, r_missing_data, MAX_RADARS, i_offset_radar &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
                   ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
@@ -342,6 +343,7 @@ elseif (namelist_name == 'lapsparms') then
    prtop = 10000.          ! 100mb for SIGMA_P grid
    l_superob_barnes = .false.
    l_mosaic_sat     = .false.
+   i_offset_radar = -1
 
    read (12, lapsparms_nl, err=901)
    
