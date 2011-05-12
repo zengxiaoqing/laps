@@ -610,6 +610,7 @@ foreach $exe (@LAPS_EXE){
                 if($execount == 1 || $qsub_mode eq "multi"){
                     print TFILE "  \n";
                     print TFILE "umask 002\n";
+                    print TFILE "ulimit -s unlimited\n";
                     print TFILE "cd $LAPS_LOG_PATH\n";
                     print TFILE "  \n";
                 }
@@ -646,9 +647,9 @@ foreach $exe (@LAPS_EXE){
         print TFILE "  \n";
 
         if($execount == $nexe){ # Add wfo_post into TFILE as necessary
-
+#           added -t $yyjjjhhmm to allow data from systime.dat at time sched.pl runs to be passed into wfo_post.pl (allows post processing to run overtime)
             if($opt_w){ # Bigfile option within qsub environment
-                print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
+                print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl -w -t $yyjjjhhmm $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
                 print TFILE "  \n";
             }
         }
@@ -681,7 +682,7 @@ foreach $exe (@LAPS_EXE){
 
             if($opt_f || $opt_F){ 
                 print TFILE "  \n";
-                print TFILE "echo 'Running www images postprocessing' >> $LAPS_LOG_PATH/runtime.log\n";
+                print TFILE "echo '$t Running www images postprocessing for $yyjjjhhmm' >> $LAPS_LOG_PATH/runtime.log\n";
 
                 if($opt_f){ 
                     print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $yyjjjhhmm $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
@@ -733,7 +734,7 @@ $t = gmtime;
 my $date = `date`;
 print "$date";
 
-print LOG "$t finshed executables\n";
+print LOG "$t finished executables for $yyjjjhhmm\n";
 unlink "$sched_lockfile";
 
 if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
