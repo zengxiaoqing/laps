@@ -886,7 +886,7 @@ c
 	endif
 c
 	write(6,900) ncnt, numsta
-900	format('   Selected ',i4,' obs out of ',i4
+900	format('   Selected ',i5,' obs out of ',i5
      1        ,' total (barnes_wide)')
 c
 	do ipass=1,npass
