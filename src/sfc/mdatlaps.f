@@ -678,7 +678,7 @@ c
 c
         I4_elapsed = ishow_timer()
 
-        i_boundary = 0 ! 2
+        i_boundary = -1 ! 0 ! 2
 
 	print *,' Boundary for    U:'
 	call set_boundary(u1,imax,jmax,ii,jj,uu,u_bk,n_obs_b,
@@ -936,6 +936,11 @@ c
 c
 c.....	First, try the wide-area Barnes, filling the dum array.
 c
+        if(i_boundary .eq. -1)then
+           write(6,*)' Skipping dyn wts, barnes_wide & boundary fill'
+           return
+        endif
+
 	rom2 = 0.005
 	call dynamic_wts(imax,jmax,0,rom2,d,fnorm)
 	call barnes_wide(dum,imax,jmax,ii,jj,x_ob,n_obs_b,badflag,
