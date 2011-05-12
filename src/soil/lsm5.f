@@ -148,11 +148,12 @@ c
 c first read in current time
 c
       call get_directory('etc',fname,len)
-      open(11, file=fname(1:len)//'systime.dat',status='unknown')
-      read(11,*,err=999)i4time_smcur
-      read(11,22,err=999)ftime_smcur
- 22   format(1x,a9)
-      close(11)
+!     open(11, file=fname(1:len)//'systime.dat',status='unknown')
+!     read(11,*,err=999)i4time_smcur
+!     read(11,22,err=999)ftime_smcur
+!22   format(1x,a9)
+!     close(11)
+      call get_systime(i4time_smcur,ftime_smcur,istatus)
 c -------------------------
       print*,'systime: ',ftime_smcur,' i4time: ',i4time_smcur
 
