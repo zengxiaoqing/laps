@@ -89,7 +89,7 @@
             h = 1600. / 1000. ! elevation in km
 !           direct = solar_irradiance
 !    1             * ( (1. - a*h) * 0.7**(airmass_2d**0.678) + a*h )
-            global = 1.1 * direct
+!           global = 1.1 * direct
         elseif(model .eq. 3)then ! Drexel model
             pw_2d = 1.0 ! cm
             trans_h2o_2d = 1.0 - 0.077 * (pw_2d * airmass_2d)**0.3
@@ -130,7 +130,7 @@
                 if(solar_alt(i_i,i_j) .gt. 0.)then
 !                   direct = solar_irradiance
 !    1                    * ( (1. - a*h) * 0.7**(airmass**0.678) + a*h )
-                    global = 1.1 * direct
+!                   global = 1.1 * direct
                 endif
 
             endif
