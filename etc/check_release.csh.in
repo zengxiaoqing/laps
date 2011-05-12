@@ -24,6 +24,8 @@ setenv FILE $1/make.out
 grep -i " error " $FILE ; grep -i "^error " $FILE ; grep -i "ERROR:" $FILE
 grep '(E)' $FILE
 grep '(S)' $FILE
+grep W: $FILE
+grep S: $FILE
 grep -i undefined $FILE
 grep -i stop $FILE
 grep -i warning $FILE
@@ -36,6 +38,8 @@ setenv FILE $1/make_install.out
 grep -i " error " $FILE ; grep -i "^error " $FILE ; grep -i "ERROR:" $FILE
 grep '(E)' $FILE
 grep '(S)' $FILE
+grep W: $FILE
+grep S: $FILE
 grep -i undefined $FILE
 grep -i stop $FILE
 grep -i warning $FILE
