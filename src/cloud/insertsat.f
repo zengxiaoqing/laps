@@ -894,6 +894,7 @@ c
         write(6,*)' n_vis_add_potl = ',n_vis_add_potl
      1           ,' n_vis_added = ',n_vis_added
 
+        istatus = 1
         return
         end
 
