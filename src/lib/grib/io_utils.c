@@ -118,7 +118,6 @@ int c_open_g(char *filename, char *faccess)
 
  #ifdef DEBUG 
     printf("c_open_g called...\n\n");
-    printf("ix : %d\n",ix);
     printf("filename : %s(end)\n",filename);
     printf("faccess : %s(end)\n",faccess);
     printf("press key to continue...\n");
@@ -149,11 +148,6 @@ int c_open_g(char *filename, char *faccess)
     /* Open the file */
     file[i] = fopen(filename,faccess);
  
-#ifdef DEBUG
-  printf("%d : result of fopen()\n",  file[ix-1].F);
-  printf("%d : result of fileno()\n", file[ix-1].f);
-  getchar();
-#endif 
  
   return( i );
 }
