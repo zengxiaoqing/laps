@@ -425,15 +425,17 @@ c     get the filename and build the i4time
 
       call get_directory('etc',fname,len)
       print *,fname(1:len)
-      open(11,file=fname(1:len)//'systime.dat',status='unknown')
-      read (11,*)i4time
-      read (11,22) filename
- 22   format (1x,a9)
-      close (11)
+!     open(11,file=fname(1:len)//'systime.dat',status='unknown')
+!     read (11,*)i4time
+!     read (11,22) filename
+!22   format (1x,a9)
+!     close (11)
+      call get_systime(i4time,filename,istatus)
+      print *,' systime returned from get_systime = ',filename
       
 c     convert filename to i4time
  
-      call i4time_fname_lp (filename,i4time,istatus)
+!     call i4time_fname_lp (filename,i4time,istatus)
 
 
 
