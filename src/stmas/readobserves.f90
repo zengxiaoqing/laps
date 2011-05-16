@@ -209,7 +209,7 @@ SUBROUTINE RDLAPSRDR
     CALL GET_MULTIRADAR_VEL(ITIME2(1)+(M-1)*INC,INC/2,RADTIM,MAX_RADARS, &
                             NRADAR,RADEXT,RMISSING, &
                             FCSTGRD(1),FCSTGRD(2),FCSTGRD(3), &
-                            0,0,0, &
+                            FCSTGRD(1),FCSTGRD(2),0, &
                             RADVEL,RADNQY,RADIDS,VOLNQY, &
                             IOFFSET,JOFFSET,CLUTTR,NGRDRD, &
                             RADLAT,RADLON,RADHGT,RADNAM,STTRAD,STTNQY)
