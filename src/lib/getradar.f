@@ -94,8 +94,6 @@ cdoc    Called from wind/lapsplot
 !                                   least one valid velocity measurement
 !       ext_a               Local   Array: Possible extensions
 !       r_missing_data      Input
-!       mode                Input   (1) normal radar data, (2) return clutter map
-!       l_apply_map         Input   .true. - remove 3D ground clutter
 !       imax,jmax,kmax      Input   LAPS 3D Grid Dimensions
 !       lat,lon             Input   2D latitude and longitude arrays (degrees)
 !       topo                Input   2D terrain array (meters)
@@ -103,13 +101,15 @@ cdoc    Called from wind/lapsplot
 !       grid_ra_nyq         Output  4D Nyquist Velocity Grid
 !       idx_radar           Output  1D grid of radar 'vxx' numbers
 !       v_nyquist_in_a      Output  Array: volume nyquist velocity of the radars
+!       i_offset,joffset    Input   offset arrays (1D)
+!       l_offset            Input   use offset arrays?
 !       n_vel_a             Output  Array: # of grid points with measurable velocity
 !       rlat_radar_a        Output  Array: Radar Latitude (Degrees)
 !       rlon_radar_a        Output  Array: Radar Longitude (Degrees)
 !       rheight_radar_a     Output  Array: Radar Height (m MSL)
 !       radar_name_a        Output  Array: Radar Name (Character*4)
-!       istatus_multi_vel   Output  Data is useable for 3D vel applications
-!       istatus_multi_nyq   Output  Data is useable for 3D nyq applications
+!       istatus_multi_vel   Output  If 1 - data is useable for 3D vel applications
+!       istatus_multi_nyq   Output  If 1 - data is useable for 3D nyq applications
 
 !
 !       The domain must be specified using grid_fnam_common
@@ -279,6 +279,9 @@ cdoc    Called from wind/lapsplot
                     else ! fill 4D array with 3D array contents
                       grid_ra_vel(:,:,:,n_radars) = grid_ra_vel_3d
                       grid_ra_nyq(:,:,:,n_radars) = grid_ra_nyq_3d
+
+                      ioffset(n_radars) = 0
+                      joffset(n_radars) = 0
 
                     endif ! l_offset
 
@@ -1642,8 +1645,8 @@ cdoc                            calls read_multiradar_3dref.
         igrid_r = int(radius_r / grid_spacing_cen_m) + 1
         nx_r_pot = (2 * igrid_r) + 1
         ny_r_pot = (2 * igrid_r) + 1
-        write(6,*)' Potential offset radar arrays',i_offset_radar
-     1                                            ,nx_r_pot,nx_l,ny_l
+        write(6,1)i_offset_radar,nx_r_pot,ny_r_pot,nx_l,ny_l
+ 1      format(' Potential offset radar arrays:',i3,2i6,3x,2i6)
 
         if(i_offset_radar .eq. 1)then
             l_offset_radar = .true.
@@ -1673,6 +1676,54 @@ cdoc                            calls read_multiradar_3dref.
         endif
 
         write(6,*)' l_offset_radar = ',l_offset_radar,nx_r,ny_r
+
+        return
+        end
+
+
+        subroutine get_ij_offset_radars(nx_l,ny_l,n_radars,               ! I
+     1                                  igrid_r,l_offset_radar,           ! I   
+     1                                  lat,lon,rlat_radar,rlon_radar,    ! I
+     1                                  ioffset,joffset)                  ! O
+
+        real lat(nx_l,ny_l),lon(nx_l,ny_l)
+        real rlat_radar(n_radars),rlon_radar(n_radars)
+        integer ioffset(n_radars),joffset(n_radars)
+        logical l_offset_radar
+
+        do k = 1,n_radars
+          if(l_offset_radar)then
+            if(rlat_radar(k) .eq. r_missing_data .or.
+     1         rlon_radar(k) .eq. r_missing_data      )then
+
+                ioffset(k) = 0
+                joffset(k) = 0
+
+            else
+                call latlon_to_rlapsgrid(rlat_radar(k),
+     &                                   rlon_radar(k),
+     &                                   lat,lon,
+     &                                   nx_l,ny_l,
+     &                                   ri,rj,
+     &                                   jstatus)
+                if(jstatus.ne.1)then
+                    write(6,*)
+     1               'computing ri/rj for radar (outside domain)'
+                endif
+
+!               Offset is location of lower left corner of small array in the large array
+                ioffset(k) = (nint(ri) - igrid_r) - 1
+                joffset(k) = (nint(rj) - igrid_r) - 1
+
+            endif
+
+          else
+            ioffset(k) = 0
+            joffset(k) = 0
+
+          endif
+
+        enddo ! k
 
         return
         end
