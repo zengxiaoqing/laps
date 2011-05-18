@@ -142,7 +142,6 @@ cdis
       do iter = 1,n_iter
 
           i4_elapsed = ishow_timer()
-          i4_loop_start = i4_elapsed
 
           r0_barnes_max_in  = r0_barnes_max_m 
      1                      * barnes_conv_rate ** (iter-1)
@@ -180,6 +179,9 @@ cdis
                   enddo ! n
 
               endif
+
+              i4_elapsed = ishow_timer()
+              i4_loop_start = i4_elapsed
 
               call barnes_multivariate_sub
      1                     (var                              ! Output
@@ -268,6 +270,9 @@ cdis
               endif
 
 !             anal_buff = analyze(obs_buff)  [if iter > 1]
+
+              i4_elapsed = ishow_timer()
+              i4_loop_start = i4_elapsed
 
               call barnes_multivariate_sub
      1                     (var_buff                          ! Output
@@ -477,7 +482,7 @@ cdis
       istatus = 0
 
       write(6,1234)iter
- 1234 format(1x,'barnes_multivariate:',' iter=',i3)
+ 1234 format(1x,'barnes_multivariate_sub:',' iter=',i3)
 
       call get_fnorm_max(imax,jmax,r0_norm,r0_value_min,fnorm_max)
       expm80 = exp(-80.)
