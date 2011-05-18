@@ -531,7 +531,7 @@ c       include 'satellite_dims_lvd.inc'
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                plot_parms%iraster = -1
+!               plot_parms%iraster = -1
 
                 if(dyn_low  .eq. r_missing_data .or. 
      1             dyn_high .eq. r_missing_data)then ! initialize range
@@ -598,7 +598,7 @@ c       include 'satellite_dims_lvd.inc'
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                plot_parms%iraster = -1
+!               plot_parms%iraster = -1
 
                 if(dyn_low  .eq. r_missing_data .or. 
      1             dyn_high .eq. r_missing_data)then ! initialize range
