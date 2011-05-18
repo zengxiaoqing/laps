@@ -40,6 +40,7 @@ cdis
       subroutine qc_radar_obs(
      1           imax,jmax,kmax                             ! Input
      1          ,r_missing_data                             ! Input
+     1          ,nx_r,ny_r,ioffset,joffset                  ! Input
      1          ,vr_obs                                     ! Input/Output
      1          ,vr_nyq                                     ! Input
      1          ,n_radarobs_tot_unfltrd                     ! Input
@@ -53,8 +54,8 @@ cdis
      1          ,istatus                                    ! Input/Output
      1                                                          )
 
-      real   vr_obs(imax,jmax,kmax)
-      real   vr_nyq(imax,jmax,kmax)
+      real   vr_obs(nx_r,ny_r,kmax)
+      real   vr_nyq(nx_r,ny_r,kmax)
       real   lat(imax,jmax),lon(imax,jmax)
       real   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)
       real   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax)
@@ -90,9 +91,13 @@ cdis
 
       do k=1,kmax
         height_k = height_of_level(k)
-        do j=1,jmax
-        do i=1,imax
-          if(vr_obs(i,j,k) .ne. r_missing_data)then
+        do jo=1,ny_r
+        do io=1,nx_r
+
+          i = io + ioffset
+          j = jo + joffset
+
+          if(vr_obs(io,jo,k) .ne. r_missing_data)then
             call latlon_to_radar(lat(i,j),lon(i,j),height_k
      1              ,azimuth,slant_range,elev
      1                  ,rlat_radar,rlon_radar,rheight_radar)
@@ -128,7 +133,7 @@ cdis
                 endif ! l_grid_north
 
                 call radar_to_uvtrue(t_pass1,
-     1                       vr_obs(i,j,k),
+     1                       vr_obs(io,jo,k),
      1                       u_true,
      1                       v_true,
      1                       azimuth)
@@ -140,7 +145,7 @@ cdis
 
 
 !               Compare radar radial velocity to 1st pass analysis
-                diff_radial = r_pass1 - vr_obs(i,j,k)
+                diff_radial = r_pass1 - vr_obs(io,jo,k)
 
 !               Dealias the radar data if appropriate
 !               Check for folded radar data (up to +/- 1 Nyquist velocity)
@@ -150,9 +155,9 @@ cdis
                 if(v_nyquist_2 .ne. r_missing_data)then ! Use global Nyquist vel
                     v_nyq_2 = v_nyquist_2
                     v_nyq = v_nyquist_global
-                elseif(vr_nyq(i,j,k) .ne. r_missing_data)then
-                    v_nyq_2 = 2. * vr_nyq(i,j,k)
-                    v_nyq = vr_nyq(i,j,k)
+                elseif(vr_nyq(io,jo,k) .ne. r_missing_data)then
+                    v_nyq_2 = 2. * vr_nyq(io,jo,k)
+                    v_nyq = vr_nyq(io,jo,k)
                 else
                     v_nyq_2 = r_missing_data
                     v_nyq = r_missing_data
@@ -168,14 +173,14 @@ c                     call latlon_to_radar(lat(i,j),lon(i,j),height_k
 c    1                  ,azimuth,slant_range,elev
 c    1                  ,rlat_radar,rlon_radar,rheight_radar)
 
-                      velold = vr_obs(i,j,k)
+                      velold = vr_obs(io,jo,k)
 
 !                     Adjust the velocity value
                       if(L_correct_unfolding)then
                         r_nyquist_number = nint(diff_radial/v_nyq_2)
                         diff_radial = diff_radial
      1                                  - r_nyquist_number * v_nyq_2
-                        vr_obs(i,j,k) = vr_obs(i,j,k)
+                        vr_obs(io,jo,k) = vr_obs(io,jo,k)
      1                                  + r_nyquist_number * v_nyq_2
                         icount_unfld=icount_unfld+1
 
@@ -183,7 +188,7 @@ c    1                  ,rlat_radar,rlon_radar,rheight_radar)
                             write(6,102)i,j,k
      1                                  ,r_pass1
      1                                  ,velold
-     1                                  ,vr_obs(i,j,k)
+     1                                  ,vr_obs(io,jo,k)
      1                                  ,diff_radial
      1                                  ,nint(azimuth)
      1                                  ,nint(slant_range/1000.)
@@ -210,9 +215,9 @@ c    1                  ,rlat_radar,rlon_radar,rheight_radar)
 
                 else ! Radar Ob is QC'ed out
                   if(icount_bad_qc .lt. 50)
-     1       write(6,311)i,j,k,diff_radial,vr_obs(i,j,k),r_pass1
+     1       write(6,311)i,j,k,diff_radial,vr_obs(io,jo,k),r_pass1
 311               format(3i4,3f6.1,' Radar OB QCed out')
-                  vr_obs(i,j,k) = r_missing_data
+                  vr_obs(io,jo,k) = r_missing_data
                   icount_bad_qc = icount_bad_qc + 1
 
                 endif

@@ -169,9 +169,6 @@ cdis
 !       real grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS)
 !       real grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS)
 
-!       real, allocatable, dimension(:,:,:,:) :: grid_ra_vel_offset
-!       real, allocatable, dimension(:,:,:,:) :: grid_ra_nyq_offset
-
         integer idx_radar_a(MAX_RADARS)
         character*31 ext_radar(MAX_RADARS)
 
@@ -491,7 +488,7 @@ cdis
      1       ,thresh_25_radarobs_lvl_unfltrd                            ! I
      1       ,u_laps_fg,v_laps_fg                                       ! I/L
      1       ,NX_L,NY_L,NZ_L,lat,lon                                    ! I
-     1       ,nx_r,ny_r                                                 ! I
+     1       ,nx_r,ny_r,ioffset,joffset                                 ! I
      1       ,i4time_sys,grid_spacing_m                                 ! I
      1       ,r_missing_data                                            ! I
      1       ,heights_3d                                                ! I

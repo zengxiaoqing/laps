@@ -53,7 +53,7 @@ cdis
      1     ,thresh_25_radarobs_lvl_unfltrd                             ! I
      1     ,u_laps_bkg,v_laps_bkg                                      ! I/L
      1     ,imax,jmax,kmax,lat,lon                                     ! I
-     1     ,nx_r,ny_r                                                  ! I
+     1     ,nx_r,ny_r,ioffset,joffset                                  ! I
      1     ,i4time,grid_spacing_m                                      ! I
      1     ,r_missing_data                                             ! I
      1     ,heights_3d                                                 ! I
@@ -136,6 +136,8 @@ cdis
       real rlat_radar(max_radars),rlon_radar(max_radars)             ! Input
      1                     ,rheight_radar(max_radars)
 
+      integer ioffset(max_radars),joffset(max_radars)
+
       integer thresh_2_radarobs_lvl_unfltrd                          ! Input
      1         ,thresh_4_radarobs_lvl_unfltrd
      1         ,thresh_9_radarobs_lvl_unfltrd
@@ -144,6 +146,9 @@ cdis
 !     # of radar obs before filtering for each radar (modified by QC)
       integer n_radarobs_tot_unfltrd(max_radars)                     ! Input/Modified
       real   heights_3d(imax,jmax,kmax)                              ! Input
+
+      real vr_obs_unfltrd_3d(imax,jmax,kmax)                         ! Local
+      real vr_nyq_3d(imax,jmax,kmax)                                 ! Local
 
 !--------------------------------------------------------------------------------
 
@@ -195,6 +200,7 @@ csms$serial(default=ignore)  begin
       call compare_wind(
      1            u_laps_bkg,v_laps_bkg,' FG ',
      1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
+     1            nx_r,ny_r,ioffset,joffset,
      1            rlat_radar,rlon_radar,rheight_radar,
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
@@ -361,6 +367,7 @@ csms$serial(default=ignore)  begin
           call qc_radar_obs(
      1           imax,jmax,kmax                             ! Input
      1          ,r_missing_data                             ! Input
+     1          ,nx_r,ny_r,ioffset(i_radar),joffset(i_radar)! Input
      1          ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input/Output
      1          ,vr_nyq(1,1,1,i_radar)                      ! Input
      1          ,n_radarobs_tot_unfltrd(i_radar)            ! Input/Output
@@ -847,6 +854,7 @@ csms$serial(default=ignore)  begin
           call compare_wind(
      1            upass1,vpass1,'PS1 ',
      1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
+     1            nx_r,ny_r,ioffset,joffset, 
      1            rlat_radar,rlon_radar,rheight_radar,
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
@@ -865,6 +873,7 @@ csms$serial(default=ignore)  begin
       call compare_wind(
      1            uanl,vanl,'LAPS',
      1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
+     1            nx_r,ny_r,ioffset,joffset,
      1            rlat_radar,rlon_radar,rheight_radar,
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
@@ -878,6 +887,7 @@ csms$serial(default=ignore)  begin
       call compare_wind(
      1            uanl,vanl,'LAPS',
      1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
+     1            nx_r,ny_r,ioffset,joffset,
      1            rlat_radar,rlon_radar,rheight_radar,
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,

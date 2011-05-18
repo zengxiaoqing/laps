@@ -42,6 +42,7 @@ cdis
         subroutine compare_wind (
      1                upass1,vpass1,cgrid,                                ! I
      1                istat_radar_vel,max_radars,grid_ra_vel,n_radars,    ! I
+     1                nx_r,ny_r,ioffset,joffset,                          ! I
      1                rlat_radar,rlon_radar,rheight_radar,                ! I
      1                lat,lon,                                            ! I
      1                ni,nj,nk,r_missing_data,                            ! I
@@ -76,6 +77,7 @@ C***************** Declarations **************************************
 
         integer istat_radar_vel
         integer l,n_radars,ni,nj,nk,max_radars
+        integer ioffset(max_radars),joffset(max_radars)
 
         real rlat_radar(max_radars),rlon_radar(max_radars)
      1                     ,rheight_radar(max_radars)
@@ -83,7 +85,7 @@ C***************** Declarations **************************************
         real lat(ni,nj),lon(ni,nj)
 
         real upass1(ni,nj,nk),vpass1(ni,nj,nk)
-        real grid_ra_vel(ni,nj,nk,max_radars),r_missing_data
+        real grid_ra_vel(nx_r,ny_r,nk,max_radars),r_missing_data
         real weight_pirep,weight_prof,weight_sfc,weight_cdw
         real grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
      1                                          ,grid_laps_wt(ni,nj,nk)
@@ -183,6 +185,7 @@ C********************************************************************
             if(istat_radar_vel .eq. 1)
      1        call comp_laps_vr(grid_ra_vel(1,1,1,l),upass1,vpass1
      1          ,ni,nj,nk,r_missing_data,cgrid,rms_fg_vr
+     1          ,nx_r,ny_r,ioffset(l),joffset(l)                           ! I
      1          ,lat,lon,rlat_radar(l),rlon_radar(l),rheight_radar(l))
 
         enddo ! l

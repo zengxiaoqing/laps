@@ -37,13 +37,16 @@ cdis
 cdis   
 cdis
         subroutine comp_laps_vr(grid_ra_vel,u,v,ni,nj,nk,r_missing_data
-     1  ,cgrid,rms,lat,lon,rlat_radar,rlon_radar,rheight_radar)
+     1  ,cgrid,rms
+     1  ,nx_r,ny_r,ioffset,joffset                                  ! I
+     1  ,lat,lon,rlat_radar,rlon_radar,rheight_radar)
 
 
-        real grid_ra_vel(ni,nj,nk)
+        real grid_ra_vel(nx_r,ny_r,nk)
         dimension u(ni,nj,nk),v(ni,nj,nk)
         real lat(ni,nj),lon(ni,nj)
         real lat_grid,lon_grid
+        integer ioffset,joffset                 
 
         character*(*) cgrid
 
@@ -57,11 +60,14 @@ cdis
 
         do k = 1,nk
         height_grid = 0.
-        do j = 1,nj
-        do i = 1,ni
+        do jo = 1,ny_r
+        do io = 1,nx_r
+
+            i = io + ioffset
+            j = jo + joffset
 
             if(         u(i,j,k) .ne. r_missing_data
-     1  .and. grid_ra_vel(i,j,k) .ne. r_missing_data)then
+     1  .and. grid_ra_vel(io,jo,k) .ne. r_missing_data)then
                 nobs = nobs + 1
                 lat_grid = lat(i,j)
                 lon_grid = lon(i,j)
@@ -74,11 +80,11 @@ cdis
      1                       r_radar,
      1                       azimuth)
 
-                diff = r_radar - grid_ra_vel(i,j,k)
+                diff = r_radar - grid_ra_vel(io,jo,k)
                 residual = residual + diff ** 2
                 bias_sum = bias_sum + diff
                 if(float(nobs)/40. .eq. nobs/40 .or. nobs .le. 25)then       
-                    write(6,101)nobs,i,j,k,grid_ra_vel(i,j,k),r_radar
+                    write(6,101)nobs,i,j,k,grid_ra_vel(io,jo,k),r_radar
      1                         ,diff
 101                 format(1x,i5,3i4,3f7.1,3i6)
                 endif
