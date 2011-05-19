@@ -220,8 +220,12 @@ SUBROUTINE RDLAPSRDR
     ! NYQUIST UNFOLDING:
     DO L=1,NRADAR
       ! QC and unfolding radar nyquist:
+      nx_r = FCSTGRD(1)
+      ny_r = FCSTGRD(2)
+      ioffset = 0
+      joffset = 0
       CALL QC_RADAR_OBS(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3), &
-                         RMISSING,RADVEL(1,1,1,L),RADNQY(1,1,1,L),NGRDRD(L), &
+                         RMISSING,nx_r,ny_r,ioffset,joffset,RADVEL(1,1,1,L),RADNQY(1,1,1,L),NGRDRD(L), &
                          LATITUDE,LONGITUD,RADLAT(L),RADLON(L),RADHGT(L), &
                          UVZERO(1,1,1,1),UVZERO(1,1,1,2),BK0(1,1,1,1,1),BK0(1,1,1,1,2), &
                          VOLNQY(L),L_CORRECT_UNFOLDING,L_GRID_NORTH,STTRAD)
