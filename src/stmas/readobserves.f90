@@ -181,7 +181,9 @@ SUBROUTINE RDLAPSRDR
   character*180 c_values_req
   INTEGER :: i4time_radar
   REAL     :: tempref
-  
+!
+! add the following definition since build on 5/23/2011 failed. HJ 5/23/2011
+  integer nx_r, ny_r 
 
 
 
