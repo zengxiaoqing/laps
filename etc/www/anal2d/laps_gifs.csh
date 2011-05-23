@@ -15,6 +15,7 @@ setenv RESOLUTION $4
 setenv DOMAIN_SUFFIX $5
 setenv AGE $6
 setenv EXE_DIR $7
+setenv LAPS_A9TIME $8
 
 echo "MACHINE ="`uname -a`
 echo "LAPS_DATA_ROOT ="$LAPS_DATA_ROOT
@@ -108,12 +109,16 @@ setenv TIME_DIR      $LAPS_DATA_ROOT/time
 date -u
 
 echo " "
-echo "Obtaining time info from systime.dat..."
-ls -l $TIME_DIR/systime.dat
+echo "Obtaining time info from LAPS_A9TIME..."
+#ls -l $TIME_DIR/systime.dat
 
-setenv utc_hour `head -3 $TIME_DIR/systime.dat | tail -1`
-setenv utc_min  `head -4 $TIME_DIR/systime.dat | tail -1`
-setenv datetime `head -2 $TIME_DIR/systime.dat | tail -1`
+#setenv utc_hour `head -3 $TIME_DIR/systime.dat | tail -1`
+#setenv utc_min  `head -4 $TIME_DIR/systime.dat | tail -1`
+#setenv datetime `head -2 $TIME_DIR/systime.dat | tail -1`
+
+setenv utc_hour `echo $LAPS_A9TIME | cut -c6-7`
+setenv utc_min  `echo $LAPS_A9TIME | cut -c8-9`
+setenv datetime `echo $LAPS_A9TIME | cut -c1-9`
 setenv latest latest
 
 echo "utc_hour = "$utc_hour
