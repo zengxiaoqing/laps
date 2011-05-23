@@ -421,12 +421,13 @@ for ($g=1; $g<=$ngrid; $g++) {
       if (! $opt_q) {  #run *with* qsub
         chdir "$modelroot/$date";
         if ($d0_directory == 1) {
-          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $lfmpostlog";
+          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
         } else {
-          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $lfmpostlog";
+          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $modelroot/log/$lfmpostlog";
         }
         print "$command\n";
 
+# HJ mod: put lfmpost_tom_xxxxx.log to the log directory. Added $modelroot/log/ in front of lfmpostlog. 3/29/2011
 #  make .sh script to submit to qsub
         open (QS, ">qsub_lfmpost_$yyyy$mm$dd$hh.sh");
         print QS "#!/bin/sh\n";
@@ -458,19 +459,21 @@ for ($g=1; $g<=$ngrid; $g++) {
         
       } else {  #run without qsub
         if ($d0_directory == 1) {
-          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $lfmpostlog";
+          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
         } else {
-          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $lfmpostlog";
+          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $modelroot/log/$lfmpostlog";
         }
         print "$command\n";
         system ("$command");
       }
 
-      if ($project eq "DWR") {     # move logfile to wrfprd
-        $user = $ENV{USER};
-        $command = "mv /home/$user/$lfmpostlog $modelroot/$date/wrfprd/$lfmpostlog";
-        system("$command");
-      }
+# HJ mod: don't need this anymore. 3/29/2011
+#      if ($project eq "DWR") {     # move logfile to wrfprd
+#        $user = $ENV{USER};
+#        $command = "mv /home/$user/$lfmpostlog $modelroot/$date/wrfprd/$lfmpostlog";
+#        system("$command");
+#      }
+# end HJ mod
    }
 }
 
