@@ -46,7 +46,7 @@ cdis
 
       character c_radar_start*10,c_radar_end*10,agroup*10
 
-      real, allocatable, dimension(:,:) :: lat,lon,topo
+      real, allocatable, dimension(:,:) :: lat,lon,topo,dum_2d
        
       call get_grid_dim_xy(NX_L,NY_L,istatus)
       if (istatus .ne. 1) then
@@ -75,6 +75,12 @@ cdis
       allocate(topo(NX_L,NY_L),STAT=istat_alloc)       
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate topo'
+          stop
+      endif
+
+      allocate(dum_2d(NX_L,NY_L),STAT=istat_alloc)       
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate dum_2d'
           stop
       endif
 
@@ -112,6 +118,15 @@ cdis
           i_radar_end = n_radars_remap
       endif
 
+      write(6,*)' REMAP > call get_laps_domain_95'
+      call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
+     1                       ,dum_2d,grid_spacing_cen_m
+     1                       ,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR return from get_laps_domain_95'
+          goto 999
+      endif
+
       do i_radar = i_radar_start,i_radar_end
           write(6,*)
           write(6,*)' Obtaining parameters for radar # ',i_radar
@@ -141,7 +156,7 @@ cdis
      1                      ,min_ref_samples,min_vel_samples,dgr
      1                      ,namelist_parms
      1                      ,NX_L,NY_L,NZ_L
-     1                      ,lat,lon,topo
+     1                      ,lat,lon,topo                              ! I
      1                      ,istatus)       
               if(istatus .ne. 1)then
                   write(6,*)' remap: istatus returned from remap_sub = '
@@ -161,7 +176,7 @@ cdis
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr       
      1                    ,namelist_parms
      1                    ,NX_L,NY_L,NZ_L
-     1                    ,lat,lon,topo
+     1                    ,lat,lon,topo                                ! I
      1                    ,istatus)
 
 c
@@ -234,6 +249,10 @@ c
       character*4 laps_radar_ext
       character*3 c3_radar_subdir
       character*(*) path_to_vrc, path_to_radar
+
+      Integer       ioffset                 
+      Integer       joffset                 
+      Logical       l_offset_radar
 
       real lat(NX_L,NY_L)      
       real lon(NX_L,NY_L)      
@@ -320,10 +339,33 @@ c
 
       ntimes_radar = ntimes_radar + 1
 
+      call get_grid_spacing_cen(grid_spacing_m, i_status)
+      if(i_status .ne. 1)then
+          write(6,*)' Error in obtaining grid_spacing_m'
+          goto 900 ! return
+      endif
+
+      call get_l_offset_radar(nx_l,ny_l,grid_spacing_m,         ! I
+     1                        nx_r,ny_r,igrid_r,l_offset_radar) ! O
+
+!     Turn off l_offset for testing
+!     nx_r = nx_l
+!     ny_r = ny_l
+!     igrid_r = 0
+!     l_offset_radar = .false.
+
+      call get_ij_offset_radars(nx_l,ny_l,1,                      ! I
+     1                          igrid_r,l_offset_radar,           ! I   
+     1                          lat,lon,radar_lat,radar_lon,      ! I
+     1                          ioffset,joffset)                  ! O
+
+      write(6,*)' Returned from get_ij_offset_radars:',ioffset,joffset
+
 !     call lut_gen FORTRAN routine 
       if(ntimes_radar .eq. 1)then ! first time we have data from this radar
           call lut_gen(rname_ptr,radar_lat,radar_lon,radar_alt
-     1                ,NX_L,NY_L,NZ_L)
+     1                ,ioffset,joffset                            ! I
+     1                ,NX_L,NY_L,NZ_L)                            ! I
       endif
 
       I4_elapsed = ishow_timer()
@@ -344,50 +386,50 @@ c
       alls_well = 1
 
 !     Allocate Velocity arrays
-      allocate(grid_rvel(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      allocate(grid_rvel(NX_R,NY_R,NZ_L),STAT=istat_alloc)      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate grid_rvel'
           stop
       endif
 
-      allocate(grid_rvel_sq(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      allocate(grid_rvel_sq(NX_R,NY_R,NZ_L),STAT=istat_alloc)      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate grid_rvel_sq'
           stop
       endif
 
-      allocate(grid_nyq(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      allocate(grid_nyq(NX_R,NY_R,NZ_L),STAT=istat_alloc)      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate grid_nyq'
           stop
       endif
 
-      allocate(ngrids_vel(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      allocate(ngrids_vel(NX_R,NY_R,NZ_L),STAT=istat_alloc)      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate ngrids_vel'
           stop
       endif
 
-      allocate(n_pot_vel(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      allocate(n_pot_vel(NX_R,NY_R,NZ_L),STAT=istat_alloc)      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate n_pot_vel'
           stop
       endif
 
 !     Allocate Reflectivity arrays
-      allocate(grid_ref(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      allocate(grid_ref(NX_R,NY_R,NZ_L),STAT=istat_alloc)      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate grid_ref'
           stop
       endif
 
-      allocate(ngrids_ref(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      allocate(ngrids_ref(NX_R,NY_R,NZ_L),STAT=istat_alloc)      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate ngrids_ref'
           stop
       endif
 
-      allocate(n_pot_ref(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      allocate(n_pot_ref(NX_R,NY_R,NZ_L),STAT=istat_alloc)      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate n_pot_ref'
           stop
@@ -544,12 +586,6 @@ c
      1        '  Calling remap_process: past_tilt/i_tilt_proc_curr',
      1                                  past_tilt,i_tilt_proc_curr
 
-              call get_grid_spacing_cen(grid_spacing_m, i_status)
-              if(i_status .ne. 1)then
-                  write(6,*)' Error in obtaining grid_spacing_m'
-                  goto 900 ! return
-              endif
-
               if(min_ref_samples .eq. -1)then
                   if(grid_spacing_m .le. 5500.)then
                       min_ref_samples = 1
@@ -619,8 +655,9 @@ c
      1            i_tilt_proc_curr,i_last_scan,i_first_scan,             ! I
      :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,  ! O
      :            grid_ref,ngrids_ref,n_pot_ref,                         ! O
-     1            NX_L,NY_L,NZ_L,                                        ! I
-     1            lat,lon,topo,                                          ! L
+     1            NX_L,NY_L,NZ_L,NX_R,NY_R,                              ! I
+     1            l_offset_radar,ioffset,joffset,                        ! I
+     1            lat,lon,topo,                                          ! I
      1            i_scan_mode,                                           ! I
      :            Slant_ranges_m,                                        ! I
      :            n_rays_88d,                                            ! I
