@@ -42,8 +42,9 @@ cdis
      :         i_first_scan,                               ! Integer (input)
      :         grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel, ! (output)
      :         grid_ref,ngrids_ref,n_pot_ref,                        ! (output)
-     :         NX_L,NY_L,NZ_L,                             ! Integer   (input)
-     1         lat,lon,topo,                               !           (local)
+     :         NX_L,NY_L,NZ_L,NX_R,NY_R,                   ! Integer   (input)
+     :         l_offset_radar,ioffset,joffset,             !           (input)
+     1         lat,lon,topo,                               !           (input)
      1         i_scan_mode,                                !           (input)
      :         Slant_ranges_m,                             !           (input)
      :         n_rays,                                     !           (input)
@@ -102,7 +103,8 @@ c
       integer i_first_scan
       integer i_product_i4time
       integer MAX_RAY_TILT
-      integer   NX_L,NY_L,NZ_L
+      integer NX_L,NY_L,NZ_L,NX_R,NY_R
+      integer ioffset,joffset,io,jo,iomin,iomax,jomin,jomax
 
       integer min_ref_samples,min_vel_samples
 
@@ -115,17 +117,17 @@ c
 c
 c     Velocity Obs
 c
-      real grid_rvel(NX_L,NY_L,NZ_L)  !  Radial radar velocities
-      real grid_rvel_sq(NX_L,NY_L,NZ_L)
-      real grid_nyq(NX_L,NY_L,NZ_L)
-      integer ngrids_vel(NX_L,NY_L,NZ_L)
-      integer n_pot_vel(NX_L,NY_L,NZ_L)
+      real grid_rvel(NX_R,NY_R,NZ_L)  !  Radial radar velocities
+      real grid_rvel_sq(NX_R,NY_R,NZ_L)
+      real grid_nyq(NX_R,NY_R,NZ_L)
+      integer ngrids_vel(NX_R,NY_R,NZ_L)
+      integer n_pot_vel(NX_R,NY_R,NZ_L)
 c
 c     Reflectivity Obs
 c
-      real grid_ref (NX_L,NY_L,NZ_L)  !  Radar reflectivities
-      integer ngrids_ref (NX_L,NY_L,NZ_L)
-      integer n_pot_ref (NX_L,NY_L,NZ_L)
+      real grid_ref (NX_R,NY_R,NZ_L)  !  Radar reflectivities
+      integer ngrids_ref (NX_R,NY_R,NZ_L)
+      integer n_pot_ref (NX_R,NY_R,NZ_L)
 c
 c     Output variables
 c
@@ -180,7 +182,7 @@ c
       real dum_2d(NX_L,NY_L)   ! Local
       integer k_eff(NX_L,NY_L) ! Local
 c
-      logical l_unfold, l_compress_output, l_domain_read
+      logical l_unfold, l_compress_output, l_domain_read, l_offset_radar       
       save l_domain_read
       data l_domain_read /.false./
 c 
@@ -213,7 +215,7 @@ c
       character*7 c7_laps_purge
       character*7 c7_laps_sleep
 
-      save height_max, k_low
+      save height_max, k_low, n_obs_vel, n_output_data
 c
 c     Beginning of executable code
 c
@@ -316,7 +318,8 @@ c
 !     Calculate effective range/height at grid point centers (done iteratively)
       
 !     First read domain grid info if needed
-      if(.not. l_domain_read)then
+!     if(.not. l_domain_read)then
+      if(.false.)then
           write(6,*)' REMAP_PROCESS > call get_laps_domain_95'
           call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
      1                           ,dum_2d,grid_spacing_cen_m
@@ -446,6 +449,9 @@ c
 
             IF (i .eq. 0 .OR. j .eq. 0) GO TO 180
 
+            io = i - ioffset
+            jo = j - joffset 
+
             if(k_eff(i,j) .ne. 0)then
                 k = k_eff(i,j)
                 klut = gate_elev_to_z_lut(igate_lut,ielev)
@@ -475,7 +481,7 @@ c
 c
 c      Velocity Data
 c
-              n_pot_vel(i,j,k) = n_pot_vel(i,j,k) + 1
+              n_pot_vel(io,jo,k) = n_pot_vel(io,jo,k) + 1
 c
 c      Map velocity if data present and abs value of velocity is
 c      more than 2 ms-1.
@@ -485,12 +491,12 @@ c
               IF (abs(vel_value) .lt. VEL_MIS_CHECK .and.
      :            abs(vel_value) .gt. namelist_parms%abs_vel_min ) THEN
 
-                IF(ngrids_vel(i,j,k).eq.0 .or. 
+                IF(ngrids_vel(io,jo,k).eq.0 .or. 
      1             vel_nyquist .eq. r_missing_data) THEN
                   rvel =  vel_value
 
                 ELSEIF(vel_nyquist .ne. r_missing_data) THEN ! .and. ngrids > 0
-                  avgvel=grid_rvel(i,j,k)/float(ngrids_vel(i,j,k))
+                  avgvel=grid_rvel(io,jo,k)/float(ngrids_vel(io,jo,k))
                   nycor=nint(0.5*(avgvel-vel_value)/
      :                     vel_nyquist)
                   rvel=vel_value+((2*nycor)*vel_nyquist)
@@ -498,14 +504,17 @@ c
                 END IF
 
                 n_obs_vel = n_obs_vel + 1
-                grid_rvel(i,j,k) = grid_rvel(i,j,k) + rvel
-                grid_rvel_sq(i,j,k) =
-     :          grid_rvel_sq(i,j,k) + rvel*rvel
+!               if(n_obs_vel .le. 100)then
+!                   write(6,*)'n_obs_vel = ',n_obs_vel,i,j,k
+!               endif
+                grid_rvel(io,jo,k) = grid_rvel(io,jo,k) + rvel
+                grid_rvel_sq(io,jo,k) =
+     :          grid_rvel_sq(io,jo,k) + rvel*rvel
 
-                ngrids_vel(i,j,k) = ngrids_vel(i,j,k) + 1
+                ngrids_vel(io,jo,k) = ngrids_vel(io,jo,k) + 1
 
                 if(vel_nyquist .ne. r_missing_data)then
-                    grid_nyq(i,j,k)=grid_nyq(i,j,k)+vel_nyquist
+                    grid_nyq(io,jo,k)=grid_nyq(io,jo,k)+vel_nyquist
                 endif
 
               END IF
@@ -516,14 +525,14 @@ c     Map reflectivity
 c
             IF( lgate_ref_lut(igate) ) THEN
 
-              n_pot_ref(i,j,k) = n_pot_ref(i,j,k) + 1
+              n_pot_ref(io,jo,k) = n_pot_ref(io,jo,k) + 1
 
               ref_value = Reflect(igate,jray)
 
               IF (abs(ref_value) .lt. REF_MIS_CHECK) THEN
 
-c               grid_ref(i,j,k) =
-c    :          grid_ref(i,j,k) + ref_value
+c               grid_ref(io,jo,k) =
+c    :          grid_ref(io,jo,k) + ref_value
 
                 if(jray .eq. 1 .and. idebug .ge. 2)then
                     write(6,170)ref_value
@@ -531,9 +540,9 @@ c    :          grid_ref(i,j,k) + ref_value
                 endif
 
                 ilut_ref = nint(ref_value * 10.) ! tenths of a dbz
-                grid_ref(i,j,k) =
-     :          grid_ref(i,j,k) + dbz_to_z_lut(ilut_ref)
-                ngrids_ref(i,j,k) = ngrids_ref(i,j,k) + 1
+                grid_ref(io,jo,k) =
+     :          grid_ref(io,jo,k) + dbz_to_z_lut(ilut_ref)
+                ngrids_ref(io,jo,k) = ngrids_ref(io,jo,k) + 1
 
                 mingate_valid_ref = min(mingate_valid_ref,igate)
                 maxgate_valid_ref = max(maxgate_valid_ref,igate)
@@ -572,11 +581,11 @@ c
   825   format(' REMAP_PROCESS > Prepare reflectivity Output')
 
         DO 480 k = 1, k_low-1
-        DO 480 j = 1, NY_L
-        DO 480 i = 1, NX_L
-          grid_ref(i,j,k)=r_missing_data
-          grid_rvel(i,j,k)=r_missing_data
-          grid_nyq(i,j,k)=r_missing_data
+        DO 480 jo = 1, NY_R
+        DO 480 io = 1, NX_R
+          grid_ref(io,jo,k)=r_missing_data
+          grid_rvel(io,jo,k)=r_missing_data
+          grid_nyq(io,jo,k)=r_missing_data
   480   CONTINUE
 
         DO 500 k = k_low,NZ_L
@@ -584,50 +593,50 @@ c
           write(6,826) k
   826     format(' REMAP_PROCESS > Dividing: k = ',i2)
 
-          DO 400 j = 1,NY_L
-          DO 400 i = 1,NX_L
+          DO 400 jo = 1,NY_R
+          DO 400 io = 1,NX_R
 c
 c     NOTE MIN_VEL_SAMPLES MUST BE GREATER THAN 1
 c
-            IF(ngrids_vel(i,j,k) .ge. MIN_VEL_SAMPLES) THEN ! Good gates
-              vknt=float(ngrids_vel(i,j,k))
+            IF(ngrids_vel(io,jo,k) .ge. MIN_VEL_SAMPLES) THEN ! Good gates
+              vknt=float(ngrids_vel(io,jo,k))
 
-              IF (vknt .ge. float(n_pot_vel(i,j,k))
+              IF (vknt .ge. float(n_pot_vel(io,jo,k))
      1                                          * COVERAGE_MIN_VEL) THEN       
 
                 n_vel_grids_prelim = n_vel_grids_prelim + 1
-                variance =(  grid_rvel_sq(i,j,k) - 
-     :                      (grid_rvel(i,j,k)*grid_rvel(i,j,k)/vknt) )
+                variance=( grid_rvel_sq(io,jo,k) - 
+     :                    (grid_rvel(io,jo,k)*grid_rvel(io,jo,k)/vknt) )
      :                     /(vknt-1.)
 
                 IF (variance .lt. RV_VAR_LIM) THEN ! increment good counter
 
                   n_vel_grids_final = n_vel_grids_final + 1
-                  grid_rvel(i,j,k) = grid_rvel(i,j,k)/vknt
+                  grid_rvel(io,jo,k) = grid_rvel(io,jo,k)/vknt
                   if(vel_nyquist .ne. r_missing_data)then
-                      grid_nyq(i,j,k) = grid_nyq(i,j,k)/vknt
+                      grid_nyq(io,jo,k) = grid_nyq(io,jo,k)/vknt
                   else
-                      grid_nyq(i,j,k) = r_missing_data
+                      grid_nyq(io,jo,k) = r_missing_data
                   endif
 
                 ELSE ! Failed VEL QC test
 
-                  grid_rvel(i,j,k) = r_missing_data
-                  grid_nyq(i,j,k) = r_missing_data
+                  grid_rvel(io,jo,k) = r_missing_data
+                  grid_nyq(io,jo,k) = r_missing_data
     
                 END IF ! VEL QC test
 
               ELSE ! Insufficient coverage
 
-                grid_rvel(i,j,k) = r_missing_data
-                grid_nyq(i,j,k) = r_missing_data
+                grid_rvel(io,jo,k) = r_missing_data
+                grid_nyq(io,jo,k) = r_missing_data
 
               END IF ! Velocity Coverage check
 
             ELSE ! Insufficient velocity count
 
-              grid_rvel(i,j,k) = r_missing_data
-              grid_nyq(i,j,k) = r_missing_data
+              grid_rvel(io,jo,k) = r_missing_data
+              grid_nyq(io,jo,k) = r_missing_data
 
             END IF ! First check of velocity count
 c
@@ -644,44 +653,44 @@ c
 !            -102.              Reflectivity less than threshold value
 
 
-            IF(ngrids_ref(i,j,k) .ge. MIN_REF_SAMPLES) THEN ! Good gates
-              rknt=float(ngrids_ref(i,j,k))
-              IF (rknt .ge. float(n_pot_ref(i,j,k)) 
+            IF(ngrids_ref(io,jo,k) .ge. MIN_REF_SAMPLES) THEN ! Good gates
+              rknt=float(ngrids_ref(io,jo,k))
+              IF (rknt .ge. float(n_pot_ref(io,jo,k)) 
      1                                          * COVERAGE_MIN_REF) THEN       
 
 !               Calculate mean value of Z
-                grid_ref(i,j,k) = grid_ref(i,j,k)/rknt
+                grid_ref(io,jo,k) = grid_ref(io,jo,k)/rknt
 
 !               Convert from Z to dbZ
-                grid_ref(i,j,k) = alog10(grid_ref(i,j,k)) * 10.
+                grid_ref(io,jo,k) = alog10(grid_ref(io,jo,k)) * 10.
 
-                IF (grid_ref(i,j,k) .ge. REF_MIN) THEN
+                IF (grid_ref(io,jo,k) .ge. REF_MIN) THEN
 
                   n_ref_grids = n_ref_grids + 1
                   IF(n_ref_grids .lt. 200 .and. idebug .ge. 1)
-     :               write(6,835) i,j,k,grid_ref(i,j,k)
+     :               write(6,835) io,jo,k,grid_ref(io,jo,k)
   835                format(' Grid loc: ',3(i4,','),'  Refl: ',f6.1)
 
                 ELSE        ! Failed REF QC test
  
                   n_ref_grids_qc_fail = n_ref_grids_qc_fail + 1
-                  grid_ref(i,j,k) = -102.
+                  grid_ref(io,jo,k) = -102.
 
                 END IF      ! Passed REF QC test
 
               ELSE       ! Insufficent coverage
 
-                grid_ref(i,j,k) = -101.
+                grid_ref(io,jo,k) = -101.
 
               END IF     ! coverage check of count
 
             ELSE       ! Insufficent data count
 
-              grid_ref(i,j,k) = r_missing_data
+              grid_ref(io,jo,k) = r_missing_data
 
             END IF     ! first check of count
 
-  400     CONTINUE ! i,j
+  400     CONTINUE ! io,jo
   500   CONTINUE ! k
 
         I4_elapsed = ishow_timer()
@@ -738,9 +747,9 @@ c
 
 c       DO 555 k=7,9
 c       print *, 'sample data on level ',k
-c       DO 555 j=1,NY_L
-c       DO 555 i=60,60
-c         print *,i,j,grid_ref(i,j,k),grid_rvel(i,j,k)
+c       DO 555 jo=1,NY_R
+c       DO 555 io=60,60
+c         print *,io,jo,grid_ref(io,jo,k),grid_rvel(io,jo,k)
 c 555   CONTINUE
 c
 
@@ -789,17 +798,11 @@ c
 
         if(laps_radar_ext(1:3) .ne. 'vrc')then ! vxx output
 
-!           call get_laps_domain(NX_L,NY_L,'nest7grid'
-!    1                          ,lat,lon,topo,istatus)       
-!           if(istatus .ne. 1)then
-!               write(6,*)' Error calling get_laps_domain'
-!               return
-!           endif
-
             I4_elapsed = ishow_timer()
 
             call ref_fill_horz(grid_ref,NX_L,NY_L,NZ_L
      1                        ,lat,lon,dgr
+     1                        ,NX_R,NY_R,ioffset,joffset
      1                        ,rlat_radar,rlon_radar,rheight_radar
      1                        ,istatus)       
             if(istatus .ne. 1)then
@@ -813,9 +816,41 @@ c
                 stop
             endif
 
-            out_array_4d(:,:,:,1) = grid_ref(:,:,:)
-            out_array_4d(:,:,:,2) = grid_rvel(:,:,:)
-            out_array_4d(:,:,:,3) = grid_nyq(:,:,:)
+            I4_elapsed = ishow_timer()
+
+            write(6,*)' Filling output arrays'
+
+            if(l_offset_radar)then
+
+                out_array_4d = r_missing_data ! Initialize
+
+                iomin = max((1-ioffset),1)
+                iomax = min((NX_L-ioffset),NX_R)
+
+                jomin = max((1-joffset),1)
+                jomax = min((NY_L-joffset),NY_R)
+
+                write(6,*)' io range: ',iomin,iomax,
+     1                    ' jo range: ',jomin,jomax
+
+                do k = 1,NZ_L
+                    do jo = jomin,jomax ! 1,NY_R
+                        j = jo + joffset
+                        do io = iomin,iomax ! 1,NX_R
+                            i = io + ioffset
+                            out_array_4d(i,j,k,1) = grid_ref(io,jo,k)
+                            out_array_4d(i,j,k,2) = grid_rvel(io,jo,k)       
+                            out_array_4d(i,j,k,3) = grid_nyq(io,jo,k)
+                        enddo ! io
+                    enddo ! jo
+                enddo ! k
+
+            else
+                out_array_4d(:,:,:,1) = grid_ref(:,:,:)
+                out_array_4d(:,:,:,2) = grid_rvel(:,:,:)
+                out_array_4d(:,:,:,3) = grid_nyq(:,:,:)
+
+            endif
 
             I4_elapsed = ishow_timer()
 
@@ -1017,6 +1052,7 @@ c
 !    1                               ,imax,jmax,ref_base,r_missing_data) ! I
 
         call ref_fill_horz(fields_2d(1,1,1),imax,jmax,1,lat,lon,dgr
+     1                    ,imax,jmax,0,0
      1                    ,rlat_radar,rlon_radar,rheight_radar,istatus)       
         if(istatus .ne. 1)then
             write(6,*)' Error calling ref_fill_horz'          
