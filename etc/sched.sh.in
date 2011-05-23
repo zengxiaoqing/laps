@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Run sched.pl primarily for use by parent XML script
+
+SCHEDARGS="$1"  
+
+LAPSINSTALLROOT=$2
+
+LAPS_DATA_ROOT=$3
+
+echo "@PERL@ $LAPSINSTALLROOT/sched.pl $SCHEDARGS $LAPSINSTALLROOT $LAPS_DATA_ROOT"
+      @PERL@ $LAPSINSTALLROOT/sched.pl $SCHEDARGS $LAPSINSTALLROOT $LAPS_DATA_ROOT 
