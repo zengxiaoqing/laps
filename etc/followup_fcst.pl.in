@@ -169,12 +169,16 @@ print "laps_fua: $local_fsf\n";
 
 my $num_files = int($fcst_len/$output_inc)+1;
 
-my $fcsthr = 0;
+my $fcsttime = 0;
+my ($fcsthr,$fcstmn);
 my @times;
-while ($fcsthr <= $fcst_len) {
+while ($fcsttime <= $fcst_len) {
+    $fcsthr=int($fcsttime);
+    $fcstmn=($fcsttime-$fcsthr) * 60;
   $fcsthr = "0".$fcsthr while (length($fcsthr)<2);
-  push @times, $cycle.$fcsthr."00";
-  $fcsthr = $fcsthr + $output_inc;
+  $fcstmn = "0".$fcstmn while (length($fcstmn)<2);
+  push @times, $cycle.$fcsthr.$fcstmn;
+  $fcsttime = $fcsttime + $output_inc;
 }
 
 my @times_new;
@@ -190,25 +194,16 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
   @times_new = @times; 
   foreach (@times) {
     if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
-      my $validtime;
       print "Ready to process $_ ... \n" ;
-      if (/^\d\d\d\d\d(\d\d)\d\d(\d\d)\d\d$/){
-        my $basehr=$1;
-        my $fcsthr=$2;
-        $validtime = $basehr + $fcsthr;
-        if ($validtime > 24) {$validtime = $validtime % 24 }
-        $validtime = "0".$validtime while (length($validtime)<2);
-        $validtime = $validtime."00";
-      }
       if ($opt_a eq "spaghetti") {
-          my $command = "$followup_spaghetti $_ $validtime";
+          my $command = "$followup_spaghetti $_";
           print "running spaghetti command: $command";
           $result=system("$command");
       } else {
-          $result=system("$followup $_ $validtime");
-#         $result=system("$followup_fire $_ $validtime");
-#         $result=system("$followup_ua $_ $validtime");
-          $result=system("$followup_xsect $_ $validtime");
+          $result=system("$followup $_");
+#         $result=system("$followup_fire $_");
+#         $result=system("$followup_ua $_");
+          $result=system("$followup_xsect $_");
           system("rm -f $local_fsf/$_.fsf.done");
 #         system("rm -f $local_fua/$_.fua.done"); 
           if (! $www_flag){
