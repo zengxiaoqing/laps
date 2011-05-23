@@ -463,6 +463,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/qsub
           etc/qsub_sge
           etc/sched.pl
+          etc/sched.sh
           etc/sched_sys.pl
           etc/realtime.pl
           etc/ramrsf.pl
