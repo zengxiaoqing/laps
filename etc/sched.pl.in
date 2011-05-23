@@ -101,10 +101,10 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S);
+            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:X');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -548,8 +548,9 @@ foreach $exe (@LAPS_EXE){
             if($nodes_last != $nodes_current){ # of nodes has changed OR we are starting
 
                 if($execount > 1 && $qsub_mode eq "multi"){ # after start - close qsub script
-#                   print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh before executable # $execount\n";
+                    print TFILE "  \n";
+                    print TFILE "  touch $LAPS_LOG_PATH/$qsub_name\_$scriptcount.done\n"; # supports XML scenario
                     close(TFILE);
 
 #                   print $t." Appending $LAPS_LOG_PATH/$qsub_name\_1.sh before executable/script # $execount $scriptnext\n";
@@ -586,7 +587,7 @@ foreach $exe (@LAPS_EXE){
                     if($qsub_mode eq "multi" || ! defined($opt_P)){
                         print TFILE "#\$ -pe $node_type $nodes_current\n";
                         if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
-                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=10.0G\n";
+                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=11.0G\n";
                         }else{
                             if($nodes_current > 1){
                                 print TFILE "#\$ -l h_rt=00:15:00\n";
@@ -610,7 +611,8 @@ foreach $exe (@LAPS_EXE){
                 if($execount == 1 || $qsub_mode eq "multi"){
                     print TFILE "  \n";
                     print TFILE "umask 002\n";
-                    print TFILE "ulimit -s unlimited\n";
+                    print TFILE "ulimit -s 512000\n";
+                    print TFILE "ulimit -a\n";
                     print TFILE "cd $LAPS_LOG_PATH\n";
                     print TFILE "  \n";
                 }
@@ -697,6 +699,8 @@ foreach $exe (@LAPS_EXE){
             print TFILE "echo `date` [finished qsub_wait scripts] >> $LAPS_LOG_PATH/runtime.log\n";
             print TFILE "  \n";
             print $t." Closing $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh with executable # $execount\n";
+            print TFILE "  \n";
+            print TFILE "  touch $LAPS_LOG_PATH/$qsub_name\_$scriptcount.done\n"; # supports XML scenario
             close(TFILE);
 #           close(TFILE_SUB);
             system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
@@ -706,9 +710,11 @@ foreach $exe (@LAPS_EXE){
             my $iscript;
 
             for ($iscript=1; $iscript<=$scriptcount; $iscript++){
-                $command = "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$iscript.sh";
-                print "Executing $command\n";
-                system("$command");
+                if(! defined $opt_X){ # Not Workflow Manager XML scenario
+                    $command = "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$iscript.sh";
+                    print "Executing $command\n";
+                    system("$command");
+                }
             }
 
 	}
@@ -738,17 +744,32 @@ print LOG "$t finished executables for $yyjjjhhmm\n";
 unlink "$sched_lockfile";
 
 if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
-    print LOG $t." Running wfo postprocessing\n";
+    if(! defined $opt_X){
+        print LOG $t." Running wfo postprocessing\n";
 
-    if($opt_w){
-        $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
-    }else{
-        $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
-    }
+        if($opt_w){
+            $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+        }else{
+            $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+        }
 
-#   system("/usr/nfs/bin/perl $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
+#       system("/usr/nfs/bin/perl $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
 
-    &forksub($sys,$lockfile);
+        &forksub($sys,$lockfile);
+    }else{ # XML scenario: generate additional TFILE for WFOPOST
+        $scriptcount = $scriptcount + 1;
+        open(TFILE,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh");
+        if($opt_w){
+            $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+        }else{
+            $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+        }
+        print TFILE "  $sys\n";
+        print TFILE "  \n";
+        print TFILE "  touch $LAPS_LOG_PATH/$qsub_name\_$scriptcount.done\n"; # supports XML scenario
+        close(TFILE);
+    } 
+   
 
 }elsif($opt_w && ($opt_q || $opt_Q) ){
 
