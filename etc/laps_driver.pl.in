@@ -212,19 +212,38 @@ my $command;
 my $t;
 my $node_type = "hcomp";
 
+my ($ngroups,$igroup);
+if($exe eq "remap_polar_netcdf.exe"){
+    my @groups=&laps_tools::get_nl_value("remap.nl","n_groups","$LAPS_DATA_ROOT"); 
+    $ngroups = $groups[0];
+}else{
+    $ngroups = 1;
+}
+
 if($opt_q || $opt_Q){
     if($opt_n){
         $node_type = $opt_n;
     }
 
-    print $t." Opening $LAPS_LOG_PATH/run_qsub_$exe.sh starting with executable $exe\n";
-    open(TFILE,">$LAPS_LOG_PATH/run_qsub_$exe.sh");
-    print TFILE "#!/bin/sh\n";
+    $igroup = 1;
+    while ($igroup le $ngroups){
 
-    if($opt_q){
+      my $qsubfile;
+
+      if($ngroups > 1){
+        $qsubfile = substr($exe,0,5)."_$igroup.sh";
+      }else{
+        $qsubfile = "$exe.sh";
+      }
+
+      print $t." Opening $LAPS_LOG_PATH/$qsubfile starting with executable $exe\n";
+      open(TFILE,">$LAPS_LOG_PATH/$qsubfile");
+      print TFILE "#!/bin/sh\n";
+
+      if($opt_q){
         print TFILE "#PBS -lnodes=1:$node_type,walltime=20:00 -A $opt_q\n";
 
-    }elsif($opt_Q){ 
+      }elsif($opt_Q){ 
         my @xdim=&laps_tools::get_nl_value("nest7grid.parms","nx_l","$LAPS_DATA_ROOT"); 
         my @ydim=&laps_tools::get_nl_value("nest7grid.parms","ny_l","$LAPS_DATA_ROOT"); 
         my @zdim=&laps_tools::get_nl_value("nest7grid.parms","nk_laps","$LAPS_DATA_ROOT"); 
@@ -240,7 +259,7 @@ if($opt_q || $opt_Q){
             my $vmem_gb = 0.8 + ($npts / 17000000.);
 	    if ($vmem_gb > 12.0) { $vmem_gb = 12.0; }
             print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
-            print TFILE "#\$ -l h_rt=00:20:00,h_vmem=".$vmem_gb."G\n";
+            print TFILE "#\$ -l h_rt=00:15:00,h_vmem=".$vmem_gb."G\n";
 
         }else{
             print TFILE "#\$ -l h_rt=00:10:00,h_vmem=1.60G\n";
@@ -251,39 +270,60 @@ if($opt_q || $opt_Q){
         print TFILE "#\$ -S /bin/sh\n";
         print TFILE "#\$ -cwd\n";
 
-    }
+      }
 
-    print TFILE "  \n";
-    if($opt_q){
+      print TFILE "  \n";
+      if($opt_q){
         print TFILE "export PBS_MODE=1\n";
-    }
-    print TFILE "  \n";
-    print TFILE "cd $LAPS_LOG_PATH\n";
-    print TFILE "  \n";
-    print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
+      }
+      print TFILE "  \n";
+      print TFILE "cd $LAPS_LOG_PATH\n";
+      print TFILE "  \n";
+      print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 
-    print " Adding to $LAPS_LOG_PATH/run_qsub_$exe.sh with executable/nodes $exe $opt_q\n";
-    print TFILE "  \n";
-    print TFILE "$LAPSROOT/$exedir/$exe $args 1>> $LAPS_LOG_PATH/$log 2>&1\n";
+      print " Adding to $LAPS_LOG_PATH/$qsubfile with executable/nodes $exe $opt_q\n";
+      print TFILE "  \n";
+      if($exe eq "remap_polar_netcdf.exe" && ($ngroups > 1) ){
+        print TFILE "$LAPSROOT/$exedir/$exe $igroup $args $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log.$igroup 2>&1\n";
+      }else{
+        print TFILE "$LAPSROOT/$exedir/$exe $args 1>> $LAPS_LOG_PATH/$log 2>&1\n";
+      }
+      print TFILE "  \n";
+      print $t." Closing $LAPS_LOG_PATH/$qsubfile with executable $exe\n";
+      close(TFILE);
 
-    print TFILE "  \n";
-    print $t." Closing $LAPS_LOG_PATH/run_qsub_$exe.sh with executable $exe\n";
-    close(TFILE);
+      chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
+      if(defined $opt_w && ($ngroups eq 1) ){
+        $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile";
+      }else{
+        $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile&";
+      }
+      print "Executing $command\n";
+      system("$command");
 
-    chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
-    if(defined $opt_w){
-       $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_$exe.sh";
-    }else{
-       $command = "@PBSHOME@/bin/qsub $LAPS_LOG_PATH/run_qsub_$exe.sh";
-    }
-    print "Executing $command\n";
-    system("$command");
+      $igroup++;
+    } # end while $igroup le $ngroups
 
 }else{
-    my $sys = "$LAPSROOT/$exedir/$exe $args";
-#   system($sys);
-#   unlink "$lockfile";
-    &forksub($sys,$lockfile);
+    $igroup = 1;
+    while ($igroup le $ngroups){
+
+      if($ngroups > 1){
+        my $sys = "$LAPSROOT/$exedir/$exe $igroup $args $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log.$igroup 2>&1 &";
+        print "submitting $sys\n";
+        system($sys);
+#       unlink "$lockfile";
+#       &forksub($sys,$lockfile);
+      }else{
+        my $sys = "$LAPSROOT/$exedir/$exe $args ";
+#       system($sys);
+#       unlink "$lockfile";
+        &forksub($sys,$lockfile);
+      }
+
+      $igroup++;
+
+    } # end while $igroup le $ngroups
 
 }
 
