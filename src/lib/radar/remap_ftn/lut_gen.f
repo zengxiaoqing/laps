@@ -36,8 +36,9 @@ cdis
 cdis
 cdis   
 cdis
-      subroutine lut_gen(c4_radarname,rlat_radar,rlon_radar
-     :                  ,rheight_radar,NX_L,NY_L,NZ_L)
+      subroutine lut_gen(c4_radarname,rlat_radar,rlon_radar ! I
+     :                  ,rheight_radar,ioffset,joffset      ! I
+     :                  ,NX_L,NY_L,NZ_L)                    ! I
 c
 c     PURPOSE:
 c        Generate look-up tables for radar remapping.
@@ -65,6 +66,7 @@ c     Misc interval variables
 c
       integer i,j,igate_lut,iaz,ielev,iran,iz_grid,istatus,len_dir
       integer I4_elapsed, lenr
+      integer ioffset,joffset,io,jo
       real rlat_grid,rlon_grid,height_grid
       real rlat_radar,rlon_radar,rheight_radar
       real elev,elev_deg,coselev,azimuth,azi_deg,azimuth_interval
@@ -276,8 +278,12 @@ c
 
           call latlon_to_rlapsgrid(rlat_grid,rlon_grid,lat,lon,
      :                   NX_L,NY_L,ri,rj,istatus)
+
           i = nint(ri)
           j = nint(rj)
+
+          io = i - ioffset
+          jo = i - joffset
 
           IF (i.le.0.or.i.gt.NX_L.or.j.le.0.or.j.gt.NY_L) THEN
 
@@ -286,8 +292,8 @@ c
 
           ELSE
 
-            azran_to_igrid_lut(iaz,iran) = i
-            azran_to_jgrid_lut(iaz,iran) = j
+            azran_to_igrid_lut(iaz,iran) = i ! io
+            azran_to_jgrid_lut(iaz,iran) = j ! jo
 
           END IF
 
