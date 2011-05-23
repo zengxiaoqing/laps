@@ -122,6 +122,8 @@ if($min_files>0){
     foreach $webdir (@webdirs){
         $dir="www/anal2d/archive/$webdir";
         $clean_dirs{$dir} = $web_time;
+        $dir="www/anal2d/recent/$webdir";
+        $clean_dirs{$dir} = $web_time;
     }
 
     $clean_dirs{'lvd/goes08'} = (0.5<$hist_time)?0.5:$hist_time;;
