@@ -114,8 +114,7 @@ AGE=+7
 LOG=$WEB_DATA/anal2d/laps_gifs.log.$utc_hour$utc_min
 echo "Additional log info in "$LOG
 
-$WEB_NFS/www/anal2d/laps_gifs.csh $LAPS_DATA_ROOT $WEB_NFS $WINDOW $RESOLUTION $2 $AGE $LAPS_ROOT/bin \
-       1> $LOG 2>&1
+$WEB_NFS/www/anal2d/laps_gifs.csh $LAPS_DATA_ROOT $WEB_NFS $WINDOW $RESOLUTION $2 $AGE $LAPS_ROOT/bin $LAPS_A9TIME       1> $LOG 2>&1
 
 rm -f /tmp/GSEG0*
 rm -f /tmp/GSEG1*
