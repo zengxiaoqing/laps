@@ -1422,9 +1422,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                       ----   2.3.7  Satellite ---
 
-     Satellite Image Ingest (lvd): GOES data ingest. Data is stored at
-           GSD in netCDF or AWIPS/NOAAPORT/SBN data (also in netCDF). Ingest of
-           Air Force Weather Agency (AFWA) satellite data is also possible.  
+     Satellite Image Ingest (lvd): GOES data ingest. Data is acquired at
+           GSD's ground station and stored in netCDF. We also obtain
+           AWIPS/NOAAPORT/SBN data (stored in netCDF). Ingest of Air Force 
+           Weather Agency (AFWA) satellite data is also possible.  
+
            Raw GVAR satellite data can be ingested and navigated using GIMLOC 
            routines. Further details can be found in the file 
            'src/ingest/satellite/lvd/README'. 
@@ -1433,7 +1435,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            AREA files to the GVAR netCDF format (lvd input). The package can 
            be found online at this URL:
 
-           ftp://aftp.fsl.noaa.gov/divisions/fd/bob/McArea2NetCDF.tar
+           http://laps.noaa.gov/software/sat/McArea2NetCDF.tar
 
            Some tweaking of satellite coordinate and image dimensions may be
            needed when setting up the McIDAS package, as can be seen in the
