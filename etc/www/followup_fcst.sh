@@ -17,7 +17,6 @@ LAPS_DATA_ROOT=$3
 WINDOW=$4
 RESOLUTION=$5
 datetime=$6
-utc_hhmm=$7
 
 echo "WINDOW = $WINDOW"
 echo "RESOLUTION = $RESOLUTION"

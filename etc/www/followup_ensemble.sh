@@ -16,7 +16,6 @@ WINDOW=$4
 RESOLUTION=$5
 LAPSINSTALLROOT=$6
 datetime=$7
-utc_hhmm=$8
 
 echo "WINDOW = $WINDOW"
 echo "RESOLUTION = $RESOLUTION"
