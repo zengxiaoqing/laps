@@ -162,7 +162,7 @@ c
 
 c this is designed to allow archive data runs!
        call get_laps_cycle_time(laps_cycle_time,istatus)
-       if(i4time_cur-i4time_sys .gt. 2*laps_cycle_time)then
+       if(i4time_cur-i4time_sys .gt. 4*laps_cycle_time)then
           print*,'Set current time to contents of systime.dat'
           c_fname_cur=c_fname_sys
           i4time_cur=i4time_sys
@@ -183,7 +183,7 @@ c this is designed to allow archive data runs!
           c_fname_cur = wfo_fname13_to_fname9(c_fname_cur_temp)
           irad = 1
        endif
-       write(6,*)'Current (nominal) file time: ',c_fname_cur
+       write(6,*)'Current (nominal) time: ',c_fname_cur
 c
        n=index(wsi_dir_path,' ')
        write(6,*)'wsi_dir_path = ',wsi_dir_path(1:n-1)
@@ -204,16 +204,20 @@ c convert to fname9 and determine if this time has already been processed
 c
 !      call get_directory('vrc',dir_vrc,nd)
        i_vrc = 1
+       write(6,*)
        call get_vrc_full_path(i_vrc,vrc_outdir,dir_vrc,nd,istatus)
        write(6,*)' wsi vrc output path is ',dir_vrc(1:nd)
 
 c       dir_vrc = '../lapsprd/vrc/'    !this also use below for output
 c       nd = index(dir_vrc,' ')-1
        c_filespec = dir_vrc(1:nd)//'*'
-       write(6,*)
        write(6,*)'Latest time for vrc files'
 
        call get_latest_file_time(c_filespec,i4time_latest_vrc)
+
+       write(6,*)' Returned from get_latest_file_time for '
+     1            ,dir_vrc(1:nd)
+       write(6,*)
 c
        i4time_latest_diff = i4time_latest_vrc-i4time_latest_wsi
 c
@@ -255,7 +259,8 @@ c
 
        elseif(i4time_latest_diff.gt.i4_thresh_age)then
 
-          write(6,*)'Data too old to wait'
+          write(6,*)'Data too old to wait: wsi/vrc i4times ='
+     1             ,i4time_latest_wsi,i4time_latest_vrc 
           goto 998
 
        endif
@@ -274,6 +279,9 @@ c
           c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:8)//'*_hd'
        endif
 
+       write(6,*)
+       write(6,*)'Latest time for wsi files - subsequent check '
+     1           ,trim(c_filespec)
        call get_latest_file_time(c_filespec,i4time_latest_wsi)
 
        if(c_raddat_type.eq.'wfo'.and.wsi_dir_path(2:7).ne.'public'
