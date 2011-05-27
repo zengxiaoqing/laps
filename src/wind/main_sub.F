@@ -301,7 +301,7 @@ cdis
      1       ,max_radars                                             ! I
      1       ,n_radars                                               ! O
      1       ,ext_radar                                              ! O
-     1       ,r_missing_data,NX_L,NY_L,NZ_L                          ! I
+     1       ,r_missing_data,NX_L,NY_L,NZ_L,lat,lon                  ! I
      1       ,nx_r,ny_r,igrid_r                                      ! I
      1       ,grid_ra_vel,grid_ra_nyq,idx_radar_a,v_nyquist_in       ! O
      1       ,ioffset,joffset                                        ! O
