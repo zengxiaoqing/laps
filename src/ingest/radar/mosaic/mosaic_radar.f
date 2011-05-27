@@ -215,8 +215,8 @@ c
       Logical       first_time
       Logical       found_data
       Logical       l_low_level
-      Logical       l_offset
-      Parameter (l_offset = .true.)
+      Logical       l_offset_vxx, l_offset
+      Parameter (l_offset_vxx = .true.)
 
       Integer       i4time_mos
       Integer       i4time_pre
@@ -268,6 +268,12 @@ c
 c---------------------------------------------------------
 c Start
 c
+      if(l_offset_vxx .AND. c_mosaic_type.eq.'vxx')then
+         l_offset = .true.
+      else
+         l_offset = .false.
+      endif
+
       if(.not. l_offset)then
          allocate(grid_ra_ref(nx_l,ny_l,nz_l,n_radars),STAT=istat_alloc)
          if(istat_alloc .ne. 0)then
@@ -514,7 +520,8 @@ c ----------------------------------------------------------
      &          nx_r,ny_r,igrid_r,                                       ! I
      &          rlat_radar,rlon_radar,rheight_radar,n_valid_radars,      ! O
      &          grid_ra_ref,                                             ! O
-     &          grid_ra_ref_offset,ioffset,joffset,l_offset,             ! O
+     &          grid_ra_ref_offset,ioffset,joffset,                      ! O
+     &          l_offset,                                                ! I
      &          istatus)                                                 ! O
 
              I4_elapsed = ishow_timer()
