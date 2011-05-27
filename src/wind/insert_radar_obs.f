@@ -3,6 +3,7 @@
      1   mode                                       ! Input
      1  ,n_radars,max_radars,idx_radar_a            ! Input
      1  ,imax,jmax,kmax                             ! Input
+     1  ,nx_r,ny_r,ioffset,joffset                  ! Input
      1  ,r_missing_data                             ! Input
      1  ,heights_3d                                 ! Input
      1  ,vr_obs_unfltrd                             ! Input
@@ -31,10 +32,12 @@
      1                        ,weight_radar 
      1                        ,iwrite_output      
 
-      real   vr_obs_unfltrd(imax,jmax,kmax,max_radars)             ! Input
+      real   vr_obs_unfltrd(nx_r,ny_r,kmax,max_radars)             ! Input
       real   rlat_radar(max_radars),rlon_radar(max_radars)         ! Input
       real   rheight_radar(max_radars)                             ! Input
       real   lat(imax,jmax),lon(imax,jmax)                         ! Input
+
+      integer ioffset(max_radars),joffset(max_radars)
 
 !     First pass analyzed winds (innovation analysis with non-radar data)
       real   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)         ! Input
@@ -86,7 +89,7 @@
           return
       endif
 
-      allocate ( n_superob(imax,jmax,kmax,max_radars),STAT=istat_alloc )      
+      allocate ( n_superob(nx_r,ny_r,kmax,max_radars),STAT=istat_alloc )      
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate n_superob'
           stop
@@ -123,7 +126,7 @@ csms$ignore begin
       write(6,*)' Filtering thresholds = ',
      1                  thresh_2_radarobs_lvl_unfltrd, 
      1                  thresh_4_radarobs_lvl_unfltrd, 
-     1                  thresh_9_radarobs_lvl_unfltrd
+     1                  thresh_9_radarobs_lvl_unfltrd,
      1                  thresh_25_radarobs_lvl_unfltrd
 
 !     This routine takes the data from all the radars and adds the derived
@@ -156,6 +159,8 @@ csms$ignore begin
 !             Filter radar at this level to make the filtered ob array sparser
               call filter_radar_obs(
      1                  imax,jmax,                      ! Input
+     1                  nx_r,ny_r,                      ! Input
+     1                  ioffset(i_radar),joffset(i_radar), ! Input
      1                  vr_obs_unfltrd(1,1,k,i_radar),  ! Input
      1                  wt_p_radar(1,1,k),weight_radar, ! Input
      1                  thresh_2_radarobs_lvl_unfltrd,  ! Input
@@ -328,6 +333,8 @@ csms$ignore end
 
       subroutine filter_radar_obs(
      1                  imax,jmax,                      ! Input
+     1                  nx_r,ny_r,                      ! Input
+     1                  ioffset,joffset,                ! Input
      1                  vr_obs_unfltrd,                 ! Input
      1                  wt_p_radar,weight_radar,        ! Input
      1                  thresh_2_radarobs_lvl_unfltrd,  ! Input
@@ -356,10 +363,11 @@ csms$ignore end
 
         integer n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
         integer n_krn, n_krn_i_m1, n_krn_j_m1, n_krn_i, n_krn_j
-        integer n_superob(imax,jmax),n_superob_tot,n_superob_count
+        integer n_superob(nx_r,ny_r),n_superob_tot,n_superob_count
+        integer nx_r,ny_r,ioffset,joffset,ismin,ismax,jsmin,jsmax,io,jo
         integer istatus
 
-        real vr_obs_unfltrd(imax,jmax)
+        real vr_obs_unfltrd(nx_r,ny_r)
         real wt_p_radar(imax,jmax)
         real vr_obs_fltrd(imax,jmax)
         real r_missing_data, weight_radar
@@ -388,12 +396,19 @@ csms$ignore begin
 
 !       Count number of unfiltered obs after rejecting obs having non-radar data
         n_radarobs_lvl_unfltrd = 0
-        do j=1,jmax
-        do i=1,imax
-          if(vr_obs_unfltrd(i,j) .ne. r_missing_data)then       
+        ismin = max(ioffset,1)
+        ismax = min((ioffset+nx_r),imax)
+        jsmin = max(joffset,1)
+        jsmax = min((joffset+ny_r),jmax)
+
+        do j=jsmin,jsmax
+        do i=ismin,ismax
+          io = i - ioffset
+          jo = j - joffset
+          if(vr_obs_unfltrd(io,jo) .ne. r_missing_data)then       
             if(wt_p_radar(i,j) .ne. weight_radar .and.
      1         wt_p_radar(i,j) .ne. r_missing_data)then ! Non-radar ob
-                vr_obs_unfltrd(i,j) = r_missing_data
+                vr_obs_unfltrd(io,jo) = r_missing_data
                 i_radar_reject = i_radar_reject + 1
             else
                 n_radarobs_lvl_unfltrd = n_radarobs_lvl_unfltrd + 1
@@ -443,6 +458,9 @@ csms$ignore begin
            intvl_rad = n_krn_i*n_krn_j
            nbox_rmsl_lvl = 0
            nbox_rmsh_lvl = 0
+
+!          Determine i,j range within io,jo array, taking into account index
+!          interval
 
            do j=1,jmax-n_krn_i_m1,n_krn_i
            do i=1,imax-n_krn_j_m1,n_krn_j
