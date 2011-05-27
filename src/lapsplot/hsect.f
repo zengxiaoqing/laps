@@ -344,6 +344,9 @@ c       include 'satellite_dims_lvd.inc'
         umf_l =  -40.
         umf_h = +120.
 
+        hel_l = -800.
+        hel_h = +800.
+
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus) 
 
         call get_max_radar_files(max_radar_files,istatus)      
@@ -1365,8 +1368,8 @@ c       include 'satellite_dims_lvd.inc'
                     clow = -40.
                 else
                     plot_parms%iraster = 1
-                    chigh = 80.
-                    clow = -80.
+                    chigh = 240.
+                    clow = -240.
                 endif
 
                 call plot_field_2d(i4_valid,c_type_i,w_2d,scale
@@ -1400,8 +1403,12 @@ c       include 'satellite_dims_lvd.inc'
                 call mklabel(k_mb,c19_label,c_label)
 
                 scale = 1e-5
-                call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
-     1                               ,zoom,density,scale)
+!               call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+!    1                               ,zoom,density,scale)
+
+                clow = -200.
+                chigh = +200.
+                cint = 20.
 
                 call plot_field_2d(i4time_3dw,c_type_i,field_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -1794,8 +1801,8 @@ c       include 'satellite_dims_lvd.inc'
 
             c_field = 'he'
             kwind = 0
-            clow = -500.
-            chigh = +500.
+            clow = hel_l
+            chigh = hel_h
 
             if(abs_max .gt. 1.)then ! new way
                 scale = 1.
@@ -1812,7 +1819,7 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'hues')
+     1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
         elseif(c_type(1:2) .eq. 'bl' .or. c_type(1:2) .eq. 'lf')then       
             write(6,*)
@@ -2476,10 +2483,13 @@ cabdel
 
                   endif ! ialloc_vel
 
+                  nx_r = NX_L
+                  ny_r = NY_L
+
                   call get_multiradar_vel(
      1                i4time_get,100000000,i4time_radar_a
      1               ,max_radars,n_radars,ext_radar_a,r_missing_data   
-     1               ,NX_L,NY_L,NZ_L
+     1               ,NX_L,NY_L,NZ_L,lat,lon                            ! I
      1               ,nx_r,ny_r,igrid_r                                 ! I
      1               ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a       
      1               ,ioffset,joffset                                   ! O
@@ -2495,6 +2505,7 @@ cabdel
                   else
                     write(6,*)' Radar 3d vel data NOT successfully read'     
      1                       ,(n_vel_grids_a(i),i=1,n_radars)
+                    write(6,*)' istat_radar_vel = ',istat_radar_vel
                     return
                   endif
 
@@ -5462,6 +5473,10 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'NBE')then
                     call ccpfil(field_2d,NX_L,NY_L,-500.,+50.
      1                         ,'cpe',n_image,scale,'hsect' 
+     1                         ,plot_parms,namelist_parms) 
+                elseif(var_2d .eq. 'LHE')then
+                    call ccpfil(field_2d,NX_L,NY_L,hel_l,hel_h
+     1                         ,'spectral',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'THE')then
                     call ccpfil(field_2d,NX_L,NY_L,250.,370.
