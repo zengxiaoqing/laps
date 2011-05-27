@@ -429,6 +429,7 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
      1         mode                                       ! Input
      1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
+     1        ,nx_r,ny_r,ioffset,joffset                  ! Input
      1        ,r_missing_data                             ! Input
      1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
@@ -553,6 +554,7 @@ csms$>                    out>:default=ignore) begin
      1         mode                                       ! Input
      1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
+     1        ,nx_r,ny_r,ioffset,joffset                  ! Input
      1        ,r_missing_data                             ! Input
      1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
@@ -702,6 +704,7 @@ csms$>                                     :default=ignore)  begin
      1         mode                                       ! Input
      1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
+     1        ,nx_r,ny_r,ioffset,joffset                  ! Input
      1        ,r_missing_data                             ! Input
      1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
