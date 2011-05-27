@@ -72,7 +72,7 @@ cdoc
         subroutine get_multiradar_vel(
      1   i4time_ref,i4time_tol,i4time_radar_a
      1  ,max_radars,n_radars,ext_a,r_missing_data
-     1  ,imax,jmax,kmax
+     1  ,imax,jmax,kmax,lat,lon                                      ! I
      1  ,nx_r,ny_r,igrid_r                                           ! I
      1  ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a
      1  ,ioffset,joffset                                             ! O
@@ -133,6 +133,8 @@ cdoc    Called from wind/lapsplot
         real grid_ra_vel_3d(imax,jmax,kmax)
         real grid_ra_nyq_3d(imax,jmax,kmax)
         integer idx_radar(max_radars)
+
+        real lat(imax,jmax),lon(imax,jmax)
 
         real rlat_radar_a(max_radars),rlon_radar_a(max_radars)
      1    ,rheight_radar_a(max_radars),v_nyquist_in_a(max_radars)
@@ -220,37 +222,46 @@ cdoc    Called from wind/lapsplot
                 else ! valid radar
 
                     if(l_offset)then
-                      if(rlat_radar_a(n_radars) .eq. r_missing_data .or.
-     1                   rlon_radar_a(n_radars) .eq. r_missing_data  
-     1                                                             )then
-                        write(6,*)
-     1                        ' No valid or single lat/lon for radar '       
-     1                           ,n_radars       
+                      call get_ij_offset_radars(nx_l,ny_l,1,              ! I
+     1                              igrid_r,l_offset_radar,               ! I   
+     1                              lat,lon,                              ! I
+     1                              rlat_radar_a(n_radars),               ! I
+     1                              rlon_radar_a(n_radars),               ! I
+     1                              ioffset(n_radars),                    ! I
+     1                              joffset(n_radars) )                   ! O  
+
+
+!                     if(rlat_radar_a(n_radars) .eq. r_missing_data .or.
+!    1                   rlon_radar_a(n_radars) .eq. r_missing_data  
+!    1                                                             )then
+!                       write(6,*)
+!    1                        ' No valid or single lat/lon for radar '       
+!    1                           ,n_radars       
 !    1                           ,' ',radar_name(n_radars)
 !                       l_valid_latlon(n_radars) = .false.
 
-                        ioffset(n_radars) = 0
-                        joffset(n_radars) = 0
+!                       ioffset(n_radars) = 0
+!                       joffset(n_radars) = 0
 
-                      else
-                        call latlon_to_rlapsgrid(rlat_radar_a(n_radars),
-     &                                           rlon_radar_a(n_radars),
-     &                                           lat,lon,
-     &                                           imax,jmax,
-     &                                           ri,rj,
-     &                                           jstatus)
-                        if(jstatus.ne.1)then
-                            write(6,*)
-     1                   'computing ri/rj for radar (outside domain)'    
-                        endif
+!                     else
+!                       call latlon_to_rlapsgrid(rlat_radar_a(n_radars),
+!    &                                           rlon_radar_a(n_radars),
+!    &                                           lat,lon,
+!    &                                           imax,jmax,
+!    &                                           ri,rj,
+!    &                                           jstatus)
+!                       if(jstatus.ne.1)then
+!                           write(6,*)
+!    1                   'computing ri/rj for radar (outside domain)'    
+!                       endif
 !                       write(6,*)'Name: ',radar_name(n_radars)
 !     1                          ,ri(n_radars),rj(n_radars),n_radars
 !                       l_valid_latlon(n_radars) = .true.
 
 !                       Offset is location of lower left corner of small array in the large array
-                        ioffset(n_radars) = (nint(ri) - igrid_r) - 1
-                        joffset(n_radars) = (nint(rj) - igrid_r) - 1
-                      endif
+!                       ioffset(n_radars) = (nint(ri) - igrid_r) - 1
+!                       joffset(n_radars) = (nint(rj) - igrid_r) - 1
+!                     endif
 
                       I4_elapsed = ishow_timer()
 
