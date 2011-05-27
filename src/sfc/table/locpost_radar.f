@@ -15,6 +15,8 @@
 
         write(6,*)' Subroutine locpost_radar...'
 
+        ie = 0
+
 !       Get actual grid spacing valid at the gridpoint nearest the center
         icen = ni/2 + 1
         jcen = nj/2 + 1
@@ -162,6 +164,8 @@
 
  999	continue
 
+        if(ie .eq. 0)goto 9999
+
 !       Write widebandlist to file
         write(6,*)                               
         write(6,*)' Full wideband string...'
@@ -218,7 +222,7 @@
 
         istatus = 1
 
-        close(lun)
+ 9999	close(lun)
         close(lun_out)
         close(lun_wideband)
         close(lun_remap)
