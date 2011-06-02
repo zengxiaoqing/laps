@@ -365,6 +365,7 @@ csms$ignore end
         integer n_krn, n_krn_i_m1, n_krn_j_m1, n_krn_i, n_krn_j
         integer n_superob(nx_r,ny_r),n_superob_tot,n_superob_count
         integer nx_r,ny_r,ioffset,joffset,ismin,ismax,jsmin,jsmax,io,jo
+        integer istart,iend,jstart,jend,iio,jjo
         integer istatus
 
         real vr_obs_unfltrd(nx_r,ny_r)
@@ -441,8 +442,8 @@ csms$ignore begin
 
         elseif(n_radarobs_lvl_unfltrd .gt.
      1         thresh_2_radarobs_lvl_unfltrd)then
-           n_krn_i = 2
-           n_krn_j = 1
+           n_krn_i = 1 ! 2
+           n_krn_j = 2 ! 1
 
         endif
 
@@ -460,61 +461,93 @@ csms$ignore begin
            nbox_rmsh_lvl = 0
 
 !          Determine i,j range within io,jo array, taking into account index
-!          interval
+!          interval. Entire box must be within radar view.
 
-           do j=1,jmax-n_krn_i_m1,n_krn_i
-           do i=1,imax-n_krn_j_m1,n_krn_j
+           jstart = 0
+           do j=1,jmax-n_krn_j_m1,n_krn_j
+               jo = j - joffset
+               if(jo .ge. 1 .AND. jstart .eq. 0)then 
+                   jstart = j ! entire box now in radar view
+               endif                   
+               if(jo + n_krn_j_m1 .le. ny_r)then
+                   jend = j   ! entire box still within radar view
+               endif                   
+           enddo ! j
+
+           istart = 0
+           do i=1,imax-n_krn_i_m1,n_krn_i
+               io = i - ioffset
+               if(io .ge. 1 .AND. istart .eq. 0)then 
+                   istart = i ! entire box now in radar view
+               endif                   
+               if(io + n_krn_i_m1 .le. nx_r)then
+                   iend = i   ! entire box still within radar view
+               endif                   
+           enddo ! i
+
+!          do j=1,jmax-n_krn_i_m1,n_krn_j
+!          do i=1,imax-n_krn_j_m1,n_krn_i
+
+           do j=jstart,jend,n_krn_j
+           do i=istart,iend,n_krn_i
+
+              jo = j - joffset
+              io = i - ioffset
 
 !             Perform initial RMS check
 
 !             If RMS scatter is small then proceed with filtering
 
               l_found_one = .false.
-              do jj = j,j+n_krn_i_m1
-              do ii = i,i+n_krn_j_m1
-                 if  ( l_found_one ) then
-                    if ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data)then
-                       n_superob(i,j) = n_superob(i,j) + 1
-                       sum = sum + vr_obs_unfltrd(ii,jj)
-                       sumsq = sumsq + vr_obs_unfltrd(ii,jj)**2
+              do jj = j,j+n_krn_j_m1
+              do ii = i,i+n_krn_i_m1
+
+                jjo = jj - joffset
+                iio = ii - ioffset
+
+                  if  ( l_found_one ) then
+                    if ( vr_obs_unfltrd(iio,jjo).ne.r_missing_data)then      
+                       n_superob(io,jo) = n_superob(io,jo) + 1
+                       sum = sum + vr_obs_unfltrd(iio,jjo)
+                       sumsq = sumsq + vr_obs_unfltrd(iio,jjo)**2
                        sumi = sumi + ii
                        sumj = sumj + jj
                     endif
 
-                 elseif (vr_obs_unfltrd(ii,jj) .ne. r_missing_data
+                  elseif (vr_obs_unfltrd(iio,jjo) .ne. r_missing_data
      1                                                            )then
-                    vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(ii,jj)
+                    vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(iio,jjo)
                     l_found_one = .true.
-                    n_superob(i,j) = 1
-                    sum = vr_obs_unfltrd(ii,jj)
+                    n_superob(io,jo) = 1
+                    sum = vr_obs_unfltrd(iio,jjo)
                     sumsq = sum**2
                     sumi = ii
                     sumj = jj
 
-                 else ! all missing in the kernel so far
+                  else ! all missing in the kernel so far
                     continue
 
-                 endif
+                  endif
 
               enddo ! ii
               enddo ! jj
 
 !             Calculate standard deviation (here dividing by N)
-              if(n_superob(i,j) .ge. 2)then
-                 xbar(i,j) = sum / float(n_superob(i,j))
-                 arg = sumsq - (float(n_superob(i,j)) * xbar(i,j)**2)
-                 ibar(i,j) = nint(sumi / float(n_superob(i,j)))
-                 jbar(i,j) = nint(sumj / float(n_superob(i,j)))
+              if(n_superob(io,jo) .ge. 2)then
+                 xbar(i,j) = sum / float(n_superob(io,jo))
+                 arg = sumsq - (float(n_superob(io,jo)) * xbar(i,j)**2)
+                 ibar(i,j) = nint(sumi / float(n_superob(io,jo)))
+                 jbar(i,j) = nint(sumj / float(n_superob(io,jo)))
                  if(arg .ge. 0.)then
-                    stdev = sqrt(arg / float(n_superob(i,j)))       
+                    stdev = sqrt(arg / float(n_superob(io,jo)))       
                  elseif(abs(arg/sumsq) .lt. 1e-6)then
-                    write(6,*)' NOTE: stdev arg < 0 ',n_superob(i,j)
+                    write(6,*)' NOTE: stdev arg < 0 ',n_superob(io,jo)
      1                        ,arg,sum,sumsq,xbar(i,j)
      1                        ,' within machine epsilon'
                     arg = 0.
                     stdev = 0.
                  else
-                    write(6,*)' ERROR: stdev arg < 0 ',n_superob(i,j)
+                    write(6,*)' ERROR: stdev arg < 0 ',n_superob(io,jo)
      1                        ,arg,sum,sumsq,xbar(i,j)
                     stop
                  endif
@@ -522,30 +555,32 @@ csms$ignore begin
 
               if(stdev .gt. stdev_thresh_radial)then ! cancel superobing
                  nbox_rmsh_lvl = nbox_rmsh_lvl + 1
-                 do jj = j,j+n_krn_i_m1
-                 do ii = i,i+n_krn_j_m1
-                    n_superob(i,j) = 0
-                    vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(ii,jj)
+                 do jj = j,j+n_krn_j_m1
+                 do ii = i,i+n_krn_i_m1
+                    jjo = jj - joffset
+                    iio = ii - ioffset
+                    n_superob(io,jo) = 0
+                    vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(iio,jjo)
                  enddo ! ii
                  enddo ! jj
               else
                  nbox_rmsl_lvl = nbox_rmsl_lvl + 1
               endif
 
-              if(l_superob .and. n_superob(i,j) .ge. 2)then ! move ob to superob location
-                 n_superob_box = n_superob(i,j)
+              if(l_superob .and. n_superob(io,jo) .ge. 2)then ! move ob to superob location
+                 n_superob_box = n_superob(io,jo)
 
 !                Clean out obs from box
-                 do jj = j,j+n_krn_i_m1
-                 do ii = i,i+n_krn_j_m1
-                    n_superob(i,j) = 0
+                 do jj = j,j+n_krn_j_m1
+                 do ii = i,i+n_krn_i_m1
+                    n_superob(io,jo) = 0
                     vr_obs_fltrd(ii,jj) = r_missing_data
                  enddo ! ii
                  enddo ! jj
 
                  inew = ibar(i,j)
                  jnew = jbar(i,j)
-                 n_superob(inew,jnew) = n_superob_box
+                 n_superob(inew-ioffset,jnew-joffset) = n_superob_box
                  vr_obs_fltrd(inew,jnew) = xbar(i,j)
               endif
 
@@ -558,11 +593,14 @@ csms$ignore begin
         else
            ! Keep every ob
            intvl_rad = 1
-           do j=1,jmax
-           do i=1,imax
-              vr_obs_fltrd(i,j) = vr_obs_unfltrd(i,j)
+           vr_obs_fltrd = r_missing_data
+           do jo=1,ny_r
+           do io=1,nx_r
+              j = jo + joffset
+              i = io + ioffset
+              vr_obs_fltrd(i,j) = vr_obs_unfltrd(io,jo)
               if(vr_obs_fltrd(i,j) .ne. r_missing_data)then
-                n_superob(i,j) = 1
+                n_superob(io,jo) = 1
               endif
            enddo
            enddo
@@ -571,14 +609,16 @@ csms$ignore begin
 !       Count number of filtered obs
         n_radarobs_lvl_fltrd = 0
         n_superob_tot = 0
-        do j=1,jmax
-        do i=1,imax
+        do jo=1,ny_r
+        do io=1,nx_r
+          j = jo + joffset
+          i = io + ioffset
           if(vr_obs_fltrd(i,j) .ne. r_missing_data)then
             n_radarobs_lvl_fltrd = n_radarobs_lvl_fltrd + 1
           endif
-          n_superob_tot = n_superob_tot + n_superob(i,j)
-        enddo ! i
-        enddo ! j
+          n_superob_tot = n_superob_tot + n_superob(io,jo)
+        enddo ! io
+        enddo ! jo
 
         if(n_radarobs_lvl_unfltrd .gt. 0)then
             write(6,*)'     Superob check ',n_radarobs_lvl_unfltrd
@@ -594,11 +634,13 @@ csms$ignore begin
 
         n_superob_count = 0
         n_superob_tot = 0
-        do j=1,jmax
-        do i=1,imax
-          if(n_superob(i,j) .gt. 0)then
+        do jo=1,ny_r
+        do io=1,nx_r
+          j = jo + joffset
+          i = io + ioffset
+          if(n_superob(io,jo) .gt. 0)then
             n_superob_count = n_superob_count + 1
-            n_superob_tot = n_superob_tot + n_superob(i,j)
+            n_superob_tot = n_superob_tot + n_superob(io,jo)
           endif
         enddo ! i
         enddo ! j
