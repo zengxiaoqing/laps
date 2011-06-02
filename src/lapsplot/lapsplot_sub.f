@@ -260,7 +260,7 @@ cdis
 
             NX_C = max(NX_L,NY_L)
 
-            NX_T = 121
+            NX_T = nint(121. * density)                      
 
             write(6,*)' NX_C/NX_T= ',NX_C,NX_T
 
