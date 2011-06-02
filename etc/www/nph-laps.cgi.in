@@ -17,7 +17,10 @@ require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www (formerly /w3/ut
 use lib "@prefix@/etc"; # Path for 'laps_tools.pm'
 require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
 require "oputil.pm";                     # supplied in $LAPSINSTALLROOT/etc
-    
+
+use Time::Local;
+use Time::HiRes "usleep";
+
 #set up some nice variables
 @month=(Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec);
 @day=(Sun,Mon,Tue,Wed,Thu,Fri,Sat);
@@ -58,6 +61,12 @@ chdir ("$thisDir") ||
           die "Content-type: text/html\n\nCan't cd to $thisDir: $!\n";
 
 # END OF PREAMBLE ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+eval {
+ local %SIG;
+  $SIG{ALRM}=
+    sub{ $cleanDB=0; print STDOUT "<h2>ALARM: TIMEOUT (60 sec)</H2>"; };
+    alarm 60; 
 
 #get calling URL
 $temp = $ENV{'SCRIPT_NAME'};
@@ -188,7 +197,7 @@ print "@fields....";
 $out_fields="[" . join(',',@fields) . "]";
 $n_fields_uc = 0;
 foreach $field (@fields) {
-    if ($field eq uc($field) && ! ($field eq "REFLCT" && $out_levels =~ "xsect") ){
+    if ($field eq uc($field) && ! ($field eq "REFLECT" && $out_levels =~ "xsect") ){
         $n_fields_uc++
     }
 }
@@ -229,7 +238,13 @@ $domain = @domains[0];
 $err=0;
 $montage=0;
 my $nmontage = 1;
+my $ndims = 0;
+my $nrows = 1;
+my $ncols = 1;
+my $nanims = 1;
 my $ntimes = 1;
+my $nframes = 1;
+my $geom;
 
 my $domain_first;
 $domain =~ /(.*)/;
@@ -243,15 +258,24 @@ my $domain_nl;
 my $nl_var;
 my $units;
 my @units_array;
+my $i_montage;
+my @i_montage_array;
 if(-e "$laps_data_root/static/lapsplot.nl"){
     $domain_nl = "lapsplot.nl";
+
     $nl_var="c_units_type";
     @units_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
     $units=@units_array[0];
+
+    $i_montage=0;
+    $nl_var="montage";
+    @i_montage_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
+    $i_montage=@i_montage_array[0];
 }
 
 #print "unitsarray = @units_array<br>";
 #print "units1 = $units<br>";
+#print "i_montage = $i_montage<br>";
 
 my $xcen_safe;
 $xcen =~ /(.*)/;
@@ -288,7 +312,7 @@ $frames =~ /(.*)/;
 $frames_safe = $1;
 my $frames_orig = $frames_safe;
 
-print "frames_orig = $frames_orig<br>";
+print "frames_orig = $frames_orig";
 
 my $size_safe;
 $size_safe = $thickness_safe;
@@ -301,6 +325,7 @@ $a9time_safe = $1;
 
 my $a9time_orig = $a9time_safe;
 my $a9time_offset;
+my $a9time_last;
 
 #my $a9time_wgi_safe;
 my $wgi_file;
@@ -315,7 +340,7 @@ my $sect = "none";
 
 #print "domain (first) = $domain_first<br>";
 chomp $forecast_time;
-print "time = $a9time";
+print " time = $a9time<br>";
 
 #Default units is set above as read in from the lapsplot.nl namelist
 if($domain_first =~ "tw_" || $domain_first =~ "tai" || $domain_first =~ "th" || $domain_first =~ "fmi"){
@@ -334,6 +359,8 @@ if ($frames_safe > 1 || $frames_safe =~ "auto"){
         @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
         if($frames_safe eq "auto-6"){
             $cycle_time=@cycle_array[0] * 6;
+        }elsif($frames_safe eq "auto-4"){
+            $cycle_time=@cycle_array[0] * 4;
         }elsif($frames_safe eq "auto-3"){
             $cycle_time=@cycle_array[0] * 3;
         }else{
@@ -347,7 +374,7 @@ if ($frames_safe > 1 || $frames_safe =~ "auto"){
 if ($n_domains == 0) {
     $err=1;
     print<<"EOI";
-<h2>Please select a one or more domains...</h2>
+<h2>Please select one or more domains...</h2>
 </body></html>
 EOI
 }
@@ -401,36 +428,54 @@ foreach $source (@sources) {
 
 #print "<h2>n_fields_uc = $n_fields_uc</h2>";
 
-if($n_fields_uc > 1 && $n_sources_fields > 0 && (@fields[0] != "CLDCLV" || @fields[1] != "REFLCT") ){ # exception for cloud/radar combo
+if($n_fields_uc == 9999 && $n_fields_uc > 1 && $n_sources_fields > 0 && ! (@fields[0] eq "CLDCLV" && @fields[1] eq "REFLCT" && $out_levels eq "xsect") ){ # exception for cloud/radar combo (no montage for cloud/radar overlay)
     print "<h2>Error: only 1 upper case field should be selected (image montages not yet supported)...</h2>";
     $err=1;
+
 }else{
-    if($n_domains == 1 && $n_sources_fields >  1 && ($n_fields_uc == 1 || $n_fields > 1) ){
-#   if($n_domains == 1 && $n_sources_fields >  1 && ($n_fields_uc == 1                 ) ){
-        print "<h2>Montage multiple sources (under construction)...</h2>";
+#   if($n_domains == 1 && $n_sources_fields >  1 && ($n_fields_uc == 1 || $n_fields > 1) ){
+    if($n_domains == 1 && $n_sources_fields >  1 &&  $n_fields_uc == 1                   ){
+        print "<h2>Montage multiple sources...</h2>";
 #       $err=1;
         $montage=1;
+        $ndims=1;
     }
     if($n_domains == 1 && $n_sources_fields == 1 && $n_fields_uc >  1){
-        print "<h2>Montage multiple fields (under construction)...</h2>";
+        print "<h2>Montage multiple fields...</h2>";
 #       $err=1;
         $montage=1;
+        $ndims=1;
     }
-    if(                   $n_sources_fields > 0 && $n_fields_uc == 1 && $n_levels > 1){
-        print "<h2>Montage multiple levels (under construction)...</h2>";
+    if($n_domains > 1 && $n_sources_fields == 1 && $n_fields_uc >  1){
+        print "<h2>Montage multiple domains and fields (experimental)...</h2>";
 #       $err=1;
         $montage=1;
+        $ndims=2;
+    }
+    if($n_domains == 1 && $n_sources_fields > 1 && $n_fields_uc >  1){
+        print "<h2>Montage multiple sources and fields (experimental)...</h2>";
+#       $err=1;
+        $montage=1;
+        $ndims=2;
+    }
+    if(                   $n_sources_fields > 0 && $n_fields_uc == 1 && $n_levels > 1 && @fields[0] ne "PRCP_H2O"){
+        print "<h2>Montage multiple levels...</h2>";
+#       $err=1;
+        $montage=1;
+        $ndims=1;
     }
 }
 
 # Montage for multiple domains
-if($n_domains > 1 && ($n_sources_fields == 1 || @sources[0]=~ "obs") && ($n_fields_uc > 0 || @fields[0]=~ "radial_vel") ){
+if($n_domains > 1 && ($n_sources_fields == 1 || @sources[0]=~ "obs") && ($n_fields_uc == 1 || @fields[0]=~ "radial_vel") ){
     print "<h2>Montage multiple domains...</h2>";
     $montage=1;
+    $ndims=1;
 }
-if($n_domains > 1 && ($n_sources_fields == 2 || @sources[0]=~ "obs") && ($n_fields_uc > 0 || @fields[0]=~ "radial_vel") ){  # Experimental
+if($n_domains > 1 && ($n_sources_fields >= 2 || @sources[0]=~ "obs") && ($n_fields_uc > 0 || @fields[0]=~ "radial_vel") ){  # Experimental
     print "<h2>Montage multiple domains and sources (experimental)...</h2>";
     $montage=1;
+    $ndims=2;
 }
 
 # Generate product
@@ -465,6 +510,10 @@ if($err == 0) {
 #       print " auto frames_safe = $frames_safe";
         $frames = $frames_safe;
         print " auto frames = $frames";
+        if($frames > 200){
+            print " ERROR: too many frames = $frames\n";
+            exit;
+        }
     }
   }
 
@@ -686,7 +735,7 @@ if($err == 0) {
 
         }elsif ("$source" eq "DIFF" ) { 
             if($n_fields_uc > 0){
-                print "<h2>Warning: DIFF should be used only with lower case fields...</h2>";
+                print '<h2><font color="red">Warning: DIFF should be used only with lower case fields...</font></h2>';
 
                 if($out_levels =~ "xsect"){
                     printf LAPSPLOT "dfi\n"; 
@@ -721,7 +770,7 @@ if($err == 0) {
         }elsif ("$source" eq "diff" ) {
 
             if($n_fields_uc > 0){
-                print "<h2>Warning: diff should be used only with lower case fields...</h2>";
+                print '<h2><font color="red">Warning: diff should be used only with lower case fields...</font></h2>';
 
                 if($out_levels =~ "xsect"){
                     printf LAPSPLOT "df\n"; 
@@ -758,6 +807,8 @@ if($err == 0) {
             foreach $field (@fields) {
 
                foreach $level (@pressure_levels) {
+
+                  next if (($field eq "ht" || $field eq "HT") && $n_levels > 1 && $level eq "sfc/2d");
 
                   if("$level" eq "sndg" && "$source" =~ "obs"){
                       print "<h2>Error: $source cannot be selected with sndg...</h2>";
@@ -803,45 +854,99 @@ if($err == 0) {
 
                   if($sect eq "hsect" || $sect eq "xsect"){
 #                     print "checking for montage <br>\n";
-#                     if($montage == 1 && $domain ne $domain_first && $field eq uc($field) && ! ($field eq "REFLECT" && $out_levels =~ "xsect") ){ 
-                      if($montage == 1 && $n_domains > 1 && ($domain ne $domain_first || $source ne $sources[0]) && $source ne "obs" && $field eq $fields[0]){ # montage multiple sources
+#                     if($montage == 1 && $domain ne $domain_first && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels =~ "xsect") ){ 
+                      if($montage == 1 && $n_domains > 1 && $n_sources > 1 && ($domain ne $domain_first || $source ne $sources[0]) && $source ne "obs" && $field eq $fields[0]){ # montage multiple domains/sources (2D)
                           print "multiple domains/sources field/field(0) is $field $fields[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
-                          if($a9time_safe == $a9time_orig){
+                          $nframes++;
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
                           }
-                          $animate = $nmontage;
-                      }elsif(    $montage == 1 && $domain ne $domain_first && $source eq $sources[0] && $field eq $fields[0]){ # montage multiple domains
+                          if($i_montage < 1){
+                              $animate = $nmontage; # animate 1D montages?
+                          }else{
+                              $animate = $nmontage;
+                          }
+                      }elsif($montage == 1 && $n_domains > 1 && $n_fields_uc > 1 && $domain eq $domain_first && $field eq uc($field) && $field ne $fields[0]){ # montage multiple domains/fields (2D)
+                          print "multiple domains/fields field/field(0) is $field $fields[0]<br>\n";
+                          printf LAPSPLOT "fcf\n"; 
+                          $nframes++;
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+                              $nmontage++;
+                          }
+                          if($i_montage < 1){
+                              $animate = $nmontage; # animate 1D montages?
+                          }else{
+                              $animate = $nmontage;
+                          }
+                      }elsif($montage == 1 && $n_sources > 1 && $n_fields_uc > 1 && $source eq $sources[0] && $field eq uc($field) && $field ne $fields[0]){ # montage multiple sources/fields (2D)
+                          print "multiple sources/fields field/field(0) is $field $fields[0]<br>\n";
+                          printf LAPSPLOT "fcf\n"; 
+                          $nframes++;
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+                              $nmontage++;
+                          }
+                          if($i_montage < 1){
+                              $animate = $nmontage; # animate 1D montages?
+                          }else{
+                              $animate = $nmontage;
+                          }
+                      }elsif($montage == 1 && $domain ne $domain_first && $n_sources == 1 && $n_fields_uc == 1 && $source eq $sources[0] && $field eq $fields[0]){ # montage multiple domains
                           print "multiple domains field/field(0) is $field $fields[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
-                          $animate = "yes";
-                          if($a9time_safe == $a9time_orig){
+                          $nframes++;
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $source ne $sources[0] && $source ne "obs" && $field eq $fields[0]){ # montage multiple sources
+                          if($i_montage < 1){
+                              $animate = "yes";
+                          }else{
+                              $animate = $nmontage;
+                          }
+                      }elsif($montage == 1 && $domain eq $domain_first && $source ne $sources[0] && $source ne "obs" && $n_fields_uc == 1 && $field eq $fields[0]){ # montage multiple sources
                           print "multiple sources field/field(0) is $field $fields[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
-                          $animate = "yes";
-                          if($a9time_safe == $a9time_orig){
+                          $nframes++;
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field ne $fields[0] && $field eq uc($field) && $field ne "REFLCT"){ # montage multiple fields
+                          if($i_montage < 1){
+                              $animate = "yes";
+                          }else{
+                              $animate = $nmontage;
+                          }
+                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field ne $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
                           print "multiple fields field/field(0) is $field $fields[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
-                          $animate = "yes";
-                          if($a9time_safe == $a9time_orig){
+                          $nframes++;
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
+                          }
+                          if($i_montage < 1){
+                              $animate = "yes";
+                          }else{
+                              $animate = $nmontage;
                           }
                       }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level ne $pressure_levels[0]){ # montage multiple levels
                           print "multiple levels level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
                           printf LAPSPLOT "fcf\n"; 
+                          $nframes++;
                           $animate = "yes";
-                          if($a9time_safe == $a9time_orig){
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
+                          }
+                      }elsif($montage == 1 && $nframes > 1 && $field eq uc($field)){
+                          $nframes++;
+                          print "montage general case: $nframes $a9time_safe $a9time_last $domain $source $field $level<br>\n";
+                          if($a9time_safe eq $a9time_last){                                              
+                             printf LAPSPLOT "fcf\n"; 
+                          }else{ # "q" will do a frame advance
+                             printf LAPSPLOT "fc\n"; 
                           }
                       }else{
                           printf LAPSPLOT "fc\n"; 
                       }
+                      $a9time_last = $a9time_safe;
                       printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
                   }
 
@@ -1131,16 +1236,28 @@ if($err == 0) {
                               printf LAPSPLOT "$hhmm\n";
                               printf LAPSPLOT "llr\n"; 
 
+#                         }elsif("$field" eq "CLD_LIQ"){ 
+#                             printf LAPSPLOT "lsi\n"; 
+#                             printf LAPSPLOT "-1\n"; 
+#                             printf LAPSPLOT "f\n"; 
+#                             printf LAPSPLOT "$source\n";
+#                             printf LAPSPLOT "$hhmm\n";
+
+#                         }elsif("$field" eq "cld_liq"){ 
+#                             printf LAPSPLOT "ls\n"; 
+#                             printf LAPSPLOT "-1\n"; 
+#                             printf LAPSPLOT "f\n"; 
+#                             printf LAPSPLOT "$source\n";
+#                             printf LAPSPLOT "$hhmm\n";
+
                           }elsif("$field" eq "CLD_LIQ"){ 
-                              printf LAPSPLOT "lsi\n"; 
-                              printf LAPSPLOT "-1\n"; 
+                              printf LAPSPLOT "isi\n"; 
                               printf LAPSPLOT "f\n"; 
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
 
                           }elsif("$field" eq "cld_liq"){ 
-                              printf LAPSPLOT "ls\n"; 
-                              printf LAPSPLOT "-1\n"; 
+                              printf LAPSPLOT "is\n"; 
                               printf LAPSPLOT "f\n"; 
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
@@ -1383,7 +1500,7 @@ if($err == 0) {
                               printf LAPSPLOT "ter\n"; 
 
                           }else{
-                              print "$source $level $field not yet available<br>\n"; 
+                              print "$source $level $field not yet available at the sfc<br>\n"; 
       
                           } # if field
 
@@ -1584,7 +1701,7 @@ if($err == 0) {
                               printf LAPSPLOT "$source\n"; 
                               printf LAPSPLOT "$hhmm\n";
                           }else{ 
-                              print "$source $level $field not available\n"; 
+                              print "$source $level $field not available on the pressure grid\n"; 
                           }
       
                       }elsif("$level" eq "sndg"){ # FUA Sounding
@@ -1861,7 +1978,7 @@ if($err == 0) {
                         printf LAPSPLOT "$hhmm\n";
 
 		    }else{
-                        print "$source $level mb $field not yet available<br>\n"; 
+                        print "$source $level mb $field not available on the pressure grid<br>\n"; 
 
 	            } # if field
 
@@ -2032,7 +2149,7 @@ if($err == 0) {
                         printf LAPSPLOT "al\n"; 
 
 		    }else{
-                        print "$source $level $field not yet available<br>\n"; 
+                        print "$source $level $field not available (via the lgb file)<br>\n"; 
 
 	            } # if field
 
@@ -2150,7 +2267,7 @@ if($err == 0) {
                         printf LAPSPLOT "b\n"; 
                         printf LAPSPLOT "$hhmm\n";
                     }else{ 
-                        print "$source $level $field not available\n"; 
+                        print "$source $level $field not available (via lga file)\n"; 
                     }
 
                 }elsif("$level" eq "sndg"){ # LGA Sounding
@@ -2336,7 +2453,7 @@ if($err == 0) {
                         printf LAPSPLOT "$hhmm\n";
 
 		    }else{
-                        print "$source $level mb $field not yet available<br>\n"; 
+                        print "$source $level mb $field not available (via lga file)<br>\n"; 
 
 	            } # if field
 
@@ -2534,6 +2651,9 @@ if($err == 0) {
 
                         }elsif("$field" eq "prcp_h2o" || "$field" eq "PRCP_H2O"){ 
                             printf LAPSPLOT "wv\n"; 
+
+                        }elsif("$field" eq "cld_liq" || "$field" eq "CLD_LIQ"){ 
+                            printf LAPSPLOT "il\n"; 
 
                         }elsif($units eq "english"){
                             printf LAPSPLOT "of\n"; 
@@ -3019,13 +3139,19 @@ if($err == 0) {
                     elsif("$field" eq "reflct"){ 
                         printf LAPSPLOT "rf\n"; 
                         printf LAPSPLOT "lr\n"; }
+#                   elsif("$field" eq "CLD_LIQ"){ 
+#                       printf LAPSPLOT "lsi\n"; 
+#                       printf LAPSPLOT "-1\n"; 
+#                       printf LAPSPLOT "a\n"; }
+#                   elsif("$field" eq "cld_liq"){ 
+#                       printf LAPSPLOT "ls\n"; 
+#                       printf LAPSPLOT "-1\n"; 
+#                       printf LAPSPLOT "a\n"; }
                     elsif("$field" eq "CLD_LIQ"){ 
-                        printf LAPSPLOT "lsi\n"; 
-                        printf LAPSPLOT "-1\n"; 
+                        printf LAPSPLOT "isi\n";
                         printf LAPSPLOT "a\n"; }
                     elsif("$field" eq "cld_liq"){ 
-                        printf LAPSPLOT "ls\n"; 
-                        printf LAPSPLOT "-1\n"; 
+                        printf LAPSPLOT "is\n"; 
                         printf LAPSPLOT "a\n"; }
                     elsif("$field" eq "SNOW_CVR"){ 
                         printf LAPSPLOT "sci\n";} 
@@ -3038,7 +3164,7 @@ if($err == 0) {
                         printf LAPSPLOT "gg\n";  
                         printf LAPSPLOT "lf\n"; }
                     else 
-                        { print "$source $level $field not available\n"; }
+                        { print "$source $level $field not available at the sfc\n"; }
 
                 }elsif("$level" eq "soil1"){ # soil1
                     if("$field" eq "RH"){ 
@@ -3408,7 +3534,7 @@ if($err == 0) {
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "a\n"; 
                     }else{ 
-                        print "$source $level mb $field not available\n"; 
+                        print "$source $level mb $field not available (via analysis pressure grid)\n"; 
 
                           } # if field
 
@@ -4019,11 +4145,120 @@ if($err == 0) {
   if ($wgi_only == 0) {
 #   print  "$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root $animate $resolution\n";
     if ($montage == 1) {
-#       print "ntimes/animate = $ntimes $animate\n";
-        if ($ntimes > 1) {
+        if ($ntimes > 1 && $i_montage == 1) {
             $animate = "$nmontage";
         }
-    } 
+
+        if($animate eq "yes"){
+#           if($ndims == 1){
+#               $nanims = $ntimes; # 1D montages at multiple times
+#           }elsif($ndims == 2){
+                $nanims = $nmontage;
+#           }
+        }else{
+            $ncols = $nmontage;
+            $nrows = $nframes / $ncols;
+        }
+
+        print "i_montage=$i_montage nmontage=$nmontage animate=$animate nrows=$nrows ncols=$ncols ndims=$ndims | ";
+
+        if($ndims == 2 && $ntimes >= 1){ # 2D montages at single/multiple times
+            $nanims = $ntimes;
+            $nrows = $nrows / $ntimes;
+            if($ntimes > 1){
+                $ndims++;
+                $nrows = $nrows * $n_domains;
+                $ncols = $nmontage / $n_domains;
+            }
+        }
+
+        if($ndims == 1 && $ntimes > 1){ # 1D montages at multiple times 
+            $ndims++;
+            $nanims = $ntimes;
+            $nrows = 1;                  
+            $ncols = $nmontage;
+        }
+
+        print "nrows=$nrows ncols=$ncols nanims=$nanims ndims=$ndims | ";
+
+        $geom = "$ncols"."x"."$nrows"."x"."$nanims";
+
+        if($i_montage < 1 && $ndims >= 2){ # animate multiple 1D/2D montages
+
+          $animate = $geom;
+
+#         my $montage_file = "$web_root/$ScratchDir/$$/montage.sh";
+          my $montage_file = "$web_root/$ScratchDir/montage"."_$$.sh";
+          open(MONTAGE,">$montage_file") ||
+          die "Content-type: text/html\n\nCan't open $montage_file: $!\n";
+          printf MONTAGE "#!/bin/sh\n\n";
+          printf MONTAGE "#$geom\n\n";
+          printf MONTAGE "cd $web_root/$ScratchDir/$$\n\n";
+
+          my $iframe = 1;
+          my $ianim = 1;
+          while ($ianim <= $nanims){
+            my $iframe_anim = 1;
+
+            while ($iframe_anim <= ($nrows*$ncols)){
+                printf MONTAGE "montage ";
+                if($iframe < 10){   
+                    printf MONTAGE "gmeta_$$.000$iframe.sun.gif ";
+                }else{
+                    printf MONTAGE "gmeta_$$.00$iframe.sun.gif ";
+                }
+                $iframe++;
+                $iframe_anim++;
+            }
+
+            printf MONTAGE "-mode Concatenate -tile $geom gmeta_$$"."_$ianim.gif ";
+            printf MONTAGE "\n";
+            $ianim++;
+          }    
+
+          printf MONTAGE "\n";
+
+          if($nanim == 1){
+            printf MONTAGE "mv gmeta_$$"."_1.gif $web_root/$ScratchDir/gmeta_$$.gif ";
+          }else{ # animate the multiple montages
+            $ianim = 1;
+            printf MONTAGE "convert -delay $delay_safe -loop 0 ";
+            while ($ianim <= $nanims){
+                printf MONTAGE "gmeta_$$"."_$ianim.gif ";
+                $ianim++;
+            }
+            printf MONTAGE "$web_root/$ScratchDir/gmeta_$$.gif\n";                                            
+          }
+
+          close MONTAGE;
+
+        } # write MONTAGE script if $i_montage < 1
+
+        print "i_montage=$i_montage nmontage=$nmontage animate=$animate ndims=$ndims geom=$geom";
+
+    } # montage = 1 
+
+
+#   Update log file prior to calling lapsplot
+    $returnAddress = ($ENV{'REMOTE_HOST'} || $ENV{REMOTE_ADDR} ||
+                  "(Unknown requestor)");
+    $logFile = "$web_root/cgi/laps_anal_products.cgi.log";
+    open(LOG,">>$logFile") ||
+        die "Content-type: text/html\n\nCan't open $logFile: $!\n";
+#   get time for log file
+    $time = time();
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
+    $thisMonth=$month[$mon];
+    $nHours=($stopSecs+1-$startSecs)/3600;
+    $year=$year+1900;
+    printf LOG "....$thisMonth $mday %02d\:%02d\:%02d UTC $year  $returnAddress " .
+             " $domain_first $out_sources %s $out_fields %s $out_levels %s $$ calling lapsplot script\n"
+             ,$hour,$min,$sec,
+             $ENV{'REMOTE_USER'};
+    close LOG;
+
+
+#   Run lapsplot
     system("@prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2> $web_root/$ScratchDir/lapsplot.err_$$"); 
     system("rm -f $request_root/lapsplot/lapsplot.in; ln -s $web_root/$ScratchDir/lapsplot.in_$$ $request_root/lapsplot/lapsplot.in; rm -f $request_root/lapsplot/lapsplot.out; ln -s $web_root/$ScratchDir/lapsplot.out_$$ $request_root/lapsplot/lapsplot.out; rm -f $request_root/lapsplot/lapsplot.err; ln -s $web_root/$ScratchDir/lapsplot.err_$$ $request_root/lapsplot/lapsplot.err; rm -f $request_root/lapsplot/loop; ln -s $web_root/$ScratchDir/$$ $request_root/lapsplot/loop");
     print<<"EOI";
@@ -4107,7 +4342,7 @@ EOI
   $nHours=($stopSecs+1-$startSecs)/3600;
   $year=$year+1900;
   printf LOG "....$thisMonth $mday %02d\:%02d\:%02d UTC $year  $returnAddress " .
-             " $domain_first $out_sources %s $out_fields %s $out_levels %s\n"
+             " $domain_first $out_sources %s $out_fields %s $out_levels %s $$\n"
              ,$hour,$min,$sec,
              $ENV{'REMOTE_USER'};
   close LOG;
@@ -4159,3 +4394,7 @@ system("$web_root/request/laps.cgi");
 
 #system("$web_root/cgi/log-access.s $logFile $LOG_USER request_$domain_first");
 #           "%3.1f".
+
+alarm 0;
+
+} #eval 
