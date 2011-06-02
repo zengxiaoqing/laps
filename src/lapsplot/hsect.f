@@ -495,9 +495,9 @@ c       include 'satellite_dims_lvd.inc'
                 write(6,*)' Bad status returned from force_laps_config'
                 return
             endif
+            call get_lapsplot_parms(namelist_parms,istatus)
             if(c_type(1:3) .eq. 'fcf')then
                 call frame
-                call get_lapsplot_parms(namelist_parms,istatus)
 !               ifield_found = 0 ! latest experiment
                 i_overlay = 0
                 n_image = 0
@@ -1362,14 +1362,14 @@ c       include 'satellite_dims_lvd.inc'
 !               endif
 
                 call get_grid_spacing_cen(grid_spacing_m,istatus)
-                if(grid_spacing_m .ge. 5000.)then
+                if(grid_spacing_m .ge. 5500.)then
                     plot_parms%iraster = 1
                     chigh = 40.
                     clow = -40.
                 else
                     plot_parms%iraster = 1
-                    chigh = 240.
-                    clow = -240.
+                    chigh = 400.
+                    clow = -400.
                 endif
 
                 call plot_field_2d(i4_valid,c_type_i,w_2d,scale
@@ -4252,6 +4252,8 @@ c
 
               var_2d = 'SH '
               ext = 'lq3'
+
+              plot_parms%iraster = 1
 
               if(c_type(1:2).eq.'rb')then ! balanced
                  call get_directory('balance',directory,lend)
