@@ -208,12 +208,15 @@ cdis
               else
                   pct_loop_total = 0.
               endif
-              write(6,*)'i4time loop/start/end/elapsed/% ='
-     1                                           ,i4_loop_total
-     1                                           ,i4_loop_start
-     1                                           ,i4_loop_end  
-     1                                           ,i4_elapsed     
-     1                                           ,pct_loop_total
+              
+              write(6,101)            i4_loop_total            
+     1                               ,i4_elapsed - i4_loop_total
+     1                               ,i4_loop_start
+     1                               ,i4_loop_end  
+     1                               ,i4_elapsed     
+     1                               ,pct_loop_total
+101           format(' i4time loop/nonloop/start/end/elapsed/% = ',
+     1               5i5,f8.2)
 
           elseif(iter .gt. 1)then
               if(r0_barnes_max_in .lt. 1.7 * grid_spacing_m)then
@@ -310,12 +313,12 @@ cdis
               else
                   pct_loop_total = 0.
               endif
-              write(6,*)'i4time loop/start/end/elapsed/% ='
-     1                                           ,i4_loop_total
-     1                                           ,i4_loop_start
-     1                                           ,i4_loop_end  
-     1                                           ,i4_elapsed     
-     1                                           ,pct_loop_total
+              write(6,101)            i4_loop_total             
+     1                               ,i4_elapsed - i4_loop_total
+     1                               ,i4_loop_start
+     1                               ,i4_loop_end  
+     1                               ,i4_elapsed     
+     1                               ,pct_loop_total
 
               write(6,*)
               write(6,*)' Calculate RMS of buffer obs'
@@ -1265,7 +1268,7 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
               exponent = -( float(kk-k)/r0_vert_ob )**2
               vertical_weight = exp(exponent)
 
-              if(.true. .and. n .le. 20)then
+              if(i .ge. Istart .and. i .le. Iend .and. n .le. 20)then
                   write(6,501)n,i,j,k,kk,vertical_weight,time_wt
      1                       ,obs_barnes(n)%value(1)
      1                       ,r0_vert_ob,exponent       
