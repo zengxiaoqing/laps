@@ -565,10 +565,11 @@ cdis
         else
             pct_loop_total = 0.
         endif
-        write(6,*)'i4time (FINAL) loop/elapsed/% ='
-     1                                           ,i4_loop_total
-     1                                           ,i4_elapsed     
-     1                                           ,pct_loop_total
+        write(6,998)           i4_loop_total                 
+     1                        ,i4_elapsed - i4_loop_total
+     1                        ,i4_elapsed     
+     1                        ,pct_loop_total
+998     format(' i4time (FINAL) loop/nonloop/total/% = ',3i5,f8.2)
 
         istat_wind = 1
 
