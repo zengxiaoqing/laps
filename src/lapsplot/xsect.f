@@ -794,6 +794,7 @@ c read in laps lat/lon and topo
             write(6,*)' Bad status returned from force_laps_config'
             return
           endif
+          call get_lapsplot_parms(namelist_parms,istatus)
           if(c_field(1:3) .eq. 'fcf')then ! montage case generally
 
 !-------------splice
@@ -1193,18 +1194,18 @@ c read in laps lat/lon and topo
 !               cint = 0.
                 cint = 10. 
 
-                if(grid_spacing_m .ge. 5000.)then
-                    chigh = 40.
-                    clow = -40.
+                if(grid_spacing_m .ge. 5500.)then
+                    chigh = 80.
+                    clow = -80.
                 elseif(grid_spacing_m .ge. 3500.)then
-                    chigh = 120.
-                    clow = -120.
+                    chigh = 800.
+                    clow = -800.
                 elseif(grid_spacing_m .ge. 2000.)then
-                    chigh = 240.
-                    clow = -240.
+                    chigh = 800.
+                    clow = -800.
                 else
-                    chigh = 320.
-                    clow = -320.
+                    chigh = 800.
+                    clow = -800.
                 endif
 
                 i_contour = -1
@@ -3327,7 +3328,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         if(i_contour .eq. 3)then ! Plot Cloud Type
             call set(vxmin, vxmax, vymin, vymax
      1             ,    1., float(NX_T), 1., float(NX_T), 1)
-            du=0.4
+            du=.0063 * (121./float(NX_T))
             rot = 0.
             do i = NX_T,1,-2
                 do k = ibottom,NZ_C
@@ -3342,7 +3343,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                       call upcase(c2_cloud_type,c2_cloud_type)
                         write(6,*)i_cloud_type,c2_cloud_type,x,y
 !                       call pwrity (x, y, c2_cloud_type, 2, 0, 0, 0)
-                        CALL PCMEQU(x, y, c2_cloud_type,.0063,0,0)       
+                        CALL PCMEQU(x, y, c2_cloud_type,du,0,0)       
                     endif
 
                 enddo ! k
