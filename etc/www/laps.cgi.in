@@ -257,7 +257,8 @@ close LAPSPRD;
 @frames_list[13] = "24";
 @frames_list[14] = "auto-1";
 @frames_list[15] = "auto-3";
-@frames_list[16] = "auto-6";
+@frames_list[16] = "auto-4";
+@frames_list[17] = "auto-6";
 
 @delay_list[0] = "25";
 @delay_list[1] = "50";
