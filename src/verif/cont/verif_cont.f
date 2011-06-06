@@ -77,9 +77,10 @@
         character*10  units_2d
         character*125 comment_2d
         character*3 var_2d
-        character*9 a9time,a9time_valid
-        character*150 hist_dir, cont_dir, verif_dir
-        character*150 hist_file
+        character*9 a9time,a9time_valid,a9time_initial
+        character*24 a24time_valid
+        character*150 hist_dir, cont_dir, verif_dir, plot_dir
+        character*150 hist_file, bias_file, ets_file
 
         integer n_fields
         parameter (n_fields=1)
@@ -100,6 +101,12 @@
         parameter (maxthr=5)
 
         real cont_4d(NX_L,NY_L,NZ_L,maxthr)
+        real bias(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
+        real ets(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
+
+!       Initialize arrays
+        bias = -999.
+        ets = -999.
 
         thresh_var = 20. ! lowest threshold for this variable
 
@@ -153,7 +160,7 @@
      1                                       //'/cont/'
      1                                       //c_model(1:len_model)
      1                                       //'/'
-!           len_cont = len_verif + 6 + lenvar + len_model
+            len_cont = len_verif + 6 + lenvar + len_model
 
             do itime_fcst = 0,n_fcst_times
 
@@ -169,17 +176,19 @@
                 i4_valid = i4_initial + itime_fcst * laps_cycle_time
 
                 call make_fnam_lp(i4_valid,a9time_valid,istatus)
+                call make_fnam_lp(i4_initial,a9time_initial,istatus)
 
                 write(6,*)
                 write(6,*)' Histograms for forecast time step '
      1                   ,itime_fcst,' Region = ',iregion
 
                 lun_out = 11
+                lun_bias = 12
+                lun_ets  = 13
 
                 write(c2_region,1)iregion
  1              format(i2.2)
 
-!               Add c_model to this?
                 hist_file = hist_dir(1:len_hist)//'/'//a9time_valid       
      1                                          //'_'//c2_region     
      1                                          //'.hist'     
@@ -196,11 +205,11 @@
      1             ,ext,var_2d,units_2d,comment_2d,var_anal_3d,istatus)
                   if(istatus .ne. 1)then
                         write(6,*)' Error reading 3D REF Analysis'
-                        return
+                        goto 900
                   endif
 
 
-		write(*,*)'beka',i4_valid
+	          write(*,*)'beka',i4_valid
 
                   if(var_2d .eq. 'REF')then ! also read radar quality
                       ext = 'lcv'
@@ -270,10 +279,16 @@
 
                   write(6,*)' Time, # of QC (2D) points (and/all)'
      1                     ,itime_fcst,n_rqc_and,n_rqc_all
-                  write(6,*)' Time, % of QC (2D) points (and/all)'
+                  if(n_rqc_and_pot .eq. 0)then
+                      write(6,*)
+     1                ' n_rqc_and_pot = 0, no echoes in 20dbz AND mask '       
+!                     goto 900
+                  else
+                      write(6,*)' Time, % of QC (2D) points (and/all)'
      1                     ,itime_fcst
      1                     ,float(n_rqc_and)/float(n_rqc_and_pot) * 100.
      1                     ,float(n_rqc_all)/float(n_rqc_all_pot) * 100.
+                  endif
 
                   if(n_rqc_all .eq. n_rqc_all_pot)then
                       write(6,*)' WARNING, 100% failed 3D radar QC test'
@@ -343,7 +358,9 @@
 
 
 !                 Calculate/Write Skill Scores
-                  call skill_scores(contable,lun_out)
+                  call skill_scores(contable,lun_out                 ! I
+     1                         ,bias(imodel,itime_fcst,iregion,idbz) ! O
+     1                         , ets(imodel,itime_fcst,iregion,idbz))! O
 
                   if(iregion .eq. 1)then
 
@@ -366,7 +383,47 @@
 
               close (lun_out) 
 
-            enddo ! itime_fcst
+ 900       enddo ! itime_fcst
+
+           do idbz = 1,1 ! nthr (move this outside model loop)
+
+           plot_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
+     1                                      //'/plot'
+!    1                                      //c_model(1:len_model)
+!    1                                      //'/'
+           len_plot = len_verif + 5 + lenvar ! + len_model
+
+!          write GNUplot file for the time series of this model (region 1)
+           bias_file = plot_dir(1:len_plot)//'/'
+     1                                     //'20/'
+     1                                     //a9time_initial     
+     1                                     //'.bias'     
+
+           write(6,*)'bias_file = ',bias_file
+
+           ets_file  = plot_dir(1:len_plot)//'/'
+     1                                     //'20/'
+     1                                     //a9time_initial     
+     1                                     //'.ets'      
+
+           write(6,*)'ets_file = ',ets_file
+
+           open(lun_bias,file=bias_file,status='unknown')
+           open(lun_ets,file=ets_file,status='unknown')
+           iregion = 1
+               do itime_fcst = 0,n_fcst_times
+                   i4_valid = i4_initial + itime_fcst * laps_cycle_time
+                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
+     1                                 ,istatus)
+                   write(lun_bias,901)a24time_valid     
+     1                             ,bias(imodel,itime_fcst,iregion,idbz)     
+                   write(lun_ets,901)a24time_valid     
+     1                              ,ets(imodel,itime_fcst,iregion,idbz)
+901                format(a24,3x,2f12.3)
+               enddo ! itime_fcst
+           close(lun_bias)
+           close(lun_ets)
+           enddo ! idbz
 
           endif ! c_model .ne. lga
 
