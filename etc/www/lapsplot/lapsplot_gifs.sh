@@ -13,7 +13,10 @@ delay=$4
 EXE_DIR=$5
 export LAPS_DATA_ROOT=$6
 export NCARG_ROOT=$7
+
+# Choices are "yes", "no", or the number of images if a montage is desired
 animate=$8
+
 RESOLUTION=$9
 
 SCRATCH_DIR=$LAPS_GIFS/scratch
@@ -113,6 +116,9 @@ date -u
 
 echo "lapsplot_gifs.sh: netpbm = $netpbm"
 
+#numimages=`ls -1 *.gif | wc -l`
+#echo "numimages = $numimages"
+
 #We assume we are running this script in LINUX and convert will not properly do AVS X on LINUX
 if test "$netpbm" = "yes" && test "$animate" = "no"; then 
     date
@@ -142,26 +148,59 @@ elif test "$netpbm" = "yes" && test "$animate" != "no"; then
 
     ls -l gmeta_$proc.*.sun.gif
 
+    numimages=`ls -1 *.gif | wc -l`
+    echo "numimages = $numimages"
+
+    echo " "
+    echo "Listing of $SCRATCH_DIR/$proc animation images"
+    ls -1r gmeta*.gif | tee files.txt
+
     if test "$animate" = "yes"; then
         echo "convert -delay $delay -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
         convert -delay $delay -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
-    else
-        numimages=`ls -1 *.gif | wc -l`
-        echo "numimages = $numimages"
+
+    else # make montage instead of animation, $animate is the number of images
+#       numimages=`ls -1 *.gif | wc -l`
+#       echo "numimages = $numimages"
 
         nmontage=$animate
 
         echo "nmontage = $nmontage"
 
-        x20=x20
+        montage_file=$SCRATCH_DIR/montage_$proc.sh
 
-        if test "$numimages" != "3"; then
-            echo "montage *.gif -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif"
-            montage *.gif -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif
+        if test -r "$montage_file"; then
+
+          echo "running montage file: $montage_file"
+          cat $montage_file
+          /bin/sh $montage_file
+          rm -f $montage_file
+
+          echo " "
+          echo "Listing of $SCRATCH_DIR/$proc animation images"
+          ls -1r gmeta_*_*.gif | tee files.txt
+          rm -f *sun*.gif
+
         else
-            echo "montage *.gif -mode Concatenate            $SCRATCH_DIR/gmeta_$proc.gif"
-            montage *.gif -mode Concatenate            $SCRATCH_DIR/gmeta_$proc.gif
-        fi    
+
+          x20=x20
+          x=x
+
+          if test "$numimages" == "3"; then # single row
+            echo "making single row"
+            echo "montage *.gif -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif"
+                  montage *.gif -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif
+          elif test "$numimages" == "4"; then # double row
+            echo "making double row"
+            echo "montage *.gif -mode Concatenate -tile 2x2           $SCRATCH_DIR/gmeta_$proc.gif"
+                  montage *.gif -mode Concatenate -tile 2x2           $SCRATCH_DIR/gmeta_$proc.gif
+          else                              # automatic settings
+            echo "making $nmontage (nmontage) columns"
+            echo "montage *.gif -mode Concatenate -tile $nmontage$x     $SCRATCH_DIR/gmeta_$proc.gif"
+                  montage *.gif -mode Concatenate -tile $nmontage$x     $SCRATCH_DIR/gmeta_$proc.gif
+          fi    
+
+        fi
 
     fi
 
@@ -169,9 +208,6 @@ elif test "$netpbm" = "yes" && test "$animate" != "no"; then
 #   echo "convert -delay $delay -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
 #   convert -delay $delay -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
 
-    echo " "
-    echo "Listing of $SCRATCH_DIR/$proc animation images"
-    ls -1r gmeta*.gif | tee files.txt
     ln -s -f /w3/lapb/looper/files.cgi files.cgi
 
     date -u
@@ -208,7 +244,8 @@ elif test "$ext2" = "x"; then
 
 #   Cleanup
     echo "Cleanup"
-    rm -f $SCRATCH_DIR/gmeta_temp_$proc.$ext2; mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rmdir $SCRATCH_DIR/$proc &
+!   rm -f $SCRATCH_DIR/gmeta_temp_$proc.$ext2; mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rmdir $SCRATCH_DIR/$proc &
+    rm -f $SCRATCH_DIR/gmeta_temp_$proc.$ext2; mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..                           &
 
 fi
 
