@@ -658,7 +658,7 @@ foreach $exe (@LAPS_EXE){
 
         if($nodes_current > 1){
 #           print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh\n";
-            print TFILE "mpirun -np $nodes_current $LAPSROOT/../../builds_mpi/laps/bin/$exe $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            print TFILE "mpirun -np $nodes_current LAPS_A9TIME=$yyjjjhhmm $LAPSROOT/../../builds_mpi/laps/bin/$exe $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log 2>&1\n";
 #           print TFILE_SUB "umask 002\n";
 #           print TFILE_SUB "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 #           print TFILE_SUB "$LAPSROOT/../../builds_mpi/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
