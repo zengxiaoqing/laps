@@ -15,8 +15,8 @@
 
 !       Calculate 3-D contingency table
         do k = 1,nk
-        do i = 1,nj
-        do j = 1,ni
+        do i = 1,ni
+        do j = 1,nj
   
           if(lmask_rqc_3d(i,j,k))then
 
