@@ -28,6 +28,7 @@
               read(11,2,err=999)a9_time
 2             format(1x,a9)
               close(11)
+              write(6,*)' systime (from systime.dat) = ',a9_time
           endif
 
           init = 1
