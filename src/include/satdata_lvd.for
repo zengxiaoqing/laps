@@ -6,6 +6,7 @@
       C_SAT_ID(6)='goes09'
       C_SAT_ID(7)='goes11'
       C_SAT_ID(8)='noaapo'
+      C_SAT_ID(9)='mtsat'
 
       C_SAT_TYPES = '   '
       C_CHANNEL_TYPES = '   '
@@ -43,6 +44,8 @@ c seventh satellite (goes11)
 c eighth satellite (noaa polar orbiter)
       C_SAT_TYPES(1,8)='ncp'
       C_SAT_TYPES(4,8)='rll'
+c ninth satellite (mtsat)
+      C_SAT_TYPES(4,9)='rll'
 c
 c ----
 c goes08 (first satellite type)
