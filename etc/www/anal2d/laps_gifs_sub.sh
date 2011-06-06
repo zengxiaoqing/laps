@@ -8,11 +8,13 @@ prod=$1
 WINDOW=$2
 LAPS_ETC=$3
 WWW_DIR=$4
-utc_hhmm=$5
+LAPS_A9TIME=$5
 LAPS_DATA_ROOT=$6
 latest=$7
 datetime=$8
 RESOLUTION=$9
+
+utc_hhmm=`echo $LAPS_A9TIME | cut -c6-9`
 
 SCRATCH_DIR=$WWW_DIR/anal2d
 
@@ -38,6 +40,7 @@ fi
 echo "prod ="$prod
 echo "WINDOW ="$WINDOW
 echo "NCARG_ROOT ="$NCARG_ROOT
+echo "LAPS_A9TIME ="$LAPS_A9TIME
 echo "utc_hhmm ="$utc_hhmm
 echo "LAPS_DATA_ROOT ="$LAPS_DATA_ROOT
 echo "latest ="$latest
@@ -57,7 +60,8 @@ else
     exit
 fi
 
-head -2 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c2-10     > $SCRATCH_DIR/lapsplot.$prod.tmp
+#head -2 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c2-10     > $SCRATCH_DIR/lapsplot.$prod.tmp
+echo $LAPS_A9TIME                                                    > $SCRATCH_DIR/lapsplot.$prod.tmp
 
 if test -r $LAPS_DATA_ROOT/static/www/lapsplot.$prod; then
     echo "Input to lapsplot.exe (dataroot) = $LAPS_DATA_ROOT/static/www/lapsplot.$prod"
