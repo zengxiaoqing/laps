@@ -1,5 +1,6 @@
 
-      subroutine skill_scores(contable,lun_out)
+      subroutine skill_scores(contable,lun_out           ! I
+     1                       ,bias,ets)                  ! O
 
 !     First index is observed, second index is forecast
 !     0 is Yes, 1 is No
@@ -12,19 +13,36 @@
       false_alarms      = contable(1,0)
       correct_negatives = contable(1,1)
 
+      rmiss = -999.
+
       total = hits + misses + false_alarms + correct_negatives
 
       accuracy = float(hits + correct_negatives) / float(total)
-      bias = float(hits + false_alarms) / float(hits + misses)
 
-      pod = float(hits) / float(hits + misses)
-      far = float(false_alarms) / 
-     1      float(hits + false_alarms)      
+      if(hits + misses .gt. 0)then
+          bias = float(hits + false_alarms) / float(hits + misses)
+          pod = float(hits) / float(hits + misses)
+      else
+          bias = rmiss
+          pod = rmiss
+      endif
+
+      if(hits + false_alarms .gt. 0)then
+          far = float(false_alarms) / 
+     1          float(hits + false_alarms)      
+      else
+          far = rmiss
+      endif
 
       hits_random = float((hits + misses) * (hits + false_alarms)) 
      1            / float(total)
-      ets = (hits - hits_random) / 
-     1      (hits + misses + false_alarms - hits_random)
+
+      denom = float(hits + misses + false_alarms) - hits_random
+      if(denom .gt. 0.)then
+          ets = (float(hits) - hits_random) / denom
+      else
+          ets = rmiss
+      endif
 
       write(lun_out,*)' Hits = ',hits
       write(lun_out,*)' Misses = ',misses
