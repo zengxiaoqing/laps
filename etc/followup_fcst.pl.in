@@ -104,7 +104,7 @@ my $followup_xsect =  "@prefix@/etc/www/followup_fcst_xsect.sh $domain $model $d
 my $followup_spaghetti = "@prefix@/etc/www/followup_ensemble.sh $domain ensemble $dataroot $window $resolution @prefix@";
 
 my $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
-my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 36 $domain $model\n";
+my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 72 $domain $model\n";
 my $output_inc = $opt_f;     # Forecast output interval (hours)
 my $cycle_freq = $opt_c;     # Cycle frequency in hours
 my $timeout = $opt_c*3600;   # Seconds to wait before giving up after starting
