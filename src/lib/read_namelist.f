@@ -39,7 +39,7 @@ cdoc  Reads static/satellite_lvd.nl file.
      &csatid,csattypes,cchanneltypes,cpath2sat,
      &i_qc_sat_flag,istatus)
 
-      if(.false.)then
+      if(.true.)then
 
       is=0
       kk=0
@@ -574,167 +574,31 @@ c
 
       ISATS=0
       do i=1,nsats
-       if(csatid(i).eq.'goes08')then
-         ISATS(1)=1
-         c_sat_id(1)=csatid(i)
-       elseif(csatid(i).eq.'meteos')then
-         ISATS(2)=1
-         c_sat_id(2)=csatid(i)
-       elseif(csatid(i).eq.'goes10')then
-         ISATS(3)=1
-         c_sat_id(3)=csatid(i)
-       elseif(csatid(i).eq.'gmssat')then
-         ISATS(4)=1
-         c_sat_id(4)=csatid(i)
-       elseif(csatid(i).eq.'goes12')then
-         ISATS(5)=1
-         c_sat_id(5)=csatid(i)
-       elseif(csatid(i).eq.'goes09')then
-         ISATS(6)=1
-         c_sat_id(6)=csatid(i)
-       elseif(csatid(i).eq.'goes11')then
-         c_sat_id(7)=csatid(i)
-         ISATS(7)=1
-       elseif(csatid(i).eq.'noaapo')then
-         c_sat_id(8)=csatid(i)
-         ISATS(8)=1
-       endif
-      enddo
+        do js = 1,maxsat
+          if(csatid(i).eq.satellite_ids(js))then
+            ISATS(js)=1
+            c_sat_id(js)=csatid(i)
+          endif
+        enddo ! js
+      enddo ! i
 
       ITYPES=0
       jj=0
       do i=1,nsats
-
-c first satellite (goes08)
-       if(csatid(i).eq.'goes08')then
-        do j=1,ntypes(i)
-         jj=jj+1
-         if(csattypes(jj).eq.'gvr')then
-          ITYPES(1,1)=1
-          c_sat_types(1,1)=csattypes(jj)
-         elseif(csattypes(jj).eq.'wfo')then
-          ITYPES(2,1)=1
-          c_sat_types(2,1)=csattypes(jj)
-         elseif(csattypes(jj).eq.'cdf')then
-          ITYPES(3,1)=1
-          c_sat_types(3,1)=csattypes(jj)
-         elseif(csattypes(jj).eq.'rll')then
-          ITYPES(4,1)=1
-          c_sat_types(4,1)=csattypes(jj)
-         endif
-        enddo
-
-c second satellite (meteosat)
-       elseif(csatid(i).eq.'meteos')then
-        do j=1,ntypes(i)
-         jj=jj+1
-         if(csattypes(jj).eq.'rll')then
-          ITYPES(4,2)=1
-          c_sat_types(4,2)=csattypes(jj)
-         elseif(csattypes(jj).eq.'cdf')then
-          ITYPES(3,2)=1
-          c_sat_types(3,2)=csattypes(jj)
-         endif
-        enddo
-
-c third satellite (goes10)
-       elseif(csatid(i).eq.'goes10')then
-        do j=1,ntypes(i)
-         jj=jj+1
-         if(csattypes(jj).eq.'gvr')then
-          ITYPES(1,3)=1
-          c_sat_types(1,3)=csattypes(jj)
-         elseif(csattypes(jj).eq.'wfo')then
-          ITYPES(2,3)=1
-          c_sat_types(2,3)=csattypes(jj)
-         elseif(csattypes(jj).eq.'rll')then
-          ITYPES(4,3)=1
-          c_sat_types(4,3)=csattypes(jj)
-         endif
-        enddo
-
-c forth satellite (gms)
-       elseif(csatid(i).eq.'gmssat')then
-        do j=1,ntypes(i)
-         jj=jj+1
-         if(csattypes(jj).eq.'hko')then
-          ITYPES(2,4)=1
-          c_sat_types(2,4)=csattypes(jj)
-         elseif(csattypes(jj).eq.'twn')then
-          ITYPES(3,4)=1
-          c_sat_types(3,4)=csattypes(jj)
-         elseif(csattypes(jj).eq.'rll')then
-          ITYPES(4,4)=1
-          c_sat_types(4,4)=csattypes(jj)
-         endif
-        enddo
-
-c fifth satellite (goes12)
-       elseif(csatid(i).eq.'goes12')then
-        do j=1,ntypes(i)
-         jj=jj+1
-         if(csattypes(jj).eq.'gvr')then
-          ITYPES(1,5)=1
-          c_sat_types(1,5)=csattypes(jj)
-         elseif(csattypes(jj).eq.'wfo')then
-          ITYPES(2,5)=1
-          c_sat_types(2,5)=csattypes(jj)
-         elseif(csattypes(jj).eq.'cdf')then
-          ITYPES(3,5)=1
-          c_sat_types(3,5)=csattypes(jj)
-         elseif(csattypes(jj).eq.'rll')then
-          ITYPES(4,5)=1
-          c_sat_types(4,5)=csattypes(jj)
-         endif
-        enddo
-
-c sixth satllite (goes09)
-       elseif(csatid(i).eq.'goes09')then
-        do j=1,ntypes(i)
-         jj=jj+1
-         if(csattypes(jj).eq.'gvr')then
-          ITYPES(1,6)=1
-          c_sat_types(1,6)=csattypes(jj)
-         elseif(csattypes(jj).eq.'cdf')then
-          ITYPES(3,6)=1
-          c_sat_types(3,6)=csattypes(jj)
-         elseif(csattypes(jj).eq.'rll')then
-          ITYPES(4,6)=1
-          c_sat_types(4,6)=csattypes(jj)
-         endif
-        enddo
-c seventh satellite (goes11)
-       elseif(csatid(i).eq.'goes11')then
-        do j=1,ntypes(i)
-         jj=jj+1
-         if(csattypes(jj).eq.'gvr')then
-          ITYPES(1,7)=1
-          c_sat_types(1,7)=csattypes(jj)
-         elseif(csattypes(jj).eq.'wfo')then
-          ITYPES(2,7)=1
-          c_sat_types(2,7)=csattypes(jj)
-         elseif(csattypes(jj).eq.'cdf')then
-          ITYPES(3,7)=1
-          c_sat_types(3,7)=csattypes(jj)
-         elseif(csattypes(jj).eq.'rll')then
-          ITYPES(4,7)=1
-          c_sat_types(4,7)=csattypes(jj)
-         endif
-        enddo
-c eigth satellite (noaa polar orbiter)
-       elseif(csatid(i).eq.'noaapo')then
-        do j=1,ntypes(i)
-         jj=jj+1
-         if(csattypes(jj).eq.'rll')then      !raw lat-lon > could be (likely is) netcdf format
-          ITYPES(4,8)=1
-          c_sat_types(4,8)=csattypes(jj)
-         elseif(csattypes(jj).eq.'ncp')then  !earth-projected polar stereographic netcdf format (FMI)
-          ITYPES(1,8)=1
-          c_sat_types(1,8)=csattypes(jj)
-         endif
-        enddo
-       endif
-      enddo
+        do js = 1,maxsat
+          if(csatid(i).eq.satellite_ids(js))then
+            do j=1,ntypes(i)
+              jj=jj+1
+              do it = 1,4
+                if(csattypes(jj).eq.satellite_types(it,js))then !raw lat-lon > could be (likely is) netcdf format
+                  ITYPES(it,js)=1
+                  c_sat_types(it,js)=csattypes(jj)
+                endif
+              enddo ! it
+            enddo ! j
+          endif 
+        enddo ! is
+      enddo ! i
 
 c ----
 c goes08 (first satellite type)
@@ -1487,6 +1351,35 @@ c format type 4 (rll)
            endif
           enddo
           path_to_raw_sat(1:6,4,8)=cpath2sat(jj)
+         endif
+        enddo
+
+c satellite = MTSAT
+       elseif(csatid(i).eq.'mtsat')then
+        is = 9
+        do j=1,ntypes(i)
+         jj=jj+1
+c format type 1 (ncp): netcdf polar (FMI's data type). Stored like wfo
+         if(csattypes(jj).eq.'rll')then
+c format type 4 (rll)
+          it = 4
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,it,is)=1
+            c_channel_types(1,it,is)=cchanneltypes(kk)
+            i_msng_sat_flag(1,it,is)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u ')then
+            ICHANNELS(2,it,is)=1
+            c_channel_types(2,it,is)=cchanneltypes(kk)
+            i_msng_sat_flag(2,it,is)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,it,is)=1
+            c_channel_types(4,it,is)=cchanneltypes(kk)
+            i_msng_sat_flag(4,it,is)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,it,is)=cpath2sat(jj)
          endif
         enddo
        endif
