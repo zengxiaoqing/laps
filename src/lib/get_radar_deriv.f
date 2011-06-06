@@ -1,9 +1,10 @@
-       subroutine get_radar_deriv(nx,ny,nz,dx,r_miss,
-     1                           radar_ref_3d,clouds_3d,cld_hts,
-     1                           temp_3d,heights_3d,pres_3d,
-     1                           ibase_array,itop_array,thresh_cvr,
+       subroutine get_radar_deriv(nx,ny,nz,dx,r_miss,                   ! I
+     1                           radar_ref_3d,clouds_3d,cld_hts,        ! I
+     1                           temp_3d,heights_3d,pres_3d,            ! I
+     1                           ibase_array,itop_array,thresh_cvr,     ! I
      1                           vv_to_height_ratio_Cu,                 ! I
-     1                           cldpcp_type_3d,w_3d,istatus)
+     1                           cldpcp_type_3d,                        ! I
+     1                           w_3d,istatus)                          ! I/O
 !      Adan Teng
 !      this rutine calculate the cloud bogus omega in radar echo area
 !      First does the convective and stratiform region seperate
@@ -32,9 +33,11 @@
        integer i,j,k
        integer nxx,nyy,ier
        integer str_con_index(nx,ny)
+       integer i_strcon
        integer index_random(nx,ny)
        real  radar_2d_max(nx,ny)             ! dbZ (while in this routine)
        logical l_cloud
+       logical l_use_random                  ! utilize random indices
        real temp_1d(nz)
        real heights_1d(nz)
        real pressure_mb(nz)
@@ -43,12 +46,15 @@
        integer cloud_type_1d(nz)
        real  radar_ref_max ! dbZ
        real w_1d(nz)
-       real w_to_omega
+       real w_to_omega,om_orig
        integer strcon
        integer rand_index
        integer dbz(nx,ny)
        real dx1
        integer nstep 
+
+       l_use_random = .false.
+       i_strcon = 2 ! 0 - automatic index, 2 - convective
 
        istatus = 1
        if (dx .lt. 1500.) then
@@ -65,10 +71,11 @@
        write(6,*)' calling get_con_str, nxx/nyy = ',nxx,nyy
 
 !      Determine convective and stratiform regions
-       call get_con_str(nx,ny,nz,nxx,nyy,radar_ref_3d,
-     1                  pres_3d,temp_3d,str_con_index,
-     1                  radar_2d_max,r_miss,ier,index_random,
-     1                  dx1)
+       call get_con_str(nx,ny,nz,nxx,nyy,radar_ref_3d,           ! I
+     1                  pres_3d,temp_3d,                         ! I
+     1                  str_con_index,                           ! O
+     1                  radar_2d_max,r_miss,ier,index_random,    ! O
+     1                  dx1)                                     ! O
        if( ier .eq. 0) then
         write(*,*)'Cannot separate convection and stratiform region'
         istatus = 0
@@ -91,18 +98,38 @@
            w_1d(k) = r_miss
           enddo
           radar_ref_max = radar_2d_max(i,j)
-          strcon = str_con_index(i,j) 
-          rand_index = index_random(i,j)
+
+          if(i_strcon .eq. 0)then
+              strcon = str_con_index(i,j) 
+          else
+              strcon = i_strcon
+          endif
+
+          if(l_use_random)then
+              rand_index = index_random(i,j)
+          else
+              rand_index = 2
+          endif
+
           if ( l_cloud ) then
            if ( strcon .ne. 0 ) then
-            call radar_bogus_w
+            if(radar_ref_max .ne. r_miss)then
+              call radar_bogus_w
      1           (dx, cloud_type_1d, heights_1d, temp_1d,
      1            radar_ref_max, strcon, nz, w_1d,
      1            vv_to_height_ratio_Cu,                                    ! I
      1            rand_index)
+            endif
             do k = 1, nz
              if( w_1d(k) .ne. r_miss ) then
+!             om_orig = w_3d(i,j,k)
               w_3d(i,j,k) = w_to_omega(w_1d(k), pressure_pa(k))
+!             if(w_3d(i,j,k) .ne. om_orig .or. 
+!    1           radar_ref_max .ne. r_miss     )then
+!                 write(6,*)' orig/om/w/ref='
+!    1                     ,om_orig,w_3d(i,j,k),w_1d(k),radar_ref_max
+!    1                     ,i,j,k
+!             endif
              endif
             enddo 
            endif   ! strcon
@@ -134,20 +161,34 @@
        real zbase, ztop
        real ratio_radar
        real depth, vvmax
+       logical l_always_use_cloud,l_always_use_radar
 
 !   Cloud Type      /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
 !   Integer Value     0     1    2    3    4    5    6    7    8    9   10
 
-! Put in the vv's for cumuliform clouds with radar reflectivity
+       l_always_use_radar = .true. ! original was .false.
+       l_always_use_cloud = .true. ! original was .false.
+
+! Put in the vv's for cumuliform clouds with radar reflectivity as determined
+! by cloud type at the base
        vv_to_height_ratio = vv_to_height_ratio_Cu
        ratio = vv_to_height_ratio / dx 
     
+       if(.not. l_always_use_cloud)then
         Do k = 1, nz
          If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           kbase = k
           Go to 10
          End if
         End do
+       else
+        Do k = 1, nz
+         If (cloud_type(k) .ne. 0) then
+          kbase = k
+          Go to 10
+         End if
+        End do
+       endif
         Go to 100
 
 10      Do k = kbase, nz
@@ -170,10 +211,13 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           ratio_radar=0.
           depth = ztop - zbase
           if (depth.ne.0) then
-           if(radar_ref_max .gt. 0. ) then
+           if(radar_ref_max .gt. 0.) then
             vvmax=4.32*radar_ref_max**0.0714286
+            write(6,*)' radar_ref_max/vvmax = ',radar_ref_max,vvmax
             ratio_radar=vvmax / depth / 1.1
-            if(ratio_radar .gt. ratio) ratio = ratio_radar
+            if(ratio_radar .gt. ratio .or. l_always_use_radar)then
+             ratio = ratio_radar
+            endif
            endif
           else
            write(6,*) 'depth =',depth, 'No changes to ratio'
