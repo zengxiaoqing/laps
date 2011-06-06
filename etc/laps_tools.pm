@@ -349,9 +349,10 @@ balance balance/lt1 balance/lw3 balance/lh3 balance/lq3 balance/lsx balance/air 
 grid ram rsf lsq tmg hmg lst pbl model model/varfiles model/output model/sfc
 verif verif/noBal verif/Bal verif/Bkgd 
 verif/REF
-verif/REF/hist verif/REF/cont 
-verif/SWI
-verif/SWI/pt
+verif/REF/hist verif/REF/cont verif/REF/plot 
+verif/REF/plot/20 verif/REF/plot/30 verif/REF/plot/40 verif/REF/plot/50 verif/REF/plot/60
+verif/SWI verif/SWI/pt
+verif/TSF verif/TSF/pt
 ensemble
 ensemble/mean
 gr2);
