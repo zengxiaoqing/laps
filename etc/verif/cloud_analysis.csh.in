@@ -54,9 +54,8 @@ ls -l $LOGDIR/load.png
 
 # Create summary file
 cd $LOGDIR
-touch solar.log 
 foreach wgi (cloud.wgi.*)
-    echo " "                                       >> solar.log     
+    echo " "                                        > solar.log     
     echo " $wgi"                                   >> solar.log
     grep bias $wgi | grep -v residuals             >> solar.log
     grep means $wgi                                >> solar.log
