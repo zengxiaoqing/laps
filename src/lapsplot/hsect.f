@@ -8204,6 +8204,7 @@ c abdel
         character*9 asc9_tim
 
         real field_2d(NX_L,NY_L)
+        real field_2d_plot(NX_L,NY_L)
 
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
@@ -8239,16 +8240,24 @@ c abdel
 
         call downcase(c_type,c_type)
 
+        if(plot_parms%l_hinterp_zoom)then
+            field_2d_plot = field_2d ! interpolate based on zoom
+        else
+            field_2d_plot = field_2d
+        endif
+
 !       if( (c_type(len_type:len_type)  .ne. 'i' .or. c_type  .eq. 'hi')       
 !    1                          .AND. 
         if(                   i_image .eq. 0                       )then       
             write(6,*)' plot_field_2d - contour plot ',c_type
             if(cint_in .eq. 0.)then
-                call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+                call contour_settings(field_2d_plot,NX_L,NY_L
+     1                               ,clow,chigh,cint       
      1                               ,zoom,density,scale)
 
             elseif(clow_in .eq. 0. .and. chigh_in .eq. 0.)then
-                call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+                call contour_settings(field_2d_plot,NX_L,NY_L
+     1                               ,clow,chigh,cint       
      1                               ,zoom,density,scale)
 
                 cint = cint_in
@@ -8259,7 +8268,7 @@ c abdel
 
             endif
 
-            call plot_cont(field_2d,scale,clow,chigh,cint
+            call plot_cont(field_2d_plot,scale,clow,chigh,cint
      1                        ,asc9_tim,namelist_parms,plot_parms
      1                        ,c_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L,NY_L
@@ -8270,7 +8279,7 @@ c abdel
      1               ,clow_img,chigh_img
 
             if(clow_img .eq. 0. .and. chigh_img .eq. 0.)then
-                call contour_settings(field_2d,NX_L,NY_L
+                call contour_settings(field_2d_plot,NX_L,NY_L
      1                               ,clow_img,chigh_img,cint       
      1                               ,zoom,density,scale)
             endif
@@ -8279,7 +8288,7 @@ c abdel
                     plot_parms%icol_barbs = +1 ! keep future barbs plots bright
             endif
 
-            call ccpfil(field_2d,NX_L,NY_L
+            call ccpfil(field_2d_plot,NX_L,NY_L
      1                 ,clow_img,chigh_img ! *scale      
      1                 ,colortable,n_image,scale,'hsect',plot_parms
      1                 ,namelist_parms)       
