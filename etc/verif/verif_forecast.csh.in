@@ -1,0 +1,76 @@
+#!@CSH@ 
+
+# First argument is $LAPS_DATA_ROOT
+
+# Second argument is number of forecast time steps
+
+# Third argument is the type "pt" or "grid"
+
+# Fourth argument is the variable (upper case)
+
+# Fifth argument is the yrange
+
+# Sixth argument is the overall title variable
+
+# Seventh argument is the units
+
+setenv LAPSINSTALLROOT @prefix@
+setenv LAPS_DATA_ROOT $1
+setenv NLINE $2
+setenv TYPE $3
+setenv VAR $4
+setenv YRANGE $5
+
+setenv VAR_LC `echo $VAR | gawk '{print tolower($0)}'`
+
+#setenv LAPS_DATA_ROOT /data/fab/projects/dwr
+setenv LOGDIR $LAPS_DATA_ROOT/log
+
+setenv MODELTIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
+
+setenv file $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/$MODELTIME.stats
+
+echo " "
+echo "inputs..."
+echo "file = $file"  
+ls -l $file                                                     
+
+@ NLINE = $NLINE + 1
+
+# obtain xrange times from the data file
+setenv STARTTIME1 `head -1       $file           | cut -c2-12` ; echo $STARTTIME1
+setenv STARTTIME2 `head -1       $file           | cut -c14-24`; echo $STARTTIME2
+setenv STOPTIME1  `head -$NLINE $file | tail -1 | cut -c1-12` ; echo $STOPTIME1
+setenv STOPTIME2  `head -$NLINE $file | tail -1 | cut -c14-24`; echo $STOPTIME2
+
+# Construct gnuplot .gp file
+setenv GNUPLOTFILE $LOGDIR/$VAR_LC\_$TYPE\_fcst.gp
+setenv PNGFILE     $LOGDIR/$VAR_LC\_$TYPE\_fcst.png
+setenv DQUOTE \"
+echo 'set terminal png size 1200,800'                                     > $GNUPLOTFILE
+echo 'set xdata time'                                                    >> $GNUPLOTFILE
+echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
+echo 'set output '$DQUOTE$PNGFILE$DQUOTE                                 >> $GNUPLOTFILE
+
+# time range must be in same format as data file
+#echo 'set xrange ["2-FEB-2011 12:00:00.00":"2-FEB-2011 18:00:00.00"]'    >> $GNUPLOTFILE
+echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
+echo 'set yrange [0:'$YRANGE']'                                           >> $GNUPLOTFILE
+echo 'set grid'                                                           >> $GNUPLOTFILE
+echo 'set xlabel "Date Time"'                                             >> $GNUPLOTFILE
+echo 'set ylabel "'$6 $7' "'                                              >> $GNUPLOTFILE
+echo 'set title "'$6' Observed vs Forecast"'                              >> $GNUPLOTFILE
+echo 'set key left box'                                                   >> $GNUPLOTFILE
+echo 'plot '$DQUOTE$file$DQUOTE' using 1:3 title "Forecast" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+echo        $DQUOTE$file$DQUOTE' using 1:4 title "Observed" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+echo        $DQUOTE$file$DQUOTE' using 1:5 title "RMS"      with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+
+
+# Run gnuplot
+gnuplot < $GNUPLOTFILE
+
+echo " "
+echo "outputs..."
+ls -l $GNUPLOTFILE
+ls -l $PNGFILE                          
+
