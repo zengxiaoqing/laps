@@ -43,6 +43,7 @@
           sequence
 
           logical l_discrete
+          logical l_hinterp_zoom
 
           real rimage_intensity
           real zoom
