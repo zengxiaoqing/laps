@@ -1,0 +1,74 @@
+#!@CSH@
+
+# First argument is $LAPS_DATA_ROOT
+
+# Second argument is number of forecast time steps
+
+# Third argument is the type of statistic
+
+# Fourth argument is Y range upper limit
+
+# Fifth argument is Reflectivity in dbz
+
+setenv LAPSINSTALLROOT @prefix@
+setenv LAPS_DATA_ROOT $1
+setenv NLINE $2
+setenv STAT $3
+setenv YRANGE $4
+setenv REFLECTIVITY $5
+
+#setenv LAPS_DATA_ROOT /data/fab/projects/dwr
+setenv LOGDIR $LAPS_DATA_ROOT/log
+
+setenv MODELTIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
+
+#setenv model wrf-wsm6
+#setenv fcsttime 01
+
+setenv STAT_LC `echo $STAT | gawk '{print tolower($0)}'`
+
+setenv file $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
+
+echo " "
+echo "inputs..."
+echo "file = $file"  
+ls -l $file                                                     
+
+@ NLINE = $NLINE + 1
+
+# obtain xrange times from the data file
+setenv STARTTIME1 `head -1       $file           | cut -c1-11` ; echo $STARTTIME1
+setenv STARTTIME2 `head -1       $file           | cut -c13-23`; echo $STARTTIME2
+setenv STOPTIME1  `head -$NLINE $file | tail -1 | cut -c1-11` ; echo $STOPTIME1
+setenv STOPTIME2  `head -$NLINE $file | tail -1 | cut -c13-23`; echo $STOPTIME2
+
+# Construct gnuplot .gp file
+setenv GNUPLOTFILE $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.gp
+setenv PNGFILE     $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
+setenv DQUOTE \"
+
+echo 'set terminal png size 1200,600'                                     > $GNUPLOTFILE
+echo 'set xdata time'                                                    >> $GNUPLOTFILE
+echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
+echo 'set output '$DQUOTE$PNGFILE$DQUOTE                                 >> $GNUPLOTFILE
+
+# time range must be in same format as data file
+echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
+echo 'set yrange [0:'$YRANGE']'                                          >> $GNUPLOTFILE
+echo 'set grid'                                                          >> $GNUPLOTFILE
+echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
+echo 'set xlabel "Date Time"'                                            >> $GNUPLOTFILE
+echo 'set ylabel "Radar Reflectivity '$STAT'"'                           >> $GNUPLOTFILE
+echo 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'"'         >> $GNUPLOTFILE
+echo 'set key left box'                                                  >> $GNUPLOTFILE
+echo 'plot '$DQUOTE$file$DQUOTE' using 1:3 title "'$STAT'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+
+
+# Run gnuplot
+gnuplot < $GNUPLOTFILE
+
+echo " "
+echo "outputs..."
+ls -l $GNUPLOTFILE
+ls -l $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
+
