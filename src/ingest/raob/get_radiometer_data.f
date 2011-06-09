@@ -227,7 +227,13 @@ C The netcdf variables are filled - your snd write call may go here
 C
 !     Initial loop through obs to get times and stanums
       do iob = 1,recNum
-          read(providerId(iob),'(3x,i2)')iwmostanum(iob)
+          read(providerId(iob),'(3x,i2)',err=101)iwmostanum(iob)
+          goto 102
+101       iwmostanum(iob) = iob
+          write(6,*)' Warning: unreadable providerId '
+     1             ,trim(providerId(iob))
+102       continue
+
           if(abs(observationTime(iob)) .le. 1e10)then
               i4time_ob = idint(observationTime(iob))+315619200
               call make_fnam_lp(i4time_ob,a9time_ob_r(iob),istatus)
