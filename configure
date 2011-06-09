@@ -3184,7 +3184,11 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
+          etc/verif/verif_fcst_driver.csh
+          etc/verif/verif_forecast.csh
           etc/verif/cloud_analysis.csh
+          etc/verif/cloud_forecast.csh
+          etc/verif/radar_forecast.csh
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
           etc/www/laps_products.cgi
@@ -3340,7 +3344,11 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
+          etc/verif/verif_fcst_driver.csh
+          etc/verif/verif_forecast.csh
           etc/verif/cloud_analysis.csh
+          etc/verif/cloud_forecast.csh
+          etc/verif/radar_forecast.csh
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
           etc/www/laps_products.cgi
