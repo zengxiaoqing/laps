@@ -1252,7 +1252,9 @@ C DRAW LIMB LINES
      1       400,400,345),IPROJ
 
 C LAMBERT CONFORMAL CONIC           [3]
-  305 DLAT = 1.
+  305 continue
+      go to 400 ! test to eliminate spurious line
+      DLAT = 1.
       RLON = PHIO+CON2
       OLAT = AMAX1(-90.,SPLAT(2)-DLAT)
       K = CLING(SPLAT(1)-SPLAT(2))
