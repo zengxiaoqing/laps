@@ -129,6 +129,7 @@ cdis
         plot_parms%obs_size = 1.0
         plot_parms%ncols = 0.
         plot_parms%icol_barbs = namelist_parms%icol_barbs
+        plot_parms%l_hinterp_zoom = .false.
 
         if(.true.)then       ! testcode
 !           call GOPKS(6,10000)
