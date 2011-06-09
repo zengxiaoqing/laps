@@ -109,7 +109,7 @@ c
       integer max_files,bg_files
       integer itime_inc
       integer itime
-      parameter (max_files=2000)
+      parameter (max_files=20000)
       character*256 names(max_files)
       character*256 reject_names(max_files)
       integer reject_cnt
@@ -421,53 +421,6 @@ c
       print *,'No acceptable background model found.'
       
 c
-      end
-c ===============================================================
-      subroutine checknan_2d(x,ni,nj,nan_flag)
-c
-c     Routine to check a real 2-d array for NaN's.
-c
-      integer ni,nj
-      real   x(ni,nj)
-c
-      nan_flag = 1
-c
-      do j=1,nj
-      do i=1,ni
-         if( nan( x(i,j) ) .eq. 1) then
-            print *,' ** ERROR. Found a NaN at ', i, j
-            nan_flag = -1
-            return
-         endif
-      enddo !i
-      enddo !j
-c
-      return
-      end
-c
-c
-      subroutine checknan_3d(x,ni,nj,nk,nan_flag)
-c
-c     Routine to check a real 3-d array for NaN's.
-c
-      integer ni,nj,nk
-      real   x(ni,nj,nk)
-c
-      nan_flag = 1
-c
-      do k=1,nk
-      do j=1,nj
-      do i=1,ni
-         if( nan( x(i,j,k) ) .eq. 1) then
-            print *,' ** ERROR. Found a NaN at ', i, j, k
-            nan_flag = -1
-            return
-         endif
-      enddo !i
-      enddo !j
-      enddo !k
-c
-      return
       end
 c
 c
