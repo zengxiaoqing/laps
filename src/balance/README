@@ -3,6 +3,7 @@
 
    qbalpe_main_sfc                       qbalpe.f
        qbalpe_stag                          "
+           balstagger
            balcon                           "
                leib_sub                     "
                    leib_p3                  "
@@ -12,4 +13,7 @@
                leib_sub
                    leib_pe
                analzo
-       put_sfc_bal                       lib/put_sfc_bal.f
+          balstagger
+          sfctempadj
+          put_sfc_bal                   lib/put_sfc_bal.f
+          write_bal_laps
