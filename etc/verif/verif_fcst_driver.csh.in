@@ -13,15 +13,29 @@ setenv NTIMES $5
 
 perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 > $LAPS_DATA_ROOT/time/modeltime.dat 
 
-# Solar verification.......................................................................................
+# Point verification (Solar and Sfc Temp)..................................................................
 
 $LAPSINSTALLROOT/bin/verif_fcst.exe $4 $NTIMES $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log
 
-$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $NTIMES > $LAPS_DATA_ROOT/log/cloud_fcst.log
+$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $NTIMES                                   > $LAPS_DATA_ROOT/log/cloud_fcst.log
+
+# For the following plots we want to add in the analysis time as well
+@ NTIMES = $NTIMES + 1
+
+echo '$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 100. "Surface Temperature" "Deg F" >& $LAPS_DATA_ROOT/log/tsf_fcst.log'
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 100. "Surface Temperature" "Deg F" >& $LAPS_DATA_ROOT/log/tsf_fcst.log
 
 # Radar verification........................................................................................
 
-setenv LAPS_A9TIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
+echo "setenv LAPS_A9TIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`"
+      setenv LAPS_A9TIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
 
-$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log
+echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log"
+      $LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log
 
+foreach THRESH (20 30 40)
+    $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH > $LAPS_DATA_ROOT/log/radar_fcst_bias_$THRESH.log
+    $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH > $LAPS_DATA_ROOT/log/radar_fcst_ets_$THRESH.log
+end
+
+# Consider a montage of the reflectivity images?
