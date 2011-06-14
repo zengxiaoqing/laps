@@ -152,7 +152,7 @@ CONTAINS
     REAL                                 :: lat1,lat2,lon1,lon2,lov
     REAL, PARAMETER                      :: llscale = 1.e6
     REAL, PARAMETER                      :: dxscale = 1000.
-    REAL, PARAMETER                      :: eradscale = 0.01 
+    REAL, PARAMETER                      :: eradscale = 1
     ig2status = 0 
     ! Initialize is3 
 
@@ -177,7 +177,7 @@ CONTAINS
     IF (grid%code .EQ. PROJ_MERC) THEN
       is3(13) = 10
       is3(15) = 1  ! Spherical earth, radius provided by user
-      is3(16) = 1  ! Scale factor for spherical earth radius
+      is3(16) = 0  ! Scale factor for spherical earth radius
       is3(17) = NINT(earth_radius_m*eradscale)
       is3(31) = grid%nx
       is3(35) = grid%ny
@@ -194,7 +194,7 @@ CONTAINS
     ELSEIF (grid%code .EQ. PROJ_LC) THEN
       is3(13) = 30
       is3(15) = 1  ! Spherical earth, radius provided by user
-      is3(16) = 1  ! Scale factor for spherical earth radius
+      is3(16) = 0  ! Scale factor for spherical earth radius
       is3(17) = NINT(earth_radius_m*eradscale)
       is3(31) = grid%nx
       is3(35) = grid%ny
@@ -221,7 +221,7 @@ CONTAINS
     ELSEIF (grid%code .EQ. PROJ_PS) THEN
       is3(13) = 20
       is3(15) = 1  ! Spherical earth, radius provided by user
-      is3(16) = 1  ! Scale factor for spherical earth radius
+      is3(16) = 0  ! Scale factor for spherical earth radius
       is3(17) = NINT(earth_radius_m*eradscale)
       is3(31) = grid%nx
       is3(35) = grid%ny
