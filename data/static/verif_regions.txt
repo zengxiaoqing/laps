@@ -1,0 +1,3 @@
+0  ! number of regions             (0 is automated single full domain, otherwise first one should be full domain)
+12 ! number of fcst times to check (excluding analysis time)
+2  ! number of models     (first one is analysis, then for example 'wrf-lin-kessler','wrf-lin-rams','wrf-sch-kessler','wrf-sch-rams','wrf-wsm6-kessler','wrf-wsm6-rams')
