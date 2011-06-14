@@ -77,6 +77,7 @@
         character*10  units_2d
         character*125 comment_2d
         character*3 var_2d
+        character*5 fcst_hh_mm
         character*9 a9time,a9time_valid,a9time_initial
         character*24 a24time_valid
         character*150 hist_dir, cont_dir, verif_dir, plot_dir
@@ -88,6 +89,7 @@
         character*10 var_a(n_fields)
         integer nthr_a(n_fields) ! number of thresholds for each field
         character*2 c2_region
+        character*10 c_thr
 
 !       Specify what is being verified
         data ext_fcst_a /'fua'/ ! 3-D
@@ -189,7 +191,12 @@
                 write(c2_region,1)iregion
  1              format(i2.2)
 
-                hist_file = hist_dir(1:len_hist)//'/'//a9time_valid       
+!               Perhaps a14time should be used (call make_fcst_time)?
+                call make_fcst_time(i4_valid,i4_initial
+     1                             ,fcst_hh_mm,istatus)
+
+                hist_file = hist_dir(1:len_hist)//'/'//a9time_initial    
+     1                                          //trim(fcst_hh_mm)       
      1                                          //'_'//c2_region     
      1                                          //'.hist'     
 
@@ -234,7 +241,7 @@
      1                          ,istatus)
                   if(istatus .ne. 1)then
                        write(6,*)' Error reading 3D REF Forecast'
-                       return
+                       goto 900
                   endif
 
 !                 Calculate "and" mask
@@ -385,7 +392,17 @@
 
  900       enddo ! itime_fcst
 
-           do idbz = 1,1 ! nthr (move this outside model loop)
+          endif ! c_model .ne. lga
+
+         enddo ! model
+
+         iregion = 1
+
+         do idbz = 1,nthr
+
+           rdbz = float(idbz*10) + 10
+           write(c_thr,901)nint(rdbz)
+ 901       format(i2)
 
            plot_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
      1                                      //'/plot'
@@ -395,14 +412,14 @@
 
 !          write GNUplot file for the time series of this model (region 1)
            bias_file = plot_dir(1:len_plot)//'/'
-     1                                     //'20/'
+     1                                     //trim(c_thr)//'/'
      1                                     //a9time_initial     
      1                                     //'.bias'     
 
            write(6,*)'bias_file = ',bias_file
 
            ets_file  = plot_dir(1:len_plot)//'/'
-     1                                     //'20/'
+     1                                     //trim(c_thr)//'/'
      1                                     //a9time_initial     
      1                                     //'.ets'      
 
@@ -410,24 +427,24 @@
 
            open(lun_bias,file=bias_file,status='unknown')
            open(lun_ets,file=ets_file,status='unknown')
-           iregion = 1
+
+           do imodel = 2,n_fdda_models
                do itime_fcst = 0,n_fcst_times
                    i4_valid = i4_initial + itime_fcst * laps_cycle_time
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
-                   write(lun_bias,901)a24time_valid     
+                   write(lun_bias,911)a24time_valid     
      1                             ,bias(imodel,itime_fcst,iregion,idbz)     
-                   write(lun_ets,901)a24time_valid     
+                   write(lun_ets,911)a24time_valid     
      1                              ,ets(imodel,itime_fcst,iregion,idbz)
-901                format(a24,3x,2f12.3)
+911                format(a24,3x,2f12.3)
                enddo ! itime_fcst
+           enddo ! imodel
+
            close(lun_bias)
            close(lun_ets)
-           enddo ! idbz
 
-          endif ! c_model .ne. lga
-
-         enddo ! model
+         enddo ! idbz
 
         enddo ! fields
 
@@ -452,7 +469,7 @@
 
 !       Read in data file with region points
         call get_directory('static',static_dir,len_static)
-        static_file = static_dir(1:len_static)//'/verif_regions.dat'
+        static_file = static_dir(1:len_static)//'/verif_regions.txt'
         open(lun_in,file=static_file,status='old')
 
         read(lun_in,*)n_regions
