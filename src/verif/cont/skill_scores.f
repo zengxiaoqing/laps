@@ -50,6 +50,7 @@
       write(lun_out,*)' POD = ',pod
       write(lun_out,*)' FAR = ',far
       write(lun_out,*)' Correct Negatives = ',correct_negatives
+      write(lun_out,*)' Hits Random = ',hits_random
       write(lun_out,*)' Total = ',total
 
       write(lun_out,*)' Accuracy = ',accuracy
