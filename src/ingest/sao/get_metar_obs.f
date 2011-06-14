@@ -709,6 +709,9 @@ c
 c
 c..... Visibility
 c
+        if(vis(i) .lt. 0.0 .OR. vis(i) .ge. 1e6) then ! QC check
+           vis(i) = badflag
+        endif
 	if(vis(i) .ne. badflag) then
 	   vis(i) = vis(i) * .001      !m to km
 	   vis(i) = 0.621371 * vis(i)  !km to miles
