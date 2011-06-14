@@ -1139,7 +1139,7 @@ c
 c
 c..... Check the field for NaN's
 c
-      call checknan_2d(x,ni,nj,nan_flag)
+      call check_nan2(x,ni,nj,nan_flag)
       if(nan_flag .ne. 1) then
          print *,'   *** ERROR. NaNs found in field. ***'
          istatus = -1
@@ -1218,30 +1218,6 @@ c.... That's it.  Let's go home.
 c
       return
       end
-c
-c
-	subroutine checknan_2d(x,ni,nj,nan_flag)
-c
-c       Routine to check a real 2-d array for NaN's.
-c
-	integer ni,nj
-	real x(ni,nj)
-c
-	nan_flag = 1
-c
-	do j=1,nj
-	do i=1,ni
-           call check_nan( x(i,j), istatus )
-	   if(istatus .ne. 1) then
-	      print *,' ** ERROR. Found a NaN at ', i, j
-	      nan_flag = -1
-	      return
-	   endif
-	enddo !i
-	enddo !j
-c
-	return
-	end
 c
 c
 	subroutine get_background_sfc(i4time_in,var_in,bkg_ext,
