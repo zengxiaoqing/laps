@@ -179,8 +179,7 @@ SRC	= machine_dependent.F \
           i4time_now_gg.c \
           regex.c \
           alloca.c \
-          xmalloc.c \
-          nan.c
+          xmalloc.c 
 
 
 
