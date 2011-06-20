@@ -27,6 +27,7 @@ setenv VAR_LC `echo $VAR | gawk '{print tolower($0)}'`
 setenv LOGDIR $LAPS_DATA_ROOT/log
 
 setenv MODELTIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
+setenv MODELTIME_HHMM `cat $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
 
 setenv file $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/$MODELTIME.stats
 
@@ -45,19 +46,21 @@ setenv STOPTIME2  `head -$NLINE $file | tail -1 | cut -c14-24`; echo $STOPTIME2
 
 # Construct gnuplot .gp file
 setenv GNUPLOTFILE $LOGDIR/$VAR_LC\_$TYPE\_fcst.gp
-setenv PNGFILE     $LOGDIR/$VAR_LC\_$TYPE\_fcst.png
+setenv PNGDIR      $LOGDIR/
+setenv PNGFILE     $VAR_LC\_$TYPE\_fcst\_$MODELTIME.png
 setenv DQUOTE \"
 echo 'set terminal png size 1200,800'                                     > $GNUPLOTFILE
 echo 'set xdata time'                                                    >> $GNUPLOTFILE
 echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
-echo 'set output '$DQUOTE$PNGFILE$DQUOTE                                 >> $GNUPLOTFILE
+echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
 
 # time range must be in same format as data file
 #echo 'set xrange ["2-FEB-2011 12:00:00.00":"2-FEB-2011 18:00:00.00"]'    >> $GNUPLOTFILE
 echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
-echo 'set yrange [0:'$YRANGE']'                                           >> $GNUPLOTFILE
+#echo 'set yrange [0:'$YRANGE']'                                           >> $GNUPLOTFILE
+echo 'set yrange ['$YRANGE']'                                             >> $GNUPLOTFILE
 echo 'set grid'                                                           >> $GNUPLOTFILE
-echo 'set xlabel "Date Time"'                                             >> $GNUPLOTFILE
+echo 'set xlabel "Initialized at '$MODELTIME'"'                           >> $GNUPLOTFILE 
 echo 'set ylabel "'$6 $7' "'                                              >> $GNUPLOTFILE
 echo 'set title "'$6' Observed vs Forecast"'                              >> $GNUPLOTFILE
 echo 'set key left box'                                                   >> $GNUPLOTFILE
@@ -74,3 +77,9 @@ echo "outputs..."
 ls -l $GNUPLOTFILE
 ls -l $PNGFILE                          
 
+cd $LOGDIR
+rm -f          $VAR_LC\_$TYPE\_fcst.png
+ln -s $PNGFILE $VAR_LC\_$TYPE\_fcst.png
+
+rm -f          $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM.png
+ln -s $PNGFILE $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM.png
