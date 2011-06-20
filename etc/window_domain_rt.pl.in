@@ -158,7 +158,7 @@ if($opt_t){
    }
 
 #  Check for template that hasn't been separated
-   if($LAPS_TEMPLATE =~ $LAPS_SRC_ROOT){
+   if($LAPS_TEMPLATE =~ $LAPS_SRC_ROOT && ! $LAPS_TEMPLATE =~ "/usr/nfs/common/lapb/parallel/laps"){
       print "Error: Template should be separated from SRCROOT\n";
       print "Template is $LAPS_TEMPLATE\n";
       print "SRCROOT is $LAPS_SRC_ROOT\n";
