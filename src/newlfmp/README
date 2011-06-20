@@ -23,9 +23,13 @@ lfmpost                                      lfmpost.f90
         gdtost_lfm                               "
             binom_lfm                            "
     lfm_derived                              lfmutil.f90
+        lfmclouds                                "
+        lfm_integrated_liquid                    "
         lfm_reflectivity                         "
             versuch                          lib/radar/synp/src_versuch.f90
-        fill_precip                          lfmutil.f90
+        lfm_sfc_pcptype                      lfmutil.f90
+        lfm_ua_pcptype                           "
+        fill_precip                              "
         wintprec                                 "       
         snowfall                                 "
         model_pblhgt                             "

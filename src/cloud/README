@@ -43,6 +43,7 @@ main                                                     laps_cloud.f
         put_clouds_2d
         cloud_snow_cvr
         compare_analysis_to_saos                         laps_cloud_sub.f
+        read_surface_sa                                  lib/read_surface_sa.f
         compare_analysis_to_rad                          compare_analysis_to_rad.f
             stats_1d                                     stats_1d.f
         array_plot
