@@ -233,6 +233,7 @@ foreach $dir (keys(%clean_dirs)){
         stat("$dir/$file");
         $age = -M _;
 	next if(-d "$dir/$file");
+        next if($dir =~ "save");
 
         if($file =~ "\.wgi\."){ # exception for wgi files 
             if($clean_dirs{$dir} > 2.0){
