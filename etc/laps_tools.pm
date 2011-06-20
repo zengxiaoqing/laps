@@ -353,6 +353,8 @@ verif/REF/hist verif/REF/cont verif/REF/plot
 verif/REF/plot/20 verif/REF/plot/30 verif/REF/plot/40 verif/REF/plot/50 verif/REF/plot/60
 verif/SWI verif/SWI/pt
 verif/TSF verif/TSF/pt
+verif/U3  verif/U3/pt
+verif/V3  verif/V3/pt
 ensemble
 ensemble/mean
 gr2);
