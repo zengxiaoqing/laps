@@ -61,8 +61,7 @@ SUBROUTINE LAPS_Obsv
 	weight_prof,l_raob,l_cdw,n_sao,n_pirep,lat,lon,  &
 	ntmin,ntmax,u,v,ulaps,vlaps,wt,maxxobs,obs_point, &
 	nobs_point,rlat_radar,rlon_radar,rhgt_radar,     &
-	useable_radar,n_grid_vel,grid_radar_vel,         &
-	istatus_remap_pro,status)
+	useable_radar,n_grid_vel,istatus_remap_pro,status)
 
   ! Temperature parameters:
   ! CALL get_temp_parms(l_raob,l_use_raob,l_adj_hgt,       &
