@@ -369,6 +369,16 @@ if (make_micro) then
    rhodrysig=hpsig/(r*htsig)
    call lfm_integrated_liquid(lx,ly,nz,condmr_sig,hmrsig,rhodrysig,hzsig,zsfc  &
                              ,intliqwater,totpcpwater)
+
+   do j=1,ly
+   do i=1,lx
+      if(intliqwater(i,j) < rmsg)then
+         cldamt(i,j) = (intliqwater(i,j) * 100.) ** 0.5
+         cldamt(i,j) = min(cldamt(i,j),1.0)
+      endif
+   enddo ! i
+   enddo ! j
+
    if (verbose) then
       print*,' '
       print *,'Calling integrated_liquid.'
