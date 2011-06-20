@@ -185,19 +185,21 @@ if($xdim[0] <=0 || $ydim[0] <= 0 || $zdim<=0){
 }
 
 my @plines;
-my $vertical_grid;
+my @vertical_grid;
 
 if( $WHICH_TYPE eq "laps"){
     my $vertical_namelist;
-    $vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
+    @vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
 
-    if($vertical_grid eq "SIGMA_HT"){
+    if($vertical_grid[0] eq "SIGMA_HT"){
         $vertical_namelist = "heights.nl";
-    }elsif($vertical_grid eq "SIGMA_P"){
+    }elsif($vertical_grid[0] eq "SIGMA_P"){
         $vertical_namelist = "sigmas.nl";
     }else{
         $vertical_namelist = "pressures.nl";
     }
+
+    print "localize_domain.pl: vertical grid is $vertical_grid[0], vertical namelist is $vertical_namelist\n";
 
     if(-e "$DATA_ROOT/static/$vertical_namelist"){
        open(PRES,"$DATA_ROOT/static/$vertical_namelist");
@@ -318,17 +320,17 @@ if($WHICH_TYPE eq "laps"){
    print "Localizing Optran Coefficients based on moisture_switch.nl namelist settings\n";
    run_sys::run_sys("@PERL@ $INSTALL_ROOT/etc/localize_optran.pl $INSTALL_ROOT/bin/ $DATA_ROOT/static");
 
-   $vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
+   @vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
 
-   if($vertical_grid eq "SIGMA_HT"){
-      print "$vertical_grid grid - copy in pressure version of lga.cdl\n";
+   if($vertical_grid[0] eq "SIGMA_HT"){
+      print "$vertical_grid[0] grid - copy in pressure version of lga.cdl\n";
       run_sys::run_sys("cp $DATA_ROOT/cdl/lga_p.cdl $DATA_ROOT/cdl/lga.cdl");
       run_sys::run_sys("cp $DATA_ROOT/cdl/fua_p.cdl $DATA_ROOT/cdl/fua.cdl");
-   }elsif($vertical_grid eq "SIGMA_P"){
-      print "$vertical_grid grid - copy in sigmap version of lga.cdl\n";
+   }elsif($vertical_grid[0] eq "SIGMA_P"){
+      print "$vertical_grid[0] grid - copy in sigmap version of lga.cdl\n";
       run_sys::run_sys("cp $DATA_ROOT/cdl/lga_sigmap.cdl $DATA_ROOT/cdl/lga.cdl");
    }else{
-      print "Vertical grid is $vertical_grid - use default CDL files\n";
+      print "Vertical grid is $vertical_grid[0] - use default CDL files\n";
    }
 
 }
@@ -342,6 +344,10 @@ if( !defined $no_ggm ){
     if( ($varx*$vary) > 6000000){
         print "Large domain - using small version of nest7grid CDL file to help keep static file size under 2GB\n";
 	run_sys::run_sys("cp $DATA_ROOT/data/cdl/nest7grid_small.cdl $DATA_ROOT/cdl/nest7grid.cdl");
+    }
+    if( ($varx*$vary*$varz) > 20000000){
+        print "Large domain - using small version of fua CDL file to help keep fua file size under 2GB\n";
+	run_sys::run_sys("cp $DATA_ROOT/data/cdl/fua_small.cdl $DATA_ROOT/cdl/fua.cdl");
     }
     if(defined $qspn && $q_sub eq "q"){
        $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -q $qspn -n rt gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
