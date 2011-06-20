@@ -260,6 +260,8 @@ cdis
         integer obstime(maxstns),kloud(maxstns),idp3(maxstns)
         character store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
         character wx_s(maxstns)*8
+        character atype(maxstns)*6
+        character reptype(maxstns)*6
 
         integer STATION_NAME_LEN
         parameter (STATION_NAME_LEN = 3)                   
@@ -1323,6 +1325,13 @@ C       EW SLICES
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns)
+
+!       Reread solar data from latest LSO file
+        call read_surface_sa(i4time,maxstns,                       ! I
+     1   n_obs_b,c_stations,reptype,atype,                         ! O
+     1   lat_s,lon_s,elev_s,wx_s,t_s,td_s,                         ! O
+     1   kloud,store_amt,store_hgt,                                ! O
+     1   rad_s,solar_ea,obstime,istatus)                           ! O
 
         call compare_analysis_to_rad(i4time,NX_L,NY_L,cvr_sao_max
      1  ,solar_alt,cvr_snow
