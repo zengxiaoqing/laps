@@ -114,20 +114,25 @@ deallocate(fld3d)
 
 icode=nf_inq_varid(ncid,'CWM',nid)
 if (icode .eq. 0) then
-   icode=nf_get_var_real(ncid,nid,ncldicemr_sig)
+   icode=nf_get_var_real(ncid,nid,ncldicemr_sig) ! CWM
    icode=nf_inq_varid(ncid,'F_ICE',nid)
    if (icode .eq. 0) then
-      icode=nf_get_var_real(ncid,nid,nsnowmr_sig)
+      icode=nf_get_var_real(ncid,nid,nsnowmr_sig) ! F_ICE
       icode=nf_inq_varid(ncid,'F_RAIN',nid)
       if (icode .eq. 0) then
-         icode=nf_get_var_real(ncid,nid,nrainmr_sig)
+         icode=nf_get_var_real(ncid,nid,nrainmr_sig) ! F_RAIN
          icode=nf_inq_varid(ncid,'F_RIMEF',nid)
          if (icode .eq. 0) then
-            icode=nf_get_var_real(ncid,nid,ngraupelmr_sig)
-            ncldliqmr_sig=ncldicemr_sig-ncldicemr_sig*nsnowmr_sig
+            icode=nf_get_var_real(ncid,nid,ngraupelmr_sig) ! F_RIMEF
+!           ncldliqmr_sig=ncldicemr_sig-ncldicemr_sig*nsnowmr_sig
+            ncldliqmr_sig=ncldicemr_sig * (1.0 - nsnowmr_sig)
+
             nrainmr_sig=ncldliqmr_sig*nrainmr_sig
+
             ncldicemr_sig=ncldicemr_sig*nsnowmr_sig
+
             ngraupelmr_sig=ncldicemr_sig/ngraupelmr_sig
+
             nsnowmr_sig=rmsg
          else
             ncldliqmr_sig=rmsg
