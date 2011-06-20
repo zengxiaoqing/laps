@@ -319,6 +319,14 @@
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_lwc)
+        elseif(c_prodtype .eq. 'F')then 
+            var_2d = 'LWC'
+            call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istat_lwc)
+            if(istat_lwc .ne. 1)goto100
         endif
 
         if(istat_lwc .eq. 1)then
@@ -337,6 +345,14 @@
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_ice)
+        elseif(c_prodtype .eq. 'F')then 
+            var_2d = 'ICE'
+            call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istat_ice)
+            if(istat_ice .ne. 1)goto100
         endif
 
         if(istat_ice .eq. 1)then
@@ -355,6 +371,14 @@
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_rain)
+        elseif(c_prodtype .eq. 'F')then 
+            var_2d = 'RAI'
+            call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istat_rain)
+            if(istat_rain .ne. 1)goto100
         endif
 
         if(istat_rain .eq. 1)then
@@ -373,6 +397,14 @@
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_snow)
+        elseif(c_prodtype .eq. 'F')then 
+            var_2d = 'SNO'
+            call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istat_snow)
+            if(istat_snow .ne. 1)goto100
         endif
 
         if(istat_snow .eq. 1)then
@@ -391,6 +423,14 @@
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_pice)
+        elseif(c_prodtype .eq. 'F')then 
+            var_2d = 'PIC'
+            call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istat_pice)
+            if(istat_pice .ne. 1)goto100
         endif
 
         if(istat_pice .eq. 1)then
@@ -409,6 +449,14 @@
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_u)
+        elseif(c_prodtype .eq. 'F')then
+            var_2d = 'U3'
+            call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istat_u)
+            if(istat_u .ne. 1)goto100
         endif
 
         if(istat_u .eq. 1)then
@@ -427,6 +475,14 @@
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_v)
+        elseif(c_prodtype .eq. 'F')then
+            var_2d = 'V3'
+            call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istat_v)
+            if(istat_v .ne. 1)goto100
         endif
 
         if(istat_v .eq. 1)then
