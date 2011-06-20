@@ -60,7 +60,6 @@ EXEDIRS = src/accum \
           src/ingest/satellite/cloud_drift \
           src/ingest/satellite/lvd \
           src/ingest/satellite/sounding \
-          src/ingest/sfc_qc \
 	  src/lapsprep \
 	  src/laps2grib \
 	  src/newlfmp \
@@ -71,8 +70,9 @@ EXEDIRS = src/accum \
 	  src/mesowave/stmas_mg \
           src/soil \
           src/temp \
-          src/verif/point \
           src/verif/cont \
+          src/verif/fcst \
+          src/verif/point \
           src/wind \
 	  src/var \
 	  src/stmas
