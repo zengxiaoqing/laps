@@ -1,0 +1,7 @@
+verif_fcst_main
+    verif_fcst_pt_2d
+        get_fdda_model_source
+        read_surface_obs
+        get_lapsdata_2d
+        stats_1d
+
