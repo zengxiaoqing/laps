@@ -296,7 +296,9 @@ if($opt_q || $opt_Q){
       if(defined $opt_w && ($ngroups eq 1) ){
         $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile";
       }else{
-        $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile&";
+#       $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile&";
+#       $command = "$LAPSROOT/etc/run_qsub.sh $LAPS_LOG_PATH/$qsubfile";
+        $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/$qsubfile";
       }
       print "Executing $command\n";
       system("$command");
