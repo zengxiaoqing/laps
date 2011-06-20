@@ -15,6 +15,11 @@ setenv MODELTIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
 
 setenv file $LAPS_DATA_ROOT/lapsprd/verif/SWI/pt/$MODELTIME.stats
 
+echo " "
+echo "inputs..."
+echo "file = $file"
+ls -l $file
+
 @ NLINE = $NLINE + 1
 
 # obtain xrange times from the data file
@@ -36,7 +41,7 @@ echo 'set output '$DQUOTE$LOGDIR'/cloud_fcst.png'$DQUOTE                 >> $GNU
 echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
 echo 'set yrange [0:1000]'                                               >> $GNUPLOTFILE
 echo 'set grid'                                                          >> $GNUPLOTFILE
-echo 'set xlabel "Date Time"'                                            >> $GNUPLOTFILE
+echo 'set xlabel "Initialized at '$MODELTIME'"'                          >> $GNUPLOTFILE
 echo 'set ylabel "Solar Radiation (W/m**2)"'                             >> $GNUPLOTFILE
 echo 'set title "Global Solar Radiation Observed vs Forecast"'           >> $GNUPLOTFILE
 echo 'set key left box'                                                  >> $GNUPLOTFILE
