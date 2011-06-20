@@ -20,48 +20,55 @@ setenv REFLECTIVITY $5
 #setenv LAPS_DATA_ROOT /data/fab/projects/dwr
 setenv LOGDIR $LAPS_DATA_ROOT/log
 
-setenv MODELTIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
+setenv MODELTIME      `cat $LAPS_DATA_ROOT/time/modeltime.dat`
+setenv MODELTIME_HHMM `cat $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
 
 #setenv model wrf-wsm6
 #setenv fcsttime 01
 
 setenv STAT_LC `echo $STAT | gawk '{print tolower($0)}'`
 
-setenv file $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
+setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
 
 echo " "
 echo "inputs..."
-echo "file = $file"  
-ls -l $file                                                     
+echo "FILE = $FILE"  
+ls -l $FILE                                                     
 
 @ NLINE = $NLINE + 1
 
 # obtain xrange times from the data file
-setenv STARTTIME1 `head -1       $file           | cut -c1-11` ; echo $STARTTIME1
-setenv STARTTIME2 `head -1       $file           | cut -c13-23`; echo $STARTTIME2
-setenv STOPTIME1  `head -$NLINE $file | tail -1 | cut -c1-11` ; echo $STOPTIME1
-setenv STOPTIME2  `head -$NLINE $file | tail -1 | cut -c13-23`; echo $STOPTIME2
+setenv STARTTIME1 `head -1       $FILE           | cut -c1-11` ; echo $STARTTIME1
+setenv STARTTIME2 `head -1       $FILE           | cut -c13-23`; echo $STARTTIME2
+setenv STOPTIME1  `head -$NLINE $FILE | tail -1 | cut -c1-11` ; echo $STOPTIME1
+setenv STOPTIME2  `head -$NLINE $FILE | tail -1 | cut -c13-23`; echo $STOPTIME2
+
+echo " "
+echo "Start time: $STARTTIME1 $STARTTIME2"
+echo "Stop  time: $STOPTIME1 $STOPTIME2 NLINE is $NLINE"
 
 # Construct gnuplot .gp file
-setenv GNUPLOTFILE $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.gp
-setenv PNGFILE     $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
+#etenv GNUPLOTFILE $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.gp
+setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.gp
+setenv PNGDIR      $LOGDIR/
+setenv PNGFILE     radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.png
 setenv DQUOTE \"
 
 echo 'set terminal png size 1200,600'                                     > $GNUPLOTFILE
 echo 'set xdata time'                                                    >> $GNUPLOTFILE
 echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
-echo 'set output '$DQUOTE$PNGFILE$DQUOTE                                 >> $GNUPLOTFILE
+echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
 
 # time range must be in same format as data file
 echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
 echo 'set yrange [0:'$YRANGE']'                                          >> $GNUPLOTFILE
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
-echo 'set xlabel "Date Time"'                                            >> $GNUPLOTFILE
+echo 'set xlabel "Initialized at '$MODELTIME'"'                          >> $GNUPLOTFILE
 echo 'set ylabel "Radar Reflectivity '$STAT'"'                           >> $GNUPLOTFILE
 echo 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'"'         >> $GNUPLOTFILE
 echo 'set key left box'                                                  >> $GNUPLOTFILE
-echo 'plot '$DQUOTE$file$DQUOTE' using 1:3 title "'$STAT'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "'$STAT'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
 
 
 # Run gnuplot
@@ -72,3 +79,9 @@ echo "outputs..."
 ls -l $GNUPLOTFILE
 ls -l $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
 
+cd $LOGDIR
+rm -f          radar_fcst_$STAT_LC\_$REFLECTIVITY.png
+ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY.png
+
+rm -f          radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
+ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
