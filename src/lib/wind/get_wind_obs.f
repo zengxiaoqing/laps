@@ -52,7 +52,6 @@ cdis
      1            max_obs,obs_point,nobs_point,                     ! I/O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            istat_radar_vel,n_vel_grids,                      ! I
-     1            grid_ra_vel,                                      ! I
      1            istatus_remap_pro,                                ! O
      1            istatus                )                          ! O
 
@@ -101,7 +100,6 @@ cdis
 
         real heights_3d(NX_L,NY_L,NZ_L)
         real heights_1d(NZ_L)
-        real grid_ra_vel(NX_L,NY_L,NZ_L)
 
         character*3 ext_in
 
