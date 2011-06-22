@@ -53,7 +53,8 @@ c
      .       wwvi(nx,ny,nz_laps)  !w-wind (omega [pa/s])
 c
 !     3D pressures on the model grid (or input as a 1D constant pressure array)
-      real   prlaps(nx_pr,ny_pr,nz_laps),prilaps,fact1,fact2
+      real   prlaps(nx_pr,ny_pr,nz_laps) ! pressure (mb)
+      real   prilaps,fact1,fact2
       real   datmsg,datmsg1,datmsg2
       integer i,j,k,kk,lencm,istatus,ishow_timer
       integer kkguess,nguess_eq,nguess_int,noguess
@@ -151,11 +152,11 @@ c analysis pressure of level is inbetween bg pressures of guessed levels kk and 
 
                noguess = noguess + 1
 
-c lowest bg pressure level is above analysis lowest pressure levels
+c analysis pressure level is below lowest bg pressure level
                if (prlaps(ip,jp,k) .gt. prbght(i,j,1)) then
                   datmsg = max(htbg(i,j,1),tpbg(i,j,1))
 
-                  if (datmsg .lt. missingflag) then
+                  if (datmsg .lt. missingflag) then ! extrapolate for T, Ht
                      fact2=14.642857*alog(prbght(i,j,1)*prilaps)
 
                      tpvi(i,j,k)=tpbg(i,j,1)
@@ -170,7 +171,7 @@ c lowest bg pressure level is above analysis lowest pressure levels
                   endif
                   goto 10
 
-c highest bg pressure level is below analysis highest pressure level
+c analysis pressure level is above highest bg pressure level 
                elseif (prlaps(ip,jp,k) .lt. prbght(i,j,nzbght)) then       
 
                   datmsg = max(htbg(i,j,nzbght),tpbg(i,j,nzbght))
@@ -324,7 +325,7 @@ c analysis pressure of level is inbetween bg pressures of guessed levels kk and 
 
                noguess = noguess + 1
 
-c lowest bg pressure level is above analysis lowest pressure levels
+c analysis pressure level is below lowest bg pressure level 
                if (pr(ip,jp,k) .gt. prbg(i,j,1)) then
 
                   if (bgdata(i,j,1) .lt. msngflag) then
@@ -335,7 +336,7 @@ c lowest bg pressure level is above analysis lowest pressure levels
                   goto 20
 
 
-c highest bg pressure level is below analysis highest pressure level
+c analysis pressure level is above highest bg pressure level 
                elseif (pr(ip,jp,k) .lt. prbg(i,j,nzbg)) then
 
                   if (bgdata(i,j,nzbg) .lt. msngflag) then
