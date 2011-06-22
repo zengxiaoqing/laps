@@ -63,13 +63,30 @@ c
       do j=1,nj
       do i=1,ni
 c
-         zlow = height_to_zcoord2(sfc_2d(i,j),heights_3d,ni,nj,nk,
+         if(.not. ltest_vertical_grid('SIGMA_HT'))then
+            zlow = height_to_zcoord2(sfc_2d(i,j),heights_3d,ni,nj,nk,       
      &                                                  i,j,istatus)
-         if(istatus .ne. 1)then
-            write(6,*) ' Error in height_to_zcoord2 in interp_to_sfc',
+            if(istatus .ne. 1)then
+               write(6,*) 
+     &             ' Error in height_to_zcoord2 in interp_to_sfc',
      &                 istatus
-            write(6,*) i,j,zlow,sfc_2d(i,j),(heights_3d(i,j,k),k=1,nk)
-            return
+               write(6,*) i,j,zlow,sfc_2d(i,j),(heights_3d(i,j,k)
+     1                                          ,k=1,nk)
+               return
+            endif
+
+         else
+            zlow = rlevel_of_field(sfc_2d(i,j),heights_3d,ni,nj,nk,       
+     &                                                  i,j,istatus)
+            if(istatus .ne. 1)then
+               write(6,*) 
+     &             ' Error in rlevel_of_field in interp_to_sfc',
+     &                 istatus
+               write(6,*) i,j,zlow,sfc_2d(i,j),(heights_3d(i,j,k)
+     1                                          ,k=1,nk)
+               return
+            endif
+
          endif
 c
          klow = max(zlow, 1.)
