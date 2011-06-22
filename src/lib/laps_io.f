@@ -643,6 +643,7 @@ cdoc    Returns a 3-D fcst grid. Inputs include directory, initial and valid tim
 
         real field_3d(imax,jmax,kmax)
         real sigma_1d(kmax)
+        real ht_1d(kmax)
 
         logical ltest_vertical_grid
 
@@ -716,7 +717,7 @@ c          endif
                 endif
             elseif(ltest_vertical_grid('SIGMA_P'))then
                 if(k .eq. 1)then
-                    write(6,*)' Reading Sigma Levels'
+                    write(6,*)' Reading Sigma P Levels'
                     call get_sigma_1d(kmax,sigma_1d,istatus)
                     if(istatus .ne. 1)then
                         return
@@ -725,9 +726,20 @@ c          endif
 
                 lvl_3d(k) = nint(sigma_1d(k) * 1000.)
                 lvl_coord_3d(k) = '  ' ! informational
+            elseif(ltest_vertical_grid('SIGMA_HT'))then
+                if(k .eq. 1)then
+                    write(6,*)' Reading Sigma Ht Levels'
+                    call get_ht_1d(kmax,ht_1d,istatus)
+                    if(istatus .ne. 1)then
+                        return
+                    endif
+                endif
+
+                lvl_3d(k) = nint(ht_1d(k))
+                lvl_coord_3d(k) = '  ' ! informational
             else
                 write(6,*)' Error, vertical grid not supported,'
-     1                   ,' this routine supports PRESSURE or HEIGHT'
+     1                   ,' in subroutine get_lapsdata_3d'                
                 istatus = 0
                 return
             endif
