@@ -42,7 +42,7 @@ c
 c *** Output vertically interpolated variables.
 c
       real   tpvi(nx,ny,nz_laps), !temperature (K)
-     .       prvi(nx,ny,nz_laps), !height (m)
+     .       prvi(nx,ny,nz_laps), !pressure (mb)
      .       shvi(nx,ny,nz_laps), !specific humidity (kg/kg)
      .       uwvi(nx,ny,nz_laps), !u-wind (m/s)
      .       vwvi(nx,ny,nz_laps), !v-wind (m/s)
@@ -125,8 +125,8 @@ c     fields instead of using Tbar.
             do i=1,nx
                do kk=1,nzbght-1
 
-c lowest bg height level is above analysis lowest height level
-                  if (htlaps(i,j,k) .gt. htbg(i,j,1)) then
+c analysis height level is below lowest bg height level 
+                  if (htlaps(i,j,k) .lt. htbg(i,j,1)) then
                      datmsg = max(prbght(i,j,1),tpbg(i,j,1))
 
                      if (datmsg .lt. missingflag) then
@@ -139,8 +139,8 @@ c lowest bg height level is above analysis lowest height level
 
                      goto 10
 
-c highest bg height level is below analysis highest height level
-                  elseif (htlaps(i,j,k) .lt. htbg(i,j,nzbght)) then
+c analysis height level is above highest bg height level 
+                  elseif (htlaps(i,j,k) .gt. htbg(i,j,nzbght)) then
 
                      datmsg = max(htbg(i,j,nzbght),tpbg(i,j,nzbght))
 
@@ -167,8 +167,8 @@ c analysis height of level equals bg height of level
                      goto 10
 
 c analysis height of level is inbetween bg height of levels kk and kk+1
-                  elseif (htlaps(i,j,k) .lt. htbg(i,j,kk) .and. 
-     +                    htlaps(i,j,k) .gt. htbg(i,j,kk+1)) then
+                  elseif (htlaps(i,j,k) .gt. htbg(i,j,kk) .and. 
+     +                    htlaps(i,j,k) .lt. htbg(i,j,kk+1)) then
 
                      datmsg = max(htbg(i,j,kk),tpbg(i,j,kk))
 
@@ -227,8 +227,8 @@ c
                do kk=1,nzbg-1
 
 
-c lowest bg height level is above analysis lowest height levels
-                  if (ht(i,j,k) .gt. htbg(i,j,1)) then
+c analysis height level is below lowest bg height level 
+                  if (ht(i,j,k) .lt. htbg(i,j,1)) then
 
                      if (bgdata(i,j,1) .lt. msngflag) then
                         bgdatavi(i,j,k)=bgdata(i,j,1)
@@ -238,8 +238,8 @@ c lowest bg height level is above analysis lowest height levels
                      goto 20
 
 
-c highest bg height level is below analysis highest height level
-                  elseif (ht(i,j,k) .lt. htbg(i,j,nzbg)) then
+c analysis height level is above highest bg height level 
+                  elseif (ht(i,j,k) .gt. htbg(i,j,nzbg)) then
 
                      if (bgdata(i,j,nzbg) .lt. msngflag) then
                         bgdatavi(i,j,k)=bgdata(i,j,nzbg)
@@ -258,8 +258,8 @@ c analysis height of level equals bg height of level
                      goto 20
 
 c analysis height of level is inbetween bg heights of levels kk and kk+1
-                  elseif (ht(i,j,k) .lt. htbg(i,j,kk) .and.
-     +                    ht(i,j,k) .gt. htbg(i,j,kk+1)) then
+                  elseif (ht(i,j,k) .gt. htbg(i,j,kk) .and.
+     +                    ht(i,j,k) .lt. htbg(i,j,kk+1)) then
 
                      if (bgdata(i,j,kk)   .lt. msngflag.and.
      .                   bgdata(i,j,kk+1) .lt. msngflag)then
