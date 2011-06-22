@@ -1074,7 +1074,8 @@ fint4 lm1_levels;
           *n_levels = (fint4) LM1_LEVELS;
         }
         else if(dim_val != *n_levels) {
-          printf("z dimension in output file does not match n_levels passed in.\n");
+          printf("Z dimension in output file does not match n_levels passed in.\n");
+          printf("Check CDL, levels namelist, and localization.\n");
           return -1;
         }
     
