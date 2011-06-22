@@ -101,6 +101,7 @@ c ---------------------------------
       rfill = -99999.
       r_bogus_sh = 1.0e-6
       istatus = 0
+      icm_sfc = 0
 c
 c This is set = .true. only for Taiwan runs ATM.
 c 
