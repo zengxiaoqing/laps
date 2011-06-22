@@ -276,7 +276,7 @@ C
                 i_count_same = i_count_same + 1
             else
                 n_cmprs = n_cmprs + 1
-                if(ncmprs .le. n_cmprs_max)then
+                if(n_cmprs .le. n_cmprs_max)then
                     array1(n_cmprs) = i_count_same
                     array2(n_cmprs) = data(i-1)
                     i_count_same = 1
@@ -299,7 +299,7 @@ C
         endif
 
         n_cmprs = n_cmprs + 1
-        if(ncmprs .le. n_cmprs_max)then
+        if(n_cmprs .le. n_cmprs_max)then
             array1(n_cmprs) = i_count_same
             array2(n_cmprs) = data(i)
         else
