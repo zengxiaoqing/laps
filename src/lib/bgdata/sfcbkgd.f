@@ -53,6 +53,7 @@ c
       REAL       make_rh
       REAL       make_ssh
       REAL       t_ref,badflag
+      REAL       tdsfc_o_min, tdsfc_o_max
 c
 c if bgmodel = 6 or 8 then td_sfc_i is used         
 c if bgmodel = 4      then qsfc_i is rh (WFO - RUC)
@@ -117,7 +118,12 @@ c
       enddo
       enddo 
       
-      write(6,*)' tdsfc_o range = ',minval(tdsfc_o),maxval(tdsfc_o)
+      tdsfc_o_min = minval(tdsfc_o)
+      tdsfc_o_max = maxval(tdsfc_o)
+      if(tdsfc_o_max .gt. 1000.)then
+          write(6,*)' ERROR: tdsfc is out of bounds'
+      endif
+      write(6,*)' tdsfc_o range = ',tdsfc_o_min,tdsfc_o_max
       write(6,*)' returning from sfcbkgd...'
       write(6,*)
 
