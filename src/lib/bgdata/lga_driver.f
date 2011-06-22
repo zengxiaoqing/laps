@@ -187,7 +187,7 @@ c
      .          shsat,cti,
      .          htave,tpave,shave,uwave,vwave,
      .          rmaxvv,rminvv,
-     .          td_sfc_c
+     .          tp_sfc_c,td_sfc_c
 c
       integer   ct,  reject_cnt,
      .          ihour,imin,
@@ -460,6 +460,7 @@ c
 c
 c *** get LAPS pressure OR height levels.  Using pressures.nl / heights.nl
 c
+      write(6,*)' Vertical grid is: ',vertical_grid
       if(vertical_grid .eq. 'PRESSURE')then ! PRESSURE
           print*,'get 1d pressures'
           call get_pres_1d(i4time_now,nz_laps,pr1d_pa,istatus)
@@ -888,21 +889,45 @@ c
              call get_ht_3d(nx_bg,ny_bg,nz_laps,ht_sfc,htvi
      1                     ,istatus)
              if(istatus .ne. 1)then
-                 write(6,*)' Error returned from get_ht_3d'
+                 write(6,*)' Error returned from get_ht_3d (model grid)'       
                  return
              endif
        
+             do k = 1,nz_laps
+                 write(6,*)' htvi range at level ',k,minval(htvi(:,:,k))
+     1                                              ,maxval(htvi(:,:,k))   
+             enddo ! k
+
              call get_ht_1d(nz_laps,ht_1d,istatus)
              if(istatus .ne. 1)then
                  write(6,*)' Error returned from get_ht_1d'
                  return
              endif
 
+             write(6,*)
+             do k = 1,nzbg_ht
+                 write(6,*)' prbght range at level ',k
+     1                                            ,minval(prbght(:,:,k))       
+     1                                            ,maxval(prbght(:,:,k))   
+             enddo ! i
+
+             write(6,*)
+             do k = 1,nzbg_ht
+                 write(6,*)' htbg range at level ',k,minval(htbg(:,:,k))
+     1                                              ,maxval(htbg(:,:,k))   
+             enddo ! i
+
              call vinterp_ht(nz_laps,nx_bg,ny_bg
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .         ,htvi,prbght,prbgsh,prbguv,prbgww 
      .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .         ,prvi,tpvi,shvi,uwvi,vwvi,wwvi) 
+
+             write(6,*)
+             do k = 1,nz_laps
+                 write(6,*)' prvi range at level ',k,minval(prvi(:,:,k))       
+     1                                              ,maxval(prvi(:,:,k))   
+             enddo ! k
 
            else
              write(6,*)' Vertical grid not supported'
@@ -1036,6 +1061,7 @@ c
 
           else
                  
+!          Obtain height and pressure fields as needed on LAPS grid
            if(vertical_grid .ne. 'SIGMA_HT')then ! PRESSURE or SIGMA_P
               itstatus(2)=ishow_timer()
               print*,'use hinterp_field for HT ',cmodel(1:ic)
@@ -1052,9 +1078,16 @@ c
               endif
 
            else ! SIGMA_HT
-!             Check pressure units on this 
+              call get_ht_3d(nx_laps,ny_laps,nz_laps,topo,ht
+     1                      ,istatus)
+              if(istatus .ne. 1)then
+                 write(6,*)' Error returned from get_ht_3d (LAPS grid)'
+                 return
+              endif
+
+!             Input pressure (prvi) is being converted from mb to Pa
               call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps, 
-     .                           grx,gry,prvi,prgd_pa,wrapped)
+     .                           grx,gry,prvi*100.,prgd_pa,wrapped)
 
            endif
            
@@ -1566,14 +1599,22 @@ c ---------
                    istatus = 0
                    return
                endif
+
+               tp_sfc_c = tp_sfc(i,j)-273.15
+               if(tp_sfc_c .lt. td_sfc_c)then
+                   write(6,*)' WARNING: TSfc < TdSfc ',tp_sfc_c,td_sfc_c
+               endif
                qsfc(i,j)=ssh2(pr_sfc(i,j)*0.01,
-     +                   tp_sfc(i,j)-273.15,
+     +                   tp_sfc_c,
      +                   td_sfc_c,-132.)*0.001
 c              sfcgrid(i,j,kk+4)=qsfc(i,j)
+
             else
                qsfc(i,j) = missingflag
 c              sfcgrid(i,j,kk+4)=missingflag
+
             endif
+
           enddo
           enddo
           call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
