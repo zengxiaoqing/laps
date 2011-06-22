@@ -104,7 +104,7 @@ C To fix this, call read_laps instead
           open(lun,file=file_name(1:fn_length),status='old',err=950)
       endif
 
-10    read(lun,*,err=11)kkdim
+10    read(lun,*,err=11,end=11)kkdim
       go to 12
 11    write(6,*)' Warning: could not read kkdim'
       call sleep(5)
@@ -148,7 +148,7 @@ C To fix this, call read_laps instead
       icheck_sum = 0
 
       do i = 1,n_cmprs
-20        read(lun,*,err=21)array1(i),array2(i)
+20        read(lun,*,err=21,end=21)array1(i),array2(i)
           go to 22
 21        write(6,*)' Warning: could not read array1/array2'
           call sleep(5)
