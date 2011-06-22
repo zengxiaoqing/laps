@@ -31,8 +31,10 @@
            write (6,*) 'Error getting laps_cycle_time'
            go to 999
         endif
+
+        model_cycle_time = 3600
           
-        call verif_radar(i4time,a9time,laps_cycle_time,
+        call verif_radar(i4time,a9time,model_cycle_time,
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
@@ -42,7 +44,7 @@
 
         end
           
-        subroutine verif_radar(i4time_sys,a9time,laps_cycle_time,
+        subroutine verif_radar(i4time_sys,a9time,model_cycle_time,
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
@@ -175,7 +177,7 @@
                 jlow  = jl(imodel,itime,iregion)
                 jhigh = jh(imodel,itime,iregion)
 
-                i4_valid = i4_initial + itime_fcst * laps_cycle_time
+                i4_valid = i4_initial + itime_fcst * model_cycle_time       
 
                 call make_fnam_lp(i4_valid,a9time_valid,istatus)
                 call make_fnam_lp(i4_initial,a9time_initial,istatus)
@@ -224,7 +226,7 @@
      1                                ,comment_2d,NX_L,NY_L,rqc,istatus)
                       if(istatus .ne. 1)then
                           write(6,*)' Error reading 2D RQC Analysis'
-                          return
+                          goto 900
                       endif
                   endif
 
@@ -430,7 +432,7 @@
 
            do imodel = 2,n_fdda_models
                do itime_fcst = 0,n_fcst_times
-                   i4_valid = i4_initial + itime_fcst * laps_cycle_time
+                   i4_valid = i4_initial + itime_fcst * model_cycle_time
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
                    write(lun_bias,911)a24time_valid     
@@ -439,6 +441,8 @@
      1                              ,ets(imodel,itime_fcst,iregion,idbz)
 911                format(a24,3x,2f12.3)
                enddo ! itime_fcst
+               write(lun_bias,*)
+               write(lun_ets,*)
            enddo ! imodel
 
            close(lun_bias)
