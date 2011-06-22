@@ -531,11 +531,13 @@
             if(istatus .ne. 1)return
 
             i4_tol_radar = 1200
-
+ 
+            ext = '                               '
+            ext(1:3) = ext_local
             call read_radar_3dref_new(i4time_radar,             ! I
      1       i4_tol_radar,i4_ret,                               ! I/O
      1       .true.,r_missing_data,imax,jmax,kmax,              ! I
-     1       ext_local,lat,lon,topo,
+     1       ext,lat,lon,topo,
      1       .true.,.false.,
      1       height_3d,
      1       grid_ra_ref,
