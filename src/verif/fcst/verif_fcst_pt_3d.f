@@ -241,7 +241,7 @@
                   call get_wind_3d_obs(
      1            ni,nj,nk,                                       ! I
      1            r_missing_data,i2_missing_data,                 ! I
-     1            i4time_sys,heights_3d,heights_1d,               ! I
+     1            i4_valid,heights_3d,heights_1d,                 ! I
      1            MAX_PR,MAX_PR_LEVELS,weight_prof,l_use_raob,    ! I
      1            l_use_cdw,                                      ! I
      1            N_SAO,N_PIREP,                                  ! I
