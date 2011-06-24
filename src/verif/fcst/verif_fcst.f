@@ -129,20 +129,20 @@
         character*125 comment_2d
         character*3 var_2d
         character*9 a9time,a9time_valid,a9time_init
-        character*24 atime_s
+!       character*24 atime_s
         character*150 hist_dir, cont_dir, verif_dir
         character*150 hist_file
 
         integer n_fields
-        parameter (n_fields=2)
+        parameter (n_fields=5)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
         character*2 c2_region
 
 !       Specify what is being verified
-        data ext_fcst_a /'fsf','fsf'/ ! 2-D
+        data ext_fcst_a /'fsf','fsf','fsf','fsf','fsf'/ ! 2-D
 !       data ext_anal_a /'lps'/ ! 3-D reflectivity
-        data var_a      /'SWI','TSF'/ ! 2-D downward solar radiation
+        data var_a      /'SWI','TSF','DSF','USF','VSF'/ 
 
         integer contable(0:1,0:1)
 
@@ -227,7 +227,7 @@
 
         do ifield = 1,n_fields
 
-          var_2d = var_a(ifield)
+          var_2d = var_a(ifield)(1:3)
           call s_len(var_2d,lenvar)
 
           write(6,*) 
@@ -313,12 +313,37 @@
 
                 write(6,*)' Number of obs in box  ',n_obs_b,atime_s
 
-                if(var_2d .eq. 'SWI')then
+                if(trim(var_2d) .eq. 'SWI')then
                   var_s = solar_s
                   threshval = 0.
-                elseif(var_2d .eq. 'TSF')then
+                elseif(trim(var_2d) .eq. 'TSF')then
                   var_s = t_s
                   threshval = -99.9
+                elseif(trim(var_2d) .eq. 'DSF')then
+                  var_s = td_s
+                  threshval = -99.9
+                elseif(trim(var_2d) .eq. 'USF')then
+                  threshval = -99.9
+                  do i = 1,maxsta  
+                    if(dd_s(i) .ne. threshval .and. 
+     1                 ff_s(i) .ne. threshval)then
+                      call disp_to_uv(dd_s(i),ff_s(i),u_s,v_s)
+                      var_s(i) = u_s * 0.518 ! convert to m/s
+                    else
+                      var_s(i) = threshval
+                    endif
+                  enddo ! i
+                elseif(trim(var_2d) .eq. 'VSF')then
+                  threshval = -99.9
+                  do i = 1,maxsta  
+                    if(dd_s(i) .ne. threshval .and. 
+     1                 ff_s(i) .ne. threshval)then
+                      call disp_to_uv(dd_s(i),ff_s(i),u_s,v_s)
+                      var_s(i) = v_s * 0.518 ! convert to m/s
+                    else
+                      var_s(i) = threshval
+                    endif
+                  enddo ! i
                 endif
 
                 if(.true.)then
@@ -346,7 +371,7 @@
 
                 endif ! .true.
 
-                if(var_2d .eq. 'SWI')then
+                if(trim(var_2d) .eq. 'SWI')then
                   swi_2d = var_fcst_2d
                 endif
 
@@ -400,7 +425,7 @@
 
                       iwrite = iwrite + 1
 
-                      if(var_2d .eq. 'SWI')then
+                      if(trim(var_2d) .eq. 'SWI')then
                         c1_c = ' '
                         c3_discrep = '   '
 
@@ -426,59 +451,65 @@
                         else
                           radob_ratio = 1.0
                         endif
-
-                      elseif(var_2d .eq. 'TSF')then
-                        var_fcst_s(ista) = k_to_f(var_fcst_2d(i_i,i_j))       
-
-                      endif
  
-!                     QC checks
-                      if(cvr_max(i_i,i_j) .le. .10 .and. 
-     1                 radob_ratio .lt. 0.3      .and.
-     1                 swi_s(ista) .ge. 100.           )then
-                        c1_c = '-' ! Suspected low
-                      endif
+!                       QC checks
+                        if(cvr_max(i_i,i_j) .le. .10 .and. 
+     1                   radob_ratio .lt. 0.3      .and.
+     1                   swi_s(ista) .ge. 100.           )then
+                          c1_c = '-' ! Suspected low
+                        endif
 
-                      if(radob_ratio .gt. 3.0      .and.      
-     1                   var_s(ista) .ge. 400.           )then
-                         c1_c = '+' ! Suspected high
-                      endif
+                        if(radob_ratio .gt. 3.0      .and.      
+     1                     var_s(ista) .ge. 400.           )then
+                           c1_c = '+' ! Suspected high
+                        endif
 
-                      if(radob_ratio .lt. 0.1 .and. 
-     1                   swi_s(ista) .ge. 100.      )then
-                        c1_c = '*' ! QC'd out
-                        rad2_s(ista) = r_missing_data
-                      endif
+                        if(radob_ratio .lt. 0.1 .and. 
+     1                     swi_s(ista) .ge. 100.      )then
+                          c1_c = '*' ! QC'd out
+                          rad2_s(ista) = r_missing_data
+                        endif
 
-                      if(var_s(ista) - rad_clr(i_i,i_j) .gt. 500.)then
-                        if(rad_clr(i_i,i_j) .gt. 100.)then
-                          if(var_s(ista)/rad_clr(i_i,i_j) .gt. 2.5)then
-                             c1_c = '*'
-                             rad2_s(ista) = r_missing_data
+                        if(var_s(ista) - rad_clr(i_i,i_j) .gt. 500.)then       
+                          if(rad_clr(i_i,i_j) .gt. 100.)then
+                            if(var_s(ista)/rad_clr(i_i,i_j) .gt. 2.5
+     1                                                             )then
+                               c1_c = '*'
+                               rad2_s(ista) = r_missing_data
+                            endif
                           endif
                         endif
-                      endif
 
-                      write(6,1111,err=1112)'sv',stations(ista)(1:3)
-     1                           ,i_i,i_j
-     1                           ,cloud_frac_vis_a(i_i,i_j)
-     1                           ,tb8_k(i_i,i_j)
-     1                           ,t_gnd_k(i_i,i_j)
-     1                           ,t_sfc_k(i_i,i_j)
-     1                           ,cvr_sao_max(i_i,i_j)
-     1                           ,cvr_max(i_i,i_j)
-     1                           ,solar_alt(i_i,i_j)
-     1                           ,cvr_9pt
-!    1                           ,cvr_25pt
-     1                           ,swi_2d(i_i,i_j)
-     1                           ,var_s(ista)
-     1                           ,rad_clr(i_i,i_j)
-     1                           ,rad_ratio
-     1                           ,cv_solar
-     1                           ,cv_diff
-     1                           ,c1_c
-1111                  format(1x,a2,1x,a3,2i5,f8.2,3f8.1,f7.2,f8.2,f6.1       
-     1                      ,f6.2,f8.1,2f7.1,3f6.2,1x,a,1x)
+                        write(6,1111,err=1112)'sv',stations(ista)(1:3)
+     1                             ,i_i,i_j
+     1                             ,cloud_frac_vis_a(i_i,i_j)
+     1                             ,tb8_k(i_i,i_j)
+     1                             ,t_gnd_k(i_i,i_j)
+     1                             ,t_sfc_k(i_i,i_j)
+     1                             ,cvr_sao_max(i_i,i_j)
+     1                             ,cvr_max(i_i,i_j)
+     1                             ,solar_alt(i_i,i_j)
+     1                             ,cvr_9pt
+!    1                             ,cvr_25pt
+     1                             ,swi_2d(i_i,i_j)
+     1                             ,var_s(ista)
+     1                             ,rad_clr(i_i,i_j)
+     1                             ,rad_ratio
+     1                             ,cv_solar
+     1                             ,cv_diff
+     1                             ,c1_c
+1111                    format(1x,a2,1x,a3,2i5,f8.2,3f8.1,f7.2,f8.2,f6.1       
+     1                        ,f6.2,f8.1,2f7.1,3f6.2,1x,a,1x)
+
+
+                      elseif(trim(var_2d) .eq. 'TSF' .OR. 
+     1                       trim(var_2d) .eq. 'DSF'     )then ! convert K to F
+                        var_fcst_s(ista) = k_to_f(var_fcst_2d(i_i,i_j))       
+                   
+                      else
+                        var_fcst_s(ista) = var_fcst_2d(i_i,i_j)
+
+                      endif
 
                       sumobs = sumobs + var_s(ista)
                       sumanl = sumanl + swi_2d(i_i,i_j)
@@ -495,14 +526,29 @@
 
                 write(6,*)
                 write(6,*)' Generic stats, cnt = ',nint(cnt)
-                if(var_2d .eq. 'SWI')then
+                if(trim(var_2d) .eq. 'SWI')then
                   call stats_1d(maxsta,swi_s,rad2_s
      1                   ,'Solar Radiation (QCed): '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
-                elseif(var_2d .eq. 'TSF')then
+                elseif(trim(var_2d) .eq. 'TSF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface Temperature     '
+     1                   ,a_t,b_t,xbar,ybar
+     1                   ,bias,std,r_missing_data,istatus)
+                elseif(trim(var_2d) .eq. 'DSF')then
+                  call stats_1d(maxsta,var_fcst_s,var_s
+     1                   ,'Surface Dewpoint     '
+     1                   ,a_t,b_t,xbar,ybar
+     1                   ,bias,std,r_missing_data,istatus)
+                elseif(trim(var_2d) .eq. 'USF')then
+                  call stats_1d(maxsta,var_fcst_s,var_s
+     1                   ,'Surface U Wind Component'
+     1                   ,a_t,b_t,xbar,ybar
+     1                   ,bias,std,r_missing_data,istatus)
+                elseif(trim(var_2d) .eq. 'VSF')then
+                  call stats_1d(maxsta,var_fcst_s,var_s
+     1                   ,'Surface V Wind Component'
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                 endif
