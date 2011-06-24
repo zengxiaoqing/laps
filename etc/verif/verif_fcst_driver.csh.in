@@ -15,21 +15,31 @@ perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 > $LAPS_DATA_ROOT/time/modelt
 
 # Point verification (Solar, Sfc Temp, and 3D Wind)..................................................................
 
-$LAPSINSTALLROOT/bin/verif_fcst.exe $4 $NTIMES $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log
+echo "$LAPSINSTALLROOT/bin/verif_fcst.exe $4 $NTIMES $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log"
+      $LAPSINSTALLROOT/bin/verif_fcst.exe $4 $NTIMES $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log
 
 $LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $NTIMES                                   > $LAPS_DATA_ROOT/log/cloud_fcst.log
 
 # For the following plots we want to add in the analysis time as well
 @ NTIMES = $NTIMES + 1
 
-echo '$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100. "Surface Temperature" "Deg F" >& $LAPS_DATA_ROOT/log/tsf_fcst.log'
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100. "Surface Temperature" "Deg F" >& $LAPS_DATA_ROOT/log/tsf_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100. '"Surface Temperature" "Deg F"' >& $LAPS_DATA_ROOT/log/tsf_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100.  "Surface Temperature" "Deg F"  >& $LAPS_DATA_ROOT/log/tsf_fcst.log
 
-echo '$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt U3  0.:40.  "U Wind Component" "M/S" >& $LAPS_DATA_ROOT/log/u3_fcst.log'
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt U3  0.:40.  "U Wind Component" "M/S" >& $LAPS_DATA_ROOT/log/u3_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:100. '"Surface Temperature" "Deg F"' >& $LAPS_DATA_ROOT/log/dsf_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:100.  "Surface Temperature" "Deg F"  >& $LAPS_DATA_ROOT/log/dsf_fcst.log
 
-echo '$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt V3  0.:40.  "V Wind Component" "M/S" >& $LAPS_DATA_ROOT/log/v3_fcst.log'
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt V3  0.:40.  "V Wind Component" "M/S" >& $LAPS_DATA_ROOT/log/v3_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt USF -20.:20. '"Sfc Wind U Component"'  "m/s"   >& $LAPS_DATA_ROOT/log/usf_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt USF -20.:20.  "Sfc Wind U Component"   "m/s"   >& $LAPS_DATA_ROOT/log/usf_fcst.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt VSF -20.:20. '"Sfc Wind V Component"'    "m/s"   >& $LAPS_DATA_ROOT/log/vsf_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt VSF -20.:20.  "Sfc Wind V Component"     "m/s"   >& $LAPS_DATA_ROOT/log/vsf_fcst.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt U3  -10.:30.  '"U Wind Component" "M/S"' >& $LAPS_DATA_ROOT/log/u3_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt U3  -10.:30.   "U Wind Component" "M/S"  >& $LAPS_DATA_ROOT/log/u3_fcst.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt V3  -20.:20.  '"V Wind Component" "M/S"' >& $LAPS_DATA_ROOT/log/v3_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt V3  -20.:20.   "V Wind Component" "M/S"  >& $LAPS_DATA_ROOT/log/v3_fcst.log
 
 # Radar verification........................................................................................
 
