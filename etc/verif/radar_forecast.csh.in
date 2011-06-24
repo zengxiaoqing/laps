@@ -50,7 +50,7 @@ echo "Stop  time: $STOPTIME1 $STOPTIME2 NLINE is $NLINE"
 # Construct gnuplot .gp file
 #etenv GNUPLOTFILE $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.gp
 setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.gp
-setenv PNGDIR      $LOGDIR/
+setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/
 setenv PNGFILE     radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.png
 setenv DQUOTE \"
 
@@ -77,9 +77,9 @@ gnuplot < $GNUPLOTFILE
 echo " "
 echo "outputs..."
 ls -l $GNUPLOTFILE
-ls -l $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
+ls -l $PNGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
 
-cd $LOGDIR
+cd $PNGDIR
 rm -f          radar_fcst_$STAT_LC\_$REFLECTIVITY.png
 ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY.png
 
