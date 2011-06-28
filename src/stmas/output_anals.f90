@@ -310,8 +310,8 @@ print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fc
      ENDDO
     ENDDO
    ENDDO  
-   print*,'bko6_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,6))
-   print*,'bko7_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,7))
+!   print*,'bko6_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,6))
+!   print*,'bko7_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,7))
    ! OUT PUT SNOW CONTENT(SNO) AND RAI   
    call put_laps_3d_multi_R(LAPSI4T,'lwc',QW,units_3D,QWC ,  &
               BK0(1,1,1,T,6),BK0(1,1,1,T,7),     &                                                             
