@@ -175,11 +175,16 @@ SUBROUTINE READNMLST
 
   ! GET NAMELIST FROM STATIC:
   CALL GET_DIRECTORY('static',ST,N)
-  DR = ST(1:N)//'stmas3d.nl'
+! replacing the file name from stmas3d.nl to stmas3d.txt, and also increase the number by 1. N+10 to N+11. HJ 6/28/2011 
+!  DR = ST(1:N)//'stmas3d.nl'
+  DR = ST(1:N)//'stmas3d.txt'
 ! --------------------
   NU=2
   !OPEN(NU,FILE='namelist.txt',ACTION='READ',STATUS='OLD')
-  OPEN(NU,FILE=DR(1:N+10),ACTION='READ',STATUS='OLD')
+! replacing the file name from stmas3d.nl to stmas3d.txt, and also increase the number by 1. N+10 to N+11. HJ 6/28/2011 
+!  OPEN(NU,FILE=DR(1:N+10),ACTION='READ',STATUS='OLD')
+  OPEN(NU,FILE=DR(1:N+11),ACTION='READ',STATUS='OLD')
+
 
   READ(NU,*)IFBKGND
   READ(NU,*)IFBOUND
