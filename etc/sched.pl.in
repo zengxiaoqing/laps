@@ -151,7 +151,7 @@ if(defined $opt_s){ # "surface only"
                   GSI_Prep.exe);
 }elsif( ($opt_V eq "STMAS3D")) { # GSI analysis or STMAS 3D analysis
     @LAPS_EXE = qw(lga.exe 
-                  obs_driver.x sfc_qc.exe
+                  obs_driver.x
                   ingest_pro.exe ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
                   ingest_lrs.exe lvd_sat_ingest.exe
@@ -587,7 +587,7 @@ foreach $exe (@LAPS_EXE){
                     if($qsub_mode eq "multi" || ! defined($opt_P)){
                         print TFILE "#\$ -pe $node_type $nodes_current\n";
                         if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
-                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=11.0G\n";
+                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=12.0G\n";
                         }else{
                             if($nodes_current > 1){
                                 print TFILE "#\$ -l h_rt=00:15:00\n";
