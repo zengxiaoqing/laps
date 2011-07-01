@@ -41,9 +41,9 @@ if test "$3" = qsub; then
     cat $script                              >> $log
     echo " "                                 >> $log
     echo " using this command..."            >> $log
-    echo "/usr/local/fsl/bin/qsub_wait $script >> $log 2>&1"     >> $log
+    echo "/usr/local/fsl/bin/qsub $script >> $log 2>&1"     >> $log
 
-          /usr/local/fsl/bin/qsub_wait $script >> $log 2>&1      >> $log
+          /usr/local/fsl/bin/qsub $script >> $log 2>&1      >> $log
 
 else
 
