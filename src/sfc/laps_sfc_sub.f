@@ -792,7 +792,7 @@ c
 
 !             Stuck wind direction
               if(obs_std(ista,iv_dir) .ne. r_missing_data)then
-                if(obs_std(ista,iv_dir)  .lt. 1.0 .and. 
+                if(obs_std(ista,iv_dir)  .lt. 3.0 .and. 
      1             obs_mean(ista,iv_spd) .gt. 0.)then
                   if(dd_s(mm) .ne. badflag)then
                     obs(mm)%dd_ea_deg = 180.                  
