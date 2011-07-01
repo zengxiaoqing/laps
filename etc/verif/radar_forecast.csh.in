@@ -29,6 +29,7 @@ setenv MODELTIME_HHMM `cat $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
 setenv STAT_LC `echo $STAT | gawk '{print tolower($0)}'`
 
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
+setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/members.txt                                   
 
 echo " "
 echo "inputs..."
@@ -48,7 +49,7 @@ echo "Start time: $STARTTIME1 $STARTTIME2"
 echo "Stop  time: $STOPTIME1 $STOPTIME2 NLINE is $NLINE"
 
 # Construct gnuplot .gp file
-#etenv GNUPLOTFILE $LOGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.gp
+# Fonts are: tiny small medium large giant                                    
 setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.gp
 setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/
 setenv PNGFILE     radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.png
@@ -66,10 +67,31 @@ echo 'set grid'                                                          >> $GNU
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
 echo 'set xlabel "Initialized at '$MODELTIME'"'                          >> $GNUPLOTFILE
 echo 'set ylabel "Radar Reflectivity '$STAT'"'                           >> $GNUPLOTFILE
-echo 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'"'         >> $GNUPLOTFILE
+echo 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'"'        >> $GNUPLOTFILE
+#cho 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'" giant'   >> $GNUPLOTFILE
+#cho 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'" font DejaVuSans 30'   >> $GNUPLOTFILE
 echo 'set key left box'                                                  >> $GNUPLOTFILE
-echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "'$STAT'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
 
+setenv NMEMBERS `wc -l $MEMBERS_FILE | cut -c1-2`
+echo "NMEMBERS: $NMEMBERS"
+
+setenv IMEMBER 1
+while ($IMEMBER <= $NMEMBERS)  
+    setenv ICOL $IMEMBER
+    @ ICOL = $ICOL + 2
+    
+    setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
+    echo "IMEMBER MEMBER: $IMEMBER $MEMBER"
+
+    if ($IMEMBER == $NMEMBERS) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+    else
+        echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+    endif
+
+    @ IMEMBER = $IMEMBER + 1
+
+end
 
 # Run gnuplot
 gnuplot < $GNUPLOTFILE
@@ -77,6 +99,7 @@ gnuplot < $GNUPLOTFILE
 echo " "
 echo "outputs..."
 ls -l $GNUPLOTFILE
+ls -l $PNGDIR$PNGFILE
 ls -l $PNGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
 
 cd $PNGDIR
