@@ -188,6 +188,13 @@ my @plines;
 my @vertical_grid;
 
 if( $WHICH_TYPE eq "laps"){
+
+#   Use the small FUA CDL file for large domains
+    if( ($varx*$vary*$varz) > 20000000){
+        print "Large domain - using small version of fua CDL file to help keep fua file size under 2GB\n";
+	run_sys::run_sys("cp $DATA_ROOT/data/cdl/fua_small.cdl $DATA_ROOT/cdl/fua.cdl");
+    }
+
     my $vertical_namelist;
     @vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
 
@@ -344,10 +351,6 @@ if( !defined $no_ggm ){
     if( ($varx*$vary) > 6000000){
         print "Large domain - using small version of nest7grid CDL file to help keep static file size under 2GB\n";
 	run_sys::run_sys("cp $DATA_ROOT/data/cdl/nest7grid_small.cdl $DATA_ROOT/cdl/nest7grid.cdl");
-    }
-    if( ($varx*$vary*$varz) > 20000000){
-        print "Large domain - using small version of fua CDL file to help keep fua file size under 2GB\n";
-	run_sys::run_sys("cp $DATA_ROOT/data/cdl/fua_small.cdl $DATA_ROOT/cdl/fua.cdl");
     }
     if(defined $qspn && $q_sub eq "q"){
        $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -q $qspn -n rt gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
