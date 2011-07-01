@@ -223,6 +223,7 @@ real              :: tcheck
 real              :: theta
 real, intent(in)  :: thetae
 real              :: tovtheta
+real              :: arg
 real, intent(out) :: tparcel
 logical           :: converged
 
@@ -231,7 +232,13 @@ tovtheta=(p/1000.)**kappa
 tparcel=thetae/exp(lv*0.012/(cp*295.0))*tovtheta
 
 do iter=1,50 
-   theta = thetae / exp(lv*mixsat(tparcel,p*100.)/(cp*tparcel))
+   arg = lv*mixsat(tparcel,p*100.)/(cp*tparcel)
+   if(arg .le. 80.)then
+      theta = thetae / exp(arg)
+   else
+      print*,'Warning, large argument for exponent ', arg
+      goto 999
+   endif
    tcheck = theta * tovtheta
    if (abs(tparcel-tcheck) < 0.05) then
       converged=.true.
@@ -240,6 +247,7 @@ do iter=1,50
    tparcel=tparcel+(tcheck-tparcel)*0.3
 enddo
 
+999 continue
 if (.not. converged) then
    print*,'Warning: thetae to temp calc did not converge.'
    print*,'  thetae and p:',thetae,p
