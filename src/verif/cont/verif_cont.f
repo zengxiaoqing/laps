@@ -58,6 +58,7 @@
 
         logical lmask_and_3d(NX_L,NY_L,NZ_L)
         logical lmask_rqc_3d(NX_L,NY_L,NZ_L)
+        logical l_col /.true./
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
@@ -83,7 +84,7 @@
         character*9 a9time,a9time_valid,a9time_initial
         character*24 a24time_valid
         character*150 hist_dir, cont_dir, verif_dir, plot_dir
-        character*150 hist_file, bias_file, ets_file
+        character*150 hist_file, bias_file, ets_file, members_file
 
         integer n_fields
         parameter (n_fields=1)
@@ -189,6 +190,7 @@
                 lun_out = 11
                 lun_bias = 12
                 lun_ets  = 13
+                lun_mem  = 14
 
                 write(c2_region,1)iregion
  1              format(i2.2)
@@ -427,23 +429,53 @@
 
            write(6,*)'ets_file = ',ets_file
 
+           members_file  = plot_dir(1:len_plot)//'/'
+     1                                     //'members.txt'      
+
+           write(6,*)'members_file = ',members_file
+
            open(lun_bias,file=bias_file,status='unknown')
            open(lun_ets,file=ets_file,status='unknown')
 
-           do imodel = 2,n_fdda_models
+           if(l_col)then
                do itime_fcst = 0,n_fcst_times
                    i4_valid = i4_initial + itime_fcst * model_cycle_time
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
-                   write(lun_bias,911)a24time_valid     
+                   write(lun_bias,911)a24time_valid,    
+     1                 (bias(imodel,itime_fcst,iregion,idbz)
+     1                              ,imodel=2,n_fdda_models)     
+                   write(lun_ets,911)a24time_valid,    
+     1                 (ets(imodel,itime_fcst,iregion,idbz)
+     1                              ,imodel=2,n_fdda_models)     
+911                format(a24,3x,20f12.3)
+               enddo ! itime_fcst
+
+               open(lun_mem,file=members_file,status='unknown')
+               do imodel = 2,n_fdda_models
+                   c_model = c_fdda_mdl_src(imodel)
+                   if(c_model(1:3) .ne. 'lga')then
+                       write(lun_mem,*)trim(c_model)              
+                   endif
+               enddo ! imodel
+               close(lun_mem)
+
+           else
+             do imodel = 2,n_fdda_models
+               do itime_fcst = 0,n_fcst_times
+                   i4_valid = i4_initial + itime_fcst * model_cycle_time
+                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
+     1                                 ,istatus)
+                   write(lun_bias,912)a24time_valid     
      1                             ,bias(imodel,itime_fcst,iregion,idbz)     
-                   write(lun_ets,911)a24time_valid     
+                   write(lun_ets,912)a24time_valid     
      1                              ,ets(imodel,itime_fcst,iregion,idbz)
-911                format(a24,3x,2f12.3)
+912                format(a24,3x,2f12.3)
                enddo ! itime_fcst
                write(lun_bias,*)
                write(lun_ets,*)
-           enddo ! imodel
+             enddo ! imodel
+           endif
 
            close(lun_bias)
            close(lun_ets)
