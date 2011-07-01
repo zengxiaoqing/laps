@@ -224,7 +224,7 @@ C
 C ****  Return normally.
 C
         istatus=error(1)
-999     deallocate(data_l)
+999     if(allocated(data_l))deallocate(data_l)
         return
 C
 C ****  Error trapping.
