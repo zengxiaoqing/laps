@@ -300,6 +300,7 @@ if (maxval(vsfc) > 1000.) vsfc(:,:)=hvsig(:,:,1)
 if (maxval(wsfc) > 1000.) wsfc(:,:)=hwsig(:,:,1)
 
 ! Other derived surface fields.
+where(mrsfc < zero_thresh) mrsfc = zero_thresh
 
 do j=1,ly
 do i=1,lx
@@ -373,7 +374,7 @@ if (make_micro) then
    do j=1,ly
    do i=1,lx
       if(intliqwater(i,j) < rmsg)then
-         cldamt(i,j) = (intliqwater(i,j) * 100.) ** 0.5
+         cldamt(i,j) = (intliqwater(i,j) * 100.) ** 0.3333333
          cldamt(i,j) = min(cldamt(i,j),1.0)
       endif
    enddo ! i
@@ -460,7 +461,14 @@ if (make_micro) then
       pcptype_sfc=rmsg
       pcptype_prs=rmsg
    endif
-endif
+
+!  Convert mr to concentration for microphysical species?
+!  To do this we'd need rho on the pressure grid. Otherwise we can convert
+!  on the model sig grid using rhosig, and this is now done at the end of 
+!  'lfm_reflectivity'
+
+endif ! make_micro
+
 
 ! Precip fields.
 
@@ -562,6 +570,7 @@ where (pblhgt < 0.) pblhgt=0.
 
 ! Helicity, cape, cin, LI.
 
+write(6,*)' Calculating helicity, stability indices'
 call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
 call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
 call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
@@ -571,6 +580,7 @@ deallocate(hthetasig,hthetaesig,hzsigf)
 
 ! Height of wet-bulb = 0C.
 
+write(6,*)' Calculating wet bulb zero height'
 allocate(htdsig(lx,ly,nz))
 htdsig=htsig/((-rvolv*alog(hrhsig)*htsig)+1.0)
 
@@ -1033,7 +1043,8 @@ do i=1,nx
         ! Add the ice component
         refl(i,j,k)=refl(i,j,k) + &
                     38000.0*(rho(i,j,k) * 1000.0 * &
-                    MAX(0.0,icemr(i,j,k)+snowmr(i,j,k)+graupelmr(i,j,k)))**2.2
+!                   MAX(0.0,icemr(i,j,k)+snowmr(i,j,k)+graupelmr(i,j,k)))**2.2
+                    MAX(0.0,             snowmr(i,j,k)+graupelmr(i,j,k)))**2.2
 
         ! Convert to dBZ (with a lower limit of zero, given the max application)
         refl(i,j,k) = 10.*ALOG10(MAX(refl(i,j,k),1.0))
@@ -1092,6 +1103,12 @@ do i=1,nx
    max_refl(i,j)=maxval(refl(i,j,:))
 enddo
 enddo
+
+! Convert Microphsical mixing ratios to concentrations - multiplying by rho
+rainmr(:,:,:)    = rainmr(:,:,:) * rho(:,:,:)
+snowmr(:,:,:)    = snowmr(:,:,:) * rho(:,:,:)
+icemr(:,:,:)     = icemr(:,:,:) * rho(:,:,:)
+graupelmr(:,:,:) = graupelmr(:,:,:) * rho(:,:,:)
 
 return
 end
@@ -1425,8 +1442,8 @@ do i=2,imax-1
       dudy = (usig(i,j+1,k)-usig(i,j-1,k))/dy
       sumhel = sumhel + wsig(i,j,k)*(dvdx-dudy)*dz 
       if (k==k5km) then
-       print *, i,j,k,dx,dy
-       print *, dz,dvdx,dudy,wsig(i,j,k),sumhel
+!      print *, i,j,k,dx,dy
+!      print *, dz,dvdx,dudy,wsig(i,j,k),sumhel
       endif
    enddo
    uhel(i,j)=sumhel
@@ -2059,6 +2076,10 @@ do i=1,lx
       if (twu <= 273.15+threshold .and. twl > 273.15+threshold) then
          rat=(twl-273.15+threshold)/(twl-twu)
          pr0=pr(i,j,k)+rat*(pr(i,j,k+1)-pr(i,j,k))
+         if(pr0 .lt. 0.)then
+             write(6,*)' ERROR in height_tw: pr0 < 0. ',pr0
+             go to 1
+         endif
          zbot=ht(i,j,k)
          ztop=ht(i,j,k+1)
          rat=alog(pr0/pr(i,j,k))/alog(pr(i,j,k+1)/pr(i,j,k))
