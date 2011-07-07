@@ -328,6 +328,17 @@ then
     FFLAGS="$FFLAGS -fd-lines-as-comments"
 fi
 
+dnl  Check to see if we are running the lahey
+dnl  compiler. If so, set flags appropriately.
+
+grep 'lahey' << EOF
+$FC
+EOF
+if test $? -eq 0
+then
+  OTHERLIBS="$OTHERLIBS -lc"
+fi
+
 echo "CFLAGS = $CFLAGS"
 echo "DBCFLAGS = $DBCFLAGS"
 echo "FFLAGS = $FFLAGS"
