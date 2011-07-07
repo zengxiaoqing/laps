@@ -1154,7 +1154,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         enddo ! i
         enddo ! k
        
-
+!       Read dewpoint obs from HMG file (generating this if needed)
         call  read_tdsnd(i4time,heights_3d,dum1_3d,               ! Input
      1                   pres_3d,                                 ! Input
      1                   lat_tdsnd,lon_tdsnd,                     ! Output
