@@ -91,7 +91,7 @@ c
                var(k,1)='HT '
             else
                ip(k)= int(ht_1d(k)) 
-               var(k,1)='HT '
+               var(k,1)='P3 '
             endif
             var(k,2)='T3 '
             var(k,3)='SH '
