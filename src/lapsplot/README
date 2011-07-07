@@ -14,8 +14,9 @@ driver                                            lapsplot_main.f
                     plot_mesoob                      "
             plot_temp_obs                         plotobs.f
                     plot_mesoob                   plot_mesoob.f
-            plot_td_sndobs                           "
+            plot_td_sndobs                        plotobs.f
                 read_tdsnd                        read_tdsnd.f
+                    read_gps_obs                  lib/read_gps_obs.f
             plot_td_obs                           plotobs.f
             write_label_lplot                     hsect.f
         xsect                                     xsect.f
