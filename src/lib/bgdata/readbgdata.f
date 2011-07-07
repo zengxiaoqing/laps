@@ -164,6 +164,9 @@ c        character gproj*2
 
       end interface
 
+!     Initialize
+      htbg_sfc = 0.
+
       call s_len(cmodel,lencm)
 
       call get_r_missing_data(r_missing_data,istatus)
