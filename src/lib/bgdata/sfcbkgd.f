@@ -81,6 +81,9 @@ c
          badflag=0.
          write(6,*)
      1        ' Interp 3D T and RH to hi-res terrain, qsfc_i is RH?'
+         write(6,*)' ter range = ',minval(ter),maxval(ter)
+         write(6,*)' height bottom level range = '
+     1             ,minval(height(:,:,1)),maxval(height(:,:,1))
          call interp_to_sfc(ter,rh3d,height,imx,jmx,kx,
      &                      badflag,tdsfc_o) ! Here tdsfc_o temporarily is RH
          call interp_to_sfc(ter,t,height,imx,jmx,kx,badflag,
