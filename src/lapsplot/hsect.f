@@ -4168,7 +4168,7 @@ c abdel
               call condition_cape(NX_L,NY_L,c_type,r_missing_data
      1                           ,field_2d)
 
-              c_label = 'CAPE                (J/KG)       '
+              c_label = 'SBCAPE              (J/KG)       '
               clow = 0.
               chigh = chigh_cape
               cint = +500.
@@ -4748,7 +4748,7 @@ c                   cint = -1.
             endif
 
 !           Plot obs from the HMG file 
-            write(6,*)' Plotting HMG file'
+            write(6,*)' Plotting dewpoint from HMG file'
             call plot_td_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                      ,r_missing_data,lat,lon,topo,zoom
      1                      ,plot_parms,k_mb,mode)
@@ -4764,10 +4764,16 @@ c                   cint = -1.
      1                        * laps_cycle_time
             endif
 
+!           Read dewpoint obs from the SND file (and make hmg file)
+            write(6,*)' Reading SND file and GPS to make HMG file'
+            call plot_td_sndobs(k_level,i4time_temp,NX_L,NY_L,NZ_L
+     1                         ,r_missing_data,lat,lon,topo,zoom
+     1                         ,plot_parms)
+
             mode = 3
 
 !           Use this if the HMG file becomes available
-            write(6,*)' Plotting GPS obs from HMG file'
+            write(6,*)' Plotting GPS WV obs from HMG file'
             call plot_td_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                      ,r_missing_data,lat,lon,topo,zoom
      1                      ,plot_parms,k_mb,mode)
