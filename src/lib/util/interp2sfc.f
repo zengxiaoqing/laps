@@ -54,6 +54,8 @@ c=================================================================
 c
       real sfc_2d(ni,nj), field_3d(ni,nj,nk), heights_3d(ni,nj,nk)
       real interp_2d(ni,nj)
+      
+      logical ltest_vertical_grid
 c
       write(6,*)' Interpolate 3-d field to 2-d surface (interp_to_sfc)'
 
