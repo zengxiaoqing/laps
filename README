@@ -233,6 +233,10 @@
      (gcc) available at 'http://www.gnu.org/software/gcc/gcc.html'. Check that 
      the C compiler is in your path.
 
+     With the 'pgf90' FORTRAN compiler, 'pgcc' is recommended.
+
+     With the Intel 'ifort' FORTRAN compiler, 'icc' is recommended.
+
      For Solaris platforms, 'cc' is recommended.
 
      For HP-UX platforms, 'cc' is suggested.
