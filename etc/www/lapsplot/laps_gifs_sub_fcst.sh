@@ -138,10 +138,11 @@ if test "$netpbm" = "yes"; then
     date
     echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file"
     $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
+    echo "Success in ctrans to make GIF"
     ls -l $SCRATCH_DIR/gmeta_$prod.gif
     date
 
-else
+else # laps_prod.sh option no longer used
   echo "Running $NCARG_ROOT/bin/ctrans to make gmeta_$prod.$ctransext file"
 
   $NCARG_ROOT/bin/ctrans -verbose -d $ctransarg -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/gmeta_$prod.$ctransext
@@ -165,17 +166,20 @@ then
   cp $SCRATCH_DIR/datetime $RECENT/cycle.datetime
 fi
 
+touch $WWW_DIR/fcst2d/$MODEL/latest.txt
 
 cp $SCRATCH_DIR/gmeta_$prod.gif $ARCHIVE/$cycle/$prod/$fcsthr.gif
 ln -fs $ARCHIVE/$cycle/$prod/$fcsthr.gif $RECENT/$prod/$fcsthr.gif
+ls -l $ARCHIVE/$cycle/$prod/$fcsthr.gif
+ls -l $RECENT/$prod/$fcsthr.gif
 
 # Set up looper
-$LOOPER $ARCHIVE/$cycle/$prod
+# $LOOPER $ARCHIVE/$cycle/$prod
 
 #Cleanup
 
 'rm' -f $SCRATCH_DIR/gmeta_$prod.$ctransext
 echo " "
+echo "finish laps_gifs_sub_fcst.sh..."
 date
-echo " "
 exit
