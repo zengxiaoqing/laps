@@ -883,10 +883,13 @@ c
              allocate(prvi(nx_bg,ny_bg,nz_laps))
 
 !            We want to model 'sigma_ht' vertical levels on the model 
-!            horizontal grid to construct the 'htvi' array. The 'ht_sfc' 
+!            horizontal grid to construct the 'htvi' array. The 'htbg_sfc' 
 !            model terrain can be used.
 
-             call get_ht_3d(nx_bg,ny_bg,nz_laps,ht_sfc,htvi
+             write(6,*)' htbg_sfc range: ',minval(htbg_sfc)
+     1                                    ,maxval(htbg_sfc)       
+
+             call get_ht_3d(nx_bg,ny_bg,nz_laps,htbg_sfc,htvi
      1                     ,istatus)
              if(istatus .ne. 1)then
                  write(6,*)' Error returned from get_ht_3d (model grid)'       
@@ -917,6 +920,12 @@ c
      1                                              ,maxval(htbg(:,:,k))   
              enddo ! i
 
+             write(6,*)
+             do k = 1,nzbg_ht
+                 write(6,*)' shbg range at level ',k,minval(shbg(:,:,k))
+     1                                              ,maxval(shbg(:,:,k))   
+             enddo ! i
+
              call vinterp_ht(nz_laps,nx_bg,ny_bg
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .         ,htvi,prbght,prbgsh,prbguv,prbgww 
@@ -927,6 +936,12 @@ c
              do k = 1,nz_laps
                  write(6,*)' prvi range at level ',k,minval(prvi(:,:,k))       
      1                                              ,maxval(prvi(:,:,k))   
+             enddo ! k
+
+             write(6,*)
+             do k = 1,nz_laps
+                 write(6,*)' shvi range at level ',k,minval(shvi(:,:,k))       
+     1                                              ,maxval(shvi(:,:,k))   
              enddo ! k
 
            else
@@ -1100,6 +1115,12 @@ c
      .                           grx,gry,tpvi,tp,wrapped)
               call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,shvi,sh,wrapped)
+
+              write(6,*)
+              do k = 1,nz_laps
+                 write(6,*)' sh range at level ',k,minval(sh(:,:,k))       
+     1                                            ,maxval(sh(:,:,k))   
+              enddo ! k
 
            else
               istatus=ishow_timer()
@@ -1436,10 +1457,16 @@ c always use sfcbkgd (as opposed to sfcbkgd_sfc) to compute reduced pressure
 c because this version uses the 3D analysis info for computations.
 c
            itstatus(3)=ishow_timer()
-           write(6,*)' call sfcbkgd for reduced pressure'
-           call sfcbkgd(bgmodel,tp,sh,ht,rp_tp,rp_sh
-     1                 ,rp_td,dum2_2d,rp_lvl,pr1d_mb
-     1                 ,nx_laps, ny_laps, nz_laps, rp_sfc)
+
+           if(vertical_grid .ne. 'SIGMA_HT')then
+              write(6,*)' call sfcbkgd for reduced pressure'
+              call sfcbkgd(bgmodel,tp,sh,ht,rp_tp,rp_sh
+     1                    ,rp_td,dum2_2d,rp_lvl,pr1d_mb
+     1                    ,nx_laps, ny_laps, nz_laps, rp_sfc)
+           else
+              write(6,*)' skip calling sfcbkgd for reduced pressure'
+              rp_sfc = missingflag
+           endif
 
            deallocate (rp_lvl,rp_tp,rp_sh,rp_td)
 
