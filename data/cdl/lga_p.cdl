@@ -17,7 +17,7 @@ netcdf lga {
             p3:record = "valtime, reftime";
             p3:_FillValue = 1.e+37f;
             p3:long_name="Background pressure";
-            p3:units="meters";
+            p3:units="pascals";
             p3:valid_range= 0.f, 120000.f;
             p3:LAPS_var="P3";
             p3:lvl_coord="SIGMA_M";
