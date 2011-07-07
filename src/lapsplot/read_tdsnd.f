@@ -82,9 +82,24 @@ cdis
 
         logical l_read_raob,l_3d,l_string_contains,l_exist
 
-!       Initialize
+!       GPS obs
+        integer gps_n, gps_indomain
+        parameter (gps_n = 10000)
+        real gps_tpw(gps_n)
+        real gps_wet(gps_n)
+        real gps_error(gps_n)
+        real gps_xy(2,gps_n)
+        real gps_elv(gps_n)
+        real gps_tim(gps_n)
+        character*256 path_to_gps
 
-        write(6,*)' Subroutine read_tdsnd -- reads LRS and SND'
+!       Initialize
+        path_to_gps = '/public/data/gpsmet/netcdf/'
+
+        write(6,*)
+     1  ' Subroutine read_tdsnd -- reads LRS, SND and GPS to make HMG'
+
+        lun_hmg = 32
 
         iwrite_output = 1
 
@@ -119,7 +134,7 @@ cdis
         endif
 
         if(iwrite_output .ge. 1)then
-            call open_lapsprd_file(32,i4time_sys,ext,istatus)
+            call open_lapsprd_file(lun_hmg,i4time_sys,ext,istatus)
             if(istatus .ne. 1)return
         endif
 
@@ -347,11 +362,11 @@ c       1                ,t_diff
 712                     if(c8_sndtype(i_tdsnd)(1:3) .ne. 'GPS'  .and.
      1                     c8_sndtype(i_tdsnd)(1:4) .ne. 'RAOB' .and.
      1                     c8_sndtype(i_tdsnd)(1:4) .ne. 'RADI'  )then
-                            write(32,*)ri-1.,rj-1.,level-1       
+                            write(lun_hmg,*)ri,rj,level       
      1                      ,ob_pr_td(i_tdsnd,level),c8_sndtype(i_tdsnd) 
      1                      ,' NONAME'
                         else
-                            write(32,*)ri-1.,rj-1.,level-1       
+                            write(lun_hmg,*)ri,rj,level       
      1                      ,ob_pr_td(i_tdsnd,level),c8_sndtype(i_tdsnd) 
      1                      ,' ',c5_name(i_tdsnd)      
                         endif
@@ -369,6 +384,40 @@ c       1                ,t_diff
 800     continue ! Exit out of loop when file is done
         n_snde = i_tdsnd - 1 - n_rass 
         close(12)
+
+! ***   Read in GPSdata  ***************************************
+        lun = 33
+        i4beg = i4time_sys - 1800
+        i4end = i4time_sys + 1800
+        istatus = 0
+        call read_gps_obs (lun, path_to_gps, i4beg, i4end,
+     1     imax, jmax, lat, lon, bad_sfc,
+     1     gps_tpw, gps_wet, gps_error, gps_xy, gps_elv, 
+     1     gps_tim, gps_indomain, gps_n, istatus)
+        if(istatus .eq. 1)then
+           write(6,*)' Success reading GPS obs, #obs = ',gps_indomain
+        else
+           write(6,*)' Failure reading GPS obs'
+        endif
+
+        if(.false.)then
+          n_gps = 0
+          level = 0
+          do i = 1,gps_num
+            call latlon_to_rlapsgrid(gps_xy(1,i),gps_xy(2,i),lat,lon
+     1                                            ,imax,jmax,ri,rj)
+            write(6,*)i,gps_xy(:,i)
+            if(ri .ge. 1. .and. ri .le. float(imax) .AND.
+     1         rj .ge. 1. .and. rj .le. float(jmax)      )then
+                n_gps = n_gps + 1
+                write(6      ,*)ri,rj,level       
+     1             ,gps_tpw(i),'GPS     '
+                write(lun_hmg,*)ri,rj,level       
+     1             ,gps_tpw(i),'GPS     '
+            endif
+          enddo ! i
+        endif 
+
         istatus = 1
         goto 900
 
@@ -379,6 +428,9 @@ c       1                ,t_diff
  
         write(6,*) ' Read ',n_snde,' SND sounding(s)'
         write(6,*) ' Read ',n_tdsnd,' Total LRS+SND sounding(s)'
+        write(6,*) ' Read ',gps_indomain,' GPS obs in domain'
+
+        close(lun_hmg)
 
         RETURN
         end
