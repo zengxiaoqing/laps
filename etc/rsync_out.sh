@@ -28,11 +28,14 @@ if test "$3" = qsub; then
     echo "#$ -S /bin/sh"            >> $script
     echo "#$ -cwd"                  >> $script
     echo "#$ -pe service 1"         >> $script
-    echo "#$ -o $LOCAL_DATA_ROOT/log/qsub_rsync_out.log"              >> $script
+    echo "#$ -o $LOCAL_DATA_ROOT/log/qsub_rsync_out.log.`date +\%H\%M`"      >> $script
+    echo "#$ -j y"                  >> $script
     echo "#exit"                    >> $script
     echo " "                        >> $script
     echo "LOCAL_DATA_ROOT=$LOCAL_DATA_ROOT" >> $script
     echo "REMOTE_DATA_ROOT=$REMOTE_DATA_ROOT" >> $script
+
+    echo "cd $LOCAL_DATA_ROOT"      >> $script
 
     echo "rsync -rlptgvvz --exclude='log/core' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
