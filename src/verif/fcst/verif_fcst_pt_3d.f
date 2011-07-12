@@ -2,7 +2,7 @@
         subroutine verif_fcst_pt_3d(i4time_sys,a9time,laps_cycle_time,
      1                  ni,nj,
      1                  nk,
-     1                  maxsta,
+     1                  maxsta,max_obs,
      1                  r_missing_data,
      1                  model_cycle_time_sec,
      1                  n_fcst_times,
@@ -10,6 +10,7 @@
 
         include 'barnesob.inc'
         include 'windparms.inc'
+        include 'tempobs.inc'   
 
         real var_anal_3d(ni,nj,nk)
         real var_fcst_3d(ni,nj,nk)
@@ -29,9 +30,10 @@
         real grid_laps_wt(ni,nj,nk)
         real heights_3d(ni,nj,nk)
         real heights_1d(nk)
+        real pres_3d(ni,nj,nk)
         type (barnesob) :: obs_point(maxsta)   
 
-        real k_to_f
+        real k_to_c
 
         integer       maxbgmodels
         parameter     (maxbgmodels=10)
@@ -53,16 +55,18 @@
         character*150 hist_dir, verif_dir
         character*150 hist_file
 
-        integer n_fields
-        parameter (n_fields=2)
-        character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
-        character*10 var_a(n_fields)
+        integer n_vfields
+        parameter (n_vfields=4)
+        character*10 ext_anal_a(n_vfields), ext_fcst_a(n_vfields)
+        character*10 var_a(n_vfields)
         character*2 c2_region
 
 !       Specify what is being verified
-        data ext_fcst_a /'fua','fua'/ ! 3-D
+        data ext_fcst_a /'fua','fua','   ','fua'/ ! 3-D
 !       data ext_anal_a /'lps'/ ! 3-D reflectivity
-        data var_a      /'U3','V3'/ ! 3-D Wind
+        data var_a      /'U3','V3','W3','T3'/               
+
+        real rms_a (n_vfields,maxbgmodels,0:max_fcst_times)
 
         integer contable(0:1,0:1)
 
@@ -90,11 +94,9 @@
         real cld_hts(KCLOUD)
 
         character c_stations(maxsta)*3
-        character stn(maxsta)*20
 
         real lat_s(maxsta), lon_s(maxsta), elev_s(maxsta)
         real var_s(maxsta)
-        real rad2_s(maxsta)
         real var_fcst_s(maxsta)
         real cvr_s(maxsta)
 
@@ -133,7 +135,9 @@
 
         lun_in = 21
 
-        rmiss = -999.
+        rmiss = -99.9
+
+        rms_a = r_missing_data
 
 !       Get fdda_model_source from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
@@ -148,7 +152,8 @@
 !           stop
 !       endif
 
-        do ifield = 1,n_fields
+!       do ifield = 1,3                  
+        do ifield = 1,n_vfields
 
           var_2d = var_a(ifield)
           call s_len(var_2d,lenvar)
@@ -212,6 +217,11 @@
                 write(c2_region,1)iregion
  1              format(i2.2)
 
+                if(trim(var_2d) .eq. 'W3')then
+!                   call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
+                    goto 1200
+                endif
+
                 N_SAO = 100000      ! read from wind.nl or nest7grid.parms?
                 N_PIREP = 100000    ! read from wind.nl or nest7grid.parms?
                 MAX_PR = 3000       ! read from wind.nl?
@@ -222,7 +232,34 @@
                 var_fcst_s = r_missing_data
                 max_wind_obs = maxsta
 
-!               Read wind obs        
+                if(.true.)then
+                  write(6,*)' Reading forecast field'
+
+!                 Read forecast field
+                  ext = ext_fcst_a(ifield)
+                  call get_directory(ext,directory,len_dir)
+
+                  DIRECTORY=directory(1:len_dir)//c_model(1:len_model)
+     1                                          //'/'
+
+                  call get_lapsdata_3d(i4_initial,i4_valid
+     1                          ,ni,nj,nk
+     1                          ,DIRECTORY,var_2d
+     1                          ,units_2d,comment_2d
+     1                          ,var_fcst_3d
+     1                          ,istatus)
+                  if(istatus .ne. 1)then
+                       write(6,*)' Error reading 3D Forecast for '
+     1                           ,var_2d
+                       xbar = rmiss
+                       ybar = rmiss
+                       std = rmiss
+                       goto 900
+                  endif
+
+                endif ! .true.
+
+!               Read obs        
                 if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
                   write(6,*)' Reading analyzed height field'
                   call get_laps_3d(i4_valid
@@ -255,57 +292,62 @@
      1            istatus_remap_pro,                              ! O
      1            istatus                )                        ! O
 
+                elseif(var_2d .eq. 'T3')then ! read temperature obs
+                  write(6,*)' Reading analyzed height field'
+                  call get_laps_3d(i4_valid
+     1                          ,ni,nj,nk
+     1                          ,'lt1'    ,'HT '  
+     1                          ,units_2d,comment_2d
+     1                          ,heights_3d 
+     1                          ,istatus)
+                  if(istatus .ne. 1)then
+                       write(6,*)' Error reading analyzed height '
+                       goto 990
+                  endif
+
+                  call get_pres_3d(i4_valid,ni,nj,nk,pres_3d,istatus)
+                  if(istatus .ne. 1)then
+                    write(6,*)
+     1                ' Error: Bad status returned from get_pres_3d'
+                    goto 990
+                  endif
+
+                  call get_meso_sao_pirep(MAX_SFC,dum,MAX_ACARS,istatus)                 
+
+                  nobs_point = 0 ! initialize
+
+                  write(6,*)' Reading 3D ACARS temp obs - i4_valid = '
+     1                                                   ,i4_valid
+                  call rd_acars_t(i4_valid,heights_3d,var_fcst_3d   ! I
+     1                       ,pres_3d                               ! I
+     1                       ,MAX_ACARS                             ! I
+     1                       ,n_good_acars                          ! O
+     1                       ,'pin'                                 ! I
+     1                       ,ni,nj,nk                              ! I
+     1                       ,lat,lon,r_missing_data                ! I
+     1                       ,temp_obs,max_obs,nobs_point           ! I/O
+     1                       ,istatus)                              ! O
+                  if(istatus .ne. 1)then
+                    write(6,*)' bad status return from rd_acars_t'
+                    return
+                  endif
+
                 endif
 
                 write(6,*)' number of obs ',nobs_point      
 
-                if(var_2d .eq. 'SWI')then
-                  var_s = solar_s
-                  threshval = 0.
-                elseif(var_2d .eq. 'TSF')then
-                  var_s = t_s
-                  threshval = -99.9
-                endif
-
-                if(.true.)then
-
-                  write(6,*)' Reading forecast field'
-
-!                 Read forecast field
-                  ext = ext_fcst_a(ifield)
-                  call get_directory(ext,directory,len_dir)
-
-                  DIRECTORY=directory(1:len_dir)//c_model(1:len_model)
-     1                                          //'/'
-
-                  call get_lapsdata_3d(i4_initial,i4_valid
-     1                          ,ni,nj,nk
-     1                          ,DIRECTORY,var_2d
-     1                          ,units_2d,comment_2d
-     1                          ,var_fcst_3d
-     1                          ,istatus)
-                  if(istatus .ne. 1)then
-                       write(6,*)' Error reading 3D Forecast for '
-     1                           ,var_2d
-                       xbar = rmiss
-                       ybar = rmiss
-                       std = rmiss
-                       goto 900
-                  endif
-
-                endif ! .true.
-
                 cnt = 0.
 
                 do ista = 1,nobs_point
-                  if(var_2d .eq. 'V3')then
-                    var_s(ista) = obs_point(ista)%valuef(2)
-                  else
+                  if(var_2d .eq. 'U3')then
                     var_s(ista) = obs_point(ista)%valuef(1)
+                  elseif(var_2d .eq. 'V3')then
+                    var_s(ista) = obs_point(ista)%valuef(2)
+                  elseif(var_2d .eq. 'T3')then
+                    var_s(ista) = temp_obs(ista,i_ob_grid)             
                   endif
 
                   var_fcst_s(ista) = r_missing_data 
-                  rad2_s(ista) = r_missing_data 
 
                   write(6,*)ista,var_s(ista)
 
@@ -313,15 +355,21 @@
                     call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat
      1                          ,lon,ni,nj,ri,rj,istatus)
 
-                    i_i = obs_point(ista)%i
-                    i_j = obs_point(ista)%j
-                    i_k = obs_point(ista)%k
+                    if(var_2d .eq. 'T3')then
+                      i_g = temp_obs(ista,i_i)             
+                      j_g = temp_obs(ista,i_j)
+                      k_g = temp_obs(ista,i_k)
+                    else
+                      i_g = obs_point(ista)%i
+                      j_g = obs_point(ista)%j
+                      k_g = obs_point(ista)%k
+                    endif
 
-                    ii_s(ista) = i_i
-                    jj_s(ista) = i_j
+                    ii_s(ista) = i_g
+                    jj_s(ista) = j_g 
 
-                    if(i_i .ge. 3 .and. i_i .le. ni-2 .and.
-     1                 i_j .ge. 3 .and. i_j .le. nj-2            )then
+                    if(i_g .ge. 3 .and. i_g .le. ni-2 .and.
+     1                 j_g .ge. 3 .and. j_g .le. nj-2            )then
 
                       if(iwrite .eq. iwrite/20*20)then
                         write(6,*)'sv '
@@ -333,15 +381,15 @@
 
                       iwrite = iwrite + 1
 
-                      if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
-                        var_fcst_s(ista) = var_fcst_3d(i_i,i_j,i_k)
-                      endif
+!                     if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
+                        var_fcst_s(ista) = var_fcst_3d(i_g,j_g,k_g)
+!                     endif
  
                       sumobs = sumobs + var_s(ista)
                       sumanl = sumanl + var_fcst_s(ista)
                       cnt = cnt + 1.
 
-                      cvr_s(ista) = cvr_max(i_i,i_j)
+                      cvr_s(ista) = cvr_max(i_g,j_g)
 
 1112                endif ! ob is in domain
                   endif ! ista .ne. 0 (valid value)
@@ -349,16 +397,48 @@
 
                 write(6,*)
                 write(6,*)' Generic stats, cnt = ',nint(cnt)
-                if(var_2d .eq. 'U3')then
+
+                if(nint(cnt) .eq. 0)then
+                  write(6,*)' Skipping call to stats_1d'
+                  xbar = rmiss
+                  ybar = rmiss
+                  std = rmiss
+                  goto 900
+                endif
+
+1200            if(var_2d .eq. 'U3')then
                   call stats_1d(maxsta,var_fcst_s,var_s 
      1                   ,'U Wind Component:       '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
                 elseif(var_2d .eq. 'V3')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'V Wind Component:       '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
+                elseif(var_2d .eq. 'W3')then
+                  xbar = rms_a(1,imodel,itime_fcst)
+                  ybar = rms_a(2,imodel,itime_fcst)
+                  if(xbar .ne. r_missing_data .AND.
+     1               ybar .ne. r_missing_data       )then
+                      std = sqrt(rms_a(1,imodel,itime_fcst)**2
+     1                          +rms_a(2,imodel,itime_fcst)**2)
+                  else
+                      xbar = rmiss
+                      ybar = rmiss
+                      std = rmiss                         
+                  endif
+                  rms_a(ifield,imodel,itime_fcst) = std
+                elseif(var_2d .eq. 'T3')then
+                  call stats_1d(max_obs,var_fcst_s,var_s
+     1                   ,'Temperature:            '
+     1                   ,a_t,b_t,xbar_k,ybar_k
+     1                   ,bias,std,r_missing_data,istatus)
+                  xbar = k_to_c(xbar_k)
+                  ybar = k_to_c(ybar_k)
+                  rms_a(ifield,imodel,itime_fcst) = std
                 endif
 
 900             write(6,*)
@@ -366,8 +446,6 @@
                 call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
                 write(6,710)atime_s,xbar,ybar,std
                 write(lun_out,710)atime_s,xbar,ybar,std
-!               write(39,710)atime_s,xbar,ybar,std
-!               write(38,710)atime_s,xbar,ybar,std
 710             format(1x,a24,3f10.3)
 
 990             continue
