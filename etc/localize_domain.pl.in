@@ -189,12 +189,6 @@ my @vertical_grid;
 
 if( $WHICH_TYPE eq "laps"){
 
-#   Use the small FUA CDL file for large domains
-    if( ($varx*$vary*$varz) > 20000000){
-        print "Large domain - using small version of fua CDL file to help keep fua file size under 2GB\n";
-	run_sys::run_sys("cp $DATA_ROOT/data/cdl/fua_small.cdl $DATA_ROOT/cdl/fua.cdl");
-    }
-
     my $vertical_namelist;
     @vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
 
@@ -220,6 +214,14 @@ if( $WHICH_TYPE eq "laps"){
        print "could not find file $vertical_namelist in $DATA_ROOT/static\n";
        print "check nest7grid.parms to insure nk_laps is properly set\n";
     }
+
+#   Use the small FUA CDL file for large domains
+    print "Number of 3-D gridpoints is $varx $vary $zdim $varx*$vary*$zdim\n";
+    if( ($varx*$vary*$zdim) > 20000000){
+        print "Large domain - using small version of fua CDL file to help keep fua file size under 2GB\n";
+	run_sys::run_sys("cp $DATA_ROOT/data/cdl/fua_small.cdl $DATA_ROOT/cdl/fua.cdl");
+    }
+
 }
 #
 # Edit the cdl files for xdim and ydim
