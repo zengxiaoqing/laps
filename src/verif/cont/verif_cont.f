@@ -388,6 +388,8 @@
 
               enddo ! iregion
 
+!             write(6,*)' nthr before put_contables = ',nthr
+
 !             Write Contingency Tables (3-D)
               call put_contables(i4_initial,i4_valid,nthr
      1                        ,cont_4d,NX_L,NY_L,NZ_L,cont_dir)
@@ -402,6 +404,8 @@
 
          iregion = 1
 
+         write(6,*)' nthr before assigning = ',nthr
+         nthr = nthr_a(ifield) ! nthr may be unset or have earlier been stepped on
          do idbz = 1,nthr
 
            rdbz = float(idbz*10) + 10
