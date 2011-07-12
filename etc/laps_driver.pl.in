@@ -256,7 +256,7 @@ if($opt_q || $opt_Q){
             print TFILE "#\$ -l h_rt=01:00:00\n";
 
         }elsif($exe eq "remap_polar_netcdf.exe"){
-            my $vmem_gb = 0.8 + ($npts / 17000000.);
+            my $vmem_gb = 0.9 + ($npts / 17000000.);
 	    if ($vmem_gb > 12.0) { $vmem_gb = 12.0; }
             print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
             print TFILE "#\$ -l h_rt=00:15:00,h_vmem=".$vmem_gb."G\n";
