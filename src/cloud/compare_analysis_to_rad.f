@@ -78,7 +78,7 @@
 
         solar_constant = 1353.
         solar_irradiance = solar_constant * rad_dist_factor
-        transmittance = 0.800 ! catchall for various types of absorption / scattering
+        transmittance = 0.720 ! catchall for various types of absorption / scattering
 
         model = 1
         if(model .eq. 1)then
@@ -119,8 +119,8 @@
 
             if(model .eq. 1)then ! simple formula (radiation on horizontal)
                 x = solar_alt(i,j)
-!               altfunc = sind(x)
-                altfunc = sind(x)**(1.0 + 0.2 * cosd(x)**9.)
+                altfunc = sind(x)
+!               altfunc = sind(x)**(1.0 + 0.2 * cosd(x)**9.)
                 rad_clr(i,j) = max(rad_zenith_clr * altfunc,0.)
 
             elseif(model .eq. 2)then ! start to using Laue formula 
