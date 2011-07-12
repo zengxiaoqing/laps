@@ -243,7 +243,7 @@ my $nrows = 1;
 my $ncols = 1;
 my $nanims = 1;
 my $ntimes = 1;
-my $nframes = 1;
+my $nframes = 0;
 my $geom;
 
 my $domain_first;
@@ -434,7 +434,7 @@ if($n_fields_uc == 9999 && $n_fields_uc > 1 && $n_sources_fields > 0 && ! (@fiel
 
 }else{
 #   if($n_domains == 1 && $n_sources_fields >  1 && ($n_fields_uc == 1 || $n_fields > 1) ){
-    if($n_domains == 1 && $n_sources_fields >  1 &&  $n_fields_uc == 1                   ){
+    if($n_domains == 1 && $n_sources_fields >  1 &&  $n_fields_uc == 1 && $n_levels == 1 ){
         print "<h2>Montage multiple sources...</h2>";
 #       $err=1;
         $montage=1;
@@ -448,19 +448,21 @@ if($n_fields_uc == 9999 && $n_fields_uc > 1 && $n_sources_fields > 0 && ! (@fiel
     }
     if($n_domains > 1 && $n_sources_fields == 1 && $n_fields_uc >  1){
         print "<h2>Montage multiple domains and fields (experimental)...</h2>";
-#       $err=1;
         $montage=1;
         $ndims=2;
     }
     if($n_domains == 1 && $n_sources_fields > 1 && $n_fields_uc >  1){
         print "<h2>Montage multiple sources and fields (experimental)...</h2>";
-#       $err=1;
         $montage=1;
         $ndims=2;
     }
-    if(                   $n_sources_fields > 0 && $n_fields_uc == 1 && $n_levels > 1 && @fields[0] ne "PRCP_H2O"){
+    if($n_domains == 1 && $n_sources_fields > 1 && $n_levels >  1){
+        print "<h2>Montage multiple sources and levels (experimental)...</h2>";
+        $montage=1;
+        $ndims=2;
+    }
+    if($n_domains == 1 && $n_sources_fields == 1 && $n_fields_uc == 1 && $n_levels > 1 && @fields[0] ne "PRCP_H2O"){
         print "<h2>Montage multiple levels...</h2>";
-#       $err=1;
         $montage=1;
         $ndims=1;
     }
@@ -855,10 +857,14 @@ if($err == 0) {
                   if($sect eq "hsect" || $sect eq "xsect"){
 #                     print "checking for montage <br>\n";
 #                     if($montage == 1 && $domain ne $domain_first && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels =~ "xsect") ){ 
-                      if($montage == 1 && $n_domains > 1 && $n_sources > 1 && ($domain ne $domain_first || $source ne $sources[0]) && $source ne "obs" && $field eq $fields[0]){ # montage multiple domains/sources (2D)
-                          print "multiple domains/sources field/field(0) is $field $fields[0]<br>\n";
-                          printf LAPSPLOT "fcf\n"; 
+                      if($montage == 1 && $n_domains > 1 && $n_sources > 1 && ($domain eq $domain_first && $source eq $sources[0]) && $source ne "obs" && $field eq $fields[0]){ # montage multiple domains/sources (2D)
                           $nframes++;
+                          print "multiple domains/sources $nframes field/field(0) is $field $fields[0]<br>\n";
+                          if($nframes > 1){
+                              printf LAPSPLOT "fc\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
                           }
@@ -868,8 +874,13 @@ if($err == 0) {
                               $animate = $nmontage;
                           }
                       }elsif($montage == 1 && $n_domains > 1 && $n_fields_uc > 1 && $domain eq $domain_first && $field eq uc($field) && $field ne $fields[0]){ # montage multiple domains/fields (2D)
-                          print "multiple domains/fields field/field(0) is $field $fields[0]<br>\n";
-                          printf LAPSPLOT "fcf\n"; 
+                          $nframes++;
+                          print "multiple domains/fields $nframes field/field(0) is $field $fields[0]<br>\n";
+                          if($nframes > 1){
+                              printf LAPSPLOT "fc\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
                           $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
@@ -879,9 +890,13 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $n_sources > 1 && $n_fields_uc > 1 && $source eq $sources[0] && $field eq uc($field) && $field ne $fields[0]){ # montage multiple sources/fields (2D)
+                      }elsif($montage == 1 && $n_sources > 1 && $n_fields_uc > 1 && $source eq $sources[0] && $field eq uc($field) && $field eq $fields[0]){ # montage multiple sources/fields (2D)
                           print "multiple sources/fields field/field(0) is $field $fields[0]<br>\n";
-                          printf LAPSPLOT "fcf\n"; 
+                          if($nframes > 1){
+                              printf LAPSPLOT "fc\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
                           $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
@@ -891,9 +906,30 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $domain ne $domain_first && $n_sources == 1 && $n_fields_uc == 1 && $source eq $sources[0] && $field eq $fields[0]){ # montage multiple domains
+                      }elsif($montage == 1 && $n_sources > 1 && $n_levels > 1 && $source eq $sources[0] && $level eq $pressure_levels[0]){ # montage multiple sources/levels (2D)
+                          $nframes++;
+                          print "multiple sources/levels $nframes level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
+                          if($nframes > 1){
+                              printf LAPSPLOT "fc\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+#                             $nmontage++;
+                              $nmontage = $n_levels;
+                          }
+                          if($i_montage < 1){
+                              $animate = $nmontage; # animate 1D montages?
+                          }else{
+                              $animate = $nmontage;
+                          }
+                      }elsif($montage == 1 && $n_domains > 1 && $domain eq $domain_first && $n_sources == 1 && $n_fields_uc == 1 && $source eq $sources[0] && $field eq $fields[0]){ # montage multiple domains
                           print "multiple domains field/field(0) is $field $fields[0]<br>\n";
-                          printf LAPSPLOT "fcf\n"; 
+                          if($nframes > 1){
+                              printf LAPSPLOT "fc\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
                           $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
@@ -903,9 +939,13 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $source ne $sources[0] && $source ne "obs" && $n_fields_uc == 1 && $field eq $fields[0]){ # montage multiple sources
+                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $source ne "obs" && $n_fields_uc == 1 && $field eq $fields[0] && $n_levels == 1){ # montage multiple sources
                           print "multiple sources field/field(0) is $field $fields[0]<br>\n";
-                          printf LAPSPLOT "fcf\n"; 
+                          if($nframes > 1){
+                              printf LAPSPLOT "fc\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
                           $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
@@ -915,9 +955,13 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field ne $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
+                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources == 1 && $source eq $sources[0] && $field eq $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
                           print "multiple fields field/field(0) is $field $fields[0]<br>\n";
-                          printf LAPSPLOT "fcf\n"; 
+                          if($nframes > 1){
+                              printf LAPSPLOT "fcf\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
                           $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
@@ -927,18 +971,23 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level ne $pressure_levels[0]){ # montage multiple levels
+                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources == 1 && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level ne $pressure_levels[0]){ # montage multiple levels
                           print "multiple levels level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
-                          printf LAPSPLOT "fcf\n"; 
+                          if($nframes > 1){
+                              printf LAPSPLOT "fcf\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
                           $nframes++;
                           $animate = "yes";
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
-                      }elsif($montage == 1 && $nframes > 1 && $field eq uc($field)){
+#                     }elsif($montage == 1 && $nframes > 1 && $field eq uc($field)){
+                      }elsif($montage == 1 && $field eq uc($field)){
                           $nframes++;
                           print "montage general case: $nframes $a9time_safe $a9time_last $domain $source $field $level<br>\n";
-                          if($a9time_safe eq $a9time_last){                                              
+                          if($a9time_safe eq $a9time_last && $nframes > 1 ){                                              
                              printf LAPSPLOT "fcf\n"; 
                           }else{ # "q" will do a frame advance
                              printf LAPSPLOT "fc\n"; 
@@ -1799,6 +1848,13 @@ if($err == 0) {
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
 
+                          }elsif("$field" eq "PCP_RAI" ) { 
+                              printf LAPSPLOT "rni\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+      
                           }elsif("$field" eq "pcp_rai" ) { 
                               printf LAPSPLOT "rn\n"; 
                               printf LAPSPLOT "$level\n"; 
@@ -1806,8 +1862,22 @@ if($err == 0) {
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
       
+                          }elsif("$field" eq "PCP_SNO" ) { 
+                              printf LAPSPLOT "sni\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+      
                           }elsif("$field" eq "pcp_sno" ) { 
                               printf LAPSPLOT "sn\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+
+                          }elsif("$field" eq "PCP_ICE" ) { 
+                              printf LAPSPLOT "pii\n"; 
                               printf LAPSPLOT "$level\n"; 
                               printf LAPSPLOT "f\n"; 
                               printf LAPSPLOT "$source\n";
@@ -3522,8 +3592,24 @@ if($err == 0) {
                         printf LAPSPLOT "rn\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "PCP_RAI" ) { 
+                        printf LAPSPLOT "rni\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "pcp_sno" ) { 
                         printf LAPSPLOT "sn\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "PCP_SNO" ) { 
+                        printf LAPSPLOT "sni\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "pcp_ice" ) { 
+                        printf LAPSPLOT "pi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "PCP_ICE" ) { 
+                        printf LAPSPLOT "pii\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "cld_type" ) { 
@@ -4156,20 +4242,35 @@ if($err == 0) {
                 $nanims = $nmontage;
 #           }
         }else{
-            $ncols = $nmontage;
-            $nrows = $nframes / $ncols;
+
+#           Original Strategy
+#           $ncols = $nmontage;
+#           $nrows = $nframes / $ncols;
+
+#           Multiple Sources and Fields
+            $nrows = $nmontage;
+            $ncols = $nframes / $nrows;
         }
 
-        print "i_montage=$i_montage nmontage=$nmontage animate=$animate nrows=$nrows ncols=$ncols ndims=$ndims | ";
+        print "i_montage=$i_montage nframes=$nframes nmontage=$nmontage animate=$animate ntimes=$ntimes nrows=$nrows ncols=$ncols ndims=$ndims | ";
 
         if($ndims == 2 && $ntimes >= 1){ # 2D montages at single/multiple times
             $nanims = $ntimes;
             $nrows = $nrows / $ntimes;
+
             if($ntimes > 1){
                 $ndims++;
-                $nrows = $nrows * $n_domains;
-                $ncols = $nmontage / $n_domains;
             }
+#           Original Formulation
+#           $nrows = $nrows * $n_domains;
+#           $ncols = $nmontage / $n_domains;
+
+#           New Formulation (Multiple Sources and Fields)
+#           $nrows = $nrows * $n_domains;
+#           $ncols = $nframes / $nrows;
+
+#           $nrows = $nrows * $n_levels;
+#           $ncols = $nmontage / $n_levels;
         }
 
         if($ndims == 1 && $ntimes > 1){ # 1D montages at multiple times 
@@ -4183,7 +4284,8 @@ if($err == 0) {
 
         $geom = "$ncols"."x"."$nrows"."x"."$nanims";
 
-        if($i_montage < 1 && $ndims >= 2){ # animate multiple 1D/2D montages
+#       if($i_montage < 1 && $ndims >= 2){ # animate multiple 1D/2D montages
+        if($ndims >= 2){ # animate multiple 1D/2D montages (or simply run montage file for one frame montage)
 
           $animate = $geom;
 
@@ -4232,7 +4334,7 @@ if($err == 0) {
 
           close MONTAGE;
 
-        } # write MONTAGE script if $i_montage < 1
+        } # write MONTAGE script if $ndims >= 2
 
         print "i_montage=$i_montage nmontage=$nmontage animate=$animate ndims=$ndims geom=$geom";
 
