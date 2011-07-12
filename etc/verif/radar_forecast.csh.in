@@ -10,7 +10,7 @@
 
 # Fifth argument is Reflectivity in dbz
 
-setenv LAPSINSTALLROOT @prefix@
+setenv LAPSINSTALLROOT @prefix@                                                     
 setenv LAPS_DATA_ROOT $1
 setenv NLINE $2
 setenv STAT $3
@@ -77,16 +77,20 @@ echo "NMEMBERS: $NMEMBERS"
 
 setenv IMEMBER 1
 while ($IMEMBER <= $NMEMBERS)  
-    setenv ICOL $IMEMBER
-    @ ICOL = $ICOL + 2
+#   setenv ICOL $IMEMBER
+    @ ICOL = $IMEMBER + 2
     
     setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
-    echo "IMEMBER MEMBER: $IMEMBER $MEMBER"
+    echo "IMEMBER MEMBER ICOL: $IMEMBER $MEMBER $ICOL"
 
-    if ($IMEMBER == $NMEMBERS) then
+    if ($NMEMBERS == 1) then
         echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
-    else
+    else if ($IMEMBER == 1) then
         echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+    else if ($IMEMBER == $NMEMBERS) then
+        echo '     '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+    else
+        echo '     '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     endif
 
     @ IMEMBER = $IMEMBER + 1
