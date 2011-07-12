@@ -356,8 +356,13 @@ verif/TSF verif/TSF/pt
 verif/DSF verif/DSF/pt
 verif/USF verif/USF/pt
 verif/VSF verif/VSF/pt
+verif/SSF verif/SSF/pt
+verif/WSF verif/WSF/pt
+verif/TPW verif/TPW/pt
 verif/U3  verif/U3/pt
 verif/V3  verif/V3/pt
+verif/W3  verif/W3/pt
+verif/T3  verif/T3/pt
 ensemble
 ensemble/mean
 gr2);
