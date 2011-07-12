@@ -48,6 +48,7 @@
         endif
 
         maxsta = 1000000
+        max_obs = 1000000
 
 !       Use getarg for model cycle time
         call getarg(1,c_model_cycle_time_sec)
@@ -75,7 +76,7 @@
         call verif_fcst_pt_3d(i4time,a9time,laps_cycle_time,
      1                     NX_L,NY_L,
      1                     NZ_L,
-     1                     maxsta,
+     1                     maxsta,max_obs,
      1                     r_missing_data,
      1                     model_cycle_time_sec,
      1                     n_fcst_times,
@@ -98,6 +99,8 @@
 
         real var_anal_2d(ni,nj)
         real var_fcst_2d(ni,nj)
+        real u_fcst_2d(ni,nj)
+        real v_fcst_2d(ni,nj)
         real lat(ni,nj)
         real lon(ni,nj)
         real topo(ni,nj)
@@ -127,22 +130,26 @@
 
         character*10  units_2d
         character*125 comment_2d
-        character*3 var_2d
+        character*3 var_2d,var_2d_wind
         character*9 a9time,a9time_valid,a9time_init
 !       character*24 atime_s
         character*150 hist_dir, cont_dir, verif_dir
         character*150 hist_file
 
         integer n_fields
-        parameter (n_fields=5)
+        parameter (n_fields=8)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
         character*2 c2_region
 
 !       Specify what is being verified
-        data ext_fcst_a /'fsf','fsf','fsf','fsf','fsf'/ ! 2-D
+        data ext_fcst_a 
+     1      /'fsf','fsf','fsf','fsf','fsf','fsf','   ','fsf'/ ! 2-D
 !       data ext_anal_a /'lps'/ ! 3-D reflectivity
-        data var_a      /'SWI','TSF','DSF','USF','VSF'/ 
+        data var_a      
+     1      /'SWI','TSF','DSF','USF','VSF','SSF','WSF','TPW'/ 
+      
+        real rms_a (n_fields,maxbgmodels,0:max_fcst_times)
 
         integer contable(0:1,0:1)
 
@@ -191,6 +198,17 @@
         character*1 c1_c
         character title*60, ver_file*256, filename*9
 
+!       GPS obs
+        integer gps_n, gps_indomain
+        parameter (gps_n = 1000000)
+        real gps_tpw(gps_n)
+        real gps_wet(gps_n)
+        real gps_error(gps_n)
+        real gps_xy(2,gps_n)
+        real gps_elv(gps_n)
+        real gps_tim(gps_n)
+        character*256 path_to_gps
+
 !       End Declarations 
 
         write(6,*)' Start subroutine verif_fcst_pt_2d...'
@@ -204,7 +222,7 @@
 
 !       n_fcst_times = 2 ! 38
 
-        cnt = 0.
+        rms_a = -99.9
 
         thresh_var = 20. ! lowest threshold for this variable
 
@@ -286,6 +304,8 @@
 
               do itime_fcst = istart,n_fcst_times
 
+                cnt = 0.
+
                 itime = itime_fcst + 1
 
                 i4_valid = i4_initial 
@@ -299,10 +319,17 @@
                 write(c2_region,1)iregion
  1              format(i2.2)
 
+                if(trim(var_2d) .eq. 'WSF')then
+                    call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
+                    goto 1200
+                endif
+
                 write(6,*)' Reading surface obs - i4_valid = ',i4_valid
 
-!               Read surface obs
-                call read_surface_data(i4_valid,atime_s,n_obs_g,n_obs_b, !regular LSO
+                if(trim(var_2d) .ne. 'TPW')then
+!                 Read surface obs (regular LSO)
+                  call read_surface_data(
+     &         i4_valid,atime_s,n_obs_g,n_obs_b,
      &         obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
      &         lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
      &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
@@ -311,7 +338,39 @@
      &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
      &         maxsta,jstatus)
 
-                write(6,*)' Number of obs in box  ',n_obs_b,atime_s
+                  if(jstatus .ne. 1)then
+                      call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
+                      write(6,*)' Could not read surface obs at: ',
+     1                          atime_s
+                      goto 990
+                  endif
+
+                  write(6,*)' Number of obs in box  ',n_obs_b,atime_s
+
+                else
+                  write(6,*)' call read_gps_obs'
+                  path_to_gps = '/public/data/gpsmet/netcdf/'
+                  lun_hmg = 0
+                  i4beg = i4_valid - 960
+                  i4end = i4_valid + 840
+                  istatus = 0
+                  bad_sfc = 0.0
+                  gps_missing = -9.99
+                  call read_gps_obs (lun_hmg, path_to_gps, i4beg, i4end,
+     1                    ni, nj, lat, lon, bad_sfc,
+     1                    gps_tpw, gps_wet, gps_error, gps_xy, gps_elv,
+     1                    gps_tim, gps_indomain, gps_n, istatus)
+                  if(istatus .eq. 1)then
+                    write(6,*)
+     1                    ' Success reading GPS obs, #obs in domain = '
+     1                     ,gps_indomain
+                  else
+                    write(6,*)' Failure reading GPS obs'
+                  endif
+                 
+                  call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
+
+                endif
 
                 if(trim(var_2d) .eq. 'SWI')then
                   var_s = solar_s
@@ -344,11 +403,29 @@
                       var_s(i) = threshval
                     endif
                   enddo ! i
+                elseif(trim(var_2d) .eq. 'SSF')then
+                  threshval = -99.9
+                  do i = 1,maxsta
+                    if(ff_s(i) .ne. threshval)then
+                      var_s(i) = ff_s(i) * 0.518 ! convert to m/s
+                    else
+                      var_s(i) = threshval
+                    endif
+                  enddo ! i
+                elseif(trim(var_2d) .eq. 'TPW')then
+                  threshval = gps_missing
+                  do i = 1,maxsta
+                    if(i .le. gps_indomain)then
+                      var_s(i) = gps_tpw(i)
+                    else
+                      var_s(i) = r_missing_data
+                    endif
+                  enddo ! i
                 endif
 
-                if(.true.)then
+                if(trim(var_2d) .ne. 'SSF')then
 
-                  write(6,*)' Reading forecast field'
+                  write(6,*)' Reading forecast field ',atime_s
 
 !                 Read forecast field
                   ext = ext_fcst_a(ifield)
@@ -369,6 +446,69 @@
                        goto 990
                   endif
 
+                  write(6,*)var_2d,' range is ',minval(var_fcst_2d)
+     1                                         ,maxval(var_fcst_2d)
+
+                else ! SSF
+
+                  write(6,*)' Reading forecast U/V to yield speed'
+
+!                 Read forecast field
+                  ext = ext_fcst_a(ifield)
+                  call get_directory(ext,directory,len_dir)
+
+                  DIRECTORY=directory(1:len_dir)//c_model(1:len_model)
+     1                                          //'/'
+
+                  var_2d_wind = 'USF'
+                  call get_lapsdata_2d(i4_initial,i4_valid
+     1                          ,directory,var_2d_wind
+     1                          ,units_2d,comment_2d
+     1                          ,ni,nj
+     1                          ,u_fcst_2d
+     1                          ,istatus)
+                  if(istatus .ne. 1)then
+                       write(6,*)' Error reading 2D Forecast for '
+     1                           ,var_2d_wind
+                       goto 990
+                  endif
+
+                  var_2d_wind = 'VSF'
+                  call get_lapsdata_2d(i4_initial,i4_valid
+     1                          ,directory,var_2d_wind
+     1                          ,units_2d,comment_2d
+     1                          ,ni,nj
+     1                          ,u_fcst_2d
+     1                          ,istatus)
+                  if(istatus .ne. 1)then
+                       write(6,*)' Error reading 2D Forecast for '
+     1                           ,var_2d_wind
+                       goto 990
+                  endif
+
+                  var_2d_wind = 'VSF'
+                  call get_lapsdata_2d(i4_initial,i4_valid
+     1                          ,directory,var_2d_wind
+     1                          ,units_2d,comment_2d
+     1                          ,ni,nj
+     1                          ,v_fcst_2d
+     1                          ,istatus)
+                  if(istatus .ne. 1)then
+                       write(6,*)' Error reading 2D Forecast for '
+     1                           ,var_2d_wind
+                       goto 990
+                  endif
+
+!                 Convert U and V to wind speed
+                  do i = 1,ni
+                  do j = 1,nj
+                      call uv_to_disp(u_fcst_2d(i,j)
+     1                               ,v_fcst_2d(i,j)
+     1                               ,dir_dum                 
+     1                               ,var_fcst_2d(i,j))
+                  enddo ! j
+                  enddo ! i
+
                 endif ! .true.
 
                 if(trim(var_2d) .eq. 'SWI')then
@@ -384,9 +524,16 @@
                   var_fcst_s(ista) = r_missing_data 
                   rad2_s(ista) = r_missing_data 
 
-                  if(var_s(ista) .gt. threshval)then 
-                    call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat
-     1                          ,lon,ni,nj,ri,rj,istatus)
+                  if(var_s(ista) .gt. threshval .AND.
+     1               var_s(ista) .ne. r_missing_data)then ! valid ob  
+                
+                    if(trim(var_2d) .ne. 'TPW')then
+                      call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista)
+     1                          ,lat,lon,ni,nj,ri,rj,istatus)
+                    else
+                      ri = gps_xy(1,ista)
+                      rj = gps_xy(2,ista)
+                    endif
 
                     i_i = nint(ri)
                     i_j = nint(rj)
@@ -397,35 +544,35 @@
                     if(i_i .ge. 3 .and. i_i .le. ni-2 .and.
      1                 i_j .ge. 3 .and. i_j .le. nj-2            )then
 
-                      if(iwrite .eq. iwrite/20*20)then
-                        write(6,*)'sv '
-                        write(6,*)'sv Sta   i    j   VIS frac tb8_k  '
-     1                  //'t_gnd_k t_sfc_k cv_s_mx cvr_mx '
-     1                  //'solalt 9pt  rad_fc '
-     1                  //'rad_ob rad_th ratio cv_sol  df'
-                      endif
-
-!                     Calculate 9pt cover
-                      cvr_9pt = 0.
-                      do ic = -1,1
-                      do jc = -1,1
-                        cvr_9pt = cvr_9pt + cvr_max(i_i+ic,i_j+jc)
-                      enddo ! jc
-                      enddo ! ic
-                      cvr_9pt = cvr_9pt / 9.
-
-!                     Calculate 25pt cover
-                      cvr_25pt = 0.
-                      do ic = -2,2
-                      do jc = -2,2
-                        cvr_25pt = cvr_25pt + cvr_max(i_i+ic,i_j+jc)
-                      enddo ! jc
-                      enddo ! ic
-                      cvr_25pt = cvr_25pt / 25.
-
-                      iwrite = iwrite + 1
-
                       if(trim(var_2d) .eq. 'SWI')then
+                        if(iwrite .eq. iwrite/20*20)then
+                          write(6,*)'sv '
+                          write(6,*)'sv Sta   i    j   VIS frac tb8_k  '
+     1                    //'t_gnd_k t_sfc_k cv_s_mx cvr_mx '
+     1                    //'solalt 9pt  rad_fc '
+     1                    //'rad_ob rad_th ratio cv_sol  df'
+                        endif
+
+!                       Calculate 9pt cover
+                        cvr_9pt = 0.
+                        do ic = -1,1
+                        do jc = -1,1
+                          cvr_9pt = cvr_9pt + cvr_max(i_i+ic,i_j+jc)
+                        enddo ! jc
+                        enddo ! ic
+                        cvr_9pt = cvr_9pt / 9.
+
+!                       Calculate 25pt cover
+                        cvr_25pt = 0.
+                        do ic = -2,2
+                        do jc = -2,2
+                          cvr_25pt = cvr_25pt + cvr_max(i_i+ic,i_j+jc)
+                        enddo ! jc
+                        enddo ! ic
+                        cvr_25pt = cvr_25pt / 25.
+
+                        iwrite = iwrite + 1
+
                         c1_c = ' '
                         c3_discrep = '   '
 
@@ -506,9 +653,18 @@
      1                       trim(var_2d) .eq. 'DSF'     )then ! convert K to F
                         var_fcst_s(ista) = k_to_f(var_fcst_2d(i_i,i_j))       
                    
-                      else
-                        var_fcst_s(ista) = var_fcst_2d(i_i,i_j)
+                      elseif(trim(var_2d) .eq. 'TPW')then
+                        var_fcst_s(ista) = var_fcst_2d(i_i,i_j) * 100.
 
+                      else
+                        var_fcst_s(ista) = var_fcst_2d(i_i,i_j)            
+
+                      endif
+
+                      if(cnt .le. 50.)then
+                        write(6,1001)var_2d,ista,i_i,i_j 
+     1                              ,var_s(ista),var_fcst_s(ista)
+1001                    format(1x,a3,' ob/fcst ',3i8,2f9.3)
                       endif
 
                       sumobs = sumobs + var_s(ista)
@@ -519,38 +675,75 @@
                       cnt = cnt + 1.
 
                       cvr_s(ista) = cvr_max(i_i,i_j)
+1112                  continue
 
-1112                endif ! ob is in domain
-                  endif ! ista .ne. 0 (valid value)
+                    else ! outside domain
+                      var_fcst_s(ista) = r_missing_data
+
+                    endif ! ob is in domain
+
+                  else
+                    var_fcst_s(ista) = r_missing_data
+
+                  endif ! valid ob                                  
+
                 enddo ! ista
 
                 write(6,*)
                 write(6,*)' Generic stats, cnt = ',nint(cnt)
-                if(trim(var_2d) .eq. 'SWI')then
+1200            if(trim(var_2d) .eq. 'SWI')then
                   call stats_1d(maxsta,swi_s,rad2_s
      1                   ,'Solar Radiation (QCed): '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
                 elseif(trim(var_2d) .eq. 'TSF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface Temperature     '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
                 elseif(trim(var_2d) .eq. 'DSF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface Dewpoint     '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
                 elseif(trim(var_2d) .eq. 'USF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface U Wind Component'
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
                 elseif(trim(var_2d) .eq. 'VSF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface V Wind Component'
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
+                elseif(trim(var_2d) .eq. 'SSF')then
+                  call stats_1d(maxsta,var_fcst_s,var_s
+     1                   ,'Surface Wind Speed'
+     1                   ,a_t,b_t,xbar,ybar
+     1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
+                elseif(trim(var_2d) .eq. 'WSF')then
+                  threshval = -99.9
+                  xbar = rms_a(4,imodel,itime_fcst) 
+                  ybar = rms_a(5,imodel,itime_fcst)
+                  if(xbar .ne. threshval .and. ybar .ne. threshval)then
+                      std = sqrt(rms_a(4,imodel,itime_fcst)**2
+     1                          +rms_a(5,imodel,itime_fcst)**2)
+                  else
+                      std = threshval
+                  endif
+                  rms_a(ifield,imodel,itime_fcst) = std
+                elseif(trim(var_2d) .eq. 'TPW')then
+                  call stats_1d(maxsta,var_fcst_s,var_s
+     1                   ,'Integrated Water Vapor'
+     1                   ,a_t,b_t,xbar,ybar
+     1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
                 endif
 
                 write(6,*)
