@@ -288,9 +288,9 @@ C **** write out netCDF file
 C
       print*,'Writing file: ',file_name
 
-      if (v_g(1:leng) .eq. 'SIGMA_HT') then
-          write(6,*)' cdl_levels = ',cdl_levels
-      endif
+!     if (v_g(1:leng) .eq. 'SIGMA_HT') then
+!         write(6,*)' cdl_levels = ',cdl_levels
+!     endif
 
       call write_cdf_v3 (file_name,ext,var,comment,asctime,cdl_path, 
      1                   static_path,laps_dom_file,ldf_len,fn_length,
