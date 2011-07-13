@@ -53,13 +53,6 @@
         open(lun_wideband,file=out_fn(1:len_name),status='unknown'
      1                                           ,err=998)
 
-!       Open remap.nl.part for output
-        lun_remap = 51
-        out_fn = static_dir(1:len_dir)//'/remap.nl.part'           
-        call s_len(out_fn,len_name)
-        open(lun_remap,file=out_fn(1:len_name),status='unknown'
-     1                                        ,err=998)
-
         do ih = 1,13
             read(lun,*)
         enddo
@@ -166,6 +159,13 @@
 
         if(ie .eq. 0)goto 9999
 
+!       Open remap_radars.nl for output
+        lun_remap = 51
+        out_fn = static_dir(1:len_dir)//'/remap_radars.nl'           
+        call s_len(out_fn,len_name)
+        open(lun_remap,file=out_fn(1:len_name),status='unknown'
+     1                                        ,err=998)
+
 !       Write widebandlist to file
         write(6,*)                               
         write(6,*)' Full wideband string...'
@@ -173,7 +173,7 @@
         write(lun_wideband,101)c_wideband(1:ie-1)
 101     format(a)
 
-!       Write to remap.nl.part (n_radars_remap)    
+!       Write to remap_radars.nl (n_radars_remap)    
         if(icount .le. 9)then
             write(lun_remap,102)icount
 102         format(' n_radars_remap=',i1,',')
@@ -185,25 +185,25 @@
 104         format(' n_radars_remap=',i3,',')
         endif
 
-!       Write to remap.nl.part (upper case section)
+!       Write to remap_radars.nl (upper case section)
         write(lun_remap,*)        
-        write(lun_remap,*)'path_to_radar_a='
+        write(lun_remap,*)'path_to_radar_uc_a='
         do i = 1,icount ! upper case section
             write(c_remap,111)c4_name_a(i)
 111         format("'/widebandroot/",a,"/netcdf',")
             write(lun_remap,*)trim(c_remap)
         enddo ! i
 
-!       Write to remap.nl.part (lower case section)
+!       Write to remap_radars.nl (lower case section)
         write(lun_remap,*)
-        write(lun_remap,*)'path_to_radar_a='
+        write(lun_remap,*)'path_to_radar_lc_a='
         do i = 1,icount ! upper case section
             call downcase(c4_name_a(i),c4_name_lc)
             write(c_remap,111)c4_name_lc  
             write(lun_remap,*)trim(c_remap)
         enddo ! i
 
-!       Write to remap.nl.part (vxx section)
+!       Write to remap_radars.nl (vxx section)
         write(lun_remap,*)
         write(lun_remap,*)'laps_radar_ext_a='
         do i = 1,icount ! upper case section
