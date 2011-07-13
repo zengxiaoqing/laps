@@ -931,17 +931,22 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         subroutine plot_td_obs(k_level,i4time,imax,jmax,kmax
      1                        ,r_missing_data,lat,lon,topo,zoom
-     1                        ,plot_parms,k_mb,mode)
+     1                        ,namelist_parms,plot_parms
+     1                        ,k_mb,mode,field_2d,i_overlay)
 
         include 'lapsplot.inc'
+        include 'icolors.inc'
 
         character*3 ext, t1
+        character*5 pw            
         character*8 c8_obstype
         character*150 directory
         character*150 filename
         character*13 filename13
-        character*100 cline
+        character*100 c_label 
         character*10 c_staname
+
+        real field_2d(imax,jmax)
 
         logical l_found_file
 
@@ -955,9 +960,19 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         if(mode .eq. 1)then
             write(6,*)' Plot Dewpoint Obs, size_td = ',size_temp
         elseif(mode .eq. 2)then
-            write(6,*)' Plot SH Obs (from dewpoint), size_td = ',size_temp
-        elseif(mode .eq. 3)then
-            write(6,*)' Plot PW Obs, size_td = ',size_temp
+            write(6,*)' Plot SH Obs (from dewpoint), size = ',size_temp
+        elseif(mode .ge. 3)then
+            write(6,*)' Plot PW (GPS) Obs, mode/size = ',mode,size_temp
+            c_label = 'Integrated Vapor Obs (cm)'
+            i_overlay = i_overlay + 1
+            call setusv_dum(2hIN,icolors(i_overlay))
+            call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+            call make_fnam_lp(i4time,asc_tim_9,istatus)
+            call write_label_lplot(imax,jmax,c_label,asc_tim_9
+     1                            ,plot_parms,namelist_parms
+     1                            ,i_overlay,'hsect')
+            call get_border(imax,jmax,x_1,x_2,y_1,y_2)
+            call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax),1)
         endif                   
 
         lun = 32
@@ -1011,7 +1026,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 42      write(6,*)' Number of dewpoint obs = ',nobs_temp
 
         do while (l_found_file) ! Plot the dewpoint obs
-            read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype,c_staname       
+            if(mode .lt. 3)then
+              read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype
+     1                                              ,c_staname       
+            else
+              read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype
+            endif
 150         continue
 
             k = nint(rk)
@@ -1023,7 +1043,35 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
               if(t_k .ne. r_missing_data)then
 
-                t_c = t_k - 273.15
+                if(mode .eq. 1)then
+                  t_c = t_k - 273.15
+                elseif(mode .eq. 2)then
+                  t_c = t_k
+                elseif(mode .eq. 3)then                  
+                  if(t_k .lt. 0.)goto 140
+                  t_c = t_k
+                  c_staname = ' '
+
+                  if(trim(c8_obstype) .ne. 'GPSTPW')then
+                    write(6,*)' Skipping: ',ri,rj,rk,c8_obstype
+                    goto 140         
+                  else
+                    write(6,*)' Keeping:  ',ri,rj,rk,c8_obstype
+                  endif
+                elseif(mode .eq. 4)then                  
+                  if(t_k .lt. 0.)goto 140
+                  field_value = field_2d(nint(ri),nint(rj)) * 100.
+                  t_c = field_value - t_k 
+                  c_staname = ' '
+
+                  if(trim(c8_obstype) .ne. 'GPSTPW')then
+                    write(6,*)' Skipping: ',ri,rj,rk,c8_obstype
+                    goto 140         
+                  else
+                    write(6,*)' Keeping:  ',ri,rj,rk,c8_obstype,t_k
+     1                                     ,field_value,t_c
+                  endif
+                endif
 
 !               spd_kt = SPEED_ms  / mspkt
 
@@ -1049,7 +1097,9 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                     icol_in = 3  ! Red
                 endif
 
-                call setusv_dum(2hIN,icol_in)
+                if(mode .lt. 3)then
+                    call setusv_dum(2hIN,icol_in)
+                endif
 
                 if(mode .eq. 2)then ! convert from td to q
                     svp = es(t_c)
@@ -1087,22 +1137,55 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1                          charsize,ANGD,CNTR)      
                 endif
 
-!               Plot ob
-                write(t1,100,err=20) nint(t_c)
- 20             call left_justify(t1)
-                call s_len(t1,len_t1)
-                CALL PCMEQU(xsta,ysta,t1(1:len_t1),charsize,ANGD,CNTR)
- 100            format(i3)
+!               Plot ob location
+                call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
+                call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
 
-                write(6,111,err=121)ri,rj,t_c,t1,c8_obstype,c_staname
-111             format(1x,3f8.1,1x,a8,1x,a10)
-121             continue
+!               Plot ob
+                if(mode .lt. 3)then
+                  write(t1,100,err=101) nint(t_c)
+ 100              format(i3)
+ 101              call left_justify(t1)
+                  call s_len(t1,len_t1)
+                  CALL PCMEQU(xsta,ysta,t1(1:len_t1),charsize,ANGD,CNTR)
+                  write(6,102,err=103)ri,rj,t_c,t1,c8_obstype,c_staname
+ 102              format(1x,3f8.1,1x,a8,1x,a10)
+ 103              continue
+                else ! GPS PW
+                  write(pw,110,err=111) t_k             
+ 110              format(f5.2)
+ 111              call left_justify(pw)
+                  CALL PCHIQU(xsta+du2*7.0,ysta+du2*3.0,trim(pw)
+     1                       ,charsize,ANGD,CNTR)
+ 
+                  if(mode .eq. 3)then
+                    write(6,121,err=122)ri,rj,t_c,pw,c8_obstype
+     1                                              ,c_staname
+ 121                format(1x,3f8.1,1x,a8,1x,a10)
+ 122                continue
+
+                  elseif(mode .eq. 4)then ! plot difference ob
+                    write(pw,110,err=131) t_c             
+ 131                call left_justify(pw)
+                    CALL PCHIQU(xsta+du2*7.0,ysta-du2*3.0,trim(pw)
+     1                       ,charsize,ANGD,CNTR)
+                    write(6,132,err=133)ri,rj,t_k,t_c,c8_obstype
+     1                                               ,c_staname
+ 132                format(1x,4f8.1,1x,a8,1x,a10)
+ 133                continue                  
+
+                  endif
+                endif
+
+!               write(6,111,err=121)ri,rj,t_c,t1,c8_obstype,c_staname
+!11             format(1x,3f8.1,1x,a8,1x,a10)
+!21             continue
 
               endif ! t_k .ne. r_missing_data
 
             endif ! k .eq. k_level
 
-        enddo
+140     enddo
 
 141     continue
 
@@ -1118,7 +1201,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         include 'lapsplot.inc'
 
         integer max_snd,max_snd_levels
-        parameter (max_snd = 10000)
+        parameter (max_snd = 30000)
         parameter (max_snd_levels = 200)
 
         real heights_3d(imax,jmax,kmax)

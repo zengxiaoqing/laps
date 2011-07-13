@@ -4742,16 +4742,17 @@ c                   cint = -1.
      1                         ,plot_parms)
 
             if(c_type .eq. 'ho')then
-                mode = 1
+                mode = 1 ! dewpoint obs
             else
-                mode = 2
+                mode = 2 ! sh obs (from dewpoint)
             endif
 
 !           Plot obs from the HMG file 
             write(6,*)' Plotting dewpoint from HMG file'
             call plot_td_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                      ,r_missing_data,lat,lon,topo,zoom
-     1                      ,plot_parms,k_mb,mode)
+     1                      ,namelist_parms,plot_parms
+     1                      ,k_mb,mode,field_2d,i_overlay)
 
         elseif(c_type .eq. 'wv')then
             k_level = 0
@@ -4770,13 +4771,15 @@ c                   cint = -1.
      1                         ,r_missing_data,lat,lon,topo,zoom
      1                         ,plot_parms)
 
-            mode = 3
+!           mode = 3 ! pw obs (from gps)
+            mode = 4 ! pw obs difference from field_2d (from gps)
 
 !           Use this if the HMG file becomes available
             write(6,*)' Plotting GPS WV obs from HMG file'
             call plot_td_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                      ,r_missing_data,lat,lon,topo,zoom
-     1                      ,plot_parms,k_mb,mode)
+     1                      ,namelist_parms,plot_parms
+     1                      ,k_mb,mode,field_2d,i_overlay)
 
         elseif(c_type .eq. 'il')then
             k_level = 0

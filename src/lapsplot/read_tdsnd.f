@@ -93,9 +93,6 @@ cdis
         real gps_tim(gps_n)
         character*256 path_to_gps
 
-!       Initialize
-        path_to_gps = '/public/data/gpsmet/netcdf/'
-
         write(6,*)
      1  ' Subroutine read_tdsnd -- reads LRS, SND and GPS to make HMG'
 
@@ -386,18 +383,28 @@ c       1                ,t_diff
         close(12)
 
 ! ***   Read in GPSdata  ***************************************
-        lun = 33
-        i4beg = i4time_sys - 1800
-        i4end = i4time_sys + 1800
-        istatus = 0
-        call read_gps_obs (lun, path_to_gps, i4beg, i4end,
+        write(6,*)' call read_gps_obs'
+        i4beg = i4time_sys - 960
+        i4end = i4time_sys + 840
+        itry = 1
+810     istatus = 0
+        path_to_gps = '/public/data/gpsmet/netcdf/'
+        call read_gps_obs (lun_hmg, path_to_gps, i4beg, i4end,
      1     imax, jmax, lat, lon, bad_sfc,
      1     gps_tpw, gps_wet, gps_error, gps_xy, gps_elv, 
      1     gps_tim, gps_indomain, gps_n, istatus)
         if(istatus .eq. 1)then
            write(6,*)' Success reading GPS obs, #obs = ',gps_indomain
         else
-           write(6,*)' Failure reading GPS obs'
+           if(itry .le. 1)then
+              write(6,*)' Failure reading GPS obs - try again...'
+              itry = itry + 1
+              i4beg = i4time_sys - 0  
+              i4end = i4time_sys + 900
+              goto 810
+           else
+              write(6,*)' Failure reading GPS obs'
+           endif
         endif
 
         if(.false.)then
