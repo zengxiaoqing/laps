@@ -46,7 +46,7 @@ cdis
       subroutine read_gps_obs (lun, path, i4beg, i4end,
      1     imax, jmax, latgrid, longrid, bad_sfc,
      1     gps_tpw, gps_wet, gps_error, gps_xy, gps_elv, 
-     1     gps_tim, gps_num, gps_n, istatus)
+     1     gps_tim, gps_indomain, gps_n, istatus)
 c     This code is originated from Dan Birkenheuer.
 
 c     On July 16, 2009, Yuanfu Xie modified it to read an additional 
@@ -55,6 +55,8 @@ c     variable, wet delays, station elevation and gps obs time.
 c     On August 2, 2009, Yuanfu Xie modified it to read all GPS data
 c     files between i4begin and i4end.
 
+c     Reworked a bit by Steve Albers in 2011
+
       implicit none
 
       include 'netcdf.inc'
@@ -62,8 +64,8 @@ c     files between i4begin and i4end.
 c     parameter list variables
       integer max_files
       parameter (max_files=3000)
-      integer lun, gps_n, gps_num
-      integer i4times(max_files),nfiles,gps_i,ifile,i
+      integer lun, gps_n, gps_num, gps_indomain, verbose
+      integer i4times(max_files),nfiles,gps_i,ifile,i,istat_latlon
       integer imax, jmax
       real latgrid(imax,jmax)
       real longrid(imax,jmax)
@@ -85,6 +87,8 @@ c     internal
 
       integer recNum, nf_fid, nf_vid, nf_status
       real x, y, bad_sfc
+
+      verbose = 1
 
 c     Set file specs for get_file_times:
       call s_len(path, ptg_index)
@@ -109,9 +113,11 @@ C
           print *, NF_STRERROR(nf_status)
           istatus = 0
           write(6,*) 'failure getting GPS data'
+          nf_status = NF_CLOSE(nf_fid)
           return
         else
           istatus = 1
+          write(6,*)' Opened gps file: ',trim(c_filenames(ifile))
         endif
 C
 C       Fill all dimension values
@@ -124,17 +130,19 @@ C
           print *, NF_STRERROR(nf_status)
           print *,'dim recNum'
           istatus = 0
+          goto 900  
         endif
         nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
         if(nf_status.ne.NF_NOERR) then
           print *, NF_STRERROR(nf_status)
           print *,'dim recNum'
           istatus = 0
+          goto 900  
         endif
 
         ! Check if recNum is larger than space allocated:
         if (gps_i+recNum .gt. gps_n) then
-          print *,' Too many GPS obs, increase your gps_num and rerun!'
+          print *,' Too many GPS obs, increase your gps_n and rerun!'
      1	,gps_i+recNum,' > ',gps_n
           stop
         endif
@@ -146,31 +154,49 @@ C
 
 c       Accumulate all:
         gps_i = gps_i+gps_num
+        write(6,*)' gps_num / gps_i = ',gps_num,gps_i
 
         ! Finish read this qualified file:
         endif
 
-      enddo
+ 900  enddo
+      ! Check if there is any gps obs:
+      if (gps_i .ge. 1) istatus = 1
+      if (gps_i .le. 0) istatus = 0
 
       ! Write the GPS wetdelay information into LAPS HMG file:
-      gps_num = 0
-      do i=1,gps_i
+      gps_indomain = 0
+      do i=1,gps_i ! loop through all obs from the files
         CALL LATLON_TO_RLAPSGRID(gps_lat(i),gps_lon(i),latgrid,
-     1             longrid, imax, jmax, x, y, istatus)
+     1             longrid, imax, jmax, x, y, istat_latlon)
+
+        if(verbose .ge. 1)then
+          write(6,101)i,gps_lat(i),gps_lon(i),x,y,gps_wet(i)
+ 101      format(i7,4f9.2,e16.6)
+        endif
+
         if (x .ge. 1 .and. x .le. imax .and.
      1      y .ge. 1 .and. y .le. jmax .and. 
-     1      gps_wet(i) .ne. bad_sfc) then
-          gps_num = gps_num+1
-          gps_tpw(gps_num) = gps_tpw(i)
-          gps_wet(gps_num) = gps_wet(i)
-          gps_error(gps_num) = gps_error(i)
-          gps_elv(gps_num) = gps_elv(i)
-          gps_tim(gps_num) = gps_tim(i)
-          gps_xy(1,gps_num) = x
-          gps_xy(2,gps_num) = y
+     1    gps_wet(i) .ne. bad_sfc) then
+          gps_indomain = gps_indomain + 1
+          gps_tpw(gps_indomain) = gps_tpw(i)
+          gps_wet(gps_indomain) = gps_wet(i)
+          gps_error(gps_indomain) = gps_error(i)
+          gps_elv(gps_indomain) = gps_elv(i)
+          gps_tim(gps_indomain) = gps_tim(i)
+          gps_xy(1,gps_indomain) = x
+          gps_xy(2,gps_indomain) = y
 
-          ! Write wet delays into hmg file:
-          write(lun, *) x-1, y-1,0, gps_wet(i), 'GPSWET'
+          if(lun .gt. 0)then! Write wet delays and tpw into hmg file:
+            write(lun, *) x, y,0, gps_wet(i), 'GPSWET'
+            write(lun, *) x, y,0, gps_tpw(i), 'GPSTPW'
+          endif
+
+          if(verbose .ge. 1)then
+            write(6, *) x, y,0, gps_wet(i), 'GPSWET'
+            write(6, *) x, y,0, gps_tpw(i), 'GPSTPW'
+          endif
+
         endif
       enddo
 
