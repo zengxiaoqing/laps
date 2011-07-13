@@ -3117,8 +3117,9 @@ c terms with dlnp**3. Also 2nd deriv terms vanish
           for=(phis(i,j,k)-phis(i,j,k-1))/
      &                              alog(p(k)/p(k+1))
           if(k+2.le.nz.and.k.gt.2) then
-           tor= t1*(phis(i,j,k+1)-3.*phis(i,j,k)+3.*phis(i,j,k-1)-
-     &            phis(i,j,k-2))
+!          tor= t1*(phis(i,j,k+1)-3.*phis(i,j,k)+3.*phis(i,j,k-1)-
+!    &            phis(i,j,k-2))
+           tor=0.
           else
            tor=0.
           endif
