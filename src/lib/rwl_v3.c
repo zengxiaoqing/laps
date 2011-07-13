@@ -2065,6 +2065,8 @@ fint4 *status;
           istatus = nc_open(filename,NC_WRITE, &cdfid);
           if (istatus != NC_NOERR) {
 	    *status = -2; /* error in file creation */ 
+            printf("The file %s could not be opened\n",filename);
+            printf("system command: %s\n",syscmd);
             free_file_var(syscmd, filename);
             free(ext);
             return;
