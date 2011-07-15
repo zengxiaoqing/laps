@@ -10,7 +10,7 @@ end module
 
 !===============================================================================
 
-subroutine get_wrf_dims(fname,nx,ny,nz)
+subroutine get_wrf_dims(fname,nx,ny,nz,istatus)
 
 use wrfutil
 
@@ -18,9 +18,12 @@ implicit none
 
 include 'netcdf.inc'
 
-integer :: nx,ny,nz,nid,icode
+integer :: nx,ny,nz,nid,icode,nRec,istatus
 character(len=*) :: fname
 logical :: there
+
+! istatus: 1=good return, 0=ERROR/bad return
+istatus = 1  ! assume good return
 
 ! Open wrf file, and leave open for future use.
 
@@ -29,13 +32,27 @@ if (there) then
    icode=nf_open(trim(fname),nf_nowrite,ncid)
    if (ncid <= 0) then
       print*,'Could not open wrf file: ',trim(fname)
-      stop
+      istatus = 0
+      return
    else
       print*,'Opened wrf file: ',trim(fname)
    endif
 else
    print*,'Could not find wrf file: ',trim(fname)
-   stop
+   istatus = 0
+   return
+endif
+
+icode=nf_inq_dimid(ncid,'Time',nid)
+icode=nf_inq_dimlen(ncid,nid,nRec)
+print*,'Time (number of records): ', nRec
+
+! Verify that file has 1 or more records (dimension "Time")
+if (nRec .eq. 0) then
+   print*,'ERROR: wrf file contains no data: ',trim(fname)
+   print*,'ERROR: cannot create output files...STOPPING!'
+   istatus = 0
+   return
 endif
 
 ! Read wrf grid dimensions.

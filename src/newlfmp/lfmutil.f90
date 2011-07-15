@@ -32,19 +32,22 @@ end
 
 !===============================================================================
 
-subroutine get_native_dims(mtype,filename,nx,ny,nz)
+subroutine get_native_dims(mtype,filename,nx,ny,nz,istatus)
 
 implicit none
 
-integer :: nx,ny,nz
+integer :: nx,ny,nz,istatus
 
 character(len=*) :: mtype,filename
+
+! istatus: 1=good return, 0=ERROR/bad return
+istatus = 1  ! assume good return
 
 select case(trim(mtype))
    case('mm5')
       call get_mm5_dims(filename,nx,ny,nz)
    case('wrf')
-      call get_wrf_dims(filename,nx,ny,nz)
+      call get_wrf_dims(filename,nx,ny,nz,istatus)
    case('nmm')
       call get_nmm_dims(filename,nx,ny,nz)
    case('st4')

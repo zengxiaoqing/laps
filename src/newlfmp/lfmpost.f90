@@ -21,6 +21,9 @@ integer ISTAT, I4_elapsed, ishow_timer, init_timer
 
 logical :: back
 
+! istatus: 1=good return, 0=ERROR/bad return
+istatus = 1  ! assume good return
+
 ! Read command line arguments.
 
 !beka
@@ -52,7 +55,6 @@ read(afcst,'(i16)',err=900) laps_valtime
 fcsttime=laps_valtime
 laps_valtime=laps_reftime+laps_valtime
 write(domnum_fstr,'("d",i2.2)') domnum
-
 
 ! Convert mtype to lower case and check for valid model type.
 
@@ -87,7 +89,12 @@ call lfm_namelist(lfmprd_dir)
 
 ! Obtain native model grid dimensions.
 
-call get_native_dims(mtype,filename,nx,ny,nz)
+call get_native_dims(mtype,filename,nx,ny,nz,istatus)
+if (istatus .ne. 1) then
+  print *, 'ERROR getting dimensions or no records in file: ', trim(filename)
+  print *, 'ERROR: Cannot process file...ABORTING!' 
+  stop
+endif
 
 ! Obtain output laps isobaric grid dimensions, pressure levels, and lat/lons.
 
