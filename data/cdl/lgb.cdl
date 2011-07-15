@@ -296,13 +296,13 @@ netcdf lgb {
         :Conventions = "NUWG";
         :history = "created by LAPS Branch of FSL";
         :record = "valtime, reftime";
-        :title = "LAPS l1s file - snow and precip accumulation";
+        :title = "LAPS lgb file - sfc background analysis fields";
         :version = 3;
 
     data:
 
         earth_shape     = "spherical radius";
-        grid_name       = "LAPS l1s file - snow and precip accumulation";
+        grid_name	= "LAPS lgb file - sfc background analysis fields";
         process_name    = "LAPS - Local Analysis and Prediction System";
         x_dim           = "x";
         y_dim           = "y";

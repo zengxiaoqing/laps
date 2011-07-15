@@ -229,13 +229,13 @@ netcdf lga {
         :Conventions = "NUWG";
         :history = "created by LAPS Branch of FSL";
         :record = "valtime, reftime";
-        :title = "LAPS lga file - background analysis fields";
+        :title = "LAPS lga file - 3d background analysis fields";
         :version = 3;
 
     data:
 
         earth_shape     = "spherical radius";
-        grid_name       = "LAPS lga file - background analysis fields";
+        grid_name       = "LAPS lga file - 3d background analysis fields";
         process_name    = "LAPS - Local Analysis and Prediction System";
         x_dim           = "x";
         y_dim           = "y";
