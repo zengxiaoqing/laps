@@ -85,6 +85,7 @@ my $wideband_time = 0.04166667;
 my $vxx_time = 0.16;
 my $vrc_time = 0.16;
 my $web_time = 7.0;
+my $verif_time = 30.0;
 my(@radars) = qw(01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 
 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 
 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76
@@ -92,8 +93,10 @@ my(@radars) = qw(01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 
 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122
 123 124 125 126 127 128 129 130 131 132 133 134 135);
 my(@webdirs) = qw(fw h5b ham llr p01 pbl pw sc td vnt xct fwi hah liw nbe pbe ptt rh sto tt wd0);
+my(@verifdirs) = qw(TSF DSF USF VSF SSF WSF TPW U3 V3 T3 W3);
 my $radar;
 my $webdir;
+my $verifdir;
 my($dir);
 
 if($min_files>0){
@@ -125,6 +128,14 @@ if($min_files>0){
         $dir="www/anal2d/recent/$webdir";
         $clean_dirs{$dir} = $web_time;
     }
+
+    foreach $verifdir (@verifdirs){
+        $dir="verif/$verifdir/pt";
+        $clean_dirs{$dir} = $verif_time;
+    }
+
+    $dir="verif/REF/plot";
+    $clean_dirs{$dir} = $verif_time;
 
     $clean_dirs{'lvd/goes08'} = (0.5<$hist_time)?0.5:$hist_time;;
     $clean_dirs{'lvd/goes09'} = (0.5<$hist_time)?0.5:$hist_time;;
