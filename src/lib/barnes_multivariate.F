@@ -649,6 +649,9 @@ cdis
         print*,IstartIend(1,rank),IstartIend(2,rank),jmax,kmax,n_var
         stop
       endif
+
+      i4_elapsed = ishow_timer()
+      write(6,*)' Call analyze_weights_mpi'
       call analyze_weights_mpi(
      1          n_var,max_obs,obs_barnes                                    ! I
      1         ,imax,jmax,kmax                                              ! I
@@ -659,6 +662,8 @@ cdis
      1         ,fnorm_lut                                                   ! I
      1         ,IstartIend(1,0),IstartIend(2,0)                             ! I
      1         ,local_var)                                                  ! O
+      i4_elapsed = ishow_timer()
+
       call mpi_gatherv(local_var,recvcounts(rank),MPI_REAL,buffer,
      1                 recvcounts,displs,MPI_REAL,0,MPI_COMM_WORLD,ierr)
       if( ierr /= 0) then
