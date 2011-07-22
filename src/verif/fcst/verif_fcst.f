@@ -213,6 +213,8 @@
 
         write(6,*)' Start subroutine verif_fcst_pt_2d...'
 
+        rmiss = -99.9
+
         call get_laps_domain_95(ni,nj,lat,lon,topo
      1           ,rlaps_land_frac,grid_spacing_cen_m,istatus)
         if(istatus .ne. 1)then
@@ -324,6 +326,10 @@
                     goto 1200
                 endif
 
+                xbar = rmiss
+                ybar = rmiss
+                std = rmiss
+
                 write(6,*)' Reading surface obs - i4_valid = ',i4_valid
 
                 if(trim(var_2d) .ne. 'TPW')then
@@ -348,6 +354,8 @@
                   write(6,*)' Number of obs in box  ',n_obs_b,atime_s
 
                 else
+                  call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
+
                   write(6,*)' call read_gps_obs'
                   path_to_gps = '/public/data/gpsmet/netcdf/'
                   lun_hmg = 0
@@ -365,10 +373,9 @@
      1                    ' Success reading GPS obs, #obs in domain = '
      1                     ,gps_indomain
                   else
-                    write(6,*)' Failure reading GPS obs'
+                    write(6,*)' Failure reading GPS obs at:',atime_s
+                    goto 980
                   endif
-                 
-                  call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
 
                 endif
 
@@ -746,7 +753,7 @@
                   rms_a(ifield,imodel,itime_fcst) = std
                 endif
 
-                write(6,*)
+980             write(6,*)
                 write(6,*)' Writing to lun_out ',lun_out
                 write(6,710)atime_s,xbar,ybar,std
                 write(lun_out,710)atime_s,xbar,ybar,std
