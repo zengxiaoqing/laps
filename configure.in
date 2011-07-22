@@ -216,9 +216,9 @@ then
   fi
   if test "$arch" = "x86_64"
   then
-    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4 -Bstatic"
     DBFLAGS="$DBFLAGS -Mbounds"
-    LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4"
+    LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4 -Bstatic"
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
