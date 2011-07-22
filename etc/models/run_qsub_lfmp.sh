@@ -1,47 +1,58 @@
 #!/bin/sh --login
 
-projectpath=$1  # Example: /lfs0/projects/hmtb/dwr_domains
+modelroot=$1    # Example: /lfs0/projects/hmtb/dwr_domains/efp_conus
 model=$2        # Example: wrf (arw), arw, nmm, mm5, st4
 physics=$3      # Example: tom
 lbc=$4          # Example: gfs1
-nest=$5         # Example: 1 or -2
-lapsdataroot=$6 # Example: /lfs0/projects/hmtb/dwr_domains/laps_psd   
-fcstIncrMin=$7  # Example: 60
-numFcsts=$8     # Example: 13
+name=$5         # Example: ewp0 or wrf-wsm6 (should match a '$LAPS_DATA_ROOT/lapsprd/fua' subdirectory name and an element of 'nest7grid.parms/fdda_model_source')
+nest=$6         # Example: 1 or -2
+lapsdataroot=$7 # Example: /lfs0/projects/hmtb/dwr_domains/laps_psd   
+fcstIncrMin=$8  # Example: 60
+numFcsts=$9     # Example: 13
 
-run=$model\-$physics\-$lbc
-mkdir -p $projectpath/$run
+mdlfilewait=200
 
-log=$projectpath/$run/lfmpost_run.log
+if test "$name" != "none"; then                               # (e.g. ewp0)
+    run=$name
+elif test "$physics" != "none" && test "$lbc" != "none"; then # (e.g. wrf-fer-gep0)
+    run=$model\-$physics\-$lbc
+elif test "$physics" != "none" && test "$lbc" == "none"; then # (e.g. wrf-fer)
+    run=$model\-$physics
+elif test "$physics" == "none" && test "$lbc" != "none"; then # (e.g. wrf-gep0)
+    run=$model\-$lbc
+elif test "$physics" == "none" && test "$lbc" == "none"; then # (e.g. wrf)
+    run=$model\-$lbc
+fi
 
-rm -f $projectpath/$run/qlfmp.log
+echo "mkdir -p $modelroot"
+      mkdir -p $modelroot
+
+log=$lapsdataroot/log/lfmpost_run.log.`date +\%H\%M`
+
+rm -f $lapsdataroot/qlfmp.log.`date +\%H\%M`
 
 # Build qsub script
-script=$projectpath/$run/qsub_lfmpost.sh
+script=$modelroot/qsub_lfmpost.sh
 echo "#!/bin/sh"                 > $script
 echo "#$ -N lfmp_$run"          >> $script
 echo "#$ -A hmtb"               >> $script
-echo "#$ -l h_rt=04:30:00"      >> $script
+echo "#$ -l h_rt=08:00:00,h_vmem=11.0G"  >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
-echo "#$ -pe hserial 1"           >> $script
-echo "#$ -o $projectpath/$run/qlfmp.log"                          >> $script
+echo "#$ -pe hserial 1"         >> $script
+echo "#$ -o $lapsdataroot/log/qlfmp.log.`date +\%H\%M`"           >> $script
+echo "#$ -j y"                  >> $script
 echo "#exit"                    >> $script
 echo " "                        >> $script
-echo "projectpath=$projectpath" >> $script
 
 if test "$model" = arw; then
     echo "model=wrf"                                              >> $script
-    echo "export WRF_DATAROOT=$projectpath/$run"                  >> $script
 elif test "$model" = nmm; then
     echo "model=$model"                                           >> $script
-    echo "export WRF_DATAROOT=$projectpath/$run"                  >> $script
 elif test "$model" = wrf; then
     echo "model=$model"                                           >> $script
-    echo "export WRF_DATAROOT=$projectpath/$run"                  >> $script
 elif test "$model" = mm5; then
     echo "model=$model"                                           >> $script
-    echo "export MM5_DATAROOT=$projectpath/$run"                  >> $script
 else
     echo "model=$model"                                           >> $script
 fi
@@ -51,7 +62,7 @@ echo "physics=$physics"         >> $script
 echo "nest=$nest"               >> $script
 echo " "                        >> $script
 
-echo "export LAPSROOT=/home/oplapb/builds/laps"                 >> $script
+echo "export LAPSROOT=/home/oplapb/builds_lahey/laps"           >> $script
 echo "export LAPS_DATA_ROOT=$lapsdataroot"                      >> $script
 
 echo "export NETCDF=/opt/netcdf/3.6.3-pgi"                >> $script
@@ -60,18 +71,24 @@ echo "export phys=$physics"                                     >> $script
 echo " "                                                        >> $script
 echo "fcstIncrMin=$fcstIncrMin"                                 >> $script
 echo "numFcsts=$numFcsts"                                       >> $script
-echo "maxWaitSec=3600"                                          >> $script
-echo "maxHrsRun=4"                                              >> $script
+echo "maxWaitSec=21600"                                         >> $script
+echo "maxHrsRun=24"                                             >> $script
+echo "name=$name"                                               >> $script
 echo "project=DWR"                                              >> $script
 echo " echo 'Running this lfmpost.pl command...'"               >> $script
-echo " echo '/usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q' " >> $script
-echo "       /usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -q"   >> $script
+if test "$name" != "none"; then # (e.g. ewp0)
+    echo " echo '/usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -r $modelroot -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n \$name -P \$project -g \$nest -W $mdlfilewait -q' " >> $script
+    echo "       /usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -r $modelroot -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n \$name -P \$project -g \$nest -W $mdlfilewait -q"   >> $script
+else
+    echo " echo '/usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -r $modelroot -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -W $mdlfilewait -q' " >> $script
+    echo "       /usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -r $modelroot -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -W $mdlfilewait -q"   >> $script
+fi
 echo " "                                                        >> $script
 echo " "                                                        >> $script
 echo " exit 0"                                                  >> $script
 
 echo " "
-echo " Running this qsub script...."
+echo " Running qsub script contained in $script...."
 cat $script
 echo " "
 echo " using this command..."
