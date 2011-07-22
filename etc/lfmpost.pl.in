@@ -16,18 +16,20 @@ my $LAPSROOT;
 #    -g model grid to process (default = 1, negative value does all grids)
 #    -f number of forecasts (default = 12)
 #    -i forecast increment (minutes, default = 60)
-#    -s start forecast time (hours, default = 0)
+#    -s start forecast hours (default = 0)
+#    -M start forecast minutes (default = 0)
 #    -p model prefix (default = model dependent)
 #    -w maximum wait time (seconds, default = 0);
 #    -e clock time hours from init date to stop to not conflict with next model run
 #    -q if *not* set, run lfmpost.exe via qsub 
 #    -P project - only important if project is DWR...will look in DWR specific dirs
 #    -y physics of model...used to make logfile unique when qsub writes it to $USER home directory
+#    -n name of model run (e.g. subdirectory under model data root) [optional]
 #    -W optional wait time for model file (once it appears in the directory) to be completely written (default is 20sec)
 
-use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_P $opt_q $opt_W);
+use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_n $opt_P $opt_q $opt_W $opt_M);
 use Getopt::Std;
-getopts('l:m:r:d:g:f:i:p:s:w:e:y:P:qW:');
+getopts('l:m:r:d:g:f:i:p:s:w:e:y:n:P:qW:M:');
 
 my $fileWait_time = 20; #Number of seconds to sleep after file copy for stability
 if (defined ($opt_W)) {
@@ -64,6 +66,7 @@ my $endClockTime;
 my $ctime;
 my $currTime;
 my $user;
+my $subdir;
 $now = substr($now,0,length($now)-1);
 print "*** LFM post script started:  $now ***\n\n";
 
@@ -126,6 +129,7 @@ my $time = time;
 my ($yyyy, $mm, $dd, $hh, $min) = &time::unix_to_time($time);
 my $mn = "00";
 $min = "0$min" while(length($min) < 2);
+$hh = "00"; # (SA) Set default run to beginning of the day to test a 24 hour cycle (e.g. EFPCONUS)
 
 # Override default time based on command line options, if present.
 
@@ -197,12 +201,14 @@ if ($opt_e) {  #set $endClockTime
 if ($project eq "DWR") {
   $date = "$yyyy$mm$dd$hh";
 } else {
-  $date = "$yyyy-$mm-$dd-$hh$mn";
+# $date = "$yyyy-$mm-$dd-$hh$mn"; # format for version 2 of WRF?
+  $date = "$yyyy$mm$dd$hh";
 }
 print "date = $date\n";
 
 # Define forecast parameters.
 
+#MAKE SURE TO COUNT analysis as one of the forecasts!
 my $nfcst = 12;
 $nfcst = $opt_f if defined ($opt_f);
 my $finc = 60;
@@ -210,6 +216,8 @@ $finc = $opt_i if defined ($opt_i);
 $finc *= 60; #make it seconds
 my $sfcst = 0;
 $sfcst = $opt_s if defined ($opt_s);
+my $sfcstMin = 0;
+$sfcstMin = $opt_M if defined ($opt_M);
 
 # LAPS i4time uses a base year of 1960 while unix time uses a base year of
 #  1970.  Account for this using the following parameter which is the number 
@@ -238,7 +246,8 @@ print "maxwait: $maxwait\n";
 if ($project eq "DWR" ) {
   $model_output_dir = "$modelroot/$date/wrfprd";
 } else {
-  $model_output_dir = "$modelroot/$date";
+# $model_output_dir = "$modelroot/$date";
+  $model_output_dir = "$modelroot/$date/wrfprd";
 }
 
 # Copy lfmpost.nl into $modelroot/$date/static from $modelroot/static
@@ -269,8 +278,7 @@ system ("cp $modelroot/static/lfmpost.nl $modelroot/$date/static/lfmpost.nl");
 
 my $inittime = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + $decade;
 my ($g,$grid,$i4time,$fcst,$fname,$dom,$ss,$mdate,$jday,$yy);
-my $cFcstNum;
-my $FcstNum;
+my ($cFcstHr,$cFcstMin,$FcstHr,$FcstMin,$cFcstExt);
 print "ngrid = $ngrid\n";
 for ($g=1; $g<=$ngrid; $g++) {
    $grid = $grid[$g];
@@ -309,38 +317,74 @@ for ($g=1; $g<=$ngrid; $g++) {
        }
    }else{ # local laps being run on JET
        print "Attempt to create fua/fsf links since we have a local LAPS on JET\n";
+       if(defined($opt_n)){
+           $subdir = $opt_n;
+       }elsif(defined($opt_y)){
+           $subdir = "wrf-$opt_y";
+       }
+
        if (! -e "$model_output_dir/d$dom/fua") {
-         if (defined ($opt_y)) {
-           system ("rm -f $lapsdataroot/lapsprd/fua/wrf-$opt_y/wrf-$opt_y");
-           system ("ln -s $lapsdataroot/lapsprd/fua/wrf-$opt_y $model_output_dir/d$dom/fua");
+         if (defined ($opt_y) || defined ($opt_n)) {
+           print   "ln -s $lapsdataroot/lapsprd/fua/$subdir $model_output_dir/d$dom/fua\n";
+           system ("ln -s $lapsdataroot/lapsprd/fua/$subdir $model_output_dir/d$dom/fua");
+
+#          This seems to get created at the beginning of the run for some reason
+           print   "rm -f $lapsdataroot/lapsprd/fua/$subdir/$subdir\n";
+           system ("rm -f $lapsdataroot/lapsprd/fua/$subdir/$subdir");
+
          } else {
+           print   "ln -s $lapsdataroot/lapsprd/fua $model_output_dir/d$dom/fua\n";
            system ("ln -s $lapsdataroot/lapsprd/fua $model_output_dir/d$dom/fua");
+
          }
        }
+
        if (! -e "$model_output_dir/d$dom/fsf") {
-         if (defined ($opt_y)) {
-           system ("rm -f $lapsdataroot/lapsprd/fsf/wrf-$opt_y/wrf-$opt_y");
-           system ("ln -s $lapsdataroot/lapsprd/fsf/wrf-$opt_y $model_output_dir/d$dom/fsf");
+         if (defined ($opt_y) || defined ($opt_n)) {
+           print   "rm -f $lapsdataroot/lapsprd/fsf/$subdir/$subdir\n";
+           system ("rm -f $lapsdataroot/lapsprd/fsf/$subdir/$subdir");
+
+           print   "ln -s $lapsdataroot/lapsprd/fsf/$subdir $model_output_dir/d$dom/fsf\n";
+           system ("ln -s $lapsdataroot/lapsprd/fsf/$subdir $model_output_dir/d$dom/fsf");
          } else {
+           print   "ln -s $lapsdataroot/lapsprd/fsf $model_output_dir/d$dom/fsf\n";
            system ("ln -s $lapsdataroot/lapsprd/fsf $model_output_dir/d$dom/fsf");
          }
        }
    }
 
-#LW modified to catch last forecast...don't count analysis as part of $nfcst
-#LW   for ($n=0; $n<$nfcst; $n++) {
-   for ($n=0; $n<=$nfcst; $n++) {
-      $FcstNum = $n * $finc / 3600; #This should get forecast hour
-      $cFcstNum = "$FcstNum";
-      $cFcstNum = "00$cFcstNum" while (length($cFcstNum)<2);
-      $cFcstNum = "0$cFcstNum" while (length($cFcstNum)<3);
-      $i4time = $inittime + $sfcst*3600 + ($n * $finc);
+#LW MAKE SURE TO COUNT analysis as part of $nfcst
+   for ($n=0; $n<$nfcst; $n++) {
+
+# Make cFcstExt that will be unique extension of log file
+      if ($nfcst == 1) {
+        $FcstHr = $sfcst; 
+        $FcstMin = $sfcstMin;
+      } else {
+        $FcstHr = $n * $finc / 3600; #This should get forecast hour
+        $FcstMin = ($n * $finc) % 3600; # This should get forecast min
+      }
+      $cFcstHr = "$FcstHr";
+      $cFcstHr = "00$cFcstHr" while (length($cFcstHr)<2);
+      $cFcstHr = "0$cFcstHr" while (length($cFcstHr)<3);
+      $cFcstMin = "$FcstMin";
+      $cFcstMin = "0$cFcstMin" while (length($cFcstMin)<2);
+      $cFcstExt = "$cFcstHr$cFcstMin";
+
+      if ($nfcst == 1) {
+        $fcst = $sfcst*3600 + $sfcstMin*60;
+      } else {
+        $fcst = $sfcst*3600 + ($n * $finc);
+      }
+      $i4time = $inittime + $fcst;
+
       if ($model eq "mm5") {
          $fcst = $sfcst + $n;
          $fcst = "0$fcst" while (length($fcst)<2);
          $fname = "$mdlpref{$model}$grid"."_$fcst";
       } elsif ($model eq "wrf" || $model eq "nmm") {
          ($yyyy,$mm,$dd,$hh,$mn,$ss) = &time::unix_to_time($i4time-$decade);
+         print "LW unix_to_time(i4time-decade) >$yyyy< >$mm< >$dd< >$hh< >$mn< >$ss< \n";
          $mm = "0$mm" while (length($mm)<2);
          $dd = "0$dd" while (length($dd)<2);
          $hh = "0$hh" while (length($hh)<2);
@@ -376,7 +420,6 @@ for ($g=1; $g<=$ngrid; $g++) {
          $jday = &time::julian($yyyy,$mm,$dd);
          $fname = "$yy$jday$hh"."00"."$hh2";
       }
-      $fcst = $sfcst*3600 + ($n * $finc);
 
 # Wait for model file and make sure file size is greater than zero.
       print "looking for $model_output_dir/$fname\n";
@@ -406,12 +449,14 @@ for ($g=1; $g<=$ngrid; $g++) {
       print "found it, inittime: $inittime\n";
       sleep $fileWait_time; # sleep to make sure file is completely written before processing
 
-      if ($opt_y) { #add identifier to logfile from $opt_y
+      if ($opt_n) { #add identifier to logfile from $opt_n
+        $lfmpostlog = "lfmpost_$opt_n"."_";
+      } elsif ($opt_y) { #add identifier to logfile from $opt_y
         $lfmpostlog = "lfmpost_$opt_y"."_";
       } else {
         $lfmpostlog = "lfmpost_";
       }
-      $lfmpostlog = "$lfmpostlog$yyyy$initmm$initdd"."_$inithh"."_$cFcstNum.log";
+      $lfmpostlog = "$lfmpostlog$yyyy$initmm$initdd"."_$inithh"."_$cFcstExt.log";
 
 #LW check to see if the directory $lapsdataroot/d0$grid exists.
 #  If it does, append "d0$grid" to $lapsdataroot as an argument to pass into lfmpost.exe
@@ -477,7 +522,7 @@ for ($g=1; $g<=$ngrid; $g++) {
 #      }
 # end HJ mod
    }
-}
+} #end of loop through $grid (d01, d02, etc)
 
 if ($project eq "DWR") {     # move lfmp_tom.* to wrfprd from $LAPSROOT/etc
   $phys = $ENV{phys};
