@@ -104,7 +104,7 @@ my $followup_xsect =  "@prefix@/etc/www/followup_fcst_xsect.sh $domain $model $d
 my $followup_spaghetti = "@prefix@/etc/www/followup_ensemble.sh $domain ensemble $dataroot $window $resolution @prefix@";
 
 my $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
-my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 72 $domain $model\n";
+my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 36 $domain $model\n";
 my $output_inc = $opt_f;     # Forecast output interval (hours)
 my $cycle_freq = $opt_c;     # Cycle frequency in hours
 my $timeout = $opt_c*3600;   # Seconds to wait before giving up after starting
@@ -167,7 +167,8 @@ print "laps_fua: $local_fsf\n";
 
 # Create the list of file times we need to get
 
-my $num_files = int($fcst_len/$output_inc)+1;
+my $num_files = int(($fcst_len/$output_inc) + 0.5)+1;
+print "num_files: $num_files\n";
 
 my $fcsttime = 0;
 my ($fcsthr,$fcstmn);
@@ -180,6 +181,8 @@ while ($fcsttime <= $fcst_len) {
   push @times, $cycle.$fcsthr.$fcstmn;
   $fcsttime = $fcsttime + $output_inc;
 }
+
+print "times: @times\n";
 
 my @times_new;
 my @fsffiles_new;
@@ -194,16 +197,16 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
   @times_new = @times; 
   foreach (@times) {
     if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
-      print "Ready to process $_ ... \n" ;
+      print "\nReady to process $_ ... \n" ;
       if ($opt_a eq "spaghetti") {
           my $command = "$followup_spaghetti $_";
           print "running spaghetti command: $command";
           $result=system("$command");
       } else {
-          $result=system("$followup $_");
+          $result=system("$followup $_ @prefix@");
 #         $result=system("$followup_fire $_");
 #         $result=system("$followup_ua $_");
-          $result=system("$followup_xsect $_");
+          $result=system("$followup_xsect $_ @prefix@");
           system("rm -f $local_fsf/$_.fsf.done");
 #         system("rm -f $local_fua/$_.fua.done"); 
           if (! $www_flag){
@@ -215,7 +218,7 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
       }
       print "done.\n";
       splice @times_new, $arrpos, 1;
-      $timeaccum = 0;
+#     $timeaccum = 0;
     }else{
       print "Not ready (both fua and fsf). $local_fsf/$_.fsf\n";
       $arrpos++;
@@ -230,7 +233,7 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
     print "Sleeping for $sleep_time\n";
     sleep $sleep_time;
     $timeaccum = $timeaccum + $sleep_time;
-    print $t." Total time since beginning of loop: $timeaccum\n";  
+    print $t." Total wait time since beginning of script: $timeaccum\n";  
   }else{
     system("touch $w3recent/../finish.txt");
     print "All fua/fsf files processed\n";
