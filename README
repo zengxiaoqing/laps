@@ -1533,10 +1533,12 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      LAPS runs in real-time under cron; there is a sample cron script in 
      '$LAPSINSTALLROOT/util/cronfile'. Referring to this cron, you can 
      see that once each hour (or other cycle time), the main './etc/sched.pl' 
-     runs. As an example at GSD, we run the 'sched.pl' hourly at :20 after the
+     runs. As an example at ESRL, we run the 'sched.pl' hourly at :20 after the
      top of the hour. By inspecting the 'sched.pl' file you can see the various
-     executables that are run in a certain order. You might want to modify the 
-     'sched.pl' file for your needs. 
+     executables that are run in a certain order. Various command line arguments
+     are documented within 'sched.pl' (such as '-d 0.25' that is useful for a 
+     15-min cycle when the latency is ~20 minutes). You might want to modify 
+     the 'sched.pl' file for your needs.
 
      In the sample cron script several ingest processes are run separately
      from the 'sched.pl'. For example the satellite ingest (lvd) is run 
