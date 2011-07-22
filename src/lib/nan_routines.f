@@ -41,6 +41,9 @@ c  author: Dan Birkenheuer
 c  date:   12/11/96
 c  date:    1/15/97  modified into 4 routines Brandy can't handle 
 c                    entry points.
+c  date:   2011      modified by Steve Albers to use division test since
+c                    inequality test doesn't work with PGF90 unless special
+c                    compiler flags are used
 
        real var
        integer istatus
@@ -48,9 +51,11 @@ c                    entry points.
 
 
 c  single variable
-        if (var.ne.var) then ! NaN detected
-         istatus = 0
-         return
+        if(var .ne. 0.0)then
+          if (var / var .NE. 1.0) then ! NaN detected
+            istatus = 0
+            return
+          endif
         endif
 
 
@@ -73,6 +78,9 @@ c  author: Dan Birkenheuer
 c  date:   12/11/96
 c  date:    1/15/97  modified into 4 routines Brandy can't handle 
 c                    entry points.
+c  date:   2011      modified by Steve Albers to use division test since
+c                    inequality test doesn't work with PGF90 unless special
+c                    compiler flags are used
        integer istatus
        real var1(n)
        integer i
@@ -84,10 +92,13 @@ c                    entry points.
 c  single dimension
 
         do i = 1,n
-        if(var1(i).ne.var1(i)) then ! NaN detected
-         istatus = 0
-         return
-        endif
+          if(var1(i) .NE. 0.) then
+            if(var1(i) / var1(i) .NE. 1.0) then ! NaN detected
+              istatus = 0
+              write(6,*)' Nan detected at i: ',i
+              return
+            endif
+          endif
         enddo
 
 
@@ -111,6 +122,9 @@ c  author: Dan Birkenheuer
 c  date:   12/11/96
 c  date:    1/15/97  modified into 4 routines Brandy can't handle 
 c                    entry points.
+c  date:   2011      modified by Steve Albers to use division test since
+c                    inequality test doesn't work with PGF90 unless special
+c                    compiler flags are used
        integer istatus
        real var2(n,m)
        integer i,j
@@ -122,10 +136,13 @@ c  double dimension
 
         do j = 1,m
         do i = 1,n
-        if(var2(i,j).ne.var2(i,j)) then ! NaN detected
-         istatus = 0
-         return
-        endif
+          if(var2(i,j) .NE. 0.0) then 
+            if(var2(i,j) / var2(i,j) .NE. 1.0) then ! NaN detected
+              istatus = 0
+              write(6,*)' Nan detected at i,j: ',i,j
+              return
+            endif
+          endif
         enddo
         enddo
 
@@ -179,6 +196,9 @@ c  author: Dan Birkenheuer
 c  date:   12/11/96
 c  date:    1/15/97  modified into 4 routines Brandy can't handle 
 c                    entry points.
+c  date:   2011      modified by Steve Albers to use division test since
+c                    inequality test doesn't work with PGF90 unless special
+c                    compiler flags are used
        integer istatus
        real var3(n,m,l)
        integer i,j,k
@@ -192,12 +212,14 @@ c  triple dimension
         do k = 1,l
         do j = 1,m
         do i = 1,n
-        if(var3(i,j,k).ne.var3(i,j,k)) then ! NaN detected
+          if(var3(i,j,k) .NE. 0.) then ! NaN detected
+            if(var3(i,j,k) / var3(i,j,k) .NE. 1.0) then ! NaN detected
 c LW added for testing
-         write(6,*) 'NaN found: ',i,j,k
-         istatus = 0
-         return
-        endif
+              write(6,*) 'NaN found: ',i,j,k
+              istatus = 0
+              return
+            endif
+          endif
         enddo
         enddo
         enddo
