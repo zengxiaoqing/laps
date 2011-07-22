@@ -22,6 +22,7 @@ include 'lapsparms.for'
         real grid_cen_lon
         real earth_radius 
         integer    laps_cycle_time
+        integer    model_cycle_time, model_fcst_intvl, model_fcst_len
         integer i2_missing_data
         real    r_missing_data
         integer  MAX_RADARS
@@ -212,6 +213,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,grid_spacing_m,grid_cen_lat,grid_cen_lon &
                   ,earth_radius &
                   ,laps_cycle_time &
+                  ,model_cycle_time, model_fcst_intvl, model_fcst_len &
                   ,i2_missing_data, r_missing_data, MAX_RADARS, i_offset_radar &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
