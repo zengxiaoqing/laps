@@ -206,6 +206,15 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
             if (j .ge. 0) then
 !              if(index(names(i)(j+1:j+13),'/').eq.0 .and.
 !    +              names(i)(j:j).eq.'/') then
+
+!              Test for "grib" extension in the name
+               if(l_parse(names(i)(j+1:j+13),'grib'))then
+                 write(6,*)' ERROR: filename has .grib extension: '
+     1                    ,trim(names(i))
+                 write(6,*)
+     1             ' remove .grib extension if present and/or use links'
+               endif
+
                if(l_parse(names(i)(j+1:j+13),'/') .eqv. .false. .AND.
      +              names(i)(j:j).eq.'/') then
                 
@@ -362,6 +371,7 @@ C            Start a new init time
            endif
 
          endif
+
 Curiously had to comment these lines as we now need 4 char to retain full filename
 c        if(bgmodel.eq.0 .and. cmodel.eq.'LAPS_FUA'.or.
 c    +       cmodel.eq.'MODEL_FUA'.or.cmodel.eq.'LAPS')then
@@ -376,7 +386,7 @@ c        else
              endif
 c        endif
 
-      enddo
+      enddo ! n
 
       print *,'Found ',ibkgd,' initial backgrounds '
       do n=1,ibkgd
@@ -406,7 +416,7 @@ c whereas the second section below is ffff = hhhh.
 
             if(cmodel.eq.'LAPS_FUA'.or.cmodel.eq.'MODEL_FUA'
      +                             .or.cmodel.eq.'HRRR'      
-     +                             .or.cmodel.eq.'RR')then
+     +                             .or.cmodel.eq.'RRs')then
 
 c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel = 0 need this switch.
 
