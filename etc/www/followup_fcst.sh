@@ -21,17 +21,24 @@ LAPSINSTALLROOT=$7
 
 echo "WINDOW = $WINDOW"
 echo "RESOLUTION = $RESOLUTION"
+echo "LAPSINSTALLROOT = $LAPSINSTALLROOT"
 
 # Hard coded stuff
 # WINDOW=0.0:0.0:1.0:1.0
-LAPS_ETC=/usr/nfs/common/lapb/www/fcst2d
-#LAPS_ETC=$LAPSINSTALLROOT/etc                               
-WWW_DIR=/w3/lapb/domains/$DOMAIN
+#LAPS_ETC=/usr/nfs/common/lapb/www/fcst2d
+LAPS_ETC=$LAPSINSTALLROOT/etc                               
+
+if test -r "/w3/lapb"; then
+    WWW_DIR=/w3/lapb/domains/$DOMAIN
+else
+    WWW_DIR=$LAPS_DATA_ROOT/lapsprd/www
+fi
+
 latest=latest
 
 # RESOLUTION=730x730
 
-export EXE_DIR=$LAPSINSTALLROOT/bin
+export LAPSINSTALLROOT
 export LAPS_DATA_ROOT
 export LAPS_ETC                            
 
@@ -55,14 +62,22 @@ ls -l $WWW_DIR/private_data/static/nest7grid.parms
 
 set -A products `cat $LAPS_DATA_ROOT/static/www/fcst2d/followup_hsect_prods.txt`
 
+echo " "
+echo "Start loop through products at $DATETIME"
+
 #Call for each product
 for prod in ${products[*]}
 do
   echo " "
   echo "Looping through $prod with call to laps_gifs_sub_fcst.sh"
   startdate=`date -u +%H:%M:%S`
-  $LAPS_ETC/laps_gifs_sub_fcst.sh $prod $WINDOW $LAPS_ETC $WWW_DIR $MODEL $LAPS_DATA_ROOT $latest $DATETIME $RESOLUTION $DOMAIN $MODEL
+  echo "Running: $LAPS_ETC/www/lapsplot/laps_gifs_sub_fcst.sh $prod $WINDOW $LAPS_ETC $WWW_DIR $MODEL $LAPS_DATA_ROOT $LAPSINSTALLROOT $DATETIME $RESOLUTION"                                
+                 $LAPS_ETC/www/lapsplot/laps_gifs_sub_fcst.sh $prod $WINDOW $LAPS_ETC $WWW_DIR $MODEL $LAPS_DATA_ROOT $LAPSINSTALLROOT $DATETIME $RESOLUTION                                         
   enddate=`date -u +%H:%M:%S`
   echo "Timing info for $prod: $startdate $enddate"
 done
+
+echo " "
+echo "Finished loop through followup_fcst.sh products at $DATETIME - end of script"
+
 exit

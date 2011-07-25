@@ -10,11 +10,10 @@ LAPS_ETC=$3
 WWW_DIR=$4
 utc_hhmm=$5
 LAPS_DATA_ROOT=$6
-latest=$7
+LAPSINSTALLROOT=$7
 datetime=$8
 RESOLUTION=$9
-domain=$10
-model=$11
+
 
 echo " "
 echo "start laps_gifs_sub_fcst.sh..."
@@ -54,7 +53,7 @@ echo "WINDOW ="$WINDOW
 echo "NCARG_ROOT ="$NCARG_ROOT
 echo "utc_hhmm ="$utc_hhmm
 echo "LAPS_DATA_ROOT ="$LAPS_DATA_ROOT
-echo "latest ="$latest
+echo "LAPSINSTALLROOT ="$LAPSINSTALLROOT
 echo "datetime ="$datetime
 echo "RESOLUTION ="$RESOLUTION
 echo "LAPS_ETC = "$LAPS_ETC
@@ -102,11 +101,17 @@ else
 
 fi
 
-echo "Running $EXE_DIR/lapsplot.exe < $LAPSPLOT_IN"; date -u
+export LAPS_DATA_ROOT=$LAPS_DATA_ROOT
 
-$EXE_DIR/lapsplot.exe < $LAPSPLOT_IN
+echo "Running $LAPSINSTALLROOT/bin/lapsplot.exe < $LAPSPLOT_IN"; date -u
+
+$LAPSINSTALLROOT/bin/lapsplot.exe < $LAPSPLOT_IN
 
 ls -l gmeta
+
+FILESIZE=$(stat -c%s "gmeta")
+echo "Size of gmeta = $FILESIZE bytes."
+
 netpbm=no
 if test "$MACHINE" = "headnode.fsl.noaa.gov"; then
     ctransarg=avs
@@ -137,6 +142,7 @@ fi
 if test "$netpbm" = "yes"; then
     date
     echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file"
+    echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif"
     $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
     echo "Success in ctrans to make GIF"
     ls -l $SCRATCH_DIR/gmeta_$prod.gif
@@ -172,6 +178,14 @@ cp $SCRATCH_DIR/gmeta_$prod.gif $ARCHIVE/$cycle/$prod/$fcsthr.gif
 ln -fs $ARCHIVE/$cycle/$prod/$fcsthr.gif $RECENT/$prod/$fcsthr.gif
 ls -l $ARCHIVE/$cycle/$prod/$fcsthr.gif
 ls -l $RECENT/$prod/$fcsthr.gif
+
+FILENAME=$ARCHIVE/$cycle/$prod/$fcsthr.gif
+FILESIZE=$(stat -c%s "$FILENAME")
+echo "Size of $FILENAME = $FILESIZE bytes."
+
+if test $FILESIZE -lt "1000"; then
+    echo "ERROR: Size of $FILENAME is too small"
+fi
 
 # Set up looper
 # $LOOPER $ARCHIVE/$cycle/$prod
