@@ -190,7 +190,6 @@ c.....	Start here.  First see if this is an interactive run.
 c*************************************************************
 c
 	call tagit('laps_sfc',20000126)
-        call get_sfc_badflag(badflag,istatus)
 	narg = iargc()
 cc	print *,' narg = ', narg
 c
