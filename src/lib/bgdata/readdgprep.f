@@ -437,6 +437,7 @@ c        endif
             do j=1,ny
             do i=1,nx
 
+!              Check if td_sfc contains valid RH value
                if(td_sfc(i,j).gt.0.0 .and. td_sfc(i,j).lt.100.001)then
                   prsfc=pr_sfc(i,j)/100.
                   qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.
@@ -444,7 +445,7 @@ c        endif
                   td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc
      &,t_ref)+273.15
                   sumsfctd=sumsfctd+td_sfc(i,j)
-               else
+               else 
                   td_sfc(i,j)=rfill
 c                 td_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
 c    &,bogus_sh,t_ref)+273.15
