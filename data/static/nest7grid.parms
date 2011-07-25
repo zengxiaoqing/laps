@@ -14,7 +14,7 @@
 
  vertical_grid='PRESSURE',
  nk_laps=41,
- earth_radius = 6370000.                         
+ earth_radius = 6370000.,                        
 
  laps_cycle_time=3600,           
  max_radar_files_nl=20000,
@@ -76,6 +76,9 @@
  c8_project='NIMBUS', 
  c8_blpfmt='default', 
  fdda_model_source='lga','wrf-wsm6',
+ model_cycle_time=7200, 
+ model_fcst_intvl=3600, 
+ model_fcst_len=360,
  /
 c OVERALL LAPS PARAMETERS
 c Many of these are stored in the common block in 'lapsparms.cmn'
@@ -207,6 +210,13 @@ c                     subdirectories. Lapsplot will plot only among those
 c                     listed elements. The list of models (other than lga)
 c                     is used for reference during localization and 
 c                     verification.
+c
+c model_cycle_time - Time between successive model initializations (seconds) 
+c
+c model_fcst_intvl - Time between model forecast steps within a given run (seconds)
+c
+c model_fcst_len - Total duration of model forecast (minutes)
+c
 c
 c iwrite_output - flag to write out all little files or just a restricted set
 c                 (1)  means write out all little files
