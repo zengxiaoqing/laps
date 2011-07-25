@@ -142,6 +142,15 @@ if (verbose) then
              ,k,npsig(nx/2,ny/2,k),nzsig(nx/2,ny/2,k)  &
              ,ntsig(nx/2,ny/2,k),nmrsig(nx/2,ny/2,k)   &
              ,nusig(nx/2,ny/2,k),nvsig(nx/2,ny/2,k)
+       call check_nan(npsig(nx/2,ny/2,k),istatus) 
+       if(istatus .ne. 1)then
+         write(6,*)' ERROR: Nan detected in npsig via check_nan...'
+         stop
+       endif
+!      if(npsig(nx/2,ny/2,k) / npsig(nx/2,ny/2,k) .ne. 1.0)then                        
+!        write(6,*)' ERROR: Nan detected in npsig by division test and missed by check_nan...'
+!        stop
+!      endif
     enddo
   endif
 endif
