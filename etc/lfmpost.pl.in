@@ -3,6 +3,7 @@
 
 require 5;
 use strict;
+require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
 
 my $project = "none";
 my $LAPSROOT;
@@ -26,10 +27,11 @@ my $LAPSROOT;
 #    -y physics of model...used to make logfile unique when qsub writes it to $USER home directory
 #    -n name of model run (e.g. subdirectory under model data root) [optional]
 #    -W optional wait time for model file (once it appears in the directory) to be completely written (default is 20sec)
+#    -F optional flag to produce forecast web GIF images after each running of 'lfmpost.exe'
 
-use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_n $opt_P $opt_q $opt_W $opt_M);
+use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_n $opt_P $opt_q $opt_W $opt_M $opt_F);
 use Getopt::Std;
-getopts('l:m:r:d:g:f:i:p:s:w:e:y:n:P:qW:M:');
+getopts('l:m:r:d:g:f:i:p:s:w:e:y:n:P:qW:M:F');
 
 my $fileWait_time = 20; #Number of seconds to sleep after file copy for stability
 if (defined ($opt_W)) {
@@ -341,11 +343,13 @@ for ($g=1; $g<=$ngrid; $g++) {
 
        if (! -e "$model_output_dir/d$dom/fsf") {
          if (defined ($opt_y) || defined ($opt_n)) {
+           print   "ln -s $lapsdataroot/lapsprd/fsf/$subdir $model_output_dir/d$dom/fsf\n";
+           system ("ln -s $lapsdataroot/lapsprd/fsf/$subdir $model_output_dir/d$dom/fsf");
+
+#          This seems to get created at the beginning of the run for some reason
            print   "rm -f $lapsdataroot/lapsprd/fsf/$subdir/$subdir\n";
            system ("rm -f $lapsdataroot/lapsprd/fsf/$subdir/$subdir");
 
-           print   "ln -s $lapsdataroot/lapsprd/fsf/$subdir $model_output_dir/d$dom/fsf\n";
-           system ("ln -s $lapsdataroot/lapsprd/fsf/$subdir $model_output_dir/d$dom/fsf");
          } else {
            print   "ln -s $lapsdataroot/lapsprd/fsf $model_output_dir/d$dom/fsf\n";
            system ("ln -s $lapsdataroot/lapsprd/fsf $model_output_dir/d$dom/fsf");
@@ -512,7 +516,47 @@ for ($g=1; $g<=$ngrid; $g++) {
         }
         print "$command\n";
         system ("$command");
-      }
+
+        if (defined ($opt_F)) { # Run followup to make GIFS 
+          if (defined ($opt_n) && ! -d "w3/lapb") { # other conditions for this to work
+            $subdir = $opt_n;
+
+            if ($fcst == 0) {
+              my $purger = "@prefix@/etc/purge_w3_fcst2d.pl -d $lapsdataroot -t 30 dummy $subdir\n";
+              print "call purger\n";
+              print "$purger\n";
+              system("$purger");
+            }
+
+            print "Run followup to make GIFS (under construction)\n";
+
+#           Obtain window parameters
+            my @windowres=&laps_tools::get_fcst_img_res($lapsdataroot);
+            my $window=@windowres[0];
+            my $resolution=@windowres[1];
+
+#           $inittime is seconds at initial time
+#           $fcst is seconds into the forecast
+#           $date is yyyymmddhh of model initial time
+            my $model_a9time=&laps_tools::i4time_to_a9time($inittime);
+            my $model_HHH=int($fcst/3600);
+            my $model_MM= int( ($fcst-($model_HHH*3600)) / 60);
+            $model_HHH = "0".$model_HHH while(length($model_HHH)<2);
+            $model_MM  = "0".$model_MM  while(length($model_MM )<2);
+
+            my $modelfcsttime = "$model_a9time$model_HHH$model_MM"; # yydddhhmm[H]HHMM                                             
+            my $followup =       "@prefix@/etc/www/followup_fcst.sh       dummy $subdir $lapsdataroot $window $resolution";
+            $command = "$followup $modelfcsttime @prefix@";
+            print "running followup hsect command: $command";
+            system ("$command");
+
+            my $followup_xsect = "@prefix@/etc/www/followup_fcst_xsect.sh dummy $subdir $lapsdataroot";
+            $command = "$followup_xsect $modelfcsttime @prefix@";
+            print "running followup xsect command: $command";
+            system ("$command");
+          }
+        }
+      } # run with qsub
 
 # HJ mod: don't need this anymore. 3/29/2011
 #      if ($project eq "DWR") {     # move logfile to wrfprd
