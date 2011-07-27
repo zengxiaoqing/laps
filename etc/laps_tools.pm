@@ -1075,3 +1075,90 @@ sub systime{
 
     return ($yyjjjhhmm);
 }
+
+# 
+#-------------------------------------------------------------------
+#
+sub get_fcst_img_res {
+ 
+# This subroutine will calculate the window and resolution of a     
+# forecast web image based on the domain dimensions    
+#
+# Notes on input:
+#
+    my ($dataroot)=@_;
+
+    my $window;
+    my $resolution;
+    my $res_x;
+    my $res_y;
+
+    my ($xhigh,$xlow,$yhigh,$ylow);
+    my $yhigh_thresh;
+    my $ylow_thresh;
+    my $x_hw;
+    my $y_hw;
+
+#   Read grid dimensions
+    my (@xdim,$xdim);
+    my (@ydim,$ydim);
+    my $nl_var;
+    my $domain_nl = "nest7grid.parms";
+    if(-e "$dataroot/static/$domain_nl"){
+        $nl_var="NX_L";
+        @xdim=&get_nl_value($domain_nl,$nl_var,$dataroot);
+        $nl_var="NY_L";
+        @ydim=&get_nl_value($domain_nl,$nl_var,$dataroot);
+        $xdim = $xdim[0];
+        $ydim = $ydim[0];
+        print "xdim,ydim is $xdim,$ydim<br>\n";
+    }
+
+#   Determine window & resolution for NCAR graphics
+    my $aspect_ratio = ($xdim-1.0) / ($ydim-1.0);
+    print "aspect_ratio is $aspect_ratio<br>\n";
+    my $zoom_safe = 1.0;
+    my $npix_safe = 730;
+
+    $x_hw  = 0.5 / $zoom_safe;
+    if($aspect_ratio > 1.40){
+        $res_y=$npix_safe;
+        $res_x=int($res_y*1200./885.);
+        $resolution="$res_x"."x"."$res_y";
+        $y_hw  = 0.36 / $zoom_safe;
+        $ylow_thresh  = 0.14;
+        $yhigh_thresh = 0.86;
+    }elsif($aspect_ratio > 1.192){
+        $res_y=$npix_safe;
+        $res_x=int($res_y*1056./885.);
+        $resolution="$res_x"."x"."$res_y";
+        $y_hw  = 0.42 / $zoom_safe;
+        $ylow_thresh  = 0.08;
+        $yhigh_thresh = 0.92;
+    }else{
+        $res_y=$npix_safe;
+        $res_x=$res_y;
+        $resolution="$res_x"."x"."$res_y";
+        $y_hw  = 0.5 / $zoom_safe;
+        $ylow_thresh  = 0.0;
+        $yhigh_thresh = 1.0;
+    }
+
+    print "resolution is $resolution<br>\n";
+
+    $xlow  = 0.5 - $x_hw;
+    $xhigh = 0.5 + $x_hw;
+    $ylow  = 0.5 - $y_hw;
+    $yhigh = 0.5 + $y_hw;
+
+    $window="$xlow:$ylow:$xhigh:$yhigh";
+    print "window is $window<br>\n";
+
+    my @argsout;
+    $argsout[0]=$window;
+    $argsout[1]=$resolution;
+
+    return (@argsout);
+ 
+}
+1;
