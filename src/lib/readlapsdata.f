@@ -174,8 +174,10 @@ C
         istatus=error(2)
         goto 999
 C
-980     if (flag .ne. 1)
-     1    write (6,*) 'Error in array dimensioning...read aborted.'
+980     if (flag .ne. 1) then
+          write (6,*) 'Error in array dimensioning...read aborted.'
+          write (6,*) 'iimax/jjmax/kkmax/kdim = ',iimax,jjmax,kkmax,kdim
+        endif
         istatus=error(2)
         goto 999
 C

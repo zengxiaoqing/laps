@@ -52,6 +52,8 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
         real umean_2d(ni,nj)             ! L
         real vmean_2d(ni,nj)             ! L
 
+        write(6,*)' Subroutine up_mflux'
+
         ht_lower(:,:)  =  750. + topo(:,:)
         ht_upper(:,:)  = 1250. + topo(:,:)
 
