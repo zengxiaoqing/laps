@@ -1,0 +1,12 @@
+#!/bin/sh --login
+
+LOCAL_DATA_ROOT=$1
+REMOTE_DATA_ROOT=$2
+HHMM=$3
+LAPSINSTALLROOT=@prefix@
+
+cd $LOCAL_DATA_ROOT/lapsprd/fua
+for subdir in `ls`; do
+    $LAPSINSTALLROOT/etc/rsync_out.sh $LOCAL_DATA_ROOT $REMOTE_DATA_ROOT qsub $HHMM $subdir
+done
+
