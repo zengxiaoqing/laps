@@ -6,7 +6,7 @@
   hydrometeor_scale_factor_cld = 1.0,
   output_format = 'wps',
   snow_thresh = 1.1,
-  lwc2vapor_thresh = 1.01,
+  lwc2vapor_thresh = 0.,
   make_sfc_uv = .false.,
   use_laps_skintemp = .true.,	
 /
@@ -14,7 +14,7 @@
 c
 c  hotstart:
 c    Logical flag, set to true to pull in the five hydrometeor species
-c    into the output files.  
+c    (from the 'lwc' file) into the output files.  
 c
 c  balance:
 c    Logical flag, set to true to use the balanced wind, temp, height, and
@@ -54,10 +54,10 @@ c
 c  lwc2vapor_thresh:
 c    Real value, controls the conversion of cloud liquid to vapor.  Set
 c    to 0 to disable.  If enabled, typical values are going to be around
-c    1.0 (default value is 1.1).  If set to 1.0, cloud water will be converted
-c    to vapor up until the RH for that point reaches 100%.  Any remaining 
-c    cloud water will be left in place.  Values greater than 1.0 allow
-c    for supersaturation (e.g., 1.1 allows 110% max RH).
+c    1.0.  If set to 1.0, cloud water will be converted to vapor up until 
+c    the RH for that point reaches 100%.  Any remaining cloud water will be 
+c    left in place.  Values greater than 1.0 allow for supersaturation 
+c    (e.g., 1.1 allows 110% max RH).
 c
 c  make_sfc_uv:
 c    Logical flag. If set to true, then the surface u/v fields from lsx
