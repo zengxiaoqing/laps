@@ -475,6 +475,7 @@ cdis
       integer flag,ierr,count
       integer :: offset,ioffset,joffset,koffset,noffset,IMAXlocal
       integer :: ip,r
+      integer i4_elapsed, ishow_timer
       include 'mpif.h'
 #endif
 
