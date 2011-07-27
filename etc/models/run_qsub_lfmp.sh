@@ -33,13 +33,13 @@ rm -f $lapsdataroot/qlfmp.log.`date +\%H\%M`
 
 # Build qsub script
 script=$modelroot/qsub_lfmpost.sh
-echo "#!/bin/sh"                 > $script
+echo "#!/bin/sh --login"         > $script
 echo "#$ -N lfmp_$run"          >> $script
 echo "#$ -A hmtb"               >> $script
 echo "#$ -l h_rt=08:00:00,h_vmem=11.0G"  >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
-echo "#$ -pe hserial 1"         >> $script
+echo "#$ -pe service 1"         >> $script
 echo "#$ -o $lapsdataroot/log/qlfmp.log.`date +\%H\%M`"           >> $script
 echo "#$ -j y"                  >> $script
 echo "#exit"                    >> $script
