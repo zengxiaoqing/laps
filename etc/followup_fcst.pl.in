@@ -16,11 +16,12 @@ use strict;
 #    -f forecast output interval (hours)
 #    -c cycle frequency (hours)
 #    -l forecast length (hours)
+#    -t purge time (hours) [optional]
 
-use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m);
+use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_t);
 use Getopt::Std;
 
-getopts('a:d:r:f:c:l:m:');
+getopts('a:d:r:f:c:l:m:t:');
 
 print "Running followup_fcst.pl...\n";
 print "user defined paths\n";
@@ -31,71 +32,14 @@ my $model = "$opt_m-$opt_a";
 $ENV{LAPSINSTALLROOT}="@prefix@";
 my $dataroot = $opt_r;
 
+my @windowres;
 my $window;
 my $resolution;
-my $res_x;
-my $res_y;
 
-my ($xhigh,$xlow,$yhigh,$ylow);
-my $yhigh_thresh;
-my $ylow_thresh;
-my $x_hw;
-my $y_hw;
-
-# Read grid dimensions
-my (@xdim,$xdim);
-my (@ydim,$ydim);
-my $nl_var;
-my $domain_nl = "nest7grid.parms";
-if(-e "$dataroot/static/$domain_nl"){
-    $nl_var="NX_L";
-    @xdim=&laps_tools::get_nl_value($domain_nl,$nl_var,$dataroot);
-    $nl_var="NY_L";
-    @ydim=&laps_tools::get_nl_value($domain_nl,$nl_var,$dataroot);
-    $xdim = $xdim[0];
-    $ydim = $ydim[0];
-    print "xdim,ydim is $xdim,$ydim<br>\n";
-}
-
-# Determine window & resolution for NCAR graphics
-my $aspect_ratio = ($xdim-1.0) / ($ydim-1.0);
-print "aspect_ratio is $aspect_ratio<br>\n";
-my $zoom_safe = 1.0;
-my $npix_safe = 730;
-
-$x_hw  = 0.5 / $zoom_safe;
-if($aspect_ratio > 1.40){
-    $res_y=$npix_safe;
-    $res_x=int($res_y*1200./885.);
-    $resolution="$res_x"."x"."$res_y";
-    $y_hw  = 0.36 / $zoom_safe;
-    $ylow_thresh  = 0.14;
-    $yhigh_thresh = 0.86;
-}elsif($aspect_ratio > 1.192){
-    $res_y=$npix_safe;
-    $res_x=int($res_y*1056./885.);
-    $resolution="$res_x"."x"."$res_y";
-    $y_hw  = 0.42 / $zoom_safe;
-    $ylow_thresh  = 0.08;
-    $yhigh_thresh = 0.92;
-}else{
-    $res_y=$npix_safe;
-    $res_x=$res_y;
-    $resolution="$res_x"."x"."$res_y";
-    $y_hw  = 0.5 / $zoom_safe;
-    $ylow_thresh  = 0.0;
-    $yhigh_thresh = 1.0;
-}
-
-print "resolution is $resolution<br>\n";
-
-$xlow  = 0.5 - $x_hw;
-$xhigh = 0.5 + $x_hw;
-$ylow  = 0.5 - $y_hw;
-$yhigh = 0.5 + $y_hw;
-
-$window="$xlow:$ylow:$xhigh:$yhigh";
-print "window is $window<br>\n";
+# Obtain window parameters
+@windowres=&laps_tools::get_fcst_img_res($dataroot);
+$window=@windowres[0];
+$resolution=@windowres[1];              
 
 my $followup = "@prefix@/etc/www/followup_fcst.sh $domain $model $dataroot $window $resolution";
 #my $followup_fire =  "/usr/nfs/common/lapb/www/followup_fcst_fire.sh $domain $model $dataroot $window $resolution";
@@ -103,8 +47,20 @@ my $followup = "@prefix@/etc/www/followup_fcst.sh $domain $model $dataroot $wind
 my $followup_xsect =  "@prefix@/etc/www/followup_fcst_xsect.sh $domain $model $dataroot";
 my $followup_spaghetti = "@prefix@/etc/www/followup_ensemble.sh $domain ensemble $dataroot $window $resolution @prefix@";
 
-my $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
-my $purger = "/usr/nfs/common/lapb/www/purge_w3_fcst2d.pl -t 36 $domain $model\n";
+my $w3recent;
+
+my $purge_time = 36;
+$purge_time = $opt_t if(defined $opt_t);
+
+my $purger;                                                                          
+if (-d "/w3/lapb") {
+    $purger = "@prefix@/etc/purge_w3_fcst2d.pl -t $purge_time $domain $model\n";
+    $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
+}else{
+    $purger = "@prefix@/etc/purge_w3_fcst2d.pl -t $purge_time -d $dataroot $domain $model\n";
+    $w3recent = "$dataroot/lapsprd/www/fcst2d/$model/recent";
+}
+
 my $output_inc = $opt_f;     # Forecast output interval (hours)
 my $cycle_freq = $opt_c;     # Cycle frequency in hours
 my $timeout = $opt_c*3600;   # Seconds to wait before giving up after starting
@@ -114,7 +70,7 @@ my $fcst_len = $opt_l;       # Forecast length (hours)
 my $fsf_subdir = "lapsprd/fsf/$opt_m-$opt_a";
 my $fua_subdir = "lapsprd/fua/$opt_m-$opt_a";
 
-my $sleep_time = 300; # Number of seconds to sleep between attempts to copy
+my $sleep_time = 60; # Number of seconds to sleep between attempts to process
 
 # END OF USER DEFINED PARAMS
 
@@ -168,6 +124,7 @@ print "laps_fua: $local_fsf\n";
 # Create the list of file times we need to get
 
 my $num_files = int(($fcst_len/$output_inc) + 0.5)+1;
+print "output_inc: $output_inc\n";
 print "num_files: $num_files\n";
 
 my $fcsttime = 0;
@@ -192,21 +149,35 @@ my $times_rem = $num_files;
 my $arrpos;
 my ($remfile, $result);
 my $www_flag = 0;
+my $t; 
+
 while (($timeaccum < $timeout)and($times_rem > 0)){
   $arrpos = 0;
   @times_new = @times; 
+  print "updated times: @times\n";
+
   foreach (@times) {
     if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
-      print "\nReady to process $_ ... \n" ;
+      $t=gmtime(); 
+      print "\nReady to process $_ ... $t \n" ;
       if ($opt_a eq "spaghetti") {
           my $command = "$followup_spaghetti $_";
           print "running spaghetti command: $command";
           $result=system("$command");
       } else {
-          $result=system("$followup $_ @prefix@");
+          my $command;
+          $command = "$followup $_ @prefix@";
+          print "running followup hsect command: $command";
+          $result=system("$command");
+
 #         $result=system("$followup_fire $_");
 #         $result=system("$followup_ua $_");
-          $result=system("$followup_xsect $_ @prefix@");
+
+#         $result=system("$followup_xsect $_ @prefix@");
+          $command = "$followup_xsect $_ @prefix@";
+          print "running followup xsect command: $command";
+          $result=system("$command");
+
           system("rm -f $local_fsf/$_.fsf.done");
 #         system("rm -f $local_fua/$_.fua.done"); 
           if (! $www_flag){
@@ -227,7 +198,7 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
   @times = @times_new;
   $times_rem = @times;
 
-  my $t=gmtime(); 
+  $t=gmtime(); 
 
   if ($times_rem > 0){
     print "Sleeping for $sleep_time\n";
