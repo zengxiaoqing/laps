@@ -18,7 +18,7 @@ netcdf lcv {
             lcv:_FillValue = 1.e+37f;
             lcv:long_name="LAPS cloud cover";
             lcv:units="none";
-            lcv:valid_range= 0.f, 100.f;
+            lcv:valid_range= 0.f, 1.f;
             lcv:LAPS_var="LCV";
             lcv:lvl_coord="MSL";
 	    lcv:LAPS_units="UNDIM";
