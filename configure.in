@@ -473,6 +473,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/lq3driver.pl
           etc/qsub
           etc/qsub_sge
+          etc/rsync_ensemble_out.sh
           etc/sched.pl
           etc/sched.sh
           etc/sched_sys.pl
