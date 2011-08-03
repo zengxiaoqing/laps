@@ -1,0 +1,69 @@
+#!@PERL@
+# This script writes out the value of a LAPS namelist parameter
+#
+# Command line arguments
+#
+# -d                   LAPS_DATA_ROOT
+#
+# -n                   namelist filename
+#
+# -v                   variable name within the namelist
+#
+
+use strict;
+use English;
+use vars qw($opt_d $opt_n $opt_v);
+use Getopt::Std;
+
+my $LAPSROOT="@prefix@";
+
+require "$LAPSROOT/etc/laps_tools.pm";
+
+umask 002;
+getopts('d:n:v:');
+
+my $initial_time = time();
+
+my $LAPS_DATA_ROOT;
+if(defined $opt_d){
+    $LAPS_DATA_ROOT = $opt_d;
+}
+
+#print "opt_n is $opt_n\n";
+#print "opt_v is $opt_v\n";
+#print "LAPS_DATA_ROOT is $LAPS_DATA_ROOT\n";
+
+
+#
+# Get the variable from the namelist
+if ($opt_v eq "n_fcst_steps_p1") {
+    my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_len",$LAPS_DATA_ROOT); 
+    my $fcst_len = $parameter[0];
+
+    my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_intvl",$LAPS_DATA_ROOT); 
+    my $fcst_intvl = $parameter[0];
+
+    my $result = ($fcst_len/$fcst_intvl + 1);
+    print "$result";
+
+}elsif ($opt_v eq "n_fcst_steps") {
+    my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_len",$LAPS_DATA_ROOT); 
+    my $fcst_len = $parameter[0];
+
+    my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_intvl",$LAPS_DATA_ROOT); 
+    my $fcst_intvl = $parameter[0];
+
+    my $result = ($fcst_len/$fcst_intvl);
+    print "$result";
+
+}else{
+#   print 'get_nl_value($opt_n,$opt_v,"$LAPS_DATA_ROOT")';
+    my @parameter=&laps_tools::get_nl_value($opt_n,$opt_v,$LAPS_DATA_ROOT); 
+
+    print "$parameter[0]\n";
+
+}
+
+
+
+
