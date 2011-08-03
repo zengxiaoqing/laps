@@ -242,6 +242,8 @@ real :: windspeed(lx,ly),soil_moist(lx,ly),snow_cover(lx,ly)
 integer ::        ismoist,isnow
 integer ::        status
 
+integer I4_elapsed, ishow_timer                    
+
 !cj Variables to compute omega, added 6/21/2007
 real :: tvprs
 
@@ -472,6 +474,7 @@ if (make_micro) then
 
 endif ! make_micro
 
+I4_elapsed = ishow_timer()
 
 ! Precip fields.
 
@@ -571,6 +574,8 @@ if (maxval(pblhgt) > 999999.) then
 endif
 where (pblhgt < 0.) pblhgt=0.
 
+I4_elapsed = ishow_timer()
+
 ! Helicity, cape, cin, LI.
 
 write(6,*)' Calculating helicity, stability indices'
@@ -580,6 +585,8 @@ call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
             ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
 
 deallocate(hthetasig,hthetaesig,hzsigf)
+
+I4_elapsed = ishow_timer()
 
 ! Height of wet-bulb = 0C.
 
