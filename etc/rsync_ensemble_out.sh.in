@@ -7,6 +7,6 @@ LAPSINSTALLROOT=@prefix@
 
 cd $LOCAL_DATA_ROOT/lapsprd/fua
 for subdir in `ls`; do
-    $LAPSINSTALLROOT/etc/rsync_out.sh $LOCAL_DATA_ROOT $REMOTE_DATA_ROOT qsub $HHMM $subdir
+    $LAPSINSTALLROOT/etc/rsync_out.sh $LOCAL_DATA_ROOT $REMOTE_DATA_ROOT qsub $HHMM 5 $subdir
 done
 
