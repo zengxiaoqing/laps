@@ -93,6 +93,9 @@
 #                          "WNI" to specify WNI product set
 #                          "LGA" for LGA only (such as in downscaling or model graphics generation)
 #
+# -R                   Perform remote copy (and purge) of analysis output to the supplied 
+#                      destination (via xferlaps.sh)
+#
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
@@ -100,11 +103,11 @@
                
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R 
             $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:X');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -823,6 +826,40 @@ if($opt_f && (! $opt_q) && (! $opt_Q) ){
 }
 
 close(LOG);
+
+system("echo $yyjjjhhmm 1> $LAPS_LOG_PATH/sched.done 2>&1");
+
+if(defined $opt_R){
+    my ($domain,$remote_data_root) = split($opt_R,":"); 
+    my $remote_purge_time = $opt_t + 0.1;
+
+    if(defined $opt_Q){
+        my $wall_time_hr  = int( ( $cycle_time_min / 60.) + $extend_time  ); 
+
+        my $wall_time_min = int($cycle_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
+        $wall_time_min="0".$wall_time_min if(length($wall_time_min)<2);
+
+        open(TFILE,">$LAPS_LOG_PATH/qsub_xfer_laps.sh");
+        print TFILE "#!/bin/sh\n";
+        print TFILE "#\$ -N xferlaps\n";
+        print TFILE "#\$ -A $opt_Q\n";
+        print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+        print TFILE "#\$ -S /bin/sh\n";
+        print TFILE "#\$ -cwd\n";
+        print TFILE "#\$ -pe service 1\n";
+        print TFILE "#\$ -o $LAPS_LOG_PATH/log/xferlaps.log.$yyjjjhhmm\n";
+        print TFILE "#\$ -j y\n";
+        print TFILE "\n";
+        print TFILE "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time\n";
+        print TFILE "#exit\n";
+        close(TFILE);
+
+        $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/qsub_xfer_laps.sh";
+        print "Executing $command\n";
+        system("$command");
+    }
+}
+
 #unlink "$lockfile";
 
 sub forksub{
@@ -851,37 +888,4 @@ sub forksub{
 	  die "Can't fork: $!\n";
       }
   }
-}
-#
-#------------------------------------------------------------------------
-#
-sub parse_namelist{
-    my($namelist,@variables) = @_;
-    my(@ans);
-    open(NL,$namelist);
-    my @nl = <NL>;
-    close(NL);
-    my $i;
-    for($i=0;$i<=$#nl;$i++){
-	next if($nl[$i] =~ /^\s*&/);
-	next if($nl[$i] =~ /^\s*\//);
-	next if($nl[$i] =~ /^[\!c]/i);
-
-	my $j;
-	for($j=0;$j<=$#variables;$j++){
-
-#	    print "here $variables[$j] $nl[$i]\n";
-            
-	    if($nl[$i] =~ /^\s+$variables[$j]\s*=\s*(.*)$/i){
-		my $ans = $1;
-		$i++;
-		while($nl[$i++]=~/^\s*([^=]+)$/){
-		    $ans.=$1;
-		}
-		$i--;
-		$ans[$j]=$ans;
-	    }
-	}	
-    }
-    return(@ans);
 }
