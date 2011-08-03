@@ -20,8 +20,10 @@ setenv REFLECTIVITY $5
 #setenv LAPS_DATA_ROOT /data/fab/projects/dwr
 setenv LOGDIR $LAPS_DATA_ROOT/log
 
-setenv MODELTIME      `cat $LAPS_DATA_ROOT/time/modeltime.dat`
-setenv MODELTIME_HHMM `cat $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
+setenv MODELTIME      `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`
+setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
+
+setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modeltime.dat`
 
 #setenv model wrf-wsm6
 #setenv fcsttime 01
@@ -65,7 +67,7 @@ echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' 
 echo 'set yrange [0:'$YRANGE']'                                          >> $GNUPLOTFILE
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
-echo 'set xlabel "Initialized at '$MODELTIME'"'                          >> $GNUPLOTFILE
+echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"'                   >> $GNUPLOTFILE
 echo 'set ylabel "Radar Reflectivity '$STAT'"'                           >> $GNUPLOTFILE
 echo 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'"'        >> $GNUPLOTFILE
 #cho 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'" giant'   >> $GNUPLOTFILE
