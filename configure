@@ -3175,6 +3175,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
+          etc/read_nl.pl
           etc/recurs_iter.pl
           etc/ruc_grib2netcdf.csh
           etc/gfs_grib2netcdf.csh
@@ -3191,6 +3192,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/wait4lapsprep.pl
           etc/wrfpost.pl
           etc/xferData.pl
+          etc/xferlaps.csh
           etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
@@ -3336,6 +3338,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
+          etc/read_nl.pl
           etc/recurs_iter.pl
           etc/ruc_grib2netcdf.csh
           etc/gfs_grib2netcdf.csh
@@ -3352,6 +3355,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/wait4lapsprep.pl
           etc/wrfpost.pl
           etc/xferData.pl
+          etc/xferlaps.csh
           etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
@@ -3539,6 +3543,7 @@ rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 
+chmod +x etc/*.sh
 chmod +x etc/qsub*
 chmod +x etc/www/nph-laps.cgi
 chmod +x etc/www/laps.cgi
