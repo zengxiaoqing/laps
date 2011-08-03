@@ -59,14 +59,14 @@ require "$LAPSROOT/etc/laps_tools.pm";
 #
 # Get the cycle time from the namelist if possible, and this is superceded by $opt_c
 
-my $cycle_time;
+my $cycle_time = 3600; # default
 
-if(-e "$LAPS_DATA_ROOT/nest7grid.parms"){
-    my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/nest7grid.parms",'laps_cycle_time');
+if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
+    my @cycle_time=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time","$LAPS_DATA_ROOT");
     $cycle_time[0]=~/^(\d+),/;
+    $cycle_time = $cycle_time[0];
 }
 
-$cycle_time = ($1>0)?$1:3600;
 $cycle_time = $opt_c if($opt_c>0);
 
 my $cycle_time_min = int($cycle_time/60);
@@ -122,6 +122,8 @@ if(defined $opt_A){
 
 my $yydddhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
 
+#print "opt_f is $opt_f\n";
+
 if($opt_f eq "mm"){
    my $ddd = substr($yydddhhmm,2,3);
    my $yy  = substr($yydddhhmm,0,2);
@@ -172,42 +174,19 @@ if($opt_f eq "mm"){
 
    print "$yyyy$mm$dd$hh\n";
 
+}elsif($opt_f eq "ascii_time"){
+   my @i4time = &laps_tools::a9time_to_i4time($yydddhhmm);
+   my ($yr,$mo,$dy,$hr,$mn,$sc) = &laps_tools::i4time_to_date($i4time[0]-315619200);
+#  print "ascii time selected\n";
+#  print "$yr,$mo,$dy,$hr,$mn,$sc\n";
+   $hr="0".$hr if(length($hr)<2);
+   $mn="0".$mn if(length($mn)<2);
+   print "$mo/$dy/$yr $hr:$mn\n";
+#  print "$yydddhhmm\n";
+
 }else{
    print "$yydddhhmm\n";
 
 }
 
 
-#
-#------------------------------------------------------------------------
-#
-sub parse_namelist{
-    my($namelist,@variables) = @_;
-    my(@ans);
-    open(NL,$namelist);
-    my @nl = <NL>;
-    close(NL);
-    my $i;
-    for($i=0;$i<=$#nl;$i++){
-	next if($nl[$i] =~ /^\s*&/);
-	next if($nl[$i] =~ /^\s*\//);
-	next if($nl[$i] =~ /^[\!c]/i);
-
-	my $j;
-	for($j=0;$j<=$#variables;$j++){
-
-#	    print "here $variables[$j] $nl[$i]\n";
-            
-	    if($nl[$i] =~ /^\s+$variables[$j]\s*=\s*(.*)$/i){
-		my $ans = $1;
-		$i++;
-		while($nl[$i++]=~/^\s*([^=]+)$/){
-		    $ans.=$1;
-		}
-		$i--;
-		$ans[$j]=$ans;
-	    }
-	}	
-    }
-    return(@ans);
-}
