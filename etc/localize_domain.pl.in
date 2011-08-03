@@ -505,6 +505,7 @@ sub update_nl{
                   $val = $nl_vals{$var};
               }
               $val =~ s/\n$//;
+#             print " $var = $val\n";
               print OUTFILE " $var = $val\n";
               next;
           }elsif($line =~ /^[!cC]/){
