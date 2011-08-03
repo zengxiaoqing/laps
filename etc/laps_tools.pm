@@ -81,6 +81,7 @@ sub get_nl_value{
 #================================================================================
 #
 sub update_nl{
+    print "In laps_tools:update_nl\n";  
     my($LAPS_DATA_ROOT,$nl_file,$nl_var,@new_values) = @_;
 
     print "LAPS_DATA_ROOT = $LAPS_DATA_ROOT\n";
