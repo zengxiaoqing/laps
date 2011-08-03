@@ -4,7 +4,7 @@
      1                  nk,
      1                  maxsta,max_obs,
      1                  r_missing_data,
-     1                  model_cycle_time_sec,
+     1                  model_verif_intvl,
      1                  n_fcst_times,
      1                  j_status)
 
@@ -207,7 +207,7 @@
                 itime = itime_fcst + 1
 
                 i4_valid = i4_initial 
-     1                   + itime_fcst * model_cycle_time_sec
+     1                   + itime_fcst * model_verif_intvl
 
                 call make_fnam_lp(i4_valid,a9time_valid,istatus)
 

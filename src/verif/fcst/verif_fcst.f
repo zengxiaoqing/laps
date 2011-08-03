@@ -1,9 +1,12 @@
 
         program verif_fcst_main
 
+        use mem_namelist, ONLY: model_fcst_intvl,model_cycle_time
+     1                                          ,model_fcst_len
+
         character*9 a9time
 	character*300 dir_t,filenamet
-        character*10 c_n_fcst_times,c_model_cycle_time_sec
+        character*10 c_n_fcst_times,c_model_fcst_intvl
         integer, parameter :: lun=120
 
 !       This can be changed to read the modeltime for the forecast
@@ -50,26 +53,30 @@
         maxsta = 1000000
         max_obs = 1000000
 
-!       Use getarg for model cycle time
-        call getarg(1,c_model_cycle_time_sec)
-        read(c_model_cycle_time_sec,*)model_cycle_time_sec
+!       Use getarg for model forecast interval
+!       call getarg(1,c_model_fcst_intvl)
+!       read(c_model_fcst_intvl,*)model_fcst_intvl
 
-!       model_cycle_time_sec = 3600  
-!       model_cycle_time_sec = 10800
+!       model_fcst_intvl = 3600  
+!       model_fcst_intvl = 10800
 
-!       Use getarg for number of forecasts
-        call getarg(2,c_n_fcst_times)
-        read(c_n_fcst_times,*)n_fcst_times
+!       Check getarg for number of forecasts (superseded by parms calculation)
+!       call getarg(2,c_n_fcst_times)
+!       read(c_n_fcst_times,*)n_fcst_times
 
-        write(6,*)' model_cycle_time_sec/n_fcst_times (from getarg) = '  
-     1             ,model_cycle_time_sec,n_fcst_times
+        model_verif_intvl = max(laps_cycle_time,model_fcst_intvl)
+        n_fcst_times = (model_fcst_len*60) / model_verif_intvl
+
+        write(6,*)
+     1  ' model_fcst_intvl (via namelist) / n_fcst_times (from parms) ='      
+     1             ,model_fcst_intvl,n_fcst_times
           
         call verif_fcst_pt_2d(i4time,a9time,laps_cycle_time,
      1                     NX_L,NY_L,
      1                     NZ_L,
      1                     maxsta,
      1                     r_missing_data,
-     1                     model_cycle_time_sec,
+     1                     model_verif_intvl,
      1                     n_fcst_times,
      1                     j_status)
 
@@ -78,7 +85,7 @@
      1                     NZ_L,
      1                     maxsta,max_obs,
      1                     r_missing_data,
-     1                     model_cycle_time_sec,
+     1                     model_verif_intvl,
      1                     n_fcst_times,
      1                     j_status)
 
@@ -91,7 +98,7 @@
      1                  nk,
      1                  maxsta,
      1                  r_missing_data,
-     1                  model_cycle_time_sec,
+     1                  model_verif_intvl,
      1                  n_fcst_times,
      1                  j_status)
 
@@ -311,7 +318,7 @@
                 itime = itime_fcst + 1
 
                 i4_valid = i4_initial 
-     1                   + itime_fcst * model_cycle_time_sec
+     1                   + itime_fcst * model_verif_intvl
 
                 call make_fnam_lp(i4_valid,a9time_valid,istatus)
 
