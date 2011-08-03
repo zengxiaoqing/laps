@@ -40,7 +40,7 @@ echo 'set style line 3 lt 3 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
 echo 'set style line 4 lt 4 lw 3 pt 7 ps 1.0'           >> $GNUPLOTFILE
 echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "Analyzed"  with linespoints ls 1          , \' >> $GNUPLOTFILE
 echo        $DQUOTE$FILE$DQUOTE' using 1:4 title "Observed"  with linespoints ls 2          , \' >> $GNUPLOTFILE
-echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMS"       with linespoints ls 3          , \' >> $GNUPLOTFILE
+echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMSE"      with linespoints ls 3          , \' >> $GNUPLOTFILE
 echo        $DQUOTE$FILE$DQUOTE' using 1:6 title "Clear sky" with      points ls 4             ' >> $GNUPLOTFILE
 
 
