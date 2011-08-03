@@ -1,6 +1,9 @@
 
         program verif_radar_main
 
+        use mem_namelist, ONLY: model_fcst_intvl,model_cycle_time
+     1                                          ,model_fcst_len
+
         character*9 a9time
 
         call get_systime(i4time,a9time,istatus)
@@ -32,9 +35,9 @@
            go to 999
         endif
 
-        model_cycle_time = 3600
-          
-        call verif_radar(i4time,a9time,model_cycle_time,
+        call verif_radar(i4time,a9time,model_fcst_intvl,
+     1                  model_fcst_len,
+     1                  laps_cycle_time,
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
@@ -44,7 +47,9 @@
 
         end
           
-        subroutine verif_radar(i4time_sys,a9time,model_cycle_time,
+        subroutine verif_radar(i4time_sys,a9time,model_fcst_intvl,
+     1                  model_fcst_len,
+     1                  laps_cycle_time,
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
@@ -117,6 +122,13 @@
 
         i4_initial = i4time_sys
 
+!       Determine verification timing
+        model_verif_intvl = max(laps_cycle_time,model_fcst_intvl)
+        n_fcst_times = (model_fcst_len*60) / model_verif_intvl
+
+        write(6,*)' model_verif_intvl = ',model_verif_intvl
+        write(6,*)' n_fcst_times = ',n_fcst_times
+
         lun_in = 21
 
 !       Get fdda_model_source and 'n_fdda_models' from static file
@@ -127,17 +139,19 @@
      1            ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
 
 !       Read in data file with region points
+        n_models = n_fdda_models
         call read_region_info(maxbgmodels,max_fcst_times,max_regions
      1                       ,n_models,n_fcst_times,n_regions
      1                       ,il,ih,jl,jh,lun_in)
 
 !       In 'nest7grid.parms' model #1 is lga usually
 !       In 'verif_regions.dat' model #1 represents the analysis
-        if(n_fdda_models .ne. n_models)then
-            write(6,*)' ERROR n_models differs from n_fdda_models '
-     1                       ,n_models,n_fdda_models
-            stop
-        endif
+
+!       if(n_fdda_models .ne. n_models)then
+!           write(6,*)' ERROR n_models differs from n_fdda_models '
+!    1                       ,n_models,n_fdda_models
+!           stop
+!       endif
 
         do ifield = 1,n_fields
 
@@ -178,7 +192,7 @@
                 jlow  = jl(imodel,itime,iregion)
                 jhigh = jh(imodel,itime,iregion)
 
-                i4_valid = i4_initial + itime_fcst * model_cycle_time       
+                i4_valid = i4_initial + itime_fcst * model_verif_intvl 
 
                 call make_fnam_lp(i4_valid,a9time_valid,istatus)
                 call make_fnam_lp(i4_initial,a9time_initial,istatus)
@@ -443,7 +457,7 @@
 
            if(l_col)then
                do itime_fcst = 0,n_fcst_times
-                   i4_valid = i4_initial + itime_fcst * model_cycle_time
+                   i4_valid = i4_initial + itime_fcst*model_verif_intvl      
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
                    write(lun_bias,911)a24time_valid,    
@@ -467,7 +481,7 @@
            else
              do imodel = 2,n_fdda_models
                do itime_fcst = 0,n_fcst_times
-                   i4_valid = i4_initial + itime_fcst * model_cycle_time
+                   i4_valid = i4_initial + itime_fcst*model_verif_intvl
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
                    write(lun_bias,912)a24time_valid     
@@ -513,8 +527,8 @@
         open(lun_in,file=static_file,status='old')
 
         read(lun_in,*)n_regions
-        read(lun_in,*)n_fcst_times
-        read(lun_in,*)n_models
+        read(lun_in,*)n_fcst_times_dum
+        read(lun_in,*)n_models_dum
 
         if(n_regions .eq. 0)then
           write(6,*)' Filling default region info automatically'
