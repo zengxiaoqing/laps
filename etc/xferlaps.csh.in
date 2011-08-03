@@ -1,0 +1,67 @@
+#!@CSH@   
+
+# This script transfers LAPS_DATA_ROOT analysis output for the present run time
+# to a remote directory on another machine, using 'tarlapstime.sh' Purging
+# is also done in the remote directory. SSH is used to access the remote 
+# machine.
+
+# LAPS DATA ROOT is first argument
+
+# REMOTE machine name is second argument
+
+# REMOTE DATA_ROOT is third argument
+
+# REMOTE purge time (hours) is fourth argument
+
+umask 002
+
+setenv LAPS_DATA_ROOT $1                      
+setenv DOMAIN $2             
+setenv REMOTE_DATA_ROOT $3
+#setenv MSSPATH $2
+setenv REMOTE_PURGE_TIME $4
+
+#setenv DEST $5
+
+#setenv LAPSINSTALLROOT @prefix@
+
+if ($LAPS_DATA_ROOT == "")then       
+    echo "LAPS_DATA_ROOT not set"
+    exit
+endif
+if (! -d $LAPS_DATA_ROOT) then
+    echo "Could not find LAPS_DATA_ROOT $LAPS_DATA_ROOT"
+    exit
+endif
+
+setenv YYDDDHHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -D $LAPS_DATA_ROOT`
+setenv MONTH     `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -f mm -D $LAPS_DATA_ROOT`
+setenv YYYYMMDD_HHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -f yyyymmdd_hhmm -D $LAPS_DATA_ROOT`
+
+echo "laps time $YYDDDHHMM"
+
+echo "a13time $YYYYMMDD_HHMM"
+
+echo "month = $MONTH"
+
+setenv YYYY `echo $YYYYMMDD_HHMM  | cut -c1-4`
+
+setenv DATE `echo $YYYYMMDD_HHMM  | cut -c7-8`
+
+cd $LAPS_DATA_ROOT
+
+@prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH $DATE tar nostatic $DOMAIN $REMOTE_DATA_ROOT
+
+echo ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd
+     ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd 
+
+if ($3 == "mss") then
+    echo "MSSFULLPATH = $MSSPATH/$YYYY/$MONTH"
+
+    mssMkdir -p $MSSPATH/$YYYY/$MONTH
+
+    mssPut laps_$YYDDDHHMM.tar* $MSSPATH/$YYYY/$MONTH
+
+    rm -f laps_$YYDDDHHMM.tar*
+endif
+
