@@ -26,8 +26,10 @@ setenv VAR_LC `echo $VAR | gawk '{print tolower($0)}'`
 #setenv LAPS_DATA_ROOT /data/fab/projects/dwr
 setenv LOGDIR $LAPS_DATA_ROOT/log
 
-setenv MODELTIME `cat $LAPS_DATA_ROOT/time/modeltime.dat`
-setenv MODELTIME_HHMM `cat $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
+setenv MODELTIME `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`
+setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
+
+setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modeltime.dat`
 
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/$MODELTIME.stats
 
@@ -67,16 +69,16 @@ echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' 
 echo 'set yrange ['$YRANGE']'                                             >> $GNUPLOTFILE
 echo 'set grid'                                                           >> $GNUPLOTFILE
 echo 'set datafile missing "-99.900"'                                     >> $GNUPLOTFILE
-echo 'set xlabel "Initialized at '$MODELTIME'"'                           >> $GNUPLOTFILE 
+echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"'                    >> $GNUPLOTFILE 
 echo 'set ylabel "'$6 \($7\)' "'                                          >> $GNUPLOTFILE
 echo 'set title "'$6' Observed vs Forecast"'                              >> $GNUPLOTFILE
 echo 'set key left box'                                                   >> $GNUPLOTFILE
 
 if ($VAR == "WSF" || $VAR == "W3") then
     echo 'set key width 1'                                                                           >> $GNUPLOTFILE
-    echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "RMS U" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' using 1:4 title "RMS V"  with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMS Vector" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+    echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "RMSE U" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+    echo        $DQUOTE$FILE$DQUOTE' using 1:4 title "RMSE V"  with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+    echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMSE Vector" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
 else
     echo 'set key width 1'                                                                           >> $GNUPLOTFILE
     echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "Fcst Mean" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
