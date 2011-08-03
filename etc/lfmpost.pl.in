@@ -3,7 +3,7 @@
 
 require 5;
 use strict;
-require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
+require "@prefix@/etc/laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
 
 my $project = "none";
 my $LAPSROOT;
