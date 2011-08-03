@@ -214,12 +214,12 @@ if (trim(mtype) /= 'st4') then
  call alloc_isobaric_grid
 
 !beka
-	I4_elapsed = ishow_timer()
+ I4_elapsed = ishow_timer()
 
  call lfm_vinterp
 
 !beka
-	I4_elapsed = ishow_timer()
+ I4_elapsed = ishow_timer()
 
  if (verbose) then
     print*,' '
@@ -237,7 +237,11 @@ if (trim(mtype) /= 'st4') then
 ! Fill any missing surface fields and generate derived fields.
 
  call lfm_derived
+ I4_elapsed = ishow_timer()
+
  call lfm_vinterp
+ I4_elapsed = ishow_timer()
+
  if (verbose) then
     print*,' '
     print*,'lfm_reflectivity pressure max/min: ',maxval(refl_prs),minval(refl_prs)
