@@ -20,6 +20,7 @@
 # Eighth argument is minimum age (minutes) to keep LGA/LGB files
 
 # Ninth argument is maximum age (minutes) to keep LGA/LGB files
+# Ninth argument is REMOTE_DATA_ROOT                                         
 
 LAPS_DATA_ROOT=$1
 time=$2
@@ -28,8 +29,10 @@ MM=$4
 DD=$5
 EXPAND=$6
 STATIC=$7
-MINAGE=$8
-MAXAGE=$9
+#MINAGE=$8
+#MAXAGE=$9
+DOMAIN_NAME=$8
+REMOTE_DATA_ROOT=$9
 
 echo "LAPS_DATA_ROOT = $LAPS_DATA_ROOT"
 echo "time = $time"
@@ -47,6 +50,7 @@ echo "Create list of lapsprd output files to be potentially tarred up for Web ac
 HH=`echo $time  | cut -c6-7`
 HHMM=`echo $time  | cut -c6-9`
 YYDDDHH=`echo $time  | cut -c1-7`
+YYDDDHHMM=$time
 
 echo "Tarring up LAPS in $LAPS_DATA_ROOT for $time"
 
@@ -58,18 +62,20 @@ touch lapstar.txt
 #LAPS Data Files
 ls -1 time/*.dat                                          > lapstar.txt
 
+# Pregenerated web analysis files
+find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
+
 # Lapsprd files (except LGA, LGB, FUA, FSF)
-find ./lapsprd -type f -name "$YYDDDHH??.*"     -print   >> lapstar.txt
+find ./lapsprd -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
 
 # LGA/LGB files (use MINAGE/MAXAGE)
-find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> lapstar.txt
+#find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> lapstar.txt
 
 # Lapsprep files (use MINAGE/MAXAGE)
-#find ./lapsprd/lapsprep    -name "LAPS*" ! -cmin +90 -cmin +30 -print >> lapstar.txt
-find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD\_$HH"      -print >> lapstar.txt
+#find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD\_$HH"      -print >> lapstar.txt
 
 # Log & Wgi files
-find ./log     -type f -name "*.???.$YYDDDHH??" -print   >> lapstar.txt
+find ./log     -type f -name "*.???.$YYDDDHHMM" -print   >> lapstar.txt
 
 # Sfc Verification file
 ls -1 log/qc/laps_sfc.ver.$HHMM                          >> lapstar.txt
@@ -97,15 +103,24 @@ if test "$EXPAND" = noexpand; then
 
     ls -l $LAPS_DATA_ROOT/laps_$time.tar.gz
 
-else
+elif test "$EXPAND" = expand; then
     echo "cp to $LAPS_DATA_ROOT/lapstar_$YYDDDHH expanded directory"
     rm -rf $LAPS_DATA_ROOT/lapstar_*
     mkdir -p $LAPS_DATA_ROOT/lapstar_$YYDDDHH
     tar -T lapstar.txt -cf - | (cd $LAPS_DATA_ROOT/lapstar_$YYDDDHH;  tar xfBp -)
     pwd
 
+elif test "$EXPAND" = scp; then
+    echo "scp to remote location (under construction)"  
+
+elif test "$EXPAND" = tar; then
+    echo "tar to remote location (under construction)"  
+    cd $LAPS_DATA_ROOT 
+    tar -T lapstar.txt -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"
+
+else
+    echo "no tar performed"                                      
+
 fi
 
-
-
-
+    
