@@ -29,14 +29,14 @@ echo "mkdir -p $modelroot"
 
 log=$lapsdataroot/log/lfmpost_run.log.`date +\%H\%M`
 
-rm -f $lapsdataroot/qlfmp.log.`date +\%H\%M`
+rm -f $lapsdataroot/log/qlfmp.log.`date +\%H\%M`
 
 # Build qsub script
 script=$modelroot/qsub_lfmpost.sh
 echo "#!/bin/sh --login"         > $script
 echo "#$ -N lfmp_$run"          >> $script
 echo "#$ -A hmtb"               >> $script
-echo "#$ -l h_rt=08:00:00,h_vmem=11.0G"  >> $script
+echo "#$ -l h_rt=08:00:00"      >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
 echo "#$ -pe service 1"         >> $script
