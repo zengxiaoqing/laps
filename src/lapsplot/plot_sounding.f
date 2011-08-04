@@ -43,11 +43,12 @@
         character*31  ext
         character*10  units_2d
         character*125 comment_2d
+        character*40 c_model
         character*9 a9time
         character*5 fcst_hhmm
         character*3 c3_string
         character*4 c4_string
-        character*33 c33_label
+        character*40 c_label
         character*16 c16_latlon
         character*11 c_pw
         character*20 c20_x, c20_y
@@ -61,6 +62,8 @@
         common /image/ n_image
 
         skewt(t_c,logp) = t_c - (logp - logp_bottom) * 32.
+
+        itd = 2 ! dashed dewpoint lines
 
         n_image = 0
 
@@ -113,6 +116,7 @@
      1                              ,NX_L,NY_L,xsound,ysound,istatus)       
 
             if(istatus .ne. 1)then
+                write(6,*)' Station is outside domain - try again...'
                 return
             endif
 
@@ -191,7 +195,7 @@
             if(istatus .ne. 1)goto900
 
             call make_fnam_lp(i4time_nearest,a9time,istatus)
-            c33_label = 'LAPS Analysis Sounding'
+            c_label = 'Analysis Sounding'
 
         elseif(c_prodtype .eq. 'N')then
             call get_directory('balance',directory,len_dir)
@@ -206,7 +210,7 @@
      1                  ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istatus)       
 
             call make_fnam_lp(i4time_nearest,a9time,istatus)
-            c33_label = 'LAPS Balanced Sounding'
+            c_label = 'Balanced Sounding'
 
         elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
             var_2d = 'T3'
@@ -219,15 +223,14 @@
             call make_fnam_lp(i4_valid,a9time,istatus)
 
             if(c_prodtype .eq. 'B')then
-                c33_label = 'LAPS Background Sounding '//fcst_hhmm
+                c_label = 'Background Sounding '//fcst_hhmm
 
             elseif(c_prodtype .eq. 'F')then
 
-!               Note that is would be possible to get the c_model from the
-!               directory variable with some type of basename extraction
-!               subroutine
+                call directory_to_cmodel(directory,c_model)
 
-                c33_label = 'LAPS Forecast Sounding '//fcst_hhmm
+                c_label = 'Forecast Sounding '//fcst_hhmm//' '
+     1                                               //trim(c_model)
 
             endif
 
@@ -783,7 +786,7 @@
                 if(istat_td .eq. 1)then
                     x1 = skewt(td_vert(iz-1),y1)
                     x2 = skewt(td_vert(iz),y2)
-                    CALL GSLN (3)
+                    CALL GSLN (itd)
                     call line(x1,y1,x2,y2) 
                     CALL GSLN (1)
                 endif
@@ -801,7 +804,7 @@
                 if(istat_td .eq. 1)then
                     x1 = skewt(td_vert(iz-1),y1)
                     x2 = skewt(td_vert(iz),y2)
-                    CALL GSLN (3)
+                    CALL GSLN (itd)
                     call line(x1,y1,x2,y2) 
                     CALL GSLN (1)
                 endif
@@ -820,7 +823,7 @@
                 if(istat_td .eq. 1)then
                     x1 = skewt(td_vert(iz-1),y1)
                     x2 = skewt(k_to_c(td_sfc_k),y2)
-                    CALL GSLN (3)
+                    CALL GSLN (itd)
                     call line(x1,y1,x2,y2) 
                     CALL GSLN (1)
                 endif
@@ -838,7 +841,7 @@
                 if(istat_td .eq. 1)then
                     x1 = skewt(k_to_c(td_sfc_k),y1)
                     x2 = skewt(td_vert(iz),y2)
-                    CALL GSLN (3)
+                    CALL GSLN (itd)
                     call line(x1,y1,x2,y2) 
                     CALL GSLN (1)
                 endif
@@ -852,13 +855,13 @@
         if(box_low .eq. 0.1)then
             call set(0., 1., 0., 1.
      1              ,0., 1., 0., 1., 1)
-            call write_label_lplot(100,94,c33_label,a9time
+            call write_label_lplot(100,94,c_label,a9time
      1                            ,plot_parms,namelist_parms
      1                            ,i_overlay,'sound')
         elseif(box_low .eq. 0.2)then
             call set(0., 1., 0., 1.
      1              ,0., 1., 0., 1., 1)
-            call write_label_lplot(100,94,c33_label,a9time
+            call write_label_lplot(100,94,c_label,a9time
      1                            ,plot_parms,namelist_parms
      1                            ,i_overlay,'sound')
         endif
