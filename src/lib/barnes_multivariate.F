@@ -471,11 +471,11 @@ cdis
       integer kk_lower_pair, kk_higher_pair,klow,jhigh,khigh,kk,kmin,kkh
       integer kdelt,jdelt,ilow,jlow
       integer ihigh,idelt,istat_alloc
+      integer i4_elapsed, ishow_timer
 #ifdef USEMPI
       integer flag,ierr,count
       integer :: offset,ioffset,joffset,koffset,noffset,IMAXlocal
       integer :: ip,r
-      integer i4_elapsed, ishow_timer
       include 'mpif.h'
 #endif
 
@@ -629,6 +629,9 @@ cdis
         ioffset=ioffset+IMAXlocal
       enddo       !r
 
+      i4_elapsed = ishow_timer()
+      write(6,*)' Start mpi_scatterv'
+
 !Send arrays
       call mpi_scatterv(buffer,recvcounts,displs,MPI_REAL,wt_b_local,
      1               recvcounts(rank),MPI_REAL,0,MPI_COMM_WORLD,ierr)
@@ -663,6 +666,7 @@ cdis
      1         ,fnorm_lut                                                   ! I
      1         ,IstartIend(1,0),IstartIend(2,0)                             ! I
      1         ,local_var)                                                  ! O
+      write(6,*)' Returned from analyze_weights_mpi'
       i4_elapsed = ishow_timer()
 
       call mpi_gatherv(local_var,recvcounts(rank),MPI_REAL,buffer,
@@ -671,6 +675,9 @@ cdis
         print*,'MPI_GATHERV error in barnes',ierr,recvcounts(rank),rank
         stop
       endif
+
+      write(6,*)' Finished mpi_gatherv'
+      i4_elapsed = ishow_timer()
 
 !     Copy buffer, with re-ordering, into var
       ioffset = 0
@@ -955,6 +962,8 @@ csms$parallel end
 
       relax = 1.0 ! allows for SUR or SOR with each iteration
 
+      i4_elapsed = ishow_timer()
+
 !     Divide the weights
       do k=1,kmax
 
@@ -982,6 +991,8 @@ csms$parallel end
           write(6,*)' Divided level ',k
 
       enddo ! k
+
+      i4_elapsed = ishow_timer()
 
       deallocate(sum_var)
       deallocate(sumwt)
@@ -1234,6 +1245,8 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
       integer istat_alloc,ilow,ihigh,jlow,jhigh,klow,khigh,ii,jj,kk
       integer i,j,k,l,n,istatus 
 
+      integer i4_elapsed, ishow_timer
+
 !     Start executable statements
 
       allocate(sum_var(max_var,Istart:Iend,jmax,kmax),STAT=istat_alloc)
@@ -1299,6 +1312,8 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
           enddo ! k
       enddo ! n
 
+      i4_elapsed = ishow_timer()
+
 !     Divide the weights
       do k=1,kmax
           do j=1,jmax
@@ -1317,6 +1332,8 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
           write(6,*)' Divided level ',k
 
       enddo ! k
+
+      i4_elapsed = ishow_timer()
 
       deallocate(sum_var)
       deallocate(sumwt)
