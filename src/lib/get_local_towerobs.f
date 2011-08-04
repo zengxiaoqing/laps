@@ -751,7 +751,7 @@ c       read _fillValue for relHumidity
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'could not find var wsQcFlag'
-        print *, 'Aborting read'
+!       print *, 'Aborting read'
 !       nf_status = NF_CLOSE(nf_fid)
 !       istatus = 0
 !       return
@@ -780,7 +780,7 @@ c     read _fillValue for windSpeed
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'could not find var wdQcFlag'
-        print *, 'Aborting read'
+!       print *, 'Aborting read'
 !       nf_status = NF_CLOSE(nf_fid)
 !       istatus = 0
 !       return
