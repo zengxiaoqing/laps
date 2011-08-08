@@ -70,7 +70,8 @@ my $fcst_len = $opt_l;       # Forecast length (hours)
 my $fsf_subdir = "lapsprd/fsf/$opt_m-$opt_a";
 my $fua_subdir = "lapsprd/fua/$opt_m-$opt_a";
 
-my $sleep_time = 60; # Number of seconds to sleep between attempts to process
+my $sleep_time_fsf = 15; # Number of seconds to wait for fsf file to fill up       
+my $sleep_time     = 60; # Number of seconds to sleep between attempts to process
 
 # END OF USER DEFINED PARAMS
 
@@ -158,6 +159,23 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
 
   foreach (@times) {
     if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
+      my $fsfsize; 
+      my $fsfsize_last; 
+      my $waitsize = 1;
+
+      $fsfsize_last = 0;                           
+      $fsfsize = -s "$local_fsf/$_.fsf";
+      print "fsf size = $fsfsize (last is $fsfsize_last)\n";
+
+      while ( ($fsfsize > $fsfsize_last && $waitsize <= 10) || $fsfsize == 0) {
+        $fsfsize_last = $fsfsize;
+        sleep $sleep_time_fsf;
+        $fsfsize = -s "$local_fsf/$_.fsf";
+        print "fsf size = $fsfsize (last is $fsfsize_last)\n";
+        $waitsize++;
+      }
+
+      $timeaccum = $timeaccum + $sleep_time_fsf;
       $t=gmtime(); 
       print "\nReady to process $_ ... $t \n" ;
       if ($opt_a eq "spaghetti") {
