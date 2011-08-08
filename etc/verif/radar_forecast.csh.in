@@ -114,3 +114,5 @@ ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY.png
 
 rm -f          radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
 ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
+
+convert -resize 90x60! $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM\_thumb.png
