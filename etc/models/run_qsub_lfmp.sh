@@ -36,7 +36,7 @@ script=$modelroot/qsub_lfmpost.sh
 echo "#!/bin/sh --login"         > $script
 echo "#$ -N lfmp_$run"          >> $script
 echo "#$ -A hmtb"               >> $script
-echo "#$ -l h_rt=08:00:00"      >> $script
+echo "#$ -l h_rt=11:00:00"      >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
 echo "#$ -pe service 1"         >> $script
