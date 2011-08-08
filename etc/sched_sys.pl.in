@@ -21,8 +21,6 @@
 # -r -m N              where "N" is the (default) maximum number of files 
 #                      to be kept in each product directory by the purger
 #
-# -t                   override default purge time expressed in days
-#
 # -l                   Write logs in LAPS_DATA_ROOT/log, even if on AWIPS
 #
 # -p T                 Advance analyses by T minutes for balanced output at systime + T
@@ -38,12 +36,12 @@
                
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_e $opt_q $opt_Q $opt_n $opt_w 
             $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_W $opt_D);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslvp:TWD:');
+getopts('d:c:a:rm:e:q:Q:KV:M:n:A:f:F:wslvp:TWD:');
 
 my $initial_time = time();
 
@@ -120,7 +118,9 @@ if(defined $opt_A){
 #  - If archive time is defined and set to i4time70, then yydddhhmm corresponds exactly to archive_time
 #
 
-my $yydddhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
+# Try new version of 'systime' that handles when $cycle_time exceeds 1 hour (call it 'sys_time')
+
+my $yydddhhmm=&laps_tools::sys_time($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
 
 #print "opt_f is $opt_f\n";
 
