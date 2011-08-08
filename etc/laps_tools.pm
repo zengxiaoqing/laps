@@ -1077,6 +1077,78 @@ sub systime{
     return ($yyjjjhhmm);
 }
 
+#
+# ------------------------------------------------------------------------
+#
+sub sys_time{
+    use Time::Local;
+    my($DATAROOT,$delay,$cycle_time,$archive_time,$write_systime_dat) = @_;
+
+#   See if -t option was used to pass in archive time in calling routine
+    my $ctime = 0;    # Initial declaration outside the scope of the if test
+    if($archive_time > 0) {
+#       print "Archive data time is being set to a ctime of $archive_time...\n";
+        $ctime = $archive_time;
+    }else{
+#       print "Setting ctime based on clock time and delay of $delay in hours...\n";
+        $ctime = time - $delay*3600;
+
+#       Round $ctime down to the nearest cycle time
+        my $ncyc = int($ctime / $cycle_time);
+        $ctime = $ncyc * $cycle_time;
+    }
+
+#   print "ctime = $ctime\n";
+
+    my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+    my($sec,$min,$hour,$mday,$mon,$year,$yyyy);
+
+    if($archive_time > 0){
+      ($year,$mon,$mday,$hour,$min,$sec) = &laps_tools::i4time_to_date($archive_time);
+       $yyyy=$year;
+       $year=substr($year,2,2);
+       $mon=$mon-1;
+    }else{ # clock time
+       ($sec,$min,$hour,$mday,$mon,$year) = gmtime($ctime);
+        $yyyy = 1900+$year;
+        $year= $year-100 if($year>99);
+        $year='0'.$year if(length($year)<2);
+        $mday = '0'.$mday if(length($mday)<2);
+    }
+
+    $ctime = timegm(0,$min,$hour,$mday,$mon,$yyyy-1900);
+
+    my $ftime = $ctime +  315619200;
+    $min = '0'.$min if(length($min)<2);
+    $hour = '0'.$hour if(length($hour)<2);
+
+    my $jjj = &laps_tools::julian($year,$mon+1,$mday);
+
+    $mday = '0'.$mday if(length($mday)<2);
+    $jjj="0".$jjj while(length($jjj)< 3);
+
+    my $yyjjjhhmm = "$year$jjj$hour$min";
+
+    if(defined $write_systime_dat){
+       open(TFILE,">$DATAROOT/time/c_time.dat");
+       print TFILE " $year$jjj$hour$min\n";
+       print TFILE "   $ctime\n";
+       close(TFILE);
+
+       open(TFILE,">$DATAROOT/time/systime.dat");
+       print TFILE "  $ftime\n";
+       print TFILE " $year$jjj$hour$min\n";
+       print TFILE "$hour\n";
+       print TFILE "$min\n";
+       print TFILE "$mday-$MON[$mon]-$yyyy $hour$min\n";
+       print TFILE "$year$jjj\n";
+       close(TFILE);
+    }
+
+    return ($yyjjjhhmm);
+}
+
+
 # 
 #-------------------------------------------------------------------
 #
