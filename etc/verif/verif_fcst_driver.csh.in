@@ -3,7 +3,7 @@
 # arg1 is the LAPS_DATA_ROOT (e.g. /data/fab/projects/dwr)
 # arg2 is the model cycle time (real number seconds, e.g. 21600.0)
 # arg3 is the delay in hours for the modeltime relative to the crontime (e.g. 12.0)
-# arg4 is model forecast time step (integer seconds, e.g. 10800)
+# arg4 (no longer used)                                                  
 # arg5 is number of forecast times that have a valid analysis to compare with (excluding analysis, e.g. 2)
 
 setenv LAPSINSTALLROOT @prefix@
@@ -11,13 +11,16 @@ setenv LAPS_DATA_ROOT $1
 
 setenv NTIMES $5
 
+date -u
+
 perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3                > $LAPS_DATA_ROOT/time/modeltime.dat 
 perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 -f ascii_time >> $LAPS_DATA_ROOT/time/modeltime.dat 
 
 # Point verification (Solar, Sfc Temp, and 3D Wind)..................................................................
+echo "$LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log"
+      $LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log
 
-echo "$LAPSINSTALLROOT/bin/verif_fcst.exe $4 $NTIMES $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log"
-      $LAPSINSTALLROOT/bin/verif_fcst.exe $4 $NTIMES $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log
+date -u
 
 echo "$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $NTIMES > $LAPS_DATA_ROOT/log/cloud_fcst.log"
       $LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $NTIMES > $LAPS_DATA_ROOT/log/cloud_fcst.log
@@ -28,8 +31,8 @@ echo "$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $NTIMES > $L
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100. '"Surface Temperature" "Deg F"' >& $LAPS_DATA_ROOT/log/tsf_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100.  "Surface Temperature" "Deg F"  >& $LAPS_DATA_ROOT/log/tsf_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:100. '"Surface Temperature" "Deg F"' >& $LAPS_DATA_ROOT/log/dsf_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:100.  "Surface Temperature" "Deg F"  >& $LAPS_DATA_ROOT/log/dsf_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:100. '"Surface Dewpoint" "Deg F"' >& $LAPS_DATA_ROOT/log/dsf_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:100.  "Surface Dewpoint" "Deg F"  >& $LAPS_DATA_ROOT/log/dsf_fcst.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt USF -20.:20. '"Sfc Wind U Component"'  "m/s"   >& $LAPS_DATA_ROOT/log/usf_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt USF -20.:20.  "Sfc Wind U Component"   "m/s"   >& $LAPS_DATA_ROOT/log/usf_fcst.log
@@ -63,8 +66,12 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T
 echo "setenv LAPS_A9TIME `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`"
       setenv LAPS_A9TIME `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`
 
+date -u
+
 echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log"
       $LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log
+
+date -u
 
 foreach THRESH (20 30 40)
     echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH > $LAPS_DATA_ROOT/log/radar_fcst_bias_$THRESH.log"
@@ -72,5 +79,7 @@ foreach THRESH (20 30 40)
     echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH > $LAPS_DATA_ROOT/log/radar_fcst_ets_$THRESH.log"
           $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH > $LAPS_DATA_ROOT/log/radar_fcst_ets_$THRESH.log
 end
+
+date -u
 
 # Consider a montage of the reflectivity images?
