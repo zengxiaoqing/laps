@@ -3201,6 +3201,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/verif/cloud_analysis.csh
           etc/verif/cloud_forecast.csh
           etc/verif/radar_forecast.csh
+          etc/verif/run_qsub_verif.sh
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
           etc/www/laps_products.cgi
@@ -3364,6 +3365,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/verif/cloud_analysis.csh
           etc/verif/cloud_forecast.csh
           etc/verif/radar_forecast.csh
+          etc/verif/run_qsub_verif.sh
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
           etc/www/laps_products.cgi
