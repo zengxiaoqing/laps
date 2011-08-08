@@ -4,9 +4,15 @@
 
 #Argument 1 is local DATA_ROOT
 
+#Argument 2 is remote DATA_ROOT (include the node unless arg 5 is set to 6)
+
 #Argument 3 tells whether ot use 'qsub'
 
-#Argument 6 is optional subdirectory (if arg 5 is specified)
+#Argument 6 is optional subdirectory (if arg 5 is set to "5" or "6")
+
+#Argument 7 is optional modelroot subdirectory (if arg 5 is set to "6")
+
+#Argument 8 is optional purge time (if arg 5 is set to "6")
 
 LOCAL_DATA_ROOT=$1
 REMOTE_DATA_ROOT=$2
@@ -57,7 +63,7 @@ if test "$3" = qsub; then
     if test "$subdir" == ""; then # copy all
         echo "#$ -o $LOCAL_DATA_ROOT/log/qsub_rsync_out.log.`date +\%H\%M`"      >> $script
     else
-        echo "#$ -o $LOCAL_DATA_ROOT/log/qsub_rsync_out_$subdir.log.`date +\%H\%M`"   >> $script
+        echo "#$ -o $LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M`"   >> $script
     fi
     echo "#$ -j y"                  >> $script
     echo "#exit"                    >> $script
@@ -71,7 +77,7 @@ if test "$3" = qsub; then
 
     if test "$5" == ""; then # copy all (except www verif)
         echo " "                        >> $script
-        echo "rsync -rlptgvvz --exclude='log/core' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo "rsync -rlptgvvz --exclude='log/core' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT  > \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
     fi
 
     if test "$5" == "1"; then # copy all except fua
@@ -81,26 +87,35 @@ if test "$3" = qsub; then
 
     if test "$5" == "2"; then # copy all except fua/fsf
         echo " "                                                                   >> $script
-        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo "date -u  > \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
+        echo " "                                                                   >> $script
         echo "Start copy of www directories"                                       >> $script
-        echo "echo rsync -rlptgvvz --rsh=ssh --delete $LOCAL_DATA_ROOT/lapsprd/www/*                        $REMOTE_DATA_ROOT/lapsprd/www" >> $script
+        echo "echo rsync -rlptgvvz --rsh=ssh --delete $LOCAL_DATA_ROOT/lapsprd/www/*                        $REMOTE_DATA_ROOT/lapsprd/www"                                                               >> $script
         echo "     rsync -rlptgvvz --rsh=ssh --delete $LOCAL_DATA_ROOT/lapsprd/www/*                        $REMOTE_DATA_ROOT/lapsprd/www   >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
+        echo " "                                                                   >> $script
         echo "Start copy of verif directories"                                     >> $script
         echo "rsync -rlptgvvz --rsh=ssh --delete $LOCAL_DATA_ROOT/lapsprd/verif/* --exclude='REF/cont' $REMOTE_DATA_ROOT/lapsprd/verif >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
+        echo " "                                                                   >> $script
         echo "Start copy of time directories"                                      >> $script
         echo "rsync -rlptgvvz --rsh=ssh --delete $LOCAL_DATA_ROOT/time/*                               $REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
-        echo "Start copy of overall dataroot directories"                          >> $script
-        echo "rsync -rlptgvvz --exclude='log/core' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
-        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
+        echo "Start copy of most overall dataroot directories"                     >> $script
+#       echo "rsync -rlptgvvz --exclude='log/core' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
-#       echo "rsync -rlptgvvz --exclude='log/core'                                                                    --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo "echo rsync -rlptgvvz --exclude='log' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --exclude='lapsprd/lvd' --exclude='lapsprd/v??' --exclude='lapsprd/v???' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT"                                                             >> $script
+        echo "     rsync -rlptgvvz --exclude='log' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --exclude='lapsprd/lvd' --exclude='lapsprd/v??' --exclude='lapsprd/v???' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
+        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
     fi
 
@@ -125,17 +140,40 @@ if test "$3" = qsub; then
       pwd >> $log                                              
       echo "build command for $subdir subdirectory" >> $log
       echo " "                        >> $script
-      echo "rsync -rlptgvvz --rsh=ssh --delete \$LOCAL_DATA_ROOT/lapsprd/fsf/$subdir \$REMOTE_DATA_ROOT/lapsprd/fsf >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo "rsync -rlptgvvz --rsh=ssh --delete \$LOCAL_DATA_ROOT/lapsprd/fsf/$subdir \$REMOTE_DATA_ROOT/lapsprd/fsf  > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
       echo "rsync -rlptgvvz --rsh=ssh --delete \$LOCAL_DATA_ROOT/lapsprd/fua/$subdir \$REMOTE_DATA_ROOT/lapsprd/fua >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
     fi
 
     if test "$5" == "6"; then # copy individual fua/fsf subdirectory via scp (and remote purge) [UNDER CONSTRUCTION]
+      MODEL_DATA_ROOT=$7
+      REMOTE_PURGE_TIME=$8
+      MODELTYPE=`echo $subdir | cut -c1-3`
+      MODELCONFIG=`echo $subdir | cut -c5-10`
+      REMOTE_NODE=oplapb@clank   
+      MODEL_CYCLE_TIME=`/usr/bin/perl /home/oplapb/builds/laps/etc/read_nl.pl -d $LOCAL_DATA_ROOT -n nest7grid.parms -v model_cycle_time`
+      MODEL_INIT_TIME=`/usr/bin/perl /home/oplapb/builds/laps/etc/sched_sys.pl -c $MODEL_CYCLE_TIME -f yyyymmddhh`
+
+      echo "MODEL_CYCLE_TIME = $MODEL_CYCLE_TIME" >> $log
+      echo "MODEL_INIT_TIME  = $MODEL_INIT_TIME"  >> $log
+
       cd $LOCAL_DATA_ROOT/lapsprd/fua
       pwd >> $log                                              
-      echo "build command for $subdir subdirectory" >> $log
+      echo "build commands for $subdir subdirectory" >> $log
+      echo " "                        >> $script
+
+      echo "ssh $REMOTE_NODE /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd/fua/$subdir           > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo " "                        >> $script
+
+      echo "date -u"                  >> $script
       echo " "                        >> $script
 #     lfmpost_scp_fuafsf.pl may need an option allowing the input of LAPS_DATA_ROOT or this script would need MODEL_DATA_ROOT
-      echo "/usr/bin/perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -r \$LOCAL_DATA_ROOT/lapsprd/fsf/$subdir -l \$REMOTE_DATA_ROOT/lapsprd/fsf >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+#                    perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -l oplapb@clank:/w3/jet/fab/wrf5km -m wrf -r /pan1/projects/mm5-laps/domains/WRFV3-5KM -f 37 -i 15 -w 10800               -a wsm6  
+      echo "/usr/bin/perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -l $REMOTE_NODE:$REMOTE_DATA_ROOT -L      -r $MODEL_DATA_ROOT -d $MODEL_INIT_TIME       -f 25 -i 15 -w  7200 -m $MODELTYPE -a $MODELCONFIG >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo " "                        >> $script
+
+      echo "date -u"                  >> $script
+
+#     exit
     fi
 
     echo " "                                 >> $log
