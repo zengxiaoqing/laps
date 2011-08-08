@@ -3,10 +3,13 @@
 LOCAL_DATA_ROOT=$1
 REMOTE_DATA_ROOT=$2
 HHMM=$3
+MODELROOT=$4
+PURGE_TIME=$5
+
 LAPSINSTALLROOT=@prefix@
 
 cd $LOCAL_DATA_ROOT/lapsprd/fua
 for subdir in `ls`; do
-    $LAPSINSTALLROOT/etc/rsync_out.sh $LOCAL_DATA_ROOT $REMOTE_DATA_ROOT qsub $HHMM 5 $subdir
+    $LAPSINSTALLROOT/etc/rsync_out.sh $LOCAL_DATA_ROOT $REMOTE_DATA_ROOT qsub $HHMM 6 $subdir $MODELROOT/$subdir $PURGE_TIME
 done
 
