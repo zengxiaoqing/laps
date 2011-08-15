@@ -31,7 +31,7 @@ setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modeltime.dat`
 setenv STAT_LC `echo $STAT | gawk '{print tolower($0)}'`
 
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
-setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/members.txt                                   
+setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt                                   
 
 echo " "
 echo "inputs..."
