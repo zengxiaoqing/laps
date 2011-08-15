@@ -3174,6 +3174,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/prebuild_sms.pl
           etc/purger.pl
           etc/purge_wideband.pl
+          etc/purge_w3_fcst2d.pl
           etc/putFile_fire1.pl
           etc/read_nl.pl
           etc/recurs_iter.pl
@@ -3196,6 +3197,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
+          etc/models/run_qsub_lfmp.sh 
           etc/verif/verif_fcst_driver.csh
           etc/verif/verif_forecast.csh
           etc/verif/cloud_analysis.csh
@@ -3338,6 +3340,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/prebuild_sms.pl
           etc/purger.pl
           etc/purge_wideband.pl
+          etc/purge_w3_fcst2d.pl
           etc/putFile_fire1.pl
           etc/read_nl.pl
           etc/recurs_iter.pl
@@ -3360,6 +3363,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
+          etc/models/run_qsub_lfmp.sh 
           etc/verif/verif_fcst_driver.csh
           etc/verif/verif_forecast.csh
           etc/verif/cloud_analysis.csh
@@ -3545,8 +3549,10 @@ rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 
-chmod +x etc/*.sh
+chmod +x etc/*.*sh
 chmod +x etc/qsub*
+chmod +x etc/models/*.*sh
 chmod +x etc/www/nph-laps.cgi
 chmod +x etc/www/laps.cgi
-chmod +x etc/verif/*.csh
+chmod +x etc/www/*.*sh
+chmod +x etc/verif/*.*sh
