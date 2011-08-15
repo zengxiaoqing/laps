@@ -447,7 +447,7 @@
 
            write(6,*)'ets_file = ',ets_file
 
-           members_file  = plot_dir(1:len_plot)//'/'
+           members_file  = verif_dir(1:len_verif)//'/'
      1                                     //'members.txt'      
 
            write(6,*)'members_file = ',members_file
