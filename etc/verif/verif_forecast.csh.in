@@ -2,7 +2,7 @@
 
 # First argument is $LAPS_DATA_ROOT
 
-# Second argument is number of forecast time steps
+# Second argument is number of forecast time steps (including analysis)
 
 # Third argument is the type "pt" or "grid"
 
@@ -32,6 +32,7 @@ setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
 setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modeltime.dat`
 
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/$MODELTIME.stats
+setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt
 
 echo " "
 echo "inputs..."
@@ -40,7 +41,7 @@ echo "VAR = $VAR"
 echo "FILE = $FILE"  
 ls -l $FILE                                                     
 
-@ NLINE = $NLINE + 1
+#@ NLINE = $NLINE + 1
 
 # obtain xrange times from the data file
 setenv STARTTIME1 `head -1       $FILE           | cut -c2-12` ; echo $STARTTIME1
@@ -51,6 +52,18 @@ setenv STOPTIME2  `head -$NLINE $FILE | tail -1 | cut -c14-24`; echo $STOPTIME2
 echo " "
 echo "Start time: $STARTTIME1 $STARTTIME2"
 echo "Stop  time: $STOPTIME1 $STOPTIME2 NLINE is $NLINE"
+
+setenv NMEMBERS `wc -l $MEMBERS_FILE | cut -c1-2`
+echo "NMEMBERS: $NMEMBERS"
+
+setenv IMEMBER 1
+while ($IMEMBER <= $NMEMBERS)
+    @ IBLOCK = $IMEMBER - 1
+
+    setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
+    echo "IMEMBER MEMBER IBLOCK: $IMEMBER $MEMBER $IBLOCK"
+    @ IMEMBER = $IMEMBER + 1
+end
 
 # Construct gnuplot .gp file
 setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/$VAR_LC\_$TYPE\_fcst.gp
@@ -75,15 +88,23 @@ echo 'set title "'$6' Observed vs Forecast"'                              >> $GN
 echo 'set key left box'                                                   >> $GNUPLOTFILE
 
 if ($VAR == "WSF" || $VAR == "W3") then
+    setenv T1 "RMSE U"    
+    setenv T2 "RMSE V"    
+    setenv T3 "RMSE Vector"    
+
     echo 'set key width 1'                                                                           >> $GNUPLOTFILE
-    echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "RMSE U" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' using 1:4 title "RMSE V"  with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMSE Vector" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+    echo 'plot '$DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:3 title "'$T1'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+    echo        $DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:4 title "'$T2'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+    echo        $DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:5 title "'$T3'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
 else
+    setenv T1 "Fcst Mean"
+    setenv T2 "Obs Mean"
+    setenv T3 "RMS (F-O)"
+
     echo 'set key width 1'                                                                           >> $GNUPLOTFILE
-    echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "Fcst Mean" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' using 1:4 title "Obs Mean"  with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMS (F-O)" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+    echo 'plot '$DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:3 title "'$T1'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+    echo        $DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:4 title "'$T2'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+    echo        $DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:5 title "'$T3'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
 endif
 
 
