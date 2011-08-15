@@ -371,14 +371,6 @@
                     if(i_g .ge. 3 .and. i_g .le. ni-2 .and.
      1                 j_g .ge. 3 .and. j_g .le. nj-2            )then
 
-                      if(iwrite .eq. iwrite/20*20)then
-                        write(6,*)'sv '
-                        write(6,*)'sv Sta   i    j   VIS frac tb8_k  '
-     1                  //'t_gnd_k t_sfc_k cv_s_mx cvr_mx '
-     1                  //'solalt 9pt  rad_fc '
-     1                  //'rad_ob rad_th ratio cv_sol  df'
-                      endif
-
                       iwrite = iwrite + 1
 
 !                     if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
