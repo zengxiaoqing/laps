@@ -2,10 +2,13 @@
 
 lapsdataroot=$1 # Example: /lfs0/projects/hmtb/dwr_domains/laps_psd   
 hhmm=$2         # Runtime needed (e.g. 01:00)
-delay=$3        # Delay in hours for the modeltime relative to the crontime (e.g. 12.0)                    
+delay=$3        # Delay in hours for the modeltime with respect to model_cycle_time (e.g. 12.0)                    
 
-model_cycle_time=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v model_cycle_time
-#n_verif_times=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v n_verif_times    
+model_cycle_time=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v model_cycle_time`
+n_verif_steps=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v n_verif_steps`
+
+echo "model_cycle_time = $model_cycle_time"
+echo "n_verif_steps = $n_verif_steps"
 
 if test "$name" != "none"; then                               # (e.g. ewp0)
     run=$name
@@ -27,30 +30,26 @@ log=$lapsdataroot/log/verif_run.log.`date +\%H\%M`
 rm -f $lapsdataroot/log/qverif.log.`date +\%H\%M`
 
 # Build qsub script
-script=$lapsdataroot/log/qsub_lfmpost.sh
+script=$lapsdataroot/log/qsub_verif.sh
 echo "#!/bin/sh --login"         > $script
 echo "#$ -N verif"              >> $script
 echo "#$ -A dlaps"              >> $script
-echo "#$ -l h_rt=$hhmm:00"      >> $script
+echo "#$ -l h_rt=$hhmm:00,h_vmem=2.5G" >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
-echo "#$ -pe service 1"         >> $script
+echo "#$ -pe hserial 1"         >> $script
 echo "#$ -o $lapsdataroot/log/qverif.log.`date +\%H\%M`"          >> $script
 echo "#$ -j y"                  >> $script
 echo "#exit"                    >> $script
 echo " "                        >> $script
 
 echo " "                                                        >> $script
-echo "fcstIncrMin=$fcstIncrMin"                                 >> $script
-echo "numFcsts=$numFcsts"                                       >> $script
-echo "name=$name"                                               >> $script
-echo "project=dlaps"                                            >> $script
 echo " echo 'Running this verif_fcst_driver.csh command...'"    >> $script
 
 #/home/oplapb/builds/laps/etc/verif/verif_fcst_driver.csh /pan1/projects/dlaps/analysis/laps_ci 21600.0  5.75  900 20 > /pan1/projects/dlaps/analysis/laps_ci/log/verif_fcst_driver.log.`date +\%H` 2>&
 
-echo " echo '@CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model_cycle_time $delay dummy 20' " >> $script
-echo "       @CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model_cycle_time $delay dummy 20"   >> $script
+echo " echo '@CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model_cycle_time $delay dummy $n_verif_steps'                                                     "   >> $script
+echo "       @CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model_cycle_time $delay dummy $n_verif_steps > $lapsdataroot/log/verif_fcst_driver.log.`date +\%H`"   >> $script
 
 echo " "                                                        >> $script
 echo " "                                                        >> $script
