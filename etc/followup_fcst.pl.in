@@ -152,6 +152,8 @@ my ($remfile, $result);
 my $www_flag = 0;
 my $t; 
 
+my $fsfsize_max = 0; 
+
 while (($timeaccum < $timeout)and($times_rem > 0)){
   $arrpos = 0;
   @times_new = @times; 
@@ -167,7 +169,10 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
       $fsfsize = -s "$local_fsf/$_.fsf";
       print "fsf size = $fsfsize (last is $fsfsize_last)\n";
 
-      while ( ($fsfsize > $fsfsize_last && $waitsize <= 10) || $fsfsize == 0) {
+      while ( ($fsfsize > $fsfsize_last && $fsfsize >= $fsfsize_max && $waitsize <= 15) || $fsfsize == 0) {
+        if($fsfsize > $fsfsize_max){
+          $fsfsize_max = $fsfsize;
+        }
         $fsfsize_last = $fsfsize;
         sleep $sleep_time_fsf;
         $fsfsize = -s "$local_fsf/$_.fsf";
