@@ -225,7 +225,7 @@ real, allocatable, dimension(:,:,:) :: htdsig,hrhsig,hthetasig,hthetaesig,hzsigf
 !beka
 real :: dx(lx,ly),dy(lx,ly)  
 real :: r_missing_data
-real :: stefan_boltzmann, b_olr
+real :: stefan_boltzmann, b_olr, eff_emissivity
 
 !beka
 
@@ -734,8 +734,9 @@ endif
 	write(*,*)'beka beka beka'
 
         stefan_boltzmann = 5.67e-8
+        eff_emissivity = 0.6
         b_olr = 0.25
-        bt11u(:,:) = (lwout(:,:) / stefan_boltzmann) ** b_olr
+        bt11u(:,:) = ( (lwout(:,:)/eff_emissivity) / stefan_boltzmann) ** b_olr
          
 
 return
