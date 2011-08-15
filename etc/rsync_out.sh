@@ -8,11 +8,20 @@
 
 #Argument 3 tells whether ot use 'qsub'
 
+#Argument 4 is optional wall clock run time (e.g. 02:00)
+
+#Argument 5 is optional number that controls the qsub action
+#           2: copy all except fua/fsa via rsync in prioritized sequence
+#           5: copy individual fua/fsf subdirectory via rsync
+#           6: copy individual fua/fsf subdirectory via scp (and remote purge)
+
 #Argument 6 is optional subdirectory (if arg 5 is set to "5" or "6")
 
-#Argument 7 is optional modelroot subdirectory (if arg 5 is set to "6")
+#Argument 7 is optional modelroot subdirectory (should be used if arg 5 is set to "6")
 
-#Argument 8 is optional purge time (if arg 5 is set to "6")
+#Argument 8 is optional purge time (should be used if arg 5 is set to "6")
+
+#Argument 9 is optional remote node (can be used if arg 5 is set to "6", default is 'clank')
 
 LOCAL_DATA_ROOT=$1
 REMOTE_DATA_ROOT=$2
@@ -144,12 +153,17 @@ if test "$3" = qsub; then
       echo "rsync -rlptgvvz --rsh=ssh --delete \$LOCAL_DATA_ROOT/lapsprd/fua/$subdir \$REMOTE_DATA_ROOT/lapsprd/fua >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
     fi
 
-    if test "$5" == "6"; then # copy individual fua/fsf subdirectory via scp (and remote purge) [UNDER CONSTRUCTION]
+    if test "$5" == "6"; then # copy individual fua/fsf subdirectory via scp (and remote purge)                          
       MODEL_DATA_ROOT=$7
       REMOTE_PURGE_TIME=$8
       MODELTYPE=`echo $subdir | cut -c1-3`
       MODELCONFIG=`echo $subdir | cut -c5-10`
+
       REMOTE_NODE=oplapb@clank   
+      if test "$9" != ""; then
+        REMOTE_NODE=$9
+      fi
+
       MODEL_CYCLE_TIME=`/usr/bin/perl /home/oplapb/builds/laps/etc/read_nl.pl -d $LOCAL_DATA_ROOT -n nest7grid.parms -v model_cycle_time`
       MODEL_INIT_TIME=`/usr/bin/perl /home/oplapb/builds/laps/etc/sched_sys.pl -c $MODEL_CYCLE_TIME -f yyyymmddhh`
 
@@ -162,6 +176,7 @@ if test "$3" = qsub; then
       echo " "                        >> $script
 
       echo "ssh $REMOTE_NODE /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd/fua/$subdir           > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo "ssh $REMOTE_NODE /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd/fsf/$subdir          >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
       echo " "                        >> $script
 
       echo "date -u"                  >> $script
