@@ -92,11 +92,13 @@ my(@radars) = qw(01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 
 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 
 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122
 123 124 125 126 127 128 129 130 131 132 133 134 135);
-my(@webdirs) = qw(fw h5b ham llr p01 pbl pw sc td vnt xct fwi hah liw nbe pbe ptt rh sto tt wd0);
+my(@webdirs) = qw(fw h5b ham llr p01 pbl pw sc td vnt xct fwi hah liw nbe pbe ptt rh sto tt wd0 umf);
 my(@verifdirs) = qw(TSF DSF USF VSF SSF WSF TPW U3 V3 T3 W3);
+my(@dbzdirs) = qw(20 30 40 50 60);                                 
 my $radar;
 my $webdir;
 my $verifdir;
+my $dbzdir;
 my($dir);
 
 if($min_files>0){
@@ -136,6 +138,11 @@ if($min_files>0){
 
     $dir="verif/REF/plot";
     $clean_dirs{$dir} = $verif_time;
+
+    foreach $dbzdir (@dbzdirs){
+        $dir="verif/REF/plot/$dbzdir";
+        $clean_dirs{$dir} = $verif_time;
+    }
 
     $clean_dirs{'lvd/goes08'} = (0.5<$hist_time)?0.5:$hist_time;;
     $clean_dirs{'lvd/goes09'} = (0.5<$hist_time)?0.5:$hist_time;;
