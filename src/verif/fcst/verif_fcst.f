@@ -252,6 +252,11 @@
 !           stop
 !       endif
 
+        if(n_fdda_models .lt. 2)then
+            write(6,*)' WARNING: n_fdda_models is less than 2'
+            write(6,*)' Check nest7grid.parms specification'
+        endif
+
         do ifield = 1,n_fields
 
           var_2d = var_a(ifield)(1:3)
