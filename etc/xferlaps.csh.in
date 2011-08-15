@@ -50,10 +50,22 @@ setenv DATE `echo $YYYYMMDD_HHMM  | cut -c7-8`
 
 cd $LAPS_DATA_ROOT
 
-@prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH $DATE tar nostatic $DOMAIN $REMOTE_DATA_ROOT
+date -u
+
+echo "Running this command:"
 
 echo ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd
      ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd 
+
+date -u
+
+echo " "
+echo "Running this command:"
+
+echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH $DATE tar nostatic $DOMAIN $REMOTE_DATA_ROOT
+     @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH $DATE tar nostatic $DOMAIN $REMOTE_DATA_ROOT
+
+date -u
 
 if ($3 == "mss") then
     echo "MSSFULLPATH = $MSSPATH/$YYYY/$MONTH"
@@ -64,4 +76,8 @@ if ($3 == "mss") then
 
     rm -f laps_$YYDDDHHMM.tar*
 endif
+
+echo " "
+echo "Successful completion of xferlaps.csh...'
+
 
