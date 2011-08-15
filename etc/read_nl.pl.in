@@ -38,7 +38,7 @@ if(defined $opt_d){
 # Get the variable from the namelist
 if ($opt_v eq "n_fcst_steps") {
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_len",$LAPS_DATA_ROOT); 
-    my $fcst_len = $parameter[0];
+    my $fcst_len = $parameter[0] * 60;
 
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_intvl",$LAPS_DATA_ROOT); 
     my $fcst_intvl = $parameter[0];
@@ -48,7 +48,7 @@ if ($opt_v eq "n_fcst_steps") {
 
 }elsif ($opt_v eq "n_fcst_steps_p1") {
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_len",$LAPS_DATA_ROOT); 
-    my $fcst_len = $parameter[0];
+    my $fcst_len = $parameter[0] * 60;
 
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_intvl",$LAPS_DATA_ROOT); 
     my $fcst_intvl = $parameter[0];
@@ -58,7 +58,7 @@ if ($opt_v eq "n_fcst_steps") {
 
 }elsif ($opt_v eq "n_verif_steps") {
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_len",$LAPS_DATA_ROOT); 
-    my $fcst_len = $parameter[0];
+    my $fcst_len = $parameter[0] * 60;
 
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_intvl",$LAPS_DATA_ROOT); 
     my $fcst_intvl = $parameter[0];
@@ -74,7 +74,7 @@ if ($opt_v eq "n_fcst_steps") {
 
 }elsif ($opt_v eq "n_verif_steps_p1") {
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_len",$LAPS_DATA_ROOT); 
-    my $fcst_len = $parameter[0];
+    my $fcst_len = $parameter[0] * 60;
 
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_intvl",$LAPS_DATA_ROOT); 
     my $fcst_intvl = $parameter[0];
