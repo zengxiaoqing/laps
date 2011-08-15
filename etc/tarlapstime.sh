@@ -64,9 +64,15 @@ ls -1 time/*.dat                                          > lapstar.txt
 
 # Pregenerated web analysis files
 find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
+find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
+find ./lapsprd/www/anal2d/recent    -type l ! -cmin +180             -print   >> lapstar.txt
+
+# Verification files                           
+find ./lapsprd/verif -type f         ! -cmin +360       -print | grep -v cont | grep -v hist >> lapstar.txt
+find ./lapsprd/verif -type l         ! -cmin +360       -print | grep -v cont | grep -v hist >> lapstar.txt
 
 # Lapsprd files (except LGA, LGB, FUA, FSF)
-find ./lapsprd -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
+find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | grep -v www | grep -v \.v  >> lapstar.txt
 
 # LGA/LGB files (use MINAGE/MAXAGE)
 #find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> lapstar.txt
