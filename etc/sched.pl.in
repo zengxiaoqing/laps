@@ -358,6 +358,9 @@ if(defined $opt_V){
     $qsub_name = "run_qsub";    
 }
 
+my $qhhmm = substr($yyjjjhhmm,5,4);
+$qsub_name = "$qsub_name\_$qhhmm";
+
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
 unless(open(STDOUT, ">$LAPS_LOG_PATH/$log_name.$yyjjjhhmm"))
@@ -825,12 +828,10 @@ if($opt_f && (! $opt_q) && (! $opt_Q) ){
     print LOG $t." Finished www images postprocessing\n";
 }
 
-close(LOG);
-
 system("echo $yyjjjhhmm 1> $LAPS_LOG_PATH/sched.done 2>&1");
 
 if(defined $opt_R){
-    my ($domain,$remote_data_root) = split($opt_R,":"); 
+    my ($domain,$remote_data_root) = split(":",$opt_R); 
     my $remote_purge_time = $opt_t + 0.1;
 
     if(defined $opt_Q){
@@ -839,15 +840,22 @@ if(defined $opt_R){
         my $wall_time_min = int($cycle_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
         $wall_time_min="0".$wall_time_min if(length($wall_time_min)<2);
 
+        my $xfer_name;
+        if(defined $opt_f){
+          $xfer_name = "xfer_$opt_f";    
+        }else{
+          $xfer_name = "xferlaps";    
+        }
+
         open(TFILE,">$LAPS_LOG_PATH/qsub_xfer_laps.sh");
-        print TFILE "#!/bin/sh\n";
-        print TFILE "#\$ -N xferlaps\n";
+        print TFILE "#!/bin/sh --login\n";
+        print TFILE "#\$ -N $xfer_name\n";
         print TFILE "#\$ -A $opt_Q\n";
         print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
         print TFILE "#\$ -S /bin/sh\n";
         print TFILE "#\$ -cwd\n";
         print TFILE "#\$ -pe service 1\n";
-        print TFILE "#\$ -o $LAPS_LOG_PATH/log/xferlaps.log.$yyjjjhhmm\n";
+        print TFILE "#\$ -o $LAPS_LOG_PATH/xferlaps.log.$yyjjjhhmm\n";
         print TFILE "#\$ -j y\n";
         print TFILE "\n";
         print TFILE "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time\n";
@@ -859,6 +867,8 @@ if(defined $opt_R){
         system("$command");
     }
 }
+
+close(LOG);
 
 #unlink "$lockfile";
 
