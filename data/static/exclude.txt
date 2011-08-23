@@ -1,0 +1,17 @@
+log
+time
+lapsprd/www
+lapsprd/verif
+lapsprd/lga
+lapsprd/bigfile
+lapsprd/lapsprep
+lapsprd/fua
+lapsprd/fsf
+lapsprd/lvd
+lapsprd/gr2
+lapsprd/v??
+lapsprd/v???
+lapsprd/d??
+lapsprd/d???
+
+
