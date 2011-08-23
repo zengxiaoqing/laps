@@ -80,8 +80,8 @@ c
         parameter (surface_ir_buffer = 5000.) ! 3000.
 
 !       Default Thickness of Clouds Inserted by Satellite
-        real thk_def
-        parameter (thk_def            = 1500.)
+!       real thk_lyr
+!       parameter (thk_lyr            = 1500.)
 
 !       Cloud cover threshold in evaluating presence of SAO/PIREP layers
         real thr_sao_cvr
@@ -539,10 +539,11 @@ c
           IF(l_cloud_present) then ! Insert satellite clouds
 
 !           Set initial satellite cloud base
+            thk_lyr = cld_thk(cldtop_m(i,j))
             if(lcl_2d(i,j) .lt. cldtop_m(i,j))then
-	        htbase_init=max(lcl_2d(i,j),cldtop_m(i,j) - thk_def)
+	        htbase_init=max(lcl_2d(i,j),cldtop_m(i,j) - thk_lyr)
             else 
-                htbase_init=cldtop_m(i,j) - thk_def
+                htbase_init=cldtop_m(i,j) - thk_lyr
             endif
 
             htbase = htbase_init
@@ -693,7 +694,8 @@ c
               call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)
      1                            ,tb8_cold_k(i,j),cover,istatus)       
               if(istatus .ne. 1)write(6,*)' Bad band8_cover status #1'      
-              htbase = max( topo(i,j) + buffer , cldtop_m(i,j)-thk_def )
+              thk_lyr = cld_thk(cldtop_m(i,j))
+              htbase = max( topo(i,j) + buffer , cldtop_m(i,j)-thk_lyr )
 
               if(htbase .gt. cldtop_m(i,j))then
                   n_no_sao3 = n_no_sao3 + 1
@@ -714,7 +716,8 @@ c
               htbase_init = ht_sao_base
               htbase = htbase_init
               cldtop_old = cldtop_m(i,j)
-              cldtop_m(i,j) = htbase_init + thk_def
+              thk_lyr = cld_thk(htbase_init)
+              cldtop_m(i,j) = htbase_init + thk_lyr
 
 !             Find a thinner value for cloud cover consistent with the new
 !             higher cloud top and the known brightness temperature.
@@ -729,8 +732,9 @@ c
      1                              ,imax,jmax,klaps,i,j,istatus)
                   if(istatus .ne. 1)then
                       write(6,*)' Correct_cover: tb8_k < t_cld'
+                      thk_lyr = cld_thk(cldtop_m(i,j))
                       write(6,*)cldtop_old,cldtop_m(i,j)
-     1                         ,htbase_init,thk_def,cover
+     1                         ,htbase_init,thk_lyr,cover
                       write(6,*)(heights_3d(i,j,k),k=1,klaps)
 !                     return
                   endif
@@ -746,7 +750,8 @@ c
               cldtop_old = cldtop_m(i,j)
               cldtop_m(i,j) = ht_sao_top
               htbase_init = ht_sao_base
-              htbase = ht_sao_top - thk_def
+              thk_lyr = cld_thk(ht_sao_top)
+              htbase = ht_sao_top - thk_lyr
 
 !             Find a thinner value for cloud cover consistent with the new
 !             higher cloud top and the known brightness temperature.
@@ -761,8 +766,9 @@ c
      1                              ,imax,jmax,klaps,i,j,istatus)
                   if(istatus .ne. 1)then
                       write(6,*)' Correct_cover: tb8_k < t_cld'
+                      thk_lyr = cld_thk(cldtop_m(i,j))
                       write(6,*)cldtop_old,cldtop_m(i,j)
-     1                         ,htbase_init,thk_def,cover
+     1                         ,htbase_init,thk_lyr,cover
                       write(6,*)(heights_3d(i,j,k),k=1,klaps)
 !                     return
                   endif
