@@ -56,15 +56,6 @@ echo "Stop  time: $STOPTIME1 $STOPTIME2 NLINE is $NLINE"
 setenv NMEMBERS `wc -l $MEMBERS_FILE | cut -c1-2`
 echo "NMEMBERS: $NMEMBERS"
 
-setenv IMEMBER 1
-while ($IMEMBER <= $NMEMBERS)
-    @ IBLOCK = $IMEMBER - 1
-
-    setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
-    echo "IMEMBER MEMBER IBLOCK: $IMEMBER $MEMBER $IBLOCK"
-    @ IMEMBER = $IMEMBER + 1
-end
-
 # Construct gnuplot .gp file
 setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/$VAR_LC\_$TYPE\_fcst.gp
 setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/
@@ -93,20 +84,41 @@ if ($VAR == "WSF" || $VAR == "W3") then
     setenv T3 "RMSE Vector"    
 
     echo 'set key width 1'                                                                           >> $GNUPLOTFILE
-    echo 'plot '$DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:3 title "'$T1'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:4 title "'$T2'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:5 title "'$T3'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
 else
     setenv T1 "Fcst Mean"
     setenv T2 "Obs Mean"
     setenv T3 "RMS (F-O)"
 
     echo 'set key width 1'                                                                           >> $GNUPLOTFILE
-    echo 'plot '$DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:3 title "'$T1'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:4 title "'$T2'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-    echo        $DQUOTE$FILE$DQUOTE' index 0:'$IBLOCK' using 1:5 title "'$T3'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
 endif
 
+setenv IMEMBER 1
+while ($IMEMBER <= $NMEMBERS)
+    @ IBLOCK = $IMEMBER - 1
+
+    setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
+    echo "IMEMBER MEMBER IBLOCK: $IMEMBER $MEMBER $IBLOCK"
+
+    if ($NMEMBERS == 1) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3'" with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+    else if ($IMEMBER == 1) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3'" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+    else if ($IMEMBER == $NMEMBERS) then
+        echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3               with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4               with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5               with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+    else
+        echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3               with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4               with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5               with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
+    endif
+
+    @ IMEMBER = $IMEMBER + 1
+end
 
 # Run gnuplot
 gnuplot < $GNUPLOTFILE
