@@ -1329,7 +1329,7 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
           enddo ! i
           enddo ! j
 
-          write(6,*)' Divided level ',k
+          write(6,*)' Divided level ',k,Istart,Iend
 
       enddo ! k
 
