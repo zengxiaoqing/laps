@@ -832,7 +832,16 @@ system("echo $yyjjjhhmm 1> $LAPS_LOG_PATH/sched.done 2>&1");
 
 if(defined $opt_R){
     my ($domain,$remote_data_root) = split(":",$opt_R); 
-    my $remote_purge_time = $opt_t + 0.1;
+
+    my $remote_purge_time;
+
+    my $qmm = substr($yyjjjhhmm,7,2);
+
+    if($cycle_time_min != 15 || $qmm == 30){
+        $remote_purge_time = $opt_t + 0.05;
+    }else{
+        $remote_purge_time = "nopurge";
+    }    
 
     if(defined $opt_Q){
         my $wall_time_hr  = int( ( $cycle_time_min / 60.) + $extend_time  ); 
