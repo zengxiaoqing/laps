@@ -14,6 +14,7 @@
 #           2: copy all except fua/fsa via rsync in prioritized sequence
 #           5: copy individual fua/fsf subdirectory via rsync
 #           6: copy individual fua/fsf subdirectory via scp (and remote purge)
+#           7: copy all except fua/fsa and verif via rsync in prioritized sequence
 
 #Argument 6 is optional subdirectory (if arg 5 is set to "5" or "6")
 
@@ -121,8 +122,10 @@ if test "$3" = qsub; then
         echo "Start copy of most overall dataroot directories"                     >> $script
 #       echo "rsync -rlptgvvz --exclude='log/core' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
-        echo "echo rsync -rlptgvvz --exclude='log' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --exclude='lapsprd/lvd' --exclude='lapsprd/v??' --exclude='lapsprd/v???' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT"                                                             >> $script
-        echo "     rsync -rlptgvvz --exclude='log' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --exclude='lapsprd/lvd' --exclude='lapsprd/v??' --exclude='lapsprd/v???' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+#       --exclude-from=$LOCAL_DATA_ROOT/static/exclude.txt
+
+        echo "echo rsync -rlptgvvz --exclude='log' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --exclude='lapsprd/lvd' --exclude='lapsprd/gr2' --exclude='lapsprd/v??' --exclude='lapsprd/v???' --exclude='lapsprd/d??' --exclude='lapsprd/d???' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT"                                                             >> $script
+        echo "     rsync -rlptgvvz --exclude='log' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --exclude='lapsprd/lvd' --exclude='lapsprd/gr2' --exclude='lapsprd/v??' --exclude='lapsprd/v???' --exclude='lapsprd/d??' --exclude='lapsprd/d???' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
         echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
@@ -189,6 +192,35 @@ if test "$3" = qsub; then
       echo "date -u"                  >> $script
 
 #     exit
+    fi
+
+    if test "$5" == "7"; then # copy all in prioritized list except fua/fsf and verif
+        echo " "                                                                   >> $script
+        echo "date -u  > \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+
+        echo " "                                                                   >> $script
+        echo "Start copy of www directories"                                       >> $script
+        echo "echo rsync -rlptgvvz --rsh=ssh --delete $LOCAL_DATA_ROOT/lapsprd/www/*                        $REMOTE_DATA_ROOT/lapsprd/www"                                                               >> $script
+        echo "     rsync -rlptgvvz --rsh=ssh --delete $LOCAL_DATA_ROOT/lapsprd/www/*                        $REMOTE_DATA_ROOT/lapsprd/www   >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
+        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+
+        echo " "                                                                   >> $script
+        echo "Start copy of time directories"                                      >> $script
+        echo "rsync -rlptgvvz --rsh=ssh --delete $LOCAL_DATA_ROOT/time/*                               $REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
+        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+
+        echo " "                                                                   >> $script
+        echo "Start copy of most overall dataroot directories"                     >> $script
+#       echo "rsync -rlptgvvz --exclude='log/core' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+
+#       --exclude-from=$LOCAL_DATA_ROOT/static/exclude.txt
+
+        echo "echo rsync -rlptgvvz --exclude='log' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --exclude='lapsprd/lvd' --exclude='lapsprd/gr2' --exclude='lapsprd/v??' --exclude='lapsprd/v???' --exclude='lapsprd/d??' --exclude='lapsprd/d???' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT"                                                             >> $script
+        echo "     rsync -rlptgvvz --exclude='log' --exclude='time' --exclude='lapsprd/www' --exclude='lapsprd/verif' --exclude='lapsprd/lga' --exclude='lapsprd/bigfile' --exclude='lapsprd/lapsprep' --exclude='lapsprd/fua' --exclude='lapsprd/fsf' --exclude='lapsprd/lvd' --exclude='lapsprd/gr2' --exclude='lapsprd/v??' --exclude='lapsprd/v???' --exclude='lapsprd/d??' --exclude='lapsprd/d???' --rsh=ssh --delete \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
+        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
     fi
 
     echo " "                                 >> $log
