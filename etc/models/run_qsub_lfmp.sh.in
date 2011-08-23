@@ -7,8 +7,12 @@ lbc=$4          # Example: gfs1
 name=$5         # Example: ewp0 or wrf-wsm6 (should match a '$LAPS_DATA_ROOT/lapsprd/fua' subdirectory name and an element of 'nest7grid.parms/fdda_model_source')
 nest=$6         # Example: 1 or -2
 lapsdataroot=$7 # Example: /lfs0/projects/hmtb/dwr_domains/laps_psd   
-fcstIncrMin=$8  # Example: 60
-delay=$9        # Example: 2.0
+delay=$8        # Example: 2.0
+
+wallclock=02:00
+if test "$9" != ""; then # Example: 02:00 (optional)
+    wallclock=$9
+fi
 
 mdlfilewait=200
 
@@ -40,13 +44,16 @@ echo "model_run_time = $model_run_time"
 numFcsts=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v n_fcst_steps_p1`
 echo "numFcsts = $numFcsts"
 
+fcstIncrMin=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v fcst_intvl_min`
+echo "fcstIncrMin = $fcstIncrMin"
+
 # Build qsub script
 script=$modelroot/qsub_lfmpost.sh
 echo "#!/bin/sh --login"         > $script
 echo "#$ -N lfmp_$run"          >> $script
 echo "#$ -A hmtb"               >> $script
 #echo "#$ -l h_rt=08:00:00"      >> $script
-echo "#$ -l h_rt=02:00:00,h_vmem=6.0G"      >> $script
+echo "#$ -l h_rt=$wallclock:00,h_vmem=6.0G"      >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
 #echo "#$ -pe service 1"         >> $script
