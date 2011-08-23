@@ -33,12 +33,22 @@ setenv STOPTIME1  `head -$NLINE $FILE | tail -1 | cut -c1-12` ; echo $STOPTIME1
 setenv STOPTIME2  `head -$NLINE $FILE | tail -1 | cut -c14-24`; echo $STOPTIME2
 
 # Construct gnuplot .gp file
-setenv GNUPLOTFILE $LOGDIR/cloud_fcst.gp
+#setenv GNUPLOTFILE $LOGDIR/cloud_fcst.gp
+
+setenv VAR SWI
+setenv VAR_LC swi
+setenv TYPE pt
+setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/$VAR_LC\_$TYPE\_fcst.gp
+setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/
+mkdir -p $PNGDIR
+setenv PNGFILE     $VAR_LC\_$TYPE\_fcst\_$MODELTIME.png
+
 setenv DQUOTE \"
 echo 'set terminal png size 1200,800'                                     > $GNUPLOTFILE
 echo 'set xdata time'                                                    >> $GNUPLOTFILE
 echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
-echo 'set output '$DQUOTE$LOGDIR'/cloud_fcst.png'$DQUOTE                 >> $GNUPLOTFILE
+#echo 'set output '$DQUOTE$LOGDIR'/cloud_fcst.png'$DQUOTE                 >> $GNUPLOTFILE
+echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
 
 # time range must be in same format as data file
 #echo 'set xrange ["2-FEB-2011 12:00:00.00":"2-FEB-2011 18:00:00.00"]'    >> $GNUPLOTFILE
@@ -60,5 +70,19 @@ gnuplot < $GNUPLOTFILE
 echo " "
 echo "outputs..."
 ls -l $GNUPLOTFILE
+cd $PNGDIR
+ls -l $PNGFILE                          
+
+rm -f          $VAR_LC\_$TYPE\_fcst.png
+ln -s $PNGFILE $VAR_LC\_$TYPE\_fcst.png
+
+rm -f          $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM.png
+ln -s $PNGFILE $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM.png
+
+#convert -resize 90x60! $PNGFILE $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM\_thumb.png
+
+echo " "
+echo "outputs (old)..."
+cp $PNGFILE $LOGDIR/cloud_fcst.png
 ls -l $LOGDIR/cloud_fcst.png
 
