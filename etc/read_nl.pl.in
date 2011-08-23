@@ -88,6 +88,13 @@ if ($opt_v eq "n_fcst_steps") {
     my $result = ($fcst_len/$verif_intvl + 1);
     print "$result";
 
+}elsif ($opt_v eq "fcst_intvl_min") {
+    my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_intvl",$LAPS_DATA_ROOT); 
+    my $fcst_intvl = $parameter[0];
+
+    my $result = ($fcst_intvl / 60);
+    print "$result";
+
 }else{
 #   print 'get_nl_value($opt_n,$opt_v,"$LAPS_DATA_ROOT")';
     my @parameter=&laps_tools::get_nl_value($opt_n,$opt_v,$LAPS_DATA_ROOT); 
