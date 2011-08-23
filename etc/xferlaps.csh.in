@@ -50,12 +50,18 @@ setenv DATE `echo $YYYYMMDD_HHMM  | cut -c7-8`
 
 cd $LAPS_DATA_ROOT
 
-date -u
+if ($REMOTE_PURGE_TIME != nopurge) then
+    date -u
 
-echo "Running this command:"
+    echo "Running this command:"
 
-echo ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd
-     ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd 
+    echo ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd
+         ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd 
+
+else
+    echo "Skipping purge: REMOTE_PURGE_TIME = $REMOTE_PURGE_TIME"
+
+endif
 
 date -u
 
