@@ -146,7 +146,10 @@ my @times_new;
 my @fsffiles_new;
 # Time to start the loop to get all of the files
 my $timeaccum = 0; 
+my $time_start = time;
+my $elapsed = 0;
 my $times_rem = $num_files;
+my $time_now;
 my $arrpos;
 my ($remfile, $result);
 my $www_flag = 0;
@@ -154,12 +157,17 @@ my $t;
 
 my $fsfsize_max = 0; 
 
-while (($timeaccum < $timeout)and($times_rem > 0)){
+while (($timeaccum < $timeout) and ($elapsed < $timeout) and ($times_rem > 0)){
   $arrpos = 0;
   @times_new = @times; 
   print "updated times: @times\n";
 
   foreach (@times) {
+    $elapsed = time - $time_start;
+    if($elapsed > $timeout){
+      print "elapsed time $elapsed exceeds timeout $timeout - exiting...";
+      exit;
+    }
     if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
       my $fsfsize; 
       my $fsfsize_last; 
@@ -227,7 +235,8 @@ while (($timeaccum < $timeout)and($times_rem > 0)){
     print "Sleeping for $sleep_time\n";
     sleep $sleep_time;
     $timeaccum = $timeaccum + $sleep_time;
-    print $t." Total wait time since beginning of script: $timeaccum\n";  
+    $elapsed = time - $time_start;
+    print $t." Total wait/elapsed/timeout times since beginning of script: $timeaccum $elapsed $timeout\n";  
   }else{
     system("touch $w3recent/../finish.txt");
     print "All fua/fsf files processed\n";
