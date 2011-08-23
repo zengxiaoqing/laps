@@ -65,14 +65,16 @@ ls -1 time/*.dat                                          > lapstar.txt
 # Pregenerated web analysis files
 find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
 find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
-find ./lapsprd/www/anal2d/recent    -type l ! -cmin +180             -print   >> lapstar.txt
+find ./lapsprd/www/anal2d/recent    -type l ! -cmin +120             -print   >> lapstar.txt
 
 # Verification files                           
-find ./lapsprd/verif -type f         ! -cmin +360       -print | grep -v cont | grep -v hist >> lapstar.txt
-find ./lapsprd/verif -type l         ! -cmin +360       -print | grep -v cont | grep -v hist >> lapstar.txt
+find ./lapsprd/verif -type f         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
+find ./lapsprd/verif -type l         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
+echo "log/load.png"                                                                            >> lapstar.txt
+echo "log/cloud_fcst.png"                                                                      >> lapstar.txt
 
 # Lapsprd files (except LGA, LGB, FUA, FSF)
-find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | grep -v www | grep -v \.v  >> lapstar.txt
+find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | grep -v www | grep -v "\.v" | grep -v "\.d"  >> lapstar.txt
 
 # LGA/LGB files (use MINAGE/MAXAGE)
 #find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> lapstar.txt
@@ -80,8 +82,8 @@ find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | g
 # Lapsprep files (use MINAGE/MAXAGE)
 #find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD\_$HH"      -print >> lapstar.txt
 
-# Log & Wgi files
-find ./log     -type f -name "*.???.$YYDDDHHMM" -print   >> lapstar.txt
+# Wgi files
+find ./log     -type f -name "*.wgi.$YYDDDHHMM" -print   >> lapstar.txt
 
 # Sfc Verification file
 ls -1 log/qc/laps_sfc.ver.$HHMM                          >> lapstar.txt
