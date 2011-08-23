@@ -63,7 +63,7 @@ c
          rlinestart=0.0
          istatus = 0
       endif
-      if(ilineend.gt.max_elems)then
+      if(ilineend.gt.max_lines)then
          write(6,*)'WARNING: LAPS exceeds sothrn Sat bndry!'
          print*,'lineend = ',ilineend
          istatus = 0
@@ -74,7 +74,7 @@ c
          relemstart=0.0
          istatus = 0
       endif
-      if(ielemend.gt.max_lines)then
+      if(ielemend.gt.max_elems)then
          write(6,*)'WARNING: LAPS exceeds eastrn Sat bndry!'
          print*,'elemend = ',ielemend
          istatus = 0
