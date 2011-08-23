@@ -853,7 +853,9 @@ C CLOUDS ARE NOW IN MSL
 
         function cld_thk(ht_base)
 
-        if(ht_base .gt. 7000.)then
+        if(ht_base .gt. 9000.)then
+            cld_thk = 2500.
+        elseif(ht_base .gt. 6000.)then
             cld_thk = 1500.
         else
             cld_thk = 1000.
