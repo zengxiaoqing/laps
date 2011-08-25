@@ -23,6 +23,7 @@ include 'lapsparms.for'
         real earth_radius 
         integer    laps_cycle_time
         integer    model_cycle_time, model_fcst_intvl, model_fcst_len
+        real purge_time
         integer i2_missing_data
         real    r_missing_data
         integer  MAX_RADARS
@@ -214,6 +215,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,earth_radius &
                   ,laps_cycle_time &
                   ,model_cycle_time, model_fcst_intvl, model_fcst_len &
+                  ,purge_time &
                   ,i2_missing_data, r_missing_data, MAX_RADARS, i_offset_radar &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
