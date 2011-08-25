@@ -2,7 +2,7 @@
  mode_evap=0,
  l_bogus_radar_w=.true.,
  l_deep_vv=.true.,
- vv_to_height_ratio_Cu=0.5,
+ vv_to_height_ratio_Cu=0.05,
  vv_to_height_ratio_Sc=0.05,
  vv_for_St=.01,
  c_z2m='albers'
