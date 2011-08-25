@@ -4314,11 +4314,11 @@ c
         subroutine mk_fcst_xlabel(comment_2d,fcst_hhmm_in
      1                                ,ext
      1                                ,units_2d
-     1                                ,c_model
+     1                                ,c_model_in
      1                                ,c_label)
 
-        character*(*) comment_2d,ext,units_2d,c_model
-        character*100 c_label
+        character*(*) comment_2d,ext,units_2d,c_model_in
+        character*100 c_label, c_model
 
         character*5 fcst_hhmm_in,fcst_hhmm
 
@@ -4336,6 +4336,14 @@ c
 
         if(ext .eq. 'lga')then
             c_model = 'lga'
+        endif
+
+        idash = index(c_model_in,'-')
+        write(6,*)' c_model_in/idash = ',c_model_in,idash
+        if(idash .gt. 0)then
+            c_model = c_model_in(idash+1:len(c_model_in))
+        else
+            c_model = c_model_in
         endif
 
         call s_len2(c_model,len_model)
