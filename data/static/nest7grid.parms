@@ -18,6 +18,7 @@
 
  laps_cycle_time=3600,           
  max_radar_files_nl=20000,
+ purge_time=1.5,
 
  l_compress_radar=.true.,                  
  l_use_tamdar=.false.,                  
@@ -30,10 +31,10 @@
  l_accum_fg=.false.,
  l_accum_radar=.true.,
  l_accum_gauge=.false.,
- 
+
  l_superob_barnes=.false.,
  l_mosaic_sat=.false.,
-
+ 
  path_to_topt30s='/data/lapb/projects/geog/world_topo_30s',
  path_to_landuse30s='/data/lapb/projects/geog/landuse_30s',
  path_to_soiltype_top30s='/data/lapb/projects/geog/soiltype_top_30s',
@@ -57,14 +58,14 @@
  MAX_RADARS=13,        
  ref_base=-10.,       
  ref_base_useable=0., 
+ r_hybrid_first_gate=0.,
  hydrometeor_scale_pcp=1.,
  hydrometeor_scale_cld=0.2,
- r_hybrid_first_gate=0.,
  maxstns=100000,         
  N_PIREP=10000,         
  max_snd_grid=3000,
  max_snd_levels=300,
- redp_lvl=0.,
+ redp_lvl=1500.,
  aircraft_time_window=0.5,     
  vert_rad_meso=1,     
  vert_rad_sao=1,      
@@ -100,6 +101,8 @@ c laps_cycle_time - LAPS cycle time in seconds. This is the interval
 c                   between successive LAPS analyses and should correspond
 c                   to the interval between cron entries that run the
 c                   'sched.pl' script.
+c
+c purge_time - default retention time for files to use with the purger (days)
 c
 c path_to_soil_2m - this parameter is not yet active since we do not yet
 c                   supply the soil type database. It is there only for
@@ -217,11 +220,11 @@ c model_fcst_intvl - Time between model forecast steps within a given run (secon
 c
 c model_fcst_len - Total duration of model forecast (minutes)
 c
-c
 c iwrite_output - flag to write out all little files or just a restricted set
 c                 (1)  means write out all little files
 c                 (0)  means write out restricted set for single executable
 c                 (-1) means doesn't write out any little files
+c
 c
 c hydrometeor_scale_cld & hydrometeor_scale_pcp:	
 c    Factors that scale the hydrometeor concentrations for a grid
