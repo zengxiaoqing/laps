@@ -35,6 +35,7 @@ program lga                                      lga.f
              read_fa_nf                                  "
              read_nf15km                                 "
              tcbogus                             bgdata/tcbogus.f
+             make_td                             lib/make_td.f
          degrib_data                             degrib/readgrib.F90
             get_lapsbg                           degrib/output.F90          #13
       vinterp                                    bgdata/vinterp.f 
