@@ -69,6 +69,7 @@
     USE lapsprep_wrf
     USE lapsprep_rams
     USE lapsprep_netcdf
+    USE mem_namelist, only: read_namelist_laps, model_cycle_time
 
     ! Variable Declarations
 
@@ -95,12 +96,13 @@
     
     ! Miscellaneous local variables
                                         
-    INTEGER :: out_loop, loop , var_loop , i, j, k, kbot,istatus
+    INTEGER :: out_loop, loop , var_loop , i, j, k, kbot,istatus, len_dir
     LOGICAL :: file_present, in_prebal_list
     REAL    :: rhmod, lwcmod, shmod, icemod
     REAL    :: rhadj
     REAL    :: lwc_limit
     REAL    :: hydrometeor_scale_pcp, hydrometeor_scale_cld
+    CHARACTER*200 :: static_dir, filename
 
     ! Some stuff for JAX to handle lga problem
     ! with constant mr above 300 mb
@@ -120,6 +122,20 @@
     endif
 
     PRINT *, 'LAPS_FILE_TIME = ', laps_file_time
+
+!   Read global parameters into module memory structure
+    call get_directory('static',static_dir,len_dir)
+    filename = static_dir(1:len_dir)//'/nest7grid.parms'
+    call read_namelist_laps('lapsparms',filename)
+
+    PRINT *, 'MODEL_CYCLE_TIME = ', model_cycle_time
+
+    if(model_cycle_time .ne. 0)then
+      if(i4time .ne. ((i4time/model_cycle_time) * model_cycle_time) .or. model_cycle_time .lt. 0)then
+        write(6,*)' not on the model run cycle: stopping...'
+        stop
+      endif
+    endif
 
     READ(laps_file_time, '(I2.2,I3.3,I2.2,I2.2)') valid_yyyy, valid_jjj, &
                                                    valid_hh, valid_min
