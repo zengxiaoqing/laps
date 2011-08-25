@@ -224,7 +224,9 @@ c
      .        sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
      .        uw(nx_laps,ny_laps,nz_laps), !U-wind (m/s)
      .        vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
-     .        ww(nx_laps,ny_laps,nz_laps)  !W-wind (pa/s)
+     .        ww(nx_laps,ny_laps,nz_laps)  !W-wind (m/s)
+
+      real scale_height
 
       character*256 outdir
       character*31  ext
@@ -362,10 +364,13 @@ c --------------------------------------------------------------
                print*,'Missingflag at ',i,j,k,' in ww'
                warncnt=warncnt+1
              endif
+
+!            Convert from Omega to W (approximately - not yet coded)            
+
             enddo
             enddo
-            var(k)='OM '
-            units(k)='pa/s'
+            var(k)='W3 '
+            units(k)='m/s'
          enddo
 
 
@@ -374,19 +379,27 @@ c --------------------------------------------------------------
          do k=1,nz_laps                 ! w-component wind
             do j=1,ny_laps
             do i=1,nx_laps
-             if(ww(i,j,k) .ge. missingflag .and. warncnt.lt.100)
+             if(ww(i,j,k) .ge. missingflag)then
+               if(warncnt.lt.100)
      +              then
-               print*,'Missingflag at ',i,j,k,' in ww'
-               warncnt=warncnt+1
+                 print*,'Missingflag at ',i,j,k,' in ww'
+                 warncnt=warncnt+1
+               endif
+             else
+!              Convert from Omega to W (approximately)            
+               scale_height = 8000.
+               ww(i,j,k) = - (ww(i,j,k) / pr(i,j,k)) * scale_height
+
              endif
+
             enddo
             enddo
-            var(k)='OM '
-            units(k)='pa/s'
+            var(k)='W3 '
+            units(k)='m/s'
          enddo
       endif
 
-      print*,'OM'
+      print*,'W3'
       call write_laps(bgtime,bgvalid,outdir,ext,
      .                nx_laps,ny_laps,nz_laps,nz_laps,var,
      .                ip,lvl_coord,units,comment,ww,istatus)
