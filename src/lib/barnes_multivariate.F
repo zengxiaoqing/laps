@@ -1249,6 +1249,8 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
 
 !     Start executable statements
 
+      i4_elapsed = ishow_timer()
+
       allocate(sum_var(max_var,Istart:Iend,jmax,kmax),STAT=istat_alloc)
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate sum_var'
@@ -1261,8 +1263,14 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
           stop
       endif
 
+      write(6,*)' analyze_weights_mpi: initialize arrays ',Istart,Iend
+
       sum_var = 0.0         ! Initialize whole array
       sumwt   = 0.0         ! Initialize whole array
+
+      i4_elapsed = ishow_timer()
+
+      write(6,*)' analyze_weights_mpi: start summing ',Istart,Iend
 
 !     Sum the weights
       do n=1,ncnt_total
@@ -1312,6 +1320,8 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
           enddo ! k
       enddo ! n
 
+      write(6,*)' analyze_weights_mpi: finished summing ',Istart,Iend
+
       i4_elapsed = ishow_timer()
 
 !     Divide the weights
@@ -1329,7 +1339,9 @@ csms$insert      print *, 'got to arrays_to_barnesobs2 processor=',me
           enddo ! i
           enddo ! j
 
-          write(6,*)' Divided level ',k,Istart,Iend
+          if(k .eq. 1 .or. k .eq. kmax)then
+              write(6,*)' Divided level ',k,Istart,Iend
+          endif
 
       enddo ! k
 
