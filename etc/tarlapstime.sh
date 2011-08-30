@@ -68,10 +68,10 @@ find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >>
 find ./lapsprd/www/anal2d/recent    -type l ! -cmin +120             -print   >> lapstar.txt
 
 # Verification files                           
-find ./lapsprd/verif -type f         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
-find ./lapsprd/verif -type l         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
-echo "log/load.png"                                                                            >> lapstar.txt
-echo "log/cloud_fcst.png"                                                                      >> lapstar.txt
+#find ./lapsprd/verif -type f         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
+#find ./lapsprd/verif -type l         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
+#echo "log/load.png"                                                                            >> lapstar.txt
+#echo "log/cloud_fcst.png"                                                                      >> lapstar.txt
 
 # Lapsprd files (except LGA, LGB, FUA, FSF)
 find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | grep -v www | grep -v "\.v" | grep -v "\.d"  >> lapstar.txt
@@ -131,4 +131,6 @@ else
 
 fi
 
+date -u
     
+echo "finished tarlapstime.sh"
