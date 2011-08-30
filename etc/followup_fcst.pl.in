@@ -13,9 +13,9 @@ use strict;
 #    -a model configuration (e.g. schultz,spaghetti)
 #    -d domain (e.g. dwr)
 #    -r laps dataroot
-#    -f forecast output interval (hours)
-#    -c cycle frequency (hours)
-#    -l forecast length (hours)
+#    -f forecast output interval (hours) [optional]
+#    -c cycle frequency (hours) [optional]
+#    -l forecast length (hours) [optional]
 #    -t purge time (hours) [optional]
 
 use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_t);
@@ -61,11 +61,40 @@ if (-d "/w3/lapb") {
     $w3recent = "$dataroot/lapsprd/www/fcst2d/$model/recent";
 }
 
-my $output_inc = $opt_f;     # Forecast output interval (hours)
-my $cycle_freq = $opt_c;     # Cycle frequency in hours
-my $timeout = $opt_c*3600;   # Seconds to wait before giving up after starting
+my @cycle_time=&laps_tools::get_nl_value("nest7grid.parms","model_cycle_time",$dataroot);
+my $cycle_time = $cycle_time[0]; # seconds
+
+my @model_fcst_intvl=&laps_tools::get_nl_value("nest7grid.parms","model_fcst_intvl",$dataroot);
+my $model_fcst_intvl = $model_fcst_intvl[0]; # seconds
+
+my @model_fcst_len=&laps_tools::get_nl_value("nest7grid.parms","model_fcst_len",$dataroot);
+my $model_fcst_len = $model_fcst_len[0]; # minutes
+
+my $cycle_freq; # Cycle frequency in hours
+my $timeout;    # Seconds to wait before giving up after starting
+if(defined $opt_c){
+    $cycle_freq = $opt_c;              
+    $timeout = $opt_c*3600;            
+}else{
+    $cycle_freq = $cycle_time / 3600.; 
+    $timeout = $cycle_time;            
+}
+
+my ($output_inc); # Forecast output interval (hours)
+if(defined $opt_f){
+    $output_inc = $opt_f;                     
+}else{
+    $output_inc = $model_fcst_intvl / 3600.;  
+}
+
+my $fcst_len; # Forecast length (hours)
+if(defined $opt_l){
+    $fcst_len = $opt_l; 
+}else{
+    $fcst_len = $model_fcst_len / 60.; 
+}
+
 my $init_base_hr = 0;        # Earliest cycle each day in GMT hour
-my $fcst_len = $opt_l;       # Forecast length (hours)
 
 my $fsf_subdir = "lapsprd/fsf/$opt_m-$opt_a";
 my $fua_subdir = "lapsprd/fua/$opt_m-$opt_a";
