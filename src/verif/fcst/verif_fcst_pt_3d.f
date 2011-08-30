@@ -433,14 +433,16 @@
                   rms_a(ifield,imodel,itime_fcst) = std
                 endif
 
-900             write(6,*)
+900             continue
+
+990             continue
+
+                write(6,*)
                 write(6,*)' Writing to lun_out ',lun_out
                 call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
                 write(6,710)atime_s,xbar,ybar,std
                 write(lun_out,710)atime_s,xbar,ybar,std
 710             format(1x,a24,3f10.3)
-
-990             continue
 
               enddo ! itime_fcst
 
