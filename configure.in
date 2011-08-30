@@ -281,6 +281,19 @@ then
     C_OPT=""
     F_OPT=""
   fi
+
+  if test "$arch" = "x86_64"
+  then
+    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4 -Bstatic"
+    DBFLAGS="$DBFLAGS -Mbounds"
+    LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4 -Bstatic"
+    FIXED="-Mnofree"
+    FREE="-Mfree"
+    CPP="$FC"
+    CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
+    C_OPT="-O2"
+    F_OPT="-O2 -fastsse"
+  fi
 fi  
 
 
