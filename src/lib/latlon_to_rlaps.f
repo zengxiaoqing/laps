@@ -46,9 +46,9 @@ cdoc    or mercator projection.
         real rlat                         ! Input Lat
         real rlon                         ! Input Lon
         real lat(ni,nj),lon(ni,nj)        ! Input (Arrays of LAT/LON)
-        integer ni,nj                       ! Input (LAPS Dimensions)
+        integer ni,nj                     ! Input (LAPS Dimensions)
         real ri,rj                        ! Output (I,J on LAPS Grid)
-        integer istatus                     ! Output
+        integer istatus                   ! Input / Output
 
         save init,umin,umax,vmin,vmax
         data init/0/
@@ -56,7 +56,9 @@ cdoc    or mercator projection.
         include 'grid_fname.cmn'
 
         if (abs(rlat) > 90.000) then
-           write(6,*) 'rejecting invalid latitude ',rlat
+           if(istatus .ne. 100)then
+              write(6,*) 'rejecting invalid latitude ',rlat
+           endif
            istatus = -1
            return
         endif

@@ -2,7 +2,7 @@
         subroutine read_snd_data2(lun,i4time_snd,ext                   ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
      1                         ,lat,lon,imax,jmax,kmax                 ! I
-     1                         ,heights_3d,l_fill_ht                   ! I
+     1                         ,vgrid_3d,l_fill_ht                     ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
      1                         ,elev_pr                                ! O
@@ -16,6 +16,8 @@
 
 cdoc    Returns sounding wind, T, Td data from the SND file
 cdoc    Also returns the lat/lon/time info from all the levels
+
+        use mem_grid, ONLY: topo
 
 !       Profile Stuff
         real lat_pr(MAX_PR),lat_pr_lvl(MAX_PR,MAX_PR_LEVELS)
@@ -44,6 +46,8 @@ cdoc    Also returns the lat/lon/time info from all the levels
 
         real lat(imax,jmax)
         real lon(imax,jmax)
+        real vgrid_3d(imax,jmax,kmax)
+        real pres_3d(imax,jmax,kmax)
         real heights_3d(imax,jmax,kmax)
 
         logical l_good_level, l_fill_ht
@@ -79,6 +83,13 @@ cdoc    Also returns the lat/lon/time info from all the levels
           istatus = 0
           open(lun,file=ext(1:len_ext),status='old',err=600)
           write(6,*)' Successful open of ',ext(1:len_ext)
+      endif
+
+      if(ltest_vertical_grid('SIGMA_HT'))then
+        call get_ht_3d(imax,jmax,kmax,topo,heights_3d,istatus) 
+        pres_3d = vgrid_3d
+      else
+        heights_3d = vgrid_3d
       endif
 
       DO i_pr = n_profiles+1,max_pr
@@ -131,10 +142,19 @@ cdoc    Also returns the lat/lon/time info from all the levels
               j_ob = nint(rj)
               if(i_ob .ge. 1 .and. i_ob .le. imax .and.
      1           j_ob .ge. 1 .and. j_ob .le. jmax      )then
+
                   pr_in_pa = pr_in * 100.
-                  call pressure_to_height(pr_in_pa,heights_3d
+
+                  if(ltest_vertical_grid('SIGMA_HT'))then
+                      call pres_to_ht(pr_in_pa,pres_3d,heights_3d
      1                     ,imax,jmax,kmax,i_ob,j_ob,ht_buff,istatus)
-                  if(istatus .ne. 1)goto505
+                      if(istatus .ne. 1)goto505
+                  else
+                      call pressure_to_height(pr_in_pa,heights_3d
+     1                     ,imax,jmax,kmax,i_ob,j_ob,ht_buff,istatus)
+                      if(istatus .ne. 1)goto505
+                  endif
+
                   ht_in = ht_buff
                   if(iwrite .eq. 1)
      1            write(6,*)' Pressure was given, height was derived:'       
