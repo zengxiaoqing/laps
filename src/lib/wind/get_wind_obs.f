@@ -375,8 +375,10 @@ cdis
                     endif ! istatus (in/out of domain)
 
                 else
-                    write(6,*)' Zero levels / outside domain'
-     1                       ,i_pr,i_ob,j_ob,' ',obstype(i_pr)
+                    if(i_pr .le. 100)then
+                        write(6,*)' Zero levels / outside domain'
+     1                           ,i_pr,i_ob,j_ob,' ',obstype(i_pr)
+                    endif
 
                 endif ! data present
 

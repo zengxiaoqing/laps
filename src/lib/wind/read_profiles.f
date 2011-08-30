@@ -241,8 +241,10 @@ c
 
             if(i_pr .le. 200 .or. i_pr .eq. (i_pr/10)*10)then
                 iwrite = 1
+                istatus = 1
             else
                 iwrite = 0
+                istatus = 100 ! Suppress write statement in 'latlon_to_rlapsgrid'
             endif
 
 !           Determine if profile is in the LAPS domain
@@ -451,8 +453,10 @@ c
               endif ! use all levels
 
             else
-              write(6,*)' This profile is set to 0 levels',i_pr
-     1                  ,obstype(i_pr)
+              if(iwrite .eq. 1)then
+                  write(6,*)' This profile is set to 0 levels',i_pr
+     1                      ,obstype(i_pr)
+              endif
 
             endif ! # levels > 0
 

@@ -209,7 +209,7 @@ c
 
                 if(grid_laps_wt(sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),k)     
      1                  .ne. r_missing_data)then
-                    if(n_overwrite .le. 1000)then
+                    if(n_overwrite .le. 100)then
                         write(6,*)
      1              ' This next station overwrites another on the grid'
                     endif
@@ -225,7 +225,7 @@ c
                 grid_laps_wt(sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),k)
      1                          = weight_sfc
 
-                if(n_in_domain .le. 1000)then
+                if(n_in_domain .le. 100)then
                     write(6,20)n_sfc_obs,stations(i)(1:5),
      1                     sfc_i(n_sfc_obs),
      1                     sfc_j(n_sfc_obs),
