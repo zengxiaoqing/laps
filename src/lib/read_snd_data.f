@@ -1,4 +1,4 @@
-
+ 
         subroutine read_snd_data2(lun,i4time_snd,ext                   ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
      1                         ,lat,lon,imax,jmax,kmax                 ! I
