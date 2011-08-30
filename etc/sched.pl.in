@@ -844,9 +844,11 @@ if(defined $opt_R){
     }    
 
     if(defined $opt_Q){
-        my $wall_time_hr  = int( ( $cycle_time_min / 60.) + $extend_time  ); 
+        my $wallclock_time_min = 2.0 * $cycle_time_min;
 
-        my $wall_time_min = int($cycle_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
+        my $wall_time_hr  = int( ( $wallclock_time_min / 60.) + $extend_time  ); 
+
+        my $wall_time_min = int($wallclock_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
         $wall_time_min="0".$wall_time_min if(length($wall_time_min)<2);
 
         my $xfer_name;
