@@ -1482,8 +1482,13 @@ c
            do j=1,ny_laps
            do i=1,nx_laps
             if(tp(i,j,k).gt.100.0)then
-               shsat=ssh2(pr1d_mb(k),tp(i,j,k)-273.15,
+               if(vertical_grid .ne. 'SIGMA_HT')then
+                 shsat=ssh2(pr1d_mb(k),tp(i,j,k)-273.15,
      .             tp(i,j,k)-273.15,-132.0)*0.001
+               else
+                 shsat=ssh2(prgd_pa(i,j,k)/100.,tp(i,j,k)-273.15,
+     .             tp(i,j,k)-273.15,-132.0)*0.001
+               endif
                sh(i,j,k)=max(1.0e-6,min(sh(i,j,k),shsat))
             else
                icnt=icnt+1
