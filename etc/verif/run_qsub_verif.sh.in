@@ -70,8 +70,8 @@ else
     echo "qsub_wait $script > $log 2>&1"
           qsub_wait $script > $log 2>&1
 
-    echo "@prefix@/etc/rsync_out.sh $lapsdataroot $remote_dataroot qsub 00:15 8"
-          @prefix@/etc/rsync_out.sh $lapsdataroot $remote_dataroot qsub 00:15 8
+    echo "@prefix@/etc/rsync_out.sh $lapsdataroot $remote_dataroot qsub 00:45 8"
+          @prefix@/etc/rsync_out.sh $lapsdataroot $remote_dataroot qsub 00:45 8
 fi
 
 
