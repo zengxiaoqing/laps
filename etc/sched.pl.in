@@ -837,15 +837,20 @@ if(defined $opt_R){
 
     my $qmm = substr($yyjjjhhmm,7,2);
 
-    if($cycle_time_min != 15 || $qmm == 30){
-        $remote_purge_time = $opt_t + 0.05;
-    }else{
+    my $wallclock_time_min;
+
+#   if($cycle_time_min != 15 || $qmm == 30){ # invoke purger for this cycle
+#       $remote_purge_time = $opt_t + 0.05;
+#       $wallclock_time_min = 3.0 * $cycle_time_min;
+#       if ($wallclock_time_min > 60.){
+#           $wallclock_time_min = 60.;
+#       }
+#   }else{
         $remote_purge_time = "nopurge";
-    }    
+        $wallclock_time_min = 2.0 * $cycle_time_min;
+#   }    
 
     if(defined $opt_Q){
-        my $wallclock_time_min = 2.0 * $cycle_time_min;
-
         my $wall_time_hr  = int( ( $wallclock_time_min / 60.) + $extend_time  ); 
 
         my $wall_time_min = int($wallclock_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
@@ -858,6 +863,25 @@ if(defined $opt_R){
           $xfer_name = "xferlaps";    
         }
 
+#       Determine $xmm
+        my $ddd = substr($yyjjjhhmm,2,3);
+        my $yy  = substr($yyjjjhhmm,0,2);
+        my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
+        my $xmm = @mmmdd[0];
+        $xmm="0".$xmm if(length($xmm)<2);
+
+#       Determine $yyyymmdd_hhmm
+        my $yyyy;
+        if($yy < 60){
+            $yyyy = "20".$yy
+        }else{
+            $yyyy = "19".$yy
+        }
+        my $dd = @mmmdd[1];
+        $dd="0".$dd if(length($dd)<2);
+        my $hhmm = substr($yyjjjhhmm,5,4);
+        my $yyyymmdd_hhmm="$yyyy$xmm$dd"."_"."$hhmm";
+
         open(TFILE,">$LAPS_LOG_PATH/qsub_xfer_laps.sh");
         print TFILE "#!/bin/sh --login\n";
         print TFILE "#\$ -N $xfer_name\n";
@@ -869,12 +893,15 @@ if(defined $opt_R){
         print TFILE "#\$ -o $LAPS_LOG_PATH/xferlaps.log.$yyjjjhhmm\n";
         print TFILE "#\$ -j y\n";
         print TFILE "\n";
-        print TFILE "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time\n";
+        print TFILE "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm\n";
         print TFILE "#exit\n";
         close(TFILE);
 
         $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/qsub_xfer_laps.sh";
-        print "Executing $command\n";
+        print "\nCommand file:\n";
+        system("cat $LAPS_LOG_PATH/qsub_xfer_laps.sh");
+
+        print "\nExecuting $command\n";
         system("$command");
     }
 }
