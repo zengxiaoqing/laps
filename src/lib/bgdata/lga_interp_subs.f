@@ -97,7 +97,11 @@ c
             var(k,3)='SH '
             var(k,4)='U3 '
             var(k,5)='V3 '
-            var(k,6)='OM '
+            if(vertical_grid .ne. 'SIGMA_HT')then
+              var(k,6)='OM '
+            else
+              var(k,6)='W3 '
+            endif
          enddo
       else
          do k=1,nz
