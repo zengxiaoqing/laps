@@ -102,6 +102,7 @@ c    .      ,wb(nx,ny,nz)
      .      ,ffz,sumu,sumv
 
       real smsng,rdum,dd,ddmin,cx,cy
+      real comega_smooth
       real rstats(7)
       real phi3dvar(nz)
 
@@ -132,7 +133,7 @@ c
       integer   k1,k2
       integer   kfirst,klast
       integer   ij
-      integer   idum
+      integer   idum, idist
 c     integer   max_pr
       integer   n_snd,nsnd,mxz
 c
@@ -176,6 +177,7 @@ c
       call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,
      .                    incl_clom,setdelo0,
      .                    c_erru, c_errub, c_errphi, c_errphib, c_delo,       
+     .                    comega_smooth,
      .                    istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
@@ -284,26 +286,48 @@ c
 
 c 
 
-        if (.not.incl_clom) then
+      if (.not.incl_clom) then
 
-      call get_laps_3d_analysis_data_isi(i4time_sys,nx,ny,nz
+        call get_laps_3d_analysis_data_isi(i4time_sys,nx,ny,nz
      +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,istatus)
-      if (istatus .ne. 1) then
+        if (istatus .ne. 1) then
          print *,'Error in get_laps_3d_analysis_data_isi...Abort.'
          stop
-      endif
+        endif
 
-	else
+      else
 
-      call get_laps_3d_analysis_data(i4time_sys,nx,ny,nz
+        call get_laps_3d_analysis_data(i4time_sys,nx,ny,nz
      +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,istatus)
 c omo is the cloud vertical motion from lco
-      if (istatus .ne. 1) then
+        if (istatus .ne. 1) then
          print *,'Error getting LAPS analysis data...Abort.'
          stop
-      endif
+        endif
 
-	endif
+!       Smooth the cloud omega data
+        if (comega_smooth .ne. 0.) then
+          if (comega_smooth .eq.-1.) then
+            if(grid_spacing_cen_m .le. 4000.)then
+              idist = 2
+            else
+              idist = 1
+            endif
+          else
+            idist = nint(comega_smooth)
+          endif
+
+          write(6,*)' Smoothing cloud omega ',comega_smooth,idist
+          do k = 1,nz
+            where(omo .eq. smsng)omo=0.
+            call smooth2 (nx,ny,idist,omo(:,:,k))
+            where(omo .eq. 0.)omo = smsng                     
+          enddo ! k
+        else
+            write(6,*)' Skip smoothing cloud omega ',comega_smooth
+        endif
+
+      endif
 
 c
 c *** Get LAPS 2D surface pressure.
@@ -1373,7 +1397,7 @@ c    .,nu,nv,fu,fv
      .,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 c
 c *** Balcon executes the mass/wind balance computations as described
-c        mcginley (Meteor and Appl Phys, 1987) except that
+c        mcginley (Meteor and Atmos Phys, 1987) except that
 c        this scheme operates on perturbations from background "b"
 c        fields. The dynamic constraint is formulated from this 
 c        perturbation field. The constraint equation is
