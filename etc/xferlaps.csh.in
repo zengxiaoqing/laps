@@ -13,6 +13,10 @@
 
 # REMOTE purge time (hours) is fourth argument
 
+# YYDDDHHMM is fifth argument
+
+# YYYYMMDD_HHMM is sixth argument
+
 umask 002
 
 setenv LAPS_DATA_ROOT $1                      
@@ -34,9 +38,13 @@ if (! -d $LAPS_DATA_ROOT) then
     exit
 endif
 
-setenv YYDDDHHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -D $LAPS_DATA_ROOT`
-setenv MONTH     `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -f mm -D $LAPS_DATA_ROOT`
-setenv YYYYMMDD_HHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -f yyyymmdd_hhmm -D $LAPS_DATA_ROOT`
+setenv YYDDDHHMM $5
+setenv YYYYMMDD_HHMM $6
+setenv MONTH `echo $YYYYMMDD_HHMM  | cut -c5-6`
+
+#setenv YYDDDHHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -D $LAPS_DATA_ROOT`
+#setenv MONTH     `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -f mm -D $LAPS_DATA_ROOT`
+#setenv YYYYMMDD_HHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 0.50 -f yyyymmdd_hhmm -D $LAPS_DATA_ROOT`
 
 echo "laps time $YYDDDHHMM"
 
@@ -50,19 +58,6 @@ setenv DATE `echo $YYYYMMDD_HHMM  | cut -c7-8`
 
 cd $LAPS_DATA_ROOT
 
-if ($REMOTE_PURGE_TIME != nopurge) then
-    date -u
-
-    echo "Running this command:"
-
-    echo ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd
-         ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd 
-
-else
-    echo "Skipping purge: REMOTE_PURGE_TIME = $REMOTE_PURGE_TIME"
-
-endif
-
 date -u
 
 echo " "
@@ -73,6 +68,19 @@ echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH $DATE t
 
 date -u
 
+if ($REMOTE_PURGE_TIME != nopurge) then
+    echo "Running this command:"
+
+    echo ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd
+         ssh $DOMAIN /usr/nfs/lapb/builds/laps/etc/purger.pl -t $REMOTE_PURGE_TIME $REMOTE_DATA_ROOT/lapsprd 
+
+    date -u
+
+else
+    echo "Skipping purge: REMOTE_PURGE_TIME = $REMOTE_PURGE_TIME"
+
+endif
+
 if ($3 == "mss") then
     echo "MSSFULLPATH = $MSSPATH/$YYYY/$MONTH"
 
@@ -81,6 +89,9 @@ if ($3 == "mss") then
     mssPut laps_$YYDDDHHMM.tar* $MSSPATH/$YYYY/$MONTH
 
     rm -f laps_$YYDDDHHMM.tar*
+
+    date -u
+
 endif
 
 echo " "
