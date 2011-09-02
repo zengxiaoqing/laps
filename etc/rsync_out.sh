@@ -28,16 +28,17 @@
 LOCAL_DATA_ROOT=$1
 REMOTE_DATA_ROOT=$2
 
-DELETE=--delete
-
 if test "$REMOTE_DATA_ROOT" == "`echo $REMOTE_DATA_ROOT | grep -v :`"; then # does not contain a semicolon
   RSH=""
 else
   RSH=--rsh=ssh
 fi
 
+DELETE=--delete
+
 if test "$5" == "8"; then # copy verif
   log=$LOCAL_DATA_ROOT/log/rsync.log.verif.`date +\%H\%M`
+  DELETE=""
 elif test "$6" == ""; then # copy all
   log=$LOCAL_DATA_ROOT/log/rsync.log.`date +\%H\%M`
 else
@@ -244,9 +245,10 @@ if test "$3" = qsub; then
 
         echo " "                                                                   >> $script
         echo "Start copy of verif directories"                                     >> $script
-        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/lapsprd/verif/*     --exclude='REF/cont' $REMOTE_DATA_ROOT/lapsprd/verif >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
-        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/load.png        --exclude='REF/cont' $REMOTE_DATA_ROOT/log           >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
-        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/cloud_fcst.png  --exclude='REF/cont' $REMOTE_DATA_ROOT/log           >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/lapsprd/verif/* --exclude='REF/cont' --exclude='REF/hist' $REMOTE_DATA_ROOT/lapsprd/verif >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/load.png                             $REMOTE_DATA_ROOT/log           >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/cloud_fcst.png                       $REMOTE_DATA_ROOT/log           >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/time/modeltime.dat                       $REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
         echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
     fi
