@@ -9,6 +9,7 @@
  c_errphi=15.,
  c_errphib=30.,
  c_delo=100.,
+ comega_smooth=-1.,
 /
 c
 c   adv_anal_by_t_min: time in minutes to advance the analyses
@@ -45,3 +46,14 @@ c c_errphi  (default=15.,  use .15 to favor heights instead of winds)
 c c_errphib (default=30.)
 c c_delo    (default=100., use 1.0 to favor heights instead of winds)
 c
+c comega_smooth: When set to a whole number greater than zero, smooth the 
+c                cloud omega field upon input with a box filter with a
+c                half-width specified by the parameter value. Here are
+c                some examples:
+c
+c                Value                Action
+c                -----                ------
+c                -1.                  Automated setting via grid spacing
+c                 0.                  No smoothing (disabled)
+c                 1.                  3x3 Box Filter
+c                 2.                  5x5 Box Filter
