@@ -61,7 +61,7 @@ echo 'set title "Global Solar Radiation Observed vs Forecast"'           >> $GNU
 echo 'set key left box'                                                  >> $GNUPLOTFILE
 echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "Forecast" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
 echo        $DQUOTE$FILE$DQUOTE' using 1:4 title "Observed" with linespoints lw 3 pt 5 ps 1, \' >> $GNUPLOTFILE
-echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMS"      with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
+echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMSE"     with linespoints lw 3 pt 5 ps 1'    >> $GNUPLOTFILE
 
 
 # Run gnuplot
