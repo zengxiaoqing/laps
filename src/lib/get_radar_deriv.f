@@ -212,7 +212,8 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           depth = ztop - zbase
           if (depth.ne.0) then
            if(radar_ref_max .gt. 0.) then
-            vvmax=4.32*radar_ref_max**0.0714286
+!           vvmax=4.32*radar_ref_max**0.0714286
+            vvmax=radar_ref_max * 0.1                
             write(6,*)' radar_ref_max/vvmax = ',radar_ref_max,vvmax
             ratio_radar=vvmax / depth / 1.1
             if(ratio_radar .gt. ratio .or. l_always_use_radar)then
