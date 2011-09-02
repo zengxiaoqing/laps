@@ -17,9 +17,8 @@
 
 # Seventh argument is for including static files [static,nostatic]
 
-# Eighth argument is minimum age (minutes) to keep LGA/LGB files
+# Eighth argument is DOMAIN_NAME
 
-# Ninth argument is maximum age (minutes) to keep LGA/LGB files
 # Ninth argument is REMOTE_DATA_ROOT                                         
 
 LAPS_DATA_ROOT=$1
@@ -60,12 +59,8 @@ rm -f lapstar.txt
 touch lapstar.txt
 
 #LAPS Data Files
-ls -1 time/*.dat                                          > lapstar.txt
-
-# Pregenerated web analysis files
-find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
-find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
-find ./lapsprd/www/anal2d/recent    -type l ! -cmin +120             -print   >> lapstar.txt
+ls -1 time/systime.dat                                          > lapstar.txt
+ls -1 time/c_time.dat                                          >> lapstar.txt
 
 # Verification files                           
 #find ./lapsprd/verif -type f         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
@@ -82,6 +77,11 @@ find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | g
 # Lapsprep files (use MINAGE/MAXAGE)
 #find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD\_$HH"      -print >> lapstar.txt
 
+# Pregenerated web analysis files
+find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
+find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
+find ./lapsprd/www/anal2d/recent    -type l ! -cmin +60              -print   >> lapstar.txt
+
 # Wgi files
 find ./log     -type f -name "*.wgi.$YYDDDHHMM" -print   >> lapstar.txt
 
@@ -89,13 +89,15 @@ find ./log     -type f -name "*.wgi.$YYDDDHHMM" -print   >> lapstar.txt
 ls -1 log/qc/laps_sfc.ver.$HHMM                          >> lapstar.txt
 
 # Static files
+ls -1 static/*.nl                                        >> lapstar.txt
+ls -1 static/nest7grid.parms                             >> lapstar.txt
+ls -1 static/purger.txt                                  >> lapstar.txt
 if test "$STATIC" = static; then                         
-    echo "including static files"
+    echo "including extra static files"
     ls -1 static/static.nest7grid                        >> lapstar.txt
-    ls -1 static/*.nl                                    >> lapstar.txt
     ls -1 static/www/*                                   >> lapstar.txt
 else
-    echo "not including static files"
+    echo "not including extra static files"
 fi
 
 ls -l $LAPS_DATA_ROOT/lapstar.txt
