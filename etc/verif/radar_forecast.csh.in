@@ -65,6 +65,9 @@ echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNU
 # time range must be in same format as data file
 echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
 echo 'set yrange [0:'$YRANGE']'                                          >> $GNUPLOTFILE
+if ($STAT == "Bias") then
+    echo 'set ytics (0.5,1,2,4,6,8,10)'                                  >> $GNUPLOTFILE
+endif
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
 echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"'                   >> $GNUPLOTFILE
