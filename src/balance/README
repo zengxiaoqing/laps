@@ -3,7 +3,8 @@
 
    qbalpe_main_sfc                       qbalpe.f
        qbalpe_stag                          "
-           balstagger
+           get_balance_nl                lib/read_namelist.f
+           balstagger                    qbalpe.f
            balcon                           "
                leib_sub                     "
                    leib_p3                  "
