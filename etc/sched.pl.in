@@ -152,7 +152,7 @@ if(defined $opt_s){ # "surface only"
                   ingest_pro.exe ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe obs_convert.exe
                   GSI_Prep.exe);
-}elsif( ($opt_V eq "STMAS3D")) { # GSI analysis or STMAS 3D analysis
+}elsif( ($opt_V eq "STMAS3D")) { # STMAS 3D analysis with standard LAPS balance
     @LAPS_EXE = qw(lga.exe 
                   obs_driver.x
                   ingest_pro.exe ingest_sounding.exe 
@@ -164,6 +164,30 @@ if(defined $opt_s){ # "surface only"
                   STMAS3D.exe
                   cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
                   qbalpe.exe  lapsprep.exe laps2grib.exe);
+}elsif( ($opt_V eq "STMAS3Domega")) { # STMAS 3D analysis with add_omega
+    @LAPS_EXE = qw(lga.exe
+                  obs_driver.x
+                  ingest_pro.exe ingest_sounding.exe
+                  ingest_cloud_drift.exe ingest_aircraft.exe
+                  ingest_lrs.exe lvd_sat_ingest.exe
+                  obs_convert.exe
+                  mosaic_radar.x
+                  stmas_mg.x
+                  STMAS3D.exe
+                  cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
+                  qbalpe.exe add_omega.exe lapsprep.exe laps2grib.exe);
+}elsif( ($opt_V eq "STMAS3Domega_nbal")) { # STMAS 3D replacing qbalpe by add_omega
+    @LAPS_EXE = qw(lga.exe
+                  obs_driver.x
+                  ingest_pro.exe ingest_sounding.exe
+                  ingest_cloud_drift.exe ingest_aircraft.exe
+                  ingest_lrs.exe lvd_sat_ingest.exe
+                  obs_convert.exe
+                  mosaic_radar.x
+                  stmas_mg.x
+                  STMAS3D.exe
+                  cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
+                  add_omega.exe lapsprep.exe laps2grib.exe);
 
 }elsif($opt_V eq "GSI_Post"){ # GSI analysis
     @LAPS_EXE = qw(GSI_Post.exe
