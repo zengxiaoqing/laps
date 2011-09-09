@@ -350,22 +350,40 @@ if($domain_first =~ "tw_" || $domain_first =~ "tai" || $domain_first =~ "th" || 
 #print "units2 = $units<br>";
 
 # Obtain cycle time 
-my $cycle_time;
+my $laps_cycle_time,$model_fcst_intvl,$cycle_time;
 my @cycle_array;
 if ($frames_safe > 1 || $frames_safe =~ "auto"){ 
     if(-e "$laps_data_root/static/nest7grid.parms"){
         $domain_nl = "nest7grid.parms";
+
         $nl_var="laps_cycle_time";
         @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
+        $laps_cycle_time=@cycle_array[0];
+
+        $nl_var="model_fcst_intvl";
+        @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
+        $model_fcst_intvl=@cycle_array[0];
+
         if($frames_safe eq "auto-6"){
-            $cycle_time=@cycle_array[0] * 6;
+            $cycle_time=$laps_cycle_time * 6;
         }elsif($frames_safe eq "auto-4"){
-            $cycle_time=@cycle_array[0] * 4;
+            $cycle_time=$laps_cycle_time * 4;
         }elsif($frames_safe eq "auto-3"){
-            $cycle_time=@cycle_array[0] * 3;
+            $cycle_time=$laps_cycle_time * 3;
+        }elsif($frames_safe eq "auto-a"){
+            $cycle_time=$laps_cycle_time;
+        }elsif($frames_safe eq "auto-f"){
+            $cycle_time=$model_fcst_intvl;
+        }elsif($frames_safe eq "auto-v"){
+            if($model_fcst_intvl > $laps_cycle_time){
+                $cycle_time=$model_fcst_intvl;
+            }else{
+                $cycle_time=$laps_cycle_time;
+            }
         }else{
-            $cycle_time=@cycle_array[0];
+            $cycle_time=$laps_cycle_time;
         }
+
     }
     $animate = "yes";
 }
@@ -469,6 +487,11 @@ if ($n_fields_uc > 0 && $out_levels =~ "sndg"){
     }
     if($n_domains == 1 && $n_sources_fields > 1 && $n_levels >  1){
         print "<h2>Montage multiple sources and levels (experimental)...</h2>";
+        $montage=1;
+        $ndims=2;
+    }
+    if($n_domains == 1 && $n_fields_uc > 1 && $n_levels >  1){
+        print "<h2>Montage multiple fields and levels (experimental)...</h2>";
         $montage=1;
         $ndims=2;
     }
@@ -866,11 +889,11 @@ if($err == 0) {
                   }
 
                   if($sect eq "hsect" || $sect eq "xsect"){
-#                     print "checking for montage <br>\n";
+                      print "checking for montage n_sources / n_sources_fields = $n_sources $n_sources_fields n_levels is $n_levels<br>\n";
 #                     if($montage == 1 && $domain ne $domain_first && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels =~ "xsect") ){ 
                       if($montage == 1 && $n_domains > 1 && $n_sources > 1 && ($domain eq $domain_first && $source eq $sources[0]) && $source ne "obs" && $field eq $fields[0]){ # montage multiple domains/sources (2D)
                           $nframes++;
-                          print "multiple domains/sources $nframes field/field(0) is $field $fields[0]<br>\n";
+                          print "multiple domains/sources $nframes field/fields(0) is $field $fields[0]<br>\n";
                           if($nframes > 1){
                               printf LAPSPLOT "fc\n"; 
 			  }else{
@@ -884,15 +907,14 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $n_domains > 1 && $n_fields_uc > 1 && $domain eq $domain_first && $field eq uc($field) && $field ne $fields[0]){ # montage multiple domains/fields (2D)
+                      }elsif($montage == 1 && $n_domains > 1 && $n_fields_uc > 1 && $domain eq $domain_first && $field eq uc($field) && $field eq $fields[0]){ # montage multiple domains/fields (2D)
                           $nframes++;
-                          print "multiple domains/fields $nframes field/field(0) is $field $fields[0]<br>\n";
+                          print "multiple domains/fields $nframes field/fields(0) is $field $fields[0]<br>\n";
                           if($nframes > 1){
                               printf LAPSPLOT "fc\n"; 
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
                           }
@@ -902,13 +924,13 @@ if($err == 0) {
                               $animate = $nmontage;
                           }
                       }elsif($montage == 1 && $n_sources > 1 && $n_fields_uc > 1 && $source eq $sources[0] && $field eq uc($field) && $field eq $fields[0]){ # montage multiple sources/fields (2D)
-                          print "multiple sources/fields field/field(0) is $field $fields[0]<br>\n";
+                          $nframes++;
+                          print "multiple sources/fields field/fields(0) is $field $fields[0]<br>\n";
                           if($nframes > 1){
                               printf LAPSPLOT "fc\n"; 
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
                           }
@@ -934,14 +956,33 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $n_domains > 1 && $domain eq $domain_first && $n_sources == 1 && $n_fields_uc == 1 && $source eq $sources[0] && $field eq $fields[0]){ # montage multiple domains
-                          print "multiple domains field/field(0) is $field $fields[0]<br>\n";
+                      }elsif($montage == 1 && $n_fields_uc > 1 && $n_levels > 1 && $field eq $fields[0] && $field eq uc($field) && $level eq $pressure_levels[0]){ # montage multiple fields/levels (2D)
+                          $nframes++;
+                          print "multiple fields/levels $nframes field/fields(0) is $field $fields[0] level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
                           if($nframes > 1){
                               printf LAPSPLOT "fc\n"; 
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
+                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+#                             $nmontage++;
+                              $nmontage = $n_levels;
+                          }
+                          if($i_montage < 1){
+                              $animate = $nmontage; # animate 1D montages?
+                          }else{
+                              $animate = $nmontage;
+                          }
+#                         $ncols = $n_levels;
+#                         $nrows = $n_fields_uc;
+                      }elsif($montage == 1 && $n_domains > 1 && $domain eq $domain_first && $n_sources_fields == 1 && $n_fields_uc == 1 && $source eq $sources[0] && $field eq $fields[0]){ # montage multiple domains
                           $nframes++;
+                          print "multiple domains field/fields(0) is $field $fields[0]<br>\n";
+                          if($nframes > 1){
+                              printf LAPSPLOT "fc\n"; 
+			  }else{
+                              printf LAPSPLOT "fc\n"; 
+                          }
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
@@ -951,13 +992,13 @@ if($err == 0) {
                               $animate = $nmontage;
                           }
                       }elsif($montage == 1 && $domain eq $domain_first && $source eq $sources[0] && $source ne "obs" && $n_fields_uc == 1 && $field eq $fields[0] && $n_levels == 1){ # montage multiple sources
-                          print "multiple sources field/field(0) is $field $fields[0]<br>\n";
+                          $nframes++;
+                          print "multiple sources field/fields(0) is $field $fields[0]<br>\n";
                           if($nframes > 1){
                               printf LAPSPLOT "fc\n"; 
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
@@ -966,14 +1007,17 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources == 1 && $source eq $sources[0] && $field eq $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
-                          print "multiple fields field/field(0) is $field $fields[0]<br>\n";
+# debug (n_levels test ==1 is an issue)
+#                     }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && n_levels == 1 && $source eq $sources[0] && $field eq $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
+                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && n_levels < 2  && $source eq $sources[0] && $field eq $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
+                          $nframes++;
+#                         print "multiple fields field/fields(0) is $field $fields[0] n_levels is $n_levels n_fields_uc is $n_fields_uc level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
+                          print "multiple fields field/fields(0) is $field $fields[0]<br>\n";
                           if($nframes > 1){
                               printf LAPSPLOT "fc\n"; 
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          $nframes++;
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
@@ -982,14 +1026,14 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources == 1 && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level ne $pressure_levels[0]){ # montage multiple levels
+                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && $n_fields_uc == 1 && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level ne $pressure_levels[0]){ # montage multiple levels
+                          $nframes++;
                           print "multiple levels level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
                           if($nframes > 1){
                               printf LAPSPLOT "fc\n"; 
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          $nframes++;
                           $animate = "yes";
                           if($a9time_safe == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
@@ -4295,6 +4339,8 @@ if($err == 0) {
 
         my $nmatrix;
 
+        my $order = "column_major";
+
         if($ndims == 2 && $ntimes >= 1){ # 2D montages at single/multiple times
             $nanims = $ntimes;
 #           $nrows = $nrows / $ntimes;
@@ -4304,8 +4350,13 @@ if($err == 0) {
             if($n_domains == 1 && $n_sources > 1){ 
                 $nrows = $n_sources;
                 $ncols = $nmatrix / $nrows;
+            }elsif($n_fields_uc > 1 && $n_levels > 1){ 
+                $ncols = $n_levels;
+                $nrows = $nmatrix / $ncols;
+                $order = "row_major";
+            }else{
+                $ncols = $nmatrix / $nrows;
             }
-
 
             if($ntimes > 1){
                 $ndims++;
@@ -4328,6 +4379,16 @@ if($err == 0) {
             $nrows = 1;                  
             $nmatrix = $nframes / $ntimes;
             $ncols = $nmatrix;
+        }
+
+        if($ndims == 1 && $ntimes == 1){ # 1D montage at single time 
+            $nanims = $ntimes;
+            $nrows = 1;                  
+            $nmatrix = $nframes / $ntimes;
+            $ncols = $nmatrix;
+            if($i_montage == 1){
+                $animate = $ncols;
+            }
         }
 
         print "nrows=$nrows ncols=$ncols nanims=$nanims ndims=$ndims | ";
@@ -4363,7 +4424,11 @@ if($err == 0) {
                 $iframe_anim++;
             }
 
-            printf MONTAGE "-mode Concatenate -tile $geom gmeta_$$"."_$ianim.gif ";
+            if ($order eq "column_major"){
+                printf MONTAGE "-mode Concatenate -tile $geom gmeta_$$"."_$ianim.gif ";
+            }else{ # row major
+                printf MONTAGE "-mode Concatenate -tile 1x$cols | montage - -tile $rows"."x1 gmeta_$$"."_$ianim.gif ";
+            }
             printf MONTAGE "\n";
             $ianim++;
           }    
