@@ -113,10 +113,16 @@
         real cont_4d(NX_L,NY_L,NZ_L,maxthr)
         real bias(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
         real ets(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
+        real 
+     1  frac_coverage(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
+        integer 
+     1  n(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
 
 !       Initialize arrays
         bias = -999.
         ets = -999.
+        frac_coverage = -999.
+        n = -999
 
         thresh_var = 20. ! lowest threshold for this variable
 
@@ -383,9 +389,12 @@
 
 
 !                 Calculate/Write Skill Scores
-                  call skill_scores(contable,lun_out                 ! I
-     1                         ,bias(imodel,itime_fcst,iregion,idbz) ! O
-     1                         , ets(imodel,itime_fcst,iregion,idbz))! O
+                  call skill_scores(contable,lun_out                   ! I
+     1                  ,frac_coverage(imodel,itime_fcst,iregion,idbz) ! O
+     1                  ,bias(imodel,itime_fcst,iregion,idbz)          ! O
+     1                  , ets(imodel,itime_fcst,iregion,idbz))         ! O
+
+                  n(imodel,itime_fcst,iregion,idbz,:,:) = contable 
 
                   if(iregion .eq. 1)then
 
@@ -405,8 +414,8 @@
 !             write(6,*)' nthr before put_contables = ',nthr
 
 !             Write Contingency Tables (3-D)
-              call put_contables(i4_initial,i4_valid,nthr
-     1                        ,cont_4d,NX_L,NY_L,NZ_L,cont_dir)
+!             call put_contables(i4_initial,i4_valid,nthr
+!    1                        ,cont_4d,NX_L,NY_L,NZ_L,cont_dir)
 
               close (lun_out) 
 
@@ -455,7 +464,15 @@
            open(lun_bias,file=bias_file,status='unknown')
            open(lun_ets,file=ets_file,status='unknown')
 
+!          Write comment with model member names
+           write(lun_bias,902)(trim(c_fdda_mdl_src(imodel))
+     1                              ,imodel=2,n_fdda_models)  
+           write(lun_ets,902)(trim(c_fdda_mdl_src(imodel))
+     1                              ,imodel=2,n_fdda_models)  
+902        format('# ',30(1x,a))  
+
            if(l_col)then
+!              Write bias and ets values
                do itime_fcst = 0,n_fcst_times
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
@@ -469,6 +486,38 @@
 911                format(a24,3x,20f12.3)
                enddo ! itime_fcst
 
+!              Write n values in separate blocks                     
+               do jn = 0,1
+               do in = 0,1
+                 write(lun_bias,*)
+                 write(lun_bias,*)
+                 do itime_fcst = 0,n_fcst_times
+                   i4_valid = i4_initial + itime_fcst*model_verif_intvl      
+                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
+     1                                 ,istatus)
+                   write(lun_bias,912)a24time_valid,    
+     1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
+     1                              ,imodel=2,n_fdda_models)     
+912                format(a24,3x,20i12.3)
+                 enddo ! itime_fcst
+               enddo ! jn
+               enddo ! in
+
+!              Write fractional coverage values
+               write(lun_bias,*)
+               write(lun_bias,*)
+               do itime_fcst = 0,n_fcst_times
+                   i4_valid = i4_initial + itime_fcst*model_verif_intvl      
+                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
+     1                                 ,istatus)
+                   write(lun_bias,913)a24time_valid,    
+     1                 (frac_coverage                
+     1                   (imodel,itime_fcst,iregion,idbz)
+     1                              ,imodel=2,n_fdda_models)     
+913                format(a24,3x,20f12.5)
+               enddo ! itime_fcst
+
+!              Write to members.txt file
                open(lun_mem,file=members_file,status='unknown')
                do imodel = 2,n_fdda_models
                    c_model = c_fdda_mdl_src(imodel)
@@ -478,17 +527,17 @@
                enddo ! imodel
                close(lun_mem)
 
-           else
+           else ! l_col is false (older code)
              do imodel = 2,n_fdda_models
                do itime_fcst = 0,n_fcst_times
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
-                   write(lun_bias,912)a24time_valid     
+                   write(lun_bias,921)a24time_valid     
      1                             ,bias(imodel,itime_fcst,iregion,idbz)     
-                   write(lun_ets,912)a24time_valid     
+                   write(lun_ets,921)a24time_valid     
      1                              ,ets(imodel,itime_fcst,iregion,idbz)
-912                format(a24,3x,2f12.3)
+921                format(a24,3x,2f12.3)
                enddo ! itime_fcst
                write(lun_bias,*)
                write(lun_ets,*)
