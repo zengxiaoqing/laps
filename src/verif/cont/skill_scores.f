@@ -1,5 +1,6 @@
 
       subroutine skill_scores(contable,lun_out           ! I
+     1                       ,frac_coverage              ! O
      1                       ,bias,ets)                  ! O
 
 !     First index is observed, second index is forecast
@@ -16,6 +17,9 @@
       rmiss = -999.
 
       total = hits + misses + false_alarms + correct_negatives
+
+      frac_negatives = float(correct_negatives) / float(total)
+      frac_coverage = 1.0 - frac_negatives
 
       accuracy = float(hits + correct_negatives) / float(total)
 
