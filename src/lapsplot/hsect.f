@@ -122,7 +122,7 @@ cdis
         character*4 c_type, c_type_i
         character*3 cstatic
         character*3 c_bkg
-        character c19_label*19,c_label*100
+        character c19_label*19,c30_label*30,c_label*100
 
 !       integer ity,ily,istatus
 !       data ity/35/,ily/1010/
@@ -1313,7 +1313,7 @@ c       include 'satellite_dims_lvd.inc'
      1                             ,directory,c_model       ! O
      1                             ,i4time_3dw              ! I
      1                             ,laps_cycle_time         ! I
-     1                             ,asc9_tim            ! O
+     1                             ,asc9_tim                ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
@@ -1388,19 +1388,25 @@ c       include 'satellite_dims_lvd.inc'
 
                 if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' DIV  (diff) 1e-5/s'
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(c_type_i(1:2) .eq. 'wb')then
                     c19_label = ' DIV  ('//ext(1:3)//')  1e-5/s'
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(c_type_i(1:2) .eq. 'wd')then
                     c19_label = ' DIV  ('//ext(1:3)//')  1e-5/s'
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(c_type_i(1:2) .eq. 'wr')then
-                    c19_label = ' DIV  (fua)  1e-5/s'
+                    call mk_fcst_hlabel(k_mb,'Divergence',fcst_hhmm       
+     1                                 ,ext(1:3),'1e-5/s'
+     1                                 ,c_model,c_label)
                 elseif(c_type_i(1:2) .eq. 'bw')then
-                    c19_label = ' DIV  (bal)  1e-5/s'
+                    c30_label = ' Divergence (balanced)  1e-5/s'
+                    call mklabel(k_mb,c30_label,c_label)
                 else
                     c19_label = ' DIV  (anal) 1e-5/s'
+                    call mklabel(k_mb,c19_label,c_label)
                 endif
 
-                call mklabel(k_mb,c19_label,c_label)
 
                 scale = 1e-5
 !               call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
