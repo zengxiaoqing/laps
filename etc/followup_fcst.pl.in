@@ -206,7 +206,8 @@ while (($timeaccum < $timeout) and ($elapsed < $timeout) and ($times_rem > 0)){
       $fsfsize = -s "$local_fsf/$_.fsf";
       print "fsf size = $fsfsize (last is $fsfsize_last)\n";
 
-      while ( ($fsfsize > $fsfsize_last && $fsfsize >= $fsfsize_max && $waitsize <= 15) || $fsfsize == 0) {
+#     Determine whether to wait
+      while ( ($fsfsize > $fsfsize_last || $fsfsize < $fsfsize_max || $fsfsize == 0) && $waitsize <= 15) {
         if($fsfsize > $fsfsize_max){
           $fsfsize_max = $fsfsize;
         }
