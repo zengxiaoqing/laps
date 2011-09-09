@@ -6,7 +6,7 @@
 
 #Argument 2 is remote DATA_ROOT (include the node unless arg 5 is set to 6)
 
-#Argument 3 tells whether ot use 'qsub'
+#Argument 3 tells whether to use 'qsub'
 
 #Argument 4 is optional wall clock run time (e.g. 02:00)
 
@@ -39,6 +39,9 @@ DELETE=--delete
 if test "$5" == "8"; then # copy verif
   log=$LOCAL_DATA_ROOT/log/rsync.log.verif.`date +\%H\%M`
   DELETE=""
+elif test "$5" == "7"; then 
+  DELETE=""
+  log=$LOCAL_DATA_ROOT/log/rsync.log.`date +\%H\%M`
 elif test "$6" == ""; then # copy all
   log=$LOCAL_DATA_ROOT/log/rsync.log.`date +\%H\%M`
 else
