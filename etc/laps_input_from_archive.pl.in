@@ -31,6 +31,8 @@
 # -S skip all standard data download from the MSS
 #
 # -T (optional) analysis type (2D or 3D), default is "3D"
+#
+# -c (use for compressed data on MSS - before about 2007)
 
 # Require PERL version 5 or newer
 require 5;
@@ -44,9 +46,9 @@ use Time::Local;
 
 # Define command line variables
 # opt_t: time (GMT) of LAPS analysis in YYYYMMDD
-use vars qw($opt_p $opt_t $opt_m $opt_g $opt_s $opt_i $opt_S $opt_T);
+use vars qw($opt_p $opt_t $opt_m $opt_g $opt_s $opt_i $opt_S $opt_T $opt_c);
 
-getopts('p:t:m:s:ig:ST:');
+getopts('p:t:m:s:ig:ST:c');
 
 require "@prefix@/etc/laps_tools.pm";
 
@@ -72,6 +74,11 @@ if (defined $opt_T) {
 
 # In-situ data
 if (! defined $opt_S) { 
+    if (defined $opt_c) { 
+      print $t." Get compressed data\n"; # perhaps use mssTar instead
+      system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy.tar\* $public/data/");
+      exit;
+    }
 
     print $t." Get metar\n";
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/metar/netcdf/\* $public/data/metar/netcdf/");
