@@ -38,11 +38,11 @@ echo "inputs..."
 echo "FILE = $FILE"  
 ls -l $FILE                                                     
 
-@ NLINE = $NLINE + 1
+@ NLINE = $NLINE + 2
 
 # obtain xrange times from the data file
-setenv STARTTIME1 `head -1       $FILE           | cut -c1-11` ; echo $STARTTIME1
-setenv STARTTIME2 `head -1       $FILE           | cut -c13-23`; echo $STARTTIME2
+setenv STARTTIME1 `head -2      $FILE | tail -1 | cut -c1-11` ; echo $STARTTIME1
+setenv STARTTIME2 `head -2      $FILE | tail -1 | cut -c13-23`; echo $STARTTIME2
 setenv STOPTIME1  `head -$NLINE $FILE | tail -1 | cut -c1-11` ; echo $STOPTIME1
 setenv STOPTIME2  `head -$NLINE $FILE | tail -1 | cut -c13-23`; echo $STOPTIME2
 
@@ -89,13 +89,13 @@ while ($IMEMBER <= $NMEMBERS)
     echo "IMEMBER MEMBER ICOL: $IMEMBER $MEMBER $ICOL"
 
     if ($NMEMBERS == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
     else if ($IMEMBER == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     else if ($IMEMBER == $NMEMBERS) then
-        echo '     '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
     else
-        echo '     '$DQUOTE$FILE$DQUOTE' using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     endif
 
     @ IMEMBER = $IMEMBER + 1
@@ -118,4 +118,8 @@ ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY.png
 rm -f          radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
 ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
 
+# Make Thumbnail
 convert -resize 90x60! $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM\_thumb.png
+
+# Make Animation
+convert -delay 100 -loop 0 `ls -rt radar_fcst_$STAT_LC\_$REFLECTIVITY\_????.png` $PNGFILE anim24hr_radar_fcst_$STAT_LC\_$REFLECTIVITY.gif
