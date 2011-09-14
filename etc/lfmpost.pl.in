@@ -40,20 +40,20 @@ if (defined ($opt_W)) {
 
 $project = $opt_P if defined($opt_P);
 
-if ($project eq "DWR") {
-  $LAPSROOT = "@prefix@";
-} else {
-  $LAPSROOT = $ENV{LAPSROOT};
-}
+$LAPSROOT = "@prefix@";
 require "$LAPSROOT/etc/oputil.pm";
+
+my $EXEDIR;
+#$EXEDIR = "$LAPSROOT/bin";
+$EXEDIR = "/home/oplapb/builds_lahey/laps/bin";
 
 if (defined ($opt_q)) {
   print "\n---------------------------------------------------------------------\n";
-  print "Run lfmpost *without* qsub\n";
+  print "Run lfmpost executable *without* qsub\n";
   print "---------------------------------------------------------------------\n";
 } else {
   print "\n---------------------------------------------------------------------\n";
-  print "Submit lfmpost via qsub\n";
+  print "Submit lfmpost executable via qsub\n";
   print "---------------------------------------------------------------------\n";
 }
 
@@ -365,8 +365,8 @@ for ($g=1; $g<=$ngrid; $g++) {
         $FcstHr = $sfcst; 
         $FcstMin = $sfcstMin;
       } else {
-        $FcstHr = $n * $finc / 3600; #This should get forecast hour
-        $FcstMin = ($n * $finc) % 3600; # This should get forecast min
+        $FcstHr = int($n * $finc / 3600);      # This should get forecast hour
+        $FcstMin = (($n * $finc) % 3600) / 60; # This should get forecast min
       }
       $cFcstHr = "$FcstHr";
       $cFcstHr = "00$cFcstHr" while (length($cFcstHr)<2);
@@ -469,12 +469,12 @@ for ($g=1; $g<=$ngrid; $g++) {
         $d0_directory = 1; # "d0$grid" directory exists..append d0$grid onto $lapsdataroot
       }
 
-      if (! $opt_q) {  #run *with* qsub
+      if (! defined $opt_q) {  #run *with* qsub
         chdir "$modelroot/$date";
         if ($d0_directory == 1) {
-          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
+          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
         } else {
-          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $modelroot/log/$lfmpostlog";
+          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $modelroot/log/$lfmpostlog";
         }
         print "$command\n";
 
@@ -482,8 +482,8 @@ for ($g=1; $g<=$ngrid; $g++) {
 #  make .sh script to submit to qsub
         open (QS, ">qsub_lfmpost_$yyyy$mm$dd$hh.sh");
         print QS "#!/bin/sh\n";
-        print QS "#\$ -pe wcomp 1\n";
-        print QS "#\$ -l h_rt=05:30:00\n";
+        print QS "#\$ -pe hserial 1\n";
+        print QS "#\$ -l h_rt=00:30:00\n"; # wall clock time for running the executable for a single forecast time step
         print QS "#\$ -A wrf\n";
         print QS "#\$ -N lfmpost\n";
         print QS "#\$ -S /bin/sh\n";
@@ -510,9 +510,9 @@ for ($g=1; $g<=$ngrid; $g++) {
         
       } else {  #run without qsub
         if ($d0_directory == 1) {
-          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
+          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
         } else {
-          $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $modelroot/log/$lfmpostlog";
+          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $modelroot/log/$lfmpostlog";
         }
         print "$command\n";
         system ("$command");
