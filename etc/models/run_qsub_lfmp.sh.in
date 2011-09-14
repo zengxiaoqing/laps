@@ -64,15 +64,9 @@ echo "#exit"                    >> $script
 echo " "                        >> $script
 
 if test "$model" = arw; then
-    echo "model=wrf"                                              >> $script
-elif test "$model" = nmm; then
-    echo "model=$model"                                           >> $script
-elif test "$model" = wrf; then
-    echo "model=$model"                                           >> $script
-elif test "$model" = mm5; then
-    echo "model=$model"                                           >> $script
+    modelarg=wrf                                                                 
 else
-    echo "model=$model"                                           >> $script
+    modelarg=$model                                                              
 fi
 
 echo "lbc=$lbc"                 >> $script
@@ -80,7 +74,9 @@ echo "physics=$physics"         >> $script
 echo "nest=$nest"               >> $script
 echo " "                        >> $script
 
-echo "export LAPSROOT=/home/oplapb/builds_lahey/laps"           >> $script
+echo "export LAPSROOT=@prefix@"                                 >> $script
+#echo "export LAPSROOT=/home/oplapb/builds_lahey/laps"           >> $script
+
 echo "export LAPS_DATA_ROOT=$lapsdataroot"                      >> $script
 
 echo "export NETCDF=/opt/netcdf/3.6.3-pgi"                >> $script
@@ -95,11 +91,11 @@ echo "name=$name"                                               >> $script
 echo "project=DWR"                                              >> $script
 echo " echo 'Running this lfmpost.pl command...'"               >> $script
 if test "$name" != "none"; then # (e.g. ewp0)
-    echo " echo '/usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -r $modelroot -d $model_run_time -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n \$name -P \$project -g \$nest -W $mdlfilewait -q' " >> $script
-    echo "       /usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -r $modelroot -d $model_run_time -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n \$name -P \$project -g \$nest -W $mdlfilewait -q"   >> $script
+    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w $maxWaitSec -e $maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait' " >> $script
+    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w $maxWaitSec -e $maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait"   >> $script
 else
-    echo " echo '/usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -r $modelroot -d $model_run_time -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -W $mdlfilewait -q' " >> $script
-    echo "       /usr/bin/perl \$LAPSROOT/etc/lfmpost.pl -m \$model -r $modelroot -d $model_run_time -f \$numFcsts -i \$fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y \$phys -P \$project -g \$nest -W $mdlfilewait -q"   >> $script
+    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w $maxWaitSec -e $maxHrsRun -y $phys -P $project -g $nest -W $mdlfilewait' " >> $script
+    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w $maxWaitSec -e $maxHrsRun -y $phys -P $project -g $nest -W $mdlfilewait"   >> $script
 fi
 echo " "                                                        >> $script
 echo " "                                                        >> $script
