@@ -11,13 +11,14 @@
 #Argument 4 is optional wall clock run time (e.g. 02:00)
 
 #Argument 5 is optional number that controls the qsub action
-#           2: copy all except fua/fsa via rsync in prioritized sequence
-#           5: copy individual fua/fsf subdirectory via rsync
-#           6: copy individual fua/fsf subdirectory via scp (and remote purge)
-#           7: copy all except fua/fsa and verif via rsync in prioritized sequence
-#           8: copy just verif via rsync
+#           2:  copy all except fua/fsa via rsync in prioritized sequence
+#           5:  copy individual fua/fsf subdirectory via rsync
+#           5r: reverse copy individual fua/fsf subdirectory via rsync
+#           6:  copy individual fua/fsf subdirectory via scp (and remote purge)
+#           7:  copy all except fua/fsa and verif via rsync in prioritized sequence
+#           8:  copy just verif via rsync
 
-#Argument 6 is optional subdirectory (if arg 5 is set to "5" or "6")
+#Argument 6 is optional subdirectory (if arg 5 is set to "5", "5r" or "6")
 
 #Argument 7 is optional modelroot subdirectory (should be used if arg 5 is set to "6")
 
@@ -176,6 +177,15 @@ if test "$3" = qsub; then
       echo "rsync -rlptgvvz $RSH $DELETE \$LOCAL_DATA_ROOT/lapsprd/fua/$subdir \$REMOTE_DATA_ROOT/lapsprd/fua >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
     fi
 
+    if test "$5" == "5r"; then # reverse copy individual fua/fsf subdirectory via rsync
+      cd $LOCAL_DATA_ROOT/lapsprd/fua
+      pwd >> $log                                              
+      echo "build command for $subdir subdirectory" >> $log
+      echo " "                        >> $script
+      echo "ssh clank.fsl.noaa.gov 'ssh pinky.fsl.noaa.gov rsync -rlptgvvz $RSH $DELETE jetscp.rdhpcs.noaa.gov:\$LOCAL_DATA_ROOT/lapsprd/fsf/$subdir \$REMOTE_DATA_ROOT/lapsprd/fsf'  > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo "ssh clank.fsl.noaa.gov 'ssh pinky.fsl.noaa.gov rsync -rlptgvvz $RSH $DELETE jetscp.rdhpcs.noaa.gov:\$LOCAL_DATA_ROOT/lapsprd/fua/$subdir \$REMOTE_DATA_ROOT/lapsprd/fua'  > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+    fi
+
     if test "$5" == "6"; then # copy individual fua/fsf subdirectory via scp (and remote purge)                          
       MODEL_DATA_ROOT=$7
       REMOTE_PURGE_TIME=$8
@@ -189,9 +199,14 @@ if test "$3" = qsub; then
 
       MODEL_CYCLE_TIME=`/usr/bin/perl /home/oplapb/builds/laps/etc/read_nl.pl -d $LOCAL_DATA_ROOT -n nest7grid.parms -v model_cycle_time`
       MODEL_INIT_TIME=`/usr/bin/perl /home/oplapb/builds/laps/etc/sched_sys.pl -c $MODEL_CYCLE_TIME -f yyyymmddhh`
+      MODEL_FCST_INTVL=`/usr/bin/perl /home/oplapb/builds/laps/etc/read_nl.pl -d $LOCAL_DATA_ROOT -n nest7grid.parms -v model_fcst_intvl`
+      N_FCST_STEPS_P1=`/usr/bin/perl /home/oplapb/builds/laps/etc/read_nl.pl -d $LOCAL_DATA_ROOT -n nest7grid.parms -v n_fcst_steps_p1`
 
       echo "MODEL_CYCLE_TIME = $MODEL_CYCLE_TIME" >> $log
       echo "MODEL_INIT_TIME  = $MODEL_INIT_TIME"  >> $log
+
+      MODEL_FCST_INTVL_MIN=`echo $MODEL_FCST_INTVL / 60 | bc`
+      echo "MODEL_FCST_INTVL_MIN  = $MODEL_FCST_INTVL_MIN"  >> $log
 
       cd $LOCAL_DATA_ROOT/lapsprd/fua
       pwd >> $log                                              
@@ -206,7 +221,7 @@ if test "$3" = qsub; then
       echo " "                        >> $script
 #     lfmpost_scp_fuafsf.pl may need an option allowing the input of LAPS_DATA_ROOT or this script would need MODEL_DATA_ROOT
 #                    perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -l oplapb@clank:/w3/jet/fab/wrf5km -m wrf -r /pan1/projects/mm5-laps/domains/WRFV3-5KM -f 37 -i 15 -w 10800               -a wsm6  
-      echo "/usr/bin/perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -l $REMOTE_NODE:$REMOTE_DATA_ROOT -L      -r $MODEL_DATA_ROOT -d $MODEL_INIT_TIME       -f 25 -i 15 -w  7200 -m $MODELTYPE -a $MODELCONFIG >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo "/usr/bin/perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -l $REMOTE_NODE:$REMOTE_DATA_ROOT -L      -r $MODEL_DATA_ROOT -d $MODEL_INIT_TIME      -f $N_FCST_STEPS_P1 -i $MODEL_FCST_INTVL_MIN -w  7200 -m $MODELTYPE -a $MODELCONFIG >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
       echo " "                        >> $script
 
       echo "date -u"                  >> $script
@@ -226,8 +241,8 @@ if test "$3" = qsub; then
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
         echo " "                                                                   >> $script
-        echo "Start copy of time directories"                                      >> $script
-        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/time/*                               $REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo "Start copy of time directory"                                        >> $script
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/time/systime.dat                          $REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
         echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
