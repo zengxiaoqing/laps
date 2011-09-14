@@ -795,7 +795,7 @@ c
      .                    ,drlatc,drlonc
      .                    ,dglat, dglon
 
-      double precision     dcosd
+!     double precision     dcosd
 
       real  r
  
