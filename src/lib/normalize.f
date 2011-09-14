@@ -537,7 +537,7 @@ c
 
       real  Emission_angle_d
 
-      real cosd, sind
+!     real cosd, sind
 
 c================================================================
         au_m = 149000000.
