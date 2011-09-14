@@ -352,6 +352,7 @@ verif verif/noBal verif/Bal verif/Bkgd
 verif/REF
 verif/REF/hist verif/REF/cont verif/REF/plot 
 verif/REF/plot/20 verif/REF/plot/30 verif/REF/plot/40 verif/REF/plot/50 verif/REF/plot/60
+verif/REF/plot/20_comp verif/REF/plot/30_comp verif/REF/plot/40_comp verif/REF/plot/50_comp verif/REF/plot/60_comp
 verif/SWI verif/SWI/pt
 verif/TSF verif/TSF/pt
 verif/DSF verif/DSF/pt
