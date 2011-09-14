@@ -364,7 +364,7 @@ if( !defined $no_ggm ){
           $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n hserial -w gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
        }
     }else{
-       $command = "$INSTALL_ROOT/bin/gridgen_model.exe";
+       $command = "$INSTALL_ROOT/bin/gridgen_model.exe $DATA_ROOT";
     }
 
     print "command = $command \n";
@@ -373,7 +373,7 @@ if( !defined $no_ggm ){
 
     if($WHICH_TYPE eq "laps"){
        print "build sfc lookup tables\n";
-       run_sys::run_sys("$INSTALL_ROOT/bin/gensfclut.exe");
+       run_sys::run_sys("$INSTALL_ROOT/bin/gensfclut.exe $DATA_ROOT");
        print "gensfclut.exe complete \n";
     }
 
