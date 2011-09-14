@@ -50,7 +50,7 @@ cdoc    Also returns the lat/lon/time info from all the levels
         real pres_3d(imax,jmax,kmax)
         real heights_3d(imax,jmax,kmax)
 
-        logical l_good_level, l_fill_ht
+        logical l_good_level, l_fill_ht, ltest_vertical_grid
 
         IPR_TIMES_LVLS = MAX_PR*MAX_PR_LEVELS
 
