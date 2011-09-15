@@ -480,14 +480,8 @@ netcdf lsx {
             level(z);
             level:long_name="level of data";
 	    level:units = "    ";
+            level:_CoordinateAxisType = "GeoZ";
                     	
-        //      z coordinate variable
-        float
-            z(z);
-            z:long_name="Level";
-	    z:units = "    ";
-	    z:_CoordinateAxisType = "GeoZ";
-
         //      validtime of the grid 
 
         double
@@ -585,5 +579,4 @@ netcdf lsx {
         x_dim           = "x";
         y_dim           = "y";
         grid_type_code  = 5;
-        z               = 0.0f;
 }                       
