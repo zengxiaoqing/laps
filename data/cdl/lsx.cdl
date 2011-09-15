@@ -519,6 +519,9 @@ netcdf lsx {
         char    grid_type(nav, namelen);
                 grid_type:long_name = "GRIB-1 grid type";
   
+        long    grid_type_code(nav) ;
+                grid_type_code:long_name = "GRIB-1 GDS data representation type" ;
+
         char    x_dim(nav, namelen);
                 x_dim:long_name = "longitude dimension";
   
@@ -574,4 +577,5 @@ netcdf lsx {
         process_name    = "LAPS - Local Analysis and Prediction System";
         x_dim           = "x";
         y_dim           = "y";
+        grid_type_code  = 5;
 }                       
