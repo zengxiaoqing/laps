@@ -72,7 +72,7 @@ netcdf lsx {
             td:navigation_dim = "nav";
             td:record = "valtime, reftime";
             td:_FillValue = 1.e+37f;
-            td:long_name="surface dewpoint temperature";
+            td:long_name="surface dew point temperature";
             td:units="kelvin";
             td:valid_range= 0.f, 350.f;
             td:LAPS_var="TD";
@@ -114,7 +114,7 @@ netcdf lsx {
             msl:navigation_dim = "nav";
             msl:record = "valtime, reftime";
             msl:_FillValue = 1.e+37f;
-            msl:long_name="MSL pressure";
+            msl:long_name="Mean Sea Level pressure";
             msl:units="pascal";
             msl:valid_range= 0.f, 120000.f;
             msl:LAPS_var="MSL";
