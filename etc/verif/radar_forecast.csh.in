@@ -38,7 +38,7 @@ echo "inputs..."
 echo "FILE = $FILE"  
 ls -l $FILE                                                     
 
-@ NLINE = $NLINE + 2
+@ NLINE = $NLINE + 1
 
 # obtain xrange times from the data file
 setenv STARTTIME1 `head -2      $FILE | tail -1 | cut -c1-11` ; echo $STARTTIME1
@@ -122,4 +122,4 @@ ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
 convert -resize 90x60! $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM\_thumb.png
 
 # Make Animation
-convert -delay 100 -loop 0 `ls -rt radar_fcst_$STAT_LC\_$REFLECTIVITY\_????.png` $PNGFILE anim24hr_radar_fcst_$STAT_LC\_$REFLECTIVITY.gif
+convert -delay 100 -loop 0 `ls -rt radar_fcst_$STAT_LC\_$REFLECTIVITY\_???[0-9].png` $PNGFILE anim24hr_radar_fcst_$STAT_LC\_$REFLECTIVITY.gif
