@@ -44,7 +44,17 @@ echo "model_run_time = $model_run_time"
 numFcsts=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v n_fcst_steps_p1`
 echo "numFcsts = $numFcsts"
 
-fcstIncrMin=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v fcst_intvl_min`
+# Use the forecast increment from the namelist, except establish a floor of 15 minutes for the HRRR
+fcstIncrMin_nl=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v fcst_intvl_min`
+if test "$physics" = hrrr; then
+    if test "$fcstIncrMin_nl" > 15; then
+        fcstIncrMin=$fcstIncrMin_nl
+    else
+        fcstIncrMin=15
+    fi
+else
+    fcstIncrMin=$fcstIncrMin_nl
+fi
 echo "fcstIncrMin = $fcstIncrMin"
 
 # Build qsub script
