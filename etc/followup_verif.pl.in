@@ -1,0 +1,323 @@
+#!@PERL@
+
+# Script to generate lapsplot gifs for forecast domain
+
+use lib "@prefix@/etc"; # Set this to your path for 'laps_tools.pm'
+require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
+
+require 5;
+use strict;
+
+# Setup command line options:
+#    -m model (e.g. wrf,arw,ensemble)
+#    -a model configuration (e.g. schultz,spaghetti)
+#    -d domain (e.g. dwr)
+#    -r laps dataroot
+#    -y delay time (seconds) [optional]
+#    -f forecast output interval (hours) [optional]
+#    -c cycle frequency (hours) [optional]
+#    -l forecast length (hours) [optional]
+
+use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_y $opt_t);
+use Getopt::Std;
+
+getopts('a:d:r:f:c:l:m:t:y:t:');
+
+print "Running followup_verif.pl...\n";
+print "user defined paths\n";
+print "model: $opt_m\n";
+print "model configuration: $opt_a\n";
+my $domain = $opt_d;
+my $modelname = "$opt_m-$opt_a";
+$ENV{LAPSINSTALLROOT}="@prefix@";
+my $dataroot = $opt_r;
+
+my @windowres;
+my $window;
+my $resolution;
+
+my @vars = qw(REF);
+
+my $fcstprd = "Radar_Sfc";
+
+my @modelnames=&laps_tools::get_nl_value("nest7grid.parms","fdda_model_source",$dataroot);
+my $modelname = @modelnames[1];   
+print "modelname: $modelname\n";
+
+# Obtain window parameters
+@windowres=&laps_tools::get_fcst_img_res($dataroot);
+$window=@windowres[0];
+$resolution=@windowres[1];              
+
+my $followup_verif = "@prefix@/etc/www/followup_verif.sh $domain ensemble $dataroot $window $resolution @prefix@";
+
+my $w3recent;
+
+my @cycle_time=&laps_tools::get_nl_value("nest7grid.parms","model_cycle_time",$dataroot);
+my $cycle_time = $cycle_time[0]; # seconds
+
+my @model_fcst_intvl=&laps_tools::get_nl_value("nest7grid.parms","model_fcst_intvl",$dataroot);
+my $model_fcst_intvl = $model_fcst_intvl[0]; # seconds
+
+my @model_fcst_len=&laps_tools::get_nl_value("nest7grid.parms","model_fcst_len",$dataroot);
+my $model_fcst_len = $model_fcst_len[0]; # minutes
+
+my $cycle_freq; # Cycle frequency in hours
+my $timeout;    # Seconds to wait before giving up after starting
+if(defined $opt_c){
+    $cycle_freq = $opt_c;              
+    $timeout = $opt_c*3600;            
+}else{
+    $cycle_freq = $cycle_time / 3600.; 
+    $timeout = $cycle_time;            
+}
+
+my ($output_inc); # Forecast output interval (hours)
+if(defined $opt_f){
+    $output_inc = $opt_f;                     
+}else{
+    $output_inc = $model_fcst_intvl / 3600.;  
+}
+
+my $fcst_len; # Forecast length (hours)
+if(defined $opt_l){
+    $fcst_len = $opt_l; 
+}else{
+    $fcst_len = $model_fcst_len / 60.; 
+}
+
+my $init_base_hr = 0;        # Earliest cycle each day in GMT hour
+
+my $fsf_subdir = "lapsprd/fsf/$opt_m-$opt_a";
+my $fua_subdir = "lapsprd/fua/$opt_m-$opt_a";
+
+my $sleep_time_fsf = 15; # Number of seconds to wait for fsf file to fill up       
+my $sleep_time     = 60; # Number of seconds to sleep between attempts to process
+
+# END OF USER DEFINED PARAMS
+
+print "setup fsf/fua pathnames\n";
+my $local_fsf = "$dataroot/$fsf_subdir";
+my $local_fua = "$dataroot/$fua_subdir";
+
+# Set up cycle to process based on system time (UTC)
+
+print "setup time parameters\n";
+#beka my $systime_now = time-3600;
+my $systime_now = time;
+my $cyc_freq_sec = $cycle_freq * 3600;
+my $init_base_sec = $init_base_hr * 3600;
+my $remainder = ($systime_now - $init_base_sec) % $cyc_freq_sec;
+my $cycle_sec = $systime_now - $remainder;
+
+if (defined $opt_y) {
+    $cycle_sec = $cycle_sec - $opt_y
+}
+
+# Convert the cycle time in seconds to normal parameters
+
+my @monthtxt = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+my ($cycsec,$cycmin,$cychour,$cycmday,$cycmon,$cycyear,$cycwday,$cycyday,
+    $cycisdt) = gmtime($cycle_sec);
+
+print "convert time parameters\n";
+my $cycyear4 = $cycyear + 1900;
+$cycyear = $cycyear - 100;
+$cycyear = "0".$cycyear while(length($cycyear)< 2);
+$cycyday++;
+$cycyday = "0".$cycyday while(length($cycyday)<3);
+$cychour = "0".$cychour while(length($cychour)<2);
+$cycmin = "0".$cycmin while(length($cycmin)<2);
+my $cycmontxt = $monthtxt[$cycmon];
+$cycmon++;
+$cycmon="0".$cycmon while (length($cycmon)<2);
+$cycmday = "0".$cycmday while(length($cycmday)<2);
+my $www_time = $cycmday."-".$cycmontxt."-".$cycyear4." ".$cychour.$cycmin;
+my $cycle = $cycyear.$cycyday.$cychour."00";
+
+print "Cycle to get: $cycle\n";
+print "laps_fsf: $local_fsf\n";
+print "laps_fua: $local_fsf\n";
+
+# Create the list of file times we need to get
+
+my $num_files = int(($fcst_len/$output_inc) + 0.5)+1;
+print "output_inc: $output_inc\n";
+print "num_files: $num_files\n";
+
+my $fcsttime = 0;
+my ($fcsthr,$fcstmn);
+my @times;
+while ($fcsttime <= $fcst_len) {
+  $fcsthr=int($fcsttime);
+  $fcstmn=($fcsttime-$fcsthr) * 60;
+  $fcsthr = "0".$fcsthr while (length($fcsthr)<2);
+  $fcstmn = "0".$fcstmn while (length($fcstmn)<2);
+  push @times, $cycle.$fcsthr.$fcstmn;
+  $fcsttime = $fcsttime + $output_inc;
+}
+
+print "times: @times\n";
+
+my @times_new;
+my @fsffiles_new;
+# Time to start the loop to get all of the files
+my $time_start = time;
+my $elapsed = 0;
+my $times_rem = $num_files;
+my $time_now;
+my $arrpos;
+my ($remfile, $result);
+my $www_flag = 0;
+my $t; 
+
+my $modelrun;
+my $hhmm_modelrun;
+my $var;
+foreach $var (@vars) { 
+
+  my $fcstprd;                   
+  my $analprd;                   
+  my $command;            
+
+  my $imageoutdir = "$dataroot/lapsprd/verif/$var/plot/";          
+  my $imageoutfile_montage;
+ 
+  if($var eq "REF"){
+    $fcstprd = "Radar_Sfc";
+    $analprd = "ptt";
+  }
+
+  $arrpos = 0;
+  @times_new = @times; 
+  print "updated times: @times\n";
+
+  my @analimagelist;
+  my @montageimagelist;
+
+  my $itime = -1;
+  my $a13time;
+
+  foreach $a13time (@times) {
+    $modelrun = substr($a13time,0,9);
+    $hhmm_modelrun = substr($a13time,5,4);
+
+    my @fcstimagelist;
+    $itime++;
+#   if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
+    if ($itime <= $opt_t){
+      my $valid_sec = $cycle_sec + 3600*$itime;
+      my $valid_a9time=&laps_tools::i4time_to_a9time($valid_sec+315619200);
+
+      my $analimagedir = "/w3/lapb/domains/$domain/anal2d/archive/$analprd/";
+      my $fullanal_image = $analimagedir.$valid_a9time.".gif ";
+
+      push @analimagelist, $fullanal_image;                              
+
+      $t=gmtime(); 
+      print "\nReady to process $a13time @modelnames... \n" ;
+
+      my $fcstimage;                             
+
+      foreach $modelname (@modelnames){
+        if($modelname ne "lga"){   
+
+          my $fcstimagedir = "/w3/lapb/domains/$domain/fcst2d/$modelname/archive/$modelrun/$fcstprd";
+
+          if (! -d $fcstimagedir) {
+            print "WARNING: $fcstimagedir not present\n";
+            next;
+          }
+
+          $fcstimage = substr($a13time,9,4);
+          my $fullfcst_image = $fcstimagedir."/".$fcstimage.".gif ";
+          print "\na13time/fcstimage/fullfcst_image $a13time $fcstimage $fullfcst_image... \n" ;
+
+          push @fcstimagelist, $fullfcst_image;                            
+
+        }
+      }
+
+      print "\nMontage the images...\n" ;
+      my $nimages = @fcstimagelist;
+      my $ncols = 3;
+      my $nrows = 1;
+      my $x = "x";
+      $nrows = int(($nimages-1) / $ncols) + 1;
+      $imageoutfile_montage = $imageoutdir.$fcstimage.".gif";
+      $command = "convert -resize 121.3% @fcstimagelist $imageoutfile_montage; montage $fullanal_image $imageoutfile_montage -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
+      print "setting up command: $command\n";
+      $result=system("$command");
+
+      push @montageimagelist, $imageoutfile_montage;                    
+
+      print "done.\n";
+      splice @times_new, $arrpos, 1;
+
+    }else{
+      print "Not being processed (both fua and fsf). $local_fsf/$_.fsf\n";
+      $arrpos++;
+
+    }
+  }
+
+# Add the last montage a second time
+  push @montageimagelist, $imageoutfile_montage;                    
+    
+  print "\nProcessing $var images...  \n" ;
+
+  my ($imageoutfile_anal, $imageoutfile_fcst);
+
+  print "\nAnalysis Image List...  \n" ;
+  print @analimagelist;
+  print "\n\n" ;
+
+  $imageoutfile_anal = $imageoutdir."analanim.gif";
+  $command = "convert -delay 50 -loop 0 @analimagelist $imageoutfile_anal";
+  print "setting up command: $command\n";
+  $result=system("$command");
+
+# print "\nForecast Image List...  \n" ;
+# print @fcstimagelist;
+# print "\n\n" ;
+
+# $imageoutfile_fcst = $imageoutdir."fcstanim.gif";
+# $command = "convert -delay 50 -loop 0 @fcstimagelist $imageoutfile_fcst";
+# print "setting up command: $command\n";
+# $result=system("$command");
+
+  print "\nAnimate the Montages...  \n" ;
+  $imageoutfile_montage = $imageoutdir."montageanim.gif";
+  $command = "convert -delay 75 -loop 0 @montageimagelist $imageoutfile_montage";
+  print "setting up command: $command\n";
+  $result=system("$command");
+
+  print "\nCopy the Animated Montage...  \n" ;
+  $command = "cp $imageoutfile_montage $imageoutdir"."montageanim_$modelrun.gif";                              
+  print "setting up command: $command\n";
+  $result=system("$command");
+
+  print "\nUpdate HHMM Montage Link...  \n" ;
+  my $hhmm_link = "$imageoutdir"."montageanim_$hhmm_modelrun.gif";
+  $command = "rm -f $hhmm_link; ln -s $imageoutdir"."montageanim_$modelrun.gif ".$hhmm_link;                              
+  print "setting up command: $command\n";
+  $result=system("$command");
+
+  print "\nUpdate HHMM Montage Thumb...  \n" ;
+  my $thumb = "$imageoutdir"."montageanim_$hhmm_modelrun\_thumb.gif";
+# $command = "convert -resize 90x60! $imageoutdir"."montageanim_$modelrun.gif $thumb";                              
+  $command = "convert -resize 90x60! $imageoutfile_anal $thumb";
+  print "setting up command: $command\n";
+  $result=system("$command");
+
+} # var
+
+@times = @times_new;
+$times_rem = @times;
+
+$t=gmtime(); 
+
+# system("touch $w3recent/../finish.txt");
+
+print "All fua/fsf files processed\n";
+exit;  
