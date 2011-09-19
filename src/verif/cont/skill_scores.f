@@ -38,13 +38,18 @@
           far = rmiss
       endif
 
-      hits_random = float((hits + misses) * (hits + false_alarms)) 
+      if(total .gt. 0)then
+          hits_random = float((hits + misses) * (hits + false_alarms)) 
      1            / float(total)
 
-      denom = float(hits + misses + false_alarms) - hits_random
-      if(denom .gt. 0.)then
-          ets = (float(hits) - hits_random) / denom
+          denom = float(hits + misses + false_alarms) - hits_random
+          if(denom .gt. 0.)then
+              ets = (float(hits) - hits_random) / denom
+          else
+              ets = rmiss
+          endif
       else
+          hits_random = rmiss
           ets = rmiss
       endif
 
