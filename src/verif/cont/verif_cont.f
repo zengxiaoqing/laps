@@ -43,6 +43,18 @@
      1                  r_missing_data,
      1                  j_status)
 
+        write(6,*)                                           
+        write(6,*)' Calling verif_radar_composite...'
+        write(6,*)' Time is ',i4time,a9time
+
+        call verif_radar_composite(i4time,a9time,model_fcst_intvl,
+     1                  model_fcst_len,
+     1                  laps_cycle_time,
+     1                  NX_L,NY_L,
+     1                  NZ_L,
+     1                  r_missing_data,
+     1                  j_status)
+
 999     continue
 
         end
@@ -117,6 +129,9 @@
      1  frac_coverage(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
         integer 
      1  n(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
+
+        rmiss = -999.
+        imiss = -999
 
 !       Initialize arrays
         bias = -999.
@@ -477,12 +492,26 @@
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
+
+!                  If little 20dBZ radar coverage set to missing
+                   do imodel = 2,n_fdda_models
+                       if(frac_coverage(imodel,itime_fcst,iregion,1)
+     1                                                   .LT. 0.001)then
+                           write(6,*)' Set to missing model/itime/frac '
+     1                       ,imodel,itime_fcst
+     1                       ,frac_coverage(imodel,itime_fcst,iregion,1)       
+                           bias(imodel,itime_fcst,iregion,idbz) = rmiss       
+                           ets(imodel,itime_fcst,iregion,idbz)  = rmiss
+                       endif
+                   enddo ! imodel
+
                    write(lun_bias,911)a24time_valid,    
      1                 (bias(imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
                    write(lun_ets,911)a24time_valid,    
      1                 (ets(imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
+
 911                format(a24,3x,20f12.3)
                enddo ! itime_fcst
 
