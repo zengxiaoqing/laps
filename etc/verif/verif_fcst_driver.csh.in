@@ -3,13 +3,15 @@
 # arg1 is the LAPS_DATA_ROOT (e.g. /data/fab/projects/dwr)
 # arg2 is the model cycle time (real number seconds, e.g. 21600.0)
 # arg3 is the delay in hours for the modeltime relative to the crontime (e.g. 12.0)
-# arg4 (no longer used)                                                  
+# arg4 domain name (from the "on-the-fly" page)                                                  
 # arg5 is number of forecast times that have a valid analysis to compare with (excluding analysis, e.g. 2)
 
 setenv LAPSINSTALLROOT @prefix@
 setenv LAPS_DATA_ROOT $1
+setenv DOMAIN_NAME $4
 
 setenv NTIMES $5
+setenv N_FCST_TIMES $5
 
 date -u
 
@@ -75,7 +77,7 @@ echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log"
 
 date -u
 
-foreach THRESH (20 30 40)
+foreach THRESH (20 30 40 20_comp 30_comp 40_comp)
     echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH > $LAPS_DATA_ROOT/log/radar_fcst_bias_$THRESH.log"
           $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH > $LAPS_DATA_ROOT/log/radar_fcst_bias_$THRESH.log
     echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH > $LAPS_DATA_ROOT/log/radar_fcst_ets_$THRESH.log"
@@ -84,6 +86,17 @@ end
 
 date -u
 
-# Consider a montage of the reflectivity images?
+# Montage of the reflectivity images
+if (-d /w3/lapb) then
+    echo "Making reflectivity montage"
+    echo @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $2 -t $N_FCST_TIMES
+         @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $2 -t $N_FCST_TIMES > $LAPS_DATA_ROOT/log/followup_verif.log
+else if (-d /home/oplapb) then
+    echo "Making reflectivity montage via double ssh"
+    echo ssh clank.fsl.noaa.gov \'ssh pinky /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $2 -t $N_FCST_TIMES\' 
+         ssh clank.fsl.noaa.gov \'ssh pinky /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $2 -t $N_FCST_TIMES\'  
+endif
+
+date -u
 
 cp $LAPS_DATA_ROOT/time/modeltime.dat $LAPS_DATA_ROOT/time/modeltime.dat.done
