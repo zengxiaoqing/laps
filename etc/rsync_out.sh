@@ -182,8 +182,8 @@ if test "$3" = qsub; then
       pwd >> $log                                              
       echo "build command for $subdir subdirectory" >> $log
       echo " "                        >> $script
-      echo "ssh clank.fsl.noaa.gov 'ssh pinky.fsl.noaa.gov rsync -rlptgvvz $RSH $DELETE jetscp.rdhpcs.noaa.gov:\$LOCAL_DATA_ROOT/lapsprd/fsf/$subdir \$REMOTE_DATA_ROOT/lapsprd/fsf'  > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
-      echo "ssh clank.fsl.noaa.gov 'ssh pinky.fsl.noaa.gov rsync -rlptgvvz $RSH $DELETE jetscp.rdhpcs.noaa.gov:\$LOCAL_DATA_ROOT/lapsprd/fua/$subdir \$REMOTE_DATA_ROOT/lapsprd/fua'  > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo "ssh clank.fsl.noaa.gov 'ssh pinky rsync -rlptgvvz $RSH $DELETE jetscp.rdhpcs.noaa.gov:$LOCAL_DATA_ROOT/lapsprd/fsf/$subdir $REMOTE_DATA_ROOT/lapsprd/fsf'  > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo "ssh clank.fsl.noaa.gov 'ssh pinky rsync -rlptgvvz $RSH $DELETE jetscp.rdhpcs.noaa.gov:$LOCAL_DATA_ROOT/lapsprd/fua/$subdir $REMOTE_DATA_ROOT/lapsprd/fua'  > \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
     fi
 
     if test "$5" == "6"; then # copy individual fua/fsf subdirectory via scp (and remote purge)                          
