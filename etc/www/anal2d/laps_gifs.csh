@@ -198,6 +198,11 @@ if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
     setenv prod ptt
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
+#   Composite Reflectivity Graphic Product
+    echo "Generating Graphical Composite Reflectivity Product"; date -u
+    setenv prod crf
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
 #   Snow Cover Graphic Product
     echo "Generating Graphical Snow Cover Product"; date -u
     setenv prod sc
