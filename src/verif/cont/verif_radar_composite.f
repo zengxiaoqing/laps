@@ -17,6 +17,7 @@
         logical lmask_and_3d(NX_L,NY_L,NZ_L)
         logical lmask_rqc_3d(NX_L,NY_L,NZ_L)
         logical l_col /.true./
+        logical l_exist
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
@@ -149,6 +150,10 @@
 
          iregion = 1
 
+         nmissing = 0
+
+         nmissing_thr = nint(0.20 * float(n_init_times))
+
          do init = 0,n_init_times
 
           n = imiss ! Initialize
@@ -194,6 +199,27 @@
 
            write(6,*)'members_file = ',members_file
 
+           inquire(file=bias_file_in,exist=l_exist)
+           if(.not. l_exist)then
+               nmissing = nmissing + 1
+               if(nmissing .le. nmissing_thr)then
+                   write(6,*)' WARNING: file does not exist:'
+     1                                                     ,bias_file_in
+                   goto960
+               else
+                   write(6,*)' ERROR: file does not exist:',bias_file_in       
+                   write(6,*)
+     1  ' Skipping this field, too many missing initialization times...'       
+                   goto980
+               endif
+           endif ! l_exist
+
+           inquire(file=ets_file_in,exist=l_exist)
+           if(.not. l_exist)then
+               write(6,*)' ERROR: file does not exist:',ets_file_in       
+               goto980
+           endif ! l_exist
+
            open(lun_bias_in,file=bias_file_in,status='old')
            open(lun_ets_in,file=ets_file_in,status='old')
 
@@ -205,8 +231,8 @@
 
            char = ' '
            call csplit(cline,c_fdda_mdl_hdr,nelems,n_fdda_models,char)
-           write(6,*)'c_fdda_mdl_hdr = ',c_fdda_mdl_hdr,nelems
-     1                                  ,n_fdda_models
+           write(6,*)'c_fdda_mdl_hdr nelems/n_fdda_models = '
+     1                              ,nelems,n_fdda_models
 
 902        format('# ',30(1x,a))  
 
@@ -289,7 +315,7 @@
 
            endif
 
-           close(lun_bias_in)
+940        close(lun_bias_in)
            close(lun_ets_in)
 
           enddo ! idbz
@@ -304,14 +330,14 @@
      1                    ,itime_fcst
      1                    ,n(imodel,itime_fcst,1,1,1,1)
      1                ,n_sum(imodel,itime_fcst,1,1,1,1)                
-950              format(' Correct negs: ',a10,i3,3x,2i10)
+950              format(' Correct negs: ',a10,' itime_fcst' ,i3,3x,2i10)
              enddo ! itime_fcst
           enddo ! imodel
 
           close(lun_bias_in)                                      
           close(lun_ets_in)                                         
 
-         enddo ! init
+960      enddo                    ! init (initialization time)
 
          write(6,*)'init neg ',n_sum(2,0,1,1,1,1)
 
@@ -332,11 +358,11 @@
      1                ,n_sum(imodel,itime_fcst,iregion,idbz,1,1)
      1                ,imodel,itime_fcst,iregion,idbz,1,1           
 
-                 write(6,960)c_fdda_mdl_src(imodel),itime_fcst
+                 write(6,970)c_fdda_mdl_src(imodel),itime_fcst
      1                      ,contable
-     1                      ,contable(0,0),contable(1,0)   
-     1                      ,contable(0,1),contable(1,1)   
-960              format(/' Calling skill scores for ',a10,i3,3x,8i8)
+!    1                      ,contable(0,0),contable(1,0)   
+!    1                      ,contable(0,1),contable(1,1)   
+970              format(/' Calling skill scores for ',a10,i3,3x,8i10)       
 
                  lun_out = 6
                  call skill_scores(contable,lun_out                    ! I
@@ -444,7 +470,7 @@
 
          enddo ! idbz
 
-        enddo ! fields
+ 980    enddo                     ! fields
 
  999    write(6,*)' End of subroutine verif_radar_composite'
 
