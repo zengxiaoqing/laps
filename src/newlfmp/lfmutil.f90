@@ -596,8 +596,13 @@ htdsig=htsig/((-rvolv*alog(hrhsig)*htsig)+1.0)
 
 call height_tw(hpsig,hzsig,htsig,htdsig,psfc,zsfc,tsfc,tdsfc,mrsfc,pmsl  &
               ,0.0,ztw0,lx,ly,nz)
+
+I4_elapsed = ishow_timer()
+
 call height_tw(hpsig,hzsig,htsig,htdsig,psfc,zsfc,tsfc,tdsfc,mrsfc,pmsl  &
               ,1.7,ztw1,lx,ly,nz)
+
+I4_elapsed = ishow_timer()
 
 ! Visibility.
 
@@ -707,6 +712,8 @@ if (verbose) then
       print*,'Min/Max laps/kelsch = ',minval(fwx_index),maxval(fwx_index)
    endif
 endif
+
+I4_elapsed = ishow_timer()
 
 !Beka moisture flux
 
