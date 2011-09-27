@@ -482,6 +482,14 @@ netcdf lsx {
 	    level:units = "    ";
             level:_CoordinateAxisType = "GeoZ";
                     	
+        //	list of grid levels for CF compliance
+
+        float 
+            z(z);
+            z:long_name="level of data";
+	    z:units = "";
+            z:_CoordinateAxisType = "GeoZ";
+                    	
         //      validtime of the grid 
 
         double
@@ -573,6 +581,7 @@ netcdf lsx {
 
     data:
 
+        z               = 0;
         earth_shape     = "spherical radius";
         grid_name       = "LAPS lsx file - LAPS surface";
         process_name    = "LAPS - Local Analysis and Prediction System";
