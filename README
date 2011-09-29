@@ -4183,9 +4183,26 @@ E.g. parameters in data file: 'static/laps2grib.vtab'
 3d 0,'lt1','ht ', 1000.,110000.,  1., 0,0, 3,  5
 2d 'l1s','r01',1000.,4,  1, 0, 0,255,255,255,0, 1,  8
 
-There are two numbers in the laps2grib.vtab file that immediately follow the file name extension and variable name: the conversion factor and the scale factor. The conversion factor will be multiplied by the LAPS variable coming out of the file in order to make the units conform to WMO specs (e.g. like cloud cover, which WMO defines as a percent from 0-100 whereas LAPS uses a fraction of 0-1., so we set the conversion factor to 100). In the case of precipitation, the units need to be in mm for GRIB, so if LAPS has precip specified in meters, then your conversion factor needs to be 1000 so you can get the data into mm. The scale factor specifies how many digits of precision to preserve after the decimal. It can be negative (for example, -1 would have precision to the nearest 10, 0 would give you to the nearest, and 1 gives you 1/10th, and so forth). So, if you have something that is typically very small (say, mixing ratio which in kg/kg ranges from 0.0001 to about 0.01, you might use a scale factor of 4 to preserve 4 digits after the decimal. On the other hand, with cloud cover you may only need the nearest integer value from 1-100, so you could use 0. 
+There are two numbers in the laps2grib.vtab file that immediately follow the 
+file name extension and variable name: the conversion factor and the scale 
+factor. The conversion factor will be multiplied by the LAPS variable coming 
+out of the file in order to make the units conform to WMO specs (e.g. like 
+cloud cover, which WMO defines as a percent from 0-100 whereas LAPS uses a 
+fraction of 0-1., so we set the conversion factor to 100). In the case of 
+precipitation, the units need to be in mm for GRIB, so if LAPS has precip 
+specified in meters, then your conversion factor needs to be 1000 so you 
+can get the data into mm. The scale factor specifies how many digits of 
+precision to preserve after the decimal. It can be negative (for example, 
+-1 would have precision to the nearest 10, 0 would give you to the nearest, 
+and 1 gives you 1/10th, and so forth). So, if you have something that is 
+typically very small (say, mixing ratio which in kg/kg ranges from 0.0001 
+to about 0.01, you might use a scale factor of 4 to preserve 4 digits after 
+the decimal. On the other hand, with cloud cover you may only need the nearest 
+integer value from 1-100, so you could use 0. 
 
-(One thing on encoding the precip data, though. Typically accumulations use product template 8 in the GRIB-2 spec and you have to encode the period over which the precip accumulates... laps2grib does not yet accommodates such things.)
+(One thing on encoding the precip data, though. Typically accumulations use 
+product template 8 in the GRIB-2 spec and you have to encode the period over 
+which the precip accumulates... laps2grib does not yet accommodates such things.)
 
 ------ 3.4.3 --------------WFOPREP------------------------------------------
 
