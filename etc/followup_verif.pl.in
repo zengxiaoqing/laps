@@ -13,7 +13,7 @@ use strict;
 #    -a model configuration (e.g. schultz,spaghetti)
 #    -d domain (e.g. dwr)
 #    -r laps dataroot
-#    -y delay time (seconds) [optional]
+#    -y delay time (hours) [optional]
 #    -f forecast output interval (hours) [optional]
 #    -c cycle frequency (hours) [optional]
 #    -l forecast length (hours) [optional]
@@ -38,7 +38,7 @@ my $resolution;
 
 my @vars = qw(REF);
 
-my $fcstprd = "Radar_Sfc";
+#my $fcstprd = "Radar_Comp";
 
 my @modelnames=&laps_tools::get_nl_value("nest7grid.parms","fdda_model_source",$dataroot);
 my $modelname = @modelnames[1];   
@@ -62,6 +62,12 @@ my $model_fcst_intvl = $model_fcst_intvl[0]; # seconds
 my @model_fcst_len=&laps_tools::get_nl_value("nest7grid.parms","model_fcst_len",$dataroot);
 my $model_fcst_len = $model_fcst_len[0]; # minutes
 
+my @laps_cycle_time=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time",$dataroot);
+my $laps_cycle_time = $laps_cycle_time[0]; # seconds
+
+my $verif_intvl = $model_fcst_intvl;
+if($laps_cycle_time > $verif_intvl) {$verif_intvl = $laps_cycle_time;}
+
 my $cycle_freq; # Cycle frequency in hours
 my $timeout;    # Seconds to wait before giving up after starting
 if(defined $opt_c){
@@ -76,7 +82,7 @@ my ($output_inc); # Forecast output interval (hours)
 if(defined $opt_f){
     $output_inc = $opt_f;                     
 }else{
-    $output_inc = $model_fcst_intvl / 3600.;  
+    $output_inc = $verif_intvl / 3600.;  
 }
 
 my $fcst_len; # Forecast length (hours)
@@ -100,19 +106,18 @@ print "setup fsf/fua pathnames\n";
 my $local_fsf = "$dataroot/$fsf_subdir";
 my $local_fua = "$dataroot/$fua_subdir";
 
-# Set up cycle to process based on system time (UTC)
+# Set up cycle to process based on system time and delay (UTC)
 
 print "setup time parameters\n";
 #beka my $systime_now = time-3600;
 my $systime_now = time;
+if (defined $opt_y) {
+    $systime_now = $systime_now - ($opt_y * 3600);
+}
 my $cyc_freq_sec = $cycle_freq * 3600;
 my $init_base_sec = $init_base_hr * 3600;
 my $remainder = ($systime_now - $init_base_sec) % $cyc_freq_sec;
 my $cycle_sec = $systime_now - $remainder;
-
-if (defined $opt_y) {
-    $cycle_sec = $cycle_sec - $opt_y
-}
 
 # Convert the cycle time in seconds to normal parameters
 
@@ -124,6 +129,7 @@ print "convert time parameters\n";
 my $cycyear4 = $cycyear + 1900;
 $cycyear = $cycyear - 100;
 $cycyear = "0".$cycyear while(length($cycyear)< 2);
+#print "Cycle year: $systime_now $opt_y $cycyear\n";
 $cycyday++;
 $cycyday = "0".$cycyday while(length($cycyday)<3);
 $cychour = "0".$cychour while(length($cychour)<2);
@@ -174,6 +180,7 @@ my $t;
 my $modelrun;
 my $hhmm_modelrun;
 my $var;
+my $nimages;
 foreach $var (@vars) { 
 
   my $fcstprd;                   
@@ -184,8 +191,11 @@ foreach $var (@vars) {
   my $imageoutfile_montage;
  
   if($var eq "REF"){
-    $fcstprd = "Radar_Sfc";
-    $analprd = "ptt";
+#   $fcstprd = "Radar_Sfc";
+#   $analprd = "ptt";
+
+    $fcstprd = "Radar_Comp";
+    $analprd = "crf";
   }
 
   $arrpos = 0;
@@ -206,7 +216,7 @@ foreach $var (@vars) {
     $itime++;
 #   if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
     if ($itime <= $opt_t){
-      my $valid_sec = $cycle_sec + 3600*$itime;
+      my $valid_sec = $cycle_sec + $verif_intvl*$itime;
       my $valid_a9time=&laps_tools::i4time_to_a9time($valid_sec+315619200);
 
       my $analimagedir = "/w3/lapb/domains/$domain/anal2d/archive/$analprd/";
@@ -238,18 +248,23 @@ foreach $var (@vars) {
         }
       }
 
-      print "\nMontage the images...\n" ;
-      my $nimages = @fcstimagelist;
+      $nimages = @fcstimagelist;
       my $ncols = 3;
       my $nrows = 1;
       my $x = "x";
       $nrows = int(($nimages-1) / $ncols) + 1;
       $imageoutfile_montage = $imageoutdir.$fcstimage.".gif";
-      $command = "convert -resize 121.3% @fcstimagelist $imageoutfile_montage; montage $fullanal_image $imageoutfile_montage -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
-      print "setting up command: $command\n";
-      $result=system("$command");
 
-      push @montageimagelist, $imageoutfile_montage;                    
+      if($nimages > 0){
+          print "\nMontage the images...\n" ;
+          $command = "rm -f $imageoutfile_montage; convert -resize 121.3% @fcstimagelist $imageoutfile_montage; montage $fullanal_image $imageoutfile_montage -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
+          print "setting up command: $command\n";
+          $result=system("$command");
+
+          push @montageimagelist, $imageoutfile_montage;                    
+      }else{
+          print "\nNo images available at this time step for montage...\n" ;
+      }
 
       print "done.\n";
       splice @times_new, $arrpos, 1;
@@ -262,6 +277,13 @@ foreach $var (@vars) {
   }
 
 # Add the last montage a second time
+  $nimages = @montageimagelist;
+
+  if($nimages == 0){
+      print "\nWARNING: No montages available for animation...\n" ;
+      exit;
+  }
+
   push @montageimagelist, $imageoutfile_montage;                    
     
   print "\nProcessing $var images...  \n" ;
@@ -306,7 +328,17 @@ foreach $var (@vars) {
   print "\nUpdate HHMM Montage Thumb...  \n" ;
   my $thumb = "$imageoutdir"."montageanim_$hhmm_modelrun\_thumb.gif";
 # $command = "convert -resize 90x60! $imageoutdir"."montageanim_$modelrun.gif $thumb";                              
-  $command = "convert -resize 90x60! $imageoutfile_anal $thumb";
+  if(-e "$imageoutdir"."montageanim_$modelrun.gif"){ # Use analysis image for thumb, except remove the thumb if the montage isn't available
+      $command = "convert -resize 90x60! $imageoutfile_anal $thumb";
+  }else{
+      $command = "rm -f $thumb";
+  }
+  print "setting up command: $command\n";
+  $result=system("$command");
+
+  print "\nSetup Java Looper Directory and files...  \n" ;
+  my $looper_outdir = $imageoutdir."/loop_".$hhmm_modelrun;
+  $command = "mkdir -p $looper_outdir";
   print "setting up command: $command\n";
   $result=system("$command");
 
