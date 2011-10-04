@@ -128,7 +128,6 @@ cdis
 
         write(6,*)
         write(6,*)' Entering Derived Wind Fields Subroutine',i4time_sys       
-        write(6,*)' Version updated 3/29/96'
 
 !       Housekeeping
         n_prods = 4
@@ -201,6 +200,8 @@ cdis
 !       i4_tol = max(ilaps_cycle_time / 2, iradar_cycle_time / 2)
 
         call get_filespec(ext_radar,2,c_filespec,istatus)
+
+        write(6,*)' istat_lps = ',istat_lps
 
         if(istat_lps .eq. 1)then
             write(6,*)' passing in "dbz_max_2d" for "ref_max" array'
