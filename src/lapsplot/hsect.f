@@ -2698,17 +2698,17 @@ cabdel
      1                                  ,NX_L,NY_L,radar_array,0
      1                                  ,istatus)
 
-                    c_label = 'Col. Max Reflectivity (lmr) '    
+                    c_label = 'Composite Reflectivity (lmr) '    
 
                 elseif(c_type .eq. 'ra')then
                     radar_array = field_2d
-                    c_label = 'Col. Max Ref (interim-vrc)  '    
+                    c_label = 'Composite Ref (interim-vrc) '    
 
                 else
                     write(6,*)' Calling get_max_ref'
                     call get_max_reflect(grid_ra_ref,NX_L,NY_L,NZ_L
      1                                  ,r_missing_data,radar_array)
-                    c_label = 'Col. Max Ref (intermediate) '    
+                    c_label = 'Composite Ref (intermediate) '    
 
                 endif
 
