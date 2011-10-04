@@ -253,12 +253,12 @@ cdis
      1                  rh_3d_pct,               ! I
      1                  pres_sfc_pa,             ! I
      1                  temp_sfc_k,              ! I
-!    1                  dbz_max_2d,istat_lps,    ! O
+     1                  dbz_max_2d,istat_lps,    ! O
      1                  twet_snow,               ! O
      1                  j_status,                ! O
      1                  istatus1)                ! O
 
-        istat_lps = 0 ! Temporary until this is wired in'
+!       istat_lps = 0 ! Temporary until this is wired in'
         istat_twet_snow = 1 ! if we get this far the read was successful
 
         call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
