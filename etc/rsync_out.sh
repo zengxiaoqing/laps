@@ -4,7 +4,7 @@
 
 #Argument 1 is local DATA_ROOT
 
-#Argument 2 is remote DATA_ROOT (include the node unless arg 5 is set to 6)
+#Argument 2 is remote DATA_ROOT (include the node unless arg 5 is set to 5r,6,7r,8r)
 
 #Argument 3 tells whether to use 'qsub'
 
@@ -16,6 +16,7 @@
 #           5r: reverse copy individual fua/fsf subdirectory via rsync
 #           6:  copy individual fua/fsf subdirectory via scp (and remote purge)
 #           7:  copy all except fua/fsa and verif via rsync in prioritized sequence
+#           7r: reverse copy all except fua/fsa and verif via rsync in prioritized sequence
 #           8:  copy just verif via rsync
 
 #Argument 6 is optional subdirectory (if arg 5 is set to "5", "5r" or "6")
@@ -41,6 +42,9 @@ if test "$5" == "8"; then # copy verif
   log=$LOCAL_DATA_ROOT/log/rsync.log.verif.`date +\%H\%M`
   DELETE=""
 elif test "$5" == "7"; then 
+  DELETE=""
+  log=$LOCAL_DATA_ROOT/log/rsync.log.`date +\%H\%M`
+elif test "$5" == "7r"; then 
   DELETE=""
   log=$LOCAL_DATA_ROOT/log/rsync.log.`date +\%H\%M`
 elif test "$6" == ""; then # copy all
@@ -69,6 +73,11 @@ echo " RSH variable is: $RSH " >> $log
 
 echo " " >> $log
 echo " DELETE variable is: $DELETE " >> $log
+
+echo " " >> $log
+echo " Option 5 is: $5 " >> $log
+
+REMOTE_NODE=oplapb@clank   
 
 if test "$3" = qsub; then
 
@@ -130,7 +139,7 @@ if test "$3" = qsub; then
 
         echo " "                                                                   >> $script
         echo "Start copy of verif directories"                                     >> $script
-        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/lapsprd/verif/* --exclude='REF/cont' $REMOTE_DATA_ROOT/lapsprd/verif >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo "rsync -rlptgvvz $RSH         $LOCAL_DATA_ROOT/lapsprd/verif/* --exclude='REF/cont' $REMOTE_DATA_ROOT/lapsprd/verif >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
         echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
 
@@ -192,7 +201,6 @@ if test "$3" = qsub; then
       MODELTYPE=`echo $subdir | cut -c1-3`
       MODELCONFIG=`echo $subdir | cut -c5-10`
 
-      REMOTE_NODE=oplapb@clank   
       if test "$9" != ""; then
         REMOTE_NODE=$9
       fi
@@ -257,6 +265,35 @@ if test "$3" = qsub; then
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
     fi
 
+    if test "$5" == "7r"; then # reverse copy all in prioritized list except fua/fsf and verif
+        echo "under construction"            >> $log
+        echo " "                                                                   >> $script
+        echo "date -u  > \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+
+        echo " "                                                                   >> $script
+        echo "Start copy of www directories"                                       >> $script
+        echo "echo rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/lapsprd/www/*                $REMOTE_NODE:$REMOTE_DATA_ROOT/lapsprd/www"                                                               >> $script
+        echo "     rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/lapsprd/www/*                $REMOTE_NODE:$REMOTE_DATA_ROOT/lapsprd/www   >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
+        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+
+        echo " "                                                                   >> $script
+        echo "Start copy of time directory"                                        >> $script
+        echo "rsync -rlptgvvz $RSH $LOCAL_DATA_ROOT/time/systime.dat                          $REMOTE_NODE:$REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
+        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+
+        echo " "                                                                   >> $script
+        echo "Start reverse copy of most overall dataroot directories"             >> $script
+        echo "rsync -rlptgvvz $RSH $LOCAL_DATA_ROOT/static/exclude.txt                        $REMOTE_NODE:$REMOTE_DATA_ROOT/static        >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo "echo ssh clank.fsl.noaa.gov 'ssh pinky rsync -rlptgvvz --exclude-from=$REMOTE_DATA_ROOT/static/exclude.txt $RSH --timeout=500 jetscp.rdhpcs.noaa.gov:$LOCAL_DATA_ROOT/ $REMOTE_DATA_ROOT'                                                            " >> $script
+        echo "     ssh clank.fsl.noaa.gov 'ssh pinky rsync -rlptgvvz --exclude-from=$REMOTE_DATA_ROOT/static/exclude.txt $RSH --timeout=500 jetscp.rdhpcs.noaa.gov:$LOCAL_DATA_ROOT/ $REMOTE_DATA_ROOT' >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+#       echo "echo rsync -rlptgvvz --exclude-from=$LOCAL_DATA_ROOT/static/exclude.txt $RSH $DELETE \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT"                                                             >> $script
+#       echo "     rsync -rlptgvvz --exclude-from=$LOCAL_DATA_ROOT/static/exclude.txt $RSH $DELETE \$LOCAL_DATA_ROOT/* \$REMOTE_DATA_ROOT >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+        echo " "                                                                   >> $script
+        echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub.log.`date +\%H\%M` 2>&1" >> $script
+    fi
+
     if test "$5" == "8"; then # copy just verif
         echo " "                                                                   >> $script
         echo "date -u  > \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
@@ -269,6 +306,10 @@ if test "$3" = qsub; then
         echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/time/modeltime.dat                       $REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
         echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
+    fi
+
+    if test "$5" == "8r"; then # reverse copy just verif
+        echo "under construction"            >> $log
     fi
 
     echo " "                                 >> $log
