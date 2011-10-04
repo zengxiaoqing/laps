@@ -432,7 +432,8 @@ C Orchid
       CALL GSCR (1,28,.0,.0,.95)
 ! Paler Yellow
       CALL GSCR (1,29,.50,.38,.0)
-      CALL GSCR (1,30,.0,.95,.0)
+! Dark Pink
+      CALL GSCR (1,30,.5,.30,.5)
       CALL GSCR (1,31,.2,.7,.7)
 
 ! Pale Yellow
