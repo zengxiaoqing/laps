@@ -11,7 +11,7 @@ echo "user = "`whoami`
 echo "machine = "`uname -n`
 
 # Arguments
-domain=$1
+DOMAIN=$1
 MODEL=$2
 LAPS_DATA_ROOT=$3
 DATETIME=$4
