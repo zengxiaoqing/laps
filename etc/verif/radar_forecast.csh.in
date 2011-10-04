@@ -10,12 +10,15 @@
 
 # Fifth argument is Reflectivity in dbz
 
+# Sixth argument is domain name
+
 setenv LAPSINSTALLROOT @prefix@                                                     
 setenv LAPS_DATA_ROOT $1
 setenv NLINE $2
 setenv STAT $3
 setenv YRANGE $4
 setenv REFLECTIVITY $5
+setenv DOMAIN_NAME $6
 
 #setenv LAPS_DATA_ROOT /data/fab/projects/dwr
 setenv LOGDIR $LAPS_DATA_ROOT/log
@@ -72,7 +75,7 @@ echo 'set grid'                                                          >> $GNU
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
 echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"'                   >> $GNUPLOTFILE
 echo 'set ylabel "Radar Reflectivity '$STAT'"'                           >> $GNUPLOTFILE
-echo 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'"'        >> $GNUPLOTFILE
+echo 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT' '$DOMAIN_NAME' domain"' >> $GNUPLOTFILE
 #cho 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'" giant'   >> $GNUPLOTFILE
 #cho 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'" font DejaVuSans 30'   >> $GNUPLOTFILE
 echo 'set key left box'                                                  >> $GNUPLOTFILE
