@@ -19,6 +19,9 @@ driver                                            lapsplot_main.f
                     read_gps_obs                  lib/read_gps_obs.f
             plot_td_obs                           plotobs.f
             write_label_lplot                     hsect.f
+            lapsplot                              lapsplot.f
+                lapsplot_setup                      "
+                    draw_county_map               drawctymap.f
         xsect                                     xsect.f
             mk_fcst_xlabel                          "
             write_label_lplot                     hsect.f

@@ -13,6 +13,7 @@ laps_deriv_main                                         laps_deriv.f
                 get_mvd                                     "
                 get_sfm_1d                              lib/smf_wisp92.f
                 cloud_bogus_w                           lib/vv.f
+                    parabolic_vv_profile                    "
                 cpt_pcp_type_3d                         lib/get_cloud_deriv.f
                     wb_melting_threshold                    "
                 isi3                                        "
