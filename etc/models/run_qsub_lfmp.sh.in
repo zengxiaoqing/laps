@@ -44,6 +44,18 @@ echo "model_run_time = $model_run_time"
 numFcsts=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v n_fcst_steps_p1`
 echo "numFcsts = $numFcsts"
 
+nx=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v nx_l`
+echo "nx = $nx"
+
+nodetype=hserial
+
+if test "$nx" > "1500"; then
+    vmem=11.0G
+else
+    vmem=6.0G
+fi
+echo "nodetype = $nodetype"
+
 # Use the forecast increment from the namelist, except establish a floor of 15 minutes for the HRRR
 fcstIncrMin_nl=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v fcst_intvl_min`
 if test "$physics" = hrrr; then
@@ -63,11 +75,10 @@ echo "#!/bin/sh --login"         > $script
 echo "#$ -N lfmp_$run"          >> $script
 echo "#$ -A hmtb"               >> $script
 #echo "#$ -l h_rt=08:00:00"      >> $script
-echo "#$ -l h_rt=$wallclock:00,h_vmem=6.0G"      >> $script
+echo "#$ -l h_rt=$wallclock:00,h_vmem=$vmem"      >> $script
 echo "#$ -S /bin/sh"            >> $script
 echo "#$ -cwd"                  >> $script
-#echo "#$ -pe service 1"         >> $script
-echo "#$ -pe hserial 1"         >> $script
+echo "#$ -pe $nodetype 1"       >> $script
 echo "#$ -o $lapsdataroot/log/qlfmp.log.`date +\%H\%M`"           >> $script
 echo "#$ -j y"                  >> $script
 echo "#exit"                    >> $script
