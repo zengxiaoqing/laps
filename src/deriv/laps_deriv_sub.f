@@ -50,6 +50,7 @@ cdis
      1                        rh_3d_pct,
      1                        pres_sfc_pa,
      1                        t_sfc_k,
+     1                        dbz_max_2d,istatus_lps,    ! O
      1                        twet_snow,                 ! O
      1                        j_status,istatus)
 
@@ -306,7 +307,7 @@ cdis
         integer obstime(maxstns),kloud(maxstns),idp3(maxstns)
         character store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
         character wx_s(maxstns)*8, obstype(maxstns)*8
-        character atime*24, infile*70
+        character atime*24, infile*256
 
         integer STATION_NAME_LEN
         parameter (STATION_NAME_LEN = 3)                   
@@ -497,7 +498,13 @@ c read in laps lat/lon and topo
      1                          ,istat_radar_3dref_orig
  510            format(23x,3i3)
 
+!               Obtain column max ref
+                call get_max_reflect(radar_ref_3d,NX_L,NY_L,NZ_L
+     1                              ,ref_base,dbz_max_2d)
+
             endif ! istatus_lps
+
+            write(6,*)' istatus_lps = ',istatus_lps
 
             var = 'LCV'
             ext = 'lcv'
