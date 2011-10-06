@@ -120,6 +120,20 @@ netcdf lst {
             wb0:lvl_coord="MSL";
             wb0:LAPS_units="M";
  
+         //      wet bulb (1.3C) //
+
+         float
+            wb1(record,z,y,x);
+            wb1:navigation_dim = "nav";
+            wb1:record = "valtime, reftime";
+            wb1:_FillValue = 1.e+37f;
+            wb1:long_name="wet bulb 1";
+            wb1:units="meters";
+            wb1:valid_range= -20000.f, 20000.f;
+            wb1:LAPS_var="WB1";
+            wb1:lvl_coord="MSL";
+            wb1:LAPS_units="M";
+ 
         //	LAPS variables
 
         long
@@ -137,6 +151,7 @@ netcdf lst {
             k_comment(record,z,namelen),
             lcl_comment(record,z,namelen),
             wb0_comment(record,z,namelen),
+            wb1_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -173,6 +188,10 @@ netcdf lst {
         short
             wb0_fcinv(record, z);
             wb0_fcinv:_FillValue= 0s;
+              	
+        short
+            wb1_fcinv(record, z);
+            wb1_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
