@@ -221,7 +221,7 @@ if (trim(mtype) /= 'st4') then
 !beka
  I4_elapsed = ishow_timer()
 
- if (verbose) then
+ if (verbose .and. .not. large_grid) then
     print*,' '
     print*,'Diagnostics from isobaric domain center:'
     print*,'--------------------------------------------'
