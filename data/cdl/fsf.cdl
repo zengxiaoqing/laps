@@ -405,12 +405,12 @@ netcdf fsf {
             tw0:lvl_coord="MSL";
             tw0:LAPS_units="meters";
 
-        //      LAPS Fcst height of wet-bulb=1.7C   //
+        //      LAPS Fcst height of wet-bulb=1.3C   //
         //      bigfile name = ztw1
         float
             tw1(record,z,y,x);
             tw1:_FillValue = 1.e+37f;
-            tw1:long_name="Height of wet-bulb=1.7C ";
+            tw1:long_name="Height of wet-bulb=1.3C ";
             tw1:units="meters";
             tw1:valid_range= 0.f, 100000.f;
             tw1:LAPS_var="TW1";
