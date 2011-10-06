@@ -49,6 +49,7 @@
 
         call verif_radar_composite(i4time,a9time,model_fcst_intvl,
      1                  model_fcst_len,
+     1                  model_cycle_time,
      1                  laps_cycle_time,
      1                  NX_L,NY_L,
      1                  NZ_L,
@@ -401,6 +402,8 @@
      1                                  ,ilow,ihigh,jlow,jhigh       ! I
      1                                  ,lmask_rqc_3d                ! I
      1                                  ,contable)                   ! O
+                  write(6,801)rdbz,contable
+801               format(' Contingency table for ',f5.0,' dbz is:',4i9)       
 
 
 !                 Calculate/Write Skill Scores
