@@ -2,6 +2,7 @@
         subroutine verif_radar_composite(i4time_sys,a9time,
      1                  model_fcst_intvl,
      1                  model_fcst_len,
+     1                  model_cycle_time,
      1                  laps_cycle_time,
      1                  NX_L,NY_L,
      1                  NZ_L,
@@ -49,6 +50,7 @@
         character*150 hist_file, members_file
         character*150 bias_file_in, ets_file_in
         character*150 bias_file_out, ets_file_out
+        character*10 compdir
 
         integer n_fields
         parameter (n_fields=1)
@@ -84,6 +86,7 @@
      1  n_sum(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
 
         ndays = 7
+        compdir = 'comp'
 
         rmiss = -999.
         imiss = -999
@@ -94,7 +97,6 @@
         frac_coverage = -999.
         n_sum = 0
 
-        model_cycle_time = 21600 ! Try to pass in from driver
         thresh_var = 20. ! lowest threshold for this variable
 
         write(6,*)' Time is ',i4time_sys,a9time
@@ -151,8 +153,10 @@
          iregion = 1
 
          nmissing = 0
+         nsuccess = 0
 
          nmissing_thr = nint(0.20 * float(n_init_times))
+         nsuccess_thr = nint(0.80 * float(n_init_times))
 
          do init = 0,n_init_times
 
@@ -202,16 +206,17 @@
            inquire(file=bias_file_in,exist=l_exist)
            if(.not. l_exist)then
                nmissing = nmissing + 1
-               if(nmissing .le. nmissing_thr)then
+!              if(nmissing .le. nmissing_thr)then
                    write(6,*)' WARNING: file does not exist:'
      1                                                     ,bias_file_in
                    goto960
-               else
-                   write(6,*)' ERROR: file does not exist:',bias_file_in       
-                   write(6,*)
-     1  ' Skipping this field, too many missing initialization times...'       
-                   goto980
-               endif
+!              else
+!                  write(6,*)' ERROR: file does not exist:',bias_file_in       
+!                  write(6,*)
+!    1  ' Skipping this field, too many missing initialization times...'       
+!    1                       ,nmissing_thr                  
+!                  goto980
+!              endif
            endif ! l_exist
 
            inquire(file=ets_file_in,exist=l_exist)
@@ -262,13 +267,21 @@
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
-                   read(lun_bias_in,912)a24time_valid,    
+                   read(lun_bias_in,51)cline
+                   read(cline,912,err=913)a24time_valid,    
      1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
      1                              ,imodel=2,n_fdda_models)     
 912                format(a24,3x,20i12.3)
-                   write(6,*)'in,jn,n',in,jn,
+                   goto914
+913                write(6,*)' read ERROR in bias file N vals '
+                   write(6,*)' check if model config has changed'
+                   write(6,*)in,jn,itime_fcst
+                   write(6,*)cline
+                   goto 955
+914                write(6,915)in,jn,itime_fcst,
      1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
      1                              ,imodel=2,n_fdda_models)     
+915                format('in,jn,itime,n',i2,i2,i4,20i10)
                  enddo ! itime_fcst
                enddo ! jn
                enddo ! in
@@ -280,11 +293,11 @@
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
-                   read(lun_bias_in,913)a24time_valid,    
+                   read(lun_bias_in,923)a24time_valid,    
      1                 (frac_coverage                
      1                   (imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
-913                format(a24,3x,20f12.5)
+923                format(a24,3x,20f12.5)
                enddo ! itime_fcst
 
 !              Read members.txt file
@@ -324,6 +337,7 @@
            n_sum(:,:,:,:,:,:) = n_sum(:,:,:,:,:,:) + n(:,:,:,:,:,:)
           end where
 
+!         Write to log for informational purposes
           do imodel=2,n_fdda_models
              do itime_fcst = 0,n_fcst_times
                  write(6,950)c_fdda_mdl_src(imodel)
@@ -334,12 +348,21 @@
              enddo ! itime_fcst
           enddo ! imodel
 
-          close(lun_bias_in)                                      
+          nsuccess = nsuccess + 1
+
+955       close(lun_bias_in)                                      
           close(lun_ets_in)                                         
 
 960      enddo                    ! init (initialization time)
 
          write(6,*)'init neg ',n_sum(2,0,1,1,1,1)
+
+         write(6,*)'success count',nsuccess,nsuccess_thr               
+         write(6,*)'nmissing is ',nmissing
+         if(nsuccess .lt. nsuccess_thr)then
+             write(6,*)' Insufficient successful times'
+             goto 980
+         endif
 
 !        Calculate composite bias/ets
          do idbz = 1,nthr
@@ -395,14 +418,16 @@
 
 !          write GNUplot file for the time series of this model (region 1)
            bias_file_out = plot_dir(1:len_plot)//'/'
-     1                                     //trim(c_thr)//'_comp/'
+     1                                     //trim(c_thr)
+     1                                     //'_'//trim(compdir)//'/'
      1                                     //a9time_initial     
      1                                     //'.bias'     
 
            write(6,*)'bias_file_out = ',bias_file_out
 
            ets_file_out  = plot_dir(1:len_plot)//'/'
-     1                                     //trim(c_thr)//'_comp/'
+     1                                     //trim(c_thr)
+     1                                     //'_'//trim(compdir)//'/'
      1                                     //a9time_initial     
      1                                     //'.ets'      
 
@@ -457,7 +482,7 @@
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
-                   write(lun_bias_out,913)a24time_valid,    
+                   write(lun_bias_out,923)a24time_valid,    
      1                 (frac_coverage                
      1                   (imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
@@ -485,7 +510,7 @@
 
         character*(*) line
         character*1 char
-        character*(*)carray(maxelems)
+        character*30 carray(maxelems)
         
         integer istart(maxelems)
         integer iend(maxelems)
@@ -493,23 +518,42 @@
         lenline = len(line)
         nelems = 0
 
+        lenelem = len(carray(1))
+
 !       Beginning of line might start an element
         if(line(1:1) .ne. char)then
-            nelems = 1
-            istart(nelems) = 1
+            istart(1) = 1
         endif
 
         do i = 1,lenline-1
+
+!           Check for start of string
             if(line(i:i) .eq. char .and. line(i+1:i+1) .ne. char)then
-                nelems = nelems + 1
-                istart(nelems)= i+1
+                if(nelems+1 .gt. maxelems)then
+                    write(6,*)
+     1              ' Error: nelems+1 > maxelems',nelems+1,maxelems,i
+     1                     ,line(i:i+1)
+                    write(6,*)line
+                    stop
+                endif
+                istart(nelems+1)= i+1
             endif
 
+!           Check for end of string
             if(line(i:i) .ne. char .and. line(i+1:i+1) .eq. char)then
+                nelems = nelems + 1
                 iend(nelems)= i+1
+ 
+                if(iend(nelems) - istart(nelems) .ge. lenelem)then
+                    write(6,*)' Error: element is too long',
+     1                        istart(nelems),iend(nelems)
+                    write(6,*)line
+                    stop
+                endif 
+
+                carray(nelems) = line(istart(nelems):iend(nelems))
             endif
 
-            carray(nelems) = line(istart(nelems):iend(nelems))
         enddo ! i
 
         write(6,*)' Elements in csplit are:'
