@@ -7,6 +7,9 @@ implicit none
 
 integer :: i,j,k
 real, allocatable, dimension(:,:) :: ri,rj
+logical l_bilinear
+
+l_bilinear = .false.
 
 allocate(ri(lx,ly),rj(lx,ly))
 
@@ -41,7 +44,7 @@ endif
 
 do k=1,nvar2d+nvar3d*nz
    if (ngrid(1,1,k) < rmsg) then
-      if (k <= nvar2d) then
+      if (k <= nvar2d) then ! sfc grids
          if (trim(mtype) == 'nmm') then
             call hinterp_nmm(nx,ny,lx,ly,ri,rj,ngrid(1,1,k),sgrid(1,1,k))
          else
@@ -54,15 +57,17 @@ do k=1,nvar2d+nvar3d*nz
             enddo
             enddo
          endif
-      else
+      else ! 3D grids
          if (trim(mtype) == 'nmm') then
             call hinterp_nmm(nx,ny,lx,ly,ri,rj,ngrid(1,1,k),hgrid(1,1,k-nvar2d))
-         else
+         elseif(.not. l_bilinear)then
             do j=1,ly
             do i=1,lx
                call gdtost_lfm(ngrid(1,1,k),nx,ny,ri(i,j),rj(i,j),hgrid(i,j,k-nvar2d))
             enddo
             enddo
+         else
+            call bilinear_laps_2d(ri,rj,nx,ny,lx,ly,ngrid(1,1,k),hgrid(i,j,k-nvar2d))
          endif
       endif
    endif
@@ -94,14 +99,16 @@ real :: pla,dz,plo,phi,slope
 allocate(logp(lx,ly,nz))
 logp=alog(hpsig)
 
+if(.not. large_grid)then
+
 ! Interpolate 3d horizontally interpolated data to isobaric surfaces.
 ! Assume that height and temp are always available, but check for 
 !  all missing in other fields.  No need to interpolate if all missing.
 
-do k=1,lz
-   pla=lprsl(k)
-   do j=1,ly
-   do i=1,lx
+  do k=1,lz
+    pla=lprsl(k)
+    do j=1,ly
+    do i=1,lx
       if (hpsig(i,j,1) <= lprs(k)) then
          if (abs(hpsig(i,j,1)-lprs(k)) < .01) then
             dz=0.
@@ -126,25 +133,29 @@ do k=1,lz
             endif
          enddo
       endif
-   enddo
-   enddo
-enddo
+    enddo
+    enddo
+  enddo
 
-if (minval(hmrsig)  < rmsg) call vinterp_single(logp,hmrsig,shprs)
-if (minval(husig)   < rmsg) call vinterp_single(logp,husig,uprs)
-if (minval(hvsig)   < rmsg) call vinterp_single(logp,hvsig,vprs)
-if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
-!if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
+  if (minval(hmrsig)  < rmsg) call vinterp_single(logp,hmrsig,shprs)
+  if (minval(husig)   < rmsg) call vinterp_single(logp,husig,uprs)
+  if (minval(hvsig)   < rmsg) call vinterp_single(logp,hvsig,vprs)
+  if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
+! if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
+
+endif ! large_grid
 
 if (make_micro) then
-   if (minval(hcldliqmr_sig)  < rmsg) call vinterp_single(logp,hcldliqmr_sig,cldliqmr_prs)
-   if (minval(hcldicemr_sig)  < rmsg) call vinterp_single(logp,hcldicemr_sig,cldicemr_prs)
-   if (minval(hrainmr_sig)    < rmsg) call vinterp_single(logp,hrainmr_sig,rainmr_prs)
-   if (minval(hsnowmr_sig)    < rmsg) call vinterp_single(logp,hsnowmr_sig,snowmr_prs)
-   if (minval(hgraupelmr_sig) < rmsg) call vinterp_single(logp,hgraupelmr_sig,graupelmr_prs)
+   if(.not. large_grid)then
+      if (minval(hcldliqmr_sig)  < rmsg) call vinterp_single(logp,hcldliqmr_sig,cldliqmr_prs)
+      if (minval(hcldicemr_sig)  < rmsg) call vinterp_single(logp,hcldicemr_sig,cldicemr_prs)
+      if (minval(hrainmr_sig)    < rmsg) call vinterp_single(logp,hrainmr_sig,rainmr_prs)
+      if (minval(hsnowmr_sig)    < rmsg) call vinterp_single(logp,hsnowmr_sig,snowmr_prs)
+      if (minval(hgraupelmr_sig) < rmsg) call vinterp_single(logp,hgraupelmr_sig,graupelmr_prs)
+      if (minval(hzdr_sig)      < rmsg) call vinterp_single(logp,hzdr_sig,zdr_prs)
+      if (minval(hldr_sig)      < rmsg) call vinterp_single(logp,hldr_sig,ldr_prs)
+   endif
    if (minval(hrefl_sig)      < rmsg) call vinterp_single(logp,hrefl_sig,refl_prs)
-   if (minval(hzdr_sig)      < rmsg) call vinterp_single(logp,hzdr_sig,zdr_prs)
-   if (minval(hldr_sig)      < rmsg) call vinterp_single(logp,hldr_sig,ldr_prs)
 endif
 
 deallocate(logp)
