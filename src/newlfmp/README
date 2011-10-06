@@ -26,6 +26,7 @@ lfmpost                                      lfmpost.f90
     alloc_isobaric_grid                      lfmgrid.f90
     lfm_vinterp                              interp.f90
     lfm_derived                              lfmutil.f90
+        interp_press_to_z                        "
         lfmclouds                                "
         lfm_integrated_liquid                    "
         lfm_reflectivity                         "
