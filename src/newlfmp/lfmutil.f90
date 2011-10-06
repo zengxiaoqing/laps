@@ -135,6 +135,11 @@ allocate(lprs(lz),lprsl(lz))
 lprs(1:lz)=pressures(1:lz)
 lprsl(1:lz)=alog(lprs(1:lz))
 
+if(lx*ly*lz > 20000000)then
+   write(6,*)' Large grid - process reduced set of 3-D fields'
+   large_grid = .true.
+endif
+
 return
 
 900 continue
@@ -319,19 +324,21 @@ enddo
 
 ! Generate reduced pressure for LAPS usage.
 
-if (verbose) then
+if(.not. large_grid)then
+ if (verbose) then
    print*,' '
    print*,'Reducing pressure to ',redp_lvl, ' meters'
-endif
-call interp_press_to_z(lprs,zprs,redp_lvl,redp,lx,ly,lz)
+ endif
+ call interp_press_to_z(lprs,zprs,redp_lvl,redp,lx,ly,lz)
 
 ! Use same routine to interpolate sea-level pressure.  This method
 ! is used in lieu of original reduction routine, because it will
 ! keep the MSL field consistent with the height field, which has been
 ! properly reduced.  It also produces a bit smoother field over the mountains.
 
-if (verbose) print*,'Reducing pressure to MSL...'
-call interp_press_to_z(lprs,zprs,0.,pmsl,lx,ly,lz)
+ if (verbose) print*,'Reducing pressure to MSL...'
+ call interp_press_to_z(lprs,zprs,0.,pmsl,lx,ly,lz)
+endif
 
 ! Microphysical surface variables.
 
@@ -450,7 +457,7 @@ if (make_micro) then
       print *,'Min/Max hsnowmr_sig =',minval(hsnowmr_sig),maxval(hsnowmr_sig)
       print *,'Min/Max hgraupelmr_sig =',minval(hgraupelmr_sig),maxval(hgraupelmr_sig)
    endif
-   if (minval(hrainmr_sig) < rmsg .and.  &
+   if (minval(hrainmr_sig) < rmsg .and. (.not. large_grid) .and.  &
        minval(hsnowmr_sig) < rmsg .and. minval(hgraupelmr_sig) < rmsg) then
       call lfm_sfc_pcptype(lx,ly,nz,hrainmr_sig,hsnowmr_sig,hgraupelmr_sig  &
                           ,pcptype_sfc)
@@ -581,8 +588,11 @@ I4_elapsed = ishow_timer()
 write(6,*)' Calculating helicity, stability indices'
 call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
 call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
-call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
-            ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
+
+if(.not. large_grid)then
+  call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
+              ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
+endif
 
 deallocate(hthetasig,hthetaesig,hzsigf)
 
@@ -600,7 +610,7 @@ call height_tw(hpsig,hzsig,htsig,htdsig,psfc,zsfc,tsfc,tdsfc,mrsfc,pmsl  &
 I4_elapsed = ishow_timer()
 
 call height_tw(hpsig,hzsig,htsig,htdsig,psfc,zsfc,tsfc,tdsfc,mrsfc,pmsl  &
-              ,1.7,ztw1,lx,ly,nz)
+              ,1.3,ztw1,lx,ly,nz)
 
 I4_elapsed = ishow_timer()
 
@@ -655,16 +665,17 @@ endif
 deallocate(hrhsig,htdsig)
 
 !cj Compute Omega, added 6/21/2007
-do k=1,lz
-do j=1,ly
-do i=1,lx
- tvprs = tprs(i,j,k) * (1. + 0.61*shprs(i,j,k))
-!YHL  omprs(i,j,k) = -(lprsl(k)*wprs(i,j,k)*grav)/(r*tvprs) * 100. ! Pa/Mb
- omprs(i,j,k) = -(lprs(k)*wprs(i,j,k)*grav)/(r*tvprs)  ! changed by Steve. A, Huiling Yuan 9/11/2009
-enddo
-enddo
-enddo
-
+if(.not. large_grid)then
+  do k=1,lz
+  do j=1,ly
+  do i=1,lx
+   tvprs = tprs(i,j,k) * (1. + 0.61*shprs(i,j,k))
+!  YHL  omprs(i,j,k) = -(lprsl(k)*wprs(i,j,k)*grav)/(r*tvprs) * 100. ! Pa/Mb
+   omprs(i,j,k) = -(lprs(k)*wprs(i,j,k)*grav)/(r*tvprs)  ! changed by Steve. A, Huiling Yuan 9/11/2009
+  enddo
+  enddo
+  enddo
+endif
 if (verbose) then
    print*,' '
    print*,'Min/Max tsfc      = ',minval(tsfc),maxval(tsfc)
