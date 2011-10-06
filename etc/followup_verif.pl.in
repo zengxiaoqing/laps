@@ -228,38 +228,73 @@ foreach $var (@vars) {
       print "\nReady to process $a13time @modelnames... \n" ;
 
       my $fcstimage;                             
+      $fcstimage = substr($a13time,9,4);
 
+      my $imiss=0;
+
+#     Make list of all forecast model images for this time
       foreach $modelname (@modelnames){
-        if($modelname ne "lga"){   
+
+        if($modelname ne "lga" && $imiss == 0){   
 
           my $fcstimagedir = "/w3/lapb/domains/$domain/fcst2d/$modelname/archive/$modelrun/$fcstprd";
 
           if (! -d $fcstimagedir) {
             print "WARNING: $fcstimagedir not present\n";
-            next;
-          }
+            $imiss++;
 
-          $fcstimage = substr($a13time,9,4);
-          my $fullfcst_image = $fcstimagedir."/".$fcstimage.".gif ";
-          print "\na13time/fcstimage/fullfcst_image $a13time $fcstimage $fullfcst_image... \n" ;
+          }else{
 
-          push @fcstimagelist, $fullfcst_image;                            
+            $fcstimage = substr($a13time,9,4);
+            my $fullfcst_image = $fcstimagedir."/".$fcstimage.".gif";
+            print "\na13time/fcstimage/fullfcst_image $a13time $fcstimage $fullfcst_image... \n" ;
+
+#           system ("ls -l $fullfcst_image");
+            if (! -e $fullfcst_image) {
+              print "WARNING: $fullfcst_image is not present\n";
+              $imiss++;
+    
+            }else{
+              my $fcstsize = -s $fullfcst_image;
+
+              if($fcstsize > 0){
+                push @fcstimagelist, $fullfcst_image;                            
+              }else{
+                print "WARNING: $fullfcst_image has zero size\n";
+                $imiss++;
+              } # filesize > 0
+
+            } # file exists
+
+          } # directory exists
 
         }
+
+      } # modelname
+
+#     Create montage of analysis and forecast images for this time, resizing the analysis image to match
+      $nimages = @fcstimagelist + 1;
+
+      my $ncols;
+      if($nimages == 4){
+          $ncols = 2;
+      }else{     
+          $ncols = 3;
       }
 
-      $nimages = @fcstimagelist;
-      my $ncols = 3;
       my $nrows = 1;
       my $x = "x";
       $nrows = int(($nimages-1) / $ncols) + 1;
       $imageoutfile_montage = $imageoutdir.$fcstimage.".gif";
 
       if($nimages > 0){
-          print "\nMontage the images...\n" ;
-          $command = "rm -f $imageoutfile_montage; convert -resize 121.3% @fcstimagelist $imageoutfile_montage; montage $fullanal_image $imageoutfile_montage -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
+          print "\nMontage the analysis and forecast images for this time...\n" ;
+#         $command = "rm -f $imageoutfile_montage; convert -resize 121.3% @fcstimagelist $imageoutfile_montage; montage $fullanal_image $imageoutfile_montage -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
+          $command = "rm -f $imageoutfile_montage; convert -resize 82.5% $fullanal_image $imageoutfile_montage; montage $imageoutfile_montage @fcstimagelist  -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
           print "setting up command: $command\n";
           $result=system("$command");
+
+          system("ls -l $imageoutfile_montage");
 
           push @montageimagelist, $imageoutfile_montage;                    
       }else{
@@ -274,7 +309,7 @@ foreach $var (@vars) {
       $arrpos++;
 
     }
-  }
+  } # a13time
 
 # Add the last montage a second time
   $nimages = @montageimagelist;
