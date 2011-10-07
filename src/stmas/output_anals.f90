@@ -75,7 +75,7 @@ SUBROUTINE OUTPTLAPS
   REAL          :: W3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2)	! 3D WIND: UV
   REAL          :: SF(FCSTGRD(1),FCSTGRD(2),2)	! SURFACE WIND: UV
   REAL          :: SP(FCSTGRD(1),FCSTGRD(2))	! SURFACE PRESSURE
-  REAL          :: HEIGHT_TO_ZCOORD3,SSH2,RM,A,DLNP
+  REAL          :: HEIGHT_TO_ZCOORD3,SSH2,MAKE_RH,RM,A,DLNP
 !ADDED BY SHUYUAN 20100722 FOR REFLECTIVITY
   REAL          :: REF_OUT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
   integer       :: istatus  ,N_3D_FIELDS
@@ -212,26 +212,32 @@ print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fc
   ENDDO
 
   ! According a discussion with Dan, specific humidity is adjusted by Q_r (rain content) using ssh2 routine of LAPS:
+GOTO 111
   DO K=1,FCSTGRD(3)
     DO J=1,FCSTGRD(2)
       DO I=1,FCSTGRD(1)
         ! Assume saturation: TD = T:
         IF (BK0(I,J,K,IFRAME,6) .GT. 0.0) &
-          BK0(I,J,K,IFRAME,5) = SSH2(LV(k),BK0(I,J,K,IFRAME,4),BK0(I,J,K,IFRAME,4),-132.0)
+          BK0(I,J,K,IFRAME,5) = SSH2(LV(k)/100.0,BK0(I,J,K,IFRAME,4)-273.15,BK0(I,J,K,IFRAME,4)-273.15,-132.0)
       ENDDO
     ENDDO
   ENDDO
+111 continue ! skip SH adjustment according to q_r
 
   ! CONVERTED FROM P, Q T:
+print*,'Use make_rh!!!',BK0(1,1,10,iframe,5)
   DO K=1,FCSTGRD(3)
     DO J=1,FCSTGRD(2)
       DO I=1,FCSTGRD(1)
         sph = BK0(I,J,K,IFRAME,5)*0.001
         tmp = BK0(I,J,K,IFRAME,4)
-        RH(I,J,K) = 1.E2 * (LV(k)*sph/(sph*(1.-eps) + eps))/(svp1*exp(svp2*(tmp-svpt0)/(tmp-svp3)))
+        ! RH(I,J,K) = 1.E2 * (LV(k)*sph/(sph*(1.-eps) + eps))/(svp1*exp(svp2*(tmp-svpt0)/(tmp-svp3)))
+        RH(I,J,K) = MAKE_RH(LV(k)/100.0,BK0(I,J,K,IFRAME,4)-273.15,BK0(I,J,K,IFRAME,5),-132.0)
+        RH(I,J,K) = RH(I,J,K)*100.0
       ENDDO
     ENDDO
   ENDDO
+print*,'Max/Min RH: ',maxval(RH),minval(RH)
 
   ! HEIGHT FROM HYDROSTATIC:
   ! BK0(1:FCSTGRD(1),1:FCSTGRD(2),1,IFRAME,3) = 0.0
