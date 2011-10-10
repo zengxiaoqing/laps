@@ -22,6 +22,8 @@ umask 002
 perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3                > $LAPS_DATA_ROOT/time/modeltime.dat 
 perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 -f ascii_time >> $LAPS_DATA_ROOT/time/modeltime.dat 
 
+echo $N_FCST_TIMES > $LAPS_DATA_ROOT/lapsprd/verif/n_fcst_times.dat
+
 # Point verification (Solar, Sfc Temp, and 3D Wind)..................................................................
 echo "$LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log"
       $LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log
@@ -79,7 +81,7 @@ echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log"
 
 date -u
 
-foreach THRESH (20 30 40 20_comp 30_comp 40_comp)
+foreach THRESH (20 30 40 20_comp 30_comp 40_comp 20_comp2 30_comp2 40_comp2)
     echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME > $LAPS_DATA_ROOT/log/radar_fcst_bias_$THRESH.log"
           $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME > $LAPS_DATA_ROOT/log/radar_fcst_bias_$THRESH.log
     echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME > $LAPS_DATA_ROOT/log/radar_fcst_ets_$THRESH.log"
