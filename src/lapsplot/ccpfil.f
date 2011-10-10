@@ -104,9 +104,10 @@ C
       if(rmin .eq. 0. .and. (rmax/scale)**power .le. 0.05 
      1                .and. c5_sect .eq. 'xsect')then
           write(6,*)' Note, Xsect background may be non-black - return'
-          write(6,*)' scale_l_in,scale_h_in = ',scale_l_in,scale_h_in
           return
       endif
+
+      write(6,*)' scale_l_in,scale_h_in = ',scale_l_in,scale_h_in
 
 !     if(n_image .gt. 1)then
 !         write(6,*)' Image was already plotted - returning from ccpfil'
@@ -217,6 +218,8 @@ C
 
       endif ! type of scaling / contours
 
+      write(6,*)' scale_h/scale_l/scale_loc =',scale_h,scale_l,scale_loc      
+
       ireverse_colorbar = ireverse
 
       ireverse = 0  ! Turn off later use of ireverse
@@ -237,6 +240,7 @@ C
       ncols = 20
 
       range = scale_loc/scale
+      write(6,*)' scale_loc/scale/range = ',scale_loc,scale,range
       call get_colorbar_int(range,colorbar_int,l_divisible)
 
       if(log_scaling)then
