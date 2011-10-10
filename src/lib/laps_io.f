@@ -873,6 +873,7 @@ cdoc    Writes a 3-D grid. Inputs include the extension and time.
         character*3 var_3d(nk),var_2d
         integer LVL_3d(nk)
         character*4 LVL_COORD_3d(nk)
+        real ht_1d(nk)
 
         real field_3d(ni,nj,nk)
 
@@ -890,6 +891,16 @@ cdoc    Writes a 3-D grid. Inputs include the extension and time.
             elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(k) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(k) = 'HPA'
+            elseif(ltest_vertical_grid('SIGMA_HT'))then
+                if(k .eq. 1)then
+                    write(6,*)' Reading Sigma Ht Levels'
+                    call get_ht_1d(nk,ht_1d,istatus)
+                    if(istatus .ne. 1)then
+                        return
+                    endif
+                endif
+                lvl_3d(k) = nint(ht_1d(k))
+                lvl_coord_3d(k) = '  ' ! informational
             else
                 write(6,*)' Error, vertical grid not supported,'
      1                   ,' this routine supports PRESSURE or HEIGHT'
@@ -923,6 +934,7 @@ cdoc    Writes multiple 3-D grids. Inputs include the extension and time.
         character*3 var_3d(nk*nf),var_2d(nf)
         integer LVL_3d(nk*nf)
         character*4 LVL_COORD_3d(nk*nf)
+        real ht_1d(nk)
 
         real field_3d(ni,nj,nk,nf)
 
@@ -948,6 +960,16 @@ cdoc    Writes multiple 3-D grids. Inputs include the extension and time.
             elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(iscript_3d) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(iscript_3d) = 'HPA'
+            elseif(ltest_vertical_grid('SIGMA_HT'))then
+                if(k .eq. 1)then
+                    write(6,*)' Reading Sigma Ht Levels'
+                    call get_ht_1d(nk,ht_1d,istatus)
+                    if(istatus .ne. 1)then
+                        return
+                    endif
+                endif
+                lvl_3d(k) = nint(ht_1d(k))
+                lvl_coord_3d(k) = '  ' ! informational
             else
                 write(6,*)' Error, vertical grid not supported,'
      1                   ,' this routine supports PRESSURE or HEIGHT'
@@ -987,6 +1009,7 @@ cdoc    time.
         character*3 var_3d(nk*nf),var_2d(nf)
         integer LVL_3d(nk*nf)
         character*4 LVL_COORD_3d(nk*nf)
+        real ht_1d(nk)
 
         real field_3d(ni,nj,nk,nf)
 
@@ -1012,6 +1035,16 @@ cdoc    time.
             elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(iscript_3d) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(iscript_3d) = 'HPA'
+            elseif(ltest_vertical_grid('SIGMA_HT'))then
+                if(k .eq. 1)then
+                    write(6,*)' Reading Sigma Ht Levels'
+                    call get_ht_1d(nk,ht_1d,istatus)
+                    if(istatus .ne. 1)then
+                        return
+                    endif
+                endif
+                lvl_3d(k) = nint(ht_1d(k))
+                lvl_coord_3d(k) = '  ' ! informational
             else
                 write(6,*)' Error, vertical grid not supported,'
      1                   ,' this routine supports PRESSURE or HEIGHT'
