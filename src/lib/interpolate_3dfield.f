@@ -40,35 +40,33 @@ cdis
 
         do kout = 1,nlvl_out
 
-!           Default if out of bounds
-            kin_low = 1
-            kin_high = 1
-            frac_low = 1.0
-            frac_high = 0.0
+!          Default if out of bounds
+           kin_low = 1
+           kin_high = 1
+           frac_low = 1.0
+           frac_high = 0.0
 
-            do kk = 1,nlvl_in-1
-                if(rlvls_in(kk  ) .ge. rlvls_out(kout) .and.
-     1           rlvls_in(kk+1) .le. rlvls_out(kout)            )then
-                    kin_low = kk
-                    kin_high = kin_low + 1
-                    frac_high = (rlvls_out(kout)  - rlvls_in(kk)) /
+           do kk = 1,nlvl_in-1
+             if(rlvls_in(kk  ) .ge. rlvls_out(kout) .and.
+     1          rlvls_in(kk+1) .le. rlvls_out(kout)            )then
+                  kin_low = kk
+                  kin_high = kin_low + 1
+                  frac_high = (rlvls_out(kout)  - rlvls_in(kk)) /
      1                        (rlvls_in(kk+1)   - rlvls_in(kk))
-                    frac_low  = 1.0 - frac_high
-                endif
-            enddo ! kk
+                  frac_low  = 1.0 - frac_high
+             endif
+           enddo ! kk
 
-c           write(6,1)kout,kin_low,kin_high,frac_low,frac_high
+c         write(6,1)kout,kin_low,kin_high,frac_low,frac_high
 c       1            ,rlvls_in(kin_low),rlvls_out(kout),rlvls_in(kin_high)
-c1          format(1x,i5,3x,2i5,3x,2f8.3,2x,3f8.2)
+c1        format(1x,i5,3x,2i5,3x,2f8.3,2x,3f8.2)
 
-            do j = 1,ny
-            do i = 1,nx
-                field_3d_out(i,j,kout) = field_3d_in(i,j,kin_low ) * fra
-     1c_low
-     1                               + field_3d_in(i,j,kin_high) * frac_
-     1high
-            enddo ! i
-            enddo ! j
+          do j = 1,ny
+          do i = 1,nx
+           field_3d_out(i,j,kout) = field_3d_in(i,j,kin_low ) * frac_low
+     1                           + field_3d_in(i,j,kin_high) * frac_high
+          enddo ! i
+          enddo ! j
 
         enddo ! kout
 
