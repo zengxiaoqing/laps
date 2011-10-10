@@ -82,12 +82,15 @@ echo 'set title "'$6' Observed vs Forecast '$DOMAIN_NAME' domain"'        >> $GN
 echo 'set key left box'                                                   >> $GNUPLOTFILE
 
 if ($VAR == "WSF" || $VAR == "W3") then
-    setenv T1 "RMSE U"    
-    setenv T2 "RMSE V"    
-    setenv T3 "RMSE Vector"    
+    setenv NFIELDS 1
+
+    setenv T1 "RMSE Vector"    
 
     echo 'set key width 1'                                                                           >> $GNUPLOTFILE
+
 else
+    setenv NFIELDS 3
+
     setenv T1 "Fcst Mean"
     setenv T2 "Obs Mean"
     setenv T3 "RMS (F-O)"
@@ -104,22 +107,38 @@ while ($IMEMBER <= $NMEMBERS)
     setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
     echo "IMEMBER MEMBER IBLOCK: $IMEMBER $MEMBER $IBLOCK"
 
-    if ($NMEMBERS == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
-    else if ($IMEMBER == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
-    else if ($IMEMBER == $NMEMBERS) then
-        echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
-    else
-        echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
+    if ($NFIELDS == 3) then
+
+        if ($NMEMBERS == 1) then
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
+        else if ($IMEMBER == 1) then
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
+        else if ($IMEMBER == $NMEMBERS) then
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
+        else
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
+        endif
+
+    else # NFIELDS = 1
+
+        if ($NMEMBERS == 1) then
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
+        else if ($IMEMBER == 1) then
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
+        else if ($IMEMBER == $NMEMBERS) then
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
+        else
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
+        endif
+
     endif
 
     @ IMEMBER = $IMEMBER + 1
