@@ -3335,16 +3335,35 @@ Cabdel
 
             elseif(c_type_i .eq. 't ')then
                 call get_temp_2d(i4time_ref,lagt,i4time_nearest
-     1                          ,k_mb,NX_L,NY_L,temp_2d,istatus)
-
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    field_2d(i,j) = k_to_c(temp_2d(i,j))
-                enddo ! j
-                enddo ! i
+     1                          ,k_mb,NX_L,NY_L,field_2d,istatus)
 
                 call mklabel(k_mb,' Temperature      C'
      1                        ,c_label)       
+
+            elseif(c_type_i .eq. 'bt')then
+                var_2d = 'T3'
+                ext='lt1'
+
+                call get_directory('balance',directory,lend)
+                directory=directory(1:lend)//'lt1/'
+                call get_2dgrid_dname(directory
+     1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
+     1           ,ext,var_2d,units_2d,comment_2d
+     1           ,NX_L,NY_L,field_2d,k_mb,istatus)       
+
+
+                call mklabel(k_mb,' Temp (Bal)       C'
+     1                        ,c_label)
+
+            endif
+
+            if(c_type_i .eq. 't ' .OR. c_type_i .eq. 'bt')then
+
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_c(field_2d(i,j))
+                enddo ! j
+                enddo ! i
 
                 write(6,*)' k_mb for T plot = ',k_mb
                 if(k_mb .eq. 300)then 
@@ -3373,31 +3392,6 @@ Cabdel
      1                           ,clow,chigh,cint
      1                           ,zoom,density,scale)
                 endif
-
-            elseif(c_type_i .eq. 'bt')then
-                var_2d = 'T3'
-                ext='lt1'
-
-                call get_directory('balance',directory,lend)
-                directory=directory(1:lend)//'lt1/'
-                call get_2dgrid_dname(directory
-     1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
-     1           ,ext,var_2d,units_2d,comment_2d
-     1           ,NX_L,NY_L,field_2d,k_mb,istatus)       
-
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    field_2d(i,j) = k_to_c(field_2d(i,j))
-                enddo ! j
-                enddo ! i
-
-                call mklabel(k_mb,' Temp (Bal)       C'
-     1                        ,c_label)
-
-                scale = 1.
-                call contour_settings(field_2d,NX_L,NY_L
-     1                           ,clow,chigh,cint
-     1                           ,zoom,density,scale)
 
             endif
 
@@ -5234,7 +5228,7 @@ c                   cint = -1.
                write(6,723)
  723           format(/'  SELECT FIELD (var_2d-i):  '
      1          /
-     1          /'     SFC: [usf,vsf,psf,tsf,dsf,fsf,slp] ? ',$)
+     1          /'     SFC: [usf,vsf,psf,tsf,dsf,fsf,slp,p] ? ',$)
 
             else
                write(6,725)
@@ -5338,7 +5332,8 @@ c                   cint = -1.
                 enddo ! i
 
             elseif(var_2d .eq. 'PS'  .or. var_2d .eq. 'PSF'
-     1        .or. var_2d .eq. 'MSL' .or. var_2d .eq. 'SLP')then
+     1        .or. var_2d .eq. 'MSL' .or. var_2d .eq. 'SLP'
+     1        .or. var_2d .eq. 'P'                         )then
                 scale = 100.
                 units_2d = 'hPa'
 
@@ -5593,7 +5588,8 @@ c                   cint = -1.
                     call array_range(field_2d,NX_L,NY_L,rmin,rmax
      1                              ,r_missing_data)
 
-                    call ccpfil(field_2d,NX_L,NY_L,rmin,rmax,'spectral'       
+                    call ccpfil(field_2d,NX_L,NY_L
+     1                         ,rmin/scale,rmax/scale,'spectral'       
      1                         ,n_image,scale,'hsect',plot_parms
      1                         ,namelist_parms)        
                 endif
