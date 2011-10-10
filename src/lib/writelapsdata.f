@@ -82,7 +82,7 @@ C
      1               error(2),
      1               i,j,n7g_nx, n7g_ny,
      1               lgfc,
-     1               ldf_len,
+     1               ldf_len,leng,
      1               fn_length,
      1               var_len,
      1               comm_len,
@@ -157,13 +157,30 @@ C  the call to get_laps_config, so set laps_dom_file and lgfc now
 
       call upcase(v_g,v_g)
 
-      if (v_g .ne. 'PRESSURE') goto 920
+      call s_len(v_g,leng)
+      if (v_g(1:leng) .eq. 'PRESSURE') then     
+        call get_pres_1d(i4_valtime,n_levels,pr,istatus)
+        do j = 1,n_levels
+          pr(j)=pr(j)/100.
+        enddo
 
-      call get_pres_1d(i4_valtime,n_levels,pr,istatus)
-      do j = 1,n_levels
-         pr(j)=pr(j)/100.
-      enddo
+      elseif (v_g(1:leng) .eq. 'SIGMA_P') then
+        call get_sigma_1d(n_levels,pr,istatus)
+        do j = 1,n_levels
+          pr(j)=pr(j)*1000.
+        enddo
 
+      elseif (v_g(1:leng) .eq. 'SIGMA_HT') then
+        call get_ht_1d(n_levels,pr,istatus) ! Sigma heights fill the pr array
+        if(istatus .ne. 1)then
+            write(6,*)' Error returned from get_ht_1d'
+            goto 920
+        endif
+
+      else
+        goto 920
+
+      endif
 
 C **** Special case where write_laps_data is called with fua or fsf extension
       if (ext .eq. 'fua') then
