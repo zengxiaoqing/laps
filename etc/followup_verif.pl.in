@@ -220,7 +220,13 @@ foreach $var (@vars) {
       my $valid_a9time=&laps_tools::i4time_to_a9time($valid_sec+315619200);
 
       my $analimagedir = "/w3/lapb/domains/$domain/anal2d/archive/$analprd/";
-      my $fullanal_image = $analimagedir.$valid_a9time.".gif ";
+      my $fullanal_image = $analimagedir.$valid_a9time.".gif";
+
+#     Make black image
+      my $black_image = $imageoutdir."black.gif";
+      $command = "convert $fullanal_image -resize 82.5% -fill black -draw 'color 0,0 reset' $black_image";
+      print "setting up command: $command\n";
+      $result=system("$command");
 
       push @analimagelist, $fullanal_image;                              
 
@@ -235,12 +241,13 @@ foreach $var (@vars) {
 #     Make list of all forecast model images for this time
       foreach $modelname (@modelnames){
 
-        if($modelname ne "lga" && $imiss == 0){   
+        if($modelname ne "lga"){   
 
           my $fcstimagedir = "/w3/lapb/domains/$domain/fcst2d/$modelname/archive/$modelrun/$fcstprd";
 
           if (! -d $fcstimagedir) {
             print "WARNING: $fcstimagedir not present\n";
+            push @fcstimagelist, $black_image;                            
             $imiss++;
 
           }else{
@@ -252,6 +259,7 @@ foreach $var (@vars) {
 #           system ("ls -l $fullfcst_image");
             if (! -e $fullfcst_image) {
               print "WARNING: $fullfcst_image is not present\n";
+              push @fcstimagelist, $black_image;                            
               $imiss++;
     
             }else{
@@ -261,6 +269,7 @@ foreach $var (@vars) {
                 push @fcstimagelist, $fullfcst_image;                            
               }else{
                 print "WARNING: $fullfcst_image has zero size\n";
+                push @fcstimagelist, $black_image;                            
                 $imiss++;
               } # filesize > 0
 
