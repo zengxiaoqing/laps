@@ -6,6 +6,8 @@
 
         character*9 a9time
 
+        character*150 verif_dir, n_plot_times_file              
+
         call get_systime(i4time,a9time,istatus)
         if(istatus .ne. 1)go to 999
 
@@ -43,6 +45,14 @@
      1                  r_missing_data,
      1                  j_status)
 
+!       Read n_plot_times from file
+        call get_directory('verif',verif_dir,len_verif)
+        lun_plot_times = 42
+        n_plot_times_file = verif_dir(1:len_verif)//'/n_fcst_times.dat'
+        open(lun_plot_times,file=n_plot_times_file,status='old')
+        read(lun_plot_times,*)n_plot_times
+        close(lun_plot_times)
+
         write(6,*)                                           
         write(6,*)' Calling verif_radar_composite...'
         write(6,*)' Time is ',i4time,a9time
@@ -54,6 +64,7 @@
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
+     1                  n_plot_times,
      1                  j_status)
 
 999     continue
@@ -88,10 +99,10 @@
         integer max_regions
         parameter (max_regions=10)
 
-        integer il(maxbgmodels,max_fcst_times,max_regions)
-        integer ih(maxbgmodels,max_fcst_times,max_regions)
-        integer jl(maxbgmodels,max_fcst_times,max_regions)
-        integer jh(maxbgmodels,max_fcst_times,max_regions)
+        integer il(maxbgmodels,0:max_fcst_times,max_regions)
+        integer ih(maxbgmodels,0:max_fcst_times,max_regions)
+        integer jl(maxbgmodels,0:max_fcst_times,max_regions)
+        integer jh(maxbgmodels,0:max_fcst_times,max_regions)
 
         character EXT*31, directory*255, c_model*30
 
@@ -205,14 +216,14 @@
 
             do itime_fcst = 0,n_fcst_times
 
-              itime = itime_fcst + 1
+!             itime = itime_fcst + 1
 
               do iregion = 1,n_regions ! 1 for testing
 
-                ilow  = il(imodel,itime,iregion)
-                ihigh = ih(imodel,itime,iregion)
-                jlow  = jl(imodel,itime,iregion)
-                jhigh = jh(imodel,itime,iregion)
+                ilow  = il(imodel,itime_fcst,iregion)
+                ihigh = ih(imodel,itime_fcst,iregion)
+                jlow  = jl(imodel,itime_fcst,iregion)
+                jhigh = jh(imodel,itime_fcst,iregion)
 
                 i4_valid = i4_initial + itime_fcst * model_verif_intvl 
 
@@ -595,10 +606,10 @@
      1                       ,n_models,n_fcst_times,n_regions
      1                       ,il,ih,jl,jh,lun_in)
 
-        integer il(maxbgmodels,max_fcst_times,max_regions)
-        integer ih(maxbgmodels,max_fcst_times,max_regions)
-        integer jl(maxbgmodels,max_fcst_times,max_regions)
-        integer jh(maxbgmodels,max_fcst_times,max_regions)
+        integer il(maxbgmodels,0:max_fcst_times,max_regions)
+        integer ih(maxbgmodels,0:max_fcst_times,max_regions)
+        integer jl(maxbgmodels,0:max_fcst_times,max_regions)
+        integer jh(maxbgmodels,0:max_fcst_times,max_regions)
 
         character*150 static_dir,static_file
 
@@ -617,16 +628,13 @@
           call get_grid_dim_xy(NX_L,NY_L,istatus)
 
           do ir = 1,n_regions
-            do if = 1,n_fcst_times
-                i_fcst_time = if - 1
-
+            do if = 0,n_fcst_times
                 do im = 1,n_models
                     il(im,if,ir) = 1
                     ih(im,if,ir) = NX_L
                     jl(im,if,ir) = 1
                     jh(im,if,ir) = NY_L
                 enddo ! im
-
             enddo ! if
           enddo ! ir
 
