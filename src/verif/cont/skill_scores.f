@@ -7,7 +7,7 @@
 !     0 is Yes, 1 is No
       integer contable(0:1,0:1)
 
-      integer hits,misses,false_alarms,correct_negatives,total
+      integer hits,misses,false_alarms,correct_negatives,total 
       
       hits              = contable(0,0)
       misses            = contable(0,1)
