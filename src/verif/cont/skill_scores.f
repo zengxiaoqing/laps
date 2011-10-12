@@ -18,10 +18,17 @@
 
       total = hits + misses + false_alarms + correct_negatives
 
-      frac_negatives = float(correct_negatives) / float(total)
-      frac_coverage = 1.0 - frac_negatives
+      if(total .gt. 0)then
+          frac_negatives = float(correct_negatives) / float(total)
+          frac_coverage = 1.0 - frac_negatives
 
-      accuracy = float(hits + correct_negatives) / float(total)
+          accuracy = float(hits + correct_negatives) / float(total)
+      else
+          frac_negatives = rmiss
+          frac_coverage = rmiss
+          accuracy = rmiss
+          write(6,*)' WARNING: no data points in skill_scores'
+      endif
 
       if(hits + misses .gt. 0)then
           bias = float(hits + false_alarms) / float(hits + misses)

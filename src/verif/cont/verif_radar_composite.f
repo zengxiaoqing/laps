@@ -7,6 +7,7 @@
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
+     1                  n_plot_times,
      1                  j_status)
 
         include 'lapsparms.for' ! maxbgmodels
@@ -85,8 +86,17 @@
         integer 
      1  n_sum(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
 
-        ndays = 7
-        compdir = 'comp'
+       do i_period = 1,2
+        
+        if(i_period .eq. 1)then
+         ndays = 7
+         compdir = 'comp'
+        else
+         ndays = 30
+         compdir = 'comp2'
+        endif
+
+        write(6,*)' Processings stats for period/dir = ',ndays,compdir
 
         rmiss = -999.
         imiss = -999
@@ -100,6 +110,7 @@
         thresh_var = 20. ! lowest threshold for this variable
 
         write(6,*)' Time is ',i4time_sys,a9time
+        write(6,*)' n_plot_times ',n_plot_times
 
         i4_initial = i4time_sys
 
@@ -154,11 +165,14 @@
 
          nmissing = 0
          nsuccess = 0
+         nincomplete = 0
 
          nmissing_thr = nint(0.20 * float(n_init_times))
          nsuccess_thr = nint(0.80 * float(n_init_times))
 
          do init = 0,n_init_times
+
+          incomplete_run = 0
 
           n = imiss ! Initialize
 
@@ -258,7 +272,7 @@
 911                format(a24,3x,20f12.3)
                enddo ! itime_fcst
 
-!              Read n values from separate blocks                     
+!              Read N values from separate blocks                     
                do jn = 0,1
                do in = 0,1
                  read(lun_bias_in,*)
@@ -282,9 +296,38 @@
      1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
      1                              ,imodel=2,n_fdda_models)     
 915                format('in,jn,itime,n',i2,i2,i4,20i10)
+
                  enddo ! itime_fcst
                enddo ! jn
                enddo ! in
+
+!              Test for missing data in all times/models for this dbz
+               do itime_fcst = 0,n_fcst_times
+                 do imodel = 2,n_fdda_models
+                   i_good_timestep_model = 0
+                   do in = 0,1
+                   do jn = 0,1
+                     if(n(imodel,itime_fcst,iregion,idbz,in,jn)
+     1                                                  .gt. 0)then
+                       i_good_timestep_model = 1
+                     endif
+                   enddo ! jn
+                   enddo ! in
+
+!                  Flag as incomplete if missing during the first 12 hours
+                   if(i_good_timestep_model .eq. 0)then
+                     if(incomplete_run .eq. 0     .AND. 
+     1                  itime_fcst .le. n_plot_times)then
+                       write(6,916)init,itime_fcst,imodel
+916                    format(
+     1                 ' WARNING: missing N values for init/time/model '
+     1                        ,3i6)                      
+                       incomplete_run = 1
+                     endif
+                   endif
+
+                 enddo ! im
+               enddo ! itime_fcst
 
 !              Read fractional coverage values
                read(lun_bias_in,*)
@@ -293,11 +336,12 @@
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
-                   read(lun_bias_in,923)a24time_valid,    
+                   read(lun_bias_in,923,err=925)a24time_valid,    
      1                 (frac_coverage                
      1                   (imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
 923                format(a24,3x,20f12.5)
+925                continue               
                enddo ! itime_fcst
 
 !              Read members.txt file
@@ -350,6 +394,8 @@
 
           nsuccess = nsuccess + 1
 
+          nincomplete = nincomplete + incomplete_run
+
 955       close(lun_bias_in)                                      
           close(lun_ets_in)                                         
 
@@ -357,8 +403,12 @@
 
          write(6,*)'init neg ',n_sum(2,0,1,1,1,1)
 
-         write(6,*)'success count',nsuccess,nsuccess_thr               
+         write(6,965)nsuccess,n_init_times+1,nsuccess_thr
+     1          ,((float(nsuccess) / float(n_init_times+1))) * 100.
+965      format(' success count ',i4,' out of ',i4,i4,' were needed' 
+     1         ,f8.2,'%')
          write(6,*)'nmissing is ',nmissing
+         write(6,*)'nincomplete is ',nincomplete
          if(nsuccess .lt. nsuccess_thr)then
              write(6,*)' Insufficient successful times'
              goto 980
@@ -483,7 +533,7 @@
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
                    write(lun_bias_out,923)a24time_valid,    
-     1                 (frac_coverage                
+     1                 (frac_cvr_comp                
      1                   (imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
                enddo ! itime_fcst
@@ -497,11 +547,13 @@
 
  980    enddo                     ! fields
 
- 999    write(6,*)' End of subroutine verif_radar_composite'
+       enddo ! i_period
 
-        return
+ 999   write(6,*)' End of subroutine verif_radar_composite'
 
-        end
+       return
+
+       end
 
 
         subroutine csplit(line,carray,nelems,maxelems,char)
