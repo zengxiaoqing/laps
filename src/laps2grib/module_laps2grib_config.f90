@@ -178,7 +178,7 @@ CONTAINS
 
       ! Set defaults
       output_path(:) = " "
-      center_id = 253
+      center_id = 59 ! NOAA ESRL GSD (aka FSL), for use with templates
       subcenter_id = 1
       process_id = 100
       prod_status = 0
