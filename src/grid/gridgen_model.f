@@ -649,7 +649,13 @@ c calculate delta x and delta y using grid and map projection parameters
             call get_ps_parms(std_lat,std_lat2,grid_spacing_m,phi0
      1                       ,grid_spacing_proj_m)
 
-            deltax = grid_spacing_proj_m
+            call get_grid_spacing_actual(std_lat2,std_lon,deltax,
+     1                                   istatus)
+            if(istatus .ne. 1)then
+                write(6,*) ' Error calling get_grid_spacing_actual '
+     1          ,'from gridgen_model'
+                return
+            endif
 
             if(phi0 .eq. 90.)then
                 write(6,*)' Projection is tangent to earths surface'
