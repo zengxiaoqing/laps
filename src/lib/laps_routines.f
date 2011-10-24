@@ -2292,7 +2292,7 @@ cc     &      dewp.gt.90.) then
 	if(dewp.gt.temp .or. pres.le.275. .or. pres.gt.1150. .or.
      &      temp.lt.-130. .or. temp.gt.150. .or. dewp.lt.-135. .or.
      &      dewp.gt.100.) then
-	   print *,' Warning. Bad input to reduce_p routine.'
+	   print *,' Warning. Bad input to reduce_p routine.',dewp,temp,pres
 	   redpres = badflag	!FLAG VALUE RETURNED FOR BAD INPUT
 	   return
 	endif
