@@ -106,20 +106,29 @@ c       lo2=data(imax,jmax,2)
       deltax_cdf = deltax
       deltay_cdf = deltay
 
-      if(.false.)then
-!     if(c6_maproj .eq. 'plrstr')then
-          call get_ps_parms(std_lat,std_lat2,grid_spacing,phi0
-     1                     ,grid_spacing_proj_m)
+      if(c6_maproj .eq. 'plrstr')then
 
-          if(phi0 .lt. 90.)then
-              write(6,*)' Calculate Polar Stereo NetCDF parameters on'
-     1                 ,' equivalent projection tangent'
-              write(6,*)' to pole. Internal LAPS projection is secant'
-              factor = 2. / (1. + sind(phi0))
-              deltax_cdf = deltax * factor
-              deltay_cdf = deltay * factor
-              write(6,*)' deltax_cdf, deltay_cdf',deltax_cdf,deltay_cdf   
-          endif
+! Per Steve Albers, standardize polar stereo grids to +/-60.0 degrees
+! LW this is only for writing Dx and Dy to the static file!
+            if(std_lat2 .eq. 90.)then
+              call get_grid_spacing_actual(60.0,std_lon,deltax_cdf,
+     1                                     istatus)
+            else
+              call get_grid_spacing_actual(-60.0,std_lon,deltax_cdf,
+     1                                     istatus)
+            endif
+
+            if(istatus .ne. 1)then
+                write(6,*) ' Error calling get_grid_spacing_actual '
+     1          ,'from put_laps_static'
+                return
+            endif
+
+            deltay_cdf = deltax_cdf
+            write(6,*)' Polar Stereographic grid identified'
+            write(6,*)' Dx and Dy for writing to static file:'
+            write(6,*)' Dx = deltax_cdf, Dy = deltay_cdf ',
+     1                 deltax_cdf, deltay_cdf
 
       endif
 
