@@ -3,6 +3,7 @@
 setenv LAPSINSTALLROOT @prefix@
 setenv LAPS_DATA_ROOT $1
 setenv LOGDIR $LAPS_DATA_ROOT/log
+setenv IMGDIR $LAPS_DATA_ROOT/lapsprd/verif/SWI/pt
 
 # parse cloud logfiles to make a temporary data file for input to gnuplot
 # this could eventually be done from the WGI script so we just grep one log file at a time
@@ -23,7 +24,7 @@ setenv DQUOTE \"
 echo 'set terminal png size 1200,800'                    > $GNUPLOTFILE
 echo 'set xdata time'                                   >> $GNUPLOTFILE
 echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                  >> $GNUPLOTFILE
-echo 'set output '$DQUOTE$LOGDIR'/load.png'$DQUOTE      >> $GNUPLOTFILE
+echo 'set output '$DQUOTE$IMGDIR'/load.png'$DQUOTE      >> $GNUPLOTFILE
 echo '' >> $GNUPLOTFILE
 echo '# time range must be in same format as data file' >> $GNUPLOTFILE
 echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
