@@ -17,11 +17,12 @@ use strict;
 #    -c cycle frequency (hours) [optional]
 #    -l forecast length (hours) [optional]
 #    -t purge time (hours) [optional]
+#    -o offset time (seconds) [optional]
 
-use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_t);
+use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_t $opt_o);
 use Getopt::Std;
 
-getopts('a:d:r:f:c:l:m:t:');
+getopts('a:d:r:f:c:l:m:t:o:');
 
 print "Running followup_fcst.pl...\n";
 print "user defined paths\n";
@@ -52,12 +53,15 @@ my $w3recent;
 my $purge_time = 36;
 $purge_time = $opt_t if(defined $opt_t);
 
+my $offset_time = 0;
+$offset_time = $opt_o if(defined $opt_o);
+
 my $purger;                                                                          
 if (-d "/w3/lapb") {
-    $purger = "@prefix@/etc/purge_w3_fcst2d.pl -t $purge_time $domain $model\n";
+    $purger = "@PERL@ @prefix@/etc/purge_w3_fcst2d.pl -t $purge_time $domain $model\n";
     $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
 }else{
-    $purger = "@prefix@/etc/purge_w3_fcst2d.pl -t $purge_time -d $dataroot $domain $model\n";
+    $purger = "@PERL@ @prefix@/etc/purge_w3_fcst2d.pl -t $purge_time -d $dataroot $domain $model\n";
     $w3recent = "$dataroot/lapsprd/www/fcst2d/$model/recent";
 }
 
@@ -117,7 +121,7 @@ my $local_fua = "$dataroot/$fua_subdir";
 
 print "setup time parameters\n";
 #beka my $systime_now = time-3600;
-my $systime_now = time;
+my $systime_now = time - $offset_time;
 my $cyc_freq_sec = $cycle_freq * 3600;
 my $init_base_sec = $init_base_hr * 3600;
 my $remainder = ($systime_now - $init_base_sec) % $cyc_freq_sec;
