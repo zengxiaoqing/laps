@@ -104,6 +104,10 @@ while ($IMEMBER <= $NMEMBERS)
 
     @ PT = $IMEMBER + 4
 
+    if ($PT == 7) then
+        @ PT = 4
+    endif
+
     setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
     echo "IMEMBER MEMBER IBLOCK: $IMEMBER $MEMBER $IBLOCK"
 
@@ -115,7 +119,6 @@ while ($IMEMBER <= $NMEMBERS)
             echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
         else if ($IMEMBER == 1) then
             echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
             echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
         else if ($IMEMBER == $NMEMBERS) then
             echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
@@ -123,7 +126,6 @@ while ($IMEMBER <= $NMEMBERS)
             echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
         else
             echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'$T1 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'$T2 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
             echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'$T3 $MEMBER'" with linespoints lw 3 pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
         endif
 
@@ -159,5 +161,5 @@ ln -s $PNGFILE $VAR_LC\_$TYPE\_fcst.png
 rm -f          $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM.png
 ln -s $PNGFILE $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM.png
 
-convert -resize 90x60! $PNGFILE $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM\_thumb.png
+convert -resize 105x70! $PNGFILE $VAR_LC\_$TYPE\_fcst\_$MODELTIME_HHMM\_thumb.png
 
