@@ -13,7 +13,7 @@ write_to_lapsdir=.false.,
 make_donefile=.false.,
 
 precip_dt=10800,
-c_m2z='rams',
+c_m2z='kessler',
 
 &end
 
