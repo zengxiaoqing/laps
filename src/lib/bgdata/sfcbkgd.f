@@ -3,8 +3,9 @@
 
 c inputs are from laps analyzed 2- 3d fields
 C     INPUT       t        ANALYZED TEMPERATURE     3D
-C                 q        Analyzed MIXXING RATIO   3D
+C                 q        Analyzed MIXING RATIO    3D
 C                 height   ANALYZED HEIGHT          3D
+C                 qsfc_i   Q Surface                2D
 C                 ter      TERRAIN                  2D
 C                 IMX      DIMENSION E-W
 C                 JMX      DIMENSION N-S
@@ -12,7 +13,8 @@ C                 KX       NUMBER OF VERTICAL LEVELS
 C                 p        LAPS Pressure levels     1D
 c
 c Compute surface variables on hi-res terrain using first 3D model level
-c above the LAPS terrain.
+c above the LAPS terrain. This routine is also called for reduced pressure
+c where 'ter' is passed in as a constant array.
 
 c
 c J. Smart    09-22-98:	Original Version: This is used to compute
@@ -54,18 +56,22 @@ c
       REAL       make_ssh
       REAL       t_ref,badflag
       REAL       tdsfc_o_min, tdsfc_o_max
+      REAL       qsfc_i_min, qsfc_i_max
 c
 c if bgmodel = 6 or 8 then td_sfc_i is used         
 c if bgmodel = 4      then qsfc_i is rh (WFO - RUC)
 c if bgmodel = 3      then qsfc_i is rh and q is rh
 c if bgmodel = 9      then no surface fields input. Compute all from 3d
 c                     fields. q3d used. (NOS - ETA)
-c otherwise qsfc_i is used directly              
+c otherwise qsfc_i is used directly with a test for g/kg or dimensionless
 c 
       write(6,*)
       write(6,*)' Subroutine sfcbkgd, bgmodel = ',bgmodel
-      write(6,*)' qsfc_i range = ',minval(qsfc_i),maxval(qsfc_i)
+      qsfc_i_min = minval(qsfc_i)
+      qsfc_i_max = maxval(qsfc_i)
+      write(6,*)' qsfc_i range = ',qsfc_i_min,qsfc_i_max
       write(6,*)' tdsfc_i range = ',minval(tdsfc_i),maxval(tdsfc_i)
+      write(6,*)' ter range = ',minval(ter),maxval(ter)
 
       t_ref=-132.0
       if(bgmodel.eq.3.or.bgmodel.eq.9)then
@@ -81,7 +87,6 @@ c
          badflag=0.
          write(6,*)
      1        ' Interp 3D T and RH to hi-res terrain, qsfc_i is RH?'
-         write(6,*)' ter range = ',minval(ter),maxval(ter)
          write(6,*)' height bottom level range = '
      1             ,minval(height(:,:,1)),maxval(height(:,:,1))
          call interp_to_sfc(ter,rh3d,height,imx,jmx,kx,
@@ -109,7 +114,8 @@ c
 
                   call compute_sfc_bgfields(bgmodel,imx,jmx,kx,i,j,k
      &                ,ter(i,j),height,t,p,q,t_ref,psfc(i,j),tsfc(i,j)
-     &                ,qsfc_i(i,j),tdsfc_o(i,j),idebug)
+     &                ,qsfc_i(i,j),qsfc_i_min,qsfc_i_max
+     &                ,tdsfc_o(i,j),idebug)      
 
                   idebug = 0
 
@@ -127,6 +133,7 @@ c
           write(6,*)' ERROR: tdsfc is out of bounds'
       endif
       write(6,*)' tdsfc_o range = ',tdsfc_o_min,tdsfc_o_max
+      write(6,*)' psfc range = ',minval(psfc),maxval(psfc)
       write(6,*)' returning from sfcbkgd...'
       write(6,*)
 
@@ -136,7 +143,7 @@ c
 c----------------------------------------------------------------------------
 c
       subroutine compute_sfc_bgfields(bgm,nx,ny,nz,i,j,k,ter,height
-     &,t,p,q,t_ref,psfc,tsfc,qsfc,tdsfc,idebug)
+     &,t,p,q,t_ref,psfc,tsfc,qsfc,qsfc_i_min,qsfc_i_max,tdsfc,idebug)
 c
 c J. Smart 11/18/99 put existing code in subroutine for other process use in laps
 c
@@ -158,10 +165,10 @@ c
       real   q(nx,ny,nz)       !I, specific humidity 3d
       real   psfc              !O, output surface pressure, pa
       real   tsfc              !I/O input sfc T, output recomputed T
-      real   qsfc              !I   input sfc Q                  
+      real   qsfc              !I   input sfc Q (g/kg)           
       real   tdsfc             !O   hi-res Td (K)           
 
-      real   qsfc_l            !L   surface spec hum, Input as q or computed internally
+      real   qsfc_l            !L   surface spec hum, Input as q or computed internally (dimensionless)
 
       real   tbar,tsfc_c
       real   td1,td2,tdsfc_c
@@ -170,6 +177,7 @@ c
       real   dz,dzp,dtdz
       real   tvsfc,tvk,tbarv
       real   r_missing_data
+      real   qsfc_i_min, qsfc_i_max
 
       parameter (G         = 9.8,
      &           R         = 287.04)
@@ -211,11 +219,30 @@ c
      &                      ,qsfc/100.,t_ref)*.001 !kg/kg
 
           else                                            ! qsfc is qsfc
-             if(idebug .eq. 1)then
-                 write(6,*)' compute_sfc_bgfields: qsfc_l = qsfc '
-     1                    ,qsfc
+             if(qsfc_i_max .gt. .050)then                 ! likely g/kg
+                 qsfc_l=qsfc*.001                         ! make dimensionless
+                 if(idebug .eq. 1)then
+                     write(6,*)
+     1                      ' compute_sfc_bgfields: qsfc_l = qsfc*.001 '       
+     1                        ,qsfc_l,qsfc
+                     write(6,*)' thus qsfc_i is assumed g/kg'
+                 endif
+             else
+                 qsfc_l=qsfc                              ! keep dimensionless
+                 if(idebug .eq. 1)then
+                     write(6,*)' compute_sfc_bgfields: qsfc_l = qsfc '
+     1                        ,qsfc_l,qsfc
+                     write(6,*)' thus qsfc_i is assumed dimensionless'       
+                 endif
              endif
-             qsfc_l=qsfc
+          endif
+
+          if(qsfc_l .lt. 0.0 .or. qsfc_l .gt. .050)then
+             write(6,*)' WARNING in compute_sfc_bgfields, qsfc_l = '
+     1                 ,qsfc_l      
+             psfc =r_missing_data
+             tsfc =r_missing_data
+             tdsfc=r_missing_data
           endif
 
 c pressure
@@ -223,6 +250,13 @@ c pressure
           tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
           tbarv=(tvsfc+tvk)*.5
           psfc=(p(k)*exp(G/(R*tbarv)*dz))*100.  !return units = pa
+
+!         if(j .eq. ny/2)then
+!             write(6,101)i,tvsfc,tvk,tbarv,height(i,j,k),dz,p(k),psfc
+!    1                   ,(psfc/100.-p(k)) / dz
+!101          format(' i,tvsfc,tvk,tbarv,ht,dz,pk,psfc',i4,6f8.2,f9.2
+!    1                                                 ,e15.6)
+!         endif
 
           if(k.gt.1)then ! calculate tsfc,qsfc
 
