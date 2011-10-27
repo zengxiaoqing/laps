@@ -213,6 +213,14 @@ if test "$3" = qsub; then
       echo "MODEL_CYCLE_TIME = $MODEL_CYCLE_TIME" >> $log
       echo "MODEL_INIT_TIME  = $MODEL_INIT_TIME"  >> $log
 
+      if test "$MODEL_CYCLE_TIME" > 21600; then
+          SCP_WAIT_TIME=21600
+      else
+          SCP_WAIT_TIME=$MODEL_CYCLE_TIME
+      fi
+
+      echo "SCP_WAIT_TIME  = $SCP_WAIT_TIME"  >> $log
+
       MODEL_FCST_INTVL_MIN=`echo $MODEL_FCST_INTVL / 60 | bc`
       echo "MODEL_FCST_INTVL_MIN  = $MODEL_FCST_INTVL_MIN"  >> $log
 
@@ -229,7 +237,7 @@ if test "$3" = qsub; then
       echo " "                        >> $script
 #     lfmpost_scp_fuafsf.pl may need an option allowing the input of LAPS_DATA_ROOT or this script would need MODEL_DATA_ROOT
 #                    perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -l oplapb@clank:/w3/jet/fab/wrf5km -m wrf -r /pan1/projects/mm5-laps/domains/WRFV3-5KM -f 37 -i 15 -w 10800               -a wsm6  
-      echo "/usr/bin/perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -l $REMOTE_NODE:$REMOTE_DATA_ROOT -L      -r $MODEL_DATA_ROOT -d $MODEL_INIT_TIME      -f $N_FCST_STEPS_P1 -i $MODEL_FCST_INTVL_MIN -w  7200 -m $MODELTYPE -a $MODELCONFIG >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
+      echo "/usr/bin/perl /home/oplapb/builds/laps/etc/models/lfmpost_scp_fuafsf.pl -l $REMOTE_NODE:$REMOTE_DATA_ROOT -L      -r $MODEL_DATA_ROOT -d $MODEL_INIT_TIME      -f $N_FCST_STEPS_P1 -i $MODEL_FCST_INTVL_MIN -w $SCP_WAIT_TIME -m $MODELTYPE -a $MODELCONFIG >> \$LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M` 2>&1" >> $script
       echo " "                        >> $script
 
       echo "date -u"                  >> $script
