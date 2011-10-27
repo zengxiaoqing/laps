@@ -5,7 +5,7 @@
  vv_to_height_ratio_Cu=0.05,
  vv_to_height_ratio_Sc=0.05,
  vv_for_St=.01,
- c_z2m='albers'
+ c_z2m='kessler'
  thresh_cvr_cty_vv=0.65,
  thresh_cvr_lwc=0.65,
  twet_snow=+1.3,
