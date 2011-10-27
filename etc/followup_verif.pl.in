@@ -36,7 +36,7 @@ my @windowres;
 my $window;
 my $resolution;
 
-my @vars = qw(REF);
+my @vars = qw(REF SWI);
 
 #my $fcstprd = "Radar_Comp";
 
@@ -187,8 +187,10 @@ foreach $var (@vars) {
   my $analprd;                   
   my $command;            
 
-  my $imageoutdir = "$dataroot/lapsprd/verif/$var/plot/";          
+  my $imageoutdir;                                                    
   my $imageoutfile_montage;
+
+  my $geom;
  
   if($var eq "REF"){
 #   $fcstprd = "Radar_Sfc";
@@ -196,6 +198,15 @@ foreach $var (@vars) {
 
     $fcstprd = "Radar_Comp";
     $analprd = "crf";
+    $imageoutdir = "$dataroot/lapsprd/verif/$var/plot/";          
+#   $geom="90x60!";
+#   $geom="120x80!";
+    $geom="210x140!";
+  }else{
+    $fcstprd = "Solar";
+    $analprd = "sol";
+    $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
+    $geom="210x140!";
   }
 
   $arrpos = 0;
@@ -207,6 +218,8 @@ foreach $var (@vars) {
 
   my $itime = -1;
   my $a13time;
+
+  my $fullanal_image;                                           
 
   foreach $a13time (@times) {
     $modelrun = substr($a13time,0,9);
@@ -220,7 +233,7 @@ foreach $var (@vars) {
       my $valid_a9time=&laps_tools::i4time_to_a9time($valid_sec+315619200);
 
       my $analimagedir = "/w3/lapb/domains/$domain/anal2d/archive/$analprd/";
-      my $fullanal_image = $analimagedir.$valid_a9time.".gif";
+      $fullanal_image = $analimagedir.$valid_a9time.".gif";
 
 #     Make black image
       my $black_image = $imageoutdir."black.gif";
@@ -334,12 +347,16 @@ foreach $var (@vars) {
 
   my ($imageoutfile_anal, $imageoutfile_fcst);
 
+# Add the last analysis a second time
+  push @analimagelist, $fullanal_image;                              
+
   print "\nAnalysis Image List...  \n" ;
   print @analimagelist;
   print "\n\n" ;
 
+  print "\nAnimate the Analyses...  \n" ;
   $imageoutfile_anal = $imageoutdir."analanim.gif";
-  $command = "convert -delay 50 -loop 0 @analimagelist $imageoutfile_anal";
+  $command = "convert -delay 75 -loop 0 $analimagelist[0] @analimagelist $imageoutfile_anal";
   print "setting up command: $command\n";
   $result=system("$command");
 
@@ -354,7 +371,7 @@ foreach $var (@vars) {
 
   print "\nAnimate the Montages...  \n" ;
   $imageoutfile_montage = $imageoutdir."montageanim.gif";
-  $command = "convert -delay 75 -loop 0 @montageimagelist $imageoutfile_montage";
+  $command = "convert -delay 75 -loop 0 $montageimagelist[0] @montageimagelist $imageoutfile_montage";
   print "setting up command: $command\n";
   $result=system("$command");
 
@@ -373,7 +390,7 @@ foreach $var (@vars) {
   my $thumb = "$imageoutdir"."montageanim_$hhmm_modelrun\_thumb.gif";
 # $command = "convert -resize 90x60! $imageoutdir"."montageanim_$modelrun.gif $thumb";                              
   if(-e "$imageoutdir"."montageanim_$modelrun.gif"){ # Use analysis image for thumb, except remove the thumb if the montage isn't available
-      $command = "convert -resize 90x60! $imageoutfile_anal $thumb";
+      $command = "convert -resize $geom $imageoutfile_anal $thumb";
   }else{
       $command = "rm -f $thumb";
   }
