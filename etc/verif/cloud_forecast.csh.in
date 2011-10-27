@@ -82,6 +82,10 @@ while ($IMEMBER <= $NMEMBERS)
 
     @ PT = $IMEMBER + 4
 
+    if ($PT == 7) then
+        @ PT = 4
+    endif
+
     setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
     echo "IMEMBER MEMBER IBLOCK: $IMEMBER $MEMBER $IBLOCK"
 
