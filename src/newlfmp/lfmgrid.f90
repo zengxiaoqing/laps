@@ -19,7 +19,8 @@ logical :: verbose=.true.
 logical :: realtime=.true.
 logical :: write_to_lapsdir=.false.
 logical :: make_donefile=.true.
-logical :: large_grid=.false.
+logical :: large_pgrid=.false.
+logical :: large_ngrid=.false.
 
 integer :: domnum,fcsttime,precip_dt=3600  ! in seconds
 
@@ -137,7 +138,11 @@ integer :: ct
 
 if (trim(mtype) /= 'st4') then
   nvar2d=16
-  nvar3d=7 ! add 1 for tkesig if needed 
+  if(.not. large_ngrid)then
+      nvar3d=7 ! add 1 for tkesig if needed 
+  else
+      nvar3d=3 ! add 1 for tkesig if needed 
+  endif
   if (make_micro) nvar3d=nvar3d+5
 
   allocate(nlat(nx,ny),nlon(nx,ny))
@@ -166,13 +171,20 @@ if (trim(mtype) /= 'st4') then
   nlhflux  =>ngrid(1:nx,1:ny,ct); ct=ct+1
 
   npsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-  nzsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+
+  if(.not. large_ngrid)then
+      nzsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+  endif
+
   ntsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
   nmrsig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-  nusig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-  nvsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-  nwsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-! ntkesig  =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+
+  if(.not. large_ngrid)then
+      nusig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+      nvsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+      nwsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+!     ntkesig  =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+  endif
 
   if (make_micro) then
     ncldliqmr_sig =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
@@ -214,13 +226,20 @@ hgrid=rmsg
 ct=1
 
 hpsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-hzsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+
+if(.not. large_ngrid)then
+    hzsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+endif
+
 htsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 hmrsig   =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-husig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-hvsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-hwsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-!htkesig  =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+
+if(.not. large_ngrid)then
+   husig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+   hvsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+   hwsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+!  htkesig  =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+endif
 
 if (make_micro) then
    hcldliqmr_sig =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
@@ -244,14 +263,14 @@ implicit none
 
 integer :: ct
 
-if(.not. large_grid)then ! state variables
+if(.not. large_pgrid)then ! state variables
    nvar3dout=8
 else
    nvar3dout=0
 endif
 
 if (make_micro) then
-   if(.not. large_grid)then
+   if(.not. large_pgrid)then
       nvar3dout=nvar3dout+9
    else
       nvar3dout=nvar3dout+1
@@ -269,7 +288,7 @@ pgrid=rmsg
 
 ct=1
 
-if(.not. large_grid)then
+if(.not. large_pgrid)then
    zprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='HT '; com3d(ct:ct+lz-1)='Geopotential Height'       ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
    rhprs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='RH3'; com3d(ct:ct+lz-1)='Relative Humidity'         ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
    tprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='T3 '; com3d(ct:ct+lz-1)='Temperature'               ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
@@ -282,7 +301,7 @@ if(.not. large_grid)then
 endif
 
 if (make_micro) then
-   if(.not. large_grid)then
+   if(.not. large_pgrid)then
       cldliqmr_prs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='LWC'; com3d(ct:ct+lz-1)='Cloud Liq.'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
       cldicemr_prs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='ICE'; com3d(ct:ct+lz-1)='Cloud Ice'      ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
       rainmr_prs   =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='RAI'; com3d(ct:ct+lz-1)='Rain Conc.'     ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
