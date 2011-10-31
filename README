@@ -1469,10 +1469,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            (GVAP) is unavailable.
 
      Satellite derived soundings (snd):
-           We have interfaces to GOES binary and MADIS POES formats. AFWA 
-           database format was previously used at GSD though not currently.
-           For other formats you may wish to supply your own routine to 
-           convert your raw data into the 'snd' format.
+           We have interfaces to GOES binary and MADIS POES (Polar Orbiter) 
+           formats. AFWA database format was previously used at GSD though not 
+           currently. The output represents derived profiles of temperature and 
+           moisture. For other formats you may wish to supply your own routine 
+           to convert your raw data into the 'snd' format.
 
                       ----   2.3.8  GPS ---
 
@@ -3247,6 +3248,13 @@ Output:
              info please check the documentation in subroutine 'make_cssi'
              in file 'src/sfc/lapsvanl_sub.f'.
 
+             Reference: Rodgers, D.M., and R.A. Maddox, 1981: Surface 
+             Meteorological Features Associated with Eastern Colorado Severe 
+             Convective Storms. NOAA Technical Memorandum ERL OWRM-13. DOC, 
+             NOAA, NWS, Boulder, Colorado, 21p.
+
+             Link: http://www.crh.noaa.gov/crh/?n=tm-114
+
          Heat Index:
              A function of temperature and humidity for discomfort due to heat.
 
@@ -3971,7 +3979,8 @@ layer analysis of soil conditions. The three layers are as follows:
 A snow cover analysis is included.
 The fractional snow cover is a composite over time of information from the 
 cloud analysis (visible and IR satellite), and snow accumulation (derived 
-mainly from radar). More documentation can be found within the source code.
+mainly from radar). More documentation can be found within the source code
+(e.g. soilmoisture5.f, calc_evap.f).
 
 Note that a soil temperature analysis is not included at this time. The closest
 thing we have to this is a single layer "ground temperature" analysis in the 
@@ -4172,6 +4181,7 @@ Process: laps2grib.exe - Converts LAPS analysis output into a single GRIB2
      (author: Brent Shaw)
 
 Parameter namelist file: 'static/laps2grib.nl'
+  lrun_laps2grib = .false. (default) or .true. (to create grib2 lapsprd/gr2 files)
 
 Data file: 'static/laps2grib.vtab'
 
@@ -4190,19 +4200,17 @@ out of the file in order to make the units conform to WMO specs (e.g. like
 cloud cover, which WMO defines as a percent from 0-100 whereas LAPS uses a 
 fraction of 0-1., so we set the conversion factor to 100). In the case of 
 precipitation, the units need to be in mm for GRIB, so if LAPS has precip 
-specified in meters, then your conversion factor needs to be 1000 so you 
-can get the data into mm. The scale factor specifies how many digits of 
-precision to preserve after the decimal. It can be negative (for example, 
--1 would have precision to the nearest 10, 0 would give you to the nearest, 
-and 1 gives you 1/10th, and so forth). So, if you have something that is 
-typically very small (say, mixing ratio which in kg/kg ranges from 0.0001 
-to about 0.01, you might use a scale factor of 4 to preserve 4 digits after 
-the decimal. On the other hand, with cloud cover you may only need the nearest 
-integer value from 1-100, so you could use 0. 
+specified in meters, then your conversion factor needs to be 1000 so you can 
+get the data into mm. The scale factor specifies how many digits of precision 
+to preserve after the decimal. It can be negative (for example, -1 would have 
+precision to the nearest 10, 0 would give you to the nearest, and 1 gives you 
+1/10th, and so forth). So, if you have something that is typically very small 
+(say, mixing ratio which in kg/kg ranges from 0.0001 to about 0.01, you might 
+use a scale factor of 4 to preserve 4 digits after the decimal. On the other 
+hand, with cloud cover you may only need the nearest integer value from 1-100, 
+so you could use 0. 
 
-(One thing on encoding the precip data, though. Typically accumulations use 
-product template 8 in the GRIB-2 spec and you have to encode the period over 
-which the precip accumulates... laps2grib does not yet accommodates such things.)
+See laps/src/laps2grib/laps2grib.doc for more detailed information.
 
 ------ 3.4.3 --------------WFOPREP------------------------------------------
 
