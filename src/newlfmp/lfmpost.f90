@@ -9,6 +9,8 @@ integer, external :: iargc
 integer :: narg,chr,nc,i,j,k
 integer :: laps_reftime,laps_valtime,istatus
 
+real :: xcen,ycen,latcen,loncen
+
 character(len=256) :: laps_data_root,lfmprd_dir
 character(len=24) :: a24time
 character(len=16) :: atime,afcst
@@ -132,16 +134,29 @@ if (verbose) then
         ,nlat(1,1),nlon(1,1),nlat(nx,1),nlon(nx,1)
    print*, ' '
    if (trim(mtype) /= 'st4') then
-     print*,'Diagnostics from native domain center:'
+     xcen = 1. + (float(nx-1) / 2.)
+     ycen = 1. + (float(ny-1) / 2.)
+     print*,'Diagnostics from native domain center: ',xcen,ycen
+
      print'(a,f7.0)',' Terrain height at center = ',nzsfc(nx/2,ny/2)
+     call bilinear_laps(xcen,ycen,nx,ny,nlat,latcen)             
+     call bilinear_laps(xcen,ycen,nx,ny,nlon,loncen)             
+     print'(a,f10.5)',' Approx Latitude at center = ',latcen                 
+     print'(a,f10.5)',' Approx Longitude at center = ',loncen                   
+
      print*,'------------------------------------------------------------'
      print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV         U       V'
      print*,'------------------------------------------------------------'
      do k=1,nz
-       print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6,2f8.2)'   &
+       if(.not. large_ngrid)then
+         print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6,2f8.2)'   &
              ,k,npsig(nx/2,ny/2,k),nzsig(nx/2,ny/2,k)  &
              ,ntsig(nx/2,ny/2,k),nmrsig(nx/2,ny/2,k)   &
              ,nusig(nx/2,ny/2,k),nvsig(nx/2,ny/2,k)
+       else
+         print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6,2f8.2)'   &
+             ,k,npsig(nx/2,ny/2,k)                            
+       endif
        call check_nan(npsig(nx/2,ny/2,k),istatus) 
        if(istatus .ne. 1)then
          write(6,*)' ERROR: Nan detected in npsig via check_nan...'
@@ -182,7 +197,7 @@ if (verbose) then
    print*,'      (SW)----------------------(SE)'
    print'(f8.3,1x,f8.3,10x,f8.3,1x,f8.3)'  &
         ,llat(1,1),llon(1,1),llat(lx,1),llon(lx,1)
-   if (trim(mtype) /= 'st4') then
+   if (trim(mtype) /= 'st4' .and. .not. large_ngrid) then
      print*, ' '
      print*,'Diagnostics from hinterp domain center:'
      print'(a,f7.0)',' Terrain height at center = ',zsfc(lx/2,ly/2)
@@ -211,17 +226,19 @@ endif
 ! Allocate and vertically interpolate data to isobaric grid.
 
 if (trim(mtype) /= 'st4') then
+ write(6,*)' call alloc_isobaric_grid'
  call alloc_isobaric_grid
 
 !beka
  I4_elapsed = ishow_timer()
 
+ write(6,*)' call lfm_vinterp'
  call lfm_vinterp
 
 !beka
  I4_elapsed = ishow_timer()
 
- if (verbose .and. .not. large_grid) then
+ if (verbose .and. .not. large_pgrid) then
     print*,' '
     print*,'Diagnostics from isobaric domain center:'
     print*,'--------------------------------------------'
@@ -236,9 +253,11 @@ if (trim(mtype) /= 'st4') then
 
 ! Fill any missing surface fields and generate derived fields.
 
+ write(6,*)' call lfm_derived'
  call lfm_derived
  I4_elapsed = ishow_timer()
 
+ write(6,*)' call lfm_vinterp (2nd time)'
  call lfm_vinterp
  I4_elapsed = ishow_timer()
 
