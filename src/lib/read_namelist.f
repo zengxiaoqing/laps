@@ -169,7 +169,7 @@ c
       subroutine get_balance_nl(lrunbal,adv_anal_by_t_min
      .           ,cpads_type,incl_clom,setdelo0
      .           ,c_erru, c_errub, c_errphi, c_errphib, c_delo
-     .           ,comega_smooth
+     .           ,comega_smooth, erf, itmax
      .           ,istatus)
 c
 cdoc  Reads static/balance.nl file.
@@ -177,7 +177,7 @@ cdoc  Reads static/balance.nl file.
       implicit none
 
       integer    istatus
-      integer    len_dir
+      integer    len_dir, itmax
       integer    adv_anal_by_t_min
       logical    lrunbal
       logical    incl_clom 
@@ -185,11 +185,12 @@ cdoc  Reads static/balance.nl file.
       character  nest7grid*150
       character  cpads_type*3
       real c_erru, c_errub, c_errphi, c_errphib, c_delo, comega_smooth
+      real erf
 
       include   'grid_fname.cmn'       !grid_fnam_common
 
       namelist /balance_nl/lrunbal,adv_anal_by_t_min,cpads_type
-     1        ,incl_clom,setdelo0
+     1        ,incl_clom,setdelo0,erf,itmax
      1        ,c_erru, c_errub, c_errphi, c_errphib, c_delo
      1        ,comega_smooth
 
