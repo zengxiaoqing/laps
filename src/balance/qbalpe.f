@@ -171,13 +171,18 @@ c    Arrays for Airdrop application
       real, allocatable, dimension(:,:) :: udrop,vdrop,tdrop,rri,rrj,
      &    rrk,rrit,rrjt,rrkt,rrii,rrjj
       real, allocatable, dimension (:) :: udropc,vdropc,tdropc,rric,rrjc
+
+      real  erf
 c_______________________________________________________________________________
 c
+!     Initialize in case not in namelist
+      erf=.01
+      itmax=200  !max iterations for relaxation
 
       call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,
      .                    incl_clom,setdelo0,
      .                    c_erru, c_errub, c_errphi, c_errphib, c_delo,       
-     .                    comega_smooth,
+     .                    comega_smooth,erf,itmax,
      .                    istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
@@ -229,7 +234,6 @@ c        print*,(p(i),dp(i),i=1,nz)
       cappa=287.053/1004.686
       g=9.80665
       bnd=1.e-30 !value of winds on the terrain face 
-      itmax=200  !max iterations for relaxation
 
       call get_domain_laps(nx,ny,staticext,lat,lon,ter
      1                    ,grid_spacing_cen_m,istatus)
@@ -669,7 +673,7 @@ c returns staggered grids of full fields u,v,phi
       call balcon(phis,us,vs,oms,phi,u,v,om,phibs,ubs,vbs,ombs
      . ,ts,rod,delo,tau,itmax,err,erru,errphi,errub,errphib
 c    . ,nu,nv,fu,fv
-     . ,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
+     . ,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax,erf)
 
       if(larray_diag)then
          print*
@@ -1394,7 +1398,7 @@ c
       subroutine balcon(to,uo,vo,omo,t,u,v,om,tb,ub,vb,omb,tmp,
      .   rod,delo,tau,itmax,err,erru,errph,errub,errphb
 c    .,nu,nv,fu,fv
-     .,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
+     .,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax,erf_in)
 c
 c *** Balcon executes the mass/wind balance computations as described
 c        mcginley (Meteor and Atmos Phys, 1987) except that
@@ -1452,7 +1456,7 @@ c    .,nu(nx,ny,nz),nv(nx,ny,nz),fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,a,bb,cortmt,rod
      .      ,dudy,dvdx,dnudx,dnvdy,tt,uot,vot,tot
      .      ,dt2dx2,dt2dy2,slap,force,rest,cot
-     .      ,cotma1,cotm5,rho,cotm0,erf,dtdx,dtdy,nuu,nvv
+     .      ,cotma1,cotm5,rho,cotm0,erf_in,erf,dtdx,dtdy,nuu,nvv
      .      ,dldp,dldx,dldy,tsum,r_missing_data
      .      ,usum,vsum,delo,fuu,fvv
      .      ,angu,angv,dyu,dxv
@@ -1571,7 +1575,7 @@ c owing to an artifact of coding the t array is phi
 c      write(9,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
 c  set convergence error for relaxation of lamda...set erf to desired 
 c  accuracy of wind
-       erf=.01 !m/sec
+       erf=erf_in     
        erf=erf*dx(nx/2,ny/2)
 c apply continuity to input winds over complete domain with no terrain
        call leib_sub(nx,ny,nz,erf,tau,erru
