@@ -90,7 +90,13 @@ c
         nsat=nsat+1
         ntype=0
 
+        write(6,*)
+        write(6,*)' Searching for valid types for selected satellite '
+     1            ,k,c_sat_id(k)
+
         do j=1,maxtype
+
+         write(6,*)' itypes(j,k) = ',j,k,itypes(j,k)
 
          if(itypes(j,k).eq.1)then
           ntype=ntype+1
@@ -105,7 +111,7 @@ c
 
           if(nchannels.eq.0)then
             print*,'!!Error: No channels specified',
-     &'for this satellite and type: ',c_sat_id(k),c_sat_types(j,k)
+     &' for this satellite and type: ',c_sat_id(k),c_sat_types(j,k)
             print*,'!!Terminating!!'
             goto 1000
           endif
@@ -156,11 +162,11 @@ c =================================================================
         enddo
         if(ntype.eq.0)then
          print*,'!!Error: No type specified for this satellite:'
-         print*,'   c_sat_id(k)'
+         print*,'   k,c_sat_id(k)',k,c_sat_id(k)
          print*,'!!Terminating!!'
          goto 1000
         endif
-       endif
+       endif ! isats(k) = 1
       enddo
 
       if(nsat.eq.0)then
