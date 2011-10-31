@@ -107,6 +107,54 @@ cdis
           enddo ! i
           enddo ! j
 
+        elseif(c_z2m .eq. 'rams')then                           
+          do j = 1,nj
+          do i = 1,ni
+          do k = 1,nk
+
+            ipcp_type = cldpcp_type_3d(i,j,k) / 16   ! Pull out precip type
+
+!           Compute the basic reflectivity 
+!           w=264083.11*(rainmr(i,j,k)  &
+!               +0.2*(icemr(i,j,k)+snowmr(i,j,k))  &
+!               +2.0*graupelmr(i,j,k))
+!           w=max(1.,w)
+!           refl(i,j,k)=17.8*alog10(w)
+
+            if(ipcp_type .ne. 0)then
+                npcp = npcp + 1
+                if(ipcp_type .eq. 1 .or. ipcp_type .eq. 3)then     ! rain or zr
+                    w = 10.**(ref_3d(i,j,k)/17.8)
+                    rho_q = w / 264083.11                          ! g/m^3
+                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    rai_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+
+                elseif(ipcp_type .eq. 2)then                       ! snow
+                    w = 10.**(ref_3d(i,j,k)/17.8)
+                    rho_q = w / 0.2                                ! g/m^3
+                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    sno_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+
+                elseif(ipcp_type .eq. 4 .or. ipcp_type .eq. 5)then ! IP or Hail
+                    w = 10.**(ref_3d(i,j,k)/17.8)
+                    rho_q = w / 2.0                                ! g/m^3
+                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    pic_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+
+                endif
+
+            else  ! ipcp_type = 0
+                pcp_cnc_3d(i,j,k) = 0.
+                rai_cnc_3d(i,j,k) = 0.
+                sno_cnc_3d(i,j,k) = 0.
+                pic_cnc_3d(i,j,k) = 0.
+
+            endif
+
+          enddo ! k
+          enddo ! i
+          enddo ! j
+
         elseif(c_z2m .eq. 'kessler')then 
           do j = 1,nj
           do i = 1,ni
