@@ -110,8 +110,10 @@ allocate(ncon_pcp_tot(nx,ny))
 
 ! Read model data.
 
-icode=nf_inq_varid(ncid,'U',nid)
-if (icode .eq. 0) then
+if(.not. large_ngrid)then ! U,V
+
+  icode=nf_inq_varid(ncid,'U',nid)
+  if (icode .eq. 0) then
    allocate(fld3d(nx+1,ny,nz))
    icode=nf_get_var_real(ncid,nid,fld3d)
       print*,'U: ',icode
@@ -119,10 +121,10 @@ if (icode .eq. 0) then
       nusig(i,:,:)=(fld3d(i,:,:)+fld3d(i+1,:,:))*0.5
    enddo
    deallocate(fld3d)
-endif
+  endif
 
-icode=nf_inq_varid(ncid,'V',nid)
-if (icode .eq. 0) then
+  icode=nf_inq_varid(ncid,'V',nid)
+  if (icode .eq. 0) then
    allocate(fld3d(nx,ny+1,nz))
    icode=nf_get_var_real(ncid,nid,fld3d)
       print*,'V: ',icode
@@ -130,6 +132,7 @@ if (icode .eq. 0) then
       nvsig(:,j,:)=(fld3d(:,j,:)+fld3d(:,j+1,:))*0.5
    enddo
    deallocate(fld3d)
+  endif
 endif
 
 icode=nf_inq_varid(ncid,'P',nid)
@@ -137,7 +140,7 @@ if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,npsig)
    icode=nf_inq_varid(ncid,'PB',nid)
    if (icode .eq. 0) then
-      allocate(fld3d(nx,ny,nz))
+    allocate(fld3d(nx,ny,nz))
       icode=nf_get_var_real(ncid,nid,fld3d)
       npsig=npsig+fld3d
       deallocate(fld3d)
@@ -170,17 +173,19 @@ if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nsnowmr_sig)
 icode=nf_inq_varid(ncid,'QGRAUP',nid)
 if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,ngraupelmr_sig)
 
-allocate(fld3d(nx,ny,nz+1))
-icode=nf_inq_varid(ncid,'W',nid)
-if (icode .eq. 0) then
+
+if(.not. large_ngrid)then ! W, Z
+  allocate(fld3d(nx,ny,nz+1))
+  icode=nf_inq_varid(ncid,'W',nid)
+  if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,fld3d)
    do k=1,nz
       nwsig(:,:,k)=(fld3d(:,:,k)+fld3d(:,:,k+1))*0.5
    enddo
-endif
+  endif
 
-icode=nf_inq_varid(ncid,'PH',nid)
-if (icode .eq. 0) then
+  icode=nf_inq_varid(ncid,'PH',nid)
+  if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,fld3d)
    do k=1,nz
       nzsig(:,:,k)=(fld3d(:,:,k)+fld3d(:,:,k+1))*0.5
@@ -194,8 +199,9 @@ if (icode .eq. 0) then
    else
       nzsig=rmsg
    endif
-endif
-deallocate(fld3d)
+  endif
+  deallocate(fld3d)
+endif ! large_ngrid
 
 icode=nf_inq_varid(ncid,'TSK',nid)
 if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nground_t)
