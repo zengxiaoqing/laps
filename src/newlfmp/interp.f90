@@ -99,7 +99,7 @@ real :: pla,dz,plo,phi,slope
 allocate(logp(lx,ly,nz))
 logp=alog(hpsig)
 
-if(.not. large_grid)then
+if(.not. large_pgrid)then
 
 ! Interpolate 3d horizontally interpolated data to isobaric surfaces.
 ! Assume that height and temp are always available, but check for 
@@ -143,10 +143,10 @@ if(.not. large_grid)then
   if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
 ! if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
 
-endif ! large_grid
+endif ! large_pgrid
 
 if (make_micro) then
-   if(.not. large_grid)then
+   if(.not. large_pgrid)then
       if (minval(hcldliqmr_sig)  < rmsg) call vinterp_single(logp,hcldliqmr_sig,cldliqmr_prs)
       if (minval(hcldicemr_sig)  < rmsg) call vinterp_single(logp,hcldicemr_sig,cldicemr_prs)
       if (minval(hrainmr_sig)    < rmsg) call vinterp_single(logp,hrainmr_sig,rainmr_prs)
