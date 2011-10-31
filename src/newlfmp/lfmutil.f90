@@ -34,6 +34,8 @@ end
 
 subroutine get_native_dims(mtype,filename,nx,ny,nz,istatus)
 
+use lfmgrid
+
 implicit none
 
 integer :: nx,ny,nz,istatus
@@ -53,6 +55,12 @@ select case(trim(mtype))
    case('st4')
       call get_st4_dims(filename,nx,ny,nz)
 end select
+
+if(nx*ny*nz > 20000000)then
+   write(6,*)' Large native grid - process reduced set of 3-D fields'
+   large_ngrid = .true.
+   large_pgrid = .true.
+endif
 
 return
 end
@@ -136,8 +144,9 @@ lprs(1:lz)=pressures(1:lz)
 lprsl(1:lz)=alog(lprs(1:lz))
 
 if(lx*ly*lz > 20000000)then
-   write(6,*)' Large grid - process reduced set of 3-D fields'
-   large_grid = .true.
+   write(6,*)' Large LAPS grid - process reduced set of 3-D fields'
+   large_pgrid = .true.
+   large_ngrid = .true.
 endif
 
 return
@@ -280,7 +289,8 @@ real :: tvprs
 
 ! Extrapolate a surface temp if not available.
 
-if (maxval(tsfc) > 1000.) then
+if(.not. large_ngrid)then
+  if (maxval(tsfc) > 1000.) then
    if (verbose) then
       print*,' '
       print*,'tsfc not available...will extrapolate from lowest level...'
@@ -300,31 +310,34 @@ if (maxval(tsfc) > 1000.) then
       tsfc(i,j)=htsig(i,j,1)-dtdz*dz
    enddo
    enddo
+  endif
 endif
 
 ! Fill other missing surface fields from lowest model level.
 
-if (maxval(mrsfc) > 1000.) mrsfc(:,:)=hmrsig(:,:,1)
-if (maxval(usfc) > 1000.) usfc(:,:)=husig(:,:,1)
-if (maxval(vsfc) > 1000.) vsfc(:,:)=hvsig(:,:,1)
-if (maxval(wsfc) > 1000.) wsfc(:,:)=hwsig(:,:,1)
+if(.not. large_ngrid)then
+  if (maxval(mrsfc) > 1000.) mrsfc(:,:)=hmrsig(:,:,1)
+  if (maxval(usfc) > 1000.) usfc(:,:)=husig(:,:,1)
+  if (maxval(vsfc) > 1000.) vsfc(:,:)=hvsig(:,:,1)
+  if (maxval(wsfc) > 1000.) wsfc(:,:)=hwsig(:,:,1)
 
 ! Other derived surface fields.
-where(mrsfc < zero_thresh) mrsfc = zero_thresh
+  where(mrsfc < zero_thresh) mrsfc = zero_thresh
 
-do j=1,ly
-do i=1,lx
+  do j=1,ly
+  do i=1,lx
    rhsfc(i,j)=min(relhum(tsfc(i,j),mrsfc(i,j),psfc(i,j)),1.)
    tdsfc(i,j)=dewpt(tsfc(i,j),rhsfc(i,j))
    thetasfc(i,j)=potential_temp(tsfc(i,j),psfc(i,j))
    thetaesfc(i,j)=eq_potential_temp(tsfc(i,j),psfc(i,j),mrsfc(i,j),rhsfc(i,j))
    rhsfc(i,j)=rhsfc(i,j)*100.
-enddo
-enddo
+  enddo
+  enddo
+endif ! large_ngrid
 
 ! Generate reduced pressure for LAPS usage.
 
-if(.not. large_grid)then
+if(.not. large_pgrid)then
  if (verbose) then
    print*,' '
    print*,'Reducing pressure to ',redp_lvl, ' meters'
@@ -343,17 +356,19 @@ endif
 ! Microphysical surface variables.
 
 if (make_micro) then
-   where(hmrsig < zero_thresh) hmrsig=zero_thresh
-   where(hcldliqmr_sig < zero_thresh) hcldliqmr_sig=0.0
-   where(hcldicemr_sig < zero_thresh) hcldicemr_sig=0.0
-   where(hsnowmr_sig < zero_thresh) hsnowmr_sig=0.0
-   where(hrainmr_sig < zero_thresh) hrainmr_sig=0.0
-   where(hgraupelmr_sig < zero_thresh) hgraupelmr_sig=0.0
-   clwmrsfc(:,:)=hcldliqmr_sig(:,:,1)
-   icemrsfc(:,:)=hcldicemr_sig(:,:,1)
-   snowmrsfc(:,:)=hsnowmr_sig(:,:,1)
-   rainmrsfc(:,:)=hrainmr_sig(:,:,1)
-   graupmrsfc(:,:)=hgraupelmr_sig(:,:,1)
+ where(hmrsig < zero_thresh) hmrsig=zero_thresh
+ where(hcldliqmr_sig < zero_thresh) hcldliqmr_sig=0.0
+ where(hcldicemr_sig < zero_thresh) hcldicemr_sig=0.0
+ where(hsnowmr_sig < zero_thresh) hsnowmr_sig=0.0
+ where(hrainmr_sig < zero_thresh) hrainmr_sig=0.0
+ where(hgraupelmr_sig < zero_thresh) hgraupelmr_sig=0.0
+ clwmrsfc(:,:)=hcldliqmr_sig(:,:,1)
+ icemrsfc(:,:)=hcldicemr_sig(:,:,1)
+ snowmrsfc(:,:)=hsnowmr_sig(:,:,1)
+ rainmrsfc(:,:)=hrainmr_sig(:,:,1)
+ graupmrsfc(:,:)=hgraupelmr_sig(:,:,1)
+
+ if(.not. large_ngrid)then
 
 ! Generate cloud fields.
 
@@ -382,8 +397,10 @@ if (make_micro) then
    rhodrysig=hpsig/(r*htsig)
    call lfm_integrated_liquid(lx,ly,nz,condmr_sig,hmrsig,rhodrysig,hzsig,zsfc  &
                              ,intliqwater,totpcpwater)
+ endif ! large_ngrid
 
-   do j=1,ly
+ if(.true.)then ! always run this part
+  do j=1,ly
    do i=1,lx
       if(intliqwater(i,j) < rmsg)then
          cldamt(i,j) = (intliqwater(i,j) * 100.) ** 0.3333333
@@ -391,19 +408,22 @@ if (make_micro) then
       endif
    enddo ! i
    enddo ! j
+ endif ! true
 
+ if(.not. large_ngrid)then
    if (verbose) then
       print*,' '
-      print *,'Calling integrated_liquid.'
+      print *,'Called integrated_liquid.'
       print *,'Min/Max condmr_sig =',minval(condmr_sig),maxval(condmr_sig)
       print *,'Min/Max mrsig =',minval(hmrsig),maxval(hmrsig)
       print *,'Min/Max rhodrysig =',minval(rhodrysig),maxval(rhodrysig)
       print *,'Min/Max zsig =',minval(hzsig),maxval(hzsig)
    endif
    deallocate(condmr_sig,rhodrysig)
+ endif ! large_ngrid
 
 ! Generate derived reflectivity fields.
-
+ if(.true.)then ! always run this part
    if (verbose) then
       print*,' '
       print *,'Calling lfm_reflectivity.'
@@ -457,7 +477,7 @@ if (make_micro) then
       print *,'Min/Max hsnowmr_sig =',minval(hsnowmr_sig),maxval(hsnowmr_sig)
       print *,'Min/Max hgraupelmr_sig =',minval(hgraupelmr_sig),maxval(hgraupelmr_sig)
    endif
-   if (minval(hrainmr_sig) < rmsg .and. (.not. large_grid) .and.  &
+   if (minval(hrainmr_sig) < rmsg .and. (.not. large_ngrid) .and.  &
        minval(hsnowmr_sig) < rmsg .and. minval(hgraupelmr_sig) < rmsg) then
       call lfm_sfc_pcptype(lx,ly,nz,hrainmr_sig,hsnowmr_sig,hgraupelmr_sig  &
                           ,pcptype_sfc)
@@ -478,6 +498,8 @@ if (make_micro) then
 !  To do this we'd need rho on the pressure grid. Otherwise we can convert
 !  on the model sig grid using rhosig, and this is now done at the end of 
 !  'lfm_reflectivity'
+
+ endif ! true
 
 endif ! make_micro
 
@@ -548,25 +570,26 @@ deallocate(pcp_06)
 ! Temporary variables needed to derive some fields.
 
 allocate(hrhsig(lx,ly,nz),hthetasig(lx,ly,nz),hthetaesig(lx,ly,nz),hzsigf(lx,ly,nz+1))
-do k=1,nz
-do j=1,ly
-do i=1,lx
+if(.not. large_ngrid)then
+ do k=1,nz
+ do j=1,ly
+ do i=1,lx
    hrhsig(i,j,k)=min(1.,relhum(htsig(i,j,k),hmrsig(i,j,k),hpsig(i,j,k)))
    hthetasig(i,j,k)=potential_temp(htsig(i,j,k),hpsig(i,j,k))
    hthetaesig(i,j,k)=eq_potential_temp(htsig(i,j,k),hpsig(i,j,k)  &
                                       ,hmrsig(i,j,k),hrhsig(i,j,k))
-enddo
-enddo
-enddo
-do k=2,nz
+ enddo
+ enddo
+ enddo
+ do k=2,nz
    hzsigf(:,:,k)=(hzsig(:,:,k-1)+hzsig(:,:,k))*0.5
-enddo
-hzsigf(:,:,1)=zsfc
-hzsigf(:,:,nz+1)=2.*hzsig(:,:,nz)-hzsigf(:,:,nz)
+ enddo
+ hzsigf(:,:,1)=zsfc
+ hzsigf(:,:,nz+1)=2.*hzsig(:,:,nz)-hzsigf(:,:,nz)
 
 ! Generate pbl height if not available from model.
 
-if (maxval(pblhgt) > 999999.) then
+ if (maxval(pblhgt) > 999999.) then
    if (verbose) then
       print*,' '  
       print*,'Generating PBL height using theta and surface temp.'
@@ -578,21 +601,22 @@ if (maxval(pblhgt) > 999999.) then
    enddo
    enddo
    call model_pblhgt(hthetasig,thetasfc,hpsig,hzsig,zsfc,lx,ly,nz,pblhgt)
-endif
-where (pblhgt < 0.) pblhgt=0.
+ endif
+ where (pblhgt < 0.) pblhgt=0.
 
-I4_elapsed = ishow_timer()
+ I4_elapsed = ishow_timer()
 
 ! Helicity, cape, cin, LI.
 
-write(6,*)' Calculating helicity, stability indices'
-call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
-call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
+ write(6,*)' Calculating helicity, stability indices'
+ call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
+ call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
 
-if(.not. large_grid)then
-  call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
+ if(.not. large_pgrid)then
+   call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
               ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
-endif
+ endif
+endif ! large_ngrid
 
 deallocate(hthetasig,hthetaesig,hzsigf)
 
@@ -602,38 +626,40 @@ I4_elapsed = ishow_timer()
 
 write(6,*)' Calculating wet bulb zero height'
 allocate(htdsig(lx,ly,nz))
-htdsig=htsig/((-rvolv*alog(hrhsig)*htsig)+1.0)
+if(.not. large_ngrid)then
+  htdsig=htsig/((-rvolv*alog(hrhsig)*htsig)+1.0)
 
-call height_tw(hpsig,hzsig,htsig,htdsig,psfc,zsfc,tsfc,tdsfc,mrsfc,pmsl  &
-              ,0.0,ztw0,lx,ly,nz)
+  call height_tw(hpsig,hzsig,htsig,htdsig,psfc,zsfc,tsfc,tdsfc,mrsfc,pmsl  &
+                ,0.0,ztw0,lx,ly,nz)
 
-I4_elapsed = ishow_timer()
+  I4_elapsed = ishow_timer()
 
-call height_tw(hpsig,hzsig,htsig,htdsig,psfc,zsfc,tsfc,tdsfc,mrsfc,pmsl  &
-              ,1.3,ztw1,lx,ly,nz)
+  call height_tw(hpsig,hzsig,htsig,htdsig,psfc,zsfc,tsfc,tdsfc,mrsfc,pmsl  &
+                ,1.3,ztw1,lx,ly,nz)
 
-I4_elapsed = ishow_timer()
+  I4_elapsed = ishow_timer()
 
 ! Visibility.
 
-visibility=6000000.*(tsfc-tdsfc)/(rhsfc**1.75)  ! in meters
-where(visibility > 99990.) visibility = 99990.
+  visibility=6000000.*(tsfc-tdsfc)/(rhsfc**1.75)  ! in meters
+  where(visibility > 99990.) visibility = 99990.
 
 ! Compute heat index if temp is above 80F (300K).
 
-do j=1,ly
-do i=1,lx
+  do j=1,ly
+  do i=1,lx
    if (tsfc(i,j) >= 300.) then
       heatind(i,j)=heatindex(tsfc(i,j),rhsfc(i,j))
    else
       heatind(i,j)=tsfc(i,j)
    endif
-enddo
-enddo
+  enddo
+  enddo
+endif ! large_ngrid
 
 ! Fire weather indices.
 
-if (make_firewx) then
+if (make_firewx .and. .not. large_ngrid) then
    call ventilation(husig,hvsig,hzsig,pblhgt,zsfc,lx,ly,nz,upbl,vpbl,vnt_index)
 
 ! Mid-level Haines Index.
@@ -662,10 +688,11 @@ if (make_firewx) then
 
 endif
 
-deallocate(hrhsig,htdsig)
+if(allocated (hrhsig)) deallocate(hrhsig)
+if(allocated (htdsig)) deallocate(htdsig)
 
 !cj Compute Omega, added 6/21/2007
-if(.not. large_grid)then
+if(.not. large_pgrid)then
   do k=1,lz
   do j=1,ly
   do i=1,lx
@@ -676,7 +703,7 @@ if(.not. large_grid)then
   enddo
   enddo
 endif
-if (verbose) then
+if (verbose .and. .not. large_ngrid) then
    print*,' '
    print*,'Min/Max tsfc      = ',minval(tsfc),maxval(tsfc)
    print*,'Min/Max rhsfc     = ',minval(rhsfc),maxval(rhsfc)
@@ -741,6 +768,8 @@ I4_elapsed = ishow_timer()
 !       enddo ! j
 !       enddo ! i
 
+if(.not. large_ngrid)then
+
         call up_mflux(lx,ly,nz,avg,ldf,dx,dy                 &
                      ,husig,hvsig,totpcpwater,upflux           &
                      ,hzsig,rmsg)              
@@ -750,6 +779,8 @@ I4_elapsed = ishow_timer()
 !       write(*,*)upflux,totpcpwater
 
 	write(*,*)'beka beka beka'
+
+endif
 
         stefan_boltzmann = 5.67e-8
         eff_emissivity = 0.6
@@ -786,19 +817,26 @@ if (fcsttime > 0) then
 
    inquire(file=trim(filename0),exist=there)
    if (there) then
-      open(1,file=trim(filename0),status='old',form='unformatted')
-      if (trim(mtype) == 'nmm') then
-        read(1) pcp_init,pcp_06,snow_init
-        print *,'reading intermediate file for model: ',trim(mtype)
-      else
-        read(1) pcp_init,snow_init
-        pcp_06=0.
-      endif
-      close(1)
       if (verbose) then
          print*,' '
          print*,'Reading previous precip data from: ',trim(filename0)
       endif
+      open(1,file=trim(filename0),status='old',form='unformatted')
+      if (trim(mtype) == 'nmm') then
+        read(1,err=101) pcp_init,pcp_06,snow_init
+        print *,'reading intermediate file for model: ',trim(mtype)
+      else
+        read(1,err=101) pcp_init,snow_init
+        pcp_06=0.
+      endif
+      goto 102
+
+101   print*,'  ERROR reading previous precip'
+      pcp_init=0.
+      snow_init=0.
+
+102   close(1)
+
    else
       print*,'Could not find previous precip file: ',trim(filename0)
       print*,'  Prior precip set to zero.'
@@ -1005,10 +1043,10 @@ end
 
 !===============================================================================
 
-subroutine lfm_reflectivity(nx,ny,nz,rho,hgt,rainmr,icemr,snowmr,graupelmr  &
+subroutine lfm_reflectivity(lx,ly,nz,rho,hgt,rainmr,icemr,snowmr,graupelmr  &
                            ,refl,zdr,ldr,tmp,p,qv,max_refl,echo_tops)
 
-use lfmgrid, ONLY: c_m2z
+use lfmgrid, ONLY: c_m2z, large_ngrid
 use src_versuch, ONLY: versuch
 
 ! Subroutine to compute estimated radar reflectivity from
@@ -1022,18 +1060,19 @@ use src_versuch, ONLY: versuch
   
 implicit none
 
-integer :: nx,ny,nz,i,j,k
+integer :: lx,ly,nz,i,j,k
 real, parameter :: svnfrth=7.0/4.0,max_top_thresh=5.0
 real :: w
-real, dimension(nx,ny) :: max_refl,echo_tops
-real, dimension(nx,ny,nz) :: rho,hgt,rainmr,icemr,snowmr,graupelmr,refl
-real, dimension(nx,ny,nz) :: zdr,ldr
-real, dimension(nx,ny,nz) :: tmp,p,qv
+real, dimension(lx,ly) :: max_refl,echo_tops
+real, dimension(lx,ly,nz) :: rho,rainmr,icemr,snowmr,graupelmr,refl
+real, dimension(lx,ly,*)  :: hgt
+real, dimension(lx,ly,nz) :: zdr,ldr
+real, dimension(lx,ly,nz) :: tmp,p,qv
 
 ! Local arrays
 
-real, dimension(nx,ny,nz) :: zhhx,ahhx,zhvx,zvhx,zvvx    ! versuch outputs
-real, dimension(nx,ny,nz) :: delahvx,kkdp,rhohvx         ! versuch outputs
+real, dimension(lx,ly,nz) :: zhhx,ahhx,zhvx,zvhx,zvvx    ! versuch outputs
+real, dimension(lx,ly,nz) :: delahvx,kkdp,rhohvx         ! versuch outputs
 
 real :: zvvxmax,zhhxmax
 
@@ -1043,8 +1082,10 @@ refl=0.0
 zdr=0.0
 ldr=0.0
 
-do j=1,ny
-do i=1,nx
+print *,'c_m2z = ',c_m2z                  
+
+do j=1,ly
+do i=1,lx
    do k=1,nz
 
 ! Compute the basic reflectivity using RAMS reflectivity algorithm.
@@ -1124,7 +1165,9 @@ do i=1,nx
 ! Since we are going from the ground up, we can 
 ! check threshold and set echo top.
 
-      if (refl(i,j,k) >= max_top_thresh) echo_tops(i,j)=hgt(i,j,k) 
+      if(.not. large_ngrid)then
+        if (refl(i,j,k) >= max_top_thresh) echo_tops(i,j)=hgt(i,j,k) 
+      endif
    enddo
 
 ! Compute the max value in the column
