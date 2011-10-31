@@ -86,6 +86,11 @@
         integer 
      1  n_sum(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
 
+        integer nmissing_m(maxbgmodels)
+        integer nsuccess_m(maxbgmodels)
+        integer nincomplete_m(maxbgmodels)
+        integer incomplete_run_m(maxbgmodels)
+
        do i_period = 1,2
         
         if(i_period .eq. 1)then
@@ -96,7 +101,7 @@
          compdir = 'comp2'
         endif
 
-        write(6,*)' Processings stats for period/dir = ',ndays,compdir
+        write(6,*)' Processing stats for period/dir = ',ndays,compdir
 
         rmiss = -999.
         imiss = -999
@@ -167,12 +172,18 @@
          nsuccess = 0
          nincomplete = 0
 
-         nmissing_thr = nint(0.20 * float(n_init_times))
-         nsuccess_thr = nint(0.80 * float(n_init_times))
+         nmissing_m = 0
+         nsuccess_m = 0
+         nincomplete_m = 0
+
+         frac_thr = 0.80
+         nmissing_thr = nint((1. - frac_thr) * float(n_init_times))
+         nsuccess_thr = nint(frac_thr * float(n_init_times))
 
          do init = 0,n_init_times
 
-          incomplete_run = 0
+          incomplete_run = 0   ! based on any of the models
+          incomplete_run_m = 0 ! based on each model
 
           n = imiss ! Initialize
 
@@ -220,6 +231,7 @@
            inquire(file=bias_file_in,exist=l_exist)
            if(.not. l_exist)then
                nmissing = nmissing + 1
+               nmissing_m = nmissing_m + 1
 !              if(nmissing .le. nmissing_thr)then
                    write(6,*)' WARNING: file does not exist:'
      1                                                     ,bias_file_in
@@ -318,13 +330,19 @@
                    if(i_good_timestep_model .eq. 0)then
                      if(incomplete_run .eq. 0     .AND. 
      1                  itime_fcst .le. n_plot_times)then
-                       write(6,916)init,itime_fcst,imodel
+                       write(6,916)init,itime_fcst,a9time_initial,imodel
 916                    format(
      1                 ' WARNING: missing N values for init/time/model '
-     1                        ,3i6)                      
-                       incomplete_run = 1
+     1                        ,2i6,1x,a9,1x,i6)                      
+                       incomplete_run = 1 
                      endif
-                   endif
+
+                     if(incomplete_run_m(imodel) .eq. 0     .AND. 
+     1                  itime_fcst .le. n_plot_times)then
+                       incomplete_run_m(imodel) = 1
+                     endif
+
+                   endif ! i_good_timestep_model = 0
 
                  enddo ! im
                enddo ! itime_fcst
@@ -393,11 +411,17 @@
           enddo ! imodel
 
           nsuccess = nsuccess + 1
+          nsuccess_m(:) = nsuccess_m(:) + (1 - incomplete_run_m(:))
 
           nincomplete = nincomplete + incomplete_run
+          nincomplete_m(:) = nincomplete_m(:) + incomplete_run_m(:)
 
 955       close(lun_bias_in)                                      
           close(lun_ets_in)                                         
+
+          write(6,956)a9time_initial,
+     1                (incomplete_run_m(imodel),imodel=2,n_fdda_models)
+956       format(' incomplete_run_m at ',a9,' is ',20i5)   
 
 960      enddo                    ! init (initialization time)
 
@@ -407,10 +431,21 @@
      1          ,((float(nsuccess) / float(n_init_times+1))) * 100.
 965      format(' success count ',i4,' out of ',i4,i4,' were needed' 
      1         ,f8.2,'%')
+         write(6,966)(nsuccess_m(imodel),imodel=2,n_fdda_models)
+966      format(' nsuccess_m is ',20i5)
+         write(6,967)                        
+     1      ( ((float(nsuccess_m(imodel)) / float(n_init_times+1))*100.)
+     1                                        ,imodel=2,n_fdda_models) 
+967      format(' nsuccess_m % is ',20f7.2)
+
          write(6,*)'nmissing is ',nmissing
+
          write(6,*)'nincomplete is ',nincomplete
+         write(6,968)(nincomplete_m(imodel),imodel=2,n_fdda_models)
+968      format(' nincomplete_m is ',20i5)   
+
          if(nsuccess .lt. nsuccess_thr)then
-             write(6,*)' Insufficient successful times'
+             write(6,*)' Insufficient successful times to plot'
              goto 980
          endif
 
@@ -437,11 +472,21 @@
 !    1                      ,contable(0,1),contable(1,1)   
 970              format(/' Calling skill scores for ',a10,i3,3x,8i10)       
 
-                 lun_out = 6
-                 call skill_scores(contable,lun_out                    ! I
+!                Test whether this model satisfies completeness criteria
+!                Plots will show up for each model that has thresh % of runs with a complete set of forecast times
+                 if(nsuccess_m(imodel) .ge. nsuccess_thr)then ! satisfies completeness criteria
+                   lun_out = 6
+                   call skill_scores(contable,lun_out                  ! I
      1                  ,frac_cvr_comp(imodel,itime_fcst,iregion,idbz) ! O
      1                  ,bias_comp(imodel,itime_fcst,iregion,idbz)     ! O
      1                  , ets_comp(imodel,itime_fcst,iregion,idbz))    ! O
+
+                 else                                         ! does not satisfy criteria
+                   frac_cvr_comp(imodel,itime_fcst,iregion,idbz) = rmiss
+                   bias_comp(imodel,itime_fcst,iregion,idbz) = rmiss
+                   ets_comp(imodel,itime_fcst,iregion,idbz) = rmiss
+
+                 endif
 
              enddo ! itime_fcst
            enddo ! imodel
