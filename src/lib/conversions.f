@@ -581,6 +581,10 @@ cdoc    Works only for constant pressure levels
 
 cdoc    Calculate zcoord (e.g. pressure) of a given level. 
 cdoc    Works only for constant pressure levels
+ 
+        use mem_namelist, ONLY: nk_laps
+
+        real, allocatable, dimension(:) :: sigma_1d_out
 
         logical ltest_vertical_grid_lc
 
@@ -591,6 +595,12 @@ cdoc    Works only for constant pressure levels
 
         elseif(ltest_vertical_grid_lc('pressure'))then
             zcoord_of_level = pressure_of_level(level)
+
+        elseif(ltest_vertical_grid_lc('sigma_ht'))then
+            allocate(sigma_1d_out(nk_laps))
+            call get_sigma_1d(nk,sigma_1d_out,istatus)
+            zcoord_of_level = sigma_1d_out(level)
+            deallocate (sigma_1d_out)
 
         else
             write(6,*)' Error, vertical grid not supported,'
