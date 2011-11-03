@@ -122,6 +122,7 @@ rm -f          radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
 ln -s $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM.png
 
 # Make Thumbnail
+rm -f                            radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM\_thumb.png
 convert -resize 105x70! $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM\_thumb.png
 
 # Make Animation
