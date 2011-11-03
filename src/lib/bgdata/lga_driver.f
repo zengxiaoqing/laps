@@ -1365,13 +1365,13 @@ c... of subroutine sfcbkgd_sfc. This routine uses the 2m Td and sfc_press
 c... 2D arrays directly from the background model.
 
            if(luse_sfc_bkgd)then ! tested only for ETA48_CONUS
-             if(vertical_grid .eq. 'PRESSURE' .or. 
-     .          vertical_grid .eq. 'SIGMA_HT'      )then
+             if(vertical_grid .eq. 'PRESSURE')then 
                call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
      .           ,sh_sfc,topo,pr1d_pa,nx_laps, ny_laps, nz_laps, pr_sfc
      .           ,nx_pr,ny_pr)      
                td_sfc_hi = td_sfc
-             elseif(vertical_grid .eq. 'SIGMA_P')then
+             elseif(vertical_grid .eq. 'SIGMA_P' .or.
+     .              vertical_grid .eq. 'SIGMA_HT'      )then
                call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
      .           ,sh_sfc,topo,prgd_pa,nx_laps, ny_laps, nz_laps, pr_sfc
      .           ,nx_pr,ny_pr)      
@@ -1381,7 +1381,8 @@ c... 2D arrays directly from the background model.
 !             write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
               call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,td_sfc
      .           ,td_sfc_hi, topo
-     .           ,pr1d_mb, nx_laps, ny_laps, nz_laps, pr_sfc)
+     .           ,pr1d_pa, nx_laps, ny_laps, nz_laps, pr_sfc
+     .           ,nx_pr,ny_pr)      
            endif
 
            write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
@@ -1459,14 +1460,18 @@ c because this version uses the 3D analysis info for computations.
 c
            itstatus(3)=ishow_timer()
 
-           if(vertical_grid .ne. 'SIGMA_HT')then
-              write(6,*)' call sfcbkgd for reduced pressure'
+!          if(vertical_grid .ne. 'SIGMA_HT')then
+           write(6,*)' call sfcbkgd for reduced pressure'
+           if(vertical_grid .eq. 'PRESSURE')then 
               call sfcbkgd(bgmodel,tp,sh,ht,rp_tp,rp_sh
-     1                    ,rp_td,dum2_2d,rp_lvl,pr1d_mb
-     1                    ,nx_laps, ny_laps, nz_laps, rp_sfc)
+     1                    ,rp_td,dum2_2d,rp_lvl,pr1d_pa
+     1                    ,nx_laps, ny_laps, nz_laps, rp_sfc
+     1                    ,nx_pr,ny_pr)      
            else
-              write(6,*)' skip calling sfcbkgd for reduced pressure'
-              rp_sfc = missingflag
+               call sfcbkgd(bgmodel,tp,sh,ht,rp_tp,rp_sh
+     1                    ,rp_td,dum2_2d,rp_lvl,prgd_pa
+     1                    ,nx_laps, ny_laps, nz_laps, rp_sfc
+     1                    ,nx_pr,ny_pr)      
            endif
 
            deallocate (rp_lvl,rp_tp,rp_sh,rp_td)
