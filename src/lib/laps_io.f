@@ -968,8 +968,9 @@ cdoc    Writes multiple 3-D grids. Inputs include the extension and time.
                         return
                     endif
                 endif
-                lvl_3d(k) = nint(ht_1d(k))
-                lvl_coord_3d(k) = '  ' ! informational
+! for other vertical_grid, lvl_3d(iscript_3d). Hongli Jiang 11/2/2011
+                lvl_3d(iscript_3d) = nint(ht_1d(k))
+                lvl_coord_3d(iscript_3d) = 'M' ! informational
             else
                 write(6,*)' Error, vertical grid not supported,'
      1                   ,' this routine supports PRESSURE or HEIGHT'
@@ -1861,6 +1862,9 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
             elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(k) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(k) = 'MB'
+            elseif(ltest_vertical_grid('SIGMA_HT'))then
+                lvl_3d(k) = nint(zcoord_of_level(k))
+                lvl_coord_3d(k) = 'M'
             else
                 write(6,*)' Error, vertical grid not supported,'
      1                   ,' this routine supports PRESSURE or HEIGHT'
