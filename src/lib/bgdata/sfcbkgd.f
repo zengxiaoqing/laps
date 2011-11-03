@@ -1,5 +1,6 @@
       SUBROUTINE SFCBKGD(bgmodel,t,q,height,tsfc,qsfc_i,
-     &                   tdsfc_i,tdsfc_o,ter,p,IMX,JMX,KX,psfc)
+     &                   tdsfc_i,tdsfc_o,ter,p,IMX,JMX,KX,psfc,
+     &                   nx_pr,ny_pr)
 
 c inputs are from laps analyzed 2- 3d fields
 C     INPUT       t        ANALYZED TEMPERATURE     3D
@@ -10,7 +11,7 @@ C                 ter      TERRAIN                  2D
 C                 IMX      DIMENSION E-W
 C                 JMX      DIMENSION N-S
 C                 KX       NUMBER OF VERTICAL LEVELS
-C                 p        LAPS Pressure levels     1D
+C                 p        LAPS Pressure levels     1D/3D (Pa)
 c
 c Compute surface variables on hi-res terrain using first 3D model level
 c above the LAPS terrain. This routine is also called for reduced pressure
@@ -33,13 +34,14 @@ c
       INTEGER    JMX
       INTEGER    K
       INTEGER    KX
+      INTEGER    nx_pr,ny_pr,ip,jp
       INTEGER    it, idebug, istatus, ishow_timer
       INTEGER    bgmodel
 
       LOGICAL    lfndz
 
       REAL       HEIGHT      ( IMX , JMX, KX )
-      REAL       P           ( KX )
+      REAL       P           ( nx_pr,ny_pr,KX ) ! Pa
       REAL       PSFC        ( IMX , JMX )
       REAL       TSFC        ( IMX , JMX )
       REAL       Q           ( IMX , JMX , KX )
@@ -57,6 +59,7 @@ c
       REAL       t_ref,badflag
       REAL       tdsfc_o_min, tdsfc_o_max
       REAL       qsfc_i_min, qsfc_i_max
+      REAL       p_mb
 c
 c if bgmodel = 6 or 8 then td_sfc_i is used         
 c if bgmodel = 4      then qsfc_i is rh (WFO - RUC)
@@ -78,7 +81,10 @@ c
          do k=1,kx
             do j=1,jmx
             do i=1,imx
-               rh3d(i,j,k)=make_rh(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
+               ip = min(i,nx_pr)
+               jp = min(j,ny_pr)
+               p_mb = p(ip,jp,k) / 100.
+               rh3d(i,j,k)=make_rh(p_mb,t(i,j,k)-273.15,q(i,j,k)*1000.
      +,t_ref)*100.
             enddo
             enddo
@@ -115,7 +121,7 @@ c
                   call compute_sfc_bgfields(bgmodel,imx,jmx,kx,i,j,k
      &                ,ter(i,j),height,t,p,q,t_ref,psfc(i,j),tsfc(i,j)
      &                ,qsfc_i(i,j),qsfc_i_min,qsfc_i_max
-     &                ,tdsfc_o(i,j),idebug)      
+     &                ,tdsfc_o(i,j),idebug,ip,jp,nx_pr,ny_pr)      
 
                   idebug = 0
 
@@ -143,7 +149,8 @@ c
 c----------------------------------------------------------------------------
 c
       subroutine compute_sfc_bgfields(bgm,nx,ny,nz,i,j,k,ter,height
-     &,t,p,q,t_ref,psfc,tsfc,qsfc,qsfc_i_min,qsfc_i_max,tdsfc,idebug)
+     &,t,p,q,t_ref,psfc,tsfc,qsfc,qsfc_i_min,qsfc_i_max,tdsfc,idebug
+     &,ip,jp,nx_pr,ny_pr)
 c
 c J. Smart 11/18/99 put existing code in subroutine for other process use in laps
 c
@@ -152,11 +159,12 @@ c
       integer nx,ny,nz
       integer i,j,k            !I, i,j,k coordinate of point for calculation
       integer bgm              !I, model type {if = 0, then tdsfc input = qsfc}
+      integer nx_pr,ny_pr,ip,jp
       integer istatus, idebug, init_td                          
       data init_td/0/
       save init_td
 
-      real   p(nz)             !I, pressure of levels
+      real   p(nx_pr,ny_pr,nz) !I, pressure of levels (Pa)
       real   ter               !I, Terrain height at i,j
       real   t_ref             !I, reference temp for library moisture conv routines
 
@@ -172,6 +180,7 @@ c
 
       real   tbar,tsfc_c
       real   td1,td2,tdsfc_c
+      real   p_mb,p_mb_p1,p_mb_m1                                 
       real   G,R
       real   ssh2,make_ssh,make_td
       real   dz,dzp,dtdz
@@ -184,16 +193,20 @@ c
 c
 c if first guess values are missing data then return missing data
 c
-       call get_r_missing_data(r_missing_data,istatus)
+      call get_r_missing_data(r_missing_data,istatus)
 
-       if(tsfc.lt.500.0.and.t(i,j,k).lt.500.0) then 
+      ip = min(i,nx_pr)
+      jp = min(j,ny_pr)
+      p_mb = p(ip,jp,k) / 100.
+
+      if(tsfc.lt.500.0.and.t(i,j,k).lt.500.0) then 
 !    .    qsfc.lt.500.0)then
 c
 c first guess psfc without moisture consideration
 c
           tbar=(tsfc+t(i,j,k))*0.5
           dz=height(i,j,k)-ter
-          psfc=p(k)*exp(G/(R*tbar)*dz)
+          psfc=p_mb*exp(G/(R*tbar)*dz)
 
 !         Calculate qsfc_l according to model (bgm=0 for reduced P)
 !         This is used below for virtual temperature and sfc P reduction
@@ -249,11 +262,11 @@ c pressure
           tvsfc=tsfc*(1.+0.608*qsfc_l)
           tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
           tbarv=(tvsfc+tvk)*.5
-          psfc=(p(k)*exp(G/(R*tbarv)*dz))*100.  !return units = pa
+          psfc=(p_mb*exp(G/(R*tbarv)*dz))*100.  !return units = pa
 
 !         if(j .eq. ny/2)then
-!             write(6,101)i,tvsfc,tvk,tbarv,height(i,j,k),dz,p(k),psfc
-!    1                   ,(psfc/100.-p(k)) / dz
+!             write(6,101)i,tvsfc,tvk,tbarv,height(i,j,k),dz,p_mb,psfc
+!    1                   ,(psfc/100.-p_mb) / dz
 !101          format(' i,tvsfc,tvk,tbarv,ht,dz,pk,psfc',i4,6f8.2,f9.2
 !    1                                                 ,e15.6)
 !         endif
@@ -266,8 +279,9 @@ c temp
              tsfc=t(i,j,k)+dtdz*dz
 
 c dew point temp
-             td2=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.,t_ref)
-             td1=make_td(p(k-1),t(i,j,k-1)-273.15,q(i,j,k-1)*1000.
+             td2=make_td(p_mb,t(i,j,k)-273.15,q(i,j,k)*1000.,t_ref)
+             p_mb_m1 = p(ip,jp,k-1) / 100.
+             td1=make_td(p_mb_m1,t(i,j,k-1)-273.15,q(i,j,k-1)*1000.
      .,t_ref)
              tdsfc=td2+((td1-td2)/dzp)*dz+273.15
 
@@ -278,14 +292,15 @@ c
           else ! k=1: calculate tsfc,qsfc and psfc
 
              dzp=height(i,j,k+1)-height(i,j,k)
-             td2=make_td(p(k),t(i,j,k)-273.15
+             p_mb_p1 = p(ip,jp,k+1) / 100.
+             td2=make_td(p_mb,t(i,j,k)-273.15
      &,q(i,j,k)*1000.,t_ref)+273.15
-             td1=make_td(p(k+1),t(i,j,k+1)-273.15
+             td1=make_td(p_mb_p1,t(i,j,k+1)-273.15
      &,q(i,j,k+1)*1000.,t_ref)+273.15
              dtdz=(t(i,j,k)-t(i,j,k+1))/dzp
              tsfc=t(i,j,k)+dtdz*dz
              tbar=(tsfc+t(i,j,k))*0.5
-             psfc=p(k)*exp(G/(R*tbar)*dz)
+             psfc=p_mb*exp(G/(R*tbar)*dz)
              tdsfc=td2+((td1-td2)/dzp)*dz
 
              if(idebug .eq. 1)then
