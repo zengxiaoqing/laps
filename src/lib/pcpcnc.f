@@ -34,10 +34,14 @@ cdis
         subroutine cpt_pcp_cnc(ref_3d,temp_3d,cldpcp_type_3d  ! Input
      1                                  ,ni,nj,nk     ! Input
      1                                  ,c_z2m        ! Input
+     1                                  ,pres_3d      ! Input
      1                                  ,pcp_cnc_3d   ! Output (kg/m^3)
      1                                  ,rai_cnc_3d   ! Output (rain)
      1                                  ,sno_cnc_3d   ! Output (snow)
      1                                  ,pic_cnc_3d)  ! Output (precip ice)
+
+
+        include 'constants.inc'
 
         real temp_3d(ni,nj,nk)
         real ref_3d(ni,nj,nk)
@@ -45,6 +49,7 @@ cdis
 
         character*20 c_z2m
 
+        real pres_3d(ni,nj,nk)    ! Pa
         real pcp_cnc_3d(ni,nj,nk) ! kg/m^3
         real rai_cnc_3d(ni,nj,nk) ! kg/m^3
         real sno_cnc_3d(ni,nj,nk) ! kg/m^3
@@ -123,23 +128,24 @@ cdis
 
             if(ipcp_type .ne. 0)then
                 npcp = npcp + 1
+                rho = pres_3d(i,j,k) / (r_d * temp_3d(i,j,k))      ! kg_m^3
                 if(ipcp_type .eq. 1 .or. ipcp_type .eq. 3)then     ! rain or zr
                     w = 10.**(ref_3d(i,j,k)/17.8)
-                    rho_q = w / 264083.11                          ! g/m^3
-                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
-                    rai_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    rainmr = w / 264083.11                         
+                    pcp_cnc_3d(i,j,k) = rainmr * rho               ! kg_m^3
+                    rai_cnc_3d(i,j,k) = rainmr * rho               ! kg_m^3
 
                 elseif(ipcp_type .eq. 2)then                       ! snow
                     w = 10.**(ref_3d(i,j,k)/17.8)
-                    rho_q = w / 0.2                                ! g/m^3
-                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
-                    sno_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    snowmr = w / (264083.11*0.2)                   
+                    pcp_cnc_3d(i,j,k) = snowmr * rho               ! kg_m^3
+                    sno_cnc_3d(i,j,k) = snowmr * rho               ! kg_m^3
 
                 elseif(ipcp_type .eq. 4 .or. ipcp_type .eq. 5)then ! IP or Hail
                     w = 10.**(ref_3d(i,j,k)/17.8)
-                    rho_q = w / 2.0                                ! g/m^3
-                    pcp_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
-                    pic_cnc_3d(i,j,k) = rho_q / 1000.              ! kg_m^3
+                    graupelmr = w / (264083.11*2.0)                
+                    pcp_cnc_3d(i,j,k) = graupelmr * rho            ! kg_m^3
+                    pic_cnc_3d(i,j,k) = graupelmr * rho            ! kg_m^3
 
                 endif
 
