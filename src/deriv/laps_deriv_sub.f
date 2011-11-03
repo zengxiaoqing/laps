@@ -1012,6 +1012,7 @@ c read in laps lat/lon and topo
             call cpt_pcp_cnc(radar_ref_3d,temp_3d,cldpcp_type_3d    ! Input
      1                                  ,NX_L,NY_L,NZ_L     ! Input
      1                                  ,c_z2m              ! Input
+     1                                  ,pres_3d            ! Input
      1                                  ,pcpcnc             ! Output
      1                                  ,raicnc             ! Output
      1                                  ,snocnc             ! Output
