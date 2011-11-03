@@ -112,11 +112,11 @@ echo "name=$name"                                               >> $script
 echo "project=DWR"                                              >> $script
 echo " echo 'Running this lfmpost.pl command...'"               >> $script
 if test "$name" != "none"; then # (e.g. ewp0)
-    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w $maxWaitSec -e $maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait' " >> $script
-    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w $maxWaitSec -e $maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait"   >> $script
+    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait' " >> $script
+    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait"   >> $script
 else
-    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w $maxWaitSec -e $maxHrsRun -y $phys -P $project -g $nest -W $mdlfilewait' " >> $script
-    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w $maxWaitSec -e $maxHrsRun -y $phys -P $project -g $nest -W $mdlfilewait"   >> $script
+    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y $phys -P $project -g $nest -W $mdlfilewait' " >> $script
+    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -y $phys -P $project -g $nest -W $mdlfilewait"   >> $script
 fi
 echo " "                                                        >> $script
 echo " "                                                        >> $script
