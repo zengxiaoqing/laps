@@ -19,6 +19,10 @@ DATETIME=`ls -1 . | tail -2 | head -1`
 model_cycle_time=`/usr/bin/perl /home/oplapb/builds/laps/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_cycle_time`
 DATETIME=`/usr/bin/perl /home/oplapb/builds/laps/etc/sched_sys.pl -c $model_cycle_time -d $DELAY -f yyyymmddhh`
 
+echo "LAPS_DATA_ROOT is $LAPS_DATA_ROOT"  
+echo "model_cycle_time is $model_cycle_time"
+echo "DATETIME is $DATETIME"                      
+
 # Short term fix to force a 00Z run
 #DATETIME=`echo $DATETIME | cut -c1-8`00
 
