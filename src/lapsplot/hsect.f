@@ -98,7 +98,7 @@ cdis
         character infile*255
         character*40 c_model
         character*200 new_dataroot
-
+        character*40 vert_grid
         character i4_to_byte
 
         real clow,chigh,cint_ref
@@ -298,6 +298,8 @@ c       include 'satellite_dims_lvd.inc'
         i_plotted_field = 0
 
         call find_domain_name(c_dataroot,c10_grid_fname,istatus)
+
+        call get_vertical_grid(vert_grid,istatus)
 
         ndim_read = 2
 
@@ -4669,7 +4671,11 @@ c                   cint = -1.
                 enddo ! i
 
                 write(6,*)' k_mb for T fua/lga plot = ',k_mb
-                if(k_mb .eq. 300)then 
+                if(vert_grid .eq. 'SIGMA_HT')then
+                    call contour_settings(field_2d,NX_L,NY_L
+     1                                   ,clow,chigh,cint
+     1                                   ,zoom,density,scale)       
+                elseif(k_mb .eq. 300)then 
                     cint = 5.
                     clow = -60.
                     chigh = -30.
@@ -7621,12 +7627,12 @@ c abdel
 
         subroutine mklabel(k_level,c19_label,c_label)
 
-!       97-Aug-17     Ken Dritz     Lines commented to (temporarily) hardwire
-!                                   VERTICAL_GRID at 'PRESSURE' (without
-!                                   accessing VERTICAL_GRID)
 !       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 
         character c19_label*(*),c_label*(*)
+        character*40 vert_grid
+
+        call get_vertical_grid(vert_grid,istatus)
 
 !       Initialize with blanks
         len_label = len(c_label)
@@ -7635,11 +7641,11 @@ c abdel
         enddo ! i
 
         if(k_level .gt. 0)then
-!            if(VERTICAL_GRID .eq. 'HEIGHT')then
-!                write(c_label,101)k_level,c19_label
-!101             format(I5,' km ',a,5x)
+             if(vert_grid .eq. 'SIGMA_HT')then
+                 write(c_label,101)k_level,c19_label
+101              format(I5,' m ',a,5x)
 
-!            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
+             elseif(vert_grid .eq. 'PRESSURE')then
                 if(k_level .gt. 50)then ! k_level is given in pressure (mb)
                     ipres = k_level
 
@@ -7652,7 +7658,7 @@ c abdel
                 write(c_label,102)ipres,c19_label
 102             format(I4,' hPa',a,5x)
 
-!            endif
+             endif
         else if(k_level .eq. 0)then
             write(c_label,103)c19_label
 103         format('Surface',a,6x)
@@ -8184,14 +8190,20 @@ c abdel
 
         subroutine input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
+!       Round to the nearest pressure level
+
         real pres_3d(NX_L,NY_L,NZ_L)
+
+        character*40 vert_grid
+
+        call get_vertical_grid(vert_grid,istatus)
 
         icen = NX_L/2
         jcen = NY_L/2
 
         read(lun,*)k_level
         k_mb = k_level
-        if(k_level .gt. 0)then
+        if(k_level .gt. 0 .and. vert_grid .eq. 'PRESSURE')then
             pressure = float(k_level*100)
             k_level = nint(rlevel_of_field(pressure,pres_3d
      1                       ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
@@ -8326,6 +8338,10 @@ c abdel
 
         character*5 fcst_hhmm_in,fcst_hhmm
 
+        character*40 vert_grid
+
+        call get_vertical_grid(vert_grid,istatus)
+
         len_model_max = 7
 
         c_label = ' '
@@ -8356,8 +8372,13 @@ c abdel
         call upcase(c_model,c_model)
 
         if(k_mb .gt. 0)then      ! 3D field
-            write(c_label,102)k_mb
-102         format(I4,' hPa ')
+            if(vert_grid .eq. 'PRESSURE')then
+                write(c_label,102)k_mb
+102             format(I4,' hPa ')
+            else
+                write(c_label,103)k_mb
+103             format(I5,' m  ')
+            endif
             ic = 10  ! Position where comment info should begin
         elseif(k_mb .eq. -1)then ! Column Max                
             c_label(1:8) = 'Col Max '
