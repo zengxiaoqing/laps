@@ -2,6 +2,7 @@ program lfmpost
 
 use lfmgrid
 use grib
+use mem_namelist, only : model_fcst_intvl
 
 implicit none
 
@@ -88,6 +89,14 @@ else
 endif
 
 call lfm_namelist(lfmprd_dir)
+
+call get_laps_config('nest7grid',istatus)
+if (istatus .ne. 1) then
+   print *, 'ERROR: get_laps_config status = ',istatus 
+else
+   print *, 'Setting precip_dt to model_fcst_intvl: ',model_fcst_intvl
+   precip_dt = model_fcst_intvl
+endif
 
 ! Obtain native model grid dimensions.
 
