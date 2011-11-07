@@ -14,7 +14,7 @@ if test "$9" != ""; then # Example: 02:00 (optional)
     wallclock=$9
 fi
 
-mdlfilewait=200
+mdlfilewait=360
 
 if test "$name" != "none"; then                               # (e.g. ewp0)
     run=$name
