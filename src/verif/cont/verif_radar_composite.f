@@ -20,6 +20,7 @@
         logical lmask_rqc_3d(NX_L,NY_L,NZ_L)
         logical l_col /.true./
         logical l_exist
+        logical l_plot_criteria
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
@@ -419,9 +420,14 @@
 955       close(lun_bias_in)                                      
           close(lun_ets_in)                                         
 
-          write(6,956)a9time_initial,
+          nincomplete_t = 0
+          do imodel=2,n_fdda_models
+              nincomplete_t = nincomplete_t + incomplete_run_m(imodel)
+          enddo 
+
+          write(6,956)a9time_initial,nincomplete_t,
      1                (incomplete_run_m(imodel),imodel=2,n_fdda_models)
-956       format(' incomplete_run_m at ',a9,' is ',20i5)   
+956       format(' incomplete_run_m at ',a9,' is ',i3,4x,20i3)   
 
 960      enddo                    ! init (initialization time)
 
@@ -443,6 +449,22 @@
          write(6,*)'nincomplete is ',nincomplete
          write(6,968)(nincomplete_m(imodel),imodel=2,n_fdda_models)
 968      format(' nincomplete_m is ',20i5)   
+
+         nruns_plotted = 0
+         do imodel=2,n_fdda_models
+             if(nsuccess_m(imodel) .ge. nsuccess_thr)then 
+                 nruns_plotted = nruns_plotted + 1
+             endif
+         enddo 
+
+         if(nruns_plotted .ge. 2)then
+             l_plot_criteria = .true.
+         else
+             l_plot_criteria = .false.
+         endif
+
+         write(6,*)'nruns_plotted / l_plot_criteria = ',nruns_plotted
+     1                                                 ,l_plot_criteria
 
          if(nsuccess .lt. nsuccess_thr)then
              write(6,*)' Insufficient successful times to plot'
