@@ -534,6 +534,8 @@ if (fcsttime > 0) then
    where(pcp_inc < .0001) pcp_inc=0.
    where(pcp_tot < .0001) pcp_tot=0.
 
+   print*,'Min/Max snow tot (previous) = ',minval(snow_tot),maxval(snow_tot)
+
    allocate(fallen_precip_type(lx,ly))
    call wintprec(htsig,hzsig,zprs,psfc,tsfc,zsfc,pcp_inc,lx,ly  &
                 ,nz,lz,k700,k850,k1000,pcp_inc,fallen_precip_type)
@@ -799,7 +801,7 @@ use lfmgrid
 
 implicit none
 
-integer :: nc
+integer :: nc, itry
 real, dimension(lx,ly) :: pcp_init,pcp_06,snow_init
 character(len=10) :: atime
 logical :: back,there
@@ -812,12 +814,13 @@ nc=index(filename,'/',back)
 
 if (fcsttime > 0) then
    if (nc > 0) filename0=filename(1:nc)//'/'//domnum_fstr
-   write(atime,'(i10)') max(0,fcsttime-precip_dt)
-   filename0=trim(filename0)//trim(adjustl(atime))//'.pcp'
+   write(atime,'(i6.6)') max(0,fcsttime-precip_dt)
+   filename0=trim(filename0)//'_'//trim(adjustl(atime))//'.pcp'
+   itry = 0
 
-   inquire(file=trim(filename0),exist=there)
+80 inquire(file=trim(filename0),exist=there)
    if (there) then
-      if (verbose) then
+90    if (verbose) then
          print*,' '
          print*,'Reading previous precip data from: ',trim(filename0)
       endif
@@ -832,31 +835,50 @@ if (fcsttime > 0) then
       goto 102
 
 101   print*,'  ERROR reading previous precip'
+
+      itry = itry + 1
+      if(itry .le. 5)then
+          print*,'  trying once again after waiting'          
+          call sleep(60)
+          goto 90
+      endif
+
+      print*,'  Prior precip set to zero.'
       pcp_init=0.
       snow_init=0.
 
 102   close(1)
 
-   else
+   else ! not there
       print*,'Could not find previous precip file: ',trim(filename0)
+
+      itry = itry + 1
+      if(itry .le. 5)then
+          print*,'  trying once again after waiting'          
+          call sleep(60)
+          goto 80
+      endif
+
       print*,'  Prior precip set to zero.'
       pcp_init=0.
       snow_init=0.
    endif
-else
+
+else ! fcsttime = 0
    pcp_init=0.
    snow_init=0.
    pcp_inc=0.
    snow_inc=0.
    pcp_tot=0.
    snow_tot=0.
+
 endif
 
 ! Create new intermediate filename for current accumulated precip data.
 
 if (nc > 0) filename0=filename(1:nc)//'/'//domnum_fstr
-write(atime,'(i10)') fcsttime
-filename0=trim(filename0)//trim(adjustl(atime))//'.pcp'
+write(atime,'(i6.6)') fcsttime
+filename0=trim(filename0)//'_'//trim(adjustl(atime))//'.pcp'
 
 return
 end
@@ -1092,9 +1114,9 @@ do i=1,lx
 
       if(c_m2z == 'rams') then
 
-      	w=264083.11*(rainmr(i,j,k)  &
-        	+0.2*(icemr(i,j,k)+snowmr(i,j,k))  &
-        	+2.0*graupelmr(i,j,k))
+      	w=264083.11*(      rainmr(i,j,k)  &
+          	     +0.2*(snowmr(i,j,k))  &
+        	     +2.0* graupelmr(i,j,k)                )
        	w=max(1.,w)
       	refl(i,j,k)=17.8*alog10(w)
 
