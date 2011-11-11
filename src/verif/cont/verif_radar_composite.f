@@ -52,6 +52,7 @@
         character*150 hist_file, members_file
         character*150 bias_file_in, ets_file_in
         character*150 bias_file_out, ets_file_out
+        character*150 summary_file_out
         character*10 compdir
 
         integer n_fields
@@ -133,6 +134,7 @@
         lun_ets_in = 32
         lun_bias_out = 41
         lun_ets_out = 42
+        lun_summary_out = 43
 
 !       Get fdda_model_source and 'n_fdda_models' from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
@@ -178,8 +180,8 @@
          nincomplete_m = 0
 
          frac_thr = 0.80
-         nmissing_thr = nint((1. - frac_thr) * float(n_init_times))
-         nsuccess_thr = nint(frac_thr * float(n_init_times))
+         nmissing_thr = int((1. - frac_thr) * float(n_init_times+1))
+         nsuccess_thr = (n_init_times+1) - nmissing_thr
 
          do init = 0,n_init_times
 
@@ -465,6 +467,23 @@
 
          write(6,*)'nruns_plotted / l_plot_criteria = ',nruns_plotted
      1                                                 ,l_plot_criteria
+
+!        Define and write to summary*.txt file
+         summary_file_out = verif_dir(1:len_verif)//var_2d(1:lenvar)
+     1                              //'/plot'
+     1                              //'/summary_'//trim(compdir)//'.txt'       
+
+         write(6,*)'summary_file_out = ',summary_file_out
+
+         open(lun_summary_out,file=summary_file_out,status='unknown')
+         do imodel=2,n_fdda_models
+             ipct = nint(  (float(nsuccess_m(imodel)) 
+     1                    / float(n_init_times+1))*100.)
+             write(lun_summary_out,969)ipct                        
+ 969         format(i3,'%')
+         enddo ! imodel
+         write(lun_summary_out,*)l_plot_criteria
+         close(lun_summary_out)
 
          if(nsuccess .lt. nsuccess_thr)then
              write(6,*)' Insufficient successful times to plot'
