@@ -43,6 +43,7 @@ cdis
      1      ,ni,nj,nk,r_missing_data                                  ! I
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz                ! I
      1      ,istat_radar,radar_ref_3d,klaps,ref_base
+     1      ,solar_alt,solar_az
      1      ,dbz_max_2d,surface_sao_buffer,istatus)
 
 !       Steve Albers 1999 Added 3.9u cloud clearing step in NULL Mode
@@ -76,6 +77,9 @@ cdis
         real radar_ref_3d(ni,nj,klaps)
         real clouds_3d(ni,nj,nk)
         real cld_hts(nk)
+        real solar_alt(ni,nj)
+        real solar_az(ni,nj)
+        real r_shadow_3d(ni,nj,nk)
 
 !       This stuff is for reading VIS data from LVD file
         real cloud_frac_vis_a(ni,nj)
@@ -324,6 +328,12 @@ cdis
         write(6,*)' N_39_CLR_2D = ',n_39_clr_2d
         write(6,*)
 
+        call get_grid_spacing_cen(grid_spacing_m,istatus)
+        call get_cloud_shadow(i4time,clouds_3d,cld_hts,r_shadow_3d
+     1                             ,ni,nj,nk
+     1                             ,solar_alt,solar_az 
+     1                             ,grid_spacing_m,r_missing_data)
+
         write(6,*)'              HISTOGRAMS'
         write(6,*)' I          ',
      1  ' Albedo  Cld Frac Sat  Cld Frac In  Cld Frac Out'
@@ -385,3 +395,88 @@ cdis
         return
         end
 
+
+        subroutine get_cloud_shadow(i4time,clouds_3d,cld_hts,r_shadow_3d
+     1                             ,ni,nj,nk
+     1                             ,solar_alt,solar_az 
+     1                             ,grid_spacing_m,r_missing_data)
+
+!       Determine shadow regions of the input 3-D cloud array
+
+        real r_shadow_3d(ni,nj,nk)
+        real clouds_3d(ni,nj,nk)
+        real cld_hts(nk)
+        real solar_alt(ni,nj)
+        real solar_az(ni,nj)
+
+        write(6,*)' Subroutine get_cloud_shadow'
+
+        ishadow_tot = 0                          
+
+!       First set shadow based on approximate ceiling cover (zero order)
+!       do j = 1,nj
+!       do i = 1,ni
+!         cvr_max = 0.
+!         do k = nk,1,-1
+!           cvr_max = max(cvr_max,clouds_3d(i,j,k))
+!           r_shadow_3d(i,j,k) = cvr_max             
+!         enddo ! k
+!       enddo ! i
+!       enddo ! j
+
+        do j = 1,nj
+        do i = 1,ni
+
+!         Trace towards sun from each grid point
+          solar_altitude_deg = solar_alt(i,j) 
+          solar_azi_deg = solar_az(i,j)
+
+!         Get direction cosines based on azimuth
+          xcos = sind(solar_azi_deg)
+          ycos = cosd(solar_azi_deg)
+
+          ishadow = 0
+          if(solar_altitude_deg .gt. 20.)then
+            do k = 1,nk-1  
+              r_shadow_3d(i,j,k) = 0.
+
+              do kk = k+1,nk
+                dk = kk-k
+                dz = cld_hts(kk) - cld_hts(k)
+                dxy = dz * tand(solar_altitude_deg)
+
+                dx = dxy * xcos
+                dy = dxy * ycos
+
+                idelt = nint(dx / grid_spacing_m)
+                jdelt = nint(dy / grid_spacing_m)
+              
+                if(idelt .gt. 0 .or. jdelt .gt. 0)then
+                  cvr_path = clouds_3d(i+idelt,j+jdelt,kk)
+                  r_shadow_3d(i,j,k) = max(r_shadow_3d(i,j,k),cvr_path)
+                endif
+              enddo ! kk
+
+              if(r_shadow_3d(i,j,k) .gt. 0.5)then
+                ishadow = 1                
+                if(ishadow_tot .le. 10)then
+                  write(6,*)' Found shadow ',i,j
+                endif
+              endif
+
+            enddo ! k
+
+          else
+            r_shadow_3d(i,j,:) = r_missing_data
+
+          endif ! high enough sun to use vis   
+
+          ishadow_tot = ishadow_tot + ishadow
+
+        enddo ! i
+        enddo ! j
+
+        write(6,*)' Number of columns with shadow = ',ishadow_tot
+ 
+        return
+        end
