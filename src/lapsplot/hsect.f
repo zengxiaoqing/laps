@@ -8334,6 +8334,8 @@ c abdel
      1                                ,c_model
      1                                ,c_label)
 
+        use mem_namelist, ONLY: model_fcst_intvl
+
         character*(*) comment_2d,ext,units_2d,c_model,c_label
 
         character*5 fcst_hhmm_in,fcst_hhmm
@@ -8387,7 +8389,8 @@ c abdel
             ic = 1   ! Position where comment info should begin
         endif
 
-        if(fcst_hhmm_in(length_fcst_in-1:length_fcst_in) .eq. '00')then       
+        if(fcst_hhmm_in(length_fcst_in-1:length_fcst_in) .eq. '00'
+     1                 .AND.            model_fcst_intvl .ge. 3600 )then       
             fcst_hhmm = fcst_hhmm_in(1:length_fcst_in-2)//'Hr '
         else
             fcst_hhmm = fcst_hhmm_in
