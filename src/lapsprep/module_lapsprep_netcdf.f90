@@ -88,7 +88,7 @@ CONTAINS
   REAL                   :: pr(z3+1)      !Pressure levels (mb)
   REAL                   :: uw(x,y,z3+1)  !U-component of wind wrt grid (m/s)
   REAL                   :: vw(x,y,z3+1)  !V-component of wind wrt grid (m/s) 
-  REAL                   :: ww(x,y,z3+1)  !W-component of wind (m/s) 
+  REAL                   :: ww(x,y,z3+1)  !Omega-component of wind (Pa/s) 
   REAL                   :: tp(x,y,z3+1)  !Temperature (K)
   REAL                   :: ht(x,y,z3+1)  !Geopotential Height (m)
   REAL                   :: mr(x,y,z3+1)  !Mixing ratio (kg/kg)
@@ -348,8 +348,8 @@ CONTAINS
      icode=nf_put_att_text(ncid,nid,'units',5,'kg/kg')
      icode=nf_def_var(ncid,'ww',nf_real,3,idimid,nid)
      icode=nf_put_att_text(ncid,nid,'long_name',19  &
-          ,'w-component of wind')
-     icode=nf_put_att_text(ncid,nid,'units',13,'meters/second')
+          ,'omega-component of wind')
+     icode=nf_put_att_text(ncid,nid,'units',13,'pascals/second')
   endif
 
   icode=nf_enddef(ncid)
