@@ -88,7 +88,7 @@
 
     ! Arrays for data
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , t , rh , ht, &   
-                                             lwc,rai,sno,pic,ice, sh, mr, w, & 
+                                             lwc,rai,sno,pic,ice, sh, mr, vv, & 
                                              virtual_t, rho,lcp
     REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
@@ -285,7 +285,7 @@
 
         ALLOCATE ( u   ( x , y , z3 + 1 ) )
         ALLOCATE ( v   ( x , y , z3 + 1 ) )
-        ALLOCATE ( w   ( x , y , z3 + 1 ) )
+        ALLOCATE ( vv  ( x , y , z3 + 1 ) )
         ALLOCATE ( t   ( x , y , z3 + 1 ) )
         ALLOCATE ( rh  ( x , y , z3 + 1 ) )
         ALLOCATE ( ht  ( x , y , z3 + 1 ) )
@@ -376,7 +376,7 @@
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'v  ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , v  (1,1,z3+1) , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'vv ' ) THEN
-            CALL NCVGT ( cdfid , vid , start , count , w  (1,1,z3+1) , rcode )
+            CALL NCVGT ( cdfid , vid , start , count , vv (1,1,z3+1) , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 't  ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , t  (1,1,z3+1) , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'rh ' ) THEN
@@ -448,7 +448,7 @@
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'v3 ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , v , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'om ' ) THEN
-            CALL NCVGT ( cdfid , vid , start , count , w , rcode )
+            CALL NCVGT ( cdfid , vid , start , count , vv , rcode )
           END IF
 
         END DO var_lw3
@@ -607,6 +607,7 @@
         lwc(:,:,:) = 0.0
       ENDIF
 
+      PRINT *, 'Max rain concentration = ',MAXVAL(rai)
       IF (MAXVAL(rai) .LT. 99999.) THEN
         rai(:,:,:) = rai(:,:,:) * hydrometeor_scale_pcp
         rai(:,:,:) = rai(:,:,:)/rho(:,:,:)   ! Rain mixing ratio
@@ -614,7 +615,9 @@
         PRINT *, 'Missing rain, setting values to 0.0' 
         rai(:,:,:) = 0.0
       ENDIF
+      PRINT *, 'Max rain mixing ratio = ',MAXVAL(rai)
 
+      PRINT *, 'Max snow concentration = ',MAXVAL(sno)
       IF (MAXVAL(sno) .LT. 99999.) THEN
         sno(:,:,:) = sno(:,:,:) * hydrometeor_scale_pcp
         sno(:,:,:) = sno(:,:,:)/rho(:,:,:)   ! Snow mixing ratio
@@ -622,6 +625,7 @@
         PRINT *, 'Missing snow, setting values to 0.0'    
         sno(:,:,:) = 0.0
       ENDIF
+      PRINT *, 'Max snow mixing ratio = ',MAXVAL(sno)
 
       IF (MAXVAL(ice) .LT. 99999.) THEN 
         ! Limit ice to autoconversion threshold
@@ -658,6 +662,7 @@
         ice(:,:,:) = 0.0
       ENDIF
 
+      PRINT *, 'Max pice concentration = ',MAXVAL(ice)
       IF (MAXVAL(pic) .LT. 99999.) THEN
          pic(:,:,:) = pic(:,:,:)*hydrometeor_scale_pcp
         pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
@@ -665,16 +670,19 @@
         PRINT *, 'Missing pice, setting values to 0.0' 
         pic(:,:,:) = 0.0
       ENDIF
+      PRINT *, 'Max pice mixing ratio = ',MAXVAL(ice)
 
-      ! Convert 3d omega from Pa/s to m/s, or fill with sfc value if missing.
+      ! Keep 3d omega as Pa/s, or fill with sfc value if missing.
 
       do k=1,z3
       do j=1,y
       do i=1,x
-        if (w(i,j,k) .eq. 1.e-30 .or. abs(w(i,j,k)) .gt. 100.) then
-          w(i,j,k)=w(i,j,z3+1)
+        if (vv(i,j,k) .eq. 1.e-30 .or. abs(vv(i,j,k)) .gt. 100.) then
+          vv(i,j,k)=vv(i,j,z3+1)
         else
-          w(i,j,k)=-w(i,j,k)/(rho(i,j,k)*g)
+          if(.false.)then
+             vv(i,j,k)=-vv(i,j,k)/(rho(i,j,k)*g)
+          endif
         endif
       enddo
       enddo
@@ -735,7 +743,7 @@
           PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
 
         CASE ('cdf ')
-          CALL output_netcdf_format(p,ht,t,mr,u,v,w,slp,psfc,lwc,ice,rai,sno,pic)
+          CALL output_netcdf_format(p,ht,t,mr,u,v,vv,slp,psfc,lwc,ice,rai,sno,pic)
 
         CASE DEFAULT
           PRINT '(2A)', 'Unrecognized output format: ', output_format
