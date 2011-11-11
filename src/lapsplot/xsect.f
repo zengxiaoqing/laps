@@ -2935,7 +2935,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 cint = 0.1 
 !               cint = 0.0 ! this should force a dynamic setting of clow/chigh
                 colortable = 'linear' 
-                plot_parms%color_power = 0.5
+                plot_parms%color_power = 0.3
             else
                 clow = 0.
                 chigh = 0.
@@ -2943,9 +2943,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                     cint = -0.005 * denslogthr            
                 else
                     if(c_prodtype .eq. 'F')then
-                        cint = -0.0001 * denslogthr            
+                        cint = -0.0005 * denslogthr            
 		    else
-                        cint = -0.005 * denslogthr                
+                        cint = -0.0005 * denslogthr                
                     endif
                 endif
             endif
