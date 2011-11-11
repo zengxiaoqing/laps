@@ -94,6 +94,7 @@ cdis
         real topo(NX_L,NY_L)
         real rlaps_land_frac(NX_L,NY_L)
         real solar_alt(NX_L,NY_L)
+        real solar_az(NX_L,NY_L)
         real solar_ha(NX_L,NY_L)
 
         logical l_packed_output 
@@ -727,6 +728,8 @@ C READ IN SATELLITE DATA
         do i = 1,NX_L
             call solar_position(lat(i,j),lon(i,j),i4time,solar_alt(i,j)
      1                                     ,solar_dec,solar_ha(i,j))
+            call equ_to_altaz_d(solar_dec,solar_ha(i,j),lat(i,j)         ! I
+     1                                   ,altdum,solar_az(i,j))          ! O
         enddo
         enddo
 
@@ -969,6 +972,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
      1        ,NX_L,NY_L,KCLOUD,r_missing_data                        ! I
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base
+     1        ,solar_alt,solar_az                                     ! I
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
         endif
 
@@ -2026,7 +2030,7 @@ C       EW SLICES
 
                 elseif(clouds_0d .lt. 0.0)then 
                     if(l_poss_extrap)then
-                        qc_thr = -0.4
+                        qc_thr = -200.0
                     else
                         qc_thr = -0.0005
                     endif
