@@ -332,7 +332,12 @@
 !           Calculate other stats
             if(cnt .gt. 0.)then
                 write(6,*)' sw radiation comparison stats'
-                write(6,*)' obs / anl ratio = ',sumobs/sumanl
+                if(sumanl .gt. 0.)then
+                    write(6,*)' obs / anl ratio = ',sumobs/sumanl
+                else
+                    write(6,*)' obs / anl ratio not computed'
+                endif
+
                 write(6,801)sumcld/cnt,sumsnow/cnt,sumalt/cnt,xbar,ybar
      1                     ,sumclr/cnt
 801             format(
