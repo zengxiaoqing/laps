@@ -481,8 +481,8 @@ c
 !         prgd_pa(1,1,:)=pr1d_pa(:)   ! 1D Pa
 
       elseif(vertical_grid .eq. 'SIGMA_HT')then
-          nx_pr = nx_bg
-          ny_pr = ny_bg
+          nx_pr = nx_laps
+          ny_pr = ny_laps
           allocate (prgd_pa(nx_pr,ny_pr,nz_laps))
 
       elseif(vertical_grid .eq. 'SIGMA_P')then
@@ -499,8 +499,8 @@ c
              print*,'Check sigmas.nl or nk_laps in nest7grid.parms'
              stop
           endif
-          nx_pr = nx_bg
-          ny_pr = ny_bg
+          nx_pr = nx_laps
+          ny_pr = ny_laps
 
           allocate (prgd_pa(nx_laps,ny_laps,nz_laps))
 
