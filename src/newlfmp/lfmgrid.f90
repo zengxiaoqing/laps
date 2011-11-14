@@ -23,6 +23,7 @@ logical :: large_pgrid=.false.
 logical :: large_ngrid=.false.
 
 integer :: domnum,fcsttime,precip_dt=3600  ! in seconds
+integer :: k_micro=999
 
 character(len=256) :: filename,filename0
 character(len=32)  :: mtype
@@ -187,6 +188,7 @@ if (trim(mtype) /= 'st4') then
   endif
 
   if (make_micro) then
+    k_micro = ct
     ncldliqmr_sig =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
     ncldicemr_sig =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
     nrainmr_sig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
