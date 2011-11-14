@@ -4070,25 +4070,6 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
    "output_format" entry in lapsprep.nl and can be set to one of the  
    following:
 
-      output_format = 'mm5'
-        This causes the program to output a file in the MM5v3 
-        pregrid (v4) format that can be read in by MM5 the "regridder"
-        pre-processor.  See the NCAR MM5 REGRID documentation for
-        the format specification of this output file.  
-
-      output_format = 'rams'
-        This causes the program to output a file in the RAMS 4.x
-        "RALPH2" format.  These files can be read in by the 
-        RAMS ISAN pressure stage process.  Note that RALPH2 files
-        are in ASCII, so these files are actually human-readable.  
-        See the RAMS RALPH2 format specification for 
-        documentation.
-
-      output_format = 'wrf'
-        This causes the program to output a file in the WRF 
-        Standard Initialization "grib_prep" format.  These 
-        files can be read by the WRF SI "hinterp" process.
-
       output_format = 'wps'
         This causes the program to output a file in the WPS format (as needed 
         for WRF version 3). Note that WPS has a constraint that the vertical 
@@ -4115,6 +4096,28 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
            'real.exe' for LAPS only at the initial time. In this way the
            'wrfinput_d01' (initial time file) will be overwritten by the LAPS
            initial condition.
+
+      output_format = 'cdf'
+        Writes a NetCDF file of the output
+
+      output_format = 'wrf'
+        This causes the program to output a file in the WRF 
+        Standard Initialization "grib_prep" format.  These 
+        files can be read by the WRF SI "hinterp" process.
+
+      output_format = 'mm5'
+        This causes the program to output a file in the MM5v3 
+        pregrid (v4) format that can be read in by MM5 the "regridder"
+        pre-processor.  See the NCAR MM5 REGRID documentation for
+        the format specification of this output file.  
+
+      output_format = 'rams'
+        This causes the program to output a file in the RAMS 4.x
+        "RALPH2" format.  These files can be read in by the 
+        RAMS ISAN pressure stage process.  Note that RALPH2 files
+        are in ASCII, so these files are actually human-readable.  
+        See the RAMS RALPH2 format specification for 
+        documentation.
 
    There are three other namelist entries in the lapsprep.nl
    file:
@@ -4152,6 +4155,7 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
 <pre>
 Inputs:         '*' = essential input
       * lw3                 grid      LAPS 3-d wind analysis (grid relative)
+                                               U, V, Omega are written out
       * lt1                 grid      LAPS 3-d temperature & height analyses
       * lh3                 grid      LAPS 3-d relative humidity analysis
         lq3                 grid      LAPS 3-d specific humidity analysis
