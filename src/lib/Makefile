@@ -48,6 +48,7 @@ SRC	= machine_dependent.F \
           convms2kt.f \
           diff.f \
           downcase.f \
+          equtoaltazd.f \
           esat1.f \
           fflxc.f \
           filename13.f \
