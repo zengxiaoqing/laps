@@ -14,7 +14,8 @@ if test "$9" != ""; then # Example: 02:00 (optional)
     wallclock=$9
 fi
 
-mdlfilewait=360
+mdlfilewait=200
+project=dlaps
 
 if test "$name" != "none"; then                               # (e.g. ewp0)
     run=$name
@@ -109,7 +110,6 @@ echo "numFcsts=$numFcsts"                                       >> $script
 echo "maxWaitSec=43200"                                         >> $script
 echo "maxHrsRun=24"                                             >> $script
 echo "name=$name"                                               >> $script
-echo "project=DWR"                                              >> $script
 echo " echo 'Running this lfmpost.pl command...'"               >> $script
 if test "$name" != "none"; then # (e.g. ewp0)
     echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait' " >> $script
