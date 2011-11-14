@@ -383,7 +383,7 @@ if(defined $opt_V){
 }
 
 my $qhhmm = substr($yyjjjhhmm,5,4);
-$qsub_name = "$qsub_name\_$qhhmm";
+$qsub_name = "$qsub_name$qhhmm";
 
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
@@ -605,9 +605,23 @@ foreach $exe (@LAPS_EXE){
 
                 }
 
-                my $wall_time_hr  = int( ( $cycle_time_min / 60.) + $extend_time  ); 
+#               Determine wall clock time
+                my $wall_time_hrs;
+                if($qsub_mode eq "single"){
+                    $wall_time_hrs = ( ( $cycle_time_min / 60.) + $extend_time  )
+                }else{ # optimize large domain wall clock time based on which section of the executable list is being run
+                    if($scriptcount == 1){
+                        $wall_time_hrs = ( ( $cycle_time_min / 60.) + $extend_time  ) * 0.22
+                    }elsif($scriptcount == 2){
+                        $wall_time_hrs = ( ( $cycle_time_min / 60.) + $extend_time  ) * 0.22
+                    }elsif($scriptcount == 3){
+                        $wall_time_hrs = ( ( $cycle_time_min / 60.) + $extend_time  ) * 0.60
+                    }
+                }
 
-                my $wall_time_min = int($cycle_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
+                my $wall_time_hr  = int($wall_time_hrs); 
+
+                my $wall_time_min = int($wall_time_hrs * 60.) - ($wall_time_hr * 60);
                 $wall_time_min="0".$wall_time_min if(length($wall_time_min)<2);
 
                 if($opt_q){
