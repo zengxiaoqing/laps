@@ -9,7 +9,7 @@ integer :: i,j,k
 real, allocatable, dimension(:,:) :: ri,rj
 logical l_bilinear
 
-l_bilinear = .false.
+l_bilinear = .true.
 
 allocate(ri(lx,ly),rj(lx,ly))
 
@@ -60,14 +60,17 @@ do k=1,nvar2d+nvar3d*nz
       else ! 3D grids
          if (trim(mtype) == 'nmm') then
             call hinterp_nmm(nx,ny,lx,ly,ri,rj,ngrid(1,1,k),hgrid(1,1,k-nvar2d))
-         elseif(.not. l_bilinear)then
+         elseif(l_bilinear .AND. k .ge. k_micro)then
+            if(k .eq. k_micro)then
+                write(6,*)' Using bilinear interpolation for microphysical variables starting at K index ',k_micro
+            endif
+            call bilinear_laps_2d(ri,rj,nx,ny,lx,ly,ngrid(1,1,k),hgrid(1,1,k-nvar2d))
+         else
             do j=1,ly
             do i=1,lx
                call gdtost_lfm(ngrid(1,1,k),nx,ny,ri(i,j),rj(i,j),hgrid(i,j,k-nvar2d))
             enddo
             enddo
-         else
-            call bilinear_laps_2d(ri,rj,nx,ny,lx,ly,ngrid(1,1,k),hgrid(i,j,k-nvar2d))
          endif
       endif
    endif
