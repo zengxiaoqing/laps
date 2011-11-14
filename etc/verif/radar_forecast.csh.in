@@ -36,6 +36,20 @@ setenv STAT_LC `echo $STAT | gawk '{print tolower($0)}'`
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt                                   
 
+if (     $REFLECTIVITY == "20_comp"  || $REFLECTIVITY == "30_comp"  || $REFLECTIVITY == "40_comp" ) then
+    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/summary_comp.txt
+else if ($REFLECTIVITY == "20_comp2" || $REFLECTIVITY == "30_comp2" || $REFLECTIVITY == "40_comp2") then
+    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/summary_comp2.txt
+else
+    setenv SUMMARY_FILE /dev/null
+    setenv L_PLOT_CRITERIA T  
+endif
+
+if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then
+    setenv L_PLOT_CRITERIA `tail -1 $SUMMARY_FILE`
+    setenv L_PLOT_CRITERIA T  # for testing
+endif
+
 echo " "
 echo "inputs..."
 echo "FILE = $FILE"  
@@ -91,14 +105,22 @@ while ($IMEMBER <= $NMEMBERS)
     setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
     echo "IMEMBER MEMBER ICOL: $IMEMBER $MEMBER $ICOL"
 
-    if ($NMEMBERS == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
-    else if ($IMEMBER == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
-    else if ($IMEMBER == $NMEMBERS) then
-        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+    if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then
+        setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
+        setenv TITLE "$MEMBER $PCT"
     else
-        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$MEMBER'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+        setenv PCT ""
+        setenv TITLE $MEMBER
+    endif
+
+    if ($NMEMBERS == 1) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+    else if ($IMEMBER == 1) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+    else if ($IMEMBER == $NMEMBERS) then
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+    else
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     endif
 
     @ IMEMBER = $IMEMBER + 1
@@ -113,6 +135,10 @@ echo "outputs..."
 ls -l $GNUPLOTFILE
 ls -l $PNGDIR$PNGFILE
 ls -l $PNGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
+
+if ($L_PLOT_CRITERIA == "F") then
+    echo "exiting to skip links, thumbnail, and animation sections - plot criteria flag is false"
+endif
 
 cd $PNGDIR
 rm -f          radar_fcst_$STAT_LC\_$REFLECTIVITY.png
