@@ -521,7 +521,7 @@ call fill_precip(pcp_init,pcp_06,snow_tot)
 ! fcsttime is in seconds
 ! change nmm, nmm zeroes accumulated precipitation every interval period
 
-if (fcsttime > 0) then
+if (fcsttime > 0 .AND. (.not. large_ngrid)) then
    if (trim(mtype) == 'nmm') then
        pcp_inc=pcp_tot
        print*, 'pcp_inc from pcp_tot: ',trim(mtype)
@@ -537,7 +537,7 @@ if (fcsttime > 0) then
    print*,'Min/Max snow tot (previous) = ',minval(snow_tot),maxval(snow_tot)
 
    allocate(fallen_precip_type(lx,ly))
-   call wintprec(htsig,hzsig,zprs,psfc,tsfc,zsfc,pcp_inc,lx,ly  &
+   call wintprec(htsig,hzsig,zprs,psfc,tsfc,tdsfc,zsfc,pcp_inc,lx,ly  &
                 ,nz,lz,k700,k850,k1000,pcp_inc,fallen_precip_type)
    call snowfall(tsfc,pcp_inc,fallen_precip_type,lx,ly,snow_inc,snow_tot)
    deallocate(fallen_precip_type)
@@ -1899,7 +1899,7 @@ end
 
 !===============================================================================
 
-subroutine wintprec(tsig,zsig,zprs,psfc,tsfc,terrain,prcpinc,imax,jmax  &
+subroutine wintprec(tsig,zsig,zprs,psfc,tsfc,tdsfc,terrain,prcpinc,imax,jmax  &
                    ,ksig,kprs,k700,k850,k1000,prcpconv,preciptype)         
 
 ! (Winter) Precipitation Algorithm
@@ -1950,8 +1950,8 @@ use constants
 implicit none
 
 integer :: i,imax,j,jmax,k,k1000,k850,k700,kprs,ksig,k1500
-real :: tsfcf,thickhigh,thicklow,tsig1,tsig2,tsig3,fahren
-real, dimension(imax,jmax) :: prcpconv,prcpinc,preciptype,psfc,terrain,tsfc
+real :: tsfcf,thickhigh,thicklow,tsig1,tsig2,tsig3,fahren,td_c,tw_c,pres_mb,twet_fast
+real, dimension(imax,jmax) :: prcpconv,prcpinc,preciptype,psfc,terrain,tsfc,tdsfc
 real, dimension(imax,jmax,ksig) :: tsig,zsig
 real, dimension(imax,jmax,kprs) :: zprs
 
@@ -1995,7 +1995,11 @@ do i=1,imax
 
          elseif (thicklow <= 1310. .and. thickhigh <= 1540.) then
             tsfcf=fahren(tsfc(i,j)-t0) 
-            if (tsfcf >= 37.) then
+            td_c=tdsfc(i,j)-t0
+            pres_mb=psfc(i,j) / 100.
+            tw_c=twet_fast(tsfc(i,j)-t0,td_c,pres_mb)
+!           if (tsfcf >= 37.) then
+            if (tw_c >= +1.3) then
                preciptype(i,j)=1    
             else                                  
                preciptype(i,j)=5   
@@ -2034,8 +2038,12 @@ do i=1,imax
          tsig2=tsig(i,j,k1500)
 
 ! Snow.
+         td_c=tdsfc(i,j)-t0
+         pres_mb=psfc(i,j) / 100.
+         tw_c=twet_fast(tsfc(i,j)-t0,td_c,pres_mb)
 
-         if (tsig1 < t0 .and. tsig2 < t0 .and. tsig3 .lt. t0) then 
+ !       if (tsig1 < t0 .and. tsig2 < t0 .and. tsig3 .lt. t0) then 
+         if (tw_c <= +1.3) then
             preciptype(i,j)=5  
 
 ! Rain & check for thunderstorms.
@@ -2116,7 +2124,7 @@ implicit none
 
 integer :: i,imax,j,jmax
 real :: fahren,tsfcf
-real, dimension(imax,jmax) :: prcpinc,preciptype,snowinc,snowtot,tsfc
+real, dimension(imax,jmax) :: prcpinc,preciptype,snowinc,snowtot,tsfc,tdsfc
       
 do j=1,jmax
 do i=1,imax    
