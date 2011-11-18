@@ -332,10 +332,15 @@ if($WHICH_TYPE eq "laps"){
 
    @vertical_grid = &laps_tools::get_nl_value("nest7grid.parms","vertical_grid",$DATA_ROOT);
 
+   my @exts = qw(lga fua lw3 lt1 lc3 lwc lq3 lh3);
+   my $ext;
+
    if($vertical_grid[0] eq "SIGMA_HT"){
-      print "$vertical_grid[0] grid - copy in pressure version of lga.cdl\n";
-      run_sys::run_sys("cp $DATA_ROOT/cdl/lga_p.cdl $DATA_ROOT/cdl/lga.cdl");
-      run_sys::run_sys("cp $DATA_ROOT/cdl/fua_p.cdl $DATA_ROOT/cdl/fua.cdl");
+      foreach $ext (@exts){
+          my $ext_p = "$ext"."_p";
+          print "$vertical_grid[0] grid - copy in pressure version of $ext.cdl\n";
+          run_sys::run_sys("cp $DATA_ROOT/cdl/$ext_p.cdl $DATA_ROOT/cdl/$ext.cdl");
+      }
    }elsif($vertical_grid[0] eq "SIGMA_P"){
       print "$vertical_grid[0] grid - copy in sigmap version of lga.cdl\n";
       run_sys::run_sys("cp $DATA_ROOT/cdl/lga_sigmap.cdl $DATA_ROOT/cdl/lga.cdl");
