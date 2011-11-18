@@ -33,19 +33,14 @@ use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_
 use Getopt::Std;
 getopts('l:m:r:d:g:f:i:p:s:w:e:y:n:P:qW:M:F');
 
-my $fileWait_time = 20; #Number of seconds to sleep after file copy for stability
-if (defined ($opt_W)) {
-  $fileWait_time = $opt_W;
-}
-
 $project = $opt_P if defined($opt_P);
 
 $LAPSROOT = "@prefix@";
 require "$LAPSROOT/etc/oputil.pm";
 
 my $EXEDIR;
-#$EXEDIR = "$LAPSROOT/bin";
-$EXEDIR = "/home/oplapb/builds_lahey/laps/bin";
+$EXEDIR = "$LAPSROOT/bin";
+#$EXEDIR = "/home/oplapb/builds_lahey/laps/bin";
 
 if (defined ($opt_q)) {
   print "\n---------------------------------------------------------------------\n";
@@ -123,6 +118,14 @@ if (! defined($lapsdataroot)) {
 if (! defined($modelroot)) {
   print "$name is not defined.\n";
   exit;
+}
+
+my $fileWait_time = 20; #Number of seconds to sleep after file copy for stability
+if (defined ($opt_W)) {
+  $fileWait_time = $opt_W;
+  print "set fileWait_time to $fileWait_time based on opt_W\n";
+}else{
+  print "set fileWait_time to $fileWait_time based on default (opt_W not set)\n";
 }
 
 # Determine default init time based on current time.
@@ -438,7 +441,7 @@ for ($g=1; $g<=$ngrid; $g++) {
 
         if ($opt_e) {
           if ($currTime > $endClockTime) {
-            print "    LFM post process ran past $endClockTime...conflict with next model run.\n\n";
+            print "    LFM post process ran for $opt_e hours past $endClockTime...conflict with next model run.\n\n";
             print "        currTime: $currTime\n";
             exit;
           }   
@@ -452,6 +455,9 @@ for ($g=1; $g<=$ngrid; $g++) {
       }
       print "found it, inittime: $inittime\n";
       sleep $fileWait_time; # sleep to make sure file is completely written before processing
+      $now = `date -u`;
+      $now = substr($now,0,length($now)-1);
+      print "Waited until $now after sleeping for $fileWait_time seconds\n";
 
       if ($opt_n) { #add identifier to logfile from $opt_n
         $lfmpostlog = "lfmpost_$opt_n"."_";
