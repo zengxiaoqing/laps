@@ -48,7 +48,7 @@ MODULE setup
    REAL, PARAMETER     :: missingflag = 1.e37
    ! Namelist items
 
-   LOGICAL            :: hotstart,balance,make_sfc_uv,use_sfc_bal,use_laps_skintemp
+   LOGICAL            :: hotstart,balance,make_sfc_uv,use_sfc_bal,use_laps_skintemp,use_laps_vv
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
    REAL               :: snow_thresh, lwc2vapor_thresh
@@ -106,7 +106,8 @@ CONTAINS
                          lwc2vapor_thresh  , &
                          rai_frac          , &
                          sno_frac          , &
-                         use_laps_skintemp        
+                         use_laps_skintemp , &        
+                         use_laps_vv        
 
       nml_unit = 77
 
@@ -122,6 +123,7 @@ CONTAINS
       sno_frac = 1.0
       use_sfc_bal = .false.
       use_laps_skintemp = .false. 
+      use_laps_vv = .false. 
       ! Open the namelist
 
       input_laps_file = TRIM(laps_data_root) // '/static/lapsprep.nl'
