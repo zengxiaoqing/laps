@@ -468,7 +468,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
 
   END SUBROUTINE write_gribprep_header
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE output_metgrid_format(p, t, ht, u, v, rh, slp, psfc, &
+  SUBROUTINE output_metgrid_format(p, t, ht, u, v, vv, rh, slp, psfc, &
                                lwc, rai, sno, ice, pic, snocov,tskin)
 
   !  Subroutine of lapsprep that will build a file the
@@ -483,6 +483,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   REAL, INTENT(IN)                   :: ht(:,:,:)   ! Height (m)
   REAL, INTENT(IN)                   :: u(:,:,:)    ! U-wind (m s{-1})
   REAL, INTENT(IN)                   :: v(:,:,:)    ! V-wind (m s{-1})
+  REAL, INTENT(IN)                   :: vv(:,:,:)   ! Omega-wind (Pa s{-1})
   REAL, INTENT(IN)                   :: rh(:,:,:)   ! Relative Humidity (%)
   REAL, INTENT(IN)                   :: slp(:,:)    ! Sea-level Pressure (Pa)
   REAL, INTENT(IN)                   :: psfc(:,:)   ! Surface Pressure (Pa)
@@ -614,6 +615,26 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
             ' Max: ', MAXVAL(d2d)
   ENDDO var_v
 
+  ! Do omega-component of wind
+  IF (use_laps_vv) THEN
+    field = 'WW       '
+    units = 'pa s-1                   '
+    desc = 'OMEGA                                         '
+    PRINT *, 'FIELD = ', field
+    PRINT *, 'UNITS = ', units
+    PRINT *, 'DESC =  ',desc
+    var_vv : DO k = 1 , z3 + 1
+      IF ( ( p_pa(k) .GT. 100100 ) .AND. ( p_pa(k) .LT. 200000 ) ) THEN
+        CYCLE var_vv
+      END IF
+      CALL write_metgrid_header(field,units,desc,p_pa(k))
+      d2d = v(:,:,k)
+      WRITE ( output_unit ) d2d
+      PRINT '(A,F9.1,A,F5.1,A,F5.1)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+              ' Max: ', MAXVAL(d2d)
+  ENDDO var_vv
+  ENDIF
+
   ! Relative Humidity
   field = 'RH       '
   units = '%                        '
@@ -676,6 +697,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), &
          ' Min: ', MINVAL(tskin), ' Max: ', MAXVAL(tskin)
   ENDIF
+
   ! Sea-level Pressure field
   field = 'PMSL     '
   units = 'Pa                       '
