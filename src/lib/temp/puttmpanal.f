@@ -729,4 +729,50 @@ c       1                               j_diff_thmax,k_diff_thmax
 
         return
         end
+! Hongli Jiang added to deal with sigma_ht. 11/2/2011
+        subroutine write_temp_anal_ht(i4time,imax,jmax,kmax,temp_3d
+     1                  ,pressure_3d,comment_2d,istatus)
+
+        integer nf
+        parameter (nf = 2)
+
+        character*31 EXT
+
+        character*125 comment_a(nf),comment_2d
+        character*10 units_a(nf)
+        character*3 var_a(nf)
+
+        real temp_3d(imax,jmax,kmax)
+        real pressure_3d(imax,jmax,kmax)
+        real output_4d(imax,jmax,kmax,2) ! Local
+
+        EXT = 'lt1'
+
+        write(6,*)
+     1 ' Writing out Temp/Height Analyses to LT1 (or equiv) Directory'
+
+        var_a(1) = 'T3' ! newvar = 'T3', oldvar = 'T'
+        var_a(2) = 'P3'
+
+        units_a(1) = 'K'
+        units_a(2) = 'Pa'
+
+        do i = 1,nf
+            comment_a(i) = comment_2d
+        enddo ! i
+
+        call move_3d(temp_3d(1,1,1)   ,output_4d(1,1,1,1)
+     1                                                ,imax,jmax,kmax)
+        call move_3d(pressure_3d(1,1,1),output_4d(1,1,1,2)
+     1                                                ,imax,jmax,kmax)      
+
+        call put_laps_multi_3d(i4time,EXT,var_a,units_a,
+     1          comment_a,output_4d,imax,jmax,kmax,nf,istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' Error in put_laps_multi_3d for LT1 file'
+        endif
+
+        return
+        end
 
