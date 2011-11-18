@@ -254,6 +254,7 @@ $ENV{PATH}.=":@NETCDF@/bin";
 # Calculate aspect ratio and set aspect keyword
 my @xdim=&laps_tools::get_nl_value("nest7grid.parms","nx_l","$LAPS_DATA_ROOT"); 
 my @ydim=&laps_tools::get_nl_value("nest7grid.parms","ny_l","$LAPS_DATA_ROOT"); 
+my @zdim=&laps_tools::get_nl_value("nest7grid.parms","nk_laps","$LAPS_DATA_ROOT"); 
 my $aspect_ratio = (@xdim[0]-1.0) / (@ydim[0]-1.0);
 my $aspect_word;
 if ($aspect_ratio > 1.40) {
@@ -263,6 +264,8 @@ if ($aspect_ratio > 1.40) {
 } else {
     $aspect_word = "square";
 }
+
+my $npts = $xdim[0] * $ydim[0] * $zdim[0];
 
 my @cycle_array=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time","$LAPS_DATA_ROOT"); 
 
@@ -608,7 +611,11 @@ foreach $exe (@LAPS_EXE){
 #               Determine wall clock time
                 my $wall_time_hrs;
                 if($qsub_mode eq "single"){
-                    $wall_time_hrs = ( ( $cycle_time_min / 60.) + $extend_time  )
+                    if($opt_V eq "STMAS3D") {
+                        $wall_time_hrs = 0.75
+                    }else{
+                        $wall_time_hrs = ( ( $cycle_time_min / 60.) + $extend_time  )
+		    }
                 }else{ # optimize large domain wall clock time based on which section of the executable list is being run
                     if($scriptcount == 1){
                         $wall_time_hrs = ( ( $cycle_time_min / 60.) + $extend_time  ) * 0.22
@@ -631,7 +638,17 @@ foreach $exe (@LAPS_EXE){
                     if($qsub_mode eq "multi" || ! defined($opt_P)){
                         print TFILE "#\$ -pe $node_type $nodes_current\n";
                         if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
-                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=12.0G\n";
+                            my $vmem_gb;
+                            if($opt_V eq "STMAS3D") {
+                                if($npts > 7000000){
+                                    $vmem_gb=12.0
+                                }else{
+                                    $vmem_gb=6.0
+			        }
+                            }else{
+                                $vmem_gb=12.0
+                            }
+                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=".$vmem_gb."G\n";
                         }else{
                             if($nodes_current > 1){
                                 print TFILE "#\$ -l h_rt=00:15:00\n";
