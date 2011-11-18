@@ -734,7 +734,7 @@
           CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
                              lwc, rai, sno, ice, pic,snocov, tskin)
         CASE ('wps ')
-          CALL output_metgrid_format(p, t, ht, u, v, rh, slp, psfc,&
+          CALL output_metgrid_format(p, t, ht, u, v, vv, rh, slp, psfc,&
                              lwc, rai, sno, ice, pic,snocov, tskin)
      
         CASE ('rams') 
