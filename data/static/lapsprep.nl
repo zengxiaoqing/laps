@@ -9,6 +9,7 @@
   lwc2vapor_thresh = 0.,
   make_sfc_uv = .false.,
   use_laps_skintemp = .true.,	
+  use_laps_vv = .false.,	
 /
  
 c
@@ -67,3 +68,7 @@ c
 c  use_laps_skintemp:
 c    Logical flag.  If set to true, then the LAPS tsk field will be output
 c    as SKINTEMP (only applies to "wps" format)
+c
+c  use_laps_vv
+c    Logical flag.  If set to true, then the LAPS omega field will be output
+c    as WW (only applies to "wps" format)
