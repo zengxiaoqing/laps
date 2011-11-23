@@ -128,19 +128,28 @@ c
           do i=1,maxchannel
             print*,' ',i,' ',TRIM(path_to_raw_sat(i,j,k))
           enddo
+
+          if(trim(c_sat_types(j,k)) .ne. 'rll')then
  
-          call compute_nav_llij(nx_l,ny_l,maxchannel,nchannels,
+            call compute_nav_llij(nx_l,ny_l,maxchannel,nchannels,
      &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,gri,grj,
      &nav_status)
 
-          if(nav_status.eq.1)then
-             print*,'Success computing mapping arrays ',c_sat_id(k)
-     +,'/',c_sat_types(j,k)
+            if(nav_status.eq.1)then
+               print*,'Success computing mapping arrays ',c_sat_id(k)
+     +               ,'/',c_sat_types(j,k)
 
-          elseif(nav_status.lt.0)then
+            elseif(nav_status.lt.0)then
              print*,'ERROR returned from compute_nav_llij - stop'
              print*,'!!Terminating!!'
              goto 1000
+            endif
+
+          else
+             print*,' Type is rll, skip compute_nav_llij'
+             print*,' Try reading lat/lon arrays from sat data file'
+             print*,' For now gri and grj will be blank'            
+
           endif
 c
 c ================================================================
