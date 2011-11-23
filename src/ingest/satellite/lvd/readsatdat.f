@@ -13,6 +13,7 @@
      &                      image_67,
      &                      image_ir,image_12,
      &                      image_39,image_vis,
+     &                      image_lat_ir,image_lon_ir,
      &                      istatus)
 c
 c
@@ -44,6 +45,8 @@ c
       real    wv_image(nelemwv,nlineswv)
       real    ir_image(nelemir,nlinesir)
       real    vis_image(nelemvis,nlinesvis)
+      real    image_lat_ir(nelemir,nlinesir)
+      real    image_lon_ir(nelemir,nlinesir)
 
       character c_fname_data(max_files)*9
       character c_type(maxchannels,max_files)*3
@@ -66,6 +69,8 @@ c
       REAL    dy_vis,dy_ir,dy_wv
       REAL    latin_vis,latin_ir,latin_wv
       REAL    lov_vis,lov_ir,lov_wv
+
+      write(6,*)' Subroutine readsatdat...',csat_type               
 
       istatus=1
 
@@ -91,6 +96,11 @@ c
 
             rcode=NF_OPEN(c_filename,NF_NOWRITE,NCID)
             if(rcode.ne.nf_noerr) return
+
+            if(csat_type .eq. 'rll')then         !check for lat/lon arrays                
+               write(6,*)' Checking for lat/lon arrays in readsatdat'        
+               write(6,*)' UNDER CONSTRUCTION'                  
+            endif
 
             if(ispec.ne.1.and.ispec.ne.3)then    !check for visible and water vapor
 
