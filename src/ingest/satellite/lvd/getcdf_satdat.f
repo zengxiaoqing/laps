@@ -92,6 +92,9 @@ c
       real image_39  (n_ir_elem,n_ir_lines,n_images)
       real image_67  (n_wv_elem,n_wv_lines,n_images)
 
+      real image_lat_ir  (n_ir_elem,n_ir_lines)
+      real image_lon_ir  (n_ir_elem,n_ir_lines)
+
       integer i,j,k,n,jj,il
       integer in(max_channel)
       integer ispec
@@ -166,7 +169,7 @@ c
       istatus = 1
 
       call get_directory('lvd',lvd_dir,lend)
-      lvd_dir=lvd_dir(1:lend)//c_sat_id//'/'
+      lvd_dir=lvd_dir(1:lend)//trim(c_sat_id)//'/'
 
       do j=1,nchannels
          call lvd_file_specifier(chtype(j),ispec,lstatus)
@@ -259,7 +262,7 @@ c           n=index(pathname,' ')
             if(gfn_status.eq.1)then
                write(*,*)'Success in GFN (lvd)'
             else
-               write(6,*)'Error GFN (lvd)'
+               write(6,*)'Error GFN (lvd) ',lvd_dir
                istatus=-1
                goto 996
             endif
@@ -301,7 +304,7 @@ c
                if(gfn_status.eq.1)then
                   write(*,*)'Success in GFN (lvd)'
                else
-                  write(6,*)'Error GFN (lvd)'
+                  write(6,*)'Error GFN (lvd) ',lvd_dir
                   istatus=-1
                   goto 996
                endif
@@ -632,6 +635,7 @@ c
      &                image_67,
      &                image_ir,image_12,
      &                image_39,image_vis,
+     &                image_lat_ir,image_lon_ir,
      &                istatus)
  
       goto 16
