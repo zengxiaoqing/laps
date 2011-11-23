@@ -56,7 +56,7 @@ select case(trim(mtype))
       call get_st4_dims(filename,nx,ny,nz)
 end select
 
-if(nx*ny*nz > 20000000)then
+if(nx*ny*nz > 20000000 .AND. .false.)then
    write(6,*)' Large native grid - process reduced set of 3-D fields'
    large_ngrid = .true.
    large_pgrid = .true.
@@ -240,6 +240,7 @@ real, allocatable, dimension(:,:,:) :: htdsig,hrhsig,hthetasig,hthetaesig,hzsigf
 real :: dx(lx,ly),dy(lx,ly)  
 real :: r_missing_data
 real :: stefan_boltzmann, b_olr, eff_emissivity
+real :: bt_flux_equiv
 
 !beka
 
@@ -252,6 +253,7 @@ integer        len_dir,istatus
 character*3    var_2d
 real :: ldf(lx,ly),lat(lx,ly),lon(lx,ly),avg(lx,ly)
 real :: windspeed(lx,ly),soil_moist(lx,ly),snow_cover(lx,ly)
+real :: intcldice(lx,ly) 
 
 integer ::        ismoist,isnow
 integer ::        status
@@ -389,22 +391,24 @@ if (make_micro) then
    allocate(condmr_sig(lx,ly,nz),rhodrysig(lx,ly,nz))
    condmr_sig=0.
    if (maxval(hcldliqmr_sig) < rmsg) condmr_sig=condmr_sig+hcldliqmr_sig
-   if (maxval(hcldicemr_sig) < rmsg) condmr_sig=condmr_sig+hcldicemr_sig
    if (maxval(hsnowmr_sig) < rmsg) condmr_sig=condmr_sig+hsnowmr_sig
    if (maxval(hrainmr_sig) < rmsg) condmr_sig=condmr_sig+hrainmr_sig
    if (maxval(hgraupelmr_sig) < rmsg) condmr_sig=condmr_sig+hgraupelmr_sig
    where(condmr_sig < zero_thresh) condmr_sig=0.
    rhodrysig=hpsig/(r*htsig)
-   call lfm_integrated_liquid(lx,ly,nz,condmr_sig,hmrsig,rhodrysig,hzsig,zsfc  &
-                             ,intliqwater,totpcpwater)
+   call lfm_integrated_liquid(lx,ly,nz,condmr_sig,hcldicemr_sig,hmrsig,rhodrysig,hzsig,zsfc  &
+                             ,intliqwater,intcldice,totpcpwater,rmsg)
  endif ! large_ngrid
 
- if(.true.)then ! always run this part
+ if(.true.)then ! supercedes binary cldamt calculated earlier
+                ! for liquid we can augment this noting that tau = (3 * intliqwater) / (2 * rho * radius)
   do j=1,ly
    do i=1,lx
-      if(intliqwater(i,j) < rmsg)then
-         cldamt(i,j) = (intliqwater(i,j) * 100.) ** 0.3333333
-         cldamt(i,j) = min(cldamt(i,j),1.0)
+      if(intliqwater(i,j) < rmsg .AND. intcldice(i,j) < rmsg)then
+!        cldamt(i,j) = (intliqwater(i,j) * 100.) ** 0.3333333 ! this might work empirically if small integrated liq/ice
+!        cldamt(i,j) = min(cldamt(i,j),1.0)                   ! values have smaller mean diameters, so the dependence
+!                                                             ! is a weaker one
+         cldamt(i,j) = 1. - (exp( -(1000. * intliqwater(i,j) + 1000. * intcldice(i,j))) ) 
       endif
    enddo ! i
    enddo ! j
@@ -721,6 +725,7 @@ if (verbose .and. .not. large_ngrid) then
    print*,'Min/Max ceiling   = ',minval(ceiling),maxval(ceiling)
    print*,'Min/Max cldamt    = ',minval(cldamt),maxval(cldamt)
    print*,'Min/Max intliqwat = ',minval(intliqwater)*1000.,maxval(intliqwater)*1000.
+   print*,'Min/Max intcldice = ',minval(intcldice)*1000.,maxval(intcldice)*1000.
    print*,'Min/Max totpcpwat = ',minval(totpcpwater)*1000.,maxval(totpcpwater)*1000.
    print*,'Min/Max max refl  = ',minval(max_refl),maxval(max_refl)
    print*,'Min/Max echo tops = ',minval(echo_tops),maxval(echo_tops)
@@ -784,10 +789,23 @@ if(.not. large_ngrid)then
 
 endif
 
-        stefan_boltzmann = 5.67e-8
-        eff_emissivity = 0.6
-        b_olr = 0.25
-        bt11u(:,:) = ( (lwout(:,:)/eff_emissivity) / stefan_boltzmann) ** b_olr
+! Calculate brightness temperature
+stefan_boltzmann = 5.67e-8
+if(.false.)then ! First method                                 
+    eff_emissivity = 0.6
+    bt11u(:,:) = ( (lwout(:,:)/eff_emissivity) / stefan_boltzmann) ** 0.25 
+else            ! Second method: adapted from Ohring, George, Arnold Gruber, Robert Ellingson, 1984: 
+                ! Satellite Determinations of the Relationship between Total Longwave Radiation Flux 
+                ! and Infrared Window Radiance. J. Climate Appl. Meteor., 23, 416-425.
+                ! Based on a look at graphs on this and another paper a quadratic fit is being used    
+                ! using these three points: 200,200 240,255 and 280,320
+    do j=1,ly
+    do i=1,lx
+        bt_flux_equiv = (lwout(i,j) / stefan_boltzmann) ** 0.25 
+        bt11u(i,j) = 255. + 1.5 * (bt_flux_equiv - 240.) + .003125 * (bt_flux_equiv - 240.)**2
+    enddo ! i
+    enddo ! j
+endif
          
 
 return
@@ -826,10 +844,10 @@ if (fcsttime > 0) then
       endif
       open(1,file=trim(filename0),status='old',form='unformatted')
       if (trim(mtype) == 'nmm') then
-        read(1,err=101) pcp_init,pcp_06,snow_init
+        read(1,end=101,err=101) pcp_init,pcp_06,snow_init
         print *,'reading intermediate file for model: ',trim(mtype)
       else
-        read(1,err=101) pcp_init,snow_init
+        read(1,end=101,err=101) pcp_init,snow_init
         pcp_06=0.
       endif
       goto 102
@@ -1023,8 +1041,8 @@ end
 
 !===============================================================================
 
-subroutine lfm_integrated_liquid(nx,ny,nz,cond_mr,vapor_mr,rho,height,topo  &
-                                ,intliqwater,totpcpwater)
+subroutine lfm_integrated_liquid(nx,ny,nz,cond_mr,cice_mr,vapor_mr,rho,height,topo  &
+                                ,intliqwater,intcldice,totpcpwater,rmsg)
 
 ! Computes integrated liquid water and total precip. water in a column.  
 !  Adapted from USAF Weather Agency MM5 Post Processor
@@ -1033,14 +1051,15 @@ subroutine lfm_integrated_liquid(nx,ny,nz,cond_mr,vapor_mr,rho,height,topo  &
 implicit none
   
 integer :: nx,ny,nz,i,j,k 
-real :: height_top,height_bot,dz
-real, dimension(nx,ny) :: topo,intliqwater,totpcpwater
-real, dimension(nx,ny,nz) :: cond_mr,vapor_mr,rho,height
+real :: height_top,height_bot,dz,rmsg
+real, dimension(nx,ny) :: topo,intliqwater,totpcpwater,intcldice
+real, dimension(nx,ny,nz) :: cond_mr,vapor_mr,cice_mr,rho,height
 
 do j=1,ny
 do i=1,nx
    intliqwater(i,j)=0.0
    totpcpwater(i,j)=0.0
+   intcldice(i,j)=0.0
    do k=1,nz
 ! Compute layer thickness
       if (k == 1) then
@@ -1054,7 +1073,8 @@ do i=1,nx
          height_top=0.5*(height(i,j,k)+height(i,j,k+1))
       endif
       dz=height_top-height_bot
-      intliqwater(i,j)=intliqwater(i,j)+cond_mr(i,j,k)*rho(i,j,k)*dz*0.001   ! meters
+      if(cond_mr(i,j,k) < rmsg)intliqwater(i,j)=intliqwater(i,j)+cond_mr(i,j,k)*rho(i,j,k)*dz*0.001  ! meters
+      if(cice_mr(i,j,k) < rmsg)intcldice(i,j)  =intcldice(i,j)  +cice_mr(i,j,k)*rho(i,j,k)*dz*0.001  ! meters
       totpcpwater(i,j)=totpcpwater(i,j)+vapor_mr(i,j,k)*rho(i,j,k)*dz*0.001  ! meters
    enddo
 enddo
