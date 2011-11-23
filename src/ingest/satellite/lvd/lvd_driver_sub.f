@@ -224,6 +224,9 @@ c used for "bad" meteosat data.
 c =========================================================================
 c ----------------------------- START -------------------------------------
 c
+      write(6,*)                                   
+      write(6,*)'Start lvd_driver_sub...'          
+
       lvd_status = 0
       nchannels = 0
 
@@ -279,7 +282,13 @@ c ---------------------------------------------
 c --------------------------------------------------------------------
 c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
-      if(csatid.ne.'gmssat'.or.csattype.eq.'twn'.or.
+      if(csattype .eq. 'rll')then
+           print *,' Read lat/lon arrays to generate gri/grj'
+           print *,' UNDER CONSTRUCTION'                                
+           gri = 100.
+           grj = 50.                               
+
+      elseif(csatid.ne.'gmssat'.or.csattype.eq.'twn'.or.
      &   csattype.eq.'hko')then
 
          call readlut(csatid,csattype,maxchannel,nchannels,
@@ -413,7 +422,8 @@ c --------------------------------------------------------------------------
 c Find and read current satellite files... as many as 5 ir channels and vis.
 c --------------------------------------------------------------------------
       if(csattype.eq.'cdf'.or.csattype.eq.'gvr'.or.
-     &   csattype.eq.'wfo'.or.csattype.eq.'ncp')then
+     &   csattype.eq.'wfo'.or.csattype.eq.'ncp'.or.
+     &                        csattype.eq.'rll')then 
 
        write(6,*)'Using getcdf_satdat routine'
 
