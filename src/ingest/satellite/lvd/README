@@ -18,13 +18,14 @@
                get_lut_ps
        lvd_driver_sub                    lvd_driver_sub.f
            readlut                       readlut.f
-           lvd_file_specifier            lvd_file_specifier.f
+           lvd_file_specifier            lib/satellite/lvd_file_specifier.f
            getcdf_satdat                 getcdf_satdat.f
                lvd_file_specifier        lvd_file_specifier.f
                wait_for_satdat           wait_for_satdat.f
                readsatdat                readsatdat.f
                    lvd_file_specifier    lvd_file_specifier.f
                    readcdf               readcdf.f         
+                       rdblock_line_elem rdcdfblock.f             
            read_gms_hko                  read_gms_hko.f
                get_satdat_attributes     getsat_attributes.f
            read_gms_taiwan               read_gms_hko.f
