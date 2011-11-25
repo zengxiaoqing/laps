@@ -35,12 +35,43 @@ MODULE lapsdata
     INTEGER              :: parm_id
   END TYPE var_2d
 
+  TYPE var_a2d
+    CHARACTER(LEN=3)     :: ext
+    CHARACTER(LEN=3)     :: var
+    REAL                 :: conv_fac
+    INTEGER              :: scale_fac
+    INTEGER              :: lev1_type
+    INTEGER              :: lev1_scale
+    INTEGER              :: lev1_value
+    INTEGER              :: lev2_type
+    INTEGER              :: lev2_scale
+    INTEGER              :: lev2_value
+    INTEGER              :: discipline
+    INTEGER              :: cat_id
+    INTEGER              :: parm_id
+
+    INTEGER              :: eyear
+    INTEGER              :: emon
+    INTEGER              :: eday
+    INTEGER              :: ehour
+    INTEGER              :: emin
+    INTEGER              :: esec
+    INTEGER              :: ntimes
+    INTEGER              :: ntimes_miss
+    INTEGER              :: stattype
+    INTEGER              :: periodtype
+    INTEGER              :: etime_unit
+    INTEGER              :: etime_value
+  END TYPE var_a2d
+
   INTEGER, PARAMETER     ::  max_iso = 20
   INTEGER, PARAMETER     ::  max_2d  = 50
+  INTEGER, PARAMETER     ::  max_a2d = 10
 
   TYPE(var_iso3d)        :: meta_iso3d(max_iso)
   TYPE(var_2d)           :: meta_2d(max_2d)
-  INTEGER                :: n_iso, n_2d
+  TYPE(var_a2d)          :: meta_accum2d(max_a2d)
+  INTEGER                :: n_iso, n_2d, n_accum2d
 
 CONTAINS
 
@@ -78,7 +109,7 @@ CONTAINS
                discipline,cat_id,parm_id
           IF (fstat .EQ. 0) THEN
             n_iso = n_iso + 1
-            IF (n_2d .GT.  max_2d) THEN
+            IF (n_iso .GT. max_iso) THEN
               PRINT *, "Number of 3D variables requested exceeds max_iso parameter!"
               STOP 'module_lapsdata.f90'
             ENDIF
@@ -95,13 +126,14 @@ CONTAINS
           ELSE
             PRINT *, "-- Format problem with 3d variable line: ", TRIM(fline)
           ENDIF
+
         ELSEIF(fline(1:2) .EQ. '2d')THEN
           READ(fline(3:line_len),*,IOSTAT=fstat) ext,var,conv_fac,scale_fac,&
                 lev1_type,lev1_scale,lev1_value,lev2_type,lev2_scale,lev2_value, &
                 discipline,cat_id,parm_id
           IF (fstat .EQ. 0) THEN
             n_2d = n_2d + 1
-            IF (n_2d .GT.  max_2d) THEN 
+            IF (n_2d .GT. max_2d) THEN 
               PRINT *, "Number of 2D variables requested exceeds max_2d parameter!"
               STOP 'module_lapsdata.f90'
             ENDIF
@@ -122,7 +154,54 @@ CONTAINS
           ELSE
             PRINT *, "-- Format problem with 2d variable line: ", TRIM(fline) 
           ENDIF
+
+        ELSEIF(fline(1:3) .EQ. 'a2d')THEN
+          READ(fline(4:line_len),*,IOSTAT=fstat) ext,var,conv_fac,scale_fac,&
+                lev1_type,lev1_scale,lev1_value,lev2_type,lev2_scale,lev2_value, &
+                discipline,cat_id,parm_id
+          IF (fstat .EQ. 0) THEN
+            n_accum2d = n_accum2d + 1
+
+            IF (n_accum2d .GT. max_a2d) THEN 
+              PRINT *, "Number of Accumulated 2D variables requested exceeds max_a2d parameter!"
+              STOP 'module_lapsdata.f90'
+            ENDIF
+
+            meta_accum2d(n_accum2d)%ext = ext
+            meta_accum2d(n_accum2d)%var = var
+            meta_accum2d(n_accum2d)%conv_fac = conv_fac
+            meta_accum2d(n_accum2d)%scale_fac = scale_fac
+            meta_accum2d(n_accum2d)%lev1_type = lev1_type
+            meta_accum2d(n_accum2d)%lev1_scale = lev1_scale
+            meta_accum2d(n_accum2d)%lev1_value = lev1_value
+            meta_accum2d(n_accum2d)%lev2_type = lev2_type
+            meta_accum2d(n_accum2d)%lev2_scale = lev2_scale
+            meta_accum2d(n_accum2d)%lev2_value = lev2_value 
+            meta_accum2d(n_accum2d)%discipline = discipline
+            meta_accum2d(n_accum2d)%cat_id = cat_id
+            meta_accum2d(n_accum2d)%parm_id = parm_id
+            ! Octet 35-40, reset to current runtime in laps2grib program
+            meta_accum2d(n_accum2d)%eyear = 0
+            meta_accum2d(n_accum2d)%emon  = 0
+            meta_accum2d(n_accum2d)%eday  = 0
+            meta_accum2d(n_accum2d)%ehour = 0
+            meta_accum2d(n_accum2d)%emin  = 0
+            ! Octet 41-43, 47-49
+            meta_accum2d(n_accum2d)%esec  = 0
+            meta_accum2d(n_accum2d)%ntimes= 1      !42 indicator of time unit (see octet 49)
+            meta_accum2d(n_accum2d)%ntimes_miss= 0 !43 missing precip causes accumulation to reset
+            meta_accum2d(n_accum2d)%stattype   = 1 !47 1=Accumulation, 0=Avg
+            meta_accum2d(n_accum2d)%periodtype = 2 !48 2=Succesive runs have same start time of accum
+            meta_accum2d(n_accum2d)%etime_unit = 0 !49 0=min, 1=hour, 2=day
+            ! Octet 50, reset to current runtime in laps2grib program
+            meta_accum2d(n_accum2d)%etime_value= 60 !50 length of time range (see octet 49)
+
+          ELSE
+            PRINT *, "-- Format problem with Accumulated 2d variable line: ", TRIM(fline) 
+          ENDIF
+
         ENDIF
+
       ELSEIF (fstat .LT. 0) THEN
         EXIT readfile
       ENDIF
