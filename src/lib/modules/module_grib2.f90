@@ -313,7 +313,7 @@ CONTAINS
     INTEGER,INTENT(IN)   :: af_process_id   ! Center defined
     INTEGER,INTENT(IN)   :: cutoff_hr
     INTEGER,INTENT(IN)   :: cutoff_min
-    INTEGER,INTENT(IN)   :: time_unit_indicator ! TAble 4.4
+    INTEGER,INTENT(IN)   :: time_unit_indicator ! Table 4.4
     INTEGER,INTENT(IN)   :: ftime  ! Forecast time
     INTEGER,INTENT(IN)   :: lev1_type,lev1_scale,lev1_value
     INTEGER,INTENT(IN)   :: lev2_type,lev2_scale,lev2_value
@@ -450,7 +450,7 @@ CONTAINS
     INTEGER,INTENT(IN)   :: af_process_id   ! Center defined
     INTEGER,INTENT(IN)   :: cutoff_hr
     INTEGER,INTENT(IN)   :: cutoff_min
-    INTEGER,INTENT(IN)   :: time_unit_indicator ! TAble 4.4
+    INTEGER,INTENT(IN)   :: time_unit_indicator ! Table 4.4
     INTEGER,INTENT(IN)   :: ftime  ! Forecast time
     INTEGER,INTENT(IN)   :: lev1_type,lev1_scale,lev1_value
     INTEGER,INTENT(IN)   :: lev2_type,lev2_scale,lev2_value
@@ -471,12 +471,12 @@ CONTAINS
                                                                                                                                                                                                                                   
     IF (.NOT. made_sec3) THEN
       ig2status = 1
-      PRINT *,"Called write_grib2_template0 before section 3 was made!"
+      PRINT *,"Called write_grib2_template8 before section 3 was made!"
       RETURN
     ENDIF
     IF (.NOT. made_sec1) THEN
       ig2status = 1
-      PRINT *,"Called write_grib2_template0 before section 1 was made!"
+      PRINT *,"Called write_grib2_template8 before section 1 was made!"
       RETURN
     ENDIF
                                                                                                                                                                                                                                   
@@ -518,20 +518,24 @@ CONTAINS
     is4(29) = lev2_type
     is4(30) = lev2_scale
     is4(31) = lev2_value
+    ! time of end of overall time interval
     is4(35) = eyear
     is4(37) = emon
     is4(38) = eday
     is4(39) = ehour
     is4(40) = emin
     is4(41) = esec
+    ! no. time range specs desc time intvls used to cal statistically-processed field
     is4(42) = ntimes
     is4(43) = ntimes_miss
     is4(47) = stattype
     is4(48) = periodtype
+    ! unit of time for time range over which statistical processing is done (Table 4.4)
     is4(49) = etime_unit
     is4(50) = etime_value
     is4(54) = 255
     is4(55:58) = 0
+
     ! Set up section 7
     is7(:) = 0
     is7(5) = 7
