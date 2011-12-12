@@ -342,6 +342,9 @@ for ($g=1; $g<=$ngrid; $g++) {
            system ("ln -s $lapsdataroot/lapsprd/fua $model_output_dir/d$dom/fua");
 
          }
+       } else {
+           print "$model_output_dir/d$dom/fua already exists - no link was made\n";
+           system ("ls -l $model_output_dir/d$dom/fua");
        }
 
        if (! -e "$model_output_dir/d$dom/fsf") {
@@ -357,6 +360,9 @@ for ($g=1; $g<=$ngrid; $g++) {
            print   "ln -s $lapsdataroot/lapsprd/fsf $model_output_dir/d$dom/fsf\n";
            system ("ln -s $lapsdataroot/lapsprd/fsf $model_output_dir/d$dom/fsf");
          }
+       } else {
+           print "$model_output_dir/d$dom/fsf already exists - no link was made\n";
+           system ("ls -l $model_output_dir/d$dom/fsf");
        }
    }
 
