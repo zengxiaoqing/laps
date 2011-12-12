@@ -261,6 +261,9 @@ if($opt_q || $opt_Q){
             print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
             print TFILE "#\$ -l h_rt=00:15:00,h_vmem=".$vmem_gb."G\n";
 
+        }elsif($exe eq "ensemble_mean.exe"){
+            print TFILE "#\$ -l h_rt=00:15:00,h_vmem=1.60G\n";
+
         }else{
             print TFILE "#\$ -l h_rt=00:10:00,h_vmem=1.60G\n";
 
