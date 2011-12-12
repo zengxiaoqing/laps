@@ -669,14 +669,14 @@ cdoc    Compute 3D Precip Type given profiles of T, RH, Reflectivity
 !       2 - Snow
 !       3 - Freezing Rain
 !       4 - Sleet
-!       5 - Hail
+!       5 - Hail / Graupel
 
         zero_c = 273.15
         rlayer_refreez_max = 0.0
 
 !       Ramp the hail_ref_thresh between 0-10km grid spacing
         arg = min(grid_spacing_cen_m,10000.)
-        hail_ref_thresh = 55. - arg/1000.
+        hail_ref_thresh1 = 55. - arg/1000.
 
         n_zr = 0
         n_sl = 0
@@ -760,6 +760,11 @@ cdoc    Compute 3D Precip Type given profiles of T, RH, Reflectivity
                         rlayer_refreez = 0.0
 
                     endif ! Temp is freezing
+
+!                   Calculate Hail/Graupel threshold with temperature factored in
+                    h_thr_depr = max(10. - abs(-5. - temp_3d(i,j,k)),0.)         
+                    hail_ref_thresh = hail_ref_thresh1 - 3. * h_thr_depr
+                    hail_ref_thresh = max(hail_ref_thresh,30.)                    
 
                     if(radar_3d(i,j,k) .lt. hail_ref_thresh)then ! Not Hail
                         if(t_wb_c .ge. thresh_melt_c)then     ! Warm, got rain
