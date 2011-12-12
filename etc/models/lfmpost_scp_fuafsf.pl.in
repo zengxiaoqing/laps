@@ -124,7 +124,7 @@ if ($opt_d) {
     $dd = substr($date,6,2);
     $hh = substr($date,8,2);
 
-    print "Date from directory is $date\n";
+    print "Date from directory is $date - nfiles is $nfiles\n";
 }
 
 my $yy = substr($yyyy,2,2); 
@@ -172,8 +172,15 @@ print "maxwait: $maxwait\n";
 
 
 my $inittime = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + $decade;
-my $endsec = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + 23400;
 my $current_sec = timegm(gmtime);
+
+my $endsec;
+if ($nfiles > 0) {
+    $endsec = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + 23400;
+}else{
+    $endsec = $current_sec + 23400;
+}
+
 my $new_cycle_min;
 my $g,@grid;
 my $grid;
