@@ -179,7 +179,7 @@
          nsuccess_m = 0
          nincomplete_m = 0
 
-         frac_thr = 0.80
+         frac_thr = 0.20
          nmissing_thr = int((1. - frac_thr) * float(n_init_times+1))
          nsuccess_thr = (n_init_times+1) - nmissing_thr
 
@@ -480,7 +480,7 @@
              ipct = nint(  (float(nsuccess_m(imodel)) 
      1                    / float(n_init_times+1))*100.)
              write(lun_summary_out,969)ipct                        
- 969         format(i3,'%')
+ 969         format(i3)
          enddo ! imodel
          write(lun_summary_out,*)l_plot_criteria
          close(lun_summary_out)
