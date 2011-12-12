@@ -234,7 +234,7 @@ real :: dz,dtdz,dewpt,relhum,potential_temp,eq_potential_temp,heatindex  &
        ,redp_lvl=1500.
 real, allocatable, dimension(:,:) :: pcp_06,pcp_init,fallen_precip_type
 real, allocatable, dimension(:,:,:) :: htdsig,hrhsig,hthetasig,hthetaesig,hzsigf  &
-                                      ,condmr_sig,rhodrysig,tvsig,rhomoistsig
+                                      ,pcpmr_sig,rhodrysig,tvsig,rhomoistsig
 
 !beka
 real :: dx(lx,ly),dy(lx,ly)  
@@ -386,17 +386,16 @@ if (make_micro) then
       cldamt=rmsg
    endif
 
-! Generate integrated liquid water.
+! Generate integrated hydrometeor fields
 
-   allocate(condmr_sig(lx,ly,nz),rhodrysig(lx,ly,nz))
-   condmr_sig=0.
-   if (maxval(hcldliqmr_sig) < rmsg) condmr_sig=condmr_sig+hcldliqmr_sig
-   if (maxval(hsnowmr_sig) < rmsg) condmr_sig=condmr_sig+hsnowmr_sig
-   if (maxval(hrainmr_sig) < rmsg) condmr_sig=condmr_sig+hrainmr_sig
-   if (maxval(hgraupelmr_sig) < rmsg) condmr_sig=condmr_sig+hgraupelmr_sig
-   where(condmr_sig < zero_thresh) condmr_sig=0.
+   allocate(pcpmr_sig(lx,ly,nz),rhodrysig(lx,ly,nz)) ! for possible use
+   pcpmr_sig=0.
+   if (maxval(hsnowmr_sig) < rmsg) pcpmr_sig=pcpmr_sig+hsnowmr_sig
+   if (maxval(hrainmr_sig) < rmsg) pcpmr_sig=pcpmr_sig+hrainmr_sig
+   if (maxval(hgraupelmr_sig) < rmsg) pcpmr_sig=pcpmr_sig+hgraupelmr_sig
+   where(pcpmr_sig < zero_thresh) pcpmr_sig=0.
    rhodrysig=hpsig/(r*htsig)
-   call lfm_integrated_liquid(lx,ly,nz,condmr_sig,hcldicemr_sig,hmrsig,rhodrysig,hzsig,zsfc  &
+   call lfm_integrated_liquid(lx,ly,nz,hcldliqmr_sig,hcldicemr_sig,hmrsig,rhodrysig,hzsig,zsfc  &
                              ,intliqwater,intcldice,totpcpwater,rmsg)
  endif ! large_ngrid
 
@@ -408,7 +407,8 @@ if (make_micro) then
 !        cldamt(i,j) = (intliqwater(i,j) * 100.) ** 0.3333333 ! this might work empirically if small integrated liq/ice
 !        cldamt(i,j) = min(cldamt(i,j),1.0)                   ! values have smaller mean diameters, so the dependence
 !                                                             ! is a weaker one
-         cldamt(i,j) = 1. - (exp( -(1000. * intliqwater(i,j) + 1000. * intcldice(i,j))) ) 
+!        liquid water is assumed to have smaller particles contributing to a larger constant
+         cldamt(i,j) = 1. - (exp( -(24000. * intliqwater(i,j) + 16000. * intcldice(i,j))) ) 
       endif
    enddo ! i
    enddo ! j
@@ -418,12 +418,12 @@ if (make_micro) then
    if (verbose) then
       print*,' '
       print *,'Called integrated_liquid.'
-      print *,'Min/Max condmr_sig =',minval(condmr_sig),maxval(condmr_sig)
+      print *,'Min/Max pcpmr_sig =',minval(pcpmr_sig),maxval(pcpmr_sig)
       print *,'Min/Max mrsig =',minval(hmrsig),maxval(hmrsig)
       print *,'Min/Max rhodrysig =',minval(rhodrysig),maxval(rhodrysig)
       print *,'Min/Max zsig =',minval(hzsig),maxval(hzsig)
    endif
-   deallocate(condmr_sig,rhodrysig)
+   deallocate(pcpmr_sig,rhodrysig)
  endif ! large_ngrid
 
 ! Generate derived reflectivity fields.
