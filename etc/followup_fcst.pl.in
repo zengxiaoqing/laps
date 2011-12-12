@@ -29,7 +29,12 @@ print "user defined paths\n";
 print "model: $opt_m\n";
 print "model configuration: $opt_a\n";
 my $domain = $opt_d;
-my $model = "$opt_m-$opt_a";
+my $model;                       
+if (defined $opt_a) {
+    $model = "$opt_m-$opt_a";
+}else{
+    $model = "$opt_m";
+}
 $ENV{LAPSINSTALLROOT}="@prefix@";
 my $dataroot = $opt_r;
 
@@ -100,8 +105,8 @@ if(defined $opt_l){
 
 my $init_base_hr = 0;        # Earliest cycle each day in GMT hour
 
-my $fsf_subdir = "lapsprd/fsf/$opt_m-$opt_a";
-my $fua_subdir = "lapsprd/fua/$opt_m-$opt_a";
+my $fsf_subdir = "lapsprd/fsf/$model";
+my $fua_subdir = "lapsprd/fua/$model";
 
 my $sleep_time_fsf = 15; # Number of seconds to wait for fsf file to fill up       
 my $sleep_time     = 60; # Number of seconds to sleep between attempts to process
