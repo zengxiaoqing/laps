@@ -97,7 +97,7 @@ c
      1ns)
 c
         character stations(maxstns)*3, wx_s(maxstns)*8
-        character atime*24, infile*70
+        character atime*24, infile*256
 c
         istatus = 0
 c
