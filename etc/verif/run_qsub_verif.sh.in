@@ -31,7 +31,7 @@ rm -f $lapsdataroot/log/qverif.log.`date +\%H\%M`
 # Build qsub script
 script=$lapsdataroot/log/qsub_verif.sh
 echo "#!/bin/sh --login"         > $script
-echo "#$ -N verif"              >> $script
+echo "#$ -N vrf_$domain_name"   >> $script
 echo "#$ -A dlaps"              >> $script
 echo "#$ -l h_rt=$hhmm:00,h_vmem=2.5G" >> $script
 echo "#$ -S /bin/sh"            >> $script
