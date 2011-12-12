@@ -126,28 +126,55 @@ cdis
 !           w=max(1.,w)
 !           refl(i,j,k)=17.8*alog10(w)
 
+!           Consider mixed graupel/rain/snow between +5 and -15C?
+
             if(ipcp_type .ne. 0)then
                 npcp = npcp + 1
                 rho = pres_3d(i,j,k) / (r_d * temp_3d(i,j,k))      ! kg_m^3
                 if(ipcp_type .eq. 1 .or. ipcp_type .eq. 3)then     ! rain or zr
+                    rainfrac = 1.0
+                    snowfrac = 0.0
+                    icefrac = 0.0
+
                     w = 10.**(ref_3d(i,j,k)/17.8)
                     rainmr = w / 264083.11                         
                     pcp_cnc_3d(i,j,k) = rainmr * rho               ! kg_m^3
                     rai_cnc_3d(i,j,k) = rainmr * rho               ! kg_m^3
 
                 elseif(ipcp_type .eq. 2)then                       ! snow
+                    rainfrac = 0.0
+                    snowfrac = 1.0
+                    icefrac = 0.0
+
                     w = 10.**(ref_3d(i,j,k)/17.8)
                     snowmr = w / (264083.11*0.2)                   
                     pcp_cnc_3d(i,j,k) = snowmr * rho               ! kg_m^3
                     sno_cnc_3d(i,j,k) = snowmr * rho               ! kg_m^3
 
                 elseif(ipcp_type .eq. 4 .or. ipcp_type .eq. 5)then ! IP or Hail
+                    rainfrac = 0.0
+                    snowfrac = 0.0
+                    icefrac = 1.0
+
                     w = 10.**(ref_3d(i,j,k)/17.8)
                     graupelmr = w / (264083.11*2.0)                
                     pcp_cnc_3d(i,j,k) = graupelmr * rho            ! kg_m^3
                     pic_cnc_3d(i,j,k) = graupelmr * rho            ! kg_m^3
 
                 endif
+
+                refarg = 1.0*rainfrac + 0.2*snowfrac + 2.0*icefrac
+                w = 10.**(ref_3d(i,j,k)/17.8)
+                totalmr = w / (264083.11*refarg)
+
+                rainmr    = totalmr * rainfrac
+                snowmr    = totalmr * snowfrac
+                graupelmr = totalmr * icefrac
+
+                pcp_cnc_3d(i,j,k) = totalmr * rho              ! kg_m^3
+                rai_cnc_3d(i,j,k) = rainmr * rho               ! kg_m^3
+                sno_cnc_3d(i,j,k) = snowmr * rho               ! kg_m^3
+                pic_cnc_3d(i,j,k) = graupelmr * rho            ! kg_m^3
 
             else  ! ipcp_type = 0
                 pcp_cnc_3d(i,j,k) = 0.
