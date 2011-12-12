@@ -578,7 +578,7 @@ c
       ISATS=0
       do i=1,nsats
         do js = 1,maxsat
-          if(csatid(i).eq.satellite_ids(js))then
+          if(trim(csatid(i)).eq.trim(satellite_ids(js)))then
             ISATS(js)=1
             c_sat_id(js)=csatid(i)
           endif
@@ -589,13 +589,20 @@ c
       jj=0
       do i=1,nsats
         do js = 1,maxsat
-          if(csatid(i).eq.satellite_ids(js))then
+          if(trim(csatid(i)).eq.trim(satellite_ids(js)))then
+            write(6,*)' Match csatid/satellite_ids/ntypes'
+     1                                  ,i,js,ntypes(i),csatid(i)
             do j=1,ntypes(i)
               jj=jj+1
               do it = 1,4
                 if(csattypes(jj).eq.satellite_types(it,js))then !raw lat-lon > could be (likely is) netcdf format
+                  write(6,*)' Match csattypes/satellite_types     '
+     1                                              ,jj,it,csattypes(jj)
                   ITYPES(it,js)=1
                   c_sat_types(it,js)=csattypes(jj)
+                else
+                  write(6,*)' No match csattypes/satellite_types  '
+     1                ,jj,it,csattypes(jj),' ',satellite_types(it,js)
                 endif
               enddo ! it
             enddo ! j
