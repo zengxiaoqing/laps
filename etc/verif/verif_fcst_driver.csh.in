@@ -54,8 +54,8 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:20. '"Sfc Wind"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/wsf_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:20.  "Sfc Wind"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/wsf_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TPW   0.:5.  '"Integrated Water Vapor"'    "cm"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/tpw_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TPW   0.:5.   "Integrated Water Vapor"     "cm"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/tpw_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TPW   0.:4.  '"Integrated Water Vapor"'    "cm"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/tpw_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TPW   0.:4.   "Integrated Water Vapor"     "cm"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/tpw_fcst.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt U3  -10.:30.  '"U Wind Component" "m/s"'  $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/u3_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt U3  -10.:30.   "U Wind Component" "m/s"   $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/u3_fcst.log
