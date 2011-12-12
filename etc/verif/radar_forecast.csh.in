@@ -107,20 +107,31 @@ while ($IMEMBER <= $NMEMBERS)
 
     if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then
         setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
-        setenv TITLE "$MEMBER $PCT"
+        setenv TITLE "$MEMBER $PCT%"
+
+        if ($PCT >= 80) then
+            setenv LS 1
+            setenv LW 3
+        else 
+            setenv LS 2
+            setenv LW 1
+        endif
+
     else
         setenv PCT ""
         setenv TITLE $MEMBER
+        setenv LS 1
+        setenv LW 3
     endif
 
     if ($NMEMBERS == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
     else if ($IMEMBER == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     else if ($IMEMBER == $NMEMBERS) then
-        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
     else
-        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw 3 lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     endif
 
     @ IMEMBER = $IMEMBER + 1
