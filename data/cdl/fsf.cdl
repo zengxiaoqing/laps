@@ -142,17 +142,28 @@ netcdf fsf {
             psf:lvl_coord="AGL";
             psf:LAPS_units="PA";
 
-        //      LAPS Fcst integrated liquid water depth         
+        //      LAPS Fcst integrated cloud liquid depth         
         //      bigfile name = ilw
         float
             lil(record,z,y,x);
             lil:_FillValue = 1.e+37f;
-            lil:long_name="Integrated Liquid Water Depth          ";
+            lil:long_name="Integrated Cloud Liquid Depth          ";
             lil:units="kg/m**2";
             lil:valid_range= 0.f, 1.f;
             lil:LAPS_var="LIL";
             lil:lvl_coord="AGL";
             lil:LAPS_units="KG/M**2";
+
+        //      LAPS Fcst integrated cloud ice depth         
+        float
+            lic(record,z,y,x);
+            lic:_FillValue = 1.e+37f;
+            lic:long_name="Integrated Cloud Ice Depth          ";
+            lic:units="kg/m**2";
+            lic:valid_range= 0.f, 1.f;
+            lic:LAPS_var="LIC";
+            lic:lvl_coord="AGL";
+            lic:LAPS_units="KG/M**2";
 
         //      LAPS Fcst integrated total precip water depth        
         //      bigfile name = tpw
@@ -649,6 +660,7 @@ netcdf fsf {
             p_comment(record,z,namelen),
             psf_comment(record,z,namelen),
             lil_comment(record,z,namelen),
+            lic_comment(record,z,namelen),
             tpw_comment(record,z,namelen),
             r01_comment(record,z,namelen),
             rto_comment(record,z,namelen),
@@ -739,6 +751,10 @@ netcdf fsf {
         short
             lil_fcinv(record, z);
             lil_fcinv:_FillValue= 0s;
+
+        short
+            lic_fcinv(record, z);
+            lic_fcinv:_FillValue= 0s;
 
         short
             tpw_fcinv(record, z);

@@ -9,19 +9,33 @@ netcdf lil {
         namelen = 132;
 		
     variables:
-        //	integrated liquid water
+        //	integrated cloud liquid
 
 	float                                  
             lil(record,z,y,x);
             lil:navigation_dim = "nav";
             lil:record = "valtime, reftime";
             lil:_FillValue = 1.e+37f;
-            lil:long_name="integrated liquid water";
+            lil:long_name="integrated cloud liquid";
             lil:units="meters";
             lil:valid_range= 0.f, 100.f;
             lil:LAPS_var="LIL";
             lil:lvl_coord="MSL";
 	    lil:LAPS_units="M";
+
+        //	integrated cloud ice               
+
+	float                                  
+            lic(record,z,y,x);
+            lic:navigation_dim = "nav";
+            lic:record = "valtime, reftime";
+            lic:_FillValue = 1.e+37f;
+            lic:long_name="integrated cloud ice";
+            lic:units="meters";
+            lic:valid_range= 0.f, 100.f;
+            lic:LAPS_var="LIC";
+            lic:lvl_coord="MSL";
+	    lic:LAPS_units="M";
                 	        
         //	LAPS variables
 
@@ -33,6 +47,7 @@ netcdf lil {
 
         char
             lil_comment(record,z,namelen),
+            lic_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -41,6 +56,10 @@ netcdf lil {
         short
             lil_fcinv(record, z);
             lil_fcinv:_FillValue= 0s;
+
+        short
+            lic_fcinv(record, z);
+            lic_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
