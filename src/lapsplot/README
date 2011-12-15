@@ -25,4 +25,5 @@ driver                                            lapsplot_main.f
         xsect                                     xsect.f
             mk_fcst_xlabel                          "
             write_label_lplot                     hsect.f
+            label_other_stations                  xsect.f
         plot_sounding                             plot_sounding.f
