@@ -205,6 +205,7 @@ cdis
         real cice_2d(NX_L,NY_L)
         real field_2d(NX_L,NY_L)
         real field_2d_buf(NX_L,NY_L)
+        real field_2d_sum(NX_L,NY_L)
         real field_2d_diff(NX_L,NY_L)
 
         real snow_2d(NX_L,NY_L)
@@ -4070,7 +4071,8 @@ c abdel
      1             ,NX_L,NY_L,laps_cycle_time,jdot)
 
         elseif(c_type_i .eq. 'ia' .or. c_type_i .eq. 'ij'
-     1                            .or. c_type_i .eq. 'is')then
+     1    .or. c_type_i .eq. 'ie' .or. c_type_i .eq. 'is'
+     1    .or. c_type_i .eq. 'in'                        )then       
 
           call input_product_info(    i4time_ref            ! I
      1                             ,laps_cycle_time         ! I
@@ -4085,7 +4087,11 @@ c abdel
      1                             ,istatus)                ! O
 
 
-          var_2d = 'LIL'
+          if(c_type_i .ne. 'ie')then
+              var_2d = 'LIL'
+          else
+              var_2d = 'LIC'
+          endif
           level = 0
           if(c_prodtype .eq. 'A')then
               ext = 'lil'
@@ -4093,7 +4099,22 @@ c abdel
      1                             ext,var_2d,units_2d,comment_2d,
      1                             NX_L,NY_L,field_2d,0,istatus)
 
-              c_label = 'Integrated Liquid Analyzed (mm) '
+              if(c_type_i .ne. 'ie')then
+                  c_label = 'Integrated Cloud Liquid (mm) '
+              else
+                  c_label = 'Integrated Cloud Ice (mm)    '
+              endif
+
+!             Add liquid and ice to get total condensate
+              if(c_type_i .eq. 'in')then
+                  field_2d_sum(:,:) = field_2d(:,:)
+                  var_2d = 'LIC'
+                  call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,     
+     1                             ext,var_2d,units_2d,comment_2d,
+     1                             NX_L,NY_L,field_2d,0,istatus)
+                  field_2d(:,:) = field_2d_sum(:,:) + field_2d(:,:)
+                  c_label = 'Integrated Cloud Condensate (mm)    '
+              endif
 
           elseif(c_prodtype .eq. 'F')then
               CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
