@@ -864,7 +864,7 @@ c read in laps lat/lon and topo
                xsta = -10000.
 
                i4time_label = i4time_ref/laps_cycle_time*laps_cycle_time
-     1                                          -laps_cycle_time
+!    1                                          -laps_cycle_time
 
                y = bottom - .015 * r_height
 
@@ -3491,7 +3491,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
            if(.not. l_atms)then
                i4time_label = i4time_ref/laps_cycle_time*laps_cycle_time
-     1                                          -laps_cycle_time
+!    1                                          -laps_cycle_time
 
                call label_other_stations(i4time_label,standard_longitude       
      1                                  ,y,xsta,lat,lon,NX_L,NY_L
@@ -3513,7 +3513,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                xsta = -10000.
 
                i4time_label = i4time_ref/laps_cycle_time*laps_cycle_time
-     1                                          -laps_cycle_time
+!    1                                          -laps_cycle_time
 
                y = bottom - .015 * r_height
 
