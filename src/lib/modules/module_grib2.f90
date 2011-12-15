@@ -115,7 +115,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN)    :: center_id            ! Common code table C-1
     INTEGER, INTENT(IN)    :: subcenter_id         ! 
-    INTEGER, INTENT(IN)    :: reftime_sig          ! Signficance of Reference Time, Code Table 1.2
+    INTEGER, INTENT(IN)    :: reftime_sig          ! Signficance of Reference Time, Code Table 1.2, where 0=analysis, 1=fcst
     INTEGER, INTENT(IN)    :: year                 ! Reference time year (4-digits)
     INTEGER, INTENT(IN)    :: month                ! Reference time month
     INTEGER, INTENT(IN)    :: day                  ! Reference time day 
