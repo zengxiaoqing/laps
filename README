@@ -350,13 +350,15 @@
      "on-the-fly" web products, we do not have any other plotting or 
      visualization packages available for distribution with LAPS at this time. 
      Many users have interfaced LAPS with their own display software (e.g. 
-     VIS5D, AVS, IDL, NCL, NCVIEW, GEMPAK). Feel free to post questions about 
-     these to the 'laps-users' bulletin board Web Page. NCAR graphics in no way
-     is essential to the successful running of LAPS to create output grids.
+     IDV, VIS5D, AVS, IDL, NCL, NCVIEW, GEMPAK). 
+
+     IDV is handy as it can read Grib-2 LAPS analysis output that can be
+     generated via the 'laps2grib' program. Feel free to post questions about 
+     the various plotting packages to the online LAPS forum. 
       
      Another note of interest is that LAPS is visualized as an integral part of
-     the AWIPS system. If you have AWIPS, then LAPS should be running on it
-     and you can view its output on the workstation.
+     the AWIPS & ALPS systems. If you have AWIPS, then LAPS should be running on
+     it and you can view its output on the workstation.
 
                  ----  2.1.8.1 Web Display  ---
 
