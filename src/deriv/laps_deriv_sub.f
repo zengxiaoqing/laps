@@ -226,6 +226,7 @@ cdis
         real, allocatable, dimension(:,:,:) :: slwc
         real, allocatable, dimension(:,:,:) :: cice
         real slwc_int(NX_L,NY_L)
+        real cice_int(NX_L,NY_L)
         real rain_int(NX_L,NY_L)
 
         real pcpcnc(NX_L,NY_L,NZ_L)
@@ -696,16 +697,34 @@ c read in laps lat/lon and topo
 
 !       Calculate and Write Integrated LWC
         write(6,*)
-        write(6,*)' Calculating Integrated LWC'
+        write(6,*)' Calculating Integrated LWC and CICE'
         call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
+        call integrate_slwc(cice,heights_3d,NX_L,NY_L,NZ_L,cice_int)
 
-        var = 'LIL'
+
+!       Write LIL/LIC
+!       Note that these arrays start off with 1 as the first index
+        var_a(1) = 'LIL'
+        var_a(2) = 'LIC'
         ext = 'lil'
-        units = 'M'
-        comment = 'no comment'
-        call put_laps_2d(i4time,ext,var,units,comment
-     1  ,NX_L,NY_L,slwc_int,istatus)
-        if(istatus .eq. 1)j_status(n_lil) = ss_normal
+        units_a(1) = 'M'
+        units_a(2) = 'M'
+        comment_a(1) = 'Analyzed Integrated Cloud Liquid'
+        comment_a(2) = 'Analyzed Integrated Cloud Ice'
+
+        call move(slwc_int,out_array_3d(1,1,1),NX_L,NY_L)
+        call move(cice_int,out_array_3d(1,1,2),NX_L,NY_L)
+
+        call put_laps_multi_2d(i4time,ext,var_a,units_a,
+     1      comment_a,out_array_3d,NX_L,NY_L,2,istatus)
+
+        if(istatus .eq. 1)then
+            j_status(n_lil) = ss_normal
+            write(6,*)' Success in writing out LIL'
+        else
+            write(6,*)' Error detected writing out LIL'
+        endif
+
         I4_elapsed = ishow_timer()
 
 !       DERIVED RADAR/PRECIP STUFF
