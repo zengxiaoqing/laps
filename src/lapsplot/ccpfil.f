@@ -589,8 +589,11 @@ C
 !                 rintens = min(max( (float(i) / rcols) - 0.4 ,0.),1.)       
                   rintens = min(max(float(i-1) / rcols,0.),1.)
               else
-                  rintens = min(max(float(i-2) / rcols,0.),1.)
+                  rintens = min(max(float(i-1) / rcols,0.),1.)
               endif
+
+!             rintens = 0.08 + (rintens * 0.92) ! brighten on the monitor
+              rintens = rintens**0.8            ! brighten on the monitor
 
               if(ireverse .eq. 1)rintens = 1.0 - rintens
               call GSCR(IWKID, i+icol_offset, rintens, rintens, rintens)
