@@ -369,6 +369,7 @@ c --------------------------------------------------------------------
         character directory*200
         character generic_data_root_laps*200
         character generic_data_root_wrfsi*200
+        character exe*200
         integer   i,j,jj
         integer   lend,lens,len_root
         integer   len_root_laps
@@ -416,10 +417,12 @@ c
         if(idir_len.eq.0) then
            narg = iargc()
            if(narg.gt.0)then
+              call getarg(0,exe)
               call getarg(narg,generic_data_root)
               call s_len(generic_data_root,len_root)
               if(generic_data_root(len_root-1:len_root).eq.'.x'.or.
-     1           generic_data_root(len_root-3:len_root).eq.'.exe')
+     1           generic_data_root(len_root-3:len_root).eq.'.exe' .or.
+     1           index(exe,'laps2grib.exe') .ge. 1)
      1        then 
                  print*,'Not a typical dataroot on command line'
                  print*,'Trying LAPS_DATA_ROOT environment variable'
