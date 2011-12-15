@@ -946,7 +946,7 @@ cdoc                            calls read_multiradar_3dref.
 !                       Set distant 3D radar points to msg to select NOWRAD/vrc
                         if(closest_vxx(i,j) .ne. r_missing_data
      1               .and. closest_vxx(i,j) .gt. 
-     1                                    closest_vrc(i,j) + 5000.)then       
+     1                                   closest_vrc(i,j) + 25000.)then       
 !    1               .and. closest_vxx(i,j) .gt. closest_vrc(i,j) )then       
                             istatus_3dref_a(i,j) = 0
                         endif
