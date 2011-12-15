@@ -617,7 +617,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
 
   ! Do omega-component of wind
   IF (use_laps_vv) THEN
-    field = 'WW       '
+    field = 'VVEL     '
     units = 'pa s-1                   '
     desc = 'OMEGA                                         '
     PRINT *, 'FIELD = ', field
