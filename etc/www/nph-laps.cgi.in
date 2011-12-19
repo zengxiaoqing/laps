@@ -1008,8 +1008,8 @@ if($err == 0) {
                               $animate = $nmontage;
                           }
 # debug (n_levels test ==1 is an issue)
-#                     }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && n_levels == 1 && $source eq $sources[0] && $field eq $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
-                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && n_levels < 2  && $source eq $sources[0] && $field eq $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
+#                     }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && $n_levels == 1 && $source eq $sources[0] && $field eq $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
+                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && $n_levels < 2  && $source eq $sources[0] && $field eq $fields[0] && $field eq uc($field) && ! ($field eq "REFLCT" && $out_levels eq "xsect") ){ # montage multiple fields
                           $nframes++;
 #                         print "multiple fields field/fields(0) is $field $fields[0] n_levels is $n_levels n_fields_uc is $n_fields_uc level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
                           print "multiple fields field/fields(0) is $field $fields[0]<br>\n";
@@ -1026,7 +1026,7 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && $n_fields_uc == 1 && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level ne $pressure_levels[0]){ # montage multiple levels
+                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && $n_fields_uc == 1 && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level eq $pressure_levels[0]){ # montage multiple levels
                           $nframes++;
                           print "multiple levels level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
                           if($nframes > 1){
@@ -1087,6 +1087,13 @@ if($err == 0) {
                               printf LAPSPLOT "$source\n"; 
                               printf LAPSPLOT "$hhmm\n";
                               printf LAPSPLOT "psf\n"; 
+      
+                          }elsif("$field" eq "P_RED" ) { 
+                              printf LAPSPLOT "bs\n"; 
+                              printf LAPSPLOT "fsf\n"; 
+                              printf LAPSPLOT "$source\n"; 
+                              printf LAPSPLOT "$hhmm\n";
+                              printf LAPSPLOT "pi\n"; 
       
                           }elsif("$field" eq "red_p" ) { 
                               printf LAPSPLOT "bs\n"; 
@@ -1364,6 +1371,18 @@ if($err == 0) {
 
                           }elsif("$field" eq "cld_liq"){ 
                               printf LAPSPLOT "is\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+
+                          }elsif("$field" eq "CLD_ICE"){ 
+                              printf LAPSPLOT "iei\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+
+                          }elsif("$field" eq "cld_ice"){ 
+                              printf LAPSPLOT "ie\n"; 
                               printf LAPSPLOT "f\n"; 
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
@@ -2119,11 +2138,23 @@ if($err == 0) {
                         printf LAPSPLOT "$hhmm\n";
                         printf LAPSPLOT "slp\n"; 
 
+                    }elsif("$field" eq "P_MSL" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "slpi\n"; 
+
                     }elsif("$field" eq "red_p" ) { 
                          printf LAPSPLOT "bs\n"; 
                          printf LAPSPLOT "lgb\n"; 
                          printf LAPSPLOT "$hhmm\n";
                          printf LAPSPLOT "p\n"; 
+
+                    }elsif("$field" eq "P_RED" ) { 
+                         printf LAPSPLOT "bs\n"; 
+                         printf LAPSPLOT "lgb\n"; 
+                         printf LAPSPLOT "$hhmm\n";
+                         printf LAPSPLOT "pi\n"; 
 
                     }elsif("$field" eq "TEMP" ) { 
                         printf LAPSPLOT "bs\n"; 
@@ -3274,11 +3305,23 @@ if($err == 0) {
 #                       printf LAPSPLOT "ls\n"; 
 #                       printf LAPSPLOT "-1\n"; 
 #                       printf LAPSPLOT "a\n"; }
-                    elsif("$field" eq "CLD_LIQ"){ 
+                    elsif("$field" eq "CLD_LIQ"){ # LIL 
                         printf LAPSPLOT "isi\n";
                         printf LAPSPLOT "a\n"; }
                     elsif("$field" eq "cld_liq"){ 
                         printf LAPSPLOT "is\n"; 
+                        printf LAPSPLOT "a\n"; }
+                    elsif("$field" eq "CLD_ICE"){ 
+                        printf LAPSPLOT "iei\n";
+                        printf LAPSPLOT "a\n"; }
+                    elsif("$field" eq "cld_ice"){ 
+                        printf LAPSPLOT "ie\n"; 
+                        printf LAPSPLOT "a\n"; }
+                    elsif("$field" eq "CLD_CND"){ 
+                        printf LAPSPLOT "ini\n";
+                        printf LAPSPLOT "a\n"; }
+                    elsif("$field" eq "cld_cnd"){ 
+                        printf LAPSPLOT "in\n"; 
                         printf LAPSPLOT "a\n"; }
                     elsif("$field" eq "SNOW_CVR"){ 
                         printf LAPSPLOT "sci\n";} 
@@ -4379,6 +4422,11 @@ if($err == 0) {
             $nrows = 1;                  
             $nmatrix = $nframes / $ntimes;
             $ncols = $nmatrix;
+            if($nmatrix > 3){ # Convert long rows into an added dimension
+                $ncols = 3;
+                $nrows = int( ($nmatrix+($ncols-1)) / $ncols);
+                $ndims++;
+            }
         }
 
         if($ndims == 1 && $ntimes == 1){ # 1D montage at single time 
@@ -4386,8 +4434,18 @@ if($err == 0) {
             $nrows = 1;                  
             $nmatrix = $nframes / $ntimes;
             $ncols = $nmatrix;
-            if($i_montage == 1){
-                $animate = $ncols;
+            if($i_montage < 1){ # animate the multiple frames
+#               $animate = $ncols;
+            }else{
+                if($nmatrix == 4){ # Convert long rows into an added dimension
+                    $ncols = 2;
+                    $nrows = int( ($nmatrix+($ncols-1)) / $ncols);
+                    $ndims++;
+                }elsif($nmatrix > 3){                                                   
+                    $ncols = 3;
+                    $nrows = int( ($nmatrix+($ncols-1)) / $ncols);
+                    $ndims++;
+                }
             }
         }
 
