@@ -102,10 +102,16 @@ c       Compute upslope moisture flux (using conventions in the PSD flux tool)
 
             endif
 
-            if(i .eq. 10)then ! write debugging info
-              write(6,2)j,ubar,vbar,dvh,tpw_2d(i,j)
-     1                   ,upslope_flux(i,j)
- 2	      format(i5,5f10.4)
+            if(i .eq. 10 .or. abs(upslope_flux(i,j)) .gt. 1e10)then ! write debugging info
+              if(abs(upslope_flux(i,j)) .lt. 1e10)then
+                  write(6,2)j,ubar,vbar,dvh,terrain_slope,tpw_2d(i,j)
+     1                       ,upslope_flux(i,j)
+2  	          format(i5,6f10.4)
+              else
+                  write(6,3)i,j,ubar,vbar,dvh,terrain_slope,tpw_2d(i,j)
+     1                       ,upslope_flux(i,j)
+3 		  format(' WARNING: large UMF ',2i5,6e13.4)
+              endif
             endif 
 
           else
