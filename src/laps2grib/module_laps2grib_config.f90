@@ -14,11 +14,11 @@ MODULE laps2grib_config
   INTEGER                    :: i4time
   CHARACTER(LEN=9)           :: a9time
   REAL, ALLOCATABLE          :: plevels_pa(:)
-  CHARACTER(LEN=512)             :: output_path
-  INTEGER                        :: center_id, subcenter_id
-  INTEGER                        :: process_id,prod_status
-  LOGICAL                     :: lrun_laps2grib
-
+  CHARACTER(LEN=512)         :: output_path
+  INTEGER                    :: center_id, subcenter_id
+  INTEGER                    :: process_id,prod_status
+  LOGICAL                    :: lrun_laps2grib
+ 
 CONTAINS 
   
    SUBROUTINE get_laps_proj(laps_data_root)
@@ -165,6 +165,19 @@ CONTAINS
       PRINT *, "-- LAPS Analysis Time: ", a9time
       RETURN
     END SUBROUTINE get_laps_analtime
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    SUBROUTINE get_laps_modeltime
+      IMPLICIT NONE 
+      INTEGER   :: istatus
+
+      CALL get_modeltime(i4time,a9time,istatus)     
+
+      IF (istatus .NE. 1) THEN
+         PRINT *, "-- Error getting LAPS modeltime.dat!"
+         STOP "STOP in get_laps_modeltime"
+      ENDIF
+      PRINT *, "-- LAPS Model Time: ", a9time
+    END SUBROUTINE get_laps_modeltime
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SUBROUTINE read_laps2grib_nl(laps_data_root)
   
