@@ -54,6 +54,10 @@ echo " "
 echo "inputs..."
 echo "FILE = $FILE"  
 ls -l $FILE                                                     
+if (! -e $FILE) then
+    echo "input file $FILE does not exist - exiting..."
+    exit
+endif
 
 @ NLINE = $NLINE + 1
 
