@@ -69,18 +69,34 @@ $laps_data_root = "$DomainDir/$default_domain/private_data";
 
 #print " test output: Start of laps.cgi \n"; 
 
-#Read pressures for this domain
-if(-e "$laps_data_root/static/pressures.nl"){
-    @domain_pres=&laps_tools::get_pressures($laps_data_root);
+#Read vertical grid type for this domain
+my $domain_nl = "nest7grid.parms";
+my $nl_var    = "vertical_grid";
+my (@vertical_grid_a,$vertical_grid);
+if(-e "$laps_data_root/static/$domain_nl"){
+    @vertical_grid_a=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
+    $vertical_grid = @vertical_grid_a[0]; 
 }
-@domain_pres = reverse @domain_pres;
-my $num_pres = @domain_pres;
+
+#Read pressure or sigma height levels for this domain
+if(-e "$laps_data_root/static/pressures.nl" && $vertical_grid eq "PRESSURE"){
+    @domain_levels=&laps_tools::get_pressures($laps_data_root);
+    @domain_levels = reverse @domain_levels;
+}elsif(-e "$laps_data_root/static/heights.nl" && $vertical_grid eq "SIGMA_HT"){
+    $domain_nl = "heights.nl";
+    $nl_var    = "heights";
+    @domain_levels=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
+    @domain_levels = reverse @domain_levels;
+}
+
+#print " vertical_grid is $vertical_grid \n"; 
+
+my $num_pres = @domain_levels;
 my $pres_mb;
 
 #Read model choices for this domain
-my $domain_nl = "nest7grid.parms";
-my $nl_var    = "fdda_model_source_cmn";
-#print "nl_var = $nl_var<br>";
+$domain_nl = "nest7grid.parms";
+$nl_var    = "fdda_model_source_cmn";
 if(-e "$laps_data_root/static/$domain_nl"){
     @domain_models=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
 }
@@ -317,6 +333,8 @@ EOF
 
 # display available domains
   foreach $file (@domainlist) {
+ 
+#   print "$file ";
 
     if($file ne "anal2d" && $file ne "fcst2d" && $file ne "t2" && $file ne "." && $file ne ".."){
       if(-e "$DomainDir/$file/private_data/static/pressures.nl"){
@@ -409,6 +427,7 @@ print <<"EOF";
 <option $selected{'C_OMEGA'}> C_OMEGA
 <option $selected{'MCONV'}> MCONV
 <option $selected{'P_MSL'}> P_MSL
+<option $selected{'P_RED'}> P_RED
 <option $selected{'P_PRIME'}> P_PRIME
 <option $selected{'THETA'}> THETA
 <option $selected{'THETAE'}> THETAE
@@ -428,6 +447,7 @@ print <<"EOF";
 <option $selected{'CLD_TOP'}> CLD_TOP
 <option $selected{'CLD_LIQ'}> CLD_LIQ
 <option $selected{'CLD_ICE'}> CLD_ICE
+<option $selected{'CLD_CND'}> CLD_CND
 <option $selected{'SAT_11U'}> SAT_11U
 <option $selected{'SAT_12U'}> SAT_12U
 <option $selected{'SAT_WV'}>  SAT_WV
@@ -495,6 +515,7 @@ print <<"EOF";
 <option $selected{'cld_top'}> cld_top
 <option $selected{'cld_liq'}> cld_liq
 <option $selected{'cld_ice'}> cld_ice
+<option $selected{'cld_cnd'}> cld_cnd
 <option $selected{'cld_type'}> cld_type
 <option $selected{'sat_11u'}> sat_11u
 <option $selected{'sat_wv'}>  sat_wv
@@ -536,8 +557,12 @@ print <<"EOF";
 EOF
 
 #display available domain pressures
-foreach $file (@domain_pres) {
-    $pres_mb = $file / 100;
+foreach $file (@domain_levels) {
+    if($vertical_grid eq "PRESSURE"){
+        $pres_mb = $file / 100;
+    }else{
+        $pres_mb = int($file);
+    }
     print "<option $selected{$pres_mb}> $pres_mb\n";
 }
 
