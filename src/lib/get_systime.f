@@ -154,3 +154,34 @@ C&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
       return
       end
 
+C&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+      subroutine get_modeltime(i4time_mdl,a9_time,istatus)
+
+      implicit none 
+      integer i4time_mdl
+      character*9 a9_time,a9_time_save
+      integer            :: istatus
+      integer, parameter :: lun=120
+      logical            :: file_exists
+      character*300 laps_data_root,dir_t,filenamet
+      integer len_dir_t
+
+      call get_directory('time',dir_t,istatus)
+      call s_len(dir_t,len_dir_t)
+      filenamet = dir_t(1:len_dir_t)//'/modeltime.dat'
+      inquire(file=filenamet,exist=file_exists)
+      if (file_exists) then
+         open(lun,file=filenamet,status='old')
+         read(lun,*) a9_time
+         close(lun)
+         !print *, ' modeltime (from modeltime.dat) = ',a9_time
+         call i4time_fname_lp(a9_time,i4time_mdl,istatus)
+         if (istatus .ne. 1) then
+           print *, "-- Error getting LAPS modeltime.dat!"
+           stop "STOP in get_laps_modeltime"
+         endif
+      else
+        print *, "-- No modeltime.dat file found: ",trim(filenamet)
+        stop "STOP in get_laps_modeltime"
+      endif
+      end subroutine get_modeltime
