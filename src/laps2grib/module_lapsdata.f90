@@ -75,10 +75,11 @@ MODULE lapsdata
 
 CONTAINS
 
-  SUBROUTINE get_data_config(laps_data_root)
+  SUBROUTINE get_data_config(laps_data_root,vname)
 
     IMPLICIT NONE
     CHARACTER(LEN=*),INTENT(IN)    :: laps_data_root
+    CHARACTER(LEN=*),INTENT(IN)    :: vname
     CHARACTER(LEN=256)             :: vtab   
     LOGICAL                        :: file_exists
     INTEGER,PARAMETER              :: lun = 10
@@ -89,7 +90,7 @@ CONTAINS
     INTEGER  :: lev2_type,lev2_scale,lev2_value
     REAL     :: conv_fac, pmin,pmax
     CHARACTER(LEN=3) :: var, ext
-    vtab = TRIM(laps_data_root)//'/static/laps2grib.vtab'
+    vtab = TRIM(laps_data_root)//'/static/'//TRIM(vname)
     INQUIRE (FILE=vtab,EXIST=file_exists) 
 
     IF (.NOT. file_exists) THEN 
