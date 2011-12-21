@@ -125,8 +125,11 @@ PROGRAM laps2grib
   CALL get_laps_plevels(laps_data_root)
 
   ! Get laps analysis valid time
-  CALL get_laps_analtime
-  IF (LEN_TRIM(hhmm) .NE. 0) CALL get_laps_modeltime
+  IF (LEN_TRIM(hhmm) .EQ. 0) THEN 
+     CALL get_laps_analtime
+  ELSE
+     CALL get_laps_modeltime
+  ENDIF
   CALL cv_i4tim_int_lp(i4time,year,month,day,hour,minute,second,istatus)
   year = year + 1900
   file_a9time=a9time
