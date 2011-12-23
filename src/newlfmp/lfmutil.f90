@@ -253,7 +253,7 @@ integer        len_dir,istatus
 character*3    var_2d
 real :: ldf(lx,ly),lat(lx,ly),lon(lx,ly),avg(lx,ly)
 real :: windspeed(lx,ly),soil_moist(lx,ly),snow_cover(lx,ly)
-real :: intcldice(lx,ly) 
+! real :: intcldice(lx,ly) 
 
 integer ::        ismoist,isnow
 integer ::        status
