@@ -4137,6 +4137,25 @@ c abdel
      1                                 ,ext(1:3),units_2d
      1                                 ,c_model,c_label)
 
+!             Add liquid and ice to get total condensate
+              if(c_type_i .eq. 'in')then
+                  field_2d_sum(:,:) = field_2d(:,:)
+                  var_2d = 'LIC'
+                  CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                       EXT,NX_L,NY_L,1,1,       
+     1                       VAR_2d,level,LVL_COORD_2d,
+     1                       UNITS_2d,COMMENT_2d,
+     1                       field_2d,istatus)
+
+                  if(istatus .ne. 1)then
+                      write(6,*)' Could not read forecast field'       
+                      goto1200
+                  endif
+
+                  field_2d(:,:) = field_2d_sum(:,:) + field_2d(:,:)
+                  c_label = 'Integrated Cloud Condensate (mm)    '
+              endif
+
               i4time_cloud = i4_valid
 
           endif
