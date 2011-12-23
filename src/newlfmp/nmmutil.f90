@@ -186,6 +186,8 @@ icode=nf_inq_varid(ncid,'SFCLHX',nid)
 if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlhflux)
 icode=nf_inq_varid(ncid,'PBLH',nid)
 if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,npblhgt)
+icode=nf_inq_varid(ncid,'RLWTOA',nid)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlwout)
 
 if (fcsttime == 0) then
    nshflux=rmsg
