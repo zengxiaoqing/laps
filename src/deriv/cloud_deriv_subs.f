@@ -49,8 +49,8 @@ cdis
         real clouds_3d_pres(ni,nj,nk)    ! Input
         real heights_3d(ni,nj,nk)        ! Input
         real temp_3d(ni,nj,nk)           ! Input
-        real slwc(ni,nj,nk)              ! Input/Output
-        real cice(ni,nj,nk)              ! Input/Output
+        real slwc(ni,nj,nk)              ! Input/Output (g/m**3)
+        real cice(ni,nj,nk)              ! Input/Output (g/m**3)
         real pres_3d(ni,nj,nk)           ! Input
         real pressures_pa(nk)            ! Local
 
@@ -131,14 +131,35 @@ cdis
 !             Compute the condensate concentration within the layer, the maximum
 !             cloud cover for the layer is assummed to represent average of
 !             the whole layer.
-              optical_depth = a(ilyr)                       ! Only linear approx
-              scattering_coeff = optical_depth / thickness
-              rmvd = .000020
-              rma =         3.14 * (rmvd/2.) ** 2               !     pi r**2
-              rnumber_density = scattering_coeff / rma
-              rmv = 4./3. * 3.14 * (rmvd/2.) ** 3               ! 4/3 pi r**3
-              density_ave = rnumber_density * rmv * 1e6
 
+!             Improvements are being considered based on this reference:
+!             http://curry.eas.gatech.edu/MAP/pdf/mcfheyms97.pdf
+
+              if(a(ilyr) .lt. 0.999)then
+                  tau = -log(1. - a(ilyr))                        ! Optical depth
+                  tau = min(tau,30.)      
+              else
+                  tau = 30.
+              endif
+              scattering_coeff = tau / thickness                  ! meters**-1
+
+!             Ice Clouds
+              rmvd = .000060                                      ! meters     (60 microns)
+              rma =         3.14 * (rmvd/2.) ** 2                 ! meters**2  (pi r**2)
+              rmv = 4./3. * 3.14 * (rmvd/2.) ** 3                 ! meters**3  (4/3 pi r**3)
+   
+              rnumber_density = scattering_coeff / rma            ! meters**-3
+              h20_density = 1e6                                   ! g/m**3
+              density_ave_i = rnumber_density * rmv * h20_density
+
+!             Liquid Clouds
+              rmvd = .000020                                      ! meters     (20 microns)
+              rma =         3.14 * (rmvd/2.) ** 2                 ! meters**2  (pi r**2)
+              rmv = 4./3. * 3.14 * (rmvd/2.) ** 3                 ! meters**3  (4/3 pi r**3)
+   
+              rnumber_density = scattering_coeff / rma            ! meters**-3
+              h20_density = 1e6                                   ! g/m**3
+              density_ave_l = rnumber_density * rmv * h20_density
 
 !             Determine LAPS pressure levels of cloud base and top
 !             QC cases where cloud layer on the height grid is near or above 
@@ -189,24 +210,28 @@ cdis
                   if(slwc(i,j,k) .eq. zero .and. 
      1               cice(i,j,k) .eq. zero       )then
 
-                    density = density_ave * clouds_3d_pres(i,j,k) 
-     1                                    / a(ilyr)
+!                   Density is normalized according to cloud fraction within layer
+                    density_l = density_ave_l * clouds_3d_pres(i,j,k) 
+     1                                      / a(ilyr)
+
+                    density_i = density_ave_i * clouds_3d_pres(i,j,k) 
+     1                                      / a(ilyr)
 
                     if(temp_3d(i,j,k) .le. 243.15)then          ! ICE
-                        cice(i,j,k) = density
+                        cice(i,j,k) = density_i
                     elseif(temp_3d(i,j,k) .ge. 263.15)then      ! LWC
-                        slwc(i,j,k) = density
+                        slwc(i,j,k) = density_l
                     else                                        ! Mixed
                         frac = (temp_3d(i,j,k) - 243.15) 
      1                               / (263.15 - 243.15)
-                        slwc(i,j,k) = density * frac
-                        cice(i,j,k) = density * (1. - frac)
+                        slwc(i,j,k) = density_l * frac
+                        cice(i,j,k) = density_i * (1. - frac)
                     endif
 
 
                     if(iwrite .lt. 50.)then
                         iwrite = iwrite + 1
-                        write(6,1)i,j,k,thickness,optical_depth
+                        write(6,1)i,j,k,thickness,tau               
      1                           ,clouds_3d_pres(i,j,k),temp_3d(i,j,k)
      1                           ,slwc(i,j,k),cice(i,j,k)
 1                       format(3i4,f7.0,2f7.3,f7.1,2f9.4)
@@ -215,7 +240,7 @@ cdis
                   else ! Write out some thick cloud values
                     if(iwrite .lt. 50.)then
                         iwrite = iwrite + 1
-                        write(6,2)i,j,k,thickness,optical_depth
+                        write(6,2)i,j,k,thickness,tau             
      1                           ,clouds_3d_pres(i,j,k),temp_3d(i,j,k)
      1                           ,slwc(i,j,k),cice(i,j,k)
 2                       format(3i4,f7.0,2f7.3,f7.1,2f9.4,' *')
