@@ -208,7 +208,7 @@ if (verbose) then
         ,llat(1,1),llon(1,1),llat(lx,1),llon(lx,1)
    if (trim(mtype) /= 'st4' .and. .not. large_ngrid) then
      print*, ' '
-     print*,'Diagnostics from hinterp domain center:'
+     print*,'Diagnostics from hinterp domain center: ',lx/2,ly/2
      print'(a,f7.0)',' Terrain height at center = ',zsfc(lx/2,ly/2)
      print*,'------------------------------------------------------------'
      print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV         U       V'
@@ -216,8 +216,8 @@ if (verbose) then
      do k=1,nz
         print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6,2f8.2)'   &
               ,k,hpsig(lx/2,ly/2,k),hzsig(lx/2,ly/2,k)  &
-              ,htsig(nx/2,ly/2,k),hmrsig(nx/2,ly/2,k)   &
-              ,husig(nx/2,ly/2,k),hvsig(nx/2,ly/2,k)
+              ,htsig(lx/2,ly/2,k),hmrsig(lx/2,ly/2,k)   &
+              ,husig(lx/2,ly/2,k),hvsig(lx/2,ly/2,k)
      enddo
    endif
 endif
