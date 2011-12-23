@@ -17,8 +17,8 @@ laps_deriv_main                                         laps_deriv.f
                 cpt_pcp_type_3d                         lib/get_cloud_deriv.f
                     wb_melting_threshold                    "
                 isi3                                        "
-            insert_thin_lwc_ice                         laps_deriv_sub.f
-            get_maxtops                                     "
+            insert_thin_lwc_ice                         cloud_deriv_subs.f
+            get_maxtops                                 laps_deriv_sub.f
             get_low_ref                                     "
             get_sfc_preciptype                          lib/get_cloud_deriv.f
                 wb_melting_threshold                        "
