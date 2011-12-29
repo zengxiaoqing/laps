@@ -6,7 +6,7 @@
  setdelo0  = .false.,
  c_erru=0.1,
  c_errub=1.5,
- c_errphi=15.,
+ c_errphi=.15,
  c_errphib=30.,
  c_delo=100.,
  comega_smooth=-1.,
@@ -42,7 +42,7 @@ c suggested values to favor the height observations:
 c
 c c_erru    (default=0.1,  use 1.0 to favor heights instead of winds)
 c c_errub   (default=1.5)
-c c_errphi  (default=15.,  use .15 to favor heights instead of winds)
+c c_errphi  (default=.15)  
 c c_errphib (default=30.)
 c c_delo    (default=100., use 1.0 to favor heights instead of winds)
 c
