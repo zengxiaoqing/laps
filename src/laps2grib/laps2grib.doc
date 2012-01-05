@@ -1,14 +1,12 @@
 Program:	laps2grib
 Author:		Brent Shaw, Weathernews Inc.
-Date:		7 Dec 2006
-LAPS Baseline:	0-30-13
-
+Date:		7 Dec 2006  (LAPS Baseline: 0-30-13)
+Updated:	5 Dec 2012
 
 1.  Function
-This program reads a set of the LAPS output files and creates
-a consolidated file of GRIB-2 messages using the LAPS
-"A9" format file name (yydddhhmm.gr2).  See WMO publication
-FM92-XII for the details on the GRIB-2 format.
+This program reads a set of the LAPS output files and creates a consolidated 
+file of GRIB2 messages using the LAPS "A9" format file name (yydddhhmm.gr2).
+See WMO publication FM92-XII for the details on the GRIB2 format.
 
 2.  Source code added or modified from ESRL/GSD baseline:
 
@@ -26,6 +24,21 @@ $LAPS_SRC_ROOT/data/static/laps2grib.vtab
 
 3.  Usage
 
+The program can be used for both LAPS NetCDF output files (lsx, etc) and for 
+LAPS processed model NetCDF output files (fsf, fua). Below is the message 
+usage statement resulting from running the program.
+
+ ======================================================
+            laps2grib V1.2, 01 Dec 2011, WNI            
+ 
+  USAGE:	laps2grib.exe [vtab]
+  MODEL USAGE:	laps2grib.exe vtab [hh]hmm forecast (e.g. wfr2grib.vtab 1200 wrf-hrrr)
+ ======================================================
+
+
+3a.  Usage of laps2grib.exe for LAPS output files (lsx, etc)
+----------------------------------------------------
+
 The program is run as the last step in the LAPS sched.pl file, and
 the LAPS_DATA_ROOT must be set if running by hand.
 
@@ -33,11 +46,12 @@ The execution of the program is controlled by:
 
 $LAPS_DATA_ROOT/static/laps2grib.nl
 $LAPS_DATA_ROOT/static/laps2grib.vtab
+$LAPS_DATA_ROOT/time/systime.dat 
 
 If you do not want to use the program, set "lrun_laps2grib = .false.'
 in the namelist file, and the program will exit immediately.
 
-The laps2grib.nl namelist file lets you set the following options:
+--- The laps2grib.nl namelist file lets you set the following options
 
 	lrun_laps2grib:  Logical, set to .true. to allow it to run
 
@@ -53,12 +67,14 @@ The laps2grib.nl namelist file lets you set the following options:
                      it to a null string to use the default path, which
                      will be $LAPS_DATA_ROOT/lapsprd/gr2
 
-The laps2grib.vtab provides a means for the user
+--- The laps2grib.vtab provides a means for the user
 to specify which LAPS variables are selected and output, and how they
-will be respresented in the GRIB-2 message.  A common set of variables
+will be represented in the GRIB2 message.  A common set of variables
 is already configured.  To prevent output of any of the variables
 already configured, either delete the line or simply insert a space
-or any other character in column 1.  
+or any other character in column 1. (Note: if the filename differs from
+"laps2grib.vtab" than use your file's vtable name in the command line,
+e.g. laps2grib.exe projectdat2grib.vtab.)
 
 In this list, you can specify variables that are either 3-dimensional 
 (assumed to be on the LAPS pressure grid), or 2-dimensional.  To
@@ -66,7 +82,7 @@ set up a 3D variable, the format is as follows:
 
 3d qbal,ext,var,pmin,pmax,conv_fac,scale_fac,discipline,category,parameter
 
-The "3d" must be exactly as shown and must start in column 1!  The remaining
+o The "3d" must be exactly as shown and must start in column 1!  The remaining
 parameters are defined as such:
 
 qbal: Integer, set to 0 to extract standard LAPS analysis or 1 to use files
@@ -83,10 +99,10 @@ pmin: Minimum pressure level (Pa) to output to the GRIB file
 pmax: Maximum pressure level (Pa) to output to the GRIB file
 
 conv_fac:  The value to multiply the LAPS variable by to make
-           it conform to the WMO GRIB-2 standard.  In most cases,
+           it conform to the WMO GRIB2 standard.  In most cases,
            this will be 1.
 
-scale_fac: The scale factor to use in creating the GRIB-2 message. This
+scale_fac: The scale factor to use in creating the GRIB2 message. This
            is expressed as a power of 10.  The raw data is multiplied by
            this power of 10 before the GRIB compression, so this is how
            you control the precision.  If you have a field with very
@@ -94,19 +110,22 @@ scale_fac: The scale factor to use in creating the GRIB-2 message. This
            to a positive value that represents the precision in terms
            of number of decimal places.
 
-discipline: The GRIB-2 discipline table to be used.
+discipline: The GRIB2 discipline table to be used.
 
-category:  The GRIB-2 parameter category within the discipline to be used.
+category:  The GRIB2 parameter category within the discipline to be used.
 
-parameter:  The GRIB-2 parameter ID within the category/discipline.
+parameter:  The GRIB2 parameter ID within the category/discipline.
 
-The 2-dimensional data is similar.  The format is:
+o The 2-dimensional data is similar.  The format is:
+2d ext,var,conv_fac,scale_fac,l1t,l1s,l1v,l2t,l2s,l2v,discipline,category,param
 
-2d ext,var,conv_fac,scale_fac,l1t,l1s,l1v,l2t,l2s,l2v,discipline,category,parameter
+o The Accumulated 2-dimensional data is similar. The format is:
+a2d ext,var,conv_fac,scale_fac,l1t,l1s,l1v,l2t,l2s,l2v,discipline,category,param
 
 NOTE: To extract data from the static.nest7grid file, use "n7g" for the extension!
-The parameters that are common with the 3d type have the same definition.  In the case
-of the 2d variables, you must specify the level types and values to use as such:
+The parameters that are common with the 3d type have the same definition. In the 
+case of the 2d variables, you must specify the level types and values to use as 
+such:
 
 l1t:  Type of first level (GRIB2 code table 4.5)
 l1s:  Scale factor (power of 10) used to store the level value.  Level values
@@ -116,3 +135,49 @@ l1v:  The scaled value of the first level]
 l2t/l2s/l2v:  The same as the "l1?" values, but for level 2 in the case of 
       a layered product.  For single level products, these should all be 
       set to 255.
+
+
+3b.  Usage of laps2grib.exe for LAPS processed model output files (fsf, fua)
+----------------------------------------------------
+
+The information as found in the section above (Usage for LAPS output files) 
+apply here. Note, additional command line arguments are required that look 
+like this:
+
+  laps2grib.exe vtab [hh]hmm forecast_id 
+
+The execution of the program is controlled by:
+
+$LAPS_DATA_ROOT/static/laps2grib.nl (same as above)
+$LAPS_DATA_ROOT/static/model2grib.vtab 
+$LAPS_DATA_ROOT/time/modeltime.dat 
+
+--- The model2grib.vtab provides means for user to specify the fsf (surface) 
+and fua (upper air) model variables to convert. The model vtab file can have 
+any naming convention, e.g. "wrf2grib.vtab", etc.
+
+o Within the vtab, the format for the model 3d, 2d and accumulated 2d variables 
+are as follows:
+
+3d  qbal,fua,var,pmin,pmax,conv_fac,scale_fac,discipline,category,parameter
+2d  fsf,var,conv_fac,scale_fac,l1t,l1s,l1v,l2t,l2s,l2v,discipline,category,param
+a2d fsf,var,conv_fac,scale_fac,l1t,l1s,l1v,l2t,l2s,l2v,discipline,category,param
+
+Here is an example for surface (fsf) temperature, dew-point and RH:
+2d 'fsf','tsf',  1., 1,103, 0, 2,255,255,255,0, 0,  0
+2d 'fsf','dsf',  1., 1,103, 0, 2,255,255,255,0, 0,  6
+2d 'fsf','rh ',  1., 0,103, 0, 2,255,255,255,0, 1,  1
+
+--- The laps2grib.exe program with model usage creates an output file of GRIB2 
+messages using the LAPS "A13" format file name (yydddhhmmffff.gr2), where ffff 
+is the forecast hhmm (and in some cases, where fffff is forecast hhhmm). As 
+such, the forecast time needs to be specified (as input to the command line) 
+as does the forecast domain. For example, there could be several models 
+processed by LAPS, e.g. wrf-hrrr, or an ensemble of N-number of members. Each 
+model could run out 12 to 144 forecast hours, or longer. E.g.:
+
+	$LAPSROOT/bin/laps2grib.exe wrf2grib.vtab    0 mean
+	$LAPSROOT/bin/laps2grib.exe wrf2grib.vtab  300 mean
+	$LAPSROOT/bin/laps2grib.exe wrf2grib.vtab  600 mean
+	$LAPSROOT/bin/laps2grib.exe wrf2grib.vtab  900 mean
+	$LAPSROOT/bin/laps2grib.exe wrf2grib.vtab 1000 mean
