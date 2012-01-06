@@ -83,7 +83,7 @@ end
 
 !===============================================================================
 
-subroutine lfm_vinterp
+subroutine lfm_vinterp(icall)
 
 use lfmgrid
 
@@ -93,7 +93,7 @@ real :: lapse,gor,rog
 real, allocatable, dimension(:,:,:) :: logp
 parameter (lapse=0.0065,gor=9.8/287.04,rog=287.04/9.8)
 
-integer :: i,j,k,kk
+integer :: i,j,k,kk,icall
 
 real :: pla,dz,plo,phi,slope
 
@@ -102,7 +102,7 @@ real :: pla,dz,plo,phi,slope
 allocate(logp(lx,ly,nz))
 logp=alog(hpsig)
 
-if(.not. large_pgrid)then
+if(.not. large_pgrid .and. icall .eq. 1)then
 
 ! Interpolate 3d horizontally interpolated data to isobaric surfaces.
 ! Assume that height and temp are always available, but check for 
@@ -141,8 +141,13 @@ if(.not. large_pgrid)then
   enddo
 
   if (minval(hmrsig)  < rmsg) call vinterp_single(logp,hmrsig,shprs)
-  if (minval(husig)   < rmsg) call vinterp_single(logp,husig,uprs)
-  if (minval(hvsig)   < rmsg) call vinterp_single(logp,hvsig,vprs)
+  if(.true.)then ! linear
+     if (minval(husig)   < rmsg) call vinterp_single(logp,husig,uprs)
+     if (minval(hvsig)   < rmsg) call vinterp_single(logp,hvsig,vprs)
+  else           ! cubic spline
+     if (minval(husig)   < rmsg) call vinterp_single_cubic(logp,husig,uprs)
+     if (minval(hvsig)   < rmsg) call vinterp_single_cubic(logp,hvsig,vprs)
+  endif
   if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
 ! if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
 
@@ -150,15 +155,20 @@ endif ! large_pgrid
 
 if (make_micro) then
    if(.not. large_pgrid)then
-      if (minval(hcldliqmr_sig)  < rmsg) call vinterp_single(logp,hcldliqmr_sig,cldliqmr_prs)
-      if (minval(hcldicemr_sig)  < rmsg) call vinterp_single(logp,hcldicemr_sig,cldicemr_prs)
-      if (minval(hrainmr_sig)    < rmsg) call vinterp_single(logp,hrainmr_sig,rainmr_prs)
-      if (minval(hsnowmr_sig)    < rmsg) call vinterp_single(logp,hsnowmr_sig,snowmr_prs)
-      if (minval(hgraupelmr_sig) < rmsg) call vinterp_single(logp,hgraupelmr_sig,graupelmr_prs)
-      if (minval(hzdr_sig)      < rmsg) call vinterp_single(logp,hzdr_sig,zdr_prs)
-      if (minval(hldr_sig)      < rmsg) call vinterp_single(logp,hldr_sig,ldr_prs)
+      if(icall .eq. 1)then
+          if (minval(hcldliqmr_sig)  < rmsg) call vinterp_single(logp,hcldliqmr_sig,cldliqmr_prs)
+          if (minval(hcldicemr_sig)  < rmsg) call vinterp_single(logp,hcldicemr_sig,cldicemr_prs)
+          if (minval(hrainmr_sig)    < rmsg) call vinterp_single(logp,hrainmr_sig,rainmr_prs)
+          if (minval(hsnowmr_sig)    < rmsg) call vinterp_single(logp,hsnowmr_sig,snowmr_prs)
+          if (minval(hgraupelmr_sig) < rmsg) call vinterp_single(logp,hgraupelmr_sig,graupelmr_prs)
+      elseif(icall .eq. 2)then
+          if (minval(hzdr_sig)      < rmsg) call vinterp_single(logp,hzdr_sig,zdr_prs)
+          if (minval(hldr_sig)      < rmsg) call vinterp_single(logp,hldr_sig,ldr_prs)
+      endif
    endif
-   if (minval(hrefl_sig)      < rmsg) call vinterp_single(logp,hrefl_sig,refl_prs)
+   if(icall .eq. 2)then
+       if (minval(hrefl_sig)      < rmsg) call vinterp_single(logp,hrefl_sig,refl_prs)
+   endif
 endif
 
 deallocate(logp)
@@ -198,6 +208,59 @@ do k=1,lz
    enddo
    enddo
 enddo
+
+return
+end
+
+!===============================================================================
+
+subroutine vinterp_single_cubic(logp,sig,field_prs_grid)
+
+use lfmgrid
+
+implicit none
+
+integer :: i,j,k,kk,left,idebug
+real :: logp(lx,ly,nz),sig(lx,ly,nz),field_prs_grid(lx,ly,lz),pla,plo,phi,slope
+real :: ypp(nz),ypval,yppval
+real :: mlogp(nz),mlprsl(lz)
+logical :: l_sigma=.false. ! used for viewing WRF sigma coords for debugging
+
+write(6,*)' running vinterp_single_cubic'
+write(6,*)' nz,lprsl = ',nz,lprsl
+
+mlprsl(:) = -lprsl(:) ! laps grid
+
+do j=1,ly
+do i=1,lx
+   idebug = (i*j) - 1                   
+   mlogp(:) = -logp(i,j,:) ! native grid
+   if(idebug .eq. 0)write(6,*)' i,j,mlogp = ',i,j,lprs(:)
+   if(idebug .eq. 0)write(6,*)' i,j,mlogp = ',i,j,mlogp
+   if(idebug .eq. 0)write(6,*)' i,j,hpsig = ',i,j,hpsig(i,j,:)
+   if(idebug .eq. 0)write(6,*)' i,j,sig = ',i,j,sig(i,j,:)
+   if(idebug .eq. 0)write(6,*)' Calling spline_cubic_set'                        
+   call spline_cubic_set(nz,mlogp(:),sig(i,j,:),0,0.,0,0.,ypp)
+   left = 1
+
+   do k=1,lz
+      if(idebug .eq. 0)write(6,*)i,j,k,lprsl(k),mlprsl(k),logp(i,j,1),mlogp(1),sig(i,j,1)
+      if(l_sigma)then
+         if(idebug .eq. 0)write(6,*)' Setting to sigma value for debugging'
+         kk = max((nz - (lz - k)),1)
+         field_prs_grid(i,j,k) = sig(i,j,kk)
+      elseif(mlprsl(k) .ge. mlogp(1))then ! laps pressure value at or above the native surface location
+         if(idebug .eq. 0)write(6,*)' Calling spline_cubic_val2'
+         call spline_cubic_val2(nz,mlogp(:),sig(i,j,:),ypp,left,mlprsl(k),field_prs_grid(i,j,k),ypval,yppval)
+      else                              ! below the surface
+         if(idebug .eq. 0)write(6,*)' Setting to surface value' 
+         field_prs_grid(i,j,k) = sig(i,j,1)
+      endif
+      if(idebug .eq. 0)write(6,*)' Interpolated value = ',field_prs_grid(i,j,k)
+   enddo ! k
+
+enddo ! i
+enddo ! j
 
 return
 end
