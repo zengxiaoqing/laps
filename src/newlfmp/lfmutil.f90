@@ -1,4 +1,4 @@
-subroutine lfm_namelist(lfmprd_dir)
+subroutine lfm_namelist(lfmprd_dir) 
 
 ! Read namelist variables.
 ! Default values are set in lfmgrid
