@@ -32,7 +32,7 @@ usage statement resulting from running the program.
             laps2grib V1.2, 01 Dec 2011, WNI            
  
   USAGE:	laps2grib.exe [vtab]
-  MODEL USAGE:	laps2grib.exe vtab [hh]hmm forecast (e.g. wfr2grib.vtab 1200 wrf-hrrr)
+  MODEL USAGE:	laps2grib.exe vtab [hh]hmm forecast_id (e.g. wfr2grib.vtab 1200 wrf-hrrr)
  ======================================================
 
 
@@ -74,15 +74,16 @@ is already configured.  To prevent output of any of the variables
 already configured, either delete the line or simply insert a space
 or any other character in column 1. (Note: if the filename differs from
 "laps2grib.vtab" than use your file's vtable name in the command line,
-e.g. laps2grib.exe projectdat2grib.vtab.)
+e.g. laps2grib.exe projectdat2grib.vtab.) 
 
 In this list, you can specify variables that are either 3-dimensional 
-(assumed to be on the LAPS pressure grid), or 2-dimensional.  To
-set up a 3D variable, the format is as follows:
+(assumed to be on the LAPS pressure grid), or 2-dimensional.  
+
+o To set up a 3D variable, the format is as follows:
 
 3d qbal,ext,var,pmin,pmax,conv_fac,scale_fac,discipline,category,parameter
 
-o The "3d" must be exactly as shown and must start in column 1!  The remaining
+The "3d" must be exactly as shown and must start in column 1!  The remaining
 parameters are defined as such:
 
 qbal: Integer, set to 0 to extract standard LAPS analysis or 1 to use files
@@ -119,7 +120,7 @@ parameter:  The GRIB2 parameter ID within the category/discipline.
 o The 2-dimensional data is similar.  The format is:
 2d ext,var,conv_fac,scale_fac,l1t,l1s,l1v,l2t,l2s,l2v,discipline,category,param
 
-o The Accumulated 2-dimensional data is similar. The format is:
+o The accumulated 2-dimensional data is similar. The format is:
 a2d ext,var,conv_fac,scale_fac,l1t,l1s,l1v,l2t,l2s,l2v,discipline,category,param
 
 NOTE: To extract data from the static.nest7grid file, use "n7g" for the extension!
@@ -156,7 +157,7 @@ $LAPS_DATA_ROOT/time/modeltime.dat
 and fua (upper air) model variables to convert. The model vtab file can have 
 any naming convention, e.g. "wrf2grib.vtab", etc.
 
-o Within the vtab, the format for the model 3d, 2d and accumulated 2d variables 
+o In the vtab, the format for the model 3d, 2d and accumulated 2d variables 
 are as follows:
 
 3d  qbal,fua,var,pmin,pmax,conv_fac,scale_fac,discipline,category,parameter
@@ -181,3 +182,7 @@ model could run out 12 to 144 forecast hours, or longer. E.g.:
 	$LAPSROOT/bin/laps2grib.exe wrf2grib.vtab  600 mean
 	$LAPSROOT/bin/laps2grib.exe wrf2grib.vtab  900 mean
 	$LAPSROOT/bin/laps2grib.exe wrf2grib.vtab 1000 mean
+
+The timestamp for the model runtime would be written to 
+$LAPS_DATA_ROOT/time/modeltime.dat containing the time format YYJJJHHMM, for 
+example, 120051200.
