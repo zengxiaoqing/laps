@@ -18,7 +18,9 @@ setenv NLINE $2
 setenv STAT $3
 setenv YRANGE $4
 setenv REFLECTIVITY $5
-setenv DOMAIN_NAME $6
+setenv DOMAIN_NAME_IN $6
+
+setenv DOMAIN_NAME `echo $DOMAIN_NAME_IN | sed 's/_/ /g'`
 
 #setenv LAPS_DATA_ROOT /data/fab/projects/dwr
 setenv LOGDIR $LAPS_DATA_ROOT/log
@@ -36,18 +38,71 @@ setenv STAT_LC `echo $STAT | gawk '{print tolower($0)}'`
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt                                   
 
+# Setup True Type fonts and related environment variables
+if (-d /usr/X11R6/lib/X11/fonts/truetype) then
+    setenv GDFONTPATH /usr/X11R6/lib/X11/fonts/truetype
+else if (-d /usr/share/fonts/bitstream-vera) then
+    setenv GDFONTPATH /usr/share/fonts/bitstream-vera
+else
+    setenv GDFONTPATH /dev/null
+endif
+#setenv GDFONTPATH /dev/null
+
+setenv GNUPLOT_DEFAULT_GDFONT VeraBd
+setenv FONTFILE $GDFONTPATH/$GNUPLOT_DEFAULT_GDFONT.ttf
+
+if (-e $FONTFILE) then
+    echo "GNUPLOT FONT is $FONTFILE"
+#   setenv TERM_FONT 'enhanced font "VeraBd, 12"'
+    setenv TERM_FONT 'enhanced'
+    setenv DEFAULT_FONT 'font "VeraBd,12"'
+    setenv TITLE_FONT 'font "VeraBd,20"'
+    setenv MEMBER_FONT 'font "VeraBd,16"'
+#   setenv KEY_FONT 'font "VeraBd,8"'
+    setenv KEY_WIDTH 0   
+    setenv KEY_HEIGHT 0.3
+    setenv KEY_SPACING 0.7
+    setenv TH "{/VeraBd=8 "
+    setenv TF \}
+else
+    echo "FONTFILE $FONTFILE does not exist"
+    setenv TERM_FONT ""
+    setenv DEFAULT_FONT ""
+    setenv TITLE_FONT ""
+    setenv MEMBER_FONT ""
+    setenv KEY_FONT ""
+    setenv KEY_WIDTH 1
+    setenv KEY_HEIGHT 0
+    setenv KEY_SPACING 1.0
+    setenv TH ""
+    setenv TF ""
+endif
+
 if (     $REFLECTIVITY == "20_comp"  || $REFLECTIVITY == "30_comp"  || $REFLECTIVITY == "40_comp" ) then
     setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/summary_comp.txt
+    setenv REF `echo $REFLECTIVITY | cut -c1-2`
+    setenv DURATION "7-day "
 else if ($REFLECTIVITY == "20_comp2" || $REFLECTIVITY == "30_comp2" || $REFLECTIVITY == "40_comp2") then
     setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/summary_comp2.txt
+    setenv REF `echo $REFLECTIVITY | cut -c1-2`
+    setenv DURATION "30-day "
 else
     setenv SUMMARY_FILE /dev/null
     setenv L_PLOT_CRITERIA T  
+    setenv REF $REFLECTIVITY                             
+    setenv DURATION ""
 endif
 
-if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then
+if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
     setenv L_PLOT_CRITERIA `tail -1 $SUMMARY_FILE`
     setenv L_PLOT_CRITERIA T  # for testing
+    if ($KEY_WIDTH == 0) then # TrueType case
+        setenv KEY_WIDTH -16 
+    endif
+else                                                     # Percentage will not be present
+    if ($KEY_WIDTH == 0) then # TrueType case
+        setenv KEY_WIDTH -14 
+    endif
 endif
 
 echo " "
@@ -78,9 +133,10 @@ setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/
 setenv PNGFILE     radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.png
 setenv DQUOTE \"
 
-echo 'set terminal png size 1200,600'                                     > $GNUPLOTFILE
+echo 'set terminal png '$TERM_FONT' size 1200,600'                        > $GNUPLOTFILE
 echo 'set xdata time'                                                    >> $GNUPLOTFILE
 echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
+echo 'set format x "%H:%M"'                                              >> $GNUPLOTFILE
 echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
 
 # time range must be in same format as data file
@@ -91,12 +147,15 @@ if ($STAT == "Bias") then
 endif
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
-echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"'                   >> $GNUPLOTFILE
-echo 'set ylabel "Radar Reflectivity '$STAT'"'                           >> $GNUPLOTFILE
-echo 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT' '$DOMAIN_NAME' domain"' >> $GNUPLOTFILE
-#cho 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'" giant'   >> $GNUPLOTFILE
-#cho 'set title "Radar Reflectivity '$REFLECTIVITY'dBZ '$STAT'" font DejaVuSans 30'   >> $GNUPLOTFILE
+echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+echo 'set ylabel "Volume Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+echo 'set title "Radar 3-D Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
+#cho 'set title "Radar Reflectivity '$REF'dBZ '$STAT'" giant'   >> $GNUPLOTFILE
+#cho 'set title "Radar Reflectivity '$REF'dBZ '$STAT'" font DejaVuSans 30'   >> $GNUPLOTFILE
 echo 'set key left box'                                                  >> $GNUPLOTFILE
+echo 'set key spacing' $KEY_SPACING                                      >> $GNUPLOTFILE
+echo 'set key height' $KEY_HEIGHT                                        >> $GNUPLOTFILE
+echo 'set key width' $KEY_WIDTH                                          >> $GNUPLOTFILE
 
 setenv NMEMBERS `wc -l $MEMBERS_FILE | cut -c1-2`
 echo "NMEMBERS: $NMEMBERS"
@@ -109,7 +168,7 @@ while ($IMEMBER <= $NMEMBERS)
     setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
     echo "IMEMBER MEMBER ICOL: $IMEMBER $MEMBER $ICOL"
 
-    if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then
+    if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
         setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
         setenv TITLE "$MEMBER $PCT%"
 
@@ -121,21 +180,22 @@ while ($IMEMBER <= $NMEMBERS)
             setenv LW 1
         endif
 
-    else
+    else                                                     # Percentage not present
         setenv PCT ""
         setenv TITLE $MEMBER
         setenv LS 1
         setenv LW 3
+
     endif
 
     if ($NMEMBERS == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
     else if ($IMEMBER == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     else if ($IMEMBER == $NMEMBERS) then
-        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
     else
-        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'$TITLE'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     endif
 
     @ IMEMBER = $IMEMBER + 1
