@@ -93,9 +93,11 @@ call lfm_namelist(lfmprd_dir)
 call get_laps_config('nest7grid',istatus)
 if (istatus .ne. 1) then
    print *, 'ERROR: get_laps_config status = ',istatus 
-else
-   print *, 'Setting precip_dt to model_fcst_intvl: ',model_fcst_intvl
+elseif(model_fcst_intvl .gt. 0)then
+   print *, 'Setting precip_dt to nest7grid.parms parameter model_fcst_intvl = ',model_fcst_intvl
    precip_dt = model_fcst_intvl
+else
+   print *, 'WARNING: model_fcst_intvl unavailable, keeping precip_dt from lfmpost.nl = ',precip_dt        
 endif
 
 ! Obtain native model grid dimensions.
@@ -242,7 +244,7 @@ if (trim(mtype) /= 'st4') then
  I4_elapsed = ishow_timer()
 
  write(6,*)' call lfm_vinterp'
- call lfm_vinterp
+ call lfm_vinterp(1)
 
 !beka
  I4_elapsed = ishow_timer()
@@ -250,13 +252,14 @@ if (trim(mtype) /= 'st4') then
  if (verbose .and. .not. large_pgrid) then
     print*,' '
     print*,'Diagnostics from isobaric domain center:'
-    print*,'--------------------------------------------'
-    print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV'
-    print*,'--------------------------------------------'
+    print*,'-------------------------------------------------------------'
+    print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV         U       V'
+    print*,'-------------------------------------------------------------'
     do k=1,lz
-       print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6)'   &
+       print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6,2f8.2)'   &
              ,k,lprs(k)*100.,zprs(lx/2,ly/2,k)  &
-             ,tprs(lx/2,ly/2,k),shprs(lx/2,ly/2,k)
+             ,tprs(lx/2,ly/2,k),shprs(lx/2,ly/2,k) &
+             ,uprs(lx/2,ly/2,k),vprs(lx/2,ly/2,k)
     enddo
  endif
 
@@ -267,7 +270,7 @@ if (trim(mtype) /= 'st4') then
  I4_elapsed = ishow_timer()
 
  write(6,*)' call lfm_vinterp (2nd time)'
- call lfm_vinterp
+ call lfm_vinterp(2)
  I4_elapsed = ishow_timer()
 
  if (verbose) then
