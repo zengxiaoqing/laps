@@ -446,6 +446,11 @@ if (make_micro) then
                            ,hrefl_sig,hzdr_sig,hldr_sig,htsig,hpsig,hmrsig        &
                            ,max_refl,echo_tops)
       refl_sfc(:,:)=hrefl_sig(:,:,1)
+
+!     Conversion of microphysical cloud mixing ratios to concentrations
+      hcldliqmr_sig(:,:,:)     = hcldliqmr_sig(:,:,:) * rhomoistsig(:,:,:)
+      hcldicemr_sig(:,:,:)     = hcldicemr_sig(:,:,:) * rhomoistsig(:,:,:)
+
       deallocate(tvsig,rhomoistsig)
       if (verbose) then
         print*,' '
@@ -501,7 +506,7 @@ if (make_micro) then
 !  Convert mr to concentration for microphysical species?
 !  To do this we'd need rho on the pressure grid. Otherwise we can convert
 !  on the model sig grid using rhosig, and this is now done at the end of 
-!  'lfm_reflectivity'
+!  'lfm_reflectivity' (and right after returning)
 
  endif ! true
 
@@ -543,7 +548,7 @@ if (fcsttime > 0 .AND. (.not. large_ngrid)) then
    allocate(fallen_precip_type(lx,ly))
    call wintprec(htsig,hzsig,zprs,psfc,tsfc,tdsfc,zsfc,pcp_inc,lx,ly  &
                 ,nz,lz,k700,k850,k1000,pcp_inc,fallen_precip_type)
-   call snowfall(tsfc,pcp_inc,fallen_precip_type,lx,ly,snow_inc,snow_tot)
+   call snowfall(htsig,tsfc,pcp_inc,fallen_precip_type,lx,ly,nz,snow_inc,snow_tot)
    deallocate(fallen_precip_type)
 endif
 if (trim(mtype) == 'nmm') then
@@ -777,7 +782,7 @@ I4_elapsed = ishow_timer()
 
 if(.not. large_ngrid)then
 
-        call up_mflux(lx,ly,nz,avg,ldf,dx,dy                 &
+        call up_mflux(lx,ly,nz,zsfc,ldf,dx,dy                 &
                      ,husig,hvsig,totpcpwater,upflux           &
                      ,hzsig,rmsg)              
 
@@ -1170,7 +1175,7 @@ do i=1,lx
 
       elseif (c_m2z == 'synp') then
 
-        call versuch(rainmr(i,j,k),icemr(i,j,k)+snowmr(i,j,k),graupelmr(i,j,k),tmp(i,j,k) &   ! I
+        call versuch(rainmr(i,j,k),snowmr(i,j,k),graupelmr(i,j,k),tmp(i,j,k) &   ! I
                     ,zhhx(i,j,k)                                             &   ! O
                     ,ahhx(i,j,k)                                             &   ! O
                     ,zhvx(i,j,k),zvhx(i,j,k),zvvx(i,j,k)                     &   ! O
@@ -1218,10 +1223,10 @@ do i=1,lx
 enddo
 enddo
 
-! Convert Microphsical mixing ratios to concentrations - multiplying by rho
+! Convert microphysical precipitation mixing ratios to concentrations - multiplying by rho
 rainmr(:,:,:)    = rainmr(:,:,:) * rho(:,:,:)
 snowmr(:,:,:)    = snowmr(:,:,:) * rho(:,:,:)
-icemr(:,:,:)     = icemr(:,:,:) * rho(:,:,:)
+! icemr(:,:,:)     = icemr(:,:,:) * rho(:,:,:)
 graupelmr(:,:,:) = graupelmr(:,:,:) * rho(:,:,:)
 
 return
@@ -2086,7 +2091,7 @@ end
 
 !===============================================================================
 
-subroutine snowfall(tsfc,prcpinc,preciptype,imax,jmax,snowinc,snowtot) 
+subroutine snowfall(tsig,tsfc,prcpinc,preciptype,imax,jmax,ksig,snowinc,snowtot) 
 
 ! Name: Snow Accumulation Algorithm
 !
@@ -2142,9 +2147,10 @@ use constants
 
 implicit none
 
-integer :: i,imax,j,jmax
-real :: fahren,tsfcf
+integer :: i,imax,j,jmax,ksig
+real :: fahren,tsfcf,tcolmax,snow_to_rain_ratio
 real, dimension(imax,jmax) :: prcpinc,preciptype,snowinc,snowtot,tsfc,tdsfc
+real, dimension(imax,jmax,ksig) :: tsig
       
 do j=1,jmax
 do i=1,imax    
@@ -2152,14 +2158,18 @@ do i=1,imax
 ! Check if precipitation type is snow.
 
    if (preciptype(i,j) == 5) then
-      tsfcf=fahren(tsfc(i,j)-t0)
 
-! Liquid equivalent of snow depends of surface temperature.
+      if(.true.)then ! Liquid equivalent of snow depends on column max temp
+          tcolmax = maxval(tsig(i,j,:))
+          snowinc(i,j) = snow_to_rain_ratio(tcolmax) * prcpinc(i,j)
 
-      if (tsfcf >= 10.0) then
-         snowinc(i,j)=10.*prcpinc(i,j)
-      else
-         snowinc(i,j)=15.*prcpinc(i,j)
+      else ! Liquid equivalent of snow depends on surface temperature.
+          tsfcf=fahren(tsfc(i,j)-t0)
+          if (tsfcf >= 10.0) then
+             snowinc(i,j)=10.*prcpinc(i,j)
+          else
+             snowinc(i,j)=15.*prcpinc(i,j)
+          endif
       endif
 
 ! If precip type is not snow then snow accum is zero.
