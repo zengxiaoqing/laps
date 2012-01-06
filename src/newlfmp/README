@@ -46,8 +46,10 @@ lfmpost                                      lfmpost.f90
         fosberg_fwi                              "
         up_mflux                             lib/up_mflux.f
     lfm_vinterp                              interp.f90
+    set_laps_projection                      lfmutil.f90
     output_laps                              lfmwrite.f90
         write_laps_lfm                       lib/writelapslfm.f
     grib_sfc_vars                            lfmwrite.f90
     grib_ua_vars                                 "
+    dealloc_grid                             lfmgrid.f90
 
