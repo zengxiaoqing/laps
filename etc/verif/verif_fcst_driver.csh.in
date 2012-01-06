@@ -99,4 +99,5 @@ endif
 
 date -u
 
-cp $LAPS_DATA_ROOT/time/modeltime.dat $LAPS_DATA_ROOT/time/modeltime.dat.done
+echo "cp $LAPS_DATA_ROOT/time/modeltime.dat $LAPS_DATA_ROOT/time/modeltime.dat.done"
+      cp $LAPS_DATA_ROOT/time/modeltime.dat $LAPS_DATA_ROOT/time/modeltime.dat.done
