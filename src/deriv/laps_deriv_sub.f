@@ -682,6 +682,28 @@ c read in laps lat/lon and topo
         enddo ! j
         enddo ! i
 
+
+!       Convert SLWC and CICE by applying scale factor to parcel method values
+        if(hydrometeor_scale_cld .ge. 0.)then
+            ratio_cld =  hydrometeor_scale_cld
+        else
+            ratio_cld = -hydrometeor_scale_cld / 
+     1                  (grid_spacing_cen_m/1000.)
+        endif
+
+        do k = 1,NZ_L
+        do j = 1,NY_L
+        do i = 1,NX_L
+            if(slwc(i,j,k) .ne. r_missing_data)then
+                slwc(i,j,k) = (slwc(i,j,k) * ratio_cld)
+            endif
+            if(cice(i,j,k) .ne. r_missing_data)then
+                cice(i,j,k) = (cice(i,j,k) * ratio_cld)
+            endif
+        enddo 
+        enddo
+        enddo
+
         write(6,*)
         write(6,*)' Inserting thin clouds into LWC/ICE fields'
         call insert_thin_lwc_ice(clouds_3d,clouds_3d_pres,heights_3d
@@ -1054,15 +1076,12 @@ c read in laps lat/lon and topo
 
         endif
 
-!       Convert SLWC and CICE from g/m**3 to kg/m**3 and apply scale factor
-        if(hydrometeor_scale_cld .ge. 0.)then
-            ratio_cld =  hydrometeor_scale_cld
-        else
-            ratio_cld = -hydrometeor_scale_cld / 
-     1                  (grid_spacing_cen_m/1000.)
-        endif
+ 700    continue
 
- 700    do k = 1,NZ_L
+!       Convert SLWC and CICE from g/m**3 to kg/m**3
+        ratio_cld = 1.0
+
+        do k = 1,NZ_L
         do j = 1,NY_L
         do i = 1,NX_L
             if(slwc(i,j,k) .ne. r_missing_data)then
