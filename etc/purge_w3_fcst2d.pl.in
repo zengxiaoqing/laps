@@ -1,6 +1,6 @@
 #!@PERL@
 #
-#  purge_w3_fcst.pl
+#  purge_w3_fcst2d.pl
 #
 #  Script to purge a domain's fcst2d archive directory on the
 #  LAPS web page.
@@ -15,7 +15,7 @@ use vars qw($opt_d $opt_h $opt_t);
 getopts('d:ht:');
 
 if ($opt_h){
-  print "Usage:  purge_w3_fcst.pl [options] domain model\n";
+  print "Usage:  purge_w3_fcst2d.pl [options] domain model\n";
   print "Options:\n\n";
   print "         -d directory\n";
   print "            Specify and utilize a LAPS_DATA_ROOT that contains\n";
@@ -38,8 +38,8 @@ if ($opt_h){
 my $nargs = @ARGV;
 if ($nargs != 2) {
   print "Need 2 arguments:  domain model\n";
-  print "Usage:  purge_w3_fcst.pl [options] domain model.\n";
-  print "Type purge_w3_fcst.pl -h for options.\n";
+  print "Usage:  purge_w3_fcst2d.pl [options] domain model.\n";
+  print "Type purge_w3_fcst2d.pl -h for options.\n";
   die;
 }
 
@@ -49,7 +49,7 @@ my ($domain, $model) = @ARGV;
 
 my ($purgedir, $maxage);
 if ($opt_d) {
-  $purgedir = "$opt_d/lapsprd/fcst2d/$model/archive";
+  $purgedir = "$opt_d/lapsprd/www/fcst2d/$model/archive";
 }else{
   $purgedir = "/w3/lapb/domains/$domain/fcst2d/$model/archive";
 }
