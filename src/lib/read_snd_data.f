@@ -94,7 +94,7 @@ cdoc    Also returns the lat/lon/time info from all the levels
 
       DO i_pr = n_profiles+1,max_pr
 
-        if(i_pr .le. 200 .or. i_pr .eq. (i_pr/10)*10)then
+        if(i_pr .le. 200 .or. i_pr .eq. (i_pr/100)*100)then
             iwrite = 1
         else
             iwrite = 0
