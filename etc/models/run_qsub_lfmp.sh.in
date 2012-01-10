@@ -75,6 +75,14 @@ else
 fi
 echo "fcstIncrMin = $fcstIncrMin"
 
+date -u
+
+# Run purger on lfmpost and other log files
+echo "@PERL@ @prefix@/etc/purger.pl -r -t 7.0 $modelroot/log" 
+      @PERL@ @prefix@/etc/purger.pl -r -t 7.0 $modelroot/log  
+
+date -u
+
 # Build qsub script
 script=$modelroot/qsub_lfmpost.sh
 echo "#!/bin/sh --login"         > $script
