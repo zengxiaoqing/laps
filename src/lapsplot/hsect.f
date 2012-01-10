@@ -3618,7 +3618,7 @@ c abdel
 
                 i4time_lwc = i4time_cloud
 
-                cint = -0.05
+                cint = -0.002
 
             elseif(c_prodtype .eq. 'F')then
                 if(k_mb .ne. -1)then ! Get 2D Grid
@@ -6609,6 +6609,8 @@ c                   cint = -1.
                   topomax = max(topomax,topo(i,j))
               enddo ! j
               enddo ! i
+
+              field_2d(:,:) = topo(:,:) ! support for difference plots
 
               if(cstatic .eq. 'tni')then
                 write(6,*)' calling solid fill plot - max terrain = '       
