@@ -23,9 +23,14 @@ MACHINE=`uname -n`
 PLATFORM=`uname -s`
 
 LOOPER=/usr/nfs/common/lapb/www/fcst2d/$domain/$model/upd_files_txt.pl
+
 #export NCARG_ROOT=/usr/local/apps/ncarg-4.0.1
 #setenv NCARG_ROOT `cat /usr/nfs/lapb/bin/ncarg_root`
-export NCARG_ROOT=`cat /usr/nfs/lapb/bin/ncarg_root`
+if test -r /usr/nfs/lapb/bin/ncarg_root; then
+    export NCARG_ROOT=`cat /usr/nfs/lapb/bin/ncarg_root`
+else
+    export NCARG_ROOT=`ncargpath root`
+fi
 SUPMAP_DATA_DIR=/home/elvis/mcdonald/data/supmap/
 
 #alias ctrans '/usr/local/apps/ncarg-4.0.1/bin/ctrans  -verbose'
