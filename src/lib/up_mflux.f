@@ -159,11 +159,17 @@ c       Compute mean wind over a 2D height layer
 !           Calculate mass weighted mean wind over the height layer       
             rk_lo = rlevel_of_field(ht_lo,ht_3d(i,j,:),1,1,nk,1,1
      1                             ,istatus)        
-            if(istatus .ne. 1)goto 900
+            if(istatus .ne. 1)then
+                write(6,*)' Bad status in rlevel_of_field for lo ',i,j
+                goto 900
+            endif
 
             rk_hi = rlevel_of_field(ht_hi,ht_3d(i,j,:),1,1,nk,1,1  
      1                             ,istatus)        
-            if(istatus .ne. 1)goto 900
+            if(istatus .ne. 1)then
+                write(6,*)' Bad status in rlevel_of_field for hi ',i,j  
+                goto 900
+            endif
 
 !           rk_lo = rlevel_of_logfield(ht_lo,ht_3d,ni,nj,nk,i,j,istatus)        
 !           rk_hi = rlevel_of_logfield(ht_hi,ht_3d,ni,nj,nk,i,j,istatus)  
@@ -215,11 +221,11 @@ c       Compute mean wind over a 2D height layer
             umean_2d(i,j) = ubar_sum / sumk
             vmean_2d(i,j) = vbar_sum / sumk            
 
-!           if(i .eq. 10)then ! write debugging info
-!             write(6,2)j,rk_lo,rk_hi,u_lo,u_hi,ubar_llyr,ubar_hlyr
-!    1                                         ,ubar_sum,ubar,sumk
-!	      format(i5,9f10.4)
-!           endif 
+            if(abs(umean_2d(i,j)) .gt. 1e10)then ! write debugging info
+              write(6,11)i,j,rk_lo,rk_hi,u_lo,u_hi,ubar_llyr,ubar_hlyr
+     1                                           ,ubar_sum,ubar,sumk
+ 11	      format(' WARNING: large umean - ',2i5,9e13.4)
+            endif 
 
           endif
 
@@ -227,6 +233,11 @@ c       Compute mean wind over a 2D height layer
 
 	enddo !i
 	enddo !j
+
+        write(6,*)' range of umean_2d = ',minval(umean_2d)
+     1                                   ,maxval(vmean_2d)
+        write(6,*)' range of vmean_2d = ',minval(vmean_2d)
+     1                                   ,maxval(vmean_2d)
 
 	return
 	end
