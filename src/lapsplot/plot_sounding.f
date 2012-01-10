@@ -15,6 +15,8 @@
         real u_2d(NX_L,NY_L)
         real v_2d(NX_L,NY_L)
         real pw_2d(NX_L,NY_L)
+        real lil_2d(NX_L,NY_L)
+        real lic_2d(NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
@@ -34,6 +36,7 @@
 
         real pres_1d(NZ_L)
         real logp_1d(NZ_L), logp_bottom, logp_top, logp, logp_sfc
+        real lil_sfc, lic_sfc, lil_cpt, lic_cpt
   
         real k_to_c, make_td
 
@@ -219,6 +222,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istatus)
+            if(istatus .ne. 1)goto900
 
             call make_fnam_lp(i4_valid,a9time,istatus)
 
@@ -231,7 +235,6 @@
 
                 c_label = 'Forecast Sounding '//fcst_hhmm//' '
      1                                               //trim(c_model)
-
             endif
 
         else
@@ -243,6 +246,44 @@
         i_overlay = i_overlay + 1
 
         call interp_3d(field_3d,temp_vert,xsound,xsound,ysound,ysound,       
+     1                 NX_L,NY_L,NZ_L,1,NZ_L,r_missing_data)
+
+!       Read Height
+        if(c_prodtype .eq. 'A')then
+            iflag_temp = 2 ! Returns Height?
+
+            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1                      ,NX_L,NY_L,NZ_L,field_3d,istatus)
+            if(istatus .ne. 1)goto900
+
+        elseif(c_prodtype .eq. 'N')then
+            call get_directory('balance',directory,len_dir)
+            ext = 'lt1'
+            directory = directory(1:len_dir)//ext(1:3)
+
+            var_2d = 'HT'
+
+            call get_3dgrid_dname(directory
+     1                  ,i4time_ref,laps_cycle_time*10000,i4time_nearest       
+     1                  ,ext,var_2d,units_2d
+     1                  ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istatus)       
+
+        elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
+            var_2d = 'HT'
+            call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istatus)
+            if(istatus .ne. 1)goto100
+
+        else
+            write(6,*)' Unknown choice, will quit'
+            go to 900
+
+        endif
+
+        call interp_3d(field_3d,ht_vert,xsound,xsound,ysound,ysound,       
      1                 NX_L,NY_L,NZ_L,1,NZ_L,r_missing_data)
 
         istat_td = 0
@@ -537,6 +578,19 @@
      1                      ,pw_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto100
 
+            ext = 'lil'
+            var_2d = 'LIL'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,lil_2d,0,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
+            var_2d = 'LIC'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,lic_2d,0,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
         elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
             write(6,*)' Look for Bkg/Fcst sfc fields'
 
@@ -597,6 +651,24 @@
      1                              ,istat_sfc)
             if(istat_sfc .ne. 1)pw_2d = r_missing_data
 
+            var_2d = 'LIL'
+            call get_lapsdata_2d(i4_initial,i4_valid
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d
+     1                              ,NX_L,NY_L
+     1                              ,lil_2d
+     1                              ,istat_sfc)
+            if(istat_sfc .ne. 1)lil_2d = r_missing_data
+
+            var_2d = 'LIC'
+            call get_lapsdata_2d(i4_initial,i4_valid
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d
+     1                              ,NX_L,NY_L
+     1                              ,lic_2d
+     1                              ,istat_sfc)
+            if(istat_sfc .ne. 1)lic_2d = r_missing_data
+
         else
             istat_sfc = 0
             go to 100
@@ -608,7 +680,7 @@
  102    format(' ASCII SOUNDING DATA at lat,lon =',a16
      1        ,'   i,j = ',2i5,5x,' time: ',a9)     
         write(6,*)
-        write(6,*)' lvl    p(mb)     t(c)'//
+        write(6,*)' lvl    p(mb)     ht(m)      t(c)'//
      1            '      td(c)      rh(%)    cld liq  cld ice'//   
      1            '    rain      snow      pcpice   u (m/s)   v (m/s)'       
         write(6,*)'                                                '
@@ -620,6 +692,8 @@
         t_sfc_k  = t_2d(isound,jsound)
         td_sfc_k = td_2d(isound,jsound)
         pw_sfc   = pw_2d(isound,jsound)
+        lil_sfc  = lil_2d(isound,jsound)
+        lic_sfc  = lic_2d(isound,jsound)
         topo_sfc = topo(isound,jsound)
 
         do iz = 1,NZ_L
@@ -627,6 +701,7 @@
             if(pres_1d(iz_test)/100. .lt. p_sfc_pa/100.)then
                 write(6,1)iz,
      1                pres_1d(iz)/100.,
+     1                ht_vert(iz),
      1                k_to_c(temp_vert(iz)), 
      1                td_vert(iz),
      1                rh_vert(iz),
@@ -637,15 +712,23 @@
      1                pice_vert(iz)*1000.,
      1                u_vert(iz),
      1                v_vert(iz)
- 1              format(i4,4f10.2,5f10.3,2f10.1)
+ 1              format(i4,5f10.2,5f10.3,2f10.1)
             endif
         enddo ! iz
         write(6,*)
+
+!       Compute integrated cloud liquid/ice
+        call integrate_slwc(lwc_vert*1000.,ht_vert,1,1,NZ_L,lil_cpt)
+        call integrate_slwc(ice_vert*1000.,ht_vert,1,1,NZ_L,lic_cpt)
 
         write(6,*)' Sfc P (mb) = ', p_sfc_pa/100.
      1           ,' Terrain Height (m)= ',topo_sfc 
         write(6,*)' Sfc T (c) = ', k_to_c(t_sfc_k)
         write(6,*)' TPW (cm) = ', pw_sfc*100.
+        write(6,*)' Integrated Cloud Water (mm) [read in/computed] = ',
+     1                            lil_sfc*1000.,lil_cpt*1000.
+        write(6,*)' Integrated Cloud Ice (mm) [read in/computed] = ',
+     1                            lic_sfc*1000.,lic_cpt*1000.
         write(6,*)
 
 !       Read Wind (a la xsect)
