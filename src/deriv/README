@@ -18,6 +18,7 @@ laps_deriv_main                                         laps_deriv.f
                     wb_melting_threshold                    "
                 isi3                                        "
             insert_thin_lwc_ice                         cloud_deriv_subs.f
+            integrate_slwc                              lib/get_cloud_deriv.f
             get_maxtops                                 laps_deriv_sub.f
             get_low_ref                                     "
             get_sfc_preciptype                          lib/get_cloud_deriv.f
