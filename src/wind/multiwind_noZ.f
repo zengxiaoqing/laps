@@ -78,7 +78,7 @@ c*  To compute the horizontal radial velocity.
 
       do i=1,n
          rcos=d(i)/sqrt( d(i)**2+(ht(i)-height)**2 )
-         vh(i)=vr(i)/rcos
+         vh(i)=vr(i)*rcos
       enddo 
 
 c-----------------------------------------------------------------------
