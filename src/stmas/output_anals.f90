@@ -149,7 +149,10 @@ SUBROUTINE OUTPTLAPS
     ENDDO
     ENDDO
     ENDDO
-    print*,'bko_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S))
+    print*,'bko_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S)),S
+    print*,'        ',maxval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S))
+    print*,'bko_min=',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S)),S
+    print*,'        ',minval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S))
   ENDDO
 print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1,5))
 
@@ -224,20 +227,25 @@ GOTO 111
   ENDDO
 111 continue ! skip SH adjustment according to q_r
 
-  ! CONVERTED FROM P, Q T:
-print*,'Use make_rh!!!',BK0(1,1,10,iframe,5)
+  ! CONVERTED FROM P, Q T: NOTE: Q is in g/kg
   DO K=1,FCSTGRD(3)
     DO J=1,FCSTGRD(2)
       DO I=1,FCSTGRD(1)
-        sph = BK0(I,J,K,IFRAME,5)*0.001
-        tmp = BK0(I,J,K,IFRAME,4)
+        ! sph = BK0(I,J,K,IFRAME,5)*0.001
+        ! tmp = BK0(I,J,K,IFRAME,4)
         ! RH(I,J,K) = 1.E2 * (LV(k)*sph/(sph*(1.-eps) + eps))/(svp1*exp(svp2*(tmp-svpt0)/(tmp-svp3)))
-        RH(I,J,K) = MAKE_RH(LV(k)/100.0,BK0(I,J,K,IFRAME,4)-273.15,BK0(I,J,K,IFRAME,5),-132.0)
-        RH(I,J,K) = RH(I,J,K)*100.0
+        IF (BK0(I,J,K,IFRAME,5) .GE. 0.0) THEN
+          RH(I,J,K) = MAKE_RH(LV(k)/100.0,BK0(I,J,K,IFRAME,4)-273.15,BK0(I,J,K,IFRAME,5),-132.0)
+        
+          ! Percentage:
+          RH(I,J,K) = RH(I,J,K)*100.0
+        ELSE
+          RH(I,J,K) = 0.0
+        ENDIF
       ENDDO
     ENDDO
   ENDDO
-print*,'Max/Min RH: ',maxval(RH),minval(RH)
+  print*,'Max/Min RH: ',maxval(RH),minval(RH)
 
   ! HEIGHT FROM HYDROSTATIC:
   ! BK0(1:FCSTGRD(1),1:FCSTGRD(2),1,IFRAME,3) = 0.0
@@ -284,16 +292,19 @@ print*,'Max/Min RH: ',maxval(RH),minval(RH)
       ! REF_OUT(I,J,K)=REF_OUT(I,J,K)+(BK0(I,J,K,T,6))**1.75*17300.
         REF_OUT(I,J,K)=REF_OUT(I,J,K)+43.1+17.5*ALOG10(BK0(I,J,K,T,6))           
       else
-       REF_OUT(I,J,K)=0.
+       ! LAPS uses -10 as base value for reflectivity:
+       REF_OUT(I,J,K)=-10.
       endif 
  
       if( REF_OUT(I,J,K) .LT. 0.) then
-        REF_OUT(I,J,K)=0.
+        ! LAPS uses -10 as base value for reflectivity:
+        REF_OUT(I,J,K)=-10.
       endif    
       ENDDO
     ENDDO
    ENDDO 
    print*,'ref_max=',maxval(REF_OUT(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3)))
+   print*,'ref_min=',minval(REF_OUT(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3)))
    call put_laps_3d(LAPSI4T,'lps',RE,'dBZ',RC,REF_OUT(1,1,1),FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
              !RC,BK0(1,1,1,T,10),FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
              
@@ -316,8 +327,8 @@ print*,'Max/Min RH: ',maxval(RH),minval(RH)
      ENDDO
     ENDDO
    ENDDO  
-!   print*,'bko6_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,6))
-!   print*,'bko7_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,7))
+   print*,'bko6_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,6))
+   print*,'bko7_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,7))
    ! OUT PUT SNOW CONTENT(SNO) AND RAI   
    call put_laps_3d_multi_R(LAPSI4T,'lwc',QW,units_3D,QWC ,  &
               BK0(1,1,1,T,6),BK0(1,1,1,T,7),     &                                                             
