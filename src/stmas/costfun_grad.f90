@@ -38,6 +38,10 @@ SUBROUTINE COSTFUNCT
   REAL  :: HT,OI,HU,HV,DG
   REAL  :: HT0,HU0,HV0
   REAL  :: CS(NUMSTAT),CM,CB
+  REAL  :: D2R
+
+  D2R = 3.14159/180.0
+
 ! --------------------
   UU=U_CMPNNT
   VV=V_CMPNNT
@@ -95,7 +99,7 @@ SUBROUTINE COSTFUNCT
     ENDDO
     ENDDO
     DG=OBSEINF1(NO)
-    HT=HU*SIND(DG)+HV*COSD(DG)
+    HT=HU*SIN(D2R*DG)+HV*COS(D2R*DG)
     COSTFUN=COSTFUN+(HT-OBSVALUE(O))*OI*(HT-OBSVALUE(O))*OBSRADAR
   ENDDO
   S=NUMSTAT+2                       ! FOR SFMR DATA
@@ -162,6 +166,10 @@ SUBROUTINE COSTGRADT
   INTEGER  :: NP(MAXDIMS)
   REAL     :: HT,OI,HU,HV,DG
   REAL     :: HT0,HU0,HV0
+  REAL     :: D2R
+
+  D2R = 3.14159/180.0
+
 ! --------------------
   UU=U_CMPNNT
   VV=V_CMPNNT
@@ -236,7 +244,7 @@ SUBROUTINE COSTGRADT
     ENDDO
     ENDDO
     DG=OBSEINF1(NO)
-    HT=HU*SIND(DG)+HV*COSD(DG)
+    HT=HU*SIN(D2R*DG)+HV*COS(D2R*DG)
     M=0
     DO T=NP(4),MIN0(NP(4)+1,NUMGRID(4))
     DO K=NP(3),MIN0(NP(3)+1,NUMGRID(3))
@@ -244,9 +252,9 @@ SUBROUTINE COSTGRADT
     DO I=NP(1),MIN0(NP(1)+1,NUMGRID(1))
       M=M+1
       GRADINT(I,J,K,T,UU)=GRADINT(I,J,K,T,UU)  &
-      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIND(DG)*OBSRADAR
+      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIN(D2R*DG)*OBSRADAR
       GRADINT(I,J,K,T,VV)=GRADINT(I,J,K,T,VV)  &
-      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*COSD(DG)*OBSRADAR
+      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*COS(D2R*DG)*OBSRADAR
     ENDDO
     ENDDO
     ENDDO
@@ -323,6 +331,10 @@ SUBROUTINE COSTFUNCT1
   REAL  :: HT,OI,HU,HV,HW,DG,DV
   REAL  :: HT0,HU0,HV0,HW0
   REAL  :: CS(NUMSTAT),CM,CB,CH
+  REAL  :: D2R
+
+  D2R = 3.14159/180.0
+
 ! --------------------
   UU=U_CMPNNT
   VV=V_CMPNNT
@@ -384,7 +396,7 @@ SUBROUTINE COSTFUNCT1
     ENDDO
     DG=OBSEINF1(NO)
     DV=OBSEINF2(NO)
-    HT=HU*SIND(DG)*COSD(DV)+HV*COSD(DG)*COSD(DV)+HW*SIND(DV)
+    HT=HU*SIN(D2R*DG)*COS(D2R*DV)+HV*COS(D2R*DG)*COS(D2R*DV)+HW*SIN(D2R*DV)
     COSTFUN=COSTFUN+(HT-OBSVALUE(O))*OI*(HT-OBSVALUE(O))*OBSRADAR
   ENDDO
   S=NUMSTAT+2                        ! FOR SRMR DATA
@@ -464,6 +476,10 @@ SUBROUTINE COSTGRADT1
   INTEGER  :: NP(MAXDIMS)
   REAL     :: HT,OI,HU,HV,HW,DG,DV
   REAL     :: HT0,HU0,HV0,HW0
+  REAL     :: D2R
+
+  D2R = 3.14159/180.0
+
 ! --------------------
   UU=U_CMPNNT
   VV=V_CMPNNT
@@ -542,7 +558,7 @@ SUBROUTINE COSTGRADT1
     ENDDO
     DG=OBSEINF1(NO)
     DV=OBSEINF2(NO)
-    HT=HU*SIND(DG)*COSD(DV)+HV*COSD(DG)*COSD(DV)+HW*SIND(DV)
+    HT=HU*SIN(D2R*DG)*COS(D2R*DV)+HV*COS(D2R*DG)*COS(D2R*DV)+HW*SIN(D2R*DV)
     M=0
     DO T=NP(4),MIN0(NP(4)+1,NUMGRID(4))
     DO K=NP(3),MIN0(NP(3)+1,NUMGRID(3))
@@ -550,11 +566,11 @@ SUBROUTINE COSTGRADT1
     DO I=NP(1),MIN0(NP(1)+1,NUMGRID(1))
       M=M+1
       GRADINT(I,J,K,T,UU)=GRADINT(I,J,K,T,UU)  &
-      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIND(DG)*COSD(DV)*OBSRADAR
+      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIN(D2R*DG)*COS(D2R*DV)*OBSRADAR
       GRADINT(I,J,K,T,VV)=GRADINT(I,J,K,T,VV)  &
-      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*COSD(DG)*COSD(DV)*OBSRADAR
+      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*COS(D2R*DG)*COS(D2R*DV)*OBSRADAR
       GRADINT(I,J,K,T,WW)=GRADINT(I,J,K,T,WW)  &
-      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIND(DV)*OBSRADAR
+      +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIN(D2R*DV)*OBSRADAR
     ENDDO
     ENDDO
     ENDDO
@@ -652,6 +668,9 @@ SUBROUTINE COSTFUNCT2
   REAL  :: Segma     !variance  for ref_obs
   REAL  ::Temp_ref,tempr,temps
   INTEGER  :: RR,RS  
+  REAL  :: D2R
+
+  D2R = 3.14159/180.0
 
   UU=U_CMPNNT
   VV=V_CMPNNT
@@ -691,8 +710,10 @@ SUBROUTINE COSTFUNCT2
       CS(S)=CS(S)+0.5*(HT-OBSVALUE(O))*(HT-OBSVALUE(O))!/(NOBSTAT(S)*1.0)!!!modified by shuyuan   20101028
     ENDDO
   ENDDO
-  S=NUMSTAT+1                        ! FOR RADIAL WIND VELOCITY OBSERVATIONS
-rdr = COSTFUN
+
+  ! FOR RADIAL WIND VELOCITY OBSERVATIONS
+  S=NUMSTAT+1
+  rdr = COSTFUN
   DO NO=1,NOBSTAT(S)
     O=O+1
     DO N=1,MAXDIMS
@@ -718,12 +739,13 @@ rdr = COSTFUN
     ENDDO
     DG=OBSEINF1(NO)
     DV=OBSEINF2(NO)
-    HT=HU*SIND(DG)*COSD(DV)+HV*COSD(DG)*COSD(DV)+HW*SIND(DV)
+    HT=HU*SIN(D2R*DG)*COS(D2R*DV)+HV*COS(D2R*DG)*COS(D2R*DV)+HW*SIN(D2R*DV)
     COSTFUN=COSTFUN+(HT-OBSVALUE(O))*(HT-OBSVALUE(O))!*OBSRADAR!!!modified by shuyuan   20101028
   ENDDO
+  print*,'Radar radial wind cost: ',COSTFUN-rdr
 
-print*,'Radar cost: ',COSTFUN-rdr
-  S=NUMSTAT+2                        ! FOR SFMR WIND VELOCITY OBSERVATIONS
+  ! FOR SFMR WIND VELOCITY OBSERVATIONS
+  S=NUMSTAT+2
   DO NO=1,NOBSTAT(S)
     O=O+1
     DO N=1,MAXDIMS
@@ -756,49 +778,48 @@ print*,'Radar cost: ',COSTFUN-rdr
     COSTFUN=COSTFUN+(HT-HT0-OBSVALUE(O))*(HT-HT0-OBSVALUE(O))!*OBS_SFMR!!!modified by shuyuan   20101028
   ENDDO
 
-
-ref = COSTFUN
+  ! Reflectivity:
+  ref = COSTFUN
 ! --------------------
 ! added by shuyuan 20100721    
   Segma=1.
-   S=NUMSTAT+3
-    DO NO=1,NOBSTAT(S)
-      O=O+1
-      DO N=1,MAXDIMS
-        NP(N)=OBSIDXPC(N,O)
-      ENDDO
-      OI=OBSERROR(O)**2
-      OI=1.0/OI
-      Temp_ref=0.0
-      M=0
-      rc=0.
-      sc=0.
-      DO T=NP(4),MIN0(NP(4)+1,NUMGRID(4))
-      DO K=NP(3),MIN0(NP(3)+1,NUMGRID(3))
-      DO J=NP(2),MIN0(NP(2)+1,NUMGRID(2))
-      DO I=NP(1),MIN0(NP(1)+1,NUMGRID(1))
+  S=NUMSTAT+3
+  DO NO=1,NOBSTAT(S)
+    O=O+1
+    DO N=1,MAXDIMS
+      NP(N)=OBSIDXPC(N,O)
+    ENDDO
+    OI=OBSERROR(O)**2
+    OI=1.0/OI
+    Temp_ref=0.0
+    M=0
+    rc=0.
+    sc=0.
+    DO T=NP(4),MIN0(NP(4)+1,NUMGRID(4))
+    DO K=NP(3),MIN0(NP(3)+1,NUMGRID(3))
+    DO J=NP(2),MIN0(NP(2)+1,NUMGRID(2))
+    DO I=NP(1),MIN0(NP(1)+1,NUMGRID(1))
             
-        M=M+1        
-        rc=rc+OBSCOEFF(M,O)*GRDANALS(I,J,K,T,RR)
-      ENDDO
-      ENDDO
-      ENDDO
-      ENDDO     
-       !changed 20100907  shuyuan
+      M=M+1        
+      rc=rc+OBSCOEFF(M,O)*GRDANALS(I,J,K,T,RR)
+    ENDDO
+    ENDDO
+    ENDDO
+    ENDDO     
+    !changed 20100907  shuyuan
   
-     ! Temp_ref=(OBSVALUE(O)-43.1)/17.5
-     ! Temp_ref=(10.**Temp_ref)              !rc  unit is g/m3 
-      Temp_ref=OBSVALUE(O)
-      Temp_ref=(rc-Temp_ref)*(rc-Temp_ref)
+    ! Temp_ref=(OBSVALUE(O)-43.1)/17.5
+    ! Temp_ref=(10.**Temp_ref)              !rc  unit is g/m3 
+    Temp_ref=OBSVALUE(O)
+    Temp_ref=(rc-Temp_ref)*(rc-Temp_ref)
 
-      !COSTFUN=COSTFUN+Temp_ref*OI/(Segma*Segma)/(NOBSTAT(S)*1.0) !!!!20101025
-     COSTFUN=COSTFUN+Temp_ref!!!!20101025
+    !COSTFUN=COSTFUN+Temp_ref*OI/(Segma*Segma)/(NOBSTAT(S)*1.0) !!!!20101025
+    COSTFUN=COSTFUN+Temp_ref!!!!20101025
 
-     CS(S)=CS(S)+0.5*(rc-Temp_ref)*(rc-Temp_ref)/(Segma*Segma)
-   
-      ENDDO
-  print*,'Radar cost: ',COSTFUN, OBSVALUE(O)
+    CS(S)=CS(S)+0.5*(rc-Temp_ref)*(rc-Temp_ref)/(Segma*Segma)
 
+  ENDDO
+  print*,'Radar reflectivity cost: ',COSTFUN-ref, OBSVALUE(O-1),NOBSTAT(S),S,Segma
 
 
   COSTFUN=0.5D0*COSTFUN
@@ -809,6 +830,7 @@ ref = COSTFUN
   CM=COSTFUN-CM
 
 ! GEOSTROPHIC BALANCE TERM
+  CB = 0.0
   IF(GRDLEVL .LE. ENDGSLV) THEN
     CB=COSTFUN
     IF(IFPCDNT.EQ. 0 .OR. IFPCDNT.EQ.2)THEN       ! FOR SIGMA AND HEIGHT COORDINATE
@@ -820,6 +842,7 @@ ref = COSTFUN
   ENDIF
 
 ! HYDROSTATIC CONDITION TERM                 ! ADDED BY ZHONGJIE HE
+  CH = 0.0
   IF(GRDLEVL .LE. ENDHYLV) THEN
     CH=COSTFUN
     ! CALL HYDROCOST
@@ -828,9 +851,9 @@ ref = COSTFUN
     CH=COSTFUN-CH
   ENDIF
 
-   OPEN(907,file='costfun.txt',position='append')!!2010823 liu for test
-   WRITE(907,1)(CS(S),S=1,NUMSTAT+3),CM,CB,CH
-   CLOSE(907)
+  ! OPEN(907,file='costfun.txt',position='append')!!2010823 liu for test
+  ! WRITE(907,1)(CS(S),S=1,NUMSTAT+3),CM,CB,CH
+  ! CLOSE(907)
   WRITE(*,1)(CS(S),S=1,NUMSTAT+3),CM,CB,CH
 1 FORMAT('Each state: ',10e12.4,' Smoothing: ',e12.4,' Geostropic: ',e12.4,' Hydrostatic: ',e12.4)
   
@@ -858,7 +881,9 @@ SUBROUTINE COSTGRADT2
   REAL  :: C1,C2    ! coeff  for rour and rous
   REAL  :: Segma     !variance  for ref_obs
   REAL  ::Temp_ref,temp,temp1
+  REAL  :: D2R
    
+  D2R = 3.14159/180.0
 
 !  DECLARATION :
 !                'CC' IS THE COEFFICENT USED TO CALCULATE GRADIENT OF W TO CONTROL VARIABLE
@@ -947,7 +972,7 @@ SUBROUTINE COSTGRADT2
      
     DG=OBSEINF1(NO)
     DV=OBSEINF2(NO)
-    HT=HU*SIND(DG)*COSD(DV)+HV*COSD(DG)*COSD(DV)+HW*SIND(DV)
+    HT=HU*SIN(D2R*DG)*COS(D2R*DV)+HV*COS(D2R*DG)*COS(D2R*DV)+HW*SIN(D2R*DV)
     M=0
     DO T=NP(4),MIN0(NP(4)+1,NUMGRID(4))
     DO K=NP(3),MIN0(NP(3)+1,NUMGRID(3))
@@ -955,12 +980,12 @@ SUBROUTINE COSTGRADT2
     DO I=NP(1),MIN0(NP(1)+1,NUMGRID(1))
       M=M+1
       GRADINT(I,J,K,T,UU)=GRADINT(I,J,K,T,UU)  &
-      +(HT-OBSVALUE(O))*OBSCOEFF(M,O)*SIND(DG)*COSD(DV)
-     ! +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIND(DG)*COSD(DV)*OBSRADAR!!!modified by shuyuan   20101028
+      +(HT-OBSVALUE(O))*OBSCOEFF(M,O)*SIN(D2R*DG)*COS(D2R*DV)
+     ! +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIN(D2R*DG)*COS(D2R*DV)*OBSRADAR!!!modified by shuyuan   20101028
       GRADINT(I,J,K,T,VV)=GRADINT(I,J,K,T,VV)  &
-       +(HT-OBSVALUE(O))*OBSCOEFF(M,O)*COSD(DG)*COSD(DV)
-      !+(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*COSD(DG)*COSD(DV)*OBSRADAR!!!modified by shuyuan   20101028
-      CC(M,O)=(HT-OBSVALUE(O))*SIND(DV)*OBSCOEFF(M,O)!*OI*OBSRADAR!!!modified by shuyuan   20101028
+       +(HT-OBSVALUE(O))*OBSCOEFF(M,O)*COS(D2R*DG)*COS(D2R*DV)
+      !+(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*COS(D2R*DG)*COS(D2R*DV)*OBSRADAR!!!modified by shuyuan   20101028
+      CC(M,O)=(HT-OBSVALUE(O))*SIN(D2R*DV)*OBSCOEFF(M,O)!*OI*OBSRADAR!!!modified by shuyuan   20101028
     ENDDO
     ENDDO
     ENDDO
@@ -1102,6 +1127,10 @@ SUBROUTINE TEST_FUN2
   REAL  :: CS(NUMSTAT),CM,CB
   
   REAL  :: OBS_X,OBS_Y,OBS_Z
+  REAL  :: D2R
+
+  D2R = 3.14159/180.0
+
 ! --------------------
   UU=U_CMPNNT
   VV=V_CMPNNT
@@ -1177,7 +1206,7 @@ SUBROUTINE TEST_FUN2
     ENDDO
     DG=OBSEINF1(NO)
     DV=OBSEINF2(NO)
-    HT=HU*SIND(DG)*COSD(DV)+HV*COSD(DG)*COSD(DV)+HW*SIND(DV)
+    HT=HU*SIN(D2R*DG)*COS(D2R*DV)+HV*COS(D2R*DG)*COS(D2R*DV)+HW*SIN(D2R*DV)
     COSTFUN=COSTFUN+(HT-OBSVALUE(O))*OI*(HT-OBSVALUE(O))*OBSRADAR
   ENDDO
   COSTFUN=0.5D0*COSTFUN
