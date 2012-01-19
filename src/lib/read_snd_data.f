@@ -1,7 +1,7 @@
  
         subroutine read_snd_data2(lun,i4time_snd,ext                   ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
-     1                         ,lat,lon,imax,jmax,kmax                 ! I
+     1                         ,lat,lon,topo,imax,jmax,kmax            ! I
      1                         ,vgrid_3d,l_fill_ht                     ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
@@ -17,7 +17,8 @@
 cdoc    Returns sounding wind, T, Td data from the SND file
 cdoc    Also returns the lat/lon/time info from all the levels
 
-        use mem_grid, ONLY: topo
+!       use mem_grid, ONLY: topo
+        real topo(imax,jmax)
 
 !       Profile Stuff
         real lat_pr(MAX_PR),lat_pr_lvl(MAX_PR,MAX_PR_LEVELS)
@@ -86,11 +87,13 @@ cdoc    Also returns the lat/lon/time info from all the levels
       endif
 
       if(ltest_vertical_grid('SIGMA_HT'))then
+        print*,'TOPO: ',topo(3,3)
         call get_ht_3d(imax,jmax,kmax,topo,heights_3d,istatus) 
         pres_3d = vgrid_3d
       else
         heights_3d = vgrid_3d
       endif
+!     print*,'HELLO'
 
       DO i_pr = n_profiles+1,max_pr
 
@@ -276,7 +279,7 @@ c
 
         subroutine read_snd_data(lun,i4time_snd,ext                    ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
-     1                         ,lat,lon,imax,jmax,kmax                 ! I
+     1                         ,lat,lon,topo,imax,jmax,kmax            ! I
      1                         ,heights_3d,l_fill_ht                   ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
@@ -288,6 +291,8 @@ c
      1                         ,istatus)                               ! O
 
 cdoc    Returns sounding wind, T, Td data from the SND file
+
+        real topo(imax,jmax)
 
 !       Profile Stuff
         real lat_pr(MAX_PR),lat_pr_lvl(MAX_PR,MAX_PR_LEVELS)
@@ -322,7 +327,7 @@ cdoc    Returns sounding wind, T, Td data from the SND file
 
         call read_snd_data2(    lun,i4time_snd,ext                     ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
-     1                         ,lat,lon,imax,jmax,kmax                 ! I
+     1                         ,lat,lon,topo,imax,jmax,kmax            ! I
      1                         ,heights_3d,l_fill_ht                   ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
@@ -500,6 +505,8 @@ c
 
         include 'read_sfc.inc'
 
+        real topo(imax,jmax)
+
 !       Declarations for 'read_snd_data' call
         integer MAX_PR,MAX_PR_LEVELS
 
@@ -544,7 +551,7 @@ c
 
         call read_snd_data(lun,i4time,ext                              ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
-     1                         ,lat,lon,imax,jmax,kmax                 ! I
+     1                         ,lat,lon,topo,imax,jmax,kmax            ! I
      1                         ,heights_3d_dum,.false.                 ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
