@@ -282,7 +282,7 @@
      1            MAX_PR,MAX_PR_LEVELS,weight_prof,l_use_raob,    ! I
      1            l_use_cdw,                                      ! I
      1            N_SAO,N_PIREP,                                  ! I
-     1            lat,lon,                                        ! I
+     1            lat,lon,topo,                                   ! I
      1            NTMIN,NTMAX,                                    ! I
      1            u_mdl_bkg_4d, v_mdl_bkg_4d,                     ! I
      1            grid_laps_u,grid_laps_v,grid_laps_wt,           ! O
@@ -349,7 +349,9 @@
 
                   var_fcst_s(ista) = r_missing_data 
 
-                  write(6,*)ista,var_s(ista)
+                  if(ista .le. 100 .or. ista .eq. (ista/100)*100)then
+                      write(6,*)ista,var_s(ista)
+                  endif
 
                   if(var_s(ista) .ne. r_missing_data)then
                     call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat
