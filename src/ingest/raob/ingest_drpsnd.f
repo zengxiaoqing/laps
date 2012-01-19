@@ -286,6 +286,8 @@
      1                           ,filename_in,ni,nj,nk
      1                           ,lun_out,istatus)       
 
+      use mem_grid, ONLY: topo
+
       integer MAX_PR, MAX_PR_LEVELS
       parameter (MAX_PR=100)
       parameter (MAX_PR_LEVELS=1000)
@@ -343,7 +345,7 @@
 !         Call Read Routine for input SND file
           call read_snd_data(lun_in,i4time_file,filename_in            ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
-     1                         ,lat,lon,imax,jmax,kmax                 ! I
+     1                         ,lat,lon,topo,imax,jmax,kmax            ! I
      1                         ,heights_3d,l_fill_ht                   ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
@@ -357,7 +359,7 @@
       else
           call read_snd_data2(lun_in,i4time_file,filename_in           ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
-     1                         ,lat,lon,imax,jmax,kmax                 ! I
+     1                         ,lat,lon,topo,imax,jmax,kmax            ! I
      1                         ,heights_3d,l_fill_ht                   ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
