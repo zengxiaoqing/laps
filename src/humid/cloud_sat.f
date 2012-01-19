@@ -55,6 +55,7 @@ c     Dan Birkenheuer  5/10/2002
       real :: cg                ! cloud fraction
       real :: delsat            ! output from test cloud, amount to sat
       real :: data              ! pre_analyzed ssh at location
+      real :: data_old          ! data as input to routine (needs to be preserved)
       real :: computed_increment ! amount planned to increase data by, we can compare this to delsat to see if it is too high
 
 c      if(cg > 0.6 .and. cg < 1.0) then !cloudy
@@ -68,11 +69,11 @@ c         data = data + delsat
          
 c      endif
 c     new function goes here devised by Steve Albers 1/19/2012
-
+      data_old = data
       computed_increment = (cg**0.2)*0.1  ! this is rh fraction
       computed_increment = computed_increment * (data+delsat)  ! this is sh fraction of saturation
-      data = data + computed_increment  
-      data = min (data, (data+delsat) ) ! this caps data to 100% rh or saturated sh 
+      data = data + computed_increment   ! data now modify, must use data_old for comparision to saturation  
+      data = min (data, (data_old+delsat) ) ! this caps data to 100% rh or saturated sh 
 
       return
 
