@@ -52,7 +52,7 @@ PROGRAM laps2grib
   CHARACTER(LEN=512)          :: syscmd
  
   INTEGER                     :: i, iargc, max_args, ihhmm
-  CHARACTER(LEN=100)          :: vtab, forecast
+  CHARACTER(LEN=100)          :: vtab, forecast_id
   CHARACTER(LEN=5)            :: hhmm
   CHARACTER(LEN=14)           :: file_a9time
   LOGICAL                     :: dir_exists
@@ -62,12 +62,12 @@ PROGRAM laps2grib
   print *, "********** ",vtag," **********"
   print *, ""
   print *, " USAGE:	laps2grib.exe [vtab]"
-  print *, " MODEL USAGE:	laps2grib.exe vtab [hh]hmm forecast (e.g. wfr2grib.vtab 1200 wrf-hrrr)"
+  print *, " MODEL USAGE:	laps2grib.exe vtab [hh]hmm forecast_id (e.g. wfr2grib.vtab 1200 wrf-hrrr)"
   print *, "======================================================"
 
   vtab = 'laps2grib.vtab'
   reftime_sig = 0
-  forecast = ''
+  forecast_id = ''
   hhmm = ''
   max_args = iargc()
 
@@ -96,9 +96,9 @@ PROGRAM laps2grib
 	hhmm = '0'//hhmm
     ENDIF
 
-    ! expect ensemble forecast name, .e.g. mean, or wrf-hrrr
-    CALL GETARG(3,forecast)
-    forecast = '/'//forecast
+    ! expect ensemble forecast_id name, .e.g. mean, or wrf-hrrr
+    CALL GETARG(3,forecast_id)
+    forecast_id = '/'//forecast_id
   ELSE IF (max_args .NE. 0) THEN
         STOP "Check the usage statement above..."
   ENDIF
@@ -144,7 +144,7 @@ PROGRAM laps2grib
   PRINT *, "-- R_MISSING: ",r_missing
 
   ! Check the GRIB dir
-  g2file = TRIM(output_path)//TRIM(forecast)
+  g2file = TRIM(output_path)//TRIM(forecast_id)
   INQUIRE(FILE=g2file,EXIST=dir_exists)
   IF (.NOT. dir_exists) THEN
       PRINT *, "Dir does not exist: ",TRIM(g2file)
@@ -152,8 +152,8 @@ PROGRAM laps2grib
   ENDIF
 
   ! Open the GRIB file
-  g2file = TRIM(output_path)//TRIM(forecast)//'/'//TRIM(file_a9time)//'.gr2'
-  g2file_tmp = TRIM(output_path)//TRIM(forecast)//'/.'//TRIM(file_a9time)//'.gr2'
+  g2file = TRIM(output_path)//TRIM(forecast_id)//'/'//TRIM(file_a9time)//'.gr2'
+  g2file_tmp = TRIM(output_path)//TRIM(forecast_id)//'/.'//TRIM(file_a9time)//'.gr2'
   CALL init_grib2_file(g2file_tmp,laps_proj,center_id,subcenter_id, &
                        reftime_sig,year,month,day,hour,minute,second, &
                        prod_status,data_type,g2lun,istatus)
@@ -166,7 +166,7 @@ PROGRAM laps2grib
     loop3d: DO n = 1, n_iso
 
       IF (meta_iso3d(n)%qbal .EQ. 0) THEN
-        lapsfile = TRIM(laps_data_root)//'/lapsprd/'//meta_iso3d(n)%ext//TRIM(forecast)//'/'//TRIM(file_a9time)//'.'// &
+        lapsfile = TRIM(laps_data_root)//'/lapsprd/'//meta_iso3d(n)%ext//TRIM(forecast_id)//'/'//TRIM(file_a9time)//'.'// &
                          meta_iso3d(n)%ext
       ELSE
         lapsfile = TRIM(laps_data_root)//'/lapsprd/balance/'//meta_iso3d(n)%ext//'/'//&
@@ -213,7 +213,7 @@ PROGRAM laps2grib
 
         
       ELSE  
-        PRINT *, "Problem getting: ",TRIM(forecast)," EXT .",meta_iso3d(n)%ext," VAR ",meta_iso3d(n)%var
+        PRINT *, "Problem getting: ",TRIM(forecast_id)," EXT .",meta_iso3d(n)%ext," VAR ",meta_iso3d(n)%var
       ENDIF
     ENDDO loop3d
     DEALLOCATE(lapsdata3d)
@@ -226,7 +226,7 @@ PROGRAM laps2grib
     PRINT *, "-- Processing 2D Fields"
     loop2d: DO n =1, n_2d
       IF (meta_2d(n)%ext .NE. 'n7g') THEN
-        lapsfile = TRIM(laps_data_root)//'/lapsprd/'//meta_2d(n)%ext//TRIM(forecast)//'/'//TRIM(file_a9time)//'.'// &
+        lapsfile = TRIM(laps_data_root)//'/lapsprd/'//meta_2d(n)%ext//TRIM(forecast_id)//'/'//TRIM(file_a9time)//'.'// &
                          meta_2d(n)%ext
 
       ELSE
@@ -262,7 +262,7 @@ PROGRAM laps2grib
                  nx,ny,newrec,inomiss,r_missing, r_missing,lapsdata2d)
 
       ELSE 
-        PRINT *, "Problem getting: ",TRIM(forecast)," EXT .",meta_2d(n)%ext," VAR ",meta_2d(n)%var
+        PRINT *, "Problem getting: ",TRIM(forecast_id)," EXT .",meta_2d(n)%ext," VAR ",meta_2d(n)%var
       ENDIF
     ENDDO loop2d
     DEALLOCATE(lapsdata2d)
@@ -273,7 +273,7 @@ PROGRAM laps2grib
     ALLOCATE(lapsdata2d(nx,ny))
     PRINT *, "-- Processing Accumulated 2D Fields"
     loop_a2d: DO n =1, n_accum2d
-      lapsfile = TRIM(laps_data_root)//'/lapsprd/'//meta_accum2d(n)%ext//TRIM(forecast)//'/'//TRIM(file_a9time)//'.'// &
+      lapsfile = TRIM(laps_data_root)//'/lapsprd/'//meta_accum2d(n)%ext//TRIM(forecast_id)//'/'//TRIM(file_a9time)//'.'// &
                          meta_accum2d(n)%ext
 
 
@@ -328,7 +328,7 @@ PROGRAM laps2grib
                  pack_method,meta_accum2d(n)%scale_fac,miss_mgmt,&
                  nx,ny,newrec,inomiss,r_missing, r_missing,lapsdata2d)
       ELSE 
-        PRINT *, "Problem getting: ",TRIM(forecast)," EXT .",meta_accum2d(n)%ext," VAR ",meta_accum2d(n)%var
+        PRINT *, "Problem getting: ",TRIM(forecast_id)," EXT .",meta_accum2d(n)%ext," VAR ",meta_accum2d(n)%var
       ENDIF
     ENDDO loop_a2d
     DEALLOCATE(lapsdata2d)
