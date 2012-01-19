@@ -109,6 +109,13 @@ c
 c
       call get_r_missing_data(r_missing_data,istatus)
 
+!     Initialize surface fields
+      ht_sfc = r_missing_data
+      tp_sfc = r_missing_data
+      td_sfc = r_missing_data
+      uw_sfc = r_missing_data
+      vw_sfc = r_missing_data
+
       call s_len(cmodel,nclen)
       call s_len(fname,nflen)
 
