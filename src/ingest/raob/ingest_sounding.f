@@ -4,6 +4,8 @@
 
 !      Steve Albers      May-1999       Original Version
 
+       use mem_grid, ONLY: topo
+
 !      Access global parameters
        character*8 c8_project
        character*9 a9_time
@@ -35,11 +37,24 @@
            write(6,*)' systime = ',a9_time
        endif
 
+       allocate( topo(ni,nj), STAT=istat_alloc )
+       if(istat_alloc .ne. 0)then
+           write(6,*)' ERROR: Could not allocate topo'
+           stop
+       endif
+
+       call read_static_grid(NX_L,NY_L,'AVG',topo,istatus)
+       if(istatus .ne. 1)then
+           stop
+       endif
+
        call snd_sub(ni,nj,c8_project,laps_cycle_time,i4time_sys)          ! I
 
  999   continue
 
        write(6,*)' Successful end of ingest_sounding program...'
+
+       deallocate(topo)
 
        end
 
