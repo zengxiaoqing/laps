@@ -46,7 +46,7 @@
 3d 0,'lw3','u3 ', 1000.,110000.,  1., 1,0, 2,  2
 3d 0,'lw3','v3 ', 1000.,110000.,  1., 1,0, 2,  3
 3d 0,'lw3','om ', 1000.,110000.,  1., 1,0, 2,  8
-3d 0,'lq3','sh ', 1000.,110000.,  1., 0,0, 1,  0
+3d 0,'lq3','sh ', 1000.,110000.,  1., 7,0, 1,  0
 
 # 2d variables
 # Similar to the 3D variables, but in this case you don't need to
@@ -63,8 +63,8 @@
 #    (or only) level of the data
 # Lev1_Scale: Power of 10 used to scale the value of the level to
 #    an integer with appropriate precision
-# Lev1_value: The scaled integer level value
-# Lev2_Type/Scale/Value: Only used for layer products, where these
+# Lev1_Value: The scaled integer level value
+# Lev2_Type/Lev2_Scale/Lev2_Value: Only used for layer products, where
 #   values are defined the same way as Lev1 but for the second level
 #   that defines the layer.  For non-layer products, these must be
 #   set to 255.
@@ -77,6 +77,9 @@
 #2d 'n7g','avg',  1., 0,  1, 0, 0,255,255,255,0, 3,  5
 #2d 'n7g','lat',  1., 0,  1, 0, 0,255,255,255,0,191,192
 #2d 'n7g','lon',  1., 0,  1, 0, 0,255,255,255,0,191,193
+#  NOTE: you can extract a 2d field and converts
+#  to single layer of a 3d field, eg 925mb
+#2d 'fsf','u01',  1., 1,100, 0,92500,255,255,255,0,2,2
 2d 'lsx','msl',  1., 0,  1, 0, 0,255,255,255,0, 3,  1
 2d 'lsx','ps ',  1., 0,  1, 0, 0,255,255,255,0, 3,  0
 2d 'lsx','t  ',  1., 1,103, 0, 2,255,255,255,0, 0,  0
