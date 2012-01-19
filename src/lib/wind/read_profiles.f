@@ -40,7 +40,7 @@ cdis
  
         subroutine read_profiles(i4time_sys,heights_3d,             ! I
      1                   lat_pr,lon_pr,obstype,c5_name_a,           ! O
-     1                   lat,lon,i4time_ob_pr,                      ! I
+     1                   lat,lon,topo,i4time_ob_pr,                 ! I
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
      1                   l_use_raob,l_use_all_nontower_lvls,        ! I
      1                   ob_pr_u , ob_pr_v ,                        ! O
@@ -78,6 +78,7 @@ c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
 
         real lat(imax,jmax)
         real lon(imax,jmax)
+        real topo(imax,jmax)
 
 !       Profile Stuff
         real lat_pr(MAX_PR)
@@ -206,7 +207,7 @@ c
       mode = 1 ! key levels off of wind data
       call read_snd_data(lun,i4time_snd,ext                             ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                    ! I
-     1                         ,lat,lon,imax,jmax,kmax                  ! I
+     1                         ,lat,lon,topo,imax,jmax,kmax             ! I
      1                         ,heights_3d,.true.                       ! I
      1                         ,mode                                    ! I
      1                         ,n_profiles                              ! I/O
