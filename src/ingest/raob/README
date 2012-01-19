@@ -119,6 +119,8 @@ snd_main                                        ingest_sounding.f
                         write_snd               lib/write_snd.f
             avapsread_sub                       avapsread_sub.f
             combine_snd_file                    ingest_drpsnd.f
+                read_snd_data                   lib/read_snd_data.f
+                read_snd_data2                        "
             get_drpsnd_data_cwb                 ingest_drpsnd_sub_cwb.f 
         ingest_satsnd                           ingest_satsnd.f
             get_satsnd_afwa                     ingest_satsnd_af.f
