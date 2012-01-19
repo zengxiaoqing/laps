@@ -890,6 +890,13 @@ c
              write(6,*)' htbg_sfc range: ',minval(htbg_sfc)
      1                                    ,maxval(htbg_sfc)       
 
+             if(minval(htbg_sfc) .eq. missingflag .AND.
+     1          maxval(htbg_sfc) .eq. missingflag      )then
+                 write(6,*)
+     1     ' Error: htbg_sfc has missing values, check BG model terrain'
+                 return
+             endif
+
              call get_ht_3d(nx_bg,ny_bg,nz_laps,htbg_sfc,htvi
      1                     ,istatus)
              if(istatus .ne. 1)then
@@ -1365,6 +1372,11 @@ c... of subroutine sfcbkgd_sfc. This routine uses the 2m Td and sfc_press
 c... 2D arrays directly from the background model.
 
            if(luse_sfc_bkgd)then ! tested only for ETA48_CONUS
+             if(minval(tp_sfc) .eq. missingflag .AND.
+     1          minval(tp_sfc) .eq. missingflag       )then
+               write(6,*)' ERROR - surface temperature is missing'
+               return
+             endif
              if(vertical_grid .eq. 'PRESSURE')then 
                call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
      .           ,sh_sfc,topo,pr1d_pa,nx_laps, ny_laps, nz_laps, pr_sfc
@@ -1377,12 +1389,18 @@ c... 2D arrays directly from the background model.
      .           ,nx_pr,ny_pr)      
                td_sfc_hi = td_sfc
              endif
+
            else
 !             write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
+              if(vertical_grid .eq. 'SIGMA_HT')then
+                write(6,*)
+     1           ' WARNING: not using surface fields for SIGMA_HT grid'       
+              endif
               call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,td_sfc
      .           ,td_sfc_hi, topo
      .           ,pr1d_pa, nx_laps, ny_laps, nz_laps, pr_sfc
      .           ,nx_pr,ny_pr)      
+
            endif
 
            write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
