@@ -78,8 +78,12 @@ echo "fcstIncrMin = $fcstIncrMin"
 date -u
 
 # Run purger on lfmpost and other log files
-echo "@PERL@ @prefix@/etc/purger.pl -r -t 7.0 $modelroot/log" 
-      @PERL@ @prefix@/etc/purger.pl -r -t 7.0 $modelroot/log  
+echo "@PERL@ @prefix@/etc/purger.pl -r -t 72.0 $modelroot/log" 
+      @PERL@ @prefix@/etc/purger.pl -r -t 72.0 $modelroot/log  
+
+# Run purger on model run directories
+echo "@PERL@ @prefix@/etc/purge_w3_fcst2d.pl -d $modelroot -t 72.0 modelroot model_dum" 
+      @PERL@ @prefix@/etc/purge_w3_fcst2d.pl -d $modelroot -t 72.0 modelroot model_dum
 
 date -u
 
