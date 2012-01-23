@@ -77,7 +77,10 @@ c
                return
             endif
 
-         else
+         elseif(.true.)then ! SIGMA_HT grid
+            zlow = 1.       ! Surface defined as lowest SIGMA_HT level
+
+         else               ! .FALSE. 
             zlow = rlevel_of_field(sfc_2d(i,j),heights_3d,ni,nj,nk,       
      &                                                  i,j,istatus)
             if(istatus .ne. 1)then
