@@ -103,7 +103,7 @@ real, pointer, dimension(:,:) ::  &
       ,vsfc         ,wsfc         ,ground_t     ,pblhgt       ,rhsfc       &  
       ,pcp_tot      ,thetasfc     ,ztw0         ,ztw1                      &
       ,thetaesfc    ,tdsfc        ,redp         ,pmsl         ,upbl        &
-      ,vpbl         ,clwmrsfc     ,icemrsfc     ,snowmrsfc    ,rainmrsfc   &
+      ,vpbl         ,u80          ,v80          ,clwmrsfc     ,icemrsfc     ,snowmrsfc    ,rainmrsfc   &
       ,graupmrsfc   ,cldbase      ,cldtop       ,cldamt       ,ceiling     &
       ,intliqwater  ,intcldice    ,totpcpwater  ,max_refl     ,echo_tops    ,refl_sfc    &
       ,pcptype_sfc  ,pcp_inc      ,snow_inc     ,snow_tot &
@@ -354,7 +354,7 @@ implicit none
 integer :: ct
 
 if (trim(mtype) /= 'st4') then
-  nvar2dout=47
+  nvar2dout=49
   if (make_micro) nvar2dout=nvar2dout+5
   if (make_firewx) nvar2dout=nvar2dout+7
 
@@ -422,6 +422,8 @@ if (trim(mtype) /= 'st4') then
   liftedind  =>sgrid(1:lx,1:ly,ct); name2d(ct)='LI '; com2d(ct)='Lifted Index'                    ; ct=ct+1
   visibility =>sgrid(1:lx,1:ly,ct); name2d(ct)='VIS'; com2d(ct)='Sfc. Visibility'                 ; ct=ct+1
   heatind    =>sgrid(1:lx,1:ly,ct); name2d(ct)='HI '; com2d(ct)='Heat Index'                      ; ct=ct+1
+  u80        =>sgrid(1:lx,1:ly,ct); name2d(ct)='U80'; com2d(ct)='U-component Wind at 80m'         ; ct=ct+1
+  v80        =>sgrid(1:lx,1:ly,ct); name2d(ct)='V80'; com2d(ct)='V-component Wind at 80m'         ; ct=ct+1
 
   if (make_micro) then
      clwmrsfc  =>sgrid(1:lx,1:ly,ct); name2d(ct)='SCL'; com2d(ct)='Sfc Cloud Liq Water MR'; ct=ct+1

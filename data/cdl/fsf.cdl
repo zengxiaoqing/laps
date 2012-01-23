@@ -574,6 +574,31 @@ netcdf fsf {
             vpb:LAPS_var="VPB";
             vpb:lvl_coord="AGL";
             vpb:LAPS_units="M/S   ";     
+
+        //      U-component 80m wind//
+        //      bigfile name =
+        float
+            u80(record,z,y,x);
+            u80:_FillValue = 1.e+37f;
+            u80:long_name="U-comp wind at 80m";
+            u80:units="meters / second  ";
+            u80:valid_range= -200.f, 200.f;
+            u80:LAPS_var="U80";
+            u80:lvl_coord="AGL";
+            u80:LAPS_units="M/S   ";
+
+        //      V-component 80m wind//
+        //      bigfile name =
+        float
+            v80(record,z,y,x);
+            v80:_FillValue = 1.e+37f;
+            v80:long_name="V-comp wind at 80m";
+            v80:units="meters / second  ";
+            v80:valid_range= -200.f, 200.f;
+            v80:LAPS_var="v80";
+            v80:lvl_coord="AGL";
+            v80:LAPS_units="M/S   ";
+
         //      Ventilation index      //
         //      bigfile name =      
         float
@@ -695,6 +720,8 @@ netcdf fsf {
             tgd_comment(record,z,namelen),
             upb_comment(record,z,namelen),
             vpb_comment(record,z,namelen),
+            u80_comment(record,z,namelen),
+            v80_comment(record,z,namelen),
             vnt_comment(record,z,namelen),
             ham_comment(record,z,namelen),
             hah_comment(record,z,namelen),
@@ -891,6 +918,14 @@ netcdf fsf {
         short
             vpb_fcinv(record, z);
             vpb_fcinv:_FillValue= 0s;
+
+        short
+            u80_fcinv(record, z);
+            u80_fcinv:_FillValue= 0s;
+
+        short
+            v80_fcinv(record, z);
+            v80_fcinv:_FillValue= 0s;
 
         short
             vnt_fcinv(record, z);
