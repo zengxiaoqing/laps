@@ -238,7 +238,7 @@ real, allocatable, dimension(:,:,:) :: htdsig,hrhsig,hthetasig,hthetaesig,hzsigf
 
 !beka
 real :: dx(lx,ly),dy(lx,ly)  
-real :: r_missing_data
+real :: r_missing_data, aglhgt
 real :: stefan_boltzmann, b_olr, eff_emissivity
 real :: bt_flux_equiv
 
@@ -666,6 +666,11 @@ if(.not. large_ngrid)then
    endif
   enddo
   enddo
+
+  aglhgt = 80.
+  call wind_agl(husig,hvsig,hzsig,aglhgt,zsfc,lx,ly,nz  &
+               ,u80,v80,r_missing_data)
+
 endif ! large_ngrid
 
 ! Fire weather indices.
@@ -1636,6 +1641,76 @@ do i=1,nx
    endif
 enddo
 enddo
+
+return
+end
+
+!===============================================================================
+
+subroutine wind_agl(usig,vsig,zsig,aglhgt,topo,lx,ly,nz  &
+                   ,uagl,vagl,r_missing_data)
+
+implicit none
+
+integer :: lx,ly,nz,i,j,k,nbl
+logical :: l_debug
+real :: aglhgt,refhgt,usum,vsum,umean,vmean,spmean,r_missing_data,zlow,zhigh
+real, dimension(lx,ly) :: topo,uagl,vagl
+real, dimension(lx,ly,nz) :: usig,vsig,zsig
+
+write(6,*)' Subroutine wind_agl...'
+
+do j=1,ly
+do i=1,lx
+
+! Compute mean wind within the PBL.
+      if(i .eq. lx/2 .AND. j .eq. ly/2)then
+         l_debug = .true.
+      else
+         l_debug = .false.
+      endif       
+
+      nbl=0
+      usum=0.
+      vsum=0.
+      umean=0.
+      vmean=0.
+      refhgt = topo(i,j) + aglhgt
+      do k=1,nz-1
+         if (zsig(i,j,k) <= refhgt .AND. zsig(i,j,k+1) >= refhgt) then
+            zlow = refhgt - zsig(i,j,k)
+            zhigh = zsig(i,j,k+1) - refhgt
+            nbl=nbl+1
+
+            usum = 0.
+            usum=usum+usig(i,j,k+1) * (zlow  / (zlow + zhigh))
+            usum=usum+usig(i,j,k)   * (zhigh / (zlow + zhigh))
+
+            vsum = 0.
+            vsum=vsum+vsig(i,j,k+1) * (zlow  / (zlow + zhigh))
+            vsum=vsum+vsig(i,j,k)   * (zhigh / (zlow + zhigh))
+
+            exit
+         endif
+      enddo
+
+      if (nbl > 0) then
+         if(l_debug)then
+             write(6,*)'topo,refhgt,zsig1,zsig2',topo(i,j),refhgt,zsig(i,j,k),zsig(i,j,k+1)
+             write(6,*)'zlow,zhigh,usig(i,j,k),usig(i,j,kp1),usum = ',zlow,zhigh,usig(i,j,k),usig(i,j,k+1),usum
+         endif
+         uagl(i,j)=usum
+         vagl(i,j)=vsum
+      else
+         uagl(i,j)=r_missing_data
+         vagl(i,j)=r_missing_data
+      endif
+
+enddo
+enddo
+
+write(6,*)aglhgt,' meter wind U range = ',minval(uagl),maxval(uagl)
+write(6,*)aglhgt,' meter wind V range = ',minval(vagl),maxval(vagl)
 
 return
 end
