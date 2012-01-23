@@ -22,6 +22,7 @@ if ($opt_h){
   print "            the subdirectories with your web data.  The default\n";
   print "            location is /w3/lapb/domains (external to LAPS_DATA_ROOT)\n";
   print "            If specified, then a dummy argument can be used for 'domain'\n";
+  print "            If -d is a full modelroot path, then set 'domain' to the string 'modelroot'\n";
   print "\n";
   print "         -h \n";
   print "            Displays this help message.\n";
@@ -33,7 +34,7 @@ if ($opt_h){
 }
  
   
-# Require 2 arguments:  domain_name and model name
+# Require 2 arguments: domain and model names
 
 my $nargs = @ARGV;
 if ($nargs != 2) {
@@ -48,14 +49,21 @@ my ($domain, $model) = @ARGV;
 #  Process options
 
 my ($purgedir, $maxage);
-if ($opt_d) {
-  $purgedir = "$opt_d/lapsprd/www/fcst2d/$model/archive";
-}else{
-  $purgedir = "/w3/lapb/domains/$domain/fcst2d/$model/archive";
-}
 
-if (! -d "$purgedir") {
-  die "$purgedir not found!\n";
+if($domain != "modelroot"){
+  if ($opt_d) {
+    $purgedir = "$opt_d/lapsprd/www/fcst2d/$model/archive";
+  }else{
+    $purgedir = "/w3/lapb/domains/$domain/fcst2d/$model/archive";
+  }
+
+  if (! -d "$purgedir") {
+    die "$purgedir not found!\n";
+  }
+
+}else{
+  $purgedir = "$opt_d";
+
 }
 
 if ($opt_t) {
