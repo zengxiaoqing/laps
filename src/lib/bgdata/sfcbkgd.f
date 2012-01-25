@@ -60,24 +60,39 @@ c
       REAL       tdsfc_o_min, tdsfc_o_max
       REAL       qsfc_i_min, qsfc_i_max
       REAL       p_mb
+      REAL       r_missing_data
 c
-c if bgmodel = 6 or 8 then td_sfc_i is used         
+c if bgmodel = 6 or 8 then tdsfc_i is used         
 c if bgmodel = 4      then qsfc_i is rh (WFO - RUC)
 c if bgmodel = 3      then qsfc_i is rh and q is rh
 c if bgmodel = 9      then no surface fields input. Compute all from 3d
 c                     fields. q3d used. (NOS - ETA)
 c otherwise qsfc_i is used directly with a test for g/kg or dimensionless
 c 
+      call get_r_missing_data(r_missing_data,istatus)
+
       write(6,*)
       write(6,*)' Subroutine sfcbkgd, bgmodel = ',bgmodel
+
       qsfc_i_min = minval(qsfc_i)
       qsfc_i_max = maxval(qsfc_i)
       write(6,*)' qsfc_i range = ',qsfc_i_min,qsfc_i_max
+      if(qsfc_i_min .eq. r_missing_data .AND.
+     1   qsfc_i_max .eq. r_missing_data       )then
+         write(6,*)' WARNING: qsfc_i has missing data values'
+      endif
+
       write(6,*)' tdsfc_i range = ',minval(tdsfc_i),maxval(tdsfc_i)
+      if(minval(tdsfc_i) .eq. r_missing_data .AND.
+     &   maxval(tdsfc_i) .eq. r_missing_data       )then
+         write(6,*)' WARNING: tdsfc_i has missing data values'
+      endif
+
       write(6,*)' ter range = ',minval(ter),maxval(ter)
 
       t_ref=-132.0
       if(bgmodel.eq.3.or.bgmodel.eq.9)then
+         write(6,*)' bgmodel is ',bgmodel,' convert 3D q to rh'
          do k=1,kx
             do j=1,jmx
             do i=1,imx
@@ -92,7 +107,7 @@ c
 
          badflag=0.
          write(6,*)
-     1        ' Interp 3D T and RH to hi-res terrain, qsfc_i is RH?'
+     1  ' Interp 3D T and RH to hi-res terrain, set tdsfc_o array to RH' 
          write(6,*)' height bottom level range = '
      1             ,minval(height(:,:,1)),maxval(height(:,:,1))
          call interp_to_sfc(ter,rh3d,height,imx,jmx,kx,
@@ -138,8 +153,10 @@ c
       if(tdsfc_o_max .gt. 1000.)then
           write(6,*)' ERROR: tdsfc is out of bounds'
       endif
+
       write(6,*)' tdsfc_o range = ',tdsfc_o_min,tdsfc_o_max
       write(6,*)' psfc range = ',minval(psfc),maxval(psfc)
+
       write(6,*)' returning from sfcbkgd...'
       write(6,*)
 
