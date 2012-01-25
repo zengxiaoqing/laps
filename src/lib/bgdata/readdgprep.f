@@ -1,6 +1,6 @@
       subroutine read_dgprep(bgmodel,cmodel,path,fname,af,nx,ny,nz
      .                      ,pr,ht,tp,sh,uw,vw,ww
-     .                      ,ht_sfc,pr_sfc,td_sfc,tp_sfc,t_at_sfc
+     .                      ,ht_sfc,pr_sfc,sh_sfc,tp_sfc,t_at_sfc
      .                      ,uw_sfc,vw_sfc,mslp,istatus)
 
 c
@@ -40,9 +40,10 @@ c
      .      ,prk(nz)
 
       real   ht_sfc(nx,ny)
-     .      ,pr_sfc(nx,ny)
-     .      ,td_sfc(nx,ny)     !for /public AVN this is RH @ 2m agl.
-     .      ,tp_sfc(nx,ny)     !for /public AVN this is T @ 2m agl.
+     .      ,pr_sfc(nx,ny)     !in pascals
+     .      ,sh_sfc(nx,ny)     !specific humidity (kg/kg) 
+     .      ,tp_sfc(nx,ny)     !Deg K, for /public AVN this is T @ 2m agl.
+     .      ,rh_sfc(nx,ny)     !Percent
      .      ,uw_sfc(nx,ny)
      .      ,vw_sfc(nx,ny)
      .      ,mslp(nx,ny)
@@ -57,7 +58,7 @@ c     real   mrsat
 c     real   esat,xe
 c     real   rp_init
 
-      real   prsfc
+      real   prsfc,prsfc_mb
       real   qsfc
       real   make_td
       real   make_ssh
@@ -111,8 +112,10 @@ c
 
 !     Initialize surface fields
       ht_sfc = r_missing_data
+      pr_sfc = r_missing_data
       tp_sfc = r_missing_data
-      td_sfc = r_missing_data
+      sh_sfc = r_missing_data
+      rh_sfc = r_missing_data
       uw_sfc = r_missing_data
       vw_sfc = r_missing_data
 
@@ -159,14 +162,14 @@ c
 
               call read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
      +,nvarsmax,nvars,nlevs,ivarcoord,ivarid
-     +,ht_sfc,pr_sfc,td_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
+     +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
 
            elseif(bgmodel.eq.8)then
 
               call read_nogaps(lun,nx,ny,nz
      + ,nvarsmax,nvars,nlevs,ivarcoord,ivarid
-     + ,ht,tp,sh,uw,vw,ht_sfc,pr_sfc,td_sfc,tp_sfc
+     + ,ht,tp,sh,uw,vw,ht_sfc,pr_sfc,sh_sfc,tp_sfc
      + ,uw_sfc,vw_sfc,mslp,istatus)
 
 
@@ -177,27 +180,27 @@ c
 c eta ingest currently disabled. J. Smart (9-2-98)
 c
 c           call read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
-c    +,ht_sfc,pr_sfc,td_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
+c    +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
 c    +,istatus)
 
          elseif(cmodel(1:nclen).eq.'AVN_FSL_NETCDF')then
 
                call read_avn_netcdf(filename, nz, 1, nx, ny,
      +     version, ACCS, ht , ht_sfc, pr_sfc, mslp, pw, sh, tp,
-     +     tp_sfc, t_at_sfc, uw, vw, ww, td_sfc, isoLevel,
+     +     tp_sfc, t_at_sfc, uw, vw, ww, sh_sfc, isoLevel,
      +     reftime, valtime, grid, model, nav, origin, istatus)
 
 
                nzsh=nz-5
 
-               call qcmodel_sh(nx,ny,1,td_sfc)  !td_sfc actually = RH for AVN.
+               call qcmodel_sh(nx,ny,1,sh_sfc)  !sh_sfc actually = RH for AVN.
 
                call qcmodel_sh(nx,ny,nzsh,sh)     !sh actually = RH for AVN.
 
          elseif(cmodel(1:nclen).eq.'FMI_NETCDF_LL')then
 
               call read_FMI_netcdf(filename, nz, 1, nx, ny,
-     +     ipk,td_sfc,ht,ht_sfc,mslp,pr_sfc,ww,sh,tp,tp_sfc,t_at_sfc,
+     +     ipk,sh_sfc,ht,ht_sfc,mslp,pr_sfc,ww,sh,tp,tp_sfc,t_at_sfc,
      +     uw, uw_sfc, vw, vw_sfc, model, origin, reftime, valtime,
      +     istatus)
               if(istatus.ne.0)then
@@ -264,7 +267,7 @@ cFA_filename="nf"//cfname10(1:8)//fname(6:7)//'.'//c3ext
      .                r_missing_data,                  ! I
      .                prk,                             ! O
      .                ht, tp, sh, uw, vw, ww,          ! O
-     .                ht_sfc, tp_sfc, td_sfc,          ! O
+     .                ht_sfc, tp_sfc, rh_sfc,          ! O
      .                uw_sfc, vw_sfc, mslp,            ! O
      .                istatus )                        ! O
             close(lun)
@@ -276,6 +279,7 @@ c              print*,'k mx/mn ww ',k,rmx2d,rmn2d
 c           enddo
 
             ww=ww/36.
+            pr_sfc = pr_sfc * 100. ! convert to Pascals
 
          elseif (cwb_type.eq.'nf15'.or.cwb_type.eq.'gfs'
      &.or.cwb_type.eq.'nf45'.or.cwb_type.eq.'tfs')then
@@ -284,12 +288,13 @@ c           enddo
 
             call read_nf15km(nx,ny,nz,filename,
      &                       ht,tp,sh,uw,vw,ww,        !Note: sh contains 3D rh
-     &                       pr_sfc,tp_sfc,td_sfc,     !Note: td_sfc contains sfc rh
+     &                       pr_sfc,tp_sfc,rh_sfc,    
      &                       uw_sfc,vw_sfc,mslp,
      &                       prk,t_at_sfc,
      &                       istatus)
 
-            ww=ww/36.  !convert to pa/s
+            ww=ww/36.              ! convert to pa/s
+            pr_sfc = pr_sfc * 100. ! convert to Pascals
 
          else
             print*,'cwb model type currently unknown ',cmodel(1:nclen)
@@ -316,7 +321,7 @@ c           enddo
 !        Right now the bogusing assumes a Lambert Conformal Projection
 
          call tcbogus(nx,ny,nz,ht,tp,sh,uw,vw,ht_sfc,
-     +             tp_sfc,td_sfc,uw_sfc,vw_sfc,mslp,
+     +             tp_sfc,sh_sfc,uw_sfc,vw_sfc,mslp,
      +             lat1,lat2,lon0,sw,ne,dskm,glat,glon,
      +             prk,filename,bgmodel,cwb_type)
 
@@ -376,7 +381,7 @@ c     enddo
       endif
 c
 c *** Fill pressure array and convert rh to specific humidity. 
-c *** Note: sh and td_sfc arrays contain rh from AVN (bgmodel=6)
+c *** Note: sh and sh_sfc arrays contain rh from AVN (bgmodel=6)
 c           or FA model (bgmodel=3).
 c
       if(bgmodel.eq.6.or.bgmodel.eq.3)then
@@ -444,17 +449,17 @@ c        endif
             do j=1,ny
             do i=1,nx
 
-!              Check if td_sfc contains valid RH value
-               if(td_sfc(i,j).gt.0.0 .and. td_sfc(i,j).lt.100.001)then
+!              Check if sh_sfc contains valid RH value
+               if(sh_sfc(i,j).gt.0.0 .and. sh_sfc(i,j).lt.100.001)then
                   prsfc=pr_sfc(i,j)/100.
-                  qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.
+                  qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,sh_sfc(i,j)/100.
      &,t_ref)
-                  td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc
+                  sh_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc
      &,t_ref)+273.15
-                  sumsfctd=sumsfctd+td_sfc(i,j)
+                  sumsfctd=sumsfctd+sh_sfc(i,j)
                else 
-                  td_sfc(i,j)=rfill
-c                 td_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
+                  sh_sfc(i,j)=rfill
+c                 sh_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
 c    &,bogus_sh,t_ref)+273.15
                   icm_sfc=icm_sfc+1
                endif
@@ -463,8 +468,8 @@ c           it=tp_sfc(i,j)*100
 c           it=min(45000,max(15000,it))
 c           xe=esat(it)
 c           mrsat=0.00622*xe/(prsfc-xe)         !Assumes that rh units are %
-c           td_sfc(i,j)=td_sfc(i,j)*mrsat             !rh --> mr
-c           td_sfc(i,j)=td_sfc(i,j)/(1.+td_sfc(i,j))  !mr --> sh
+c           sh_sfc(i,j)=sh_sfc(i,j)*mrsat             !rh --> mr
+c           sh_sfc(i,j)=sh_sfc(i,j)/(1.+sh_sfc(i,j))  !mr --> sh
 
             enddo
             enddo
@@ -511,11 +516,11 @@ c
          sumsfctd=0.0
          do j=1,ny
          do i=1,nx
-            if(td_sfc(i,j).eq.-99999.)then
+            if(sh_sfc(i,j).eq.-99999.)then
                icm_sfc=icm_sfc+1
-               td_sfc(i,j)=rfill
+               sh_sfc(i,j)=rfill
             else
-               sumsfctd=sumsfctd+td_sfc(i,j)
+               sumsfctd=sumsfctd+sh_sfc(i,j)
             endif
          enddo
          enddo
@@ -566,7 +571,7 @@ c
             shavg=sumsfctd/(nx*ny-icm_sfc)
             do j=1,ny
             do i=1,nx
-               if(td_sfc(i,j).eq.rfill)td_sfc(i,j)=shavg
+               if(sh_sfc(i,j).eq.rfill)sh_sfc(i,j)=shavg
             enddo
             enddo
          endif
@@ -576,6 +581,29 @@ c
      &,'average of good points (Td avg = ',shavg,').'
          print*,'#/% 2D points filled: ',icm_sfc,icm_sfc/(nx*ny)
       endif
+
+!     Convert rh_sfc to sh_sfc if sh_sfc is unavailable
+      if(minval(sh_sfc) .eq. r_missing_data .OR. 
+     1   maxval(sh_sfc) .eq. r_missing_data      )then
+          write(6,*)' Calculate sh_sfc using Sfc T, P, RH'
+          do i = 1,nx
+          do j = 1,ny
+              if(rh_sfc(i,j) .ne. r_missing_data .AND.
+     1           pr_sfc(i,j) .ne. r_missing_data .AND.
+     1           tp_sfc(i,j) .ne. r_missing_data .AND.
+     1           rh_sfc(i,j) .ge. 0.0            .AND.
+     1           rh_sfc(i,j) .le. 100.0                )then
+                  prsfc_mb=pr_sfc(i,j)/100.
+                  sh_sfc(i,j)=(make_ssh(prsfc_mb,tp_sfc(i,j)-273.15
+     1                        ,rh_sfc(i,j)/100.,t_ref)) * .001
+!                 td_sfc(i,j)=make_td(prsfc_mb,tp_sfc(i,j)-273.15,qsfc
+!    1                               ,t_ref)+273.15
+              endif
+          enddo ! j
+          enddo ! i
+      endif
+
+      write(6,*)' Returning from read_dgprep'
 
       istatus=0
       return
