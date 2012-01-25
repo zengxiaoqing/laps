@@ -78,6 +78,7 @@ c
       real sw(2),ne(2)
       real cenlat,cenlon
       real dx,dy
+      real psatoz
 
       character*256 bgpath
       character*256 bg_names(max_files)
@@ -172,7 +173,7 @@ c
      .          vw_sfc(nx_laps,ny_laps),
      .          pr_sfc(nx_laps,ny_laps),     !Stn pressure
      .          rp_sfc(nx_laps,ny_laps),     !Reduced pressure
-     .          mslp(nx_laps,ny_laps),
+     .          mslp(nx_laps,ny_laps),       !in Pascals
      .          pcp_sfc(nx_laps,ny_laps),
      .          dum1_2d(nx_laps,ny_laps),
      .          dum2_2d(nx_laps,ny_laps)
@@ -885,16 +886,37 @@ c
 
 !            We want to model 'sigma_ht' vertical levels on the model 
 !            horizontal grid to construct the 'htvi' array. The 'htbg_sfc' 
-!            model terrain can be used.
+!            model terrain can be used or calculated (if available).
 
              write(6,*)' htbg_sfc range: ',minval(htbg_sfc)
      1                                    ,maxval(htbg_sfc)       
 
-             if(minval(htbg_sfc) .eq. missingflag .AND.
+             if(minval(htbg_sfc) .eq. missingflag .OR.
      1          maxval(htbg_sfc) .eq. missingflag      )then
                  write(6,*)
-     1     ' Error: htbg_sfc has missing values, check BG model terrain'
-                 return
+     1   ' WARNING: htbg_sfc has missing values, check BG model terrain'
+                 write(6,*)
+     1   ' Calculating model terrain from model pressure and std atmos'
+ 
+                 write(6,*)' prbg_sfc range: ',minval(prbg_sfc)
+     1                                        ,maxval(prbg_sfc)       
+
+                 if(.false.)then
+                     do j = 1,ny_bg
+                     do i = 1,nx_bg
+                        htbg_sfc(i,j) = PsaToZ(prbg_sfc(i,j)/100.)
+                     enddo ! i
+                     enddo ! j                 
+                 else
+                     call pres_to_ht_2d(prbg_sfc,prbght*100.,htbg,tpbg
+     1                                 ,nx_bg,ny_bg,nzbg_ht,htbg_sfc
+     1                                 ,istatus)
+                 endif
+
+                 write(6,*)' recalculated htbg_sfc range: '
+     1                                        ,minval(htbg_sfc)
+     1                                        ,maxval(htbg_sfc)       
+
              endif
 
              call get_ht_3d(nx_bg,ny_bg,nz_laps,htbg_sfc,htvi
@@ -1280,13 +1302,21 @@ c ****** Horizontally interpolate background surface data to LAPS grid points.
 c
            itstatus(3)=ishow_timer()
 
-           if(bgmodel.ne.1.and.bgmodel.ne.9 .AND.
-     1                         bgmodel.ne.3      )then
+!          if(bgmodel.ne.1.and.bgmodel.ne.9 .AND.
+!    1                         bgmodel.ne.3      )then
+           if(.true.)then
 
             write(6,*)' Calling hinterp_field for surface variables'
 
-            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            if(minval(htbg_sfc) .eq. missingflag .OR.
+     1         maxval(htbg_sfc) .eq. missingflag      )then
+              write(6,*)' ERROR: htbg_sfc has missing data'
+              return
+            else
+              call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,htbg_sfc,ht_sfc,wrapped)
+            endif
+
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,tdbg_sfc,td_sfc,wrapped)
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
@@ -1304,12 +1334,20 @@ c
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,pcpbg,pcp_sfc,wrapped)
 
+            write(6,*)' ht_sfc range = ',minval(ht_sfc),maxval(ht_sfc)
+            write(6,*)' pr_sfc range = ',minval(pr_sfc),maxval(pr_sfc)
             write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
             write(6,*)' sh_sfc range = ',minval(sh_sfc),maxval(sh_sfc)
             write(6,*)' mslp range = ',minval(mslp),maxval(mslp)
 
-            if(maxval(mslp) .le. 500.) then
+            if(maxval(mslp) .le. 70000.) then
               print *,' ERROR: MSLP out of allowed range'
+              lga_status = -nf
+              goto 999 ! deallocate/return
+            endif
+
+            if(maxval(pr_sfc) .le. 30000.) then
+              print *,' ERROR: pr_sfc out of allowed range'
               lga_status = -nf
               goto 999 ! deallocate/return
             endif
