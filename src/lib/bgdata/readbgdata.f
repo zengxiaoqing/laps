@@ -55,7 +55,7 @@ c
       real, intent(out) :: mslpbg(nx_bg,ny_bg)         !mslp  (mb)
       real, intent(out) :: htbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: prbg_sfc(nx_bg,ny_bg)
-      real, intent(out) :: shbg_sfc(nx_bg,ny_bg)
+      real, intent(out) :: shbg_sfc(nx_bg,ny_bg)       !Specific humidity (kg/kg)
       real, intent(out) :: uwbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: vwbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: tdbg_sfc(nx_bg,ny_bg)
@@ -81,95 +81,13 @@ c
       character*4     af_bg
       character*2     gproj
 
-
-      interface
-
-         subroutine read_sbn_grids(cdfname,af,cmodel,
-     .nxbg,nybg,nzbght,nzbgtp,nzbgsh,nzbguv,nzbgww,
-     .prbght,prbgsh,prbguv,prbgww,
-     .ht,tp,sh,uw,vw,ww,
-     .ht_sfc,pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp,
-     .ctype,istatus)
-
-         real  ::   pr_sfc(nxbg,nybg)
-         real  ::   uw_sfc(nxbg,nybg)
-         real  ::   vw_sfc(nxbg,nybg)
-         real  ::   sh_sfc(nxbg,nybg)
-         real  ::   tp_sfc(nxbg,nybg)
-         real  ::   ht_sfc(nxbg,nybg)
-         real  ::     mslp(nxbg,nybg)
-c
-         real  :: prbght(nxbg,nybg,nzbght)
-         real  :: prbgsh(nxbg,nybg,nzbgsh)
-         real  :: prbguv(nxbg,nybg,nzbguv)
-         real  :: prbgww(nxbg,nybg,nzbgww)
-         real  ::     ht(nxbg,nybg,nzbght)
-         real  ::     tp(nxbg,nybg,nzbgtp)
-         real  ::     sh(nxbg,nybg,nzbgsh)
-         real  ::     uw(nxbg,nybg,nzbguv)
-         real  ::     vw(nxbg,nybg,nzbguv)
-         real  ::     ww(nxbg,nybg,nzbgww)
-
-         character*200 cdfname
-         character*132 cmodel
-         character*5   ctype
-         character*4   af
-         integer       nxbg
-         integer       nybg
-         integer       nzbght
-         integer       nzbgsh
-         integer       nzbguv
-         integer       nzbgww
-         integer       istatus
-c
-         end subroutine
-
-         subroutine read_dgprep(bgmodel,cmodel,path,fname,af
-     .   ,nx,ny,nz
-     .   ,pr,ht,tp,sh,uw,vw,ww
-     .   ,ht_sfc,pr_sfc,td_sfc,tp_sfc,t_at_sfc
-     .   ,uw_sfc,vw_sfc,mslp,istatus)
-
-         integer bgmodel
-         integer nx,ny,nz
-         integer istatus
-
-         real   ht(nx,ny,nz)
-         real   tp(nx,ny,nz)
-         real   sh(nx,ny,nz)
-         real   uw(nx,ny,nz)
-         real   vw(nx,ny,nz)
-         real   ww(nx,ny,nz)
-         real   pr(nx,ny,nz)
-
-         real   ht_sfc(nx,ny)
-         real   pr_sfc(nx,ny)
-         real   td_sfc(nx,ny)
-         real   tp_sfc(nx,ny)
-         real   t_at_sfc(nx,ny)
-         real   uw_sfc(nx,ny)
-         real   vw_sfc(nx,ny)
-         real   mslp(nx,ny)
-
-c        real   lon0
-c        real   lat1,lat2
-
-         character cmodel*132
-         character path*256
-         character fname*200
-         character af*4
-c        character gproj*2
- 
-         end subroutine
-
-      end interface
+      call get_r_missing_data(r_missing_data,istatus)
 
 !     Initialize
       htbg_sfc = 0.
+      tdbg_sfc = r_missing_data
 
       call s_len(cmodel,lencm)
-
-      call get_r_missing_data(r_missing_data,istatus)
 
       if(bgmodel.eq.0)then
         if(cmodel(1:lencm).eq.'LAPS_FUA'.or.
@@ -663,6 +581,11 @@ c
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc pcpbg array '
       endif
+
+      write(6,*)' prbg_sfc range = ',minval(prbg_sfc),maxval(prbg_sfc)
+      write(6,*)' tdbg_sfc range = ',minval(tdbg_sfc),maxval(tdbg_sfc)
+      write(6,*)' shbg_sfc range = ',minval(shbg_sfc),maxval(shbg_sfc)
+      write(6,*)' Returning from read_bgdata'
 
       istatus = 0
 
