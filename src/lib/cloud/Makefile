@@ -21,7 +21,7 @@ DRTUFLAG = -Drtu
 
 
 .SUFFIXES:
-.SUFFIXES: .o .c .f .a
+.SUFFIXES: .o .c .f .f90 .a
 
 LIB      = libcloud.a
 DEBUGLIB = libdebugcloud.a
@@ -29,8 +29,8 @@ DEBUGLIB = libdebugcloud.a
 
 
 
-SRC=rfill_evap.f \
-    schultz.f
+SRC= \
+    cloud_var.f90 cvr_to_tb8_effective.f
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
@@ -54,3 +54,7 @@ clean:
 
 
 distclean: clean
+
+
+.f90.o:;    $(FC) $(DBFLAGS) $(FREE) $(STINC) -c $*.f90
+.f.o:;      $(FC) $(DBFLAGS) -c $*.f
