@@ -180,7 +180,7 @@ SUBROUTINE RDLAPSRDR
   character*40 c_vars_req
   character*180 c_values_req
   INTEGER :: i4time_radar
-  REAL     :: tempref
+  REAL     :: tempref,make_ssh
 !
 ! add the following definition since build on 5/23/2011 failed. HJ 5/23/2011
   integer nx_r, ny_r 
@@ -258,8 +258,8 @@ SUBROUTINE RDLAPSRDR
 
             IF (RADVEL(I,J,K,L) .NE. RMISSING) THEN
 
-               PRINT*,'RDLAPSRDR: --RADIAL WIND: ', &
-		 RADVEL(I,J,K,L),RADNQY(I,J,K,L),I,J,K,L,XRADAR,YRADAR,NGRDRD(L),VOLNQY(L)
+!               PRINT*,'RDLAPSRDR: --RADIAL WIND: ', &
+!		 RADVEL(I,J,K,L),RADNQY(I,J,K,L),I,J,K,L,XRADAR,YRADAR,NGRDRD(L),VOLNQY(L)
 
 	       ! COMPUTE AZIMUTH AND ELEVATION ANGLES USING LAPS ROUTINE
 	       ! LATLON_TO_RADAR.
@@ -347,7 +347,18 @@ SUBROUTINE RDLAPSRDR
             OB= RADREF(I,J,K,L)         
             OE=0.01  ! shuyuan   test 0.1 0.01 1 
             SID(1:3) = "vrz"
-            CALL HANDLEOBS_SIGMA(OP,OB,OE,NUMSTAT+3,NALLOBS,IP,AZ,EA,SID)   
+            CALL HANDLEOBS_SIGMA(OP,OB,OE,NUMSTAT+3,NALLOBS,IP,AZ,EA,SID)  
+
+            ! Modified by Yuanfu Xie Nov. 2011 for adding radar reflectivity generated SH obs:
+            NST(HUMIDITY) = NST(HUMIDITY)+1
+            OBP(1,NST(HUMIDITY),HUMIDITY) = I-1
+            OBP(2,NST(HUMIDITY),HUMIDITY) = J-1
+            OBP(3,NST(HUMIDITY),HUMIDITY) = K-1
+            OBP(4,NST(HUMIDITY),HUMIDITY) = L-1
+            ! ASSUME 75% satured RH where reflectivity present:
+            OBS(NST(HUMIDITY),HUMIDITY) = MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.75,-132.0)
+            OBE(NST(HUMIDITY),HUMIDITY) = 1.0
+            NALLOBS = NALLOBS+1
         ENDIF
        ENDDO
       ENDDO
