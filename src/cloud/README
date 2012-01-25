@@ -2,7 +2,6 @@
 
 main                                                     laps_cloud.f
     laps_cloud_sub                                       laps_cloud_sub.f
-        get_cloud_parms                                      "
         get_modelfg                                      get_fg_cloud.f
             rh_to_cldcv                                  lib/rh2cld.f
         insert_sao                                       lib/insertsao.f
@@ -22,7 +21,8 @@ main                                                     laps_cloud.f
                     get_laps_lvd                             "
         qc_clouds_3d                                     laps_cloud_sub.f
         get_vis      (read vis data)                     getvis.f
-            get_sfc_albedo
+            get_laps_2dvar    
+            get_sfc_albedo                               getvis.f
             albedo_to_cloudfrac2
         GET_ISTAT_39 (cloud mask from 3.9u)              get_istat_39.f
         qc_clouds_3d                                     laps_cloud_sub.f
@@ -33,7 +33,7 @@ main                                                     laps_cloud.f
                 get_band8_cover                              "
             compare_radiation                                "
                 apply_correction                             "
-                cvr_to_tb8_effective                         "
+                cvr_to_tb8_effective                     lib/cloud/cvr_to_tb8_effective.f
         qc_clouds_3d                                     laps_cloud_sub.f
         get_max_ref
         insert_radar                                     insertradar.f
@@ -48,4 +48,4 @@ main                                                     laps_cloud.f
             stats_1d                                     stats_1d.f
         array_plot
         get_cloud_deriv                                  lib/get_cloud_deriv.f
-
+        cloud_var                                        lib/cloud/cloud_var.f90
