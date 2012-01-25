@@ -71,6 +71,8 @@ c first loop is required for getting the heights and temps.
 c currently only SBN grids have variable pressure levels for
 c individual fields (like sh, u/v and ww).
 
+      write(6,*)' Start vinterp_ht'
+
       if(nzbg_ht.ne.nzbg_tp)then
          print*,'vinterp_ht requires nzbg_ht=nzbg_tp'
          print*,'no interp performed. terminating'
