@@ -1426,6 +1426,12 @@ C       EW SLICES
 
         endif
 
+        if(.false.)then
+            call cloud_var(NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
+     1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
+     1                    ,cloud_frac_vis_a)
+        endif
+
 999     continue
 
         write(6,*)' Notifications'
