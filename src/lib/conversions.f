@@ -545,6 +545,53 @@ cdoc    change this to a log interpolation later if needed.
         return
         end
 
+        subroutine pres_to_ht_2d(pres_pa_2d,pres_pa_3d,heights_3d
+     1                          ,temp_3d,ni,nj,nk,height_out_2d,istatus)       
+
+        real pres_pa_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
+        real temp_3d(ni,nj,nk)
+        real pres_pa_2d(ni,nj)
+        real height_out_2d(ni,nj)
+
+        include 'constants.inc'
+        real C1
+        PARAMETER (C1 = EP_1) 
+
+        real C2
+        PARAMETER (C2 = r_d / grav)  
+
+!       Interpolate to find heights on the input pressure surface
+!       Simplified for now until we take the layer mean temp
+
+        do i = 1,ni
+        do j = 1,nj
+
+!         Find closest pressure level
+          delta_p_min = 1e10
+          do k = 1,nk
+              delta_p_abs = abs(pres_pa_2d(i,j) - pres_pa_3d(i,j,k))
+              if(delta_p_abs .lt. delta_p_min)then
+                  delta_p_min = delta_p_abs
+                  kref = k
+              endif
+          enddo ! k
+
+          delta_p = pres_pa_2d(i,j) - pres_pa_3d(i,j,kref)
+          delta_h_simple = -delta_p_min * 0.1 ! simplified hypsometric equation
+
+          alog_term = alog(pres_pa_2d(i,j) / pres_pa_3d(i,j,kref))
+          t_k = temp_3d(i,j,kref)
+          delta_h = -C2 * t_k * alog_term
+
+          height_out_2d(i,j) = heights_3d(i,j,kref) + delta_h
+
+        enddo ! j
+        enddo ! i
+
+        return
+        end
+
 
         function height_of_level(level)
 
