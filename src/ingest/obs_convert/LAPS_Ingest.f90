@@ -206,7 +206,7 @@ SUBROUTINE CONV_SONDES
 
     ! READ SONDE DATA:
     CALL READ_SND_DATA2(IOFILE,I4TIME,EXTNSN,MAXNUM_SONDES,MAXLVL_SONDES, & ! I
-                       DOMAIN_LATITDE,DOMAIN_LONGITD,NUMBER_GRIDPTS(1),     & ! I
+                       DOMAIN_LATITDE,DOMAIN_LONGITD,DOMAIN_TOPOGRP,NUMBER_GRIDPTS(1),     & ! I
                        NUMBER_GRIDPTS(2),NUMBER_GRIDPTS(3),HEIGHT_GRID3DM,  & ! I
                        .TRUE.,MODEOB,                                       & ! I
                        NPRFLR,PRFELV,NLEVEL,C5NAME,OBTYPE,HGHTOB,           & ! O
