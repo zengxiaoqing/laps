@@ -166,7 +166,7 @@ integer  :: max_obs, mode_adjust_heights
 ! cloud_nl variables
 logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 &
            ,l_use_metars, l_use_radar 
-integer  :: latency_co2,i4_sat_window,i4_sat_window_offset
+integer  :: latency_co2,i4_sat_window,i4_sat_window_offset,i_varadj
 real     :: pct_req_lvd_s8a, echotop_thr_a(3)
 
 ! moisture_switch_nl variables
@@ -279,7 +279,8 @@ namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
                    ,l_use_39, l_use_metars, l_use_radar &
                    ,latency_co2 &
                    ,pct_req_lvd_s8a, echotop_thr_a &
-                   ,i4_sat_window,i4_sat_window_offset 
+                   ,i4_sat_window,i4_sat_window_offset &
+                   ,i_varadj
 
 namelist /moisture_switch_nl/ &
                    print_switch, raob_switch, raob_lookback, endian  &
