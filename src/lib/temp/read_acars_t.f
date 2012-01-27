@@ -308,8 +308,11 @@ cdis
                     endif ! In vertical bounds
 
                 else
-                    write(6,*)' Out of horizontal bounds'
-     1                        ,n_acars_read,i_grid,j_grid        
+                    if(n_acars_read .le. 100 .OR.
+     1                 n_acars_read .eq. (n_acars_read/100)*100)then
+                        write(6,*)' Out of horizontal bounds'
+     1                            ,n_acars_read,i_grid,j_grid        
+                    endif
 
                 endif ! In horizontal bounds
             endif ! Good data
