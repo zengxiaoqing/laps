@@ -14,6 +14,7 @@ LIBDIRS = src/lib/modules \
           src/lib \
           src/lib/bgdata \
           src/lib/blas \
+          src/lib/cloud \
           src/lib/fm \
           src/lib/grib \
           src/lib/grib2 \
