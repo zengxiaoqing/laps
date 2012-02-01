@@ -203,7 +203,7 @@ c KML: END
       real   psfc              !I/O, input bkgd model sfc p; output recalculated surface pressure, pa
       real   tsfc              !I/O input model T, output recomputed T
       real   sh_sfc            !I/O input model SH
-      real   td_sfc            !I, model Td, output recomputed Td
+      real   td_sfc            !I/O input model Td, output recomputed Td
       real   qsfc              !I/O surface spec hum, Input as q or computed internally
                                                            
       real   tbar
@@ -264,6 +264,8 @@ c dew point temp
              td1=make_td(p_mb_m1,t(i,j,k-1)-273.15,q(i,j,k-1)*1000.
      .,t_ref)
              td_sfc=td_sfc+((td1-td2)/dzp)*dz
+
+             td_sfc = min(tsfc,td_sfc)
 c
           else
              dzp=height(i,j,k+1)-height(i,j,k)
@@ -278,6 +280,8 @@ c
 c            psfc=p_mb*exp(G/(R*tbar)*dz)
              psfc=psfc*exp(G/(R*tbar)*dz)
              td_sfc=td_sfc+((td1-td2)/dzp)*dz
+
+             td_sfc = min(tsfc,td_sfc)
                                    
           endif
        else
