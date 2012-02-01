@@ -588,8 +588,8 @@
             var_2d = 'LIC'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,lic_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+     1                      ,lic_2d,0,istat_lic)
+            if(istat_lic .ne. 1)lic_2d = r_missing_data
 
         elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
             write(6,*)' Look for Bkg/Fcst sfc fields'
@@ -666,8 +666,8 @@
      1                              ,units_2d,comment_2d
      1                              ,NX_L,NY_L
      1                              ,lic_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)lic_2d = r_missing_data
+     1                              ,istat_lic)
+            if(istat_lic .ne. 1)lic_2d = r_missing_data
 
         else
             istat_sfc = 0
