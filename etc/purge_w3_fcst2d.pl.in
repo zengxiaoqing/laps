@@ -50,7 +50,7 @@ my ($domain, $model) = @ARGV;
 
 my ($purgedir, $maxage);
 
-if($domain != "modelroot"){
+if($domain ne "modelroot"){
   if ($opt_d) {
     $purgedir = "$opt_d/lapsprd/www/fcst2d/$model/archive";
   }else{
@@ -72,7 +72,7 @@ if ($opt_t) {
   $maxage = 48 * 3600;
 }
 
-print "Purging $purgedir.\n";
+print "Purging $purgedir\n";
 my $timenow = time;     
 my $timeold = $timenow - $maxage;
 
