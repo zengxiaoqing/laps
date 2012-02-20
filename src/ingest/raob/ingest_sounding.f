@@ -43,7 +43,7 @@
            stop
        endif
 
-       call read_static_grid(NX_L,NY_L,'AVG',topo,istatus)
+       call read_static_grid(ni,nj,'AVG',topo,istatus)
        if(istatus .ne. 1)then
            stop
        endif
