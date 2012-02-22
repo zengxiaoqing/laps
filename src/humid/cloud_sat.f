@@ -69,11 +69,13 @@ c         data = data + delsat
          
 c      endif
 c     new function goes here devised by Steve Albers 1/19/2012
+      if (cg .gt. 0.3) then
       data_old = data
       computed_increment = (cg**0.2)*0.1  ! this is rh fraction
       computed_increment = computed_increment * (data+delsat)  ! this is sh fraction of saturation
       data = data + computed_increment   ! data now modify, must use data_old for comparision to saturation  
       data = min (data, (data_old+delsat) ) ! this caps data to 100% rh or saturated sh 
+      endif
 
       return
 
