@@ -76,8 +76,8 @@ echo "setenv LAPS_A9TIME `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`"
 
 date -u
 
-echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log"
-      $LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log
+echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log.`date +\%H`"
+      $LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log.`date +\%H`
 
 date -u
 
