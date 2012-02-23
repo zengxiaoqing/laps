@@ -32,8 +32,8 @@ echo 'set yrange [0:1000]'                              >> $GNUPLOTFILE
 echo 'set grid'                                         >> $GNUPLOTFILE
 echo 'set datafile missing "-99.900"'                   >> $GNUPLOTFILE
 echo 'set xlabel "Date Time"'                           >> $GNUPLOTFILE
-echo 'set ylabel "Solar Radiation (W/m**2)"'            >> $GNUPLOTFILE
-echo 'set title "Global Solar Radiation Observed vs Analyzed"' >> $GNUPLOTFILE
+echo 'set ylabel "GHI (W/m**2)"'                        >> $GNUPLOTFILE
+echo 'set title "Global Horizontal Irradiance Observed vs Analyzed"' >> $GNUPLOTFILE
 echo 'set key left box'                                 >> $GNUPLOTFILE
 echo 'set style line 1 lt 1 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
 echo 'set style line 2 lt 2 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
@@ -51,7 +51,7 @@ gnuplot < $GNUPLOTFILE
 echo " "
 echo "outputs..."  
 ls -l $GNUPLOTFILE
-ls -l $LOGDIR/load.png
+ls -l $IMGDIR/load.png
 
 # Create summary file
 cd $LOGDIR
