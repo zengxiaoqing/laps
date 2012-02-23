@@ -295,7 +295,7 @@
                        goto 900
                   endif
 
-!                 Calculate "and" mask
+!                 Calculate "and" as well as "rqc" "and" mask
                   n_rqc_and = 0
                   n_rqc_and_pot = 0
                   do k = 1,NZ_L
@@ -319,7 +319,7 @@
                   enddo ! i
                   enddo ! k
 
-!                 Calculate "rqc" mask
+!                 Calculate "rqc" "all" mask
                   lmask_rqc_3d = .true.
                   n_rqc_all = 0
                   n_rqc_all_pot = 0
@@ -335,14 +335,14 @@
                   enddo ! i
                   enddo ! k
 
-                  write(6,*)' Time, # of QC (2D) points (and/all)'
+                  write(6,*)' Time, # of QC (2D) points (and/ALL)'
      1                     ,itime_fcst,n_rqc_and,n_rqc_all
                   if(n_rqc_and_pot .eq. 0)then
                       write(6,*)
      1                ' n_rqc_and_pot = 0, no echoes in 20dbz AND mask '       
 !                     goto 900
                   else
-                      write(6,*)' Time, % of QC (2D) points (and/all)'
+                      write(6,*)' Time, % of QC (2D) points (and/ALL)'
      1                     ,itime_fcst
      1                     ,float(n_rqc_and)/float(n_rqc_and_pot) * 100.
      1                     ,float(n_rqc_all)/float(n_rqc_all_pot) * 100.
@@ -398,8 +398,7 @@
                 nthr = nthr_a(ifield)
 
 !               Calculate contingency tables
-!               Radar QC (rqc) should be added perhaps via l_mask_all
-!                              (or call l_mask_all l_mask_qconly)
+!               Radar QC (rqc) for "all" case is used via 'lmask_rqc_3d'
                 do idbz = 1,nthr
                   rdbz = float(idbz*10) + 10
 
