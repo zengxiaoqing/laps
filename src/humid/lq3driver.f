@@ -151,6 +151,11 @@ c     surface variables preserved and passed
       data ext/'lq3'/
       data rhext/'lh3'/
 
+c     create common block for cloud_sat data (direct insert)
+      common /cloud_sat_insert/ max_cdelrh
+      real max_cdelrh
+     
+
 
 c     namelist data
 
@@ -164,6 +169,7 @@ c     namelist data
       integer goes_switch
       integer cloud_switch
       integer cloud_d
+      real    max_cdelrh_nl
       integer tiros_switch
       integer sounder_switch
       integer sat_skip
@@ -179,7 +185,8 @@ c     namelist data
       namelist /moisture_switch_nl/ covar_switch,print_switch,
      1     raob_switch,radiometer_switch,
      1     raob_lookback, endian,
-     1     raob_radius, goes_switch, cloud_switch, cloud_d
+     1     raob_radius, goes_switch, cloud_switch, cloud_d,
+     1     max_cdelrh_nl
      1     ,tiros_switch, sounder_switch, sat_skip
      1     ,gvap_switch, IHOP_flag, time_diff, gps_switch
      1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
@@ -224,6 +231,7 @@ c     set namelist parameters to defaults
       print_switch = 0
       cloud_switch = 0
       cloud_d = 0
+      max_cdelrh_nl = 0.11  ! test default
       raob_switch = 0
       radiometer_switch = 2000
       raob_lookback = 0
@@ -265,10 +273,8 @@ c-----------------------end filling namelist ---
 
 
 
-
-
-
-
+c    assign name list cloud_sat parameter to the variable in the common block
+      max_cdelrh = max_cdelrh_nl
 
 
 c     get horizontal dimensions ii,jj
