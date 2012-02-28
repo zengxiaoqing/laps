@@ -323,15 +323,15 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 5.8 (3/3/2011) successfully incorporates'
-      write (6,*) '1) Increase of Powell method tolerance to 5%'
-      write (6,*) '2) Assimilate Radiometer to namelist level'
-      write (6,*) '3) Ability to read MADIS files for GPS data'
-      write (6,*) '4) Test of input field for bad data (forced abort)'
-      write (6,*) '5) Bug fix for no cloud situation'
-      write (6,*) '6) state variables passed into this routine'
-      write (6,*) '7) state variables not modified (except for q)'
-      write (6,*) '8) input option to write output file in subroutine'
+      write (6,*) 'Release 6.0 (2/28/2012) successfully incorporates'
+      write (6,*) '1) Namelist control of values in the cloud_sat mod'! module (mod)
+      write (6,*) '2) Increase of Powell method tolerance to 5%'
+      write (6,*) '3) Assimilate Radiometer to namelist level'
+      write (6,*) '4) Ability to read MADIS files for GPS data'
+      write (6,*) '5) Test of input field for bad data (forced abort)'
+      write (6,*) '6) Bug fix for no cloud situation'
+      write (6,*) '7) state variables passed into this routine'
+      write (6,*) '8) state variables not modified (except for q)'
       write (6,*) ' '
 
 

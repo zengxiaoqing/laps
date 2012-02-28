@@ -152,6 +152,10 @@ c     surface variables preserved and passed
       data rhext/'lh3'/
 
 c     create common block for cloud_sat data (direct insert)
+c     via Steve Albers new function for humidification
+c     the variable with the _nl suffix is from the namelist and will be
+c     assigned here since a namelist variable cannot be in a 
+c     common block also
       common /cloud_sat_insert/ max_cdelrh
       real max_cdelrh
      
@@ -231,7 +235,7 @@ c     set namelist parameters to defaults
       print_switch = 0
       cloud_switch = 0
       cloud_d = 0
-      max_cdelrh_nl = 0.11  ! test default
+      max_cdelrh_nl = 0.11 ! test default; the 0.11 value should not appear in code
       raob_switch = 0
       radiometer_switch = 2000
       raob_lookback = 0
@@ -273,7 +277,10 @@ c-----------------------end filling namelist ---
 
 
 
-c    assign name list cloud_sat parameter to the variable in the common block
+c     assign name list cloud_sat parameter to the variable in the common block
+c     namelist variable suggested by Steve Albers for routine Cloud_sat.f only
+c     this is a direct insert from the namelist into that routine via a special
+c     common block that was deviced in Feb 2012
       max_cdelrh = max_cdelrh_nl
 
 
