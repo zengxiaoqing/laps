@@ -85,8 +85,8 @@
                         c7_chars = line(ic+1:ic+7)
                         read(c7_chars,13)id,im,is
  13			format(i3,i2,i2)
-                        rlon = -float(id) + float(im) / 60. 
-     1                        + float(is)/3600.
+                        rlon = -float(id) - float(im) / 60. ! Terms are all negative for west longitude
+     1                        - float(is)/3600.
                     endif
                 endif
             enddo ! ic
