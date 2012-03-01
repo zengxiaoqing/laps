@@ -40,6 +40,7 @@ c  ENDIAN = 1 (big endian machines [default], =0 little endian machines)
 c  GOES_SWITCH = 12,  goes switch on/off assign sat
 c  CLOUD_SWITCH = 1, cloud usage on/off
 c  CLOUD_D = 1, cloud field presence is mandated to produce output
+c  MAX_CDELRH_NL = 0.1,  Steve's factor value for the cloud saturature (cloud_sat.f) module function
 c  SOUNDER_SWITCH = 1,  sounder switch  on/off, [ONLY ACTIVE IF GOES_SWITCH IS NON-ZERO]
 c  TIROS_SWITCH = 0,   use of tiros on/off (inactive)
 c  SAT_SKIP = 2,      process every 2nd, 3rd, 10th... whatever gridpoint
