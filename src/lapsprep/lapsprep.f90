@@ -87,7 +87,7 @@
     CHARACTER (LEN=132) :: dum 
 
     ! Arrays for data
-    REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , t , rh , ht, &   
+    REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , w, t , rh , ht, &   
                                              lwc,rai,sno,pic,ice, sh, mr, vv, & 
                                              virtual_t, rho,lcp
     REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin
@@ -286,6 +286,7 @@
         ALLOCATE ( u   ( x , y , z3 + 1 ) )
         ALLOCATE ( v   ( x , y , z3 + 1 ) )
         ALLOCATE ( vv  ( x , y , z3 + 1 ) )
+        ALLOCATE ( w   ( x , y , z3 + 1 ) )
         ALLOCATE ( t   ( x , y , z3 + 1 ) )
         ALLOCATE ( rh  ( x , y , z3 + 1 ) )
         ALLOCATE ( ht  ( x , y , z3 + 1 ) )
@@ -679,11 +680,11 @@
       do i=1,x
         if (vv(i,j,k) .eq. 1.e-30 .or. abs(vv(i,j,k)) .gt. 100.) then
           vv(i,j,k)=vv(i,j,z3+1)
-        else
-          if(.false.)then
-             vv(i,j,k)=-vv(i,j,k)/(rho(i,j,k)*g)
-          endif
         endif
+
+!       convert from omega to W
+        w(i,j,k)=-vv(i,j,k)/(rho(i,j,k)*g) 
+
       enddo
       enddo
       enddo
@@ -734,7 +735,7 @@
           CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
                              lwc, rai, sno, ice, pic,snocov, tskin)
         CASE ('wps ')
-          CALL output_metgrid_format(p, t, ht, u, v, vv, rh, slp, psfc,&
+          CALL output_metgrid_format(p, t, ht, u, v, w, rh, slp, psfc,&
                              lwc, rai, sno, ice, pic,snocov, tskin)
      
         CASE ('rams') 
