@@ -468,7 +468,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
 
   END SUBROUTINE write_gribprep_header
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE output_metgrid_format(p, t, ht, u, v, vv, rh, slp, psfc, &
+  SUBROUTINE output_metgrid_format(p, t, ht, u, v, w, rh, slp, psfc, &
                                lwc, rai, sno, ice, pic, snocov,tskin)
 
   !  Subroutine of lapsprep that will build a file the
@@ -483,7 +483,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   REAL, INTENT(IN)                   :: ht(:,:,:)   ! Height (m)
   REAL, INTENT(IN)                   :: u(:,:,:)    ! U-wind (m s{-1})
   REAL, INTENT(IN)                   :: v(:,:,:)    ! V-wind (m s{-1})
-  REAL, INTENT(IN)                   :: vv(:,:,:)   ! Omega-wind (Pa s{-1})
+  REAL, INTENT(IN)                   :: w(:,:,:)    ! W-wind (m s{-1})
   REAL, INTENT(IN)                   :: rh(:,:,:)   ! Relative Humidity (%)
   REAL, INTENT(IN)                   :: slp(:,:)    ! Sea-level Pressure (Pa)
   REAL, INTENT(IN)                   :: psfc(:,:)   ! Surface Pressure (Pa)
@@ -615,11 +615,11 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
             ' Max: ', MAXVAL(d2d)
   ENDDO var_v
 
-  ! Do omega-component of wind
+  ! Do w-component of wind
   IF (use_laps_vv) THEN
     field = 'VVEL     '
     units = 'pa s-1                   '
-    desc = 'OMEGA                                         '
+    desc = 'W                                             '
     PRINT *, 'FIELD = ', field
     PRINT *, 'UNITS = ', units
     PRINT *, 'DESC =  ',desc
@@ -628,7 +628,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
         CYCLE var_vv
       END IF
       CALL write_metgrid_header(field,units,desc,p_pa(k))
-      d2d = v(:,:,k)
+      d2d = w(:,:,k)
       WRITE ( output_unit ) d2d
       PRINT '(A,F9.1,A,F5.1,A,F5.1)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
               ' Max: ', MAXVAL(d2d)
