@@ -58,8 +58,9 @@ c     Dan Birkenheuer  5/10/2002
       real :: data_old          ! data as input to routine (needs to be preserved)
       real :: computed_increment ! amount planned to increase data by, we can compare this to delsat to see if it is too high
 
-      common /cloud_sat_insert/ max_cdelrh
+      common /cloud_sat_insert/ max_cdelrh, cf_set
       real max_cdelrh
+      real cf_set
 
 
 
@@ -74,7 +75,7 @@ c         data = data + delsat
          
 c      endif
 c     new function goes here devised by Steve Albers 1/19/2012
-      if (cg .gt. 0.3) then
+      if (cg .gt. cf_set) then
       data_old = data
       computed_increment = (cg**0.2)*max_cdelrh  ! this is rh fraction
       computed_increment = computed_increment * (data+delsat)  ! this is sh fraction of saturation

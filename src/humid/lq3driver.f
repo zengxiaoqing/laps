@@ -156,9 +156,9 @@ c     via Steve Albers new function for humidification
 c     the variable with the _nl suffix is from the namelist and will be
 c     assigned here since a namelist variable cannot be in a 
 c     common block also
-      common /cloud_sat_insert/ max_cdelrh
+      common /cloud_sat_insert/ max_cdelrh,cf_set
       real max_cdelrh
-     
+      real cf_set     
 
 
 c     namelist data
@@ -174,6 +174,7 @@ c     namelist data
       integer cloud_switch
       integer cloud_d
       real    max_cdelrh_nl
+      real    cf_set_nl
       integer tiros_switch
       integer sounder_switch
       integer sat_skip
@@ -190,7 +191,7 @@ c     namelist data
      1     raob_switch,radiometer_switch,
      1     raob_lookback, endian,
      1     raob_radius, goes_switch, cloud_switch, cloud_d,
-     1     max_cdelrh_nl
+     1     max_cdelrh_nl,cf_set_nl
      1     ,tiros_switch, sounder_switch, sat_skip
      1     ,gvap_switch, IHOP_flag, time_diff, gps_switch
      1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
@@ -236,6 +237,7 @@ c     set namelist parameters to defaults
       cloud_switch = 0
       cloud_d = 0
       max_cdelrh_nl = 0.11 ! test default; the 0.11 value should not appear in code
+      cf_set_nl = 0.6 ! test default: 0.3 is better value
       raob_switch = 0
       radiometer_switch = 2000
       raob_lookback = 0
@@ -282,6 +284,7 @@ c     namelist variable suggested by Steve Albers for routine Cloud_sat.f only
 c     this is a direct insert from the namelist into that routine via a special
 c     common block that was deviced in Feb 2012
       max_cdelrh = max_cdelrh_nl
+      cf_set = cf_set_nl
 
 
 c     get horizontal dimensions ii,jj
