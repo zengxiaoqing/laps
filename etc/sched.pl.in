@@ -191,7 +191,7 @@ if(defined $opt_s){ # "surface only"
                   lvd_sat_ingest.exe
                   cloud.exe lq3driver.x STMAS3D.exe deriv.exe accum.exe lsm5.exe
                   qbalpe.exe lapsprep.exe laps2grib.exe);
-}elsif( ($opt_V eq "STMAS3Domega_nbal")) { # STMAS 3D replacing qbalpe by add_omega
+}elsif( ($opt_V eq "STMAS3Domega_bal")) { # STMAS 3D replacing qbalpe by add_omega
     @LAPS_EXE = qw(lga.exe
                   obs_driver.x
                   ingest_pro.exe ingest_sounding.exe
@@ -203,7 +203,7 @@ if(defined $opt_s){ # "surface only"
                   STMAS3D.exe
                   lvd_sat_ingest.exe
                   cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
-                  add_omega.exe lapsprep.exe laps2grib.exe);
+                  add_omega.exe qbalpe.exe lapsprep.exe laps2grib.exe);
 
 }elsif($opt_V eq "GSI_Post"){ # GSI analysis
     @LAPS_EXE = qw(GSI_Post.exe
