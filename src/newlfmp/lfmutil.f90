@@ -719,6 +719,18 @@ if(.not. large_pgrid)then
   enddo
   enddo
 endif
+
+if (fcsttime .eq. 0) then ! obtain initial time swdown field from swi analysis LCV files
+  ext = 'lcv'
+  var_2d = 'SWI'
+  call get_laps_2d(laps_reftime,ext,var_2d,units_2d,comment_2d,lx,ly,swdown,istatus)
+  if(istatus .eq. 1)then
+    write(6,*)' Obtained initial time swdown field from swi analysis LCV file'
+  else
+    write(6,*)' Warning: could not find initial time swdown field from swi analysis LCV file'
+  endif      
+endif
+
 if (verbose .and. .not. large_ngrid) then
    print*,' '
    print*,'Min/Max tsfc      = ',minval(tsfc),maxval(tsfc)
