@@ -216,7 +216,7 @@ c
       Logical       found_data
       Logical       l_low_level
       Logical       l_offset_vxx, l_offset
-      Parameter (l_offset_vxx = .true.)
+!     Parameter (l_offset_vxx = .true.)
 
       Integer       i4time_mos
       Integer       i4time_pre
@@ -268,6 +268,9 @@ c
 c---------------------------------------------------------
 c Start
 c
+      call get_l_offset_radar(nx_l,ny_l,grid_spacing_cen_m,     ! I
+     1                        nx_r,ny_r,igrid_r,l_offset_vxx)   ! O
+
       if(l_offset_vxx .AND. c_mosaic_type.eq.'vxx')then
          l_offset = .true.
       else
@@ -283,9 +286,9 @@ c
 
       else 
          radius_r = 500000. ! 500km max radar radius
-         igrid_r = int(radius_r / grid_spacing_cen_m) + 1
-         nx_r = min(((2 * igrid_r) + 1),nx_l)
-         ny_r = min(((2 * igrid_r) + 1),ny_l)
+!        igrid_r = int(radius_r / grid_spacing_cen_m) + 1
+!        nx_r = min(((2 * igrid_r) + 1),nx_l)
+!        ny_r = min(((2 * igrid_r) + 1),ny_l)
 
          allocate(grid_ra_ref_offset(nx_r,ny_r,nz_l,n_radars)
      1           ,STAT=istat_alloc)             
@@ -633,6 +636,7 @@ c this subroutine does not yet use the imosaic_3d parameter.
      &                         nx_r,ny_r,                                 ! I
      &                         imosaic_3d,                                ! I
      &                         dist_multiradar_2d,                        ! I  
+     &                         l_offset,                                  ! I
      &                         grid_mosaic_2dref,grid_mosaic_3dref,       ! I/O
      &                         closest_radar_m,istatus)                   ! O
              if(istatus .ne. 1)goto 1000
