@@ -152,7 +152,7 @@ cdis
         endif ! Status for MODEL data
 
 !       Remap to cloud height grid and convert to cloud cover
-        t_ref = 0.
+        t_ref = -10. ! colder than this ice saturation is assumed
 
         do k = 1,KCLOUD
         do j = 1,nj
