@@ -8,7 +8,7 @@ implicit none
 
 integer, external :: iargc
 integer :: narg,chr,nc,i,j,k
-integer :: laps_reftime,laps_valtime,istatus
+integer :: laps_valtime,istatus
 
 real :: xcen,ycen,latcen,loncen
 
