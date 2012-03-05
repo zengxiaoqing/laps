@@ -68,6 +68,20 @@ c       dummy call for the CO2 slicing method.
 c       Cloud building for VIS is under construction
 c
 c
+c       DRAFT summary of general goals:
+c
+c       Set minimum cloud top from tb8 (100% cover)
+c
+c       Allow higher cloud top based on vis (thin cloud is higher)
+c
+c       Allow higher cloud top based on rh (via pre-existing cloud, determined 
+c       from RH of first guess).
+c
+c       Iterative corrective step of cloud layers vs tb8 is done at the end.
+c       This could be moved up earlier? Perhaps this and other measures could
+c       help avoid inserting new cloud tops too low in the column. A higher
+c       top could be used more consistent with RH?
+c
 c*************************************************************************
 c
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
