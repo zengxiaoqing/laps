@@ -7,6 +7,7 @@
      &                            nx_r,ny_r,                              ! I
      &                            imosaic_3d,                             ! I
      &                            dist_multiradar_2d,                     ! I  
+     &                            l_offset,                               ! I
      &                            grid_mosaic_2dref,grid_mosaic_3dref,    ! I/O
      &                            closest_radar_m,istatus)                ! O
 c
@@ -38,7 +39,7 @@ c
       Logical   l_valid
       Logical   l_valid_latlon(maxradars)
       Logical   l_offset 
-      Parameter (l_offset = .true.)
+!     Parameter (l_offset = .true.)
 
       integer   lr_2d(nx,ny)                     ! closest radar
       Integer   ioffset(maxradars),joffset(maxradars)
