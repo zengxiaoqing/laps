@@ -22,7 +22,7 @@ logical :: make_donefile=.true.
 logical :: large_pgrid=.false.
 logical :: large_ngrid=.false.
 
-integer :: domnum,fcsttime,precip_dt=3600  ! in seconds
+integer :: domnum,fcsttime,laps_reftime,precip_dt=3600  ! in seconds
 integer :: k_micro=999
 
 character(len=256) :: filename,filename0
