@@ -612,8 +612,15 @@ c    CLOUD SECTION -- UNITS (none, just a fraction 0->1)
                endif            ! if cloudy check (cloudy enough?)
             endif               ! mdf check and bad value check
          enddo                  ! enddo k level
+
+c here the weight of the cloud function is hard coded as 0.5  this will 
+c now be modified to become a namelist parameter to help in the improve
+c ment of the cloud analysis for Steve Albers needs. 3/8/12   DB
          max_func_cloud = max_func_cloud * 0.5
          func = func + max_func_cloud
+
+c the following IF is suspect as a coding bug, it is deemed to have
+c little or no significance on the processing
          if (max_func_cloud .ne. 0.0) then
             min_func_cloud = min(min_func_cloud,max_func_cloud)
          endif
