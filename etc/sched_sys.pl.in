@@ -1,5 +1,5 @@
 #!@PERL@
-# This script runs LAPS analyses. The default is for realtime operation.
+# This script writes out the date to standard output in various formats
 #
 # Command line arguments
 #
@@ -75,7 +75,7 @@ my $cycle_time_hr  = int($cycle_time/3600);
 $cycle_time_hr="0".$cycle_time_hr if(length($cycle_time_hr)<2);
 
 my $delay_time = 0;
-$delay_time = $opt_d if($opt_d > 0);
+$delay_time = $opt_d if(defined $opt_d);
 
 my $extend_time=0;
 if(defined $opt_e){ # allow extend time to be either positive or negative
