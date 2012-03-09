@@ -102,6 +102,11 @@ c     background covariance common block
       real covar_sum
       integer covar_count
 
+c     common from lq3driver main program, direct insert from namelist
+c     common block for cloud weighting .. direct insert into func_o.f
+      common /func_o_insert/ cloud_weight
+      real cloud_weight      
+
 c     optran common 
 
       common /cost_optran/btemp_ob, cost_kk, cost_p, cost_t_l,
@@ -616,7 +621,7 @@ c    CLOUD SECTION -- UNITS (none, just a fraction 0->1)
 c here the weight of the cloud function is hard coded as 0.5  this will 
 c now be modified to become a namelist parameter to help in the improve
 c ment of the cloud analysis for Steve Albers needs. 3/8/12   DB
-         max_func_cloud = max_func_cloud * 0.5
+         max_func_cloud = max_func_cloud * cloud_weight
          func = func + max_func_cloud
 
 c the following IF is suspect as a coding bug, it is deemed to have
