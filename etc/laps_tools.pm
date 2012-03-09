@@ -1090,7 +1090,8 @@ sub sys_time{
     my $ctime = 0;    # Initial declaration outside the scope of the if test
     if($archive_time > 0) {
 #       print "Archive data time is being set to a ctime of $archive_time...\n";
-        $ctime = $archive_time;
+#       print "delay = $delay\n";
+        $ctime = $archive_time - $delay*3600;
     }else{
 #       print "Setting ctime based on clock time and delay of $delay in hours...\n";
         $ctime = time - $delay*3600;
@@ -1106,7 +1107,7 @@ sub sys_time{
     my($sec,$min,$hour,$mday,$mon,$year,$yyyy);
 
     if($archive_time > 0){
-      ($year,$mon,$mday,$hour,$min,$sec) = &laps_tools::i4time_to_date($archive_time);
+      ($year,$mon,$mday,$hour,$min,$sec) = &laps_tools::i4time_to_date($ctime);
        $yyyy=$year;
        $year=substr($year,2,2);
        $mon=$mon-1;
