@@ -232,10 +232,10 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 #           Process super res data (parse hhmmss files by hour)
             setenv CDL wsr88d_super_res_wideband.cdl
 
-            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V03*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
+            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V0?*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
             echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
 
-            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V03*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V0?*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
                                     -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
 
             echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
