@@ -48,3 +48,5 @@ echo " "
 echo "Summary of this and previously downloaded directories..."
 
 ls -l $dir/ftp3.ncdc.noaa.gov/pub/has
+
+echo "Note that .Z files can be left as is without uncompressing, this is optional"
