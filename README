@@ -3939,9 +3939,24 @@ Source directory: laps/src/accum
 Parameter namelist file: static/nest7grid.parms 
 
 The precipitation analysis uses radar estimated precip rates as the primary
-dataset. Areas without radar coverage switch over to a gauge only analysis of
-1-hr precipitation - using a background field (if available) or zero field as 
-a first guess.
+dataset. The radar reflectiivty can be obtained from any combination of NOWRAD
+2-D (Section 3.2.4) or low-level reflectivity from mosaiced 2-D or 3-D radar 
+reflectivity data. The source can be narrowband or wideband radar 
+(section 3.2.3). The mosaics can be performed with either 2-D or 3-D inputs 
+(section 3.2.5). 
+
+We presently use a Marshall Palmer Z-R relationship to obtain liquid equivalent
+precipitation. Snow is also estimated using a snow/rain ratio derived as a 
+function of column maximum temperature. More on the basic accumulation 
+processing is in Albers et. al., 1996.
+
+In the present LAPS version, areas without radar coverage switch over to a 
+gauge only analysis of 1-hr precipitation - using a background or model first
+guess field (if available) or zero field as a first guess. 
+
+Areas having both radar and rain gauges present can be bias adjusted. An
+algorithm is presently be tested that determines this bias as a function of
+reflectivity.
 
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
