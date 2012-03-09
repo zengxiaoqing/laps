@@ -6,7 +6,7 @@ echo "Starting install_laps.csh...$6"
 #This script sets up the pre-compiled tar file and localizes it at CWB
 #Usage: install_laps.csh $LAPS_SRC_ROOT $LAPSINSTALLROOT $LAPS_DATA_ROOT $TEMPLATE `which perl` [a/w/p]
 
-setenv LAPS_SRC_ROOT      $1
+setenv LAPS_SRC_ROOT      $1 # Top level LAPS directory above 'src'
 setenv LAPSINSTALLROOT    $2
 setenv LAPS_DATA_ROOT     $3
 
@@ -21,7 +21,7 @@ setenv TEMPLATEDIR        $4
 setenv NEWPERL            $5
 
 # Argument $6
-#    a - do entire install 
+#    a - do entire install (equivalent to 'p' followed by 'w')
 #    p - does binary (configure/install) setup only
 #    w - does window localization only
 
@@ -55,12 +55,21 @@ if ($6 != w) then
 
     echo "Makefile not present, assuming precompiled tar file"
 
-    echo "Configuring precompiled scripts in $LAPSINSTALLROOT/etc"
+    echo "Configuring precompiled scripts in $LAPSINSTALLROOT/etc and $LAPSINSTALLROOT/util"
+
+    if(! -e $LAPS_SRC_ROOT/etc) then
+        echo "ERROR: $LAPS_SRC_ROOT/etc is not present"
+        exit
+    endif
+
     cd $LAPS_SRC_ROOT
 
     setenv NEWNETCDF    /usr/local/netcdf
 
 #   Edit paths
+
+#   ls -l etc/*.pl util/cronfile
+
     foreach file (etc/*.pl util/cronfile)
         if (-e $file.in) then
             cp $file.in $file
@@ -217,12 +226,12 @@ if ($6 != p) then
         setenv config_domain f
         echo " "
         echo "Calling window_domain_rt.pl, config_domain = f"
-        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl    -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT -w laps $QSPN
+        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl    -t $TEMPLATEDIR -s $LAPS_SRC_ROOT -i $LAPSINSTALLROOT -d $LAPS_DATA_ROOT -w laps $QSPN
     else
         setenv config_domain t
         echo " "
         echo "Calling window_domain_rt.pl, config_domain = t"
-        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl -c -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT -w laps $QSPN
+        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl -c -t $TEMPLATEDIR -s $LAPS_SRC_ROOT -i $LAPSINSTALLROOT -d $LAPS_DATA_ROOT -w laps $QSPN
     endif
 
 #   cd $LAPS_SRC_ROOT
