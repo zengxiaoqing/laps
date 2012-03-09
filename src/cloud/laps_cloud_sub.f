@@ -56,6 +56,7 @@ cdis
      1                         ,pct_req_lvd_s8a                        
      1                         ,i4_sat_window,i4_sat_window_offset     
      1                         ,l_use_metars,l_use_radar,iwrite_output
+     1                         ,i_varadj
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                sys_abort_prod
@@ -1426,10 +1427,10 @@ C       EW SLICES
 
         endif
 
-        if(.false.)then
+        if(i_varadj .eq. 1)then
             call cloud_var(NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
-     1                    ,cloud_frac_vis_a)
+     1                    ,cloud_frac_vis_a,r_missing_data)
         endif
 
 999     continue
