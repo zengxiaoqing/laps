@@ -328,7 +328,7 @@ if( $CONFIG_DOMAIN eq "true" ) {
 
      }else{
 
-        print "All roots are equal.\n";
+        print "All roots are equal. Try placing LAPS_DATA_ROOT in a directory tree separate from LAPSINSTALLROOT.\n";
 
         if(! -e "$DATAROOT/$DOMAIN_NAME/data_rep"){
            print "Make subdirectory data_rep and save static and cdl for save keeping\n";
