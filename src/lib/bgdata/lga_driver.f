@@ -854,6 +854,46 @@ c
      .               vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
      .               wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
 
+           if(.true.)then
+
+!            The 'htbg_sfc' model terrain can be used or calculated (if 
+!            unavailable).
+
+             write(6,*)' htbg_sfc range: ',minval(htbg_sfc)
+     1                                    ,maxval(htbg_sfc)       
+
+             if(minval(htbg_sfc) .eq. missingflag .OR.
+     1          maxval(htbg_sfc) .eq. missingflag      )then
+                 write(6,*)
+     1   ' WARNING: htbg_sfc has missing values, check BG model terrain'
+ 
+                 write(6,*)' prbg_sfc range: ',minval(prbg_sfc)
+     1                                        ,maxval(prbg_sfc)       
+
+                 if(.false.)then
+                     write(6,*)
+     1   ' Calculating model terrain from model pressure and std atmos'
+                     do j = 1,ny_bg
+                     do i = 1,nx_bg
+                        htbg_sfc(i,j) = PsaToZ(prbg_sfc(i,j)/100.)
+                     enddo ! i
+                     enddo ! j                 
+                 else
+                     write(6,*)
+     1   ' Calculating model terrain from model sfc pres and 3D height' 
+                     call pres_to_ht_2d(prbg_sfc,prbght*100.,htbg,tpbg
+     1                                 ,nx_bg,ny_bg,nzbg_ht,htbg_sfc
+     1                                 ,istatus)
+                 endif
+
+                 write(6,*)' recalculated htbg_sfc range: '
+     1                                        ,minval(htbg_sfc)
+     1                                        ,maxval(htbg_sfc)       
+
+             endif
+
+           endif ! .true.
+
            if(vertical_grid .eq. 'PRESSURE')then 
              call vinterp(nz_laps,nx_bg,ny_bg,nx_pr,ny_pr
      .         ,ixmin,ixmax,iymin,iymax
@@ -885,39 +925,7 @@ c
              allocate(prvi(nx_bg,ny_bg,nz_laps))
 
 !            We want to model 'sigma_ht' vertical levels on the model 
-!            horizontal grid to construct the 'htvi' array. The 'htbg_sfc' 
-!            model terrain can be used or calculated (if available).
-
-             write(6,*)' htbg_sfc range: ',minval(htbg_sfc)
-     1                                    ,maxval(htbg_sfc)       
-
-             if(minval(htbg_sfc) .eq. missingflag .OR.
-     1          maxval(htbg_sfc) .eq. missingflag      )then
-                 write(6,*)
-     1   ' WARNING: htbg_sfc has missing values, check BG model terrain'
-                 write(6,*)
-     1   ' Calculating model terrain from model pressure and std atmos'
- 
-                 write(6,*)' prbg_sfc range: ',minval(prbg_sfc)
-     1                                        ,maxval(prbg_sfc)       
-
-                 if(.false.)then
-                     do j = 1,ny_bg
-                     do i = 1,nx_bg
-                        htbg_sfc(i,j) = PsaToZ(prbg_sfc(i,j)/100.)
-                     enddo ! i
-                     enddo ! j                 
-                 else
-                     call pres_to_ht_2d(prbg_sfc,prbght*100.,htbg,tpbg
-     1                                 ,nx_bg,ny_bg,nzbg_ht,htbg_sfc
-     1                                 ,istatus)
-                 endif
-
-                 write(6,*)' recalculated htbg_sfc range: '
-     1                                        ,minval(htbg_sfc)
-     1                                        ,maxval(htbg_sfc)       
-
-             endif
+!            horizontal grid to construct the 'htvi' array. 
 
              call get_ht_3d(nx_bg,ny_bg,nz_laps,htbg_sfc,htvi
      1                     ,istatus)
