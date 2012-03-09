@@ -113,10 +113,10 @@
 
             dist_outside = sqrt(dist_outside_i**2 + dist_outside_j**2)       
 
-            write(6,*)line
-            write(6,*)c4_name,rlat,rlon,ri,rj,dist_outside
-
             dist_outside_km = dist_outside * grid_spacing_m / 1000.
+
+            write(6,*)line
+            write(6,*)c4_name,rlat,rlon,ri,rj,dist_outside_km
 
 !           Find nearest ocean to radar site
             grid_dist_min = 9999.
@@ -131,7 +131,7 @@
             enddo ! ii
             dist_ocean_min = grid_dist_min 
 
-            if(dist_outside_km .le. 100.)then
+            if(dist_outside_km .le. 200.)then ! apply distance threshold
                 icount = icount + 1
                 write(lun_out,21)c4_name,dist_outside_km,dist_ocean_min       
      1                          ,nint(ri),nint(rj)
