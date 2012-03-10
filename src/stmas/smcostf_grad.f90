@@ -25,16 +25,19 @@ SUBROUTINE SMOTHCOST
 ! --------------------
   INTEGER  :: I,J,K,T,S
   REAL     :: Z1,Z2,Z3,AZ,BZ,CZ
+  double precision :: smx,smy,smz,smt
 ! --------------------
 ! PENALTY TERM
 
+  smx = 0.0d0
   IF(NUMGRID(1).GE.3)THEN
     DO S=1,NUMSTAT+1
       DO T=1,NUMGRID(4)
       DO K=1,NUMGRID(3)
       DO J=1,NUMGRID(2)
       DO I=2,NUMGRID(1)-1
-        COSTFUN=COSTFUN+PENAL_X(S)* &
+        ! COSTFUN=COSTFUN+PENAL_X(S)* &
+        smx=smx+PENAL_X(S)* &
         ((GRDANALS(I-1,J,K,T,S)-2*GRDANALS(I,J,K,T,S)+GRDANALS(I+1,J,K,T,S))/(GRDSPAC(1)*GRDSPAC(1)))**2
       ENDDO
       ENDDO
@@ -43,13 +46,15 @@ SUBROUTINE SMOTHCOST
     ENDDO
   ENDIF
 
+  smy = 0.0d0
   IF(NUMGRID(2).GE.3)THEN
     DO S=1,NUMSTAT+1
       DO T=1,NUMGRID(4)
       DO K=1,NUMGRID(3)
       DO J=2,NUMGRID(2)-1
       DO I=1,NUMGRID(1)
-        COSTFUN=COSTFUN+PENAL_Y(S)* &
+        ! COSTFUN=COSTFUN+PENAL_Y(S)* &
+        smy=smy+PENAL_Y(S)* &
         ((GRDANALS(I,J-1,K,T,S)-2*GRDANALS(I,J,K,T,S)+GRDANALS(I,J+1,K,T,S))/(GRDSPAC(2)*GRDSPAC(2)))**2
       ENDDO
       ENDDO
@@ -58,6 +63,7 @@ SUBROUTINE SMOTHCOST
     ENDDO
   ENDIF
 
+  smz = 0.0d0
   IF(NUMGRID(3).GE.3)THEN
     DO S=1,NUMSTAT+1
       DO T=1,NUMGRID(4)
@@ -79,7 +85,8 @@ SUBROUTINE SMOTHCOST
         AZ=AZ*(Z2-Z1)*(Z3-Z2)
         BZ=BZ*(Z2-Z1)*(Z3-Z2)
         CZ=CZ*(Z2-Z1)*(Z3-Z2)
-        COSTFUN=COSTFUN+PENAL_Z(S)* &
+        ! COSTFUN=COSTFUN+PENAL_Z(S)* &
+        smz=smz+PENAL_Z(S)* &
         (AZ*GRDANALS(I,J,K-1,T,S)+BZ*GRDANALS(I,J,K,T,S)+CZ*GRDANALS(I,J,K+1,T,S))**2
       ENDDO
       ENDDO
@@ -88,13 +95,15 @@ SUBROUTINE SMOTHCOST
     ENDDO
   ENDIF
 
+  smt = 0.0d0
   IF(NUMGRID(4).GE.3)THEN
     DO S=1,NUMSTAT+1
       DO T=2,NUMGRID(4)-1
       DO K=1,NUMGRID(3)
       DO J=1,NUMGRID(2)
       DO I=1,NUMGRID(1)
-        COSTFUN=COSTFUN+PENAL_T(S)* &
+        ! COSTFUN=COSTFUN+PENAL_T(S)* &
+        smt=smt+PENAL_T(S)* &
         ((GRDANALS(I,J,K,T-1,S)-2*GRDANALS(I,J,K,T,S)+GRDANALS(I,J,K,T+1,S))/(GRDSPAC(4)*GRDSPAC(4)))**2
       ENDDO
       ENDDO
@@ -102,6 +111,9 @@ SUBROUTINE SMOTHCOST
       ENDDO
     ENDDO
   ENDIF
+
+  COSTFUN = COSTFUN+smx+smy+smz+smt
+
   RETURN
 END SUBROUTINE SMOTHCOST
 
