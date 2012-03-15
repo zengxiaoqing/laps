@@ -83,28 +83,28 @@ SUBROUTINE WCOMPGERNL
     WWW(I,J,K,T)=WWW(I,J,K-1,T)-(HT(I,J,K,T)-HT(I,J,K-1,T))*SZ/2.0 &
                 *((GRDANALS(I2,J,K-1,T,UU)-GRDANALS(I1,J,K-1,T,UU) &
                   +GRDBKGND(I2,J,K-1,T,UU)-GRDBKGND(I1,J,K-1,T,UU)) &
-                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*COSD(DEG(I,J)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*1.0 &
                  +(GRDANALS(I,J2,K-1,T,VV)-GRDANALS(I,J1,K-1,T,VV) &
                   +GRDBKGND(I,J2,K-1,T,VV)-GRDBKGND(I,J1,K-1,T,VV)) &
-                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*COSD(DEG(I,J)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*1.0 &
                  +(GRDANALS(I2,J,K  ,T,UU)-GRDANALS(I1,J,K  ,T,UU) &
                   +GRDBKGND(I2,J,K  ,T,UU)-GRDBKGND(I1,J,K  ,T,UU)) &
-                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*COSD(DEG(I,J)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*1.0 &
                  +(GRDANALS(I,J2,K  ,T,VV)-GRDANALS(I,J1,K  ,T,VV) &
                   +GRDBKGND(I,J2,K  ,T,VV)-GRDBKGND(I,J1,K  ,T,VV)) &
-                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*COSD(DEG(I,J)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*1.0 &
                  -(GRDANALS(I,J2,K-1,T,UU)-GRDANALS(I,J1,K-1,T,UU) &
                   +GRDBKGND(I,J2,K-1,T,UU)-GRDBKGND(I,J1,K-1,T,UU)) &
-                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*SIND(DEG(I,J)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*0.0 &
                  +(GRDANALS(I2,J,K-1,T,VV)-GRDANALS(I1,J,K-1,T,VV) &
                   +GRDBKGND(I2,J,K-1,T,VV)-GRDBKGND(I1,J,K-1,T,VV)) &
-                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*SIND(DEG(I,J)) &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*0.0 &
                  -(GRDANALS(I,J2,K  ,T,UU)-GRDANALS(I,J1,K  ,T,UU) &
                   +GRDBKGND(I,J2,K  ,T,UU)-GRDBKGND(I,J1,K  ,T,UU)) &
-                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*SIND(DEG(I,J)) &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*0.0 &
                  +(GRDANALS(I2,J,K  ,T,VV)-GRDANALS(I1,J,K  ,T,VV) &
                   +GRDBKGND(I2,J,K  ,T,VV)-GRDBKGND(I1,J,K  ,T,VV)) &
-                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*SIND(DEG(I,J)))
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*0.0)
 
     IF(IFPCDNT.EQ.0) THEN                                          !     FOR SIGMA
       WWW(I,J,K,T)=WWW(I,J,K,T)-(HT(I,J,K,T)-HT(I,J,K-1,T))*SZ/2.0 &
@@ -112,22 +112,22 @@ SUBROUTINE WCOMPGERNL
                   +GRDBKGND(I,J,K,T,UU)-GRDBKGND(I,J,K-1,T,UU))  &
                  /(HT(I,J,K,T)-HT(I,J,K-1,T))  &
                  *(HT(I2,J,K,T)-HT(I1,J,K,T)+HT(I2,J,K-1,T)-HT(I1,J,K-1,T)) &
-                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*COSD(DEG(I,J))  &
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*1.0  &
                  +(GRDANALS(I,J,K,T,VV)-GRDANALS(I,J,K-1,T,VV)  &
                   +GRDBKGND(I,J,K,T,VV)-GRDBKGND(I,J,K-1,T,VV))  &
                  /(HT(I,J,K,T)-HT(I,J,K-1,T))  &
                  *(HT(I,J2,K,T)-HT(I,J1,K,T)+HT(I,J2,K-1,T)-HT(I,J1,K-1,T)) &
-                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*COSD(DEG(I,J))  &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*1.0  &
                 - (GRDANALS(I,J,K,T,UU)-GRDANALS(I,J,K-1,T,UU)  &
                   +GRDBKGND(I,J,K,T,UU)-GRDBKGND(I,J,K-1,T,UU))  &
                  /(HT(I,J,K,T)-HT(I,J,K-1,T))  &
                  *(HT(I,J2,K,T)-HT(I,J1,K,T)+HT(I,J2,K-1,T)-HT(I,J1,K-1,T)) &
-                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*SIND(DEG(I,J))  &
+                 /(YYY(I,J2)-YYY(I,J1))/SCP(YSL)*0.0  &
                  +(GRDANALS(I,J,K,T,VV)-GRDANALS(I,J,K-1,T,VV)  &
                   +GRDBKGND(I,J,K,T,VV)-GRDBKGND(I,J,K-1,T,VV))  &
                  /(HT(I,J,K,T)-HT(I,J,K-1,T))  &
                  *(HT(I2,J,K,T)-HT(I1,J,K,T)+HT(I2,J,K-1,T)-HT(I1,J,K-1,T)) &
-                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*SIND(DEG(I,J)) )
+                 /(XXX(I2,J)-XXX(I1,J))/SCP(XSL)*0.0 )
     ENDIF
   ENDDO
   ENDDO
@@ -228,8 +228,8 @@ SUBROUTINE WWGRADIENT(CC,ST)
 
   DO J=1,NUMGRID(2)
   DO I=1,NUMGRID(1)
-    SG(I,J)=SIND(DEG(I,J))
-    CG(I,J)=COSD(DEG(I,J))
+    SG(I,J)=0.0
+    CG(I,J)=1.0
   ENDDO
   ENDDO
 
