@@ -129,10 +129,12 @@ SUBROUTINE OUTPTLAPS
    !  ENDDO
   ! ENDDO
   ! WRITE(15,*) MAXGRID,GRDBKGD0(1:MAXGRID(1),1:MAXGRID(2),1:MAXGRID(3),2,3)
-  print*,'Increment: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,1)))
-  print*,'Increment: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,2)))
-  print*,'Increment: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,3)))
-  print*,'Increment: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,4)))
+  print*,'Increment 1: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,1)))
+  print*,'Increment 2: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,2)))
+  print*,'Increment 3: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,3)))
+  print*,'Increment 4: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,4)))
+  print*,'Increment 5: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,5)))
+  print*,'Increment 6: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,6)))
   CALL BKGTOFINE(NUMSTAT,MAXGRID,XB,YB,ZB,TB,FCSTGRD,XF,YF,ZF,TF,GRDBKGD0,ANA)
 
   ! ADD INCREMENT TO BK0:
