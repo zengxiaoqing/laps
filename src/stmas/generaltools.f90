@@ -821,23 +821,6 @@ SUBROUTINE BKGTOFINE(NS,NB,XB,YB,ZB,TB,NF,XF,YF,ZF,TF,BK,FG)
   ENDDO
 END SUBROUTINE BKGTOFINE
 
-SUBROUTINE CONVERTUV(X1,Y1,X2,Y2,U1,V1,U2,V2)
-!*************************************************
-! CONVERT VECTOR FROM ONE COORDINATE TO ANOTHER (GENERAL) (NOT USED)
-! HISTORY: AUGUST 2007, CODED by WEI LI.
-!*************************************************
-  IMPLICIT NONE
-! --------------------
-  REAL  :: X1,Y1,X2,Y2,U1,V1,U,V,DG,U2,V2
-! --------------------
-  U=X2-X1
-  V=Y2-Y1
-  CALL DIRECTION(U,V,DG)
-  U2= U1*COSD(DG)+V1*SIND(DG)
-  V2=-U1*SIND(DG)+V1*COSD(DG)
-  RETURN
-END SUBROUTINE CONVERTUV
-
 SUBROUTINE DIRECTION(U,V,DG)
 !*************************************************
 ! CALCULATE DIRECTION (GENERAL) (NOT USED)
