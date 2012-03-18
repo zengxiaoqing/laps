@@ -661,7 +661,8 @@ SUBROUTINE COSTFUNCT2
   INTEGER  :: NP(MAXDIMS)
   REAL  :: HT,OI,HU,HV,HW,DG,DV
   REAL  :: HT0,HU0,HV0
-  REAL  :: CS(NUMSTAT+3),CM,CB,CH,rdr,ref
+  REAL  :: CS(NUMSTAT+3),CM,CB,CH,ref
+  double precision :: rdr
 ! added by shuyuan 20100907  for calculate ref, qr,qs..
   REAL  ::rc     !   desity*rain water mixing ration    
   REAL  ::sc     !   desity*snow water mixing ration 
@@ -713,7 +714,7 @@ SUBROUTINE COSTFUNCT2
 
   ! FOR RADIAL WIND VELOCITY OBSERVATIONS
   S=NUMSTAT+1
-  rdr = COSTFUN
+  rdr = 0.0d0 !COSTFUN
   DO NO=1,NOBSTAT(S)
     O=O+1
     DO N=1,MAXDIMS
@@ -740,9 +741,12 @@ SUBROUTINE COSTFUNCT2
     DG=OBSEINF1(NO)
     DV=OBSEINF2(NO)
     HT=HU*SIN(D2R*DG)*COS(D2R*DV)+HV*COS(D2R*DG)*COS(D2R*DV)+HW*SIN(D2R*DV)
-    COSTFUN=COSTFUN+(HT-OBSVALUE(O))*(HT-OBSVALUE(O))!*OBSRADAR!!!modified by shuyuan   20101028
+    ! COSTFUN=COSTFUN+(HT-OBSVALUE(O))*(HT-OBSVALUE(O)) !*OBSRADAR!!!modified by shuyuan   20101028
+    rdr=rdr+(HT-OBSVALUE(O))*(HT-OBSVALUE(O))*OBSRADAR!!!modified by shuyuan   20101028
   ENDDO
-  print*,'Radar radial wind cost: ',COSTFUN-rdr
+  print*,'Radar radial wind cost: ',rdr,' obsradr= ',obsradar,' : ',costfun,rdr
+  CS(S) = rdr
+  COSTFUN = COSTFUN+rdr
 
   ! FOR SFMR WIND VELOCITY OBSERVATIONS
   S=NUMSTAT+2
@@ -816,7 +820,7 @@ SUBROUTINE COSTFUNCT2
     !COSTFUN=COSTFUN+Temp_ref*OI/(Segma*Segma)/(NOBSTAT(S)*1.0) !!!!20101025
     COSTFUN=COSTFUN+Temp_ref!!!!20101025
 
-    CS(S)=CS(S)+0.5*(rc-Temp_ref)*(rc-Temp_ref)/(Segma*Segma)
+    CS(S)=CS(S)+0.5*Temp_ref
 
   ENDDO
   print*,'Radar reflectivity cost: ',COSTFUN-ref, OBSVALUE(O-1),NOBSTAT(S),S,Segma
@@ -980,12 +984,12 @@ SUBROUTINE COSTGRADT2
     DO I=NP(1),MIN0(NP(1)+1,NUMGRID(1))
       M=M+1
       GRADINT(I,J,K,T,UU)=GRADINT(I,J,K,T,UU)  &
-      +(HT-OBSVALUE(O))*OBSCOEFF(M,O)*SIN(D2R*DG)*COS(D2R*DV)
+      +(HT-OBSVALUE(O))*OBSCOEFF(M,O)*SIN(D2R*DG)*COS(D2R*DV)*OBSRADAR
      ! +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*SIN(D2R*DG)*COS(D2R*DV)*OBSRADAR!!!modified by shuyuan   20101028
       GRADINT(I,J,K,T,VV)=GRADINT(I,J,K,T,VV)  &
-       +(HT-OBSVALUE(O))*OBSCOEFF(M,O)*COS(D2R*DG)*COS(D2R*DV)
+       +(HT-OBSVALUE(O))*OBSCOEFF(M,O)*COS(D2R*DG)*COS(D2R*DV)*OBSRADAR
       !+(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)*COS(D2R*DG)*COS(D2R*DV)*OBSRADAR!!!modified by shuyuan   20101028
-      CC(M,O)=(HT-OBSVALUE(O))*SIN(D2R*DV)*OBSCOEFF(M,O)!*OI*OBSRADAR!!!modified by shuyuan   20101028
+      CC(M,O)=(HT-OBSVALUE(O))*SIN(D2R*DV)*OBSCOEFF(M,O)*OBSRADAR!!!modified by shuyuan   20101028
     ENDDO
     ENDDO
     ENDDO
