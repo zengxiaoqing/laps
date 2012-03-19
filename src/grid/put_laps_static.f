@@ -105,6 +105,7 @@ c       lo2=data(imax,jmax,2)
 !     Calculate deltax_cdf and deltay_cdf
       deltax_cdf = deltax
       deltay_cdf = deltay
+      std_lat_cdf = std_lat
 
       if(c6_maproj .eq. 'plrstr')then
 
@@ -113,9 +114,11 @@ c       lo2=data(imax,jmax,2)
             if(std_lat2 .eq. 90.)then
               call get_grid_spacing_actual(60.0,std_lon,deltax_cdf,
      1                                     istatus)
+              std_lat_cdf = +60.
             else
               call get_grid_spacing_actual(-60.0,std_lon,deltax_cdf,
      1                                     istatus)
+              std_lat_cdf = -60.
             endif
 
             if(istatus .ne. 1)then
@@ -146,7 +149,8 @@ c       lo2=data(imax,jmax,2)
 
       call wrt_laps_static (dir_out(1:len),laps_dom_file(1:lapslen),
      1                      imax,jmax,
-     1                      kmax,deltax_cdf,deltay_cdf,std_lon,std_lat,       
+     1                      kmax,deltax_cdf,deltay_cdf,
+     1                      std_lon,std_lat_cdf,       
      1                      std_lat2,origin,var,comment,
      1                      data,model,grid_spacing,
      1                      c6_maproj,la1,lo1,la2,lo2,
