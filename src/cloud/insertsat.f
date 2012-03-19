@@ -56,7 +56,7 @@ c
      1  t_modelfg,sh_modelfg,pres_3d,                                    ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
      1  t_gnd_k,                                                         ! O
-     1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,                              ! O
+     1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,                   ! O
      1  istatus)                                                         ! O
 c
 c*************************************************************************
@@ -152,6 +152,7 @@ c
         real cldtop_m(imax,jmax)
         real cldtop_co2_m(imax,jmax)
         real cldtop_tb8_m(imax,jmax)
+        real ht_sao_top(imax,jmax)
 
 !       Local
         real P(1),T(1),TD(1),LCL_AGL,TLCL_PBE,PLCL_PBE ! used for LCL (abdel)
@@ -182,6 +183,9 @@ c
         data nidelt/3/,njdelt/3/
 
         write(6,*)' Subroutine insert_sat...'
+
+!       Initialize
+        ht_sao_top = r_missing_data
 
 !       Calculate LCL
         do j=1,jmax
@@ -564,7 +568,7 @@ c
 
 !           Initialize lowest SAO cloud base & highest SAO/CO2 top
             ht_sao_base = r_missing_ht
-            ht_sao_top  = r_missing_ht
+            ht_sao_top(i,j) = r_missing_ht
 
 !           Locate lowest SAO cloud base
             cldcv_below = 0.
@@ -585,7 +589,7 @@ c
             do k=kcld,2,-1
               if(cldcv_above      .le. thr_sao_cvr .and.
      1           cldcv_sao(i,j,k) .gt. thr_sao_cvr)then
-                    ht_sao_top = cld_hts(k)
+                    ht_sao_top(i,j) = cld_hts(k)
                     goto186
               endif
               cldcv_above = cldcv_sao(i,j,k)
@@ -755,17 +759,17 @@ c
                   cover = cover_new
               endif ! .true.
 
-            elseif(ht_sao_top .gt. cldtop_m(i,j) .and. 
-     1             ht_sao_top .ne. r_missing_ht .and. .true.)then 
+            elseif(ht_sao_top(i,j) .gt. cldtop_m(i,j) .and. 
+     1             ht_sao_top(i,j) .ne. r_missing_ht .and. .true.)then 
                                                     ! Satellite top below 
                                                     ! ceiling (lowest SAO base)
               mode_sao = 4
               cover=sat_cover
               cldtop_old = cldtop_m(i,j)
-              cldtop_m(i,j) = ht_sao_top
+              cldtop_m(i,j) = ht_sao_top(i,j)
               htbase_init = ht_sao_base
-              thk_lyr = cld_thk(ht_sao_top)
-              htbase = ht_sao_top - thk_lyr
+              thk_lyr = cld_thk(ht_sao_top(i,j))
+              htbase = ht_sao_top(i,j) - thk_lyr
 
 !             Find a thinner value for cloud cover consistent with the new
 !             higher cloud top and the known brightness temperature.
@@ -837,7 +841,7 @@ c
 
             if(idebug .eq. 1)then
                 write(6,302,err=303)i,j,mode_sao,htbase,cover
-     1                             ,cldtop_m(i,j),ht_sao_top
+     1                             ,cldtop_m(i,j),ht_sao_top(i,j)
      1                             ,l_no_sao_vis,istat_vis_potl_a(i,j)
 302             format(1x,2i4,' mode_sao =',i2,f7.0,f7.2,2f7.0,l2,i2)       
 303             continue
@@ -861,7 +865,7 @@ c
      1         abs(htbase) .gt. 100000.       .or.
      1         cover       .le. 0.01              )then
                 write(6,322,err=323)i,j,mode_sao,htbase,cover
-     1                   ,cldtop_m(i,j),ht_sao_top
+     1                   ,cldtop_m(i,j),ht_sao_top(i,j)
      1                   ,l_no_sao_vis,istat_vis_potl_a(i,j)
 322             format(1x,2i4,' WARNING: htbase/cover = '
      1                ,i2,f7.0,f7.2,2f7.0,l2,i2)       
