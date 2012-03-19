@@ -39,7 +39,8 @@ cdis
 
         subroutine get_modelfg(cf_modelfg,t_modelfg                      ! O
      1                        ,model_q_3d                                ! O
-     1                        ,default_clear_cover                       ! I
+     1                        ,model_ref_3d                              ! O
+     1                        ,default_clear_cover,r_missing_data        ! I
      1                        ,temp_3d,heights_3d,cld_hts                ! I
      1                        ,i4time_needed,ilaps_cycle_time            ! I
      1                        ,ni,nj,klaps,KCLOUD                        ! I
@@ -62,6 +63,7 @@ cdis
         real t_modelfg(ni,nj,KCLOUD)       ! Output
         real cld_hts(KCLOUD)               ! Input
         real model_q_3d(ni,nj,klaps)       ! Output
+        real model_ref_3d(ni,nj,klaps)     ! Output
 
         real model_lwc_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
         real model_ice_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
@@ -75,6 +77,9 @@ cdis
 
         write(6,*)
         write(6,*)' Getting first guess cloud cover'
+
+        mode = 1 ! Prefer LWC if available
+!       mode = 2 ! use maximum of LWC and RH cloud
 
 !       Initialize model first guess cover field with default value
         do k = 1,KCLOUD
@@ -129,6 +134,18 @@ cdis
             write(6,*)' No first guess available for ',var_2d
             istatus = 0
             return
+        endif
+
+        write(6,*)' Getting MODEL REF background'
+
+!       Get Model First Guess REF
+        var_2d = 'REF'
+        call get_modelfg_3d(i4time_needed,var_2d,ni,nj,klaps
+     1                     ,model_ref_3d,istat_ref)
+
+        if(istat_ref .ne. 1)then
+            write(6,*)' No first guess available for ',var_2d
+            model_ref_3d = r_missing_data
         endif
 
 !       Check status of LWC/ICE from model first guess
@@ -208,7 +225,12 @@ cdis
                     cf_modelfg(i,j,k) = default_clear_cover
                 endif
 
-            elseif(istat_sh .eq. 1)then
+            endif
+
+            if(istat_sh .eq. 1)then
+              if(.NOT. (istat_lwc .eq. 1 .and. istat_lwc .eq. 1) 
+     1                          .OR.   mode .eq. 2
+     1                                                           )then
 !               Find the model temp at this location in the cloud height grid
                 t_modelfg(i,j,k) =  temp_3d(i,j,iz_laps)   * (1. - frac)      
      1                           +  temp_3d(i,j,iz_laps+1) * frac
@@ -241,13 +263,14 @@ cdis
                                                         ! counters model (ruc) 
                                                         ! moist bias
 
-                cf_modelfg(i,j,k) = rh_to_cldcv(rh_qc)  ! fractional_rh
+                if(mode .eq. 1)then
+                    cf_modelfg(i,j,k) = rh_to_cldcv(rh_qc)       ! fractional_rh
+                else
+                    cf_modelfg(i,j,k) = 
+     1              max(cf_modelfg(i,j,k),rh_to_cldcv(rh_qc))    ! fractional_rh
+                endif
 
-            else
-                write(6,*)' Code error in get_modelfg, STOP'
-                stop
-!               istatus = 0
-!               return
+              endif
 
             endif
 
