@@ -79,7 +79,7 @@ c                                              designed specifically for FMI pro
 c                                             (tested and working as of June-2007)
 c        bgmodels = 13 ---> GFS  
 c                           NAM 
-c                           RUC (pressure grid) 
+c                           RUC, RR, and HRRR (pressure grids) 
 c                           ECMWF
 c                           FIM
 c                     GRIB1 and GRIB2-formatted data files for which there is a 
@@ -122,7 +122,7 @@ c                 Note that for cmodel of LAPS_FUA or LAPS surface fields are al
 c                 used and this flag is ignored. For other models we are currently
 c                 reviewing whether this flag gives acceptable results when set to TRUE.
 c
-c                 For a SIGMA_P grid this should always be set to TRUE.
+c                 For a SIGMA_P or SIGMA_HT grid this should always be set to TRUE.
 c
 c Namelist section 2: interp_controls
 c     These variables are not active atm.
