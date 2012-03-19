@@ -133,6 +133,7 @@ cdis
         real, allocatable, dimension(:,:,:) :: cf_modelfg
         real, allocatable, dimension(:,:,:) :: t_modelfg
         real, allocatable, dimension(:,:,:) :: sh_modelfg
+        real, allocatable, dimension(:,:,:) :: ref_modelfg
 !       REAL cldcv1(NX_L,NY_L,KCLOUD)
 !       REAL cf_modelfg(NX_L,NY_L,KCLOUD)
 !       REAL t_modelfg(NX_L,NY_L,KCLOUD)
@@ -160,6 +161,7 @@ cdis
         real cldtop_co2_m(NX_L,NY_L)
         real cldtop_tb8_m(NX_L,NY_L)
         real cldtop_co2_pa_a(NX_L,NY_L)
+        real ht_sao_top(NX_L,NY_L)
 
         real cldcv_sao(NX_L,NY_L,KCLOUD)
         real cld_pres_1d(KCLOUD)
@@ -309,6 +311,11 @@ cdis
         allocate( sh_modelfg(NX_L,NY_L,NZ_L), STAT=istat_alloc )
         if(istat_alloc .ne. 0)then
             write(6,*)' ERROR: Could not allocate sh_modelfg'
+        endif
+
+        allocate( ref_modelfg(NX_L,NY_L,NZ_L), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate ref_modelfg'
         endif
 
         allocate( cld_snd(max_cld_snd,KCLOUD), STAT=istat_alloc )
@@ -526,13 +533,13 @@ C READ IN LAPS HEIGHTS
             goto999
         endif
 
-C OBTAIN MODEL FIRST GUESS CLOUD COVER FIELD
-        call get_modelfg(cf_modelfg,t_modelfg,sh_modelfg
-     1           ,default_clear_cover
-     1           ,temp_3d,heights_3d,cld_hts
-     1              ,i4time,ilaps_cycle_time
-     1                  ,NX_L,NY_L,NZ_L,KCLOUD
-     1                  ,istatus)
+C OBTAIN MODEL FIRST GUESS CLOUD COVER FIELD (along with reflectivity, water vapor)
+        call get_modelfg(cf_modelfg,t_modelfg,sh_modelfg,ref_modelfg    ! O
+     1           ,default_clear_cover,r_missing_data                    ! I
+     1           ,temp_3d,heights_3d,cld_hts                            ! I
+     1              ,i4time,ilaps_cycle_time                            ! I
+     1                  ,NX_L,NY_L,NZ_L,KCLOUD                          ! I
+     1                  ,istatus)                                       ! O
 
 C READ IN RADAR DATA
 !       Get time of radar file of the indicated appropriate extension
@@ -576,6 +583,34 @@ C READ IN RADAR DATA
 !           call constant_i(istat_radar_3dref_a,0,NX_L,NY_L)
 
 !       endif
+
+C BLEND IN FIRST GUESS RADAR
+        n_fg_radar = 0
+        n_fg_echoes = 0
+        do i = 1,NX_L
+        do j = 1,NY_L
+            if(rqc_2d(i,j) .eq. 0. .OR. 
+     1         closest_radar(i,j) .gt. 460000.)then
+                do k = 1,NZ_L
+                    if(ref_modelfg(i,j,k) .ne. r_missing_data)then
+                        radar_ref_3d(i,j,k) = ref_modelfg(i,j,k)
+                        rqc_2d(i,j) = 1.
+                        n_fg_radar = n_fg_radar + 1
+                        if(ref_modelfg(i,j,k) .gt. ref_base)then
+                            n_fg_echoes = n_fg_echoes + 1
+                        endif
+                    endif ! first guess is present
+                enddo ! k
+            endif ! radar obs data are absent
+        enddo ! j
+        enddo ! i
+
+        frac_fg_radar = float(n_fg_radar) / float(NX_L*NY_L*NZ_L)
+
+        write(6,*)'First guess radar used over ',frac_fg_radar*100.
+     1           ,'% of domain'
+
+        write(6,*)'Number of first guess echoes is ',n_fg_echoes
 
 C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
 !       Read in surface pressure
@@ -780,7 +815,7 @@ C READ IN SATELLITE DATA
      1       t_modelfg,sh_modelfg,pres_3d,                              ! I
      1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,             ! I
      1       t_gnd_k,                                                   ! O
-     1       cldtop_co2_m,cldtop_tb8_m,cldtop_m,                        ! O
+     1       cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,             ! O
      1       istatus)                                                   ! O
 
         if(istatus .ne. 1)then
@@ -791,10 +826,18 @@ C READ IN SATELLITE DATA
 !       Cloud cover QC check
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
-        write(6,*)' Cloud top (Band 8 vs. Satellite Analysis)'
+        write(6,*)' Cloud top (Band 8 vs. ht_sao_top)'
         scale = .0001
         write(6,301)
 301     format('  Cloud Top (km)             Band 8                ',
+     1                 23x,'               ht_sao_top')
+        CALL ARRAY_PLOT(cldtop_tb8_m,ht_sao_top,NX_L,NY_L,'HORZ CV'
+     1                 ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale)
+
+        write(6,*)' Cloud top (Band 8 vs. Satellite Analysis)'
+        scale = .0001
+        write(6,302)
+302     format('  Cloud Top (km)             Band 8                ',
      1                 23x,'          Satellite Analysis')
         CALL ARRAY_PLOT(cldtop_tb8_m,cldtop_m,NX_L,NY_L,'HORZ CV'
      1                 ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale)
@@ -921,10 +964,12 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 !       Generate field of radar coverage (2D/3D)
         do i = 1,NX_L
         do j = 1,NY_L
-            if(lstat_radar_3dref_orig_a(i,j))then
+            if(rqc_2d(i,j) .eq. 1.)then
+                plot_maskr(i,j) = 10.0 ! 3D first guess data
+            elseif(lstat_radar_3dref_orig_a(i,j))then
                 plot_maskr(i,j) = 30.0 ! 3D original data
             elseif(istat_radar_2dref_a(i,j) .eq. 1)then
-                plot_maskr(i,j) = 20.0 ! 2D data
+                plot_maskr(i,j) = 20.0 ! 2D original data
             else                    
                 plot_maskr(i,j) = 0.0  ! no data
             endif
@@ -1427,6 +1472,9 @@ C       EW SLICES
 
         endif
 
+!       If needed 't_modelfg' and 'sh_modelfg' are available.
+!       'rh_modelfg' is sometimes calculated in 'get_model_fg'
+
         if(i_varadj .eq. 1)then
             call cloud_var(NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
@@ -1446,6 +1494,7 @@ C       EW SLICES
         deallocate(cf_modelfg)
         deallocate(t_modelfg)
         deallocate(sh_modelfg)
+        deallocate(ref_modelfg)
         deallocate(cld_snd)
         deallocate(wt_snd)
 
