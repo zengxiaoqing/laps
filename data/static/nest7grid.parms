@@ -31,10 +31,10 @@
  l_accum_fg=.false.,
  l_accum_radar=.true.,
  l_accum_gauge=.false.,
-
+ 
  l_superob_barnes=.false.,
  l_mosaic_sat=.false.,
- 
+
  path_to_topt30s='/data/lapb/projects/geog/world_topo_30s',
  path_to_landuse30s='/data/lapb/projects/geog/landuse_30s',
  path_to_soiltype_top30s='/data/lapb/projects/geog/soiltype_top_30s',
@@ -59,13 +59,11 @@
  ref_base=-10.,       
  ref_base_useable=0., 
  r_hybrid_first_gate=0.,
- hydrometeor_scale_pcp=1.,
- hydrometeor_scale_cld=0.2,
  maxstns=100000,         
  N_PIREP=10000,         
  max_snd_grid=3000,
  max_snd_levels=300,
- redp_lvl=1500.,
+ redp_lvl=0.,
  aircraft_time_window=0.5,     
  vert_rad_meso=1,     
  vert_rad_sao=1,      
@@ -188,7 +186,11 @@ c              resources.
 c
 c max_radar_files_nl - Maximum number of files expected in a radar directory
 c
-c ref_base - Reflectivity dbZ value assigned to areas with no echoes.
+c ref_base - Reflectivity dbZ value assigned to areas with no echoes detected
+c            by a radar scan. Note that areas where the radar hasn't scanned 
+c            are normally given the more general missing value of 
+c            'r_missing_data', unless something like first guess information
+c            is being used to fill in.
 c
 c ref_base_useable - Threshold dbZ used to filter out low reflectivities 
 c                    thus acting as a ground clutter and noise filter.
@@ -220,18 +222,11 @@ c model_fcst_intvl - Time between model forecast steps within a given run (secon
 c
 c model_fcst_len - Total duration of model forecast (minutes)
 c
+c
 c iwrite_output - flag to write out all little files or just a restricted set
 c                 (1)  means write out all little files
 c                 (0)  means write out restricted set for single executable
 c                 (-1) means doesn't write out any little files
-c
-c
-c hydrometeor_scale_cld & hydrometeor_scale_pcp:	
-c    Factors that scale the hydrometeor concentrations for a grid
-c    spacing. If set to a positive number it is treated as a simple scaling.
-c    If set to a negative number, then (hydrometeor_scale = -hydrometeor_scale_cld[pcp]/dx)
-c    Note that dx is in kilometers. This is the scale that LAPS analyzed values
-c    are multiplied by to account for sub-grid scale effects.
 c
 c TERRAIN SMOOTHING
 c           
