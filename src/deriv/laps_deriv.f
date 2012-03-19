@@ -341,12 +341,17 @@ cdis
      1                            c_z2m,                                  ! O
      1                            thresh_cvr_cty_vv,thresh_cvr_lwc,       ! O
      1                            twet_snow,                              ! O
+     1                            hydrometeor_scale_cldliq,               ! O
+     1                            hydrometeor_scale_cldice,               ! O
+     1                            hydrometeor_scale_pcp,                  ! O
      1                            istatus)                                ! O
 
        Real vv_to_height_ratio_Cu
        Real vv_to_height_ratio_Sc
        Real vv_for_St
        Real thresh_cvr_cty_vv,thresh_cvr_lwc,twet_snow
+       Real hydrometeor_scale_cldliq,hydrometeor_scale_cldice
+       Real hydrometeor_scale_pcp
 
        character*20 c_z2m
 
@@ -358,12 +363,18 @@ cdis
      1                     vv_for_St,
      1                     c_z2m,
      1                     thresh_cvr_cty_vv,thresh_cvr_lwc,
-     1                     twet_snow
+     1                     twet_snow,
+     1                     hydrometeor_scale_cldliq,
+     1                     hydrometeor_scale_cldice,
+     1                     hydrometeor_scale_pcp
  
        character*150 static_dir,filename
 
 !      Set default value(s)
        c_z2m = 'albers'
+       hydrometeor_scale_cldliq = 0.2
+       hydrometeor_scale_cldice = 0.2
+       hydrometeor_scale_pcp    = 1.0
  
        call get_directory('static',static_dir,len_dir)
 
