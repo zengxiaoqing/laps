@@ -269,7 +269,7 @@
           call get_directory('verif',verif_dir,len_verif)
 
           if(trim(var_2d) .eq. 'SWI')then
-              istart = 1
+              istart = 0 ! 1
           else
               istart = 0
           endif
@@ -459,6 +459,17 @@
      1                          ,ni,nj
      1                          ,var_fcst_2d
      1                          ,istatus)
+
+!                 Suppress 00hr SWI if from wrf-hrrr since it would have been
+!                 pulled in via LFMPOST from a LAPS analysis
+
+                  if(trim(var_2d) .eq. 'SWI'              .AND.
+     1               l_parse(c_model(1:len_model),'hrrr') .AND.
+     1               i4_valid .eq. i4_initial             )then
+                      write(6,*)' Suppressing 00hr hrrr SWI'
+                      istatus = 0
+                  endif
+
                   if(istatus .ne. 1)then
                        write(6,*)' Error reading 2D Forecast for '
      1                           ,var_2d
