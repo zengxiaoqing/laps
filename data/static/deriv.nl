@@ -5,6 +5,9 @@
  vv_to_height_ratio_Cu=0.05,
  vv_to_height_ratio_Sc=0.05,
  vv_for_St=.01,
+ hydrometeor_scale_pcp=1.,
+ hydrometeor_scale_cldliq=0.2,
+ hydrometeor_scale_cldice=0.2,
  c_z2m='rams'
  thresh_cvr_cty_vv=0.65,
  thresh_cvr_lwc=0.65,
@@ -37,6 +40,13 @@ c                         routine (units are 10^-3 inverse seconds)
 c
 c vv_for_St   - parameter for the cloud omega (vv.f/cloud_bogus_w) routine
 c                         (units are meters/second)
+c
+c hydrometeor_scale_cldliq & hydrometeor_scale_cldice & hydrometeor_scale_pcp:	
+c    Factors that scale the hydrometeor concentrations for a grid
+c    spacing. If set to a positive number it is treated as a simple scaling.
+c    If set to a negative number, then (hydrometeor_scale = -hydrometeor_scale_cld[pcp]/dx)
+c    Note that dx is in kilometers. This is the scale that LAPS analyzed values
+c    are multiplied by to account for sub-grid scale effects.
 c
 c c_z2m - parameter for converting from radar reflectivity to precipitating
 c         hydrometeor concentrations ('albers','kessler')
