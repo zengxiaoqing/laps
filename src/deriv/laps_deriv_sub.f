@@ -54,9 +54,6 @@ cdis
      1                        twet_snow,                 ! O
      1                        j_status,istatus)
 
-        use mem_namelist, ONLY: hydrometeor_scale_cld, 
-     1                          hydrometeor_scale_pcp
-
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                  sys_abort_prod
 
@@ -366,6 +363,9 @@ cdis
      1                       c_z2m,                                  ! O
      1                       thresh_cvr_cty_vv,thresh_cvr_lwc,       ! O
      1                       twet_snow,                              ! O
+     1                       hydrometeor_scale_cldliq,               ! O
+     1                       hydrometeor_scale_cldice,               ! O
+     1                       hydrometeor_scale_pcp,                  ! O
      1                       istatus)                                ! O
         if (istatus .ne. 1) then
            write (6,*) 'Error calling get_deriv_parms'
@@ -684,10 +684,17 @@ c read in laps lat/lon and topo
 
 
 !       Convert SLWC and CICE by applying scale factor to parcel method values
-        if(hydrometeor_scale_cld .ge. 0.)then
-            ratio_cld =  hydrometeor_scale_cld
+        if(hydrometeor_scale_cldliq .ge. 0.)then
+            ratio_cldliq =  hydrometeor_scale_cldliq
         else
-            ratio_cld = -hydrometeor_scale_cld / 
+            ratio_cldliq = -hydrometeor_scale_cldliq / 
+     1                  (grid_spacing_cen_m/1000.)
+        endif
+
+        if(hydrometeor_scale_cldice .ge. 0.)then
+            ratio_cldice =  hydrometeor_scale_cldice
+        else
+            ratio_cldice = -hydrometeor_scale_cldice / 
      1                  (grid_spacing_cen_m/1000.)
         endif
 
@@ -695,10 +702,10 @@ c read in laps lat/lon and topo
         do j = 1,NY_L
         do i = 1,NX_L
             if(slwc(i,j,k) .ne. r_missing_data)then
-                slwc(i,j,k) = (slwc(i,j,k) * ratio_cld)
+                slwc(i,j,k) = (slwc(i,j,k) * ratio_cldliq)
             endif
             if(cice(i,j,k) .ne. r_missing_data)then
-                cice(i,j,k) = (cice(i,j,k) * ratio_cld)
+                cice(i,j,k) = (cice(i,j,k) * ratio_cldice)
             endif
         enddo 
         enddo
@@ -1079,16 +1086,14 @@ c read in laps lat/lon and topo
  700    continue
 
 !       Convert SLWC and CICE from g/m**3 to kg/m**3
-        ratio_cld = 1.0
-
         do k = 1,NZ_L
         do j = 1,NY_L
         do i = 1,NX_L
             if(slwc(i,j,k) .ne. r_missing_data)then
-                slwc(i,j,k) = (slwc(i,j,k) * ratio_cld) / 1e3
+                slwc(i,j,k) = (slwc(i,j,k) * 1.0) / 1e3
             endif
             if(cice(i,j,k) .ne. r_missing_data)then
-                cice(i,j,k) = (cice(i,j,k) * ratio_cld) / 1e3
+                cice(i,j,k) = (cice(i,j,k) * 1.0) / 1e3
             endif
         enddo 
         enddo
