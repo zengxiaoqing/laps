@@ -9,12 +9,15 @@
         real thresh_cvr
         parameter (thresh_cvr = 0.1)
 
-        real a(100)          ! Cloud fractions of layers
-        real f(100)          ! Apparent "cross-section" of cloud layers seen from above
-        integer ik(100)      ! Height level representative of cloud layers
-        integer ilyr(kcld)   ! Layer index for each cloud lvl (needs KCLOUD)
-        real cvr(kcld)       ! Cloud cover from analysis
-        real temp_3d(ni,nj,klaps),temp_lyr(100)
+        integer max_cld_lyrs                   
+        parameter (max_cld_lyrs = 100)
+
+        real a(max_cld_lyrs)     ! Cloud fractions of layers
+        real f(max_cld_lyrs)     ! Apparent "cross-section" of cloud layers seen from above
+        integer ik(max_cld_lyrs) ! Height level representative of cloud layers
+        integer ilyr(kcld)       ! Layer index for each cloud lvl (needs KCLOUD)
+        real cvr(kcld)           ! Cloud cover from analysis
+        real temp_3d(ni,nj,klaps),temp_lyr(max_cld_lyrs)
         real heights_3d(ni,nj,klaps)
         real cld_hts(kcld)
 
