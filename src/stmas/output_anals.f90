@@ -134,7 +134,7 @@ SUBROUTINE OUTPTLAPS
   print*,'Increment 3: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,3)))
   print*,'Increment 4: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,4)))
   print*,'Increment 5: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,5)))
-  print*,'Increment 6: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,6)))
+  IF (NUMSTAT .GT. 5) print*,'Increment 6: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,6)))
   CALL BKGTOFINE(NUMSTAT,MAXGRID,XB,YB,ZB,TB,FCSTGRD,XF,YF,ZF,TF,GRDBKGD0,ANA)
 
   ! ADD INCREMENT TO BK0:
@@ -284,6 +284,8 @@ GOTO 111
 
 ! --------ADDED BY SHUYUAN 201007---------------------------------
 ! CALCULATE AND OUTPUT REFLECTIVITY
+  ! CHECK IF RAIN AND SNOW IS ANALYZED:
+  IF (NUMSTAT .LE. 5) GOTO 555 ! BY YUANFU
    T=2
    DO K=1,FCSTGRD(3)
     DO J=1,FCSTGRD(2)
@@ -337,6 +339,9 @@ GOTO 111
               FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),            &
               FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),N_3D_FIELDS,istatus)         
 !--END OUTPUT REF RAI SNO  BY SHUYUAN---------------------
+
+  ! SKIP OUTPUT RAIN AND SNOW IF NOT ANALYZED:
+555 CONTINUE
 
   CALL BKGMEMRLS
   DEALLOCATE(Z_FCSTGD)
