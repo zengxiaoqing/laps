@@ -348,8 +348,9 @@ print*,'nonhydrostatic: ',amx,mxi,mxj,mxk
     BK0(I,J,K,T,TEMPRTUR)=TT(I,J,K,T)
     BK0(I,J,K,T,HUMIDITY)=QQ(I,J,K,T)
     !added by shuyuan for ref  20100811
-    BK0(I,J,K,T,ROUR_CMPNNT) =0.0
-    BK0(I,J,K,T,ROUS_CMPNNT) =0.0 
+    ! MODIFIED BY YUANFU FOR CHECKING IF RAIN AND SNOW IS ANALYZED:
+    IF (NUMSTAT .GT. 5) BK0(I,J,K,T,ROUR_CMPNNT) =0.0
+    IF (NUMSTAT .GT. 6) BK0(I,J,K,T,ROUS_CMPNNT) =0.0 
     ! ROUR and ROUS  are the input variable. when they are caculated in the COSTFUNT2, they have to be changed to 
     !rc=(17300**(4/7)*ROUR*1000)**(7/4)  rour  kg/m**3
     !rc=(17300**(4/7)*ROUR)**(7/4)  rour  g/m**3
