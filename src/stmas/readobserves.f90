@@ -304,6 +304,8 @@ SUBROUTINE RDLAPSRDR
 
 !=======reflectivity==for time cycle ,read multitime data file *.vrz======
 !=========added by shuyuan liu 20100830================== 
+  ! CHECK IF RAIN AND SNOW IS ANALYZED:
+  IF (NUMSTAT .LE. 5) GOTO 555
   i4_tol = 900
   i4_ret = 0
   ref_base = -10
@@ -364,7 +366,8 @@ SUBROUTINE RDLAPSRDR
       ENDDO
      ENDDO
   ENDDO  ! for L
-
+  ! SKIP REFLECTIVITY:
+555 CONTINUE
 
 END SUBROUTINE RDLAPSRDR
 
