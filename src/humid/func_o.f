@@ -107,6 +107,10 @@ c     common block for cloud weighting .. direct insert into func_o.f
       common /func_o_insert/ cloud_weight
       real cloud_weight      
 
+c     radiomenter direct insert of weight form driver and namelist
+      common /radiometer/ radio_wt
+      real radio_wt
+
 c     optran common 
 
       common /cost_optran/btemp_ob, cost_kk, cost_p, cost_t_l,
@@ -698,6 +702,7 @@ c     SH units
                max_func_snd = max_func_snd +
      1              (mr_l(i)-cost_snd_data(i))**2 * 
      1              cost_snd_wt(i) !weighted squared difference
+     1              * radio_wt
      1              / (0.05*mr_l(i))**2
             endif
             
