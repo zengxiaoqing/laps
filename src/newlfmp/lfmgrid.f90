@@ -405,7 +405,7 @@ if (trim(mtype) /= 'st4') then
   cldtop     =>sgrid(1:lx,1:ly,ct); name2d(ct)='LCT'; com2d(ct)='Cloud Top ASL'                   ; ct=ct+1
   cldamt     =>sgrid(1:lx,1:ly,ct); name2d(ct)='LCV'; com2d(ct)='Cloud Fraction'                  ; ct=ct+1
   ceiling    =>sgrid(1:lx,1:ly,ct); name2d(ct)='CCE'; com2d(ct)='Cloud Ceiling AGL'               ; ct=ct+1
-  intliqwater=>sgrid(1:lx,1:ly,ct); name2d(ct)='LIL'; com2d(ct)='Integrated Liquid Water'         ; ct=ct+1
+  intliqwater=>sgrid(1:lx,1:ly,ct); name2d(ct)='LIL'; com2d(ct)='Integrated Cloud Liquid'         ; ct=ct+1
   intcldice  =>sgrid(1:lx,1:ly,ct); name2d(ct)='LIC'; com2d(ct)='Integrated Cloud Ice'            ; ct=ct+1
   totpcpwater=>sgrid(1:lx,1:ly,ct); name2d(ct)='TPW'; com2d(ct)='Total Precipitable Water'        ; ct=ct+1
   max_refl   =>sgrid(1:lx,1:ly,ct); name2d(ct)='LMR'; com2d(ct)='Sim. Composite Reflectivity'     ; ct=ct+1
