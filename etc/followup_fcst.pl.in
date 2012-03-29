@@ -65,6 +65,7 @@ my $purger;
 if (-d "/w3/lapb") {
     $purger = "@PERL@ @prefix@/etc/purge_w3_fcst2d.pl -t $purge_time $domain $model\n";
     $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
+    symlink "$dataroot", "/w3/lapb/domains/private_web_data";
 }else{
     $purger = "@PERL@ @prefix@/etc/purge_w3_fcst2d.pl -t $purge_time -d $dataroot $domain $model\n";
     $w3recent = "$dataroot/lapsprd/www/fcst2d/$model/recent";
