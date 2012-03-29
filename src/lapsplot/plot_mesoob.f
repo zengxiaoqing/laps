@@ -65,7 +65,7 @@ cdis
         character*255 c_filespec
         character*9 c9_string, asc_tim_9
         character*13 filename13
-        character*2 c_field
+        character*4 c_field
         character*3 c3_presob
         character*5 c_staname
 
@@ -295,10 +295,36 @@ cdis
             if(iflag_cv .eq. 1)then
                 c_label(14:33) =  '          Ceil & Vis'
             elseif(iflag_cv .eq. 2)then
-                if(namelist_parms%c_units_type .eq. 'english')then
-                    c_label(13:33) = '1Hr Pcp/Snw Dpth (in)'
+                if(c_field(3:4) .eq. '24')then
+                  if(namelist_parms%c_units_type .eq. 'english')then
+                    c_label(13:34) = '24Hr Precip (in)'
+                  else
+                    c_label(13:39) = '24Hr Precip (in)'
+                  endif
+                elseif(c_field(3:3) .eq. '6')then
+                  if(namelist_parms%c_units_type .eq. 'english')then
+                    c_label(13:33) = '6Hr Precip (in)'
+                  else
+                    c_label(13:38) = '6Hr Precip (in)'
+                  endif
+                elseif(c_field(3:3) .eq. '3')then
+                  if(namelist_parms%c_units_type .eq. 'english')then
+                    c_label(13:33) = '3Hr Precip (in)'
+                  else
+                    c_label(13:38) = '3Hr Precip (in)'
+                  endif
+                elseif(c_field(3:3) .eq. '1')then
+                  if(namelist_parms%c_units_type .eq. 'english')then
+                    c_label(13:33) = '1Hr Precip (in)'
+                  else
+                    c_label(13:38) = '1Hr Precip (in)'
+                  endif
                 else
+                  if(namelist_parms%c_units_type .eq. 'english')then
+                    c_label(13:33) = '1Hr Pcp/Snw Dpth (in)'
+                  else
                     c_label(13:38) = '1Hr Pcp (mm)/Snw Dpth (cm)'
+                  endif
                 endif
             elseif(iflag_cv .eq. 3)then
                 c_label(14:51) =  
@@ -440,14 +466,25 @@ cdis
 
                 elseif(iflag_cv .eq. 2)then ! Precip
                     temp = badflag
-                    if(pcp1(i) .ne. badflag)then
+                    if(c_field(3:4) .eq. '24')then
+                        pcpval = pcp24(i)
+                    elseif(c_field(3:3) .eq. '6')then
+                        pcpval = pcp6(i)
+                    elseif(c_field(3:3) .eq. '3')then
+                        pcpval = pcp3(i)
+                    elseif(c_field(3:3) .eq. '1')then
+                        pcpval = pcp1(i)
+                    else
+                        pcpval = pcp1(i)
+                    endif
+                    if(pcpval .ne. badflag)then
                         if(namelist_parms%c_units_type 
      1                                             .eq. 'metric')then      
-                            dewpoint = pcp1(i) * 25.4
+                            dewpoint = pcpval * 25.4
                         else
-                            dewpoint = pcp1(i)
+                            dewpoint = pcpval
                         endif
-                        write(6,*)' Precip ob ',i,pcp1(i),dewpoint
+                        write(6,*)' Precip ob ',i,pcpval,dewpoint
                     else
                         dewpoint = badflag
                     endif
@@ -468,8 +505,10 @@ cdis
 
                     call s_len(wx_s(i),lenwx)
 
+                    call s_len(c_field,len_field)
+
 !                   Test for valid report
-                    if(pcp1(i) .ne. badflag .or. 
+                    if(pcpval .ne. badflag .or. 
      1                 snow(i) .ne. badflag .or. 
      1                 (wx_s(i) .ne. 'UNK' .and. lenwx .gt. 0) 
      1                                                         )then       
@@ -478,9 +517,11 @@ cdis
 11                      format('  Plot Precip ob ',i4,2f8.2,i3,1x,a)
 
 !                       Plot Weather String
-                        if(lenwx .gt. 0 .and. wx_s(i) .ne. 'UNK')then
+                        if(len_field .le. 2)then
+                          if(lenwx .gt. 0 .and. wx_s(i) .ne. 'UNK')then
                             CALL PCLOQU(xsta-du2*0.9, ysta-du2*1.5
      1                        , wx_s(i)(1:lenwx), charsize,ANGD,+1.0)
+                          endif
                         endif
 
 !                       Plot name and Station Location
