@@ -252,14 +252,30 @@ if (trim(mtype) /= 'st4') then
  if (verbose .and. .not. large_pgrid) then
     print*,' '
     print*,'Diagnostics from isobaric domain center:'
-    print*,'-------------------------------------------------------------'
-    print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV         U       V'
-    print*,'-------------------------------------------------------------'
+    print*,'------------------------------------------------------------------------'
+    print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV       QL      QI      U       V'
+    print*,'------------------------------------------------------------------------'
     do k=1,lz
-       print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6,2f8.2)'   &
+       print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,3(2x,f8.6),2f8.2)'   &
              ,k,lprs(k)*100.,zprs(lx/2,ly/2,k)  &
              ,tprs(lx/2,ly/2,k),shprs(lx/2,ly/2,k) &
+             ,cldliqmr_prs(lx/2,ly/2,k) &
+             ,cldicemr_prs(lx/2,ly/2,k) &
              ,uprs(lx/2,ly/2,k),vprs(lx/2,ly/2,k)
+    enddo
+
+    print*,' '
+    print*,'Diagnostics from isobaric domain level maxvals:'
+    print*,'------------------------------------------------------------------------'
+    print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV       QL      QI      U       V'
+    print*,'------------------------------------------------------------------------'
+    do k=1,lz
+       print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,3(2x,f8.6),2f8.2)'   &
+             ,k,lprs(k)*100.,maxval(zprs(:,:,k))  &
+             ,maxval(tprs(:,:,k)),maxval(shprs(:,:,k)) &
+             ,maxval(cldliqmr_prs(:,:,k)) &
+             ,maxval(cldicemr_prs(:,:,k)) &
+             ,maxval(uprs(:,:,k)),maxval(vprs(:,:,k))
     enddo
  endif
 
