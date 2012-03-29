@@ -1748,7 +1748,7 @@ c       include 'satellite_dims_lvd.inc'
      1                          .or. c_type .eq. 'oc' ! Air T,Td in C
      1                          .or. c_type .eq. 'os' ! Stations  
      1                          .or. c_type .eq. 'ov' ! Sky Cover, Visibility
-     1                          .or. c_type .eq. 'op' ! Precip 
+     1                          .or. c_type(1:2) .eq. 'op' ! Precip 
      1                          .or. c_type .eq. 'og' ! Soil/Water T + Solar Rad
      1                          .or. c_type .eq. 'or' ! Solar Radiation Only
      1                          .or. c_type .eq. 'oh' ! Humidity (GPS-PW)
@@ -3583,8 +3583,10 @@ c abdel
                 var_2d = 'SNO'
             elseif(c_type_i .eq. 'ls')then
                 var_2d = 'LWC'
+                plot_parms%color_power = 0.3
             elseif(c_type_i .eq. 'ci')then
                 var_2d = 'ICE'
+                plot_parms%color_power = 0.3
             elseif(c_type_i .eq. 'pi')then
                 var_2d = 'PIC'
             else
@@ -4128,9 +4130,6 @@ c abdel
                   goto1200
               endif
 
-!             c_label(11:33) = ' FSF     '//var_2d(1:4)
-!    1                                    //fcst_hhmm//'      '
-
               call directory_to_cmodel(directory,c_model)
 
               call mk_fcst_hlabel(level,comment_2d,fcst_hhmm
@@ -4153,7 +4152,12 @@ c abdel
                   endif
 
                   field_2d(:,:) = field_2d_sum(:,:) + field_2d(:,:)
-                  c_label = 'Integrated Cloud Condensate (mm)    '
+
+                  comment_2d = 'Integrated Cloud Condensate'
+                  units_2d = 'mm'
+                  call mk_fcst_hlabel(level,comment_2d,fcst_hhmm
+     1                                 ,ext(1:3),units_2d
+     1                                 ,c_model,c_label)
               endif
 
               i4time_cloud = i4_valid
@@ -5631,11 +5635,19 @@ c                   cint = -1.
      1                         ,'spectral',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 else
-                    call array_range(field_2d,NX_L,NY_L,rmin,rmax
-     1                              ,r_missing_data)
+!                   call array_range(field_2d,NX_L,NY_L,rmin,rmax
+!    1                              ,r_missing_data)
+!                   call ccpfil(field_2d,NX_L,NY_L
+!    1                         ,rmin/scale,rmax/scale,'spectral'       
+!    1                         ,n_image,scale,'hsect',plot_parms
+!    1                         ,namelist_parms)        
+
+                    call contour_settings(field_2d,NX_L,NY_L
+     1                           ,clow,chigh,cint
+     1                           ,zoom,density,scale)       
 
                     call ccpfil(field_2d,NX_L,NY_L
-     1                         ,rmin/scale,rmax/scale,'spectral'       
+     1                         ,clow,chigh,'spectral'       
      1                         ,n_image,scale,'hsect',plot_parms
      1                         ,namelist_parms)        
                 endif
@@ -7528,7 +7540,7 @@ c abdel
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         character c_label*(*),asc_tim_9*9,c_metacode*2,asc_tim_24*24
-        character c_field*2,c_display*1
+        character c_field*4,c_display*1
         character*(*) c_file
 
         real lat(NX_L,NY_L)
@@ -8396,7 +8408,7 @@ c abdel
         call s_len2(units_2d,len_units)
         write(6,*)'units_2d = ',units_2d(1:len_units)
 
-        if(l_parse(units_2d,'PERCENT'))then
+        if(l_parse(units_2d,'PERCENT') .eqv. .true.)then
             units_2d = '%'
             len_units = 1
         endif
