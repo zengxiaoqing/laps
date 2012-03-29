@@ -1434,12 +1434,14 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            Weather Agency (AFWA) satellite data is also possible.  
 
            Raw GVAR satellite data can be ingested and navigated using GIMLOC 
-           routines. Further details can be found in the file 
-           'src/ingest/satellite/lvd/README'. 
+           routines. These files are in NetCDF. Further details can be found 
+           in the file 'src/ingest/satellite/lvd/README'. 
 
            The ITS group at ESRL/GSD has put together a converter from McIDAS 
-           AREA files to the GVAR netCDF format (lvd input). The package can 
-           be found online at this URL:
+           AREA files to the GVAR netCDF format (lvd input). These files are
+           similar to the "raw" GVAR, except they have lat/lon arrays added
+           to make the filed self navigating. The package can be found online 
+           at this URL:
 
            http://laps.noaa.gov/software/sat/McArea2NetCDF.tar
 
@@ -3451,6 +3453,7 @@ Outputs:
 
 	lcv     2d grid		column max cloud cover / snow cover
                                 satellite/radar diagnostic fields
+                                downward short wave radiation
 </pre>
 Source directory: laps/src/cloud
 
@@ -4461,6 +4464,7 @@ Process cloud:	LC3  LC3  camt    42  Fractional Cloud Cover (levels 1-42)
                      S3A           1  3.9u satellite data
                      S8A           1  11u satellite data
                      RQC           1  Radar QC information (2D vs 3D)
+                     SWI           1  Downward Shortwave Radiation
 
         	LPS  REF  ref     21  LAPS Radar Reflectivity 
 
@@ -4506,7 +4510,7 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
 		LIW  LIW  liw      1  log(LI*omega)
 		     UMF  umf	   1  Upslope Component of Moisture Flux
 
-		LMR  R    mxrf     1  Max Radar Reflectivity
+		LMR  R    mxrf     1  Column Max (Composite) Radar Reflectivity
 
                 LFR  HAH  hah      1  High Level Haines Index
                      HAM  ham      1  Mid Level Haines Index
