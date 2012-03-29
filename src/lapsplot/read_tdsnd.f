@@ -388,7 +388,10 @@ c       1                ,t_diff
         i4end = i4time_sys + 840
         itry = 1
 810     istatus = 0
+
+!       Consider reading 'path_to_gps' from moisture.nl
         path_to_gps = '/public/data/gpsmet/netcdf/'
+        path_to_gps ='/data/fab/cwb/windsor/archive/data/gpsmet/netcdf/'      
         call read_gps_obs (lun_hmg, path_to_gps, i4beg, i4end,
      1     imax, jmax, lat, lon, bad_sfc,
      1     gps_tpw, gps_wet, gps_error, gps_xy, gps_elv, 
