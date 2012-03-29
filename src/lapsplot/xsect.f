@@ -2281,6 +2281,69 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             cint = 5. / density
             i_contour = 1
 
+        elseif(c_field .eq. 'te')then ! under construction
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+            if(c_prodtype .eq. 'A')then ! Original code
+                iflag_temp = 0 ! Returns Potential Temperature
+                call get_temp_3d(i4time_ref,i4_valid,iflag_temp
+     1                      ,NX_L,NY_L,NZ_L,field_3d,istatus)
+!               if(istatus .ne. 1)goto100
+                c_label = 'LAPS Theta(e) Vert X-Sect    K  '
+
+            elseif(c_prodtype .eq. 'B' .or. 
+     1             c_prodtype .eq. 'F')then
+                var_2d = 'T3'
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+!               Convert from T to Theta
+                do i = 1,NX_L
+                do j = 1,NY_L
+
+                    do k = 1,NZ_L
+                        theta = O_K(temp_3d(i,j,k),zcoord_of_level(k))         
+                        field_3d(i,j,k) = theta
+                    enddo ! k
+
+                enddo ! j
+                enddo ! i
+
+                if(c_prodtype .eq. 'B')then
+                    c_label = 'LAPS  Bkgnd  Theta(e) '//fcst_hhmm
+     1                                                //'  Deg K '
+                elseif(c_prodtype .eq. 'F')then
+                    call directory_to_cmodel(directory,c_model)
+                    call mk_fcst_xlabel('Theta(e)',fcst_hhmm
+     1                          ,ext(1:3),'Deg K',c_model,c_label)       
+
+                endif
+
+            endif
+
+            call make_fnam_lp(i4_valid,a9time,istatus)
+            call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            clow = 200.
+            chigh = +500.
+            cint = 5. / density
+            i_contour = 1
+
         elseif(c_field .eq. 'pb')then
             iflag_temp = 3 ! Returns Balanced Potential Temperature
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
@@ -2680,8 +2743,10 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             if(c_prodtype .eq. 'A')then
                 if(c_field(1:2) .eq. 'rh')then
                     var_2d = 'RH3'
+                    c_label = 'LAPS Relative Humidity (Anl)    %'
                 elseif(c_field(1:2) .eq. 'rl')then
                     var_2d = 'RHL'
+                    c_label = 'LAPS Relative Humidity (Anl-liq) %'
                 endif
 
                 write(6,*)' Reading lh3 / ',var_2d
@@ -2696,8 +2761,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                         NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)      
-
-                c_label = 'LAPS Relative Humidity (Anl)    %'
 
             elseif(c_prodtype .eq. 'B' .or. 
      1             c_prodtype .eq. 'F')then
@@ -2750,8 +2813,10 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 if(c_field(1:2) .eq. 'rh')then
                     var_2d = 'RH3'
+                    c_label = 'LAPS Relative Humidity (Bal)    %'
                 elseif(c_field(1:2) .eq. 'rl')then
                     var_2d = 'RHL'
+                    c_label = 'LAPS Relative Humidity (Bal-liq) %'
                 endif
 
                 write(6,*)' Reading balanced lh3 / ',var_2d
@@ -2766,8 +2831,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 endif
 
                 call make_fnam_lp(i4time_nearest,a9time,istatus)
-
-                c_label = 'LAPS Relative Humidity (Bal)    %'
 
             endif ! c_prodtype
 
