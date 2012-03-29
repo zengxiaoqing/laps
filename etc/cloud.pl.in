@@ -135,6 +135,10 @@ foreach (@greplines) {
 print "   $greplines[0]";
 print "\n";
 
+@greplines = grep /First guess radar/, @lines;
+print "   $greplines[0]";
+print "\n";
+
 # Surface metars (sfc.pl has a nicer way of printing these out)
 print "METARS:\n    ";
 @greplines = grep /   METAR  /, @lines;
