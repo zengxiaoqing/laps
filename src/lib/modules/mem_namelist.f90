@@ -167,15 +167,19 @@ integer  :: max_obs, mode_adjust_heights
 logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 &
            ,l_use_metars, l_use_radar 
 integer  :: latency_co2,i4_sat_window,i4_sat_window_offset,i_varadj
-real     :: pct_req_lvd_s8a, echotop_thr_a(3)
+real     :: pct_req_lvd_s8a, echotop_thr_a(3), cld_weight_modelfg
 
 ! moisture_switch_nl variables
-integer :: print_switch, raob_switch, raob_lookback, endian, goes_switch &
+integer :: covar_switch, print_switch, raob_switch, radiometer_switch, raob_lookback, endian, goes_switch &
           ,cloud_switch, cloud_d, sounder_switch, tiros_switch, sat_skip &
           ,gvap_switch, ihop_flag, time_diff, gps_switch, sfc_mix &
           ,mod_4dda_1
 real    :: raob_radius, mod_4dda_factor, t_ref
-character(len=256) ::  path_to_gvap12, path_to_gvap10, path_to_gps
+real    :: max_cdelrh_nl
+real    :: cf_set_nl
+real    :: cloud_weight_nl
+real    :: radio_wt_nl
+character(len=256) ::  path_to_gvap12, path_to_gvap10, path_to_gps, path2covar
 
 ! lapsprep_nl variables
 logical ::  hotstart, balance, make_sfc_uv 
@@ -279,16 +283,18 @@ namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
                    ,l_use_39, l_use_metars, l_use_radar &
                    ,latency_co2 &
                    ,pct_req_lvd_s8a, echotop_thr_a &
+                   ,cld_weight_modelfg &
                    ,i4_sat_window,i4_sat_window_offset &
                    ,i_varadj
 
 namelist /moisture_switch_nl/ &
-                   print_switch, raob_switch, raob_lookback, endian  &
+                   covar_switch, print_switch, raob_switch, radiometer_switch, raob_lookback, endian, raob_radius  &
                   ,goes_switch ,cloud_switch, cloud_d, sounder_switch  &
                   ,tiros_switch, sat_skip, gvap_switch  &
+                  ,max_cdelrh_nl,cf_set_nl,cloud_weight_nl,radio_wt_nl & 
                   ,ihop_flag, time_diff, gps_switch, sfc_mix, mod_4dda_1  &
                   ,raob_radius, mod_4dda_factor, t_ref  &
-                  ,path_to_gvap12, path_to_gvap10, path_to_gps
+                  ,path_to_gvap12, path_to_gvap10, path_to_gps, path2covar
 
 namelist/lapsprep_nl/ var_prefix, sfcinf, hotstart, balance  &
                      ,output_format, snow_thresh, lwc2vapor_thresh  &
@@ -447,6 +453,10 @@ return
 
 908  print*,'error reading cloud_anal'
      write(*,cloud_nl)
+     stop
+
+909  print*,'error reading moisture_anal'
+     write(*,moisture_switch_nl)
      stop
 
 end subroutine
