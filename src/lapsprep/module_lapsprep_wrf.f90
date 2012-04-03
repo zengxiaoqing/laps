@@ -618,7 +618,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   ! Do w-component of wind
   IF (use_laps_vv) THEN
     field = 'VVEL     '
-    units = 'pa s-1                   '
+    units = 'm s-1                   '
     desc = 'W                                             '
     PRINT *, 'FIELD = ', field
     PRINT *, 'UNITS = ', units
@@ -630,7 +630,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_metgrid_header(field,units,desc,p_pa(k))
       d2d = w(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F5.1,A,F5.1)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+      PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
               ' Max: ', MAXVAL(d2d)
   ENDDO var_vv
   ENDIF

@@ -69,7 +69,7 @@
     USE lapsprep_wrf
     USE lapsprep_rams
     USE lapsprep_netcdf
-    USE mem_namelist, only: read_namelist_laps, model_cycle_time
+    USE mem_namelist, only: read_namelist_laps, model_cycle_time, r_missing_data
 
     ! Variable Declarations
 
@@ -678,12 +678,16 @@
       do k=1,z3
       do j=1,y
       do i=1,x
-        if (vv(i,j,k) .eq. 1.e-30 .or. abs(vv(i,j,k)) .gt. 100.) then
+        if (vv(i,j,k) .eq. 1.e-30 .or. vv(i,j,k) .eq. r_missing_data .or. abs(vv(i,j,k)) .gt. 100.) then
           vv(i,j,k)=vv(i,j,z3+1)
         endif
 
 !       convert from omega to W
-        w(i,j,k)=-vv(i,j,k)/(rho(i,j,k)*g) 
+        if(vv(i,j,k) .ne. r_missing_data)then
+            w(i,j,k)=-vv(i,j,k)/(rho(i,j,k)*g) 
+        else
+            w(i,j,k)=0.
+        endif
 
       enddo
       enddo
@@ -744,7 +748,7 @@
           PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
 
         CASE ('cdf ')
-          CALL output_netcdf_format(p,ht,t,mr,u,v,vv,slp,psfc,lwc,ice,rai,sno,pic)
+          CALL output_netcdf_format(p,ht,t,mr,u,v,w,slp,psfc,lwc,ice,rai,sno,pic)
 
         CASE DEFAULT
           PRINT '(2A)', 'Unrecognized output format: ', output_format
