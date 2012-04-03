@@ -30,9 +30,9 @@ SRC   = obs_driver_sub_af.f \
         read_metar_af.f \
         read_synop_cwb.f \
         get_local_obs.f \
-        read_local_obs.f \
-        get_ldad_madis_data.f \
         read_ldad_madis_data.f \
+        get_hydro_obs.f \
+        read_madis_hydro_data.f \
         qc_madis.f \
         get_local_cwb.f \
         read_local_cwb.f \
