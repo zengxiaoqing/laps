@@ -71,6 +71,14 @@ cc   --------------------------------------------------------------
      +,  a2=10.357
      +,  b2=-28.2416
      +,  c2=8.8846)
+
+!     Set ramp going from liquid to ice
+      temp1_c = -10.
+      temp1_k = c_to_k(temp1_c)
+
+      temp2_c = -30.
+      temp2_k = c_to_k(temp2_c)
+
 cc    -------------------------------------------------------------
 cc
 cc   calculate indices of cloud top and base
@@ -193,9 +201,9 @@ cc                             and dilution
 cc
 cc   -----------------------------------------------------------------
           ffrac=1.0
-          if(temp.lt.263.15) then
-            if(temp.gt.243.15) then
-              ffrac=(temp-243.15)/20
+          if(temp.lt.temp1_k) then
+            if(temp.gt.temp2_k) then
+              ffrac=(temp-temp2_k)/(temp1_k-temp2_k)
             else
               ffrac=0.0
             endif
