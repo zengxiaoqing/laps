@@ -460,7 +460,8 @@ c
 
                     write(6,*)' MADIS case: ',path_to_madis_data
 
-                    call get_local_obs(maxobs,maxsta,i4time_sys,
+                    if(madis_dirs(imadis)(1:len_madis) .ne. 'hydro')then       
+                      call get_local_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_madis_data,metar_format,
      &                      itime_before,itime_after,
      &                      itest_madis_qc,l_multiple_reports,
@@ -475,6 +476,23 @@ c
      &                      local_obs_thresh_madis, 
      &                      i4wait_local_obs_max, 
      &                      jstatus)       
+                    else
+                      call get_hydro_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_madis_data,metar_format,
+     &                      itime_before,itime_after,
+     &                      itest_madis_qc,l_multiple_reports,
+     &                      lat,lon,ni,nj,grid_spacing,
+     &                      nn,n_local_gx,n_local_b,stations,
+     &                      reptype,atype,weather,wmoid,
+     &                      store_1,store_2,store_2ea,
+     &                      store_3,store_3ea,store_4,store_4ea,
+     &                      store_5,store_5ea,store_6,store_6ea,
+     &                      store_7,store_cldht,store_cldamt,
+     &                      provider, laps_cycle_time, 
+     &                      local_obs_thresh_madis, 
+     &                      i4wait_local_obs_max, 
+     &                      jstatus)       
+                    endif
 
 	            if(jstatus .ne. 1) then
 	               print *, 
