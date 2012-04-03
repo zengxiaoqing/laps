@@ -7,6 +7,7 @@
  l_use_radar=.true.,
  latency_co2=4000,
  pct_req_lvd_s8a=75.,
+ cld_weight_modelfg=.01,
  echotop_thr_a=4000.,4000.,276.15,
  i4_sat_window=1270,
  i4_sat_window_offset=-60,
@@ -41,6 +42,16 @@ c                   analysis to produce any output. Valid range is 0.-100.
 c                   A value of 0. means that IR data are not required and 
 c                   the cloud analysis will produce output anyway using the 
 c                   other data sources. 
+c
+c cld_weight_modelfg - Set weight for using model background clouds beyond a 
+c                      certain effective radius of influence from the sfc 
+c                      obs/pireps
+c   cld_weight_modelfg = 0.    ! Model wt inactive, obs used to infinite radius
+c   cld_weight_modelfg = 100.  ! Model used beyond  ~40km from nearest obs
+c   cld_weight_modelfg = 1.    ! Model used beyond ~100km from nearest obs
+c   cld_weight_modelfg = .01   ! Model used beyond ~250km from nearest obs
+c   cld_weight_modelfg = .0001 ! Model used beyond ~630km from nearest obs
+c 
 c
 c echotop_thr_a - 3 element array for the echo top ground clutter test
 c                 1) height threshold for cold temperatures
