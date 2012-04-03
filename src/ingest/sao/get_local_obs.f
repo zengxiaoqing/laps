@@ -588,6 +588,8 @@ c
            endif
  
            n_obs_b = n_obs_b + 1     !station is in the box
+
+           call s_len2(dataProvider(i),lenp)  
 c
 c.....  Check if its in the LAPS grid.
 c
@@ -765,7 +767,6 @@ c
          if(solar_rad .le. badflag .or. solar_rad .ge. 2000.) then !  bad?
             solar_rad = badflag                                    !  bag
          else ! good solar
-            call s_len2(dataProvider(i),lenp)  
             write(6,*)' solar dataProvider = '
      1               ,stationId(i),dataProvider(i)(1:lenp)
 
@@ -954,6 +955,18 @@ c
 	    endif
 	 endif
 c
+c
+c..... Precip
+         pcp1 = badflag
+         if(dataProvider(i)(1:lenp) .eq. 'HADS' .AND.
+     1      precipAccum(i) .ge. 0.              .AND.    
+     1      precipAccum(i) .ne. badflag               )then
+             pcp1 = precipAccum(i) / 25.4 ! convert mm to inches
+             write(6,*)' Found a local 1hr precip ob: '
+     1                 ,pcp1,' ',dataProvider(i)(1:lenp),' '
+     1                 ,precipAccumDD(i)
+         endif
+c
 c..... Other stuff.  
 c
 	 store_5ea(nn,2) = 0.0             ! solar radiation 
@@ -976,9 +989,8 @@ c
  101	     format(i5,15x)
          endif
 c
-	 call s_len(dataProvider(i), len)
-         if(len .ne. 0) then
-	     provider(nn)(1:len) = dataProvider(i)(1:len)    ! data provider
+         if(lenp .ne. 0) then
+	     provider(nn)(1:lenp) = dataProvider(i)(1:lenp)    ! data provider
          endif
          call filter_string(provider(nn))
 c
@@ -1026,7 +1038,7 @@ c
 
          store_5(nn,4) = soilmoist_p            ! soil moisture (%)
 c
-         store_6(nn,1) = badflag                ! 1-h precipitation
+         store_6(nn,1) = pcp1                   ! 1-h precipitation
          store_6(nn,2) = badflag                ! 3-h precipitation
          store_6(nn,3) = badflag                ! 6-h precipitation
          store_6(nn,4) = badflag                ! 24-h precipitation
