@@ -54,6 +54,7 @@ cdis
      1                         ,l_use_vis_partial                      
      1                         ,l_use_39,latency_co2                   
      1                         ,pct_req_lvd_s8a                        
+     1                         ,cld_weight_modelfg
      1                         ,i4_sat_window,i4_sat_window_offset     
      1                         ,l_use_metars,l_use_radar,iwrite_output
      1                         ,i_varadj
@@ -706,8 +707,10 @@ C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
 !       radius of influence from the sfc obs/pireps
 !       weight_modelfg = 0.    ! Model wt inactive, obs used to infinite radius
 !       weight_modelfg = 1.    ! Model used beyond ~100km from nearest obs
-        weight_modelfg = .01   ! Model used beyond ~250km from nearest obs
+!       weight_modelfg = .01   ! Model used beyond ~250km from nearest obs
 !       weight_modelfg = .0001 ! Model used beyond ~630km from nearest obs
+ 
+        weight_modelfg = cld_weight_modelfg 
 
         call barnes_r5(clouds_3d,NX_L,NY_L,KCLOUD,cldcv1,wtcldcv
      1     ,cf_modelfg,l_perimeter,cld_snd,wt_snd,r_missing_data
