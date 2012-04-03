@@ -23,6 +23,9 @@ main                                      obs_driver.f
             madis_qc_r                    qc_madis.f        
             madis_qc_b                         "
 
+        get_hydro_obs                     get_hydro_obs.f        MADIS / HYDRO
+            read_madis_hydro_netcdf       read_madis_hydro_data.f 
+
         get_local_cwb                     get_local_cwb.f        CWB mesonets
             read_local_cwb                read_local_cwb.f       CWB mesonets
                 read_agr_cwb                   "                      "
