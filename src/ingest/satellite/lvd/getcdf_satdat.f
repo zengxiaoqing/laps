@@ -176,7 +176,7 @@ c
          call s_len(path_to_raw_sat(ispec),in(j))
       enddo
 c
-c Adjust time when just past top of hour to insure processing files that are
+c Adjust time when just past top of hour to ensure processing files that are
 c just before top of hour.
  
       if(c_sat_type.eq.'wfo'.or.c_sat_type.eq.'ncp')then
@@ -195,14 +195,15 @@ C Use namelist parameter for this time offset
             wfo_fname13_in = cvt_i4time_wfo_fname13(i4time_in)
             write(6,*)'New time: ',wfo_fname13_in
          endif
+!     elseif(c_sat_type.eq.'rll')then ! global satellites can have latency
       else
         i4time_now = i4time_now_gg()
         call cv_asc_i4time(c_fname_in,i4time_in)
         call get_laps_cycle_time(laps_cycle_time,istatus)
-        if(i4time_now-i4time_in .lt. 2*laps_cycle_time)then
+        if(i4time_now-i4time_in .lt. 2*laps_cycle_time)then ! real-time
 c          if(c_fname_in(8:8).eq.'0')then
             print*
-            write(6,*)'Adjusting I4time_In'
+            write(6,*)'Adjusting I4time_In by ',i_delta_t
 c           i4time_in = i4time_in-480
             i4time_in = i4time_in-i_delta_t
             call make_fnam_lp (i4time_in, c_fname_in, i4status)
@@ -212,6 +213,8 @@ c           i4time_in = i4time_in-480
             endif
             write(6,*)'New time: ',c_fname_in
 c          endif
+        else
+           write(6,*)' No time adjustment for i4time_in (non-realtime)'
         endif
       endif
 
@@ -236,7 +239,8 @@ c           n=index(pathname,' ')
      &                     gfn_status)
 
             if(gfn_status.eq.1)then
-               write(*,*)'Success in GFN (Satellite)'
+               write(*,*)'Success in GFN (Satellite): ifiles_sat = '
+     1                                               ,ifiles_sat
             endif
             do i=1,ifiles_sat
                ifiles_sat_raw=ifiles_sat_raw+1
@@ -290,7 +294,8 @@ c
      &                     gfn_status)
 
          if(gfn_status.eq.1)then
-            write(*,*)'Success in GFN (Satellite)'
+            write(*,*)'Success in GFN (Satellite): ifiles_sat_raw = '
+     1                                            ,ifiles_sat_raw
 
             if(ifiles_sat_raw .le. 0)then
                write(*,*)'+++ No Data Available +++ '
@@ -314,6 +319,8 @@ c
          il=9
          if(c_sat_type.eq.'ncp')il=13
          do i=1,ifiles_sat_raw
+          write(6,*)' Raw filename: ',c_filename_sat(i)
+          write(6,*)' Raw a9time: ',c_filename_sat(i)(in(1)+1:in(1)+il)
           call i4time_fname_lp(c_filename_sat(i)(in(1)+1:in(1)+il),
      &i4time_sat_raw(i),jstatus)
          enddo
