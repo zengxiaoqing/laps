@@ -1,20 +1,19 @@
 #!@CSH@    
 
 # Usage examples:
-# lfmpost_test.csh                           ! no ancillary operations          
-# lfmpost_test.csh scp cpoutput              ! full copy of input and output
-# lfmpost_test.csh cp                        ! copy static files                
+# lfmpost_test.csh $LAPSINSTALLROOT $LAPS_DATA_ROOT $RUN                 ! no ancillary operations          
+# lfmpost_test.csh $LAPSINSTALLROOT $LAPS_DATA_ROOT $RUN scp cpoutput    ! full copy of input and output
+# lfmpost_test.csh $LAPSINSTALLROOT $LAPS_DATA_ROOT $RUN cp              ! copy static files                
 
 # Edit mainly these lines
-setenv LAPSINSTALLROOT @prefix@
-setenv LAPS_DATA_ROOT  /data/fab/cwb/windsor_stmas/stmas3.2_l41
+setenv LAPSINSTALLROOT $1
+setenv LAPS_DATA_ROOT  $2
 setenv WRF_DATA_ROOT /lfs0/projects/hmtb/dwr_domains/nmm-fer-gep4 # WRF directory on remote machine (optional)
-setenv RUN       2008052217        # Model Run Initial Time          
-setenv MAXTIMES  60                # Number of forecast times (starting at zero)
+setenv RUN       $3                # Model Run Initial Time          
+setenv MAXTIMES  59                # Number of forecast times (not including zero minute - though that also gets calculated)
 setenv FCSTINTVL 60                # Forecast interval in seconds 
 setenv MODELNAME wrf-wsm6
-setenv WRFDIR    /scratch/staging/fab/wrf/$MODELNAME              # WRF directory on local machine
-setenv WRFDIR    /data/fab/stmas/wrf/                             # WRF directory on local machine
+setenv WRFDIR    $LAPS_DATA_ROOT/lapsprd/$MODELNAME                  # WRF directory on local machine
 setenv NEST      d01
 setenv MODEL     wrf
 
@@ -27,12 +26,19 @@ while ($FCOUNT <= $MAXTIMES)
     setenv FMM $FCOUNT  
   endif
 
-  setenv VTIME     $RUN$FMM          # Model Run Valid Time
-  @ FCSTTIME =     $FMM * $FCSTINTVL # Model Forecast Time (seconds)
+  @ FCSTTIME_SEC = $FMM * $FCSTINTVL     # Model Forecast Time (seconds)
+  setenv FCSTTIME_HR `echo $FCSTTIME_SEC 3600. | awk '{print $1/$2}'`
+
+  setenv VTIME     $RUN$FMM              # Model Run Valid Time
 
   echo "RUN = $RUN"
+  echo "FCSTTIME_SEC = $FCSTTIME_SEC"
+
+  echo "FCSTTIME_HR = $FCSTTIME_HR"
+  setenv VTIME_EXP `perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $RUN -d -$FCSTTIME_HR`
+  echo "VTIME_EXP = $VTIME_EXP"
+
   echo "VTIME = $VTIME"
-  echo "FCSTTIME = $FCSTTIME"
 
 # Set up directory structure and bring over the data
 
@@ -64,14 +70,14 @@ while ($FCOUNT <= $MAXTIMES)
 
   setenv WRFOUTFILE wrfout_$NEST$USCORE$CC$YY-$MON-$DD$USCORE$HH$ENDPART
 
-  if ($1 == scp) then
+  if ($4 == scp) then
 #   scp jetscp.rdhpcs.noaa.gov:$WRF_DATA_ROOT/$RUN/wrfprd/wrfout"*"00:00:00 $WRFDIR/$RUN/wrfprd
     scp jetscp.rdhpcs.noaa.gov:$WRF_DATA_ROOT/$RUN/wrfprd/$WRFOUTFILE       $WRFDIR/$RUN/wrfprd
     scp jetscp.rdhpcs.noaa.gov:$WRF_DATA_ROOT/$RUN/wrfprd/d01_"*".pcp       $WRFDIR/$RUN/wrfprd
     ##ln -s /scratch/staging/fab/jankov/* $WRFDIR/$RUN/wrfprd
   endif
 
-  if ($1 == cp || $1 == scp) then
+  if ($4 == cp || $4 == scp) then
     echo "Copying static files from $LAPS_DATA_ROOT to $WRFDIR"
 #   scp jetscp.rdhpcs.noaa.gov:/lfs0/projects/hmtb/dwr_domains/laps/$NEST/static/static.nest7grid    $WRFDIR/static
     cp $LAPS_DATA_ROOT/static/lfmpost.nl          $WRFDIR/$RUN/static
@@ -106,12 +112,12 @@ while ($FCOUNT <= $MAXTIMES)
 # Run the lfmpost executable and save the log file
   cd $LAPSINSTALLROOT/bin
 
-  setenv LOGFILE $LAPS_DATA_ROOT/log/lfmpost_$RUN\_$FCSTTIME.log
+  setenv LOGFILE $LAPS_DATA_ROOT/log/lfmpost_$RUN\_$FCSTTIME_SEC.log
 
-  echo  "lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME $WRFDIR" | tee $LOGFILE
+  echo  "lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $WRFDIR" | tee $LOGFILE
   echo  " " | tee -a $LOGFILE
 
-         lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME $WRFDIR | tee -a $LOGFILE
+         lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $WRFDIR | tee -a $LOGFILE
 
   echo  " " | tee -a $LOGFILE
 
@@ -126,12 +132,17 @@ echo  " " | tee -a $LOGFILE
 setenv FUADEST $LAPS_DATA_ROOT/lapsprd/fua/$MODELNAME   
 setenv FSFDEST $LAPS_DATA_ROOT/lapsprd/fsf/$MODELNAME  
 
-if ($1 == cpoutput || $2 == cpoutput) then
+if ($4 == cpoutput || $5 == cpoutput) then
     echo "copying output files to LAPS_DATA_ROOT" | tee -a $LOGFILE
     cp $WRFDIR/$RUN/wrfprd/$NEST/fua/*.fua  $FUADEST                                                     
     cp $WRFDIR/$RUN/wrfprd/$NEST/fsf/*.fsf  $FSFDEST                                                   
+else if ($4 == mvoutput || $5 == mvoutput) then
+    echo "moving output files to LAPS_DATA_ROOT" | tee -a $LOGFILE
+    mv $WRFDIR/$RUN/wrfprd/$NEST/fua/*.fua  $FUADEST                                                     
+    mv $WRFDIR/$RUN/wrfprd/$NEST/fsf/*.fsf  $FSFDEST                                                   
 else
     echo "optional copy of output files to LAPS_DATA_ROOT shown below..." | tee -a $LOGFILE
 endif
+
 echo "cp $WRFDIR/$RUN/wrfprd/$NEST/fua/*.fua  $FUADEST" | tee -a $LOGFILE
 echo "cp $WRFDIR/$RUN/wrfprd/$NEST/fsf/*.fsf  $FSFDEST" | tee -a $LOGFILE  
