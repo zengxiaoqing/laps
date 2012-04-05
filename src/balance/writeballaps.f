@@ -143,7 +143,7 @@ c
               LVL(K)=IP(K)
               LVL_COORD(K)='MB  '
               UNITS(K)='Percent'
-              COMMENT(K)='Cloud liquid balanced rh.'
+              COMMENT(K)='Balanced RH'
        ENDDO
 
        write(6,*)' Writing grids ',ext(1:3),' ',fname9
@@ -166,7 +166,7 @@ c
               LVL(K)=IP(K)
               LVL_COORD(K)='MB  ' 
               UNITS(K)='kg/kg'
-              COMMENT(K)='Cloud liquid balanced specific humidity.'
+              COMMENT(K)='Balanced specific humidity.'
        ENDDO
 
        write(6,*)' Writing grids ',ext(1:3),' ',fname9
