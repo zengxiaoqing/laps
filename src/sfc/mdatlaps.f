@@ -396,7 +396,8 @@ c
 
 	if(back_t.eq.1 .and. back_td.eq.1 .and. back_sp.eq.1
      1                 .and. back_rp.ne.1) then
-	   print *,' Have good backgrounds...calculating RP_BK from them.'
+	   print *
+     1          ,' Have good backgrounds...calculating RP_BK from them.'
 	   do j=1,jmax
 	   do i=1,imax
 	      if(stnp_bk(i,j).le.badflag .or. t_bk(i,j).le.badflag 

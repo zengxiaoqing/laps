@@ -393,6 +393,8 @@ c     enddo
      1                    riW,rjW,rkW,latW,lonW,htW, uIW,vIW,
      1                    uPW,vPW,timeLapsW,status)
 
+      include 'trigd.inc'
+
       implicit none
 
       real          height_to_zcoord3
@@ -595,6 +597,8 @@ C     pass back modified typeW
 !................................variables below returned...................
      1                    riT,rjT,rkT,latT,lonT,htT,prIT,tIT,tdIT,
      1                    prPT,tPT,tdPT,timeLapsT,status)
+
+      include 'trigd.inc'
 
       implicit none
 
