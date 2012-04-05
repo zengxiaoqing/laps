@@ -69,7 +69,7 @@ cdis
                                                    
         real lat(NX_L,NY_L)                      
         real lon(NX_L,NY_L)                      
-        real topo(imax,jmax)
+        real topo(NX_L,NY_L)
 
 !       Profiler Stuff
         real lat_pr(MAX_PR)                        
