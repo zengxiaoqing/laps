@@ -270,8 +270,8 @@ cdis
                            return
                         endif
 
-                        if(n_point_obs .le. 500 .OR. 
-     1                     n_point_obs .eq. (n_point_obs/10) * 10)then       
+                        if(n_point_obs .le. 100 .OR. 
+     1                     n_point_obs .eq. (n_point_obs/100) * 100)then
                             iwrite = 1
                         else
                             iwrite = 0
