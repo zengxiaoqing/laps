@@ -35,7 +35,7 @@ c*********************
       use mem_namelist, ONLY: read_namelist_laps
       use mem_namelist, ONLY: max_pr
 c*********************************edtoll
-c     include 'trigd.inc'
+      include 'trigd.inc'
       implicit none
       include 'bgdata.inc'
       include 'grid_fname.cmn'
@@ -162,11 +162,13 @@ c     character*255 generic_data_root
       character*8   c8_project
       character*3   cpads_type
 
-c    Added by B. Shaw, 4 Sep 01
+c    Added by B. Shaw, 4 Sep 01, modified by Steve Albers
       real, allocatable :: lapsrh(:,:,:)
       real, external :: ssh, make_rh
-      real shsat
+      real shsat, lapsrh_orig
       real ubias,vbias,urms,vrms,oberr
+      logical l_preserve_rh /.true./
+
 c    Arrays for Airdrop application
       real, allocatable, dimension(:,:) :: udrop,vdrop,tdrop,rri,rrj,
      &    rrk,rrit,rrjt,rrkt,rrii,rrjj
@@ -757,7 +759,7 @@ c adjust surface temps to account for poor phi estimates below ground
       call move_3d(ombs,om,nx,ny,nz)
       call move_3d(shbs,sh,nx,ny,nz)
 
-      deallocate (phibs,ubs,vbs,tbs,ombs,shbs,lapstemp)
+      deallocate (phibs,ubs,vbs,tbs,ombs,shbs)
 
 c JS> commented 8-21-02.  unsure of need for ps at this point?
 c     call get_laps_2d(i4time_sys,sfcext,'PS ',units,
@@ -816,20 +818,34 @@ c       Compute the saturation specific humidity
 
         shsat = ssh(p(k)*0.01,t(i,j,k)-273.15)*0.001
 
-c       Ensure the specfic humidity does not exceed
-c       the saturation value for this temperature
+        if(.not. l_preserve_rh)then
+c           Ensure the specfic humidity does not exceed
+c           the saturation value for this temperature
 
-        lapssh(i,j,k) = MIN(shsat,lapssh(i,j,k))
+            lapssh(i,j,k) = MIN(shsat,lapssh(i,j,k))
 c
-c       Finally, rediagnose RH wrt liquid from the 
-c       modified sh field
+c           Finally, rediagnose RH wrt liquid from the 
+c           modified sh field
 
-        lapsrh(i,j,k) = make_rh(p(k)*0.01,t(i,j,k)-273.15
+            lapsrh(i,j,k) = make_rh(p(k)*0.01,t(i,j,k)-273.15
      .                    ,lapssh(i,j,k)*1000.,-132.)*100.         
-        lapsrh(i,j,k) = MAX(lapsrh(i,j,k),1.0)
+            lapsrh(i,j,k) = MAX(lapsrh(i,j,k),1.0)
+
+        else ! Keep the RH the same as it was prior to balancing (while
+             ! modifying SH)
+            lapsrh_orig = make_rh(p(k)*0.01,lapstemp(i,j,k)-273.15  
+     .                          ,lapssh(i,j,k)*1000.,-132.)*100.         
+            lapsrh(i,j,k) = MAX(lapsrh_orig,1.0)
+   
+            lapssh(i,j,k) = (lapsrh_orig/100.) * shsat
+
+        endif
+
       enddo
       enddo
       enddo     
+
+      deallocate(lapstemp)
 c
 c     New section added by to replicate the values of u/v at 
 c     from the lowest p-level still above ground to all levels
