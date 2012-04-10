@@ -448,7 +448,7 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
 
     ! ADD LOW BOUND FOR SPECIFIC HUMIDITY:
     NG(1:4) = NUMGRID(1:4)
-    NG(5) = 5
+    NG(5) = NUMSTAT  ! THE NUMBER OF STATES IN THE 5TH DIMENSION
     DO T=1,NUMGRID(4)
       DO K=1,NUMGRID(3)
         DO J=1,NUMGRID(2)
@@ -457,7 +457,7 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
             NN(2)=J
             NN(3)=K
             NN(4)=T
-            NN(5)=5
+            NN(5)=5  ! POSITION OF SPECIFIC HUMIDITY
            
             CALL PSTN2NUMB(5,NN,NG,NC)
 
@@ -467,6 +467,34 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
         ENDDO
       ENDDO
     ENDDO
+    ! ADD LOWER BOUNDS FOR RAIN AND SNOW:
+    IF (NUMSTAT .GT. 5) THEN ! RAIN AND SNOW ARE 6TH AND 7TH:
+    DO T=1,NUMGRID(4)
+      DO K=1,NUMGRID(3)
+        DO J=1,NUMGRID(2)
+          DO I=1,NUMGRID(1)
+            NN(1)=I
+            NN(2)=J
+            NN(3)=K
+            NN(4)=T
+            NN(5)=6  ! POSITION OF RAIN
+           
+            CALL PSTN2NUMB(5,NN,NG,NC)
+
+            NB(NC) = 1
+            LB(NC) = -GRDBKGND(I,J,K,T,6)
+
+            NN(5)=7  ! POSITION OF SNOW
+           
+            CALL PSTN2NUMB(5,NN,NG,NC)
+
+            NB(NC) = 1
+            LB(NC) = -GRDBKGND(I,J,K,T,7)
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
+    ENDIF
  
     ! CALL SETULB(NUMVARS,MM,GRDANALS,LB,UB,NB,DF,GRADINT,FA,PG,WA,IW, &
     !            TA,IP,CS,LS,IS,DS,IT)
