@@ -117,8 +117,11 @@ if(.not. large_ngrid)then ! U,V
    allocate(fld3d(nx+1,ny,nz))
    icode=nf_get_var_real(ncid,nid,fld3d)
       print*,'U: ',icode
-   do i=1,nx
+   do i=1,nx-1
       nusig(i,:,:)=(fld3d(i,:,:)+fld3d(i+1,:,:))*0.5
+   enddo
+   do i=nx,nx
+      nusig(i,:,:)=(fld3d(i,:,:)+fld3d(i  ,:,:))*0.5
    enddo
    deallocate(fld3d)
   endif
@@ -128,8 +131,11 @@ if(.not. large_ngrid)then ! U,V
    allocate(fld3d(nx,ny+1,nz))
    icode=nf_get_var_real(ncid,nid,fld3d)
       print*,'V: ',icode
-   do j=1,ny
+   do j=1,ny-1
       nvsig(:,j,:)=(fld3d(:,j,:)+fld3d(:,j+1,:))*0.5
+   enddo
+   do j=ny,ny
+      nvsig(:,j,:)=(fld3d(:,j,:)+fld3d(:,j  ,:))*0.5
    enddo
    deallocate(fld3d)
   endif
