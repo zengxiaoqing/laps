@@ -105,7 +105,7 @@ real, pointer, dimension(:,:) ::  &
       ,thetaesfc    ,tdsfc        ,redp         ,pmsl         ,upbl        &
       ,vpbl         ,u80          ,v80          ,clwmrsfc     ,icemrsfc     ,snowmrsfc    ,rainmrsfc   &
       ,graupmrsfc   ,cldbase      ,cldtop       ,cldamt       ,ceiling     &
-      ,intliqwater  ,intcldice    ,totpcpwater  ,max_refl     ,echo_tops    ,refl_sfc    &
+      ,intliqwater  ,intcldice    ,intgraupel   ,totpcpwater  ,max_refl     ,echo_tops    ,refl_sfc    &
       ,pcptype_sfc  ,pcp_inc      ,snow_inc     ,snow_tot &
       ,srhel        ,uhel         ,cape         ,cin          ,liftedind   &
       ,visibility   ,heatind      ,lwout        ,swout        ,lwdown      &
@@ -354,7 +354,7 @@ implicit none
 integer :: ct
 
 if (trim(mtype) /= 'st4') then
-  nvar2dout=49
+  nvar2dout=50
   if (make_micro) nvar2dout=nvar2dout+5
   if (make_firewx) nvar2dout=nvar2dout+7
 
@@ -407,10 +407,11 @@ if (trim(mtype) /= 'st4') then
   ceiling    =>sgrid(1:lx,1:ly,ct); name2d(ct)='CCE'; com2d(ct)='Cloud Ceiling AGL'               ; ct=ct+1
   intliqwater=>sgrid(1:lx,1:ly,ct); name2d(ct)='LIL'; com2d(ct)='Integrated Cloud Liquid'         ; ct=ct+1
   intcldice  =>sgrid(1:lx,1:ly,ct); name2d(ct)='LIC'; com2d(ct)='Integrated Cloud Ice'            ; ct=ct+1
+  intgraupel =>sgrid(1:lx,1:ly,ct); name2d(ct)='LIG'; com2d(ct)='Integrated Graupel'              ; ct=ct+1
   totpcpwater=>sgrid(1:lx,1:ly,ct); name2d(ct)='TPW'; com2d(ct)='Total Precipitable Water'        ; ct=ct+1
-  max_refl   =>sgrid(1:lx,1:ly,ct); name2d(ct)='LMR'; com2d(ct)='Sim. Composite Reflectivity'     ; ct=ct+1
-  echo_tops  =>sgrid(1:lx,1:ly,ct); name2d(ct)='LMT'; com2d(ct)='Sim. Radar Echo Tops'            ; ct=ct+1
-  refl_sfc   =>sgrid(1:lx,1:ly,ct); name2d(ct)='LLR'; com2d(ct)='Sim. Sfc. Reflectivity'          ; ct=ct+1
+  max_refl   =>sgrid(1:lx,1:ly,ct); name2d(ct)='LMR'; com2d(ct)='Composite Reflectivity'          ; ct=ct+1
+  echo_tops  =>sgrid(1:lx,1:ly,ct); name2d(ct)='LMT'; com2d(ct)='Radar Echo Tops'                 ; ct=ct+1
+  refl_sfc   =>sgrid(1:lx,1:ly,ct); name2d(ct)='LLR'; com2d(ct)='1km AGL Reflectivity'            ; ct=ct+1
   pcptype_sfc=>sgrid(1:lx,1:ly,ct); name2d(ct)='SPT'; com2d(ct)='Sfc Precip. Type'                ; ct=ct+1
   pcp_inc    =>sgrid(1:lx,1:ly,ct); name2d(ct)='R01'; com2d(ct)='Incremental Tot. Liq. Precip'    ; ct=ct+1
   snow_inc   =>sgrid(1:lx,1:ly,ct); name2d(ct)='S01'; com2d(ct)='Incremental Snow Depth'          ; ct=ct+1
