@@ -1238,3 +1238,27 @@ sub get_fcst_img_res {
  
 }
 1;
+
+# 
+#-------------------------------------------------------------------
+#
+sub round {
+ 
+# This subroutine will round a number to the nearest integer    
+# in case the math module isn't installed                       
+#
+    my ($arg)=@_;
+
+    my $value;
+    
+    if($arg >= 0.){ 
+        $value = int($arg + 0.5);
+    }else{
+        my $arg1 = -$arg;
+        $value = int($arg1 + 0.5);
+        $value = -$value;
+    }   
+
+#   print "rounded $arg to $value\n"; 
+    return ($value);
+}
