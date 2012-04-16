@@ -76,6 +76,8 @@ $cycle_time_hr="0".$cycle_time_hr if(length($cycle_time_hr)<2);
 
 my $delay_time = 0;
 $delay_time = $opt_d if(defined $opt_d);
+$delay_time = &laps_tools::round($delay_time * 60.) / 60.; # Round to the nearest sixtieth of an hour (minute)
+#print "delay_time = $delay_time\n";
 
 my $extend_time=0;
 if(defined $opt_e){ # allow extend time to be either positive or negative
@@ -88,24 +90,38 @@ $archive_time = $opt_a if($opt_a > 0);
 my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
 
 if(defined $opt_A){
-   if(length($opt_A) != 16){
+   if(length($opt_A) == 16){ # dd-mmm-yyyy-hhmm (Ascii time format)
+      my $mon=0;
+      my ($day, $month, $year, $hoursmin)=split /\-/, $opt_A;
+      my $hours   = substr($hoursmin,0,2);
+      my $minutes = substr($hoursmin,2,2);
+      foreach (@MON){
+       if($_ eq (uc $month)){last;}
+       $mon++;
+      }
+      $mon=$mon+1;
+      $mon="0".$mon if(length($mon)<2);
+
+      $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
+
+   }elsif(length($opt_A) == 10){ # yyyymmddhh (model run time)
+      my $year = substr($opt_A,0,4); 
+      my $mon = substr($opt_A,4,2);
+      my $day = substr($opt_A,6,2);
+      my $hours = substr($opt_A,8,2);
+      $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,"00","00");
+#     my $doy = &laps_tools::get_julian_day($day,$month,$year);
+#     $archive_time = &laps_tools::a9time_to_i4time($a9time);
+
+   }elsif(length($opt_A) == 9){ # yydddhhmm (a9time format)
+      my $a9time = $opt_A;
+      $archive_time = &laps_tools::a9time_to_i4time($a9time);
+
+   }else{
       print "USAGE: use -A to input time with the following format\n";
       print "dd-mmm-yyyy-hhmm. Eg., 28-Aug-2002-1200 \n";
       exit;
    }
-   my $mon=0;
-   my ($day, $month, $year, $hoursmin)=split /\-/, $opt_A;
-   my $hours   = substr($hoursmin,0,2);
-   my $minutes = substr($hoursmin,2,2);
-   foreach (@MON){
-       if($_ eq (uc $month)){last;}
-       $mon++;
-   }
-   $mon=$mon+1;
-   $mon="0".$mon if(length($mon)<2);
-
-   $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
-
 #  $archive_time = &seconds_since_1970($opt_A,$LAPSROOT,$LAPS_DATA_ROOT);
 }
 
