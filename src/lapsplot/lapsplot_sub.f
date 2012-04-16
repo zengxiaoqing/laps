@@ -46,7 +46,7 @@ cdis
         character*9 asc9_tim
         character*4 RM
         character*35 TIME
-        logical l_atms
+        logical l_atms, l_plotobs
 
         character*2 c_section
 
@@ -279,10 +279,15 @@ cdis
                 write(6,*)' Field not found - not calling frame'
             endif
 
-        elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
+        elseif(c_section .eq. 's' .or. c_section .eq. 'sz')THEN
+            if(c_section .eq. 'sz')then
+                read(lun,*)plot_parms%obs_size           
+            endif
+            
             call plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                        ,r_missing_data,laps_cycle_time,maxstns
-     1                        ,i_overlay,plot_parms,namelist_parms)       
+     1                        ,i_overlay,plot_parms,namelist_parms
+     1                        ,l_plotobs)       
 
             if(ifield_found .eq. 1)then
                 write(6,*)' Field found - calling frame'
