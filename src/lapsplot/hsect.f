@@ -2701,7 +2701,7 @@ cabdel
      1                                  ,NX_L,NY_L,radar_array,0
      1                                  ,istatus)
 
-                    c_label = 'Composite Reflectivity (lmr) '    
+                    c_label = 'Composite Reflectivity (analysis) '    
 
                 elseif(c_type .eq. 'ra')then
                     radar_array = field_2d
@@ -4167,7 +4167,7 @@ c abdel
           call make_fnam_lp(i4time_cloud,asc9_tim,istatus)
 
           clow = 0.
-          chigh = +3.
+          chigh = +2.
           cint = -0.1
 
 !         call plot_cont(column_max,1e-3,
@@ -4176,6 +4176,7 @@ c abdel
 !    1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
           scale = 1e-3
+          plot_parms%color_power = 0.3
 
           call plot_field_2d(i4time_cloud,c_type_i,field_2d
      1                        ,scale
