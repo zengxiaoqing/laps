@@ -117,7 +117,7 @@ C                               exit the program.
 C
 
         character*13 filename13,outfile,asc13_tim,fname9_to_wfo_fname13       
-        character*9 asc9_tim,a9time_ob
+        character*9 asc9_tim,a9time_ob,a9time_infile
 
         character*31    ext
         integer       len_dir_in
@@ -263,6 +263,8 @@ C           Determine file format by looking at the file name convention
 
         endif
 
+        call make_fnam_lp(i4time_desired,a9time_infile,istatus)
+
         write(6,*)c_filespec(1:80)
 
 C       Wait for the data
@@ -295,11 +297,12 @@ C       Wait for the data
 
 C       READ IN THE RAW PROFILER DATA
         if(c8_project(1:6) .eq. 'NIMBUS')then
-            fnam_in = dir_in(1:len_dir_in)//asc9_tim//c5_data_interval
+            fnam_in = dir_in(1:len_dir_in)//a9time_infile
+     1                                    //c5_data_interval
         else ! WFO
 !           Convert from asc9_tim to asc13_tim
-!           asc13_tim = '19960903_2200'                 ! Hardwired for testing.
-            asc13_tim = fname9_to_wfo_fname13(asc9_tim) ! John Smart's routine
+!           asc13_tim = '19960903_2200'                      ! Hardwired for testing.
+            asc13_tim = fname9_to_wfo_fname13(a9time_infile) ! John Smart's routine
             fnam_in = dir_in(1:len_dir_in)//asc13_tim
         endif
 
