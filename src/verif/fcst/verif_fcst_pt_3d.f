@@ -59,7 +59,6 @@
         parameter (n_vfields=4)
         character*10 ext_anal_a(n_vfields), ext_fcst_a(n_vfields)
         character*10 var_a(n_vfields)
-        character*2 c2_region
 
 !       Specify what is being verified
         data ext_fcst_a /'fua','fua','   ','fua'/ ! 3-D
@@ -75,12 +74,10 @@
 
 !       Declarations from compare_analysis_to_rad
         real                   
-     1                        cvr_max(ni,nj),cvr_sao_max(ni,nj)
+     1                        cvr_max(ni,nj)                    
      1        ,dbz_max_2d(ni,nj),solar_alt(ni,nj)                   
 
 !       How much the solar radiation varies with changes in cloud fraction
-        real cvr_scl_a(ni,nj) 
-
         real rad_clr(ni,nj)
 
         real airmass_2d(ni,nj)
@@ -89,16 +86,11 @@
 
         real dum_2d(ni,nj)
 
-        real cld_snd(max_cld_snd,KCLOUD)
-        integer ista_snd(max_cld_snd)
-        real cld_hts(KCLOUD)
-
         character c_stations(maxsta)*3
 
         real lat_s(maxsta), lon_s(maxsta), elev_s(maxsta)
         real var_s(maxsta)
         real var_fcst_s(maxsta)
-        real cvr_s(maxsta)
 
         real dum_s(maxsta)
 
@@ -213,9 +205,6 @@
 
                 write(6,*) 
                 write(6,*)' Processing time ',a9time_valid
-
-                write(c2_region,1)iregion
- 1              format(i2.2)
 
                 if(trim(var_2d) .eq. 'W3')then
 !                   call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
@@ -382,8 +371,6 @@
                       sumobs = sumobs + var_s(ista)
                       sumanl = sumanl + var_fcst_s(ista)
                       cnt = cnt + 1.
-
-                      cvr_s(ista) = cvr_max(i_g,j_g)
 
 1112                endif ! ob is in domain
                   endif ! ista .ne. 0 (valid value)
