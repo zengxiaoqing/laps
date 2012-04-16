@@ -959,11 +959,16 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         if(mode .eq. 1)then
             write(6,*)' Plot Dewpoint Obs, size_td = ',size_temp
+            call get_border(imax,jmax,x_1,x_2,y_1,y_2)
+            call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax),1)
         elseif(mode .eq. 2)then
             write(6,*)' Plot SH Obs (from dewpoint), size = ',size_temp
+            call get_border(imax,jmax,x_1,x_2,y_1,y_2)
+            call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax),1)
         elseif(mode .ge. 3)then
             write(6,*)' Plot PW (GPS) Obs, mode/size = ',mode,size_temp
-            c_label = 'Integrated Vapor Obs (cm)'
+!           c_label = 'Integrated Vapor Obs (cm)'
+            c_label = 'IWV Obs, Grid-Obs (cm)'
             i_overlay = i_overlay + 1
             call setusv_dum(2hIN,icolors(i_overlay))
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -1137,9 +1142,11 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1                          charsize,ANGD,CNTR)      
                 endif
 
-!               Plot ob location
-                call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
-                call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
+!               Plot ob location (with a plus sign)
+                if(mode .ge. 3)then
+                    call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
+                    call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
+                endif
 
 !               Plot ob
                 if(mode .lt. 3)then
