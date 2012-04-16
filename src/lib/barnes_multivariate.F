@@ -775,7 +775,7 @@ csms$parallel(grid_dh, <ii>) begin
 
                     if(kk .le. k)then
                       kk_lower_pair = 0
-                    elseif(kk - 2*abs(kk-k) .ge. kmin)then
+                    elseif(kk - 2*abs(kk-k) .ge. 1)then
                       kk_lower_pair = 1
                     else
                       kk_lower_pair = 0
