@@ -36,6 +36,15 @@ cdis
 cdis
 cdis   
 cdis
+        use mem_namelist, ONLY: read_namelist_laps
+
+        character*150 static_dir,filename
+
+!       Read moisture parameters into module memory structure
+        call get_directory('static',static_dir,len_dir)
+        filename = static_dir(1:len_dir)//'/moisture_switch.nl'
+        call read_namelist_laps('moisture_anal',filename)
+
         call supmap_block_data()
 
         call lapsplot_3d()
