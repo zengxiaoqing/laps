@@ -107,7 +107,6 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
      endif
      call mprintf(.true.,ERROR," ***** Stopping in Subroutine PARSE_TABLE")
   endif
-!"PTM
 
 ! First, read past the headers, i.e., skip lines until we hit the first
 ! line beginning with '-'
