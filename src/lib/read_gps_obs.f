@@ -79,7 +79,7 @@ c     parameter list variables
       real gps_lat(gps_n)
       real gps_lon(gps_n)
       integer i4beg, i4end
-      character*256 path,c_filenames(max_files) 
+      character*256 path,filespec,c_filenames(max_files) 
       
 c     internal
       integer istatus, ptg_index
@@ -92,10 +92,11 @@ c     internal
 
 c     Set file specs for get_file_times:
       call s_len(path, ptg_index)
-      path(ptg_index+1:ptg_index+9) = '*0030o.nc'  ! Hardcode for now by Yuanfu
+      filespec(1:ptg_index) = path(1:ptg_index)
+      filespec(ptg_index+1:ptg_index+9) = '*0030o.nc'  ! Hardcode for now by Yuanfu
 
 c     Get all filenames under the path:
-      call get_file_times(path(1:ptg_index+9),max_files,c_filenames,
+      call get_file_times(filespec(1:ptg_index+9),max_files,c_filenames,
      1                    i4times,nfiles,istatus)
 
       gps_i = 0    ! Total GPS data read
