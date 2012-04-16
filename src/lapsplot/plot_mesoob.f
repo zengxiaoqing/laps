@@ -513,8 +513,11 @@ cdis
      1                 (wx_s(i) .ne. 'UNK' .and. lenwx .gt. 0) 
      1                                                         )then       
 
-                        write(6,11)i,pcp1(i),snow(i),lenwx,wx_s(i)
-11                      format('  Plot Precip ob ',i4,2f8.2,i3,1x,a)
+                        write(6,11)i,pcpval,snow(i),lenwx,c_staname
+     1                                                   ,wx_s(i)
+11                      format('  Plot Precip ob ',i4,2f8.2,i3,1x,a
+     1                                                        ,1x,a)
+!                       write(6,*)pcp1(i),pcp3(i),pcp6(i),pcp24(i)
 
 !                       Plot Weather String
                         if(len_field .le. 2)then
