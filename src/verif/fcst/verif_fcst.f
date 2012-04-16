@@ -1,9 +1,11 @@
 
         program verif_fcst_main
 
+        use mem_namelist, ONLY: read_namelist_laps
         use mem_namelist, ONLY: model_fcst_intvl,model_cycle_time
      1                                          ,model_fcst_len
 
+        character*150 static_dir,filename
         character*9 a9time
 	character*300 dir_t,filenamet
         character*10 c_n_fcst_times,c_model_fcst_intvl
@@ -49,6 +51,11 @@
            write (6,*) 'Error getting laps_cycle_time'
            go to 999
         endif
+
+!       Read moisture parameters into module memory structure
+        call get_directory('static',static_dir,len_dir)
+        filename = static_dir(1:len_dir)//'/moisture_switch.nl'
+        call read_namelist_laps('moisture_anal',filename)
 
         maxsta = 1000000
         max_obs = 1000000
@@ -102,6 +109,8 @@
      1                  n_fcst_times,
      1                  j_status)
 
+        use mem_namelist, ONLY: path_to_gps
+
         include 'read_sfc.inc'
 
         real var_anal_2d(ni,nj)
@@ -117,6 +126,7 @@
 
         logical lmask_and_3d(ni,nj,nk)
         logical lmask_rqc_3d(ni,nj,nk)
+        logical l_parse, l_parse_result
 
         integer       maxbgmodels
         parameter     (maxbgmodels=10)
@@ -147,7 +157,6 @@
         parameter (n_fields=8)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
-        character*2 c2_region
 
 !       Specify what is being verified
         data ext_fcst_a 
@@ -178,10 +187,6 @@
         real trans_h2o_2d(ni,nj)
 
         real dum_2d(ni,nj)
-
-        real cld_snd(max_cld_snd,KCLOUD)
-        integer ista_snd(max_cld_snd)
-        real cld_hts(KCLOUD)
 
         character c_stations(maxsta)*3
         character stn(maxsta)*20
@@ -214,7 +219,7 @@
         real gps_xy(2,gps_n)
         real gps_elv(gps_n)
         real gps_tim(gps_n)
-        character*256 path_to_gps
+!       character*256 path_to_gps
 
 !       End Declarations 
 
@@ -277,15 +282,9 @@
           lun_out = 39
 
           hist_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
-     1                                       //'/pt'
-!    1                                       //c_model(1:len_model)
+     1                                     //'/pt'
+!    1                                     //c_model(1:len_model)
           len_hist = len_verif + 3 + lenvar ! + len_model
-
-          cont_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
-     1                                       //'/cont/'
-     1                                       //c_model(1:len_model)
-     1                                       //'/'
-          len_cont = len_verif + 6 + lenvar + len_model
 
           call make_fnam_lp(i4_initial,a9time_init,istatus)
 
@@ -303,6 +302,14 @@
           do imodel = 1,n_fdda_models ! move this inside the time loop
 
             c_model = c_fdda_mdl_src(imodel)
+
+            call s_len(c_model,len_model)
+
+            cont_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
+     1                                       //'/cont/'
+     1                                       //c_model(1:len_model)
+     1                                       //'/'
+            len_cont = len_verif + 6 + lenvar + len_model
 
             if(c_model(1:3) .ne. 'lga')then
 
@@ -329,9 +336,6 @@
 
                 write(6,*) 
                 write(6,*)' Processing time ',a9time_valid
-
-                write(c2_region,1)iregion
- 1              format(i2.2)
 
                 if(trim(var_2d) .eq. 'WSF')then
                     call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
@@ -368,8 +372,8 @@
                 else
                   call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
 
-                  write(6,*)' call read_gps_obs'
-                  path_to_gps = '/public/data/gpsmet/netcdf/'
+                  write(6,*)' call read_gps_obs: ',trim(path_to_gps)
+!                 path_to_gps = '/public/data/gpsmet/netcdf/'
                   lun_hmg = 0
                   i4beg = i4_valid - 960
                   i4end = i4_valid + 840
@@ -463,11 +467,14 @@
 !                 Suppress 00hr SWI if from wrf-hrrr since it would have been
 !                 pulled in via LFMPOST from a LAPS analysis
 
-                  if(trim(var_2d) .eq. 'SWI'              .AND.
-     1               l_parse(c_model(1:len_model),'hrrr') .AND.
-     1               i4_valid .eq. i4_initial             )then
-                      write(6,*)' Suppressing 00hr hrrr SWI'
-                      istatus = 0
+                  if(trim(var_2d) .eq. 'SWI')then              
+                     l_parse_result=l_parse(c_model(1:len_model),'hrrr')
+                     if(l_parse_result .eqv. .true.)then       
+                        if(i4_valid .eq. i4_initial)then
+                           write(6,*)' Suppressing 00hr hrrr SWI'
+                          istatus = 0
+                        endif
+                     endif
                   endif
 
                   if(istatus .ne. 1)then
@@ -585,40 +592,18 @@
 
 !                       Calculate 9pt cover
                         cvr_9pt = 0.
-                        do ic = -1,1
-                        do jc = -1,1
-                          cvr_9pt = cvr_9pt + cvr_max(i_i+ic,i_j+jc)
-                        enddo ! jc
-                        enddo ! ic
-                        cvr_9pt = cvr_9pt / 9.
 
 !                       Calculate 25pt cover
                         cvr_25pt = 0.
-                        do ic = -2,2
-                        do jc = -2,2
-                          cvr_25pt = cvr_25pt + cvr_max(i_i+ic,i_j+jc)
-                        enddo ! jc
-                        enddo ! ic
-                        cvr_25pt = cvr_25pt / 25.
 
                         iwrite = iwrite + 1
 
                         c1_c = ' '
                         c3_discrep = '   '
 
-                        if(solar_alt(i_i,i_j) .gt. 0.)then
-                          rad_ratio = var_s(ista) / rad_clr(i_i,i_j)
-                          cv_solar = (1.0 - rad_ratio)       ! 100% cloud cover 
-     1                             / (cvr_scl_a(i_i,i_j))    ! has (1-cvr_scl) of possible
-                                                             ! solar radiation
-                          cv_diff = cv_solar - cvr_max(i_i,i_j)
-
-                        else
-                          rad_ratio = 0.
-                          cv_solar = 0.
-                          cv_diff = 0.
-
-                        endif
+                        rad_ratio = 0.
+                        cv_solar = 0.
+                        cv_diff = 0.
 
                         rad2_s(ista) = var_s(ista)            
                         swi_s(ista) = swi_2d(i_i,i_j)
