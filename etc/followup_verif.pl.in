@@ -241,7 +241,12 @@ foreach $var (@vars) {
       print "setting up command: $command\n";
       $result=system("$command");
 
-      push @analimagelist, $fullanal_image;                              
+      if (! -e $fullanal_image) {
+        print "WARNING: $fullanal_image is not present\n";
+        push @analimagelist, $black_image;                            
+      }else{
+        push @analimagelist, $fullanal_image;                              
+      }
 
       $t=gmtime(); 
       print "\nReady to process $a13time @modelnames... \n" ;
