@@ -168,6 +168,7 @@ c
 c.....  Call the read routine.
 c
 	    call read_local_tower(data_file,lenf,                 ! I 
+     &         tower_format,                                      ! I
      &         maxobs, maxlvls,                                   ! I
      &         r_missing_data,                                    ! I
      &         nsnd_file, nlvl(ix), lvls_m(1,ix),                 ! O
@@ -349,6 +350,7 @@ c
         end
 
          subroutine read_local_tower(filename,fn_len,             ! I 
+     &         tower_format,                                      ! I
      &         maxobs, maxlvls,                                   ! I
      &         r_missing_data,                                    ! I
      &         nobs, nlvl, lvls_m,                                ! O
@@ -364,7 +366,7 @@ c    &         pressure_pa, prsQcFlag,                            ! O
 
       include 'netcdf.inc'
 
-      character*(*) filename 
+      character*(*) filename, tower_format 
       integer       maxobs ! raw stations for SND file
       integer       maxlvls ! raw/processed stations for SND file
       real        r_missing_data 
@@ -397,7 +399,7 @@ c    &         pressure_pa, prsQcFlag,                            ! O
       integer       start1(1),count1(1)
       integer       pi_len, sn_len, fn_len, obno
       character     stname(maxobs)*6, stationName*51, c_staid*6
-      character     a9time_ob(maxobs)*9
+      character     a9time_ob(maxobs)*9, rh_var*30
       double precision d_timeobs
 
 c     open data_file
@@ -704,10 +706,16 @@ c       read _fillValue for stationPressure
         endif 
       endif
 
-      nf_status = NF_INQ_VARID(nf_fid,'relHumidity',rh_id)
+      if(.true.)then ! NIMBUS
+          rh_var = 'relativeHumidity'
+      else ! RSA
+          rh_var = 'relHumidity'
+      endif
+
+      nf_status = NF_INQ_VARID(nf_fid,trim(rh_var),rh_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'Warning: could not find var relHumidity'
+        print *,'Warning: could not find var ',rh_var     
 !       nf_status = NF_CLOSE(nf_fid)
 !       istatus = 0
 !       return
@@ -721,10 +729,10 @@ c       read _fillValue for stationPressure
         if(nf_status.ne.NF_NOERR) then
           print *, NF_STRERROR(nf_status)
           print *,'finding var rhQcFlag'
-          print *, 'Aborting read'
-          nf_status = NF_CLOSE(nf_fid)
-          istatus = 0
-          return
+!         print *, 'Aborting read'
+!         nf_status = NF_CLOSE(nf_fid)
+!         istatus = 0
+!         return
         endif
 
 c       read _fillValue for relHumidity
@@ -886,6 +894,9 @@ c       read var stationId(recNum,providerIDLen) -> c_staid
           istatus = 0
           return
         endif
+        call s_len(c_staid,len_sta)
+        stname(obno) = '      '
+        stname(obno)(1:len_sta) = c_staid(1:len_sta)          
 
 c       NEEDS DOING
 c       convert string to iwmostanum(maxobs) (cvt S to 0 and N to 1)
