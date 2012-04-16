@@ -46,6 +46,8 @@ cdis
      1                   r_missing_data,                          ! Input
      1                   istatus)                                 ! Output
 
+        use mem_namelist, ONLY: path_to_gps
+
 !       Output arrays
         real lat_tdsnd(max_snd)
         real lon_tdsnd(max_snd)
@@ -91,7 +93,6 @@ cdis
         real gps_xy(2,gps_n)
         real gps_elv(gps_n)
         real gps_tim(gps_n)
-        character*256 path_to_gps
 
         write(6,*)
      1  ' Subroutine read_tdsnd -- reads LRS, SND and GPS to make HMG'
@@ -389,9 +390,6 @@ c       1                ,t_diff
         itry = 1
 810     istatus = 0
 
-!       Consider reading 'path_to_gps' from moisture.nl
-        path_to_gps = '/public/data/gpsmet/netcdf/'
-        path_to_gps ='/data/fab/cwb/windsor/archive/data/gpsmet/netcdf/'      
         call read_gps_obs (lun_hmg, path_to_gps, i4beg, i4end,
      1     imax, jmax, lat, lon, bad_sfc,
      1     gps_tpw, gps_wet, gps_error, gps_xy, gps_elv, 
