@@ -263,6 +263,10 @@ integer I4_elapsed, ishow_timer
 !cj Variables to compute omega, added 6/21/2007
 real :: tvprs
 
+! Variables for low level reflectivity
+integer :: klow, khigh
+real :: ht_1km, frack
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !Beka!!!!!!!!!!!!! obtaining ldf, lat and lon !!!!!!!!!!!!!!!!!!!!
 
@@ -445,11 +449,31 @@ if (make_micro) then
                            ,hrainmr_sig,hcldicemr_sig,hsnowmr_sig,hgraupelmr_sig  &
                            ,hrefl_sig,hzdr_sig,hldr_sig,htsig,hpsig,hmrsig        &
                            ,max_refl,echo_tops)
-      refl_sfc(:,:)=hrefl_sig(:,:,1)
+
+!     Determine low level reflectivity
+      if(.false.)then ! use lowest sigma level (sfc)
+          refl_sfc(:,:)=hrefl_sig(:,:,1)
+      elseif(large_ngrid)then ! assume a certain sigma level is 1km AGL
+          refl_sfc(:,:)=hrefl_sig(:,:,8)
+      else ! interpolate to 1km AGL
+          do j=1,ly
+          do i=1,lx
+              ht_1km = zsfc(i,j) + 1000.
+              do k = 1,nz-1
+                  if(hzsig(i,j,k) .le. ht_1km .AND. hzsig(i,j,k+1) .ge. ht_1km)then
+                      frack = (ht_1km - hzsig(i,j,k)) / (hzsig(i,j,k+1) - hzsig(i,j,k))
+                      klow = k
+                      khigh = klow+1
+                      refl_sfc(i,j)=hrefl_sig(i,j,klow) * (1. - frack) + hrefl_sig(i,j,khigh) * frack
+                  endif
+              enddo ! k
+          enddo ! i
+          enddo ! j
+      endif
 
 !     Conversion of microphysical cloud mixing ratios to concentrations
-      hcldliqmr_sig(:,:,:)     = hcldliqmr_sig(:,:,:) * rhomoistsig(:,:,:)
-      hcldicemr_sig(:,:,:)     = hcldicemr_sig(:,:,:) * rhomoistsig(:,:,:)
+      hcldliqmr_sig(:,:,:) = hcldliqmr_sig(:,:,:) * rhomoistsig(:,:,:)
+      hcldicemr_sig(:,:,:) = hcldicemr_sig(:,:,:) * rhomoistsig(:,:,:)
 
       deallocate(tvsig,rhomoistsig)
       if (verbose) then
@@ -2281,14 +2305,36 @@ subroutine height_tw(pr,ht,tp,td,spr,sht,stp,std,smr,slp,threshold,ztw0,lx,ly,nz
 
 implicit none
 
-integer :: lx,ly,nz,i,j,k
+integer :: lx,ly,nz,i,j,k,ku,kl
 real, parameter :: lapse=0.0065
 real :: tw,twl,twu,rat,pr0,zbot,ztop,t0,rh0,td0,relhum,dewpt,threshold
 real, dimension(lx,ly,nz) :: pr,ht,tp,td
 real, dimension(lx,ly) :: spr,sht,stp,std,smr,slp,ztw0
 
+ku = -999
+kl = -999
+
 do j=1,ly
 do i=1,lx
+   if(kl .ne. -999)then ! use the previously found bracketing levels for efficiency
+     twu=tw(tp(i,j,ku),td(i,j,ku),pr(i,j,ku))
+     do k=kl,kl
+      twl=tw(tp(i,j,k  ),td(i,j,k  ),pr(i,j,k  ))
+      if (twu <= 273.15+threshold .and. twl > 273.15+threshold) then
+         rat=(twl-273.15+threshold)/(twl-twu)
+         pr0=pr(i,j,k)+rat*(pr(i,j,k+1)-pr(i,j,k))
+         if(pr0 .lt. 0.)then
+             write(6,*)' ERROR in height_tw: pr0 < 0. ',pr0
+             go to 1
+         endif
+         zbot=ht(i,j,k)
+         ztop=ht(i,j,k+1)
+         rat=alog(pr0/pr(i,j,k))/alog(pr(i,j,k+1)/pr(i,j,k))
+         ztw0(i,j)=zbot+rat*(ztop-zbot)
+         goto 1
+      endif
+     enddo
+   endif
    twu=tw(tp(i,j,nz),td(i,j,nz),pr(i,j,nz))
    do k=nz-1,1,-1
       twl=tw(tp(i,j,k  ),td(i,j,k  ),pr(i,j,k  ))
@@ -2303,6 +2349,8 @@ do i=1,lx
          ztop=ht(i,j,k+1)
          rat=alog(pr0/pr(i,j,k))/alog(pr(i,j,k+1)/pr(i,j,k))
          ztw0(i,j)=zbot+rat*(ztop-zbot)
+         kl = k
+         ku = k+1
          goto 1
       endif
       twu=twl
