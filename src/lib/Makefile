@@ -146,6 +146,7 @@ SRC	= machine_dependent.F \
           sfc_routines.f \
           smf_wisp91.f \
           smf_wisp92.f \
+          smooth_box.f \
           smooth_cross_laps.f \
           snooze_gg.f \
           spread.f \
