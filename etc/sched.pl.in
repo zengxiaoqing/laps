@@ -96,6 +96,8 @@
 # -R                   Perform remote copy (and purge) of analysis output to the supplied 
 #                      destination (via xferlaps.sh)
 #
+# -C                   Copy file $LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2 to $opt_C/$yyjjjhhmm.gr2
+#
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
@@ -104,10 +106,10 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R 
-            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X);
+            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X $opt_C);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:C:');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -975,6 +977,27 @@ if(defined $opt_R){
 
         print "\nExecuting $command\n";
         system("$command");
+    }
+}
+
+# if opt_C is set, copy the lapsprd/gr2/$yyjjjhhmm.gr2 to the $opt_C location 
+if(defined $opt_C){
+    if (($opt_C ne "") && (substr($opt_C,0,1) ne "-")) {
+      if ( -s "$LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2") {
+        if ( -d $opt_C) {
+          print  "cp $LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2  $opt_C/$yyjjjhhmm.gr2\n";
+          system("cp $LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2  $opt_C/$yyjjjhhmm.gr2");
+        } else {
+          print "ERROR: opt_C is not a directory: $opt_C \n";
+          print "$LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2 file NOT not copied!\n";
+        }
+      } else {
+        print "ERROR: file does not exist: $LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2\n";
+        print "$LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2 file NOT not copied!\n";
+      }
+    } else {
+      print "Error in path for opt_C: $opt_C \n";
+      print "$LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2 file NOT not copied!\n";
     }
 }
 
