@@ -698,7 +698,7 @@ c     SH units
          
          do i = 1, cost_kk      ! all laps levels
             
-            if (mr_l(i) .ne. 0.0) then
+            if (mr_l(i).ne.0.0.and.cost_snd_data(i).ne.cost_mdf) then
                max_func_snd = max_func_snd +
      1              (mr_l(i)-cost_snd_data(i))**2 * 
      1              cost_snd_wt(i) !weighted squared difference
@@ -716,6 +716,11 @@ c     SH units
       endif
 
 C     END RAOB SECTION
+
+      if (func .ne. func ) then ! Nan
+         write (6,*) 'func is a nan in func_o.f'
+         stop
+      endif
 
 
 
