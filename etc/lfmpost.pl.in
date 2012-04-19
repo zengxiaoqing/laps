@@ -472,7 +472,7 @@ for ($g=1; $g<=$ngrid; $g++) {
       } else {
         $lfmpostlog = "lfmpost_";
       }
-      $lfmpostlog = "$lfmpostlog$yyyy$initmm$initdd"."_$inithh"."_$cFcstExt.log";
+      $lfmpostlog = "$lfmpostlog$yyyy$initmm$initdd$inithh"."_$cFcstExt.log";
 
 #LW check to see if the directory $lapsdataroot/d0$grid exists.
 #  If it does, append "d0$grid" to $lapsdataroot as an argument to pass into lfmpost.exe
