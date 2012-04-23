@@ -449,7 +449,7 @@ c
 	print *,'----------------------------------'
 	do k=1,n_obs_b
 	  if(pstn_s(k).le.badflag .or. t_s(k).le.badflag 
-     &                           .or. td_s(k).le.badflagthen
+     &                           .or. td_s(k).le.badflag    
 !    &                           .or. obs(i)%t_ea_f  .gt. 8.0
 !    &                           .or. obs(i)%td_ea_f .gt. 8.0
      &                                                       )then
