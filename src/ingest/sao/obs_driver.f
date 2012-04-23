@@ -484,10 +484,10 @@ c
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_gx,n_local_b,stations,
      &                      reptype,atype,weather,wmoid,
-     &                      store_1,store_2,store_2ea,
-     &                      store_3,store_3ea,store_4,store_4ea,
+     &                      store_1,!store_2,store_2ea,
+!    &                      store_3,store_3ea,store_4,store_4ea,
      &                      store_5,store_5ea,store_6,store_6ea,
-     &                      store_7,store_cldht,store_cldamt,
+!    &                      store_7,store_cldht,store_cldamt,
      &                      provider, laps_cycle_time, 
      &                      local_obs_thresh_madis, 
      &                      i4wait_local_obs_max, 
@@ -505,6 +505,8 @@ c
                     if(nn .gt. maxsta)then
                        write(6,*)' ERROR: nn > maxsta ',nn,maxsta
                        return
+                    else
+                       write(6,*)' Total obs so far is ',nn
                     endif
 
                   endif ! directory length > 0
