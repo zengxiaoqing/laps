@@ -109,7 +109,8 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
       integer maxSensor,nf_fid, nf_vid, nf_status
       parameter (maxSensor=2)          ! Manually added
       parameter (maxPSTEntries=3000)   ! Manually added
-      integer code2PST(maxPSTEntries), code4PST(maxPSTEntries),
+      integer code1PST(maxPSTEntries), code2PST(maxPSTEntries), 
+     +     code4PST(maxPSTEntries),
      +     altimeterQCR(maxobs), dewpointQCR(maxobs),
      +     firstOverflow, globalInventory, nStaticIds,
      +     numericWMOid(maxobs), precipAccumQCR(maxobs),
@@ -331,7 +332,7 @@ c
 c.....  Call the read routine.
 c
             call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     maxPSTEntries, code2PST, namePST,
+     +     maxPSTEntries, code1PST, code2PST, namePST,
      +     altimeterQCR(ix), dewpointQCR(ix), firstOverflow, 
      +     globalInventory, nStaticIds, numericWMOid, 
      +     precipAccumQCR(ix), precipIntensity, 
@@ -388,6 +389,13 @@ c..................................
 c.....	First QC loop over all the obs.
 c..................................
 c
+        if(n_local_all .gt. maxobs)then
+           write(6,*)' Error in get_local_obs: n_local_all is ',
+     1                                         n_local_all       
+           write(6,*)' Try increasing obs_driver.nl/maxobs from ',maxobs
+           stop   
+        endif
+
 	do i=1,n_local_all
            l_reject(i) = .false.
 c
@@ -407,9 +415,9 @@ c
            if(latitude(i) .lt. -90 .or. latitude(i) .gt. +90.)then
                if(.true.)then
                    write(6,81,err=82)i,n_local_all
-     1                               ,wmoid(i),stationId(i)
+     1                               ,stationId(i)
      1                               ,latitude(i)
- 81                format(2i7,i7,1x,a8,' invalid latitude ',e12.5)
+ 81                format(2i7,1x,a8,' invalid latitude ',e12.5)
                endif
  82            l_reject(i) = .true.
                go to 105
@@ -427,9 +435,9 @@ c
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
      1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
                if(i .le. max_write)then
-                   write(6,91,err=92)i,wmoid(i),stationId(i)
+                   write(6,91,err=92)i,stationId(i)
      1                               ,nint(ri_loc),nint(rj_loc)
- 91                format(i6,i7,1x,a8,' out of box ',2i12)
+ 91                format(i6,1x,a8,' out of box ',2i12)
                endif
  92            l_reject(i) = .true.
                go to 105
@@ -454,10 +462,10 @@ c
 	   if(i4time_ob_a(i) .lt. before 
      1   .or. i4time_ob_a(i) .gt. after) then
                if(i .le. max_write)then
-                   write(6,71,err=72)i,wmoid(i),stationId(i)
+                   write(6,71,err=72)i,stationId(i)
      1                               ,a9time_a(i),i4time_ob_a(i)
      1                               ,before,after
- 71		   format(i6,i7,1x,a8,' out of time ',a11,3i12)
+ 71		   format(i6,1x,a8,' out of time ',a11,3i12)
                endif
  72            l_reject(i) = .true.
                go to 105
@@ -958,14 +966,41 @@ c
 c
 c..... Precip
          pcp1 = badflag
-         if(dataProvider(i)(1:lenp) .eq. 'HADS' .AND.
-     1      precipAccum(i) .ge. 0.              .AND.    
-     1      precipAccum(i) .ne. badflag               )then
-             pcp1 = precipAccum(i) / 25.4 ! convert mm to inches
-             write(6,*)' Found a local 1hr precip ob: '
-     1                 ,pcp1,' ',dataProvider(i)(1:lenp),' '
-     1                 ,precipAccumDD(i)
-         endif
+         pcp24 = badflag
+
+         if(precipAccum(i) .ge. 0.      .AND.    
+     1      precipAccum(i) .ne. badflag       )then
+
+            iprov_pst = 0
+            do iprov = 1,numPSTEntries                  
+               if(namePST(iprov) .eq. dataProvider(i)(1:lenp))then
+!                 write(6,*)' match,code1PST = ',code1PST(iprov)
+                  iprov_pst = iprov
+               endif ! found a provider match
+            enddo ! iprov
+
+            if(code1PST(iprov_pst) .eq. -3 .AND. 
+     1         dataProvider(i)(1:lenp) .eq. 'HADS')then  
+               pcp24 = precipAccum(i) / 25.4 ! convert mm to inches
+               write(6,*)' Found a local 24hr HADS precip ob: '
+     1                 ,pcp24,' ',dataProvider(i)(1:lenp),' '
+     1                 ,stationId(i),' '
+     1                 ,precipAccumDD(i),' ',code1PST(iprov_pst)       
+            elseif(code1PST(iprov_pst) .eq. -2 .AND. ! 24hr ob at 00UT
+     1             i4time_sys .eq. ((i4time_sys/86400) * 86400) )then                         
+               pcp24 = precipAccum(i) / 25.4 ! convert mm to inches
+               write(6,*)' Found a local 24hr 00UTC precip ob: '
+     1                 ,pcp24,' ',dataProvider(i)(1:lenp),' '
+     1                 ,stationId(i),' '
+     1                 ,precipAccumDD(i),' ',code1PST(iprov_pst)       
+            elseif(code1PST(iprov_pst) .ne. 0)then
+               write(6,*)' Potential precip ob: '                             
+     1                 ,precipAccum(i) / 25.4,' '
+     1                 ,dataProvider(i)(1:lenp),' '
+     1                 ,stationId(i),' '
+     1                 ,precipAccumDD(i),' ',code1PST(iprov_pst)       
+            endif ! type of precip ob
+         endif ! precip was reported
 c
 c..... Other stuff.  
 c
@@ -1041,7 +1076,7 @@ c
          store_6(nn,1) = pcp1                   ! 1-h precipitation
          store_6(nn,2) = badflag                ! 3-h precipitation
          store_6(nn,3) = badflag                ! 6-h precipitation
-         store_6(nn,4) = badflag                ! 24-h precipitation
+         store_6(nn,4) = pcp24                  ! 24-h precipitation
          store_6(nn,5) = badflag                ! snow cover
 c
          store_7(nn,1) = float(kkk)             ! number of cloud layers
