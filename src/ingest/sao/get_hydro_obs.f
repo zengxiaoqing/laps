@@ -44,10 +44,10 @@ c
      &                 lat,lon,ni,nj,grid_spacing,
      &                 nn,n_obs_g,n_obs_b,stations,
      &                 reptype,atype,weather,wmoid,
-     &                 store_1,store_2,store_2ea,
-     &                 store_3,store_3ea,store_4,store_4ea,
+     &                 store_1,!store_2,store_2ea,
+!    &                 store_3,store_3ea,store_4,store_4ea,
      &                 store_5,store_5ea,store_6,store_6ea,
-     &                 store_7,store_cldht,store_cldamt,
+!    &                 store_7,store_cldht,store_cldamt,
      &                 provider, laps_cycle_time, 
      &                 local_obs_thresh, i4wait_local_obs_max, jstatus)       
 
@@ -90,8 +90,8 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
      +     recNum,nf_fid, nf_vid, nf_status
       parameter (ICcheckNum=100)       ! Manually added
       parameter (QCcheckNum=100)       ! Manually added
-      parameter (maxStaticIds=100)     ! Manually added
-      parameter (nInventoryBins=2)     ! Manually added
+      parameter (maxStaticIds=30000)   ! Manually added
+      parameter (nInventoryBins=24)    ! Manually added
       integer filterSetNum, firstInBin(nInventoryBins), firstOverflow,
      +     globalInventory, invTime(maxobs), inventory(maxStaticIds),
      +     isOverflow(maxobs), lastInBin(nInventoryBins),
@@ -253,6 +253,7 @@ c
 
             write(6,*)' mesonet file = ',data_file(1:len_path+13)
 
+!           goto 590 ! debugging test
 	    nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
 
 	    if(nf_status.ne.NF_NOERR) then
@@ -288,7 +289,7 @@ c
 c.....  Call the read routine.
 c
         call read_madis_hydro_netcdf(nf_fid, ICcheckNum, QCcheckNum, 
-     +     maxStaticIds, nInventoryBins, maxobs, elevation(ix), 
+     +     maxStaticIds, nInventoryBins, recnum, elevation(ix), 
      +     latitude(ix), longitude(ix), precip12hr(ix), 
      +     precip12hrQCD(1,ix), precip1hr(ix), precip1hrQCD(1,ix), 
      +     precip24hr(ix), precip24hrQCD(1,ix), precip3hr(ix), 
@@ -339,7 +340,13 @@ c.....  "FloatInf" is in the lat, lon, elevation, or time of observation,
 c.....  we toss the whole ob since we can't be sure where it is.
 c
         max_write = 100
-      
+
+        if(n_local_all .gt. maxobs)then
+           write(6,*)' Error in get_hydro_obs: n_local_all is ',
+     1                                         n_local_all
+           write(6,*)' Try increasing obs_driver.nl/maxobs from ',maxobs
+           stop
+        endif
 c
 c..................................
 c.....	First QC loop over all the obs.
@@ -364,9 +371,9 @@ c
            if(latitude(i) .lt. -90 .or. latitude(i) .gt. +90.)then
                if(.true.)then
                    write(6,81,err=82)i,n_local_all
-     1                               ,wmoid(i),stationId(i)
+     1                               ,stationId(i)
      1                               ,latitude(i)
- 81                format(2i7,i7,1x,a8,' invalid latitude ',e12.5)
+ 81                format(2i7,1x,a8,' invalid latitude ',e12.5)
                endif
  82            l_reject(i) = .true.
                go to 105
@@ -384,9 +391,9 @@ c
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
      1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
                if(i .le. max_write)then
-                   write(6,91,err=92)i,wmoid(i),stationId(i)
+                   write(6,91,err=92)i,stationId(i)
      1                               ,nint(ri_loc),nint(rj_loc)
- 91                format(i6,i7,1x,a8,' out of box ',2i12)
+ 91                format(i6,1x,a8,' out of box ',2i12)
                endif
  92            l_reject(i) = .true.
                go to 105
@@ -411,10 +418,10 @@ c
 	   if(i4time_ob_a(i) .lt. before 
      1   .or. i4time_ob_a(i) .gt. after) then
                if(i .le. max_write)then
-                   write(6,71,err=72)i,wmoid(i),stationId(i)
+                   write(6,71,err=72)i,stationId(i)
      1                               ,a9time_a(i),i4time_ob_a(i)
      1                               ,before,after
- 71		   format(i6,i7,1x,a8,' out of time ',a11,3i12)
+ 71		   format(i6,1x,a8,' out of time ',a11,3i12)
                endif
  72            l_reject(i) = .true.
                go to 105
@@ -511,7 +518,7 @@ c
  150	   nn = nn + 1
 
            if(nn .gt. maxsta)then
-              write(6,*)' ERROR in get_local_obs: increase maxsta '
+              write(6,*)' ERROR in get_hydro_obs: increase maxsta '
      1                 ,nn,maxsta
               stop
            endif
@@ -530,11 +537,6 @@ c
            else
                n_obs_g = n_obs_g + 1   ! on grid...count it
            endif
-c
-c.....	Figure out the cloud data.
-c.....     NOTE: Not currently reading cloud data from mesonets.
-c
-           kkk = 0               ! number of cloud layers
 c
 c
 c.....  Convert units for storage.  For those variables with a "change
@@ -619,9 +621,6 @@ c
          endif
          call filter_string(atype(nn))
 c
-         weather(nn)(1:25) = presWeather(i)(1:25) ! present weather
-         call filter_string(weather(nn))
-
 	 reptype(nn)(1:6) = 'LDAD  '            ! report type
 	 wmoid(nn) = ibadflag                   ! WMO ID
 c
