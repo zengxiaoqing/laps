@@ -866,6 +866,7 @@ cdoc                            calls read_multiradar_3dref.
      1                              lat(i,j),lon(i,j),topo(i,j)
      1                             ,azimuth,closest_vxx(i,j),elev
      1                             ,rlat_radar,rlon_radar,rheight_radar)       
+                                closest_radar(i,j) = closest_vxx(i,j) ! initialize
                             endif
 
                         endif
@@ -1173,6 +1174,55 @@ cdoc                            calls read_multiradar_3dref.
         return
         end
 
+
+        subroutine get_radar_horizon(i,j,ni,nj,lat,lon,topo)
+
+        use mem_namelist, ONLY: grid_spacing_m
+
+!       Consider line segment from radar location to present location
+!       This version approximates the great circle from the radar to the 
+!       grid point using a straight line in map projection space
+
+        real lat(ni,nj)
+        real lon(ni,nj)
+        real topo(ni,nj)
+
+        ri_radar = 10.
+        rj_radar = 50.
+        rheight_radar = 1000.
+
+        ri_grid = i
+        rj_grid = j
+
+        dist = sqrt ( (ri_grid-ri_radar)**2 + (rj_grid-rj_radar)**2 )
+        dir = atan3(ri_grid-ri_radar,rj_grid-rj_radar) 
+        sindir = sind(dir)
+        cosdir = cosd(dir)
+
+        delta_dist = 1.
+
+        do ds = 0.,dist,delta_dist
+            dist_i = ds * cosdir
+            dist_j = ds * sindir
+
+            ri = ri_radar + dist_i
+            rj = rj_radar + dist_j
+
+            i = nint(ri)
+            j = nint(rj)
+
+            rheight = topo(i,j)
+
+            call latlon_to_radar(lat(i,j),lon(i,j),topo(i,j)
+     1                          ,azimuth,slant_range,elev_angle
+     1                          ,rlat_radar,rlon_radar,rheight_radar)
+
+            angle_max = max(angle_max,elev_angle)
+
+        enddo ! ds                
+
+        return
+        end
 
         subroutine ground_clutter(
      1              imax,jmax,kmax
