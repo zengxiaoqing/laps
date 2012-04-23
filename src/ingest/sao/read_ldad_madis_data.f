@@ -2,7 +2,7 @@ C
 C  Subroutine to read the file "LDAD automated mesonet data " 
 C
       subroutine read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     maxPSTEntries, code2PST, namePST,
+     +     maxPSTEntries, code1PST, code2PST, namePST,
      +     altimeterQCR, dewpointQCR, firstOverflow, globalInventory, 
      +     nStaticIds, numericWMOid, precipAccumQCR, precipIntensity, 
      +     precipRateQCR, precipType, pressChange3HourQCR, 
@@ -26,7 +26,8 @@ C
 C
       include 'netcdf.inc'
       integer maxSensor, recNum,nf_fid, nf_vid, nf_status
-      integer code2PST(maxPSTEntries), code4PST(maxPSTEntries),
+      integer code1PST(maxPSTEntries), code2PST(maxPSTEntries), 
+     +     code4PST(maxPSTEntries),
      +     altimeterQCR(recNum), dewpointQCR(recNum),
      +     firstOverflow, globalInventory, nStaticIds,
      +     numericWMOid(recNum), precipAccumQCR(recNum),
@@ -1044,6 +1045,22 @@ C
         print *, NF_STRERROR(nf_status),' for windSpeedQCR'
        endif
       endif
+C
+C     Variable        NETCDF Long Name
+C     code1PST      "precip variable definition"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'code1PST',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for code1PST'
+       print *,'Set code1PST to -99'
+       code1PST = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,code1PST)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for code1PST'
+       endif
+      endif
+
 C
 C     Variable        NETCDF Long Name
 C     code2PST      "solarRadiation variable definition"
