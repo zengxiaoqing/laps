@@ -56,6 +56,7 @@
  i2_missing_data=-99,
  r_missing_data=+1e37,
  MAX_RADARS=13,        
+ I_OFFSET_RADAR=-1,
  ref_base=-10.,       
  ref_base_useable=0., 
  r_hybrid_first_gate=0.,
