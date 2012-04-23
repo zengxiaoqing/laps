@@ -1149,7 +1149,8 @@ c
 c.....  Move the 2-d analyses to the 3-d storage array for writing.
 c.....  Check the fields for NaN's and other bad stuff first.
 c
-	print *,' ======================================================='
+	print *,
+     1  ' ======================================================='
 	print *,' u-wind (m/s):'
 	var(1) = 'U'		! u-wind (m/s)
 	units(1) = 'M/S'
@@ -1366,7 +1367,8 @@ c
 	comment(24) = 'TGD (0m AGL)'
 	call move_2dto3d(  tgd_k, data, 24, imax, jmax, num_var)       
 c
-	print *,' ======================================================='
+	print *,
+     1  ' ======================================================='
 c
 c.....  Now actually write the LSX file.
 c
