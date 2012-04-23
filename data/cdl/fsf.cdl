@@ -142,6 +142,17 @@ netcdf fsf {
             psf:lvl_coord="AGL";
             psf:LAPS_units="PA";
 
+        //      LAPS Fcst integrated graupel depth         
+        float
+            lig(record,z,y,x);
+            lig:_FillValue = 1.e+37f;
+            lig:long_name="Integrated Graupel Depth          ";
+            lig:units="kg/m**2";
+            lig:valid_range= 0.f, 1.f;
+            lig:LAPS_var="LIG";
+            lig:lvl_coord="AGL";
+            lig:LAPS_units="KG/M**2";
+
         //      LAPS Fcst integrated cloud liquid depth         
         //      bigfile name = ilw
         float
@@ -684,6 +695,7 @@ netcdf fsf {
             slp_comment(record,z,namelen),
             p_comment(record,z,namelen),
             psf_comment(record,z,namelen),
+            lig_comment(record,z,namelen),
             lil_comment(record,z,namelen),
             lic_comment(record,z,namelen),
             tpw_comment(record,z,namelen),
@@ -774,6 +786,10 @@ netcdf fsf {
         short
             psf_fcinv(record, z);
             psf_fcinv:_FillValue= 0s;
+
+        short
+            lig_fcinv(record, z);
+            lig_fcinv:_FillValue= 0s;
 
         short
             lil_fcinv(record, z);
