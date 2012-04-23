@@ -78,6 +78,7 @@ C
       character*11 stationId(recNum)
       character*4 homeWFO(recNum)
 
+      write(6,*)' subroutine read_madis_hydro_netcdf: recNum = ',recNum
 
 C   Variables of type REAL
 C
@@ -173,6 +174,7 @@ C
      1                    ,badflag)
        endif
       endif
+
 C
 C     Variable        NETCDF Long Name
 C     precip12hr    "12 hour precip accumulation "
@@ -359,6 +361,7 @@ C
      1                    ,badflag)
        endif
       endif
+
 C
 C     Variable        NETCDF Long Name
 C     precip3hr     "3 hour precip accumulation "
@@ -822,6 +825,7 @@ C
         print *, NF_STRERROR(nf_status),' for nStaticIds'
        endif
       endif
+
 C
 C     Variable        NETCDF Long Name
 C     numericWMOid  "numeric WMO identification"
@@ -1257,6 +1261,7 @@ C
         print *, NF_STRERROR(nf_status),' for precipAccumQCR'
        endif
       endif
+
 C
 C     Variable        NETCDF Long Name
 C     prevRecord    
