@@ -175,6 +175,8 @@ if($min_files>0){
 	    $clean_dirs{$what} = ($when<$hist_time)?$when:$hist_time;
 	  }
 	  print "Setting purge for $what from purger.dat to $clean_dirs{$what}\n";
+        }else{
+          print "WARNING: Skipping override $_\n";
 	}
        }
        close(OVERRIDES);
