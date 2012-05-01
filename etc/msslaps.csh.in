@@ -29,7 +29,8 @@ echo "MSSFULLPATH = $MSSPATH/$YYYY/$MONTH"
 
 cd $LAPS_DATA_ROOT
 
-@prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH $DATE noexpand nostatic 48 112
+echo "@prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE lga noexpand nostatic 48 112"
+      @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE lga noexpand nostatic 48 112
 
 mssMkdir -p $MSSPATH/$YYYY/$MONTH
 
