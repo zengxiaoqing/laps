@@ -22,9 +22,15 @@ umask 002
 if ($2 == archive) then
     perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3                      > $LAPS_DATA_ROOT/time/modeltime.dat 
     perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3       -f ascii_time >> $LAPS_DATA_ROOT/time/modeltime.dat 
+
+    perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3                      > $LAPS_DATA_ROOT/time/modelvtime.dat 
+    perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3       -f ascii_time >> $LAPS_DATA_ROOT/time/modelvtime.dat 
 else
     perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3                > $LAPS_DATA_ROOT/time/modeltime.dat 
     perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 -f ascii_time >> $LAPS_DATA_ROOT/time/modeltime.dat 
+
+    perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3                > $LAPS_DATA_ROOT/time/modelvtime.dat 
+    perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 -f ascii_time >> $LAPS_DATA_ROOT/time/modelvtime.dat 
 endif
 
 echo $N_FCST_TIMES > $LAPS_DATA_ROOT/lapsprd/verif/n_fcst_times.dat
@@ -56,8 +62,14 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt V
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:20. '"Sfc Wind Speed"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/ssf_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:20.  "Sfc Wind Speed"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/ssf_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:20. '"Sfc Wind"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/wsf_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:20.  "Sfc Wind"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/wsf_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:10. '"Sfc Wind"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/wsf_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:10.  "Sfc Wind"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/wsf_fcst.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2 '"Incremental Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2  "Incremental Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.:0.2 '"Run Total Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.:0.2  "Run Total Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TPW   0.:4.  '"Integrated Water Vapor"'    "cm"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/tpw_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TPW   0.:4.   "Integrated Water Vapor"     "cm"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/tpw_fcst.log
@@ -76,8 +88,8 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T
 
 # Radar verification........................................................................................
 
-echo "setenv LAPS_A9TIME `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`"
-      setenv LAPS_A9TIME `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`
+echo "setenv LAPS_A9TIME `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`"
+      setenv LAPS_A9TIME `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 
 date -u
 
@@ -106,3 +118,6 @@ date -u
 
 echo "cp $LAPS_DATA_ROOT/time/modeltime.dat $LAPS_DATA_ROOT/time/modeltime.dat.done"
       cp $LAPS_DATA_ROOT/time/modeltime.dat $LAPS_DATA_ROOT/time/modeltime.dat.done
+
+echo "cp $LAPS_DATA_ROOT/time/modelvtime.dat $LAPS_DATA_ROOT/time/modelvtime.dat.done"
+      cp $LAPS_DATA_ROOT/time/modelvtime.dat $LAPS_DATA_ROOT/time/modelvtime.dat.done
