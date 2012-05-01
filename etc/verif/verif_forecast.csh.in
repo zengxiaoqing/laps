@@ -85,6 +85,16 @@ echo "VAR = $VAR"
 echo "FILE = $FILE"  
 ls -l $FILE                                                     
 
+# Stats Files In General:
+# 1st column is mean forecast value at the stations
+# 2nd column is mean observed value at the stations
+# 3rd column is RMSE
+#
+# For WSF (Surface Wind) and W3 (3-D Wind)
+# 1st column is the rms of U
+# 2nd column is the rms of V
+# 3rd column is RMS vector wind
+
 #@ NLINE = $NLINE + 1
 
 # obtain xrange times from the data file
