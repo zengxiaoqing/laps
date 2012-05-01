@@ -5,14 +5,16 @@
 #  Script to purge a domain's fcst2d archive directory on the
 #  LAPS web page.
 
+require "@prefix@/etc/laps_tools.pm";
+
 require 5;
 use strict;
 
 # Allow some options
 
 use Getopt::Std;
-use vars qw($opt_d $opt_h $opt_t);
-getopts('d:ht:');
+use vars qw($opt_d $opt_h $opt_t $opt_f);
+getopts('d:ht:f');
 
 if ($opt_h){
   print "Usage:  purge_w3_fcst2d.pl [options] domain model\n";
@@ -30,6 +32,9 @@ if ($opt_h){
   print "         -t hours\n";
   print "            Any directory older than this many hours will\n";
   print "            be purged.  Default value is 48.\n";
+  print "\n";
+  print "         -f \n";
+  print "            Purge model run directories having the format YYYYMMDDHH\n";
   exit;
 }
  
@@ -88,20 +93,34 @@ $yday="0".$yday while (length($yday)<3);
 $hour = "0".$hour while(length($hour)<2);
 $min = "00";  # Truncate to this hour
 
-my $thresh = $year2.$yday.$hour.$min;
+my $thresh;
+
+if (defined $opt_f) {
+    my @mmdd = laps_tools::JJJ2MMDD($yday,$year);
+    $mmdd[0] = "0".$mmdd[0] while(length($mmdd[0])<2);
+    $mmdd[1] = "0".$mmdd[1] while(length($mmdd[1])<2);
+    print "yday year mmdd is $yday $year $mmdd[0] $mmdd[1]\n";
+    $thresh = $year.$mmdd[0].$mmdd[1].$hour;
+}else{
+    $thresh = $year2.$yday.$hour.$min;
+}
 
 # Change to the purge directory and read through list of subdirectories,
 # purging those with a name older than thresh
+
+print "Thresh is $thresh\n";
 
 chdir "$purgedir";
 opendir (PDIR, "$purgedir");
 foreach (readdir PDIR) {
   if (-d "$_") {
-    if (/^(\d\d\d\d\d\d\d\d\d)$/){
+    if (/^(\d\d\d\d\d\d\d\d\d)$/ || /^(\d\d\d\d\d\d\d\d\d\d)$/){
       my $dirtime = $1;
       if ($dirtime < $thresh){
         print "Purging $dirtime\n";
         system("rm -rf $dirtime");
+      }else{
+        print "not purging $dirtime\n";
       }
     }
   }
