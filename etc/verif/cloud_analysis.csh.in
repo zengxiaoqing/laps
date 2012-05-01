@@ -18,12 +18,59 @@ setenv STARTTIME2 `head -1 $FILE | cut -c13-23`; echo $STARTTIME2
 setenv STOPTIME1  `tail -1 $FILE | cut -c1-11` ; echo $STOPTIME1
 setenv STOPTIME2  `tail -1 $FILE | cut -c13-23`; echo $STOPTIME2
 
+setenv YYYY       `head -1 $FILE | cut -c8-11` ; echo $YYYY
+setenv MON        `head -1 $FILE | cut -c4-6`  ; echo $MON
+setenv DD         `head -1 $FILE | cut -c1-2`  ; echo $DD
+setenv HH         `head -1 $FILE | cut -c13-14`; echo $HH
+setenv MM         `head -1 $FILE | cut -c16-17`; echo $MM
+
+# Setup True Type fonts and related environment variables
+if (-d /usr/X11R6/lib/X11/fonts/truetype) then
+    setenv GDFONTPATH /usr/X11R6/lib/X11/fonts/truetype
+else if (-d /usr/share/fonts/bitstream-vera) then
+    setenv GDFONTPATH /usr/share/fonts/bitstream-vera  
+else
+    setenv GDFONTPATH /dev/null
+endif
+#setenv GDFONTPATH /dev/null
+
+setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
+setenv FONTFILE $GDFONTPATH/$GNUPLOT_DEFAULT_GDFONT.ttf
+
+if (-e $FONTFILE) then
+    echo "GNUPLOT FONT is $FONTFILE"                                    
+#   setenv TERM_FONT 'enhanced font "VeraBd, 12"'
+    setenv TERM_FONT 'enhanced'
+    setenv DEFAULT_FONT 'font "VeraBd,12"'
+    setenv TITLE_FONT 'font "VeraBd,20"'
+    setenv MEMBER_FONT 'font "VeraBd,16"'
+#   setenv KEY_FONT 'font "VeraBd,8"'
+    setenv KEY_WIDTH -16.5
+    setenv KEY_HEIGHT 0.3
+    setenv KEY_SPACING 0.7
+    setenv TH "{/VeraBd=8 "
+    setenv TF \}
+else
+    echo "FONTFILE $FONTFILE does not exist"
+    setenv TERM_FONT ""                             
+    setenv DEFAULT_FONT ""
+    setenv TITLE_FONT ""
+    setenv MEMBER_FONT ""
+    setenv KEY_FONT ""
+    setenv KEY_WIDTH 1
+    setenv KEY_HEIGHT 0
+    setenv KEY_SPACING 1.0
+    setenv TH ""             
+    setenv TF ""
+endif
+
 # Construct gnuplot .gp file
 setenv GNUPLOTFILE $LOGDIR/cloud_analysis.gp
 setenv DQUOTE \"
-echo 'set terminal png size 1200,800'                    > $GNUPLOTFILE
+echo 'set terminal png '$TERM_FONT' size 1200,800'                    > $GNUPLOTFILE
 echo 'set xdata time'                                   >> $GNUPLOTFILE
 echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                  >> $GNUPLOTFILE
+echo 'set bmargin 3'                                    >> $GNUPLOTFILE
 echo 'set output '$DQUOTE$IMGDIR'/load.png'$DQUOTE      >> $GNUPLOTFILE
 echo '' >> $GNUPLOTFILE
 echo '# time range must be in same format as data file' >> $GNUPLOTFILE
@@ -31,18 +78,21 @@ echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' 
 echo 'set yrange [0:1000]'                              >> $GNUPLOTFILE
 echo 'set grid'                                         >> $GNUPLOTFILE
 echo 'set datafile missing "-99.900"'                   >> $GNUPLOTFILE
-echo 'set xlabel "Date Time"'                           >> $GNUPLOTFILE
-echo 'set ylabel "GHI (W/m**2)"'                        >> $GNUPLOTFILE
-echo 'set title "Global Horizontal Irradiance Observed vs Analyzed"' >> $GNUPLOTFILE
+#echo 'set xlabel "Date Time"'    $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
+echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
+echo 'set title "Global Horizontal Irradiance Observed vs Analyzed"' $TITLE_FONT >> $GNUPLOTFILE
 echo 'set key left box'                                 >> $GNUPLOTFILE
+echo 'set key spacing' $KEY_SPACING                                                                    >> $GNUPLOTFILE
+echo 'set key height' $KEY_HEIGHT                                                                      >> $GNUPLOTFILE
+echo 'set key width' $KEY_WIDTH                                                                        >> $GNUPLOTFILE
 echo 'set style line 1 lt 1 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
 echo 'set style line 2 lt 2 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
 echo 'set style line 3 lt 3 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
 echo 'set style line 4 lt 4 lw 3 pt 7 ps 1.0'           >> $GNUPLOTFILE
-echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title "Analyzed"  with linespoints ls 1          , \' >> $GNUPLOTFILE
-echo        $DQUOTE$FILE$DQUOTE' using 1:4 title "Observed"  with linespoints ls 2          , \' >> $GNUPLOTFILE
-echo        $DQUOTE$FILE$DQUOTE' using 1:5 title "RMSE"      with linespoints ls 3          , \' >> $GNUPLOTFILE
-echo        $DQUOTE$FILE$DQUOTE' using 1:6 title "Clear sky" with      points ls 4             ' >> $GNUPLOTFILE
+echo 'plot '$DQUOTE$FILE$DQUOTE' using 1:3 title '$DQUOTE"$TH"' Analyzed '"$TF"$DQUOTE' with linespoints ls 1          , \' >> $GNUPLOTFILE
+echo        $DQUOTE$FILE$DQUOTE' using 1:4 title '$DQUOTE"$TH"' Observed '"$TF"$DQUOTE' with linespoints ls 2          , \' >> $GNUPLOTFILE
+echo        $DQUOTE$FILE$DQUOTE' using 1:5 title '$DQUOTE"$TH"' RMSE     '"$TF"$DQUOTE' with linespoints ls 3          , \' >> $GNUPLOTFILE
+echo        $DQUOTE$FILE$DQUOTE' using 1:6 title '$DQUOTE"$TH"' Clear sky'"$TF"$DQUOTE' with      points ls 4             ' >> $GNUPLOTFILE
 
 
 # Run gnuplot
@@ -52,6 +102,14 @@ echo " "
 echo "outputs..."  
 ls -l $GNUPLOTFILE
 ls -l $IMGDIR/load.png
+
+if ($HH == 06 && $MM == 00) then # save daily image
+    echo "saving daily image"
+    cp $IMGDIR/load.png $IMGDIR/$YYYY$MON$DD.png
+    ls -l $IMGDIR/$YYYY$MON$DD.png
+else
+    echo "skip saving daily image"
+endif
 
 # Create summary file
 cd $LOGDIR
