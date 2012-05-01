@@ -9,6 +9,12 @@ DELAY=$3
 #LOCAL_WRF_ROOT=/lfs0/projects/hmtb/hwt_domains/hrrr_conus
 #LAPS_DATA_ROOT=/pan1/projects/dlaps/analysis/wiap 
 
+# Purge local WRF_ROOT subdirectories
+/usr/bin/perl /home/oplapb/builds/laps/etc/purge_w3_fcst2d.pl -f -t 72 -d $LOCAL_WRF_ROOT modelroot dummy
+
+# Purge local WRF_ROOT logs                 
+/usr/bin/perl /home/oplapb/builds/laps/etc/purger.pl -r -t 3.0 $LOCAL_WRF_ROOT/log                  
+
 REMOTE_WRF_ROOT=/whome/rtrr/hrrr
 
 # Set model run time according to latest directory in REMOTE_WRF_ROOT
