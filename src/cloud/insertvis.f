@@ -401,6 +401,8 @@ cdis
      1                             ,solar_alt,solar_az 
      1                             ,grid_spacing_m,r_missing_data)
 
+        include 'trigd.inc'
+
 !       Determine shadow regions of the input 3-D cloud array
 
         real r_shadow_3d(ni,nj,nk)
