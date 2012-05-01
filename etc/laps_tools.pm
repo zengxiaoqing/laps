@@ -362,6 +362,8 @@ verif/VSF verif/VSF/pt
 verif/SSF verif/SSF/pt
 verif/WSF verif/WSF/pt
 verif/TPW verif/TPW/pt
+verif/R01 verif/R01/pt
+verif/RTO verif/RTO/pt
 verif/U3  verif/U3/pt
 verif/V3  verif/V3/pt
 verif/W3  verif/W3/pt
