@@ -98,7 +98,7 @@ c
                 csctot(i,j)=0.0
              endif
              rmxlcv=max(lcv(i,j),rmxlcv)
-             rmnlcv=min(lcv(i,j),rmnlcb)
+             rmnlcv=min(lcv(i,j),rmnlcv)
            enddo
            enddo
            nmpts=(imax*jmax)-nspts-nrpts
