@@ -509,7 +509,9 @@ AC_OUTPUT(src/include/trigd.inc
           etc/send_lapsprep.pl
           etc/sfc.pl
           etc/systime.pl
+          etc/tarlapstime.sh
           etc/temp.pl
+          etc/timeconv.pl
           etc/wfo-cwa-latlon-bounds.pl
           etc/wfo_post.pl
           etc/wfo-relocalization.pl
