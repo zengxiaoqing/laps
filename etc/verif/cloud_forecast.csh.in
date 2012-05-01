@@ -109,7 +109,8 @@ echo 'set datafile missing "-99.900"'                                     >> $GN
 echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
 echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
 echo 'set title "Global Horizontal Irradiance Observed vs Forecast ('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
-echo 'set key left box'                                                  >> $GNUPLOTFILE
+#echo 'set key left box'                                                  >> $GNUPLOTFILE
+echo 'set key box'                                                        >> $GNUPLOTFILE
 echo 'set key spacing' $KEY_SPACING                                                                    >> $GNUPLOTFILE
 echo 'set key height' $KEY_HEIGHT                                                                      >> $GNUPLOTFILE
 echo 'set key width' $KEY_WIDTH                                                                        >> $GNUPLOTFILE
