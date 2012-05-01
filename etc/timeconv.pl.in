@@ -1,0 +1,191 @@
+#!@PERL@
+# This script writes out the date to standard output in various formats
+#
+# Command line arguments
+#
+# -i (optional)        format to print date in, yydddhhmm     (default if not specified)
+#                                               mm            (month)
+#                                               yyyymmdd_hhmm (13 character date)
+#                                               yyyymmddhh
+#                                               yyyy_mm_dd_hhmm (lfmpost.pl input format)
+#
+# -o (optional)        format to print date in, yydddhhmm     (default if not specified)
+#                                               mm            (month)
+#                                               yyyymmdd_hhmm (13 character date)
+#                                               yyyymmddhh
+#                                               yyyy_mm_dd_hhmm (lfmpost.pl input format)
+#
+# -a (required)        input time argument
+# 
+               
+use strict;
+use English;
+use vars qw($opt_a $opt_o $opt_i);
+use Getopt::Std;
+
+umask 002;
+getopts('a:i:o:');
+
+my $initial_time = time();
+
+my $LAPSROOT="@prefix@";
+
+my $LAPS_DATA_ROOT;
+
+require "$LAPSROOT/etc/laps_tools.pm";
+
+my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+
+my ($archive_time, $i4time);
+
+if(defined $opt_a){
+   if(length($opt_a) == 16){ # dd-mmm-yyyy-hhmm (Ascii time format)
+      my $mon=0;
+      my ($day, $month, $year, $hoursmin)=split /\-/, $opt_a;
+      my $hours   = substr($hoursmin,0,2);
+      my $minutes = substr($hoursmin,2,2);
+      foreach (@MON){
+       if($_ eq (uc $month)){last;}
+       $mon++;
+      }
+      $mon=$mon+1;
+      $mon="0".$mon if(length($mon)<2);
+
+      $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
+
+   }elsif(length($opt_a) == 10){ # yyyymmddhh (model run time)
+      my $year = substr($opt_a,0,4); 
+      my $mon = substr($opt_a,4,2);
+      my $day = substr($opt_a,6,2);
+      my $hours = substr($opt_a,8,2);
+      $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,"00","00");
+#     my $doy = &laps_tools::get_julian_day($day,$month,$year);
+#     $archive_time = &laps_tools::a9time_to_i4time($a9time);
+
+   }elsif(length($opt_a) == 9){ # yydddhhmm (a9time format)
+      my $a9time = $opt_a;
+      $i4time=&laps_tools::a9time_to_i4time($a9time);
+
+   }elsif(length($opt_a) == 13){ # yydddhhmmHHMM (a13time format)
+      my $a9time = substr($opt_a,0,9);
+      my $hh     = substr($opt_a,9,2);
+      my $mm     = substr($opt_a,11,2);
+      $i4time = &laps_tools::a9time_to_i4time($a9time) + $hh * 3600 + $mm * 60;
+
+   }else{
+      print "USAGE: use -A to input time with the following format\n";
+      print "dd-mmm-yyyy-hhmm. Eg., 28-Aug-2002-1200 \n";
+      exit;
+   }
+#  $archive_time = &seconds_since_1970($opt_a,$LAPSROOT,$LAPS_DATA_ROOT);
+}
+
+#
+#  - The second argument is the time delay in hours to 
+#  set the systime.dat file, if you're data arrives more than 1 hour 
+#  behind it's valid time set this variable to delay the laps cycle.
+#
+#  - The '1' (last input) tells sub systime to write ctime.dat and systime.dat; otherwise, not. 
+#
+#  - If archive time is defined and set to i4time70, then yydddhhmm corresponds exactly to archive_time
+#
+
+# Try new version of 'systime' that handles when $cycle_time exceeds 1 hour (call it 'sys_time')
+
+#my $yydddhhmm=&laps_tools::sys_time($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
+
+#print "opt_f is $opt_f\n";
+
+# default input is yydddhhmm
+
+#my $yydddhhmm=&laps_tools::sys_time($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
+
+my $yydddhhmm=&laps_tools::i4time_to_a9time($i4time);
+
+if($opt_o eq "mm"){
+   my $ddd = substr($yydddhhmm,2,3);
+   my $yy  = substr($yydddhhmm,0,2);
+   my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
+   my $mm = @mmmdd[0];
+   $mm="0".$mm if(length($mm)<2);
+   print "$mm\n";
+
+}elsif($opt_o eq "yyyymmdd_hhmm"){
+   my $yy  = substr($yydddhhmm,0,2);
+   my $yyyy;
+   if($yy < 60){
+       $yyyy = "20".$yy
+   }else{
+       $yyyy = "19".$yy
+   }
+
+   my $ddd = substr($yydddhhmm,2,3);
+   my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
+   my $mm = @mmmdd[0];
+   $mm="0".$mm if(length($mm)<2);
+
+   my $dd = @mmmdd[1];
+   $dd="0".$dd if(length($dd)<2);
+
+   my $hhmm = substr($yydddhhmm,5,4);
+
+   print "$yyyy$mm$dd"."_"."$hhmm\n";
+
+}elsif($opt_o eq "yyyy_mm_dd_hhmm"){
+   my $yy  = substr($yydddhhmm,0,2);
+   my $yyyy;
+   if($yy < 60){
+       $yyyy = "20".$yy
+   }else{
+       $yyyy = "19".$yy
+   }
+
+   my $ddd = substr($yydddhhmm,2,3);
+   my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
+   my $mm = @mmmdd[0];
+   $mm="0".$mm if(length($mm)<2);
+
+   my $dd = @mmmdd[1];
+   $dd="0".$dd if(length($dd)<2);
+
+   my $hhmm = substr($yydddhhmm,5,4);
+
+   print "$yyyy"."-"."$mm"."-"."$dd"."-"."$hhmm\n";
+
+}elsif($opt_o eq "yyyymmddhh"){
+   my $yy  = substr($yydddhhmm,0,2);
+   my $yyyy;
+   if($yy < 60){
+       $yyyy = "20".$yy
+   }else{
+       $yyyy = "19".$yy
+   }
+
+   my $ddd = substr($yydddhhmm,2,3);
+   my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
+   my $mm = @mmmdd[0];
+   $mm="0".$mm if(length($mm)<2);
+
+   my $dd = @mmmdd[1];
+   $dd="0".$dd if(length($dd)<2);
+
+   my $hh = substr($yydddhhmm,5,2);
+
+   print "$yyyy$mm$dd$hh\n";
+
+}elsif($opt_o eq "ascii_time"){
+   my @i4time = &laps_tools::a9time_to_i4time($yydddhhmm);
+   my ($yr,$mo,$dy,$hr,$mn,$sc) = &laps_tools::i4time_to_date($i4time[0]-315619200);
+#  print "ascii time selected\n";
+#  print "$yr,$mo,$dy,$hr,$mn,$sc\n";
+   $hr="0".$hr if(length($hr)<2);
+   $mn="0".$mn if(length($mn)<2);
+   print "$mo/$dy/$yr $hr:$mn\n";
+#  print "$yydddhhmm\n";
+
+}else{
+   print "$yydddhhmm\n";
+
+}
+
+
