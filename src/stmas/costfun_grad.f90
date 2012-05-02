@@ -707,8 +707,8 @@ SUBROUTINE COSTFUNCT2
       ENDDO
       ENDDO
       ENDDO
-      COSTFUN=COSTFUN+(HT-OBSVALUE(O))*(HT-OBSVALUE(O))!/(NOBSTAT(S)*1.0)!!!modified by shuyuan   20101028
-      CS(S)=CS(S)+0.5*(HT-OBSVALUE(O))*(HT-OBSVALUE(O))!/(NOBSTAT(S)*1.0)!!!modified by shuyuan   20101028
+      COSTFUN=COSTFUN+(HT-OBSVALUE(O))*(HT-OBSVALUE(O)) !/(NOBSTAT(S)*1.0)!!!modified by shuyuan   20101028
+      CS(S)=CS(S)+0.5*(HT-OBSVALUE(O))*(HT-OBSVALUE(O)) !/(NOBSTAT(S)*1.0)!!!modified by shuyuan   20101028
     ENDDO
   ENDDO
 
@@ -944,7 +944,7 @@ SUBROUTINE COSTGRADT2
         M=M+1
         GRADINT(I,J,K,T,S)=GRADINT(I,J,K,T,S)  &
         +(HT-OBSVALUE(O))*OBSCOEFF(M,O)!!!modified by shuyuan   20101028
-        ! +(HT-OBSVALUE(O))*OI*OBSCOEFF(M,O)/(NOBSTAT(S)*1.0)
+        ! +(HT-OBSVALUE(O))*OBSCOEFF(M,O)/(NOBSTAT(S)*1.0)
       ENDDO
       ENDDO
       ENDDO
