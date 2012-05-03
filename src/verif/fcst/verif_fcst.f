@@ -1,4 +1,4 @@
-
+  
         program verif_fcst_main
 
         use mem_namelist, ONLY: read_namelist_laps
