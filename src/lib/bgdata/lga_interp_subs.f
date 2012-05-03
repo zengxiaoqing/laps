@@ -158,6 +158,7 @@ c
 c
          if(istatus.ne.1) then
             print *, 'ERROR returned from read_laps, time1'
+            print *, 'n / ngrids = ',n,ngrids                        
             stop 'lga_interp'
          endif
 
@@ -166,6 +167,7 @@ c
      .        grid2,istatus)
          if(istatus.ne.1) then
             print *, 'ERROR returned from read_laps, time2'
+            print *, 'n / ngrids = ',n,ngrids                        
             stop 'lga_interp'
          endif
 c
