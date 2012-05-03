@@ -1,6 +1,8 @@
 
         subroutine equ_to_altaz_d(dec,ha,phi,alt,az)
 
+        include 'trigd.inc'
+
         IMPLICIT REAL(A-Z)
 
         sindec = SIND(dec)
