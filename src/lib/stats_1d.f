@@ -54,7 +54,8 @@ c          x               RA        I
 c          y               RA        I    
 c          b_t             R         O    intercept (y = ax + b)
 c          a_t             R         O    slope
-c          xbar            R         O    Mean elevation of the stations.
+c          xbar            R         O    Mean value of the stations.
+c          ybar            R         O    Mean value of the gridded field
 c
 c       User Notes:
 c
