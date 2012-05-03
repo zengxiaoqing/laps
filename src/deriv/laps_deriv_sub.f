@@ -1057,7 +1057,9 @@ c read in laps lat/lon and topo
             write(6,*)' Computing Precip Concentration'
 
 !           Calculate 3D Precip Concentration in kg/m**3
-            call cpt_pcp_cnc(radar_ref_3d,temp_3d,cldpcp_type_3d    ! Input
+            call cpt_pcp_cnc(radar_ref_3d,temp_3d           ! Input
+     1                                  ,rh_3d_pct          ! Input
+     1                                  ,cldpcp_type_3d     ! Input
      1                                  ,NX_L,NY_L,NZ_L     ! Input
      1                                  ,c_z2m              ! Input
      1                                  ,pres_3d            ! Input
