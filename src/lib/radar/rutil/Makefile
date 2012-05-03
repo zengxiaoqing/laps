@@ -1,80 +1,60 @@
-#dis   
-#dis    Open Source License/Disclaimer, Forecast Systems Laboratory
-#dis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
-#dis    
-#dis    This software is distributed under the Open Source Definition,
-#dis    which may be found at http://www.opensource.org/osd.html.
-#dis    
-#dis    In particular, redistribution and use in source and binary forms,
-#dis    with or without modification, are permitted provided that the
-#dis    following conditions are met:
-#dis    
-#dis    - Redistributions of source code must retain this notice, this
-#dis    list of conditions and the following disclaimer.
-#dis    
-#dis    - Redistributions in binary form must provide access to this
-#dis    notice, this list of conditions and the following disclaimer, and
-#dis    the underlying source code.
-#dis    
-#dis    - All modifications to this software must be clearly documented,
-#dis    and are solely the responsibility of the agent making the
-#dis    modifications.
-#dis    
-#dis    - If significant modifications or enhancements are made to this
-#dis    software, the FSL Software Policy Manager
-#dis    (softwaremgr@fsl.noaa.gov) should be notified.
-#dis    
-#dis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
-#dis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
-#dis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
-#dis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
-#dis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
-#dis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
-#dis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
-#dis   
+# User options are in src/include/makefile.inc
+# This Makefile is designed for gnu make version 3.75 or newer
+# Please report problems to lapsbugs@fsl.noaa.gov
+#
+#
 
 SRCROOT=../../../..
 
+
 include $(SRCROOT)/src/include/makefile.inc
 
-RM=rm -f 
+KRCFLAGS=-g $(INC)
+
+DRTUFLAG = -Drtu
+
+
+
+
+
+
+
 
 .SUFFIXES:
+.SUFFIXES: .o .c .f .f90 .a
 
-.SUFFIXES:              .f90 .F90 .o
-
-LIB=librutil.a
-DEBUGLIB=libdebugrutil.a
-ARCHIVE = ar rv
-
-.F90.o:
-			$(RM) $@
-			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.F90
-			$(ARCHIVE) $(LIB) $(<:.F90=.o)
-
-.f90.o:
-			$(RM) $@
-			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.f90
-			$(ARCHIVE) $(LIB) $(<:.f90=.o)
+LIB      = librutil.a
+DEBUGLIB = libdebugrutil.a
 
 
-FMOD = kessler.o
 
-all:			lib
 
-lib:			$(LIB)
+SRC= \
+    kessler.f90 st4_driver.f90 dbzcalc.f       
 
-$(LIB):			$(FMOD)
-			$(RANLIB) $(LIB)
-			$(RM) *.o
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
 
-debug:	
-	($(RM) *.o *.mod ; $(MAKE) lib	\
- 	"LIB	=	$(DEBUGLIB)" 	\
-	"FFLAGS =	$(DBFLAGS)" 	)
+
+all: lib
+
+lib: $(LIB)
+
+$(LIB): $(ARCHIVE) 
+	$(RANLIB) $@
+
+debug: $(SRC)
+	$(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
+	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
 install: lib
 
-
 clean:
-			$(RM) $(FMOD) *.a core *.mod
+	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
+
+
+distclean: clean
+
+
+.f90.o:;    $(FC) $(DBFLAGS) $(FREE) $(STINC) -c $*.f90
+.f.o:;      $(FC) $(DBFLAGS) -c $*.f
