@@ -159,6 +159,7 @@ if($returnAddress =~ /noaa\.gov/) {
    $lvl_access = 2;
 } else {
    $lvl_access = 1;
+#  $lvl_access = 2; # for testing
 }
 
 if(! -e "/w3/lapb"){ # Being run outside of ESRL/GSD/FAB
@@ -177,7 +178,8 @@ if(@sources[0] =~ "wrf" || @sources[0] =~ "arw" || @sources[0] =~ "nmm" || @sour
         $default_title="@sources[0]";
     }
 } else {
-    $default_title="FSL/LAPS Data Display (On-the-fly)";
+#   $default_title="FSL/LAPS Data Display (On-the-fly)";
+    $default_title="@domains[0] (On-the-fly)";
 }
 
 print "<head><title>$default_title</title></head>";
@@ -245,6 +247,7 @@ my $nanims = 1;
 my $ntimes = 1;
 my $nframes = 0;
 my $geom;
+my $i4time_fcst;
 
 my $domain_first;
 $domain =~ /(.*)/;
@@ -352,17 +355,19 @@ if($domain_first =~ "tw_" || $domain_first =~ "tai" || $domain_first =~ "th" || 
 # Obtain cycle time 
 my $laps_cycle_time,$model_fcst_intvl,$cycle_time;
 my @cycle_array;
+
+$domain_nl = "nest7grid.parms";
+if(-e "$laps_data_root/static/nest7grid.parms"){
+    $nl_var="model_fcst_intvl";
+    @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
+    $model_fcst_intvl=@cycle_array[0];
+}
+
 if ($frames_safe > 1 || $frames_safe =~ "auto"){ 
     if(-e "$laps_data_root/static/nest7grid.parms"){
-        $domain_nl = "nest7grid.parms";
-
         $nl_var="laps_cycle_time";
         @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
         $laps_cycle_time=@cycle_array[0];
-
-        $nl_var="model_fcst_intvl";
-        @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
-        $model_fcst_intvl=@cycle_array[0];
 
         if($frames_safe eq "auto-6"){
             $cycle_time=$laps_cycle_time * 6;
@@ -445,10 +450,16 @@ EOI
 
 my $n_sources_fields = 0;
 foreach $source (@sources) {
-    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "mean" || "$source" =~ "WRF" || "$source" =~ "spin" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep" ){
+    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "mean" || "$source" =~ "WRF" || "$source" =~ "jinx" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep" ){
         $n_sources_fields++
     }
     if($source eq "bkgnd" || $source eq "analysis" || $source eq "balanced" ){
+        $n_sources_fields++
+    }
+    if($source eq "obs" && @fields[0] eq "REF_MAX"){
+        $n_sources_fields++
+    }
+    if($source eq "obs" && @fields[0] eq "REFLCT"){
         $n_sources_fields++
     }
 }
@@ -525,7 +536,7 @@ if($err == 0) {
 # Determine if one of the sources is a forecast, if so obtain $a9time from the $systime
   $fcst=0;
   foreach $source (@sources) {
-    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "mean" || "$source" =~ "WRF" || "$source" =~ "bkgnd" || "$source" =~ "spin" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep" ){
+    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "mean" || "$source" =~ "WRF" || "$source" =~ "bkgnd" || "$source" =~ "jinx" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep" ){
         $fcst=1;
     }
   }
@@ -539,7 +550,7 @@ if($err == 0) {
 
         my $i4time_valid = &laps_tools::a9time_to_i4time($a9time_orig);
         my $i4time_initial = &laps_tools::a9time_to_i4time($forecast_time);
-        my $i4time_fcst = $i4time_valid - $i4time_initial;
+        $i4time_fcst = $i4time_valid - $i4time_initial;
 #       print " forecast seconds = $i4time_fcst";
 #       print " auto cycle_time = $cycle_time";
         $frames_safe = ($i4time_fcst / $cycle_time) + 1;
@@ -630,7 +641,7 @@ if($err == 0) {
 
         my $i4time_valid = &laps_tools::a9time_to_i4time($a9time_safe);
         my $i4time_initial = &laps_tools::a9time_to_i4time($forecast_time);
-        my $i4time_fcst = $i4time_valid - $i4time_initial;
+        $i4time_fcst = $i4time_valid - $i4time_initial;
 #       print " forecast seconds = $i4time_fcst";
         my $fcsthh = int($i4time_fcst / 3600);
         $fcsthh = "0".$fcsthh while(length($fcsthh)<2);     
@@ -646,7 +657,7 @@ if($err == 0) {
     }
 
 #   Correct zoom_safe if it is invalid
-#   if($zoom_safe < 1.00 && @pressure_levels[0] != "xsect"){$zoom_safe = 1.00;}
+#   if($zoom_safe > 50. && @pressure_levels[0] != "xsect"){$zoom_safe = 1.00;}
 
     my $a9time_wgi = $a9time_safe;
     $a9time_wgi =~ /(\d\d\d\d\d\d\d\d\d)/;
@@ -846,9 +857,9 @@ if($err == 0) {
 
                   next if (($field eq "ht" || $field eq "HT") && $n_levels > 1 && $level eq "sfc/2d");
 
-                  if("$level" eq "sndg" && "$source" =~ "obs"){
-                      print "<h2>Error: $source cannot be selected with sndg...</h2>";
-                  }
+#                 if("$level" eq "sndg" && "$source" =~ "obs"){
+#                     print "<h2>WARNING: sndg $source is under construction...</h2>";
+#                 }
 
                   if ("$level" eq "xsect" && $n_levels > 1){
                       print "<h2>Error: xsect cannot be combined with other levels...</h2>";
@@ -858,7 +869,7 @@ if($err == 0) {
                       print "<h2>Error: sndg cannot be combined with other levels...</h2>";
                   }
 
-                  if($overlay == 0){
+                  if($overlay == 0 || "$level" eq "sndg"){
                       if("$level" eq "xsect"){
                           $sect = "xsect";
                           printf LAPSPLOT "xz\n";
@@ -867,13 +878,27 @@ if($err == 0) {
                           printf LAPSPLOT "$xcen_safe,$ycen_safe\n";
                       }elsif("$level" eq "sndg"){
                           $sect = "sndg";
-                          printf LAPSPLOT "s\n";
-                          printf LAPSPLOT "$xcen_safe\n";
-                          printf LAPSPLOT "$ycen_safe\n";
+#                         if($overlay > 0){
+#                             printf LAPSPLOT "q\n";
+#                         }
+                          if($overlay == 0){
+                             printf LAPSPLOT "sz\n";
+                             printf LAPSPLOT "$size_safe\n";
+                             printf LAPSPLOT "$xcen_safe\n";
+                             printf LAPSPLOT "$ycen_safe\n";
+                          }
+
+                          if("$source" =~ "obs"){
+                              printf LAPSPLOT "1\n";
+                          }else{
+                              printf LAPSPLOT "0\n";
+                          }
+
                       }else{
                           $sect = "hsect";
                           printf LAPSPLOT "hz\n";
                           if($zoom_safe < 1.00){$zoom_safe = 1.00;}
+                          if($zoom_safe > 50.0){$zoom_safe = 1.00;}
 
 #                         $zoom_lapsplot = $zoom_safe * ( $density_safe**2 );
 #                         printf LAPSPLOT "$zoom_safe,$density_safe\n";
@@ -1026,7 +1051,7 @@ if($err == 0) {
                           }else{
                               $animate = $nmontage;
                           }
-                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && $n_fields_uc == 1 && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level eq $pressure_levels[0]){ # montage multiple levels
+                      }elsif($montage == 1 && $domain eq $domain_first && $n_sources_fields == 1 && $n_fields_uc == 1 && $field eq $fields[0] && ( ! ($field =~ "SAT") ) && $level eq $pressure_levels[0] && $source ne "obs"){ # montage multiple levels
                           $nframes++;
                           print "multiple levels level/pressure_level(0) is $level $pressure_levels[0]<br>\n";
                           if($nframes > 1){
@@ -1039,7 +1064,7 @@ if($err == 0) {
                               $nmontage++;
                           }
 #                     }elsif($montage == 1 && $nframes > 1 && $field eq uc($field)){
-                      }elsif($montage == 1 && $field eq uc($field)){
+                      }elsif($montage == 1 && $field eq uc($field) && $source ne "obs"){
                           $nframes++;
                           print "montage general case: $nframes $a9time_safe $a9time_last $domain $source $field $level<br>\n";
 #                         if($frames == $frames_safe || $nframes == 1){ 
@@ -1049,6 +1074,10 @@ if($err == 0) {
                           }else{ # "q" will do a frame advance
                              printf LAPSPLOT "fc\n"; 
                           }
+#                         This change may help with obs montages, and may hurt with multiple domains and sources
+#                         if($i_montage < 1){
+#                             $animate = "yes";
+#                         }
                       }else{
                           printf LAPSPLOT "fc\n"; 
                       }
@@ -1065,7 +1094,7 @@ if($err == 0) {
                   $overlay = $overlay + 1;
                   $sounding = $sounding + 1;
 
-                  if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "mean" || "$source" =~ "WRF" || "$source" =~ "spin" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep"){
+                  if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "arw" || "$source" =~ "nmm" || "$source" =~ "mean" || "$source" =~ "WRF" || "$source" =~ "jinx" || "$source" =~ "hot" || "$source" =~ "gec" || "$source" =~ "gep"){
                       if("$level" eq "sfc/2d"){                # fsf sfc forecast
                           if   ("$field" eq "p_msl" ) { 
                               printf LAPSPLOT "bs\n"; 
@@ -1383,6 +1412,18 @@ if($err == 0) {
 
                           }elsif("$field" eq "cld_ice"){ 
                               printf LAPSPLOT "ie\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+
+                          }elsif("$field" eq "CLD_CND"){ 
+                              printf LAPSPLOT "ini\n"; 
+                              printf LAPSPLOT "f\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+
+                          }elsif("$field" eq "cld_cnd"){ 
+                              printf LAPSPLOT "in\n"; 
                               printf LAPSPLOT "f\n"; 
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
@@ -2617,13 +2658,15 @@ if($err == 0) {
 
                 } # if level
            
-            }elsif("$source" eq "obs"){
+#           }elsif("$source" eq "obs"){
+            }elsif("$source" eq "obs" && $field eq $fields[$n_fields-1]){
                 if("$level" eq "sfc/2d"){                                         # Sfc Obs
                     print "field, obs_sfc = $field $obs_sfc \n";
 
                     if($obs_sfc eq "none" || $field eq "SFCT" || $field eq "sfct" || $field eq "stn_p" || $field eq "alt_p" 
                     || $field eq "p_prime"  || $field eq "P_PRIME"  
-                    || $field eq "red_p" || $field eq "ref_max" || $field eq "REF_MAX" 
+                    || $field eq "red_p" || $field eq "ref_max" 
+                    || $field eq "REF_MAX" 
                     || $field eq "snow_cvr" || $field eq "SNOW_CVR" 
                     || $field eq "cld_cvr" || $field eq "CLD_CVR" 
 #                   || $field eq "sat_11u" || $field eq "SAT_11U" 
@@ -2637,8 +2680,25 @@ if($err == 0) {
                             printf LAPSPLOT " \n"; 
                             $obs_sfc = "vsblty";    # This is set to prevent station model overlays
 
-                        }elsif("$field" =~ "pcp_" || "$field" =~ "PCP_") { 
-                            printf LAPSPLOT "op\n"; 
+                        }elsif("$field" =~ "pcp_inc" || "$field" =~ "PCP_INC") { 
+                            if($model_fcst_intvl == 10800 && $fcst == 1){
+                                printf LAPSPLOT "op3\n"; 
+                            }else{
+                                printf LAPSPLOT "op\n"; 
+                            }
+                            printf LAPSPLOT " \n"; 
+                            $obs_sfc = "pcp_inc";   # This is set to prevent station model overlays
+
+                        }elsif("$field" =~ "pcp_sto" || "$field" =~ "PCP_STO") { 
+                            if($i4time_fcst >= 86400){
+                                printf LAPSPLOT "op24\n"; 
+                            }elsif($i4time_fcst >= 21600){
+                                printf LAPSPLOT "op6\n"; 
+                            }elsif($i4time_fcst >= 10800){
+                                printf LAPSPLOT "op3\n"; 
+                            }else{
+                                printf LAPSPLOT "op1\n"; 
+                            }
                             printf LAPSPLOT " \n"; 
                             $obs_sfc = "pcp_inc";   # This is set to prevent station model overlays
 
@@ -2845,6 +2905,8 @@ if($err == 0) {
                             printf LAPSPLOT "vrz\n"; 
 		        }
                     }
+
+                }elsif("$level" eq "sndg"){                                                            # Sounding Obs 
 
                 }else{                                                                                 # Obs Aloft
                     if(("$field" eq "temp" || "$field" eq "TEMP") && $lvl_access == 2) { 
@@ -3451,11 +3513,11 @@ if($err == 0) {
                     }elsif("$field" eq "WIND_V" ) { 
                         printf LAPSPLOT "vi\n"; 
                         printf LAPSPLOT "a\n"; 
-                    }elsif("$field" eq "rh" ){ 
-                        printf LAPSPLOT "rh\n"; 
+                    }elsif("$field" eq "rh" ){ # LH3
+                        printf LAPSPLOT "rl\n"; 
                         printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "RH" ){ 
-                        printf LAPSPLOT "rhi\n"; 
+                        printf LAPSPLOT "rli\n"; 
                         printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "sh" ){ 
                         printf LAPSPLOT "sh\n"; 
@@ -3546,7 +3608,7 @@ if($err == 0) {
                     }elsif("$field" eq "theta" ) { 
                         printf LAPSPLOT "pt\n"; 
                         printf LAPSPLOT "$level\n"; 
-                    }elsif("$field" eq "RH" ) { 
+                    }elsif("$field" eq "RH" ) { # LH3
                         printf LAPSPLOT "lqi\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "r\n"; 
@@ -3582,14 +3644,14 @@ if($err == 0) {
                         printf LAPSPLOT "lq\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "q\n"; 
-                    }elsif("$field" eq "radial_vel") { includes obs for all radars
-                        printf LAPSPLOT "wd\n"; 
-                        printf LAPSPLOT "$level\n"; 
-                        printf LAPSPLOT "ob\n"; 
-                        printf LAPSPLOT "0\n"; 
-                        printf LAPSPLOT "y\n"; 
-                        printf LAPSPLOT "n\n"; 
-                        printf LAPSPLOT "n\n"; 
+#                   }elsif("$field" eq "radial_vel") { includes obs for all radars
+#                       printf LAPSPLOT "wd\n"; 
+#                       printf LAPSPLOT "$level\n"; 
+#                       printf LAPSPLOT "ob\n"; 
+#                       printf LAPSPLOT "0\n"; 
+#                       printf LAPSPLOT "y\n"; 
+#                       printf LAPSPLOT "n\n"; 
+#                       printf LAPSPLOT "n\n"; 
                     }elsif("$field" eq "wind" ) { # LW3
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
@@ -4143,6 +4205,42 @@ if($err == 0) {
                               printf LAPSPLOT "$level\n"; 
                               printf LAPSPLOT "a\n"; 
 
+                          }elsif("$field" eq "pcp_cnc" ) { 
+                              printf LAPSPLOT "pc\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+                          }elsif("$field" eq "pcp_rai" ) { 
+                              printf LAPSPLOT "rn\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+                          }elsif("$field" eq "PCP_RAI" ) { 
+                              printf LAPSPLOT "rni\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+                          }elsif("$field" eq "pcp_sno" ) { 
+                              printf LAPSPLOT "sn\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+                          }elsif("$field" eq "PCP_SNO" ) { 
+                              printf LAPSPLOT "sni\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+                          }elsif("$field" eq "pcp_ice" ) { 
+                              printf LAPSPLOT "pi\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+                          }elsif("$field" eq "PCP_ICE" ) { 
+                              printf LAPSPLOT "pii\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+                          }elsif("$field" eq "cld_type" ) { 
+                              printf LAPSPLOT "cy\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                          }elsif("$field" eq "pcp_typ" ) { 
+                              printf LAPSPLOT "py\n"; 
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "a\n"; 
+
                           }elsif("$field" eq "RH" ) { 
                               printf LAPSPLOT "rbi\n"; 
                               printf LAPSPLOT "$level\n"; 
@@ -4422,7 +4520,10 @@ if($err == 0) {
             $nrows = 1;                  
             $nmatrix = $nframes / $ntimes;
             $ncols = $nmatrix;
-            if($nmatrix > 3){ # Convert long rows into an added dimension
+            if($nmatrix == 4){ 
+                $ncols = 2;
+                $nrows = 2;
+            }elsif($nmatrix > 3){ # Convert long rows into an added dimension
                 $ncols = 3;
                 $nrows = int( ($nmatrix+($ncols-1)) / $ncols);
                 $ndims++;
@@ -4449,7 +4550,7 @@ if($err == 0) {
             }
         }
 
-        print "nrows=$nrows ncols=$ncols nanims=$nanims ndims=$ndims | ";
+        print "nrows=$nrows ncols=$ncols nanims=$nanims nmatrix=$nmatrix ndims=$ndims | ";
 
         $geom = "$ncols"."x"."$nrows"."x"."$nanims";
 
@@ -4471,7 +4572,8 @@ if($err == 0) {
           while ($ianim <= $nanims){
             my $iframe_anim = 1;
 
-            while ($iframe_anim <= ($nrows*$ncols)){
+#           while ($iframe_anim <= ($nrows*$ncols)){
+            while ($iframe_anim <= $nmatrix){
                 printf MONTAGE "montage ";
                 if($iframe < 10){   
                     printf MONTAGE "gmeta_$$.000$iframe.sun.gif ";
@@ -4501,6 +4603,9 @@ if($err == 0) {
             while ($ianim <= $nanims){
                 printf MONTAGE "gmeta_$$"."_$ianim.gif ";
                 $ianim++;
+            }
+            if ($nanims > 1) {
+                printf MONTAGE "gmeta_$$"."_$nanims.gif "; # repeat the last montage
             }
             printf MONTAGE "$web_root/$ScratchDir/gmeta_$$.gif\n";                                            
           }
