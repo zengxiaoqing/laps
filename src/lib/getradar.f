@@ -792,6 +792,7 @@ cdoc                            calls read_multiradar_3dref.
      1                                 ,grid_ra_ref                      ! O
      1                                 ,closest_vxx                      ! O
      1                                 ,istatus)                         ! O
+                    closest_radar = closest_vxx ! initialize
 
                 endif
  
@@ -1176,6 +1177,8 @@ cdoc                            calls read_multiradar_3dref.
 
 
         subroutine get_radar_horizon(i,j,ni,nj,lat,lon,topo)
+
+        include 'trigd.inc'
 
         use mem_namelist, ONLY: grid_spacing_m
 
