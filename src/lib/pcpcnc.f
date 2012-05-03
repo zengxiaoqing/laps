@@ -31,7 +31,9 @@ cdis
 cdis
 
 
-        subroutine cpt_pcp_cnc(ref_3d,temp_3d,cldpcp_type_3d  ! Input
+        subroutine cpt_pcp_cnc(ref_3d,temp_3d
+     1                                  ,rh_3d_pct    ! Input
+     1                                  ,cldpcp_type_3d  ! Input
      1                                  ,ni,nj,nk     ! Input
      1                                  ,c_z2m        ! Input
      1                                  ,pres_3d      ! Input
@@ -44,6 +46,7 @@ cdis
         include 'constants.inc'
 
         real temp_3d(ni,nj,nk)
+        real rh_3d_pct(ni,nj,nk)
         real ref_3d(ni,nj,nk)
         integer cldpcp_type_3d(ni,nj,nk)
 
@@ -141,7 +144,18 @@ cdis
                     pcp_cnc_3d(i,j,k) = rainmr * rho               ! kg_m^3
                     rai_cnc_3d(i,j,k) = rainmr * rho               ! kg_m^3
 
-                elseif(ipcp_type .eq. 2)then                       ! snow
+                elseif(ipcp_type .eq. 2)then                       ! snow (or mixed)
+
+!                   Calculate wet bulb temperature
+                    zero_c = 273.15
+                    t_c         = temp_3d(i,j,k) - zero_c
+                    td_c        = DWPT(t_c,rh_3d_pct(i,j,k))
+                    pressure_mb = pres_3d(i,j,k) / 100.
+                    t_wb_c = twet_fast(t_c,td_c,pressure_mb)
+
+                    rainfrac = max(min((t_wb_c / 1.3),1.),0.)
+                    snowfrac = 1.0 - rainfrac
+
                     rainfrac = 0.0
                     snowfrac = 1.0
                     icefrac = 0.0
