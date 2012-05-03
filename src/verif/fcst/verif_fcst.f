@@ -20,7 +20,7 @@
 
         call get_directory('time',dir_t,istatus)
         call s_len(dir_t,len_dir_t)
-        filenamet = dir_t(1:len_dir_t)//'/modeltime.dat'
+        filenamet = dir_t(1:len_dir_t)//'/modelvtime.dat'
         write(6,*)' filenamet = ',trim(filenamet)
         open(lun,file=filenamet,status='old')
         read(lun,*)a9time
@@ -154,16 +154,16 @@
         character*150 hist_file
 
         integer n_fields
-        parameter (n_fields=8)
+        parameter (n_fields=10)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
 
 !       Specify what is being verified
         data ext_fcst_a 
-     1      /'fsf','fsf','fsf','fsf','fsf','fsf','   ','fsf'/ ! 2-D
+     1     /'fsf','fsf','fsf','fsf','fsf','fsf','   ','fsf','fsf','fsf'/ ! 2-D
 !       data ext_anal_a /'lps'/ ! 3-D reflectivity
         data var_a      
-     1      /'SWI','TSF','DSF','USF','VSF','SSF','WSF','TPW'/ 
+     1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF','TPW','R01','RTO'/
       
         real rms_a (n_fields,maxbgmodels,0:max_fcst_times)
 
@@ -273,8 +273,8 @@
 
           call get_directory('verif',verif_dir,len_verif)
 
-          if(trim(var_2d) .eq. 'SWI')then
-              istart = 0 ! 1
+          if(trim(var_2d) .eq. 'R01' .OR. trim(var_2d) .eq. 'RTO')then      
+              istart = 1
           else
               istart = 0
           endif
@@ -320,7 +320,7 @@
 
               if(istart .eq. 1)then
                   call cv_i4tim_asc_lp(i4_initial,atime_s,istatus)
-                  write(lun_out,710)atime_s
+                  write(lun_out,710)atime_s,rmiss,rmiss,rmiss
               endif
 
               do itime_fcst = istart,n_fcst_times
@@ -347,6 +347,8 @@
                 std = rmiss
 
                 write(6,*)' Reading surface obs - i4_valid = ',i4_valid
+
+                i4_fcst = i4_valid - i4_initial
 
                 if(trim(var_2d) .ne. 'TPW')then
 !                 Read surface obs (regular LSO)
@@ -444,6 +446,32 @@
                       var_s(i) = r_missing_data
                     endif
                   enddo ! i
+                elseif(trim(var_2d) .eq. 'R01')then
+                  threshval = -99.9
+                  if(model_verif_intvl .eq. 3600)then
+                      var_s = pcp1
+                  elseif(model_verif_intvl .eq. 10800)then
+                      var_s = pcp3
+                  elseif(model_verif_intvl .eq. 21600)then
+                      var_s = pcp6
+                  elseif(model_verif_intvl .eq. 86400)then
+                      var_s = pcp24
+                  else
+                      var_s = r_missing_data  
+                  endif
+                elseif(trim(var_2d) .eq. 'RTO')then
+                  threshval = -99.9
+                  if(i4_fcst .eq. 3600)then
+                      var_s = pcp1
+                  elseif(i4_fcst .eq. 10800)then
+                      var_s = pcp3
+                  elseif(i4_fcst .eq. 21600)then
+                      var_s = pcp6
+                  elseif(i4_fcst .eq. 86400)then
+                      var_s = pcp24
+                  else
+                      var_s = r_missing_data  
+                  endif
                 endif
 
                 if(trim(var_2d) .ne. 'SSF')then
@@ -668,8 +696,12 @@
      1                       trim(var_2d) .eq. 'DSF'     )then ! convert K to F
                         var_fcst_s(ista) = k_to_f(var_fcst_2d(i_i,i_j))       
                    
-                      elseif(trim(var_2d) .eq. 'TPW')then
+                      elseif(trim(var_2d) .eq. 'TPW')then      ! convert M to CM
                         var_fcst_s(ista) = var_fcst_2d(i_i,i_j) * 100.
+
+                      elseif(trim(var_2d) .eq. 'R01' .OR. 
+     1                       trim(var_2d) .eq. 'RTO'     )then ! convert M to IN
+                        var_fcst_s(ista) = var_fcst_2d(i_i,i_j) / .0254 
 
                       else
                         var_fcst_s(ista) = var_fcst_2d(i_i,i_j)            
@@ -706,6 +738,12 @@
 
                 write(6,*)
                 write(6,*)' Generic stats, cnt = ',nint(cnt)
+
+                if(cnt .eq. 0.)then
+                  write(6,*)' No obs - skipping calculation of stats'
+                  goto 980 ! Skip calculation of stats and write initialized flag values
+                endif
+ 
 1200            if(trim(var_2d) .eq. 'SWI')then
                   call stats_1d(maxsta,swi_s,rad2_s
      1                   ,'Solar Radiation (QCed): '
@@ -759,12 +797,32 @@
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                elseif(trim(var_2d) .eq. 'R01')then
+                  call stats_1d(maxsta,var_fcst_s,var_s
+     1                   ,'Incremental Precip'             
+     1                   ,a_t,b_t,xbar,ybar
+     1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
+                elseif(trim(var_2d) .eq. 'RTO')then
+                  call stats_1d(maxsta,var_fcst_s,var_s
+     1                   ,'Run Total Precip'             
+     1                   ,a_t,b_t,xbar,ybar
+     1                   ,bias,std,r_missing_data,istatus)
+                  rms_a(ifield,imodel,itime_fcst) = std
                 endif
 
 980             continue
 
 990             continue
  
+!               In General:
+!               xbar is mean forecast value at the stations
+!               ybar is mean observed value at the stations
+
+!               For WSF (Surface Wind)
+!               xbar is the rms of U
+!               ybar is the rms of V
+
                 write(6,*)
                 write(6,*)' Writing to lun_out ',lun_out
                 write(6,710)atime_s,xbar,ybar,std
