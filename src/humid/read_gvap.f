@@ -128,13 +128,13 @@ c     get most recent file in directory
 
       write(6,*) 'opening file ',const_file(1:cf)
       
-      if (filefound(1:2) .le. '09') then   ! big endian data
-         open(22, file=const_file(1:cf),form='formatted',
-     1        status='old',convert='swap',err = 668)
-      else ! little endian data
+c      if (filefound(1:2) .le. '09') then   ! big endian data
+c         open(22, file=const_file(1:cf),form='formatted',
+c     1        status='old',convert='swap',err = 668)
+c      else ! little endian data
          open(22, file=const_file(1:cf),form='formatted',
      1        status='old',err = 668)
-      endif
+c      endif
       read(22,*,end=668,err=668) ! first header line is ignored
       do i = 1,nstations
 
