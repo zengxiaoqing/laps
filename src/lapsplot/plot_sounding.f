@@ -18,6 +18,7 @@
         real u_2d(NX_L,NY_L)
         real v_2d(NX_L,NY_L)
         real pw_2d(NX_L,NY_L)
+        real cape_2d(NX_L,NY_L)
         real lil_2d(NX_L,NY_L)
         real lic_2d(NX_L,NY_L)
         real lat(NX_L,NY_L)
@@ -58,6 +59,7 @@
         character*40 c_label
         character*16 c16_latlon
         character*11 c_pw
+        character*11 c_cape
         character*20 c20_x, c20_y
         character*255 new_dataroot
         logical l_latlon, l_parse, l_plotobs
@@ -411,6 +413,7 @@
           call make_fnam_lp(i4time_ob_pr(ismin),a9time,istatus)
 
           pw_sfc = r_missing_data
+          cape_sfc = r_missing_data
 
         endif ! l_plotobs
 
@@ -711,7 +714,7 @@
             u_vert = -999.
           endif
 
-!       Read in sfc data (pressure, temp, dewpoint, u, v, tpw)
+!       Read in sfc data (pressure, temp, dewpoint, u, v, tpw, cape)
           if(c_prodtype .eq. 'A')then ! Read LSX
             ext = 'lsx'
 
@@ -750,6 +753,13 @@
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,pw_2d,0,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
+            ext = 'lst'
+            var_2d = 'PBE'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,cape_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto100
 
             ext = 'lil'
@@ -825,6 +835,15 @@
      1                              ,istat_sfc)
             if(istat_sfc .ne. 1)pw_2d = r_missing_data
 
+            var_2d = 'PBE'
+            call get_lapsdata_2d(i4_initial,i4_valid
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d
+     1                              ,NX_L,NY_L
+     1                              ,cape_2d
+     1                              ,istat_sfc)
+            if(istat_sfc .ne. 1)cape_2d = r_missing_data
+
             var_2d = 'LIL'
             call get_lapsdata_2d(i4_initial,i4_valid
      1                              ,directory,var_2d
@@ -855,6 +874,7 @@
           t_sfc_k  = t_2d(isound,jsound)
           td_sfc_k = td_2d(isound,jsound)
           pw_sfc   = pw_2d(isound,jsound)
+          cape_sfc = cape_2d(isound,jsound)
           lil_sfc  = lil_2d(isound,jsound)
           lic_sfc  = lic_2d(isound,jsound)
           topo_sfc = topo(isound,jsound)
@@ -905,6 +925,7 @@
      1           ,' Terrain Height (m)= ',topo_sfc 
         write(6,*)' Sfc T (c) = ', k_to_c(t_sfc_k)
         write(6,*)' TPW (cm) = ', pw_sfc*100.
+        write(6,*)' SBCAPE (J/KG) = ', cape_sfc
         write(6,*)' Integrated Cloud Water (mm) [read in/computed] = ',
      1                            lil_sfc*1000.,lil_cpt*1000.
         write(6,*)' Integrated Cloud Ice (mm) [read in/computed] = ',
@@ -1133,12 +1154,22 @@
 
 !       Plot TPW value
         if(pw_sfc .ne. r_missing_data)then
-            ix = 800
-            iy = 180
+            ix = 795
+            iy = 240
             rsize = .010
             write(c_pw,890)pw_sfc*100. ! convert M to CM
  890        format('IWV = ',f5.2)
             CALL PCHIQU (cpux(ix),cpux(iy),c_pw,rsize,0,-1.0)
+        endif
+
+!       Plot CAPE value
+        if(cape_sfc .ne. r_missing_data)then
+            ix = 795
+            iy = 220
+            rsize = .010
+            write(c_cape,891)nint(cape_sfc)
+ 891        format('CAPE = ',i4)
+            CALL PCHIQU (cpux(ix),cpux(iy),c_cape,rsize,0,-1.0)
         endif
 
         write(6,*)' Sounding has been plotted...'
