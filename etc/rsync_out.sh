@@ -311,7 +311,7 @@ if test "$3" = qsub; then
         echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/lapsprd/verif/* --exclude='REF/cont' --exclude='REF/hist' $REMOTE_DATA_ROOT/lapsprd/verif >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
         echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/load.png                             $REMOTE_DATA_ROOT/log           >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
         echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/cloud_fcst.png                       $REMOTE_DATA_ROOT/log           >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
-        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/time/modeltime.dat                       $REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/time/modelvtime.dat                      $REMOTE_DATA_ROOT/time          >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
         echo " "                                                                   >> $script
         echo "date -u >> \$LOCAL_DATA_ROOT/log/rsync_qsub_verif.log.`date +\%H\%M` 2>&1" >> $script
     fi
