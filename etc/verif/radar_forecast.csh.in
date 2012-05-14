@@ -25,10 +25,10 @@ setenv DOMAIN_NAME `echo $DOMAIN_NAME_IN | sed 's/_/ /g'`
 #setenv LAPS_DATA_ROOT /data/fab/projects/dwr
 setenv LOGDIR $LAPS_DATA_ROOT/log
 
-setenv MODELTIME      `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`
-setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
+setenv MODELTIME      `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
+setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat | cut -c6-9`
 
-setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modeltime.dat`
+setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 
 #setenv model wrf-wsm6
 #setenv fcsttime 01
@@ -143,7 +143,11 @@ echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNU
 echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
 echo 'set yrange [0:'$YRANGE']'                                          >> $GNUPLOTFILE
 if ($STAT == "Bias") then
-    echo 'set ytics (0.5,1,2,4,6,8,10)'                                  >> $GNUPLOTFILE
+    echo 'set yrange [0.1:'$YRANGE']'                                    >> $GNUPLOTFILE
+    echo 'set ytics (0.1,0.2,0.5,1,2,5,10)'                              >> $GNUPLOTFILE
+    echo 'set logscale y'                                                >> $GNUPLOTFILE
+else
+    echo 'set yrange [0:'$YRANGE']'                                      >> $GNUPLOTFILE
 endif
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
