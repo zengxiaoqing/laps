@@ -30,10 +30,10 @@ setenv VAR_LC `echo $VAR | gawk '{print tolower($0)}'`
 
 #setenv LAPS_DATA_ROOT /data/fab/projects/dwr
 
-setenv MODELTIME `head -1 $LAPS_DATA_ROOT/time/modeltime.dat`
-setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modeltime.dat | cut -c6-9`
+setenv MODELTIME `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
+setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat | cut -c6-9`
 
-setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modeltime.dat`
+setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/$MODELTIME.stats
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt
