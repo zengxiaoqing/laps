@@ -180,15 +180,16 @@ C ------------------------------------------------------------
 c     Variable        NETCDF Long Name
 C      wmo_sat_id   "WMO satellite id number"
  
-        nf_status = NF_INQ_VARID(nf_fid,'wmo_sat_id',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'wmo_sat_id',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var wmo_sat_id'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,wmo_sat_id)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var wmo_sat_id'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var wmo_sat_id'
+        endif
       endif
 
 C   Variables of type DOUBLE
