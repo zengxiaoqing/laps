@@ -75,6 +75,8 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim recNum'
       endif
+
+      write(6,*)' get_poes_data: number of records is ',recNum
       call read_poes_data(nf_fid, maxLevels, maxStaticIds,
      +     nInventoryBins, recNum, i4time_sys, ilaps_cycle_time,
      +     NX_L, NY_L, i4time_earliest, i4time_latest, lun_out,
