@@ -98,6 +98,8 @@
 #
 # -C                   Copy file $LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2 to $opt_C/$yyjjjhhmm.gr2
 #
+# -N                   Disable the purger                                                                  
+#
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
@@ -106,10 +108,10 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R 
-            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X $opt_C);
+            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X $opt_C $opt_N);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:C:');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:C:N');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -369,6 +371,7 @@ if($opt_S){
 #  - If archive time is defined and set to i4time70, then yyjjjhhmm corresponds exactly to archive_time
 #
 my $yyjjjhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time,'1');
+my $i4time_sys=&laps_tools::a9time_to_i4time($yyjjjhhmm);
 #
 # This sends the stdout to the run log file
 #
@@ -434,6 +437,7 @@ my $t=gmtime();
 my $sys;
 
 if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r || defined $opt_t){
+  if($i4time_sys == (int($i4time_sys/3600)*3600) && (! defined $opt_N) ){ # On the hour run without -N
     print $t." Running purger\n";
     $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
     $sys .= "-r " if($opt_r);
@@ -471,8 +475,11 @@ if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r
         print $sys."\n";
     system($sys);
     }
-
+  }else{
+    print $t." Skipping purger\n";
+  }
 }
+
 # for CWB/Taiwan, we need to update file tcbogus.nl and deal
 # with previous lga files in the event the contents of tcbogus.nl has changed.
 # will call module tcbogus_background
