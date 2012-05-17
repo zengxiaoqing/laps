@@ -979,10 +979,19 @@ c..... Precip
                endif ! found a provider match
             enddo ! iprov
 
+            if(dataProvider(i)(1:lenp) .eq. 'HADS' .AND.
+     1         precipRateDD(i) .ne. 'Z')then
+               pcp1 = precipRate(i) * (3600. / .0254) ! convert m/s to inches
+               write(6,*)' Found a local 1hr HADS precip rate ob: '
+     1                 ,pcp1,' ',dataProvider(i)(1:lenp),' '
+     1                 ,stationId(i),' '
+     1                 ,precipRateDD(i)                                 
+            endif
+
             if(code1PST(iprov_pst) .eq. -3 .AND. 
      1         dataProvider(i)(1:lenp) .eq. 'HADS')then  
                pcp24 = precipAccum(i) / 25.4 ! convert mm to inches
-               write(6,*)' Found a local 24hr HADS precip ob: '
+               write(6,*)' Found a local 24hr HADS precip ob    : '
      1                 ,pcp24,' ',dataProvider(i)(1:lenp),' '
      1                 ,stationId(i),' '
      1                 ,precipAccumDD(i),' ',code1PST(iprov_pst)       
