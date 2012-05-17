@@ -354,20 +354,20 @@ verif/REF/hist verif/REF/cont verif/REF/plot
 verif/REF/plot/20 verif/REF/plot/30 verif/REF/plot/40 verif/REF/plot/50 verif/REF/plot/60
 verif/REF/plot/20_comp verif/REF/plot/30_comp verif/REF/plot/40_comp verif/REF/plot/50_comp verif/REF/plot/60_comp
 verif/REF/plot/20_comp2 verif/REF/plot/30_comp2 verif/REF/plot/40_comp2 verif/REF/plot/50_comp2 verif/REF/plot/60_comp2
-verif/SWI verif/SWI/pt
-verif/TSF verif/TSF/pt
-verif/DSF verif/DSF/pt
-verif/USF verif/USF/pt
-verif/VSF verif/VSF/pt
-verif/SSF verif/SSF/pt
-verif/WSF verif/WSF/pt
-verif/TPW verif/TPW/pt
-verif/R01 verif/R01/pt
-verif/RTO verif/RTO/pt
-verif/U3  verif/U3/pt
-verif/V3  verif/V3/pt
-verif/W3  verif/W3/pt
-verif/T3  verif/T3/pt
+verif/SWI verif/SWI/pt verif/SWI/pt/comp verif/SWI/pt/comp2
+verif/TSF verif/TSF/pt verif/TSF/pt/comp verif/TSF/pt/comp2
+verif/DSF verif/DSF/pt verif/DSF/pt/comp verif/DSF/pt/comp2
+verif/USF verif/USF/pt verif/USF/pt/comp verif/USF/pt/comp2
+verif/VSF verif/VSF/pt verif/VSF/pt/comp verif/VSF/pt/comp2
+verif/SSF verif/SSF/pt verif/SSF/pt/comp verif/SSF/pt/comp2
+verif/WSF verif/WSF/pt verif/WSF/pt/comp verif/WSF/pt/comp2
+verif/TPW verif/TPW/pt verif/TPW/pt/comp verif/TPW/pt/comp2
+verif/R01 verif/R01/pt verif/R01/pt/comp verif/R01/pt/comp2
+verif/RTO verif/RTO/pt verif/RTO/pt/comp verif/RTO/pt/comp2
+verif/U3  verif/U3/pt verif/U3/pt/comp verif/U3/pt/comp2
+verif/V3  verif/V3/pt verif/V3/pt/comp verif/V3/pt/comp2
+verif/W3  verif/W3/pt verif/W3/pt/comp verif/W3/pt/comp2
+verif/T3  verif/T3/pt verif/T3/pt/comp verif/T3/pt/comp2
 ensemble
 ensemble/mean
 gr2);
@@ -552,6 +552,30 @@ sub get_pressures {
 #   print "$_\n";
 #}
 #
+#
+#---------------------------------------------------------------------
+#
+sub wait_for_file {
+    my($file,$wait_interval,$wait_total) = @_;
+
+    my $nwait = int($wait_total / $wait_interval);
+
+    my $iwait = $nwait;
+
+    while ($iwait > 0) {
+        if (! -e $file) {
+            print "wait_for_file sleeping for $wait_interval seconds\n";
+            sleep $wait_interval;
+            $iwait--;
+        } else {
+            $iwait=0;
+        }
+    }
+
+    print "wait_for_file found $file now returning...\n";
+
+    return ($iwait);
+}
 #
 #---------------------------------------------------------------------
 #
