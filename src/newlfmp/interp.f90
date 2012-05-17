@@ -102,7 +102,7 @@ real :: pla,dz,plo,phi,slope
 allocate(logp(lx,ly,nz))
 logp=alog(hpsig)
 
-if(.not. large_pgrid .and. icall .eq. 1)then
+if(.not. large_pgrid .and. .not. large_ngrid .and. icall .eq. 1)then
 
 ! Interpolate 3d horizontally interpolated data to isobaric surfaces.
 ! Assume that height and temp are always available, but check for 
