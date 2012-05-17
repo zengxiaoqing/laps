@@ -15,16 +15,18 @@
 #                                               yyyymmddhh
 #                                               yyyy_mm_dd_hhmm (lfmpost.pl input format)
 #
+# -t (optional)        add this number of seconds to the input time
+#
 # -a (required)        input time argument
 # 
                
 use strict;
 use English;
-use vars qw($opt_a $opt_o $opt_i);
+use vars qw($opt_a $opt_o $opt_i $opt_t);
 use Getopt::Std;
 
 umask 002;
-getopts('a:i:o:');
+getopts('a:i:o:t:');
 
 my $initial_time = time();
 
@@ -80,23 +82,11 @@ if(defined $opt_a){
 #  $archive_time = &seconds_since_1970($opt_a,$LAPSROOT,$LAPS_DATA_ROOT);
 }
 
-#
-#  - The second argument is the time delay in hours to 
-#  set the systime.dat file, if you're data arrives more than 1 hour 
-#  behind it's valid time set this variable to delay the laps cycle.
-#
-#  - The '1' (last input) tells sub systime to write ctime.dat and systime.dat; otherwise, not. 
-#
-#  - If archive time is defined and set to i4time70, then yydddhhmm corresponds exactly to archive_time
-#
+if(defined $opt_t){
+   $i4time = $i4time + $opt_t;
+}
 
-# Try new version of 'systime' that handles when $cycle_time exceeds 1 hour (call it 'sys_time')
-
-#my $yydddhhmm=&laps_tools::sys_time($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
-
-#print "opt_f is $opt_f\n";
-
-# default input is yydddhhmm
+# default output is yydddhhmm
 
 #my $yydddhhmm=&laps_tools::sys_time($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
 
