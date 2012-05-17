@@ -238,35 +238,46 @@ if($opt_q || $opt_Q){
 
       print $t." Opening $LAPS_LOG_PATH/$qsubfile starting with executable $exe\n";
       open(TFILE,">$LAPS_LOG_PATH/$qsubfile");
-      print TFILE "#!/bin/sh\n";
 
-      if($opt_q){
-        print TFILE "#PBS -lnodes=1:$node_type,walltime=20:00 -A $opt_q\n";
+      my @xdim=&laps_tools::get_nl_value("nest7grid.parms","nx_l","$LAPS_DATA_ROOT"); 
+      my @ydim=&laps_tools::get_nl_value("nest7grid.parms","ny_l","$LAPS_DATA_ROOT"); 
+      my @zdim=&laps_tools::get_nl_value("nest7grid.parms","nk_laps","$LAPS_DATA_ROOT"); 
+      my $npts = $xdim[0] * $ydim[0] * $zdim[0];
 
-      }elsif($opt_Q){ 
-        my @xdim=&laps_tools::get_nl_value("nest7grid.parms","nx_l","$LAPS_DATA_ROOT"); 
-        my @ydim=&laps_tools::get_nl_value("nest7grid.parms","ny_l","$LAPS_DATA_ROOT"); 
-        my @zdim=&laps_tools::get_nl_value("nest7grid.parms","nk_laps","$LAPS_DATA_ROOT"); 
+      my ($walltime,$vmem_gb);
 
-        my $npts = $xdim[0] * $ydim[0] * $zdim[0];
+      if($exe eq "gridgen_model.exe"){ # allow localization to have more time
+          $walltime = "01:00:00";
+          $vmem_gb = 0.;
 
+      }elsif($exe eq "remap_polar_netcdf.exe"){
+          $walltime = "00:15:00";
+          $vmem_gb = 0.9 + ($npts / 17000000.);
+          if ($vmem_gb > 12.0) { $vmem_gb = 12.0; }
+          print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
+
+      }elsif($exe eq "ensemble_mean.exe"){
+          $walltime = "00:15:00";
+          $vmem_gb = 1.6;
+
+      }else{
+          $walltime = "00:10:00";
+          $vmem_gb = 1.6;
+
+      }
+
+      if($opt_q){     # PBS queueing syntax
+        print TFILE "#!/bin/sh --login\n";
+        print TFILE "#PBS -lnodes=1:$node_type,walltime=$walltime -A $opt_q\n";
+
+      }elsif($opt_Q){ # SGE queueing syntax
+        print TFILE "#!/bin/sh\n";
         print TFILE "#\$ -pe $node_type 1\n";
 
-        if($exe eq "gridgen_model.exe"){ # allow localization to have more time
-            print TFILE "#\$ -l h_rt=01:00:00\n";
-
-        }elsif($exe eq "remap_polar_netcdf.exe"){
-            my $vmem_gb = 0.9 + ($npts / 17000000.);
-	    if ($vmem_gb > 12.0) { $vmem_gb = 12.0; }
-            print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
-            print TFILE "#\$ -l h_rt=00:15:00,h_vmem=".$vmem_gb."G\n";
-
-        }elsif($exe eq "ensemble_mean.exe"){
-            print TFILE "#\$ -l h_rt=00:15:00,h_vmem=1.60G\n";
-
+        if($vmem_gb > 0.){                                            
+            print TFILE "#\$ -l h_rt=$walltime,h_vmem=".$vmem_gb."G\n";
         }else{
-            print TFILE "#\$ -l h_rt=00:10:00,h_vmem=1.60G\n";
-
+            print TFILE "#\$ -l h_rt=$walltime\n";
         }
 
         print TFILE "#\$ -A $opt_Q\n";
@@ -291,20 +302,47 @@ if($opt_q || $opt_Q){
       }else{
         print TFILE "$LAPSROOT/$exedir/$exe $args 1>> $LAPS_LOG_PATH/$log 2>&1\n";
       }
+      my $wait_file = "$LAPS_LOG_PATH/qsub.$exe.done.$yyjjjhhmm";
+      print TFILE "touch $wait_file\n";
       print TFILE "  \n";
       print $t." Closing $LAPS_LOG_PATH/$qsubfile with executable $exe\n";
       close(TFILE);
 
       chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
       if(defined $opt_w && ($ngroups eq 1) ){
-        $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile";
+        if($opt_Q){
+          $command = "rm -f $LAPS_LOG_PATH/qsub.$exe.done.*; qsub -A $opt_Q $LAPS_LOG_PATH/$qsubfile";
+          print "Executing $command\n";
+          system("$command");
+
+#         Wait for $wait_file to appear                              
+          print "Waiting for $wait_file for up to 60 minutes...\n";
+          my $iwait = &laps_tools::wait_for_file("$wait_file",60,3600);
+          print "Waited for $wait_file with $iwait waits remaining\n";
+          if(! -e "$wait_file"){
+            print "ERROR: $wait_file never appeared with $iwait waits remaining\n";
+            exit;
+          }
+
+        }else{ # opt_q
+          $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile";
+          print "Executing $command\n";
+          system("$command");
+
+        }
+
       }else{
 #       $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile&";
 #       $command = "$LAPSROOT/etc/run_qsub.sh $LAPS_LOG_PATH/$qsubfile";
-        $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/$qsubfile";
+        if($opt_Q){
+          $command = "qsub -A $opt_Q $LAPS_LOG_PATH/$qsubfile";
+        }else{ # opt_q
+          $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/$qsubfile";
+        }
+        print "Executing $command\n";
+        system("$command");
+
       }
-      print "Executing $command\n";
-      system("$command");
 
       $igroup++;
     } # end while $igroup le $ngroups
