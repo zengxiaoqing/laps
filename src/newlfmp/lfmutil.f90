@@ -56,10 +56,10 @@ select case(trim(mtype))
       call get_st4_dims(filename,nx,ny,nz)
 end select
 
-if(nx*ny*nz > 20000000 .AND. .false.)then
+if(nx*ny*nz > 20000000)then
    write(6,*)' Large native grid - process reduced set of 3-D fields'
    large_ngrid = .true.
-   large_pgrid = .true.
+!  large_pgrid = .true.
 endif
 
 return
@@ -835,12 +835,22 @@ if(.not. large_ngrid)then
 
 endif
 
-! Calculate brightness temperature
-stefan_boltzmann = 5.67e-8
-if(.false.)then ! First method                                 
+if (fcsttime .eq. 0) then ! obtain initial time bt11u field from s8a analysis LCV files
+  ext = 'lcv'
+  var_2d = 'S8A'
+  call get_laps_2d(laps_reftime,ext,var_2d,units_2d,comment_2d,lx,ly,bt11u,istatus)
+  if(istatus .eq. 1)then
+    write(6,*)' Obtained initial time bt11u field from s8a analysis LCV file'
+  else
+    write(6,*)' Warning: could not find initial time swdown field from s8a analysis LCV file'
+  endif      
+
+else ! Calculate brightness temperature
+  stefan_boltzmann = 5.67e-8
+  if(.false.)then ! First method                                 
     eff_emissivity = 0.6
     bt11u(:,:) = ( (lwout(:,:)/eff_emissivity) / stefan_boltzmann) ** 0.25 
-else            ! Second method: adapted from Ohring, George, Arnold Gruber, Robert Ellingson, 1984: 
+  else          ! Second method: adapted from Ohring, George, Arnold Gruber, Robert Ellingson, 1984: 
                 ! Satellite Determinations of the Relationship between Total Longwave Radiation Flux 
                 ! and Infrared Window Radiance. J. Climate Appl. Meteor., 23, 416-425.
                 ! Based on a look at graphs on this and another paper a quadratic fit is being used    
@@ -851,8 +861,9 @@ else            ! Second method: adapted from Ohring, George, Arnold Gruber, Rob
         bt11u(i,j) = 255. + 1.5 * (bt_flux_equiv - 240.) + .003125 * (bt_flux_equiv - 240.)**2
     enddo ! i
     enddo ! j
+  endif
+
 endif
-         
 
 return
 end
