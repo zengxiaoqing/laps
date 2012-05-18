@@ -237,7 +237,7 @@ SUBROUTINE GETCOEFFT
   UV=NOBSTAT(U_CMPNNT)+NOBSTAT(V_CMPNNT)
   RR=NOBSTAT(NUMSTAT+1)
   OBSRADAR = 1.0
-  IF(RR.NE.0)OBSRADAR=UV/FLOAT(RR)
+  IF(RR.NE.0)OBSRADAR=100.0*UV/FLOAT(RR)
   RR=NOBSTAT(NUMSTAT+2)
   OBS_SFMR = 1.0
   IF(RR.NE.0)OBS_SFMR=1.0/RR
@@ -279,6 +279,8 @@ SUBROUTINE MINIMIZER_XIE
   IF (ER .NE. 0) THEN
     PRINT*,'MINIMIZER: Cannot allocate enough memory for the working array'
     STOP
+  ELSE
+    PRINT*,'Successfully allocate memory for LBFGS!'
   ENDIF
 
   IP=1
@@ -462,7 +464,9 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
             CALL PSTN2NUMB(5,NN,NG,NC)
 
             NB(NC) = 1
-            LB(NC) = -GRDBKGND(I,J,K,T,5)
+            
+            ! LOW BOUND FROM REFLECTIVITY DID NOT GET SCALED AND SO HERE IT DOES:
+            LB(NC) = -GRDBKGND(I,J,K,T,5)+GRDBKGND(I,J,K,T,NUMSTAT+1)
           ENDDO
         ENDDO
       ENDDO
