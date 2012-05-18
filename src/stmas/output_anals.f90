@@ -48,7 +48,8 @@ SUBROUTINE OUTPTLAPS
   real, parameter :: svp3=29.65
   real, parameter :: svpt0=273.15
   real, parameter :: eps = 0.622
-  real            :: tmp,sph
+  real, parameter :: r_dry = 287.0
+  real            :: tmp,sph,density
 
   ! VARIABLES NEEDED FOR LAPS: YUANFU
   CHARACTER*9   :: A9
@@ -129,12 +130,13 @@ SUBROUTINE OUTPTLAPS
    !  ENDDO
   ! ENDDO
   ! WRITE(15,*) MAXGRID,GRDBKGD0(1:MAXGRID(1),1:MAXGRID(2),1:MAXGRID(3),2,3)
-  print*,'Increment 1: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,1)))
-  print*,'Increment 2: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,2)))
-  print*,'Increment 3: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,3)))
-  print*,'Increment 4: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,4)))
-  print*,'Increment 5: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,5)))
+  print*,'Increment 1: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,1)))
+  print*,'Increment 2: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,2)))
+  print*,'Increment 3: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,3)))
+  print*,'Increment 4: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,4)))
+  print*,'Increment 5: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,5)))
   IF (NUMSTAT .GT. 5) print*,'Increment 6: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,6)))
+  ANA = 0.0
   CALL BKGTOFINE(NUMSTAT,MAXGRID,XB,YB,ZB,TB,FCSTGRD,XF,YF,ZF,TF,GRDBKGD0,ANA)
 
   ! ADD INCREMENT TO BK0:
@@ -156,7 +158,8 @@ SUBROUTINE OUTPTLAPS
     print*,'bko_min=',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S)),S
     print*,'        ',minval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S))
   ENDDO
-print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1,5))
+print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,5))
+print*,'Specific humidity upp bound: ',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,5))
 
   CALL GET_GRID_SPACING_ACTUAL(LATITUDE((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1), &
                                 LONGITUD((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1),DS,ST)
@@ -238,7 +241,6 @@ GOTO 111
         ! RH(I,J,K) = 1.E2 * (LV(k)*sph/(sph*(1.-eps) + eps))/(svp1*exp(svp2*(tmp-svpt0)/(tmp-svp3)))
         IF (BK0(I,J,K,IFRAME,5) .GE. 0.0) THEN
           RH(I,J,K) = MAKE_RH(LV(k)/100.0,BK0(I,J,K,IFRAME,4)-273.15,BK0(I,J,K,IFRAME,5),-132.0)
-        
           ! Percentage:
           RH(I,J,K) = RH(I,J,K)*100.0
         ELSE
@@ -262,6 +264,22 @@ GOTO 111
     ENDDO
   ENDDO
 1 continue
+
+  ! Temperature adjustment according to rain and snow: Testing by YUANFU
+  ! SKIP FOR NOW AS CWB DOMAIN FOR MORAKOT, THIS CAUSES VERY LARGE TEMP INCREMENT
+  GOTO 11
+  DO K=1,FCSTGRD(3)
+    DO J=1,FCSTGRD(2)
+      DO I=1,FCSTGRD(1)
+        ! Dry density:
+        density = LV(K)/r_dry/BK0(I,J,K,IFRAME,4)
+        ! Adjusted temperature:
+        BK0(I,J,K,IFRAME,4) = LV(K)/r_dry/ &
+          (density+BK0(I,J,K,IFRAME,6)*0.001+BK0(I,J,K,IFRAME,7)*0.001)
+      ENDDO
+    ENDDO
+  ENDDO
+11 CONTINUE
 
   ! KG/KG FOR BALANCE NETCDF:
   BK0(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),IFRAME,5) = 0.001* &
