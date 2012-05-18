@@ -125,7 +125,7 @@ SUBROUTINE RDLAPSRDR
   INTEGER      :: RADTIM(MAX_RADARS)    ! RADAR OBSERVATION TIME
   INTEGER      :: RADIDS(MAX_RADARS)    ! RADAR IDX
   INTEGER      :: IOFFSET(MAX_RADARS),JOFFSET(MAX_RADARS) ! OFFSET FOR THE NEW get_multiradar_vel
-  INTEGER      :: I,J,K,L,M		! GRID INDICES, NUMBER OF RADAR, TIME FRAME
+  INTEGER      :: I,J,K,L,M,IX0,IY0,IX1,IY1	! GRID INDICES, NUMBER OF RADAR, TIME FRAME
   LOGICAL      :: CLUTTR                ! .TRUE. -- REMOVE 3D RADAR CLUTTER
   REAL         :: RADVEL(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),MAX_RADARS)
                   ! RADAR 4D VELOCITY GRID
@@ -181,7 +181,7 @@ SUBROUTINE RDLAPSRDR
   character*180 c_values_req
   INTEGER :: i4time_radar
   REAL     :: tempref,make_ssh
-!
+
 ! add the following definition since build on 5/23/2011 failed. HJ 5/23/2011
   integer nx_r, ny_r 
 
@@ -304,14 +304,14 @@ SUBROUTINE RDLAPSRDR
 
 !=======reflectivity==for time cycle ,read multitime data file *.vrz======
 !=========added by shuyuan liu 20100830================== 
-  ! CHECK IF RAIN AND SNOW IS ANALYZED:
-  IF (NUMSTAT .LE. 5) GOTO 555
+  
   i4_tol = 900
   i4_ret = 0
   ref_base = -10
   nn =0
   REFSCL =0.0  
-  iext="vrz"  
+  iext="vrz"
+  BK0(:,:,:,:,NUMSTAT+1) = 0.0
   DO L=1,FCSTGRD(4)  !for L   time          
      call get_filespec(iext(1:3),2,c_filespec,istatus)
      call get_file_time(c_filespec,LAPSI4T,i4time_radar)
@@ -332,14 +332,15 @@ SUBROUTINE RDLAPSRDR
        RADREF(I,J,K,L) =0.
        IF(radar_ref_3d(I,J,K) .GT. 5. .AND. radar_ref_3d(I,J,K) .LT.100) THEN
             ! modified shuyuan 20100719
-            BK0(I,J,K,L,10)=radar_ref_3d(I,J,K)!! just for test dbz
-            
+                        
             tempref=(radar_ref_3d(I,J,K)-43.1)/17.5
             tempref=(10.**tempref)       !g/m3
             RADREF(I,J,K,L) =tempref   
              ! shuyuan 20100719
             REFSCL = REFSCL + RADREF(I,J,K,L)**2             
-                   
+                 
+            ! CHECK IF RAIN AND SNOW IS ANALYZED:
+            IF (NUMSTAT .LE. 5) GOTO 555 
             nn = nn + 1
             OP(2) = LATITUDE(I,J)      ! OP(1): LONGITUDE; OP(2): LATITUDE
             OP(1) = LONGITUD(I,J)
@@ -349,25 +350,58 @@ SUBROUTINE RDLAPSRDR
             OB= RADREF(I,J,K,L)         
             OE=0.01  ! shuyuan   test 0.1 0.01 1 
             SID(1:3) = "vrz"
-            CALL HANDLEOBS_SIGMA(OP,OB,OE,NUMSTAT+3,NALLOBS,IP,AZ,EA,SID)  
+            CALL HANDLEOBS_SIGMA(OP,OB,OE,NUMSTAT+3,NALLOBS,IP,AZ,EA,SID) 
+            ! SKIP REFLECTIVITY:
+555         CONTINUE 
 
             ! Modified by Yuanfu Xie Nov. 2011 for adding radar reflectivity generated SH obs:
-            NST(HUMIDITY) = NST(HUMIDITY)+1
-            OBP(1,NST(HUMIDITY),HUMIDITY) = I-1
-            OBP(2,NST(HUMIDITY),HUMIDITY) = J-1
-            OBP(3,NST(HUMIDITY),HUMIDITY) = K-1
-            OBP(4,NST(HUMIDITY),HUMIDITY) = L-1
-            ! ASSUME 75% satured RH where reflectivity present:
-            OBS(NST(HUMIDITY),HUMIDITY) = MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.75,-132.0)
-            OBE(NST(HUMIDITY),HUMIDITY) = 1.0
-            NALLOBS = NALLOBS+1
+            !NST(HUMIDITY) = NST(HUMIDITY)+1
+            !OBP(1,NST(HUMIDITY),HUMIDITY) = I-1
+            !OBP(2,NST(HUMIDITY),HUMIDITY) = J-1
+            !OBP(3,NST(HUMIDITY),HUMIDITY) = K-1
+            !OBP(4,NST(HUMIDITY),HUMIDITY) = L-1
+            ! ASSUME 75% satured RH where reflectivity present as SH lower bounds:
+            IF (radar_ref_3d(I,J,K) .GT. 30.0) THEN
+              BK0(I,J,K,L,NUMSTAT+1)= &
+                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,-132.0)
+            ELSE
+              BK0(I,J,K,L,NUMSTAT+1)= &
+                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.5+0.5*radar_ref_3d(I,J,K)/30.0,-132.0)
+            ENDIF
+   
+            !OBS(NST(HUMIDITY),HUMIDITY) = MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.75,-132.0)
+            !OBE(NST(HUMIDITY),HUMIDITY) = 1.0
+            !NALLOBS = NALLOBS+1
         ENDIF
        ENDDO
       ENDDO
      ENDDO
   ENDDO  ! for L
-  ! SKIP REFLECTIVITY:
-555 CONTINUE
+
+  ! Interpolate RADREF to GRDBKGD0 as SH lower bound:
+  IF (MAXGRID(3) .NE. FCSTGRD(3) .OR. MAXGRID(4) .NE. FCSTGRD(4)) THEN
+    PRINT*,'The analysis grid does not match multigrid in Z or T, please check!'
+    PRINT*,'The SH lower bound calculation assumes they are the same'
+    STOP
+  ENDIF
+
+   DO I=1,MAXGRID(1)
+     IX0 = FLOAT(I-1)/FLOAT(MAXGRID(1)-1)*(FCSTGRD(1)-1)+1
+     IX1 = MIN(IX0+1,FCSTGRD(1))
+     DO J=1,MAXGRID(2)
+       IY0 = FLOAT(J-1)/FLOAT(MAXGRID(2)-1)*(FCSTGRD(2)-1)+1
+       IY1 = MIN(IY0+1,FCSTGRD(2))
+       DO K=1,MAXGRID(3)
+         DO L=1,MAXGRID(4)
+           ! Simple shift instead of interpolation:
+           GRDBKGD0(I,J,K,L,NUMSTAT+1) = 0.25*(BK0(IX0,IY0,K,L,NUMSTAT+1)+ &
+             BK0(IX1,IY0,K,L,NUMSTAT+1)+BK0(IX0,IY1,K,L,NUMSTAT+1)+BK0(IX1,IY1,K,L,NUMSTAT+1))
+         ENDDO
+       ENDDO
+     ENDDO
+   ENDDO
+   PRINT*,'Max dBZ over finest grid: ',maxval(GRDBKGD0(:,:,:,:,NUMSTAT+1)), &
+                                       minval(GRDBKGD0(:,:,:,:,NUMSTAT+1))
 
 END SUBROUTINE RDLAPSRDR
 
