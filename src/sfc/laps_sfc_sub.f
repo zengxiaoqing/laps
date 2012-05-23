@@ -736,7 +736,7 @@ c
                    goto 130
                 endif
               enddo 
-              goto 140
+              goto 150
 130           continue
               if(mm .le. 50)then
                 write(6,*)' Found a QC match',mm,ista,stn_a(ista)
@@ -763,6 +763,25 @@ c
                 endif
               endif
 
+!             Stuck temperature
+              if(obs_std(ista,iv_t) .ne. r_missing_data)then
+                if(obs_std(ista,iv_t)  .lt. 0.1)then
+                  if(t_s(mm) .ne. badflag)then
+                    obs(mm)%t_ea_f = 50.                  
+                    t_ea(mm)       = 50.                 
+                    write(6,136)mm,ista,obs(mm)%i,obs(mm)%j
+     1                       ,stn_a(ista),obs_std(ista,iv_t) 
+136		    format(' stuck temperature for   '
+     1                    ,i6,i6,4x,2i5,1x,a5,1x,f8.1,'deg')
+                    do it = 1,mt              
+                      write(6,*)' stuck temp time ',it 
+     1                         ,obs_a(ista,iv_t,it)
+     1                         ,obs_a(ista,iv_t,it)
+                    enddo
+                  endif
+                endif
+              endif
+
 !             Dewpoint bias
               if(bias_a(ista,iv_td) .ne. r_missing_data)then
                 biastd_corr = bias_a(ista,iv_td) 
@@ -772,10 +791,10 @@ c
                   if(td_s(mm) .ne. badflag)then
                     obs(mm)%td_ea_f = abs(biastd_corr)
                     td_ea(mm)       = abs(biastd_corr)
-                    write(6,136)mm,ista,obs(mm)%i,obs(mm)%j
+                    write(6,137)mm,ista,obs(mm)%i,obs(mm)%j
      1                       ,stn_a(ista),biastd_corr
      1                       ,bias_a(ista,iv_td),obs(mm)%elev_diff
-136		    format(' setting td_ea based on bias'
+137		    format(' setting td_ea based on bias'
      1                    ,i6,i6,4x,2i5,1x,a5,1x,2f8.2,f8.1)
                   endif                
 !                 if(abs(biastd_corr) .gt. 1000.)then
@@ -796,9 +815,9 @@ c
                   if(dd_s(mm) .ne. badflag)then
                     obs(mm)%dd_ea_deg = 180.                  
                     dd_ea(mm)         = 180.                 
-                    write(6,137)mm,ista,obs(mm)%i,obs(mm)%j
+                    write(6,138)mm,ista,obs(mm)%i,obs(mm)%j
      1                       ,stn_a(ista),obs_mean(ista,iv_dir) 
-137		    format(' stuck wind direction for   '
+138		    format(' stuck wind direction for   '
      1                    ,i6,i6,4x,2i5,1x,a5,1x,f8.1,'deg')
                     do it = 1,mt              
                       write(6,*)' stuck time ',it 
@@ -815,9 +834,9 @@ c
                   if(ff_s(mm) .ne. badflag)then
                     obs(mm)%ff_ea_kt = 50.                  
                     ff_ea(mm)        = 50.                 
-                    write(6,138)mm,ista,obs(mm)%i,obs(mm)%j
+                    write(6,139)mm,ista,obs(mm)%i,obs(mm)%j
      1                       ,stn_a(ista),obs_mean(ista,iv_spd)               
-138		    format(' stuck wind speed for       '
+139		    format(' stuck wind speed for       '
      1                    ,i6,i6,4x,2i5,1x,a5,1x,f8.1,'kt')
                     do it = 1,mt              
                       write(6,*)' stuck time ',it 
@@ -828,7 +847,7 @@ c
                 endif
               endif
 
-140         enddo ! mm
+150         enddo ! mm
 
             I4_elapsed = ishow_timer()
 
