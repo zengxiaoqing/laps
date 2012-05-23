@@ -2533,6 +2533,8 @@ c
         do ifield = 1,2 ! t and td
           do ista = 1,nsta
             icount = 0
+            sum = 0.
+            sumsq = 0.
             diff_sum   = 0.
             diff_sumsq = 0.
             do itime = 1,mt
@@ -2541,6 +2543,10 @@ c
                 diff_sum   = diff_sum   + diff_a(ista,ifield,itime)             
                 diff_sumsq = diff_sumsq + diff_a(ista,ifield,itime)**2
               endif
+
+              sum   = sum   + obs_a(ista,ifield,itime)             
+              sumsq = sumsq + obs_a(ista,ifield,itime)**2
+
             enddo
 
             frac = float(icount) / float(mt)
@@ -2552,10 +2558,18 @@ c
                 write(6,*)stn_a(ista),frac
      1                   ,' bias = ',bias                        
               endif
+
+              rmean = sum / float(icount)
+              obs_mean(ista,ifield) = rmean
+
+              obs_std(ista,ifield) = 
+     1          sqrt( (sumsq / float(icount)) - rmean**2)
+
             else 
               if(ista .le. 50)then
                 write(6,*)stn_a(ista),frac
               endif
+
             endif
 
           enddo ! ista
