@@ -11,5 +11,6 @@ verif_fcst_main                              verif_fcst.f
         get_meso_sao_pirep
         rd_acars_t
         stats_1d
+    verif_fcst_pt_composite                  verif_fcst_pt_composite.f
 
 
