@@ -9,6 +9,7 @@
         character*9 a9time
 	character*300 dir_t,filenamet
         character*10 c_n_fcst_times,c_model_fcst_intvl
+        character*150 verif_dir, n_plot_times_file
         integer, parameter :: lun=120
 
 !       This can be changed to read the modeltime for the forecast
@@ -94,6 +95,24 @@
      1                     r_missing_data,
      1                     model_verif_intvl,
      1                     n_fcst_times,
+     1                     j_status)
+
+!       Read n_plot_times from file
+        call get_directory('verif',verif_dir,len_verif)
+        lun_plot_times = 42
+        n_plot_times_file = verif_dir(1:len_verif)//'/n_fcst_times.dat'
+        open(lun_plot_times,file=n_plot_times_file,status='old')
+        read(lun_plot_times,*)n_plot_times
+        close(lun_plot_times)
+
+        call verif_fcst_pt_composite(i4time,a9time,                    
+     1                     model_fcst_intvl,
+     1                     model_fcst_len,
+     1                     model_cycle_time,
+     1                     laps_cycle_time,
+     1                     r_missing_data,
+!    1                     model_verif_intvl,
+     1                     n_plot_times,
      1                     j_status)
 
 999     continue
