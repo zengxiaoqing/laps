@@ -27,7 +27,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libdebugwind.a \
 
 EXE = verif_fcst.exe
 
-SRC=verif_fcst.f verif_fcst_pt_3d.f
+SRC=verif_fcst.f verif_fcst_pt_3d.f verif_fcst_pt_composite.f
 
 all: exe
 
