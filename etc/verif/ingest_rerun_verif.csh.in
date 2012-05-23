@@ -1,0 +1,34 @@
+#!@CSH@    
+
+setenv LAPSINSTALLROOT @prefix@ 
+setenv LAPS_DATA_ROOT $1                                  
+setenv MODELVTIME $2
+setenv N_FCST_TIMES $3
+
+echo "MODELVTIME is $MODELVTIME"
+
+setenv MODEL_FCST_INTVL `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_intvl`
+
+foreach EXE (obs_driver)
+  setenv BINARY $EXE.x
+
+  setenv STEP 0
+  while ($STEP <= $N_FCST_TIMES)
+    echo "STEP = $STEP"
+                                        
+#   Note that this is hardwired for hourly forecast intervals at present
+    @ FCST_SEC = $STEP * $MODEL_FCST_INTVL
+                        perl $LAPSINSTALLROOT/etc/timeconv.pl -a $MODELVTIME -t $FCST_SEC
+    setenv LAPS_A9TIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $MODELVTIME -t $FCST_SEC`
+    echo "running $LAPS_A9TIME $BINARY"
+    $LAPSINSTALLROOT/bin/$BINARY > $LAPS_DATA_ROOT/log/$EXE.log.rerun_$LAPS_A9TIME
+    ls -l $LAPS_DATA_ROOT/lapsprd/lso/$LAPS_A9TIME.lso
+    ls -l $LAPS_DATA_ROOT/log/$EXE.log.rerun_$LAPS_A9TIME
+
+    @ STEP = $STEP + 1
+  end # STEP up to N_FCST_TIMES  
+
+end
+
+echo "rerun complete"
+
