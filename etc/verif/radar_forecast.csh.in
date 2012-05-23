@@ -95,7 +95,7 @@ endif
 
 if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
     setenv L_PLOT_CRITERIA `tail -1 $SUMMARY_FILE`
-    setenv L_PLOT_CRITERIA T  # for testing
+#   setenv L_PLOT_CRITERIA T  # for testing
     if ($KEY_WIDTH == 0) then # TrueType case
         setenv KEY_WIDTH -16 
     endif
