@@ -19,24 +19,24 @@ LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
            $(SRCROOT)/src/wind/libwind.a \
 	   $(SRCROOT)/src/balance/libqbalpe.a \
            $(SRCROOT)/src/lib/temp/libtemp.a \
+	   $(SRCROOT)/src/humid/liblq3.a \
            $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/modules/libmodules.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  \
            $(SRCROOT)/src/lib/goeslib/libgoeslib.a \
-	   $(SRCROOT)/src/lib/radar/moving/libairad.a \
-	   $(SRCROOT)/src/humid/liblq3.a
+	   $(SRCROOT)/src/lib/radar/moving/libairad.a 
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libdebugwind.a \
 	     $(SRCROOT)/src/balance/libqbalpe.a \
              $(SRCROOT)/src/lib/temp/libdebugtemp.a \
+	     $(SRCROOT)/src/humid/liblq3.a \
              $(SRCROOT)/src/lib/libdebuglaps.a  \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a  \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
              $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a \
-	     $(SRCROOT)/src/lib/radar/moving/libdebugairad.a \
-	     $(SRCROOT)/src/humid/liblq3.a
+	     $(SRCROOT)/src/lib/radar/moving/libdebugairad.a
 
 #LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
 
