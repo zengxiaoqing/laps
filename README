@@ -403,16 +403,15 @@
 
      6) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/laps.cgi .
 
-     7) mkdir -p $web_root/domains
-
-     8) For each $LAPS_DATA_ROOT (foo):
+     7) For each DOMAIN NAME (foo):
   
      a) mkdir -p $web_root/domains/foo                   
 
      b) cd $web_root/domains/foo; ln -s $LAPS_DATA_ROOT private_data
 
-     9) edit 'etc/www/nph-laps.cgi' and set $default_domain to be your
-        favorite domain 'foo' established in step (8)
+     8) edit 'etc/www/nph-laps.cgi' and set $default_domain to be your
+        favorite domain 'foo' within the domain list established in 
+        step (7)
 
      At this point you should hopefully be able to use a web browser and
      run the "on-the-fly" page with something like this URL:
