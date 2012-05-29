@@ -3213,6 +3213,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
           etc/models/run_qsub_lfmp.sh 
+          etc/verif/ingest_rerun_verif.csh
           etc/verif/verif_fcst_driver.csh
           etc/verif/verif_forecast.csh
           etc/verif/cloud_analysis.csh
@@ -3381,6 +3382,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
           etc/models/run_qsub_lfmp.sh 
+          etc/verif/ingest_rerun_verif.csh
           etc/verif/verif_fcst_driver.csh
           etc/verif/verif_forecast.csh
           etc/verif/cloud_analysis.csh
