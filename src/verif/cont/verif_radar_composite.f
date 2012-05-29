@@ -48,6 +48,7 @@
         character*5 fcst_hh_mm
         character*9 a9time,a9time_valid,a9time_initial
         character*24 a24time_valid
+        character*24 a24time_valid_file, a24time_valid_expected
         character*150 hist_dir, cont_dir, verif_dir, plot_dir
         character*150 hist_file, members_file
         character*150 bias_file_in, ets_file_in
@@ -274,15 +275,35 @@
 !              Read bias and ets values
                do itime_fcst = 0,n_fcst_times
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
-                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
+                   call cv_i4tim_asc_lp(i4_valid,a24time_valid_expected
      1                                 ,istatus)
+                   call left_justify(a24time_valid_expected)
 
                    read(lun_bias_in,911)a24time_valid,    
      1                 (bias(imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
+                   call left_justify(a24time_valid)
+                   if(a24time_valid .ne.
+     1                a24time_valid_expected)then
+                       write(6,*)
+     1                 ,' WARNING: imodel / a24time (expected/file-1)'
+     1                 ,imodel,itime,a24time_valid_expected            
+     1                              ,a24time_valid              
+                       goto960
+                   endif
+
                    read(lun_ets_in,911)a24time_valid,    
      1                 (ets(imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
+                   call left_justify(a24time_valid)
+                   if(a24time_valid .ne.
+     1                a24time_valid_expected)then
+                       write(6,*)
+     1                 ,' WARNING: imodel / a24time (expected/file-2)'
+     1                 ,imodel,itime,a24time_valid_expected           
+     1                              ,a24time_valid         
+                       goto960
+                   endif
 
 911                format(a24,3x,20f12.3)
                enddo ! itime_fcst
@@ -294,8 +315,10 @@
                  read(lun_bias_in,*)
                  do itime_fcst = 0,n_fcst_times
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
-                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
+                   call cv_i4tim_asc_lp(i4_valid,a24time_valid_expected
      1                                 ,istatus)
+                   call left_justify(a24time_valid_expected)
+
                    read(lun_bias_in,51)cline
                    read(cline,912,err=913)a24time_valid,    
      1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
@@ -312,6 +335,15 @@
      1                              ,imodel=2,n_fdda_models)     
 915                format('in,jn,itime,n',i2,i2,i4,20i10)
 
+                   call left_justify(a24time_valid)
+                   if(a24time_valid .ne.
+     1                a24time_valid_expected)then
+                       write(6,*)
+     1                 ,' WARNING: imodel / a24time (expected/file-3)'
+     1                 ,imodel,itime,a24time_valid_expected           
+     1                              ,a24time_valid              
+                       goto960
+                   endif
                  enddo ! itime_fcst
                enddo ! jn
                enddo ! in
@@ -355,14 +387,25 @@
                read(lun_bias_in,*)
                do itime_fcst = 0,n_fcst_times
                    i4_valid = i4_initial + itime_fcst*model_verif_intvl      
-                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
+                   call cv_i4tim_asc_lp(i4_valid,a24time_valid_expected
      1                                 ,istatus)
+                   call left_justify(a24time_valid_expected)
+
                    read(lun_bias_in,923,err=925)a24time_valid,    
      1                 (frac_coverage                
      1                   (imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
 923                format(a24,3x,20f12.5)
 925                continue               
+                   call left_justify(a24time_valid)
+                   if(a24time_valid .ne.
+     1                a24time_valid_expected)then
+                       write(6,*)
+     1                 ,' WARNING: imodel / a24time (expected/file-4)'
+     1                 ,imodel,itime,a24time_valid_expected           
+     1                              ,a24time_valid                           
+                       goto960
+                   endif
                enddo ! itime_fcst
 
 !              Read members.txt file
@@ -396,7 +439,7 @@
 940        close(lun_bias_in)
            close(lun_ets_in)
 
-          enddo ! idbz
+          enddo ! idbz 
 
           where (n(:,:,:,:,:,:) .ne. imiss)                
            n_sum(:,:,:,:,:,:) = n_sum(:,:,:,:,:,:) + n(:,:,:,:,:,:)
