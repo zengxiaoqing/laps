@@ -32,9 +32,9 @@
 #                      which can also substitute for archive time (Eg., 28-Aug-2002-1200)
 #                      used for archive time on log filename
 #
-# -q  P                Use QSUB (PBS syntax on 'jet/ijet') where P is the project name
+# -q  P                Use QSUB (SGE syntax on ZEUS) where P is the project name
 #
-# -Q  P                Use QSUB (SGE syntax on 'jet/ijet') where P is the project name
+# -Q  P                Use QSUB (SGE syntax on JET) where P is the project name
 #
 # -u                   Input a umask to override the default of 002
 #
@@ -266,11 +266,11 @@ if($opt_q || $opt_Q){
 
       }
 
-      if($opt_q){     # PBS queueing syntax
-        print TFILE "#!/bin/sh --login\n";
-        print TFILE "#PBS -lnodes=1:$node_type,walltime=$walltime -A $opt_q\n";
+#     if($opt_q){     
+#       print TFILE "#!/bin/sh --login\n";
+#       print TFILE "#PBS -lnodes=1:$node_type,walltime=$walltime -A $opt_q\n";
 
-      }elsif($opt_Q){ # SGE queueing syntax
+      if($opt_Q || $opt_q){ 
         print TFILE "#!/bin/sh\n";
         print TFILE "#\$ -pe $node_type 1\n";
 
@@ -287,9 +287,9 @@ if($opt_q || $opt_Q){
       }
 
       print TFILE "  \n";
-      if($opt_q){
-        print TFILE "export PBS_MODE=1\n";
-      }
+#     if($opt_q){
+#       print TFILE "export PBS_MODE=1\n";
+#     }
       print TFILE "  \n";
       print TFILE "cd $LAPS_LOG_PATH\n";
       print TFILE "  \n";
@@ -310,8 +310,8 @@ if($opt_q || $opt_Q){
 
       chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
       if(defined $opt_w && ($ngroups eq 1) ){
-        if($opt_Q){
-          $command = "rm -f $LAPS_LOG_PATH/qsub.$exe.done.*; qsub -A $opt_Q $LAPS_LOG_PATH/$qsubfile";
+        if($opt_q){ # SGE queueing syntax (ZEUS)
+          $command = "qsub -A $opt_q $LAPS_LOG_PATH/$qsubfile";
           print "Executing $command\n";
           system("$command");
 
@@ -324,7 +324,7 @@ if($opt_q || $opt_Q){
             exit;
           }
 
-        }else{ # opt_q
+        }else{ # opt_Q SGE queueing syntax (JET)
           $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile";
           print "Executing $command\n";
           system("$command");
@@ -334,9 +334,9 @@ if($opt_q || $opt_Q){
       }else{
 #       $command = "@PBSHOME@/bin/qsub_wait $LAPS_LOG_PATH/$qsubfile&";
 #       $command = "$LAPSROOT/etc/run_qsub.sh $LAPS_LOG_PATH/$qsubfile";
-        if($opt_Q){
-          $command = "qsub -A $opt_Q $LAPS_LOG_PATH/$qsubfile";
-        }else{ # opt_q
+        if($opt_q){
+          $command = "qsub -A $opt_q $LAPS_LOG_PATH/$qsubfile";
+        }else{ # opt_Q
           $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/$qsubfile";
         }
         print "Executing $command\n";
