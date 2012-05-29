@@ -139,16 +139,21 @@ my $c8_project = uc @c8_project[0];
 my @LAPS_EXE;
 my $wgi_log;
 
+# Set first process that depends on LGA input - thus waits for LGA to finish
+my $lga_proc;                                                                                               
+
 if(defined $opt_s){ # "surface only"
-    @LAPS_EXE = qw(obs_driver.x lga.exe 
+    @LAPS_EXE = qw(lga.exe obs_driver.x 
                   sfc_qc.exe 
                   laps_sfc.x laps2grib.exe);
+    $lga_proc = "laps_sfc.x";  
 
 }elsif(defined $opt_K){ # Kalman only
     @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
 
 }elsif(defined $opt_M){ # Mesowave or other "surface only" LAPS
-    @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M, "laps2grib.exe");
+    @LAPS_EXE = ("lga.exe", "obs_driver.x", "sfc_qc.exe", $opt_M, "laps2grib.exe");
+    $lga_proc = "$opt_M"; 
 
 }elsif( ($opt_V eq "GSI_Prep")) { # GSI analysis or STMAS 3D analysis
     @LAPS_EXE = qw(lga.exe 
@@ -169,6 +174,7 @@ if(defined $opt_s){ # "surface only"
                   lvd_sat_ingest.exe
                   cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
                   qbalpe.exe lapsprep.exe laps2grib.exe);
+    $lga_proc = "obs_convert.exe"; 
 }elsif( ($opt_V eq "STMAS3Domega")) { # STMAS 3D analysis with add_omega
     @LAPS_EXE = qw(lga.exe
                   obs_driver.x
@@ -182,6 +188,7 @@ if(defined $opt_s){ # "surface only"
                   lvd_sat_ingest.exe
                   cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
                   qbalpe.exe add_omega.exe lapsprep.exe laps2grib.exe);
+    $lga_proc = "obs_convert.exe"; 
 }elsif( ($opt_V eq "STMAS3Dradar")) { # STMAS 3D analysis with add_omega
     @LAPS_EXE = qw(lga.exe
                   obs_driver.x
@@ -195,6 +202,7 @@ if(defined $opt_s){ # "surface only"
                   lvd_sat_ingest.exe
                   cloud.exe lq3driver.x STMAS3D.exe deriv.exe accum.exe lsm5.exe
                   qbalpe.exe lapsprep.exe laps2grib.exe);
+    $lga_proc = "obs_convert.exe"; 
 }elsif( ($opt_V eq "STMAS3Domega_nbal")) { # STMAS 3D replacing qbalpe by add_omega
     @LAPS_EXE = qw(lga.exe
                   obs_driver.x
@@ -208,6 +216,7 @@ if(defined $opt_s){ # "surface only"
                   lvd_sat_ingest.exe
                   cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
                   add_omega.exe lapsprep.exe laps2grib.exe);
+    $lga_proc = "obs_convert.exe"; 
 
 }elsif($opt_V eq "GSI_Post"){ # GSI analysis
     @LAPS_EXE = qw(GSI_Post.exe
@@ -223,6 +232,7 @@ if(defined $opt_s){ # "surface only"
                    lq3driver.x deriv.exe
                    lsm5.exe
                    qbalpe.exe);
+    $lga_proc = "wind.exe"; 
 
 }elsif($c8_project eq "RRV"){
     @LAPS_EXE = qw(mosaic_radar.x);
@@ -242,11 +252,12 @@ if(defined $opt_s){ # "surface only"
                   laps_sfc.x temp.exe
                   cloud.exe lq3driver.x deriv.exe
                   qbalpe.exe lapsprep.exe accum.exe laps2grib.exe);
+    $lga_proc = "wind.exe"; 
 
 }elsif($opt_E eq "LGA"){  # LGA only (e.g. for downscaling or model graphics)
     @LAPS_EXE = qw(lga.exe);
 
-}else{      # Full product set
+}else{      # Full product set for tradiational LAPS
     @LAPS_EXE = qw(lga.exe 
                   obs_driver.x sfc_qc.exe
                   ingest_pro.exe ingest_sounding.exe 
@@ -256,6 +267,11 @@ if(defined $opt_s){ # "surface only"
                   laps_sfc.x temp.exe 
                   mosaic_radar.x cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe qbalpe.exe lapsprep.exe laps2grib.exe);
+#   if($opt_S eq "multi"){
+#       $lga_proc = "ingest_aircraft.exe";                                                    
+#   }else{
+        $lga_proc = "wind.exe";                                                                           
+#   }
 }
 
 if(defined $opt_v){
@@ -379,7 +395,7 @@ my $hh = (gmtime)[2];
 my $mm = (gmtime)[1];
 my $hhmm = 100*$hh+$mm;
 $hhmm = "0".$hhmm while(length($hhmm)<4);
-my($LAPS_LOG_PATH,$LAPS_LOCK_PATH,$log_name,$qsub_name);
+my($LAPS_LOG_PATH,$LAPS_LOCK_PATH,$log_name,$qsub_name,$qsub_log_name);
 if(($fxa_sys!=0)and(! $opt_l)){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
@@ -407,7 +423,8 @@ if(defined $opt_V){
 }
 
 my $qhhmm = substr($yyjjjhhmm,5,4);
-$qsub_name = "$qsub_name$qhhmm";
+$qsub_log_name = "$qsub_name$qhhmm";
+$qsub_name     = "$qsub_name$yyjjjhhmm";
 
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
@@ -510,6 +527,8 @@ $nexe = @LAPS_EXE;
 $t=gmtime();
 print $t." Number of executables = $nexe\n";
 
+my ($done,$waitdone);               
+
 foreach $exe (@LAPS_EXE){
 
     my(@locks);
@@ -559,13 +578,31 @@ foreach $exe (@LAPS_EXE){
 #   $log =~ s/\..*$/\.log\.$hhmm/;
     $log =~ s/\..*$/\.log\.$yyjjjhhmm/;
 
+    $done = $exe;
+    $done =~ s/\..*$/\.done\.$yyjjjhhmm/;
+
     $execount = $execount + 1;
 
     if( (! $opt_q) && (! $opt_Q) ){ # Normal run of an executable
         if(-x  "$LAPSROOT/bin/$exe"){
-            print $t." Running $exe\n";
-            my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
-            &forksub($sys,$lockfile);
+            if($exe =~ "lga" && $opt_E ne "LGA"){
+                $waitdone = $done;
+                print $t." Running $exe in background, waitdone is $waitdone\n";
+                my $sys="($LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1; touch $LAPS_LOG_PATH/$done; echo `date -u` $exe finished in background)&";
+                &forksub($sys,$lockfile);
+            }elsif($exe eq $lga_proc){
+                print $t." Waiting for $waitdone to appear before running $exe\n";
+                my $iwait = &laps_tools::wait_for_file("$LAPS_LOG_PATH/$waitdone",5,1200);
+                $t=gmtime(); 
+                print $t." Waiting for $waitdone completed, now running $exe\n";
+                my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
+                &forksub($sys,$lockfile);
+            }else{                            
+                print $t." Running $exe\n";
+                my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
+                &forksub($sys,$lockfile);
+            }
+
             if(-e "$LAPSROOT/etc/$wgi_script_name\.pl"){
                 if($wgi_script_name eq "sfc"){
                    $exe_name = $1 if($exe =~ /^(\S+)\./);
@@ -606,14 +643,23 @@ foreach $exe (@LAPS_EXE){
             if($nodes_last != $nodes_current){ # of nodes has changed OR we are starting
 
                 if($execount > 1 && $qsub_mode eq "multi"){ # after start - close qsub script
+
+                    if($exe eq $lga_proc){
+                        print TFILE "  \n";
+                        print TFILE "echo `date -u` Waiting for $waitdone to appear before closing script and running $exe\n";
+                        print TFILE "$LAPSROOT/etc/wait_for_file.sh $LAPS_LOG_PATH/$waitdone 240 5\n";
+                        print TFILE "echo `date -u` Waiting for $waitdone completed, now closing script before running $exe\n";
+                        print TFILE "  \n";
+                    }
+
                     print $t." Closing $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh before executable # $execount\n";
-                    print TFILE "  \n";
-                    print TFILE "  touch $LAPS_LOG_PATH/$qsub_name\_$scriptcount.done\n"; # supports XML scenario
+                    print TFILE "\n";
+                    print TFILE "touch $LAPS_LOG_PATH/sched\_$yyjjjhhmm\_$scriptcount.done\n"; # supports XML scenario
                     close(TFILE);
 
 #                   print $t." Appending $LAPS_LOG_PATH/$qsub_name\_1.sh before executable/script # $execount $scriptnext\n";
 #                   open(TFILE_FIRST,">>$LAPS_LOG_PATH/$qsub_name\_1.sh");
-#                   print TFILE_FIRST "  \n";
+#                   print TFILE_FIRST "\n";
 #                   print TFILE_FIRST "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$scriptnext.sh 1> $LAPS_LOG_PATH/$qsub_name\_$scriptnext.log 2>&1\n";
 #                   close(TFILE_FIRST);
 
@@ -629,7 +675,7 @@ foreach $exe (@LAPS_EXE){
                     print $t." Opening $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh starting with executable # $execount\n";
                     open(TFILE,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh");
 #                   open(TFILE_SUB,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
-                    print TFILE "#!/bin/sh\n";
+                    print TFILE "#!/bin/sh --login\n";
 
                 }
 
@@ -656,29 +702,48 @@ foreach $exe (@LAPS_EXE){
                 my $wall_time_min = int($wall_time_hrs * 60.) - ($wall_time_hr * 60);
                 $wall_time_min="0".$wall_time_min if(length($wall_time_min)<2);
 
-                if($opt_q){
-                    $wall_time_hr="0".$wall_time_hr if(length($wall_time_hr)<2);
-                    print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$wall_time_hr:$wall_time_min:00 -A $opt_q\n";
-                }elsif($opt_Q){ 
+                my $vmem_gb=1.0;
+                if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
+                    if($opt_V eq "STMAS3D") {
+                        if($npts > 7000000){
+                            $vmem_gb=12.0
+                        }else{
+                            $vmem_gb=6.0
+                        }
+                    }else{
+                        $vmem_gb=12.0
+                    }
+                }
+
+#               if($opt_q){
+#                   $wall_time_hr="0".$wall_time_hr if(length($wall_time_hr)<2);
+#                   print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$wall_time_hr:$wall_time_min:00 -A $opt_q\n";
+                if($opt_Q || $opt_q){ 
                     if($qsub_mode eq "multi" || ! defined($opt_P)){
-                        print TFILE "#\$ -pe $node_type $nodes_current\n";
+                        if($opt_Q){
+                            print TFILE "#\$ -pe $node_type $nodes_current\n";
+                        }else{
+                            print TFILE "#PBS -l procs=$nodes_current\n";
+                        }
                         if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
-                            my $vmem_gb;
-                            if($opt_V eq "STMAS3D") {
-                                if($npts > 7000000){
-                                    $vmem_gb=12.0
-                                }else{
-                                    $vmem_gb=6.0
-			        }
+                            if($opt_Q){
+                                print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=".$vmem_gb."G\n";
                             }else{
-                                $vmem_gb=12.0
+                                print TFILE "#PBS -l walltime=$wall_time_hr:$wall_time_min:00\n";
                             }
-                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=".$vmem_gb."G\n";
                         }else{
                             if($nodes_current > 1){
-                                print TFILE "#\$ -l h_rt=00:15:00\n";
+                                if($opt_Q){
+                                    print TFILE "#\$ -l h_rt=00:15:00\n";
+                                }else{
+                                    print TFILE "#PBS -l walltime=00:15:00\n";
+                                }
                             }else{ 
-                                print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                                if($opt_Q){
+                                    print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                                }else{
+                                    print TFILE "#PBS -l walltime=$wall_time_hr:$wall_time_min:00\n";
+                                }
                             }
                         }
                     }else{ # qsub in "single" mode with $opt_P defined for multiple processors
@@ -688,9 +753,16 @@ foreach $exe (@LAPS_EXE){
                         }
                     }
                     if($execount == 1 || $qsub_mode eq "multi"){
-                        print TFILE "#\$ -A $opt_Q\n";
-                        print TFILE "#\$ -S /bin/sh\n";
-                        print TFILE "#\$ -cwd\n";
+                        if($opt_Q){
+                            print TFILE "#\$ -A $opt_Q\n";
+                            print TFILE "#\$ -S /bin/sh\n";
+                            print TFILE "#\$ -cwd\n";
+                        }else{
+                            print TFILE "#PBS -A $opt_q\n";
+                            print TFILE "#PBS -N $qsub_name\n";
+                            print TFILE "#PBS -j oe\n";
+                            print TFILE "#PBS -o $LAPS_LOG_PATH/$qsub_log_name\_$execount.log\n";
+                        }
                     }
                 }
 
@@ -742,14 +814,41 @@ foreach $exe (@LAPS_EXE){
             }
         }
 
+        if($exe eq $lga_proc){
+            print TFILE "echo `date -u` Waiting for $waitdone to appear before running $exe\n";
+            print TFILE "$LAPSROOT/etc/wait_for_file.sh $LAPS_LOG_PATH/$waitdone 240 5\n";
+            print TFILE "echo `date -u` Waiting for $waitdone completed, now running $exe\n";
+            print TFILE "  \n";
+        }
+
         if($nodes_current > 1){
 #           print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh\n";
-            print TFILE "mpirun -np $nodes_current LAPS_A9TIME=$yyjjjhhmm $LAPSROOT/../../builds_mpi/laps/bin/$exe $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            if(defined $opt_Q){ # JET
+                print TFILE "mpirun -np $nodes_current LAPS_A9TIME=$yyjjjhhmm $LAPSROOT/../../builds_mpi/laps/bin/$exe $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            }else{ # Zeus
+                print TFILE "module load mpt\n";
+                print TFILE "which mpiexec_mpt\n";
+                print TFILE "export MPI_VERBOSE=1\n";
+                print TFILE "export MPI_DISPLAY_SETTINGS=1\n";
+                print TFILE "export MPI_BUFS_PER_PROC=128\n";
+                print TFILE "export MPI_BUFS_PER_HOST=128\n";
+                print TFILE "export MPI_IB_RAILS=2\n";
+                print TFILE "export MPI_GROUP_MAX=128\n";
+                print TFILE "\n";
+#               print TFILE "mpiexec_mpt -np $nodes_current LAPS_A9TIME=$yyjjjhhmm $LAPSROOT/../../builds_mpi/laps/bin/$exe $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log 2>&1\n";
+                print TFILE "mpiexec_mpt -np $nodes_current $LAPSROOT/../../builds_mpi/laps/bin/$exe $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            }
 #           print TFILE_SUB "umask 002\n";
 #           print TFILE_SUB "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 #           print TFILE_SUB "$LAPSROOT/../../builds_mpi/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
-            print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            if($exe =~ "lga" && $opt_E ne "LGA"){
+                $waitdone = $done;
+                print TFILE "echo `date -u` Running $exe in background, waitdone is $waitdone\n";
+                print TFILE "($LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1; touch $LAPS_LOG_PATH/$done)&\n";
+            }else{
+                print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            }
             print TFILE "error=\$?\n";
             print TFILE "if [ \${error} -ne 0 ]; then\n";
             print TFILE "  echo \"ERROR: $exe crashed!  Exit status=\${error}\"\n";
@@ -774,10 +873,10 @@ foreach $exe (@LAPS_EXE){
 
                 if($opt_f){ 
                     print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT $yyjjjhhmm $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
-                    print TFILE "$LAPSROOT/etc/verif/cloud_analysis.csh $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/cloud_verif.log 2>&1\n";
+                    print TFILE "$LAPSROOT/etc/verif/cloud_analysis.csh $LAPS_DATA_ROOT $opt_f 1> $LAPS_LOG_PATH/cloud_verif.log 2>&1\n";
                 }else{ # $opt_F
                     print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT $yyjjjhhmm $aspect_word 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
-                    print TFILE "$LAPSROOT/etc/verif/cloud_analysis.csh $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/cloud_verif.log 2>&1\n";
+                    print TFILE "$LAPSROOT/etc/verif/cloud_analysis.csh $LAPS_DATA_ROOT $opt_F 1> $LAPS_LOG_PATH/cloud_verif.log 2>&1\n";
                 }
             }
 
@@ -786,7 +885,7 @@ foreach $exe (@LAPS_EXE){
             print TFILE "  \n";
             print $t." Closing $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh with executable # $execount\n";
             print TFILE "  \n";
-            print TFILE "  touch $LAPS_LOG_PATH/$qsub_name\_$scriptcount.done\n"; # supports XML scenario
+            print TFILE "  touch $LAPS_LOG_PATH/sched\_$yyjjjhhmm\_$scriptcount.done\n"; # supports XML scenario
             close(TFILE);
 #           close(TFILE_SUB);
             system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
@@ -797,9 +896,28 @@ foreach $exe (@LAPS_EXE){
 
             for ($iscript=1; $iscript<=$scriptcount; $iscript++){
                 if(! defined $opt_X){ # Not Workflow Manager XML scenario
-                    $command = "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$iscript.sh";
-                    print "Executing $command\n";
-                    system("$command");
+                    if(defined $opt_Q){ # JET
+                        $command = "$LAPSROOT/etc/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$iscript.sh";
+                        print "Executing $command\n";
+                        system("$command");
+                    }else{ # $opt_q ZEUS
+                        $command = "qsub -A $opt_q $LAPS_LOG_PATH/$qsub_name\_$iscript.sh";
+                        print "Executing $command\n";
+                        system("$command");
+
+#                       Wait for $wait_file to appear                              
+                        my $wait_file = "$LAPS_LOG_PATH/sched\_$yyjjjhhmm\_$iscript.done";
+                        $t = gmtime;
+                        print "Waiting for $wait_file for up to 60 minutes from $t...\n";
+                        my $iwait = &laps_tools::wait_for_file("$wait_file",60,3600);
+                        $t = gmtime;
+                        print "Waited for $wait_file with $iwait waits remaining at $t\n";
+                        if(! -e "$wait_file"){
+                            print "ERROR: $wait_file never appeared with $iwait waits remaining\n";
+                            exit;
+                        }
+                        system("chmod 664 $LAPS_LOG_PATH/$qsub_log_name\_$iscript.log");
+                    }
                 }
             }
 
@@ -852,7 +970,7 @@ if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
         }
         print TFILE "  $sys\n";
         print TFILE "  \n";
-        print TFILE "  touch $LAPS_LOG_PATH/$qsub_name\_$scriptcount.done\n"; # supports XML scenario
+        print TFILE "  touch $LAPS_LOG_PATH/sched\_$yyjjjhhmm\_$scriptcount.done\n"; # supports XML scenario
         close(TFILE);
     } 
    
@@ -910,6 +1028,10 @@ if($opt_f && (! $opt_q) && (! $opt_Q) ){
 }
 
 system("echo $yyjjjhhmm 1> $LAPS_LOG_PATH/sched.done 2>&1");
+ 
+#if(defined $opt_q){
+#   system("chmod 664 $LAPS_LOG_PATH/$qsub_log_name*.log");
+#}
 
 if(defined $opt_R){
     my ($domain,$remote_data_root) = split(":",$opt_R); 
@@ -931,7 +1053,7 @@ if(defined $opt_R){
         $wallclock_time_min = 2.0 * $cycle_time_min;
 #   }    
 
-    if(defined $opt_Q){
+    if(defined $opt_Q || defined $opt_q){
         my $wall_time_hr  = int( ( $wallclock_time_min / 60.) + $extend_time  ); 
 
         my $wall_time_min = int($wallclock_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
@@ -978,7 +1100,11 @@ if(defined $opt_R){
         print TFILE "#exit\n";
         close(TFILE);
 
-        $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/qsub_xfer_laps.sh";
+        if(defined $opt_Q){ # JET
+            $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/qsub_xfer_laps.sh";
+        }else{    # opt_q     ZEUS
+            $command = "qsub -A $opt_q $LAPS_LOG_PATH/qsub_xfer_laps.sh";
+        }
         print "\nCommand file:\n";
         system("cat $LAPS_LOG_PATH/qsub_xfer_laps.sh");
 
