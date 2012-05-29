@@ -366,7 +366,7 @@ if( !defined $no_ggm ){
        if( substr($ENV{HOSTTYPE},0,4) eq "i386"){
           $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n hserial -w gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
        }else{
-          $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n hserial -w gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
+          $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -q $qspn -n hserial -w gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
        }
     }else{
        $command = "$INSTALL_ROOT/bin/gridgen_model.exe $DATA_ROOT";
