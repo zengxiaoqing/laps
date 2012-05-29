@@ -105,6 +105,9 @@ find ./log     -type f -name "*.wgi.$YYDDDHHMM" -print   >> lapstar.txt
 # Sfc Verification file
 ls -1 log/qc/laps_sfc.ver.$HHMM                          >> lapstar.txt
 
+# Solar Analysis Verification file
+ls -1 lapsprd/verif/SWI/pt/load.png                      >> lapstar.txt
+
 # Static files
 ls -1 static/*.nl                                        >> lapstar.txt
 ls -1 static/nest7grid.parms                             >> lapstar.txt
