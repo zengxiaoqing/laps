@@ -8,3 +8,4 @@ verif_radar_main                                        verif_cont.f
         skill_scores                                    skill_scores.f
         calc_contable_3d                                calc_contable.f
         put_contables                                   put_contables.f
+    verif_radar_composite                               verif_radar_composite.f
