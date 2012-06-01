@@ -63,8 +63,11 @@ cdis
         do jo = 1,ny_r
         do io = 1,nx_r
 
-            i = io + ioffset
-            j = jo + joffset
+          i = io + ioffset
+          j = jo + joffset
+
+          if(i .ge. 1 .and. i .le. ni .and. 
+     1       j .ge. 1 .and. j .le. nj)then     
 
             if(         u(i,j,k) .ne. r_missing_data
      1  .and. grid_ra_vel(io,jo,k) .ne. r_missing_data)then
@@ -90,6 +93,8 @@ cdis
                 endif
 
             endif
+
+          endif
 
         enddo ! i
         enddo ! j
