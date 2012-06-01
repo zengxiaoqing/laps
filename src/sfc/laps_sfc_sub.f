@@ -705,21 +705,31 @@ c
 
         I4_elapsed = ishow_timer()
 
+!       Just experimental for now
+        call read_sfc_verif_history(51,r_missing_data
+     1                             ,mo,mf,mt
+     1                             ,stn_a,bkg_a,obs_a,diff_a,nsta
+     1                             ,istatus)
+
+        I4_elapsed = ishow_timer()
+
+ 	call sfc_verif_qc(r_missing_data
+     1                   ,mo,mf,mt
+     1                   ,stn_a,bkg_a,obs_a,diff_a,nsta
+     1                   ,bias_a,obs_mean,obs_std)
+
+        I4_elapsed = ishow_timer()
+
         if(.true.)then
-!           Just experimental for now
-            call read_sfc_verif_history(51,r_missing_data
-     1                                 ,mo,mf,mt
-     1                                 ,stn_a,bkg_a,obs_a,diff_a,nsta
-     1                                 ,istatus)
+            call apply_qc_info(n_obs_b,r_missing_data
+     1                        ,mo,mf,mt
+     1                        ,stn_a,bkg_a,obs_a,diff_a,nsta
+     1                        ,bias_a,obs_mean,obs_std
+     1                        ,mxstn,obs,stations
+     1                        ,t_s,t_ea,td_s,td_ea
+     1                        ,dd_s,dd_ea,ff_s,ff_ea)
 
-            I4_elapsed = ishow_timer()
-
- 	    call sfc_verif_qc(r_missing_data
-     1                       ,mo,mf,mt
-     1                       ,stn_a,bkg_a,obs_a,diff_a,nsta
-     1                       ,bias_a,obs_mean,obs_std)
-
-            I4_elapsed = ishow_timer()
+        else
 
 !           Apply QC information                            
             iv_t   = 1
