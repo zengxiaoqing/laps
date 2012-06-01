@@ -22,6 +22,7 @@ main                                           laps_sfc.f
             bkg_chk                                 "
         read_sfc_verif_history                 lib/laps_routines.f
         sfc_verif_qc                                "
+        apply_qc_info                          lib/apply_qc_info.f
         mdat_laps                              mdatlaps.f
             splie2                                  "
             splin2                                  "
