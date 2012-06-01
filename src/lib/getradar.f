@@ -76,7 +76,7 @@ cdoc
      1  ,nx_r,ny_r,igrid_r                                           ! I
      1  ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a
      1  ,ioffset,joffset                                             ! O
-     1  ,l_offset                                                    ! I
+     1  ,l_offset_radar                                              ! I
      1  ,n_vel_a
      1  ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a
      1  ,istatus_multi_vel,istatus_multi_nyq)
@@ -102,7 +102,7 @@ cdoc    Called from wind/lapsplot
 !       idx_radar           Output  1D grid of radar 'vxx' numbers
 !       v_nyquist_in_a      Output  Array: volume nyquist velocity of the radars
 !       i_offset,joffset    Input   offset arrays (1D)
-!       l_offset            Input   use offset arrays?
+!       l_offset_radar      Input   use offset arrays?
 !       n_vel_a             Output  Array: # of grid points with measurable velocity
 !       rlat_radar_a        Output  Array: Radar Latitude (Degrees)
 !       rlon_radar_a        Output  Array: Radar Longitude (Degrees)
@@ -126,7 +126,7 @@ cdoc    Called from wind/lapsplot
 
         Integer       ioffset(max_radars)
         Integer       joffset(max_radars)
-        logical l_apply_map, l_offset
+        logical l_apply_map, l_offset_radar
 
         real grid_ra_vel(nx_r,ny_r,kmax,max_radars)
         real grid_ra_nyq(nx_r,ny_r,kmax,max_radars)
@@ -221,8 +221,8 @@ cdoc    Called from wind/lapsplot
 
                 else ! valid radar
 
-                    if(l_offset)then
-                      call get_ij_offset_radars(nx_l,ny_l,1,              ! I
+                    if(l_offset_radar)then
+                      call get_ij_offset_radars(imax,jmax,1,              ! I
      1                              igrid_r,l_offset_radar,               ! I   
      1                              lat,lon,                              ! I
      1                              rlat_radar_a(n_radars),               ! I
@@ -294,7 +294,7 @@ cdoc    Called from wind/lapsplot
                       ioffset(n_radars) = 0
                       joffset(n_radars) = 0
 
-                    endif ! l_offset
+                    endif ! l_offset_radar
 
                 endif ! valid radar
 
