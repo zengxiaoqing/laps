@@ -170,11 +170,14 @@ while ($IMEMBER <= $NMEMBERS)
     @ ICOL = $IMEMBER + 2
     
     setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
-    echo "IMEMBER MEMBER ICOL: $IMEMBER $MEMBER $ICOL"
+
+#   if ($MEMBER == persistence) then # shorten appearance in the title
+#       setenv MEMBER persist 
+#   endif
 
     if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
         setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
-        setenv TITLE "$MEMBER $PCT%"
+        setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT%"
 
         if ($PCT >= 80) then
             setenv LS 1
@@ -186,11 +189,13 @@ while ($IMEMBER <= $NMEMBERS)
 
     else                                                     # Percentage not present
         setenv PCT ""
-        setenv TITLE $MEMBER
+        setenv TITLE `echo $MEMBER | sed 's/_/ /g'`
         setenv LS 1
         setenv LW 3
 
     endif
+
+    echo "IMEMBER MEMBER ICOL TITLE: $IMEMBER $MEMBER $ICOL $TITLE"
 
     if ($NMEMBERS == 1) then
         echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
