@@ -472,6 +472,10 @@ for ($g=1; $g<=$ngrid; $g++) {
       } else {
         $lfmpostlog = "lfmpost_";
       }
+      #add grid id to logfile name from $grid 
+      my $dom1 = $grid;
+      $dom1 = "0$dom1" while (length($dom1)<2);
+      $lfmpostlog = $lfmpostlog."d$dom1"."_";
       $lfmpostlog = "$lfmpostlog$yyyy$initmm$initdd$inithh"."_$cFcstExt.log";
 
 #LW check to see if the directory $lapsdataroot/d0$grid exists.
