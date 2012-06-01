@@ -51,15 +51,16 @@
         character*10 compdir
 
         integer n_fields
-        parameter (n_fields=2)
+        parameter (n_fields=10)
         character*10 var_a(n_fields)
         integer nthr_a(n_fields) ! number of thresholds for each field
         character*2 c2_region
         character*10 c_thr
 
 !       Specify what is being verified
-        data var_a      /'TSF','R01'/ 
-        data nthr_a     /1,1/        
+        data var_a      
+     1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF','TPW','R01','RTO'/
+        data nthr_a     /1,1,1,1,1,1,1,1,1,1/        
 
         integer contable(0:1,0:1)
 
@@ -110,15 +111,6 @@
         rmiss = -99.9
         imiss = -999
 
-!       Initialize arrays
-        obs_mean_comp = rmiss
-        fcst_mean_comp = rmiss
-        rms_comp = rmiss
-        n_sum = 0
-        obs_sum = 0.
-        fcst_sum = 0.
-        sumsq = 0.
-
         thresh_var = 20. ! lowest threshold for this variable
 
         write(6,*)' Time is ',i4time_sys,a9time
@@ -166,6 +158,15 @@
         call get_directory('verif',verif_dir,len_verif)
 
         do ifield = 1,n_fields
+
+!        Initialize arrays
+         obs_mean_comp = rmiss
+         fcst_mean_comp = rmiss
+         rms_comp = rmiss
+         n_sum = 0
+         obs_sum = 0.
+         fcst_sum = 0.
+         sumsq = 0.
 
          var_2d = var_a(ifield)
          call s_len(var_2d,lenvar)
@@ -275,7 +276,7 @@
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid_expected
      1                                 ,istatus)
 
-                   read(lun_stats_in,911)a24time_valid_file,    
+                   read(lun_stats_in,911,err=960)a24time_valid_file,    
      1                  obs_mean(imodel,itime_fcst,iregion),
      1                  fcst_mean(imodel,itime_fcst,iregion),
      1                  rms(imodel,itime_fcst,iregion)
