@@ -29,8 +29,9 @@ SRC	= machine_dependent.F \
           add.f \
           addcon.f \
           advect.f \
-          aski4tim_gg.f \
+          apply_qc_info.f \
           array_diagnosis.f \
+          aski4tim_gg.f \
           atan3.f \
           atan3d.f \
           bilinear_interp.f \
