@@ -167,6 +167,7 @@ c     get perimeter values for the domain
 
 c     open file 
 
+
        OPEN(70,FILE=path(1:path_len)//filename(1:file_len)
      1     ,ACCESS='DIRECT',RECL=840,
      1 FORM='UNFORMATTED',STATUS='OLD',ERR=9000)
@@ -174,7 +175,16 @@ C
       irec = 0
 c     read header information
 
-      READ(70,REC=1,ERR=9999) NBUF 
+      READ(70,REC=1,ERR=9999) NBUF
+
+C     endian swap if needed
+      if (filename(4:5) .lt. '09') then
+      do k  = 1, 210
+         call endian4 (nbuf(k))
+      enddo
+      endif
+
+
       nrec = nbuf(1)
       write(6,*) 'Header Record Contents:'
       write(6,*) '-----------------------'
@@ -196,6 +206,15 @@ c     read header information
            NBUF(LLL) = 0
   205   CONTINUE
         READ(70,REC=ILIN,ERR=9999) NBUF 
+
+c     Endian swap if needed
+      if (filename(4:5) .lt. '09') then
+        do k = 1, 210
+           call endian4 (nbuf(k))
+        enddo
+      endif
+
+
         DO 210 MM = 1,210
            RBUF(MM) = (NBUF(MM)/FLOAT(ISCALE(MM)))
   210   CONTINUE
@@ -318,13 +337,39 @@ c     Call write routine
      1       istatus)
 C
   200 continue
-      go to 9999
+      go to 9001
  9000 continue
+      write (6,*) 'routine process_snd failed on open, 9000'
+
 c     call sdest('open error',0)
 C
  9999 CONTINUE
-      istatus   = 1
+      write (6,*) 'routine process_snd failed on read, 9999'
+      istatus   = 0
       CLOSE(70)
+      return
 
+ 9001 Continue
+      write (6,*) 'Routine Process_SND Success on read'
+      istatus = 1
+      close (70)
       RETURN
       END
+
+
+      subroutine endian4(byte)
+c
+      integer*1 byte(4),tmp(4)
+c
+      do j = 1, 4
+        tmp(j) = byte(j)
+      enddo  !  j
+c
+      do j = 1, 4
+        j1 = 5-j
+        byte(j1) = tmp(j)
+      enddo  !  j                      
+c
+      return
+      end
+
