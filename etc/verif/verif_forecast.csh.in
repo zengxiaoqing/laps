@@ -30,6 +30,8 @@ setenv SUBTYPE $9
 if ($SUBTYPE == "") then
     setenv SUBDIR $TYPE
     setenv DURATION ""
+    setenv SUMMARY_FILE /dev/null
+    echo "SUMMARY_FILE is $SUMMARY_FILE"
 else
     setenv SUBDIR $TYPE/$SUBTYPE
     if($SUBTYPE == "comp") then
@@ -37,6 +39,9 @@ else
     else
         setenv DURATION "30-day "
     endif
+    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$TYPE/summary_$SUBTYPE.txt
+    echo "SUMMARY_FILE is $SUMMARY_FILE"
+    ls -l $SUMMARY_FILE
 endif
 
 setenv DOMAIN_NAME `echo $DOMAIN_NAME_IN | sed 's/_/ /g'`
@@ -93,6 +98,19 @@ else
     setenv TF ""
 endif
 
+if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
+    setenv L_PLOT_CRITERIA `tail -1 $SUMMARY_FILE`
+#   setenv L_PLOT_CRITERIA T  # for testing
+    if ($KEY_WIDTH == 0) then # TrueType case
+        setenv KEY_WIDTH -16 
+    endif
+else                                                     # Percentage will not be present
+    setenv L_PLOT_CRITERIA T 
+    if ($KEY_WIDTH == 0) then # TrueType case
+        setenv KEY_WIDTH -14 
+    endif
+endif
+
 echo " "
 echo "inputs..."
 echo "TYPE = $TYPE"  
@@ -122,7 +140,7 @@ echo " "
 echo "Start time: $STARTTIME1 $STARTTIME2"
 echo "Stop  time: $STOPTIME1 $STOPTIME2 NLINE is $NLINE"
 
-setenv NMEMBERS `wc -l $MEMBERS_FILE | cut -c1-2`
+setenv NMEMBERS `grep -v persistence $MEMBERS_FILE | wc -l | cut -c1-2`
 echo "NMEMBERS: $NMEMBERS"
 
 # Construct gnuplot .gp file
@@ -178,39 +196,61 @@ while ($IMEMBER <= $NMEMBERS)
     endif
 
     setenv MEMBER `head -$IMEMBER $MEMBERS_FILE | tail -1`
-    echo "IMEMBER MEMBER IBLOCK: $IMEMBER $MEMBER $IBLOCK"
+
+    if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
+        setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
+        setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT%"
+
+
+        if ($PCT >= 80) then
+            setenv LS 1
+            setenv LW 3
+        else 
+            setenv LS 2
+            setenv LW 1
+        endif
+
+    else                                                     # Percentage not present
+        setenv PCT ""
+        setenv TITLE `echo $MEMBER | sed 's/_/ /g'`
+        setenv LS 1
+        setenv LW 3
+
+    endif
+
+    echo "IMEMBER MEMBER IBLOCK TITLE: $IMEMBER $MEMBER $IBLOCK $TITLE"
 
     if ($NFIELDS == 3) then
 
         setenv PS 1.5
 
         if ($NMEMBERS == 1) then
-            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'"$TH"$T2 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 2, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 3'    >> $GNUPLOTFILE
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 2, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 3'    >> $GNUPLOTFILE
         else if ($IMEMBER == 1) then
-            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'"$TH"$T2 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 2, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 3, \' >> $GNUPLOTFILE
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 2, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 3, \' >> $GNUPLOTFILE
         else if ($IMEMBER == $NMEMBERS) then
-            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 3'    >> $GNUPLOTFILE
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 3'    >> $GNUPLOTFILE
         else
-            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $MEMBER$TF'" with linespoints lw 3 pt '$PT' ps '$PS' lt 3, \' >> $GNUPLOTFILE
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 3, \' >> $GNUPLOTFILE
         endif
 
     else # NFIELDS = 1
 
         if ($NMEMBERS == 1) then
-            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $MEMBER$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
         else if ($IMEMBER == 1) then
-            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $MEMBER$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
         else if ($IMEMBER == $NMEMBERS) then
-            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $MEMBER$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
 
         else
-            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $MEMBER$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
         endif
 
     endif
@@ -226,6 +266,10 @@ echo "outputs..."
 ls -l $GNUPLOTFILE
 cd $PNGDIR
 ls -l $PNGFILE                          
+
+if ($L_PLOT_CRITERIA == "F") then
+    echo "exiting to skip links, thumbnail, and potential animation sections - plot criteria flag is false"
+endif
 
 rm -f          $VAR_LC\_$TYPE\_fcst.png
 ln -s $PNGFILE $VAR_LC\_$TYPE\_fcst.png
