@@ -5,6 +5,11 @@ setenv LAPS_DATA_ROOT $1
 setenv LOGDIR $LAPS_DATA_ROOT/log
 setenv IMGDIR $LAPS_DATA_ROOT/lapsprd/verif/SWI/pt
 
+setenv DOMAIN_NAME_IN $2
+setenv DOMAIN_NAME `echo $DOMAIN_NAME_IN | sed 's/_/ /g'`
+
+echo "DOMAIN_NAME is $DOMAIN_NAME"                                    
+
 # parse cloud logfiles to make a temporary data file for input to gnuplot
 # this could eventually be done from the WGI script so we just grep one log file at a time
 setenv FILE $LOGDIR/cloud_gp.log
@@ -80,7 +85,11 @@ echo 'set grid'                                         >> $GNUPLOTFILE
 echo 'set datafile missing "-99.900"'                   >> $GNUPLOTFILE
 #echo 'set xlabel "Date Time"'    $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
 echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
-echo 'set title "Global Horizontal Irradiance Observed vs Analyzed"' $TITLE_FONT >> $GNUPLOTFILE
+if ($DOMAIN_NAME == "") then
+    echo 'set title "Global Horizontal Irradiance Analyzed vs Observed"' $TITLE_FONT >> $GNUPLOTFILE
+else
+    echo 'set title "Global Horizontal Irradiance Analyzed vs Obs. ('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
+endif
 echo 'set key left box'                                 >> $GNUPLOTFILE
 echo 'set key spacing' $KEY_SPACING                                                                    >> $GNUPLOTFILE
 echo 'set key height' $KEY_HEIGHT                                                                      >> $GNUPLOTFILE
