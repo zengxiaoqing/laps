@@ -463,10 +463,11 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
            
             CALL PSTN2NUMB(5,NN,NG,NC)
 
-            NB(NC) = 1
+            NB(NC) = 2
             
             ! LOW BOUND FROM REFLECTIVITY DID NOT GET SCALED AND SO HERE IT DOES:
             LB(NC) = -GRDBKGND(I,J,K,T,5)+GRDBKGND(I,J,K,T,NUMSTAT+1)
+            UB(NC) = -GRDBKGND(I,J,K,T,5)+GRDBKGND(I,J,K,T,NUMSTAT+2)
           ENDDO
         ENDDO
       ENDDO
