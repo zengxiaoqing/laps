@@ -366,7 +366,7 @@ SUBROUTINE RDLAPSRDR
                 MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,-132.0)
             ELSE
               BK0(I,J,K,L,NUMSTAT+1)= &
-                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.5+0.5*radar_ref_3d(I,J,K)/30.0,-132.0)
+                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.2+0.8*radar_ref_3d(I,J,K)/30.0,-132.0)
             ENDIF
    
             !OBS(NST(HUMIDITY),HUMIDITY) = MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.75,-132.0)
@@ -396,6 +396,7 @@ SUBROUTINE RDLAPSRDR
            ! Simple shift instead of interpolation:
            GRDBKGD0(I,J,K,L,NUMSTAT+1) = 0.25*(BK0(IX0,IY0,K,L,NUMSTAT+1)+ &
              BK0(IX1,IY0,K,L,NUMSTAT+1)+BK0(IX0,IY1,K,L,NUMSTAT+1)+BK0(IX1,IY1,K,L,NUMSTAT+1))
+           GRDBKGD0(I,J,K,L,NUMSTAT+2) = 1000.0 ! UNDEFINED UPPER BOUND
          ENDDO
        ENDDO
      ENDDO
