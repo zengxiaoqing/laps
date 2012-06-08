@@ -102,7 +102,7 @@ real :: pla,dz,plo,phi,slope
 allocate(logp(lx,ly,nz))
 logp=alog(hpsig)
 
-if(.not. large_pgrid .and. .not. large_ngrid .and. icall .eq. 1)then
+if(.not. large_pgrid .and. icall .eq. 1)then
 
 ! Interpolate 3d horizontally interpolated data to isobaric surfaces.
 ! Assume that height and temp are always available, but check for 
@@ -141,15 +141,18 @@ if(.not. large_pgrid .and. .not. large_ngrid .and. icall .eq. 1)then
   enddo
 
   if (minval(hmrsig)  < rmsg) call vinterp_single(logp,hmrsig,shprs)
-  if(.true.)then ! linear
-     if (minval(husig)   < rmsg) call vinterp_single(logp,husig,uprs)
-     if (minval(hvsig)   < rmsg) call vinterp_single(logp,hvsig,vprs)
-  else           ! cubic spline
-     if (minval(husig)   < rmsg) call vinterp_single_cubic(logp,husig,uprs)
-     if (minval(hvsig)   < rmsg) call vinterp_single_cubic(logp,hvsig,vprs)
+
+  if(.not. large_ngrid)then
+    if(.true.)then ! linear
+      if (minval(husig)   < rmsg) call vinterp_single(logp,husig,uprs)
+      if (minval(hvsig)   < rmsg) call vinterp_single(logp,hvsig,vprs)
+    else           ! cubic spline
+      if (minval(husig)   < rmsg) call vinterp_single_cubic(logp,husig,uprs)
+      if (minval(hvsig)   < rmsg) call vinterp_single_cubic(logp,hvsig,vprs)
+    endif
+    if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
+!   if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
   endif
-  if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
-! if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
 
 endif ! large_pgrid
 
