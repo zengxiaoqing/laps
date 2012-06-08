@@ -8,6 +8,7 @@
      1                  NZ_L,
      1                  r_missing_data,
      1                  n_plot_times,
+     1                  l_persist,
      1                  j_status)
 
         include 'lapsparms.for' ! maxbgmodels
@@ -20,7 +21,8 @@
         logical lmask_rqc_3d(NX_L,NY_L,NZ_L)
         logical l_col /.true./
         logical l_exist
-        logical l_plot_criteria
+        logical l_plot_criteria 
+        logical l_persist 
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
@@ -139,6 +141,12 @@
 
 !       Get fdda_model_source and 'n_fdda_models' from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
+
+        if(l_persist .eqv. .true.)then
+            n_fdda_models = n_fdda_models + 1
+            c_fdda_mdl_src(n_fdda_models) = 'persistence'
+            write(6,*)' Adding persistence to fdda_models'
+        endif
 
         write(6,*)' n_fdda_models = ',n_fdda_models
         write(6,*)' c_fdda_mdl_src = '
