@@ -423,8 +423,8 @@ if(defined $opt_V){
 }
 
 my $qhhmm = substr($yyjjjhhmm,5,4);
-$qsub_log_name = "$qsub_name$qhhmm";
-$qsub_name     = "$qsub_name$yyjjjhhmm";
+$qsub_log_name = "$qsub_name$yyjjjhhmm";
+$qsub_name     = "$qsub_name$qhhmm";
 
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
