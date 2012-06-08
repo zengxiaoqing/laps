@@ -321,15 +321,18 @@ endif
 
 ! Fill other missing surface fields from lowest model level.
 
+print *,'Min/Max mrsfc (model sfc grids) =',minval(mrsfc),maxval(mrsfc)
 if(.not. large_ngrid)then
   if (maxval(mrsfc) > 1000.) mrsfc(:,:)=hmrsig(:,:,1)
   if (maxval(usfc) > 1000.) usfc(:,:)=husig(:,:,1)
   if (maxval(vsfc) > 1000.) vsfc(:,:)=hvsig(:,:,1)
   if (maxval(wsfc) > 1000.) wsfc(:,:)=hwsig(:,:,1)
+endif ! large_ngrid
 
 ! Other derived surface fields.
-  where(mrsfc < zero_thresh) mrsfc = zero_thresh
+where(mrsfc < zero_thresh) mrsfc = zero_thresh
 
+if (maxval(mrsfc) < 1000.)then
   do j=1,ly
   do i=1,lx
    rhsfc(i,j)=min(relhum(tsfc(i,j),mrsfc(i,j),psfc(i,j)),1.)
@@ -339,7 +342,7 @@ if(.not. large_ngrid)then
    rhsfc(i,j)=rhsfc(i,j)*100.
   enddo
   enddo
-endif ! large_ngrid
+endif
 
 ! Generate reduced pressure for LAPS usage.
 
@@ -554,7 +557,7 @@ call fill_precip(pcp_init,pcp_06,snow_tot)
 ! fcsttime is in seconds
 ! change nmm, nmm zeroes accumulated precipitation every interval period
 
-if (fcsttime > 0 .AND. (.not. large_ngrid)) then
+if (fcsttime > 0) then
    if (trim(mtype) == 'nmm') then
        pcp_inc=pcp_tot
        print*, 'pcp_inc from pcp_tot: ',trim(mtype)
@@ -567,13 +570,16 @@ if (fcsttime > 0 .AND. (.not. large_ngrid)) then
    where(pcp_inc < .0001) pcp_inc=0.
    where(pcp_tot < .0001) pcp_tot=0.
 
-   print*,'Min/Max snow tot (previous) = ',minval(snow_tot),maxval(snow_tot)
+   if(large_ngrid .eqv. .false.)then
+      print*,'Min/Max snow tot (previous) = ',minval(snow_tot),maxval(snow_tot)
 
-   allocate(fallen_precip_type(lx,ly))
-   call wintprec(htsig,hzsig,zprs,psfc,tsfc,tdsfc,zsfc,pcp_inc,lx,ly  &
+      allocate(fallen_precip_type(lx,ly))
+      call wintprec(htsig,hzsig,zprs,psfc,tsfc,tdsfc,zsfc,pcp_inc,lx,ly  &
                 ,nz,lz,k700,k850,k1000,pcp_inc,fallen_precip_type)
-   call snowfall(htsig,tsfc,pcp_inc,fallen_precip_type,lx,ly,nz,snow_inc,snow_tot)
-   deallocate(fallen_precip_type)
+      call snowfall(htsig,tsfc,pcp_inc,fallen_precip_type,lx,ly,nz,snow_inc,snow_tot)
+      deallocate(fallen_precip_type)
+   endif
+
 endif
 if (trim(mtype) == 'nmm') then
  print*, 'pcp_inc update: ',trim(mtype)
@@ -1160,6 +1166,7 @@ use src_versuch, ONLY: versuch
 implicit none
 
 integer :: lx,ly,nz,i,j,k
+integer :: in0r,in0s,in0g,iliqskin
 real, parameter :: svnfrth=7.0/4.0,max_top_thresh=5.0
 real :: w
 real, dimension(lx,ly) :: max_refl,echo_tops
@@ -1181,10 +1188,26 @@ refl=0.0
 zdr=0.0
 ldr=0.0
 
-print *,'c_m2z = ',c_m2z                  
+print *,'c_m2z = ',c_m2z   
 
-do j=1,ly
-do i=1,lx
+if(c_m2z == 'rip') then
+ in0r = 0
+ in0s = 0
+ in0g = 0
+ iliqskin = 0
+!call dbzcalc(qv,rainmr,snowmr,graupelmr,tmp,p,refl, &
+!             ly,lx,nz,in0r,in0s,in0g,iliqskin)
+
+ do j=1,ly
+ do i=1,lx
+!  Compute the max value in the column
+   max_refl(i,j)=maxval(refl(i,j,:))
+ enddo ! i
+ enddo ! j
+
+else
+ do j=1,ly
+ do i=1,lx
    do k=1,nz
 
 ! Compute the basic reflectivity using RAMS reflectivity algorithm.
@@ -1272,8 +1295,10 @@ do i=1,lx
 ! Compute the max value in the column
 
    max_refl(i,j)=maxval(refl(i,j,:))
-enddo
-enddo
+ enddo
+ enddo
+
+endif
 
 ! Convert microphysical precipitation mixing ratios to concentrations - multiplying by rho
 rainmr(:,:,:)    = rainmr(:,:,:) * rho(:,:,:)
