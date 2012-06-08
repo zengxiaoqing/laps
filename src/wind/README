@@ -30,7 +30,7 @@ program laps_wind                              main.F
         laps_anl                               windanal.f
             compare_wind                       comparisons.f
             calc_qced_obs                      windanal.f
-            qc_radar_obs                       qcradar.f
+            qc_radar_obs                       lib/wind/qcradar.f
             insert_derived_radar_obs           insert_radar_obs.f
                 filter_radar_obs                  "
                 multiwind_noz                  multiwind_noZ.f
