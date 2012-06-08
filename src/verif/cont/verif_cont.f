@@ -8,6 +8,10 @@
 
         character*150 verif_dir, n_plot_times_file              
 
+        logical l_persist 
+
+        l_persist = .true. ! Add persistence forecast for evaluation
+
         call get_systime(i4time,a9time,istatus)
         if(istatus .ne. 1)go to 999
 
@@ -43,6 +47,7 @@
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
+     1                  l_persist,
      1                  j_status)
 
 !       Read n_plot_times from file
@@ -65,6 +70,7 @@
      1                  NZ_L,
      1                  r_missing_data,
      1                  n_plot_times,
+     1                  l_persist,
      1                  j_status)
 
 999     continue
@@ -77,12 +83,14 @@
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  r_missing_data,
+     1                  l_persist,
      1                  j_status)
 
         include 'lapsparms.for' ! maxbgmodels
 
         real var_anal_3d(NX_L,NY_L,NZ_L)
         real var_fcst_3d(NX_L,NY_L,NZ_L)
+        real var_prst_3d(NX_L,NY_L,NZ_L)
         real rqc(NX_L,NY_L)
 
         logical lmask_and_3d(NX_L,NY_L,NZ_L)
@@ -119,7 +127,8 @@
         parameter (n_fields=1)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
-        integer nthr_a(n_fields) ! number of thresholds for each field
+        integer nthr_a(n_fields)  ! number of thresholds for each field
+        integer ndims_a(n_fields) ! number of dimensions for each field
         character*2 c2_region
         character*10 c_thr
 
@@ -128,6 +137,7 @@
         data ext_anal_a /'lps'/ ! 3-D reflectivity
         data var_a      /'REF'/ ! 3-D reflectivity       
         data nthr_a     /5/        
+        data ndims_a    /3/        
 
         integer contable(0:1,0:1)
 
@@ -142,14 +152,11 @@
         integer 
      1  n(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
 
+
+        logical l_persist, l_good_persist
+
         rmiss = -999.
         imiss = -999
-
-!       Initialize arrays
-        bias = -999.
-        ets = -999.
-        frac_coverage = -999.
-        n = -999
 
         thresh_var = 20. ! lowest threshold for this variable
 
@@ -166,6 +173,12 @@
 
 !       Get fdda_model_source and 'n_fdda_models' from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
+
+        if(l_persist .eqv. .true.)then
+            n_fdda_models = n_fdda_models + 1
+            c_fdda_mdl_src(n_fdda_models) = 'persistence'
+            write(6,*)' Adding persistence to fdda_models'
+        endif
 
         write(6,*)' n_fdda_models = ',n_fdda_models
         write(6,*)' c_fdda_mdl_src = '
@@ -188,6 +201,15 @@
 
         do ifield = 1,n_fields
 
+!        Initialize arrays
+         bias = -999.
+         ets = -999.
+         frac_coverage = -999.
+         n = -999
+
+         var_prst_3d = r_missing_data
+         l_good_persist = .false.
+ 
          var_2d = var_a(ifield)
          call s_len(var_2d,lenvar)
 
@@ -257,15 +279,36 @@
 
                 if(iregion .eq. 1)then
 
-!                 Read analyzed reflectivity
-                  ext = ext_anal_a(ifield)
-                  call get_laps_3d(i4_valid,NX_L,NY_L,NZ_L
-     1             ,ext,var_2d,units_2d,comment_2d,var_anal_3d,istatus)
-                  if(istatus .ne. 1)then
-                        write(6,*)' Error reading 3D REF Analysis'
+                  if(ndims_a(ifield) .eq. 3)then ! Read analyzed 3D field
+                    ext = ext_anal_a(ifield)
+                    call get_laps_3d(i4_valid,NX_L,NY_L,NZ_L
+     1              ,ext,var_2d,units_2d,comment_2d,var_anal_3d,istatus)       
+                    if(istatus .ne. 1)then
+                        write(6,*)' Error reading 3D Analysis for '
+     1                            ,var_2d
                         goto 900
+                    endif
+
+                  else ! Read analyzed 2D field
+                    ext = ext_anal_a(ifield)
+                    call get_laps_2d(i4_valid,ext,var_2d,units_2d
+     1              ,comment_2d,NX_L,NY_L,var_anal_3d,istatus)       
+                    if(istatus .ne. 1)then
+                        write(6,*)' Error reading 2D Analysis for '
+     1                            ,var_2d
+                        goto 900
+                    endif
+
+                    do k = 2,NZ_L
+                        var_anal_3d(:,:,k) = var_anal_3d(:,:,1)
+                    enddo ! k
+
                   endif
 
+                  if(itime_fcst .eq. 0)then
+                      var_prst_3d = var_anal_3d
+                      l_good_persist = .true.
+                  endif
 
 	          write(*,*)'beka',i4_valid
 
@@ -279,20 +322,55 @@
                       endif
                   endif
 
-!                 Read forecast reflectivity
-                  ext = ext_fcst_a(ifield)
-                  call get_directory(ext,directory,len_dir)
-                  DIRECTORY=directory(1:len_dir)//c_model(1:len_model)
-     1                                          //'/'
+                  if(c_fdda_mdl_src(imodel) .ne. 'persistence')then
 
-                  call get_lapsdata_3d(i4_initial,i4_valid
+                     if(ndims_a(ifield) .eq. 3)then ! Read forecast 3D field
+                        ext = ext_fcst_a(ifield)
+                        call get_directory(ext,directory,len_dir)
+                        DIRECTORY=directory(1:len_dir)
+     1                                      //c_model(1:len_model)    
+     1                                      //'/'
+
+                        call get_lapsdata_3d(i4_initial,i4_valid
      1                          ,NX_L,NY_L,NZ_L       
      1                          ,directory,var_2d
      1                          ,units_2d,comment_2d,var_fcst_3d
      1                          ,istatus)
-                  if(istatus .ne. 1)then
-                       write(6,*)' Error reading 3D REF Forecast'
-                       goto 900
+                        if(istatus .ne. 1)then
+                             write(6,*)' Error reading 3D Forecast'
+     1                                 ,var_2d
+                             goto 900
+                        endif
+                     else ! Read forecast 2D field
+                        ext = ext_fcst_a(ifield)
+                        call get_directory(ext,directory,len_dir)
+                        DIRECTORY=directory(1:len_dir)
+     1                                      //c_model(1:len_model)    
+     1                                      //'/'
+
+                        call get_lapsdata_2d(i4_initial,i4_valid
+     1                          ,directory,var_2d
+     1                          ,units_2d,comment_2d
+     1                          ,NX_L,NY_L
+     1                          ,var_fcst_3d
+     1                          ,istatus)
+                        if(istatus .ne. 1)then
+                             write(6,*)' Error reading 3D REF Forecast'
+                             goto 900
+                        endif
+
+                        do k = 2,NZ_L
+                            var_fcst_3d(:,:,k) = var_fcst_3d(:,:,1)
+                        enddo ! k
+
+                     endif
+
+                  elseif(l_good_persist .eqv. .true.)then
+                      write(6,*)' Setting forecast to persistence'
+                      var_fcst_3d = var_prst_3d
+                  else
+                      write(6,*)' Persistence fcst unavailable'
+                      goto 900
                   endif
 
 !                 Calculate "and" as well as "rqc" "and" mask
