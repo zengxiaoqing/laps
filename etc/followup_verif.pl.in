@@ -25,8 +25,8 @@ getopts('a:d:r:f:c:l:m:t:y:t:');
 
 print "Running followup_verif.pl...\n";
 print "user defined paths\n";
-print "model: $opt_m\n";
-print "model configuration: $opt_a\n";
+print "model (from opt_m): $opt_m\n";
+print "model configuration (from opt_a): $opt_a\n";
 my $domain = $opt_d;
 my $modelname = "$opt_m-$opt_a";
 $ENV{LAPSINSTALLROOT}="@prefix@";
@@ -42,7 +42,8 @@ my @vars = qw(REF SWI);
 
 my @modelnames=&laps_tools::get_nl_value("nest7grid.parms","fdda_model_source",$dataroot);
 my $modelname = @modelnames[1];   
-print "modelname: $modelname\n";
+print "modelnames (from fdda_model_source): @modelnames\n";
+print "modelname (from first element of modelnames array): $modelname\n";
 
 # Obtain window parameters
 @windowres=&laps_tools::get_fcst_img_res($dataroot);
@@ -102,10 +103,6 @@ my $sleep_time     = 60; # Number of seconds to sleep between attempts to proces
 
 # END OF USER DEFINED PARAMS
 
-print "setup fsf/fua pathnames\n";
-my $local_fsf = "$dataroot/$fsf_subdir";
-my $local_fua = "$dataroot/$fua_subdir";
-
 # Set up cycle to process based on system time and delay (UTC)
 
 print "setup time parameters\n";
@@ -142,8 +139,6 @@ my $www_time = $cycmday."-".$cycmontxt."-".$cycyear4." ".$cychour.$cycmin;
 my $cycle = $cycyear.$cycyday.$cychour."00";
 
 print "Cycle to get: $cycle\n";
-print "laps_fsf: $local_fsf\n";
-print "laps_fua: $local_fsf\n";
 
 # Create the list of file times we need to get
 
@@ -209,6 +204,8 @@ foreach $var (@vars) {
     $geom="210x140!";
   }
 
+  print "fcstprd: $fcstprd\n";
+
   $arrpos = 0;
   @times_new = @times; 
   print "updated times: @times\n";
@@ -222,12 +219,12 @@ foreach $var (@vars) {
   my $fullanal_image;                                           
 
   foreach $a13time (@times) {
+#   print "fcstprd 2: $fcstprd\n";
     $modelrun = substr($a13time,0,9);
     $hhmm_modelrun = substr($a13time,5,4);
 
     my @fcstimagelist;
     $itime++;
-#   if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
     if ($itime <= $opt_t){
       my $valid_sec = $cycle_sec + $verif_intvl*$itime;
       my $valid_a9time=&laps_tools::i4time_to_a9time($valid_sec+315619200);
@@ -256,23 +253,34 @@ foreach $var (@vars) {
 
       my $imiss=0;
 
+#     print "fcstprd 3: $fcstprd\n";
+
 #     Make list of all forecast model images for this time
       foreach $modelname (@modelnames){
 
-        if($modelname ne "lga"){   
+#       print "fcstprd 4: $fcstprd\n";
 
+        if($fcstprd eq ""){
+          print "ERROR: fcstprd is blank\n";
+          exit;
+
+        }elsif($modelname ne "lga"){   
+        
           my $fcstimagedir = "/w3/lapb/domains/$domain/fcst2d/$modelname/archive/$modelrun/$fcstprd";
 
           if (! -d $fcstimagedir) {
             print "WARNING: $fcstimagedir not present\n";
             push @fcstimagelist, $black_image;                            
             $imiss++;
+#           print "fcstprd 4a: $fcstprd\n";
 
           }else{
 
             $fcstimage = substr($a13time,9,4);
             my $fullfcst_image = $fcstimagedir."/".$fcstimage.".gif";
             print "\na13time/fcstimage/fullfcst_image $a13time $fcstimage $fullfcst_image... \n" ;
+
+#           print "fcstprd 4b: $fcstprd\n";
 
 #           system ("ls -l $fullfcst_image");
             if (! -e $fullfcst_image) {
@@ -283,7 +291,14 @@ foreach $var (@vars) {
             }else{
               my $fcstsize = -s $fullfcst_image;
 
-              if($fcstsize > 0){
+#             print "fcstprd 4b1: $fcstprd\n";
+
+              if($fcstprd eq "Solar" && $modelname =~ "hrrr" && $itime == 0){
+                print "NOTE: zero hour solar forecast assumed to be absent for the HRRR\n";
+#               print "fcstprd 4b2: $fcstprd\n";
+                push @fcstimagelist, $black_image;                            
+                $imiss++;
+              }elsif($fcstsize > 0){
                 push @fcstimagelist, $fullfcst_image;                            
               }else{
                 print "WARNING: $fullfcst_image has zero size\n";
@@ -293,9 +308,13 @@ foreach $var (@vars) {
 
             } # file exists
 
+#           print "fcstprd 4c: $fcstprd\n";
+
           } # directory exists
 
-        }
+        } # valid fcstprd and modelname
+
+#       print "fcstprd 5: $fcstprd\n";
 
       } # modelname
 
@@ -332,7 +351,7 @@ foreach $var (@vars) {
       splice @times_new, $arrpos, 1;
 
     }else{
-      print "Not being processed (both fua and fsf). $local_fsf/$_.fsf\n";
+      print "Not being processed for itime: $itime\n";
       $arrpos++;
 
     }
@@ -417,5 +436,5 @@ $t=gmtime();
 
 # system("touch $w3recent/../finish.txt");
 
-print "All fua/fsf files processed\n";
+print "Completion of followup_verif...\n";
 exit;  
