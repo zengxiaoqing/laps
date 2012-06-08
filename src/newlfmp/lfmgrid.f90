@@ -9,7 +9,7 @@ save
 integer, parameter :: maxdomains=10
 real, parameter :: rmsg=1.e37
 
-integer :: nx,ny,nz,lx,ly,lz,nvar2d,nvar3d,nvar2dout,nvar3dout
+integer :: nx,ny,nz,lx,ly,lz,nvar2d,nvar3d,nvar3dh,nvar2dout,nvar3dout
 
 type(proj_info) :: proj
 
@@ -148,6 +148,8 @@ if (trim(mtype) /= 'st4') then
 
   allocate(nlat(nx,ny),nlon(nx,ny))
 
+  print*,'Native grid allocation 2d/3d/2dpts/3dpts = ',nvar2d,nvar3d,nx*ny*nvar2d,nx*ny*nz*nvar3d 
+
   allocate(ngrid(nx,ny,nvar2d+nvar3d*nz))
 
   ngrid=rmsg
@@ -221,7 +223,20 @@ implicit none
 
 integer :: ct
 
-allocate(hgrid(lx,ly,(nvar3d+3)*nz))  ! Huiling Yuan, changed on 10/19/2009
+if(.not. large_pgrid)then ! state variables
+   nvar3dh=7
+else
+   nvar3dh=3
+endif
+
+if (make_micro) then
+   nvar3dh=nvar3dh+8
+endif
+
+print*,'hinterp grid allocation 3d/3dpts = ',nvar3dh,lx*ly*nz*nvar3dh    
+print*,'ctmax (predicted) = ',nz*nvar3dh    
+
+allocate(hgrid(lx,ly,nvar3dh*nz))                                                
 
 hgrid=rmsg
 
@@ -229,14 +244,14 @@ ct=1
 
 hpsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 
-if(.not. large_ngrid)then
+if(.not. large_pgrid)then
     hzsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 endif
 
 htsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 hmrsig   =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 
-if(.not. large_ngrid)then
+if(.not. large_pgrid)then
    husig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
    hvsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
    hwsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
@@ -253,6 +268,8 @@ if (make_micro) then
    hzdr_sig     =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
    hldr_sig     =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 endif
+
+print*,'ctmax (actual) = ',ct - 1            
 
 return
 end subroutine
