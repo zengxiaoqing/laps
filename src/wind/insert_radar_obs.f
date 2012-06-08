@@ -397,9 +397,9 @@ csms$ignore begin
 
 !       Count number of unfiltered obs after rejecting obs having non-radar data
         n_radarobs_lvl_unfltrd = 0
-        ismin = max(ioffset,1)
+        ismin = max(ioffset+1,1)
         ismax = min((ioffset+nx_r),imax)
-        jsmin = max(joffset,1)
+        jsmin = max(joffset+1,1)
         jsmax = min((joffset+ny_r),jmax)
 
         do j=jsmin,jsmax
@@ -598,10 +598,17 @@ csms$ignore begin
            do io=1,nx_r
               j = jo + joffset
               i = io + ioffset
-              vr_obs_fltrd(i,j) = vr_obs_unfltrd(io,jo)
-              if(vr_obs_fltrd(i,j) .ne. r_missing_data)then
-                n_superob(io,jo) = 1
-              endif
+
+              if(i .ge. 1 .and. i .le. imax .and. 
+     1           j .ge. 1 .and. j .le. jmax       )then 
+
+                 vr_obs_fltrd(i,j) = vr_obs_unfltrd(io,jo)
+                 if(vr_obs_fltrd(i,j) .ne. r_missing_data)then
+                   n_superob(io,jo) = 1
+                 endif
+
+              endif ! i/j within bounds
+
            enddo
            enddo
         endif
@@ -613,10 +620,15 @@ csms$ignore begin
         do io=1,nx_r
           j = jo + joffset
           i = io + ioffset
-          if(vr_obs_fltrd(i,j) .ne. r_missing_data)then
-            n_radarobs_lvl_fltrd = n_radarobs_lvl_fltrd + 1
-          endif
-          n_superob_tot = n_superob_tot + n_superob(io,jo)
+          if(i .ge. 1 .and. i .le. imax .and. 
+     1       j .ge. 1 .and. j .le. jmax       )then 
+
+            if(vr_obs_fltrd(i,j) .ne. r_missing_data)then
+              n_radarobs_lvl_fltrd = n_radarobs_lvl_fltrd + 1
+            endif
+            n_superob_tot = n_superob_tot + n_superob(io,jo)
+
+          endif ! i/j within bounds
         enddo ! io
         enddo ! jo
 
@@ -638,12 +650,15 @@ csms$ignore begin
         do io=1,nx_r
           j = jo + joffset
           i = io + ioffset
-          if(n_superob(io,jo) .gt. 0)then
-            n_superob_count = n_superob_count + 1
-            n_superob_tot = n_superob_tot + n_superob(io,jo)
-          endif
-        enddo ! i
-        enddo ! j
+          if(i .ge. 1 .and. i .le. imax .and. 
+     1       j .ge. 1 .and. j .le. jmax       )then 
+            if(n_superob(io,jo) .gt. 0)then
+              n_superob_count = n_superob_count + 1
+              n_superob_tot = n_superob_tot + n_superob(io,jo)
+            endif
+          endif ! i/j within bounds
+        enddo ! io
+        enddo ! jo
 
         if(n_superob_count .gt. 0)then
             write(6,*)'     2nd Superob check ',n_superob_count
