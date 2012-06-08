@@ -276,11 +276,16 @@ cdoc    Called from wind/lapsplot
                         if(j .ge. 1 .and. j .le. jmax)then
                           do io = 1,nx_r
                             i = io + ioffset(n_radars)
+
                             if(i .ge. 1 .and. i .le. imax)then
                               grid_ra_vel(io,jo,:,n_radars) = 
      1                        grid_ra_vel_3d(i,j,:)
+
+                              grid_ra_nyq(io,jo,:,n_radars) = 
+     1                        grid_ra_nyq_3d(i,j,:)
                               nfill = nfill + 1
                             endif ! in i bounds
+
                           enddo ! io
                         endif ! in j bounds
                       enddo ! j
