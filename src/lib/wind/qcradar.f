@@ -69,7 +69,7 @@ cdis
       write(6,*)' LVL  # Obs  Intvl  # QC'
 
       write(6,*)' Also applying QC and dealiasing'
-      write(6,*)'  i   j   k    df    vr    fgr'
+      write(6,*)'  i   j   k   df    vr    fgr'
 
       height_grid = 0. ! This approximation won't hurt the azimuth
 
@@ -94,8 +94,11 @@ cdis
         do jo=1,ny_r
         do io=1,nx_r
 
-          i = io + ioffset
-          j = jo + joffset
+         i = io + ioffset
+         j = jo + joffset
+
+         if(i .ge. 1 .and. i .le. imax .and. 
+     1      j .ge. 1 .and. j .le. jmax       )then 
 
           if(vr_obs(io,jo,k) .ne. r_missing_data)then
             call latlon_to_radar(lat(i,j),lon(i,j),height_k
@@ -225,8 +228,9 @@ c    1                  ,rlat_radar,rlon_radar,rheight_radar)
             endif ! Error condition
 
           endif ! Not missing data
-        enddo ! i
-        enddo ! j
+         endif ! i/j within domain
+        enddo ! io
+        enddo ! jo
       enddo ! k
 
       write(6,*)' # of Input (unfiltered) Radar obs = '
