@@ -354,6 +354,11 @@ verif/REF/hist verif/REF/cont verif/REF/plot
 verif/REF/plot/20 verif/REF/plot/30 verif/REF/plot/40 verif/REF/plot/50 verif/REF/plot/60
 verif/REF/plot/20_comp verif/REF/plot/30_comp verif/REF/plot/40_comp verif/REF/plot/50_comp verif/REF/plot/60_comp
 verif/REF/plot/20_comp2 verif/REF/plot/30_comp2 verif/REF/plot/40_comp2 verif/REF/plot/50_comp2 verif/REF/plot/60_comp2
+verif/LMR
+verif/LMR/hist verif/LMR/cont verif/LMR/plot 
+verif/LMR/plot/20 verif/LMR/plot/30 verif/LMR/plot/40 verif/LMR/plot/50 verif/LMR/plot/60
+verif/LMR/plot/20_comp verif/LMR/plot/30_comp verif/LMR/plot/40_comp verif/LMR/plot/50_comp verif/LMR/plot/60_comp
+verif/LMR/plot/20_comp2 verif/LMR/plot/30_comp2 verif/LMR/plot/40_comp2 verif/LMR/plot/50_comp2 verif/LMR/plot/60_comp2
 verif/SWI verif/SWI/pt verif/SWI/pt/comp verif/SWI/pt/comp2
 verif/TSF verif/TSF/pt verif/TSF/pt/comp verif/TSF/pt/comp2
 verif/DSF verif/DSF/pt verif/DSF/pt/comp verif/DSF/pt/comp2
