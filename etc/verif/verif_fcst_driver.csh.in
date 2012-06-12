@@ -63,15 +63,6 @@ end
 
 date -u
 
-# Montage of the reflectivity images
-if (-d /w3/lapb) then
-    echo "Making reflectivity montage"
-    echo @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $3 -t $N_FCST_TIMES
-         @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $3 -t $N_FCST_TIMES > $LAPS_DATA_ROOT/log/followup_verif.log
-endif
-
-date -u
-
 # Point verification (Solar, Sfc, and 3D Wind)..................................................................
 if ($2 != archive) then # realtime
     echo "Rerunning ingest to get latest obs..."
@@ -169,9 +160,18 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt V
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W3   0.:20. '"3-D Wind"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/w3_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W3   0.:20.  "3-D Wind"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/w3_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3 -50.:10. '"3-D Temperature"'    "Deg C"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/t3_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3 -50.:10.  "3-D Temperature"     "Deg C"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/t3_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3  -4.:4.  '"3-D Temperature"'    "Deg C"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/t3_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3  -4.:4.   "3-D Temperature"     "Deg C"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/t3_fcst.log
 
+
+# Montage of the reflectivity and solar images
+if (-d /w3/lapb) then
+    echo "Making reflectivity and solar montages: log file is $LAPS_DATA_ROOT/log/followup_verif_montage.log"
+    echo @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $3 -t $N_FCST_TIMES
+         @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $3 -t $N_FCST_TIMES > $LAPS_DATA_ROOT/log/followup_verif_montage.log
+endif
+
+date -u
 
 #echo "cp $LAPS_DATA_ROOT/time/modeltime.dat $LAPS_DATA_ROOT/time/modeltime.dat.done"
 #      cp $LAPS_DATA_ROOT/time/modeltime.dat $LAPS_DATA_ROOT/time/modeltime.dat.done
