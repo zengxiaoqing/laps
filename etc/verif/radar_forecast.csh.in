@@ -151,11 +151,13 @@ else
 endif
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
-echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+if ($DURATION == "") then
+    echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+else
+    echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+endif
 echo 'set ylabel "Volume Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
 echo 'set title "Radar 3-D Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
-#cho 'set title "Radar Reflectivity '$REF'dBZ '$STAT'" giant'   >> $GNUPLOTFILE
-#cho 'set title "Radar Reflectivity '$REF'dBZ '$STAT'" font DejaVuSans 30'   >> $GNUPLOTFILE
 echo 'set key left box'                                                  >> $GNUPLOTFILE
 echo 'set key spacing' $KEY_SPACING                                      >> $GNUPLOTFILE
 echo 'set key height' $KEY_HEIGHT                                        >> $GNUPLOTFILE

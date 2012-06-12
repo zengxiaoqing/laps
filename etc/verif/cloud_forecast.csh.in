@@ -144,11 +144,13 @@ echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' 
 echo 'set yrange [0:1000]'                                               >> $GNUPLOTFILE
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-99.900"'                                     >> $GNUPLOTFILE
-echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
-echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
 if ($DURATION == "") then
+    echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
+    echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
     echo 'set title "Global Horizontal Irradiance Observed vs Forecast '$DURATION'('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
 else
+    echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
+    echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
     echo 'set title "GHI Observed vs Forecast '$DURATION'('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
 endif
 #echo 'set key left box'                                                  >> $GNUPLOTFILE
