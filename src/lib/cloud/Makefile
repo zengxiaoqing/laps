@@ -30,7 +30,7 @@ DEBUGLIB = libdebugcloud.a
 
 
 SRC= \
-    cloud_var.f90 cvr_to_tb8_effective.f
+    cloud_var.f90 cvr_to_tb8_effective.f solar_routines.f
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
