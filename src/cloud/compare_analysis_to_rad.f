@@ -275,6 +275,15 @@
                        endif
                     endif
 
+                    call qc_solar_ob(rad_s(ista),solar_alt(i_i,i_j)
+     1                              ,r_missing_data,iqc
+     1                              ,rad_clr(i_i,i_j))      
+
+                    if(iqc .ne. 0)then
+                       c1_c = '*' ! QC'd out
+                       rad2_s(ista) = r_missing_data
+                    endif
+
                     write(6,1111,err=1112)'sv',c_stations(ista)(1:3)
      1                           ,i_i,i_j
      1                           ,cloud_frac_vis_a(i_i,i_j)
