@@ -164,9 +164,15 @@ if (verbose) then
              ,k,npsig(nx/2,ny/2,k),nzsig(nx/2,ny/2,k)  &
              ,ntsig(nx/2,ny/2,k),nmrsig(nx/2,ny/2,k)   &
              ,nusig(nx/2,ny/2,k),nvsig(nx/2,ny/2,k)
-       else
-         print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6,2f8.2)'   &
-             ,k,npsig(nx/2,ny/2,k)                            
+       elseif(.not. large_pgrid)then
+         print '(i5,2x,f12.1,2x,6x,2x,f6.2,2x,f8.6,2f8.2)'   &
+             ,k,npsig(nx/2,ny/2,k)                        &
+             ,ntsig(nx/2,ny/2,k),nmrsig(nx/2,ny/2,k)   &
+             ,nusig(nx/2,ny/2,k),nvsig(nx/2,ny/2,k)
+       else ! both grids are large
+         print '(i5,2x,f12.1,2x,6x,2x,f6.2,2x,f8.6,2f8.2)'   &
+             ,k,npsig(nx/2,ny/2,k)                        &
+             ,ntsig(nx/2,ny/2,k),nmrsig(nx/2,ny/2,k)   
        endif
        call check_nan(npsig(nx/2,ny/2,k),istatus) 
        if(istatus .ne. 1)then
@@ -208,7 +214,7 @@ if (verbose) then
    print*,'      (SW)----------------------(SE)'
    print'(f8.3,1x,f8.3,10x,f8.3,1x,f8.3)'  &
         ,llat(1,1),llon(1,1),llat(lx,1),llon(lx,1)
-   if (trim(mtype) /= 'st4' .and. .not. large_ngrid) then
+   if (trim(mtype) /= 'st4') then
      print*, ' '
      print*,'Diagnostics from hinterp domain center: ',lx/2,ly/2
      print'(a,f7.0)',' Terrain height at center = ',zsfc(lx/2,ly/2)
@@ -216,10 +222,21 @@ if (verbose) then
      print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV         U       V'
      print*,'------------------------------------------------------------'
      do k=1,nz
+      if(.not. large_ngrid)then
         print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,2x,f8.6,2f8.2)'   &
               ,k,hpsig(lx/2,ly/2,k),hzsig(lx/2,ly/2,k)  &
               ,htsig(lx/2,ly/2,k),hmrsig(lx/2,ly/2,k)   &
               ,husig(lx/2,ly/2,k),hvsig(lx/2,ly/2,k)
+      elseif(.not. large_pgrid)then
+        print '(i5,2x,f12.1,2x,6x,2x,f6.2,2x,f8.6,2f8.2)'   &
+              ,k,hpsig(lx/2,ly/2,k)                        &
+              ,htsig(lx/2,ly/2,k),hmrsig(lx/2,ly/2,k)   &
+              ,husig(lx/2,ly/2,k),hvsig(lx/2,ly/2,k)
+       else ! both grids are large
+        print '(i5,2x,f12.1,2x,6x,2x,f6.2,2x,f8.6,2f8.2)'   &
+              ,k,hpsig(lx/2,ly/2,k)                        &
+              ,htsig(lx/2,ly/2,k),hmrsig(lx/2,ly/2,k)   
+      endif
      enddo
    endif
 endif
@@ -252,9 +269,9 @@ if (trim(mtype) /= 'st4') then
  if (verbose .and. .not. large_pgrid) then
     print*,' '
     print*,'Diagnostics from isobaric domain center:'
-    print*,'------------------------------------------------------------------------'
-    print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV       QL      QI      U       V'
-    print*,'------------------------------------------------------------------------'
+    print*,'------------------------------------------------------------------------------'
+    print*,'LEVEL     PRES(Pa)  HEIGHT     T       QV        QL        QI       U        V'
+    print*,'------------------------------------------------------------------------------'
     do k=1,lz
        print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,3(2x,f8.6),2f8.2)'   &
              ,k,lprs(k)*100.,zprs(lx/2,ly/2,k)  &
@@ -266,9 +283,9 @@ if (trim(mtype) /= 'st4') then
 
     print*,' '
     print*,'Diagnostics from isobaric domain level maxvals:'
-    print*,'------------------------------------------------------------------------'
-    print*,'LEVEL     PRES(Pa)  HEIGHT     T      QV       QL      QI      U       V'
-    print*,'------------------------------------------------------------------------'
+    print*,'------------------------------------------------------------------------------'
+    print*,'LEVEL     PRES(Pa)  HEIGHT     T       QV        QL        QI       U        V'
+    print*,'------------------------------------------------------------------------------'
     do k=1,lz
        print '(i5,2x,f12.1,2x,f6.0,2x,f6.2,3(2x,f8.6),2f8.2)'   &
              ,k,lprs(k)*100.,maxval(zprs(:,:,k))  &
