@@ -9,6 +9,7 @@
        compute_nav_ll                    compute_nav_llij.f
            genlvdlut_lvd                 lib/satellite/genlvdlut_lvd.f 
                get_lut_lambert 
+                   rdcdfhead             lib/satellite/rdcdfhead.f
                gen_gvarimage_lut         lib/satellite/gen_lut_gvar.f
                    update_gvarimg_parms  lib/satellite/update_gvarimg_parms
                        sat_sublatlon
@@ -34,6 +35,7 @@
                get_satdat_attributes     getsat_attributes.f
            satdatfill                    satdatfill.f
                satdatfill1               satfill1.f
+                   get_cdf_dims          readnet.f
                    readcdf               readcdf.f
            lvd_file_specifier            lvd_file_specifier.f
            read_gvarimg_cnt2btemp_lut   
