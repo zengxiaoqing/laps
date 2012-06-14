@@ -18,6 +18,7 @@
 !       if(istatus .ne. 1)go to 999
 
         ISTAT = init_timer()
+        I4_elapsed = ishow_timer()
 
         call get_directory('time',dir_t,istatus)
         call s_len(dir_t,len_dir_t)
@@ -88,6 +89,8 @@
      1                     n_fcst_times,
      1                     j_status)
 
+        I4_elapsed = ishow_timer()
+
         call verif_fcst_pt_3d(i4time,a9time,laps_cycle_time,
      1                     NX_L,NY_L,
      1                     NZ_L,
@@ -96,6 +99,8 @@
      1                     model_verif_intvl,
      1                     n_fcst_times,
      1                     j_status)
+
+        I4_elapsed = ishow_timer()
 
 !       Read n_plot_times from file
         call get_directory('verif',verif_dir,len_verif)
@@ -114,6 +119,8 @@
 !    1                     model_verif_intvl,
      1                     n_plot_times,
      1                     j_status)
+
+        I4_elapsed = ishow_timer()
 
 999     continue
 
