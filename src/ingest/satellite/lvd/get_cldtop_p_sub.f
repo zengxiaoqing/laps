@@ -128,6 +128,8 @@ c     print*,'last file name:  ',c_filenames(numoffiles)(1:lenf)
 
       call get_directory_length(c_filenames(1),lend)
 
+      isave = 0
+
       i4timemin=2000000000
       do i=1,numoffiles
          cfname9=c_filenames(i)(lend+1:lend+9)
@@ -144,8 +146,14 @@ c     print*,'last file name:  ',c_filenames(numoffiles)(1:lenf)
          endif
       enddo
 
-      print*,'index for minmum time: i= ',isave
-      print*,'current cld-top-p file: ',c_filenames(isave)(1:lenf)
+      print*,'index for minimum time: i= ',isave
+      if(isave .gt. 0)then
+          print*,'current cld-top-p file: ',c_filenames(isave)(1:lenf)
+      else
+          print*,'no current cld-top-p data - returning '
+          istatus = 0
+          return
+      endif
 
 c     if(i4timefile_min.ge.i4time_sys-iwindow_ctp_s.and.
 c    &   i4timefile_min.le.i4time_sys+iwindow_ctp_s)then
