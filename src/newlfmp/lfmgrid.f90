@@ -142,7 +142,11 @@ if (trim(mtype) /= 'st4') then
   if(.not. large_ngrid)then
       nvar3d=7 ! add 1 for tkesig if needed 
   else
-      nvar3d=3 ! add 1 for tkesig if needed 
+    if(.not. large_pgrid)then ! process U,V
+      nvar3d=5
+    else
+      nvar3d=3
+    endif
   endif
   if (make_micro) nvar3d=nvar3d+5
 
@@ -182,11 +186,12 @@ if (trim(mtype) /= 'st4') then
   ntsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
   nmrsig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
 
-  if(.not. large_ngrid)then
+  if(.not. large_pgrid)then
       nusig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
       nvsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-      nwsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-!     ntkesig  =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+      if(.not. large_ngrid)then   
+          nwsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+      endif
   endif
 
   if (make_micro) then
@@ -223,10 +228,14 @@ implicit none
 
 integer :: ct
 
-if(.not. large_pgrid)then ! state variables
+if(.not. large_ngrid)then ! state variables
    nvar3dh=7
 else
-   nvar3dh=3
+   if(.not. large_pgrid)then ! process U,V
+      nvar3dh=5
+   else
+      nvar3dh=3
+   endif
 endif
 
 if (make_micro) then
@@ -235,6 +244,10 @@ endif
 
 print*,'hinterp grid allocation 3d/3dpts = ',nvar3dh,lx*ly*nz*nvar3dh    
 print*,'ctmax (predicted) = ',nz*nvar3dh    
+if(nvar3dh .ne. nvar3d+3)then
+   print*,'ERROR: nvar3dh is different from nvar3d+3 ',nvar3dh,nvar3d
+   stop
+endif
 
 allocate(hgrid(lx,ly,nvar3dh*nz))                                                
 
@@ -244,7 +257,7 @@ ct=1
 
 hpsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 
-if(.not. large_pgrid)then
+if(.not. large_ngrid)then
     hzsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 endif
 
@@ -254,7 +267,9 @@ hmrsig   =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 if(.not. large_pgrid)then
    husig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
    hvsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-   hwsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+   if(.not. large_ngrid)then   
+      hwsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+   endif
 !  htkesig  =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 endif
 
@@ -270,6 +285,10 @@ if (make_micro) then
 endif
 
 print*,'ctmax (actual) = ',ct - 1            
+if(nz*nvar3dh .ne. ct-1)then
+    write(6,*)' ERROR: ctmax actual is different from predicted'
+    stop
+endif
 
 return
 end subroutine
