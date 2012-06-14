@@ -16,6 +16,7 @@
           real weight
           real vert_rad_rat           ! Vertical radius ratio 
           real elev                   ! Used for sfc obs
+          real htagl                  ! Height above station surface elevation (m)
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
           integer i4time              ! I4time of ob
@@ -37,6 +38,7 @@
           real weight
           real vert_rad_rat           ! Vertical radius ratio 
           real elev                   ! Used for sfc obs
+          real htagl                  ! Height above station surface elevation (m)
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
           integer i4time              ! I4time of ob
