@@ -570,7 +570,7 @@ if (fcsttime > 0) then
    where(pcp_inc < .0001) pcp_inc=0.
    where(pcp_tot < .0001) pcp_tot=0.
 
-   if(large_ngrid .eqv. .false.)then
+   if(.not. large_ngrid)then
       print*,'Min/Max snow tot (previous) = ',minval(snow_tot),maxval(snow_tot)
 
       allocate(fallen_precip_type(lx,ly))
