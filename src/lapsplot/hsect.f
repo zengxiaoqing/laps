@@ -508,12 +508,22 @@ c       include 'satellite_dims_lvd.inc'
             goto 1200
         endif
 
-        if(c_type(1:2) .eq. 'di')then
-            write(6,*)' Plotting difference field of last two entries'       
-            call diff_miss(field_2d,field_2d_buf,field_2d_diff
-     1                                          ,NX_L,NY_L)       
+        if(c_type(1:2) .eq. 'di' .or. c_type(1:2) .eq. 'ml')then
 
-            c_label = 'difference field (b - a)'
+            if(c_type(1:2) .eq. 'di')then
+              write(6,*)' Plotting difference field of last two entries' 
+              call diff_miss(field_2d,field_2d_buf,field_2d_diff
+     1                                            ,NX_L,NY_L)       
+
+              c_label = 'difference field (b - a)'
+
+            else
+              write(6,*)' Plotting product field of last two entries' 
+              call multar_miss(field_2d,field_2d_buf,field_2d_diff
+     1                                            ,NX_L,NY_L)       
+
+              c_label = 'product field (b - a)'
+            endif
 
 !           Use scale from the most recent plot?
 !           scale = 1.
@@ -2690,6 +2700,7 @@ cabdel
             endif
 
             if(c_field(1:2) .eq. 'mr')then ! Column Max Reflectivity data
+                plot_parms%icol_barbs = +1 ! keep future barbs plots bright
                 if(c_type .eq. 'rf')then
                     write(6,*)' Getting analyzed lmr file'
                     var_2d = 'R'
@@ -2799,6 +2810,7 @@ cabdel
                 endif
 
             elseif(c_field(1:2) .eq. 'rf')then
+                plot_parms%icol_barbs = +1 ! keep future barbs plots bright
                 if(c_type .eq. 'rv')then
 !                   c19_label = 'Reflectivity '//ext_radar(1:3)//' '
                     call filter_string(radar_name)
