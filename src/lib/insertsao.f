@@ -857,8 +857,10 @@ C CLOUDS ARE NOW IN MSL
             cld_thk = 2500.
         elseif(ht_base .gt. 6000.)then
             cld_thk = 1500.
-        else
+        elseif(ht_base .gt. 4000.)then
             cld_thk = 1000.
+        else
+            cld_thk = 600.
         endif
 
         return
