@@ -110,8 +110,8 @@ allocate(ncon_pcp_tot(nx,ny))
 
 ! Read model data.
 
-if(.not. large_ngrid)then ! U,V
-
+if(.not. large_pgrid)then ! U,V
+  print*,' Reading WRF U/V ',large_ngrid,large_pgrid
   icode=nf_inq_varid(ncid,'U',nid)
   if (icode .eq. 0) then
    allocate(fld3d(nx+1,ny,nz))
@@ -139,6 +139,8 @@ if(.not. large_ngrid)then ! U,V
    enddo
    deallocate(fld3d)
   endif
+else
+  print*,' Skipping read of WRF U/V ',large_ngrid,large_pgrid
 endif
 
 icode=nf_inq_varid(ncid,'P',nid)
@@ -180,7 +182,8 @@ icode=nf_inq_varid(ncid,'QGRAUP',nid)
 if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,ngraupelmr_sig)
 
 
-if(.not. large_ngrid)then ! W, Z
+if(.not. large_ngrid .AND. .not. large_pgrid)then ! W   
+  print*,' Reading WRF W ',large_ngrid,large_pgrid
   allocate(fld3d(nx,ny,nz+1))
   icode=nf_inq_varid(ncid,'W',nid)
   if (icode .eq. 0) then
@@ -189,7 +192,12 @@ if(.not. large_ngrid)then ! W, Z
       nwsig(:,:,k)=(fld3d(:,:,k)+fld3d(:,:,k+1))*0.5
    enddo
   endif
+else
+  print*,' Skipping read of WRF W ',large_ngrid,large_pgrid
+endif ! large_ngrid
 
+if(.not. large_ngrid)then ! Z
+  print*,' Reading WRF Z'
   icode=nf_inq_varid(ncid,'PH',nid)
   if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,fld3d)
@@ -206,7 +214,9 @@ if(.not. large_ngrid)then ! W, Z
       nzsig=rmsg
    endif
   endif
-  deallocate(fld3d)
+  deallocate(fld3d) 
+else
+  print*,' Skipping read of WRF Z'
 endif ! large_ngrid
 
 icode=nf_inq_varid(ncid,'TSK',nid)
