@@ -116,6 +116,8 @@
             return
         endif
 
+        iwrite = 0
+
         u_mdl_bkg_4d = 0 ! Sets time term to zero when we call get_wind_3d_obs
         v_mdl_bkg_4d = 0
 
@@ -362,18 +364,27 @@
                     if(i_g .ge. 3 .and. i_g .le. ni-2 .and.
      1                 j_g .ge. 3 .and. j_g .le. nj-2            )then
 
-                      iwrite = iwrite + 1
+                      if(k_g .le. nk)then
 
-!                     if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
-                        var_fcst_s(ista) = var_fcst_3d(i_g,j_g,k_g)
-!                     endif
+!                       if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
+                          var_fcst_s(ista) = var_fcst_3d(i_g,j_g,k_g)
+!                       endif
  
-                      sumobs = sumobs + var_s(ista)
-                      sumanl = sumanl + var_fcst_s(ista)
-                      cnt = cnt + 1.
+                        sumobs = sumobs + var_s(ista)
+                        sumanl = sumanl + var_fcst_s(ista)
+                        cnt = cnt + 1.
+
+                      else
+                        iwrite = iwrite + 1
+                        if(iwrite .le. 50)then
+                          write(6,*)' WARNING: k is outside domain '
+     1                             ,ista,k_g       
+                        endif
+
+                      endif
 
 1112                endif ! ob is in domain
-                  endif ! ista .ne. 0 (valid value)
+                  endif ! non-missing observation (valid value)
                 enddo ! ista
 
                 write(6,*)
