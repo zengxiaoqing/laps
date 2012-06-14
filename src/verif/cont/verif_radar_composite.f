@@ -59,7 +59,7 @@
         character*10 compdir
 
         integer n_fields
-        parameter (n_fields=1)
+        parameter (n_fields=2)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
         integer nthr_a(n_fields) ! number of thresholds for each field
@@ -67,10 +67,15 @@
         character*10 c_thr
 
 !       Specify what is being verified
-        data ext_fcst_a /'fua'/ ! 3-D
-        data ext_anal_a /'lps'/ ! 3-D reflectivity
-        data var_a      /'REF'/ ! 3-D reflectivity       
-        data nthr_a     /5/        
+!       data ext_fcst_a /'fua'/ ! 3-D
+!       data ext_anal_a /'lps'/ ! 3-D reflectivity
+!       data var_a      /'REF'/ ! 3-D reflectivity       
+!       data nthr_a     /5/        
+
+        data ext_fcst_a /'fua','fsf'/ ! 3-D / composite ref
+        data ext_anal_a /'lps','lmr'/ ! 3-D / composite ref
+        data var_a      /'REF','LMR'/ ! 3-D / composite ref
+        data nthr_a     /5,5/        
 
         integer contable(0:1,0:1)
 
@@ -188,7 +193,7 @@
          nsuccess_m = 0
          nincomplete_m = 0
 
-         frac_thr = 0.20
+         frac_thr = 0.15
          nmissing_thr = int((1. - frac_thr) * float(n_init_times+1))
          nsuccess_thr = (n_init_times+1) - nmissing_thr
 
