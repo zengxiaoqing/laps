@@ -46,3 +46,28 @@ c
 c
         return
         end
+
+c
+        subroutine multar_miss(a,b,result,imax,jmax)
+c
+cdoc    Routine to multiply array 'b' and array 'a' and put the
+cdoc    result into array 'result'. This takes account of 'r_missing_data'
+c
+        real a(imax,jmax), b(imax,jmax), result(imax,jmax)
+c
+        call get_r_missing_data(r_missing_data,istatus)
+
+        do j=1,jmax
+        do i=1,imax
+          if(a(i,j) .ne. r_missing_data .and. 
+     1       b(i,j) .ne. r_missing_data       )then
+              result(i,j) = a(i,j) * b(i,j)
+          else
+              result(i,j) = r_missing_data
+          endif
+        enddo !i
+        enddo !j
+c
+        return
+        end
+c
