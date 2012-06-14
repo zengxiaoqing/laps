@@ -118,11 +118,11 @@ if(.not. large_pgrid .and. icall .eq. 1)then
          else
             dz=htsig(i,j,1)/(gor/(pla-alog(hpsig(i,j,1)))-lapse*0.5)
          endif
-         zprs(i,j,k)=hzsig(i,j,1)-dz
+         if(.not. large_ngrid)zprs(i,j,k)=hzsig(i,j,1)-dz
          tprs(i,j,k)=htsig(i,j,1)+lapse*dz
       elseif (hpsig(i,j,nz) >= lprs(k)) then
          tprs(i,j,k)=htsig(i,j,nz)
-         zprs(i,j,k)=hzsig(i,j,nz)+rog*htsig(i,j,nz)*alog(hpsig(i,j,nz)/lprs(k))
+         if(.not. large_ngrid)zprs(i,j,k)=hzsig(i,j,nz)+rog*htsig(i,j,nz)*alog(hpsig(i,j,nz)/lprs(k))
       else
          do kk=1,nz-1
             if (hpsig(i,j,kk) >= lprs(k) .and. hpsig(i,j,kk+1) <= lprs(k)) then
@@ -131,7 +131,7 @@ if(.not. large_pgrid .and. icall .eq. 1)then
                phi=logp(i,j,kk+1)
                slope=(plo-pla)/(plo-phi)
 
-               zprs(i,j,k)=hzsig(i,j,kk)-slope*(hzsig(i,j,kk)-hzsig(i,j,kk+1))
+               if(.not. large_ngrid)zprs(i,j,k)=hzsig(i,j,kk)-slope*(hzsig(i,j,kk)-hzsig(i,j,kk+1))
                tprs(i,j,k)=htsig(i,j,kk)-slope*(htsig(i,j,kk)-htsig(i,j,kk+1))
             endif
          enddo
@@ -142,7 +142,7 @@ if(.not. large_pgrid .and. icall .eq. 1)then
 
   if (minval(hmrsig)  < rmsg) call vinterp_single(logp,hmrsig,shprs)
 
-  if(.not. large_ngrid)then
+  if(.not. large_pgrid)then
     if(.true.)then ! linear
       if (minval(husig)   < rmsg) call vinterp_single(logp,husig,uprs)
       if (minval(hvsig)   < rmsg) call vinterp_single(logp,hvsig,vprs)
@@ -150,8 +150,10 @@ if(.not. large_pgrid .and. icall .eq. 1)then
       if (minval(husig)   < rmsg) call vinterp_single_cubic(logp,husig,uprs)
       if (minval(hvsig)   < rmsg) call vinterp_single_cubic(logp,hvsig,vprs)
     endif
-    if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
-!   if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
+    if(.not. large_ngrid)then
+      if (minval(hwsig)   < rmsg) call vinterp_single(logp,hwsig,wprs)
+!     if (minval(htkesig) < rmsg) call vinterp_single(logp,htkesig,tkeprs)
+    endif
   endif
 
 endif ! large_pgrid
