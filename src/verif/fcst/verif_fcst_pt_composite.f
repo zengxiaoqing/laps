@@ -51,7 +51,7 @@
         character*10 compdir
 
         integer n_fields
-        parameter (n_fields=10)
+        parameter (n_fields=12)
         character*10 var_a(n_fields)
         integer nthr_a(n_fields) ! number of thresholds for each field
         character*2 c2_region
@@ -59,8 +59,9 @@
 
 !       Specify what is being verified
         data var_a      
-     1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF','TPW','R01','RTO'/
-        data nthr_a     /1,1,1,1,1,1,1,1,1,1/        
+     1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF'
+     1     ,'T3' ,'W3' ,'TPW','R01','RTO'/     
+        data nthr_a     /1,1,1,1,1,1,1,1,1,1,1,1/        
 
         integer contable(0:1,0:1)
 
