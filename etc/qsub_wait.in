@@ -1,0 +1,19 @@
+#!/bin/sh --login
+
+script=$1
+flagfile=$2
+project=$3
+
+if test "$flagfile" == ""; then
+    flagfile=flagfile.$$
+fi
+
+if test "$project" == ""; then
+    project=dlaps
+fi
+
+echo "qsub -A $project $script"
+      qsub -A $project $script
+
+@prefix@/etc/wait_for_file.sh $flagfile 60 60
+
