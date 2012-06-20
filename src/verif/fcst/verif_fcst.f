@@ -424,7 +424,19 @@
                 endif
 
                 if(trim(var_2d) .eq. 'SWI')then
-                  var_s = solar_s
+                  clear_sky_ghi = r_missing_data
+                  do i = 1,maxsta  
+                      call solalt(lat_s(i),lon_s(i),i4_valid,sol_alt)
+                      call qc_solar_ob(solar_s(i),sol_alt 
+     1                                ,r_missing_data,iqc,clear_sky_ghi)
+                      if(iqc .eq. 0)then
+                          var_s(i) = solar_s(i)
+                      else
+                          var_s(i) = r_missing_data
+                          write(6,*)' Solar ob QCd out ',i,stations(i)
+     1                             ,sol_alt,solar_s(i),provider(i)
+                      endif
+                  enddo ! i
                   threshval = 0.
                 elseif(trim(var_2d) .eq. 'TSF')then
                   var_s = t_s
