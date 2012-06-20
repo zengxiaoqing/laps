@@ -403,13 +403,21 @@
      1                   ,'U Wind Component:       '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
-                  rms_a(ifield,imodel,itime_fcst) = std
+                  if(istatus .eq. 1)then
+                      rms_a(ifield,imodel,itime_fcst) = std
+                  else
+                      rms_a(ifield,imodel,itime_fcst) = r_missing_data
+                  endif
                 elseif(var_2d .eq. 'V3')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'V Wind Component:       '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
-                  rms_a(ifield,imodel,itime_fcst) = std
+                  if(istatus .eq. 1)then
+                      rms_a(ifield,imodel,itime_fcst) = std
+                  else
+                      rms_a(ifield,imodel,itime_fcst) = r_missing_data
+                  endif
                 elseif(var_2d .eq. 'W3')then
                   xbar = rms_a(1,imodel,itime_fcst)
                   ybar = rms_a(2,imodel,itime_fcst)
@@ -428,8 +436,14 @@
      1                   ,'Temperature:            '
      1                   ,a_t,b_t,xbar_k,ybar_k
      1                   ,bias,std,r_missing_data,istatus)
-                  xbar = k_to_c(xbar_k)
-                  ybar = k_to_c(ybar_k)
+                  if(istatus .eq. 1)then
+                      xbar = k_to_c(xbar_k)
+                      ybar = k_to_c(ybar_k)
+                  else
+                      xbar = rmiss
+                      ybar = rmiss
+                      std = rmiss                         
+                  endif
                   rms_a(ifield,imodel,itime_fcst) = std
                 endif
 
