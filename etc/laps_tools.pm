@@ -297,6 +297,7 @@ sub mkdatadirs{
   my (@hist_dirs, @cont_dirs);
   my (@ensm_dirs);
   my (@fdda_dirs);
+  my (@fdda_radar_dirs);
   my (@lga_dirs, @lgb_dirs);
   my (@bkgd_dirs);
 
@@ -409,7 +410,11 @@ gr2);
      $ii = 0;
      $hist_dirs[$ii] = 'verif/REF/hist';
      $cont_dirs[$ii] = 'verif/REF/cont';
-     foreach (@fdda_dirs){
+
+     @fdda_radar_dirs = @fdda_dirs;
+     push(@fdda_radar_dirs,"persistence");
+
+     foreach (@fdda_radar_dirs){
 #       print "$_\n";         
         if($_ ne "lga"){
               $ii++;
@@ -419,8 +424,6 @@ gr2);
      }
      print "hist dirs: @hist_dirs\n";
      print "cont dirs: @cont_dirs\n";
-
-
 
      print "adding background model subdirectories to lapsprd dirs\n";
      $lga_dirs[0]='lga';
