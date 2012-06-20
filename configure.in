@@ -479,6 +479,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/cronfile.pl
           etc/followup_fcst.pl
           etc/fxalogdir.pl
+          etc/generate_images.pl
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
 	  etc/laps_monitor.pl
@@ -486,6 +487,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/lq3driver.pl
           etc/qsub
           etc/qsub_sge
+          etc/qsub_wait
           etc/rsync_ensemble_out.sh
           etc/sched.pl
           etc/sched.sh
@@ -521,7 +523,6 @@ AC_OUTPUT(src/include/trigd.inc
           etc/wrfpost.pl
           etc/xferData.pl
           etc/xferlaps.csh
-          etc/generate_images.pl
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
           etc/models/run_qsub_lfmp.sh 
