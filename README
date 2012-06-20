@@ -2038,7 +2038,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      To do this, perform the following between untarring the tar file and
      localizing LAPS
 
-     1. Edit 'data/static/pressures.nl'
+     1. Copy 'data/static/pressures.nl' to your $TEMPLATE directory, then edit
+        it with to have the new set of levels.
 
         Update the list of pressures that go in sequence from higher to lower
         pressures (bottom to top) 
