@@ -27,6 +27,8 @@
 
 #Argument 9 is optional remote node (can be used if arg 5 is set to "6", default is 'clank')
 
+umask 002
+
 LOCAL_DATA_ROOT=$1
 REMOTE_DATA_ROOT=$2
 
@@ -76,6 +78,8 @@ echo " DELETE variable is: $DELETE " >> $log
 
 echo " " >> $log
 echo " Option 5 is: $5 " >> $log
+
+date -u > $LOCAL_DATA_ROOT/time/rsynctime.dat
 
 REMOTE_NODE=oplapb@clank   
 
