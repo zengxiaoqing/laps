@@ -714,6 +714,7 @@ foreach $exe (@LAPS_EXE){
                         $vmem_gb=12.0
                     }
                 }
+                my $vmem_mb = int($vmem_gb*1000.);
 
 #               if($opt_q){
 #                   $wall_time_hr="0".$wall_time_hr if(length($wall_time_hr)<2);
@@ -730,6 +731,7 @@ foreach $exe (@LAPS_EXE){
                                 print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=".$vmem_gb."G\n";
                             }else{
                                 print TFILE "#PBS -l walltime=$wall_time_hr:$wall_time_min:00\n";
+                                print TFILE "#PBS -l mem=$vmem_mb"."M\n";
                             }
                         }else{
                             if($nodes_current > 1){
@@ -743,13 +745,19 @@ foreach $exe (@LAPS_EXE){
                                     print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
                                 }else{
                                     print TFILE "#PBS -l walltime=$wall_time_hr:$wall_time_min:00\n";
+                                    print TFILE "#PBS -l mem=$vmem_mb"."M\n";
                                 }
                             }
                         }
                     }else{ # qsub in "single" mode with $opt_P defined for multiple processors
                         if($execount == 1){
-                            print TFILE "#\$ -pe $node_type_multi $opt_P\n";
-                            print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                            if($opt_Q){
+                                print TFILE "#\$ -pe $node_type_multi $opt_P\n";
+                                print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+                            }else{
+                                print TFILE "#PBS -l procs=$opt_P\n";
+                                print TFILE "#PBS -l walltime=$wall_time_hr:$wall_time_min:00\n";
+                            }
                         }
                     }
                     if($execount == 1 || $qsub_mode eq "multi"){
