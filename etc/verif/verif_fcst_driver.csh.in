@@ -54,11 +54,37 @@ echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log.`
 
 date -u
 
-foreach THRESH (20 30 40 20_comp 30_comp 40_comp 20_comp2 30_comp2 40_comp2)
-    echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME > $LAPS_DATA_ROOT/log/radar_fcst_bias_$THRESH.log"
-          $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME > $LAPS_DATA_ROOT/log/radar_fcst_bias_$THRESH.log
-    echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME > $LAPS_DATA_ROOT/log/radar_fcst_ets_$THRESH.log"
-          $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME > $LAPS_DATA_ROOT/log/radar_fcst_ets_$THRESH.log
+foreach SUBDIR (REF LMR)
+
+    foreach THRESH (20 30 40 20_comp 30_comp 40_comp 20_comp2 30_comp2 40_comp2)
+
+        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log"
+              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log
+        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log"
+              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log
+    end
+
+#   Montage the image scores
+    echo ""
+    echo "Montage the image scores for $SUBDIR"
+    setenv IMGDIR $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot
+    setenv IM1 $IMGDIR/radar_fcst_bias_20_$LAPS_A9TIME.png
+    setenv IM2 $IMGDIR/radar_fcst_ets_20_$LAPS_A9TIME.png
+    setenv IM3 $IMGDIR/radar_fcst_bias_30_$LAPS_A9TIME.png
+    setenv IM4 $IMGDIR/radar_fcst_ets_30_$LAPS_A9TIME.png
+    setenv IM5 $IMGDIR/radar_fcst_bias_40_$LAPS_A9TIME.png
+    setenv IM6 $IMGDIR/radar_fcst_ets_40_$LAPS_A9TIME.png
+    setenv IMOUT $IMGDIR/radar_fcst_all_$LAPS_A9TIME.png
+    echo "montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT"
+          montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
+
+    setenv LAPS_HHMM `echo $LAPS_A9TIME | cut -c6-9`
+    setenv HHMM_LINK $IMGDIR/radar_fcst_all_$LAPS_HHMM.png
+    echo "rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK"
+          rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK
+
+    echo ""
+
 end
 
 date -u
@@ -160,8 +186,23 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt V
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W3   0.:20. '"3-D Wind"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/w3_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W3   0.:20.  "3-D Wind"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/w3_fcst.log
 
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W3   0.:20. '"3-D Wind"'    "m/s"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/w3_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W3   0.:20.  "3-D Wind"     "m/s"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/w3_fcst_comp.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W3   0.:20. '"3-D Wind"'    "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/w3_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W3   0.:20.  "3-D Wind"     "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/w3_fcst_comp2.log
+
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3  -4.:4.  '"3-D Temperature"'    "Deg C"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/t3_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3  -4.:4.   "3-D Temperature"     "Deg C"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/t3_fcst.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3  -4.:4.  '"3-D Temperature"'    "Deg C"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/t3_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3  -4.:4.   "3-D Temperature"     "Deg C"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/t3_fcst_comp.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3  -4.:4.  '"3-D Temperature"'    "Deg C"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/t3_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T3  -4.:4.   "3-D Temperature"     "Deg C"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/t3_fcst_comp2.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S8A 0.:300. '"11 micron IR Sat" "Deg K"' $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/s8a_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S8A 0.:300.  "11 micron IR Sat" "Deg K"  $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/s8a_fcst.log
 
 
 # Montage of the reflectivity and solar images
