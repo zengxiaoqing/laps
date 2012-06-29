@@ -21,6 +21,8 @@
 
 # Ninth argument is REMOTE_DATA_ROOT                                         
 
+umask 002
+
 LAPS_DATA_ROOT=$1
 time=$2
 YYYY=$3
@@ -63,8 +65,14 @@ rm -f lapstar.txt
 touch lapstar.txt
 
 #LAPS Data Files
+
+#Time directory
+echo $YYDDDHHMM                                                 > time/copyremotetime.dat
+echo "tarlapstime.sh"                                          >> time/copyremotetime.dat
+
 ls -1 time/systime.dat                                          > lapstar.txt
 ls -1 time/c_time.dat                                          >> lapstar.txt
+ls -1 time/copyremotetime.dat                                  >> lapstar.txt
 
 # Verification files                           
 #find ./lapsprd/verif -type f         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
@@ -146,7 +154,11 @@ elif test "$EXPAND" = scp; then
 elif test "$EXPAND" = tar; then
     echo "tar to remote location (under construction)"  
     cd $LAPS_DATA_ROOT 
-    tar -T lapstar.txt -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"
+    pwd
+    echo "DOMAIN_NAME = "$DOMAIN_NAME
+    echo "REMOTE_DATA_ROOT = "$REMOTE_DATA_ROOT
+    echo 'tar -T lapstar.txt -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"'
+          tar -T lapstar.txt -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"
 
 else
     echo "no tar performed"                                      
