@@ -94,23 +94,20 @@ if test "$3" = qsub; then
     if test "$subdir" == ""; then # copy all
         script=$LOCAL_DATA_ROOT/log/qsub_rsync_out.sh
         echo "#!/bin/sh"                 > $script
-        echo "#$ -N qsub_rsync_out"     >> $script
+        echo "#PBS -N qsub_rsync_out"     >> $script
     else
         script=$LOCAL_DATA_ROOT/log/qsub_rsync_out_$subdir.sh
         echo "#!/bin/sh"                 > $script
-        echo "#$ -N qsub_rsync_out_$subdir"  >> $script
+        echo "#PBS -N qsub_rsync_out_$subdir"  >> $script
     fi
-    echo "#$ -A dlaps"              >> $script
-    echo "#$ -l h_rt=$HHMM:00"      >> $script
-    echo "#$ -S /bin/sh"            >> $script
-    echo "#$ -cwd"                  >> $script
-    echo "#$ -pe service 1"         >> $script
+    echo "#PBS -A dlaps"              >> $script
+    echo "#PBS -l procs=1,walltime=$HHMM:00"      >> $script
+    echo "#PBS -q service"         >> $script
     if test "$subdir" == ""; then # copy all
-        echo "#$ -o $LOCAL_DATA_ROOT/log/qsub_rsync_out.log.`date +\%H\%M`"      >> $script
+        echo "#PBS -o $LOCAL_DATA_ROOT/log/qsub_rsync_out.log.`date +\%H\%M`"      >> $script
     else
-        echo "#$ -o $LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M`"   >> $script
+        echo "#PBS -o $LOCAL_DATA_ROOT/log/rsync_qsub_fuafsf_$subdir.log.`date +\%H\%M`"   >> $script
     fi
-    echo "#$ -j y"                  >> $script
     echo "#exit"                    >> $script
     echo " "                        >> $script
     echo "LOCAL_DATA_ROOT=$LOCAL_DATA_ROOT" >> $script
@@ -329,9 +326,9 @@ if test "$3" = qsub; then
     cat $script                              >> $log
     echo " "                                 >> $log
     echo " using this command..."            >> $log
-    echo "/usr/local/fsl/bin/qsub $script >> $log 2>&1"     >> $log
+    echo "qsub $script >> $log 2>&1"     >> $log
 
-          /usr/local/fsl/bin/qsub $script >> $log 2>&1      >> $log
+          qsub $script >> $log 2>&1      >> $log
 
 else
 
