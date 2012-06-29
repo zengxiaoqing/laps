@@ -1371,7 +1371,7 @@ c       include 'satellite_dims_lvd.inc'
                 endif
 
 !               if(plot_parms%iraster .lt. 1)then
-!                   plot_parms%discrete = .true.
+!                   plot_parms%l_discrete = .true.
 !               endif
 
                 call get_grid_spacing_cen(grid_spacing_m,istatus)
@@ -4355,6 +4355,8 @@ c                cint = -1.
 
                  scale = 1e-3
 
+                 plot_parms%color_power = 0.7
+
                  call plot_field_2d(i4time_heights,c_type_i,field_2d
      1                        ,scale
      1                        ,namelist_parms,plot_parms
@@ -4530,6 +4532,7 @@ c
 c                   cint = -1.
 
                     scale = 1e-3
+                    plot_parms%color_power = 0.7
 
                     call plot_field_2d(i4_valid,c_type_i,sh_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -4945,6 +4948,7 @@ c                   cint = -1.
 
             clow = 0.00
             chigh = 7.00
+            plot_parms%color_power = 0.7
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -5562,10 +5566,12 @@ c                   cint = -1.
      1                         ,'moist',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'TPW')then
+                    plot_parms%color_power = 0.7
                     call ccpfil(field_2d,NX_L,NY_L,0.,7.0
      1                         ,'tpw',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'MSF' .or. var_2d .eq. 'RSF')then
+                    plot_parms%color_power = 0.7
                     call ccpfil(field_2d,NX_L,NY_L,0.,25.0
      1                         ,'tpw',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
@@ -6098,6 +6104,8 @@ c                   cint = -1.
 !    1        c_label,i_overlay,c_display,lat,lon,jdot,
 !    1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
+            plot_parms%color_power = 0.7
+
             call plot_field_2d(i4time_pw,c_type,field_2d,1e-3
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
@@ -6233,7 +6241,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c_label = 'Sfc Wind Speed          (kt)     '
+            plot_parms%l_discrete = .false.
 
             do i = 1,NX_L
             do j = 1,NY_L
@@ -6249,6 +6257,9 @@ c                   cint = -1.
      1                                  lat(i,j),
      1                                  lon(i,j)     )
                         spds(i,j) = spds(i,j) / mspkt
+                        if(c_type(1:3) .eq. 'sp3')then
+                            spds(i,j) = spds(i,j)**3
+                        endif
                     endif
             enddo ! j
             enddo ! i
@@ -6257,17 +6268,29 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
-            clow = 0.
-            chigh = chigh_sfcwind
-            cint = 0.
-
-            scale = 1.
+            if(c_type(1:3) .eq. 'sp3')then
+                c_label = 'Sfc Wind Power       (1000kt**3) '
+                scale = 1000.
+                clow = 0.
+                chigh = (chigh_sfcwind**3 / scale) * 0.2
+                cint = 0.
+                plot_parms%color_power = 0.4  
+                colortable = 'power' 
+            else
+                c_label = 'Sfc Wind Speed          (kt)     '
+                scale = 1.
+                clow = 0.
+                chigh = chigh_sfcwind
+                cint = 0.
+                plot_parms%color_power = 1.0
+                colortable = 'spectral'
+            endif
 
             call plot_field_2d(i4time_pw,c_type,spds,scale
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'spectral')
+     1                        ,NX_L,NY_L,r_missing_data,colortable)
 
             if(i_image .eq. 1 .and. (.not. namelist_parms%l_sphere)
      1                                                         )then      
@@ -8366,7 +8389,7 @@ c abdel
 
         else ! image plot
             write(6,*)' plot_field_2d - image plot ',c_type
-     1               ,clow_img,chigh_img
+     1               ,clow_img,chigh_img,plot_parms%color_power
 
             if(clow_img .eq. 0. .and. chigh_img .eq. 0.)then
                 call contour_settings(field_2d_plot,NX_L,NY_L
