@@ -896,7 +896,7 @@ foreach $exe (@LAPS_EXE){
             print TFILE "  touch $LAPS_LOG_PATH/sched\_$yyjjjhhmm\_$scriptcount.done\n"; # supports XML scenario
             close(TFILE);
 #           close(TFILE_SUB);
-            system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
+#           system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
 
             chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
 
@@ -1111,7 +1111,9 @@ if(defined $opt_R){
         if(defined $opt_Q){ # JET
             $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/qsub_xfer_laps.sh";
         }else{    # opt_q     ZEUS
-            $command = "qsub -A $opt_q $LAPS_LOG_PATH/qsub_xfer_laps.sh";
+#           $command = "qsub -A $opt_q $LAPS_LOG_PATH/qsub_xfer_laps.sh";
+#           $command = "$LAPSROOT/etc/rsync_out.sh $LAPS_DATA_ROOT $domain:$remote_data_root qsub 00:15 7 > $LAPS_LOG_PATH/rsync_out.log.`date +\%M`";         
+            $command = "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm";
         }
         print "\nCommand file:\n";
         system("cat $LAPS_LOG_PATH/qsub_xfer_laps.sh");
