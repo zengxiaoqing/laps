@@ -81,11 +81,11 @@ C
           l_integral = .false.
       endif
 
-      if(colortable .eq. 'tpw')then
-          power = 0.7
-      else
+!     if(colortable .eq. 'tpw')then
+!         power = 0.7
+!     else
           power = plot_parms%color_power
-      endif
+!     endif
 
       write(6,*)' Colortable power = ',power
 
@@ -251,11 +251,11 @@ C
           elseif(colortable .eq. 'spectral' .or. 
      1           colortable .eq. 'spectralr')then
 !             Test for isotachs 
-              if(scale_h_in .eq. 50. .and. scale_l_in .eq. 0.)then 
-                  l_discrete = .true. 
-              else
+!             if(scale_h_in .eq. 50. .and. scale_l_in .eq. 0.)then 
+!                 l_discrete = .true. 
+!             else
                   l_discrete = plot_parms%l_discrete
-              endif
+!             endif
           elseif(colortable .eq. 'moist')then
               l_discrete = plot_parms%l_discrete
           elseif(colortable .eq. 'tpw')then
@@ -750,8 +750,13 @@ C
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,power,plot_parms,istatus)
 
-      else
-          write(6,*)' ERROR: Unknown color table ',colortable
+      else ! generic color table settings
+          if(.not. l_discrete)then
+              ncols = 179 ! previous good value was 79 (139)      
+          endif
+
+          call generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                            ,power,plot_parms,istatus)
 
       endif
 
