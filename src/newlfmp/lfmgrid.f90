@@ -21,6 +21,12 @@ logical :: write_to_lapsdir=.false.
 logical :: make_donefile=.true.
 logical :: large_pgrid=.false.
 logical :: large_ngrid=.false.
+logical :: l_process_p=.false.
+logical :: l_process_t=.false.
+logical :: l_process_mr=.false.
+logical :: l_process_z=.false.
+logical :: l_process_uv=.false.
+logical :: l_process_w=.false.
 
 integer :: domnum,fcsttime,laps_reftime,precip_dt=3600  ! in seconds
 integer :: k_micro=999
@@ -177,20 +183,20 @@ if (trim(mtype) /= 'st4') then
   nshflux  =>ngrid(1:nx,1:ny,ct); ct=ct+1
   nlhflux  =>ngrid(1:nx,1:ny,ct); ct=ct+1
 
-  npsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+  npsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_p = .true.
 
   if(.not. large_ngrid)then
-      nzsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+      nzsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_z = .true.
   endif
 
-  ntsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-  nmrsig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+  ntsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_t = .true.
+  nmrsig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_mr = .true.
 
   if(.not. large_pgrid)then
-      nusig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+      nusig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_uv = .true.
       nvsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
       if(.not. large_ngrid)then   
-          nwsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+          nwsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_w = .true.
       endif
   endif
 
