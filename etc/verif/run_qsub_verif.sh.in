@@ -1,5 +1,7 @@
 #!/bin/sh --login
 
+umask 002
+
 lapsdataroot=$1    # Example: /lfs0/projects/hmtb/dwr_domains/laps_psd   
 hhmm=$2            # Runtime needed (e.g. 01:00)
 delay=$3           # Delay in hours for the modeltime with respect to model_cycle_time (e.g. 12.0)                    
@@ -52,6 +54,7 @@ echo "       @CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model
 
 echo " "                                                        >> $script
 echo " "                                                        >> $script
+echo " touch $log.wait"                                         >> $script
 echo " exit 0"                                                  >> $script
 
 echo " "
@@ -65,20 +68,19 @@ if test "$remote_dataroot" == ""; then
           qsub $script > $log 2>&1
 
 else
-    echo "qsub_wait $script > $log 2>&1"
-          qsub_wait $script > $log 2>&1
+    echo "@prefix@/etc/qsub_wait $script $log.wait > $log 2>&1"
+          @prefix@/etc/qsub_wait $script $log.wait > $log 2>&1
 
-    if test -d "/home/oplapb"; then
-        echo "Making reflectivity montage via double ssh"
-        echo ssh clank.fsl.noaa.gov ssh pinky /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
-             ssh clank.fsl.noaa.gov ssh pinky /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
-    fi
+    echo "Making reflectivity montage via ssh"
+    echo ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
+         ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
 
-#   This option might be reinstated if a reverse copy can be set up?
-#   echo "@prefix@/etc/rsync_out.sh $lapsdataroot $remote_dataroot qsub 01:00 8"
-#         @prefix@/etc/rsync_out.sh $lapsdataroot $remote_dataroot qsub 01:00 8
+#   Rsync the verification data to remote dataroot
+    echo "@prefix@/etc/rsync_out.sh $lapsdataroot $remote_dataroot qsub 01:00 8"
+          @prefix@/etc/rsync_out.sh $lapsdataroot $remote_dataroot qsub 01:00 8
 
 fi
 
+echo "run_qsub_verif.sh completed..."
 
 
