@@ -95,6 +95,6 @@ if ($3 == "mss") then
 endif
 
 echo " "
-echo "Successful completion of xferlaps.csh...'
+echo "Successful completion of xferlaps.csh..."
 
 
