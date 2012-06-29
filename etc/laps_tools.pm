@@ -294,7 +294,6 @@ sub mkdatadirs{
   my ($datadirs, $lapsprddirs);
   my (@datadirs, @lapsprddirs);
   my (@fua_dirs, @fsf_dirs);
-  my (@hist_dirs, @cont_dirs);
   my (@ensm_dirs);
   my (@fdda_dirs);
   my (@fdda_radar_dirs);
@@ -374,6 +373,7 @@ verif/U3  verif/U3/pt verif/U3/pt/comp verif/U3/pt/comp2
 verif/V3  verif/V3/pt verif/V3/pt/comp verif/V3/pt/comp2
 verif/W3  verif/W3/pt verif/W3/pt/comp verif/W3/pt/comp2
 verif/T3  verif/T3/pt verif/T3/pt/comp verif/T3/pt/comp2
+verif/S8A verif/S8A/pt verif/S8A/pt/comp verif/S8A/pt/comp2
 ensemble
 ensemble/mean
 gr2);
@@ -406,24 +406,39 @@ gr2);
      print "fua dirs: @fua_dirs\n";
      print "fsf dirs: @fsf_dirs\n";
 
-     print "adding fdda_model_source subdirectories to verif hist/cont dirs\n";
-     $ii = 0;
-     $hist_dirs[$ii] = 'verif/REF/hist';
-     $cont_dirs[$ii] = 'verif/REF/cont';
+     my $verifvar;
+     foreach (qw(REF LMR LLR)){
+         my (@hist_dirs, @cont_dirs);
+         $verifvar = $_;
 
-     @fdda_radar_dirs = @fdda_dirs;
-     push(@fdda_radar_dirs,"persistence");
+         print "adding fdda_model_source subdirectories to verif hist/cont dirs\n";
+         $ii = 0;
+         $hist_dirs[$ii] = 'verif/'.$verifvar.'/hist';
+         $cont_dirs[$ii] = 'verif/'.$verifvar.'/cont';
 
-     foreach (@fdda_radar_dirs){
-#       print "$_\n";         
-        if($_ ne "lga"){
-              $ii++;
-              $hist_dirs[$ii]=$hist_dirs[0]."/".$_;
-              $cont_dirs[$ii]=$cont_dirs[0]."/".$_;
-        }
+         @fdda_radar_dirs = @fdda_dirs;
+         push(@fdda_radar_dirs,"persistence");
+
+         foreach (@fdda_radar_dirs){
+#           print "$_\n";         
+            if($_ ne "lga"){
+                  $ii++;
+                  $hist_dirs[$ii]=$hist_dirs[0]."/".$_;
+                  $cont_dirs[$ii]=$cont_dirs[0]."/".$_;
+            }
+         }
+
+         print "hist dirs: @hist_dirs\n";
+         print "cont dirs: @cont_dirs\n";
+
+         foreach (@hist_dirs) {
+            mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
+         }
+
+         foreach (@cont_dirs) {
+            mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
+         }
      }
-     print "hist dirs: @hist_dirs\n";
-     print "cont dirs: @cont_dirs\n";
 
      print "adding background model subdirectories to lapsprd dirs\n";
      $lga_dirs[0]='lga';
@@ -465,12 +480,6 @@ gr2);
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
   foreach (@fsf_dirs) {
-     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
-  }
-  foreach (@hist_dirs) {
-     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
-  }
-  foreach (@cont_dirs) {
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
   return;
