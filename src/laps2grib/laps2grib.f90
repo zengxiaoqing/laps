@@ -23,7 +23,7 @@ PROGRAM laps2grib
   IMPLICIT NONE
 
   INTEGER                     :: istatus,year,month,day,hour,minute,second
-  INTEGER                     :: g2lun
+  INTEGER                     :: filestatus, g2lun
   INTEGER                     :: ncid,varid,ncstat
   INTEGER                     :: k,n
   INTEGER, PARAMETER          :: data_type = 0
@@ -173,9 +173,20 @@ PROGRAM laps2grib
                      TRIM(file_a9time)//'.'//meta_iso3d(n)%ext
       ENDIF
 
+      filestatus = 0
       CALL ncread_3d(lapsfile,nx,ny,nz,meta_iso3d(n)%var,lapsdata3d,val_time,ref_time,istatus)
-      CALL calc_val_ref_times(val_time,ref_time,time_unit_indicator,time_range,istatus)
       IF (istatus .EQ. 1) THEN
+        filestatus = 1  ! ncread_3d returned data...OK to write out grib2
+        CALL calc_val_ref_times(val_time,ref_time,time_unit_indicator,time_range,istatus)
+        IF (istatus .NE. 1) THEN
+          filestatus = 0  ! could not calc val_ref times...DO NOT write out grib2
+          PRINT *, "Could not calc val_ref times: ",meta_iso3d(n)%ext," VAR ",meta_iso3d(n)%var
+        ENDIF
+      ELSE
+        PRINT *, "Could not read file: ",meta_iso3d(n)%ext," VAR ",meta_iso3d(n)%var
+      ENDIF
+
+      IF (filestatus .EQ. 1) THEN
         press_loop:  DO k = 1, nz
           IF( (plevels_pa(k) .GE. meta_iso3d(n)%pmin).AND. &
               (plevels_pa(k) .LE. meta_iso3d(n)%pmax) ) THEN
@@ -233,9 +244,20 @@ PROGRAM laps2grib
         lapsfile = TRIM(laps_data_root)//'/static/static.nest7grid'
       ENDIF
 
+      filestatus = 0
       CALL ncread_2d(lapsfile,nx,ny,meta_2d(n)%var,lapsdata2d,val_time,ref_time,istatus)
-      CALL calc_val_ref_times(val_time,ref_time,time_unit_indicator,time_range,istatus)
       IF (istatus .EQ. 1) THEN
+        filestatus = 1  ! ncread_2d returned data...OK to write out grib2
+        CALL calc_val_ref_times(val_time,ref_time,time_unit_indicator,time_range,istatus)
+        IF (istatus .NE. 1) THEN
+          filestatus = 0  ! could not calc val_ref times...DO NOT write out grib2
+          PRINT *, "Could not calc val_ref times: ",meta_2d(n)%ext," VAR ",meta_2d(n)%var
+        ENDIF
+      ELSE
+        PRINT *, "Could not read file: ",meta_2d(n)%ext," VAR ",meta_2d(n)%var
+      ENDIF
+
+      IF (filestatus .EQ. 1) THEN
         IF ( MAXVAL(lapsdata2d) .EQ. r_missing ) THEN
           inomiss = 0
           miss_mgmt = 1
@@ -276,10 +298,20 @@ PROGRAM laps2grib
       lapsfile = TRIM(laps_data_root)//'/lapsprd/'//meta_accum2d(n)%ext//TRIM(forecast_id)//'/'//TRIM(file_a9time)//'.'// &
                          meta_accum2d(n)%ext
 
-
+      filestatus = 0
       CALL ncread_2d(lapsfile,nx,ny,meta_accum2d(n)%var,lapsdata2d,val_time,ref_time,istatus)
-
       IF (istatus .EQ. 1) THEN
+        filestatus = 1  ! ncread_2d returned data...OK to write out grib2
+        CALL calc_val_ref_times(val_time,ref_time,time_unit_indicator,time_range,istatus)
+        IF (istatus .NE. 1) THEN
+          filestatus = 0  ! could not calc val_ref times...DO NOT write out grib2
+          PRINT *, "Could not calc val_ref times: ",meta_accum2d(n)%ext," VAR ",meta_accum2d(n)%var
+        ENDIF
+      ELSE
+        PRINT *, "Could not read file: ",meta_accum2d(n)%ext," VAR ",meta_accum2d(n)%var
+      ENDIF
+
+      IF (filestatus .EQ. 1) THEN
         IF ( MAXVAL(lapsdata2d) .EQ. r_missing ) THEN
           inomiss = 0
           miss_mgmt = 1
@@ -402,7 +434,7 @@ END PROGRAM laps2grib
     IF (ncstat .EQ. NF_NOERR) THEN
       ncstat = NF_GET_VAR_INT(ncid,vid,nc_ref)
       IF (ncstat .NE. NF_NOERR) THEN
-        PRINT *,"Could not find value for Var ID for valtime", vid
+        PRINT *,"Could not find value for Var ID for reftime", vid
         istatus = 0
       ENDIF
     ELSE
@@ -469,7 +501,7 @@ END PROGRAM laps2grib
     IF (ncstat .EQ. NF_NOERR) THEN
       ncstat = NF_GET_VAR_INT(ncid,vid,nc_ref)
       IF (ncstat .NE. NF_NOERR) THEN
-        PRINT *,"Could not find value for Var ID for valtime", vid
+        PRINT *,"Could not find value for Var ID for reftime", vid
         istatus = 0
       ENDIF
     ELSE
