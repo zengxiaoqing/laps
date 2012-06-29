@@ -36,7 +36,7 @@ my @windowres;
 my $window;
 my $resolution;
 
-my @vars = qw(REF SWI);
+my @vars = qw(REF SWI S8A);
 
 #my $fcstprd = "Radar_Comp";
 
@@ -187,23 +187,25 @@ foreach $var (@vars) {
 
   my $geom;
  
-  if($var eq "REF"){
-#   $fcstprd = "Radar_Sfc";
-#   $analprd = "ptt";
-
+  if($var eq "REF" || $var eq "LMR"){
     $fcstprd = "Radar_Comp";
     $analprd = "crf";
-    $imageoutdir = "$dataroot/lapsprd/verif/$var/plot/";          
-#   $geom="90x60!";
-#   $geom="120x80!";
-    $geom="210x140!";
-  }else{
+  }elsif($var eq "LLR"){
+    $fcstprd = "Radar_Sfc";
+    $analprd = "ptt";
+  }elsif($var eq "SWI"){
     $fcstprd = "Solar";
     $analprd = "sol";
-    $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
-    $geom="210x140!";
+  }else{
+    $fcstprd = "11u";
+    $analprd = "s8a";
   }
 
+  $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
+  $geom="210x140!";
+
+  print "\n";
+  print "var:     $var\n";
   print "fcstprd: $fcstprd\n";
 
   $arrpos = 0;
