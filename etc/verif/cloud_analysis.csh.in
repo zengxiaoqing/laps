@@ -85,7 +85,7 @@ echo 'set grid'                                         >> $GNUPLOTFILE
 echo 'set datafile missing "-99.900"'                   >> $GNUPLOTFILE
 #echo 'set xlabel "Date Time"'    $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
 echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
-if ($DOMAIN_NAME == "") then
+if ($DOMAIN_NAME_IN == "") then
     echo 'set title "Global Horizontal Irradiance Analyzed vs Observed"' $TITLE_FONT >> $GNUPLOTFILE
 else
     echo 'set title "Global Horizontal Irradiance Analyzed vs Obs. ('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
