@@ -12,6 +12,8 @@
 
 # Sixth argument is domain name
 
+# Seventh argument is subdir
+
 setenv LAPSINSTALLROOT @prefix@                                                     
 setenv LAPS_DATA_ROOT $1
 setenv NLINE $2
@@ -19,6 +21,7 @@ setenv STAT $3
 setenv YRANGE $4
 setenv REFLECTIVITY $5
 setenv DOMAIN_NAME_IN $6
+setenv SUBDIR $7
 
 setenv DOMAIN_NAME `echo $DOMAIN_NAME_IN | sed 's/_/ /g'`
 
@@ -35,7 +38,7 @@ setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 
 setenv STAT_LC `echo $STAT | gawk '{print tolower($0)}'`
 
-setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
+setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt                                   
 
 # Setup True Type fonts and related environment variables
@@ -79,11 +82,11 @@ else
 endif
 
 if (     $REFLECTIVITY == "20_comp"  || $REFLECTIVITY == "30_comp"  || $REFLECTIVITY == "40_comp" ) then
-    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/summary_comp.txt
+    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/summary_comp.txt
     setenv REF `echo $REFLECTIVITY | cut -c1-2`
     setenv DURATION "7-day "
 else if ($REFLECTIVITY == "20_comp2" || $REFLECTIVITY == "30_comp2" || $REFLECTIVITY == "40_comp2") then
-    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/summary_comp2.txt
+    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/summary_comp2.txt
     setenv REF `echo $REFLECTIVITY | cut -c1-2`
     setenv DURATION "30-day "
 else
@@ -128,8 +131,8 @@ echo "Stop  time: $STOPTIME1 $STOPTIME2 NLINE is $NLINE"
 
 # Construct gnuplot .gp file
 # Fonts are: tiny small medium large giant                                    
-setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/$REFLECTIVITY/radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.gp
-setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/REF/plot/
+setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/$REFLECTIVITY/radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.gp
+setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/
 setenv PNGFILE     radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.png
 setenv DQUOTE \"
 
@@ -156,8 +159,13 @@ if ($DURATION == "") then
 else
     echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
 endif
-echo 'set ylabel "Volume Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
-echo 'set title "Radar 3-D Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
+if ($SUBDIR == "REF") then
+    echo 'set ylabel "Volume Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+    echo 'set title "Radar 3-D Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
+else if ($SUBDIR == "LMR") then
+    echo 'set ylabel "Composite Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+    echo 'set title "Composite Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
+endif
 echo 'set key left box'                                                  >> $GNUPLOTFILE
 echo 'set key spacing' $KEY_SPACING                                      >> $GNUPLOTFILE
 echo 'set key height' $KEY_HEIGHT                                        >> $GNUPLOTFILE
@@ -238,4 +246,4 @@ rm -f                            radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_
 convert -resize 105x70! $PNGFILE radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME_HHMM\_thumb.png
 
 # Make Animation
-convert -delay 100 -loop 0 `ls -rt radar_fcst_$STAT_LC\_$REFLECTIVITY\_???[0-9].png` $PNGFILE anim24hr_radar_fcst_$STAT_LC\_$REFLECTIVITY.gif
+convert -delay 150 -loop 0 `ls -rt radar_fcst_$STAT_LC\_$REFLECTIVITY\_???[0-9].png` $PNGFILE anim24hr_radar_fcst_$STAT_LC\_$REFLECTIVITY.gif
