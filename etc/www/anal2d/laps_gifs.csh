@@ -232,6 +232,11 @@ if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
     echo "Generating Solar Radiation"; date -u
     setenv prod sol
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   11 micron brightness temperature
+    echo "Generating 11 micron brightness temperature"; date -u
+    setenv prod s8a
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
  
 #   Ground Temperature
 #   echo "Generating Ground Temperature"; date -u
