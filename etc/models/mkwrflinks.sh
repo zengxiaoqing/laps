@@ -4,18 +4,18 @@
 
 LOCAL_WRF_ROOT=$1
 LAPS_DATA_ROOT=$2
-DELAY=$3
+REMOTE_WRF_ROOT=$3                      
+DELAY=$4
 
 #LOCAL_WRF_ROOT=/lfs0/projects/hmtb/hwt_domains/hrrr_conus
 #LAPS_DATA_ROOT=/pan1/projects/dlaps/analysis/wiap 
+#REMOTE_WRF_ROOT=/home/rtrr/hrrr_dev1
 
 # Purge local WRF_ROOT subdirectories
 /usr/bin/perl /home/oplapb/builds/laps/etc/purge_w3_fcst2d.pl -f -t 72 -d $LOCAL_WRF_ROOT modelroot dummy
 
 # Purge local WRF_ROOT logs                 
 /usr/bin/perl /home/oplapb/builds/laps/etc/purger.pl -r -t 3.0 $LOCAL_WRF_ROOT/log                  
-
-REMOTE_WRF_ROOT=/whome/rtrr/hrrr
 
 # Set model run time according to latest directory in REMOTE_WRF_ROOT
 cd $REMOTE_WRF_ROOT
@@ -41,7 +41,10 @@ mkdir -p $LOCAL_WRF_RUN/wrfprd
 mkdir -p $LOCAL_WRF_RUN/static
 
 cd $LOCAL_WRF_RUN/wrfprd
-ln -s $REMOTE_WRF_RUN/wrfprd/wrfout* .
+for file in `ls $REMOTE_WRF_RUN/wrfprd/wrfout*`; do
+    ls -l $file
+    ln -s $file .                              
+done
 
 echo ""
 pwd
