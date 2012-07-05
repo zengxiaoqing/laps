@@ -25,10 +25,12 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -S skip remote copy (just do Mass Store if that is chosen)
 #    -x <blank> if present an awips bigfile will be created
 #    -e avoid exiting if a particular file is missing (position as last argument or supply dummy value)
+#    -c remote copy method (scp or rsync), default is rsync [optional]
+#    -R copy surface fsf only [optional]
 
-use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e);
-#getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxe');
-getopt('lmardgfispwMSxe');
+use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e $opt_c $opt_R);
+#getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxec:R');
+getopt('lmardgfispwMSxecR');
 
 # Obtain perl module from LAPSINSTALLROOT
 require "@prefix@/etc/laps_tools.pm";
@@ -298,30 +300,61 @@ if (! $opt_S){ # test for skipping remote copy
     system ("date");
     my $scp_cmd;
 
-    if ($opt_a eq "noSubDir") {
-      $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua";
-    }else {
-      if ($opt_L) {
-        $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/lapsprd/fua/$opt_m-$opt_a";
-      }else {
-        $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$opt_m-$opt_a";
-      }
+    my $remote_copy;
+
+    if($opt_c eq "scp"){
+      $remote_copy = "scp -o ConnectTimeout=200";    # slower though maybe more reliable
+      print "opt_c / remote_copy are $opt_c $remote_copy\n";
+    }else{
+      $remote_copy = "rsync -lptgvvz --timeout=300"; # faster for larger files
+      print "opt_c / remote_copy are $opt_c $remote_copy\n";
     }
-    print "Running command: $scp_cmd\n";
-    system ($scp_cmd);
-    system ("date");
+
+#   Force this to rsync for now
+#   $remote_copy = "rsync -lptgvvz --timeout=300";   # faster for larger files
 
     if ($opt_a eq "noSubDir") {
-      $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf";
+      $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua";
     }else {
       if ($opt_L) {
-        $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$opt_m-$opt_a";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/lapsprd/fua/$opt_m-$opt_a";
       }else {
-        $scp_cmd = "scp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$opt_m-$opt_a";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$opt_m-$opt_a";
       }
     }
+
+    if(! defined ($opt_R)){ # check surface only flag
+      print "Running command: $scp_cmd\n";
+      system ($scp_cmd);
+      if($remote_copy =~ "rsync"){
+        print "Running repeat command: $scp_cmd\n";
+        system ($scp_cmd);
+        if($fcst_time eq "0000"){
+          print "Running repeat command: $scp_cmd\n";
+          system ($scp_cmd);
+          print "Running repeat command: $scp_cmd\n";
+          system ($scp_cmd);
+        }
+      }
+      system ("date");
+    }
+
+    if ($opt_a eq "noSubDir") {
+      $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf";
+    }else {
+      if ($opt_L) {
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$opt_m-$opt_a";
+      }else {
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$opt_m-$opt_a";
+      }
+    }
+
     print "Running command: $scp_cmd\n";
     system ($scp_cmd);
+    if($remote_copy =~ "rsync"){
+      print "Running repeat command: $scp_cmd\n";
+      system ($scp_cmd);
+    }
     system ("date");
   } # grid loop
  } # forecast time loop
