@@ -114,6 +114,8 @@ endif
 echo " "
 echo "inputs..."
 echo "TYPE = $TYPE"  
+echo "SUBTYPE = $SUBTYPE"  
+echo "SUBDIR = $SUBDIR"  
 echo "VAR = $VAR"  
 echo "FILE = $FILE"  
 ls -l $FILE                                                     
@@ -217,7 +219,7 @@ while ($IMEMBER <= $NMEMBERS)
         setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
         setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT%"
 
-
+        echo "PCT being compared to threshold of 80 is: $PCT"
         if ($PCT >= 80) then
             setenv LS 1
             setenv LW 3
@@ -299,7 +301,7 @@ echo " "
 echo "outputs..."
 ls -l $GNUPLOTFILE
 cd $PNGDIR
-ls -l $PNGFILE                          
+ls -l $PNGDIR/$PNGFILE                          
 
 if ($L_PLOT_CRITERIA == "F") then
     echo "exiting to skip links, thumbnail, and potential animation sections - plot criteria flag is false"
