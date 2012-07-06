@@ -574,6 +574,8 @@
                  if(nsuccess_m(imodel) .ge. nsuccess_thr)then ! satisfies completeness criteria
                    lun_out = 6
                    call skill_scores(contable,lun_out                  ! I
+     1                  ,frac_obs                                      ! O
+     1                  ,frac_fcst                                     ! O
      1                  ,frac_cvr_comp(imodel,itime_fcst,iregion,idbz) ! O
      1                  ,bias_comp(imodel,itime_fcst,iregion,idbz)     ! O
      1                  , ets_comp(imodel,itime_fcst,iregion,idbz))    ! O
