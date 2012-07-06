@@ -41,6 +41,9 @@
            go to 999
         endif
 
+        ISTAT = init_timer()
+        I4_elapsed = ishow_timer()
+
         call verif_radar(i4time,a9time,model_fcst_intvl,
      1                  model_fcst_len,
      1                  laps_cycle_time,
@@ -49,6 +52,8 @@
      1                  r_missing_data,
      1                  l_persist,
      1                  j_status)
+
+        I4_elapsed = ishow_timer()
 
 !       Read n_plot_times from file
         call get_directory('verif',verif_dir,len_verif)
@@ -73,7 +78,11 @@
      1                  l_persist,
      1                  j_status)
 
+        I4_elapsed = ishow_timer()
+
 999     continue
+
+        write(6,*)' End of verif_radar_main program...'
 
         end
           
@@ -116,7 +125,7 @@
 
         character*10  units_2d
         character*125 comment_2d
-        character*3 var_2d
+        character*3 var_2d, var_2d_anal
         character*5 fcst_hh_mm
         character*9 a9time,a9time_valid,a9time_initial
         character*24 a24time_valid
@@ -129,6 +138,7 @@
         character*10 var_a(n_fields)
         integer nthr_a(n_fields)  ! number of thresholds for each field
         integer ndims_a(n_fields) ! number of dimensions for each field
+        real dbz_an(5),dbz_fc(5)
         character*2 c2_region
         character*10 c_thr
 
@@ -155,6 +165,8 @@
         real ets(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
         real 
      1  frac_coverage(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
+        real frac_obs(maxbgmodels,0:max_fcst_times,max_regions,maxthr) 
+        real frac_fcst(maxbgmodels,0:max_fcst_times,max_regions,maxthr) 
         integer 
      1  n(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
 
@@ -225,28 +237,28 @@
 
           if(c_model(1:3) .ne. 'lga')then
 
-            write(6,*)' Processing model ',c_model
+           write(6,*)' Processing model ',c_model
 
-            call s_len(c_model,len_model)
+           call s_len(c_model,len_model)
 
-            call get_directory('verif',verif_dir,len_verif)
+           call get_directory('verif',verif_dir,len_verif)
 
-            hist_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
-     1                                       //'/hist/'
-     1                                       //c_model(1:len_model)
-            len_hist = len_verif + 6 + lenvar + len_model
+           hist_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
+     1                                      //'/hist/'
+     1                                      //c_model(1:len_model)
+           len_hist = len_verif + 6 + lenvar + len_model
 
-            cont_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
-     1                                       //'/cont/'
-     1                                       //c_model(1:len_model)
-     1                                       //'/'
-            len_cont = len_verif + 6 + lenvar + len_model
+           cont_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
+     1                                      //'/cont/'
+     1                                      //c_model(1:len_model)
+     1                                      //'/'
+           len_cont = len_verif + 6 + lenvar + len_model
 
-            do itime_fcst = 0,n_fcst_times
+           do itime_fcst = 0,n_fcst_times
 
-!             itime = itime_fcst + 1
+!            itime = itime_fcst + 1
 
-              do iregion = 1,n_regions ! 1 for testing
+             do iregion = 1,n_regions ! 1 for testing
 
                 ilow  = il(imodel,itime_fcst,iregion)
                 ihigh = ih(imodel,itime_fcst,iregion)
@@ -297,7 +309,14 @@
 
                   else ! Read analyzed 2D field
                     ext = ext_anal_a(ifield)
-                    call get_laps_2d(i4_valid,ext,var_2d,units_2d
+
+                    if(var_2d .eq. 'LMR')then
+                      var_2d_anal = 'R'
+                    else
+                      var_2d_anal = var_2d
+                    endif
+
+                    call get_laps_2d(i4_valid,ext,var_2d_anal,units_2d       
      1              ,comment_2d,NX_L,NY_L,var_anal_3d,istatus)       
                     if(istatus .ne. 1)then
                         write(6,*)' Error reading 2D Analysis for '
@@ -481,10 +500,17 @@
 
                 nthr = nthr_a(ifield)
 
-!               Calculate contingency tables
-!               Radar QC (rqc) for "all" case is used via 'lmask_rqc_3d'
-                do idbz = 1,nthr
+                do iter = 1,1
+
+!                Calculate contingency tables
+!                Radar QC (rqc) for "all" case is used via 'lmask_rqc_3d'
+                 do idbz = 1,nthr
                   rdbz = float(idbz*10) + 10
+
+                  if(iter .eq. 1)then
+                   dbz_an(idbz) = rdbz
+                   dbz_fc(idbz) = rdbz
+                  endif
 
                   write(lun_out,*)
                   write(lun_out,*)' Calculate contingency table for '
@@ -492,7 +518,9 @@
                   write(lun_out,*)' region = ',iregion
      1                           ,ilow,ihigh,jlow,jhigh
                   call contingency_table(var_anal_3d,var_fcst_3d     ! I
-     1                                  ,NX_L,NY_L,NZ_L,rdbz,lun_out ! I
+     1                                  ,NX_L,NY_L,NZ_L              ! I
+     1                                  ,dbz_an(idbz),dbz_fc(idbz)   ! I
+     1                                  ,lun_out                     ! I
      1                                  ,ilow,ihigh,jlow,jhigh       ! I
      1                                  ,lmask_rqc_3d                ! I
      1                                  ,contable)                   ! O
@@ -503,6 +531,8 @@
 !                 Calculate/Write Skill Scores
                   call skill_scores(contable,lun_out                   ! I
      1                  ,frac_coverage(imodel,itime_fcst,iregion,idbz) ! O
+     1                  ,frac_obs(imodel,itime_fcst,iregion,idbz)      ! O 
+     1                  ,frac_fcst(imodel,itime_fcst,iregion,idbz)     ! O 
      1                  ,bias(imodel,itime_fcst,iregion,idbz)          ! O
      1                  , ets(imodel,itime_fcst,iregion,idbz))         ! O
 
@@ -519,17 +549,25 @@
 
                   endif ! iregion = 1
 
-                enddo ! idbz
+                 enddo ! idbz
 
-              enddo ! iregion
+!                Correlate dbz values with bias
+                 call calc_thresholds(itime_fcst,nthr,dbz_an,dbz_fc    ! I
+     1                       ,frac_obs(imodel,itime_fcst,iregion,:)    ! I    
+     1                       ,frac_fcst(imodel,itime_fcst,iregion,:)   ! I
+     1                       ,bias(imodel,itime_fcst,iregion,:)        ! I
+     1                       ,rmiss                                )   ! I
 
-!             write(6,*)' nthr before put_contables = ',nthr
+                 write(6,*)
+                 write(6,*)' End of iteration ',iter
 
-!             Write Contingency Tables (3-D)
-!             call put_contables(i4_initial,i4_valid,nthr
-!    1                        ,cont_4d,NX_L,NY_L,NZ_L,cont_dir)
+                enddo ! iter
 
-              close (lun_out) 
+             enddo ! iregion
+
+!            write(6,*)' nthr before put_contables = ',nthr
+
+             close (lun_out) 
 
  900       enddo ! itime_fcst
 
@@ -744,6 +782,109 @@
         endif
 
         close(lun_in)
+
+        return
+        end
+
+
+        subroutine calc_thresholds(itime_fcst,nthr,dbz_an,dbz_fc
+     1                            ,frac_obs,frac_fcst,bias,rmiss)
+
+        real dbz_an(nthr)
+        real dbz_fc(nthr)
+        real frac_obs(nthr)
+        real frac_fcst(nthr)
+        real bias(nthr)
+        real dbz_nw(nthr)
+        integer jbr(nthr)
+
+        jbr_min = nthr+1
+        jbr_max = 0
+
+        errmax = 0.
+
+        do idbz = 1,nthr
+            if(bias(idbz) .ne. rmiss)then
+              if(bias(idbz) .ne. 0.)then
+                errmax = max(errmax,abs(alog10(bias(idbz))))
+              else
+                errmax = 999.
+              endif
+            endif
+
+!           Find bracket values of obs that match fcst
+            jbr(idbz) = 0
+            do jdbz = 1,nthr-1
+                if(frac_fcst(jdbz)   .ge. frac_obs(idbz) .AND.
+     1             frac_fcst(jdbz)   .ne. rmiss          .AND.
+     1             frac_fcst(jdbz+1) .le. frac_obs(idbz) .AND.
+     1             frac_fcst(jdbz+1) .ne. rmiss          .AND.         
+     1             bias(idbz)        .ne. rmiss                )then
+                    jbr(idbz) = jdbz
+                    jbr_min = min(jbr_min,idbz)
+                    jbr_max = max(jbr_max,idbz)
+                endif
+            enddo ! jdbz
+
+            dbz_nw(idbz) = rmiss
+
+            if(bias(idbz) .ne. rmiss)then
+              if(jbr(idbz) .gt. 0)then
+                fracint = (frac_obs(idbz)        -frac_fcst(jbr(idbz)) ) 
+     1                  / (frac_fcst(jbr(idbz)+1)-frac_fcst(jbr(idbz)) )       
+!               write(6,*)' idbz/jbr/fracint = '
+!    1                     ,idbz,jbr,fracint
+                dbz_nw(idbz) = dbz_fc(jbr(idbz)) + 
+     1              fracint * (dbz_fc(jbr(idbz)+1) - dbz_fc(jbr(idbz)))
+
+              else ! We have to go beyond the end of the binning range
+                if(bias(idbz) .lt. 1.0)then
+                  dbz_nw(idbz) = dbz_fc(idbz) - 1.0
+                else
+                  dbz_nw(idbz) = dbz_fc(idbz) + 1.0
+                endif
+
+              endif ! jbr(idbz) .ne. 0
+
+            endif ! valid bias value
+        enddo ! idbz
+
+        write(6,*)
+        write(6,*)' Subroutine calc_thresholds, errmax = ',errmax
+        write(6,840)itime_fcst
+ 840    format('   bin  dbz/an  dbz/fc    bias      obs      ',
+     1         'fcst  jbrckt dbz/nw   for itime_fcst: ',i4)       
+
+!       Additional passes to get tails
+        do idbz = jbr_min+1,nthr
+          if(bias(idbz) .ne. rmiss)then
+             dbz_nw(idbz) = max(dbz_nw(idbz),dbz_nw(idbz-1)+1.0)
+             write(6,*)' upper tail ',idbz,dbz_nw(idbz)
+          else
+             write(6,*)' upper tail ',idbz
+          endif
+        enddo ! idbz
+
+        do idbz = jbr_max-1,1,-1
+          if(bias(idbz) .ne. rmiss)then
+             dbz_nw(idbz) = min(dbz_nw(idbz),dbz_nw(idbz+1)-1.0)
+             write(6,*)' lower tail ',idbz,dbz_nw(idbz)
+          else
+             write(6,*)' lower tail ',idbz
+          endif
+        enddo ! idbz
+
+        do idbz = 1,nthr
+           write(6,850)idbz,dbz_an(idbz),dbz_fc(idbz)
+     1                 ,bias(idbz)
+     1                 ,frac_obs(idbz)
+     1                 ,frac_fcst(idbz)
+     1                 ,jbr(idbz)
+     1                 ,dbz_nw(idbz)
+ 850       format(1x,i4,2f8.1,f10.3,2f10.6,i5,f8.1)
+        enddo ! idbz
+
+        dbz_fc = dbz_nw
 
         return
         end
