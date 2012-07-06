@@ -108,16 +108,27 @@ cdis
         endif
 
 !       Read in albedo data
-        write(6,*)' Getting the VIS data from LVD file'
-        call make_fnam_lp(i4time,filename,istatus)
+        ntrys=2
+        itry = 1
+        istatus = 0
+        do while (itry .le. ntrys .and. 
+     1            istatus .ne. 1 .and. istatus .ne. -1)
+            i4time_try = i4time - ((itry-1)*900)
+            write(6,*)' Getting the VIS data from LVD file - try = '
+     1                                                      ,itry      
+            call make_fnam_lp(i4time_try,filename,istatus)
 
-        ext = lvd_ext
-        var = 'ALB'
-        ilevel = 0
-        call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window
+            ext = lvd_ext
+            var = 'ALB'
+            ilevel = 0
+            call get_laps_2dvar(i4time_try+i4_sat_window_offset
+     1                     ,i4_sat_window
      1                     ,i4time_nearest,lat,lon,EXT,var,units
      1                     ,comment,ni,nj,vis_albedo,ilevel,istatus)
-        write(6,*)' istatus from vis_albedo data = ',istatus
+            write(6,*)' istatus from vis_albedo data = ',istatus
+            itry = itry + 1
+        enddo ! itry
+
         if(istatus .ne. 1 .and. istatus .ne. -1)then
             write(6,*)' No VIS / ALBEDO available'
             write(6,*)' return from get_vis'
