@@ -1,5 +1,6 @@
 
-        subroutine contingency_table(o,f,ni,nj,nk,thresh
+        subroutine contingency_table(o,f,ni,nj,nk             ! I
+     1                              ,thresh_o,thresh_f        ! I
      1                              ,lun_out                  ! I
      1                              ,ilow,ihigh,jlow,jhigh    ! I
      1                              ,lmask_rqc_3d             ! I
@@ -22,13 +23,13 @@
 
           if(lmask_rqc_3d(i,j,k))then
 
-            if(o(i,j,k) .ge. thresh)then
+            if(o(i,j,k) .ge. thresh_o)then
                 index1 = 0
             else
                 index1 = 1
             endif
 
-            if(f(i,j,k) .ge. thresh)then
+            if(f(i,j,k) .ge. thresh_f)then
                 index2 = 0
             else
                 index2 = 1
