@@ -66,7 +66,7 @@ foreach SUBDIR (REF LMR)
 
 #   Montage the image scores
     echo ""
-    echo "Montage the image scores for $SUBDIR"
+    echo "Montage the latest image scores for $SUBDIR"
     setenv IMGDIR $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot
     setenv IM1 $IMGDIR/radar_fcst_bias_20_$LAPS_A9TIME.png
     setenv IM2 $IMGDIR/radar_fcst_ets_20_$LAPS_A9TIME.png
@@ -84,6 +84,34 @@ foreach SUBDIR (REF LMR)
           rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK
 
     echo ""
+
+    foreach COMP (comp comp2)
+
+        echo ""
+        echo "Montage the $COMP image scores for $SUBDIR"
+        setenv IMGDIR $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot
+        setenv IM1 $IMGDIR/radar_fcst_bias_20_$COMP\_$LAPS_A9TIME.png
+        setenv IM2 $IMGDIR/radar_fcst_ets_20_$COMP\_$LAPS_A9TIME.png
+        setenv IM3 $IMGDIR/radar_fcst_bias_30_$COMP\_$LAPS_A9TIME.png
+        setenv IM4 $IMGDIR/radar_fcst_ets_30_$COMP\_$LAPS_A9TIME.png
+        setenv IM5 $IMGDIR/radar_fcst_bias_40_$COMP\_$LAPS_A9TIME.png
+        setenv IM6 $IMGDIR/radar_fcst_ets_40_$COMP\_$LAPS_A9TIME.png
+        setenv IMOUT $IMGDIR/radar_fcst_all_$COMP\_$LAPS_A9TIME.png
+        echo "montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT"
+              montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
+
+        setenv LAPS_HHMM `echo $LAPS_A9TIME | cut -c6-9`
+        setenv HHMM_LINK $IMGDIR/radar_fcst_all_$LAPS_HHMM.png
+        echo "rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK"
+              rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK
+
+        setenv COMP_LINK $IMGDIR/radar_fcst_all_$COMP.png
+        echo "rm -f $COMP_LINK; ln -s $IMOUT $COMP_LINK"
+              rm -f $COMP_LINK; ln -s $IMOUT $COMP_LINK
+
+        echo ""
+
+    end
 
 end
 
@@ -203,6 +231,12 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S8A 0.:300. '"11 micron IR Sat" "Deg K"' $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/s8a_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S8A 0.:300.  "11 micron IR Sat" "Deg K"  $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/s8a_fcst.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S8A 0.:300. '"11 micron IR Sat" "Deg K"' $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/s8a_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S8A 0.:300.  "11 micron IR Sat" "Deg K"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/s8a_fcst_comp.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S8A 0.:300. '"11 micron IR Sat" "Deg K"' $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/s8a_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S8A 0.:300.  "11 micron IR Sat" "Deg K"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/s8a_fcst_comp2.log
 
 
 # Montage of the reflectivity and solar images
