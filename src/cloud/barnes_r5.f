@@ -782,6 +782,7 @@ cdis
           write(6,*)' WARNING: Distant obs given zero weight in barnes_r
      15'
           write(6,*)' Try increasing bias_iii'
+          write(6,*)' weight_modelfg = ',weight_modelfg
       endif
 
       deallocate(cld_snd)
