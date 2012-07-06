@@ -202,7 +202,7 @@ c           cenlon = grid_cen_lon_cmn
             call latlon_to_uv_ll(rlat,rlon,cenlon,u,v)
 
         else
-            write(6,*)'latlon_to_uv: unrecognized projection '
+            write(6,*)'ERROR in latlon_to_uv: unrecognized projection '
      1                ,c6_maproj       
             stop
 
@@ -359,7 +359,7 @@ c           cenlon = grid_cen_lon_cmn
             call uv_to_latlon_ll(u,v,cenlon,rlat,rlon)
 
         else
-            write(6,*)'latlon_to_uv: unrecognized projection '
+            write(6,*)'ERROR in uv_to_latlon: unrecognized projection '
      1                ,c6_maproj
             stop
 
@@ -589,7 +589,9 @@ cdoc                         true north. Units are degrees.
             projrot_laps = 0.
 
         else
-            write(6,*)'projrot_laps: unrecognized projection ',c6_maproj       
+            write(6,*)
+     1            'ERROR in projrot_latlon: unrecognized projection '      
+     1               ,c6_maproj       
             stop
 
         endif
@@ -732,7 +734,9 @@ cdoc                         true north. Units are degrees.
             projrot_laps = 0.
 
         else
-            write(6,*)'projrot_laps: unrecognized projection ',c6_maproj       
+            write(6,*)
+     1         'ERROR in projrot_latlon_2d: unrecognized projection '
+     1         ,c6_maproj       
             stop
 
         endif
@@ -868,7 +872,8 @@ cdoc    This routine is being phased out. Please try to use 'projrot_latlon'.
             projrot_laps = 0.
 
         else
-            write(6,*)'projrot_laps: unrecognized projection ',c6_maproj       
+            write(6,*)'ERROR in projrot_laps: unrecognized projection '
+     1               ,c6_maproj       
             stop
 
         endif
