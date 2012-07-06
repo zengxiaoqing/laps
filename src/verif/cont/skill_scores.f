@@ -1,6 +1,8 @@
 
       subroutine skill_scores(contable,lun_out           ! I
-     1                       ,frac_coverage              ! O
+     1                       ,frac_coverage              ! O (obs OR fcst)
+     1                       ,frac_obs                   ! O 
+     1                       ,frac_fcst                  ! O 
      1                       ,bias,ets)                  ! O
 
 !     First index is observed, second index is forecast
@@ -22,10 +24,15 @@
           frac_negatives = float(correct_negatives) / float(total)
           frac_coverage = 1.0 - frac_negatives
 
+          frac_obs  = float(hits + misses)       / float(total)
+          frac_fcst = float(hits + false_alarms) / float(total)
+
           accuracy = float(hits + correct_negatives) / float(total)
       else
           frac_negatives = rmiss
           frac_coverage = rmiss
+          frac_obs = rmiss
+          frac_fcst = rmiss
           accuracy = rmiss
           write(6,*)' WARNING: no data points in skill_scores'
       endif
