@@ -1,5 +1,5 @@
           
-        subroutine verif_fcst_pt_composite(i4time_sys,a9time,
+        subroutine verif_fcst_composite(i4time_sys,a9time,
      1                  model_fcst_intvl,
      1                  model_fcst_len,
      1                  model_cycle_time_in,
@@ -51,17 +51,22 @@
         character*10 compdir
 
         integer n_fields
-        parameter (n_fields=12)
+        parameter (n_fields=13)
         character*10 var_a(n_fields)
-        integer nthr_a(n_fields) ! number of thresholds for each field
+        integer nthr_a(n_fields)     ! number of thresholds for each field
+        integer istart_a(n_fields)   ! start time for each field              
+        integer ipersist_a(n_fields) ! persistence flag for each field              
+        logical l_persist
         character*2 c2_region
         character*10 c_thr
 
 !       Specify what is being verified
         data var_a      
      1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF'
-     1     ,'T3' ,'W3' ,'TPW','R01','RTO'/     
-        data nthr_a     /1,1,1,1,1,1,1,1,1,1,1,1/        
+     1     ,'T3' ,'W3' ,'TPW','R01','RTO','S8A'/     
+        data nthr_a     /1,1,1,1,1,1,1,1,1,1,1,1,1/        
+        data istart_a   /0,0,0,0,0,0,0,0,0,0,0,0,1/        
+        data ipersist_a /0,0,0,0,0,0,0,0,0,0,0,0,1/        
 
         integer contable(0:1,0:1)
 
@@ -137,6 +142,12 @@
 !       Get fdda_model_source and 'n_fdda_models' from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
 
+        if(l_persist .eqv. .true.)then
+            n_fdda_models = n_fdda_models + 1
+            c_fdda_mdl_src(n_fdda_models) = 'persistence'
+            write(6,*)' Adding persistence to fdda_models'
+        endif
+
         write(6,*)' n_fdda_models = ',n_fdda_models
         write(6,*)' c_fdda_mdl_src = '
      1            ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
@@ -159,6 +170,12 @@
         call get_directory('verif',verif_dir,len_verif)
 
         do ifield = 1,n_fields
+
+         if(ipersist_a(ifield) .eq. 1)then
+          l_persist = .true.
+         else
+          l_persist = .false.
+         endif
 
 !        Initialize arrays
          obs_mean_comp = rmiss
@@ -246,10 +263,11 @@
      1                                                    ,stats_file_in
                    goto960
                else
-                   write(6,*)' ERROR: file does not exist:',stats_file_in       
+                   write(6,*)' WARNING: file does not exist:'
+     1                                                    ,stats_file_in
                    write(6,*)
      1  ' Skipping this field, too many missing initialization times...'       
-     1                       ,nmissing_thr                  
+     1                       ,nmissing,nmissing_thr                  
                    goto980
                endif
            endif ! l_exist
@@ -277,11 +295,16 @@
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid_expected
      1                                 ,istatus)
 
-                   read(lun_stats_in,911,err=960)a24time_valid_file,    
+                   read(lun_stats_in,911,err=912,end=912)
+     1                  a24time_valid_file,    
      1                  obs_mean(imodel,itime_fcst,iregion),
      1                  fcst_mean(imodel,itime_fcst,iregion),
      1                  rms(imodel,itime_fcst,iregion)
 911                format(a24,1x,3f10.3)
+                   goto 913
+912                write(6,*)' Read error in stats file...'
+                   goto 960
+913                continue
 
                    call left_justify(a24time_valid_file)
                    call left_justify(a24time_valid_expected)        
@@ -300,7 +323,7 @@
                enddo ! imodel
 
 !              Test for missing data in all times/models                    
-               do itime_fcst = 0,n_fcst_times
+               do itime_fcst = istart_a(ifield),n_fcst_times
 
                  do imodel = 2,n_fdda_models
 
@@ -503,21 +526,6 @@
      1                ,imodel,itime_fcst,iregion           
 972              format('sums ',i8,3f9.1,3i4)
 
-!                Test whether this model satisfies completeness criteria
-!                Plots will show up for each model that has thresh % of runs with a complete set of forecast times
-!                if(nsuccess_m(imodel) .ge. nsuccess_thr)then ! satisfies completeness criteria
-!                  lun_out = 6
-!                  call skill_scores(contable,lun_out                  ! I
-!    1                  ,frac_cvr_comp(imodel,itime_fcst,iregion,idbz) ! O
-!    1                  ,bias_comp(imodel,itime_fcst,iregion,idbz)     ! O
-!    1                  , ets_comp(imodel,itime_fcst,iregion,idbz))    ! O
-
-!                else                                         ! does not satisfy criteria
-!                  fcst_mean_comp(imodel,itime_fcst,iregion) = rmiss
-!                  obs_mean_comp(imodel,itime_fcst,iregion) = rmiss
-
-!                endif
-
              enddo ! itime_fcst
            enddo ! imodel
           enddo ! idbz
@@ -573,13 +581,13 @@
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
 
-                   write(6,912)a24time_valid,    
+                   write(6,974)a24time_valid,    
      1                 obs_mean_comp(imodel,itime_fcst,iregion),
      1                 fcst_mean_comp(imodel,itime_fcst,iregion), 
      1                 rms_comp(imodel,itime_fcst,iregion) 
-912                format(1x,a24,3f10.3)
+974                format(1x,a24,3f10.3)
 
-                   write(lun_stats_out,912)a24time_valid,    
+                   write(lun_stats_out,974)a24time_valid,    
      1                 obs_mean_comp(imodel,itime_fcst,iregion),
      1                 fcst_mean_comp(imodel,itime_fcst,iregion), 
      1                 rms_comp(imodel,itime_fcst,iregion) 
@@ -598,7 +606,7 @@
 
        enddo ! i_period
 
- 999   write(6,*)' End of subroutine verif_fcst_pt_2d_composite'
+ 999   write(6,*)' End of subroutine verif_fcst_composite'
 
        return
 
