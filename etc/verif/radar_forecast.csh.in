@@ -189,6 +189,7 @@ while ($IMEMBER <= $NMEMBERS)
         setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
         setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT%"
 
+        echo "PCT being compared to threshold of 80 is: $PCT"
         if ($PCT >= 80) then
             setenv LS 1
             setenv LW 3
