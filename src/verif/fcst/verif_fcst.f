@@ -79,8 +79,10 @@
         write(6,*)
      1  ' model_fcst_intvl (via namelist) / n_fcst_times (from parms) ='      
      1             ,model_fcst_intvl,n_fcst_times
+
+        if(.true.)then
           
-        call verif_fcst_pt_2d(i4time,a9time,laps_cycle_time,
+            call verif_fcst_pt_2d(i4time,a9time,laps_cycle_time,
      1                     NX_L,NY_L,
      1                     NZ_L,
      1                     maxsta,
@@ -89,12 +91,27 @@
      1                     n_fcst_times,
      1                     j_status)
 
-        I4_elapsed = ishow_timer()
+            I4_elapsed = ishow_timer()
 
-        call verif_fcst_pt_3d(i4time,a9time,laps_cycle_time,
+            call verif_fcst_pt_3d(i4time,a9time,laps_cycle_time,
      1                     NX_L,NY_L,
      1                     NZ_L,
      1                     maxsta,max_obs,
+     1                     r_missing_data,
+     1                     model_verif_intvl,
+     1                     n_fcst_times,
+     1                     j_status)
+
+            I4_elapsed = ishow_timer()
+
+        endif
+
+        maxsta=NX_L*NY_L ! some 2D grids are fed into 1-D arrays
+
+        call verif_fcst_grid_2d(i4time,a9time,laps_cycle_time,
+     1                     NX_L,NY_L,
+     1                     NZ_L,
+     1                     maxsta,
      1                     r_missing_data,
      1                     model_verif_intvl,
      1                     n_fcst_times,
@@ -110,7 +127,7 @@
         read(lun_plot_times,*)n_plot_times
         close(lun_plot_times)
 
-        call verif_fcst_pt_composite(i4time,a9time,                    
+        call verif_fcst_composite(i4time,a9time,                    
      1                     model_fcst_intvl,
      1                     model_fcst_len,
      1                     model_cycle_time,
