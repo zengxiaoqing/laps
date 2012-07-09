@@ -361,12 +361,22 @@ SUBROUTINE RDLAPSRDR
             !OBP(3,NST(HUMIDITY),HUMIDITY) = K-1
             !OBP(4,NST(HUMIDITY),HUMIDITY) = L-1
             ! ASSUME 75% satured RH where reflectivity present as SH lower bounds:
-            IF (radar_ref_3d(I,J,K) .GT. 30.0) THEN
-              BK0(I,J,K,L,NUMSTAT+1)= &
-                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,0.0)
+            IF (BK0(I,J,K,L,TEMPRTUR) .GT. 273.15) THEN
+              IF (radar_ref_3d(I,J,K) .GT. 45.0) THEN
+                BK0(I,J,K,L,NUMSTAT+1)= &
+                  MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,0.0)
+              ELSE
+                BK0(I,J,K,L,NUMSTAT+1)= &
+                  MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.1+0.9*radar_ref_3d(I,J,K)/45.0,0.0)
+              ENDIF
             ELSE
-              BK0(I,J,K,L,NUMSTAT+1)= &
-                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.2+0.8*radar_ref_3d(I,J,K)/30.0,0.0)
+              IF (radar_ref_3d(I,J,K) .GT. 30.0) THEN
+                BK0(I,J,K,L,NUMSTAT+1)= &
+                  MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,0.0)
+              ELSE
+                BK0(I,J,K,L,NUMSTAT+1)= &
+                  MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.2+0.8*radar_ref_3d(I,J,K)/30.0,0.0)
+              ENDIF
             ENDIF
    
             !OBS(NST(HUMIDITY),HUMIDITY) = MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.75,-132.0)
