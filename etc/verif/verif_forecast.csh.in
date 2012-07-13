@@ -142,7 +142,7 @@ echo " "
 echo "Start time: $STARTTIME1 $STARTTIME2"
 echo "Stop  time: $STOPTIME1 $STOPTIME2 NLINE is $NLINE"
 
-if ($VAR == "S8A") then # Allow persistence to be plotted
+if ($VAR == "S8A" || $VAR == "TPW") then # Allow persistence to be plotted
     setenv NMEMBERS `cat                 $MEMBERS_FILE | wc -l | cut -c1-2`
 else
     setenv NMEMBERS `grep -v persistence $MEMBERS_FILE | wc -l | cut -c1-2`
