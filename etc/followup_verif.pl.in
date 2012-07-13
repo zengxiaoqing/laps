@@ -190,18 +190,21 @@ foreach $var (@vars) {
   if($var eq "REF" || $var eq "LMR"){
     $fcstprd = "Radar_Comp";
     $analprd = "crf";
+    $imageoutdir = "$dataroot/lapsprd/verif/$var/plot/";          
   }elsif($var eq "LLR"){
     $fcstprd = "Radar_Sfc";
     $analprd = "ptt";
+    $imageoutdir = "$dataroot/lapsprd/verif/$var/plot/";          
   }elsif($var eq "SWI"){
     $fcstprd = "Solar";
     $analprd = "sol";
+    $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
   }else{
     $fcstprd = "11u";
     $analprd = "s8a";
+    $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
   }
 
-  $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
   $geom="210x140!";
 
   print "\n";
