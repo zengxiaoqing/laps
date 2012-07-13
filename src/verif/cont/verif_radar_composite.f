@@ -96,7 +96,7 @@
         integer 
      1  n_sum(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
 
-        integer nmissing_m(maxbgmodels)
+!       integer nmissing_m(maxbgmodels)
         integer nsuccess_m(maxbgmodels)
         integer nincomplete_m(maxbgmodels)
         integer incomplete_run_m(maxbgmodels)
@@ -176,12 +176,13 @@
 
         n_init_times = ((ndays * 86400) / model_cycle_time) - 1
 
-        write(6,*)' ndays / n_init_times = ',ndays,n_init_times
-
         do ifield = 1,n_fields
 
          var_2d = var_a(ifield)
          call s_len(var_2d,lenvar)
+
+         write(6,*)' var / ndays / n_init_times = ',trim(var_2d)
+     1                                             ,ndays,n_init_times       
 
          iregion = 1
 
@@ -189,7 +190,7 @@
          nsuccess = 0
          nincomplete = 0
 
-         nmissing_m = 0
+!        nmissing_m = 0
          nsuccess_m = 0
          nincomplete_m = 0
 
@@ -247,25 +248,14 @@
 
            inquire(file=bias_file_in,exist=l_exist)
            if(.not. l_exist)then
-               nmissing = nmissing + 1
-               nmissing_m = nmissing_m + 1
-!              if(nmissing .le. nmissing_thr)then
-                   write(6,*)' WARNING: file does not exist:'
-     1                                                     ,bias_file_in
-                   goto960
-!              else
-!                  write(6,*)' ERROR: file does not exist:',bias_file_in       
-!                  write(6,*)
-!    1  ' Skipping this field, too many missing initialization times...'       
-!    1                       ,nmissing_thr                  
-!                  goto980
-!              endif
+               write(6,*)' WARNING: file does not exist:',bias_file_in
+               goto958
            endif ! l_exist
 
            inquire(file=ets_file_in,exist=l_exist)
            if(.not. l_exist)then
                write(6,*)' ERROR: file does not exist:',ets_file_in       
-               goto980
+               goto958
            endif ! l_exist
 
            open(lun_bias_in,file=bias_file_in,status='old')
@@ -273,7 +263,7 @@
 
 !          Read comment with model member names
            read(lun_bias_in,*)
-           read(lun_ets_in,51) cline
+           read(lun_ets_in,51,err=958,end=958) cline
  51        format(a)
            write(6,*)'cline = ',cline
 
@@ -302,7 +292,7 @@
      1                 ,' WARNING: imodel / a24time (expected/file-1)'
      1                 ,imodel,itime,a24time_valid_expected            
      1                              ,a24time_valid              
-                       goto960
+                       goto958
                    endif
 
                    read(lun_ets_in,911)a24time_valid,    
@@ -315,7 +305,7 @@
      1                 ,' WARNING: imodel / a24time (expected/file-2)'
      1                 ,imodel,itime,a24time_valid_expected           
      1                              ,a24time_valid         
-                       goto960
+                       goto958
                    endif
 
 911                format(a24,3x,20f12.3)
@@ -355,7 +345,7 @@
      1                 ,' WARNING: imodel / a24time (expected/file-3)'
      1                 ,imodel,itime,a24time_valid_expected           
      1                              ,a24time_valid              
-                       goto960
+                       goto958
                    endif
                  enddo ! itime_fcst
                enddo ! jn
@@ -417,7 +407,7 @@
      1                 ,' WARNING: imodel / a24time (expected/file-4)'
      1                 ,imodel,itime,a24time_valid_expected           
      1                              ,a24time_valid                           
-                       goto960
+                       goto958
                    endif
                enddo ! itime_fcst
 
@@ -486,6 +476,11 @@
           write(6,956)a9time_initial,nincomplete_t,
      1                (incomplete_run_m(imodel),imodel=2,n_fdda_models)
 956       format(' incomplete_run_m at ',a9,' is ',i3,4x,20i3)   
+      
+          goto 960 ! success for this time
+
+!         Error Condition for this time
+958       nmissing = nmissing + 1
 
 960      enddo                    ! init (initialization time)
 
@@ -689,7 +684,7 @@
 
          enddo ! idbz
 
- 980    enddo                     ! fields
+ 980    enddo ! fields
 
        enddo ! i_period
 
