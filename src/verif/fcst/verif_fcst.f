@@ -158,6 +158,7 @@
 
         real var_anal_2d(ni,nj)
         real var_fcst_2d(ni,nj)
+        real var_prst_2d(ni,nj)
         real u_fcst_2d(ni,nj)
         real v_fcst_2d(ni,nj)
         real lat(ni,nj)
@@ -200,6 +201,8 @@
         parameter (n_fields=10)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
+        integer ipersist_a(n_fields) ! persistence flag for each field              
+        logical l_persist, l_good_persist
 
 !       Specify what is being verified
         data ext_fcst_a 
@@ -208,6 +211,8 @@
         data var_a      
      1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF','TPW','R01','RTO'/
       
+        data ipersist_a /0,0,0,0,0,0,0,1,0,0/        
+
         real rms_a (n_fields,maxbgmodels,0:max_fcst_times)
 
         integer contable(0:1,0:1)
@@ -287,25 +292,41 @@
 
         lun_in = 21
 
-!       Get fdda_model_source from static file
-        call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
+        do ifield = 1,n_fields
 
-        write(6,*)' n_fdda_models = ',n_fdda_models
-        write(6,*)' c_fdda_mdl_src = '
-     1            ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
+          if(ipersist_a(ifield) .eq. 1)then
+            l_persist = .true.
+          else
+            l_persist = .false.
+          endif
 
-!       if(n_fdda_models .ne. n_models + 1)then
+          var_prst_2d = r_missing_data
+          l_good_persist = .false.
+
+!         Get fdda_model_source from static file
+          call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models
+     1                                             ,istatus)
+
+          if(l_persist .eqv. .true.)then
+              n_fdda_models = n_fdda_models + 1
+              c_fdda_mdl_src(n_fdda_models) = 'persistence'
+              write(6,*)' Adding persistence to fdda_models'
+          endif
+
+          write(6,*)' n_fdda_models = ',n_fdda_models
+          write(6,*)' c_fdda_mdl_src = '
+     1              ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
+
+!         if(n_fdda_models .ne. n_models + 1)then
 !           write(6,*)' ERROR n_models differs from n_fdda_models '
 !    1                       ,n_models,n_fdda_models
 !           stop
-!       endif
+!         endif
 
-        if(n_fdda_models .lt. 2)then
-            write(6,*)' WARNING: n_fdda_models is less than 2'
-            write(6,*)' Check nest7grid.parms specification'
-        endif
-
-        do ifield = 1,n_fields
+          if(n_fdda_models .lt. 2)then
+              write(6,*)' WARNING: n_fdda_models is less than 2'
+              write(6,*)' Check nest7grid.parms specification'
+          endif
 
           var_2d = var_a(ifield)(1:3)
           call s_len(var_2d,lenvar)
@@ -529,7 +550,8 @@
                   endif
                 endif
 
-                if(trim(var_2d) .ne. 'SSF')then
+                if(c_fdda_mdl_src(imodel) .ne. 'persistence')then
+                 if(trim(var_2d) .ne. 'SSF')then
 
                   write(6,*)' Reading forecast field ',atime_s
 
@@ -547,6 +569,39 @@
      1                          ,var_fcst_2d
      1                          ,istatus)
 
+                  if(istatus .ne. 1)then
+                       write(6,*)' Error reading 2D Forecast for '
+     1                           ,var_2d
+                       goto 990
+                  endif
+
+                  write(6,*)var_2d,' range is ',minval(var_fcst_2d)
+     1                                         ,maxval(var_fcst_2d)
+                  if(l_persist .eqv. .true. .and. 
+     1               l_good_persist .eqv. .false. .and.
+     1               itime_fcst .eq. 0                  )then
+                       write(6,*)imodel,l_persist,l_good_persist
+     1                          ,itime_fcst,istatus
+     1                          ,' Setting persistence to 00 hr fcst '
+     1                          ,var_2d
+                       var_prst_2d = var_fcst_2d
+
+!                      QC check for TPW persistence forecast
+                       if(maxval(var_prst_2d) .eq. 0. .and.
+     1                    minval(var_prst_2d) .eq. 0. .and.
+     1                    trim(var_2d) .eq. 'TPW'     )then
+                           write(6,*)
+     1                    ' WARNING, persistence appears to be all zero'
+                       else
+                           l_good_persist = .true.
+                       endif
+
+!                 else
+!                      write(6,*)imodel,l_persist,l_good_persist
+!    1                          ,itime_fcst,istatus,
+!    1                         ' Not setting persistence to 00 hr fcst'
+                  endif
+
 !                 Suppress 00hr SWI if from wrf-hrrr since it would have been
 !                 pulled in via LFMPOST from a LAPS analysis
 
@@ -560,16 +615,7 @@
                      endif
                   endif
 
-                  if(istatus .ne. 1)then
-                       write(6,*)' Error reading 2D Forecast for '
-     1                           ,var_2d
-                       goto 990
-                  endif
-
-                  write(6,*)var_2d,' range is ',minval(var_fcst_2d)
-     1                                         ,maxval(var_fcst_2d)
-
-                else ! SSF
+                 else ! SSF
 
                   write(6,*)' Reading forecast U/V to yield speed'
 
@@ -629,7 +675,15 @@
                   enddo ! j
                   enddo ! i
 
-                endif ! .true.
+                 endif ! .true. (SSF test)
+
+                elseif(l_good_persist .eqv. .true.)then
+                    write(6,*)' Setting forecast to persistence ',var_2d
+                    var_fcst_2d = var_prst_2d
+                else
+                    write(6,*)' Persistence fcst unavailable'
+                    goto 990
+                endif
 
                 if(trim(var_2d) .eq. 'SWI')then
                   swi_2d = var_fcst_2d
