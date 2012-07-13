@@ -20,6 +20,7 @@
          2.1.8 ..................  Plotting / NCAR graphics library (optional)
          2.1.8.1 ................  Web Display
          2.1.9 ..................  GRIB2 external libraries (optional)
+         2.1.10 .................  GNUPLOT / ImageMagick for verification (optional)
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
          2.2.2 ..................  Running Configure
@@ -106,6 +107,7 @@
          3.4.2 ..................  LAPS2GRIB
          3.4.3 ..................  WFOPREP
          3.4.4 ..................  LFMPOST
+         3.4.5 ..................  VERIFICATION
      4.0 ............  Porting code mods from LAPS users back to GSD
      5.0 ............  LAPS Output Variables and netCDF File Organization 
 
@@ -455,6 +457,11 @@
 
      See source directory: $LAPS_SRC_ROOT/src/lib/degrib/README_LIBS file 
      for additional information.
+
+          --- 2.1.10 GNUPLOT / ImageMagick for verification (optional) ---
+
+     LAPS has a built in verification package and this needs installation
+     of GNUPLOT and ImageMagick to run fully.
 
      ------------- 2.2 Installation Procedure Summary ------------------
 
@@ -922,7 +929,7 @@ setenv LAPS_SRC_ROOT /usr/nfs/common/lapb/operational/laps
 setenv LAPSINSTALLROOT /usr/nfs/lapb/operational/laps
 setenv LAPS_DATA_ROOT "any new or existing LAPS_DATA_ROOT" 
 
-cd $LAPSINSTALLROOT
+cd $LAPSINSTALLROOT/etc
 
 a) perl window_domain_rt.pl -s $LAPS_SRC_ROOT -i $LAPSINSTALLROOT 
               -d $LAPS_DATA_ROOT -t "full path to template directory" -w laps -c
@@ -1148,12 +1155,14 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      guarentee that any model specified in 'background.nl' will work without
      some software modification.  
 
-     RUC grids are ftp'ed from NCEP to GSD, then converted at GSD from 
-     GRIB to netCDF. This netCDF file is the input for the LAPS ingest
-     process that writes "lga". For more information on RUC check the 
-     following URL for more RUC info:  'http://maps.fsl.noaa.gov/'
+     Rapid Refresh (RR) grids are ftp'ed from NCEP to GSD, then converted at 
+     GSD from GRIB to netCDF. This netCDF file is the input for the LAPS ingest
+     process that writes "lga". For more information on RR check the 
+     following URL for more info:  'http://rapidrefresh.noaa.gov/'
+     Note that we often read these into LAPS as RUC (Rapid Update Cycle) look 
+     alike files.
 
-     RUC is also available from UNIDATA and distributed to universities 
+     RR is also available from UNIDATA and distributed to universities 
      through private companies like Alden. 
 
      The conversion from GRIB to netCDF is done outside of LAPS by GSD's 
@@ -1162,8 +1171,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      of netCDF for writing out the data. Beyond that, you may wish to contact 
      the ITS group for more info (see the reference to them in section 3.2.1).
      The Atlanta, Sterling, and Seattle WFOs have followed a more direct route,
-     going from the RUC/Eta to the intermediate "lga" file, bypassing the 
-     netCDF file on the model grid. This includes RUC on isobaric surfaces. 
+     going from the RR/Eta to the intermediate "lga" file, bypassing the 
+     netCDF file on the model grid. This includes RR on isobaric surfaces. 
 
                  ----   2.3.1.1 Acquiring Model Background Data ---
 
@@ -4256,13 +4265,13 @@ Source directory: 'laps/src/wfoprep'
 
 ------ 3.4.4 -------------- LFMPOST ------------------------------------------
 
-Process: lfmpost.exe - Post-processes MM5/WRF model forecast files into formats
+Process: lfmpost.exe - Post-processes WRF/MM5 model forecast files into formats
                        that can be used to feed back into LAPS analysis or
                        plotting software.
    
 authors: Linda Wharton, Brent Shaw, John Snook, Steve Albers, Isidora Jankov
 
-contact: Linda Wharton
+contacts: Linda Wharton / Steve Albers
 
 Parameter namelist file: 'static/lfmpost.nl'
 
@@ -4342,13 +4351,11 @@ Source directory: 'laps/src/newlfmp' (new default version)
    Additional arguments are needed for the new (default) version of 
    'lfmpost.exe'. 
 
-   lfmpost.exe NAME WRFOUT DOMNUM NEST RCTIME FCSTTIME WRFDIR
-      where NAME is one of "mm5", "wrf", or "wrf2" for MM5, WRFv1.3, 
-      or WRFv2, respectively.  
+   lfmpost.exe NAME WRFOUT NEST RCTIME FCSTTIME LAPS_DATA_ROOT
+      NAME - one of "mm5", "wrf", or "wrf2" for MM5, WRFv1.3, 
+             or WRFv2, respectively.  
 
-      WRFOUT - full filenamne of WRFout file
-
-      DOMNUM is the nest to process.  
+      WRFOUT - full filename of WRFout file
 
       NEST - nest number (1 is outer)
 
@@ -4356,18 +4363,28 @@ Source directory: 'laps/src/newlfmp' (new default version)
 
       FCSTTIME - number of seconds into the forecast
 
-      WRFDIR - directory containing WRFOUT file
-      
+      LAPS_DATA_ROOT - LAPS_DATA_ROOT where static files are set up
+                       (or the equivalent in the WRF directory)
 
-   LFMPOST is designed to operate on "incremental" raw model output
-   data, so when you run MM5 or WRF, be sure to output each time
-   period to a separate file.
+   LFMPOST is designed to operate on "incremental" raw model output data, so 
+   when you run WRF, be sure to output each time period to a separate file.
 
-   Finally, when running lfmpost for WRF output, there is a Perl script
-   which can be used:
+   When running lfmpost in real-time for WRF output there is a Perl script that 
+   can be used:
      $LAPSINSTALLROOT/etc/lfmpost.pl (use wrfpost.pl for older lfmpost.exe)
 
-   There is also a test driver script located in 'etc/models/lfmpost_test.csh'.
+   There is also a driver script located in 'etc/models/lfmpost_test.csh', often
+   used for non-realtime case runs, that can be executed as in this example:
+
+   ./lfmpost_test.csh $LAPSINSTALLROOT $LAPS_DATA_ROOT $RUNTIME mvoutput
+
+      RUNTIME is model initialization time with format 'yyyymmddhh'
+
+------ 3.4.5 -------------- VERIFICATION ------------------------------------
+
+   LAPS has a built-in verification package. This can be run after a model
+   is run and the verifying observations and analyses are available. The
+   driver script is in 'etc/verif/verif_fcst_driver.csh'.
 
 -------- 4.0 --  Porting code mods from LAPS users back to GSD --------------
 
