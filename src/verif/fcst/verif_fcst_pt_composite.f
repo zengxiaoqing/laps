@@ -66,7 +66,7 @@
      1     ,'T3' ,'W3' ,'TPW','R01','RTO','S8A'/     
         data nthr_a     /1,1,1,1,1,1,1,1,1,1,1,1,1/        
         data istart_a   /0,0,0,0,0,0,0,0,0,0,0,0,1/        
-        data ipersist_a /0,0,0,0,0,0,0,0,0,0,0,0,1/        
+        data ipersist_a /0,0,0,0,0,0,0,0,0,1,0,0,1/        
 
         integer contable(0:1,0:1)
 
@@ -139,36 +139,6 @@
         lun_stats_out = 41
         lun_summary_out = 43
 
-!       Get fdda_model_source and 'n_fdda_models' from static file
-        call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
-
-        if(l_persist .eqv. .true.)then
-            n_fdda_models = n_fdda_models + 1
-            c_fdda_mdl_src(n_fdda_models) = 'persistence'
-            write(6,*)' Adding persistence to fdda_models'
-        endif
-
-        write(6,*)' n_fdda_models = ',n_fdda_models
-        write(6,*)' c_fdda_mdl_src = '
-     1            ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
-
-!       Read in data file with region points
-        n_models = n_fdda_models
-!       call read_region_info(maxbgmodels,max_fcst_times,max_regions
-!    1                       ,n_models,n_fcst_times,n_regions
-!    1                       ,il,ih,jl,jh,lun_in)
-
-!       In 'nest7grid.parms' model #1 is lga usually
-!       In 'verif_regions.dat' model #1 represents the analysis
-
-!       if(n_fdda_models .ne. n_models)then
-!           write(6,*)' ERROR n_models differs from n_fdda_models '
-!    1                       ,n_models,n_fdda_models
-!           stop
-!       endif
-
-        call get_directory('verif',verif_dir,len_verif)
-
         do ifield = 1,n_fields
 
          if(ipersist_a(ifield) .eq. 1)then
@@ -176,6 +146,22 @@
          else
           l_persist = .false.
          endif
+
+!        Get fdda_model_source and 'n_fdda_models' from static file
+         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models
+     1                                            ,istatus)
+
+         if(l_persist .eqv. .true.)then
+            n_fdda_models = n_fdda_models + 1
+            c_fdda_mdl_src(n_fdda_models) = 'persistence'
+            write(6,*)' Adding persistence to fdda_models'
+         endif
+
+         write(6,*)' n_fdda_models = ',n_fdda_models
+         write(6,*)' c_fdda_mdl_src = '
+     1             ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
+
+         call get_directory('verif',verif_dir,len_verif)
 
 !        Initialize arrays
          obs_mean_comp = rmiss
