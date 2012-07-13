@@ -357,7 +357,9 @@
                  endif ! SSF field
 
                 elseif(l_good_persist .eqv. .true.)then
-                    write(6,*)' Setting forecast to persistence'
+                    write(6,*)
+     1                  ' Setting forecast to persistence gridded data '
+     1                  ,var_2d
                     var_fcst_2d = var_prst_2d
                 else
                     write(6,*)' Persistence fcst unavailable'
