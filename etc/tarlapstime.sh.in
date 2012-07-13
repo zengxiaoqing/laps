@@ -13,7 +13,7 @@
 
 # Fifth command line argument is mode [lga,nolga]          
 
-# Sixth argument is for expanded output [expand,noexpand]
+# Sixth argument is for expanded output and/or copy method [expand,noexpand,tar,rsync,scp]
 
 # Seventh argument is for including static files [static,nostatic]
 
@@ -61,8 +61,10 @@ echo "Tarring up LAPS in $LAPS_DATA_ROOT for $time"
 
 cd $LAPS_DATA_ROOT
 
-rm -f lapstar.txt
-touch lapstar.txt
+LAPSTAR_TXT=$LOGDIR/lapstar.txt.$YYDDDHHMM
+LAPSTAR2_TXT=$LOGDIR/lapstar2.txt.$YYDDDHHMM
+
+touch $LAPSTAR_TXT
 
 #LAPS Data Files
 
@@ -70,29 +72,34 @@ touch lapstar.txt
 echo $YYDDDHHMM                                                 > time/copyremotetime.dat
 echo "tarlapstime.sh"                                          >> time/copyremotetime.dat
 
-ls -1 time/systime.dat                                          > lapstar.txt
-ls -1 time/c_time.dat                                          >> lapstar.txt
-ls -1 time/copyremotetime.dat                                  >> lapstar.txt
+ls -1 time/systime.dat                                          > $LAPSTAR_TXT
+ls -1 time/c_time.dat                                          >> $LAPSTAR_TXT
+ls -1 time/copyremotetime.dat                                  >> $LAPSTAR_TXT
 
 # Verification files                           
-#find ./lapsprd/verif -type f         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
-#find ./lapsprd/verif -type l         ! -cmin +120         -print | grep -v cont | grep -v hist >> lapstar.txt
-#echo "log/load.png"                                                                            >> lapstar.txt
-#echo "log/cloud_fcst.png"                                                                      >> lapstar.txt
+#find ./lapsprd/verif -type f         ! -cmin +120         -print | grep -v cont | grep -v hist >> $LAPSTAR_TXT
+#find ./lapsprd/verif -type l         ! -cmin +120         -print | grep -v cont | grep -v hist >> $LAPSTAR_TXT
+#echo "log/load.png"                                                                            >> $LAPSTAR_TXT
+#echo "log/cloud_fcst.png"                                                                      >> $LAPSTAR_TXT
+
+# Pregenerated web analysis files
+find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
+find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
+find ./lapsprd/www/anal2d/recent    -type l ! -cmin +60              -print   >> $LAPSTAR_TXT
 
 # Lapsprd files (except LGA, LGB, FUA, FSF)
-find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | grep -v www | grep -v "\.v" | grep -v "\.d"  >> lapstar.txt
+find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | grep -v www | grep -v "\.v" | grep -v "\.d"  >> $LAPSTAR_TXT
 
 # LGA/LGB files (use MINAGE/MAXAGE?)
 if test "$MODE" = lga; then
     echo "include lga/lgb files"
-#   find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> lapstar.txt
+#   find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> $LAPSTAR_TXT
     for file in `ls ./lapsprd/lg?/*.lg?`; do
         FILETIME=`echo $file | cut -c15-27`
         VALIDTIME=`@PERL@ @prefix@/etc/timeconv.pl -a $FILETIME`
         if test "$VALIDTIME" = $YYDDDHHMM; then
             echo "checking valid time of $file $FILETIME $VALIDTIME $YYDDDHHMM match"
-            echo $file >> lapstar.txt
+            echo $file >> $LAPSTAR_TXT
         else
             echo "checking valid time of $file $FILETIME $VALIDTIME $YYDDDHHMM"
         fi    
@@ -100,35 +107,30 @@ if test "$MODE" = lga; then
 fi
 
 # Lapsprep files (use MINAGE/MAXAGE)
-#find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD\_$HH"      -print >> lapstar.txt
-
-# Pregenerated web analysis files
-find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
-find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> lapstar.txt
-find ./lapsprd/www/anal2d/recent    -type l ! -cmin +60              -print   >> lapstar.txt
+#find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD\_$HH"      -print >> $LAPSTAR_TXT
 
 # Wgi files
-find ./log     -type f -name "*.wgi.$YYDDDHHMM" -print   >> lapstar.txt
+find ./log     -type f -name "*.wgi.$YYDDDHHMM" -print   >> $LAPSTAR_TXT
 
 # Sfc Verification file
-ls -1 log/qc/laps_sfc.ver.$HHMM                          >> lapstar.txt
+ls -1 log/qc/laps_sfc.ver.$HHMM                          >> $LAPSTAR_TXT
 
 # Solar Analysis Verification file
-ls -1 lapsprd/verif/SWI/pt/load.png                      >> lapstar.txt
+ls -1 lapsprd/verif/SWI/pt/load.png                      >> $LAPSTAR_TXT
 
 # Static files
-ls -1 static/*.nl                                        >> lapstar.txt
-ls -1 static/nest7grid.parms                             >> lapstar.txt
-ls -1 static/purger.txt                                  >> lapstar.txt
+ls -1 static/*.nl                                        >> $LAPSTAR_TXT
+ls -1 static/nest7grid.parms                             >> $LAPSTAR_TXT
+ls -1 static/purger.txt                                  >> $LAPSTAR_TXT
 if test "$STATIC" = static; then                         
     echo "including extra static files"
-    ls -1 static/static.nest7grid                        >> lapstar.txt
-    ls -1 static/www/*                                   >> lapstar.txt
+    ls -1 static/static.nest7grid                        >> $LAPSTAR_TXT
+    ls -1 static/www/*                                   >> $LAPSTAR_TXT
 else
     echo "not including extra static files"
 fi
 
-ls -l $LAPS_DATA_ROOT/lapstar.txt
+ls -l $LAPS_DATA_ROOT/$LAPSTAR_TXT
 
 which tar
 
@@ -136,8 +138,8 @@ if test "$EXPAND" = noexpand; then
     echo "current directory is `pwd`"
     echo "making tar file $LAPS_DATA_ROOT/laps_$time.tar.gz"
 
-    echo "tar cvfz $LAPS_DATA_ROOT/laps_$time.tar.gz -T $LAPS_DATA_ROOT/lapstar.txt"
-          tar cvfz $LAPS_DATA_ROOT/laps_$time.tar.gz -T $LAPS_DATA_ROOT/lapstar.txt
+    echo "tar cvfz $LAPS_DATA_ROOT/laps_$time.tar.gz -T $LAPS_DATA_ROOT/$LAPSTAR_TXT"
+          tar cvfz $LAPS_DATA_ROOT/laps_$time.tar.gz -T $LAPS_DATA_ROOT/$LAPSTAR_TXT
 
     ls -l $LAPS_DATA_ROOT/laps_$time.tar.gz
 
@@ -145,20 +147,37 @@ elif test "$EXPAND" = expand; then
     echo "cp to $LAPS_DATA_ROOT/lapstar_$YYDDDHH expanded directory"
     rm -rf $LAPS_DATA_ROOT/lapstar_*
     mkdir -p $LAPS_DATA_ROOT/lapstar_$YYDDDHH
-    tar -T lapstar.txt -cf - | (cd $LAPS_DATA_ROOT/lapstar_$YYDDDHH;  tar xfBp -)
+    tar -T $LAPSTAR_TXT -cf - | (cd $LAPS_DATA_ROOT/lapstar_$YYDDDHH;  tar xfBp -)
     pwd
 
 elif test "$EXPAND" = scp; then
     echo "scp to remote location (under construction)"  
 
-elif test "$EXPAND" = tar; then
-    echo "tar to remote location (under construction)"  
+elif test "$EXPAND" = tar; then # tar is slower without compression and may be more reliable
+    echo "tar to remote location"  
     cd $LAPS_DATA_ROOT 
     pwd
     echo "DOMAIN_NAME = "$DOMAIN_NAME
     echo "REMOTE_DATA_ROOT = "$REMOTE_DATA_ROOT
-    echo 'tar -T lapstar.txt -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"'
-          tar -T lapstar.txt -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"
+    echo 'tar -T $LAPSTAR_TXT -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"'
+          tar -T $LAPSTAR_TXT -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"
+
+elif test "$EXPAND" = rsync; then # rsync compression allows faster transmission
+    echo "rsync to remote location"  
+    cd $LAPS_DATA_ROOT 
+    pwd
+    echo "DOMAIN_NAME = "$DOMAIN_NAME
+    echo "REMOTE_DATA_ROOT = "$REMOTE_DATA_ROOT
+    COLON=:            
+    echo "rsync -vvzlptg -e ssh --files-from=$LAPSTAR_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT"
+          rsync -vvzlptg -e ssh --files-from=$LAPSTAR_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT
+
+    grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT
+
+    echo " "
+
+    echo "rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT"
+          rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT
 
 else
     echo "no tar performed"                                      
