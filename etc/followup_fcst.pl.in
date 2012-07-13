@@ -18,11 +18,12 @@ use strict;
 #    -l forecast length (hours) [optional]
 #    -t purge time (hours) [optional]
 #    -o offset time (seconds) [optional]
+#    -s fsf only [optional]                 
 
-use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_t $opt_o);
+use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_t $opt_o $opt_s);
 use Getopt::Std;
 
-getopts('a:d:r:f:c:l:m:t:o:');
+getopts('a:d:r:f:c:l:m:t:o:s');
 
 print "Running followup_fcst.pl...\n";
 print "user defined paths\n";
@@ -207,7 +208,7 @@ while (($timeaccum < $timeout) and ($elapsed < $timeout) and ($times_rem > 0)){
       print "elapsed time $elapsed exceeds timeout $timeout - exiting...";
       exit;
     }
-    if ((-e "$local_fsf/$_.fsf" and -e "$local_fua/$_.fua") || $opt_a eq "spaghetti"){
+    if ((-e "$local_fsf/$_.fsf" and (-e "$local_fua/$_.fua" || defined $opt_s) ) || $opt_a eq "spaghetti"){
       my $fsfsize; 
       my $fsfsize_last; 
       my $waitsize = 1;
