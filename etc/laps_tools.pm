@@ -390,7 +390,8 @@ gr2);
            exit;
      }
 
-     @bkgd_dirs = &get_bkgd_models($LAPS_SRC_ROOT);
+#    @bkgd_dirs = &get_bkgd_models($LAPS_SRC_ROOT);
+     (@bkgd_dirs) = qw ();
 
      print "adding fdda_model_source subdirectories to lapsprd dirs\n";
      my $ii = 0;
