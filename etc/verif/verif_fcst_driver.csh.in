@@ -1,7 +1,7 @@
 #!@CSH@
 
 # arg1 is the LAPS_DATA_ROOT (e.g. /data/fab/projects/dwr)
-# arg2 is the model cycle time (real number seconds, e.g. 21600.0) - set to "archive" for archive case
+# arg2 is a dummy value for real-time cases - set to "archive" for archive cases
 # arg3 is the delay in hours for the modeltime relative to the crontime (e.g. 12.0) - set to dd-Mon-yyyy-hhmm for archive case
 # arg4 domain name (from the "on-the-fly" page)                                                  
 # arg5 is number of forecast times that have a valid analysis to compare with (excluding analysis, e.g. 2)
@@ -33,8 +33,10 @@ else
 #   perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3                > $LAPS_DATA_ROOT/time/modeltime.dat 
 #   perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 -f ascii_time >> $LAPS_DATA_ROOT/time/modeltime.dat 
 
-    perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3                > $LAPS_DATA_ROOT/time/modelvtime.dat 
-    perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 -f ascii_time >> $LAPS_DATA_ROOT/time/modelvtime.dat 
+    setenv MODEL_CYCLE_TIME `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_cycle_time`
+
+    perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $MODEL_CYCLE_TIME -d $3                > $LAPS_DATA_ROOT/time/modelvtime.dat 
+    perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $MODEL_CYCLE_TIME -d $3 -f ascii_time >> $LAPS_DATA_ROOT/time/modelvtime.dat 
 
     echo "setenv MODELVTIME `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`"
           setenv MODELVTIME `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
@@ -100,11 +102,6 @@ foreach SUBDIR (REF LMR)
         echo "montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT"
               montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
 
-        setenv LAPS_HHMM `echo $LAPS_A9TIME | cut -c6-9`
-        setenv HHMM_LINK $IMGDIR/radar_fcst_all_$LAPS_HHMM.png
-        echo "rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK"
-              rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK
-
         setenv COMP_LINK $IMGDIR/radar_fcst_all_$COMP.png
         echo "rm -f $COMP_LINK; ln -s $IMOUT $COMP_LINK"
               rm -f $COMP_LINK; ln -s $IMOUT $COMP_LINK
@@ -112,6 +109,19 @@ foreach SUBDIR (REF LMR)
         echo ""
 
     end
+
+#   Animate the image score montages
+    echo ""
+    echo "Montage the latest image scores for $SUBDIR"
+    setenv IMGDIR $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot
+    setenv IMOUT $IMGDIR/radar_fcst_all_anim.gif
+
+    ls -lrt $IMGDIR/radar_fcst_all_[0-9]???.png
+
+    echo "convert -delay 150 -loop 0 `ls -rt $IMGDIR/radar_fcst_all_[0-9]???.png` $IMOUT"
+          convert -delay 150 -loop 0 `ls -rt $IMGDIR/radar_fcst_all_[0-9]???.png` $IMOUT
+
+    echo ""
 
 end
 
