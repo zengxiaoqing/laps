@@ -38,7 +38,7 @@ use lfmgrid
 
 implicit none
 
-integer :: nx,ny,nz,istatus
+integer :: nx,ny,nz,istatus,n3d_pts_thr
 
 character(len=*) :: mtype,filename
 
@@ -56,7 +56,10 @@ select case(trim(mtype))
       call get_st4_dims(filename,nx,ny,nz)
 end select
 
-if(nx*ny*nz > 20000000)then
+! Set native grid size threshold based on an 8GB machine
+n3d_pts_thr = 33000000
+write(6,*)' # of 3D grid points, large_ngrid thresh = ',nx*ny*nz,n3d_pts_thr
+if(nx*ny*nz > n3d_pts_thr)then
    write(6,*)' Large native grid - process reduced set of 3-D fields'
    large_ngrid = .true.
 !  large_pgrid = .true.
