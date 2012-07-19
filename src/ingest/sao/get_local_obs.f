@@ -476,6 +476,7 @@ c
 !          Pick closest station if multiple stations are in time window
            if(.not. l_multiple_reports)then
              do k = 1,i-1
+              if(.not. l_reject(k))then 
                if(stationId(i) .eq. stationId(k))then ! possibly the same stn
                  l_same_stn = .true.
                  if(latitude(i)  .ne. latitude(k) .or.
@@ -497,13 +498,14 @@ c
 
                      write(6,51)i,k,stationId(i),a9time_a(i),a9time_a(k)       
      1                         ,i_reject
- 51		     format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
+ 51		     format(' Duplicate detected ',2i7,1x,a6,1x,a9,1x,a9
      1                     ,1x,i6)
 
                      l_reject(i_reject) = .true.
                    endif ! both weren't rejected
                  endif ! same station
                endif ! possibly the same stn
+              endif ! more efficient l_reject(k) test
              enddo ! k
            endif ! l_multiple_reports
 c
@@ -991,6 +993,7 @@ c..... Precip
             if(code1PST(iprov_pst) .eq. -3 .AND. 
      1         dataProvider(i)(1:lenp) .eq. 'HADS')then  
                pcp24 = precipAccum(i) / 25.4 ! convert mm to inches
+               if(pcp24 .lt. 0. .OR. pcp24 .gt. 1e4)pcp24 = badflag       
                write(6,*)' Found a local 24hr HADS precip ob    : '
      1                 ,pcp24,' ',dataProvider(i)(1:lenp),' '
      1                 ,stationId(i),' '
@@ -998,6 +1001,7 @@ c..... Precip
             elseif(code1PST(iprov_pst) .eq. -2 .AND. ! 24hr ob at 00UT
      1             i4time_sys .eq. ((i4time_sys/86400) * 86400) )then                         
                pcp24 = precipAccum(i) / 25.4 ! convert mm to inches
+               if(pcp24 .lt. 0. .OR. pcp24 .gt. 1e4)pcp24 = badflag       
                write(6,*)' Found a local 24hr 00UTC precip ob: '
      1                 ,pcp24,' ',dataProvider(i)(1:lenp),' '
      1                 ,stationId(i),' '
