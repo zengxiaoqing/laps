@@ -96,6 +96,9 @@
 # -R                   Perform remote copy (and purge) of analysis output to the supplied 
 #                      destination (via xferlaps.sh)
 #
+# -x                   If supplied, specify amount of files to be transferred (used with -R)
+#                      [1=2D, 2=3D, 3=3D+LGA, default value is 2 if not supplied] 
+#
 # -C                   Copy file $LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2 to $opt_C/$yyjjjhhmm.gr2
 #
 # -N                   Disable the purger                                                                  
@@ -107,11 +110,11 @@
                
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R 
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R $opt_x 
             $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X $opt_C $opt_N);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:C:N');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:x:C:N');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -230,6 +233,21 @@ if(defined $opt_s){ # "surface only"
                   STMAS3D.exe
                   lvd_sat_ingest.exe
                   cloud.exe deriv.exe accum.exe lsm5.exe
+                  qbalpe.exe lapsprep.exe laps2grib.exe);
+    $lga_proc = "obs_convert.exe";
+
+}elsif( ($opt_V eq "STMAS3D_wcld")) { # STMAS 3D replacing qbalpe by add_omega
+    @LAPS_EXE = qw(lga.exe
+                  obs_driver.x
+                  ingest_pro.exe ingest_sounding.exe
+                  ingest_cloud_drift.exe ingest_aircraft.exe
+                  ingest_lrs.exe
+                  obs_convert.exe
+                  mosaic_radar.x
+                  stmas_mg.x
+                  temp.exe
+                  lvd_sat_ingest.exe
+                  cloud.exe STMAS3D_wcld.exe deriv.exe accum.exe lsm5.exe
                   qbalpe.exe lapsprep.exe laps2grib.exe);
     $lga_proc = "obs_convert.exe";
 
@@ -1128,7 +1146,7 @@ if(defined $opt_R){
         }else{    # opt_q     ZEUS
 #           $command = "qsub -A $opt_q $LAPS_LOG_PATH/qsub_xfer_laps.sh";
 #           $command = "$LAPSROOT/etc/rsync_out.sh $LAPS_DATA_ROOT $domain:$remote_data_root qsub 00:15 7 > $LAPS_LOG_PATH/rsync_out.log.`date +\%M`";         
-            $command = "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm";
+            $command = "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm $opt_x";
         }
         print "\nCommand file:\n";
         system("cat $LAPS_LOG_PATH/qsub_xfer_laps.sh");
