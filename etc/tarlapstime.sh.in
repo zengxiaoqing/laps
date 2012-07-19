@@ -11,7 +11,7 @@
 
 # Fourth command line argument is month and date (MMDD)
 
-# Fifth command line argument is mode [lga,nolga]          
+# Fifth command line argument is FILES [1=2D, 2=3D, 3=3D+LGA]           
 
 # Sixth argument is for expanded output and/or copy method [expand,noexpand,tar,rsync,scp]
 
@@ -27,7 +27,7 @@ LAPS_DATA_ROOT=$1
 time=$2
 YYYY=$3
 MMDD=$4
-MODE=$5
+FILES=$5
 EXPAND=$6
 STATIC=$7
 #MINAGE=$8
@@ -37,7 +37,7 @@ REMOTE_DATA_ROOT=$9
 
 echo "LAPS_DATA_ROOT = $LAPS_DATA_ROOT"
 echo "time = $time"
-echo "MODE = $MODE"
+echo "FILES = $FILES"
 echo "EXPAND = $EXPAND"
 echo "STATIC = $STATIC"
 echo "MINAGE = $MINAGE"
@@ -88,10 +88,16 @@ find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >>
 find ./lapsprd/www/anal2d/recent    -type l ! -cmin +60              -print   >> $LAPSTAR_TXT
 
 # Lapsprd files (except LGA, LGB, FUA, FSF)
-find ./lapsprd -type f -name "$YYDDDHHMM.*"             -print | grep -v gr2 | grep -v www | grep -v "\.v" | grep -v "\.d"  >> $LAPSTAR_TXT
+if test "$FILES" -ge 2; then
+    find ./lapsprd -type f -name "$YYDDDHHMM.*" -print | grep -v gr2 | grep -v www | grep -v "\.v" | grep -v "\.d"  >> $LAPSTAR_TXT
+else
+    for ext in lsx lmr lcv; do
+	echo "./lapsprd/ext/$YYDDDHHMM.ext"  >> $LAPSTAR_TXT     
+    done
+fi
 
 # LGA/LGB files (use MINAGE/MAXAGE?)
-if test "$MODE" = lga; then
+if test "$FILES" = 3; then
     echo "include lga/lgb files"
 #   find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> $LAPSTAR_TXT
     for file in `ls ./lapsprd/lg?/*.lg?`; do
