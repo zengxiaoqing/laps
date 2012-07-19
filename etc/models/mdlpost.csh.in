@@ -1,0 +1,89 @@
+#!/bin/csh      
+
+# This script converts model data into FUA/FSF files 
+
+# Supports composite reflectivity data for the HRRR, and can be more 
+# generalized later to other fields/models
+
+setenv LAPS_DATA_ROOT $1
+
+setenv MODEL $2
+
+setenv YYDDDHHMM `perl @prefix@/etc/sched_sys.pl -c 21600`              
+
+#setenv YYDDDHHMM `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
+#setenv YYDDDHHMM 121900600 # for testing
+
+echo "YYDDDHHMM (modelvtime) = $YYDDDHHMM"
+
+foreach HRRRHH (00 01)
+
+    setenv FCSTTIMEHRRR 0000
+
+    if ($HRRRHH == 00) then
+        setenv MMTIMES '00'
+        setenv FHH 00          
+    else
+        setenv MMTIMES '15 30 45 60'
+        @ FHH_I = $HRRRHH - 1
+        setenv FHH 0$FHH_I
+    endif
+
+    foreach FMM ($MMTIMES)
+
+        if ($FMM == 60 || $HRRRHH == 00) then
+            setenv FHH $HRRRHH
+            setenv FCSTTIME $FHH\00 
+        else
+            @ FHH_I = $HRRRHH - 1
+            setenv FHH 0$FHH_I
+            setenv FCSTTIME $FHH$FMM
+        endif
+
+        if ($HRRRHH == 00)then
+            @ REC_LMR = 1
+        else
+            @ REC_LMR = ((($FMM / 15) - 1) * 31) + 1
+        endif
+
+        @ REC_TSF = $REC_LMR + 18
+
+        echo " "
+        echo "Processing forecast time/record $FCSTTIME $REC_LMR"
+
+#       setenv GRIBIN /home/Steve.Albers/public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$HRRRHH\00         
+        setenv GRIBIN /public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$HRRRHH\00         
+
+#       setenv NCOUT /home/Steve.Albers/outdir/$YYDDDHHMM$FCSTTIME.fsf
+        setenv OUTDIR $LAPS_DATA_ROOT/lapsprd/fsf/$MODEL
+        setenv NCOUT $OUTDIR/$YYDDDHHMM$FCSTTIME.fsf
+
+#       Specify stmas_hwt grid for testing
+#       setenv NEWGRID "-new_grid lambert:-98.408:35.25:35.25 -105.0:433:3000. 28.0:433.:3000."
+        setenv NEWGRID " "                                                                         
+        echo "NEWGRID is $NEWGRID"
+
+        echo "wgrib2  $GRIBIN -s -d $REC_LMR         $NEWGRID -netcdf $NCOUT"
+              wgrib2  $GRIBIN -s -d $REC_LMR         $NEWGRID -netcdf $NCOUT
+
+        echo "wgrib2  $GRIBIN -s -d $REC_TSF -append $NEWGRID -netcdf $NCOUT"
+              wgrib2  $GRIBIN -s -d $REC_TSF -append $NEWGRID -netcdf $NCOUT
+
+        echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf $NCOUT"          
+              ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf $NCOUT           
+
+        echo "ncatted -a lmr_fcinv,global,a,s,1 $NCOUT"
+              ncatted -a lmr_fcinv,global,a,s,1 $NCOUT
+
+#       Add dimensions: record = UNLIMITED, z, nav, namelen via ncatted?
+
+#       echo "wgrib2  $GRIBIN         -nc_table ./hrrr_g2nc.table  -netcdf $NCOUT"
+#             wgrib2  $GRIBIN         -nc_table ./hrrr_g2nc.table  -netcdf $NCOUT 
+
+    end
+
+end
+
+echo ""
+echo "output..."
+ls -l $OUTDIR
