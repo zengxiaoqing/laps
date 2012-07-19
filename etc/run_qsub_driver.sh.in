@@ -1,0 +1,67 @@
+#!/bin/sh --login
+
+umask 002
+
+command=$1         # Program or script being run via qsub
+lapsdataroot=$2    # Example: /lfs0/projects/hmtb/dwr_domains/laps_psd   
+hhmm=$3            # Runtime needed (e.g. 01:00)
+domain_name=$4     # domain name (from the "on-the-fly") page
+procname=$5        # name to use in logging, etc.
+wait=$6            # set to "wait" [optional, default is "nowait"]
+vmem_gb=$7         # [optional, default is 1.0]
+
+log=$lapsdataroot/log/$procname.log.`date +\%H\%M`
+qlog=$lapsdataroot/log/qsub_$procname.log.`date +\%H\%M`
+
+rm -f $qlog                                                    
+
+if test "$vem_gb" == ""; then   
+    $vmem_gb=1.0
+fi
+
+# Build qsub script
+script=$lapsdataroot/log/qsub_$procname.sh
+echo "#!/bin/sh --login"         > $script
+echo "#$ -N $procname$domain_name" >> $script
+echo "#$ -A dlaps"              >> $script
+echo "#$ -l h_rt=$hhmm:00,h_vmem=$vmem_gb\G" >> $script
+echo "#$ -S /bin/sh"            >> $script
+echo "#$ -cwd"                  >> $script
+echo "#$ -pe hserial 1"         >> $script
+echo "#$ -o $qlog               >> $script
+echo "#$ -j y"                  >> $script
+echo "#exit"                    >> $script
+echo " "                        >> $script
+
+echo " "                                                        >> $script
+echo " echo 'Running this verif_fcst_driver.csh command...'"    >> $script
+
+echo " echo '$command'  "                                       >> $script
+echo "       $command > $lapsdataroot/log/$logfile"             >> $script
+
+echo " "                                                        >> $script
+echo " "                                                        >> $script
+echo " touch $log.wait"                                         >> $script
+echo " exit 0"                                                  >> $script
+
+date -u
+
+echo " "
+echo " Running qsub script contained in $script...."
+cat $script
+echo " "
+echo " using this command..."
+
+if test "$wait" == "wait"; then   
+    echo "@prefix@/etc/qsub_wait $script $log.wait > $log 2>&1"
+          @prefix@/etc/qsub_wait $script $log.wait > $log 2>&1
+else
+    echo "qsub $script > $log 2>&1"
+          qsub $script > $log 2>&1
+fi
+
+date -u
+
+echo "run_qsub_driver.sh completed for $procname..."
+
+
