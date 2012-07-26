@@ -73,10 +73,15 @@ cc   --------------------------------------------------------------
      +,  c2=8.8846)
 
 !     Set ramp going from liquid to ice
-      temp1_c = -10.
-      temp1_k = c_to_k(temp1_c)
+      if(ityp .eq. 3 .OR. ityp .eq. 10)then ! convective
+        temp1_c = -10.
+        temp2_c = -30.
+      else
+        temp1_c = -00.
+        temp2_c = -05.
+      endif
 
-      temp2_c = -30.
+      temp1_k = c_to_k(temp1_c)
       temp2_k = c_to_k(temp2_c)
 
 cc    -------------------------------------------------------------
