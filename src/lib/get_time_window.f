@@ -10,7 +10,8 @@
 
        call get_laps_cycle_time(ilaps_cycle_time,istatus)
        if(istatus .eq. 1)then
-           write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
+!          write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
+           continue
        else
            write(6,*)' Error getting laps_cycle_time'
            return
@@ -45,7 +46,8 @@
 
        call get_laps_cycle_time(ilaps_cycle_time,istatus)
        if(istatus .eq. 1)then
-           write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
+!          write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
+           continue
        else
            write(6,*)' Error getting laps_cycle_time'
            return
