@@ -274,7 +274,8 @@ C
      +     distanceR_HI(gateR_HI), distanceV(gateV),
      +     distanceV_HI(gateV_HI), elevationR( radialR, scanR),
      +     elevationR_HI( radialR_HI, scanR_HI), elevationV( radialV,
-     +     scanV), elevationV_HI( radialV_HI, scanV_HI)
+     +     scanV), elevationV_HI( radialV_HI, scanV_HI),
+     +     nyquistVelocityR(scanR), nyquistVelocityR_HI(scanR_HI)
 
 
 
