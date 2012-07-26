@@ -236,11 +236,36 @@
 
                 call get_laps_2d(i4_valid,ext,var_2d,units_2d       
      1              ,comment_2d,ni,nj,var_anal_2d,istatus)       
-                if(istatus .ne. 1)then
+
+                if(istatus .eq. -1)then
+                    nmissing = 0
+                    do i = 1,ni
+                    do j = 1,nj
+                        if(var_anal_2d(i,j) .eq. r_missing_data)then
+                            nmissing = nmissing + 1
+                        endif
+                    enddo ! j
+                    enddo ! i
+
+                    pct_missing = (float(nmissing) / float(ni*nj))*100.
+
+                    if(pct_missing .le. 10.)then
+                        write(6,*)' WARNING: missing analysis data for '
+     1                             ,var_2d,nmissing,pct_missing
+                    else
+                        write(6,*)' ERROR: missing analysis data for '
+     1                             ,var_2d,nmissing,pct_missing
+                        goto 980
+                    endif
+
+                elseif(istatus .ne. 1)then
                     write(6,*)' Error reading 2D Analysis for '
      1                         ,var_2d
                     goto 980
                 endif
+
+                write(6,*)var_2d,' anal range is ',minval(var_anal_2d)
+     1                                            ,maxval(var_anal_2d)
 
                 if(itime_fcst .eq. 0)then
                     var_prst_2d = var_anal_2d
@@ -291,8 +316,8 @@
                        goto 990
                   endif
 
-                  write(6,*)var_2d,' range is ',minval(var_fcst_2d)
-     1                                         ,maxval(var_fcst_2d)
+                  write(6,*)var_2d,' fcst range is ',minval(var_fcst_2d)
+     1                                              ,maxval(var_fcst_2d)
 
                  else ! SSF
 
