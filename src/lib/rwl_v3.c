@@ -176,6 +176,7 @@ char *g_name;
         if (i_flag == 1)
           return 1;
         else
+          printf("error in check_laps_inv i_flag != 1\n");
           return -1;
 }
 
@@ -318,7 +319,7 @@ fint4 *kmax;
 /* get the data variable id */
         i_status = nc_inq_varid (cdfid, "imax",&i_varid);
         if (i_status != NC_NOERR) {
-          printf("%s\n",nc_strerror(i_status));
+          printf("imax id %s\n",nc_strerror(i_status));
           return -1;
 	}
 /* read the var from the netcdf file */
@@ -331,7 +332,7 @@ fint4 *kmax;
 /* get the data variable id */
         i_status = nc_inq_varid (cdfid, "jmax",&i_varid);
         if (i_status != NC_NOERR) {
-          printf("%s\n",nc_strerror(i_status));
+          printf("jmax id %s\n",nc_strerror(i_status));
           return -1;
 	}
  
@@ -345,7 +346,7 @@ fint4 *kmax;
 /* get the data variable id */
         i_status = nc_inq_varid (cdfid, "kmax",&i_varid);
         if (i_status != NC_NOERR) {
-          printf("%s\n",nc_strerror(i_status));
+          printf("kmax id %s\n",nc_strerror(i_status));
           return -1;
 	}
  
@@ -683,7 +684,7 @@ fint4 *status;
         istatus = nc_open((const char*)filename,NC_NOWRITE, &cdfid);
         free(filename);
         if (istatus != NC_NOERR) {
-          printf("%s\n",nc_strerror(istatus));
+          printf("nc_open %s\n",nc_strerror(istatus));
           *status = -1; /* error opening file */
           return;
         }
@@ -695,13 +696,14 @@ fint4 *status;
           printf("%s\n",nc_strerror(istatus));
           istatus = nc_close(cdfid);
           *status = -2; /* error in reading header info */
+          printf("Error reading record in header info\n");
           return;
         }
         
         istatus = nc_inq_dimlen(cdfid, dim_id, &dim_len);
         num_record = (long) dim_len;
         if ((istatus != NC_NOERR) || (num_record == 0)) { /* no data in file */
-          printf("%s\n",nc_strerror(istatus));
+          printf("dimlen dim_id %s\n",nc_strerror(istatus));
           istatus = nc_close(cdfid);
           *status = -2; /* error in reading header info */
           return;
@@ -718,6 +720,7 @@ fint4 *status;
           printf("%s\n",nc_strerror(istatus));
           istatus = nc_close(cdfid);
           *status = -2; /* error in reading header info */
+          printf("Error reading namelen in header info\n");
           return;
         }
         
@@ -728,6 +731,7 @@ fint4 *status;
           printf("%s\n",nc_strerror(istatus));
           istatus = nc_close(cdfid);
           *status = -2; /* error in reading header info */
+          printf("Error reading namelen dimension in header info\n");
           return;
         }
 
@@ -792,6 +796,7 @@ fint4 *status;
           free_read_var(var, comment, ext, lvl_coord, units,
                         comm_var, inv_var);
           *status = -2; /* error in reading header info */
+          printf("Error reading grid dimensions in header info\n");
           return;
         }
 
@@ -811,6 +816,7 @@ fint4 *status;
             free_read_var(var, comment, ext, lvl_coord, units,
                           comm_var, inv_var);
             *status = -2; /* error in reading header info */
+            printf("Error reading valtime in header info\n");
             return;
           }
         }
@@ -858,6 +864,7 @@ fint4 *status;
                 free_read_var(var, comment, ext, lvl_coord, units,
                               comm_var, inv_var);
                 *status = -2; /* error in reading header info */
+                printf("Error in nc_get_var1_double\n");
                 return;
               }
 
