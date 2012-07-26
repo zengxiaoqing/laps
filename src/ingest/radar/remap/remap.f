@@ -531,9 +531,18 @@ c
               io_stat = get_data_field(ref_index, b_ref(ref_ptr)
      1                                ,ref_ptr  , MAX_REF_GATES
      1                                , b_missing_data) 
+              if(io_stat .ne. 1)then
+                  write(6,*)' WARNING: incorrect ref data'
+                  return
+              endif
+
               io_stat = get_data_field(vel_index, b_vel(vel_ptr)
      1                                ,vel_ptr  , MAX_VEL_GATES
      1                                , b_missing_data) 
+              if(io_stat .ne. 1)then
+                  write(6,*)' WARNING: incorrect vel data'
+                  return
+              endif
 
               ref_ptr = ref_ptr + n_ref_gates 
               vel_ptr = vel_ptr + n_vel_gates 
