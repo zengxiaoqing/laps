@@ -1014,8 +1014,13 @@ c      Determine output filename extension
            do i = 1,n_gates
                call counts_to_dbz(Z(n_ptr + (i-1))                       ! I
      1                           ,Z_scale,Z_offset,b_missing_data        ! I
-     1                           ,data(i))                               ! O
+     1                           ,data(i),istatus)                       ! O
            enddo
+
+           if(istatus .ne. 1)then
+               get_data_field = 0
+               return
+           endif
 
        elseif(index .eq. 2)then ! velocity
            do i = 1,n_gates
@@ -1031,7 +1036,7 @@ c      Determine output filename extension
        end
  
        subroutine counts_to_dbz(zcounts,Z_scale,Z_offset,b_missing_data  ! I
-     1                         ,dbz)                                     ! O
+     1                         ,dbz,istatus)                             ! O
 
 !      Convert integer Z count value to dbz
 
@@ -1048,8 +1053,8 @@ c      Determine output filename extension
 
 !      Convert from signed to unsigned
        if(dbz_hold .gt. 127.) then
-           print *, 'error in Reflectivity: ',dbz_hold
-           stop
+           print *, 'error in Reflectivity: ',dbz_hold,zcounts
+           istatus = 0
        endif
 
        if(dbz_hold .lt. 0.) then
@@ -1066,6 +1071,7 @@ c      Determine output filename extension
 
        dbz = dbz_hold
 
+       istatus = 1
        return
        end
 
