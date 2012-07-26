@@ -88,7 +88,7 @@ c     internal
       integer recNum, nf_fid, nf_vid, nf_status
       real x, y, bad_sfc
 
-      verbose = 1
+      verbose = 0
 
 c     Set file specs for get_file_times:
       call s_len(path, ptg_index)
@@ -171,7 +171,7 @@ c       Accumulate all:
         CALL LATLON_TO_RLAPSGRID(gps_lat(i),gps_lon(i),latgrid,
      1             longrid, imax, jmax, x, y, istat_latlon)
 
-        if(verbose .ge. 1)then
+        if(verbose .ge. 1 .or. i .le. 10)then
           write(6,101)i,gps_lat(i),gps_lon(i),x,y,gps_wet(i)
  101      format(i7,4f9.2,e16.6)
         endif
