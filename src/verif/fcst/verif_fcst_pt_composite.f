@@ -94,7 +94,6 @@
         integer n(maxbgmodels,0:max_fcst_times,max_regions) 
         integer n_sum(maxbgmodels,0:max_fcst_times,max_regions) 
 
-        integer nmissing_m(maxbgmodels)
         integer nsuccess_m(maxbgmodels)
         integer nincomplete_m(maxbgmodels)
         integer incomplete_run_m(maxbgmodels)
@@ -194,7 +193,6 @@
          nsuccess = 0
          nincomplete = 0
 
-         nmissing_m = 0
          nsuccess_m = 0
          nincomplete_m = 0
 
@@ -243,7 +241,6 @@
            inquire(file=stats_file_in,exist=l_exist)
            if(.not. l_exist)then
                nmissing = nmissing + 1
-               nmissing_m = nmissing_m + 1
                if(nmissing .le. nmissing_thr)then
                    write(6,*)' WARNING: file does not exist:'
      1                                                    ,stats_file_in
@@ -289,7 +286,7 @@
 911                format(a24,1x,3f10.3)
                    goto 913
 912                write(6,*)' Read error in stats file...'
-                   goto 960
+                   goto 958
 913                continue
 
                    call left_justify(a24time_valid_file)
@@ -301,7 +298,7 @@
      1                 ,' WARNING: imodel / a24time (expected/file)'
      1                 ,imodel,itime,a24time_valid_expected
      1                              ,a24time_valid_file     
-                       goto960
+                       goto958
                    endif
 
                  enddo ! itime_fcst
@@ -434,6 +431,11 @@
           write(6,956)a9time_initial,nincomplete_t,
      1                (incomplete_run_m(imodel),imodel=2,n_fdda_models)
 956       format(' incomplete_run_m at ',a9,' is ',i3,4x,20i3)   
+
+          goto 960 ! success for this time
+
+!         Error Condition for this time
+958       nmissing = nmissing + 1
 
 960      enddo                    ! init (initialization time)
 
