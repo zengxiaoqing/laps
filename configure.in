@@ -525,6 +525,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/xferlaps.csh
           etc/models/lfmpost_scp_fuafsf.pl
           etc/models/lfmpost_test.csh
+          etc/models/mdlpost.csh
           etc/models/run_qsub_lfmp.sh 
           etc/verif/ingest_rerun_verif.csh
           etc/verif/verif_fcst_driver.csh
