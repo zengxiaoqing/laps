@@ -462,12 +462,12 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
 !                               Performance is 450/700 calls/sec on PROFS3/FSL9
                                 call get_sfm_1d(nk,cld_base_qc_m
-     1                              ,cld_top_qc_m
-!    1                              ,cloud_type_1d((k_1d_base + k_1d_top)/2)
-     1                              ,1
-     1                              ,heights_1d,pressures_mb,temp_1d
-     1                              ,slwc_1d,cice_1d,prob_laps,mode)
-!    1                              ,slwc_1d,prob_laps,mode)
+     1                          ,cld_top_qc_m
+     1                          ,cloud_type_1d((k_1d_base + k_1d_top)/2)
+!    1                          ,1
+     1                          ,heights_1d,pressures_mb,temp_1d
+     1                          ,slwc_1d,cice_1d,prob_laps,mode)
+!    1                          ,slwc_1d,prob_laps,mode)
                             endif
 
 
