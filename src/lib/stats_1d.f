@@ -176,7 +176,7 @@ c
         write(6,*)' regression sums = ',sum1,sum2,sum3
 
         write(6,900)title,int(cnt),bias,std,r
-900     format(/,2x,a,' N/bias/rms/r = ',i5,2f9.2,f9.3)
+900     format(/,2x,a,' N/bias/rms/r = ',i7,2f9.2,f9.3)
 
         return
         end
