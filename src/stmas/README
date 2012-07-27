@@ -15,7 +15,45 @@ program main                                   main.f90
         RDOBSTEST
         ADDBKGRND
         BKGTOFINE
-    MGANALYSS                                  stmas_core.f90
+    MGANALYSS                                  stmas_core_cg.f90
+        PREPROCSS
+        RDINITBGD
+        PHYSCPSTN
+        GETCOEFFT
+        MINIMIZER_CG
+        COAS2FINE_XIE
+        FINE2COAS
+        PSTPROCSS
+        PREPROCSS
+        RDINITBGD
+        PHYSCPSTN
+        GETCOEFFT
+        MINIMIZER_CG
+        COAS2FINE_XIE
+        COAS2FINE_XIE
+        FINE2COAS
+        PSTPROCSS
+        INTERPLTN                             
+        SYSTEM_CLOCK                                     
+        cg_descent (X, NUMVARS, cg_value, cg_grad,                 &
+        SYSTEM_CLOCK                                         
+        TMPMEMALC
+        GRDMEMRLS
+        GRDMEMALC
+        TMPMEMRLS
+        TMPMEMALC
+        GRDMEMRLS
+        GRDMEMALC
+        TMPMEMRLS
+        TMPMEMALC
+        GRDMEMRLS
+        GRDMEMALC
+        TMPMEMRLS
+        WCOMPGERNL
+        COSTGRADT2
+        COSTFUNCT2
+        COSTFUNCT2
+        WCOMPGERNL      ! MODIFIED BY ZHONG
     OUTPUTLAPS                                 output_anals.f90
     OUTPUTANA                                        "
         WIND_POST_PROCESS                      src/lib/wind/wind_post_process.f
