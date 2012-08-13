@@ -217,13 +217,19 @@ cdis
                     density_i = density_ave_i * clouds_3d_pres(i,j,k) 
      1                                      / a(ilyr)
 
-                    if(temp_3d(i,j,k) .le. 243.15)then          ! ICE
+                    temp1_c = -00.
+                    temp2_c = -05.
+
+                    temp1_k = c_to_k(temp1_c)
+                    temp2_k = c_to_k(temp2_c)
+
+                    if(temp_3d(i,j,k) .le. temp2_k)then          ! ICE
                         cice(i,j,k) = density_i
-                    elseif(temp_3d(i,j,k) .ge. 263.15)then      ! LWC
+                    elseif(temp_3d(i,j,k) .ge. temp1_k)then      ! LWC
                         slwc(i,j,k) = density_l
                     else                                        ! Mixed
-                        frac = (temp_3d(i,j,k) - 243.15) 
-     1                               / (263.15 - 243.15)
+                        frac = (temp_3d(i,j,k) - temp2_k) 
+     1                               / (temp1_k - temp2_k)
                         slwc(i,j,k) = density_l * frac
                         cice(i,j,k) = density_i * (1. - frac)
                     endif
