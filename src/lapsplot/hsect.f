@@ -3589,10 +3589,13 @@ c abdel
 
             if(c_type_i .eq. 'pc')then
                 var_2d = 'PCN'
+                plot_parms%color_power = 0.3
             elseif(c_type_i .eq. 'rn')then
                 var_2d = 'RAI'
+                plot_parms%color_power = 0.3
             elseif(c_type_i .eq. 'sn')then
                 var_2d = 'SNO'
+                plot_parms%color_power = 0.3
             elseif(c_type_i .eq. 'ls')then
                 var_2d = 'LWC'
                 plot_parms%color_power = 0.3
@@ -3601,8 +3604,10 @@ c abdel
                 plot_parms%color_power = 0.3
             elseif(c_type_i .eq. 'pi')then
                 var_2d = 'PIC'
+                plot_parms%color_power = 0.3
             else
                 var_2d = 'LWC'
+                plot_parms%color_power = 0.3
             endif
 
             if(c_prodtype .eq. 'A')then
@@ -3691,20 +3696,20 @@ c abdel
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
                elseif(c_type_i .ne. 'ci')then
-                   call subcon(field2_2d,1e-30,field_2d,NX_L,NY_L)
+!                  call subcon(field2_2d,1e-30,field_2d,NX_L,NY_L)
 
                    call plot_field_2d(i4time_lwc,c_type
-     1                        ,field_2d,1e-3
+     1                        ,field2_2d,1e-3
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
                else ! c_type .eq. 'ci'
-                   call subcon(cice_2d,1e-30,field_2d,NX_L,NY_L)
+!                  call subcon(cice_2d,1e-30,field_2d,NX_L,NY_L)
 
                    call plot_field_2d(i4time_lwc,c_type
-     1                        ,field_2d,1e-3
+     1                        ,cice_2d,1e-3
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
@@ -4351,7 +4356,8 @@ c
                  clow = 0.
                  chigh = +25.
                  cint = 1.0
-c                cint = -1.
+
+                 cint = 0.0 ! -0.1
 
                  scale = 1e-3
 
@@ -8327,6 +8333,8 @@ c abdel
         common /zoom/  zoom, density
 
         write(6,*)' Subroutine plot_field_2d: i4time = ',i4time
+
+        write(6,*)' Inputs clow/chigh/cint = ',clow_in,chigh_in,cint_in
 
         c_type = c_type_in
 
