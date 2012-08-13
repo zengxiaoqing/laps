@@ -12,9 +12,19 @@ setenv MODEL $2
 setenv YYDDDHHMM `perl @prefix@/etc/sched_sys.pl -c 21600`              
 
 #setenv YYDDDHHMM `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
-#setenv YYDDDHHMM 121900600 # for testing
+setenv YYDDDHHMM 122021200 # for testing
 
 echo "YYDDDHHMM (modelvtime) = $YYDDDHHMM"
+
+setenv NCTEMPLATE $LAPS_DATA_ROOT/template.fsf
+#setenv NCTEMPLATE /home/fab/oplapb/template.fsf
+
+# Create FSF template file
+#echo "ncgen -o $NCTEMPLATE $LAPS_DATA_ROOT/cdl/fsf.cdl"
+#      ncgen -o $NCTEMPLATE $LAPS_DATA_ROOT/cdl/fsf.cdl
+
+echo "NCTEMPLATE is $NCTEMPLATE"
+ls -l $NCTEMPLATE
 
 foreach HRRRHH (00 01)
 
@@ -71,14 +81,89 @@ foreach HRRRHH (00 01)
 
         echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf $NCOUT"          
               ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf $NCOUT           
+ 
+#       echo "ncatted -a lmr_fcinv,global,a,s,1 $NCOUT"
+#             ncatted -a lmr_fcinv,global,a,s,1 $NCOUT
 
-        echo "ncatted -a lmr_fcinv,global,a,s,1 $NCOUT"
-              ncatted -a lmr_fcinv,global,a,s,1 $NCOUT
+        echo "ncatted -a lvl_coord,lmr,a,c,"MSL" $NCOUT"
+              ncatted -a lvl_coord,lmr,a,c,"MSL" $NCOUT
 
-#       Add dimensions: record = UNLIMITED, z, nav, namelen via ncatted?
+        echo "ncatted -a LAPS_units,lmr,a,c,"DBZ" $NCOUT"
+              ncatted -a LAPS_units,lmr,a,c,"DBZ" $NCOUT
+
+        echo "ncatted -a x_dim,global,a,c,"x" $NCOUT"
+              ncatted -a x_dim,global,a,c,"x" $NCOUT
+
+        echo "ncatted -a Nx,global,a,s,1800 $NCOUT"
+              ncatted -a Nx,global,a,s,1800 $NCOUT
+
+#       Add dimensions: record = UNLIMITED, z, nav, namelen                   
+#       See http://jisao.washington.edu/data/nco/
+
+#       Add record dimension
+        echo "ncecat -O -h $NCOUT $NCOUT"       
+              ncecat -O -h $NCOUT $NCOUT
+
+#       Change value of time dimension (wipes out the lmr field)
+#       setenv STR1 "time = UNLIMITED ; // (1 currently)"
+#       setenv STR2 "time = 1 ;"
+#       echo "ncdump $NCOUT  | sed -e "s#^.$STR1# $STR2#" | ncgen -o $NCOUT"
+#             ncdump $NCOUT  | sed -e "s#^.$STR1# $STR2#" | ncgen -o $NCOUT
+
+#       Rename time dimension to z
+        echo "ncrename -d time,z $NCOUT"          
+              ncrename -d time,z $NCOUT           
+
+#       Add record dimension
+#       echo "ncecat -O -h $NCOUT $NCOUT"       
+#             ncecat -O -h $NCOUT $NCOUT
+
+#       Reorder dimensions                       
+        echo "ncpdq -a record,z,y,x -O $NCOUT $NCOUT"
+              ncpdq -a record,z,y,x -O $NCOUT $NCOUT
+
+#       Append miscellaneous variables from FSF template file
+        echo "ncks -A -v lmr_comment,tsf_comment,imax,jmax,kmax,kdim,level,lmr_fcinv $NCTEMPLATE $NCOUT"
+              ncks -A -v lmr_comment,tsf_comment,imax,jmax,kmax,kdim,level,lmr_fcinv $NCTEMPLATE $NCOUT
+
+#       echo "ncks -A -v imax $NCIN $NCOUT"
+#             ncks -A -v imax $NCIN $NCOUT
+
+#       exit # for testing
+
+#       Rename record dimension to namelen
+#       echo "ncrename -d record,namelen $NCOUT"          
+#             ncrename -d record,namelen $NCOUT           
+
+#       Change value of namelen dimension
+#       setenv STR1 "namelen = UNLIMITED ; // (1 currently)"
+#       setenv STR1 "namelen = 1"                            
+#       setenv STR2 "namelen = 132"
+#       echo "ncdump $NCOUT  | sed -e "s#^.$STR1# $STR2#" | ncgen -o $NCOUT"
+#             ncdump $NCOUT  | sed -e "s#^.$STR1# $STR2#" | ncgen -o $NCOUT
+
+#       Add new record dimension
+#       echo "ncecat -O -h $NCOUT $NCOUT"       
+#             ncecat -O -h $NCOUT $NCOUT
+
+#       Rename record dimension to z
+#       echo "ncrename -d record,namelen $NCOUT"          
+#             ncrename -d record,namelen $NCOUT           
+
+#       Add record dimension
+#       echo "ncecat -O -h $NCOUT $NCOUT"       
+#             ncecat -O -h $NCOUT $NCOUT
+
+#       echo "ncpdq -O -h -a time,record $NCOUT $NCOUT"        
+#             ncpdq -O -h -a time,record $NCOUT $NCOUT  
+
+#       echo "ncwa -O -h -a record $NCOUT $NCOUT"           
+#             ncwa -O -h -a record $NCOUT $NCOUT          
 
 #       echo "wgrib2  $GRIBIN         -nc_table ./hrrr_g2nc.table  -netcdf $NCOUT"
 #             wgrib2  $GRIBIN         -nc_table ./hrrr_g2nc.table  -netcdf $NCOUT 
+
+#       exit # for testing
 
     end
 
