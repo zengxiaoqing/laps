@@ -2888,6 +2888,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                         .or. c_field .eq. 'ls'
      1                         .or. c_field .eq. 'ss'
      1                         .or. c_field .eq. 'ci'
+     1                         .or. c_field .eq. 'cn'
      1                         .or. c_field .eq. 'pc'
      1                         .or. c_field .eq. 'rn'
      1                         .or. c_field .eq. 'sn'
@@ -2915,19 +2916,21 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             elseif(c_field .eq. 'sj')then
                 c_label = 'LAPS Adjusted  SLWC     g/m^3    '
             elseif(c_field .eq. 'ls')then
-                c_label = 'LAPS Smith-Feddes LWC   g/m^3    '
+                c_label = 'Cloud Liquid            g/m^3    '
             elseif(c_field .eq. 'ci')then
-                c_label = 'LAPS Cloud Ice          g/m^3    '
+                c_label = 'Cloud Ice               g/m^3    '
+            elseif(c_field .eq. 'cn')then
+                c_label = 'Cloud Condensate        g/m^3    '
             elseif(c_field .eq. 'ss')then
                 c_label = 'LAPS Smith-Feddes SLWC  g/m^3    '
             elseif(c_field .eq. 'pc')then
-                c_label = 'LAPS Precip Concen      g/m^3    '
+                c_label = 'Precip Concentration    g/m^3    '
             elseif(c_field .eq. 'rn')then
-                c_label = 'LAPS Rain Concen        g/m^3    '
+                c_label = 'Rain Concentration      g/m^3    '
             elseif(c_field .eq. 'sn')then
-                c_label = 'LAPS Snow Concen        g/m^3    '
+                c_label = 'Snow Concentration      g/m^3    '
             elseif(c_field .eq. 'ic')then
-                c_label = 'LAPS Ice Concen         g/m^3    '
+                c_label = 'Ice Concentration       g/m^3    '
             endif
 
             l_pregen = lapsplot_pregen
@@ -2936,6 +2939,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 var_2d = 'LWC'
             elseif(c_field .eq. 'ci')then
                 var_2d = 'ICE'
+            elseif(c_field .eq. 'cn')then
+                var_2d = 'LWC'
             elseif(c_field .eq. 'pc')then
                 var_2d = 'PCN'
             elseif(c_field .eq. 'rn')then
@@ -2953,6 +2958,16 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1              NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,slwc_3d,istatus)
 
+                if(c_field .eq. 'cn')then
+                    write(6,*)' Adding ice to get total condensate'
+                    var_2d = 'ICE'
+                    call get_laps_3dgrid(i4time_lwc,86400,i4time_valid,
+     1                  NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,cice_3d,istatus)
+                    slwc_3d = slwc_3d + cice_3d
+                    comment_2d = 'Cloud Condensate'
+                endif
+
                 call make_fnam_lp(i4time_valid,a9time,istatus)
 
             elseif(c_prodtype .eq. 'B' .or. 
@@ -2965,12 +2980,26 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                              ,istatus)
                 if(istatus .ne. 1)goto100
 
+                if(c_field .eq. 'cn')then
+                    write(6,*)' Adding ice to get total condensate'
+                    var_2d = 'ICE'
+                    call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,cice_3d
+     1                              ,istatus)
+                    slwc_3d = slwc_3d + cice_3d
+                    comment_2d = 'Cloud Condensate'
+                endif
+
                 call downcase(units_2d,units_2d)
                 if(units_2d .eq. 'kg/m**3')then
                     units_2d = 'g/m**3'
                 endif
 
                 call directory_to_cmodel(directory,c_model)
+
+                write(6,*)' comment_2d = ',trim(comment_2d)
 
                 call mk_fcst_xlabel(comment_2d,fcst_hhmm
      1                                 ,ext(1:3),units_2d
