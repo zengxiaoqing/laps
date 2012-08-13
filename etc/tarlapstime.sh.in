@@ -74,7 +74,6 @@ echo "tarlapstime.sh"                                          >> time/copyremot
 
 ls -1 time/systime.dat                                          > $LAPSTAR_TXT
 ls -1 time/c_time.dat                                          >> $LAPSTAR_TXT
-ls -1 time/copyremotetime.dat                                  >> $LAPSTAR_TXT
 
 # Verification files                           
 #find ./lapsprd/verif -type f         ! -cmin +120         -print | grep -v cont | grep -v hist >> $LAPSTAR_TXT
@@ -83,16 +82,17 @@ ls -1 time/copyremotetime.dat                                  >> $LAPSTAR_TXT
 #echo "log/cloud_fcst.png"                                                                      >> $LAPSTAR_TXT
 
 # Pregenerated web analysis files
-find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
 find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
-find ./lapsprd/www/anal2d/recent    -type l ! -cmin +60              -print   >> $LAPSTAR_TXT
+find ./lapsprd/www/anal2d/recent    -type l -name "*$HHMM.gif"       -print   >> $LAPSTAR_TXT
+find ./lapsprd/www/anal2d/recent    -type l -name "gmeta*latest.gif" -print   >> $LAPSTAR_TXT
+find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
 
 # Lapsprd files (except LGA, LGB, FUA, FSF)
 if test "$FILES" -ge 2; then
     find ./lapsprd -type f -name "$YYDDDHHMM.*" -print | grep -v gr2 | grep -v www | grep -v "\.v" | grep -v "\.d"  >> $LAPSTAR_TXT
 else
     for ext in lsx lmr lcv; do
-	echo "./lapsprd/ext/$YYDDDHHMM.ext"  >> $LAPSTAR_TXT     
+	echo "./lapsprd/$ext/$YYDDDHHMM.$ext"  >> $LAPSTAR_TXT     
     done
 fi
 
@@ -121,13 +121,17 @@ find ./log     -type f -name "*.wgi.$YYDDDHHMM" -print   >> $LAPSTAR_TXT
 # Sfc Verification file
 ls -1 log/qc/laps_sfc.ver.$HHMM                          >> $LAPSTAR_TXT
 
-# Solar Analysis Verification file
+# lapstar.txt file
+ls -1 log/lapstar.txt.$YYDDDHHMM                         >> $LAPSTAR_TXT
+
+# Solar Analysis Verification files
 ls -1 lapsprd/verif/SWI/pt/load.png                      >> $LAPSTAR_TXT
+ls -1rt lapsprd/verif/SWI/pt/$YYYY????.png lapsprd/verif/SWI/pt/$YYYY?????.png | tail -1 >> $LAPSTAR_TXT
 
 # Static files
 ls -1 static/*.nl                                        >> $LAPSTAR_TXT
 ls -1 static/nest7grid.parms                             >> $LAPSTAR_TXT
-ls -1 static/purger.txt                                  >> $LAPSTAR_TXT
+ls -1 static/purger.dat                                  >> $LAPSTAR_TXT
 if test "$STATIC" = static; then                         
     echo "including extra static files"
     ls -1 static/static.nest7grid                        >> $LAPSTAR_TXT
@@ -136,9 +140,14 @@ else
     echo "not including extra static files"
 fi
 
-ls -l $LAPS_DATA_ROOT/$LAPSTAR_TXT
+# Last file will denote this time is finished
+ls -1 time/copyremotetime.dat                            >> $LAPSTAR_TXT
+
+ls -l $LAPSTAR_TXT
 
 which tar
+
+date -u
 
 if test "$EXPAND" = noexpand; then
     echo "current directory is `pwd`"
@@ -169,6 +178,7 @@ elif test "$EXPAND" = tar; then # tar is slower without compression and may be m
           tar -T $LAPSTAR_TXT -cvf - | ssh $DOMAIN_NAME "cd $REMOTE_DATA_ROOT; tar xpvf -"
 
 elif test "$EXPAND" = rsync; then # rsync compression allows faster transmission
+    echo " "
     echo "rsync to remote location"  
     cd $LAPS_DATA_ROOT 
     pwd
@@ -190,6 +200,7 @@ else
 
 fi
 
+echo " "
 date -u
     
 echo "finished tarlapstime.sh"
