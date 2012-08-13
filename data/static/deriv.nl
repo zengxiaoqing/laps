@@ -7,7 +7,7 @@
  vv_for_St=.01,
  hydrometeor_scale_pcp=1.,
  hydrometeor_scale_cldliq=0.2,
- hydrometeor_scale_cldice=0.05,
+ hydrometeor_scale_cldice=0.02,
  c_z2m='rams'
  thresh_cvr_cty_vv=0.65,
  thresh_cvr_lwc=0.65,
