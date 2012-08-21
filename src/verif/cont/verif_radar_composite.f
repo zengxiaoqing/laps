@@ -268,7 +268,13 @@
            write(6,*)'cline = ',cline
 
            char = ' '
-           call csplit(cline,c_fdda_mdl_hdr,nelems,n_fdda_models,char)
+           call csplit(cline,c_fdda_mdl_hdr,nelems,n_fdda_models,char
+     1                ,istatus)
+           if(istatus .ne. 1)then
+               write(6,*)' Read error in ets file header line...'
+               goto958
+           endif
+
            write(6,*)'c_fdda_mdl_hdr nelems/n_fdda_models = '
      1                              ,nelems,n_fdda_models
 
@@ -412,28 +418,37 @@
                enddo ! itime_fcst
 
 !              Read members.txt file
-               open(lun_mem,file=members_file,status='unknown')
+               open(lun_mem,file=members_file,status='old')
                do imodel = 2,n_fdda_models
-                   if(c_model(1:3) .ne. 'lga')then
-                       read(lun_mem,*)c_model               
-                   endif
-                   write(6,*)' c_model check: ',c_model
-     1                                         ,c_fdda_mdl_src(imodel)
-     1                                         ,c_fdda_mdl_hdr(imodel)
+                 read(lun_mem,*)c_model ! from members.txt               
+
+                 write(6,*)' c_model check (members/namelist/header): '
+     1                                       ,imodel,c_model
+     1                                       ,c_fdda_mdl_src(imodel)
+     1                                       ,c_fdda_mdl_hdr(imodel)
+
+                 if(trim(c_model) .ne. 'persistence')then
 
 !                  Compare members.txt file and namelist fdda parms
                    if(trim(c_model) .ne. 
      1                              trim(c_fdda_mdl_src(imodel)))then
-                       write(6,*)' Models did not match (members.txt)'
+                       write(6,*)
+     1             ' ERROR: Models did not match (members.txt/namelist)'
+                       close(lun_mem)
                        return
                    endif
 
 !                  Compare ets file header and namelist fdda parms
                    if(trim(c_model) .ne. 
      1                              trim(c_fdda_mdl_hdr(imodel)))then
-                       write(6,*)' Models did not match (ets header)'
-                       return
+                       write(6,*)
+     1       ' WARNING: Models did not match (ets file header/namelist)'
+                       close(lun_mem)
+                       goto 958
                    endif
+
+                 endif ! other than persistence from members.txt
+
                enddo ! imodel
                close(lun_mem)
 
@@ -694,63 +709,3 @@
 
        end
 
-
-        subroutine csplit(line,carray,nelems,maxelems,char)
-
-!       Routine to split a character array into segments
-
-        character*(*) line
-        character*1 char
-        character*30 carray(maxelems)
-        
-        integer istart(maxelems)
-        integer iend(maxelems)
-
-        lenline = len(line)
-        nelems = 0
-
-        lenelem = len(carray(1))
-
-!       Beginning of line might start an element
-        if(line(1:1) .ne. char)then
-            istart(1) = 1
-        endif
-
-        do i = 1,lenline-1
-
-!           Check for start of string
-            if(line(i:i) .eq. char .and. line(i+1:i+1) .ne. char)then
-                if(nelems+1 .gt. maxelems)then
-                    write(6,*)
-     1              ' Error: nelems+1 > maxelems',nelems+1,maxelems,i
-     1                     ,line(i:i+1)
-                    write(6,*)line
-                    stop
-                endif
-                istart(nelems+1)= i+1
-            endif
-
-!           Check for end of string
-            if(line(i:i) .ne. char .and. line(i+1:i+1) .eq. char)then
-                nelems = nelems + 1
-                iend(nelems)= i+1
- 
-                if(iend(nelems) - istart(nelems) .ge. lenelem)then
-                    write(6,*)' Error: element is too long',
-     1                        istart(nelems),iend(nelems)
-                    write(6,*)line
-                    stop
-                endif 
-
-                carray(nelems) = line(istart(nelems):iend(nelems))
-            endif
-
-        enddo ! i
-
-        write(6,*)' Elements in csplit are:'
-        do i = 1,nelems
-            write(6,*)i,' ',carray(i)
-        enddo ! i
-
-        return
-        end
