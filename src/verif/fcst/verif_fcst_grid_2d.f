@@ -184,6 +184,11 @@
           write(6,*)'hist_file = ',hist_file(1:len_histf)
           open(lun_out,file=hist_file(1:len_histf),status='unknown')
 
+!         Write comment with model member names
+          write(lun_out,902)(trim(c_fdda_mdl_src(imodel))
+     1                     ,imodel=2,n_fdda_models)
+902       format('# ',30(1x,a))
+
           do imodel = 1,n_fdda_models ! move this inside the time loop
 
             c_model = c_fdda_mdl_src(imodel)
