@@ -1578,7 +1578,7 @@ c
             endif ! xx = 2
 c
             if(staval(1).eq.missingflag)then
-               print*,'Here: staval = missingflag'
+               print*,'hinterp_field_3d: staval = missingflag ',il,jl
             endif
 
             flaps(il,jl,:) = staval(:)
@@ -1815,7 +1815,7 @@ c
             endif
 c
             if(staval.eq.missingflag)then
-               print*,'Here: staval = missingflag'
+               print*,'hinterp_field_2d: staval = missingflag',il,jl
             endif
 
             flaps(il,jl,k) = staval
@@ -1925,7 +1925,7 @@ c
       endif
 c
       if(staval.eq.missingflag)then
-         print*,'Here: staval = missingflag'
+         print*,'gdtost: staval = missingflag'
       endif
       return
       end
@@ -2113,7 +2113,7 @@ c
       endif
 c
       if(staval.eq.missingflag)then
-         print*,'Here: staval = missingflag'
+         print*,'gdtost_i: staval = missingflag'
       endif
       return
       end
