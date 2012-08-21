@@ -9,6 +9,7 @@ program lga                                      lga.f
    advance_analysis
    lga_driver                                    bgdata/lga_driver.f
       get_bkgd_mdl_info                          bgdata/get_bkgd_mdl_info.f
+         getdims_lapsprd                         bgdata/getdims_lapsprd.f 
          get_sbn_dims                            bgdata/read_sbn_grids.f
          get_attribute_sbn                       bgdata/get_attr_sbn.f
          get_ruc2_dims                           bgdata/readruc2_pub.f
@@ -20,7 +21,7 @@ program lga                                      lga.f
             map_set
       get_lgb_source                             bgdata/lga_driver.f
       read_bgdata                                bgdata/readbgdata.f
-         read_fuafsf_cdf   
+         read_fuafsf_cdf                         bgdata/read_fuafsf.f 
          get_lapsdata_3d
          read_sbn_grids                          bgdata/read_sbn_grids.f 
             read_netcdf_real                     bgdata/read_netcdf_field.f
