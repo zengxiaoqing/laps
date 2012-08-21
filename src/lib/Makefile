@@ -47,6 +47,7 @@ SRC	= machine_dependent.F \
           convm2miles.f \
           convmiles2m.f \
           convms2kt.f \
+          csplit.f \
           diff.f \
           downcase.f \
           equtoaltazd.f \
