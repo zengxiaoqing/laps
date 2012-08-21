@@ -1,6 +1,7 @@
       subroutine read_fuafsf_cdf(fullname, x, y, z, 
      +     ht, level, om, sh, t3, u3, v3,
-     +     usfc, vsfc, tsfc, dsfc, psfc, mslp, zsfc,
+     +     usfc, vsfc, tsfc, dsfc, psfc, mslp, zsfc, 
+     +     lmr, llr, s8a, tpw,
      +     istatus)
 C
       implicit none
@@ -29,16 +30,34 @@ C
      +,    usfc( x,  y)
      +,    vsfc( x,  y)
      +,    zsfc( x,  y)
-
-      istatus = 0
+     +,    lmr( x,  y)
+     +,    llr( x,  y)
+     +,    s8a( x,  y)
+     +,    tpw( x,  y)
 
       call get_c8_project(c8_proj,istatus)
+
+      istatus = 1 ! good status
+
       call downcase(c8_proj,c8_proj)
       call s_len(c8_proj,lenc8)
+
+      call s_len(fullname,lname_in)
+
+      if(x*y .eq. 0)then
+          write(6,*)' ERROR in read_fuafsf_cdf input x/y ',x,y
+          istatus = 0
+          return
+      endif
+
+      if(z .le. 1)then
+          write(6,*)' Skip FUA read, lname_in,x,y = ',lname_in,x,y
+          cfname_int=fullname(1:lname_in)//'.fsf'
+          goto100
+      endif
 C
 C  Open netcdf File for reading
 C
-      call s_len(fullname,lname_in)
       cfname_int=fullname(1:lname_in)//'.fua'
       call s_len(cfname_int,lname)
       print*,'Open/read ',cfname_int(1:lname)
@@ -46,7 +65,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ',cfname_int(1:lname)
-        return
+        istatus = 0; return
       endif
 C
 C     Variable        NETCDF Long Name
@@ -61,7 +80,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var ht'
-        return
+        istatus = -1            
       endif
 
 c     if(c8_proj(1:lenc8).eq.'airdrop')
@@ -74,13 +93,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var level'
-        return
+        istatus = -1             
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,level)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var level'
-        return
+        istatus = -1           
       endif
 
 c     if(c8_proj(1:lenc8).eq.'airdrop')
@@ -93,13 +112,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var om'
-        return
+        istatus = -1            
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,om)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var om'
-        return
+        istatus = -1          
       endif
 
 c     if(c8_proj(1:lenc8).eq.'airdrop')
@@ -112,13 +131,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var sh'
-        return
+        istatus = -1          
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,sh)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var sh'
-        return
+        istatus = -1                
       endif
 
 c     if(c8_proj(1:lenc8).eq.'airdrop')
@@ -131,13 +150,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var t3'
-        return
+        istatus = -1            
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,t3)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var t3'
-        return
+        istatus = -1           
       endif
 
 c     if(c8_proj(1:lenc8).eq.'airdrop')
@@ -150,13 +169,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var u3'
-        return
+        istatus = -1          
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,u3)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var u3'
-        return
+        istatus = -1           
       endif
 
 c     if(c8_proj(1:lenc8).eq.'airdrop')
@@ -169,13 +188,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var v3'
-        return
+        istatus = -1              
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,v3)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var v3'
-        return
+        istatus = -1           
       endif
 
 c     if(c8_proj(1:lenc8).eq.'airdrop')
@@ -185,7 +204,7 @@ c     if(c8_proj(1:lenc8).eq.'airdrop')
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
-        return
+        istatus = -1           
       endif
 c
 c now fsf file:
@@ -203,10 +222,12 @@ c
          print*,'didnt determine location of fua in'
          print*,'string for fsf. Return with no data'
          print*,'read_fuafsf.f: abort'
-         return
+         istatus = 0; return
       endif
 
       cfname_int(l:l+2)='fsf'
+
+ 100  continue
 
       cfname_int=cfname_int(1:lname_in)//'.fsf'
 
@@ -216,9 +237,10 @@ c
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ',cfname_int(1:lname)
-        return
+        istatus = 0; return
       endif
 
+      write(6,*)' Reading USF'
 C
 C     Variable        NETCDF Long Name
 C      usf          "LAPS Fcst sfc u wind component"
@@ -227,13 +249,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var usf'
-        return
+        istatus = -1          
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,usfc)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var usf'
-        return
+        istatus = -1           
       endif
 C
 C     Variable        NETCDF Long Name
@@ -243,13 +265,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var vsf'
-        return
+        istatus = -1          
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,vsfc)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var vsf'
-        return
+        istatus = -1          
       endif
 C
 C     Variable        NETCDF Long Name
@@ -259,13 +281,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var tsf'
-        return
+        istatus = -1          
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tsfc)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var tsf'
-        return
+        istatus = -1           
       endif
 C
 C     Variable        NETCDF Long Name
@@ -275,13 +297,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var dsf'
-        return
+        istatus = -1           
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,dsfc)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var dsfc'
-        return
+        istatus = -1            
       endif
 C
 C     Variable        NETCDF Long Name
@@ -291,13 +313,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var slp'
-        return
+        istatus = -1            
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,mslp)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var mslp'
-        return
+        istatus = -1           
       endif
 C
 C     Variable        NETCDF Long Name
@@ -307,15 +329,17 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var psf'
-        return
+        istatus = -1          
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,psfc)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var psfc'
-        return
+        istatus = -1           
       endif
-C
+
+      write(6,*)' Reading ZSFC'
+CC
 C     Variable        NETCDF Long Name
 C      ter          "LAPS sfc terrain"
 C
@@ -323,14 +347,34 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var ter'
-        return
+        istatus = -1           
       endif
       nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,zsfc)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var zsfc'
-        return
+        istatus = -1            
       endif
+
+      write(6,*)' Reading LMR'
+C
+C     Variable        NETCDF Long Name
+C      lmr          "LAPS Column Max reflectivity"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'lmr',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var lmr'
+        istatus = -1          
+      endif
+      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,lmr)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var lmr'
+        istatus = -1          
+      endif
+
+      write(6,*)' Closing file ',nf_fid,z
 
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
@@ -339,7 +383,8 @@ C
         return
       endif
 
-      istatus = 1
+      write(6,*)' Returning from read_fuafsf_cdf...'
+
       return
       end
 c
