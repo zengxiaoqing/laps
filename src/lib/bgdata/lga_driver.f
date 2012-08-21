@@ -69,10 +69,10 @@ c
       integer   itstatus_rot,istat_alloc
       integer   icnt
       integer   igrx,igry
-      integer ixmin, ixmax, iymin, iymax
+      integer ixmin, ixmax, iymin, iymax, i_perim
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
       real diff, diff_mx, diff_mn
-      real xmin, xmax, ymin, ymax
+      real xmin, xmax, ymin, ymax, bgres, grid_spacing_cen_m
 
       real Lon0,Lat0,Lat1,dlat,dlon
       real sw(2),ne(2)
@@ -457,7 +457,7 @@ c
 c *** Specify model path, extension for write laps routine.
 c
       call get_directory('lga',outdir,len_dir)
-      print *,'writing to dir ',outdir(1:len_dir)
+      print *,'output dir will be ',outdir(1:len_dir)
 c
 c *** get LAPS pressure OR height levels.  Using pressures.nl / heights.nl
 c
@@ -826,7 +826,7 @@ c       ----------------------------------------------------
      .           gry(i,j).eq.missingflag)then
                  lgrid_missing=.true.
                  exit search_grid_missing
-             else    
+             else ! xygrid exists at LAPS grid point
                  xmin = min(grx(i,j),xmin)
                  xmax = max(grx(i,j),xmax)
                  ymin = min(gry(i,j),ymin)
@@ -840,10 +840,20 @@ c       ----------------------------------------------------
            print*,'Yrange ',ymin,ymax
 
 !          Add a perimeter to account for hinterp spline
-           ixmin = max(int(xmin)-5,1)
-           ixmax = min(int(xmax)+5,nx_bg)
-           iymin = max(int(ymin)-5,1)
-           iymax = min(int(ymax)+5,ny_bg)
+           call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
+           bgres = 40000. ! worst case for now
+!          i_perim = int(bgres / grid_spacing_cen_m) + 1
+           i_perim = 5
+           ixmin = max(nint(xmin)-i_perim,1)
+           ixmax = min(nint(xmax)+i_perim,nx_bg)
+           iymin = max(nint(ymin)-i_perim,1)
+           iymax = min(nint(ymax)+i_perim,ny_bg)
+           write(6,*)' bgres / i_perim ',bgres,i_perim
+
+           print*
+           print*,'LAPS (Input) Grid Bounding Box For Vinterp'
+           print*,'Xrange ',ixmin,ixmax
+           print*,'Yrange ',iymin,iymax
 c
            istatus=ishow_timer()
 
@@ -895,12 +905,41 @@ c
            endif ! .true.
 
            if(vertical_grid .eq. 'PRESSURE')then 
+       
+             write(6,*)
+             do k = 1,nzbg_ht
+                 write(6,*)' htbg range at level ',k,minval(htbg(:,:,k))
+     1                                              ,maxval(htbg(:,:,k))   
+             enddo ! k
+
+             write(6,*)
+             do k = 1,nzbg_tp
+                 write(6,*)' tpbg range at level ',k,minval(tpbg(:,:,k))
+     1                                              ,maxval(tpbg(:,:,k))   
+             enddo ! k
+
              call vinterp(nz_laps,nx_bg,ny_bg,nx_pr,ny_pr
      .         ,ixmin,ixmax,iymin,iymax
      .         ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .         ,pr1d_mb,prbght,prbgsh,prbguv,prbgww
      .         ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .         ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
+       
+             write(6,*)
+             write(6,*)' compute tpvi range within LAPS box'
+             do k = 1,nz_laps
+                 write(6,*)' tpvi range at level ',k
+     1                     ,minval(tpvi(ixmin:ixmax,iymin:iymax,k))
+     1                     ,maxval(tpvi(ixmin:ixmax,iymin:iymax,k))   
+             enddo ! k
+       
+             write(6,*)
+             write(6,*)' compute htvi range within LAPS box'
+             do k = 1,nz_laps
+                 write(6,*)' htvi range at level ',k
+     1                     ,minval(htvi(ixmin:ixmax,iymin:iymax,k))
+     1                     ,maxval(htvi(ixmin:ixmax,iymin:iymax,k))   
+             enddo ! k
 
            elseif(vertical_grid .eq. 'SIGMA_P')then
 !            LAPS pressure should be on model grid (prvi grid). We want to 
@@ -1117,9 +1156,21 @@ c
 !          Obtain height and pressure fields as needed on LAPS grid
            if(vertical_grid .ne. 'SIGMA_HT')then ! PRESSURE or SIGMA_P
               itstatus(2)=ishow_timer()
-              print*,'use hinterp_field for HT ',cmodel(1:ic)
+              print*,'use hinterp_field_3d for HT ',cmodel(1:ic)
               call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,       
      .                           grx,gry,htvi,ht,wrapped)
+
+              write(6,*)
+              do k = 1,nz_laps
+                 write(6,*)' ht range at level ',k,minval(ht(:,:,k))       
+     1                                            ,maxval(ht(:,:,k))   
+              enddo ! k
+
+              if(minval(ht) .eq. missingflag .OR.
+     1           maxval(ht) .eq. missingflag      )then
+                 write(6,*)
+     1               ' ERROR: missing value in interpolated ht field'
+              endif
 
               if(vertical_grid .eq. 'SIGMA_P')then ! generate 3D P     
                  call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,1,
@@ -1143,7 +1194,7 @@ c
      .                           grx,gry,prvi*100.,prgd_pa,wrapped)
 
            endif
-           
+
            if(.not. l_bilinear) then                                  
               call hinterp_field_3d(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .                           grx,gry,uwvi,uw,wrapped)
