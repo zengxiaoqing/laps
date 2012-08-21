@@ -544,7 +544,7 @@ c
             print *, NF_STRERROR(rcode)
             print *,'in NF_GET_VAR (gh): ',cmodel
          else
-            print *,'Missing HT data detected: return'
+            print *,'Missing HT data detected in read_sbn_grids: return'
          endif
          print*
          return
@@ -583,7 +583,7 @@ c
             print *, NF_STRERROR(rcode)
             print *,'in NF_GET_VAR (t): ',cmodel
          else
-            print *,'Missing T data detected: return'
+            print *,'Missing T data detected in read_sbn_grids: return'
          endif
          print*
          return
@@ -618,7 +618,7 @@ c
             print *, NF_STRERROR(rcode)
             print *,'in NF_GET_VAR (rh): ',cmodel
          else
-            print *,'Missing RH data detected: return'
+            print *,'Missing RH data detected in read_sbn_grids: return'
          endif
          print*
          return
@@ -656,7 +656,7 @@ c
             print *, NF_STRERROR(rcode)
             print *,'in NF_GET_VAR (uw): ',cmodel
          else
-            print *,'Missing U data detected: return'
+            print *,'Missing U data detected in read_sbn_grids: return'
          endif
          print*
          return
@@ -697,7 +697,7 @@ c
             print *, NF_STRERROR(rcode)
             print *,'in NF_GET_VAR (vw): ',cmodel
          else
-            print *,'Missing V data detected: return'
+            print *,'Missing V data detected in read_sbn_grids: return'
          endif
          print*
          return
@@ -772,7 +772,7 @@ c
             print *, NF_STRERROR(rcode)
             print *,'in NF_GET_VAR (p): ',cmodel
          endif
-         print *,'Missing sfc p data detected'
+         print *,'Missing sfc p data detected in read_sbn_grids'
          print*,' -> continue without; compute in sfcbkgd'
          lcmpsfcq=.false.
          print*
@@ -794,7 +794,7 @@ c
             else
                print*,'Error status returned from read_netcdf_real'
             endif
-            print *,'Missing emsp data detected'
+            print *,'Missing emsp data detected in read_sbn_grids'
             print*
             return
          endif
@@ -811,7 +811,7 @@ c
             else
                print*,'Error status returned from read_netcdf_real'
             endif
-            print *,'Missing mmsp data detected'
+            print *,'Missing mmsp data detected in read_sbn_grids'
             print*
             return
          endif
@@ -828,7 +828,7 @@ c
             else
                print*,'Error status returned from read_netcdf_real'
             endif
-            print*,'Missing pmsl data detected'
+            print*,'Missing pmsl data detected in read_sbn_grids'
             print*
             return
          endif
