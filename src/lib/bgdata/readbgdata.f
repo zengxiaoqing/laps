@@ -63,9 +63,17 @@ c
       real, intent(out) :: t_at_sfc(nx_bg,ny_bg)
       real, intent(out) :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
 
+c     Local variables for the time being
+      real lmr(nx_bg,ny_bg)
+      real llr(nx_bg,ny_bg)
+      real s8a(nx_bg,ny_bg)
+      real tpw(nx_bg,ny_bg)
+
       real      lon0,lat1,lat2
       real      ssh2
       real      r_missing_data
+     
+      real      argmin,argmax
 
       character*256   bgpath
       character*256   fname_bg
@@ -85,6 +93,7 @@ c
 
 !     Initialize
       htbg_sfc = 0.
+      prbg_sfc = r_missing_data
       tdbg_sfc = r_missing_data
 
       call s_len(cmodel,lencm)
@@ -106,10 +115,12 @@ c domain fua/fsf but we'll try the get_lapsdata stuff first.
 
          if(cmodel(1:lencm).eq.'MODEL_FUA')then
             call read_fuafsf_cdf(fullname
-     +,nx_bg, ny_bg, nzbg_ht
-     +,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg
-     +,uwbg_sfc, vwbg_sfc, tpbg_sfc, shbg_sfc
-     +,prbg_sfc, mslpbg, htbg_sfc, istatus)
+     +                          ,nx_bg, ny_bg, nzbg_ht
+     +                          ,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg       
+     +                          ,uwbg_sfc, vwbg_sfc, tpbg_sfc, shbg_sfc       
+     +                          ,prbg_sfc, mslpbg, htbg_sfc
+     +                          ,lmr, llr, s8a, tpw
+     +                          ,istatus)
             if(istatus.ne.1)then
                print*,'Error returned: read_fuafsf_cdf'
                return
@@ -582,7 +593,13 @@ c
          print *,' ERROR: NaN found in sfc pcpbg array '
       endif
 
-      write(6,*)' prbg_sfc range = ',minval(prbg_sfc),maxval(prbg_sfc)
+      argmin = minval(prbg_sfc)
+      argmax = maxval(prbg_sfc)
+      write(6,*)' prbg_sfc range = ',argmin,argmax
+      if(argmax .lt. 100. .or. argmax .gt. 1e6)then
+          write(6,*)' WARNING: prbg_sfc has questionable range'
+      endif
+
       write(6,*)' tdbg_sfc range = ',minval(tdbg_sfc),maxval(tdbg_sfc)
       write(6,*)' shbg_sfc range = ',minval(shbg_sfc),maxval(shbg_sfc)
       write(6,*)' Returning from read_bgdata'
