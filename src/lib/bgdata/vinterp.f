@@ -57,7 +57,7 @@ c
       real   prilaps,fact1,fact2
       real   datmsg,datmsg1,datmsg2
       integer i,j,k,kk,lencm,istatus,ishow_timer
-      integer kkguess,nguess_eq,nguess_int,noguess
+      integer kkguess,nguess_eq,nguess_int,noguess,nmiss_write,mode
 
       interface
          subroutine vinterp_sub(msngflag
@@ -99,6 +99,10 @@ c individual fields (like sh, u/v and ww).
       nguess_eq = 0
       nguess_int = 0
 
+      nmiss_write = 0
+      htvi = missingflag
+      tpvi = missingflag
+
       do k=1,nz_laps
          kkguess = 1 ! default value
          do j=iymin,iymax ! 1,ny
@@ -109,6 +113,7 @@ c individual fields (like sh, u/v and ww).
 
 c guessed pressure level
                kk=kkguess
+               mode = 0 
 
 c analysis pressure of level equals bg pressure of guessed level
                if (prlaps(ip,jp,k) .eq. prbght(i,j,kk)) then
@@ -121,6 +126,7 @@ c analysis pressure of level equals bg pressure of guessed level
                      tpvi(i,j,k)=missingflag
                   endif
                   nguess_eq = nguess_eq + 1
+                  mode = 1
                   goto 10
 
 c analysis pressure of level is inbetween bg pressures of guessed levels kk and kk+1
@@ -146,6 +152,7 @@ c analysis pressure of level is inbetween bg pressures of guessed levels kk and 
                      tpvi(i,j,k)=missingflag
                   endif
                   nguess_int = nguess_int + 1
+                  mode = 2
                   goto 10
 
                endif
@@ -169,6 +176,7 @@ c analysis pressure level is below lowest bg pressure level
                      htvi(i,j,k)=missingflag
                      tpvi(i,j,k)=missingflag
                   endif
+                  mode = 3
                   goto 10
 
 c analysis pressure level is above highest bg pressure level 
@@ -185,6 +193,7 @@ c analysis pressure level is above highest bg pressure level
                      htvi(i,j,k)=missingflag
                      tpvi(i,j,k)=missingflag
                   endif
+                  mode = 4
                   goto 10
 
                endif
@@ -201,6 +210,7 @@ c analysis pressure of level equals bg pressure of level
                         tpvi(i,j,k)=missingflag
                      endif
                      kkguess=kk
+                     mode = 5
                      goto 10
 
 c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
@@ -226,13 +236,20 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
                         tpvi(i,j,k)=missingflag
                      endif
                      kkguess=kk
+                     mode = 6
                      goto 10
                   endif
                enddo ! kk
  10            continue
-            enddo
-         enddo
-      enddo
+               if(htvi(i,j,k) .eq. missingflag)then
+                  if(nmiss_write .le. 50)then
+                     write(6,*)' WARNING: missing htvi ',i,j,k,mode
+                     nmiss_write = nmiss_write + 1
+                  endif
+               endif
+            enddo ! i
+         enddo ! j
+      enddo ! k
 
       write(6,*)' nguess_eq/nguess_int/noguess = ',nguess_eq,nguess_int
      1                                            ,noguess
