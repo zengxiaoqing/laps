@@ -2,7 +2,7 @@
 
 # First argument is $LAPS_DATA_ROOT
 
-# Second argument is number of forecast time steps
+# Second argument is number of forecast time steps (excluding analysis)
 
 # Third argument is domain name
 
@@ -52,30 +52,36 @@ setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/SWI/pt/$MODELTIME.stats
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt
 
 # Setup True Type fonts and related environment variables
+setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
+
 if (-d /usr/X11R6/lib/X11/fonts/truetype) then
     setenv GDFONTPATH /usr/X11R6/lib/X11/fonts/truetype
 else if (-d /usr/share/fonts/bitstream-vera) then
     setenv GDFONTPATH /usr/share/fonts/bitstream-vera  
+else if (-d /usr/share/fonts/dejavu) then
+    setenv GDFONTPATH /usr/share/fonts/dejavu           
+    setenv GNUPLOT_DEFAULT_GDFONT DejaVuSans-Bold            
 else
     setenv GDFONTPATH /dev/null
 endif
-#setenv GDFONTPATH /dev/null
 
-setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
 setenv FONTFILE $GDFONTPATH/$GNUPLOT_DEFAULT_GDFONT.ttf
 
 if (-e $FONTFILE) then
     echo "GNUPLOT FONT is $FONTFILE"                                    
-#   setenv TERM_FONT 'enhanced font "VeraBd, 12"'
+#   setenv TERM_FONT 'enhanced font "'$GNUPLOT_DEFAULT_GDFONT', 12"'
     setenv TERM_FONT 'enhanced'
-    setenv DEFAULT_FONT 'font "VeraBd,12"'
-    setenv TITLE_FONT 'font "VeraBd,20"'
-    setenv MEMBER_FONT 'font "VeraBd,16"'
-#   setenv KEY_FONT 'font "VeraBd,8"'
-    setenv KEY_WIDTH -19 
+    setenv DEFAULT_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',12"'
+    setenv TITLE_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',20"'
+    setenv MEMBER_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',16"'
+    if (-d /w3/lapb) then
+        setenv KEY_WIDTH -19.0
+    else
+        setenv KEY_WIDTH -3 
+    endif
     setenv KEY_HEIGHT 0.3
     setenv KEY_SPACING 0.7
-    setenv TH "{/VeraBd=8 "
+    setenv TH "{/$GNUPLOT_DEFAULT_GDFONT=8 "
     setenv TF \}
 else
     echo "FONTFILE $FONTFILE does not exist"
@@ -111,11 +117,11 @@ echo "VAR = $VAR"
 echo "FILE = $FILE"
 ls -l $FILE
 
-@ NLINE = $NLINE + 1
+@ NLINE = $NLINE + 2
 
 # obtain xrange times from the data file
-setenv STARTTIME1 `head -1       $FILE           | cut -c2-12` ; echo $STARTTIME1
-setenv STARTTIME2 `head -1       $FILE           | cut -c14-24`; echo $STARTTIME2
+setenv STARTTIME1 `head -2      $FILE | tail -1 | cut -c2-12` ; echo $STARTTIME1
+setenv STARTTIME2 `head -2      $FILE | tail -1 | cut -c14-24`; echo $STARTTIME2
 setenv STOPTIME1  `head -$NLINE $FILE | tail -1 | cut -c1-12` ; echo $STOPTIME1
 setenv STOPTIME2  `head -$NLINE $FILE | tail -1 | cut -c14-24`; echo $STOPTIME2
 
@@ -154,6 +160,7 @@ else
     echo 'set title "GHI Observed vs Forecast '$DURATION'('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
 endif
 #echo 'set key left box'                                                  >> $GNUPLOTFILE
+echo 'set key ins'                                                        >> $GNUPLOTFILE
 echo 'set key box'                                                        >> $GNUPLOTFILE
 echo 'set key spacing' $KEY_SPACING                                                                    >> $GNUPLOTFILE
 echo 'set key height' $KEY_HEIGHT                                                                      >> $GNUPLOTFILE
