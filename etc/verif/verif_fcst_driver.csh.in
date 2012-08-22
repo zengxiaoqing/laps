@@ -29,7 +29,8 @@ if ($2 == archive) then
 
     perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3                      > $LAPS_DATA_ROOT/time/modelvtime.dat 
     perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3       -f ascii_time >> $LAPS_DATA_ROOT/time/modelvtime.dat 
-else
+
+else # real-time
 #   perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3                > $LAPS_DATA_ROOT/time/modeltime.dat 
 #   perl $LAPSINSTALLROOT/etc/sched_sys.pl -c $2 -d $3 -f ascii_time >> $LAPS_DATA_ROOT/time/modeltime.dat 
 
@@ -42,6 +43,13 @@ else
           setenv MODELVTIME `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 
     date -u
+
+    if (-e /w3/lapb && -e $LAPS_DATA_ROOT/time/copyremotetime.dat) then # running at GSD on a mirrored data directory
+        echo "Make data dirs since this is running on a mirrored set of data"
+        echo "perl $LAPSINSTALLROOT/etc/makedatadirs.pl --installroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPSINSTALLROOT --system_type=laps"
+              perl $LAPSINSTALLROOT/etc/makedatadirs.pl --installroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPSINSTALLROOT --system_type=laps
+    endif
+
 endif
 
 # Radar verification........................................................................................
