@@ -42,30 +42,36 @@ setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/$REFLECTIVITY/$MODELTIME.
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt                                   
 
 # Setup True Type fonts and related environment variables
+setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
+
 if (-d /usr/X11R6/lib/X11/fonts/truetype) then
     setenv GDFONTPATH /usr/X11R6/lib/X11/fonts/truetype
 else if (-d /usr/share/fonts/bitstream-vera) then
     setenv GDFONTPATH /usr/share/fonts/bitstream-vera
+else if (-d /usr/share/fonts/dejavu) then
+    setenv GDFONTPATH /usr/share/fonts/dejavu           
+    setenv GNUPLOT_DEFAULT_GDFONT DejaVuSans-Bold            
 else
     setenv GDFONTPATH /dev/null
 endif
-#setenv GDFONTPATH /dev/null
 
-setenv GNUPLOT_DEFAULT_GDFONT VeraBd
 setenv FONTFILE $GDFONTPATH/$GNUPLOT_DEFAULT_GDFONT.ttf
 
 if (-e $FONTFILE) then
-    echo "GNUPLOT FONT is $FONTFILE"
-#   setenv TERM_FONT 'enhanced font "VeraBd, 12"'
+    echo "GNUPLOT FONT is $FONTFILE"                                    
+#   setenv TERM_FONT 'enhanced font "'$GNUPLOT_DEFAULT_GDFONT', 12"'
     setenv TERM_FONT 'enhanced'
-    setenv DEFAULT_FONT 'font "VeraBd,12"'
-    setenv TITLE_FONT 'font "VeraBd,20"'
-    setenv MEMBER_FONT 'font "VeraBd,16"'
-#   setenv KEY_FONT 'font "VeraBd,8"'
-    setenv KEY_WIDTH 0   
+    setenv DEFAULT_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',12"'
+    setenv TITLE_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',20"'
+    setenv MEMBER_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',16"'
+    if (-d /w3/lapb) then
+        setenv KEY_WIDTH -16.0
+    else
+        setenv KEY_WIDTH 0.0
+    endif
     setenv KEY_HEIGHT 0.3
     setenv KEY_SPACING 0.7
-    setenv TH "{/VeraBd=8 "
+    setenv TH "{/$GNUPLOT_DEFAULT_GDFONT=8 "
     setenv TF \}
 else
     echo "FONTFILE $FONTFILE does not exist"
@@ -166,6 +172,7 @@ else if ($SUBDIR == "LMR") then
     echo 'set ylabel "Composite Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
     echo 'set title "Composite Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
 endif
+echo 'set key ins'                                                       >> $GNUPLOTFILE
 echo 'set key left box'                                                  >> $GNUPLOTFILE
 echo 'set key spacing' $KEY_SPACING                                      >> $GNUPLOTFILE
 echo 'set key height' $KEY_HEIGHT                                        >> $GNUPLOTFILE
