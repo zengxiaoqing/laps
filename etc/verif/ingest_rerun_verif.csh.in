@@ -14,12 +14,22 @@ foreach EXE (obs_driver)
 
   setenv STEP 0
   while ($STEP <= $N_FCST_TIMES)
+    echo " "
     echo "STEP = $STEP"
                                         
 #   Note that this is hardwired for hourly forecast intervals at present
     @ FCST_SEC = $STEP * $MODEL_FCST_INTVL
                         perl $LAPSINSTALLROOT/etc/timeconv.pl -a $MODELVTIME -t $FCST_SEC
     setenv LAPS_A9TIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $MODELVTIME -t $FCST_SEC`
+
+    if (-e /w3/lapb) then # FAB machine, so we can go back to the short path to /public
+        if ($EXE == "obs_driver") then
+            @prefix@/util/fix_net  /scratch2/portfolios/BMC/public /public $LAPS_DATA_ROOT/static/obs_driver.nl
+            echo "convert long /public path to short path"
+            ls -l $LAPS_DATA_ROOT/static/obs_driver.nl
+        endif
+    endif
+
     echo "running $LAPS_A9TIME $BINARY"
     $LAPSINSTALLROOT/bin/$BINARY > $LAPS_DATA_ROOT/log/$EXE.log.rerun_$LAPS_A9TIME
     ls -l $LAPS_DATA_ROOT/lapsprd/lso/$LAPS_A9TIME.lso
