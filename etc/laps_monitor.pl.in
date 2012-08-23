@@ -10,13 +10,11 @@
 
 select STDOUT; $|=1;
 $ENV{PATH}="";
-my(%lapsprds)=( "AWIPS"      => '/data/fxa/laps/lapsprd',
-                "FSLD"       => '/data/fxa/sdd/laps/lapsprd',
-  	        "WFOJ"       => '/data/lapb/projects/wfoj/data/lapsprd');
+my(%lapsprds)=( "AWIPS2"      => '/data/fxa/laps/lapsprd');
 
 # This defines the order of the sources in the table
 #
-my(@order) = qw(AWIPS FSLD WFOJ);
+my(@order) = qw(AWIPS2);
 
 my(%min_age,$min_age,%max_age,$max_age,%files_per_hour,$fph,$model,%green,%yellow,%red,$dir,@filelist,$file,$age,$image,$time,$i);
 
@@ -59,7 +57,7 @@ for $radar ("01".."09") {
 #
 
 my(@lapsDirs) = (lga, lgb, 
-                 "lvd/goes09", "lvd/goes10", "lvd/goes12", "lvd/gmssat", ctp, 
+                 "lvd/goes10", "lvd/goes11", "lvd/goes12", "lvd/gmssat", ctp, 
                  @rdrraw, @rdrvrc, vrc, 
                  pro, lso, lsq, snd, cdw, pin,
                  @vxx, @dxx,
@@ -70,7 +68,7 @@ my(@lapsDirs) = (lga, lgb,
                  lcp, lwc, lil, lct, lmd, lmt, lco, lrp, lty, lst, 
                  lmr, liw, lhe, lfr,
                  l1s, lm1, lm2,
-                 "balance/lt1", "balance/lw3", "balance/lh3", "balance/lq3",
+                 "balance/lt1", "balance/lw3", "balance/lh3", "balance/lq3", "balance/lsx",
                  "lapsprep/mm5", "lapsprep/wrf", "fua/mm5", "fsf/mm5");
 
 
