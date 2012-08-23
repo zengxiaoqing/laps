@@ -89,7 +89,7 @@
     ! Arrays for data
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , w, t , rh , ht, &   
                                              lwc,rai,sno,pic,ice, sh, mr, vv, & 
-                                             virtual_t, rho,lcp
+                                             virtual_t, rho,lcp, mvd
     REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
     REAL , PARAMETER                       :: tiny = 1.0e-30
@@ -97,6 +97,7 @@
     ! Miscellaneous local variables
                                         
     INTEGER :: out_loop, loop , var_loop , i, j, k, kbot,istatus, len_dir
+    INTEGER :: moment_uphys
     LOGICAL :: file_present, in_prebal_list
     REAL    :: rhmod, lwcmod, shmod, icemod
     REAL    :: rhadj
@@ -155,6 +156,8 @@
     !  Get the namelist items (from the setup module).
 
     CALL read_namelist
+
+    moment_uphys = 1
 
     ! Get the static information (projection, dimensions,etc.)
  
@@ -301,6 +304,9 @@
         ALLOCATE ( sno ( x , y , z3 ) ) 
         ALLOCATE ( pic ( x , y , z3 ) ) 
         ALLOCATE ( ice ( x , y , z3 ) )
+        if(moment_uphys .eq. 2)then
+            ALLOCATE ( mvd ( x , y , z3 ) )
+        endif
         ALLOCATE ( snocov ( x , y ) ) 
         ALLOCATE ( lcp ( x , y , z3 ) ) 
         ! The following variables are only used
@@ -475,6 +481,8 @@
             CALL NCVGT ( cdfid , vid , start , count , ice , rcode ) 
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'pic' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , pic , rcode ) 
+          ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'mvd' .AND. moment_uphys .eq. 2) THEN
+            CALL NCVGT ( cdfid , vid , start , count , mvd , rcode ) 
           END IF
 
         END DO var_lwc1    
@@ -504,14 +512,18 @@
     ! Compute mixing ratio from spec hum.
     ! Fill missing values with sfc value.
 
+!   Assume pressure array goes from lower pressures to higher ones
     k300 = 0
     do k= 1,z3
-      if (p(k) .eq. 300.) k300 = k
+      if (p(k) .le. 300.) k300 = k
     enddo
     if (k300 .eq. 0) THEN
       print *, "Could not find k300!"
       stop
+    else
+      print *, "k300,p(k300) = ",k300,p(k300)
     endif
+
     do k=1,z3
     do j=1,y
     do i=1,x
