@@ -87,11 +87,11 @@ find ./lapsprd/www/anal2d/recent    -type l -name "*$HHMM.gif"       -print   >>
 find ./lapsprd/www/anal2d/recent    -type l -name "gmeta*latest.gif" -print   >> $LAPSTAR_TXT
 find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
 
-# Lapsprd files (except LGA, LGB, FUA, FSF)
+# Lapsprd files (except LGA, LGB, FUA, FSF), high and low bandwidth options
 if test "$FILES" -ge 2; then
     find ./lapsprd -type f -name "$YYDDDHHMM.*" -print | grep -v gr2 | grep -v www | grep -v "\.v" | grep -v "\.d"  >> $LAPSTAR_TXT
 else
-    for ext in lsx lmr lcv; do
+    for ext in lsx lmr lcv lh4; do
 	echo "./lapsprd/$ext/$YYDDDHHMM.$ext"  >> $LAPSTAR_TXT     
     done
 fi
