@@ -28,6 +28,7 @@
          2.2.3 ..................  Ingest Software changes
          2.2.4 ..................  Running make
          2.2.5 ..................  Geography databases
+         2.2.5.1 .....................  High Resolution Terrain (sub-kilometer)
          2.2.6 ..................  Localizing for single or multiple data domains
          2.2.6.1 .....................  Localization Method 1
          2.2.6.2 .....................  Localization Method 2
@@ -800,6 +801,24 @@
           should still see the localization run to completion (ie.,
           static.nest7grid is generated).
 
+         --- 2.2.5.1 High Resolution Terrain (sub-kilometer) ---
+
+     High resolution terrain can be imported (experimentally) into LAPS via
+     two methods, the WRF Wizard (see section 2.2.7), and Topograbber - see
+     http://laps.noaa.gov/topograbber/ 
+
+     The WRF Wizard can be used to generate a GEOGRID file on the same grid as
+     the LAPS analysis. The terrain from this file can be imported during the
+     LAPS localization by setting the 'nest7grid.parms' namelist path parameter
+     'path_to_topt30s' to contain the string 'wps' in the directory name.
+
+     Also, Topograbber is under development and this might be used with some
+     further work. The tiles produced may need some modifications to the 
+     'gridgen_model.exe' program so they can be read in. A second way to use 
+     Topograbber with LAPS is to generate a WPS GEOGRID terrain file, and 
+     then read that in during the LAPS/STMAS localization process (see above
+     paragraph). 
+
          --- 2.2.6 Localizing for single or multiple data domains ---
 
      Runtime parameter changes may be needed to tailor LAPS for your
@@ -1498,6 +1517,13 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            moisture. For other formats you may wish to supply your own routine 
            to convert your raw data into the 'snd' format.
 
+     Cloud Drift Winds (cdw):
+           We are ingesting the ASCII satellite cloud-drift wind files
+           for use in the wind analysis. These come from NESDIS (via NIMBUS)
+           as well as from CWB and AFWA. We can also utilize netCDF files from
+           MADIS. Both NESDIS and MADIS files are included in our sample data
+           set.
+
                       ----   2.3.8  GPS ---
 
      GPS:
@@ -1539,12 +1565,6 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      Radiometric Profiler (snd):
            We have an interface to radiometric profilers (in netCDF via NIMBUS)
            that can be used for the temperature and humidity analyses.
-
-     Cloud Drift Winds (cdw):
-           We are ingesting the ASCII satellite cloud-drift wind files
-           for use in the wind analysis. These come from NESDIS (via NIMBUS)
-           as well as from CWB and AFWA. We can also utilize netCDF files from
-           MADIS.
 
      Lightning Data:
            Although the LAPS repository doesn't yet have any lightning data
@@ -3036,7 +3056,7 @@ Process: (ingest_cloud_drift.exe) LAPS Cloud Drift Winds
 Author: Steve Albers (Steve.Albers AT noaa.gov)
 
 <pre>
-Inputs:
+Inputs (supported cloud drift wind formats):
 	GOES cloud drift winds in NESDIS (ASCII) format
         MADIS netCDF format
         AFWA & CWB formats are also allowed.
