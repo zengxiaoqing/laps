@@ -230,9 +230,9 @@ if(defined $opt_s){ # "surface only"
                   obs_convert.exe
                   mosaic_radar.x
                   stmas_mg.x
-                  STMAS3D.exe
+                  temp.exe
                   lvd_sat_ingest.exe
-                  cloud.exe deriv.exe accum.exe lsm5.exe
+                  cloud.exe STMAS3D.exe deriv.exe accum.exe lsm5.exe
                   qbalpe.exe lapsprep.exe laps2grib.exe);
     $lga_proc = "obs_convert.exe";
 
