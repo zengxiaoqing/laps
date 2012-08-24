@@ -81,6 +81,11 @@ SUBROUTINE OUTPTLAPS
 !ADDED BY SHUYUAN 20100722 FOR REFLECTIVITY
   REAL          :: REF_OUT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
   integer       :: istatus  ,N_3D_FIELDS
+!Yuanfu test of cloud ice and liquid for temperature:
+character :: ext*31,unit*10,comment*30 
+integer   :: i4_tol,i4_ret
+i4_tol=900
+i4_ret=0
 ! --------------------
   
   DO I=1,FCSTGRD(1)
@@ -246,6 +251,17 @@ GOTO 111
   ENDDO
 111 continue ! skip SH adjustment according to q_r
 
+  ! Adjust SH by bounds:
+goto 222
+  do k=1,fcstgrd(3)
+  do j=1,fcstgrd(2)
+  do i=1,fcstgrd(1)
+    bk0(i,j,k,iframe,5) = max(bk0(i,j,k,iframe,5),bk0(i,j,k,iframe,6))
+  enddo
+  enddo
+  enddo
+222 continue
+
   ! CONVERTED FROM P, Q T: NOTE: Q is in g/kg
   DO K=1,FCSTGRD(3)
     DO J=1,FCSTGRD(2)
@@ -294,14 +310,41 @@ GOTO 111
     ENDDO
   ENDDO
 11 CONTINUE
+  ! Temperature adjustment according to cloud ice and liquid: Test by Yuanfu
+  ext = "lwc"
+  BK0(:,:,:,IFRAME,NUMSTAT+1) = 0.0
+  BK0(:,:,:,IFRAME,NUMSTAT+2) = 0.0
+  CALL GET_LAPS_3DGRID(LAPSI4T,i4_tol,i4_ret, &
+               FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),ext,"lwc", &
+               unit,comment,BK0(1,1,1,IFRAME,NUMSTAT+1),ST)
+  CALL GET_LAPS_3DGRID(LAPSI4T,i4_tol,i4_ret, &
+               FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),ext,"ice", &
+               unit,comment,BK0(1,1,1,IFRAME,NUMSTAT+2),ST)
+  print*,'Max cloud liquid: ',maxval(BK0(:,:,:,IFRAME,NUMSTAT+1))
+  print*,'Max cloud ice   : ',maxval(BK0(:,:,:,IFRAME,NUMSTAT+2))
+goto 333
+  DO K=1,FCSTGRD(3)
+    DO J=1,FCSTGRD(2)
+      DO I=1,FCSTGRD(1)
+        ! Adjusted temperature based on cloud liquid and ice::
+        IF (BK0(I,J,K,IFRAME,NUMSTAT+2) .GT. 0.0) THEN
+          BK0(I,J,K,IFRAME,4) = BK0(I,J,K,IFRAME,4)-2.0
+        ELSEIF (BK0(I,J,K,IFRAME,NUMSTAT+1) .GT. 0.0) THEN
+          BK0(I,J,K,IFRAME,4) = BK0(I,J,K,IFRAME,4)-1.0
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDDO
+333 continue
  
   ! TOTAL PRECIPITABLE WATER:
   DO J=1,FCSTGRD(2)
   DO I=1,FCSTGRD(1)
     TPW(I,J) = 0.0
     DO K=1,FCSTGRD(3)-1
-      TPW(I,J) = TPW(I,J) + 0.5*(BK0(I,J,K,IFRAME,5)+BK0(I,J,K+1,IFRAME,5))* &
-                  (LV(K)-LV(K+1))/100.0 ! PRESSURE IN MB
+      IF (BK0(I,J,K,IFRAME,3) .GE. 0.0) &
+        TPW(I,J) = TPW(I,J) + 0.5*(BK0(I,J,K,IFRAME,5)+BK0(I,J,K+1,IFRAME,5))* &
+                   (LV(K)-LV(K+1))/100.0 ! PRESSURE IN MB
     ENDDO
     ! FROM G/KG TO CM:
     TPW(I,J) = TPW(I,J)/100.0/9.8 ! FOLLOWING DAN'S INT_IPW.F ROUTINE
