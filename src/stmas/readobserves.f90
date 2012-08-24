@@ -127,16 +127,12 @@ SUBROUTINE RDLAPSRDR
   INTEGER      :: IOFFSET(MAX_RADARS),JOFFSET(MAX_RADARS) ! OFFSET FOR THE NEW get_multiradar_vel
   INTEGER      :: I,J,K,L,M,IX0,IY0,IX1,IY1	! GRID INDICES, NUMBER OF RADAR, TIME FRAME
   LOGICAL      :: CLUTTR                ! .TRUE. -- REMOVE 3D RADAR CLUTTER
-  REAL         :: RADVEL(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),MAX_RADARS)
+  REAL         :: RADVEL(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),MAX(3,MAX_RADARS))  ! 3 To allow cloud liquid read in
                   ! RADAR 4D VELOCITY GRID
-  REAL         :: RADNQY(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),MAX_RADARS)
+  REAL         :: RADNQY(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),MAX(3,MAX_RADARS))  ! 3 To allow cloud ice read in
                   ! RADAR 4D NYQUIST VELOCITY
-  REAL         :: UVZERO(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2)
+  REAL         :: UVZERO(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),3)    ! INCREASED TO 3 SHARING WITH CLOUD READ
                   ! ZERO UV GRIDS USED FOR CALLING LAPS QC_RADAR_OBS
-  REAL         :: UVBKGD(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2)
-                  ! UV BACKGROUND GRIDS USED FOR CALLING LAPS QC_RADAR_OBS
-  REAL         :: UV4DML(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),-1:1,2)
-                  ! UV BACKGROUND GRIDS USED FOR CALLING LAPS QC_RADAR_OBS
   REAL         :: VOLNQY(MAX_RADARS)            ! VOLUME NYQUIST VELOCITY
   REAL         :: RADLAT(MAX_RADARS),RADLON(MAX_RADARS),RADHGT(MAX_RADARS)
   REAL         :: UVGRID(2)
@@ -158,7 +154,6 @@ SUBROUTINE RDLAPSRDR
   !====== END MODIFICATION OF ZHONGJIE HE
 !jhui
   INTEGER :: TT,TT1,INC1,nn
-  REAL    :: RADREF(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),5)
   REAL    :: REFSCL
   REAL    :: lat(FCSTGRD(1),FCSTGRD(2))
   REAL    :: lon(FCSTGRD(1),FCSTGRD(2))
@@ -168,7 +163,7 @@ SUBROUTINE RDLAPSRDR
   INTEGER :: istatus, i4_tol,i4_ret,iqc_2dref
   CHARACTER :: units*10,comment*125,radar_name*4,iext*31,c_filespec*255
   REAL :: heights_3d(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
-  REAL :: radar_ref_3d(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+  REAL :: radar_ref_3d(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4))
   REAL :: closest_radar(FCSTGRD(1),FCSTGRD(2))
   REAL ::  rlat_radar(5), rlon_radar(5),rheight_radar(5)
   INTEGER :: n_ref_grids,n_2dref,n_3dref
@@ -180,16 +175,15 @@ SUBROUTINE RDLAPSRDR
   character*40 c_vars_req
   character*180 c_values_req
   INTEGER :: i4time_radar
-  REAL     :: tempref,make_ssh
+  REAL     :: tempref,make_ssh,make_td,tw,make_rh
 
 ! add the following definition since build on 5/23/2011 failed. HJ 5/23/2011
   integer nx_r, ny_r 
 
-
-
-
-
   INCLUDE 'main_sub.inc'
+  INCLUDE 'laps_cloud.inc'
+  REAL :: CLD_PRS(KCLOUD)
+  REAL :: CLOUD3D(FCSTGRD(1),FCSTGRD(2),KCLOUD)
 
   IF(IFPCDNT.NE.1) THEN              !   BY ZHONGJIEHE
     PRINT*, 'ERROR! LAPS IS PRESSURE COORDINATE! PLEASE SET IFPCDNT TO 1!'
@@ -312,16 +306,17 @@ SUBROUTINE RDLAPSRDR
   REFSCL =0.0  
   iext="vrz"
   BK0(:,:,:,:,NUMSTAT+1) = 0.0
-  DO L=1,FCSTGRD(4)  !for L   time          
+  radar_ref_3d = 0.0
+  ! Get radar at current and previous time:
+  DO L=1,2  !for L   time          
      call get_filespec(iext(1:3),2,c_filespec,istatus)
-     call get_file_time(c_filespec,LAPSI4T,i4time_radar)
+     call get_file_time(c_filespec,LAPSI4T+(L-2)*ICYCLE,i4time_radar)
 
-    ! LAPSI4T=ITIME2(1)+(L-1)*INC   !added by shuyuan 
-     call read_multiradar_3dref(ITIME2(1)+(L-1)*INC,i4_tol,i4_ret,&!I
+     call read_multiradar_3dref(LAPSI4T+(L-2)*ICYCLE,i4_tol,i4_ret,&!I
                    .true.,ref_base,&                              ! I
                    FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),iext, &   ! I 
                    lat,lon,topo,.false.,.false., heights_3d, &  ! I
-                   radar_ref_3d, &                                      ! O
+                   radar_ref_3d(1,1,1,L), &                                      ! O
                    rlat_radar,rlon_radar,rheight_radar,radar_name, &  ! O
                    iqc_2dref,closest_radar, &                          ! O
                    n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a, &  ! O
@@ -329,15 +324,13 @@ SUBROUTINE RDLAPSRDR
      DO K = 1, FCSTGRD(3)
       DO J = 1, FCSTGRD(2)
        DO I = 1, FCSTGRD(1) 
-       RADREF(I,J,K,L) =0.
-       IF(radar_ref_3d(I,J,K) .GT. 5. .AND. radar_ref_3d(I,J,K) .LT.100) THEN
+       IF(radar_ref_3d(I,J,K,L) .GT. 5. .AND. radar_ref_3d(I,J,K,L) .LT.100) THEN
             ! modified shuyuan 20100719
                         
-            tempref=(radar_ref_3d(I,J,K)-43.1)/17.5
+            tempref=(radar_ref_3d(I,J,K,L)-43.1)/17.5
             tempref=(10.**tempref)       !g/m3
-            RADREF(I,J,K,L) =tempref   
              ! shuyuan 20100719
-            REFSCL = REFSCL + RADREF(I,J,K,L)**2             
+            REFSCL = REFSCL + tempref**2             
                  
             ! CHECK IF RAIN AND SNOW IS ANALYZED:
             IF (NUMSTAT .LE. 5) GOTO 555 
@@ -347,7 +340,7 @@ SUBROUTINE RDLAPSRDR
             OP(3) = PRSLVL(K)          ! IN PASCAL
 !           OP(4) = RADTIM(L)-ITIME2(1)    ! ACTUAL RADAR TIME
             OP(4) = T00(L)
-            OB= RADREF(I,J,K,L)         
+            OB= tempref         
             OE=0.01  ! shuyuan   test 0.1 0.01 1 
             SID(1:3) = "vrz"
             CALL HANDLEOBS_SIGMA(OP,OB,OE,NUMSTAT+3,NALLOBS,IP,AZ,EA,SID) 
@@ -360,25 +353,6 @@ SUBROUTINE RDLAPSRDR
             !OBP(2,NST(HUMIDITY),HUMIDITY) = J-1
             !OBP(3,NST(HUMIDITY),HUMIDITY) = K-1
             !OBP(4,NST(HUMIDITY),HUMIDITY) = L-1
-            ! ASSUME 75% satured RH where reflectivity present as SH lower bounds:
-            IF (BK0(I,J,K,L,TEMPRTUR) .GT. 273.15) THEN
-              IF (radar_ref_3d(I,J,K) .GT. 45.0) THEN
-                BK0(I,J,K,L,NUMSTAT+1)= &
-                  MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,0.0)
-              ELSE
-                BK0(I,J,K,L,NUMSTAT+1)= &
-                  MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.1+0.9*radar_ref_3d(I,J,K)/45.0,0.0)
-              ENDIF
-            ELSE
-              IF (radar_ref_3d(I,J,K) .GT. 30.0) THEN
-                BK0(I,J,K,L,NUMSTAT+1)= &
-                  MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,0.0)
-              ELSE
-                BK0(I,J,K,L,NUMSTAT+1)= &
-                  MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.2+0.8*radar_ref_3d(I,J,K)/30.0,0.0)
-              ENDIF
-            ENDIF
-   
             !OBS(NST(HUMIDITY),HUMIDITY) = MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.75,-132.0)
             !OBE(NST(HUMIDITY),HUMIDITY) = 1.0
             !NALLOBS = NALLOBS+1
@@ -387,6 +361,48 @@ SUBROUTINE RDLAPSRDR
       ENDDO
      ENDDO
   ENDDO  ! for L
+  ! INTERPOLATION TO THE THREE TIME FRAMES OF STMAS ANALYSIS:
+  radar_ref_3d(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),3) = &
+    1.5*radar_ref_3d(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2)- &
+    0.5*radar_ref_3d(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1)
+  radar_ref_3d(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1) = &
+    0.5*radar_ref_3d(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2)+ &
+    0.5*radar_ref_3d(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1)
+
+  ! Calculate the SH bounds from radar reflectivity:
+  DO L=1,FCSTGRD(4)
+    DO K=1,FCSTGRD(3)
+      DO J=1,FCSTGRD(2)
+        DO I=1,FCSTGRD(1)
+          IF(radar_ref_3d(I,J,K,L) .GT. 5. .AND. radar_ref_3d(I,J,K,L) .LT.100) THEN
+
+          ! ASSUME 75% satured RH where reflectivity present as SH lower bounds:
+          IF (BK0(I,J,K,L,TEMPRTUR) .GT. 273.15) THEN
+            IF (radar_ref_3d(I,J,K,L) .GT. 45.0) THEN
+              BK0(I,J,K,L,NUMSTAT+1)= &
+                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,0.0)
+            ELSE
+              BK0(I,J,K,L,NUMSTAT+1)= &
+                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.1+0.9*radar_ref_3d(I,J,K,L)/45.0,0.0)
+            ENDIF
+          ELSE
+            IF (radar_ref_3d(I,J,K,L) .GT. 30.0) THEN
+              BK0(I,J,K,L,NUMSTAT+1)= &
+                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,1.0,0.0)
+            ELSE
+              BK0(I,J,K,L,NUMSTAT+1)= &
+                MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,0.2+0.8*radar_ref_3d(I,J,K,L)/30.0,0.0)
+            ENDIF
+          ENDIF
+
+          ENDIF
+        ENDDO 
+      ENDDO 
+    ENDDO 
+  ENDDO 
+  PRINT*,'Range of reflectivity derived bound: ', &
+   maxval(BK0(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2,NUMSTAT+1)), &
+   minval(BK0(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2,NUMSTAT+1))
 
   ! Interpolate RADREF to GRDBKGD0 as SH lower bound:
   IF (MAXGRID(3) .NE. FCSTGRD(3) .OR. MAXGRID(4) .NE. FCSTGRD(4)) THEN
@@ -395,25 +411,118 @@ SUBROUTINE RDLAPSRDR
     STOP
   ENDIF
 
-   DO I=1,MAXGRID(1)
-     IX0 = FLOAT(I-1)/FLOAT(MAXGRID(1)-1)*(FCSTGRD(1)-1)+1
-     IX1 = MIN(IX0+1,FCSTGRD(1))
-     DO J=1,MAXGRID(2)
-       IY0 = FLOAT(J-1)/FLOAT(MAXGRID(2)-1)*(FCSTGRD(2)-1)+1
-       IY1 = MIN(IY0+1,FCSTGRD(2))
-       DO K=1,MAXGRID(3)
-         DO L=1,MAXGRID(4)
-           ! Simple shift instead of interpolation:
-           GRDBKGD0(I,J,K,L,NUMSTAT+1) = 0.25*(BK0(IX0,IY0,K,L,NUMSTAT+1)+ &
-             BK0(IX1,IY0,K,L,NUMSTAT+1)+BK0(IX0,IY1,K,L,NUMSTAT+1)+BK0(IX1,IY1,K,L,NUMSTAT+1))
-           GRDBKGD0(I,J,K,L,NUMSTAT+2) = 1000.0 ! UNDEFINED UPPER BOUND
-         ENDDO
-       ENDDO
-     ENDDO
-   ENDDO
-   PRINT*,'Max dBZ over finest grid: ',maxval(GRDBKGD0(:,:,:,:,NUMSTAT+1)), &
-                                       minval(GRDBKGD0(:,:,:,:,NUMSTAT+1))
+  ! READ IN LAPS CLOUD LIQUID AND ICE:
+  iext = "lwc"
+  DO L=1,2
+    CALL GET_LAPS_3DGRID(LAPSI4T+(L-2)*ICYCLE,i4_tol,i4_ret, &
+               FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),iext,iext, &
+               units,comment,RADVEL(1,1,1,L),STTRAD)
+  ENDDO
+  ! INTERPOLATION TO THE THREE TIME FRAMES OF STMAS ANALYSIS:
+  RADVEL(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),3) = &
+    1.5*RADVEL(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2)- &
+    0.5*RADVEL(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1)
+  RADVEL(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1) = &
+    0.5*RADVEL(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2)+ &
+    0.5*RADVEL(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1)
+  PRINT*,'LAPS cloud liquid: ',minval(RADVEL(:,:,:,2))*1000.0,maxval(RADVEL(:,:,:,2))*1000.0
+  DO L=1,2
+    CALL GET_LAPS_3DGRID(LAPSI4T+(L-2)*ICYCLE,i4_tol,i4_ret, &
+               FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),iext,"ice", &
+               units,comment,RADNQY(1,1,1,L),STTRAD)
+  ENDDO
+  ! INTERPOLATION TO THE THREE TIME FRAMES OF STMAS ANALYSIS:
+  RADNQY(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),3) = &
+    1.5*RADNQY(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2)- &
+    0.5*RADNQY(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1)
+  RADNQY(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1) = &
+    0.5*RADNQY(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2)+ &
+    0.5*RADNQY(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1)
+  PRINT*,'LAPS cloud ice: ',minval(RADNQY(:,:,:,2))*1000.0,maxval(RADNQY(:,:,:,2))*1000.0
 
+  ! READ IN LAPS CLOUD ANALYSIS FOR BOUNDS OF SH: USE OF ARRAY UZERO
+  UVZERO = 0.0
+  iext = "lc3"
+  DO L=1,2
+    CALL GET_CLOUDS_3DGRID(LAPSI4T+(L-2)*ICYCLE,J,FCSTGRD(1),FCSTGRD(2), &
+           KCLOUD,iext,CLOUD3D,CLD_HTS,CLD_PRS,I)
+    IF (J .NE. LAPSI4T+(L-2)*ICYCLE) THEN
+      PRINT*,'lc3 time does not match the analysis, skip'
+      cycle
+    ELSE
+      PRINT*,'readobservs: found file -- ',J
+    ENDIF
+
+    DO K=1,FCSTGRD(3)
+      DO M=1,KCLOUD-1
+        IF (PRSLVL(K) .LE. CLD_PRS(M) .AND. (PRSLVL(K) .GE. CLD_PRS(M+1))) THEN
+          XSPACE = (LOG(CLD_PRS(M))-LOG(PRSLVL(K)))/(LOG(CLD_PRS(M))-LOG(CLD_PRS(M+1)))
+          YSPACE = 1.0-XSPACE
+          DO J=1,FCSTGRD(2)
+          DO I=1,FCSTGRD(1)
+            UVZERO(I,J,K,L) = YSPACE*CLOUD3D(I,J,M)+XSPACE*CLOUD3D(I,J,M+1)
+          ENDDO
+          ENDDO
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDDO
+  ! INTERPOLATION TO THE THREE TIME FRAMES OF STMAS ANALYSIS:
+  UVZERO(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),3) = &
+    1.5*UVZERO(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2)- &
+    0.5*UVZERO(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1)
+  UVZERO(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1) = &
+    0.5*UVZERO(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2)+ &
+    0.5*UVZERO(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),1)
+
+  ! CONVERT CLOUD TO SH BOUNDS:
+  DO L=1,3
+    DO K=1,FCSTGRD(3)
+    DO J=1,FCSTGRD(2)
+    DO I=1,FCSTGRD(1)
+      ! XSPACE = 0.0
+      ! IF (UVZERO(I,J,K,L) .GT. 0.1) THEN
+      !   XSPACE = MAKE_SSH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15, &
+      !                     0.8*(UVZERO(I,J,K,L)**0.2),0.0)
+      ! ENDIF
+      ! IF (XSPACE .GT. BK0(I,J,K,L,NUMSTAT+1)) BK0(I,J,K,L,NUMSTAT+1)=XSPACE
+
+      ! Adjust SH bounds based on cloud fraction:
+      IF ( (UVZERO(I,J,K,L) .LT. 0.1) .AND. (radar_ref_3d(I,J,K,L) .GT. 5.0) ) THEN
+        ! XSPACE = MAKE_TD(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15, & ! DEW
+        !                  BK0(I,J,K,L,NUMSTAT+1),0.0)
+        ! YSPACE = TW(BK0(I,J,K,L,TEMPRTUR)-273.15,XSPACE,PRSLVL(K)/100.0) ! WET BULB T
+        ! XSPACE = MAKE_RH(PRSLVL(K)/100.0,BK0(I,J,K,L,TEMPRTUR)-273.15,& ! RH
+        !                  BK0(I,J,K,L,NUMSTAT+1),0.0)
+        BK0(I,J,K,L,NUMSTAT+1) = 0.0 !MAKE_SSH(PRSLVL(K)/100.0,YSPACE,XSPACE,0.0)
+      ENDIF
+    ENDDO
+    ENDDO
+    ENDDO
+  ENDDO
+  PRINT*,'Range of reflectivity and cloud derived bound: ', &
+   maxval(BK0(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2,NUMSTAT+1)), &
+   minval(BK0(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),2,NUMSTAT+1))
+
+  ! ASSIGN REFLECTIVITY DERIVED BOUNDS TO GRDBKGD0:
+  DO I=1,MAXGRID(1)
+    IX0 = FLOAT(I-1)/FLOAT(MAXGRID(1)-1)*(FCSTGRD(1)-1)+1
+    IX1 = MIN(IX0+1,FCSTGRD(1))
+    DO J=1,MAXGRID(2)
+      IY0 = FLOAT(J-1)/FLOAT(MAXGRID(2)-1)*(FCSTGRD(2)-1)+1
+      IY1 = MIN(IY0+1,FCSTGRD(2))
+      DO K=1,MAXGRID(3)
+        DO L=1,MAXGRID(4)
+          ! Simple shift instead of interpolation:
+          GRDBKGD0(I,J,K,L,NUMSTAT+1) = 0.25*(BK0(IX0,IY0,K,L,NUMSTAT+1)+ &
+            BK0(IX1,IY0,K,L,NUMSTAT+1)+BK0(IX0,IY1,K,L,NUMSTAT+1)+BK0(IX1,IY1,K,L,NUMSTAT+1))
+          GRDBKGD0(I,J,K,L,NUMSTAT+2) = 1000.0 !GRDBKGD0(I,J,K,L,NUMSTAT+1) ! TEST UPPER BOUND
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDDO
+  PRINT*,'Max dBZ over finest grid: ',maxval(GRDBKGD0(:,:,:,:,NUMSTAT+1)), &
+                                      minval(GRDBKGD0(:,:,:,:,NUMSTAT+1))
 END SUBROUTINE RDLAPSRDR
 
 
