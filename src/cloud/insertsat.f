@@ -212,6 +212,7 @@ c
         jdelt(3) = -idelt_max
 
         iwrite = 0
+        iwrite_lcl = 0
 
         call filter_2dx_array(cloud_frac_vis_a,r_missing_data,imax,jmax       
      1                       ,cloud_frac_vis_s)              
@@ -557,14 +558,26 @@ c
           IF(l_cloud_present) then ! Insert satellite clouds
 
 !           Set initial satellite cloud base
+!           Use LCL as a constraint when cloud base is just below it     
             thk_lyr = cld_thk(cldtop_m(i,j))
-            if(lcl_2d(i,j) .lt. cldtop_m(i,j))then
-	        htbase_init=max(lcl_2d(i,j),cldtop_m(i,j) - thk_lyr)
-            else 
-                htbase_init=cldtop_m(i,j) - thk_lyr
-            endif
+            buf_lcl = 0.
 
-            htbase = htbase_init
+            if(cldtop_m(i,j) .gt. (lcl_2d(i,j) + thk_lyr) )then
+!               Cloud top and base are above lcl
+                htbase=cldtop_m(i,j) - thk_lyr
+            elseif(cldtop_m(i,j) .gt. (lcl_2d(i,j) + buf_lcl) )then
+!               Cloud top is above lcl with a buffer
+	        htbase=max(lcl_2d(i,j),cldtop_m(i,j) - thk_lyr)
+            else 
+!               Cloud top is near/below lcl - consider relocation later
+                iwrite_lcl = iwrite_lcl + 1
+                if(iwrite_lcl .le. 100)then
+                    write(6,151)i,j,cldtop_m(i,j),lcl_2d(i,j)
+ 151                format(' NOTE: sat cloud top near or below lcl '
+     1                     ,2i6,2f8.1)       
+                endif
+                htbase=cldtop_m(i,j) - thk_lyr
+            endif
 
 !           Initialize lowest SAO cloud base & highest SAO/CO2 top
             ht_sao_base = r_missing_ht
@@ -664,7 +677,7 @@ c
               n_no_sao2 = n_no_sao2 + 1
               mode_sao = 2
               cover=sat_cover
-              htbase_init = ht_sao_base
+              htbase = ht_sao_base
 
               if(tb8_k(i,j) - t_gnd_k(i,j) .lt. -thresh_ir_diff2)then 
                   buffer = 2100.             ! We more likely have a cloud
@@ -731,11 +744,10 @@ c
                                                     ! ceiling (lowest SAO base)
               mode_sao = 4
               cover=sat_cover
-              htbase_init = ht_sao_base
-              htbase = htbase_init
+              htbase = ht_sao_base
               cldtop_old = cldtop_m(i,j)
-              thk_lyr = cld_thk(htbase_init)
-              cldtop_m(i,j) = htbase_init + thk_lyr
+              thk_lyr = cld_thk(htbase)
+              cldtop_m(i,j) = htbase + thk_lyr
 
 !             Find a thinner value for cloud cover consistent with the new
 !             higher cloud top and the known brightness temperature.
@@ -752,7 +764,38 @@ c
                       write(6,*)' Correct_cover: tb8_k < t_cld'
                       thk_lyr = cld_thk(cldtop_m(i,j))
                       write(6,*)cldtop_old,cldtop_m(i,j)
-     1                         ,htbase_init,thk_lyr,cover
+     1                         ,htbase,thk_lyr,cover
+                      write(6,*)(heights_3d(i,j,k),k=1,klaps)
+!                     return
+                  endif
+                  cover = cover_new
+              endif ! .true.
+
+            elseif(cldtop_m(i,j) .lt. lcl(i,j) .AND. .false.)then
+                                                    ! Satellite top below lcl
+              mode_sao = 4
+              cover=sat_cover
+              htbase = lcl(i,j)                     
+              thk_lyr = cld_thk(htbase)
+              cldtop_old = cldtop_m(i,j)
+              cldtop_m(i,j) = htbase + thk_lyr
+
+!             Find a thinner value for cloud cover consistent with the new
+!             higher cloud top and the known brightness temperature.
+!             This works OK if tb8_k is warmer than T at the assumed cloud top
+              if(.true.)then ! Should this depend on co2?
+
+!                 Note that cover is not really used here as an input
+                  call correct_cover(cover,cover_new,cldtop_old
+     1                              ,cldtop_m(i,j)
+     1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
+     1                              ,heights_3d
+     1                              ,imax,jmax,klaps,i,j,istatus)
+                  if(istatus .ne. 1)then
+                      write(6,*)' Correct_cover: tb8_k < t_cld'
+                      thk_lyr = cld_thk(cldtop_m(i,j))
+                      write(6,*)cldtop_old,cldtop_m(i,j)
+     1                         ,htbase,thk_lyr,cover
                       write(6,*)(heights_3d(i,j,k),k=1,klaps)
 !                     return
                   endif
@@ -763,11 +806,11 @@ c
      1             ht_sao_top(i,j) .ne. r_missing_ht .and. .true.)then 
                                                     ! Satellite top below 
                                                     ! ceiling (lowest SAO base)
-              mode_sao = 4
+              mode_sao = 5
               cover=sat_cover
               cldtop_old = cldtop_m(i,j)
               cldtop_m(i,j) = ht_sao_top(i,j)
-              htbase_init = ht_sao_base
+              htbase = ht_sao_base
               thk_lyr = cld_thk(ht_sao_top(i,j))
               htbase = ht_sao_top(i,j) - thk_lyr
 
@@ -786,7 +829,7 @@ c
                       write(6,*)' Correct_cover: tb8_k < t_cld'
                       thk_lyr = cld_thk(cldtop_m(i,j))
                       write(6,*)cldtop_old,cldtop_m(i,j)
-     1                         ,htbase_init,thk_lyr,cover
+     1                         ,htbase,thk_lyr,cover
                       write(6,*)(heights_3d(i,j,k),k=1,klaps)
 !                     return
                   endif
@@ -794,7 +837,7 @@ c
               endif ! .true.
 
             else ! Normal use of satellite data
-              mode_sao = 5
+              mode_sao = 6
               cover=sat_cover
 
               if(cldtop_m(i,j) .eq. 0.           .or. 
@@ -803,9 +846,9 @@ c
      1                     ,i,j,mode_sao     
               endif
 
-              if(htbase_init .eq. 0.           .or. 
-     1           abs(htbase_init) .gt. 100000.      )then
-                  write(6,*)' WARNING: htbase_init = ',htbase_init,i,j     
+              if(htbase .eq. 0.           .or. 
+     1           abs(htbase) .gt. 100000.      )then
+                  write(6,*)' WARNING: htbase = ',htbase,i,j     
               endif
 
 !             Locate SAO cloud base below satellite cloud top, modify
@@ -813,7 +856,7 @@ c
 !             range of satellite layer is used.
               do k=kcld-1,1,-1
 
-                if(       cld_hts(k) .ge. htbase_init
+                if(       cld_hts(k) .ge. htbase
      1             .and.  cld_hts(k) .le. cldtop_m(i,j)      )then
 
                   if(cldcv_sao(i_sao,j_sao,k)   .le. thr_sao_cvr .and.
@@ -847,17 +890,19 @@ c
 303             continue
             endif
             
-            if(htbase .ne. htbase_init)then
-!                write(6,*)' Satellite ceiling reset by SAO',i,j,htbase
-!       1       ,htbase_init,cldtop_m(i,j)
-            endif
-
 !           Test for questionable cloud layer
             if(htbase .ge. cldtop_m(i,j) .and. mode_sao .ne. 3)then       
                 write(6,*)' WARNING: htbase>cldtp = '
      1                   ,htbase,cover,i,j,mode_sao
      1                   ,cldtop_m(i,j),l_no_sao_vis
      1                   ,istat_vis_potl_a(i,j)
+            endif
+
+            if(htbase .lt. lcl_2d(i,j))then
+!               Consider relocating cloud above the lcl
+                write(6,305)i,j,htbase,lcl_2d(i,j),mode_sao
+ 305            format(' WARNING: sat cloud base below lcl '
+     1                ,2i6,2f8.1,i4)       
             endif
 
 !           Test for unreasonable cloud layer
