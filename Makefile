@@ -63,6 +63,7 @@ EXEDIRS = src/accum \
           src/ingest/satellite/sounding \
 	  src/lapsprep \
 	  src/laps2grib \
+	  src/lfmregrid \
 	  src/newlfmp \
           src/wfoprep \
           src/sfc \
