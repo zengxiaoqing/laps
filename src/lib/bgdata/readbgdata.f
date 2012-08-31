@@ -67,6 +67,7 @@ c     Local variables for the time being
       real lmr(nx_bg,ny_bg)
       real llr(nx_bg,ny_bg)
       real s8a(nx_bg,ny_bg)
+      real swi(nx_bg,ny_bg)
       real tpw(nx_bg,ny_bg)
 
       real      lon0,lat1,lat2
@@ -95,6 +96,7 @@ c     Local variables for the time being
       htbg_sfc = 0.
       prbg_sfc = r_missing_data
       tdbg_sfc = r_missing_data
+      shbg_sfc = r_missing_data
 
       call s_len(cmodel,lencm)
 
@@ -117,9 +119,9 @@ c domain fua/fsf but we'll try the get_lapsdata stuff first.
             call read_fuafsf_cdf(fullname
      +                          ,nx_bg, ny_bg, nzbg_ht
      +                          ,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg       
-     +                          ,uwbg_sfc, vwbg_sfc, tpbg_sfc, shbg_sfc       
+     +                          ,uwbg_sfc, vwbg_sfc, tpbg_sfc, tdbg_sfc       
      +                          ,prbg_sfc, mslpbg, htbg_sfc
-     +                          ,lmr, llr, s8a, tpw
+     +                          ,lmr, llr, s8a, swi, tpw
      +                          ,istatus)
             if(istatus.ne.1)then
                print*,'Error returned: read_fuafsf_cdf'
