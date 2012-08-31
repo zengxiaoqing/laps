@@ -16,7 +16,7 @@ main                                                     laps_cloud.f
         insert_co2ctp                                    insert_co2ctp.f
         barnes_r5                                        barnes_r5.f
         qc_clouds_3d                                     laps_cloud_sub.f
-        GET_SAT_DATA (read 3.9 micron)                   get_sat_data.f
+        GET_SAT_DATA (read 11 & 3.9 micron)              get_sat_data.f
             get_laps_2dvar                               lib/laps_io.f
                 get_laps_sat                                 "
                     get_laps_lvd                             "
