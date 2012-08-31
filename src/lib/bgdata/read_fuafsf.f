@@ -1,7 +1,7 @@
       subroutine read_fuafsf_cdf(fullname, x, y, z, 
      +     ht, level, om, sh, t3, u3, v3,
      +     usfc, vsfc, tsfc, dsfc, psfc, mslp, zsfc, 
-     +     lmr, llr, s8a, tpw,
+     +     lmr, llr, s8a, swi, tpw,
      +     istatus)
 C
       implicit none
@@ -33,6 +33,7 @@ C
      +,    lmr( x,  y)
      +,    llr( x,  y)
      +,    s8a( x,  y)
+     +,    swi( x,  y)
      +,    tpw( x,  y)
 
       call get_c8_project(c8_proj,istatus)
@@ -371,6 +372,42 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var lmr'
+        istatus = -1          
+      endif
+
+      write(6,*)' Reading SWI'
+C
+C     Variable        NETCDF Long Name
+C      swi          "LAPS GHI"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'swi',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var swi'
+        istatus = -1          
+      endif
+      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,swi)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var swi'
+        istatus = -1          
+      endif
+
+      write(6,*)' Reading S8A'
+C
+C     Variable        NETCDF Long Name
+C      s8a          "LAPS GHI"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'s8a',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var s8a'
+        istatus = -1          
+      endif
+      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,s8a)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var s8a'
         istatus = -1          
       endif
 
