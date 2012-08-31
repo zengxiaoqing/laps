@@ -136,17 +136,25 @@ if($min_files>0){
         $clean_dirs{$dir} = $verif_time;
     }
 
+#   Set purge time for reflectivity verification directories
     $dir="verif/REF/plot";
     $clean_dirs{$dir} = $verif_time;
+    foreach $dbzdir (@dbzdirs){
+        $dir="verif/REF/plot/$dbzdir";
+        $clean_dirs{$dir} = $verif_time;
+    }
 
     $dir="verif/LMR/plot";
     $clean_dirs{$dir} = $verif_time;
+    foreach $dbzdir (@dbzdirs){
+        $dir="verif/LMR/plot/$dbzdir";
+        $clean_dirs{$dir} = $verif_time;
+    }
 
     $dir="verif/LLR/plot";
     $clean_dirs{$dir} = $verif_time;
-
     foreach $dbzdir (@dbzdirs){
-        $dir="verif/REF/plot/$dbzdir";
+        $dir="verif/LLR/plot/$dbzdir";
         $clean_dirs{$dir} = $verif_time;
     }
 
