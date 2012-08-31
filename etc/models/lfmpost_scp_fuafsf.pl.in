@@ -301,10 +301,15 @@ if (! $opt_S){ # test for skipping remote copy
     my $scp_cmd;
 
     my $remote_copy;
+    my $method = "";
 
     if($opt_c eq "scp"){
       $remote_copy = "scp -o ConnectTimeout=200";    # slower though maybe more reliable
       print "opt_c / remote_copy are $opt_c $remote_copy\n";
+    }elsif($opt_c eq "exchange"){
+      $remote_copy = "@prefix@/etc/copyremote.sh";                                          
+      print "opt_c / remote_copy are $opt_c $remote_copy\n";
+      $method = "exchange";
     }else{
       $remote_copy = "rsync -lptgvvz --timeout=300"; # faster for larger files
       print "opt_c / remote_copy are $opt_c $remote_copy\n";
@@ -314,12 +319,12 @@ if (! $opt_S){ # test for skipping remote copy
 #   $remote_copy = "rsync -lptgvvz --timeout=300";   # faster for larger files
 
     if ($opt_a eq "noSubDir") {
-      $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua";
+      $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua $method";
     }else {
       if ($opt_L) {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/lapsprd/fua/$opt_m-$opt_a";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/lapsprd/fua/$opt_m-$opt_a $method";
       }else {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$opt_m-$opt_a";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$opt_m-$opt_a $method";
       }
     }
 
@@ -340,12 +345,12 @@ if (! $opt_S){ # test for skipping remote copy
     }
 
     if ($opt_a eq "noSubDir") {
-      $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf";
+      $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf $method";
     }else {
       if ($opt_L) {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$opt_m-$opt_a";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$opt_m-$opt_a $method";
       }else {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$opt_m-$opt_a";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$opt_m-$opt_a $method";
       }
     }
 
