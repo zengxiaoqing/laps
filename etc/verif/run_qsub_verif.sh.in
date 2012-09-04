@@ -7,6 +7,7 @@ hhmm=$2            # Runtime needed (e.g. 01:00)
 delay=$3           # Delay in hours for the modeltime with respect to model_cycle_time (e.g. 12.0)                    
 remote_dataroot=$4 # Remote dataroot to send output to (without machine name)
 domain_name=$5     # domain name (from the "on-the-fly") page
+rsync_qsub=$6      # do rsync via qsub [optional: yes,no - under construction]          
 
 model_cycle_time=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v model_cycle_time`
 n_verif_steps=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v n_verif_steps`
@@ -26,23 +27,23 @@ elif test "$physics" == "none" && test "$lbc" == "none"; then # (e.g. wrf)
     run=$model\-$lbc
 fi
 
-log=$lapsdataroot/log/verif_run.log.`date +\%H\%M`
-
-rm -f $lapsdataroot/log/qverif.log.`date +\%H\%M`
+rm -f $lapsdataroot/log/qsub_verif_pbs.log.`date +\%H\%M`
+log=$lapsdataroot/log/run_qsub_verif.log.`date +\%H\%M`
 
 # Build qsub script
 script=$lapsdataroot/log/qsub_verif.sh
-echo "#!/bin/sh --login"         > $script
-echo "#$ -N vrf_$domain_name"   >> $script
-echo "#$ -A dlaps"              >> $script
-echo "#$ -l h_rt=$hhmm:00,h_vmem=3.5G" >> $script
-echo "#$ -S /bin/sh"            >> $script
-echo "#$ -cwd"                  >> $script
-echo "#$ -pe hserial 1"         >> $script
-echo "#$ -o $lapsdataroot/log/qverif.log.`date +\%H\%M`"          >> $script
-echo "#$ -j y"                  >> $script
-echo "#exit"                    >> $script
-echo " "                        >> $script
+echo "#!/bin/sh --login"           > $script
+echo "#PBS -l procs=1"            >> $script
+echo "#PBS -l walltime=$hhmm:00"  >> $script
+echo "#PBS -l mem=3500M"          >> $script
+echo "#PBS -A dlaps"              >> $script
+echo "#PBS -N vrf_$domain_name"   >> $script
+#echo "#PBS -S /bin/sh"            >> $script
+#echo "#PBS -cwd"                  >> $script
+echo "#PBS -j oe"                 >> $script
+echo "#PBS -o $lapsdataroot/log/qsub_verif_pbs.log.`date +\%H\%M`"          >> $script
+echo " "                          >> $script
+echo "umask 002"                  >> $script
 
 echo " "                                                        >> $script
 echo " echo 'Running this verif_fcst_driver.csh command...'"    >> $script
@@ -54,7 +55,7 @@ echo "       @CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model
 
 echo " "                                                        >> $script
 echo " "                                                        >> $script
-echo " touch $log.wait"                                         >> $script
+echo " touch $log.done"                                         >> $script
 echo " exit 0"                                                  >> $script
 
 echo " "
@@ -68,16 +69,44 @@ if test "$remote_dataroot" == ""; then
           qsub $script > $log 2>&1
 
 else
-    echo "@prefix@/etc/qsub_wait $script $log.wait > $log 2>&1"
-          @prefix@/etc/qsub_wait $script $log.wait > $log 2>&1
+    echo "@prefix@/etc/qsub_wait $script $log.done"
+          @prefix@/etc/qsub_wait $script $log.done
 
+    echo " "
     echo "Making reflectivity montage via ssh"
     echo ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
          ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
 
-#   Rsync the verification data to remote dataroot
-    echo "@prefix@/etc/rsync_out.sh $lapsdataroot pinky.fsl.noaa.gov:$remote_dataroot qsub 01:00 8"
-          @prefix@/etc/rsync_out.sh $lapsdataroot pinky.fsl.noaa.gov:$remote_dataroot qsub 01:00 8
+    rsync_qsub=yes 
+
+    if test "$rsync_qsub" == "yes"; then   
+
+#       Rsync the verification data to remote dataroot
+        echo "@prefix@/etc/rsync_out.sh $lapsdataroot pinky.fsl.noaa.gov:$remote_dataroot qsub 01:00 8"
+              @prefix@/etc/rsync_out.sh $lapsdataroot pinky.fsl.noaa.gov:$remote_dataroot qsub 01:00 8
+
+    else
+
+        date -u                                                                                  
+        echo " " 
+        echo "Start copy of verif directories (under construction)"
+
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/lapsprd/verif/* --exclude='REF/cont' --exclude='REF/hist' $REMOTE_DATA_ROOT/lapsprd/verif"
+              rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/lapsprd/verif/* --exclude='REF/cont' --exclude='REF/hist' $REMOTE_DATA_ROOT/lapsprd/verif 
+
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/load.png                             $REMOTE_DATA_ROOT/log"
+              rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/load.png                             $REMOTE_DATA_ROOT/log 
+
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/cloud_fcst.png                       $REMOTE_DATA_ROOT/log"
+              rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/log/cloud_fcst.png                       $REMOTE_DATA_ROOT/log 
+
+        echo "rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/time/modelvtime.dat                      $REMOTE_DATA_ROOT/time"
+              rsync -rlptgvvz $RSH $DELETE $LOCAL_DATA_ROOT/time/modelvtime.dat                      $REMOTE_DATA_ROOT/time 
+
+        echo " "                                            
+        date -u                                                                                  
+
+    fi
 
 fi
 
