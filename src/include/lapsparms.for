@@ -5,7 +5,7 @@
 
 !       Background
         integer*4  MAX_BACKGROUND_FILES
-        parameter (MAX_BACKGROUND_FILES = 2000)     
+        parameter (MAX_BACKGROUND_FILES = 6000)     
 
 !       Ingest
         integer*4  MAX_INGEST_FILES
