@@ -48,6 +48,8 @@ cdis
 
       real, allocatable, dimension(:,:) :: lat,lon,topo,dum_2d
        
+      logical l_realtime
+
       call get_grid_dim_xy(NX_L,NY_L,istatus)
       if (istatus .ne. 1) then
           write (6,*) 'Error getting horizontal domain dimensions'
@@ -150,6 +152,7 @@ cdis
      1                 ,laps_radar_ext
               call remap_sub(i_radar,itimes
      1                      ,ntimes_radar                              ! I/O 
+     1                      ,l_realtime                                ! O
      1                      ,laps_radar_ext       
      1                      ,radar_subdir_dum       
      1                      ,path_to_vrc,path_to_radar,ref_min
@@ -161,7 +164,12 @@ cdis
               if(istatus .ne. 1)then
                   write(6,*)' remap: istatus returned from remap_sub = '
      1                                             ,istatus
-                  go to 900 ! saves computer time searching directories
+                  if(l_realtime)then
+!                     Note that missing tilts are given the same 0 value of
+!                     istatus, and we assume that all radar times are experiencing
+!                     the missing tilts
+                      go to 900 ! saves computer time searching directories
+                  endif
               endif
           enddo ! itimes
 
@@ -171,6 +179,7 @@ cdis
 
       subroutine remap_sub(i_radar,itimes
      1                    ,ntimes_radar                                ! I/O
+     1                    ,l_realtime                                  ! O
      1                    ,laps_radar_ext
      1                    ,c3_radar_subdir,path_to_vrc,path_to_radar
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr       
@@ -273,6 +282,8 @@ c
 
       integer VERBOSE
 
+      logical l_realtime
+
 !     Function call declarations
       integer get_field_num
       integer get_altitude
@@ -303,6 +314,7 @@ c
       call radar_init(i_radar,path_to_radar,path_to_vrc,itimes         ! I
      1               ,b_missing_data                                   ! I
      1               ,i_tilt_proc_curr                                 ! I/O
+     1               ,l_realtime                                       ! O
      1               ,i_last_scan,istatus)                             ! O
       write(6,*)' remap_sub: istatus from radar_init (1st call) ='
      1         ,istatus    
@@ -585,10 +597,14 @@ c
               i_tilt_proc_next = i_tilt_proc_curr + 1
               call radar_init(i_radar,path_to_radar,path_to_vrc,itimes   ! I
      1                       ,b_missing_data                             ! I
-     1                       ,i_tilt_proc_next,i_last_scan
-     1                                                ,istatus)          ! O
+     1                       ,i_tilt_proc_next                           ! I/O
+     1                       ,l_realtime,i_last_scan                     ! O
+     1                       ,istatus)                                   ! O
               write(6,*)
      1        ' remap_sub: istatus from radar_init (2nd call) =',istatus    
+              if(istatus .ne. 1)then
+                  return
+              endif
 
 ! call REMAP_PROCESS with the current tilt
               write(6,*)
