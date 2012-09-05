@@ -337,7 +337,8 @@
 
 	          write(*,*)'beka',i4_valid
 
-                  if(var_2d .eq. 'REF')then ! also read radar quality
+!                 if(var_2d .eq. 'REF')then ! also read radar quality
+                  if(.true.)then ! also read radar quality
                       ext = 'lcv'
                       call get_laps_2d(i4_valid,ext,'RQC',units_2d
      1                                ,comment_2d,NX_L,NY_L,rqc,istatus)
@@ -732,7 +733,11 @@
         integer jl(maxbgmodels,0:max_fcst_times,max_regions)
         integer jh(maxbgmodels,0:max_fcst_times,max_regions)
 
+        integer iperim_buff
+
         character*150 static_dir,static_file
+
+        iperim_buff = 0
 
 !       Read in data file with region points
         call get_directory('static',static_dir,len_static)
@@ -751,10 +756,10 @@
           do ir = 1,n_regions
             do if = 0,n_fcst_times
                 do im = 1,n_models
-                    il(im,if,ir) = 1
-                    ih(im,if,ir) = NX_L
-                    jl(im,if,ir) = 1
-                    jh(im,if,ir) = NY_L
+                    il(im,if,ir) = 1    + iperim_buff
+                    ih(im,if,ir) = NX_L - iperim_buff
+                    jl(im,if,ir) = 1    + iperim_buff
+                    jh(im,if,ir) = NY_L - iperim_buff
                 enddo ! im
             enddo ! if
           enddo ! ir
