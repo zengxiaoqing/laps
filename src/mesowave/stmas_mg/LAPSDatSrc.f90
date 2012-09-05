@@ -650,7 +650,8 @@ SUBROUTINE LAPSOBSV(m)
 
   ! Check number of obs:
   DO i=1,numvar
-    IF (verbal .EQ. 1) WRITE(*,23) varnam(i),numobs(i)
+    WRITE(*,23) varnam(i),numobs(i)
+    ! IF (verbal .EQ. 1) WRITE(*,23) varnam(i),numobs(i)
   ENDDO
 23 FORMAT('STMAS>LAPSOBSV: NumObs of (raw) ',A4,': ',I8)
 
