@@ -4479,7 +4479,7 @@ c
      1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
-     1                             ,asc9_tim              ! O
+     1                             ,asc9_tim                ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
@@ -4563,6 +4563,12 @@ c                   cint = -1.
                     clow = -100.
                     chigh = +30.
                     cint = 10.
+
+                    comment_2d = 'Dewpoint         (C)'
+
+                    call mk_fcst_hlabel(k_mb,comment_2d,fcst_hhmm
+     1                                 ,ext(1:3),units_2d
+     1                                 ,c_model,c_label)
 
                     call plot_field_2d(i4_valid,c_type_i,field_2d       
      1                                ,1.
@@ -8066,13 +8072,13 @@ c abdel
      1                             ,i4_valid                ! O
      1                             ,istatus)                ! O
 
-        include 'lapsparms.for' ! maxbgmodels
+        include 'lapsparms.for' ! maxbgmodels, max_background_files
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
 
         integer       maxfiles
-        parameter     (maxfiles=3000)
+        parameter     (maxfiles=max_background_files)
 
         integer       n_fdda_models
         integer       l,len_dir,lfdda
