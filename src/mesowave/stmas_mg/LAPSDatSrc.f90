@@ -449,7 +449,8 @@ SUBROUTINE LAPSOBSV(m)
         ELSE
           ! OBS time error:
           otm(j) = -100
-          PRINT*,'LAPSOBS: Invalid Obs time: set to bad value: ',ot,j,i
+          IF (verbal .EQ. 1) &
+            PRINT*,'LAPSOBS: Invalid Obs time: set to bad value: ',ot,j,i
         ENDIF
       ENDDO
 
