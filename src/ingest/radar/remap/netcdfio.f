@@ -41,6 +41,7 @@ cdis
        subroutine radar_init(i_radar,path_to_radar,path_to_vrc,itimes   ! I
      1                      ,b_missing_data                             ! I
      1                      ,i_tilt_proc                                ! I/O
+     1                      ,l_realtime                                 ! O
      1                      ,i_last_scan,istatus)                       ! O
 
        use mem_vol
@@ -691,10 +692,10 @@ c      Determine output filename extension
 
          endif ! end of volume processing for this tilt
 
-       elseif(i_tilt_proc .le. 20)then
+       elseif(i_tilt_proc .le. 20)then ! l_exist is .false.
            i_tilt_proc = i_tilt_proc + 1
            i_skip = 1
-           goto 200
+           goto 200 ! check for existence of next tilt
 
        else
            istatus = 0
@@ -714,9 +715,18 @@ c      Determine output filename extension
  202           format(' elevationNumber, i_tilt_proc',2i4
      1               ,' (upcoming tilt)')
 
-               if(i_skip .eq. 1)then
-                   write(6,*)
+               if(i_skip .eq. 1)then ! tilt is found and prior one didn't exist
+                   if(.false.)then
+                       write(6,*)
      1               ' WARNING: We had to skip past some missing tilts'       
+                   else
+                       call s_len(radarName,lenr)
+                       write(6,*)' ERROR: Missing tilts present for '
+     1                          ,radarName(1:lenr),' at ',a9_time
+     1                          ,' ',trim(laps_radar_ext)
+                       istatus = 0
+                       return
+                   endif
                endif
 
            endif
