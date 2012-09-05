@@ -727,7 +727,7 @@ c read in laps lat/lon and topo
      1  /
      1  /'           HUMID: sh,rh,rl (Specific/Relative Humidity)'
      1  /
-     1  /'           ts (Thetae Sat), tw (wetbulb)'
+     1  /'           ts (Thetae Sat), tw (wetbulb), td (dewpoint)'
      1  /
      1  /'           cg/cf (3D Cloud Image),  tc (Cloud Type),  '
      1  ,'tp (Precip Type)'
@@ -2610,7 +2610,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             i_contour = 1
             c_label = 'LAPS Theta(e) Sat (Balanced) Deg K'
 
-        elseif(c_field .eq. 'tw')then
+        elseif(c_field .eq. 'tw' .or. c_field .eq. 'td')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
@@ -2646,8 +2646,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !               equal to t_c if pres < 500mb. This approximation should
 !               not hurt the algorithm.
 
-                t_wb_c = twet_fast(t_c,td_c,pressure_mb)
-                field_vert(i,k) = t_wb_c
+                if(c_field .eq. 'tw')then
+                    t_wb_c = twet_fast(t_c,td_c,pressure_mb)
+                    field_vert(i,k) = t_wb_c
+                else 
+                    field_vert(i,k) = td_c
+                endif
             enddo ! i
             enddo ! k
 
@@ -2655,7 +2659,11 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +100.
             cint = 5. / density
             i_contour = 1
-            c_label = 'LAPS Wet Bulb       X-Sect  Deg K'
+            if(c_field .eq. 'tw')then
+                c_label = 'Wet Bulb Temp       X-Sect  Deg C'
+            else
+                c_label = 'Dew Point           X-Sect  Deg C'
+            endif
 
         elseif(c_field .eq. 'sh')then
             call input_product_info(i4time_ref              ! I
@@ -3185,6 +3193,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         write(6,*)' Plotting, Overlay = ',i_graphics_overlay
      1                                   ,i_label_overlay
      1                                   ,i_image
+     1                                   ,i_contour
 
         ifield_found = 1
 
