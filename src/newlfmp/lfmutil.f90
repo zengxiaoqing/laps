@@ -244,6 +244,7 @@ real :: dx(lx,ly),dy(lx,ly)
 real :: r_missing_data, aglhgt
 real :: stefan_boltzmann, b_olr, eff_emissivity
 real :: bt_flux_equiv
+real :: coeff
 
 !beka
 
@@ -761,7 +762,16 @@ if (fcsttime .eq. 0) then ! obtain initial time swdown field from swi analysis L
     write(6,*)' Obtained initial time swdown field from swi analysis LCV file'
   else
     write(6,*)' Warning: could not find initial time swdown field from swi analysis LCV file'
-  endif      
+  endif    
+else
+  if(.true.)then ! post-process swdown field  
+     do j=1,ly
+     do i=1,lx
+        coeff = 0.93 + (cldamt(i,j) * 0.2)
+        swdown(i,j) = swdown(i,j) * coeff
+     enddo ! i
+     enddo ! j      
+  endif
 endif
 
 if (verbose .and. .not. large_ngrid) then
