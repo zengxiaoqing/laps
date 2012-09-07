@@ -34,6 +34,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim gateR'
+        gateR = 0
       endif
 C
 C Get size of gateR_HI
@@ -47,6 +48,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim gateR_HI'
+        gateR_HI = 0
       endif
 C
 C Get size of gateV
@@ -60,6 +62,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim gateV'
+        gateV = 0
       endif
 C
 C Get size of gateV_HI
@@ -73,6 +76,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim gateV_HI'
+        gateV_HI = 0
       endif
 C
 C Get size of radialR
@@ -86,6 +90,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim radialR'
+        radialR = 0
       endif
 C
 C Get size of radialR_HI
@@ -99,6 +104,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim radialR_HI'
+        radialR_HI = 0
       endif
 C
 C Get size of radialV
@@ -112,6 +118,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim radialV'
+        radialV = 0
       endif
 C
 C Get size of radialV_HI
@@ -125,6 +132,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim radialV_HI'
+        radialV_HI = 0
       endif
 C
 C Get size of scanR
@@ -138,6 +146,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim scanR'
+        scanR = 0
       endif
 C
 C Get size of scanR_HI
@@ -151,6 +160,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim scanR_HI'
+        scanR_HI = 0
       endif
 C
 C Get size of scanV
@@ -164,6 +174,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim scanV'
+        scanV = 0
       endif
 C
 C Get size of scanV_HI
@@ -177,6 +188,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim scanV_HI'
+        scanV_HI = 0
       endif
 !     call get_vol_netcdf_data(nf_fid, gateR, gateR_HI, gateV, gateV_HI, radialR,
 !    +     radialR_HI, radialV, radialV_HI, scanR, scanR_HI, scanV,
@@ -253,6 +265,9 @@ C
      +     distanceR_HI, distanceV, distanceV_HI, elevationR, 
      +     elevationR_HI, elevationV, elevationV_HI)
 C
+   
+      use mem_namelist, ONLY: r_missing_data
+
       include 'netcdf.inc'
       integer gateR, gateR_HI, gateV, gateV_HI, radialR, radialR_HI, 
      +     radialV, radialV_HI, scanR, scanR_HI, scanV, 
@@ -288,11 +303,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var azimuthR'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,azimuthR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var azimuthR'
+        azimuthR = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,azimuthR)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var azimuthR'
+          azimuthR = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -302,11 +320,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var azimuthR_HI'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,azimuthR_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var azimuthR_HI'
+        azimuthR_HI = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,azimuthR_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var azimuthR_HI'
+          azimuthR_HI = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -316,11 +337,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var azimuthV'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,azimuthV)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var azimuthV'
+        azimuthV = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,azimuthV)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var azimuthV'
+          azimuthV = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -330,11 +354,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var azimuthV_HI'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,azimuthV_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var azimuthV_HI'
+        azimuthV_HI = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,azimuthV_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var azimuthV_HI'
+          azimuthV_HI = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -344,11 +371,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var distanceR'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,distanceR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var distanceR'
+        distanceR = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,distanceR)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var distanceR'
+          distanceR = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -358,11 +388,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var distanceR_HI'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,distanceR_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var distanceR_HI'
+        distanceR_HI = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,distanceR_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var distanceR_HI'
+          distanceR_HI = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -372,11 +405,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var distanceV'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,distanceV)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var distanceV'
+        distanceV = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,distanceV)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var distanceV'
+          distanceV = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -386,11 +422,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var distanceV_HI'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,distanceV_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var distanceV_HI'
+        distanceV_HI = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,distanceV_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var distanceV_HI'
+          distanceV_HI = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -400,11 +439,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var elevationR'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var elevationR'
+        elevationR = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationR)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var elevationR'
+          elevationR = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -414,11 +456,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var elevationR_HI'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationR_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var elevationR_HI'
+        elevationR_HI = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationR_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var elevationR_HI'
+          elevationR_HI = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -428,11 +473,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var elevationV'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationV)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var elevationV'
+        elevationV = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationV)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var elevationV'
+          elevationV = r_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -442,11 +490,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var elevationV_HI'
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationV_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var elevationV_HI'
+        elevationV_HI = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationV_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var elevationV_HI'
+          elevationV_HI = r_missing_data
+        endif
       endif
 
 C   Variables of type INT
