@@ -69,6 +69,8 @@ if test "$remote_dataroot" == ""; then
           qsub $script > $log 2>&1
 
 else
+    rm -f $log.done
+
     echo "@prefix@/etc/qsub_wait $script $log.done"
           @prefix@/etc/qsub_wait $script $log.done
 
