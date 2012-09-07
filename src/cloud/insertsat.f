@@ -771,11 +771,15 @@ c
                   cover = cover_new
               endif ! .true.
 
-            elseif(cldtop_m(i,j) .lt. lcl(i,j) .AND. .false.)then
-                                                    ! Satellite top below lcl
+            elseif(  cldtop_m(i,j) .lt. lcl_2d(i,j)           .AND.      
+     1             ( lcl_2d(i,j)   .gt. ht_sao_top(i,j) .OR.
+     1               ht_sao_top(i,j) .eq. r_missing_ht      )
+     1                                                        )then        
+                                             ! Satellite top is below lcl
+                                             ! & lcl is higher than ht_sao_top
               mode_sao = 4
               cover=sat_cover
-              htbase = lcl(i,j)                     
+              htbase = lcl_2d(i,j)                     
               thk_lyr = cld_thk(htbase)
               cldtop_old = cldtop_m(i,j)
               cldtop_m(i,j) = htbase + thk_lyr
@@ -805,7 +809,7 @@ c
             elseif(ht_sao_top(i,j) .gt. cldtop_m(i,j) .and. 
      1             ht_sao_top(i,j) .ne. r_missing_ht .and. .true.)then 
                                                     ! Satellite top below 
-                                                    ! ceiling (lowest SAO base)
+                                                    ! SAO top
               mode_sao = 5
               cover=sat_cover
               cldtop_old = cldtop_m(i,j)
