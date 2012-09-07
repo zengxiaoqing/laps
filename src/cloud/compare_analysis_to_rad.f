@@ -4,6 +4,7 @@
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns
+     1  ,n_obs_b
      1  ,swi_2d)                                                 ! O
 
         include 'trigd.inc'
@@ -171,12 +172,13 @@
             sumsnow = 0.
             sumclr = 0.
 
-            do ista = 1,maxstns  
+            swi_s = r_missing_data 
+            rad2_s = r_missing_data 
+
+            do ista = 1,n_obs_b  
               stn(ista) = c_stations(ista)(1:3)
 
 !             write(6,*)ista,rad_s(ista)
-              swi_s(ista) = r_missing_data 
-              rad2_s(ista) = r_missing_data 
 
               if(rad_s(ista) .ge. 0.)then ! valid value
                 call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat,lon
