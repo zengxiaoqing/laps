@@ -702,6 +702,12 @@ c      Determine output filename extension
 
        endif ! file exists
 
+       if(i_tilt_proc .gt. 50)then
+           write(6,*)' ERROR in radar_init, i_tilt_proc = ',i_tilt_proc
+           istatus = 0
+           return
+       endif
+
        if(istatus .eq. 1
      1             .AND.
      1     .not. (laps_radar_ext .eq. 'vrc' .and. i_tilt_proc .gt. 1)
