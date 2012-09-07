@@ -56,6 +56,19 @@ if ($opt_v eq "n_fcst_steps") {
     my $result = ($fcst_len/$fcst_intvl + 1);
     print "$result";
 
+}elsif ($opt_v eq "verif_intvl") {
+    my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_intvl",$LAPS_DATA_ROOT); 
+    my $fcst_intvl = $parameter[0];
+
+    my @parameter=&laps_tools::get_nl_value($opt_n,"laps_cycle_time",$LAPS_DATA_ROOT); 
+    my $laps_cycle_time = $parameter[0];
+
+    my $verif_intvl = $fcst_intvl;
+    if($laps_cycle_time > $verif_intvl) {$verif_intvl = $laps_cycle_time;}
+
+    my $result = $verif_intvl;
+    print "$result";
+
 }elsif ($opt_v eq "n_verif_steps") {
     my @parameter=&laps_tools::get_nl_value($opt_n,"model_fcst_len",$LAPS_DATA_ROOT); 
     my $fcst_len = $parameter[0] * 60;
