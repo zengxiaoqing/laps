@@ -7,13 +7,19 @@ setenv N_FCST_TIMES $3
 
 echo "MODELVTIME is $MODELVTIME"
 
+setenv VERIF_INTVL      `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v verif_intvl`
+setenv N_VERIF_STEPS    `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v n_verif_steps`
 setenv MODEL_FCST_INTVL `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_intvl`
+
+echo "VERIF_INTVL is $VERIF_INTVL"
+echo "N_VERIF_STEPS is $N_VERIF_STEPS"
+echo "MODEL_FCST_INTVL is $MODEL_FCST_INTVL"
 
 foreach EXE (obs_driver)
   setenv BINARY $EXE.x
 
   setenv STEP 0
-  while ($STEP <= $N_FCST_TIMES)
+  while ($STEP <= $N_VERIF_STEPS)
     echo " "
     echo "STEP = $STEP"
                                         
@@ -36,7 +42,7 @@ foreach EXE (obs_driver)
     ls -l $LAPS_DATA_ROOT/log/$EXE.log.rerun_$LAPS_A9TIME
 
     @ STEP = $STEP + 1
-  end # STEP up to N_FCST_TIMES  
+  end # STEP up to N_VERIF_STEPS 
 
 end
 
