@@ -67,6 +67,7 @@ STMAS= \
         drawcountour.f90 \
         read_backgrd.f90 \
         readobserves.f90 \
+        read_laps_radar.f90 \
         input_bg_obs.f90 \
         prep_stmas4d.f90 \
         post_stmas4d.f90 \
