@@ -1390,7 +1390,8 @@ C       EW SLICES
      1  ,solar_alt,cvr_snow
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
-     1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns,swi_2d)
+     1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s
+     1  ,maxstns,n_obs_b,swi_2d)
 
 !       Write LCV file
         if(iwrite_output .ge. 1)then
