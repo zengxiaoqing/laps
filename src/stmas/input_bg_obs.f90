@@ -145,7 +145,8 @@ SUBROUTINE BKGRNDOBS
     ! CLOSE(TMGOBS_CHANNEL)
     ! CLOSE(PIGOBS_CHANNEL)
   !  CALL RDRADROBS
-    CALL RDLAPSRDR
+    ! CALL RDLAPSRDR
+    call read_laps_radar  ! Switch to a new routine using less memory by Yuanfu
     ! CALL GPSWDELAY
   ELSE
     CALL RDOBSTEST
