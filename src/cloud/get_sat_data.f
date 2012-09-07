@@ -85,7 +85,8 @@ c
      1                     ,comment_s8a,imax,jmax,s8a_k,ilevel
      1                     ,istat_s8a)      
         if(istat_s8a .ne. 1)then
-            write(6,*)' No S8A data available'
+            write(6,*)' No S8A data available, i4_sat_window is: '
+     1               ,i4_sat_window
         endif
 
 !       Final QC check on band 8 (11.2 mm) brightness temps
