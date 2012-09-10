@@ -391,7 +391,7 @@ goto 222
       ! Topography is between this interval: take a fraction
       IF (BK0(I,J,K,IFRAME,3) .LE. TOPOGRPH(I,J)) &
         TPW(I,J) = TPW(I,J)*(BK0(I,J,K+1,IFRAME,3)-TOPOGRPH(I,J))/ &
-                            (BK0(I,J,K+1,IFRAME,3)-BK0(I,J,K,IFRAME,3)
+                            (BK0(I,J,K+1,IFRAME,3)-BK0(I,J,K,IFRAME,3))
     ENDDO
     ! FROM G/KG TO CM:
     TPW(I,J) = TPW(I,J)/100.0/9.8 ! FOLLOWING DAN'S INT_IPW.F ROUTINE
