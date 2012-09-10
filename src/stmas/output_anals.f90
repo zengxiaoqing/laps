@@ -84,7 +84,11 @@ SUBROUTINE OUTPTLAPS
   integer       :: istatus  ,N_3D_FIELDS
 !Yuanfu test of cloud ice and liquid for temperature:
 character :: ext*31,unit*10,comment*30 
-integer   :: i4_tol,i4_ret
+integer   :: i4_tol,i4_ret,iqc,nref,n2d,n3d
+integer   :: istatus2d(FCSTGRD(1),FCSTGRD(2)),istatus3d(FCSTGRD(1),FCSTGRD(2))
+integer   :: CLOUD_BASE,CLOUD_TOP,K400
+REAL :: closest_radar(FCSTGRD(1),FCSTGRD(2)),AT
+REAL ::  rlat,rlon,rhgt
 i4_tol=900
 i4_ret=0
 ! --------------------
@@ -315,9 +319,18 @@ goto 222
   ENDDO
 11 CONTINUE
   ! Temperature adjustment according to cloud ice and liquid: Test by Yuanfu
+  ext = "vrz"
+  BK0(:,:,:,1,NUMSTAT+1) = 0.0      ! Reflectivity
+  call read_multiradar_3dref(lapsi4t, &
+      900,0,      & ! 900 tolerate
+      .true.,-10.0, & ! apply_map: true; ref missing data value: 10
+      fcstgrd(1),fcstgrd(2),fcstgrd(3),ext,latitude,longitud,topogrph, &
+      .false.,.false., & ! l_low_fill: false; l_high_fill: false
+      bk0(1,1,1,iframe,3),bk0(1,1,1,1,numstat+1),rlat,rlon,rhgt,unit,iqc,closest_radar, &
+      nref,n2d,n3d,istatus2d,istatus3d)
   ext = "lwc"
-  BK0(:,:,:,IFRAME,NUMSTAT+1) = 0.0
-  BK0(:,:,:,IFRAME,NUMSTAT+2) = 0.0
+  BK0(:,:,:,IFRAME,NUMSTAT+1) = 0.0 ! Cloud liquid
+  BK0(:,:,:,IFRAME,NUMSTAT+2) = 0.0 ! Cloud ice
   CALL GET_LAPS_3DGRID(LAPSI4T,i4_tol,i4_ret, &
                FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),ext,"lwc", &
                unit,comment,BK0(1,1,1,IFRAME,NUMSTAT+1),ST)
@@ -326,16 +339,39 @@ goto 222
                unit,comment,BK0(1,1,1,IFRAME,NUMSTAT+2),ST)
   print*,'Max cloud liquid: ',maxval(BK0(:,:,:,IFRAME,NUMSTAT+1))
   print*,'Max cloud ice   : ',maxval(BK0(:,:,:,IFRAME,NUMSTAT+2))
-goto 333
-  DO K=1,FCSTGRD(3)
-    DO J=1,FCSTGRD(2)
-      DO I=1,FCSTGRD(1)
-        ! Adjusted temperature based on cloud liquid and ice::
-        IF (BK0(I,J,K,IFRAME,NUMSTAT+2) .GT. 0.0) THEN
-          BK0(I,J,K,IFRAME,4) = BK0(I,J,K,IFRAME,4)-2.0
-        ELSEIF (BK0(I,J,K,IFRAME,NUMSTAT+1) .GT. 0.0) THEN
-          BK0(I,J,K,IFRAME,4) = BK0(I,J,K,IFRAME,4)-1.0
+ goto 333
+  ! Adjust temperature according to cloud:
+  DO J=1,FCSTGRD(2)
+    DO I=1,FCSTGRD(1)
+      AT=0.0
+      CLOUD_BASE = FCSTGRD(3)+1
+      CLOUD_TOP = 0
+      DO K=1,FCSTGRD(3)
+        IF (LV(K) .EQ. 40000) THEN 
+          IF (BK0(I,J,K,1,NUMSTAT+1) .GT. 5 .AND. &
+              BK0(I,J,K,1,NUMSTAT+1) .LT.100.0 ) &
+            AT=BK0(I,J,K,1,NUMSTAT+1)/10.0
+          K400 = K
         ENDIF
+        IF (BK0(I,J,K,IFRAME,NUMSTAT+1) .GT. 0.0 .OR. &
+            BK0(I,J,K,IFRAME,NUMSTAT+2) .GT. 0.0) THEN
+          CLOUD_BASE = MIN0(K,CLOUD_BASE)
+          CLOUD_TOP  = MAX0(K,CLOUD_TOP)
+        ENDIF
+      ENDDO
+
+      ! Only adjust when cloud top is above 400mb
+      IF (CLOUD_TOP .LT. K400 .OR. AT .LE. 0.0) cycle
+
+      IF (CLOUD_BASE .LE. K400) THEN
+        DO K=CLOUD_BASE,K400
+          BK0(I,J,K,IFRAME,4) = BK0(I,J,K,IFRAME,4)+ &
+            AT*(K-CLOUD_BASE)/FLOAT(MAX(K400-CLOUD_BASE,1))
+        ENDDO
+      ENDIF
+      DO K=K400+1,CLOUD_TOP
+        BK0(I,J,K,IFRAME,4) = BK0(I,J,K,IFRAME,4)+ &
+          AT*(CLOUD_TOP-K)/FLOAT(MAX(CLOUD_TOP-K400,1))
       ENDDO
     ENDDO
   ENDDO
@@ -346,9 +382,16 @@ goto 333
   DO I=1,FCSTGRD(1)
     TPW(I,J) = 0.0
     DO K=1,FCSTGRD(3)-1
-      IF (BK0(I,J,K,IFRAME,3) .GE. 0.0) &
-        TPW(I,J) = TPW(I,J) + 0.5*(BK0(I,J,K,IFRAME,5)+BK0(I,J,K+1,IFRAME,5))* &
-                   (LV(K)-LV(K+1))/100.0 ! PRESSURE IN MB
+      IF (BK0(I,J,K+1,IFRAME,3) .LE. TOPOGRPH(I,J)) CYCLE
+
+      ! For the top of interval is above topography: summed up
+      TPW(I,J) = TPW(I,J) + 0.5*(BK0(I,J,K,IFRAME,5)+BK0(I,J,K+1,IFRAME,5))* &
+                 (LV(K)-LV(K+1))/100.0 ! PRESSURE IN MB
+
+      ! Topography is between this interval: take a fraction
+      IF (BK0(I,J,K,IFRAME,3) .LE. TOPOGRPH(I,J)) &
+        TPW(I,J) = TPW(I,J)*(BK0(I,J,K+1,IFRAME,3)-TOPOGRPH(I,J))/ &
+                            (BK0(I,J,K+1,IFRAME,3)-BK0(I,J,K,IFRAME,3)
     ENDDO
     ! FROM G/KG TO CM:
     TPW(I,J) = TPW(I,J)/100.0/9.8 ! FOLLOWING DAN'S INT_IPW.F ROUTINE
