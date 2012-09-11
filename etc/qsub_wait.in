@@ -1,16 +1,17 @@
 #!/bin/sh --login
 
+# An assumption is made that the qsub script will generate the $flagfile
+# as the last step in that script
+
 script=$1
 flagfile=$2
 project=$3
 
-if test "$flagfile" == ""; then
-    flagfile=flagfile.$$
-fi
-
 if test "$project" == ""; then
     project=dlaps
 fi
+
+rm -f $flagfile
 
 echo "qsub -A $project $script"
       qsub -A $project $script
