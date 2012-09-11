@@ -181,6 +181,11 @@ if ($VAR == "S8A") then
     echo 'set y2label "RMSE" ' $MEMBER_FONT textcolor lt 3               >> $GNUPLOTFILE
     echo 'set grid xtics y2tics'                                         >> $GNUPLOTFILE
 
+else if ($VAR == "RTO") then
+    echo 'set yrange ['$YRANGE']'                                        >> $GNUPLOTFILE
+    echo 'set y2range ['$YRANGE']'                                       >> $GNUPLOTFILE
+    echo 'set logscale y'                                                >> $GNUPLOTFILE
+
 else
     echo 'set yrange ['$YRANGE']'                                        >> $GNUPLOTFILE
     echo 'set y2range ['$YRANGE']'                                       >> $GNUPLOTFILE
