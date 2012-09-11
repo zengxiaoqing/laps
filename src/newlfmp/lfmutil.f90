@@ -58,7 +58,7 @@ end select
 
 ! Set native grid size threshold based on an 8GB machine
 n3d_pts_thr = 33000000
-write(6,*)' # of 3D grid points, large_ngrid thresh = ',nx*ny*nz,n3d_pts_thr
+write(6,*)' # of 3D native grid points, large_ngrid thresh = ',nx*ny*nz,n3d_pts_thr
 if(nx*ny*nz > n3d_pts_thr)then
    write(6,*)' Large native grid - process reduced set of 3-D fields'
    large_ngrid = .true.
@@ -146,7 +146,8 @@ allocate(lprs(lz),lprsl(lz))
 lprs(1:lz)=pressures(1:lz)
 lprsl(1:lz)=alog(lprs(1:lz))
 
-if(lx*ly*lz > 20000000)then
+write(6,*)' # of 3D LAPS grid points, large_pgrid thresh = ',lx*ly*lz,22000000
+if(lx*ly*lz > 22000000)then
    write(6,*)' Large LAPS grid - process reduced set of 3-D fields'
    large_pgrid = .true.
    large_ngrid = .true.
@@ -326,8 +327,14 @@ endif
 ! Fill other missing surface fields from lowest model level.
 
 print *,'Min/Max mrsfc (model sfc grids) =',minval(mrsfc),maxval(mrsfc)
+print *,'Substitute lowest sigma level for surface mixing ratio'
+
+!if (maxval(mrsfc) > 1000.)mrsfc(:,:)=hmrsig(:,:,1)
+if (.true.)               mrsfc(:,:)=hmrsig(:,:,1)
+
+print *,'Min/Max mrsfc (model sfc grids) =',minval(mrsfc),maxval(mrsfc)
+
 if(.not. large_ngrid)then
-  if (maxval(mrsfc) > 1000.) mrsfc(:,:)=hmrsig(:,:,1)
   if (maxval(usfc) > 1000.) usfc(:,:)=husig(:,:,1)
   if (maxval(vsfc) > 1000.) vsfc(:,:)=hvsig(:,:,1)
   if (maxval(wsfc) > 1000.) wsfc(:,:)=hwsig(:,:,1)
