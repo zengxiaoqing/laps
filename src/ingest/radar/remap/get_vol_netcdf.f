@@ -293,6 +293,7 @@ C
      +     nyquistVelocityR(scanR), nyquistVelocityR_HI(scanR_HI)
 
 
+      i_missing_data = 255
 
 C   Variables of type REAL
 C
@@ -510,11 +511,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var RadialVelocity'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,RadialVelocity)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var RadialVelocity'
+        RadialVelocity = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,RadialVelocity)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var RadialVelocity'
+          RadialVelocity = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -524,11 +528,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var RadialVelocity_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,RadialVelocity_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var RadialVelocity_HI'
+        RadialVelocity_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,RadialVelocity_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var RadialVelocity_HI'
+          RadialVelocity_HI = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -538,11 +545,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var Reflectivity'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,Reflectivity)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var Reflectivity'
+        Reflectivity = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,Reflectivity)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var Reflectivity'
+          Reflectivity = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -552,39 +562,48 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var Reflectivity_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,Reflectivity_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var Reflectivity_HI'
+        Reflectivity_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,Reflectivity_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var Reflectivity_HI'
+          Reflectivity_HI = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      SpectrumWidth"Radial Spectrum"
 C
       nf_status = NF_INQ_VARID(nf_fid,'SpectrumWidth',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
+      if(nf_status.ne.NF_NOERR .or. .true.) then
         print *, NF_STRERROR(nf_status)
         print *,'in var SpectrumWidth'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,SpectrumWidth)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var SpectrumWidth'
+        SpectrumWidth = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,SpectrumWidth)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var SpectrumWidth'
+          SpectrumWidth = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      SpectrumWidth_HI"Radial Spectrum_HI"
 C
       nf_status = NF_INQ_VARID(nf_fid,'SpectrumWidth_HI',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
+      if(nf_status.ne.NF_NOERR .or. .true.) then
         print *, NF_STRERROR(nf_status)
         print *,'in var SpectrumWidth_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,SpectrumWidth_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var SpectrumWidth_HI'
+        SpectrumWidth_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,SpectrumWidth_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var SpectrumWidth_HI'
+          SpectrumWidth_HI = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
