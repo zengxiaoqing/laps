@@ -779,7 +779,8 @@ foreach $exe (@LAPS_EXE){
                                 print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00,h_vmem=".$vmem_gb."G\n";
                             }else{
                                 print TFILE "#PBS -l walltime=$wall_time_hr:$wall_time_min:00\n";
-                                print TFILE "#PBS -l mem=$vmem_mb"."M\n";
+                                print TFILE "#PBS -l vmem=$vmem_mb"."M\n";
+                                print TFILE "#PBS -m n\n";
                             }
                         }else{
                             if($nodes_current > 1){
@@ -793,7 +794,8 @@ foreach $exe (@LAPS_EXE){
                                     print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
                                 }else{
                                     print TFILE "#PBS -l walltime=$wall_time_hr:$wall_time_min:00\n";
-                                    print TFILE "#PBS -l mem=$vmem_mb"."M\n";
+                                    print TFILE "#PBS -l vmem=$vmem_mb"."M\n";
+                                    print TFILE "#PBS -m n\n";
                                 }
                             }
                         }
