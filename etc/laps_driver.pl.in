@@ -252,7 +252,7 @@ if($opt_q || $opt_Q){
 
       }elsif($exe eq "remap_polar_netcdf.exe"){
           $walltime = "00:15:00";
-          $vmem_gb = 0.9 + ($npts / 17000000.);
+          $vmem_gb = 1.0 + ($npts / 16000000.);
           if ($vmem_gb > 12.0) { $vmem_gb = 12.0; }
           print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
 
@@ -270,7 +270,7 @@ if($opt_q || $opt_Q){
 #       print TFILE "#!/bin/sh --login\n";
 #       print TFILE "#PBS -lnodes=1:$node_type,walltime=$walltime -A $opt_q\n";
 
-      if($opt_Q || $opt_q){ 
+      if($opt_Q){ # JET syntax
         print TFILE "#!/bin/sh\n";
         print TFILE "#\$ -pe $node_type 1\n";
 
@@ -283,6 +283,19 @@ if($opt_q || $opt_Q){
         print TFILE "#\$ -A $opt_Q\n";
         print TFILE "#\$ -S /bin/sh\n";
         print TFILE "#\$ -cwd\n";
+
+      }elsif($opt_q){ # ZEUS syntax
+        print TFILE "#!/bin/sh --login\n";
+        print TFILE "#PBS -l procs=1\n";
+        print TFILE "#PBS -l walltime=$walltime\n";
+
+        if($vmem_gb > 0.){                                            
+            my $vmem_mb = int($vmem_gb * 1000.);
+            print TFILE "#PBS -l vmem=$vmem_mb"."M\n";
+        }
+
+        print TFILE "#PBS -m n\n";
+        print TFILE "#\PBS -A $opt_q\n";
 
       }
 
