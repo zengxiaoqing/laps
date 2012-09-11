@@ -89,9 +89,9 @@ foreach SUBDIR (REF LMR)
           montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
 
     setenv LAPS_HHMM `echo $LAPS_A9TIME | cut -c6-9`
-    setenv HHMM_LINK $IMGDIR/radar_fcst_all_$LAPS_HHMM.png
-    echo "rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK"
-          rm -f $HHMM_LINK; ln -s $IMOUT $HHMM_LINK
+    setenv HHMM_LINK radar_fcst_all_$LAPS_HHMM.png
+    echo "cd $IMGDIR; rm -f $HHMM_LINK; ln -s radar_fcst_all_$LAPS_A9TIME.png $HHMM_LINK"
+          cd $IMGDIR; rm -f $HHMM_LINK; ln -s radar_fcst_all_$LAPS_A9TIME.png $HHMM_LINK 
 
     echo ""
 
@@ -110,9 +110,9 @@ foreach SUBDIR (REF LMR)
         echo "montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT"
               montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
 
-        setenv COMP_LINK $IMGDIR/radar_fcst_all_$COMP.png
-        echo "rm -f $COMP_LINK; ln -s $IMOUT $COMP_LINK"
-              rm -f $COMP_LINK; ln -s $IMOUT $COMP_LINK
+        setenv COMP_LINK radar_fcst_all_$COMP.png
+        echo "cd $IMGDIR; rm -f $COMP_LINK; ln -s radar_fcst_all_$COMP\_$LAPS_A9TIME.png $COMP_LINK"
+              cd $IMGDIR; rm -f $COMP_LINK; ln -s radar_fcst_all_$COMP\_$LAPS_A9TIME.png $COMP_LINK 
 
         echo ""
 
@@ -211,14 +211,14 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2 '"Incremental Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2  "Incremental Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.:0.2 '"Run Total Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.:0.2  "Run Total Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0 '"Run Total Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0  "Run Total Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.:0.2 '"Run Total Precip"'    "inches"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/rto_fcst_comp.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.:0.2  "Run Total Precip"     "inches"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/rto_fcst_comp.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0 '"Run Total Precip"'    "inches"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/rto_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0  "Run Total Precip"     "inches"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/rto_fcst_comp.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.:0.2 '"Run Total Precip"'    "inches"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/rto_fcst_comp2.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.:0.2  "Run Total Precip"     "inches"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/rto_fcst_comp2.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0 '"Run Total Precip"'    "inches"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/rto_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0  "Run Total Precip"     "inches"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/rto_fcst_comp2.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TPW   0.:4.  '"Integrated Water Vapor"'    "cm"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/tpw_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TPW   0.:4.   "Integrated Water Vapor"     "cm"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/tpw_fcst.log
