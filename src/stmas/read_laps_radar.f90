@@ -16,11 +16,13 @@ subroutine read_laps_radar
 !  Author : Yuanfu Xie at ESRL/GSD/FAB
 !==================================================================
 
+  use prmtrs_stmas
+
   implicit none
 
   ! Get radar radial wind obs:
   print*,'Reading radial wind...'
-  call radialwind
+  if (fcstgrd(1) .lt. 1000) call radialwind
 
   ! Get radar reflectivity obs:
   print*,'Reading reflectivity...'
