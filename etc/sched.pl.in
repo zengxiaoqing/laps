@@ -164,6 +164,14 @@ if(defined $opt_s){ # "surface only"
                   ingest_pro.exe ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe obs_convert.exe
                   GSI_Prep.exe);
+}elsif( ($opt_V eq "STMAS4D")) { # STMAS 3D analysis with standard LAPS balance
+    @LAPS_EXE = qw(lga.exe 
+                  obs_driver.x
+                  ingest_pro.exe ingest_sounding.exe 
+                  ingest_cloud_drift.exe ingest_aircraft.exe 
+                  ingest_lrs.exe
+                  obs_convert.exe
+                  mosaic_radar.x);
 }elsif( ($opt_V eq "STMAS3D")) { # STMAS 3D analysis with standard LAPS balance
     @LAPS_EXE = qw(lga.exe 
                   obs_driver.x
@@ -752,9 +760,9 @@ foreach $exe (@LAPS_EXE){
 
                 my $vmem_gb=1.0;
                 if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
-                    if($opt_V eq "STMAS3D") {
+                    if($opt_V eq "STMAS3D_sh") {
                         if($npts > 7000000){
-                            $vmem_gb=12.0
+                            $vmem_gb=20.0
                         }else{
                             $vmem_gb=6.0
                         }
