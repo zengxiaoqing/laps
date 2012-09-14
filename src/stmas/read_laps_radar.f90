@@ -21,8 +21,8 @@ subroutine read_laps_radar
   implicit none
 
   ! Get radar radial wind obs:
-  print*,'Reading radial wind...'
-  if (fcstgrd(1) .lt. 1000) call radialwind
+  print*,'Reading radial wind... DUE TO RADAR FORMAT CHANGE: NO RADIAL WIND ingested!' 
+  ! if (fcstgrd(1) .lt. 1000) call radialwind
 
   ! Get radar reflectivity obs:
   print*,'Reading reflectivity...'
@@ -213,12 +213,12 @@ subroutine reflectivity
   rmax(1) = 45.0
   rlow(1) = 0.1
   rmax(2) = 30.0
-  rlow(2) = 0.2
+  rlow(2) = 0.5
   do l=1,fcstgrd(4)
   do k=1,fcstgrd(3)
   do j=1,fcstgrd(2)
   do i=1,fcstgrd(1)
-    if (refl(i,j,k,l) .gt. 5.0 .and. refl(i,j,k,l) .le. 100) then
+    if (refl(i,j,k,l) .gt. 10.0 .and. refl(i,j,k,l) .le. 100) then
 
       ! iqc: 1 rain; 2 snow:
       iqc = 2
@@ -280,6 +280,9 @@ subroutine reflectivity
   do i=1,fcstgrd(1)
     if (cldf(i,j,k,l) .lt. 0.1 .and. refl(i,j,k,l) .gt. 5.0) &
       bk0(i,j,k,l,numstat+1) = 0.0
+
+    if (cldf(i,j,k,l) .ge. 0.2) bk0(i,j,k,l,numstat+1) = &
+      amax1(bk0(i,j,k,l,numstat+1),cldf(i,j,k,l)**0.2)
   enddo
   enddo
   enddo
