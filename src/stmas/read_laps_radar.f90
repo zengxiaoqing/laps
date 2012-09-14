@@ -283,6 +283,11 @@ subroutine reflectivity
 
     if (cldf(i,j,k,l) .ge. 0.2) bk0(i,j,k,l,numstat+1) = &
       amax1(bk0(i,j,k,l,numstat+1),cldf(i,j,k,l)**0.2)
+
+    ! RH =100% if both cloud and reflectivity occur:
+    if (cldf(i,j,k,l) .ge. 0.2 .and. refl(i,j,k,l) .ge. 5.0) &
+      bk0(i,j,k,l,numstat+1) = &
+          make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,l,temprtur)-273.15,1.0,0.0)
   enddo
   enddo
   enddo
