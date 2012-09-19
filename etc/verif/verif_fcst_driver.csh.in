@@ -59,8 +59,8 @@ echo "setenv LAPS_A9TIME `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`"
 
 date -u
 
-echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log.`date +\%H`"
-      $LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log.`date +\%H`
+echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log.`date -u +\%H`"
+      $LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log.`date -u +\%H`
 
 date -u
 
@@ -184,14 +184,14 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt U
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt VSF -20.:20. '"Sfc Wind V Component"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/vsf_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt VSF -20.:20.  "Sfc Wind V Component"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/vsf_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:20. '"Sfc Wind Speed"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/ssf_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:20.  "Sfc Wind Speed"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/ssf_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:10. '"Sfc Wind Speed"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/ssf_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:10.  "Sfc Wind Speed"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/ssf_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:20. '"Sfc Wind Speed"'    "m/s"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/ssf_fcst_comp.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:20.  "Sfc Wind Speed"     "m/s"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/ssf_fcst_comp.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:10. '"Sfc Wind Speed"'    "m/s"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/ssf_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:10.  "Sfc Wind Speed"     "m/s"  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/ssf_fcst_comp.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:20. '"Sfc Wind Speed"'    "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/ssf_fcst_comp2.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:20.  "Sfc Wind Speed"     "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/ssf_fcst_comp2.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:10. '"Sfc Wind Speed"'    "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/ssf_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt SSF   0.:10.  "Sfc Wind Speed"     "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/ssf_fcst_comp2.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:10. '"Sfc Wind"'    "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/wsf_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:10.  "Sfc Wind"     "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/wsf_fcst.log
