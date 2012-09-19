@@ -100,8 +100,9 @@ if test "$3" = qsub; then
         echo "#!/bin/sh"                 > $script
         echo "#PBS -N qsub_rsync_out_$subdir"  >> $script
     fi
-    echo "#PBS -A dlaps"              >> $script
+    echo "#PBS -A dlaps"           >> $script
     echo "#PBS -l procs=1,walltime=$HHMM:00"      >> $script
+    echo "#PBS -m n"               >> $script
     echo "#PBS -q service"         >> $script
     if test "$subdir" == ""; then # copy all
         echo "#PBS -o $LOCAL_DATA_ROOT/log/qsub_rsync_out.log.`date +\%H\%M`"      >> $script
