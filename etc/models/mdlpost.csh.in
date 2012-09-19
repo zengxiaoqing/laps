@@ -103,6 +103,7 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
         @ REC_DSF = $REC_LMR + 19 # 20 in table
         @ REC_WSF = $REC_LMR + 20 # 21 in table
         @ REC_SWI = $REC_LMR + 29 # 30 in table
+        @ REC_RTO = 52                                    
 
         echo " "
         echo "Processing forecast time/record $FCSTTIME $REC_LMR"
@@ -148,11 +149,37 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
         echo "wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $NCOUT"
               wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $NCOUT
 
+        setenv GRIB_PCP_IN /nofile                                                         
+        if ($FMM == 00 || $FMM == 60) then
+            setenv GRIB_PCP_IN /public/data/fsl/hrrr/conus/wrftwo/$YYDDDHHMM$HRRRHH\00         
+            if (-e $GRIB_PCP_IN) then
+                echo "$GRIB_PCP_IN is present"
+                echo "wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT"
+                      wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT
+              
+                echo "future command"
+                echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT"                   
+
+            else
+                echo "$GRIB_PCP_IN is not present"
+            endif
+        endif
+
 #       cp $NCOUT $NCOUT.wgrib2out
 
-        echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT"          
-              ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT          
+        ncdump -h $NCOUT 
+
+        if (-e $GRIB_PCP_IN) then
+            echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto $NCOUT"          
+                  ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto $NCOUT           
  
+        else
+            echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT"          
+                  ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT           
+
+        endif
+
+        ncdump -h $NCOUT 
 #       cp $NCOUT $NCOUT.renamed
 
 #       echo "ncatted -O -a lvl_coord,lmr,a,c,"MSL" $NCOUT"
@@ -191,8 +218,8 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
               ncpdq -a record,z,y,x -O $NCOUT $NCOUT
 
 #       Append miscellaneous variables from FSF template file
-        echo "ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT"
-              ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT
+        echo "ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,rto_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,rto_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT"
+              ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,rto_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,rto_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT
 
         rm $NCOUT.pid*ncks.tmp
 #       cp $NCOUT $NCOUT.ncks
@@ -209,6 +236,10 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
 
 #       echo "ncatted -O -a Lo1,global,m,f,$LON1 $NCOUT"
 #             ncatted -O -a Lo1,global,m,f,$LON1 $NCOUT
+
+        if ($FMM == 00 || $FMM == 60) then
+            echo "Hourly HRRR files under construction for FUA"
+        endif
 
         echo "*** regridding $NCOUT ***"
         echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME $OUTDIR $LAPS_DATA_ROOT"
