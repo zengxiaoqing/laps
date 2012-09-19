@@ -122,7 +122,7 @@ opendir LAPSPRD, "$laps_data_root/lapsprd/fsf";
 @modellist = readdir LAPSPRD;
 close LAPSPRD;
 @modellist = sort @modellist;
-#print "modellist = @modellist<br>";
+#print "modellist = $laps_data_root @modellist<br>";
 
 my $default_time = @lines[4];
 $default_time =~ s/ //g;
@@ -271,9 +271,10 @@ close LAPSPRD;
 @frames_list[11] = "12";
 @frames_list[12] = "13";
 @frames_list[13] = "24";
-@frames_list[14] = "auto-a";
-@frames_list[15] = "auto-f";
-@frames_list[16] = "auto-v";
+@frames_list[14] = "auto-2";
+@frames_list[15] = "auto-a";
+@frames_list[16] = "auto-f";
+@frames_list[17] = "auto-v";
 
 @delay_list[0] = "25";
 @delay_list[1] = "50";
@@ -414,6 +415,7 @@ print <<"EOF";
 <option $selected{'SH'}> SH
 <option $selected{'MR'}> MR
 <option $selected{'WIND_SPD'}> WIND_SPD
+<option $selected{'WIND_PWR'}> WIND_PWR
 <option $selected{'WIND_U'}> WIND_U
 <option $selected{'WIND_V'}> WIND_V
 <option $selected{'WIND_DIV'}> WIND_DIV
@@ -427,6 +429,7 @@ print <<"EOF";
 <option $selected{'P_PRIME'}> P_PRIME
 <option $selected{'THETA'}> THETA
 <option $selected{'THETAE'}> THETAE
+<option $selected{'WETBULB'}> WETBULB
 <option $selected{'WTBLB0'}> WTBLB0
 <option $selected{'CAPE'}> CAPE
 <option $selected{'CIN'}> CIN
@@ -494,6 +497,7 @@ print <<"EOF";
 <option $selected{'p_prime'}> p_prime
 <option $selected{'theta'}> theta
 <option $selected{'thetae'}> thetae
+<option $selected{'wetbulb'}> wetbulb
 <option $selected{'wtblb0'}> wtblb0
 <option $selected{'cape'}> cape
 <option $selected{'cin'}> cin
