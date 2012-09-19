@@ -591,7 +591,7 @@ C BLEND IN FIRST GUESS RADAR
         do i = 1,NX_L
         do j = 1,NY_L
             if(rqc_2d(i,j) .eq. 0. .OR. 
-     1         closest_radar(i,j) .gt. 460000.)then
+     1         closest_radar(i,j) .gt. 350000.)then
                 do k = 1,NZ_L
                     if(ref_modelfg(i,j,k) .ne. r_missing_data)then
                         radar_ref_3d(i,j,k) = ref_modelfg(i,j,k)
