@@ -570,13 +570,13 @@ c
 	        htbase=max(lcl_2d(i,j),cldtop_m(i,j) - thk_lyr)
             else 
 !               Cloud top is near/below lcl - consider relocation later
+                htbase=cldtop_m(i,j) - thk_lyr
                 iwrite_lcl = iwrite_lcl + 1
                 if(iwrite_lcl .le. 100)then
-                    write(6,151)i,j,cldtop_m(i,j),lcl_2d(i,j)
- 151                format(' NOTE: sat cloud top near or below lcl '
-     1                     ,2i6,2f8.1)       
+                    write(6,151)i,j,cldtop_m(i,j),lcl_2d(i,j),htbase
+ 151                format(' NOTE: sat cloud top near or below LCL '
+     1                     ,2i6,3f8.1)       
                 endif
-                htbase=cldtop_m(i,j) - thk_lyr
             endif
 
 !           Initialize lowest SAO cloud base & highest SAO/CO2 top
@@ -771,12 +771,12 @@ c
                   cover = cover_new
               endif ! .true.
 
-            elseif(  cldtop_m(i,j) .lt. lcl_2d(i,j)           .AND.      
-     1             ( lcl_2d(i,j)   .gt. ht_sao_top(i,j) .OR.
+            elseif(  htbase .lt. lcl_2d(i,j)           .AND.      
+     1             ( (lcl_2d(i,j)+thk_lyr) .gt. ht_sao_top(i,j) .OR.
      1               ht_sao_top(i,j) .eq. r_missing_ht      )
      1                                                        )then        
-                                             ! Satellite top is below lcl
-                                             ! & lcl is higher than ht_sao_top
+                                             ! Cloud base is below lcl
+                                             ! & lcl+thk is higher than ht_sao_top
               mode_sao = 4
               cover=sat_cover
               htbase = lcl_2d(i,j)                     
@@ -817,6 +817,7 @@ c
               htbase = ht_sao_base
               thk_lyr = cld_thk(ht_sao_top(i,j))
               htbase = ht_sao_top(i,j) - thk_lyr
+              htbase = max(htbase,lcl_2d(i,j))          
 
 !             Find a thinner value for cloud cover consistent with the new
 !             higher cloud top and the known brightness temperature.
@@ -905,8 +906,9 @@ c
             if(htbase .lt. lcl_2d(i,j))then
 !               Consider relocating cloud above the lcl
                 write(6,305)i,j,htbase,lcl_2d(i,j),mode_sao
- 305            format(' WARNING: sat cloud base below lcl '
-     1                ,2i6,2f8.1,i4)       
+     1                     ,cldtop_m(i,j),ht_sao_top(i,j)
+ 305            format(' WARNING: sat cloud base below LCL     '
+     1                ,2i6,2f8.1,i4,2f8.1)       
             endif
 
 !           Test for unreasonable cloud layer
