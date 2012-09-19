@@ -55,6 +55,7 @@ my $followup_xsect =  "@prefix@/etc/www/followup_fcst_xsect.sh $domain $model $d
 my $followup_spaghetti = "@prefix@/etc/www/followup_ensemble.sh $domain ensemble $dataroot $window $resolution @prefix@";
 
 my $w3recent;
+my $w3archive;
 
 my $purge_time = 36;
 $purge_time = $opt_t if(defined $opt_t);
@@ -65,12 +66,16 @@ $offset_time = $opt_o if(defined $opt_o);
 my $purger;                                                                          
 if (-d "/w3/lapb") {
     $purger = "@PERL@ @prefix@/etc/purge_w3_fcst2d.pl -t $purge_time $domain $model\n";
-    $w3recent = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
+    $w3recent  = "/w3/lapb/domains/$domain/fcst2d/$model/recent";
+    $w3archive = "/w3/lapb/domains/$domain/fcst2d/$model/archive";
     symlink "$dataroot", "/w3/lapb/domains/private_web_data";
 }else{
     $purger = "@PERL@ @prefix@/etc/purge_w3_fcst2d.pl -t $purge_time -d $dataroot $domain $model\n";
-    $w3recent = "$dataroot/lapsprd/www/fcst2d/$model/recent";
+    $w3recent  = "$dataroot/lapsprd/www/fcst2d/$model/recent";
+    $w3archive = "$dataroot/lapsprd/www/fcst2d/$model/archive";
 }
+system("mkdir -p /w3/lapb/domains/$domain/fcst2d/$model/recent");
+system("mkdir -p /w3/lapb/domains/$domain/fcst2d/$model/archive");
 
 my @cycle_time=&laps_tools::get_nl_value("nest7grid.parms","model_cycle_time",$dataroot);
 my $cycle_time = $cycle_time[0]; # seconds
