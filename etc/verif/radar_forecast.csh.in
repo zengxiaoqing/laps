@@ -64,11 +64,6 @@ if (-e $FONTFILE) then
     setenv DEFAULT_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',12"'
     setenv TITLE_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',20"'
     setenv MEMBER_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',16"'
-    if (-d /w3/lapb) then
-        setenv KEY_WIDTH -16.0
-    else
-        setenv KEY_WIDTH 0.0
-    endif
     setenv KEY_HEIGHT 0.3
     setenv KEY_SPACING 0.7
     setenv TH "{/$GNUPLOT_DEFAULT_GDFONT=8 "
@@ -80,7 +75,6 @@ else
     setenv TITLE_FONT ""
     setenv MEMBER_FONT ""
     setenv KEY_FONT ""
-    setenv KEY_WIDTH 1
     setenv KEY_HEIGHT 0
     setenv KEY_SPACING 1.0
     setenv TH ""
@@ -103,16 +97,23 @@ else
 endif
 
 if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
-    setenv L_PLOT_CRITERIA `tail -1 $SUMMARY_FILE`
+    setenv L_PLOT_CRITERIA `tail -2 $SUMMARY_FILE | head -1`
+    setenv PCT_SUCCESS     `tail -1 $SUMMARY_FILE`
 #   setenv L_PLOT_CRITERIA T  # for testing
-    if ($KEY_WIDTH == 0) then # TrueType case
-        setenv KEY_WIDTH -16 
+    if (-d /w3/lapb) then
+        setenv KEY_WIDTH -19.5 
+    else
+        setenv KEY_WIDTH -19.5
     endif
 else                                                     # Percentage will not be present
-    if ($KEY_WIDTH == 0) then # TrueType case
-        setenv KEY_WIDTH -14 
+    if (-d /w3/lapb) then
+        setenv KEY_WIDTH -16.2 
+    else
+        setenv KEY_WIDTH -16.2 
     endif
 endif
+
+echo "KEY_WIDTH is $KEY_WIDTH"
 
 echo " "
 echo "inputs..."
@@ -150,7 +151,7 @@ echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNU
 
 # time range must be in same format as data file
 echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
-echo 'set yrange [0:'$YRANGE']'                                          >> $GNUPLOTFILE
+#echo 'set yrange [0:'$YRANGE']'                                          >> $GNUPLOTFILE
 if ($STAT == "Bias") then
     echo 'set yrange [0.1:'$YRANGE']'                                    >> $GNUPLOTFILE
     echo 'set ytics (0.1,0.2,0.5,1,2,5,10)'                              >> $GNUPLOTFILE
@@ -194,12 +195,16 @@ while ($IMEMBER <= $NMEMBERS)
 
     if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
         setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
-        setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT%"
+        setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT_SUCCESS/$PCT%"
 
-        echo "PCT being compared to threshold of 80 is: $PCT"
-        if ($PCT >= 80) then
+        echo "PCT_SUCCESS being compared to threshold of 80 is: $PCT_SUCCESS"
+        if ($PCT_SUCCESS >= 80) then
             setenv LS 1
-            setenv LW 3
+            if (-d /w3/lapb) then
+                setenv LW 3
+            else
+                setenv LW 2
+            endif
         else 
             setenv LS 2
             setenv LW 1
@@ -209,7 +214,11 @@ while ($IMEMBER <= $NMEMBERS)
         setenv PCT ""
         setenv TITLE `echo $MEMBER | sed 's/_/ /g'`
         setenv LS 1
-        setenv LW 3
+        if (-d /w3/lapb) then
+            setenv LW 3
+        else
+            setenv LW 2
+        endif
 
     endif
 
