@@ -23,6 +23,7 @@
         logical l_exist
         logical l_plot_criteria 
         logical l_persist 
+        logical l_req_all_mdls / .true. /
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
@@ -100,6 +101,7 @@
         integer nsuccess_m(maxbgmodels)
         integer nincomplete_m(maxbgmodels)
         integer incomplete_run_m(maxbgmodels)
+        integer n_plot_times_m(maxbgmodels,n_fields)
 
        do i_period = 1,2
         
@@ -126,6 +128,8 @@
 
         write(6,*)' Time is ',i4time_sys,a9time
         write(6,*)' n_plot_times ',n_plot_times
+
+        n_plot_times_m(:,:) = n_plot_times
 
         i4_initial = i4time_sys
 
@@ -156,6 +160,29 @@
         write(6,*)' n_fdda_models = ',n_fdda_models
         write(6,*)' c_fdda_mdl_src = '
      1            ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
+
+!       Update array of n_plot_times_m for available model exceptions
+        do imodel = 2,n_fdda_models
+            if(trim(c_fdda_mdl_src(imodel)) .eq. 'advection')then
+                n_fcst_times_m = 10800 / model_verif_intvl
+                n_plot_times_m(imodel,:) = min(n_plot_times_m(imodel,:)
+     1                                        ,n_fcst_times_m)
+                do ifield = 1,n_fields ! only LMR is available
+                    if(var_a(ifield) .ne. 'LMR')then
+                        n_plot_times_m(imodel,ifield) = -1
+                    endif
+                enddo
+            endif
+
+            if(trim(c_fdda_mdl_src(imodel)) .eq. 'wrf-hrrr')then
+                do ifield = 1,n_fields ! only LMR is available
+                    if(var_a(ifield) .ne. 'LMR')then
+                        n_plot_times_m(imodel,ifield) = -1
+                    endif
+                enddo
+            endif
+
+        enddo ! imodel
 
 !       Read in data file with region points
         n_models = n_fdda_models
@@ -373,7 +400,8 @@
 !                  Flag as incomplete if missing during the first 12 hours
                    if(i_good_timestep_model .eq. 0)then
                      if(incomplete_run .eq. 0     .AND. 
-     1                  itime_fcst .le. n_plot_times)then
+     1                  itime_fcst .le. 
+     1                                n_plot_times_m(imodel,ifield))then
                        write(6,916)init,itime_fcst,a9time_initial,imodel
 916                    format(
      1                 ' WARNING: missing N values for init/time/model '
@@ -382,7 +410,8 @@
                      endif
 
                      if(incomplete_run_m(imodel) .eq. 0     .AND. 
-     1                  itime_fcst .le. n_plot_times)then
+     1                  itime_fcst .le. 
+     1                                n_plot_times_m(imodel,ifield))then
                        incomplete_run_m(imodel) = 1
                      endif
 
@@ -459,38 +488,50 @@
 
           enddo ! idbz 
 
-          where (n(:,:,:,:,:,:) .ne. imiss)                
-           n_sum(:,:,:,:,:,:) = n_sum(:,:,:,:,:,:) + n(:,:,:,:,:,:)
-          end where
-
-!         Write to log for informational purposes
-          do imodel=2,n_fdda_models
-             do itime_fcst = 0,n_fcst_times
-                 write(6,950)c_fdda_mdl_src(imodel)
-     1                    ,itime_fcst
-     1                    ,n(imodel,itime_fcst,1,1,1,1)
-     1                ,n_sum(imodel,itime_fcst,1,1,1,1)                
-950              format(' Correct negs: ',a10,' itime_fcst' ,i3,3x,2i10)
-             enddo ! itime_fcst
-          enddo ! imodel
-
-          nsuccess = nsuccess + 1
-          nsuccess_m(:) = nsuccess_m(:) + (1 - incomplete_run_m(:))
+!         Update arrays for all models
+          where(n_plot_times_m(:,ifield) .gt. -1)
+              nsuccess_m(:) = nsuccess_m(:) + (1 - incomplete_run_m(:))
+          endwhere
 
           nincomplete = nincomplete + incomplete_run
           nincomplete_m(:) = nincomplete_m(:) + incomplete_run_m(:)
-
-955       close(lun_bias_in)                                      
-          close(lun_ets_in)                                         
 
           nincomplete_t = 0
           do imodel=2,n_fdda_models
               nincomplete_t = nincomplete_t + incomplete_run_m(imodel)
           enddo 
 
-          write(6,956)a9time_initial,nincomplete_t,
+          if(nincomplete_t .eq. 0 .OR. 
+     1                             (l_req_all_mdls .eqv. .false.) )then
+              write(6,*)' Accumulating sums for this run '
+              nsuccess = nsuccess + 1
+
+              where (n(:,:,:,:,:,:) .ne. imiss)                
+               n_sum(:,:,:,:,:,:) = n_sum(:,:,:,:,:,:) + n(:,:,:,:,:,:)
+              end where
+
+!             Write to log for informational purposes
+              do imodel=2,n_fdda_models
+                 do itime_fcst = 0,n_fcst_times
+                     write(6,950)c_fdda_mdl_src(imodel)
+     1                    ,itime_fcst
+     1                    ,n(imodel,itime_fcst,1,1,1,1)
+     1                ,n_sum(imodel,itime_fcst,1,1,1,1)                
+950                  format(' Correct negs: ',a10,' itime_fcst' 
+     1                      ,i3,3x,2i10)
+                 enddo ! itime_fcst
+              enddo ! imodel
+          else
+              write(6,*)' Not accumulating sums for this run'
+
+          endif ! accumulate sums for this run
+
+          write(6,953)a9time_initial,nincomplete_t,
      1                (incomplete_run_m(imodel),imodel=2,n_fdda_models)
-956       format(' incomplete_run_m at ',a9,' is ',i3,4x,20i3)   
+953       format(' incomplete_run_m at ',a9,' is ',i3,4x,20i3)   
+
+955       close(lun_bias_in)                                      
+          close(lun_ets_in)                                         
       
           goto 960 ! success for this time
 
@@ -549,6 +590,9 @@
  969         format(i3)
          enddo ! imodel
          write(lun_summary_out,*)l_plot_criteria
+         ipct = nint(  (float(nsuccess          ) 
+     1                / float(n_init_times+1))*100.)
+         write(lun_summary_out,969)ipct                        
          close(lun_summary_out)
 
          if(nsuccess .lt. nsuccess_thr)then
@@ -699,7 +743,7 @@
 
          enddo ! idbz
 
- 980    enddo ! fields
+ 980    enddo ! ifield 
 
        enddo ! i_period
 
