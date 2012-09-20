@@ -293,7 +293,8 @@ cdis
             endif
 
             if(iflag_cv .eq. 1)then
-                c_label(14:33) =  '          Ceil & Vis'
+!               c_label(14:33) =  '          Ceil & Vis'
+                c_label(14:38) =  ' Ceil (hFt) & Vis (miles)'
             elseif(iflag_cv .eq. 2)then
                 if(c_field(3:4) .eq. '24')then
                   if(namelist_parms%c_units_type .eq. 'english')then
@@ -462,6 +463,11 @@ cdis
      1                               ,store_amt(i,nlyr)
                             temp = 0.0
                         endif
+
+                        temp = w1 / 1000. ! convert feet to kft
+                    else ! no cloud layers
+                        temp = r_missing_data
+
                     endif
 
                 elseif(iflag_cv .eq. 2)then ! Precip
@@ -817,6 +823,14 @@ c
                CALL PCLOQU(u+du_t,v-dv,td1,charsize,ANGD,CNTR)
             endif
  31         continue
+
+!           Plot Cloud Height (t variable)
+            if(t.gt.-75. .and. t.lt.140.) then 
+               write(t1,100,err=38) nint(t*10.) ! HectoFt of lowest layer
+               call left_justify(t1)
+               CALL PCLOQU(u+du_t,v+dv,t1,charsize,ANGD,CNTR)
+            endif
+ 38         continue
 
         elseif(iflag_cv .eq. 2)then ! Precip obs plot
 !           Plot 1hr Precip Ob
