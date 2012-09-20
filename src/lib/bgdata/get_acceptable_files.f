@@ -1,6 +1,6 @@
 
       subroutine get_acceptable_files(i4time_anal,bgpath,bgmodel,names
-     +     ,max_files,use_analysis
+     +     ,max_files,use_analysis,use_forecast
      +     ,bg_files,accepted_files,forecast_length,cmodel,NX,NY,NZ
      +     ,rejected_files,rejected_cnt)
 
@@ -27,7 +27,7 @@
       integer istatus, idebug
       integer i4time_fa
       integer sbnvaltimes
-      logical use_analysis, use_fcst, l_parse
+      logical use_analysis, use_forecast, l_parse
       character*9   fname,wfo_fname13_to_fname9,fname9
       integer itimes(max_files)
       integer i4time_anal
@@ -64,19 +64,21 @@ C forecast.  if forecast_length > 0 return all files for i4time_anal
 C to >= i4time_anal+forecast_length
 C      
       print*, '----------------------------------------------'
-      print*, 'get_acceptable_files: use_analysis = ',use_analysis
+      print*, 'get_acceptable_files: use_analysis / use_forecast = '
+     1                              ,use_analysis,use_forecast
       print*, '----------------------------------------------'
 
       idebug = 0
 
-!     If later on we want to set use_fcst to .false. then we can use analyses
-!     only similar to what is presently being done with the 'LAPS' option.
-      use_fcst = .true.
+!     If later on we want to set use_forecast to .false. then we can use 
+!     analyses only similar to what is presently being done with the 'LAPS' 
+!     option.
 
-      if(use_fcst .eqv. .true. .OR. use_analysis .eqv. .true.)then
+      if((use_forecast .eqv. .true.) .OR. 
+     1   (use_analysis .eqv. .true.)      )then       
           continue
       else
-          write(6,*)' ERROR: use_fcst AND use_analysis are false'
+          write(6,*)' ERROR: use_forecast AND use_analysis are false'       
           return
       endif
 
@@ -177,7 +179,7 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
 
          bg_files=nvt
 
-      elseif(cmodel.ne.'LAPS' .and. use_fcst .eqv. .true.)then
+      elseif(cmodel.ne.'LAPS' .and. (use_forecast .eqv. .true.))then
 
          final_time = i4time_anal+3600*max(0,forecast_length)
          call get_file_times(cfilespec,max_files,names,itimes
@@ -446,6 +448,44 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
 
             elseif(cmodel.ne.'LAPS')then
 
+!!! add Huiling Yuan 20120904  AAA001, tested with RUC, use_analysis=true
+             if ((use_analysis .eqv. .true.) .AND. 
+     1           (use_forecast .eqv. .false.)      )then
+             jj=1
+             if(n.lt.ibkgd)then
+              valid_time_1=i4timeinit(n)
+              valid_time_2=i4timeinit(n+1)
+
+                if(idebug.ge.1)write(6,*)bkgd(n),fcst(n,jj),' '
+     1                                  ,bkgd(n),fcst(n+1,jj)  ,' '
+     1                        ,valid_time_1,i4time_anal,valid_time_2
+
+                if(valid_time_1.le.i4time_anal.and.
+     +             valid_time_2.ge.i4time_anal)then
+
+                 if(abs(i4timeinit(n)-i4time_anal).lt.i4time_min_diff)
+     +then
+                    i4time_min_diff=abs(i4timeinit(n)-i4time_anal)
+                    indx_for_best_init=n+1
+                    indx_for_best_fcst=jj
+                 endif
+
+                 print*,'Found fcsts bounding anal'
+                 print*, "Index/init/fcst = ",n+1
+     1                   , indx_for_best_init
+     1                   , indx_for_best_fcst
+                 print*,'Full name 1: ', bkgd(n),fcst(n,jj)
+                 print*,'Full name 2: ', bkgd(n+1),fcst(n+1,jj)
+                 write(6,*)valid_time_1,i4time_anal,valid_time_2
+                 print*
+
+               endif
+
+             endif   ! (n.lt.ibkgd)
+
+!!!  partial if block, use_analysis=true,  by Huiling Yuan,  AAA001_A
+            else   !! add by Huiling Yuan, AAA001_B
+
              do jj=2,ifcst_bkgd(n)
                 af=fcst(n,jj-1)
                 read(af,'(i4)',err=888) ihour
@@ -479,6 +519,7 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
                 endif
              enddo
 
+             endif   !use_analysis.eqv..true., end Huiling Yuan,  AAA001
             else  !must be LAPS
 
              if(n.gt.1)then
@@ -495,7 +536,7 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
                print*,'Full name 2: ', bkgd(indx_for_best_init2)
               endif
 
-c            endif
+c             endif
 
               if(indx_for_best_init2.eq.0.and.
      +         indx_for_best_init1.eq.0)then
@@ -510,11 +551,11 @@ c            endif
                 print*,'Full name 1: ', bkgd(indx_for_best_init1)
                 print*,'Full name 2: ', bkgd(indx_for_best_init2)
                endif
-              endif
+              endif ! indx_for_best_init2
 
-             endif
+             endif ! n
 
-            endif
+            endif ! cmodel
          endif
          n=n+1
       enddo
@@ -525,10 +566,20 @@ c -----------------------------------------------------------------------------
       if(cmodel.ne.'LAPS')then
          if(indx_for_best_init.ne.0.and.indx_for_best_fcst.ne.0)then
             accepted_files = 2
+           if ((use_analysis .eqv. .true.) .AND.
+     1         (use_forecast .eqv. .false.))then   !! add  if block Huiling Yuan 20120905, AAA002
+!!!!  names(1) is the earlier file, and names(2) is the latter file, Huiling Yuan, 20120905
+            names(2)=bkgd(indx_for_best_init-1)//fcst(indx_for_best_init
+     +        ,indx_for_best_fcst)
+            names(1)=bkgd(indx_for_best_init)//fcst(indx_for_best_init
+     +        ,indx_for_best_fcst)
+           else
             names(2) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
      +        ,indx_for_best_fcst)
             names(1) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
      +        ,indx_for_best_fcst+1)
+           endif     !! endif Huiling Yuan AAA002
+
             print*,'Accepted file 1: ',TRIM(names(1))
             print*,'Accepted file 2: ',TRIM(names(2))
          else
