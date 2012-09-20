@@ -425,6 +425,7 @@ c     terscl=sqrt(sumt/(nx*ny))
       integer rejected_cnt
       integer laps_cycle_time
       logical use_analysis
+      logical use_forecast
       logical luse_sfc_bkgd
       logical smooth_fields
       logical lgb_only
@@ -476,7 +477,8 @@ c
       allocate (cmodels(maxbgmodels),bgpaths(maxbgmodels))
 
       call get_background_info(bgpaths,bgmodels,forecast_length
-     +,use_analysis,cmodels,itime_inc,smooth_fields,luse_sfc_bkgd
+     +,use_analysis,use_forecast,cmodels,itime_inc,smooth_fields
+     +,luse_sfc_bkgd
      +,lgb_only)
 
       call s_len(cmodels(1),lenm)
@@ -488,7 +490,8 @@ c
 
       call get_acceptable_files(i4time_sys_drop,bgpaths(1),bgmodels(1)
      +        ,names,max_files
-     +        ,use_analysis,bg_files,accepted_files,forecast_length
+     +        ,use_analysis,use_forecast,bg_files,accepted_files
+     +        ,forecast_length
      +        ,cmodels(1),nx,ny,nz,reject_names,rejected_cnt)
 
       print*,'Returned from get_acceptable_files'
