@@ -80,9 +80,37 @@ c
       character*9    fname9
       character*4    af
 
+!!    add by Huiling Yuan  for getting background information, 20120905, AAA001
+      character*256 bgpaths(maxbgmodels)
+      character*132 cmodel(maxbgmodels)
+      integer bgmodels(maxbgmodels)
+      integer forecast_length
+      integer itime_inc
+      integer nbgm
+      logical sfc_bkgd
+      logical use_analysis, use_forecast
+      logical smooth_fields
+      logical lgb_only
+      integer  i4reftime,i4valtime
+!!    end by Huiling Yuan, AAA001
 c_______________________________________________________________________________
 c
       write(6,*)' Subroutine time_interp...'
+
+!! add Huiling Yuan 20120905, AAA002
+c
+c Read information from static/background.nl,  from src/lib/laps_io.f 
+c
+      call get_background_info(bgpaths,bgmodels
+     +,forecast_length
+     +,use_analysis,use_forecast
+     +,cmodel,itime_inc,smooth_fields,sfc_bkgd,lgb_only)
+
+      print*, '----------------------------------------------'
+      print*, 'time_interp: use_analysis = ',use_analysis
+      print*, '             use_forecast = ',use_forecast
+      print*, '----------------------------------------------'
+!! end Huiling Yuan AAA002
 
       if(ext.eq.'lga') then
          do k=1,nz
@@ -119,7 +147,7 @@ c
          var(1,10)='PCP'
       endif
 
-      newfcst=fcst1-(i4time_valid2-i4time_now)
+
       weight=float(i4time_valid2-i4time_now)/
      .       float(i4time_valid2-i4time_valid1)
       print*,'Time interp weight = ',weight
@@ -131,11 +159,24 @@ c
       call  make_fnam_lp(time2, fname9, nstatus)
       print*,'Time interp file 2: ',fname9,af,'.'//ext
 
+!     add Huiling Yuan, 20120906, AAA003
+      if((use_analysis. eqv. .true.) .and. 
+     1   (use_forecast .eqv. .false.))then   
+      newfcst=i4time_now-i4time_valid1
+      call make_fnam_lp(time2,fname9,istatus)
+      imin=mod(newfcst,3600)/60
+      ihour=newfcst/3600
+      write(af,'(2i2.2)') ihour,imin
+      print *,'Time interp output file: ',fname9//af,'.'//ext(1:3)
+
+      else
+      newfcst=fcst1-(i4time_valid2-i4time_now)
       call make_fnam_lp(time1,fname9,istatus)
       imin=mod(newfcst,3600)/60
       ihour=newfcst/3600
       write(af,'(2i2.2)') ihour,imin
       print *,'Time interp output file: ',fname9//af,'.'//ext(1:3)
+      endif   ! end if block use_analysis=true, Huiling Yuan, 20120906, AAA003
 
       call s_len(dir,lend)
       cfilespec=dir(1:lend)//'/'//fname9//af//'.'//ext
@@ -149,6 +190,7 @@ c
       allocate (grid1(nx,ny,nz)
      &         ,grid2(nx,ny,nz)
      &         ,gridn(nx,ny,nz))
+
 
       do n=1,ngrids
 
@@ -196,19 +238,32 @@ c
          enddo
          enddo
          enddo
+
+!        add Huiling Yuan, 20120906, AAA004
+         if((use_analysis. eqv. .true.) .AND. 
+     1      (use_forecast .eqv. .false.)      )then   
+            i4reftime=time2
+            i4valtime=time2+newfcst
+         else
+            i4reftime=time1
+            i4valtime=time1+newfcst
+         endif    ! end Huiling Yuan, AAA004
+ 
 c
 !        istatus = ishow_timer()
          comment(1) = 'Time Interpolated: '//comment(1)
          if(ext.eq.'lga')then
-            call write_laps(time1,time1+newfcst,dir,ext,
+!YHL 20120906            call write_laps(time1,time1+newfcst,dir,ext,
+            call write_laps(i4reftime,i4valtime,dir,ext,
      .           nx,ny,nz,nz,var(1,n),ip,lvl_coord,units,comment,
      .           gridn,istatus)
          else
-            call write_laps(time1,time1+newfcst,dir,ext,
+!YHL 20120906            call write_laps(time1,time1+newfcst,dir,ext,
+            call write_laps(i4reftime,i4valtime,dir,ext,
      .           nx,ny,1,1,var(1,n),ip,lvl_coord,units,comment,
      .           gridn,istatus)
          endif
-          
+
       enddo
 
       deallocate (grid1, grid2, gridn)
