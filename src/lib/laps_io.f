@@ -1610,6 +1610,7 @@ c
         if(i4_diff_min .gt. i4tol)then
            write(6,*)' No remaining files found within ',i4tol
      1              ,' sec time window ',ext(1:5),var_2d
+           write(6,*)' Closest file (in seconds) is ',i4_diff_min
 
            lcont=.false.
 
@@ -1964,6 +1965,7 @@ c     include 'bgdata.inc'
       integer nbgm
       logical sfc_bkgd
       logical use_analysis
+      logical use_forecast
       logical smooth_fields
       logical lgb_only
 
@@ -1971,7 +1973,8 @@ c     include 'bgdata.inc'
 
       call get_background_info(bgpaths,bgmodels
      +,forecast_length
-     +,use_analysis,cmodel,itime_inc,smooth_fields,sfc_bkgd,lgb_only)
+     +,use_analysis,use_forecast
+     +,cmodel,itime_inc,smooth_fields,sfc_bkgd,lgb_only)
 
       nbgm=0
       do i=1,maxbgmodels
