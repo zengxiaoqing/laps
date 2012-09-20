@@ -613,11 +613,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numGatesR'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var numGatesR'
+        numGatesR = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesR)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var numGatesR'
+          numGatesR = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -627,11 +630,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numGatesR_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesR_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var numGatesR_HI'
+        numGatesR_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesR_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var numGatesR_HI'
+          numGatesR_HI = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -641,11 +647,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numGatesV'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesV)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var numGatesV'
+        numGatesV = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesV)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var numGatesV'
+          numGatesV = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -655,11 +664,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numGatesV_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesV_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var numGatesV_HI'
+        numGatesV_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesV_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var numGatesV_HI'
+          numGatesV_HI = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -669,11 +681,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numRadialsR'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadialsR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var numRadialsR'
+        numRadialsR = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadialsR)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var numRadialsR'
+          numRadialsR = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -683,11 +698,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numRadialsR_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadialsR_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var numRadialsR_HI'
+        numRadialsR_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadialsR_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var numRadialsR_HI'
+          numRadialsR_HI = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -697,11 +715,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numRadialsV'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadialsV)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var numRadialsV'
+        numRadialsV = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadialsV)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var numRadialsV'
+          numRadialsV = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -711,11 +732,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numRadialsV_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadialsV_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var numRadialsV_HI'
+        numRadialsV_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadialsV_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var numRadialsV_HI'
+          numRadialsV_HI = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
