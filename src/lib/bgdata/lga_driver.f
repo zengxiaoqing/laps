@@ -1823,6 +1823,7 @@ c        endif
      +     bg_valid(i),bg_valid(i-1),laps_cycle_time,
      +     i4time_bg_valid(i),i4time_bg_valid(i-1)
 
+!        i4time_bg_valid times expected to be in reverse order 
          if(i4time_bg_valid(i-1) .gt.i4time_now   .and.
      +      i4time_bg_valid(i)   .lt.i4time_now  )then
             ext = 'lga'
