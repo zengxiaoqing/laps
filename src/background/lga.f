@@ -131,7 +131,7 @@ c
       character*132 cmodels(maxbgmodels)
       character*132 cmodel
       integer forecast_length
-      logical use_analysis, use_systime
+      logical use_analysis, use_forecast, use_systime
       logical ltime(-1:1)
       logical luse_sfc_bkgd
       logical smooth_fields
@@ -149,7 +149,7 @@ c
 c Read information from static/background.nl
 c
       call get_background_info(bgpaths,bgmodels
-     +,forecast_length,use_analysis,cmodels
+     +,forecast_length,use_analysis,use_forecast,cmodels
      +,itime,smooth_fields,luse_sfc_bkgd,lgb_only)
 
       nbgmodels=0
@@ -278,7 +278,8 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
            print*
 
            call get_acceptable_files(i4time_now_lga,bgpath,bgmodel
-     +        ,names,max_files,use_analysis,bg_files,accepted_files
+     +        ,names,max_files,use_analysis,use_forecast,bg_files
+     +        ,accepted_files
      +        ,forecast_length,cmodel
      +        ,nx_bg,ny_bg,nz_bg,reject_names,reject_cnt)
 
