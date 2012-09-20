@@ -1,6 +1,6 @@
       subroutine read_fuafsf_cdf(fullname, x, y, z, 
      +     ht, level, om, sh, t3, u3, v3,
-     +     usfc, vsfc, tsfc, dsfc, psfc, mslp, zsfc, 
+     +     usfc, vsfc, tsfc, dsfc, psfc, mslp, zsfc, rto,
      +     lmr, llr, s8a, swi, tpw,
      +     istatus)
 C
@@ -30,6 +30,7 @@ C
      +,    usfc( x,  y)
      +,    vsfc( x,  y)
      +,    zsfc( x,  y)
+     +,    rto( x,  y)
      +,    lmr( x,  y)
      +,    llr( x,  y)
      +,    s8a( x,  y)
@@ -355,6 +356,24 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var zsfc'
         istatus = -1            
+      endif
+
+      write(6,*)' Reading RTO'
+C
+C     Variable        NETCDF Long Name
+C      rto          "LAPS Storm-Total Precip"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'rto',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rto'
+        istatus = -1          
+      endif
+      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,rto)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rto'
+        istatus = -1          
       endif
 
       write(6,*)' Reading LMR'
