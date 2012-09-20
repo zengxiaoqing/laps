@@ -343,8 +343,11 @@
               c5_name_min = c5_name_a(is)
             endif
           enddo ! is 
-          write(6,*)' minimum distance sounding ob is ',ismin
+     
+          if(n_profiles .gt. 0)then
+              write(6,*)' minimum distance sounding ob is ',ismin
      1                           ,nlevels_obs_pr(ismin),c5_name_min
+          endif
 
           i_overlay = i_overlay + 1
           write(6,*)' Sounding ob data, nlevels is: '
@@ -405,7 +408,7 @@
 
 !         c_label = 'Sounding ob '//c5_name_min
 !         write(c_label,60)c5_name_min,lat_pr(ismin),lon_pr(ismin)
-          write(c_label,60)trim(obstype(ismin)),c5_name_min
+          write(c_label,60)trim(obstype(ismin)),trim(c5_name_min)
      1                    ,lat_pr(ismin),lon_pr(ismin)
  60       format(a,' Ob ',a5,2f9.2)
 
