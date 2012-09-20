@@ -11,7 +11,7 @@ character*256 syscmd
 integer bgmodel
 
 integer ct,n2df,n3df
-parameter (n2df = 7)
+parameter (n2df = 8)
 parameter (n3df = 0)
 
 real sgrid(NX_L,NY_L,n2df)
@@ -64,6 +64,7 @@ real usf_laps(NX_L,NY_L)
 real vsf_laps(NX_L,NY_L)
 real swi_laps(NX_L,NY_L)
 real s8a_laps(NX_L,NY_L)
+real rto_laps(NX_L,NY_L)
 
 logical wrapped
 
@@ -74,6 +75,7 @@ call read_fuafsf_cdf(fname_in &
                     ,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg &
                     ,uwbg_sfc, vwbg_sfc, tpbg_sfc, tdbg_sfc &     
                     ,prbg_sfc, mslpbg, htbg_sfc &
+                    ,pcpbg &
                     ,lmr, llr, s8a, swi, tpw &
                     ,istatus) 
 if(istatus.ne.1 .AND. istatus.ne.-1)then
@@ -122,6 +124,10 @@ if(.false.)then
     call hinterp_field_2d(nx_bg,ny_bg,NX_L,NY_L,1, &
                          grx,gry,swi,swi_laps,wrapped)
 
+    write(6,*)' Calling hinterp_field_2d for rto'
+    call hinterp_field_2d(nx_bg,ny_bg,NX_L,NY_L,1, &
+                         grx,gry,pcpbg,rto_laps,wrapped)
+
 else
 
     write(6,*)' Calling bilinear_laps_2d for lmr'
@@ -142,10 +148,16 @@ else
     write(6,*)' Calling bilinear_laps_2d for swi'
     call bilinear_laps_2d(grx,gry,nx_bg,ny_bg,NX_L,NY_L,swi,swi_laps)
 
+    write(6,*)' Calling bilinear_laps_2d for rto'
+    call bilinear_laps_2d(grx,gry,nx_bg,ny_bg,NX_L,NY_L,pcpbg,rto_laps)
+
 
 endif
 
 s8a_laps = r_missing_data
+where (rto_laps(:,:) .ne. r_missing_data)
+    rto_laps(:,:) = rto_laps(:,:) / 1000.
+endwhere
 
 write(6,*)' lmr ranges: ',minval(lmr),maxval(lmr),minval(lmr_laps),maxval(lmr_laps)
 write(6,*)' tsf ranges: ',minval(tpbg_sfc),maxval(tpbg_sfc),minval(tsf_laps),maxval(tsf_laps)
@@ -154,6 +166,7 @@ write(6,*)' usf ranges: ',minval(uwbg_sfc),maxval(uwbg_sfc),minval(usf_laps),max
 write(6,*)' vsf ranges: ',minval(vwbg_sfc),maxval(vwbg_sfc),minval(vsf_laps),maxval(vsf_laps)
 write(6,*)' swi ranges: ',minval(swi),maxval(swi),minval(swi_laps),maxval(swi_laps)
 write(6,*)' s8a ranges: ',minval(s8a),maxval(s8a),minval(s8a_laps),maxval(s8a_laps)
+write(6,*)' rto ranges: ',minval(pcpbg),maxval(pcpbg),minval(rto_laps),maxval(rto_laps)
 
 write(6,*)' Setup output arrays'
 ct=1
@@ -164,6 +177,7 @@ sgrid(1:NX_L,1:NY_L,ct) = usf_laps; name2d(ct)='USF'; com2d(ct)='Sfc U-Component
 sgrid(1:NX_L,1:NY_L,ct) = vsf_laps; name2d(ct)='VSF'; com2d(ct)='Sfc V-Component Wind'       ; ct=ct+1
 sgrid(1:NX_L,1:NY_L,ct) = swi_laps; name2d(ct)='SWI'; com2d(ct)='Incoming SW Radiation'      ; ct=ct+1
 sgrid(1:NX_L,1:NY_L,ct) = s8a_laps; name2d(ct)='S8A'; com2d(ct)='11u Brightness Temperature' ; ct=ct+1
+sgrid(1:NX_L,1:NY_L,ct) = rto_laps; name2d(ct)='RTO'; com2d(ct)='Run Total Precip Accum'     ; ct=ct+1
 
 if(ct-1 .ne. n2df)then
     write(6,*)' ERROR in lfmregrid_sub: value of ct is inconsistent with n2df ',ct,n2df
