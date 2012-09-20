@@ -190,6 +190,8 @@ c        call s_len(projname,leng)
             return
          endif
 
+! Hongli Jiang add the tangentail option. 9/4/2012 
+
          if(projname(1:l).eq. 'polar'.or.
      &projname(1:l).eq.'polar stereographic')then
             gproj='PS'
@@ -198,6 +200,8 @@ c        call s_len(projname,leng)
          elseif(projname(1:l).eq. 'mercator')then
             gproj='MC'
          elseif(projname(1:l).eq.'secant lambert conformal')then
+           gproj='LC'
+         elseif(projname(1:l).eq.'tangential lambert conformal')then
            gproj='LC'
          else
            print*,'ERROR: unable to determine gproj setting ',gproj
