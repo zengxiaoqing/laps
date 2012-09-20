@@ -176,7 +176,7 @@ char *g_name;
         if (i_flag == 1)
           return 1;
         else
-          printf("error in check_laps_inv i_flag != 1\n");
+          printf("warning in check_laps_inv i_flag != 1\n");
           return -1;
 }
 
