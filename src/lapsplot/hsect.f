@@ -2730,6 +2730,8 @@ cabdel
 
                 write(6,*)' c_field = ',c_field,' ',c_field(3:3)
 
+                field_2d = radar_array ! diff support
+
 !               Display R field
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(radar_array,1e0,0.,chigh,cint_ref,
