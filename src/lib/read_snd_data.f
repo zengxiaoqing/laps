@@ -359,7 +359,7 @@ cdoc    Returns sounding wind, T, Td data from the SND file
      1                         ,n_profiles                             ! O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
      1                         ,c5_name,i4time_ob_pr,obstype           ! O
-     1                         ,cloud_base_temp,cloud_liquid           ! O
+     1                         ,cloud_base_temp,cloud_liquid_int       ! O
      1                         ,istatus)                               ! O
 
 cdoc    Returns sounding metadata from the SND file
@@ -370,7 +370,7 @@ cdoc    Returns sounding metadata from the SND file
         real elev_pr(MAX_PR)
 
         real cloud_base_temp(MAX_PR)
-        real cloud_liquid(MAX_PR)
+        real cloud_liquid_int(MAX_PR)
 
         integer i4time_ob_pr(MAX_PR)
         integer nlevels_obs_pr(MAX_PR)
@@ -420,13 +420,13 @@ cdoc    Returns sounding metadata from the SND file
             read(line,511,err=530)ista,nlevels_in,
      1           lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),
      1           c5_name(i_pr),a9time_ob,obstype(i_pr),
-     1           cloud_base_temp(i_pr),cloud_liquid(i_pr)
+     1           cloud_base_temp(i_pr),cloud_liquid_int(i_pr)
         else
             read(line,511,err=530)ista,nlevels_in,
      1           lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),
      1           c5_name(i_pr),a9time_ob,obstype(i_pr)
             cloud_base_temp(i_pr) = r_missing_data     
-            cloud_liquid(i_pr) = r_missing_data     
+            cloud_liquid_int(i_pr) = r_missing_data     
         endif
 
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8,f8.0,f8.0)
