@@ -121,6 +121,8 @@ c
 
         logical l_out_of_grid
 
+        call get_sfc_badflag(badflag,istatus)
+
 !       Initialize ista_snd
         do i = 1,max_cld_snd
             ista_snd(i) = 0
@@ -281,7 +283,7 @@ c place station at proper laps grid point
 
               cover = 0.
 
-              ht_base=ht_base_ret(i,l)
+              ht_base=ht_base_ret(i,l) ! Meters
 
               if(ht_base .gt. ht_defined+1.)then
 
@@ -405,6 +407,36 @@ C CLOUDS ARE NOW IN MSL
                       endif
                   endif
               enddo
+
+!             LCL check
+              if(t(i) .ne. badflag .and. td(i) .ne. badflag)then
+                  ht_lcl_agl = (t(i) - td(i)) * 250. * .3048 ! Meters
+                  if(td(i) .gt. 32.)then
+                      lcl_thresh = 300.
+                  else
+                      lcl_thresh = 600.
+                  endif
+              else
+                  ht_lcl_agl = 0. ! used for missing value
+                  lcl_thresh = 0.   
+              endif
+
+              if(ht_base .lt. (ht_lcl_agl - lcl_thresh))then
+                  write(6,111)t(i),td(i),ht_base,ht_lcl_agl                       
+111               format(' WARNING: ht_base << ht_lcl_agl (m) ',2f8.1 
+     1                                                         ,2f9.1)       
+                  goto 126                               ! Loop to next station
+
+              elseif(ht_base .lt. ht_lcl_agl)then
+                  write(6,112)t(i),td(i),ht_base,ht_lcl_agl                    
+112               format(' NOTE: ht_base < ht_lcl_agl (m) ',2f8.1,2f9.1)
+
+              else
+                  write(6,113,err=114)t(i),td(i),ht_base,ht_lcl_agl 
+113               format(' t,td,ht_base, ht_lcl (m) ',2f8.1,2f9.1)
+114               continue
+
+              endif
 
               if(l_parse(amt_ret(i,l),'FEW'))then
                   summation_cover=.125
@@ -671,8 +703,9 @@ C CLOUDS ARE NOW IN MSL
 !             Obtain summation cover directly from obs
               cvr_snd(n_cld_snd) = summation_cover
 
-        enddo ! l (Cloud layer)
+ 115          continue
 
+        enddo ! l (Cloud layer)
 
 !       Locate the highest ceiling
         k_ceil = nk
