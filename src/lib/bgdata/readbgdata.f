@@ -120,7 +120,7 @@ c domain fua/fsf but we'll try the get_lapsdata stuff first.
      +                          ,nx_bg, ny_bg, nzbg_ht
      +                          ,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg       
      +                          ,uwbg_sfc, vwbg_sfc, tpbg_sfc, tdbg_sfc       
-     +                          ,prbg_sfc, mslpbg, htbg_sfc
+     +                          ,prbg_sfc, mslpbg, htbg_sfc, pcpbg
      +                          ,lmr, llr, s8a, swi, tpw
      +                          ,istatus)
             if(istatus.ne.1)then
