@@ -202,9 +202,11 @@ c place station at proper laps grid point
 
           if(n_cloud_layers_ret(i) .eq. 0)then ! Kick out AMOS stations not
                                                ! reporting clouds this time
-              write(6,*)' No cloud layers reported - '
-     1          ,'CLR?/MSG?/AMOS? - goto end of loop '       
-     1          ,c_stations(i),' ',obstype(i),' ',atype(i)
+              if(i .le. 1000)then
+                  write(6,*)' No cloud layers reported - '
+     1              ,'CLR?/MSG?/AMOS? - goto end of loop '       
+     1              ,c_stations(i),' ',obstype(i),' ',atype(i)
+              endif
               goto 126
           endif
 
@@ -826,7 +828,7 @@ C CLOUDS ARE NOW IN MSL
 
                 write(6,21)t_subcloud
 21              format(' modify_sounding.....          '
-     1         ,'cf     t    dlt th r i   i   j kcld h-msl'
+     1         ,'cf     t    dlt th r i   i   j kcld m-msl'
      1         /' model    T    subcloud   = ',7x,f7.2)
 
 !               write(6,1)cf_model_base,t_modelfg(i,j,k),l_cf
