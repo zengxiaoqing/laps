@@ -371,6 +371,9 @@ c Find and read current satellite files... as many as 4 ir channels and vis.
          endif
       enddo
 
+      print*,'Nchannels = ',nchannels      
+
+      print*      
       print*,'Raw data line/elem dimensions: '
       print*,'-------------------------------'
       print*,'VIS: ',n_vis_lines,n_vis_elem
@@ -902,7 +905,7 @@ c ----------  GMS SATELLITE SWITCH -------
      &                      istatus)
 
                if(istatus .ne. 1)then
-                  write(*,*)'Error processing IR Satillite Data'
+                  write(*,*)'Error processing IR (Bnd-8) Satellite Data'
                else
                   if(csatid.eq.'meteos')then
                      call check_field_ave(nx_l,ny_l,ta8,favgth11u
@@ -951,7 +954,7 @@ c                    endif
      &                      istatus)
 
                if(istatus .ne. 1)then
-                  write(*,*)'Error processing IR Satillite Data'
+                  write(*,*)'Error processing IR (Bnd-4) Satellite Data'       
                else
                   if(csatid.eq.'meteos')then
                      call check_field_ave(nx_l,ny_l,ta4,favgth39u
@@ -989,7 +992,7 @@ c                    endif
      &                      istatus)
 
                if(istatus .ne. 1)then
-                  write(*,*)'Error processing IR Satillite Data'
+                  write(*,*)'Error processing IR (Bd-12) Satellite Data'       
                else
                   if(csatid.eq.'meteos')then
                      call check_field_ave(nx_l,ny_l,ta12,favgth12u
@@ -1027,7 +1030,7 @@ c                    endif
      &                      istatus)
 
                if(istatus .ne. 1)then
-                  write(*,*)'Error processing wv Satillite Data'
+                  write(*,*)'Error processing wv Satellite Data'
                else
                   if(csatid.eq.'meteos')then
                      call check_field_ave(nx_l,ny_l,ta6,favgth67u
