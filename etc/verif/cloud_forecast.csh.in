@@ -48,7 +48,7 @@ setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat | cut -c6-9`
 setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 
 
-setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/SWI/pt/$MODELTIME.stats
+setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/SWI/$SUBDIR/$MODELTIME.stats
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt
 
 # Setup True Type fonts and related environment variables
@@ -194,7 +194,11 @@ while ($IMEMBER <= $NMEMBERS)
 
         if ($PCT >= 80) then
             setenv LS 1
-            setenv LW 3
+            if (-d /w3/lapb) then
+                setenv LW 3
+            else
+                setenv LW 2
+            endif
         else 
             setenv LS 2
             setenv LW 1
@@ -204,7 +208,11 @@ while ($IMEMBER <= $NMEMBERS)
         setenv PCT ""
         setenv TITLE `echo $MEMBER | sed 's/_/ /g'`
         setenv LS 1
-        setenv LW 3
+        if (-d /w3/lapb) then
+            setenv LW 3
+        else
+            setenv LW 2
+        endif
 
     endif
 
