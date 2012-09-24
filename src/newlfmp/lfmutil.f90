@@ -388,7 +388,8 @@ if (make_micro) then
  rainmrsfc(:,:)=hrainmr_sig(:,:,1)
  graupmrsfc(:,:)=hgraupelmr_sig(:,:,1)
 
- if(.not. large_ngrid)then
+!if(.not. large_ngrid)then
+ if(.true.)then                  
 
 ! Generate cloud fields.
 
