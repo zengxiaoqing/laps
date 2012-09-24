@@ -1540,9 +1540,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            addressed.
 
            MADIS (LDAD) mesonet files also carry the GPS PW and related data,
-           including surface obs. LAPS does not yet read precipitable water 
-           from this format. If you receive MADIS mesonet data and would
-           like to see an interface to the MADIS PW data please contact us.
+           including surface obs. However there may be some questions about
+           the latency of this data feed for GPS. Based on tests conducted in
+           2011, with a LAPS cycle that begins at about 20min past the top of 
+           the hour, one can generally expect only 5-10% of the GPS data to 
+           be avaliable via MADIS when the code is configured to seek the data.
 
                       ----   2.3.9  Other Data Sources ---
 
@@ -4415,7 +4417,11 @@ Source directory: 'laps/src/newlfmp' (new default version)
 
    LAPS has a built-in verification package. This can be run after a model
    is run and the verifying observations and analyses are available. The
-   driver script is in 'etc/verif/verif_fcst_driver.csh'.
+   driver script is in 'etc/verif/verif_fcst_driver.csh'. This script has
+   several command line arguments that are described in comments at the top.
+
+   The script will produce stats files and PNG/GIF image output in the
+   'lapsprd/verif' directory tree.
 
 -------- 4.0 --  Porting code mods from LAPS users back to GSD --------------
 
