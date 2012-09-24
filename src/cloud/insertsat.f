@@ -385,6 +385,7 @@ c
      1     ,cloud_frac_vis_s                                              ! I
      1     ,lstat_co2_a(i,j)                                              ! I
      1     ,t_modelfg,sh_modelfg                                          ! I
+     1     ,pres_3d                                                       ! I
      1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
      1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
      1     ,cldtop_m(i,j),l_cloud_present                                 ! O
@@ -714,6 +715,7 @@ c
      1            ,cloud_frac_vis_s                                      ! I
      1            ,lstat_co2_a(i,j)                                      ! I
      1            ,t_modelfg,sh_modelfg                                  ! I
+     1            ,pres_3d                                               ! I
      1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
      1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
      1            ,cldtop_m(i,j),l_cloud_present                         ! O
@@ -754,7 +756,6 @@ c
 !             This works OK if tb8_k is warmer than T at the assumed cloud top
               if(.true.)then ! Should this depend on co2?
 
-!                 Note that cover is not really used here as an input
                   call correct_cover(cover,cover_new,cldtop_old
      1                              ,cldtop_m(i,j)
      1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
@@ -789,7 +790,6 @@ c
 !             This works OK if tb8_k is warmer than T at the assumed cloud top
               if(.true.)then ! Should this depend on co2?
 
-!                 Note that cover is not really used here as an input
                   call correct_cover(cover,cover_new,cldtop_old
      1                              ,cldtop_m(i,j)
      1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
@@ -824,7 +824,6 @@ c
 !             This works OK if tb8_k is warmer than T at the assumed cloud top
               if(.true.)then ! Should this depend on co2?
 
-!                 Note that cover is not really used here as an input
                   call correct_cover(cover,cover_new,cldtop_old
      1                              ,cldtop_m(i,j)
      1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
@@ -983,6 +982,7 @@ c
      1  ,cloud_frac_vis_s                                              ! I
      1  ,lstat_co2                                                     ! I
      1  ,t_modelfg,sh_modelfg                                          ! I
+     1  ,pres_3d                                                       ! I
      1  ,n_valid_co2,n_missing_co2,cldtop_co2_m,istat_co2              ! O
      1  ,cldtop_tb8_m,l_tb8                                            ! O
      1  ,cldtop_m,l_cloud_present                                      ! O
@@ -1008,6 +1008,7 @@ c
         real pres_sfc_pa(imax,jmax)           ! Input
         real t_modelfg(imax,jmax,klaps)       ! Input
         real sh_modelfg(imax,jmax,klaps)      ! Input
+        real pres_3d(imax,jmax,klaps)         ! Input
         real thresh_ir_diff1                  ! Input
         real topo                             ! Input
         real r_missing_data                   ! Input
@@ -1031,8 +1032,8 @@ c
         real arg,frac_k,temp_above,cldtop_temp_k
         integer kl
 
-!       Function call
-        real k_to_f
+!       Function calls
+        real k_to_f, jcost_cldtop
 
 !       Call the CO2 slicing method to get cloud tops
 
@@ -1093,13 +1094,16 @@ c
             call correct_cldtop_t_rad(tb8_k,t_gnd_k(i,j)               ! I
      1                           ,cloud_frac_vis_s(i,j)                ! I
      1                           ,istat_vis_potl                       ! I
-     1                           ,cldtop_temp_k,istatus)               ! O
+     1                           ,cldtop_temp_k,istat_vis_corr)        ! O
 
 !           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point)
 
-! abdel added this when the model is the brighteness temp is too cold than the model a klaps level
+            costmin_x = 9999. ! Initial cost value from crossing points
+            cloud_frac_tb8 = 1.0
+
+! abdel added this when the model is the brightness temp is too cold than the model a klaps level
 	               
-	    if (cldtop_temp_k .le. temp_3d(i,j,klaps))then             
+	    if (cldtop_temp_k .le. temp_3d(i,j,klaps))then ! Extrapolate
                 frac_k = (temp_3d(i,j,klaps) - temp_3d(i,j,klaps-1))
      1                 /  (cldtop_temp_k     - temp_3d(i,j,klaps))
               
@@ -1109,6 +1113,21 @@ c
                 if(arg .ge. topo)then
                     cldtop_tb8_m = arg
                 endif
+
+                qamb = sh_modelfg(i,j,klaps) + frac_k *
+     1                (sh_modelfg(i,j,klaps) - sh_modelfg(i,j,klaps-1))
+
+                arg =  alog(pres_3d(i,j,klaps)) + frac_k *
+     1                (alog(pres_3d(i,j,klaps)) 
+     1               - alog(pres_3d(i,j,klaps-1)))
+
+                p_pa = exp(arg)
+
+                if(p_pa .ge. 5000.)then
+                    costmin_x = jcost_cldtop(cldtop_temp_k,tb8_k,qamb
+     1                                                    ,p_pa,idebug)      
+                endif
+
             endif 
 		
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1130,6 +1149,15 @@ c
                         cldtop_tb8_m = arg
                     endif
 
+                    qamb = sh_modelfg(i,j,kl) + frac_k *
+     1                    (sh_modelfg(i,j,kl+1) - sh_modelfg(i,j,kl))
+
+                    p_pa = pres_3d(i,j,kl) + frac_k *
+     1                    (pres_3d(i,j,kl+1) - pres_3d(i,j,kl))
+
+                    costmin_x = jcost_cldtop(cldtop_temp_k,tb8_k,qamb
+     1                                                 ,p_pa,idebug)      
+
                     if(idebug .eq. 1)then
                         if(arg .lt. topo)then
                             write(6,*)
@@ -1144,8 +1172,9 @@ c
      1                           ,k_to_f(cldtop_temp_k)
      1                           ,arg,topo,k_to_f(temp_3d(i,j,kl))
      1                           ,k_to_f(temp_above)
+     1                           ,costmin_x
 122                     format(1x,2i4,' cldtp_t',i4,f8.3,2f8.1,f11.1
-     1                           ,f21.1,2f6.1)
+     1                           ,f21.1,2f6.1,f9.2)
 123                 endif
 
                 endif
@@ -1153,6 +1182,62 @@ c
                 temp_above = temp_3d(i,j,kl)
 
             enddo ! kl
+
+!           Evaluate cost function at all the LAPS levels
+            costmin_lvl = 9999.       
+
+            if(idebug .eq. 1)then
+                write(6,*)
+     1      '          p      tb8     del_t   del_q  del_rh     jcost'
+            endif
+
+            do kl = klaps,k_terrain,-1
+                costlvl = jcost_cldtop(temp_3d(i,j,kl),tb8_k
+     1                                ,sh_modelfg(i,j,kl)
+     1                                ,pres_3d(i,j,kl),idebug)
+
+                if(costlvl .lt. costmin_lvl)then
+                    costmin_lvl = costlvl
+                    kl_min = kl
+                endif
+            enddo ! kl
+
+            if(costmin_lvl .lt. costmin_x)then
+
+!               Calculate pot'l new cloud top and cover                             
+                cldtop_new_potl_m = heights_3d(i,j,kl_min)
+
+                if(temp_3d(i,j,kl_min) .lt. tb8_k)then
+                    call correct_cover(cloud_frac_tb8
+     1                  ,cloud_frac_tb8_potl
+     1                  ,cldtop_tb8_m,cldtop_new_potl_m          
+     1                  ,temp_3d,tb8_k,t_gnd_k(i,j)
+     1                  ,heights_3d
+     1                  ,imax,jmax,klaps,i,j,istatus)
+                else
+                    cloud_frac_tb8_potl = cloud_frac_tb8
+                endif
+
+                if(idebug .eq. 1)then
+                    write(6,131)i,j,kl_min                        
+     1                     ,costmin_lvl,tb8_k,temp_3d(i,j,kl_min)
+     1                     ,cloud_frac_tb8_potl
+     1                     ,cldtop_new_potl_m              
+131                 format(1x,'Found lower cost function at: ',8x,2i6,i4
+     1                ,f12.4,2f8.1,f6.2,f8.0)
+                endif
+
+                if(.false.)then ! Set new cloud top and cover
+                    cldtop_tb8_m = cldtop_new_potl_m            
+                    cloud_frac_tb8 = cloud_frac_tb8_potl
+                endif
+
+            else
+                if(idebug .eq. 1)then
+                    write(6,*)' No lower cost function '          
+     1                        ,costmin_lvl,costmin_x                 
+                endif
+            endif
 
         endif ! We will want to use a 11u determined cloud top
 
@@ -1179,7 +1264,7 @@ c
 
             l_cloud_present = .true.
             cldtop_m = cldtop_tb8_m
-            sat_cover = 1.0 
+            sat_cover = cloud_frac_tb8
             istat_39_add = 1
 
         elseif( (.not. l_tb8) .AND. istat_vis_potl .eq. 1 
@@ -1198,7 +1283,7 @@ c
         else                          ! Using Band 8 (11.2mm) data only
             l_cloud_present = l_tb8
             cldtop_m = cldtop_tb8_m
-            sat_cover = 1.0 
+            sat_cover = cloud_frac_tb8
 
         endif
 
@@ -1860,6 +1945,46 @@ c
 
         call filter_2dx(array_out,ni,nj,1,+0.5)
         call filter_2dx(array_out,ni,nj,1,-0.5)
+
+        return
+        end
+
+        function jcost_cldtop(tamb_k,tb8_k,qamb,p_pa,idebug)
+
+        real jcost_cldtop, k_to_c, make_ssh
+
+        delta_t = tb8_k - tamb_k
+
+        p_mb = p_pa / 100.
+
+        tamb_c = k_to_c(tamb_k)
+
+!       qsat_amb = ssh(p_mb,tamb_c) / 1000.
+        qsat_amb = make_ssh(p_mb,tamb_c,1.0,-5.) / 1000.
+
+        delta_q = max(qsat_amb - qamb,0.) ! set supersaturated to 0.
+
+        rh_amb = qamb / qsat_amb ! w.r.t. liquid OR ice
+
+        delta_rh = max(1.0 - rh_amb,0.) ! set supersaturated to 0.
+
+!       Favor warm brightness temp with still some allowance for cold
+!       brightness temps in the boundary layer
+        if(delta_t .gt. 0.)then
+            t_coeff = 0.04
+        else
+            t_coeff = 2.
+        endif
+
+        jcost_cldtop = abs(delta_t) * t_coeff
+     1               + abs(delta_q) * 100.
+     1               + abs(delta_rh) * 10.
+
+        if(idebug .eq. 1)then
+            write(6,1)p_mb,tb8_k,delta_t,delta_q*1000.,delta_rh*100.
+     1               ,jcost_cldtop
+1           format(1x,'jcost',2f8.1,f8.1,f8.1,f8.1,f12.4)
+        endif
 
         return
         end
