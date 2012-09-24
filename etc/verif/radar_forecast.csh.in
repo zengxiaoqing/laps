@@ -103,13 +103,13 @@ if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be pr
     if (-d /w3/lapb) then
         setenv KEY_WIDTH -19.5 
     else
-        setenv KEY_WIDTH -19.5
+        setenv KEY_WIDTH -7.1
     endif
 else                                                     # Percentage will not be present
     if (-d /w3/lapb) then
         setenv KEY_WIDTH -16.2 
     else
-        setenv KEY_WIDTH -16.2 
+        setenv KEY_WIDTH -7.1
     endif
 endif
 
@@ -174,7 +174,7 @@ else if ($SUBDIR == "LMR") then
     echo 'set title "Composite Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
 endif
 echo 'set key ins'                                                       >> $GNUPLOTFILE
-echo 'set key left box'                                                  >> $GNUPLOTFILE
+echo 'set key right box'                                                 >> $GNUPLOTFILE
 echo 'set key spacing' $KEY_SPACING                                      >> $GNUPLOTFILE
 echo 'set key height' $KEY_HEIGHT                                        >> $GNUPLOTFILE
 echo 'set key width' $KEY_WIDTH                                          >> $GNUPLOTFILE
