@@ -6,6 +6,8 @@
    lvd_sat_ingest                        lvd_sat_ingest.f
        config_satellite_lvd              lib/read_namelist.f
            conf_isjtkc                          "
+              satellite_common_lvd       include/satellite_common_lvd.inc
+              satdata_lvd_table          include/satdata_lvd_table.for
        compute_nav_ll                    compute_nav_llij.f
            genlvdlut_lvd                 lib/satellite/genlvdlut_lvd.f 
                get_lut_lambert 
