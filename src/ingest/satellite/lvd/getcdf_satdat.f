@@ -352,13 +352,23 @@ c
             endif
          enddo
          if(.not.found_lvd_match)then
+
+!           Determine j as the beginning of the channel part
             do k=255,1,-1
                if(c_filename_sat(i)(k:k).eq.'_')then
                   j=k+1
                   goto 121
                endif
             enddo
+
+!           Determine jj as the end of the channel part
 121         jj=index(c_filename_sat(i),' ')-1
+
+!           So far jj (end of file index) is assumed to be the end of the
+!           channel part. We now strip off the '.nc' if present.
+            if(c_filename_sat(i)(jj-2:jj) .eq. '.nc')then
+               jj = jj-3
+            endif
 
             do k=1,nchannels
                if(c_filename_sat(i)(j:jj).eq.chtype(k))then
