@@ -147,11 +147,11 @@ if (trim(mtype) /= 'st4') then
   nvar2d=16
   if(.not. large_ngrid)then
       nvar3d=7 ! add 1 for tkesig if needed 
-  else
+  else ! large_ngrid
     if(.not. large_pgrid)then ! process U,V
-      nvar3d=5
+      nvar3d=6
     else
-      nvar3d=3
+      nvar3d=4
     endif
   endif
   if (make_micro) nvar3d=nvar3d+5
@@ -184,11 +184,7 @@ if (trim(mtype) /= 'st4') then
   nlhflux  =>ngrid(1:nx,1:ny,ct); ct=ct+1
 
   npsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_p = .true.
-
-  if(.not. large_ngrid)then
-      nzsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_z = .true.
-  endif
-
+  nzsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_z = .true.
   ntsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_t = .true.
   nmrsig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_mr = .true.
 
@@ -238,9 +234,9 @@ if(.not. large_ngrid)then ! state variables
    nvar3dh=7
 else
    if(.not. large_pgrid)then ! process U,V
-      nvar3dh=5
+      nvar3dh=6
    else
-      nvar3dh=3
+      nvar3dh=4
    endif
 endif
 
@@ -263,9 +259,7 @@ ct=1
 
 hpsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 
-if(.not. large_ngrid)then
-    hzsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-endif
+hzsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 
 htsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 hmrsig   =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
