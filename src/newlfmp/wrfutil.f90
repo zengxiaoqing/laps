@@ -196,7 +196,7 @@ else
   print*,' Skipping read of WRF W ',large_ngrid,large_pgrid
 endif ! large_ngrid
 
-if(.not. large_ngrid)then ! Z
+if(.true.)then ! Z
   print*,' Reading WRF Z'
   icode=nf_inq_varid(ncid,'PH',nid)
   if (icode .eq. 0) then
