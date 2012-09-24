@@ -253,7 +253,11 @@ while ($IMEMBER <= $NMEMBERS)
         echo "PCT being compared to threshold of 80 is: $PCT"
         if ($PCT >= 80) then
             setenv LS 1
-            setenv LW 3
+            if (-d /w3/lapb) then
+                setenv LW 3
+            else
+                setenv LW 2
+            endif
         else 
             setenv LS 2
             setenv LW 1
@@ -263,7 +267,11 @@ while ($IMEMBER <= $NMEMBERS)
         setenv PCT ""
         setenv TITLE `echo $MEMBER | sed 's/_/ /g'`
         setenv LS 1
-        setenv LW 3
+        if (-d /w3/lapb) then
+            setenv LW 3
+        else
+            setenv LW 2
+        endif
 
     endif
 
