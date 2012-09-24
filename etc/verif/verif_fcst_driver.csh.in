@@ -126,8 +126,10 @@ foreach SUBDIR (REF LMR)
 
     ls -lrt $IMGDIR/radar_fcst_all_[0-9]???.png
 
-    echo "convert -delay 150 -loop 0 `ls -rt $IMGDIR/radar_fcst_all_[0-9]???.png` $IMOUT"
-          convert -delay 150 -loop 0 `ls -rt $IMGDIR/radar_fcst_all_[0-9]???.png` $IMOUT
+    setenv LASTIMG `ls -rt $IMGDIR/radar_fcst_all_[0-9]???.png | tail -1`
+
+    echo "convert -delay 150 -loop 0 `ls -rt $IMGDIR/radar_fcst_all_[0-9]???.png` $LASTIMG $IMOUT"
+          convert -delay 150 -loop 0 `ls -rt $IMGDIR/radar_fcst_all_[0-9]???.png` $LASTIMG $IMOUT
 
     echo ""
 
