@@ -201,18 +201,29 @@ c
        call check(tb8,r_missing_data,istatus_w,imax,jmax)
        call check(tc8,r_missing_data,istatus_f,imax,jmax)
 
+       istatus = 1
+
        if(istatus_a .lt. 0)then
           write(6,910) istatus_a
+          if(istatus_a .eq. -(ni*nj))then ! entire array is missing
+              istatus = 0
+          endif
        else
           write(6,*)'ta8 checked out ok'
        end if
        if(istatus_w .lt. 0)then
           write(6,911) istatus_w
+          if(istatus_w .eq. -(ni*nj))then ! entire array is missing
+              istatus = 0
+          endif
        else
           write(6,*)'tb8 checked out ok'
        end if
        if(istatus_f .lt. 0)then
           write(6,912) istatus_f
+          if(istatus_f .eq. -(ni*nj))then ! entire array is missing
+              istatus = 0
+          endif
        else
           write(6,*)'tc8 checked out ok'
        end if
