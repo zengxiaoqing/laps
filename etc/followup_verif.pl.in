@@ -298,12 +298,13 @@ foreach $var (@vars) {
 
 #             print "fcstprd 4b1: $fcstprd\n";
 
-              if($fcstprd eq "Solar" && $modelname =~ "hrrr" && $itime == 0){
-                print "NOTE: zero hour solar forecast assumed to be absent for the HRRR\n";
+#             if($fcstprd eq "Solar" && $modelname =~ "hrrr" && $itime == 0){
+#             if($fcstprd eq "Solar" && $itime == 0){
+#               print "NOTE: zero hour solar forecast assumed to be absent for the HRRR\n";
 #               print "fcstprd 4b2: $fcstprd\n";
-                push @fcstimagelist, $black_image;                            
-                $imiss++;
-              }elsif($fcstsize > 0){
+#               push @fcstimagelist, $black_image;                            
+#               $imiss++;
+              if($fcstsize > 0){
                 push @fcstimagelist, $fullfcst_image;                            
               }else{
                 print "WARNING: $fullfcst_image has zero size\n";
