@@ -179,7 +179,7 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
 
          bg_files=nvt
 
-      elseif(cmodel.ne.'LAPS' .and. (use_forecast .eqv. .true.))then
+      elseif(cmodel.ne.'LAPS')then
 
          final_time = i4time_anal+3600*max(0,forecast_length)
          call get_file_times(cfilespec,max_files,names,itimes
