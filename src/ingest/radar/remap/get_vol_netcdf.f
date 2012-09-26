@@ -749,11 +749,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var timeR'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,timeR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var timeR'
+        timeR = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,timeR)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var timeR'
+          timeR = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -763,11 +766,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var timeR_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,timeR_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var timeR_HI'
+        timeR_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,timeR_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var timeR_HI'
+          timeR_HI = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -777,11 +783,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var timeV'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,timeV)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var timeV'
+        timeV = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,timeV)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var timeV'
+          timeV = i_missing_data
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -791,11 +800,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var timeV_HI'
-      endif
-      nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,timeV_HI)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var timeV_HI'
+        timeV_HI = i_missing_data
+      else
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,timeV_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var timeV_HI'
+          timeV_HI = i_missing_data
+        endif
       endif
 
 C   Variables of type DOUBLE
