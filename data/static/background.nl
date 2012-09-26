@@ -5,6 +5,7 @@
  bgmodels=13,13,5,
  forecast_length=12,
  use_analysis=.false.,
+ use_forecast=.true.,
  cmodel='RUC','RUC','RUC40_NATIVE',
  itime_inc =0,
  smooth_fields = .false.,
@@ -89,9 +90,12 @@ c
 c forecast_length = the length in hrs of the oldest forecast allowed (to be processed by lga)
 c                   as a background in laps
 c
-c use_analysis =  .true. -> forces backgrounds to be produced from model initial times.
+c use_analysis =  .true. -> backgrounds will be produced from model initial times 
 c                 .false.-> lga only uses model forecasts, no initial time allowed.
-
+c
+c use_forecast =  .true. -> backgrounds will be produced from model forecasts
+c                 .false.-> lga only uses model analyses, no forecasts allowed.
+c
 c cmodel: this variable describes the specific type for a given value of bgmodel:
 c         allowable names are included above with the allowable values of bgmodel.
 c         new SBN (bgmodel=4) grid available 5-02 - MesoEta_SBN
