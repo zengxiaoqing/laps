@@ -2317,6 +2317,7 @@ c
             c_label='LCV '//comment_2d(1:24)
 
             if(var_2d_in .eq. 'S8A' .or. var_2d_in .eq. 'S3A')then
+              c_label(30:38) = '    Deg C'
               do i = 1,NX_L
               do j = 1,NY_L
                  if(vas(i,j).ne.r_missing_data)then
@@ -4961,7 +4962,7 @@ c                   cint = -1.
      1                           ,zoom,density,scale)       
 
             clow = 0.00
-            chigh = 7.00
+            chigh = namelist_parms%chigh_tpw
             plot_parms%color_power = 0.7
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
@@ -5581,7 +5582,8 @@ c                   cint = -1.
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'TPW')then
                     plot_parms%color_power = 0.7
-                    call ccpfil(field_2d,NX_L,NY_L,0.,7.0
+                    call ccpfil(field_2d,NX_L,NY_L,0.
+     1                         ,namelist_parms%chigh_tpw
      1                         ,'tpw',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'MSF' .or. var_2d .eq. 'RSF')then
@@ -6644,6 +6646,8 @@ c                   cint = -1.
      1                             ,namelist_parms,plot_parms)
 
             endif
+
+            field_2d = cloud_cvr ! Supports diff option
 
         elseif(c_type(1:2) .eq. 'gg')then
 
