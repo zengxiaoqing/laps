@@ -293,8 +293,7 @@ cdis
             endif
 
             if(iflag_cv .eq. 1)then
-!               c_label(14:33) =  '          Ceil & Vis'
-                c_label(14:38) =  ' Ceil (hFt) & Vis (miles)'
+                c_label(14:38) =  ' Ceil (hm) & Vis (miles)'
             elseif(iflag_cv .eq. 2)then
                 if(c_field(3:4) .eq. '24')then
                   if(namelist_parms%c_units_type .eq. 'english')then
@@ -464,7 +463,7 @@ cdis
                             temp = 0.0
                         endif
 
-                        temp = w1 / 1000. ! convert feet to kft
+                        temp = w1 / 100. ! convert meters MSL to Hecto-meters
                     else ! no cloud layers
                         temp = r_missing_data
 
@@ -826,7 +825,7 @@ c
 
 !           Plot Cloud Height (t variable)
             if(t.gt.-75. .and. t.lt.140.) then 
-               write(t1,100,err=38) nint(t*10.) ! HectoFt of lowest layer
+               write(t1,100,err=38) nint(t) ! HectoMeters of lowest layer
                call left_justify(t1)
                CALL PCLOQU(u+du_t,v+dv,t1,charsize,ANGD,CNTR)
             endif
