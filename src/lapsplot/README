@@ -2,7 +2,9 @@
 
 driver                                            lapsplot_main.f
     lapsplot_3d                                   lapsplot_sub.f
+        get_lapsplot_parms                        drawctymap.f
         lapswind_plot                             hsect.f
+            get_lapsplot_parms                    drawctymap.f
             divergence                            divergence.f
             calc_potvort                             "
                 vorticity_abs                        "
@@ -23,6 +25,7 @@ driver                                            lapsplot_main.f
                 lapsplot_setup                      "
                     draw_county_map               drawctymap.f
         xsect                                     xsect.f
+            get_lapsplot_parms                    drawctymap.f
             mk_fcst_xlabel                          "
             write_label_lplot                     hsect.f
             label_other_stations                  xsect.f
