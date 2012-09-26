@@ -1134,8 +1134,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 CNTR = 0.
                 charsize = .0040 / zoom_eff
 
-!               Plot station name & location
-                if(c_staname .ne. 'NONAME')then 
+!               Plot station name if it exists
+                if(c_staname .ne. 'NONAME')then
                     call s_len(c_staname,len_name)
                     CALL PCHIQU(xsta, ysta-du2*3.5, 
      1                          c_staname(1:len_name),
@@ -1143,7 +1143,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 endif
 
 !               Plot ob location (with a plus sign)
-                if(mode .ge. 3)then
+                if(mode .ge. 3 .OR.
+     1             c8_obstype(1:3) .eq. 'RAO')then 
                     call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
                     call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
                 endif
@@ -1154,7 +1155,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
  100              format(i3)
  101              call left_justify(t1)
                   call s_len(t1,len_t1)
-                  CALL PCMEQU(xsta,ysta,t1(1:len_t1),charsize,ANGD,CNTR)
+                  if(c8_obstype(1:3) .eq. 'RAO')then 
+                      xloc = xsta + du2*4.0
+                  else
+                      xloc = xsta
+                  endif
+                  CALL PCMEQU(xloc,ysta,t1(1:len_t1),charsize,ANGD,CNTR)
                   write(6,102,err=103)ri,rj,t_c,t1,c8_obstype,c_staname
  102              format(1x,3f8.1,1x,a8,1x,a10)
  103              continue
