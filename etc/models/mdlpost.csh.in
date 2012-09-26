@@ -154,11 +154,13 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
             setenv GRIB_PCP_IN /public/data/fsl/hrrr/conus/wrftwo/$YYDDDHHMM$HRRRHH\00         
             if (-e $GRIB_PCP_IN) then
                 echo "$GRIB_PCP_IN is present"
-                echo "wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT"
-                      wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT
+
+#               echo "wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT"
+#                     wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT
               
-                echo "future command"
+                echo "new precip command"
                 echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT"                   
+                      wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT                   
 
             else
                 echo "$GRIB_PCP_IN is not present"
