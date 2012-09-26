@@ -16,6 +16,7 @@
           real chigh_sfcwind
           real chigh_3dwind
           real chigh_cape
+          real chigh_tpw
 
           integer latlon_int
           integer mode_supmap
@@ -28,6 +29,7 @@
           character*3 c3_time_zone
           character*30 c_institution
           character*6 c_vnt_units
+          character*7 c_tpw_units
           character*7 c_units_type
           character*7 c_pbl_depth_units
           character*10 c_ob_color
