@@ -1227,7 +1227,7 @@ c
      1                ,f12.4,2f8.1,f6.2,f8.0)
                 endif
 
-                if(.false.)then ! Set new cloud top and cover
+                if(.true.)then ! Set new cloud top and cover
                     cldtop_tb8_m = cldtop_new_potl_m            
                     cloud_frac_tb8 = cloud_frac_tb8_potl
                 endif
