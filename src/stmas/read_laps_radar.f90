@@ -211,9 +211,9 @@ subroutine reflectivity
   ! Reflectivity derived bounds:
   bk0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:fcstgrd(4),numstat+1) = 0.0
   rmax(1) = 45.0
-  rlow(1) = 0.1
+  rlow(1) = 0.5
   rmax(2) = 30.0
-  rlow(2) = 0.5
+  rlow(2) = 0.6
   do l=1,fcstgrd(4)
   do k=1,fcstgrd(3)
   do j=1,fcstgrd(2)
