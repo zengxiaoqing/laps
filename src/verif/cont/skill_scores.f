@@ -5,11 +5,14 @@
      1                       ,frac_fcst                  ! O 
      1                       ,bias,ets)                  ! O
 
+      integer,parameter :: k12 = selected_int_kind(12)
+
 !     First index is observed, second index is forecast
 !     0 is Yes, 1 is No
-      integer contable(0:1,0:1)
+      integer (kind=k12) :: contable(0:1,0:1)
 
-      integer hits,misses,false_alarms,correct_negatives,total 
+      integer (kind=k12) :: hits,misses,false_alarms,correct_negatives
+     1                     ,total 
       
       hits              = contable(0,0)
       misses            = contable(0,1)
@@ -17,6 +20,16 @@
       correct_negatives = contable(1,1)
 
       rmiss = -999.
+
+      if(minval(contable) .lt. 0)then
+          write(6,*)' ERROR: skill_scores contable has negative values'
+          frac_coverage = rmiss
+          frac_obs = rmiss
+          frac_fcst = rmiss
+          bias = rmiss
+          ets = rmiss
+          return
+      endif
 
       total = hits + misses + false_alarms + correct_negatives
 
