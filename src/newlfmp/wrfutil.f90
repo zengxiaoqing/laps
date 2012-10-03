@@ -192,12 +192,14 @@ if(.not. large_ngrid .AND. .not. large_pgrid)then ! W
       nwsig(:,:,k)=(fld3d(:,:,k)+fld3d(:,:,k+1))*0.5
    enddo
   endif
+  deallocate(fld3d)
 else
   print*,' Skipping read of WRF W ',large_ngrid,large_pgrid
 endif ! large_ngrid
 
 if(.true.)then ! Z
   print*,' Reading WRF Z'
+  allocate(fld3d(nx,ny,nz+1))
   icode=nf_inq_varid(ncid,'PH',nid)
   if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,fld3d)
