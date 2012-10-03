@@ -109,7 +109,7 @@ else                                                     # Percentage will not b
     if (-d /w3/lapb) then
         setenv KEY_WIDTH -16.2 
     else
-        setenv KEY_WIDTH -7.1
+        setenv KEY_WIDTH -4.0
     endif
 endif
 
