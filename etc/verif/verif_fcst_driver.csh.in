@@ -204,14 +204,14 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:10. '"Sfc Wind"'    "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/wsf_fcst_comp2.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:10.  "Sfc Wind"     "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/wsf_fcst_comp2.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2 '"Incremental Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2  "Incremental Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"Incremental Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "Incremental Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2 '"Incremental Precip"'    "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r01_fcst_comp.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2  "Incremental Precip"     "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r01_fcst_comp.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"Incremental Precip"'    "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r01_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "Incremental Precip"     "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r01_fcst_comp.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2 '"Incremental Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.:0.2  "Incremental Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"Incremental Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "Incremental Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0 '"Run Total Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0  "Run Total Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log
