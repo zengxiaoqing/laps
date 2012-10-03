@@ -395,6 +395,7 @@
               do itime_fcst = istart,n_fcst_times
 
                 cnt = 0.
+                cnt_write = 0.
 
                 itime = itime_fcst + 1
 
@@ -582,6 +583,7 @@
 
                   write(6,*)var_2d,' range is ',minval(var_fcst_2d)
      1                                         ,maxval(var_fcst_2d)
+
                   if(l_persist .eqv. .true. .and. 
      1               l_good_persist .eqv. .false. .and.
      1               itime_fcst .eq. 0                  )then
@@ -815,17 +817,30 @@
 
                       elseif(trim(var_2d) .eq. 'R01' .OR. 
      1                       trim(var_2d) .eq. 'RTO'     )then ! convert M to IN
-                        var_fcst_s(ista) = var_fcst_2d(i_i,i_j) / .0254 
+
+                        if(var_fcst_2d(i_i,i_j) .gt. .000254 .OR. ! .01 inch
+     1                     var_s(ista)          .gt. 0.      )then
+                            var_fcst_s(ista) = var_fcst_2d(i_i,i_j) 
+     1                                       / .0254 
+                        else
+                            var_fcst_s(ista) = r_missing_data
+                            var_s(ista) = r_missing_data
+                        endif
 
                       else
                         var_fcst_s(ista) = var_fcst_2d(i_i,i_j)            
 
                       endif
 
-                      if(cnt .le. 50.)then
-                        write(6,1001)var_2d,ista,i_i,i_j 
-     1                              ,var_s(ista),var_fcst_s(ista)
-1001                    format(1x,a3,' ob/fcst ',3i8,2f9.3)
+                      if(var_fcst_s(ista)     .ne. r_missing_data .AND.
+     1                   var_s(ista)          .ne. r_missing_data .AND.
+     1                   var_fcst_2d(i_i,i_j) .ne. r_missing_data  )then   
+                        if(cnt_write .le. 50.)then
+                          write(6,1001)var_2d,ista,i_i,i_j 
+     1                                ,var_s(ista),var_fcst_s(ista)
+1001                      format(1x,a3,' ob/fcst ',3i8,2f9.3)
+                        endif
+                        cnt_write = cnt_write + 1.
                       endif
 
                       sumobs = sumobs + var_s(ista)
