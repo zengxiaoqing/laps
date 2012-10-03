@@ -78,7 +78,8 @@
         data var_a      /'REF','LMR'/ ! 3-D / composite ref
         data nthr_a     /5,5/        
 
-        integer contable(0:1,0:1)
+        integer,parameter :: k12 = selected_int_kind(12)
+        integer (kind=k12) :: contable(0:1,0:1)
 
         integer maxthr
         parameter (maxthr=5)
@@ -94,7 +95,7 @@
      1  frac_cvr_comp(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
         integer 
      1  n(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
-        integer 
+        integer (kind=k12) :: 
      1  n_sum(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
 
 !       integer nmissing_m(maxbgmodels)
