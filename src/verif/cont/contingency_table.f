@@ -13,7 +13,8 @@
 
 !       First index is observed, second index is forecast
 !       0 is Yes, 1 is No
-        integer contable(0:1,0:1)
+        integer,parameter :: k12 = selected_int_kind(12)
+        integer (kind=k12) :: contable(0:1,0:1)
 
         contable = 0 ! initialize
 
