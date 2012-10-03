@@ -15,6 +15,7 @@
         logical l_col /.true./
         logical l_exist
         logical l_plot_criteria
+        logical l_req_all_mdls /.true./
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
@@ -65,7 +66,7 @@
      1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF'
      1     ,'T3' ,'W3' ,'TPW','R01','RTO','S8A'/     
         data nthr_a     /1,1,1,1,1,1,1,1,1,1,1,1,1/        
-        data istart_a   /0,0,0,0,0,0,0,0,0,0,0,0,1/        
+        data istart_a   /0,0,0,0,0,0,0,0,0,0,1,1,1/        
         data ipersist_a /0,0,0,0,0,0,0,0,0,1,0,0,1/        
 
         integer contable(0:1,0:1)
@@ -405,16 +406,6 @@
 
           enddo ! idbz
 
-          where (n(:,:,:) .ne. imiss .AND. n(:,:,:) .gt. 0
-     1                       .AND. obs_mean(:,:,:) .ne. rmiss
-     1                       .AND. fcst_mean(:,:,:) .ne. rmiss
-     1                                                           )                
-           n_sum(:,:,:) = n_sum(:,:,:) + n(:,:,:)
-           obs_sum(:,:,:) = obs_sum(:,:,:)   + n(:,:,:)*obs_mean(:,:,:)
-           fcst_sum(:,:,:) = fcst_sum(:,:,:) + n(:,:,:)*fcst_mean(:,:,:)
-           sumsq(:,:,:) = sumsq(:,:,:) + n(:,:,:)*(rms(:,:,:)**2)
-          end where
-
 !         Write to log for informational purposes
           do imodel=2,n_fdda_models
              do itime_fcst = 0,n_fcst_times
@@ -439,18 +430,39 @@
              enddo ! itime_fcst
           enddo ! imodel
 
-          nsuccess = nsuccess + 1
           nsuccess_m(:) = nsuccess_m(:) + (1 - incomplete_run_m(:))
 
           nincomplete = nincomplete + incomplete_run
           nincomplete_m(:) = nincomplete_m(:) + incomplete_run_m(:)
 
-955       close(lun_stats_in)                                      
-
           nincomplete_t = 0
           do imodel=2,n_fdda_models
               nincomplete_t = nincomplete_t + incomplete_run_m(imodel)
           enddo 
+
+          if(nincomplete_t .eq. 0 .OR. 
+     1                             (l_req_all_mdls .eqv. .false.) )then
+              write(6,*)' Accumulating sums for this run '
+              nsuccess = nsuccess + 1
+
+              where (n(:,:,:) .ne. imiss .AND. n(:,:,:) .gt. 0
+     1                       .AND. obs_mean(:,:,:) .ne. rmiss
+     1                       .AND. fcst_mean(:,:,:) .ne. rmiss
+     1                                                           )                
+               n_sum(:,:,:) = n_sum(:,:,:) + n(:,:,:)
+               obs_sum(:,:,:) = 
+     1         obs_sum(:,:,:)   + n(:,:,:)*obs_mean(:,:,:)
+               fcst_sum(:,:,:) = 
+     1         fcst_sum(:,:,:) + n(:,:,:)*fcst_mean(:,:,:)
+               sumsq(:,:,:) = sumsq(:,:,:) + n(:,:,:)*(rms(:,:,:)**2)
+              end where
+
+          else
+              write(6,*)' Not accumulating sums for this run'
+
+          endif ! accumulate sums for this run
+
+955       close(lun_stats_in)                                      
 
           write(6,956)a9time_initial,nincomplete_t,
      1                (incomplete_run_m(imodel),imodel=2,n_fdda_models)
@@ -513,6 +525,9 @@
  969         format(i3)
          enddo ! imodel
          write(lun_summary_out,*)l_plot_criteria
+         ipct = nint(  (float(nsuccess          ) 
+     1                / float(n_init_times+1))*100.)
+         write(lun_summary_out,969)ipct                        
          close(lun_summary_out)
 
          if(nsuccess .lt. nsuccess_thr)then
