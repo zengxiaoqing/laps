@@ -105,16 +105,21 @@ else
 endif
 
 if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
-    setenv L_PLOT_CRITERIA `tail -1 $SUMMARY_FILE`
+    setenv L_PLOT_CRITERIA `tail -2 $SUMMARY_FILE | head -1`
+    setenv PCT_SUCCESS     `tail -1 $SUMMARY_FILE`
 #   setenv L_PLOT_CRITERIA T  # for testing
-    if ($KEY_WIDTH == 0) then # TrueType case
-        setenv KEY_WIDTH -16 
+    if (-d /w3/lapb) then
+        setenv KEY_WIDTH -22.5
+    else
+        setenv KEY_WIDTH -10
     endif
     setenv XKEY 0.225
 else                                                     # Percentage will not be present
     setenv L_PLOT_CRITERIA T 
-    if ($KEY_WIDTH == 0) then # TrueType case
-        setenv KEY_WIDTH -14 
+    if (-d /w3/lapb) then
+        setenv KEY_WIDTH -19.0
+    else
+         setenv KEY_WIDTH -7
     endif
     setenv XKEY 0.180
 endif
@@ -122,6 +127,7 @@ endif
 echo " "
 echo "inputs..."
 echo "TYPE = $TYPE"  
+echo "KEY_WIDTH = $KEY_WIDTH"  
 echo "SUBTYPE = $SUBTYPE"  
 echo "SUBDIR = $SUBDIR"  
 echo "VAR = $VAR"  
@@ -181,7 +187,7 @@ if ($VAR == "S8A") then
     echo 'set y2label "RMSE" ' $MEMBER_FONT textcolor lt 3               >> $GNUPLOTFILE
     echo 'set grid xtics y2tics'                                         >> $GNUPLOTFILE
 
-else if ($VAR == "RTO") then
+else if ($VAR == "RTO" || $VAR == "R01") then
     echo 'set yrange ['$YRANGE']'                                        >> $GNUPLOTFILE
     echo 'set y2range ['$YRANGE']'                                       >> $GNUPLOTFILE
     echo 'set logscale y'                                                >> $GNUPLOTFILE
@@ -248,10 +254,10 @@ while ($IMEMBER <= $NMEMBERS)
 
     if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
         setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
-        setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT%"
+        setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT_SUCCESS/$PCT%"
 
-        echo "PCT being compared to threshold of 80 is: $PCT"
-        if ($PCT >= 80) then
+        echo "PCT_SUCCESS being compared to threshold of 80 is: $PCT_SUCCESS"
+        if ($PCT_SUCCESS >= 80) then
             setenv LS 1
             if (-d /w3/lapb) then
                 setenv LW 3
