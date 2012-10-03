@@ -16,7 +16,8 @@ namelist/lfmpost_nl/out_cdf,out_grib,out_v5d            &
                    ,make_micro,make_firewx,make_points  &
                    ,verbose,realtime,write_to_lapsdir   &
                    ,make_donefile                       &
-                   ,precip_dt,c_m2z
+                   ,precip_dt,c_m2z                     &
+                   ,wrf_version
 
 nlfile=trim(lfmprd_dir)//'/../static/lfmpost.nl'
 open(1,file=trim(nlfile),form='formatted',status='old',iostat=istatus)
