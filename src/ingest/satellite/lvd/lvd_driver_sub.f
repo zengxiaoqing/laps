@@ -158,7 +158,7 @@ c
 
       integer   i,j,k,l,n,ic
       integer   ispec
-      integer   nlf
+      integer   nlf,ilf
       integer   nlf_prev
       integer   in,ncs
 c
@@ -1142,6 +1142,8 @@ c been mapped to the laps domain. AFWA's GMS so far.
 
             write(6,*)' Writing lvd. Total # of fields: ',nlf
             write(6,*)'    to ',dir_lvd(1:len_lvd)
+            write(6,313)csatid,c_fname,(var_lvd(ilf),ilf=1,nlf)
+313         format(' LVD fields for ',a6,1x,a9,':',30(1x,a))
             call write_laps_data(i4time_data(i),
      &                      dir_lvd,
      &                      ext_lvd,

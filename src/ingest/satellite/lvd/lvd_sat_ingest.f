@@ -184,5 +184,8 @@ c =================================================================
        print*,'!!Terminating!!'
       endif
 1000  deallocate (gri,grj)
+
+      write(6,*)' Program lvd_sat_ingest complete...'
+
       stop
       end
