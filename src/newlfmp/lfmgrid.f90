@@ -35,6 +35,7 @@ character(len=256) :: filename,filename0
 character(len=32)  :: mtype
 character(len=20)  :: c_m2z='rams'
 character(len=3)   :: domnum_fstr
+character(len=4)   :: wrf_version='3'
 
 
 ! Point forecast variables.
