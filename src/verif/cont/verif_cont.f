@@ -155,7 +155,8 @@
         data nthr_a     /5,5/        
         data ndims_a    /3,2/        
 
-        integer contable(0:1,0:1)
+        integer,parameter :: k12 = selected_int_kind(12)
+        integer (kind=k12) :: contable(0:1,0:1)
 
         integer maxthr
         parameter (maxthr=5)
@@ -339,6 +340,12 @@
 
 !                 if(var_2d .eq. 'REF')then ! also read radar quality
                   if(.true.)then ! also read radar quality
+                      if(var_2d .eq. 'LLR')then 
+                          rqc_thresh = 2.0
+                      else
+                          rqc_thresh = 3.0
+                      endif
+
                       ext = 'lcv'
                       call get_laps_2d(i4_valid,ext,'RQC',units_2d
      1                                ,comment_2d,NX_L,NY_L,rqc,istatus)
@@ -414,7 +421,8 @@
                      endif
                      if(lmask_and_3d(i,j,k))then
                          n_rqc_and_pot = n_rqc_and_pot + 1
-                         if(rqc(i,j) .ne. 3.0)then
+                         if(rqc(i,j) .lt. rqc_thresh .OR.
+     1                      rqc(i,j) .eq. r_missing_data)then
                              n_rqc_and = n_rqc_and + 1
                              lmask_and_3d(i,j,k) = .false.
                          endif
@@ -431,7 +439,8 @@
                   do i = 1,NX_L
                   do j = 1,NY_L
                     n_rqc_all_pot = n_rqc_all_pot + 1
-                    if(rqc(i,j) .ne. 3.0)then
+                    if(rqc(i,j) .lt. rqc_thresh .OR.
+     1                 rqc(i,j) .eq. r_missing_data)then
                         n_rqc_all = n_rqc_all + 1
                         lmask_rqc_3d(i,j,k) = .false.
                     endif
