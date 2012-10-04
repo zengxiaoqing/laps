@@ -206,7 +206,7 @@ c                   write(6,*)' khigh = ',kk
                     ref_thresh = ref_base_useable
                 else
 !                   ref_thresh = ref_base_useable ! Lowered from 20. and 13. 9/94
-                    ref_thresh = 13.              ! Raised back to 13. in 2012          
+                    ref_thresh = 20.              ! Raised back to 13. in 2012          
                 endif
 
                 if(grid_ra_ref(i,j,k) .gt. ref_thresh)then
