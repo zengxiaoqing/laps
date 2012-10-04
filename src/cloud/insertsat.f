@@ -348,11 +348,19 @@ c
 
         nskip_max = 4 ! 'See barnes_r5'
 
+        if(imax .lt. 1000)then
+            iskd = 4
+            jskd = 20
+        else
+            iskd = 40
+            jskd = 40
+        endif
+
         do j=1,jmax
         do i=1,imax
 
          jp10 = j+10
-         if(jp10 .eq. (jp10/20)*20 .and. i .eq. (i/4)*4)then
+         if(jp10 .eq. (jp10/jskd)*jskd .and. i .eq. (i/jskd)*jskd)then
           idebug=1
          else
           idebug=0
@@ -760,7 +768,7 @@ c
      1                              ,cldtop_m(i,j)
      1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
      1                              ,heights_3d
-     1                              ,imax,jmax,klaps,i,j,istatus)
+     1                              ,imax,jmax,klaps,i,j,idebug,istatus)       
                   if(istatus .ne. 1)then
                       write(6,*)' Correct_cover: tb8_k < t_cld'
                       thk_lyr = cld_thk(cldtop_m(i,j))
@@ -794,7 +802,7 @@ c
      1                              ,cldtop_m(i,j)
      1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
      1                              ,heights_3d
-     1                              ,imax,jmax,klaps,i,j,istatus)
+     1                              ,imax,jmax,klaps,i,j,idebug,istatus)       
                   if(istatus .ne. 1)then
                       write(6,*)' Correct_cover: tb8_k < t_cld'
                       thk_lyr = cld_thk(cldtop_m(i,j))
@@ -828,7 +836,7 @@ c
      1                              ,cldtop_m(i,j)
      1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
      1                              ,heights_3d
-     1                              ,imax,jmax,klaps,i,j,istatus)
+     1                              ,imax,jmax,klaps,i,j,idebug,istatus)       
                   if(istatus .ne. 1)then
                       write(6,*)' Correct_cover: tb8_k < t_cld'
                       thk_lyr = cld_thk(cldtop_m(i,j))
@@ -911,6 +919,7 @@ c
             endif
 
 !           Test for unreasonable cloud layer
+            ierr = 0
             if(htbase      .lt. topo(i,j)     .or. 
      1         abs(htbase) .gt. 100000.       .or.
      1         cover       .le. 0.01              )then
@@ -919,19 +928,23 @@ c
      1                   ,l_no_sao_vis,istat_vis_potl_a(i,j)
 322             format(1x,2i4,' WARNING: htbase/cover = '
      1                ,i2,f7.0,f7.2,2f7.0,l2,i2)       
-                if(cover .lt. -0.0001)then
-                    write(6,*)' ERROR, cover << 0.'
+                if(cover .lt. 0.)then
+                    write(6,*)' ERROR, cover < 0., reset to 0.', cover       
+                    cover = 0.
+                    ierr = 1
                 endif
 323             continue
             endif
 
 !           Add satellite cloud to array
-            do k=kcld,1,-1
-              if(cld_hts(k) .ge. htbase  .and.
-     1           cld_hts(k) .le. cldtop_m(i,j) )then ! in satellite layer
-                 cldcv(i,j,k)=cover
-              endif
-            enddo
+            if(ierr .eq. 0)then
+              do k=kcld,1,-1
+                if(cld_hts(k) .ge. htbase  .and.
+     1             cld_hts(k) .le. cldtop_m(i,j) )then ! in satellite layer
+                   cldcv(i,j,k)=cover
+                endif
+              enddo
+            endif ! ierr = 0 (unreasonable cloud that was below zero cover)
 
           ENDIF ! l_cloud_present (Cloudy)
 
@@ -1213,7 +1226,7 @@ c
      1                  ,cldtop_tb8_m,cldtop_new_potl_m          
      1                  ,temp_3d,tb8_k,t_gnd_k(i,j)
      1                  ,heights_3d
-     1                  ,imax,jmax,klaps,i,j,istatus)
+     1                  ,imax,jmax,klaps,i,j,idebug,istatus)
                 else
                     cloud_frac_tb8_potl = cloud_frac_tb8
                 endif
@@ -1243,9 +1256,11 @@ c
 
         istat_39_add = 0
         istat_vis_added = 0
+        mode_top = 0
 
 !       Set variables depending on whether in Band 8 or CO2 mode
         if(lstat_co2)then ! Using CO2 method
+            mode_top = 1
             if(cldtop_co2_m .ne. r_missing_data)then
                 l_cloud_present = .true.
             else
@@ -1262,6 +1277,7 @@ c
 !           Band 8 (11mm) threshold says no but 3.9 micron says yes
 !           We did still get a valid Band 8 derived cloud top
 
+            mode_top = 2
             l_cloud_present = .true.
             cldtop_m = cldtop_tb8_m
             sat_cover = cloud_frac_tb8
@@ -1275,24 +1291,38 @@ c
 !           Band 8 (11mm) threshold says no but visible says yes
 !           We did still get a valid Band 8 derived cloud top
 
+            mode_top = 3
             l_cloud_present = .true.
             cldtop_m = cldtop_tb8_m
             sat_cover = cloud_frac_vis_a(i,j) 
             istat_vis_added = 1
 
         else                          ! Using Band 8 (11.2mm) data only
+            mode_top = 4
             l_cloud_present = l_tb8
             cldtop_m = cldtop_tb8_m
             sat_cover = cloud_frac_tb8
 
         endif
 
-        if(l_cloud_present .and. cldtop_m .eq. r_missing_data)then
-            write(6,*)' Warning in cloud_top: ',i,j,l_cloud_present
+        if(l_cloud_present)then
+          if(cldtop_m .eq. r_missing_data .OR.
+     1       sat_cover .lt. 0.            .OR.
+     1       sat_cover .gt. 1.                 )then
+            write(6,*)' ERROR in cloud_top: ',i,j,l_cloud_present
+     1               ,mode_top
      1               ,istat_vis_added,istat_39_add,cldtop_m       
      1               ,t_gnd_k(i,j),tb8_k,cloud_frac_vis_a(i,j)
      1               ,cloud_frac_vis_s(i,j)
-     1               ,cldtop_temp_k
+     1               ,cldtop_temp_k,sat_cover
+     1               ,cloud_frac_tb8
+            if(sat_cover .gt. 1.)then
+                sat_cover = 1.
+            endif
+            if(sat_cover .gt. 0.)then
+                sat_cover = 0.
+            endif
+          endif
         endif
 
         return
@@ -1358,7 +1388,7 @@ c
 
         subroutine correct_cover(cover_in,cover_new_f,cldtop_old
      1             ,cldtop_new,temp_3d,tb8_k,t_gnd_k,heights_3d
-     1             ,imax,jmax,klaps,i,j,istatus)
+     1             ,imax,jmax,klaps,i,j,idebug,istatus)
 
 !       Find a thinner value for cloud cover consistent with the new
 !       higher cloud top and the known brightness temperature.
@@ -1391,6 +1421,8 @@ c
         z_temp = height_to_zcoord2(cldtop_new,heights_3d,imax,jmax,klaps
      1                                          ,i,j,istatus)
         if(istatus .ne. 1)then
+            cldtop_new = cldtop_old
+            cover_new_f = cover_in
             return
         endif
 
@@ -1414,22 +1446,31 @@ c
             lwrite = .false.
         endif
 
-        if(j .eq. int(j-9)/10*10+9)then
-            iwrite = iwrite + 1
-            if(iwrite .lt. 60)then
-                lwrite = .true.
-            endif
+        if(idebug .eq. 1)then
+            lwrite = .true.
+        endif
+
+        if(cover_new_f .lt. -0.0001)then
+            write(6,*)' ERROR: corrected cover << 0. ',i,j,cover_new_f
+            lwrite = .true.
+            istatus = 0
+            cldtop_new = cldtop_old
+            cover_new_f = cover_in
+        endif
+
+        if(cover_new_f .gt. 1.0)then
+            write(6,*)' ERROR: corrected cover > 1. ',i,j,cover_new_f
+            lwrite = .true.
+            istatus = 0
+            cldtop_new = cldtop_old
+            cover_new_f = cover_in
         endif
 
         if(lwrite)then
             write(6,1,err=2)i,j,t_gnd_k,temp_old,temp_new,cldtop_old
      1                     ,cldtop_new,cover_new,cover_new_f
-1           format(1x,'Corr-cvr ',2i3,3f7.0,2f8.0,2f8.2)
+1           format(1x,'Corr-cvr ',2i5,3f7.0,2f8.0,2f8.2)
 2           continue
-        endif
-
-        if(cover_new_f .lt. -0.0001)then
-            write(6,*)' WARNING: corrected cover << 0. ',i,j,cover_new_f
         endif
 
         return
@@ -1449,14 +1490,13 @@ c
 
         if(band8_cover .gt. 1.0)then
             write(6,*)' WARNING: resetting band8_cover down to 1.0'
-            write(6,*)' tb8_k,t_gnd_k,t_cld,band8_cover'
-     1                 ,tb8_k,t_gnd_k,t_cld,band8_cover
+            write(6,11)tb8_k,t_gnd_k,t_cld,band8_cover
+ 11         format(' tb8_k,t_gnd_k,t_cld,band8_cover:',4f9.3,f8.4)
             band8_cover = 1.0 
             istatus = 0
         elseif(band8_cover .lt. 0.0)then
             write(6,*)' WARNING: resetting band8_cover up to 0.0'
-            write(6,*)' tb8_k,t_gnd_k,t_cld,band8_cover'
-     1                 ,tb8_k,t_gnd_k,t_cld,band8_cover
+            write(6,11)tb8_k,t_gnd_k,t_cld,band8_cover
             band8_cover = 0.0 
             istatus = 0
         endif
