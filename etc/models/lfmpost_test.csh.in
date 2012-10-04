@@ -98,8 +98,8 @@ while ($FCOUNT <= $MAXTIMES)
     setenv FMM $FCOUNT  
   endif
 
-  @ FCSTTIME_SEC = $FMM * $FCSTINTVL     # Model Forecast Time (seconds)
-  setenv FCSTTIME_HR `echo $FCSTTIME_SEC 3600. | awk '{print $1/$2}'`
+  setenv FCSTTIME_SEC `echo $FMM $FCSTINTVL     | awk '{print $1*$2}'`
+  setenv FCSTTIME_HR  `echo $FCSTTIME_SEC 3600. | awk '{print $1/$2}'`
 
 # setenv VTIME     $RUN$FMM              # Model Run Valid Time
 
