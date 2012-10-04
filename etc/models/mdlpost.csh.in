@@ -49,7 +49,7 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
 
     setenv FCSTTIMEHRRR 0000
 
-    if ($FCSTINTVL == 900) then
+    if ($FCSTINTVL == 900 || $FCSTINTVL == 1800) then
         echo "using 15 minute output"
 
         if ($HRRRHH == 00) then
@@ -62,13 +62,13 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
         endif
 
     else
-        echo "using 15 minute output, though we could switch to 60"
+        echo "using 15 minute output files, for every 60 minutes of output"
 
         if ($HRRRHH == 00) then
             setenv MMTIMES '00'
             setenv FHH 00          
         else
-            setenv MMTIMES '15 30 45 60'
+            setenv MMTIMES '60'
 #           @ FHH_I = $HRRRHH - 1
 #           setenv FHH 0$FHH_I
         endif
@@ -158,9 +158,18 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
 #               echo "wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT"
 #                     wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT
               
-                echo "new precip command"
+                echo "precip command for rto"
                 echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT"                   
                       wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT                   
+              
+                echo "new precip command for r01"
+                if ($HRRRHH == 01 && $FCSTINTVL == 3600) then
+                    echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT"                   
+                          wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT
+                else
+                    echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT"                   
+                          wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT
+                endif
 
             else
                 echo "$GRIB_PCP_IN is not present"
@@ -220,8 +229,8 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
               ncpdq -a record,z,y,x -O $NCOUT $NCOUT
 
 #       Append miscellaneous variables from FSF template file
-        echo "ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,rto_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,rto_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT"
-              ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,rto_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,rto_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT
+        echo "ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT"
+              ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT
 
         rm $NCOUT.pid*ncks.tmp
 #       cp $NCOUT $NCOUT.ncks
