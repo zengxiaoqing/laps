@@ -64,6 +64,7 @@ c
       real, intent(out) :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
 
 c     Local variables for the time being
+      real r01(nx_bg,ny_bg)
       real lmr(nx_bg,ny_bg)
       real llr(nx_bg,ny_bg)
       real s8a(nx_bg,ny_bg)
@@ -120,7 +121,7 @@ c domain fua/fsf but we'll try the get_lapsdata stuff first.
      +                          ,nx_bg, ny_bg, nzbg_ht
      +                          ,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg       
      +                          ,uwbg_sfc, vwbg_sfc, tpbg_sfc, tdbg_sfc       
-     +                          ,prbg_sfc, mslpbg, htbg_sfc, pcpbg
+     +                          ,prbg_sfc, mslpbg, htbg_sfc, r01, pcpbg
      +                          ,lmr, llr, s8a, swi, tpw
      +                          ,istatus)
             if(istatus.ne.1)then
