@@ -1,6 +1,6 @@
       subroutine read_fuafsf_cdf(fullname, x, y, z, 
      +     ht, level, om, sh, t3, u3, v3,
-     +     usfc, vsfc, tsfc, dsfc, psfc, mslp, zsfc, rto,
+     +     usfc, vsfc, tsfc, dsfc, psfc, mslp, zsfc, r01, rto,
      +     lmr, llr, s8a, swi, tpw,
      +     istatus)
 C
@@ -30,6 +30,7 @@ C
      +,    usfc( x,  y)
      +,    vsfc( x,  y)
      +,    zsfc( x,  y)
+     +,    r01( x,  y)
      +,    rto( x,  y)
      +,    lmr( x,  y)
      +,    llr( x,  y)
@@ -356,6 +357,24 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var zsfc'
         istatus = -1            
+      endif
+
+      write(6,*)' Reading R01'
+C
+C     Variable        NETCDF Long Name
+C      r01          "LAPS Incremental Precip"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'r01',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var r01'
+        istatus = -1          
+      endif
+      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,r01)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var r01'
+        istatus = -1          
       endif
 
       write(6,*)' Reading RTO'
