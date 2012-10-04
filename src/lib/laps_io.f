@@ -1351,7 +1351,7 @@ cdoc 2d field (for var_2d).
 c
         implicit none
 
-        integer imax,jmax,maxsat
+        integer imax,jmax,maxsat,min,max,iskip
 
         real    field_2d_lvd(imax,jmax,maxsat)
         real    field_2d(imax,jmax)
@@ -1359,9 +1359,13 @@ c
         real    lon(imax,jmax)
         real    subpoint_lon_clo(imax,jmax)
         real    subpoint_lon_sat(maxsat)
+        real    cost(imax,jmax,maxsat)
+        real    costmin(imax,jmax), fracp, time_diff_sec
+        real    satm_time_wt,satm_subp_wt
 
         integer   isats(maxsat)
         integer   nsats
+        integer   npts(maxsat)
 
         integer   i4time_needed
         integer   i4time_nearest
@@ -1371,7 +1375,7 @@ c
         integer   i4time_sys
         integer   min_i4time
 
-        integer   i
+        integer   i,j,isat
         integer   imn
         integer   istatus 
         integer   jstatus
@@ -1387,9 +1391,15 @@ c
 c       data      i4time_first/0/
 c       save      i4time_first
 
+        call get_systime_i4(i4time_sys,istatus)
         istatus=1   !data was found
         nsats=0
+        npts=0
         i4time_first=0
+        subpoint_lon_sat = -75.            ! fill satellite array (default)
+        satm_time_wt = 1./60.
+        satm_subp_wt = 1.0
+
         do i=1,maxsat
            if(isats(i).eq.1)then
               call get_laps_lvd(c_sat_id(i),
@@ -1405,6 +1415,12 @@ c       save      i4time_first
                  csatid(nsats)=c_sat_id(i)
                  i4timedata(nsats)=i4time_nearest
                  call move(field_2d,field_2d_lvd(1,1,nsats),imax,jmax)
+                 write(6,*)' Comment is:',trim(comment_2d)
+                 read(comment_2d,1)subpoint_lon_sat(nsats)
+ 1               format(83x,e17.8)
+                 write(6,*)' Sublon for satellite: ',nsats
+     1                      ,subpoint_lon_sat(nsats)      
+
               endif
            endif
         enddo
@@ -1413,35 +1429,69 @@ c this section can make decisions about which satellite data
 c to return in the event there is more than 1 2d field.
 c
         if(nsats.gt.1 .and. l_mosaic_sat)then
+           write(6,*)
            write(6,*)'Mosaicing ',nsats,' satellites'
            subpoint_lon_clo = r_missing_data  ! fill grid 
-           subpoint_lon_sat = -75.            ! fill satellite array (default)
 
-           do i=1,nsats
-              call make_fnam_lp(i4timedata(i),asc9_tim,istatus)
-              write(6,*)'Adding ',var_2d,' for ',csatid(i),
-     &                                       ' ',asc9_tim
+           cost = 9999. ! initialize array
 
-              if(trim(csatid(i)) .eq. 'goes12')then
-                  subpoint_lon_sat(i) = -75.
-              elseif(trim(csatid(i)) .eq. 'goes11')then
-                  subpoint_lon_sat(i) = -135.
-              endif
+           do isat=1,nsats
 
-!             Add in satellite if it's lon is closest so far to the grid lon
-              where(field_2d_lvd(:,:,i) .ne. r_missing_data 
-     1                            .AND.
-     1              abs(lon(:,:) - subpoint_lon_sat(i))  .LT.
-     1              abs(lon(:,:) - subpoint_lon_clo(:,:)) 
-     1                                                        )
-                 subpoint_lon_clo(:,:) = subpoint_lon_sat(i)
-                 field_2d(:,:) = field_2d_lvd(:,:,i)
+              time_diff_sec = i4timedata(isat) - i4time_sys   
+
+              write(6,*)' isat/time_diff = ',isat,time_diff_sec
+
+!             Determine cost of satellite based on valid data, time, and subpoint
+              where(field_2d_lvd(:,:,isat) .ne. r_missing_data)
+                 cost(:,:,isat) 
+     1           = abs(lon(:,:) - subpoint_lon_sat(isat)) * satm_subp_wt
+     1           + abs(time_diff_sec) * satm_time_wt
               end where
 
+           enddo ! isat
+
+           do i = 1,imax
+           do j = 1,jmax
+               costmin(i,j) = minval(cost(i,j,:))
+           enddo ! j
            enddo ! i
+
+           write(6,*)' Summary of cost function'
+           j = jmax/2
+           iskip = max(((imax/100)/5)*5,5)
+           do i = 1,imax,iskip
+               write(6,*)i,lon(i,j),cost(i,j,1:nsats)                  
+           enddo ! i                      
+
+           do isat=1,nsats
+              call make_fnam_lp(i4timedata(isat),asc9_tim,istatus)
+
+!             Add satellite to mosaic if it has the lowest cost
+              do i = 1,imax
+              do j = 1,jmax
+                  if(field_2d_lvd(i,j,isat) .ne. r_missing_data 
+     1                            .AND.
+     1              cost(i,j,isat) .eq. costmin(i,j)
+     1                                                           )then       
+                    npts(isat) = npts(isat) + 1
+                    subpoint_lon_clo(i,j) = subpoint_lon_sat(isat) 
+                    field_2d(i,j) = field_2d_lvd(i,j,isat)
+                  endif
+              enddo ! j
+              enddo ! i
+
+              fracp = float(npts(isat)) / float(imax*jmax)
+
+              write(6,11)var_2d,csatid(isat),asc9_tim 
+     &                 ,subpoint_lon_sat(isat),npts(isat),fracp  
+11            format('Mosaicing ',a,' for ',a,1x,a,f8.2
+     1                           ,' npts/frac=',i8,f10.6)
+
+           enddo ! isat
            return
 
         elseif(nsats .gt.1 .and. (.not. l_mosaic_sat))then
+           write(6,*)
            write(6,*)'Found data for ',nsats,' satellites'
            do i=1,nsats
               if(i4timedata(i).eq.i4time_first)then
@@ -1454,7 +1504,6 @@ c
               endif
            enddo
 
-           call get_systime_i4(i4time_sys,istatus)
            min_i4time=i4time_sys
            do i=1,nsats
               i4time_min=abs(i4timedata(i)-i4time_sys)
@@ -1489,6 +1538,7 @@ c default
            call make_fnam_lp(i4time_first,asc9_tim,istatus)
            call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
            i4time_nearest=i4timedata(1)
+           write(6,*)
            write(6,*)'Returning ',var_2d,' for ',csatid(1),' ',asc9_tim
            return
 
@@ -1567,6 +1617,9 @@ c
         character*6 c_sat_id          !input satellite id's known to system
         logical lcont
 
+        write(6,*)
+        write(6,*)' Subroutine get_laps_lvd for ',c_sat_id,'...'
+
         ext = 'lvd'
         call get_directory(ext,dir,ldir)
 
@@ -1587,7 +1640,7 @@ c
         call get_file_times(c_filespec,max_files,c_fnames
      1                     ,i4times,i_nbr_files_ret,istatus)
         if(istatus .ne. 1)then
-           write(6,*)'get_laps_2dvar: Bad status returned '
+           write(6,*)'get_laps_lvd: Bad status returned '
      1              ,'from get_file_times'
            return
         endif
@@ -1677,6 +1730,7 @@ c                           return
                  asc9_time(jf)=asc9_tim
                  i4times_data(jf)=i4times(j)
                  comment_2d_save(jf)=comment_2d
+                 write(6,*)'         pctmiss = ',pctmiss(jf)
 
               endif
 
