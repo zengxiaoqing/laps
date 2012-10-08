@@ -109,10 +109,10 @@ if($min_files>0){
     $clean_dirs{fua} = (0.5<$hist_time)?0.5:$hist_time;
     $clean_dirs{fsf} = (0.5<$hist_time)?0.5:$hist_time;
 
-    $clean_dirs{lcv} = 2.1;
-    $clean_dirs{l1s} = 2.1;
-    $clean_dirs{lm2} = 1.5;
-    $clean_dirs{lso} = 1.5;
+    $clean_dirs{lcv} = 2.1 if($hist_time < 2.1);
+    $clean_dirs{l1s} = 2.1 if($hist_time < 2.1);
+    $clean_dirs{lm2} = 1.5 if($hist_time < 1.5);
+    $clean_dirs{lso} = 1.5 if($hist_time < 1.5);
 #   $clean_dirs{lwc} = 0.5;
 
     foreach $radar (@radars){
