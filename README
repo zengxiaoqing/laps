@@ -1475,8 +1475,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            The ITS group at ESRL/GSD has put together a converter from McIDAS 
            AREA files to the GVAR netCDF format (lvd input). These files are
            similar to the "raw" GVAR, except they have lat/lon arrays added
-           to make the filed self navigating. The package can be found online 
-           at this URL:
+           to make the files self navigating. The AREA files can be obtained
+           from sources such as the NESDIS ADDE server. The Java based 
+           converter package can be found online at this URL:
 
            http://laps.noaa.gov/software/sat/McArea2NetCDF.tar
 
