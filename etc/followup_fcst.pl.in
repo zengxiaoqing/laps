@@ -201,6 +201,7 @@ my $www_flag = 0;
 my $t; 
 
 my $fsfsize_max = 0; 
+my $fsfsize_max_last; 
 
 while (($timeaccum < $timeout) and ($elapsed < $timeout) and ($times_rem > 0)){
   $arrpos = 0;
@@ -222,8 +223,11 @@ while (($timeaccum < $timeout) and ($elapsed < $timeout) and ($times_rem > 0)){
       $fsfsize = -s "$local_fsf/$_.fsf";
       print "fsf size = $fsfsize (last is $fsfsize_last)\n";
 
+      $fsfsize_max_last = $fsfsize_max;
+      print "fsfsize_max_last = $fsfsize_max_last\n";
+
 #     Determine whether to wait
-      while ( ($fsfsize > $fsfsize_last || $fsfsize < $fsfsize_max || $fsfsize == 0) && $waitsize <= 15) {
+      while ( ($fsfsize > $fsfsize_last || $fsfsize < $fsfsize_max || $fsfsize == 0 || $fsfsize_max_last == 0) && $waitsize <= 15) {
         if($fsfsize > $fsfsize_max){
           $fsfsize_max = $fsfsize;
         }
