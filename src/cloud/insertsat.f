@@ -1116,7 +1116,11 @@ c
 
 ! abdel added this when the model is the brightness temp is too cold than the model a klaps level
 	               
-	    if (cldtop_temp_k .le. temp_3d(i,j,klaps))then ! Extrapolate
+	    if (cldtop_temp_k .le. temp_3d(i,j,klaps))then ! Restrict to top
+                cldtop_temp_k = temp_3d(i,j,klaps)
+            endif
+
+	    if (.false.)then ! Extrapolate
                 frac_k = (temp_3d(i,j,klaps) - temp_3d(i,j,klaps-1))
      1                 /  (cldtop_temp_k     - temp_3d(i,j,klaps))
               
