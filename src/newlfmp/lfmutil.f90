@@ -1309,9 +1309,7 @@ else
 ! Since we are going from the ground up, we can 
 ! check threshold and set echo top.
 
-      if(.not. large_ngrid)then
-        if (refl(i,j,k) >= max_top_thresh) echo_tops(i,j)=hgt(i,j,k) 
-      endif
+      if (refl(i,j,k) >= max_top_thresh) echo_tops(i,j)=hgt(i,j,k) 
    enddo
 
 ! Compute the max value in the column
