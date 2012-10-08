@@ -278,7 +278,7 @@ cdis
         integer j_status(20),iprod_number(20)
 
 !       Stuff for 2d fields
-        real ref_mt_2d(NX_L,NY_L)
+        real ref_mt_modelfg(NX_L,NY_L)
         real dbz_low_2d(NX_L,NY_L)
         real dbz_max_2d(NX_L,NY_L)
         real rqc_2d(NX_L,NY_L)
@@ -588,10 +588,32 @@ C READ IN RADAR DATA
 C BLEND IN FIRST GUESS RADAR
         n_fg_radar = 0
         n_fg_echoes = 0
+
+        call get_maxtops(ref_modelfg,heights_3d
+     1                  ,NX_L,NY_L,NZ_L,ref_mt_modelfg)
+
+        write(6,*)' Modelfg maxtops range is: '
+     1      ,minval(ref_mt_modelfg),maxval(ref_mt_modelfg)
+        write(6,*)' Closest radar range is: '
+     1      ,minval(closest_radar),maxval(closest_radar)
+
+        range_thresh_lo = 200000.
+        range_thresh_hi = 300000.
+
         do i = 1,NX_L
         do j = 1,NY_L
+            if(ref_mt_modelfg(i,j) .gt. 0.)then
+                radius_earth_8_thirds = 6371.e3 * 2.6666666
+                curvature = ref_mt_modelfg(i,j)
+                hor_dist = sqrt(curvature*radius_earth_8_thirds)
+                range_thresh = 
+     1              min(max(hor_dist,range_thresh_lo),range_thresh_hi)
+            else
+                range_thresh = range_thresh_hi
+            endif
+
             if(rqc_2d(i,j) .eq. 0. .OR. 
-     1         closest_radar(i,j) .gt. 350000.)then
+     1         closest_radar(i,j) .gt. range_thresh)then
                 do k = 1,NZ_L
                     if(ref_modelfg(i,j,k) .ne. r_missing_data)then
                         radar_ref_3d(i,j,k) = ref_modelfg(i,j,k)
@@ -2140,6 +2162,11 @@ C       EW SLICES
      1          ,i,j,k,clouds_3d
                 clouds_3d = 1.0
             endif
+        endif
+
+        if(clouds_3d .lt. 0.0)then 
+            write(6,*)' ERROR: clouds_3d < 0 - reset',i,j,k,clouds_3d       
+            clouds_3d = 0.0
         endif
 
         return
