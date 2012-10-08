@@ -76,6 +76,10 @@ foreach (@greplines) {
   print "    Using @rest ";
   print "\n";
 }
+@greplines = grep /Mosaicing S8A/, @lines;
+foreach (@greplines) {
+  print "    $_";
+}
 @greplines = grep /No S8A/, @lines;
 print "   $greplines[0]";
 @greplines = grep /insufficient/, @lines;
@@ -92,11 +96,11 @@ foreach (@greplines) {
   print "\n";
 }
 @greplines = grep /No VIS/, @lines;
-print "  $greplines[0]";
+print " $greplines[0]";
 @greplines = grep /Visible albedo data used/, @lines;
-print "   $greplines[0]";
+print "  $greplines[0]";
 @greplines = grep /l_use_vis set to not use vis data/, @lines;
-print "   $greplines[0]";
+print " $greplines[0]";
 print "\n";
 
 print "Satellite (3.9 micron - used for nighttime stratus):\n";
