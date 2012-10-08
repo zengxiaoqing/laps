@@ -210,10 +210,20 @@ cdis
 
 !               Update Histograms
                 iscr_frac_in = nint(cloud_frac_in*10.)
+                if(iscr_frac_in .lt. -10)then
+                    write(6,*)' Bounds error for iscr_frac_in'
+     1                       ,i,j,k,cloud_frac_in
+                    iscr_frac_in = -10
+                endif
                 ihist_frac_in(iscr_frac_in) = 
      1          ihist_frac_in(iscr_frac_in) + 1
 
                 iscr_frac_out = nint(cloud_frac_out*10.)
+                if(iscr_frac_out .lt. -10)then
+                    write(6,*)' Bounds error for iscr_frac_out'
+     1                       ,i,j,k,cloud_frac_out
+                    iscr_frac_out = -10               
+                endif
                 ihist_frac_out(iscr_frac_out) =
      1          ihist_frac_out(iscr_frac_out) + 1
 
