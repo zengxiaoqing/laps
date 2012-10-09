@@ -49,7 +49,7 @@ subroutine radialwind
 
   ! Local variables:
   character :: ext*31, rname*4, sid*8, dir*300
-  integer   :: i,j,k,l,iradar,len_dir,istatus,istat,i4radar, &
+  integer   :: i,j,k,ll,iradar,len_dir,istatus,istat,i4radar, &
                num,ifqc,lb,nframe
   logical   :: apply_map ! LAPS does not use this for radial wind
   real      :: volnyqt,rlat,rlon,rhgt,op(4),az,sr,ea
@@ -89,17 +89,17 @@ subroutine radialwind
     ! Frequency of reading radial wind data:
     ifqc = 900
     nframe = 4
-    do l=1,2 !nframe ! read data at current and previous cycle
+    do ll=1,2 !nframe ! read data at current and previous cycle
       ! Which background to use for radial wind obs: 
       ! Note these change with ifqc:
       lb = 1
-      if (l .ge. nframe-1) lb = 2
+      if (ll .ge. nframe-1) lb = 2
 
-      call get_file_time(dir,lapsi4t+(l-nframe+1)*ifqc,i4radar)
+      call get_file_time(dir,lapsi4t+(ll-nframe+1)*ifqc,i4radar)
 
       ! Check file availability:
-      if (abs(i4radar-(lapsi4t+(l-nframe+1)*ifqc)) .ge. ifqc) then
-        write(6,10) lapsi4t+(l-nframe+1)*ifqc,istatus,dir(1:len_dir)
+      if (abs(i4radar-(lapsi4t+(ll-nframe+1)*ifqc)) .ge. ifqc) then
+        write(6,10) lapsi4t+(ll-nframe+1)*ifqc,istatus,dir(1:len_dir)
 10      format('No radial wind avail at ',i10,' within ',i5, &
         /,' in directory: ',a50)
       else ! find good file:
@@ -167,11 +167,11 @@ subroutine reflectivity
   implicit none
 
   ! Local variables:
-  character :: ext*31, rname*4
-  integer :: i,j,k,l,iqc,nref,n2d,n3d,istatus
+  character :: ext*31, rname*4, unit*10, comment*150
+  integer :: i,j,k,ll,iqc,nref,n2d,n3d,istatus,ix0,ix1,iy0,iy1
   integer :: istatus2d(fcstgrd(1),fcstgrd(2)), &
              istatus3d(fcstgrd(1),fcstgrd(2))
-  real    :: rlat,rlon,rhgt ! LAPS uses these scalars
+  real    :: rlat,rlon,rhgt,rhc,tref ! LAPS uses these scalars
   real    :: closest(fcstgrd(1),fcstgrd(2)),rmax(2),rlow(2)
 
   ! Functions:
@@ -188,25 +188,27 @@ subroutine reflectivity
   allocate(refl(fcstgrd(1),fcstgrd(2),fcstgrd(3),3), &
            cldf(fcstgrd(1),fcstgrd(2),max(kcloud,fcstgrd(3)),3), &
     stat=istatus)
+  
+  ! Reference temperaure for converison between SH and RH:
+  tref = -132.0
 
-  ext = 'vrz '
+  ! Get reflectivity at pressure levels:
+  ext = 'lps '
   refl = 0.0
-  do l=1,2
-    call read_multiradar_3dref(lapsi4t+(l-2)*icycle, &
-      900,0,      & ! 900 tolerate
-      .true.,-10.0, & ! apply_map: true; ref missing data value: 10
-      fcstgrd(1),fcstgrd(2),fcstgrd(3),ext,latitude,longitud,topogrph, &
-      .false.,.false., & ! l_low_fill: false; l_high_fill: false
-      bk0(1,1,1,l,3),refl(1,1,1,l),rlat,rlon,rhgt,rname,iqc,closest, &
-      nref,n2d,n3d,istatus2d,istatus3d)   
+  do ll=1,2
+    call get_laps_3dgrid(lapsi4t+(ll-2)*icycle,icycle/2,i, &
+                         fcstgrd(1),fcstgrd(2),fcstgrd(3), &
+                         ext,'ref',unit,comment,refl(1,1,1,ll),istatus)
+    if (i .ne. lapsi4t+(ll-2)*icycle) then
+      print*,'Does not find a lps at: ',lapsi4t+(ll-2)*icycle
+      cycle
+    endif
   enddo
-  ! Interpolate:
+  ! Interpolate: 
   refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),3) = &
-    1.5*refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2)- &
-    0.5*refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1)
+    refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2) ! No extrapolation
   refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) = &
-    0.5*refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2)+ &
-    0.5*refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1)
+    refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! Assume refl does not change in half cycle
   
   ! Reflectivity derived bounds:
   bk0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:fcstgrd(4),numstat+1) = 0.0
@@ -214,23 +216,24 @@ subroutine reflectivity
   rlow(1) = 0.5
   rmax(2) = 30.0
   rlow(2) = 0.6
-  do l=1,fcstgrd(4)
+  do ll=1,fcstgrd(4)
   do k=1,fcstgrd(3)
   do j=1,fcstgrd(2)
   do i=1,fcstgrd(1)
-    if (refl(i,j,k,l) .gt. 10.0 .and. refl(i,j,k,l) .le. 100) then
+    if (refl(i,j,k,ll) .gt. 5.0 .and. refl(i,j,k,ll) .le. 100) then
 
       ! iqc: 1 rain; 2 snow:
       iqc = 2
-      if (bk0(i,j,k,l,temprtur) .gt. 273.15) iqc = 1
+      if (bk0(i,j,k,ll,temprtur) .gt. 273.15) iqc = 1
 
-      if (refl(i,j,k,l) .gt. rmax(iqc)) then
-        bk0(i,j,k,l,numstat+1) = &
-          make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,l,temprtur)-273.15,1.0,0.0)
+      if (refl(i,j,k,ll) .gt. rmax(iqc)) then
+        bk0(i,j,k,ll,numstat+1) = &
+          make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,ll,temprtur)-273.15,1.0,tref)
       else
-        bk0(i,j,k,l,numstat+1) = &
-          make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,l,temprtur)-273.15, &
-            rlow(iqc)+(1.0-rlow(iqc))*refl(i,j,k,l)/rmax(iqc),0.0)
+        bk0(i,j,k,ll,numstat+1) = &
+          make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,ll,temprtur)-273.15, &
+            1.0,tref)
+  !          rlow(iqc)+(1.0-rlow(iqc))*refl(i,j,k,ll)/rmax(iqc),tref)
       endif
     endif
   enddo
@@ -239,60 +242,66 @@ subroutine reflectivity
   enddo
 
   ! Read LAPS cloud fraction:
-  ext = 'lc3 '
+  ext = 'lcp '
   cldf = 0.0
-  do l=1,2
-    call get_clouds_3dgrid(lapsi4t+(l-2)*icycle,i,fcstgrd(1),fcstgrd(2), &
-           kcloud,ext,cldf(1,1,1,3),cloudheight,cloudpress,istatus)
-    if (i .ne. lapsi4t+(l-2)*icycle) then
-      print*,'Does not find a lc3 at: ',lapsi4t+(l-2)*icycle
+  do ll=1,1 ! lcp is written out by deriv.exe but STMAS is before deriv.exe!!!!
+    call get_laps_3dgrid(lapsi4t+(ll-2)*icycle,icycle/2,i, &
+                         fcstgrd(1),fcstgrd(2),fcstgrd(3), &
+                         ext,'lcp',unit,comment,cldf(1,1,1,ll),istatus)
+    if (i .ne. lapsi4t+(ll-2)*icycle) then
+      print*,'Does not find a lcp at: ',lapsi4t+(ll-2)*icycle
       cycle
     endif
 
-    ! Found lc3 and then interpolate:
-    do k=1,fcstgrd(3)
-      do iqc=1,kcloud-1
-        if (z_fcstgd(k) .le. cloudpress(iqc) .and. &
-            z_fcstgd(k) .ge. cloudpress(iqc)) then
-          alpha = (log(cloudpress(iqc))-log(z_fcstgd(k)))/ &
-                  (log(cloudpress(iqc))-log(cloudpress(iqc+1)))
-          do j=1,fcstgrd(2)
-          do i=1,fcstgrd(1)
-            cldf(i,j,k,l) = (1.0-alpha)*cldf(i,j,iqc,3)+alpha*cldf(i,j,iqc+1,3)
-          enddo
-          enddo
-        endif
-      enddo
-    enddo
   enddo
+  print*,'Cloud fraction before interpolation: ',maxval(cldf(:,:,:,1)),minval(cldf(:,:,:,1))
+
   ! Interpolate cloud fraction to all time frames:
   cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),3) = &
-    1.5*cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2)- &
-    0.5*cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1)
-  cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) = &
-    0.5*cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2)+ &
-    0.5*cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1)
-
-  ! Temporarily remove sh lower bounds where there is no cloud:
-  do l=1,fcstgrd(4)
+    cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! No extrapolation
+  cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2) = &
+    cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! Assume cloud does not change in a cycle
+  
+  ! Adjust bound based on cloud:
+  do ll=1,fcstgrd(4)
   do k=1,fcstgrd(3)
   do j=1,fcstgrd(2)
   do i=1,fcstgrd(1)
-    if (cldf(i,j,k,l) .lt. 0.1 .and. refl(i,j,k,l) .gt. 5.0) &
-      bk0(i,j,k,l,numstat+1) = 0.0
+    ! Temporarily remove sh lower bounds where there is no cloud:
+    if (cldf(i,j,k,ll) .lt. 0.1 .and. refl(i,j,k,ll) .gt. 5.0) &
+      bk0(i,j,k,ll,numstat+1) = 0.0
 
-    if (cldf(i,j,k,l) .ge. 0.2) bk0(i,j,k,l,numstat+1) = &
-      amax1(bk0(i,j,k,l,numstat+1),cldf(i,j,k,l)**0.2)
+    if (cldf(i,j,k,ll) .ge. 1000.2) then
+      rhc = make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,ll,temprtur)-273.15, &
+                     cldf(i,j,k,ll)**0.2,0.0)
+      bk0(i,j,k,ll,numstat+1) = amax1(bk0(i,j,k,ll,numstat+1),rhc)
+    endif
 
     ! RH =100% if both cloud and reflectivity occur:
-    if (cldf(i,j,k,l) .ge. 0.2 .and. refl(i,j,k,l) .ge. 5.0) &
-      bk0(i,j,k,l,numstat+1) = &
-          make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,l,temprtur)-273.15,1.0,0.0)
+    if (cldf(i,j,k,ll) .ge. 0.1 .and. refl(i,j,k,ll) .ge. 5.0) &
+      bk0(i,j,k,ll,numstat+1) = &
+          make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,ll,temprtur)-273.15,1.0,tref)
+
   enddo
   enddo
   enddo
   enddo
 
+  ! Assign reflectivity derived bounds to GRDBKGD0:
+  do j=1,maxgrid(2)
+    iy0 = float(j-1)/float(maxgrid(2)-1)*(fcstgrd(2)-1)+1
+    do i=1,maxgrid(1)
+      ix0 = float(i-1)/float(maxgrid(1)-1)*(fcstgrd(1)-1)+1
+      do ll=1,maxgrid(4) 
+      do k=1,maxgrid(3) 
+        grdbkgd0(i,j,k,ll,numstat+1) = bk0(ix0,iy0,k,ll,numstat+1)
+        grdbkgd0(i,j,k,ll,numstat+2) = 1000.0 ! no uppper bound now
+      enddo
+      enddo
+  enddo
+  enddo
+  print*,'Max dBZ over finest grid: ',maxval(grdbkgd0(:,:,:,:,numstat+1)), &
+                                      minval(grdbkgd0(:,:,:,:,numstat+1))
   ! Deallocate:
   
   deallocate(refl,cldf,stat=istatus)
