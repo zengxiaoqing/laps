@@ -209,7 +209,8 @@ C
      +     azimuthR, azimuthR_HI,
      +     azimuthV, azimuthV_HI,
      +     distanceR, distanceR_HI,
-     +     distanceV, distanceV_HI)
+     +     distanceV, distanceV_HI,
+     +     nyquistVelocityV, nyquistVelocityV_HI)
 
       include 'netcdf.inc'
       integer gateR, gateR_HI, gateV, gateV_HI, radialR, radialR_HI,
@@ -232,7 +233,8 @@ C
      +     distanceR_HI(gateR_HI), distanceV(gateV),
      +     distanceV_HI(gateV_HI), elevationR( radialR, scanR),
      +     elevationR_HI( radialR_HI, scanR_HI), elevationV( radialV,
-     +     scanV), elevationV_HI( radialV_HI, scanV_HI)
+     +     scanV), elevationV_HI( radialV_HI, scanV_HI),
+     +     nyquistVelocityV(scanV), nyquistVelocityV_HI(scanV_HI)
 
 
       call read_netcdf_vol(nf_fid, gateR, gateR_HI, gateV, gateV_HI, 
@@ -244,7 +246,8 @@ C
      +     numRadialsV_HI, timeR, timeR_HI, timeV, timeV_HI, 
      +     azimuthR, azimuthR_HI, azimuthV, azimuthV_HI, distanceR, 
      +     distanceR_HI, distanceV, distanceV_HI, elevationR, 
-     +     elevationR_HI, elevationV, elevationV_HI)
+     +     elevationR_HI, elevationV, elevationV_HI,
+     +     nyquistVelocityV, nyquistVelocityV_HI)
 C
 C The netcdf variables are filled - your code goes here
 C
@@ -263,7 +266,8 @@ C
      +     numRadialsV_HI, timeR, timeR_HI, timeV, timeV_HI, 
      +     azimuthR, azimuthR_HI, azimuthV, azimuthV_HI, distanceR, 
      +     distanceR_HI, distanceV, distanceV_HI, elevationR, 
-     +     elevationR_HI, elevationV, elevationV_HI)
+     +     elevationR_HI, elevationV, elevationV_HI,
+     +     nyquistVelocityV, nyquistVelocityV_HI)
 C
    
       use mem_namelist, ONLY: r_missing_data
@@ -290,7 +294,8 @@ C
      +     distanceV_HI(gateV_HI), elevationR( radialR, scanR),
      +     elevationR_HI( radialR_HI, scanR_HI), elevationV( radialV,
      +     scanV), elevationV_HI( radialV_HI, scanV_HI),
-     +     nyquistVelocityR(scanR), nyquistVelocityR_HI(scanR_HI)
+     +     nyquistVelocityR(scanR), nyquistVelocityR_HI(scanR_HI),
+     +     nyquistVelocityV(scanV), nyquistVelocityV_HI(scanV_HI)
 
 
       i_missing_data = 255
@@ -498,6 +503,74 @@ C
           print *, NF_STRERROR(nf_status)
           print *,'in var elevationV_HI'
           elevationV_HI = r_missing_data
+        endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C      nyquistVelocityR"Nyquist Velocity"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'nyquistVelocityR',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var nyquistVelocityR'
+        nyquistVelocityR = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,nyquistVelocityR)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var nyquistVelocityR'
+          nyquistVelocityR = r_missing_data
+        endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C      nyquistVelocityR_HI"Nyquist Velocity"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'nyquistVelocityR_HI',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var nyquistVelocityR_HI'
+        nyquistVelocityR_HI = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,nyquistVelocityR_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var nyquistVelocityR_HI'
+          nyquistVelocityR_HI = r_missing_data
+        endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C      nyquistVelocityV"Nyquist Velocity"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'nyquistVelocityV',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var nyquistVelocityV'
+        nyquistVelocityV = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,nyquistVelocityV)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var nyquistVelocityV'
+          nyquistVelocityV = r_missing_data
+        endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C      nyquistVelocityV_HI"Nyquist Velocity"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'nyquistVelocityV_HI',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var nyquistVelocityV_HI'
+        nyquistVelocityV_HI = r_missing_data
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,nyquistVelocityV_HI)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var nyquistVelocityV_HI'
+          nyquistVelocityV_HI = r_missing_data
         endif
       endif
 
