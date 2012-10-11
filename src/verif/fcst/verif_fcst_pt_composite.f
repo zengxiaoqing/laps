@@ -437,7 +437,9 @@
 
           nincomplete_t = 0
           do imodel=2,n_fdda_models
+            if(trim(c_fdda_mdl_src(imodel)) .ne. 'advection')then
               nincomplete_t = nincomplete_t + incomplete_run_m(imodel)
+            endif
           enddo 
 
           if(nincomplete_t .eq. 0 .OR. 
