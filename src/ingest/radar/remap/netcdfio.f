@@ -490,6 +490,10 @@ c      Determine output filename extension
                if(allocated(distanceR_HI))deallocate(distanceR_HI)
                if(allocated(distanceV))deallocate(distanceV)
                if(allocated(distanceV_HI))deallocate(distanceV_HI)
+               if(allocated(nyquistVelocityV))
+     1           deallocate(nyquistVelocityV)
+               if(allocated(nyquistVelocityV_HI))
+     1           deallocate(nyquistVelocityV_HI)
 
 !              Allocate new volume scan
                write(6,*)'gateR,radialR,scanR = ',gateR,radialR,scanR
@@ -510,6 +514,7 @@ c      Determine output filename extension
                allocate(elevationV(radialV,scanV))
                allocate(azimuthV(radialV,scanV))
                allocate(distanceV(gateV))              
+               allocate(nyquistVelocityV(gateV))              
 
                write(6,*)'gateV_HI,radialV_HI,scanV_HI = ',
      1                    gateV_HI,radialV_HI,scanV_HI
@@ -517,6 +522,7 @@ c      Determine output filename extension
                allocate(elevationV_HI(radialV_HI,scanV_HI))
                allocate(azimuthV_HI(radialV_HI,scanV_HI))
                allocate(distanceV_HI(gateV_HI))                   
+               allocate(nyquistVelocityV_HI(gateV_HI))                   
 
                write(6,*)' call get_vol_netcdf_data'
                call get_vol_netcdf_data(nf_fid, gateR, gateR_HI, 
@@ -531,7 +537,8 @@ c      Determine output filename extension
      +              azimuthR, azimuthR_HI,
      +              azimuthV, azimuthV_HI, 
      +              distanceR, distanceR_HI,
-     +              distanceV, distanceV_HI)
+     +              distanceV, distanceV_HI,
+     +              nyquistVelocityV, nyquistVelocityV_HI)
 
 !              Use Default values
                Z_scale  = 2.0
@@ -641,8 +648,9 @@ c      Determine output filename extension
                ngates_vel_cdf = gateV
                firstGateRangeV = distanceV(1) / 1000.
                gateSizeV = (distanceV(2) - distanceV(1)) / 1000.
-               write(6,*)' V i_tilt_proc/i_array/elev = ',
-     1                     i_tilt_proc,i_array,elevationAngle
+               r_nyquist = nyquistVelocityV(i_array)
+               write(6,*)' V i_tilt_proc/i_array/elev/nyq = ',
+     1                     i_tilt_proc,i_array,elevationAngle,r_nyquist       
            else
                write(6,*)' No V match at elev ',elevationAngle
            endif
@@ -671,8 +679,9 @@ c      Determine output filename extension
                ngates_vel_cdf = gateV_HI
                firstGateRangeV = distanceV_HI(1) / 1000.
                gateSizeV = (distanceV_HI(2) -  distanceV_HI(1)) / 1000. 
-               write(6,*)' V_HI i_tilt_proc/i_array/elev = ',
-     1                     i_tilt_proc,i_array,elevationAngle
+               r_nyquist = nyquistVelocityV_HI(i_array)
+               write(6,*)' V_HI i_tilt_proc/i_array/elev/nyq = ',
+     1                     i_tilt_proc,i_array,elevationAngle,r_nyquist       
            else
                write(6,*)' No V_HI match at elev ',elevationAngle
            endif
