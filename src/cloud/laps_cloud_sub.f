@@ -600,12 +600,20 @@ C BLEND IN FIRST GUESS RADAR
         range_thresh_lo = 200000.
         range_thresh_hi = 300000.
 
+        radius_earth_8_thirds = 6371.e3 * 2.6666666
+        aterm = 1. / radius_earth_8_thirds
+
+        elev_ang_thr = 0.5 ! angle of radar horizon 
+        bterm = tand(elev_ang_thr)
+
         do i = 1,NX_L
         do j = 1,NY_L
-            if(ref_mt_modelfg(i,j) .gt. 0.)then
-                radius_earth_8_thirds = 6371.e3 * 2.6666666
-                curvature = ref_mt_modelfg(i,j)
-                hor_dist = sqrt(curvature*radius_earth_8_thirds)
+
+!           Determine dynamic cutoff distance between radar data and first guess
+            if(ref_mt_modelfg(i,j) .gt. 0.)then ! find distance from radar given
+                cterm = ref_mt_modelfg(i,j)     ! height and elev angle
+                hor_dist = (sqrt(4.*aterm*cterm + bterm**2.) - bterm)       
+     1                                / (2.*aterm)
                 range_thresh = 
      1              min(max(hor_dist,range_thresh_lo),range_thresh_hi)
             else
