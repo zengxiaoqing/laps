@@ -6,7 +6,7 @@ real, allocatable, dimension(:,:) :: elevationR, elevationR_HI, elevationV, elev
 
 real, allocatable, dimension(:,:) :: azimuthR, azimuthR_HI, azimuthV, azimuthV_HI          
 
-real, allocatable, dimension(:) :: distanceR, distanceR_HI, distanceV, distanceV_HI          
+real, allocatable, dimension(:) :: distanceR, distanceR_HI, distanceV, distanceV_HI, nyquistVelocityV, nyquistVelocityV_HI          
 
 integer :: gateR, gateR_HI, gateV, gateV_HI, radialR, radialR_HI, &
            radialV, radialV_HI, scanR, scanR_HI, scanV, &
