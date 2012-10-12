@@ -171,6 +171,7 @@ subroutine reflectivity
   integer :: i,j,k,ll,iqc,nref,n2d,n3d,istatus,ix0,ix1,iy0,iy1
   integer :: istatus2d(fcstgrd(1),fcstgrd(2)), &
              istatus3d(fcstgrd(1),fcstgrd(2))
+  logical :: reflectivity_bound
   real    :: rlat,rlon,rhgt,rhc,tref ! LAPS uses these scalars
   real    :: closest(fcstgrd(1),fcstgrd(2)),rmax(2),rlow(2)
 
@@ -263,6 +264,7 @@ subroutine reflectivity
     cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! Assume cloud does not change in a cycle
   
   ! Adjust bound based on cloud:
+  reflectivity_bound = .false.
   do ll=1,fcstgrd(4)
   do k=1,fcstgrd(3)
   do j=1,fcstgrd(2)
@@ -271,7 +273,7 @@ subroutine reflectivity
     if (cldf(i,j,k,ll) .lt. 0.1 .and. refl(i,j,k,ll) .gt. 5.0) &
       bk0(i,j,k,ll,numstat+1) = 0.0
 
-    if (cldf(i,j,k,ll) .ge. 1000.2) then
+    if (cldf(i,j,k,ll) .ge. 0.1) then
       rhc = make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,ll,temprtur)-273.15, &
                      cldf(i,j,k,ll)**0.2,0.0)
       bk0(i,j,k,ll,numstat+1) = amax1(bk0(i,j,k,ll,numstat+1),rhc)
@@ -281,11 +283,14 @@ subroutine reflectivity
     if (cldf(i,j,k,ll) .ge. 0.1 .and. refl(i,j,k,ll) .ge. 5.0) &
       bk0(i,j,k,ll,numstat+1) = &
           make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,ll,temprtur)-273.15,1.0,tref)
+    if (ll .eq. 2 .and. cldf(i,j,k,ll) .ge. 0.1 .and. refl(i,j,k,ll) .ge. 5.0) &
+      reflectivity_bound = .true.
 
   enddo
   enddo
   enddo
   enddo
+  print*,'Reflectivity bound derived: ',reflectivity_bound
 
   ! Assign reflectivity derived bounds to GRDBKGD0:
   do j=1,maxgrid(2)
