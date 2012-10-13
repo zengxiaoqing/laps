@@ -1322,7 +1322,7 @@ SUBROUTINE RDBUFROBS_XIE
           OBS(NST(TEMPRTUR),TEMPRTUR) = OBS(NST(TEMPRTUR),TEMPRTUR)-TT
 
           ! Add a threshold check: Yuanfu June 2010
-          IF (ABS(OBS(NST(TEMPRTUR),TEMPRTUR)) .GT. 20.0) THEN
+          IF (ABS(OBS(NST(TEMPRTUR),TEMPRTUR)) .GT. 10.0) THEN
             ! Over the threshold, remove this data:
             O = O-1
             NST(TEMPRTUR) = NST(TEMPRTUR)-1
