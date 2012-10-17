@@ -114,6 +114,8 @@ cdis
         logical iflag_snow_potential, l_plot_image, l_image
         logical l_low_fill, l_high_fill
 
+        logical lmask_rqc_3d(NX_L,NY_L,1)
+
         integer ibase_array(NX_L,NY_L)
         integer itop_array(NX_L,NY_L)
 
@@ -478,6 +480,8 @@ c       include 'satellite_dims_lvd.inc'
             c_type_i = c_type
         endif
 
+        write(6,*)' c_type is: ',c_type
+
         if(c_type(1:2) .eq. 'by')then
             i_balance = 1
             goto 1200
@@ -508,7 +512,8 @@ c       include 'satellite_dims_lvd.inc'
             goto 1200
         endif
 
-        if(c_type(1:2) .eq. 'di' .or. c_type(1:2) .eq. 'ml')then
+        if(c_type(1:2) .eq. 'di' .or. c_type(1:2) .eq. 'ml' .or. 
+     1     c_type(1:2) .eq. 'dt')then
 
             if(c_type(1:2) .eq. 'di')then
               write(6,*)' Plotting difference field of last two entries' 
@@ -516,6 +521,30 @@ c       include 'satellite_dims_lvd.inc'
      1                                            ,NX_L,NY_L)       
 
               c_label = 'difference field (b - a)'
+              colortable = 'hues'
+
+            elseif(c_type(1:2) .eq. 'dt')then
+              write(6,*)
+     1           ' Plotting contingency table of last two entries'       
+
+              thresh = 20.
+              lmask_rqc_3d = .true.
+
+              call calc_contable_3d(
+     1             field_2d_buf,field_2d,thresh,NX_L,NY_L,1,    ! I
+     1             lmask_rqc_3d,r_missing_data,                 ! I
+     1             field_2d_diff)                               ! O
+
+              c_label = '20dBZ Contingency Table (b - a)'
+              plot_parms%iraster = +1
+              plot_parms%l_discrete = .true.
+              colortable = 'ref' ! 'spectral'
+              where(field_2d_diff .eq. 0.0)field_2d_diff = +1.4 ! Hit      
+              where(field_2d_diff .eq. 1.0)field_2d_diff = +1.0 ! Miss      
+              where(field_2d_diff .eq. 2.0)field_2d_diff = +2.2 ! False Pos
+              where(field_2d_diff .eq. 3.0)field_2d_diff = +0.1 ! Correct Neg
+              dyn_low = 0.0
+              dyn_high = 3.0
 
             else
               write(6,*)' Plotting product field of last two entries' 
@@ -523,6 +552,7 @@ c       include 'satellite_dims_lvd.inc'
      1                                            ,NX_L,NY_L)       
 
               c_label = 'product field (b - a)'
+              colortable = 'hues'
             endif
 
 !           Use scale from the most recent plot?
@@ -572,7 +602,7 @@ c       include 'satellite_dims_lvd.inc'
                 write(6,*)' ccpfil for diff plot range = ',rmin,rmax
      1                                                    ,scale
 
-                call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,'hues'
+                call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,colortable
      1                     ,n_image,scale,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -2943,7 +2973,7 @@ cabdel
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
      1                             ,namelist_parms,plot_parms)
 
-            elseif(c_field .eq. 'mt')then ! Do Max Tops
+            elseif(c_field(1:2) .eq. 'mt')then ! Do Max Tops
 	        if (laps_cycle_time.eq.0)then
 	           i4time_hour = (i4time_radar+laps_cycle_time/2)
 	        else
@@ -2976,25 +3006,44 @@ cabdel
                 endif
 
 !               Create a floor to the array for better contouring
-                do i = 1,NX_L
-                do j = 1,NY_L
+                if(i_image .eq. 0)then
+                  do i = 1,NX_L
+                  do j = 1,NY_L
                     rfloor = cont_low - 0.1
                     radar_array(i,j) = radar_array(i,j) / 1000.
                     radar_array(i,j) =
      1                  max(radar_array(i,j),rfloor)
-                enddo ! j
-                enddo ! i
+                  enddo ! j
+                  enddo ! i
+                  scale = 1e0
+                else
+                  scale = 1e3
+                endif
 
 !               Display Max Tops
                 write(6,*)' Displaying Max Tops, cint = '
      1                          ,cont_low,cont_high,cint
-                call plot_cont(radar_array,1e0,cont_low
-     1                        ,cont_high,cint,asc9_tim_r,namelist_parms       
-     1                        ,plot_parms
-     1                        ,'Max Echo Tops    (km MSL)        '
-     1                        ,i_overlay,c_display,lat,lon
-     1                        ,jdot,NX_L,NY_L,r_missing_data
-     1                        ,laps_cycle_time)
+
+!               call plot_cont(radar_array,1e0,cont_low
+!    1                        ,cont_high,cint,asc9_tim_r,namelist_parms       
+!    1                        ,plot_parms
+!    1                        ,'Max Echo Tops    (km MSL)        '
+!    1                        ,i_overlay,c_display,lat,lon
+!    1                        ,jdot,NX_L,NY_L,r_missing_data
+!    1                        ,laps_cycle_time)
+
+                plot_parms%iraster = 1
+
+                c_label = 'Max Echo Tops    (km MSL)'
+                colortable = 'spectral'
+                clow = 0.
+                chigh = 20.
+                cint = 1.
+                call plot_field_2d(i4_valid,c_type,radar_array,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,colortable)
 
             elseif(c_field .eq. 'f1')then ! Fcst Max Reflectivity
 
@@ -3628,12 +3677,13 @@ c abdel
                   if(c_type_i .ne. 'ci')then
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
      1                                   ext,var_2d,units_2d,
-     1                                   comment_2d,NX_L,NY_L,field2_2d,       
+     1                                   comment_2d,NX_L,NY_L,field_2d,       
      1                                   k_mb,istatus)
                   else
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
      1                                   ext,var_2d,units_2d,comment_2d,
-     1                                   NX_L,NY_L,cice_2d,k_mb,istatus)       
+     1                                   NX_L,NY_L,field_2d,k_mb,
+     1                                   istatus)
                   endif
 
                 endif
@@ -3699,20 +3749,16 @@ c abdel
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
                elseif(c_type_i .ne. 'ci')then
-!                  call subcon(field2_2d,1e-30,field_2d,NX_L,NY_L)
-
                    call plot_field_2d(i4time_lwc,c_type
-     1                        ,field2_2d,1e-3
+     1                        ,field_2d,1e-3
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
                else ! c_type .eq. 'ci'
-!                  call subcon(cice_2d,1e-30,field_2d,NX_L,NY_L)
-
                    call plot_field_2d(i4time_lwc,c_type
-     1                        ,cice_2d,1e-3
+     1                        ,field_2d,1e-3
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
