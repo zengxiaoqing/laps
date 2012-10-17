@@ -336,7 +336,7 @@ my $aspect_ratio = (@xdim[0]-1.0) / (@ydim[0]-1.0);
 my $aspect_word;
 if ($aspect_ratio > 1.40) {
     $aspect_word = "wide2";
-} elsif ($aspect_ratio > 1.192) {
+} elsif ($aspect_ratio > 1.190) {
     $aspect_word = "wide";
 } else {
     $aspect_word = "square";
