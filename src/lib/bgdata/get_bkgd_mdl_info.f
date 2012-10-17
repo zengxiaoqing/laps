@@ -667,6 +667,11 @@ c --------------------
      1         ,Lat0,Lat1,Lon0
      1         ,cgrddef,cross_dateline,sw,ne
 
+             if(cgrddef .ne. 'N' .and. cgrddef .ne. 'S')then
+                 write(6,*)' WARNING: cgrddef is ',cgrddef
+                 goto 98
+             endif
+
              if(fpathname_a(iheader) .eq. fpathname)then ! valid header
                  l_valid_header = .true. ! can be turned off  
                  goto 99
@@ -697,18 +702,25 @@ c --------------------
      1         ,cgrddef,cross_dateline,sw,ne
              istatus = 1
  
+             write(*,*) "CALL DEGRIB_NAV:" 
              call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
      &       gproj,dlat,dlon,Lat0,Lat1,Lon0,cgrddef,cross_dateline,
      &       sw(1),sw(2),ne(1),ne(2),.false.,istatus)
 
            else ! call degrib_nav to obtain header info
 !            fullname, vtable are assumed as inputs, the rest outputs
-             write(*,*) "CALL DEGRIB_NAV:" 
-             write(*,*) " grib filename", fullname
+
+             write(*,*) "CALL DEGRIB_NAV to obtain header info:" 
+             write(*,*) " grib filename", trim(fullname)
 
              call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
      &       gproj,dlat,dlon,Lat0,Lat1,Lon0,cgrddef,cross_dateline,
      &       sw(1),sw(2),ne(1),ne(2),.true.,istatus)
+
+             if(cgrddef .ne. 'N' .and. cgrddef .ne. 'S')then
+                 write(6,*)' WARNING: undefined cgrddef, setting to N'
+                 cgrddef = 'N'
+             endif
 
 !            Write header information into a file for later retrieval
              call s_len(outdir,lenh)
@@ -718,8 +730,11 @@ c --------------------
              open(22,file=headers_file(1:lenhf),status='unknown')
              nheaders = 1
              write(22,*)nheaders
+             write( 6,*)nheaders
              write(22,11)fpathname
+             write( 6,11)fpathname
              write(22,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon,Lat0,Lat1,Lon0
+             write( 6,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon,Lat0,Lat1,Lon0
      1       ,cgrddef,cross_dateline,sw,ne
              close(22)
 
