@@ -195,7 +195,6 @@ C Use namelist parameter for this time offset
             wfo_fname13_in = cvt_i4time_wfo_fname13(i4time_in)
             write(6,*)'New time: ',wfo_fname13_in
          endif
-!     elseif(c_sat_type.eq.'rll')then ! global satellites can have latency
       else
         i4time_now = i4time_now_gg()
         call cv_asc_i4time(c_fname_in,i4time_in)
@@ -367,7 +366,7 @@ c
 !           So far jj (end of file index) is assumed to be the end of the
 !           channel part. We now strip off the '.nc' if present.
             if(c_filename_sat(i)(jj-2:jj) .eq. '.nc')then
-               jj = jj-3
+               jj = jj-4 ! (e.g. read '10p' part of filename)
             endif
 
             do k=1,nchannels
