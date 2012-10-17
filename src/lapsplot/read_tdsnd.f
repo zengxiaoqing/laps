@@ -95,7 +95,7 @@ cdis
         real gps_tim(gps_n)
 
         write(6,*)
-     1  ' Subroutine read_tdsnd -- reads LRS, SND and GPS to make HMG'
+     1  ' Subroutine read_tdsnd -- reads SND and GPS to make HMG'
 
         lun_hmg = 32
 
@@ -116,11 +116,6 @@ cdis
                 ob_pr_td(i_tdsnd,level) = r_missing_data
             enddo
         enddo
-
-        call get_tempob_time_window('LRS',i4_window_ob,istatus)
-        if(istatus .ne. 1)return
-
-        i4_window_rass_file = 3600
 
         ext = 'hmg'
 
