@@ -449,6 +449,24 @@ C
         istatus = -1          
       endif
 
+      write(6,*)' Reading TPW'
+C
+C     Variable        NETCDF Long Name
+C      tpw          "LAPS TPW"
+C
+      nf_status = NF_INQ_VARID(nf_fid,'tpw',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tpw'
+        istatus = -1          
+      endif
+      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tpw)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tpw'
+        istatus = -1          
+      endif
+
       write(6,*)' Closing file ',nf_fid,z
 
       nf_status = nf_close(nf_fid)
