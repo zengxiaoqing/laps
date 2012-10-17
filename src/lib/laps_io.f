@@ -1713,6 +1713,12 @@ c
                  imiss=0
                  do il = 1,imax
                  do jl = 1,jmax
+
+!                   QC check
+                    if(field_2d(il,jl) .gt. 1e10)then
+                       field_2d(il,jl) = r_missing_data
+                    endif
+
                     if(field_2d(il,jl) .eq. r_missing_data)then
                        imiss=imiss+1
 
