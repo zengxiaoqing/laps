@@ -551,8 +551,8 @@
                   if(iregion .eq. 1)then
 
 !                     Calculate Contingency Table (3-D)
-                      call calc_contable_3d(i4_initial,i4_valid
-     1                       ,var_anal_3d,var_fcst_3d
+                      call calc_contable_3d(
+     1                        var_anal_3d,var_fcst_3d
      1                       ,rdbz,NX_L,NY_L,NZ_L                    ! I
      1                       ,lmask_rqc_3d,r_missing_data            ! I
      1                       ,cont_4d(1,1,1,idbz))                   ! O
