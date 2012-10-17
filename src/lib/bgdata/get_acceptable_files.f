@@ -451,10 +451,11 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
 !!! add Huiling Yuan 20120904  AAA001, tested with RUC, use_analysis=true
              if ((use_analysis .eqv. .true.) .AND. 
      1           (use_forecast .eqv. .false.)      )then
-             jj=1
-             if(n.lt.ibkgd)then
-              valid_time_1=i4timeinit(n)
-              valid_time_2=i4timeinit(n+1)
+              jj=1
+
+              if(n.lt.ibkgd)then
+                valid_time_1=i4timeinit(n)
+                valid_time_2=i4timeinit(n+1)
 
                 if(idebug.ge.1)write(6,*)bkgd(n),fcst(n,jj),' '
      1                                  ,bkgd(n),fcst(n+1,jj)  ,' '
@@ -479,14 +480,16 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
                  write(6,*)valid_time_1,i4time_anal,valid_time_2
                  print*
 
-               endif
+                endif ! valid time
 
-             endif   ! (n.lt.ibkgd)
+              endif   ! (n.lt.ibkgd)
 
 !!!  partial if block, use_analysis=true,  by Huiling Yuan,  AAA001_A
-            else   !! add by Huiling Yuan, AAA001_B
+             else   !! add by Huiling Yuan, AAA001_B
 
-             do jj=2,ifcst_bkgd(n)
+!             use_analysis = .false. .OR. use_forecast = .true.
+
+              do jj=2,ifcst_bkgd(n)
                 af=fcst(n,jj-1)
                 read(af,'(i4)',err=888) ihour
                 valid_time_1=i4timeinit(n)+ihour*3600
@@ -517,9 +520,10 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
                  print*
 
                 endif
-             enddo
+              enddo
 
              endif   !use_analysis.eqv..true., end Huiling Yuan,  AAA001
+
             else  !must be LAPS
 
              if(n.gt.1)then
