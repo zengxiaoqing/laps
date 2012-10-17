@@ -95,6 +95,10 @@ foreach (@greplines) {
   print "    Using @rest ";
   print "\n";
 }
+@greplines = grep /Mosaicing ALB/, @lines;
+foreach (@greplines) {
+  print "    $_";
+}
 @greplines = grep /No VIS/, @lines;
 print " $greplines[0]";
 @greplines = grep /Visible albedo data used/, @lines;
