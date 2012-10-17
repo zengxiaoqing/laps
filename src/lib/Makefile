@@ -36,6 +36,7 @@ SRC	= machine_dependent.F \
           atan3d.f \
           bilinear_interp.f \
           block_data.f \
+          calc_contable.f \
           climate_sm.f \
           constant.f \
           convc2f.f \
