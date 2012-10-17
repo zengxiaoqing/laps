@@ -758,7 +758,7 @@ c format type 4 (raw lat lon)
             ICHANNELS(3,4,1)=1
             c_channel_types(3,4,1)=cchanneltypes(kk)
             i_msng_sat_flag(3,4,1)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,4,1)=1
             c_channel_types(4,4,1)=cchanneltypes(kk)
             i_msng_sat_flag(4,4,1)=i_qc_sat_flag(kk)
@@ -820,7 +820,7 @@ c format type 4 (raw lat lon)
            elseif(cchanneltypes(kk).eq.'wv')then
             ICHANNELS(3,4,2)=1
             c_channel_types(3,4,2)=cchanneltypes(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,4,2)=1
             c_channel_types(4,4,2)=cchanneltypes(kk)
            elseif(cchanneltypes(kk).eq.'12u')then
@@ -918,7 +918,7 @@ c     format type 4 (raw lat lon)
             ICHANNELS(3,4,3)=1
             c_channel_types(3,4,3)=cchanneltypes(kk)
             i_msng_sat_flag(3,4,3)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,4,3)=1
             c_channel_types(4,4,3)=cchanneltypes(kk)
             i_msng_sat_flag(4,4,3)=i_qc_sat_flag(kk)
@@ -949,7 +949,7 @@ c     format type 4 (rll)
             ICHANNELS(3,4,4)=1
             c_channel_types(3,4,4)=cchanneltypes(kk)
             i_msng_sat_flag(3,4,4)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,4,4)=1
             c_channel_types(4,4,4)=cchanneltypes(kk)
             i_msng_sat_flag(4,4,4)=i_qc_sat_flag(kk)
@@ -1128,7 +1128,7 @@ c format type 3 (raw lat lon)
             ICHANNELS(3,4,5)=1
             c_channel_types(3,4,5)=cchanneltypes(kk)
             i_msng_sat_flag(3,4,5)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,4,5)=1
             c_channel_types(4,4,5)=cchanneltypes(kk)
             i_msng_sat_flag(4,4,5)=i_qc_sat_flag(kk)
@@ -1218,7 +1218,7 @@ c format type 4 (rll)
             ICHANNELS(3,4,6)=1
             c_channel_types(3,4,6)=cchanneltypes(kk)
             i_msng_sat_flag(3,4,6)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,4,6)=1
             c_channel_types(4,4,6)=cchanneltypes(kk)
             i_msng_sat_flag(4,4,6)=i_qc_sat_flag(kk)
@@ -1348,7 +1348,7 @@ c format type 4 (raw lat lon)
             ICHANNELS(3,4,7)=1
             c_channel_types(3,4,7)=cchanneltypes(kk)
             i_msng_sat_flag(3,4,7)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,4,7)=1
             c_channel_types(4,4,7)=cchanneltypes(kk)
             i_msng_sat_flag(4,4,7)=i_qc_sat_flag(kk)
@@ -1402,7 +1402,7 @@ c format type 4 (rll)
             ICHANNELS(2,4,8)=1
             c_channel_types(2,4,8)=cchanneltypes(kk)
             i_msng_sat_flag(2,4,8)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,4,8)=1
             c_channel_types(4,4,8)=cchanneltypes(kk)
             i_msng_sat_flag(4,4,8)=i_qc_sat_flag(kk)
@@ -1431,7 +1431,7 @@ c format type 4 (rll)
             ICHANNELS(2,it,is)=1
             c_channel_types(2,it,is)=cchanneltypes(kk)
             i_msng_sat_flag(2,it,is)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'11u')then
+           elseif(cchanneltypes(kk).eq.'10p')then
             ICHANNELS(4,it,is)=1
             c_channel_types(4,it,is)=cchanneltypes(kk)
             i_msng_sat_flag(4,it,is)=i_qc_sat_flag(kk)
