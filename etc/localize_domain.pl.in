@@ -414,6 +414,13 @@ if($WHICH_TYPE eq "laps"){
    print "Copy satellite_lvd.nl to satellite_lvd_rep.nl";
    run_sys::run_sys($command);
 
+# -------------------
+# update version file 
+# -------------------
+   $command="cp $SOURCE_ROOT/version.src $DATA_ROOT/version.localized";
+   print "Copy $SOURCE_ROOT/version.src to $DATA_ROOT/version.localized";
+   run_sys::run_sys($command);
+
 }
 
 print "$0 complete\n";
