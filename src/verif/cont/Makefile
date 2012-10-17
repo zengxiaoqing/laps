@@ -23,7 +23,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
 
 EXE = verif_cont.exe
 
-SRC=verif_cont.f hist.f contingency_table.f skill_scores.f calc_contable.f put_contables.f verif_radar_composite.f
+SRC=verif_cont.f hist.f contingency_table.f skill_scores.f put_contables.f verif_radar_composite.f
 
 all: exe
 
