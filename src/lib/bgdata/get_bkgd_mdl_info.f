@@ -734,6 +734,7 @@ c --------------------
              write(22,11)fpathname
              write( 6,11)fpathname
              write(22,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon,Lat0,Lat1,Lon0
+     1       ,cgrddef,cross_dateline,sw,ne
              write( 6,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon,Lat0,Lat1,Lon0
      1       ,cgrddef,cross_dateline,sw,ne
              close(22)
