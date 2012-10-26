@@ -42,7 +42,7 @@ cdis
      1                        NZ_L,
      1                        N_PIREP,
      1                        maxstns,
-     1                        max_cld_snd,
+     1                        max_snd_grid,max_snd_levels,
      1                        n_prods,
      1                        iprod_number,
      1                        temp_3d,
@@ -98,9 +98,6 @@ cdis
 !                               initialize c1_name_array dynamically instead
 !                               of with a DATA statement.
 !       1997 Jul 31 K. Dritz  - Added NZ_L as dummy argument.
-!       1997 Jul 31 K. Dritz  - Added N_PIREP, maxstns, and max_cld_snd as
-!                               dummy arguments.  Removed the PARAMETER
-!                               statement for max_cld_snd.
 !       1997 Jul 31 K. Dritz  - Added call to get_ref_base.
 !       1997 Aug 01 K. Dritz  - Added maxstns, IX_LOW, IX_HIGH, IY_LOW, and
 !                               IY_HIGH as arguments in call to insert_sao.
@@ -698,6 +695,8 @@ c read in laps lat/lon and topo
      1                  (grid_spacing_cen_m/1000.)
         endif
 
+        cld_ice_ub_gpm3 = .01
+
         do k = 1,NZ_L
         do j = 1,NY_L
         do i = 1,NX_L
@@ -705,7 +704,9 @@ c read in laps lat/lon and topo
                 slwc(i,j,k) = (slwc(i,j,k) * ratio_cldliq)
             endif
             if(cice(i,j,k) .ne. r_missing_data)then
-                cice(i,j,k) = (cice(i,j,k) * ratio_cldice)
+!               cice(i,j,k) = (cice(i,j,k) * ratio_cldice)
+                cice(i,j,k) = min(cice(i,j,k),cld_ice_ub_gpm3)                
+        
             endif
         enddo 
         enddo
@@ -1238,6 +1239,21 @@ c read in laps lat/lon and topo
         I4_elapsed = ishow_timer()
 
         istatus = 1
+
+!       Read sounding metadata to get integrated cloud liquid obs
+!       lun = 89
+!       ext = 'snd'
+!       call read_snd_metadata(lun,i4time,ext                         ! I
+!    1                        ,MAX_SND_GRID,MAX_SND_LEVELS            ! I
+!    1                        ,lat,lon,imax,jmax                      ! I
+!    1                        ,n_profiles                             ! O
+!    1                        ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
+!    1                        ,c5_name,i4time_ob_pr,obstype           ! O
+!    1                        ,cloud_base_temp,cloud_liquid           ! O
+!    1                        ,istatus)                               ! O
+
+!       write(6,*)' back from read_snd_metadata, # soundings = '
+!    1            ,n_profiles
 
 999     continue
 
