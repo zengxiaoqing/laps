@@ -39,22 +39,29 @@ OTHERLIBS=-L$(NETCDF)/lib -lnetcdf
 include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
+	   $(SRCROOT)/src/lib/degrib/libdegrib.a  \
            $(SRCROOT)/src/lib/modules/libmodules.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  \
 	   $(SRCROOT)/src/lib/bgdata/libbgdata.a  \
-	   $(SRCROOT)/src/lib/grib2/libgrib2.a  \
 	   $(SRCROOT)/src/lib/radar/rutil/librutil.a \
-	   $(SRCROOT)/src/lib/radar/synp/libsynp.a
+	   $(SRCROOT)/src/lib/radar/synp/libsynp.a \
+           $(SRCROOT)/src/lib/w3lib/libw3.a \
+           $(SRCROOT)/src/lib/g2lib/libg2_4.a
+
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
+	     $(SRCROOT)/src/lib/degrib/libdebugdegrib.a  \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
 	     $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a  \
-	     $(SRCROOT)/src/lib/grib2/libdebuggrib2.a  \
+	     $(SRCROOT)/src/lib/degrib/libdebugdegrib.a  \
 	     $(SRCROOT)/src/lib/radar/rutil/libdebugrutil.a \
-	     $(SRCROOT)/src/lib/radar/synp/libdebugsynp.a
+	     $(SRCROOT)/src/lib/radar/synp/libdebugsynp.a \
+             $(SRCROOT)/src/lib/w3lib/libdebugw3.a \
+             $(SRCROOT)/src/lib/g2lib/libdebugg2_4.a
+
              
 
 # This can be uncommented if desired for the regular 'make' to have the 
@@ -65,7 +72,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
 
 RM=rm -f 
 
-.SUFFIXES:              .f90 .o
+.SUFFIXES:              .f90 .o .c .f .a .F .i .exe
 
 %.o:%.mod
 
@@ -89,7 +96,7 @@ all:			$(EXE)
 
 $(EXE):			$(FOBJS) $(COBJS) $(FMOD)
 			$(FC) $(FREE) -o $@ $(FFLAGS) $(FOBJS) $(COBJS) \
-			$(BGDATALIB) $(LAPSLIBS) $(HDF5LIB) $(OTHERLIBS) $(INC) -lm
+			$(BGDATALIB) $(LAPSLIBS) $(HDF5LIB) $(OTHERLIBS) $(DEGRIBLIBS) $(INC) -lm
 
 debug:	
 	 ($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
