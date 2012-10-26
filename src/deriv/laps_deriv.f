@@ -81,6 +81,8 @@ cdis
      1                  r_missing_data,
      1                  j_status)
 
+        use mem_namelist, ONLY: max_snd_grid, max_snd_levels
+
         integer j_status(20),iprod_number(20)
 
         real temp_3d(NX_L,NY_L,NZ_L)
@@ -240,23 +242,23 @@ cdis
 
         write(6,*)
         write(6,*)' Calling laps_deriv_sub'
-        call laps_deriv_sub(i4time,              ! I
-     1                  NX_L,NY_L,               ! I
-     1                  NZ_L,                    ! I
-     1                  N_PIREP,                 ! I
-     1                  maxstns,                 ! I
-     1                  max_cld_snd,             ! I
+        call laps_deriv_sub(i4time,                  ! I
+     1                  NX_L,NY_L,                   ! I
+     1                  NZ_L,                        ! I
+     1                  N_PIREP,                     ! I
+     1                  maxstns,                     ! I
+     1                  max_snd_grid,max_snd_levels, ! I
      1                  n_prods,
      1                  iprod_number,
-     1                  temp_3d,                 ! I
-     1                  heights_3d,              ! I
-     1                  rh_3d_pct,               ! I
-     1                  pres_sfc_pa,             ! I
-     1                  temp_sfc_k,              ! I
-     1                  dbz_max_2d,istat_lps,    ! O
-     1                  twet_snow,               ! O
-     1                  j_status,                ! O
-     1                  istatus1)                ! O
+     1                  temp_3d,                     ! I
+     1                  heights_3d,                  ! I
+     1                  rh_3d_pct,                   ! I
+     1                  pres_sfc_pa,                 ! I
+     1                  temp_sfc_k,                  ! I
+     1                  dbz_max_2d,istat_lps,        ! O
+     1                  twet_snow,                   ! O
+     1                  j_status,                    ! O
+     1                  istatus1)                    ! O
 
 !       istat_lps = 0 ! Temporary until this is wired in'
         istat_twet_snow = 1 ! if we get this far the read was successful
