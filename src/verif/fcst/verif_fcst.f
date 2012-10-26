@@ -170,7 +170,7 @@
 
         logical lmask_and_3d(ni,nj,nk)
         logical lmask_rqc_3d(ni,nj,nk)
-        logical l_parse, l_parse_result
+        logical l_parse, l_parse_result, l_exist
 
         integer       maxbgmodels
         parameter     (maxbgmodels=10)
@@ -445,7 +445,14 @@
                   call cv_i4tim_asc_lp(i4_valid,atime_s,istatus)
 
                   write(6,*)' call read_gps_obs: ',trim(path_to_gps)
-!                 path_to_gps = '/public/data/gpsmet/netcdf/'
+                  inquire(file=trim(path_to_gps),exist=l_exist)
+                  if(l_exist .eqv. .true.)then
+                      write(6,*)' Path to GPS from namelist exists'         
+                  else
+                      write(6,*)
+     1                  ' Path to GPS non-existent, trying /public'
+                      path_to_gps = '/public/data/gpsmet/netcdf/'
+                  endif
                   lun_hmg = 0
                   i4beg = i4_valid - 960
                   i4end = i4_valid + 840
@@ -460,6 +467,10 @@
                     write(6,*)
      1                    ' Success reading GPS obs, #obs in domain = '
      1                     ,gps_indomain
+                    if(gps_indomain .eq. 0.)then
+                      write(6,*)' No GPS obs - skip stats calculation'
+                      goto 980 ! Skip calculation of stats and write initialized flag values
+                    endif
                   else
                     write(6,*)' Failure reading GPS obs at:',atime_s
                     goto 980
@@ -583,6 +594,13 @@
 
                   write(6,*)var_2d,' range is ',minval(var_fcst_2d)
      1                                         ,maxval(var_fcst_2d)
+
+                  if(trim(var_2d) .eq. 'TPW')then
+                      if(maxval(var_fcst_2d) .eq. 0.)then
+                          write(6,*)' QC issue with TPW forecast field' 
+                          goto 990
+                      endif
+                  endif
 
                   if(l_persist .eqv. .true. .and. 
      1               l_good_persist .eqv. .false. .and.
