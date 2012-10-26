@@ -31,7 +31,8 @@ echo "FCSTINTVL is $FCSTINTVL"
 #   setenv NCTEMPLATE /data/fab/laps/laps_conus.fsf
 #endif
 
-setenv NCTEMPLATE $LAPS_DATA_ROOT/template.fsf
+setenv NCTEMPLATE     $LAPS_DATA_ROOT/template.fsf
+setenv NCTEMPLATE_FUA $LAPS_DATA_ROOT/template.fua
 
 # Create FSF template file
 #echo "ncgen -o $NCTEMPLATE $LAPS_DATA_ROOT/cdl/fsf.cdl"
@@ -99,6 +100,7 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
         endif
 
 #       Info from HRRR 15-min GRIB2 table - http://ruc.noaa.gov/hrrr/GRIB2Table-subh.txt
+        @ REC_PSF = $REC_LMR + 17 # 18 in table
         @ REC_TSF = $REC_LMR + 18 # 19 in table
         @ REC_DSF = $REC_LMR + 19 # 20 in table
         @ REC_WSF = $REC_LMR + 20 # 21 in table
@@ -112,8 +114,11 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
         setenv GRIBIN /public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$HRRRHH\00         
 
 #       setenv NCOUT /home/Steve.Albers/outdir/$YYDDDHHMM$FCSTTIME.fsf
-        setenv OUTDIR $LAPS_DATA_ROOT/lapsprd/fsf/$MODEL
-        setenv NCOUT $OUTDIR/$YYDDDHHMM$FCSTTIME.fsf
+        setenv OUTDIR     $LAPS_DATA_ROOT/lapsprd/fsf/$MODEL
+        setenv NCOUT     $OUTDIR/$YYDDDHHMM$FCSTTIME.fsf
+
+        setenv OUTDIR_FUA $LAPS_DATA_ROOT/lapsprd/fua/$MODEL
+        setenv NCOUT_FUA $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME.fua
 
 #       Specify stmas_hwt grid for testing
 #       setenv NEWGRID "-new_grid lambert:-98.408:35.25:35.25 -105.0:433:3000. 28.0:433.:3000."
@@ -149,6 +154,9 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
         echo "wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $NCOUT"
               wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $NCOUT
 
+        echo "wgrib2  $GRIBIN -s -d $REC_PSF -append $NEWGRID -netcdf $NCOUT"
+              wgrib2  $GRIBIN -s -d $REC_PSF -append $NEWGRID -netcdf $NCOUT
+
         setenv GRIB_PCP_IN /nofile                                                         
         if ($FMM == 00 || $FMM == 60) then
             setenv GRIB_PCP_IN /public/data/fsl/hrrr/conus/wrftwo/$YYDDDHHMM$HRRRHH\00         
@@ -162,13 +170,23 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
                 echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT"                   
                       wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT                   
               
+                echo "precip command for tpw"
+                echo "wgrib2  $GRIB_PCP_IN -s -match PWAT           -append $NEWGRID -netcdf $NCOUT"                   
+                      wgrib2  $GRIB_PCP_IN -s -match PWAT           -append $NEWGRID -netcdf $NCOUT                   
+              
                 echo "new precip command for r01"
-                if ($HRRRHH == 01 && $FCSTINTVL == 3600) then
-                    echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT"                   
-                          wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT
+                if (-e $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01) then
+                    if ($HRRRHH == 01 && $FCSTINTVL == 3600) then
+                        echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT"                   
+                              wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT
+                    else
+                        echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT"                   
+                              wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT
+                    endif
+
                 else
-                    echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT"                   
-                          wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT
+                    echo "ERROR: $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 not present"
+
                 endif
 
             else
@@ -179,14 +197,14 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
 #       cp $NCOUT $NCOUT.wgrib2out
 
         ncdump -h $NCOUT 
-
+  
         if (-e $GRIB_PCP_IN) then
-            echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto $NCOUT"          
-                  ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto $NCOUT           
+            echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto -v PWAT_localleveltype2000,tpw $NCOUT"          
+                  ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto -v PWAT_localleveltype2000,tpw $NCOUT           
  
         else
-            echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT"          
-                  ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT           
+            echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT"          
+                  ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT           
 
         endif
 
@@ -229,8 +247,8 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
               ncpdq -a record,z,y,x -O $NCOUT $NCOUT
 
 #       Append miscellaneous variables from FSF template file
-        echo "ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT"
-              ncks -A -v lmr_comment,tsf_comment,dsf_comment,usf_comment,vsf_comment,swi_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT
+        echo "ncks -A -v lmr_comment,tsf_comment,dsf_comment,psf_comment,usf_comment,vsf_comment,swi_comment,tpw_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,psf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,tpw_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT"
+              ncks -A -v lmr_comment,tsf_comment,dsf_comment,psf_comment,usf_comment,vsf_comment,swi_comment,tpw_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,psf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,tpw_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE $NCOUT
 
         rm $NCOUT.pid*ncks.tmp
 #       cp $NCOUT $NCOUT.ncks
@@ -249,18 +267,86 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
 #             ncatted -O -a Lo1,global,m,f,$LON1 $NCOUT
 
         if ($FMM == 00 || $FMM == 60) then
+            echo " "
+            date -u
+            echo " "
             echo "Hourly HRRR files under construction for FUA"
-        endif
+            setenv GRIB_PRES_IN /public/data/fsl/hrrr/conus/wrfprs/$YYDDDHHMM$HRRRHH\00         
+            setenv MODE_FUA WGRIB
 
-        echo "*** regridding $NCOUT ***"
-        echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME $OUTDIR $LAPS_DATA_ROOT"
-              $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME $OUTDIR $LAPS_DATA_ROOT
+            if (-e $GRIB_PRES_IN && -e $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua) then
+                if ($MODE_FUA == WGRIB) then
+                    echo "wgrib2 method...."
+                    echo "wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $NCOUT_FUA"                   
+                          wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $NCOUT_FUA                    
+
+#                   echo "wgrib2  $GRIB_PRES_IN -s -match DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -append $NEWGRID -netcdf $NCOUT_FUA"                   
+#                         wgrib2  $GRIB_PRES_IN -s -match DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -append $NEWGRID -netcdf $NCOUT_FUA                    
+   
+                    echo " "
+                    date -u
+                    echo " "
+
+#                   Add record dimension
+                    echo "ncecat -O -h $NCOUT_FUA $NCOUT_FUA"       
+                          ncecat -O -h $NCOUT_FUA $NCOUT_FUA        
+
+#                   Remove time dimension
+                    echo "ncwa -O -a time $NCOUT_FUA $NCOUT_FUA"
+                          ncwa -O -a time $NCOUT_FUA $NCOUT_FUA 
+
+                    if (-e $NCTEMPLATE_FUA) then
+                        echo "ncks -A -v t3_comment,sh_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $NCOUT_FUA"
+                              ncks -A -v t3_comment,sh_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $NCOUT_FUA 
+
+                        rm $NCOUT.pid*ncks.tmp
+                    endif
+
+                    echo "*** regridding $NCOUT and $NCOUT_FUA (by inputting $OUTDIR_FUA in arg 1) ***"
+                    echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F T T wrf-hrrr $LAPS_DATA_ROOT"
+                          $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F T T wrf-hrrr $LAPS_DATA_ROOT
+
+                    ls -l $NCOUT $NCOUT_FUA
+
+                else # MODE_FUA (lfmregrid method - read GRIB file via FORTRAN routines)
+
+                    echo "lfmregrid method..."
+                    echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME T F T F F F wrf-hrrr $LAPS_DATA_ROOT"
+                          $LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME T F T F F F wrf-hrrr $LAPS_DATA_ROOT 
+
+                endif # MODE_FUA (WGRIB method)
+
+
+            else # missing input data for FUA
+                echo "WARNING: $GRIB_PRES_IN or $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua is not present"
+
+                echo "*** regridding $NCOUT by inputting $OUTDIR in arg 1) ***"
+                echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F F T wrf-hrrr $LAPS_DATA_ROOT"
+                      $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F F T wrf-hrrr $LAPS_DATA_ROOT
+
+                ls -l $NCOUT $NCOUT_FUA
+
+            endif # $GRIB_PRES_IN exists
+
+            echo " "
+            date -u
+            echo " "
+
+        else # off the hour
+
+            echo "*** regridding $NCOUT by inputting $OUTDIR in arg 1) ***"
+            echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F F T wrf-hrrr $LAPS_DATA_ROOT"
+                  $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F F T wrf-hrrr $LAPS_DATA_ROOT
+
+            ls -l $NCOUT $NCOUT_FUA
+
+        endif # on the hour
 
 #       exit # for testing
 
-    end
+    end # minute loop
 
-end
+end # hour loop
 
 echo ""
 echo "output..."
