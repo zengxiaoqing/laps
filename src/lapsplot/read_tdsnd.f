@@ -46,7 +46,7 @@ cdis
      1                   r_missing_data,                          ! Input
      1                   istatus)                                 ! Output
 
-        use mem_namelist, ONLY: path_to_gps
+        character*256 path_to_gps
 
 !       Output arrays
         real lat_tdsnd(max_snd)
@@ -379,6 +379,8 @@ c       1                ,t_diff
         close(12)
 
 ! ***   Read in GPSdata  ***************************************
+        call get_gps_path(path_to_gps,istatus)
+
         write(6,*)' call read_gps_obs'
         i4beg = i4time_sys - 960
         i4end = i4time_sys + 840
