@@ -2611,6 +2611,18 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             c_label = 'LAPS Theta(e) Sat (Balanced) Deg K'
 
         elseif(c_field .eq. 'tw' .or. c_field .eq. 'td')then
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
             iflag_temp = 1 ! Returns Ambient Temp (K)
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
