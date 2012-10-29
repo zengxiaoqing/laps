@@ -30,7 +30,7 @@
         real u_vert(max_snd_levels)
         real v_vert(max_snd_levels)
         real rh_vert(max_snd_levels)
-        real sh_vert(max_snd_levels)
+        real sh_vert(max_snd_levels) ! dimensionless
         real td_vert(max_snd_levels)
         real lwc_vert(max_snd_levels)
         real ice_vert(max_snd_levels)
@@ -43,7 +43,7 @@
      1                              , logp_sfc
         real lil_sfc, lic_sfc, lil_cpt, lic_cpt
   
-        real k_to_c, make_td
+        real k_to_c, make_td, make_ssh
 
         character*1 c_prodtype, c_plotobs
         character*3 var_2d
@@ -424,11 +424,11 @@
 
 !         Read Height
           if(c_prodtype .eq. 'A')then
-            iflag_temp = 2 ! Returns Height?
+            iflag_temp = 2 ! Returns Height
 
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                      ,NX_L,NY_L,NZ_L,field_3d,istatus)
-            if(istatus .ne. 1)goto900
+            if(istatus .ne. 1)goto300
 
           elseif(c_prodtype .eq. 'N')then
             call get_directory('balance',directory,len_dir)
@@ -449,7 +449,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istatus)
-            if(istatus .ne. 1)goto100
+            if(istatus .ne. 1)goto300
 
           else
             write(6,*)' Unknown choice, will quit'
@@ -460,16 +460,15 @@
           call interp_3d(field_3d,ht_vert,xsound,xsound,ysound,ysound,       
      1                   NX_L,NY_L,NZ_L,1,NZ_L,r_missing_data)
 
-          istat_td = 0
-
 !         Read RH/SH 
+ 300      istat_td = 0
           if(c_prodtype .eq. 'A')then ! Read RH
             var_2d = 'RHL'
             ext = 'lh3'
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_rh)
-            if(istat_rh .ne. 1)goto100
+            if(istat_rh .ne. 1)goto1000
 
           elseif(c_prodtype .eq. 'N')then ! Read RH
             call get_directory('balance',directory,len_dir)
@@ -482,7 +481,7 @@
      1                  ,i4time_ref,laps_cycle_time*10000,i4time_nearest       
      1                  ,ext,var_2d,units_2d
      1                  ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istat_rh)       
-            if(istat_rh .ne. 1)goto100
+            if(istat_rh .ne. 1)goto1000
 
           elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
             var_2d = 'SH'
@@ -491,13 +490,13 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_sh)
-            if(istat_sh .ne. 1)goto100
+            if(istat_sh .ne. 1)goto1000
 
           else
             write(6,*)' Sorry, RH/SH not yet supported for prodtype: '
      1               ,c_prodtype
             istat_rh = 0
-            goto100
+            goto1000
 
           endif
 
@@ -550,7 +549,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_lwc)
-            if(istat_lwc .ne. 1)goto100
+!           if(istat_lwc .ne. 1)goto1000
           endif
 
           if(istat_lwc .eq. 1)then
@@ -576,7 +575,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_ice)
-            if(istat_ice .ne. 1)goto100
+!           if(istat_ice .ne. 1)goto1000
           endif
 
           if(istat_ice .eq. 1)then
@@ -602,7 +601,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_rain)
-            if(istat_rain .ne. 1)goto100
+!           if(istat_rain .ne. 1)goto1000
           endif
 
           if(istat_rain .eq. 1)then
@@ -628,7 +627,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_snow)
-            if(istat_snow .ne. 1)goto100
+!           if(istat_snow .ne. 1)goto1000
           endif
 
           if(istat_snow .eq. 1)then
@@ -654,7 +653,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_pice)
-            if(istat_pice .ne. 1)goto100
+!           if(istat_pice .ne. 1)goto1000
           endif
 
           if(istat_pice .eq. 1)then
@@ -680,7 +679,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_u)
-            if(istat_u .ne. 1)goto100
+!           if(istat_u .ne. 1)goto1000
           endif
 
           if(istat_u .eq. 1)then
@@ -706,7 +705,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_v)
-            if(istat_v .ne. 1)goto100
+!           if(istat_v .ne. 1)goto1000
           endif
 
           if(istat_v .eq. 1)then
@@ -725,52 +724,52 @@
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,pres_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'T'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,t_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'TD'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,td_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'U'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,u_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'V'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,v_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             ext = 'lh4'
             var_2d = 'TPW'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,pw_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             ext = 'lst'
             var_2d = 'PBE'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,cape_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             ext = 'lil'
             var_2d = 'LIL'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,lil_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'LIC'
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
@@ -809,7 +808,7 @@
      1                              ,NX_L,NY_L
      1                              ,pres_2d
      1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+!           if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'TSF'
             call get_lapsdata_2d(i4_initial,i4_valid
@@ -818,7 +817,7 @@
      1                              ,NX_L,NY_L
      1                              ,t_2d
      1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'DSF'
             call get_lapsdata_2d(i4_initial,i4_valid
@@ -827,7 +826,7 @@
      1                              ,NX_L,NY_L
      1                              ,td_2d
      1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'TPW'
             call get_lapsdata_2d(i4_initial,i4_valid
@@ -867,7 +866,7 @@
 
           else
             istat_sfc = 0
-            go to 100
+            go to 1000
 
           endif
 
@@ -924,10 +923,18 @@
         call integrate_slwc(lwc_vert*1000.,ht_vert,1,1,NZ_L,lil_cpt)
         call integrate_slwc(ice_vert*1000.,ht_vert,1,1,NZ_L,lic_cpt)
 
-        write(6,*)' Sfc P (mb) = ', p_sfc_pa/100.
+        td_sfc_c = k_to_c(td_sfc_k)
+        p_sfc_mb = p_sfc_pa/100.
+        sh_sfc = make_ssh(p_mb,td_sfc_c,1.0,-132.) / 1000.
+
+        call integrate_tpw(sh_vert,sh_sfc,pres_1d,p_sfc_pa
+     1                    ,1,1,NZ_L,pw_cpt)
+
+        write(6,*)' Sfc P (mb) = ', p_sfc_mb     
      1           ,' Terrain Height (m)= ',topo_sfc 
         write(6,*)' Sfc T (c) = ', k_to_c(t_sfc_k)
-        write(6,*)' TPW (cm) = ', pw_sfc*100.
+        write(6,*)' TPW (cm) [read in/computed] = ', 
+     1                            pw_sfc*100.,pw_cpt*100.
         write(6,*)' SBCAPE (J/KG) = ', cape_sfc
         write(6,*)' Integrated Cloud Water (mm) [read in/computed] = ',
      1                            lil_sfc*1000.,lil_cpt*1000.
@@ -937,7 +944,7 @@
 
 !       Read Wind (a la xsect)
 
- 100    continue
+ 1000   continue
 
 !       Set up scaling for plots
         pbottom = 110000.
