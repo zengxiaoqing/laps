@@ -1632,7 +1632,7 @@ c
            i_selected(j) = 0
         enddo ! j
 
-        satdir=dir(1:ldir)//c_sat_id//'/'
+        satdir=dir(1:ldir)//trim(c_sat_id)//'/'
         lsdir=index(satdir,' ')-1
         c_filespec = satdir(1:lsdir)//'*.'//ext(1:lext)
 
