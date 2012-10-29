@@ -1368,4 +1368,56 @@ cdoc    Correct precip type for snow drying in sub-cloud layer based on sfc rh
         return
         end
 
+        subroutine integrate_tpw(sh,sh_sfc,p,psfc,ni,nj,nk,tpw)
 
+!       Calculate tpw using pressures of the levels
+
+        use constants_laps, ONLY: grav ! m/s**2
+
+        real sh(ni,nj,nk)     ! (dimensionless)          Input
+        real sh_sfc           ! (dimensionless)          Input
+        real p(ni,nj,nk)      ! (Pa)                     Input
+        real psfc             ! (Pa)                     Input
+        real tpw(ni,nj)       ! (meters)                 Output
+
+        rho_water = 1e3       ! mass in kilograms of a cubic meter of water
+
+        do i = 1,ni
+        do j = 1,nj
+            tpw(i,j) = 0.
+
+            do k = 2,nk
+                if(p(i,j,k-1) .lt. psfc)then    ! layer is all above the sfc 
+                    pbot = p(i,j,k-1)
+                    ptop = p(i,j,k)
+                    shbot = sh(i,j,k-1)
+                    shtop = sh(i,j,k)
+                elseif(p(i,j,k) .lt. psfc) then ! layer straddles the sfc
+                    pbot = psfc          
+                    ptop = p(i,j,k)
+                    shbot = shsfc          
+                    shtop = sh(i,j,k)
+                else                            ! layer is all below the sfc
+                    pbot = 0.
+                    ptop = 0.
+                endif
+
+                if(pbot .gt. 0.)then
+                    shave = 0.5 * (shbot + shtop)
+                    dp = pbot - ptop
+                    tpw(i,j) = tpw(i,j) + shave * dp
+                endif
+
+            enddo ! k
+
+            tpw(i,j) = (tpw(i,j) / grav) / rho_water 
+
+!           if(i .eq. 1 .and. j .eq. 1)then
+!               write(6,*)' integrate_tpw: ',tpw(i,j)
+!           endif
+
+        enddo ! j
+        enddo ! i
+ 
+        return
+        end
