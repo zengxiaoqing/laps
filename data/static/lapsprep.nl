@@ -53,10 +53,10 @@ c    in the output.  To prevent any snow cover flags from being set, set
 c    this value > 1.0.  THIS FIELD IS NOT OUTPUT FOR "wps" FORMAT
 c
 c  lwc2vapor_thresh:
-c    Real value, controls the conversion of cloud liquid to vapor.  Set
+c    Real value, controls the saturation of cloud condensate.  Set
 c    to 0 to disable.  If enabled, typical values are going to be around
-c    1.0.  If set to 1.0, cloud water will be converted to vapor up until 
-c    the RH for that point reaches 100%.  Any remaining cloud water will be 
+c    1.0.  If set to 1.0, cloud condensate will be converted to vapor up until 
+c    the RH for that point reaches 100%.  Any remaining condensate will be 
 c    left in place.  Values greater than 1.0 allow for supersaturation 
 c    (e.g., 1.1 allows 110% max RH).
 c
