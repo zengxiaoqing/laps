@@ -408,3 +408,28 @@ C     Close file:
 
       return
       end
+
+
+      subroutine get_gps_path(path_to_gps_out,istatus)
+
+      use mem_namelist, ONLY: path_to_gps
+
+      character*256 path_to_gps_out
+
+      logical l_exist
+
+      path_to_gps_out = path_to_gps 
+
+      inquire(file=trim(path_to_gps_out),exist=l_exist)
+      if(l_exist .eqv. .true.)then
+          write(6,*)' Path to GPS from namelist exists'         
+      else
+          write(6,*)
+     1              ' Path to GPS non-existent, trying /public'
+          path_to_gps_out = '/public/data/gpsmet/netcdf/'
+      endif
+
+      istatus = 1
+
+      return
+      end
