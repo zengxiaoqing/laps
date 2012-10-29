@@ -28,7 +28,8 @@
      &    lvd_index=4
 
       if( (c_type(1:n).eq.'i11').or.
-     &    (c_type(1:n).eq.'11u') )
+     &    (c_type(1:n).eq.'11u').or.
+     &    (c_type(1:n).eq.'10p') )
      &    lvd_index=4
 
       if( (c_type(1:n).eq.'12').or.(c_type(1:n).eq.'i12').or.
