@@ -68,6 +68,8 @@ c input values "js" (representing the satellite id) and "it" (representing
 c the format type for that satellite) direct this subroutine to
 c compute the appropriate mapping nav arrays.
 c
+      write(6,*)' Subroutine genlvdlut_lvd'
+
       istatus = -1
 
       if(c_sat_types(it,js).eq.'cdf'.or.
@@ -123,7 +125,8 @@ c
             else
              write(6,49)c_sat_id(js),c_sat_types(it,js),
      &c_channel_types(lc,it,js)
-49    format(3x,a6,"/",a3,"/",a3,1x,'not on in satellite namelist')
+49           format(3x,a6,"/",a3,"/",a3,1x
+     1                ,'not on in satellite namelist (via ichannels)')       
 
             endif
 

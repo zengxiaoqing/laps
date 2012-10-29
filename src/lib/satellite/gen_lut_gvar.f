@@ -155,6 +155,8 @@ c    &             .false.,.false.,.false.,.false./
 c     save lfirst
 c
 c ---------------------------------------------------------
+      write(6,*)' subroutine gen_gvarimage_lut:'
+
       istatus = 0
       cchantype = c_channel_types(kchl,jtype,isat)
       call s_len(cchantype,nc)

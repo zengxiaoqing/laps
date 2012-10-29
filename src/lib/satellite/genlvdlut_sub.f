@@ -132,7 +132,8 @@ c
             else
              write(6,49)c_sat_id(js),c_sat_types(it,js),
      &c_channel_types(lc,it,js)
-49    format(3x,a6,"/",a3,"/",a3,1x,'not on in satellite namelist')
+49           format(3x,a6,"/",a3,"/",a3,1x
+     1                ,'not on in satellite namelist (via ichannels)')      
             endif
            enddo
 
@@ -166,13 +167,16 @@ c           enddo
 
          elseif(c_sat_types(it,js).ne.'   ')then
           write(6,47)c_sat_id(js), c_sat_types(it,js)
-47     format(2x,a6,"/",a3,' not on in satellite namelist')
-         endif
+47        format(2x,a6,"/",a3
+     1                ,' not on in satellite namelist (via itypes)')
+
+         endif ! if(itypes(it,js).eq.1)
 
         enddo
 
        else
-        write(*,*)c_sat_id(js),' not on in satellite namelist'
+        write(*,*)c_sat_id(js)
+     1           ,' not on in satellite namelist (via isats)'
        endif
 
       enddo
