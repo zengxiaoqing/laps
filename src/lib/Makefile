@@ -57,6 +57,7 @@ SRC	= machine_dependent.F \
           filename13.f \
           filter_filenames.f \
           fname_conversions.f \
+          gaussj.f \
           gen_bl_file.f \
           gen_btemps.f \
           get_barnes_superobs.f \
