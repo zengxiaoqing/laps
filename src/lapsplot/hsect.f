@@ -2044,7 +2044,7 @@ c       include 'satellite_dims_lvd.inc'
             if(cansw.eq.'y'.or.cansw.eq.'Y')then
 
              call get_directory(ext,directory,len_dir)
-             directory=directory(1:len_dir)//c_sat_id(k)//'/'
+             directory=directory(1:len_dir)//trim(c_sat_id(k))//'/'
 c
 c determine which channels have been processed for this satellite
 c
