@@ -46,7 +46,7 @@ MODULE lapsprep_constants
    ! rain and ice to snow, in kg/m**3
    REAL, PARAMETER :: autoconv_lwc2rai = 0.0005
    REAL, PARAMETER :: autoconv_ice2sno = 0.0005
-   REAL, PARAMETER :: lwc_min = autoconv_lwc2rai*0.2
-   REAL, PARAMETER :: ice_min = autoconv_ice2sno*0.2
-   REAL, PARAMETER :: lcp_min = 0.6  ! Changed to be consistent with lq3
+   REAL, PARAMETER :: lwc_min = 0.000001                     
+   REAL, PARAMETER :: ice_min = 0.000001                     
+   REAL, PARAMETER :: lcp_min = 0.0 ! simpler and more aggressive humidification
 END MODULE lapsprep_constants
