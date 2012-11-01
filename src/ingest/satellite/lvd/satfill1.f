@@ -40,6 +40,8 @@ c
 
       real    image_main(n_elems,n_lines)
       real    image_prev(n_elems,n_lines)
+      real    latitude(n_elems,n_lines)
+      real    longitude(n_elems,n_lines)
       real    r_missing_data
       real    percent_missing
       real    smsng
@@ -124,6 +126,8 @@ c
      &                   record,
      &                   n_elems,n_lines,
      &                   image_prev,
+     &                   latitude,
+     &                   longitude,
      &                   la1,lo1,
      &                   Dx,Dy,
      &                   Latin,Lov,
