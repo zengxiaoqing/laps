@@ -76,7 +76,8 @@ real, pointer, dimension(:,:) ::  &
 real, pointer, dimension(:,:,:) :: &
        npsig    ,nzsig    ,ntsig    ,nmrsig   ,nusig     &
       ,nvsig    ,nwsig    ,ntkesig                       &
-      ,ncldliqmr_sig,ncldicemr_sig,nrainmr_sig,nsnowmr_sig,ngraupelmr_sig
+      ,ncldliqmr_sig,ncldicemr_sig,nrainmr_sig,nsnowmr_sig,ngraupelmr_sig &
+      ,nrefl_sig
 
 ! Horizontally interpolated grid variables.
 
@@ -155,7 +156,12 @@ if (trim(mtype) /= 'st4') then
       nvar3d=4
     endif
   endif
-  if (make_micro) nvar3d=nvar3d+5
+  if (make_micro) then
+      nvar3d=nvar3d+5
+      if(c_m2z == 'wrf') then
+          nvar3d=nvar3d+1
+      endif
+  endif
 
   allocate(nlat(nx,ny),nlon(nx,ny))
 
@@ -204,6 +210,9 @@ if (trim(mtype) /= 'st4') then
     nrainmr_sig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
     nsnowmr_sig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
     ngraupelmr_sig=>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+    if(c_m2z == 'wrf') then
+       nrefl_sig  =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
+    endif
   endif
 else
   nvar2d=1
