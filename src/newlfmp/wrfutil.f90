@@ -181,6 +181,11 @@ if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nsnowmr_sig)
 icode=nf_inq_varid(ncid,'QGRAUP',nid)
 if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,ngraupelmr_sig)
 
+if(c_m2z .eq. 'wrf')then
+  print*,' Reading WRF REFL_10CM'
+  icode=nf_inq_varid(ncid,'REFL_10CM',nid)
+  if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nrefl_sig)
+endif
 
 if(.not. large_ngrid .AND. .not. large_pgrid)then ! W   
   print*,' Reading WRF W ',large_ngrid,large_pgrid
