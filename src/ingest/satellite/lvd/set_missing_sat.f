@@ -86,6 +86,11 @@ c        rhigh=255.
          endif
       endif
 
+      if(csattype.eq.'rll')then
+         rhigh = 5000.
+         rlow  = 1631.
+      endif
+
       istat_status=0
       imiss_status=0
 
