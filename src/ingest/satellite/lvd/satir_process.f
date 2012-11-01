@@ -175,8 +175,8 @@ c --------------------------------------------------------------------------
 
        if(istatus_r .ne. 1) then
           write(6,920)istatus_r, c_type
-920       format(' +++ WARNING. Bad status',i3,' from
-     &  SATDAT2LAPS_IR for band ',a2)
+920       format(' +++ WARNING. Bad status',i3          
+     &          ,' from SATDAT2LAPS_IR for band ',a2)
        endif
 c
 c----------------------------------------------------------------------------

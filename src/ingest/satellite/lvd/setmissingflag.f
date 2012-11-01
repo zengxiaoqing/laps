@@ -95,7 +95,7 @@ c
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_ir_pix
-               write(6,*)'Missing status (%): ',mstatus(j,i)
+               write(6,*)'Missing status (%): ',mstatus(j,i)*100.
 
             elseif(ispec.eq.3)then
 
@@ -107,7 +107,7 @@ c
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_wv_pix
-               write(6,*)'Missing status (%): ',mstatus(j,i)
+               write(6,*)'Missing status (%): ',mstatus(j,i)*100.
 
             else    !must be the vis data
 
@@ -119,7 +119,7 @@ c
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_vis_pix
-               write(6,*)'Missing status (%): ',mstatus(j,i)
+               write(6,*)'Missing status (%): ',mstatus(j,i)*100.
 
             endif
 
