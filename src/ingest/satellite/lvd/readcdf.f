@@ -30,7 +30,9 @@ cdis
 cdis 
 cdis 
       subroutine readcdf(csat_id,csat_type,chtype,
-     1record,n_elem,n_lines,r4_image,La1,Lo1,Dx,Dy,Latin,
+     1record,n_elem,n_lines,r4_image,
+     1latitude,longitude,
+     1La1,Lo1,Dx,Dy,Latin,
      1LoV, ivalidTime , ncid, istatus)
 
 c     written by Dan Birkenheuer February 1994
@@ -54,6 +56,8 @@ c===============================================================================
       INTEGER RCODE
 C
       real      r4_image(n_elem,n_lines)
+      real      latitude(n_elem,n_lines)
+      real      longitude(n_elem,n_lines)
       integer  ib
       integer       bi (2)
       equivalence (ib,bi (1) )
@@ -99,12 +103,53 @@ C
 c---------------------------------------------------------
 c   code
 
-      print*,'In routine readcdf'
+      print*,'Subroutine readcdf...'
       print*,'n_elem/n_lines = ',n_elem,n_lines
 
       istatus = 0 ! bad istatus
 
       call NCPOPT(0)
+
+      if(csat_type.eq.'rll')then ! read lat/lon
+         rcode = NF_INQ_VARID(ncid,'latitude',varid)
+         if(rcode.ne.NF_NOERR) then
+            print *, NF_STRERROR(rcode)
+            print *,'in var latitude'
+         else
+            write(6,*)
+            Write(6,*)'Calling rdblock_line_elem - latitude'
+
+            Call rdblock_line_elem(csat_id,csat_type,chtype,
+     &          ncid,varid,n_elem,n_lines,latitude,istatus)
+
+            if(istatus .ne. 1)then
+               write(6,*)'Error in rdblock_line_elem'
+               return
+            endif
+         endif
+         write(6,*)'readcdf latitude range:       '
+     1          ,minval(latitude),maxval(latitude)
+
+         rcode = NF_INQ_VARID(ncid,'longitude',varid)
+         if(rcode.ne.NF_NOERR) then
+            print *, NF_STRERROR(rcode)
+            print *,'in var longitude'
+         else
+            write(6,*)
+            Write(6,*)'Calling rdblock_line_elem - longitude'
+
+            Call rdblock_line_elem(csat_id,csat_type,chtype,
+     &          ncid,varid,n_elem,n_lines,longitude,istatus)
+
+            if(istatus .ne. 1)then
+               write(6,*)'Error in rdblock_line_elem'
+               return
+            endif
+         endif
+         write(6,*)'readcdf longitude range:      '
+     1          ,minval(longitude),maxval(longitude)
+
+      endif
 
       if(csat_type.eq.'ncp')then
          rcode = NF_INQ_VARID(ncid,'channel',varid)
@@ -118,6 +163,7 @@ c   code
 C
 C    statements to fill image                          
 C
+      write(6,*)
       Write(6,*)'Calling rdblock_line_elem - image read sub'
 
       Call rdblock_line_elem(csat_id,csat_type,chtype,
@@ -143,6 +189,9 @@ c
 
          ivalidtime = int(valtime(1))
       endif
+
+      write(6,*)'readcdf image range: '
+     1          ,minval(r4_image),maxval(r4_image)
 
       istatus = 1  ! ok!
 
