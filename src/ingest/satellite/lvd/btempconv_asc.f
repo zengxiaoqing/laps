@@ -21,5 +21,7 @@ c
        enddo
        enddo
 
+       write(6,*)'btemp_convert_asc range: ',minval(image),maxval(image)
+
        return
        end

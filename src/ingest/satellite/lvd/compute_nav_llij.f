@@ -53,7 +53,7 @@ c    &chtype,nx_l,ny_l,rdumij,rdumij,istatus)
 
 c        write(6,*)'LUT not obtained: ',csatid,'/',csattype
          print*,'-------------------------------------------'
-         write(6,*)'Computing gri and grx with genlvdlut_lvd'
+         write(6,*)'Computing gri and grj with genlvdlut_lvd'
          print*,'-------------------------------------------'
 c        call genlvdlut_sub(nx_l,ny_l,gstatus)
          call genlvdlut_lvd(nx_l,ny_l,maxchannels,lat,lon

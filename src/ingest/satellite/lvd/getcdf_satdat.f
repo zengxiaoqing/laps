@@ -673,6 +673,6 @@ c
  998  write(*,*)' +++ neither IR or VIS data available'
       istatus = -1
 
- 16   write(*,*)' Normal completion in GETSATDAT'
+ 16   write(*,*)' Normal completion in GETCDF_SATDAT'
       return
       end
