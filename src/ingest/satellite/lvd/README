@@ -10,10 +10,12 @@
               satdata_lvd_table              include/satdata_lvd_table.for
        compute_nav_ll                        compute_nav_llij.f
            genlvdlut_lvd                     lib/satellite/genlvdlut_lvd.f 
-               get_lut_lambert 
+               get_lut_lambert               lib/satellite/gen_lut_lambert.f
                    rdcdfhead                 lib/satellite/rdcdfhead.f
+                   get_sat_boundary          lib/satellite/getsat_boundary.f
                gen_gvarimage_lut             lib/satellite/gen_lut_gvar.f
-                   update_gvarimg_parms      lib/satellite/update_gvarimg_parms
+                   update_gvarimg_parms      lib/satellite/update_gvarimg_parms.f
+                       rd_gvarimg_cdf_header lib/satellite/rdgvarimg_cdf_header.f
                        sat_sublatlon
                            time50            lib/goesinav/gimloc.f
                    time50                         "
@@ -29,7 +31,8 @@
                    lvd_file_specifier        lvd_file_specifier.f
                    readcdf                   readcdf.f         
                        rdblock_line_elem     rdcdfblock.f    
-                           getsat_attributes getsat_attributes.f        
+                           getsat_attributes getsat_attributes.f
+                       read_netcdf_sat_head  lib/satellite/readnet.f        
            read_gms_hko                      read_gms_hko.f
                get_satdat_attributes         getsat_attributes.f
            read_gms_taiwan                   read_gms_hko.f
@@ -41,10 +44,12 @@
                    get_cdf_dims              readnet.f
                    readcdf                   readcdf.f
            lvd_file_specifier                lvd_file_specifier.f
-           read_gvarimg_cnt2btemp_lut   
-           btemp_convert_asc
-           process_ir_satellite          satir_process.f
-               satdat2laps_ir            satir2laps.f        
+           read_gvarimg_cnt2btemp_lut 
+           set_missing_flag                  setmissingflag.f
+               set_missing_sat               set_missing_sat.f
+           btemp_convert_asc                 btempconv_asc.f
+           process_ir_satellite              satir_process.f
+               satdat2laps_ir                satir2laps.f        
            loadlapsdata
            write_laps_data
            check_for_new_ctp
