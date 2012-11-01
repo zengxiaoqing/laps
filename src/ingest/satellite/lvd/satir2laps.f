@@ -122,7 +122,10 @@ c
         endif
  
         insufdata=0
-        if(r_grid_ratio .le.0.0)goto 1000
+        if(r_grid_ratio .le.0.0)then
+            write(6,*)'WARNING: r_grid_ratio out of range',r_grid_ratio
+            goto 1000
+        endif
 
         if(r_grid_ratio.lt.rgrid_ratio_thresh.or.lforce_switch)then
 
@@ -212,8 +215,8 @@ c
 
                 else   
 
-                   btemp = image_ir(II,JJ)
-c                  btemp=r_missing_data
+!                  btemp = image_ir(II,JJ)
+                   btemp=r_missing_data
                    fcount=fcount+1
 
                 endif
