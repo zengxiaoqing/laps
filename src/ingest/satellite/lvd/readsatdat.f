@@ -70,7 +70,8 @@ c
       REAL    latin_vis,latin_ir,latin_wv
       REAL    lov_vis,lov_ir,lov_wv
 
-      write(6,*)' Subroutine readsatdat...',csat_type               
+      write(6,*)' Subroutine readsatdat...',csat_type
+      write(6,*)' nelemir/nlinesir = ',nelemir,nlinesir               
 
       istatus=1
 
@@ -86,16 +87,24 @@ c
                c_wfo_fname = fname9_to_wfo_fname13(c_fname_data(i))
                c_filename=c_dir_path(ispec)(1:n)//c_wfo_fname
                n=index(c_filename,' ')
+            elseif(csat_type.eq.'rll')then
+               n=index(c_dir_path(1),' ')-1
+               c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
+     &                    '_'//c_type(j,i)//'8.nc'
             else
                n=index(c_dir_path(1),' ')-1
                c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
-     &'_'//c_type(j,i)
+     &                    '_'//c_type(j,i)
             endif
             n=index(c_filename,' ')
             print*,'Reading: ',c_filename(1:n)
 
             rcode=NF_OPEN(c_filename,NF_NOWRITE,NCID)
-            if(rcode.ne.nf_noerr) return
+            if(rcode.ne.nf_noerr)then
+                write(6,*)'File open error: ',rcode
+                istatus=-1
+                return
+            endif
 
             if(csat_type .eq. 'rll')then         !check for lat/lon arrays                
                write(6,*)' Checking for lat/lon arrays in readsatdat'        
@@ -110,6 +119,7 @@ c
      &                    record,
      &                    nelemir,nlinesir,
      &                    ir_image,
+     &                    image_lat_ir,image_lon_ir,
      &                    la1_ir,lo1_ir,
      &                    Dx_ir,Dy_ir,
      &                    Latin_ir,Lov_ir,
@@ -117,9 +127,9 @@ c
      &                    ncid,
      &                    istatus_ir)
                if(istatus_ir.eq.1)then
-                  write(6,*)'Successful'
+                  write(6,*)'Successful return from readcdf'
                else
-                  Write(6,*)'NOT Successful!!'
+                  Write(6,*)'readcdf NOT Successful!!'
                   istatus=-1
                   goto 125
                endif
@@ -148,6 +158,7 @@ c
      &                    record,
      &                    nelemvis,nlinesvis,
      &                    vis_image,
+     &                    image_lat_ir,image_lon_ir,
      &                    la1_vis,lo1_vis,
      &                    Dx_vis,Dy_vis,
      &                    Latin_vis,Lov_vis,
@@ -155,11 +166,11 @@ c
      &                    ncid,
      &                    istatus_vis)
                if(istatus_vis.eq.1)then
-                  write(6,*)'Successful'
+                  write(6,*)'Successful return from readcdf'
                   call move(vis_image,image_vis(1,1,i),nelemvis,
      &                      nlinesvis)
                else
-                  Write(6,*)'NOT Successful!!'
+                  Write(6,*)'readcdf NOT Successful!!'
                   istatus=-1
                endif
 
@@ -180,6 +191,7 @@ c
      &                    record,
      &                    nelemwv,nlineswv,
      &                    wv_image,
+     &                    image_lat_ir,image_lon_ir,
      &                    la1_wv,lo1_wv,
      &                    Dx_wv,Dy_wv,
      &                    Latin_wv,Lov_wv,
@@ -187,11 +199,11 @@ c
      &                    ncid,
      &                    istatus_wv)
                if(istatus_wv.eq.1)then
-                  write(6,*)'Successful'
+                  write(6,*)'Successful return from readcdf'
                   call move(wv_image,image_67(1,1,i),nelemwv,
      &                      nlineswv)
                else
-                  Write(6,*)'NOT Successful!!'
+                  Write(6,*)'readcdf NOT Successful!!'
                   istatus=-1
                endif
 
