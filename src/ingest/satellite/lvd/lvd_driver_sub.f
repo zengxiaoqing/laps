@@ -167,8 +167,8 @@ c
       real      r12_cnt_to_btemp_lut(0:1023)
       real      r39_cnt_to_btemp_lut(0:1023)
       real      r67_cnt_to_btemp_lut(0:1023)
-      real      gri(nx_l,ny_l,maxchannel)	!Input: i values for mapping satellite data to domain
-      real      grj(nx_l,ny_l,maxchannel)	!Input: j values for mapping satellite data to domain
+      real      gri(nx_l,ny_l,maxchannel)   !Input: i satellite coord at each LAPS grid point    
+      real      grj(nx_l,ny_l,maxchannel)   !Input: j satellite coord at each LAPS grid point    
       real      good_vis_data_thresh
 c
 c dimensions for lvd
@@ -283,10 +283,17 @@ c --------------------------------------------------------------------
 c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
       if(csattype .eq. 'rll')then
-           print *,' Read lat/lon arrays to generate gri/grj'
+           print *,' Read lat/lon arrays to regenerate gri/grj'
            print *,' UNDER CONSTRUCTION'                                
            gri = 100.
            grj = 50.                               
+!          call latlon_to_grij(lat,lon,nx_l,ny_l,
+!    1                         lats,lons,gri,grj,
+!    1                         n_ir_elem,n_ir_lines)
+           i_start_ir(jtype,ksat) = 500 !    1                             
+           i_end_ir(jtype,ksat)   = 900 ! 1375                             
+           j_start_ir(jtype,ksat) = 500 !    1                             
+           j_end_ir(jtype,ksat)   = 900 ! 1375                             
 
       elseif(csatid.ne.'gmssat'.or.csattype.eq.'twn'.or.
      &   csattype.eq.'hko')then
@@ -349,26 +356,26 @@ c
       nchannels=0
       do i=1,maxchannel
          if(ichannels(i,jtype,ksat).eq.1)then
-            nchannels=nchannels+1
-            chtype(nchannels)=c_channel_types(i,jtype,ksat)
+           nchannels=nchannels+1
+           chtype(nchannels)=c_channel_types(i,jtype,ksat)
 c Find and read current satellite files... as many as 4 ir channels and vis.
-            call lvd_file_specifier(c_channel_types(i,jtype,ksat)
+           call lvd_file_specifier(c_channel_types(i,jtype,ksat)
      &,ispec,istatus)
-            if(istatus.ne.0)then
+           if(istatus.ne.0)then
                write(6,*)'Error status returned from lvd_file_specifier'
                return
-            endif
-            if(ispec.eq.1)then
+           endif
+           if(ispec.eq.1)then
              n_vis_elem=i_end_vis(jtype,ksat)-i_start_vis(jtype,ksat)+1
              n_vis_lines=j_end_vis(jtype,ksat)-j_start_vis(jtype,ksat)+1
-            elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
+           elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
              n_ir_elem=i_end_ir(jtype,ksat)-i_start_ir(jtype,ksat)+1
              n_ir_lines=j_end_ir(jtype,ksat)-j_start_ir(jtype,ksat)+1
-            elseif(ispec.eq.3)then
+           elseif(ispec.eq.3)then
              n_wv_elem=i_end_wv(jtype,ksat)-i_start_wv(jtype,ksat)+1
              n_wv_lines=j_end_wv(jtype,ksat)-j_start_wv(jtype,ksat)+1
-            endif
-         endif
+           endif
+         endif ! valid channel
       enddo
 
       print*,'Nchannels = ',nchannels      
@@ -749,6 +756,7 @@ c ------------------------------------------------------------
 
        if(csattype.ne.'asc'.and.
      &    csattype.ne.'hko'.and.
+     &    csattype.ne.'rll'.and.
      &    csattype.ne.'ncp')then
           write(6,*)
           write(6,*)'Convert counts to brightness temps'
@@ -806,12 +814,12 @@ c ------------------------------------------------------------
           write(6,*)'Done with conversions '
           write(6,*)
 
-       elseif(csattype.eq.'asc')then
+       elseif(csattype.eq.'asc'.or.csattype.eq.'rll')then
 c
 c note that brightness temps in the ascii file have 1 significant
 c decimal digit and have been acquired as integers so convert here.
 c 
-          write(6,*)'Convert ascii btemps from Integer to Floating pt.'
+          write(6,*)'Convert btemps from Integer to Floating pt.'
           do i = 1,nft
           do j = 1,ntm(i)
 
@@ -854,7 +862,7 @@ c
 c This for output.  LAPS LVD files as indicated.
 c
       call get_directory('lvd',dir_lvd,len_lvd)
-      dir_lvd=dir_lvd(1:len_lvd)//csatid//'/'
+      dir_lvd=dir_lvd(1:len_lvd)//trim(csatid)//'/'
       len_lvd=index(dir_lvd,' ')-1
       ext_lvd = 'lvd'
 c
@@ -891,7 +899,7 @@ c ----------  GMS SATELLITE SWITCH -------
             call lvd_file_specifier(c_type(j,i),ispec,istat)
 
             if(ispec.eq.4)then
-            if(r_image_status(j,i).le.0.3333)then
+              if(r_image_status(j,i).le.0.3333)then
 
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
@@ -935,9 +943,10 @@ c                    endif
                    endif
                endif
 
-            else
+              else
                write(6,*)'IR image not processed: missing ir data'
-            endif
+     1                  ,r_image_status(j,i)
+              endif
 
             elseif(ispec.eq.2)then
             if(r_image_status(j,i).lt.0.3333)then
