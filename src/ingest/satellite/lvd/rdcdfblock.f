@@ -55,13 +55,13 @@ c
 c qc step
 c -------
       if(jend.gt.NDSIZE_Y)then
-         write(6,*)'jend > NDSIZE_Y - rdcdfblock.f '
+         write(6,*)'jend > NDSIZE_Y - rdcdfblock.f ',jend,NDSIZE_Y
          write(6,*)'Returing: istatus = ',istatus
          return
       endif
 
       if(iend.gt.NDSIZE_X)then
-         write(6,*)'iend > NDSIZE_X '
+         write(6,*)'iend > NDSIZE_X ',iend,NDSIZE_X
          write(6,*)'Returning to main, istatus = ',istatus
          return
       endif
@@ -83,14 +83,23 @@ c -------
 c
 c read line. Switch here discriminates 1-byte versus 2-byte data.
 c
+      if(csat_type.eq.'rll')then
+          write(6,*)'ncid/varid = ',ncid,varid
+          write(6,*)'start=',start(1:2),' count=',count(1:2)
+      endif
 
       rcode=NF_GET_VARA_REAL(NCID,varid,START,COUNT,data)
 
-      do j=1,n_lines
-      do i=1,n_elems
-         if(data(i,j).lt.0)data(i,j)=data(i,j)+256.
-      enddo
-      enddo
+      write(6,*)'rdblock_line_elem data range: '
+     1          ,minval(data),maxval(data)
+
+      if(csat_type.ne.'rll')then
+          do j=1,n_lines
+          do i=1,n_elems
+              if(data(i,j).lt.0)data(i,j)=data(i,j)+256.
+          enddo
+          enddo
+      endif
 C
       istatus = 1
 1000  Return
