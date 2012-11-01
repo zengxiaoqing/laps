@@ -18,5 +18,5 @@ c_m2z='rams',
 &end
 
 c c_m2z various options for reflectivity calculation 
-c 'kessler', 'rams', synpolrad 'synp', future additions are 
+c 'kessler', 'wrf', 'rams', synpolrad 'synp', future additions are 
 c thompson 'thom' and others. 
