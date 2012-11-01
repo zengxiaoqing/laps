@@ -58,6 +58,8 @@ setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$SUBDIR/$MODELTIME.stats
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt
 
+setenv MODEL_FCST_LEN `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
+
 # Setup True Type fonts and related environment variables
 setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
 
