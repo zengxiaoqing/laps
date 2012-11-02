@@ -1,0 +1,164 @@
+netcdf lt1 {
+
+    dimensions:
+        record = unlimited,
+        z = 21,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	pressure
+
+	float                                  
+            p3(record,z,y,x);
+            p3:navigation_dim = "nav";
+            p3:record = "valtime, reftime";
+            p3:_FillValue = 1.e+37f;
+            p3:long_name="pressure";
+            p3:units="pascals";
+            p3:valid_range= 0.f, 120000.f;
+            p3:LAPS_var="P3";
+            p3:lvl_coord="SIGMA_M";
+	    p3:LAPS_units="PASCALS";
+                	        
+        //     temperature 
+ 
+        float
+            t3(record,z,y,x);
+            t3:navigation_dim = "nav";
+            t3:record = "valtime, reftime";
+            t3:_FillValue = 1.e+37f;
+            t3:long_name="temperature";
+            t3:units="degrees Kelvin";
+            t3:valid_range=0.f, 100.f;
+            t3:LAPS_var="T3";
+            t3:lvl_coord="SIGMA_M";
+            t3:LAPS_units="K";
+
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            p3_comment(record,z,namelen),
+            t3_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            p3_fcinv(record, z);
+            p3_fcinv:_FillValue= 0s;
+              	
+        short
+            t3_fcinv(record, z);
+            t3_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "meters";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "meters";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS lt1 file - 3D temperature and pressure";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS lt1 file - 3D temperature and pressure";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
