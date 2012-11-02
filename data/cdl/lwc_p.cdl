@@ -1,0 +1,237 @@
+netcdf lwc {
+
+    dimensions:
+        record = unlimited,
+        z = 21,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	cloud liquid water
+
+	float                                  
+            lwc(record,z,y,x);
+            lwc:navigation_dim = "nav";
+            lwc:record = "valtime, reftime";
+            lwc:_FillValue = 1.e+37f;
+            lwc:long_name="cloud liquid water";
+            lwc:units="kg/meter**3";
+            lwc:valid_range= 0.f, 100.f;
+            lwc:LAPS_var="LWC";
+            lwc:lvl_coord="SIGMA_M";
+	    lwc:LAPS_units="KG/M**3";
+                	        
+        //	cloud ice
+
+	float                                  
+            ice(record,z,y,x);
+            ice:navigation_dim = "nav";
+            ice:record = "valtime, reftime";
+            ice:_FillValue = 1.e+37f;
+            ice:long_name="cloud ice";
+            ice:units="kg/meter**3";
+            ice:valid_range= 0.f, 100.f;
+            ice:LAPS_var="ICE";
+            ice:lvl_coord="SIGMA_M";
+	    ice:LAPS_units="KG/M**3";
+                	        
+       //      snow content
+        float
+            sno(record,z,y,x);
+            sno:navigation_dim = "nav";
+            sno:record = "valtime, reftime";
+            sno:_FillValue = 1.e+37f;
+            sno:long_name="snow content";
+            sno:units="kg/meter**3";
+            sno:valid_range= 0.f, .1f;
+            sno:LAPS_var="SNO";
+            sno:lvl_coord="SIGMA_M";
+	    sno:LAPS_units="KG/M**3";
+
+        //      rain content
+        float
+            rai(record,z,y,x);
+            rai:navigation_dim = "nav";
+            rai:record = "valtime, reftime";
+            rai:_FillValue = 1.e+37f;
+            rai:long_name="rain content";
+            rai:units="kg/meter**3";
+            rai:valid_range= 0.f, .1f;
+            rai:LAPS_var="RAI";
+            rai:lvl_coord="SIGMA_M";
+	    rai:LAPS_units="KG/M**3";
+
+       //      precipitating ice content (graupel,hail,sleet)
+        float
+            pic(record,z,y,x);
+            pic:navigation_dim = "nav";
+            pic:record = "valtime, reftime";
+            pic:_FillValue = 1.e+37f;
+            pic:long_name="precipitating ice content";
+            pic:units="kg/meter**3";
+            pic:valid_range= 0.f, .1f;
+            pic:LAPS_var="PIC";
+            pic:lvl_coord="SIGMA_M";
+	    pic:LAPS_units="KG/M**3";
+
+        //	hydrometeor concentration
+
+	float                                  
+            pcn(record,z,y,x);
+            pcn:navigation_dim = "nav";
+            pcn:record = "valtime, reftime";
+            pcn:_FillValue = 1.e+37f;
+            pcn:long_name="hydrometeor concentration";
+            pcn:units="kg/meter**3";
+            pcn:valid_range= 0.f, 100.f;
+            pcn:LAPS_var="PCN";
+            pcn:lvl_coord="SIGMA_M";
+	    pcn:LAPS_units="KG/M**3";
+                	        
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            lwc_comment(record,z,namelen),
+            ice_comment(record,z,namelen),
+            sno_comment(record,z,namelen),
+            rai_comment(record,z,namelen),
+            pic_comment(record,z,namelen),
+            pcn_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            lwc_fcinv(record, z);
+            lwc_fcinv:_FillValue= 0s;
+              	
+        short
+            ice_fcinv(record, z);
+            ice_fcinv:_FillValue= 0s;
+              	
+        short
+            sno_fcinv(record, z);
+            sno_fcinv:_FillValue= 0s;
+              	
+        short
+            rai_fcinv(record, z);
+            rai_fcinv:_FillValue= 0s;
+              	
+        short
+            pic_fcinv(record, z);
+            pic_fcinv:_FillValue= 0s;
+              	
+        short
+            pcn_fcinv(record, z);
+            pcn_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "meters";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "meters";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS lwc file - cloud liquid, ice and hydrometeor concentration";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS lwc file - cloud liquid, ice and hydrometeor concentration";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
