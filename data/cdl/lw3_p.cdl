@@ -1,0 +1,182 @@
+netcdf lw3 {
+
+    dimensions:
+        record = unlimited,
+        z = 21,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	u wind component
+
+	float                                  
+            u3(record,z,y,x);
+            u3:navigation_dim = "nav";
+            u3:record = "valtime, reftime";
+            u3:_FillValue = 1.e+37f;
+            u3:long_name="u-component of wind";
+            u3:units="meters / second";
+            u3:valid_range= -200.f, 200.f;
+            u3:LAPS_var="U3";
+            u3:lvl_coord="SIGMA_M";
+	    u3:LAPS_units="M/S";
+                	        
+        //	v wind component
+
+	float                                  
+            v3(record,z,y,x);
+            v3:navigation_dim = "nav";
+            v3:record = "valtime, reftime";
+            v3:_FillValue = 1.e+37f;
+            v3:long_name="v-component of wind";
+            v3:units="meters / second";
+            v3:valid_range= -200.f, 200.f;
+            v3:LAPS_var="V3";
+            v3:lvl_coord="SIGMA_M";
+	    v3:LAPS_units="M/S";
+
+        //	wind omega
+
+	float                                  
+            w3(record,z,y,x);
+            w3:navigation_dim = "nav";
+            w3:record = "valtime, reftime";
+            w3:_FillValue = 1.e+37f;
+            w3:long_name="w wind component";
+            w3:units="meters/second";   
+            w3:valid_range= -100.f, 100.f;     
+            w3:LAPS_var="W3";
+            w3:lvl_coord="SIGMA_M";
+	    w3:LAPS_units="M/S";
+                
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            u3_comment(record,z,namelen),
+            v3_comment(record,z,namelen),
+            w3_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            u3_fcinv(record, z);
+            u3_fcinv:_FillValue= 0s;
+              	
+        short
+            v3_fcinv(record, z);
+            v3_fcinv:_FillValue= 0s;
+                	
+        short
+            w3_fcinv(record, z);
+            w3_fcinv:_FillValue= 0s;
+
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+  
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+  
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "meters";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "meters";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS LW3 file - 3D and surface winds";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS LW3 file - 3D and surface winds";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
