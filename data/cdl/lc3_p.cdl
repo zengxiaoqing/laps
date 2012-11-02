@@ -1,0 +1,145 @@
+netcdf lc3 {
+
+    dimensions:
+        record = unlimited,
+        z = 42,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	u wind component
+
+	float                                  
+            lc3(record,z,y,x);
+            lc3:navigation_dim = "nav";
+            lc3:record = "valtime, reftime";
+            lc3:_FillValue = 1.e+37f;
+            lc3:long_name="fractional cloud cover (levels 1 - 42)";
+            lc3:units="fractional";
+            lc3:valid_range= 0.f, 1.f;
+            lc3:LAPS_var="LC3";
+            lc3:lvl_coord="MSL";
+	    lc3:LAPS_units="FRACTIONAL";
+                	        
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            lc3_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            lc3_fcinv(record, z);
+            lc3_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "fractional";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "meters";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "meters";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS lc3 file - fractional cloud cover";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS lc3 file - fractional cloud cover";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
