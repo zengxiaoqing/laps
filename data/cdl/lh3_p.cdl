@@ -1,0 +1,164 @@
+netcdf lh3 {
+
+    dimensions:
+        record = unlimited,
+        z = 21,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	relative humidity	
+
+	float                                  
+            rh3(record,z,y,x);
+            rh3:navigation_dim = "nav";
+            rh3:record = "valtime, reftime";
+            rh3:_FillValue = 1.e+37f;
+            rh3:long_name="relative humidity";
+            rh3:units="percent";
+            rh3:valid_range= 0.f, 100.0f;
+            rh3:LAPS_var="RH3";
+            rh3:lvl_coord="SIGMA_M ";
+	    rh3:LAPS_units="PERCENT";
+                	        
+        //      relative humidity from liquid
+ 
+        float
+            rhl(record,z,y,x);
+            rhl:navigation_dim = "nav";
+            rhl:record = "valtime, reftime";
+            rhl:_FillValue = 1.e+37f;
+            rhl:long_name="relative humidity from liquid";
+            rhl:units="percent";
+            rhl:valid_range= 0.f, 100.0f;
+            rhl:LAPS_var="RHL";
+            rhl:lvl_coord="SIGMA_M ";
+            rhl:LAPS_units="PERCENT";
+
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            rh3_comment(record,z,namelen),
+            rhl_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            rh3_fcinv(record, z);
+            rh3_fcinv:_FillValue= 0s;
+              	
+        short
+            rhl_fcinv(record, z);
+            rhl_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "meters";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "meters";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS lh3 file - relative humidity";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS lh3 file - relative humidity";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
