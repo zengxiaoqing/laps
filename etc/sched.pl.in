@@ -761,13 +761,13 @@ foreach $exe (@LAPS_EXE){
                 my $vmem_gb=1.0;
                 if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
                     if($opt_V eq "STMAS3D_sh") {
-                        if($npts > 7000000){
+                        if($npts > 10000000){
                             $vmem_gb=20.0
                         }else{
-                            $vmem_gb=12.0
+                            $vmem_gb=6.0
                         }
                     }else{
-                        $vmem_gb=12.0
+                        $vmem_gb=6.0
                     }
                 }
                 my $vmem_mb = int($vmem_gb*1000.);
