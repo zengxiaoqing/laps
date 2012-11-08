@@ -308,7 +308,7 @@ lf1  lh3 lh4 lhe lil liw lm1 lm2 lmd lmr lmt
 lpbl lps lq3 lrp lrs lso bufr lsx lt1 lty cty pty lfr
 lvd
 lvd/goes08 lvd/goes09 lvd/goes10 lvd/goes11
-lvd/goes12 lvd/meteos lvd/gmssat lvd/noaapo
+lvd/goes12 lvd/meteos lvd/gmssat lvd/noaapo lvd/mtsat
 lw3 lwc lwm ctp msg pig pin prg pro sag vrc vrz snd 
 v01 v02 v03 v04 v05 v06 v07 v08 v09 v10 v11 v12 
 v13 v14 v15 v16 v17 v18 v19 v20 v21 v22 v23 v24
