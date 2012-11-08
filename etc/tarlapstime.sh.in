@@ -63,6 +63,7 @@ cd $LAPS_DATA_ROOT
 
 LAPSTAR_TXT=$LOGDIR/lapstar.txt.$YYDDDHHMM
 LAPSTAR2_TXT=$LOGDIR/lapstar2.txt.$YYDDDHHMM
+LAPSTAR_WWW_TXT=$LOGDIR/lapstar_www.txt.$YYDDDHHMM
 
 touch $LAPSTAR_TXT
 
@@ -82,16 +83,16 @@ ls -1 time/c_time.dat                                          >> $LAPSTAR_TXT
 #echo "log/cloud_fcst.png"                                                                      >> $LAPSTAR_TXT
 
 # Pregenerated web analysis files
+find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
 find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
 find ./lapsprd/www/anal2d/recent    -type l -name "*$HHMM.gif"       -print   >> $LAPSTAR_TXT
 find ./lapsprd/www/anal2d/recent    -type l -name "gmeta*latest.gif" -print   >> $LAPSTAR_TXT
-find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
 
 # Lapsprd files (except LGA, LGB, FUA, FSF), high and low bandwidth options
 if test "$FILES" -ge 2; then
     find ./lapsprd -type f -name "$YYDDDHHMM.*" -print | grep -v gr2 | grep -v www | grep -v "\.v[0-9][0-9]" | grep -v "\.d[0-9][0-9]"  >> $LAPSTAR_TXT
 else
-    for ext in snd hmg lsx lmr lmt lcv lh4 lil; do
+    for ext in lso snd hmg tmg prg pig lsx lmr lmt lcv lh4 lil; do
 	echo "./lapsprd/$ext/$YYDDDHHMM.$ext"  >> $LAPSTAR_TXT     
     done
 fi
@@ -136,7 +137,8 @@ ls -1 static/Variable_Tables/nctable.*                   >> $LAPSTAR_TXT
 if test "$STATIC" = static; then                         
     echo "including extra static files"
     ls -1 static/static.nest7grid                        >> $LAPSTAR_TXT
-    ls -1 static/www/*                                   >> $LAPSTAR_TXT
+    ls -1 static/www/*.*                                 >> $LAPSTAR_TXT
+    ls -1 static/www/fcst2d/*                            >> $LAPSTAR_TXT
 else
     echo "not including extra static files"
 fi
@@ -183,17 +185,31 @@ elif test "$EXPAND" = tar; then # tar is slower without compression and may be m
 
 elif test "$EXPAND" = rsync; then # rsync compression allows faster transmission
     echo " "
+    date -u
+    echo " "
     echo "rsync to remote location"  
+
+    grep www       $LAPSTAR_TXT > $LAPSTAR_WWW_TXT
+    grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT
+
     cd $LAPS_DATA_ROOT 
     pwd
     echo "DOMAIN_NAME = "$DOMAIN_NAME
     echo "REMOTE_DATA_ROOT = "$REMOTE_DATA_ROOT
     COLON=:            
-    echo "rsync -vvzlptg -e ssh --files-from=$LAPSTAR_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT"
-          rsync -vvzlptg -e ssh --files-from=$LAPSTAR_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT
 
-    grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT
+    echo "rsync -vvzlptg -e ssh --files-from=$LAPSTAR_WWW_TXT --timeout=200 --delay-updates $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT"
+          rsync -vvzlptg -e ssh --files-from=$LAPSTAR_WWW_TXT --timeout=200 --delay-updates $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT
 
+    echo " "
+    date -u
+    echo " "
+
+    echo "rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT"
+          rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT
+
+    echo " "
+    date -u
     echo " "
 
     echo "rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT"
