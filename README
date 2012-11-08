@@ -392,7 +392,7 @@
      this web page. 
 
      1) edit 'etc/www/nph-laps.cgi' and set $web_root to be the root directory
-        of the web server
+        of the web server (document root)
 
      2) edit 'etc/www/laps.cgi' and set $web_root to be the root directory
         of the web server
@@ -4418,11 +4418,36 @@ Source directory: 'laps/src/newlfmp' (new default version)
 
    LAPS has a built-in verification package. This can be run after a model
    is run and the verifying observations and analyses are available. The
-   driver script is in 'etc/verif/verif_fcst_driver.csh'. This script has
+   driver script is in 'etc/verif/verif_fcst_driver.csh'. For real time runs
+   it can be run via cron once for each model cycle. The script has
    several command line arguments that are described in comments at the top.
 
    The script will produce stats files and PNG/GIF image output in the
-   'lapsprd/verif' directory tree.
+   'lapsprd/verif' directory tree. To help in setting this up or troubleshooting
+   the results please note the input data that are being used:
+
+   1) FUA/FSF forecast files should be located in 
+      $LAPS_DATA_ROOT/lapsprd/f??/[model]/*.f??'
+
+   2) Observation and analysis files should be located in various other 
+      'lapsprd' subdirectories. Some examples are as follows:
+
+<pre>
+      LSO - surface obs
+      LT1 - 3-D Temperature
+      LMR - Composite Reflectivity
+      LPS - 3-D Reflectivity
+      LCV - Solar Radiation (GHI)
+</pre>
+
+   3) Several parameters are relevant in 'static/nest7grid.parms' including:
+
+      model_cycle_time, model_fcst_intvl, model_fcst_len, fdda_model_src
+
+   4) Log files are in $LAPS_DATA_ROOT/log/[*fcst*][*verif*]
+
+   5) Animated montages are an option that will work if 'followup_fcst.pl'
+      is run prior to the verification.
 
 -------- 4.0 --  Porting code mods from LAPS users back to GSD --------------
 
