@@ -404,12 +404,18 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  t_at_sfc = scr2d
               elseif (field.eq.'PSFC') then
                  prbg_sfc = scr2d
+                 write(6,*)' Filling prbg_sfc with PSFC'
               elseif (field.eq.'PMSL') then
                  mslpbg = scr2d
               elseif (field.eq.'ACPC') then
                  pcpbg = scr2d
+              else
+                 write(6,*)' field not filled: ',trim(field)
               endif
               nullify(scr2d)
+
+!         else
+!             write(6,*)' field is not there: ',ilev,trim(field)
 
           endif ! if parm exists
 
