@@ -764,10 +764,10 @@ foreach $exe (@LAPS_EXE){
                         if($npts > 10000000){
                             $vmem_gb=20.0
                         }else{
-                            $vmem_gb=6.0
+                            $vmem_gb=8.0
                         }
                     }else{
-                        $vmem_gb=6.0
+                        $vmem_gb=8.0
                     }
                 }
                 my $vmem_mb = int($vmem_gb*1000.);
