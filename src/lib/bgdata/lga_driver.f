@@ -47,6 +47,7 @@ c KML: END
 
  
       use mem_namelist, ONLY: vertical_grid
+      use storage_module, ONLY: get_plvls
  
       implicit none
       real    prtop ! pa
@@ -59,6 +60,7 @@ c
      .        nx_bg  ,ny_bg,               !Background model grid dimensions
      .        nzbg_ht,nzbg_tp,nzbg_sh,
      .        nzbg_uv,nzbg_ww,
+     .        nlvl_grib,                   !Actual number of grib levels
      .        max_files, lga_status,
      .        laps_cycle_time,
      .        bgmodel,nbg,lncf,mode
@@ -131,6 +133,7 @@ c
       real, allocatable  :: uwbg(:,:,:)      !Background u component (m/s)
       real, allocatable  :: vwbg(:,:,:)      !Background v component (m/s)
       real, allocatable  :: wwbg(:,:,:)      !Background omega (m/s)
+      real plvl_grib(100) ! Dimension is maxlvl in 'degrib_nav' routine
 c
 c *** Intermediate arrays for background data vertically
 c     interpolated to LAPS isobaric levels (on the model horizontal grid).
@@ -702,6 +705,24 @@ c             goto900
 
        istatus=ishow_timer()
        write(6,*)' Returned from read_bgdata'
+
+       if(bgmodel .eq. 13)then ! determine actual number of levels
+           call get_plvls(plvl_grib, 100, nlvl_grib)
+           write(6,*)' grib plvls info: ',nlvl_grib,plvl_grib
+           nzbg_ht = 0
+           do k = 1,nlvl_grib
+               if(plvl_grib(k) .lt. 150000)then
+                   nzbg_ht = nzbg_ht + 1
+               endif
+           enddo ! k
+
+           write(6,*)' Reset nzbg_ht, etc. to ',nzbg_ht
+
+           nzbg_tp=nzbg_ht
+           nzbg_sh=nzbg_ht
+           nzbg_uv=nzbg_ht
+           nzbg_ww=nzbg_ht
+       endif
 
        if(.false.)then
            print*,'After read'
@@ -1379,14 +1400,30 @@ c
      .        grx,gry,tdbg_sfc,td_sfc,wrapped)
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,tpbg_sfc,tp_sfc,wrapped)
-            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
+
+            if(minval(shbg_sfc) .eq. missingflag .OR.
+     1         maxval(shbg_sfc) .eq. missingflag      )then
+              write(6,*)' NOTE: shbg_sfc has missing data'
+              sh_sfc = missingflag
+            else
+              call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,shbg_sfc,sh_sfc,wrapped)
+            endif
+
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,uwbg_sfc,uw_sfc,wrapped)
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,vwbg_sfc,vw_sfc,wrapped)
-            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
+
+            if(minval(prbg_sfc) .eq. missingflag .OR.
+     1         maxval(prbg_sfc) .eq. missingflag      )then
+              write(6,*)' WARNING: prbg_sfc has missing data'
+              pr_sfc = missingflag
+            else
+              call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,prbg_sfc,pr_sfc,wrapped)
+            endif
+
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,mslpbg,mslp,wrapped)
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
