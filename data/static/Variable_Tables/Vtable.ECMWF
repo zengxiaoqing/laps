@@ -7,7 +7,7 @@ Param| Type |   1  |   2  | Name     |  Units   | Description                   
  131 | 100  |   *  |      | UU       | m s-1    | U                                          |
  132 | 100  |   *  |      | VV       | m s-1    | V                                          |
  151 |  1   |   0  |      | PMSL     | Pa       | Sea-level Pressure                         |
- 134 |  1   |   0  |      | PSFC     | Pa       |                                            |
+ 134 |  1   |   0  |      | PSFC     | Pa       | Pressure at surface                        |
  129 |  1   |   0  |      | GEOPT_SFC| m2 s-2   | Geopotential Height                        |
  235 |  1   |   0  |      | TT_SKIN  | K        | Skin Temperature                           |
  141 |  1   |   0  |      | WEASD    | kg m-2   | Water Equivalent of Accumulated Snow Depth |
