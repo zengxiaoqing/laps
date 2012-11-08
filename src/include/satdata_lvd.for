@@ -466,6 +466,7 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_IR(2,6)=0.0
       R_RESOLUTION_X_IR(3,6)=0.0
       R_RESOLUTION_X_IR(4,6)=0.0
+      R_RESOLUTION_X_IR(4,9)=8000.0
       R_RESOLUTION_Y_IR(1,1)=5053.0898
       R_RESOLUTION_Y_IR(2,1)=4063.6001
       R_RESOLUTION_Y_IR(3,1)=5079.2998
@@ -490,6 +491,7 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_Y_IR(2,6)=0.0
       R_RESOLUTION_Y_IR(3,6)=0.0
       R_RESOLUTION_Y_IR(4,6)=0.0
+      R_RESOLUTION_Y_IR(4,9)=8000.0
       R_RESOLUTION_X_WV(1,1)=8373.9775
       R_RESOLUTION_X_WV(2,1)=8127.2002
       R_RESOLUTION_X_WV(3,1)=5079.2998
@@ -624,6 +626,7 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_IR(1,5)=2000
       N_PIXELS_IR(2:4,5)=0
       N_PIXELS_IR(1:4,6)=0
+      N_PIXELS_IR(1:4,9)=1375
       N_LINES_IR(1,1)=823
       N_LINES_IR(2,1)=511
       N_LINES_IR(3,1)=897
@@ -638,6 +641,7 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_IR(1,5)=823
       N_LINES_IR(2:4,5)=0
       N_LINES_IR(1:4,6)=0
+      N_LINES_IR(1:4,9)=1375
       N_PIXELS_WV(1,1)=2000
       N_PIXELS_WV(2,1)=256
       N_PIXELS_WV(3,1)=1201
