@@ -80,7 +80,7 @@ c
 
       if(minval(td_sfc) .eq. r_missing_data .AND.
      &   maxval(td_sfc) .eq. r_missing_data       )then
-         write(6,*)' WARNING: td_sfc has missing data values'
+         write(6,*)' NOTE: td_sfc has missing data values'
          write(6,*)' Computing td_sfc from sh_sfc'
 
           do i = 1,imx
@@ -158,7 +158,7 @@ c    &,t_ref)+273.15
 
       if(minval(sh_sfc) .eq. r_missing_data .AND.
      &   maxval(sh_sfc) .eq. r_missing_data       )then
-         write(6,*)' WARNING: sh_sfc has missing data values'
+         write(6,*)' NOTE: sh_sfc has missing data values'
       endif
 
       if(minval(td_sfc) .eq. r_missing_data .AND.
