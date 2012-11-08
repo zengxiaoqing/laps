@@ -14,6 +14,7 @@ c
                           ! vertical grid
       integer ip,jp
       integer ixmin, ixmax, iymin, iymax ! bounding box of needed gridpoints
+      integer ixtest, iytest
       integer nzbg_ht
       integer nzbg_tp
       integer nzbg_sh
@@ -79,7 +80,7 @@ c first loop is required for getting the heights and temps.
 c currently only SBN grids have variable pressure levels for
 c individual fields (like sh, u/v and ww).
 
-      write(6,*)' Start vinterp'
+      write(6,*)' Start vinterp, # lvls (bg/laps) = ',nzbg_ht,nz_laps       
 
       if(nzbg_ht.ne.nzbg_tp)then
          print*,'vinterp requires nzbg_ht=nzbg_tp'
@@ -241,14 +242,28 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
                   endif
                enddo ! kk
  10            continue
+
                if(htvi(i,j,k) .eq. missingflag)then
                   if(nmiss_write .le. 50)then
                      write(6,*)' WARNING: missing htvi ',i,j,k,mode
                      nmiss_write = nmiss_write + 1
                   endif
                endif
+
+               if(tpvi(i,j,k) .lt. 150.)then
+                  if(nmiss_write .le. 50)then
+                     write(6,*)' WARNING: tpvi < 150. ',i,j,k,mode
+                     nmiss_write = nmiss_write + 1
+                  endif
+               endif
+
             enddo ! i
          enddo ! j
+
+         ixtest = (ixmin+ixmax)/2
+         iytest = (iymin+iymax)/2
+         write(6,*)k,htvi(ixtest,iytest,k),tpvi(ixtest,iytest,k)
+
       enddo ! k
 
       write(6,*)' nguess_eq/nguess_int/noguess = ',nguess_eq,nguess_int
