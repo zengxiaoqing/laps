@@ -242,6 +242,8 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   logical :: readit
   logical :: val_std = .false.
   logical :: isthere_shsfc
+  logical :: isthere_tdsfc
+  logical :: isthere_prsfc
 
 ! *** sfc background arrays.
   real :: prbg_sfc(nx,ny)
@@ -454,20 +456,38 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
      i4time = ishow_timer()
 
-     print*,'convert rh (or sh, if avail) to Td - sfc'
-
 !    Is this test valid for just GRIB1 or for certain models?
      isthere_shsfc = (is_there(200101,'SH_SFC') .OR. is_there(200100,'SH_SFC')&
                                                 .OR. is_there(200102,'SH_SFC'))
-     if (isthere_shsfc) then
+     if (isthere_shsfc .eqv. .true.) then
          print*,'SH_SFC is available'
      else
          print*,'SH_SFC is unavailable according to "is_there" test'
      endif
 
-     k=1
-     do j=1,ny
-     do i=1,nx
+!    Is this test valid for just GRIB1 or for certain models?
+     isthere_prsfc = (is_there(200101,'PSFC') .OR. is_there(200100,'PSFC')&
+                                              .OR. is_there(200102,'PSFC'))
+     if (isthere_prsfc .eqv. .true.) then
+         print*,'PSFC is available'
+     else
+         print*,'PSFC is unavailable according to "is_there" test'
+     endif
+
+!    Is this test valid for just GRIB1 or for certain models?
+     isthere_tdsfc = (is_there(200101,'TD_SFC') .OR. is_there(200100,'TD_SFC')&
+                                                .OR. is_there(200102,'TD_SFC'))
+
+     if(isthere_tdsfc .eqv. .true.)then
+       write(6,*)' TD_SFC is available, use it directly...'
+
+     else
+       print*,'TD_SFC is unavailable according to "is_there" test'
+       print*,'convert rh (or sh, if avail) to Td - sfc'
+
+       k=1
+       do j=1,ny
+       do i=1,nx
 
         if(tdbg_sfc(i,j).gt.0.0 .and. tdbg_sfc(i,j).lt.100.001)then
            prsfc=prbg_sfc(i,j)/100.
@@ -483,10 +503,17 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
            tdbg_sfc(i,j)=rfill
         endif
 
-     enddo
-     enddo
+       enddo ! i
+       enddo ! j
+
+     endif ! isthere_tdsfc
+
+     write(6,*)' tdbg_sfc range = ',minval(tdbg_sfc),maxval(tdbg_sfc)
+     write(6,*)' shbg_sfc range = ',minval(shbg_sfc),maxval(shbg_sfc)
 
 ! ------------- end convert data ----------------
+ 
+     write(6,*)' returning from degrib_data...'
  
  return
 
