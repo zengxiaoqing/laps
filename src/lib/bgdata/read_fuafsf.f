@@ -97,16 +97,17 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var level'
         istatus = -1             
+      else ! found id
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,level)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var level'
+          istatus = -1           
+        else ! found data
+c         if(c8_proj(1:lenc8).eq.'airdrop')
+          call swap_array_k(level,1,1,z)
+        endif
       endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,level)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var level'
-        istatus = -1           
-      endif
-
-c     if(c8_proj(1:lenc8).eq.'airdrop')
-      call swap_array_k(level,1,1,z)
 C
 C     Variable        NETCDF Long Name
 C      om           "LAPS Fcst omega wind component"
