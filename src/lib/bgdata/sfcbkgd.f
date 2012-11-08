@@ -79,13 +79,13 @@ c
       write(6,*)' qsfc_i range = ',qsfc_i_min,qsfc_i_max
       if(qsfc_i_min .eq. r_missing_data .AND.
      1   qsfc_i_max .eq. r_missing_data       )then
-         write(6,*)' WARNING: qsfc_i has missing data values'
+         write(6,*)' NOTE: qsfc_i has missing data values'
       endif
 
       write(6,*)' tdsfc_i range = ',minval(tdsfc_i),maxval(tdsfc_i)
       if(minval(tdsfc_i) .eq. r_missing_data .AND.
      &   maxval(tdsfc_i) .eq. r_missing_data       )then
-         write(6,*)' WARNING: tdsfc_i has missing data values'
+         write(6,*)' NOTE: tdsfc_i has missing data values'
       endif
 
       write(6,*)' ter range = ',minval(ter),maxval(ter)
@@ -136,6 +136,7 @@ c
                   call compute_sfc_bgfields(bgmodel,imx,jmx,kx,i,j,k
      &                ,ter(i,j),height,t,p,q,t_ref,psfc(i,j),tsfc(i,j)
      &                ,qsfc_i(i,j),qsfc_i_min,qsfc_i_max
+     &                ,tdsfc_i(i,j)
      &                ,tdsfc_o(i,j),idebug,ip,jp,nx_pr,ny_pr)      
 
                   idebug = 0
@@ -166,8 +167,8 @@ c
 c----------------------------------------------------------------------------
 c
       subroutine compute_sfc_bgfields(bgm,nx,ny,nz,i,j,k,ter,height
-     &,t,p,q,t_ref,psfc,tsfc,qsfc,qsfc_i_min,qsfc_i_max,tdsfc,idebug
-     &,ip,jp,nx_pr,ny_pr)
+     &,t,p,q,t_ref,psfc,tsfc,qsfc,qsfc_i_min,qsfc_i_max,tdsfc_i,tdsfc
+     &,idebug,ip,jp,nx_pr,ny_pr)
 c
 c J. Smart 11/18/99 put existing code in subroutine for other process use in laps
 c
@@ -191,6 +192,7 @@ c
       real   psfc              !O, output surface pressure, pa
       real   tsfc              !I/O input sfc T, output recomputed T
       real   qsfc              !I   input sfc Q (g/kg)           
+      real   tdsfc_i           !I   input sfc Td
       real   tdsfc             !O   hi-res Td (K)           
 
       real   qsfc_l            !L   surface spec hum, Input as q or computed internally (dimensionless)
@@ -227,8 +229,10 @@ c
 
 !         Calculate qsfc_l according to model (bgm=0 for reduced P)
 !         This is used below for virtual temperature and sfc P reduction
-          if(bgm.eq.0.or.bgm.eq.6.or.
-     &       bgm.eq.8.or.bgm.eq.12)then                   ! qsfc is Td
+          if(qsfc_i_min .ne. r_missing_data .and. 
+     &       qsfc_i_max .ne. r_missing_data      )then
+           if(bgm.eq.0.or.bgm.eq.6.or.
+     &        bgm.eq.8.or.bgm.eq.12)then                   ! qsfc is Td
              tsfc_c  = tsfc-273.15
              tdsfc_c = qsfc-273.15
              if(tdsfc_c .lt. -200.)then ! a la ssh2 error check
@@ -242,13 +246,13 @@ c
                  qsfc_l=ssh2(psfc,tsfc_c,tdsfc_c,t_ref)*.001 ! kg/kg
              endif
 
-          elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then    ! qsfc is RH
-!    1                               .or.bgm.eq.13)then   ! qsfc is RH
+           elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then    ! qsfc is RH
+!    1                                .or.bgm.eq.13)then   ! qsfc is RH
              if(idebug .eq. 1)write(6,*)' qsfc is RH: calling make_ssh'
              qsfc_l=make_ssh(psfc,tsfc-273.15
      &                      ,qsfc/100.,t_ref)*.001 !kg/kg
 
-          else                                            ! qsfc is qsfc
+           else                                            ! qsfc is qsfc
              if(qsfc_i_max .gt. .050)then                 ! likely g/kg
                  qsfc_l=qsfc*.001                         ! make dimensionless
                  if(idebug .eq. 1)then
@@ -265,15 +269,22 @@ c
                      write(6,*)' thus qsfc_i is assumed dimensionless'       
                  endif
              endif
-          endif
-
-          if(qsfc_l .lt. 0.0 .or. qsfc_l .gt. .050)then
+           endif
+    
+           if(qsfc_l .lt. 0.0 .or. qsfc_l .gt. .050)then
              write(6,*)' WARNING in compute_sfc_bgfields, qsfc_l = '
      1                 ,qsfc_l      
              psfc =r_missing_data
              tsfc =r_missing_data
              tdsfc=r_missing_data
-          endif
+           endif
+
+          else ! q is missing, so use td more directly
+           tsfc_c  = tsfc-273.15
+           tdsfc_c = tdsfc_i-273.15
+           qsfc_l=ssh2(psfc,tsfc_c,tdsfc_c,t_ref)*.001 ! kg/kg
+
+          endif ! valid range for qsfc_i
 
 c pressure
           tvsfc=tsfc*(1.+0.608*qsfc_l)
