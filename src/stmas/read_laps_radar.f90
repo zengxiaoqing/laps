@@ -49,8 +49,7 @@ subroutine radialwind
 
   ! Local variables:
   character :: ext*31, rname*4, sid*8, dir*300
-  integer   :: i,j,k,ll,iradar,len_dir,istatus,istat,i4radar, &
-               num,ifqc,lb,nframe
+  integer   :: i,j,k,ll,iradar,len_dir,istatus,istat,i4radar,num
   logical   :: apply_map ! LAPS does not use this for radial wind
   real      :: volnyqt,rlat,rlon,rhgt,op(4),az,sr,ea
 
@@ -87,21 +86,15 @@ subroutine radialwind
     dir = dir(1:len_dir)//'*.'//ext
 
     ! Frequency of reading radial wind data:
-    ifqc = 900
-    nframe = 4
-    do ll=1,2 !nframe ! read data at current and previous cycle
-      ! Which background to use for radial wind obs: 
-      ! Note these change with ifqc:
-      lb = 1
-      if (ll .ge. nframe-1) lb = 2
+    do ll=1,2 ! read data at current and previous cycle
 
-      call get_file_time(dir,lapsi4t+(ll-nframe+1)*ifqc,i4radar)
+      call get_file_time(dir,lapsi4t+(ll-2)*icycle,i4radar)
 
       ! Check file availability:
-      if (abs(i4radar-(lapsi4t+(ll-nframe+1)*ifqc)) .ge. ifqc) then
-        write(6,10) lapsi4t+(ll-nframe+1)*ifqc,istatus,dir(1:len_dir)
-10      format('No radial wind avail at ',i10,' within ',i5, &
-        /,' in directory: ',a50)
+      if (abs(i4radar-(lapsi4t+(ll-2)*icycle)) .ge. icycle) then
+        write(6,10) lapsi4t+(ll-2)*icycle,dir(1:len_dir)
+10      format('No radial wind avail at ',i10,' under ', &
+          /,' in directory: ',a50)
       else ! find good file:
         num = 0 ! number of grid points where radial wind has value
         call read_radar_vel(i4radar,apply_map, &
@@ -114,7 +107,7 @@ subroutine radialwind
                             rmissing,fcstgrd(1),fcstgrd(2),0,0, &
                             velo,nyqt,num,latitude,longitud, &
                             rlat,rlon,rhgt,zero,zero, &
-                            bk0(1,1,1,lb,1),bk0(1,1,1,lb,2),volnyqt, &
+                            bk0(1,1,1,ll,1),bk0(1,1,1,ll,2),volnyqt, &
                             l_correct_unfolding,l_grid_north,istatus)
 
           ! Pass radial wind to STMAS data structure:
@@ -124,7 +117,7 @@ subroutine radialwind
             if (velo(i,j,k) .ne. rmissing) then
               ! Calculate azimuth/elevation/slant range:
               call latlon_to_radar(latitude(i,j),longitud(i,j), &
-                                   bk0(i,j,k,lb,3),az,sr,ea,rlat,rlon,rhgt)
+                                   bk0(i,j,k,ll,3),az,sr,ea,rlat,rlon,rhgt)
 
               op(1) = longitud(i,j)
               op(2) = latitude(i,j)
