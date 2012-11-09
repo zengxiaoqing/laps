@@ -606,7 +606,7 @@ c       include 'satellite_dims_lvd.inc'
      1                     ,n_image,scale,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -673,7 +673,7 @@ c       include 'satellite_dims_lvd.inc'
      1                     ,n_image,scale,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -2134,7 +2134,7 @@ c
                  call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,colortable
      1                ,n_image,scale,'hsect',plot_parms,namelist_parms)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call setusv_dum(2hIN,7)
+                 call setusv_dum('IN',7)
                  call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -2392,7 +2392,7 @@ c
      1                     ,n_image,scale,'hsect',plot_parms
      1                     ,namelist_parms)
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -2774,7 +2774,7 @@ cabdel
      1                         ,n_image,1e0,'hsect',plot_parms
      1                         ,namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                    call setusv_dum(2hIN,7)
+                    call setusv_dum('IN',7)
                     call write_label_lplot(NX_L,NY_L,c_label
      1                                    ,asc9_tim_r,plot_parms
      1                                    ,namelist_parms,i_overlay
@@ -2832,7 +2832,7 @@ cabdel
      1                         ,n_image,1e0,'hsect',plot_parms
      1                         ,namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                    call setusv_dum(2hIN,7)
+                    call setusv_dum('IN',7)
                     call write_label_lplot(NX_L,NY_L,c_label
      1                                    ,asc9_tim_r,plot_parms
      1                                    ,namelist_parms
@@ -2890,7 +2890,7 @@ cabdel
      1                         ,NX_L,NY_L,-10.,70.,'ref',n_image,1e0
      1                         ,'hsect',plot_parms,namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                    call setusv_dum(2hIN,7)
+                    call setusv_dum('IN',7)
                     call write_label_lplot(NX_L,NY_L,c_label
      1                                    ,asc9_tim_r,plot_parms
      1                                    ,namelist_parms
@@ -2965,7 +2965,7 @@ cabdel
                 n_image = n_image + 1
 
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label
      1                                ,asc9_tim_r,plot_parms
      1                                ,namelist_parms
@@ -4334,7 +4334,7 @@ c abdel
      1                   ,n_image,scale,'hsect',plot_parms
      1                   ,namelist_parms)    
               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-              call setusv_dum(2hIN,7)
+              call setusv_dum('IN',7)
               call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                              ,plot_parms,namelist_parms,i_overlay       
      1                              ,'hsect')
@@ -5097,7 +5097,7 @@ c                   cint = -1.
      1                     ,n_image,1e-0,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')
@@ -5172,7 +5172,7 @@ c                   cint = -1.
      1                     ,n_image,scale,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -5734,7 +5734,7 @@ c                   cint = -1.
                 endif
 
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -6502,7 +6502,7 @@ c                   cint = -1.
      1                     ,n_image,1.,'hsect',plot_parms
      1                     ,namelist_parms)      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -6598,7 +6598,7 @@ c                   cint = -1.
      1                     ,n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)       
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -6684,7 +6684,7 @@ c                   cint = -1.
      1                     ,n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)     
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
+                call setusv_dum('IN',7)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -7163,7 +7163,7 @@ c             if(cint.eq.0.0)cint=0.1
 
 !           i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
 !!      1                                            -laps_cycle_time
-            call setusv_dum(2hIN,34)
+            call setusv_dum('IN',34)
 
             iflag = 0
 
@@ -7187,7 +7187,7 @@ c             if(cint.eq.0.0)cint=0.1
         write(6,*)' CLOW,HIGH,CINT ',clow,chigh,cint
         write(6,*)' Max/Min/n_missing = ',vmax,vmin,n_missing
 
-        call setusv_dum(2hIN,icolors(i_overlay))
+        call setusv_dum('IN',icolors(i_overlay))
         write(6,*)' Plotting field, color = '
      1                       ,icolors(i_overlay)
 
@@ -7308,7 +7308,7 @@ c abdel
               i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
             endif
 c abdel	  
-            call setusv_dum(2hIN,34)
+            call setusv_dum('IN',34)
 
             iflag = 0
 
@@ -7324,7 +7324,7 @@ c abdel
         write(6,*)' Plotting: c_metacode,i_overlay = ',
      1                          c_metacode,i_overlay
 
-        call setusv_dum(2hIN,icolors(i_overlay))
+        call setusv_dum('IN',icolors(i_overlay))
 
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
@@ -7368,11 +7368,11 @@ c abdel
 
                 if(n_image .ge. 1 .and. 
      1             plot_parms%icol_barbs .lt. +1)then
-                    call setusv_dum(2hIN,22)
+                    call setusv_dum('IN',22)
                     write(6,*)' Plotting quasi black wind barbs'
      1                       ,n_image,plot_parms%icol_barbs
                 else
-                    call setusv_dum(2hIN,icolors(i_overlay))
+                    call setusv_dum('IN',icolors(i_overlay))
                     write(6,*)' Plotting wind barbs, color = '
      1                       ,icolors(i_overlay)
                 endif
@@ -7454,14 +7454,14 @@ c abdel
 
 !           i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
 !       1                                            -laps_cycle_time
-            call setusv_dum(2hIN,34)
+            call setusv_dum('IN',34)
 
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
      1                          c_metacode,i_overlay
 
-        call setusv_dum(2hIN,icolors(i_overlay))
+        call setusv_dum('IN',icolors(i_overlay))
 
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y '
@@ -7478,7 +7478,7 @@ c abdel
 
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
 
-                call setusv_dum(2hIN,icolors(i_overlay))
+                call setusv_dum('IN',icolors(i_overlay))
 
 !               call get_border(NX_L,NY_L,x_1,x_2,y_1,y_2)
 
@@ -7575,7 +7575,7 @@ c abdel
                i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
 !       1                                               -laps_cycle_time
             endif
-            call setusv_dum(2hIN,34)
+            call setusv_dum('IN',34)
 
             iflag = 0
 
@@ -7595,7 +7595,7 @@ c abdel
         call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
 !       asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
-        call setusv_dum(2hIN,icolors(i_overlay))
+        call setusv_dum('IN',icolors(i_overlay))
 
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y '
@@ -7608,7 +7608,7 @@ c abdel
 
 
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
-                call setusv_dum(2hIN,icolors(i_overlay))
+                call setusv_dum('IN',icolors(i_overlay))
 
                 if(max(NX_L,NY_L) .gt. 61)then
                     interval = 4
@@ -7699,7 +7699,7 @@ c abdel
 !       1                                            -laps_cycle_time
 	    endif
 
-            call setusv_dum(2hIN,34) ! Grey
+            call setusv_dum('IN',34) ! Grey
 !           call setusv_dum(2HIN,11)
 
             call get_maxstns(maxstns,istatus)
@@ -7720,7 +7720,7 @@ c abdel
         call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
 !       asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
-        call setusv_dum(2hIN,icolors(i_overlay))
+        call setusv_dum('IN',icolors(i_overlay))
 
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y '
@@ -7743,11 +7743,11 @@ c abdel
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
 
                 if(namelist_parms%c_ob_color .eq. 'white')then
-                    call setusv_dum(2hIN,1)                     ! White
+                    call setusv_dum('IN',1)                     ! White
                 elseif(iflag .eq. 2)then ! obs with station locations?
-                    call setusv_dum(2hIN,icolors(i_overlay))
+                    call setusv_dum('IN',icolors(i_overlay))
                 else                 ! station locations by themselves
-                    call setusv_dum(2hIN,34)                    ! Grey
+                    call setusv_dum('IN',34)                    ! Grey
                 endif
 
                 if(max(NX_L,NY_L) .gt. 61)then
@@ -8472,7 +8472,7 @@ c abdel
      1                 ,colortable,n_image,scale,'hsect',plot_parms
      1                 ,namelist_parms)       
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-            call setusv_dum(2hIN,7)
+            call setusv_dum('IN',7)
             call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                            ,plot_parms,namelist_parms
      1                            ,i_overlay,'hsect')       
@@ -8498,6 +8498,9 @@ c abdel
 
         character*40 vert_grid
 
+        ! Yuanfu added this declaration of logical function l_parse:
+        logical l_parse
+
         call get_vertical_grid(vert_grid,istatus)
 
         len_model_max = 7
@@ -8510,7 +8513,8 @@ c abdel
         call s_len2(units_2d,len_units)
         write(6,*)'units_2d = ',units_2d(1:len_units)
 
-        if(l_parse(units_2d,'PERCENT') .eqv. .true.)then
+        ! Yuanfu removed ".eqv. .true." as it is unnecessary and problem for gfortran:
+        if(l_parse(units_2d,'PERCENT'))then
             units_2d = '%'
             len_units = 1
         endif
