@@ -90,7 +90,7 @@
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , w, t , rh , ht, &   
                                              lwc,rai,sno,pic,ice, sh, mr, vv, & 
                                              virtual_t, rho,lcp, mvd
-    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin
+    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin,tpw_before,tpw_after
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
     REAL , PARAMETER                       :: tiny = 1.0e-30
     
@@ -100,7 +100,7 @@
     INTEGER :: moment_uphys
     LOGICAL :: file_present, in_prebal_list
     REAL    :: rhmod, lwcmod, shmod, icemod
-    REAL    :: rhadj
+    REAL    :: rhadj, sh_sfc
     REAL    :: lwc_limit
     REAL    :: hydrometeor_scale_pcp, hydrometeor_scale_cld
     CHARACTER*200 :: static_dir, filename
@@ -111,8 +111,9 @@
     REAL  :: weight_top, weight_bot, newsh
     REAL, EXTERNAL ::make_rh 
     INTEGER :: k300
+
     jaxsbn = .false.
-     
+
     ! Beginning of code
 
     CALL get_systime(i4time,laps_file_time,istatus)
@@ -297,6 +298,8 @@
         ALLOCATE ( psfc (x , y         ) )
         ALLOCATE ( d2d ( x , y         ) )
         ALLOCATE ( tskin ( x , y       ) )
+        ALLOCATE ( tpw_before ( x , y       ) )
+        ALLOCATE ( tpw_after ( x , y       ) )
         ALLOCATE ( p   (         z3 + 1 ) ) 
         ! The following variables are not "mandatory"
         ALLOCATE ( lwc ( x , y , z3 ) ) 
@@ -580,14 +583,33 @@
       ! then set their values to 0.000.  Otherwise, divide by the density to 
       ! convert from concentration to mixing ratio.
 
+      PRINT *, 'Max lwc concentration (as read in) = ',MAXVAL(lwc)
+
       IF (MAXVAL(lwc) .LT. 99999.) THEN
 
         ! Scale lwc for grid spacing
         lwc = lwc*hydrometeor_scale_cld
+        PRINT *, 'Max lwc concentration (after hydro scaling) = ',MAXVAL(lwc)
+
         ! Cap lwc to autoconversion rate for liquid to rain
         WHERE(lwc .GT. autoconv_lwc2rai) lwc = autoconv_lwc2rai
+        PRINT *, 'Max lwc concentration (after autoconversion) = ',MAXVAL(lwc)
+
         ! Convert lwc concentration to mixing ratio
         lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
+        PRINT *, 'Max lwc mixing ratio (before saturate_lwc_points) = ',MAXVAL(lwc)
+        PRINT *, 'Max sh (before saturate_lwc_points) = ',MAXVAL(sh)
+
+        ! Calculate TPW from initial fields
+        do i = 1,x 
+        do j = 1,y 
+            sh_sfc = mr(i,j,z3+1) / (1. + mr(i,j,z3+1))
+            call integrate_tpw(sh(i,j,z3:1:-1),sh_sfc,p(z3:1:-1)*100.,psfc(i,j),1,1,z3,tpw_before(i,j))
+        enddo ! j
+        enddo ! i
+        PRINT *, 'Max tpw (before saturate_lwc_points) = ',MAXVAL(tpw_before)
+
+        tpw_after = tpw_before ! initialize
 
         ! Convert lwc mixing ratio to vapor mixing ratio
         IF (lwc2vapor_thresh .GT. 0.) THEN
@@ -614,7 +636,18 @@
               ENDDO
             ENDDO
           ENDDO
+          ! Calculate TPW from modified fields
+          do i = 1,x 
+          do j = 1,y 
+              sh_sfc = mr(i,j,z3+1) / (1. + mr(i,j,z3+1))
+              call integrate_tpw(sh(i,j,z3:1:-1),sh_sfc,p(z3:1:-1)*100.,psfc(i,j),1,1,z3,tpw_after(i,j))
+          enddo ! j
+          enddo ! i
         ENDIF
+
+        PRINT *, 'Max lwc mixing ratio (after saturate_lwc_points) = ',MAXVAL(lwc)
+        PRINT *, 'Max sh (after saturate_lwc_points) = ',MAXVAL(sh)
+        PRINT *, 'Max tpw (after saturate_lwc_points) = ',MAXVAL(tpw_after)
       ELSE
         PRINT *,'Missing cloud liquid, setting values to 0.0'
         lwc(:,:,:) = 0.0
@@ -669,7 +702,15 @@
               ENDDO
             ENDDO
           ENDDO
+          ! Calculate TPW from modified fields
+          do i = 1,x 
+          do j = 1,y 
+              sh_sfc = mr(i,j,z3+1) / (1. + mr(i,j,z3+1))
+              call integrate_tpw(sh(i,j,z3:1:-1),sh_sfc,p(z3:1:-1)*100.,psfc(i,j),1,1,z3,tpw_after(i,j))
+          enddo ! j
+          enddo ! i
         ENDIF
+        PRINT *, 'Max tpw (after saturate_ice_points) = ',MAXVAL(tpw_after)
       ELSE
         PRINT *, 'Missing ice, setting values to 0.0' 
         ice(:,:,:) = 0.0
@@ -760,7 +801,10 @@
           PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
 
         CASE ('cdf ')
-          CALL output_netcdf_format(p,ht,t,mr,u,v,w,slp,psfc,lwc,ice,rai,sno,pic)
+!LW added rh (with srh in z+1), snocov and tskin
+!         CALL output_netcdf_format(p,ht,t,mr,u,v,w,slp,psfc,lwc,ice,rai,sno,pic)
+          CALL output_netcdf_format(p,ht,t,mr,u,v,w,slp,psfc,lwc,ice,rai,sno,&
+                                    pic,rh,snocov,tskin)
 
         CASE DEFAULT
           PRINT '(2A)', 'Unrecognized output format: ', output_format
