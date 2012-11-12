@@ -931,14 +931,14 @@ c..... Wind direction (deg) and speed (kts)
 c
 	 store_3ea(nn,1) = 15.0    ! deg 
 	 store_3ea(nn,2) = 10.0    ! kt
-	 if(windSpeed(i) .ne. badflag) then
-	    if(windSpeed(i).ge.1.0 .and. windSpeed(i).lt.10.0) then
+	 if(spd .ne. badflag) then
+	    if(spd.ge.1.0 .and. spd.lt.10.0) then
 	       store_3ea(nn,2) = 2.0          ! kt
-	    elseif(windSpeed(i) .gt. 10.0) then
-	       store_3ea(nn,2) = windSpeed(i) * 0.2  ! 20% of speed (kts)
+	    elseif(spd .gt. 10.0) then
+	       store_3ea(nn,2) = spd * 0.2  ! 20% of speed (kts)
 	    endif
 c
-	    if(windSpeed(i) .ge. 5.0) then    ! dir check
+	    if(spd .ge. 5.0) then    ! dir check
 	       store_3ea(nn,1) = 10.0   ! deg
 	    endif
 	 endif
