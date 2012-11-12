@@ -113,6 +113,81 @@ if test "$FILES" = 3; then
     done
 fi
 
+# VXX files (pick closest ones to analysis time)
+if test "$FILES" -ge 2; then
+    YYDDDHHMM_M01=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -60`
+    YYDDDHHMM_M02=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -120`
+    YYDDDHHMM_M03=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -180`
+    YYDDDHHMM_M04=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -240`
+    YYDDDHHMM_M05=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -300`
+    YYDDDHHMM_M06=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -360`
+    YYDDDHHMM_M07=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -420`
+    YYDDDHHMM_M08=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -480`
+    YYDDDHHMM_M09=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -540`
+    YYDDDHHMM_M10=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t -600`
+
+    YYDDDHHMM_P01=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +60`
+    YYDDDHHMM_P02=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +120`
+    YYDDDHHMM_P03=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +180`
+    YYDDDHHMM_P04=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +240`
+    YYDDDHHMM_P05=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +300`
+    YYDDDHHMM_P06=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +360`
+    YYDDDHHMM_P07=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +420`
+    YYDDDHHMM_P08=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +480`
+    YYDDDHHMM_P09=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +540`
+    YYDDDHHMM_P10=`@PERL@ @prefix@/etc/timeconv.pl -a $YYDDDHHMM -t +600`
+
+    for ext1 in v0 v1 v2 v3 v4 v5 v6 v7 v8 v9; do
+      for ext2 in 0 1 2 3 4 5 6 7 8 9; do
+        ext=$ext1$ext2
+        YYDDDHHM=`echo $YYDDDHHMM | cut -c1-8`
+        if test -e ./lapsprd/$ext/$YYDDDHHMM.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM.$ext"      >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M01.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M01.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P01.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P01.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M02.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M02.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P02.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P02.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M03.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M03.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P03.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P03.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M04.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M04.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P04.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P04.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M05.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M05.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P05.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P05.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M06.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M06.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P06.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P06.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M07.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M07.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P07.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P07.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M08.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M08.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P08.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P08.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M09.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M09.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P09.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P09.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_M10.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_M10.$ext"  >> $LAPSTAR_TXT     
+        elif test -e ./lapsprd/$ext/$YYDDDHHMM_P10.$ext; then
+            echo "./lapsprd/$ext/$YYDDDHHMM_P10.$ext"  >> $LAPSTAR_TXT     
+        fi
+      done
+    done
+fi # vxx for high bandwidth
+
 # Lapsprep files (use MINAGE/MAXAGE)
 #find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD\_$HH"      -print >> $LAPSTAR_TXT
 
