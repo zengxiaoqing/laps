@@ -63,7 +63,7 @@ MODULE lapsprep_netcdf
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  SUBROUTINE output_netcdf_format(pr,ht,tp,mr,uw,vw,ww,slp,spr,lwc,ice,rai,sno,pic)
+  SUBROUTINE output_netcdf_format(pr,ht,tp,mr,uw,vw,ww,slp,spr,lwc,ice,rai,sno,pic,rh,snocov,tskin)
 
   ! Subroutine to output data in netcdf format.  The skin temp from
   ! LAPS (lsx/tgd) is used for SST.
@@ -99,6 +99,9 @@ CONTAINS
   REAL                   :: rai(x,y,z3)   !Precip rain mr (kg/kg)
   REAL                   :: sno(x,y,z3)   !Precip snow mr (kg/kg)
   REAL                   :: pic(x,y,z3)   !Precip ice mr (kg/kg)
+  REAL                   :: rh(x,y,z3+1)  !Relative Humidity (%)
+  REAL                   :: snocov(x,y)   !Snow cover (fract)
+  REAL                   :: tskin(x,y)    !Skin Temp (K)
 
   ! Local Variables
 
@@ -106,11 +109,13 @@ CONTAINS
   real, allocatable              :: ht3(:,:,:)
   real, allocatable              :: tp3(:,:,:)
   real, allocatable              :: mr3(:,:,:)
+  real, allocatable              :: rh3(:,:,:)
   real, allocatable              :: uw3(:,:,:)
   real, allocatable              :: vw3(:,:,:)
   real, allocatable              :: ww3(:,:,:)
   real, allocatable              :: sht(:,:)
   real, allocatable              :: stp(:,:)
+  real, allocatable              :: srh(:,:)
   real, allocatable              :: smr(:,:)
   real, allocatable              :: suw(:,:)
   real, allocatable              :: svw(:,:)
@@ -119,6 +124,8 @@ CONTAINS
   real, allocatable              :: raif(:,:,:)
   real, allocatable              :: snof(:,:,:)
   real, allocatable              :: picf(:,:,:)
+  real, allocatable              :: scvf(:,:)
+  real, allocatable              :: tskf(:,:)
 
   INTEGER                        :: yyyyddd, valid_mm, valid_dd
   INTEGER                        :: icode,ncid,nid,idimid(3),start,count
@@ -146,6 +153,9 @@ CONTAINS
   allocate(mr3(x,y,z3))
   mr3 = mr(1:x,1:y,1:z3)
 
+  allocate(rh3(x,y,z3))
+  rh3 = rh(1:x,1:y,1:z3)
+
   allocate(uw3(x,y,z3))
   uw3 = uw(1:x,1:y,1:z3)
 
@@ -164,11 +174,20 @@ CONTAINS
   allocate(smr(x,y))
   smr = mr(1:x,1:y,z3+1)
 
+  allocate(srh(x,y))
+  srh = rh(1:x,1:y,z3+1)
+
   allocate(suw(x,y))
   suw = uw(1:x,1:y,z3+1)
 
   allocate(svw(x,y))
   svw = vw(1:x,1:y,z3+1)
+
+  allocate(scvf(x,y))
+  scvf = snocov(1:x,1:y)
+
+  allocate(tskf(x,y))
+  tskf = tskin(1:x,1:y)
 
   ! Flip 3d arrays.
 
@@ -176,6 +195,7 @@ CONTAINS
   call flip_array(x,y,z3,ht3)
   call flip_array(x,y,z3,tp3)
   call flip_array(x,y,z3,mr3)
+  call flip_array(x,y,z3,rh3)
   call flip_array(x,y,z3,uw3)
   call flip_array(x,y,z3,vw3)
 
@@ -299,12 +319,21 @@ CONTAINS
   icode=nf_def_var(ncid,'smr',nf_real,2,idimid,nid)
   icode=nf_put_att_text(ncid,nid,'long_name',20,'surface mixing ratio')
   icode=nf_put_att_text(ncid,nid,'units',5,'kg/kg')
+  icode=nf_def_var(ncid,'srh',nf_real,2,idimid,nid)
+  icode=nf_put_att_text(ncid,nid,'long_name',25,'surface relative humidity')
+  icode=nf_put_att_text(ncid,nid,'units',7,'percent')
   icode=nf_def_var(ncid,'suw',nf_real,2,idimid,nid)
   icode=nf_put_att_text(ncid,nid,'long_name',14,'surface u-wind')
   icode=nf_put_att_text(ncid,nid,'units',14,'meters/seconds')
   icode=nf_def_var(ncid,'svw',nf_real,2,idimid,nid)
   icode=nf_put_att_text(ncid,nid,'long_name',14,'surface v-wind')
   icode=nf_put_att_text(ncid,nid,'units',14,'meters/seconds')
+  icode=nf_def_var(ncid,'scv',nf_real,2,idimid,nid)
+  icode=nf_put_att_text(ncid,nid,'long_name',10,'snow cover')
+  icode=nf_put_att_text(ncid,nid,'units',8,'fraction')
+  icode=nf_def_var(ncid,'tsk',nf_real,2,idimid,nid)
+  icode=nf_put_att_text(ncid,nid,'long_name',16,'skin temperature')
+  icode=nf_put_att_text(ncid,nid,'units',6,'kelvin')
 
   !  Define upper-air variables.
 
@@ -318,6 +347,9 @@ CONTAINS
   icode=nf_def_var(ncid,'mr',nf_real,3,idimid,nid)
   icode=nf_put_att_text(ncid,nid,'long_name',12,'mixing ratio')
   icode=nf_put_att_text(ncid,nid,'units',5,'kg/kg')
+  icode=nf_def_var(ncid,'rh',nf_real,3,idimid,nid)
+  icode=nf_put_att_text(ncid,nid,'long_name',17,'relative humidity')
+  icode=nf_put_att_text(ncid,nid,'units',7,'percent')
   icode=nf_def_var(ncid,'uw',nf_real,3,idimid,nid)
   icode=nf_put_att_text(ncid,nid,'long_name',19,'u-component of wind')
   icode=nf_put_att_text(ncid,nid,'units',13,'meters/second')
@@ -447,10 +479,16 @@ CONTAINS
   icode=nf_put_var_real(ncid,nid,stp)
   icode=nf_inq_varid(ncid,'smr',nid)
   icode=nf_put_var_real(ncid,nid,smr)
+  icode=nf_inq_varid(ncid,'srh',nid)
+  icode=nf_put_var_real(ncid,nid,srh)
   icode=nf_inq_varid(ncid,'suw',nid)
   icode=nf_put_var_real(ncid,nid,ut)
   icode=nf_inq_varid(ncid,'svw',nid)
   icode=nf_put_var_real(ncid,nid,vt)
+  icode=nf_inq_varid(ncid,'scv',nid)
+  icode=nf_put_var_real(ncid,nid,scvf)
+  icode=nf_inq_varid(ncid,'tsk',nid)
+  icode=nf_put_var_real(ncid,nid,tskf)
 
   DEALLOCATE (ut)
   DEALLOCATE (vt)
@@ -483,6 +521,8 @@ CONTAINS
   icode=nf_put_var_real(ncid,nid,tp3)
   icode=nf_inq_varid(ncid,'mr',nid)
   icode=nf_put_var_real(ncid,nid,mr3)
+  icode=nf_inq_varid(ncid,'rh',nid)
+  icode=nf_put_var_real(ncid,nid,rh3)
   icode=nf_inq_varid(ncid,'uw',nid)
   icode=nf_put_var_real(ncid,nid,ut)
   icode=nf_inq_varid(ncid,'vw',nid)
@@ -514,14 +554,18 @@ CONTAINS
   deallocate (ht3)
   deallocate (tp3)
   deallocate (mr3)
+  deallocate (rh3)
   deallocate (uw3)
   deallocate (vw3)
   deallocate (ww3)
   deallocate (sht)
   deallocate (stp)
   deallocate (smr)
+  deallocate (srh)
   deallocate (suw)
   deallocate (svw)
+  deallocate (scvf)
+  deallocate (tskf)
 
   ! Close the netcdf file.
 
