@@ -11,6 +11,8 @@ CWD = $(shell pwd)
 MACHDEP = config.log config.status config.cache src/include/config.h
 
 LIBDIRS = src/lib/modules \
+          src/lib/w3lib \
+          src/lib/g2lib \
           src/lib/degrib \
           src/lib \
           src/lib/bgdata \
@@ -35,8 +37,6 @@ LIBDIRS = src/lib/modules \
           src/lib/temp   \
           src/lib/util \
           src/lib/wind \
-          src/lib/w3lib \
-          src/lib/g2lib \
           src/var/bufr 
 
 EXEDIRS = src/accum \
