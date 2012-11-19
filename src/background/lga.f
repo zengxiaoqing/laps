@@ -109,8 +109,8 @@ c
       integer max_files,bg_files
       integer itime_inc
       integer itime
-      parameter (max_files=20000)
-      character*256 names(max_files)
+      parameter (max_files=20000)             
+      character*256 names(max_files)            ! should be basenames
       character*256 reject_names(max_files)
       integer reject_cnt
       integer accepted_files
@@ -231,20 +231,22 @@ c
        bg_files=0
        i=1
 
-      bgmodel = bgmodels(i)
-      bgpath =  bgpaths(i)
-      cmodel =  cmodels(i)
-      lga_status = -99 
+       bgmodel = bgmodels(i)
+       bgpath =  bgpaths(i)
+       cmodel =  cmodels(i)
+       lga_status = -99 
 
-      reject_cnt=0
-      bg_files=0
-      no_infinite_loops=0
+       reject_cnt=0
+       bg_files=0
+       no_infinite_loops=0
 
-      do while((lga_status.le.0 .and. i.le.nbgmodels)
-     +         .and. (no_infinite_loops.le.nbgmodels))
+       do while((lga_status.le.0 .and. i.le.nbgmodels)
+     +          .and. (no_infinite_loops.le.nbgmodels))
 
 
-         print *,'HERE (lga):',lga_status, i, bg_files,reject_cnt
+         print *,'Looping through models (lga-1):',lga_status, i, 
+     1                                           bg_files,reject_cnt
+
 c        if(i.eq.nbgmodels)i=0
          if(reject_cnt.gt.bg_files )then    !.and. bg_files.gt.0) then
             i=i+1
@@ -261,6 +263,10 @@ c        if(i.eq.nbgmodels)i=0
             print*,' LGA process aborted...'
             stop
          endif
+
+
+         print *,'Looping through models (lga-2):',lga_status, i, 
+     1                                           bg_files,reject_cnt
 
 c
 c this commented subroutine is under development to replace
@@ -282,7 +288,6 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
      +        ,accepted_files
      +        ,forecast_length,cmodel
      +        ,nx_bg,ny_bg,nz_bg,reject_names,reject_cnt)
-
 
            if(accepted_files.eq.0.and.bg_files.eq.0) then
 
@@ -306,8 +311,11 @@ c    +,ny_laps,nz_laps)
 c             print*,'Finished in advance_analyses'
 
            elseif(accepted_files.eq.0.and.reject_cnt.eq.bg_files)then
+             write(6,*)' accepted files is 0, incrementing reject_cnt'
+             reject_cnt=reject_cnt+1
 
-               reject_cnt=reject_cnt+1
+           elseif(accepted_files.eq.0)then
+             write(6,*)'NOTE: accepted files is 0, skip lga_driver call'
 
            else
 
@@ -340,7 +348,7 @@ c
      .          n_written,c_ftimes_written,
      .          i4time_now_lga, smooth_fields,lgb_only,lga_status)
 
-           endif
+           endif ! test for acceptable files
 
          else  
 cc
@@ -374,7 +382,7 @@ c             lga_status = -99
            bg_files = 0
          endif
 
-      enddo !do while
+       enddo !do while
 
       enddo !itime_inc = -1,+1
 
