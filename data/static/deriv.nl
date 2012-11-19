@@ -49,7 +49,7 @@ c    Note that dx is in kilometers. This is the scale that LAPS analyzed values
 c    are multiplied by to account for sub-grid scale effects.
 c
 c c_z2m - parameter for converting from radar reflectivity to precipitating
-c         hydrometeor concentrations ('albers','kessler')
+c         hydrometeor concentrations ('rams', 'albers', 'kessler')
 c
 c thresh_cvr_cty_vv - cloud cover threshold used for cloud type and cloud omega
 c                     a lower value will increase the extent and magnitude of
