@@ -83,7 +83,7 @@ c
       real psatoz
 
       character*256 bgpath
-      character*256 bg_names(max_files)
+      character*256 bg_names(max_files)         ! should be basenames
       character*256 reject_names(max_files)
       character*132 cmodel
       character*150 static_dir,filename
@@ -708,7 +708,8 @@ c             goto900
 
        if(bgmodel .eq. 13)then ! determine actual number of levels
            call get_plvls(plvl_grib, 100, nlvl_grib)
-           write(6,*)' grib plvls info: ',nlvl_grib,plvl_grib
+           write(6,*)' grib plvls info: ',nlvl_grib
+     1                                   ,plvl_grib(1:nlvl_grib)
            nzbg_ht = 0
            do k = 1,nlvl_grib
                if(plvl_grib(k) .lt. 150000)then
@@ -1396,8 +1397,15 @@ c
      .        grx,gry,htbg_sfc,ht_sfc,wrapped)
             endif
 
-            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            if(minval(tdbg_sfc) .eq. missingflag .OR.
+     1         maxval(tdbg_sfc) .eq. missingflag      )then
+              write(6,*)' NOTE: tdbg_sfc has missing data'
+              td_sfc = missingflag
+            else
+              call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,tdbg_sfc,td_sfc,wrapped)
+            endif
+
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,tpbg_sfc,tp_sfc,wrapped)
 
