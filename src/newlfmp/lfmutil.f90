@@ -17,6 +17,7 @@ namelist/lfmpost_nl/out_cdf,out_grib,out_v5d            &
                    ,verbose,realtime,write_to_lapsdir   &
                    ,make_donefile                       &
                    ,precip_dt,c_m2z                     &
+                   ,n3d_pts_thr,p3d_pts_thr             &
                    ,wrf_version
 
 nlfile=trim(lfmprd_dir)//'/../static/lfmpost.nl'
@@ -39,7 +40,7 @@ use lfmgrid
 
 implicit none
 
-integer :: nx,ny,nz,istatus,n3d_pts_thr
+integer :: nx,ny,nz,istatus
 
 character(len=*) :: mtype,filename
 
@@ -58,7 +59,6 @@ select case(trim(mtype))
 end select
 
 ! Set native grid size threshold based on an 8GB machine
-n3d_pts_thr = 33000000
 write(6,*)' # of 3D native grid points, large_ngrid thresh = ',nx*ny*nz,n3d_pts_thr
 if(nx*ny*nz > n3d_pts_thr)then
    write(6,*)' Large native grid - process reduced set of 3-D fields'
@@ -125,6 +125,8 @@ elseif (gridtype(1:14) == 'secant lambert') then
    projection='LAMBERT CONFORMAL'
 elseif (gridtype(1:18) == 'tangential lambert') then
    projection='LAMBERT CONFORMAL'
+elseif (gridtype(1:18) == 'mercator') then
+   projection='MERCATOR'
 else
    print*,'Unrecognized LAPS grid type: ',trim(gridtype)
    stop
@@ -147,8 +149,8 @@ allocate(lprs(lz),lprsl(lz))
 lprs(1:lz)=pressures(1:lz)
 lprsl(1:lz)=alog(lprs(1:lz))
 
-write(6,*)' # of 3D LAPS grid points, large_pgrid thresh = ',lx*ly*lz,22000000
-if(lx*ly*lz > 22000000)then
+write(6,*)' # of 3D LAPS grid points, large_pgrid thresh = ',lx*ly*lz,p3d_pts_thr
+if(lx*ly*lz > p3d_pts_thr)then
    write(6,*)' Large LAPS grid - process reduced set of 3-D fields'
    large_pgrid = .true.
    large_ngrid = .true.
@@ -180,6 +182,9 @@ select case(trim(projection))
                   ,stdlon,truelat1,truelat2,lx,ly,proj)
    case('POLAR STEREOGRAPHIC')
       call map_set(proj_ps,llat(1,1),llon(1,1),grid_spacing  &
+                  ,stdlon,truelat1,truelat2,lx,ly,proj)
+   case('MERCATOR')
+      call map_set(proj_merc,llat(1,1),llon(1,1),grid_spacing  &
                   ,stdlon,truelat1,truelat2,lx,ly,proj)
 end select
 
