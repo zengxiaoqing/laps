@@ -131,33 +131,6 @@ cdis
        end
 
 
-       subroutine array_range(a,ni,nj,rmin,rmax,r_missing_data)
-
-       real a(ni,nj)
-
-       rmin =  abs(r_missing_data)
-       rmax = -abs(r_missing_data)
-
-       imsg = 0
-
-       do i = 1,ni
-       do j = 1,nj
-           if(a(i,j) .ne. r_missing_data)then
-               rmin = min(rmin,a(i,j))
-               rmax = max(rmax,a(i,j))
-           else
-               if(imsg .eq. 0)then
-                   write(6,*)' Missing data detected in array_range'
-                   imsg = 1
-               endif               
-           endif
-       enddo ! j
-       enddo ! i
-
-       return
-       end
-
-
         subroutine condition_precip(NX_L,NY_L,c_type,accum_2d,scale
      1                             ,pthr)           
 
