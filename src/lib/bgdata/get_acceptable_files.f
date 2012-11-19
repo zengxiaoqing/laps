@@ -10,7 +10,7 @@
 
       integer bgmodel
       integer max_files, NX,NY,NZ,rejected_cnt
-      character*256 names(max_files)
+      character*256 names(max_files)           ! should be returned as basenames
       character*256 names_tmp(max_files)
       character*256 rejected_files(max_files)
       character*132 cmodel
@@ -326,6 +326,7 @@ c ---------------------------------------------------------------------------
              print*,'Consider setting use_analysis parameter to true'
              print*,'Forecasts should also be added to the analyses'
              deallocate(bgnames_tmp)
+             accepted_files = 0
              return
           endif
 
