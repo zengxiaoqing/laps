@@ -154,7 +154,11 @@ cdoc    Calculate and write out set of 2-D stability grids
      1              ,temp_sfc_k,td_sfc_k,pres_sfc_pa
      1              ,temp_3d,td_3d_k,heights_3d,topo,blayr_thk_pa
      1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
-     1              ,wb1_2d,r_missing_data)
+     1              ,wb1_2d,r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' WARNING, Bad istatus returned from laps_be'
+            return
+        endif
 
 !       Fill pres_sfc_mb
         call move(pres_sfc_pa,pres_sfc_mb,NX_L,NY_L)
@@ -229,7 +233,7 @@ cdoc    Calculate and write out set of 2-D stability grids
         subroutine laps_be(ni,nj,nk,twet_snow
      1        ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
      1        ,blayr_thk_pa,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
-     1        ,wb1_2d,r_missing_data)
+     1        ,wb1_2d,r_missing_data,istatus)
 
 !       1991    Steve Albers
 cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
@@ -320,8 +324,8 @@ c       write(6,*)' i = ',i
      1                ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI
      1                ,VELNEG,WATER,IHOUR,istatus)
             if(istatus .ne. 1)then
-                write(6,*)' Bad istatus returned from SINDX'
-                stop
+                write(6,*)' WARNING: Bad istatus returned from SINDX'
+                return
             endif
 
             pbe_2d(i,j) = PBEPOS
