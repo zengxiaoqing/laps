@@ -30,6 +30,8 @@ logical :: l_process_w=.false.
 
 integer :: domnum,fcsttime,laps_reftime,precip_dt=3600  ! in seconds
 integer :: k_micro=999
+integer :: n3d_pts_thr=33000000
+integer :: p3d_pts_thr=22000000
 
 character(len=256) :: filename,filename0
 character(len=32)  :: mtype
@@ -256,10 +258,7 @@ endif
 
 print*,'hinterp grid allocation 3d/3dpts = ',nvar3dh,lx*ly*nz*nvar3dh    
 print*,'ctmax (predicted) = ',nz*nvar3dh    
-if(nvar3dh .ne. nvar3d+3)then
-   print*,'ERROR: nvar3dh is different from nvar3d+3 ',nvar3dh,nvar3d
-   stop
-endif
+print*,'nvar3dh / nvar3d = ',nvar3dh,nvar3d
 
 allocate(hgrid(lx,ly,nvar3dh*nz))                                                
 
