@@ -16,5 +16,5 @@ rm -f $flagfile
 echo "qsub -A $project $script"
       qsub -A $project $script
 
-@prefix@/etc/wait_for_file.sh $flagfile 60 60
+@prefix@/etc/wait_for_file.sh $flagfile 120 60
 
