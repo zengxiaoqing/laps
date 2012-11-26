@@ -100,6 +100,8 @@ c     include 'satellite_namelist_lvd.cmn'
       real, allocatable :: image_12  (:,:,:) !n_ir_elem,n_ir_lines,nimages)
       real, allocatable :: image_39  (:,:,:) !n_ir_elem,n_ir_lines,nimages)
       real, allocatable :: image_67  (:,:,:) !n_wv_elem,n_wv_lines,nimages)
+      real, allocatable :: image_lat_ir (:,:) !n_ir_elem,n_ir_lines
+      real, allocatable :: image_lon_ir (:,:) !n_ir_elem,n_ir_lines
 c
 c this stuff for cloud top pressure
 c
@@ -147,7 +149,7 @@ c
       real      smsng(maxchannel)
       real      sublon_d
       real      sublat_d
-      real      r_missing_data
+      real      r_missing_data,rmin,rmax
       real      radtodeg
       real      rcal
 
@@ -284,16 +286,14 @@ c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
       if(csattype .eq. 'rll')then
            print *,' Read lat/lon arrays to regenerate gri/grj'
-           print *,' UNDER CONSTRUCTION'                                
-           gri = 100.
-           grj = 50.                               
-!          call latlon_to_grij(lat,lon,nx_l,ny_l,
-!    1                         lats,lons,gri,grj,
-!    1                         n_ir_elem,n_ir_lines)
-           i_start_ir(jtype,ksat) = 500 !    1                             
-           i_end_ir(jtype,ksat)   = 900 ! 1375                             
-           j_start_ir(jtype,ksat) = 500 !    1                             
-           j_end_ir(jtype,ksat)   = 900 ! 1375                             
+           print *,' Set i/j start/end'                                 
+!          gri = 100.
+!          grj = 50.                               
+
+           i_start_ir(jtype,ksat) =  1                             
+           i_end_ir(jtype,ksat)   =  1375                             
+           j_start_ir(jtype,ksat) =  1                             
+           j_end_ir(jtype,ksat)   =  1375                             
 
       elseif(csatid.ne.'gmssat'.or.csattype.eq.'twn'.or.
      &   csattype.eq.'hko')then
@@ -427,6 +427,24 @@ c Find and read current satellite files... as many as 4 ir channels and vis.
          stop
        endif
       endif
+      if(csattype.eq.'rll')then
+       if(.not.allocated(image_lat_ir))then
+        allocate(image_lat_ir(n_ir_lines,n_ir_elem),stat=istat)
+        if(istat.ne.0)then
+          print*,'Error allocating image_lat_ir data array ',istat
+          print*,'Error: Aborting process: Not enough memory'
+          stop
+        endif
+       endif
+       if(.not.allocated(image_lon_ir))then
+        allocate(image_lon_ir(n_ir_lines,n_ir_elem),stat=istat)
+        if(istat.ne.0)then
+          print*,'Error allocating image_lon_ir data array ',istat
+          print*,'Error: Aborting process: Not enough memory'
+          stop
+        endif
+       endif
+      endif
 c
 c --------------------------------------------------------------------------
 c Find and read current satellite files... as many as 5 ir channels and vis.
@@ -450,6 +468,7 @@ c --------------------------------------------------------------------------
      &                      nft,ntm,c_type,max_files,
      &                      image_ir,image_vis,
      &                      image_12,image_39,image_67,
+     &                      image_lat_ir,image_lon_ir,
      &                      i4time_data,
      &                      istatus)
 
@@ -708,8 +727,18 @@ c satellite range and sub-longitude (namelist items).
 c ---------------------------------------------------
       radtodeg=180.0/acos(-1.)
       range_m = sat_range_m(ksat)+eradius   !adding eradius 07-2007: JRS
-      sublon_d = r_sat_sub_lon(ksat)*radtodeg
-      sublat_d = r_sat_sub_lat(ksat)*radtodeg
+
+      if(csattype .eq. 'rll')then 
+!        Select center of hopefully full disk image
+         sublat_d = image_lat_ir(n_ir_lines/2,n_ir_elem/2)
+         sublon_d = image_lon_ir(n_ir_lines/2,n_ir_elem/2)
+
+      else
+         sublon_d = r_sat_sub_lon(ksat)*radtodeg
+         sublat_d = r_sat_sub_lat(ksat)*radtodeg
+
+      endif
+
       write(6,*)'range_m = ',range_m
       write(6,*)'sublat_d = ',sublat_d
       write(6,*)'sublon_d = ',sublon_d
@@ -901,6 +930,14 @@ c ----------  GMS SATELLITE SWITCH -------
             if(ispec.eq.4)then
               if(r_image_status(j,i).le.0.3333)then
 
+               if(csattype.eq.'rll')then
+                   write(6,*)' Calling latlon_to_grij'
+                   call latlon_to_grij(lat,lon,nx_l,ny_l,
+     1                                 image_lat_ir,image_lon_ir,
+     1                                 gri(1,1,ispec),grj(1,1,ispec),
+     1                                 n_ir_elem,n_ir_lines)
+               endif
+
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
@@ -924,7 +961,14 @@ c ----------  GMS SATELLITE SWITCH -------
 c                    if(csattype.eq.'twn')then
                         call filter_2dx(ta8,nx_l,ny_l,1, 0.5)
                         call filter_2dx(ta8,nx_l,ny_l,1,-0.5)
+                        where(abs(ta8) .ge. 1e10)ta8 = r_missing_data
 c                    endif
+
+                     call array_range(ta8,nx_l,ny_l,rmin,rmax
+     1                               ,r_missing_data)
+
+                     write(6,*)' ta8 (non-missing) range is '
+     1                         ,rmin,rmax
 
                      nlf=nlf+1
                      call move(ta8,laps_data(1,1,nlf),nx_l,ny_l)
