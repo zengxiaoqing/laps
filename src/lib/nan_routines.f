@@ -245,3 +245,30 @@ cdoc  detected, otherwise it returns a 0.
       end
 
       
+
+       subroutine  clean_nan2 (var2,n,m,istatus)
+
+       use mem_namelist, ONLY: r_missing_data
+
+       integer istatus
+       real var2(n,m)
+       integer i,j
+       integer m,n
+
+c  double dimension
+
+        do j = 1,m
+        do i = 1,n
+          if(var2(i,j) .NE. 0.0) then 
+            if(var2(i,j) / var2(i,j) .NE. 1.0) then ! NaN detected
+              var2(i,j) = r_missing_data
+            endif
+          endif
+        enddo
+        enddo
+
+
+        istatus = 1
+        return
+
+        end
