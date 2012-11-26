@@ -99,6 +99,7 @@ endif
 
 if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
     setenv L_PLOT_CRITERIA `tail -1 $SUMMARY_FILE`
+    setenv PCT_SUCCESS     `tail -1 $SUMMARY_FILE`
 #   setenv L_PLOT_CRITERIA T  # for testing
     if ($KEY_WIDTH == 0) then # TrueType case
         setenv KEY_WIDTH -16 
@@ -189,10 +190,10 @@ while ($IMEMBER <= $NMEMBERS)
 
     if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be present
         setenv PCT `head -$IMEMBER $SUMMARY_FILE | tail -1`
-        setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT%"
+        setenv TITLE "`echo $MEMBER | sed 's/_/ /g'` $PCT_SUCCESS/$PCT%"
 
-
-        if ($PCT >= 80) then
+        echo "PCT_SUCCESS being compared to threshold of 80 is: $PCT_SUCCESS"
+        if ($PCT_SUCCESS >= 80) then
             setenv LS 1
             if (-d /w3/lapb) then
                 setenv LW 3
