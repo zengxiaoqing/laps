@@ -279,6 +279,14 @@ goto 222
         ! RH(I,J,K) = 1.E2 * (LV(k)*sph/(sph*(1.-eps) + eps))/(svp1*exp(svp2*(tmp-svpt0)/(tmp-svp3)))
         IF (BK0(I,J,K,IFRAME,5) .GE. 0.0) THEN
           RH(I,J,K) = MAKE_RH(LV(k)/100.0,BK0(I,J,K,IFRAME,4)-273.15,BK0(I,J,K,IFRAME,5),-132.0)
+
+          ! Ensure no RH greater than 1.0:
+          IF (RH(I,J,K) .GT. 1.0) THEN
+            RH(I,J,K) = 1.0
+            BK0(I,J,K,IFRAME,5) = &
+              MAKE_SSH(LV(k)/100.0,BK0(I,J,K,IFRAME,4)-273.15,1.0,-132.0)
+          ENDIF
+
           ! Percentage:
           RH(I,J,K) = RH(I,J,K)*100.0
         ELSE
