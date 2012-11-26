@@ -82,7 +82,7 @@ include 'lapsparms.for'
         character*200 path_to_islope
         character*200 path_to_sst
 
-        logical*1    l_compress_radar,l_use_tamdar,l_3dvar,l_pad1
+        logical*1    l_compress_radar,l_dual_pol,l_use_tamdar,l_3dvar,l_pad1
         logical*1    l_accum_fg, l_accum_radar, l_accum_gauge
         logical*1    l_superob_barnes, l_mosaic_sat
 
@@ -120,8 +120,8 @@ include 'lapsparms.for'
         ,path_to_soiltemp1deg,path_to_albedo,path_to_sst     &
         ,path_to_maxsnoalb,path_to_islope                    &
         ,fdda_model_source                                   &
-        ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1        &
-        ,l_accum_fg,l_accum_radar,l_accum_gauge
+        ,l_compress_radar,l_dual_pol,l_use_tamdar,l_3dvar    &
+        ,l_pad1,l_accum_fg,l_accum_radar,l_accum_gauge
 
 ! wind_nl variables
 logical :: l_use_raob, l_use_cdw, l_use_radial_vel
@@ -212,7 +212,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,max_radar_files_nl,PRESSURE_INTERVAL_L &
                   ,nk_laps,standard_latitude,standard_latitude2    &    
                   ,standard_longitude,NX_L, NY_L, I_PERIMETER &
-                  ,l_compress_radar,l_use_tamdar,l_3dvar &
+                  ,l_compress_radar,l_dual_pol,l_use_tamdar,l_3dvar &
                   ,l_accum_fg, l_accum_radar, l_accum_gauge &
                   ,l_superob_barnes, l_mosaic_sat &
                   ,grid_spacing_m,grid_cen_lat,grid_cen_lon &
@@ -354,6 +354,7 @@ elseif (namelist_name == 'lapsparms') then
    prtop = 10000.          ! 100mb for SIGMA_P grid
    l_superob_barnes = .false.
    l_mosaic_sat     = .false.
+   l_dual_pol       = .false.
    i_offset_radar = -1
 
    read (12, lapsparms_nl, err=901)
