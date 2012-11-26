@@ -1,5 +1,5 @@
   
-      This LAPS/STMAS README file is viewable on the WWW via the LAPS home 
+      This LAPS README file is viewable on the WWW via the LAPS home 
       page at http://laps.noaa.gov/
 
 
@@ -108,7 +108,8 @@
          3.4.2 ..................  LAPS2GRIB
          3.4.3 ..................  WFOPREP
          3.4.4 ..................  LFMPOST
-         3.4.5 ..................  VERIFICATION
+         3.4.5 ..................  FORECAST GRAPHICS
+         3.4.6 ..................  VERIFICATION
      4.0 ............  Porting code mods from LAPS users back to GSD
      5.0 ............  LAPS Output Variables and netCDF File Organization 
 
@@ -4414,7 +4415,13 @@ Source directory: 'laps/src/newlfmp' (new default version)
 
       RUNTIME is model initialization time with format 'yyyymmddhh'
 
------- 3.4.5 -------------- VERIFICATION ------------------------------------
+------ 3.4.5 -------------- FORECAST GRAPHICS -------------------------------
+
+   A script can be run in cron (after the FUA/FSF files are created) to make
+   GIF images of various forecast fields. This is located in 
+   'etc/followup_fcst.pl'. Output images will appear in 'lapsprd/www/fcst2d'.
+
+------ 3.4.6 -------------- VERIFICATION ------------------------------------
 
    LAPS has a built-in verification package. This can be run after a model
    is run and the verifying observations and analyses are available. The
@@ -4447,7 +4454,7 @@ Source directory: 'laps/src/newlfmp' (new default version)
    4) Log files are in $LAPS_DATA_ROOT/log/[*fcst*][*verif*]
 
    5) Animated montages are an option that will work if 'followup_fcst.pl'
-      is run prior to the verification.
+      is run prior to the verification (see previous sub-section 3.4.5). 
 
 -------- 4.0 --  Porting code mods from LAPS users back to GSD --------------
 
