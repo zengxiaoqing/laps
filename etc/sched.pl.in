@@ -780,6 +780,12 @@ foreach $exe (@LAPS_EXE){
                                 $vmem_gb=8.0
                             }
                         }
+                    }else{ # Traditional LAPS in "normal" serial mode
+                        if($npts > 50000000){
+                            $vmem_gb=11.5
+                        }else{
+                            $vmem_gb=4.0
+                        }
                     }
                 }
                 my $vmem_mb = int($vmem_gb*1000.);
