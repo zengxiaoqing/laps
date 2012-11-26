@@ -39,6 +39,7 @@ cdis
      &                      nft,ntm,c_mtype,max_files,
      &                      image_ir,image_vis,
      &                      image_12,image_39,image_67,
+     &                      image_lat_ir,image_lon_ir,          ! O
      &                      i4time_data,
      &                      istatus)
 c
@@ -655,7 +656,7 @@ c
      &                image_67,
      &                image_ir,image_12,
      &                image_39,image_vis,
-     &                image_lat_ir,image_lon_ir,
+     &                image_lat_ir,image_lon_ir,         ! O
      &                istatus)
  
       goto 16
