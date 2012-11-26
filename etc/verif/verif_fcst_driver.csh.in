@@ -111,10 +111,14 @@ foreach SUBDIR (REF LMR)
               montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
 
         setenv COMP_LINK radar_fcst_all_$COMP.png
-        echo "cd $IMGDIR; rm -f $COMP_LINK; ln -s radar_fcst_all_$COMP\_$LAPS_A9TIME.png $COMP_LINK"
-              cd $IMGDIR; rm -f $COMP_LINK; ln -s radar_fcst_all_$COMP\_$LAPS_A9TIME.png $COMP_LINK 
+        if (-e $IMOUT) then
+            echo "cd $IMGDIR; rm -f $COMP_LINK; ln -s radar_fcst_all_$COMP\_$LAPS_A9TIME.png $COMP_LINK"
+                  cd $IMGDIR; rm -f $COMP_LINK; ln -s radar_fcst_all_$COMP\_$LAPS_A9TIME.png $COMP_LINK 
 
-        echo ""
+            echo ""
+        else
+            echo "WARNING: $IMOUT was not created, soft link to $COMP_LINK skipped"
+        endif
 
     end
 
