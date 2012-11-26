@@ -127,6 +127,7 @@ c   code
                return
             endif
          endif
+         call clean_nan2(latitude,n_elem,n_lines,istatus)
          write(6,*)'readcdf latitude range:       '
      1          ,minval(latitude),maxval(latitude)
 
@@ -146,6 +147,7 @@ c   code
                return
             endif
          endif
+         call clean_nan2(longitude,n_elem,n_lines,istatus)
          write(6,*)'readcdf longitude range:      '
      1          ,minval(longitude),maxval(longitude)
 
