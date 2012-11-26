@@ -147,6 +147,7 @@ SRC	= machine_dependent.F \
           rfill.f \
           rh2cld.f \
           rootfind.f \
+          satgeom.f \
           sfc_routines.f \
           smf_wisp91.f \
           smf_wisp92.f \
