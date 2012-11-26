@@ -72,7 +72,7 @@ c
         real frac
 c       real fraci,fracj
         real pixsum 
-        real r_missing_data
+        real r_missing_data,rmin,rmax
         real pcnt_msng_thresh
         real result
 
@@ -95,7 +95,7 @@ c       real fraci,fracj
         qcstatus=0
         fcount=0
 c
-c       write(6,*)'   I   J   WarmPix  ColdPix  NPix Nwarm  CldTemp'
+        write(6,*)'   I   J   WarmPix  ColdPix  NPix Nwarm  CldTemp'
 c
 c The "10" loop represents input image resolution < output grid resolution such
 c that there are enough pixels from the input image to get a representative
@@ -114,6 +114,7 @@ c
            endif
         enddo
         enddo
+
         if(icnt.gt.(pcnt_msng_thresh*elem_dim*line_dim))then
            lforce_switch=.true.
            print*,'More than 10% of data missing: '
@@ -135,20 +136,18 @@ c
           max_wi=10.
           max_wj=10.
 
-
-
           DO 10 J=1,JMAX
           DO 10 I=1,IMAX
 
-          IF(ST(I,J).NE.0.) GO TO 10
+           IF(ST(I,J).NE.0.) GO TO 10
 c
 c line/elem are floating point i/j positions in ISPAN grid for input lat/lon
 c also, use the lat/lon to real i/j look up table (r_llij_lut) to map out points
 c needed for satellite pixels.
 c****************************************************************************
 
-             if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
-     &          r_llij_lut_rj(i,j).ne.r_missing_data)then
+           if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+     &        r_llij_lut_rj(i,j).ne.r_missing_data)then
 
              elem_mx = r_llij_lut_ri(i,j) + ((1./r_grid_ratio) * 0.5)
              elem_mn = r_llij_lut_ri(i,j) - ((1./r_grid_ratio) * 0.5)
@@ -262,22 +261,31 @@ c              write(6,1112) wm,wc
 
              end if  ! Enough data for num_lines .gt. 0
 
-             endif   !r_llij's .ne. r_missing_data
+           endif   !r_llij's .ne. r_missing_data
 
-cisid             if(sa(i,j).eq.r_missing_data)then
-        if((sa(i,j).eq.r_missing_data).and.(max_wi.lt.10)
+cisid      if(sa(i,j).eq.r_missing_data)then
+           if((sa(i,j).eq.r_missing_data).and.(max_wi.lt.10)
      &         .and.(max_wj.lt.10)) then
                 print*,'found missing data in ir remapping'
-             endif
-ccd           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
-ccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
-ccd5555         format(1x,2i4,2f10.2,2i5,f10.2)
-ccd           endif
+           endif
+
+!          if(i .eq. i/100*100 .and. j .eq. j/100*100       
+!    1        .OR.                   sa(i,j) .lt. 190.      
+!    1        .OR.                   
+!    1       (sa(i,j) .gt. 500. .and. sa(i,j) .ne. r_missing_data)
+!    1                                 )then
+!               write(6,5555)i,j,wm,wc,npix,nwarm,sa(i,j)
+!    1                      ,r_llij_lut_ri(i,j),r_llij_lut_rj(i,j)
+!555            format(1x,2i4,2f10.2,2i5,f10.2,2x,2f10.2)
+!          endif
 
    10     CONTINUE ! I,J
           write(6,*)'Max num IR pix for avg: ',maxpix
           write(6,*)'Number of LAPS gridpoints missing',
      &fcount
+
+          call array_range(sa,imax,jmax,rmin,rmax,r_missing_data)
+          write(6,*)' sa (non-missing) range is ',rmin,rmax
 
 C       elseif(r_grid_ratio .lt. 1.0)then
 c       ---------------------------------------
