@@ -23,7 +23,7 @@
  SFC_MIX = 1,
  MOD_4DDA_1 = 0,
  MOD_4DDA_FACTOR = 0.02,
- T_REF = -132.0,
+ T_REF = -10.0,
  PATH_TO_GVAP12 = '/public/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/',
  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
  PATH_TO_GPS = '/public/data/gpsmet/netcdf/',
