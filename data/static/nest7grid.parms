@@ -8,12 +8,12 @@
  standard_longitude=-105.5,       
  grid_cen_lat=41.0,         
  grid_cen_lon=-105.5,         
- grid_spacing_m=5000.,          
- NX_L=249,                         
- NY_L=209,                         
+ grid_spacing_m=3000.,          
+ NX_L=413,                         
+ NY_L=347,                         
 
  vertical_grid='PRESSURE',
- nk_laps=41,
+ nk_laps=43,
  earth_radius = 6370000.,                        
 
  laps_cycle_time=3600,           
@@ -171,6 +171,11 @@ c                     'v01' (radar #1  volume data)
 c                     'v02' (radar #2  volume data)
 c                     'vxx' (radar #xx volume data)
 c                     'non' radar will not be used (i.e. is withheld)
+c
+c path_to_topt30s - Path to LAPS topography database.
+c                   If this contains the string 'wps', a WRF GEOGRID file can
+c                   instead be imported, provided it is on the same grid as
+c                   LAPS.
 c
 c path_to_raw_blpprofiler - Path to Boundary Layer wind profiler data. If 
 c                           data is Multi-Agency MADIS then use 'WFO' for 
