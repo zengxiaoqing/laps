@@ -50,6 +50,8 @@ c KML: END
       use storage_module, ONLY: get_plvls
  
       implicit none
+      integer, parameter :: maxbglvl = 42 
+
       real    prtop ! pa
       include 'bgdata.inc'
       real     badflag
@@ -133,7 +135,7 @@ c
       real, allocatable  :: uwbg(:,:,:)      !Background u component (m/s)
       real, allocatable  :: vwbg(:,:,:)      !Background v component (m/s)
       real, allocatable  :: wwbg(:,:,:)      !Background omega (m/s)
-      real plvl_grib(100) ! Dimension is maxlvl in 'degrib_nav' routine
+      real plvl_grib(maxbglvl) ! Dimension is maxbglvl in 'degrib_nav' routine
 c
 c *** Intermediate arrays for background data vertically
 c     interpolated to LAPS isobaric levels (on the model horizontal grid).
@@ -523,8 +525,7 @@ c
             read(bg_names(j)(10:11),'(i2)')ihour
             read(bg_names(j)(12:13),'(i2)')imin
          else
-            if(cmodel(1:ic) .eq. 'HRRR' .or.
-     1         cmodel(1:ic) .eq. 'RR')then
+            if(cmodel(1:ic) .eq. 'HRRR')then    
                read(bg_names(j)(10:11),'(i2)')ihour
                read(bg_names(j)(12:13),'(i2)')imin       
             else
@@ -1540,7 +1541,7 @@ c... 2D arrays directly from the background model.
               call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,td_sfc
      .           ,td_sfc_hi, topo
      .           ,pr1d_pa, nx_laps, ny_laps, nz_laps, pr_sfc
-     .           ,nx_pr,ny_pr)      
+     .           ,nx_pr,ny_pr,istatus)      
 
            endif
 
@@ -1625,12 +1626,12 @@ c
               call sfcbkgd(bgmodel,tp,sh,ht,rp_tp,rp_sh
      1                    ,rp_td,dum2_2d,rp_lvl,pr1d_pa
      1                    ,nx_laps, ny_laps, nz_laps, rp_sfc
-     1                    ,nx_pr,ny_pr)      
+     1                    ,nx_pr,ny_pr,istatus)      
            else
                call sfcbkgd(bgmodel,tp,sh,ht,rp_tp,rp_sh
      1                    ,rp_td,dum2_2d,rp_lvl,prgd_pa
      1                    ,nx_laps, ny_laps, nz_laps, rp_sfc
-     1                    ,nx_pr,ny_pr)      
+     1                    ,nx_pr,ny_pr,istatus)      
            endif
 
            deallocate (rp_lvl,rp_tp,rp_sh,rp_td)
