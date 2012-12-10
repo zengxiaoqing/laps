@@ -84,6 +84,7 @@ c individual fields (like sh, u/v and ww).
 
       if(nzbg_ht.ne.nzbg_tp)then
          print*,'vinterp requires nzbg_ht=nzbg_tp'
+         print*,'values are: ',nzbg_ht,nzbg_tp       
          print*,'no interp performed. terminating'
          stop
       endif
