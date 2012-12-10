@@ -3,6 +3,7 @@ program lfmregrid
 use mem_namelist
 
 character*256 fname_in, fullname_in, laps_data_root
+character*132 cmodel
 character*150 static_dir,filename
 
 character*16 atime,afcst
@@ -12,7 +13,7 @@ character*2   gproj
 character*1 cgrddef 
 character*30 mtype
 
-integer fcsttime,fcsthr,fcstmn
+integer fcsttime,fcsthr,fcstmn,bgmodel
 
 real La1, Lo1, La1in, La2in, LoV, La2, Lo2
 real Lat0, Lat1, Lon0
@@ -46,26 +47,25 @@ istatus=init_timer()
 call getarg(1,fname_in)       ! Input file name (without the .f?? extension)
 call getarg(2,a9time)         ! Ascii 9 character time for initialization
 call getarg(3,afcst)          ! HHMM of the forecast                                      
-call getarg(4,a_process_grib)      
-call getarg(5,a_process_cdf)      
-call getarg(6,a_grib_fua)      
-call getarg(7,a_grib_fsf)      
-call getarg(8,a_cdf_fua)       
-call getarg(9,a_cdf_fsf)       
-call getarg(10,mtype)       
-call getarg(11,laps_data_root) 
+call getarg(4,a_grib_fua)      
+call getarg(5,a_grib_fsf)      
+call getarg(6,a_cdf_fua)       
+call getarg(7,a_cdf_fsf)       
+call getarg(8,mtype)       
+call getarg(9,laps_data_root) 
 
 call cv_asc_i4time(a9time,laps_reftime)
 read(afcst,'(i2)',err=900) fcsthr        
 read(afcst,'(2x,i2)',err=900) fcstmn        
 fcsttime=fcsthr*3600 + fcstmn*60
 laps_valtime=laps_reftime+fcsttime        
-read(a_process_grib,*)l_process_grib
-read(a_process_cdf,*)l_process_cdf
 read(a_grib_fua,*)l_grib_fua      
 read(a_grib_fsf,*)l_grib_fsf      
 read(a_cdf_fua,*)l_cdf_fua      
 read(a_cdf_fsf,*)l_cdf_fsf      
+
+l_process_grib = (l_grib_fua .OR. l_grib_fsf)
+l_process_cdf = (l_cdf_fua .OR. l_cdf_fsf)
 
 write(6,*)' a9time/laps_reftime ',a9time,' ',laps_reftime
 write(6,*)' l_process_grib, l_process_cdf:', l_process_grib, l_process_cdf
@@ -186,11 +186,38 @@ endif
 
 write(6,*)' grid dims NX_L,NY_L,NZ_L = ',NX_L,NY_L,NZ_L
 
-call lfmregrid_sub(nxbg,nybg,nzbg,fname_in,NX_L,NY_L,NZ_L,gproj &
-                  ,laps_data_root,mtype,laps_reftime,laps_valtime &
+if(l_process_grib .eqv. .true.)then
+    bgmodel = 13
+    if(mtype .eq. 'nam')then
+        cmodel = 'NAM'
+    else
+        cmodel = 'HRRR'
+    endif
+    write(6,*)' calling get_bkgd_mdl_info for cmodel: ',trim(cmodel)
+    call get_bkgd_mdl_info(bgmodel,cmodel,fname_in  &
+      ,nxbg,nybg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww &
+      ,gproj,dlat,dlon,centrallat,centrallon,dxbg,dybg &
+      ,Lat0,Lat1,Lon0,sw,ne,cgrddef,istatus)
+    if(istatus .ne. 1)then
+        write(6,*)' ERROR: Bad status return from get_bkgd_mdl_info'
+        goto 900
+    endif
+
+    call init_gridconv_cmn(gproj,nxbg,nybg,nzbg &
+         ,dlat,dlon,centrallat,centrallon,Lat0,Lat1,Lon0 &
+         ,sw(1),sw(2),ne(1),ne(2),cgrddef,istatus)
+    if(istatus .ne. 1)then
+        write(6,*)' ERROR: Bad status return from init_gridconv_cmn'
+        goto 900
+    endif
+endif
+
+
+call lfmregrid_sub(nxbg,nybg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,fname_in,NX_L,NY_L,NZ_L,gproj &
+                  ,bgmodel,cmodel,laps_data_root,mtype,laps_reftime,laps_valtime &
                   ,l_process_grib,l_process_cdf,l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf)
 
-write(6,*)' Returned from lfmregrid_sub'
+write(6,*)' Returned from lfmregrid_sub - program end'
 
 900 continue
 
