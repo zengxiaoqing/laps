@@ -43,7 +43,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   character(LEN=9)   :: field
   character(LEN=2)   :: gproj
   character(LEN=1)   :: cgrddef
-  integer, parameter :: maxlvl = 100
+  integer, parameter :: maxbglvl = 42 
   integer, dimension(255) :: iuarr = 0
   integer :: iplvl
   integer :: nlvl
@@ -54,7 +54,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   integer :: vtable_columns
   integer :: istatus
   integer :: nx, ny, nz
-  real, dimension(maxlvl) :: plvl
+  real, dimension(maxbglvl) :: plvl
   real    :: level
   real    :: dx, dy  ! Required by Laps, in meters.
   real    :: sw1, sw2, ne1, ne2
@@ -137,7 +137,8 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 
         nx=map%nx
         ny=map%ny
-        nz=42
+        nz=maxbglvl
+        write(6,*)' nz is being set to ',maxbglvl
         dx=map%dx
         dy=abs(map%dx)
 
@@ -220,7 +221,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   character(LEN=150) :: gribflnm
   character(LEN=19)  :: hdate
   character(LEN=9)   :: field
-  integer, parameter :: maxlvl = 100
+  integer, parameter :: maxbglvl = 42  
   integer, dimension(255) :: iuarr = 0
   integer :: nunit1 = 12
   integer :: debug_level = 0 
@@ -232,12 +233,12 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   integer :: grib_version
   integer :: istatus, i, j, k, i4time, ishow_timer 
   integer :: nx, ny, nz, nzsh
-  integer :: icn3d, icm(42)
-  real, dimension(maxlvl) :: plvl
+  integer :: icn3d, icm(maxbglvl)
+  real, dimension(maxbglvl) :: plvl
   real    :: level
   real    :: t_ref, rfill, prsfc, qsfc
   real    :: make_ssh, make_td
-  real    :: sumtot, shsum(42), shavg, r_bogus_sh
+  real    :: sumtot, shsum(maxbglvl), shavg, r_bogus_sh
   real    :: it,xe,mrsat,esat
   logical :: readit
   logical :: val_std = .false.
@@ -266,6 +267,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real :: vwbg(nx,ny,nz)
   real :: wwbg(nx,ny,nz)
 
+  write(6,*)' Start degrib_data: dims are ',nx,ny,nz
 
 ! -----------------
 ! Determine GRIB Edition number
@@ -354,7 +356,8 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
         i4time = ishow_timer()
 !-----
-        call get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz, &
+        write(6,*)' call get_lapsbg: dims are ',nx,ny,nz
+        call get_lapsbg(nlvl, maxbglvl, plvl, debug_level, nx, ny, nz, &
          prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, &
          htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, &
          tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, istatus)
@@ -395,7 +398,12 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
      print*,'convert rh to q - 3D'
 
      t_ref=-132.0
-     rfill = -99999.
+     rfill = 1e37 ! -99999.
+
+     if(nzsh .gt. maxbglvl)then
+        write(6,*)' ERROR: nzsh > maxbglvl ',nzsh,maxbglvl 
+        write(6,*)' Increase dimension of maxbglvl'                  
+     endif
 
      do k=1,nzsh
         icm(k)=0
