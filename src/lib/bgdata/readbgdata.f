@@ -27,7 +27,6 @@ c KML: END
       integer ntbg,nzbg
       integer i,j,k,l
       integer lencm,lend
-      integer ivaltimes(100)
       integer i4_initial
       integer i4_valid
       integer i4time
@@ -39,29 +38,29 @@ c KML: END
 
 c *** Background model grid data.
 c
-      real, intent(out) :: prbght(nx_bg,ny_bg,nzbg_ht) !Pressure (mb) ht and temp
-      real, intent(out) :: prbgsh(nx_bg,ny_bg,nzbg_sh) !Pressure (mb) q
-      real, intent(out) :: prbguv(nx_bg,ny_bg,nzbg_uv) !Pressure (mb) u- v-components
-      real, intent(out) :: prbgww(nx_bg,ny_bg,nzbg_ww) !Pressure (mb) omega
+      real :: prbght(nx_bg,ny_bg,nzbg_ht) !Pressure (mb) ht and temp
+      real :: prbgsh(nx_bg,ny_bg,nzbg_sh) !Pressure (mb) q
+      real :: prbguv(nx_bg,ny_bg,nzbg_uv) !Pressure (mb) u- v-components
+      real :: prbgww(nx_bg,ny_bg,nzbg_ww) !Pressure (mb) omega
       real  pr(nzbg_ht)
 
-      real, intent(out) :: htbg(nx_bg,ny_bg,nzbg_ht)   !Height (m)
-      real, intent(out) :: tpbg(nx_bg,ny_bg,nzbg_tp)   !Temperature (K)
-      real, intent(out) :: shbg(nx_bg,ny_bg,nzbg_sh)   !Specific humidity (kg/kg)
-      real, intent(out) :: uwbg(nx_bg,ny_bg,nzbg_uv)   !U-wind (m/s)
-      real, intent(out) :: vwbg(nx_bg,ny_bg,nzbg_uv)   !V-wind (m/s)
-      real, intent(out) :: wwbg(nx_bg,ny_bg,nzbg_ww)   !W-wind (pa/s)
+      real :: htbg(nx_bg,ny_bg,nzbg_ht)   !Height (m)
+      real :: tpbg(nx_bg,ny_bg,nzbg_tp)   !Temperature (K)
+      real :: shbg(nx_bg,ny_bg,nzbg_sh)   !Specific humidity (kg/kg)
+      real :: uwbg(nx_bg,ny_bg,nzbg_uv)   !U-wind (m/s)
+      real :: vwbg(nx_bg,ny_bg,nzbg_uv)   !V-wind (m/s)
+      real :: wwbg(nx_bg,ny_bg,nzbg_ww)   !W-wind (pa/s)
 
-      real, intent(out) :: mslpbg(nx_bg,ny_bg)         !mslp  (mb)
-      real, intent(out) :: htbg_sfc(nx_bg,ny_bg)
-      real, intent(out) :: prbg_sfc(nx_bg,ny_bg)
-      real, intent(out) :: shbg_sfc(nx_bg,ny_bg)       !Specific humidity (kg/kg)
-      real, intent(out) :: uwbg_sfc(nx_bg,ny_bg)
-      real, intent(out) :: vwbg_sfc(nx_bg,ny_bg)
-      real, intent(out) :: tdbg_sfc(nx_bg,ny_bg)
-      real, intent(out) :: tpbg_sfc(nx_bg,ny_bg)
-      real, intent(out) :: t_at_sfc(nx_bg,ny_bg)
-      real, intent(out) :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
+      real :: mslpbg(nx_bg,ny_bg)         !mslp  (mb)
+      real :: htbg_sfc(nx_bg,ny_bg)
+      real :: prbg_sfc(nx_bg,ny_bg)
+      real :: shbg_sfc(nx_bg,ny_bg)       !Specific humidity (kg/kg)
+      real :: uwbg_sfc(nx_bg,ny_bg)
+      real :: vwbg_sfc(nx_bg,ny_bg)
+      real :: tdbg_sfc(nx_bg,ny_bg)
+      real :: tpbg_sfc(nx_bg,ny_bg)
+      real :: t_at_sfc(nx_bg,ny_bg)
+      real :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
 
 c     Local variables for the time being
       real r01(nx_bg,ny_bg)
@@ -90,6 +89,8 @@ c     Local variables for the time being
       character*5     ctype      !either "dprep" or "lapsb" depending on dprep or lga
       character*4     af_bg
       character*2     gproj
+
+      write(6,*)' Subroutine read_bgdata: dims are ',nx_bg,ny_bg,nzbg_ht
 
       call get_r_missing_data(r_missing_data,istatus)
 
@@ -488,7 +489,7 @@ C WNI-BLS
 
       elseif (bgmodel .eq. 13) then ! Process GRIB1/GRIB2
 
-         write(*,*) 'CALL DEGRIB_DATA:'
+         write(*,*) 'CALL DEGRIB_DATA: dims are ',nx_bg, ny_bg, nzbg_ht
          write(*,*) ' grib filename',fullname
 
          call degrib_data(fullname, nx_bg, ny_bg, nzbg_ht, 
@@ -503,7 +504,7 @@ C WNI-BLS
 c        write(*, *) "READBGDATA htbg(3,30,1)", htbg(3,30,1)
 c        write(*, *) "READBGDATA tpbg(3,30,1)", tpbg(3,30,1)
 c        write(*, *) "READBGDATA wwbg(3,30,1)", wwbg(3,30,1)
-         write(*, *) "READBGDATA: shbg_sfc/tdbg_sfc is actually rh?"
+c        write(*, *) "READBGDATA: shbg_sfc/tdbg_sfc is actually rh?"
          write(*, *) "READBGDATA shbg_sfc(3,30)", shbg_sfc(3,30)
          write(*, *) "READBGDATA tdbg_sfc(3,30)", tdbg_sfc(3,30)
 c        do j = 1, nzbg_ht 
