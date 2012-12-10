@@ -1,4 +1,4 @@
-#!/bin/csh        
+#!/bin/csh          
 
 # This script converts model data into FUA/FSF files 
 
@@ -10,17 +10,34 @@ setenv MODEL $2
 
 setenv LAPSINSTALLROOT @prefix@
 
+# Model Delay in hours - if length of string is 9, then explicit YYDDHHMM is being entered
 if ($3 == "") then
     setenv DELAY 3
 else
     setenv DELAY $3
 endif
 
-# Obtain model runtime (on the hour), default is with a 3 hour delay
-setenv YYDDDHHMM `perl @prefix@/etc/sched_sys.pl -d $DELAY -c 3600`              
+if ($MODEL == wrf-hrrr) then
+    setenv CMODEL HRRR
+    setenv MODE_FSF WGRIB
+    setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12'
+else if ($MODEL == nam) then
+    setenv CMODEL NAM
+    setenv MODE_FSF REGRID
+    setenv GRIBINDIR /public/data/grids/nam/A218/grib2 
+    setenv HHTIMES '00 03 06 09 12'                                      
+endif
 
-#setenv YYDDDHHMM `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
-#setenv YYDDDHHMM 122021200 # for testing
+echo "CMODEL is $CMODEL"
+echo "MODE_FSF is $MODE_FSF"
+
+# Obtain model runtime (on the hour), default is with a 3 hour delay
+@ LEN_DELAY = `echo $DELAY | wc -c` - 1
+if ($LEN_DELAY == 9) then
+    setenv YYDDDHHMM $DELAY
+else
+    setenv YYDDDHHMM `perl @prefix@/etc/sched_sys.pl -d $DELAY -c 3600`              
+endif
 
 echo "YYDDDHHMM (model initialization time to process) = $YYDDDHHMM"
 
@@ -46,7 +63,7 @@ if (! -e $NCTEMPLATE) then
     exit
 endif
 
-foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
+foreach HRRRHH ($HHTIMES)                                     
 
     setenv FCSTTIMEHRRR 0000
 
@@ -58,8 +75,6 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
             setenv FHH 00          
         else
             setenv MMTIMES '15 30 45 60'
-#           @ FHH_I = $HRRRHH - 1
-#           setenv FHH 0$FHH_I
         endif
 
     else
@@ -69,14 +84,19 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
             setenv MMTIMES '00'
             setenv FHH 00          
         else
-            setenv MMTIMES '60'
-#           @ FHH_I = $HRRRHH - 1
-#           setenv FHH 0$FHH_I
+            if ($CMODEL == HRRR) then
+                setenv MMTIMES '60'
+            else
+                setenv FHH $HRRRHH
+                setenv MMTIMES '00'
+            endif
         endif
 
     endif
 
     foreach FMM ($MMTIMES)
+
+      if ($MODE_FSF == WGRIB) then
 
         if ($FMM == 60 || $HRRRHH == 00) then
             setenv FHH $HRRRHH
@@ -93,7 +113,7 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
 
         setenv NTABLE 31
 
-        if ($HRRRHH == 00)then
+        if ($HRRRHH == 00) then
             @ REC_LMR = 1
         else
             @ REC_LMR = ((($FMM / 15) - 1) * $NTABLE) + 1
@@ -266,6 +286,9 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
 #       echo "ncatted -O -a Lo1,global,m,f,$LON1 $NCOUT"
 #             ncatted -O -a Lo1,global,m,f,$LON1 $NCOUT
 
+      endif # MODE_FSF (WGRIB method)
+
+      if ($CMODEL == HRRR) then
         if ($FMM == 00 || $FMM == 60) then
             echo " "
             date -u
@@ -303,16 +326,16 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
                     endif
 
                     echo "*** regridding $NCOUT and $NCOUT_FUA (by inputting $OUTDIR_FUA in arg 1) ***"
-                    echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F T T wrf-hrrr $LAPS_DATA_ROOT"
-                          $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F T T wrf-hrrr $LAPS_DATA_ROOT
+                    echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F T T wrf-hrrr $LAPS_DATA_ROOT"
+                          $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F T T wrf-hrrr $LAPS_DATA_ROOT
 
                     ls -l $NCOUT $NCOUT_FUA
 
                 else # MODE_FUA (lfmregrid method - read GRIB file via FORTRAN routines)
 
                     echo "lfmregrid method..."
-                    echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME T F T F F F wrf-hrrr $LAPS_DATA_ROOT"
-                          $LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME T F T F F F wrf-hrrr $LAPS_DATA_ROOT 
+                    echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME T F F F wrf-hrrr $LAPS_DATA_ROOT"
+                          $LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME T F F F wrf-hrrr $LAPS_DATA_ROOT 
 
                 endif # MODE_FUA (WGRIB method)
 
@@ -321,8 +344,8 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
                 echo "WARNING: $GRIB_PRES_IN or $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua is not present"
 
                 echo "*** regridding $NCOUT by inputting $OUTDIR in arg 1) ***"
-                echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F F T wrf-hrrr $LAPS_DATA_ROOT"
-                      $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F F T wrf-hrrr $LAPS_DATA_ROOT
+                echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT"
+                      $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
 
                 ls -l $NCOUT $NCOUT_FUA
 
@@ -335,14 +358,28 @@ foreach HRRRHH (00 01 02 03 04 05 06 07 08 09 10 11 12)
         else # off the hour
 
             echo "*** regridding $NCOUT by inputting $OUTDIR in arg 1) ***"
-            echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F F T wrf-hrrr $LAPS_DATA_ROOT"
-                  $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F T F F F T wrf-hrrr $LAPS_DATA_ROOT
+            echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT"
+                  $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
 
             ls -l $NCOUT $NCOUT_FUA
 
         endif # on the hour
 
-#       exit # for testing
+      else # other model
+        setenv FCSTTIME_IN  00$FHH    
+        setenv FCSTTIME_OUT $FHH$FMM
+
+        echo " "
+        echo "Processing model $CMODEL with input/output forecast time of $FCSTTIME_IN/$FCSTTIME_OUT"
+        echo "lfmregrid method..."
+
+        setenv GRIB_PRES_IN $GRIBINDIR/$YYDDDHHMM$FCSTTIME_IN
+        echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME_OUT T T F F nam $LAPS_DATA_ROOT"
+              $LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME_OUT T T F F nam $LAPS_DATA_ROOT 
+
+      endif # CMODEL = HRRR
+
+#     exit # for testing
 
     end # minute loop
 
