@@ -33,7 +33,7 @@
       integer i4time_anal
       integer bgtime_init
       integer len,lenf,bg_len,ifile
-      integer ihour, n, accepted_files, final_time, lend
+      integer ihour, imin, n, accepted_files, final_time, lend
       integer lentodot,nc
       character*9 bkgd(3500)
       character*4 fcst(3000,120)
@@ -421,17 +421,20 @@ c whereas the second section below is ffff = hhhh.
      +                             .or.cmodel.eq.'HRRR'      
      +                             .or.cmodel.eq.'RRs')then
 
-c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel = 0 need this switch.
+c    +       (cmodel.eq.'LAPS') )then ! all cmodel types with bgmodel = 0 need this switch.
 
                do jj=2,ifcst_bkgd(n)
-                  af=fcst(n,jj-1)(1:2)
-                  read(af,'(i2)',err=888) ihour
-                  valid_time_1=i4timeinit(n)+ihour*3600
-                  af=fcst(n,jj)(1:2)
-                  read(af,'(i2)',err=888) ihour
-                  valid_time_2=i4timeinit(n)+ihour*3600
+                  af=fcst(n,jj-1)
+                  read(af,'(2i2)',err=888) ihour,imin
+                  valid_time_1=i4timeinit(n)+ihour*3600+imin*60
+
+                  af=fcst(n,jj)
+                  read(af,'(2i2)',err=888) ihour,imin
+                  valid_time_2=i4timeinit(n)+ihour*3600+imin*60
+
                   if(valid_time_1.le.i4time_anal.and.
-     +valid_time_2.ge.i4time_anal)then
+     +               valid_time_2.ge.i4time_anal)then
+
                    if(abs(i4timeinit(n)-i4time_anal).lt.i4time_min_diff)
      +             then
                       i4time_min_diff=abs(i4timeinit(n)-i4time_anal)
@@ -443,6 +446,8 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
      1                   , indx_for_best_fcst                
                    print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
                    print*,'Full name 2: ', bkgd(n),fcst(n,jj)
+                   print*,'i4times: fcst1/anal/fcst2',valid_time_1
+     1                                   ,i4time_anal,valid_time_2
                    print*
                   endif
                enddo
