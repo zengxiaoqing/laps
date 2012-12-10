@@ -460,12 +460,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var tpw'
         istatus = -1          
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tpw)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var tpw'
-        istatus = -1          
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tpw)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var tpw'
+          istatus = -1          
+        endif
       endif
 
       write(6,*)' Closing file ',nf_fid,z
