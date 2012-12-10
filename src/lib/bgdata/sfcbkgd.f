@@ -1,6 +1,6 @@
       SUBROUTINE SFCBKGD(bgmodel,t,q,height,tsfc,qsfc_i,
      &                   tdsfc_i,tdsfc_o,ter,p,IMX,JMX,KX,psfc,
-     &                   nx_pr,ny_pr)
+     &                   nx_pr,ny_pr,istatus)
 
 c inputs are from laps analyzed 2- 3d fields
 C     INPUT       t        ANALYZED TEMPERATURE     3D
@@ -36,6 +36,7 @@ c
       INTEGER    KX
       INTEGER    nx_pr,ny_pr,ip,jp
       INTEGER    it, idebug, istatus, ishow_timer
+      INTEGER    istat_qsfc_i, istat_tdsfc_i
       INTEGER    bgmodel
 
       LOGICAL    lfndz
@@ -80,12 +81,23 @@ c
       if(qsfc_i_min .eq. r_missing_data .AND.
      1   qsfc_i_max .eq. r_missing_data       )then
          write(6,*)' NOTE: qsfc_i has missing data values'
+         istat_qsfc_i = 0
+      else
+         istat_qsfc_i = 1
       endif
 
       write(6,*)' tdsfc_i range = ',minval(tdsfc_i),maxval(tdsfc_i)
       if(minval(tdsfc_i) .eq. r_missing_data .AND.
      &   maxval(tdsfc_i) .eq. r_missing_data       )then
          write(6,*)' NOTE: tdsfc_i has missing data values'
+         istat_tdsfc_i = 0
+      else
+         istat_tdsfc_i = 1
+      endif
+
+      if(istat_qsfc_i .eq. 0 .and. istat_tdsfc_i .eq. 0)then
+         write(6,*)
+     1           ' WARNING: both qsfc_i and tdsfc_i have missing values'
       endif
 
       write(6,*)' ter range = ',minval(ter),maxval(ter)
@@ -135,8 +147,8 @@ c
 
                   call compute_sfc_bgfields(bgmodel,imx,jmx,kx,i,j,k
      &                ,ter(i,j),height,t,p,q,t_ref,psfc(i,j),tsfc(i,j)
-     &                ,qsfc_i(i,j),qsfc_i_min,qsfc_i_max
-     &                ,tdsfc_i(i,j)
+     &                ,qsfc_i(i,j),qsfc_i_min,qsfc_i_max,istat_qsfc_i
+     &                ,tdsfc_i(i,j),istat_tdsfc_i
      &                ,tdsfc_o(i,j),idebug,ip,jp,nx_pr,ny_pr)      
 
                   idebug = 0
@@ -148,11 +160,14 @@ c
          enddo
       enddo
       enddo 
+
+      istatus = 1
       
       tdsfc_o_min = minval(tdsfc_o)
       tdsfc_o_max = maxval(tdsfc_o)
       if(tdsfc_o_max .gt. 1000.)then
-          write(6,*)' ERROR: tdsfc is out of bounds'
+          write(6,*)' ERROR: tdsfc_o is out of bounds'
+          istatus = 0
       endif
 
       write(6,*)' tdsfc_o range = ',tdsfc_o_min,tdsfc_o_max
@@ -167,7 +182,8 @@ c
 c----------------------------------------------------------------------------
 c
       subroutine compute_sfc_bgfields(bgm,nx,ny,nz,i,j,k,ter,height
-     &,t,p,q,t_ref,psfc,tsfc,qsfc,qsfc_i_min,qsfc_i_max,tdsfc_i,tdsfc
+     &,t,p,q,t_ref,psfc,tsfc,qsfc,qsfc_i_min,qsfc_i_max,istat_qsfc_i
+     &,tdsfc_i,istat_tdsfc_i,tdsfc
      &,idebug,ip,jp,nx_pr,ny_pr)
 c
 c J. Smart 11/18/99 put existing code in subroutine for other process use in laps
@@ -179,6 +195,7 @@ c
       integer bgm              !I, model type {if = 0, then tdsfc input = qsfc}
       integer nx_pr,ny_pr,ip,jp
       integer istatus, idebug, init_td                          
+      integer istat_qsfc_i,istat_tdsfc_i
       data init_td/0/
       save init_td
 
@@ -219,7 +236,6 @@ c
       p_mb = p(ip,jp,k) / 100.
 
       if(tsfc.lt.500.0.and.t(i,j,k).lt.500.0) then 
-!    .    qsfc.lt.500.0)then
 c
 c first guess psfc without moisture consideration
 c
@@ -229,8 +245,7 @@ c
 
 !         Calculate qsfc_l according to model (bgm=0 for reduced P)
 !         This is used below for virtual temperature and sfc P reduction
-          if(qsfc_i_min .ne. r_missing_data .and. 
-     &       qsfc_i_max .ne. r_missing_data      )then
+          if(istat_qsfc_i .eq. 1)then                  
            if(bgm.eq.0.or.bgm.eq.6.or.
      &        bgm.eq.8.or.bgm.eq.12)then                   ! qsfc is Td
              tsfc_c  = tsfc-273.15
@@ -279,10 +294,13 @@ c
              tdsfc=r_missing_data
            endif
 
-          else ! q is missing, so use td more directly
+          elseif(istat_tdsfc_i .eq. 1)then ! q is missing, so use td more directly
            tsfc_c  = tsfc-273.15
            tdsfc_c = tdsfc_i-273.15
            qsfc_l=ssh2(psfc,tsfc_c,tdsfc_c,t_ref)*.001 ! kg/kg
+
+          else ! both q and td are missing
+           qsfc_l = 0.
 
           endif ! valid range for qsfc_i
 
@@ -343,4 +361,5 @@ c
        endif
 
        return
+ 
        end
