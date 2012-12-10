@@ -663,12 +663,17 @@ c --------------------
 11           format(a)
 !            write(6,*)' test - header path = ',iheader,  
 !    1                 fpathname_a(iheader)             
-             read(22,*,err=98,end=98)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
+             read(22,12,err=98,end=98)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
      1         ,Lat0,Lat1,Lon0
      1         ,cgrddef,cross_dateline,sw,ne
+12           format(3i6,1x,a2,1x,2f11.2,3f11.5,1x,a1,1x,l1,4f11.5)
 
              if(cgrddef .ne. 'N' .and. cgrddef .ne. 'S')then
                  write(6,*)' WARNING: cgrddef is ',cgrddef
+                 write(6,*)' Rest of header is as follows:'
+                 write(6,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
+     1             ,Lat0,Lat1,Lon0
+     1             ,cgrddef,cross_dateline,sw,ne
                  goto 98
              endif
 
@@ -697,7 +702,7 @@ c --------------------
              write(6,*)' Valid DEGRIB_NAV header info has been read in'
              call s_len(fpathname,lenp)
              write(6,11)fpathname(1:lenp)
-             write(6,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
+             write(6,12)nxbg,nybg,nzbg_ht,gproj,dlat,dlon
      1         ,Lat0,Lat1,Lon0
      1         ,cgrddef,cross_dateline,sw,ne
              istatus = 1
@@ -733,10 +738,10 @@ c --------------------
              write( 6,*)nheaders
              write(22,11)fpathname
              write( 6,11)fpathname
-             write(22,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon,Lat0,Lat1,Lon0
-     1       ,cgrddef,cross_dateline,sw,ne
-             write( 6,*)nxbg,nybg,nzbg_ht,gproj,dlat,dlon,Lat0,Lat1,Lon0
-     1       ,cgrddef,cross_dateline,sw,ne
+             write(22,12)nxbg,nybg,nzbg_ht,gproj,dlat,dlon                   
+     1                  ,Lat0,Lat1,Lon0,cgrddef,cross_dateline,sw,ne
+             write( 6,12)nxbg,nybg,nzbg_ht,gproj,dlat,dlon                   
+     1                  ,Lat0,Lat1,Lon0,cgrddef,cross_dateline,sw,ne
              close(22)
 
            endif ! call degrib_nav
