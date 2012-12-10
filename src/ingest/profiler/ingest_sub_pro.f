@@ -90,7 +90,7 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
         character*255 c_filenames(max_files)
 
         integer wsmr_wmo_id
-        data wsmr_wmo_id/74533/
+        data wsmr_wmo_id/0/
         integer error_code
         data error_code/1/
         logical l_in_box
