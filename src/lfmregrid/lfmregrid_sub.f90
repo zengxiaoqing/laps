@@ -1,7 +1,9 @@
 
-subroutine lfmregrid_sub(nx_bg,ny_bg,nzbg,fname_in,NX_L,NY_L,NZ_L,gproj,laps_data_root,mtype,laps_reftime,laps_valtime,l_process_grib,l_process_cdf,l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf)
+subroutine lfmregrid_sub(nx_bg,ny_bg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,fname_in,NX_L,NY_L,NZ_L,gproj,bgmodel,cmodel,laps_data_root,mtype,laps_reftime,laps_valtime,l_process_grib,l_process_cdf,l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf)
 
 use mem_namelist
+use storage_module, ONLY: get_plvls
+integer, parameter :: maxbglvl = 42 
 
 character*256 fname_in, fullname_in, laps_data_root, fname_bg, bgpath
 character*132 cmodel
@@ -25,6 +27,8 @@ character*3 name3d(n3df*NZ_L)
 integer lvls3d(n3df*NZ_L)  ! mb for pressure grid
 
 real pres_1d(NZ_L) ! pa
+real pr1d_pa(NZ_L) ! pa
+real pr1d_mb(NZ_L) ! mb
 
 ! *** Background model grid data.
 !
@@ -41,6 +45,7 @@ real  tdbg(nx_bg,ny_bg,nzbg)   !Dewpoint (K)
 real  uwbg(nx_bg,ny_bg,nzbg)   !U-wind (m/s)
 real  vwbg(nx_bg,ny_bg,nzbg)   !V-wind (m/s)
 real  wwbg(nx_bg,ny_bg,nzbg)   !W-wind (pa/s)
+real plvl_grib(maxbglvl) ! Dimension is maxbglvl in 'degrib_nav' routine
 
 real  mslpbg(nx_bg,ny_bg)         !mslp  (mb)
 real  htbg_sfc(nx_bg,ny_bg)
@@ -60,6 +65,13 @@ real llr(nx_bg,ny_bg)
 real swi(nx_bg,ny_bg)
 real s8a(nx_bg,ny_bg)
 real tpw(nx_bg,ny_bg)
+
+real htvi(nx_bg,ny_bg,NZ_L)
+real tpvi(nx_bg,ny_bg,NZ_L)
+real shvi(nx_bg,ny_bg,NZ_L)
+real uwvi(nx_bg,ny_bg,NZ_L)
+real vwvi(nx_bg,ny_bg,NZ_L)
+real wwvi(nx_bg,ny_bg,NZ_L)
 
 real lat(NX_L,NY_L)         ! LAPS lat
 real lon(NX_L,NY_L)         ! LAPS lon
@@ -83,23 +95,46 @@ real make_ssh, k_to_c
 logical wrapped, l_process_grib, l_process_cdf
 logical     l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf
 
-write(6,*)' Subroutine lfmregrid_sub'
+write(6,*)                              
+write(6,*)' Subroutine lfmregrid_sub...'
+write(6,*)' nx_bg/ny_bg = ',nx_bg,ny_bg
+
+write(6,*)' l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf:', l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf
+
+call get_laps_domain(NX_L,NY_L,'nest7grid' &
+                    ,lat,lon,topo,istatus)
+if (istatus.lt.1)then
+    print *,'Error reading lat, lon, topo data from get_laps_domain'
+    stop
+endif
+
+call get_pres_1d(i4_valtime,NZ_L,pr1d_pa,istatus)
+if(istatus.ne.1)then
+   print*,'Error returned from get_pres_1d'
+   print*,'Check pressures.nl or nk_laps in nest7grid.parms'
+   stop
+endif
+pr1d_mb(:)=pr1d_pa(:)/100.  ! Pa to mb
 
 if(l_process_grib .eqv. .true.)then
-    bgmodel = 13
-    cmodel = 'HRRR'
-    write(6,*)' calling get_bkgd_mdl_info'
-    call get_bkgd_mdl_info(bgmodel,cmodel,fname_in  &
-      ,nx_bg,ny_bg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww &
-      ,gproj,dlat,dlon,centrallat,centrallon,dxbg,dybg &
-      ,Lat0,Lat1,Lon0,sw,ne,cgrddef,istatus)
+!   bgmodel = 13
+!   if(mtype .eq. 'nam')then
+!       cmodel = 'NAM'
+!   else
+!       cmodel = 'HRRR'
+!   endif
+!   write(6,*)' calling get_bkgd_mdl_info for cmodel: ',trim(cmodel)
+!   call get_bkgd_mdl_info(bgmodel,cmodel,fname_in  &
+!     ,nx_bg,ny_bg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww &
+!     ,gproj,dlat,dlon,centrallat,centrallon,dxbg,dybg &
+!     ,Lat0,Lat1,Lon0,sw,ne,cgrddef,istatus)
 
-    if(istatus .eq. 1)then
+    if(.true.)then
         call get_basename(fname_in,fname_bg)
         call get_directory_length(fname_in,lend)
         bgpath=fname_in(1:lend)
         af_bg=fname_bg(10:13)
-        write(6,*)' calling read_bgdata'          
+        write(6,*)' calling read_bgdata: dims are ',nx_bg,ny_bg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww          
         call read_bgdata(nx_bg,ny_bg, &
            nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,'lapsb' &
           ,bgpath,fname_bg,af_bg,fname_in,cmodel,bgmodel &
@@ -108,12 +143,36 @@ if(l_process_grib .eqv. .true.)then
           ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc &
           ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,istatus)
 
+        write(6,*)' returned from read_bgdata'
+
         istatus=ishow_timer()
 
         nx_pr = 1
         ny_pr = 1
 
-        write(6,*)' calling vinterp'              
+        call get_plvls(plvl_grib, 100, nlvl_grib)
+        write(6,*)' grib plvls info: ',nlvl_grib,plvl_grib(1:nlvl_grib)
+        nzbg_ht = 0
+        do k = 1,nlvl_grib
+            if(plvl_grib(k) .lt. 150000)then
+                nzbg_ht = nzbg_ht + 1
+            endif
+        enddo ! k
+
+        write(6,*)' Reset nzbg_ht, etc. to ',nzbg_ht
+
+        nzbg_tp=nzbg_ht
+        nzbg_sh=nzbg_ht
+        nzbg_uv=nzbg_ht
+        nzbg_ww=nzbg_ht
+
+        ixmin = 1
+        ixmax = nx_bg
+        iymin = 1
+        iymax = ny_bg
+
+        nz_laps = NZ_L
+        write(6,*)' calling vinterp: dims are ',nx_bg,ny_bg,nzbg_ht,nz_laps              
         call vinterp(nz_laps,nx_bg,ny_bg,nx_pr,ny_pr &
                ,ixmin,ixmax,iymin,iymax &
                ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww &
@@ -121,14 +180,28 @@ if(l_process_grib .eqv. .true.)then
                ,htbg,tpbg,shbg,uwbg,vwbg,wwbg &
                ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
 
-        print*,'use bilinear_laps_3d for T ',cmodel(1:ic)
+        nx_laps = NX_L
+        ny_laps = NY_L
+
+!       if((l_cdf_fua .eqv. .true.) .OR. (l_grib_fua .eqv. .true.))then
+        if(.false.)then
+
+        write(6,*)' calling init_hinterp'
+        wrapped = .false.
+        bgmodel = 0
+        call init_hinterp(nx_bg,ny_bg,NX_L,NY_L,gproj, &
+                          lat,lon,grx,gry,bgmodel,cmodel,wrapped)
+
+        print*,'use bilinear_laps_3d for T ',trim(cmodel)
         call bilinear_laps_3df(grx,gry,nx_bg,ny_bg &
                               ,nx_laps,ny_laps,nz_laps,tpvi,tp)
 
         istatus=ishow_timer()
-        print*,'use bilinear_laps_3d for Q ',cmodel(1:ic)
+        print*,'use bilinear_laps_3d for Q ',trim(cmodel)
         call bilinear_laps_3df(grx,gry,nx_bg,ny_bg &
                               ,nx_laps,ny_laps,nz_laps,shvi,sh)
+
+        endif
 
         if(istatus .eq. 1)then
             write(6,*)' calling write_lga'            
@@ -145,6 +218,11 @@ endif
 if(l_process_cdf .eqv. .true.)then
 !   fullname_in = trim(fname_in)//'.fsf'
 
+    write(6,*)' Calling read_fuafsf_cdf'
+
+!   Initialize variables
+    tpw = r_missing_data
+
     call read_fuafsf_cdf(fname_in & 
                     ,nx_bg, ny_bg, nzbg &
                     ,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg &
@@ -159,13 +237,10 @@ if(l_process_cdf .eqv. .true.)then
         return
     endif
 
-    call get_laps_domain(NX_L,NY_L,'nest7grid' &
-                        ,lat,lon,topo,istatus)
-    if (istatus.lt.1)then
-        print *,'Error reading lat, lon, topo data from get_laps_domain'
-        stop
-    endif
+endif
 
+! if(l_process_cdf .eqv. .true.)then
+if(.true.)then
     wrapped = .false.
     bgmodel = 0
 
@@ -174,7 +249,7 @@ if(l_process_cdf .eqv. .true.)then
     call init_hinterp(nx_bg,ny_bg,NX_L,NY_L,gproj, &
                   lat,lon,grx,gry,bgmodel,cmodel,wrapped)
 
-    if(l_cdf_fua .eqv. .true.)then
+    if((l_grib_fua .eqv. .true.) .OR. (l_cdf_fua .eqv. .true.))then
         call get_pres_1d(i4_valtime,NZ_L,pres_1d,istatus)
         lz = NZ_L
         ct=1
@@ -184,8 +259,9 @@ if(l_process_cdf .eqv. .true.)then
                               ,NX_L,NY_L,NZ_L,tpbg,pgrid(1,1,ct))
         name3d(ct:ct+lz-1)='T3 '; com3d(ct:ct+lz-1)='Temperature'; lvls3d(ct:ct+lz-1)=nint(pres_1d(lz:1:-1)/100.); ct=ct+lz   
 
-!       Convert sh from dpt into actual sh
-        do k = 1,NZ_L
+        if(trim(cmodel) .eq. 'HRRR')then
+!         Convert sh from dpt into actual sh
+          do k = 1,NZ_L
             p_mb = pres_1d(k) / 100.
             do i = 1,nx_bg
             do j = 1,ny_bg
@@ -195,7 +271,8 @@ if(l_process_cdf .eqv. .true.)then
                 if(i .eq. 1 .and. j .eq. 1)write(6,*)' sh_orig,tamb_c,sh: ',sh_orig,tamb_c,shbg(i,j,k)
             enddo ! j 
             enddo ! i
-        enddo ! k
+          enddo ! k
+        endif
 
         print*,'use bilinear_laps_3df for SH starting at pgrid level',ct                        
         write(6,*)shbg(1,1,:)
@@ -203,6 +280,9 @@ if(l_process_cdf .eqv. .true.)then
                               ,NX_L,NY_L,NZ_L,shbg,pgrid(1,1,ct))
         write(6,*)pgrid(1,1,ct:ct+lz-1)
         name3d(ct:ct+lz-1)='SH '; com3d(ct:ct+lz-1)='Specific Humidity'; lvls3d(ct:ct+lz-1)=nint(pres_1d(lz:1:-1)/100.); ct=ct+lz   
+
+    else
+        write(6,*)' Skip 3D interpolation - FUA processing set to FALSE'
 
     endif
 
@@ -335,7 +415,7 @@ if(l_process_cdf .eqv. .true.)then
     write(6,*)' pgrid is ',pgrid(1,1,:) 
     call output_laps_rg(laps_data_root,mtype,domnum_in,laps_reftime,laps_valtime,pgrid,sgrid,name2d,name3d,com2d,com3d,lvls3d,n2df,n3df,pres_1d,NX_L,NY_L,NZ_L)
 
-endif ! l_process_cdf
+endif ! .true. (formerly l_process_cdf)
 
 write(6,*)' End of lfmregrid_sub'
 
