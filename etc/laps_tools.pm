@@ -307,8 +307,9 @@ sub mkdatadirs{
 lf1  lh3 lh4 lhe lil liw lm1 lm2 lmd lmr lmt 
 lpbl lps lq3 lrp lrs lso bufr lsx lt1 lty cty pty lfr
 lvd
-lvd/goes08 lvd/goes09 lvd/goes10 lvd/goes11
-lvd/goes12 lvd/meteos lvd/gmssat lvd/noaapo lvd/mtsat
+lvd/goes08 lvd/goes09 lvd/goes10 lvd/goes11 lvd/goes12 lvd/goes13 
+lvd/goeswe lvd/goesea 
+lvd/meteos lvd/gmssat lvd/noaapo lvd/mtsat lvd/fy
 lw3 lwc lwm ctp msg pig pin prg pro sag vrc vrz snd 
 v01 v02 v03 v04 v05 v06 v07 v08 v09 v10 v11 v12 
 v13 v14 v15 v16 v17 v18 v19 v20 v21 v22 v23 v24
@@ -368,6 +369,9 @@ verif/SSF verif/SSF/pt verif/SSF/pt/comp verif/SSF/pt/comp2
 verif/WSF verif/WSF/pt verif/WSF/pt/comp verif/WSF/pt/comp2
 verif/TPW verif/TPW/pt verif/TPW/pt/comp verif/TPW/pt/comp2
 verif/R01 verif/R01/pt verif/R01/pt/comp verif/R01/pt/comp2
+verif/R03 verif/R03/pt verif/R03/pt/comp verif/R03/pt/comp2
+verif/R06 verif/R06/pt verif/R06/pt/comp verif/R06/pt/comp2
+verif/R24 verif/R24/pt verif/R24/pt/comp verif/R24/pt/comp2
 verif/RTO verif/RTO/pt verif/RTO/pt/comp verif/RTO/pt/comp2
 verif/U3  verif/U3/pt verif/U3/pt/comp verif/U3/pt/comp2
 verif/V3  verif/V3/pt verif/V3/pt/comp verif/V3/pt/comp2
