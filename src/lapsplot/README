@@ -30,3 +30,5 @@ driver                                            lapsplot_main.f
             write_label_lplot                     hsect.f
             label_other_stations                  xsect.f
         plot_sounding                             plot_sounding.f
+            integrate_slwc                        lib/get_cloud_deriv.f
+            integrate_tpw                           "
