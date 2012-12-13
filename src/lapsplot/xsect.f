@@ -2806,13 +2806,21 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                        ,r_missing_data)      
 
                 call directory_to_cmodel(directory,c_model)
-                call mk_fcst_xlabel('RH',fcst_hhmm
-     1                              ,ext(1:3),'%',c_model,c_label)       
 
                 call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
      1                          ,istatus)
 
-                t_ref = -192.
+                if(c_field(1:2) .eq. 'rh')then
+                    t_ref = -10. 
+                    call mk_fcst_xlabel('RH (tref = -10C)',fcst_hhmm
+     1                              ,ext(1:3),'%',c_model,c_label)       
+                elseif(c_field(1:2) .eq. 'rl')then
+                    t_ref = -192.
+                    call mk_fcst_xlabel('RH (liq)',fcst_hhmm
+     1                              ,ext(1:3),'%',c_model,c_label)       
+                endif
+
+                write(6,*)' t_ref = ',t_ref
 
                 do i = 1,NX_L
                 do j = 1,NY_L
