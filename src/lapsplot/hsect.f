@@ -493,6 +493,7 @@ c       include 'satellite_dims_lvd.inc'
         plot_parms%color_power = 1.
 
         if(c_type(1:2) .eq. 'fc')then ! force config with new dataroot
+            write(6,*)' Time is: ',asc9_tim
             write(6,*)' Enter new dataroot:'
             read(lun,17)new_dataroot
  17         format(a)
@@ -517,6 +518,7 @@ c       include 'satellite_dims_lvd.inc'
 
             if(c_type(1:2) .eq. 'di')then
               write(6,*)' Plotting difference field of last two entries' 
+     1                 ,asc9_tim
               call diff_miss(field_2d,field_2d_buf,field_2d_diff
      1                                            ,NX_L,NY_L)       
 
@@ -5002,7 +5004,7 @@ c                   cint = -1.
 !           cint = 0.25
             scale = 1e-2
 
-!           call make_fnam_lp(i4time_pw,asc9_tim,istatus)
+            call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
      1                           ,zoom,density,scale)       
