@@ -1,15 +1,13 @@
  &background_nl
- bgpaths='/public/data/fsl/13kmruc/ruc_presm/grib/',
-'/public/data/fsl/13kmruc/ruc_presm20/grib/',
-'/public/data/grids/nam/A212/grib2/',
+ bgpaths='/public/data/grids/rap/iso_130/grib2/',
+'/public/data/grids/nam/A218/grib2/',
 '/public/data/grids/gfs/0p5deg/grib',
 '/public/data/gsd/fim/nat/grib1',
-'/public/data/grids/rr/hyb_A236/netcdf',
- bgmodels=13,13,13,13,13,5,
+ bgmodels=13,13,13,13
  forecast_length=12,
  use_analysis=.false.,
  use_forecast=.true.,
- cmodel='RUC','RUC','NAM','GFS','FIM','RUC40_NATIVE',
+ cmodel='RR','NAM','GFS','FIM',
  itime_inc =0,
  smooth_fields = .false.,
  luse_sfc_bkgd = .false.,
@@ -76,6 +74,11 @@ c                     have a raw WRF file with an exact match of the lga backgro
 c                     time needed, it returns to the main lga program with a 0
 c                     status to force lga to look for the next bgmodel source in your
 c                     background.nl list. 
+c 
+c                     Note that for WRF version 3 NetCDF input it is best to use 
+c                     the LFMPOST program to make FUA and FSF files instead of 
+c                     running the LGA program.
+c
 c        bgmodels = 12 ---> ECMWF - two options available as listed below:
 c                           ESRL_NETCDF_LL---> global  area netCDF file from ESRL ITS. (Not tested 6-07)
 c                           FMI_NETCDF_LL ---> limited area netCDF file with ECMWF data 
