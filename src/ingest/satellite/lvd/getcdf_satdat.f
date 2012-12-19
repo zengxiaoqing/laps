@@ -203,13 +203,13 @@ C Use namelist parameter for this time offset
         if(i4time_now-i4time_in .lt. 2*laps_cycle_time)then ! real-time
 c          if(c_fname_in(8:8).eq.'0')then
             print*
-            if(c_sat_type.eq.'rll')then ! global satellites can have latency
-                write(6,*)'Adjusting I4time_In (for rll data) by ',3600
-                i4time_in = i4time_in-3600         
-            else
-                write(6,*)'Adjusting I4time_In by ',i_delta_t
+!           if(c_sat_type.eq.'rll')then ! global satellites can have latency
+!               write(6,*)'Adjusting I4time_In (for rll data) by ',3600
+!               i4time_in = i4time_in-3600         
+!           else
+                write(6,*)'Adjusting I4time_In by i_delta_t ',i_delta_t       
                 i4time_in = i4time_in-i_delta_t
-            endif
+!           endif
             call make_fnam_lp (i4time_in, c_fname_in, i4status)
             if(i4status.ne.1)then
                write(6,*)'Error converting i4time_in to new c_fname_in'
