@@ -56,6 +56,9 @@ c
       character csattype*(*)
       character chtype*(*)
       character csatid*(*)
+
+      write(6,*)'Enter set_missing_sat: ',csattype
+
 c
 c note that this quality control step is performed with satellite counts
 c both ir and vis.
@@ -86,9 +89,15 @@ c        rhigh=255.
          endif
       endif
 
-      if(csattype.eq.'rll')then
-         rhigh = 5000.
-         rlow  = 1631.
+      if(csattype.eq.'rll')then ! Bad range thresholds
+         if(csatid .ne. 'meteos')then
+             rhigh = 5000.
+             rlow  = 1631.
+         else
+             rhigh = 50000.
+             rlow  = 16310.
+         endif
+         write(6,*)' Range testing thresholds set to ',rlow,rhigh
       endif
 
       istat_status=0
