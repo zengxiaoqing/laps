@@ -98,6 +98,8 @@
         integer nsuccess_m(maxbgmodels)
         integer nincomplete_m(maxbgmodels)
         integer incomplete_run_m(maxbgmodels)
+        integer n_plot_times_m(maxbgmodels,0:max_fcst_times,n_fields)       
+        integer i_plot_times_m(maxbgmodels,0:max_fcst_times,n_fields)       
 
        write(6,*)
        write(6,*)' Start subroutine verif_fcst_pt_composite...'
@@ -121,6 +123,9 @@
 
         write(6,*)' Time is ',i4time_sys,a9time
         write(6,*)' n_plot_times ',n_plot_times
+
+        n_plot_times_m(:,:,:) = 1
+        i_plot_times_m(:,:,:) = 0
 
         i4_initial = i4time_sys
 
@@ -160,6 +165,62 @@
          write(6,*)' n_fdda_models = ',n_fdda_models
          write(6,*)' c_fdda_mdl_src = '
      1             ,(c_fdda_mdl_src(m),m=1,n_fdda_models)
+
+!        Update array of n_plot_times_m for available model exceptions
+         do imodel = 2,n_fdda_models
+             if(var_a(ifield) .eq. 'RTO')then
+                 n_plot_times_m(imodel,0:max_fcst_times,ifield) = 0       
+
+                 itime_exception  = 3600 / model_verif_intvl
+                 if(itime_exception .le. max_fcst_times)then
+                     n_plot_times_m(imodel,itime_exception,ifield) = 1
+                 endif
+
+                 itime_exception = 10800 / model_verif_intvl
+                 if(itime_exception .le. max_fcst_times)then
+                     n_plot_times_m(imodel,itime_exception,ifield) = 1
+                 endif
+
+                 itime_exception = 43200 / model_verif_intvl
+                 if(itime_exception .le. max_fcst_times)then
+                     n_plot_times_m(imodel,itime_exception,ifield) = 1
+                 endif
+
+                 itime_exception = 86400 / model_verif_intvl
+                 if(itime_exception .le. max_fcst_times)then
+                     n_plot_times_m(imodel,itime_exception,ifield) = 1
+                 endif
+             endif ! RTO field    
+
+!            Accept just 3-hourly forecasts from the NAM model
+             if(trim(c_fdda_mdl_src(imodel)) .eq. 'nam')then 
+                 nam_fcst_intvl = 10800                           
+                 do itime_fcst = 0,n_fcst_times
+                     i4_fcst = itime_fcst*model_verif_intvl      
+                     if(i4_fcst .ne. 
+     1                 (i4_fcst/nam_fcst_intvl)*nam_fcst_intvl)then
+                         n_plot_times_m(imodel,itime_fcst,ifield) = 0
+                     endif
+                 enddo
+             endif ! NAM model
+
+!            Accept just 1-hourly 3D/FUA fcsts from the HRRR model
+             if(trim(c_fdda_mdl_src(imodel)) .eq. 'wrf-hrrr' .AND.
+     1          (var_a(ifield) .eq. 'TPW' .or. 
+     1           var_a(ifield) .eq. 'T3'  .or. 
+     1           var_a(ifield) .eq. 'W3'       ) 
+     1                                                             )then
+                 mdl_fcst_intvl = 3600                            
+                 do itime_fcst = 0,n_fcst_times
+                     i4_fcst = itime_fcst*model_verif_intvl      
+                     if(i4_fcst .ne. 
+     1                 (i4_fcst/mdl_fcst_intvl)*mdl_fcst_intvl)then
+                         n_plot_times_m(imodel,itime_fcst,ifield) = 0
+                     endif
+                 enddo
+             endif ! NAM model
+
+         enddo ! imodel
 
          call get_directory('verif',verif_dir,len_verif)
 
@@ -342,27 +403,35 @@
                    else ! valid data
                      n(imodel,itime_fcst,iregion) = 1 ! nobs
                      i_good_timestep_model = 1
+                     i_plot_times_m(imodel,itime_fcst,ifield) = 1       
                    endif
 
-!                  Flag as incomplete if missing during the first 12 hours
-                   if(i_good_timestep_model .eq. 0)then
+!                  Flag as incomplete if missing during expected time     
+                   if(i_good_timestep_model .eq. 0 .AND.
+     1                n_plot_times_m(imodel,itime_fcst,ifield) .eq. 1 
+     1                                                   )then
                      if(incomplete_run .eq. 0     .AND. 
      1                  itime_fcst .le. n_plot_times)then
-                       write(6,916)init,itime_fcst,a9time_initial,imodel
+                       write(6,916)init,a9time_initial,itime_fcst,imodel
 916                    format(
-     1                 ' WARNING: missing N values for init/time/model '
-     1                        ,2i6,1x,a9,1x,i6)                      
+     1                 ' WARNING: overall missing for init/time/model  '
+     1                        ,i6,1x,a9,1x,i6,i6)                      
                        incomplete_run = 1 
                      endif
 
                      if(incomplete_run_m(imodel) .eq. 0     .AND. 
      1                  itime_fcst .le. n_plot_times)then
+                       write(6,917)init,a9time_initial,itime_fcst,imodel
+917                    format(
+     1                 ' WARNING: missing N values for init/time/model '
+     1                        ,i6,1x,a9,1x,i6,i6)                      
                        incomplete_run_m(imodel) = 1
                      endif
 
-                   endif ! i_good_timestep_model = 0
+                   endif ! i_good_timestep_model = 0 .AND.
+                         ! expect output from model at this time
 
-                 enddo ! im
+                 enddo ! imodel
                enddo ! itime_fcst
 
 !              Read members.txt file
@@ -503,14 +572,13 @@
              endif
          enddo 
 
-         if(nruns_plotted .ge. 2)then
-             l_plot_criteria = .true.
-         else
+         if(nsuccess .lt. nsuccess_thr)then
              l_plot_criteria = .false.
+         else
+             l_plot_criteria = .true.
          endif
 
-         write(6,*)'nruns_plotted / l_plot_criteria = ',nruns_plotted
-     1                                                 ,l_plot_criteria
+         write(6,*)'l_plot_criteria = ',l_plot_criteria
 
 !        Define and write to summary*.txt file
          summary_file_out = verif_dir(1:len_verif)//var_2d(1:lenvar)
