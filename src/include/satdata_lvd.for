@@ -1,12 +1,15 @@
-      C_SAT_ID(1)='goes08'
-      C_SAT_ID(2)='meteos'
-      C_SAT_ID(3)='goes10'
-      C_SAT_ID(4)='gmssat'
-      C_SAT_ID(5)='goes12'
-      C_SAT_ID(6)='goes09'
-      C_SAT_ID(7)='goes11'
-      C_SAT_ID(8)='noaapo'
-      C_SAT_ID(9)='mtsat'
+!     C_SAT_ID(1)='goes08'
+!     C_SAT_ID(2)='meteos'
+!     C_SAT_ID(3)='goes10'
+!     C_SAT_ID(4)='gmssat'
+!     C_SAT_ID(5)='goes12'
+!     C_SAT_ID(6)='goes09'
+!     C_SAT_ID(7)='goes11'
+!     C_SAT_ID(8)='noaapo'
+!     C_SAT_ID(9)='mtsat'
+!     C_SAT_ID(10)='fy'
+!     C_SAT_ID(11)='goeswe'
+!     C_SAT_ID(12)='goesea'
 
       C_SAT_TYPES = '   '
       C_CHANNEL_TYPES = '   '
@@ -619,7 +622,7 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_IR(1,2)=2003
       N_PIXELS_IR(2,2)=510
       N_PIXELS_IR(3,2)=0
-      N_PIXELS_IR(4,2)=1280
+      N_PIXELS_IR(4,2)=1237
       N_PIXELS_IR(1,3)=2003
       N_PIXELS_IR(2:4,3)=0
       N_PIXELS_IR(1:4,4)=0
@@ -627,6 +630,7 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_IR(2:4,5)=0
       N_PIXELS_IR(1:4,6)=0
       N_PIXELS_IR(1:4,9)=1375
+      N_PIXELS_IR(1:4,10)=1140
       N_LINES_IR(1,1)=823
       N_LINES_IR(2,1)=511
       N_LINES_IR(3,1)=897
@@ -634,7 +638,7 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_IR(1,2)=986
       N_LINES_IR(2,2)=509
       N_LINES_IR(3,2)=0
-      N_LINES_IR(4,2)=832
+      N_LINES_IR(4,2)=1237
       N_LINES_IR(1,3)=986
       N_LINES_IR(2:4,3)=0
       N_LINES_IR(1:4,4)=0
@@ -642,6 +646,7 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_IR(2:4,5)=0
       N_LINES_IR(1:4,6)=0
       N_LINES_IR(1:4,9)=1375
+      N_LINES_IR(1:4,10)=1140
       N_PIXELS_WV(1,1)=2000
       N_PIXELS_WV(2,1)=256
       N_PIXELS_WV(3,1)=1201
