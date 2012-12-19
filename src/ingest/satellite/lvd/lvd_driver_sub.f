@@ -152,6 +152,7 @@ c
       real      r_missing_data,rmin,rmax
       real      radtodeg
       real      rcal
+      real      scale
 
       logical   lvis_flag
       logical   lsatqc
@@ -284,16 +285,24 @@ c ---------------------------------------------
 c --------------------------------------------------------------------
 c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
-      if(csattype .eq. 'rll')then
+      if(csattype .eq. 'rll')then ! Java NetCDF files now use this type
            print *,' Read lat/lon arrays to regenerate gri/grj'
-           print *,' Set i/j start/end'                                 
+           print *,' Set i/j start/end for: ',jtype,ksat,
+     1               i_end_ir(jtype,ksat),j_end_ir(jtype,ksat)
 !          gri = 100.
 !          grj = 50.                               
 
-           i_start_ir(jtype,ksat) =  1                             
-           i_end_ir(jtype,ksat)   =  1375                             
-           j_start_ir(jtype,ksat) =  1                             
-           j_end_ir(jtype,ksat)   =  1375                             
+!          if(csatid .eq. 'mtsat')then
+!              i_start_ir(jtype,ksat) =  1                             
+!              i_end_ir(jtype,ksat)   =  1375                             
+!              j_start_ir(jtype,ksat) =  1                             
+!              j_end_ir(jtype,ksat)   =  1375                             
+!          elseif(csatid .eq. 'fy')then
+               i_start_ir(jtype,ksat) =  1                             
+               i_end_ir(jtype,ksat)   =  n_pixels_ir(jtype,ksat)
+               j_start_ir(jtype,ksat) =  1                             
+               j_end_ir(jtype,ksat)   =  n_lines_ir(jtype,ksat)                             
+!          endif
 
       elseif(csatid.ne.'gmssat'.or.csattype.eq.'twn'.or.
      &   csattype.eq.'hko')then
@@ -848,23 +857,32 @@ c
 c note that brightness temps in the ascii file have 1 significant
 c decimal digit and have been acquired as integers so convert here.
 c 
-          write(6,*)'Convert btemps from Integer to Floating pt.'
+          if(csatid.eq.'meteos')then
+              scale = 100.
+          else
+              scale = 10.
+          endif
+
+          write(6,*)
+     1       'Convert btemps from Integer to Floating pt., scaled by '
+     1        ,scale      
+
           do i = 1,nft
           do j = 1,ntm(i)
 
              call lvd_file_specifier(c_type(j,i),ispec,istat)
              if(ispec.eq.2)then
                 call btemp_convert_asc(n_ir_lines,n_ir_elem,
-     &               r_missing_data,image_39(1,1,i),istatus)
+     &               r_missing_data,image_39(1,1,i),scale,istatus)
              elseif(ispec.eq.3)then
                 call btemp_convert_asc(n_wv_lines,n_wv_elem,
-     &               r_missing_data,image_67(1,1,i),istatus)
+     &               r_missing_data,image_67(1,1,i),scale,istatus)
              elseif(ispec.eq.4)then
                 call btemp_convert_asc(n_ir_lines,n_ir_elem,
-     &               r_missing_data,image_ir(1,1,i),istatus)
+     &               r_missing_data,image_ir(1,1,i),scale,istatus)
              elseif(ispec.eq.5)then
                 call btemp_convert_asc(n_ir_lines,n_ir_elem,
-     &               r_missing_data,image_12(1,1,i),istatus)
+     &               r_missing_data,image_12(1,1,i),scale,istatus)
              endif
 
           enddo
