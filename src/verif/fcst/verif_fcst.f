@@ -158,6 +158,7 @@
 
         real var_anal_2d(ni,nj)
         real var_fcst_2d(ni,nj)
+        real var_fcst_2d_prev(ni,nj)
         real var_prst_2d(ni,nj)
         real u_fcst_2d(ni,nj)
         real v_fcst_2d(ni,nj)
@@ -191,14 +192,14 @@
 
         character*10  units_2d
         character*125 comment_2d
-        character*3 var_2d,var_2d_wind
+        character*3 var_2d,var_2d_rto,var_2d_wind
         character*9 a9time,a9time_valid,a9time_init
 !       character*24 atime_s
         character*150 hist_dir, cont_dir, verif_dir
         character*150 hist_file
 
         integer n_fields
-        parameter (n_fields=10)
+        parameter (n_fields=13)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
         integer ipersist_a(n_fields) ! persistence flag for each field              
@@ -206,12 +207,14 @@
 
 !       Specify what is being verified
         data ext_fcst_a 
-     1     /'fsf','fsf','fsf','fsf','fsf','fsf','   ','fsf','fsf','fsf'/ ! 2-D
+     1     /'fsf','fsf','fsf','fsf','fsf','fsf','   ','fsf','fsf','fsf',
+     1      'fsf','fsf','fsf'/ ! 2-D
 !       data ext_anal_a /'lps'/ ! 3-D reflectivity
         data var_a      
-     1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF','TPW','R01','RTO'/
+     1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF','TPW','R01','RTO',
+     1      'R03','R06','R24'/
       
-        data ipersist_a /0,0,0,0,0,0,0,1,0,0/        
+        data ipersist_a /0,0,0,0,0,0,0,1,0,0,0,0,0/        
 
         real rms_a (n_fields,maxbgmodels,0:max_fcst_times)
 
@@ -337,7 +340,7 @@
 
           call get_directory('verif',verif_dir,len_verif)
 
-          if(trim(var_2d) .eq. 'R01' .OR. trim(var_2d) .eq. 'RTO')then      
+          if(var_2d(1:2) .eq. 'R0' .OR. var_2d(1:2) .eq. 'R2')then      
               istart = 1
           else
               istart = 0
@@ -539,7 +542,7 @@
                       var_s(i) = r_missing_data
                     endif
                   enddo ! i
-                elseif(trim(var_2d) .eq. 'R01')then
+                elseif(trim(var_2d) .eq. 'R01_old')then
                   threshval = -99.9
                   if(model_verif_intvl .eq. 3600)then
                       var_s = pcp1
@@ -565,10 +568,78 @@
                   else
                       var_s = r_missing_data  
                   endif
+                elseif(trim(var_2d) .eq. 'R01')then
+                  threshval = -99.9
+                  var_s = pcp1
+                elseif(trim(var_2d) .eq. 'R03')then
+                  threshval = -99.9
+                  var_s = pcp3
+                elseif(trim(var_2d) .eq. 'R06')then
+                  threshval = -99.9
+                  var_s = pcp6
+                elseif(trim(var_2d) .eq. 'R24')then
+                  threshval = -99.9
+                  var_s = pcp24
                 endif
 
+!               Read forecast field
                 if(c_fdda_mdl_src(imodel) .ne. 'persistence')then
-                 if(trim(var_2d) .ne. 'SSF')then
+                 if(trim(var_2d) .eq. 'R01'  .OR.
+     1              trim(var_2d) .eq. 'R03'  .OR.    
+     1              trim(var_2d) .eq. 'R06'  .OR.    
+     1              trim(var_2d) .eq. 'R24'       )then
+
+                    if(trim(var_2d) .eq. 'R01')i4_acc =  3600
+                    if(trim(var_2d) .eq. 'R03')i4_acc = 10800
+                    if(trim(var_2d) .eq. 'R06')i4_acc = 21600
+                    if(trim(var_2d) .eq. 'R24')i4_acc = 86400
+
+                    if(i4_initial .eq. (i4_initial/i4_acc)*i4_acc)then
+                      if(i4_valid .eq. (i4_valid/i4_acc)*i4_acc)then
+                        var_2d_rto = 'RTO'
+                        call get_directory(ext,directory,len_dir)
+                        DIRECTORY=
+     1                  directory(1:len_dir)//c_model(1:len_model)//'/'
+
+                        call get_lapsdata_2d(i4_initial,i4_valid
+     1                          ,directory,var_2d_rto
+     1                          ,units_2d,comment_2d
+     1                          ,ni,nj
+     1                          ,var_fcst_2d
+     1                          ,istatus)
+
+                        if(istatus .ne. 1)then
+                          write(6,*)' Error reading 2D Forecast for '
+     1                           ,var_2d
+                          goto 990
+                        endif
+
+                        call get_lapsdata_2d(i4_initial,i4_valid-i4_acc
+     1                          ,directory,var_2d_rto
+     1                          ,units_2d,comment_2d
+     1                          ,ni,nj
+     1                          ,var_fcst_2d_prev
+     1                          ,istatus)
+
+                        if(istatus .ne. 1)then
+                          write(6,*)
+     1                    ' Error reading 2D Prev Forecast for ',var_2d
+                          goto 990
+                        endif
+
+                        write(6,*)
+     1                    ' Subtracting precip totals over interval'
+                        var_fcst_2d = var_fcst_2d - var_fcst_2d_prev
+
+                      else
+                        goto 990
+                      endif ! useable valid time
+
+                    else
+                      goto 990
+                    endif ! useable initial time
+
+                 elseif(trim(var_2d) .ne. 'SSF')then
 
                   write(6,*)' Reading forecast field ',atime_s
 
@@ -700,7 +771,7 @@
                   enddo ! j
                   enddo ! i
 
-                 endif ! .true. (SSF test)
+                 endif ! Variable of interest (precip,ssf,generic)
 
                 elseif(l_good_persist .eqv. .true.)then
                     write(6,*)' Setting forecast to persistence ',var_2d
@@ -944,7 +1015,8 @@
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
-                elseif(trim(var_2d) .eq. 'R01')then
+                elseif(var_2d(1:2) .eq. 'R0' .OR. 
+     1                 var_2d(1:2) .eq. 'R2'      )then      
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Incremental Precip'             
      1                   ,a_t,b_t,xbar,ybar
