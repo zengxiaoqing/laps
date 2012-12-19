@@ -47,6 +47,8 @@ c =====================================================
 c
 c get r_missing_data from nest7grid.parms
 c
+      write(6,*)'Enter set_missing_flag: ',csatid,' ',csat_type
+
       call get_r_missing_data(r_missing_data, istatus)
       if(istatus.ne.1)goto 900
 
@@ -60,6 +62,10 @@ c
       do i=1,nft
          do j=1,ntm(i)
             call lvd_file_specifier(c_type(j,i),ispec,istat)
+
+            if(ispec .ne. 0)then
+              write(6,*)'set_missing_flag - ispec is: ',ispec     
+            endif
 
             if(ispec.eq.4)then
                call move(image_ir(1,1,i),image_data_ir,
@@ -82,8 +88,6 @@ c
      &                      nvis_elem,nvis_lines)
                rmsng=smsng(ispec)
             endif
-
-            write(6,*)'Enter set missing sat: ',c_type(j,i)
 
             if(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
 
