@@ -605,23 +605,23 @@ c
 
 !     Determine satellite types with help of 'satdata_lvd_table'
       ITYPES=0
-      jj=0
+!     jj=0
       do i=1,nsats
         do js = 1,maxsat
           if(trim(csatid(i)).eq.trim(satellite_ids(js)))then
             write(6,*)' Match csatid/satellite_ids/ntypes'
      1                                  ,i,js,ntypes(i),csatid(i)
             do j=1,ntypes(i)
-              jj=jj+1
+!             jj=jj+1
               do it = 1,4
-                if(csattypes(jj).eq.satellite_types(it,js))then !raw lat-lon > could be (likely is) netcdf format
+                if(csattypes(j).eq.satellite_types(it,js))then !raw lat-lon > could be (likely is) netcdf format
                   write(6,*)' Match csattypes/satellite_types     '
-     1                                              ,jj,it,csattypes(jj)
+     1                                              ,j,it,csattypes(j)
                   ITYPES(it,js)=1
-                  c_sat_types(it,js)=csattypes(jj)
+                  c_sat_types(it,js)=csattypes(j)
                 else
                   write(6,*)' No match csattypes/satellite_types  '
-     1                ,jj,it,csattypes(jj),' ',satellite_types(it,js)
+     1                ,j,it,csattypes(j),' ',satellite_types(it,js)
                 endif
               enddo ! it
             enddo ! j
@@ -772,7 +772,7 @@ c format type 4 (raw lat lon)
          endif
         enddo !type for this sat -> end of types for goes08
 
-       elseif(csatid(i).eq.'meteos')then
+       elseif(csatid(i).eq.'meteos_null')then
 c
 c meteos    #goes09 --- 5-12-99 J. Smart changed to AFWA METEOSAT
          
@@ -1412,36 +1412,53 @@ c format type 4 (rll)
          endif
         enddo
 
-c satellite = MTSAT
-       elseif(csatid(i).eq.'mtsat')then
-        is = 9
-        do j=1,ntypes(i)
-         jj=jj+1
+       else ! more general formulation for channels
+
 c format type 1 (ncp): netcdf polar (FMI's data type). Stored like wfo
-         if(csattypes(jj).eq.'rll')then
 c format type 4 (rll)
-          it = 4
-          do k=1,nchannel(jj)
-           kk=kk+1
-           if(cchanneltypes(kk).eq.'vis')then
-            ICHANNELS(1,it,is)=1
-            c_channel_types(1,it,is)=cchanneltypes(kk)
-            i_msng_sat_flag(1,it,is)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'4u ')then
-            ICHANNELS(2,it,is)=1
-            c_channel_types(2,it,is)=cchanneltypes(kk)
-            i_msng_sat_flag(2,it,is)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'10p')then
-            ICHANNELS(4,it,is)=1
-            c_channel_types(4,it,is)=cchanneltypes(kk)
-            i_msng_sat_flag(4,it,is)=i_qc_sat_flag(kk)
-           endif
-          enddo
-          path_to_raw_sat(1:6,it,is)=cpath2sat(jj)
-         endif
-        enddo
-       endif
-      enddo
+
+        do js = 1,maxsat
+
+         if(js .eq. 2 .OR. js .ge. 9)then
+
+          if(trim(csatid(i)).eq.trim(satellite_ids(js)))then
+
+           do j=1,ntypes(i)
+
+            do it = 1,4
+
+             if(csattypes(j).eq.satellite_types(it,js))then
+
+              do k=1,nchannel(j)
+                kk=kk+1
+
+                ic=0
+                if(cchanneltypes(k).eq.'vis')then
+                  ic=1
+                elseif(cchanneltypes(k).eq.'4u ')then
+                  ic=2
+                elseif(cchanneltypes(k).eq.'10p')then
+                  ic=4
+                endif
+
+                if(ic .gt. 0)then
+                  ICHANNELS(ic,it,js)=1
+                  c_channel_types(ic,it,js)=cchanneltypes(k)
+                  i_msng_sat_flag(ic,it,js)=i_qc_sat_flag(k)
+                endif ! valid ic found
+
+              enddo ! k
+
+              path_to_raw_sat(1:6,it,js)=cpath2sat(j)
+
+             endif ! match of sat types
+            enddo ! it = 1,4
+           enddo ! j = 1,ntypes
+          endif ! test of csatid (specific test)
+         endif ! range of satellite numbers (js) using simplified loop
+        enddo ! js
+       endif ! test of csatid (9 or greater)
+      enddo ! i = 1,nsats
       print*,'Done in conf_isjtkc. Returning to config_satellite_lvd'
       return
       end
