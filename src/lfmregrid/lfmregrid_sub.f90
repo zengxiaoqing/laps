@@ -141,7 +141,7 @@ if(l_process_grib .eqv. .true.)then
           ,prbght,prbgsh,prbguv,prbgww &
           ,htbg, tpbg,uwbg,vwbg,shbg,wwbg &
           ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc &
-          ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,istatus)
+          ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,lmr,istatus)
 
         write(6,*)' returned from read_bgdata'
 

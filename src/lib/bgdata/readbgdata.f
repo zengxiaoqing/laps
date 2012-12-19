@@ -4,7 +4,7 @@
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg, tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,istatus)
+     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg,istatus)
 
 c KML: CHANGES MADE APRIL 2004
 c tdbg_sfc (model 2m dew point) is now read in during subroutine read_eta_conusc
@@ -61,6 +61,7 @@ c
       real :: tpbg_sfc(nx_bg,ny_bg)
       real :: t_at_sfc(nx_bg,ny_bg)
       real :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
+      real :: crefbg(nx_bg,ny_bg)         !Composite Reflectivity
 
 c     Local variables for the time being
       real r01(nx_bg,ny_bg)
@@ -495,7 +496,8 @@ C WNI-BLS
          call degrib_data(fullname, nx_bg, ny_bg, nzbg_ht, 
      &      prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, 
      &      htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, 
-     &      tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, istatus)
+     &      tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, 
+     &      istatus)
 
             prbgsh(:,:,:)=prbght(:,:,:) 
             prbguv(:,:,:)=prbght(:,:,:) 

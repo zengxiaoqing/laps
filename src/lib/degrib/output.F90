@@ -268,7 +268,7 @@ end subroutine output
 
 subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
          ,prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, htbg_sfc, tpbg_sfc, shbg_sfc& 
-         ,uwbg_sfc, vwbg_sfc, tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, istatus)
+         ,uwbg_sfc, vwbg_sfc, tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, istatus)
 !                                                                             !
 !*****************************************************************************!
 !  Write output to a file.
@@ -324,6 +324,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
      real :: htbg_sfc(nx,ny)
      real :: mslpbg(nx,ny)
      real :: pcpbg(nx,ny)
+     real :: crefbg(nx,ny)
 
 ! *** 3D background arrays.
 
@@ -409,6 +410,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  mslpbg = scr2d
               elseif (field.eq.'ACPC') then
                  pcpbg = scr2d
+              elseif (field.eq.'REFC') then
+                 crefbg = scr2d
               else
                  write(6,*)' field not filled: ',trim(field)
               endif
