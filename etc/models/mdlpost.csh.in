@@ -20,16 +20,27 @@ endif
 if ($MODEL == wrf-hrrr) then
     setenv CMODEL HRRR
     setenv MODE_FSF WGRIB
-    setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12'
+    setenv HHTIMES '00 01 02 03 04 05 06'
 else if ($MODEL == nam) then
     setenv CMODEL NAM
     setenv MODE_FSF REGRID
     setenv GRIBINDIR /public/data/grids/nam/A218/grib2 
     setenv HHTIMES '00 03 06 09 12'                                      
+else if ($MODEL == rr) then
+    setenv CMODEL RR
+    setenv MODE_FSF REGRID
+    setenv GRIBINDIR /public/data/grids/rap/iso_130/grib2
+    setenv HHTIMES '00 01 02 03 04 05 06'
 endif
 
 echo "CMODEL is $CMODEL"
 echo "MODE_FSF is $MODE_FSF"
+
+setenv OUTDIR_FUA $LAPS_DATA_ROOT/lapsprd/fua/$MODEL
+setenv OUTDIR     $LAPS_DATA_ROOT/lapsprd/fsf/$MODEL
+
+mkdir -p $OUTDIR_FUA
+mkdir -p $OUTDIR
 
 # Obtain model runtime (on the hour), default is with a 3 hour delay
 @ LEN_DELAY = `echo $DELAY | wc -c` - 1
@@ -58,7 +69,7 @@ setenv NCTEMPLATE_FUA $LAPS_DATA_ROOT/template.fua
 echo "NCTEMPLATE is $NCTEMPLATE"
 ls -l $NCTEMPLATE
 
-if (! -e $NCTEMPLATE) then
+if (! -e $NCTEMPLATE && $MODE_FSF == WGRIB) then
     echo "ERROR $NCTEMPLATE does not exist"
     exit
 endif
@@ -134,10 +145,8 @@ foreach HRRRHH ($HHTIMES)
         setenv GRIBIN /public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$HRRRHH\00         
 
 #       setenv NCOUT /home/Steve.Albers/outdir/$YYDDDHHMM$FCSTTIME.fsf
-        setenv OUTDIR     $LAPS_DATA_ROOT/lapsprd/fsf/$MODEL
         setenv NCOUT     $OUTDIR/$YYDDDHHMM$FCSTTIME.fsf
 
-        setenv OUTDIR_FUA $LAPS_DATA_ROOT/lapsprd/fua/$MODEL
         setenv NCOUT_FUA $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME.fua
 
 #       Specify stmas_hwt grid for testing
@@ -374,8 +383,8 @@ foreach HRRRHH ($HHTIMES)
         echo "lfmregrid method..."
 
         setenv GRIB_PRES_IN $GRIBINDIR/$YYDDDHHMM$FCSTTIME_IN
-        echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME_OUT T T F F nam $LAPS_DATA_ROOT"
-              $LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME_OUT T T F F nam $LAPS_DATA_ROOT 
+        echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME_OUT T T F F $MODEL $LAPS_DATA_ROOT"
+              $LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME_OUT T T F F $MODEL $LAPS_DATA_ROOT 
 
       endif # CMODEL = HRRR
 
