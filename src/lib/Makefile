@@ -39,6 +39,7 @@ SRC	= machine_dependent.F \
           calc_contable.f \
           climate_sm.f \
           constant.f \
+          contingency_table.f \
           convc2f.f \
           conversions.f \
           convf2c.f \
@@ -149,6 +150,7 @@ SRC	= machine_dependent.F \
           rootfind.f \
           satgeom.f \
           sfc_routines.f \
+          skill_scores.f \
           smf_wisp91.f \
           smf_wisp92.f \
           smooth_box.f \
