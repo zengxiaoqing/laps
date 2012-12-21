@@ -249,6 +249,7 @@ ls -l $PNGDIR/radar_fcst_$STAT_LC\_$REFLECTIVITY.png
 
 if ($L_PLOT_CRITERIA == "F") then
     echo "exiting to skip links, thumbnail, and animation sections - plot criteria flag is false"
+    exit
 endif
 
 cd $PNGDIR
