@@ -11,7 +11,7 @@
      1                  l_persist,
      1                  j_status)
 
-        include 'lapsparms.for' ! maxbgmodels
+        include 'lapsparms.for' ! maxbgmodels 
 
         real var_anal_3d(NX_L,NY_L,NZ_L)
         real var_fcst_3d(NX_L,NY_L,NZ_L)
