@@ -189,7 +189,7 @@ if ($VAR == "S8A") then
     echo 'set y2label "RMSE" ' $MEMBER_FONT textcolor lt 3               >> $GNUPLOTFILE
     echo 'set grid xtics y2tics'                                         >> $GNUPLOTFILE
 
-else if ($VAR == "RTO" || $VAR == "R01") then
+else if ($VAR == "RTO" || $VAR == "R01" || $VAR == "R03" || $VAR == "R06" || $VAR == "R24") then
     echo 'set yrange ['$YRANGE']'                                        >> $GNUPLOTFILE
     echo 'set y2range ['$YRANGE']'                                       >> $GNUPLOTFILE
     echo 'set logscale y'                                                >> $GNUPLOTFILE
@@ -352,6 +352,7 @@ ls -l $PNGDIR/$PNGFILE
 
 if ($L_PLOT_CRITERIA == "F") then
     echo "exiting to skip links, thumbnail, and potential animation sections - plot criteria flag is false"
+    exit
 endif
 
 rm -f          $VAR_LC\_$TYPE\_fcst.png
