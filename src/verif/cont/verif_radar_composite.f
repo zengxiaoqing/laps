@@ -102,7 +102,7 @@
         integer nsuccess_m(maxbgmodels)
         integer nincomplete_m(maxbgmodels)
         integer incomplete_run_m(maxbgmodels)
-        integer n_plot_times_m(maxbgmodels,n_fields)
+        integer n_plot_times_m(maxbgmodels,0:max_fcst_times,n_fields)
 
        do i_period = 1,2
         
@@ -130,7 +130,7 @@
         write(6,*)' Time is ',i4time_sys,a9time
         write(6,*)' n_plot_times ',n_plot_times
 
-        n_plot_times_m(:,:) = n_plot_times
+        n_plot_times_m(:,:,:) = 1
 
         i4_initial = i4time_sys
 
@@ -164,21 +164,48 @@
 
 !       Update array of n_plot_times_m for available model exceptions
         do imodel = 2,n_fdda_models
+
+!           Advection available just for LMR out to 3 hours
             if(trim(c_fdda_mdl_src(imodel)) .eq. 'advection')then
-                n_fcst_times_m = 10800 / model_verif_intvl
-                n_plot_times_m(imodel,:) = min(n_plot_times_m(imodel,:)
-     1                                        ,n_fcst_times_m)
-                do ifield = 1,n_fields ! only LMR is available
-                    if(var_a(ifield) .ne. 'LMR')then
-                        n_plot_times_m(imodel,ifield) = -1
+                do ifield = 1,n_fields 
+                    if(var_a(ifield) .ne. 'LMR')then ! only LMR is available
+                        n_plot_times_m(imodel,:,ifield) = 0
+                    else ! block out forecasts > 3 hours
+                        n_fcst_times_m = 10800 / model_verif_intvl
+                        if(max_fcst_times .gt. n_fcst_times_m)then 
+                            n_plot_times_m(imodel,
+     1                                 n_fcst_times_m+1:max_fcst_times,
+     1                                 ifield) = 0 
+                        endif
                     endif
                 enddo
             endif
 
+!           Only LMR available from the HRRR
             if(trim(c_fdda_mdl_src(imodel)) .eq. 'wrf-hrrr')then
                 do ifield = 1,n_fields ! only LMR is available
                     if(var_a(ifield) .ne. 'LMR')then
-                        n_plot_times_m(imodel,ifield) = -1
+                        n_plot_times_m(imodel,:,ifield) = 0
+                    endif
+                enddo
+            endif
+
+!           Only LMR available from the NAM, every 3 hours
+            if(trim(c_fdda_mdl_src(imodel)) .eq. 'nam')then
+                do ifield = 1,n_fields ! only LMR is available
+                    if(var_a(ifield) .ne. 'LMR')then
+                        n_plot_times_m(imodel,:,ifield) = 0
+                    else ! only every 3 hours is available
+                        nam_fcst_intvl = 10800                           
+                        do itime_fcst = 0,n_fcst_times
+                            i4_fcst = itime_fcst*model_verif_intvl      
+                            if(i4_fcst .ne. 
+     1                        (i4_fcst/nam_fcst_intvl)*nam_fcst_intvl
+     1                                                             )then      
+                                n_plot_times_m(imodel,itime_fcst,ifield)
+     1                                                               = 0
+                            endif
+                        enddo
                     endif
                 enddo
             endif
@@ -398,11 +425,12 @@
                    enddo ! jn
                    enddo ! in
 
-!                  Flag as incomplete if missing during the first 12 hours
-                   if(i_good_timestep_model .eq. 0)then
-                     if(incomplete_run .eq. 0     .AND. 
-     1                  itime_fcst .le. 
-     1                                n_plot_times_m(imodel,ifield))then
+!                  Flag as incomplete if missing during expected time
+                   if(i_good_timestep_model .eq. 0 .AND.
+     1                n_plot_times_m(imodel,itime_fcst,ifield) .eq. 1 
+     1                                                   )then
+
+                     if(incomplete_run .eq. 0)then       
                        write(6,916)init,itime_fcst,a9time_initial,imodel
 916                    format(
      1                 ' WARNING: missing N values for init/time/model '
@@ -410,9 +438,7 @@
                        incomplete_run = 1 
                      endif
 
-                     if(incomplete_run_m(imodel) .eq. 0     .AND. 
-     1                  itime_fcst .le. 
-     1                                n_plot_times_m(imodel,ifield))then
+                     if(incomplete_run_m(imodel) .eq. 0)then       
                        incomplete_run_m(imodel) = 1
                      endif
 
@@ -490,9 +516,9 @@
           enddo ! idbz 
 
 !         Update arrays for all models
-          where(n_plot_times_m(:,ifield) .gt. -1)
+!         where(n_plot_times_m(:,ifield) .gt. -1)
               nsuccess_m(:) = nsuccess_m(:) + (1 - incomplete_run_m(:))
-          endwhere
+!         endwhere
 
           nincomplete = nincomplete + incomplete_run
           nincomplete_m(:) = nincomplete_m(:) + incomplete_run_m(:)
@@ -567,14 +593,13 @@
              endif
          enddo 
 
-         if(nruns_plotted .ge. 2)then
-             l_plot_criteria = .true.
-         else
+         if(nsuccess .lt. nsuccess_thr)then
              l_plot_criteria = .false.
+         else
+             l_plot_criteria = .true.
          endif
 
-         write(6,*)'nruns_plotted / l_plot_criteria = ',nruns_plotted
-     1                                                 ,l_plot_criteria
+         write(6,*)'l_plot_criteria = ',l_plot_criteria
 
 !        Define and write to summary*.txt file
          summary_file_out = verif_dir(1:len_verif)//var_2d(1:lenvar)
