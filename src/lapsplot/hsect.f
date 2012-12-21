@@ -105,6 +105,7 @@ cdis
         data clow/-200./,chigh/+400/,cint_ref/10./
 
         integer idum1_array(NX_L,NY_L)
+        integer contable(0:1,0:1)
 
         real dum1_array(NX_L,NY_L)
 
@@ -115,6 +116,7 @@ cdis
         logical l_low_fill, l_high_fill
 
         logical lmask_rqc_3d(NX_L,NY_L,1)
+        real rqc(NX_L,NY_L,1)
 
         integer ibase_array(NX_L,NY_L)
         integer itop_array(NX_L,NY_L)
@@ -532,6 +534,15 @@ c       include 'satellite_dims_lvd.inc'
               thresh = 20.
               lmask_rqc_3d = .true.
 
+              ext = 'lcv'
+              call get_laps_2d(i4_ref,ext,'RQC',units_2d
+     1                        ,comment_2d,NX_L,NY_L,rqc,istatus)
+              if(istatus .ne. 1)then
+                  write(6,*)' Error reading 2D RQC Analysis'
+              else
+                  write(6,*)' Apply RQC to mask (under construction)'
+              endif
+
               call calc_contable_3d(
      1             field_2d_buf,field_2d,thresh,NX_L,NY_L,1,    ! I
      1             lmask_rqc_3d,r_missing_data,                 ! I
@@ -547,6 +558,26 @@ c       include 'satellite_dims_lvd.inc'
               where(field_2d_diff .eq. 3.0)field_2d_diff = +0.1 ! Correct Neg
               dyn_low = 0.0
               dyn_high = 3.0
+
+              lun_out = 6
+              ilow = 1
+              ihigh = NX_L
+              jlow = 1
+              jhigh = NY_L
+              call contingency_table(field_2d_buf,field_2d       ! I
+     1                              ,NX_L,NY_L,1                 ! I
+     1                              ,thresh,thresh               ! I
+     1                              ,lun_out                     ! I
+     1                              ,ilow,ihigh,jlow,jhigh       ! I
+     1                              ,lmask_rqc_3d                ! I
+     1                              ,contable)                   ! O
+
+              call skill_scores(contable,lun_out                   ! I
+     1              ,frac_coverage                                 ! O
+     1              ,frac_obs                                      ! O
+     1              ,frac_fcst                                     ! O
+     1              ,bias                                          ! O
+     1              ,ets)                                          ! O
 
             else
               write(6,*)' Plotting product field of last two entries' 
