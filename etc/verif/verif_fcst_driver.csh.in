@@ -5,6 +5,7 @@
 # arg3 is the delay in hours for the modeltime relative to the crontime (e.g. 12.0) - set to dd-Mon-yyyy-hhmm for archive case
 # arg4 domain name (from the "on-the-fly" page)                                                  
 # arg5 is number of forecast times that have a valid analysis to compare with (excluding analysis, e.g. 2)
+#      note this can represent a shorter time than what is in 'nest7grid.parms/model_fcst_len'
 
 setenv LAPSINSTALLROOT @prefix@
 setenv LAPS_DATA_ROOT $1
@@ -208,14 +209,23 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt W
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:10. '"Sfc Wind"'    "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/wsf_fcst_comp2.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt WSF   0.:10.  "Sfc Wind"     "m/s"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/wsf_fcst_comp2.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"Incremental Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "Incremental Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"1 Hour Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "1 Hour Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r01_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"Incremental Precip"'    "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r01_fcst_comp.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "Incremental Precip"     "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r01_fcst_comp.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"1 Hour Precip"'    "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r01_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "1 Hour Precip"     "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r01_fcst_comp.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"Incremental Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "Incremental Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"1 Hour Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "1 Hour Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0 '"3 Hour Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r03_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0  "3 Hour Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r03_fcst.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0 '"3 Hour Precip"'    "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r03_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0  "3 Hour Precip"     "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r03_fcst_comp.log
+
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0 '"3 Hour Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r03_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0  "3 Hour Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r03_fcst_comp2.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0 '"Run Total Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0  "Run Total Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log
