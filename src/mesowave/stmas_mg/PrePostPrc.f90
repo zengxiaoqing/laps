@@ -530,8 +530,10 @@ SUBROUTINE PrPstLSX
   L1S_lvl = 0
 
   ! Write data to a lsx file:
-  CALL WRITE_LAPS_DATA(i4t,dir,ext,ngd(1),ngd(2),2,2, &
-     		       L1S_vnm,L1S_lvl,L1S_crd,L1S_vun,L1S_cmt,L1S,sts)
+  ! Temporarily turn off L1S output as soil analysis needs snow as well
+  ! however, Mile's work is only on rain.
+  ! CALL WRITE_LAPS_DATA(i4t,dir,ext,ngd(1),ngd(2),2,2, &
+  !   		       L1S_vnm,L1S_lvl,L1S_crd,L1S_vun,L1S_cmt,L1S,sts)
   ! End of writing a series of time frames:
   ENDDO
 
