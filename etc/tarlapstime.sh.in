@@ -92,7 +92,7 @@ find ./lapsprd/www/anal2d/recent    -type l -name "gmeta*latest.gif" -print   >>
 if test "$FILES" -ge 2; then
     find ./lapsprd -type f -name "$YYDDDHHMM.*" -print | grep -v gr2 | grep -v www | grep -v "\.v[0-9][0-9]" | grep -v "\.d[0-9][0-9]"  >> $LAPSTAR_TXT
 else
-    for ext in lso snd hmg tmg prg pig lsx lmr lmt lcv lh4 lil; do
+    for ext in lso snd hmg tmg prg pig lsx lmr lmt lcv lh4 lil l1s; do
 	echo "./lapsprd/$ext/$YYDDDHHMM.$ext"  >> $LAPSTAR_TXT     
     done
 fi
@@ -210,10 +210,12 @@ ls -1 static/nest7grid.parms                             >> $LAPSTAR_TXT
 ls -1 static/purger.dat                                  >> $LAPSTAR_TXT
 ls -1 static/Variable_Tables/nctable.*                   >> $LAPSTAR_TXT
 if test "$STATIC" = static; then                         
-    echo "including extra static files"
+    echo "including extra static/cdl files"
     ls -1 static/static.nest7grid                        >> $LAPSTAR_TXT
     ls -1 static/www/*.*                                 >> $LAPSTAR_TXT
     ls -1 static/www/fcst2d/*                            >> $LAPSTAR_TXT
+    ls -1 cdl/fua.cdl                                    >> $LAPSTAR_TXT
+    ls -1 cdl/fsf.cdl                                    >> $LAPSTAR_TXT
 else
     echo "not including extra static files"
 fi
