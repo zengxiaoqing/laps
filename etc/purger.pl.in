@@ -28,6 +28,11 @@ getopts('rt:m:d:');
 
 my $DATAROOT=shift || die "LAPS_DATA_ROOT required (generally appended by /lapsprd)";
 
+# There are two main ways this script can be used to purge files as described
+# in the following sections of text:
+#
+# 1) Purging a directory tree (either 'lapsprd' or a more general tree)
+#
 # This script purges old data files in directories under the 'lapsprd' 
 # directory.  More generally, it purges one or more levels below the
 # input directory, not in the directory itself. It purges only those files
@@ -48,12 +53,14 @@ my $DATAROOT=shift || die "LAPS_DATA_ROOT required (generally appended by /lapsp
 #
 # lwc min 1.0
 #
-# If the user wants to purge in a $DATAROOT subdirectory (ie., no
+# 2) Purging a specific directory (having no subdirectories)
+#
+# If the user wants to purge in a $DIR subdirectory (ie., no
 # subdirectories under this) then use "-r" in conjunction with "-t" and
-# input $DATAROOT must not have any subdirectories.
+# input $DIR must not have any subdirectories.
 # For example, "purger.pl -r -t 0.5 /data/laps/lapsprd/lt1" will only
-# purge files in the lt1 subdirectory using -t 0.5 as the input $hist_time.
-# Again, this will not work if there are subdirectories under the input $DATAROOT.
+# purge files in the lt1 directory using -t 0.5 as the input $hist_time.
+# Again, this will not work if there are subdirectories under the input $DIR.
 #
 # Other exceptions can be listed below...
 #
