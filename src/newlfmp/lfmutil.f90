@@ -1211,7 +1211,12 @@ real :: zvvxmax,zhhxmax
 
 max_refl=0.0
 echo_tops=1.0e37
-refl=0.0
+if (c_m2z .ne. 'wrf') then
+    refl=0.0
+else
+    refl = max(refl,-10.)
+    where(refl .lt. 0. .and. refl .gt. -10.)refl = 0.
+endif
 zdr=0.0
 ldr=0.0
 
