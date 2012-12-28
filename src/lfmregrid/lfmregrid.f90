@@ -188,10 +188,10 @@ write(6,*)' grid dims NX_L,NY_L,NZ_L = ',NX_L,NY_L,NZ_L
 
 if(l_process_grib .eqv. .true.)then
     bgmodel = 13
-    if(mtype .eq. 'nam')then
-        cmodel = 'NAM'
-    else
+    if(mtype .eq. 'wrf-hrrr')then
         cmodel = 'HRRR'
+    else
+        call upcase(mtype,cmodel)
     endif
     write(6,*)' calling get_bkgd_mdl_info for cmodel: ',trim(cmodel)
     call get_bkgd_mdl_info(bgmodel,cmodel,fname_in  &
