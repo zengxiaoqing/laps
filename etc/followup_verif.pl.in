@@ -328,7 +328,7 @@ foreach $var (@vars) {
       $nimages = @fcstimagelist + 1;
 
       my $ncols;
-      if($nimages == 4){
+      if($nimages == 2 || $nimages == 4){
           $ncols = 2;
       }else{     
           $ncols = 3;
