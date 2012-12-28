@@ -90,6 +90,11 @@ endif
 
 call lfm_namelist(lfmprd_dir)
 
+if (fcsttime .eq. 0 .and. c_m2z .eq. 'wrf') then
+   write(6,*)' Set c_m2z to rams for initial time'
+   c_m2z = 'rams'
+endif
+
 call get_laps_config('nest7grid',istatus)
 if (istatus .ne. 1) then
    print *, 'ERROR: get_laps_config status = ',istatus 
