@@ -992,8 +992,8 @@ foreach $exe (@LAPS_EXE){
 #                       Wait for $wait_file to appear                              
                         my $wait_file = "$LAPS_LOG_PATH/sched\_$yyjjjhhmm\_$iscript.done";
                         $t = gmtime;
-                        print "Waiting for $wait_file for up to 60 minutes from $t...\n";
-                        my $iwait = &laps_tools::wait_for_file("$wait_file",60,3600);
+                        print "Waiting for $wait_file for up to 120 minutes from $t...\n";
+                        my $iwait = &laps_tools::wait_for_file("$wait_file",60,7200);
                         $t = gmtime;
                         print "Waited for $wait_file with $iwait waits remaining at $t\n";
                         if(! -e "$wait_file"){
