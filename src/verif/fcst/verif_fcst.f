@@ -392,7 +392,8 @@
 
               if(istart .eq. 1)then
                   call cv_i4tim_asc_lp(i4_initial,atime_s,istatus)
-                  write(lun_out,710)atime_s,rmiss,rmiss,rmiss
+                  cnt = 0.
+                  write(lun_out,710)atime_s,rmiss,rmiss,rmiss,nint(cnt)
               endif
 
               do itime_fcst = istart,n_fcst_times
@@ -1045,10 +1046,10 @@
                 write(6,*)
                 write(6,*)' Writing to lun_out ',lun_out
                 write(6,710)atime_s,xbar,ybar,std
-                write(lun_out,710)atime_s,xbar,ybar,std
+                write(lun_out,710)atime_s,xbar,ybar,std,nint(cnt)
 !               write(39,710)atime_s,xbar,ybar,std
 !               write(38,710)atime_s,xbar,ybar,std
-710             format(1x,a24,3f10.3)
+710             format(1x,a24,3f10.3,i8)
 
               enddo ! itime_fcst
 
