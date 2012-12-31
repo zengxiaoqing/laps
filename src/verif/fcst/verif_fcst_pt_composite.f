@@ -16,6 +16,7 @@
         logical l_exist
         logical l_plot_criteria
         logical l_req_all_mdls /.true./
+        logical l_time_outcoord_hhmm 
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
@@ -103,6 +104,8 @@
 
        write(6,*)
        write(6,*)' Start subroutine verif_fcst_pt_composite...'
+ 
+       l_time_outcoord_hhmm = .true.
 
        do i_period = 1,2
         
@@ -678,16 +681,36 @@
                    call cv_i4tim_asc_lp(i4_valid,a24time_valid
      1                                 ,istatus)
 
-                   write(6,974)a24time_valid,    
-     1                 obs_mean_comp(imodel,itime_fcst,iregion),
-     1                 fcst_mean_comp(imodel,itime_fcst,iregion), 
-     1                 rms_comp(imodel,itime_fcst,iregion) 
-974                format(1x,a24,3f10.3)
+                   if(l_time_outcoord_hhmm .eqv. .true.)then
+                     i4_fcst = itime_fcst*model_verif_intvl      
+                     i4_fcst_hh = i4_fcst / 3600
+                     i4_fcst_mm = i4_fcst/60 - (i4_fcst_hh*60)
 
-                   write(lun_stats_out,974)a24time_valid,    
+                     write(6,973)i4_fcst_hh,i4_fcst_mm,    
      1                 obs_mean_comp(imodel,itime_fcst,iregion),
      1                 fcst_mean_comp(imodel,itime_fcst,iregion), 
      1                 rms_comp(imodel,itime_fcst,iregion) 
+973                  format(1x,i2.2,1x,i2.2,19x,3f10.3)
+
+                     write(lun_stats_out,973)i4_fcst_hh,i4_fcst_mm,    
+     1                 obs_mean_comp(imodel,itime_fcst,iregion),
+     1                 fcst_mean_comp(imodel,itime_fcst,iregion), 
+     1                 rms_comp(imodel,itime_fcst,iregion) 
+
+                   else ! use ascii time format
+
+                     write(6,974)a24time_valid,    
+     1                 obs_mean_comp(imodel,itime_fcst,iregion),
+     1                 fcst_mean_comp(imodel,itime_fcst,iregion), 
+     1                 rms_comp(imodel,itime_fcst,iregion) 
+974                  format(1x,a24,3f10.3)
+
+                     write(lun_stats_out,974)a24time_valid,    
+     1                 obs_mean_comp(imodel,itime_fcst,iregion),
+     1                 fcst_mean_comp(imodel,itime_fcst,iregion), 
+     1                 rms_comp(imodel,itime_fcst,iregion) 
+
+                   endif ! l_time_outcoord_hhmm
 
                enddo ! itime_fcst
 
