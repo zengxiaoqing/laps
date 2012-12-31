@@ -26,6 +26,7 @@ foreach EXE (obs_driver)
 #   Note that this is hardwired for hourly forecast intervals at present
     @ FCST_SEC = $STEP * $MODEL_FCST_INTVL
                         perl $LAPSINSTALLROOT/etc/timeconv.pl -a $MODELVTIME -t $FCST_SEC
+    echo               "perl $LAPSINSTALLROOT/etc/timeconv.pl -a $MODELVTIME -t $FCST_SEC" 
     setenv LAPS_A9TIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $MODELVTIME -t $FCST_SEC`
 
     if (-e /w3/lapb) then # FAB machine, so we can go back to the short path to /public
@@ -36,6 +37,7 @@ foreach EXE (obs_driver)
         endif
     endif
 
+    date -u
     echo "running $LAPS_A9TIME $BINARY"
     $LAPSINSTALLROOT/bin/$BINARY > $LAPS_DATA_ROOT/log/$EXE.log.rerun_$LAPS_A9TIME
     ls -l $LAPS_DATA_ROOT/lapsprd/lso/$LAPS_A9TIME.lso
