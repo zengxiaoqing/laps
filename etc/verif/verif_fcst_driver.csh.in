@@ -20,6 +20,9 @@ setenv NTIMES $5
 
 date -u
 
+uname -a
+whoami
+
 umask 002 
 
 echo $N_FCST_TIMES > $LAPS_DATA_ROOT/lapsprd/verif/n_fcst_times.dat
