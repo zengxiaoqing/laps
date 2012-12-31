@@ -84,7 +84,11 @@ if (-e $FONTFILE) then
     setenv TITLE_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',20"'
     setenv MEMBER_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',16"'
     if (-d /w3/lapb) then
-        setenv KEY_WIDTH -19.0
+        if ($SUBTYPE == "") then 
+            setenv KEY_WIDTH -19.0
+        else
+            setenv KEY_WIDTH -12.5
+        endif
     else
         setenv KEY_WIDTH -3 
     endif
@@ -171,14 +175,20 @@ setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$SUBDIR/
 setenv PNGFILE     $VAR_LC\_$TYPE\_fcst\_$MODELTIME.png
 setenv DQUOTE \"
 echo 'set terminal png '$TERM_FONT' size 1200,800'                        > $GNUPLOTFILE
-echo 'set xdata time'                                                    >> $GNUPLOTFILE
-echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
-echo 'set format x "%H:%M"'                                              >> $GNUPLOTFILE
+if ($SUBTYPE == "") then 
+    echo 'set xdata time'                                                    >> $GNUPLOTFILE
+    echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
+    echo 'set format x "%H:%M"'                                              >> $GNUPLOTFILE
+endif
 echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
 
 # time range must be in same format as data file
 #echo 'set xrange ["2-FEB-2011 12:00:00.00":"2-FEB-2011 18:00:00.00"]'    >> $GNUPLOTFILE
-echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
+if ($SUBTYPE == "") then 
+    echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
+else
+    echo 'set xrange [00:06]'                                            >> $GNUPLOTFILE
+endif
 #echo 'set yrange [0:'$YRANGE']'                                           >> $GNUPLOTFILE
 if ($VAR == "S8A") then                                       
     echo 'set yrange  [100:350]'                                         >> $GNUPLOTFILE
@@ -203,7 +213,8 @@ echo 'set datafile missing "-99.900"'                                     >> $GN
 if ($DURATION == "") then
     echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
 else
-    echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
+#   echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
+    echo 'set xlabel "Forecast Hours - Latest Run At '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
 endif
 echo 'set ylabel "'$6 \($7\)' "' $MEMBER_FONT textcolor lt 2              >> $GNUPLOTFILE
 echo 'set title "'$6' Observed vs Forecast '$DURATION'('$DOMAIN_NAME' domain)" '$TITLE_FONT  >> $GNUPLOTFILE
