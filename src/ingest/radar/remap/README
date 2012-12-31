@@ -41,7 +41,8 @@ main                                                remap.f
         remap_process                               remap_process.f
             get_laps_domain_95                      lib/lapsgrid.f
             ref_fill_horz                           remap_ftn/ref_fill_horz.f
-            put_laps_multi_3d                       laps_io.f
+            put_compressed_multi_3d                 laps_io.f
+            put_laps_multi_3d                          "
             put_remap_vrc                           remap_process.f
                 ref_fill_horz                       remap_ftn/ref_fill_horz.f
 
