@@ -58,7 +58,10 @@ setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$SUBDIR/$MODELTIME.stats
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt
 
-setenv MODEL_FCST_LEN `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
+setenv VERIF_INTVL `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v verif_intvl`
+@ VERIF_FCST_LEN = ( $NLINE - 1 ) * $VERIF_INTVL
+#setenv VERIF_FCST_LEN `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
+#setenv MODEL_FCST_LEN  `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
 
 # Setup True Type fonts and related environment variables
 setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
@@ -138,6 +141,7 @@ echo "SUBTYPE = $SUBTYPE"
 echo "SUBDIR = $SUBDIR"  
 echo "VAR = $VAR"  
 echo "FILE = $FILE"  
+echo "VERIF_FCST_LEN = $VERIF_FCST_LEN"
 ls -l $FILE                                                     
 
 # Stats Files In General:
@@ -178,7 +182,11 @@ echo 'set terminal png '$TERM_FONT' size 1200,800'                        > $GNU
 if ($SUBTYPE == "") then 
     echo 'set xdata time'                                                    >> $GNUPLOTFILE
     echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
-    echo 'set format x "%H:%M"'                                              >> $GNUPLOTFILE
+    if ($VERIF_FCST_LEN >= 86400) then
+        echo 'set format x "%d/%H"'                                          >> $GNUPLOTFILE
+    else
+        echo 'set format x "%H:%M"'                                          >> $GNUPLOTFILE
+    endif
 endif
 echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
 
