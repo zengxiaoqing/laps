@@ -11,7 +11,7 @@ setenv LAPSINSTALLROOT @prefix@
 setenv LAPS_DATA_ROOT $1
 setenv DOMAIN_NAME $4
 
-setenv N_FCST_TIMES $5
+setenv N_VERIF_TIMES $5
 setenv NTIMES $5
 
 @ NTIMES = $NTIMES + 1
@@ -25,7 +25,7 @@ whoami
 
 umask 002 
 
-echo $N_FCST_TIMES > $LAPS_DATA_ROOT/lapsprd/verif/n_fcst_times.dat
+echo $N_VERIF_TIMES > $LAPS_DATA_ROOT/lapsprd/verif/n_fcst_times.dat
 
 if ($2 == archive) then
 #   perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3                      > $LAPS_DATA_ROOT/time/modeltime.dat 
@@ -144,15 +144,19 @@ foreach SUBDIR (REF LMR)
 end
 
 date -u
+echo ""
 
 # Point verification (Solar, Sfc, and 3D Wind)..................................................................
 if ($2 != archive) then # realtime
     echo "Rerunning ingest to get latest obs..."
 
-    echo "$LAPSINSTALLROOT/etc/verif/ingest_rerun_verif.csh $LAPS_DATA_ROOT $MODELVTIME $N_FCST_TIMES"
-          $LAPSINSTALLROOT/etc/verif/ingest_rerun_verif.csh $LAPS_DATA_ROOT $MODELVTIME $N_FCST_TIMES
+    echo "$LAPSINSTALLROOT/etc/verif/ingest_rerun_verif.csh $LAPS_DATA_ROOT $MODELVTIME $N_VERIF_TIMES"
+          $LAPSINSTALLROOT/etc/verif/ingest_rerun_verif.csh $LAPS_DATA_ROOT $MODELVTIME $N_VERIF_TIMES
 
+    echo ""
     date -u
+    echo ""
+
 endif
 
 echo "$LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log"
@@ -160,14 +164,14 @@ echo "$LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/
 
 date -u
 
-echo "$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_FCST_TIMES  $DOMAIN_NAME       > $LAPS_DATA_ROOT/log/cloud_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_FCST_TIMES  $DOMAIN_NAME       > $LAPS_DATA_ROOT/log/cloud_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_VERIF_TIMES  $DOMAIN_NAME       > $LAPS_DATA_ROOT/log/cloud_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_VERIF_TIMES  $DOMAIN_NAME       > $LAPS_DATA_ROOT/log/cloud_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_FCST_TIMES  $DOMAIN_NAME comp  > $LAPS_DATA_ROOT/log/cloud_fcst_comp.log"
-      $LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_FCST_TIMES  $DOMAIN_NAME comp  > $LAPS_DATA_ROOT/log/cloud_fcst_comp.log
+echo "$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_VERIF_TIMES  $DOMAIN_NAME comp  > $LAPS_DATA_ROOT/log/cloud_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_VERIF_TIMES  $DOMAIN_NAME comp  > $LAPS_DATA_ROOT/log/cloud_fcst_comp.log
 
-echo "$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_FCST_TIMES  $DOMAIN_NAME comp2 > $LAPS_DATA_ROOT/log/cloud_fcst_comp2.log"
-      $LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_FCST_TIMES  $DOMAIN_NAME comp2 > $LAPS_DATA_ROOT/log/cloud_fcst_comp2.log
+echo "$LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_VERIF_TIMES  $DOMAIN_NAME comp2 > $LAPS_DATA_ROOT/log/cloud_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/cloud_forecast.csh $LAPS_DATA_ROOT $N_VERIF_TIMES  $DOMAIN_NAME comp2 > $LAPS_DATA_ROOT/log/cloud_fcst_comp2.log
 
 # For the following plots we want to add in the analysis time as well
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100. '"Surface Temperature" "Deg F"' $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/tsf_fcst.log"
@@ -221,14 +225,14 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0 '"1 Hour Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R01   0.005:2.0  "1 Hour Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r01_fcst_comp2.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0 '"3 Hour Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r03_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0  "3 Hour Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r03_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R06   0.005:2.0 '"6 Hour Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r06_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R06   0.005:2.0  "6 Hour Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/r06_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0 '"3 Hour Precip"'    "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r03_fcst_comp.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0  "3 Hour Precip"     "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r03_fcst_comp.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R06   0.005:2.0 '"6 Hour Precip"'    "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r06_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R06   0.005:2.0  "6 Hour Precip"     "inches"  $DOMAIN_NAME comp  >& $LAPS_DATA_ROOT/log/r06_fcst_comp.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0 '"3 Hour Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r03_fcst_comp2.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R03   0.005:2.0  "3 Hour Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r03_fcst_comp2.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R06   0.005:2.0 '"6 Hour Precip"'    "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r06_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt R06   0.005:2.0  "6 Hour Precip"     "inches"  $DOMAIN_NAME comp2  >& $LAPS_DATA_ROOT/log/r06_fcst_comp2.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0 '"Run Total Precip"'    "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt RTO   0.005:2.0  "Run Total Precip"     "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/rto_fcst.log
@@ -285,8 +289,8 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt S
 # Montage of the reflectivity and solar images
 if (-d /w3/lapb) then
     echo "Making reflectivity and solar montages: log file is $LAPS_DATA_ROOT/log/followup_verif_montage.log"
-    echo @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $3 -t $N_FCST_TIMES
-         @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $3 -t $N_FCST_TIMES > $LAPS_DATA_ROOT/log/followup_verif_montage.log
+    echo @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $3 -t $N_VERIF_TIMES
+         @PERL@ @prefix@/etc/followup_verif.pl -r $LAPS_DATA_ROOT -d $DOMAIN_NAME -y $3 -t $N_VERIF_TIMES > $LAPS_DATA_ROOT/log/followup_verif_montage.log
 endif
 
 date -u
