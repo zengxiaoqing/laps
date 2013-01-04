@@ -605,27 +605,27 @@ c
 
 !     Determine satellite types with help of 'satdata_lvd_table'
       ITYPES=0
-!     jj=0
+      jj=0
       do i=1,nsats
         do js = 1,maxsat
           if(trim(csatid(i)).eq.trim(satellite_ids(js)))then
             write(6,*)' Match csatid/satellite_ids/ntypes'
      1                                  ,i,js,ntypes(i),csatid(i)
             do j=1,ntypes(i)
-!             jj=jj+1
+              jj=jj+1
               do it = 1,4
-                if(csattypes(j).eq.satellite_types(it,js))then !raw lat-lon > could be (likely is) netcdf format
+                if(csattypes(jj).eq.satellite_types(it,js))then !raw lat-lon > could be (likely is) netcdf format
                   write(6,*)' Match csattypes/satellite_types     '
-     1                                              ,j,it,csattypes(j)
+     1                                              ,j,it,csattypes(jj)
                   ITYPES(it,js)=1
-                  c_sat_types(it,js)=csattypes(j)
+                  c_sat_types(it,js)=csattypes(jj)
                 else
                   write(6,*)' No match csattypes/satellite_types  '
-     1                ,j,it,csattypes(j),' ',satellite_types(it,js)
-                endif
+     1                ,j,it,csattypes(jj),' ',satellite_types(it,js)
+                endif ! type match
               enddo ! it
             enddo ! j
-          endif 
+          endif ! id match
         enddo ! is
       enddo ! i
 
@@ -1417,6 +1417,8 @@ c format type 4 (rll)
 c format type 1 (ncp): netcdf polar (FMI's data type). Stored like wfo
 c format type 4 (rll)
 
+        jj=0
+
         do js = 1,maxsat
 
          if(js .eq. 2 .OR. js .ge. 9)then
@@ -1425,9 +1427,11 @@ c format type 4 (rll)
 
            do j=1,ntypes(i)
 
+            jj=jj+1
+
             do it = 1,4
 
-             if(csattypes(j).eq.satellite_types(it,js))then
+             if(csattypes(jj).eq.satellite_types(it,js))then
 
               do k=1,nchannel(j)
                 kk=kk+1
