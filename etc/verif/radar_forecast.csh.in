@@ -41,6 +41,12 @@ setenv STAT_LC `echo $STAT | gawk '{print tolower($0)}'`
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/$REFLECTIVITY/$MODELTIME.$STAT_LC             
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt                                   
 
+setenv VERIF_INTVL `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v verif_intvl`
+@ VERIF_FCST_LEN = ( $NLINE - 1 ) * $VERIF_INTVL
+@ VERIF_FCST_LEN_HH = $VERIF_FCST_LEN / 3600
+#setenv VERIF_FCST_LEN `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
+#setenv MODEL_FCST_LEN  `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
+
 # Setup True Type fonts and related environment variables
 setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
 
@@ -101,7 +107,11 @@ if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be pr
     setenv PCT_SUCCESS     `tail -1 $SUMMARY_FILE`
 #   setenv L_PLOT_CRITERIA T  # for testing
     if (-d /w3/lapb) then
-        setenv KEY_WIDTH -19.5 
+        if ($DURATION == "") then 
+            setenv KEY_WIDTH -19.5 
+        else
+            setenv KEY_WIDTH -19.5 
+        endif
     else
         setenv KEY_WIDTH -7.1
     endif
@@ -118,6 +128,8 @@ echo "KEY_WIDTH is $KEY_WIDTH"
 echo " "
 echo "inputs..."
 echo "FILE = $FILE"  
+echo "VERIF_FCST_LEN = $VERIF_FCST_LEN"
+echo "VERIF_FCST_LEN_HH = $VERIF_FCST_LEN_HH"
 ls -l $FILE                                                     
 if (! -e $FILE) then
     echo "input file $FILE does not exist - exiting..."
@@ -144,14 +156,24 @@ setenv PNGFILE     radar_fcst_$STAT_LC\_$REFLECTIVITY\_$MODELTIME.png
 setenv DQUOTE \"
 
 echo 'set terminal png '$TERM_FONT' size 1200,600'                        > $GNUPLOTFILE
-echo 'set xdata time'                                                    >> $GNUPLOTFILE
-echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
-echo 'set format x "%H:%M"'                                              >> $GNUPLOTFILE
+if ($DURATION == "") then 
+    echo 'set xdata time'                                                    >> $GNUPLOTFILE
+    echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
+    if ($VERIF_FCST_LEN >= 86400) then
+        echo 'set format x "%d/%H"'                                          >> $GNUPLOTFILE
+    else
+        echo 'set format x "%H:%M"'                                          >> $GNUPLOTFILE
+    endif
+endif
 echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
 
 # time range must be in same format as data file
-echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
-#echo 'set yrange [0:'$YRANGE']'                                          >> $GNUPLOTFILE
+if ($DURATION == "") then 
+    echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
+else
+    echo 'set xrange [00:'$VERIF_FCST_LEN_HH']'                          >> $GNUPLOTFILE
+endif
+#echo 'set yrange [0:'$YRANGE']'                                         >> $GNUPLOTFILE
 if ($STAT == "Bias") then
     echo 'set yrange [0.1:'$YRANGE']'                                    >> $GNUPLOTFILE
     echo 'set ytics (0.1,0.2,0.5,1,2,5,10)'                              >> $GNUPLOTFILE
@@ -164,7 +186,8 @@ echo 'set datafile missing "-999.000"'                                   >> $GNU
 if ($DURATION == "") then
     echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
 else
-    echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+#   echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+    echo 'set xlabel "Forecast Hours - Latest Run At '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
 endif
 if ($SUBDIR == "REF") then
     echo 'set ylabel "Volume Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
