@@ -681,9 +681,8 @@
         ice(:,:,:) = ice(:,:,:)/rho(:,:,:)   ! Ice mixing ratio
       
         ! Convert ice mixing ratio to vapor mixing ratio
-        ! (for now ice conversion tied to lwc2vapor_thresh)
 
-        IF (lwc2vapor_thresh .GT. 0.) THEN
+        IF (ice2vapor_thresh .GT. 0.) THEN
           DO k=1,z3
             DO j=1,y
               DO i=1,x
@@ -693,7 +692,7 @@
 
                       ! Update moisture arrays
                        CALL saturate_ice_points(t(i,j,k), &
-                                           p(k),lwc2vapor_thresh, &
+                                           p(k),ice2vapor_thresh, &
                                            shmod,rhmod)
                   sh(i,j,k) = shmod
                   rh(i,j,k) = rhmod
