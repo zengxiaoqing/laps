@@ -7,6 +7,7 @@
   output_format = 'wps',
   snow_thresh = 1.1,
   lwc2vapor_thresh = 0.,
+  ice2vapor_thresh = 0.,
   make_sfc_uv = .false.,
   use_laps_skintemp = .true.,	
   use_laps_vv = .false.,	
@@ -55,10 +56,16 @@ c
 c  lwc2vapor_thresh:
 c    Real value, controls the saturation of cloud condensate.  Set
 c    to 0 to disable.  If enabled, typical values are going to be around
-c    1.0.  If set to 1.0, cloud condensate will be converted to vapor up until 
-c    the RH for that point reaches 100%.  Any remaining condensate will be 
-c    left in place.  Values greater than 1.0 allow for supersaturation 
-c    (e.g., 1.1 allows 110% max RH).
+c    1.0.  If set to 1.0, locations with mainly cloud liquid will be given an 
+c    RH of 100%. This is done with respect to liquid saturation. Values greater 
+c    than 1.0 allow for supersaturation (e.g., 1.1 allows 110% RH).
+c
+c  ice2vapor_thresh:
+c    Real value, controls the saturation of cloud condensate.  Set
+c    to 0 to disable.  If enabled, typical values are going to be around
+c    1.0.  If set to 1.0, locations with mainly cloud ice will be given an 
+c    RH of 100%. This is done with respect to ice saturation. Values greater 
+c    than 1.0 allow for supersaturation (e.g., 1.1 allows 110% RH).
 c
 c  make_sfc_uv:
 c    Logical flag. If set to true, then the surface u/v fields from lsx
