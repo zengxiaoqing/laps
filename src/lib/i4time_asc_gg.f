@@ -31,9 +31,9 @@ cdis
 cdis
 C
 C Given a ASCII time such as 09-mar-1992 12:00:00.00, return the corresponding
-C i4time.  The use of the seconds field is a bit of a historical relic.
-C This function is mostly used to parse the types of dates a user might
-C type in.
+C i4time (seconds since 1-1-1960). The use of the seconds field is a bit of 
+c a historical relic. This function is mostly used to parse the types of dates 
+c a user might type in.
 C
         function        i4time_asc_gg(atime,istatus)
 

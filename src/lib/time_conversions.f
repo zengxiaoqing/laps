@@ -33,7 +33,7 @@ C
         SUBROUTINE make_fnam_lp (I4TIME, FILE_NAME, ISTATUS)
 C
 cdoc    make_fnam_lp CONSTRUCTS THE FILE NAME STRING 'yyjjjhhmm' FOR
-cdoc    THE TIME CORRESPONDING TO I4TIME.
+cdoc    THE TIME CORRESPONDING TO I4TIME (seconds since 1-1-1960).
 C
 C================================================================
 C
@@ -86,7 +86,7 @@ C
         SUBROUTINE CV_I4TIM_INT_LP (I4TIME,NYEAR,NMONTH,NDAY,NHOUR,
      1                     NMIN,NSEC,ISTATUS)
 C
-cdoc    CV_I4TIM_INT_LP CONVERTS I4 TIME TO SIX INTEGERS
+cdoc    CV_I4TIM_INT_LP CONVERTS I4TIME (seconds since 1-1-1960) TO SIX INTEGERS
 cdoc    Note that NYEAR is the number of years since 1900
 C
 C================================================================
@@ -212,10 +212,10 @@ cdoc  This is converted to i4time, number of sec since Jan 1, 1960 at 00z
 
         subroutine cv_asc_i4time(ascii_time,I4time)
 
-cdoc    Converts 9 character ascii time into i4time
+cdoc    Converts 9 character ascii time into i4time (seconds since 1-1-1960)
 
         character*9 ascii_time
-        integer i4time
+        integer i4time ! seconds since 1-1-1960
 
         read(ascii_time(1:2),2)iyear
         read(ascii_time(3:5),3)idoy
@@ -248,7 +248,7 @@ cdoc  (e.g. 27-MAR-1990 12:30:00.00 ).  The i4time is assumed to
 cdoc  be a 1960-relative time, although the starting year is easily
 cdoc  changed in the code.
 C
-C     IMPORTS - i4time
+C     IMPORTS - i4time ! seconds since 1-1-1960
 C
 C     EXPORTS - atime, istatus
 C
@@ -360,7 +360,7 @@ C
       subroutine jd_to_i4time(jd,i4time,istatus)
 
       double precision jd, jd1960
-      integer i4time
+      integer i4time ! seconds since 1-1-1960
 
 cdoc  Converts Julian Day (Number of days since Jan 1 4713BCE to i4time)
 
