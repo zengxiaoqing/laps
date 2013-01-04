@@ -3,9 +3,10 @@
 setenv LAPSINSTALLROOT @prefix@ 
 setenv LAPS_DATA_ROOT $1                                  
 setenv MODELVTIME $2
-setenv N_FCST_TIMES $3
+setenv N_VERIF_TIMES $3
 
 echo "MODELVTIME is $MODELVTIME"
+echo "N_VERIF_TIMES (actively used with ingest loop) is $N_VERIF_TIMES"
 
 setenv VERIF_INTVL      `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v verif_intvl`
 setenv N_VERIF_STEPS    `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v n_verif_steps`
@@ -19,7 +20,7 @@ foreach EXE (obs_driver)
   setenv BINARY $EXE.x
 
   setenv STEP 0
-  while ($STEP <= $N_VERIF_STEPS)
+  while ($STEP <= $N_VERIF_TIMES)
     echo " "
     echo "STEP = $STEP"
                                         
@@ -44,7 +45,7 @@ foreach EXE (obs_driver)
     ls -l $LAPS_DATA_ROOT/log/$EXE.log.rerun_$LAPS_A9TIME
 
     @ STEP = $STEP + 1
-  end # STEP up to N_VERIF_STEPS 
+  end # STEP up to N_VERIF_TIMES
 
 end
 
