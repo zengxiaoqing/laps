@@ -24,6 +24,7 @@
         logical l_plot_criteria 
         logical l_persist 
         logical l_req_all_mdls / .true. /
+        logical l_time_outcoord_hhmm 
 
 !       integer       maxbgmodels
 !       parameter     (maxbgmodels=10)
@@ -103,6 +104,11 @@
         integer nincomplete_m(maxbgmodels)
         integer incomplete_run_m(maxbgmodels)
         integer n_plot_times_m(maxbgmodels,0:max_fcst_times,n_fields)
+
+       write(6,*)
+       write(6,*)' Start subroutine verif_radar_composite...'
+
+       l_time_outcoord_hhmm = .true.
 
        do i_period = 1,2
         
@@ -718,9 +724,17 @@
            if(l_col)then
 !              Write bias and ets values
                do itime_fcst = 0,n_fcst_times
-                   i4_valid = i4_initial + itime_fcst*model_verif_intvl      
-                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
-     1                                 ,istatus)
+                   i4_fcst = itime_fcst*model_verif_intvl      
+                   if(l_time_outcoord_hhmm .eqv. .true.)then
+                       i4_fcst_hh = i4_fcst / 3600
+                       i4_fcst_mm = i4_fcst/60 - (i4_fcst_hh*60)
+                       write(a24time_valid,975)i4_fcst_hh,i4_fcst_mm
+ 975                   format(i2.2,1x,i2.2,19x)
+                   else
+                       i4_valid = i4_initial + i4_fcst
+                       call cv_i4tim_asc_lp(i4_valid,a24time_valid
+     1                                     ,istatus)
+                   endif
 
                    write(lun_bias_out,911)a24time_valid,    
      1                 (bias_comp(imodel,itime_fcst,iregion,idbz)
@@ -736,9 +750,17 @@
                  write(lun_bias_out,*)
                  write(lun_bias_out,*)
                  do itime_fcst = 0,n_fcst_times
-                   i4_valid = i4_initial + itime_fcst*model_verif_intvl      
-                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
-     1                                 ,istatus)
+                   i4_fcst = itime_fcst*model_verif_intvl      
+                   if(l_time_outcoord_hhmm .eqv. .true.)then
+                       i4_fcst_hh = i4_fcst / 3600
+                       i4_fcst_mm = i4_fcst/60 - (i4_fcst_hh*60)
+                       write(a24time_valid,975)i4_fcst_hh,i4_fcst_mm
+                   else
+                       i4_valid = i4_initial + i4_fcst
+                       call cv_i4tim_asc_lp(i4_valid,a24time_valid
+     1                                     ,istatus)
+                   endif
+
                    write(6           ,912)a24time_valid,    
      1                 (n_sum(imodel,itime_fcst,iregion,idbz,in,jn)
      1                              ,imodel=2,n_fdda_models)     
@@ -753,9 +775,17 @@
                write(lun_bias_out,*)
                write(lun_bias_out,*)
                do itime_fcst = 0,n_fcst_times
-                   i4_valid = i4_initial + itime_fcst*model_verif_intvl      
-                   call cv_i4tim_asc_lp(i4_valid,a24time_valid
-     1                                 ,istatus)
+                   i4_fcst = itime_fcst*model_verif_intvl      
+                   if(l_time_outcoord_hhmm .eqv. .true.)then
+                       i4_fcst_hh = i4_fcst / 3600
+                       i4_fcst_mm = i4_fcst/60 - (i4_fcst_hh*60)
+                       write(a24time_valid,975)i4_fcst_hh,i4_fcst_mm
+                   else
+                       i4_valid = i4_initial + i4_fcst
+                       call cv_i4tim_asc_lp(i4_valid,a24time_valid
+     1                                     ,istatus)
+                   endif
+
                    write(lun_bias_out,923)a24time_valid,    
      1                 (frac_cvr_comp                
      1                   (imodel,itime_fcst,iregion,idbz)
