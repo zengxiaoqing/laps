@@ -124,6 +124,10 @@ c or presently reporting radars.
      +,nsites_present,present_site_loc_i,present_site_loc_j
      +,nsites_absent,absent_site_loc_i,absent_site_loc_j
      +,maxradars,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)'Bad status returned from cvt_wsi_nowrad'
+          return
+      endif
 
 c     call cvt_wsi_nowrad(ctype,nelems,nlines,image,istatus)
 
