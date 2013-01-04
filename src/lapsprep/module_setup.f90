@@ -51,7 +51,7 @@ MODULE setup
    LOGICAL            :: hotstart,balance,make_sfc_uv,use_sfc_bal,use_laps_skintemp,use_laps_vv
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
-   REAL               :: snow_thresh, lwc2vapor_thresh
+   REAL               :: snow_thresh, lwc2vapor_thresh, ice2vapor_thresh
    REAL               :: hydrometeor_scale_factor_pcp, hydrometeor_scale_factor_cld
    REAL               :: rai_frac, sno_frac
    CHARACTER (LEN=256):: output_prefix
@@ -104,6 +104,7 @@ CONTAINS
                          output_format     , &
                          snow_thresh       , &
                          lwc2vapor_thresh  , &
+                         ice2vapor_thresh  , &
                          rai_frac          , &
                          sno_frac          , &
                          use_laps_skintemp , &        
@@ -117,7 +118,8 @@ CONTAINS
       hydrometeor_scale_factor_pcp = 0.0	
       hydrometeor_scale_factor_cld = 0.5	
       snow_thresh = 0.5
-      lwc2vapor_thresh = 1.1
+      lwc2vapor_thresh = 0.
+      ice2vapor_thresh = 0.
       make_sfc_uv = .false.
       rai_frac = 1.0
       sno_frac = 1.0
