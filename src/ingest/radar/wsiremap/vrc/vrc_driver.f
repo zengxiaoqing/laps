@@ -126,6 +126,8 @@ c
        integer irad
        integer msngrad,i4_check_interval
        integer i4_total_wait,i4_thresh_age
+       integer i4times_recent(max_files)
+       integer i4times_proc(max_files)
 
        character*100 c_values_req
        character*40  c_vars_req
@@ -140,6 +142,7 @@ c
        character*200 wsi_dir_path
        character*255 c_filespec
        character*200 c_filenames_proc(max_files)
+       character*200 c_fnames_recent(max_files)
        character*3   c_raddat_type
      
        data lvl_2d/0,0/
@@ -156,7 +159,9 @@ c set filename. wfo data is 13 character. HOWEVER, if reading from WFO-type
 c data from /public then we must fool the filename to still be 9 characters.
 c we do this by checking for "public" when the radar type is wfo.
 c
-       i4time_cur = i4time_now_gg()
+       iwait = 1
+
+ 50    i4time_cur = i4time_now_gg()
        call get_systime(i4time_sys,c_fname_sys,istatus)
        call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
 
@@ -188,17 +193,6 @@ c
        n=index(wsi_dir_path,' ')
        write(6,*)'wsi_dir_path = ',wsi_dir_path(1:n-1)
 c
-       if(c_raddat_type.eq.'wfo')then
-          c_filespec=wsi_dir_path(1:n-1)//'*'
-       elseif(.not.l_archive)then
-          c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
-       else
-          c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:8)//'*_hd'
-       endif
-       write(6,*)
-       write(6,*)'Latest time for wsi data'
-
-       call get_latest_file_time(c_filespec,i4time_latest_wsi)
 c
 c convert to fname9 and determine if this time has already been processed
 c
@@ -219,83 +213,80 @@ c       nd = index(dir_vrc,' ')-1
      1            ,dir_vrc(1:nd)
        write(6,*)
 c
-       i4time_latest_diff = i4time_latest_vrc-i4time_latest_wsi
+c find files matching filespec and that have yet to be processed      
 c
-c wait for data if necessary
-c
-       if(i4time_latest_diff .eq. 0)then
-
-          i4time_latest_vrc = i4time_latest_vrc + 900
-
-          n=index(wsi_dir_path,' ')
-
-          if(c_raddat_type.eq.'wfo')then
-             c_filespec=wsi_dir_path(1:n-1)//'*'
-          elseif(.not.l_archive)then
-             c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
-          else
-             c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:8)//'*_hd'
-          endif
-
-          n=index(c_filespec,' ')
-
-          if(.not. l_archive)then
-              write(6,*)'Directory_wait: ',c_filespec(1:n)
-              write(6,*)
-              write(6,*)'Calling wait_for_data'
-              write(6,*)'check-interval, total_wait, thresh age'
-              write(6,*)i4_check_interval,i4_total_wait,i4_thresh_age
-
-              call wait_for_data(c_filespec,i4time_latest_vrc
-     1               ,i4_check_interval,i4_total_wait
-     1               ,i4_thresh_age
-     1               ,istatus)
-              if(istatus .ne.1)then
-                 write(6,*)'wait for data did not find the data'
-                goto 998
-              endif
-
-          endif
-
-       elseif(i4time_latest_diff.gt.i4_thresh_age)then
-
-          write(6,*)'Data too old to wait: wsi/vrc i4times ='
-     1             ,i4time_latest_wsi,i4time_latest_vrc 
-          goto 998
-
-       endif
-c
-c we found new data, set nfiles to 1 and set the filenames for input.
-c in theory we could find more than one new file to process. In such a case
-c nfiles > 1.
-c
-       nfiles=1
        n=index(wsi_dir_path,' ')
        if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
        elseif(.not.l_archive)then
-          c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
+          c_filespec=wsi_dir_path(1:n-1)//'*_hd'
        else
           c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:8)//'*_hd'
        endif
 
-       write(6,*)
-       write(6,*)'Latest time for wsi files - subsequent check '
-     1           ,trim(c_filespec)
-       call get_latest_file_time(c_filespec,i4time_latest_wsi)
+       call get_file_times(c_filespec,max_files,c_fnames_recent
+     1                    ,i4times_recent,i_nbr_files_out,istatus)
 
-       if(c_raddat_type.eq.'wfo'.and.wsi_dir_path(2:7).ne.'public'
-     1)then
-          c_filetime=cvt_i4time_wfo_fname13(i4time_latest_wsi)
-          nn=index(c_filetime,' ')-1
-          c_filenames_proc(nfiles)=wsi_dir_path(1:n-1)//c_filetime(1:nn)
-       else
-          call make_fnam_lp (i4time_latest_wsi, c_filename, ISTATUS)
-          c_filetime=c_filename
-          nn=index(c_filetime,' ')-1
-          c_filenames_proc(nfiles)=wsi_dir_path(1:n-1)//c_filetime(1:nn)
-     1//'_hd'
+       n_new_files = 0
+
+       if(i_nbr_files_out .eq. 0)then
+           write(6,*)' No hd files meeting filespec: ',trim(c_filespec)
+           goto 60
        endif
+
+       do k = 1,i_nbr_files_out
+           if(l_archive .OR. 
+     1       ((.not. l_archive) .and. 
+     1        (i4times_recent(k) .ge. i4time_cur-5400) ) 
+     1                                                   )then
+             if(i4times_recent(k) .gt. i4time_latest_vrc)then
+               write(6,*)' Recent unprocessed file is: '
+     1                  ,trim(c_fnames_recent(k))
+               n_new_files = n_new_files + 1
+               c_filenames_proc(n_new_files) = c_fnames_recent(k)
+               i4times_proc(n_new_files) = i4times_recent(k)
+             else
+               write(6,*)' Recent processed file is:   '
+     1                  ,trim(c_fnames_recent(k))
+             endif                                             
+
+           else
+             write(6,*)' File is too old for processing: '
+     1                 ,trim(c_fnames_recent(k))
+
+           endif ! recent enough to consider processing
+       enddo ! k
+
+       write(6,*)' n_new_files is ',n_new_files
+
+60     if(n_new_files .eq. 0 .and. iwait .le. 4)then
+           write(6,*)' Waiting for 60 seconds...'
+           write(6,*)
+           call sleep(60)
+           iwait = iwait + 1
+           goto 50
+       endif
+
+       nfiles = n_new_files
+
+       do ifile = 1,nfiles
+
+         i4time_latest_wsi = i4times_proc(ifile)         
+
+         if(c_raddat_type.eq.'wfo'.and.wsi_dir_path(2:7).ne.'public'       
+     1)then
+           c_filetime=cvt_i4time_wfo_fname13(i4time_latest_wsi)
+           nn=index(c_filetime,' ')-1
+           c_filenames_proc(ifile)=wsi_dir_path(1:n-1)//c_filetime(1:nn)      
+         else
+           call make_fnam_lp (i4time_latest_wsi, c_filename, ISTATUS)
+           c_filetime=c_filename
+           nn=index(c_filetime,' ')-1
+           c_filenames_proc(ifile)=wsi_dir_path(1:n-1)//c_filetime(1:nn)
+     1                                                //'_hd'
+         endif
+
+       enddo ! ifile
 c
 c This for output.  LAPS VRC files as indicated.
 c
@@ -342,8 +333,13 @@ c    +rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,istatus)
 
        do k=1,nfiles
 
+          write(6,*)
+          write(6,*)' Processing: ',trim(c_filenames_proc(k))
+
           call read_nowrad_dims(c_raddat_type,c_filenames_proc(k),
      &         nelems,nlines)
+
+          write(6,*)' NOWRAD dims are: ',nelems,nlines
 
           call NOWRADWSI_to_LAPS(c_raddat_type,
      &                     c_filenames_proc(k),
@@ -408,7 +404,7 @@ c
 
             if(istatus.eq.1)then
                write(*,*)'VRC file successfully written'
-               write(*,*)'for: ',c_filenames_proc(k)(1:n-1)
+               write(*,*)'for: ',trim(c_filenames_proc(k)(1:n-1))
                write(*,*)'i4 time: ',i4time_data
             else
                goto 14
@@ -421,7 +417,7 @@ c
             write(6,*)'More than 25% of dBZ >= 47; thus,'
             write(6,*)'Not writing this vrc'
             write(*,*)'i4Time: ',i4time_data,
-     &              ' fTime: ',c_filenames_proc(k)(1:n-1)
+     &              ' fTime: ',trim(c_filenames_proc(k)(1:n-1))
 
          end if
 
