@@ -169,11 +169,17 @@ c abdel
      +                      jjlts,jgrid*1000,iout,jdot,ier)
       elseif(mode_supmap .eq. 3)then
           write(6,*)' Calling MAPDRW, etc. for countries/states...'
-     1             ,namelist_parms%continent_line_width
-!         call mapdrw()
+     1             ,namelist_parms%continent_line_width,icol_sta
           call mapint
-!         call maplot
-          CALL MPLNDR ('Earth..2',4)
+          CALL MPLNDR ('Earth..2',4) ! states & countries
+
+          if(namelist_parms%icol_country .ne. icol_sta)then
+              write(6,*)' Replotting countries in separate color: '
+     1                 ,namelist_parms%icol_country
+              call setusv_dum('IN',namelist_parms%icol_country) 
+              CALL MPLNDR ('Earth..2',3) ! countries
+          endif
+
           if(jgrid .gt. 0)then ! draw lat/lon lines
               call setusv_dum(2HIN,icol_cou)
               call mpsetr('GR',float(jgrid))
@@ -255,6 +261,8 @@ c abdel
      1                       ,l_discrete, l_sphere
      1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
+     1                       ,icol_continent,icol_country
+     1                       ,icol_state,icol_county
      1                       ,dist_plot_ua, dist_plot_sfc
      1                       ,c_ob_color, i_background_color
      1                       ,btemp_colortable
@@ -274,6 +282,10 @@ c abdel
        iraster = 0
        l_sphere = .false.
        icol_barbs = 0
+       icol_continent = 7 ! yellow
+       icol_country = 7   ! yellow
+       icol_state = 7     ! yellow
+       icol_county = 7    ! yellow
        chigh_cape = 7000.
        chigh_tpw = 7.
        c_ob_color = 'default'
@@ -316,6 +328,10 @@ c abdel
        namelist_parms%mode_supmap = mode_supmap
        namelist_parms%iraster = iraster
        namelist_parms%icol_barbs = icol_barbs
+       namelist_parms%icol_continent = icol_continent
+       namelist_parms%icol_country = icol_country
+       namelist_parms%icol_state = icol_state
+       namelist_parms%icol_county = icol_county
        namelist_parms%dist_plot_ua = dist_plot_ua
        namelist_parms%dist_plot_sfc = dist_plot_sfc
        namelist_parms%i_pcp_sto_colorbar = i_pcp_sto_colorbar
