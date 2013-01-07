@@ -6,7 +6,9 @@
      1                          ,latitude,longitude,altitude
      1                          ,windDir,windSpeed
      1                          ,temperature,relHumidity
-     1                          ,l_geoalt)
+     1                          ,l_geoalt
+     1                          ,l_debug                           ! I
+     1                          ,istat_ob)                         ! O
 
           character*(*) ext 
 
@@ -16,7 +18,7 @@
 
           real latitude, longitude
 
-          l_debug = .false.
+          istat_ob = 0
 
           call open_ext(lun,i4time_sys,ext(1:3),istatus)       
 
@@ -46,6 +48,7 @@
           if(l_debug)write(6,1)a9_timeObs,a9_recptTime 
                      write(lun,1)a9_timeObs,a9_recptTime 
  1        format(' Time - prp/rcvd:'/1x,a9,2x,a9) 
+          istat_ob = 1
 
           if(l_geoalt)then
               if(l_debug)write(6,2)latitude,longitude,altitude
