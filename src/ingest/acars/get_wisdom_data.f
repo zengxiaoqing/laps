@@ -139,6 +139,7 @@ C
       integer iwmostanum(recNum)
       character a9time_ob_r(recNum)*9
       logical l_closest_time, l_closest_time_i, l_in_domain, l_geoalt
+      logical l_debug
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
@@ -176,7 +177,7 @@ C
 C
 C The netcdf variables are filled - your pin write call may go here
 C
-      write(6,*)' # of WISDOM reports = ',recNum
+      write(6,*)' # of WISDOM reports read in = ',recNum
 
 !     Initial loop through obs to get times and stanums
       do iob = 1,recNum
@@ -188,10 +189,18 @@ C
 
       enddo ! iob
 
+      icount_ob_written = 0
+
       do iob = 1,recNum
           l_geoalt = .true.
 
 !         MADIS QC flag checks can be added here if desired
+
+          if(iob .le. 10)then
+              l_debug = .true.
+          else
+              l_debug = .false.
+          endif
 
           call write_aircraft_sub(lun_out,'pin'
      1                           ,a9time_ob_r(iob),a9time_ob_r(iob)
@@ -202,9 +211,17 @@ C
      1                           ,elevation(iob)
      1                           ,windDir(iob),windSpeed(iob)
      1                           ,temperature(iob),relHumidity(iob)
-     1                           ,l_geoalt)
+     1                           ,l_geoalt                          ! I
+     1                           ,l_debug                           ! I
+     1                           ,istat_ob)                         ! O
+
+          icount_ob_written = icount_ob_written + istat_ob
 
       enddo ! iob
+
+      write(6,*)' # of WISDOM reports written to PIN file = '
+     1          ,icount_ob_written        
+
       return
       end
 C
