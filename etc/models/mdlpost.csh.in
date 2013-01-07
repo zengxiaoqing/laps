@@ -6,7 +6,7 @@
 # generalized later to other fields/models
 
 setenv LAPS_DATA_ROOT $1
-setenv MODEL $2
+setenv MODELS "$2"
 
 setenv LAPSINSTALLROOT @prefix@
 
@@ -16,31 +16,6 @@ if ($3 == "") then
 else
     setenv DELAY $3
 endif
-
-if ($MODEL == wrf-hrrr) then
-    setenv CMODEL HRRR
-    setenv MODE_FSF WGRIB
-    setenv HHTIMES '00 01 02 03 04 05 06'
-else if ($MODEL == nam) then
-    setenv CMODEL NAM
-    setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/nam/A218/grib2 
-    setenv HHTIMES '00 03 06 09 12'                                      
-else if ($MODEL == rr) then
-    setenv CMODEL RR
-    setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/rap/iso_130/grib2
-    setenv HHTIMES '00 01 02 03 04 05 06'
-endif
-
-echo "CMODEL is $CMODEL"
-echo "MODE_FSF is $MODE_FSF"
-
-setenv OUTDIR_FUA $LAPS_DATA_ROOT/lapsprd/fua/$MODEL
-setenv OUTDIR     $LAPS_DATA_ROOT/lapsprd/fsf/$MODEL
-
-mkdir -p $OUTDIR_FUA
-mkdir -p $OUTDIR
 
 # Obtain model runtime (on the hour), default is with a 3 hour delay
 @ LEN_DELAY = `echo $DELAY | wc -c` - 1
@@ -52,56 +27,100 @@ endif
 
 echo "YYDDDHHMM (model initialization time to process) = $YYDDDHHMM"
 
-setenv FCSTINTVL `perl $LAPSINSTALLROOT/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_intvl`
-echo "FCSTINTVL is $FCSTINTVL"
+echo "Inputted MODEL(s): $MODELS"
 
-#if (-e /data/fab/laps/laps_conus.fsf) then
+foreach MODEL ($MODELS)
+
+  echo "Processing model $MODEL"
+
+  if ($MODEL == wrf-hrrr) then
+    setenv CMODEL HRRR
+    setenv MODE_FSF WGRIB
+    setenv HHTIMES '00 01 02 03 04 05 06'
+  else if ($MODEL == nam) then
+    setenv CMODEL NAM
+    setenv MODE_FSF REGRID
+    setenv GRIBINDIR /public/data/grids/nam/A218/grib2 
+    setenv HHTIMES '00 03 06 09 12'                                      
+    setenv MMTIMES '00'
+  else if ($MODEL == rr) then
+    setenv CMODEL RR
+    setenv MODE_FSF REGRID
+    setenv GRIBINDIR /public/data/grids/rap/iso_130/grib2
+    setenv HHTIMES '00 01 02 03 04 05 06'
+    setenv MMTIMES '00'
+  else if ($MODEL == wndw-warw) then
+    setenv CMODEL WNDW-WARW
+    setenv MODE_FSF REGRID
+    setenv GRIBINDIR /public/data/grids/hiresw/westarw/grib2
+    setenv HHTIMES '00 01 02 03 04 05 06'
+    setenv MMTIMES '00'
+  endif
+
+  echo "CMODEL is $CMODEL"
+  echo "MODE_FSF is $MODE_FSF"
+
+  setenv OUTDIR_FUA $LAPS_DATA_ROOT/lapsprd/fua/$MODEL
+  setenv OUTDIR     $LAPS_DATA_ROOT/lapsprd/fsf/$MODEL
+
+  mkdir -p $OUTDIR_FUA
+  mkdir -p $OUTDIR
+
+  setenv FCSTINTVL `perl $LAPSINSTALLROOT/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_intvl`
+  echo "FCSTINTVL is $FCSTINTVL"
+
+# if (-e /data/fab/laps/laps_conus.fsf) then
 #   setenv NCTEMPLATE /data/fab/laps/laps_conus.fsf
-#endif
+# endif
 
-setenv NCTEMPLATE     $LAPS_DATA_ROOT/template.fsf
-setenv NCTEMPLATE_FUA $LAPS_DATA_ROOT/template.fua
+  setenv NCTEMPLATE     $LAPS_DATA_ROOT/template.fsf
+  setenv NCTEMPLATE_FUA $LAPS_DATA_ROOT/template.fua
 
 # Create FSF template file
 #echo "ncgen -o $NCTEMPLATE $LAPS_DATA_ROOT/cdl/fsf.cdl"
 #      ncgen -o $NCTEMPLATE $LAPS_DATA_ROOT/cdl/fsf.cdl
 
-echo "NCTEMPLATE is $NCTEMPLATE"
-ls -l $NCTEMPLATE
+  echo "NCTEMPLATE is $NCTEMPLATE"
+  ls -l $NCTEMPLATE
 
-if (! -e $NCTEMPLATE && $MODE_FSF == WGRIB) then
+  if (! -e $NCTEMPLATE && $MODE_FSF == WGRIB) then
     echo "ERROR $NCTEMPLATE does not exist"
     exit
-endif
+  endif
 
-foreach HRRRHH ($HHTIMES)                                     
+  foreach FCST_HH ($HHTIMES)                                     
 
-    setenv FCSTTIMEHRRR 0000
+    if ($CMODEL == HRRR) then
 
-    if ($FCSTINTVL == 900 || $FCSTINTVL == 1800) then
+      if ($FCSTINTVL == 900 || $FCSTINTVL == 1800) then
         echo "using 15 minute output"
 
-        if ($HRRRHH == 00) then
+        if ($FCST_HH == 00) then
             setenv MMTIMES '00'
-            setenv FHH 00          
+            setenv FILE_HH 00          
         else
             setenv MMTIMES '15 30 45 60'
         endif
 
-    else
+      else
         echo "using 15 minute output files, for every 60 minutes of output"
 
-        if ($HRRRHH == 00) then
+        if ($FCST_HH == 00) then
             setenv MMTIMES '00'
-            setenv FHH 00          
+            setenv FILE_HH 00          
         else
             if ($CMODEL == HRRR) then
                 setenv MMTIMES '60'
             else
-                setenv FHH $HRRRHH
+                setenv FILE_HH $FCST_HH
                 setenv MMTIMES '00'
             endif
         endif
+
+      endif
+
+    else # other model
+      setenv FILE_HH $FCST_HH
 
     endif
 
@@ -109,22 +128,22 @@ foreach HRRRHH ($HHTIMES)
 
       if ($MODE_FSF == WGRIB) then
 
-        if ($FMM == 60 || $HRRRHH == 00) then
-            setenv FHH $HRRRHH
-            setenv FCSTTIME $FHH\00 
+        if ($FMM == 60 || $FCST_HH == 00) then
+            setenv FILE_HH $FCST_HH
+            setenv FCSTTIME $FILE_HH\00 
         else
-            @ FHH_I = $HRRRHH - 1
+            @ FHH_I = $FCST_HH - 1
             if ($FHH_I < 10) then
-                setenv FHH 0$FHH_I
+                setenv FILE_HH 0$FHH_I
             else
-                setenv FHH $FHH_I
+                setenv FILE_HH $FHH_I
             endif
-            setenv FCSTTIME $FHH$FMM
+            setenv FCSTTIME $FILE_HH$FMM
         endif
 
         setenv NTABLE 31
 
-        if ($HRRRHH == 00) then
+        if ($FCST_HH == 00) then
             @ REC_LMR = 1
         else
             @ REC_LMR = ((($FMM / 15) - 1) * $NTABLE) + 1
@@ -141,8 +160,8 @@ foreach HRRRHH ($HHTIMES)
         echo " "
         echo "Processing forecast time/record $FCSTTIME $REC_LMR"
 
-#       setenv GRIBIN /home/Steve.Albers/public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$HRRRHH\00         
-        setenv GRIBIN /public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$HRRRHH\00         
+#       setenv GRIBIN /home/Steve.Albers/public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
+        setenv GRIBIN /public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
 
 #       setenv NCOUT /home/Steve.Albers/outdir/$YYDDDHHMM$FCSTTIME.fsf
         setenv NCOUT     $OUTDIR/$YYDDDHHMM$FCSTTIME.fsf
@@ -188,7 +207,7 @@ foreach HRRRHH ($HHTIMES)
 
         setenv GRIB_PCP_IN /nofile                                                         
         if ($FMM == 00 || $FMM == 60) then
-            setenv GRIB_PCP_IN /public/data/fsl/hrrr/conus/wrftwo/$YYDDDHHMM$HRRRHH\00         
+            setenv GRIB_PCP_IN /public/data/fsl/hrrr/conus/wrftwo/$YYDDDHHMM$FCST_HH\00         
             if (-e $GRIB_PCP_IN) then
                 echo "$GRIB_PCP_IN is present"
 
@@ -205,7 +224,7 @@ foreach HRRRHH ($HHTIMES)
               
                 echo "new precip command for r01"
                 if (-e $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01) then
-                    if ($HRRRHH == 01 && $FCSTINTVL == 3600) then
+                    if ($FCST_HH == 01 && $FCSTINTVL == 3600) then
                         echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT"                   
                               wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT
                     else
@@ -303,7 +322,7 @@ foreach HRRRHH ($HHTIMES)
             date -u
             echo " "
             echo "Hourly HRRR files under construction for FUA"
-            setenv GRIB_PRES_IN /public/data/fsl/hrrr/conus/wrfprs/$YYDDDHHMM$HRRRHH\00         
+            setenv GRIB_PRES_IN /public/data/fsl/hrrr/conus/wrfprs/$YYDDDHHMM$FCST_HH\00         
             setenv MODE_FUA WGRIB
 
             if (-e $GRIB_PRES_IN && -e $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua) then
@@ -375,8 +394,8 @@ foreach HRRRHH ($HHTIMES)
         endif # on the hour
 
       else # other model
-        setenv FCSTTIME_IN  00$FHH    
-        setenv FCSTTIME_OUT $FHH$FMM
+        setenv FCSTTIME_IN  00$FILE_HH    
+        setenv FCSTTIME_OUT $FILE_HH$FMM
 
         echo " "
         echo "Processing model $CMODEL with input/output forecast time of $FCSTTIME_IN/$FCSTTIME_OUT"
@@ -392,8 +411,10 @@ foreach HRRRHH ($HHTIMES)
 
     end # minute loop
 
-end # hour loop
+  end # hour loop
 
-echo ""
-echo "output..."
-ls -l $OUTDIR
+  echo ""
+  echo "output..."
+  ls -l $OUTDIR
+
+end # Loop through models
