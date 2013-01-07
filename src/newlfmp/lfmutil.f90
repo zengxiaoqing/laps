@@ -781,7 +781,7 @@ else
   if(.true.)then ! post-process swdown field  
      do j=1,ly
      do i=1,lx
-        coeff = 0.93 + (cldamt(i,j) * 0.2)
+        coeff = 0.93 + (cldamt(i,j) * 0.5)
         swdown(i,j) = swdown(i,j) * coeff
      enddo ! i
      enddo ! j      
