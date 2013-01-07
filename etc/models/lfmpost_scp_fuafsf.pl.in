@@ -9,11 +9,9 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 # Setup command line options:
 #    -l lapsprd (needs machine name and directory)
 #    -L flag meaning -l represents the LAPS_DATA_ROOT path to the output directory (minus the nest)
-#    -m model type (default = mm5)
-#    -a model configuration (e.g. schultz)
-#       NOTE: if -a is set to "noSubDir", files will be written out to 
-#             $lapsprd/fua and $lapsprd/fsf
-#    -r model root (default = environment variable)
+#    -m model type [optional if -a will be set]
+#    -a model configuration (e.g. schultz) [optional if -m has been set]
+#    -r model root                                       
 #    -d init date (yyyymmddhh, default = current hour)
 #    -g model grid to process (default = 1, negative value does all grids)
 #    -f number of forecasts including initial time (default = 12)
@@ -26,7 +24,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -x <blank> if present an awips bigfile will be created
 #    -e avoid exiting if a particular file is missing (position as last argument or supply dummy value)
 #    -c remote copy method (scp or rsync), default is rsync [optional]
-#    -R copy surface fsf only [optional]
+#    -R copy surface fsf only [optional - dummy value should be supplied]
 
 use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e $opt_c $opt_R);
 #getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxec:R');
@@ -36,14 +34,20 @@ getopt('lmardgfispwMSxecR');
 require "@prefix@/etc/laps_tools.pm";
 require "@prefix@/etc/oputil.pm";
 
+if(! defined $opt_R){ # check surface only flag
+    print "opt_R is not defined\n";
+}else{
+    print "opt_R is defined\n";
+}
+
 my $now = `date -u`;
 $now = substr($now,0,length($now)-1);
 print "*** lfmpost_scp_fuafsf.pl script started:  $now ***\n\n";
 
 # Define model type (default = mm5).
 
-my $model = "mm5";
-$model = $opt_m if defined($opt_m);
+#my $model = "mm5";
+#$model = $opt_m if defined($opt_m);
 
 # Define model grids (default = 1).
 
@@ -65,8 +69,8 @@ my $lapsprd;
 $lapsprd = "$opt_l" if defined($opt_l);
 
 my $modelroot;
-my $name = uc($model)."_ROOT";
-$modelroot = $ENV{"$name"} if defined($ENV{"$name"});
+#my $name = uc($model)."_ROOT";
+#$modelroot = $ENV{"$name"} if defined($ENV{"$name"});
 $modelroot = "$opt_r" if defined($opt_r);
 
 if (! defined($lapsprd)) {
@@ -74,9 +78,14 @@ if (! defined($lapsprd)) {
   exit;
 }
 if (! defined($modelroot)) {
-  print "$name is not defined.\n";
+  print "$modelroot is not defined.\n";
   exit;
 }
+
+my $name;
+$name = "$opt_m" if defined($opt_m);
+$name = "$opt_a" if defined($opt_a);
+$name = "$opt_m-$opt_a" if (defined($opt_m) && defined($opt_a));
 
 # Determine default init time based on current time.
 
@@ -126,7 +135,7 @@ if ($opt_d) {
     $dd = substr($date,6,2);
     $hh = substr($date,8,2);
 
-    print "Date from directory is $date - nfiles is $nfiles\n";
+    print "Date from model directory is $date - nfiles is $nfiles\n";
 }
 
 my $yy = substr($yyyy,2,2); 
@@ -163,7 +172,6 @@ $maxwait = $opt_w if defined ($opt_w);
 
 # Echo input arguments
 
-print "model: $model\n";
 print "lapsprd: $lapsprd\n";
 print "modelroot: $modelroot\n";
 print "date: $date\n";
@@ -173,14 +181,16 @@ print "finc (minutes): $finc_mn\n";
 print "maxwait: $maxwait\n";
 
 
+print "name: $name\n";
+
 my $inittime = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + $decade;
 my $current_sec = timegm(gmtime);
 
 my $endsec;
 if ($nfiles > 0) {
-    $endsec = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + 23400;
+    $endsec = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + 40000;
 }else{
-    $endsec = $current_sec + 23400;
+    $endsec = $current_sec + 40000;
 }
 
 my $new_cycle_min;
@@ -322,13 +332,13 @@ if (! $opt_S){ # test for skipping remote copy
       $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua $method";
     }else {
       if ($opt_L) {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/lapsprd/fua/$opt_m-$opt_a $method";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/lapsprd/fua/$name $method";
       }else {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$opt_m-$opt_a $method";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$name $method";
       }
     }
 
-    if(! defined ($opt_R)){ # check surface only flag
+    if(! defined $opt_R){ # check surface only flag
       print "Running command: $scp_cmd\n";
       system ($scp_cmd);
       if($remote_copy =~ "rsync"){
@@ -348,9 +358,9 @@ if (! $opt_S){ # test for skipping remote copy
       $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf $method";
     }else {
       if ($opt_L) {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$opt_m-$opt_a $method";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$name $method";
       }else {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$opt_m-$opt_a $method";
+        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$name $method";
       }
     }
 
@@ -445,7 +455,7 @@ for ($n=0; $n<$nfcst; $n++) {
 
   my $mss_cmd;
 
-  $mss_cmd = "mkdir -p $mssfullpath/fua/$opt_m-$opt_a";
+  $mss_cmd = "mkdir -p $mssfullpath/fua/$name";
   print "Running command: $mss_cmd\n";
   system ($mss_cmd);
 
@@ -455,16 +465,16 @@ for ($n=0; $n<$nfcst; $n++) {
   for ($g=1; $g<=$ngrid; $g++) {
     $grid = $grid[$g];
 
-    $mss_cmd = "cp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $mssfullpath/fua/$opt_m-$opt_a";
+    $mss_cmd = "cp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $mssfullpath/fua/$name";
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
     system ("date");
 
-    $mss_cmd = "mkdir -p $mssfullpath/fsf/$opt_m-$opt_a";
+    $mss_cmd = "mkdir -p $mssfullpath/fsf/$name";
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
 
-    $mss_cmd = "cp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $mssfullpath/fsf/$opt_m-$opt_a";
+    $mss_cmd = "cp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $mssfullpath/fsf/$name";
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
     system ("date");
