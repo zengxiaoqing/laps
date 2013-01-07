@@ -21,6 +21,10 @@
           integer latlon_int
           integer mode_supmap
           integer icol_barbs
+          integer icol_continent
+          integer icol_country   
+          integer icol_state     
+          integer icol_county    
           integer iraster
           integer i_background_color
           integer i_pcp_sto_colorbar
