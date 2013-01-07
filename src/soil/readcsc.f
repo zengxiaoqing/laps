@@ -31,13 +31,15 @@ cdis
 cdis 
          subroutine readcsc(i4time_cur,imax,jmax,cscnew)
 C
-         integer*4  imax,jmax
+         integer  imax,jmax
 
-         real*4 csc(imax,jmax),lcv(imax,jmax),csctot(imax,jmax)
-         real*4 snow_total(imax,jmax)
-         real*4 snow_accum(imax,jmax)
-         real*4 missval,cscnew(imax,jmax)
-         integer*4 i4time,i4time_cur
+         real csc(imax,jmax),lcv(imax,jmax),csctot(imax,jmax)
+         real csc2nd(imax,jmax)
+         real snow_total(imax,jmax)
+         real snow_accum(imax,jmax)
+         real missval,cscnew(imax,jmax)
+         integer i4time,i4time_cur
+         integer i4time_csc(imax,jmax),i4time_snow(imax,jmax)
          CHARACTER*24 TIME
 c ************************************************************
 c
@@ -60,13 +62,12 @@ c
         i4time=i4time_cur-48*3600 !force 48 hours 
 
 c ************************************************************
-c first set csctot to all missing values
+c initialize arrays                                    
 c
-         do i=1,imax
-         do j=1,jmax
-           csctot(i,j)=missval
-         enddo
-         enddo
+        csctot=missval
+        csc2nd=missval
+        i4time_csc = -999
+        i4time_snow = -999
 c
 c now loop through past 48 hours, looking only at csc files
 c
@@ -79,9 +80,9 @@ c
            call cv_i4tim_asc_lp(i4time,time,istatus)
 c           if(time(13:14).eq.'13')goto 52
            write(6,101)time
+ 101       format(1x,'First csc loop data search time: ',a17)
 c
-	   CALL GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
-     &ISTATUS)
+	   CALL GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,ISTATUS)
 	   IF (ISTATUS .NE. 1)go to 522
 
            icsc=icsc+1
@@ -103,13 +104,12 @@ c
            enddo
            nmpts=(imax*jmax)-nspts-nrpts
            nspts=nspts-nrpts
-           print*,'Cycle ',itime,'nmiss/nsnow/nreject ',nmpts,
-     &nspts,nrpts
+           write(6,501)itime,nmpts,nspts,nrpts
+ 501       format(' Cycle ',i4,' nmiss/nsnow/nreject ',3i9)
  522       continue
 c
            i4time=i4time+laps_cycle_time
         enddo
- 101    format(1x,'First csc loop data search time: ',a17)
 c
         if(icsc.eq.0)then
         write(6,*) '**** No lcv data available over 48 hours ****'
@@ -135,19 +135,27 @@ c
         do itime=1,ncycle_times
 c
            call cv_i4tim_asc_lp(i4time,time,istatus)
-c           if(time(13:14).eq.'13')goto 52
+c          if(time(13:14).eq.'13')goto 52
            write(6,102)time
+ 102       format(1x,'Second loop data search time: ',a17)
 c
 c First get csc field again. Will not analyze - just use this to
 c   write over any previous time's snow_total obs.
-	   CALL GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
-     &ISTATUS)
+	   CALL GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,ISTATUS)
 	   IF (ISTATUS .NE. 1)goto 52
 
            do i=1,imax
            do j=1,jmax
-             if(csc(i,j).le.1.1)cscnew(i,j)=csc(i,j)  
-	     if(csc(i,j).le.0.1)cscnew(i,j)=0.0
+             if(csc(i,j).le.1.1)then
+                 cscnew(i,j)=csc(i,j)  
+                 csc2nd(i,j)=csc(i,j)  
+                 i4time_csc(i,j) = i4time
+             endif
+	     if(csc(i,j).le.0.1)then
+                 cscnew(i,j)=0.0
+                 csc2nd(i,j)=0.0
+                 i4time_csc(i,j) = i4time
+             endif
            enddo
            enddo
  52        continue
@@ -155,9 +163,10 @@ c   write over any previous time's snow_total obs.
         enddo
 c
 c now get snow_total obs
-c J.Smart (11-3-97). Compute 6 hour snow accumulation instead of
+c J.Smart (11-3-97). Compute 48 hour snow accumulation instead of
 c                    snow total to avoid false snow cover from "old"
 c                    snow total accumulation.
+c Recent snow is given more weight
 c
         i4time=i4time_cur-48*3600
         ncycle_times=48*int(3600./float(laps_cycle_time))
@@ -169,17 +178,27 @@ c
 
            call cv_i4tim_asc_lp(i4time,time,istatus)
            write(6,103)time
+ 103       format(1x,'Snow Accum data search time: ',a17)
 
-           CALL GETLAPSL1S(I4TIME,snow_accum,imax,jmax,1,
-     &ISTATUS)
-           IF (ISTATUS .NE. 1)goto 51
-           do j=1,jmax
-           do i=1,imax
-              snow_total(i,j)=snow_total(i,j)
-     & +(snow_accum(i,j)*(float(itime)/float(ncycle_times)))
-           enddo
-           enddo
- 51        continue
+           CALL GETLAPSL1S(I4TIME,snow_accum,imax,jmax,1,ISTATUS)
+           IF (ISTATUS .EQ. 1)then   
+             do j=1,jmax
+             do i=1,imax
+               snow_total(i,j)=snow_total(i,j)
+     &       +(snow_accum(i,j)*(float(itime)/float(ncycle_times)))
+               if(snow_accum(i,j) .gt. 0.)then
+                 i4time_snow(i,j) = i4time
+               endif
+             enddo
+             enddo
+             call array_range(snow_accum,imax,jmax,rmin1,rmax1,missval)          
+             call array_range(snow_total,imax,jmax,rmin2,rmax2,missval)          
+             write(6,111)rmin1,rmax1,rmin2,rmax2 
+111          format(' L1S/S01, snow total ranges ',4f9.5)
+           else
+             write(6,*)'WARNING - L1S/S01 unavailable'
+           endif     
+
            i4time=i4time+laps_cycle_time
         enddo
 c
@@ -187,34 +206,52 @@ c Adjust snow cover field based upon snow total. ------
 c   if snowfall total >= 2cm, then set snow cover to 1.
 c   if snowfall total  = 1cm, then set snow cover to 0.5
 c   if snowfall total between 1 and 2cm, then ramp snow cover 0.5 to 1.
-           do i=1,imax
-           do j=1,jmax
+c
+c We added an extra condition that snowfall is more recent than satellite
+c data.                                                                   
+
+        nrecent_snow = 0
+        nrecent_csc2nd = 0
+        n_neither = 0
+        do i=1,imax
+        do j=1,jmax
+c         if(csc2nd(i,j) .eq. missval)then
+c         if(i4time_csc(i,j) .lt. i4time_cur-86400)then
+          if(i4time_snow(i,j) .gt. i4time_csc(i,j))then
+            nrecent_snow = nrecent_snow + 1
+
             if(snow_total(i,j) .ge. 0.02)cscnew(i,j)=1.0
             if((snow_total(i,j).ge.0.01).and.(snow_total(i,j).lt.0.02))
      1         cscnew(i,j)=snow_total(i,j)/0.02
 
 c           if(snow_total(i,j).ge.0.02.and.cscnew(i,j).gt.0.25)
-c    1cscnew(i,j)=1.0
+c    1         cscnew(i,j)=1.0
 c           if((snow_total(i,j).ge.0.01).and.(snow_total(i,j).lt.0.02))
-c    1cscnew(i,j)=snow_total(i,j)/0.02
+c    1         cscnew(i,j)=snow_total(i,j)/0.02
 
-           enddo
-           enddo     
+          elseif(csc2nd(i,j) .ne. missval)then ! test csc2nd is recent   
+              nrecent_csc2nd = nrecent_csc2nd + 1
+          else
+              n_neither = n_neither + 1
+          endif
+
+        enddo
+        enddo     
+
+        write(6,*)' recent snow(S01)/csc(sat)/none = ',nrecent_snow
+     1                                                ,nrecent_csc2nd
+     1                                                ,n_neither
 c
- 102    format(1x,'Second loop data search time: ',a17)
- 103    format(1x,'Snow Accum data search time: ',a17)
-c
-c        do j=jmax,1,-1
+c       do j=jmax,1,-1
 c          write(6,76)j,(cscnew(i,j),i=1,18)
 c 76       format(1x,i2,1x,18f4.1)
-c        enddo
+c       enddo
 c
         return
         end
 C-------------------------------------------------------------------------------
 C
-      SUBROUTINE GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
-     &ISTATUS)
+      SUBROUTINE GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,ISTATUS)
 C
       Integer*4 imax,jmax
       Integer*4 kmax
