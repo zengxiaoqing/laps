@@ -1174,7 +1174,8 @@ c       ----------------------------
 c
           if(lgrid_missing)then
 
-           print*,'Error: bkgd domain size insufficient'
+           print*,'Error: bkgd domain size insufficient for: '
+     1           ,trim(cmodel)
            goto 999 ! return
 
           else
@@ -1760,8 +1761,8 @@ c
 c
 c Write LGA
 c ---------
-         write(6,*)' Writing lga and/or lgb:',time_bg(nf),valid_bg(nf)
-     1                                       ,bgvalid
+         write(6,*)' Writing lga and/or lgb: ',trim(cmodel),' '
+     1                 ,time_bg(nf),valid_bg(nf),bgvalid
          if(.not.lgb_only)then
 
           if(vertical_grid .eq. 'PRESSURE')then
