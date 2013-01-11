@@ -2,6 +2,8 @@ package wgi_utils;
 
 sub which_bkgd
 {
+#   print "which_bkgd 1\n";
+
     @lines_in=@_;
 
 #   We want the last model read if there is more than one
@@ -43,7 +45,8 @@ sub which_bkgd
         }
     }
 
-    print "BACKGROUND FIELDS:  ";
+#   print "which_bkgd 2\n";
+    print "BACKGROUND FIELDS: $modeltype  ";
 
     if ($modeltype eq 'lga' || $modeltype eq 'lgb')
     {
@@ -51,17 +54,22 @@ sub which_bkgd
         $bgmodelfile = $main::filename;
         $bgmodelfile =~ s/$main::logname/lga/;
         $modelid = "???";
+#       print "Opening $bgmodelfile\n";
         if(open(BGMODEL,$bgmodelfile))
         {
+#          print "Opened $bgmodelfile\n";
            foreach(<BGMODEL>)
            {
-
-              if(/cmodel (\w*)/) {$modelid = $1;}
-              if (/cmodel: (.*)/)           {(@modelid) = split(" ", $1); $modelid = @modelid[0];}
-              if (/Reading - (.*)/)         {$pathname = $1; last; close BGMODEL; }
-              if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; }
+#             print "$_";
+#             if (/Reading (.*)/) {print "*** $_";  }
+#             if (/Reading (.*)/) {print "*** $_";  }
+#             if (/ Writing lga (.*)/) {print "*** $_";  }
+              if (/ Writing lga (.*)/) {(@modelid) = split(" ", $1); $modelid = @modelid[2];}
+              if (/Reading - (.*)/)         {$pathname = $1; }
+              if (/reading cdfname\: (.*)/) {$pathname = $1; }
            }
            $basename = $1 if ($pathname =~ /([^\/]*)$/);
+           close BGMODEL;
         }
 
         if($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/)
