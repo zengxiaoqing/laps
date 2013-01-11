@@ -609,6 +609,7 @@ c
       do i=1,nsats
         do js = 1,maxsat
           if(trim(csatid(i)).eq.trim(satellite_ids(js)))then
+            write(6,*)
             write(6,*)' Match csatid/satellite_ids/ntypes'
      1                                  ,i,js,ntypes(i),csatid(i)
             do j=1,ntypes(i)
@@ -632,6 +633,7 @@ c
 c ----
 c goes08 (first satellite type)
 
+      write(6,*)
       write(6,*)' Determine satellite channels:'
       write(6,*)' nchannel = ',nchannel
       write(6,*)' cchanneltypes = ',cchanneltypes
@@ -641,6 +643,7 @@ c goes08 (first satellite type)
       jj=0
       kk=0
       do i=1,nsats
+       write(6,*)' Checking channels for ',i,csatid(i)
        if(csatid(i).eq.'goes08')then
         do j=1,ntypes(i)
          jj=jj+1
@@ -1417,8 +1420,6 @@ c format type 4 (rll)
 c format type 1 (ncp): netcdf polar (FMI's data type). Stored like wfo
 c format type 4 (rll)
 
-        jj=0
-
         do js = 1,maxsat
 
          if(js .eq. 2 .OR. js .ge. 9)then
@@ -1433,27 +1434,34 @@ c format type 4 (rll)
 
              if(csattypes(jj).eq.satellite_types(it,js))then
 
-              do k=1,nchannel(j)
+              do k=1,nchannel(jj)
                 kk=kk+1
 
                 ic=0
-                if(cchanneltypes(k).eq.'vis')then
+                if(cchanneltypes(kk).eq.'vis')then
                   ic=1
-                elseif(cchanneltypes(k).eq.'4u ')then
+                elseif(cchanneltypes(kk).eq.'4u ')then
                   ic=2
-                elseif(cchanneltypes(k).eq.'10p')then
+                elseif(cchanneltypes(kk).eq.'10p')then
                   ic=4
                 endif
 
                 if(ic .gt. 0)then
                   ICHANNELS(ic,it,js)=1
-                  c_channel_types(ic,it,js)=cchanneltypes(k)
-                  i_msng_sat_flag(ic,it,js)=i_qc_sat_flag(k)
+                  c_channel_types(ic,it,js)=cchanneltypes(kk)
+                  i_msng_sat_flag(ic,it,js)=i_qc_sat_flag(kk)
+                  write(6,*)' Channel Match js/it/k/kk/ic'
+     1                                     ,js,it,k,kk,ic,csatid(i)
+     1                                     ,cchanneltypes(kk)
+                else
+                  write(6,*)' No Channel Match js/it/k/kk/ic'
+     1                                     ,js,it,k,kk,ic,csatid(i)
+     1                                     ,cchanneltypes(kk)
                 endif ! valid ic found
 
               enddo ! k
 
-              path_to_raw_sat(1:6,it,js)=cpath2sat(j)
+              path_to_raw_sat(1:6,it,js)=cpath2sat(jj)
 
              endif ! match of sat types
             enddo ! it = 1,4
