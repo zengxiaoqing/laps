@@ -36,7 +36,7 @@ my @windowres;
 my $window;
 my $resolution;
 
-my @vars = qw(REF SWI S8A);
+my @vars = qw(REF SWI S8A RTO);
 
 #my $fcstprd = "Radar_Comp";
 
@@ -199,6 +199,10 @@ foreach $var (@vars) {
     $fcstprd = "Solar";
     $analprd = "sol";
     $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
+  }elsif($var eq "RTO"){
+    $fcstprd = "Precip";
+    $analprd = "sto";
+    $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
   }else{
     $fcstprd = "11u";
     $analprd = "s8a";
@@ -244,7 +248,8 @@ foreach $var (@vars) {
       $result=system("$command");
 
       if (! -e $fullanal_image) {
-        print "WARNING: $fullanal_image is not present\n";
+        print "WARNING: $fullanal_image analysis image is not present - using black_image $black_image\n";
+        $fullanal_image = $black_image;
         push @analimagelist, $black_image;                            
       }else{
         push @analimagelist, $fullanal_image;                              
