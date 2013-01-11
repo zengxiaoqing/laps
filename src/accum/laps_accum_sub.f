@@ -399,6 +399,9 @@ c read in laps lat/lon and topo
             LVL_2d(k) = LVL
             LVL_Coord_2d(k) = LVL_Coord
             UNITS_2d(k) = 'M'
+            write(6,*)' Range of ',var_2d(k),' ' 
+     1                            ,minval(field_2dsnow(:,:,k))
+     1                            ,maxval(field_2dsnow(:,:,k))
         enddo
 
         CALL WRITE_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
