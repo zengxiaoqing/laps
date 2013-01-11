@@ -1,7 +1,7 @@
 
         subroutine compare_analysis_to_rad(i4time,ni,nj
      1  ,cvr_sao_max,solar_alt,cvr_snow
-     1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
+     1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,td_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns
      1  ,n_obs_b
@@ -10,7 +10,7 @@
         include 'trigd.inc'
 
         real cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
-     1        ,t_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
+     1        ,td_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
      1        ,dbz_max_2d(ni,nj),solar_alt(ni,nj),swi_2d(ni,nj)
      1        ,cvr_snow(ni,nj)
 
@@ -79,7 +79,7 @@
 
         solar_constant = 1353.
         solar_irradiance = solar_constant * rad_dist_factor
-        transmittance = 0.730 ! catchall for various types of absorption / scattering
+        transmittance = 0.800 ! catchall for various types of absorption / scattering
 
         model = 1
         if(model .eq. 1)then
@@ -106,11 +106,11 @@
 !           Set how much solar radiation varies with changes in cloud fraction
             if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then
                 if(cvr_snow(i,j) .eq. r_missing_data .OR. 
-     1             cvr_snow(i,j) .le. 0.25                )then 
+     1             cvr_snow(i,j) .le. 0.50                )then 
                     cvr_scl_a(i,j) = 1.0 ! scaling where we have VIS data
-                    cvr_rad(i,j) = cloud_frac_vis_a(i,j)
+                    cvr_rad(i,j) = cvr_max(i,j) ! cloud_frac_vis_a(i,j)
                 else
-                    cvr_scl_a(i,j) = 0.6 ! scaling where we have VIS data & snow cover
+                    cvr_scl_a(i,j) = 1.0 ! scaling where we have VIS data & snow cover
                     cvr_rad(i,j) = cvr_max(i,j)
                 endif
             else
@@ -123,7 +123,10 @@
 !               altfunc = sind(x)
 !               altfunc = sind(x)**(1.0 + 0.2 * cosd(x)**9.)
                 altfunc = (0.9 * sind(x)) + (0.1 * sind(x)**2)
-                rad_clr(i,j) = max(rad_zenith_clr * altfunc,0.)
+                vapor_p = esat(td_sfc_k(i,j) - 273.15) ! mb 
+                trans_h2o_2d(i,j) = (1.0 - (vapor_p / 200.))          
+                rad_clr(i,j) = max(rad_zenith_clr * altfunc 
+     1                           * trans_h2o_2d(i,j),0.)
 
             elseif(model .eq. 2)then ! start to using Laue formula 
                                      ! (normal to sun's rays)
@@ -196,7 +199,7 @@
                     if(iwrite .eq. iwrite/20*20)then
                         write(6,*)'sv '
                         write(6,*)'sv Sta   i    j   VIS frac tb8_k  '
-     1                  //'t_gnd_k t_sfc_k cv_s_mx cvr_mx '
+     1                  //'t_gnd_k transmt cv_s_mx cvr_mx '
      1                  //'solalt cv_r rad_an '
      1                  //'rad_ob rad_th ratio cv_sol  df'
                     endif
@@ -291,7 +294,7 @@
      1                           ,cloud_frac_vis_a(i_i,i_j)
      1                           ,tb8_k(i_i,i_j)
      1                           ,t_gnd_k(i_i,i_j)
-     1                           ,t_sfc_k(i_i,i_j)
+     1                           ,transmittance*trans_h2o_2d(i_i,i_j)
      1                           ,cvr_snow(i_i,i_j)
      1                           ,cvr_max(i_i,i_j)
      1                           ,solar_alt(i_i,i_j)
@@ -304,7 +307,7 @@
      1                           ,cv_solar
      1                           ,cv_diff
      1                           ,c1_c
-1111                format(1x,a2,1x,a3,2i5,f8.2,3f8.1,f7.2,f8.2,f6.1       
+1111                format(1x,a2,1x,a3,2i5,f8.2,3f8.2,f7.2,f8.2,f6.1       
      1                    ,f6.2,f8.1,2f7.1,3f6.2,1x,a,1x)
 
                     sumobs = sumobs + rad_s(ista)
