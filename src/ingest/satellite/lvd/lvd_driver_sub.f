@@ -1142,7 +1142,7 @@ c                    endif
 c
 c *** istatus_v() is < 0. Determine if we have enough vis data.
 c
-               good_vis_data_thresh=(nx_l*ny_l)*0.1000
+               good_vis_data_thresh=(nx_l*ny_l)*0.0100
                if( (nx_l*ny_l+istatus_vis(1)).gt.
      &              good_vis_data_thresh)then
 
