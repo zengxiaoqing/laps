@@ -1310,3 +1310,47 @@ sub round {
 #   print "rounded $arg to $value\n"; 
     return ($value);
 }
+
+# 
+#-------------------------------------------------------------------
+#
+sub is_model {
+ 
+# Check string to see if it is a model (1-yes, 0-no)
+
+  my ($string) = @_;
+ 
+  my ($iout) = 1;
+
+  if ($string eq "bkgnd"){$iout = 0;} 
+  if ($string eq "analysis"){$iout = 0;} 
+  if ($string eq "balanced"){$iout = 0;} 
+  if ($string eq "DIFF"){$iout = 0;} 
+  if ($string eq "diff"){$iout = 0;} 
+  if ($string eq "DIFF_20"){$iout = 0;} 
+  if ($string eq "obs"){$iout = 0;} 
+  if ($string eq "obs_qc"){$iout = 0;} 
+  if ($string eq "what-got-in"){$iout = 0;} 
+
+  return ($iout);
+ 
+}
+# 
+#-------------------------------------------------------------------
+#
+sub is_sat {
+ 
+# Check string to see if it is a satellite (1-yes, 0-no)
+
+  my ($string) = @_;
+ 
+  my ($iout) = 0;
+
+  if ($string =~ "goes"){$iout = 1;} 
+  if ($string =~ "meteos"){$iout = 1;} 
+  if ($string =~ "mtsat"){$iout = 1;} 
+  if ($string =~ "fy"){$iout = 1;} 
+
+  return ($iout);
+ 
+}
