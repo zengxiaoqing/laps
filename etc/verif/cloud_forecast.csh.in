@@ -47,9 +47,14 @@ setenv MODELTIME_HHMM `head -1 $LAPS_DATA_ROOT/time/modelvtime.dat | cut -c6-9`
 
 setenv MODEL_ASCIITIME `tail -1 $LAPS_DATA_ROOT/time/modelvtime.dat`
 
-
 setenv FILE $LAPS_DATA_ROOT/lapsprd/verif/SWI/$SUBDIR/$MODELTIME.stats
 setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt
+
+setenv VERIF_INTVL `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v verif_intvl`
+@ VERIF_FCST_LEN = ( $NLINE - 1 ) * $VERIF_INTVL
+@ VERIF_FCST_LEN_HH = $VERIF_FCST_LEN / 3600
+#setenv VERIF_FCST_LEN `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
+#setenv MODEL_FCST_LEN  `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
 
 # Setup True Type fonts and related environment variables
 setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
@@ -139,15 +144,23 @@ setenv PNGFILE     $VAR_LC\_$TYPE\_fcst\_$MODELTIME.png
 
 setenv DQUOTE \"
 echo 'set terminal png '$TERM_FONT' size 1200,800'                        > $GNUPLOTFILE
-echo 'set xdata time'                                                    >> $GNUPLOTFILE
-echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
-echo 'set format x "%H:%M"'                                              >> $GNUPLOTFILE
-#echo 'set output '$DQUOTE$LOGDIR'/cloud_fcst.png'$DQUOTE                 >> $GNUPLOTFILE
+if ($DURATION == "") then 
+    echo 'set xdata time'                                                    >> $GNUPLOTFILE
+    echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
+    if ($VERIF_FCST_LEN >= 86400) then
+        echo 'set format x "%d/%H"'                                          >> $GNUPLOTFILE
+    else
+        echo 'set format x "%H:%M"'                                          >> $GNUPLOTFILE
+    endif
+endif
 echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
 
 # time range must be in same format as data file
-#echo 'set xrange ["2-FEB-2011 12:00:00.00":"2-FEB-2011 18:00:00.00"]'    >> $GNUPLOTFILE
-echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
+if ($DURATION == "") then 
+    echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
+else
+    echo 'set xrange [00:'$VERIF_FCST_LEN_HH']'                          >> $GNUPLOTFILE
+endif
 echo 'set yrange [0:1000]'                                               >> $GNUPLOTFILE
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-99.900"'                                     >> $GNUPLOTFILE
@@ -156,7 +169,8 @@ if ($DURATION == "") then
     echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
     echo 'set title "Global Horizontal Irradiance Observed vs Forecast '$DURATION'('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
 else
-    echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
+#   echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
+    echo 'set xlabel "Forecast Hours - Latest Run At '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
     echo 'set ylabel "GHI (W/m**2)"' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
     echo 'set title "GHI Observed vs Forecast '$DURATION'('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
 endif
@@ -219,22 +233,28 @@ while ($IMEMBER <= $NMEMBERS)
 
     echo "IMEMBER MEMBER IBLOCK TITLE: $IMEMBER $MEMBER $IBLOCK $TITLE"
 
-    if ($NMEMBERS == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
-    else if ($IMEMBER == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
-    else if ($IMEMBER == $NMEMBERS) then
-        echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
+    if ($DURATION == "") then 
+        setenv TIME 1
     else
-        echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
-        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using 1:5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
+        setenv TIME \(\$1+\$2/60\)
+    endif
+
+    if ($NMEMBERS == 1) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
+    else if ($IMEMBER == 1) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
+    else if ($IMEMBER == $NMEMBERS) then
+        echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 3'    >> $GNUPLOTFILE
+    else
+        echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 1, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':4 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 2, \' >> $GNUPLOTFILE
+        echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps 2 lt 3, \' >> $GNUPLOTFILE
     endif
 
     @ IMEMBER = $IMEMBER + 1
