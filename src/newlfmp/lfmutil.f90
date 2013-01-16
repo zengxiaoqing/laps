@@ -698,28 +698,28 @@ if(.not. large_ngrid)then
 
   I4_elapsed = ishow_timer()
 
-! Visibility.
-
-  visibility=6000000.*(tsfc-tdsfc)/(rhsfc**1.75)  ! in meters
-  where(visibility > 99990.) visibility = 99990.
-
-! Compute heat index if temp is above 80F (300K).
-
-  do j=1,ly
-  do i=1,lx
-   if (tsfc(i,j) >= 300.) then
-      heatind(i,j)=heatindex(tsfc(i,j),rhsfc(i,j))
-   else
-      heatind(i,j)=tsfc(i,j)
-   endif
-  enddo
-  enddo
-
   aglhgt = 80.
   call wind_agl(husig,hvsig,hzsig,aglhgt,zsfc,lx,ly,nz  &
                ,u80,v80,r_missing_data)
 
 endif ! large_ngrid
+
+! Visibility.
+
+visibility=6000000.*(tsfc-tdsfc)/(rhsfc**1.75)  ! in meters
+where(visibility > 99990.) visibility = 99990.
+
+! Compute heat index if temp is above 80F (300K).
+
+do j=1,ly
+do i=1,lx
+   if (tsfc(i,j) >= 300.) then
+      heatind(i,j)=heatindex(tsfc(i,j),rhsfc(i,j))
+   else
+      heatind(i,j)=tsfc(i,j)
+   endif
+enddo
+enddo
 
 ! Fire weather indices.
 
