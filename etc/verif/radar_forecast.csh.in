@@ -247,14 +247,20 @@ while ($IMEMBER <= $NMEMBERS)
 
     echo "IMEMBER MEMBER ICOL TITLE: $IMEMBER $MEMBER $ICOL $TITLE"
 
-    if ($NMEMBERS == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
-    else if ($IMEMBER == 1) then
-        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
-    else if ($IMEMBER == $NMEMBERS) then
-        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+    if ($DURATION == "") then 
+        setenv TIME 1
     else
-        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using 1:'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+        setenv TIME \(\$1+\$2/60\)
+    endif
+
+    if ($NMEMBERS == 1) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using '$TIME':'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+    else if ($IMEMBER == 1) then
+        echo 'plot '$DQUOTE$FILE$DQUOTE' index 0 using '$TIME':'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
+    else if ($IMEMBER == $NMEMBERS) then
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using '$TIME':'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1'       >> $GNUPLOTFILE
+    else
+        echo '     '$DQUOTE$FILE$DQUOTE' index 0 using '$TIME':'$ICOL'  title "'"$TH"$TITLE$TF'" with linespoints lw '$LW' lt '$IMEMBER' pt 5 ps 1, \'    >> $GNUPLOTFILE
     endif
 
     @ IMEMBER = $IMEMBER + 1
