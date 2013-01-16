@@ -146,7 +146,7 @@ c abdel
 
           jgrid=0                        ! Do not draw subsequent lat/lon lines
 
-       else
+      else
           write(6,*)' Omitting counties ',domsize
      1             ,namelist_parms%continent_line_width
 
@@ -169,7 +169,9 @@ c abdel
      +                      jjlts,jgrid*1000,iout,jdot,ier)
       elseif(mode_supmap .eq. 3)then
           write(6,*)' Calling MAPDRW, etc. for countries/states...'
-     1             ,namelist_parms%continent_line_width,icol_sta
+     1             ,namelist_parms%continent_line_width
+     1             ,namelist_parms%icol_country
+     1             ,icol_sta
           call mapint
           CALL MPLNDR ('Earth..2',4) ! states & countries
 
