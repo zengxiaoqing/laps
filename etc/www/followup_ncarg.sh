@@ -73,6 +73,11 @@ then
     WINDOW=0.0:0.0796:1.0:0.9204
     RESOLUTION=3193x2681
 
+elif test "$2" = "glaps_sos2"
+then
+    WINDOW=0.0:0.0796:1.0:0.9204
+    RESOLUTION=3193x2681
+
 elif test "$5" = "wide"
 then
     WINDOW=0.0:0.08:1.0:0.92
@@ -107,9 +112,11 @@ mkdir -p $WEB_DATA/anal2d
 AGE=+7 
 
 LOG=$WEB_DATA/anal2d/laps_gifs.log.$utc_hour$utc_min
-echo "Additional log info in "$LOG
 
-$WEB_NFS/www/anal2d/laps_gifs.csh $LAPS_DATA_ROOT $WEB_NFS $WINDOW $RESOLUTION $2 $AGE $LAPS_ROOT/bin $LAPS_A9TIME       1> $LOG 2>&1
+echo "Running command $WEB_NFS/www/anal2d/laps_gifs.csh $LAPS_DATA_ROOT $WEB_NFS $WINDOW $RESOLUTION $2 $AGE $LAPS_ROOT/bin $LAPS_A9TIME"
+                      $WEB_NFS/www/anal2d/laps_gifs.csh $LAPS_DATA_ROOT $WEB_NFS $WINDOW $RESOLUTION $2 $AGE $LAPS_ROOT/bin $LAPS_A9TIME       1> $LOG 2>&1
+
+echo "Additional log info in "$LOG
 
 rm -f /tmp/GSEG0*
 rm -f /tmp/GSEG1*
