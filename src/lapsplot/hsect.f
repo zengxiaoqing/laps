@@ -482,6 +482,14 @@ c       include 'satellite_dims_lvd.inc'
             c_type_i = c_type
         endif
 
+        if(c_type .eq. 'm')then
+            write(6,*)' Plot just map background'
+            ifield_found = 1
+            call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
+     1                         ,namelist_parms,plot_parms)
+            goto 1200
+        endif
+
         write(6,*)' c_type is: ',c_type
 
         if(c_type(1:2) .eq. 'by')then
@@ -5636,6 +5644,10 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'SWI')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1000.
      1                         ,'spectral',n_image,scale,'hsect'
+     1                         ,plot_parms,namelist_parms) 
+                elseif(var_2d .eq. 'VIS')then
+                    call ccpfil(field_2d,NX_L,NY_L,10000.,0.
+     1                         ,'linear',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'PBE')then
 !                   call condition_cape(NX_L,NY_L,'pei',r_missing_data
