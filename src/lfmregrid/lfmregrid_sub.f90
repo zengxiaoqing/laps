@@ -98,6 +98,7 @@ logical     l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf
 write(6,*)                              
 write(6,*)' Subroutine lfmregrid_sub...'
 write(6,*)' nx_bg/ny_bg = ',nx_bg,ny_bg
+write(6,*)' cmodel = ',cmodel          
 
 write(6,*)' l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf:', l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf
 
