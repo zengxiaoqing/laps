@@ -4111,13 +4111,16 @@ Process: STMAS3D.exe - Space-Time Mesoscale Analysis System in 3D
 
 ------- 3.4  ----  Model Initialization & Postprocessing ---------------------
 
-   The main GSD contact for information on how we use the LAPS analyses to 
-   initialize the forecasts is as follows: Chris Anderson for the
-   RAMS/SFM/MM5/WRF/Eta models. The forecast models themselves are obtained 
-   separately from the LAPS analysis tar file. There is some documentation for 
-   the model interfacing at this URL: 
+   LAPS analyses are used to initialize various mesoscale models (e.g. WRF, MM5,
+   HIRLAM, BOLAM) to accomplish the prediction component. The forecast models 
+   themselves are obtained separately from the LAPS analysis tar file. There is 
+   some documentation for the model interfacing (for MM5) at this URL: 
      
    http://laps.noaa.gov/mm5doc/README_lapsmm5.htm
+
+   For the WRF model we have a flow chart that illustrates an example of the 
+   initialization process: http://laps.noaa.gov/doc/HMT-m1.png
+
 
 ------ 3.4.1 --------------LAPSPREP------------------------------------------
 
@@ -4125,10 +4128,6 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
                         that can be used to initialize a local forecast
                         model (e.g., MM5, RAMS, WRF)
    
-   author: Brent Shaw
-
-   contact: Paul Schultz (Paul.J.Schultz AT noaa.gov)
-
    This process reformats LAPS data into files suitable for initializing
    a mesoscale forecast model.  The output format is controlled by the
    "output_format" entry in lapsprep.nl and can be set to one of the  
@@ -4652,6 +4651,7 @@ LAPS Fcst Model:
                      LHE  lhe      1  Fcst Model Helicity
                      LI   li       1  Fcst Model Lifted index
                      HI   hi       1  Fcst Model Heat index
+                     SWI  swi      1  Downward Shortwave Radiation
                      SWO  swo      1  Fcst Model Outgoing Shortwave Radiation
                      LWO  lwo      1  Fcst Model Outgoing Longwave Radiation
                      FWI  fwi      1  Fcst Model Fosberg fire weather index
