@@ -22,6 +22,7 @@
  mode_supmap=3,
  iraster=0,
  icol_barbs=0,
+ icol_continent=7,
  dist_plot_ua=0.,
  montage=0,
  /
@@ -102,6 +103,9 @@ c           (-1) use contour fill image plots exclusively for better quality
 c
 c icol_barbs - (0) use default situation dependent settings for wind barb color
 c              (1) always have colored wind barbs (instead of black)
+c
+c icol_continent - (7) use yellow color for continental outlines
+c                  (1) use white color for continental outlines
 c
 c dist_plot_ua - used to thin out the plotted upper air (ACARS & Cloud Drift 
 c                Wind) observations and represents the threshold distance in 
