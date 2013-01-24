@@ -556,7 +556,6 @@ c       include 'satellite_dims_lvd.inc'
      1             lmask_rqc_3d,r_missing_data,                 ! I
      1             field_2d_diff)                               ! O
 
-              c_label = '20dBZ Contingency Table (b - a)'
               plot_parms%iraster = +1
               plot_parms%l_discrete = .true.
               colortable = 'ref' ! 'spectral'
@@ -586,6 +585,9 @@ c       include 'satellite_dims_lvd.inc'
      1              ,frac_fcst                                     ! O
      1              ,bias                                          ! O
      1              ,ets)                                          ! O
+
+              write(c_label,41)ets
+ 41           format('20dBZ Contingency Table (b - a) ETS =',f5.2)
 
             else
               write(6,*)' Plotting product field of last two entries' 
