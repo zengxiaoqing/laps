@@ -7,7 +7,7 @@ use Time::Local;
 $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 
 # Setup command line options:
-#    -l lapsprd (needs machine name and directory)
+#    -l lapsprd (needs remote machine name and directory, except no machine name for "-c exchange" option)
 #    -L flag meaning -l represents the LAPS_DATA_ROOT path to the output directory (minus the nest)
 #    -m model type [optional if -a will be set]
 #    -a model configuration (e.g. schultz) [optional if -m has been set]
@@ -23,7 +23,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -S skip remote copy (just do Mass Store if that is chosen)
 #    -x <blank> if present an awips bigfile will be created
 #    -e avoid exiting if a particular file is missing (position as last argument or supply dummy value)
-#    -c remote copy method (scp or rsync), default is rsync [optional]
+#    -c remote copy method (rsync, scp, exchange), default is rsync [optional]
 #    -R copy surface fsf only [optional - dummy value should be supplied]
 
 use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e $opt_c $opt_R);
@@ -311,6 +311,7 @@ if (! $opt_S){ # test for skipping remote copy
     my $scp_cmd;
 
     my $remote_copy;
+    my ($fua_dir,$fsf_dir);
     my $method = "";
 
     if($opt_c eq "scp"){
@@ -328,13 +329,20 @@ if (! $opt_S){ # test for skipping remote copy
 #   Force this to rsync for now
 #   $remote_copy = "rsync -lptgvvz --timeout=300";   # faster for larger files
 
+    $fua_dir = "$modelroot/$date/wrfprd/d0$grid/fua";
+    $fsf_dir = "$modelroot/$date/wrfprd/d0$grid/fsf";
+
     if ($opt_a eq "noSubDir") {
-      $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua $method";
+      $scp_cmd = "$remote_copy $fua_dir/$fua_file $lapsprd/d0$grid/fua $method";
     }else {
       if ($opt_L) {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/lapsprd/fua/$name $method";
-      }else {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $lapsprd/d0$grid/fua/$name $method";
+        if ($method eq "exchange") {
+          $scp_cmd = "cd $fua_dir; $remote_copy $fua_file $lapsprd/lapsprd/fua/$name $method";
+        }else{
+          $scp_cmd = "$remote_copy $fua_dir/$fua_file $lapsprd/lapsprd/fua/$name $method";
+        }
+      }else{
+        $scp_cmd = "$remote_copy $fua_dir/$fua_file $lapsprd/d0$grid/fua/$name $method";
       }
     }
 
@@ -358,7 +366,11 @@ if (! $opt_S){ # test for skipping remote copy
       $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf $method";
     }else {
       if ($opt_L) {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$name $method";
+        if ($method eq "exchange") {
+          $scp_cmd = "cd $fsf_dir; $remote_copy $fsf_file $lapsprd/lapsprd/fsf/$name $method";
+        }else{
+          $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$name $method";
+        }
       }else {
         $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$name $method";
       }
