@@ -28,6 +28,9 @@ cdoc  Reads static/satellite_lvd.nl file.
 
       istatus = 0
 
+!     Initialize
+      cchanneltypes = '   '
+
       write(6,*)' Reading LVD namelist in config_satellite_lvd'
 
       call get_directory(grid_fnam_common,nest7grid,len_dir)
@@ -40,7 +43,7 @@ cdoc  Reads static/satellite_lvd.nl file.
       do i=1,maxchannel*maxtype*maxsat
           call s_len(cchanneltypes(i),lenc)
           if(lenc .gt. 0)then
-              write(6,*)' i,cchanneltypes(i) ',i,cchanneltypes(i)
+              write(6,*)' i,cchanneltypes(i) ',i,trim(cchanneltypes(i))
           endif
       enddo ! i
 
@@ -590,6 +593,7 @@ c
       character*3   cchanneltypes(ncdim*ntdim*nsdim)
       character*200 cpath2sat(ntdim*nsdim)
 
+      print*
       print*,'Start conf_isjtkc...'
 
 !     Determine satellites with help of 'satdata_lvd_table'
@@ -636,7 +640,12 @@ c goes08 (first satellite type)
       write(6,*)
       write(6,*)' Determine satellite channels:'
       write(6,*)' nchannel = ',nchannel
-      write(6,*)' cchanneltypes = ',cchanneltypes
+      do i=1,ncdim*ntdim*nsdim
+          call s_len(cchanneltypes(i),lenc)
+          if(lenc .gt. 0)then
+              write(6,*)' i,cchanneltypes(i) ',i,trim(cchanneltypes(i))
+          endif
+      enddo ! i
 
 !     Determine satellite channels without help of 'satdata_lvd_table'
       ICHANNELS = 0
