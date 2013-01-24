@@ -81,6 +81,7 @@
 
         integer,parameter :: k12 = selected_int_kind(12)
         integer (kind=k12) :: contable(0:1,0:1)
+        integer (kind=k12) :: idenom_sum,idenom_sum2,ihits_sum                       
 
         integer maxthr
         parameter (maxthr=5)
@@ -98,6 +99,13 @@
      1  n(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
         integer (kind=k12) :: 
      1  n_sum(maxbgmodels,0:max_fcst_times,max_regions,maxthr,0:1,0:1)
+
+!       Diagnostic logging arrays
+        real ets_max(maxbgmodels,0:max_fcst_times,maxthr)
+        real ets_min(maxbgmodels,0:max_fcst_times,maxthr)
+        real ets_sum(maxbgmodels,0:max_fcst_times,maxthr)
+        real ets_count(maxbgmodels,0:max_fcst_times,maxthr)
+        real ets_mean(maxbgmodels,0:max_fcst_times,maxthr)
 
 !       integer nmissing_m(maxbgmodels)
         integer nsuccess_m(maxbgmodels)
@@ -124,12 +132,6 @@
 
         rmiss = -999.
         imiss = -999
-
-!       Initialize arrays
-        bias = -999.
-        ets = -999.
-        frac_coverage = -999.
-        n_sum = 0
 
         thresh_var = 20. ! lowest threshold for this variable
 
@@ -216,6 +218,21 @@
                 enddo
             endif
 
+!           Assume WNDW-WARW isn't available for composite forecasts  
+!           if(trim(c_fdda_mdl_src(imodel)) .eq. 'wndw-warw')then
+!               n_plot_times_m(imodel,:,:) = 0
+!           endif
+
+!           Assume NAM isn't available for composite forecasts  
+!           if(trim(c_fdda_mdl_src(imodel)) .eq. 'nam')then
+!               n_plot_times_m(imodel,:,:) = 0
+!           endif
+
+!           Assume WRF-TOM isn't available for composite forecasts  
+!           if(trim(c_fdda_mdl_src(imodel)) .eq. 'wrf-tom')then
+!               n_plot_times_m(imodel,:,:) = 0
+!           endif
+
         enddo ! imodel
 
 !       Read in data file with region points
@@ -239,6 +256,18 @@
 
         do ifield = 1,n_fields
 
+!        Initialize arrays
+         bias = -999.
+         ets = -999.
+         frac_coverage = -999.
+         n_sum = 0
+        
+!        Diagnostic array initialization
+         ets_max   = -999.9
+         ets_min   = +999.9
+         ets_sum   =   0.
+         ets_count =   0.
+
          var_2d = var_a(ifield)
          call s_len(var_2d,lenvar)
 
@@ -255,7 +284,8 @@
          nsuccess_m = 0
          nincomplete_m = 0
 
-         frac_thr = 0.15
+!        frac_thr = 0.15
+         frac_thr = 0.035
          nmissing_thr = int((1. - frac_thr) * float(n_init_times+1))
          nsuccess_thr = (n_init_times+1) - nmissing_thr
 
@@ -394,13 +424,29 @@
      1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
      1                              ,imodel=2,n_fdda_models)     
 912                format(a24,3x,20i12.3)
+
+                   if(n(imodel,itime_fcst,iregion,idbz,in,jn) 
+     1                                            .lt. -1000)then
+                       write(6,*)' WARNING: anomalous N value',
+     1                     n(imodel,itime_fcst,iregion,idbz,in,jn)
+                   endif
+
                    goto914
 913                write(6,*)' read ERROR in bias file N vals '
                    write(6,*)' check if model config has changed'
                    write(6,*)in,jn,itime_fcst
                    write(6,*)cline
                    goto 955
-914                write(6,915)in,jn,itime_fcst,
+
+914                continue
+
+!                  Blank out N values if we're not expecting/desiring data
+!                  where(n_plot_times_m(:,itime_fcst,ifield) 
+!    1                                                 .eq. 0)
+!                      n(:,itime_fcst,iregion,idbz,in,jn) = 0
+!                  endwhere
+
+                   write(6,915)in,jn,itime_fcst,
      1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
      1                              ,imodel=2,n_fdda_models)     
 915                format('in,jn,itime,n',i2,i2,i4,20i10)
@@ -543,17 +589,102 @@
                n_sum(:,:,:,:,:,:) = n_sum(:,:,:,:,:,:) + n(:,:,:,:,:,:)
               end where
 
-!             Write to log for informational purposes
-              do imodel=2,n_fdda_models
-                 do itime_fcst = 0,n_fcst_times
-                     write(6,950)c_fdda_mdl_src(imodel)
+!             Write to log for diagnostic purposes
+              if(var_2d .eq. 'LMR')then
+                 write(6,*)'...............'
+
+                 itime_start =  3600/model_verif_intvl
+                 itime_end   = 21600/model_verif_intvl
+                 do itime_fcst = itime_start,itime_end 
+     1                          ,itime_end-itime_start 
+
+                   write(6,*)'...............'
+
+                   do imodel=2,n_fdda_models
+
+!                    Calculated summed skill scores so far
+                     contable(:,:) = 
+     1                   n_sum(imodel,itime_fcst,1,1,:,:)
+
+                     idbz = 1
+
+                     call skill_scores(contable,0                      ! I
+     1                                ,frac_obs                        ! O
+     1                                ,frac_fcst                       ! O
+     1                                ,frac_cvr_val                    ! O
+     1                                ,bias_val                        ! O
+     1                                ,ets_val)                        ! O
+
+                     ihits_sum  = contable(0,0)
+                     idenom_sum = contable(1,0) + contable(0,1) 
+     1                          + contable(0,0) 
+
+!                    idenom_sum2 = frac_cvr_val * float(NX_L*NY_L) 
+!    1                           * ets_count(imodel,idbz)
+
+                     ets_min(imodel,itime_fcst,idbz) = 
+     1                   min(ets_min(imodel,itime_fcst,idbz),ets_val)
+
+                     ets_max(imodel,itime_fcst,idbz) = 
+     1                   max(ets_max(imodel,itime_fcst,idbz),ets_val)
+
+                     if(ets_val .ne. rmiss .and. 
+     1                  ets_min(imodel,itime_fcst,idbz) .ne. rmiss) then ! valid ets 
+                         ets_sum(imodel,itime_fcst,idbz) = 
+     1                   ets_sum(imodel,itime_fcst,idbz) + ets_val
+                         ets_count(imodel,itime_fcst,idbz) = 
+     1                   ets_count(imodel,itime_fcst,idbz) + 1.0
+                         ets_mean(imodel,itime_fcst,idbz) =  
+     1                   ets_sum(imodel,itime_fcst,idbz) / 
+     1                   ets_count(imodel,itime_fcst,idbz)       
+                     else
+                         ets_mean(imodel,itime_fcst,idbz) = rmiss
+                     endif
+
+                     idenom_sum2 = frac_cvr_val * float(NX_L*NY_L) 
+     1                           * ets_count(imodel,itime_fcst,idbz)
+
+!                    Process contingency table for run
+                     contable(:,:) = 
+     1                   n(imodel,itime_fcst,1,1,:,:)
+
+                     idenom_run = contable(1,0) + contable(0,1) 
+     1                          + contable(0,0) 
+
+!                    if(frac_coverage(imodel,itime_fcst,iregion,idbz)
+!    1                  .ne. -999.)then
+!                        idenom_run2 = 
+!    1                   frac_coverage(imodel,itime_fcst,iregion,idbz)
+!    1                    * float(NX_L*NY_L)
+!                    else
+!                        idenom_run2 = -999
+!                    endif
+
+                     write(6,950)a9time_initial,c_fdda_mdl_src(imodel)
+     1                    ,var_2d
      1                    ,itime_fcst
-     1                    ,n(imodel,itime_fcst,1,1,1,1)
-     1                ,n_sum(imodel,itime_fcst,1,1,1,1)                
-950                  format(' Correct negs: ',a10,' itime_fcst' 
-     1                      ,i3,3x,2i10)
+     1                    ,n(imodel,itime_fcst,1,1,1,1)     ! negs run
+     1                    ,n_sum(imodel,itime_fcst,1,1,1,1) ! negs sum     
+     1                    ,n(imodel,itime_fcst,1,1,0,0)     ! hits run
+     1                    ,n_sum(imodel,itime_fcst,1,1,0,0) ! hits sum     
+     1                    ,idenom_run,idenom_sum            ! denoms               
+     1                    ,nint(ets_count(imodel,itime_fcst,idbz))
+     1                    ,ets(imodel,itime_fcst,iregion,idbz)       
+     1                    ,ets_val
+     1                    ,ets_mean(imodel,itime_fcst,idbz)
+     1                    ,ets_min(imodel,itime_fcst,idbz)
+     1                    ,ets_max(imodel,itime_fcst,idbz)
+
+950                  format(a9,1x,a10,1x,a3,' itime_fcst',i3
+     1                      ,' Negs (run/sum):',2i11
+     1                      ,' Hits (run/sum):',2i10
+     1                      ,' Denom (run/sum):',2i10 
+     1                      ,' ETS (run/sum/mean/min/max) = '
+     1                      ,i3,3f9.3,2x,2f9.3)
+
+                   enddo ! imodel
                  enddo ! itime_fcst
-              enddo ! imodel
+              endif ! var_2d = 'LMR'
           else
               write(6,*)' Not accumulating sums for this run'
 
