@@ -10,6 +10,9 @@
           logical l_high_fill
 
           real continent_line_width
+          real country_line_width
+          real state_line_width
+          real county_line_width
           real time_zone
           real dist_plot_ua
           real dist_plot_sfc
