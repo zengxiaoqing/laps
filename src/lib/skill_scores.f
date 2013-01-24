@@ -47,7 +47,9 @@
           frac_obs = rmiss
           frac_fcst = rmiss
           accuracy = rmiss
-          write(6,*)' WARNING: no data points in skill_scores'
+          if(lun_out .gt. 0)then
+              write(6,*)' WARNING: no data points in skill_scores'
+          endif
       endif
 
       if(hits + misses .gt. 0)then
@@ -80,18 +82,20 @@
           ets = rmiss
       endif
 
-      write(lun_out,*)' Hits = ',hits
-      write(lun_out,*)' Misses = ',misses
-      write(lun_out,*)' False Alarms = ',false_alarms
-      write(lun_out,*)' POD = ',pod
-      write(lun_out,*)' FAR = ',far
-      write(lun_out,*)' Correct Negatives = ',correct_negatives
-      write(lun_out,*)' Hits Random = ',hits_random
-      write(lun_out,*)' Total = ',total
+      if(lun_out .gt. 0)then
+          write(lun_out,*)' Hits = ',hits
+          write(lun_out,*)' Misses = ',misses
+          write(lun_out,*)' False Alarms = ',false_alarms
+          write(lun_out,*)' POD = ',pod
+          write(lun_out,*)' FAR = ',far
+          write(lun_out,*)' Correct Negatives = ',correct_negatives
+          write(lun_out,*)' Hits Random = ',hits_random
+          write(lun_out,*)' Total = ',total
 
-      write(lun_out,*)' Accuracy = ',accuracy
-      write(lun_out,*)' Bias = ',bias
-      write(lun_out,*)' ETS = ',ets
+          write(lun_out,*)' Accuracy = ',accuracy
+          write(lun_out,*)' Bias = ',bias
+          write(lun_out,*)' ETS = ',ets
+      endif
 
       return
       end
