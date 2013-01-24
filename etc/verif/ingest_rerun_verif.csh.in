@@ -11,15 +11,32 @@ echo "N_VERIF_TIMES (actively used with ingest loop) is $N_VERIF_TIMES"
 setenv VERIF_INTVL      `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v verif_intvl`
 setenv N_VERIF_STEPS    `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v n_verif_steps`
 setenv MODEL_FCST_INTVL `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_intvl`
+setenv MODEL_CYCLE_TIME `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_cycle_time`
 
 echo "VERIF_INTVL is $VERIF_INTVL"
 echo "N_VERIF_STEPS is $N_VERIF_STEPS"
 echo "MODEL_FCST_INTVL is $MODEL_FCST_INTVL"
+echo "MODEL_CYCLE_TIME is $MODEL_CYCLE_TIME"
+
+# Rerun ingest during the intervening 'model_cycle_time' or 3 hours, whichever is greater
+setenv INGEST_RERUN_TIME $MODEL_CYCLE_TIME
+if ($INGEST_RERUN_TIME < 10800) then
+    $INGEST_RERUN_TIME = 10800
+endif
+echo " "
+echo "INGEST_RERUN_TIME = $INGEST_RERUN_TIME"
+
+@ STEP_START = $N_VERIF_STEPS - ($INGEST_RERUN_TIME / $VERIF_INTVL)
+echo "STEP_START is $STEP_START"
+if ($STEP_START < 0) then
+    setenv STEP_START 0
+endif
+echo "STEP_START is $STEP_START"
 
 foreach EXE (obs_driver)
   setenv BINARY $EXE.x
 
-  setenv STEP 0
+  setenv STEP $STEP_START
   while ($STEP <= $N_VERIF_TIMES)
     echo " "
     echo "STEP = $STEP"
