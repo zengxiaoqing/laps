@@ -153,7 +153,7 @@ c abdel
       endif
 
       call gsln(1)
-      call setusv_dum(2HIN,icol_sta)
+      call setusv_dum('IN',namelist_parms%icol_state)
 
       call GSLWSC(namelist_parms%continent_line_width)
 
@@ -175,9 +175,16 @@ c abdel
           call mapint
           CALL MPLNDR ('Earth..2',4) ! states & countries
 
-          if(namelist_parms%icol_country .ne. icol_sta)then
-              write(6,*)' Replotting countries in separate color: '
+          if((namelist_parms%icol_country .ne. 
+     1        namelist_parms%icol_state) 
+     1                     .OR.
+     1       (namelist_parms%country_line_width .ne. 
+     1        namelist_parms%state_line_width)       )then
+              write(6,*)
+     1              ' Replotting countries in separate color/width: '
      1                 ,namelist_parms%icol_country
+     1                 ,namelist_parms%country_line_width
+              call GSLWSC(namelist_parms%country_line_width)
               call setusv_dum('IN',namelist_parms%icol_country) 
               CALL MPLNDR ('Earth..2',3) ! countries
           endif
@@ -255,6 +262,9 @@ c abdel
        real time_zone
 
        namelist /lapsplot_nl/ latlon_int,continent_line_width
+     1                       ,country_line_width
+     1                       ,state_line_width
+     1                       ,county_line_width
      1                       ,c3_time_zone,time_zone
      1                       ,c_institution,c_vnt_units,c_tpw_units
      1                       ,c_units_type,c_pbl_depth_units
@@ -275,6 +285,9 @@ c abdel
 !      Set defaults
        latlon_int = 0
        continent_line_width = 1.0
+       country_line_width = 1.0
+       state_line_width = 1.0
+       county_line_width = 1.0
        c3_time_zone = 'UTC'
        time_zone = 0.0
        c_institution = 'NOAA/FSL LAPS'
@@ -309,6 +322,9 @@ c abdel
 !      Set namelist structure
        namelist_parms%latlon_int = latlon_int
        namelist_parms%continent_line_width = continent_line_width
+       namelist_parms%country_line_width   = country_line_width
+       namelist_parms%state_line_width     = state_line_width
+       namelist_parms%county_line_width    = county_line_width
        namelist_parms%c3_time_zone = c3_time_zone
        namelist_parms%c_institution = c_institution
        namelist_parms%time_zone = time_zone
