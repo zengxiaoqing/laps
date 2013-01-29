@@ -241,16 +241,21 @@ foreach $var (@vars) {
       my $analimagedir = "/w3/lapb/domains/$domain/anal2d/archive/$analprd/";
       $fullanal_image = $analimagedir.$valid_a9time.".gif";
 
-#     Make black image
+#     Make black images (850/885 fcst/anal pixel sizes gives ratio of 96.05%)
       my $black_image = $imageoutdir."black.gif";
-      $command = "convert $fullanal_image -resize 82.5% -fill black -draw 'color 0,0 reset' $black_image";
+      $command = "convert $fullanal_image -resize 96.05% -fill black -draw 'color 0,0 reset' $black_image";
+      print "setting up command: $command\n";
+      $result=system("$command");
+
+      my $blackanal_image = $imageoutdir."blackanal.gif";
+      $command = "convert $fullanal_image               -fill black -draw 'color 0,0 reset' $blackanal_image";
       print "setting up command: $command\n";
       $result=system("$command");
 
       if (! -e $fullanal_image) {
-        print "WARNING: $fullanal_image analysis image is not present - using black_image $black_image\n";
-        $fullanal_image = $black_image;
-        push @analimagelist, $black_image;                            
+        print "WARNING: $fullanal_image analysis image is not present - using blackanal_image $blackanal_image\n";
+        $fullanal_image = $blackanal_image;
+        push @analimagelist, $blackanal_image;                            
       }else{
         push @analimagelist, $fullanal_image;                              
       }
@@ -347,7 +352,7 @@ foreach $var (@vars) {
       if($nimages > 0){
           print "\nMontage the analysis and forecast images for this time...\n" ;
 #         $command = "rm -f $imageoutfile_montage; convert -resize 121.3% @fcstimagelist $imageoutfile_montage; montage $fullanal_image $imageoutfile_montage -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
-          $command = "rm -f $imageoutfile_montage; convert -resize 82.5% $fullanal_image $imageoutfile_montage; montage $imageoutfile_montage @fcstimagelist  -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
+          $command = "rm -f $imageoutfile_montage; convert -resize 96.05% $fullanal_image $imageoutfile_montage; montage $imageoutfile_montage @fcstimagelist  -mode Concatenate -tile $ncols$x$nrows $imageoutfile_montage";
           print "setting up command: $command\n";
           $result=system("$command");
 
