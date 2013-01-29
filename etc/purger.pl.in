@@ -141,6 +141,12 @@ if($min_files>0){
     foreach $verifdir (@verifdirs){
         $dir="verif/$verifdir/pt";
         $clean_dirs{$dir} = $verif_time;
+
+        $dir="verif/$verifdir/pt/comp";
+        $clean_dirs{$dir} = 3.0;
+
+        $dir="verif/$verifdir/pt/comp2";
+        $clean_dirs{$dir} = 3.0;
     }
 
 #   Set purge time for reflectivity verification directories
