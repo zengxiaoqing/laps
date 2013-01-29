@@ -17,20 +17,24 @@ RSH=--rsh=ssh
 RSYNCARGS=-rlptgvvz
 REMOTE_NODE=pinky.fsl.noaa.gov
 
+echo "copy_remote.sh..."
+
 if test "$3" == "bbcp"; then
-    echo "bbcp -s 8 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR"
-          bbcp -s 8 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR
+    echo "bbcp -s 32 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR"
+          bbcp -s 32 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR
 
 elif test "$3" == "exchange"; then
     echo "scp -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
           scp -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
 
-    if test -d /exchange/tmp/fab/$TEMPFILE; then # move individual files between the two directories
+    if test -d $FILENAME; then # move individual files between the two directories
         echo " "
+        date -u
         echo "second hop of directory"
         echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME"
               ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME 
     else
+        date -u
         echo "second hop of file"
         echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME"
               ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME 
@@ -50,12 +54,14 @@ elif test "$3" == "exchange_tar"; then
               scp -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
     fi
 
-    if test -d /exchange/tmp/fab/$TEMPFILE; then # move individual files between the two directories
+    if test -d $FILENAME; then # move individual files between the two directories
         echo " "
+        date -u
         echo "second hop of directory"
         echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME"
               ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME 
     else
+        date -u
         echo "second hop of file"
         echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME"
               ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME 
