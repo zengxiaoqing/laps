@@ -305,8 +305,8 @@ sub mkdatadirs{
      (@datadirs) = qw (cdl lapsprd log log/qc static time);
      (@lapsprddirs) = qw (l1s lc3 lcb lco lcp lct lcv 
 lf1  lh3 lh4 lhe lil liw lm1 lm2 lmd lmr lmt 
-lpbl lps lq3 lrp lrs lso bufr lsx lt1 lty cty pty lfr
-lvd
+lpbl lps lq3 lrp lrs lso bufr lsx lt1 lty cty pty lfr st4
+lvd 
 lvd/goes08 lvd/goes09 lvd/goes10 lvd/goes11 lvd/goes12 lvd/goes13 
 lvd/goeswe lvd/goesea 
 lvd/meteos lvd/gmssat lvd/noaapo lvd/mtsat lvd/fy
@@ -1242,7 +1242,7 @@ sub get_fcst_img_res {
     my $aspect_ratio = ($xdim-1.0) / ($ydim-1.0);
     print "aspect_ratio is $aspect_ratio<br>\n";
     my $zoom_safe = 1.0;
-    my $npix_safe = 730;
+    my $npix_safe = 850;
 
     $x_hw  = 0.5 / $zoom_safe;
     if($aspect_ratio > 1.40){
@@ -1252,7 +1252,7 @@ sub get_fcst_img_res {
         $y_hw  = 0.36 / $zoom_safe;
         $ylow_thresh  = 0.14;
         $yhigh_thresh = 0.86;
-    }elsif($aspect_ratio > 1.192){
+    }elsif($aspect_ratio > 1.190){
         $res_y=$npix_safe;
         $res_x=int($res_y*1056./885.);
         $resolution="$res_x"."x"."$res_y";
