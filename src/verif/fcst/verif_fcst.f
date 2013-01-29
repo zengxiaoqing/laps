@@ -906,10 +906,15 @@
                         var_fcst_s(ista) = var_fcst_2d(i_i,i_j) * 100.
 
                       elseif(trim(var_2d) .eq. 'R01' .OR. 
+     1                       trim(var_2d) .eq. 'R03' .OR.
+     1                       trim(var_2d) .eq. 'R06' .OR.
+     1                       trim(var_2d) .eq. 'R24' .OR.
      1                       trim(var_2d) .eq. 'RTO'     )then ! convert M to IN
 
-                        if(var_fcst_2d(i_i,i_j) .gt. .000254 .OR. ! .01 inch
-     1                     var_s(ista)          .gt. 0.      )then
+!                       if(var_fcst_2d(i_i,i_j) .gt. .000254 .OR. ! .01 inch
+!    1                     var_s(ista)          .gt. 0.      )then
+                        if(var_fcst_2d(i_i,i_j) .ge. 0.      .OR. ! .00 inch
+     1                     var_s(ista)          .ge. 0.      )then
                             var_fcst_s(ista) = var_fcst_2d(i_i,i_j) 
      1                                       / .0254 
                         else
