@@ -208,7 +208,7 @@ ls -1rt lapsprd/verif/SWI/pt/$YYYY????.png lapsprd/verif/SWI/pt/$YYYY?????.png |
 ls -1 static/*.nl                                        >> $LAPSTAR_TXT
 ls -1 static/nest7grid.parms                             >> $LAPSTAR_TXT
 ls -1 static/purger.dat                                  >> $LAPSTAR_TXT
-ls -1 static/Variable_Tables/nctable.*                   >> $LAPSTAR_TXT
+ls -1 static/Variable_Tables/*                           >> $LAPSTAR_TXT
 if test "$STATIC" = static; then                         
     echo "including extra static/cdl files"
     ls -1 static/static.nest7grid                        >> $LAPSTAR_TXT
