@@ -1,6 +1,9 @@
  &lapsplot_nl
  latlon_int=0,
  continent_line_width=1.0,
+ country_line_width=1.0,
+ state_line_width=1.0,
+ county_line_width=1.0,
  c3_time_zone='UTC',
  c_institution='NOAA/ESRL LAPS',
  time_zone=0.,
@@ -33,11 +36,20 @@ c latlon_int - interval for plotting lat/lon lines in integer degrees
 c              (0) means no latlon lines plotted
 c
 c continent_line_width - Width of continental boundaries is adjusted by this
-c                        parameter. County line width is unaffected by this 
-c                        parameter and will have a line width of 1.
+c                        parameter. If this is set to 0 then the boundaries
+c                        will be suppressed.
 c
-c                        If this is set to 0 then all boundaries (including
-c                        continental, state, and county) will be suppressed.
+c country_line_width - Width of country boundaries is adjusted by this
+c                      parameter. If this is set to 0 then the boundaries
+c                      will be suppressed.
+c
+c state_line_width - Width of state boundaries is adjusted by this
+c                    parameter. If this is set to 0 then the boundaries
+c                    will be suppressed. 
+c
+c county_line_width - Width of county boundaries is adjusted by this
+c                     parameter. If this is set to 0 then the boundaries
+c                     will be suppressed.
 c
 c c3_time_zone - initials representing time zone (up to 3 characters)
 c
