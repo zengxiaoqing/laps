@@ -84,6 +84,7 @@ c
           write(6,*)' no grid spacing, stop in draw_county_map'
           stop
       else
+          write(6,*)
           write(6,*)' Subroutine draw_county_map...',mode_supmap,jproj
       endif
 
@@ -168,24 +169,40 @@ c abdel
           call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid*1000,iout,jdot,ier)
       elseif(mode_supmap .eq. 3)then
-          write(6,*)' Calling MAPDRW, etc. for countries/states...'
-     1             ,namelist_parms%continent_line_width
-     1             ,namelist_parms%icol_country
-     1             ,icol_sta
           call mapint
-          CALL MPLNDR ('Earth..2',4) ! states & countries
 
-          if((namelist_parms%icol_country .ne. 
-     1        namelist_parms%icol_state) 
+          if(namelist_parms%state_line_width .gt. 0. .OR.
+     1       namelist_parms%country_line_width .gt. 0.     )then
+              write(6,*)' Calling MAPDRW, etc. for countries/states...'
+     1                 ,namelist_parms%state_line_width
+     1                 ,namelist_parms%icol_country
+     1                 ,icol_sta
+              call GSLWSC(namelist_parms%state_line_width)
+              call setusv_dum('IN',namelist_parms%icol_state) 
+              CALL MPLNDR ('Earth..2',4) ! states & countries
+          else
+              write(6,*)' Skip plot of countries/states'
+              if(namelist_parms%continent_line_width .gt. 0.)then
+                  write(6,*)' Calling MAPDRW just for continents...'
+                  call GSLWSC(namelist_parms%continent_line_width)
+                  call setusv_dum('IN',namelist_parms%icol_continent) 
+                  CALL MPLNDR ('Earth..2',2) ! continents
+              endif
+          endif
+
+          if(((namelist_parms%icol_country .ne. 
+     1         namelist_parms%icol_state) 
      1                     .OR.
-     1       (namelist_parms%country_line_width .ne. 
-     1        namelist_parms%state_line_width)       )then
+     1        (namelist_parms%country_line_width .ne. 
+     1         namelist_parms%state_line_width)      )       
+     1                     .AND.
+     1                    .true.                        )then
               write(6,*)
      1              ' Replotting countries in separate color/width: '
-     1                 ,namelist_parms%icol_country
-     1                 ,namelist_parms%country_line_width
-              call GSLWSC(namelist_parms%country_line_width)
-              call setusv_dum('IN',namelist_parms%icol_country) 
+     1                 ,0
+     1                 ,namelist_parms%state_line_width
+              call GSLWSC(namelist_parms%state_line_width)
+              call setusv_dum('IN',0) 
               CALL MPLNDR ('Earth..2',3) ! countries
           endif
 
@@ -240,6 +257,8 @@ c abdel
       call GSLWSC(1.0)
 
       call sflush
+
+      write(6,*)
 
       return
       end
