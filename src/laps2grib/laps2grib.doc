@@ -1,7 +1,7 @@
 Program:	laps2grib
 Author:		Brent Shaw, Weathernews Inc.
 Date:		7 Dec 2006  (LAPS Baseline: 0-30-13)
-Updated:	5 Dec 2012
+Updated:	5 Dec 2012 Paula McCaslin
 
 1.  Function
 This program reads a set of the LAPS output files and creates a consolidated 
@@ -170,7 +170,7 @@ Here is an example for surface (fsf) temperature, dew-point and RH:
 2d 'fsf','rh ',  1., 0,103, 0, 2,255,255,255,0, 1,  1
 
 --- The laps2grib.exe program with model usage creates an output file of GRIB2 
-messages using the LAPS "A13" format file name (yydddhhmmffff.gr2), where ffff 
+messages using the LAPS "A13" file name format (yydddhhmmffff.gr2), where ffff 
 is the forecast hhmm (and in some cases, where fffff is forecast hhhmm). As 
 such, the forecast time needs to be specified (as input to the command line) 
 as does the forecast domain. For example, there could be several models 
