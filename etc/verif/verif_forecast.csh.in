@@ -211,6 +211,7 @@ else if ($VAR == "RTO" || $VAR == "R01" || $VAR == "R03" || $VAR == "R06" || $VA
     echo 'set yrange ['$YRANGE']'                                        >> $GNUPLOTFILE
     echo 'set y2range ['$YRANGE']'                                       >> $GNUPLOTFILE
     echo 'set logscale y'                                                >> $GNUPLOTFILE
+    echo 'set logscale y2'                                               >> $GNUPLOTFILE
 
 else
     echo 'set yrange ['$YRANGE']'                                        >> $GNUPLOTFILE
