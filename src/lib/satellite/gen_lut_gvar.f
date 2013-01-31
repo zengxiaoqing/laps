@@ -97,7 +97,7 @@ c
       Integer     bepixfc,bescnfc,iwidth,idepth,fsci
 
       logical     lwrite 
-      data lwrite/.false./
+      data lwrite/.true./
 
       Integer     linestart,lineend
       Integer     elemstart,elemend
@@ -227,6 +227,10 @@ c
             goto 901
          endif
       endif
+
+      write(6,*)' Returned from update_gvarimg_parms'
+      write(6,*)' xres/yres = ',xres,yres
+      write(6,*)' x_step/y_step = ',x_step,y_step
 c
 c get expanded domain lats/lons. Some of this code follows what
 c happens in gridgen_model.
@@ -241,6 +245,8 @@ c
             xres=8.
             yres=8.
          endif
+         write(6,*)' WARNING: Reset values from update_gvarimg_parms'
+         write(6,*)' xres/yres = ',xres,yres
       endif
 
       call get_grid_spacing(grid_spacing_m,istatus)
@@ -365,13 +371,19 @@ c       ewIncs=i_ewIncs(jtype,isat)
 c       nsCycles=i_nsCycles(jtype,isat)
 c       nsIncs=i_nsIncs(jtype,isat)
 
-        rp_div = 4.0*x_step
-        rl_div = 4.0*y_step            !channels 2, 4, and 5 (3.9u, 11u, and 12u)
-        if(ct(1:nc).eq.'wv '.and.csattype.ne.'gwc') then
-          rl_div = 8.0*y_step          !channel 3 = water vapor; only FSL public
-        elseif (ct(1:nc).eq.'vis') then
-          rp_div = x_step              !channel 1 = visible
-          rl_div = y_step
+        if(.true.)then ! new experimental code
+            rp_div = xres
+            rl_div = yres            !channels 2, 4, and 5 (3.9u, 11u, and 12u)
+        else            ! original code
+            rp_div = 4.0*x_step
+            rl_div = 4.0*y_step      !channels 2, 4, and 5 (3.9u, 11u, and 12u)
+
+            if(ct(1:nc).eq.'wv '.and.csattype.ne.'gwc') then
+              rl_div = 8.0*y_step          !channel 3 = water vapor; only FSL public
+            elseif (ct(1:nc).eq.'vis') then
+              rp_div = x_step              !channel 1 = visible
+              rl_div = y_step
+            endif
         endif
 
         instr=1          !1=Imager, 2=Sounder
@@ -497,26 +509,27 @@ c
         enddo
         enddo
 
-        print*,'lat/lon/x/y (1,1) = ',xlat(1,1),xlon(1,1),
-     .rpix(1,1),rline(1,1)
-        print*,'lat/lon/x/y (nx,1) = ',xlat(nxe,1),xlon(nxe,1),
-     .rpix(nxe,1),rline(nxe,1)
-        print*,'lat/lon/x/y (1,ny) = ',xlat(1,nye),xlon(1,nye),
-     .rpix(1,nye),rline(1,nye)
-        print*,'lat/lon/x/y (nx,ny) = ',xlat(nxe,nye),xlon(nxe,nye)
-     .,rpix(nxe,nye),rline(nxe,nye)
-
       endif
 
       if(lwrite)then
+         write(6,*)'Satellite points of LAPS domain corners'
+         print*,   '---------------------------------------'
+         print*,'lat/lon/x/y (1,1) = ',xlat(1,1),xlon(1,1),
+     .rpix(1,1),rline(1,1)
+         print*,'lat/lon/x/y (nx,1) = ',xlat(nxe,1),xlon(nxe,1),
+     .rpix(nxe,1),rline(nxe,1)
+         print*,'lat/lon/x/y (1,ny) = ',xlat(1,nye),xlon(1,nye),
+     .rpix(1,nye),rline(1,nye)
+         print*,'lat/lon/x/y (nx,ny) = ',xlat(nxe,nye),xlon(nxe,nye)
+     .,rpix(nxe,nye),rline(nxe,nye)
 
-         print*,'Absolute Satellite Pix/Line Coords:'
-         print*,'-----------------------------------'
-         do j = 1,nye,10
-         do i = 1,nxe,10
-            write(6,*)'i,j,ri,rj: ',i,j,rpix(i,j),rline(i,j)
-         enddo
-         enddo
+!        print*,'Absolute Satellite Pix/Line Coords:'
+!        print*,'-----------------------------------'
+!        do j = 1,nye,100
+!        do i = 1,nxe,100
+!           write(6,*)'i,j,ri,rj: ',i,j,rpix(i,j),rline(i,j)
+!        enddo
+!        enddo
 
       endif
 
@@ -552,6 +565,7 @@ c
 c
 c compute relative lut
 c
+      write(6,*)' Call get_sat_boundary...'
       call get_sat_boundary(nx_l,ny_l,nxe,nye,idx,ny,nx
      &,rpix,rline,linestart,lineend,elemstart,elemend,
      &rls,rle,res,ree,istatus)
@@ -638,8 +652,9 @@ c
 
 777   if(lwrite)then
 
-         do j = 1,ny_l,10
-         do i = 1,nx_l,10
+         write(6,*)' Domain corner ri/rj_laps info:'
+         do j = 1,ny_l,ny_l-1
+         do i = 1,nx_l,nx_l-1
             write(6,*)'i,j,ri,rj: ',i,j,ri_laps(i,j),rj_laps(i,j)
          enddo
          enddo
