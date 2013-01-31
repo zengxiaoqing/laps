@@ -1,10 +1,10 @@
-Quick install instructions for the LAPS systems.  Please refer to the
+Quick install instructions for the LAPS system.  Please refer to the
 document README in this directory for detailed information on
 installation and configuration.
 
     $ zcat laps.tar.gz | tar xf -
     $ cd laps
     $ ./configure 
-    $ make install
-    $ ./etc/laps_localization.pl 
+    $ make; make install
+    $ ./etc/window_domain_rt.pl (see README 2.2.6.1 and related sections)
 
