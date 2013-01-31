@@ -629,26 +629,25 @@ deallocate(pcp_06)
 ! Temporary variables needed to derive some fields.
 
 allocate(hrhsig(lx,ly,nz),hthetasig(lx,ly,nz),hthetaesig(lx,ly,nz),hzsigf(lx,ly,nz+1))
-if(.not. large_ngrid)then
- do k=1,nz
- do j=1,ly
- do i=1,lx
+do k=1,nz
+do j=1,ly
+do i=1,lx
    hrhsig(i,j,k)=min(1.,relhum(htsig(i,j,k),hmrsig(i,j,k),hpsig(i,j,k)))
    hthetasig(i,j,k)=potential_temp(htsig(i,j,k),hpsig(i,j,k))
    hthetaesig(i,j,k)=eq_potential_temp(htsig(i,j,k),hpsig(i,j,k)  &
                                       ,hmrsig(i,j,k),hrhsig(i,j,k))
- enddo
- enddo
- enddo
- do k=2,nz
+enddo
+enddo
+enddo
+do k=2,nz
    hzsigf(:,:,k)=(hzsig(:,:,k-1)+hzsig(:,:,k))*0.5
- enddo
- hzsigf(:,:,1)=zsfc
- hzsigf(:,:,nz+1)=2.*hzsig(:,:,nz)-hzsigf(:,:,nz)
+enddo
+hzsigf(:,:,1)=zsfc
+hzsigf(:,:,nz+1)=2.*hzsig(:,:,nz)-hzsigf(:,:,nz)
 
 ! Generate pbl height if not available from model.
 
- if (maxval(pblhgt) > 999999.) then
+if (maxval(pblhgt) > 999999.) then
    if (verbose) then
       print*,' '  
       print*,'Generating PBL height using theta and surface temp.'
@@ -660,10 +659,12 @@ if(.not. large_ngrid)then
    enddo
    enddo
    call model_pblhgt(hthetasig,thetasfc,hpsig,hzsig,zsfc,lx,ly,nz,pblhgt)
- endif
- where (pblhgt < 0.) pblhgt=0.
+endif
+where (pblhgt < 0.) pblhgt=0.
 
- I4_elapsed = ishow_timer()
+I4_elapsed = ishow_timer()
+
+if(.not. large_ngrid)then
 
 ! Helicity, cape, cin, LI.
 
@@ -798,6 +799,7 @@ if (verbose .and. .not. large_ngrid) then
    print*,'Min/Max redp      = ',minval(redp),maxval(redp)
    print*,'Min/Max pmsl      = ',minval(pmsl),maxval(pmsl)
    print*,'Min/Max ztw0      = ',minval(ztw0),maxval(ztw0)
+   print*,'Min/Max ztw1      = ',minval(ztw1),maxval(ztw1)
    print*,'Min/Max pblhgt    = ',minval(pblhgt),maxval(pblhgt)
    print*,'Min/Max cldbase   = ',minval(cldbase),maxval(cldbase)
    print*,'Min/Max cldtop    = ',minval(cldtop),maxval(cldtop)
@@ -2387,7 +2389,7 @@ do i=1,lx
      do k=kl,kl
       twl=tw(tp(i,j,k  ),td(i,j,k  ),pr(i,j,k  ))
       if (twu <= 273.15+threshold .and. twl > 273.15+threshold) then
-         rat=(twl-273.15+threshold)/(twl-twu)
+         rat=(twl-(273.15+threshold))/(twl-twu)
          pr0=pr(i,j,k)+rat*(pr(i,j,k+1)-pr(i,j,k))
          if(pr0 .lt. 0.)then
              write(6,*)' ERROR in height_tw: pr0 < 0. ',pr0
@@ -2405,7 +2407,7 @@ do i=1,lx
    do k=nz-1,1,-1
       twl=tw(tp(i,j,k  ),td(i,j,k  ),pr(i,j,k  ))
       if (twu <= 273.15+threshold .and. twl > 273.15+threshold) then
-         rat=(twl-273.15+threshold)/(twl-twu)
+         rat=(twl-(273.15+threshold))/(twl-twu)
          pr0=pr(i,j,k)+rat*(pr(i,j,k+1)-pr(i,j,k))
          if(pr0 .lt. 0.)then
              write(6,*)' ERROR in height_tw: pr0 < 0. ',pr0
@@ -2423,7 +2425,7 @@ do i=1,lx
    enddo
    twl=tw(stp(i,j),std(i,j),spr(i,j))
    if (twu <= 273.15+threshold .and. twl > 273.15+threshold) then
-      rat=(twl-273.15+threshold)/(twl-twu)
+      rat=(twl-(273.15+threshold))/(twl-twu)
       pr0=spr(i,j)+rat*(pr(i,j,1)-spr(i,j))
       zbot=sht(i,j)
       ztop=ht(i,j,1)
@@ -2438,7 +2440,7 @@ do i=1,lx
       td0=dewpt(t0,rh0)
       twl=tw(t0,td0,slp(i,j))
       if (twu <= 273.15+threshold .and. twl > 273.15+threshold) then
-         rat=(twl-273.15+threshold)/(twl-twu)
+         rat=(twl-(273.15+threshold))/(twl-twu)
          pr0=slp(i,j)+rat*(spr(i,j)-slp(i,j))
          ztop=sht(i,j)
          rat=alog(pr0/slp(i,j))/alog(spr(i,j)/slp(i,j))
