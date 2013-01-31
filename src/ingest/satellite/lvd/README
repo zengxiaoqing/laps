@@ -19,6 +19,9 @@
                        sat_sublatlon
                            time50            lib/goesinav/gimloc.f
                    time50                         "
+                   setcon                         "
+                   lmodel                         "
+                   get_sat_boundary          lib/satellite/getsat_boundary.f
                get_lut_mercator
                get_lut_ps
        lvd_driver_sub                        lvd_driver_sub.f
