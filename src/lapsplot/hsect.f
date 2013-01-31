@@ -543,12 +543,13 @@ c       include 'satellite_dims_lvd.inc'
               lmask_rqc_3d = .true.
 
               ext = 'lcv'
-              call get_laps_2d(i4_ref,ext,'RQC',units_2d
+              call get_laps_2d(i4time_ref,ext,'RQC',units_2d
      1                        ,comment_2d,NX_L,NY_L,rqc,istatus)
               if(istatus .ne. 1)then
                   write(6,*)' Error reading 2D RQC Analysis'
               else
                   write(6,*)' Apply RQC to mask (under construction)'
+                  where(rqc .ne. 3.0)lmask_rqc_3d = .false.
               endif
 
               call calc_contable_3d(
@@ -558,11 +559,12 @@ c       include 'satellite_dims_lvd.inc'
 
               plot_parms%iraster = +1
               plot_parms%l_discrete = .true.
-              colortable = 'ref' ! 'spectral'
+              colortable = 'cont' ! 'ref'                 
               where(field_2d_diff .eq. 0.0)field_2d_diff = +1.4 ! Hit      
-              where(field_2d_diff .eq. 1.0)field_2d_diff = +1.0 ! Miss      
+              where(field_2d_diff .eq. 1.0)field_2d_diff = +0.7 ! Miss      
               where(field_2d_diff .eq. 2.0)field_2d_diff = +2.2 ! False Pos
-              where(field_2d_diff .eq. 3.0)field_2d_diff = +0.1 ! Correct Neg
+              where(field_2d_diff .eq. 3.0)field_2d_diff = +0.0 ! Correct Neg
+              where(field_2d_diff .eq. r_missing_data)field_2d_diff=.100 ! Outside Mask
               dyn_low = 0.0
               dyn_high = 3.0
 
@@ -586,8 +588,9 @@ c       include 'satellite_dims_lvd.inc'
      1              ,bias                                          ! O
      1              ,ets)                                          ! O
 
-              write(c_label,41)ets
- 41           format('20dBZ Contingency Table (b - a) ETS =',f5.2)
+              write(c_label,41)bias,ets
+ 41           format('20dBZ Contingency Table (b-a) Bias =',f5.2
+     1                                           ,' ETS =',f6.3)
 
             else
               write(6,*)' Plotting product field of last two entries' 
