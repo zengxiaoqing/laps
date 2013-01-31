@@ -104,6 +104,8 @@ c     character*1   ct
 c
 c ========================================================
 c
+      write(6,*)' Subroutine update_gvarimg_parms...'
+
       istatus = -1  !bad status return
 
       i4time_cur = i4time_now_gg()
@@ -136,7 +138,8 @@ c
                if(numoffiles.eq.1)then
                   filename_cdf=c_filenames(numoffiles)
                else
-                  write(6,*)'Odd, numoffiles > 1: = ',numoffiles
+                  write(6,*)'WARNING: numoffiles > 1: = ',numoffiles
+                  write(6,*)'fname_sat = ',trim(fname_sat)
                   filename_cdf=c_filenames(1)
                endif
             else
@@ -191,7 +194,7 @@ c the bottom line:
 c
          imci4 = 0
 
-         write(6,*)'Compute SatSubLAT/SatSubLON - enter subroutine'
+         write(6,*)'Compute SatSubLAT/SatSubLON - call sat_sublatlon...'       
          call sat_sublatlon(ewCycles,ewIncs,nsCycles,nsIncs,
      &frameStartTime,imci4,orbitAttitude,SatSubLAT,SatSubLON,lstatus)
          if(lstatus.ne.1)then
