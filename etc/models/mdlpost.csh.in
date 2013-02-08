@@ -27,6 +27,9 @@ endif
 
 echo "YYDDDHHMM (model initialization time to process) = $YYDDDHHMM"
 
+setenv FCSTINTVL `perl $LAPSINSTALLROOT/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_intvl`
+echo "FCSTINTVL is $FCSTINTVL"
+
 echo "Inputted MODEL(s): $MODELS"
 
 foreach MODEL ($MODELS)
@@ -36,7 +39,11 @@ foreach MODEL ($MODELS)
   if ($MODEL == wrf-hrrr) then
     setenv CMODEL HRRR
     setenv MODE_FSF WGRIB
-    setenv HHTIMES '00 01 02 03 04 05 06'
+    if ($FCSTINTVL <= 3600) then
+        setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12'
+    else
+        setenv HHTIMES '00 03 06 09 12'
+    endif
   else if ($MODEL == nam) then
     setenv CMODEL NAM
     setenv MODE_FSF REGRID
@@ -47,13 +54,21 @@ foreach MODEL ($MODELS)
     setenv CMODEL RR
     setenv MODE_FSF REGRID
     setenv GRIBINDIR /public/data/grids/rap/iso_130/grib2
-    setenv HHTIMES '00 01 02 03 04 05 06'
+    if ($FCSTINTVL <= 3600) then
+        setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12'
+    else
+        setenv HHTIMES '00 03 06 09 12'
+    endif
     setenv MMTIMES '00'
   else if ($MODEL == wndw-warw) then
     setenv CMODEL WNDW-WARW
     setenv MODE_FSF REGRID
     setenv GRIBINDIR /public/data/grids/hiresw/westarw/grib2
-    setenv HHTIMES '00 01 02 03 04 05 06'
+    if ($FCSTINTVL <= 3600) then
+        setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12'
+    else
+        setenv HHTIMES '00 03 06 09 12'
+    endif
     setenv MMTIMES '00'
   endif
 
@@ -66,8 +81,11 @@ foreach MODEL ($MODELS)
   mkdir -p $OUTDIR_FUA
   mkdir -p $OUTDIR
 
-  setenv FCSTINTVL `perl $LAPSINSTALLROOT/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_intvl`
-  echo "FCSTINTVL is $FCSTINTVL"
+  setenv FCSTLEN_MM  `perl $LAPSINSTALLROOT/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
+  echo "FCSTLEN_MM is $FCSTLEN_MM"
+
+  @ FCSTLEN_HH = $FCSTLEN_MM / 60
+  echo "FCSTLEN_HH is $FCSTLEN_HH"
 
 # if (-e /data/fab/laps/laps_conus.fsf) then
 #   setenv NCTEMPLATE /data/fab/laps/laps_conus.fsf
@@ -89,6 +107,8 @@ foreach MODEL ($MODELS)
   endif
 
   foreach FCST_HH ($HHTIMES)                                     
+ 
+   if ($FCST_HH <= $FCSTLEN_HH) then
 
     if ($CMODEL == HRRR) then
 
@@ -410,6 +430,8 @@ foreach MODEL ($MODELS)
 #     exit # for testing
 
     end # minute loop
+
+   endif # within LAPS forecast time range
 
   end # hour loop
 
