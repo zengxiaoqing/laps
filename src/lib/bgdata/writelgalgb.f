@@ -25,15 +25,44 @@
       character*4   lvl_coord(nz_laps)
       character*10  units(nz_laps)
       character*125 comment(nz_laps)
+      character*5 fcst_hh_mm
+      character*9 a9time
+      character*256 outfile
       character*(*) cmodel
 
       character*40   v_g
+
+      logical l_exist
 
       call get_vertical_grid(v_g,istatus)
       call upcase(v_g, v_g)
 
       ext='lga'
       call get_directory('lga',outdir,lendir)
+
+c     Test for existence of output file
+      call make_fnam_lp(bgtime,a9time,istatus)
+      if (istatus .ne. 1) then
+        write (6,*)
+     1'Error converting i4time to file name...write aborted.'
+        istatus=0
+        return
+      endif
+
+      call make_fcst_time(bgvalid,bgtime,fcst_hh_mm,istatus)
+
+      outfile = trim(outdir)//'/'//a9time//trim(fcst_hh_mm)//'.lga'
+      inquire(file=outfile,exist=l_exist)
+      if(l_exist .eqv. .false.)then
+          write(6,*)' LGA file = ',trim(outfile)
+      else
+          write(6,*)' LGA file (already exists) = ',trim(outfile)
+          write(6,*)
+     1         ' Returning from write_lga without writing new LGA file'     
+          istatus = 1
+          return
+      endif
+c
 
       call s_len(cmodel,ic)
       do k=1,nz_laps                 ! Height
