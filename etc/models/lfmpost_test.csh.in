@@ -75,10 +75,25 @@ mkdir -p $WRFDIR/cdl
 setenv FUAWRF $WRFDIR/$RUN/wrfprd/$NEST/fua
 setenv FSFWRF $WRFDIR/$RUN/wrfprd/$NEST/fsf
 
+mkdir -p $FUAWRF
+mkdir -p $FSFWRF
+
 if ($5 != mvoutput && $6 != mvoutput && ! -e $FUAWRF && ! -e $FSFWRF) then
     echo "Making soft links for FUA/FSF from LAPS to WRF"
+
+    if (! -e $FUALAPS) then
+        echo "ERROR: could not find $FUALAPS"
+        exit
+    endif
+    rm -f $FUAWRF/$MODELNAME
     echo "ln -s $FUALAPS $FUAWRF"
           ln -s $FUALAPS $FUAWRF
+
+    if (! -e $FSFLAPS) then
+        echo "ERROR: could not find $FSFLAPS"
+        exit
+    endif
+    rm -f $FSFWRF/$MODELNAME
     echo "ln -s $FSFLAPS $FSFWRF"
           ln -s $FSFLAPS $FSFWRF
 else
@@ -179,10 +194,10 @@ while ($FCOUNT <= $MAXTIMES)
 
   setenv LOGFILE $LAPS_DATA_ROOT/log/lfmpost_$RUN\_$FCSTTIME_SEC.log
 
-  echo  "lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $LAPS_DATA_ROOT" | tee $LOGFILE
+  echo  "./lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $LAPS_DATA_ROOT" | tee $LOGFILE
   echo  " " | tee -a $LOGFILE
 
-         lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $LAPS_DATA_ROOT | tee -a $LOGFILE
+         ./lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $LAPS_DATA_ROOT | tee -a $LOGFILE
 
   echo  " " | tee -a $LOGFILE
 
