@@ -672,10 +672,8 @@ if(.not. large_ngrid)then
  call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
  call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
 
- if(.not. large_pgrid)then
-   call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
-              ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
- endif
+ call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
+             ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
 endif ! large_ngrid
 
 deallocate(hthetasig,hthetaesig,hzsigf)
@@ -1990,6 +1988,7 @@ subroutine capecin(psig,tsig,thetaesig,thetasig                &
 !             B. Shaw, NOAA/FSL
 
 use constants
+use lfmgrid, ONLY: large_pgrid
 
 implicit none
 
@@ -2030,8 +2029,10 @@ do i=1,imax
 
 ! Calculate lifted index by lifting the most unstable parcel.
 
-   call the2t(thetaesig(i,j,kmax),500.,tparcel)
-   li(i,j)=tprs(i,j,k500)-tparcel
+   if(.not. large_pgrid)then
+       call the2t(thetaesig(i,j,kmax),500.,tparcel)
+       li(i,j)=tprs(i,j,k500)-tparcel
+   endif
     
 ! Calculate the temperature and pressure of the lifting 
 !   condensation level.
