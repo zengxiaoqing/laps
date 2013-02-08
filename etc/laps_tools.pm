@@ -351,15 +351,7 @@ balance balance/lt1 balance/lw3 balance/lh3 balance/lq3 balance/lsx balance/air 
 grid ram rsf lsq tmg hmg lst pbl model model/varfiles model/output model/sfc
 verif verif/noBal verif/Bal verif/Bkgd 
 verif/REF
-verif/REF/hist verif/REF/cont verif/REF/plot 
-verif/REF/plot/20 verif/REF/plot/30 verif/REF/plot/40 verif/REF/plot/50 verif/REF/plot/60
-verif/REF/plot/20_comp verif/REF/plot/30_comp verif/REF/plot/40_comp verif/REF/plot/50_comp verif/REF/plot/60_comp
-verif/REF/plot/20_comp2 verif/REF/plot/30_comp2 verif/REF/plot/40_comp2 verif/REF/plot/50_comp2 verif/REF/plot/60_comp2
 verif/LMR
-verif/LMR/hist verif/LMR/cont verif/LMR/plot 
-verif/LMR/plot/20 verif/LMR/plot/30 verif/LMR/plot/40 verif/LMR/plot/50 verif/LMR/plot/60
-verif/LMR/plot/20_comp verif/LMR/plot/30_comp verif/LMR/plot/40_comp verif/LMR/plot/50_comp verif/LMR/plot/60_comp
-verif/LMR/plot/20_comp2 verif/LMR/plot/30_comp2 verif/LMR/plot/40_comp2 verif/LMR/plot/50_comp2 verif/LMR/plot/60_comp2
 verif/SWI verif/SWI/pt verif/SWI/pt/comp verif/SWI/pt/comp2
 verif/TSF verif/TSF/pt verif/TSF/pt/comp verif/TSF/pt/comp2
 verif/DSF verif/DSF/pt verif/DSF/pt/comp verif/DSF/pt/comp2
@@ -411,15 +403,17 @@ gr2);
      print "fua dirs: @fua_dirs\n";
      print "fsf dirs: @fsf_dirs\n";
 
+#    Make directories related to verification Bias/ETS (for radar and precip)
      my $verifvar;
-     foreach (qw(REF LMR LLR)){
-         my (@hist_dirs, @cont_dirs);
-         $verifvar = $_;
+     foreach $verifvar (qw(REF LMR LLR PCP_01)){
+         mkdir "$LAPS_DATA_ROOT/lapsprd/$verifvar/plot",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$verifvar/plot");
+
+#        Make hist dirs
+         my (@hist_dirs);
 
          print "adding fdda_model_source subdirectories to verif hist/cont dirs\n";
          $ii = 0;
          $hist_dirs[$ii] = 'verif/'.$verifvar.'/hist';
-         $cont_dirs[$ii] = 'verif/'.$verifvar.'/cont';
 
          @fdda_radar_dirs = @fdda_dirs;
          push(@fdda_radar_dirs,"persistence");
@@ -429,19 +423,25 @@ gr2);
             if($_ ne "lga"){
                   $ii++;
                   $hist_dirs[$ii]=$hist_dirs[0]."/".$_;
-                  $cont_dirs[$ii]=$cont_dirs[0]."/".$_;
             }
          }
 
          print "hist dirs: @hist_dirs\n";
-         print "cont dirs: @cont_dirs\n";
 
          foreach (@hist_dirs) {
             mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
          }
 
-         foreach (@cont_dirs) {
-            mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
+#        Make threshold dirs
+         my (@thr_dirs);
+         if($verifvar ne "PCP_01"){
+             @thr_dirs = qw(20 30 40 50 60 20_comp 30_comp 40_comp 50_comp 60_comp 20_comp2 30_comp2 40_comp2 50_comp2 60_comp2);
+         }else{
+             @thr_dirs = qw(0001 0005 0010 0050 0100 0200 0500)
+         }
+
+         foreach (@thr_dirs) {
+            mkdir "$LAPS_DATA_ROOT/lapsprd/$verifvar/plot/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$verifvar/plot/$_");
          }
      }
 
@@ -1353,4 +1353,35 @@ sub is_sat {
 
   return ($iout);
  
+}
+
+sub zeus_resource {
+
+  # Usage: zeus_resource($program_name, $opt_P, $opt_S, $opt_V)
+  my ($program_name, $opt_P, $opt_S, $opt_V) = @_;
+
+  # Initials:
+  my $np = 1;
+  my $startOFblock = 0;
+  my $endOFblock = 0;
+
+  if ($program_name =~ /lga.*/) {
+    $startOFblock = 1;
+  }
+  if ($program_name =~ /laps2grib.exe/ &&
+      ($opt_S =~ /multi*/ || $opt_V =~ /STMAS3D/)) {
+    $endOFblock = 1;
+  }
+
+  if ($opt_S =~ /multi*/ && $program_name =~ /wind*/) {
+    $np = $opt_P;
+    $startOFblock = 1;
+  }
+
+  if ($opt_V =~ /STMAS3D*/ && $program_name =~ /STMAS3D*/) {
+    $np = 1;
+    $startOFblock = 1;
+  }
+
+  my @out = ($np,$startOFblock,$endOFblock);
 }
