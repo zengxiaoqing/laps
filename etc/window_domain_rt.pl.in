@@ -547,7 +547,7 @@ else
 
 if( $opt_m ){
     print "Did not run gridgen_model\n";
-    print "Restore gridgen files: move files from static_save to static \n";
+    print "Restore just the gridgen files from prior localization: move files from static_save to static \n";
 
    $success = &restorefiles("ggm");
 
@@ -705,7 +705,8 @@ sub restorefiles
             }
        }elsif($type eq "ggm"){
            foreach (@filelist){
-                    next if(/\.nl$/ || /nest7grid.parms/  || -d "$LAPS_DATA_ROOT/static\_save/$_");
+#                   Skip via next for files we do not want restored from the previous localization
+                    next if(/\.nl$/ || /nest7grid.parms/ || /purger.dat/ || -d "$LAPS_DATA_ROOT/static\_save/$_");
                     if( /\.dat$/ || /^static/ || /wrfstatic/){
                        `cp $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
 #                   }elsif(-d "$LAPS_DATA_ROOT/static\_save/$_"){
