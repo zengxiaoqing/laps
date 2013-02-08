@@ -917,6 +917,13 @@
      1                     var_s(ista)          .ge. 0.      )then
                             var_fcst_s(ista) = var_fcst_2d(i_i,i_j) 
      1                                       / .0254 
+                           if(var_s(ista) .ge. 1.0)then
+                              c1_c = '*'
+                              write(6,1001)var_2d,ista
+     1                                    ,stations(ista)(1:5),i_i,i_j        
+     1                                    ,var_s(ista),var_fcst_s(ista)
+     1                                    ,c1_c
+                           endif
                         else
                             var_fcst_s(ista) = r_missing_data
                             var_s(ista) = r_missing_data
@@ -931,9 +938,13 @@
      1                   var_s(ista)          .ne. r_missing_data .AND.
      1                   var_fcst_2d(i_i,i_j) .ne. r_missing_data  )then   
                         if(cnt_write .le. 50.)then
-                          write(6,1001)var_2d,ista,i_i,i_j 
+                          c1_c = ' '
+                          write(6,1001)var_2d,ista
+     1                                ,stations(ista)(1:5),i_i,i_j 
      1                                ,var_s(ista),var_fcst_s(ista)
-1001                      format(1x,a3,' ob/fcst ',3i8,2f9.3)
+     1                                ,c1_c
+1001                      format(1x,a5,' ob/fcst',i9,1x,a3,1x,2i8,2f9.3
+     1                          ,1x,a1) 
                         endif
                         cnt_write = cnt_write + 1.
                       endif
