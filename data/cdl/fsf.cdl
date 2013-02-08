@@ -366,7 +366,19 @@ netcdf fsf {
             lhe:valid_range= 0.f, 10000.f;
             lhe:LAPS_var="LHE";
             lhe:lvl_coord="MSL ";
-            lhe:LAPS_units="M/S**2";
+            lhe:LAPS_units="M**2/S**2";
+
+        //      LAPS Updraft helicity
+        //      not transferred to bigfile
+        float
+            uhe(record,z,y,x);
+            uhe:_FillValue = 1.e+37f;
+            uhe:long_name="Updraft Helicity   ";
+            uhe:units="m/s**2";
+            uhe:valid_range= 0.f, 10000.f;
+            uhe:LAPS_var="UHE";
+            uhe:lvl_coord="MSL ";
+            uhe:LAPS_units="M**2/S**2";
 
         //     LAPS Fcst lifted index            //
         //     bigfile name = sli
@@ -714,6 +726,7 @@ netcdf fsf {
             llr_comment(record,z,namelen),
             spt_comment(record,z,namelen),
             lhe_comment(record,z,namelen),
+            uhe_comment(record,z,namelen),
             li_comment(record,z,namelen),
             hi_comment(record,z,namelen),
             vis_comment(record,z,namelen),
@@ -862,6 +875,10 @@ netcdf fsf {
         short
             lhe_fcinv(record, z);
             lhe_fcinv:_FillValue= 0s;
+
+        short
+            uhe_fcinv(record, z);
+            uhe_fcinv:_FillValue= 0s;
 
         short
             li_fcinv(record, z);
