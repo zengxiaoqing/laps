@@ -18,12 +18,13 @@ use strict;
 #    -l forecast length (hours) [optional]
 #    -t purge time (hours) [optional]
 #    -o offset time (seconds) [optional]
+#    -w timeout with waiting for model files (hours) [optional]                 
 #    -s fsf only [optional]                 
 
-use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_t $opt_o $opt_s);
+use vars qw($opt_a $opt_d $opt_r $opt_f $opt_c $opt_l $opt_m $opt_t $opt_o $opt_s $opt_w);
 use Getopt::Std;
 
-getopts('a:d:r:f:c:l:m:t:o:s');
+getopts('a:d:r:f:c:l:m:t:o:w:s');
 
 print "Running followup_fcst.pl...\n";
 print "user defined paths\n";
@@ -94,6 +95,9 @@ if(defined $opt_c){
 }else{
     $cycle_freq = $cycle_time / 3600.; 
     $timeout = $cycle_time;            
+}
+if(defined $opt_w){
+    $timeout = $opt_w*3600;            
 }
 
 my ($output_inc); # Forecast output interval (hours)
