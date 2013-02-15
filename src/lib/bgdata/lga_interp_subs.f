@@ -225,7 +225,7 @@ c
 c
          call check_nan3(grid2,nx,ny,nz,nan_flag)
          if(nan_flag .ne. 1) then
-            print *,' ERROR: NaN found in grid1 array '
+            print *,' ERROR: NaN found in grid2 array '
             goto 99
          endif
 
@@ -266,9 +266,9 @@ c
 
       enddo
 
-      deallocate (grid1, grid2, gridn)
+99    deallocate (grid1, grid2, gridn)
 c
-99    return
+      return
       end
 
 c     subroutine erase_file(inittime,validtime,dir,ext)
