@@ -330,7 +330,7 @@ if (! $opt_S){ # test for skipping remote copy
       print "opt_c / remote_copy are $opt_c $remote_copy\n";
       $method = "bbcp";
     }else{
-      $remote_copy = "rsync -lptgvvz --timeout=300"; # faster for larger files
+      $remote_copy = "rsync -lptgvvz --timeout=800"; # faster for larger files
       print "opt_c / remote_copy are $opt_c $remote_copy\n";
     }
 
