@@ -122,6 +122,8 @@ c
       real, allocatable  :: mslpbg(:,:)
       real, allocatable  :: pcpbg(:,:)       !Precip at surface, ACPC (k/m^2)
       real, allocatable  :: crefbg(:,:)      !Composite Reflectivity (dBZ)
+      real, allocatable  :: tpwbg(:,:)       !Total Precipitable Water
+      real, allocatable  :: swibg(:,:)       !Downward Solar Radiation (GHI)
 
 c
 c *** 3D background arrays.
@@ -258,7 +260,8 @@ c
      +,prbght,prbgsh,prbguv,prbgww
      +,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg,istatus)
+     +,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg,tpwbg,swibg
+     +,istatus)
 c
          real  :: prbg_sfc(nx_bg,ny_bg)
          real  :: uwbg_sfc(nx_bg,ny_bg)
@@ -271,6 +274,8 @@ c
          real  :: mslpbg(nx_bg,ny_bg)
          real  :: pcpbg(nx_bg,ny_bg)
          real  :: crefbg(nx_bg,ny_bg)
+         real  :: tpwbg(nx_bg,ny_bg)
+         real  :: swibg(nx_bg,ny_bg)
 c
          real  :: prbght(nx_bg,ny_bg,nzbg_ht)
          real  :: prbgsh(nx_bg,ny_bg,nzbg_sh)
@@ -695,6 +700,8 @@ c             goto900
        allocate (mslpbg(nx_bg,ny_bg))
        allocate (pcpbg(nx_bg,ny_bg))
        allocate (crefbg(nx_bg,ny_bg))
+       allocate (tpwbg(nx_bg,ny_bg))
+       allocate (swibg(nx_bg,ny_bg))
 
        t_at_sfc=missingflag
 
@@ -706,6 +713,7 @@ c             goto900
      +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
      +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg
+     +    ,tpwbg,swibg
      +    ,istatus_prep(nf))
 
        istatus=ishow_timer()
@@ -807,7 +815,7 @@ c         convert to wfo if necessary
      +               tpbg_sfc,
      +               t_at_sfc,
      +               mslpbg,
-     +               pcpbg,crefbg)
+     +               pcpbg,crefbg,tpwbg,swibg)
 
  
        else   !processing the file because it is not a reject
@@ -1333,7 +1341,7 @@ c    .                     uw(i,j,k),vw(i,j,k)) .ge. missingflag)then
      +                          ,tpbg_sfc
      +                          ,t_at_sfc
      +                          ,mslpbg
-     +                          ,pcpbg,crefbg)
+     +                          ,pcpbg,crefbg,tpwbg,swibg)
 
                      goto 999 ! deallocate/return
 
@@ -1511,7 +1519,7 @@ c
            deallocate (tpbg_sfc)
            deallocate (t_at_sfc) 
            deallocate (mslpbg)
-           deallocate (pcpbg,crefbg)
+           deallocate (pcpbg,crefbg,tpwbg,swibg)
 c
 c... Do the temp, moisture (sh_sfc returns with Td), and pressures
 c... Only ETA48_CONUS and namelist switch "luse_sfc_bkgd" enable the use
@@ -1753,7 +1761,7 @@ c
      +        ,prbght, prbguv, prbgsh, prbgww )
           deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
      +        ,vwbg_sfc,tdbg_sfc, tpbg_sfc, t_at_sfc, mslpbg, pcpbg
-     +        ,crefbg)
+     +        ,crefbg, tpwbg, swibg)
 
          endif !(linterp)
 
