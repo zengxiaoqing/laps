@@ -536,10 +536,15 @@ c       include 'satellite_dims_lvd.inc'
               colortable = 'hues'
 
             elseif(c_type(1:2) .eq. 'dt')then
-              write(6,*)
-     1           ' Plotting contingency table of last two entries'       
+              if(c_type(3:3) .eq. '3')then
+                  thresh = 30.
+              else
+                  thresh = 20.
+              endif
 
-              thresh = 20.
+              write(6,*)
+     1         ' Plotting contingency table of last two entries', thresh 
+
               lmask_rqc_3d = .true.
 
               ext = 'lcv'
@@ -588,9 +593,9 @@ c       include 'satellite_dims_lvd.inc'
      1              ,bias                                          ! O
      1              ,ets)                                          ! O
 
-              write(c_label,41)bias,ets
- 41           format('20dBZ Contingency Table (b-a) Bias =',f5.2
-     1                                           ,' ETS =',f6.3)
+              write(c_label,41)nint(thresh),bias,ets
+ 41           format(i2,'dBZ Contingency Table (b-a) Bias =',f5.2
+     1                                             ,' ETS =',f6.3)
 
             else
               write(6,*)' Plotting product field of last two entries' 
@@ -613,7 +618,8 @@ c       include 'satellite_dims_lvd.inc'
      1                            ,i_overlay,c_display,lat,lon,jdot
      1                            ,NX_L,NY_L,r_missing_data,colortable)       
 
-            elseif(c_type(3:3) .ne. 'i')then ! contour plot
+            elseif(c_type(3:3) .ne. 'i' .and. c_type(4:4) .ne. 'i')then
+              ! contour plot
                 call contour_settings(field_2d_diff,NX_L,NY_L
      1               ,clow,chigh,cint,zoom,density,scale)      
 
@@ -3188,25 +3194,34 @@ Cabdel
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif( c_type(1:2) .eq. 'sa' .or. c_type(1:2) .eq. 'pa' )then       
+        elseif( c_type(1:2) .eq. 'sa' .or. c_type(1:2) .eq. 'pa' 
+     1                                .or. c_type(1:2) .eq. 's4')then       
             if(c_type(1:2) .eq. 'sa')then
                 write(6,1321)
 1321            format('     ','Enter # of Hours of Snow Accumulation,',
      1          ' [-99 for Storm Total]     ','? ',$)
                 var_2d = 'STO'
-            else
+                ext = 'l1s'
+            elseif(c_type(1:2) .eq. 'pa')then
                 write(6,1322)
 1322            format('     ','Enter # of Hours of Precip Accumulation,
      1',
      1          ' [-99 for Storm Total]   ','? ',$)
                 var_2d = 'RTO'
+                ext = 'l1s'
+            elseif(c_type(1:2) .eq. 's4')then
+                write(6,1323)
+1323            format('     '
+     1          ,'Enter # of Hours of StageIV Precip Accum',
+     1          ' [-99 for Storm Total]   ','? ',$)
+                var_2d = 'ppt'
+                ext = 'st4'
             endif
 
             read(lun,*)r_hours
 
             write(6,*)
 
-            ext = 'l1s'
             call get_directory(ext,directory,len_dir)
 
 !           Cycle over at :28 after (if input time is not on the hour)?
@@ -3298,8 +3313,10 @@ Cabdel
                 if(r_hours .ne. -99.)then ! Already have label for Storm Total
                     if(c_type(1:2) .eq. 'sa')then
                         c_label = c9_string//' Snow Accum  (in)'
-                    else
+                    elseif(c_type(1:2) .eq. 'pa')then
                         c_label = c9_string//' Prcp Accum  (in)'
+                    elseif(c_type(1:2) .eq. 's4')then
+                        c_label = c9_string//' Stage IV Prcp Accum (in)'
                     endif
                 endif
 
@@ -3316,7 +3333,7 @@ Cabdel
 
             clow = 0.
 
-            if(c_type(1:2) .eq. 'pa')then
+            if(c_type(1:2) .eq. 'pa' .OR. c_type(1:2) .eq. 's4')then
                 if(abs(r_hours) .gt. 1.0)then
                     cint = -0.01 ! -0.05
                 else
@@ -8658,7 +8675,9 @@ c abdel
 
         pcp_2d = 0.
 
-        if(nf .eq. 2)then
+        if(trim(ext) .eq. 'st4')then
+            var_2d(1) = 'ppt'                
+        elseif(nf .eq. 2)then
             var_2d(1) = 'R01'
             var_2d(2) = 'S01'
         else
