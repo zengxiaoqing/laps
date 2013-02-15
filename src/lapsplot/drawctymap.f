@@ -190,19 +190,23 @@ c abdel
               endif
           endif
 
-          if(((namelist_parms%icol_country .ne. 
+          if( (namelist_parms%icol_country .ne. 
      1         namelist_parms%icol_state) 
      1                     .OR.
-     1        (namelist_parms%country_line_width .ne. 
-     1         namelist_parms%state_line_width)      )       
+     1        (namelist_parms%country_line_width .eq. 0. 
      1                     .AND.
-     1                    .true.                        )then
+     1         namelist_parms%state_line_width .gt. 0.)       
+     1                                                 )then
               write(6,*)
      1              ' Replotting countries in separate color/width: '
      1                 ,0
      1                 ,namelist_parms%state_line_width
               call GSLWSC(namelist_parms%state_line_width)
-              call setusv_dum('IN',0) 
+              if(namelist_parms%country_line_width .eq. 0.)then
+                  call setusv_dum('IN',0) 
+              else
+                  call setusv_dum('IN',namelist_parms%icol_country) 
+              endif
               CALL MPLNDR ('Earth..2',3) ! countries
           endif
 
