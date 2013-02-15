@@ -4,7 +4,8 @@
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg, tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg,istatus)
+     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg,tpw,swi
+     +    ,istatus)
 
 c KML: CHANGES MADE APRIL 2004
 c tdbg_sfc (model 2m dew point) is now read in during subroutine read_eta_conusc
@@ -62,14 +63,13 @@ c
       real :: t_at_sfc(nx_bg,ny_bg)
       real :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
       real :: crefbg(nx_bg,ny_bg)         !Composite Reflectivity
+      real tpw(nx_bg,ny_bg)
+      real swi(nx_bg,ny_bg)
 
 c     Local variables for the time being
       real r01(nx_bg,ny_bg)
-      real lmr(nx_bg,ny_bg)
       real llr(nx_bg,ny_bg)
       real s8a(nx_bg,ny_bg)
-      real swi(nx_bg,ny_bg)
-      real tpw(nx_bg,ny_bg)
 
       real      lon0,lat1,lat2
       real      ssh2
@@ -124,7 +124,7 @@ c domain fua/fsf but we'll try the get_lapsdata stuff first.
      +                          ,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg       
      +                          ,uwbg_sfc, vwbg_sfc, tpbg_sfc, tdbg_sfc       
      +                          ,prbg_sfc, mslpbg, htbg_sfc, r01, pcpbg
-     +                          ,lmr, llr, s8a, swi, tpw
+     +                          ,crefbg, llr, s8a, swi, tpw
      +                          ,istatus)
             if(istatus.ne.1)then
                print*,'Error returned: read_fuafsf_cdf'
@@ -491,13 +491,13 @@ C WNI-BLS
       elseif (bgmodel .eq. 13) then ! Process GRIB1/GRIB2
 
          write(*,*) 'CALL DEGRIB_DATA: dims are ',nx_bg, ny_bg, nzbg_ht
-         write(*,*) ' grib filename',fullname
+         write(*,*) ' grib filename',trim(fullname)
 
          call degrib_data(fullname, nx_bg, ny_bg, nzbg_ht, 
      &      prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, 
      &      htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, 
      &      tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, 
-     &      istatus)
+     &      tpw,istatus)
 
             prbgsh(:,:,:)=prbght(:,:,:) 
             prbguv(:,:,:)=prbght(:,:,:) 
