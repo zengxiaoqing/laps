@@ -206,7 +206,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 subroutine degrib_data(gribflnm, nx, ny, nz, &
          prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, &
          htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, &
-         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, istatus)
+         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, pwatbg, istatus)
 
   use table
   use gridinfo
@@ -258,6 +258,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real :: mslpbg(nx,ny)
   real :: pcpbg(nx,ny)
   real :: crefbg(nx,ny)
+  real :: pwatbg(nx,ny)
 
 ! *** 3D background arrays.
   real :: prbght(nx,ny,nz)
@@ -361,7 +362,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
         call get_lapsbg(nlvl, maxbglvl, plvl, debug_level, nx, ny, nz, &
          prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, &
          htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, &
-         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, istatus)
+         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, pwatbg, istatus)
 
 !-----
 
