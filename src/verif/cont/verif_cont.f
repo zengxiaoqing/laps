@@ -125,7 +125,9 @@
 
         character*10  units_2d
         character*125 comment_2d
-        character*3 var_2d, var_2d_anal
+        character*6 var_2d               
+        character*3 var_2d_anal
+        character*3 var_2d_fcst
         character*5 fcst_hh_mm
         character*9 a9time,a9time_valid,a9time_initial
         character*24 a24time_valid
@@ -133,12 +135,13 @@
         character*150 hist_file, bias_file, ets_file, members_file
 
         integer n_fields
-        parameter (n_fields=2)
+        parameter (n_fields=3)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
+        character*10 type_a(n_fields)
         integer nthr_a(n_fields)  ! number of thresholds for each field
         integer ndims_a(n_fields) ! number of dimensions for each field
-        real dbz_an(5),dbz_fc(5)
+        real dbz_an(5),dbz_fc(5),pcp_thr(7)
         character*2 c2_region
         character*10 c_thr
 
@@ -149,19 +152,22 @@
 !       data nthr_a     /5/        
 !       data ndims_a    /3/        
 
-        data ext_fcst_a /'fua','fsf'/ ! 3-D / composite ref
-        data ext_anal_a /'lps','lmr'/ ! 3-D / composite ref
-        data var_a      /'REF','LMR'/ ! 3-D / composite ref
-        data nthr_a     /5,5/        
-        data ndims_a    /3,2/        
+        data ext_fcst_a /'fua','fsf','fsf'/                          
+        data ext_anal_a /'lps','lmr','st4'/                           
+        data var_a      /'REF','LMR','PCP_01'/                          
+        data type_a     /'rdr','rdr','pcp'/
+        data nthr_a     /5,5,7/        
+        data ndims_a    /3,2,2/        
+
+        data pcp_thr /.01,.05,0.1,0.5,1.0,2.0,5.0/
 
         integer,parameter :: k12 = selected_int_kind(12)
         integer (kind=k12) :: contable(0:1,0:1)
 
         integer maxthr
-        parameter (maxthr=5)
+        parameter (maxthr=7)
 
-        real cont_4d(NX_L,NY_L,NZ_L,maxthr)
+!       real cont_4d(NX_L,NY_L,NZ_L,maxthr)
         real bias(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
         real ets(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
         real 
@@ -294,7 +300,11 @@
 
                 write(6,*)'hist_file = ',hist_file
 
-                open(lun_out,file=hist_file,status='unknown')
+                open(lun_out,file=hist_file,status='unknown',err=401)
+                goto 402
+401             write(6,*)' ERROR opening hist_file: ',trim(hist_file)
+                goto 900
+402             continue
 
                 if(iregion .eq. 1)then
 
@@ -311,8 +321,10 @@
                   else ! Read analyzed 2D field
                     ext = ext_anal_a(ifield)
 
-                    if(var_2d .eq. 'LMR')then
+                    if(trim(var_2d) .eq. 'LMR')then
                       var_2d_anal = 'R'
+                    elseif(trim(var_2d) .eq. 'PCP_01')then
+                      var_2d_anal = 'ppt'
                     else
                       var_2d_anal = var_2d
                     endif
@@ -321,7 +333,7 @@
      1              ,comment_2d,NX_L,NY_L,var_anal_3d,istatus)       
                     if(istatus .ne. 1)then
                         write(6,*)' Error reading 2D Analysis for '
-     1                            ,var_2d
+     1                            ,trim(ext),' ',trim(var_2d_anal)
                         goto 900
                     endif
 
@@ -338,8 +350,7 @@
 
 	          write(*,*)'beka',i4_valid
 
-!                 if(var_2d .eq. 'REF')then ! also read radar quality
-                  if(.true.)then ! also read radar quality
+                  if(trim(type_a(ifield)) .eq. 'rdr')then
                       if(var_2d .eq. 'LLR')then 
                           rqc_thresh = 2.0
                       else
@@ -353,6 +364,10 @@
                           write(6,*)' Error reading 2D RQC Analysis'
                           goto 900
                       endif
+                      write(6,*)' Successful radar quality (RQC) read'
+                  else ! determine precip quality
+                      rqc_thresh = 0.
+                      rqc(:,:) = var_anal_3d(:,:,1)
                   endif
 
                   if(c_fdda_mdl_src(imodel) .ne. 'persistence')then
@@ -370,25 +385,34 @@
      1                          ,units_2d,comment_2d,var_fcst_3d
      1                          ,istatus)
                         if(istatus .ne. 1)then
-                             write(6,*)' Error reading 3D Forecast'
+                             write(6,*)' Error reading 3D Forecast for '
      1                                 ,var_2d
                              goto 900
                         endif
+
                      else ! Read forecast 2D field
                         ext = ext_fcst_a(ifield)
+
                         call get_directory(ext,directory,len_dir)
                         DIRECTORY=directory(1:len_dir)
      1                                      //c_model(1:len_model)    
      1                                      //'/'
 
+                        if(trim(type_a(ifield)) .eq. 'rdr')then
+                            var_2d_fcst = var_2d
+                        else
+                            var_2d_fcst = 'R01' 
+                        endif
+
                         call get_lapsdata_2d(i4_initial,i4_valid
-     1                          ,directory,var_2d
+     1                          ,directory,var_2d_fcst
      1                          ,units_2d,comment_2d
      1                          ,NX_L,NY_L
      1                          ,var_fcst_3d
      1                          ,istatus)
                         if(istatus .ne. 1)then
-                             write(6,*)' Error reading 3D REF Forecast'
+                             write(6,*)' Error reading 2D Forecast for '
+     1                                ,trim(ext),' ',trim(var_2d_fcst)
                              goto 900
                         endif
 
@@ -515,7 +539,11 @@
 !                Calculate contingency tables
 !                Radar QC (rqc) for "all" case is used via 'lmask_rqc_3d'
                  do idbz = 1,nthr
-                  rdbz = float(idbz*10) + 10
+                  if(trim(type_a(ifield)) .eq. 'pcp')then
+                      rdbz = pcp_thr(idbz)                   
+                  else
+                      rdbz = float(idbz*10) + 10
+                  endif
 
                   if(iter .eq. 1)then
                    dbz_an(idbz) = rdbz
@@ -551,11 +579,11 @@
                   if(iregion .eq. 1)then
 
 !                     Calculate Contingency Table (3-D)
-                      call calc_contable_3d(
-     1                        var_anal_3d,var_fcst_3d
-     1                       ,rdbz,NX_L,NY_L,NZ_L                    ! I
-     1                       ,lmask_rqc_3d,r_missing_data            ! I
-     1                       ,cont_4d(1,1,1,idbz))                   ! O
+!                     call calc_contable_3d(
+!    1                        var_anal_3d,var_fcst_3d
+!    1                       ,rdbz,NX_L,NY_L,NZ_L                    ! I
+!    1                       ,lmask_rqc_3d,r_missing_data            ! I
+!    1                       ,cont_4d(1,1,1,idbz))                   ! O
 
                   endif ! iregion = 1
 
@@ -591,9 +619,14 @@
          nthr = nthr_a(ifield) ! nthr may be unset or have earlier been stepped on
          do idbz = 1,nthr
 
-           rdbz = float(idbz*10) + 10
-           write(c_thr,901)nint(rdbz)
- 901       format(i2)
+           if(trim(type_a(ifield)) .eq. 'rdr')then
+               rdbz = float(idbz*10) + 10
+               write(c_thr,901)nint(rdbz)
+ 901           format(i2)
+           else
+               write(c_thr,902)nint(pcp_thr(ifield)*100.)
+ 902           format(i4.4)
+           endif
 
            plot_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
      1                                      //'/plot'
@@ -625,11 +658,11 @@
            open(lun_ets,file=ets_file,status='unknown')
 
 !          Write comment with model member names
-           write(lun_bias,902)(trim(c_fdda_mdl_src(imodel))
+           write(lun_bias,905)(trim(c_fdda_mdl_src(imodel))
      1                              ,imodel=2,n_fdda_models)  
-           write(lun_ets,902)(trim(c_fdda_mdl_src(imodel))
+           write(lun_ets,905)(trim(c_fdda_mdl_src(imodel))
      1                              ,imodel=2,n_fdda_models)  
-902        format('# ',30(1x,a))  
+905        format('# ',30(1x,a))  
 
            if(l_col)then
 !              Write bias and ets values
