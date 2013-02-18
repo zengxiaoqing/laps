@@ -442,6 +442,9 @@ if($opt_S){
 #
 my $yyjjjhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time,'1');
 my $i4time_sys=&laps_tools::a9time_to_i4time($yyjjjhhmm);
+
+$ENV{LAPS_A9TIME} = "$yyjjjhhmm";
+
 #
 # This sends the stdout to the run log file
 #
