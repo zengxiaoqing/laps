@@ -439,9 +439,12 @@ gr2);
          }else{
              @thr_dirs = qw(0001 0005 0010 0050 0100 0200 0500)
          }
+         
+         print "thr dirs: @thr_dirs\n";
 
          foreach (@thr_dirs) {
-            mkdir "$LAPS_DATA_ROOT/lapsprd/$verifvar/plot/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$verifvar/plot/$_");
+            print "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_\n";
+            mkdir "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_");
          }
      }
 
