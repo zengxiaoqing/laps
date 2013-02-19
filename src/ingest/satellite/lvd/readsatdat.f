@@ -14,6 +14,7 @@
      &                      image_ir,image_12,
      &                      image_39,image_vis,
      &                      image_lat_ir,image_lon_ir,
+     &                      scale_img,
      &                      istatus)
 c
 c
@@ -62,7 +63,7 @@ c
       INTEGER   rcode
       INTEGER   ivalidTime
       doubleprecision validtime
-      REAL    dummy
+      REAL    dummy,scale_img
       REAL    la1_vis,la1_ir,la1_wv
       REAL    lo1_vis,lo1_ir,lo1_wv
       REAL    dx_vis,dx_ir,dx_wv
@@ -118,7 +119,7 @@ c
      &                    c_type(j,i),
      &                    record,
      &                    nelemir,nlinesir,
-     &                    ir_image,
+     &                    ir_image,scale_img,
      &                    image_lat_ir,image_lon_ir,
      &                    la1_ir,lo1_ir,
      &                    Dx_ir,Dy_ir,
@@ -157,7 +158,7 @@ c
      &                    c_type(j,i),
      &                    record,
      &                    nelemvis,nlinesvis,
-     &                    vis_image,
+     &                    vis_image,scale_img,
      &                    image_lat_ir,image_lon_ir,
      &                    la1_vis,lo1_vis,
      &                    Dx_vis,Dy_vis,
@@ -190,7 +191,7 @@ c
      &                    c_type(j,i),
      &                    record,
      &                    nelemwv,nlineswv,
-     &                    wv_image,
+     &                    wv_image,scale_img,
      &                    image_lat_ir,image_lon_ir,
      &                    la1_wv,lo1_wv,
      &                    Dx_wv,Dy_wv,
