@@ -14,7 +14,11 @@
      9  'mtsat',
      .  'fy',
      1  'goeswe',
-     2  'goesea'/
+     2  'goesea',
+     3  'goesne',
+     4  'goesnw',
+     5  'goesse',
+     6  'goessw'/
 
       data satellite_types/
      1              'gvr','wfo','cdf','rll',
@@ -28,7 +32,11 @@
      9              '   ','   ','   ','rll',
      .              '   ','   ','   ','rll',
      1              'gvr','wfo','cdf','rll',
-     2              'gvr','wfo','cdf','rll'/
+     2              'gvr','wfo','cdf','rll',
+     3              'gvr','wfo','cdf','rll',
+     4              'gvr','wfo','cdf','rll',
+     5              'gvr','wfo','cdf','rll',
+     6              'gvr','wfo','cdf','rll'/
 
       data satellite_channels/
      1              'vis','4u ','wv ','11u','12u','   ',
@@ -89,4 +97,24 @@
      1              'vis','4u ','wv ','11u','12u','   ',
      2              'vis','i39','iwv','i11','i12','   ',
      3              'vis','4u ','wv ','11u','12u','   ',
-     4              '   ','   ','   ','   ','   ','   '/  !end for goesea
+     4              '   ','   ','   ','   ','   ','   ',  !end for goesea
+
+     1              'vis','4u ','wv ','11u','12u','   ',
+     2              'vis','i39','iwv','i11','i12','   ',
+     3              'vis','4u ','wv ','11u','12u','   ',
+     4              '   ','   ','   ','   ','   ','   ',  !end for goesne
+
+     1              'vis','4u ','wv ','11u','12u','   ',
+     2              'vis','i39','iwv','i11','i12','   ',
+     3              'vis','4u ','wv ','11u','12u','   ',
+     4              '   ','   ','   ','   ','   ','   ',  !end for goesnw
+
+     1              'vis','4u ','wv ','11u','12u','   ',
+     2              'vis','i39','iwv','i11','i12','   ',
+     3              'vis','4u ','wv ','11u','12u','   ',
+     4              '   ','   ','   ','   ','   ','   ',  !end for goesse
+
+     1              'vis','4u ','wv ','11u','12u','   ',
+     2              'vis','i39','iwv','i11','i12','   ',
+     3              'vis','4u ','wv ','11u','12u','   ',
+     4              '   ','   ','   ','   ','   ','   '/  !end for goessw
