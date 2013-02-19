@@ -647,7 +647,8 @@ c goes08 (first satellite type)
           endif
       enddo ! i
 
-!     Determine satellite channels without help of 'satdata_lvd_table'
+!     Determine satellite channels without help of 'satdata_lvd_table' at first,
+!     though 'satdata_lvd_table' is partially tested near the end of this block
       ICHANNELS = 0
       jj=0
       kk=0
@@ -1445,6 +1446,13 @@ c format type 4 (rll)
 
               do k=1,nchannel(jj)
                 kk=kk+1
+
+                do ic = 1,maxchannel
+                    if(cchanneltypes(kk).eq.satellite_channels(it,js,ic)
+     1                                                             )then  
+                        write(6,*)' Test channel match ',it,js,ic
+                    endif
+                enddo 
 
                 ic=0
                 if(cchanneltypes(kk).eq.'vis')then
