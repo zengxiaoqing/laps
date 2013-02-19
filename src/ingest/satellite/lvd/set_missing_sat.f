@@ -94,8 +94,10 @@ c        rhigh=255.
              rhigh = 5000.
              rlow  = 1631.
          else
-             rhigh = 50000.
-             rlow  = 16310.
+             rhigh = 5000.
+             rlow  = 1631.
+!            rhigh = 50000.
+!            rlow  = 16310.
          endif
          write(6,*)' Range testing thresholds set to ',rlow,rhigh
       endif

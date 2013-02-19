@@ -45,6 +45,7 @@ c
       real    r_missing_data
       real    percent_missing
       real    smsng
+      real    scale_img
 
       integer bcnt
       integer itot
@@ -125,7 +126,7 @@ c
 !    &                   nx2,ny2,
      &                   record,
      &                   n_elems,n_lines,
-     &                   image_prev,
+     &                   image_prev,scale_img,
      &                   latitude,
      &                   longitude,
      &                   la1,lo1,
