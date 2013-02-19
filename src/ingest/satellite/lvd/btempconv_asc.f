@@ -16,7 +16,7 @@ c
        do i=1,nelems
 
           if(image(i,j).ne.r_missing_data)then
-             image(i,j)=image(i,j)/scale
+             image(i,j)=image(i,j)*scale
           endif
 
        enddo
