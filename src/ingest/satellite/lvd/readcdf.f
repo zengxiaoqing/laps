@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
       subroutine readcdf(csat_id,csat_type,chtype,
-     1record,n_elem,n_lines,r4_image,
+     1record,n_elem,n_lines,r4_image,scale_img,
      1latitude,longitude,
      1La1,Lo1,Dx,Dy,Latin,
      1LoV, ivalidTime , ncid, istatus)
@@ -75,6 +75,7 @@ C
       REAL      LoV     
       REAL      poLat
       REAL      La2,Lo2,level
+      REAL      scale_img
       INTEGER START(10)
       INTEGER COUNT(10)
       integer varid,ncid
@@ -174,6 +175,18 @@ C
       if(istatus .ne. 1)then
          write(6,*)'Error in rdblock_line_elem'
          return
+      endif
+
+      if(csat_type.eq.'rll')then ! read scaling attribute
+          rcode=NF_GET_ATT_REAL(ncid,varid,'scale_factor'
+     1                              ,scale_img)
+          if(rcode.ne.NF_NOERR) then
+             write(6,*)'Error reading image scaling attribute'
+             scale_img = .01
+             write(6,*)' Use default value for image scale ',scale_img
+          else
+             write(6,*)' Successfully read image scale ',scale_img
+          endif
       endif
 
       istatus = 0
