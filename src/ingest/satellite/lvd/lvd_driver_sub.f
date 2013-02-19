@@ -152,7 +152,7 @@ c
       real      r_missing_data,rmin,rmax
       real      radtodeg
       real      rcal
-      real      scale
+      real      scale_img
 
       logical   lvis_flag
       logical   lsatqc
@@ -478,6 +478,7 @@ c --------------------------------------------------------------------------
      &                      image_ir,image_vis,
      &                      image_12,image_39,image_67,
      &                      image_lat_ir,image_lon_ir,
+     &                      scale_img,
      &                      i4time_data,
      &                      istatus)
 
@@ -857,15 +858,9 @@ c
 c note that brightness temps in the ascii file have 1 significant
 c decimal digit and have been acquired as integers so convert here.
 c 
-          if(csatid.eq.'meteos')then
-              scale = 100.
-          else
-              scale = 10.
-          endif
-
           write(6,*)
      1       'Convert btemps from Integer to Floating pt., scaled by '
-     1        ,scale      
+     1        ,scale_img      
 
           do i = 1,nft
           do j = 1,ntm(i)
@@ -873,16 +868,16 @@ c
              call lvd_file_specifier(c_type(j,i),ispec,istat)
              if(ispec.eq.2)then
                 call btemp_convert_asc(n_ir_lines,n_ir_elem,
-     &               r_missing_data,image_39(1,1,i),scale,istatus)
+     &               r_missing_data,image_39(1,1,i),scale_img,istatus)
              elseif(ispec.eq.3)then
                 call btemp_convert_asc(n_wv_lines,n_wv_elem,
-     &               r_missing_data,image_67(1,1,i),scale,istatus)
+     &               r_missing_data,image_67(1,1,i),scale_img,istatus)
              elseif(ispec.eq.4)then
                 call btemp_convert_asc(n_ir_lines,n_ir_elem,
-     &               r_missing_data,image_ir(1,1,i),scale,istatus)
+     &               r_missing_data,image_ir(1,1,i),scale_img,istatus)
              elseif(ispec.eq.5)then
                 call btemp_convert_asc(n_ir_lines,n_ir_elem,
-     &               r_missing_data,image_12(1,1,i),scale,istatus)
+     &               r_missing_data,image_12(1,1,i),scale_img,istatus)
              endif
 
           enddo
