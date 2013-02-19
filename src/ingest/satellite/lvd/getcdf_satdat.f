@@ -40,6 +40,7 @@ cdis
      &                      image_ir,image_vis,
      &                      image_12,image_39,image_67,
      &                      image_lat_ir,image_lon_ir,          ! O
+     &                      scale_img,                          ! O
      &                      i4time_data,
      &                      istatus)
 c
@@ -95,6 +96,8 @@ c
 
       real image_lat_ir  (n_ir_elem,n_ir_lines)
       real image_lon_ir  (n_ir_elem,n_ir_lines)
+
+      real scale_img
 
       integer i,j,k,n,jj,il
       integer in(max_channel)
@@ -657,6 +660,7 @@ c
      &                image_ir,image_12,
      &                image_39,image_vis,
      &                image_lat_ir,image_lon_ir,         ! O
+     &                scale_img,
      &                istatus)
  
       goto 16
