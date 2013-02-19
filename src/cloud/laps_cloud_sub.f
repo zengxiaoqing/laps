@@ -611,7 +611,7 @@ C BLEND IN FIRST GUESS RADAR
 
 !           Determine dynamic cutoff distance between radar data and first guess
             if(ref_mt_modelfg(i,j) .gt. 0.)then ! find distance from radar given
-                cterm = ref_mt_modelfg(i,j)     ! height and elev angle
+                cterm = ref_mt_modelfg(i,j)     ! echo height and elev angle
                 hor_dist = (sqrt(4.*aterm*cterm + bterm**2.) - bterm)       
      1                                / (2.*aterm)
                 range_thresh = 
