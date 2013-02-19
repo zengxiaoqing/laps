@@ -79,7 +79,7 @@
 
         solar_constant = 1353.
         solar_irradiance = solar_constant * rad_dist_factor
-        transmittance = 0.800 ! catchall for various types of absorption / scattering
+        transmittance = 0.820 ! catchall for various types of absorption / scattering
 
         model = 1
         if(model .eq. 1)then
