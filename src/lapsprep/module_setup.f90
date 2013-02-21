@@ -49,6 +49,7 @@ MODULE setup
    ! Namelist items
 
    LOGICAL            :: hotstart,balance,make_sfc_uv,use_sfc_bal,use_laps_skintemp,use_laps_vv
+   LOGICAL            :: lapsprep_always_write 
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
    REAL               :: snow_thresh, lwc2vapor_thresh, ice2vapor_thresh
@@ -108,7 +109,8 @@ CONTAINS
                          rai_frac          , &
                          sno_frac          , &
                          use_laps_skintemp , &        
-                         use_laps_vv        
+                         use_laps_vv       , &
+                         lapsprep_always_write 
 
       nml_unit = 77
 
@@ -126,6 +128,7 @@ CONTAINS
       use_sfc_bal = .false.
       use_laps_skintemp = .false. 
       use_laps_vv = .false. 
+      lapsprep_always_write = .false. 
       ! Open the namelist
 
       input_laps_file = TRIM(laps_data_root) // '/static/lapsprep.nl'
