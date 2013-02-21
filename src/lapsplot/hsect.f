@@ -5623,8 +5623,14 @@ c                   cint = -1.
             write(6,*)' l_image = ',l_image
 
             if(.not. l_image)then ! Surface background contours
-                call contour_settings(field_2d,NX_L,NY_L
+                if(var_2d .eq. 'S01')then
+                    clow = 0.0
+                    chigh = 100.0
+                    cint = -.1
+                else
+                    call contour_settings(field_2d,NX_L,NY_L
      1                            ,clow,chigh,cint,zoom,density,scale)      
+                endif
 
                 call plot_cont(field_2d,scale,clow,chigh,cint
      1                        ,asc9_tim,namelist_parms,plot_parms
