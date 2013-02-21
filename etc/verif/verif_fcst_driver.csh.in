@@ -27,6 +27,21 @@ umask 002
 
 echo $N_VERIF_TIMES > $LAPS_DATA_ROOT/lapsprd/verif/n_fcst_times.dat
 
+# sync stage IV files
+if (-e $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl) then
+    setenv REPODIR /w3/jet/fab/st4repo
+    if (-d $REPODIR) then
+        cd $REPODIR                      
+        echo "perl $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl $4 $1 >& $LAPS_DATA_ROOT/log/ingest_stageIV_files.log"
+              perl $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl $4 $1 >& $LAPS_DATA_ROOT/log/ingest_stageIV_files.log 
+    else
+        echo "NOTE: $REPODIR not found..."
+    endif
+
+else
+    echo "NOTE: $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl not found..."
+endif
+
 if ($2 == archive) then
 #   perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3                      > $LAPS_DATA_ROOT/time/modeltime.dat 
 #   perl $LAPSINSTALLROOT/etc/sched_sys.pl -A $3       -f ascii_time >> $LAPS_DATA_ROOT/time/modeltime.dat 
@@ -141,6 +156,21 @@ foreach SUBDIR (REF LMR)
 
     echo ""
 
+end
+
+foreach SUBDIR (PCP_01)
+    foreach THRESH (0001 0005 0010 0050 0100 0200 0500)
+
+
+#       echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt PCP_01   0.001:2.0 '"1 Hour Stage IV Precip"' "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/pcp_01_fcst.log"
+#             $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt PCP_01   0.001:2.0  "1 Hour Stage IV Precip"  "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/pcp_01_fcst.log
+
+
+        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log"
+              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log
+        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log"
+              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log
+    end
 end
 
 date -u
