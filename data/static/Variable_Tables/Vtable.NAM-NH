@@ -1,0 +1,25 @@
+GRIB1| Level| From |  To  | degrib   |         |                                         |GRIB2|GRIB2|GRIB2|GRIB2|
+Param| Type |Level1|Level2| Name     | Units   | Description                             |Discp|Catgy|Param|Level|
+-----+------+------+------+----------+---------+-----------------------------------------+-----------------------+
+   7 | 100  |   *  |      | HGT      | m       | Height                                  |  0  |  3  |  5  | 100 |
+  11 | 100  |   *  |      | TT       | K       | Temperature                             |  0  |  0  |  0  | 100 |
+  52 | 100  |   *  |      | RH       | %       | Relative Humidity                       |  0  |  1  |  1  | 100 |
+  33 | 100  |   *  |      | UU       | m s-1   | U                                       |  0  |  2  |  2  | 100 |
+  34 | 100  |   *  |      | VV       | m s-1   | V                                       |  0  |  2  |  3  | 100 |
+  39 | 100  |   *  |      | VVEL     | Pa s-1  | Press Vertical Vel                      |  0  |  2  |  8  | 100 |
+   2 | 102  |   0  |      | PMSL     | Pa      | Sea-level Pressure                      |  0  |  3  |  1  | 101 |
+   1 |   1  |   0  |      | PSFC     | Pa      | Surface Pressure                        |  0  |  3  |  0  |   1 |
+   7 |   1  |   0  |      | HGT_SFC  | m       | Height            at sfc                |  0  |  3  |  5  |   1 |
+  11 |   1  |   0  |      | TT_SKIN  | K       | Temperature       at sfc (skin)         |  0  |  0  |  0  |   1 |
+  65 |   1  |   0  |      | WEASD    | kg/m2   | Water Equiv Accumulated Snow Depth      |  0  |  1  | 13  |   1 |
+ 136 |   7  |   0  |      | VSS_T    | 1/s     | Vertical Speed sheer at Trop            |  0  |  2  |192  |   7 |
+  54 | 200  |   0  |      | PWAT     | kg/m2   | Precipitable water (Entire column)      |  0  |  1  |  3  | 200 |
+  11 | 105  |   2  |      | TT_SFC   | K       | Temperature       at  2 m               |  0  |  0  |  0  | 103 |
+  52 | 105  |   2  |      | RH_SFC   | %       | Relative Humidity at  2 m               |  0  |  1  |  1  | 103 |
+  51 | 105  |   2  |      | SH_SFC   | %       | Specific Humidity at  2 m               |  0  |  1  |  0  | 105 |
+  33 | 105  |  10  |      | UU_SFC   | m s-1   | U                 at 10 m               |  0  |  2  |  2  | 103 |
+  34 | 105  |  10  |      | VV_SFC   | m s-1   | V                 at 10 m               |  0  |  2  |  3  | 103 |
+  39 | 107  | 9950 |      | VVEL_SIG | Pa s-1  | Press Vertical Vel, sigma 0.0995        |  0  |  2  |  8  | 104 |
+  61 |   1  |   0  |      | ACPC     | kg m-2  | Total Precip at Surface                 |  0  |  1  |  8  |   1 |
+ 212 |   1  |   0  |      | REFC     | dbZ     | Maximum/Composite radar reflectivity    |  0  | 16  |196  | 200 |
+-----+------+------+------+----------+---------+-----------------------------------------+-----------------------+
