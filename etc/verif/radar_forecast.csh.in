@@ -183,19 +183,27 @@ else
 endif
 echo 'set grid'                                                          >> $GNUPLOTFILE
 echo 'set datafile missing "-999.000"'                                   >> $GNUPLOTFILE
+
 if ($DURATION == "") then
     echo 'set xlabel "Initialized '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
 else
 #   echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
     echo 'set xlabel "Forecast Hours - Latest Run At '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
 endif
+
 if ($SUBDIR == "REF") then
     echo 'set ylabel "Volume Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
     echo 'set title "Radar 3-D Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
 else if ($SUBDIR == "LMR") then
     echo 'set ylabel "Composite Reflectivity '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
     echo 'set title "Composite Reflectivity '$REF'dBZ '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
+else # Stage IV Precip
+    setenv PCP_HR    `echo $SUBDIR | cut -c5-6 | sed 's/^0//'`
+    setenv REF_LABEL `echo $REF | cut -c1-2 | sed 's/^0//'`.`echo $REF | cut -c3-4`
+    echo 'set ylabel "'$PCP_HR' Hour Stage IV Precip '$REF_LABEL'in '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
+    echo 'set title  "'$PCP_HR' Hour Stage IV Precip '$REF_LABEL'in '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
 endif
+
 echo 'set key ins'                                                       >> $GNUPLOTFILE
 echo 'set key right box'                                                 >> $GNUPLOTFILE
 echo 'set key spacing' $KEY_SPACING                                      >> $GNUPLOTFILE
