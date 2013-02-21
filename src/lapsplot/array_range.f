@@ -50,7 +50,7 @@ cdis
            clow = 0.0
            chigh = 10.
            cint = -0.01
-           write(6,*)' Subroutine contour_settings....',cint,scale
+           write(6,*)' contour_settings for precip: ',cint,scale
            return
        endif
 
