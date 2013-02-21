@@ -9,7 +9,7 @@
  pct_req_lvd_s8a=75.,
  cld_weight_modelfg=.01,
  echotop_thr_a=4000.,4000.,276.15,
- i4_sat_window=1270,
+ i4_sat_window=1870,
  i4_sat_window_offset=-60,
  /
 
