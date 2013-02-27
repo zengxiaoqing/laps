@@ -148,12 +148,14 @@ foreach MODEL ($MODELS)
 #echo "ncgen -o $NCTEMPLATE $LAPS_DATA_ROOT/cdl/fsf.cdl"
 #      ncgen -o $NCTEMPLATE $LAPS_DATA_ROOT/cdl/fsf.cdl
 
-  echo "NCTEMPLATE_FSF is $NCTEMPLATE_FSF"
-  ls -l $NCTEMPLATE_FSF
+  if ($MODE_FSF == WGRIB) then
+      echo "NCTEMPLATE_FSF is $NCTEMPLATE_FSF"
+      ls -l $NCTEMPLATE_FSF
 
-  if (! -e $NCTEMPLATE_FSF && $MODE_FSF == WGRIB) then
-    echo "ERROR $NCTEMPLATE_FSF does not exist"
-    exit
+      if (! -e $NCTEMPLATE_FSF) then
+        echo "ERROR $NCTEMPLATE_FSF does not exist"
+        exit
+      endif
   endif
 
   foreach FCST_HH ($HHTIMES)                                     
@@ -235,9 +237,8 @@ foreach MODEL ($MODELS)
 #       setenv GRIBIN /home/Steve.Albers/public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
         setenv GRIBIN /public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
 
-#       setenv NCOUT_FSF /home/Steve.Albers/outdir/$YYDDDHHMM$FCSTTIME.fsf
+#       setenv TMPOUT_FSF /home/Steve.Albers/outdir/$YYDDDHHMM$FCSTTIME.fsf
         setenv NCOUT_FSF $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME.fsf
-
         setenv NCOUT_FUA $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME.fua
 
 #       Consider a local disk for faster intermediate file processing, otherwise use a dot file
@@ -250,8 +251,10 @@ foreach MODEL ($MODELS)
             endif
             perl $LAPSINSTALLROOT/etc/purger.pl -r -t 1.0 $TMPDIR
             setenv TMPOUT_FUA $TMPDIR/$YYDDDHHMM$FCSTTIME.fua.$PROC
+            setenv TMPOUT_FSF $TMPDIR/$YYDDDHHMM$FCSTTIME.fsf.$PROC
         else
             setenv TMPOUT_FUA $OUTDIR_FUA/.$YYDDDHHMM$FCSTTIME.fua
+            setenv TMPOUT_FSF $OUTDIR_FSF/.$YYDDDHHMM$FCSTTIME.fsf
         endif
 
 #       Specify stmas_hwt grid for testing
@@ -272,26 +275,26 @@ foreach MODEL ($MODELS)
             echo "Lat1 is $LAT1"
 
 #           Convert GRIB2 file into initial NetCDF file
-            echo "wgrib2  $GRIBIN -s -d $REC_LMR         $NEWGRID -netcdf $NCOUT_FSF"
-                  wgrib2  $GRIBIN -s -d $REC_LMR         $NEWGRID -netcdf $NCOUT_FSF
+            echo "wgrib2  $GRIBIN -s -d $REC_LMR         $NEWGRID -netcdf $TMPOUT_FSF"
+                  wgrib2  $GRIBIN -s -d $REC_LMR         $NEWGRID -netcdf $TMPOUT_FSF
  
-            echo "wgrib2  $GRIBIN -s -d $REC_TSF -append $NEWGRID -netcdf $NCOUT_FSF"
-                  wgrib2  $GRIBIN -s -d $REC_TSF -append $NEWGRID -netcdf $NCOUT_FSF  
+            echo "wgrib2  $GRIBIN -s -d $REC_TSF -append $NEWGRID -netcdf $TMPOUT_FSF"
+                  wgrib2  $GRIBIN -s -d $REC_TSF -append $NEWGRID -netcdf $TMPOUT_FSF  
 
-            echo "wgrib2  $GRIBIN -s -d $REC_DSF -append $NEWGRID -netcdf $NCOUT_FSF"
-                  wgrib2  $GRIBIN -s -d $REC_DSF -append $NEWGRID -netcdf $NCOUT_FSF
+            echo "wgrib2  $GRIBIN -s -d $REC_DSF -append $NEWGRID -netcdf $TMPOUT_FSF"
+                  wgrib2  $GRIBIN -s -d $REC_DSF -append $NEWGRID -netcdf $TMPOUT_FSF
 
-            echo "wgrib2  $GRIBIN -s -d $REC_WSF.1 -append $NEWGRID -netcdf $NCOUT_FSF"
-                  wgrib2  $GRIBIN -s -d $REC_WSF.1 -append $NEWGRID -netcdf $NCOUT_FSF
+            echo "wgrib2  $GRIBIN -s -d $REC_WSF.1 -append $NEWGRID -netcdf $TMPOUT_FSF"
+                  wgrib2  $GRIBIN -s -d $REC_WSF.1 -append $NEWGRID -netcdf $TMPOUT_FSF
 
-            echo "wgrib2  $GRIBIN -s -d $REC_WSF.2 -append $NEWGRID -netcdf $NCOUT_FSF"
-                  wgrib2  $GRIBIN -s -d $REC_WSF.2 -append $NEWGRID -netcdf $NCOUT_FSF
+            echo "wgrib2  $GRIBIN -s -d $REC_WSF.2 -append $NEWGRID -netcdf $TMPOUT_FSF"
+                  wgrib2  $GRIBIN -s -d $REC_WSF.2 -append $NEWGRID -netcdf $TMPOUT_FSF
 
-            echo "wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $NCOUT_FSF"
-                  wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $NCOUT_FSF
+            echo "wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $TMPOUT_FSF"
+                  wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $TMPOUT_FSF
 
-            echo "wgrib2  $GRIBIN -s -d $REC_PSF -append $NEWGRID -netcdf $NCOUT_FSF"
-                  wgrib2  $GRIBIN -s -d $REC_PSF -append $NEWGRID -netcdf $NCOUT_FSF
+            echo "wgrib2  $GRIBIN -s -d $REC_PSF -append $NEWGRID -netcdf $TMPOUT_FSF"
+                  wgrib2  $GRIBIN -s -d $REC_PSF -append $NEWGRID -netcdf $TMPOUT_FSF
 
 
             setenv GRIB_PCP_IN /nofile                                                         
@@ -300,25 +303,25 @@ foreach MODEL ($MODELS)
                 if (-e $GRIB_PCP_IN) then
                     echo "$GRIB_PCP_IN is present"
 
-#                   echo "wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT_FSF"
-#                         wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $NCOUT_FSF
+#                   echo "wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $TMPOUT_FSF"
+#                         wgrib2  $GRIB_PCP_IN -s -d $REC_RTO -append $NEWGRID -netcdf $TMPOUT_FSF
               
                     echo "precip command for rto"
-                    echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT_FSF"                   
-                          wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $NCOUT_FSF                   
+                    echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $TMPOUT_FSF"                   
+                          wgrib2  $GRIB_PCP_IN -s -match APCP:surface:0 -append $NEWGRID -netcdf $TMPOUT_FSF                   
               
                     echo "precip command for tpw"
-                    echo "wgrib2  $GRIB_PCP_IN -s -match PWAT           -append $NEWGRID -netcdf $NCOUT_FSF"                   
-                          wgrib2  $GRIB_PCP_IN -s -match PWAT           -append $NEWGRID -netcdf $NCOUT_FSF                   
+                    echo "wgrib2  $GRIB_PCP_IN -s -match PWAT           -append $NEWGRID -netcdf $TMPOUT_FSF"                   
+                          wgrib2  $GRIB_PCP_IN -s -match PWAT           -append $NEWGRID -netcdf $TMPOUT_FSF                   
               
                     echo "new precip command for r01"
                     if (-e $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01) then
                         if ($FCST_HH == 01 && $FCSTINTVL == 3600) then
-                            echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT_FSF"                   
-                                  wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT_FSF
+                            echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $TMPOUT_FSF"                   
+                                  wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep 0-1     | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $TMPOUT_FSF
                         else
-                            echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT_FSF"                   
-                                  wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $NCOUT_FSF
+                            echo "wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $TMPOUT_FSF"                   
+                                  wgrib2  $GRIB_PCP_IN -s -match APCP:surface: | grep -v "0-" | wgrib2 -i $GRIB_PCP_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.r01 -append $NEWGRID -netcdf $TMPOUT_FSF
                         endif
 
                     else
@@ -333,75 +336,75 @@ foreach MODEL ($MODELS)
 
 #           cp $NCOUT $NCOUT.wgrib2out
 
-            ncdump -h $NCOUT_FSF 
+            ncdump -h $TMPOUT_FSF 
   
             if (-e $GRIB_PCP_IN) then
-                echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto -v PWAT_localleveltype2000,tpw $NCOUT_FSF"          
-                      ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto -v PWAT_localleveltype2000,tpw $NCOUT_FSF           
+                echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto -v PWAT_localleveltype2000,tpw $TMPOUT_FSF"          
+                      ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi -v APCP_surface,rto -v PWAT_localleveltype2000,tpw $TMPOUT_FSF           
  
             else
-                echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT_FSF"          
-                      ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $NCOUT_FSF           
+                echo "ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $TMPOUT_FSF"          
+                      ncrename -v var0_16_196_localleveltype2000,lmr -v TMP_2maboveground,tsf -v DPT_2maboveground,dsf -v PRES_surface,psf -v UGRD_10maboveground,usf -v VGRD_10maboveground,vsf -v var0_4_192_surface,swi $TMPOUT_FSF           
 
             endif
 
-            ncdump -h $NCOUT_FSF 
-#           cp $NCOUT_FSF $NCOUT_FSF.renamed
+            ncdump -h $TMPOUT_FSF 
+#           cp $TMPOUT_FSF $TMPOUT_FSF.renamed
 
-#           echo "ncatted -O -a lvl_coord,lmr,a,c,"MSL" $NCOUT_FSF"
-#                 ncatted -O -a lvl_coord,lmr,a,c,"MSL" $NCOUT_FSF
+#           echo "ncatted -O -a lvl_coord,lmr,a,c,"MSL" $TMPOUT_FSF"
+#                 ncatted -O -a lvl_coord,lmr,a,c,"MSL" $TMPOUT_FSF
 
-#           echo "ncatted -O -a LAPS_units,lmr,a,c,"DBZ" $NCOUT_FSF"
-#                 ncatted -O -a LAPS_units,lmr,a,c,"DBZ" $NCOUT_FSF
+#           echo "ncatted -O -a LAPS_units,lmr,a,c,"DBZ" $TMPOUT_FSF"
+#                 ncatted -O -a LAPS_units,lmr,a,c,"DBZ" $TMPOUT_FSF
 
 #           Add dimensions: record = UNLIMITED, z, nav, namelen                   
 #           See http://jisao.washington.edu/data/nco/
 
 #           Add record dimension
-            echo "ncecat -O -h $NCOUT_FSF $NCOUT_FSF"
-                  ncecat -O -h $NCOUT_FSF $NCOUT_FSF
+            echo "ncecat -O -h $TMPOUT_FSF $TMPOUT_FSF"
+                  ncecat -O -h $TMPOUT_FSF $TMPOUT_FSF
 
 #           Change value of time dimension (wipes out the lmr field)
 #           setenv STR1 "time = UNLIMITED ; // (1 currently)"
 #           setenv STR2 "time = 1 ;"
-#           echo "ncdump $NCOUT_FSF  | sed -e "s#^.$STR1# $STR2#" | ncgen -o $NCOUT_FSF"
-#                 ncdump $NCOUT_FSF  | sed -e "s#^.$STR1# $STR2#" | ncgen -o $NCOUT_FSF
+#           echo "ncdump $TMPOUT_FSF  | sed -e "s#^.$STR1# $STR2#" | ncgen -o $TMPOUT_FSF"
+#                 ncdump $TMPOUT_FSF  | sed -e "s#^.$STR1# $STR2#" | ncgen -o $TMPOUT_FSF
 
 #           Rename time dimension to z
-            echo "ncrename -d time,z $NCOUT_FSF"          
-                  ncrename -d time,z $NCOUT_FSF           
+            echo "ncrename -d time,z $TMPOUT_FSF"          
+                  ncrename -d time,z $TMPOUT_FSF           
 
 #           Add record dimension
-#           echo "ncecat -O -h $NCOUT_FSF $NCOUT_FSF"       
-#                 ncecat -O -h $NCOUT_FSF $NCOUT_FSF
+#           echo "ncecat -O -h $TMPOUT_FSF $TMPOUT_FSF"       
+#                 ncecat -O -h $TMPOUT_FSF $TMPOUT_FSF
 
 #           Rename time dimension to nav
-#           echo "ncrename -d time,nav $NCOUT_FSF"          
-#                 ncrename -d time,nav $NCOUT_FSF           
+#           echo "ncrename -d time,nav $TMPOUT_FSF"          
+#                 ncrename -d time,nav $TMPOUT_FSF           
 
 #           Reorder dimensions                       
-            echo "ncpdq -a record,z,y,x -O $NCOUT_FSF $NCOUT_FSF"
-                  ncpdq -a record,z,y,x -O $NCOUT_FSF $NCOUT_FSF
+            echo "ncpdq -a record,z,y,x -O $TMPOUT_FSF $TMPOUT_FSF"
+                  ncpdq -a record,z,y,x -O $TMPOUT_FSF $TMPOUT_FSF
 
 #           Append miscellaneous variables from FSF template file
-            echo "ncks -A -v lmr_comment,tsf_comment,dsf_comment,psf_comment,usf_comment,vsf_comment,swi_comment,tpw_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,psf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,tpw_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FSF $NCOUT_FSF"
-                  ncks -A -v lmr_comment,tsf_comment,dsf_comment,psf_comment,usf_comment,vsf_comment,swi_comment,tpw_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,psf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,tpw_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FSF $NCOUT_FSF
+            echo "ncks -A -v lmr_comment,tsf_comment,dsf_comment,psf_comment,usf_comment,vsf_comment,swi_comment,tpw_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,psf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,tpw_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FSF $TMPOUT_FSF"
+                  ncks -A -v lmr_comment,tsf_comment,dsf_comment,psf_comment,usf_comment,vsf_comment,swi_comment,tpw_comment,rto_comment,r01_comment,imax,jmax,kmax,kdim,level,lmr_fcinv,tsf_fcinv,dsf_fcinv,psf_fcinv,usf_fcinv,vsf_fcinv,swi_fcinv,tpw_fcinv,rto_fcinv,r01_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FSF $TMPOUT_FSF
 
-            rm $NCOUT_FSF.pid*ncks.tmp
-#           cp $NCOUT_FSF $NCOUT_FSF.ncks
+            rm -f $TMPOUT_FSF.pid*nc*.tmp
+#           cp $TMPOUT_FSF $TMPOUT_FSF.ncks
 
 #           Modify the navigation variables
-#           echo "ncap2 -O -v -s 'Dx=3000.' $NCOUT_FSF $NCOUT_FSF"
-#                 ncap2 -O -v -s 'Dx=3000.' $NCOUT_FSF $NCOUT_FSF 
+#           echo "ncap2 -O -v -s 'Dx=3000.' $TMPOUT_FSF $TMPOUT_FSF"
+#                 ncap2 -O -v -s 'Dx=3000.' $TMPOUT_FSF $TMPOUT_FSF 
 
-#           echo "ncatted -O -a Dy,global,m,f,3000. $NCOUT_FSF"
-#                 ncatted -O -a Dy,global,m,f,3000. $NCOUT_FSF
+#           echo "ncatted -O -a Dy,global,m,f,3000. $TMPOUT_FSF"
+#                 ncatted -O -a Dy,global,m,f,3000. $TMPOUT_FSF
         
-#           echo "ncatted -O -a La1,global,m,f,$LAT1 $NCOUT_FSF"
-#                 ncatted -O -a La1,global,m,f,$LAT1 $NCOUT_FSF
+#           echo "ncatted -O -a La1,global,m,f,$LAT1 $TMPOUT_FSF"
+#                 ncatted -O -a La1,global,m,f,$LAT1 $TMPOUT_FSF
 
-#           echo "ncatted -O -a Lo1,global,m,f,$LON1 $NCOUT_FSF"
-#                 ncatted -O -a Lo1,global,m,f,$LON1 $NCOUT_FSF
+#           echo "ncatted -O -a Lo1,global,m,f,$LON1 $TMPOUT_FSF"
+#                 ncatted -O -a Lo1,global,m,f,$LON1 $TMPOUT_FSF
 
         endif # GRIBIN file is present
 
@@ -449,27 +452,49 @@ foreach MODEL ($MODELS)
                         echo "ncks -A -v t3_comment,sh_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA"
                               ncks -A -v t3_comment,sh_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA 
 
-                        rm -f $TMPOUT_FUA.pid*ncks.tmp
+                        echo "rm -f $TMPOUT_FUA.pid*nc*.tmp"
+                              rm -f $TMPOUT_FUA.pid*nc*.tmp
 
                         echo " "
                         date -u
                         echo " "
                         echo "mv $TMPOUT_FUA $NCOUT_FUA"
                               mv $TMPOUT_FUA $NCOUT_FUA
+
+                        echo " "
+                        echo "mv $TMPOUT_FSF $NCOUT_FSF"
+                              mv $TMPOUT_FSF $NCOUT_FSF
+
+                        echo "** regridding $NCOUT_FSF and $NCOUT_FUA (by inputting $OUTDIR_FUA in arg 1) **"
+                        echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F T T wrf-hrrr $LAPS_DATA_ROOT"
+                              $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F T T wrf-hrrr $LAPS_DATA_ROOT
+
+
                     else
                         echo "$NCTEMPLATE_FUA does not exist, skip rest of HRRR FUA processing"
 
                         echo " "
                         date -u
                         echo " "
+
+                        echo "rm -f $TMPOUT_FUA.pid*nc*.tmp"
+                              rm -f $TMPOUT_FUA.pid*nc*.tmp
+
                         echo "rm -f $TMPOUT_FUA"
                               rm -f $TMPOUT_FUA
 
-                    endif
+                        echo " "
+                        echo "mv $TMPOUT_FSF $NCOUT_FSF"
+                              mv $TMPOUT_FSF $NCOUT_FSF
 
-                    echo "*** regridding $NCOUT_FSF and $NCOUT_FUA (by inputting $OUTDIR_FUA in arg 1) ***"
-                    echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F T T wrf-hrrr $LAPS_DATA_ROOT"
-                          $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F T T wrf-hrrr $LAPS_DATA_ROOT
+                        ls -l $NCOUT_FSF
+                        echo " "
+
+                        echo "*** regridding $NCOUT_FSF (by inputting $OUTDIR_FSF in arg 1) ***"
+                        echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT"
+                              $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
+
+                    endif
 
                     ls -l $NCOUT_FSF $NCOUT_FUA
 
@@ -485,7 +510,11 @@ foreach MODEL ($MODELS)
             else # missing input data for FUA
                 echo "WARNING: $GRIB_PRES_IN or $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua is not present"
 
-                echo "*** regridding $NCOUT_FSF by inputting $OUTDIR_FSF in arg 1) ***"
+                echo " "
+                echo "mv $TMPOUT_FSF $NCOUT_FSF"
+                      mv $TMPOUT_FSF $NCOUT_FSF
+
+                echo "**** regridding $NCOUT_FSF by inputting $OUTDIR_FSF in arg 1) ****"
                 echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT"
                       $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
 
@@ -499,7 +528,11 @@ foreach MODEL ($MODELS)
 
         else # off the hour
 
-            echo "*** regridding $NCOUT_FSF by inputting $OUTDIR_FSF in arg 1) ***"
+            echo " "
+            echo "mv $TMPOUT_FSF $NCOUT_FSF"
+                  mv $TMPOUT_FSF $NCOUT_FSF
+
+            echo "***** regridding $NCOUT_FSF by inputting $OUTDIR_FSF in arg 1) *****"
             echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT"
                   $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
 
