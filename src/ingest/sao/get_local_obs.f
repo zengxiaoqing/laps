@@ -994,6 +994,7 @@ c..... Precip
      1         dataProvider(i)(1:lenp) .eq. 'HADS')then  
                pcp24 = precipAccum(i) / 25.4 ! convert mm to inches
                if(pcp24 .lt. 0. .OR. pcp24 .gt. 1e4)pcp24 = badflag       
+               if(precipAccumDD(i) .eq. 'X')pcp24 = badflag
                write(6,*)' Found a local 24hr HADS precip ob    : '
      1                 ,pcp24,' ',dataProvider(i)(1:lenp),' '
      1                 ,stationId(i),' '
