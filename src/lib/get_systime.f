@@ -57,20 +57,10 @@ C&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
       integer i4time_sys
       integer istatus
 
-      character*100 dir
-      integer length
+      character*9 a9_time
 
-      call get_directory('time',dir,length)
+      call get_systime(i4time_sys,a9_time,istatus)
 
-      open(11,file=dir(1:length)//'systime.dat',status='old',err=999)
-
-      read(11,*,err=999)i4time_sys
-      close(11)
-      istatus = 1
-      return
-
- 999  print*,'Error reading systime file'
-      istatus = 0
       return
       end
 
