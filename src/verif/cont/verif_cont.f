@@ -141,7 +141,7 @@
         character*10 type_a(n_fields)
         integer nthr_a(n_fields)  ! number of thresholds for each field
         integer ndims_a(n_fields) ! number of dimensions for each field
-        real dbz_an(5),dbz_fc(5),pcp_thr(7)
+        real dbz_an(7),dbz_fc(7),pcp_thr(7)
         character*2 c2_region
         character*10 c_thr
 
@@ -234,8 +234,8 @@
 
          var_prst_3d = r_missing_data
          l_good_persist = .false.
- 
-         var_2d = var_a(ifield)
+
+         var_2d = trim(var_a(ifield))
          call s_len(var_2d,lenvar)
 
          do imodel = 1,n_fdda_models
@@ -244,6 +244,7 @@
 
           if(c_model(1:3) .ne. 'lga')then
 
+           write(6,*)
            write(6,*)' Processing model ',c_model
 
            call s_len(c_model,len_model)
@@ -273,6 +274,8 @@
                 jhigh = jh(imodel,itime_fcst,iregion)
 
                 i4_valid = i4_initial + itime_fcst * model_verif_intvl 
+
+!               write(*,*)'beka1',i4_valid,l_good_persist,len_model
 
                 call make_fnam_lp(i4_valid,a9time_valid,istatus)
                 call make_fnam_lp(i4_initial,a9time_initial,istatus)
@@ -309,6 +312,7 @@
                 if(iregion .eq. 1)then
 
                   if(ndims_a(ifield) .eq. 3)then ! Read analyzed 3D field
+!                   write(*,*)'beka2a',i4_valid,l_good_persist,len_model
                     ext = ext_anal_a(ifield)
                     call get_laps_3d(i4_valid,NX_L,NY_L,NZ_L
      1              ,ext,var_2d,units_2d,comment_2d,var_anal_3d,istatus)       
@@ -319,21 +323,34 @@
                     endif
 
                   else ! Read analyzed 2D field
+!                   write(*,*)'beka2b',i4_valid,l_good_persist,len_model
                     ext = ext_anal_a(ifield)
 
                     if(trim(var_2d) .eq. 'LMR')then
                       var_2d_anal = 'R'
                     elseif(trim(var_2d) .eq. 'PCP_01')then
                       var_2d_anal = 'ppt'
+                    elseif(trim(var_2d) .eq. 'PCP_03')then
+                      var_2d_anal = 'NUL'
+                    elseif(trim(var_2d) .eq. 'PCP_06')then
+                      var_2d_anal = 'NUL'
+                    elseif(trim(var_2d) .eq. 'PCP_24')then
+                      var_2d_anal = 'NUL'
                     else
-                      var_2d_anal = var_2d
+                      var_2d_anal = trim(var_2d(1:3))
                     endif
 
-                    call get_laps_2d(i4_valid,ext,var_2d_anal,units_2d       
-     1              ,comment_2d,NX_L,NY_L,var_anal_3d,istatus)       
+                    if(var_2d_anal .ne. 'NUL')then
+                        call get_laps_2d(i4_valid,ext,var_2d_anal
+     1                  ,units_2d,comment_2d,NX_L,NY_L,var_anal_3d
+     1                  ,istatus)       
+                    else ! call summing routine for 'st4'
+                        istatus = 0
+                    endif
+
                     if(istatus .ne. 1)then
                         write(6,*)' Error reading 2D Analysis for '
-     1                            ,trim(ext),' ',trim(var_2d_anal)
+     1                           ,trim(ext),' ',trim(var_2d_anal)
                         goto 900
                     endif
 
@@ -346,9 +363,11 @@
                   if(itime_fcst .eq. 0)then
                       var_prst_3d = var_anal_3d
                       l_good_persist = .true.
+                      write(6,*)
+     1         ' Setting persistence to analysis (and l_good_persist=T)'       
                   endif
 
-	          write(*,*)'beka',i4_valid
+!                 write(*,*)'beka3',i4_valid,l_good_persist,len_model
 
                   if(trim(type_a(ifield)) .eq. 'rdr')then
                       if(var_2d .eq. 'LLR')then 
@@ -373,7 +392,7 @@
                   if(c_fdda_mdl_src(imodel) .ne. 'persistence')then
 
                      if(ndims_a(ifield) .eq. 3)then ! Read forecast 3D field
-                        ext = ext_fcst_a(ifield)
+                        ext = trim(ext_fcst_a(ifield))
                         call get_directory(ext,directory,len_dir)
                         DIRECTORY=directory(1:len_dir)
      1                                      //c_model(1:len_model)    
@@ -391,18 +410,44 @@
                         endif
 
                      else ! Read forecast 2D field
-                        ext = ext_fcst_a(ifield)
+                        ext = trim(ext_fcst_a(ifield))
 
                         call get_directory(ext,directory,len_dir)
+!                       write(6,*)' len_model/len_dir/directory = '
+!    1                      ,len_model,len_dir,trim(directory)
                         DIRECTORY=directory(1:len_dir)
      1                                      //c_model(1:len_model)    
      1                                      //'/'
 
+                        write(6,*)' directory = ',trim(directory)
+
                         if(trim(type_a(ifield)) .eq. 'rdr')then
-                            var_2d_fcst = var_2d
+                            write(6,*)' radar type block'
+                            var_2d_fcst = trim(var_2d(1:3))
                         else
-                            var_2d_fcst = 'R01' 
+                            write(6,*)' precip type block'
+                            var_2d_fcst = 'NUL'
+                            if(trim(var_2d) .eq. 'PCP_01')then
+                                if(model_fcst_intvl .eq. 3600)then
+                                    var_2d_fcst = 'R01' 
+                                endif
+                            elseif(trim(var_2d) .eq. 'PCP_03')then
+                                if(model_fcst_intvl .eq. 10800)then
+                                    var_2d_fcst = 'R01' 
+                                endif
+                            elseif(trim(var_2d) .eq. 'PCP_06')then
+                                if(model_fcst_intvl .eq. 21600)then
+                                    var_2d_fcst = 'R01' 
+                                endif
+                            elseif(trim(var_2d) .eq. 'PCP_24')then
+                                if(model_fcst_intvl .eq. 86400)then
+                                    var_2d_fcst = 'R01' 
+                                endif
+                            endif
                         endif
+
+                        write(6,*)' var_2d/var_2d_fcst = ',var_2d,' '
+     1                                                    ,var_2d_fcst
 
                         call get_lapsdata_2d(i4_initial,i4_valid
      1                          ,directory,var_2d_fcst
@@ -624,7 +669,7 @@
                write(c_thr,901)nint(rdbz)
  901           format(i2)
            else
-               write(c_thr,902)nint(pcp_thr(ifield)*100.)
+               write(c_thr,902)nint(pcp_thr(idbz)*100.)
  902           format(i4.4)
            endif
 
