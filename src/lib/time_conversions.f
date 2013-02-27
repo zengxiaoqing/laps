@@ -217,10 +217,10 @@ cdoc    Converts 9 character ascii time into i4time (seconds since 1-1-1960)
         character*9 ascii_time
         integer i4time ! seconds since 1-1-1960
 
-        read(ascii_time(1:2),2)iyear
-        read(ascii_time(3:5),3)idoy
-        read(ascii_time(6:7),2)ihour
-        read(ascii_time(8:9),2)imin
+        read(ascii_time(1:2),2,err=900)iyear
+        read(ascii_time(3:5),3,err=900)idoy
+        read(ascii_time(6:7),2,err=900)ihour
+        read(ascii_time(8:9),2,err=900)imin
 
 2       format(i2)
 3       format(i3)
@@ -238,6 +238,12 @@ cdoc    Converts 9 character ascii time into i4time (seconds since 1-1-1960)
         i4time = i4time + 86400 * lp
 
         return
+
+!       Error return
+900     write(6,*)' Error in cv_asc_i4time: ascii_time = ',ascii_time
+
+        return
+
         end
 
 C
