@@ -1404,6 +1404,7 @@ c       save      i4time_first
            if(isats(i).eq.1)then
               call get_laps_lvd(c_sat_id(i),
      &                 i4time_needed,i4tol,i4time_nearest,
+     &                 i4time_sys,
      &                 var_2d,units_2d,comment_2d,
      &                 imax,jmax,field_2d,jstatus)
 
@@ -1556,6 +1557,7 @@ c--------------------------------------------------------------------
 c
         subroutine get_laps_lvd(c_sat_id,
      1      i4time_needed,i4tol,i4time_nearest
+     1     ,i4time_sys
      1     ,var_2d,units_2d,comment_2d
      1     ,imax,jmax,field_2d,istatus)
 
@@ -1617,8 +1619,11 @@ c
         character*6 c_sat_id          !input satellite id's known to system
         logical lcont
 
+        call make_fnam_lp(i4time_needed,asc9_tim,istatus)
+
         write(6,*)
-        write(6,*)' Subroutine get_laps_lvd for ',c_sat_id,'...'
+        write(6,*)' Subroutine get_laps_lvd for ',c_sat_id,
+     1            ' needed at ',asc9_tim,'...'
 
         ext = 'lvd'
         call get_directory(ext,dir,ldir)
@@ -1651,19 +1656,23 @@ c
         print*,'Number of files returned get_file_times',i_nbr_files_ret
 
 !       Calculate minimum time difference of unselected files from desired time
+!       with respect to both needed time and system time
 50      i4_diff_min = 999999999
+        i4_diff_min_sys = 999999999
         do j = 1,i_nbr_files_ret
            i4_diff = abs(i4times(j) - i4time_needed)
+           i4_diff_sys=abs(i4times(j)-i4time_sys)      
            if(i_selected(j) .eq. 0)then
-            i4_diff_min = min(i4_diff,i4_diff_min)
+            i4_diff_min     = min(i4_diff    ,i4_diff_min)
+            i4_diff_min_sys = min(i4_diff_sys,i4_diff_min_sys)
            endif
         enddo ! j
 
 !       Check whether any unselected files lie within the time window
-        if(i4_diff_min .gt. i4tol)then
+        if(i4_diff_min_sys .gt. i4tol)then
            write(6,*)' No remaining files found within ',i4tol
-     1              ,' sec time window ',ext(1:5),var_2d
-           write(6,*)' Closest file (in seconds) is ',i4_diff_min
+     1              ,' sec systime window ',ext(1:5),var_2d
+           write(6,*)' Closest file (in seconds) is ',i4_diff_min_sys
 
            lcont=.false.
 
@@ -1673,12 +1682,13 @@ c          return
 
         do j=1,i_nbr_files_ret
 
-           i4_diff=abs(i4times(j)-i4time_needed)
+           i4_diff=    abs(i4times(j)-i4time_needed)
+           i4_diff_sys=abs(i4times(j)-i4time_sys)      
 
 !          Select file that has minimum time diff (of unselected)
            if(i4_diff.eq.i4_diff_min.and.
      1            i_selected(j).eq.0.and.
-     1            i4_diff.le.i4tol)               then
+     1            i4_diff_sys.le.i4tol)               then
 
               i_selected(j) = 1
               lvl_2d = 0
