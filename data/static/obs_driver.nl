@@ -93,8 +93,8 @@ c                         station falling within the time window
 c
 c 'l_dupe_names' - .true. means subroutine 'check_for_dupes' will check and
 c                  set to missing any stations that duplicate the name of
-c                  a prior station in the list. It is recommended to set this
-c                  to .false. if 'l_multiple_reports' is set to .true.
+c                  a prior station in the list. This parameter is used only
+c                  when 'l_multiple_reports' is set to .false.
 c
 c 'itest_madis_qc' -  0 means we do not test MADIS QC flags
 c                     1 means level 1 test for MADIS QC flags with local data
