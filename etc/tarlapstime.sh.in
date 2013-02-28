@@ -84,6 +84,7 @@ ls -1 time/c_time.dat                                          >> $LAPSTAR_TXT
 
 # Pregenerated web analysis files
 find ./lapsprd/www/anal2d/archive/* -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
+find ./lapsprd/www/anal2d/archive/* -type f -name "files.txt"        -print   >> $LAPSTAR_TXT
 find ./lapsprd/www/anal2d/recent/*  -type f -name "$YYDDDHHMM.*"     -print   >> $LAPSTAR_TXT
 find ./lapsprd/www/anal2d/recent    -type l -name "*$HHMM.gif"       -print   >> $LAPSTAR_TXT
 find ./lapsprd/www/anal2d/recent    -type l -name "gmeta*latest.gif" -print   >> $LAPSTAR_TXT
