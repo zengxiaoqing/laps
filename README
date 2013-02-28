@@ -424,9 +424,10 @@
 
                --- 2.1.9  GRIB2 external libraries (optional) ---
 
-     The background models read by lga include GRIB1 and GRIB2-formatted files. 
+     The background models read by the model first guess ingest program (LGA)
+     include GRIB1 and GRIB2-formatted files. 
 
-     The external compression libraries required for decoding GRIB2-formatted 
+     The external compression libraries required for processing GRIB2-formatted 
      files are libjasper.a, libpng.a, and libz.a. They are usually found in 
      /usr/lib or /usr/lib64. It is recommended to have a system administrator 
      install these external libraries if they are not already on your system. 
@@ -1655,11 +1656,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
         (default) maximum number of files to be kept in each product directory
         by the purger
 
-     2) Overrides can be read in from '/data/static/purger.dat'. You can see 
-        the 'purger.pl' script to see how that information is used.
+     2) Overrides can be read in from '/data/static/purger.dat'. This file
+        can be modified by the user to optimize the purging in various 
+        domains. One can review the 'purger.pl' script to see how the
+        'purger.dat' information is used.
  
-     3) Simply edit the 'purger.pl' to change it accordingly.
-
             ----   2.4.3 STMAS and other configurations ---
 
      Within the LAPS cron the call to 'sched.pl' can have some optional command
