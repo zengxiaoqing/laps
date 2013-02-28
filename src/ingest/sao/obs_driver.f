@@ -658,6 +658,10 @@ c       Call subroutine to blacklist the stations in the "store" arrays
         I4_elapsed = ishow_timer()
 
 c       Call subroutine to check for duplicate obs
+        if(l_multiple_reports .eqv. .true.)then
+            l_dupe_names = .false.
+        endif
+
         call check_for_dupes(      maxsta,n_obs_b,stations
      1                            ,store_1,store_2,store_3
      1                            ,store_4,store_5,store_6
