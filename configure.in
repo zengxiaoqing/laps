@@ -492,8 +492,6 @@ AC_OUTPUT(src/include/trigd.inc
           etc/sched.pl
           etc/sched.sh
           etc/sched_sys.pl
-          etc/realtime.pl
-          etc/ramrsf.pl
           etc/localize_optran.pl
           etc/localize_domain.pl
           etc/makedatadirs.pl
