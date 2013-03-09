@@ -17,28 +17,31 @@
         pcp_2d = 0.
 
         if(trim(ext) .eq. 'st4')then
-            var_2d(1) = 'ppt'                
+            var_2d(1) = 'ppt'       
+            ipcp_cycle_time = 3600         
         elseif(nf .eq. 2)then
             var_2d(1) = 'R01'
             var_2d(2) = 'S01'
+            ipcp_cycle_time = laps_cycle_time
         else
             var_2d(1) = c_pcp(1:1)//'01'
+            ipcp_cycle_time = laps_cycle_time
         endif
 
         i4time_interval = i4time_end - i4time_start
 C    abdel       
-        if (laps_cycle_time.eq.0) i4time_interval = 0
+        if (ipcp_cycle_time.eq.0) i4time_interval = 0
 	    
         if(i4time_interval .ne. 
-     1       (i4time_interval/laps_cycle_time) *laps_cycle_time)then
+     1       (i4time_interval/ipcp_cycle_time) *ipcp_cycle_time)then
             write(6,*)' ERROR: Interval is not an integral # of cycles'
             pcp_2d = r_missing_data
             istatus = 0
             return
         endif
 
-        do i4time = i4time_start+laps_cycle_time,i4time_end
-     1             ,laps_cycle_time
+        do i4time = i4time_start+ipcp_cycle_time,i4time_end
+     1             ,ipcp_cycle_time
 
             if(nf .le. 2)then
                 call get_laps_multi_2d(i4time,ext,var_2d
@@ -50,8 +53,8 @@ C    abdel
      1                          ,pcp_buf_2d,istatus_file)
 
             endif
-            if(istatus_file .ne. 1)then
-                write(6,*)' ERROR: Missing precip file'
+            if(istatus_file .ne. 1 .and. istatus_file .ne. -1)then
+                write(6,*)' ERROR: Missing precip file: ',istatus_file 
                 pcp_2d = r_missing_data
                 istatus = 0
                 return
