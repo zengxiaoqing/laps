@@ -28,10 +28,11 @@ my $LAPSROOT;
 #    -n name of model run (e.g. subdirectory under model data root) [optional]
 #    -W optional wait time for model file (once it appears in the directory) to be completely written (default is 20sec)
 #    -F optional flag to produce forecast web GIF images after each running of 'lfmpost.exe'
+#    -R use restart file at time zero
 
-use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_n $opt_P $opt_q $opt_W $opt_M $opt_F);
+use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_n $opt_P $opt_q $opt_W $opt_M $opt_F $opt_R);
 use Getopt::Std;
-getopts('l:m:r:d:g:f:i:p:s:w:e:y:n:P:qW:M:F');
+getopts('l:m:r:d:g:f:i:p:s:w:e:y:n:P:qW:M:FR');
 
 $project = $opt_P if defined($opt_P);
 
@@ -404,7 +405,11 @@ for ($g=1; $g<=$ngrid; $g++) {
          $mn = "0$mn" while (length($mn)<2);
          $ss = "0$ss" while (length($ss)<2);
          $mdate = "$yyyy-$mm-$dd"."_$hh:$mn:$ss";
-         $fname = "$mdlpref{$model}"."_d$dom"."_$mdate";
+         if (defined ($opt_R && $cFcstExt eq "0000")) { # Restart file
+             $fname = "wrfrst"."_d$dom"."_$mdate";
+         } else {
+             $fname = "$mdlpref{$model}"."_d$dom"."_$mdate";
+         }
       } elsif ($model eq "rams") {
          ($yyyy,$mm,$dd,$hh,$mn,$ss) = &time::unix_to_time($i4time-$decade);
          $mm = "0$mm" while (length($mm)<2);
