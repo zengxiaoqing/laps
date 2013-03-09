@@ -135,7 +135,7 @@
         character*150 hist_file, bias_file, ets_file, members_file
 
         integer n_fields
-        parameter (n_fields=3)
+        parameter (n_fields=5)
         character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
         character*10 var_a(n_fields)
         character*10 type_a(n_fields)
@@ -146,18 +146,12 @@
         character*10 c_thr
 
 !       Specify what is being verified
-!       data ext_fcst_a /'fua'/ ! 3-D
-!       data ext_anal_a /'lps'/ ! 3-D reflectivity
-!       data var_a      /'REF'/ ! 3-D reflectivity       
-!       data nthr_a     /5/        
-!       data ndims_a    /3/        
-
-        data ext_fcst_a /'fua','fsf','fsf'/                          
-        data ext_anal_a /'lps','lmr','st4'/                           
-        data var_a      /'REF','LMR','PCP_01'/                          
-        data type_a     /'rdr','rdr','pcp'/
-        data nthr_a     /5,5,7/        
-        data ndims_a    /3,2,2/        
+        data ext_fcst_a /'fua','fsf','fsf','fsf','fsf'/                        
+        data ext_anal_a /'lps','lmr','st4','st4','st4'/                        
+        data var_a      /'REF','LMR','PCP_01','PCP_03','PCP_06'/
+        data type_a     /'rdr','rdr','pcp','pcp','pcp'/
+        data nthr_a     /5,5,7,7,7/        
+        data ndims_a    /3,2,2,2,2/        
 
         data pcp_thr /.01,.05,0.1,0.5,1.0,2.0,5.0/
 
@@ -237,6 +231,12 @@
 
          var_2d = trim(var_a(ifield))
          call s_len(var_2d,lenvar)
+
+         if(trim(type_a(ifield)) .eq. 'rdr')then
+             nk_cont = NZ_L
+         else
+             nk_cont = 1
+         endif
 
          do imodel = 1,n_fdda_models
 
@@ -345,7 +345,11 @@
      1                  ,units_2d,comment_2d,NX_L,NY_L,var_anal_3d
      1                  ,istatus)       
                     else ! call summing routine for 'st4'
-                        istatus = 0
+                        write(6,*)' Call get_interval_precip...'
+                        call get_interval_precip(' ',ext
+     1                        ,i4_valid - model_fcst_intvl,i4_valid
+     1                        ,laps_cycle_time,r_missing_data
+     1                        ,NX_L,NY_L,1,var_anal_3d,istatus)
                     endif
 
                     if(istatus .ne. 1)then
@@ -601,7 +605,7 @@
                   write(lun_out,*)' region = ',iregion
      1                           ,ilow,ihigh,jlow,jhigh
                   call contingency_table(var_anal_3d,var_fcst_3d     ! I
-     1                                  ,NX_L,NY_L,NZ_L              ! I
+     1                                  ,NX_L,NY_L,nk_cont           ! I
      1                                  ,dbz_an(idbz),dbz_fc(idbz)   ! I
      1                                  ,lun_out                     ! I
      1                                  ,ilow,ihigh,jlow,jhigh       ! I
@@ -647,8 +651,6 @@
                 enddo ! iter
 
              enddo ! iregion
-
-!            write(6,*)' nthr before put_contables = ',nthr
 
              close (lun_out) 
 
