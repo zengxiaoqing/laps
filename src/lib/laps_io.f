@@ -2079,3 +2079,59 @@ c     include 'bgdata.inc'
 
       return
       end
+
+cdis
+
+        subroutine get_laps_multi_2d(i4time,EXT,var_2d,units_2d,
+     1                  comment_2d,imax,jmax,nf,field_2d,istatus)
+
+cdoc    Used to read in one or more surface grids with inputs of time and ext
+
+        character*9 asc9_tim
+        character*150 DIRECTORY
+        character*(*) EXT
+
+        character*125 comment_2d(nf)
+        character*10 units_2d(nf)
+        character*3 var_2d(nf)
+        integer LVL_2d(nf)
+        character*4 LVL_COORD_2d(nf)
+
+        real field_2d(imax,jmax,nf)
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_laps_multi_2d: bad istatus, return'
+            return
+        endif
+
+        call get_directory(ext,directory,len_dir)
+
+        call make_fnam_lp(i4time,asc9_tim,istatus)
+
+        write(6,11)directory(1:45),asc9_tim,ext,var_2d
+11      format(' Reading 2d ',a,1x,a,1x,a,1x,a)
+
+        lvl_2d = 0
+        lvl_coord_2d = 'MSL'
+
+        CALL READ_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
+     1  nf,nf,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
+     1                     COMMENT_2D,field_2d,ISTATUS)
+
+!       Check for missing data
+        do if = 1,nf
+        do j = 1,jmax
+        do i = 1,imax
+            if(istatus .eq. 1)then
+                if(field_2d(i,j,if) .eq. r_missing_data)then
+                    write(6,*)' Missing Data Value Detected in 2D Field'
+                    istatus = -1
+                endif
+            endif
+        enddo ! i
+        enddo ! j
+        enddo ! if
+
+        return
+        end
