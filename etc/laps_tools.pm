@@ -309,6 +309,8 @@ lpbl lps lq3 lrp lrs lso bufr lsx lt1 lty cty pty lfr st4
 lvd 
 lvd/goes08 lvd/goes09 lvd/goes10 lvd/goes11 lvd/goes12 lvd/goes13 
 lvd/goeswe lvd/goesea 
+lvd/goesnw lvd/goesne
+lvd/goessw lvd/goesse 
 lvd/meteos lvd/gmssat lvd/noaapo lvd/mtsat lvd/fy
 lw3 lwc lwm ctp msg pig pin prg pro sag vrc vrz snd 
 v01 v02 v03 v04 v05 v06 v07 v08 v09 v10 v11 v12 
@@ -403,51 +405,6 @@ gr2);
      print "fua dirs: @fua_dirs\n";
      print "fsf dirs: @fsf_dirs\n";
 
-#    Make directories related to verification Bias/ETS (for radar and precip)
-     my $verifvar;
-     foreach $verifvar (qw(REF LMR LLR PCP_01)){
-         mkdir "$LAPS_DATA_ROOT/lapsprd/$verifvar/plot",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$verifvar/plot");
-
-#        Make hist dirs
-         my (@hist_dirs);
-
-         print "adding fdda_model_source subdirectories to verif hist/cont dirs\n";
-         $ii = 0;
-         $hist_dirs[$ii] = 'verif/'.$verifvar.'/hist';
-
-         @fdda_radar_dirs = @fdda_dirs;
-         push(@fdda_radar_dirs,"persistence");
-
-         foreach (@fdda_radar_dirs){
-#           print "$_\n";         
-            if($_ ne "lga"){
-                  $ii++;
-                  $hist_dirs[$ii]=$hist_dirs[0]."/".$_;
-            }
-         }
-
-         print "hist dirs: @hist_dirs\n";
-
-         foreach (@hist_dirs) {
-            mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
-         }
-
-#        Make threshold dirs
-         my (@thr_dirs);
-         if($verifvar ne "PCP_01"){
-             @thr_dirs = qw(20 30 40 50 60 20_comp 30_comp 40_comp 50_comp 60_comp 20_comp2 30_comp2 40_comp2 50_comp2 60_comp2);
-         }else{
-             @thr_dirs = qw(0001 0005 0010 0050 0100 0200 0500)
-         }
-         
-         print "thr dirs: @thr_dirs\n";
-
-         foreach (@thr_dirs) {
-            print "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_\n";
-            mkdir "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_");
-         }
-     }
-
      print "adding background model subdirectories to lapsprd dirs\n";
      $lga_dirs[0]='lga';
      $lgb_dirs[0]='lgb';
@@ -490,6 +447,57 @@ gr2);
   foreach (@fsf_dirs) {
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
+
+
+# Make directories related to verification Bias/ETS (for radar and precip)
+  my $verifvar;
+  foreach $verifvar (qw(REF LMR LLR PCP_01 PCP_03 PCP_06 PCP_24)){
+       print " \n";
+       print "making $LAPS_DATA_ROOT/lapsprd/verif/$verifvar directory\n";
+       mkdir "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar");
+       print "making $LAPS_DATA_ROOT/lapsprd/$verifvar/plot directory\n";
+       mkdir "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot");
+
+#      Make hist dirs
+       my (@hist_dirs);
+
+       print "adding fdda_model_source subdirectories to verif hist/cont dirs\n";
+       my $ii = 0;
+       $hist_dirs[$ii] = 'verif/'.$verifvar.'/hist';
+
+       @fdda_radar_dirs = @fdda_dirs;
+       push(@fdda_radar_dirs,"persistence");
+
+       foreach (@fdda_radar_dirs){
+#         print "$_\n";         
+          if($_ ne "lga"){
+                $ii++;
+                $hist_dirs[$ii]=$hist_dirs[0]."/".$_;
+          }
+       }
+
+       print "hist dirs: @hist_dirs\n";
+
+       foreach (@hist_dirs) {
+            mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
+       }
+
+#      Make threshold dirs
+       my (@thr_dirs);
+       if(! $verifvar =~ "PCP"){
+             @thr_dirs = qw(20 30 40 50 60 20_comp 30_comp 40_comp 50_comp 60_comp 20_comp2 30_comp2 40_comp2 50_comp2 60_comp2);
+       }else{
+             @thr_dirs = qw(0001 0005 0010 0050 0100 0200 0500)
+       }
+         
+       print "thr dirs: @thr_dirs\n";
+
+       foreach (@thr_dirs) {
+            print "making $LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_ directory\n";
+            mkdir "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/verif/$verifvar/plot/$_");
+       }
+  }
+
   return;
 }
 1;
