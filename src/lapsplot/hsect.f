@@ -2107,6 +2107,7 @@ c
               if(itypes(j,k).eq.1)then
                ist=j
                lfndtyp=.true.
+               write(6,*)' Found type for ',j,k
               endif
              enddo
 
@@ -2131,7 +2132,8 @@ c
               read(lun,*)var_2d
               call upcase(var_2d,var_2d)
              else
-              print*,'This channel was not processed'
+              print*,'This channel was not processed ',ilvd,ist,k
+              print*,'ichannels: ',ichannels
               goto 119
              endif
 
