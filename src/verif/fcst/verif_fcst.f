@@ -81,6 +81,8 @@
      1             ,model_fcst_intvl,n_fcst_times
 
         if(.true.)then
+
+            write(6,*)' Calling verif_fcst_pt_2d'
           
             call verif_fcst_pt_2d(i4time,a9time,laps_cycle_time,
      1                     NX_L,NY_L,
@@ -92,6 +94,8 @@
      1                     j_status)
 
             I4_elapsed = ishow_timer()
+
+            write(6,*)' Calling verif_fcst_pt_3d'
 
             call verif_fcst_pt_3d(i4time,a9time,laps_cycle_time,
      1                     NX_L,NY_L,
@@ -943,7 +947,7 @@
      1                                ,stations(ista)(1:5),i_i,i_j 
      1                                ,var_s(ista),var_fcst_s(ista)
      1                                ,c1_c
-1001                      format(1x,a5,' ob/fcst',i9,1x,a3,1x,2i8,2f9.3
+1001                      format(1x,a3,' ob/fcst',i9,1x,a5,1x,2i8,2f9.3
      1                          ,1x,a1) 
                         endif
                         cnt_write = cnt_write + 1.
