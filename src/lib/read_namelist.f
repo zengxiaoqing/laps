@@ -1450,7 +1450,8 @@ c format type 4 (rll)
                 do ic = 1,maxchannel
                     if(cchanneltypes(kk).eq.satellite_channels(it,js,ic)
      1                                                             )then  
-                        write(6,*)' Test channel match ',it,js,ic
+                        write(6,*)' Test channel match ',it,js,ic 
+     1                           ,kk,cchanneltypes(kk)
                     endif
                 enddo 
 
@@ -1460,6 +1461,8 @@ c format type 4 (rll)
                 elseif(cchanneltypes(kk).eq.'4u ')then
                   ic=2
                 elseif(cchanneltypes(kk).eq.'10p')then
+                  ic=4
+                elseif(cchanneltypes(kk).eq.'11u')then
                   ic=4
                 endif
 
