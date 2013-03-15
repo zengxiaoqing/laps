@@ -422,11 +422,19 @@ foreach MODEL ($MODELS)
             if (-e $GRIB_PRES_IN && -e $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua) then
                 if ($MODE_FUA == WGRIB) then
                     echo "wgrib2 method...."
-                    echo "wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $TMPOUT_FUA"                   
-                          wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $TMPOUT_FUA                    
+                    echo "wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT -e UGRD -e VGRD | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $TMPOUT_FUA"                   
+                          wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT -e UGRD -e VGRD | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $TMPOUT_FUA                    
 
 #                   echo "wgrib2  $GRIB_PRES_IN -s -match DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -append $NEWGRID -netcdf $NCOUT_FUA"                   
 #                         wgrib2  $GRIB_PRES_IN -s -match DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -append $NEWGRID -netcdf $NCOUT_FUA                    
+
+                    echo "output file..."
+                    ls -l $TMPOUT_FUA
+
+                    if (-e /export/scratch) then
+                        echo "output directory..."
+                        ls -l $TMPDIR             
+                    endif
    
                     echo " "
                     date -u
@@ -436,6 +444,9 @@ foreach MODEL ($MODELS)
                     echo "ncecat -O -h $TMPOUT_FUA $TMPOUT_FUA"       
                           ncecat -O -h $TMPOUT_FUA $TMPOUT_FUA        
 
+                    echo "rm -f $TMPOUT_FUA.pid*nc*.tmp"
+                          rm -f $TMPOUT_FUA.pid*nc*.tmp
+
                     echo " "
                     date -u
                     echo " "
@@ -444,13 +455,16 @@ foreach MODEL ($MODELS)
                     echo "ncwa -O -a time $TMPOUT_FUA $TMPOUT_FUA"
                           ncwa -O -a time $TMPOUT_FUA $TMPOUT_FUA 
 
+                    echo "rm -f $TMPOUT_FUA.pid*nc*.tmp"
+                          rm -f $TMPOUT_FUA.pid*nc*.tmp
+
                     echo " "
                     date -u
                     echo " "
 
                     if (-e $NCTEMPLATE_FUA) then
-                        echo "ncks -A -v t3_comment,sh_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA"
-                              ncks -A -v t3_comment,sh_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA 
+                        echo "ncks -A -v t3_comment,sh_comment,u3_comment,v3_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,u3_fcinv,v3_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA"
+                              ncks -A -v t3_comment,sh_comment,u3_comment,v3_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,u3_fcinv,v3_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA 
 
                         echo "rm -f $TMPOUT_FUA.pid*nc*.tmp"
                               rm -f $TMPOUT_FUA.pid*nc*.tmp
@@ -496,7 +510,7 @@ foreach MODEL ($MODELS)
 
                     endif
 
-                    ls -l $NCOUT_FSF $NCOUT_FUA
+                    ls -l $NCOUT_FSF                
 
                 else # MODE_FUA (lfmregrid method - read GRIB file via FORTRAN routines)
 
@@ -518,7 +532,7 @@ foreach MODEL ($MODELS)
                 echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT"
                       $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
 
-                ls -l $NCOUT_FSF $NCOUT_FUA
+                ls -l $NCOUT_FSF                
 
             endif # $GRIB_PRES_IN exists
 
@@ -536,7 +550,7 @@ foreach MODEL ($MODELS)
             echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT"
                   $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
 
-            ls -l $NCOUT_FSF $NCOUT_FUA
+            ls -l $NCOUT_FSF                
 
         endif # on the hour
 
