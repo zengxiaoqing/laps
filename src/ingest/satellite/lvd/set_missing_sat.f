@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
       subroutine set_missing_sat(csatid,csattype,chtype,
-     &       image_in,nx,ny,smsng,r_missing_data,istatus)
+     &       image_in,nx,ny,smsng,r_missing_data,scale_img,istatus)
 c
 c
 c J. Smart    11-13-95   include technique to determine bad (outliers) data in
@@ -52,7 +52,7 @@ c
       real    ave,adev,sdev,var,skew,curt
       real    smsng
       real    r_missing_data
-      real    rlow,rhigh
+      real    rlow,rhigh,scale_img
       character csattype*(*)
       character chtype*(*)
       character csatid*(*)
@@ -90,16 +90,18 @@ c        rhigh=255.
       endif
 
       if(csattype.eq.'rll')then ! Bad range thresholds
-         if(csatid .ne. 'meteos')then
-             rhigh = 5000.
-             rlow  = 1631.
+         write(6,*)' scale_img passed in = ',scale_img
+         if(csatid .ne. 'meteos' .AND. csatid .ne. 'fy')then
+             scale_img = .01
          else
-             rhigh = 5000.
-             rlow  = 1631.
-!            rhigh = 50000.
-!            rlow  = 16310.
+             scale_img = .1
          endif
-         write(6,*)' Range testing thresholds set to ',rlow,rhigh
+
+         rhigh = 500. /scale_img
+         rlow  = 163.1/scale_img
+
+         write(6,*)' Scale & Range testing thresholds set to '
+     1              ,scale_img,rlow,rhigh
       endif
 
       istat_status=0
