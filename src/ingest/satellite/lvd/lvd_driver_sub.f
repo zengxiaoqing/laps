@@ -711,7 +711,7 @@ c     lsatqc=.true.
      &   maxchannel,nimages,max_files,
      &   i4time_data,path_to_raw_sat(1,jtype,ksat),
      &   image_ir,image_39,image_12,image_67,image_vis,
-     &   r_image_status)
+     &   scale_img,r_image_status)
 
       else         !  if(csatid.ne.'gmssat')then
 
@@ -727,7 +727,7 @@ c     lsatqc=.true.
      &             n_vis_elem,n_vis_lines,n_wv_elem,n_wv_lines,
      &             nft,ntm,c_type,smsng,maxchannel,nimages,
      &             image_ir,image_39,image_12,image_67,image_vis,
-     &             r_image_status)
+     &             scale_img,r_image_status)
          write(6,*)
 
       endif
