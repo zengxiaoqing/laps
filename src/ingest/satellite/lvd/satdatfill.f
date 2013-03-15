@@ -3,7 +3,7 @@
      &    nwv_elem,nwv_lines,c_type,smsng,maxchannels,
      &    maximage,maxfiles,i4time_data,sat_dir_path,
      &    image_ir,image_39,image_12,image_67,image_vis,
-     &    mstatus)
+     &    scale_img,mstatus)
 c
       implicit none
 
@@ -26,7 +26,7 @@ c
       real image_39  (nir_elem,nir_lines,maximage)
       real image_67  (nwv_elem,nwv_lines,maximage)
 
-      Real        r_missing_data
+      Real        r_missing_data, scale_img
       Real        rmsng
       Real        smsng(maxchannels)
       Real        mstatus(maxchannels,maxfiles)
@@ -66,7 +66,7 @@ c -------------------------------------------
             rmsng=smsng(ispec)
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_39(1,1,i),nir_elem,nir_lines,
-     &               rmsng,r_missing_data,istatus)
+     &               rmsng,r_missing_data,scale_img,istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
             write(6,*)'  Enter Satfill1 for: ',c_type(j,i)
@@ -92,7 +92,7 @@ c -------------------------------------------
             rmsng=smsng(ispec)
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_ir(1,1,i),nir_elem,nir_lines,
-     &               rmsng,r_missing_data,
+     &               rmsng,r_missing_data,scale_img,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
@@ -119,7 +119,7 @@ c -------------------------------------------
             rmsng=smsng(ispec)
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_12(1,1,i),nir_elem,nir_lines,
-     &               rmsng,r_missing_data,
+     &               rmsng,r_missing_data,scale_img,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
@@ -146,7 +146,7 @@ c -------------------------------------------
             rmsng=smsng(ispec)
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_67(1,1,i),nwv_elem,nwv_lines,
-     &               rmsng,r_missing_data,
+     &               rmsng,r_missing_data,scale_img,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
@@ -174,7 +174,7 @@ c -------------------------------------------
             c_satdir=sat_dir_path(ispec)  !Particularly wfo! The channel types are in order.
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_vis(1,1,i),nvis_elem,nvis_lines,
-     &               rmsng,r_missing_data,
+     &               rmsng,r_missing_data,scale_img,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
