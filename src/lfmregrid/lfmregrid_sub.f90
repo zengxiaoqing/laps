@@ -16,7 +16,7 @@ integer bgmodel
 
 integer ct,n2df,n3df
 parameter (n2df = 11)
-parameter (n3df = 2)
+parameter (n3df = 4)
 
 real sgrid(NX_L,NY_L,n2df)
 real pgrid(NX_L,NY_L,n3df*NZ_L)
@@ -90,7 +90,7 @@ real tpw_laps(NX_L,NY_L)
 real rto_laps(NX_L,NY_L)
 real r01_laps(NX_L,NY_L)
 
-real make_ssh, k_to_c
+real ssh, k_to_c
 
 logical wrapped, l_process_grib, l_process_cdf
 logical     l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf
@@ -267,13 +267,15 @@ if(.true.)then
             do i = 1,nx_bg
             do j = 1,ny_bg
                 sh_orig = shbg(i,j,k)
-                tamb_c = k_to_c(shbg(i,j,k))
-                shbg(i,j,k) = make_ssh(p_mb,tamb_c,1.0,-132.) / 1000.
-                if(i .eq. 1 .and. j .eq. 1)write(6,*)' sh_orig,tamb_c,sh: ',sh_orig,tamb_c,shbg(i,j,k)
+                td_c = k_to_c(shbg(i,j,k))
+                shbg(i,j,k) = ssh(p_mb,td_c) / 1000.
+                if(i .eq. 1 .and. j .eq. 1)write(6,*)' sh_orig,td_c,sh: ',sh_orig,td_c,shbg(i,j,k)
             enddo ! j 
             enddo ! i
           enddo ! k
         endif
+
+        istatus=ishow_timer()
 
         print*,'use bilinear_laps_3df for SH starting at pgrid level',ct                        
         write(6,*)shbg(1,1,:)
@@ -281,6 +283,22 @@ if(.true.)then
                               ,NX_L,NY_L,NZ_L,shbg,pgrid(1,1,ct))
         write(6,*)pgrid(1,1,ct:ct+lz-1)
         name3d(ct:ct+lz-1)='SH '; com3d(ct:ct+lz-1)='Specific Humidity'; lvls3d(ct:ct+lz-1)=nint(pres_1d(lz:1:-1)/100.); ct=ct+lz   
+
+        istatus=ishow_timer()
+
+        print*,'use bilinear_laps_3df for U3 starting at pgrid level',ct                        
+        call bilinear_laps_3df(grx,gry,nx_bg,ny_bg &
+                              ,NX_L,NY_L,NZ_L,uwbg,pgrid(1,1,ct))
+        name3d(ct:ct+lz-1)='U3 '; com3d(ct:ct+lz-1)='U-component Wind'; lvls3d(ct:ct+lz-1)=nint(pres_1d(lz:1:-1)/100.); ct=ct+lz   
+
+        istatus=ishow_timer()
+
+        print*,'use bilinear_laps_3df for V3 starting at pgrid level',ct                        
+        call bilinear_laps_3df(grx,gry,nx_bg,ny_bg &
+                              ,NX_L,NY_L,NZ_L,vwbg,pgrid(1,1,ct))
+        name3d(ct:ct+lz-1)='V3 '; com3d(ct:ct+lz-1)='V-component Wind'; lvls3d(ct:ct+lz-1)=nint(pres_1d(lz:1:-1)/100.); ct=ct+lz   
+
+        istatus=ishow_timer()
 
     else
         write(6,*)' Skip 3D interpolation - FUA processing set to FALSE'
