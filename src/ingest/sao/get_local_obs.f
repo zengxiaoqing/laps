@@ -934,7 +934,7 @@ c
 	 if(spd .ne. badflag) then
 	    if(spd.ge.1.0 .and. spd.lt.10.0) then
 	       store_3ea(nn,2) = 2.0          ! kt
-	    elseif(spd .gt. 10.0) then
+	    elseif((spd .gt. 10.0) .and.(spd .lt. 200.0)) then
 	       store_3ea(nn,2) = spd * 0.2  ! 20% of speed (kts)
 	    endif
 c

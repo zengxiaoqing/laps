@@ -779,7 +779,7 @@ c
 	 if(ff(i) .ne. badflag) then
 	    if(ff(i).ge.1.0 .and. ff(i).le.10.0) then
 	       store_3ea(np,2) = 1.0          ! kt
-	    elseif(ff(i) .gt. 10.0) then
+	    elseif((ff(i) .gt. 10.0).and.(ff(i) .lt. 200)) then
 	       store_3ea(np,2) = ff(i) * 0.1  ! 10% of speed (kts)
 	    endif
 c
