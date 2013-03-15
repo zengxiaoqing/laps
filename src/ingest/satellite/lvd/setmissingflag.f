@@ -2,7 +2,7 @@
      &                   nvis_elem,nvis_lines,nwv_elem,nwv_lines,
      &                   nft,ntm,c_type,smsng,maxchannels,nimages,
      &                   image_ir,image_39,image_12,image_67,
-     &                   image_vis,
+     &                   image_vis,scale_img,
      &                   mstatus)
 c
 c
@@ -31,7 +31,7 @@ c
 
       Real      rmsng
       Real      smsng(maxchannels)
-      Real      r_missing_data
+      Real      r_missing_data, scale_img
       Real      tot_ir_pix,tot_vis_pix,tot_wv_pix
       Real      mstatus(maxchannels,nimages)
 
@@ -95,7 +95,7 @@ c
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_ir,
      &               nir_elem,nir_lines,
-     &               rmsng,r_missing_data,
+     &               rmsng,r_missing_data,scale_img,
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_ir_pix
@@ -107,7 +107,7 @@ c
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_wv,
      &               nwv_elem,nwv_lines,
-     &               rmsng,r_missing_data,
+     &               rmsng,r_missing_data,scale_img,
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_wv_pix
@@ -119,7 +119,7 @@ c
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_vis,
      &               nvis_elem,nvis_lines,
-     &               rmsng,r_missing_data,
+     &               rmsng,r_missing_data,scale_img,
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_vis_pix
