@@ -43,6 +43,7 @@
            genbtemplut                       genbtemplut.f
                get_satdat_attributes         getsat_attributes.f
            satdatfill                        satdatfill.f
+               set_missing_sat               set_missing_sat.f
                satdatfill1                   satfill1.f
                    get_cdf_dims              readnet.f
                    readcdf                   readcdf.f
