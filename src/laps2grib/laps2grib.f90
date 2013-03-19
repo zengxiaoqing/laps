@@ -52,18 +52,21 @@ PROGRAM laps2grib
   CHARACTER(LEN=512)          :: syscmd
  
   INTEGER                     :: i, iargc, max_args, ihhmm
+  INTEGER                     :: modeltime_passed_in
   CHARACTER(LEN=100)          :: vtab, forecast_id
   CHARACTER(LEN=5)            :: hhmm
-  CHARACTER(LEN=14)           :: file_a9time
+  CHARACTER(LEN=14)           :: file_a9time, modeltime
   LOGICAL                     :: dir_exists
 
   ! Print banner
-  print *, "======================================================"
+  print *, "=================================================================="
   print *, "********** ",vtag," **********"
   print *, ""
-  print *, " USAGE:	laps2grib.exe [vtab]"
-  print *, " MODEL USAGE:	laps2grib.exe vtab [hh]hmm forecast_id (e.g. wfr2grib.vtab 1200 wrf-hrrr)"
-  print *, "======================================================"
+  print *, " USAGE:       laps2grib.exe [vtab]"
+  print *, " MODEL USAGE: laps2grib.exe vtab [hh]hmm forecast_id [modeltime]"
+  print *, "        (e.g. laps2grib.exe wfr2grib.vtab 1200 wrf-hrrr 130451800)"
+  print *, "        (optional modeltime has the format YYJJJHHMM)"
+  print *, "=================================================================="
 
   vtab = 'laps2grib.vtab'
   reftime_sig = 0
@@ -75,7 +78,7 @@ PROGRAM laps2grib
     ! expect vtable name
     CALL GETARG(1,vtab)
 
-  ELSE IF (max_args .EQ. 3) THEN
+  ELSE IF ((max_args .EQ. 3) .OR. (max_args .EQ. 4)) THEN
     reftime_sig = 1
     ! expect vtable name
     CALL GETARG(1,vtab)
@@ -87,18 +90,28 @@ PROGRAM laps2grib
         PRINT *, "The usage requires HHMM for the forecast time, this is not an expected number: ", hhmm
         STOP 
     ELSE IF (rhhmm .EQ. 0.) THEN 
-	hhmm = '0000'
+        hhmm = '0000'
     ELSE IF ( LEN_TRIM(hhmm) .LT. 3) THEN
         PRINT *, "The usage requires HHMM for the forecast time, the string is too short: ", hhmm
         STOP 
     ELSE IF ( LEN_TRIM(hhmm) .LE. 3 .AND. index(hhmm,' ') .NE. 0) THEN
         PRINT *, "--> Index Value", index(hhmm,' ')
-	hhmm = '0'//hhmm
+        hhmm = '0'//hhmm
     ENDIF
 
     ! expect ensemble forecast_id name, .e.g. mean, or wrf-hrrr
     CALL GETARG(3,forecast_id)
     forecast_id = '/'//forecast_id
+    modeltime_passed_in = 0
+    IF (max_args .EQ. 4) THEN
+      CALL GETARG(4,modeltime)
+      IF ( LEN_TRIM(modeltime) .NE. 9) THEN
+        print *, 'Modeltime passed in is not the correct length: ',trim(modeltime)
+        print *, 'Defaulting to time in file modeltime.dat'
+      ELSE
+        modeltime_passed_in = 1
+      ENDIF
+    ENDIF
   ELSE IF (max_args .NE. 0) THEN
         STOP "Check the usage statement above..."
   ENDIF
@@ -128,7 +141,7 @@ PROGRAM laps2grib
   IF (LEN_TRIM(hhmm) .EQ. 0) THEN 
      CALL get_laps_analtime
   ELSE
-     CALL get_laps_modeltime
+     CALL get_laps_modeltime(modeltime,modeltime_passed_in)
   ENDIF
   CALL cv_i4tim_int_lp(i4time,year,month,day,hour,minute,second,istatus)
   year = year + 1900

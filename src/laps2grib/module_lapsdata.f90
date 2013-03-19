@@ -64,7 +64,7 @@ MODULE lapsdata
     INTEGER              :: etime_value
   END TYPE var_a2d
 
-  INTEGER, PARAMETER     ::  max_iso = 20
+  INTEGER, PARAMETER     ::  max_iso = 40
   INTEGER, PARAMETER     ::  max_2d  = 50
   INTEGER, PARAMETER     ::  max_a2d = 10
 

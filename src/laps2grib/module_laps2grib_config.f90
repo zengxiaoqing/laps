@@ -166,16 +166,27 @@ CONTAINS
       RETURN
     END SUBROUTINE get_laps_analtime
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    SUBROUTINE get_laps_modeltime
+    SUBROUTINE get_laps_modeltime(modeltime,modeltime_passed_in)
       IMPLICIT NONE 
-      INTEGER   :: istatus
+      CHARACTER(LEN=*), INTENT(IN)   :: modeltime
+      INTEGER   :: modeltime_passed_in,istatus
 
-      CALL get_modeltime(i4time,a9time,istatus)     
-
-      IF (istatus .NE. 1) THEN
-         PRINT *, "-- Error getting LAPS modeltime.dat!"
-         STOP "STOP in get_laps_modeltime"
+      IF (modeltime_passed_in .EQ. 1) THEN
+        print*, "Generating model i4time using ",trim(modeltime)
+        CALL i4time_fname_lp(modeltime,i4time,istatus)
+        IF (istatus .NE. 1) THEN
+          PRINT *, "-- Error converting ",trim(modeltime)," to i4time!"
+          STOP "STOP in get_laps_modeltime"
+        ENDIF
+        a9time = trim(modeltime)
+      ELSE
+        CALL get_modeltime(i4time,a9time,istatus)
+        IF (istatus .NE. 1) THEN
+           PRINT *, "-- Error getting LAPS modeltime.dat!"
+           STOP "STOP in get_laps_modeltime"
+        ENDIF
       ENDIF
+
       PRINT *, "-- LAPS Model Time: ", a9time
     END SUBROUTINE get_laps_modeltime
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
