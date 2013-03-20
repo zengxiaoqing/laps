@@ -91,9 +91,17 @@ if (     $REFLECTIVITY == "20_comp"  || $REFLECTIVITY == "30_comp"  || $REFLECTI
     setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/summary_comp.txt
     setenv REF `echo $REFLECTIVITY | cut -c1-2`
     setenv DURATION "7-day "
+else if ($REFLECTIVITY == "0001_comp"  || $REFLECTIVITY == "0005_comp"  || $REFLECTIVITY == "0010_comp"  || $REFLECTIVITY == "0050_comp"  || $REFLECTIVITY == "0100_comp"  || $REFLECTIVITY == "0200_comp"  || $REFLECTIVITY == "0500_comp") then
+    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/summary_comp.txt
+    setenv REF `echo $REFLECTIVITY | cut -c1-4`
+    setenv DURATION "7-day "
 else if ($REFLECTIVITY == "20_comp2" || $REFLECTIVITY == "30_comp2" || $REFLECTIVITY == "40_comp2") then
     setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/summary_comp2.txt
     setenv REF `echo $REFLECTIVITY | cut -c1-2`
+    setenv DURATION "30-day "
+else if ($REFLECTIVITY == "0001_comp2" || $REFLECTIVITY == "0005_comp2" || $REFLECTIVITY == "0010_comp2" || $REFLECTIVITY == "0050_comp2" || $REFLECTIVITY == "0100_comp2" || $REFLECTIVITY == "0200_comp2" || $REFLECTIVITY == "0500_comp2") then
+    setenv SUMMARY_FILE $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot/summary_comp2.txt
+    setenv REF `echo $REFLECTIVITY | cut -c1-4`
     setenv DURATION "30-day "
 else
     setenv SUMMARY_FILE /dev/null
@@ -200,6 +208,8 @@ else if ($SUBDIR == "LMR") then
 else # Stage IV Precip
     setenv PCP_HR    `echo $SUBDIR | cut -c5-6 | sed 's/^0//'`
     setenv REF_LABEL `echo $REF | cut -c1-2 | sed 's/^0//'`.`echo $REF | cut -c3-4`
+    echo "REF: $REF"
+    echo "REF_LABEL: $REF_LABEL"
     echo 'set ylabel "'$PCP_HR' Hour Stage IV Precip '$REF_LABEL'in '$STAT'"'  $MEMBER_FONT textcolor lt 2      >> $GNUPLOTFILE
     echo 'set title  "'$PCP_HR' Hour Stage IV Precip '$REF_LABEL'in '$DURATION$STAT' ('$DOMAIN_NAME' domain)" '$TITLE_FONT >> $GNUPLOTFILE
 endif
