@@ -19,7 +19,7 @@
          2.1.7 ..................  Memory Etc. (ulimit)
          2.1.8 ..................  Plotting / NCAR graphics library (optional)
          2.1.8.1 ................  Web Display
-         2.1.9 ..................  GRIB2 external libraries (optional)
+         2.1.9 ..................  GRIB2 external libraries
          2.1.10 .................  GNUPLOT / ImageMagick for verification (optional)
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
@@ -422,7 +422,7 @@
 
      http://yourdomain.something/request/nph-laps.cgi 
 
-               --- 2.1.9  GRIB2 external libraries (optional) ---
+               --- 2.1.9  GRIB2 external libraries ---
 
      The background models read by the model first guess ingest program (LGA)
      include GRIB1 and GRIB2-formatted files. 
