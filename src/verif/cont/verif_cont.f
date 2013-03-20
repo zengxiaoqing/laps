@@ -95,6 +95,8 @@
      1                  l_persist,
      1                  j_status)
 
+        use constants_laps, ONLY: INCH2M
+
         include 'lapsparms.for' ! maxbgmodels
 
         real var_anal_3d(NX_L,NY_L,NZ_L)
@@ -352,15 +354,17 @@
      1                        ,NX_L,NY_L,1,var_anal_3d,istatus)
                     endif
 
-                    if(istatus .ne. 1)then
+                    if(istatus .ne. 1 .AND. istatus .ne. -1)then
                         write(6,*)' Error reading 2D Analysis for '
      1                           ,trim(ext),' ',trim(var_2d_anal)
                         goto 900
                     endif
 
-                    do k = 2,NZ_L
-                        var_anal_3d(:,:,k) = var_anal_3d(:,:,1)
-                    enddo ! k
+                    if(trim(type_a(ifield)) .eq. 'rdr')then 
+                        do k = 2,NZ_L
+                            var_anal_3d(:,:,k) = var_anal_3d(:,:,1)
+                        enddo ! k
+                    endif
 
                   endif
 
@@ -391,6 +395,8 @@
                   else ! determine precip quality
                       rqc_thresh = 0.
                       rqc(:,:) = var_anal_3d(:,:,1)
+                      write(6,*)' Range of rqc is ',minval(rqc)
+     1                                             ,maxval(rqc)
                   endif
 
                   if(c_fdda_mdl_src(imodel) .ne. 'persistence')then
@@ -426,13 +432,14 @@
                         write(6,*)' directory = ',trim(directory)
 
                         if(trim(type_a(ifield)) .eq. 'rdr')then
-                            write(6,*)' radar type block'
+                            write(6,*)' radar verif type block'
                             var_2d_fcst = trim(var_2d(1:3))
                         else
-                            write(6,*)' precip type block'
+                            write(6,*)' precip verif type block'
                             var_2d_fcst = 'NUL'
                             if(trim(var_2d) .eq. 'PCP_01')then
-                                if(model_fcst_intvl .eq. 3600)then
+                                if(model_fcst_intvl .eq. 3600 .AND.
+     1                             c_model(1:len_model) .ne. 'nam')then
                                     var_2d_fcst = 'R01' 
                                 endif
                             elseif(trim(var_2d) .eq. 'PCP_03')then
@@ -465,9 +472,11 @@
                              goto 900
                         endif
 
-                        do k = 2,NZ_L
-                            var_fcst_3d(:,:,k) = var_fcst_3d(:,:,1)
-                        enddo ! k
+                        if(trim(type_a(ifield)) .eq. 'rdr')then 
+                            do k = 2,NZ_L
+                                var_fcst_3d(:,:,k) = var_fcst_3d(:,:,1)
+                            enddo ! k
+                         endif
 
                      endif
 
@@ -482,7 +491,7 @@
 !                 Calculate "and" as well as "rqc" "and" mask
                   n_rqc_and = 0
                   n_rqc_and_pot = 0
-                  do k = 1,NZ_L
+                  do k = 1,nk_cont
                   do i = 1,NX_L
                   do j = 1,NY_L
                      lmask_and_3d(i,j,k) = .false.
@@ -508,7 +517,7 @@
                   lmask_rqc_3d = .true.
                   n_rqc_all = 0
                   n_rqc_all_pot = 0
-                  do k = 1,NZ_L
+                  do k = 1,nk_cont
                   do i = 1,NX_L
                   do j = 1,NY_L
                     n_rqc_all_pot = n_rqc_all_pot + 1
@@ -589,7 +598,9 @@
 !                Radar QC (rqc) for "all" case is used via 'lmask_rqc_3d'
                  do idbz = 1,nthr
                   if(trim(type_a(ifield)) .eq. 'pcp')then
-                      rdbz = pcp_thr(idbz)                   
+                      rdbz = pcp_thr(idbz) * INCH2M
+!                     write(6,*)' pcp_thr / INCH2M / rdbz = '
+!    1                         ,pcp_thr(idbz),INCH2M,rdbz
                   else
                       rdbz = float(idbz*10) + 10
                   endif
@@ -602,6 +613,8 @@
                   write(lun_out,*)
                   write(lun_out,*)' Calculate contingency table for '
      1                           ,rdbz,' dbz'
+                  write(6,*)' Calculate contingency table for '
+     1                           ,rdbz,' dbz'
                   write(lun_out,*)' region = ',iregion
      1                           ,ilow,ihigh,jlow,jhigh
                   call contingency_table(var_anal_3d,var_fcst_3d     ! I
@@ -611,8 +624,16 @@
      1                                  ,ilow,ihigh,jlow,jhigh       ! I
      1                                  ,lmask_rqc_3d                ! I
      1                                  ,contable)                   ! O
-                  write(6,801)rdbz,contable
-801               format(' Contingency table for ',f5.0,' dbz is:',4i9)       
+                  if(trim(type_a(ifield)) .eq. 'pcp')then
+                      write(6,801)rdbz / INCH2M, contable
+801                   format(' Contingency table for ',f5.2
+     1                                               ,' in is:',4i9)       
+!                     write(6,*)' dbz_an = ',dbz_an(idbz)
+                  else
+                      write(6,802)rdbz,contable
+802                   format(' Contingency table for ',f5.0
+     1                                               ,' dbz is:',4i9)       
+                  endif
 
 
 !                 Calculate/Write Skill Scores
@@ -639,6 +660,8 @@
                  enddo ! idbz
 
 !                Correlate dbz values with bias
+                 write(6,*)' dbz_an (before call to calc_thresholds) = '
+     1                                                          ,dbz_an 
                  call calc_thresholds(itime_fcst,nthr,dbz_an,dbz_fc    ! I
      1                       ,frac_obs(imodel,itime_fcst,iregion,:)    ! I    
      1                       ,frac_fcst(imodel,itime_fcst,iregion,:)   ! I
@@ -945,6 +968,7 @@
 
         write(6,*)
         write(6,*)' Subroutine calc_thresholds, errmax = ',errmax
+        write(6,*)' dbz_an = ',dbz_an
         write(6,840)itime_fcst
  840    format('   bin  dbz/an  dbz/fc    bias      obs      ',
      1         'fcst  jbrckt dbz/nw   for itime_fcst: ',i4)       
