@@ -308,8 +308,8 @@ $FC
 EOF
 if test $? -eq 0
 then
-    FFLAGS="$FFLAGS -w90 -w95 -cm"
-    LITTLEFLAGS="$LITTLEFLAGS -w90 -w95 -cm"
+    FFLAGS="$FFLAGS -warn usage"
+    LITTLEFLAGS="$LITTLEFLAGS -warn usage"
     DBFLAGS="$DBFLAGS -O0 -traceback -ftrapuv"
     FREE="-FR"
     C_OPT="-O3"
