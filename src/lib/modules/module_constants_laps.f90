@@ -3,6 +3,8 @@ MODULE constants_laps
   ! Constants used by laps     
 
       REAL,       PARAMETER        :: CM2INCH  =   1.0 / 2.54
+      REAL,       PARAMETER        :: M2INCH   =   100. / 2.54
+      REAL,       PARAMETER        :: INCH2M   =   .0254
       REAL,       PARAMETER        :: CP       =   1005.7
       REAL,       PARAMETER        :: GRAV     =      9.81
       INTEGER,    PARAMETER        :: IMISS    = -99999
