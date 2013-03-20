@@ -73,8 +73,8 @@
      1                    ,UNITS_2d,COMMENT_2d,uv_2d,ISTATUS)
             IF(ISTATUS .ne. 1)THEN
                 write(6,*)
-     1          ' Sorry, file has not yet been generated this cycle'
-                stop
+     1          ' Sorry, unable to read in wind variables ',var          
+                return
             else
                 write(6,*)
      1          ' 2d - LAPS U and V analysis successfully read in'
