@@ -158,8 +158,8 @@ foreach SUBDIR (REF LMR)
 
 end
 
-foreach SUBDIR (PCP_01)
-    foreach THRESH (0001 0005 0010 0050 0100 0200 0500)
+foreach SUBDIR (PCP_01 PCP_03 PCP_06 PCP_24)
+    foreach THRESH (0001 0005 0010 0050 0100 0200 0500 0001_comp 0005_comp 0010_comp 0050_comp 0100_comp 0200_comp 0500_comp 0001_comp2 0005_comp2 0010_comp2 0050_comp2 0100_comp2 0200_comp2 0500_comp2)
 
 
 #       echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt PCP_01   0.001:2.0 '"1 Hour Stage IV Precip"' "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/pcp_01_fcst.log"
