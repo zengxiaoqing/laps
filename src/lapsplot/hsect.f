@@ -536,7 +536,9 @@ c       include 'satellite_dims_lvd.inc'
               colortable = 'hues'
 
             elseif(c_type(1:2) .eq. 'dt')then
-              if(c_type(3:3) .eq. '3')then
+              if(c_type(3:3) .eq. '4')then
+                  thresh = 40.
+              elseif(c_type(3:3) .eq. '3')then
                   thresh = 30.
               else
                   thresh = 20.
@@ -3296,6 +3298,12 @@ Cabdel
 
                 nf = 1
 
+                call make_fnam_lp(i4time_start,a9_start,istatus)
+                call make_fnam_lp(i4time_end,a9_end,istatus)
+
+                write(6,*)' Range of precip interval is ',a9_start,' '
+     1                                                   ,a9_end
+ 
                 call get_interval_precip(var_2d(1:1),ext(1:3)
      1                                  ,i4time_start,i4time_end
      1                                  ,laps_cycle_time,r_missing_data       
@@ -4642,6 +4650,8 @@ c
             if(.true.)then
 
                 if(qtype.eq.'q' .and. istat_sh .eq. 1)then
+                    write(6,*)' Plotting Q directly, range is: ',
+     1                        minval(sh_2d),maxval(sh_2d)
 
                     call mklabel(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' Q  (x1e3)',c_label)
@@ -4663,7 +4673,10 @@ c                   cint = -1.
                     call move(sh_2d,field_2d,NX_L,NY_L) ! supports diff option
 
                 elseif(qtype .eq. 'd' .and. istat_sh .eq. 1)then
-                    write(6,*)' Calculate Model tdew'
+                    write(6,*)' Calculate Model tdew from P and SH'
+                    write(6,*)' Q range is: '
+     1                       ,minval(sh_2d),maxval(sh_2d)
+
                     do i = 1,NX_L
                     do j = 1,NY_L
 !                       field_2d(i,j) = make_td(
