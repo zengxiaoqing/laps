@@ -221,6 +221,7 @@
         data ipersist_a /0,0,0,0,0,0,0,1,0,0,0,0,0/        
 
         real rms_a (n_fields,maxbgmodels,0:max_fcst_times)
+        real cnt_a (n_fields,maxbgmodels,0:max_fcst_times)
 
         integer contable(0:1,0:1)
 
@@ -989,36 +990,42 @@
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 elseif(trim(var_2d) .eq. 'TSF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface Temperature     '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 elseif(trim(var_2d) .eq. 'DSF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface Dewpoint     '
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 elseif(trim(var_2d) .eq. 'USF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface U Wind Component'
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 elseif(trim(var_2d) .eq. 'VSF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface V Wind Component'
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 elseif(trim(var_2d) .eq. 'SSF')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Surface Wind Speed'
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 elseif(trim(var_2d) .eq. 'WSF')then
                   threshval = -99.9
                   xbar = rms_a(4,imodel,itime_fcst) 
@@ -1030,12 +1037,15 @@
                       std = threshval
                   endif
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = 
+     1            cnt_a(4,imodel,itime_fcst)
                 elseif(trim(var_2d) .eq. 'TPW')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Integrated Water Vapor'
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 elseif(var_2d(1:2) .eq. 'R0' .OR. 
      1                 var_2d(1:2) .eq. 'R2'      )then      
                   call stats_1d(maxsta,var_fcst_s,var_s
@@ -1043,12 +1053,14 @@
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 elseif(trim(var_2d) .eq. 'RTO')then
                   call stats_1d(maxsta,var_fcst_s,var_s
      1                   ,'Run Total Precip'             
      1                   ,a_t,b_t,xbar,ybar
      1                   ,bias,std,r_missing_data,istatus)
                   rms_a(ifield,imodel,itime_fcst) = std
+                  cnt_a(ifield,imodel,itime_fcst) = cnt
                 endif
 
 980             continue
@@ -1066,7 +1078,8 @@
                 write(6,*)
                 write(6,*)' Writing to lun_out ',lun_out
                 write(6,710)atime_s,xbar,ybar,std
-                write(lun_out,710)atime_s,xbar,ybar,std,nint(cnt)
+                write(lun_out,710)atime_s,xbar,ybar,std
+     1                           ,nint(cnt_a(ifield,imodel,itime_fcst))
 !               write(39,710)atime_s,xbar,ybar,std
 !               write(38,710)atime_s,xbar,ybar,std
 710             format(1x,a24,3f10.3,i8)
