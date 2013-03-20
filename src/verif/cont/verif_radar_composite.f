@@ -48,7 +48,7 @@
 
         character*10  units_2d
         character*125 comment_2d
-        character*3 var_2d
+        character*10 var_2d
         character*5 fcst_hh_mm
         character*9 a9time,a9time_valid,a9time_initial
         character*24 a24time_valid
@@ -61,30 +61,25 @@
         character*10 compdir
 
         integer n_fields
-        parameter (n_fields=2)
-        character*10 ext_anal_a(n_fields), ext_fcst_a(n_fields)
+        parameter (n_fields=6)
         character*10 var_a(n_fields)
         integer nthr_a(n_fields) ! number of thresholds for each field
         character*2 c2_region
         character*10 c_thr
 
 !       Specify what is being verified
-!       data ext_fcst_a /'fua'/ ! 3-D
-!       data ext_anal_a /'lps'/ ! 3-D reflectivity
-!       data var_a      /'REF'/ ! 3-D reflectivity       
-!       data nthr_a     /5/        
-
-        data ext_fcst_a /'fua','fsf'/ ! 3-D / composite ref
-        data ext_anal_a /'lps','lmr'/ ! 3-D / composite ref
-        data var_a      /'REF','LMR'/ ! 3-D / composite ref
-        data nthr_a     /5,5/        
+        data var_a  /'REF','LMR','PCP_01','PCP_03','PCP_06','PCP_24'/ ! 3-D / composite ref
+        data nthr_a /5,5,7,7,7,7/        
 
         integer,parameter :: k12 = selected_int_kind(12)
         integer (kind=k12) :: contable(0:1,0:1)
         integer (kind=k12) :: idenom_sum,idenom_sum2,ihits_sum                       
 
         integer maxthr
-        parameter (maxthr=5)
+        parameter (maxthr=7)
+
+        real pcp_thr(7)
+        data pcp_thr /.01,.05,0.1,0.5,1.0,2.0,5.0/
 
         real cont_4d(NX_L,NY_L,NZ_L,maxthr)
         real bias(maxbgmodels,0:max_fcst_times,max_regions,maxthr)
@@ -307,9 +302,14 @@
           nthr = nthr_a(ifield) ! nthr may be unset or have earlier been stepped on
           do idbz = 1,nthr
 
-           rdbz = float(idbz*10) + 10
-           write(c_thr,901)nint(rdbz)
- 901       format(i2)
+           if(var_2d(1:3) .ne. 'PCP')then
+               rdbz = float(idbz*10) + 10
+               write(c_thr,901)nint(rdbz)
+ 901           format(i2)
+           else
+               write(c_thr,902)nint(pcp_thr(idbz)*100.)
+ 902           format(i4.4)
+           endif
 
            plot_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
      1                                      //'/plot'
@@ -369,7 +369,7 @@
            write(6,*)'c_fdda_mdl_hdr nelems/n_fdda_models = '
      1                              ,nelems,n_fdda_models
 
-902        format('# ',30(1x,a))  
+906        format('# ',30(1x,a))  
 
            if(l_col)then
 !              Read bias and ets values
@@ -815,8 +815,12 @@
          nthr = nthr_a(ifield) ! nthr may be unset or have earlier been stepped on
          do idbz = 1,nthr
 
-           rdbz = float(idbz*10) + 10
-           write(c_thr,901)nint(rdbz)
+           if(var_2d(1:3) .ne. 'PCP')then
+               rdbz = float(idbz*10) + 10
+               write(c_thr,901)nint(rdbz)
+           else
+               write(c_thr,902)nint(pcp_thr(idbz)*100.)
+           endif
  
            plot_dir = verif_dir(1:len_verif)//var_2d(1:lenvar)
      1                                      //'/plot'
@@ -848,9 +852,9 @@
            open(lun_ets_out,file=ets_file_out,status='unknown')
 
 !          Write comment with model member names
-           write(lun_bias_out,902)(trim(c_fdda_mdl_src(imodel))
+           write(lun_bias_out,906)(trim(c_fdda_mdl_src(imodel))
      1                              ,imodel=2,n_fdda_models)  
-           write(lun_ets_out,902)(trim(c_fdda_mdl_src(imodel))
+           write(lun_ets_out,906)(trim(c_fdda_mdl_src(imodel))
      1                              ,imodel=2,n_fdda_models)  
            if(l_col)then
 !              Write bias and ets values
