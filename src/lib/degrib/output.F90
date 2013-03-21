@@ -409,7 +409,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  write(6,*)' Filling prbg_sfc with PSFC'
               elseif (field.eq.'PMSL') then
                  mslpbg = scr2d
-              elseif (field.eq.'ACPC') then
+              elseif (field.eq.'APCP') then
                  pcpbg = scr2d
               elseif (field.eq.'REFC') then
                  crefbg = scr2d
