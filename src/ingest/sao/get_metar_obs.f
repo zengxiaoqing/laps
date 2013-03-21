@@ -723,6 +723,12 @@ c
 	if(pcp3(i)  .ne. badflag)  pcp3(i) =  pcp3(i) * 39.370079 ! m to in
 	if(pcp6(i)  .ne. badflag)  pcp6(i) =  pcp6(i) * 39.370079 ! m to in
 	if(pcp24(i) .ne. badflag) pcp24(i) = pcp24(i) * 39.370079 ! m to in
+
+        if(pcp1(i)  .gt. 50.)pcp1(i) = badflag
+        if(pcp3(i)  .gt. 50.)pcp3(i) = badflag
+        if(pcp6(i)  .gt. 50.)pcp6(i) = badflag
+        if(pcp24(i) .gt. 50.)pcp24(i) = badflag
+
 	if(snowcvr(i) .ne. badflag) snowcvr(i) = snowcvr(i) * 39.370079 ! m to in
 	if(max24t(i) .ne. badflag) then
 	   max24t(i) = k_to_f(max24t(i))
