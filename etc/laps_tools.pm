@@ -487,7 +487,7 @@ gr2);
        if(! $verifvar =~ "PCP"){
              @thr_dirs = qw(20 30 40 50 60 20_comp 30_comp 40_comp 50_comp 60_comp 20_comp2 30_comp2 40_comp2 50_comp2 60_comp2);
        }else{
-             @thr_dirs = qw(0001 0005 0010 0050 0100 0200 0500)
+             @thr_dirs = qw(0001 0005 0010 0050 0100 0200 0500 0001_comp 0005_comp 0010_comp 0050_comp 0100_comp 0200_comp 0500_comp 0001_comp2 0005_comp2 0010_comp2 0050_comp2 0100_comp2 0200_comp2 0500_comp2);
        }
          
        print "thr dirs: @thr_dirs\n";
