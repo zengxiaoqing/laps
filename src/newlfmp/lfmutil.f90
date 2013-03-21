@@ -598,7 +598,11 @@ if (fcsttime > 0) then
       deallocate(fallen_precip_type)
    endif
 
+else ! no incremental precip at time zero
+   pcp_inc = r_missing_data
+
 endif
+
 if (trim(mtype) == 'nmm') then
  print*, 'pcp_inc update: ',trim(mtype)
  pcp_06 = pcp_tot
