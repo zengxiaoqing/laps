@@ -28,11 +28,13 @@ MODULE wrf_lga
   REAL, ALLOCATABLE      :: usf(:,:)
   REAL, ALLOCATABLE      :: vsf(:,:)
   REAL, ALLOCATABLE      :: tsf(:,:)
+  REAL, ALLOCATABLE      :: tsk(:,:) ! surface skin temp. (added by Wei-Ting 130312)
   REAL, ALLOCATABLE      :: dsf(:,:)
   REAL, ALLOCATABLE      :: slp(:,:)
   REAL, ALLOCATABLE      :: psf(:,:)
   REAL, ALLOCATABLE      :: rsf(:,:)
   REAL, ALLOCATABLE      :: p(:,:)
+  REAL, ALLOCATABLE      :: pcp(:,:) ! RAINNC+RAINC (added by Wei-Ting 130312)
   ! LAPS static variables
   REAL, ALLOCATABLE      :: topo_laps(:,:)
   REAL, ALLOCATABLE      :: lat(:,:)
@@ -51,11 +53,13 @@ MODULE wrf_lga
   REAL, ALLOCATABLE      :: usf_wrf(:,:)
   REAL, ALLOCATABLE      :: vsf_wrf(:,:)
   REAL, ALLOCATABLE      :: tsf_wrf(:,:)
+  REAL, ALLOCATABLE      :: tsk_wrf(:,:) ! surface skin temp. (added by Wei-Ting 130312)
   REAL, ALLOCATABLE      :: dsf_wrf(:,:)
   REAL, ALLOCATABLE      :: slp_wrf(:,:)
   REAL, ALLOCATABLE      :: psf_wrf(:,:)
   REAL, ALLOCATABLE      :: rsf_wrf(:,:)
   REAL, ALLOCATABLE      :: p_wrf(:,:)
+  REAL, ALLOCATABLE      :: pcp_wrf(:,:) ! RAINNC+RAINC (added by Wei-Ting 130312)
   REAL, ALLOCATABLE      :: tvb_wrf(:,:)  ! Mean virtual temperature in lowest 60mb
   ! WRF on native variables
   REAL, ALLOCATABLE      :: pr_wrfs(:,:,:)
@@ -68,7 +72,7 @@ MODULE wrf_lga
   REAL, ALLOCATABLE      :: rho_wrfs(:,:,:) ! Density
   REAL, ALLOCATABLE      :: mr_wrfs(:,:,:) ! Mixing Ratio
   ! WRF static variables 
-  INTEGER                :: cdf
+  INTEGER                :: cdf,cdp ! added cdp by Wei-Ting (130312)
   TYPE(proj_info)        :: wrfgrid
   REAL, ALLOCATABLE      :: topo_wrf(:,:)
   CHARACTER(LEN=19)      :: reftime
@@ -86,7 +90,7 @@ CONTAINS
 
      IMPLICIT NONE
 
-     CHARACTER(LEN=255), INTENT(IN) :: wrffile
+     CHARACTER(LEN=256), INTENT(IN) :: wrffile(2) ! add 1 dim. and (LEN=255 -> LEN=256) by Wei-Ting (130312) to contain previous time
      CHARACTER(LEN=12), INTENT(IN) :: cmodel
      INTEGER, INTENT(IN)          :: i4time
      INTEGER                      :: i4reftime
@@ -146,7 +150,8 @@ CONTAINS
 
 
      ! Get the WRF config
-     CALL open_wrfnc(wrffile,cdf,istatus) 
+     CALL open_wrfnc(wrffile(1),cdf,istatus) ! modified by Wei-Ting to use right time ( wrffile -> wrffile(1) )
+     CALL open_wrfnc(wrffile(2),cdp,istatus) ! added by Wei-Ting to use previous time (just for calculate PCP)
      CALL get_wrf2_timeinfo(cdf,reftime,dt,itimestep,tau_hr,tau_min,tau_sec,istatus)
      reftime13 = reftime(1:4) // reftime(6:7) // reftime(9:13) // reftime(15:16)
      i4reftime = cvt_wfo_fname13_i4time(reftime13)
@@ -201,11 +206,13 @@ CONTAINS
      ALLOCATE (usf_wrf(nxw,nyw))
      ALLOCATE (vsf_wrf(nxw,nyw))
      ALLOCATE (tsf_wrf(nxw,nyw))
+     ALLOCATE (tsk_wrf(nxw,nyw)) ! surface skin temp. (added by Wei-Ting 130312)
      ALLOCATE (rsf_wrf(nxw,nyw))
      ALLOCATE (dsf_wrf(nxw,nyw))
      ALLOCATE (slp_wrf(nxw,nyw))
      ALLOCATE (psf_wrf(nxw,nyw))
      ALLOCATE (p_wrf(nxw,nyw))
+     ALLOCATE (pcp_wrf(nxw,nyw)) ! RAINNC+RAINC (added by Wei-Ting 130312)
      ALLOCATE (topo_wrf(nxw,nyw))
      ALLOCATE (tvb_wrf(nxw,nyw))
 
@@ -258,18 +265,22 @@ CONTAINS
      ALLOCATE (usf(nxl,nyl))
      ALLOCATE (vsf(nxl,nyl))
      ALLOCATE (tsf(nxl,nyl))
+     ALLOCATE (tsk(nxl,nyl)) ! surface skin temp. (added by Wei-Ting 130312)
      ALLOCATE (rsf(nxl,nyl))
      ALLOCATE (dsf(nxl,nyl))
      ALLOCATE (slp(nxl,nyl))
      ALLOCATE (psf(nxl,nyl))
      ALLOCATE (p  (nxl,nyl))
+     ALLOCATE (pcp(nxl,nyl)) ! precitation (added by Wei-Ting 130312)
      usf = rmissingflag
      vsf = rmissingflag
      tsf = rmissingflag
+     tsk = rmissingflag ! surface skin temp. (added by Wei-Ting 130312)
      dsf = rmissingflag
      slp = rmissingflag
      psf = rmissingflag
      p   = rmissingflag
+     pcp = rmissingflag ! RAINNC+RAINC (added by Wei-Ting 130312)
 
      IF (need_hinterp) THEN
        ht = rmissingflag
@@ -281,10 +292,12 @@ CONTAINS
        usf = rmissingflag
        vsf = rmissingflag
        tsf = rmissingflag
+       tsk = rmissingflag ! surface skin temp. (added by Wei-Ting 130312)
        dsf = rmissingflag
        slp = rmissingflag
        psf = rmissingflag
        p   = rmissingflag
+       pcp = rmissingflag ! RAINNC+RAINC (added by Wei-Ting 130312)
                                                                                                                             
 
        ! call hinterplga
@@ -304,24 +317,29 @@ CONTAINS
        om = om_wrfp
        psf = psf_wrf
        tsf = tsf_wrf
+       tsk = tsk_wrf ! surface skin temp. (added by Wei-Ting 130312)
        dsf = dsf_wrf
        rsf = rsf_wrf
        usf = usf_wrf
        vsf = vsf_wrf
+       pcp = pcp_wrf ! RAINNC+RAINC (added by Wei-Ting 130312)
      ENDIF 
+!     pcp = 0 ! since pcp hasn't be used for now, assume that the value is 0
 
      print *, "Deallocating WRF press vars"
      DEALLOCATE (ht_wrfp,t3_wrfp,sh_wrfp,u3_wrfp,v3_wrfp,om_wrfp)
 
      print *, "Deallocating WRF sfc vars"
-     DEALLOCATE (usf_wrf,vsf_wrf,tsf_wrf,rsf_wrf,dsf_wrf,slp_wrf,psf_wrf,p_wrf,tvb_wrf)
+     DEALLOCATE (usf_wrf,vsf_wrf,tsf_wrf,tsk_wrf,rsf_wrf,dsf_wrf,slp_wrf,&
+         psf_wrf,p_wrf,pcp_wrf,tvb_wrf) ! added tsk_wrf & pcp_wrf by Wei-Ting (130312)
  
      ! Create MSLP and reduced pressure
      print *, "Creating reduced pressure arrays"
      CALL make_derived_pressures
-     print *, "topo/slp/psf/p/tsf/dsf/rsf/usf/vsf",topo_laps(icentl,jcentl), &
+     print *, "topo/slp/psf/p/tsf/tsk/dsf/rsf/usf/vsf",topo_laps(icentl,jcentl), &
        slp(icentl,jcentl),psf(icentl,jcentl),p(icentl,jcentl),tsf(icentl,jcentl), &
-       dsf(icentl,jcentl),rsf(icentl,jcentl),usf(icentl,jcentl),vsf(icentl,jcentl)
+       tsk(icentl,jcentl),dsf(icentl,jcentl),rsf(icentl,jcentl),usf(icentl,jcentl), &
+       vsf(icentl,jcentl) ! added tsk by Wei-Ting (130312)
 
 
 
@@ -337,9 +355,9 @@ CONTAINS
        RETURN
      ENDIF
 
-     print *, "Writing LGA"
+     print *, "Writing LGB" ! modified by Wei-Ting (LGA -> LGB)
      CALL write_lgb(nxl,nyl,i4reftime,bg_valid,cmodel,rmissingflag, &
-           usf,vsf,tsf,rsf,psf,slp,dsf,p,istatus)
+           usf,vsf,tsf,tsk,rsf,psf,slp,dsf,p,pcp,istatus) ! added tsk & pcp by Wei-Ting (130312)
      IF(istatus .NE. 1) THEN
        print *, "Error writing LGB"
        RETURN
@@ -350,8 +368,8 @@ CONTAINS
      print *, "Deallocating lga vars"
      DEALLOCATE(ht,t3,sh,u3,v3,om,pr_laps)
      print *, "Deallocating lgb vars"
-     DEALLOCATE(usf,vsf,tsf,rsf,dsf,slp,psf,p)
-     PRINT *, "Successful processing of ", trim(wrffile)
+     DEALLOCATE(usf,vsf,tsf,tsk,rsf,dsf,slp,psf,p,pcp) ! added tsk & pcp by Wei-Ting (130312)
+     PRINT *, "Successful processing of ", trim(wrffile(1)) ! modified by Wei-Ting
      RETURN 
   END SUBROUTINE wrf2lga
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -363,6 +381,8 @@ CONTAINS
     REAL, ALLOCATABLE     :: dum3d(:,:,:)
     REAL, ALLOCATABLE     :: dum3df(:,:,:)
     REAL, ALLOCATABLE     :: dum3df2(:,:,:)
+    REAL, ALLOCATABLE     :: dum2dt1(:,:) ! added by Wei-Ting (130312) to get RAINNC
+    REAL, ALLOCATABLE     :: dum2dt2(:,:) ! added by Wei-Ting (130312) to get RAINNC
     REAL, EXTERNAL        :: mixsat, relhum, dewpt
     REAL                  :: rh 
     REAL                  :: tvbar, tvbar_nlevs
@@ -374,6 +394,8 @@ CONTAINS
     ALLOCATE(dum3d(nxw,nyw,nzw))
     ALLOCATE(dum3df(nxw,nyw,nzw+1))
     ALLOCATE(dum3df2(nxw,nyw,nzw+1))
+    ALLOCATE(dum2dt1(nxw,nyw))
+    ALLOCATE(dum2dt2(nxw,nyw))
 
     ! Get 3D pressure array
     ! Get pressures
@@ -521,7 +543,47 @@ CONTAINS
       PRINT *, "Could not get T2, using lowest sigma level"
       tsf_wrf = t3_wrfs(:,:,1)
     ENDIF
-                                                                                            
+    
+    ! added tsk(skin temp.) by Wei-Ting (130312)
+    PRINT *, "Getting TSK" 
+    CALL get_wrfnc_2d(cdf, "TSK","T",nxw,nyw,1,tsk_wrf,status)
+    IF ((status .NE. 0).OR.(MAXVAL(tsk_wrf) .LT. 100.))THEN
+      PRINT *, "Could not get TSK, using lowest sigma level"
+      tsk_wrf = t3_wrfs(:,:,1)
+    ENDIF
+    
+    ! added PCP (RAINNC+RAINC) by Wei-Ting (130312)
+    PRINT *, "Getting RAINNC(t-1)"
+    CALL get_wrfnc_2d(cdp,"RAINNC","T",nxw,nyw,1,dum2dt1,status)
+    IF (status .NE. 0) THEN
+      PRINT *, "Could not get RAINNC (t-1), setting the value = 0"
+      dum2dt1 = 0
+    ENDIF
+    PRINT *, "Getting RAINNC"
+    CALL get_wrfnc_2d(cdf,"RAINNC","T",nxw,nyw,1,dum2dt2,status)
+    IF (status .NE. 0) THEN
+      PRINT *, "Could not get RAINNC, setting the value = 0"
+      dum2dt2 = 0
+    ENDIF
+    pcp_wrf = dum2dt2-dum2dt1
+                        
+    PRINT *, "Getting RAINC(t-1)"
+    CALL get_wrfnc_2d(cdp,"RAINC","T",nxw,nyw,1,dum2dt1,status)
+    IF (status .NE. 0) THEN
+      PRINT *, "Could not get RAINC(t-1), setting the value = 0"
+      dum2dt1 = 0
+    ENDIF
+    PRINT *, "Getting RAINC"                                                                    
+    CALL get_wrfnc_2d(cdf,"RAINC","T",nxw,nyw,1,dum2dt2,status)
+    IF (status .NE. 0) THEN
+      PRINT *, "Could not get RAINC, setting the value = 0"
+      dum2dt2 = 0
+    ENDIF
+    pcp_wrf = pcp_wrf + (dum2dt2-dum2dt1)
+    where ( pcp_wrf < 0 ) ; pcp_wrf = 0 ; endwhere ! keep pcp >= 0
+    print *, "Min/Max WRF Precipitation : ",minval(pcp_wrf),maxval(pcp_wrf)
+    ! End of reading RAINNC+RAINC
+
     ! qvapor at 2m
     PRINT *, "Getting Q2"
     CALL get_wrfnc_2d(cdf, "Q2","T",nxw,nyw,1,rsf_wrf,status)
@@ -571,14 +633,14 @@ CONTAINS
           om_wrfs(icentw,jcentw,k)
     ENDDO
     PRINT *, "SFC:"
-    PRINT ('(F8.1,2x,F7.0,2x,F5.1,2x,F5.1,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1)'), &
+    PRINT ('(F8.1,2x,F7.0,2x,F5.1,2x,F5.1,2x,F5.1,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1)'), &
         psf_wrf(icentw,jcentw),topo_wrf(icentw,jcentw),tsf_wrf(icentw,jcentw), &
-        dsf_wrf(icentw,jcentw),tvb_wrf(icentw,jcentw), &
+        tsk_wrf(icentw,jcentw),dsf_wrf(icentw,jcentw),tvb_wrf(icentw,jcentw), &
         rsf_wrf(icentw,jcentw), usf_wrf(icentw,jcentw), vsf_wrf(icentw,jcentw)
-      
+        ! added tsk_wrf by Wei-Ting (130312)
     
     PRINT *, "Deallocating arrays"
-    DEALLOCATE(dum3d,dum3df,dum3df2)
+    DEALLOCATE(dum3d,dum3df,dum3df2,dum2dt1,dum2dt2)
     RETURN
   END SUBROUTINE fill_wrfs 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -796,6 +858,8 @@ CONTAINS
       METHOD_LINEAR,vsf)
   CALL interpolate_standard(nxw,nyw,tsf_wrf, nxl,nyl,xloc,yloc, &
       METHOD_LINEAR,tsf)
+  CALL interpolate_standard(nxw,nyw,tsk_wrf, nxl,nyl,xloc,yloc, &
+      METHOD_LINEAR,tsk) ! added tsk by Wei-Ting (130312)
   CALL interpolate_standard(nxw,nyw,dsf_wrf, nxl,nyl,xloc,yloc, &
       METHOD_LINEAR,dsf)
   CALL interpolate_standard(nxw,nyw,rsf_wrf, nxl,nyl,xloc,yloc, &
@@ -804,6 +868,9 @@ CONTAINS
       METHOD_LINEAR,psf)
   CALL interpolate_standard(nxw,nyw,topo_wrf, nxl,nyl,xloc,yloc, &
       METHOD_LINEAR,topo_wrfl)
+  CALL interpolate_standard(nxw,nyw,pcp_wrf, nxl,nyl,xloc,yloc, &
+      METHOD_LINEAR,pcp) ! added pcp by Wei-Ting (130312)
+  where ( pcp < 0 ) ; pcp = 0 ; endwhere ! keep pcp >= 0 added by Wei-Ting (130312)
 
   ! Adjust for terrain differences between WRF and LAPS
   PRINT *, "Adjusting WRF surface to LAPS surface"
@@ -820,6 +887,7 @@ CONTAINS
               lp = wgt1*ALOG(pr_laps(k)) + wgt2*ALOG(psf(i,j))
               psf(i,j) = EXP(lp)
               tsf(i,j) = wgt1*t3(i,j,k)  + wgt2*tsf(i,j)
+              tsk(i,j) = wgt1*t3(i,j,k)  + wgt2*tsk(i,j) ! added tsk by Wei-Ting (130312)
               rsf(i,j) = wgt1*sh(i,j,k)  + wgt2*rsf(i,j)
               usf(i,j) = wgt1*u3(i,j,k)  + wgt2*usf(i,j)
               vsf(i,j) = wgt1*v3(i,j,k)  + wgt2*vsf(i,j)
@@ -835,6 +903,7 @@ CONTAINS
               wgt1 = 1.0 - wgt2
               psf(i,j) = wgt1 * psf(i,j) + wgt2*pr_laps(k)
               tsf(i,j) = wgt1 * tsf(i,j) + wgt2*t3(i,j,k)
+              tsk(i,j) = wgt1 * tsk(i,j) + wgt2*t3(i,j,k) ! added tsk by Wei-Ting (130312)
               rsf(i,j) = wgt1 * rsf(i,j) + wgt2*sh(i,j,k)
               usf(i,j) = wgt1 * usf(i,j) + wgt2*u3(i,j,k)
               vsf(i,j) = wgt1 * vsf(i,j) + wgt2*v3(i,j,k) 
