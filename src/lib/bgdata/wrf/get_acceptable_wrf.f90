@@ -16,7 +16,7 @@ SUBROUTINE get_acceptable_wrf(bgpath,i4time_needed,nfiles, &
   INTEGER,INTENT(IN)            :: i4time_needed
   INTEGER,INTENT(OUT)           :: nfiles
   INTEGER,INTENT(OUT)           :: i4times_found(2)
-  CHARACTER(LEN=256)            :: filenames(2)
+  CHARACTER(LEN=256)            :: filenames(3) ! plus 1 dim. by Wei-Ting (130312) to put previous time
   CHARACTER(LEN=256)            :: thisfile
   CHARACTER(LEN=256)            :: all_files(20000)
 
@@ -46,6 +46,7 @@ SUBROUTINE get_acceptable_wrf(bgpath,i4time_needed,nfiles, &
          nfiles = 1
          i4times_found(1) = i4time
          filenames(1)     = thisfile
+         filenames(3)     = all_files(i-1) ! added by Wei-Ting (130312) to get previous time
          return
       ELSE
         delta_t = i4time_needed - i4time
