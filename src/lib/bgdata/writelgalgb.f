@@ -685,7 +685,7 @@ c --- Precipitation
       warncnt=0
       do i=1,nx_laps
       do j=1,ny_laps
-         if(rp_sfc(i,j).ge.missflag.and.warncnt.lt.100)
+         if(pcp_sfc(i,j).ge.missflag.and.warncnt.lt.100) ! modified rp_sfc -> pcp_sfc by Wei-Ting (130312)
      +              then
             print*,'Missing data at ',i,j,' in precip - pcp '
             warncnt=warncnt+1
@@ -693,7 +693,7 @@ c --- Precipitation
       enddo
       enddo
       var='PCP'
-      units='k/m**2'
+      units='mm' ! modified units ( k/m**2 -> mm ) by Wei-Ting (130312)
       print*,'PCP'
       call write_laps(bgtime,bgvalid,outdir,ext
      .           ,nx_laps,ny_laps,1,1,var,0,lvl_coord
