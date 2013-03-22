@@ -25,7 +25,7 @@ SUBROUTINE lga_driver_wrfarw(bgpath, cmodel, &
   ! Local variables
   INTEGER              :: nfiles,cdf,istatus
   INTEGER              :: files_i4time(2)  
-  CHARACTER(LEN=256)   :: filenames(2)
+  CHARACTER(LEN=256)   :: filenames(3) ! plus 1 dim. by Wei-Ting (130312) to put previous time
   CHARACTER(LEN=19)    :: reftime
   REAL                 :: dt
   INTEGER              :: itimestep, tau_hr, tau_min, tau_sec 
@@ -70,7 +70,7 @@ SUBROUTINE lga_driver_wrfarw(bgpath, cmodel, &
       print *, "Already done: ",already_done
       IF (.NOT. already_done) THEN
         PRINT *, "Calling wrf2lga"
-        CALL wrf2lga(filenames(1),i4time_now,cmodel,istatus)
+        CALL wrf2lga(filenames(1:3:2),i4time_now,cmodel,istatus) ! modified by Wei-Ting (130312) to insert previous time ( filename(1) -> filname(1:3:2) )
         IF (istatus .NE. 1) THEN
           PRINT *, "Failure in wrf2lga"
           lga_status = 0
