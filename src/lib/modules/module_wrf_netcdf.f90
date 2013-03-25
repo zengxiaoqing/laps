@@ -209,6 +209,7 @@ CONTAINS
     INTEGER, INTENT(IN)                  :: lun
     CHARACTER(LEN=19), INTENT(OUT)       :: reftime
     REAL, INTENT(OUT)                    :: dt
+    REAL                                 :: xtime
     INTEGER, INTENT(OUT)                 :: itimestep
     INTEGER, INTENT(OUT)                 :: tau_hr, tau_min, tau_sec, status
 
@@ -224,6 +225,16 @@ CONTAINS
     rcode = NF_GET_ATT_REAL(lun,0,"DT",dt)
     rcode = NF_INQ_VARID(lun,"ITIMESTEP",vid)
     rcode = NF_GET_VAR_INT(lun,vid,itimestep)
+
+    !!!!! Modified by Wei-Ting (20130307) :            !!!!!
+    !!!!!     Use XTIME instead of ITIMESTEP FOR WRFV3 !!!!!
+    if (rcode .lt. 0) then
+      write(6,*)' Warning: ITIMESTEP not found, looking for XTIME in get_wrf2_timeinfo'
+      rcode = NF_INQ_VARID(lun,"XTIME",vid)
+      rcode = NF_GET_VAR_REAL(lun,vid,xtime)
+      itimestep = INT(xtime*60/dt)
+    endif
+    !!!!! End of Modifying !!!!!
     
     tau_hr = INT(FLOAT(itimestep)*dt)/3600
     tau_sec = MOD(INT(FLOAT(itimestep)*dt),3600)
@@ -1021,6 +1032,7 @@ END SUBROUTINE get_wrf2_timeinfo
     INTEGER, PARAMETER  :: pause_sec = 30
     INTEGER             :: secs_waited
     INTEGER             :: cdf, rcode, dimid, ntimes,status,vid,itimestep
+    REAL                :: dt,xtime
     file_ready = .false.
     file_exists = .false.
     num_checks = 0
@@ -1052,6 +1064,18 @@ END SUBROUTINE get_wrf2_timeinfo
           IF (ntimes.GT.0) THEN
             rcode = NF_INQ_VARID(cdf,"ITIMESTEP",vid)
             rcode = NF_GET_VAR_INT(cdf,vid,itimestep)
+            
+            !!!!! Modified by Wei-Ting (20130307) :            !!!!!
+            !!!!!     Use XTIME instead of ITIMESTEP FOR WRFV3 !!!!!
+            if (rcode .lt. 0) then
+              write(6,*)' Warning: ITIMESTEP not found, looking for XTIME in wrfio_wait'
+              rcode = NF_GET_ATT_REAL(cdf,0,"DT",dt)
+              rcode = NF_INQ_VARID(cdf,"XTIME",vid)
+              rcode = NF_GET_VAR_REAL(cdf,vid,xtime)
+              itimestep = INT(xtime*60/dt)
+            endif
+            !!!!! End of Modifying !!!!!
+
             print *,"rcode/itimestep ", rcode,itimestep
             IF ((rcode .EQ. NF_NOERR) .AND. (itimestep .GE. 0))THEN
               CALL date_and_time(date_ready,time_ready)
