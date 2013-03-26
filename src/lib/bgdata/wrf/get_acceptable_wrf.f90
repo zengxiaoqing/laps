@@ -71,8 +71,8 @@ SUBROUTINE get_acceptable_wrf(bgpath,i4time_needed,nfiles, &
   ! match.  We need to check if we got appropriate
   ! bounding files
  
-  IF ( (i4times_found(1) .LT. dtmax).AND. &
-       (i4times_found(2) .GT. dtmin) ) THEN
+  IF ( (i4times_found(1)-i4time_needed .LT. dtmax).AND. & ! add -i4time_needed by Wei-Ting (130326)
+       (i4times_found(2)-i4time_needed .GT. dtmin) ) THEN ! add -i4time_needed by Wei-Ting (130326)
      nfiles = 2
   ELSE
      nfiles = 0
