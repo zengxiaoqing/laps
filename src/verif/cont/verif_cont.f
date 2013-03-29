@@ -236,8 +236,10 @@
 
          if(trim(type_a(ifield)) .eq. 'rdr')then
              nk_cont = NZ_L
+             istart = 0
          else
              nk_cont = 1
+             istart = 1
          endif
 
          do imodel = 1,n_fdda_models
@@ -264,7 +266,7 @@
      1                                      //'/'
            len_cont = len_verif + 6 + lenvar + len_model
 
-           do itime_fcst = 0,n_fcst_times
+           do itime_fcst = istart,n_fcst_times
 
 !            itime = itime_fcst + 1
 
