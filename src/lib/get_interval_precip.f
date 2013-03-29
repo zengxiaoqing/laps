@@ -43,7 +43,8 @@ C    abdel
         do i4time = i4time_start+ipcp_cycle_time,i4time_end
      1             ,ipcp_cycle_time
 
-            if(nf .le. 2)then
+!           if(nf .le. 2)then
+            if(.false.)then
                 call get_laps_multi_2d(i4time,ext,var_2d
      1                                ,units_2d,comment_2d,ni,nj,nf
      1                                ,pcp_buf_2d,istatus_file)
@@ -61,6 +62,12 @@ C    abdel
             endif                
 
             do i = 1,nf
+                call array_range(pcp_buf_2d,ni,nj,rmin,rmax
+     1                          ,r_missing_data)
+                write(6,*)' get_interval_precip range: ',nf,rmin,rmax 
+            enddo ! i
+
+            do i = 1,nf
                 call add_miss(pcp_2d(1,1,nf),pcp_buf_2d(1,1,nf)
      1                       ,pcp_2d(1,1,nf),ni,nj)
 !               call add_miss(pcp_2d,pcp_buf_2d
@@ -68,6 +75,11 @@ C    abdel
             enddo ! i
 
         enddo ! i4time
+
+        do i = 1,nf
+            call array_range(pcp_2d,ni,nj,rmin,rmax,r_missing_data)
+            write(6,*)' get_interval_precip total range: ',nf,rmin,rmax
+        enddo ! i
 
         return
         end
