@@ -71,6 +71,8 @@ SUBROUTINE ALLOCATOB
   ALLOCATE(IDXRADWN(4,FCSTGRD(1)*FCSTGRD(2)*FCSTGRD(3)*FCSTGRD(4)), &
              LAPSRADW(FCSTGRD(1)*FCSTGRD(2)*FCSTGRD(3)*FCSTGRD(4)), STAT=ER)
   IF (ER .NE. 0) THEN
+    print*,'Size too large: ',FCSTGRD(1)*FCSTGRD(2)*FCSTGRD(3)*FCSTGRD(4)
+    print*,'Size too large: ',FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4)
     PRINT*,'ALLOCATOB: cannot allocate memory for LAPS radial wind'
     STOP
   ENDIF
