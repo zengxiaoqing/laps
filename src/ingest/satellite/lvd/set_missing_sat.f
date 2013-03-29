@@ -91,11 +91,11 @@ c        rhigh=255.
 
       if(csattype.eq.'rll')then ! Bad range thresholds
          write(6,*)' scale_img passed in = ',scale_img
-         if(csatid .ne. 'meteos' .AND. csatid .ne. 'fy')then
-             scale_img = .01
-         else
-             scale_img = .1
-         endif
+!        if(csatid .ne. 'meteos' .AND. csatid .ne. 'fy')then
+!            scale_img = .01
+!        else
+!            scale_img = .1
+!        endif
 
          rhigh = 500. /scale_img
          rlow  = 163.1/scale_img
