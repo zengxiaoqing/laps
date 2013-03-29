@@ -13,6 +13,7 @@ setenv DOMAIN_NAME $4
 
 setenv N_VERIF_TIMES $5
 setenv NTIMES $5
+setenv REPODIR $6
 
 @ NTIMES = $NTIMES + 1
 
@@ -29,11 +30,17 @@ echo $N_VERIF_TIMES > $LAPS_DATA_ROOT/lapsprd/verif/n_fcst_times.dat
 
 # sync stage IV files
 if (-e $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl) then
-    setenv REPODIR /w3/jet/fab/st4repo
+    if ($REPODIR == "") then
+        if (-d /w3/jet) then
+            setenv REPODIR /w3/jet/fab/st4repo
+        else
+            setenv REPODIR /scratch1/portfolios/BMC/dtc/holub/st4repo
+        endif                                            
+    endif
+
     if (-d $REPODIR) then
-        cd $REPODIR                      
-        echo "perl $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl $4 $1 >& $LAPS_DATA_ROOT/log/ingest_stageIV_files.log"
-              perl $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl $4 $1 >& $LAPS_DATA_ROOT/log/ingest_stageIV_files.log 
+        echo "perl $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl $4 $1 $REPODIR >& $LAPS_DATA_ROOT/log/ingest_stageIV_files.log"
+              perl $LAPSINSTALLROOT/etc/ingest_stageIV_files.pl $4 $1 $REPODIR >& $LAPS_DATA_ROOT/log/ingest_stageIV_files.log 
     else
         echo "NOTE: $REPODIR not found..."
     endif
