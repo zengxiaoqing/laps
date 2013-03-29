@@ -21,8 +21,8 @@ subroutine read_laps_radar
   implicit none
 
   ! Get radar radial wind obs:
-  print*,'Reading radial wind... DUE TO RADAR FORMAT CHANGE: NO RADIAL WIND ingested!' 
-  ! if (fcstgrd(1) .lt. 1000) call radialwind
+  ! print*,'Reading radial wind... DUE TO RADAR FORMAT CHANGE: NO RADIAL WIND ingested!' 
+  if (fcstgrd(1) .lt. 10000) call radialwind
 
   ! Get radar reflectivity obs:
   print*,'Reading reflectivity...'
@@ -266,11 +266,12 @@ subroutine reflectivity
     if (cldf(i,j,k,ll) .lt. 0.1 .and. refl(i,j,k,ll) .gt. 5.0) &
       bk0(i,j,k,ll,numstat+1) = 0.0
 
-    if (cldf(i,j,k,ll) .ge. 0.1) then
-      rhc = make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,ll,temprtur)-273.15, &
-                     cldf(i,j,k,ll)**0.2,0.0)
-      bk0(i,j,k,ll,numstat+1) = amax1(bk0(i,j,k,ll,numstat+1),rhc)
-    endif
+    ! Covering the following 5 lines: Testing no bound for cloudy area without reflectivity:
+    !if (cldf(i,j,k,ll) .ge. 0.1) then
+    !  rhc = make_ssh(z_fcstgd(k)/100.0,bk0(i,j,k,ll,temprtur)-273.15, &
+    !                 cldf(i,j,k,ll)**0.2,0.0)
+    !  bk0(i,j,k,ll,numstat+1) = amax1(bk0(i,j,k,ll,numstat+1),rhc)
+    !endif
 
     ! RH =100% if both cloud and reflectivity occur:
     if (cldf(i,j,k,ll) .ge. 0.1 .and. refl(i,j,k,ll) .ge. 5.0) &
