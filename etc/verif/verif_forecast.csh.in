@@ -60,6 +60,7 @@ setenv MEMBERS_FILE $LAPS_DATA_ROOT/lapsprd/verif/members.txt
 
 setenv VERIF_INTVL `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v verif_intvl`
 @ VERIF_FCST_LEN = ( $NLINE - 1 ) * $VERIF_INTVL
+@ VERIF_FCST_LEN_HH = $VERIF_FCST_LEN / 3600
 #setenv VERIF_FCST_LEN `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
 #setenv MODEL_FCST_LEN  `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v model_fcst_len`
 
@@ -142,6 +143,7 @@ echo "SUBDIR = $SUBDIR"
 echo "VAR = $VAR"  
 echo "FILE = $FILE"  
 echo "VERIF_FCST_LEN = $VERIF_FCST_LEN"
+echo "VERIF_FCST_LEN_HH = $VERIF_FCST_LEN_HH"
 ls -l $FILE                                                     
 
 # Stats Files In General:
@@ -195,7 +197,7 @@ echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNU
 if ($SUBTYPE == "") then 
     echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
 else
-    echo 'set xrange [00:06]'                                            >> $GNUPLOTFILE
+    echo 'set xrange [00:'$VERIF_FCST_LEN_HH']'                          >> $GNUPLOTFILE
 endif
 #echo 'set yrange [0:'$YRANGE']'                                           >> $GNUPLOTFILE
 if ($VAR == "S8A") then                                       
