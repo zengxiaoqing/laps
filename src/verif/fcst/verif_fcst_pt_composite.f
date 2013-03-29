@@ -207,6 +207,18 @@
                  enddo
              endif ! NAM model
 
+!            Accept just 6-hourly forecasts from the NAM-NH model
+             if(trim(c_fdda_mdl_src(imodel)) .eq. 'nam-nh')then 
+                 nam_fcst_intvl = 21600                           
+                 do itime_fcst = 0,n_fcst_times
+                     i4_fcst = itime_fcst*model_verif_intvl      
+                     if(i4_fcst .ne. 
+     1                 (i4_fcst/nam_fcst_intvl)*nam_fcst_intvl)then
+                         n_plot_times_m(imodel,itime_fcst,ifield) = 0
+                     endif
+                 enddo
+             endif ! NAM model
+
 !            Accept just 1-hourly 3D/FUA fcsts from the HRRR model
              if(trim(c_fdda_mdl_src(imodel)) .eq. 'wrf-hrrr' .AND.
      1          (var_a(ifield) .eq. 'TPW' .or. 
