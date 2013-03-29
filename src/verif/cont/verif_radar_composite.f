@@ -63,13 +63,15 @@
         integer n_fields
         parameter (n_fields=6)
         character*10 var_a(n_fields)
-        integer nthr_a(n_fields) ! number of thresholds for each field
+        integer nthr_a(n_fields)   ! number of thresholds for each field
+        integer istart_a(n_fields) ! start time for each field              
         character*2 c2_region
         character*10 c_thr
 
 !       Specify what is being verified
         data var_a  /'REF','LMR','PCP_01','PCP_03','PCP_06','PCP_24'/ ! 3-D / composite ref
-        data nthr_a /5,5,7,7,7,7/        
+        data nthr_a   /5,5,7,7,7,7/        
+        data istart_a /0,0,1,1,1,1/        
 
         integer,parameter :: k12 = selected_int_kind(12)
         integer (kind=k12) :: contable(0:1,0:1)
@@ -193,13 +195,12 @@
                 enddo
             endif
 
-!           Only LMR available from the NAM, every 3 hours
+!           Only LMR & PCP_03 available from the NAM, every 3 hours
             if(trim(c_fdda_mdl_src(imodel)) .eq. 'nam')then
-                do ifield = 1,n_fields ! only LMR is available
-                    if(var_a(ifield) .ne. 'LMR')then
-                        n_plot_times_m(imodel,:,ifield) = 0
-                    else ! only every 3 hours is available
-                        nam_fcst_intvl = 10800                           
+                do ifield = 1,n_fields                                 
+                    if(var_a(ifield) .eq. 'LMR'                          
+     1            .OR. var_a(ifield) .eq. 'PCP_03')then ! LMR & PCP_03 avail                    
+                        nam_fcst_intvl = 10800          ! every 3 hours
                         do itime_fcst = 0,n_fcst_times
                             i4_fcst = itime_fcst*model_verif_intvl      
                             if(i4_fcst .ne. 
@@ -209,6 +210,29 @@
      1                                                               = 0
                             endif
                         enddo
+                    else 
+                        n_plot_times_m(imodel,:,ifield) = 0
+                    endif
+                enddo
+            endif
+
+!           Only LMR & PCP_06 available from the NAM-NH, every 6 hours
+            if(trim(c_fdda_mdl_src(imodel)) .eq. 'nam-nh')then
+                do ifield = 1,n_fields                                 
+                    if(var_a(ifield) .eq. 'LMR'                          
+     1            .OR. var_a(ifield) .eq. 'PCP_06')then ! LMR & PCP_06 avail                    
+                        nam_fcst_intvl = 21600          ! every 6 hours
+                        do itime_fcst = 0,n_fcst_times
+                            i4_fcst = itime_fcst*model_verif_intvl      
+                            if(i4_fcst .ne. 
+     1                        (i4_fcst/nam_fcst_intvl)*nam_fcst_intvl
+     1                                                             )then      
+                                n_plot_times_m(imodel,itime_fcst,ifield)
+     1                                                               = 0
+                            endif
+                        enddo
+                    else 
+                        n_plot_times_m(imodel,:,ifield) = 0
                     endif
                 enddo
             endif
@@ -464,8 +488,8 @@
                enddo ! jn
                enddo ! in
 
-!              Test for missing data in all times/models for this dbz
-               do itime_fcst = 0,n_fcst_times
+!              Test for missing data in all times/models for this threshold
+               do itime_fcst = istart_a(ifield),n_fcst_times
                  do imodel = 2,n_fdda_models
                    i_good_timestep_model = 0
                    do in = 0,1
