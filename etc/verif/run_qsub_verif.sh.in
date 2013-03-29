@@ -48,10 +48,10 @@ echo "umask 002"                  >> $script
 echo " "                                                        >> $script
 echo " echo 'Running this verif_fcst_driver.csh command...'"    >> $script
 
-#/home/oplapb/builds/laps/etc/verif/verif_fcst_driver.csh /pan1/projects/dlaps/analysis/laps_ci 21600.0  5.75  900 20 > /pan1/projects/dlaps/analysis/laps_ci/log/verif_fcst_driver.log.`date +\%H` 2>&
+#@prefix@/etc/verif/verif_fcst_driver.csh /pan1/projects/dlaps/analysis/laps_ci 21600.0  5.75  900 20 > /pan1/projects/dlaps/analysis/laps_ci/log/verif_fcst_driver.log.`date +\%H` 2>&
 
-echo " echo '@CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model_cycle_time $delay $domain_name $n_verif_steps $remote_dataroot'                                                     "   >> $script
-echo "       @CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model_cycle_time $delay $domain_name $n_verif_steps $remote_dataroot > $lapsdataroot/log/verif_fcst_driver.log.`date +\%H`"   >> $script
+echo " echo '@CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model_cycle_time $delay $domain_name $n_verif_steps'                                                     "   >> $script
+echo "       @CSH@ @prefix@/etc/verif/verif_fcst_driver.csh $lapsdataroot $model_cycle_time $delay $domain_name $n_verif_steps > $lapsdataroot/log/verif_fcst_driver.log.`date +\%H`"   >> $script
 
 echo " "                                                        >> $script
 echo " "                                                        >> $script
@@ -76,8 +76,8 @@ else
 
     echo " "
     echo "Making reflectivity montage via ssh"
-    echo ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
-         ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
+    echo ssh pinky.fsl.noaa.gov @PERL@ @prefix@/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
+         ssh pinky.fsl.noaa.gov @PERL@ @prefix@/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
 
     rsync_qsub=yes 
 
