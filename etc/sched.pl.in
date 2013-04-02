@@ -601,7 +601,8 @@ foreach $exe (@LAPS_EXE){
        $wgi_script_name = "sfc";
     }
 
-    foreach(@locks){
+    if(! defined $opt_e){ 
+      foreach(@locks){
 	$_ =~ /^\.locklaps\.(\d+)$/;
 	my $jpid = $1;    
 	open(LFH,"$LAPS_LOG_PATH/$_");
@@ -629,8 +630,8 @@ foreach $exe (@LAPS_EXE){
 #
 	kill -9,$cid if($cid>0);
 	unlink "$LAPS_LOCK_PATH/$_";
+      }
     }
-
 
     $t=gmtime(); 
     my $log = $exe;
