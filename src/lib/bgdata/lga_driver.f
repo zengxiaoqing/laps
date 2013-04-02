@@ -889,6 +889,12 @@ c       ----------------------------------------------------
            print*,'Xrange ',ixmin,ixmax
            print*,'Yrange ',iymin,iymax
 c
+           if(ixmin .gt. ixmax .OR. iymin .gt. iymax)then
+               write(6,*)' WARNING: No valid bounding box'
+               lga_status = -nf
+               goto 999 ! deallocate/return
+           endif
+
            istatus=ishow_timer()
 
            allocate( htvi(nx_bg,ny_bg,nz_laps),   !Height (m)
