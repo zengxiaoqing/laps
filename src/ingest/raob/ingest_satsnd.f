@@ -31,6 +31,8 @@
 
       dir_in = path_to_raw_satsnd
 
+      write(6,*)' Subroutine ingest_satsnd - path is: ',trim(dir_in)
+
       ext_in = 'satsnd'
 
       call s_len(dir_in,len_dir_in)
@@ -61,7 +63,7 @@
 
 !     Get list of files
       call get_file_times(c_filespec,max_files,c_fnames
-     1                      ,i4times,i_nbr_files_ret,istatus)
+     1                   ,i4times,i_nbr_files_ret,istatus)
 
       call get_tempob_time_window('SATSND',i4_satsnd_window,istatus)
       if(istatus .ne. 1)return
@@ -74,6 +76,7 @@
           call open_ext(lun_out,i4time_sys,ext(1:3),istatus)
       else
           write(6,*)' No raw data files identified:',' *.',ext_in
+          write(6,*)' c_filespec = ',trim(c_filespec)
           goto999
       endif
 
