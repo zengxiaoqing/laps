@@ -263,7 +263,13 @@ c analysis pressure of level is inbetween bg pressures of levels kk and kk+1
 
          ixtest = (ixmin+ixmax)/2
          iytest = (iymin+iymax)/2
-         write(6,*)k,htvi(ixtest,iytest,k),tpvi(ixtest,iytest,k)
+         if(ixtest .lt.  1 .OR. iytest .lt.  1 .OR. 
+     1      ixtest .gt. nx .OR. iytest .gt. ny      )then
+             write(6,*)' WARNING: ixtest/iytest out of bounds',ixtest
+     1                                                        ,iytest
+         else
+             write(6,*)k,htvi(ixtest,iytest,k),tpvi(ixtest,iytest,k)
+         endif
 
       enddo ! k
 
