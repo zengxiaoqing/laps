@@ -67,11 +67,11 @@ c *** The fourth line specifies the LAPS domain designation.
 c *** Each following line specifies the grid dimensions for each corresponding
 c        bgmodel defined above.
 c
-      integer nx_laps,ny_laps,nz_laps,       !LAPS grid dimensions
-     .          laps_cycle_time,             !LAPS cycle time
+      integer nx_laps,ny_laps,nz_laps,       ! LAPS grid dimensions
+     .          laps_cycle_time,             ! LAPS cycle time
      .          nx_bg,ny_bg,nz_bg,
-     .          lga_status                   !status returned from lga_driver
-c                                            ! 1=good 0=bad
+     .          lga_status                   ! status returned from lga_driver
+c                                            ! 1 = good, <1 = bad
       integer   np,ntmin,ntmax
 c
 c
