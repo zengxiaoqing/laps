@@ -68,17 +68,13 @@ c        bgmodels = 10 ---> GFS_ISO or RUC_ISO.  This lets us ingest
 c                     netCDF files created from GFS or RUC GRIB data run through
 c                     Unidatas gribtonc decoders.
 c        bgmodels = 11 ---> WRFARW.  This allows raw netcdf output files from
-c                     WRF-ARW v2.1 and create the required lga/lgb files.
+c                     WRF-ARW v3.x or v2.1 to create the required lga/lgb files.
 c                     Does not time interpolation yet, though, so if you don't
 c                     have a raw WRF file with an exact match of the lga background
 c                     time needed, it returns to the main lga program with a 0
 c                     status to force lga to look for the next bgmodel source in your
 c                     background.nl list. 
 c 
-c                     Note that for WRF version 3 NetCDF input it is best to use 
-c                     the LFMPOST program to make FUA and FSF files instead of 
-c                     running the LGA program.
-c
 c        bgmodels = 12 ---> ECMWF - two options available as listed below:
 c                           ESRL_NETCDF_LL---> global  area netCDF file from ESRL ITS. (Not tested 6-07)
 c                           FMI_NETCDF_LL ---> limited area netCDF file with ECMWF data 
