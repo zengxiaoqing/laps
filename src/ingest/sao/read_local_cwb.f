@@ -42,10 +42,10 @@ cdis
      ~           pcp24hr, dd, ff, wgdd, wgff, p, mslp, pcc, pc, sr, st,
      ~           num, istatus )
         
-      integer, parameter :: maxobs = 600
+      integer, parameter :: maxobs = 1100
       integer, parameter :: maxAgr =  20
-      integer, parameter :: maxCum = 450
-      integer, parameter :: maxShp = 150
+      integer, parameter :: maxCum = 800
+      integer, parameter :: maxShp = 250
 
       character(*)   stname(maxobs)
       character(*)  inpath
@@ -109,9 +109,12 @@ cdis
 
       np= np +numAgr
       nq= np +maxCum
-      inpath= inpath(1:len_inpath)//'cum/'
-
-      call read_cum_cwb (inpath, maxCum, badflag, i4time_sys,
+c      inpath= inpath(1:len_inpath)//'cum/'
+      inpath= inpath(1:len_inpath)//'new_cum/'
+c
+c  2013-04 change  cum data format 
+c      call read_cum_cwb (inpath, maxCum, badflag, i4time_sys,
+      call read_newcum_cwb (inpath, maxCum, badflag, i4time_sys,
      ~                   stnTp(np:nq), stname(np:nq), 
      ~                   lons(np:nq), lats(np:nq), elev(np:nq),
      ~                   pcp1hr(np:nq), pcp3hr(np:nq), 
@@ -122,13 +125,13 @@ cdis
       num= numAgr +numCum
       np=  np +numCum
       nq=  np +maxShp
-      inpath= inpath(1:len_inpath)//'shp/'
+      inpath= inpath(1:len_inpath)//'new_shp/' ! modified by Tin
 
       call read_shp_cwb (inpath, maxShp, badflag, i4time_sys,
      ~                   stnTp(np:nq), stname(np:nq),
      ~                   lons(np:nq), lats(np:nq), elev(np:nq),
-     ~                   p(np:nq), t(np:nq), dd(np:nq), ff(np:nq), 
-     ~                   numShp, istatusShp)       
+     ~                   p(np:nq),t(np:nq),rh(np:nq),dd(np:nq), 
+     ~                   ff(np:nq),numShp, istatusShp)       
 
       nt= numAgr +numCum +numShp
 
@@ -181,7 +184,7 @@ c======================================================================
       integer  istart(30), iend(30)
  
       character(*)  :: stnTp(maxobs), stname(maxobs), inpath
-      character(13) :: cvt_i4time_wfo_fname13, a13time_eat
+      character(13) :: cvt_i4time_wfo_fname13, a13time_eat,a13time_eat2
       character     :: filename*80, line*180
  
 c                        Stuff for the agricultural data.
@@ -252,17 +255,19 @@ c
 	    return
 	 endif
       enddo
-
+     
       do 450 j= 1,maxobs
 
          read (11,'(a)',end=500,err=450) line
+
+         call s_len ( line, len_line )
+         if ( len_line < 1 ) go to 500
 
 c                  Parse the string into contiguous characters
          istart= 0
          iend=   0
          ivar= 1
          istart(1)= 1
-
          do i= 1,idash
 	    if ( i == 1 )  go to 100
 
@@ -814,7 +819,7 @@ c     Routine to read the CWB ASCII rain gauge files.
 c     
 c======================================================================
 c
-      integer, parameter :: loopnum = 450 
+      integer, parameter :: loopnum = 800 
       integer, parameter :: num23= 23
 
       real :: lats(maxobs), lons(maxobs), elev(maxobs)
@@ -839,7 +844,7 @@ c                    Stuff for the rain gauge metadata.
 
       data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
  
-c            Get the rain gauge metadata (station information).
+c             Get the rain gauge metadata (station information).
       call read_cum_stntbl (inpath, maxobs, badflag,
      ~                      stn_id_master, stn_name_master,
      ~                      elev_master, num_master, istatus)
@@ -1101,7 +1106,7 @@ c                        Hit end of file...that's it.
 
       subroutine read_shp_cwb (inpath, maxobs, badflag, i4time_sys,
      ~                         stnTp, stname, lats, lons, elev,       ! O
-     ~                         p, t, dd, ff, num, istatus)            ! O
+     ~                         p, t,rh, dd, ff, num, istatus)            ! O
  
 c======================================================================
 c
@@ -1109,13 +1114,14 @@ c     Routine to read the CWB ASCII shp files.
 c     
 c======================================================================
  
-      integer, parameter :: loopnum= 150 
+      integer, parameter :: loopnum= 250
+      integer :: imatch,i_invalid
       real lats(maxobs), lons(maxobs), elev(maxobs)
-      real p(maxobs), t(maxobs), dd(maxobs), ff(maxobs)
+      real p(maxobs),t(maxobs),dd(maxobs),ff(maxobs),rh(maxobs)
 
       character(*)  :: stnTp(maxobs), stname(maxobs), inpath
       character(80) :: filename
-      character(13) :: cvt_i4time_wfo_fname13, a13time_eat
+      character(13) :: cvt_i4time_wfo_fname13, a13time_eat,a13time_eat2
 
 c                         stuff for the shp metadata.
       real  lat_master(maxobs), lon_master(maxobs), elev_master(maxobs)       
@@ -1124,14 +1130,18 @@ c                         stuff for the shp metadata.
       character(4) :: hhmm(maxobs)
  
 c                    Get the shp metadata (station information).
-      call read_shp_stntbl (inpath, maxobs, badflag,
-     ~                      stn_id_master, stn_name_master,
-     ~                      lat_master, lon_master, elev_master,
-     ~                      num_master, istatus)
-      if ( istatus /= 1 ) then
-         write(6,*)' Error reading shp station table'
-         return
-      endif
+
+c     ===== Tin added =====
+      write(*,*) "***** TIN TEST:START READ SHP DATA *****"
+
+!      call read_shp_stntbl (inpath, maxobs, badflag,
+!     ~                      stn_id_master, stn_name_master,
+!     ~                      lat_master, lon_master, elev_master,
+!     ~                      num_master, istatus)
+!      if ( istatus /= 1 ) then
+!         write(6,*)' Error reading shp station table'
+!         return
+!      endif
 
 c   fill the output arrays with something, then open the file to read
  
@@ -1146,16 +1156,21 @@ c   fill the output arrays with something, then open the file to read
       i4time_file_eat= i4time_sys +8*3600             ! convert GMT to EAT
 
       a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
+      
+      a13time_eat2 = cvt_i4time_wfo_fname13(i4time_sys) ! added by Tin (Use UTC)
 c
 c modified by min-ken.hsieh
 c filename include hhmm information to get each 15 min data
 c
-      filename= 'Data.CWB.SHP.'
-     ~           //a13time_eat(1:4)//'-'//a13time_eat(5:6)   ! yyyy_mm
-     ~           //'-'//a13time_eat(7:8)                     ! dd
-     ~           //'_'//a13time_eat(10:13) //'.shp'        ! hh
+!      filename= 'Data.CWB.SHP.'
+!     ~           //a13time_eat(1:4)//'-'//a13time_eat(5:6)   ! yyyy_mm
+!     ~           //'-'//a13time_eat(7:8)                     ! dd
+!     ~           //'_'//a13time_eat(10:13) //'.shp'        ! hh
 
-      write(6,*) ' Mesonet file ',filename
+      filename= a13time_eat2(1:8)//a13time_eat2(10:13)//'.' ! yyyymmddhhMM
+     ~           //'QPESUMS_STATION.15M.mdf'
+
+      write(6,*) ' SHP: file ',filename
 
       call s_len ( inpath, len_inpath )
       call s_len ( filename, len_fname )
@@ -1164,11 +1179,20 @@ c
 
       open (11,file=inpath(1:len_inpath)//filename(1:len_fname),
      ~         status='old',err=980)
+      do j=1,3
+         read(11,*)
+      end do
 
       do i= 1,loopNum
-         read (11,511,end=600,err=990) stn_id(i), 
-     ~                                 hhmm(i),p(i), t(i), ff(i), dd(i) 
- 511     format (5x, a4, 9x,a4,1x, 4f6.1)
+!         read (11,511,end=600,err=990) stn_id(i), 
+!     ~                                 hhmm(i),p(i), t(i), ff(i), dd(i) 
+! 511     format (5x, a4, 9x,a4,1x, 4f6.1)
+c modified by Tin
+         read (11,511,end=600,err=990) stname(i),lats(i),
+     ~                                 lons(i),elev(i),dd(i),
+     ~                                 ff(i),t(i),rh(i),p(i),hhmm(i)
+ 511     format(a6,21x,f7.4,2x,f8.4,2x,f6.1,2x,f6.1,
+     ~          1x,f6.1,1x,f6.1,4x,f4.2,2x,f6.1,90x,a4)
          num= num +1
       enddo
 
@@ -1180,7 +1204,7 @@ c filter out data which labeled wrong time
 c and find out how many stns match table
 c 
       i_match = 0 
-      i_ivalid = 0
+      i_invalid = 0
       do i= 1,num
          if (hhmm(i)/=a13time_eat(10:13)) then
 	       i_invalid = i_invalid+1
@@ -1188,22 +1212,23 @@ c
 	       t(i)= badflag
                dd(i)= badflag
                ff(i)= badflag
+               rh(i)= badflag
          endif
 
-         do j= 1,num_master
-            if ( stn_id(i) == stn_id_master(j) ) then
-               stname(i)= stn_name_master(i)
-               lats(i)= lat_master(j)
-               lons(i)= lon_master(j)
-               elev(i)= elev_master(j)
-               imatch=1
-               i_match = i_match+1
-            endif
-         enddo
+!         do j= 1,num_master
+!            if ( stn_id(i) == stn_id_master(j) ) then
+!               stname(i)= stn_name_master(i)
+!               lats(i)= lat_master(j)
+!               lons(i)= lon_master(j)
+!               elev(i)= elev_master(j)
+!               imatch=1
+!               i_match = i_match+1
+!            endif
+!         enddo
 
-         if ( imatch == 0 ) then
-            write(6,*)' No station match ', stn_id(i), stn_id_master(j)       
-         endif
+!         if ( imatch == 0 ) then
+!            write(6,*)' No station match ', stn_id(i), stn_id_master(j)       
+!         endif
  
 c                               quality control
          if ( p(i) < 0 )  p(i)= badflag
@@ -1219,14 +1244,20 @@ c                               quality control
          else
             ff(i)= ff(i) * 1.94254        ! conv m/s to kt
          endif
- 
+          rh(i)=rh(i)*100.
+         if ( rh(i) < 0  )  rh(i)= badflag
+         if ( rh(i) > 100.  )  rh(i)=  100.
       enddo
 c                               end of file
       write(6,*) ' Total ', num, ' shp stations.'
       write(6,*) ' Found ', num - i_invalid, ' shp stations.'
-      write(6,*) ' Found ', i_match - i_invalid,
-     +			 ' shp stations match the table.'
+!      write(6,*) ' Found ', i_match - i_invalid,
+!     +			 ' shp stations match the table.'
       istatus= 1
+c     ===== Tin added =====
+!      write(*,*) dd
+!      write(*,*) i_match
+      write(*,*) "***** TIN TEST:END READ SHP DATA *****"
       return
  
  980  write(6,*) ' Warning: could not open shp data file ', filename
@@ -1316,3 +1347,144 @@ c                         Hit end of file...that's it.
       return
       end
 
+
+      subroutine read_newcum_cwb (inpath, maxobs, badflag, i4time_sys,
+     ~                         stnTp, stname, lons, lats, elev, 
+     ~                         pcp1hr, pcp3hr, pcp6hr, pcp24hr,      ! O
+     ~                         num, istatus)                         ! O
+c
+c======================================================================
+c
+c     Routine to read the CWB ASCII rain gauge files.
+c     
+c======================================================================
+c
+      integer, parameter :: loopnum = 800 
+
+      real :: lats(maxobs), lons(maxobs), elev(maxobs)
+      real :: pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
+      real :: pcp10min(maxobs),pcp12hr(maxobs),pcp24hr(maxobs)
+
+      integer :: dataMin(maxobs), dMin(maxobs,num23), d(12), flag
+ 
+      character(*)  :: stnTp(maxobs), stname(maxobs), inpath
+      character(80) :: filename
+      character(13) :: cvt_i4time_wfo_fname13, a13time_sys
+      character(2)  :: yy, mm, dd, hh
+
+c                    Stuff for the rain gauge metadata.
+
+      data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
+ 
+c   fill the output arrays with something, then open the file to read
+      istatus= 0
+      flag=    0
+      stnTp=   'CUM'
+      stn=     '     '
+      stname=  '     '
+      p1hrQ=   ' '
+      pcp1hrQ= ' '
+      pcp3hrQ= ' '
+      pcp6hrQ= ' '
+      p1hr=    badflag
+      pcp1hr=  badflag
+      pcp3hr=  badflag
+      pcp6hr=  badflag
+      pcp24hr= badflag
+
+      a13time_sys= cvt_i4time_wfo_fname13(i4time_sys)
+
+      read (a13time_sys( 1: 4),'(i4)') iy
+      read (a13time_sys( 5: 6),'(i2)') im
+      read (a13time_sys( 7: 8),'(i2)') id
+      read (a13time_sys(10:11),'(i2)') ih
+
+         iy= iy -2000
+         call i2a ( iy, yy )
+         call i2a ( im, mm )
+         call i2a ( id, dd )
+         call i2a ( ih, hh )
+         iy= iy +2000
+
+         filename= '20' //yy //mm //dd//hh //'00.' 
+     ~                                 //'QPESUMS_GAUGE.10M.mdf'      
+c         filename= 'Data.CWB.CUM_UDD.' //'20' //yy //'-' //mm //'-' 
+c     ~                                 //dd //'_' //hh //'.cum_hr'      
+         call s_len ( inpath, len_inpath )
+         call s_len ( filename, len_fname )
+ 
+
+
+         open (11,file=inpath(1:len_inpath)//filename(1:len_fname),
+     ~            status='old',err=980,iostat=istat)
+
+         do j=1,3
+           read(11,*)
+         end do
+ 
+            num=0
+         do i= 1,loopnum
+               read (11,501,iostat=istat)stname(i),lats(i),lons(i),      
+     ~                      elev(i),pcp1hr(i),pcp10min(i),pcp3hr(i),
+     ~                      pcp6hr(i),pcp12hr(i),pcp24hr(i)       
+c 501           format (8x,a8,9x,f7.4,2x,f8.4,f8.2,6f8.2)  
+ 501           format (a6,19x,f7.4,2x,f8.4,f8.2,6f8.2)  
+
+               if ( istat == -1 .or. istat == -2 )  exit
+               if ( istat > 0 .or. pcp1hr(i) == badflag ) then
+                  pcp1hr= badflag
+                  pcp3hr= badflag
+                  pcp6hr= badflag
+                  pcp12hr= badflag
+                  pcp24hr= badflag
+                  go to 990
+               endif
+
+               num= num +1
+c                               quality control
+            if ( pcp1hr(i) < 0  ) then
+               pcp1hr(i)= badflag
+            else
+               pcp1hr(i)= pcp1hr(i) *0.03937         ! conv mm to inch
+            endif
+ 
+            if ( pcp3hr(i) < 0 ) then
+               pcp3hr(i)= badflag
+            else
+               pcp3hr(i)= pcp3hr(i) *0.03937         ! conv mm to inch
+            endif
+ 
+            if ( pcp6hr(i) < 0 ) then
+               pcp6hr(i)= badflag
+            else
+               pcp6hr(i)= pcp6hr(i) *0.03937         ! conv mm to inch
+            endif
+
+            if ( pcp12hr(i) < 0 ) then
+               pcp12hr(i)= badflag
+            else
+               pcp12hr(i)= pcp6hr(i) *0.03937         ! conv mm to inch
+            endif
+
+            if ( pcp24hr(i) < 0 ) then
+               pcp24hr(i)= badflag
+            else
+               pcp24hr(i)= pcp24hr(i) *0.03937         ! conv mm to inch
+            endif
+      enddo 
+
+c                               end of file
+      write(6,*) ' Found ', num, ' rain gauge stations.'
+      istatus= 1
+      return
+ 
+ 980  write(6,*) ' Warning: could not open rain gauge file ', filename
+      istatus= -1
+      return
+      
+ 990  write(6,*) ' ** ERROR reading rain gauge data.'
+      num= 0
+      istatus= -1
+      return
+
+      end
