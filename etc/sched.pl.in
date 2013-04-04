@@ -471,16 +471,16 @@ if(defined $opt_F){
     $log_name = "sched\.log";    
 }
 
-if(defined $opt_V){
-    $qsub_name = $opt_V;    
-}elsif(defined $opt_f){
+if(defined $opt_f){
     $qsub_name = $opt_f;    
+}elsif(defined $opt_V){
+    $qsub_name = $opt_V;    
 }else{
     $qsub_name = "run_qsub";    
 }
 
 my $qhhmm = substr($yyjjjhhmm,5,4);
-$qsub_log_name = "$qsub_name$yyjjjhhmm";
+$qsub_log_name = "sched_qsub_$yyjjjhhmm";
 $qsub_name     = "$qsub_name$qhhmm";
 
 open(SAVEOUT,">&STDOUT");
