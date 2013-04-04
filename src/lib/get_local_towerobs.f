@@ -53,11 +53,11 @@ c
         real     temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
         real     dir_deg(maxobs,maxlvls),spd_mps(maxobs,maxlvls)
 	character  stname(maxobs)*6
-        integer    tempQcFlag(maxlvls,maxobs)
-        integer    prsQcFlag(maxlvls,maxobs)
-        integer    rhQcFlag(maxlvls,maxobs)
-        integer    wsQcFlag(maxlvls,maxobs)
-        integer    wdQcFlag(maxlvls,maxobs)
+        integer    tempQcFlag(maxobs,maxlvls)
+        integer    prsQcFlag(maxobs,maxlvls)
+        integer    rhQcFlag(maxobs,maxlvls)
+        integer    wsQcFlag(maxobs,maxlvls)
+        integer    wdQcFlag(maxobs,maxlvls)
         integer    smQcFlag(maxobs)
 
         logical    l_closest_time(maxobs), l_closest_time_i
