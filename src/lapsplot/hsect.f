@@ -3278,7 +3278,7 @@ Cabdel
                     endif
                 endif
 
-            elseif(.true.)then ! under construction
+            elseif(.true.)then ! precip interval (via r_hours)
 !               Near Realtime - look for snow accumulation files
                 if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
                    !Find latest time of radar data
