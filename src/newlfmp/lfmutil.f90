@@ -675,6 +675,7 @@ if(.not. large_ngrid)then
  write(6,*)' Calculating helicity, stability indices'
  call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
  call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
+ print *,'Min/Max uhel =',minval(uhel),maxval(uhel)
 
  call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
              ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
