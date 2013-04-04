@@ -178,7 +178,7 @@ c     read header information
       READ(70,REC=1,ERR=9999) NBUF
 
 C     endian swap if needed
-      if (filename(4:5) .lt. '09') then
+      if (filename(5:6) .lt. '09') then
       do k  = 1, 210
          call endian4 (nbuf(k))
       enddo
@@ -208,7 +208,7 @@ C     endian swap if needed
         READ(70,REC=ILIN,ERR=9999) NBUF 
 
 c     Endian swap if needed
-      if (filename(4:5) .lt. '09') then
+      if (filename(5:6) .lt. '09') then
         do k = 1, 210
            call endian4 (nbuf(k))
         enddo

@@ -61,6 +61,8 @@ cdis
 
       istatus = 0
 
+      
+
 c     get missing data flag
       call get_r_missing_data (mdf,istatus) 
 
@@ -91,19 +93,20 @@ c     trim file names removing path
          write(6,*) 'error in get_file_names'
          return
       endif
+
       
 c     go through list of filenames and test their valid times against window
 
       j = 0 ! counter to increment for good files to run through scanner
       do i = 1, num_files
-         a9_test = file_names(i)(4:8)//file_names(i)(10:13)
+         a9_test = file_names(i)(5:9)//file_names(i)(11:14)
          call i4time_fname_lp(a9_test,i4time_test,istatus)
          if (i4time_test.ge.i4time_begin .and.
      1        i4time_test.le.i4time_end)then
             j = j+1
             files_to_process(j) = file_names(i)
          endif
-      enddo                           !i
+      enddo                     !i                    
 
       if (j.eq.0) then
          write (6,*) 'no files to process'
@@ -128,7 +131,6 @@ c     what is the new file name length (same for all files)
      1        i4time_begin,i4time_end,mdf,lun_out,istatus)
 
       enddo                     ! i
-
 
       istatus = 1
       return
