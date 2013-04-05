@@ -1,0 +1,96 @@
+#!@PERL@
+#
+# Determines processed file times found in directories 
+# LAPS_DATA_ROOT/lapsprd/lso/*.lso
+# and copies StageIV LAPS netCDF files into LAPS_DATA_ROOT/lapsprd/data/st4
+#
+# Requires these environment variables be set:
+#   LAPS_DATA_ROOT
+#   ST4_REPO_PATH
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#
+# Kirk Holub
+# Feb 2013
+
+use strict;
+use English;
+use File::Basename;
+
+my $LAPS_DATA_ROOT;
+my $ST4_REPO_PATH;
+
+my $domain = shift;
+if ( !(defined $domain ) ) {
+  die "Usage: $0 domain_name LAPS_DATA_ROOT [ST4_REPO_PATH]\n";
+};
+
+$LAPS_DATA_ROOT = shift;
+if ( !(defined $LAPS_DATA_ROOT) ) {
+  die "Usage: $0 domain_name LAPS_DATA_ROOT [ST4_REPO_PATH]\n";
+};
+
+$ST4_REPO_PATH = shift;
+if ( !(defined $ST4_REPO_PATH) ) {
+  $ST4_REPO_PATH = '/w3/jet/fab/st4repo';
+  print "ST4_REPO_PATH set to \"$ST4_REPO_PATH\" \n";
+};
+
+my $outputDir = $LAPS_DATA_ROOT."/lapsprd/st4";
+
+#print "Output directory = $outputDir\n";
+
+my %timestamps = ();
+foreach my $dt qw( R01 R03 R06 R24 RTO ) {
+  my $path = $LAPS_DATA_ROOT . "/lapsprd/lso/*lso";
+  my @filelist = `/bin/ls -1 $path 2>/dev/null`;
+  foreach my $fn (@filelist) {
+    $fn = basename( $fn );
+    my $timestamp = substr( $fn, 0, 5 );
+    $timestamps{$timestamp}++;
+  }
+}
+
+#gpsmet-s1:~/lapsverif $ ls /exchange/projects/osse/st4repo/co/13028/01h/130280000.st4
+my @timestamps = keys %timestamps;
+my $numts = @timestamps;
+my $i = 1;
+@timestamps = sort { $a <=> $b } @timestamps;
+foreach my $ts (@timestamps) {
+  print "$ts -- $i of $numts\n";
+  $i++;
+
+  foreach my $hr (0 .. 23) {
+    my $fn = $ts . sprintf( "%02d", $hr ) . '00.st4';
+    my $src = "${ST4_REPO_PATH}/${domain}/${ts}/01h/${fn}";
+    my $dest = "${outputDir}/${fn}";
+    if ( -e $src  ) {
+      my $cmd = "";
+      if ( !(-e $dest) ) {
+        $cmd = "/bin/cp $src $dest";
+      } else {
+        $cmd = "/bin/touch $dest";
+      }
+      print "$cmd\n";
+      my $err = `$cmd`;
+      my $err = '';
+      print "$err\n" unless( $err eq '' );
+    } else {
+      print "source $src does not exist\n";
+      my $cmd = "/bin/touch $dest";
+    }
+  } # hr
+} # ts
