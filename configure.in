@@ -480,6 +480,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/followup_fcst.pl
           etc/fxalogdir.pl
           etc/generate_images.pl
+          etc/ingest_stageIV_files.pl
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
 	  etc/laps_monitor.pl
