@@ -206,6 +206,7 @@ c
        if(istatus_a .lt. 0)then
           write(6,910) istatus_a
           if(istatus_a .eq. -(ni*nj))then ! entire array is missing
+              write(6,*)' Entire ta8 array is missing'
               istatus = 0
           endif
        else
@@ -214,6 +215,7 @@ c
        if(istatus_w .lt. 0)then
           write(6,911) istatus_w
           if(istatus_w .eq. -(ni*nj))then ! entire array is missing
+              write(6,*)' Entire tb8 array is missing'
               istatus = 0
           endif
        else
@@ -222,6 +224,7 @@ c
        if(istatus_f .lt. 0)then
           write(6,912) istatus_f
           if(istatus_f .eq. -(ni*nj))then ! entire array is missing
+              write(6,*)' Entire tc8 array is missing'
               istatus = 0
           endif
        else
