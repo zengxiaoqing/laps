@@ -33,6 +33,8 @@
 # -d                   Delay in hours (lag time or displaced real-time). This generally 
 #                      should be set in cases where the wall clock time of the run will 
 #                      differ from the analysis time by more than the laps cycle time.
+#                      This is usually set to a positive number, though it will probably 
+#                      work with negative numbers also. 
 #
 # -e                   Extend time in hours (allow for long runs beyond cycle time)
 #
