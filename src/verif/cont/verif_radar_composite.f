@@ -237,6 +237,16 @@
                 enddo
             endif
 
+!           Only REF & LMR available from persistence
+            if(trim(c_fdda_mdl_src(imodel)) .eq. 'persistence')then
+                do ifield = 1,n_fields ! all unavailable except REF & LMR
+                    if(var_a(ifield) .ne. 'REF' .AND.
+     1                 var_a(ifield) .ne. 'LMR'       )then
+                        n_plot_times_m(imodel,:,ifield) = 0
+                    endif
+                enddo
+            endif
+
 !           Assume WNDW-WARW isn't available for composite forecasts  
 !           if(trim(c_fdda_mdl_src(imodel)) .eq. 'wndw-warw')then
 !               n_plot_times_m(imodel,:,:) = 0
