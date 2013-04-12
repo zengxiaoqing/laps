@@ -222,6 +222,9 @@ c used for "bad" meteosat data.
 
       data rcal/0.106178/  !as specified by EUMETSAT User Services 5-May-99.
 
+      integer lineRes, elemRes
+      common /cdfdata/ lineRes, elemRes
+
       include 'grid_fname.cmn'
 
 c =========================================================================
@@ -486,6 +489,8 @@ c --------------------------------------------------------------------------
             write(6,*)'Did not get data for ',c_fname_cur
             goto 998
          endif
+
+!        Note that lineRes and elemRes are filled into common for the 'rll' case
 
       elseif(csattype.eq.'asc')then   !then we are using ascii files for raw ingest sat data
 
@@ -773,7 +778,12 @@ c -------------------------------------------------
 c
 c compute grid ratio input/output resolutions
 c
-      r_grid_ratio(j,i)=r_image_res_m(j,i)/grid_spacing_laps_m
+         if(csattype .eq. 'rll')then
+            write(6,*)'Using common block variable for lineRes'
+            r_image_res_m(j,i) = lineRes
+         endif
+
+         r_grid_ratio(j,i)=r_image_res_m(j,i)/grid_spacing_laps_m
 
          write(6,*)'Image resolution (m): ',r_image_res_m(j,i)
          write(6,*)'I/O Grid ratio: ',r_grid_ratio(j,i)
