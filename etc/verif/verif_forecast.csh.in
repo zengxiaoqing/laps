@@ -10,13 +10,15 @@
 
 # Fifth argument is the yrange
 
-# Sixth argument is the overall title variable
+# Sixth argument is the y2range
 
-# Seventh argument is the units
+# Seventh argument is the overall title variable
 
-# Eighth argument is domain name
+# Eighth argument is the units
 
-# Ninth argument is subtype (comp or comp2 - optional)
+# Ninth argument is domain name
+
+# Tenth argument is subtype (comp or comp2 - optional)
 
 setenv LAPSINSTALLROOT @prefix@
 setenv LAPS_DATA_ROOT $1
@@ -24,8 +26,9 @@ setenv NLINE $2
 setenv TYPE $3
 setenv VAR $4
 setenv YRANGE $5
-setenv DOMAIN_NAME_IN $8
-setenv SUBTYPE $9           
+setenv Y2RANGE $6
+setenv DOMAIN_NAME_IN $9
+setenv SUBTYPE $10          
 
 if ($SUBTYPE == "") then
     setenv SUBDIR $TYPE
@@ -180,7 +183,7 @@ setenv GNUPLOTFILE $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$SUBDIR/$VAR_LC\_$TYPE\_fc
 setenv PNGDIR      $LAPS_DATA_ROOT/lapsprd/verif/$VAR/$SUBDIR/
 setenv PNGFILE     $VAR_LC\_$TYPE\_fcst\_$MODELTIME.png
 setenv DQUOTE \"
-echo 'set terminal png '$TERM_FONT' size 1200,800'                        > $GNUPLOTFILE
+echo 'set terminal png '$TERM_FONT' size 1500,1000'                           > $GNUPLOTFILE
 if ($SUBTYPE == "") then 
     echo 'set xdata time'                                                    >> $GNUPLOTFILE
     echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
@@ -217,7 +220,13 @@ else if ($VAR == "RTO" || $VAR == "R01" || $VAR == "R03" || $VAR == "R06" || $VA
 
 else
     echo 'set yrange ['$YRANGE']'                                        >> $GNUPLOTFILE
-    echo 'set y2range ['$YRANGE']'                                       >> $GNUPLOTFILE
+    if ($Y2RANGE != same && $Y2RANGE != $YRANGE) then
+        echo 'set y2range ['$Y2RANGE']'                                  >> $GNUPLOTFILE
+        echo 'set y2tics border'                                         >> $GNUPLOTFILE
+        echo 'set y2label "RMSE" ' $MEMBER_FONT textcolor lt 3           >> $GNUPLOTFILE
+    else
+        echo 'set y2range ['$YRANGE']'                                   >> $GNUPLOTFILE
+    endif
 endif
 echo 'set grid'                                                           >> $GNUPLOTFILE
 echo 'set datafile missing "-99.900"'                                     >> $GNUPLOTFILE
@@ -227,8 +236,8 @@ else
 #   echo 'set xlabel "Ending on '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
     echo 'set xlabel "Forecast Hours - Latest Run At '$MODEL_ASCIITIME' UTC"' $MEMBER_FONT textcolor lt 2       >> $GNUPLOTFILE 
 endif
-echo 'set ylabel "'$6 \($7\)' "' $MEMBER_FONT textcolor lt 2              >> $GNUPLOTFILE
-echo 'set title "'$6' Observed vs Forecast '$DURATION'('$DOMAIN_NAME' domain)" '$TITLE_FONT  >> $GNUPLOTFILE
+echo 'set ylabel "'$7 \($8\)' "' $MEMBER_FONT textcolor lt 2              >> $GNUPLOTFILE
+echo 'set title "'$7' Observed vs Forecast '$DURATION'('$DOMAIN_NAME' domain)" '$TITLE_FONT  >> $GNUPLOTFILE
 echo 'set key ins'                                                       >> $GNUPLOTFILE
 if ($VAR == "S8A_DUMMY") then
     echo 'set key box'                                                        >> $GNUPLOTFILE
