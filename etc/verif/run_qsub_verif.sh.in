@@ -76,8 +76,8 @@ else
 
     echo " "
     echo "Making reflectivity montage via ssh"
-    echo ssh pinky.fsl.noaa.gov @PERL@ @prefix@/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
-         ssh pinky.fsl.noaa.gov @PERL@ @prefix@/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
+    echo ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
+         ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
 
     rsync_qsub=yes 
 
