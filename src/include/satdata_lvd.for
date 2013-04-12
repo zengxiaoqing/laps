@@ -380,21 +380,23 @@ c -- geostationary satellite height (m) above earth surface
       SAT_RANGE_M(8)=870000.00
 c -- sub lat/lon for each geostationary satellite
       R_SAT_SUB_LAT(1)=0.0
-      R_SAT_SUB_LAT(3)=0.0
       R_SAT_SUB_LAT(2)=0.0
+      R_SAT_SUB_LAT(3)=0.0
       R_SAT_SUB_LAT(4)=0.0
-      R_SAT_SUB_LAT(6)=0.0
       R_SAT_SUB_LAT(5)=0.0
+      R_SAT_SUB_LAT(6)=0.0
       R_SAT_SUB_LAT(7)=0.0
       R_SAT_SUB_LAT(8)=1.051
+      R_SAT_SUB_LAT(9)=0.0
       R_SAT_SUB_LON(1)=-1.30900
       R_SAT_SUB_LON(2)= -2.35619
       R_SAT_SUB_LON(3)= -2.35619
       R_SAT_SUB_LON(4)= 2.44346
       R_SAT_SUB_LON(5)= -1.30900
-      R_SAT_SUB_LON(6)= 0.00000
+      R_SAT_SUB_LON(6)= 2.530727
       R_SAT_SUB_LON(7)= -2.35619
       R_SAT_SUB_LON(8)= 0.42935
+      R_SAT_SUB_LON(9)= 2.530727
 c -- these resolution (grid spacing) settings should be available in
 c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_VIS(1,1)=1264.2157
@@ -630,7 +632,7 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_IR(2:4,5)=0
       N_PIXELS_IR(1:4,6)=0
       N_PIXELS_IR(1:4,9)=1375
-      N_PIXELS_IR(1:4,10)=1140
+      N_PIXELS_IR(1:4,10)=1250 ! 1140
       N_LINES_IR(1,1)=823
       N_LINES_IR(2,1)=511
       N_LINES_IR(3,1)=897
@@ -646,7 +648,7 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_IR(2:4,5)=0
       N_LINES_IR(1:4,6)=0
       N_LINES_IR(1:4,9)=1375
-      N_LINES_IR(1:4,10)=1140
+      N_LINES_IR(1:4,10)=1250 ! 1140
       N_PIXELS_WV(1,1)=2000
       N_PIXELS_WV(2,1)=256
       N_PIXELS_WV(3,1)=1201
