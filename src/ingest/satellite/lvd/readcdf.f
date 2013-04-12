@@ -83,6 +83,10 @@ C
      +     wmo_sat_id(record),ivalidtime,nav
       Integer imax,jmax,kmax,kdim
       Integer channel_fcinv
+
+      integer lineRes, elemRes
+      common /cdfdata/ lineRes, elemRes
+
       double precision reftime(record), valtime(record)
       character*30  c_valtime
       character*30  c_Lov
@@ -177,7 +181,9 @@ C
          return
       endif
 
-      if(csat_type.eq.'rll')then ! read scaling attribute
+      if(csat_type.eq.'rll')then 
+
+!         read scaling attribute
           rcode=NF_GET_ATT_REAL(ncid,varid,'scale_factor'
      1                              ,scale_img)
           if(rcode.ne.NF_NOERR) then
@@ -187,6 +193,39 @@ C
           else
              write(6,*)' Successfully read image scale ',scale_img
           endif
+
+          rcode = NF_INQ_VARID(ncid,'lineRes',varid)
+          if(rcode.ne.NF_NOERR) then
+             print *, NF_STRERROR(rcode)
+             print *,'in var lineRes'
+          endif
+          rcode = NF_GET_VAR_INT(ncid,varid,lineRes)
+          if(rcode.ne.NF_NOERR) then
+             print *, NF_STRERROR(rcode)
+             print *,'in var lineRes'
+          endif
+          if(rcode.ne.NF_NOERR) then
+             write(6,*)'Error reading lineRes'
+          else
+             write(6,*)' Successfully read lineRes ',lineRes
+          endif
+
+          rcode = NF_INQ_VARID(ncid,'elemRes',varid)
+          if(rcode.ne.NF_NOERR) then
+             print *, NF_STRERROR(rcode)
+             print *,'in var elemRes'
+          endif
+          rcode = NF_GET_VAR_INT(ncid,varid,elemRes)
+          if(rcode.ne.NF_NOERR) then
+             print *, NF_STRERROR(rcode)
+             print *,'in var elemRes'
+          endif
+          if(rcode.ne.NF_NOERR) then
+             write(6,*)'Error reading elemRes'
+          else
+             write(6,*)' Successfully read elemRes ',elemRes
+          endif
+C
       endif
 
       istatus = 0
