@@ -32,6 +32,7 @@ integer :: domnum,fcsttime,laps_reftime,precip_dt=3600  ! in seconds
 integer :: k_micro=999
 integer :: n3d_pts_thr=33000000
 integer :: p3d_pts_thr=22000000
+integer :: advection_time = 0
 
 character(len=256) :: filename,filename0
 character(len=32)  :: mtype
