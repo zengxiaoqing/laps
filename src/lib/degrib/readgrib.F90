@@ -49,7 +49,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   integer :: nlvl
   integer :: ierr
   integer :: nunit1 = 12
-  integer :: debug_level = 0 
+  integer :: debug_level = 1 
   integer :: grib_version
   integer :: vtable_columns
   integer :: istatus
@@ -224,7 +224,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   integer, parameter :: maxbglvl = 42  
   integer, dimension(255) :: iuarr = 0
   integer :: nunit1 = 12
-  integer :: debug_level = 0 
+  integer :: debug_level = 1 
   integer :: iplvl
   integer :: nlvl
   integer :: itime
@@ -520,6 +520,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
      write(6,*)' tdbg_sfc range = ',minval(tdbg_sfc),maxval(tdbg_sfc)
      write(6,*)' shbg_sfc range = ',minval(shbg_sfc),maxval(shbg_sfc)
+     write(6,*)' pcpbg    range = ',minval(pcpbg)   ,maxval(pcpbg)    
 
 ! ------------- end convert data ----------------
  

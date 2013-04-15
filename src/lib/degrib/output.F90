@@ -51,6 +51,8 @@ subroutine output(hdate, nlvl, maxlvl, plvl, interval, iflag, out_format, prefix
 ! DATELEN:  length of date strings to use for our output file names.
   integer :: datelen
 
+  write(6,*)' Subroutine output - debug_level is ',debug_level
+
 ! Decide the length of date strings to use for output file names.  
 ! DATELEN is 13 for hours, 16 for minutes, and 19 for seconds.
   if (mod(interval,3600) == 0) then
@@ -339,6 +341,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
 
      include 'constants.inc' ! for grav
 
+     write(6,*)' Subroutine get_lapsbg...'
+
      call get_plvls(plvl, maxlvl, nlvl)
 
      NLOOP : do m = 1, maxvar
@@ -420,14 +424,17 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
               endif
               nullify(scr2d)
 
-!         else
-!             write(6,*)' field is not there: ',ilev,trim(field)
+          elseif (field.eq.'APCP') then
+              write(6,*)' field is not there: ',ilev,trim(field)
 
           endif ! if parm exists
 
-        if ((level.gt.200100 .and. level.lt.200200)) then
-           cycle OUTLOOP
-        endif
+          if ((level.gt.200100 .and. level.lt.200200)) then
+              cycle OUTLOOP
+          endif
+
+       else
+          write(6,*)' Description is null ',trim(field)
 
        endif ! if desc=null
      enddo OUTLOOP
@@ -477,6 +484,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
 !        write(*, *) "OUTPUT pcpbg(30,",jj, pcpbg(30,jj)
 !     enddo
 
+      write(*, *) "End of get_lapsbg..."
 
  return
 end subroutine get_lapsbg
