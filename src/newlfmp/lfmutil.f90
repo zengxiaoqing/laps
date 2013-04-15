@@ -16,9 +16,10 @@ namelist/lfmpost_nl/out_cdf,out_grib,out_v5d            &
                    ,make_micro,make_firewx,make_points  &
                    ,verbose,realtime,write_to_lapsdir   &
                    ,make_donefile                       &
-                   ,precip_dt,c_m2z                     &
+                   ,precip_dt,c_m2z,advection_time      &
                    ,n3d_pts_thr,p3d_pts_thr             &
                    ,wrf_version
+                   
 
 nlfile=trim(lfmprd_dir)//'/../static/lfmpost.nl'
 open(1,file=trim(nlfile),form='formatted',status='old',iostat=istatus)
@@ -490,6 +491,13 @@ if (make_micro) then
               enddo ! k
           enddo ! i
           enddo ! j
+      endif
+
+!     Run Advection routine on reflectivity
+      if(advection_time .gt. 0)then
+          write(6,*)' Advect Surface Reflectivity (under construction)'
+!         call advect(u,v,refl_sfc,array_buf,grid_spacing_m
+!    1               ,lx,ly,array_out,time,frac,lon,rmsg)
       endif
 
 !     Conversion of microphysical cloud mixing ratios to concentrations
