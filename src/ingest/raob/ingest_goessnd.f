@@ -101,6 +101,10 @@ c     go through list of filenames and test their valid times against window
       do i = 1, num_files
          a9_test = file_names(i)(5:9)//file_names(i)(11:14)
          call i4time_fname_lp(a9_test,i4time_test,istatus)
+
+
+c         i4time_begin = i4time_begin - 3800 ! inserted to expand time window
+
          if (i4time_test.ge.i4time_begin .and.
      1        i4time_test.le.i4time_end)then
             j = j+1
