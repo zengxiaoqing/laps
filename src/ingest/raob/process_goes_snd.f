@@ -39,6 +39,9 @@ cdis
      1     file_len,iii,jjj,
      1     i4time_begin,i4time_end, mdf, lun_out, istatus)
 
+c
+c	modified for filename change 4/22/2013 DB
+c
       implicit none
 
 c     parameter list
