@@ -586,6 +586,7 @@ c     test is passed
           enddo ! jj
         enddo ! ii
          write(6,*) 'Data in SH input array are all EQUAL in value'
+         write (6,*) 'Value detected = ', data(1,1,k), ' level ', k
          write(6,*) 'Assuming such a constant field is an ERROR'
          write(6,*) 'Aborting LQ3 run'
          go to 666
