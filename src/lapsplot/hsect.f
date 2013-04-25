@@ -3306,7 +3306,8 @@ Cabdel
  
                 call get_interval_precip(var_2d(1:1),ext(1:3)
      1                                  ,i4time_start,i4time_end
-     1                                  ,laps_cycle_time,r_missing_data       
+     1                                  ,laps_cycle_time,i4_dum
+     1                                  ,r_missing_data       
      1                                  ,NX_L,NY_L,nf,accum_2d,istatus)
 
                 write(c9_string,2029)r_hours
