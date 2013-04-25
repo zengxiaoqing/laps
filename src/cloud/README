@@ -22,7 +22,9 @@ main                                                     laps_cloud.f
                     get_laps_lvd                             "
         qc_clouds_3d                                     laps_cloud_sub.f
         get_vis      (read vis data)                     getvis.f
-            get_laps_2dvar    
+            get_laps_2dvar                               lib/laps_io.f
+                get_laps_sat                                 "
+                    get_laps_lvd                             "
             get_sfc_albedo                               getvis.f
             albedo_to_cloudfrac2
         GET_ISTAT_39 (cloud mask from 3.9u)              get_istat_39.f
