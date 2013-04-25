@@ -3,7 +3,7 @@
 !
 !  Brent L. Shaw, Weathernews Americas, Inc., 2005
 
-SUBROUTINE lga_driver_wrfarw(bgpath, cmodel, &
+SUBROUTINE lga_driver_wrfarw(nx_laps,ny_laps,nz_laps,bgpath, cmodel, & ! add nx_laps,ny_laps,nz_laps by Wei-Ting(130326)
                              use_analysis,forecast_length, &
                              luse_sfc_bkgd, &
                              i4time_now, smooth_fields,lga_status)
@@ -13,6 +13,18 @@ SUBROUTINE lga_driver_wrfarw(bgpath, cmodel, &
   USE wrf_lga
   IMPLICIT NONE
   include 'netcdf.inc'
+  ! === add variables by Wei-Ting(130326) ===
+  INTEGER, INTENT(IN)          :: nx_laps,ny_laps,nz_laps ! LAPS grid dimensions
+  REAL                         :: ht_1d(nz_laps), &       !LAPS vert grid (SIGMA_HT grid only)
+                                  pr1d_pa(nz_laps), &     !LAPS pressures (pa)
+                                  pr1d_mb(nz_laps)        !LAPS pressures (mb)
+  CHARACTER(LEN=9)             :: wfo_fname13_to_fname9
+  CHARACTER(LEN=9)             :: fname9_reftime          ! reftime julian date
+  INTEGER                      :: i4time_reftime,i4time_fcst(2)
+  CHARACTER(LEN=256)           :: outdir
+  CHARACTER(LEN=31)            :: ext
+  INTEGER                      :: iloop,len_dir,hr_now,min_now
+  ! === end of add by Wei-Ting(130326) ===
   CHARACTER(LEN=*),INTENT(IN)  :: bgpath
   CHARACTER(LEN=12)            :: cmodel
   LOGICAL, INTENT(IN)          :: use_analysis
@@ -70,7 +82,7 @@ SUBROUTINE lga_driver_wrfarw(bgpath, cmodel, &
       print *, "Already done: ",already_done
       IF (.NOT. already_done) THEN
         PRINT *, "Calling wrf2lga"
-        CALL wrf2lga(filenames(1:3:2),i4time_now,cmodel,istatus) ! modified by Wei-Ting (130312) to insert previous time ( filename(1) -> filname(1:3:2) )
+        CALL wrf2lga(filenames(1:2),i4time_now,cmodel,istatus) ! modified by Wei-Ting (130326) to insert previous time ( filename(1) -> filname(1:2) )
         IF (istatus .NE. 1) THEN
           PRINT *, "Failure in wrf2lga"
           lga_status = 0
@@ -89,11 +101,9 @@ SUBROUTINE lga_driver_wrfarw(bgpath, cmodel, &
   ELSEIF(nfiles .EQ. 2) THEN
     ! No, but we do have 2 files that bound this time
     PRINT *, "Found bounding files: "
-    PRINT *, TRIM(filenames(1))
-    PRINT *, TRIM(filenames(2))
-    PRINT *, " This part not yet complete in lga_driver_wrf!"
-    lga_status = 0
-    RETURN
+    PRINT *, TRIM(filenames(2)) ! eariler time : exchange two lines by Wei-Ting(130326)
+    PRINT *, TRIM(filenames(1)) ! later time   : exchange two lines by Wei-Ting(130326)
+    PRINT *, " "
     ! Does latest bound exceed forecast limit?
              ! No...read both in, then time interpolate
                 ! Get domain info
@@ -105,6 +115,105 @@ SUBROUTINE lga_driver_wrfarw(bgpath, cmodel, &
              ! Yes...exit with error
         ! No
           ! Exit with error
+    
+    ! ===== Below codes is added to complete        =====
+    ! ===== time interpolation by Wei-Ting (130326) =====
+    DO iloop = 2,1,-1
+       PRINT *, "Processing :", TRIM(filenames(iloop))
+       ! Make sure file is ready
+       CALL wrfio_wait(filenames(iloop),300)
+       CALL open_wrfnc(filenames(iloop),cdf,istatus)
+       IF (istatus .NE. 0) THEN
+         PRINT *, "Problem opening ",TRIM(filenames(iloop))
+         lga_status = 0
+         RETURN 
+       ENDIF
+       ! Get time information
+       CALL get_wrf2_timeinfo(cdf,reftime,dt,itimestep,tau_hr, &
+              tau_min, tau_sec, istatus)
+       CALL close_wrfnc(cdf)
+       IF (istatus .NE. 0) THEN
+         PRINT*, "Problem getting time info from ", TRIM(filenames(iloop))
+         lga_status = 0
+         RETURN
+       ENDIF
+       ! Is it a new enough forecast?
+       IF (tau_hr .LE. forecast_length) THEN
+         PRINT *, "Forecast hour = ",tau_hr
+
+         ! Only process if we don't already have an LGA output file from WRFARW
+         ! that matches this reftime+tau
+         PRINT *, "Calling check_wrf_lga for:",cmodel,reftime
+         CALL check_wrf_lga(cmodel,reftime,tau_hr,tau_min,already_done) 
+         print *, "Already done: ",already_done
+         IF (.NOT. already_done) THEN
+           PRINT *, "Calling wrf2lga"
+           CALL wrf2lga(filenames(iloop:iloop+1),i4time_now,cmodel,istatus)
+           IF (istatus .NE. 1) THEN
+             PRINT *, "Failure in wrf2lga"
+             lga_status = 0
+             RETURN
+           ENDIF
+         ELSE
+           PRINT *, "File already processed previously"
+           lga_status = 1
+           ! RETURN
+           CONTINUE
+         ENDIF
+       ELSE
+         PRINT *, "Forecast is too old :", tau_hr, forecast_length
+         lga_status = 0
+         RETURN
+       ENDIF
+    ENDDO
+    ! ===== Time Interpolation =====
+    fname9_reftime = wfo_fname13_to_fname9&
+                  (reftime(1:4)//reftime(6:7)//reftime(9:13)//reftime(15:16))
+    call i4time_fname_lp(fname9_reftime,i4time_reftime,istatus)
+    i4time_fcst(1) = files_i4time(1)-i4time_reftime
+    i4time_fcst(2) = files_i4time(2)-i4time_reftime
+    hr_now = (i4time_now-i4time_reftime)/3600
+    min_now = MOD(i4time_now-i4time_reftime,3600)/60
+    PRINT *, "Calling check_wrf_lga for:",cmodel,reftime
+    CALL check_wrf_lga(cmodel,reftime,hr_now,min_now,already_done)
+    print *, "Already done: ",already_done
+    IF (.NOT. already_done) THEN
+       print*,'get 1d pressures'
+       call get_pres_1d(i4time_now,nz_laps,pr1d_pa,istatus)
+       if(istatus.ne.1)then
+          print*,'Error returned from get_pres_1d'
+          print*,'Check pressures.nl or nk_laps in nest7grid.parms'
+          stop
+       endif
+       pr1d_mb(:)=pr1d_pa(:)/100.  ! Pa to mb
+       print*,i4time_now,i4time_reftime,i4time_reftime, &
+              i4time_fcst(2),i4time_fcst(1), &
+              files_i4time(2),files_i4time(1)
+       ext = 'lga'
+       call get_directory(ext,outdir,len_dir)
+       print*,outdir,ext,nz_laps
+       ! interp 3D fields
+       call time_interp(outdir,ext, &
+                   nx_laps,ny_laps,nz_laps,6,pr1d_mb,ht_1d, &
+                   files_i4time(2),files_i4time(1), &
+                   i4time_now,i4time_reftime,i4time_fcst(1), &
+                   i4time_reftime,i4time_fcst(2))
+       ext = 'lgb'
+       call get_directory(ext,outdir,len_dir)
+       print*,outdir,ext
+       ! interp 2D fields
+       call time_interp(outdir,ext, &
+                   nx_laps,ny_laps,1,10,pr1d_mb(1),ht_1d(1), &
+                   files_i4time(2),files_i4time(1), &
+                   i4time_now,i4time_reftime,i4time_fcst(1), &
+                   i4time_reftime,i4time_fcst(2))
+       
+    ELSE
+       PRINT *, "File already processed previously"
+       lga_status = 1
+       RETURN
+    ENDIF
+    ! ===== End of modification by Wei-Ting (130326) =====
   ELSE
     PRINT *, "No acceptable WRF files found!"
     lga_status = 0
