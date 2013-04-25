@@ -46,21 +46,27 @@ SUBROUTINE get_acceptable_wrf(bgpath,i4time_needed,nfiles, &
          nfiles = 1
          i4times_found(1) = i4time
          filenames(1)     = thisfile
-         filenames(3)     = all_files(i-1) ! added by Wei-Ting (130312) to get previous time
+         IF (i .GT. 1) THEN
+            filenames(2)  = all_files(i-1) ! Modified by Wei-Ting (130326) to get previous time
+         ENDIF
          return
       ELSE
-        delta_t = i4time_needed - i4time
+       ! delta_t = i4time_needed - i4time
+        delta_t = i4time - i4time_needed
         IF (delta_t .GT. 0) THEN
           IF (delta_t .LT. delta_t_1) THEN
+            delta_t_1 = delta_t
             i4times_found(1) = i4time
             filenames(1) = thisfile
-            delta_t_1 = delta_t
           ENDIF
         ELSE
           IF (delta_t .GT. delta_t_2) THEN
             delta_t_2 = delta_t
             i4times_found(2) = i4time
             filenames(2) = thisfile
+            IF (i .GT. 1) THEN
+               filenames(3) = all_files(i-1) ! added by Wei-Ting (130326) to get previous time
+            ENDIF
           ENDIF
         ENDIF
       ENDIF
