@@ -432,7 +432,7 @@ cdis
                         write(6,*)i,c20_stations(1:min(len_sta+1,20))       
      1                           ,c_staname,nint(xsta),nint(ysta)
      1                           ,reptype(i)(1:5),nlyr,vis_s(i)
-     1                           ,store_amt(i,nlyr)
+     1                           ,store_amt(i,nlyr),store_hgt(i,1)
                     else
                         write(6,*)i,c20_stations(1:min(len_sta+1,20))       
      1                           ,c_staname,nint(xsta),nint(ysta)
@@ -440,9 +440,9 @@ cdis
                     endif
 
                     pressure = float(nlyr)        ! number of cloud layers
-                    w1       = store_hgt(i,1)     ! height of 1st layer
-                    if(nlyr .ge. 2)w2 = store_hgt(i,2)      ! 2nd layer
-                    if(nlyr .ge. 3)w3 = store_hgt(i,3)      ! 3rd layer
+                    w1       = store_hgt(i,1)     ! height of 1st layer (m)
+                    if(nlyr .ge. 2)w2 = store_hgt(i,2)      ! 2nd layer (m)
+                    if(nlyr .ge. 3)w3 = store_hgt(i,3)      ! 3rd layer (m)
 
                     if(nlyr .ge. 1)then                    
                         if(l_parse(store_amt(i,nlyr),'CLR'))then
@@ -463,9 +463,9 @@ cdis
                             temp = 0.0
                         endif
 
-                        temp = w1 / 100. ! convert meters MSL to Hecto-meters
+                        w1 = w1 / 100. ! convert meters MSL to Hecto-meters
                     else ! no cloud layers
-                        temp = r_missing_data
+                        w1 = r_missing_data
 
                     endif
 
@@ -823,9 +823,9 @@ c
             endif
  31         continue
 
-!           Plot Cloud Height (t variable)
-            if(t.gt.-75. .and. t.lt.140.) then 
-               write(t1,100,err=38) nint(t) ! HectoMeters of lowest layer
+!           Plot Cloud Height (dir/w1 variable)
+            if(dir.gt.-75. .and. dir.lt.140.) then 
+               write(t1,100,err=38) nint(dir) ! HectoMeters of lowest layer
                call left_justify(t1)
                CALL PCLOQU(u+du_t,v+dv,t1,charsize,ANGD,CNTR)
             endif
