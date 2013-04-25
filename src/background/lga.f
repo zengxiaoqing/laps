@@ -67,11 +67,11 @@ c *** The fourth line specifies the LAPS domain designation.
 c *** Each following line specifies the grid dimensions for each corresponding
 c        bgmodel defined above.
 c
-      integer nx_laps,ny_laps,nz_laps,       ! LAPS grid dimensions
-     .          laps_cycle_time,             ! LAPS cycle time
+      integer nx_laps,ny_laps,nz_laps,       !LAPS grid dimensions
+     .          laps_cycle_time,             !LAPS cycle time
      .          nx_bg,ny_bg,nz_bg,
-     .          lga_status                   ! status returned from lga_driver
-c                                            ! 1 = good, <1 = bad
+     .          lga_status                   !status returned from lga_driver
+c                                            ! 1=good 0=bad
       integer   np,ntmin,ntmax
 c
 c
@@ -354,7 +354,7 @@ c
 cc
 c wrf-arw2.1 netcdf data processing
 c ---------------------------------
-           call lga_driver_wrfarw(
+           call lga_driver_wrfarw(nx_laps,ny_laps,nz_laps, ! add nx_laps,ny_laps,nz_laps by Wei-Ting(130326)
      .             bgpath,cmodel(1:12),use_analysis,forecast_length,
      .             luse_sfc_bkgd,
      .             i4time_now_lga,smooth_fields,lga_status)
