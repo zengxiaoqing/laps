@@ -780,7 +780,7 @@ c compute grid ratio input/output resolutions
 c
          if(csattype .eq. 'rll')then
             write(6,*)'Using common block variable for lineRes'
-            r_image_res_m(j,i) = lineRes
+            r_image_res_m(j,i) = lineRes * 1000.
          endif
 
          r_grid_ratio(j,i)=r_image_res_m(j,i)/grid_spacing_laps_m
