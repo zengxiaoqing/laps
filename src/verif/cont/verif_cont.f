@@ -330,30 +330,43 @@
 !                   write(*,*)'beka2b',i4_valid,l_good_persist,len_model
                     ext = ext_anal_a(ifield)
 
+                    intvl_pcp = -999
+
                     if(trim(var_2d) .eq. 'LMR')then
                       var_2d_anal = 'R'
                     elseif(trim(var_2d) .eq. 'PCP_01')then
                       var_2d_anal = 'ppt'
+                      intvl_pcp = 3600 
                     elseif(trim(var_2d) .eq. 'PCP_03')then
                       var_2d_anal = 'NUL'
+                      intvl_pcp = 10800
                     elseif(trim(var_2d) .eq. 'PCP_06')then
                       var_2d_anal = 'NUL'
+                      intvl_pcp = 21600
                     elseif(trim(var_2d) .eq. 'PCP_24')then
                       var_2d_anal = 'NUL'
+                      intvl_pcp = 86400
                     else
                       var_2d_anal = trim(var_2d(1:3))
                     endif
+
+                    i4_fcst = i4_valid - i4_initial
 
                     if(var_2d_anal .ne. 'NUL')then
                         call get_laps_2d(i4_valid,ext,var_2d_anal
      1                  ,units_2d,comment_2d,NX_L,NY_L,var_anal_3d
      1                  ,istatus)       
-                    else ! call summing routine for 'st4'
-                        write(6,*)' Call get_interval_precip...'
+                    elseif(i4_fcst .eq. (i4_fcst/intvl_pcp) 
+     1                                         * intvl_pcp  )then  
+                        write(6,*)' Call get_interval_precip for st4...'
                         call get_interval_precip(' ',ext
-     1                        ,i4_valid - model_fcst_intvl,i4_valid
-     1                        ,laps_cycle_time,r_missing_data
+     1                        ,i4_valid - intvl_pcp,i4_valid
+     1                        ,laps_cycle_time,i4_dum
+     1                        ,r_missing_data
      1                        ,NX_L,NY_L,1,var_anal_3d,istatus)
+                    else
+                        write(6,*)' No analysis for this time/field'    
+                        goto 900
                     endif
 
                     if(istatus .ne. 1 .AND. istatus .ne. -1)then
@@ -462,16 +475,45 @@
                         write(6,*)' var_2d/var_2d_fcst = ',var_2d,' '
      1                                                    ,var_2d_fcst
 
-                        call get_lapsdata_2d(i4_initial,i4_valid
+                        if(trim(type_a(ifield)) .ne. 'pcp' .OR.
+     1                          var_2d_fcst .eq. 'R01'         )then 
+                            call get_lapsdata_2d(i4_initial,i4_valid
      1                          ,directory,var_2d_fcst
      1                          ,units_2d,comment_2d
      1                          ,NX_L,NY_L
      1                          ,var_fcst_3d
      1                          ,istatus)
-                        if(istatus .ne. 1)then
-                             write(6,*)' Error reading 2D Forecast for '
-     1                                ,trim(ext),' ',trim(var_2d_fcst)
-                             goto 900
+                            if(istatus .ne. 1)then
+                                write(6,*)
+     1                           ' Error reading 2D Forecast for '      
+     1                           ,trim(ext),' ',trim(var_2d_fcst)
+                                goto 900
+                            endif
+                        elseif(i4_fcst .eq. (i4_fcst/intvl_pcp) 
+     1                                             * intvl_pcp  )then ! FSF
+                            if(trim(c_model) .eq. 'nam')then
+                                model_pcp_intvl = 10800
+                            elseif(trim(c_model) .eq. 'nam-nh')then
+                                model_pcp_intvl = 21600
+                            else
+                                model_pcp_intvl = model_fcst_intvl
+                            endif
+
+                            write(6,*)
+     1                      ' Call get_interval_precip for ',trim(ext)
+                            call get_interval_precip('R',c_model  
+     1                        ,i4_valid - intvl_pcp,i4_valid
+     1                        ,model_pcp_intvl,i4_initial
+     1                        ,r_missing_data
+     1                        ,NX_L,NY_L,1,var_fcst_3d,istatus)
+                            if(istatus .ne. 1)then
+                                write(6,*)
+     1                          ' Bad status from get_interval_precip'
+                                goto 900
+                            endif
+                        else
+                            write(6,*)' No precip fcst at this time'
+                            goto 900
                         endif
 
                         if(trim(type_a(ifield)) .eq. 'rdr')then 
