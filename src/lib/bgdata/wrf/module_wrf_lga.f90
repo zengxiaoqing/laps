@@ -552,34 +552,51 @@ CONTAINS
       tsk_wrf = t3_wrfs(:,:,1)
     ENDIF
     
-    ! added PCP (RAINNC+RAINC) by Wei-Ting (130312)
-    PRINT *, "Getting RAINNC(t-1)"
-    CALL get_wrfnc_2d(cdp,"RAINNC","T",nxw,nyw,1,dum2dt1,status)
-    IF (status .NE. 0) THEN
-      PRINT *, "Could not get RAINNC (t-1), setting the value = 0"
-      dum2dt1 = 0
-    ENDIF
-    PRINT *, "Getting RAINNC"
+    ! added PCP (RAINNC+RAINC) by Wei-Ting (130312) & Modified (130326)
+    PRINT *, "Getting Precipitation"
+    PRINT *, "!!!!! This Precipitaion is an accumulation per N hours. !!!!!"
+    PRINT *, "!!!!! N depends on the time difference of each WRFOUT.  !!!!!"
+    PRINT *, "   Getting RAINNC(t)"
     CALL get_wrfnc_2d(cdf,"RAINNC","T",nxw,nyw,1,dum2dt2,status)
     IF (status .NE. 0) THEN
-      PRINT *, "Could not get RAINNC, setting the value = 0"
+      PRINT *, "   Could not get RAINNC(t), setting the value = 0"
       dum2dt2 = 0
     ENDIF
-    pcp_wrf = dum2dt2-dum2dt1
-                        
-    PRINT *, "Getting RAINC(t-1)"
-    CALL get_wrfnc_2d(cdp,"RAINC","T",nxw,nyw,1,dum2dt1,status)
-    IF (status .NE. 0) THEN
-      PRINT *, "Could not get RAINC(t-1), setting the value = 0"
-      dum2dt1 = 0
-    ENDIF
-    PRINT *, "Getting RAINC"                                                                    
+    pcp_wrf = dum2dt2
+    PRINT *, "   Getting RAINC(t)"
     CALL get_wrfnc_2d(cdf,"RAINC","T",nxw,nyw,1,dum2dt2,status)
     IF (status .NE. 0) THEN
-      PRINT *, "Could not get RAINC, setting the value = 0"
+      PRINT *, "   Could not get RAINC(t), setting the value = 0"
       dum2dt2 = 0
     ENDIF
-    pcp_wrf = pcp_wrf + (dum2dt2-dum2dt1)
+    pcp_wrf = pcp_wrf+dum2dt2
+
+    PRINT *, "   Getting RAINNC(t-1)"
+    IF (cdp .LT. 0 .AND. cdf .GT. 0) THEN
+      PRINT *, "   Could not get RAINNC(t-1), maybe result from t = initial time!"
+      PRINT *, "   Set RAINNC(t-1) = 0"
+      dum2dt1 = 0
+    ELSE
+      CALL get_wrfnc_2d(cdp,"RAINNC","T",nxw,nyw,1,dum2dt1,status)
+      IF (status .NE. 0) THEN
+         PRINT *, "   Could not get RAINNC(t-1), setting the value = 0"
+         dum2dt1 = 0
+      ENDIF
+    ENDIF
+    pcp_wrf = pcp_wrf-dum2dt1
+    PRINT *, "   Getting RAINC(t-1)"
+    IF (cdp .LT. 0 .AND. cdf .GT. 0) THEN
+      PRINT *, "   Could not get RAINC(t-1), maybe result from t = initial time!"
+      PRINT *, "   Set RAINC(t-1) = 0"
+      dum2dt1 = 0
+    ELSE
+      CALL get_wrfnc_2d(cdp,"RAINC","T",nxw,nyw,1,dum2dt1,status)
+      IF (status .NE. 0) THEN
+         PRINT *, "   Could not get RAINC(t-1), setting the value = 0"
+         dum2dt1 = 0
+      ENDIF
+    ENDIF
+    pcp_wrf = pcp_wrf-dum2dt1
     where ( pcp_wrf < 0 ) ; pcp_wrf = 0 ; endwhere ! keep pcp >= 0
     print *, "Min/Max WRF Precipitation : ",minval(pcp_wrf),maxval(pcp_wrf)
     ! End of reading RAINNC+RAINC
