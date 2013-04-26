@@ -3,9 +3,12 @@
 #
 # Command line arguments
 #
-# -i (optional)        format to print date in, yydddhhmm     (default if not specified)
-#                                               mm            (month)
-#                                               yyyymmdd_hhmm (13 character date)
+# Please note that opt_i is under construction, as the length of $opt_a is now used instead...
+#
+# -i (optional)        format to print date in, yydddhhmm       (default if not specified)
+#                                               mm              (month)
+#                                               yyyymmdd_hhmm   (13 character date)
+#                                               yyyy-mm-dd-hhmm (WRFOUT date)
 #                                               yyyymmddhh
 #                                               yyyy_mm_dd_hhmm (lfmpost.pl input format)
 #
@@ -63,6 +66,14 @@ if(defined $opt_a){
       $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,"00","00");
 #     my $doy = &laps_tools::get_julian_day($day,$month,$year);
 #     $archive_time = &laps_tools::a9time_to_i4time($a9time);
+
+   }elsif(length($opt_a) == 15){ # yyyy-mm-dd-hhmm (WRFOUT date)
+      my $year = substr($opt_a,0,4); 
+      my $mon = substr($opt_a,5,2);
+      my $day = substr($opt_a,8,2);
+      my $hours = substr($opt_a,11,2);
+      my $minutes = substr($opt_a,13,2);
+      $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
 
    }elsif(length($opt_a) == 9){ # yydddhhmm (a9time format)
       my $a9time = $opt_a;
