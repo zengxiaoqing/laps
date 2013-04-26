@@ -190,19 +190,22 @@ $CP $SCRATCH_DIR/gmeta_$prod.gif                                    $WWW_DIR/ana
 
 cd $WWW_DIR/anal2d/recent
 
-rm -f                                                               gmeta_$prod$uscore$latest.gif
-ln -s ../archive/$prod/$datetime.gif                                gmeta_$prod$uscore$latest.gif
+rm -f                                                                gmeta_$prod$uscore$latest.gif
+#ln -s ../archive/$prod/$datetime.gif                                gmeta_$prod$uscore$latest.gif
+cp ../archive/$prod/$datetime.gif                                    gmeta_$prod$uscore$latest.gif
 
-rm -f                                                               $prod/gmeta_$prod$uscore$latest.gif
-ln -s ../../archive/$prod/$datetime.gif                             $prod/gmeta_$prod$uscore$latest.gif
+rm -f                                                                $prod/gmeta_$prod$uscore$latest.gif
+#ln -s ../../archive/$prod/$datetime.gif                             $prod/gmeta_$prod$uscore$latest.gif
+cp        ../archive/$prod/$datetime.gif                             $prod/gmeta_$prod$uscore$latest.gif
 
-rm -f                                                               gmeta_$prod$uscore$utc_hhmm.gif
-#ln -s ../archive/$prod/$datetime.gif                               gmeta_$prod$uscore$utc_hhmm.gif
+rm -f                                                                gmeta_$prod$uscore$utc_hhmm.gif
+#ln -s ../archive/$prod/$datetime.gif                                gmeta_$prod$uscore$utc_hhmm.gif
 
-rm -f                                                               $prod/gmeta_$prod$uscore$utc_hhmm.gif
-ln -s ../../archive/$prod/$datetime.gif                             $prod/gmeta_$prod$uscore$utc_hhmm.gif
+rm -f                                                                $prod/gmeta_$prod$uscore$utc_hhmm.gif
+#ln -s ../../archive/$prod/$datetime.gif                             $prod/gmeta_$prod$uscore$utc_hhmm.gif
+cp        ../archive/$prod/$datetime.gif                             $prod/gmeta_$prod$uscore$utc_hhmm.gif
 
-#ln -s $WWW_DIR/anal2d/archive/$prod/$datetime.gif                  $WWW_DIR/anal2d/loop/$prod/$datetime.gif
+#ln -s $WWW_DIR/anal2d/archive/$prod/$datetime.gif                   $WWW_DIR/anal2d/loop/$prod/$datetime.gif
 
 #Make the soft link for Web display of directories
 cd    $WWW_DIR/anal2d/archive/$prod
@@ -222,9 +225,9 @@ cd    $WWW_DIR/anal2d/loop/$prod
 if test -r $WWW_DIR/../../looper/files.cgi; then
      rm -f files.cgi
      ln -s $WWW_DIR/../../looper/files.cgi files.cgi
-else # this can be modified for your own server location
+else # this will use the supplied files.cgi
      rm -f files.cgi
-     ln -s /w3/lapb/domains/$DOMAIN_SUFFIX/../../looper/files.cgi files.cgi
+     ln -s $LAPS_ETC/www/anal2d/files.cgi files.cgi
 fi
 
 echo "Finish laps_gifs_sub.sh..."
