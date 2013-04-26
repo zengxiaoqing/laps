@@ -351,6 +351,7 @@ PROGRAM laps2grib
         !val_time = val_time + 315619200 
 	! --- Valid date, time to describe data for GRIB2.
         CALL cv_i4tim_int_lp(val_time,eyear,emonth,eday,ehour,eminute,esecond,istatus)
+        ! Add 10 to eyear to have time in grib2 files to account for 10 yr difference between i4time and unixtime
         ! Octet 35-40, set to current runtime
         meta_accum2d(n)%eyear = eyear + 1900 + 10
         meta_accum2d(n)%emon  = emonth
