@@ -1,3 +1,4 @@
+
   
       This LAPS README file is viewable on the WWW via the LAPS home 
       page at http://laps.noaa.gov/
@@ -376,14 +377,16 @@
 
      We have the option of making pre-generated GIF images that can be displayed
      on the web by invoking the 'sched.pl -f dummy' command line argument. 
-     Please see section 2.4 for more info on 'sched.pl'. The associated web
-     related scripts (for analyses) such as 'etc/www/followup_ncarg.sh' are in 
-     the repository. These "wrapper" scripts run 'lapsplot.exe' and output a 
-     set of GIF images in a directory tree that can be accessed via the web. 
+     Please see section 2.4 for more info on 'sched.pl'. The web images appear 
+     as '.gif' files in the 'lapsprd/www/anal2d' directory. 
+
+     The associated web related scripts (for analyses) such as 
+     'etc/www/followup_ncarg.sh' are in the repository. These "wrapper" scripts 
+     run 'lapsplot.exe' and output the GIF images suitable for web display.
      The set of web image products are defined with configuration files in
      'static/www/lapsplot.*'. Color tables are specified in 'static/www/*.lut'.
      Other user definable plotting parameters are located in 
-     'static/lapsplot.nl'.
+     'static/lapsplot.nl'. 
 
      A separate web related script is our "on-the-fly" page that is contained
      in 'etc/www/nph-laps.cgi'. This CGI/PERL script can be run via a web
@@ -1393,7 +1396,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            The profiler data for wind goes into the 'pro' intermediate file, 
            and RASS temperature profiles go into the 'lrs' intermediate file. 
            Note that the cdl's associated with each data source indicate the
-           time frequency of the data that our ingest code can process.
+           time frequency of the data that our ingest code can process. The
+           path names for the profiler data are all set in 'nest7grid.parms'.
 
            To summarize...
 <pre>
@@ -2886,6 +2890,8 @@ Inputs: (located in separate netCDF directories)
 
 Output: (feeds wind)
 	pro   inter data   wind profile direction and speed (ASCII-true North)
+
+Parameter namelist file (for data paths): 'static/nest7grid.parms'
 </pre>
 
 Source directory: laps/src/ingest/profiler
@@ -2945,6 +2951,8 @@ Inputs:
 
 Outputs: (feeds LSX and temp.exe)
 	lrs	inter data	RASS Virtual Temperatures (ASCII)
+
+Parameter namelist file (for data paths): 'static/nest7grid.parms'
 </pre>
 
 Source directory: laps/src/ingest/rass
