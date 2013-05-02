@@ -218,7 +218,7 @@ if( $WHICH_TYPE eq "laps"){
 #   Use the small FUA CDL file for large domains
     my $n_3d_grids = $xdim[0]*$ydim[0]*$zdim;
     print "Number of 3-D gridpoints is $xdim[0] $ydim[0] $zdim $n_3d_grids\n";
-    if($n_3d_grids > 22000000){
+    if($n_3d_grids > 28000000){
         print "Large domain - using small version of fua CDL file to help keep fua file size under 2GB\n";
 	run_sys::run_sys("cp $DATA_ROOT/cdl/fua_small.cdl $DATA_ROOT/cdl/fua.cdl");
     }
