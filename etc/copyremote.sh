@@ -2,7 +2,7 @@
 
 # Argument 1: filename (individual file, subdirectory, or file list)
 
-# Argument 2: Destination directory
+# Argument 2: Destination directory (without remote node)
 
 # Argument 3: Copy method (bbcp, exchange, rsync, exchange_tar, exchange_tarfilelist)
 
@@ -11,11 +11,11 @@
 FILENAME=$1
 DESTDIR=$2
 TEMPFILE=$FILENAME.$$
-TEMPDIR=/exchange/tmp/fab
+TEMPDIR=/exchange/tmp/fab/zeus
 
 RSH=--rsh=ssh
 RSYNCARGS=-rlptgvvz
-REMOTE_NODE=pinky.fsl.noaa.gov
+REMOTE_NODE=dlaps-ms1.fsl.noaa.gov
 
 echo "copy_remote.sh..."
 
