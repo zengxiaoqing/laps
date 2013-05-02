@@ -49,6 +49,8 @@
 #
 # -S                   Specify "single" or "multi" strategy for setting up qsub scripts (default="single")
 #
+# -Y                   Override default amount of memory in qsub environment
+#
 # -M                   Runs just the executables for the surface analysis. The argument value
 #                      denotes the name of the surface analysis executable (e.g. 'stmas_mg.x' 
 #                      'laps_sfc.x', or 'recurs_iter.x')
@@ -112,11 +114,11 @@
                
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R $opt_x 
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R $opt_x $opt_Y
             $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X $opt_C $opt_N);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:x:C:N');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:x:C:NY:');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -767,10 +769,10 @@ foreach $exe (@LAPS_EXE){
                 my $vmem_gb=1.0;
                 if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
                     if($opt_V =~ "STMAS") {
-                        if($npts > 10000000){
-                            $vmem_gb=20.0
+                        if($npts > 10000000){ # Note STMAS_CONUS is 55 million gridpoints & 16GB, VLAPS_HWT is 27.5 million gridpoints & 18.5GB
+                            $vmem_gb=18.5
                         }else{
-                            $vmem_gb=8.0
+                            $vmem_gb=11.0
                         }
                     }elsif($qsub_mode eq "multi"){ # Traditional LAPS in multi mode
                         if($execount == 1){ # first set of executables 
@@ -792,6 +794,9 @@ foreach $exe (@LAPS_EXE){
                         }else{
                             $vmem_gb=4.0
                         }
+                    }
+                    if(defined $opt_Y){
+                        $vmem_gb=$opt_Y
                     }
                 }
                 my $vmem_mb = int($vmem_gb*1000.);
