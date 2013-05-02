@@ -98,7 +98,7 @@ if test "$3" = qsub; then
     else
         script=$LOCAL_DATA_ROOT/log/qsub_rsync_out_$subdir.sh
         echo "#!/bin/sh"                 > $script
-        echo "#PBS -N qsub_rsync_out_$subdir"  >> $script
+        echo "#PBS -N rsync_$subdir"  >> $script
     fi
     echo "#PBS -A dlaps"           >> $script
     echo "#PBS -l procs=1,walltime=$HHMM:00"      >> $script
