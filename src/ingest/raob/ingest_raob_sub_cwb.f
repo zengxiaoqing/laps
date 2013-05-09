@@ -3,7 +3,7 @@
      ~             a9_time, filename, istatus )
 
       integer   loopNum, levelNum  
-      parameter ( loopNum=20, levelNum=100 )
+      parameter ( loopNum=20, levelNum=300 )
 
       character*(*)  filename
       character*3    reportFlag
@@ -43,7 +43,6 @@
       recNum= 0
       inNum= 0        ! inNum : the record number within time window
       istatus= 0
-
       open ( 1, file=filename, status='old', err=1000 )
 
       istatus= 1
@@ -211,7 +210,7 @@ c wen modify         if ( windQua(i,j) .ne. 1 )  then
          if ( windQua(i,j) .eq. 11 ) go to 100 
          if ( windQua(i,j) .eq. 21 ) go to 100 
          if ( windQua(i,j) .eq. 31 ) go to 100 
-             write(*,*)' wen test windQua',windQua(i,j),windDir(i,j)
+            ! write(*,*)' wen test windQua',windQua(i,j),windDir(i,j)
             windDir(i,j)= r_missing_data
             windSpeed(i,j)= r_missing_data
 100   continue
