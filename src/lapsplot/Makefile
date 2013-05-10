@@ -10,16 +10,18 @@ include $(SRCROOT)/src/include/makefile.inc
 
 FFLAGS=$(DBFLAGS)
 
-LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
-           $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
-           $(SRCROOT)/src/lib/util/libutil.a  \
+LAPSLIBS = $(SRCROOT)/src/lib/cloud/libcloud.a  \
            $(SRCROOT)/src/lib/temp/libtemp.a  \
+           $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/util/libutil.a  \
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/modules/libmodules.a  
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
-             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
-             $(SRCROOT)/src/lib/util/libdebugutil.a  \
+DBLAPSLIBS = $(SRCROOT)/src/lib/cloud/libdebugcloud.a  \
              $(SRCROOT)/src/lib/temp/libdebugtemp.a  \
+             $(SRCROOT)/src/lib/libdebuglaps.a  \
+             $(SRCROOT)/src/lib/util/libdebugutil.a  \
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
 .SUFFIXES:
@@ -37,11 +39,13 @@ SRC= lapsplot_main.f \
      lapsplot.f \
      frame2.f \
      getuv2d.f \
+     get_cloud_rays.f \
      hsv_to_rgb.f \
      logit.f \
      plotobs.f \
      plot_il_obs.f \
      read_tdsnd.f \
+     plot_allsky.f \
      plottype.f \
      plotwinds_2d.f \
      plotgrid_2d.f \
