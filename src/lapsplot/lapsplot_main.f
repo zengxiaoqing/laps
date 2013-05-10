@@ -40,6 +40,8 @@ cdis
 
         character*150 static_dir,filename
 
+        ISTAT = INIT_TIMER()
+
 !       Read moisture parameters into module memory structure
         call get_directory('static',static_dir,len_dir)
         filename = static_dir(1:len_dir)//'/moisture_switch.nl'
