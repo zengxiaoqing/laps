@@ -475,6 +475,14 @@
                         write(6,*)' var_2d/var_2d_fcst = ',var_2d,' '
      1                                                    ,var_2d_fcst
 
+                        if(trim(c_model) .eq. 'nam')then
+                             model_pcp_intvl = 10800
+                        elseif(trim(c_model) .eq. 'nam-nh')then
+                             model_pcp_intvl = 21600
+                        else
+                             model_pcp_intvl = model_fcst_intvl
+                        endif
+
                         if(trim(type_a(ifield)) .ne. 'pcp' .OR.
      1                          var_2d_fcst .eq. 'R01'         )then 
                             call get_lapsdata_2d(i4_initial,i4_valid
@@ -490,14 +498,9 @@
                                 goto 900
                             endif
                         elseif(i4_fcst .eq. (i4_fcst/intvl_pcp) 
-     1                                             * intvl_pcp  )then ! FSF
-                            if(trim(c_model) .eq. 'nam')then
-                                model_pcp_intvl = 10800
-                            elseif(trim(c_model) .eq. 'nam-nh')then
-                                model_pcp_intvl = 21600
-                            else
-                                model_pcp_intvl = model_fcst_intvl
-                            endif
+     1                                             * intvl_pcp  
+     1                                  .AND.
+     1                         model_pcp_intvl .le. intvl_pcp)then ! FSF
 
                             write(6,*)
      1                      ' Call get_interval_precip for ',trim(ext)
@@ -512,7 +515,10 @@
                                 goto 900
                             endif
                         else
-                            write(6,*)' No precip fcst at this time'
+                            write(6,*)' No precip fcst at this time...'
+                            write(6,*)
+     1                       ' i4_fcst/intvl_pcp/model_pcp_intvl ',
+     1                         i4_fcst,intvl_pcp,model_pcp_intvl
                             goto 900
                         endif
 
