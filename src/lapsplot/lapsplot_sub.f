@@ -294,6 +294,21 @@ cdis
                 call frame
             endif
 
+        elseif(c_section .eq. 'a' .or. c_section .eq. 'az')THEN
+            if(c_section .eq. 'az')then
+                read(lun,*)plot_parms%obs_size           
+            endif
+            
+            call plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
+     1                        ,r_missing_data,laps_cycle_time,maxstns
+     1                        ,i_overlay,plot_parms,namelist_parms
+     1                        ,l_plotobs)       
+
+            if(ifield_found .eq. 1)then
+                write(6,*)' Field found - calling frame'
+                call frame
+            endif
+
         endif ! c_section
 
         write(6,901)
