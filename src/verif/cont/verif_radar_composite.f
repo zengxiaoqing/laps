@@ -237,6 +237,74 @@
                 enddo
             endif
 
+!           Just use 1-hourly fields for PCP_01
+            intvl_pcp = 3600
+            do ifield = 1,n_fields                                 
+                if(var_a(ifield) .eq. 'PCP_01')then ! PCP_01 avail every 1 hour
+                    do itime_fcst = 0,n_fcst_times
+                        i4_fcst = itime_fcst*model_verif_intvl      
+                        if(i4_fcst .ne. (i4_fcst/intvl_pcp)*intvl_pcp
+     1                                                             )then 
+                            n_plot_times_m(imodel,itime_fcst,ifield)
+     1                                                           = 0
+                        endif
+                    enddo
+!               else 
+!                   n_plot_times_m(imodel,:,ifield) = 0
+                endif
+            enddo
+
+!           Just use 3-hourly fields for PCP_03
+            intvl_pcp = 10800
+            do ifield = 1,n_fields                                 
+                if(var_a(ifield) .eq. 'PCP_03')then ! PCP_03 avail every 3 hours
+                    do itime_fcst = 0,n_fcst_times
+                        i4_fcst = itime_fcst*model_verif_intvl      
+                        if(i4_fcst .ne. (i4_fcst/intvl_pcp)*intvl_pcp
+     1                                                             )then 
+                            n_plot_times_m(imodel,itime_fcst,ifield)
+     1                                                           = 0
+                        endif
+                    enddo
+!               else 
+!                   n_plot_times_m(imodel,:,ifield) = 0
+                endif
+            enddo
+
+!           Just use 6-hourly fields for PCP_06
+            intvl_pcp = 21600
+            do ifield = 1,n_fields                                 
+                if(var_a(ifield) .eq. 'PCP_06')then ! PCP_06 avail every 6 hours
+                    do itime_fcst = 0,n_fcst_times
+                        i4_fcst = itime_fcst*model_verif_intvl      
+                        if(i4_fcst .ne. (i4_fcst/intvl_pcp)*intvl_pcp
+     1                                                             )then 
+                            n_plot_times_m(imodel,itime_fcst,ifield)
+     1                                                           = 0
+                        endif
+                    enddo
+!               else 
+!                   n_plot_times_m(imodel,:,ifield) = 0
+                endif
+            enddo
+
+!           Just use 24-hourly fields for PCP_24
+            intvl_pcp = 86400
+            do ifield = 1,n_fields                                 
+                if(var_a(ifield) .eq. 'PCP_24')then ! PCP_24 avail every 24 hrs
+                    do itime_fcst = 0,n_fcst_times
+                        i4_fcst = itime_fcst*model_verif_intvl      
+                        if(i4_fcst .ne. (i4_fcst/intvl_pcp)*intvl_pcp
+     1                                                             )then 
+                            n_plot_times_m(imodel,itime_fcst,ifield)
+     1                                                           = 0
+                        endif
+                    enddo
+!               else 
+!                   n_plot_times_m(imodel,:,ifield) = 0
+                endif
+            enddo
+
 !           Only REF & LMR available from persistence
             if(trim(c_fdda_mdl_src(imodel)) .eq. 'persistence')then
                 do ifield = 1,n_fields ! all unavailable except REF & LMR
