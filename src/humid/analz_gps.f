@@ -151,7 +151,7 @@ c     compute the fraction of data_out that is empty
          enddo
       enddo
 
-      if(ncount.eq.0) then      !abort gvap here
+      if(ncount.eq.0) then      !abort gps here
          write(6,*) 'No GPS data avail to process'
          istatus = 0
          return
@@ -179,7 +179,7 @@ c     prep the weighting array for the above analyzed sheet
       call weight_field (data_weights, mask,  ii,jj,r50 , istatus)
 
       if (istatus .ne. 1) then! test weight_field
-         write (6,*) 'Failure in weight_field from analz_gvap'
+         write (6,*) 'Failure in weight_field from analz_gps'
          return
       endif
 
@@ -189,12 +189,12 @@ c     test NaN values coming out of data_out and data_weights
 
       call check_nan2 (data_out,ii,jj,istatus)
       if (istatus.ne.1) then 
-         write (6,*) 'NaN detected in data_out in analz_gvap.f'
+         write (6,*) 'NaN detected in data_out in analz_gps.f'
          return
       endif
       call check_nan2 (data_weights,ii,jj,istatus)
       if (istatus.ne.1) then 
-         write (6,*) 'NaN detected in data_weights in analz_gvap.f'
+         write (6,*) 'NaN detected in data_weights in analz_gps.f'
          return
       endif
 
