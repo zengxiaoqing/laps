@@ -174,7 +174,7 @@ c     now have fairly full data array.  now analyze
 
 c     prep the weighting array for the above analyzed sheet
 
-      r50 = 750.e+3 ! km radius of influence     
+      r50 = 750.e+3 ! m radius of influence (here 750 km)    
 
       call weight_field (data_weights, mask,  ii,jj,r50 , istatus)
 
