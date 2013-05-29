@@ -24,7 +24,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -x <blank> if present an awips bigfile will be created
 #    -e avoid exiting if a particular file is missing (position as last argument or supply dummy value)
 #    -c remote copy method (rsync, scp, exchange, bbcp), default is rsync [optional]
-#    -R copy surface fsf only [optional - dummy value should be supplied]
+#    -R copy surface fsf or upper air fua only (specify "fua" or "fsf") [optional]
 
 use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e $opt_c $opt_R);
 #getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxec:R');
@@ -37,7 +37,10 @@ require "@prefix@/etc/oputil.pm";
 if(! defined $opt_R){ # check surface only flag
     print "opt_R is not defined\n";
 }else{
-    print "opt_R is defined\n";
+    if($opt_R eq "dummy"){
+        $opt_R = "fsf";
+    }
+    print "opt_R is defined as $opt_R\n";
 }
 
 my $now = `date -u`;
@@ -236,7 +239,7 @@ if (! $opt_S){ # test for skipping remote copy
   for ($g=1; $g<=$ngrid; $g++) {
     $grid = $grid[$g];
 
-    if(! defined $opt_R){ # check surface only flag
+    if($opt_R ne "fsf"){ # check surface only flag
         $skip = 0;
     }else{
         $skip = 1; # Skip fua checking when surface only flag is set
@@ -260,7 +263,11 @@ if (! $opt_S){ # test for skipping remote copy
 
     print "fsf_file = $fsf_file\n";
 
-    $skip = 0;
+    if($opt_R ne "fua"){ # check upper air only flag
+        $skip = 0;
+    }else{
+        $skip = 1; # Skip fsf checking when upper air only flag is set
+    }
     while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file") && $skip==0) {
          print "file does not exist $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
          system ("date");
@@ -354,7 +361,7 @@ if (! $opt_S){ # test for skipping remote copy
       }
     }
 
-    if(! defined $opt_R){ # check surface only flag
+    if($opt_R ne "fsf"){ # check surface only flag
       print "Running command: $scp_cmd\n";
       system ($scp_cmd);
       if($remote_copy =~ "rsync"){
@@ -384,13 +391,16 @@ if (! $opt_S){ # test for skipping remote copy
       }
     }
 
-    print "Running command: $scp_cmd\n";
-    system ($scp_cmd);
-    if($remote_copy =~ "rsync"){
-      print "Running repeat command: $scp_cmd\n";
+    if($opt_R ne "fua"){ # check upper air only flag
+      print "Running command: $scp_cmd\n";
       system ($scp_cmd);
+      if($remote_copy =~ "rsync"){
+        print "Running repeat command: $scp_cmd\n";
+        system ($scp_cmd);
+      }
+      system ("date");
     }
-    system ("date");
+
   } # grid loop
  } # forecast time loop
 
