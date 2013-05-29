@@ -59,10 +59,112 @@ echo "Running $EXE_DIR/lapsplot.exe < $LAPSPLOT_IN on $MACHINE $NODE"
 #$EXE_DIR/lapsplot.exe                                          < $LAPS_GIFS/lapsplot.in
 $EXE_DIR/lapsplot.exe                                           < $LAPSPLOT_IN
 
-pwd
-ls -l $SCRATCH_DIR/$proc/gmeta
+if test "$NCARG_ROOT" = "allsky"; then 
+  echo "allsky option"
+  echo "$SCRATCH_DIR/$proc"
+  ls -l $SCRATCH_DIR/$proc
 
-if test "$MACHINE" = "AIX"; then
+  if test "$RESOLUTION" = "180p" || test "$RESOLUTION" = "180pr"; then
+      MODE_ALLSKY=polar
+  elif test "$RESOLUTION" = "180c"; then
+      MODE_ALLSKY=cyl   
+  elif test "$RESOLUTION" = "360c"; then
+      MODE_ALLSKY=cyl   
+  elif test "$RESOLUTION" = "360p" || test "$RESOLUTION" = "360pr"; then
+      MODE_ALLSKY=polar 
+  else
+      setenv RESOLUTION 360p
+      MODE_ALLSKY=polar
+  fi
+
+  echo "MODE_ALLSKY = $MODE_ALLSKY    RESOLUTION = $RESOLUTION"
+
+  if test "$MODE_ALLSKY" = "polar"; then
+    echo "will run IDL polar conversion to PNG"
+    rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky.pro allsky.pro
+    echo allsky | /usr/local/share/rsi/idl/bin/idl
+  else # MODE_ALLSKY is cyl
+    echo "will run IDL cyl conversion to PNG"
+    rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky_cyl.pro allsky_cyl.pro
+    echo allsky_cyl | /usr/local/share/rsi/idl/bin/idl
+    convert -resize 300% allsky_polar_001.png allsky_polar_001.png
+  fi
+
+  DIRCYL=South
+
+# Other orientations
+  if test "$RESOLUTION" = "180pr"; then
+      convert allsky_polar_001.png -rotate 180 allsky_polar_001.png
+      DIR1=SE
+      DIR2=NE
+      DIR3=NW
+      DIR4=SW
+  elif test "$RESOLUTION" = "360pr"; then # default           
+      DIR1=NW
+      DIR2=SW
+      DIR3=SE
+      DIR4=NE
+  elif test "$RESOLUTION" = "360p"; then # flip left/right
+      convert allsky_polar_001.png -flop allsky_polar_001.png
+      DIR1=NE
+      DIR2=SE
+      DIR3=SW
+      DIR4=NW
+  elif test "$RESOLUTION" = "180p"; then # rotate and flip left/right
+      convert allsky_polar_001.png -rotate 180 -flop allsky_polar_001.png
+#     convert allsky_polar_001.png -flop allsky_polar_001.png
+      DIR1=SW
+      DIR2=NW
+      DIR3=NE
+      DIR4=SE
+  elif test "$RESOLUTION" = "360c"; then # roll horizontally by half the image
+      convert allsky_polar_001.png -roll +540+0 allsky_polar_001.png
+      DIRCYL=North
+  fi
+
+# Annotate Model
+  convert -annotate +15+20  "NOAA LAPS"  -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+
+# Annotate Time
+  if test "$MODE_ALLSKY" = "polar"; then
+    convert -annotate +393+500 `cat label.001`   -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+  else # MODE_ALLSKY is cyl
+    convert -annotate +725+20 `cat label.001`   -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+  fi
+
+# Annotate Lat/Lon
+  if test "$MODE_ALLSKY" = "polar"; then
+    convert -annotate +363+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+  else # MODE_ALLSKY is cyl
+    convert -annotate +890+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+  fi
+
+# Annotate Field
+  convert -annotate +20+500 "All Sky"          -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+
+# Annotate Directions
+  if test "$MODE_ALLSKY" = "polar"; then
+    convert -annotate +55+60     "$DIR1"            -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    convert -annotate +40+450    "$DIR2"            -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    convert -annotate +440+450   "$DIR3"            -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    convert -annotate +435+60    "$DIR4"            -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+  else # MODE_ALLSKY is cyl
+    convert -annotate +520+20    "$DIRCYL"          -pointsize 20 -fill orange allsky_polar_001.png allsky_polar_001.png
+  fi
+
+  echo "run convert from PNG to GIF (assuming no animation)"    
+  convert allsky_polar_001.png $SCRATCH_DIR/gmeta_$proc.gif
+  ls -l $SCRATCH_DIR/$proc
+  ls -l $SCRATCH_DIR/gmeta_$proc.gif
+
+  ext3=png
+
+else
+  echo "regular ncar graphics option"
+  pwd
+  ls -l $SCRATCH_DIR/$proc/gmeta
+
+  if test "$MACHINE" = "AIX"; then
 
 #   Combination for IBM
     ext1=avs
@@ -72,7 +174,7 @@ if test "$MACHINE" = "AIX"; then
 
 #   CTRANS=/usr/local/apps/ncarg-4.0.1/bin/ctrans
 
-else
+  else
 
     netpbm=yes
 
@@ -98,29 +200,29 @@ else
 
 #   CTRANS=/usr/local/apps/ncarg-4.2.2-pgi/bin/ctrans
 
-fi
+  fi
 
-CTRANS=$NCARG_ROOT/bin/ctrans
+  CTRANS=$NCARG_ROOT/bin/ctrans
 
 
-#/usr/local/apps/ncarg-4.0.1/bin/ctrans -verbose -d avs -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/gmeta_$proc.x
-#ctrans -d avs -window 0.0:0.08:1.0:0.92 -resolution 610x512 gmeta > $SCRATCH_DIR/gmeta_$proc.x
-#/usr/local/apps/ncarg-4.0.1/bin/ctrans -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
-#$NCARG_ROOT/bin/ctrans -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION $SCRATCH_DIR/gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
+# /usr/local/apps/ncarg-4.0.1/bin/ctrans -verbose -d avs -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/gmeta_$proc.x
+# ctrans -d avs -window 0.0:0.08:1.0:0.92 -resolution 610x512 gmeta > $SCRATCH_DIR/gmeta_$proc.x
+# /usr/local/apps/ncarg-4.0.1/bin/ctrans -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
+# $NCARG_ROOT/bin/ctrans -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION $SCRATCH_DIR/gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
 
-#$CTRANS -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION $SCRATCH_DIR/$proc/gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
+# $CTRANS -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION $SCRATCH_DIR/$proc/gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
 
-#ls -l $SCRATCH_DIR/gmeta_temp_$proc.$ext2
+# ls -l $SCRATCH_DIR/gmeta_temp_$proc.$ext2
 
-date -u
+  date -u
 
-echo "lapsplot_gifs.sh: netpbm = $netpbm"
+  echo "lapsplot_gifs.sh: netpbm = $netpbm"
 
-#numimages=`ls -1 *.gif | wc -l`
-#echo "numimages = $numimages"
+# numimages=`ls -1 *.gif | wc -l`
+# echo "numimages = $numimages"
 
-#We assume we are running this script in LINUX and convert will not properly do AVS X on LINUX
-if test "$netpbm" = "yes" && test "$animate" = "no"; then 
+# We assume we are running this script in LINUX and convert will not properly do AVS X on LINUX
+  if test "$netpbm" = "yes" && test "$animate" = "no"; then 
     date
 #   echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$proc.gif file"
     echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$proc.gif"
@@ -132,7 +234,7 @@ if test "$netpbm" = "yes" && test "$animate" = "no"; then
     echo "Cleanup"
     mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rmdir $SCRATCH_DIR/$proc &
 
-elif test "$netpbm" = "yes" && test "$animate" != "no"; then 
+  elif test "$netpbm" = "yes" && test "$animate" != "no"; then 
     date
     echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun"
     $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun
@@ -148,18 +250,20 @@ elif test "$netpbm" = "yes" && test "$animate" != "no"; then
 
     ls -l gmeta_$proc.*.sun.gif
 
-    numimages=`ls -1 *.gif | wc -l`
-    echo "numimages = $numimages"
+#   Make animation or montage
+    if test "$animate" != "no"; then
+      numimages=`ls -1 *.$ext3 | wc -l`
+      echo "numimages = $numimages"
 
-    echo " "
-    echo "Listing of $SCRATCH_DIR/$proc animation images"
-    ls -1r gmeta*.gif | tee files.txt
+      echo " "
+      echo "Listing of $SCRATCH_DIR/$proc animation images"
+      ls -1r gmeta*.$ext3 | tee files.txt
 
-    if test "$animate" = "yes"; then
-        echo "convert -delay $delay -loop 0 *.gif $SCRATCH_DIR/gmeta_$proc.gif"
-        convert -delay $delay -loop 0 *.gif $file.gif     $SCRATCH_DIR/gmeta_$proc.gif
+      if test "$animate" = "yes"; then
+        echo "convert -delay $delay -loop 0 *.$ext3                 $SCRATCH_DIR/gmeta_$proc.gif"
+              convert -delay $delay -loop 0 *.$ext3 $file.$ext3     $SCRATCH_DIR/gmeta_$proc.gif
 
-    else # make montage instead of animation, $animate is the number of images
+      else # make montage instead of animation, $animate is the number of images
 #       numimages=`ls -1 *.gif | wc -l`
 #       echo "numimages = $numimages"
 
@@ -178,8 +282,8 @@ elif test "$netpbm" = "yes" && test "$animate" != "no"; then
 
           echo " "
           echo "Listing of $SCRATCH_DIR/$proc animation images"
-          ls -1r gmeta_*_*.gif | tee files.txt
-          rm -f *sun*.gif
+          ls -1r gmeta_*_*.$ext3 | tee files.txt
+          rm -f *sun*.$ext3
 
         else
 
@@ -188,21 +292,23 @@ elif test "$netpbm" = "yes" && test "$animate" != "no"; then
 
           if test "$numimages" == "3"; then # single row
             echo "making single row"
-            echo "montage *.gif -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif"
-                  montage *.gif -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif
+            echo "montage *.$ext3 -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif"
+                  montage *.$ext3 -mode Concatenate -tile $nmontage$x20 $SCRATCH_DIR/gmeta_$proc.gif
           elif test "$numimages" == "4"; then # double row
             echo "making double row"
-            echo "montage *.gif -mode Concatenate -tile 2x2           $SCRATCH_DIR/gmeta_$proc.gif"
-                  montage *.gif -mode Concatenate -tile 2x2           $SCRATCH_DIR/gmeta_$proc.gif
+            echo "montage *.$ext3 -mode Concatenate -tile 2x2           $SCRATCH_DIR/gmeta_$proc.gif"
+                  montage *.$ext3 -mode Concatenate -tile 2x2           $SCRATCH_DIR/gmeta_$proc.gif
           else                              # automatic settings
             echo "making $nmontage (nmontage) columns"
-            echo "montage *.gif -mode Concatenate -tile $nmontage$x     $SCRATCH_DIR/gmeta_$proc.gif"
-                  montage *.gif -mode Concatenate -tile $nmontage$x     $SCRATCH_DIR/gmeta_$proc.gif
+            echo "montage *.$ext3 -mode Concatenate -tile $nmontage$x     $SCRATCH_DIR/gmeta_$proc.gif"
+                  montage *.$ext3 -mode Concatenate -tile $nmontage$x     $SCRATCH_DIR/gmeta_$proc.gif
           fi    
 
         fi
 
-    fi
+      fi # decide between animation and montage
+
+    fi # make animation or montage (animation != "no")
 
 #   This option may be more direct though it isn't working on the new server
 #   echo "convert -delay $delay -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
@@ -221,33 +327,9 @@ elif test "$netpbm" = "yes" && test "$animate" != "no"; then
 #   echo "Cleaned up listing of $SCRATCH_DIR/$proc"
 #   ls -l $SCRATCH_DIR/$proc
 
-elif test "$ext2" = "x"; then
-    date -u
-    echo "Converting $SCRATCH_DIR/$proc/gmeta file with $CTRANS to $SCRATCH_DIR/gmeta_temp_$proc.$ext2"
-    $CTRANS -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION $SCRATCH_DIR/$proc/gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
+  fi # netpbm / animate test                        
 
-    ls -l $SCRATCH_DIR/gmeta_temp_$proc.$ext2
-
-    date -u
-
-#   echo "Running imconv.ibm.exe on ren via rsh"
-#   rsh ren /usr/nfs/avs_fsl/bin/imconv.ibm.exe $SCRATCH_DIR/gmeta_temp_$proc.$ext2 $SCRATCH_DIR/gmeta_$proc.gif
-
-#   Note that 'convert' is available on Linux but it appears to be slow for GIFs
-#   echo "Running convert $SCRATCH_DIR/gmeta_temp_$proc.$ext2 $SCRATCH_DIR/gmeta_$proc.$ext3 on $MACHINE"
-#   convert $SCRATCH_DIR/gmeta_temp_$proc.$ext2 $SCRATCH_DIR/gmeta_$proc.$ext3
-
-    echo "Running imconv.ibm.exe on $MACHINE $NODE"
-    /usr/nfs/avs_fsl/bin/imconv.ibm.exe $SCRATCH_DIR/gmeta_temp_$proc.$ext2 $SCRATCH_DIR/gmeta_$proc.gif
-
-    date -u
-
-#   Cleanup
-    echo "Cleanup"
-!   rm -f $SCRATCH_DIR/gmeta_temp_$proc.$ext2; mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rmdir $SCRATCH_DIR/$proc &
-    rm -f $SCRATCH_DIR/gmeta_temp_$proc.$ext2; mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..                           &
-
-fi
+fi # allsky option
 
 chmod 666 $SCRATCH_DIR/gmeta_$proc.$ext3
 
