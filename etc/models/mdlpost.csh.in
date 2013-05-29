@@ -17,7 +17,17 @@ else
     setenv DELAY $3
 endif
 
+setenv REMOTE_DATA_ROOT $4
+
 setenv PROC $$
+
+if (-e /public) then
+    setenv GSDPUBLIC /public
+else
+    setenv GSDPUBLIC /scratch2/portfolios/BMC/public
+endif
+
+echo "GSDPUBLIC is $GSDPUBLIC"
 
 # Obtain model runtime (on the hour), default is with a 3 hour delay
 @ LEN_DELAY = `echo $DELAY | wc -c` - 1
@@ -49,19 +59,19 @@ foreach MODEL ($MODELS)
   else if ($MODEL == nam) then
     setenv CMODEL NAM
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/nam/A218/grib2 
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/nam/A218/grib2 
     setenv HHTIMES '00 03 06 09 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84'                                      
     setenv MMTIMES '00'
   else if ($MODEL == nam-nh) then
     setenv CMODEL NAM
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/nam/nh221/grib2 
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/nam/nh221/grib2 
     setenv HHTIMES '00 06 12 18 24 30 36 42 48 54 60 66 72 78 84'                                      
     setenv MMTIMES '00'
   else if ($MODEL == rr) then
     setenv CMODEL RR
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/rap/iso_130/grib2
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/rap/iso_130/grib2
     if ($FCSTINTVL <= 3600) then
         setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18'
     else
@@ -71,7 +81,7 @@ foreach MODEL ($MODELS)
   else if ($MODEL == wndw-warw) then
     setenv CMODEL WNDW-WARW
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/hiresw/westarw/grib2
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/hiresw/westarw/grib2
     if ($FCSTINTVL <= 3600) then
         setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12'
     else
@@ -81,43 +91,43 @@ foreach MODEL ($MODELS)
   else if ($MODEL == em-ctl) then
     setenv CMODEL EM-CTL
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/sref/em.ctl
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/sref/em.ctl
     setenv HHTIMES '00 03 06 09 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84 87'                                      
     setenv MMTIMES '00'
   else if ($MODEL == em-n1) then
     setenv CMODEL EM-N1
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/sref/em.n1
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/sref/em.n1
     setenv HHTIMES '00 03 06 09 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84 87'                                      
     setenv MMTIMES '00'
   else if ($MODEL == em-n2) then
     setenv CMODEL EM-N2
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/sref/em.n2
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/sref/em.n2
     setenv HHTIMES '00 03 06 09 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84 87'                                      
     setenv MMTIMES '00'
   else if ($MODEL == em-n3) then
     setenv CMODEL EM-N3
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/sref/em.n3
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/sref/em.n3
     setenv HHTIMES '00 03 06 09 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84 87'                                      
     setenv MMTIMES '00'
   else if ($MODEL == em-p1) then
     setenv CMODEL EM-P1
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/sref/em.p1
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/sref/em.p1
     setenv HHTIMES '00 03 06 09 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84 87'                                      
     setenv MMTIMES '00'
   else if ($MODEL == em-p2) then
     setenv CMODEL EM-P2
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/sref/em.p2
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/sref/em.p2
     setenv HHTIMES '00 03 06 09 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84 87'                                      
     setenv MMTIMES '00'
   else if ($MODEL == em-p3) then
     setenv CMODEL EM-P3
     setenv MODE_FSF REGRID
-    setenv GRIBINDIR /public/data/grids/sref/em.p3
+    setenv GRIBINDIR $GSDPUBLIC/data/grids/sref/em.p3
     setenv HHTIMES '00 03 06 09 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84 87'                                      
     setenv MMTIMES '00'
   endif
@@ -234,8 +244,8 @@ foreach MODEL ($MODELS)
         echo " "
         echo "Processing forecast time/record $FCSTTIME $REC_LMR"
 
-#       setenv GRIBIN /home/Steve.Albers/public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
-        setenv GRIBIN /public/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
+#       setenv GRIBIN /home/Steve.Albers$GSDPUBLIC/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
+        setenv GRIBIN $GSDPUBLIC/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
 
 #       setenv TMPOUT_FSF /home/Steve.Albers/outdir/$YYDDDHHMM$FCSTTIME.fsf
         setenv NCOUT_FSF $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME.fsf
@@ -299,7 +309,7 @@ foreach MODEL ($MODELS)
 
             setenv GRIB_PCP_IN /nofile                                                         
             if ($FMM == 00 || $FMM == 60) then
-                setenv GRIB_PCP_IN /public/data/fsl/hrrr/conus/wrftwo/$YYDDDHHMM$FCST_HH\00         
+                setenv GRIB_PCP_IN $GSDPUBLIC/data/fsl/hrrr/conus/wrftwo/$YYDDDHHMM$FCST_HH\00         
                 if (-e $GRIB_PCP_IN) then
                     echo "$GRIB_PCP_IN is present"
 
@@ -416,7 +426,7 @@ foreach MODEL ($MODELS)
             date -u
             echo " "
             echo "Hourly HRRR files under construction for FUA"
-            setenv GRIB_PRES_IN /public/data/fsl/hrrr/conus/wrfprs/$YYDDDHHMM$FCST_HH\00         
+            setenv GRIB_PRES_IN $GSDPUBLIC/data/fsl/hrrr/conus/wrfprs/$YYDDDHHMM$FCST_HH\00         
             setenv MODE_FUA WGRIB
 
             if (-e $GRIB_PRES_IN && -e $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua) then
@@ -483,6 +493,15 @@ foreach MODEL ($MODELS)
                         echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F T T wrf-hrrr $LAPS_DATA_ROOT"
                               $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F T T wrf-hrrr $LAPS_DATA_ROOT
 
+                        if ($REMOTE_DATA_ROOT != "") then
+                            cd $OUTDIR_FUA 
+                            $LAPSINSTALLROOT/etc/copyremote.sh $YYDDDHHMM$FCSTTIME.fua $REMOTE_DATA_ROOT/lapsprd/fua/$MODEL exchange
+                        endif
+
+                        if ($REMOTE_DATA_ROOT != "") then
+                            cd $OUTDIR_FSF 
+                            $LAPSINSTALLROOT/etc/copyremote.sh $YYDDDHHMM$FCSTTIME.fsf $REMOTE_DATA_ROOT/lapsprd/fsf/$MODEL exchange
+                        endif
 
                     else
                         echo "$NCTEMPLATE_FUA does not exist, skip rest of HRRR FUA processing"
@@ -502,11 +521,17 @@ foreach MODEL ($MODELS)
                               mv $TMPOUT_FSF $NCOUT_FSF
 
                         ls -l $NCOUT_FSF
+
                         echo " "
 
                         echo "*** regridding $NCOUT_FSF (by inputting $OUTDIR_FSF in arg 1) ***"
                         echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT"
                               $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
+
+                        if ($REMOTE_DATA_ROOT != "") then
+                            cd $OUTDIR_FSF 
+                            $LAPSINSTALLROOT/etc/copyremote.sh $YYDDDHHMM$FCSTTIME.fsf $REMOTE_DATA_ROOT/lapsprd/fsf/$MODEL exchange
+                        endif
 
                     endif
 
@@ -517,6 +542,11 @@ foreach MODEL ($MODELS)
                     echo "lfmregrid method..."
                     echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME T F F F wrf-hrrr $LAPS_DATA_ROOT"
                           $LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME T F F F wrf-hrrr $LAPS_DATA_ROOT 
+
+                    if ($REMOTE_DATA_ROOT != "") then
+                        cd $OUTDIR_FUA 
+                        $LAPSINSTALLROOT/etc/copyremote.sh $YYDDDHHMM$FCSTTIME.fua $REMOTE_DATA_ROOT/lapsprd/fua/$MODEL exchange
+                    endif
 
                 endif # MODE_FUA (WGRIB method)
 
@@ -533,6 +563,11 @@ foreach MODEL ($MODELS)
                       $LAPSINSTALLROOT/bin/lfmregrid.exe $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME $YYDDDHHMM $FCSTTIME F F F T wrf-hrrr $LAPS_DATA_ROOT
 
                 ls -l $NCOUT_FSF                
+
+                if ($REMOTE_DATA_ROOT != "") then
+                    cd $OUTDIR_FSF 
+                    $LAPSINSTALLROOT/etc/copyremote.sh $YYDDDHHMM$FCSTTIME.fsf $REMOTE_DATA_ROOT/lapsprd/fsf/$MODEL exchange
+                endif
 
             endif # $GRIB_PRES_IN exists
 
@@ -552,6 +587,11 @@ foreach MODEL ($MODELS)
 
             ls -l $NCOUT_FSF                
 
+            if ($REMOTE_DATA_ROOT != "") then
+                cd $OUTDIR_FSF 
+                $LAPSINSTALLROOT/etc/copyremote.sh $YYDDDHHMM$FCSTTIME.fsf $REMOTE_DATA_ROOT/lapsprd/fsf/$MODEL exchange
+            endif
+
         endif # on the hour
 
       else # other model
@@ -565,6 +605,16 @@ foreach MODEL ($MODELS)
         setenv GRIB_PRES_IN $GRIBINDIR/$YYDDDHHMM$FCSTTIME_IN
         echo "$LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME_OUT T T F F $MODEL $LAPS_DATA_ROOT"
               $LAPSINSTALLROOT/bin/lfmregrid.exe $GRIB_PRES_IN $YYDDDHHMM $FCSTTIME_OUT T T F F $MODEL $LAPS_DATA_ROOT 
+
+        if ($REMOTE_DATA_ROOT != "") then
+            cd $OUTDIR_FUA 
+            $LAPSINSTALLROOT/etc/copyremote.sh $YYDDDHHMM$FCSTTIME.fua $REMOTE_DATA_ROOT/lapsprd/fua/$MODEL exchange
+        endif
+
+        if ($REMOTE_DATA_ROOT != "") then
+            cd $OUTDIR_FSF 
+            $LAPSINSTALLROOT/etc/copyremote.sh $YYDDDHHMM$FCSTTIME.fsf $REMOTE_DATA_ROOT/lapsprd/fsf/$MODEL exchange
+        endif
 
       endif # CMODEL = HRRR
 
