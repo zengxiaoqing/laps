@@ -4,7 +4,7 @@
 
 # Argument 2: Destination directory (without remote node)
 
-# Argument 3: Copy method (bbcp, exchange, rsync, exchange_tar, exchange_tarfilelist)
+# Argument 3: Copy method (bbcp, exchange, rsync, exchange_tar, exchange_tarfilelist, exchange_filelist)
 
 # .................................................................................
 
@@ -24,8 +24,8 @@ if test "$3" == "bbcp"; then
           bbcp -s 32 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR
 
 elif test "$3" == "exchange"; then
-    echo "scp -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
-          scp -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
+    echo "scp -o ConnectTimeout=200 -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
+          scp -o ConnectTimeout=200 -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
 
     if test -d $FILENAME; then # move individual files between the two directories
         echo " "
@@ -50,8 +50,8 @@ elif test "$3" == "exchange_tar"; then
     else
         echo " "
         echo "first hop of file"        
-        echo "scp -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
-              scp -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
+        echo "scp -o ConnectTimeout=200 -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
+              scp -o ConnectTimeout=200 -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
     fi
 
     if test -d $FILENAME; then # move individual files between the two directories
@@ -66,6 +66,24 @@ elif test "$3" == "exchange_tar"; then
         echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME"
               ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME 
     fi
+
+elif test "$3" == "exchange_filelist"; then
+    echo " "
+    echo "first hop of filelist"        
+    echo "ssh $REMOTE_NODE mkdir -p $TEMPDIR/$TEMPFILE"
+          ssh $REMOTE_NODE mkdir -p $TEMPDIR/$TEMPFILE
+
+    echo "scp -o ConnectTimeout=200 `cat $FILENAME` jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
+          scp -o ConnectTimeout=200 `cat $FILENAME` jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE
+
+    echo " "
+    date -u
+    echo "second hop of filelist"
+    echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR"
+          ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR 
+
+    echo "ssh $REMOTE_NODE rmdir $TEMPDIR/$TEMPFILE"
+          ssh $REMOTE_NODE rmdir $TEMPDIR/$TEMPFILE 
 
 elif test "$3" == "exchange_tarfilelist"; then
     if test -e $FILENAME; then                                                       
@@ -84,8 +102,8 @@ elif test "$3" == "exchange_tarfilelist"; then
 
         echo " "
         echo "first hop of tar file"        
-        echo  scp -r $TEMPFILE.tar.gz jetscp.rdhpcs.noaa.gov:$TEMPDIR              
-              scp -r $TEMPFILE.tar.gz jetscp.rdhpcs.noaa.gov:$TEMPDIR               
+        echo  scp -o ConnectTimeout=200 -r $TEMPFILE.tar.gz jetscp.rdhpcs.noaa.gov:$TEMPDIR              
+              scp -o ConnectTimeout=200 -r $TEMPFILE.tar.gz jetscp.rdhpcs.noaa.gov:$TEMPDIR               
 
         date -u
 
