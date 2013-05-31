@@ -1,5 +1,7 @@
 
-       subroutine skyglow_cyl(altsource_in,azisource_in,blog_v_roll)
+       subroutine skyglow_cyl(altsource_in,azisource_in,blog_v_roll,elong_roll)
+
+       include 'trigd.inc'
 
        real*8 xs,ys,zs,xo,yo,zo              
        real*8 magn_r8,elong_r8,altdif_r8,al1_r8,al2_r8,elgms_r8,elgmc_r8
@@ -14,6 +16,9 @@
        real blog_v(0:90,0:360)
        real blog_v_out(0:90,0:360)
        real blog_v_roll(0:90,0:360)
+       real elong_a(0:90,0:360)
+       real elong_out(0:90,0:360)
+       real elong_roll(0:90,0:360)
 !      real rmaglim_s(0:90,0:360)
        real rmaglim_v(0:90,0:360)
 
@@ -21,6 +26,7 @@
        PI = 3.1415926535897932d0; RPD = PI/180.d0
 
        blog_v = 0.
+       elong_a = 0.
 
        degint_alt = 2.
        degint_azi = 5.
@@ -103,6 +109,7 @@
                        stop
                    endif
                    blog_v(ialt,jazi) = log10(skyglow)
+                   elong_a(ialt,jazi) = elong                
                enddo ! altobj
              endif ! process this azimuth
            enddo ! aziobj
@@ -118,16 +125,18 @@
            write(lun,*)blog_v         
 
            write(6,*)
-!          Fill in altitudes with blog_v     
-           write(6,*)' Fill interpolated altitudes in blog_v'
+!          Fill in altitudes with blog_v/elong     
+           write(6,*)' Fill interpolated altitudes in blog_v/elong'
            do altobj = 89.,1.,-degint_alt
                ialt = nint(altobj)
                ialtp = ialt+1
                ialtm = ialt-1
-               blog_v(ialt,:) = 0.5 * (blog_v(ialtp,:) + blog_v(ialtm,:))
+               blog_v(ialt,:)  = 0.5 * (blog_v(ialtp,:)  + blog_v(ialtm,:))
+               elong_a(ialt,:) = 0.5 * (elong_a(ialtp,:) + elong_a(ialtm,:))
            enddo ! altobj
 
-           blog_v_out = blog_v
+           blog_v_out  = blog_v
+           elong_out = elong_a
 
 !          Fill in azimuths with blog_v
            write(6,*)' Fill interpolated azimuths in blog_v_out'  
@@ -158,16 +167,20 @@
                    endif
                    blog_v_out(:,iazi) = blog_v(:,iazi_m) * (1. - frac)  &
                                       + blog_v(:,iazi_p) *       frac
+                   elong_out(:,iazi)  = elong_a(:,iazi_m) * (1. - frac)  &
+                                      + elong_a(:,iazi_p) *       frac
                endif
 
                iazi_mirror = 360 - iazi
                blog_v_out(:,iazi_mirror) = blog_v_out(:,iazi)
+               elong_out(:,iazi_mirror)  = elong_out(:,iazi)
 
            enddo ! iazi
 
        endif ! true       
 
        iroll = nint(azisource_in - azisource)
+
        write(6,*)' Roll image by azimuth ',iroll                     
 
        do iazir = 0,360
@@ -175,7 +188,8 @@
            if(iazio .gt. 360)iazio = iazio - 360
            if(iazio .lt.   0)iazio = iazio + 360
            blog_v_roll(:,iazir) = blog_v_out(:,iazio)
-           write(6,*)'iazio,iazir',iazio,iazir
+           elong_roll(:,iazir)  = elong_out(:,iazio)
+           if(iazir .le. 10)write(6,*)'iazio,iazir',iazio,iazir
        enddo ! iazir
 
        do altobj = 90.,0.,-10.
