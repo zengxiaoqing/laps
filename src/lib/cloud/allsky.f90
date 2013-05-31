@@ -26,7 +26,7 @@
            zenith_angle = sqrt(delti**2 + deltj**2) * (90. / ri_polar_mid)
            alt = 90. - zenith_angle
            if(alt .ge. 0.)then
-               azi = atan3d(deltj,delti)
+               azi = atan3d(+deltj,delti) ! minus sign on deltj flips left/right
                i_cyl = nint(alt)    
                j_cyl = nint(azi)    
                polar(ip,jp) = cyl(i_cyl,j_cyl)
