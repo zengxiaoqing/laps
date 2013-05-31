@@ -186,6 +186,7 @@ c
 
 !       Initialize
         ht_sao_top = r_missing_data
+        idebug_tb8 = 0
 
 !       Calculate LCL
         do j=1,jmax
@@ -1614,7 +1615,7 @@ c
 
             call cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j,imax,jmax
      1      ,a,f,ilyr,cldcv_1d,cld_hts,t_gnd_k(i,j),heights_3d
-     1                                  ,t_effective,nlyr,istatus)
+     1      ,t_effective,nlyr,idebug_tb8,istatus)
             tdiff = tb8_k(i,j)-t_effective ! Band 8 - calculated
             frac_clouds = 1.-f(nlyr)
 
@@ -1695,7 +1696,7 @@ c
                 call cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j
      1              ,imax,jmax,a_new,f_new,ilyr_new,cldcv_1d,cld_hts       
      1              ,t_gnd_k(i,j),heights_3d
-     1              ,t_effective,nlyr_new,istatus)
+     1              ,t_effective,nlyr_new,idebug_tb8,istatus)
 
                 tdiff = tb8_k(i,j)-t_effective
                 frac_clouds = 1.-f_new(nlyr_new)
@@ -1746,7 +1747,7 @@ c
      1                                       ,cldcv_1d,cld_hts
      1                                       ,t_gnd_k(i,j),heights_3d       
      1                                       ,t_effective,nlyr_new
-     1                                       ,istatus)
+     1                                       ,idebug_tb8,istatus)
                     tdiff = tb8_k(i,j)-t_effective
                     n_iter = n_iter + 1
                 endif
