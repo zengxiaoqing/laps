@@ -1041,6 +1041,13 @@ C INSERT RADAR DATA
 
         endif
 
+        if(i_varadj .eq. 1)then
+            write(6,*)' Call cloud_var before insert vis'
+            call cloud_var(NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
+     1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
+     1                    ,cloud_frac_vis_a,r_missing_data)
+        endif
+
         I4_elapsed = ishow_timer()
 
 C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
@@ -1510,6 +1517,7 @@ C       EW SLICES
 !       'rh_modelfg' is sometimes calculated in 'get_model_fg'
 
         if(i_varadj .eq. 1)then
+            write(6,*)' Call cloud_var at end of analysis'
             call cloud_var(NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
      1                    ,cloud_frac_vis_a,r_missing_data)
