@@ -2,7 +2,7 @@
         subroutine cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j,ni,nj,a
      1                                 ,f,ilyr,cvr,cld_hts,t_gnd_k
      1                                 ,heights_3d,t_effective,nlyr
-     1                                 ,istatus)
+     1                                 ,idebug,istatus)
 
 !       Forward model for multiple cloud layers
 
@@ -21,8 +21,14 @@
         real heights_3d(ni,nj,klaps)
         real cld_hts(kcld)
 
+        if(idebug .eq. 1)then
+            write(6,*)' Subroutine cvr_to_tb8_effective at:',i,j
+            write(6,*)'n,temp_lyr(n),f(n),rsum...'
+        endif
+
 !       Convert from cloud cover to discreet cloud layer indices (cvr to a)
         nlyr = 0
+        ilyr = 0
         do k = kcld-1,1,-1
             if(cvr(k)   .ge. thresh_cvr .and.
      1         cvr(k+1) .lt. thresh_cvr)then      ! Top of layer
@@ -93,6 +99,9 @@
         rsum = 0
         do n = 1,nlyr
             rsum = rsum + temp_to_rad(temp_lyr(n)) * f(n)
+            if(idebug .eq. 1)then
+                write(6,*)n,temp_lyr(n),f(n),rsum
+            endif
         enddo ! n
 
 !       Convert to effective temperature and compare to observed brightness temp
