@@ -3,6 +3,8 @@
 
        subroutine phase_func_moon(phase_angle_deg,mode,area_rel,area_es,phase_corr_moon)
 
+       include 'trigd.inc'
+
        Implicit real*8(a-z)
 
 !      Traditional equation

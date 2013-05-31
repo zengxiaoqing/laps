@@ -5,6 +5,8 @@
                     ,maglimd_r8,maglimt_r8,maglimn_r8,maglim_r8 &
                     ,vis_r8,c_observe)
 
+       include 'trigd.inc'
+
        IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
 
 !      vis of 6.0 means barely visible to the naked eye, lower amounts are more visible
