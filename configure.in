@@ -547,3 +547,5 @@ chmod +x etc/www/nph-laps.cgi
 chmod +x etc/www/laps.cgi
 chmod +x etc/www/*.*sh
 chmod +x etc/verif/*.*sh
+
+./util/fix_net "C      use trigd" "!      use trigd" src/include/trigd.inc
