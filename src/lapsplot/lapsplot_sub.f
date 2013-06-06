@@ -46,7 +46,9 @@ cdis
         character*9 asc9_tim
         character*4 RM
         character*35 TIME
+        character*4 czoom
         logical l_atms, l_plotobs
+        logical l_parse, l_polar, l_cyl
 
         character*2 c_section
 
@@ -296,13 +298,23 @@ cdis
 
         elseif(c_section .eq. 'a' .or. c_section .eq. 'az')THEN
             if(c_section .eq. 'az')then
-                read(lun,*)plot_parms%obs_size           
+                write(6,*)' Enter plot info (e.g. 180p, 90c)'
+                read(lun,*)czoom                   
+                l_polar = l_parse(czoom,'p')
+                l_cyl   = l_parse(czoom,'c')
+                if((l_polar .OR. l_cyl) .eqv. .false.)then
+                    write(6,*)' Set l_polar to TRUE'
+                    l_polar = .true.
+                endif
+                write(6,*)' l_polar = ',l_polar,' l_cyl = ',l_cyl
+!               l_polar = .true.
+!               l_cyl = .true.
             endif
             
             call plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                        ,r_missing_data,laps_cycle_time,maxstns
      1                        ,i_overlay,plot_parms,namelist_parms
-     1                        ,l_plotobs)       
+     1                        ,l_polar,l_cyl)       
 
             if(ifield_found .eq. 1)then
                 write(6,*)' Field found - calling frame'
