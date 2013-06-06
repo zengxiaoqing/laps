@@ -35,6 +35,9 @@ cdis
 
 
         include 'trigd.inc'
+
+        ANGDIF(X,Y)=MOD(X-Y+540.,360.)-180.
+
 C istatus        O        I*4     Standard status return.
         integer         ni,nj
 C***Parameter list variables
@@ -63,6 +66,7 @@ C***Local variables
      1                PF_UL,PF_UR,PF_LR,PF_LL,PF_U,PF_L,P_F,RBril,RBrih,
      1          Phase_factor(ni,nj),Phase_angle_d(ni,nj),
      1          sat_radius,Emission_angle_d(ni,nj),
+     1          azimuth(ni,nj),
      1          Specular_ref_angle_d(ni,nj)       
 
         Real RBril_a(ni,nj),RBrih_a(ni,nj)
@@ -86,7 +90,7 @@ C***Local variables
 
 C***Where's the sun?
 !       Use cartesian coordinates with the x-axis through the prime
-!       meridian and distances in AU.
+!       meridian and distances in AU (geocentric equatorial).
         rlat = 0.
         rlon = 0.
         call solar_position(rlat,rlon,i4time,solar_alt_deg       
@@ -97,7 +101,7 @@ C***Where's the sun?
         RY = sind(solar_sublon_d) * cosd(solar_dec_d) * solar_range
         RZ = sind(solar_dec_d)                        * solar_range
 
-!   Satellite Location (in AU)
+!   Satellite Location (in AU - geocentric equatorial)
         au_m = 149000000.
         sat_radius = range_m / au_m
 
@@ -113,10 +117,6 @@ C***Fill the solar brightness and phase angle arrays
         Do j = 1,nj
          Do i = 1,ni
 
-          call solar_position(lat(i,j),lon(i,j),i4time
-     1                                  ,solar_alt_d(i,j)
-     1                                  ,solar_dec_d,hr_angle_d)
-
 C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
  
           call sat_angular_alt(sat_radius,lat(i,j),lon(i,j)
@@ -127,7 +127,25 @@ C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
               Emission_angle_d(i,j) = 0.0
           endif ! emission angle < 0 (looking beyond the limb)
 
+!         Topocentric equatorial vector of satellite relative to gridpoint
+          DX=SATX-TX
+          DY=SATY-TY
+          DZ=SATZ-TZ
+
+!         Rotate this vector around Z axis to get local cartesian coordinates
+          call rotate_z(DX,DY,DZ,lon(i,j))
+
+!         Convert cartesian coordinates to dec and ha
+          call xyz_to_polar_d(DX,DY,DZ,dec,ha,r)
+
+!         Convert dec and ha to alt/az
+          call equ_to_altaz_d(dec,ha,lat(i,j),alt,azimuth(i,j))
+
           goto500
+
+          call solar_position(lat(i,j),lon(i,j),i4time
+     1                                  ,solar_alt_d(i,j)
+     1                                  ,solar_dec_d,hr_angle_d)
 
 C   Compute Phase Angle
           Call AngleVectors(TX-SATX,TY-SATY,TZ-SATZ,RX,RY,RZ
@@ -160,3 +178,4 @@ c=======================================================================
 
         return
         end
+
