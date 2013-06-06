@@ -1,9 +1,11 @@
         
         subroutine get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
-     1                             ,pres_3d,topo_sfc
-     1                             ,r_cloud_3d,airmass_2_cloud_3d
+     1                             ,rain_3d,snow_3d
+     1                             ,pres_3d,topo_sfc,topo_a
+     1                             ,r_cloud_3d,cloud_rad         
+     1                             ,airmass_2_cloud_3d,airmass_2_topo_3d
      1                             ,ni,nj,nk,i,j
-     1                             ,view_alt,view_az 
+     1                             ,view_alt,view_az,sol_alt,sol_azi 
      1                             ,grid_spacing_m,r_missing_data)
 
         include 'trigd.inc'
@@ -12,9 +14,13 @@
 
         real clwc_3d(ni,nj,nk)
         real cice_3d(ni,nj,nk)
+        real rain_3d(ni,nj,nk)
+        real snow_3d(ni,nj,nk)
         real cond_3d(ni,nj,nk)
         real heights_3d(ni,nj,nk)
+        real transm_3d(ni,nj,nk)
         real heights_1d(nk)
+        real topo_a(ni,nj)
         real pres_3d(ni,nj,nk)
         real pres_1d(nk)
         real view_alt(ni,nj)
@@ -23,14 +29,20 @@
         integer isky(0:90,0:360)
         real r_shadow_3d(0:90,0:360)
         real r_cloud_3d(0:90,0:360)
+        real cloud_rad(0:90,0:360)
         real airmass_2_cloud_3d(0:90,0:360)
+        real airmass_2_topo_3d(0:90,0:360)
+
+        character*1 cslant
 
         I4_elapsed = ishow_timer()
 
         write(6,*)' Subroutine get_cloud_rays ',i,j
 
         pstd = 101325.
-        airmass_2_cloud_3d = 0
+        airmass_2_cloud_3d = 0.
+        airmass_2_topo_3d = 0.
+        cloud_rad = 1.
 
         ishadow_tot = 0                          
 
@@ -40,7 +52,15 @@
         write(6,*)' range of heights is ',minval(heights_3d)
      1                                   ,maxval(heights_3d)
 
-        cond_3d = clwc_3d + cice_3d
+        write(6,*)' call get_cloud_rad'
+
+        call get_cloud_rad(sol_alt,sol_azi,clwc_3d,cice_3d
+     1                    ,rain_3d,snow_3d
+     1                    ,heights_3d,transm_3d,i,j,ni,nj,nk)
+
+        I4_elapsed = ishow_timer()
+
+        cond_3d = clwc_3d + cice_3d + rain_3d * 0.01 + snow_3d * 0.1
 
         ri = i
         rj = j
@@ -48,8 +68,11 @@
         do k = 1,nk-1
             if(heights_3d(i,j,k)   .le. topo_sfc .AND.
      1         heights_3d(i,j,k+1) .ge. topo_sfc      )then
+                frach = (topo_sfc - heights_3d(i,j,k)) / 
+     1                  (heights_3d(i,j,k+1) - heights_3d(i,j,k))
                 ksfc = k
                 write(6,*)' ksfc = ',ksfc
+                rksfc = float(ksfc) + frach
             endif
         enddo
 
@@ -70,8 +93,9 @@
 
          do jazi = 0,360,jazi_delt
 
-          if((jazi .eq. 45 .or. jazi .eq. 225) .AND.
-     1        ialt .eq. (ialt/10)*10                 )then
+          if((jazi .eq. 225 .or. jazi .eq. 45) .AND.
+!    1        (ialt .eq. (ialt/10)*10 .or. ialt .le. 5) )then
+     1        (ialt .eq. 12 .or. ialt .le. 5) )then
               idebug = 1
           else
               idebug = 0
@@ -87,6 +111,7 @@
 
           ishadow = 0
           cvr_path_sum = 0.
+          sum_odrad = 0.
 
           if(.true.)then
             do k = ksfc,ksfc
@@ -96,11 +121,25 @@
               rj1 = rj
 
               ht_sfc = heights_1d(k)
+              ht_sfc = topo_sfc       
 
-              if(view_altitude_deg .le. 10.)then
-                  rkdelt = 0.5
+              grid_factor = grid_spacing_m / 3000.
+
+              if(view_altitude_deg .le. 0.5)then
+                  rkdelt1 = 0.01 * grid_factor
+                  rkdelt2 = 0.10 * grid_factor
+              elseif(view_altitude_deg .le. 4.)then
+                  rkdelt1 = 0.10 * grid_factor
+                  rkdelt2 = 0.25 * grid_factor
+              elseif(view_altitude_deg .le. 10.)then
+                  rkdelt1 = 0.50 * grid_factor
+                  rkdelt2 = 0.50 * grid_factor
+              elseif(view_altitude_deg .le. 45.)then
+                  rkdelt1 = 1.00 * grid_factor
+                  rkdelt2 = 1.00 * grid_factor
               else
-                  rkdelt = 1.0
+                  rkdelt1 = 1.0
+                  rkdelt2 = 1.0
               endif
 
 !             arg = max(view_altitude_deg,1.0)
@@ -108,16 +147,29 @@
 !             rkdelt = max(min(rkdelt,2.0),0.5)
               
               if(idebug .eq. 1)write(6,*)
-              if(idebug .eq. 1)write(6,*)
-     1        ' Trace the slant path (ialt/jazi/jdelt,rkdelt) '
-     1                               ,ialt,jazi,jazi_delt,rkdelt
+              if(idebug .eq. 1)then
+                write(6,11)ialt,jazi,jazi_delt,rkdelt,i,j
+11              format(
+     1          'Trace the slant path (ialt/jazi/jdelt/rkdelt/i/j):'
+     1                ,3i5,f6.2,2i5)                                     
+                write(6,12)                                                            
+12              format('   dz1_l   dz1_h   dxy1_l   dxy1_h  rin',
+     1           'ew  rjnew   rk    ht_m   topo_m  ',
+     1           ' path     lwc    ice    rain   snow      slant',
+     1           '      sum     cloudfrac  airmass cloud_rad')
+              endif
 
               slant1_h = 0.
               airmass1_h = 0.
+              ihit_topo = 0
+
+              rkdelt = rkdelt1
 
 !             do kk = ksfc+1,nk
-              do rk = ksfc+rkdelt,float(nk),rkdelt
-
+              rk = rksfc          
+!             do rk = rksfc+rkdelt,float(nk),rkdelt
+              do while(rk .le. float(nk) - rkdelt)
+                rk = rk + rkdelt
 !               rk = kk
 
                 rk_l = rk - rkdelt
@@ -168,12 +220,26 @@
                   aterm = 1. / radius_earth_8_thirds
                   bterm = tand(min(view_altitude_deg,89.9))
                   cterm = dz1_l                                                
-                  dxy1_l = (sqrt(4.*aterm*cterm + bterm**2.) - bterm)
+                  if(cterm .gt. 0.)then ! catch start point
+                    dxy1_l = (sqrt(4.*aterm*cterm + bterm**2.) - bterm)
      1                                  / (2.*aterm)
+                  else
+                    dxy1_l = 0.
+                  endif
+
                   cterm = dz1_h                                                
                   dxy1_h = (sqrt(4.*aterm*cterm + bterm**2.) - bterm)
      1                                  / (2.*aterm)
                   dxy2 = dxy1_h - dxy1_l
+                endif
+
+                if(dxy2 .gt. grid_spacing_m)then
+!                 if(idebug .eq. 1)then
+!                   write(6,*)' dxy2 is more than the grid spacing'
+!                 endif
+                  cslant = '*'
+                else
+                  cslant = ' '
                 endif
 
                 dx1_l = dxy1_l * xcos
@@ -207,6 +273,7 @@
                 rjnew_m = 0.5 * (rjnew_l + rjnew_h)
 
                 rk_m = 0.5 * (rk_l + rk_h)
+                ht_m = 0.5 * (ht_l + ht_h)
 
                 rni = ni
                 rnj = nj
@@ -217,12 +284,22 @@
                   if(.true.)then
                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
      1                                 ,cond_3d,cond_m)
-                  elseif(.false.)then
-                    call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                 ,clwc_3d,clwc_m)
+                    if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
+                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+     1                                   ,clwc_3d,clwc_m)
+                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+     1                                   ,cice_3d,cice_m)
+                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+     1                                   ,rain_3d,rain_m)
+                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+     1                                   ,snow_3d,snow_m)
+                    endif
 
-                    call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                 ,cice_3d,cice_m)
+!                   nf = 1
+!                   call trilinear_laps_1d(rinew_m,rjnew_m,rk_m
+!    1                                    ,ni,nj,nk,nf
+!    1                                    ,cond_3d,cond_m)
+
                   else
                     clwc_m = 
      1              clwc_3d(nint(rinew_m),nint(rjnew_m),nint(rk_m))
@@ -230,25 +307,62 @@
      1              cice_3d(nint(rinew_m),nint(rjnew_m),nint(rk_m))
                   endif
 
+                  if(ht_m - ht_sfc .le. 1000.)then ! more accurate topo when low
+                    call bilinear_laps(rinew_m,rjnew_m,ni,nj
+     1                                ,topo_a,topo_m)
+                  else
+                    topo_m = topo_a(nint(rinew_m),nint(rjnew_m))
+                  endif
+
                   cvr_path = cond_m                                 
                   cvr_path_sum_last = cvr_path_sum
                   cvr_path_sum      = cvr_path_sum + cvr_path * slant2       
+                  sum_odrad = sum_odrad + 
+     1               (cvr_path * slant2 * 
+     1                transm_3d(nint(rinew_m),nint(rjnew_m),nint(rk_m)))       
 
-                  if(cvr_path_sum      .gt. .05 .and.
-     1               cvr_path_sum_last .lt. .05       )then ! optical depth ~1
+                  if((cvr_path          .gt. 0.00) .AND.
+     1               (cvr_path_sum      .le.  .05      .OR. ! tau ~1
+     1                cvr_path_sum_last .eq. 0.  )            )then 
                       airmass_2_cloud_3d(ialt,jazi) 
+     1                                 = 0.5 * (airmass1_l + airmass1_h)
+!                     Instantaneous value
+!                     cloud_rad(ialt,jazi) = 
+!    1                 transm_3d(nint(rinew_m),nint(rjnew_m),nint(rk_m))
+
+!                     Average value over cloud path (tau ~1)
+                      cloud_rad(ialt,jazi) = sum_odrad / cvr_path_sum 
+                  endif
+
+                  if(topo_m .gt. ht_m .AND. ihit_topo .eq. 0)then
+                      if(idebug .eq. 1)write(6,*)' Hit topo '
+                      ihit_topo = 1
+                      airmass_2_topo_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
                   endif
 
                   r_shadow_3d(ialt,jazi) = 1. - (exp(-20.*cvr_path_sum))
                   if(idebug .eq. 1)write(6,101)dz1_l,dz1_h,dxy1_l,dxy1_h
-     1                     ,rinew_h,rjnew_h,rk 
-     1                     ,cvr_path,slant2,cvr_path_sum
+     1                     ,cslant
+     1                     ,rinew_h,rjnew_h,rk,ht_m,topo_m 
+     1                     ,cvr_path*1e3
+     1                     ,clwc_m*1e3,cice_m*1e3,rain_m*1e3,snow_m*1e3
+     1                     ,slant2,cvr_path_sum
      1                     ,r_shadow_3d(ialt,jazi)
- 101              format(2f8.1,2f9.1,4x,2f7.1,f6.1,f12.7,f10.1,2f11.4)
+     1                     ,airmass_2_cloud_3d(ialt,jazi)
+     1                     ,cloud_rad(ialt,jazi)
+ 101              format(2f8.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
+     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,f9.4)
                 else
                   if(idebug .eq. 1)write(6,*)' out of bounds ',ialt,jazi
      1                            ,rinew_h,rjnew_h,rk
+                endif
+
+                if(rk_h - rksfc .gt. 0.0)then
+!                 rkdelt = rkdelt2
+!                 rkdelt = 0.5 * (rk_h - rksfc)
+                  rkdelt = rkdelt * 1.1             
+                  rkdelt = min(rkdelt,rkdelt2)
                 endif
               enddo ! kk/rk
 
@@ -259,17 +373,18 @@
           if(r_shadow_3d(ialt,jazi) .gt. .5)then
 !         if(r_shadow_3d(ialt,jazi) .ge. 0.000000)then
               ishadow = 1
-              r_cloud_3d(ialt,jazi) = r_shadow_3d(ialt,jazi) ! 1              
           else
               ishadow = 0
-              r_cloud_3d(ialt,jazi) = r_shadow_3d(ialt,jazi) ! 0
           endif
+
+          r_cloud_3d(ialt,jazi) = r_shadow_3d(ialt,jazi)     
 
           ishadow_tot = ishadow_tot + ishadow
 
-          if(idebug .eq. 1 .OR. 
-     1       (ishadow .eq. 1 .AND. ishadow_tot .le. 10) )then
-              write(6,*)'ialt,jazi,ishadow',ialt,jazi,ishadow
+          if(idebug .eq. 1)then 
+              write(6,111)ialt,jazi,airmass_2_cloud_3d(ialt,jazi)
+     1                   ,cloud_rad(ialt,jazi)
+111           format('ialt,jazi,airm2cld,rad',2i5,2f10.6)
           endif
 
          enddo ! jazi
@@ -278,6 +393,14 @@
           do jazi = 1,359,jazi_delt
               r_cloud_3d(ialt,jazi) = 
      1         0.5 * (r_cloud_3d(ialt,jazi-1) + r_cloud_3d(ialt,jazi+1))
+              cloud_rad(ialt,jazi) = 
+     1         0.5 * (cloud_rad(ialt,jazi-1)  + cloud_rad(ialt,jazi+1))
+              airmass_2_cloud_3d(ialt,jazi) = 
+     1         0.5 * (airmass_2_cloud_3d(ialt,jazi-1) 
+     1              + airmass_2_cloud_3d(ialt,jazi+1))
+              airmass_2_topo_3d(ialt,jazi) = 
+     1         0.5 * (airmass_2_topo_3d(ialt,jazi-1) 
+     1              + airmass_2_topo_3d(ialt,jazi+1))
           enddo
          endif
 
@@ -286,6 +409,14 @@
         do ialt = 21,89,2 ! fill in missing alt rings
             r_cloud_3d(ialt,:) =
      1         0.5 * (r_cloud_3d(ialt-1,:) + r_cloud_3d(ialt+1,:))
+            cloud_rad(ialt,:) =
+     1         0.5 * (cloud_rad(ialt-1,:) + cloud_rad(ialt+1,:))
+            airmass_2_cloud_3d(ialt,:) =
+     1         0.5 * (airmass_2_cloud_3d(ialt-1,:) 
+     1              + airmass_2_cloud_3d(ialt+1,:))
+            airmass_2_topo_3d(ialt,:) =
+     1         0.5 * (airmass_2_topo_3d(ialt-1,:) 
+     1              + airmass_2_topo_3d(ialt+1,:))
         enddo ! ialt
 
         write(6,*)' Number of rays with cloud = ',ishadow_tot
@@ -296,6 +427,9 @@
 
         write(6,*)' Range of r_cloud_3d = ',minval(r_cloud_3d)
      1                                     ,maxval(r_cloud_3d)
+
+        write(6,*)' Range of cloud_rad = ',minval(cloud_rad)
+     1                                    ,maxval(cloud_rad)
 
         I4_elapsed = ishow_timer()
  
