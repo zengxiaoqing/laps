@@ -404,6 +404,7 @@ cdoc    Returns a 2-D grid. Inputs include the directory, ext, and time window.
 
         subroutine get_laps_2dvar(i4time_needed,i4tol,i4time_nearest
      1         ,lat,lon
+     1         ,subpoint_lat_clo,subpoint_lon_clo      ! O 
      1         ,EXT,var_2d,units_2d
      1         ,comment_2d,imax,jmax,field_2d,ilevel,istatus)
 
@@ -440,6 +441,9 @@ cdoc    added lvd subdirectory flexibility. Only one 2d satellite field returned
         integer i4times(max_files)
         integer i_selected(max_files)
 
+        real    subpoint_lat_clo(imax,jmax)
+        real    subpoint_lon_clo(imax,jmax)
+
         include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
 
@@ -468,6 +472,7 @@ c
            call get_laps_sat(maxsat,c_sat_id,isats
      1     ,i4time_needed,i4tol,i4time_nearest
      1     ,var_2d,units_2d,comment_2d,imax,jmax
+     1     ,subpoint_lat_clo,subpoint_lon_clo      ! O 
      1     ,lat,lon,field_2d,istatus)
 
            if(istatus.ne.1)then
@@ -1340,6 +1345,7 @@ c
         subroutine get_laps_sat(maxsat,c_sat_id,isats
      1     ,i4time_needed,i4tol,i4time_nearest
      1     ,var_2d,units_2d,comment_2d,imax,jmax
+     1     ,subpoint_lat_clo,subpoint_lon_clo         ! O
      1     ,lat,lon,field_2d,istatus)
 c
 c    J. Smart 2-98.
@@ -1357,6 +1363,7 @@ c
         real    field_2d(imax,jmax)
         real    lat(imax,jmax)
         real    lon(imax,jmax)
+        real    subpoint_lat_clo(imax,jmax)
         real    subpoint_lon_clo(imax,jmax)
         real    subpoint_lon_sat(maxsat)
         real    cost(imax,jmax,maxsat)
@@ -1397,6 +1404,7 @@ c       save      i4time_first
         npts=0
         i4time_first=0
         subpoint_lon_sat = -75.            ! fill satellite array (default)
+        subpoint_lat_clo = 0.
         satm_time_wt = 1./60.
         satm_subp_wt = 1.0
 
