@@ -66,6 +66,10 @@ c
 !       Local
         real pct_pa(imax,jmax)
         real lca(imax,jmax)
+        real    subpoint_lat_clo_s8a(imax,jmax)
+        real    subpoint_lon_clo_s8a(imax,jmax)
+        real    subpoint_lat_clo_s3a(imax,jmax)
+        real    subpoint_lon_clo_s3a(imax,jmax)
 
         character*3 lvd_ext
         data lvd_ext /'lvd'/
@@ -81,7 +85,9 @@ c
         var = 'S8A'
         ilevel = 0
         call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
-     1                     ,i4time_s8a,lat,lon,EXT,var,units
+     1                     ,i4time_s8a,lat,lon
+     1                     ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a     ! O 
+     1                     ,EXT,var,units
      1                     ,comment_s8a,imax,jmax,s8a_k,ilevel
      1                     ,istat_s8a)      
         if(istat_s8a .ne. 1)then
@@ -127,7 +133,10 @@ c
             var = 'S3A'
             ilevel = 0
             call get_laps_2dvar(i4time_s8a,0       
-     1                         ,i4time_nearest,lat,lon,EXT,var,units
+     1                         ,i4time_nearest,lat,lon
+     1                         ,subpoint_lat_clo_s3a           ! O
+     1                         ,subpoint_lon_clo_s3a           ! O 
+     1                         ,EXT,var,units
      1                         ,comment_s3a,imax,jmax,s3a_k,ilevel
      1                         ,istat_s3a)
             if(istat_s3a .ne. 1)then

@@ -61,6 +61,8 @@ cdis
         real vis_albedo(ni,nj)
         real rlaps_land_frac(ni,nj)
         real topo(ni,nj)
+        real subpoint_lat_clo(ni,nj)
+        real subpoint_lon_clo(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
         real solar_alt(ni,nj)
@@ -123,7 +125,9 @@ cdis
             ilevel = 0
             call get_laps_2dvar(i4time_try+i4_sat_window_offset
      1                     ,i4_sat_window
-     1                     ,i4time_nearest,lat,lon,EXT,var,units
+     1                     ,i4time_nearest,lat,lon
+     1                     ,subpoint_lat_clo,subpoint_lon_clo      ! O 
+     1                     ,EXT,var,units
      1                     ,comment,ni,nj,vis_albedo,ilevel,istatus)
             write(6,*)' istatus from vis_albedo data = ',istatus
             itry = itry + 1
