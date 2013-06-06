@@ -71,8 +71,8 @@ date -u
 echo " "
 echo "Running this command:"
 
-echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES rsync static $DOMAIN $REMOTE_DATA_ROOT
-     @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES rsync static $DOMAIN $REMOTE_DATA_ROOT
+echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES exchange static $DOMAIN $REMOTE_DATA_ROOT
+     @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES exchange static $DOMAIN $REMOTE_DATA_ROOT
 
 date -u
 
