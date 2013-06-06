@@ -149,6 +149,7 @@ SRC	= machine_dependent.F \
           rfill.f \
           rh2cld.f \
           rootfind.f \
+          rotate.f \
           satgeom.f \
           sfc_routines.f \
           skill_scores.f \
@@ -181,6 +182,7 @@ SRC	= machine_dependent.F \
           writelapslfm.f \
           wrt_laps_static.f \
           write_snd.f \
+          xyztopolard.f \
           zero.f \
           zr.f \
           zs.f \
