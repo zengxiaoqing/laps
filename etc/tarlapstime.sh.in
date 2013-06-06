@@ -13,7 +13,7 @@
 
 # Fifth command line argument is FILES [1=2D, 2=3D, 3=3D+LGA]           
 
-# Sixth argument is for expanded output and/or copy method [expand,noexpand,tar,rsync,scp]
+# Sixth argument is for expanded output and/or copy method [expand,noexpand,tar,rsync,scp,exchange]
 
 # Seventh argument is for including static files [static,nostatic]
 
@@ -251,6 +251,30 @@ elif test "$EXPAND" = expand; then
 
 elif test "$EXPAND" = scp; then
     echo "scp to remote location (under construction)"  
+
+elif test "$EXPAND" = exchange; then
+    echo "call copy_remote with exchange_filelist option"  
+
+    grep www       $LAPSTAR_TXT > $LAPSTAR_WWW_TXT
+    grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT
+
+    echo " "
+    date -u
+    echo " "
+
+    echo "@prefix@/etc/copyremote.sh $LAPSTAR_WWW_TXT $REMOTE_DATA_ROOT exchange_filelist"
+          @prefix@/etc/copyremote.sh $LAPSTAR_WWW_TXT $REMOTE_DATA_ROOT exchange_filelist
+
+    echo " "
+    date -u
+    echo " "
+
+    echo "@prefix@/etc/copyremote.sh $LAPSTAR2_TXT    $REMOTE_DATA_ROOT exchange_filelist"
+          @prefix@/etc/copyremote.sh $LAPSTAR2_TXT    $REMOTE_DATA_ROOT exchange_filelist
+
+    echo " "
+    date -u
+    echo " "
 
 elif test "$EXPAND" = tar; then # tar is slower without compression and may be more reliable
     echo "tar to remote location"  
