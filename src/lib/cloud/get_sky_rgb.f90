@@ -28,7 +28,7 @@
         endif
 
         if(ni .eq. nj)write(6,11)
-11      format('    i   j      alt      azi     elong    opac     cloud  airmass  rad     rinten   airtopo  cld_visb       skyrgb')
+11      format('    i   j      alt      azi     elong   pf_scat   opac     cloud  airmass  rad     rinten   airtopo  cld_visb       skyrgb')
 
         itopo_red = 150; itopo_grn = 150 ; itopo_blu = 0
 
@@ -60,9 +60,16 @@
 !         rint_coeff =  380. * (1. - whiteness_thk) ! default is 380.
           rint_coeff =  900. * (1. - whiteness_thk) ! default is 380.
 
-          rintensity = 250. - ((abs(r_cloud_3d(i,j)-0.6)**2.0) * rint_coeff)
+!         rintensity = 250. - ((abs(r_cloud_3d(i,j)-0.6)**2.0) * rint_coeff)
 
-          rintensity = min(rintensity,255.)
+!         Phase function that depends on degree of forward scattering in cloud    
+          a = r_cloud_rad(i,j); b = 1.0 + 2.0 * r_cloud_rad(i,j)
+          pf_scat = 0.9 + a * (cosd(min(elong_a(i,j),89.99))**b)
+
+!         Intensity of an opaque cloud that is still thin (normalized by opacity)
+          rintensity = 250. * (r_cloud_rad(i,j) * pf_scat)
+
+!         rintensity = min(rintensity,255.)
           rintensity = max(rintensity,0.)
 
           grayness = r_cloud_3d(i,j) ** 0.4
@@ -76,7 +83,7 @@
           endif
 
           cld_red = nint(rintensity * grayness)                
-          cld_grn = nint(rintensity * grayness * (1. - redness)**0.3)                   
+          cld_grn = nint(rintensity * grayness * (1. - redness)**0.3)
           cld_blu = nint(rintensity            * (1. - redness))
 
           rintensity_glow = min(((glow(i,j)-7.) * 100.),255.)
@@ -102,6 +109,7 @@
           sky_rgb(0,I,J) = clr_red * frac_clr + cld_red * frac_cloud
           sky_rgb(1,I,J) = clr_grn * frac_clr + cld_grn * frac_cloud
           sky_rgb(2,I,J) = clr_blu * frac_clr + cld_blu * frac_cloud
+          sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
 
 !         Use topo value if airmass to topo > 0
           if(airmass_2_topo(i,j) .gt. 0.)then
@@ -115,10 +123,10 @@
           endif
 
           if(idebug .eq. 1)then
-              write(6,101)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j),r_cloud_3d(i,j) &
+              write(6,101)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j),pf_scat,r_cloud_3d(i,j) &
                          ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity,airmass_2_topo(i,j) &
                          ,cloud_visibility,nint(sky_rgb(:,i,j))
-101           format(2i5,3f9.2,3f9.3,f7.4,f9.1,2f9.3,2x,3i6)
+101           format(2i5,3f9.2,4f9.3,f7.4,f9.1,2f9.3,2x,3i6)
           endif
 
          endif ! missing data tested via altitude
