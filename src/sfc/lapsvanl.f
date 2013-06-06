@@ -259,6 +259,7 @@ c
         real vis_bk(ni,nj), wt_vis(ni,nj)
 	real tgd_bk_f(ni,nj)
 	real tb8_bk(ni,nj)
+	real dum1(ni,nj), dum2(ni,nj)
         real u_bk_ms(ni,nj), v_bk_ms(ni,nj)                       ! m/s
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
@@ -1094,6 +1095,7 @@ c
 	var_fire = 'LSM'                   ! soil moisture
 	ext_f = 'lm1'
 	call get_laps_2dvar(i4time,i4time_tol,i4time_near,lat,lon,
+     &                      dum1,dum2,
      &                      ext_f,var_fire,units_fire,com_fire,
      &                      imax,jmax,d1,ilev,istatus)
 	if(istatus .ne. 1) then
@@ -1105,6 +1107,7 @@ c
 	var_fire = 'SC '                   ! snow cover
 	ext_f = 'lm2'
 	call get_laps_2dvar(i4time,i4time_tol,i4time_near,lat,lon,
+     &                      dum1,dum2,
      &                      ext_f,var_fire,units_fire,com_fire,
      &                      imax,jmax,d2,ilev,istatus)
 	if(istatus .ne. 1) then

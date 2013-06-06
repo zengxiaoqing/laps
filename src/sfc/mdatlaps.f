@@ -148,6 +148,7 @@ c
 	real t1(ni,nj), td1(ni,nj), tb81(ni,nj)
 	real rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
 	real vis1(ni,nj), elev1(ni,nj)
+	real dum1(ni,nj), dum2(ni,nj)
 c
 c..... Other arrays for intermediate grids 
 c
@@ -513,6 +514,7 @@ c
 	var_v(1) = 'S8W'	! satellite...band 8, warm pixel (K)
 c
 	call get_laps_2dvar(i4time,970,i4time_nearest,lat,lon,
+     &                      dum1,dum2,
      &                      ext_v,var_v,
      &        units_v,comment_v,imax,jmax,tb81,lvl_v,istatus)
 c
