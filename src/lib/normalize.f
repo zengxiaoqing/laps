@@ -531,9 +531,10 @@ c
       real  lat,lon
       real  sat_radius,au_m
 
-      real*8  TX,TY,TZ,
-     1        SATX,SATY,SATZ,
-     1        R8Emission_angle_r
+!     Coordinates are equatorial and relative to prime meridian
+      real*8  TX,TY,TZ,          ! O (Earth Surface)                                                   
+     1        SATX,SATY,SATZ,    ! I (Satellite)    
+     1        R8Emission_angle_r     
 
       real  Emission_angle_d
 

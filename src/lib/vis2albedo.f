@@ -155,6 +155,14 @@ c
 
         function albedo_to_cloudfrac(albedo)
 
+!       We might refer to a new version of this to return several quantities:
+!       cloud fraction/opacity 
+!       cloud albedo (assuming a black terrain surface), related to back scatter
+!       cloud optical depth
+
+!       Such a routine, 'albedo_to_clouds', is in 
+!           'src/lib/modules/module_cloud_rad.f90'
+
         clear_albedo = .2097063
         cloud_albedo = .4485300
 !       cloud_albedo = .40
