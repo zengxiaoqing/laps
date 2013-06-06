@@ -1180,20 +1180,20 @@ if(defined $opt_R){
         my $hhmm = substr($yyjjjhhmm,5,4);
         my $yyyymmdd_hhmm="$yyyy$xmm$dd"."_"."$hhmm";
 
-        open(TFILE,">$LAPS_LOG_PATH/qsub_xfer_laps.sh");
-        print TFILE "#!/bin/sh --login\n";
-        print TFILE "#\$ -N $xfer_name\n";
-        print TFILE "#\$ -A $opt_Q\n";
-        print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
-        print TFILE "#\$ -S /bin/sh\n";
-        print TFILE "#\$ -cwd\n";
-        print TFILE "#\$ -pe service 1\n";
-        print TFILE "#\$ -o $LAPS_LOG_PATH/xferlaps.log.$yyjjjhhmm\n";
-        print TFILE "#\$ -j y\n";
-        print TFILE "\n";
-        print TFILE "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm\n";
-        print TFILE "#exit\n";
-        close(TFILE);
+#       open(TFILE,">$LAPS_LOG_PATH/qsub_xfer_laps.sh");
+#       print TFILE "#!/bin/sh --login\n";
+#       print TFILE "#\$ -N $xfer_name\n";
+#       print TFILE "#\$ -A $opt_Q\n";
+#       print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
+#       print TFILE "#\$ -S /bin/sh\n";
+#       print TFILE "#\$ -cwd\n";
+#       print TFILE "#\$ -pe service 1\n";
+#       print TFILE "#\$ -o $LAPS_LOG_PATH/xferlaps.log.$yyjjjhhmm\n";
+#       print TFILE "#\$ -j y\n";
+#       print TFILE "\n";
+#       print TFILE "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm\n";
+#       print TFILE "#exit\n";
+#       close(TFILE);
 
         if(defined $opt_Q){ # JET
             $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/qsub_xfer_laps.sh";
@@ -1202,8 +1202,8 @@ if(defined $opt_R){
 #           $command = "$LAPSROOT/etc/rsync_out.sh $LAPS_DATA_ROOT $domain:$remote_data_root qsub 00:15 7 > $LAPS_LOG_PATH/rsync_out.log.`date +\%M`";         
             $command = "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm $opt_x";
         }
-        print "\nCommand file:\n";
-        system("cat $LAPS_LOG_PATH/qsub_xfer_laps.sh");
+#       print "\nCommand file:\n";
+#       system("cat $LAPS_LOG_PATH/qsub_xfer_laps.sh");
 
         print "\nExecuting $command\n";
         system("$command");
