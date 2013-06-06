@@ -2,7 +2,7 @@
         subroutine plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                          ,r_missing_data,laps_cycle_time,maxstns
      1                          ,i_overlay,plot_parms,namelist_parms
-     1                          ,l_plotobs)       
+     1                          ,l_polar,l_cyl)       
 
         use mem_namelist, ONLY: max_snd_grid, max_snd_levels
      1                        , grid_spacing_m
@@ -14,6 +14,8 @@
         real heights_3d(NX_L,NY_L,NZ_L)
         real clwc_3d(NX_L,NY_L,NZ_L)
         real cice_3d(NX_L,NY_L,NZ_L)
+        real rain_3d(NX_L,NY_L,NZ_L)
+        real snow_3d(NX_L,NY_L,NZ_L)
 !       real rh_3d(NX_L,NY_L,NZ_L)
 
         real pres_2d(NX_L,NY_L)
@@ -67,6 +69,9 @@
         character*20 c20_x, c20_y
         character*255 new_dataroot
         logical l_latlon, l_parse, l_plotobs
+        logical l_idl /.false./
+        logical l_cyl               
+        logical l_polar               
 
         integer i_overlay
 
@@ -91,16 +96,26 @@
         parameter (nj_polar = 511)
         real r_shadow_3d(0:90,0:360)
         real blog_v_roll(0:90,0:360)
+        real elong_roll(0:90,0:360)
         real airmass_2_cloud_3d(0:90,0:360)
+        real airmass_2_topo_3d(0:90,0:360)
+        real r_cloud_trans(0:90,0:360)
+        real alt_a_roll(0:90,0:360)
+        real azi_a_roll(0:90,0:360)
 
         real r_shadow_3d_polar(ni_polar,nj_polar)
+        real r_cloud_trans_polar(ni_polar,nj_polar)
         real blog_v_roll_polar(ni_polar,nj_polar)
         real alt_a_polar(ni_polar,nj_polar)
         real azi_a_polar(ni_polar,nj_polar)
+        real elong_a_polar(ni_polar,nj_polar)
         real airmass_2_cloud_3d_polar(ni_polar,nj_polar)
+        real airmass_2_topo_3d_polar(ni_polar,nj_polar)
+
         real sky_rgb_polar(0:2,ni_polar,nj_polar)
         integer isky_rgb_polar(0:2,ni_polar,nj_polar)
         real sky_rgb_cyl(0:2,0:90,0:360)
+        integer isky_rgb_cyl(0:2,0:90,0:360)
 
         data ilun /0/
         character*3 clun
@@ -186,6 +201,13 @@
             read(c20_x(1:lenx),*)xsound
             write(6,*)' Input y grid point for allsky plot...'
             read(5,*)ysound
+            if(xsound .lt. 1.0 .OR. ysound .lt. 1.0)then ! scale domain
+                write(6,*)' Values less than 1.0, scale to domain'
+                xsound = nint(xsound * (NX_L-1)) + 1
+                ysound = nint(ysound * (NY_L-1)) + 1
+                soundlat = lat(nint(xsound),nint(ysound))
+                soundlon = lon(nint(xsound),nint(ysound))
+            endif
         endif
 
         write(6,*)' soundlat/soundlon ',soundlat,soundlon
@@ -512,7 +534,7 @@
             ice_vert = -999.
           endif
  
-          goto500
+!         goto500
 
 !         Read Precipitating Rain
           istat_rain = 0
@@ -521,13 +543,13 @@
             ext = 'lwc'
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
-     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_rain)
+     1          ,ext,var_2d,units_2d,comment_2d,rain_3d,istat_rain)
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'RAI'
             call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
      1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d,field_3d
+     1                              ,units_2d,comment_2d,rain_3d
      1                              ,istat_rain)
 !           if(istat_rain .ne. 1)goto1000
           endif
@@ -547,13 +569,13 @@
             ext = 'lwc'
             call get_laps_3dgrid
      1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
-     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_snow)
+     1          ,ext,var_2d,units_2d,comment_2d,snow_3d,istat_snow)
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'SNO'
             call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
      1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d,field_3d
+     1                              ,units_2d,comment_2d,snow_3d
      1                              ,istat_snow)
 !           if(istat_snow .ne. 1)goto1000
           endif
@@ -565,6 +587,8 @@
           else
             snow_vert = -999.
           endif
+
+          goto500
 
 !         Read Precipitating Ice
           istat_pice = 0
@@ -767,10 +791,12 @@
 !       Get line of sight from isound/jsound
 
         call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
-     1                             ,pres_3d,topo_sfc
-     1                             ,r_shadow_3d,airmass_2_cloud_3d
+     1                             ,rain_3d,snow_3d
+     1                             ,pres_3d,topo_sfc,topo
+     1                             ,r_shadow_3d,r_cloud_trans
+     1                             ,airmass_2_cloud_3d,airmass_2_topo_3d
      1                             ,NX_L,NY_L,NZ_L,isound,jsound
-     1                             ,view_alt,view_az 
+     1                             ,view_alt,view_az,solar_alt,solar_az 
      1                             ,grid_spacing_m,r_missing_data)
 
         write(6,*)' Return from get_cloud_rays...',a9time
@@ -788,20 +814,22 @@
         if(solar_alt .ge. 0.)then
             I4_elapsed = ishow_timer()
             write(6,*)' call get_skyglow_cyl'
-            call skyglow_cyl(solar_alt,solar_az,blog_v_roll)
+            call skyglow_cyl(solar_alt,solar_az,blog_v_roll,elong_roll)
             I4_elapsed = ishow_timer()
         else
             blog_v_roll = 8.0
         endif
 
-!       Write ASCII Cyl plot
-        do altobj = 90.,0.,-10.
-           ialt = int(altobj)
-           write(6,15)altobj,(r_shadow_3d(ialt,jazi),jazi=0,360,30)
-15         format('altobj,r_shadow_3d',f8.2,13f6.2)
-        enddo ! altobj
+        if(l_idl .eqv. .true.)then
+!         Write ASCII Cyl plot
+          do altobj = 90.,0.,-10.
+            ialt = int(altobj)
+            write(6,15)altobj,(r_shadow_3d(ialt,jazi),jazi=0,360,30)
+15          format('altobj,r_shadow_3d',f8.2,13f6.2)
+          enddo ! altobj
+        endif
 
-!       Reproject and Write Polar Cloud Plot
+!       Reproject Polar Cloud Plot
         lunsky = 60 
         write(lunsky,*)rmaglim_v
         call cyl_to_polar(r_shadow_3d,r_shadow_3d_polar,90,360
@@ -810,24 +838,37 @@
 !       write(6,*)' cyl slice at 40alt ',r_shadow_3d(40,:)
 !       write(6,*)' polar slice at 256 ',r_shadow_3d_polar(256,:)
 
-        open(51,file='cloud.'//clun,status='unknown')
-        write(51,*)r_shadow_3d_polar
-        close(51)
+        if(l_idl .eqv. .true.)then
+!         Write Polar Cloud Plot
+          open(51,file='cloud.'//clun,status='unknown')
+          write(51,*)r_shadow_3d_polar
+          close(51)
+        endif
 
-!       Reproject and Write Skyglow Plot
+!       Reproject Skyglow Field
         call cyl_to_polar(blog_v_roll,blog_v_roll_polar,90,360
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
-        open(52,file='glow.'//clun,status='unknown')
-        write(52,*)blog_v_roll_polar
-        close(52)
-        write(6,*)' Range of blog_v_roll_polar is '
-     1            ,minval(blog_v_roll_polar),maxval(blog_v_roll_polar)
 
-!       Write label
+        if(l_idl .eqv. .true.)then
+!         Write Skyglow Plot
+          open(52,file='glow.'//clun,status='unknown')
+          write(52,*)blog_v_roll_polar
+          close(52)
+          write(6,*)' Range of blog_v_roll_polar is '
+     1              ,minval(blog_v_roll_polar),maxval(blog_v_roll_polar)
+        endif
+
+!       Write time label
         open(53,file='label.'//clun,status='unknown')
         write(53,*)a9time
         close(53)
+
+!       Write lat/lon label
+        open(54,file='label2.txt',status='unknown')
+        write(54,54)soundlat,soundlon
+        close(54)
+ 54     format(2f8.2)
 
 !       Reproject Airmass_2_cloud array from cyl to polar
         call cyl_to_polar(airmass_2_cloud_3d,airmass_2_cloud_3d_polar
@@ -835,27 +876,75 @@
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
 
-!       Get all sky for polar
-        write(6,*)' call get_sky_rgb with polar data'
-        call get_sky_rgb(r_shadow_3d_polar         ! cloud opacity
-     1                  ,blog_v_roll_polar         ! skyglow
-     1                  ,airmass_2_cloud_3d_polar
-     1                  ,alt_a_polar,azi_a_polar
-     1                  ,ni_polar,nj_polar
-     1                  ,sky_rgb_polar)   
+!       Reproject r_cloud_trans array from cyl to polar
+        call cyl_to_polar(r_cloud_trans,r_cloud_trans_polar
+     1                               ,90,360
+     1                               ,alt_a_polar,azi_a_polar
+     1                               ,ni_polar,nj_polar)
 
-!       Write all sky for polar
-        isky_rgb_polar = sky_rgb_polar
-        write(6,*)' Write all sky polar text file'
-     1            ,isky_rgb_polar(:,255,255)
-        open(54,file='allsky_rgb_polar.'//clun,status='unknown')
-        write(54,*)isky_rgb_polar
-        close(54)
+!       Reproject Airmass_2_topo array from cyl to polar
+        call cyl_to_polar(airmass_2_topo_3d,airmass_2_topo_3d_polar
+     1                               ,90,360
+     1                               ,alt_a_polar,azi_a_polar
+     1                               ,ni_polar,nj_polar)
 
-!       Write all sky for cyl
-        open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
-        write(55,*)nint(sky_rgb_cyl)
-        close(55)
+!       Reproject Elong array from cyl to polar
+        call cyl_to_polar(elong_roll,elong_a_polar                    
+     1                               ,90,360
+     1                               ,alt_a_polar,azi_a_polar
+     1                               ,ni_polar,nj_polar)
+
+        if(l_polar .eqv. .true.)then
+!         Get all sky for polar
+          write(6,*)' call get_sky_rgb with polar data'
+          call get_sky_rgb(r_shadow_3d_polar         ! cloud opacity
+     1                    ,r_cloud_trans_polar       ! cloud solar transmittance
+     1                    ,blog_v_roll_polar         ! skyglow
+     1                    ,airmass_2_cloud_3d_polar
+     1                    ,airmass_2_topo_3d_polar
+     1                    ,alt_a_polar,azi_a_polar
+     1                    ,elong_a_polar
+     1                    ,ni_polar,nj_polar
+     1                    ,solar_alt,solar_az
+     1                    ,sky_rgb_polar)   
+
+!         Write all sky for polar
+          isky_rgb_polar = sky_rgb_polar
+          write(6,*)' Write all sky polar text file'
+     1              ,isky_rgb_polar(:,255,255)
+          open(54,file='allsky_rgb_polar.'//clun,status='unknown')
+          write(54,*)isky_rgb_polar
+          close(54)
+        endif ! l_polar
+
+        if(l_cyl .eqv. .true.)then              
+!         Get all sky for cyl   
+          write(6,*)' call get_sky_rgb with cyl data'
+          ni_cyl = 91
+          nj_cyl = 361
+          do i = 0,90
+          do j = 0,360
+              alt_a_roll(i,j) = i
+              azi_a_roll(i,j) = j
+          enddo 
+          enddo
+          call get_sky_rgb(r_shadow_3d               ! cloud opacity
+     1                    ,r_cloud_trans             ! cloud solar transmittance
+     1                    ,blog_v_roll               ! skyglow
+     1                    ,airmass_2_cloud_3d      
+     1                    ,airmass_2_topo_3d      
+     1                    ,alt_a_roll,azi_a_roll       
+     1                    ,elong_roll    
+     1                    ,ni_cyl,nj_cyl  
+     1                    ,solar_alt,solar_az
+     1                    ,sky_rgb_cyl)   
+
+!         Write all sky for cyl
+          isky_rgb_cyl = sky_rgb_cyl   
+          open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
+          write(55,*)isky_rgb_cyl           
+          close(55)
+        endif
 
         write(6,*)' End of plot_allsky...'
         write(6,*)
