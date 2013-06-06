@@ -61,6 +61,8 @@ cdis
 !       echo is strong then visible is overruled and a minimal value of cloud 
 !       fraction of 0.2 is left in.
 
+        use cloud_rad
+
         integer ihist_alb(-10:20)
         integer ihist_frac_sat(-10:20)
         integer ihist_frac_in(-10:20)
@@ -120,11 +122,24 @@ cdis
 
 !       Horizontal array loop
         do i = 1,ni
-        do j = 1,nj
+        do j = 1,nj    
+
+          if(i .eq. ni/2 .and. j .eq. nj/2)then
+              idebug = 1
+          else
+              idebug = 0
+          endif
 
 !         Calculate upper bound to cloud cover (through the column)
           if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then ! VIS (Daytime)
+              call albedo_to_clouds(albedo(i,j),trans,cloud_od,cloud_op)
               cloud_frac_uprb = cloud_frac_vis_a(i,j)
+
+              if(idebug .eq. 1)then
+                  write(6,51)cloud_frac_vis_a(i,j),albedo(i,j)
+     1                       ,trans,cloud_od,cloud_op
+51                format('cf_vis/albedo/trans/od/op',5f9.3)
+              endif
 
           else                                              ! 3.9u (Nighttime)
               n_missing_albedo =  n_missing_albedo + 1
@@ -489,6 +504,6 @@ cdis
         enddo ! j
 
         write(6,*)' Number of columns with shadow = ',ishadow_tot
- 
+
         return
         end
