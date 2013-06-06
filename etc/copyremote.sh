@@ -68,19 +68,33 @@ elif test "$3" == "exchange_tar"; then
     fi
 
 elif test "$3" == "exchange_filelist"; then
+    BASEFILE=`basename $FILENAME` 
+    TEMPPATH=`dirname  $FILENAME` 
+
     echo " "
     echo "first hop of filelist"        
-    echo "ssh $REMOTE_NODE mkdir -p $TEMPDIR/$TEMPFILE"
-          ssh $REMOTE_NODE mkdir -p $TEMPDIR/$TEMPFILE
+    echo "ssh $REMOTE_NODE mkdir -p $TEMPDIR/$BASEFILE.$$"
+          ssh $REMOTE_NODE mkdir -p $TEMPDIR/$BASEFILE.$$
 
-    echo "scp -o ConnectTimeout=200 `cat $FILENAME` jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
-          scp -o ConnectTimeout=200 `cat $FILENAME` jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE
+#   echo "scp -o ConnectTimeout=200 `cat $FILENAME` jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
+#         scp -o ConnectTimeout=200 `cat $FILENAME` jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE
+
+#   echo "tar -T $FILENAME cvf - | ssh jetscp.rdhpcs.noaa.gov tar xpvf - -C $TEMPDIR/$TEMPFILE"
+#         tar -T $FILENAME cvf - | ssh jetscp.rdhpcs.noaa.gov tar xpvf - -C $TEMPDIR/$TEMPFILE
+
+    cd $TEMPPATH/..
+
+    echo "Tarring file list from the following directory: $cwd"
+    pwd
+
+    echo "tar -T $BASEFILE -cvf - | (ssh jetscp.rdhpcs.noaa.gov; cd $TEMPDIR/$BASEFILE.$$;  tar xfBp -)"
+          tar -T $BASEFILE -cvf - | (ssh jetscp.rdhpcs.noaa.gov; cd $TEMPDIR/$BASEFILE.$$;  tar xfBp -)
 
     echo " "
     date -u
     echo "second hop of filelist"
-    echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR"
-          ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR 
+    echo "ssh $REMOTE_NODE mv $TEMPDIR/$BASEFILE.$$/* $DESTDIR"
+          ssh $REMOTE_NODE mv $TEMPDIR/$BASEFILE.$$/* $DESTDIR 
 
     echo "ssh $REMOTE_NODE rmdir $TEMPDIR/$TEMPFILE"
           ssh $REMOTE_NODE rmdir $TEMPDIR/$TEMPFILE 
