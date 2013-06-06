@@ -3654,83 +3654,101 @@ analysis in place of the result of the first pass Barnes' result.  The
 difference field is then generated and applied using a set of weights 
 appropriate for the LAPS domain resolution and density of observations.
 
-SATELLITE ALGORITHM:
+    SATELLITE ALGORITHM:
 
-An essential ingredient of the variational method is a satellite forward 
-radiance model.  The forward model produces a simulated radiance based on 
-temperature, moisture, and ozone profiles along with the temperature of the 
-surface or cloud top, and the pressure of that radiating surface (i.e., surface 
-pressure or cloud top pressure whichever applies).   Also needed are the zenith 
-angle, used to determine the air mass path and optical depth between the 
-radiator and the satellite.  The forward model used for this work was obtained 
-from NESDIS.  The forward model coefficients used for this study were vintage 
-late 1995.  
+    An essential ingredient of the variational method is a satellite forward
+    radiance model.  The forward model produces a simulated radiance based on
+    temperature, moisture, and ozone profiles along with the temperature of the
+    surface or cloud top, and the pressure of that radiating surface (i.e.,
+    surface pressure or cloud top pressure whichever applies).   Also needed are
+    the zenith angle, used to determine the air mass path and optical depth
+    between the radiator and the satellite.  The forward model used for this work
+    was obtained from NESDIS.  The forward model coefficients used for this study
+    were vintage late 1995.
 
-In order to apply the forward model appropriately, a determination of clear and 
-cloudy fields-of-view (FOV) need to be determined.  The LAPS cloud analysis is 
-used to identify clear and cloudy LAPS grid points.  The analysis as presented 
-here is only working from FOVs classified as clear.  Cloudy FOVs probably can be 
-used, but this is an early attempt at this technique, so a conservative approach 
-was chosen.  Later research may focus on using a combination of both clear and 
-cloudy FOVs in the algorithm.
-  
-The first step in the algorithm is to assure all the data needed for proper 
-execution are present.  These include channel radiances derived from AWIPS 
-imagery, the LAPS cloud analysis output, the LAPS surface temperature output, 
-and LAPS 3-D temperatures.  The forward model also requires an ozone profile 
-along with moisture and temperature profiles above 100 hPa.  These are gotten 
-from climatology since LAPS extends only to 100 hPa.  The entire ozone profile 
-is provided by the forward model since LAPS does not analyze this parameter.  
-     
-Next, the forward model is run to verify "clear" LAPS gridpoints, where clear is 
-defined as those points in which both the modeled and measured GOES image 
-radiances in channel 4 (11 micron) agree to with 2K.  This step uses the LAPS 
-thermal and as yet unmodified moisture profiles.  Disparity in the channel 4 
-brightness temperature comparison indicates that the LAPS thermal profile is too 
-far off or perhaps it is really cloudy where the LAPS cloud analysis is 
-indicating it is clear.  (It doesn't have to be totally cloudy for a disparity 
-to exist, it can be partially cloudy and this will still be detectable in this 
-difference test.)   This is a conservative test; it really goes beyond simple 
-cloud detection though that is a likely cause of differences, the forward model 
-check is very sensitive and in many ways eliminates any thermal profiles that 
-subsequent variational technique will find difficult to deal with.  We are 
-basically saying that we will not worry about moisture adjustment unless the 
-thermal profiles are reasonable.  
-     
-At this point, all gridpoints offering promise of moisture adjustment have been 
-identified.  If the domain is totally cloudy, the GOES adjustment is 
-discontinued and returns unmodified moisture values which are passed to the 
-final QC step.  Assuming some gridpoints have been classified as clear, the next 
-step is a variational adjustment at those locations.  The functional evaluated 
-at each gridpoint has and is best described in the literature (see articles 
-under http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi.  
+    In order to apply the forward model appropriately, a determination of clear
+    and  cloudy fields-of-view (FOV) need to be determined.  The LAPS cloud
+    analysis is used to identify clear and cloudy LAPS grid points.  The analysis
+    as presented here is only working from FOVs classified as clear.  Cloudy FOVs
+    probably can be used, but this is an early attempt at this technique, so a
+    conservative approach was chosen.  Later research may focus on using a
+    combination of both clear and cloudy FOVs in the algorithm.
 
-Basically a funcational is minimized that differences the perturbed solution 
-against observation.  The best perturbation is accepted as the "answer". The 
-first term in the functional maximizes agreement between the forward model and 
-observed radiance at the expense of only modifying the water vapor profile.  The 
-second term adds stability and gives more weight to solutions in which the 
-coefficients departure from unity (no change to the initial profile) is 
-minimized.  The stability term was discovered to be necessary since without it 
-some very good radiance matches were solved but with unreasonable coefficients.
+    The first step in the algorithm is to assure all the data needed for proper
+    execution are present.  These include channel radiances derived from AWIPS
+    imagery, the LAPS cloud analysis output, the LAPS surface temperature output,
+    and LAPS 3-D temperatures.  The forward model also requires an ozone profile
+    along with moisture and temperature profiles above 100 hPa.  These are gotten
+    from climatology since LAPS extends only to 100 hPa.  The entire ozone
+    profile is provided by the forward model since LAPS does not analyze this
+    parameter.
 
-Note that differences in all three channels are minimized in this technique, not 
-only the moisture channel.  Thus, any improvement in the "dirty window," channel 
-5, will also contribute to the solution.  A variational technique is used to 
-minimize this function and typically requires three to 10 iterations to 
-converge. A limit of 50 iterations was set as the maximum number to attempt.  If 
-limit was reached, that particular gridpoint was excluded and treated as cloudy.  
-Once the coefficients are determined, Laplace's equation is solved for interior 
-points for which coefficients have not been determined.  Then the entire domain 
-is averaged using a spatial invariant filter; simply averaging the values in a 
-3x3 gridpoint window, assigning that average to the window's central grid 
-location.
+    Next, the forward model is run to verify "clear" LAPS gridpoints, where clear
+    is defined as those points in which both the modeled and measured GOES image
+    radiances in channel 4 (11 micron) agree to with 2K.  This step uses the LAPS
+    thermal and as yet unmodified moisture profiles.  Disparity in the channel 4
+    brightness temperature comparison indicates that the LAPS thermal profile is
+    too far off or perhaps it is really cloudy where the LAPS cloud analysis is
+    indicating it is clear.  (It doesn't have to be totally cloudy for a
+    disparity to exist, it can be partially cloudy and this will still be
+    detectable in this difference test.)   This is a conservative test; it really
+    goes beyond simple cloud detection though that is a likely cause of
+    differences, the forward model check is very sensitive and in many ways
+    eliminates any thermal profiles that subsequent variational technique will
+    find difficult to deal with.  We are basically saying that we will not worry
+    about moisture adjustment unless the thermal profiles are reasonable.  The
+    current LAPS system uses an older forward radiance model named OPTRAN and
+    this is now being switched to CRTM.  However, this test is not that satellite
+    specific and the older OPTRAN model can be used by stating that newer
+    satellite data is of the vintage that OPTRAN uses.  For this reason, the user
+    should not be that concerned with the exact satellite specified for this
+    process. At this point, all gridpoints offering promise of moisture
+    adjustment have been  identified.  If the domain is totally cloudy, the GOES
+    adjustment is  discontinued and returns unmodified moisture values which are
+    passed to the  final QC step.  Assuming some gridpoints have been classified
+    as clear, the next  step is a variational adjustment at those locations.  The
+    functional evaluated  at each gridpoint has and is best described in the
+    literature (see articles  under http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi.
 
-When the coefficients have been determined, they are applied to the specific 
-humidity field at each pressure level for which they are designated.  The 
-modified specific humidity field is then advanced to the final analysis step.
+    Basically a funcational is minimized that differences the perturbed solution
+    against observation.  The best perturbation is accepted as the "answer". The
+    first term in the functional maximizes agreement between the forward model
+    and observed radiance at the expense of only modifying the water vapor
+    profile.  The second term adds stability and gives more weight to solutions
+    in which the coefficients departure from unity (no change to the initial
+    profile) is minimized.  The stability term was discovered to be necessary
+    since without it some very good radiance matches were solved but with
+    unreasonable coefficients.
 
-Reference: http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi
+    Note that differences in all three channels are minimized in this technique,
+    not only the moisture channel.  Thus, any improvement in the "dirty window,"
+    channel 5, will also contribute to the solution.  A variational technique is
+    used to minimize this function and typically requires three to 10 iterations
+    to converge. A limit of 50 iterations was set as the maximum number to
+    attempt.  If limit was reached, that particular gridpoint was excluded and
+    treated as cloudy. Once the coefficients are determined, Laplace's equation
+    is solved for interior points for which coefficients have not been determined.
+    Then the entire domain is averaged using a spatial invariant filter; simply
+    averaging the values in a 3x3 gridpoint window, assigning that average to the
+    window's central grid location.
+
+    When the coefficients have been determined, they are applied to the specific
+    humidity field at each pressure level for which they are designated.  The
+    modified specific humidity field is then advanced to the final analysis step.
+
+    As a final note it should be mentioned that owing to the unknown bias in
+    radiance data.  If it is available, it is far better to use water vapor
+    gradient fields derived from satellite, than to assimilate satellite
+    radiances directly.  If the GVAP option is turned on, it is recommended that
+    the direct assimilation is disabled in moisture_switch.nl.  This is one
+    reason why direct radiance assimilation has been slow in development with
+    CRTM.  Its value still can be reasonably questioned given the unknown bias.
+    It is far more straight forward to rid the system of bias by using the first
+    derivative structure of the radiance or PW field that to try to accept/deal
+    with the bias.
+
+
+    Reference: http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi
 
    GPS ASSIMILATION ALGORITHM:
    
@@ -3748,7 +3766,7 @@ Reference: http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi
    files for GPS data.  The MADIS data are typically built every 5 minutes,
    so to read GPS data from these files, one should look back to the prior
    hour's MADIS file for the most recent GPS data.  This is due to the
-   fact that typically the GPS data are not ready for use until about Ω
+   fact that typically the GPS data are not ready for use until about an
    hour after acquisition time.  So for a typical "20-min after the hour"
    LAPS run, the current hour's MADIS file will not contain any GPS data.
    
