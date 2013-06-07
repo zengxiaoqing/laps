@@ -396,6 +396,7 @@ print <<"EOF";
 <option $selected{'diff'}> diff
 <option $selected{'DIFF_20'}> DIFF_20
 <option $selected{'DIFF_30'}> DIFF_30
+<option $selected{'DIFF_40'}> DIFF_40
 <option $selected{'obs'}> obs
 <option $selected{'obs_qc'}> obs_qc
 <option $selected{'what-got-in'}> what-got-in
@@ -482,9 +483,6 @@ print <<"EOF";
 <option $selected{'WTBLB0'}> WTBLB0
 <option $selected{'WTBLB1'}> WTBLB1
 <option $selected{'radial_vel'}> radial_vel
-<option $selected{'ht'}> ht
-<option $selected{'temp'}> temp
-<option $selected{'sfct'}> sfct
 <option $selected{'c_omega'}> c_omega
 <option $selected{'cape'}> cape
 <option $selected{'cin'}> cin
@@ -504,6 +502,7 @@ print <<"EOF";
 <option $selected{'gg'}> gg
 <option $selected{'heatindex'}> heatindex
 <option $selected{'helicity'}> helicity
+<option $selected{'ht'}> ht
 <option $selected{'land_frac'}> land_frac
 <option $selected{'mconv'}> mconv
 <option $selected{'mr'}> mr
@@ -529,11 +528,13 @@ print <<"EOF";
 <option $selected{'sat_wv'}>  sat_wv
 <option $selected{'sat_d39'}> sat_d39
 <option $selected{'sat_vis_alb'}> sat_vis_alb
+<option $selected{'sfct'}> sfct
 <option $selected{'sh'}> sh
 <option $selected{'snow_inc'}> snow_inc
 <option $selected{'snow_sto'}> snow_sto
 <option $selected{'snow_cvr'}> snow_cvr
 <option $selected{'sw_down'}> sw_down  
+<option $selected{'temp'}> temp
 <option $selected{'theta'}> theta
 <option $selected{'thetae'}> thetae
 <option $selected{'wind'}> wind
@@ -587,6 +588,7 @@ print <<"EOF";
 <option $selected{'soil3'}> soil3
 <option $selected{'xsect'}> xsect
 <option $selected{'sndg'}> sndg
+<option $selected{'allsky'}> allsky
 </select>
 </td>
 EOF

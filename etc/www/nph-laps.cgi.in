@@ -353,7 +353,7 @@ if($domain_first =~ "tw_" || $domain_first =~ "tai" || $domain_first =~ "th" || 
 #print "units2 = $units<br>";
 
 # Obtain cycle time 
-my $laps_cycle_time,$model_fcst_intvl,$cycle_time;
+my $laps_cycle_time,$model_fcst_intvl,$cycle_time,$model_fcst_intvl_hr;
 my @cycle_array;
 
 $domain_nl = "nest7grid.parms";
@@ -361,6 +361,7 @@ if(-e "$laps_data_root/static/nest7grid.parms"){
     $nl_var="model_fcst_intvl";
     @cycle_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
     $model_fcst_intvl=@cycle_array[0];
+    $model_fcst_intvl_hr = ($model_fcst_intvl/3600.);
 }
 
 if ($frames_safe > 1 || $frames_safe =~ "auto"){ 
@@ -441,7 +442,7 @@ if ($frames_safe ne "1" && length($forecast_time) < 9 && $frames_safe =~ "auto")
 EOI
 }
 
-if ($n_fields_uc > 0 && $out_levels =~ "sndg"){
+if ($n_fields_uc > 0 && ($out_levels =~ "sndg" || $out_levels =~ "allsky")){
     $err=1;
     print<<"EOI";
 <h2>Please select a valid initial time for auto multi-frame image...</h2>
@@ -493,7 +494,7 @@ if($n_sources_obs > 0 && $n_sources >= 2 && $n_fields_uc > 0){
 
 #if($n_fields_uc == 9999 && $n_fields_uc > 1 && $n_sources_fields > 0 && ! (@fields[0] eq "CLDCLV" && @fields[1] eq "REFLCT" && $out_levels eq "xsect") ){ # exception for cloud/radar combo (no montage for cloud/radar overlay)
 
-if ($n_fields_uc > 0 && $out_levels =~ "sndg"){
+if ($n_fields_uc > 0 && ($out_levels =~ "sndg" || $out_levels =~ "allsky")){
     print '<h2><font color="red">Error: lower case fields should be used for soundings...</font></h2>';
     $err=1;
 
@@ -835,6 +836,8 @@ if($err == 0) {
                                 printf LAPSPLOT "dt2i\n"; 
                             }elsif ("$source" eq "DIFF_30" ) {
                                 printf LAPSPLOT "dt3i\n"; 
+                            }elsif ("$source" eq "DIFF_40" ) {
+                                printf LAPSPLOT "dt4i\n"; 
                             }
                         }
                     }
@@ -854,6 +857,8 @@ if($err == 0) {
                         printf LAPSPLOT "dt2i\n"; 
                     }elsif ("$source" eq "DIFF_30" ) {
                         printf LAPSPLOT "dt3i\n"; 
+                    }elsif ("$source" eq "DIFF_40" ) {
+                        printf LAPSPLOT "dt4i\n"; 
                     }
                 }
 
@@ -914,7 +919,11 @@ if($err == 0) {
                       print "<h2>Error: sndg cannot be combined with other levels...</h2>";
                   }
 
-                  if($overlay == 0 || "$level" eq "sndg"){
+                  if ("$level" eq "allsky" && $n_levels > 1){
+                      print "<h2>Error: allsky cannot be combined with other levels...</h2>";
+                  }
+
+                  if($overlay == 0 || "$level" eq "sndg" || "$level" eq "allsky"){
                       if("$level" eq "xsect"){
                           $sect = "xsect";
                           printf LAPSPLOT "xz\n";
@@ -937,6 +946,18 @@ if($err == 0) {
                               printf LAPSPLOT "1\n";
                           }else{
                               printf LAPSPLOT "0\n";
+                          }
+
+                      }elsif("$level" eq "allsky"){
+                          $sect = "allsky";
+#                         if($overlay > 0){
+#                             printf LAPSPLOT "q\n";
+#                         }
+                          if($overlay == 0){
+                             printf LAPSPLOT "az\n";
+                             printf LAPSPLOT "$zoom_safe\n";
+                             printf LAPSPLOT "$xcen_safe\n";
+                             printf LAPSPLOT "$ycen_safe\n";
                           }
 
                       }else{
@@ -1131,7 +1152,7 @@ if($err == 0) {
                       printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
                   }
 
-                  if($sect eq "sndg"){
+                  if($sect eq "sndg" || $sect eq "allsky"){
                       printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
                   }
 
@@ -1988,7 +2009,7 @@ if($err == 0) {
                               print "$source $level $field not available on the pressure grid\n"; 
                           }
       
-                      }elsif("$level" eq "sndg"){ # FUA Sounding
+                      }elsif("$level" eq "sndg" || "$level" eq "allsky"){ # FUA Sounding
                           if($sounding == 1){
                               printf LAPSPLOT "f\n"; 
                               printf LAPSPLOT "$source\n"; 
@@ -2063,6 +2084,14 @@ if($err == 0) {
                               printf LAPSPLOT "$hhmm\n";
                               printf LAPSPLOT "$level\n"; 
                               printf LAPSPLOT "q\n"; 
+
+                          }elsif("$field" eq "dewpoint" ) { 
+                              printf LAPSPLOT "fr\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "d\n"; 
+                              printf LAPSPLOT "-132.\n"; 
 
                           }elsif("$field" eq "DEWPOINT" ) { 
                               printf LAPSPLOT "fri\n"; 
@@ -2609,7 +2638,7 @@ if($err == 0) {
                         print "$source $level $field not available (via lga file)\n"; 
                     }
 
-                }elsif("$level" eq "sndg"){ # LGA Sounding
+                }elsif("$level" eq "sndg" || "$level" eq "allsky"){ # LGA Sounding
                     if($sounding == 1){
                         printf LAPSPLOT "b\n"; 
                         printf LAPSPLOT "$hhmm\n";
@@ -3789,7 +3818,7 @@ if($err == 0) {
                         print "$source $level $field not available\n"; 
                     }
 
-                }elsif("$level" eq "sndg"){ # analysis
+                }elsif("$level" eq "sndg" || "$level" eq "allsky"){ # analysis
                     if($sounding == 1){
                         printf LAPSPLOT "a\n"; 
                     }
@@ -4100,6 +4129,9 @@ if($err == 0) {
                               printf LAPSPLOT "by\n"; 
                               printf LAPSPLOT "mri\n"; 
                               printf LAPSPLOT "bn\n"; 
+                          }elsif("$field" eq "PCP_INC"){ 
+                              printf LAPSPLOT "s4i\n"; 
+                              printf LAPSPLOT "$model_fcst_intvl_hr\n"; 
                           }elsif("$field" eq "p_msl"){ 
                               printf LAPSPLOT "by\n"; 
                               printf LAPSPLOT "pm\n"; 
@@ -4243,7 +4275,7 @@ if($err == 0) {
                               print "$source $level $field not available\n"; 
                           }
 
-                      }elsif("$level" eq "sndg"){ # Balanced Sounding
+                      }elsif("$level" eq "sndg" || "$level" eq "allsky"){ # Balanced Sounding
                           if($sounding == 1){
                               printf LAPSPLOT "n\n"; 
                           }
@@ -4855,7 +4887,11 @@ if($err == 0) {
 
 
 #   Run lapsplot
-    system("@prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+    if ($out_levels =~ "allsky"){
+        system("@prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+    }else{
+        system("@prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+    }
     system("rm -f $request_root/lapsplot/lapsplot.in; ln -s $web_root/$ScratchDir/lapsplot.in_$$ $request_root/lapsplot/lapsplot.in; rm -f $request_root/lapsplot/lapsplot.out; ln -s $web_root/$ScratchDir/lapsplot.out_$$ $request_root/lapsplot/lapsplot.out; rm -f $request_root/lapsplot/lapsplot.err; ln -s $web_root/$ScratchDir/lapsplot.err_$$ $request_root/lapsplot/lapsplot.err; rm -f $request_root/lapsplot/loop; ln -s $web_root/$ScratchDir/$$ $request_root/lapsplot/loop");
     print<<"EOI";
     <A HREF=\"/$ScratchDir/gmeta_$$.gm\">gmeta file</A>
