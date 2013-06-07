@@ -42,15 +42,15 @@ CONTAINS
 
         call stretch2(clear_albedo,cloud_albedo,0.,1.,arg)
 
-        cloud_albedo = min(arg,0.99999)
+        cloud_albedo = min(arg,0.99999)      ! Back Scattered
 
-        cloud_rad_trans = 1.0 - cloud_albedo
+        cloud_rad_trans = 1.0 - cloud_albedo ! Fwd Scattered + Direct Transmission
 
-        bksc_eff_od = -log(cloud_rad_trans)
+        bksc_eff_od = -log(cloud_albedo)     ! Tau * Back Scat Efficiency
 
-        cloud_od = bksc_eff_od * 10.
+        cloud_od = bksc_eff_od / 0.10        ! Tau
 
-        cloud_opacity = 1.0 - exp(cloud_od)
+        cloud_opacity = 1.0 - exp(-cloud_od) ! 1 - Direct Transmission
 
         return
    
