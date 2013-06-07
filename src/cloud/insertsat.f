@@ -1095,6 +1095,8 @@ c
 
         endif
 
+        cloud_frac_tb8 = 1.0
+
         if(               l_tb8 
      1                     .OR. 
      1       (l_use_39 .and. istat_39 .eq. 1)
@@ -1113,7 +1115,6 @@ c
 !           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point)
 
             costmin_x = 9999. ! Initial cost value from crossing points
-            cloud_frac_tb8 = 1.0
 
 ! abdel added this when the model is the brightness temp is too cold than the model a klaps level
 	               
@@ -1236,6 +1237,18 @@ c
                     cloud_frac_tb8_potl = cloud_frac_tb8
                 endif
 
+                if(cloud_frac_tb8_potl .ge. 0. .OR.
+     1             cloud_frac_tb8_potl .le. 1.      )then 
+!                   Set new cloud top and cover
+                    cldtop_tb8_m = cldtop_new_potl_m            
+                    cloud_frac_tb8 = cloud_frac_tb8_potl
+                else
+                    write(6,*)
+     1       ' WARNING in cloud_top: cloud_frac_tb8_potl out of bounds '       
+     1                              ,cloud_frac_tb8_potl
+                    idebug = 1
+                endif
+
                 if(idebug .eq. 1)then
                     write(6,131)i,j,kl_min                        
      1                     ,costmin_lvl,tb8_k,temp_3d(i,j,kl_min)
@@ -1243,11 +1256,6 @@ c
      1                     ,cldtop_new_potl_m              
 131                 format(1x,'Found lower cost function at: ',8x,2i6,i4
      1                ,f12.4,2f8.1,f6.2,f8.0)
-                endif
-
-                if(.true.)then ! Set new cloud top and cover
-                    cldtop_tb8_m = cldtop_new_potl_m            
-                    cloud_frac_tb8 = cloud_frac_tb8_potl
                 endif
 
             else
@@ -1445,7 +1453,7 @@ c
 !       This one utilizes the sigma T**4 relationship
         call get_band8_cover(tb8_k,t_gnd_k,temp_new,cover_new_f,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Bad band8_cover status #2'      
+            write(6,*)' Bad band8_cover status #2 ',cover_new_f      
             lwrite = .true.
         else
             lwrite = .false.
@@ -1456,7 +1464,8 @@ c
         endif
 
         if(cover_new_f .lt. -0.0001)then
-            write(6,*)' ERROR: corrected cover << 0. ',i,j,cover_new_f
+            write(6,*)' ERROR in correct_cover: corrected cover << 0. '
+     1                ,i,j,cover_new_f
             lwrite = .true.
             istatus = 0
             cldtop_new = cldtop_old
@@ -1464,7 +1473,8 @@ c
         endif
 
         if(cover_new_f .gt. 1.0)then
-            write(6,*)' ERROR: corrected cover > 1. ',i,j,cover_new_f
+            write(6,*)' ERROR in correct_cover: corrected cover > 1. '
+     1                ,i,j,cover_new_f
             lwrite = .true.
             istatus = 0
             cldtop_new = cldtop_old
@@ -1494,13 +1504,13 @@ c
         istatus = 1
 
         if(band8_cover .gt. 1.0)then
-            write(6,*)' WARNING: resetting band8_cover down to 1.0'
+            write(6,*)' WARNING: get_band8_cover resetting down to 1.0'
             write(6,11)tb8_k,t_gnd_k,t_cld,band8_cover
  11         format(' tb8_k,t_gnd_k,t_cld,band8_cover:',4f9.3,f8.4)
             band8_cover = 1.0 
             istatus = 0
         elseif(band8_cover .lt. 0.0)then
-            write(6,*)' WARNING: resetting band8_cover up to 0.0'
+            write(6,*)' WARNING: get_band8_cover resetting up to 0.0'
             write(6,11)tb8_k,t_gnd_k,t_cld,band8_cover
             band8_cover = 0.0 
             istatus = 0
