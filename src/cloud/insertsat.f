@@ -533,7 +533,7 @@ c
                             cldcv(i,j,k)=default_clear_cover
                         else                          ! Cover < 0.9, correct it
                             call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)       
-     1                                          ,temp_grid_point
+     1                                          ,temp_grid_point,idebug
      1                                          ,cldcv(i,j,k),istatus)
                             if(cldcv(i,j,k) .gt. 1.0 .or.
      1                         cldcv(i,j,k) .lt. 0.0       )then
@@ -734,7 +734,7 @@ c
 !             Calculate the cover (opacity) given the brightness temperature,
 !             ground temperature, and assumed ambient cloud-top temperature.
               call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)
-     1                            ,tb8_cold_k(i,j),cover,istatus)       
+     1                            ,tb8_cold_k(i,j),idebug,cover,istatus)       
               if(istatus .ne. 1)write(6,*)' Bad band8_cover status #1'      
               thk_lyr = cld_thk(cldtop_m(i,j))
               htbase = max( topo(i,j) + buffer , cldtop_m(i,j)-thk_lyr )
@@ -805,12 +805,14 @@ c
      1                              ,heights_3d
      1                              ,imax,jmax,klaps,i,j,idebug,istatus)       
                   if(istatus .ne. 1)then
-                      write(6,*)' Correct_cover: tb8_k < t_cld'
-                      thk_lyr = cld_thk(cldtop_m(i,j))
-                      write(6,*)cldtop_old,cldtop_m(i,j)
-     1                         ,htbase,thk_lyr,cover
-                      write(6,*)(heights_3d(i,j,k),k=1,klaps)
-!                     return
+                      if(idebug .eq. 1)then
+                          write(6,*)' Correct_cover: tb8_k < t_cld #4'
+                          thk_lyr = cld_thk(cldtop_m(i,j))
+                          write(6,*)cldtop_old,cldtop_m(i,j)
+     1                             ,htbase,thk_lyr,cover
+                          write(6,*)(heights_3d(i,j,k),k=1,klaps)
+!                         return
+                      endif
                   endif
                   cover = cover_new
               endif ! .true.
@@ -839,12 +841,14 @@ c
      1                              ,heights_3d
      1                              ,imax,jmax,klaps,i,j,idebug,istatus)       
                   if(istatus .ne. 1)then
-                      write(6,*)' Correct_cover: tb8_k < t_cld'
-                      thk_lyr = cld_thk(cldtop_m(i,j))
-                      write(6,*)cldtop_old,cldtop_m(i,j)
-     1                         ,htbase,thk_lyr,cover
-                      write(6,*)(heights_3d(i,j,k),k=1,klaps)
-!                     return
+                      if(idebug .eq. 1)then
+                          write(6,*)' Correct_cover: tb8_k < t_cld #5'
+                          thk_lyr = cld_thk(cldtop_m(i,j))
+                          write(6,*)cldtop_old,cldtop_m(i,j)
+     1                             ,htbase,thk_lyr,cover
+                          write(6,*)(heights_3d(i,j,k),k=1,klaps)
+!                         return
+                      endif
                   endif
                   cover = cover_new
               endif ! .true.
@@ -1450,32 +1454,36 @@ c
         cover_new = cover_old *
      1  (tb8_k - t_gnd_k) / (temp_new - t_gnd_k)
 
-!       This one utilizes the sigma T**4 relationship
-        call get_band8_cover(tb8_k,t_gnd_k,temp_new,cover_new_f,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Bad band8_cover status #2 ',cover_new_f      
+        if(idebug .eq. 1)then
             lwrite = .true.
         else
             lwrite = .false.
         endif
 
-        if(idebug .eq. 1)then
-            lwrite = .true.
+!       This one utilizes the sigma T**4 relationship
+        call get_band8_cover(tb8_k,t_gnd_k,temp_new,idebug
+     1                      ,cover_new_f,istatus)
+        if(istatus .ne. 1)then
+            if(lwrite)then
+                write(6,*)' Bad band8_cover status #2 ',cover_new_f      
+            endif
         endif
 
         if(cover_new_f .lt. -0.0001)then
-            write(6,*)' ERROR in correct_cover: corrected cover << 0. '
-     1                ,i,j,cover_new_f
-            lwrite = .true.
+            if(lwrite)then
+              write(6,*)' ERROR in correct_cover: corrected cover << 0.'      
+     1                  ,i,j,cover_new_f
+            endif
             istatus = 0
             cldtop_new = cldtop_old
             cover_new_f = cover_in
         endif
 
         if(cover_new_f .gt. 1.0)then
-            write(6,*)' ERROR in correct_cover: corrected cover > 1. '
-     1                ,i,j,cover_new_f
-            lwrite = .true.
+            if(lwrite)then
+              write(6,*)' ERROR in correct_cover: corrected cover > 1. '       
+     1                  ,i,j,cover_new_f
+            endif
             istatus = 0
             cldtop_new = cldtop_old
             cover_new_f = cover_in
@@ -1492,7 +1500,7 @@ c
         end
 
 
-        subroutine get_band8_cover(tb8_k,t_gnd_k,t_cld          ! I
+        subroutine get_band8_cover(tb8_k,t_gnd_k,t_cld,idebug   ! I
      1                            ,band8_cover,istatus)         ! O
 
         r_sfc = temp_to_rad(t_gnd_k)
@@ -1504,14 +1512,19 @@ c
         istatus = 1
 
         if(band8_cover .gt. 1.0)then
-            write(6,*)' WARNING: get_band8_cover resetting down to 1.0'
-            write(6,11)tb8_k,t_gnd_k,t_cld,band8_cover
- 11         format(' tb8_k,t_gnd_k,t_cld,band8_cover:',4f9.3,f8.4)
+            if(idebug .eq. 1)then
+              write(6,*)
+     1             ' WARNING: get_band8_cover resetting down to 1.0'      
+              write(6,11)tb8_k,t_gnd_k,t_cld,band8_cover
+ 11           format(' tb8_k,t_gnd_k,t_cld,band8_cover:',4f9.3,f8.4)
+            endif
             band8_cover = 1.0 
             istatus = 0
         elseif(band8_cover .lt. 0.0)then
-            write(6,*)' WARNING: get_band8_cover resetting up to 0.0'
-            write(6,11)tb8_k,t_gnd_k,t_cld,band8_cover
+            if(idebug .eq. 1)then
+              write(6,*)' WARNING: get_band8_cover resetting up to 0.0'       
+              write(6,11)tb8_k,t_gnd_k,t_cld,band8_cover
+            endif
             band8_cover = 0.0 
             istatus = 0
         endif
