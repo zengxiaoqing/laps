@@ -14,7 +14,7 @@
         alt=ASIND (sinphi*sindec+cosphi*cosdec*cosha)
         az =ACOSD((cosphi*sindec-sinphi*cosdec*cosha)/cosd(alt))
 
-        if(ha .gt. 0)az = 6.2831853071796E0 - az
+        if(ha .gt. 0)az = 360.0 - az
 
         return
         end
