@@ -67,14 +67,10 @@
           pf_scat = 0.9 + a * (cosd(min(elong_a(i,j),89.99))**b)
 
 !         Intensity of an opaque cloud that is still thin (normalized by opacity)
-          rintensity = 250. * (r_cloud_rad(i,j) * pf_scat)
+          rintensity = 250. * ( (0.2 + 0.8 * r_cloud_rad(i,j)) * pf_scat)
 
 !         rintensity = min(rintensity,255.)
           rintensity = max(rintensity,0.)
-
-          grayness = r_cloud_3d(i,j) ** 0.4
-          grayness = 0.4 + (0.6 * grayness)
-          grayness = 1.0                         
 
           if(sol_alt .le. 3.0 .and. sol_alt .gt. 0.)then
               redness = (3.0 - sol_alt) / 3.0
@@ -82,9 +78,9 @@
               redness = 0.
           endif
 
-          cld_red = nint(rintensity * grayness)                
-          cld_grn = nint(rintensity * grayness * (1. - redness)**0.3)
-          cld_blu = nint(rintensity            * (1. - redness))
+          cld_red = nint(rintensity)                
+          cld_grn = nint(rintensity * (1. - redness)**0.3)
+          cld_blu = nint(rintensity * (1. - redness))
 
           rintensity_glow = min(((glow(i,j)-7.) * 100.),255.)
           clr_red = rintensity_glow * rintensity_glow / 255.
