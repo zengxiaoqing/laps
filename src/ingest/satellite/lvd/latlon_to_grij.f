@@ -14,6 +14,7 @@
         real emission_angle_d(nx_l,ny_l)
         real phase_angle_d(nx_l,ny_l)
         real specular_ref_angle_d(nx_l,ny_l)
+        real azimuth_d(nx_l,ny_l)
 
         real gri(nx_l,ny_l)
         real grj(nx_l,ny_l)
@@ -99,7 +100,7 @@
         range_m = 42155680.00
         call satgeom(i4time,lat_l,lon_l,nx_l,ny_l
      1  ,slatcen,sloncen,range_m,r_missing_data,Phase_angle_d
-     1  ,Specular_ref_angle_d,emission_angle_d,istatus)
+     1  ,Specular_ref_angle_d,emission_angle_d,azimuth_d,istatus)
 
         itstatus=ishow_timer()
 
