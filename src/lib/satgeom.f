@@ -31,7 +31,7 @@ cdis
 cdis 
         Subroutine satgeom(i4time,lat,lon,ni,nj
      1  ,sublat_d,sublon_d,range_m,r_missing_data,Phase_angle_d
-     1  ,Specular_ref_angle_d,Emission_angle_d,istatus)
+     1  ,Specular_ref_angle_d,Emission_angle_d,azimuth_d,istatus)
 
 
         include 'trigd.inc'
@@ -66,7 +66,7 @@ C***Local variables
      1                PF_UL,PF_UR,PF_LR,PF_LL,PF_U,PF_L,P_F,RBril,RBrih,
      1          Phase_factor(ni,nj),Phase_angle_d(ni,nj),
      1          sat_radius,Emission_angle_d(ni,nj),
-     1          azimuth(ni,nj),
+     1          azimuth_d(ni,nj),
      1          Specular_ref_angle_d(ni,nj)       
 
         Real RBril_a(ni,nj),RBrih_a(ni,nj)
@@ -79,7 +79,8 @@ C***Local variables
         call make_fnam_lp (i4time,a9time,istatus)
         if(istatus .ne. 1)return
 
-        write(lun,*)' Begin normalization routine (V970519) for ',a9time       
+        lun = 6
+        write(lun,*)' Begin satgeom at ',a9time       
         write(lun,*)' Sub Lat/Lon/Rng = ',sublat_d,sublon_d,range_m
 
         call zero(phase_angle_d,ni,nj)
@@ -117,6 +118,12 @@ C***Fill the solar brightness and phase angle arrays
         Do j = 1,nj
          Do i = 1,ni
 
+          if(i .eq. ni/2 .and. j .eq. nj/2)then
+            idebug = 1
+          else
+            idebug = 0
+          endif
+
 C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
  
           call sat_angular_alt(sat_radius,lat(i,j),lon(i,j)
@@ -132,14 +139,26 @@ C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
           DY=SATY-TY
           DZ=SATZ-TZ
 
+          if(idebug .eq. 1)then
+              write(6,*)'DX/DY/DZ/lon',DX,DY,DZ,lon(i,j)
+          endif
+
 !         Rotate this vector around Z axis to get local cartesian coordinates
           call rotate_z(DX,DY,DZ,lon(i,j))
 
 !         Convert cartesian coordinates to dec and ha
           call xyz_to_polar_d(DX,DY,DZ,dec,ha,r)
 
+          if(idebug .eq. 1)then
+              write(6,*)'rotated DX/DY/DZ,dec,ha',DX,DY,DZ,dec,ha
+          endif
+
 !         Convert dec and ha to alt/az
-          call equ_to_altaz_d(dec,ha,lat(i,j),alt,azimuth(i,j))
+          call equ_to_altaz_d(dec,ha,lat(i,j),alt,azimuth_d(i,j))
+
+          if(idebug .eq. 1)then
+              write(6,*)'alt/az',alt,azimuth_d(i,j)
+          endif
 
           goto500
 
