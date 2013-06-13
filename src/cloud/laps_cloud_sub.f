@@ -239,6 +239,8 @@ cdis
         real static_albedo(NX_L,NY_L)              ! Static albedo database
         real cloud_frac_vis_a(NX_L,NY_L)
         real cloud_frac_co2_a(NX_L,NY_L)
+        real subpoint_lat_clo_vis(NX_L,NY_L)
+        real subpoint_lon_clo_vis(NX_L,NY_L)
 
         integer istat_39_a(NX_L,NY_L)
         integer istat_39_add_a(NX_L,NY_L)
@@ -817,6 +819,7 @@ C READ IN SATELLITE DATA
      1              ,rlaps_land_frac,topo                                ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,static_albedo                                       ! O
+     1              ,subpoint_lat_clo_vis,subpoint_lon_clo_vis           ! O 
      1              ,comment_alb                                         ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
      1              ,istat_vis_potl_a,istat_vis)                         ! O
@@ -1043,9 +1046,12 @@ C INSERT RADAR DATA
 
         if(i_varadj .eq. 1)then
             write(6,*)' Call cloud_var before insert vis'
-            call cloud_var(NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
+            call cloud_var(i4time,lat,lon
+     1                    ,NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
-     1                    ,cloud_frac_vis_a,r_missing_data)
+     1                    ,cloud_frac_vis_a
+     1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
+     1                    ,r_missing_data)                            ! I
         endif
 
         I4_elapsed = ishow_timer()
@@ -1518,9 +1524,12 @@ C       EW SLICES
 
         if(i_varadj .eq. 1)then
             write(6,*)' Call cloud_var at end of analysis'
-            call cloud_var(NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
+            call cloud_var(i4time,lat,lon
+     1                    ,NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
-     1                    ,cloud_frac_vis_a,r_missing_data)
+     1                    ,cloud_frac_vis_a
+     1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
+     1                    ,r_missing_data)                            ! I
         endif
 
 999     continue
