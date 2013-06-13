@@ -43,6 +43,7 @@ cdis
      1                    ,rlaps_land_frac,topo                     ! I
      1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb    ! O
      1                    ,static_albedo                            ! O
+     1                    ,subpoint_lat_clo,subpoint_lon_clo        ! O 
      1                    ,comment                                  ! O
      1                    ,ni,nj,nk,r_missing_data                  ! I
      1                    ,istat_vis_a                              ! O
