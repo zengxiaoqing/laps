@@ -252,7 +252,7 @@ if($opt_q || $opt_Q){
 
       }elsif($exe eq "remap_polar_netcdf.exe"){
           $walltime = "00:15:00";
-          $vmem_gb = 1.0 + ($npts / 16000000.);
+          $vmem_gb = 1.1 + ($npts / 16000000.);
           if ($vmem_gb > 12.0) { $vmem_gb = 12.0; }
           print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
 
