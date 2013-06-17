@@ -253,7 +253,7 @@ elif test "$EXPAND" = scp; then
     echo "scp to remote location (under construction)"  
 
 elif test "$EXPAND" = exchange; then
-    echo "call copy_remote with exchange_filelist option"  
+    echo "call copy_remote with exchange_tarfilelist option"  
 
     grep www       $LAPSTAR_TXT > $LAPSTAR_WWW_TXT
     grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT
@@ -262,15 +262,15 @@ elif test "$EXPAND" = exchange; then
     date -u
     echo " "
 
-    echo "@prefix@/etc/copyremote.sh $LAPSTAR_WWW_TXT $REMOTE_DATA_ROOT exchange_filelist"
-          @prefix@/etc/copyremote.sh $LAPSTAR_WWW_TXT $REMOTE_DATA_ROOT exchange_filelist
+    echo "@prefix@/etc/copyremote.sh $LAPSTAR_WWW_TXT $REMOTE_DATA_ROOT exchange_tarfilelist"
+          @prefix@/etc/copyremote.sh $LAPSTAR_WWW_TXT $REMOTE_DATA_ROOT exchange_tarfilelist
 
     echo " "
     date -u
     echo " "
 
-    echo "@prefix@/etc/copyremote.sh $LAPSTAR2_TXT    $REMOTE_DATA_ROOT exchange_filelist"
-          @prefix@/etc/copyremote.sh $LAPSTAR2_TXT    $REMOTE_DATA_ROOT exchange_filelist
+    echo "@prefix@/etc/copyremote.sh $LAPSTAR2_TXT    $REMOTE_DATA_ROOT exchange_tarfilelist"
+          @prefix@/etc/copyremote.sh $LAPSTAR2_TXT    $REMOTE_DATA_ROOT exchange_tarfilelist
 
     echo " "
     date -u
@@ -317,8 +317,29 @@ elif test "$EXPAND" = rsync; then # rsync compression allows faster transmission
     echo "rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT"
           rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT
 
-else
-    echo "no tar performed"                                      
+else # generic option
+    echo "call copy_remote with $EXPAND option"  
+
+    grep www       $LAPSTAR_TXT > $LAPSTAR_WWW_TXT
+    grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT
+
+    echo " "
+    date -u
+    echo " "
+
+    echo "@prefix@/etc/copyremote.sh $LAPSTAR_WWW_TXT $REMOTE_DATA_ROOT $EXPAND"
+          @prefix@/etc/copyremote.sh $LAPSTAR_WWW_TXT $REMOTE_DATA_ROOT $EXPAND
+
+    echo " "
+    date -u
+    echo " "
+
+    echo "@prefix@/etc/copyremote.sh $LAPSTAR2_TXT    $REMOTE_DATA_ROOT $EXPAND"
+          @prefix@/etc/copyremote.sh $LAPSTAR2_TXT    $REMOTE_DATA_ROOT $EXPAND
+
+    echo " "
+    date -u
+    echo " "
 
 fi
 
