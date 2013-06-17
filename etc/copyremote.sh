@@ -4,7 +4,8 @@
 
 # Argument 2: Destination directory (without remote node)
 
-# Argument 3: Copy method (bbcp, exchange, rsync, exchange_tar, exchange_tarfilelist, exchange_filelist)
+# Argument 3: Copy method (bbcp, exchange, rsync, exchange_tar, exchange_tarfilelist, 
+#                          exchange_tarfilelist_z, exchange_filelist, exchange_zip, exchange_zip2)
 
 # .................................................................................
 
@@ -103,13 +104,36 @@ elif test "$3" == "exchange_tarfilelist"; then
     if test -e $FILENAME; then                                                       
         echo " "
         echo "make local tar file from filelist"
-        echo  tar -T $FILENAME -cvf $TEMPFILE.tar    
-              tar -T $FILENAME -cvf $TEMPFILE.tar                                                                         
+        echo  tar -T $FILENAME -cvf $TEMPFILE.tar
+              tar -T $FILENAME -cvf $TEMPFILE.tar
         ls -l $TEMPFILE.tar
 
-        echo  gzip $TEMPFILE.tar 
-              gzip $TEMPFILE.tar 
+        date -u
 
+        echo " "
+        echo "first hop of tar file"        
+        echo  scp -o ConnectTimeout=200 -r $TEMPFILE.tar jetscp.rdhpcs.noaa.gov:$TEMPDIR              
+              scp -o ConnectTimeout=200 -r $TEMPFILE.tar jetscp.rdhpcs.noaa.gov:$TEMPDIR               
+
+        date -u
+
+        TEMPFILE2=`basename $TEMPFILE`                        
+
+        echo " "
+        echo "untar from $TEMPDIR into second directory"
+        echo  ssh $REMOTE_NODE "cd $DESTDIR; tar -xvf $TEMPDIR/$TEMPFILE2.tar; rm -f $TEMPDIR/$TEMPFILE2.tar"
+              ssh $REMOTE_NODE "cd $DESTDIR; tar -xvf $TEMPDIR/$TEMPFILE2.tar; rm -f $TEMPDIR/$TEMPFILE2.tar"
+       
+        date -u
+
+    fi
+
+elif test "$3" == "exchange_tarfilelist_z"; then
+    if test -e $FILENAME; then                                                       
+        echo " "
+        echo "make local tar file from filelist"
+        echo  tar -T $FILENAME --gzip -cvf $TEMPFILE.tar.gz    
+              tar -T $FILENAME --gzip -cvf $TEMPFILE.tar.gz                                                                         
         ls -l $TEMPFILE.tar.gz
 
         date -u
@@ -125,24 +149,62 @@ elif test "$3" == "exchange_tarfilelist"; then
 
         echo " "
         echo "zcat from $TEMPDIR into second directory"
-        echo  ssh $REMOTE_NODE "cd $DESTDIR; zcat $TEMPDIR/$TEMPFILE2.tar.gz | tar -xvf -"
-              ssh $REMOTE_NODE "cd $DESTDIR; zcat $TEMPDIR/$TEMPFILE2.tar.gz | tar -xvf -"
+        echo  ssh $REMOTE_NODE "cd $DESTDIR; zcat $TEMPDIR/$TEMPFILE2.tar.gz | tar -xvf -; rm -f $TEMPDIR/$TEMPFILE2.tar.gz"
+              ssh $REMOTE_NODE "cd $DESTDIR; zcat $TEMPDIR/$TEMPFILE2.tar.gz | tar -xvf -; rm -f $TEMPDIR/$TEMPFILE2.tar.gz"
        
         date -u
 
     fi
 
-    exit
+elif test "$3" == "exchange_zip"; then
+    if test -e $FILENAME; then                                                       
+        echo $DESTDIR > destdirname
 
-    if test -d /exchange/tmp/fab/$TEMPFILE; then # move individual files between the two directories
         echo " "
-        echo "second hop of directory"
-        echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME"
-              ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME 
-    else
-        echo "second hop of file"
-        echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME"
-              ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME 
+        echo "make local zip file from filelist"
+        echo  zip $TEMPFILE.z destdirname `cat $FILENAME`   
+              zip $TEMPFILE.z destdirname `cat $FILENAME`                                                                         
+        ls -l $TEMPFILE.z
+
+        date -u
+
+        echo " "
+        echo "first hop of zip file"        
+        echo  scp -o ConnectTimeout=200 $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR              
+              scp -o ConnectTimeout=200 $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR               
+
+        date -u
+
+    fi
+
+elif test "$3" == "exchange_zip2"; then
+    if test -e $FILENAME; then                                                       
+        echo $DESTDIR > destdirname
+
+        echo " "
+        echo "make local zip file from filelist"
+        echo  zip $TEMPFILE.z destdirname `cat $FILENAME`   
+              zip $TEMPFILE.z destdirname `cat $FILENAME`                                                                         
+        ls -l $TEMPFILE.z
+
+        date -u
+
+        echo " "
+        echo "first hop of zip file"        
+        echo  scp -o ConnectTimeout=200 $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR              
+              scp -o ConnectTimeout=200 $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR               
+
+        date -u
+
+        TEMPFILE2=`basename $TEMPFILE`                        
+
+        echo " "
+        echo "unzip from $TEMPDIR into second directory"
+        echo  ssh $REMOTE_NODE "cd $DESTDIR; unzip $TEMPDIR/$TEMPFILE2.z; rm -f $TEMPDIR/$TEMPFILE2.z"
+              ssh $REMOTE_NODE "cd $DESTDIR; unzip $TEMPDIR/$TEMPFILE2.z; rm -f $TEMPDIR/$TEMPFILE2.z"
+       
+        date -u
+
     fi
 
 elif test "$3" == "exchange_tar_filelist2"; then
