@@ -29,10 +29,14 @@ echo "Start laps_gifs_sub.sh..."
 echo "PATH=$PATH"
 
 cd
+pwd
+ls -l etc/ncarg_root
 if test -r etc/ncarg_root; then
     echo "Getting NCARG_ROOT from ~/etc/ncarg_root"
     ls -l etc/ncarg_root
     export NCARG_ROOT=`cat etc/ncarg_root`
+else
+    echo "unable to find etc/ncarg_root file"
 fi
 
 #alias ctrans '/usr/local/apps/ncarg-4.0.1/bin/ctrans  -verbose'
@@ -76,7 +80,7 @@ fi
 
 $EXE_DIR/lapsplot.exe                                           < $SCRATCH_DIR/lapsplot.$prod.tmp
 
-ls -l gmeta
+pwd; ls -l gmeta
 
 # Test whether we are on NOAA/ESRL/GSD/FAB machines
 if test -r /data/fab; then
@@ -142,6 +146,8 @@ if test -r /opt/ncarg/bin/ctrans; then
 elif test "$netpbm" = "yes"; then 
     if test -r /whomenull; then
         CTRANS=/opt/ncl/5.1.0_bin/bin/ctrans
+#   elif test -r /usr/local/ncarg; then
+#       CTRANS=/usr/local/ncarg/bin/ctrans
     elif test -r /usr/local/apps/ncarg-4.3.1.LINUX9; then
         CTRANS=/usr/local/apps/ncarg-4.3.1.LINUX9/bin/ctrans
     elif test -r /usr/local/ncarg-5.0.0-pgi-64-SLES10; then
