@@ -20,6 +20,9 @@
 # FILES is seventh argument 
 #       [optional - 1=2D, 2=3D, 3=3D+LGA, default value is 2 if not supplied]
 
+# METHOD is eighth argument (if FILES is supplied)
+#       [optional - exchange_zip, rsync, etc., default value is rsync if not supplied]
+
 umask 002
 
 setenv LAPS_DATA_ROOT $1                      
@@ -64,6 +67,11 @@ if ($FILES == "") then
     setenv FILES 2
 endif
 
+setenv METHOD $8
+if ($METHOD == "") then
+    setenv METHOD rsync
+endif
+
 cd $LAPS_DATA_ROOT
 
 date -u
@@ -71,8 +79,8 @@ date -u
 echo " "
 echo "Running this command:"
 
-echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES exchange static $DOMAIN $REMOTE_DATA_ROOT
-     @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES exchange static $DOMAIN $REMOTE_DATA_ROOT
+echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES $METHOD static $DOMAIN $REMOTE_DATA_ROOT
+     @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES $METHOD static $DOMAIN $REMOTE_DATA_ROOT
 
 date -u
 
