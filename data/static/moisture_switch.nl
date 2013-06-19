@@ -49,7 +49,7 @@ C  cloud_weight_nl = 0.5, adjustable weight for cloud analysis weight.  nominal 
 c  radio_wt_nl = 1.0, radiometer weight control in variational step
 c  SOUNDER_SWITCH = 1,  sounder switch  on/off, [ONLY ACTIVE IF GOES_SWITCH IS NON-ZERO]
 c  TIROS_SWITCH = 0,   use of tiros on/off (inactive)
-c  SAT_SKIP = 2,      process every 2nd, 3rd, 10th... whatever gridpoint
+c  SAT_SKIP = 2,      process every 2nd, 3rd, 10th... whatever gridpoint, if 0 or neg, will force fail the call to powell.
 c  GVAP_SWITCH = 1,    gvap on/off
 c  IHOP_flag = 1,     (off = 0), (normally on = 1) on for nesdis off for cimss
 c  TIME_DIFF = 3900,  gvap AND gps latency seconds
