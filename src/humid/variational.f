@@ -502,7 +502,7 @@ c                     adjustment
 c     check sat_skip for zero, if zero skip routine
       
       if (sat_skip.le.0) then
-         write (6,*) 'sat_skip parameter <= 0, skipping sat entirely'
+         write (6,*) 'sat_skip parameter <= 0, skipping POWELL  entirely'
          return
       endif
       
