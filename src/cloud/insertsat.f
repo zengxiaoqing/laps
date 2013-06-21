@@ -44,6 +44,7 @@ c
      1  tb8_k,istat_tb8,                                                 ! I
      1  sst_k,istat_sst,                                                 ! I
      1  istat_39_a, l_use_39,                                            ! I
+     1  di_dh,dj_dh,                                                     ! I
      1  istat_39_add_a,                                                  ! O
      1  tb8_cold_k,                                                      ! O
      1  grid_spacing_m,surface_sao_buffer,                               ! I
@@ -122,6 +123,8 @@ c
         real cldcv_sao(imax,jmax,kcld)       ! 3D Cloud cover array
         real rlat(imax,jmax),rlon(imax,jmax)
         real tb8_k(imax,jmax)
+        real di_dh(imax,jmax)              ! Parallax offset for sat data
+        real dj_dh(imax,jmax)              ! Parallax offset for sat data
         real sst_k(imax,jmax)
         real tb8_cold_k(imax,jmax)
         real topo(imax,jmax)
@@ -461,7 +464,12 @@ c
 
             do k=kcld,1,-1
 
-              if(cldcv(i,j,k) .gt. .04)then ! Efficiency test
+              it = i - nint(di_dh(i,j) * cld_hts(k))
+              jt = j - nint(dj_dh(i,j) * cld_hts(k))
+              it = max(min(it,imax),1)
+              jt = max(min(jt,jmax),1)
+
+              if(cldcv(it,jt,k) .gt. .04)then ! Efficiency test
 
                 z_temp = height_to_zcoord2(cld_hts(k),heights_3d,
      1                                     imax,jmax,klaps,i,j,istatus1)       
@@ -485,23 +493,23 @@ c
                 temp_grid_point = temp_3d(i,j,iz_temp)    * (1. - frac)  
      1                          + temp_3d(i,j,iz_temp+1)  * frac
 
-                if(cldcv(i,j,k) .ne. r_missing_data)then
-                  if(cldcv(i,j,k) .gt. 1.070 
+                if(cldcv(it,jt,k) .ne. r_missing_data)then
+                  if(cldcv(it,jt,k) .gt. 1.070 
      1                    .and. .not. l_poss_extrap)then ! excessively over 1.0
                       write(6,*)
      1                    ' Error in insert_sat, interior cldcv > 1.070'     
-     1                    ,i,j,k,cldcv(i,j,k)
+     1                    ,i,j,k,cldcv(it,jt,k)
                       istatus = 0
                       return
-                  elseif(cldcv(i,j,k) .gt. 1.0)then ! slightly over 1.0
+                  elseif(cldcv(it,jt,k) .gt. 1.0)then ! slightly over 1.0
                       write(6,*)' Warning in insert_sat, cldcv > 1.0'       
-     1                         ,i,j,k,cldcv(i,j,k)
+     1                         ,i,j,k,cldcv(it,jt,k)
                       write(6,*)' Resetting cloud cover to 1.0'
-                      cldcv(i,j,k) = 1.0
+                      cldcv(it,jt,k) = 1.0
                   endif
 
                   call get_tb8_fwd(temp_grid_point,t_gnd_k(i,j)         ! I   
-     1                            ,cldcv(i,j,k)                         ! I
+     1                            ,cldcv(it,jt,k)                       ! I
      1                            ,tb8_calculated,istatus)              ! O
 
                   if(istatus .ne. 1)then
@@ -511,8 +519,8 @@ c
                       return
                   endif
 
-                  tb8_calculated_test = temp_grid_point *  cldcv(i,j,k) 
-     1                                + t_gnd_k(i,j) * (1.-cldcv(i,j,k))
+                  tb8_calculated_test = temp_grid_point * cldcv(it,jt,k)       
+     1                              + t_gnd_k(i,j) * (1.-cldcv(it,jt,k))
                 else
                   tb8_calculated = t_gnd_k(i,j)
                 endif
@@ -525,18 +533,18 @@ c
 !                 Don't touch points within buffer of surface
                   if(cld_hts(k) - topo(i,j) .gt. surface_sao_buffer)then
                     if(.false.)then
-                      cldcv(i,j,k)=default_clear_cover
+                      cldcv(it,jt,k)=default_clear_cover
                     else ! .true.
 !                     Does satellite still imply at least some cloud?
                       if(t_gnd_k(i,j) - tb8_k(i,j)  .gt. 8.0)then ! Some cloud
-                        if(cldcv(i,j,k) .gt. 0.9)then ! Lower top of solid cld
-                            cldcv(i,j,k)=default_clear_cover
+                        if(cldcv(it,jt,k) .gt. 0.9)then ! Lower top of solid cld
+                            cldcv(it,jt,k)=default_clear_cover
                         else                          ! Cover < 0.9, correct it
                             call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)       
      1                                          ,temp_grid_point,idebug
-     1                                          ,cldcv(i,j,k),istatus)
-                            if(cldcv(i,j,k) .gt. 1.0 .or.
-     1                         cldcv(i,j,k) .lt. 0.0       )then
+     1                                          ,cldcv(it,jt,k),istatus)
+                            if(cldcv(it,jt,k) .gt. 1.0 .or.
+     1                         cldcv(it,jt,k) .lt. 0.0       )then
                                 write(6,*)' ERROR--cover out of bounds'
                                 istatus = 0
                                 return
@@ -548,8 +556,8 @@ c
      1                            min(t_gnd_k(i,j),t_sfc_k(i,j)-10.0)       
                         if(temp_grid_point .lt. temp_thresh)then
 !                       if(temp_grid_point .lt. t_gnd_k(i,j))then
-                            cldcv(i,j,k)=default_clear_cover ! not in inversion, 
-                                                             ! clear it out
+                            cldcv(it,jt,k)=default_clear_cover ! not in inversion, 
+                                                               ! clear it out
                         endif
                       endif ! IR signature present
                     endif ! .true.
@@ -946,7 +954,11 @@ c
               do k=kcld,1,-1
                 if(cld_hts(k) .ge. htbase  .and.
      1             cld_hts(k) .le. cldtop_m(i,j) )then ! in satellite layer
-                   cldcv(i,j,k)=cover
+                   it = i - nint(di_dh(i,j) * cld_hts(k))
+                   jt = j - nint(dj_dh(i,j) * cld_hts(k))
+                   it = max(min(it,imax),1)
+                   jt = max(min(jt,jmax),1)
+                   cldcv(it,jt,k)=cover
                 endif
               enddo
             endif ! ierr = 0 (unreasonable cloud that was below zero cover)
