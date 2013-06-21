@@ -44,6 +44,7 @@ cdis
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz                ! I
      1      ,istat_radar,radar_ref_3d,klaps,ref_base
      1      ,solar_alt,solar_az
+     1      ,di_dh,dj_dh                                              ! I
      1      ,dbz_max_2d,surface_sao_buffer,istatus)
 
 !       Steve Albers 1999 Added 3.9u cloud clearing step in NULL Mode
@@ -82,6 +83,8 @@ cdis
         real solar_alt(ni,nj)
         real solar_az(ni,nj)
         real r_shadow_3d(ni,nj,nk)
+        real di_dh(ni,nj)                      
+        real dj_dh(ni,nj)                      
 
 !       This stuff is for reading VIS data from LVD file
         real cloud_frac_vis_a(ni,nj)
@@ -174,9 +177,15 @@ cdis
             l_39_clr_2d = .false.
 
             do k = 1,nk
-                call qc_clouds_0d(i,j,k,clouds_3d(i,j,k),ni,nj,.false.)       
+                it = i - nint(di_dh(i,j) * cld_hts(k))
+                jt = j - nint(dj_dh(i,j) * cld_hts(k))
+                it = max(min(it,imax),1)
+                jt = max(min(jt,jmax),1)
 
-                cloud_frac_in = clouds_3d(i,j,k)
+                call qc_clouds_0d(i,j,k,clouds_3d(it,jt,k)
+     1                           ,ni,nj,.false.)       
+
+                cloud_frac_in = clouds_3d(it,jt,k)
 
 !               Modify the cloud field with the vis input - allow .3 vis err?
                 if(cld_hts(k) .gt. topo(i,j) + surface_sao_buffer)then
@@ -218,7 +227,7 @@ cdis
                        endif
                    endif
 
-                   clouds_3d(i,j,k) = cloud_frac_out   ! Modify the output
+                   clouds_3d(it,jt,k) = cloud_frac_out   ! Modify the output
                 else
                    cloud_frac_out = cloud_frac_in
                 endif
@@ -478,9 +487,14 @@ cdis
                 idelt = nint(dx / grid_spacing_m)
                 jdelt = nint(dy / grid_spacing_m)
               
-                if(idelt .gt. 0 .or. jdelt .gt. 0)then
-                  cvr_path = clouds_3d(i+idelt,j+jdelt,kk)
-                  r_shadow_3d(i,j,k) = max(r_shadow_3d(i,j,k),cvr_path)
+                if(idelt .ne. 0 .or. jdelt .ne. 0)then
+                  inew = i + idelt
+                  jnew = j + jdelt
+                  if(inew .gt. 1 .and. inew .le. ni .AND.
+     1               jnew .gt. 1 .and. jnew .le. nj      )then
+                    cvr_path = clouds_3d(i+idelt,j+jdelt,kk)
+                    r_shadow_3d(i,j,k)=max(r_shadow_3d(i,j,k),cvr_path)      
+                  endif
                 endif
               enddo ! kk
 
