@@ -144,7 +144,7 @@ C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
           endif
 
 !         Rotate this vector around Z axis to get local cartesian coordinates
-          call rotate_z(DX,DY,DZ,lon(i,j))
+          call rotate_z(DX,DY,DZ,-lon(i,j))
 
 !         Convert cartesian coordinates to dec and ha
           call xyz_to_polar_d(DX,DY,DZ,dec,ha,r)
