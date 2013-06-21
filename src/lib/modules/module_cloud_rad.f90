@@ -2,9 +2,9 @@
 MODULE cloud_rad    
 
 !     Cloud Radiation and Microphysics Parameters
-      real, parameter :: bksct_eff_clwc = .07
+      real, parameter :: bksct_eff_clwc = .063
       real, parameter :: bksct_eff_cice = .14
-      real, parameter :: bksct_eff_rain = .07
+      real, parameter :: bksct_eff_rain = .063
       real, parameter :: bksct_eff_snow = .14
 
       real, parameter :: rholiq =    1e3 ! kilograms per cubic meter
