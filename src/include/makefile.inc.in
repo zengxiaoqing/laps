@@ -29,7 +29,7 @@ CPPFLAGS = $(INC) @CPPFLAGS@
 @USECPP@
 # Define include paths.
 NETCDF=@NETCDF@
-INC = -I$(SRCROOT)/src/include -I$(NETCDF)/include -I$(SRCROOT)/src/lib -I$(SRCROOT)/src/lib/modules -I$(SRCROOT)/src/lib/radar/synp -I$(SRCROOT)/src/lib/degrib
+INC = -I$(SRCROOT)/src/include -I$(NETCDF)/include -I$(SRCROOT)/src/lib -I$(SRCROOT)/src/lib/modules -I$(SRCROOT)/src/lib/cloud -I$(SRCROOT)/src/lib/radar/synp -I$(SRCROOT)/src/lib/degrib
 
 AR  = @ARCHIVE@
 RANLIB   = @RANLIB@
