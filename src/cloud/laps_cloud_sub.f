@@ -241,6 +241,8 @@ cdis
         real cloud_frac_co2_a(NX_L,NY_L)
         real subpoint_lat_clo_vis(NX_L,NY_L)
         real subpoint_lon_clo_vis(NX_L,NY_L)
+        real di_dh(NX_L,NY_L)                      
+        real dj_dh(NX_L,NY_L)                      
 
         integer istat_39_a(NX_L,NY_L)
         integer istat_39_add_a(NX_L,NY_L)
@@ -834,11 +836,27 @@ C READ IN SATELLITE DATA
 
         call get_pres_3d(i4time,NX_L,NY_L,NZ_L,pres_3d,istatus)
 
+        if(i_varadj .eq. 1)then
+            write(6,*)' Call cloud_var before insert_sat'
+            call cloud_var(i4time,lat,lon
+     1                    ,NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
+     1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
+     1                    ,cloud_frac_vis_a
+     1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
+     1                    ,r_missing_data                             ! I
+     1                    ,di_dh,dj_dh)                               ! O
+            di_dh = 0. ! for testing
+            dj_dh = 0. ! for testing
+        endif
+
+        I4_elapsed = ishow_timer()
+
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
      1       tb8_k,istat_tb8,                                           ! I
      1       sst_k,istat_sst,                                           ! I
      1       istat_39_a, l_use_39,                                      ! I
+     1       di_dh,dj_dh,                                               ! I
      1       istat_39_add_a,                                            ! O
      1       tb8_cold_k,                                                ! O
      1       grid_spacing_cen_m,surface_sao_buffer,                     ! I
@@ -1051,7 +1069,10 @@ C INSERT RADAR DATA
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
      1                    ,cloud_frac_vis_a
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
-     1                    ,r_missing_data)                            ! I
+     1                    ,r_missing_data                             ! I
+     1                    ,di_dh,dj_dh)                               ! O
+            di_dh = 0. ! for testing
+            dj_dh = 0. ! for testing
         endif
 
         I4_elapsed = ishow_timer()
@@ -1065,6 +1086,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base
      1        ,solar_alt,solar_az                                     ! I
+     1        ,di_dh,dj_dh                                            ! I
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
         endif
 
@@ -1529,7 +1551,8 @@ C       EW SLICES
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
      1                    ,cloud_frac_vis_a
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
-     1                    ,r_missing_data)                            ! I
+     1                    ,r_missing_data                             ! I
+     1                    ,di_dh,dj_dh)                               ! O
         endif
 
 999     continue
