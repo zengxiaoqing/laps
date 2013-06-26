@@ -1052,7 +1052,10 @@ if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
         if($opt_w){
             $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
         }else{
-            $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+# no bigfile in awips2
+#           $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+# move grib file from /data/fxa/laps/grib to the edex ingest location
+            system("/usr/bin/perl $LAPSROOT/etc/awips2_moveGrib.pl /awips/laps /data/fxa/laps");
         }
 
 #       system("/usr/nfs/bin/perl $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
