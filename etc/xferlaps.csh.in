@@ -62,6 +62,8 @@ setenv YYYY `echo $YYYYMMDD_HHMM  | cut -c1-4`
 
 setenv DATE `echo $YYYYMMDD_HHMM  | cut -c7-8`
 
+setenv MM   `echo $YYYYMMDD_HHMM  | cut -c12-13`
+
 setenv FILES $7
 if ($FILES == "") then
     setenv FILES 2
@@ -79,8 +81,13 @@ date -u
 echo " "
 echo "Running this command:"
 
-echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES $METHOD static $DOMAIN $REMOTE_DATA_ROOT
-     @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES $METHOD static $DOMAIN $REMOTE_DATA_ROOT
+if ($MM == "00") then
+    echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES $METHOD static $DOMAIN $REMOTE_DATA_ROOT
+         @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES $METHOD static $DOMAIN $REMOTE_DATA_ROOT
+else
+    echo @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES $METHOD nostatic $DOMAIN $REMOTE_DATA_ROOT
+         @prefix@/etc/tarlapstime.sh $LAPS_DATA_ROOT $YYDDDHHMM $YYYY $MONTH$DATE $FILES $METHOD nostatic $DOMAIN $REMOTE_DATA_ROOT
+endif
 
 date -u
 
