@@ -845,8 +845,8 @@ C READ IN SATELLITE DATA
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
      1                    ,r_missing_data                             ! I
      1                    ,di_dh,dj_dh)                               ! O
-            di_dh = 0. ! for testing
-            dj_dh = 0. ! for testing
+!           di_dh = 0. ! for testing
+!           dj_dh = 0. ! for testing
         endif
 
         I4_elapsed = ishow_timer()
@@ -1071,8 +1071,8 @@ C INSERT RADAR DATA
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
      1                    ,r_missing_data                             ! I
      1                    ,di_dh,dj_dh)                               ! O
-            di_dh = 0. ! for testing
-            dj_dh = 0. ! for testing
+!           di_dh = 0. ! for testing
+!           dj_dh = 0. ! for testing
         endif
 
         I4_elapsed = ishow_timer()
