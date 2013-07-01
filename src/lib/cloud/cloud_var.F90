@@ -8,7 +8,9 @@ include 'trigd.inc'
 
 use cloud_rad
 use prmtrs_stmas_cloud, only : satellite_obs
-use crtm_kmatrix, only : conf4lvd
+#ifdef CRTM
+    use crtm_kmatrix, only : conf4lvd
+#endif
 
 ! Declarations for conf4lvd
 TYPE(SATELLITE_OBS), lvd
