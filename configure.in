@@ -198,7 +198,7 @@ then
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
-    CFLAGS="$CFLAGS -static -DLITTLE -DSWAPBYTE"
+    CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2"
   fi
@@ -210,7 +210,7 @@ then
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
-    CFLAGS="$CFLAGS -static -DLITTLE -DSWAPBYTE"
+    CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2"
   fi
@@ -222,7 +222,7 @@ then
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
-    CFLAGS="$CFLAGS -static -DLITTLE -DSWAPBYTE"
+    CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2 -fastsse"
   fi
@@ -290,7 +290,7 @@ then
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
-    CFLAGS="$CFLAGS -static -DLITTLE -DSWAPBYTE"
+    CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2 -fastsse"
   fi
