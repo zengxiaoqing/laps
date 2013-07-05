@@ -30,6 +30,8 @@
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
+        real sol_alt_2d(NX_L,NY_L)
+        real sol_azi_2d(NX_L,NY_L)
 
         real temp_vert(max_snd_levels)
         real ht_vert(max_snd_levels)
@@ -92,19 +94,26 @@
         character*5 c5_name, c5_name_a(max_snd_grid), c5_name_min
         character*8 obstype(max_snd_grid)
 
+        parameter (minalt =  0)
+        parameter (maxalt = 90)
+        parameter (nc = 3)
+        real r_shadow_3d(minalt:maxalt,0:360)
+        real blog_v_roll(minalt:maxalt,0:360)
+        real elong_roll(minalt:maxalt,0:360)
+        real airmass_2_cloud_3d(minalt:maxalt,0:360)
+        real airmass_2_topo_3d(minalt:maxalt,0:360)
+        real r_cloud_trans(minalt:maxalt,0:360)  ! sun to cloud transmissivity (direct+fwd scat)
+        real cloud_rad_c(nc,minalt:maxalt,0:360) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
+        real clear_rad_c(nc,minalt:maxalt,0:360) ! integrated fraction of air illuminated by the sun along line of sight
+        real alt_a_roll(minalt:maxalt,0:360)
+        real azi_a_roll(minalt:maxalt,0:360)
+
         parameter (ni_polar = 511)
         parameter (nj_polar = 511)
-        real r_shadow_3d(0:90,0:360)
-        real blog_v_roll(0:90,0:360)
-        real elong_roll(0:90,0:360)
-        real airmass_2_cloud_3d(0:90,0:360)
-        real airmass_2_topo_3d(0:90,0:360)
-        real r_cloud_trans(0:90,0:360)
-        real alt_a_roll(0:90,0:360)
-        real azi_a_roll(0:90,0:360)
-
         real r_shadow_3d_polar(ni_polar,nj_polar)
         real r_cloud_trans_polar(ni_polar,nj_polar)
+        real cloud_rad_c_polar(nc,ni_polar,nj_polar)
+        real clear_rad_c_polar(nc,ni_polar,nj_polar)
         real blog_v_roll_polar(ni_polar,nj_polar)
         real alt_a_polar(ni_polar,nj_polar)
         real azi_a_polar(ni_polar,nj_polar)
@@ -114,8 +123,8 @@
 
         real sky_rgb_polar(0:2,ni_polar,nj_polar)
         integer isky_rgb_polar(0:2,ni_polar,nj_polar)
-        real sky_rgb_cyl(0:2,0:90,0:360)
-        integer isky_rgb_cyl(0:2,0:90,0:360)
+        real sky_rgb_cyl(0:2,minalt:maxalt,0:360)
+        integer isky_rgb_cyl(0:2,minalt:maxalt,0:360)
 
         data ilun /0/
         character*3 clun
@@ -494,6 +503,19 @@
             i4time_solar = i4_valid
           endif
 
+!         Calculate solar position for 2D array of grid points
+          do i = 1,NX_L
+          do j = 1,NY_L
+            call solar_position(soundlat,soundlon,i4time_solar
+     1                         ,sol_alt_2d(i,j),solar_dec,solar_ha)
+            call equ_to_altaz_d(solar_dec,solar_ha,soundlat                 
+     1                         ,altdum,sol_azi_2d(i,j))               
+            if(sol_azi_2d(i,j) .lt. 0.)sol_azi_2d(i,j) = 
+     1                                 sol_azi_2d(i,j) + 360.
+          enddo ! j
+          enddo ! i
+
+!         Calculate solar position for all-sky point
           call solar_position(soundlat,soundlon,i4time_solar,solar_alt     
      1                                    ,solar_dec,solar_ha)
           call equ_to_altaz_d(solar_dec,solar_ha,soundlat                 
@@ -791,13 +813,14 @@
 !       Get line of sight from isound/jsound
 
         call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
-     1                             ,rain_3d,snow_3d
-     1                             ,pres_3d,topo_sfc,topo
-     1                             ,r_shadow_3d,r_cloud_trans
-     1                             ,airmass_2_cloud_3d,airmass_2_topo_3d
-     1                             ,NX_L,NY_L,NZ_L,isound,jsound
-     1                             ,view_alt,view_az,solar_alt,solar_az 
-     1                             ,grid_spacing_m,r_missing_data)
+     1                     ,rain_3d,snow_3d
+     1                     ,pres_3d,topo_sfc,topo
+     1                     ,r_shadow_3d,r_cloud_trans,cloud_rad_c
+     1                     ,clear_rad_c
+     1                     ,airmass_2_cloud_3d,airmass_2_topo_3d
+     1                     ,NX_L,NY_L,NZ_L,isound,jsound
+     1                     ,view_alt,view_az,sol_alt_2d,sol_azi_2d
+     1                     ,grid_spacing_m,r_missing_data)
 
         write(6,*)' Return from get_cloud_rays...',a9time
 
@@ -811,7 +834,8 @@
         write(clun,14)ilun
 14      format(i3.3)
 
-        if(solar_alt .ge. 0.)then
+!       if(solar_alt .ge. 0.)then
+        if(.true.)then
             I4_elapsed = ishow_timer()
             write(6,*)' call get_skyglow_cyl'
             call skyglow_cyl(solar_alt,solar_az,blog_v_roll,elong_roll)
@@ -882,6 +906,24 @@
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
 
+!       Reproject cloud_rad_c array from cyl to polar    
+        do ic = 1,nc
+          call cyl_to_polar(cloud_rad_c(ic,:,:)
+     1                               ,cloud_rad_c_polar(ic,:,:)
+     1                               ,90,360
+     1                               ,alt_a_polar,azi_a_polar
+     1                               ,ni_polar,nj_polar)
+        enddo ! ic
+
+!       Reproject clear_rad_c array from cyl to polar    
+        do ic = 1,nc
+          call cyl_to_polar(clear_rad_c(ic,:,:)
+     1                               ,clear_rad_c_polar(ic,:,:)
+     1                               ,90,360
+     1                               ,alt_a_polar,azi_a_polar
+     1                               ,ni_polar,nj_polar)
+        enddo ! ic
+
 !       Reproject Airmass_2_topo array from cyl to polar
         call cyl_to_polar(airmass_2_topo_3d,airmass_2_topo_3d_polar
      1                               ,90,360
@@ -899,6 +941,8 @@
           write(6,*)' call get_sky_rgb with polar data'
           call get_sky_rgb(r_shadow_3d_polar         ! cloud opacity
      1                    ,r_cloud_trans_polar       ! cloud solar transmittance
+     1                    ,cloud_rad_c_polar         ! cloud solar transmittance / color
+     1                    ,clear_rad_c_polar         ! clear sky illumination by sun     
      1                    ,blog_v_roll_polar         ! skyglow
      1                    ,airmass_2_cloud_3d_polar
      1                    ,airmass_2_topo_3d_polar
@@ -920,9 +964,9 @@
         if(l_cyl .eqv. .true.)then              
 !         Get all sky for cyl   
           write(6,*)' call get_sky_rgb with cyl data'
-          ni_cyl = 91
+          ni_cyl = maxalt - minalt + 1
           nj_cyl = 361
-          do i = 0,90
+          do i = minalt,maxalt
           do j = 0,360
               alt_a_roll(i,j) = i
               azi_a_roll(i,j) = j
@@ -930,6 +974,8 @@
           enddo
           call get_sky_rgb(r_shadow_3d               ! cloud opacity
      1                    ,r_cloud_trans             ! cloud solar transmittance
+     1                    ,cloud_rad_c               ! cloud solar transmittance / color
+     1                    ,clear_rad_c               ! clear sky illumination by sun     
      1                    ,blog_v_roll               ! skyglow
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
