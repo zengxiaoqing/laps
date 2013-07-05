@@ -28,11 +28,17 @@ DEBUGLIB = libdebugcloud.a
 
 
 
-
+ifdef CRTMROOT
 SRC= \
     cloud_var.F90 compare_analysis_to_radiometer.f crtm_kmatrix.f90 cvr_to_tb8_effective.f get_cloud_rad.f90 \
     get_sky_rgb.f90 hotstart_perturbation.f phase_func_moon.f90 places_routines.f \
-    solar_routines.f allsky.f90 interp_1d.f90 skyglow_cyl.f90 vi.f90
+    solar_routines.f allsky.f90 interp_1d.f90 skyglow_cyl.f90 vi.f90 vi2.f90
+else
+SRC= \
+    cloud_var.F90 compare_analysis_to_radiometer.f cvr_to_tb8_effective.f get_cloud_rad.f90 \
+    get_sky_rgb.f90 hotstart_perturbation.f phase_func_moon.f90 places_routines.f \
+    solar_routines.f allsky.f90 interp_1d.f90 skyglow_cyl.f90 vi.f90 vi2.f90
+endif
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
