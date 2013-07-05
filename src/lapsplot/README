@@ -31,3 +31,8 @@ driver                                            lapsplot_main.f
         plot_sounding                             plot_sounding.f
             integrate_slwc                        lib/get_cloud_deriv.f
             integrate_tpw                           "
+        plot_allsky                               plot_allsky.f
+            get_cloud_rays                        get_cloud_rays.f
+                get_cloud_rad                     lib/cloud/get_cloud_rad.f90
+            get_skyglow_cyl                       lib/cloud/skyglow_cyl.f90
+            get_sky_rgb                           lib/cloud/get_sky_rgb.f90
