@@ -2,15 +2,24 @@
         subroutine get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
      1                             ,rain_3d,snow_3d
      1                             ,pres_3d,topo_sfc,topo_a
-     1                             ,r_cloud_3d,cloud_rad         
+     1                             ,r_cloud_3d,cloud_rad,cloud_rad_c         
+     1                             ,clear_rad_c
      1                             ,airmass_2_cloud_3d,airmass_2_topo_3d
      1                             ,ni,nj,nk,i,j
      1                             ,view_alt,view_az,sol_alt,sol_azi 
      1                             ,grid_spacing_m,r_missing_data)
 
+        use mem_namelist, ONLY: earth_radius
+
         include 'trigd.inc'
 
+        angdif(X,Y)=MOD(X-Y+540.,360.)-180.
+
+        parameter (rpd = 3.14159 / 180.)
+
 !       Determine shadow regions of the input 3-D cloud array
+
+        parameter (nc = 3)
 
         real clwc_3d(ni,nj,nk)
         real cice_3d(ni,nj,nk)
@@ -19,6 +28,7 @@
         real cond_3d(ni,nj,nk)
         real heights_3d(ni,nj,nk)
         real transm_3d(ni,nj,nk)
+        real transm_4d(nc,ni,nj,nk)
         real heights_1d(nk)
         real topo_a(ni,nj)
         real pres_3d(ni,nj,nk)
@@ -26,12 +36,21 @@
         real view_alt(ni,nj)
         real view_az(ni,nj)
 
+        real sol_alt(ni,nj)
+        real sol_azi(ni,nj)
+
         integer isky(0:90,0:360)
         real r_shadow_3d(0:90,0:360)
-        real r_cloud_3d(0:90,0:360)
-        real cloud_rad(0:90,0:360)
+        real r_cloud_3d(0:90,0:360)      ! cloud opacity
+        real cloud_rad(0:90,0:360)       ! sun to cloud transmissivity (direct+fwd scat)
+        real cloud_rad_c(nc,0:90,0:360)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
+        real clear_rad_c(nc,0:90,0:360)  ! integrated fraction of air illuminated by the sun along line of sight
         real airmass_2_cloud_3d(0:90,0:360)
         real airmass_2_topo_3d(0:90,0:360)
+        real sum_odrad_c(nc)
+
+        real*8 xplane,yplane,zplane
+        real*8 xray,yray,zray,angle_r 
 
         character*1 cslant
 
@@ -43,6 +62,7 @@
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
         cloud_rad = 1.
+        cloud_rad_c = 1.
 
         ishadow_tot = 0                          
 
@@ -56,7 +76,7 @@
 
         call get_cloud_rad(sol_alt,sol_azi,clwc_3d,cice_3d
      1                    ,rain_3d,snow_3d
-     1                    ,heights_3d,transm_3d,i,j,ni,nj,nk)
+     1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk)
 
         I4_elapsed = ishow_timer()
 
@@ -112,6 +132,7 @@
           ishadow = 0
           cvr_path_sum = 0.
           sum_odrad = 0.
+          sum_odrad_c = 0.
 
           if(.true.)then
             do k = ksfc,ksfc
@@ -321,17 +342,20 @@
      1               (cvr_path * slant2 * 
      1                transm_3d(nint(rinew_m),nint(rjnew_m),nint(rk_m)))       
 
+                  sum_odrad_c(:) = sum_odrad_c(:) + 
+     1               (cvr_path * slant2 * 
+     1              transm_4d(:,nint(rinew_m),nint(rjnew_m),nint(rk_m)))       
+
                   if((cvr_path          .gt. 0.00) .AND.
      1               (cvr_path_sum      .le.  .05      .OR. ! tau ~1
      1                cvr_path_sum_last .eq. 0.  )            )then 
                       airmass_2_cloud_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
-!                     Instantaneous value
-!                     cloud_rad(ialt,jazi) = 
-!    1                 transm_3d(nint(rinew_m),nint(rjnew_m),nint(rk_m))
 
 !                     Average value over cloud path (tau ~1)
                       cloud_rad(ialt,jazi) = sum_odrad / cvr_path_sum 
+                      cloud_rad_c(:,ialt,jazi) 
+     1                                = sum_odrad_c(:) / cvr_path_sum 
                   endif
 
                   if(topo_m .gt. ht_m .AND. ihit_topo .eq. 0)then
@@ -381,10 +405,51 @@
 
           ishadow_tot = ishadow_tot + ishadow
 
+!         Estimate portion of ray in illuminated region of atmosphere
+          if(sol_alt(i,j) .gt. 0.)then
+            clear_rad_c(:,ialt,jazi) = 1. ! assume all of atmosphere is illuminated by the sun
+          else
+            alt_plane = 90. - abs(sol_alt(i,j))
+            azi_plane = sol_azi(i,j)
+            xplane = cosd(azi_plane) * cosd(alt_plane)
+            yplane = sind(azi_plane) * cosd(alt_plane)
+            zplane =                   sind(alt_plane)
+            xray   = cosd(float(jazi)) * cosd(float(ialt))
+            yray   = sind(float(jazi)) * cosd(float(ialt))
+            zray   =                     sind(float(ialt))
+            call anglevectors(xplane,yplane,zplane
+     1                       ,xray,yray,zray,angle_r)
+            angle_plane = 90. - (angle_r / rpd) ! angle between light ray and plane                              
+            if(angle_plane .gt. 0.)then ! assume part of atmosphere is illuminated by the sun
+              horz_dep_r = -sol_alt(i,j) * rpd                                                  
+              dist_pp_plane = horz_dep_r**2 * earth_radius / 2.0 ! approx perpendicular dist
+              dist_ray_plane = dist_pp_plane / sind(angle_plane) ! distance along ray
+              ht_ray_plane = dist_ray_plane * sind(float(ialt)) 
+     1                     + dist_ray_plane**2 / (2. * earth_radius)
+              if(ht_ray_plane .le. 99000.)then
+                frac_airmass_lit = min(ZtoPsa(ht_ray_plane) / 1013.,1.0)
+              else
+                frac_airmass_lit = 0.
+              endif
+              z = 90. - float(ialt)
+              airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
+              airmass_lit = airmass * frac_airmass_lit      
+              clear_rad_c(:,ialt,jazi) = min(airmass_lit,1.0)                                                
+            else
+              dist_ray_plane = -999.9
+              ht_ray_plane = -999.9
+              clear_rad_c(:,ialt,jazi) = 0.  ! assume none of atmosphere is illuminated by the sun
+            endif
+          endif
+
           if(idebug .eq. 1)then 
-              write(6,111)ialt,jazi,airmass_2_cloud_3d(ialt,jazi)
-     1                   ,cloud_rad(ialt,jazi)
-111           format('ialt,jazi,airm2cld,rad',2i5,2f10.6)
+            write(6,111)ialt,jazi,airmass_2_cloud_3d(ialt,jazi)
+     1                ,cloud_rad(ialt,jazi),sol_alt(i,j)
+     1                ,angle_plane,dist_ray_plane,ht_ray_plane
+     1                ,clear_rad_c(2,ialt,jazi)
+111         format(
+     1     'ialt/jazi/airm2cld/cldrad/salt/ang_pln/ds_ray/ht_ray/clrrad'
+     1            ,2i5,2f10.6,2f8.2,2f10.1,f8.4)
           endif
 
          enddo ! jazi
@@ -395,6 +460,12 @@
      1         0.5 * (r_cloud_3d(ialt,jazi-1) + r_cloud_3d(ialt,jazi+1))
               cloud_rad(ialt,jazi) = 
      1         0.5 * (cloud_rad(ialt,jazi-1)  + cloud_rad(ialt,jazi+1))
+              cloud_rad_c(:,ialt,jazi) = 
+     1         0.5 * (cloud_rad_c(:,ialt,jazi-1)  
+     1                                     + cloud_rad_c(:,ialt,jazi+1))
+              clear_rad_c(:,ialt,jazi) = 
+     1         0.5 * (clear_rad_c(:,ialt,jazi-1)   
+     1                                     + clear_rad_c(:,ialt,jazi+1))
               airmass_2_cloud_3d(ialt,jazi) = 
      1         0.5 * (airmass_2_cloud_3d(ialt,jazi-1) 
      1              + airmass_2_cloud_3d(ialt,jazi+1))
@@ -410,7 +481,11 @@
             r_cloud_3d(ialt,:) =
      1         0.5 * (r_cloud_3d(ialt-1,:) + r_cloud_3d(ialt+1,:))
             cloud_rad(ialt,:) =
-     1         0.5 * (cloud_rad(ialt-1,:) + cloud_rad(ialt+1,:))
+     1         0.5 * (cloud_rad(ialt-1,:)     + cloud_rad(ialt+1,:))
+            cloud_rad_c(:,ialt,:) =
+     1         0.5 * (cloud_rad_c(:,ialt-1,:) + cloud_rad_c(:,ialt+1,:))
+            clear_rad_c(:,ialt,:) =
+     1         0.5 * (clear_rad_c(:,ialt-1,:) + clear_rad_c(:,ialt+1,:))
             airmass_2_cloud_3d(ialt,:) =
      1         0.5 * (airmass_2_cloud_3d(ialt-1,:) 
      1              + airmass_2_cloud_3d(ialt+1,:))
@@ -430,6 +505,15 @@
 
         write(6,*)' Range of cloud_rad = ',minval(cloud_rad)
      1                                    ,maxval(cloud_rad)
+
+        write(6,*)' Range of cloud_rad_c R =',minval(cloud_rad_c(1,:,:))
+     1                                       ,maxval(cloud_rad_c(1,:,:))
+
+        write(6,*)' Range of cloud_rad_c G =',minval(cloud_rad_c(2,:,:))
+     1                                       ,maxval(cloud_rad_c(2,:,:))
+
+        write(6,*)' Range of cloud_rad_c B =',minval(cloud_rad_c(3,:,:))
+     1                                       ,maxval(cloud_rad_c(3,:,:))
 
         I4_elapsed = ishow_timer()
  
