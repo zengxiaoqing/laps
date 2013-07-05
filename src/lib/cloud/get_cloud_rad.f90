@@ -1,18 +1,24 @@
 
 
       subroutine get_cloud_rad(sol_alt,sol_azi,clwc_3d,cice_3d,rain_3d,snow_3d, &
-                               heights_3d,transm_3d,idb,jdb,ni,nj,nk)
+                               heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk)
 
-      use mem_namelist, ONLY: r_missing_data
+      use mem_namelist, ONLY: r_missing_data, earth_radius
       use cloud_rad ! Cloud Radiation and Microphysics Parameters
       include 'trigd.inc'
+
+      parameter (nc = 3)
 
       real clwc_3d(ni,nj,nk)
       real cice_3d(ni,nj,nk)
       real rain_3d(ni,nj,nk)
       real snow_3d(ni,nj,nk)
       real heights_3d(ni,nj,nk)
-      real transm_3d(ni,nj,nk)
+      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered, account for solar intensity at top of cloud
+      real transm_4d(nc,ni,nj,nk) ! adding 3 color information
+
+      real sol_alt(ni,nj)
+      real sol_azi(ni,nj)
 
       real clwc_int(ni,nj)
       real cice_int(ni,nj)
@@ -33,7 +39,8 @@
 
       call get_grid_spacing_cen(grid_spacing_m,istatus)
 
-      sol_alt_eff = max(sol_alt,1.5)
+!     Note that idb,jdb is a "nominal" grid point location from which we derive a constant solar alt/az for some purposes
+      sol_alt_eff = max(sol_alt(idb,jdb),1.5)
       ds_dh = 1. / sind(sol_alt_eff)
       dxy_dh = 1. / tand(sol_alt_eff)
 
@@ -46,12 +53,12 @@
         dh = heights_3d(1,1,ku) - heights_3d(1,1,kl)
         ds = dh * ds_dh
         dij = (dh * dxy_dh) / grid_spacing_m           
-        di =  sind(sol_azi) * dij
-        dj = -cosd(sol_azi) * dij
-        dil =  sind(sol_azi) * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
-        dih =  sind(sol_azi) * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
-        djl = -cosd(sol_azi) * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
-        djh = -cosd(sol_azi) * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
+        di =  sind(sol_azi(idb,jdb)) * dij
+        dj = -cosd(sol_azi(idb,jdb)) * dij
+        dil =  sind(sol_azi(idb,jdb)) * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
+        dih =  sind(sol_azi(idb,jdb)) * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
+        djl = -cosd(sol_azi(idb,jdb)) * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
+        djh = -cosd(sol_azi(idb,jdb)) * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
 
         do i = 1,ni
         do j = 1,nj
@@ -111,10 +118,46 @@
           else ! for efficiency
             transm_3d(i,j,k) = transm_3d(i,j,ku)
             if(idebug .eq. 1)then
-              write(6,102)k,transm_3d(i,j,k),dh,ds,sol_alt,sol_azi,di,dj
+              write(6,102)k,transm_3d(i,j,k),dh,ds,sol_alt(idb,jdb),sol_azi(idb,jdb),di,dj
 102           format('k/trans/dhds/solaltaz/dij ',i5,f8.5,1x,2f9.3,1x,2f7.2,1x,2f7.3)
             endif
           endif
+
+!         See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
+          if(heights_3d(i,j,k) .gt. 0.)then ! consider correction for topo
+              horz_dep_d = sqrt(2.0 * heights_3d(i,j,k) / earth_radius) * 180./3.14
+          else
+              horz_dep_d = 0.
+          endif
+
+          refraction = 0.5 ! typical value near horizon
+
+          sol_alt_cld = sol_alt(i,j) + horz_dep_d + refraction
+
+!         Estimate solar extinction/reddening by Rayleigh scattering at this cloud altitude
+          z = 90. - sol_alt_cld
+!         airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
+!         extinction = 0.28 * airmass * patm
+
+          ramp_ang = 5.0
+          if(sol_alt_cld .le. ramp_ang)then
+            ramp_slope = 1. / ramp_ang
+            rint    = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 1.0),0.0)
+            blu_rat = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 2.0),0.0)
+          else
+            rint = 1.
+            blu_rat = 1.
+          endif  
+
+          if(idebug .eq. 1)then
+              write(6,103)k,sol_alt(i,j),horz_dep_d,sol_alt_cld, rint,rint*blu_rat**0.3,rint*blu_rat
+103           format('k/salt/hdep/salt_cld/R/G/B',70x,i4,3f9.3,2x,3f6.2)                                   
+          endif
+
+!         Modify transm array for each of 3 colors depending on solar intensity and color at cloud (top)
+          transm_4d(1,i,j,k) = transm_3d(i,j,k) * rint
+          transm_4d(2,i,j,k) = transm_3d(i,j,k) * rint * blu_rat**0.3 
+          transm_4d(3,i,j,k) = transm_3d(i,j,k) * rint * blu_rat   
 
         enddo ! j
         enddo ! i
