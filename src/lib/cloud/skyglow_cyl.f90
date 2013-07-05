@@ -54,7 +54,8 @@
        enddo
 
        if(.true.)then                      
-           altsource = max(altsource_in,0.)
+!          altsource = max(altsource_in,0.)
+           altsource = altsource_in     
            write(6,*)
            write(6,*)'                     Solar Altitude = ',altsource
            do aziobj = 0.,180.                   
@@ -72,6 +73,14 @@
                    call anglevectors(xs,ys,zs,xo,yo,zo,elong_r8)
                    elong_r8 = elong_r8 / rpd
                    elong = elong_r8            
+
+                   if(aziobj .eq. 180.)then                             
+                       idebug = 1
+                       write(6,*)
+                       write(6,*)' Debug for alt/az/elong ',altobj,aziobj,elong
+                   else
+                       idebug = 0
+                   endif
 
 !                  Schaeffer routine
 !                  call get_skyglow(rmag,altsource,altobj,elong,patm,skyglow)
@@ -93,23 +102,47 @@
                    al_t_r8 = max(altobj,.001)
                    als_ct_r8 = altsource
                    alm_best_r8 = 0.
-                   elong_r8 = max(elong_r8,1.00d0)
-                   call vi(magn_r8,elong_r8,altdif_r8,al1_r8,al2_r8,elgms_r8,elgmc_r8 &
+                   elong_r8 = max(elong_r8,1.50d0)
+
+!                  Consider settings for the moon
+
+                   if(altsource .ge. 0.)then
+                     call vi(magn_r8,elong_r8,altdif_r8,al1_r8,al2_r8,elgms_r8,elgmc_r8 &
                           ,al_t_r8,als_ct_r8,alm_best_r8 &
                           ,maglimd_r8,maglimt_r8,maglimn_r8,maglim_r8 &
                           ,vis_r8,c_observe)
-                   if(maglim_r8 .lt. -900.d0)then
+                     if(maglim_r8 .lt. -900.d0)then
                        write(6,*)' warning in vi (maglim/elong) ',maglim_r8,elong_r8
+                     endif
+                     rmaglim_v(ialt,jazi) = maglim_r8
+                     rmaglim_v_noextinction = maglim_r8 + (totexto - zenext)
+                     skyglow = rmaglim_to_b(rmaglim_v_noextinction)
+
+                   else ! twilight (sun below horizon)
+                     call vi2(magn_r8,elong_r8,altdif_r8,al1_r8,al2_r8,elgms_r8,elgmc_r8 &
+                          ,al_t_r8,als_ct_r8,alm_best_r8 &
+                          ,maglimd_r8,maglimt_r8,maglimn_r8,maglim_r8 &
+                          ,idebug,vis_r8,c_observe)
+                     if(maglim_r8 .lt. -900.d0)then
+                       write(6,*)' warning in vi (maglim/elong) ',maglim_r8,elong_r8
+                     endif
+                     rmaglim_v(ialt,jazi) = maglim_r8
+                     rmaglim_v_noextinction = maglim_r8 + (totexto - zenext)
+!                    skyglow = rmaglim_to_b(rmaglim_v_noextinction)
+                     skyglow = rmaglim_to_b(rmaglim_v(ialt,jazi))    
+
                    endif
-                   rmaglim_v(ialt,jazi) = maglim_r8
-                   rmaglim_v_noextinction = maglim_r8 + (totexto - zenext)
-                   skyglow = rmaglim_to_b(rmaglim_v_noextinction)
+
                    if(skyglow .le. 0.)then
                        write(6,*)' Error in skyglow value ',skyglow,rmaglim_v_noextinction,maglim_r8,totexto,zenext
                        stop
                    endif
                    blog_v(ialt,jazi) = log10(skyglow)
                    elong_a(ialt,jazi) = elong                
+                   if(idebug .eq. 1)then
+                       write(6,101)maglim_r8,rmaglim_v_noextinction,blog_v(ialt,jazi)
+101                    format(' maglim/maglim_noext/blog_v',3f8.3)
+                   endif
                enddo ! altobj
              endif ! process this azimuth
            enddo ! aziobj
@@ -142,7 +175,7 @@
            write(6,*)' Fill interpolated azimuths in blog_v_out'  
            do iazi = 0,180,1
                if(blog_v(0,iazi) .gt. 0.)then
-                   write(6,*)' azi already filled ',iazi
+!                  write(6,*)' azi already filled ',iazi
                else
                    do iazim = iazi-1,0,-1
                        if(blog_v(0,iazim) .gt. 0.)then
@@ -158,7 +191,8 @@
                            goto22
                        endif
                    enddo
-22                 write(6,*)' fill azi ',iazi_m,iazi,iazi_p
+22                 continue
+!                  write(6,*)' fill azi ',iazi_m,iazi,iazi_p
                    dist = distm + distp
                    frac = distm / dist
                    if(iazi_m .lt. 0 .or. iazi_m .gt. 360 .or. iazi_p .lt. 0 .or. iazi_p .gt. 360)then
