@@ -126,7 +126,9 @@ C To fix this, call read_laps instead
       do l = 1,nf
           do k = 1,kdim
               read(lun,1)comment_req_l(k,l)
-              write(6,1)comment_req_l(k,l)
+              ! Temporarily comment this following write statement out for saving output time and file July 2013
+              ! Steve and Yuanfu will add a parameter later controling the output.
+              ! write(6,1)comment_req_l(k,l)
 1             format(a)
           enddo ! k
       enddo ! l
