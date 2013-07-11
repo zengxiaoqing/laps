@@ -217,8 +217,11 @@ c    1                  ,rlat_radar,rlon_radar,rheight_radar)
                   icount_good_qc = icount_good_qc + 1
 
                 else ! Radar Ob is QC'ed out
-                  if(icount_bad_qc .lt. 50)
-     1       write(6,311)i,j,k,diff_radial,vr_obs(io,jo,k),r_pass1
+                  ! Temporarily comment out the following two lines for writing to save
+                  ! output time and file size. Steve or Yuanfu will add a parameter controling what to write
+                  ! Yuanfu July 2013
+!                  if(icount_bad_qc .lt. 50)
+!     1       write(6,311)i,j,k,diff_radial,vr_obs(io,jo,k),r_pass1
 311               format(3i4,3f6.1,' Radar OB QCed out')
                   vr_obs(io,jo,k) = r_missing_data
                   icount_bad_qc = icount_bad_qc + 1
