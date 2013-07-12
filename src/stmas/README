@@ -5,17 +5,17 @@
   ---------------                              ----------
  
 program main                                   main.f90
-    BKGRNDOBS                                  input_bg_and_obs.f90
+    BKGRNDOBS                                  input_bg_obs.f90
         READNMLST
-        RDLAPSBKG
-        RDBKGTEST
+        RDLAPSBKG                              read_backgrd.f90
+        RDBKGTEST                                    "
         GETBKGRND_NEW
         RDBUFROBS
-        RDLAPSRDR
+        RDLAPSRDR                              readobserves.f90
         RDOBSTEST
         ADDBKGRND
         BKGTOFINE
-    MGANALYSS                                  stmas_core_cg.f90
+    MGANALYSSO                                 stmas_core_lgbfs.f90
         PREPROCSS
         RDINITBGD
         PHYSCPSTN
