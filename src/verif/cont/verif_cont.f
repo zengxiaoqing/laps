@@ -446,35 +446,6 @@
 
                         write(6,*)' directory = ',trim(directory)
 
-                        if(trim(type_a(ifield)) .eq. 'rdr')then
-                            write(6,*)' radar verif type block'
-                            var_2d_fcst = trim(var_2d(1:3))
-                        else
-                            write(6,*)' precip verif type block'
-                            var_2d_fcst = 'NUL'
-                            if(trim(var_2d) .eq. 'PCP_01')then
-                                if(model_fcst_intvl .eq. 3600 .AND.
-     1                             c_model(1:len_model) .ne. 'nam')then
-                                    var_2d_fcst = 'R01' 
-                                endif
-                            elseif(trim(var_2d) .eq. 'PCP_03')then
-                                if(model_fcst_intvl .eq. 10800)then
-                                    var_2d_fcst = 'R01' 
-                                endif
-                            elseif(trim(var_2d) .eq. 'PCP_06')then
-                                if(model_fcst_intvl .eq. 21600)then
-                                    var_2d_fcst = 'R01' 
-                                endif
-                            elseif(trim(var_2d) .eq. 'PCP_24')then
-                                if(model_fcst_intvl .eq. 86400)then
-                                    var_2d_fcst = 'R01' 
-                                endif
-                            endif
-                        endif
-
-                        write(6,*)' var_2d/var_2d_fcst = ',var_2d,' '
-     1                                                    ,var_2d_fcst
-
                         if(trim(c_model) .eq. 'nam')then
                              model_pcp_intvl = 10800
                         elseif(trim(c_model) .eq. 'nam-nh')then
@@ -482,6 +453,42 @@
                         else
                              model_pcp_intvl = model_fcst_intvl
                         endif
+
+                        if(trim(type_a(ifield)) .eq. 'rdr')then
+                            write(6,*)' radar verif type block'
+                            var_2d_fcst = trim(var_2d(1:3))
+                        else ! find cases where 'R01' field is appropriate
+                            write(6,*)' precip verif type block'
+                            var_2d_fcst = 'NUL'
+                            if(trim(var_2d) .eq. 'PCP_01')then
+                                if(model_fcst_intvl .eq. 3600 .AND.
+     1                             model_fcst_intvl .ge. model_pcp_intvl
+     1                                                             )then
+                                    var_2d_fcst = 'R01' 
+                                endif
+                            elseif(trim(var_2d) .eq. 'PCP_03')then
+                                if(model_fcst_intvl .eq. 10800 .AND.
+     1                             model_fcst_intvl .ge. model_pcp_intvl
+     1                                                             )then
+                                    var_2d_fcst = 'R01' 
+                                endif
+                            elseif(trim(var_2d) .eq. 'PCP_06')then
+                                if(model_fcst_intvl .eq. 21600 .AND.
+     1                             model_fcst_intvl .ge. model_pcp_intvl
+     1                                                             )then
+                                    var_2d_fcst = 'R01' 
+                                endif
+                            elseif(trim(var_2d) .eq. 'PCP_24')then
+                                if(model_fcst_intvl .eq. 86400 .AND.
+     1                             model_fcst_intvl .ge. model_pcp_intvl
+     1                                                             )then
+                                    var_2d_fcst = 'R01' 
+                                endif
+                            endif
+                        endif
+
+                        write(6,*)' var_2d/var_2d_fcst = ',var_2d,' '
+     1                                                    ,var_2d_fcst
 
                         if(trim(type_a(ifield)) .ne. 'pcp' .OR.
      1                          var_2d_fcst .eq. 'R01'         )then 
