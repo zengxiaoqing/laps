@@ -1,13 +1,15 @@
         
         subroutine get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
-     1                             ,rain_3d,snow_3d
-     1                             ,pres_3d,topo_sfc,topo_a
-     1                             ,r_cloud_3d,cloud_rad,cloud_rad_c         
-     1                             ,clear_rad_c
-     1                             ,airmass_2_cloud_3d,airmass_2_topo_3d
-     1                             ,ni,nj,nk,i,j
-     1                             ,view_alt,view_az,sol_alt,sol_azi 
-     1                             ,grid_spacing_m,r_missing_data)
+     1                           ,rain_3d,snow_3d
+     1                           ,pres_3d,topo_sfc,topo_a,swi_2d
+     1                           ,topo_swi,topo_albedo_2d,topo_albedo
+     1                           ,r_cloud_3d,cloud_rad,cloud_rad_c
+     1                           ,clear_rad_c
+     1                           ,airmass_2_cloud_3d,airmass_2_topo_3d
+     1                           ,ni,nj,nk,i,j
+     1                           ,view_alt,view_az,sol_alt,sol_azi 
+     1                           ,minalt,maxalt
+     1                           ,grid_spacing_m,r_missing_data)
 
         use mem_namelist, ONLY: earth_radius
 
@@ -31,6 +33,8 @@
         real transm_4d(nc,ni,nj,nk)
         real heights_1d(nk)
         real topo_a(ni,nj)
+        real swi_2d(ni,nj)
+        real topo_albedo_2d(nc,ni,nj)
         real pres_3d(ni,nj,nk)
         real pres_1d(nk)
         real view_alt(ni,nj)
@@ -39,14 +43,16 @@
         real sol_alt(ni,nj)
         real sol_azi(ni,nj)
 
-        integer isky(0:90,0:360)
-        real r_shadow_3d(0:90,0:360)
-        real r_cloud_3d(0:90,0:360)      ! cloud opacity
-        real cloud_rad(0:90,0:360)       ! sun to cloud transmissivity (direct+fwd scat)
-        real cloud_rad_c(nc,0:90,0:360)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
-        real clear_rad_c(nc,0:90,0:360)  ! integrated fraction of air illuminated by the sun along line of sight
-        real airmass_2_cloud_3d(0:90,0:360)
-        real airmass_2_topo_3d(0:90,0:360)
+        integer isky(minalt:maxalt,0:360)
+        real r_cloud_3d(minalt:maxalt,0:360)        ! cloud opacity
+        real cloud_od(minalt:maxalt,0:360)          ! cloud optical depth
+        real cloud_rad(minalt:maxalt,0:360)         ! sun to cloud transmissivity (direct+fwd scat)
+        real cloud_rad_c(nc,minalt:maxalt,0:360)    ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
+        real clear_rad_c(nc,minalt:maxalt,0:360)    ! integrated fraction of air illuminated by the sun along line of sight
+        real airmass_2_cloud_3d(minalt:maxalt,0:360)
+        real airmass_2_topo_3d(minalt:maxalt,0:360)
+        real topo_swi(minalt:maxalt,0:360)
+        real topo_albedo(nc,minalt:maxalt,0:360)
         real sum_odrad_c(nc)
 
         real*8 xplane,yplane,zplane
@@ -61,6 +67,7 @@
         pstd = 101325.
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
+        topo_swi = 0.
         cloud_rad = 1.
         cloud_rad_c = 1.
 
@@ -99,7 +106,7 @@
         heights_1d(:) = heights_3d(i,j,:)
         pres_1d(:)    = pres_3d(i,j,:)
 
-        do ialt = 0,90
+        do ialt = minalt,maxalt
 
          if(ialt .ge. 20)then
              if(ialt .eq. (ialt/2)*2)then
@@ -136,7 +143,8 @@
 
           if(.true.)then
             do k = ksfc,ksfc
-              r_shadow_3d(ialt,jazi) = 0.
+              r_cloud_3d(ialt,jazi) = 0.
+              cloud_od(ialt,jazi) = 0.
               
               ri1 = ri
               rj1 = rj
@@ -146,7 +154,10 @@
 
               grid_factor = grid_spacing_m / 3000.
 
-              if(view_altitude_deg .le. 0.5)then
+              if(view_altitude_deg .lt. 0.0)then
+                  rkdelt1 = -0.01 * grid_factor
+                  rkdelt2 = -0.10 * grid_factor
+              elseif(view_altitude_deg .le. 0.5)then
                   rkdelt1 = 0.01 * grid_factor
                   rkdelt2 = 0.10 * grid_factor
               elseif(view_altitude_deg .le. 4.)then
@@ -189,7 +200,8 @@
 !             do kk = ksfc+1,nk
               rk = rksfc          
 !             do rk = rksfc+rkdelt,float(nk),rkdelt
-              do while(rk .le. float(nk) - rkdelt)
+              do while(rk .le. float(nk) - rkdelt 
+     1                                 .AND. ihit_topo .eq. 0)
                 rk = rk + rkdelt
 !               rk = kk
 
@@ -359,20 +371,27 @@
                   endif
 
                   if(topo_m .gt. ht_m .AND. ihit_topo .eq. 0)then
-                      if(idebug .eq. 1)write(6,*)' Hit topo '
                       ihit_topo = 1
                       airmass_2_topo_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
+                      topo_swi(ialt,jazi) = 
+     1                    swi_2d(nint(rinew_m),nint(rjnew_m))
+                      topo_albedo(:,ialt,jazi) = 
+     1                    topo_albedo_2d(:,nint(rinew_m),nint(rjnew_m))
+                      if(idebug .eq. 1)write(6,*)' Hit topo '
+     1                                ,topo_swi(ialt,jazi)
+     1                                ,topo_albedo(:,ialt,jazi)
                   endif
 
-                  r_shadow_3d(ialt,jazi) = 1. - (exp(-20.*cvr_path_sum))
+                  cloud_od(ialt,jazi) = 20.*cvr_path_sum   
+                  r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
                   if(idebug .eq. 1)write(6,101)dz1_l,dz1_h,dxy1_l,dxy1_h
      1                     ,cslant
      1                     ,rinew_h,rjnew_h,rk,ht_m,topo_m 
      1                     ,cvr_path*1e3
      1                     ,clwc_m*1e3,cice_m*1e3,rain_m*1e3,snow_m*1e3
      1                     ,slant2,cvr_path_sum
-     1                     ,r_shadow_3d(ialt,jazi)
+     1                     ,r_cloud_3d(ialt,jazi)
      1                     ,airmass_2_cloud_3d(ialt,jazi)
      1                     ,cloud_rad(ialt,jazi)
  101              format(2f8.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
@@ -394,20 +413,18 @@
 
           endif ! high enough sun to use vis   
 
-          if(r_shadow_3d(ialt,jazi) .gt. .5)then
-!         if(r_shadow_3d(ialt,jazi) .ge. 0.000000)then
+          if(r_cloud_3d(ialt,jazi) .gt. .5)then
               ishadow = 1
           else
               ishadow = 0
           endif
-
-          r_cloud_3d(ialt,jazi) = r_shadow_3d(ialt,jazi)     
 
           ishadow_tot = ishadow_tot + ishadow
 
 !         Estimate portion of ray in illuminated region of atmosphere
           if(sol_alt(i,j) .gt. 0.)then
             clear_rad_c(:,ialt,jazi) = 1. ! assume all of atmosphere is illuminated by the sun
+            angle_plane = 0.; dist_ray_plane = 0.; ht_ray_plane = 0.
           else
             alt_plane = 90. - abs(sol_alt(i,j))
             azi_plane = sol_azi(i,j)
@@ -434,12 +451,24 @@
               z = 90. - float(ialt)
               airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
               airmass_lit = airmass * frac_airmass_lit      
-              clear_rad_c(:,ialt,jazi) = min(airmass_lit,1.0)                                                
-            else
+              clear_int = max(min(airmass_lit,1.0),.001)                                                
+            else ! in Earth's shadow
               dist_ray_plane = -999.9
               ht_ray_plane = -999.9
-              clear_rad_c(:,ialt,jazi) = 0.  ! assume none of atmosphere is illuminated by the sun
+              airmass_lit = 0.
+              clear_int = .001                                                                           
             endif
+
+            sat_ramp = min(-sol_alt(i,j) / 3.0,1.0)
+            bluness = (1.0-saturation) / 2.0 
+     1              + exp(-airmass_lit*0.5) * saturation ! range from 0.2 to 0.8 
+            redness = 1.0 - bluness
+!           HSI
+            hue = exp(-airmass_lit*0.2) ! 0:R 1:B
+            clear_rad_c(1,ialt,jazi) = hue                           ! Hue
+            clear_rad_c(2,ialt,jazi) = abs(hue-0.4) * 1.0 * sat_ramp ! Saturation
+            clear_rad_c(3,ialt,jazi) = clear_int                     ! Intensity
+
           endif
 
           if(idebug .eq. 1)then 
@@ -472,6 +501,9 @@
               airmass_2_topo_3d(ialt,jazi) = 
      1         0.5 * (airmass_2_topo_3d(ialt,jazi-1) 
      1              + airmass_2_topo_3d(ialt,jazi+1))
+              topo_swi(ialt,jazi) = 
+     1         0.5 * (topo_swi(ialt,jazi-1) 
+     1              + topo_swi(ialt,jazi+1))
           enddo
          endif
 
@@ -492,13 +524,13 @@
             airmass_2_topo_3d(ialt,:) =
      1         0.5 * (airmass_2_topo_3d(ialt-1,:) 
      1              + airmass_2_topo_3d(ialt+1,:))
+            topo_swi(ialt,:) =
+     1         0.5 * (topo_swi(ialt-1,:) 
+     1              + topo_swi(ialt+1,:))
         enddo ! ialt
 
         write(6,*)' Number of rays with cloud = ',ishadow_tot
      1           ,' out of ',91*361
-
-        write(6,*)' Range of r_shadow_3d = ',minval(r_shadow_3d)
-     1                                      ,maxval(r_shadow_3d)
 
         write(6,*)' Range of r_cloud_3d = ',minval(r_cloud_3d)
      1                                     ,maxval(r_cloud_3d)
