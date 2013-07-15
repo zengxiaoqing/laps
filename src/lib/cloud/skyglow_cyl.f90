@@ -1,5 +1,5 @@
 
-       subroutine skyglow_cyl(altsource_in,azisource_in,blog_v_roll,elong_roll)
+       subroutine skyglow_cyl(altsource_in,azisource_in,blog_v_roll,elong_roll,od_atm_a)
 
        include 'trigd.inc'
 
@@ -108,7 +108,7 @@
 
                    if(altsource .ge. 0.)then
                      call vi(magn_r8,elong_r8,altdif_r8,al1_r8,al2_r8,elgms_r8,elgmc_r8 &
-                          ,al_t_r8,als_ct_r8,alm_best_r8 &
+                          ,al_t_r8,als_ct_r8,alm_best_r8,od_atm_a &
                           ,maglimd_r8,maglimt_r8,maglimn_r8,maglim_r8 &
                           ,vis_r8,c_observe)
                      if(maglim_r8 .lt. -900.d0)then
@@ -120,7 +120,7 @@
 
                    else ! twilight (sun below horizon)
                      call vi2(magn_r8,elong_r8,altdif_r8,al1_r8,al2_r8,elgms_r8,elgmc_r8 &
-                          ,al_t_r8,als_ct_r8,alm_best_r8 &
+                          ,al_t_r8,als_ct_r8,alm_best_r8,od_atm_a &
                           ,maglimd_r8,maglimt_r8,maglimn_r8,maglim_r8 &
                           ,idebug,vis_r8,c_observe)
                      if(maglim_r8 .lt. -900.d0)then
