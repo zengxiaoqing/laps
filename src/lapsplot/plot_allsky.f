@@ -18,6 +18,8 @@
         real snow_3d(NX_L,NY_L,NZ_L)
 !       real rh_3d(NX_L,NY_L,NZ_L)
 
+        parameter (nc = 3)
+
         real pres_2d(NX_L,NY_L)
         real t_2d(NX_L,NY_L)
         real td_2d(NX_L,NY_L)
@@ -27,6 +29,9 @@
         real cape_2d(NX_L,NY_L)
         real lil_2d(NX_L,NY_L)
         real lic_2d(NX_L,NY_L)
+        real swi_2d(NX_L,NY_L)
+        real static_albedo(NX_L,NY_L)
+        real topo_albedo_2d(nc,NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
@@ -94,14 +99,15 @@
         character*5 c5_name, c5_name_a(max_snd_grid), c5_name_min
         character*8 obstype(max_snd_grid)
 
-        parameter (minalt =  0)
+        parameter (minalt =  0) ! -1
         parameter (maxalt = 90)
-        parameter (nc = 3)
         real r_shadow_3d(minalt:maxalt,0:360)
         real blog_v_roll(minalt:maxalt,0:360)
         real elong_roll(minalt:maxalt,0:360)
         real airmass_2_cloud_3d(minalt:maxalt,0:360)
         real airmass_2_topo_3d(minalt:maxalt,0:360)
+        real topo_swi(minalt:maxalt,0:360)
+        real topo_albedo(nc,minalt:maxalt,0:360)
         real r_cloud_trans(minalt:maxalt,0:360)  ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,0:360) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,minalt:maxalt,0:360) ! integrated fraction of air illuminated by the sun along line of sight
@@ -111,15 +117,10 @@
         parameter (ni_polar = 511)
         parameter (nj_polar = 511)
         real r_shadow_3d_polar(ni_polar,nj_polar)
-        real r_cloud_trans_polar(ni_polar,nj_polar)
-        real cloud_rad_c_polar(nc,ni_polar,nj_polar)
-        real clear_rad_c_polar(nc,ni_polar,nj_polar)
         real blog_v_roll_polar(ni_polar,nj_polar)
         real alt_a_polar(ni_polar,nj_polar)
         real azi_a_polar(ni_polar,nj_polar)
         real elong_a_polar(ni_polar,nj_polar)
-        real airmass_2_cloud_3d_polar(ni_polar,nj_polar)
-        real airmass_2_topo_3d_polar(ni_polar,nj_polar)
 
         real sky_rgb_polar(0:2,ni_polar,nj_polar)
         integer isky_rgb_polar(0:2,ni_polar,nj_polar)
@@ -133,6 +134,12 @@
 
         skewt(t_c,logp) = t_c - (logp - logp_bottom) * 32.
 
+        if(l_polar .eqv. .true.)then
+            mode_polar = 2
+        else
+            mode_polar = 0
+        endif
+
         nsmooth = plot_parms%obs_size
         if(nsmooth .ne. 3)then
             nsmooth = 1
@@ -142,6 +149,8 @@
 
         write(6,*)
         write(6,*)' subroutine plot_allsky: nsmooth is ',nsmooth
+
+        od_atm_a = 0.05
 
         itd = 2 ! dashed dewpoint lines
 
@@ -488,7 +497,7 @@
             var_2d = 'LWC'
             ext = 'lwc'
             call get_laps_3dgrid
-     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          (i4time_ref,10800,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,clwc_3d,istat_lwc)
             call make_fnam_lp(i4time_nearest,a9time,istatus)
             i4time_solar = i4time_nearest
@@ -499,8 +508,12 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,clwc_3d
      1                              ,istat_lwc)
-!           if(istat_lwc .ne. 1)goto1000
             i4time_solar = i4_valid
+          endif
+
+          if(istat_lwc .ne. 1)then
+              write(6,*)' Error reading LWC field in plot_allsky'
+              return
           endif
 
 !         Calculate solar position for 2D array of grid points
@@ -639,6 +652,32 @@
           endif
 
 500       continue
+
+          ext = 'lcv'
+
+!         Read in swi data
+          var_2d = 'SWI'
+          call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,swi_2d,0,istat_sfc)
+          if(istat_sfc .ne. 1)goto1000
+
+          call get_static_field_interp('albedo',i4time_nearest,NX_L,NY_L
+     1                                ,static_albedo,istat_sfc)
+          if(istat_sfc .ne. 1)goto1000
+          do j = 1,NY_L
+          do i = 1,NX_L
+            if(static_albedo(i,j) .ne. 0.08)then ! brown land
+              topo_albedo_2d(1,i,j) = static_albedo(i,j)
+              topo_albedo_2d(2,i,j) = static_albedo(i,j)
+              topo_albedo_2d(3,i,j) = 0.01
+            else ! blue lakes
+              topo_albedo_2d(1,i,j) = 0.04
+              topo_albedo_2d(2,i,j) = 0.06
+              topo_albedo_2d(3,i,j) = 0.12
+            endif
+          enddo ! i
+          enddo ! j
 
           goto600
 
@@ -814,12 +853,15 @@
 
         call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
      1                     ,rain_3d,snow_3d
-     1                     ,pres_3d,topo_sfc,topo
+     1                     ,pres_3d,topo_sfc
+     1                     ,topo,swi_2d,topo_swi
+     1                     ,topo_albedo_2d,topo_albedo
      1                     ,r_shadow_3d,r_cloud_trans,cloud_rad_c
      1                     ,clear_rad_c
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d
      1                     ,NX_L,NY_L,NZ_L,isound,jsound
      1                     ,view_alt,view_az,sol_alt_2d,sol_azi_2d
+     1                     ,minalt,maxalt
      1                     ,grid_spacing_m,r_missing_data)
 
         write(6,*)' Return from get_cloud_rays...',a9time
@@ -838,7 +880,8 @@
         if(.true.)then
             I4_elapsed = ishow_timer()
             write(6,*)' call get_skyglow_cyl'
-            call skyglow_cyl(solar_alt,solar_az,blog_v_roll,elong_roll)
+            call skyglow_cyl(solar_alt,solar_az,blog_v_roll,elong_roll
+     1                      ,od_atm_a)
             I4_elapsed = ishow_timer()
         else
             blog_v_roll = 8.0
@@ -894,74 +937,11 @@
         close(54)
  54     format(2f8.2)
 
-!       Reproject Airmass_2_cloud array from cyl to polar
-        call cyl_to_polar(airmass_2_cloud_3d,airmass_2_cloud_3d_polar
-     1                               ,90,360
-     1                               ,alt_a_polar,azi_a_polar
-     1                               ,ni_polar,nj_polar)
-
-!       Reproject r_cloud_trans array from cyl to polar
-        call cyl_to_polar(r_cloud_trans,r_cloud_trans_polar
-     1                               ,90,360
-     1                               ,alt_a_polar,azi_a_polar
-     1                               ,ni_polar,nj_polar)
-
-!       Reproject cloud_rad_c array from cyl to polar    
-        do ic = 1,nc
-          call cyl_to_polar(cloud_rad_c(ic,:,:)
-     1                               ,cloud_rad_c_polar(ic,:,:)
-     1                               ,90,360
-     1                               ,alt_a_polar,azi_a_polar
-     1                               ,ni_polar,nj_polar)
-        enddo ! ic
-
-!       Reproject clear_rad_c array from cyl to polar    
-        do ic = 1,nc
-          call cyl_to_polar(clear_rad_c(ic,:,:)
-     1                               ,clear_rad_c_polar(ic,:,:)
-     1                               ,90,360
-     1                               ,alt_a_polar,azi_a_polar
-     1                               ,ni_polar,nj_polar)
-        enddo ! ic
-
-!       Reproject Airmass_2_topo array from cyl to polar
-        call cyl_to_polar(airmass_2_topo_3d,airmass_2_topo_3d_polar
-     1                               ,90,360
-     1                               ,alt_a_polar,azi_a_polar
-     1                               ,ni_polar,nj_polar)
-
-!       Reproject Elong array from cyl to polar
-        call cyl_to_polar(elong_roll,elong_a_polar                    
-     1                               ,90,360
-     1                               ,alt_a_polar,azi_a_polar
-     1                               ,ni_polar,nj_polar)
-
-        if(l_polar .eqv. .true.)then
-!         Get all sky for polar
-          write(6,*)' call get_sky_rgb with polar data'
-          call get_sky_rgb(r_shadow_3d_polar         ! cloud opacity
-     1                    ,r_cloud_trans_polar       ! cloud solar transmittance
-     1                    ,cloud_rad_c_polar         ! cloud solar transmittance / color
-     1                    ,clear_rad_c_polar         ! clear sky illumination by sun     
-     1                    ,blog_v_roll_polar         ! skyglow
-     1                    ,airmass_2_cloud_3d_polar
-     1                    ,airmass_2_topo_3d_polar
-     1                    ,alt_a_polar,azi_a_polar
-     1                    ,elong_a_polar
-     1                    ,ni_polar,nj_polar
-     1                    ,solar_alt,solar_az
-     1                    ,sky_rgb_polar)   
-
-!         Write all sky for polar
-          isky_rgb_polar = sky_rgb_polar
-          write(6,*)' Write all sky polar text file'
-     1              ,isky_rgb_polar(:,255,255)
-          open(54,file='allsky_rgb_polar.'//clun,status='unknown')
-          write(54,*)isky_rgb_polar
-          close(54)
+        if(mode_polar .eq. 1)then
+          continue
         endif ! l_polar
 
-        if(l_cyl .eqv. .true.)then              
+        if((l_cyl .eqv. .true.) .OR. (mode_polar .eq. 2))then              
 !         Get all sky for cyl   
           write(6,*)' call get_sky_rgb with cyl data'
           ni_cyl = maxalt - minalt + 1
@@ -977,20 +957,42 @@
      1                    ,cloud_rad_c               ! cloud solar transmittance / color
      1                    ,clear_rad_c               ! clear sky illumination by sun     
      1                    ,blog_v_roll               ! skyglow
+     1                    ,od_atm_a
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
+     1                    ,topo_swi,topo_albedo
      1                    ,alt_a_roll,azi_a_roll       
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
      1                    ,solar_alt,solar_az
      1                    ,sky_rgb_cyl)   
 
-!         Write all sky for cyl
-          isky_rgb_cyl = sky_rgb_cyl   
-          open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
-          write(55,*)isky_rgb_cyl           
-          close(55)
-        endif
+          if(mode_polar .ne. 2)then
+!             Write all sky for cyl
+              isky_rgb_cyl = sky_rgb_cyl   
+              open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
+              write(55,*)isky_rgb_cyl           
+              close(55)
+          else ! mode polar = 2
+!             Reproject sky_rgb array from cyl to polar    
+              do ic = 0,nc-1
+                call cyl_to_polar(sky_rgb_cyl(ic,:,:)
+     1                           ,sky_rgb_polar(ic,:,:)
+     1                           ,90,360
+     1                           ,alt_a_polar,azi_a_polar
+     1                           ,ni_polar,nj_polar)
+              enddo ! ic
+
+!             Write all sky for polar
+              isky_rgb_polar = sky_rgb_polar
+              write(6,*)' Write all sky polar text file'
+     1                  ,isky_rgb_polar(:,255,255)
+              open(54,file='allsky_rgb_polar.'//clun,status='unknown')
+              write(54,*)isky_rgb_polar
+              close(54)
+          endif
+
+        endif ! mode_polar = 0 or 2
 
         write(6,*)' End of plot_allsky...'
         write(6,*)
