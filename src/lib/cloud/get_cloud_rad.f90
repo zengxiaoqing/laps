@@ -25,6 +25,13 @@
       real rain_int(ni,nj)
       real snow_int(ni,nj)
       real backscatter_int(ni,nj)
+      real aod_2d(ni,nj)          ! aerosol optical depth (tau per airmass) 
+
+!     n                                    (number concentration:   m**-3)
+!     sigma                                (cross-section:          m**2)
+!     kappa = n * sigma / rho              (opacity:                m**2 per kg)
+!     K or alpha = sigma * n = kappa * rho (extinction coefficient: m**-1)
+!     tau = K * s = kappa * rho * s        (optical depth:          dimensionless)
 
 !     Statement functions
 !     od_to_albedo_lwc(tau) = 1. - exp(-tau*.07) ! lwc backscattering efficiency term 
