@@ -287,6 +287,9 @@ cdis
             call read_static_grid(ni,nj,var,static_albedo,istat_sfc_alb)
         endif
 
+        write(6,*)' static albedo range: ',minval(static_albedo)
+     1                                    ,maxval(static_albedo)
+
         icount_albedo = 0
         icount_albedo_lwrb = 0
 
