@@ -127,7 +127,7 @@ cdis
         do i = 1,ni
         do j = 1,nj    
 
-          if(i .eq. ni/2 .and. j .eq. nj/2)then
+          if(j .eq. nj/2)then
               idebug = 1
           else
               idebug = 0
@@ -179,13 +179,20 @@ cdis
             do k = 1,nk
                 it = i - nint(di_dh(i,j) * cld_hts(k))
                 jt = j - nint(dj_dh(i,j) * cld_hts(k))
-                it = max(min(it,imax),1)
-                jt = max(min(jt,jmax),1)
+                it = max(min(it,ni),1)
+                jt = max(min(jt,nj),1)
 
                 call qc_clouds_0d(i,j,k,clouds_3d(it,jt,k)
      1                           ,ni,nj,.false.)       
 
                 cloud_frac_in = clouds_3d(it,jt,k)
+
+                if(idebug .eq. 1 .and. k .eq. nk/2)then
+                    write(6,201)i,j,it,jt,di_dh(i,j),dj_dh(i,j)
+     1                         ,cloud_frac_in,cld_hts(k)
+ 201                format('i,j,it,jt,didh,djdh,cloud_frac_in,cldht'
+     1                    ,4i6,2f9.5,f9.3,f9.1)
+                endif
 
 !               Modify the cloud field with the vis input - allow .3 vis err?
                 if(cld_hts(k) .gt. topo(i,j) + surface_sao_buffer)then
