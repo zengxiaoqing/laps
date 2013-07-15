@@ -46,7 +46,7 @@ CONTAINS
 
         cloud_rad_trans = 1.0 - cloud_albedo ! Fwd Scattered + Direct Transmission
 
-        bksc_eff_od = -log(cloud_albedo)     ! Tau * Back Scat Efficiency
+        bksc_eff_od = -log(cloud_rad_trans)  ! Tau * Back Scat Efficiency
 
         cloud_od = bksc_eff_od / 0.10        ! Tau
 
