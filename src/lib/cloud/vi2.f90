@@ -1,7 +1,7 @@
 
 
        subroutine vi2(magn_r8,elong_r8,altdif_r8,al1_r8,al2_r8,elgms_r8,elgmc_r8 &
-                    ,al_t_r8,als_ct_r8,alm_best_r8 &
+                    ,al_t_r8,als_ct_r8,alm_best_r8,od_atm_a &
                     ,maglimd_r8,maglimt_r8,maglimn_r8,maglim_r8 &
                     ,idebug,vis_r8,c_observe)
 
@@ -21,6 +21,7 @@
        real   maglim,maglimd,maglimt,maglimm,maglimn,maglimp
        real   maglimm1,mag_eff
        real   al_t,als_ct,alm_best,sb1,sb2,rmaglim_to_b,b_to_maglim,maglimdark,sbdark
+       real   al_t_eff,od_atm_a
        real   maglimdark2,sb_corr,diff_mag
 
        parameter (nmag_n=9)  ; real maglim_n(nmag_n); real alts_n(nmag_n)
@@ -197,7 +198,8 @@
            maglimd = maglimd + sb_corr
 
 !          Correct for Sky Brightness change with comet altitude
-           call correct_skyglow(1.,al_t,patm,sb2,sb_corr)
+           al_t_eff = al_t * min(max(1.0-(od_atm_a-0.05)*1.0, 0.0),1.0)
+           call correct_skyglow(1.,al_t_eff,patm,sb2,sb_corr)
            maglimd = maglimd + sb_corr
 
            if(idebug .eq. 1)then
