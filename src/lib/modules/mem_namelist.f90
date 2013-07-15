@@ -402,6 +402,8 @@ elseif (namelist_name == 'temp_anal') then
 
 elseif (namelist_name == 'cloud_anal') then
 
+   i_varadj = 1                    ! keep this on as a default          
+
    read (12, cloud_nl, err=908)
    
    ! QC the input variables if desired
