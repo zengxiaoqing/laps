@@ -175,8 +175,8 @@ foreach SUBDIR (PCP_01 PCP_03 PCP_06 PCP_24)
 
         echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log"
               $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log
-        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   0.6 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log"
-              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   0.6 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log
+        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   0.5 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log"
+              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   0.5 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log
     end
 end
 
