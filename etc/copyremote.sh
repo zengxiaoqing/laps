@@ -183,16 +183,16 @@ elif test "$3" == "exchange_zip2"; then
 
         echo " "
         echo "make local zip file from filelist"
-        echo  zip $TEMPFILE.z destdirname `cat $FILENAME`   
-              zip $TEMPFILE.z destdirname `cat $FILENAME`                                                                         
-        ls -l $TEMPFILE.z
+        echo  zip $TEMPFILE.z2 destdirname `cat $FILENAME`   
+              zip $TEMPFILE.z2 destdirname `cat $FILENAME`                                                                         
+        ls -l $TEMPFILE.z2
 
         date -u
 
         echo " "
         echo "first hop of zip file"        
-        echo  scp -o ConnectTimeout=200 $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR              
-              scp -o ConnectTimeout=200 $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR               
+        echo  scp -o ConnectTimeout=200 $TEMPFILE.z2 jetscp.rdhpcs.noaa.gov:$TEMPDIR              
+              scp -o ConnectTimeout=200 $TEMPFILE.z2 jetscp.rdhpcs.noaa.gov:$TEMPDIR               
 
         date -u
 
@@ -200,8 +200,8 @@ elif test "$3" == "exchange_zip2"; then
 
         echo " "
         echo "unzip from $TEMPDIR into second directory"
-        echo  ssh $REMOTE_NODE "cd $DESTDIR; unzip $TEMPDIR/$TEMPFILE2.z; rm -f $TEMPDIR/$TEMPFILE2.z"
-              ssh $REMOTE_NODE "cd $DESTDIR; unzip $TEMPDIR/$TEMPFILE2.z; rm -f $TEMPDIR/$TEMPFILE2.z"
+        echo  ssh $REMOTE_NODE "cd $DESTDIR; unzip -o $TEMPDIR/$TEMPFILE2.z2; rm -f $TEMPDIR/$TEMPFILE2.z2"
+              ssh $REMOTE_NODE "cd $DESTDIR; unzip -o $TEMPDIR/$TEMPFILE2.z2; rm -f $TEMPDIR/$TEMPFILE2.z2"
        
         date -u
 
