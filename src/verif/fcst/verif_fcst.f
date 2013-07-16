@@ -493,12 +493,19 @@
                       call solalt(lat_s(i),lon_s(i),i4_valid,sol_alt)
                       call qc_solar_ob(solar_s(i),sol_alt 
      1                                ,r_missing_data,iqc,clear_sky_ghi)
+
+                      call get_sfc_obtime(obstime(i),i4_valid,i4time_ob        
+     1                                   ,istatus)
+                      if(abs(i4time_ob - i4_valid) .gt. 60)then
+                          iqc = 1 ! ob is more than a minute from valid time
+                      endif
+
                       if(iqc .eq. 0)then
                           var_s(i) = solar_s(i)
                       else
                           var_s(i) = r_missing_data
                           write(6,*)' Solar ob QCd out ',i,stations(i)
-     1                             ,sol_alt,solar_s(i),provider(i)
+     1                        ,sol_alt,solar_s(i),provider(i),obstime(i)       
                       endif
                   enddo ! i
                   threshval = 0.
