@@ -86,7 +86,7 @@ do j = 1,nj
 !   Calculate parallax offset (sat/lvd grid index minus analysis grid index)
     if(alt(i,j) .gt. 0.)then
         ds_dh = tand(90. - alt(i,j))
-        azi_grid = azi(i,j) + projrot_laps(i,j)
+        azi_grid = azi(i,j) - projrot_laps(i,j)
         do k = 1,kcld
             di_dh(i,j) = (ds_dh / dx(i,j)) * (-sind(azi_grid))
             dj_dh(i,j) = (ds_dh / dy(i,j)) * (-cosd(azi_grid))
