@@ -1,5 +1,6 @@
 
-       subroutine skyglow_cyl(altsource_in,azisource_in,blog_v_roll,elong_roll,od_atm_a)
+       subroutine skyglow_cyl(altsource_in,azisource_in,blog_v_roll,elong_roll,od_atm_a &
+                             ,minalt,maxalt)
 
        include 'trigd.inc'
 
@@ -12,15 +13,15 @@
 
        logical l_process_azi(0:360)
 
-!      real blog_s(0:90,0:360)
-       real blog_v(0:90,0:360)
-       real blog_v_out(0:90,0:360)
-       real blog_v_roll(0:90,0:360)
-       real elong_a(0:90,0:360)
-       real elong_out(0:90,0:360)
-       real elong_roll(0:90,0:360)
-!      real rmaglim_s(0:90,0:360)
-       real rmaglim_v(0:90,0:360)
+!      real blog_s(minalt:maxalt,0:360)
+       real blog_v(minalt:maxalt,0:360)
+       real blog_v_out(minalt:maxalt,0:360)
+       real blog_v_roll(minalt:maxalt,0:360)
+       real elong_a(minalt:maxalt,0:360)
+       real elong_out(minalt:maxalt,0:360)
+       real elong_roll(minalt:maxalt,0:360)
+!      real rmaglim_s(minalt:maxalt,0:360)
+       real rmaglim_v(minalt:maxalt,0:360)
 
        real*8 PI, RPD                            
        PI = 3.1415926535897932d0; RPD = PI/180.d0
@@ -61,7 +62,7 @@
            do aziobj = 0.,180.                   
              if(l_process_azi(nint(aziobj)) .eqv. .true.)then
                write(6,*)' Aziobj = ',aziobj
-               do altobj = 90.,0.,-degint_alt
+               do altobj = float(maxalt),float(minalt),-degint_alt
                    xs = cosd(altsource) * cosd(azisource)
                    ys = cosd(altsource) * sind(azisource)
                    zs = sind(altsource)
@@ -149,7 +150,7 @@
 
            write(6,*)
 
-           do altobj = 90.,0.,-10.
+           do altobj = float(maxalt),float(minalt),-10.
                ialt = int(altobj)
                write(6,13)altobj,(blog_v(ialt,jazi),jazi=0,360,30)
 13             format('altobj,blog_v ',f8.2,13f6.2)
@@ -226,7 +227,7 @@
            if(iazir .le. 10)write(6,*)'iazio,iazir',iazio,iazir
        enddo ! iazir
 
-       do altobj = 90.,0.,-10.
+       do altobj = float(maxalt),float(minalt),-10.
            ialt = int(altobj)
            write(6,23)altobj,(blog_v_roll(ialt,jazi),jazi=0,360,30)
 23         format('altobj,blog_v_roll ',f8.2,13f6.2)
