@@ -3,7 +3,9 @@
      1                           ,rain_3d,snow_3d
      1                           ,pres_3d,topo_sfc,topo_a,swi_2d
      1                           ,topo_swi,topo_albedo_2d,topo_albedo
-     1                           ,r_cloud_3d,cloud_rad,cloud_rad_c
+     1                           ,aod_2_cloud,aod_2_topo
+     1                           ,r_cloud_3d,cloud_od
+     1                           ,cloud_rad,cloud_rad_c
      1                           ,clear_rad_c
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d
      1                           ,ni,nj,nk,i,j
@@ -23,12 +25,13 @@
 
         parameter (nc = 3)
 
-        real clwc_3d(ni,nj,nk)
-        real cice_3d(ni,nj,nk)
-        real rain_3d(ni,nj,nk)
-        real snow_3d(ni,nj,nk)
-        real cond_3d(ni,nj,nk)
-        real heights_3d(ni,nj,nk)
+        real clwc_3d(ni,nj,nk) ! kg/m**3
+        real cice_3d(ni,nj,nk) ! kg/m**3
+        real rain_3d(ni,nj,nk) ! kg/m**3
+        real snow_3d(ni,nj,nk) ! kg/m**3
+        real cond_3d(ni,nj,nk) ! kg/m**3 (effective LWC)
+        real aod_3d(ni,nj,nk)  ! aerosol optical depth (per vertical atmosphere)
+        real heights_3d(ni,nj,nk) ! MSL
         real transm_3d(ni,nj,nk)
         real transm_4d(nc,ni,nj,nk)
         real heights_1d(nk)
@@ -53,6 +56,8 @@
         real airmass_2_topo_3d(minalt:maxalt,0:360)
         real topo_swi(minalt:maxalt,0:360)
         real topo_albedo(nc,minalt:maxalt,0:360)
+        real aod_2_cloud(minalt:maxalt,0:360)
+        real aod_2_topo(minalt:maxalt,0:360)
         real sum_odrad_c(nc)
 
         real*8 xplane,yplane,zplane
@@ -87,21 +92,32 @@
 
         I4_elapsed = ishow_timer()
 
-        cond_3d = clwc_3d + cice_3d + rain_3d * 0.01 + snow_3d * 0.1
+        cond_3d = clwc_3d +        cice_3d * 0.5 
+     1          + rain_3d * 0.02 + snow_3d * 0.05
 
         ri = i
         rj = j
 
-        do k = 1,nk-1
+        kstart = 0 ! 0 means sfc, otherwise level of start
+
+        if(kstart .eq. 0)then ! start from sfc
+          htstart = topo_sfc  ! MSL
+          do k = 1,nk-1
             if(heights_3d(i,j,k)   .le. topo_sfc .AND.
      1         heights_3d(i,j,k+1) .ge. topo_sfc      )then
                 frach = (topo_sfc - heights_3d(i,j,k)) / 
      1                  (heights_3d(i,j,k+1) - heights_3d(i,j,k))
                 ksfc = k
-                write(6,*)' ksfc = ',ksfc
+                write(6,*)' Start at sfc, ksfc = ',ksfc
                 rksfc = float(ksfc) + frach
             endif
-        enddo
+          enddo
+          rkstart = rksfc
+        else ! start aloft
+          rkstart = kstart
+          htstart = heights_3d(i,j,kstart)
+          write(6,*)' Start aloft at k = ',kstart
+        endif
 
         heights_1d(:) = heights_3d(i,j,:)
         pres_1d(:)    = pres_3d(i,j,:)
@@ -122,7 +138,7 @@
 
           if((jazi .eq. 225 .or. jazi .eq. 45) .AND.
 !    1        (ialt .eq. (ialt/10)*10 .or. ialt .le. 5) )then
-     1        (ialt .eq. 12 .or. ialt .le. 5) )then
+     1        (ialt .eq. 12 .or. ialt .le. 6) )then
               idebug = 1
           else
               idebug = 0
@@ -142,21 +158,24 @@
           sum_odrad_c = 0.
 
           if(.true.)then
-            do k = ksfc,ksfc
+!           do k = ksfc,ksfc
               r_cloud_3d(ialt,jazi) = 0.
               cloud_od(ialt,jazi) = 0.
               
               ri1 = ri
               rj1 = rj
 
-              ht_sfc = heights_1d(k)
-              ht_sfc = topo_sfc       
+!             ht_sfc = heights_1d(ksfc)
+!             ht_sfc = topo_sfc       
 
               grid_factor = grid_spacing_m / 3000.
 
-              if(view_altitude_deg .lt. 0.0)then
-                  rkdelt1 = -0.01 * grid_factor
-                  rkdelt2 = -0.10 * grid_factor
+              if(view_altitude_deg .lt. -4.5)then
+                  rkdelt1 = -1.00 * grid_factor
+                  rkdelt2 = -1.00 * grid_factor
+              elseif(view_altitude_deg .lt. 0.0)then
+                  rkdelt1 =  0.0  * grid_factor
+                  rkdelt2 =  0.0  * grid_factor
               elseif(view_altitude_deg .le. 0.5)then
                   rkdelt1 = 0.01 * grid_factor
                   rkdelt2 = 0.10 * grid_factor
@@ -191,80 +210,119 @@
      1           '      sum     cloudfrac  airmass cloud_rad')
               endif
 
+!             Initialize ray
+              dz1_h = 0.
               slant1_h = 0.
               airmass1_h = 0.
               ihit_topo = 0
+              rk_h = rkstart
 
               rkdelt = rkdelt1
 
-!             do kk = ksfc+1,nk
-              rk = rksfc          
-!             do rk = rksfc+rkdelt,float(nk),rkdelt
+              rk = rkstart          
               do while(rk .le. float(nk) - rkdelt 
      1                                 .AND. ihit_topo .eq. 0)
-                rk = rk + rkdelt
-!               rk = kk
 
-                rk_l = rk - rkdelt
-                kk_l = int(rk_l)
-                frac_l = rk_l - float(kk_l)
+                if(rkdelt .ne. 0.)then ! trace by pressure levels
+                  rk = rk + rkdelt
 
-                if(kk_l .ge. nk .or. kk_l .le. 0)then
+                  rk_l = rk - rkdelt
+                  kk_l = int(rk_l)
+                  frac_l = rk_l - float(kk_l)
+
+                  if(kk_l .ge. nk .or. kk_l .le. 0)then
                     write(6,*)' ERROR: rk/kk_l',rk,kk_l
-                endif
+                  endif
 
-                rk_h = rk
-                kk_h = int(rk_h)
-                frac_h = rk_h - float(kk_h)
+                  rk_h = rk
+                  kk_h = int(rk_h)
+                  frac_h = rk_h - float(kk_h)
 
-                ht_l = heights_1d(kk_l) * (1. - frac_l) 
-     1               + heights_1d(kk_l+1) * frac_l
+                  ht_l = heights_1d(kk_l) * (1. - frac_l) 
+     1                 + heights_1d(kk_l+1) * frac_l
 
-                pr_l = pres_1d(kk_l) * (1. - frac_l) 
-     1               + pres_1d(kk_l+1) * frac_l
+                  pr_l = pres_1d(kk_l) * (1. - frac_l) 
+     1                 + pres_1d(kk_l+1) * frac_l
 
-                if(rk_h .lt. float(nk))then
+                  if(rk_h .lt. float(nk))then
                     ht_h = heights_1d(kk_h) * (1. - frac_h) 
      1                   + heights_1d(kk_h+1) * frac_h
 
                     pr_h = pres_1d(kk_h) * (1. - frac_h) 
      1                   + pres_1d(kk_h+1) * frac_h
 
-                elseif(rk_h .eq. float(nk))then
+                  elseif(rk_h .eq. float(nk))then
                     ht_h = heights_1d(kk_h)
 
                     pr_h = pres_1d(kk_h)
-                else
+                  else
                     write(6,*)' ERROR: rk_h is too high ',rk_h,nk
                     istatus = 0
                     return
-                endif
-
-                dz1_l = ht_l - ht_sfc        
-                dz1_h = ht_h - ht_sfc          
-                dz2   = dz1_h - dz1_l ! layer
-
-                if(.false.)then
-                  dxy1_l = dz1_l * tand(90. - view_altitude_deg)
-                  dxy1_h = dz1_h * tand(90. - view_altitude_deg)
-                  dxy2   = dz2   * tand(90. - view_altitude_deg)
-                else ! horzdist call (determine distance from height & elev)
-                  radius_earth_8_thirds = 6371.e3 * 2.6666666
-                  aterm = 1. / radius_earth_8_thirds
-                  bterm = tand(min(view_altitude_deg,89.9))
-                  cterm = dz1_l                                                
-                  if(cterm .gt. 0.)then ! catch start point
-                    dxy1_l = (sqrt(4.*aterm*cterm + bterm**2.) - bterm)
-     1                                  / (2.*aterm)
-                  else
-                    dxy1_l = 0.
                   endif
 
-                  cterm = dz1_h                                                
-                  dxy1_h = (sqrt(4.*aterm*cterm + bterm**2.) - bterm)
+                  dz1_l = ht_l - htstart        
+                  dz1_h = ht_h - htstart          
+                  dz2   = dz1_h - dz1_l ! layer
+
+                  if(.false.)then
+                    dxy1_l = dz1_l * tand(90. - view_altitude_deg)
+                    dxy1_h = dz1_h * tand(90. - view_altitude_deg)
+                    dxy2   = dz2   * tand(90. - view_altitude_deg)
+                  else ! horzdist call (determine distance from height & elev)
+                    radius_earth_8_thirds = 6371.e3 * 2.6666666
+                    aterm = 1. / radius_earth_8_thirds
+                    bterm = tand(min(view_altitude_deg,89.9))
+                    cterm = dz1_l                                            
+                    if(cterm .gt. 0.)then ! catch start point
+                      dxy1_l = 
+     1                       (sqrt(4.*aterm*cterm + bterm**2.) - bterm)   
      1                                  / (2.*aterm)
-                  dxy2 = dxy1_h - dxy1_l
-                endif
+                    else
+                      dxy1_l = 0.
+                    endif
+
+                    cterm = dz1_h                                          
+                    dxy1_h = (sqrt(4.*aterm*cterm + bterm**2.) - bterm) 
+     1                                  / (2.*aterm)
+                    dxy2 = dxy1_h - dxy1_l
+                  endif
+
+                  slant2 = sqrt(dxy2**2 + dz2**2) ! layer
+                  slant1_l = slant1_h
+                  slant1_h = slant1_h + slant2
+
+                  airmassv = (pr_l - pr_h) / pstd
+                  airmass2 = airmassv * (slant2 / dz2)
+
+                else  ! Trace by slant range (rkdelt = 0. )
+                  slant2 = grid_spacing_m
+                  slant1_l = slant1_h
+                  slant1_h = slant1_h + slant2
+
+!                 Determine height from distance and elev
+                  dz1_l = dz1_h
+                  dz1_h = slant1_h * sind(float(ialt)) 
+     1                  + slant1_h**2 / (2. * radius_earth_8_thirds)
+
+                  rk_l = rk_h
+                  ht_l = htstart + dz1_l
+                  ht_h = htstart + dz1_h
+
+                  do k = 1,nk-1
+                    if(heights_1d(k)   .le. ht_h .AND.
+     1                 heights_1d(k+1) .ge. ht_h      )then
+                        frach = (ht_h - heights_1d(k)) / 
+     1                          (heights_1d(k+1) - heights_1d(k))      
+                        rk_h = float(k) + frach
+                    endif
+                  enddo
+
+                  pr_h = (pres_1d(k)*(1.-frach)) + (pres_1d(k+1)*frach)
+
+                  airmass2 = (slant2 / 8000.) * (pr_h / pstd)
+
+                endif ! rkdelt .ne. 0.
 
                 if(dxy2 .gt. grid_spacing_m)then
 !                 if(idebug .eq. 1)then
@@ -281,12 +339,6 @@
                 dx1_h = dxy1_h * xcos
                 dy1_h = dxy1_h * ycos
 
-                slant2 = sqrt(dxy2**2 + dz2**2) ! layer
-                slant1_l = slant1_h
-                slant1_h = slant1_h + slant2
-
-                airmassv = (pr_l - pr_h) / pstd
-                airmass2 = airmassv * (slant2 / dz2)
                 airmass1_l = airmass1_h
                 airmass1_h = airmass1_h + airmass2
 
@@ -340,7 +392,7 @@
      1              cice_3d(nint(rinew_m),nint(rjnew_m),nint(rk_m))
                   endif
 
-                  if(ht_m - ht_sfc .le. 1000.)then ! more accurate topo when low
+                  if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
                     call bilinear_laps(rinew_m,rjnew_m,ni,nj
      1                                ,topo_a,topo_m)
                   else
@@ -359,7 +411,7 @@
      1              transm_4d(:,nint(rinew_m),nint(rjnew_m),nint(rk_m)))       
 
                   if((cvr_path          .gt. 0.00) .AND.
-     1               (cvr_path_sum      .le.  .05      .OR. ! tau ~1
+     1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
      1                cvr_path_sum_last .eq. 0.  )            )then 
                       airmass_2_cloud_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
@@ -383,7 +435,8 @@
      1                                ,topo_albedo(:,ialt,jazi)
                   endif
 
-                  cloud_od(ialt,jazi) = 20.*cvr_path_sum   
+!                 value of 75. from clwc constants in 'get_cloud_rad'
+                  cloud_od(ialt,jazi) = 75.*cvr_path_sum   
                   r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
                   if(idebug .eq. 1)write(6,101)dz1_l,dz1_h,dxy1_l,dxy1_h
      1                     ,cslant
@@ -401,17 +454,17 @@
      1                            ,rinew_h,rjnew_h,rk
                 endif
 
-                if(rk_h - rksfc .gt. 0.0)then
+                if(rk_h - rkstart .gt. 0.0)then
 !                 rkdelt = rkdelt2
-!                 rkdelt = 0.5 * (rk_h - rksfc)
+!                 rkdelt = 0.5 * (rk_h - rkstart)
                   rkdelt = rkdelt * 1.1             
                   rkdelt = min(rkdelt,rkdelt2)
                 endif
               enddo ! kk/rk
 
-            enddo ! k
+!           enddo ! k
 
-          endif ! high enough sun to use vis   
+          endif ! true
 
           if(r_cloud_3d(ialt,jazi) .gt. .5)then
               ishadow = 1
@@ -425,7 +478,7 @@
           if(sol_alt(i,j) .gt. 0.)then
             clear_rad_c(:,ialt,jazi) = 1. ! assume all of atmosphere is illuminated by the sun
             angle_plane = 0.; dist_ray_plane = 0.; ht_ray_plane = 0.
-          else
+          else ! sun below horizon
             alt_plane = 90. - abs(sol_alt(i,j))
             azi_plane = sol_azi(i,j)
             xplane = cosd(azi_plane) * cosd(alt_plane)
@@ -469,7 +522,7 @@
             clear_rad_c(2,ialt,jazi) = abs(hue-0.4) * 1.0 * sat_ramp ! Saturation
             clear_rad_c(3,ialt,jazi) = clear_int                     ! Intensity
 
-          endif
+          endif ! sun above horizon
 
           if(idebug .eq. 1)then 
             write(6,111)ialt,jazi,airmass_2_cloud_3d(ialt,jazi)
@@ -487,6 +540,8 @@
           do jazi = 1,359,jazi_delt
               r_cloud_3d(ialt,jazi) = 
      1         0.5 * (r_cloud_3d(ialt,jazi-1) + r_cloud_3d(ialt,jazi+1))
+              cloud_od(ialt,jazi) = 
+     1         0.5 * (cloud_od(ialt,jazi-1)   + cloud_od(ialt,jazi+1))
               cloud_rad(ialt,jazi) = 
      1         0.5 * (cloud_rad(ialt,jazi-1)  + cloud_rad(ialt,jazi+1))
               cloud_rad_c(:,ialt,jazi) = 
@@ -512,6 +567,8 @@
         do ialt = 21,89,2 ! fill in missing alt rings
             r_cloud_3d(ialt,:) =
      1         0.5 * (r_cloud_3d(ialt-1,:) + r_cloud_3d(ialt+1,:))
+            cloud_od(ialt,:) =
+     1         0.5 * (cloud_od(ialt-1,:)   + cloud_od(ialt+1,:))
             cloud_rad(ialt,:) =
      1         0.5 * (cloud_rad(ialt-1,:)     + cloud_rad(ialt+1,:))
             cloud_rad_c(:,ialt,:) =
@@ -534,6 +591,9 @@
 
         write(6,*)' Range of r_cloud_3d = ',minval(r_cloud_3d)
      1                                     ,maxval(r_cloud_3d)
+
+        write(6,*)' Range of cloud_od = ',minval(cloud_od)
+     1                                   ,maxval(cloud_od)
 
         write(6,*)' Range of cloud_rad = ',minval(cloud_rad)
      1                                    ,maxval(cloud_rad)
