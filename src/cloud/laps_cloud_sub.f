@@ -241,6 +241,8 @@ cdis
         real cloud_frac_co2_a(NX_L,NY_L)
         real subpoint_lat_clo_vis(NX_L,NY_L)
         real subpoint_lon_clo_vis(NX_L,NY_L)
+        real subpoint_lat_clo_s8a(NX_L,NY_L)
+        real subpoint_lon_clo_s8a(NX_L,NY_L)
         real di_dh(NX_L,NY_L)                      
         real dj_dh(NX_L,NY_L)                      
 
@@ -790,6 +792,7 @@ C READ IN SATELLITE DATA
      1                    NX_L,NY_L,r_missing_data,                      ! I
      1                    l_use_39,l_use_co2_mode2,latency_co2,          ! I
      1                    lat,lon,                                       ! I
+     1                    subpoint_lat_clo_s8a,subpoint_lon_clo_s8a,     ! O
      1                    tb8_k,istat_tb8,comment_tb8,                   ! O
      1                    t39_k,istat_t39,comment_t39,                   ! O
      1                    sst_k,istat_sst,comment_sst,                   ! O
@@ -842,7 +845,7 @@ C READ IN SATELLITE DATA
      1                    ,NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
      1                    ,cloud_frac_vis_a
-     1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
+     1                    ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a  ! I 
      1                    ,r_missing_data                             ! I
      1                    ,di_dh,dj_dh)                               ! O
 !           di_dh = 0. ! for testing
