@@ -100,14 +100,22 @@ do j = 1,nj
         dj_dh(i,j) = 0.
     endif
 
+    intvl = max(ni/41,1)
+    if(j .eq. nj/2 .AND. i .eq. (i/intvl)*intvl)then
+        idebugsub = 1
+    else
+        idebugsub = 0
+    endif
+
     if(i .eq. ni/2 .AND. j .eq. nj/2)then
         idebug = 1
     else
         idebug = 0
     endif
 
-    if(idebug .eq. 1)then
-        write(6,*)' sat alt/azi/ht/di/dj = ',alt(i,j),azi(i,j),cld_hts(20),di(20),dj(20)
+    if(idebugsub .eq. 1)then
+        write(6,101)i,j,subpoint_lon_clo_vis(i,j),alt(i,j),azi(i,j),cld_hts(20),di(20),dj(20)
+101     format(' sat i/j/sub/alt/azi/ht/di/dj = ',2i4,6f10.3)
     endif
 
 !   Determine 1D cloud cvr in the column corrected for parallax to compare with
