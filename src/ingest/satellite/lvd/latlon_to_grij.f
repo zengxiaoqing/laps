@@ -11,6 +11,9 @@
         real lat_s(nx_s,ny_s)
         real lon_s(nx_s,ny_s)
 
+        real sublat_l(nx_l,ny_l)
+        real sublon_l(nx_l,ny_l)
+
         real emission_angle_d(nx_l,ny_l)
         real phase_angle_d(nx_l,ny_l)
         real specular_ref_angle_d(nx_l,ny_l)
@@ -41,6 +44,9 @@
 
         slatcen = lat_s(nx_s/2,ny_s/2)
         sloncen = lon_s(nx_s/2,ny_s/2)
+
+        sublat_l = slatcen
+        sublon_l = sloncen
 
         dist_min_thr = 0.5
 
@@ -99,7 +105,7 @@
         write(6,*)' Calling satgeom...'
         range_m = 42155680.00
         call satgeom(i4time,lat_l,lon_l,nx_l,ny_l
-     1  ,slatcen,sloncen,range_m,r_missing_data,Phase_angle_d
+     1  ,sublat_l,sublon_l,range_m,r_missing_data,Phase_angle_d
      1  ,Specular_ref_angle_d,emission_angle_d,azimuth_d,istatus)
 
         itstatus=ishow_timer()
