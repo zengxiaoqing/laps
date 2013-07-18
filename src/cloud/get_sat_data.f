@@ -44,6 +44,7 @@ c
      1  imax,jmax,r_missing_data,                                        ! I
      1  l_use_39,l_use_co2,latency_co2,                                  ! I
      1  lat,lon,                                                         ! I
+     1  subpoint_lat_clo_s8a,subpoint_lon_clo_s8a,                       ! O
      1  s8a_k,istat_s8a,comment_s8a,                                     ! O
      1  s3a_k,istat_s3a,comment_s3a,                                     ! O
      1  sst_k,istat_sst,comment_sst,                                     ! O
