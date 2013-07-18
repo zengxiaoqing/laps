@@ -101,13 +101,18 @@
 
         parameter (minalt =  0) ! -1
         parameter (maxalt = 90)
-        real r_shadow_3d(minalt:maxalt,0:360)
+        parameter (alt_scale =  1.0) 
+        parameter (azi_scale =  1.0) 
+        real r_cloud_3d(minalt:maxalt,0:360)     ! cloud opacity
+        real cloud_od(minalt:maxalt,0:360)       ! cloud optical depth
         real blog_v_roll(minalt:maxalt,0:360)
         real elong_roll(minalt:maxalt,0:360)
         real airmass_2_cloud_3d(minalt:maxalt,0:360)
         real airmass_2_topo_3d(minalt:maxalt,0:360)
         real topo_swi(minalt:maxalt,0:360)
         real topo_albedo(nc,minalt:maxalt,0:360)
+        real aod_2_cloud(minalt:maxalt,0:360)
+        real aod_2_topo(minalt:maxalt,0:360)
         real r_cloud_trans(minalt:maxalt,0:360)  ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,0:360) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,minalt:maxalt,0:360) ! integrated fraction of air illuminated by the sun along line of sight
@@ -116,7 +121,7 @@
 
         parameter (ni_polar = 511)
         parameter (nj_polar = 511)
-        real r_shadow_3d_polar(ni_polar,nj_polar)
+        real r_cloud_3d_polar(ni_polar,nj_polar)
         real blog_v_roll_polar(ni_polar,nj_polar)
         real alt_a_polar(ni_polar,nj_polar)
         real azi_a_polar(ni_polar,nj_polar)
@@ -660,7 +665,10 @@
           call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,swi_2d,0,istat_sfc)
-          if(istat_sfc .ne. 1)goto1000
+          if(istat_sfc .ne. 1)then
+              write(6,*)' Error reading LCV/SWI field in plot_allsky'      
+              return
+          endif
 
           call get_static_field_interp('albedo',i4time_nearest,NX_L,NY_L
      1                                ,static_albedo,istat_sfc)
@@ -856,7 +864,9 @@
      1                     ,pres_3d,topo_sfc
      1                     ,topo,swi_2d,topo_swi
      1                     ,topo_albedo_2d,topo_albedo
-     1                     ,r_shadow_3d,r_cloud_trans,cloud_rad_c
+     1                     ,aod_2_cloud,aod_2_topo
+     1                     ,r_cloud_3d,cloud_od
+     1                     ,r_cloud_trans,cloud_rad_c
      1                     ,clear_rad_c
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d
      1                     ,NX_L,NY_L,NZ_L,isound,jsound
@@ -881,7 +891,7 @@
             I4_elapsed = ishow_timer()
             write(6,*)' call get_skyglow_cyl'
             call skyglow_cyl(solar_alt,solar_az,blog_v_roll,elong_roll
-     1                      ,od_atm_a)
+     1                      ,od_atm_a,minalt,maxalt)
             I4_elapsed = ishow_timer()
         else
             blog_v_roll = 8.0
@@ -891,24 +901,24 @@
 !         Write ASCII Cyl plot
           do altobj = 90.,0.,-10.
             ialt = int(altobj)
-            write(6,15)altobj,(r_shadow_3d(ialt,jazi),jazi=0,360,30)
-15          format('altobj,r_shadow_3d',f8.2,13f6.2)
+            write(6,15)altobj,(r_cloud_3d(ialt,jazi),jazi=0,360,30)
+15          format('altobj,r_cloud_3d',f8.2,13f6.2)
           enddo ! altobj
         endif
 
 !       Reproject Polar Cloud Plot
         lunsky = 60 
         write(lunsky,*)rmaglim_v
-        call cyl_to_polar(r_shadow_3d,r_shadow_3d_polar,90,360
+        call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,90,360
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
-!       write(6,*)' cyl slice at 40alt ',r_shadow_3d(40,:)
-!       write(6,*)' polar slice at 256 ',r_shadow_3d_polar(256,:)
+!       write(6,*)' cyl slice at 40alt ',r_cloud_3d(40,:)
+!       write(6,*)' polar slice at 256 ',r_cloud_3d_polar(256,:)
 
         if(l_idl .eqv. .true.)then
 !         Write Polar Cloud Plot
           open(51,file='cloud.'//clun,status='unknown')
-          write(51,*)r_shadow_3d_polar
+          write(51,*)r_cloud_3d_polar
           close(51)
         endif
 
@@ -952,7 +962,8 @@
               azi_a_roll(i,j) = j
           enddo 
           enddo
-          call get_sky_rgb(r_shadow_3d               ! cloud opacity
+          call get_sky_rgb(r_cloud_3d                ! cloud opacity
+     1                    ,cloud_od                  ! cloud optical depth
      1                    ,r_cloud_trans             ! cloud solar transmittance
      1                    ,cloud_rad_c               ! cloud solar transmittance / color
      1                    ,clear_rad_c               ! clear sky illumination by sun     
@@ -961,6 +972,7 @@
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo
+     1                    ,aod_2_cloud,aod_2_topo
      1                    ,alt_a_roll,azi_a_roll       
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
