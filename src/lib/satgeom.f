@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
         Subroutine satgeom(i4time,lat,lon,ni,nj
-     1  ,sublat_d,sublon_d,range_m,r_missing_data,Phase_angle_d
+     1  ,sublat_d_a,sublon_d_a,range_m,r_missing_data,Phase_angle_d
      1  ,Specular_ref_angle_d,Emission_angle_d,azimuth_d,istatus)
 
 
@@ -42,6 +42,7 @@ C istatus        O        I*4     Standard status return.
         integer         ni,nj
 C***Parameter list variables
         real          lat(ni,nj),lon(ni,nj)
+        real          sublat_d_a(ni,nj),sublon_d_a(ni,nj)
         Real          sublat_d,sublon_d,range_m
         Integer       i4time,istatus
 
@@ -81,7 +82,6 @@ C***Local variables
 
         lun = 6
         write(lun,*)' Begin satgeom at ',a9time       
-        write(lun,*)' Sub Lat/Lon/Rng = ',sublat_d,sublon_d,range_m
 
         call zero(phase_angle_d,ni,nj)
         call zero(emission_angle_d,ni,nj)
@@ -106,10 +106,6 @@ C***Where's the sun?
         au_m = 149000000.
         sat_radius = range_m / au_m
 
-        SATX = cosd(sublon_d) * cosd(sublat_d) * sat_radius
-        SATY = sind(sublon_d) * cosd(sublat_d) * sat_radius
-        SATZ = sind(sublat_d)                  * sat_radius
-
         write(lun,*)'    I    J    ALT    EMIS   PHA    PF   VIS  SPEC'       
 
 C***Fill the solar brightness and phase angle arrays
@@ -118,10 +114,18 @@ C***Fill the solar brightness and phase angle arrays
         Do j = 1,nj
          Do i = 1,ni
 
-          if(i .eq. ni/2 .and. j .eq. nj/2)then
-            idebug = 1
+          sublat_d = sublat_d_a(i,j)
+          sublon_d = sublon_d_a(i,j)
+
+          SATX = cosd(sublon_d) * cosd(sublat_d) * sat_radius
+          SATY = sind(sublon_d) * cosd(sublat_d) * sat_radius
+          SATZ = sind(sublat_d)                  * sat_radius
+
+          intvl = max(ni/21,1)
+          if(j .eq. nj/2 .AND. i .eq. (i/intvl)*intvl)then
+              idebug = 1
           else
-            idebug = 0
+              idebug = 0
           endif
 
 C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
@@ -140,14 +144,21 @@ C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
           DZ=SATZ-TZ
 
           if(idebug .eq. 1)then
-              write(6,*)'DX/DY/DZ/lon',DX,DY,DZ,lon(i,j)
+              write(6,*)
+              write(6,*)'/lon/sub/DX/DY/DZ',lon(i,j),sublon_d,DX,DY,DZ       
           endif
 
 !         Rotate this vector around Z axis to get local cartesian coordinates
           call rotate_z(DX,DY,DZ,-lon(i,j))
 
 !         Convert cartesian coordinates to dec and ha
-          call xyz_to_polar_d(DX,DY,DZ,dec,ha,r)
+          call xyz_to_polar_d(DX,DY,DZ,dec,angle,r)
+
+          if(angle .gt. 180.)then
+              angle = angle - 360.
+          endif
+
+          ha = -angle
 
           if(idebug .eq. 1)then
               write(6,*)'rotated DX/DY/DZ,dec,ha',DX,DY,DZ,dec,ha
