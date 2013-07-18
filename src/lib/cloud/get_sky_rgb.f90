@@ -1,12 +1,13 @@
 
-
-        subroutine get_sky_rgb(r_cloud_3d,r_cloud_rad,cloud_rad_c, &
+        subroutine get_sky_rgb(r_cloud_3d,cloud_od,r_cloud_rad, &
+                               cloud_rad_c, &
                                clear_rad_c, &
                                glow,od_atm_a, &
                                airmass_2_cloud,airmass_2_topo, &
                                topo_swi,topo_albedo, & 
+                               aod_2_cloud,aod_2_topo, &
                                alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az, &
-                               sky_rgb)                                     ! O
+                               sky_rgb)                                 ! O
 
         use mem_namelist, ONLY: r_missing_data
         include 'trigd.inc'
@@ -14,6 +15,7 @@
         parameter (nc = 3)
 
         real r_cloud_3d(ni,nj)      ! cloud opacity
+        real cloud_od(ni,nj)        ! cloud optical depth
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,ni,nj)  ! integrated fraction of air illuminated by the sun along line of sight                        
@@ -40,7 +42,7 @@
         endif
 
         if(ni .eq. nj)write(6,11)
-11      format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten   airtopo  switopo  topoalb  topovis   cld_visb  glow          skyrgb')
+11      format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten   airtopo  switopo  topoalb  topovis  cld_visb  glow          skyrgb')
 
         do j = 1,nj
         do i = 1,ni
@@ -79,14 +81,15 @@
               pwr = 3.0
               ampl = r_cloud_rad(i,j) * 0.7; b = 1.0 + pwr * r_cloud_rad(i,j)
               pf_scat = 0.9 + ampl * (cosd(min(elong_a(i,j),89.99))**b)
-              cloud_od   = -99.9 ! flag value for logging
+              cloud_odl  = -99.9 ! flag value for logging
               bkscat_alb = -99.9 ! flag value for logging
           else
 !             convert from opacity to albedo
 !             bkscat_alb = r_cloud_3d(i,j) ** 2.0 ! approx opacity to albedo
               cloud_opacity = min(r_cloud_3d(i,j),0.999999)
-              cloud_od = -log(1.0 - cloud_opacity)
-              bksc_eff_od = cloud_od * 0.12 ! > .10 due to machine epsilon
+              cloud_odl = -log(1.0 - cloud_opacity)
+!             bksc_eff_od = cloud_odl     * 0.12 ! > .10 due to machine epsilon
+              bksc_eff_od = cloud_od(i,j) * 0.10 
               cloud_rad_trans = exp(-bksc_eff_od)
               bkscat_alb = 1.0 - cloud_rad_trans 
               ampl = 0.15 * bkscat_alb
@@ -133,7 +136,6 @@
 
           elong_red = 12.0
           if(elong_a(i,j) .le. elong_red)then
-!         if(.false.)then                               
               red_elong = (elong_red - elong_a(i,j)) / elong_red
               clr_red = clr_red * 1.0
               clr_grn = clr_grn * (1. - redness * red_elong)**0.3 
@@ -161,29 +163,30 @@
           if(airmass_2_topo(i,j) .gt. 0.)then
               od_2_topo = (od_atm_g + od_atm_a) * airmass_2_topo(i,j)
               topo_visibility = exp(-0.43*od_2_topo)                    
-              if(airmass_2_cloud(i,j) .gt. 0. .AND. airmass_2_cloud(i,j) .lt. airmass_2_topo(i,j)) then
-                  continue
-              else ! note 0.45 is display gamma correction  
-                  topo_swi_frac = (max(topo_swi(i,j),001.) / 1000.) ** 0.45
-                  rtopo_red = 150. * topo_swi_frac * (topo_albedo(1,i,j)/.15)**0.45
-                  rtopo_grn = 150. * topo_swi_frac * (topo_albedo(2,i,j)/.15)**0.45
-                  rtopo_blu = 150. * topo_swi_frac * (topo_albedo(3,i,j)/.15)**0.45
 
-                  sky_rgb(0,I,J) = nint(rtopo_red*topo_visibility + sky_rgb(0,I,J)*(1.0-topo_visibility) )
-                  sky_rgb(1,I,J) = nint(rtopo_grn*topo_visibility + sky_rgb(1,I,J)*(1.0-topo_visibility) )
-                  sky_rgb(2,I,J) = nint(rtopo_blu*topo_visibility + sky_rgb(2,I,J)*(1.0-topo_visibility) )
+              if(airmass_2_cloud(i,j) .gt. 0. .AND. airmass_2_cloud(i,j) .lt. airmass_2_topo(i,j)) then
+                  topo_visibility = topo_visibility * (1.0 - r_cloud_3d(ni,nj))
               endif
+
+              topo_swi_frac = (max(topo_swi(i,j),001.) / 1000.) ** 0.45
+              rtopo_red = 150. * topo_swi_frac * (topo_albedo(1,i,j)/.15)**0.45
+              rtopo_grn = 150. * topo_swi_frac * (topo_albedo(2,i,j)/.15)**0.45
+              rtopo_blu = 150. * topo_swi_frac * (topo_albedo(3,i,j)/.15)**0.45
+
+              sky_rgb(0,I,J) = nint(rtopo_red*topo_visibility + sky_rgb(0,I,J)*(1.0-topo_visibility) )
+              sky_rgb(1,I,J) = nint(rtopo_grn*topo_visibility + sky_rgb(1,I,J)*(1.0-topo_visibility) )
+              sky_rgb(2,I,J) = nint(rtopo_blu*topo_visibility + sky_rgb(2,I,J)*(1.0-topo_visibility) )
           endif
 
           if(idebug .eq. 1)then
               if(sol_alt .ge. 0.)then
                   write(6,102)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j),pf_scat,r_cloud_3d(i,j) &
-                         ,cloud_od,bkscat_alb &
+                         ,cloud_od(i,j),bkscat_alb &
                          ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
                          ,topo_swi(i,j),topo_albedo(1,i,j),topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j))
               else  
                   write(6,103)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j),pf_scat,r_cloud_3d(i,j) &
-                         ,cloud_od,bkscat_alb &
+                         ,cloud_od(i,j),bkscat_alb &
                          ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
                          ,topo_swi(i,j),topo_albedo(1,i,j),topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j)
               endif
