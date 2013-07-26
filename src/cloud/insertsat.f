@@ -45,6 +45,7 @@ c
      1  sst_k,istat_sst,                                                 ! I
      1  istat_39_a, l_use_39,                                            ! I
      1  di_dh,dj_dh,                                                     ! I
+     1  i_fill_seams,                                                    ! I
      1  istat_39_add_a,                                                  ! O
      1  tb8_cold_k,                                                      ! O
      1  grid_spacing_m,surface_sao_buffer,                               ! I
@@ -149,6 +150,7 @@ c
         integer istat_39_add_a(imax,jmax)
         integer istat_vis_potl_a(imax,jmax)  ! Pot'l cloud building with vis
         integer istat_vis_added_a(imax,jmax) ! Actual cloud building with vis
+        integer i_fill_seams(imax,jmax)
 
 !       Output
         real t_gnd_k(imax,jmax)
@@ -468,6 +470,15 @@ c
               jt = j - nint(dj_dh(i,j) * cld_hts(k))
               it = max(min(it,imax),1)
               jt = max(min(jt,jmax),1)
+              if(i_fill_seams(i,j) .ne. 0)then
+                  itn = min(i,it)
+                  itx = max(i,it)
+!                 itn = it
+!                 itx = it
+              else
+                  itn = it
+                  itx = it
+              endif
 
               if(cldcv(it,jt,k) .gt. .04)then ! Efficiency test
 
@@ -505,7 +516,7 @@ c
                       write(6,*)' Warning in insert_sat, cldcv > 1.0'       
      1                         ,i,j,k,cldcv(it,jt,k)
                       write(6,*)' Resetting cloud cover to 1.0'
-                      cldcv(it,jt,k) = 1.0
+                      cldcv(itn:itx,jt,k) = 1.0
                   endif
 
                   call get_tb8_fwd(temp_grid_point,t_gnd_k(i,j)         ! I   
@@ -533,12 +544,12 @@ c
 !                 Don't touch points within buffer of surface
                   if(cld_hts(k) - topo(i,j) .gt. surface_sao_buffer)then
                     if(.false.)then
-                      cldcv(it,jt,k)=default_clear_cover
+                      cldcv(itn:itx,jt,k)=default_clear_cover
                     else ! .true.
 !                     Does satellite still imply at least some cloud?
                       if(t_gnd_k(i,j) - tb8_k(i,j)  .gt. 8.0)then ! Some cloud
                         if(cldcv(it,jt,k) .gt. 0.9)then ! Lower top of solid cld
-                            cldcv(it,jt,k)=default_clear_cover
+                            cldcv(itn:itx,jt,k)=default_clear_cover
                         else                          ! Cover < 0.9, correct it
                             call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)       
      1                                          ,temp_grid_point,idebug
@@ -556,8 +567,8 @@ c
      1                            min(t_gnd_k(i,j),t_sfc_k(i,j)-10.0)       
                         if(temp_grid_point .lt. temp_thresh)then
 !                       if(temp_grid_point .lt. t_gnd_k(i,j))then
-                            cldcv(it,jt,k)=default_clear_cover ! not in inversion, 
-                                                               ! clear it out
+                            cldcv(itn:itx,jt,k)=default_clear_cover ! not in inversion, 
+                                                                    ! clear it out
                         endif
                       endif ! IR signature present
                     endif ! .true.
@@ -958,7 +969,16 @@ c
                    jt = j - nint(dj_dh(i,j) * cld_hts(k))
                    it = max(min(it,imax),1)
                    jt = max(min(jt,jmax),1)
-                   cldcv(it,jt,k)=cover
+                   if(i_fill_seams(i,j) .ne. 0)then
+                       itn = min(i,it)
+                       itx = max(i,it)
+!                      itn = it
+!                      itx = it
+                   else
+                       itn = it
+                       itx = it
+                   endif
+                   cldcv(itn:itx,jt,k)=cover
                 endif
               enddo
             endif ! ierr = 0 (unreasonable cloud that was below zero cover)
