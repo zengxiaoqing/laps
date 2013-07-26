@@ -44,7 +44,7 @@ cdis
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz                ! I
      1      ,istat_radar,radar_ref_3d,klaps,ref_base
      1      ,solar_alt,solar_az
-     1      ,di_dh,dj_dh                                              ! I
+     1      ,di_dh,dj_dh,i_fill_seams                                 ! I
      1      ,dbz_max_2d,surface_sao_buffer,istatus)
 
 !       Steve Albers 1999 Added 3.9u cloud clearing step in NULL Mode
@@ -85,6 +85,7 @@ cdis
         real r_shadow_3d(ni,nj,nk)
         real di_dh(ni,nj)                      
         real dj_dh(ni,nj)                      
+        integer i_fill_seams(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
         real cloud_frac_vis_a(ni,nj)
@@ -181,6 +182,15 @@ cdis
                 jt = j - nint(dj_dh(i,j) * cld_hts(k))
                 it = max(min(it,ni),1)
                 jt = max(min(jt,nj),1)
+                if(i_fill_seams(i,j) .ne. 0)then
+                    itn = min(i,it)
+                    itx = max(i,it)
+!                   itn = it
+!                   itx = it
+                else
+                    itn = it
+                    itx = it
+                endif
 
                 call qc_clouds_0d(i,j,k,clouds_3d(it,jt,k)
      1                           ,ni,nj,.false.)       
@@ -234,7 +244,7 @@ cdis
                        endif
                    endif
 
-                   clouds_3d(it,jt,k) = cloud_frac_out   ! Modify the output
+                   clouds_3d(itn:itx,jt,k) = cloud_frac_out ! Modify the output
                 else
                    cloud_frac_out = cloud_frac_in
                 endif
