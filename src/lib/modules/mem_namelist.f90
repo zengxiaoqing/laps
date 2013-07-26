@@ -25,8 +25,10 @@ include 'lapsparms.for'
         integer    model_cycle_time, model_fcst_intvl, model_fcst_len
         real purge_time
         integer i2_missing_data
+        integer iverbose
         real    r_missing_data
         integer  MAX_RADARS
+        real aod
         real ref_base
         real ref_base_useable
         real r_hybrid_first_gate
@@ -165,7 +167,7 @@ integer  :: max_obs, mode_adjust_heights
 
 ! cloud_nl variables
 logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 &
-           ,l_use_metars, l_use_radar 
+           ,l_use_metars, l_use_radar, l_corr_parallax
 integer  :: latency_co2,i4_sat_window,i4_sat_window_offset,i_varadj
 real     :: pct_req_lvd_s8a, echotop_thr_a(3), cld_weight_modelfg
 
@@ -220,8 +222,8 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,laps_cycle_time &
                   ,model_cycle_time, model_fcst_intvl, model_fcst_len &
                   ,purge_time &
-                  ,i2_missing_data, r_missing_data, MAX_RADARS, i_offset_radar &
-                  ,ref_base,ref_base_useable,r_hybrid_first_gate &
+                  ,i2_missing_data, iverbose, r_missing_data, MAX_RADARS, i_offset_radar &
+                  ,aod,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
                   ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
                   ,hydrometeor_scale_pcp,hydrometeor_scale_cld &
@@ -280,7 +282,7 @@ namelist /temp_nl/ l_read_raob_t, l_use_raob_t, mode_adjust_heights  &
                   ,max_obs, radiometer_ht_temp
 
 namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
-                   ,l_use_39, l_use_metars, l_use_radar &
+                   ,l_use_39, l_use_metars, l_use_radar, l_corr_parallax &
                    ,latency_co2 &
                    ,pct_req_lvd_s8a, echotop_thr_a &
                    ,cld_weight_modelfg &
@@ -355,7 +357,9 @@ elseif (namelist_name == 'lapsparms') then
    l_superob_barnes = .false.
    l_mosaic_sat     = .false.
    l_dual_pol       = .false.
+   iverbose = 0
    i_offset_radar = -1
+   aod = 0.25              ! default column aerosol optical depth
 
    read (12, lapsparms_nl, err=901)
    
@@ -403,6 +407,7 @@ elseif (namelist_name == 'temp_anal') then
 elseif (namelist_name == 'cloud_anal') then
 
    i_varadj = 1                    ! keep this on as a default          
+   l_corr_parallax = .true.
 
    read (12, cloud_nl, err=908)
    
