@@ -19,6 +19,7 @@
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,ni,nj)  ! integrated fraction of air illuminated by the sun along line of sight                        
+                                    ! (accounting for Earth shadow + clouds)
         real glow(ni,nj)            ! skyglow
         real airmass_2_cloud(ni,nj) ! airmass to cloud 
         real airmass_2_topo(ni,nj)  ! airmass to topo  
@@ -42,7 +43,7 @@
         endif
 
         if(ni .eq. nj)write(6,11)
-11      format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten   airtopo  switopo  topoalb  topovis  cld_visb  glow          skyrgb')
+11      format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten   airtopo  switopo  topoalb   topood  topovis  cld_visb  glow          skyrgb')
 
         do j = 1,nj
         do i = 1,ni
@@ -109,13 +110,13 @@
           cld_blu = nint(rintensity(3))                         
 
           if(sol_alt .ge. 0.)then ! Daylight from skyglow routine
-              rintensity_glow = min(((glow(i,j)-7.) * 100.),255.)
-              clr_red = rintensity_glow * rintensity_glow / 255.
-              clr_grn = rintensity_glow * rintensity_glow / 255.
+              arg = glow(i,j) + log10(clear_rad_c(3,i,j))
+!             rintensity_glow = min(((glow(i,j)-7.) * 100.),255.)
+              rintensity_glow = min(((arg      -7.) * 100.),255.)
+              clr_red = rintensity_glow *  rintensity_glow / 255.
+              clr_grn = rintensity_glow * (rintensity_glow / 255.)**0.80
               clr_blu = rintensity_glow  
           else ! Twilight / Night from clear_rad_c array
-!             rintensity_glow = 200. * clear_rad_c(1,i,j)**0.3
-!             rintensity_glow = min(((8.0      -7.) * 100.),255.)
               hue = clear_rad_c(1,i,j)
               sat = clear_rad_c(2,i,j)
               arg = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15             
@@ -165,7 +166,7 @@
               topo_visibility = exp(-0.43*od_2_topo)                    
 
               if(airmass_2_cloud(i,j) .gt. 0. .AND. airmass_2_cloud(i,j) .lt. airmass_2_topo(i,j)) then
-                  topo_visibility = topo_visibility * (1.0 - r_cloud_3d(ni,nj))
+                  topo_visibility = topo_visibility * (1.0 - r_cloud_3d(i,j))
               endif
 
               topo_swi_frac = (max(topo_swi(i,j),001.) / 1000.) ** 0.45
@@ -176,6 +177,8 @@
               sky_rgb(0,I,J) = nint(rtopo_red*topo_visibility + sky_rgb(0,I,J)*(1.0-topo_visibility) )
               sky_rgb(1,I,J) = nint(rtopo_grn*topo_visibility + sky_rgb(1,I,J)*(1.0-topo_visibility) )
               sky_rgb(2,I,J) = nint(rtopo_blu*topo_visibility + sky_rgb(2,I,J)*(1.0-topo_visibility) )
+          else
+              od_2_topo = 0.
           endif
 
           if(idebug .eq. 1)then
@@ -183,15 +186,15 @@
                   write(6,102)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j),pf_scat,r_cloud_3d(i,j) &
                          ,cloud_od(i,j),bkscat_alb &
                          ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
-                         ,topo_swi(i,j),topo_albedo(1,i,j),topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j))
+                         ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j))
               else  
                   write(6,103)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j),pf_scat,r_cloud_3d(i,j) &
                          ,cloud_od(i,j),bkscat_alb &
                          ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
-                         ,topo_swi(i,j),topo_albedo(1,i,j),topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j)
+                         ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j)
               endif
-102           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,3f9.3,f9.2,2x,3i6)
-103           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,3f9.3,f9.2,2x,3i6,' clrrad',3f10.6)
+102           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i6)
+103           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i6,' clrrad',3f10.6)
           endif
 
          endif ! missing data tested via altitude
