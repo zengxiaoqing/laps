@@ -1,9 +1,9 @@
 
-       subroutine cyl_to_polar(cyl,polar,ni_cyl,nj_cyl,alt_a,azi_a,ni_polar,nj_polar)
+       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,nj_cyl,alt_a,azi_a,ni_polar,nj_polar)
 
        use mem_namelist, ONLY: r_missing_data
 
-       real cyl(0:ni_cyl,0:nj_cyl)
+       real cyl(minalt:maxalt,0:nj_cyl)
        real polar(ni_polar,nj_polar)
        real alt_a(ni_polar,nj_polar)
        real azi_a(ni_polar,nj_polar)
@@ -33,15 +33,15 @@
 !              i_cyl = nint(alt)    
 !              j_cyl = nint(azi) 
 !              polar(ip,jp) = cyl(i_cyl,j_cyl)
-               ri_a(ip,jp) = alt + 1.0   
-               rj_a(ip,jp) = azi + 1.0   
+               ri_a(ip,jp) = (alt-float(minalt)) + 1.0 ! real I index in CYL array, offset to start at 1
+               rj_a(ip,jp) =  azi                + 1.0 ! real J index in CYL array, offset to start at 1
                alt_a(ip,jp) = alt
                azi_a(ip,jp) = azi 
            endif
        enddo ! jp
        enddo ! ip
 
-       imax = ni_cyl+1
+       imax = maxalt-minalt+1
        jmax = nj_cyl+1
 
        call bilinear_laps_2d(ri_a,rj_a,imax,jmax,ni_polar,nj_polar,cyl,polar)
