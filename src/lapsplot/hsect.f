@@ -5563,6 +5563,11 @@ c                   cint = -1.
                 units_2d = 'cm-m/s'
                 plot_parms%iraster = 1
 
+            elseif(var_2d .eq. 'VIS')then       
+                scale = 1000.    
+                units_2d = 'km'
+                plot_parms%iraster = 1
+
             elseif(var_2d .eq. 'MSF')then       
                 scale = 1e-3  ! calculated field 
                 units_2d = 'g/kg'
@@ -5690,7 +5695,7 @@ c                   cint = -1.
      1                         ,'spectral',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'VIS')then
-                    call ccpfil(field_2d,NX_L,NY_L,10000.,0.
+                    call ccpfil(field_2d,NX_L,NY_L,20.,0.
      1                         ,'linear',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'PBE')then
