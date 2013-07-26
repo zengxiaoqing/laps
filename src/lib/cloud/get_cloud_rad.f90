@@ -14,8 +14,8 @@
       real rain_3d(ni,nj,nk) ! kg/m**3
       real snow_3d(ni,nj,nk) ! kg/m**3
       real heights_3d(ni,nj,nk)
-      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered, account for solar intensity at top of cloud
-      real transm_4d(nc,ni,nj,nk) ! adding 3 color information
+      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
+      real transm_4d(nc,ni,nj,nk) ! adding 3 color information, account for solar intensity at top of cloud
 
       real sol_alt(ni,nj)
       real sol_azi(ni,nj)
