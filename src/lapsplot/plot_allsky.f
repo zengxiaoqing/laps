@@ -5,7 +5,7 @@
      1                          ,l_polar,l_cyl)       
 
         use mem_namelist, ONLY: max_snd_grid, max_snd_levels
-     1                        , grid_spacing_m
+     1                        , grid_spacing_m, aod
 
         include 'lapsplot.inc'
 
@@ -16,6 +16,7 @@
         real cice_3d(NX_L,NY_L,NZ_L)
         real rain_3d(NX_L,NY_L,NZ_L)
         real snow_3d(NX_L,NY_L,NZ_L)
+        real aod_3d(NX_L,NY_L,NZ_L)
 !       real rh_3d(NX_L,NY_L,NZ_L)
 
         parameter (nc = 3)
@@ -153,9 +154,9 @@
         I4_elapsed = ishow_timer()
 
         write(6,*)
-        write(6,*)' subroutine plot_allsky: nsmooth is ',nsmooth
+        write(6,*)' subroutine plot_allsky: nsmooth/aod is ',nsmooth,aod
 
-        od_atm_a = 0.05
+        od_atm_a = aod
 
         itd = 2 ! dashed dewpoint lines
 
@@ -502,10 +503,10 @@
             var_2d = 'LWC'
             ext = 'lwc'
             call get_laps_3dgrid
-     1          (i4time_ref,10800,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          (i4time_ref,10800,i4time_lwc,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,clwc_3d,istat_lwc)
-            call make_fnam_lp(i4time_nearest,a9time,istatus)
-            i4time_solar = i4time_nearest
+            call make_fnam_lp(i4time_lwc,a9time,istatus)
+            i4time_solar = i4time_lwc
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'LWC'
             call get_lapsdata_3d(i4_initial,i4_valid
@@ -533,12 +534,17 @@
           enddo ! j
           enddo ! i
 
+          write(6,*)' solar alt/az (2d array)',sol_alt_2d(isound,jsound)       
+     1                                        ,sol_azi_2d(isound,jsound)       
+
 !         Calculate solar position for all-sky point
           call solar_position(soundlat,soundlon,i4time_solar,solar_alt     
      1                                    ,solar_dec,solar_ha)
           call equ_to_altaz_d(solar_dec,solar_ha,soundlat                 
      1                                ,altdum,solar_az)               
           if(solar_az .lt. 0.)solar_az = solar_az + 360.
+
+          write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
 
           if(istat_lwc .eq. 1)then
             call interp_3d(field_3d,lwc_vert,xsound,xsound
@@ -554,7 +560,7 @@
             var_2d = 'ICE'
             ext = 'lwc'
             call get_laps_3dgrid
-     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          (i4time_lwc,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,cice_3d,istat_ice)
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'ICE'
@@ -582,7 +588,7 @@
             var_2d = 'RAI'
             ext = 'lwc'
             call get_laps_3dgrid
-     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          (i4time_lwc,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,rain_3d,istat_rain)
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'RAI'
@@ -608,7 +614,7 @@
             var_2d = 'SNO'
             ext = 'lwc'
             call get_laps_3dgrid
-     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          (i4time_lwc,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,snow_3d,istat_snow)
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'SNO'
@@ -636,7 +642,7 @@
             var_2d = 'PIC'
             ext = 'lwc'
             call get_laps_3dgrid
-     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          (i4time_lwc,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_pice)
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'PIC'
@@ -662,7 +668,7 @@
 
 !         Read in swi data
           var_2d = 'SWI'
-          call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+          call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,swi_2d,0,istat_sfc)
           if(istat_sfc .ne. 1)then
@@ -670,7 +676,7 @@
               return
           endif
 
-          call get_static_field_interp('albedo',i4time_nearest,NX_L,NY_L
+          call get_static_field_interp('albedo',i4time_lwc,NX_L,NY_L
      1                                ,static_albedo,istat_sfc)
           if(istat_sfc .ne. 1)goto1000
           do j = 1,NY_L
@@ -694,58 +700,58 @@
             ext = 'lsx'
 
             var_2d = 'PS'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,pres_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'T'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,t_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'TD'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,td_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'U'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,u_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'V'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,v_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto1000
 
             ext = 'lh4'
             var_2d = 'TPW'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,pw_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto1000
 
             ext = 'lst'
             var_2d = 'PBE'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,cape_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto1000
 
             ext = 'lil'
             var_2d = 'LIL'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,lil_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto1000
 
             var_2d = 'LIC'
-            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,lic_2d,0,istat_lic)
             if(istat_lic .ne. 1)lic_2d = r_missing_data
@@ -857,11 +863,13 @@
 
         write(6,*)' a9time is ',a9time
 
-!       Get line of sight from isound/jsound
+!       Get Atmospheric Optical Depth (3D field)
+        call get_aod_3d(pres_3d,NX_L,NY_L,NZ_L,aod_3d)
 
+!       Get line of sight from isound/jsound
         call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
      1                     ,rain_3d,snow_3d
-     1                     ,pres_3d,topo_sfc
+     1                     ,pres_3d,aod_3d,topo_sfc
      1                     ,topo,swi_2d,topo_swi
      1                     ,topo_albedo_2d,topo_albedo
      1                     ,aod_2_cloud,aod_2_topo
@@ -909,7 +917,7 @@
 !       Reproject Polar Cloud Plot
         lunsky = 60 
         write(lunsky,*)rmaglim_v
-        call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,90,360
+        call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,minalt,maxalt,360
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
 !       write(6,*)' cyl slice at 40alt ',r_cloud_3d(40,:)
@@ -923,7 +931,8 @@
         endif
 
 !       Reproject Skyglow Field
-        call cyl_to_polar(blog_v_roll,blog_v_roll_polar,90,360
+        call cyl_to_polar(blog_v_roll,blog_v_roll_polar
+     1                               ,minalt,maxalt,360
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
 
@@ -990,7 +999,7 @@
               do ic = 0,nc-1
                 call cyl_to_polar(sky_rgb_cyl(ic,:,:)
      1                           ,sky_rgb_polar(ic,:,:)
-     1                           ,90,360
+     1                           ,minalt,maxalt,360
      1                           ,alt_a_polar,azi_a_polar
      1                           ,ni_polar,nj_polar)
               enddo ! ic
