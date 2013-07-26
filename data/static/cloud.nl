@@ -5,12 +5,14 @@
  l_use_39=.true.,
  l_use_metars=.true.,
  l_use_radar=.true.,
+ l_corr_parallax=.true.,
  latency_co2=4000,
  pct_req_lvd_s8a=75.,
  cld_weight_modelfg=.01,
  echotop_thr_a=4000.,4000.,276.15,
  i4_sat_window=1870,
  i4_sat_window_offset=-60,
+ i_varadj=1,
  /
 
 c CLOUD PARAMETERS
@@ -32,6 +34,8 @@ c                cloud fraction analysis. They are always used for internal
 c                verification.
 c
 c l_use_radar - flag for whether to use radar data in the cloud analysis. 
+c
+c l_corr_parallax - flag for whether to correct satellite parallax
 c
 c latency_co2 - Allowed time lag (in seconds) for using CO2-Slicing satellite 
 c               data from the CTP file for cloud-top pressure information
