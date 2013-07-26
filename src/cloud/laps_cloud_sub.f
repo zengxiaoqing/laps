@@ -57,7 +57,7 @@ cdis
      1                         ,cld_weight_modelfg
      1                         ,i4_sat_window,i4_sat_window_offset     
      1                         ,l_use_metars,l_use_radar,iwrite_output
-     1                         ,i_varadj
+     1                         ,i_varadj,l_corr_parallax
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                sys_abort_prod
@@ -245,6 +245,7 @@ cdis
         real subpoint_lon_clo_s8a(NX_L,NY_L)
         real di_dh(NX_L,NY_L)                      
         real dj_dh(NX_L,NY_L)                      
+        integer i_fill_seams(NX_L,NY_L)
 
         integer istat_39_a(NX_L,NY_L)
         integer istat_39_add_a(NX_L,NY_L)
@@ -847,10 +848,17 @@ C READ IN SATELLITE DATA
      1                    ,cloud_frac_vis_a
      1                    ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a  ! I 
      1                    ,r_missing_data                             ! I
-     1                    ,di_dh,dj_dh)                               ! O
-!           di_dh = 0. ! for testing
-!           dj_dh = 0. ! for testing
+     1                    ,di_dh,dj_dh)                               ! O 
+            if(l_corr_parallax .eqv. .false.)then
+                write(6,*)' turn off parallax correction'
+                di_dh = 0. ! for testing
+                dj_dh = 0. ! for testing
+            endif
         endif
+
+        call get_parallax_info(NX_L,NY_L                                 ! I
+     1                        ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a ! I
+     1                        ,i_fill_seams)                             ! O
 
         I4_elapsed = ishow_timer()
 
@@ -860,6 +868,7 @@ C READ IN SATELLITE DATA
      1       sst_k,istat_sst,                                           ! I
      1       istat_39_a, l_use_39,                                      ! I
      1       di_dh,dj_dh,                                               ! I
+     1       i_fill_seams,                                              ! I
      1       istat_39_add_a,                                            ! O
      1       tb8_cold_k,                                                ! O
      1       grid_spacing_cen_m,surface_sao_buffer,                     ! I
@@ -1074,9 +1083,16 @@ C INSERT RADAR DATA
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
      1                    ,r_missing_data                             ! I
      1                    ,di_dh,dj_dh)                               ! O
-!           di_dh = 0. ! for testing
-!           dj_dh = 0. ! for testing
+            if(l_corr_parallax .eqv. .false.)then
+                write(6,*)' turn off parallax correction'
+                di_dh = 0. ! for testing
+                dj_dh = 0. ! for testing
+            endif
         endif
+
+        call get_parallax_info(NX_L,NY_L                                 ! I
+     1                        ,subpoint_lat_clo_vis,subpoint_lon_clo_vis ! I
+     1                        ,i_fill_seams)                             ! O
 
         I4_elapsed = ishow_timer()
 
@@ -1089,7 +1105,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base
      1        ,solar_alt,solar_az                                     ! I
-     1        ,di_dh,dj_dh                                            ! I
+     1        ,di_dh,dj_dh,i_fill_seams                               ! I
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
         endif
 
@@ -2219,6 +2235,33 @@ C       EW SLICES
             write(6,*)' ERROR: clouds_3d < 0 - reset',i,j,k,clouds_3d       
             clouds_3d = 0.0
         endif
+
+        return
+        end
+
+
+        subroutine get_parallax_info(ni,nj                             ! I
+     1                              ,subpoint_lat_clo,subpoint_lon_clo ! I
+     1                              ,i_fill_seams)                     ! O
+
+        real subpoint_lat_clo(ni,nj)
+        real subpoint_lon_clo(ni,nj)
+
+        integer i_fill_seams(ni,nj)
+
+        do j = 1,nj
+        do i = 1,ni
+            i_fill_seams(i,j) = 0
+            im1 = max(i-1,1)
+            ip1 = min(i+1,ni)
+            if(subpoint_lon_clo(ip1,j) .gt. subpoint_lon_clo(i,j))then       
+                i_fill_seams(i,j) = -1 ! W side of seam
+            endif
+            if(subpoint_lon_clo(im1,j) .lt. subpoint_lon_clo(i,j))then
+                i_fill_seams(i,j) = +1 ! E side of seam
+            endif
+        enddo ! i
+        enddo ! j
 
         return
         end
