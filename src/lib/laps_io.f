@@ -1507,8 +1507,9 @@ c
                  call make_fnam_lp(i4timedata(i),asc9_tim,istatus)
                  call move(field_2d_lvd(1,1,i),field_2d,imax,jmax)
                  i4time_nearest=i4timedata(i)
+                 subpoint_lon_clo = subpoint_lon_sat(i)
                  write(6,*)'Returning ',var_2d,' for ',csatid(i),
-     &                     ' ',asc9_tim
+     &                     ' ',asc9_tim,' 1'
                  return
               endif
            enddo
@@ -1527,8 +1528,9 @@ c
               call make_fnam_lp(i4timedata(imn),asc9_tim,istatus)
               call move(field_2d_lvd(1,1,imn),field_2d,imax,jmax)
               i4time_nearest=i4timedata(imn)
+              subpoint_lon_clo = subpoint_lon_sat(imn)
               write(6,*)'Returning ',var_2d,' for ',csatid(imn),
-     &                  ' ',asc9_tim
+     &                  ' ',asc9_tim,' 2'
               return
 
            else
@@ -1537,8 +1539,9 @@ c default
               call make_fnam_lp(i4time_first,asc9_tim,istatus)
               call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
               i4time_nearest=i4timedata(1)
+              subpoint_lon_clo = subpoint_lon_sat(1)
               write(6,*)'Returning ',var_2d,' for ',csatid(1),
-     &                  ' ',asc9_tim
+     &                  ' ',asc9_tim,' 3'
               return
            endif
 
@@ -1547,8 +1550,10 @@ c default
            call make_fnam_lp(i4time_first,asc9_tim,istatus)
            call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
            i4time_nearest=i4timedata(1)
+           subpoint_lon_clo = subpoint_lon_sat(1)
            write(6,*)
-           write(6,*)'Returning ',var_2d,' for ',csatid(1),' ',asc9_tim
+           write(6,*)'Returning ',var_2d,' for ',csatid(1), 
+     &                ' ',asc9_tim,' 4'
            return
 
         elseif(nsats.le.0)then
