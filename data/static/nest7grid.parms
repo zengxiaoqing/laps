@@ -53,8 +53,10 @@
  path_to_qc_acars='/public/data/acars/qc/netcdf/',
  path_to_wisdom='/public/data/madis/LDAD/WISDOM/netCDF/',
 
+ iverbose=0,
  i2_missing_data=-99,
  r_missing_data=+1e37,
+ aod=0.05,
  MAX_RADARS=13,        
  I_OFFSET_RADAR=0,
  ref_base=-10.,       
@@ -185,10 +187,15 @@ c path_to_raw_blprass - Path to Boundary Layer RASS data. If data is
 c                       Multi-Agency MADIS then use 'WFO' for 
 c                       'c8_project'.
 c
+c iverbose - amount of log file output (0,1)
+c
 c MAX_RADARS - Number of wideband radars being used. This can be set to
 c              0 if no radars are present to save computer memory 
 c              (particularly in the wind analysis) along with other 
 c              resources.
+c
+c aod - aerosol optical depth integrated through the column (treated as a
+c       constant over the horizontal domain)
 c
 c max_radar_files_nl - Maximum number of files expected in a radar directory
 c
