@@ -469,7 +469,6 @@ print <<"EOF";
 <option $selected{'THETAE'}> THETAE
 <option $selected{'UMFLUX'}> UMFLUX
 <option $selected{'UPD_HEL'}> UPD_HEL
-<option $selected{'VSBLTY'}> VSBLTY
 <option $selected{'VISIBILITY'}> VISIBILITY
 <option $selected{'WETBULB'}> WETBULB
 <option $selected{'WIND_SPD'}> WIND_SPD
