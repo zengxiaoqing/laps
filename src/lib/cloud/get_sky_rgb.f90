@@ -20,7 +20,7 @@
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,ni,nj)  ! integrated fraction of air illuminated by the sun along line of sight                        
                                     ! (accounting for Earth shadow + clouds)
-        real glow(ni,nj)            ! skyglow
+        real glow(ni,nj)            ! skyglow (log b in nanolamberts)
         real airmass_2_cloud(ni,nj) ! airmass to cloud 
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         real topo_swi(ni,nj)        ! terrain illumination
@@ -35,6 +35,13 @@
         real sky_rgb(0:2,ni,nj)
 
         write(6,*)' get_sky_rgb: sol_alt = ',sol_alt
+
+!       Brighten resulting image at night
+        if(sol_alt .lt. -16.)then
+            ramp_night = 2.0
+        else
+            ramp_night = 1.0
+        endif
 
         if(ni .eq. nj)then ! polar
             write(6,*)' slice from SW to NE through midpoint'
@@ -116,15 +123,22 @@
               clr_red = rintensity_glow *  rintensity_glow / 255.
               clr_grn = rintensity_glow * (rintensity_glow / 255.)**0.80
               clr_blu = rintensity_glow  
-          else ! Twilight / Night from clear_rad_c array
+          elseif(sol_alt .ge. -16.)then ! Twilight from clear_rad_c array
               hue = clear_rad_c(1,i,j)
               sat = clear_rad_c(2,i,j)
               arg = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15             
-              rintensity_glow = max(min(((arg     -7.) * 100.),255.),70.)
+              rintensity_floor = 70. + sol_alt
+              rintensity_glow = max(min(((arg     -7.) * 100.),255.),rintensity_floor)
               call hsi_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
 !             clr_red = rintensity_glow * clear_rad_c(2,i,j)
 !             clr_blu = rintensity_glow * clear_rad_c(3,i,j)
 !             clr_grn = 0.5 * (clr_red + clr_blu)                               
+          else ! Night from clear_rad_c array (default flat value of glow)
+              hue = clear_rad_c(1,i,j)
+              sat = clear_rad_c(2,i,j)
+              arg = 8.0 + log10(clear_rad_c(3,i,j)) * 0.15             
+              rintensity_glow = max(min(((arg     -7.) * 100.),255.),20.)
+              call hsi_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
           endif
 
           sol_alt_red_thr = 1.0 + (od_atm_a * 40.)
@@ -143,12 +157,15 @@
               clr_blu = clr_blu * (1. - redness * red_elong)
           endif
 
-          od_atm_g = 0.28
+!                     Rayleigh  Ozone   Mag per optical depth            
+          od_atm_g = (0.1451  + .016) / 1.086
           od_2_cloud = (od_atm_g + od_atm_a) * airmass_2_cloud(i,j)
 
+!         Empirical correction to account for bright clouds being visible
 !         cloud_visibility = exp(-0.28*airmass_2_cloud(i,j))
 !         cloud_visibility = exp(-0.14*airmass_2_cloud(i,j))
-          cloud_visibility = exp(-0.43*od_2_cloud)
+!         cloud_visibility = exp(-0.43*od_2_cloud)
+          cloud_visibility = exp(-0.71*od_2_cloud) 
 
 !         Use clear sky values if cloud cover is less than 0.5
           frac_cloud = r_cloud_3d(i,j)
@@ -163,7 +180,7 @@
 !         Use topo value if airmass to topo > 0
           if(airmass_2_topo(i,j) .gt. 0.)then
               od_2_topo = (od_atm_g + od_atm_a) * airmass_2_topo(i,j)
-              topo_visibility = exp(-0.43*od_2_topo)                    
+              topo_visibility = exp(-1.00*od_2_topo)                    
 
               if(airmass_2_cloud(i,j) .gt. 0. .AND. airmass_2_cloud(i,j) .lt. airmass_2_topo(i,j)) then
                   topo_visibility = topo_visibility * (1.0 - r_cloud_3d(i,j))
@@ -180,6 +197,8 @@
           else
               od_2_topo = 0.
           endif
+
+          sky_rgb(:,i,j) = min(sky_rgb(:,i,j) * ramp_night,255.)
 
           if(idebug .eq. 1)then
               if(sol_alt .ge. 0.)then
