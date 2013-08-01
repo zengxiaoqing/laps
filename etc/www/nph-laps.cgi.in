@@ -956,6 +956,15 @@ if($err == 0) {
                           if($overlay == 0){
                              printf LAPSPLOT "az\n";
                              printf LAPSPLOT "$zoom_safe\n";
+                             if($npix_safe == "885"){
+                                 printf LAPSPLOT "0,90\n";
+                                 $minalt = 0;
+                                 $maxalt = 90;
+                             }else{
+                                 printf LAPSPLOT "$npix_safe\n";
+                                 ($minalt,$maxalt) = split (',',$npix_safe) ;
+                             }
+                             $jdim = $maxalt - $minalt + 1;
                              printf LAPSPLOT "$xcen_safe\n";
                              printf LAPSPLOT "$ycen_safe\n";
                           }
@@ -2049,13 +2058,21 @@ if($err == 0) {
                               printf LAPSPLOT "r\n"; 
                               printf LAPSPLOT "-132.\n"; 
       
-                          }elsif("$field" eq "RH" ) { 
+                          }elsif("$field" eq "RH" ) { # FUA
                               printf LAPSPLOT "fri\n"; 
                               printf LAPSPLOT "$source\n";
                               printf LAPSPLOT "$hhmm\n";
                               printf LAPSPLOT "$level\n"; 
                               printf LAPSPLOT "r\n"; 
                               printf LAPSPLOT "-132.\n"; 
+      
+                          }elsif("$field" eq "RH3" ) { # FUA
+                              printf LAPSPLOT "fri\n"; 
+                              printf LAPSPLOT "$source\n";
+                              printf LAPSPLOT "$hhmm\n";
+                              printf LAPSPLOT "$level\n"; 
+                              printf LAPSPLOT "r\n"; 
+                              printf LAPSPLOT "-10.\n"; 
 
                           }elsif("$field" eq "sh" ) { 
                               printf LAPSPLOT "fr\n"; 
@@ -2846,10 +2863,10 @@ if($err == 0) {
 #                   || $nmontage > 0
                                                                            ){     # Overlay always for these (even when obs_sfc != none)
 
-                        if("$field" eq "vsblty" || "$field" eq "VSBLTY") { 
+                        if("$field" eq "visibility" || "$field" eq "VISIBILITY") { 
                             printf LAPSPLOT "ov\n"; 
                             printf LAPSPLOT " \n"; 
-                            $obs_sfc = "vsblty";    # This is set to prevent station model overlays
+                            $obs_sfc = "visibility";    # This is set to prevent station model overlays
 
                         }elsif("$field" =~ "pcp_inc" || "$field" =~ "PCP_INC") { 
                             if($model_fcst_intvl == 10800 && $fcst == 1){
@@ -2888,35 +2905,35 @@ if($err == 0) {
                             printf LAPSPLOT "or\n"; 
                             printf LAPSPLOT " \n"; 
 #                           if($montage == 0){
-                                $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                                $obs_sfc = "visibility";   # This is set to prevent station model overlays
 #                           }
 
                         }elsif("$field" eq "CLD_BASE") { 
                             printf LAPSPLOT "ov\n";    # Optional C&V obs
                             printf LAPSPLOT " \n"; 
 #                           if($montage == 0){
-                                $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                                $obs_sfc = "visibility";   # This is set to prevent station model overlays
 #                           }
 
                         }elsif("$field" eq "cld_cvr" ) { 
                             printf LAPSPLOT "ov\n"; 
                             printf LAPSPLOT " \n"; 
-                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                            $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                         }elsif("$field" =~ "SAT_D39" ) { 
                             printf LAPSPLOT "ov\n"; 
                             printf LAPSPLOT " \n"; 
-                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                            $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
 #                       }elsif("$field" =~ "SAT_" ) { 
 #                           printf LAPSPLOT "ov\n"; 
 #                           printf LAPSPLOT " \n"; 
-#                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+#                           $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
 #                       }elsif("$field" =~ "sat_" ) { 
 #                           printf LAPSPLOT "ov\n"; 
 #                           printf LAPSPLOT " \n"; 
-#                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+#                           $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                         }elsif("$field" eq "wind_u" || "$field" eq "WIND_U") { 
                             printf LAPSPLOT "ow\n"; 
@@ -2955,7 +2972,7 @@ if($err == 0) {
                            printf LAPSPLOT "$hhmm\n"; 
                            printf LAPSPLOT "4\n"; 
                            printf LAPSPLOT "S8A\n"; 
-                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                           $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                        }elsif("$field" eq "SAT_11U" ) { 
                            if("$hhmm" =~ "goes" || "$hhmm" =~ "mtsat" || "$hhmm" =~ "meteos") { 
@@ -2964,7 +2981,7 @@ if($err == 0) {
                                printf LAPSPLOT "-4\n"; 
                                printf LAPSPLOT "S8A\n";
                            }else{
-#                              $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+#                              $obs_sfc = "visibility";   # This is set to prevent station model overlays
                                printf LAPSPLOT "og\n"; 
                                printf LAPSPLOT "ov\n"; 
                                printf LAPSPLOT " \n"; 
@@ -2975,42 +2992,42 @@ if($err == 0) {
                            printf LAPSPLOT "$hhmm\n"; 
                            printf LAPSPLOT "5\n"; 
                            printf LAPSPLOT "S8A\n"; 
-                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                           $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                        }elsif("$field" eq "SAT_12U" ) { 
                            printf LAPSPLOT "lv\n"; 
                            printf LAPSPLOT "$hhmm\n"; 
                            printf LAPSPLOT "-5\n"; 
                            printf LAPSPLOT "S8A\n"; 
-#                          $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+#                          $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                        }elsif("$field" eq "sat_wv" ) { 
                            printf LAPSPLOT "lv\n"; 
                            printf LAPSPLOT "$hhmm\n"; 
                            printf LAPSPLOT "3\n"; 
                            printf LAPSPLOT "S4A\n"; 
-                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                           $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                        }elsif("$field" eq "SAT_WV" ) { 
                            printf LAPSPLOT "lv\n"; 
                            printf LAPSPLOT "$hhmm\n"; 
                            printf LAPSPLOT "-3\n"; 
                            printf LAPSPLOT "S4A\n"; 
-#                          $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+#                          $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                         }elsif("$field" eq "sat_39u" ) { 
                             printf LAPSPLOT "lv\n"; 
                             printf LAPSPLOT "$hhmm\n"; 
                             printf LAPSPLOT "2\n"; 
                             printf LAPSPLOT "S3A\n"; 
-                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                            $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                         }elsif("$field" eq "SAT_39U" ) { 
                             printf LAPSPLOT "lv\n"; 
                             printf LAPSPLOT "$hhmm\n"; 
                             printf LAPSPLOT "-2\n"; 
                             printf LAPSPLOT "S3A\n"; 
-                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                            $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                         }elsif("$field" eq "ref_max" ) { 
                             printf LAPSPLOT "ra\n"; 
@@ -3425,9 +3442,9 @@ if($err == 0) {
 #                   elsif("$field" eq "wtblb1") 
 #                       { printf LAPSPLOT "s\n"; 
 #                         printf LAPSPLOT "wb1\n"; }
-                    elsif("$field" eq "VSBLTY") 
+                    elsif("$field" eq "VISIBILITY") 
                         { printf LAPSPLOT "vsi\n"; }
-                    elsif("$field" eq "vsblty") 
+                    elsif("$field" eq "visibility") 
                         { printf LAPSPLOT "vs\n"; }
                     elsif("$field" eq "HEATINDEX") 
                         { printf LAPSPLOT "hii\n"; }
@@ -4554,6 +4571,7 @@ if($err == 0) {
 # print "laps_data_root = $laps_data_root<br>";
 
   my $window;
+  my ($minalt,$maxalt,$jdim); # for allsky, related to $window
   my $resolution;
   my $res_x;
   my $res_y;
@@ -4671,7 +4689,7 @@ if($err == 0) {
       }
     }
 
-  }else{ # xsect
+  }elsif($sect eq "xsect"){ # Sounding
 #   $resolution="1056x885";
     $res_y=$npix_safe;
     $res_x=int($res_y*1.192 + .5);
@@ -4679,6 +4697,9 @@ if($err == 0) {
     $resolution="$res_x"."x"."$res_y";
 #   $window="0.06:0.14:0.94:0.86";
     $window="0.06:0.13:0.94:0.85";
+
+  }else{ # allsky
+    $window="91";
 
   }
 
