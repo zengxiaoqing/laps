@@ -15,7 +15,7 @@
       real snow_3d(ni,nj,nk) ! kg/m**3
       real heights_3d(ni,nj,nk)
       real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
-      real transm_4d(nc,ni,nj,nk) ! adding 3 color information, account for solar intensity at top of cloud
+      real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for solar intensity at top of cloud
 
       real sol_alt(ni,nj)
       real sol_azi(ni,nj)
@@ -53,6 +53,9 @@
 
       transm_3d(:,:,nk) = 1.
 
+      sinazi = sind(sol_azi(idb,jdb))
+      cosazi = cosd(sol_azi(idb,jdb))
+
       do k = nk-1,1,-1
 
         ku = k+1 ; kl = k
@@ -60,12 +63,12 @@
         dh = heights_3d(1,1,ku) - heights_3d(1,1,kl)
         ds = dh * ds_dh
         dij = (dh * dxy_dh) / grid_spacing_m           
-        di =  sind(sol_azi(idb,jdb)) * dij
-        dj = -cosd(sol_azi(idb,jdb)) * dij
-        dil =  sind(sol_azi(idb,jdb)) * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
-        dih =  sind(sol_azi(idb,jdb)) * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
-        djl = -cosd(sol_azi(idb,jdb)) * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
-        djh = -cosd(sol_azi(idb,jdb)) * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
+        di =  sinazi * dij
+        dj = -cosazi * dij
+        dil =  sinazi * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
+        dih =  sinazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
+        djl = -cosazi * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
+        djh = -cosazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
 
         do i = 1,ni
         do j = 1,nj
@@ -162,9 +165,9 @@
           endif
 
 !         Modify transm array for each of 3 colors depending on solar intensity and color at cloud (top)
-          transm_4d(1,i,j,k) = transm_3d(i,j,k) * rint
-          transm_4d(2,i,j,k) = transm_3d(i,j,k) * rint * blu_rat**0.3 
-          transm_4d(3,i,j,k) = transm_3d(i,j,k) * rint * blu_rat   
+          transm_4d(i,j,k,1) = transm_3d(i,j,k) * rint
+          transm_4d(i,j,k,2) = transm_3d(i,j,k) * rint * blu_rat**0.3 
+          transm_4d(i,j,k,3) = transm_3d(i,j,k) * rint * blu_rat   
 
         enddo ! j
         enddo ! i
