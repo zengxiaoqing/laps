@@ -85,6 +85,7 @@ if test "$NCARG_ROOT" = "allsky"; then
     echo allsky | /usr/local/share/rsi/idl/bin/idl
   else # MODE_ALLSKY is cyl
     echo "will run IDL cyl conversion to PNG"
+    export ALLSKY_JDIM=91
     rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky_cyl.pro allsky_cyl.pro
     echo allsky_cyl | /usr/local/share/rsi/idl/bin/idl
     convert -resize 300% allsky_polar_001.png allsky_polar_001.png
@@ -153,9 +154,10 @@ if test "$NCARG_ROOT" = "allsky"; then
   fi
 
   echo "run convert from PNG to GIF (assuming no animation)"    
-  convert allsky_polar_001.png $SCRATCH_DIR/gmeta_$proc.gif
+# convert allsky_polar_001.png $SCRATCH_DIR/gmeta_$proc.gif
+  cp allsky_polar_001.png $SCRATCH_DIR/gmeta_$proc.png
   ls -l $SCRATCH_DIR/$proc
-  ls -l $SCRATCH_DIR/gmeta_$proc.gif
+  ls -l $SCRATCH_DIR/gmeta_$proc.png
 
   ext3=png
 
