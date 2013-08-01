@@ -91,7 +91,6 @@ echo "$LAPSINSTALLROOT/bin/verif_cont.exe > $LAPS_DATA_ROOT/log/verif_cont.log.`
 date -u
 
 foreach SUBDIR (REF LMR)
-
     foreach THRESH (20 30 40 20_comp 30_comp 40_comp 20_comp2 30_comp2 40_comp2)
 
         echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log"
@@ -99,20 +98,45 @@ foreach SUBDIR (REF LMR)
         echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log"
               $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   1.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log
     end
+end
+
+foreach SUBDIR (PCP_01 PCP_03 PCP_06 PCP_24)
+    foreach THRESH (0001 0005 0010 0050 0100 0200 0500 0001_comp 0005_comp 0010_comp 0050_comp 0100_comp 0200_comp 0500_comp 0001_comp2 0005_comp2 0010_comp2 0050_comp2 0100_comp2 0200_comp2 0500_comp2)
+
+        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log"
+              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log
+        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   0.5 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log"
+              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   0.5 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log
+    end
+end
+
+foreach SUBDIR (REF LMR PCP_01 PCP_03 PCP_06 PCP_24) # Radar + Precip SUBDIRs
 
 #   Montage the image scores
     echo ""
     echo "Montage the latest image scores for $SUBDIR"
     setenv IMGDIR $LAPS_DATA_ROOT/lapsprd/verif/$SUBDIR/plot
-    setenv IM1 $IMGDIR/radar_fcst_bias_20_$LAPS_A9TIME.png
-    setenv IM2 $IMGDIR/radar_fcst_ets_20_$LAPS_A9TIME.png
-    setenv IM3 $IMGDIR/radar_fcst_bias_30_$LAPS_A9TIME.png
-    setenv IM4 $IMGDIR/radar_fcst_ets_30_$LAPS_A9TIME.png
-    setenv IM5 $IMGDIR/radar_fcst_bias_40_$LAPS_A9TIME.png
-    setenv IM6 $IMGDIR/radar_fcst_ets_40_$LAPS_A9TIME.png
+    if ($SUBDIR == REF || $SUBDIR == LMR) then # Radar
+        setenv IM1 $IMGDIR/radar_fcst_bias_20_$LAPS_A9TIME.png
+        setenv IM2 $IMGDIR/radar_fcst_ets_20_$LAPS_A9TIME.png
+        setenv IM3 $IMGDIR/radar_fcst_bias_30_$LAPS_A9TIME.png
+        setenv IM4 $IMGDIR/radar_fcst_ets_30_$LAPS_A9TIME.png
+        setenv IM5 $IMGDIR/radar_fcst_bias_40_$LAPS_A9TIME.png
+        setenv IM6 $IMGDIR/radar_fcst_ets_40_$LAPS_A9TIME.png
+        setenv IMAGES "$IM1 $IM2 $IM3 $IM4 $IM5 $IM6"
+    else                                       # Precip
+        setenv IM1 $IMGDIR/radar_fcst_bias_0001_$LAPS_A9TIME.png
+        setenv IM2 $IMGDIR/radar_fcst_ets_0001_$LAPS_A9TIME.png
+        setenv IM3 $IMGDIR/radar_fcst_bias_0010_$LAPS_A9TIME.png
+        setenv IM4 $IMGDIR/radar_fcst_ets_0010_$LAPS_A9TIME.png
+        setenv IM5 $IMGDIR/radar_fcst_bias_0050_$LAPS_A9TIME.png
+        setenv IM6 $IMGDIR/radar_fcst_ets_0050_$LAPS_A9TIME.png
+        setenv IMAGES "$IM1 $IM2 $IM3 $IM4 $IM5 $IM6"
+    endif
+
     setenv IMOUT $IMGDIR/radar_fcst_all_$LAPS_A9TIME.png
-    echo "montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT"
-          montage $IM1 $IM2 $IM3 $IM4 $IM5 $IM6 -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
+    echo "montage $IMAGES -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT"
+          montage $IMAGES -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
 
     setenv LAPS_HHMM `echo $LAPS_A9TIME | cut -c6-9`
     setenv HHMM_LINK radar_fcst_all_$LAPS_HHMM.png
@@ -163,21 +187,6 @@ foreach SUBDIR (REF LMR)
 
     echo ""
 
-end
-
-foreach SUBDIR (PCP_01 PCP_03 PCP_06 PCP_24)
-    foreach THRESH (0001 0005 0010 0050 0100 0200 0500 0001_comp 0005_comp 0010_comp 0050_comp 0100_comp 0200_comp 0500_comp 0001_comp2 0005_comp2 0010_comp2 0050_comp2 0100_comp2 0200_comp2 0500_comp2)
-
-
-#       echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt PCP_01   0.001:2.0 '"1 Hour Stage IV Precip"' "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/pcp_01_fcst.log"
-#             $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt PCP_01   0.001:2.0  "1 Hour Stage IV Precip"  "inches"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/pcp_01_fcst.log
-
-
-        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log"
-              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES Bias 10.0 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_bias_$SUBDIR\_$THRESH.log
-        echo "$LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   0.5 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log"
-              $LAPSINSTALLROOT/etc/verif/radar_forecast.csh $LAPS_DATA_ROOT $NTIMES ETS   0.5 $THRESH $DOMAIN_NAME $SUBDIR > $LAPS_DATA_ROOT/log/radar_fcst_ets_$SUBDIR\_$THRESH.log
-    end
 end
 
 date -u
