@@ -12,7 +12,8 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -m model type [optional if -a will be set]
 #    -a model configuration (e.g. schultz) [optional if -m has been set]
 #    -r model root                                       
-#    -d init date (yyyymmddhh, default = current hour)
+#    -D root directory specified by -r is actually the LAPS_DATA_ROOT on the source machine
+#    -d init date (yyyymmddhh, default = current hour) [Mandatory if -D is set]
 #    -g model grid to process (default = 1, negative value does all grids)
 #    -f number of forecasts including initial time (default = 12)
 #    -i forecast increment (minutes, default = 60)
@@ -26,9 +27,9 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -c remote copy method (rsync, scp, exchange, bbcp), default is rsync [optional]
 #    -R copy surface fsf or upper air fua only (specify "fua" or "fsf") [optional]
 
-use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e $opt_c $opt_R);
-#getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxec:R');
-getopt('lmardgfispwMSxecR');
+use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e $opt_c $opt_R $opt_D);
+#getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxec:RD:');
+getopt('lmardgfispwMSxecRD');
 
 # Obtain perl module from LAPSINSTALLROOT
 require "@prefix@/etc/laps_tools.pm";
@@ -127,6 +128,10 @@ if ($opt_d) {
    }
 
 }else{ # find latest directory available
+    if (defined ($opt_D)){
+        print "   exiting: -d is needed since -D is set\n";
+        exit;
+    }
     opendir(DIR,$modelroot);
     @filelist = grep(/\d\d\d\d\d\d\d\d/, readdir(DIR));
     @filelist_sorted = (sort @filelist);
@@ -201,6 +206,8 @@ my $g,@grid;
 my $grid;
 my @times;
 
+my ($fua_dir,$fsf_dir);
+
 # Loop through each forecast time for remote copy
 if (! $opt_S){ # test for skipping remote copy
  for ($n=0; $n<$nfcst; $n++) {
@@ -239,17 +246,25 @@ if (! $opt_S){ # test for skipping remote copy
   for ($g=1; $g<=$ngrid; $g++) {
     $grid = $grid[$g];
 
+    if (defined ($opt_D)){
+        $fua_dir = "$modelroot/$lapsprd/fua";
+        $fsf_dir = "$modelroot/$lapsprd/fsf";
+    }else{
+        $fua_dir = "$modelroot/$date/wrfprd/d0$grid/fua";
+        $fsf_dir = "$modelroot/$date/wrfprd/d0$grid/fsf";
+    }
+
     if($opt_R ne "fsf"){ # check surface only flag
         $skip = 0;
     }else{
         $skip = 1; # Skip fua checking when surface only flag is set
     }
-    while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file") && $skip==0) {
-         print "file does not exist $modelroot/$date/wrfprd/d0$grid/fua/$fua_file\n";
+    while ( !(-e "$fua_dir/$fua_file") && $skip==0) {
+         print "file does not exist $fua_dir/$fua_file\n";
          system ("date");
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FUA timed out after $elapsed seconds: maxwait = $maxwait\n\n";
-            print "    fua_file = $modelroot/$date/wrfprd/d0$grid/fua/$fua_file\n";
+            print "    fua_file = $fua_dir/$fua_file\n";
             if (! defined ($opt_e)){
                 exit;
             }
@@ -268,12 +283,12 @@ if (! $opt_S){ # test for skipping remote copy
     }else{
         $skip = 1; # Skip fsf checking when upper air only flag is set
     }
-    while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file") && $skip==0) {
-         print "file does not exist $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
+    while ( !(-e "$fsf_dir/$fsf_file") && $skip==0) {
+         print "file does not exist $fsf_dir/$fsf_file\n";
          system ("date");
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FSF timed out after $elapsed seconds: maxwait = $maxwait\n\n";
-            print "    fsf_file = $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
+            print "    fsf_file = $fsf_dir/$fsf_file\n";
             if (! $opt_e){
                 exit;
             }
@@ -322,7 +337,6 @@ if (! $opt_S){ # test for skipping remote copy
     my $scp_cmd;
 
     my $remote_copy;
-    my ($fua_dir,$fsf_dir);
     my $method = "";
 
     if($opt_c eq "scp"){
@@ -343,9 +357,6 @@ if (! $opt_S){ # test for skipping remote copy
 
 #   Force this to rsync for now
 #   $remote_copy = "rsync -lptgvvz --timeout=300";   # faster for larger files
-
-    $fua_dir = "$modelroot/$date/wrfprd/d0$grid/fua";
-    $fsf_dir = "$modelroot/$date/wrfprd/d0$grid/fsf";
 
     if ($opt_a eq "noSubDir") {
       $scp_cmd = "$remote_copy $fua_dir/$fua_file $lapsprd/d0$grid/fua $method";
