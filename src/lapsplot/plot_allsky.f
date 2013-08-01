@@ -1,5 +1,6 @@
 
         subroutine plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
+     1                          ,minalt,maxalt
      1                          ,r_missing_data,laps_cycle_time,maxstns
      1                          ,i_overlay,plot_parms,namelist_parms
      1                          ,l_polar,l_cyl)       
@@ -100,8 +101,8 @@
         character*5 c5_name, c5_name_a(max_snd_grid), c5_name_min
         character*8 obstype(max_snd_grid)
 
-        parameter (minalt =  0) ! -1
-        parameter (maxalt = 90)
+!       parameter (minalt =  0) ! -1
+!       parameter (maxalt = 90)
         parameter (alt_scale =  1.0) 
         parameter (azi_scale =  1.0) 
         real r_cloud_3d(minalt:maxalt,0:360)     ! cloud opacity
@@ -864,7 +865,10 @@
         write(6,*)' a9time is ',a9time
 
 !       Get Atmospheric Optical Depth (3D field)
-        call get_aod_3d(pres_3d,NX_L,NY_L,NZ_L,aod_3d)
+        call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L
+     1                 ,aod_3d)
+
+        kstart = 0 ! 0 means sfc, otherwise level of start
 
 !       Get line of sight from isound/jsound
         call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
@@ -877,7 +881,7 @@
      1                     ,r_cloud_trans,cloud_rad_c
      1                     ,clear_rad_c
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d
-     1                     ,NX_L,NY_L,NZ_L,isound,jsound
+     1                     ,NX_L,NY_L,NZ_L,isound,jsound,kstart
      1                     ,view_alt,view_az,sol_alt_2d,sol_azi_2d
      1                     ,minalt,maxalt
      1                     ,grid_spacing_m,r_missing_data)
@@ -901,6 +905,12 @@
             call skyglow_cyl(solar_alt,solar_az,blog_v_roll,elong_roll
      1                      ,od_atm_a,minalt,maxalt)
             I4_elapsed = ishow_timer()
+
+            if(.false.)then
+                write(6,*)' call sun_moon'
+                call sun_moon(i4time,lat,lon,NX_L,NY_L)
+                I4_elapsed = ishow_timer()
+            endif
         else
             blog_v_roll = 8.0
         endif
