@@ -8,7 +8,7 @@
      1                           ,cloud_rad,cloud_rad_c
      1                           ,clear_rad_c
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d
-     1                           ,ni,nj,nk,i,j
+     1                           ,ni,nj,nk,i,j,kstart
      1                           ,view_alt,view_az,sol_alt,sol_azi 
      1                           ,minalt,maxalt
      1                           ,grid_spacing_m,r_missing_data)
@@ -33,7 +33,8 @@
         real aod_3d(ni,nj,nk)  ! aerosol optical depth (per vertical atmosphere)
         real heights_3d(ni,nj,nk) ! MSL
         real transm_3d(ni,nj,nk)
-        real transm_4d(nc,ni,nj,nk)
+        real transm_4d(ni,nj,nk,nc) ! L
+        real transm_4d_m(nc)
         real heights_1d(nk)
         real topo_a(ni,nj)
         real swi_2d(ni,nj)
@@ -45,6 +46,12 @@
 
         real sol_alt(ni,nj)
         real sol_azi(ni,nj)
+
+        real moon_alt(ni,nj)
+        real moon_azi(ni,nj)
+
+        real obj_alt(ni,nj)
+        real obj_azi(ni,nj)
 
         integer isky(minalt:maxalt,0:360)
         real r_cloud_3d(minalt:maxalt,0:360)     ! cloud opacity
@@ -70,6 +77,9 @@
 
         write(6,*)' Subroutine get_cloud_rays ',i,j
 
+        moon_alt = -10.0
+        moon_azi = 0.
+
         pstd = 101325.
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
@@ -79,6 +89,17 @@
 
         icloud_tot = 0                          
 
+        if((sol_alt(i,j) .lt. -6.0  .AND. moon_alt(i,j) .gt.  0.0) .OR.
+     1     (sol_alt(i,j) .lt. -16.0 .AND. moon_alt(i,j) .gt. -6.0))then
+            obj_alt = moon_alt
+            obj_azi = moon_azi
+            obj_bri = .0001
+        else
+            obj_alt = sol_alt
+            obj_azi = sol_azi
+            obj_bri = 1.0
+        endif
+
         write(6,*)' range of clwc,cice is ',maxval(clwc_3d)
      1                                     ,maxval(cice_3d)
 
@@ -87,9 +108,11 @@
 
         write(6,*)' call get_cloud_rad'
 
-        call get_cloud_rad(sol_alt,sol_azi,clwc_3d,cice_3d
+        call get_cloud_rad(obj_alt,obj_azi,clwc_3d,cice_3d
      1                    ,rain_3d,snow_3d
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk)
+
+        transm_4d = transm_4d * obj_bri ! correct for sun/moon brightness
 
         I4_elapsed = ishow_timer()
 
@@ -99,7 +122,7 @@
         ri = i
         rj = j
 
-        kstart = 0 ! 0 means sfc, otherwise level of start
+!       kstart = 0 ! 0 means sfc, otherwise level of start
 
         if(kstart .eq. 0)then ! start from sfc
           htstart = topo_sfc  ! MSL
@@ -210,7 +233,7 @@
 12              format('   dz1_l   dz1_h   dxy1_l   dxy1_h  rin',
      1           'ew  rjnew   rk    ht_m   topo_m  ',
      1           ' path     lwc    ice    rain   snow      slant',
-     1           '      sum     cloudfrac  airmass cloud_rad')
+     1           '  cvrpathsum  cloudfrac  airmass cloud_rad')
               endif
 
 !             Initialize ray
@@ -225,7 +248,8 @@
 
               rk = rkstart          
               do while(rk .le. float(nk) - rkdelt 
-     1                                 .AND. ihit_topo .eq. 0)
+     1           .AND. ihit_topo .eq. 0
+     1           .AND. cvr_path_sum .le. 1.0) ! Tau < ~75
 
                 if(rkdelt .ne. 0.)then ! trace by pressure levels
                   rk = rk + rkdelt
@@ -375,10 +399,10 @@
                 if(rinew_h .ge. 1. .and. rinew_h .le. rni .AND. 
      1             rjnew_h .ge. 1. .and. rjnew_h .le. rnj      )then 
 
-                  if(.true.)then
-                    call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                 ,cond_3d,cond_m)
-                    if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
+                  call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+     1                               ,cond_3d,cond_m)
+
+                  if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
                       call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
      1                                   ,clwc_3d,clwc_m)
                       call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
@@ -387,39 +411,32 @@
      1                                   ,rain_3d,rain_m)
                       call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
      1                                   ,snow_3d,snow_m)
-                    endif
-
-!                   nf = 1
-!                   call trilinear_laps_1d(rinew_m,rjnew_m,rk_m
-!    1                                    ,ni,nj,nk,nf
-!    1                                    ,cond_3d,cond_m)
-
-                  else
-                    clwc_m = clwc_3d(inew_m,jnew_m,k_m)
-                    cice_m = cice_3d(inew_m,jnew_m,k_m)
-                  endif
-
-                  if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
-                    call bilinear_laps(rinew_m,rjnew_m,ni,nj
-     1                                ,topo_a,topo_m)
-                  else
-                    topo_m = topo_a(inew_m,jnew_m)
                   endif
 
                   cvr_path = cond_m                                 
                   cvr_path_sum_last = cvr_path_sum
                   cvr_path_sum      = cvr_path_sum + cvr_path * slant2       
-                  sum_odrad = sum_odrad + 
-     1               (cvr_path * slant2 * transm_3d(inew_m,jnew_m,k_m))       
 
-                  sum_odrad_c(:) = sum_odrad_c(:) + 
-     1              (cvr_path * slant2 * transm_4d(:,inew_m,jnew_m,k_m))
+                  if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
+                    call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+     1                                 ,transm_3d,transm_3d_m)
+
+                    sum_odrad = sum_odrad + 
+     1               (cvr_path * slant2 * transm_3d_m)       
+
+                    do ic = 1,nc
+                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+     1                            ,transm_4d(:,:,:,ic),transm_4d_m(ic))
+                    enddo ! ic
+
+                    sum_odrad_c(:) = sum_odrad_c(:) + 
+     1              (cvr_path * slant2 * transm_4d_m(:))
+                  endif
 
                   sum_clrrad = sum_clrrad + transm_3d(inew_m,jnew_m,k_m) 
      1                                    * (airmass1_h - airmass1_l)
 
-                  aero_ext_coeff = (aod_3d(inew_m,jnew_m,k_m)/8000.)
-     1                           * (pr_h / pstd)
+                  aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
                   sum_aod = sum_aod + aero_ext_coeff * slant2
 
                   if((cvr_path          .gt. 0.00) .AND.
@@ -434,6 +451,13 @@
      1                                = sum_odrad_c(:) / cvr_path_sum 
 
                       aod_2_cloud(ialt,jazi) = sum_aod
+                  endif
+
+                  if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
+                    call bilinear_laps(rinew_m,rjnew_m,ni,nj
+     1                                ,topo_a,topo_m)
+                  else
+                    topo_m = topo_a(inew_m,jnew_m)
                   endif
 
                   if(topo_m .gt. ht_m .AND. ihit_topo .eq. 0)then
@@ -494,11 +518,14 @@
 
 !           Fraction of atmosphere illuminated by the sun
 !           clear_rad_c(3,ialt,jazi) = 1. 
-            clear_rad_c(3,ialt,jazi) = 0.25 
+            clear_rad_c(3,ialt,jazi) = 0.25 ! secondary scattering in cloud shadow
      1                               + 0.75 * (sum_clrrad/airmass1_h)
             angle_plane = 0.; dist_ray_plane = 0.; ht_ray_plane = 0.
 
-          else ! sun below horizon
+          else ! sun below horizon (twilight / night illumination)
+            z = 90. - float(ialt)
+            airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
+
             alt_plane = 90. - abs(sol_alt(i,j))
             azi_plane = sol_azi(i,j)
             xplane = cosd(azi_plane) * cosd(alt_plane)
@@ -521,29 +548,43 @@
               else
                 frac_airmass_lit = 0.
               endif
-              z = 90. - float(ialt)
-              airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
               airmass_lit = airmass * frac_airmass_lit      
-              clear_int = max(min(airmass_lit,1.0),.001)               
-            else ! in Earth's shadow
+              clear_int = max(min(airmass_lit,1.0),.00001)               
+            else ! in Earth's shadow (may need secondary scattering)
               dist_ray_plane = -999.9
               ht_ray_plane = -999.9
               airmass_lit = 0.
-              clear_int = .001                                         
+              clear_int = .00001                                         
             endif ! part of atmosphere is illuminated
 
 !           Apply saturation ramp at low altitudes
-            sat_ramp = min(-sol_alt(i,j) / 3.0,1.0)
-            frac_sat_ramp = sqrt(sind(float(ialt)))
-            sat_ramp = frac_sat_ramp + sat_ramp * (1.0 - sat_frac_ramp)
-            bluness = (1.0-saturation) / 2.0 
-     1              + exp(-airmass_lit*0.5) * saturation ! range from 0.2 to 0.8 
-            redness = 1.0 - bluness
+            sat_sol_ramp = min(-sol_alt(i,j) / 3.0,1.0) ! 0-1 (lower sun)
+            sat_alt_ramp = sqrt(sind(float(ialt)))      ! 0-1 (higher alt)
+            sat_ramp = 1.0-((1.0 - sat_alt_ramp) * (1.0 - sat_sol_ramp))
+
+!           clear_int here represents intensity at the zenith
+            if(clear_int .gt. .0001)then      ! mid twilight
+                sat_twi_ramp = 1.0
+                rint_twi_ramp = rint_alt_ramp * 1.0
+                rint_alt_ramp = 1.0
+            elseif(clear_int .le. .00001)then ! night
+                sat_twi_ramp = 0.6
+                rint_twi_ramp = rint_alt_ramp * 0.0
+                rint_alt_ramp = sqrt(airmass)
+            else                              ! late twilight
+                frac_twi_ramp = (clear_int - .00001) / .00009
+                sat_twi_ramp = 0.6 + 0.4 * frac_twi_ramp
+                rint_twi_ramp = rint_alt_ramp * frac_twi_ramp
+                rint_alt_ramp = (1.0           * frac_twi_ramp)
+     1                        +  sqrt(airmass) * (1.0 - frac_twi_ramp)
+            endif
+
 !           HSI
             hue = exp(-airmass_lit*0.2) ! 0:R 1:B
             clear_rad_c(1,ialt,jazi) = hue                           ! Hue
-            clear_rad_c(2,ialt,jazi) = abs(hue-0.4) * sat_ramp       ! Saturation
-            clear_rad_c(3,ialt,jazi) = clear_int                     ! Intensity
+            clear_rad_c(2,ialt,jazi) = abs(hue-0.5) * 0.8 * sat_ramp ! Sat
+     1                                                * sat_twi_ramp
+            clear_rad_c(3,ialt,jazi) = clear_int * rint_twi_ramp     ! Int
 
           endif ! sun above horizon
 
