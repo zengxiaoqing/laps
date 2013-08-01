@@ -1,0 +1,37 @@
+
+      SUBROUTINE CJYMD(T,IYEAR,MONTH,DATE)
+      IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
+      DIMENSION K(49)
+      DATA K/0,31,60,91,121,152,182,213,244,274,305,335,366,397,425,456
+     .,486,517,547,578,609,639,670,700,731,762,790,821,851,882,912,943
+     .,974,1004,1035,1065,1096,1127,1155,1186,1216,1247,1277,1308,1339
+     .,1369,1400,1430,1461/
+
+      TIME=T+0.5D0
+      I=IDINT(TIME)
+
+      IF(I .GT. 2299160)then
+          I=I+10
+          LP1=IDINT((DFLOAT(I)-2305517.D0)/36524.25D0)
+          I=I+LP1-LP1/4
+      endif
+
+
+      LP=I/1461
+      J=I-LP*1461
+      MONTH=J/30+1
+
+      IF(K(MONTH) .GT. J)then
+          MONTH=MONTH-1
+      endif
+
+      DATE=J-K(MONTH)+1+TIME-INT(TIME)
+      IYEAR=-4712+LP*4+(MONTH-1)/12
+      MONTH=MONTH-12*((MONTH-1)/12)
+
+      IF(IYEAR.LE.0)then
+          IYEAR=IYEAR-1
+      endif
+
+11    RETURN
+      END
