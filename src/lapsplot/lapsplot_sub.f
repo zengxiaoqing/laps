@@ -309,9 +309,12 @@ cdis
                 write(6,*)' l_polar = ',l_polar,' l_cyl = ',l_cyl
 !               l_polar = .true.
 !               l_cyl = .true.
+                write(6,*)' Enter minalt,maxalt (e.g. 0,90)'
+                read(lun,*)minalt,maxalt           
             endif
-            
+
             call plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
+     1                        ,minalt,maxalt
      1                        ,r_missing_data,laps_cycle_time,maxstns
      1                        ,i_overlay,plot_parms,namelist_parms
      1                        ,l_polar,l_cyl)       
