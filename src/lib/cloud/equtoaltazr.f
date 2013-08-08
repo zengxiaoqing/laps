@@ -12,7 +12,13 @@
         alt=ASIN (sinphi*sindec+cosphi*cosdec*cosha)
         az =ACOS((cosphi*sindec-sinphi*cosdec*cosha)/dcos(alt))
 
-        if(ha .gt. 0)az = 6.2831853071796D0 - az
+        if(ha .gt. 0 .and. ha .lt. 3.1415926535897932d0)then !    0 to +180
+            az = 6.2831853071796D0 - az
+        endif
+
+        if(ha .lt. -3.1415926535897932d0)then                ! -360 to -180
+            az = 6.2831853071796D0 - az
+        endif
 
         return
         end
