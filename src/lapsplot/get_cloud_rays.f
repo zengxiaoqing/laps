@@ -9,7 +9,9 @@
      1                           ,clear_rad_c
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d
      1                           ,ni,nj,nk,i,j,kstart
-     1                           ,view_alt,view_az,sol_alt,sol_azi 
+     1                           ,view_alt,view_az,sol_alt,sol_azi
+     1                           ,moon_alt,moon_azi 
+     1                           ,moon_mag,moon_mag_thr
      1                           ,minalt,maxalt
      1                           ,grid_spacing_m,r_missing_data)
 
@@ -49,6 +51,7 @@
 
         real moon_alt(ni,nj)
         real moon_azi(ni,nj)
+        real moon_mag,moon_mag_thr
 
         real obj_alt(ni,nj)
         real obj_azi(ni,nj)
@@ -77,8 +80,8 @@
 
         write(6,*)' Subroutine get_cloud_rays ',i,j
 
-        moon_alt = -10.0
-        moon_azi = 0.
+!       moon_alt = -10.0
+!       moon_azi = 0.
 
         pstd = 101325.
         airmass_2_cloud_3d = 0.
@@ -89,15 +92,19 @@
 
         icloud_tot = 0                          
 
-        if((sol_alt(i,j) .lt. -6.0  .AND. moon_alt(i,j) .gt.  0.0) .OR.
-     1     (sol_alt(i,j) .lt. -16.0 .AND. moon_alt(i,j) .gt. -6.0))then
+        if(((sol_alt(i,j) .lt. -6.0  .AND. moon_alt(i,j) .gt.  0.0) .OR.
+     1      (sol_alt(i,j) .lt. -16.0 .AND. moon_alt(i,j) .gt. -6.0))
+     1                         .AND. 
+     1                moon_mag .le. moon_mag_thr                  )then
             obj_alt = moon_alt
             obj_azi = moon_azi
-            obj_bri = .0001
+            obj_bri = 10. ** ((-26.7 - moon_mag)*0.4)
+            write(6,*)' Object is moon, brightness is:',obj_bri
         else
             obj_alt = sol_alt
             obj_azi = sol_azi
             obj_bri = 1.0
+            write(6,*)' Object is sun, brightness is:',obj_bri
         endif
 
         write(6,*)' range of clwc,cice is ',maxval(clwc_3d)
@@ -565,18 +572,16 @@
 !           clear_int here represents intensity at the zenith
             if(clear_int .gt. .0001)then      ! mid twilight
                 sat_twi_ramp = 1.0
-                rint_twi_ramp = rint_alt_ramp * 1.0
                 rint_alt_ramp = 1.0
             elseif(clear_int .le. .00001)then ! night
                 sat_twi_ramp = 0.6
-                rint_twi_ramp = rint_alt_ramp * 0.0
                 rint_alt_ramp = sqrt(airmass)
             else                              ! late twilight
                 frac_twi_ramp = (clear_int - .00001) / .00009
                 sat_twi_ramp = 0.6 + 0.4 * frac_twi_ramp
-                rint_twi_ramp = rint_alt_ramp * frac_twi_ramp
-                rint_alt_ramp = (1.0           * frac_twi_ramp)
+                rint_twi_ramp = (1.0           * frac_twi_ramp)
      1                        +  sqrt(airmass) * (1.0 - frac_twi_ramp)
+                rint_alt_ramp = rint_twi_ramp * frac_twi_ramp
             endif
 
 !           HSI
@@ -584,7 +589,7 @@
             clear_rad_c(1,ialt,jazi) = hue                           ! Hue
             clear_rad_c(2,ialt,jazi) = abs(hue-0.5) * 0.8 * sat_ramp ! Sat
      1                                                * sat_twi_ramp
-            clear_rad_c(3,ialt,jazi) = clear_int * rint_twi_ramp     ! Int
+            clear_rad_c(3,ialt,jazi) = clear_int * rint_alt_ramp     ! Int
 
           endif ! sun above horizon
 
