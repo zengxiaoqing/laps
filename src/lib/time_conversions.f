@@ -365,7 +365,7 @@ C
 
       subroutine jd_to_i4time(jd,i4time,istatus)
 
-      double precision jd, jd1960
+      double precision jd, jd_1960
       integer i4time ! seconds since 1-1-1960
 
 cdoc  Converts Julian Day (Number of days since Jan 1 4713BCE to i4time)
@@ -385,16 +385,18 @@ cdoc  Converts Julian Day (Number of days since Jan 1 4713BCE to i4time)
 
       subroutine i4time_to_jd(i4time,jd,istatus)
 
-      double precision jd, jd1960, days_since_1960
-      integer i4time ! seconds since 1-1-1960
+      double precision jd, jd_1960, days_since_1960
+      integer i4time,istatus ! seconds since 1-1-1960
 
-cdoc  Converts Julian Day (Number of days since Jan 1 4713BCE to i4time)
+cdoc  Converts i4time to Julian Day (Number of days since Jan 1 4713BCE)
 
 !     Author: Steve Albers 2013
 
       jd_1960 = 2436934.5
 
       days_since_1960 = dble(i4time) / 86400.D0
+
+!     write(6,*)' days since 1960 is ',days_since_1960
 
       jd = jd_1960 + days_since_1960              
 
