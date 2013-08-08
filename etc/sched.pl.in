@@ -101,7 +101,7 @@
 #                      destination (via xferlaps.sh)
 #
 # -x                   If supplied, specify amount of files to be transferred (used with -R)
-#                      [1=2D, 2=3D, 3=3D+LGA, default value is 2 if not supplied] 
+#                      [1=2D, 2=3D, 3=3D+LGA, an internal default value is 2 is used if -x is not supplied in the cron line] 
 #
 # -y                   If supplied, the file transfer method (used with -R)
 #                      [e.g. rsync,exchange_zip,exchange_zip2] 
@@ -154,20 +154,16 @@ my $lga_proc;
 
 if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(lga.exe obs_driver.x 
-                  sfc_qc.exe 
                   laps_sfc.x laps2grib.exe);
     $lga_proc = "laps_sfc.x";  
 
-}elsif(defined $opt_K){ # Kalman only
-    @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
-
 }elsif(defined $opt_M){ # Mesowave or other "surface only" LAPS
-    @LAPS_EXE = ("lga.exe", "obs_driver.x", "sfc_qc.exe", $opt_M, "laps2grib.exe");
+    @LAPS_EXE = ("lga.exe", "obs_driver.x", $opt_M, "laps2grib.exe");
     $lga_proc = "$opt_M"; 
 
 }elsif( ($opt_V eq "GSI_Prep")) { # GSI analysis or STMAS 3D analysis
     @LAPS_EXE = qw(lga.exe 
-                  obs_driver.x sfc_qc.exe
+                  obs_driver.x 
                   ingest_pro.exe ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe obs_convert.exe
                   GSI_Prep.exe);
@@ -286,14 +282,14 @@ if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(mosaic_radar.x);
 
 }elsif(defined $opt_T){ # Analysis only executables (for running with test data)
-    @LAPS_EXE = qw(sfc_qc.exe wind.exe 
+    @LAPS_EXE = qw(wind.exe 
                   laps_sfc.x temp.exe 
                   mosaic_radar.x cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe qbalpe.exe lapsprep.exe);
 
 }elsif($opt_E eq "WNI"){  # WNI Product Set
     @LAPS_EXE = qw(lga.exe
-                  obs_driver.x sfc_qc.exe
+                  obs_driver.x 
                   ingest_pro.exe ingest_sounding.exe
                   ingest_cloud_drift.exe
                   wind.exe
@@ -307,7 +303,7 @@ if(defined $opt_s){ # "surface only"
 
 }else{      # Full product set for tradiational LAPS
     @LAPS_EXE = qw(lga.exe 
-                  obs_driver.x sfc_qc.exe
+                  obs_driver.x 
                   ingest_pro.exe ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
 		  wind.exe 
