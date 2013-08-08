@@ -30,16 +30,16 @@ DEBUGLIB = libdebugcloud.a
 
 ifdef CRTMROOT
 SRC= \
-    clock.f cloud_var.F90 compare_analysis_to_radiometer.f crtm_kmatrix.f90 cvr_to_tb8_effective.f get_aod_3d.f90 get_cloud_rad.f90 \
-    get_sky_rgb.f90 hotstart_perturbation.f moon_brwn.f obliquity.f phase.f phase_func_moon.f90 places_routines.f posin.f preces.f \
+    accel.f clock.f cloud_var.F90 compare_analysis_to_radiometer.f crtm_kmatrix.f90 cvr_to_tb8_effective.f get_aod_3d.f90 get_cloud_rad.f90 \
+    get_sky_rgb.f90 hotstart_perturbation.f moon_brwn.f obliquity.f phase.f phase_func_moon.f90 places_routines.f posin.f posint.f preces.f \
     delta_t.f topo_ff1.f xyztopolarr.f equtoaltazr.f refract.f cjymd.f magnitude.f \
-    solar_routines.f allsky.f90 interp_1d.f90 sidereal_time.f skyglow_cyl.f90 sun_moon.f topo.f vi.f90 vi2.f90
+    solar_routines.f allsky.f90 interp_1d.f90 sidereal_time.f skyglow_cyl.f90 sun_moon.f sun_planet.f topo.f vi.f90 vi2.f90
 else
 SRC= \
-    clock.f cloud_var.F90 compare_analysis_to_radiometer.f cvr_to_tb8_effective.f get_aod_3d.f90 get_cloud_rad.f90 \
-    get_sky_rgb.f90 hotstart_perturbation.f moon_brwn.f obliquity.f phase.f phase_func_moon.f90 places_routines.f posin.f preces.f \
+    accel.f clock.f cloud_var.F90 compare_analysis_to_radiometer.f cvr_to_tb8_effective.f get_aod_3d.f90 get_cloud_rad.f90 \
+    get_sky_rgb.f90 hotstart_perturbation.f moon_brwn.f obliquity.f phase.f phase_func_moon.f90 places_routines.f posin.f posint.f preces.f \
     delta_t.f topo_ff1.f xyztopolarr.f equtoaltazr.f refract.f cjymd.f magnitude.f \
-    solar_routines.f allsky.f90 interp_1d.f90 sidereal_time.f skyglow_cyl.f90 sun_moon.f topo.f vi.f90 vi2.f90
+    solar_routines.f allsky.f90 interp_1d.f90 sidereal_time.f skyglow_cyl.f90 sun_moon.f sun_planet.f topo.f vi.f90 vi2.f90
 endif
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
