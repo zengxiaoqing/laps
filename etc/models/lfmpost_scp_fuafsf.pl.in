@@ -12,7 +12,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -m model type [optional if -a will be set]
 #    -a model configuration (e.g. schultz) [optional if -m has been set]
 #    -r model root                                       
-#    -D root directory specified by -r is actually the LAPS_DATA_ROOT on the source machine
+#    -D root directory specified by -r is actually the LAPS_DATA_ROOT on the source machine (on Zeus needs to be at the end for some reason)
 #    -d init date (yyyymmddhh, default = current hour) [Mandatory if -D is set]
 #    -g model grid to process (default = 1, negative value does all grids)
 #    -f number of forecasts including initial time (default = 12)
@@ -28,7 +28,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -R copy surface fsf or upper air fua only (specify "fua" or "fsf") [optional]
 
 use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e $opt_c $opt_R $opt_D);
-#getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxec:RD:');
+#getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxec:RD');
 getopt('lmardgfispwMSxecRD');
 
 # Obtain perl module from LAPSINSTALLROOT
@@ -247,8 +247,8 @@ if (! $opt_S){ # test for skipping remote copy
     $grid = $grid[$g];
 
     if (defined ($opt_D)){
-        $fua_dir = "$modelroot/$lapsprd/fua";
-        $fsf_dir = "$modelroot/$lapsprd/fsf";
+        $fua_dir = "$modelroot/lapsprd/fua";
+        $fsf_dir = "$modelroot/lapsprd/fsf";
     }else{
         $fua_dir = "$modelroot/$date/wrfprd/d0$grid/fua";
         $fsf_dir = "$modelroot/$date/wrfprd/d0$grid/fsf";
