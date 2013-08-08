@@ -39,6 +39,9 @@
         real topo(NX_L,NY_L)
         real sol_alt_2d(NX_L,NY_L)
         real sol_azi_2d(NX_L,NY_L)
+        real moon_alt_2d(NX_L,NY_L)
+        real moon_azi_2d(NX_L,NY_L)
+        real moon_mag,moon_mag_thr
 
         real temp_vert(max_snd_levels)
         real ht_vert(max_snd_levels)
@@ -108,6 +111,7 @@
         real r_cloud_3d(minalt:maxalt,0:360)     ! cloud opacity
         real cloud_od(minalt:maxalt,0:360)       ! cloud optical depth
         real blog_v_roll(minalt:maxalt,0:360)
+        real glow_stars(minalt:maxalt,0:360)
         real elong_roll(minalt:maxalt,0:360)
         real airmass_2_cloud_3d(minalt:maxalt,0:360)
         real airmass_2_topo_3d(minalt:maxalt,0:360)
@@ -547,6 +551,19 @@
 
           write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
 
+          write(6,*)' call sun_moon at grid point ',isound,jsound
+          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,isound,jsound
+     1                 ,alm,azm,elgms,moon_mag)
+          write(6,24)alm,azm,elgms,moon_mag 
+24        format('  alt/az/elg/mag = ',4f8.2)
+
+!         alm = -90.          ! Test for disabling
+!         moon_mag = -4.0    ! Test for disabling
+          moon_mag_thr = -6.0
+
+          moon_alt_2d = alm
+          moon_azi_2d = azm
+
           if(istat_lwc .eq. 1)then
             call interp_3d(field_3d,lwc_vert,xsound,xsound
      1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
@@ -883,6 +900,8 @@
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,kstart
      1                     ,view_alt,view_az,sol_alt_2d,sol_azi_2d
+     1                     ,moon_alt_2d,moon_azi_2d
+     1                     ,moon_mag,moon_mag_thr
      1                     ,minalt,maxalt
      1                     ,grid_spacing_m,r_missing_data)
 
@@ -901,27 +920,28 @@
 !       if(solar_alt .ge. 0.)then
         if(.true.)then
             I4_elapsed = ishow_timer()
-            write(6,*)' call get_skyglow_cyl'
-            call skyglow_cyl(solar_alt,solar_az,blog_v_roll,elong_roll
-     1                      ,od_atm_a,minalt,maxalt)
-            I4_elapsed = ishow_timer()
+            write(6,*)' call get_skyglow_cyl for sun or moon...'
 
-            if(.false.)then
-                write(6,*)' call sun_moon'
-                call sun_moon(i4time,lat,lon,NX_L,NY_L)
+            if(solar_alt .ge. -16.)then
+!           if(.true.)then
+                write(6,*)' Sun is significant'
+                call skyglow_cyl(solar_alt,solar_az,blog_v_roll
+     1                          ,elong_roll,od_atm_a,minalt,maxalt)
                 I4_elapsed = ishow_timer()
             endif
+
+            if(solar_alt .lt. -16. .AND. moon_mag .lt. moon_mag_thr
+     1                             .AND. alm .gt. 0.         )then
+                write(6,*)' Moon is significant: mag is ',moon_mag
+                call skyglow_cyl(alm,azm,blog_v_roll,elong_roll
+     1                          ,od_atm_a,minalt,maxalt)
+                blog_v_roll = blog_v_roll + (-26.7 - moon_mag) * 0.4
+                I4_elapsed = ishow_timer()
+            endif
+
         else
             blog_v_roll = 8.0
-        endif
 
-        if(l_idl .eqv. .true.)then
-!         Write ASCII Cyl plot
-          do altobj = 90.,0.,-10.
-            ialt = int(altobj)
-            write(6,15)altobj,(r_cloud_3d(ialt,jazi),jazi=0,360,30)
-15          format('altobj,r_cloud_3d',f8.2,13f6.2)
-          enddo ! altobj
         endif
 
 !       Reproject Polar Cloud Plot
@@ -933,27 +953,11 @@
 !       write(6,*)' cyl slice at 40alt ',r_cloud_3d(40,:)
 !       write(6,*)' polar slice at 256 ',r_cloud_3d_polar(256,:)
 
-        if(l_idl .eqv. .true.)then
-!         Write Polar Cloud Plot
-          open(51,file='cloud.'//clun,status='unknown')
-          write(51,*)r_cloud_3d_polar
-          close(51)
-        endif
-
 !       Reproject Skyglow Field
         call cyl_to_polar(blog_v_roll,blog_v_roll_polar
      1                               ,minalt,maxalt,360
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
-
-        if(l_idl .eqv. .true.)then
-!         Write Skyglow Plot
-          open(52,file='glow.'//clun,status='unknown')
-          write(52,*)blog_v_roll_polar
-          close(52)
-          write(6,*)' Range of blog_v_roll_polar is '
-     1              ,minval(blog_v_roll_polar),maxval(blog_v_roll_polar)
-        endif
 
 !       Write time label
         open(53,file='label.'//clun,status='unknown')
@@ -972,7 +976,6 @@
 
         if((l_cyl .eqv. .true.) .OR. (mode_polar .eq. 2))then              
 !         Get all sky for cyl   
-          write(6,*)' call get_sky_rgb with cyl data'
           ni_cyl = maxalt - minalt + 1
           nj_cyl = 361
           do i = minalt,maxalt
@@ -981,12 +984,28 @@
               azi_a_roll(i,j) = j
           enddo 
           enddo
+
+          minazi = 0.
+          maxazi = 360.
+
+          I4_elapsed = ishow_timer()
+
+          write(6,*)' call get_starglow with cyl data'
+          call get_starglow(i4time_solar,alt_a_roll,azi_a_roll           ! I
+     1                     ,minalt,maxalt,minazi,maxazi                  ! I
+     1                     ,rlat,rlon,alt_scale,azi_scale                ! I
+     1                     ,glow_stars)                                  ! O
+
+          I4_elapsed = ishow_timer()
+
+          write(6,*)' call get_sky_rgb with cyl data'
           call get_sky_rgb(r_cloud_3d                ! cloud opacity
      1                    ,cloud_od                  ! cloud optical depth
      1                    ,r_cloud_trans             ! cloud solar transmittance
      1                    ,cloud_rad_c               ! cloud solar transmittance / color
      1                    ,clear_rad_c               ! clear sky illumination by sun     
      1                    ,blog_v_roll               ! skyglow
+     1                    ,glow_stars                ! starglow
      1                    ,od_atm_a
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
@@ -995,7 +1014,8 @@
      1                    ,alt_a_roll,azi_a_roll       
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
-     1                    ,solar_alt,solar_az
+     1                    ,solar_alt,solar_az        ! sun alt/az
+     1                    ,alm,azm,moon_mag          ! moon alt/az/mag
      1                    ,sky_rgb_cyl)   
 
           if(mode_polar .ne. 2)then
