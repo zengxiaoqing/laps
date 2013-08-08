@@ -155,8 +155,8 @@
                write(6,13)altobj,(blog_v(ialt,jazi),jazi=0,360,30)
 13             format('altobj,blog_v ',f8.2,13f6.2)
            enddo ! altobj
-           lun = 41                            
-           write(lun,*)blog_v         
+!          lun = 41                            
+!          write(lun,*)blog_v         
 
            write(6,*)
 !          Fill in altitudes with blog_v/elong     
