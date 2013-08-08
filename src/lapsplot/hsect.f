@@ -337,7 +337,7 @@ c       include 'satellite_dims_lvd.inc'
         sfctdc_h =  50.
         sfctdc_l = -30.
 
-        btemp_l = -50.
+        btemp_l = -80.
         btemp_h = +40.
         btemp_table = 'linear'
 
@@ -2414,7 +2414,7 @@ c
 
               scale = 1e0
               scale_l = +40.          ! for image plots
-              scale_h = -50.          ! for image plots
+              scale_h = btemp_l       ! for image plots
             elseif(var_2d_in.eq.'ALB')then
 !             c_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
