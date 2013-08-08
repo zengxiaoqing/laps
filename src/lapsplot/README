@@ -32,8 +32,12 @@ driver                                            lapsplot_main.f
             integrate_slwc                        lib/get_cloud_deriv.f
             integrate_tpw                           "
         plot_allsky                               plot_allsky.f
+            sun_moon                              lib/sun_moon.f
             get_cloud_rays                        get_cloud_rays.f
                 get_cloud_rad                     lib/cloud/get_cloud_rad.f90
             get_skyglow_cyl                       lib/cloud/skyglow_cyl.f90
             cyl_to_polar 
-            get_sky_rgb                           lib/cloud/get_sky_rgb.f90
+            get_starglow                          lib/cloud/get_sky_rgb.f90
+                read_stars                          "
+            get_sky_rgb                             "
+                get_clr_rad_nt                      "
