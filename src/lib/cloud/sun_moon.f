@@ -1,5 +1,6 @@
 
-      subroutine sun_moon(i4time,lat_2d,lon_2d,ni,nj)                                     
+      subroutine sun_moon(i4time,lat_2d,lon_2d,ni,nj,is,js,alm_r4,azm_r4
+     1                   ,elgms_r4,r4_mag)                                     
 
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
 !     include '../util/utilparms.for'
@@ -7,6 +8,8 @@
 
       ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)
      .-3.1415926535897932D0
+
+      ATAN3(X,Y)=DMOD((DATAN2(X,Y)+6.2831853071796D0),6.2831853071796D0)
 
       CHARACTER BLANK,TWI,MOON,RISE,SET,signm,signs
       DIMENSION MNTH(12)
@@ -23,16 +26,17 @@
       DATA MNTH/3HJAN,3HFEB,3HMAR,3HAPR,3HMAY,3HJUN,3HJUL,3HAUG,3HSEP
      .,3HOCT,3HNOV,3HDEC/
 
-      integer i4time
+      integer i4time,istatus
       real lat_2d(ni,nj)
       real lon_2d(ni,nj)
+      real alm_r4,azm_r4,elgms_r4,r4_mag
 C
       n_loc = 1
-      lat = 40.0
-      lon = -105.00
+      lat = lat_2d(is,js)
+      lon = lon_2d(is,js)
       topo_flag = 1.0
 
-      call i4time_to_jd(i4ime,tb)
+      call i4time_to_jd(i4time,tb,istatus)
       tf = tb
       c20_site = 'las'
 
@@ -64,9 +68,9 @@ C ENTER TIME LOOPS
       t = tb
 C
 C WRITE HEADINGS
-      IF(IPRINT.EQ.1.AND.IFL.EQ.0)write(13,11)c20_site,LAT(L),LON(L)
+      IF(IPRINT.EQ.1.AND.IFL.EQ.0)write(6,11)c20_site,LAT(L),LON(L)
 11    FORMAT(1H1,30X,a20,'  LAT=',F7.2,'  LON=',F7.2/)
-10    IF(IPRINT.EQ.1.AND.IFL.EQ.0)write(13,1)
+10    IF(IPRINT.EQ.1.AND.IFL.EQ.0)write(6,1)
 1     FORMAT(
      1 ' YEAR MON DT   UT                   MOON         ',
      1 '     Coordinates of Date        SUN',
@@ -75,8 +79,6 @@ C WRITE HEADINGS
      1      10x,'Alt    App     Az        Dec          RA',7x,'(mag)')
 
 
-400   if(t .gt. tf)goto9999
-
       DELTAT=delta_t(T)
       UT = T
       ET = UT + DELTAT
@@ -84,6 +86,9 @@ c
 c calculate position of observer's zenith (coordinates of date)
       CALL TOPO_ff1(PHI,LON(L),UT,TXZ,TYZ,TZZ)
       RAMR=ATAN3(TYZ,TXZ)
+
+      write(6,*)' lat,lon = ',LAT(L),LON(L)
+      write(6,*)' TXZ,TYZ,TZZ,RAMR',TXZ,TYZ,TZZ,RAMR/rpd
 
       CALL TOPO(PHI,LON(L),UT,TX,TY,TZ)
 
@@ -152,6 +157,7 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
       CALL anglevectors(-MXG,-MYG,-MZG,SXG,SYG,SZG,ELGARG)
       ELGMSG = ELGARG/RPD
 
+      write(6,*)' DEC / RA / HA = ',DECM/rpd,RAM/rpd,HAM/rpd
 
 !     Calculate Apparent Positions
       call equ_to_altaz_r(DECM,HAM,PHI,ALM,AZM)
@@ -180,6 +186,19 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
       call coords(decs,signs,dec_dg_s,dec_mn_s,dec_sc_s,
      1          ras,       ra_hr_s, ra_mn_s, ra_sc_s)
 
+
+      alm_r4 = alm
+      azm_r4 = azm
+      elgms_r4 = elgmst
+
+      phase_angle_deg = 180. - elgmst ! approximate
+
+      call phase_func_moon(phase_angle_deg,mode,area_rel,area_es
+     1                    ,phase_corr_moon)
+
+      r4_mag = -12.74 + phase_corr_moon
+
+      if(.false.)then
 
 !     Calculate Solar Eclipse Magnitude
       call magnitude(0,0,SXT,SYT,SZT,0.,0.,0.,amag
@@ -240,9 +259,11 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
           elgmst = umbral_magnitude * 100.
       endif
 
+      endif ! .false.
+
 C
 C WRITE OUT DATA
-500   write(13,2)IYEAR,MNTH(MONTH),idt,ctt,
+500   write(6,2)IYEAR,MNTH(MONTH),idt,ctt,
      1  alm,c8_appm(2:8),azm,signm,int(abs(dec_dg_m)),int(dec_mn_m),dec_
      1sc_m,
      1                        int(ra_hr_m),      int(ra_mn_m), ra_sc_m,
@@ -255,9 +276,6 @@ C WRITE OUT DATA
      1          2x,
      1  f7.2,a7,f8.2,2x,a1,i2,1x,i2,f5.1,2x,i2,1x,i2,f6.2,
      1          1x,f7.2,f7.2)
-
-      t = t + ti
-      goto400
 
 C
 9999  CONTINUE
