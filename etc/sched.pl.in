@@ -773,6 +773,14 @@ foreach $exe (@LAPS_EXE){
                         }else{
                             $vmem_gb=11.0
                         }
+# Hongli Jiang add: to run surface analysis in serial node. tried with 8.0 else 4.0, but lga needs 8 GB. 8/9/2013
+                    }elsif($opt_M eq "stmasfc.exe"){
+                        if($npts > 2000000){ # Note conus 2001x1269 is 2.6 million gridpoints. HJ
+                            $vmem_gb=14.0
+                        }else{
+                            $vmem_gb=12.0
+                        }
+# end of HJ add.
                     }elsif($qsub_mode eq "multi"){ # Traditional LAPS in multi mode
                         if($execount == 1){ # first set of executables 
                             if($npts > 50000000){
