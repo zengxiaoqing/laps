@@ -1,6 +1,6 @@
 
        subroutine skyglow_cyl(altsource_in,azisource_in,blog_v_roll,elong_roll,od_atm_a &
-                             ,minalt,maxalt)
+                             ,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale)
 
        include 'trigd.inc'
 
@@ -11,17 +11,17 @@
        real*8 vis_r8
        character*1 c_observe
 
-       logical l_process_azi(0:360)
+       logical l_process_azi(minazi:maxazi)
 
-!      real blog_s(minalt:maxalt,0:360)
-       real blog_v(minalt:maxalt,0:360)
-       real blog_v_out(minalt:maxalt,0:360)
-       real blog_v_roll(minalt:maxalt,0:360)
-       real elong_a(minalt:maxalt,0:360)
-       real elong_out(minalt:maxalt,0:360)
-       real elong_roll(minalt:maxalt,0:360)
-!      real rmaglim_s(minalt:maxalt,0:360)
-       real rmaglim_v(minalt:maxalt,0:360)
+!      real blog_s(minalt:maxalt,minazi:maxazi)
+       real blog_v(minalt:maxalt,minazi:maxazi)
+       real blog_v_out(minalt:maxalt,minazi:maxazi)
+       real blog_v_roll(minalt:maxalt,minazi:maxazi)
+       real elong_a(minalt:maxalt,minazi:maxazi)
+       real elong_out(minalt:maxalt,minazi:maxazi)
+       real elong_roll(minalt:maxalt,minazi:maxazi)
+!      real rmaglim_s(minalt:maxalt,minazi:maxazi)
+       real rmaglim_v(minalt:maxalt,minazi:maxazi)
 
        real*8 PI, RPD                            
        PI = 3.1415926535897932d0; RPD = PI/180.d0
@@ -30,7 +30,6 @@
        elong_a = 0.
 
        degint_alt = 2.
-       degint_azi = 5.
 
        skyglow_in = 1.0
        patm = 0.85
@@ -44,13 +43,13 @@
        azisource = 180.
 
        l_process_azi = .false.
-       do iazi = 0,180,10               
+       do iazi = minazi,maxazi/2,nint(10./azi_scale)
            l_process_azi(iazi) = .true.
        enddo
-       do iazi = 160,180,2              
+       do iazi = nint(160./azi_scale),maxazi/2,nint(2./azi_scale)              
            l_process_azi(iazi) = .true.
        enddo
-       do iazi = 170,180,1              
+       do iazi = nint(170./azi_scale),maxazi/2,nint(1./azi_scale)              
            l_process_azi(iazi) = .true.
        enddo
 
@@ -86,8 +85,8 @@
 !                  Schaeffer routine
 !                  call get_skyglow(rmag,altsource,altobj,elong,patm,skyglow)
 
-                   ialt = int(altobj)
-                   jazi = int(aziobj)
+                   ialt = nint(altobj/alt_scale)
+                   jazi = nint(aziobj/azi_scale)
 !                  blog_s(ialt,jazi) = log10(skyglow)
                    call calc_extinction(90.      ,patm,airmass,zenext)
                    call calc_extinction(altobj   ,patm,airmass,totexto)
@@ -174,7 +173,7 @@
 
 !          Fill in azimuths with blog_v
            write(6,*)' Fill interpolated azimuths in blog_v_out'  
-           do iazi = 0,180,1
+           do iazi = minazi,maxazi/2,1
                if(blog_v(0,iazi) .gt. 0.)then
 !                  write(6,*)' azi already filled ',iazi
                else
@@ -206,7 +205,7 @@
                                       + elong_a(:,iazi_p) *       frac
                endif
 
-               iazi_mirror = 360 - iazi
+               iazi_mirror = maxazi - iazi
                blog_v_out(:,iazi_mirror) = blog_v_out(:,iazi)
                elong_out(:,iazi_mirror)  = elong_out(:,iazi)
 
