@@ -104,10 +104,6 @@
         character*5 c5_name, c5_name_a(max_snd_grid), c5_name_min
         character*8 obstype(max_snd_grid)
 
-!       parameter (minalt =  0) ! -1
-!       parameter (maxalt = 90)
-        parameter (alt_scale =  1.0) 
-        parameter (azi_scale =  1.0) 
         real r_cloud_3d(minalt:maxalt,0:360)     ! cloud opacity
         real cloud_od(minalt:maxalt,0:360)       ! cloud optical depth
         real blog_v_roll(minalt:maxalt,0:360)
@@ -144,6 +140,21 @@
         common /image/ n_image
 
         skewt(t_c,logp) = t_c - (logp - logp_bottom) * 32.
+
+        if(maxalt .eq. 720)then
+            alt_scale = 0.5 
+        else
+            alt_scale = 1.0 
+        endif
+
+        minazi = 0
+        maxazi = maxalt * 4
+
+        if(maxazi .eq. 720)then
+            azi_scale = 0.5 
+        else
+            azi_scale = 1.0
+        endif
 
         if(l_polar .eqv. .true.)then
             mode_polar = 2
@@ -902,7 +913,8 @@
      1                     ,view_alt,view_az,sol_alt_2d,sol_azi_2d
      1                     ,moon_alt_2d,moon_azi_2d
      1                     ,moon_mag,moon_mag_thr
-     1                     ,minalt,maxalt
+     1                     ,minalt,maxalt,minazi,maxazi
+     1                     ,alt_scale,azi_scale
      1                     ,grid_spacing_m,r_missing_data)
 
         write(6,*)' Return from get_cloud_rays...',a9time
@@ -926,7 +938,9 @@
 !           if(.true.)then
                 write(6,*)' Sun is significant'
                 call skyglow_cyl(solar_alt,solar_az,blog_v_roll
-     1                          ,elong_roll,od_atm_a,minalt,maxalt)
+     1                          ,elong_roll,od_atm_a
+     1                          ,minalt,maxalt,minazi,maxazi
+     1                          ,alt_scale,azi_scale)
                 I4_elapsed = ishow_timer()
             endif
 
@@ -985,16 +999,15 @@
           enddo 
           enddo
 
-          minazi = 0.
-          maxazi = 360.
-
           I4_elapsed = ishow_timer()
 
-          write(6,*)' call get_starglow with cyl data'
-          call get_starglow(i4time_solar,alt_a_roll,azi_a_roll           ! I
+          if(solar_alt .lt. 0.)then
+              write(6,*)' call get_starglow with cyl data'
+              call get_starglow(i4time_solar,alt_a_roll,azi_a_roll       ! I
      1                     ,minalt,maxalt,minazi,maxazi                  ! I
      1                     ,rlat,rlon,alt_scale,azi_scale                ! I
      1                     ,glow_stars)                                  ! O
+          endif
 
           I4_elapsed = ishow_timer()
 
