@@ -135,7 +135,7 @@
 
         Implicit real*8(a-z)
 
-        integer i,j,len_ast_root,len_mag_file
+        integer i,j,len_ast_root,len_mag_file,len_dir
 
         dimension v10(0:13,0:70)  ! opposition magnitude
         dimension r_km(0:13,0:70) ! radius of object
@@ -145,14 +145,19 @@
 
         data init/0/
 
+        character*150 static_dir,filename
+        character*120 cline
+
+        call get_directory('static',static_dir,len_dir)
+        filename = static_dir(1:len_dir)//'/magnitude.dat'          
+
         if(init .eq. 1)go to 102
 
 !       nm = '          '
 
 !       Read i, j, v10(i,j), r_km(i,j), nm(i,j)
-        call get_ast_root(c_ast_root,len_ast_root)
-        c_mag_file = c_ast_root(1:len_ast_root)//'/util/magnitude.dat'
-        len_mag_file = len_ast_root + 19
+        c_mag_file = filename
+        call s_len(filename,len_mag_file)
 
         open(15,file=c_mag_file(1:len_mag_file),status='old')
  50     read(15,51,err=101,end=101)c_line
