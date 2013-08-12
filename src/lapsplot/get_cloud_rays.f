@@ -12,7 +12,8 @@
      1                           ,view_alt,view_az,sol_alt,sol_azi
      1                           ,moon_alt,moon_azi 
      1                           ,moon_mag,moon_mag_thr
-     1                           ,minalt,maxalt
+     1                           ,minalt,maxalt,minazi,maxazi
+     1                           ,alt_scale,azi_scale
      1                           ,grid_spacing_m,r_missing_data)
 
         use mem_namelist, ONLY: earth_radius
@@ -56,19 +57,19 @@
         real obj_alt(ni,nj)
         real obj_azi(ni,nj)
 
-        integer isky(minalt:maxalt,0:360)
-        real r_cloud_3d(minalt:maxalt,0:360)     ! cloud opacity
-        real cloud_od(minalt:maxalt,0:360)       ! cloud optical depth
-        real cloud_rad(minalt:maxalt,0:360)      ! sun to cloud transmissivity (direct+fwd scat)
-        real cloud_rad_c(nc,minalt:maxalt,0:360) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
-        real clear_rad_c(nc,minalt:maxalt,0:360) ! integrated fraction of air illuminated by the sun along line of sight
+        integer isky(minalt:maxalt,minazi:maxazi)
+        real r_cloud_3d(minalt:maxalt,minazi:maxazi)     ! cloud opacity
+        real cloud_od(minalt:maxalt,minazi:maxazi)       ! cloud optical depth
+        real cloud_rad(minalt:maxalt,minazi:maxazi)      ! sun to cloud transmissivity (direct+fwd scat)
+        real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
+        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! integrated fraction of air illuminated by the sun along line of sight
                                            ! (consider Earth's shadow + clouds)
-        real airmass_2_cloud_3d(minalt:maxalt,0:360)
-        real airmass_2_topo_3d(minalt:maxalt,0:360)
-        real topo_swi(minalt:maxalt,0:360)
-        real topo_albedo(nc,minalt:maxalt,0:360)
-        real aod_2_cloud(minalt:maxalt,0:360)
-        real aod_2_topo(minalt:maxalt,0:360)
+        real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
+        real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
+        real topo_swi(minalt:maxalt,minazi:maxazi)
+        real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
+        real aod_2_cloud(minalt:maxalt,minazi:maxazi)
+        real aod_2_topo(minalt:maxalt,minazi:maxazi)
         real sum_odrad_c(nc)
 
         real*8 xplane,yplane,zplane
@@ -556,7 +557,7 @@
                 frac_airmass_lit = 0.
               endif
               airmass_lit = airmass * frac_airmass_lit      
-              clear_int = max(min(airmass_lit,1.0),.00001)               
+              clear_int = max(min(airmass_lit,8.0),.00001)               
             else ! in Earth's shadow (may need secondary scattering)
               dist_ray_plane = -999.9
               ht_ray_plane = -999.9
@@ -568,6 +569,7 @@
             sat_sol_ramp = min(-sol_alt(i,j) / 3.0,1.0) ! 0-1 (lower sun)
             sat_alt_ramp = sqrt(sind(float(ialt)))      ! 0-1 (higher alt)
             sat_ramp = 1.0-((1.0 - sat_alt_ramp) * (1.0 - sat_sol_ramp))
+!           sat_ramp = 1.0                                              
 
 !           clear_int here represents intensity at the zenith
             if(clear_int .gt. .0001)then      ! mid twilight
@@ -585,10 +587,22 @@
             endif
 
 !           HSI
-            hue = exp(-airmass_lit*0.2) ! 0:R 1:B
-            clear_rad_c(1,ialt,jazi) = hue                           ! Hue
+            hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
+            hue2 = 2.7 - 1.7 * hue ** 1.6     
+
+            if(hue2 .lt. 2.0)then
+                hue2 = 2.0 - sqrt(2.0 - hue2)
+            else
+                hue2 = 2.0 + .836 * sqrt(hue2 - 2.0)
+            endif
+
+            clear_rad_c(1,ialt,jazi) = hue2                          ! Hue
             clear_rad_c(2,ialt,jazi) = abs(hue-0.5) * 0.8 * sat_ramp ! Sat
      1                                                * sat_twi_ramp
+!           clear_rad_c(2,ialt,jazi) = 0.00 + (2.0*(hue-0.5)**2)     ! Sat
+            clear_rad_c(2,ialt,jazi) = 0.00 + (1.4*abs((hue-0.5))**1.5)   ! Sat
+     1                                     * sat_ramp                  
+     1                                     * sat_twi_ramp
             clear_rad_c(3,ialt,jazi) = clear_int * rint_alt_ramp     ! Int
 
           endif ! sun above horizon
@@ -607,52 +621,59 @@
 
          if(jazi_delt .eq. 2)then ! fill in missing azimuths
           do jazi = 1,359,jazi_delt
+              jazim = jazi-1
+              jazip = jazi+1
+              fm = 0.5
+              fp = 0.5
               r_cloud_3d(ialt,jazi) = 
-     1         0.5 * (r_cloud_3d(ialt,jazi-1) + r_cloud_3d(ialt,jazi+1))
+     1         fm * r_cloud_3d(ialt,jazim) + fp * r_cloud_3d(ialt,jazip)   
               cloud_od(ialt,jazi) = 
-     1         0.5 * (cloud_od(ialt,jazi-1)   + cloud_od(ialt,jazi+1))
+     1         fm * cloud_od(ialt,jazim)   + fp * cloud_od(ialt,jazip)
               cloud_rad(ialt,jazi) = 
-     1         0.5 * (cloud_rad(ialt,jazi-1)  + cloud_rad(ialt,jazi+1))
+     1         fm * cloud_rad(ialt,jazim)  + fp * cloud_rad(ialt,jazip)
               cloud_rad_c(:,ialt,jazi) = 
-     1         0.5 * (cloud_rad_c(:,ialt,jazi-1)  
-     1                                     + cloud_rad_c(:,ialt,jazi+1))
+     1         fm * cloud_rad_c(:,ialt,jazim)  
+     1                                  + fp *cloud_rad_c(:,ialt,jazip)
               clear_rad_c(:,ialt,jazi) = 
-     1         0.5 * (clear_rad_c(:,ialt,jazi-1)   
-     1                                     + clear_rad_c(:,ialt,jazi+1))
+     1         fm * clear_rad_c(:,ialt,jazim)   
+     1                                  + fp * clear_rad_c(:,ialt,jazip)
               airmass_2_cloud_3d(ialt,jazi) = 
-     1         0.5 * (airmass_2_cloud_3d(ialt,jazi-1) 
-     1              + airmass_2_cloud_3d(ialt,jazi+1))
+     1                fm * airmass_2_cloud_3d(ialt,jazim) 
+     1              + fp * airmass_2_cloud_3d(ialt,jazip)
               airmass_2_topo_3d(ialt,jazi) = 
-     1         0.5 * (airmass_2_topo_3d(ialt,jazi-1) 
-     1              + airmass_2_topo_3d(ialt,jazi+1))
+     1                fm * airmass_2_topo_3d(ialt,jazim) 
+     1              + fp * airmass_2_topo_3d(ialt,jazip)
               topo_swi(ialt,jazi) = 
-     1         0.5 * (topo_swi(ialt,jazi-1) 
-     1              + topo_swi(ialt,jazi+1))
+     1                fm * topo_swi(ialt,jazim) 
+     1              + fp * topo_swi(ialt,jazip)
           enddo
          endif
 
         enddo ! ialt
 
         do ialt = 21,89,2 ! fill in missing alt rings
+            ialtm = ialt-1
+            ialtp = ialt+1
+            fm = 0.5
+            fp = 0.5
             r_cloud_3d(ialt,:) =
-     1         0.5 * (r_cloud_3d(ialt-1,:) + r_cloud_3d(ialt+1,:))
+     1         fm * r_cloud_3d(ialtm,:) + fp * r_cloud_3d(ialtp,:)
             cloud_od(ialt,:) =
-     1         0.5 * (cloud_od(ialt-1,:)   + cloud_od(ialt+1,:))
+     1         fm * cloud_od(ialtm,:)   + fp * cloud_od(ialtp,:)
             cloud_rad(ialt,:) =
-     1         0.5 * (cloud_rad(ialt-1,:)     + cloud_rad(ialt+1,:))
+     1         fm * cloud_rad(ialtm,:)  + fp * cloud_rad(ialtp,:)
             cloud_rad_c(:,ialt,:) =
-     1         0.5 * (cloud_rad_c(:,ialt-1,:) + cloud_rad_c(:,ialt+1,:))
+     1         fm * cloud_rad_c(:,ialtm,:) + fp * cloud_rad_c(:,ialtp,:)
             clear_rad_c(:,ialt,:) =
-     1         0.5 * (clear_rad_c(:,ialt-1,:) + clear_rad_c(:,ialt+1,:))
+     1         fm * clear_rad_c(:,ialtm,:) + fp * clear_rad_c(:,ialtp,:)
             airmass_2_cloud_3d(ialt,:) =
-     1         0.5 * (airmass_2_cloud_3d(ialt-1,:) 
-     1              + airmass_2_cloud_3d(ialt+1,:))
+     1           fm * airmass_2_cloud_3d(ialtm,:) 
+     1         + fp * airmass_2_cloud_3d(ialtp,:)
             airmass_2_topo_3d(ialt,:) =
-     1         0.5 * (airmass_2_topo_3d(ialt-1,:) 
-     1              + airmass_2_topo_3d(ialt+1,:))
+     1           fm * airmass_2_topo_3d(ialtm,:) 
+     1         + fp * airmass_2_topo_3d(ialtp,:)
             topo_swi(ialt,:) =
-     1         0.5 * (topo_swi(ialt-1,:) 
-     1              + topo_swi(ialt+1,:))
+     1         fm * topo_swi(ialtm,:)      + fp * topo_swi(ialtp,:)
         enddo ! ialt
 
         write(6,*)' Number of rays with cloud = ',icloud_tot
