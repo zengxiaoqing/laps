@@ -79,7 +79,8 @@
       IF(INIT.NE.0)GO TO 1000
 
 !     Read in initial conditions
-      read(11,11)c_filename
+!     read(11,11)c_filename
+      c_filename = c_fileref
 11    format(a14)
       if(c_filename .ne. c_fileref)then
           write(6,*)' Opening planet file for initial conditions: '
@@ -93,7 +94,7 @@
       else
           write(6,*)' Using default initial conditions'
       endif ! We are reading from an external file (not using default data)
-      read(11,*)TOPOF,LAT,LON
+!     read(11,*)TOPOF,LAT,LON
       write(6,*)' TOPOF,lat,lon',topof,lat,lon
 
       H=1.D0
