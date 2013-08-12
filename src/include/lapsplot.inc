@@ -20,6 +20,7 @@
           real chigh_3dwind
           real chigh_cape
           real chigh_tpw
+          real power_tpw
 
           integer latlon_int
           integer mode_supmap
