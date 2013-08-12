@@ -136,10 +136,18 @@
           elseif(sol_alt .ge. -16.)then ! Twilight from clear_rad_c array
               hue = clear_rad_c(1,i,j)
               sat = clear_rad_c(2,i,j)
-              arg = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15             
-              rintensity_floor = 70. + sol_alt
+              if(clear_rad_c(3,i,j) .gt. 1.0)then
+                  arg2 = log10(clear_rad_c(3,i,j))
+                  arg = glow(i,j) + (arg2 + 5.0*arg2**1.5) * 0.15                                       
+              else
+                  arg = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15             
+              endif
+              rintensity_floor = 65. + sol_alt
               rintensity_glow = max(min(((arg     -7.) * 100.),255.),rintensity_floor)
               call hsi_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
+!             if(idebug .eq. 1)then
+!                 write(6,*)'Clr RGB = ',nint(clr_red),nint(clr_grn),nint(clr_blu)
+!             endif
 !             clr_red = rintensity_glow * clear_rad_c(2,i,j)
 !             clr_blu = rintensity_glow * clear_rad_c(3,i,j)
 !             clr_grn = 0.5 * (clr_red + clr_blu)                               
@@ -183,7 +191,9 @@
 
           elong_red = 12.0
           if(elong_a(i,j) .le. elong_red)then
+!         if(.false.)then                        
               red_elong = (elong_red - elong_a(i,j)) / elong_red
+!             write(6,*)' alt/elong/redelong: ',alt_a(i,j),elong_a(i,j),red_elong
               clr_red = clr_red * 1.0
               clr_grn = clr_grn * (1. - redness * red_elong)**0.3 
               clr_blu = clr_blu * (1. - redness * red_elong)
@@ -242,7 +252,7 @@
                   write(6,103)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
-                      ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j)
+                      ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)                              
               else ! night
                   write(6,103)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
@@ -250,7 +260,7 @@
                       ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:)
               endif
 102           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i6)
-103           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i6,' clrrad',3f10.6)
+103           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i6,' clrrad',3f10.6,3i6)
           endif
 
          endif ! missing data tested via altitude
@@ -297,7 +307,7 @@
         parameter (nstars = 320)
         real dec_d(nstars),ra_d(nstars),mag_stars(nstars)
         real alt_stars(nstars),azi_stars(nstars),ext_mag(nstars),lst_deg
-        real*8 angdif,jed,r8lon,lst,has,phi,als,azs,ras,x,y,decr
+        real*8 angdif,jed,r8lon,lst,has(nstars),phi,als,azs,ras,x,y,decr
 
         character*20 starnames(nstars)
 
@@ -323,8 +333,8 @@
           RAS = ra_d(is) * rpd
           DECR=dec_d(is) * rpd
 
-          HAS=angdif(lst,RAS)
-          call equ_to_altaz_r(DECR,HAS,PHI,ALS,AZS)
+          HAS(is)=angdif(lst,RAS)
+          call equ_to_altaz_r(DECR,HAS(is),PHI,ALS,AZS)
 
           alt_stars(is) = als / rpd
           azi_stars(is) = azs / rpd
@@ -334,10 +344,10 @@
 
 !       Obtain planets data
         do iobj = 2,6
-          if(.false.)then
+          if(.true.)then
             ns = ns + 1
             write(6,*)' Call sun_planet for ',iobj
-            call sun_planet(i4time,iobj,rlat,rlon,alt_stars(is),azi_stars(is),elgms_r4,mag_stars(is))
+            call sun_planet(i4time,iobj,rlat,rlon,dec_d(ns),ra_d(ns),alt_stars(ns),azi_stars(ns),elgms_r4,mag_stars(ns))
             starnames(ns) = 'planet'
           endif
         enddo ! iobj
@@ -355,8 +365,8 @@
             ext_mag(is) = 0.0
           endif
 
-          if(is .le. 200)then
-            write(6,7)is,starnames(is),dec_d(is),ra_d(is),has/rpd,alt_stars(is),azi_stars(is),mag_stars(is),ext_mag(is)
+          if(is .le. 100 .OR. (is .gt. 100 .and. is .ge. ns-4))then
+            write(6,7)is,starnames(is),dec_d(is),ra_d(is),has(is)/rpd,alt_stars(is),azi_stars(is),mag_stars(is),ext_mag(is)
 7           format('dec/ra/ha/al/az/mg/ext',i4,1x,a20,1x,f9.1,4f9.3,2f9.1)
           endif
         enddo ! is
