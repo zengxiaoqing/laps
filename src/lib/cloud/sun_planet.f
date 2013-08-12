@@ -1,6 +1,6 @@
 
       subroutine sun_planet(i4time,n_planet,rlat,rlon
-     1                     ,alm_r4,azm_r4,elgms_r4,r4_mag) 
+     1                     ,dec_r4,ra_r4,alm_r4,azm_r4,elgms_r4,r4_mag) 
 
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
 
@@ -9,6 +9,8 @@
 
       ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)
      .-3.1415926535897932D0
+
+      ATAN3(X,Y)=DMOD((DATAN2(X,Y)+6.2831853071796D0),6.2831853071796D0)
 
       CHARACTER BLANK,TWI,MOON,RISE,SET,SIGN,PLUS,MINUS
       DIMENSION R(3),RR(3),RHO(3),RRI(3),P(3),Q(3),W(3),PP(3),QQ(3)
@@ -25,6 +27,7 @@
       DIMENSION LAT(9),LON(9)
 
       real*8 maglimd_r8,maglimt_r8,maglimn_r8,maglim_r8
+      real alm_r4,azm_r4,r4_mag,elgms_r4,rlat,rlon,dec_r4,ra_r4
 
       CUBERT(X)=DEXP(DLOG(DABS(X))/3.)*X/DABS(X)
 
@@ -215,6 +218,14 @@ C CALCULATE ALT AND AZ of SUN
 
           endif
       endif
+
+!     Convert to real
+      alm_r4 = alm
+      azm_r4 = azm
+      r4_mag = amag
+      elgms_r4 = elgms
+      dec_r4 = decm/rpd
+      ra_r4 = ram/rpd
 
       return
 
