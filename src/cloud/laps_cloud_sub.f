@@ -1106,6 +1106,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base
      1        ,solar_alt,solar_az                                     ! I
      1        ,di_dh,dj_dh,i_fill_seams                               ! I
+     1        ,cldtop_tb8_m                                           ! I
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
         endif
 
