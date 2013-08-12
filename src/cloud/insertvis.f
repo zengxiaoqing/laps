@@ -45,6 +45,7 @@ cdis
      1      ,istat_radar,radar_ref_3d,klaps,ref_base
      1      ,solar_alt,solar_az
      1      ,di_dh,dj_dh,i_fill_seams                                 ! I
+     1      ,cldtop_tb8_m                                             ! I
      1      ,dbz_max_2d,surface_sao_buffer,istatus)
 
 !       Steve Albers 1999 Added 3.9u cloud clearing step in NULL Mode
@@ -85,12 +86,15 @@ cdis
         real r_shadow_3d(ni,nj,nk)
         real di_dh(ni,nj)                      
         real dj_dh(ni,nj)                      
+        real cldtop_tb8_m(ni,nj)     ! Input
         integer i_fill_seams(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
         real cloud_frac_vis_a(ni,nj)
         integer mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
+
+        call get_grid_spacing_cen(grid_spacing_m,istatus)
 
         if(l_use_39)then
             write(6,*)' subroutine insert_vis (with 3.9u)...'
@@ -118,6 +122,8 @@ cdis
         n_vis_mod = 0
         n_39_clr = 0
         n_39_clr_2d = 0
+        n_ir = 0
+        n_no_ir = 0
 
         diffin_sum  = 0.
         diffout_sum = 0.
@@ -242,6 +248,28 @@ cdis
                            n_39_clr = n_39_clr + 1
                            l_39_clr_2d = .true.
                        endif
+                   endif
+
+!                  Check for nearby IR cloud signature
+                   nsmooth = (int(8000. / grid_spacing_m) / 2) + 1
+                   il = max(i-nsmooth,1)
+                   ih = min(i+nsmooth,ni)
+                   jl = max(j-nsmooth,1)
+                   jh = min(j+nsmooth,nj)
+
+                   ir_present = 1
+                   do ii = il,ih
+                   do jj = jl,jh
+                       if(cldtop_tb8_m(i,j) .eq. r_missing_data)then
+                           ir_present = 0
+                       endif
+                   enddo ! jj
+                   enddo ! ii
+
+                   if(ir_present .eq. 1)then
+                       n_ir = n_ir + 1
+                   else
+                       n_no_ir = n_no_ir + 1
                    endif
 
                    clouds_3d(itn:itx,jt,k) = cloud_frac_out ! Modify the output
@@ -377,9 +405,10 @@ cdis
         write(6,*)' N_VIS_MOD = ',n_vis_mod
         write(6,*)' N_39_CLR = ',n_39_clr
         write(6,*)' N_39_CLR_2D = ',n_39_clr_2d
+        write(6,*)' N_IR = ',n_ir
+        write(6,*)' N_NO_IR = ',n_no_ir
         write(6,*)
 
-        call get_grid_spacing_cen(grid_spacing_m,istatus)
         call get_cloud_shadow(i4time,clouds_3d,cld_hts,r_shadow_3d
      1                             ,ni,nj,nk
      1                             ,solar_alt,solar_az 
