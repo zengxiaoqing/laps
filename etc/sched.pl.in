@@ -184,9 +184,9 @@ if(defined $opt_s){ # "surface only"
                   obs_convert.exe
                   mosaic_radar.x
                   stmas_mg.x
-                  STMAS3D.exe
+                  temp.exe
                   lvd_sat_ingest.exe
-                  cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
+                  cloud.exe STMAS3D_rh.exe deriv.exe accum.exe lsm5.exe
                   qbalpe.exe lapsprep.exe laps2grib.exe);
     $lga_proc = "obs_convert.exe"; 
 }elsif( ($opt_V eq "STMAS3Domega")) { # STMAS 3D analysis with add_omega
@@ -203,7 +203,7 @@ if(defined $opt_s){ # "surface only"
                   cloud.exe lq3driver.x deriv.exe accum.exe lsm5.exe
                   qbalpe.exe add_omega.exe lapsprep.exe laps2grib.exe);
     $lga_proc = "obs_convert.exe"; 
-}elsif( ($opt_V eq "STMAS3Dradar")) { # STMAS 3D analysis with add_omega
+}elsif( ($opt_V eq "STMAS3D_gps")) { # STMAS 3D analysis with add_omega
     @LAPS_EXE = qw(lga.exe
                   obs_driver.x
                   ingest_pro.exe ingest_sounding.exe
@@ -212,9 +212,9 @@ if(defined $opt_s){ # "surface only"
                   obs_convert.exe
                   mosaic_radar.x
                   stmas_mg.x
-                  STMAS3D.exe
+                  temp.exe
                   lvd_sat_ingest.exe
-                  cloud.exe lq3driver.x STMAS3D.exe deriv.exe accum.exe lsm5.exe
+                  cloud.exe STMAS3D_gps.exe deriv.exe accum.exe lsm5.exe
                   qbalpe.exe lapsprep.exe laps2grib.exe);
     $lga_proc = "obs_convert.exe"; 
 }elsif( ($opt_V eq "STMAS3Domega_nbal")) { # STMAS 3D replacing qbalpe by add_omega
