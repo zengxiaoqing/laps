@@ -262,6 +262,21 @@ if(defined $opt_s){ # "surface only"
                   qbalpe.exe lapsprep.exe laps2grib.exe);
     $lga_proc = "obs_convert.exe";
 
+}elsif( ($opt_V eq "STMAS3D_crtm")) { # STMAS crtm analysis. HJ 8/13/2013
+    @LAPS_EXE = qw(lga.exe
+                  obs_driver.x
+                  ingest_pro.exe ingest_sounding.exe
+                  ingest_cloud_drift.exe ingest_aircraft.exe
+                  ingest_lrs.exe
+                  obs_convert.exe
+                  mosaic_radar.x
+                  stmas_mg.x
+                  temp.exe
+                  lvd_sat_ingest.exe
+                  cloud.exe STMAS3D_crtm.exe deriv.exe accum.exe lsm5.exe
+                  qbalpe.exe lapsprep.exe laps2grib.exe);
+    $lga_proc = "obs_convert.exe";
+
 }elsif($opt_V eq "GSI_Post"){ # GSI analysis
     @LAPS_EXE = qw(GSI_Post.exe
                   lapsprep.exe);
