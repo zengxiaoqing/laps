@@ -165,22 +165,23 @@ subroutine reflectivity
   integer :: istatus2d(fcstgrd(1),fcstgrd(2)), &
              istatus3d(fcstgrd(1),fcstgrd(2))
   logical :: reflectivity_bound
-  real    :: rlat,rlon,rhgt,rhc,tref ! LAPS uses these scalars
-  real    :: closest(fcstgrd(1),fcstgrd(2)),rmax(2),rlow(2)
+  real    :: rhc,tref ! LAPS uses these scalars
+  real    :: rmax(2),rlow(2)
 
   ! Functions:
   real :: make_ssh
 
-  ! Allocatables:
-  real, allocatable :: refl(:,:,:,:),cldf(:,:,:,:)
-
   ! Include LAPS cloud parameters:
   include 'laps_cloud.inc'
-  real :: cloudheight(kcloud),cloudpress(kcloud),alpha
+
+  ! Allocatables: Reflectivity, cloud fraction on p-coor and on height-coord:
+  real, allocatable :: refl(:,:,:,:),cldf(:,:,:,:),cldh(:,:,:,:)
+  real :: cld_hgt(kcloud),cld_prs(kcloud)
 
   ! Allocate memory:
   allocate(refl(fcstgrd(1),fcstgrd(2),fcstgrd(3),3), &
-           cldf(fcstgrd(1),fcstgrd(2),max(kcloud,fcstgrd(3)),3), &
+           cldf(fcstgrd(1),fcstgrd(2),fcstgrd(3),3), &
+           cldh(fcstgrd(1),fcstgrd(2),kcloud,3), &
     stat=istatus)
   
   ! Reference temperaure for converison between SH and RH:
@@ -199,10 +200,12 @@ subroutine reflectivity
     endif
   enddo
   ! Interpolate: 
-  refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),3) = &
-    refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2) ! No extrapolation
   refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) = &
-    refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! Assume refl does not change in half cycle
+    0.5*(refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1)+ &
+         refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2))
+  refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),3) = &
+    2.0*refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2)- &
+        refl(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! extrapolation
   
   ! Reflectivity derived bounds:
   bk0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:fcstgrd(4),numstat+1) = 0.0
@@ -235,26 +238,33 @@ subroutine reflectivity
   enddo
   enddo
 
-  ! Read LAPS cloud fraction:
-  ext = 'lcp '
+  ! Read LAPS cloud fraction on LAPS cld_hgt coordinate and then interpolate to pressure levels:
+  ext = 'lc3 '
   cldf = 0.0
-  do ll=1,1 ! lcp is written out by deriv.exe but STMAS is before deriv.exe!!!!
-    call get_laps_3dgrid(lapsi4t+(ll-2)*icycle,icycle/2,i, &
-                         fcstgrd(1),fcstgrd(2),fcstgrd(3), &
-                         ext,'lcp',unit,comment,cldf(1,1,1,ll),istatus)
+  do ll=1,2 ! lc3 at current and previous time frames
+    call get_clouds_3dgrid(lapsi4t+(ll-2)*icycle,i, &
+                         fcstgrd(1),fcstgrd(2),kcloud, &
+                         ext,cldh(1,1,1,ll),cld_hgt,cld_prs,istatus)
     if (i .ne. lapsi4t+(ll-2)*icycle) then
-      print*,'Does not find a lcp at: ',lapsi4t+(ll-2)*icycle
+      print*,'Does not find a lc3 at: ',lapsi4t+(ll-2)*icycle
       cycle
     endif
+
+    ! Interpolate from LAPS_height to analysis pressure coordinate:
+    print*,'Interpolating lc3 to lcp...'
+    call interp_height_pres_fast(fcstgrd(1),fcstgrd(2),fcstgrd(3),kcloud,cldf(1,1,1,ll), &
+         cldh(1,1,1,ll),bk0(1,1,1,ll,pressure),cld_hgt,istatus)
 
   enddo
   print*,'Cloud fraction before interpolation: ',maxval(cldf(:,:,:,1)),minval(cldf(:,:,:,1))
 
   ! Interpolate cloud fraction to all time frames:
-  cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),3) = &
-    cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! No extrapolation
   cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2) = &
-    cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! Assume cloud does not change in a cycle
+    0.5*(cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1)+ &
+         cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2))
+  cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),3) = &
+    2.0*cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2)- &
+        cldf(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1) ! extrapolation
   
   ! Adjust bound based on cloud:
   reflectivity_bound = .false.
@@ -303,7 +313,7 @@ subroutine reflectivity
                                       minval(grdbkgd0(:,:,:,:,numstat+1))
   ! Deallocate:
   
-  deallocate(refl,cldf,stat=istatus)
+  deallocate(refl,cldf,cldh,stat=istatus)
 
 end subroutine reflectivity
 
