@@ -784,7 +784,7 @@ foreach $exe (@LAPS_EXE){
                 if($node_type =~ "serial"){ # 6.0 GB STMAS (covers 4.8GB for LAPS)
                     if($opt_V =~ "STMAS") {
                         if($npts > 10000000){ # Note STMAS_CONUS is 55 million gridpoints & 16GB, VLAPS_HWT is 27.5 million gridpoints & 18.5GB
-                            $vmem_gb=18.5
+                            $vmem_gb=20.0
                         }else{
                             $vmem_gb=11.0
                         }
