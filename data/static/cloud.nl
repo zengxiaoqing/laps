@@ -9,7 +9,7 @@
  latency_co2=4000,
  pct_req_lvd_s8a=75.,
  cld_weight_modelfg=.01,
- echotop_thr_a=4000.,4000.,276.15,
+ echotop_thr_a=4000.,4000.,274.15,
  i4_sat_window=1870,
  i4_sat_window_offset=-60,
  i_varadj=1,
@@ -58,9 +58,9 @@ c   cld_weight_modelfg = .0001 ! Model used beyond ~630km from nearest obs
 c 
 c
 c echotop_thr_a - 3 element array for the echo top ground clutter test
-c                 1) height threshold for cold temperatures
-c                 2) height threshold for warm temperatures
-c                 3) surface air temperature cutoff (K)
+c                 1) height threshold for cold nighttime temperatures
+c                 2) height threshold for warm temperatures or daytime
+c                 3) surface air temperature cutoff from warm to cold regime (K)
 c
 c i4_sat_window - half-width of time window for satellite data
 c
