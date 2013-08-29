@@ -846,6 +846,52 @@ C
       end
 
 
+      subroutine hsl_to_rgb(hue,sat,rintens,red,grn,blu)
+
+      real luma
+
+!     Hue is 0:R, 1:B, 2:G, 3:R
+
+      red1 = max(1.0 - abs(hue - 0.0),0.0)
+      red2 = max(1.0 - abs(hue - 3.0),0.0)
+      red = max(red1,red2)
+      grn = max(1.0 - abs(hue  - 2.0),0.0)
+      blu = max(1.0 - abs(hue  - 1.0),0.0)
+
+!     Normalize to the max intensity
+      colmax = max(red,grn,blu)
+      if(colmax .gt. 0.)then
+          red = red/colmax
+          grn = grn/colmax
+          blu = blu/colmax
+      endif
+
+      red = (red*sat) + 1.0*(1.0-sat)
+      grn = (grn*sat) + 1.0*(1.0-sat)
+      blu = (blu*sat) + 1.0*(1.0-sat)
+
+      red = red * rintens
+      grn = grn * rintens
+      blu = blu * rintens
+
+!     Scale the RGB intensity according to the luma calculation
+
+      luma = .30 * red + .59 * grn + .11 * blu
+
+      if(luma .gt. 0.)then
+          ratio_corr = rintens / luma
+      else
+          ratio_corr = 1.0
+      endif
+
+      red = red * ratio_corr
+      grn = grn * ratio_corr
+      blu = blu * ratio_corr
+
+      return
+      end
+
+
       subroutine colorbar(ni,nj,namelist_parms,plot_parms 
      1                   ,ncols,ireverse,log_scaling,power
      1                   ,scale_l,scale_h
