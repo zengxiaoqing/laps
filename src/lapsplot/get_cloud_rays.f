@@ -156,6 +156,8 @@
 
         do ialt = minalt,maxalt
 
+         altray = float(minalt) + float(ialt)*alt_scale
+
          if(ialt .ge. 20)then
              if(ialt .eq. (ialt/2)*2)then
                  jazi_delt = 2
@@ -170,14 +172,15 @@
 
           if((jazi .eq. 225 .or. jazi .eq. 45) .AND.
 !    1        (ialt .eq. (ialt/10)*10 .or. ialt .le. 5) )then
-     1        (ialt .eq. 12 .or. ialt .eq. 9 .or. ialt .le. 6) )then
+     1        (abs(altray) .eq. 12 .or. abs(altray) .eq. 9 
+     1                             .or. abs(altray) .le. 6) )then
               idebug = 1
           else
               idebug = 0
           endif
 
 !         Trace towards sky from each grid point
-          view_altitude_deg = max(float(ialt),0.) ! handle Earth curvature later
+          view_altitude_deg = max(altray,0.) ! handle Earth curvature later
           view_azi_deg = jazi
 
 !         Get direction cosines based on azimuth
@@ -531,7 +534,8 @@
             angle_plane = 0.; dist_ray_plane = 0.; ht_ray_plane = 0.
 
           else ! sun below horizon (twilight / night illumination)
-            z = 90. - float(ialt)
+            patm = 0.85
+            z = 90. - altray
             airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
 
             alt_plane = 90. - abs(sol_alt(i,j))
@@ -557,38 +561,54 @@
                 frac_airmass_lit = 0.
               endif
               airmass_lit = airmass * frac_airmass_lit      
-              clear_int = max(min(airmass_lit,8.0),.00001)               
-            else ! in Earth's shadow (may need secondary scattering)
+              airmass_to_twi = (1.0 - frac_airmass_lit) * airmass * patm
+              twi_trans = 1.0 - exp(-.14 * 0.5 * airmass_to_twi)
+
+!             clear_int = max(min(airmass_lit,32.0),.00001)               
+              clear_int = 
+     1                max(min(frac_airmass_lit*twi_trans,1.0),.00001) ! test
+!             clear_int = 
+!    1                max(min(     airmass_lit*twi_trans,1.0),.00001) ! test
+
+            else ! in Earth's shadow (may need secondary scattering)  
               dist_ray_plane = -999.9
               ht_ray_plane = -999.9
               airmass_lit = 0.
               clear_int = .00001                                         
             endif ! part of atmosphere is illuminated
 
-!           Apply saturation ramp at low altitudes
+!           Apply saturation ramp (=1) at high altitudes or low sun
+!                                 (=0) at low altitudes and high sun
             sat_sol_ramp = min(-sol_alt(i,j) / 3.0,1.0) ! 0-1 (lower sun)
             sat_alt_ramp = sqrt(sind(float(ialt)))      ! 0-1 (higher alt)
             sat_ramp = 1.0-((1.0 - sat_alt_ramp) * (1.0 - sat_sol_ramp))
-!           sat_ramp = 1.0                                              
+
+!           Ramp2 is zero with either high sun or high alt
+            hue_alt_ramp = (sind(float(ialt)))**2.0     ! 0-1 (higher alt)
+            hue_ramp2 = sat_sol_ramp * (1.0 - hue_alt_ramp)
 
 !           clear_int here represents intensity at the zenith
             if(clear_int .gt. .0001)then      ! mid twilight
                 sat_twi_ramp = 1.0
                 rint_alt_ramp = 1.0
-            elseif(clear_int .le. .00001)then ! night
+            elseif(clear_int .le. .00001)then ! night or late twilight
                 sat_twi_ramp = 0.6
                 rint_alt_ramp = sqrt(airmass)
+                clear_int = .00001
             else                              ! late twilight
                 frac_twi_ramp = (clear_int - .00001) / .00009
                 sat_twi_ramp = 0.6 + 0.4 * frac_twi_ramp
-                rint_twi_ramp = (1.0           * frac_twi_ramp)
+                rint_alt_ramp = (1.0           *        frac_twi_ramp)
      1                        +  sqrt(airmass) * (1.0 - frac_twi_ramp)
-                rint_alt_ramp = rint_twi_ramp * frac_twi_ramp
             endif
 
 !           HSI
+!           Hue tends to red with high airmass and blue with low airmass
+!           Higher exp coefficient makes it more red
+!           Also set to blue with high alt or high sun (near horizon)
             hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
-            hue2 = 2.7 - 1.7 * hue ** 1.6     
+            hue2 = (2.7 - 1.7 * hue ** 1.6) *      hue_ramp2 
+     1                                + 1.0 * (1.0-hue_ramp2)
 
             if(hue2 .lt. 2.0)then
                 hue2 = 2.0 - sqrt(2.0 - hue2)
@@ -597,13 +617,24 @@
             endif
 
             clear_rad_c(1,ialt,jazi) = hue2                          ! Hue
-            clear_rad_c(2,ialt,jazi) = abs(hue-0.5) * 0.8 * sat_ramp ! Sat
-     1                                                * sat_twi_ramp
-!           clear_rad_c(2,ialt,jazi) = 0.00 + (2.0*(hue-0.5)**2)     ! Sat
-            clear_rad_c(2,ialt,jazi) = 0.00 + (1.4*abs((hue-0.5))**1.5)   ! Sat
+
+            if(hue2 .gt. 2.0)then ! Red End
+                sat_arg = 0.7*abs((hue2-2.0))**1.5
+            else                  ! Blue End
+                sat_arg = 0.4*abs((hue2-2.0))**1.5
+            endif
+            clear_rad_c(2,ialt,jazi) = 0.00 + (sat_arg)              ! Sat
      1                                     * sat_ramp                  
      1                                     * sat_twi_ramp
+
             clear_rad_c(3,ialt,jazi) = clear_int * rint_alt_ramp     ! Int
+
+            if(clear_rad_c(3,ialt,jazi) .lt. .0000099)then
+                write(6,*)' WARNING: low value of clear_rad_c'
+     1                   ,clear_rad_c(3,ialt,jazi),z,airmass
+     1                   ,rint_alt_ramp,clear_int,angle_plane
+     `                   ,ht_ray_plane,ZtoPsa(ht_ray_plane)
+            endif
 
           endif ! sun above horizon
 
@@ -619,12 +650,11 @@
 
          enddo ! jazi
 
-         if(jazi_delt .eq. 2)then ! fill in missing azimuths
+         if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4)then ! fill missing azimuths
           do jazi = 1,359,jazi_delt
-              jazim = jazi-1
-              jazip = jazi+1
-              fm = 0.5
-              fp = 0.5
+            call get_interp_parms(minazi,maxazi,jazi_delt,jazi       ! I
+     1                           ,fm,fp,jazim,jazip,ir)              ! O
+            if(ir .ne. 0)then
               r_cloud_3d(ialt,jazi) = 
      1         fm * r_cloud_3d(ialt,jazim) + fp * r_cloud_3d(ialt,jazip)   
               cloud_od(ialt,jazi) = 
@@ -646,16 +676,16 @@
               topo_swi(ialt,jazi) = 
      1                fm * topo_swi(ialt,jazim) 
      1              + fp * topo_swi(ialt,jazip)
+            endif ! ir .ne. 0
           enddo
          endif
 
         enddo ! ialt
 
         do ialt = 21,89,2 ! fill in missing alt rings
-            ialtm = ialt-1
-            ialtp = ialt+1
-            fm = 0.5
-            fp = 0.5
+          call get_interp_parms(minalt,maxalt,2,ialt               ! I
+     1                         ,fm,fp,ialtm,ialtp,ir)              ! O
+          if(ir .ne. 0)then
             r_cloud_3d(ialt,:) =
      1         fm * r_cloud_3d(ialtm,:) + fp * r_cloud_3d(ialtp,:)
             cloud_od(ialt,:) =
@@ -674,6 +704,7 @@
      1         + fp * airmass_2_topo_3d(ialtp,:)
             topo_swi(ialt,:) =
      1         fm * topo_swi(ialtm,:)      + fp * topo_swi(ialtp,:)
+          endif ! ir .ne. 0
         enddo ! ialt
 
         write(6,*)' Number of rays with cloud = ',icloud_tot
@@ -696,6 +727,9 @@
 
         write(6,*)' Range of cloud_rad_c B =',minval(cloud_rad_c(3,:,:))
      1                                       ,maxval(cloud_rad_c(3,:,:))
+
+        write(6,*)' Range of clear_rad_c 3 =',minval(clear_rad_c(3,:,:))
+     1                                       ,maxval(clear_rad_c(3,:,:))
 
         I4_elapsed = ishow_timer()
  
