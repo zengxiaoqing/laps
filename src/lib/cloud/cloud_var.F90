@@ -127,7 +127,7 @@ do j = 1,nj
     enddo ! k
 
     call cvr_to_tb8_effective(kcld,temp_3d,nk,i,j,ni,nj,a      &
-                             ,f,ilyr,cloudcvr_1d,cld_hts,t_gnd_k(i,j)  &
+                             ,f,ilyr,cldcvr_1d,cld_hts,t_gnd_k(i,j)  &
                              ,heights_3d,t_effective,nlyr      &
                              ,idebug,istatus)
 
