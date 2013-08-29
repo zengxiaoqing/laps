@@ -1,6 +1,6 @@
 
         subroutine plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
-     1                          ,minalt,maxalt
+     1                          ,minalt,maxalt,minazi,maxazi
      1                          ,r_missing_data,laps_cycle_time,maxstns
      1                          ,i_overlay,plot_parms,namelist_parms
      1                          ,l_polar,l_cyl)       
@@ -9,6 +9,8 @@
      1                        , grid_spacing_m, aod
 
         include 'lapsplot.inc'
+
+        addlogs(x,y) = log10(10.**x + 10.**y)
 
         real pres_3d(NX_L,NY_L,NZ_L)
         real field_3d(NX_L,NY_L,NZ_L)
@@ -104,22 +106,23 @@
         character*5 c5_name, c5_name_a(max_snd_grid), c5_name_min
         character*8 obstype(max_snd_grid)
 
-        real r_cloud_3d(minalt:maxalt,0:360)     ! cloud opacity
-        real cloud_od(minalt:maxalt,0:360)       ! cloud optical depth
-        real blog_v_roll(minalt:maxalt,0:360)
-        real glow_stars(minalt:maxalt,0:360)
-        real elong_roll(minalt:maxalt,0:360)
-        real airmass_2_cloud_3d(minalt:maxalt,0:360)
-        real airmass_2_topo_3d(minalt:maxalt,0:360)
-        real topo_swi(minalt:maxalt,0:360)
-        real topo_albedo(nc,minalt:maxalt,0:360)
-        real aod_2_cloud(minalt:maxalt,0:360)
-        real aod_2_topo(minalt:maxalt,0:360)
-        real r_cloud_trans(minalt:maxalt,0:360)  ! sun to cloud transmissivity (direct+fwd scat)
-        real cloud_rad_c(nc,minalt:maxalt,0:360) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
-        real clear_rad_c(nc,minalt:maxalt,0:360) ! integrated fraction of air illuminated by the sun along line of sight
-        real alt_a_roll(minalt:maxalt,0:360)
-        real azi_a_roll(minalt:maxalt,0:360)
+        real r_cloud_3d(minalt:maxalt,minazi:maxazi) ! cloud opacity
+        real cloud_od(minalt:maxalt,minazi:maxazi)   ! cloud optical depth
+        real blog_v_roll(minalt:maxalt,minazi:maxazi)
+        real blog_moon_roll(minalt:maxalt,minazi:maxazi)
+        real glow_stars(minalt:maxalt,minazi:maxazi)
+        real elong_roll(minalt:maxalt,minazi:maxazi)
+        real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
+        real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
+        real topo_swi(minalt:maxalt,minazi:maxazi)
+        real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
+        real aod_2_cloud(minalt:maxalt,minazi:maxazi)
+        real aod_2_topo(minalt:maxalt,minazi:maxazi)
+        real r_cloud_trans(minalt:maxalt,minazi:maxazi)  ! sun to cloud transmissivity (direct+fwd scat)
+        real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
+        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! integrated fraction of air illuminated by the sun along line of sight
+        real alt_a_roll(minalt:maxalt,minazi:maxazi)
+        real azi_a_roll(minalt:maxalt,minazi:maxazi)
 
         parameter (ni_polar = 511)
         parameter (nj_polar = 511)
@@ -131,8 +134,8 @@
 
         real sky_rgb_polar(0:2,ni_polar,nj_polar)
         integer isky_rgb_polar(0:2,ni_polar,nj_polar)
-        real sky_rgb_cyl(0:2,minalt:maxalt,0:360)
-        integer isky_rgb_cyl(0:2,minalt:maxalt,0:360)
+        real sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi)
+        integer isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi)
 
         data ilun /0/
         character*3 clun
@@ -146,9 +149,6 @@
         else
             alt_scale = 1.0 
         endif
-
-        minazi = 0
-        maxazi = maxalt * 4
 
         if(maxazi .eq. 720)then
             azi_scale = 0.5 
@@ -325,7 +325,7 @@
      1                         ,i4_valid                ! O
      1                         ,istatus)                ! O
 
-          write(6,*)' a9time1 is ',a9time
+          write(6,*)' a9time is ',a9time
 
           goto200
 
@@ -707,7 +707,11 @@
 
           call get_static_field_interp('albedo',i4time_lwc,NX_L,NY_L
      1                                ,static_albedo,istat_sfc)
-          if(istat_sfc .ne. 1)goto1000
+          if(istat_sfc .ne. 1)then
+              write(6,*)' Error reading albedo field in plot_allsky'      
+              return
+          endif
+
           do j = 1,NY_L
           do i = 1,NX_L
             if(static_albedo(i,j) .ne. 0.08)then ! brown land
@@ -929,6 +933,14 @@
         write(clun,14)ilun
 14      format(i3.3)
 
+!       Get alt_a_roll and azi_a_roll arrays (needs to be generalized)?
+        do i = minalt,maxalt
+        do j = minazi,maxazi
+            alt_a_roll(i,j) = i
+            azi_a_roll(i,j) = j
+        enddo 
+        enddo
+
 !       if(solar_alt .ge. 0.)then
         if(.true.)then
             I4_elapsed = ishow_timer()
@@ -942,13 +954,29 @@
      1                          ,minalt,maxalt,minazi,maxazi
      1                          ,alt_scale,azi_scale)
                 I4_elapsed = ishow_timer()
+
+                if(moon_mag .lt. moon_mag_thr .AND.
+     1             alm      .gt. 0.                 )then
+                    write(6,*)' Moon is being added in: ',alm,azm
+                    call get_glow_obj(i4time,alt_a_roll,azi_a_roll
+     1                               ,minalt,maxalt,minazi,maxazi 
+     1                               ,rlat,rlon,alt_scale,azi_scale
+     1                               ,alm,azm,moon_mag
+     1                               ,blog_moon_roll)
+
+                    write(6,*)' range of blog_moon_roll is',
+     1                  minval(blog_moon_roll),maxval(blog_moon_roll)
+                    blog_v_roll = addlogs(blog_v_roll,blog_moon_roll)
+                endif
+
             endif
 
             if(solar_alt .lt. -16. .AND. moon_mag .lt. moon_mag_thr
      1                             .AND. alm .gt. 0.         )then
                 write(6,*)' Moon is significant: mag is ',moon_mag
-                call skyglow_cyl(alm,azm,blog_v_roll,elong_roll
-     1                          ,od_atm_a,minalt,maxalt)
+                call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,od_atm_a
+     1                          ,minalt,maxalt,minazi,maxazi
+     1                          ,alt_scale,azi_scale)
                 blog_v_roll = blog_v_roll + (-26.7 - moon_mag) * 0.4
                 I4_elapsed = ishow_timer()
             endif
@@ -989,15 +1017,10 @@
         endif ! l_polar
 
         if((l_cyl .eqv. .true.) .OR. (mode_polar .eq. 2))then              
+
 !         Get all sky for cyl   
           ni_cyl = maxalt - minalt + 1
           nj_cyl = 361
-          do i = minalt,maxalt
-          do j = 0,360
-              alt_a_roll(i,j) = i
-              azi_a_roll(i,j) = j
-          enddo 
-          enddo
 
           I4_elapsed = ishow_timer()
 
