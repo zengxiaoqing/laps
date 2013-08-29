@@ -14,6 +14,7 @@
         include 'trigd.inc'
 
         addlogs(x,y) = log10(10.**x + 10.**y)
+        trans(od) = exp(-od)
 
         parameter (nc = 3)
 
@@ -36,12 +37,40 @@
         real azi_a(ni,nj)
         real elong_a(ni,nj)
         real rintensity(nc)
+       
+        real ext_g(nc),trans_c(nc)  ! od per airmass, tramsmissivity
+        data ext_g /.07,.14,.28/    ! refine via Schaeffer
 
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag
 
         write(6,*)' get_sky_rgb: sol_alt = ',sol_alt
         write(6,*)' moon alt/az/mag = ',moon_alt,moon_az,moon_mag
+
+!       Use maximum sky brightness to calculate a secondary glow (twilight)
+        call get_twi_glow_ave(glow(:,:) + log10(clear_rad_c(3,:,:)) &
+                     ,alt_a,azi_a,ni,nj,sol_alt,sol_az,twi_glow_ave)
+        write(6,*)' twi_glow_ave = ',twi_glow_ave
+
+!       arg = maxval(glow(:,:) + log10(clear_rad_c(3,:,:))) ! phys val
+        arg = maxval(8.0       + log10(clear_rad_c(3,:,:))) ! avoid moon
+        write(6,*)' twi_glow_max = ',arg
+
+!       glow_secondary = arg - 1.5          ! one thirtieth of max sky brightness
+        glow_diff_cld      = 1.0
+        glow_diff_clr      = 1.5
+        glow_secondary_cld = twi_glow_ave - glow_diff_cld
+        glow_secondary_clr = twi_glow_ave - glow_diff_clr
+
+        write(6,*)' glow_secondary_cld = ',glow_secondary_cld
+        write(6,*)' glow_secondary_clr = ',glow_secondary_clr
+
+        if(sol_alt .le. 0. .AND. sol_alt .ge. -16.)then
+            argref = 8.3 + (sol_alt * 0.293)
+            contrast = 44. + 56. * (abs(sol_alt + 8.)/8.)**2
+            write(6,*)' argref = ',argref
+            write(6,*)' contrast = ',contrast
+        endif
 
 !       Brighten resulting image at night
         if(sol_alt .lt. -16.)then
@@ -56,8 +85,15 @@
             write(6,*)' slices at 45,225 degrees azimuth'
         endif
 
-        if(ni .eq. nj)write(6,11)
-11      format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten   airtopo  switopo  topoalb   topood  topovis  cld_visb  glow          skyrgb')
+        if(.true.)then
+          if(sol_alt .ge. 0.)then
+            write(6,11)
+11          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten   airtopo  switopo  topoalb   topood  topovis  cld_visb  glow      skyrgb')
+          else
+            write(6,12)
+12          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten glw_cld_nt glw_cld  glw_twi glw2ndclr rmaglim  cld_visb  glow      skyrgb')
+          endif
+        endif
 
         do j = 1,nj
         do i = 1,ni
@@ -74,7 +110,7 @@
           else ! cyl
               if(j .eq. 226 .or. j .eq. 46)then ! constant azimuth
                   idebug = 1
-                  if(i .eq. 1)write(6,11)   
+!                 if(i .eq. 1)write(6,11)   
               endif
           endif
 
@@ -111,46 +147,81 @@
               pf_scat = 0.9 + ampl * (-cosd(elong_a(i,j)))
           endif
 
-          if(sol_alt .ge. -16.)then ! Day/twilight from clear_rad_c array
+          if(sol_alt .ge. -4.)then ! Day/twilight from cloud_rad_c array
 !             Potential intensity of cloud if it is opaque 
 !               (240. is nominal intensity of a white cloud far from the sun)
 !               (0.25 is dark cloud base value)                                  
-              rintensity(:) = 240. * ( (0.25 + 0.75 * cloud_rad_c(:,i,j)) * pf_scat)
+              rintensity(:) = 240. * ( (0.35 + 0.65 * cloud_rad_c(:,i,j)) * pf_scat)
 !             rintensity = min(rintensity,255.)
               rintensity = max(rintensity,0.)
-          else ! nighttime from default surface lighting
-              rintensity(:) = 120.
+
+!             Apply cloud reddening
+              trans_c = trans(ext_g * airmass_2_cloud(i,j))              
+              rintensity = rintensity * (trans_c/trans_c(1))**0.25 ! 0.45
+
+          else ! later twilight (clear_rad_c) and nighttime (surface lighting)
+              glow_cld_nt = log10(5000.) ! 10 * clear sky zenith value
+              glow_cld = addlogs(glow_cld_nt,glow_secondary_cld) ! 2ndary sct
+
+              glow_twi = glow(i,j) + log10(clear_rad_c(3,i,j)) ! phys val
+
+!             During twilight, compare with sky background
+!             Note that secondary scattering might also be considered in
+!             early twilight away from the bright twilight arch.
+              if(glow_cld .gt. glow_twi)then
+                  rintensity(:) = 130. ! bright with city lights or
+                                       ! secondary scattering against night
+              else
+                  rintensity(:) = 60.  ! dark against twilight
+              endif
           endif
 
           cld_red = nint(rintensity(1))                
           cld_grn = nint(rintensity(2))                        
           cld_blu = nint(rintensity(3))                         
 
+!         Obtain brightness (glow) of clear sky
           if(sol_alt .ge. 0.)then ! Daylight from skyglow routine
-              arg = glow(i,j) + log10(clear_rad_c(3,i,j))
+              glow_tot = glow(i,j) + log10(clear_rad_c(3,i,j))
 !             rintensity_glow = min(((glow(i,j)-7.) * 100.),255.)
-              rintensity_glow = min(((arg      -7.) * 100.),255.)
+              rintensity_glow = min(((glow_tot -7.) * 100.),255.)
               clr_red = rintensity_glow *  rintensity_glow / 255.
               clr_grn = rintensity_glow * (rintensity_glow / 255.)**0.80
               clr_blu = rintensity_glow  
+
           elseif(sol_alt .ge. -16.)then ! Twilight from clear_rad_c array
+              call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),clear_rad_c_nt)
+              glow_nt = log10(clear_rad_c_nt(3)) ! log nL           
+
               hue = clear_rad_c(1,i,j)
               sat = clear_rad_c(2,i,j)
-              if(clear_rad_c(3,i,j) .gt. 1.0)then
-                  arg2 = log10(clear_rad_c(3,i,j))
-                  arg = glow(i,j) + (arg2 + 5.0*arg2**1.5) * 0.15                                       
-              else
-                  arg = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15             
+              glow_twi = glow(i,j) + log10(clear_rad_c(3,i,j)) ! phys val
+              glow_twi = max(glow_twi,glow_secondary_clr)
+              glow_twi = max(glow_twi,glow_nt)
+
+              if(glow_stars(i,j) .gt. 1.0)then
+!                 write(6,*)'i,j,glow_stars',i,j,glow_stars(i,j)
               endif
-              rintensity_floor = 65. + sol_alt
-              rintensity_glow = max(min(((arg     -7.) * 100.),255.),rintensity_floor)
-              call hsi_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
+!             glow_stars(i,j) = 1.0                           ! test
+              glow_tot = addlogs(glow_twi,glow_stars(i,j))    ! with stars 
+              star_ratio = 10. ** ((glow_tot - glow_twi) * 0.45)
+
+!             arg = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15             
+              arg = glow_tot                                  ! experiment?            
+              rintensity_floor = 0. ! 75. + sol_alt
+
+!             rintensity_glow = max(min(((arg     -7.) * 100.),255.),rintensity_floor)
+!             rintensity_glow = max(min(((arg -argref) * 100.),255.),rintensity_floor)
+              rintensity_glow = max(min(((arg -argref) * contrast + 128.),255.),rintensity_floor)
+!             rintensity_glow = min(rintensity_glow*star_ratio,255.)              
+              call hsl_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
 !             if(idebug .eq. 1)then
-!                 write(6,*)'Clr RGB = ',nint(clr_red),nint(clr_grn),nint(clr_blu)
+!                 write(6,*)'Clr RGB = ',nint(clr_red),nint(clr_grn),nint(clr_blu),rintensity_floor, rintensity_glow
 !             endif
 !             clr_red = rintensity_glow * clear_rad_c(2,i,j)
 !             clr_blu = rintensity_glow * clear_rad_c(3,i,j)
 !             clr_grn = 0.5 * (clr_red + clr_blu)                               
+
           else ! Night from clear_rad_c array (default flat value of glow)
               call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),clear_rad_c_nt)
               hue = clear_rad_c_nt(1)
@@ -177,8 +248,9 @@
                   idebug = 1 ! for subsequent writing at this grid point
               endif
 
-              rintensity_glow = max(min(((glow_tot - 2.5) * 100.),255.),20.)
-              call hsi_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
+              rintensity_glow = max(min(((glow_tot - 2.3) * 100.),255.),20.)
+              call hsl_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
+
           endif
 
           sol_alt_red_thr = 1.0 + (od_atm_a * 40.)
@@ -204,10 +276,7 @@
           od_2_cloud = (od_atm_g + od_atm_a) * airmass_2_cloud(i,j)
 
 !         Empirical correction to account for bright clouds being visible
-!         cloud_visibility = exp(-0.28*airmass_2_cloud(i,j))
-!         cloud_visibility = exp(-0.14*airmass_2_cloud(i,j))
-!         cloud_visibility = exp(-0.43*od_2_cloud)
-          cloud_visibility = exp(-0.71*od_2_cloud) 
+          cloud_visibility = exp(-0.71*od_2_cloud) ! empirical coefficient
 
 !         Use clear sky values if cloud cover is less than 0.5
           frac_cloud = r_cloud_3d(i,j)
@@ -243,24 +312,29 @@
           sky_rgb(:,i,j) = min(sky_rgb(:,i,j) * ramp_night,255.)
 
           if(idebug .eq. 1)then
-              if(sol_alt .ge. 0.)then
+              rmaglim = b_to_maglim(10.**glow_tot)
+              call apply_rel_extinction(rmaglim,alt_a(i,j),od_atm_g+od_atm_a)
+              if(sol_alt .ge. 0.)then        ! daylight
                   write(6,102)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
-                      ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j))
-              elseif(sol_alt .ge. -16.)then  
+                      ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)) &
+                      ,nint(cld_red),nint(cld_grn),nint(cld_blu)
+              elseif(sol_alt .ge. -16.)then ! twilight
                   write(6,103)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
-                      ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
-                      ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)                              
+                      ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j) &
+                      ,rintensity(1),glow_cld_nt,glow_cld,glow_twi &
+                      ,glow_secondary_clr,rmaglim,cloud_visibility &
+                      ,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)                              
               else ! night
                   write(6,103)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
                       ,topo_swi(i,j),topo_albedo(1,i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:)
               endif
-102           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i6)
-103           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i6,' clrrad',3f10.6,3i6)
+102           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
+103           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',3f10.6,3i4)
           endif
 
          endif ! missing data tested via altitude
@@ -272,6 +346,8 @@
         end
 
         subroutine get_clr_rad_nt(alt,azi,clear_rad_c_nt)
+
+        include 'trigd.inc'
 
         real clear_rad_c_nt(3)      ! HSV night sky brightness
                                     ! Nanolamberts
@@ -460,6 +536,127 @@
         ns = is
 
         write(6,*)' read_stars completing with # stars of ',ns
+
+        return
+        end
+       
+        subroutine get_glow_obj(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi &
+                               ,rlat,rlon,alt_scale,azi_scale &
+                               ,alt_obj,azi_obj,mag_obj,glow_obj)
+
+        real alt_a(minalt:maxalt,minazi:maxazi)
+        real azi_a(minalt:maxalt,minazi:maxazi)
+        real glow_obj(minalt:maxalt,minazi:maxazi) ! log nL
+
+        parameter (nstars = 320)
+        real ext_mag,lst_deg,mag_obj
+        real*8 angdif,jed,r8lon,lst,has,phi,als,azs,ras,x,y,decr
+
+        character*20 starnames
+
+        ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
+
+        write(6,*)' subroutine get_glow_obj...'
+        write(6,*)' lat/lon = ',rlat,rlon             
+
+        rpd = 3.14159265 / 180.
+        phi = rlat * rpd
+        r8lon = rlon          
+
+        I4_elapsed = ishow_timer()
+
+        starnames = 'moon'
+ 
+!       Calculate extinction
+        patm = 1.0     
+
+        if(alt_obj .gt. 0.0)then
+            call calc_extinction(90.    ,patm,airmass,zenext)
+            call calc_extinction(alt_obj,patm,airmass,totexto)
+            ext_mag = totexto - zenext 
+        else
+            ext_mag = 0.0
+        endif
+
+        write(6,7)starnames,dec_d,ra_d,has/rpd,alt_obj,azi_obj,mag_obj,ext_mag
+7       format('dec/ra/ha/al/az/mg/ext',1x,a20,1x,f9.1,4f9.3,2f9.1)
+
+        glow_obj = 1.0 ! cosmic background level
+
+        sqarcsec_per_sqdeg = 3600.**2
+
+        do ialt = minalt,maxalt
+        do jazi = minazi,maxazi
+
+            size_glow_sqdg = 1.0  ! alt/az grid
+            size_glow_sqdg = 0.1  ! final polar kernel size
+            size_glow_sqdg = 0.3  ! empirical middle ground 
+
+            alt = alt_a(ialt,jazi)
+            azi = azi_a(ialt,jazi)
+
+            if(alt .ge. -2.)then
+
+              alt_cos = min(alt,89.)
+              alt_dist = alt_scale / 2.0
+              azi_dist = alt_dist / cosd(alt_cos)         
+
+                if(abs(alt_obj-alt) .le. alt_dist .AND. abs(azi_obj-azi) .le. azi_dist)then
+                    delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
+                    rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+
+!                   Convert to nanolamberts
+                    glow_nl = v_to_b(rmag_per_sqarcsec)
+                    glow_obj(ialt,jazi) = log10(glow_nl)             
+
+                    if(abs(azi_obj-azi) .le. 0.5)then
+                        write(6,91)rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
+91                      format(' rmag_per_sqarcsec/dmag/glow_nl/glow_nl/glow_obj = ',2f10.3,e12.4,f11.2)
+                    endif
+                endif ! within star kernel
+            endif ! alt > -2.
+        enddo ! jazi
+        enddo ! ialt
+
+        return
+        end 
+
+        subroutine get_twi_glow_ave(glow,alt_a,azi_a,ni,nj &
+                                   ,sol_alt,sol_az,twi_glow_ave)
+
+        ANGDIF(X,Y)=MOD(X-Y+540.,360.)-180.
+
+        real glow(ni,nj)
+        real alt_a(ni,nj)
+        real azi_a(ni,nj)
+
+        cnt = 0.
+
+        do i = 1,ni
+        do j = 1,nj
+            diffaz = angdif(azi_a(i,j),sol_az)
+            if( abs(diffaz) .le. 90. .AND. &
+               (alt_a(i,j)  .le. 20. .and. alt_a(i,j) .ge. 0.) )then            
+                cnt = cnt + 1.0
+                sum = sum + 10.**glow(i,j)
+            endif
+        enddo ! j
+        enddo ! i
+
+        twi_glow_ave = log10(sum/cnt)
+
+        return
+        end
+
+        subroutine apply_rel_extinction(rmaglim,alt,od_zen)
+
+        include 'trigd.inc'
+
+        z = 90. - alt
+        airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
+        od_slant = od_zen * (airmass - 1.0)
+        delta_mag = od_slant * 1.086
+        rmaglim = rmaglim - delta_mag
 
         return
         end
