@@ -1564,38 +1564,6 @@ c
         return
         end
 
-        function temp_to_rad(temp)
-
-        data init /0/
-        save init
-        if(init .eq. 0)then
-            init = 1
-            NSAT = 3
-            call PLNKIV(NSAT)
-        endif
-
-        temp_to_rad = temp
-        temp_to_rad = VPLANC(temp,8)
-
-        return
-        end
-
-        function rad_to_temp(rad)
-
-        data init /0/
-        save init
-        if(init .eq. 0)then
-            init = 1
-            NSAT = 3
-            call PLNKIV(NSAT)
-        endif
-
-        rad_to_temp = rad
-        rad_to_temp = VBRITE(rad,8)
-
-        return
-        end
-
         subroutine compare_radiation(kcld,temp_3d,klaps,imax,jmax
      1      ,cldcv,cldcv_1d,cld_hts,t_sfc_k,t_gnd_k,tb8_k
      1           ,r_missing_data,cvr_snow,heights_3d,nlyr,istatus)
