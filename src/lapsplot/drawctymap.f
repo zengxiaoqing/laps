@@ -292,7 +292,7 @@ c abdel
      1                       ,c_institution,c_vnt_units,c_tpw_units
      1                       ,c_units_type,c_pbl_depth_units
      1                       ,chigh_sfcwind,chigh_3dwind,chigh_cape
-     1                       ,chigh_tpw
+     1                       ,chigh_tpw,power_tpw
      1                       ,l_discrete, l_sphere
      1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
@@ -326,6 +326,7 @@ c abdel
        icol_county = 7    ! yellow
        chigh_cape = 7000.
        chigh_tpw = 7.
+       power_tpw = 0.7
        c_ob_color = 'default'
        i_background_color = 2
        btemp_colortable = 'linear'
@@ -359,6 +360,7 @@ c abdel
        namelist_parms%chigh_3dwind = chigh_3dwind
        namelist_parms%chigh_cape = chigh_cape
        namelist_parms%chigh_tpw = chigh_tpw
+       namelist_parms%power_tpw = power_tpw
        namelist_parms%c_ob_color = c_ob_color
        namelist_parms%btemp_colortable = btemp_colortable
        namelist_parms%i_background_color = i_background_color
