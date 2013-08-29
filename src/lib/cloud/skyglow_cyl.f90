@@ -58,10 +58,11 @@
            altsource = altsource_in     
            write(6,*)
            write(6,*)'                     Solar Altitude = ',altsource
-           do aziobj = 0.,180.                   
+           do aziobj = 0.,180.,azi_scale                   
              if(l_process_azi(nint(aziobj)) .eqv. .true.)then
                write(6,*)' Aziobj = ',aziobj
-               do altobj = float(maxalt),float(minalt),-degint_alt
+               do altobj = float(maxalt)*alt_scale,float(minalt)*azi_scale,-degint_alt
+!                  write(6,*)' Altobj = ',altobj
                    xs = cosd(altsource) * cosd(azisource)
                    ys = cosd(altsource) * sind(azisource)
                    zs = sind(altsource)
@@ -160,12 +161,16 @@
            write(6,*)
 !          Fill in altitudes with blog_v/elong     
            write(6,*)' Fill interpolated altitudes in blog_v/elong'
-           do altobj = 89.,1.,-degint_alt
-               ialt = nint(altobj)
-               ialtp = ialt+1
-               ialtm = ialt-1
-               blog_v(ialt,:)  = 0.5 * (blog_v(ialtp,:)  + blog_v(ialtm,:))
-               elong_a(ialt,:) = 0.5 * (elong_a(ialtp,:) + elong_a(ialtm,:))
+           altmax = maxalt * alt_scale
+           altmin = minalt * alt_scale
+           do altobj = altmax,altmin,-alt_scale
+             if(altobj .ne. nint(altobj/2.) * 2.)then ! odd altitudes
+               ialt = nint((altobj-altmin)/alt_scale)
+               call get_interp_parms(minalt,maxalt,2,ialt &             ! I
+                                    ,fm,fp,ialtm,ialtp,ir)              ! O
+               blog_v(ialt,:)  = fm * blog_v(ialtp,:)  + fp * blog_v(ialtm,:)
+               elong_a(ialt,:) = fm * elong_a(ialtp,:) + fp * elong_a(ialtm,:)
+             endif
            enddo ! altobj
 
            blog_v_out  = blog_v
@@ -195,7 +200,7 @@
 !                  write(6,*)' fill azi ',iazi_m,iazi,iazi_p
                    dist = distm + distp
                    frac = distm / dist
-                   if(iazi_m .lt. 0 .or. iazi_m .gt. 360 .or. iazi_p .lt. 0 .or. iazi_p .gt. 360)then
+                   if(iazi_m .lt. 0 .or. iazi_m .gt. maxazi .or. iazi_p .lt. 0 .or. iazi_p .gt. maxazi)then
                        write(6,*)' ERROR in iazi values'
                        stop
                    endif
@@ -217,10 +222,10 @@
 
        write(6,*)' Roll image by azimuth ',iroll                     
 
-       do iazir = 0,360
+       do iazir = 0,maxazi
            iazio = iazir - iroll
-           if(iazio .gt. 360)iazio = iazio - 360
-           if(iazio .lt.   0)iazio = iazio + 360
+           if(iazio .gt. maxazi)iazio = iazio - maxazi
+           if(iazio .lt.   0)iazio = iazio + maxazi
            blog_v_roll(:,iazir) = blog_v_out(:,iazio)
            elong_roll(:,iazir)  = elong_out(:,iazio)
            if(iazir .le. 10)write(6,*)'iazio,iazir',iazio,iazir
@@ -228,7 +233,7 @@
 
        do altobj = float(maxalt),float(minalt),-10.
            ialt = int(altobj)
-           write(6,23)altobj,(blog_v_roll(ialt,jazi),jazi=0,360,30)
+           write(6,23)altobj,(blog_v_roll(ialt,jazi),jazi=0,maxazi,30)
 23         format('altobj,blog_v_roll ',f8.2,13f6.2)
        enddo ! altobj
 
@@ -237,3 +242,27 @@
        return
        end
 
+       subroutine get_interp_parms(minidx,maxidx,intidx,idx &         ! I
+                                  ,fm,fp,im,ip,ir)                    ! O
+
+       ir = mod(idx-minidx,intidx)
+       if(ir .ne. 0)then
+           im = idx - ir
+           ip = im + intidx
+           fp = float(ir) / float(intidx)
+           fm = 1.0 - fp
+       else ! interp not needed
+           im = idx
+           ip = idx
+           fp = 1.0
+           fm = 0.0
+       endif
+
+       if(ip .gt. maxidx .OR. im .lt. minidx)then
+           write(6,*)' ERROR in get_interp_parms',ip,im,idx
+           stop
+       endif
+
+       return
+       end
+       
