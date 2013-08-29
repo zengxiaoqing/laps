@@ -14,6 +14,7 @@
  chigh_3dwind=200.,
  chigh_cape=7000.,
  chigh_tpw=7.,
+ power_tpw=0.7,
  c_ob_color='default',
  i_background_color=2,
  l_discrete=.false.,
@@ -76,6 +77,9 @@ c              (recommended values are 7000., 3500.)
 c
 c chigh_tpw - maximum of colorbar range for CAPE plots in centimeters
 c              (recommended values are 7., or smaller positive integer values)
+c
+c power_tpw - lower numbers skew the colors more toward the left side of the
+c             colorbar
 c
 c c_ob_color - color to plot surface obs 'default', or 'white'
 c
