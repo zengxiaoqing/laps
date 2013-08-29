@@ -12,7 +12,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -m model type [optional if -a will be set]
 #    -a model configuration (e.g. schultz) [optional if -m has been set]
 #    -r model root                                       
-#    -D root directory specified by -r is actually the LAPS_DATA_ROOT on the source machine (on Zeus needs to be at the end for some reason)
+#    -D root directory specified by -r is actually the LAPS_DATA_ROOT on the source machine, dummy argument is needed
 #    -d init date (yyyymmddhh, default = current hour) [Mandatory if -D is set]
 #    -g model grid to process (default = 1, negative value does all grids)
 #    -f number of forecasts including initial time (default = 12)
@@ -247,9 +247,11 @@ if (! $opt_S){ # test for skipping remote copy
     $grid = $grid[$g];
 
     if (defined ($opt_D)){
-        $fua_dir = "$modelroot/lapsprd/fua";
-        $fsf_dir = "$modelroot/lapsprd/fsf";
+        print "opt_D is set, modelroot represents LAPS_DATA_ROOT\n";
+        $fua_dir = "$modelroot/lapsprd/fua/$name";
+        $fsf_dir = "$modelroot/lapsprd/fsf/$name";
     }else{
+        print "opt_D is not set, modelroot is a true modelroot directory\n";
         $fua_dir = "$modelroot/$date/wrfprd/d0$grid/fua";
         $fsf_dir = "$modelroot/$date/wrfprd/d0$grid/fsf";
     }
@@ -302,8 +304,8 @@ if (! $opt_S){ # test for skipping remote copy
 
     print "found it, inittime: $inittime\n";
     print "elapsed time is $elapsed\n";
-    system ("ls -l $modelroot/$date/wrfprd/d0$grid/fua/$fua_file");
-    system ("ls -l $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file");
+    system ("ls -l $fua_dir/$fua_file");
+    system ("ls -l $fsf_dir/$fsf_file");
     sleep 10;
     $elapsed = 0;
 
@@ -311,24 +313,24 @@ if (! $opt_S){ # test for skipping remote copy
     my $waitsize = 1;
 
     my $fuasize;
-    $fuasize = -s "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file";
+    $fuasize = -s "$fua_dir/$fua_file";
     $waitsize = 1;
     while ($fuasize == 0 && $waitsize <= 5) {
         print "fua size = $fuasize, wait count = $waitsize\n";
         sleep 10;
         $waitsize++;
-        $fuasize = -s "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file";
+        $fuasize = -s "$fua_dir/$fua_file";
     }
     print "fua size = $fuasize\n";
 
     my $fsfsize;
-    $fsfsize = -s "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file";
+    $fsfsize = -s "$fsf_dir/$fsf_file";
     $waitsize = 1;
     while ($fsfsize == 0 && $waitsize <= 5) {
         print "fsf size = $fsfsize, wait count = $waitsize\n";
         sleep 10;
         $waitsize++;
-        $fsfsize = -s "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file";
+        $fsfsize = -s "$fsf_dir/$fsf_file";
     }
     print "fsf size = $fsfsize\n";
 
@@ -389,16 +391,16 @@ if (! $opt_S){ # test for skipping remote copy
     }
 
     if ($opt_a eq "noSubDir") {
-      $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf $method";
+      $scp_cmd = "$remote_copy $fsf_dir/$fsf_file $lapsprd/d0$grid/fsf $method";
     }else {
       if ($opt_L) {
         if ($method eq "exchange" || $method eq "bbcp") {
           $scp_cmd = "cd $fsf_dir; $remote_copy $fsf_file $lapsprd/lapsprd/fsf/$name $method";
         }else{
-          $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/lapsprd/fsf/$name $method";
+          $scp_cmd = "$remote_copy $fsf_dir/$fsf_file $lapsprd/lapsprd/fsf/$name $method";
         }
       }else {
-        $scp_cmd = "$remote_copy $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $lapsprd/d0$grid/fsf/$name $method";
+        $scp_cmd = "$remote_copy $fsf_dir/$fsf_file $lapsprd/d0$grid/fsf/$name $method";
       }
     }
 
@@ -447,11 +449,11 @@ for ($n=0; $n<$nfcst; $n++) {
 
   print "fua_file = $fua_file\n";
 
-  while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fua/$fua_file")) {
+  while ( !(-e "$fua_dir/$fua_file")) {
          print "file does not exist\n";
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FUA timed out after $elapsed seconds: maxwait = $maxwait\n\n";
-            print "    fua_file = $modelroot/$date/wrfprd/d0$grid/fua/$fua_file\n";
+            print "    fua_file = $fua_dir/$fua_file\n";
             if (! defined ($opt_e)){
                 exit;
             }
@@ -463,11 +465,11 @@ for ($n=0; $n<$nfcst; $n++) {
 
   print "fsf_file = $fsf_file\n";
 
-  while ( !(-e "$modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file")) {
+  while ( !(-e "$fsf_dir/$fsf_file")) {
          print "file does not exist\n";
          if ($elapsed >= $maxwait) {
             print "    LFM post process wait for FSF timed out after $elapsed seconds: maxwait = $maxwait\n\n";
-            print "    fsf_file = $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file\n";
+            print "    fsf_file = $fsf_dir/$fsf_file\n";
             if (! $opt_e){
                 exit;
             }
@@ -479,8 +481,8 @@ for ($n=0; $n<$nfcst; $n++) {
 
   print "found it, inittime: $inittime\n";
   print "elapsed time is $elapsed\n";
-  system ("ls -l $modelroot/$date/wrfprd/d0$grid/fua/$fua_file");
-  system ("ls -l $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file");
+  system ("ls -l $fua_dir/$fua_file");
+  system ("ls -l $fsf_dir/$fsf_file");
   sleep 10;
   $elapsed = 0;
 
@@ -506,7 +508,7 @@ for ($n=0; $n<$nfcst; $n++) {
   for ($g=1; $g<=$ngrid; $g++) {
     $grid = $grid[$g];
 
-    $mss_cmd = "cp $modelroot/$date/wrfprd/d0$grid/fua/$fua_file $mssfullpath/fua/$name";
+    $mss_cmd = "cp $fua_dir/$fua_file $mssfullpath/fua/$name";
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
     system ("date");
@@ -515,7 +517,7 @@ for ($n=0; $n<$nfcst; $n++) {
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
 
-    $mss_cmd = "cp $modelroot/$date/wrfprd/d0$grid/fsf/$fsf_file $mssfullpath/fsf/$name";
+    $mss_cmd = "cp $fsf_dir/$fsf_file $mssfullpath/fsf/$name";
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
     system ("date");
