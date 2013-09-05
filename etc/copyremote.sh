@@ -16,6 +16,7 @@ TEMPDIR=/exchange/tmp/fab/zeus
 
 RSH=--rsh=ssh
 RSYNCARGS=-rlptgvvz
+RSYNCARGS_NOCOMPRESS=-rlptgvv 
 REMOTE_NODE=dlaps-ms1.fsl.noaa.gov
 
 echo "copy_remote.sh..."
@@ -170,8 +171,8 @@ elif test "$3" == "exchange_zip"; then
 
         echo " "
         echo "first hop of zip file"        
-        echo  scp -o ConnectTimeout=200 $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR              
-              scp -o ConnectTimeout=200 $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR               
+        echo  rsync $RSH $RSYNCARGS_NOCOMPRESS $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR              
+              rsync $RSH $RSYNCARGS_NOCOMPRESS $TEMPFILE.z jetscp.rdhpcs.noaa.gov:$TEMPDIR               
 
         date -u
 
