@@ -309,7 +309,7 @@ cdis
                 write(6,*)' l_polar = ',l_polar,' l_cyl = ',l_cyl
 !               l_polar = .true.
 !               l_cyl = .true.
-                write(6,*)' Enter minalt,maxalt (e.g. 0,90)'
+                write(6,*)' Enter minalt,maxalt (e.g. 0,90 0,180)'
                 read(lun,*)minalt,maxalt           
             endif
 
