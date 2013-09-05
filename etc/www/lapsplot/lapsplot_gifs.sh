@@ -80,12 +80,12 @@ if test "$NCARG_ROOT" = "allsky"; then
   echo "MODE_ALLSKY = $MODE_ALLSKY    RESOLUTION = $RESOLUTION"
 
   if test "$MODE_ALLSKY" = "polar"; then
-    echo "will run IDL polar conversion to PNG"
+    echo "Will run IDL polar conversion to PNG"
     rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky.pro allsky.pro
     echo allsky | /usr/local/share/rsi/idl/bin/idl
   else # MODE_ALLSKY is cyl
-    echo "will run IDL cyl conversion to PNG"
-    export ALLSKY_JDIM=91
+    export ALLSKY_JDIM=$WINDOW
+    echo "Will run IDL cyl conversion to PNG: WINDOW/ALLSKY_JDIM is $WINDOW $ALLSKY_JDIM"
     rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky_cyl.pro allsky_cyl.pro
     echo allsky_cyl | /usr/local/share/rsi/idl/bin/idl
     convert -resize 300% allsky_polar_001.png allsky_polar_001.png
@@ -130,14 +130,22 @@ if test "$NCARG_ROOT" = "allsky"; then
   if test "$MODE_ALLSKY" = "polar"; then
     convert -annotate +393+500 `cat label.001`   -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
   else # MODE_ALLSKY is cyl
-    convert -annotate +725+20 `cat label.001`   -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    if test "$WINDOW" = "181"; then
+      convert -annotate +1550+20 `cat label.001`   -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    else
+      convert -annotate +725+20 `cat label.001`   -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    fi
   fi
 
 # Annotate Lat/Lon
   if test "$MODE_ALLSKY" = "polar"; then
     convert -annotate +363+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
   else # MODE_ALLSKY is cyl
-    convert -annotate +890+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    if test "$WINDOW" = "181"; then
+      convert -annotate +1780+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    else
+      convert -annotate +890+20  "`cat label2.txt`" -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
+    fi
   fi
 
 # Annotate Field
@@ -150,7 +158,11 @@ if test "$NCARG_ROOT" = "allsky"; then
     convert -annotate +440+450   "$DIR3"            -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
     convert -annotate +435+60    "$DIR4"            -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
   else # MODE_ALLSKY is cyl
-    convert -annotate +520+20    "$DIRCYL"          -pointsize 20 -fill orange allsky_polar_001.png allsky_polar_001.png
+    if test "$WINDOW" = "181"; then
+      convert -annotate +1040+20   "$DIRCYL"          -pointsize 20 -fill orange allsky_polar_001.png allsky_polar_001.png
+    else
+      convert -annotate +520+20    "$DIRCYL"          -pointsize 20 -fill orange allsky_polar_001.png allsky_polar_001.png
+    fi
   fi
 
   echo "run convert from PNG to GIF (assuming no animation)"    
