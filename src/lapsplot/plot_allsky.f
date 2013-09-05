@@ -144,7 +144,7 @@
 
         skewt(t_c,logp) = t_c - (logp - logp_bottom) * 32.
 
-        if(maxalt .eq. 720)then
+        if(maxalt .eq. 180)then
             alt_scale = 0.5 
         else
             alt_scale = 1.0 
@@ -171,6 +171,10 @@
 
         write(6,*)
         write(6,*)' subroutine plot_allsky: nsmooth/aod is ',nsmooth,aod
+        write(6,*)' l_cyl/l_polar = ',l_cyl,l_polar
+        write(6,*)' minalt/maxalt = ',minalt,maxalt
+        write(6,*)' minazi/maxazi = ',minazi,maxazi
+        write(6,*)' alt_scale/azi_scale = ',alt_scale,azi_scale
 
         od_atm_a = aod
 
@@ -935,11 +939,27 @@
 
 !       Get alt_a_roll and azi_a_roll arrays (needs to be generalized)?
         do i = minalt,maxalt
-        do j = minazi,maxazi
-            alt_a_roll(i,j) = i
-            azi_a_roll(i,j) = j
+            call get_val(i,minalt,alt_scale,altobj)
+            alt_a_roll(i,:) = altobj
         enddo 
+        do j = minazi,maxazi
+            call get_val(j,minazi,azi_scale,aziobj)
+            azi_a_roll(:,j) = aziobj
         enddo
+
+        blog_moon_roll = 0.
+        if(moon_mag .lt. moon_mag_thr .AND.
+     1     alm      .gt. 0.                 )then
+            write(6,*)' Moon glow being calculated: ',alm,azm
+            call get_glow_obj(i4time,alt_a_roll,azi_a_roll
+     1                       ,minalt,maxalt,minazi,maxazi 
+     1                       ,rlat,rlon,alt_scale,azi_scale
+     1                       ,alm,azm,moon_mag
+     1                       ,blog_moon_roll)
+
+            write(6,*)' range of blog_moon_roll is',
+     1          minval(blog_moon_roll),maxval(blog_moon_roll)
+        endif
 
 !       if(solar_alt .ge. 0.)then
         if(.true.)then
@@ -947,8 +967,7 @@
             write(6,*)' call get_skyglow_cyl for sun or moon...'
 
             if(solar_alt .ge. -16.)then
-!           if(.true.)then
-                write(6,*)' Sun is significant'
+                write(6,*)' Sun is significant, alt is:',solar_alt
                 call skyglow_cyl(solar_alt,solar_az,blog_v_roll
      1                          ,elong_roll,od_atm_a
      1                          ,minalt,maxalt,minazi,maxazi
@@ -957,27 +976,23 @@
 
                 if(moon_mag .lt. moon_mag_thr .AND.
      1             alm      .gt. 0.                 )then
-                    write(6,*)' Moon is being added in: ',alm,azm
-                    call get_glow_obj(i4time,alt_a_roll,azi_a_roll
-     1                               ,minalt,maxalt,minazi,maxazi 
-     1                               ,rlat,rlon,alt_scale,azi_scale
-     1                               ,alm,azm,moon_mag
-     1                               ,blog_moon_roll)
-
-                    write(6,*)' range of blog_moon_roll is',
-     1                  minval(blog_moon_roll),maxval(blog_moon_roll)
-                    blog_v_roll = addlogs(blog_v_roll,blog_moon_roll)
+                    if(solar_alt .ge. 0.)then ! valid only in daytime
+                        write(6,*)' Moonglow is being added to daylight'       
+                        blog_v_roll = 
+     1                              addlogs(blog_v_roll,blog_moon_roll)      
+                    endif
                 endif
-
-            endif
+            endif ! solar_alt .ge. -16.
 
             if(solar_alt .lt. -16. .AND. moon_mag .lt. moon_mag_thr
      1                             .AND. alm .gt. 0.         )then
-                write(6,*)' Moon is significant: mag is ',moon_mag
+                write(6,*)' Moon skyglow significant: mag ',moon_mag
                 call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,od_atm_a
      1                          ,minalt,maxalt,minazi,maxazi
      1                          ,alt_scale,azi_scale)
                 blog_v_roll = blog_v_roll + (-26.7 - moon_mag) * 0.4
+                write(6,*)' Range of blog_v_roll for moon is',
+     1                    minval(blog_v_roll),maxval(blog_v_roll)
                 I4_elapsed = ishow_timer()
             endif
 
@@ -989,15 +1004,17 @@
 !       Reproject Polar Cloud Plot
         lunsky = 60 
         write(lunsky,*)rmaglim_v
-        call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,minalt,maxalt,360
-     1                               ,alt_a_polar,azi_a_polar
-     1                               ,ni_polar,nj_polar)
+        call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,minalt,maxalt
+     1                   ,maxazi,alt_scale,azi_scale
+     1                   ,alt_a_polar,azi_a_polar
+     1                   ,ni_polar,nj_polar)
 !       write(6,*)' cyl slice at 40alt ',r_cloud_3d(40,:)
 !       write(6,*)' polar slice at 256 ',r_cloud_3d_polar(256,:)
 
 !       Reproject Skyglow Field
         call cyl_to_polar(blog_v_roll,blog_v_roll_polar
-     1                               ,minalt,maxalt,360
+     1                               ,minalt,maxalt,maxazi
+     1                               ,alt_scale,azi_scale
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
 
@@ -1016,11 +1033,12 @@
           continue
         endif ! l_polar
 
-        if((l_cyl .eqv. .true.) .OR. (mode_polar .eq. 2))then              
+!       if((l_cyl .eqv. .true.) .OR. (mode_polar .eq. 2))then              
+        if(.true.)then
 
 !         Get all sky for cyl   
           ni_cyl = maxalt - minalt + 1
-          nj_cyl = 361
+          nj_cyl = maxazi - minazi + 1
 
           I4_elapsed = ishow_timer()
 
@@ -1030,6 +1048,15 @@
      1                     ,minalt,maxalt,minazi,maxazi                  ! I
      1                     ,rlat,rlon,alt_scale,azi_scale                ! I
      1                     ,glow_stars)                                  ! O
+
+              write(6,*)' range of glow_stars (before) is',
+     1             minval(glow_stars),maxval(glow_stars)
+
+              write(6,*)' Moonglow is being added to starlight'       
+              glow_stars = addlogs(glow_stars,blog_moon_roll)
+
+              write(6,*)' range of glow_stars (after) is',
+     1             minval(glow_stars),maxval(glow_stars)
           endif
 
           I4_elapsed = ishow_timer()
@@ -1054,18 +1081,28 @@
      1                    ,alm,azm,moon_mag          ! moon alt/az/mag
      1                    ,sky_rgb_cyl)   
 
-          if(mode_polar .ne. 2)then
+          if(l_cyl .eqv. .true.)then
 !             Write all sky for cyl
               isky_rgb_cyl = sky_rgb_cyl   
               open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
               write(55,*)isky_rgb_cyl           
               close(55)
-          else ! mode polar = 2
+          endif
+
+          if(l_polar .eqv. .true.)then
 !             Reproject sky_rgb array from cyl to polar    
+              do iaz = 0,maxazi,20
+               write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz
+     1                       ,sky_rgb_cyl(1,maxalt/2,iaz)
+              enddo ! iaz
+
+              write(6,*)' Call cyl_to_polar with sky rgb data'
+
               do ic = 0,nc-1
                 call cyl_to_polar(sky_rgb_cyl(ic,:,:)
      1                           ,sky_rgb_polar(ic,:,:)
-     1                           ,minalt,maxalt,360
+     1                           ,minalt,maxalt,maxazi
+     1                           ,alt_scale,azi_scale
      1                           ,alt_a_polar,azi_a_polar
      1                           ,ni_polar,nj_polar)
               enddo ! ic
