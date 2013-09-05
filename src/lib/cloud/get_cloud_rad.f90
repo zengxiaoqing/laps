@@ -48,6 +48,7 @@
 
 !     Note that idb,jdb is a "nominal" grid point location from which we derive a constant solar alt/az for some purposes
       sol_alt_eff = max(sol_alt(idb,jdb),1.5)
+      if(sol_alt(idb,jdb) .le. -2.0)sol_alt_eff = +5.0 ! twilight arch light source
       ds_dh = 1. / sind(sol_alt_eff)
       dxy_dh = 1. / tand(sol_alt_eff)
 
@@ -150,11 +151,16 @@
 !         extinction = 0.28 * airmass * patm
 
           ramp_ang = 5.0
-          if(sol_alt_cld .le. ramp_ang)then
+          if(sol_alt_cld .lt. 0.)then    ! (early) twilight cloud lighting
+            twi_int = .1 * 10.**(+sol_alt_cld * 0.4) ! magnitudes per deg
+            rint = twi_int
+            blu_rat = 1.0            
+          elseif(sol_alt_cld .le. ramp_ang .AND. & 
+                 sol_alt_cld .ge. 0.            )then ! low daylight sun
             ramp_slope = 1. / ramp_ang
             rint    = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 1.0),0.0)
             blu_rat = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 2.0),0.0)
-          else
+          else                                        ! full daylight
             rint = 1.
             blu_rat = 1.
           endif  
