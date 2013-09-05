@@ -5088,7 +5088,7 @@ c                   cint = -1.
 
             clow = 0.00
             chigh = namelist_parms%chigh_tpw
-            plot_parms%color_power = 0.7
+            plot_parms%color_power = namelist_parms%power_tpw
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -5721,7 +5721,7 @@ c                   cint = -1.
      1                         ,'moist',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'TPW')then
-                    plot_parms%color_power = 0.7
+                    plot_parms%color_power = namelist_parms%power_tpw
                     call ccpfil(field_2d,NX_L,NY_L,0.
      1                         ,namelist_parms%chigh_tpw
      1                         ,'tpw',n_image,scale,'hsect' 
