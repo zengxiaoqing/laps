@@ -961,7 +961,7 @@ C
       zoom_colorbar = plot_parms%zoom_wdw
 
 !     Note that "square" case works for aspect ratio up to 1.192
-      write(6,*)'colorbar zoom = ',zoom_colorbar        
+      write(6,*)'colorbar zoom/power = ',zoom_colorbar,power
 
       write(6,*)'colorbar location before zoom ',xlow,xhigh,ylow,yhigh
 
