@@ -101,7 +101,7 @@
 #                      destination (via xferlaps.sh)
 #
 # -x                   If supplied, specify amount of files to be transferred (used with -R)
-#                      [1=2D, 2=3D, 3=3D+LGA, an internal default value is 2 is used if -x is not supplied in the cron line] 
+#                      [1=2D, 2=3D, 3=3D+LGA, an internal default value is 1 is used if -x is not supplied in the cron line] 
 #
 # -y                   If supplied, the file transfer method (used with -R)
 #                      [e.g. rsync,exchange_zip,exchange_zip2] 
@@ -1226,7 +1226,7 @@ if(defined $opt_R){
 #           $command = "qsub -A $opt_q $LAPS_LOG_PATH/qsub_xfer_laps.sh";
 #           $command = "$LAPSROOT/etc/rsync_out.sh $LAPS_DATA_ROOT $domain:$remote_data_root qsub 00:15 7 > $LAPS_LOG_PATH/rsync_out.log.`date +\%M`";         
 
-            my $xferfiles = 2;
+            my $xferfiles = 1;
             if(defined $opt_x){
                 $xferfiles = $opt_x;
             }
