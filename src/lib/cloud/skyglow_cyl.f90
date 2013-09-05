@@ -31,6 +31,9 @@
 
        degint_alt = 2.
 
+       call get_val(minalt,minalt,alt_scale,altmin)
+       call get_val(maxalt,minalt,alt_scale,altmax)
+
        skyglow_in = 1.0
        patm = 0.85
 
@@ -59,9 +62,10 @@
            write(6,*)
            write(6,*)'                     Solar Altitude = ',altsource
            do aziobj = 0.,180.,azi_scale                   
-             if(l_process_azi(nint(aziobj)) .eqv. .true.)then
-               write(6,*)' Aziobj = ',aziobj
-               do altobj = float(maxalt)*alt_scale,float(minalt)*azi_scale,-degint_alt
+             call get_idx(aziobj,minazi,azi_scale,jazi)
+             if(l_process_azi(jazi) .eqv. .true.)then
+               write(6,*)' Aziobj/jazi = ',aziobj,jazi
+               do altobj = altmax,altmin,-degint_alt
 !                  write(6,*)' Altobj = ',altobj
                    xs = cosd(altsource) * cosd(azisource)
                    ys = cosd(altsource) * sind(azisource)
@@ -75,10 +79,10 @@
                    elong_r8 = elong_r8 / rpd
                    elong = elong_r8            
 
-                   if(aziobj .eq. 180.)then                             
+                   if(aziobj .eq. 180. .OR. aziobj .eq. 0.)then
                        idebug = 1
                        write(6,*)
-                       write(6,*)' Debug for alt/az/elong ',altobj,aziobj,elong
+                       write(6,*)'Debug for alt/az/elong ',altobj,aziobj,elong
                    else
                        idebug = 0
                    endif
@@ -86,8 +90,7 @@
 !                  Schaeffer routine
 !                  call get_skyglow(rmag,altsource,altobj,elong,patm,skyglow)
 
-                   ialt = nint(altobj/alt_scale)
-                   jazi = nint(aziobj/azi_scale)
+                   call get_idx(altobj,minalt,alt_scale,ialt)
 !                  blog_s(ialt,jazi) = log10(skyglow)
                    call calc_extinction(90.      ,patm,airmass,zenext)
                    call calc_extinction(altobj   ,patm,airmass,totexto)
@@ -150,9 +153,9 @@
 
            write(6,*)
 
-           do altobj = float(maxalt),float(minalt),-10.
-               ialt = int(altobj)
-               write(6,13)altobj,(blog_v(ialt,jazi),jazi=0,360,30)
+           do altobj = altmax,altmin,-10.
+               call get_idx(altobj,minalt,alt_scale,ialt)
+               write(6,13)altobj,(blog_v(ialt,jazi),jazi=0,maxazi,maxazi/12)
 13             format('altobj,blog_v ',f8.2,13f6.2)
            enddo ! altobj
 !          lun = 41                            
@@ -161,16 +164,19 @@
            write(6,*)
 !          Fill in altitudes with blog_v/elong     
            write(6,*)' Fill interpolated altitudes in blog_v/elong'
-           altmax = maxalt * alt_scale
-           altmin = minalt * alt_scale
+           ialt_delt = nint(2. / alt_scale)
            do altobj = altmax,altmin,-alt_scale
-             if(altobj .ne. nint(altobj/2.) * 2.)then ! odd altitudes
-               ialt = nint((altobj-altmin)/alt_scale)
-               call get_interp_parms(minalt,maxalt,2,ialt &             ! I
+!            if(altobj .ne. nint(altobj/2.) * 2.)then ! odd altitudes
+!              ialt = nint((altobj-altmin)/alt_scale)
+               call get_idx(altobj,minalt,alt_scale,ialt)
+               call get_interp_parms(minalt,maxalt,ialt_delt,ialt &     ! I
                                     ,fm,fp,ialtm,ialtp,ir)              ! O
-               blog_v(ialt,:)  = fm * blog_v(ialtp,:)  + fp * blog_v(ialtm,:)
-               elong_a(ialt,:) = fm * elong_a(ialtp,:) + fp * elong_a(ialtm,:)
-             endif
+               write(6,*)' altobj/fm/fp/ialtm/ialtp',altobj,fm,fp,ialtm,ialtp
+               if(ir .ne. 0)then
+                 blog_v(ialt,:)  = fm * blog_v(ialtm,:)  + fp * blog_v(ialtp,:)
+                 elong_a(ialt,:) = fm * elong_a(ialtm,:) + fp * elong_a(ialtp,:)
+               endif
+!            endif
            enddo ! altobj
 
            blog_v_out  = blog_v
@@ -189,7 +195,7 @@
                            goto21
                        endif
                    enddo
-21                 do iazip = iazi+1,180,+1
+21                 do iazip = iazi+1,maxazi/2,+1
                        if(blog_v(0,iazip) .gt. 0.)then
                            iazi_p = iazip
                            distp = iazip - iazi 
@@ -218,9 +224,9 @@
 
        endif ! true       
 
-       iroll = nint(azisource_in - azisource)
+       iroll = nint((azisource_in - azisource)/azi_scale)
 
-       write(6,*)' Roll image by azimuth ',iroll                     
+       write(6,*)' Roll image by azimuth ',iroll,azisource_in
 
        do iazir = 0,maxazi
            iazio = iazir - iroll
@@ -231,9 +237,9 @@
            if(iazir .le. 10)write(6,*)'iazio,iazir',iazio,iazir
        enddo ! iazir
 
-       do altobj = float(maxalt),float(minalt),-10.
-           ialt = int(altobj)
-           write(6,23)altobj,(blog_v_roll(ialt,jazi),jazi=0,maxazi,30)
+       do altobj = altmax,altmin,-10.
+           call get_idx(altobj,minalt,alt_scale,ialt)
+           write(6,23)altobj,(blog_v_roll(ialt,jazi),jazi=0,maxazi,maxazi/12)
 23         format('altobj,blog_v_roll ',f8.2,13f6.2)
        enddo ! altobj
 
@@ -266,3 +272,21 @@
        return
        end
        
+
+        subroutine get_idx(val,minidx,scale,idx)
+
+        valmin = float(minidx) * scale
+
+        idx = nint((val - valmin) / scale)
+
+        return
+        end
+
+        subroutine get_val(idx,minidx,scale,val)
+
+        valmin = float(minidx) * scale
+
+        val = valmin + float(idx) * scale
+
+        return
+        end
