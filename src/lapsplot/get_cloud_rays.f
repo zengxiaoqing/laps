@@ -20,6 +20,8 @@
 
         include 'trigd.inc'
 
+        brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness
+
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
 
         parameter (rpd = 3.14159 / 180.)
@@ -101,6 +103,8 @@
             obj_azi = moon_azi
             obj_bri = 10. ** ((-26.7 - moon_mag)*0.4)
             write(6,*)' Object is moon, brightness is:',obj_bri
+!       else ! add case for twilight light source (depending on handling
+!                                                  in get_cloud_rad)
         else
             obj_alt = sol_alt
             obj_azi = sol_azi
@@ -154,21 +158,25 @@
         heights_1d(:) = heights_3d(i,j,:)
         pres_1d(:)    = pres_3d(i,j,:)
 
+        idelt = nint(2. / alt_scale)
+
         do ialt = minalt,maxalt
 
-         altray = float(minalt) + float(ialt)*alt_scale
+         call get_val(ialt,minalt,alt_scale,altray)
 
-         if(ialt .ge. 20)then
-             if(ialt .eq. (ialt/2)*2)then
-                 jazi_delt = 2
+         if(altray .ge. 20.)then     ! 2 deg alt, 2 deg azi
+             if(ialt .eq. (ialt/idelt)*idelt)then
+                 jazi_delt = nint(2. / azi_scale)
              else
-                 jazi_delt = 360
+                 jazi_delt = maxazi
              endif
-         else
+         elseif(altray .ge. 10.)then ! alt_scale, 1 deg azi
+             jazi_delt = nint(1. / azi_scale)
+         else                        ! alt_scale, azi_scale
              jazi_delt = 1
          endif
 
-         do jazi = 0,360,jazi_delt
+         do jazi = minazi,maxazi,jazi_delt
 
           if((jazi .eq. 225 .or. jazi .eq. 45) .AND.
 !    1        (ialt .eq. (ialt/10)*10 .or. ialt .le. 5) )then
@@ -181,7 +189,7 @@
 
 !         Trace towards sky from each grid point
           view_altitude_deg = max(altray,0.) ! handle Earth curvature later
-          view_azi_deg = jazi
+          view_azi_deg = float(jazi) * azi_scale
 
 !         Get direction cosines based on azimuth
           xcos = sind(view_azi_deg)
@@ -553,16 +561,21 @@
               horz_dep_r = -sol_alt(i,j) * rpd                                                  
               dist_pp_plane = horz_dep_r**2 * earth_radius / 2.0 ! approx perpendicular dist
               dist_ray_plane = dist_pp_plane / sind(angle_plane) ! distance along ray
-              ht_ray_plane = dist_ray_plane * sind(float(ialt)) 
-     1                     + dist_ray_plane**2 / (2. * earth_radius)
+              bterm = dist_ray_plane**2 / (2. * earth_radius)
+              ht_ray_plane = dist_ray_plane * sind(altray) + bterm
               if(ht_ray_plane .le. 99000.)then
                 frac_airmass_lit = min(ZtoPsa(ht_ray_plane) / 1013.,1.0)
               else
                 frac_airmass_lit = 0.
               endif
+
+              exp_term = 1.0 - 0.5 * (bterm / ht_ray_plane)
+              frac_airmass_unlit = (1.0 - frac_airmass_lit) ** exp_term
+              frac_airmass_lit = 1.0 - frac_airmass_unlit
               airmass_lit = airmass * frac_airmass_lit      
-              airmass_to_twi = (1.0 - frac_airmass_lit) * airmass * patm
-              twi_trans = 1.0 - exp(-.14 * 0.5 * airmass_to_twi)
+
+              airmass_to_twi = frac_airmass_unlit * airmass * patm
+              twi_trans = exp(-.14 * 0.75 * airmass_to_twi)
 
 !             clear_int = max(min(airmass_lit,32.0),.00001)               
               clear_int = 
@@ -642,16 +655,17 @@
             write(6,111)ialt,jazi,airmass_2_cloud_3d(ialt,jazi)
      1                ,cloud_rad(ialt,jazi),sol_alt(i,j)
      1                ,angle_plane,dist_ray_plane,ht_ray_plane
-     1                ,clear_rad_c(2,ialt,jazi)
+     1                ,frac_airmass_lit,twi_trans
+     1                ,clear_rad_c(3,ialt,jazi)
 111         format(
-     1     'ialt/jazi/airm2cld/cldrad/salt/ang_pln/ds_ray/ht_ray/clrrad'
-     1            ,2i5,2f10.6,2f8.2,2f10.1,f8.4)
+     1 'ialt/jazi/airm2cld/cdrad/salt/ang_pln/ds_ray/ht_ray/f/t/clrrad'
+     1            ,2i5,2f7.3,2f8.2,2f10.1,3f8.4)
           endif
 
          enddo ! jazi
 
          if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4)then ! fill missing azimuths
-          do jazi = 1,359,jazi_delt
+          do jazi = minazi,maxazi
             call get_interp_parms(minazi,maxazi,jazi_delt,jazi       ! I
      1                           ,fm,fp,jazim,jazip,ir)              ! O
             if(ir .ne. 0)then
@@ -682,8 +696,11 @@
 
         enddo ! ialt
 
-        do ialt = 21,89,2 ! fill in missing alt rings
-          call get_interp_parms(minalt,maxalt,2,ialt               ! I
+        call get_idx(20.,minalt,alt_scale,ialt_min)
+        call get_idx(90.,minalt,alt_scale,ialt_max)
+
+        do ialt = ialt_min,ialt_max ! fill in missing alt rings
+          call get_interp_parms(minalt,maxalt,idelt,ialt           ! I
      1                         ,fm,fp,ialtm,ialtp,ir)              ! O
           if(ir .ne. 0)then
             r_cloud_3d(ialt,:) =
