@@ -86,6 +86,8 @@
 !       moon_alt = -10.0
 !       moon_azi = 0.
 
+        radius_earth_8_thirds = 6371.e3 * 2.6666666
+
         pstd = 101325.
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
@@ -127,6 +129,9 @@
         transm_4d = transm_4d * obj_bri ! correct for sun/moon brightness
 
         I4_elapsed = ishow_timer()
+
+        topo_max_ang = 12.0
+        topo_max_ht = maxval(topo_a)
 
         cond_3d = clwc_3d +        cice_3d * 0.5 
      1          + rain_3d * 0.02 + snow_3d * 0.05
@@ -179,16 +184,16 @@
          do jazi = minazi,maxazi,jazi_delt
 
           if((jazi .eq. 225 .or. jazi .eq. 45) .AND.
-!    1        (ialt .eq. (ialt/10)*10 .or. ialt .le. 5) )then
-     1        (abs(altray) .eq. 12 .or. abs(altray) .eq. 9 
-     1                             .or. abs(altray) .le. 6) )then
+     1        (abs(altray) .eq. 12 .or. abs(altray) .eq. 9 .or.
+     1         abs(altray) .le. 6  .or. ialt .eq. minalt)      )then
               idebug = 1
           else
               idebug = 0
           endif
 
 !         Trace towards sky from each grid point
-          view_altitude_deg = max(altray,0.) ! handle Earth curvature later
+!         view_altitude_deg = max(altray,0.) ! handle Earth curvature later
+          view_altitude_deg = altray
           view_azi_deg = float(jazi) * azi_scale
 
 !         Get direction cosines based on azimuth
@@ -215,12 +220,16 @@
 
               grid_factor = grid_spacing_m / 3000.
 
-              if(view_altitude_deg .lt. -4.5)then
+              if(view_altitude_deg .lt. -10.)then
                   rkdelt1 = -1.00 * grid_factor
                   rkdelt2 = -1.00 * grid_factor
+!             elseif(view_altitude_deg .lt. -4.5)then ! produces red image at -6
+!                 rkdelt1 = -0.50 * grid_factor
+!                 rkdelt2 = -0.50 * grid_factor
               elseif(view_altitude_deg .lt. 0.0)then
                   rkdelt1 =  0.0  * grid_factor
                   rkdelt2 =  0.0  * grid_factor
+!                 idebug = 1 ! regardless of azimuth
               elseif(view_altitude_deg .le. 0.5)then
                   rkdelt1 = 0.01 * grid_factor
                   rkdelt2 = 0.10 * grid_factor
@@ -266,6 +275,12 @@
               rkdelt = rkdelt1
 
               rk = rkstart          
+
+!             Up front check for going below the domain (and topo)
+!             if((rk + rkdelt) .lt. 1.0 .AND. rkdelt .lt. 0.)then
+!                 ihit_topo = 1
+!             endif
+
               do while(rk .le. float(nk) - rkdelt 
      1           .AND. ihit_topo .eq. 0
      1           .AND. cvr_path_sum .le. 1.0) ! Tau < ~75
@@ -291,7 +306,7 @@
                   pr_l = pres_1d(kk_l) * (1. - frac_l) 
      1                 + pres_1d(kk_l+1) * frac_l
 
-                  if(rk_h .lt. float(nk))then
+                  if(rk_h .lt. float(nk) .AND. rk_h .ge. 1.0)then
                     ht_h = heights_1d(kk_h) * (1. - frac_h) 
      1                   + heights_1d(kk_h+1) * frac_h
 
@@ -303,7 +318,8 @@
 
                     pr_h = pres_1d(kk_h)
                   else
-                    write(6,*)' ERROR: rk_h is too high ',rk_h,nk
+                    write(6,*)' ERROR: rk_h is out of bounds ',rk_h,nk
+     1                                                        ,rkdelt
                     istatus = 0
                     return
                   endif
@@ -317,7 +333,6 @@
                     dxy1_h = dz1_h * tand(90. - view_altitude_deg)
                     dxy2   = dz2   * tand(90. - view_altitude_deg)
                   else ! horzdist call (determine distance from height & elev)
-                    radius_earth_8_thirds = 6371.e3 * 2.6666666
                     aterm = 1. / radius_earth_8_thirds
                     bterm = tand(min(view_altitude_deg,89.9))
                     cterm = dz1_l                                            
@@ -354,11 +369,11 @@
                   slant1_h = slant1_h + slant2
 
                   dxy1_l = dxy1_h
-                  dxy1_h = slant1_h * cosd(float(ialt))
+                  dxy1_h = slant1_h * cosd(altray)
 
 !                 Determine height from distance and elev
                   dz1_l = dz1_h
-                  dz1_h = slant1_h * sind(float(ialt)) 
+                  dz1_h = slant1_h * sind(altray) 
      1                  + dxy1_h**2 / (2. * radius_earth_8_thirds)
 
                   rk_l = rk_h
@@ -371,10 +386,10 @@
                         frach = (ht_h - heights_1d(k)) / 
      1                          (heights_1d(k+1) - heights_1d(k))      
                         rk_h = float(k) + frach
+                        pr_h = (pres_1d(k)*(1.-frach)) 
+     1                       + (pres_1d(k+1)*frach)
                     endif
                   enddo
-
-                  pr_h = (pres_1d(k)*(1.-frach)) + (pres_1d(k+1)*frach)
 
                   airmass2 = (slant2 / 8000.) * (pr_h / pstd)
 
@@ -418,8 +433,16 @@
                 if(rinew_h .ge. 1. .and. rinew_h .le. rni .AND. 
      1             rjnew_h .ge. 1. .and. rjnew_h .le. rnj      )then 
 
-                  call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                               ,cond_3d,cond_m)
+!                 Cloud present on any of 8 interpolation vertices
+                  if(maxval(
+     1              cond_3d(int(rinew_m):int(rinew_m)+1
+     1                     ,int(rjnew_m):int(rjnew_m)+1
+     1                     ,int(rk_m)   :int(rk_m)+1    ) ) .gt. 0.)then        
+                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+     1                                   ,cond_3d,cond_m)
+                  else
+                      cond_m = 0.
+                  endif
 
                   if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
                       call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
@@ -472,7 +495,9 @@
                       aod_2_cloud(ialt,jazi) = sum_aod
                   endif
 
-                  if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
+!                 if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
+                  if(ht_m   .le. topo_max_ht .AND. 
+     1               altray .le. topo_max_ang     )then 
                     call bilinear_laps(rinew_m,rjnew_m,ni,nj
      1                                ,topo_a,topo_m)
                   else
@@ -551,9 +576,9 @@
             xplane = cosd(azi_plane) * cosd(alt_plane)
             yplane = sind(azi_plane) * cosd(alt_plane)
             zplane =                   sind(alt_plane)
-            xray   = cosd(float(jazi)) * cosd(float(ialt))
-            yray   = sind(float(jazi)) * cosd(float(ialt))
-            zray   =                     sind(float(ialt))
+            xray   = cosd(view_azi_deg) * cosd(altray)
+            yray   = sind(view_azi_deg) * cosd(altray)
+            zray   =                      sind(altray)
             call anglevectors(xplane,yplane,zplane
      1                       ,xray,yray,zray,angle_r)
             angle_plane = 90. - (angle_r / rpd) ! angle between light ray and plane                              
@@ -593,11 +618,11 @@
 !           Apply saturation ramp (=1) at high altitudes or low sun
 !                                 (=0) at low altitudes and high sun
             sat_sol_ramp = min(-sol_alt(i,j) / 3.0,1.0) ! 0-1 (lower sun)
-            sat_alt_ramp = sqrt(sind(float(ialt)))      ! 0-1 (higher alt)
+            sat_alt_ramp = sqrt(sind(altray))           ! 0-1 (higher alt)
             sat_ramp = 1.0-((1.0 - sat_alt_ramp) * (1.0 - sat_sol_ramp))
 
 !           Ramp2 is zero with either high sun or high alt
-            hue_alt_ramp = (sind(float(ialt)))**2.0     ! 0-1 (higher alt)
+            hue_alt_ramp = (sind(altray))**2.0     ! 0-1 (higher alt)
             hue_ramp2 = sat_sol_ramp * (1.0 - hue_alt_ramp)
 
 !           clear_int here represents intensity at the zenith
