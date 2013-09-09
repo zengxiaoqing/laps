@@ -300,13 +300,19 @@ cdis
             if(c_section .eq. 'az')then
                 write(6,*)' Enter plot info (e.g. 180p, 90c)'
                 read(lun,*)czoom                   
-                l_polar = l_parse(czoom,'p')
-                l_cyl   = l_parse(czoom,'c')
+                if(l_parse(czoom,'b') .eqv. .true.)then
+                    l_polar = .true.
+                    l_cyl   = .true.
+                else
+                    l_polar = l_parse(czoom,'p')
+                    l_cyl   = l_parse(czoom,'c')
+                endif
                 if((l_polar .OR. l_cyl) .eqv. .false.)then
                     write(6,*)' Set l_polar to TRUE'
                     l_polar = .true.
                 endif
-                write(6,*)' l_polar = ',l_polar,' l_cyl = ',l_cyl
+                write(6,*)' czoom = ',czoom,' l_polar = ',l_polar
+     1                   ,' l_cyl = ',l_cyl
 !               l_polar = .true.
 !               l_cyl = .true.
                 write(6,*)' Enter minalt,maxalt (e.g. 0,90 0,180)'
