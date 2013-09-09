@@ -1865,7 +1865,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                 change from the default 10000m for the grid spacing).
 
                 Grid spacing in meters on the projection plane. Used for all 
-                projections.
+                projections. The grid spacing is valid at the standard
+                latitude and may vary elsewhere.
                  
         2) Modify the 'grid_cen_lat' and 'grid_cen_lon' parameters.
 
@@ -1885,6 +1886,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                 Mercator:
                     Set to 'merctr'.
 
+                Latitude / Longitude
+                    Set to 'latlon'
+
                 In most cases, the Lambert projection is recommended.
 
                 Mercator is recommended if the domain includes the
@@ -1894,6 +1898,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                 If the domain includes one of the geographic poles, then
                 Polar Stereographic should be used instead.
+
+                Latitude / Longitude is recommended only for a global LAPS
+                run.
 
                 See the note below regarding current map projection limitations.
                 
