@@ -283,6 +283,7 @@
        subroutine calc_extinction(alt,patm,airmass,extinction)
 
        z = 90. - alt
+       z = min(z,91.)
        airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
        extinction = 0.28 * airmass * patm
 
