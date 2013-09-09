@@ -8,4 +8,4 @@
 
         parameter (MAX_REF_GATES = 1840)
         parameter (MAX_VEL_GATES = 1840)
-        parameter (MAX_RAY_TILT = 750)
+        parameter (MAX_RAY_TILT = 1000)
