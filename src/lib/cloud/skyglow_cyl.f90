@@ -93,7 +93,8 @@
                    call get_idx(altobj,minalt,alt_scale,ialt)
 !                  blog_s(ialt,jazi) = log10(skyglow)
                    call calc_extinction(90.      ,patm,airmass,zenext)
-                   call calc_extinction(altobj   ,patm,airmass,totexto)
+                   altobj_e = max(altobj,.001)
+                   call calc_extinction(altobj_e,patm,airmass,totexto)
 !                  rmaglim_s(ialt,jazi) = b_to_maglim(skyglow) - (totexto - zenext)
 
 !                  VI routine
@@ -144,8 +145,8 @@
                    blog_v(ialt,jazi) = log10(skyglow)
                    elong_a(ialt,jazi) = elong                
                    if(idebug .eq. 1)then
-                       write(6,101)maglim_r8,rmaglim_v_noextinction,blog_v(ialt,jazi)
-101                    format(' maglim/maglim_noext/blog_v',3f8.3)
+                       write(6,101)maglim_r8,altobj_e,totexto,rmaglim_v_noextinction,blog_v(ialt,jazi)
+101                    format(' maglim/altobj_e/totexto/maglim_noext/blog_v',5f8.3)
                    endif
                enddo ! altobj
              endif ! process this azimuth
@@ -265,7 +266,7 @@
        endif
 
        if(ip .gt. maxidx .OR. im .lt. minidx)then
-           write(6,*)' ERROR in get_interp_parms',ip,im,idx
+           write(6,*)' ERROR in get_interp_parms',ip,im,idx,minidx,maxidx
            stop
        endif
 
@@ -275,18 +276,14 @@
 
         subroutine get_idx(val,minidx,scale,idx)
 
-        valmin = float(minidx) * scale
-
-        idx = nint((val - valmin) / scale)
+        idx = nint(val / scale)
 
         return
         end
 
         subroutine get_val(idx,minidx,scale,val)
 
-        valmin = float(minidx) * scale
-
-        val = valmin + float(idx) * scale
+        val = float(idx) * scale
 
         return
         end
