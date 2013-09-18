@@ -100,7 +100,7 @@
         if(ni .eq. nj)then ! polar
             write(6,*)' slice from SW to NE through midpoint'
         else
-            write(6,*)' slices at 45,225 degrees azimuth'
+            write(6,*)' slices at 46,226 degrees azimuth'
         endif
 
         if(.true.)then
@@ -126,7 +126,7 @@
                   idebug = 1
               endif
           else ! cyl
-              if(j .eq. 226 .or. j .eq. 46)then ! constant azimuth
+              if(j .eq. 227 .or. j .eq. 47)then ! constant azimuth
                   idebug = 1
 !                 if(i .eq. 1)write(6,11)   
               endif
@@ -216,7 +216,7 @@
                 frac_ray = max(min((elong_a(i,j)-elong_gn)/35.,1.0),0.0)
                 frac_ray = frac_ray * cosd(alt_a(i,j)) * 0.5
                 if(idebug .eq. 1)then
-                    write(6,115)alt_a(i,j),elong_a(i,j),airmass,ray_red,ray_grn,ray_blu
+!                   write(6,115)alt_a(i,j),elong_a(i,j),airmass,ray_red,ray_grn,ray_blu
 115                 format('frac_ray',3f8.2,3f8.4)
                 endif
 !               frac_ray = 1.0
@@ -368,9 +368,9 @@
                       ,glow_cld_nt,glow_cld,glow_twi,glow_secondary_clr,rmaglim &
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:)
               endif
-102           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
-103           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',3f10.6,3i4)
-104           format(2i5,3f9.2,6f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
+102           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
+103           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',3f10.6,3i4)
+104           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
           endif
 
          endif ! missing data tested via altitude
