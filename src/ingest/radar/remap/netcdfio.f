@@ -601,6 +601,12 @@ c      Determine output filename extension
                i_array = i_tilt_proc                   
                iscr = 0   
 !              irmax = 0                                   ! debug
+               if(radialR_HI .gt. MAX_RAY_TILT)then
+                 write(6,*)' Error: radialR_HI > MAX_RAY_TILT',
+     1                     radialR_HI,MAX_RAY_TILT
+                 istatus = 0
+                 return
+               endif
                do j = 1,radialR_HI
                  do i = 1,gateR_HI
                    iscr = iscr + 1
