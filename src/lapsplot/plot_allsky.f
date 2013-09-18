@@ -35,6 +35,7 @@
         real lic_2d(NX_L,NY_L)
         real swi_2d(NX_L,NY_L)
         real static_albedo(NX_L,NY_L)
+        real land_use(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
@@ -208,8 +209,12 @@
             return
         endif
 
+        write(6,*)
+        write(6,*)' Input number of all-sky locations...'
+        read(5,*)nloc
+
  80     write(6,*)
-        write(6,*)' Input x grid point (or latitude) for sounding...'
+        write(6,*)' Input x grid point (or latitude) for all-sky...'
         read(5,*)c20_x
 
         call s_len(c20_x,lenx)
@@ -316,6 +321,8 @@
 
           n_lvls_snd = NZ_L
 
+          write(6,*)' i4time_ref = ',i4time_ref
+
 !         Read appropriate 3-D fields
 50        call input_product_info(i4time_ref            ! I
      1                         ,laps_cycle_time         ! I
@@ -331,74 +338,7 @@
 
           write(6,*)' a9time is ',a9time
 
-          goto200
-
-!         Read Temperature
-          if(c_prodtype .eq. 'A')then
-            iflag_temp = 2 ! Returns Heights?
-
-            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1                      ,NX_L,NY_L,NZ_L,heights_3d,istatus)
-            if(istatus .ne. 1)goto900
-
-            call make_fnam_lp(i4time_nearest,a9time,istatus)
-
-            if(nsmooth .eq. 3)then
-                c_label = 'Analysis Sounding (3x3 smoothing)'
-            else
-                c_label = 'Analysis Sounding'
-            endif
-
-          elseif(c_prodtype .eq. 'N')then
-            call get_directory('balance',directory,len_dir)
-            ext = 'lt1'
-            directory = directory(1:len_dir)//ext(1:3)
-
-            var_2d = 'HT'
-
-            call get_3dgrid_dname(directory
-     1                  ,i4time_ref,laps_cycle_time*10000,i4time_nearest       
-     1                  ,ext,var_2d,units_2d
-     1                  ,comment_2d,NX_L,NY_L,NZ_L,heights_3d,istatus)       
-
-            call make_fnam_lp(i4time_nearest,a9time,istatus)
-            c_label = 'Balanced Sounding'
-
-          elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
-            var_2d = 'HT'
-            call get_lapsdata_3d(i4_initial,i4_valid
-     1                              ,NX_L,NY_L,NZ_L       
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d,heights_3d
-     1                              ,istatus)
-            if(istatus .ne. 1)goto900
-
-            call make_fnam_lp(i4_valid,a9time,istatus)
-
-            if(c_prodtype .eq. 'B')then
-                c_label = 'Background Sounding '//fcst_hhmm
-
-            elseif(c_prodtype .eq. 'F')then
-
-                call directory_to_cmodel(directory,c_model)
-
-                c_label = 'Forecast Sounding '//fcst_hhmm//' '
-     1                                               //trim(c_model)
-            endif
-
-          else
-            write(6,*)' Unknown choice, will quit'
-            go to 900
-
-          endif
-
-          i_overlay = i_overlay + 1
-
-          if(nsmooth .gt. 1)then
-              call smooth_box_3d(field_3d,NX_L,NY_L,NZ_L,nsmooth)
-          endif
-
-        endif ! l_plotobs
+        endif
 
 200     continue
 
@@ -408,9 +348,19 @@
           if(c_prodtype .eq. 'A')then
             iflag_temp = 2 ! Returns Height
 
-            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1                      ,NX_L,NY_L,NZ_L,heights_3d,istatus)
-            if(istatus .ne. 1)goto300
+            write(6,*)' Calling get_laps_3dgrid for heights'
+            var_2d = 'HT'
+            ext = 'lt1'
+            call get_laps_3dgrid
+     1          (i4time_ref,10800,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,heights_3d,istatus)
+
+!           call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+!    1                      ,NX_L,NY_L,NZ_L,heights_3d,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Error reading LAPS Heights'
+                return
+            endif
 
           elseif(c_prodtype .eq. 'N')then
             call get_directory('balance',directory,len_dir)
@@ -610,7 +560,8 @@
      1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
      1                    ,r_missing_data)
           else
-            ice_vert = -999.
+            write(6,*)' Error reading ICE field in plot_allsky'
+            return
           endif
  
 !         goto500
@@ -638,7 +589,8 @@
      1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
      1                    ,r_missing_data)
           else
-            rain_vert = -999.
+            write(6,*)' Error reading RAI field in plot_allsky'
+            return
           endif
 
 !         Read Precipitating Snow
@@ -664,7 +616,8 @@
      1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
      1                    ,r_missing_data)
           else
-            snow_vert = -999.
+            write(6,*)' Error reading SNO field in plot_allsky'
+            return
           endif
 
           goto500
@@ -692,7 +645,8 @@
      1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
      1                    ,r_missing_data)
           else
-            pice_vert = -999.
+            write(6,*)' Error reading PIC field in plot_allsky'
+            return
           endif
 
 500       continue
@@ -729,6 +683,14 @@
             endif
           enddo ! i
           enddo ! j
+
+!         Consider additional albedo info based on land use and snow cover
+          var_2d='USE'
+          call read_static_grid(NX_L,NY_L,var_2d,land_use,istatus)
+          if(istatus .ne. 1)then
+             print*,' Warning: could not read static-landuse'
+             return
+          endif
 
           goto600
 
@@ -904,10 +866,12 @@
         call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L
      1                 ,aod_3d)
 
-        kstart = 0 ! 0 means sfc, otherwise level of start
+        do iloc = 1,nloc
 
-!       Get line of sight from isound/jsound
-        call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
+          kstart = 0 ! 0 means sfc, otherwise level of start
+
+!         Get line of sight from isound/jsound
+          call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
      1                     ,rain_3d,snow_3d
      1                     ,pres_3d,aod_3d,topo_sfc
      1                     ,topo,swi_2d,topo_swi
@@ -925,30 +889,28 @@
      1                     ,alt_scale,azi_scale
      1                     ,grid_spacing_m,r_missing_data)
 
-        write(6,*)' Return from get_cloud_rays...',a9time
+          write(6,*)' Return from get_cloud_rays...',a9time
 
-        go to 40
+ 900      continue
 
- 900    continue
+1000      continue
 
-1000    continue
+          ilun = ilun + 1
+          write(clun,14)ilun
+14        format(i3.3)
 
-        ilun = ilun + 1
-        write(clun,14)ilun
-14      format(i3.3)
-
-!       Get alt_a_roll and azi_a_roll arrays (needs to be generalized)?
-        do i = minalt,maxalt
+!         Get alt_a_roll and azi_a_roll arrays (needs to be generalized)?
+          do i = minalt,maxalt
             call get_val(i,minalt,alt_scale,altobj)
             alt_a_roll(i,:) = altobj
-        enddo 
-        do j = minazi,maxazi
+          enddo 
+          do j = minazi,maxazi
             call get_val(j,minazi,azi_scale,aziobj)
             azi_a_roll(:,j) = aziobj
-        enddo
+          enddo
 
-        blog_moon_roll = 0.
-        if(moon_mag .lt. moon_mag_thr .AND.
+          blog_moon_roll = 0.
+          if(moon_mag .lt. moon_mag_thr .AND.
      1     alm      .gt. 0.                 )then
             write(6,*)' Moon glow being calculated: ',alm,azm
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
@@ -959,10 +921,10 @@
 
             write(6,*)' range of blog_moon_roll is',
      1          minval(blog_moon_roll),maxval(blog_moon_roll)
-        endif
+          endif
 
-!       if(solar_alt .ge. 0.)then
-        if(.true.)then
+!         if(solar_alt .ge. 0.)then
+          if(.true.)then
             I4_elapsed = ishow_timer()
             write(6,*)' call get_skyglow_cyl for sun or moon...'
 
@@ -996,53 +958,53 @@
                 I4_elapsed = ishow_timer()
             endif
 
-        else
+          else
             blog_v_roll = 8.0
 
-        endif
+          endif
 
-!       Reproject Polar Cloud Plot
-        lunsky = 60 
-        write(lunsky,*)rmaglim_v
-        call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,minalt,maxalt
+!         Reproject Polar Cloud Plot
+          lunsky = 60 
+          write(lunsky,*)rmaglim_v
+          call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,minalt,maxalt
      1                   ,maxazi,alt_scale,azi_scale
      1                   ,alt_a_polar,azi_a_polar
      1                   ,ni_polar,nj_polar)
-!       write(6,*)' cyl slice at 40alt ',r_cloud_3d(40,:)
-!       write(6,*)' polar slice at 256 ',r_cloud_3d_polar(256,:)
+!         write(6,*)' cyl slice at 40alt ',r_cloud_3d(40,:)
+!         write(6,*)' polar slice at 256 ',r_cloud_3d_polar(256,:)
 
-!       Reproject Skyglow Field
-        call cyl_to_polar(blog_v_roll,blog_v_roll_polar
+!         Reproject Skyglow Field
+          call cyl_to_polar(blog_v_roll,blog_v_roll_polar
      1                               ,minalt,maxalt,maxazi
      1                               ,alt_scale,azi_scale
      1                               ,alt_a_polar,azi_a_polar
      1                               ,ni_polar,nj_polar)
 
-!       Write time label
-        open(53,file='label.'//clun,status='unknown')
-        write(53,*)a9time
-        close(53)
+!         Write time label
+          open(53,file='label.'//clun,status='unknown')
+          write(53,*)a9time
+          close(53)
 
-!       Write lat/lon label
-        open(54,file='label2.txt',status='unknown')
-        write(54,54)soundlat,soundlon
-        close(54)
- 54     format(2f8.2)
+!         Write lat/lon label
+          open(54,file='label2.txt',status='unknown')
+          write(54,54)soundlat,soundlon
+          close(54)
+ 54       format(2f8.2)
 
-        if(mode_polar .eq. 1)then
-          continue
-        endif ! l_polar
+          if(mode_polar .eq. 1)then
+            continue
+          endif ! l_polar
 
-!       if((l_cyl .eqv. .true.) .OR. (mode_polar .eq. 2))then              
-        if(.true.)then
+!         if((l_cyl .eqv. .true.) .OR. (mode_polar .eq. 2))then              
+          if(.true.)then
 
-!         Get all sky for cyl   
-          ni_cyl = maxalt - minalt + 1
-          nj_cyl = maxazi - minazi + 1
+!           Get all sky for cyl   
+            ni_cyl = maxalt - minalt + 1
+            nj_cyl = maxazi - minazi + 1
 
-          I4_elapsed = ishow_timer()
+            I4_elapsed = ishow_timer()
 
-          if(solar_alt .lt. 0.)then
+            if(solar_alt .lt. 0.)then
               write(6,*)' call get_starglow with cyl data'
               call get_starglow(i4time_solar,alt_a_roll,azi_a_roll       ! I
      1                     ,minalt,maxalt,minazi,maxazi                  ! I
@@ -1057,12 +1019,12 @@
 
               write(6,*)' range of glow_stars (after) is',
      1             minval(glow_stars),maxval(glow_stars)
-          endif
+            endif
 
-          I4_elapsed = ishow_timer()
+            I4_elapsed = ishow_timer()
 
-          write(6,*)' call get_sky_rgb with cyl data'
-          call get_sky_rgb(r_cloud_3d                ! cloud opacity
+            write(6,*)' call get_sky_rgb with cyl data'
+            call get_sky_rgb(r_cloud_3d              ! cloud opacity
      1                    ,cloud_od                  ! cloud optical depth
      1                    ,r_cloud_trans             ! cloud solar transmittance
      1                    ,cloud_rad_c               ! cloud solar transmittance / color
@@ -1081,15 +1043,15 @@
      1                    ,alm,azm,moon_mag          ! moon alt/az/mag
      1                    ,sky_rgb_cyl)   
 
-          if(l_cyl .eqv. .true.)then
+            if(l_cyl .eqv. .true.)then
 !             Write all sky for cyl
               isky_rgb_cyl = sky_rgb_cyl   
               open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
               write(55,*)isky_rgb_cyl           
               close(55)
-          endif
+            endif
 
-          if(l_polar .eqv. .true.)then
+            if(l_polar .eqv. .true.)then
 !             Reproject sky_rgb array from cyl to polar    
               do iaz = 0,maxazi,20
                write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz
@@ -1114,15 +1076,19 @@
               open(54,file='allsky_rgb_polar.'//clun,status='unknown')
               write(54,*)isky_rgb_polar
               close(54)
-          endif
+            endif
 
-        endif ! mode_polar = 0 or 2
+          endif ! mode_polar = 0 or 2
 
-        write(6,*)' End of plot_allsky...'
+          write(6,*)' End of plot_allsky for iloc...',iloc
+          write(6,*)
+
+          I4_elapsed = ishow_timer()
+
+        enddo ! iloc
+
         write(6,*)
-
-        I4_elapsed = ishow_timer()
-
+        write(6,*)' End of plot_allsky...'
         write(6,*)
 
         return
