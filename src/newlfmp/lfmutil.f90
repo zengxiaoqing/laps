@@ -278,6 +278,8 @@ real :: tvprs
 ! Variables for low level reflectivity
 integer :: klow, khigh
 real :: ht_1km, frack
+real :: umean(lx,ly),vmean(lx,ly),ustorm(lx,ly),vstorm(lx,ly)
+real :: array_buf(lx,ly),array_out(lx,ly)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !Beka!!!!!!!!!!!!! obtaining ldf, lat and lon !!!!!!!!!!!!!!!!!!!!
@@ -427,6 +429,10 @@ if (make_micro) then
 
  if(.true.)then ! supercedes binary cldamt calculated earlier
                 ! for liquid we can augment this noting that tau = (3 * intliqwater) / (2 * rho * radius)
+                ! cldamt should be related to opacity and optical depth
+                ! we might use a new module for this derived from these files
+                ! in  'src/lib/cloud/get_cloud_rad.f90':
+                ! and 'src/lib/modules/module_cloud_rad.f90'
   do j=1,ly
    do i=1,lx
       if(intliqwater(i,j) < rmsg .AND. intcldice(i,j) < rmsg)then
@@ -494,10 +500,16 @@ if (make_micro) then
       endif
 
 !     Run Advection routine on reflectivity
-      if(advection_time .gt. 0)then
-          write(6,*)' Advect Surface Reflectivity (under construction)'
-!         call advect(u,v,refl_sfc,array_buf,grid_spacing_m
+      if(fcsttime .le. i4_adv_pcp)then
+          write(6,*)' Advect Surface Reflectivity (under construction)',fcsttime,i4_adv_pcp
+          call mean_wind_bunkers(husig,hvsig,hzsig(:,:,1),lx,ly,nz &     ! I
+                          ,hzsig                                   &     ! I
+                          ,umean,vmean,ustorm,vstorm,status)             ! O
+!         call advect(ustorm,vstorm,refl_sfc,array_buf,grid_spacing_m
 !    1               ,lx,ly,array_out,time,frac,lon,rmsg)
+!         refl_sfc = array_out
+      else
+          write(6,*)' Using model output reflectivity',fcsttime,i4_adv_pcp
       endif
 
 !     Conversion of microphysical cloud mixing ratios to concentrations
