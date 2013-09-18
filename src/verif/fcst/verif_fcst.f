@@ -156,7 +156,7 @@
      1                  n_fcst_times,
      1                  j_status)
 
-        use mem_namelist, ONLY: path_to_gps
+        use mem_namelist, ONLY: path_to_gps, iverbose
 
         include 'read_sfc.inc'
 
@@ -504,8 +504,11 @@
                           var_s(i) = solar_s(i)
                       else
                           var_s(i) = r_missing_data
-                          write(6,*)' Solar ob QCd out ',i,stations(i)
-     1                        ,sol_alt,solar_s(i),provider(i),obstime(i)       
+                          if(iverbose .eq. 1)then
+                              write(6,*)' Solar ob QCd out '
+     1                        ,i,stations(i),sol_alt,solar_s(i)
+     1                        ,provider(i),obstime(i)       
+                          endif
                       endif
                   enddo ! i
                   threshval = 0.
