@@ -33,6 +33,8 @@ integer :: k_micro=999
 integer :: n3d_pts_thr=33000000
 integer :: p3d_pts_thr=22000000
 integer :: advection_time = 0
+integer :: i4_adv_cld = -1
+integer :: i4_adv_pcp = -1
 
 character(len=256) :: filename,filename0
 character(len=32)  :: mtype
