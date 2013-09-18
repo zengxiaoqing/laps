@@ -817,7 +817,7 @@
      1                 (ets(imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
 
-911                format(a24,3x,20f12.3)
+911                format(a24,3x,40f12.3)
                enddo ! itime_fcst
 
 !              Write n values in separate blocks                     
@@ -832,7 +832,7 @@
                    write(lun_bias,912)a24time_valid,    
      1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
      1                              ,imodel=2,n_fdda_models)     
-912                format(a24,3x,20i12.3)
+912                format(a24,3x,40i12.3)
                  enddo ! itime_fcst
                enddo ! jn
                enddo ! in
@@ -848,7 +848,7 @@
      1                 (frac_coverage                
      1                   (imodel,itime_fcst,iregion,idbz)
      1                              ,imodel=2,n_fdda_models)     
-913                format(a24,3x,20f12.5)
+913                format(a24,3x,40f12.5)
                enddo ! itime_fcst
 
 !              Write to members.txt file
