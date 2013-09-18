@@ -3623,7 +3623,7 @@ Cabdel
      1         c_type   .eq. 'sj' .or. c_type_i .eq. 'ls' .or.
      1         c_type_i .eq. 'ci' .or. c_type_i .eq. 'pc' .or.
      1         c_type_i .eq. 'rn' .or. c_type_i .eq. 'sn' .or.
-     1         c_type_i .eq. 'pi'                             )then
+     1         c_type_i .eq. 'pi' .or. c_type_i .eq. 'cn'     )then
             write(6,1514)
 1514        format('     Enter Level in mb; OR [-1] for max in column'
      1                          ,21x,'? ',$)
@@ -3671,6 +3671,14 @@ c abdel
                 if(k_level .gt. 0)then
                     call mklabel(k_mb,
      1                             ' Cloud ICE g/m^3   ',c_label)
+                else
+                    c_label = 'Max Smith-Feddes  ICE g/m^3      '
+                endif
+
+            elseif(c_type_i .eq. 'cn')then ! Returns Cloud Condensate
+                if(k_level .gt. 0)then
+                    call mklabel(k_mb,
+     1                     ' Cloud Condensate  g/m^3 ',c_label)
                 else
                     c_label = 'Max Smith-Feddes  ICE g/m^3      '
                 endif
@@ -3748,16 +3756,22 @@ c abdel
      1                                   istatus) 
 
                 else ! Get 2D horizontal slice from 3D Grid
-                  if(c_type_i .ne. 'ci')then
-                    call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
+                  call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
      1                                   ext,var_2d,units_2d,
      1                                   comment_2d,NX_L,NY_L,field_2d,       
      1                                   k_mb,istatus)
-                  else
-                    call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
-     1                                   ext,var_2d,units_2d,comment_2d,
-     1                                   NX_L,NY_L,field_2d,k_mb,
-     1                                   istatus)
+
+                  if(c_type_i .eq. 'cn')then
+                      var_2d = 'ICE'
+                      call get_laps_2dgrid(i4time_ref,86400,
+     1                                   i4time_cloud,      
+     1                                   ext,var_2d,units_2d,
+     1                                   comment_2d,NX_L,NY_L,
+     1                                   field_2d_buf,       
+     1                                   k_mb,istatus)
+                      field_2d = field_2d + field_2d_buf
+                      write(6,*)' Adding ICE to get condensate'
+                      comment_2d = 'Cloud Condensate'
                   endif
 
                 endif
