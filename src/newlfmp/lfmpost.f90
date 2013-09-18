@@ -9,12 +9,14 @@ implicit none
 integer, external :: iargc
 integer :: narg,chr,nc,i,j,k
 integer :: laps_valtime,istatus
+integer :: len_str
 
 real :: xcen,ycen,latcen,loncen
 
 character(len=256) :: laps_data_root,lfmprd_dir
 character(len=24) :: a24time
 character(len=16) :: atime,afcst
+character(len=16) :: c_adv_cld,c_adv_pcp
 character(len=9) :: a9time
 character(len=4) :: fcst_hhmm
 character(len=2) :: adomnum,domnum_str
@@ -35,7 +37,6 @@ istatus = 1  ! assume good return
 
 
 narg=iargc()
-if (narg /= 6) call usage
 
 !call ugetarg(1,mtype)
 !call ugetarg(2,filename)
@@ -48,7 +49,18 @@ call getarg(2,filename)
 call getarg(3,adomnum)
 call getarg(4,atime)
 call getarg(5,afcst)
-call getarg(6,laps_data_root)
+if(narg .eq. 6)then
+    call getarg(6,laps_data_root)
+elseif(narg .eq. 8)then
+    call getarg(6,c_adv_cld)
+    write(6,*)' c_adv_cld = ',c_adv_cld
+    call getarg(7,c_adv_pcp)
+    write(6,*)' c_adv_pcp = ',c_adv_pcp
+    call getarg(8,laps_data_root)
+else
+    call usage
+endif
+
 call right_justify(adomnum)
 call right_justify(atime)
 call right_justify(afcst)
@@ -58,6 +70,18 @@ read(afcst,'(i16)',err=900) laps_valtime
 fcsttime=laps_valtime
 laps_valtime=laps_reftime+laps_valtime
 write(domnum_fstr,'("d",i2.2)') domnum
+
+call s_len(c_adv_cld,len_str)
+if(len_str .gt. 0)then
+    read(c_adv_cld,'(i)',err=900) i4_adv_cld
+endif
+write(6,*)' i4_adv_cld = ',i4_adv_cld
+
+call s_len(c_adv_pcp,len_str)
+if(len_str .gt. 0)then
+    read(c_adv_pcp,'(i)',err=900) i4_adv_pcp
+endif
+write(6,*)' i4_adv_pcp = ',i4_adv_pcp
 
 ! Convert mtype to lower case and check for valid model type.
 
@@ -373,6 +397,7 @@ subroutine usage
 implicit none
 
 print*,'Usage: lfmpost.exe ''model type'' ''filename'' ''grid no'' ''laps i4time'' ''fcst time (sec)'' ''laps_data_root'''
+print*,'OR:    lfmpost.exe ''model type'' ''filename'' ''grid no'' ''laps i4time'' ''fcst time (sec)'' ''adv cloud (sec)'' ''adv pcp (sec)'' ''laps_data_root'''
 
 stop
 
