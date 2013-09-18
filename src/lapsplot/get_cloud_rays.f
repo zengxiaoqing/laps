@@ -20,6 +20,7 @@
 
         include 'trigd.inc'
 
+        trans(od) = exp(-od)
         brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
@@ -130,7 +131,7 @@
 
         I4_elapsed = ishow_timer()
 
-        topo_max_ang = 12.0
+        topo_max_ang = 45.0
         topo_max_ht = maxval(topo_a)
 
         cond_3d = clwc_3d +        cice_3d * 0.5 
@@ -143,6 +144,8 @@
 
         if(kstart .eq. 0)then ! start from sfc
           htstart = topo_sfc  ! MSL
+          write(6,*)' i/j/topo_sfc = ',i,j,topo_sfc
+          write(6,*)' height column = ',heights_3d(i,j,:)
           do k = 1,nk-1
             if(heights_3d(i,j,k)   .le. topo_sfc .AND.
      1         heights_3d(i,j,k+1) .ge. topo_sfc      )then
@@ -159,6 +162,8 @@
           htstart = heights_3d(i,j,kstart)
           write(6,*)' Start aloft at k = ',kstart
         endif
+
+        write(6,*)' rkstart = ',rkstart
 
         heights_1d(:) = heights_3d(i,j,:)
         pres_1d(:)    = pres_3d(i,j,:)
@@ -183,9 +188,11 @@
 
          do jazi = minazi,maxazi,jazi_delt
 
-          if((jazi .eq. 225 .or. jazi .eq. 45) .AND.
+          if((jazi .eq. 226 .or. jazi .eq. 46) .AND.
      1        (abs(altray) .eq. 12 .or. abs(altray) .eq. 9 .or.
-     1         abs(altray) .le. 6  .or. ialt .eq. minalt)      )then
+     1         abs(altray) .le. 6  .or. ialt .eq. minalt .or.
+     1             altray  .eq. 20. .or. altray .eq. 30. .or.
+     1             altray  .eq. 40. .or. altray .eq. 50.)      )then
               idebug = 1
           else
               idebug = 0
@@ -206,6 +213,8 @@
           sum_odrad_c = 0.
           sum_clrrad = 0.
           sum_aod = 0.
+          sum_am2cld_num = 0.
+          sum_am2cld_den = 0.
 
           if(.true.)then
 !           do k = ksfc,ksfc
@@ -227,18 +236,17 @@
 !                 rkdelt1 = -0.50 * grid_factor
 !                 rkdelt2 = -0.50 * grid_factor
               elseif(view_altitude_deg .lt. 0.0)then
-                  rkdelt1 =  0.0  * grid_factor
-                  rkdelt2 =  0.0  * grid_factor
-!                 idebug = 1 ! regardless of azimuth
+                  rkdelt1 =  0.0
+                  rkdelt2 =  0.0
               elseif(view_altitude_deg .le. 0.5)then
-                  rkdelt1 = 0.01 * grid_factor
-                  rkdelt2 = 0.10 * grid_factor
+                  rkdelt1 = 0.0 ! 0.01 * grid_factor 
+                  rkdelt2 = 0.0 ! 0.10 * grid_factor 
               elseif(view_altitude_deg .le. 4.)then
-                  rkdelt1 = 0.10 * grid_factor
-                  rkdelt2 = 0.25 * grid_factor
-              elseif(view_altitude_deg .le. 10.)then
-                  rkdelt1 = 0.50 * grid_factor
-                  rkdelt2 = 0.50 * grid_factor
+                  rkdelt1 = 0.0 ! 0.10 * grid_factor
+                  rkdelt2 = 0.0 ! 0.25 * grid_factor
+              elseif(view_altitude_deg .le. 15.)then
+                  rkdelt1 = 0.0 ! 0.50 * grid_factor
+                  rkdelt2 = 0.0 ! 0.50 * grid_factor
               elseif(view_altitude_deg .le. 45.)then
                   rkdelt1 = 1.00 * grid_factor
                   rkdelt2 = 1.00 * grid_factor
@@ -253,11 +261,12 @@
               
               if(idebug .eq. 1)write(6,*)
               if(idebug .eq. 1)then
-                write(6,11)ialt,jazi,jazi_delt,rkdelt,i,j
+                write(6,11)altray,view_azi_deg,ialt,jazi,jazi_delt
+     1                    ,rkdelt,i,j
 11              format(
-     1          'Trace the slant path (ialt/jazi/jdelt/rkdelt/i/j):'
-     1                ,3i5,f6.2,2i5)                                     
-                write(6,12)                                                            
+     1      'Trace the slant path (alt/azi/ialt/jazi/jdelt/rkdelt/i/j):'
+     1                ,2f6.1,3i5,f6.2,2i5)                                     
+                write(6,12)                                   
 12              format('   dz1_l   dz1_h   dxy1_l   dxy1_h  rin',
      1           'ew  rjnew   rk    ht_m   topo_m  ',
      1           ' path     lwc    ice    rain   snow      slant',
@@ -270,6 +279,7 @@
               slant1_h = 0.
               airmass1_h = 0.
               ihit_topo = 0
+              ihit_bounds = 0
               rk_h = rkstart
 
               rkdelt = rkdelt1
@@ -283,6 +293,7 @@
 
               do while(rk .le. float(nk) - rkdelt 
      1           .AND. ihit_topo .eq. 0
+     1           .AND. ihit_bounds .eq. 0
      1           .AND. cvr_path_sum .le. 1.0) ! Tau < ~75
 
                 if(rkdelt .ne. 0.)then ! trace by pressure levels
@@ -336,10 +347,11 @@
                     aterm = 1. / radius_earth_8_thirds
                     bterm = tand(min(view_altitude_deg,89.9))
                     cterm = dz1_l                                            
-                    if(cterm .gt. 0.)then ! catch start point
-                      dxy1_l = 
-     1                       (sqrt(4.*aterm*cterm + bterm**2.) - bterm)   
-     1                                  / (2.*aterm)
+
+                    discriminant = 4.*aterm*cterm + bterm**2.
+                    if(discriminant .gt. 0.)then ! catch start point
+                      dxy1_l = (sqrt(discriminant) - bterm)   
+     1                                         / (2.*aterm)
                     else
                       dxy1_l = 0.
                     endif
@@ -424,6 +436,13 @@
                 rk_m = 0.5 * (rk_l + rk_h)
                 ht_m = 0.5 * (ht_l + ht_h)
 
+                if((rk_h-rk_l) .gt. 0.)then
+                    grid_dh = (ht_h-ht_l) / (rk_h-rk_l)
+                    grid_tan = grid_dh / grid_spacing_m
+                else
+                    grid_tan = 0.25 ! nominal value
+                endif
+
                 rni = ni
                 rnj = nj
 
@@ -481,11 +500,13 @@
                   aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
                   sum_aod = sum_aod + aero_ext_coeff * slant2
 
+                  clwc2alpha = 75. ! from clwc constants in 'get_cloud_rad'
+
                   if((cvr_path          .gt. 0.00) .AND.
      1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
      1                cvr_path_sum_last .eq. 0.  )            )then 
-                      airmass_2_cloud_3d(ialt,jazi) 
-     1                                 = 0.5 * (airmass1_l + airmass1_h)
+!                     airmass_2_cloud_3d(ialt,jazi) 
+!    1                                 = 0.5 * (airmass1_l + airmass1_h)
 
 !                     Average value over cloud path (tau ~1)
                       cloud_rad(ialt,jazi) = sum_odrad / cvr_path_sum 
@@ -495,9 +516,23 @@
                       aod_2_cloud(ialt,jazi) = sum_aod
                   endif
 
+!                 Calculated weighted value of airmass to cloud
+!                 Summation(airmass*cvrpath*trans) / Summation(cvrpath*trans)
+                  if(cvr_path .gt. 0.00)then
+                      am2cld_den = cvr_path 
+     1                           * trans(clwc2alpha*cvr_path_sum)
+                      am2cld_num = am2cld_den 
+     1                           * 0.5 * (airmass1_l + airmass1_h)
+                      sum_am2cld_num = sum_am2cld_num + am2cld_num
+                      sum_am2cld_den = sum_am2cld_den + am2cld_den
+                      airmass_2_cloud_3d(ialt,jazi) = sum_am2cld_num
+     1                                              / sum_am2cld_den
+                  endif
+
 !                 if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
                   if(ht_m   .le. topo_max_ht .AND. 
      1               altray .le. topo_max_ang     )then 
+!                 if(ht_m   .le. topo_max_ht)then 
                     call bilinear_laps(rinew_m,rjnew_m,ni,nj
      1                                ,topo_a,topo_m)
                   else
@@ -518,7 +553,6 @@
      1                                ,aod_2_topo(ialt,jazi)
                   endif
 
-                  clwc2alpha = 75. ! from clwc constants in 'get_cloud_rad'
                   cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
                   r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
                   if(idebug .eq. 1)write(6,101)dz1_l,dz1_h,dxy1_l,dxy1_h
@@ -535,6 +569,7 @@
                 else
                   if(idebug .eq. 1)write(6,*)' out of bounds ',ialt,jazi
      1                            ,rinew_h,rjnew_h,rk
+                  ihit_bounds = 1
                 endif ! in horizontal domain
 
                 if(rk_h - rkstart .gt. 0.0)then
@@ -715,6 +750,9 @@
               topo_swi(ialt,jazi) = 
      1                fm * topo_swi(ialt,jazim) 
      1              + fp * topo_swi(ialt,jazip)
+              topo_albedo(:,ialt,jazi) = 
+     1                fm * topo_albedo(:,ialt,jazim) 
+     1              + fp * topo_albedo(:,ialt,jazip)
             endif ! ir .ne. 0
           enddo
          endif
@@ -746,6 +784,8 @@
      1         + fp * airmass_2_topo_3d(ialtp,:)
             topo_swi(ialt,:) =
      1         fm * topo_swi(ialtm,:)      + fp * topo_swi(ialtp,:)
+            topo_albedo(:,ialt,:) =
+     1         fm * topo_albedo(:,ialtm,:) + fp * topo_albedo(:,ialtp,:)
           endif ! ir .ne. 0
         enddo ! ialt
 
