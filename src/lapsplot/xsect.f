@@ -4393,7 +4393,7 @@ c
 
         if(c_prodtype .eq. 'A' .or. c_prodtype .eq. 'N')then
             i4_valid = i4time_ref
-            call make_fnam_lp(i4time_valid,a9time,istatus)
+            call make_fnam_lp(i4_valid,a9time,istatus)
             write(6,*)' return from input_product_info ',a9time
             return
 
