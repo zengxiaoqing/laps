@@ -670,26 +670,36 @@
               return
           endif
 
-          do j = 1,NY_L
-          do i = 1,NX_L
-            if(static_albedo(i,j) .ne. 0.08)then ! brown land
-              topo_albedo_2d(1,i,j) = static_albedo(i,j)
-              topo_albedo_2d(2,i,j) = static_albedo(i,j)
-              topo_albedo_2d(3,i,j) = 0.01
-            else ! blue lakes
-              topo_albedo_2d(1,i,j) = 0.04
-              topo_albedo_2d(2,i,j) = 0.06
-              topo_albedo_2d(3,i,j) = 0.12
-            endif
-          enddo ! i
-          enddo ! j
+          if(.true.)then ! initial setting of albedo
+            do j = 1,NY_L
+            do i = 1,NX_L
+              if(static_albedo(i,j) .ne. 0.08)then ! brown land
+                topo_albedo_2d(1,i,j) = static_albedo(i,j)
+                topo_albedo_2d(2,i,j) = static_albedo(i,j)
+                topo_albedo_2d(3,i,j) = 0.01
+              else ! blue lakes
+                topo_albedo_2d(1,i,j) = 0.04
+                topo_albedo_2d(2,i,j) = 0.06
+                topo_albedo_2d(3,i,j) = 0.12
+              endif
+            enddo ! i
+            enddo ! j
 
-!         Consider additional albedo info based on land use and snow cover
-          var_2d='USE'
-          call read_static_grid(NX_L,NY_L,var_2d,land_use,istatus)
-          if(istatus .ne. 1)then
-             print*,' Warning: could not read static-landuse'
-             return
+          endif
+
+          if(.true.)then
+!           Consider additional albedo info based on land use 
+!           Eventually this can include snow cover
+            var_2d='USE'
+            call read_static_grid(NX_L,NY_L,var_2d,land_use,istatus)
+            if(istatus .ne. 1)then
+               print*,' Warning: could not read static-landuse'
+               return
+            endif
+
+            write(6,*)' Set 3-color albedo based on land use'
+            call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
+ 
           endif
 
           goto600
@@ -1046,6 +1056,8 @@
             if(l_cyl .eqv. .true.)then
 !             Write all sky for cyl
               isky_rgb_cyl = sky_rgb_cyl   
+              npts = 3*(maxalt-minalt+1)*(maxazi-minazi+1)
+              write(6,*)' Write all sky cyl text file ',npts
               open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
               write(55,*)isky_rgb_cyl           
               close(55)
@@ -1071,8 +1083,9 @@
 
 !             Write all sky for polar
               isky_rgb_polar = sky_rgb_polar
+              npts = 3*ni_polar*nj_polar
               write(6,*)' Write all sky polar text file'
-     1                  ,isky_rgb_polar(:,255,255)
+     1                  ,isky_rgb_polar(:,255,255),npts
               open(54,file='allsky_rgb_polar.'//clun,status='unknown')
               write(54,*)isky_rgb_polar
               close(54)
