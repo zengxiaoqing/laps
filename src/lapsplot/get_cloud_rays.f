@@ -94,7 +94,6 @@
         airmass_2_topo_3d = 0.
         topo_swi = 0.
         cloud_rad = 1.
-        cloud_rad_c = 1.
 
         icloud_tot = 0                          
 
@@ -114,6 +113,8 @@
             obj_bri = 1.0
             write(6,*)' Object is sun, brightness is:',obj_bri
         endif
+
+        cloud_rad_c = obj_bri
 
         write(6,*)' range of clwc,cice is ',maxval(clwc_3d)
      1                                     ,maxval(cice_3d)
@@ -188,10 +189,10 @@
 
          do jazi = minazi,maxazi,jazi_delt
 
-          if((jazi .eq. 226 .or. jazi .eq. 46) .AND.
+          if((view_azi_deg .eq. 226. .or. view_azi_deg .eq. 46.) .AND.
      1        (abs(altray) .eq. 12 .or. abs(altray) .eq. 9 .or.
      1         abs(altray) .le. 6  .or. ialt .eq. minalt .or.
-     1             altray  .eq. 20. .or. altray .eq. 30. .or.
+     1         abs(altray) .eq. 20. .or. altray .eq. 30. .or.
      1             altray  .eq. 40. .or. altray .eq. 50.)      )then
               idebug = 1
           else
@@ -229,7 +230,7 @@
 
               grid_factor = grid_spacing_m / 3000.
 
-              if(view_altitude_deg .lt. -10.)then
+              if(view_altitude_deg .lt. -15.)then
                   rkdelt1 = -1.00 * grid_factor
                   rkdelt2 = -1.00 * grid_factor
 !             elseif(view_altitude_deg .lt. -4.5)then ! produces red image at -6
@@ -346,19 +347,39 @@
                   else ! horzdist call (determine distance from height & elev)
                     aterm = 1. / radius_earth_8_thirds
                     bterm = tand(min(view_altitude_deg,89.9))
-                    cterm = dz1_l                                            
 
+                    cterm = dz1_l                                            
                     discriminant = 4.*aterm*cterm + bterm**2.
-                    if(discriminant .gt. 0.)then ! catch start point
-                      dxy1_l = (sqrt(discriminant) - bterm)   
-     1                                         / (2.*aterm)
-                    else
+
+                    if(discriminant .gt. 0.)then     
+                      if(view_altitude_deg .gt. 0.)then ! above horizon
+                          dxy1_l = ( sqrt(discriminant) - bterm)   
+     1                                              / (2.*aterm)
+                      else                           ! below horizon
+                          dxy1_l = (-sqrt(discriminant) - bterm)   
+     1                                              / (2.*aterm)
+                      endif
+                    else                             ! catch start point
                       dxy1_l = 0.
                     endif
 
                     cterm = dz1_h                                          
-                    dxy1_h = (sqrt(4.*aterm*cterm + bterm**2.) - bterm) 
-     1                                  / (2.*aterm)
+                    discriminant = 4.*aterm*cterm + bterm**2.
+
+                    if(view_altitude_deg .gt. 0.)then ! above horizon
+                        dxy1_h = ( sqrt(discriminant) - bterm) 
+     1                                           / (2.*aterm)
+                    else                           ! below horizon
+                        dxy1_h = (-sqrt(discriminant) - bterm) 
+     1                                           / (2.*aterm)
+                    endif
+                    if(.true.)then
+                        argd1 = ( sqrt(discriminant) - bterm) 
+     1                                           / (2.*aterm)
+                        argd2 = (-sqrt(discriminant) - bterm) 
+     1                                           / (2.*aterm)
+                    endif
+                 
                     dxy2 = dxy1_h - dxy1_l
                   endif
 
@@ -567,8 +588,15 @@
  101              format(2f8.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,f9.4)
                 else
-                  if(idebug .eq. 1)write(6,*)' out of bounds ',ialt,jazi
-     1                            ,rinew_h,rjnew_h,rk
+                  if(idebug .eq. 1)then
+                      write(6,*)' out of bounds ',ialt,jazi
+     1                    ,rinew_h,rjnew_h,rk,slant2,dxy1_l,dxy1_h,dz1_h   
+                      if(rkdelt .ne. 0.)then
+                          write(6,*)' aterm/bterm/cterm/discriminant='
+     1                               ,aterm,bterm,cterm,discriminant   
+                          write(6,*)' argd1/argd2=',argd1,argd2
+                      endif
+                  endif
                   ihit_bounds = 1
                 endif ! in horizontal domain
 
