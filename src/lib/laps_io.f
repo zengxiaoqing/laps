@@ -1437,6 +1437,8 @@ c
 c this section can make decisions about which satellite data
 c to return in the event there is more than 1 2d field.
 c
+        write(6,*)' nsats / l_mosaic_sat = ',nsats,l_mosaic_sat
+
         if(nsats.gt.1 .and. l_mosaic_sat)then
            write(6,*)
            write(6,*)'Mosaicing ',nsats,' satellites'
