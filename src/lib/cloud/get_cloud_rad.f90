@@ -7,7 +7,16 @@
       use cloud_rad ! Cloud Radiation and Microphysics Parameters
       include 'trigd.inc'
 
+!     airmass(z) = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z))) ! if z <= 91
+      airmassn(cosz) =           1.002432 * cosz**2 + 0.148386  * cosz + 0.0096467
+      airmassd(cosz) = cosz**3 + 0.149864 * cosz**2 + 0.0102963 * cosz + .000303978
+      airmass(cosz) = airmassn(cosz) / airmassd(cosz)
+      trans(od) = exp(-min(od,80.))
+
       parameter (nc = 3)
+
+      real ext_g(nc),trans_c(nc)  ! od per airmass, transmissivity
+      data ext_g /.07,.14,.28/    ! refine via Schaeffer
 
       real clwc_3d(ni,nj,nk) ! kg/m**3
       real cice_3d(ni,nj,nk) ! kg/m**3
@@ -58,6 +67,8 @@
       cosazi = cosd(sol_azi(idb,jdb))
 
       do k = nk-1,1,-1
+
+        patm_k = ztopsa(heights_3d(idb,jdb,k)) / 1013.
 
         ku = k+1 ; kl = k
 
@@ -130,13 +141,16 @@
             transm_3d(i,j,k) = transm_3d(i,j,ku)
             if(idebug .eq. 1)then
               write(6,102)k,transm_3d(i,j,k),dh,ds,sol_alt(idb,jdb),sol_azi(idb,jdb),di,dj
-102           format('k/trans/dhds/solaltaz/dij ',i5,f8.5,1x,2f9.3,1x,2f7.2,1x,2f7.3)
+102           format('k/trans/dhds/solaltaz/dij ',i5,f8.5,1x,2f9.2,1x,2f7.2,1x,2f7.3)
             endif
           endif
 
+          topo = 1500.
+          ht_agl = heights_3d(i,j,k) - topo
+
 !         See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
-          if(heights_3d(i,j,k) .gt. 0.)then ! consider correction for topo
-              horz_dep_d = sqrt(2.0 * heights_3d(i,j,k) / earth_radius) * 180./3.14
+          if(ht_agl .gt. 0.)then                               
+              horz_dep_d = sqrt(2.0 * ht_agl / earth_radius) * 180./3.14
           else
               horz_dep_d = 0.
           endif
@@ -150,29 +164,41 @@
 !         airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
 !         extinction = 0.28 * airmass * patm
 
-          ramp_ang = 5.0
+          ramp_ang = 100.0 ! 5.0
           if(sol_alt_cld .lt. 0.)then    ! (early) twilight cloud lighting
             twi_int = .1 * 10.**(+sol_alt_cld * 0.4) ! magnitudes per deg
             rint = twi_int
-            blu_rat = 1.0            
+            grn_rat = 1.0 ; blu_rat = 1.0            
           elseif(sol_alt_cld .le. ramp_ang .AND. & 
                  sol_alt_cld .ge. 0.            )then ! low daylight sun
-            ramp_slope = 1. / ramp_ang
-            rint    = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 1.0),0.0)
-            blu_rat = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 2.0),0.0)
+            if(.false.)then
+              ramp_slope = 1. / ramp_ang
+              rint    = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 1.0),0.0)
+              blu_rat = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 2.0),0.0)
+              grn_rat = blu_rat ** 0.3
+            else
+!             Direct illumination of the cloud is calculated here
+!             Indirect illumination is factored in via 'scat_frac'
+              am = airmass(cosd(90. - max(sol_alt(i,j),-3.0)))
+              scat_frac = 0.75
+              trans_c(:) = trans(am*ext_g(:)*patm_k*scat_frac)
+              rint = trans_c(1)
+              grn_rat = trans_c(2) / trans_c(1)
+              blu_rat = trans_c(3) / trans_c(1)
+            endif
           else                                        ! full daylight
             rint = 1.
-            blu_rat = 1.
+            grn_rat = 1.0 ; blu_rat = 1.0            
           endif  
 
           if(idebug .eq. 1)then
-              write(6,103)k,sol_alt(i,j),horz_dep_d,sol_alt_cld, rint,rint*blu_rat**0.3,rint*blu_rat
-103           format('k/salt/hdep/salt_cld/R/G/B',70x,i4,3f9.3,2x,3f6.2)                                   
+              write(6,103)k,sol_alt(i,j),horz_dep_d,sol_alt_cld,am*patm_k,rint,rint*blu_rat**0.3,rint*blu_rat
+103           format('k/salt/hdep/salt_cld/amk/R/G/B',43x,i4,3f6.2,f8.2,2x,3f6.2)                                   
           endif
 
 !         Modify transm array for each of 3 colors depending on solar intensity and color at cloud (top)
           transm_4d(i,j,k,1) = transm_3d(i,j,k) * rint
-          transm_4d(i,j,k,2) = transm_3d(i,j,k) * rint * blu_rat**0.3 
+          transm_4d(i,j,k,2) = transm_3d(i,j,k) * rint * grn_rat      
           transm_4d(i,j,k,3) = transm_3d(i,j,k) * rint * blu_rat   
 
         enddo ! j
