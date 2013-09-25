@@ -100,6 +100,7 @@ SRC	= machine_dependent.F \
           insertsao.f \
           interp.f \
           interpolate_3dfield.f \
+          land_albedo.f \
           laps_io.f \
           laps_routines.f \
           laps_thermo.f \
@@ -158,6 +159,7 @@ SRC	= machine_dependent.F \
           smooth_box.f \
           smooth_cross_laps.f \
           snooze_gg.f \
+          solar_normal.f \
           spread.f \
           sroutines.f \
           ssh2.f \
