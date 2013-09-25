@@ -37,7 +37,7 @@
         real alt_a(ni,nj)
         real azi_a(ni,nj)
         real elong_a(ni,nj)
-        real rintensity(nc)
+        real rintensity(nc), cld_rgb_rat(nc)
        
         real ext_g(nc),trans_c(nc)  ! od per airmass, tramsmissivity
         data ext_g /.07,.14,.28/    ! refine via Schaeffer
@@ -80,6 +80,16 @@
             write(6,*)' contrast = ',contrast
         endif
 
+!       Cloud glow Calculation
+!       Sun = 96000 lux
+!       Vega = 2.54 * 1e-6 lux
+!       1 lambert = 1 lumen / cm**2
+!       Sun is -26.9 mag per sphere
+!       (180/pi)^2 * 4 * pi = 41250 square degrees in a sphere.
+!       5.346e11 square arcsec in a sphere
+        glow_cld_day = v_to_b(-26.9 + log10(5.346e11)*2.5)
+        write(6,*)' glow_cld_day (nl) = ',glow_cld_day
+
 !       Redness section
         sol_alt_red_thr = 1.0 + (od_atm_a * 40.)
 
@@ -104,12 +114,15 @@
         endif
 
         if(.true.)then
-          if(sol_alt .ge. 0.)then
+          if(sol_alt .ge. 0.)then       ! daylight
             write(6,11)
 11          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten   airtopo  switopo  topoalb   topood  topovis  cld_visb  glow      skyrgb')
-          else
+          elseif(sol_alt .ge. -16.)then ! twilight
             write(6,12)
 12          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    rinten glw_cld_nt glw_cld  glw_twi glw2ndclr rmaglim  cld_visb  glow      skyrgb')
+          else                          ! night
+            write(6,13)
+13          format('    i   j      alt      azi     elong   pf_scat2  opac       od      alb     cloud  airmass   rade-3 rinten glw_cld_nt glw_cld glwcldmn glw2ndclr rmaglim  cld_visb  glow      skyrgb')
           endif
         endif
 
@@ -126,7 +139,7 @@
                   idebug = 1
               endif
           else ! cyl
-              if(j .eq. 227 .or. j .eq. 47)then ! constant azimuth
+              if(azi_a(i,j) .eq. 46. .OR. azi_a(i,j) .eq. 226.)then ! constant azimuth
                   idebug = 1
 !                 if(i .eq. 1)write(6,11)   
               endif
@@ -170,7 +183,12 @@
 !             Potential intensity of cloud if it is opaque 
 !               (240. is nominal intensity of a white cloud far from the sun)
 !               (0.25 is dark cloud base value)                                  
-              rintensity(:) = 240. * ( (0.35 + 0.65 * cloud_rad_c(:,i,j)) * pf_scat)
+              rint_top  = 240.                                        * pf_scat 
+              rint_base = 240. * (  0.35                            ) * pf_scat 
+!             Gamma color correction applied when sun is near horizon 
+              cld_rgb_rat(:) = (cloud_rad_c(:,i,j) / cloud_rad_c(1,i,j)) ** 0.45
+              rintensity(:) = rint_top  * cld_rgb_rat(:) * r_cloud_rad(i,j) &
+                            + rint_base * (1.0 - r_cloud_rad(i,j))
 !             rintensity = min(rintensity,255.)
               rintensity = max(rintensity,0.)
 
@@ -179,17 +197,23 @@
               rintensity = rintensity * (trans_c/trans_c(1))**0.25 ! 0.45
 
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
-              glow_cld_nt = log10(5000.) ! 10 * clear sky zenith value
+              glow_cld_nt = log10(5000.) ! 10 * clear sky zenith value (log nl)
               glow_cld = addlogs(glow_cld_nt,glow_secondary_cld) ! 2ndary sct
 
               glow_twi = glow(i,j) + log10(clear_rad_c(3,i,j)) ! phys val
+
+              if(sol_alt .lt. -16.)then
+!                 Add phys term for scattering by moonlight on the clouds
+                  pf_scat2 = 5. ** (pf_scat - 1.1)
+!                 glow_cld_day = 2e10 ! nanolamberts (actual about 3e9)
+                  glow_cld_moon = log10(glow_cld_day * cloud_rad_c(2,i,j) * pf_scat2)
+                  glow_cld = addlogs(glow_cld,glow_cld_moon)
+              endif
 
 !             During twilight, compare with clear sky background
 !             Note that secondary scattering might also be considered in
 !             early twilight away from the bright twilight arch.
 !             The result creates a contrast effect for clouds vs twilight            
-              glow_cld_diff = max(min((glow_cld - glow_twi),1.0),-1.0)
-!             rintensity(:) = 95. + 35. * glow_cld_diff
               rintensity(:) = max(min(((glow_cld -argref) * contrast + 128.),255.),0.)
           endif
 
@@ -332,9 +356,9 @@
               endif
 
               topo_swi_frac = (max(topo_swi(i,j),001.) / 1000.) ** 0.45
-              rtopo_red = 150. * topo_swi_frac * (topo_albedo(1,i,j)/.15)**0.45
-              rtopo_grn = 150. * topo_swi_frac * (topo_albedo(2,i,j)/.15)**0.45
-              rtopo_blu = 150. * topo_swi_frac * (topo_albedo(3,i,j)/.15)**0.45
+              rtopo_red = 120. * topo_swi_frac * (topo_albedo(1,i,j)/.15)**0.45
+              rtopo_grn = 120. * topo_swi_frac * (topo_albedo(2,i,j)/.15)**0.45
+              rtopo_blu = 120. * topo_swi_frac * (topo_albedo(3,i,j)/.15)**0.45
 
               sky_rgb(0,I,J) = nint(rtopo_red*topo_visibility + sky_rgb(0,I,J)*(1.0-topo_visibility) )
               sky_rgb(1,I,J) = nint(rtopo_grn*topo_visibility + sky_rgb(1,I,J)*(1.0-topo_visibility) )
@@ -363,14 +387,14 @@
                       ,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)                              
               else ! night
                   write(6,104)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
-                      ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
-                      ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1) &
-                      ,glow_cld_nt,glow_cld,glow_twi,glow_secondary_clr,rmaglim &
+                      ,pf_scat2,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
+                      ,frac_cloud,airmass_2_cloud(i,j),cloud_rad_c(2,i,j)*1e3,rintensity(1) &
+                      ,glow_cld_nt,glow_cld,glow_cld_moon,glow_secondary_clr,rmaglim &
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:)
               endif
-102           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
-103           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',3f10.6,3i4)
-104           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f7.4,f9.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
+102           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.4,f7.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
+103           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.4,f7.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',3f10.6,3i4)
+104           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
           endif
 
          endif ! missing data tested via altitude
