@@ -194,6 +194,7 @@ if ($SUBTYPE == "") then
     endif
 endif
 echo 'set output '$DQUOTE$PNGDIR$PNGFILE$DQUOTE                          >> $GNUPLOTFILE
+#echo 'set termoption dash'                                               >> $GNUPLOTFILE
 
 # time range must be in same format as data file
 #echo 'set xrange ["2-FEB-2011 12:00:00.00":"2-FEB-2011 18:00:00.00"]'    >> $GNUPLOTFILE
@@ -291,25 +292,30 @@ while ($IMEMBER <= $NMEMBERS)
 
         echo "PCT_SUCCESS being compared to threshold of 80 is: $PCT_SUCCESS"
         if ($PCT_SUCCESS >= 80) then
-            setenv LS 1
             if (-d /w3/lapb) then
                 setenv LW 3
             else
-                setenv LW 2
+                if ($NMEMBERS >= 7) then
+                    setenv LW 1
+                else
+                    setenv LW 2
+                endif
             endif
         else 
-            setenv LS 2
             setenv LW 1
         endif
 
     else                                                     # Percentage not present
         setenv PCT ""
         setenv TITLE `echo $MEMBER | sed 's/_/ /g'`
-        setenv LS 1
         if (-d /w3/lapb) then
             setenv LW 3
         else
-            setenv LW 2
+            if ($NMEMBERS >= 7) then
+                setenv LW 1
+            else
+                setenv LW 2
+            endif
         endif
 
     endif
@@ -326,20 +332,33 @@ while ($IMEMBER <= $NMEMBERS)
 
         setenv PS 1.5
 
-        if ($NMEMBERS == 1) then
-            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 axis x1y1 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':4 axis x1y1 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 2, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 axis x1y2 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 3'    >> $GNUPLOTFILE
-        else if ($IMEMBER == 1) then
-            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 axis x1y1 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':4 axis x1y1 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 2, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 axis x1y2 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 3, \' >> $GNUPLOTFILE
-        else if ($IMEMBER == $NMEMBERS) then
-            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 axis x1y1 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 axis x1y2 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 3'    >> $GNUPLOTFILE
+        if ($IMEMBER > 18) then
+            setenv LT 3
+            setenv LCF 7
+        else if ($IMEMBER > 9) then
+            setenv LT 2
+            setenv LCF 4
         else
-            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 axis x1y1 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 1, \' >> $GNUPLOTFILE
-            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 axis x1y2 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt 3, \' >> $GNUPLOTFILE
+            setenv LT 1
+            setenv LCF 1
+        endif
+
+        echo "IMEMBER LT LCF: $IMEMBER $LT $LCF"
+
+        if ($NMEMBERS == 1) then
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 axis x1y1 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt '$LT' , \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':4 axis x1y1 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt     2 , \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 axis x1y2 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt     3 '    >> $GNUPLOTFILE
+        else if ($IMEMBER == 1) then
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 axis x1y1 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt '$LT' , \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':4 axis x1y1 title "'"$TH"$T2 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt     2 , \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 axis x1y2 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt     3 , \' >> $GNUPLOTFILE
+        else if ($IMEMBER == $NMEMBERS) then
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 axis x1y1 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt '$LT' , \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 axis x1y2 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt     3 '    >> $GNUPLOTFILE
+        else
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 axis x1y1 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt '$LT' , \' >> $GNUPLOTFILE
+            echo        $DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':5 axis x1y2 title "'"$TH"$T3 $TITLE$TF'" with linespoints lw '$LW' pt '$PT' ps '$PS' lt     3 , \' >> $GNUPLOTFILE
         endif
 
     else if ($NFIELDS == 2) then
