@@ -46,7 +46,7 @@ cdis
         character*9 asc9_tim
         character*4 RM
         character*35 TIME
-        character*4 czoom
+        character*8 czoom
         logical l_atms, l_plotobs
         logical l_parse, l_polar, l_cyl
 
@@ -300,18 +300,18 @@ cdis
             if(c_section .eq. 'az')then
                 write(6,*)' Enter plot info (e.g. 180p, 90c)'
                 read(lun,*)czoom                   
-                if(l_parse(czoom,'b') .eqv. .true.)then
+                if(l_parse(trim(czoom),'b') .eqv. .true.)then
                     l_polar = .true.
                     l_cyl   = .true.
                 else
-                    l_polar = l_parse(czoom,'p')
-                    l_cyl   = l_parse(czoom,'c')
+                    l_polar = l_parse(trim(czoom),'p')
+                    l_cyl   = l_parse(trim(czoom),'c')
                 endif
                 if((l_polar .OR. l_cyl) .eqv. .false.)then
                     write(6,*)' Set l_polar to TRUE'
                     l_polar = .true.
                 endif
-                write(6,*)' czoom = ',czoom,' l_polar = ',l_polar
+                write(6,*)' czoom = ',trim(czoom),' l_polar = ',l_polar
      1                   ,' l_cyl = ',l_cyl
 !               l_polar = .true.
 !               l_cyl = .true.
