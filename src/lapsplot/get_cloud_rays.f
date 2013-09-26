@@ -188,6 +188,7 @@
          endif
 
          do jazi = minazi,maxazi,jazi_delt
+          view_azi_deg = float(jazi) * azi_scale
 
           if((view_azi_deg .eq. 226. .or. view_azi_deg .eq. 46.) .AND.
      1        (abs(altray) .eq. 12 .or. abs(altray) .eq. 9 .or.
@@ -202,7 +203,6 @@
 !         Trace towards sky from each grid point
 !         view_altitude_deg = max(altray,0.) ! handle Earth curvature later
           view_altitude_deg = altray
-          view_azi_deg = float(jazi) * azi_scale
 
 !         Get direction cosines based on azimuth
           xcos = sind(view_azi_deg)
@@ -298,6 +298,27 @@
      1           .AND. cvr_path_sum .le. 1.0) ! Tau < ~75
 
                 if(rkdelt .ne. 0.)then ! trace by pressure levels
+
+                  if(.false.)then ! optimize step size
+!                 if(view_altitude_deg .gt. 0.)then ! optimize step size
+                    rkdelt_vert = 1.0 - (rk - int(rk))
+                    kk_ref = min(int(rk),nk-1)
+                    delta_grid_height = heights_1d(kk_ref+1)
+     1                                - heights_1d(kk_ref)
+                    aspect_ratio = delta_grid_height / grid_spacing_m
+                    rkdelt_horz = aspect_ratio / tand(view_altitude_deg) 
+                    rkdelt = max(min(rkdelt_horz,rkdelt_vert),0.2)
+                    if(idebug .eq. 1)then
+                      write(6,*)' rk,rkdelt_vert,rkdelt_horz,rkdelt',
+     1                            rk,rkdelt_vert,rkdelt_horz,rkdelt
+                      write(6,*)' view_altitude_deg,delta_grid_height',      
+     1                            view_altitude_deg,delta_grid_height
+                      write(6,*)' aspect_ratio',
+     1                            aspect_ratio
+!                     stop
+                    endif
+                  endif
+
                   rk = rk + rkdelt
 
                   rk_l = rk - rkdelt
@@ -373,7 +394,7 @@
                         dxy1_h = (-sqrt(discriminant) - bterm) 
      1                                           / (2.*aterm)
                     endif
-                    if(.true.)then
+                    if(.false.)then
                         argd1 = ( sqrt(discriminant) - bterm) 
      1                                           / (2.*aterm)
                         argd2 = (-sqrt(discriminant) - bterm) 
@@ -594,7 +615,7 @@
                       if(rkdelt .ne. 0.)then
                           write(6,*)' aterm/bterm/cterm/discriminant='
      1                               ,aterm,bterm,cterm,discriminant   
-                          write(6,*)' argd1/argd2=',argd1,argd2
+!                         write(6,*)' argd1/argd2=',argd1,argd2
                       endif
                   endif
                   ihit_bounds = 1
