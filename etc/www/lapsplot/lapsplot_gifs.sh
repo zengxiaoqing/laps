@@ -64,24 +64,43 @@ if test "$NCARG_ROOT" = "allsky"; then
   echo "$SCRATCH_DIR/$proc"
   ls -l $SCRATCH_DIR/$proc
 
+  RESOLUTION_POLAR=""
+  RESOLUTION_CYL=""
+
   if test "$RESOLUTION" = "180p" || test "$RESOLUTION" = "180pr"; then
       MODE_ALLSKY=polar
+      RESOLUTION_POLAR=$RESOLUTION
   elif test "$RESOLUTION" = "180c"; then
       MODE_ALLSKY=cyl   
+      RESOLUTION_CYL=$RESOLUTION
   elif test "$RESOLUTION" = "360c"; then
       MODE_ALLSKY=cyl   
+      RESOLUTION_CYL=$RESOLUTION
   elif test "$RESOLUTION" = "360p" || test "$RESOLUTION" = "360pr"; then
       MODE_ALLSKY=polar 
+      RESOLUTION_POLAR=$RESOLUTION
   elif test "$RESOLUTION" = "360b"; then
       MODE_ALLSKY=both   
+      RESOLUTION_POLAR=360p
+      RESOLUTION_CYL=360c
+  elif test "$RESOLUTION" = "180b"; then
+      MODE_ALLSKY=both   
+      RESOLUTION_POLAR=180p
+      RESOLUTION_CYL=180c
+  elif test "$RESOLUTION" = "360p180c"; then
+      MODE_ALLSKY=both   
+      RESOLUTION_POLAR=360p
+      RESOLUTION_CYL=180c
   else
-      setenv RESOLUTION 360p
+      RESOLUTION=360p
       MODE_ALLSKY=polar
   fi
 
   echo "MODE_ALLSKY = $MODE_ALLSKY    RESOLUTION = $RESOLUTION"
+  echo "RESOLUTION_CYL = $RESOLUTION_CYL    RESOLUTION_POLAR = $RESOLUTION_POLAR"
 
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
+    echo " "
     echo "Will run IDL polar conversion to PNG"
     rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky.pro allsky.pro
     echo allsky | /usr/local/share/rsi/idl/bin/idl
@@ -89,36 +108,39 @@ if test "$NCARG_ROOT" = "allsky"; then
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     export ALLSKY_JDIM=$WINDOW
+    echo " "
     echo "Will run IDL cyl conversion to PNG: WINDOW/ALLSKY_JDIM is $WINDOW $ALLSKY_JDIM"
     rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky_cyl.pro allsky_cyl.pro
     echo allsky_cyl | /usr/local/share/rsi/idl/bin/idl
     convert -resize 300% allsky_cyl_001.png allsky_cyl_001.png
   fi
 
+  echo " "
+
   DIRCYL=South
 
 # Other orientations
-  if test "$RESOLUTION" = "180pr"; then
+  if test "$RESOLUTION_POLAR" = "180pr"; then
       convert allsky_polar_001.png -rotate 180 allsky_polar_001.png
       DIR1=SE
       DIR2=NE
       DIR3=NW
       DIR4=SW
   fi
-  if test "$RESOLUTION" = "360pr"; then # default           
+  if test "$RESOLUTION_POLAR" = "360pr"; then # default           
       DIR1=NW
       DIR2=SW
       DIR3=SE
       DIR4=NE
   fi
-  if test "$RESOLUTION" = "360p"; then # flip left/right
+  if test "$RESOLUTION_POLAR" = "360p"; then # flip left/right
       convert allsky_polar_001.png -flop allsky_polar_001.png
       DIR1=NE
       DIR2=SE
       DIR3=SW
       DIR4=NW
   fi
-  if test "$RESOLUTION" = "180p"; then # rotate and flip left/right
+  if test "$RESOLUTION_POLAR" = "180p"; then # rotate and flip left/right
       convert allsky_polar_001.png -rotate 180 -flop allsky_polar_001.png
 #     convert allsky_polar_001.png -flop allsky_polar_001.png
       DIR1=SW
@@ -126,8 +148,12 @@ if test "$NCARG_ROOT" = "allsky"; then
       DIR3=NE
       DIR4=SE
   fi
-  if test "$RESOLUTION" = "360c" || test "$RESOLUTION" = "360b"; then # roll horizontally by half the image
-      convert allsky_cyl_001.png -roll +540+0 allsky_cyl_001.png
+  if test "$RESOLUTION_CYL" = "360c"; then # roll horizontally by half the image
+      if test $WINDOW -ge 181; then
+          convert allsky_cyl_001.png -roll +1080+0 allsky_cyl_001.png
+      else
+          convert allsky_cyl_001.png -roll  +540+0 allsky_cyl_001.png
+      fi
       DIRCYL=North
   fi
 
@@ -135,6 +161,7 @@ if test "$NCARG_ROOT" = "allsky"; then
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
     convert -annotate +15+20  "NOAA LAPS"  -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
   fi
+
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     convert -annotate +15+20  "NOAA LAPS"  -pointsize 20 -fill white allsky_cyl_001.png allsky_cyl_001.png
   fi
@@ -143,8 +170,9 @@ if test "$NCARG_ROOT" = "allsky"; then
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
     convert -annotate +393+500 `cat label.001`   -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
   fi
+
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    if test "$WINDOW" = "181"; then
+    if test $WINDOW -ge 181; then
       convert -annotate +1550+20 `cat label.001`   -pointsize 20 -fill white allsky_cyl_001.png allsky_cyl_001.png
     else
       convert -annotate +725+20 `cat label.001`   -pointsize 20 -fill white allsky_cyl_001.png allsky_cyl_001.png
@@ -155,8 +183,9 @@ if test "$NCARG_ROOT" = "allsky"; then
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
     convert -annotate +363+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
   fi
+
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    if test "$WINDOW" = "181"; then
+    if test $WINDOW -ge 181; then
       convert -annotate +1780+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_cyl_001.png allsky_cyl_001.png
     else
       convert -annotate +890+20  "`cat label2.txt`" -pointsize 20 -fill white allsky_cyl_001.png allsky_cyl_001.png
@@ -167,6 +196,7 @@ if test "$NCARG_ROOT" = "allsky"; then
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
     convert -annotate +20+500 "All Sky"          -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
   fi
+
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     convert -annotate +20+500 "All Sky"          -pointsize 20 -fill white allsky_cyl_001.png allsky_cyl_001.png
   fi
@@ -178,26 +208,37 @@ if test "$NCARG_ROOT" = "allsky"; then
     convert -annotate +440+450   "$DIR3"            -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
     convert -annotate +435+60    "$DIR4"            -pointsize 20 -fill white allsky_polar_001.png allsky_polar_001.png
   fi
+
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    if test "$WINDOW" = "181"; then
+    if test $WINDOW -ge 181; then
       convert -annotate +1040+20   "$DIRCYL"          -pointsize 20 -fill orange allsky_cyl_001.png allsky_cyl_001.png
+      echo "WINDOW is large "$WINDOW
     else
       convert -annotate +520+20    "$DIRCYL"          -pointsize 20 -fill orange allsky_cyl_001.png allsky_cyl_001.png
+      echo "WINDOW is small "$WINDOW
     fi
   fi
 
 # convert allsky_polar_001.png $SCRATCH_DIR/gmeta_$proc.gif
-  if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
+  if test "$MODE_ALLSKY" = "cyl"; then
       cp allsky_cyl_001.png $SCRATCH_DIR/gmeta_$proc.png
+      ls -l $SCRATCH_DIR/gmeta_$proc.png
   fi
   if test "$MODE_ALLSKY" = "polar"; then
       cp allsky_polar_001.png $SCRATCH_DIR/gmeta_$proc.png
+      ls -l $SCRATCH_DIR/gmeta_$proc.png
+  fi
+
+# handle "both" option?
+
+  if test "$MODE_ALLSKY" = "both"; then
+      cp allsky_cyl_001.png $SCRATCH_DIR/gmeta_$proc.cyl.png
+      cp allsky_polar_001.png $SCRATCH_DIR/gmeta_$proc.polar.png
+      ls -l $SCRATCH_DIR/gmeta_$proc.cyl.png
+      ls -l $SCRATCH_DIR/gmeta_$proc.polar.png
   fi
 
   ls -l $SCRATCH_DIR/$proc
-  ls -l $SCRATCH_DIR/gmeta_$proc.png
-
-# handle "both" option?
 
   ext3=png
 
@@ -374,9 +415,9 @@ else
 fi # allsky option
 
 chmod 666 $SCRATCH_DIR/gmeta_$proc.$ext3
-
-
 echo " "
 date -u
+echo " "
+echo "finished lapsplot_gifs.sh"
 echo " "
 
