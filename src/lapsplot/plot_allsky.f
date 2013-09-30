@@ -36,6 +36,7 @@
         real swi_2d(NX_L,NY_L)
         real static_albedo(NX_L,NY_L)
         real land_use(NX_L,NY_L)
+        real snow_cover(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
@@ -46,22 +47,6 @@
         real moon_azi_2d(NX_L,NY_L)
         real moon_mag,moon_mag_thr
 
-        real temp_vert(max_snd_levels)
-        real ht_vert(max_snd_levels)
-        real u_vert(max_snd_levels)
-        real v_vert(max_snd_levels)
-        real rh_vert(max_snd_levels)
-        real sh_vert(max_snd_levels) ! dimensionless
-        real td_vert(max_snd_levels)
-        real lwc_vert(max_snd_levels)
-        real ice_vert(max_snd_levels)
-        real rain_vert(max_snd_levels)
-        real snow_vert(max_snd_levels)
-        real pice_vert(max_snd_levels)
-
-        real pres_1d(max_snd_levels)
-        real logp_1d(max_snd_levels), logp_bottom, logp_top, logp
-     1                              , logp_sfc
         real lil_sfc, lic_sfc, lil_cpt, lic_cpt
   
         real k_to_c, make_td, make_ssh
@@ -78,7 +63,6 @@
         character*3 c3_string
         character*4 c4_string
         character*40 c_label
-        character*16 c16_latlon
         character*11 c_pw
         character*11 c_cape
         character*20 c20_x, c20_y
@@ -93,17 +77,10 @@
         include 'icolors.inc'
 
 !       Sounding observation declarations
-        real ob_pr_ht_obs(max_snd_grid,max_snd_levels)
-        real ob_pr_pr_obs(max_snd_grid,max_snd_levels)
-        real ob_pr_u_obs(max_snd_grid,max_snd_levels) 
-        real ob_pr_v_obs(max_snd_grid,max_snd_levels)
-        real ob_pr_t_obs(max_snd_grid,max_snd_levels)
-        real ob_pr_td_obs(max_snd_grid,max_snd_levels)
         real lat_pr(max_snd_grid)
         real lon_pr(max_snd_grid)
         real elev_pr(max_snd_grid)
         integer nlevels_obs_pr(max_snd_grid)
-        integer i4time_ob_pr(max_snd_grid)
         character*5 c5_name, c5_name_a(max_snd_grid), c5_name_min
         character*8 obstype(max_snd_grid)
 
@@ -138,12 +115,16 @@
         real sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi)
         integer isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi)
 
+        integer maxloc
+        parameter (maxloc = 10)
+
+        real xsound(maxloc),ysound(maxloc)
+        real soundlat(maxloc),soundlon(maxloc)
+
         data ilun /0/
         character*3 clun
  
         common /image/ n_image
-
-        skewt(t_c,logp) = t_c - (logp - logp_bottom) * 32.
 
         if(maxalt .eq. 180)then
             alt_scale = 0.5 
@@ -213,54 +194,63 @@
         write(6,*)' Input number of all-sky locations...'
         read(5,*)nloc
 
- 80     write(6,*)
-        write(6,*)' Input x grid point (or latitude) for all-sky...'
-        read(5,*)c20_x
+        do iloc = 1,nloc
 
-        call s_len(c20_x,lenx)
-        l_latlon = l_parse(c20_x(1:lenx),'l')
+ 80       write(6,*)
+          write(6,*)' Input x grid point (or latitude) for all-sky...'
+          read(5,*)c20_x
 
-        if(l_latlon)then ! x value was flagged as latitude with "l" at the end 
-            read(c20_x(1:lenx-1),*)soundlat
+          call s_len(c20_x,lenx)
+          l_latlon = l_parse(c20_x(1:lenx),'l')
+
+          if(l_latlon)then ! x value was flagged as latitude with "l" at the end 
+            read(c20_x(1:lenx-1),*)soundlat(iloc)
 
             write(6,*)' Input longitude for allsky plot...'       
             read(5,*)c20_y
             call s_len(c20_y,leny)
             if(l_parse(c20_y(1:leny),'l'))then
-                read(c20_y(1:leny-1),*)soundlon
+                read(c20_y(1:leny-1),*)soundlon(iloc)
             else
-                read(c20_y(1:leny),*)soundlon
+                read(c20_y(1:leny),*)soundlon(iloc)
             endif
 
-            call latlon_to_rlapsgrid(soundlat,soundlon,lat,lon
-     1                              ,NX_L,NY_L,xsound,ysound,istatus)       
+            call latlon_to_rlapsgrid(soundlat(iloc),soundlon(iloc)
+     1                              ,lat,lon,NX_L,NY_L
+     1                              ,xsound(iloc),ysound(iloc),istatus)
 
             if(istatus .ne. 1)then
                 write(6,*)' Station is outside domain - try again...'
                 return
             endif
 
-            if(xsound .lt. 1. .or. xsound .gt. float(NX_L) .OR.
-     1         ysound .lt. 1. .or. ysound .gt. float(NY_L)    )then
+            if(xsound(iloc) .lt. 1. .or. xsound(iloc) .gt. float(NX_L)
+     1                              .or.
+     1         ysound(iloc) .lt. 1. .or. ysound(iloc) .gt. float(NY_L)    
+     1                                                             )then
                 write(6,*)' Station is outside domain - try again...'
                 return
             endif
 
-        else
-            read(c20_x(1:lenx),*)xsound
+          else
+            read(c20_x(1:lenx),*)xsound(iloc)
             write(6,*)' Input y grid point for allsky plot...'
             read(5,*)ysound
-            if(xsound .lt. 1.0 .OR. ysound .lt. 1.0)then ! scale domain
+            if(xsound(iloc) .lt. 1.0 .OR. ysound(iloc) .lt. 1.0)then ! scale domain
                 write(6,*)' Values less than 1.0, scale to domain'
-                xsound = nint(xsound * (NX_L-1)) + 1
-                ysound = nint(ysound * (NY_L-1)) + 1
-                soundlat = lat(nint(xsound),nint(ysound))
-                soundlon = lon(nint(xsound),nint(ysound))
+                xsound(iloc) = nint(xsound(iloc) * (NX_L-1)) + 1
+                ysound(iloc) = nint(ysound(iloc) * (NY_L-1)) + 1
+                soundlat(iloc) = 
+     1              lat(nint(xsound(iloc)),nint(ysound(iloc)))
+                soundlon(iloc) = 
+     1              lon(nint(xsound(iloc)),nint(ysound(iloc)))
             endif
-        endif
+          endif
 
-        write(6,*)' soundlat/soundlon ',soundlat,soundlon
-        write(6,*)' xsound/ysound ',xsound,ysound
+          write(6,*)' soundlat/soundlon ',soundlat(iloc),soundlon(iloc)
+          write(6,*)' xsound/ysound ',xsound(iloc),ysound(iloc)
+
+        enddo ! nloc
 
  40     continue
 !40     write(6,*)' Enter c_plotobs'
@@ -302,20 +292,6 @@
 !       Get 3-D pressure field
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
-
-        isound = nint(xsound)
-        jsound = nint(ysound)
-
-        rlat = lat(isound,jsound)
-        rlon = lon(isound,jsound)
-
-        write(c16_latlon,101)rlat,rlon
- 101    format(2f8.2)
-
-        do iz = 1,NZ_L
-            pres_1d(iz) = pres_3d(isound,jsound,iz)
-            logp_1d(iz) = log(pres_1d(iz))
-        enddo ! iz
 
         if(l_plotobs .eqv. .false.)then
 
@@ -435,13 +411,6 @@
             if(nsmooth .gt. 1)then
                 call smooth_box_3d(field_3d,NX_L,NY_L,NZ_L,nsmooth)
             endif
-            call interp_3d(field_3d,rh_vert,xsound,xsound,ysound,ysound,       
-     1                     NX_L,NY_L,NZ_L,1,NZ_L,r_missing_data)
-
-            do iz = 1,NZ_L
-                t_c         = k_to_c(temp_vert(iz)) 
-                td_vert(iz) = DWPT(t_c,rh_vert(iz))
-            enddo ! iz
 
             istat_td = 1
 
@@ -449,17 +418,6 @@
             if(nsmooth .gt. 1)then
                 call smooth_box_3d(field_3d,NX_L,NY_L,NZ_L,nsmooth)
             endif
-            call interp_3d(field_3d,sh_vert,xsound,xsound,ysound,ysound,       
-     1                     NX_L,NY_L,NZ_L,1,NZ_L,r_missing_data)
-
-            t_ref = -199.
-            do iz = 1,NZ_L
-                t_c         = k_to_c(temp_vert(iz)) 
-                p_mb        = pres_1d(iz)/100.
-                q_gkg       = sh_vert(iz) * 1000.
-                td_vert(iz) = make_td(p_mb,t_c,q_gkg,t_ref)
-                rh_vert(iz) = humidity(t_c,td_vert(iz))
-            enddo ! iz
 
             istat_td = 1
 
@@ -495,46 +453,19 @@
 !         Calculate solar position for 2D array of grid points
           do i = 1,NX_L
           do j = 1,NY_L
-            call solar_position(soundlat,soundlon,i4time_solar
+            call solar_position(lat(i,j),lon(i,j),i4time_solar
      1                         ,sol_alt_2d(i,j),solar_dec,solar_ha)
-            call equ_to_altaz_d(solar_dec,solar_ha,soundlat                 
+            call equ_to_altaz_d(solar_dec,solar_ha,lat(i,j)
      1                         ,altdum,sol_azi_2d(i,j))               
             if(sol_azi_2d(i,j) .lt. 0.)sol_azi_2d(i,j) = 
      1                                 sol_azi_2d(i,j) + 360.
           enddo ! j
           enddo ! i
 
-          write(6,*)' solar alt/az (2d array)',sol_alt_2d(isound,jsound)       
-     1                                        ,sol_azi_2d(isound,jsound)       
-
-!         Calculate solar position for all-sky point
-          call solar_position(soundlat,soundlon,i4time_solar,solar_alt     
-     1                                    ,solar_dec,solar_ha)
-          call equ_to_altaz_d(solar_dec,solar_ha,soundlat                 
-     1                                ,altdum,solar_az)               
-          if(solar_az .lt. 0.)solar_az = solar_az + 360.
-
-          write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
-
-          write(6,*)' call sun_moon at grid point ',isound,jsound
-          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,isound,jsound
-     1                 ,alm,azm,elgms,moon_mag)
-          write(6,24)alm,azm,elgms,moon_mag 
-24        format('  alt/az/elg/mag = ',4f8.2)
-
-!         alm = -90.          ! Test for disabling
-!         moon_mag = -4.0    ! Test for disabling
-          moon_mag_thr = -6.0
-
-          moon_alt_2d = alm
-          moon_azi_2d = azm
-
           if(istat_lwc .eq. 1)then
-            call interp_3d(field_3d,lwc_vert,xsound,xsound
-     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
-     1                    ,r_missing_data)
+            continue
           else
-            lwc_vert = -999.
+            continue
           endif
 
 !       Read Cloud Ice
@@ -556,9 +487,7 @@
           endif
 
           if(istat_ice .eq. 1)then
-            call interp_3d(field_3d,ice_vert,xsound,xsound
-     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
-     1                    ,r_missing_data)
+            continue
           else
             write(6,*)' Error reading ICE field in plot_allsky'
             return
@@ -585,9 +514,7 @@
           endif
 
           if(istat_rain .eq. 1)then
-            call interp_3d(field_3d,rain_vert,xsound,xsound
-     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
-     1                    ,r_missing_data)
+            continue
           else
             write(6,*)' Error reading RAI field in plot_allsky'
             return
@@ -612,9 +539,7 @@
           endif
 
           if(istat_snow .eq. 1)then
-            call interp_3d(field_3d,snow_vert,xsound,xsound
-     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
-     1                    ,r_missing_data)
+            continue
           else
             write(6,*)' Error reading SNO field in plot_allsky'
             return
@@ -641,9 +566,7 @@
           endif
 
           if(istat_pice .eq. 1)then
-            call interp_3d(field_3d,pice_vert,xsound,xsound
-     1                    ,ysound,ysound,NX_L,NY_L,NZ_L,1,NZ_L
-     1                    ,r_missing_data)
+            continue
           else
             write(6,*)' Error reading PIC field in plot_allsky'
             return
@@ -651,16 +574,32 @@
 
 500       continue
 
-          ext = 'lcv'
-
-!         Read in swi data
-          var_2d = 'SWI'
-          call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
+          if(c_prodtype .eq. 'A')then 
+!           Read in swi data
+            ext = 'lcv'
+            var_2d = 'SWI'
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,swi_2d,0,istat_sfc)
-          if(istat_sfc .ne. 1)then
+            if(istat_sfc .ne. 1)then
               write(6,*)' Error reading LCV/SWI field in plot_allsky'      
               return
+            endif
+
+!           Read in snow cover data
+            ext = 'lm2'
+            var_2d = 'SC'
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,snow_cover,0,istat_sfc)
+            if(istat_sfc .ne. 1)then
+                write(6,*)' Error reading LM2/SC field in plot_allsky'      
+                return
+            endif
+            write(6,*)' range of snow_cover is',
+     1                minval(snow_cover),maxval(snow_cover)
+          else
+            snow_cover = r_missing_data
           endif
 
           call get_static_field_interp('albedo',i4time_lwc,NX_L,NY_L
@@ -689,7 +628,7 @@
 
           if(.true.)then
 !           Consider additional albedo info based on land use 
-!           Eventually this can include snow cover
+!           This also includes snow cover
             var_2d='USE'
             call read_static_grid(NX_L,NY_L,var_2d,land_use,istatus)
             if(istatus .ne. 1)then
@@ -699,6 +638,13 @@
 
             write(6,*)' Set 3-color albedo based on land use'
             call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
+
+            where(snow_cover(:,:) .ne. r_missing_data)
+              do ic = 1,3
+                topo_albedo_2d(ic,:,:) = 
+     1          max(topo_albedo_2d(ic,:,:),snow_cover(:,:))
+              enddo ! ic
+            end where
  
           endif
 
@@ -858,16 +804,7 @@
 
           endif
 
-!         Convert sfc variables
-          p_sfc_pa = pres_2d(isound,jsound)
-          logp_sfc = log(p_sfc_pa)
-          t_sfc_k  = t_2d(isound,jsound)
-          td_sfc_k = td_2d(isound,jsound)
-          pw_sfc   = pw_2d(isound,jsound)
-          cape_sfc = cape_2d(isound,jsound)
-          lil_sfc  = lil_2d(isound,jsound)
-          lic_sfc  = lic_2d(isound,jsound)
-600       topo_sfc = topo(isound,jsound)
+600       continue
         endif ! l_plotobs is FALSE
 
         write(6,*)' a9time is ',a9time
@@ -877,6 +814,40 @@
      1                 ,aod_3d)
 
         do iloc = 1,nloc
+
+          isound = nint(xsound(iloc))
+          jsound = nint(ysound(iloc))
+
+          topo_sfc = topo(isound,jsound)
+
+          rlat = lat(isound,jsound)
+          rlon = lon(isound,jsound)
+
+          write(6,*)' solar alt/az (2d array)',sol_alt_2d(isound,jsound)       
+     1                                        ,sol_azi_2d(isound,jsound)       
+
+!         Calculate solar position for all-sky point
+          call solar_position(soundlat(iloc),soundlon(iloc)
+     1                       ,i4time_solar,solar_alt     
+     1                       ,solar_dec,solar_ha)
+          call equ_to_altaz_d(solar_dec,solar_ha,soundlat(iloc)                 
+     1                                ,altdum,solar_az)               
+          if(solar_az .lt. 0.)solar_az = solar_az + 360.
+
+          write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
+
+          write(6,*)' call sun_moon at grid point ',isound,jsound
+          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,isound,jsound
+     1                 ,alm,azm,elgms,moon_mag)
+          write(6,24)alm,azm,elgms,moon_mag 
+24        format('  alt/az/elg/mag = ',4f8.2)
+
+!         alm = -90.          ! Test for disabling
+!         moon_mag = -4.0    ! Test for disabling
+          moon_mag_thr = -6.0
+
+          moon_alt_2d = alm
+          moon_azi_2d = azm
 
           kstart = 0 ! 0 means sfc, otherwise level of start
 
@@ -997,7 +968,7 @@
 
 !         Write lat/lon label
           open(54,file='label2.txt',status='unknown')
-          write(54,54)soundlat,soundlon
+          write(54,54)soundlat(iloc),soundlon(iloc)
           close(54)
  54       format(2f8.2)
 
