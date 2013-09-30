@@ -21,7 +21,8 @@
         include 'trigd.inc'
 
         trans(od) = exp(-od)
-        brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness
+!       brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness (max~7)
+        brt(a) = (1.0 - exp(-.14 * a))     ! relative sky brightness (max=1)
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
 
@@ -30,6 +31,9 @@
 !       Determine shadow regions of the input 3-D cloud array
 
         parameter (nc = 3)
+
+        real ext_g(nc),twi_trans_c(nc) ! od per airmass, tramsmissivity
+        data ext_g /.07,.14,.28/       ! refine via Schaeffer
 
         real clwc_3d(ni,nj,nk) ! kg/m**3
         real cice_3d(ni,nj,nk) ! kg/m**3
@@ -158,13 +162,15 @@
             endif
           enddo
           rkstart = rksfc
+          patm = pres_3d(i,j,ksfc) / 101325.
         else ! start aloft
           rkstart = kstart
           htstart = heights_3d(i,j,kstart)
+          patm = pres_3d(i,j,kstart) / 101325.
           write(6,*)' Start aloft at k = ',kstart
         endif
 
-        write(6,*)' rkstart = ',rkstart
+        write(6,*)' rkstart/htstart/patm = ',rkstart,htstart,patm
 
         heights_1d(:) = heights_3d(i,j,:)
         pres_1d(:)    = pres_3d(i,j,:)
@@ -651,8 +657,8 @@
             angle_plane = 0.; dist_ray_plane = 0.; ht_ray_plane = 0.
 
           else ! sun below horizon (twilight / night illumination)
-            patm = 0.85
-            z = 90. - altray
+!           patm = 0.85
+            z = min(90. - altray,91.)
             airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
 
             alt_plane = 90. - abs(sol_alt(i,j))
@@ -673,24 +679,28 @@
               bterm = dist_ray_plane**2 / (2. * earth_radius)
               ht_ray_plane = dist_ray_plane * sind(altray) + bterm
               if(ht_ray_plane .le. 99000.)then
-                frac_airmass_lit = min(ZtoPsa(ht_ray_plane) / 1013.,1.0)
+                frac_airmass_lit1= min(ZtoPsa(ht_ray_plane) / 1013.,1.0)
               else
-                frac_airmass_lit = 0.
+                frac_airmass_lit1= 0.
               endif
 
+!             This appears to become inaccurate near/below the horizon
               exp_term = 1.0 - 0.5 * (bterm / ht_ray_plane)
-              frac_airmass_unlit = (1.0 - frac_airmass_lit) ** exp_term
+              frac_airmass_unlit = (1.0 - frac_airmass_lit1)**exp_term
               frac_airmass_lit = 1.0 - frac_airmass_unlit
               airmass_lit = airmass * frac_airmass_lit      
 
               airmass_to_twi = frac_airmass_unlit * airmass * patm
               twi_trans = exp(-.14 * 0.75 * airmass_to_twi)
+              twi_trans_c = trans(ext_g * airmass_to_twi * 0.75) 
 
 !             clear_int = max(min(airmass_lit,32.0),.00001)               
               clear_int = 
-     1                max(min(frac_airmass_lit*twi_trans,1.0),.00001) ! test
+     1             max(min(frac_airmass_lit *twi_trans     ,1.0),.00001) ! test
 !             clear_int = 
-!    1                max(min(     airmass_lit*twi_trans,1.0),.00001) ! test
+!    1             max(min(     airmass_lit *twi_trans_c(1),1.0),.00001) ! test
+!             clear_int = 
+!    1             max(     brt(airmass_lit)*twi_trans_c(1)     ,.00001) ! test
 
             else ! in Earth's shadow (may need secondary scattering)  
               dist_ray_plane = -999.9
@@ -702,7 +712,7 @@
 !           Apply saturation ramp (=1) at high altitudes or low sun
 !                                 (=0) at low altitudes and high sun
             sat_sol_ramp = min(-sol_alt(i,j) / 3.0,1.0) ! 0-1 (lower sun)
-            sat_alt_ramp = sqrt(sind(altray))           ! 0-1 (higher alt)
+            sat_alt_ramp = sqrt(sind(max(altray,0.)))   ! 0-1 (higher alt)
             sat_ramp = 1.0-((1.0 - sat_alt_ramp) * (1.0 - sat_sol_ramp))
 
 !           Ramp2 is zero with either high sun or high alt
@@ -715,13 +725,15 @@
                 rint_alt_ramp = 1.0
             elseif(clear_int .le. .00001)then ! night or late twilight
                 sat_twi_ramp = 0.6
-                rint_alt_ramp = sqrt(airmass)
+                am_term = min(sqrt(airmass),5.)
+                rint_alt_ramp = am_term                  
                 clear_int = .00001
             else                              ! late twilight
                 frac_twi_ramp = (clear_int - .00001) / .00009
                 sat_twi_ramp = 0.6 + 0.4 * frac_twi_ramp
-                rint_alt_ramp = (1.0           *        frac_twi_ramp)
-     1                        +  sqrt(airmass) * (1.0 - frac_twi_ramp)
+                am_term = min(sqrt(airmass),5.)
+                rint_alt_ramp = (1.0       *        frac_twi_ramp)
+     1                        +  am_term   * (1.0 - frac_twi_ramp)
             endif
 
 !           HSI
@@ -731,6 +743,7 @@
             hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
             hue2 = (2.7 - 1.7 * hue ** 1.6) *      hue_ramp2 
      1                                + 1.0 * (1.0-hue_ramp2)
+            hue2 = max(hue2,1.5) ! keep aqua color high up
 
             if(hue2 .lt. 2.0)then
                 hue2 = 2.0 - sqrt(2.0 - hue2)
@@ -761,14 +774,26 @@
           endif ! sun above horizon
 
           if(idebug .eq. 1)then 
-            write(6,111)ialt,jazi,airmass_2_cloud_3d(ialt,jazi)
+            if(sol_alt(i,j) .gt. 0.)then
+              write(6,111)ialt,jazi,airmass_2_cloud_3d(ialt,jazi)
      1                ,cloud_rad(ialt,jazi),sol_alt(i,j)
      1                ,angle_plane,dist_ray_plane,ht_ray_plane
      1                ,frac_airmass_lit,twi_trans
      1                ,clear_rad_c(3,ialt,jazi)
+            else
+              write(6,112)ialt,jazi,airmass_2_cloud_3d(ialt,jazi)
+     1                ,cloud_rad(ialt,jazi),sol_alt(i,j)
+     1                ,angle_plane,dist_ray_plane,ht_ray_plane
+     1                ,frac_airmass_lit1,frac_airmass_lit,airmass_lit
+     1                ,twi_trans,clear_int,rint_alt_ramp
+     1                ,clear_rad_c(:,ialt,jazi)
+            endif
 111         format(
      1 'ialt/jazi/airm2cld/cdrad/salt/ang_pln/ds_ray/ht_ray/f/t/clrrad'
-     1            ,2i5,2f7.3,2f8.2,2f10.1,3f8.4)
+     1            ,2i5,2f7.3,2f8.2,2f10.1,8f8.5)
+112         format(
+     1 'ialt/jazi/airm2cld/cdrad/salt/ang_pln/ds_ray/ht_ray/f/t/clrrad'
+     1            ,2i5,2f7.3,2f8.2,2f10.1,2x,6f8.5,2x,3f8.5)
           endif
 
          enddo ! jazi
