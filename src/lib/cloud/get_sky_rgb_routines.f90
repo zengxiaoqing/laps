@@ -6,7 +6,7 @@
         real clear_rad_c_nt(3)      ! HSV night sky brightness
                                     ! Nanolamberts
 
-        z = 90. - alt        
+        z = min(90. - alt,91.)        
         airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
 
         airmass_lit = 0.
