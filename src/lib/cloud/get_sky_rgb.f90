@@ -90,15 +90,23 @@
         glow_cld_day = v_to_b(-26.9 + log10(5.346e11)*2.5)
         write(6,*)' glow_cld_day (nl) = ',glow_cld_day
 
-!       Redness section
-        sol_alt_red_thr = 1.0 + (od_atm_a * 40.)
-
+!       Redness section (sun and aureole at low solar altitude)
+        sol_alt_red_thr = 7.0 + (od_atm_a * 20.)
         if(sol_alt .le. sol_alt_red_thr .and. sol_alt .gt. -16.0)then
-            redness = min((sol_alt_red_thr - sol_alt) / sol_alt_red_thr,1.0)
+            redness = min((sol_alt_red_thr - sol_alt) / sol_alt_red_thr,1.0)**1.5
         else
             redness = 0.
         endif
         write(6,*)' sol_alt_red_thr/redness = ',sol_alt_red_thr,redness
+
+!       Grnness section (clear sky at low solar altitudes)      
+        sol_alt_grn_thr = 10.0                       
+        if(sol_alt .le. sol_alt_grn_thr .and. sol_alt .gt. -16.0)then
+            grnness = min((sol_alt_grn_thr - sol_alt) / sol_alt_grn_thr,1.0)
+        else
+            grnness = 0.
+        endif
+        write(6,*)' sol_alt_grn_thr/grnness = ',sol_alt_grn_thr,grnness
 
 !       Brighten resulting image at night
         if(sol_alt .lt. -16.)then
@@ -246,8 +254,10 @@
 !               frac_ray = 1.0
 !               gob = max((rintensity_glow/255.)**0.8,((ray_grn/ray_blu)**0.885)*frac_ray)
 !               rob = max( rintensity_glow/255.      ,((ray_red/ray_blu)**0.885)*frac_ray)
-                gob = (1.0-frac_ray) * (rintensity_glow/255.)**0.8+((ray_grn/ray_blu)**0.885)*frac_ray
-                rob = (1.0-frac_ray) *  rintensity_glow/255.      +((ray_red/ray_blu)**0.885)*frac_ray
+                exr = 1.0 * (1.0 - 0.2*grnness)
+                exg = 0.8 * (1.0 - 0.5*grnness)
+                gob = (1.0-frac_ray) * (rintensity_glow/255.)**exg+((ray_grn/ray_blu)**0.885)*frac_ray
+                rob = (1.0-frac_ray) * (rintensity_glow/255.)**exr+((ray_red/ray_blu)**0.885)*frac_ray
                 clr_red = rintensity_glow *  rob
                 clr_grn = rintensity_glow *  gob
                 clr_blu = rintensity_glow  
