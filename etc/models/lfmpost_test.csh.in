@@ -21,6 +21,9 @@ setenv WRFDIR    $LAPS_DATA_ROOT/lapsprd/$MODELNAME                # WRF directo
 setenv NEST      d01
 setenv MODEL     wrf
 
+setenv ADVPCP    0900
+setenv ADVCLD    0900
+
 # Number of forecast times (not including zero minute)
 setenv MAXTIMES  `perl $LAPSINSTALLROOT/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v n_fcst_steps`
 echo "MAXTIMES = $MAXTIMES"
@@ -194,10 +197,10 @@ while ($FCOUNT <= $MAXTIMES)
 
   setenv LOGFILE $LAPS_DATA_ROOT/log/lfmpost_$RUN\_$FCSTTIME_SEC.log
 
-  echo  "./lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $LAPS_DATA_ROOT" | tee $LOGFILE
+  echo  "./lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $ADVCLD $ADVPCP $LAPS_DATA_ROOT" | tee $LOGFILE
   echo  " " | tee -a $LOGFILE
 
-         ./lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $LAPS_DATA_ROOT | tee -a $LOGFILE
+         ./lfmpost.exe $MODEL $WRFDIR/$RUN/wrfprd/$WRFOUTFILE 1 $RCTIME $FCSTTIME_SEC $ADVCLD $ADVPCP $LAPS_DATA_ROOT  | tee -a $LOGFILE
 
   echo  " " | tee -a $LOGFILE
 
