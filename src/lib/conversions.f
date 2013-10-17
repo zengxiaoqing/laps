@@ -1246,6 +1246,43 @@ cdoc    Convert wind vector from true north to grid north, given the longitude.
         return
         end
 
+        subroutine   uvtrue_to_uvgrid_2d(u_true,    ! I
+     1                                   v_true,    ! I
+     1                                   u_grid,    ! O
+     1                                   v_grid,    ! O
+     1                                   longitude, ! I
+     1                                   ni,        ! I
+     1                                   nj)        ! I
+
+cdoc    Convert wind vector from true north to grid north, given the longitude.
+
+        real u_true(ni,nj), v_true(ni,nj)
+        real u_grid(ni,nj), v_grid(ni,nj)
+        real latitude(ni,nj), longitude(ni,nj)
+
+        real angle(ni,nj)
+
+        call get_config(istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
+            stop
+        endif
+
+        latitude = -999. ! Since lat is not yet passed in
+ 
+        call projrot_latlon_2d(latitude,longitude,ni,nj,angle,istatus)
+
+        call         rotate_vec_2d(u_true,
+     1                  v_true,
+     1                  u_grid,
+     1                  v_grid,
+     1                  angle,
+     1                  ni,nj)
+
+        return
+        end
+
         subroutine   uvgrid_to_uvtrue(u_grid,    ! I
      1                                v_grid,    ! I
      1                                u_true,    ! O
