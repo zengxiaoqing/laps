@@ -795,6 +795,10 @@ foreach $exe (@LAPS_EXE){
                         }else{
                             $vmem_gb=12.0
                         }
+# Hongli Jiang add: to run STMAS3D_crtm.exe. For CWB domain, the npts is less than 10,000,000 so the
+# 20GB condition will not be met.  10/14/2013
+                    }elsif($opt_V eq "STMAS3D_crtm.exe"){
+                        $vmem_gb=20.0
 # end of HJ add.
                     }elsif($qsub_mode eq "multi"){ # Traditional LAPS in multi mode
                         if($execount == 1){ # first set of executables 
