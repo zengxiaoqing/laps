@@ -225,7 +225,7 @@ foreach MODEL ($MODELS)
             setenv FCSTTIME $FILE_HH$FMM
         endif
 
-        setenv NTABLE 31
+        setenv NTABLE 32
 
         if ($FCST_HH == 00) then
             @ REC_LMR = 1
@@ -236,10 +236,10 @@ foreach MODEL ($MODELS)
 #       Info from HRRR 15-min GRIB2 table - http://ruc.noaa.gov/hrrr/GRIB2Table-subh.txt
         @ REC_PSF = $REC_LMR + 17 # 18 in table
         @ REC_TSF = $REC_LMR + 18 # 19 in table
-        @ REC_DSF = $REC_LMR + 19 # 20 in table
-        @ REC_WSF = $REC_LMR + 20 # 21 in table
-        @ REC_SWI = $REC_LMR + 29 # 30 in table
-        @ REC_RTO = 52                                    
+        @ REC_DSF = $REC_LMR + 20 # 20 in table
+        @ REC_WSF = $REC_LMR + 21 # 21 in table
+        @ REC_SWI = $REC_LMR + 30 # 30 in table
+#       @ REC_RTO = 52                                    
 
         echo " "
         echo "Processing forecast time/record $FCSTTIME $REC_LMR"
@@ -285,24 +285,38 @@ foreach MODEL ($MODELS)
             echo "Lat1 is $LAT1"
 
 #           Convert GRIB2 file into initial NetCDF file
+            echo " "
+            echo "converting LMR"
             echo "wgrib2  $GRIBIN -s -d $REC_LMR         $NEWGRID -netcdf $TMPOUT_FSF"
                   wgrib2  $GRIBIN -s -d $REC_LMR         $NEWGRID -netcdf $TMPOUT_FSF
  
+            echo " "
+            echo "converting TSF"
             echo "wgrib2  $GRIBIN -s -d $REC_TSF -append $NEWGRID -netcdf $TMPOUT_FSF"
                   wgrib2  $GRIBIN -s -d $REC_TSF -append $NEWGRID -netcdf $TMPOUT_FSF  
 
+            echo " "
+            echo "converting DSF"
             echo "wgrib2  $GRIBIN -s -d $REC_DSF -append $NEWGRID -netcdf $TMPOUT_FSF"
                   wgrib2  $GRIBIN -s -d $REC_DSF -append $NEWGRID -netcdf $TMPOUT_FSF
 
+            echo " "
+            echo "converting USF"
             echo "wgrib2  $GRIBIN -s -d $REC_WSF.1 -append $NEWGRID -netcdf $TMPOUT_FSF"
                   wgrib2  $GRIBIN -s -d $REC_WSF.1 -append $NEWGRID -netcdf $TMPOUT_FSF
 
+            echo " "
+            echo "converting VSF"
             echo "wgrib2  $GRIBIN -s -d $REC_WSF.2 -append $NEWGRID -netcdf $TMPOUT_FSF"
                   wgrib2  $GRIBIN -s -d $REC_WSF.2 -append $NEWGRID -netcdf $TMPOUT_FSF
 
+            echo " "
+            echo "converting SWI"
             echo "wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $TMPOUT_FSF"
                   wgrib2  $GRIBIN -s -d $REC_SWI -append $NEWGRID -netcdf $TMPOUT_FSF
 
+            echo " "
+            echo "converting PSF"
             echo "wgrib2  $GRIBIN -s -d $REC_PSF -append $NEWGRID -netcdf $TMPOUT_FSF"
                   wgrib2  $GRIBIN -s -d $REC_PSF -append $NEWGRID -netcdf $TMPOUT_FSF
 
