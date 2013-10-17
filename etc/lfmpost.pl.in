@@ -29,10 +29,12 @@ my $LAPSROOT;
 #    -W optional wait time for model file (once it appears in the directory) to be completely written (default is 20sec)
 #    -F optional flag to produce forecast web GIF images after each running of 'lfmpost.exe'
 #    -R use restart file at time zero
+#    -C number of seconds for advecting radar reflectivity (after that use the model output)
+#    -Z number of seconds for advecting clouds (after that use the model output)
 
-use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_n $opt_P $opt_q $opt_W $opt_M $opt_F $opt_R);
+use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_n $opt_P $opt_q $opt_W $opt_M $opt_F $opt_R $opt_C $opt_Z);
 use Getopt::Std;
-getopts('l:m:r:d:g:f:i:p:s:w:e:y:n:P:qW:M:FR');
+getopts('l:m:r:d:g:f:i:p:s:w:e:y:n:P:qW:M:FRC:Z:');
 
 $project = $opt_P if defined($opt_P);
 
@@ -490,12 +492,24 @@ for ($g=1; $g<=$ngrid; $g++) {
         $d0_directory = 1; # "d0$grid" directory exists..append d0$grid onto $lapsdataroot
       }
 
+      my $advect_args = "";
+
+      if (defined $opt_C || defined $opt_Z) {
+          if (defined $opt_C && defined $opt_Z) {
+              $advect_args = "$opt_C $opt_Z";
+          }elsif(defined($opt_C)){
+              $advect_args = "$opt_C -1";
+          }elsif(defined($opt_Z)){
+              $advect_args = "-1 $opt_Z";
+          }
+      }  
+
       if (! defined $opt_q) {  #run *with* qsub
         chdir "$modelroot/$date";
         if ($d0_directory == 1) {
-          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
+          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $advect_args $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
         } else {
-          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $modelroot/log/$lfmpostlog";
+          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $advect_args $lapsdataroot > $modelroot/log/$lfmpostlog";
         }
         print "$command\n";
 
@@ -531,9 +545,9 @@ for ($g=1; $g<=$ngrid; $g++) {
         
       } else {  #run without qsub
         if ($d0_directory == 1) {
-          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
+          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $advect_args $lapsdataroot/d0$grid > $modelroot/log/$lfmpostlog";
         } else {
-          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $modelroot/log/$lfmpostlog";
+          $command = "$EXEDIR/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $advect_args $lapsdataroot > $modelroot/log/$lfmpostlog";
         }
         print "$command\n";
         system ("$command");
