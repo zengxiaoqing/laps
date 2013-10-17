@@ -283,6 +283,12 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
         do i = 1,ni
 c       write(6,*)' i = ',i
         do j = 1,nj
+
+            IF(i .eq. i/20*20 .AND. j .eq. nj/2)then
+                idebug = 2
+            else 
+                idebug = 0
+            endif
         
             do k = 1,nk
                 p_1d_pa(k) = pres_3d(i,j,k)
@@ -322,7 +328,7 @@ c       write(6,*)' i = ',i
      1                ,PLCL,LCL,CCL
      1                ,TCONV,IO
      1                ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI
-     1                ,VELNEG,WATER,IHOUR,istatus)
+     1                ,VELNEG,WATER,IHOUR,idebug,istatus)
             if(istatus .ne. 1)then
                 write(6,*)' WARNING: Bad istatus returned from SINDX'
                 return
@@ -359,8 +365,7 @@ c       write(6,*)' i = ',i
                 iwarn = 1
             endif
 
-            IF( (i .eq. i/10*10 .and. j .eq. nj/2) 
-     1                          .OR. iwarn .eq. 1    )then
+            IF(idebug .ge. 1 .OR. iwarn .eq. 1)then
 
                 write(6,*)
                 write(6,*)' Indices at:',i,j
@@ -374,6 +379,9 @@ c       write(6,*)' i = ',i
 
                 SWEAT=0.0
 !               IF(IFLAG1*IFLAG2.EQ.0)SWEAT=0.0
+
+                WRITE(6,420)PBENEG,PBEPOS
+ 420            FORMAT(' PBENEG',F8.1,'               PBEPOS',F8.1)
 
                 WRITE(6,430)DD85,FF85,DD50,FF50,T500
  430            FORMAT(' 850MB WIND',2F5.0,'         500MB WIND',2F5.0
@@ -397,7 +405,7 @@ c       write(6,*)' i = ',i
                 ITMAX=NINT(TMAX)
 
                 WRITE(6,63,err=163)K_INDEX,ITMAX,WATER
- 63             FORMAT(' K INDEX =',f7.1,16X,'TMAX =',I4,' F',12X
+ 63             FORMAT(' K INDEX =',f7.1,13X,'TMAX =',I4,' F',12X
      1                ,'PRECIP. WATER=',F5.2,' IN.')
  163            WRITE(6,*)
 C
@@ -444,7 +452,7 @@ C
      1   ,twet_snow,HWB0,HWB_snow
      1   ,PLCL_PBE,LCL_PBE_MSL,CCL  
      1   ,TCONV,IO,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50
-     1   ,PBLI,VELNEG,WATER,IHOUR,istatus)
+     1   ,PBLI,VELNEG,WATER,IHOUR,idebug,istatus)
 
 cdoc    Calculate a variety of stability indices from an input sounding
 
@@ -588,7 +596,7 @@ C  CALCULATE WET BULB ZERO LEVEL
 !       Calculate CAPE/CIN based on sfc parcel
         CALL POTBE(Q,NLEVEL,P(1),T(1),W(1),PLCL_PBE
      1   ,TLCL_PBE,LCL_PBE_MSL,THETAE,ICP,ICT,IO,PBENEG,PBEPOS
-     1   ,VELNEG)
+     1   ,VELNEG,idebug)
 C
         DO 600 I=1,ICP
             VEL(I)=SQRT(ABS(2.*PBECR(I,2)))
@@ -626,7 +634,7 @@ C
 C
         SUBROUTINE POTBE(Q,NLEVEL,PMEAN,TMEAN,WMEAN,PLCL
      #   ,TLCL,LCL,BLTHTE,ICP,ICT,IO,PBENEG,pos_area_max
-     #   ,VELNEG)
+     #   ,VELNEG,idebug)
 
 cdoc    Calculate a PBE/LCL related indices from an input sounding
 
@@ -645,6 +653,11 @@ cdoc    Calculate a PBE/LCL related indices from an input sounding
         real GAMMA
         parameter (GAMMA = .009760) ! Dry Adiabatic Lapse Rate Deg/m
         DATA G/9.80665/
+
+        if(idebug .ge. 2)then
+            WRITE(6,*)
+            WRITE(6,*)' SUBROUTINE POTBE'
+        endif
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -671,7 +684,7 @@ c     +   ,F5.1)
 
             IF(PLCL .lt. P(N-1))then ! Lower level is below LCL
                 IF(PLCL .lt. P(N))then ! Upper level is below LCL
-c                   WRITE(6,*)' DRY CASE'
+                    if(idebug .ge. 2)WRITE(6,*)' DRY CASE'
                     PARTEM(N)=PARTEM(N-1)-GAMMA*DELTAH(N)
                     TEMDIF(N)=PARTEM(N)-T(N)
                     PBE(N)=PBE(N-1)+G*(TEMDIF(N)+TEMDIF(N-1))/(T(N)
@@ -679,11 +692,11 @@ c                   WRITE(6,*)' DRY CASE'
 
                 else ! Upper level is above LCL
 C                   BRACKETING CASE AROUND LCL - DRY ADIABATIC PART
-c                   WRITE(6,*)' DRY ADIABATIC PART'
+                    if(idebug .ge. 2)WRITE(6,*)' DRY ADIABATIC PART'
 
                     delta_ht_dry = lcl - HT(n-1)
 
-c                   WRITE(6,307)TLCL
+                    if(idebug .ge. 2)WRITE(6,307)TLCL
  307                format(' PARCEL TEMP AT LCL= ',F10.3)
 
                     CALL ITPLV(P,T,NLEVEL,PLCL,SNTLCL,IO,istatus)
@@ -699,7 +712,7 @@ c                   WRITE(6,307)TLCL
 !d    #                    ,TEMDIF(N-1),delta_ht_dry,HT(N),PBE(N-1)+pbe_dry
 
 C                   MOIST ADIABATIC PART
-c                   WRITE(6,*)' MOIST ADIABATIC PART'
+                    if(idebug .ge. 2)WRITE(6,*)' MOIST ADIABATIC PART'
                     delta_ht_wet=DELTAH(N)-delta_ht_dry
 
                     partem(n) = tmlaps_fast(blthte,P(n))
@@ -713,7 +726,9 @@ c                   WRITE(6,*)' MOIST ADIABATIC PART'
                 endif ! Upper level below LCL (Dry or bracket)
 
             else ! Lower Level is above LCL
-c               WRITE(6,*)' GETTING PARCEL TEMPERATURE FOR MOIST CASE'
+                if(idebug .ge. 2)then
+                  WRITE(6,*)' GETTING PARCEL TEMPERATURE FOR MOIST CASE'
+                endif
                 partem(n) = tmlaps_fast(blthte,P(n))
 
           !     Add Layer
@@ -724,8 +739,10 @@ c               WRITE(6,*)' GETTING PARCEL TEMPERATURE FOR MOIST CASE'
             endif
 
 
-c           WRITE(6,777)N,P(N),PARTEM(N),T(N)
-c    #                ,TEMDIF(N),TEMDIF(N-1),DELTAH(N),HT(N),PBE(N)
+            if(idebug .ge. 2)then
+                WRITE(6,777)N,P(N),PARTEM(N),T(N)
+     #                ,TEMDIF(N),TEMDIF(N-1),DELTAH(N),HT(N),PBE(N)
+            endif
  777        format(' PBE DATA',I3,F6.1,6F8.2,F12.3)
 
  800    CONTINUE
@@ -739,7 +756,7 @@ c       WRITE(6,382)N1,NLEVEL
 C
 C  DETERMINE ENERGY EXTREMA - NEUTRAL BUOYANCY
         DO 1100 N=N1,NLEVEL
-c           WRITE(6,940)N
+            if(idebug .ge. 2)WRITE(6,940)N
  940        format(' LOOKING FOR NEUTRAL BUOYANCY - ENERGY EXTREMUM, LEV
      1EL',I3)
 
@@ -749,8 +766,10 @@ c           WRITE(6,940)N
                 FRAC=TEMDIF(N-1)/(TEMDIF(N-1)-TEMDIF(N))
                 TDFCR(ICT,1)=EXP(ALOG(P(N-1))-TEMDIF(N-1)/SLOPE)
                 TDFCR(ICT,2)=0.
-c               WRITE(6,948)ICT,N,TEMDIF(N-1),TEMDIF(N),SLOPE,FRAC
-c    #           ,TDFCR(ICT,1)
+                if(idebug .ge. 2)then
+                    WRITE(6,948)ICT,N,TEMDIF(N-1),TEMDIF(N),SLOPE,FRAC
+     #                         ,TDFCR(ICT,1)
+                endif
  948            format(' NEUT BUOY',2I3,5F12.5)
                 ICP=ICP+1
                 TMID=(1.-FRAC)*T(N-1)+FRAC*T(N)
@@ -765,14 +784,17 @@ C
                 pos_area=PBECR(ICP,2)-nbe_min
                 pos_area_max=max(pos_area,pos_area_max)
 
-!d              WRITE(6,951)pos_area_max,pos_area,PBENEG,nbe_min,PBECR(ICP,2),ICP
+                if(idebug .ge. 2)WRITE(6,951)pos_area_max
+     1                       ,pos_area,PBENEG,nbe_min,PBECR(ICP,2),ICP
 
                 PBECR(ICP,3)=PBECR(ICP,2)-PBECR(max(1,ICP-1),2)
                 PBECR(ICP,4)=HT(N-1)+FRAC*DELTAH(N)
 C
-c               WRITE(6,949)ICP,PBECR(ICP,1),PBECR(ICP,2),PBECR(ICP,3)
-c    &          ,PBECR(ICP,4),pos_area_max,nbe_min
- 949            format(' PBECR',I3,4F10.3,2F10.2)
+                if(idebug .ge. 2)then
+                  WRITE(6,949)ICP,PBECR(ICP,1),PBECR(ICP,2),PBECR(ICP,3)
+     &          ,PBECR(ICP,4),pos_area_max,nbe_min
+ 949              format(' PBECR',I3,4F10.3,2F10.2)
+                endif
 
             endif
 
@@ -857,9 +879,11 @@ C
 
         endif
 
+        if(idebug .ge. 2)then
+          WRITE(6,485)pos_area_max,PBENEG,VELNEG
+ 485      format(' pos_area_max',F10.1,' PBENEG',F10.1,' VELNEG',F10.1)
+        endif
 
-c       WRITE(6,485)pos_area_max,PBENEG,VELNEG
- 485    format(' pos_area_max',F10.1,' PBENEG',F10.1,' VELNEG',F10.1)
         RETURN
         END
 C
