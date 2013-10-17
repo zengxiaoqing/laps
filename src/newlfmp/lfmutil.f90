@@ -501,16 +501,49 @@ if (make_micro) then
 
 !     Run Advection routine on reflectivity
       if(fcsttime .le. i4_adv_pcp)then
-          write(6,*)' Advect Surface Reflectivity (under construction)',fcsttime,i4_adv_pcp
+          I4_elapsed = ishow_timer()
+
+          ext = 'lmr'
+          var_2d = 'R'
+          call get_laps_2d(laps_reftime,ext,var_2d,units_2d,comment_2d,lx,ly,max_refl,istatus)
+          if(istatus .eq. 1)then
+            write(6,*)' Obtained initial time max_refl field from lmr analysis LMR file'
+          else
+            write(6,*)' Warning: could not find initial time max_refl field from lmr analysis LMR file'
+          endif      
+
           call mean_wind_bunkers(husig,hvsig,hzsig(:,:,1),lx,ly,nz &     ! I
                           ,hzsig                                   &     ! I
                           ,umean,vmean,ustorm,vstorm,status)             ! O
-!         call advect(ustorm,vstorm,refl_sfc,array_buf,grid_spacing_m
-!    1               ,lx,ly,array_out,time,frac,lon,rmsg)
-!         refl_sfc = array_out
+          write(6,*)' Advect Surface Reflectivity ',fcsttime,i4_adv_pcp
+          call advect(ustorm,vstorm,refl_sfc,array_buf,ngrid_spacingx & 
+                     ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
+          refl_sfc = array_out
+          write(6,*)' Advect Max Reflectivity ',fcsttime,i4_adv_pcp
+          call advect(ustorm,vstorm,max_refl,array_buf,ngrid_spacingx & 
+                     ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
+          max_refl = array_out
       else
-          write(6,*)' Using model output reflectivity',fcsttime,i4_adv_pcp
+          write(6,*)' Using model output reflectivity (no advection)',fcsttime,i4_adv_pcp
       endif
+
+      if(fcsttime .le. i4_adv_cld)then
+          I4_elapsed = ishow_timer()
+          write(6,*)' Advect 3D Clouds ',fcsttime,i4_adv_cld
+          do k = 1,nz
+              call advect(husig(:,:,k),hvsig(:,:,k),hcldliqmr_sig(:,:,k),array_buf,ngrid_spacingx & 
+                         ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
+              hcldliqmr_sig(:,:,k) = array_out(:,:)
+
+              call advect(husig(:,:,k),hvsig(:,:,k),hcldicemr_sig(:,:,k),array_buf,ngrid_spacingx & 
+                         ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
+              hcldicemr_sig(:,:,k) = array_out(:,:)
+          enddo ! k
+      else
+          write(6,*)' Using model output clouds (no advection)',fcsttime,i4_adv_cld
+      endif
+
+      I4_elapsed = ishow_timer()
 
 !     Conversion of microphysical cloud mixing ratios to concentrations
       hcldliqmr_sig(:,:,:) = hcldliqmr_sig(:,:,:) * rhomoistsig(:,:,:)
@@ -792,7 +825,10 @@ if(.not. large_pgrid)then
   enddo
 endif
 
-if (fcsttime .eq. 0) then ! obtain initial time swdown field from swi analysis LCV files
+if(fcsttime .le. i4_adv_cld)then
+  call mean_wind_bunkers(husig,hvsig,hzsig(:,:,1),lx,ly,nz &     ! I
+                        ,hzsig                                   &     ! I
+                        ,umean,vmean,ustorm,vstorm,status)             ! O
   ext = 'lcv'
   var_2d = 'SWI'
   call get_laps_2d(laps_reftime,ext,var_2d,units_2d,comment_2d,lx,ly,swdown,istatus)
@@ -800,17 +836,34 @@ if (fcsttime .eq. 0) then ! obtain initial time swdown field from swi analysis L
     write(6,*)' Obtained initial time swdown field from swi analysis LCV file'
   else
     write(6,*)' Warning: could not find initial time swdown field from swi analysis LCV file'
-  endif    
+  endif      
+  write(6,*)' Advect Solar Radiation ',fcsttime,i4_adv_cld
+  call advect(umean,vmean,swdown,array_buf,ngrid_spacingx & 
+             ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
+  write(6,*)' Range of advection input is ',minval(swdown),maxval(swdown)
+  swdown = array_out
+  write(6,*)' Range of advection output is ',minval(swdown),maxval(swdown)
 else
-  if(.true.)then ! post-process swdown field  
-     do j=1,ly
-     do i=1,lx
-        coeff = 0.93 + (cldamt(i,j) * 0.5)
-        swdown(i,j) = swdown(i,j) * coeff
-     enddo ! i
-     enddo ! j      
+  if (fcsttime .eq. 0) then ! obtain initial time swdown field from swi analysis LCV files
+    ext = 'lcv'
+    var_2d = 'SWI'
+    call get_laps_2d(laps_reftime,ext,var_2d,units_2d,comment_2d,lx,ly,swdown,istatus)
+    if(istatus .eq. 1)then
+      write(6,*)' Obtained initial time swdown field from swi analysis LCV file'
+    else
+      write(6,*)' Warning: could not find initial time swdown field from swi analysis LCV file'
+    endif    
+  else
+    if(.true.)then ! post-process swdown field  
+       do j=1,ly
+       do i=1,lx
+          coeff = 0.93 + (cldamt(i,j) * 0.5)
+          swdown(i,j) = swdown(i,j) * coeff
+       enddo ! i
+       enddo ! j      
+    endif
   endif
-endif
+endif  
 
 if (verbose .and. .not. large_ngrid) then
    print*,' '
