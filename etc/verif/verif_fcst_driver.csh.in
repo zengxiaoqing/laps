@@ -205,8 +205,11 @@ if ($2 != archive) then # realtime
 
 endif
 
-echo "$LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log"
-      $LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT > $LAPS_DATA_ROOT/log/verif_fcst.log
+hostname >  $LAPS_DATA_ROOT/log/verif_fcst.log
+whoami   >> $LAPS_DATA_ROOT/log/verif_fcst.log
+
+echo "$LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT >> $LAPS_DATA_ROOT/log/verif_fcst.log"
+      $LAPSINSTALLROOT/bin/verif_fcst.exe $LAPS_DATA_ROOT >> $LAPS_DATA_ROOT/log/verif_fcst.log
 
 date -u
 
