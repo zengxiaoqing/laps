@@ -35,6 +35,8 @@ cdis
 
 !       1992                            Steve Albers
 
+        use mem_namelist, ONLY: iverbose
+
         integer imax,jmax            ! Input Array dimensions
         real u(imax,jmax),v(imax,jmax) ! Input Wind field (WRT True North)
         real lon(imax,jmax)          ! Input Longitude field
@@ -42,6 +44,8 @@ cdis
         real array_out(imax,jmax)    ! Output Field to be advected
 
         real array_buf(imax,jmax)    ! Dummy Array
+        real ugrid(imax,jmax)
+        real vgrid(imax,jmax)
 
         real time                    ! Input Seconds for advection
         real frac                    ! Input scaling factor (normally 1.0)
@@ -56,14 +60,15 @@ cdis
         enddo
         enddo
 
+!       Rotate the winds to grid north
+!       Call uvtrue_to_uvgrid_2d for better efficiency
+        call uvtrue_to_uvgrid_2d(u,v,ugrid,vgrid,lon,imax,jmax)
+
         do j = 1,jmax
         do i = 1,imax
 
-!           Rotate the winds to grid north
-            call uvtrue_to_uvgrid(u(i,j),v(i,j),ugrid,vgrid,lon(i,j))
-
-            delta_u_m = ugrid * seconds / grid_spacing_m
-            delta_v_m = vgrid * seconds / grid_spacing_m
+            delta_u_m = ugrid(i,j) * seconds / grid_spacing_m
+            delta_v_m = vgrid(i,j) * seconds / grid_spacing_m
 
 !           write(6,*)delta_u_m,delta_v_m
 
@@ -74,7 +79,7 @@ cdis
             jnew = j + jdelta_v_m
 
             if(   inew .ge. 1 .and. inew .le. imax
-     1   .and.  jnew .ge. 1 .and. jnew .le. jmax ) then
+     1     .and.  jnew .ge. 1 .and. jnew .le. jmax ) then
 
 !               array_buf(inew,jnew) = array_in(i,j)
 
@@ -126,7 +131,7 @@ cdis
                     array_out(i,j) = ref_sum / float(isum)
                     nfill1 = nfill1 + 1
                 else
-                    array_out(i,j) = 0.
+                    array_out(i,j) = array_in(i,j) ! 0.
                     nfill2 = nfill2 + 1
                 endif
 
@@ -140,7 +145,9 @@ c               write(6,*)' Upgrade',array_buf(i,j),array_out(i,j)
           enddo ! i
         enddo ! j
 
-        write(6,*)' NFILL1,NFILL2 ',nfill1,nfill2
+        if(iverbose .ge. 2)then
+            write(6,*)' NFILL1,NFILL2 ',nfill1,nfill2
+        endif
 
         return
         end
