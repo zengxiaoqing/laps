@@ -6,7 +6,7 @@
      1                          ,l_polar,l_cyl)       
 
         use mem_namelist, ONLY: max_snd_grid, max_snd_levels
-     1                        , grid_spacing_m, aod
+     1                        , grid_spacing_m, aod, aero_scaleht
 
         include 'lapsplot.inc'
 
@@ -41,6 +41,9 @@
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
+        real dx(NX_L,NY_L)
+        real dy(NX_L,NY_L)
+        real alt_norm(NX_L,NY_L)
         real sol_alt_2d(NX_L,NY_L)
         real sol_azi_2d(NX_L,NY_L)
         real moon_alt_2d(NX_L,NY_L)
@@ -98,7 +101,8 @@
         real aod_2_topo(minalt:maxalt,minazi:maxazi)
         real r_cloud_trans(minalt:maxalt,minazi:maxazi)  ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
-        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! integrated fraction of air illuminated by the sun along line of sight
+        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
+        real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated fraction of air illuminated by the sun along line of sight
         real alt_a_roll(minalt:maxalt,minazi:maxazi)
         real azi_a_roll(minalt:maxalt,minazi:maxazi)
 
@@ -157,8 +161,6 @@
         write(6,*)' minalt/maxalt = ',minalt,maxalt
         write(6,*)' minazi/maxazi = ',minazi,maxazi
         write(6,*)' alt_scale/azi_scale = ',alt_scale,azi_scale
-
-        od_atm_a = aod
 
         itd = 2 ! dashed dewpoint lines
 
@@ -648,163 +650,18 @@
  
           endif
 
-          goto600
+          I4_elapsed = ishow_timer()
 
-!       Read in sfc data (pressure, temp, dewpoint, u, v, tpw, cape)
-          if(c_prodtype .eq. 'A')then ! Read LSX
-            ext = 'lsx'
+          call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
 
-            var_2d = 'PS'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,pres_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
+          I4_elapsed = ishow_timer()
 
-            var_2d = 'T'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,t_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
+          call solar_normal(NX_L,NY_L,topo,dx,dy,lat,lon ! I
+     1                     ,sol_alt_2d,sol_azi_2d        ! I
+     1                     ,alt_norm)                    ! O
 
-            var_2d = 'TD'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,td_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
+          I4_elapsed = ishow_timer()
 
-            var_2d = 'U'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,u_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
-
-            var_2d = 'V'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,v_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
-
-            ext = 'lh4'
-            var_2d = 'TPW'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,pw_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
-
-            ext = 'lst'
-            var_2d = 'PBE'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,cape_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
-
-            ext = 'lil'
-            var_2d = 'LIL'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,lil_2d,0,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
-
-            var_2d = 'LIC'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                      ,lic_2d,0,istat_lic)
-            if(istat_lic .ne. 1)lic_2d = r_missing_data
-
-          elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
-            write(6,*)' Look for Bkg/Fcst sfc fields'
-
-            call s_len(directory,len_dir)
-
-            write(6,*)' Orig directory = ',directory
-            write(6,*)' ext = ',ext
-
-            if(c_prodtype .eq. 'B')then
-                directory = directory(1:len_dir)//'../lgb'
-            else ! Fcst
-                ext = 'fsf'
-                call s_len(directory,len_dir)
-                do i = 1,len_dir-2
-                    if(directory(i:i+2) .eq. 'fua')then
-                        directory(i:i+2) = ext(1:3)
-                        write(6,*)'Substituted directory string'
-                    endif
-                enddo ! i
-            endif
-
-            write(6,*)' New directory = ',directory
-            write(6,*)' ext = ',ext
-
-            var_2d = 'PSF'
-            call get_lapsdata_2d(i4_initial,i4_valid
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d
-     1                              ,NX_L,NY_L
-     1                              ,pres_2d
-     1                              ,istat_sfc)
-!           if(istat_sfc .ne. 1)goto1000
-
-            var_2d = 'TSF'
-            call get_lapsdata_2d(i4_initial,i4_valid
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d
-     1                              ,NX_L,NY_L
-     1                              ,t_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
-
-            var_2d = 'DSF'
-            call get_lapsdata_2d(i4_initial,i4_valid
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d
-     1                              ,NX_L,NY_L
-     1                              ,td_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)goto1000
-
-            var_2d = 'TPW'
-            call get_lapsdata_2d(i4_initial,i4_valid
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d
-     1                              ,NX_L,NY_L
-     1                              ,pw_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)pw_2d = r_missing_data
-
-            var_2d = 'PBE'
-            call get_lapsdata_2d(i4_initial,i4_valid
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d
-     1                              ,NX_L,NY_L
-     1                              ,cape_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)cape_2d = r_missing_data
-
-            var_2d = 'LIL'
-            call get_lapsdata_2d(i4_initial,i4_valid
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d
-     1                              ,NX_L,NY_L
-     1                              ,lil_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)lil_2d = r_missing_data
-
-            var_2d = 'LIC'
-            call get_lapsdata_2d(i4_initial,i4_valid
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d
-     1                              ,NX_L,NY_L
-     1                              ,lic_2d
-     1                              ,istat_lic)
-            if(istat_lic .ne. 1)lic_2d = r_missing_data
-
-          else
-            istat_sfc = 0
-            go to 1000
-
-          endif
-
-600       continue
         endif ! l_plotobs is FALSE
 
         write(6,*)' a9time is ',a9time
@@ -813,12 +670,16 @@
         call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L
      1                 ,aod_3d)
 
+        I4_elapsed = ishow_timer()
+
         do iloc = 1,nloc
 
           isound = nint(xsound(iloc))
           jsound = nint(ysound(iloc))
 
           topo_sfc = topo(isound,jsound)
+ 
+          write(6,*)' loc/topo_sfc ',iloc,topo_sfc
 
           rlat = lat(isound,jsound)
           rlon = lon(isound,jsound)
@@ -851,35 +712,6 @@
 
           kstart = 0 ! 0 means sfc, otherwise level of start
 
-!         Get line of sight from isound/jsound
-          call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d
-     1                     ,rain_3d,snow_3d
-     1                     ,pres_3d,aod_3d,topo_sfc
-     1                     ,topo,swi_2d,topo_swi
-     1                     ,topo_albedo_2d,topo_albedo
-     1                     ,aod_2_cloud,aod_2_topo
-     1                     ,r_cloud_3d,cloud_od
-     1                     ,r_cloud_trans,cloud_rad_c
-     1                     ,clear_rad_c
-     1                     ,airmass_2_cloud_3d,airmass_2_topo_3d
-     1                     ,NX_L,NY_L,NZ_L,isound,jsound,kstart
-     1                     ,view_alt,view_az,sol_alt_2d,sol_azi_2d
-     1                     ,moon_alt_2d,moon_azi_2d
-     1                     ,moon_mag,moon_mag_thr
-     1                     ,minalt,maxalt,minazi,maxazi
-     1                     ,alt_scale,azi_scale
-     1                     ,grid_spacing_m,r_missing_data)
-
-          write(6,*)' Return from get_cloud_rays...',a9time
-
- 900      continue
-
-1000      continue
-
-          ilun = ilun + 1
-          write(clun,14)ilun
-14        format(i3.3)
-
 !         Get alt_a_roll and azi_a_roll arrays (needs to be generalized)?
           do i = minalt,maxalt
             call get_val(i,minalt,alt_scale,altobj)
@@ -889,6 +721,38 @@
             call get_val(j,minazi,azi_scale,aziobj)
             azi_a_roll(:,j) = aziobj
           enddo
+
+!         Get line of sight from isound/jsound
+          call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d  ! I
+     1                     ,rain_3d,snow_3d                      ! I
+     1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
+     1                     ,topo_albedo_2d                       ! I
+     1                     ,topo_swi,topo_albedo                 ! O
+     1                     ,aod_ray,aod_2_cloud,aod_2_topo       ! O
+     1                     ,r_cloud_3d,cloud_od                  ! O
+     1                     ,r_cloud_trans,cloud_rad_c            ! O
+     1                     ,clear_rad_c,clear_radf_c,patm        ! O
+     1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
+     1                     ,NX_L,NY_L,NZ_L,isound,jsound,kstart  ! I
+     1                     ,alt_a_roll,azi_a_roll                ! I
+     1                     ,sol_alt_2d,sol_azi_2d                ! I
+     1                     ,alt_norm                             ! I
+     1                     ,moon_alt_2d,moon_azi_2d              ! I
+     1                     ,moon_mag,moon_mag_thr                ! I
+     1                     ,minalt,maxalt,minazi,maxazi          ! I
+     1                     ,alt_scale,azi_scale                  ! I
+     1                     ,grid_spacing_m,r_missing_data)       ! I
+
+          write(6,*)' Return from get_cloud_rays: ',a9time
+     1             ,' aod_ray is ',aod_ray
+
+ 900      continue
+
+1000      continue
+
+          ilun = ilun + 1
+          write(clun,14)ilun
+14        format(i3.3)
 
           blog_moon_roll = 0.
           if(moon_mag .lt. moon_mag_thr .AND.
@@ -911,10 +775,10 @@
 
             if(solar_alt .ge. -16.)then
                 write(6,*)' Sun is significant, alt is:',solar_alt
-                call skyglow_cyl(solar_alt,solar_az,blog_v_roll
-     1                          ,elong_roll,od_atm_a
-     1                          ,minalt,maxalt,minazi,maxazi
-     1                          ,alt_scale,azi_scale)
+                call skyglow_cyl(solar_alt,solar_az,blog_v_roll  ! IO
+     1                          ,elong_roll,aod_ray              ! OI
+     1                          ,minalt,maxalt,minazi,maxazi     ! I
+     1                          ,alt_scale,azi_scale)            ! I
                 I4_elapsed = ishow_timer()
 
                 if(moon_mag .lt. moon_mag_thr .AND.
@@ -930,7 +794,7 @@
             if(solar_alt .lt. -16. .AND. moon_mag .lt. moon_mag_thr
      1                             .AND. alm .gt. 0.         )then
                 write(6,*)' Moon skyglow significant: mag ',moon_mag
-                call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,od_atm_a
+                call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,aod_ray 
      1                          ,minalt,maxalt,minazi,maxazi
      1                          ,alt_scale,azi_scale)
                 blog_v_roll = blog_v_roll + (-26.7 - moon_mag) * 0.4
@@ -1005,23 +869,25 @@
             I4_elapsed = ishow_timer()
 
             write(6,*)' call get_sky_rgb with cyl data'
-            call get_sky_rgb(r_cloud_3d              ! cloud opacity
-     1                    ,cloud_od                  ! cloud optical depth
-     1                    ,r_cloud_trans             ! cloud solar transmittance
-     1                    ,cloud_rad_c               ! cloud solar transmittance / color
-     1                    ,clear_rad_c               ! clear sky illumination by sun     
-     1                    ,blog_v_roll               ! skyglow
-     1                    ,glow_stars                ! starglow
-     1                    ,od_atm_a
+            call get_sky_rgb(r_cloud_3d           ! cloud opacity
+     1                    ,cloud_od               ! cloud optical depth
+     1                    ,r_cloud_trans          ! cloud solar transmittance
+     1                    ,cloud_rad_c            ! cloud solar transmittance / color
+     1                    ,clear_rad_c            ! clear sky illumination by sun     
+     1                    ,clear_radf_c           ! clear sky frac illumination by sun     
+     1                    ,patm
+     1                    ,blog_v_roll            ! skyglow
+     1                    ,glow_stars             ! starglow
+     1                    ,aod_ray 
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo
-     1                    ,aod_2_cloud,aod_2_topo
+     1                    ,aod_2_cloud,aod_2_topo 
      1                    ,alt_a_roll,azi_a_roll       
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
-     1                    ,solar_alt,solar_az        ! sun alt/az
-     1                    ,alm,azm,moon_mag          ! moon alt/az/mag
+     1                    ,solar_alt,solar_az     ! sun alt/az
+     1                    ,alm,azm,moon_mag       ! moon alt/az/mag
      1                    ,sky_rgb_cyl)   
 
             if(l_cyl .eqv. .true.)then
