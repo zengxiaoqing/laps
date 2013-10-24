@@ -381,8 +381,8 @@
          nsuccess_m = 0
          nincomplete_m = 0
 
-!        frac_thr = 0.15
-         frac_thr = 0.035
+         frac_thr = 0.15
+!        frac_thr = 0.035
          nmissing_thr = int((1. - frac_thr) * float(n_init_times+1))
          nsuccess_thr = (n_init_times+1) - nmissing_thr
 
@@ -488,7 +488,7 @@
                    if(a24time_valid .ne.
      1                a24time_valid_expected)then
                        write(6,*)
-     1                 ,' WARNING: imodel / a24time (expected/file-1)'
+     1                 ' WARNING: imodel / a24time (expected/file-1)'
      1                 ,imodel,itime,a24time_valid_expected            
      1                              ,a24time_valid              
                        goto958
@@ -501,7 +501,7 @@
                    if(a24time_valid .ne.
      1                a24time_valid_expected)then
                        write(6,*)
-     1                 ,' WARNING: imodel / a24time (expected/file-2)'
+     1                 ' WARNING: imodel / a24time (expected/file-2)'
      1                 ,imodel,itime,a24time_valid_expected           
      1                              ,a24time_valid         
                        goto958
@@ -557,7 +557,7 @@
                    if(a24time_valid .ne.
      1                a24time_valid_expected)then
                        write(6,*)
-     1                 ,' WARNING: imodel / a24time (expected/file-3)'
+     1                 ' WARNING: imodel / a24time (expected/file-3)'
      1                 ,imodel,itime,a24time_valid_expected           
      1                              ,a24time_valid              
                        goto958
@@ -620,7 +620,7 @@
                    if(a24time_valid .ne.
      1                a24time_valid_expected)then
                        write(6,*)
-     1                 ,' WARNING: imodel / a24time (expected/file-4)'
+     1                 ' WARNING: imodel / a24time (expected/file-4)'
      1                 ,imodel,itime,a24time_valid_expected           
      1                              ,a24time_valid                           
                        goto958
