@@ -1,1 +1,1 @@
-CAPE SurfaceTempWind Sfc_RelHum Precip Snow Solar Radar_850 Radar_Comp Radar_Sfc Cloud LiftedIndex_SfcDewPt Moist_Flux FireDanger 11u IWV
+CAPE SurfaceTempWind Sfc_RelHum Precip Precip_Inc Snow Solar Radar_Comp Radar_Sfc Cloud LiftedIndex_SfcDewPt Moist_Flux FireDanger 11u IWV
