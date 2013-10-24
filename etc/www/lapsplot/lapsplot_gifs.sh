@@ -102,7 +102,7 @@ if test "$NCARG_ROOT" = "allsky"; then
 #NLOC=1
 
  for (( i=1; i<=$NLOC; i++ )); do
-  ILOC=00$i
+  export ILOC=00$i
   echo "Welcome $ILOC times"
 
   echo "MODE_ALLSKY = $MODE_ALLSKY    RESOLUTION = $RESOLUTION"
