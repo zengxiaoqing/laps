@@ -8,8 +8,6 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-FFLAGS=$(DBFLAGS)
-
 LAPSLIBS = $(SRCROOT)/src/lib/cloud/libcloud.a  \
            $(SRCROOT)/src/lib/temp/libtemp.a  \
            $(SRCROOT)/src/lib/liblaps.a  \
@@ -70,7 +68,7 @@ all: exe
 exe: $(ARCHIVE) $(EXE)
 
 $(EXE): $(ARCHIVE) $(MAIN)
-	$(NCARGFC) $(MAIN) $(DBFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(NCARGFC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
