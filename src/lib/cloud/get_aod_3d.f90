@@ -1,7 +1,7 @@
 
        subroutine get_aod_3d(pres_3d,heights_3d,topo_2d,ni,nj,nk,aod_3d)
 
-       use mem_namelist, ONLY: aod
+       use mem_namelist, ONLY: aod,redp_lvl,aero_scaleht
 
        real aod_3d(ni,nj,nk) ! aerosol extinction coefficient
        real pres_3d(ni,nj,nk)
@@ -9,19 +9,17 @@
        real topo_2d(ni,nj)
 
        gas_scale_height = 8000.
-       aero_scale_height = 1500.
 
-       pref = 85000.
-
-       write(6,*)' subroutine get_aod_3d: aod = ',aod
+       write(6,*)' subroutine get_aod_3d: aod/redp_lvl/aero_scaleht = ' &
+                                         ,aod,redp_lvl,aero_scaleht
 
        do i = 1,ni
        do j = 1,nj
          sum_aod = 0.
          do k = 1,nk
-           pratio = pres_3d(i,j,k) / pref
-           h_agl = heights_3d(i,j,k) - topo_2d(i,j)
-           aod_3d(i,j,k) = aod/aero_scale_height * exp(-h_agl/aero_scale_height)
+!          pratio = pres_3d(i,j,k) / pref
+           h_agl = heights_3d(i,j,k) - redp_lvl 
+           aod_3d(i,j,k) = (aod/aero_scaleht) * exp(-h_agl/aero_scaleht)
 
            if(i .eq. ni/2 .and. j .eq. nj/2)then
                if(h_agl .gt. 0.)then
