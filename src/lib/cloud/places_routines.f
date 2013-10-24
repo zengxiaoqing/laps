@@ -87,7 +87,7 @@
       enddo ! i
 
 !     write(13,1)rmaglim,ibest,resid_min,rmaglim_to_b        
-1     format('  rmaglim/ibest/resid_min/rmaglim_to_b ',f9.2,i,2f9.2)
+1     format('  rmaglim/ibest/resid_min/rmaglim_to_b ',f9.2,i6,2f9.2)
           
       return
       end
