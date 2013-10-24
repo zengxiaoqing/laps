@@ -29,7 +29,7 @@
       real*8 maglimd_r8,maglimt_r8,maglimn_r8,maglim_r8
       real alm_r4,azm_r4,r4_mag,elgms_r4,rlat,rlon,dec_r4,ra_r4
 
-      CUBERT(X)=DEXP(DLOG(DABS(X))/3.)*X/DABS(X)
+!     CUBERT(X)=DEXP(DLOG(DABS(X))/3.)*X/DABS(X)
 
       DATA MODE/1/,IFL/0/,TIME/0.0D0/,TIMEOL/0.D0/,IPRINT/1/
       DATA FRAME/2/
