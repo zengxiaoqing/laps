@@ -7,14 +7,14 @@ subroutine cloud_var(i4time,lat,lon,ni,nj,nk,kcld,heights_3d,temp_3d,t_gnd_k,clo
 include 'trigd.inc'
 
 use cloud_rad
-use prmtrs_stmas_cloud, only : satellite_obs
 #ifdef CRTM
+    use prmtrs_stmas_cloud, only : satellite_obs
     use crtm_kmatrix, only : conf4lvd
+!   Declarations for conf4lvd
+    TYPE(SATELLITE_OBS) lvd
+    character*200 coe_path,moist_unit
 #endif
 
-! Declarations for conf4lvd
-TYPE(SATELLITE_OBS), lvd
-character*200 coe_path,moist_unit
 
 ! Note kcld is on the cloud height grid
 ! Note nk is on the LAPS grid
