@@ -10,7 +10,7 @@
 !     airmass(z) = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z))) ! if z <= 91
       airmassn(cosz) =           1.002432 * cosz**2 + 0.148386  * cosz + 0.0096467
       airmassd(cosz) = cosz**3 + 0.149864 * cosz**2 + 0.0102963 * cosz + .000303978
-      airmass(cosz) = airmassn(cosz) / airmassd(cosz)
+      airmassf(cosz) = airmassn(cosz) / airmassd(cosz)         ! if z <= 93
       trans(od) = exp(-min(od,80.))
 
       parameter (nc = 3)
@@ -61,7 +61,7 @@
       ds_dh = 1. / sind(sol_alt_eff)
       dxy_dh = 1. / tand(sol_alt_eff)
 
-      transm_3d(:,:,nk) = 1.
+      transm_3d(:,:,:) = 1.
 
       sinazi = sind(sol_azi(idb,jdb))
       cosazi = cosd(sol_azi(idb,jdb))
@@ -76,25 +76,26 @@
         ds = dh * ds_dh
         dij = (dh * dxy_dh) / grid_spacing_m           
         di =  sinazi * dij
-        dj = -cosazi * dij
+        dj =  cosazi * dij
         dil =  sinazi * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
-        dih =  sinazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
-        djl = -cosazi * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
-        djh = -cosazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
+        diu =  sinazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
+        djl =  cosazi * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
+        dju =  cosazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
 
         do i = 1,ni
         do j = 1,nj
 
-          if(i .eq. idb .AND. j .eq. jdb)then
-              idebug = 1
-          else
-              idebug = 0
-          endif
-
+!         il,ih,jl,jh are offset in reference to MSL height
           il = i + nint(dil) ; il = max(il,1) ; il = min(il,ni)
           iu = i + nint(diu) ; iu = max(iu,1) ; iu = min(iu,ni)
           jl = j + nint(djl) ; jl = max(jl,1) ; jl = min(jl,nj)
           ju = j + nint(dju) ; ju = max(ju,1) ; ju = min(ju,nj)
+
+          if(il .eq. idb .AND. jl .eq. jdb)then
+              idebug = 1
+          else
+              idebug = 0
+          endif
 
 !         Calculate cloud integrated species along slant path
           clwc_m = 0.5 * (clwc_3d(iu,ju,ku) + clwc_3d(il,jl,kl))
@@ -118,35 +119,38 @@
 
 !           Convert to reflectance (using od_to_albedo)
 !           od_int = od_int + (od_lyr_clwc + od_lyr_cice + od_lyr_rain + od_lyr_snow)
-            backscatter_int(i,j) = backscatter_int(i,j) + od_lyr_clwc * bksct_eff_clwc &
-                                                        + od_lyr_cice * bksct_eff_cice &
-                                                        + od_lyr_rain * bksct_eff_rain &
-                                                        + od_lyr_snow * bksct_eff_snow  
+            backscatter_int(i,j) = backscatter_int(i,j) &
+                                           + od_lyr_clwc * bksct_eff_clwc &
+                                           + od_lyr_cice * bksct_eff_cice &
+                                           + od_lyr_rain * bksct_eff_rain &
+                                           + od_lyr_snow * bksct_eff_snow  
 
 !           albedo_int = od_to_albedo(backscatter_int(i,j))                                                            
             albedo_int = 1.0 - exp(-backscatter_int(i,j))                                                            
 
 !           Convert to transmittance
-            transm_3d(i,j,k) = 1. - albedo_int
+            transm_3d(il,jl,kl) = 1. - albedo_int
 
             if(idebug .eq. 1)then
               write(6,101)k,il,clwc_m,cice_m,rain_m,snow_m &
-                       ,clwc_lyr_int,cice_lyr_int,rain_lyr_int,snow_lyr_int &
-                       ,od_lyr_clwc,od_lyr_cice,od_lyr_rain,od_lyr_snow &
-                       ,backscatter_int(i,j),transm_3d(i,j,k)
+                     ,clwc_lyr_int,cice_lyr_int,rain_lyr_int,snow_lyr_int &
+                     ,od_lyr_clwc,od_lyr_cice,od_lyr_rain,od_lyr_snow &
+                     ,backscatter_int(i,j),transm_3d(il,jl,kl)
 101           format('k/il/clwc/lwp/od/bks/transm: ',i3,i4,2x,4f9.6,2x,4f7.4,2x,4f7.4,1x,2f9.5)
             endif
 
           else ! for efficiency
-            transm_3d(i,j,k) = transm_3d(i,j,ku)
+            transm_3d(il,jl,kl) = transm_3d(iu,ju,ku)
             if(idebug .eq. 1)then
-              write(6,102)k,transm_3d(i,j,k),dh,ds,sol_alt(idb,jdb),sol_azi(idb,jdb),di,dj
-102           format('k/trans/dhds/solaltaz/dij ',i5,f8.5,1x,2f9.2,1x,2f7.2,1x,2f7.3)
+              write(6,102)k,heights_3d(il,jl,kl),transm_3d(il,jl,kl),dh,ds&
+                         ,sol_alt(il,jl),sol_azi(il,jl),di,dj,il,iu,jl,ju
+102           format('k/ht/trans/dhds/solaltaz/dij ' &
+                     ,i5,f8.0,f8.5,1x,2f9.2,1x,2f7.2,1x,2f7.3,4i4)
             endif
           endif
 
           topo = 1500.
-          ht_agl = heights_3d(i,j,k) - topo
+          ht_agl = heights_3d(il,jl,k) - topo
 
 !         See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
           if(ht_agl .gt. 0.)then                               
@@ -157,7 +161,7 @@
 
           refraction = 0.5 ! typical value near horizon
 
-          sol_alt_cld = sol_alt(i,j) + horz_dep_d + refraction
+          sol_alt_cld = sol_alt(il,jl) + horz_dep_d + refraction
 
 !         Estimate solar extinction/reddening by Rayleigh scattering at this cloud altitude
           z = 90. - sol_alt_cld
@@ -179,9 +183,11 @@
             else
 !             Direct illumination of the cloud is calculated here
 !             Indirect illumination is factored in via 'scat_frac'
-              am = airmass(cosd(90. - max(sol_alt(i,j),-3.0)))
+              am = airmassf(cosd(90. - max(sol_alt(il,jl),-3.0)))
               scat_frac = 0.75
-              trans_c(:) = trans(am*ext_g(:)*patm_k*scat_frac)
+              do ic = 1,nc
+                trans_c(ic) = trans(am*ext_g(ic)*patm_k*scat_frac)
+              enddo
               rint = trans_c(1)
               grn_rat = trans_c(2) / trans_c(1)
               blu_rat = trans_c(3) / trans_c(1)
@@ -192,14 +198,14 @@
           endif  
 
           if(idebug .eq. 1)then
-              write(6,103)k,sol_alt(i,j),horz_dep_d,sol_alt_cld,am*patm_k,rint,rint*blu_rat**0.3,rint*blu_rat
+              write(6,103)k,sol_alt(il,jl),horz_dep_d,sol_alt_cld,am*patm_k,rint,rint*blu_rat**0.3,rint*blu_rat
 103           format('k/salt/hdep/salt_cld/amk/R/G/B',43x,i4,3f6.2,f8.2,2x,3f6.2)                                   
           endif
 
 !         Modify transm array for each of 3 colors depending on solar intensity and color at cloud (top)
-          transm_4d(i,j,k,1) = transm_3d(i,j,k) * rint
-          transm_4d(i,j,k,2) = transm_3d(i,j,k) * rint * grn_rat      
-          transm_4d(i,j,k,3) = transm_3d(i,j,k) * rint * blu_rat   
+          transm_4d(il,jl,kl,1) = transm_3d(il,jl,kl) * rint
+          transm_4d(il,jl,kl,2) = transm_3d(il,jl,kl) * rint * grn_rat      
+          transm_4d(il,jl,kl,3) = transm_3d(il,jl,kl) * rint * blu_rat   
 
         enddo ! j
         enddo ! i
