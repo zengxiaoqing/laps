@@ -17,7 +17,8 @@ TEMPDIR=/exchange/tmp/fab/zeus
 RSH=--rsh=ssh
 RSYNCARGS=-rlptgvvz
 RSYNCARGS_NOCOMPRESS=-rlptgvv 
-REMOTE_NODE=dlaps-ms1.fsl.noaa.gov
+REMOTE_NODE=clank.fsl.noaa.gov
+REMOTE_NODE_MV=dlaps-ms1.fsl.noaa.gov
 
 echo "copy_remote.sh..."
 
@@ -33,13 +34,13 @@ elif test "$3" == "exchange"; then
         echo " "
         date -u
         echo "second hop of directory"
-        echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME"
-              ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME 
+        echo "ssh $REMOTE_NODE_MV mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME"
+              ssh $REMOTE_NODE_MV mv $TEMPDIR/$TEMPFILE/* $DESTDIR/$FILENAME 
     else
         date -u
         echo "second hop of file"
-        echo "ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME"
-              ssh $REMOTE_NODE mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME 
+        echo "ssh $REMOTE_NODE_MV mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME"
+              ssh $REMOTE_NODE_MV mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME 
     fi
 
 elif test "$3" == "exchange_tar"; then
