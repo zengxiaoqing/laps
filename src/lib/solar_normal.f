@@ -31,12 +31,14 @@ cdis
 cdis 
 c
 c
-	subroutine solar_normal(ni,nj,topo,dx,dy
+	subroutine solar_normal(ni,nj,topo,dx,dy,lat,lon
      1                         ,sol_alt,sol_azi,alt_norm)
 
 c       Compute solar altitude normal to the terrain
 
-        use constants_laps
+        include 'trigd.inc'
+
+        angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
 
 	real topo(ni,nj)                 ! I Terrain elevation (m)
         real lat(ni,nj)                  ! I Lat (deg)
@@ -47,18 +49,17 @@ c       Compute solar altitude normal to the terrain
 
 	real dx(ni,nj)                   ! I Grid spacing in X direction (m)
 	real dy(ni,nj)                   ! I Grid spacing in Y direction (m)
-    
-        real*8 dircos_tx,dircos_ty,dircos_tz
-        real*8 dircos_sx,dircos_sy,dircos_sz,result
 
+        real rot(ni,nj)                  ! L Rotation Angle (deg)
+    
         write(6,*)' Subroutine solar_normal'
 
-        rpd = DEG2RAD
-
-        call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
+!       call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
 
 !       Default value
         alt_norm = sol_alt
+
+        call projrot_latlon_2d(lat,lon,ni,nj,rot,istatus)
 
 	do j=2,nj-1
 	do i=2,ni-1
@@ -78,26 +79,33 @@ c       Compute solar altitude normal to the terrain
               dircos_ty = dterdy / (sqrt(dterdy**2 + 1.))
               dircos_tz = 1.0 / sqrt(1.0 + terrain_slope**2)
 
-              sol_azi_grid = sol_azi(i,j) 
-     1                     - projrot_latlon(lat(i,j),lon(i,j),istatus)
+              sol_azi_grid = sol_azi(i,j) - rot(i,j) 
 
               dircos_sx = sind(sol_azi_grid)
               dircos_sy = cosd(sol_azi_grid)
               dircos_sz = sind(sol_alt(i,j))
 
-              call angle_vectors(dircos_tx,dircos_ty,dircos_tz
-     1                           dircos_sx,dircos_sy,dircos_sz,result)
+              result = angleunitvectors(dircos_tx,dircos_ty,dircos_tz
+     1                                 ,dircos_sx,dircos_sy,dircos_sz)
 
-              alt_norm(i,j) = result / rpd ! terrain virtually flat
+              alt_norm(i,j) = 90. - result 
+            
+              if(i .eq. ni/2 .and. j .eq. nj/2)then
+                write(6,*)'solar alt/az, dterdx, dterdy, alt_norm',
+     1             sol_alt(i,j),sol_azi(i,j),dterdx,dterdy,alt_norm(i,j)        
+                write(6,*)' dircos_t ',dircos_tx,dircos_ty,dircos_tz
+                write(6,*)' dircos_s ',dircos_sx,dircos_sy,dircos_sz
+                write(6,*)' rot = ',rot(i,j)
+              endif
 
             else 
               alt_norm(i,j) = sol_alt(i,j) ! terrain virtually flat
 
-            endif
+              if(i .eq. ni/2 .and. j .eq. nj/2)then
+                write(6,*)'solar alt/az, alt_norm',
+     1             sol_alt(i,j),sol_azi(i,j),alt_norm(i,j)        
+              endif
 
-            if(i .eq. ni/2 .and. j .eq. nj/2)then
-                write(6,*)'solar alt/az, dterdx, dterdy, alt_norm',
-     1             sol_alt(i,j),sol_azi(i,j),dterdx,dterdy,alt_norm(i,j)        
             endif
 
 	enddo !i
