@@ -32,7 +32,8 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis 	implicit none
+cdis 	
+        implicit none
 	include 'constants_optran.inc'
 
 	Real*8 Bw(Nwet+1,Nw,Nchan)
