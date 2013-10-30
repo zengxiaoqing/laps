@@ -1,47 +1,20 @@
-#! /bin/csh
+#!/bin/sh --login
 
-set verbose=1
+# An assumption is made that the qsub script will generate the $flagfile
+# as the last step in that script
 
-set rStatus = 130
-set fN=cpuCount.`date +%s`.$$
-touch /tmp/$fN
+script=$1
+flagfile=$2
+project=$3
 
-onintr cleanup
+if test "$project" == ""; then
+    project=dlaps
+fi
 
-set runPrefix = `echo $0 | cut -c1-1`
-switch ($runPrefix)
-  case /:
-  case .:
-        set runScript = $0
-        breaksw
-  default:
-        set runScript = `which $0`
-        breaksw
-endsw
-set baseDir = `dirname $runScript`
+rm -f $flagfile
 
-$baseDir/qsub $* >& /tmp/$fN
+echo "qsub -A $project $script"
+      qsub -A $project $script
 
-set rStatus = $status
+/usr/nfs/lapb/parallel/laps/etc/wait_for_file.sh $flagfile 120 60
 
-if ( $rStatus == 0) then
-  set noglob
-  set jobID=`cat /tmp/$fN | sed -e 's/[yY]our job //' | sed -e 's/ (.*//' | awk /[0-9][0-9]*/`
-  unset noglob
-  if ( x$jobID == x ) then
-    set rStatus = 1
-    cat /tmp/$fN
-    echo QSUB Failed.
-  else
-    cat /tmp/$fN
-    echo Waiting...
-    $baseDir/wait_job $jobID
-    set rStatus = $status
-  endif
-else
-  cat /tmp/$fN
-  echo QSUB Failed.
-endif
-
-cleanup:
-  rm -f /tmp/$fN
