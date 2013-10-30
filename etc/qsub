@@ -46,11 +46,11 @@ $EXE_ROOT="$SGE_ROOT/bin/$arch";
 $QSUB="$EXE_ROOT/$Q_CMD";
 
 # Set the location of the account control files
-$RSRC_CTL="/usr/local/fsl/etc/resource_control";
-$ACCT_INFO="/usr/local/fsl/etc/accountInfo";
+$RSRC_CTL="/usr/nfs/lapb/parallel/laps/etc/resource_control";
+$ACCT_INFO="/usr/nfs/lapb/parallel/laps/etc/accountInfo";
 
 # Location of PE mappings
-$PE_MAP_FILE='/usr/local/fsl/etc/pe_mapping';
+$PE_MAP_FILE='/usr/nfs/lapb/parallel/laps/etc/pe_mapping';
 #$PE_MAP_FILE='./pe_mapping';
 
 # Initialize option hashes
