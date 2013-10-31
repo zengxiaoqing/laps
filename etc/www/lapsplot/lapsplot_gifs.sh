@@ -96,7 +96,7 @@ if test "$NCARG_ROOT" = "allsky"; then
       MODE_ALLSKY=polar
  fi
 
- NLOC=`head -5      $LAPSPLOT_IN | tail -1`
+ NLOC=`head -4      $LAPSPLOT_IN | tail -1`
  echo "NLOC from input file $LAPSPLOT_IN is $NLOC"
 
 #NLOC=1
@@ -190,14 +190,14 @@ if test "$NCARG_ROOT" = "allsky"; then
 
 # Annotate Lat/Lon
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    convert -annotate +363+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -annotate +363+20 "`cat label2.$ILOC`" -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $WINDOW -ge 181; then
-      convert -annotate +1780+20 "`cat label2.txt`" -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -annotate +1780+20 "`cat label2.$ILOC`" -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
-      convert -annotate +890+20  "`cat label2.txt`" -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -annotate +890+20  "`cat label2.$ILOC`" -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     fi
   fi
 
@@ -228,23 +228,25 @@ if test "$NCARG_ROOT" = "allsky"; then
     fi
   fi
 
-# convert allsky_polar_ILOC.png $SCRATCH_DIR/gmeta_$proc.gif
+# convert allsky_polar_ILOC.png $SCRATCH_DIR/gmeta_$proc.$ILOC.gif
   if test "$MODE_ALLSKY" = "cyl"; then
-      cp allsky_cyl_$ILOC.png $SCRATCH_DIR/gmeta_$proc.png
-      ls -l $SCRATCH_DIR/gmeta_$proc.png
+      cp allsky_cyl_$ILOC.png $SCRATCH_DIR/gmeta_$proc.$ILOC.png
+      cp allsky_cyl_$ILOC.png $SCRATCH_DIR/gmeta_$proc.png # for on-the-fly page
+      ls -l $SCRATCH_DIR/gmeta_$proc.$ILOC.png
   fi
   if test "$MODE_ALLSKY" = "polar"; then
-      cp allsky_polar_$ILOC.png $SCRATCH_DIR/gmeta_$proc.png
-      ls -l $SCRATCH_DIR/gmeta_$proc.png
+      cp allsky_polar_$ILOC.png $SCRATCH_DIR/gmeta_$proc.$ILOC.png
+      cp allsky_polar_$ILOC.png $SCRATCH_DIR/gmeta_$proc.png # for on-the-fly page
+      ls -l $SCRATCH_DIR/gmeta_$proc.$ILOC.png
   fi
 
 # handle "both" option?
 
   if test "$MODE_ALLSKY" = "both"; then
-      cp allsky_cyl_$ILOC.png $SCRATCH_DIR/gmeta_$proc.cyl.png
-      cp allsky_polar_$ILOC.png $SCRATCH_DIR/gmeta_$proc.polar.png
-      ls -l $SCRATCH_DIR/gmeta_$proc.cyl.png
-      ls -l $SCRATCH_DIR/gmeta_$proc.polar.png
+      cp allsky_cyl_$ILOC.png $SCRATCH_DIR/gmeta_$proc.$ILOC.cyl.png
+      cp allsky_polar_$ILOC.png $SCRATCH_DIR/gmeta_$proc.$ILOC.polar.png
+      ls -l $SCRATCH_DIR/gmeta_$proc.$ILOC.cyl.png
+      ls -l $SCRATCH_DIR/gmeta_$proc.$ILOC.polar.png
   fi
 
   ls -l $SCRATCH_DIR/$proc
