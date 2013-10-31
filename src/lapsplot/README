@@ -32,6 +32,8 @@ driver                                            lapsplot_main.f
             integrate_slwc                        lib/get_cloud_deriv.f
             integrate_tpw                           "
         plot_allsky                               plot_allsky.f
+            solar_position                        lib/sunfuncs.f
+            equ_to_altaz_d                        lib/equtoaltazd.f
             sun_moon                              lib/cloud/sun_moon.f
             get_cloud_rays                        get_cloud_rays.f
                 get_cloud_rad                     lib/cloud/get_cloud_rad.f90
