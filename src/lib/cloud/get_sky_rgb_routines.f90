@@ -195,7 +195,7 @@
         end
        
         subroutine get_glow_obj(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi &
-                               ,rlat,rlon,alt_scale,azi_scale &
+                               ,alt_scale,azi_scale &
                                ,alt_obj,azi_obj,mag_obj,glow_obj)
 
         real alt_a(minalt:maxalt,minazi:maxazi)
@@ -204,7 +204,7 @@
 
         parameter (nstars = 320)
         real ext_mag,lst_deg,mag_obj
-        real*8 angdif,jed,r8lon,lst,has,phi,als,azs,ras,x,y,decr
+        real*8 angdif,jed,lst,has,als,azs,ras,x,y,decr
 
         character*20 starnames
 
@@ -214,8 +214,6 @@
         write(6,*)' lat/lon = ',rlat,rlon             
 
         rpd = 3.14159265 / 180.
-        phi = rlat * rpd
-        r8lon = rlon          
 
         I4_elapsed = ishow_timer()
 
