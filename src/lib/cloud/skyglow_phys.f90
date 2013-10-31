@@ -335,7 +335,7 @@
               if(sol_alt .gt. 0.)then
                 write(6,111)ialt,jazi,sol_alt &
                       ,angle_plane,dist_ray_plane,ht_ray_plane &
-                      ,clear_rad_c(3,ialt,jazi)
+                      ,clear_rad_c(:,ialt,jazi)/1e9
               else
                 write(6,112)ialt,jazi,sol_alt &
                       ,angle_plane,dist_ray_plane,ht_ray_plane &
@@ -346,8 +346,8 @@
                       ,clear_rad_c(3,ialt,jazi) ! /1e9
               endif
 111           format( &
-       'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/clrrd3' &
-                  ,2i4,2x,2f6.2,2f10.1,f11.0)
+       'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/clrrd' &
+                  ,2i4,2x,2f6.2,2f10.1,2x,3f8.3)
 112           format( &
        'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/a/t/clrrad' &
 !                 ,2i5,2f7.3,2f8.2,2f10.1,2x,4f8.5,f8.0,f8.5,2x,3f8.5) &
