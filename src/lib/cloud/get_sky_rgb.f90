@@ -2,7 +2,7 @@
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,r_cloud_rad, &
                                cloud_rad_c, &
                                clear_rad_c,clear_radf_c,patm, &
-                               glow,glow_stars,od_atm_a, &
+                               glow,glow_sun,glow_moon,glow_stars,od_atm_a, &
                                airmass_2_cloud,airmass_2_topo, &
                                topo_swi,topo_albedo, & 
                                aod_2_cloud,aod_2_topo, &
@@ -29,6 +29,8 @@
                                     ! (accounting for Earth shadow + clouds)
         real clear_rad_c_nt(3)      ! HSV night sky brightness
         real glow(ni,nj)            ! skyglow (log b in nanolamberts)
+        real glow_sun(ni,nj)        ! sunglow (log b in nanolamberts)
+        real glow_moon(ni,nj)       ! moonglow (log b in nanolamberts)
         real glow_stars(ni,nj)      ! starglow (log b in nanolamberts)
         real airmass_2_cloud(ni,nj) ! airmass to cloud 
         real airmass_2_topo(ni,nj)  ! airmass to topo  
@@ -83,7 +85,7 @@
           sol_alt_eff = max(sol_alt,-16.)
 !         Test at -3.2 solar alt
           fracalt = sol_alt_eff / -16.
-          corr1 = 8.3; corr2 = 3.612
+          corr1 = 8.6; corr2 = 3.612
 !         argref = corr1 + (fracalt**0.83 * (corr2-corr1))
           argref = corr1 + (fracalt**0.68 * (corr2-corr1))
           contrast = 70. + 30. * (abs(sol_alt_eff + 8.)/8.)**2
@@ -114,13 +116,15 @@
             do ic = 1,nc
               trans_c(ic) = trans(am*ext_g(ic)*patm*scat_frac)
             enddo
-            blu_rat = trans_c(3) / trans_c(1)
-            redness = (1.0 - blu_rat ** 0.45)
+            rob_sun = trans_c(1) / trans_c(3)
+            rog_sun = trans_c(1) / trans_c(2)
           endif
         else
-            redness = 0.
+            rob_sun = 1.
+            rog_sun = 1.
         endif
-        write(6,*)' sol_alt_red_thr/od_atm_a/redness = ',sol_alt_red_thr,od_atm_a,redness
+        write(6,5)sol_alt_red_thr,od_atm_a,am,rob_sun,rog_sun
+5       format(' sol_alt_red_thr/od_atm_a/am/rob_sun/rog_sun = ',5f9.3)
 
 !       Grnness section (clear sky at low solar altitudes)      
         sol_alt_grn_thr = 10.0                       
@@ -177,6 +181,10 @@
                      ,sol_alt,sol_az,alt_a,azi_a &               ! I
                      ,earth_radius,patm,od_atm_a,aero_scaleht &  ! I
                      ,clear_rad_c,elong_a                     )  ! O
+
+            write(6,*)' range of clear_rad_c(2) is ',minval(clear_rad_c(2,:,:)),maxval(clear_rad_c(2,:,:))
+            write(6,*)' range of glow_sun is ',minval(glow_sun),maxval(glow_sun)
+            write(6,*)' range of glow_moon is ',minval(glow_moon),maxval(glow_moon)
 
             I4_elapsed = ishow_timer()
         endif
@@ -295,12 +303,22 @@
           if(sol_alt .gt. 0.)then ! Daylight from skyglow routine
               if(new_skyglow .eq. 1)then
                 glow_tot = log10(clear_rad_c(2,i,j)) + log10(clear_radf_c(2,i,j))
+                glow_tot = addlogs(glow_tot,glow_sun(i,j))
+                glow_tot = addlogs(glow_tot,glow_moon(i,j))
 !               glow_tot = log10(clear_rad_c(2,i,j))
                 rintensity_glow = min(((glow_tot -7.3) * 100.),255.)
 
 !               Convert RGB brightness into image counts preserving color balance
-                rog = (clear_rad_c(1,i,j) / clear_rad_c(2,i,j))**0.45
-                bog = (clear_rad_c(3,i,j) / clear_rad_c(2,i,j))**0.45
+                bog_rad = clear_rad_c(3,i,j) / clear_rad_c(2,i,j) 
+                if(bog_rad .gt. 2.)then
+                    rog_exp = 0.45
+                elseif(bog_rad .lt. 1.)then
+                    rog_exp = 0.80
+                else
+                    rog_exp = 0.80 - 0.35 * (bog_rad - 1.0)
+                endif
+                rog = (clear_rad_c(1,i,j) / clear_rad_c(2,i,j))**rog_exp
+                bog = (clear_rad_c(3,i,j) / clear_rad_c(2,i,j))**0.80
                 clr_red = rintensity_glow * rog
                 clr_grn = rintensity_glow
                 clr_blu = rintensity_glow * bog
@@ -379,20 +397,20 @@
               if(moon_alt .gt. 0.)then ! add moon mag condition
 !                 Glow from Rayleigh, no clear_rad crepuscular rays yet
 !                 argm = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15
-                  glow_moon = glow(i,j)          ! log nL                 
-                  glow_tot = addlogs(glow_nt,glow_moon)
+                  glow_moon_s = glow(i,j)          ! log nL                 
+                  glow_tot = addlogs(glow_nt,glow_moon_s)
               else
                   glow_tot = glow_nt
-                  glow_moon = 0.
+                  glow_moon_s = 0.
               endif
 
 !             Add in stars. Stars have a background glow of 1.0
               glow_tot = addlogs(glow_tot,glow_stars(i,j))
 
-!             if((idebug .eq. 1 .and. moon_alt .gt. 0.) .OR. glow_stars(i,j) .gt. 1.0)then
+!!            if((idebug .eq. 1 .and. moon_alt .gt. 0.) .OR. glow_stars(i,j) .gt. 1.0)then
               if((idebug .eq. 1) .OR. glow_stars(i,j) .gt. 2.0)then
-                  write(6,91)glow_nt,glow_moon,glow_stars(i,j),glow_tot
-91                format(' glow: nt/moon/stars/tot = ',4f9.3)
+                  write(6,91)i,j,idebug,glow_nt,glow_moon_s,glow_stars(i,j),glow_tot
+91                format(' glow: nt/moon/stars/tot = ',3i5,4f9.3)
                   idebug = 1 ! for subsequent writing at this grid point
               endif
 
@@ -403,14 +421,30 @@
           endif
 
 !         Apply redness to clear sky / sun
-          elong_red = 12.0
+!         Define area around the sun that is redenned since scattering by aerosols
+!         is dominant. Try and preserve both original luminance and desired color         
+          if(od_atm_a .ge. 0.03)then
+              elong_red = 20.0
+          elseif(od_atm_a .le. 0.02)then
+              elong_red = 1.0
+          else
+              elong_red = 1. + 1900. * (od_atm_a-.02)
+          endif
+          if(sol_alt .gt. 0)elong_red = min(elong_red,10.)
           if(elong_a(i,j) .le. elong_red)then
 !         if(.false.)then                        
-              red_elong = (elong_red - elong_a(i,j)) / elong_red
+              clr_luma1 = .30 * clr_red + .59 * clr_grn + .11 * clr_blu
+              red_elong = ((elong_red - elong_a(i,j)) / elong_red)**2
 !             write(6,*)' alt/elong/redelong: ',alt_a(i,j),elong_a(i,j),red_elong
-              clr_red = clr_red * 1.0
-              clr_grn = clr_grn * (1. - redness * red_elong)**0.3 
-              clr_blu = clr_blu * (1. - redness * red_elong)
+              red_sun = 255.
+              clr_red = clr_red*(1.-red_elong) +  red_sun * red_elong
+              clr_grn = clr_grn*(1.-red_elong) + (red_sun / (rog_sun**(0.45))) * red_elong                   
+              clr_blu = clr_blu*(1.-red_elong) + (red_sun / (rob_sun**(0.45))) * red_elong
+              clr_luma2 = .30 * clr_red + .59 * clr_grn + .11 * clr_blu
+              ratio_luma = min(clr_luma1 / clr_luma2,255. / clr_red)
+              clr_red = clr_red * ratio_luma               
+              clr_grn = clr_grn * ratio_luma              
+              clr_blu = clr_blu * ratio_luma               
           endif
 
 !                     Rayleigh  Ozone   Mag per optical depth            
