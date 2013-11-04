@@ -621,7 +621,7 @@ cdoc    Returns a 3-D fcst grid. Inputs include directory, initial and valid tim
 !       i4time              Input      Desired i4time initial
 !       i4_valid            Input      i4time for valid data time
 !       imax,jmax,kmax      Input      LAPS grid dimensions
-!       ext                 Input      3 character file extension
+!       ext                 Input      3 character file extension or model member
 !       var_2d              Input      Which Variable do you want?
 !       units_2d            Output     Units of data
 !       Comment_2d          Output     Comment block
