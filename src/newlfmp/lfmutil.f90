@@ -281,6 +281,8 @@ real :: ht_1km, frack
 real :: umean(lx,ly),vmean(lx,ly),ustorm(lx,ly),vstorm(lx,ly)
 real :: array_buf(lx,ly),array_out(lx,ly)
 
+real :: ghi_ratio(lx,ly)
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !Beka!!!!!!!!!!!!! obtaining ldf, lat and lon !!!!!!!!!!!!!!!!!!!!
 
@@ -841,8 +843,14 @@ if(fcsttime .le. i4_adv_cld)then
   call advect(umean,vmean,swdown,array_buf,ngrid_spacingx & 
              ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
   write(6,*)' Range of advection input is ',minval(swdown),maxval(swdown)
-  swdown = array_out
-  write(6,*)' Range of advection output is ',minval(swdown),maxval(swdown)
+  write(6,*)' Range of initial advection output is ',minval(array_out),maxval(array_out)
+
+  write(6,*)' Calling get_ghi_ratio for times ',laps_reftime,laps_valtime
+  call get_ghi_ratio(laps_reftime,laps_valtime,lat,lon,lx,ly,ghi_ratio)
+  write(6,*)' Range of ghi_ratio is ',minval(ghi_ratio),maxval(ghi_ratio)
+
+  swdown = array_out * ghi_ratio
+  write(6,*)' Range of final advection output is ',minval(swdown),maxval(swdown)
 else
   if (fcsttime .eq. 0) then ! obtain initial time swdown field from swi analysis LCV files
     ext = 'lcv'
@@ -2361,12 +2369,9 @@ subroutine snowfall(tsig,tsfc,prcpinc,preciptype,imax,jmax,ksig,snowinc,snowtot)
 ! Method
 ! ======
 ! - If precip type is snow
-!    - calculate surface temperature on dot
+!    - calculate column max temperature on dot
 !    - calculate incremental precip on dot
-!    - if surface temp is >= 10 F
-!      - use a 10:1 snow/liquid ratio
-!    - if surface temp is < 10 F
-!      - use a 15:1 snow/liquid ratio
+!    - Obtain snow_to_rain ratio from LAPS analysis subroutine
 ! - If precip type is not snow
 !    - snow accumulation is zero
 !
@@ -2400,6 +2405,8 @@ subroutine snowfall(tsig,tsfc,prcpinc,preciptype,imax,jmax,ksig,snowinc,snowtot)
 !  5 Jan 99  Removed interpolations to dot grid as mmpost now
 !            operates on the cross grid........................DNXM
 !  4 Jan 01  Adapted by FSL for use with LAPS.. B. Shaw, NOAA/FSL
+!    Jan 12  Use column max temperature and analysis library routine
+!            to obtain snow_to_rain ratio (S. Albers)
 
 use constants
 
@@ -2534,3 +2541,52 @@ enddo
 
 return
 end
+
+subroutine get_ghi_ratio(i4time1,i4time2,lat,lon,ni,nj,ghi_ratio)
+
+! Ratio of GHI at time 2 to GHI at time 1
+
+include 'trigd.inc'
+
+real lat(ni,nj)
+real lon(ni,nj)
+
+real solalt1(ni,nj)
+real solalt2(ni,nj)
+
+real ghi_ratio(ni,nj)
+
+call get_solalt_2d(lat,lon,i4time1,ni,nj,solalt1)
+call get_solalt_2d(lat,lon,i4time2,ni,nj,solalt2)
+
+write(6,*)' Range of solalt1 is ',minval(solalt1),maxval(solalt1)
+write(6,*)' Range of solalt2 is ',minval(solalt2),maxval(solalt2)
+
+do i = 1,ni
+do j = 1,nj
+
+    floor = max(.01 * (1.+solalt1(i,j)/+3.),0.)
+    zenfrac1 = max(sind(solalt1(i,j)),floor)
+
+    floor = max(.01 * (1.+solalt2(i,j)/+3.),0.)
+    zenfrac2 = max(sind(solalt2(i,j)),floor)
+
+    if(zenfrac1 .gt. 0)then
+        ratio = zenfrac2 / zenfrac1
+    else
+        ratio = 1.
+    endif
+
+!   if(i .eq. ni/2)then
+!       write(6,*)'solalt1/2,zenfrac1,zenfrac2,ratio',i,j,solalt1(i,j),solalt2(i,j),zenfrac1,zenfrac2,ratio
+!   endif
+
+    ghi_ratio(i,j) = min(max(ratio,.1),10.)
+
+enddo ! j
+enddo ! i
+
+return
+end
+
+       
