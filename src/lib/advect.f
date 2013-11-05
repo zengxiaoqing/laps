@@ -91,11 +91,11 @@ cdis
      1                  max(array_buf(inew,jnew),array_in(i,j))
                 endif
 
-                if(array_in(i,j) .ge. 40.)then
-                    write(6,102)i,j,inew,jnew,idelta_u_m,jdelta_v_m,
-     1                          delta_u_m,delta_v_m,array_buf(inew,jnew)
+!               if(array_in(i,j) .ge. 40.)then
+!                   write(6,102)i,j,inew,jnew,idelta_u_m,jdelta_v_m,
+!    1                          delta_u_m,delta_v_m,array_buf(inew,jnew)
 102                 format(6i4,2f10.5,f8.1)
-                endif
+!               endif
 
             endif
 
