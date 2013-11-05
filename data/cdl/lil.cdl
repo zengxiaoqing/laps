@@ -36,6 +36,20 @@ netcdf lil {
             lic:LAPS_var="LIC";
             lic:lvl_coord="MSL";
 	    lic:LAPS_units="M";
+
+        //	cloud optical depth
+
+	float                                  
+            cod(record,z,y,x);
+            cod:navigation_dim = "nav";
+            cod:record = "valtime, reftime";
+            cod:_FillValue = 1.e+37f;
+            cod:long_name="cloud optical depth";
+            cod:units="none";
+            cod:valid_range= 0.f, 1000.f;
+            cod:LAPS_var="COD";
+            cod:lvl_coord="MSL";
+	    cod:LAPS_units="NONE";
                 	        
         //	LAPS variables
 
@@ -48,6 +62,7 @@ netcdf lil {
         char
             lil_comment(record,z,namelen),
             lic_comment(record,z,namelen),
+            cod_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -60,6 +75,10 @@ netcdf lil {
         short
             lic_fcinv(record, z);
             lic_fcinv:_FillValue= 0s;
+
+        short
+            cod_fcinv(record, z);
+            cod_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
