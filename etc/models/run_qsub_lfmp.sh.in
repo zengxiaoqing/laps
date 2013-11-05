@@ -1,10 +1,10 @@
 #!/bin/sh --login
 
 modelroot=$1    # Example: /lfs0/projects/hmtb/dwr_domains/efp_conus
-model=$2        # Example: wrf (arw), arw, nmm, mm5, st4
-physics=$3      # Example: tom
-lbc=$4          # Example: gfs1
-name=$5         # Example: ewp0 or wrf-wsm6 (should match a '$LAPS_DATA_ROOT/lapsprd/fua' subdirectory name and an element of 'nest7grid.parms/fdda_model_source')
+model=$2        # Example: wrf (arw), arw, nmm, mm5, st4, none
+physics=$3      # Example: tom, none
+lbc=$4          # Example: gfs1, none
+name=$5         # Example: ewp0, wrf-wsm6, or none (should match a '$LAPS_DATA_ROOT/lapsprd/fua' subdirectory name and an element of 'nest7grid.parms/fdda_model_source')
 nest=$6         # Example: 1 or -2
 lapsdataroot=$7 # Example: /lfs0/projects/hmtb/dwr_domains/laps_psd   
 delay=$8        # Example: 2.0
@@ -90,16 +90,13 @@ date -u
 # Build qsub script
 script=$modelroot/qsub_lfmpost.sh
 echo "#!/bin/sh --login"         > $script
-echo "#$ -N lfmp_$run"          >> $script
-echo "#$ -A hmtb"               >> $script
-#echo "#$ -l h_rt=08:00:00"      >> $script
-echo "#$ -l h_rt=$wallclock:00,h_vmem=$vmem"      >> $script
-echo "#$ -S /bin/sh"            >> $script
-echo "#$ -cwd"                  >> $script
-echo "#$ -pe $nodetype 1"       >> $script
-echo "#$ -o $lapsdataroot/log/qlfmp.log.`date +\%H\%M`"           >> $script
-echo "#$ -j y"                  >> $script
-echo "#exit"                    >> $script
+echo "#PBS -l procs=1"          >> $script
+echo "#PBS -l walltime=$wallclock:00" >> $script
+echo "#PBS -m n"                >> $script
+echo "#PBS -A dlaps"            >> $script
+echo "#PBS -N lfmp_$run"        >> $script
+echo "#PBS -j oe"               >> $script
+echo "#PBS -o $lapsdataroot/log/qlfmp.log.`date +\%H\%M`"           >> $script
 echo " "                        >> $script
 
 if test "$model" = arw; then
@@ -128,7 +125,10 @@ echo "maxWaitSec=43200"                                         >> $script
 echo "maxHrsRun=24"                                             >> $script
 echo "name=$name"                                               >> $script
 echo " echo 'Running this lfmpost.pl command...'"               >> $script
-if test "$name" != "none"; then # (e.g. ewp0)
+if test "$name" == "advection"; then # (e.g. advection)
+    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -C 3600 -Z 3600 -W $mdlfilewait' " >> $script
+    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -C 3600 -Z 3600 -W $mdlfilewait"   >> $script
+elif test "$name" != "none"; then    # (e.g. ewp0)
     echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait' " >> $script
     echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait"   >> $script
 else
