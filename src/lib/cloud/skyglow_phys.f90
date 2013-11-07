@@ -5,6 +5,8 @@
                    ,minalt,maxalt,minazi,maxazi,idebug_a      &! I
                    ,sol_alt,sol_azi,view_alt,view_az          &! I
                    ,earth_radius,patm,aod_ray,aero_scaleht    &! I
+                   ,htmsl,redp_lvl                            &! I
+                   ,l_solar_eclipse,i4time,rlat,rlon          &! I
                    ,clear_rad_c,elong                       )  ! O
 
         include 'trigd.inc'
@@ -18,12 +20,17 @@
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
         angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
+        scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
+
+        real linecyl,linecylp
+        linecylp(xcos,ycos,x1,r) = (-(2.*xcos*x1) + sqrt((2.*xcos*x1)**2 - 4. * (xcos**2 + ycos**2) * (x1**2 - r**2))) &
+                                 /  (2. * (xcos**2 + ycos**2))
 
         include 'rad.inc'
 
         real twi_trans_c(nc)           ! transmissivity
 
-        real mie, kappa_g, kappa_a
+        real mie, alpha_g, alpha_a
 
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! integrated fraction of air illuminated by the sun along line of sight
                                            ! (consider Earth's shadow + clouds)
@@ -36,8 +43,7 @@
         do ialt = ialt_start,ialt_end,ialt_delt
   
          altray = view_alt(ialt,jazi_start)
-         htmsl = 1600.
-         aero_refht = 1600.
+         aero_refht = redp_lvl
          call get_airmass(altray,htmsl,patm &       ! I
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius &            ! I
@@ -111,16 +117,26 @@
               do ic = 1,nc
                 od_g = ext_g(ic)*airmass_g
                 od_a = aod_ray*aa
-                kappa_g = od_g / 8000.
-                kappa_a = od_a / aero_scaleht
+                alpha_g = od_g / 8000.
+                alpha_a = od_a / aero_scaleht
                 if(od_a .gt. 0)then
-                    od_g1 = od_a * (kappa_g / kappa_a)
+                    od_g1 = od_a * (alpha_g / alpha_a)
                 else
                     od_g1 = 0.
                 endif
                 od_g2 = od_g - od_g1
-                pf_eff1 = (rayleigh_pf(elong(ialt,jazi)) * kappa_g + hg2 * kappa_a) &
-                        / (kappa_g + kappa_a)
+
+                if(.true.)then ! available light for Mie scattering, relative to Rayleigh scattering
+                    am_sun = airmassf(90. - sol_alt,patm) * (od_g2/od_g)
+                    sun_trans_g2 = trans(am_sun*ext_g(ic))
+                    solar_int_g2 = sun_trans_g2 * 10.**(0.4*sbcorr)
+                    solar_int_g2 = min(solar_int_g2,1.0)
+                else
+                    solar_int_g2 = 1.0
+                endif
+
+                pf_eff1 = (rayleigh_pf(elong(ialt,jazi)) * alpha_g + hg2 * alpha_a * solar_int_g2) &
+                        / (alpha_g + alpha_a * solar_int_g2)
                 od_1 = od_g1 + od_a
                 brt1 = brto(od_1) * pf_eff1
                 brt2 = brto(od_g2) * rayleigh_pf(elong(ialt,jazi))
@@ -128,9 +144,10 @@
                 clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2)
 
                 if(idebug .ge. 1 .and. ic .eq. 2)then
-                  write(6,73)day_int,airmass_g,od_g,aod_ray,od_a,kappa_g*1e3,kappa_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
-73                format('day_int/airmass_g/od_g/aod_ray/od_a/kappa_g/kappa_a/od_g1/od_g2/clear_rad :' &
+                  write(6,73)day_int,airmass_g,od_g,aod_ray,od_a,alpha_g*1e3,alpha_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
+73                format('day_int/airmass_g/od_g/aod_ray/od_a/alpha_g/alpha_a/od_g1/od_g2/clear_rad :' &
                         ,f12.0,4f7.3,2x,2f7.3,2x,2f7.3,f11.0)      
+                  write(6,*)'am_sun,solar_int_g2 = ',am_sun,solar_int_g2
                 endif
 
              enddo ! ic
@@ -165,10 +182,26 @@
 !           write(6,*)'xray/yray/zray',xray,yray,zray             ! test
             angle_plane = 90. - angle_r ! angle between light ray and plane                              
 !           write(6,*)'angle_r/angle_plane = ',angle_r,angle_plane ! test
-            if(angle_plane .gt. 0.)then ! assume part of atmosphere is illuminated by the sun
-              horz_dep_r = -sol_alt * rpd                                                  
-              dist_pp_plane = horz_dep_r**2 * earth_radius / 2.0 ! approx perpendicular dist
-              dist_ray_plane = dist_pp_plane / sind(angle_plane) ! distance along ray
+
+            horz_dep_r = -sol_alt * rpd                                                  
+            dist_pp_plane = horz_dep_r**2 * earth_radius / 2.0 ! approx perpendicular dist
+
+            if(.true.)then ! get light ray distance to shadow cylinder
+                xcos = cosd(angle_r) ! points along the sun's azimuth at 90 degees elong
+                zcos = cosd(elong(ialt,jazi))   ! points towards the sun
+                ycos_2 = max(1. - xcos**2 - zcos**2,0.)
+                ycos = sqrt(ycos_2)             ! perpendicular to xcos and zcos
+                x1 = earth_radius - dist_pp_plane
+!               y1 = 0.
+!               x3 = 0.           
+!               y3 = 0.
+                dist_ray_plane = linecylp(xcos,ycos,x1,earth_radius) 
+            endif
+
+            skyref = .000001 ! related to airglow / surface lighting?
+
+            if(.true.)then ! assume part of atmosphere is illuminated by the sun
+!             dist_ray_plane = dist_pp_plane / sind(angle_plane) ! distance along ray
               bterm = dist_ray_plane**2 / (2. * earth_radius)
               ht_ray_plane = dist_ray_plane * sind(altray) + bterm
               if(ht_ray_plane .le. 99000.)then
@@ -178,6 +211,18 @@
               else
                 patm_ray_plane = 0.
                 aero_ray_plane = 0.
+              endif
+
+              if(l_solar_eclipse .eqv. .true.)then ! get lat/lon of light ray hitting shadow cylinder
+                  call sun_eclipse_parms(i4time,rlat,rlon,htmsl,idebug &
+                                        ,altray,view_azi_deg,dist_ray_plane &
+                                        ,earth_radius,elgms,emag,eobsc)
+                  ecl_int = 1.0 - eobsc
+                  if(idebug .ge. 1)then
+                      write(6,*)' eclipse elg,emag,eobs ',elgms,emag,eobsc
+                  endif
+              else
+                  ecl_int = 1.0          
               endif
 
               if(.false.)then ! This appears to become inaccurate near/below the horizon
@@ -202,9 +247,11 @@
                   frac_aero_lit = aero_ray_plane / aod_ray
                   aod_lit = aod_path * frac_aero_lit
                   aod_unlit = aod_path * (1.-frac_aero_lit)
-                  arg = aod_lit * 0.5 * (1. - cosd(elong(ialt,jazi)))
-                  aero_red = (1.0 - exp(-40. * aod_lit)) &
-                           * 0.5 * (1. - cosd(elong(ialt,jazi))) 
+!                 arg = aod_lit * 0.5 * (1. - cosd(elong(ialt,jazi)))
+!                 Note: is the 40. factor too large?
+                  aero_red = (1.0 - exp(-40. * aod_lit)) &       ! aod factor   (0-1)
+                           * 0.5 * (1. - cosd(elong(ialt,jazi)))&! elong factor (0-1) 
+                           * min(-sol_alt*0.7,1.0)               ! solalt factor(0-1)
               endif
 
               airmass_to_twi = airmass_unlit
@@ -227,7 +274,7 @@
               else ! experimental absolute illumination (nl)
                 rayleigh = rayleigh_pf(elong(ialt,jazi))  ! phase function
                 clear_int = &
-                   max(twi_int*rayleigh*brt(airmass_lit)*twi_trans_c(1) &
+                  max(twi_int*ecl_int*rayleigh*brt(airmass_lit)*twi_trans_c(1) &
                                                               ,1e3)       
                 if(idebug .ge. 2)then
                   write(6,91)elong(ialt,jazi) &
@@ -243,7 +290,7 @@
               airmass_lit = 0.
               airmass_unlit = 0.
               airmass_tot = 0.
-              clear_intf = .00001                                         
+              clear_intf = skyref
               clear_int  = clear_intf * twi_int                           
               aod_lit = 0.
               aod_unlit = 0.
@@ -262,27 +309,30 @@
             hue_coeff = max(1.0 + min((sol_alt+3.),0.) /  6.,0.2)
 
 !           clear_int here represents intensity at the zenith
-            if(clear_intf .gt. .0001)then      ! mid twilight
+            if(clear_intf .gt. skyref*10.)then      ! mid twilight
                 sat_twi_ramp = 1.0
                 rint_alt_ramp = 1.0
-            elseif(clear_intf .le. .00001)then ! night or late twilight
+            elseif(clear_intf .le. skyref)then ! night or late twilight
                 sat_twi_ramp = 0.6
                 am_term = min(sqrt(airmass_g),5.)
                 rint_alt_ramp = am_term                  
-                clear_intf = .00001
+                clear_intf = skyref
                 clear_int  = clear_intf * twi_int                           
             else                              ! late twilight
-                frac_twi_ramp = (clear_intf - .00001) / .00009
-                sat_twi_ramp = 0.6 + 0.4 * frac_twi_ramp
+                frac_twi_ramp = (clear_intf - skyref) / (9.*skyref)
+                sat_twi_ramp = 0.6 + 0.4 * scurve(frac_twi_ramp)
                 am_term = min(sqrt(airmass_g),5.)
                 rint_alt_ramp = (1.0       *        frac_twi_ramp) &
                               +  am_term   * (1.0 - frac_twi_ramp)
             endif
 
 !           HSI
+
+!           Hue
 !           Hue tends to red with high airmass and blue with low airmass
 !           Higher exp coefficient (or low hue) makes it more red
 !           Also set to blue with high alt or high sun (near horizon)
+!           Aero_red reddens due to aerosols (if value is 1)
 !           hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
             huea = exp(-airmass_unlit*0.12*hue_coeff) ! 0:R 1:B 2:G 3:R
             hue = min(huea,(1.0 - aero_red))
@@ -301,7 +351,8 @@
 
             clear_rad_c(1,ialt,jazi) = hue2                          ! Hue
 
-            if(hue2 .gt. 2.0)then ! Red End
+!           Saturation
+            if(hue2 .gt. 2.0)then ! Red End                          
                 sat_arg = 0.7*abs((hue2-2.0))**1.5
             else                  ! Blue End
                 sat_arg = 0.4*abs((hue2-2.0))**1.5
@@ -310,6 +361,7 @@
                                            * sat_ramp &                 
                                            * sat_twi_ramp 
 
+!           Intensity
             clear_rad_c(3,ialt,jazi) = clear_int * rint_alt_ramp     ! Int
 
             if(clear_rad_c(3,ialt,jazi) .lt. .0000099)then
@@ -324,8 +376,9 @@
                           ,hue_coeff,huea,hue  
 101           format('airmass_lit/tot/unlit/huec/huea/hue',6f9.5)
               write(6,102)aod_lit,aod_unlit,aero_red &         
-                         ,aero_red/clear_intf                 
-102           format('aod_lit/unlit/red/rat',4f9.5)
+                         ,aero_red/clear_intf &                
+                         ,sat_arg,sat_ramp,sat_twi_ramp
+102           format('aod_lit/unlit/red/rat/sat',4f9.5,2x,3f9.5)
               rmaglim = b_to_maglim(clear_rad_c(3,ialt,jazi))
             endif
 
@@ -416,3 +469,4 @@
 
         return
         end
+        
