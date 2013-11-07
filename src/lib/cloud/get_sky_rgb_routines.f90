@@ -15,7 +15,7 @@
 
         rint_alt_ramp = sqrt(airmass)
 
-        glow_lp = 500. ! from city lights (nL)
+        glow_lp = 1000. ! from city lights (nL)
         glow_alt = glow_lp * rint_alt_ramp
 
 !       HSI
@@ -34,7 +34,7 @@
         real azi_a(minalt:maxalt,minazi:maxazi)
         real glow_stars(minalt:maxalt,minazi:maxazi) ! log nL
 
-        parameter (nstars = 320)
+        parameter (nstars = 2000)
         real dec_d(nstars),ra_d(nstars),mag_stars(nstars)
         real alt_stars(nstars),azi_stars(nstars),ext_mag(nstars),lst_deg
         real*8 angdif,jed,r8lon,lst,has(nstars),phi,als,azs,ras,x,y,decr
@@ -57,7 +57,7 @@
         write(6,*)' sidereal time (deg) = ',lst_deg               
 
 !       Obtain stars data
-        call read_stars(nstars,ns,dec_d,ra_d,mag_stars,starnames)
+        call read_bsc(nstars,ns,dec_d,ra_d,mag_stars,starnames)
 
         do is = 1,ns        
           RAS = ra_d(is) * rpd
@@ -108,9 +108,9 @@
         do ialt = minalt,maxalt
         do jazi = minazi,maxazi
 
-            size_glow_sqdg = 1.0  ! alt/az grid
-            size_glow_sqdg = 0.1  ! final polar kernel size
-            size_glow_sqdg = 0.3  ! empirical middle ground 
+            size_glow_sqdg = 0.5  ! alt/az grid
+            size_glow_sqdg = 0.1  ! final polar kernel size?
+            size_glow_sqdg = 0.5  ! empirical middle ground 
 
             alt = alt_a(ialt,jazi)
             azi = azi_a(ialt,jazi)
@@ -130,7 +130,8 @@
 !                   glow_stars(ialt,jazi) = 5.0 - (mag_stars(is)+ext_mag(is))*0.4
 
                     glow_nl = v_to_b(rmag_per_sqarcsec)
-                    glow_stars(ialt,jazi) = log10(glow_nl)             
+!                   glow_stars(ialt,jazi) = log10(glow_nl)             
+                    glow_stars(ialt,jazi) = glow_stars(ialt,jazi) + log10(glow_nl)             
 
                     if(is .le. 50 .AND. abs(azi_stars(is)-azi) .le. 0.5)then
                         write(6,91)is,rmag_per_sqarcsec,delta_mag,glow_nl,glow_stars(ialt,jazi)
@@ -190,6 +191,79 @@
         ns = is
 
         write(6,*)' read_stars completing with # stars of ',ns
+
+        return
+        end
+
+        subroutine read_bsc(nstars,ns,dec_d,ra_d,mag_stars,starnames)
+
+!       http://tdc-www.harvard.edu/catalogs/bsc5.html
+
+        real dec_d(nstars),ra_d(nstars),mag_stars(nstars)
+        character*20 starnames(nstars)
+
+        character*150 static_dir,filename
+        character*120 cline
+        character*1 c1_dec
+
+        call get_directory('static',static_dir,len_dir)
+        filename = static_dir(1:len_dir)//'/bsc5.dat'          
+
+        is = 0
+        open(51,file=filename,status='old')
+1       read(51,2,err=3,end=9)cline
+2       format(a)
+3       is = is + 1
+!       write(6,*)cline
+
+        if(is .le. 0)then
+            do ic = 1,80
+                write(6,*)' char ',ic,cline(ic:ic)
+            enddo ! ic
+        endif
+
+        read(cline,4,err=5)ih,im,c1_dec,id,idm,mag_stars(is)
+4       format(75x,i2,i2,4x,a1,i2,i2,14x,f5.0)
+5       continue
+!       read(cline(66:70),*,err=6)mag_stars(is)
+6       continue
+
+!       Convert coordinates
+        if(c1_dec .eq. '+')then
+            rsign = 1.0
+        else
+            rsign = -1.0
+        endif
+        dec_d(is) = rsign * (float(id) + float(idm)/60.)
+        ra_d(is) = float(ih)*15. + float(im)/4.
+
+        starnames(is) = cline(5:14) 
+
+        if(dec_d(is) .eq. 0. .and. ra_d(is) .eq. 0)then ! QC
+            is = is - 1
+            iqc = 0
+        else
+            iqc = 1
+        endif
+
+        if(mag_stars(is) .lt. 2.0 .and. iqc .eq. 1)then ! magnitude limit
+!           write(6,*)' name is: ',
+!           write(6,*)' mag string is: ',cline(91:95)
+            write(6,13)is,starnames(is),ih,im,dec_d(is),ra_d(is),mag_stars(is)
+13          format(i4,1x,a10,' ih/im',2i4,2f7.2,f7.1)
+        endif
+
+        if(mag_stars(is) .gt. 5.0)then ! magnitude limit
+            is = is - 1
+        endif
+
+        goto 1
+
+9       close(51)
+
+        ns = is
+
+        write(6,*)' read_bsc completing with # stars of ',ns
 
         return
         end
