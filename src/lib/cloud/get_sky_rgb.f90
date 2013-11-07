@@ -10,13 +10,15 @@
                                moon_alt,moon_az,moon_mag, &
                                sky_rgb)                                 ! O
 
-        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht
+        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl
         include 'trigd.inc'
 
 !       Statement functions
         addlogs(x,y) = log10(10.**x + 10.**y)
         trans(od) = exp(-od)
         brt(a,ext) = 1.0 - exp(-a*ext)
+        rad_to_counts(rad) = (log10(rad)-7.3)*100.
+        counts_to_rad(counts) = 10.**((counts/100.)+7.3)
 
         include 'rad.inc'
 
@@ -55,6 +57,8 @@
         write(6,*)' moon alt/az/mag = ',moon_alt,moon_az,moon_mag
 
         idebug_a = 0
+
+        htmsl = psatoz(patm*1013.25)
 
         if(sol_alt .le. 0.)then
 
@@ -124,7 +128,7 @@
             rog_sun = 1.
         endif
         write(6,5)sol_alt_red_thr,od_atm_a,am,rob_sun,rog_sun
-5       format(' sol_alt_red_thr/od_atm_a/am/rob_sun/rog_sun = ',5f9.3)
+5       format('  sol_alt_red_thr/od_atm_a/am/rob_sun/rog_sun = ',5f9.3)
 
 !       Grnness section (clear sky at low solar altitudes)      
         sol_alt_grn_thr = 10.0                       
@@ -180,6 +184,8 @@
                      ,1,ni,1,nj,idebug_a &                       ! I
                      ,sol_alt,sol_az,alt_a,azi_a &               ! I
                      ,earth_radius,patm,od_atm_a,aero_scaleht &  ! I
+                     ,htmsl,redp_lvl &                           ! I
+                     ,.false.,i4time,rlat,rlon &                 ! I
                      ,clear_rad_c,elong_a                     )  ! O
 
             write(6,*)' range of clear_rad_c(2) is ',minval(clear_rad_c(2,:,:)),maxval(clear_rad_c(2,:,:))
@@ -275,7 +281,7 @@
               rintensity = rintensity * (trans_c/trans_c(1))**0.25 ! 0.45
 
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
-              glow_cld_nt = log10(5000.) ! 10 * clear sky zenith value (log nl)
+              glow_cld_nt = log10(10000.) ! 10 * clear sky zenith value (log nl)
               glow_cld = addlogs(glow_cld_nt,glow_secondary_cld) ! 2ndary sct
 
               glow_twi = glow(i,j) + log10(clear_rad_c(3,i,j)) ! phys val
@@ -382,7 +388,8 @@
 !             rintensity_glow = min(rintensity_glow*star_ratio,255.)              
               call hsl_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
 !             if(idebug .eq. 1)then
-!                 write(6,*)'Clr RGB = ',nint(clr_red),nint(clr_grn),nint(clr_blu),rintensity_floor, rintensity_glow
+!                 write(6,51)glow_tot, argref, rintensity_glow,nint(clr_red),nint(clr_grn),nint(clr_blu)
+51                format('Twi Clr RGB = ',3f9.3,3i5)
 !             endif
 !             clr_red = rintensity_glow * clear_rad_c(2,i,j)
 !             clr_blu = rintensity_glow * clear_rad_c(3,i,j)
@@ -421,7 +428,7 @@
           endif
 
 !         Apply redness to clear sky / sun
-!         Define area around the sun that is redenned since scattering by aerosols
+!         Define area around the sun that is reddenned since scattering by aerosols
 !         is dominant. Try and preserve both original luminance and desired color         
           if(od_atm_a .ge. 0.03)then
               elong_red = 20.0
@@ -430,21 +437,28 @@
           else
               elong_red = 1. + 1900. * (od_atm_a-.02)
           endif
-          if(sol_alt .gt. 0)elong_red = min(elong_red,10.)
+!         if(sol_alt .gt. 0)then
+          if(.false.)then
+              elong_red = min(elong_red,10.)
+              elong_red = min(elong_red,1.5 + sol_alt * 5.)
+          else
+              elong_red = 0.75 ! only redden solar disk
+          endif
           if(elong_a(i,j) .le. elong_red)then
 !         if(.false.)then                        
               clr_luma1 = .30 * clr_red + .59 * clr_grn + .11 * clr_blu
               red_elong = ((elong_red - elong_a(i,j)) / elong_red)**2
-!             write(6,*)' alt/elong/redelong: ',alt_a(i,j),elong_a(i,j),red_elong
+              red_elong = 1.0
               red_sun = 255.
               clr_red = clr_red*(1.-red_elong) +  red_sun * red_elong
-              clr_grn = clr_grn*(1.-red_elong) + (red_sun / (rog_sun**(0.45))) * red_elong                   
-              clr_blu = clr_blu*(1.-red_elong) + (red_sun / (rob_sun**(0.45))) * red_elong
+              clr_grn = clr_grn*(1.-red_elong) + (red_sun / (rog_sun**(0.25))) * red_elong                   
+              clr_blu = clr_blu*(1.-red_elong) + (red_sun / (rob_sun**(0.25))) * red_elong
               clr_luma2 = .30 * clr_red + .59 * clr_grn + .11 * clr_blu
               ratio_luma = min(clr_luma1 / clr_luma2,255. / clr_red)
               clr_red = clr_red * ratio_luma               
               clr_grn = clr_grn * ratio_luma              
               clr_blu = clr_blu * ratio_luma               
+              write(6,*)' alt/azi/elong_red/elong/redelong: ',alt_a(i,j),azi_a(i,j),elong_red,elong_a(i,j),red_elong,nint(clr_red),nint(clr_grn),nint(clr_blu)
           endif
 
 !                     Rayleigh  Ozone   Mag per optical depth            
@@ -478,9 +492,12 @@
               rtopo_grn = 120. * topo_swi_frac * (topo_albedo(2,i,j)/.15)**0.45
               rtopo_blu = 120. * topo_swi_frac * (topo_albedo(3,i,j)/.15)**0.45
 
-              sky_rgb(0,I,J) = nint(rtopo_red*topo_visibility + sky_rgb(0,I,J)*(1.0-topo_visibility) )
-              sky_rgb(1,I,J) = nint(rtopo_grn*topo_visibility + sky_rgb(1,I,J)*(1.0-topo_visibility) )
-              sky_rgb(2,I,J) = nint(rtopo_blu*topo_visibility + sky_rgb(2,I,J)*(1.0-topo_visibility) )
+              sky_rgb(0,I,J) = nint(rad_to_counts(counts_to_rad(rtopo_red)*topo_visibility &
+                             + counts_to_rad(sky_rgb(0,I,J))*(1.0-topo_visibility) ) )
+              sky_rgb(1,I,J) = nint(rad_to_counts(counts_to_rad(rtopo_grn)*topo_visibility &
+                             + counts_to_rad(sky_rgb(1,I,J))*(1.0-topo_visibility) ) )
+              sky_rgb(2,I,J) = nint(rad_to_counts(counts_to_rad(rtopo_blu)*topo_visibility &
+                             + counts_to_rad(sky_rgb(2,I,J))*(1.0-topo_visibility) ) )
           else
               od_2_topo = 0.
           endif
