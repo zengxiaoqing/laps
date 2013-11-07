@@ -70,7 +70,7 @@
         character*11 c_cape
         character*20 c20_x, c20_y
         character*255 new_dataroot
-        logical l_latlon, l_parse, l_plotobs
+        logical l_latlon, l_parse, l_plotobs, l_solar_eclipse
         logical l_idl /.false./
         logical l_cyl               
         logical l_polar               
@@ -736,6 +736,22 @@
           write(6,24)alm,azm,elgms,moon_mag 
 24        format('  alt/az/elg/mag = ',4f8.2)
 
+!         Consider passing 'topo_flag' into 'sun_moon' to consider either
+!         solar or lunar eclipses
+!         http://www.jgisen.de/eclipse
+          if(elgms .lt. 0.5)then
+              emag = 1. - (2. * elgms)
+              eobs = emag**1.35 ! valid with sun & moon of equal radius
+              write(6,*)' NOTE: Solar Eclipse Conditions: mag/obsc = '
+     1                  ,emag,eobs
+              l_solar_eclipse = .true.
+          elseif(elgms .lt. 0.6)then
+              write(6,*)' NOTE: Possible Solar Eclipse Conditions'
+              l_solar_eclipse = .true.
+          else
+              l_solar_eclipse = .false.
+          endif
+
 !         alm = -90.          ! Test for disabling
 !         moon_mag = -4.0    ! Test for disabling
           moon_mag_thr = -6.0
@@ -772,6 +788,7 @@
      1                     ,alt_norm                             ! I
      1                     ,moon_alt_2d,moon_azi_2d              ! I
      1                     ,moon_mag,moon_mag_thr                ! I
+     1                     ,l_solar_eclipse,rlat,rlon            ! I
      1                     ,minalt,maxalt,minazi,maxazi          ! I
      1                     ,alt_scale,azi_scale                  ! I
      1                     ,grid_spacing_m,r_missing_data)       ! I
@@ -874,22 +891,18 @@
           write(53,*)a9time
           close(53)
 
-!         Write lat/lon label
-          open(54,file='label2.'//clun,status='unknown')
-          write(54,54)soundlat(iloc),soundlon(iloc)
-          close(54)
- 54       format(2f8.2)
-
-          if(mode_polar .eq. 1)then
-            continue
-          endif ! l_polar
-
-!         if((l_cyl .eqv. .true.) .OR. (mode_polar .eq. 2))then              
           if(.true.)then
 
 !           Get all sky for cyl   
             ni_cyl = maxalt - minalt + 1
             nj_cyl = maxazi - minazi + 1
+
+!           Write lat/lon and other info for label
+            open(54,file='label2.'//clun,status='unknown')
+            write(54,54)soundlat(iloc),soundlon(iloc),
+     1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl
+            close(54)
+ 54         format(2f8.2/6i8)
 
             I4_elapsed = ishow_timer()
 
