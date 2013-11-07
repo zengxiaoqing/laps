@@ -1,4 +1,274 @@
 
+      subroutine sun_eclipse_parms(i4time,rlat_r4,rlon_r4,ht,idebug
+     1                            ,alt_r4,azi_r4,dist_m_r4
+     1                            ,earth_radius,elgms_r4,r4_mag,r4_obsc)
+
+      IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
+      include '../../include/astparms.for'
+
+      ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)
+     .-3.1415926535897932D0
+
+      ATAN3(X,Y)=DMOD((DATAN2(X,Y)+6.2831853071796D0),6.2831853071796D0)
+
+      CHARACTER BLANK,TWI,MOON,RISE,SET,signm,signs
+      DIMENSION MNTH(12)
+      REAL*8 M,MAG,LON,LHMSH,
+     1  MXG,MYG,MZG,MXR,MYR,MZR,LAT
+      REAL*8 NX,NY,NZ,EX,EY,EZ,LST
+      INTEGER RAH,DECD,FRAME,ELGMC,ALTDK1
+      Character*5 CTT,CTR,CTS,BTT,BMT,C5_BLANK
+      character c8_appm*8,c8_apps*8
+      DATA MODE/1/,IFL/0/,TIME/0.0D0/,TIMEOL/0.D0/,IPRINT/1/
+      DATA FRAME/2/
+      DATA RISE/'R'/,SET/'S'/,BLANK/' '/,C5_BLANK/'     '/
+      DATA MNTH/3HJAN,3HFEB,3HMAR,3HAPR,3HMAY,3HJUN,3HJUL,3HAUG,3HSEP
+     .,3HOCT,3HNOV,3HDEC/
+
+      integer i4time,istatus
+      integer i4time_last /0/
+      real rlat_r4,rlon_r4,alt_r4,azi_r4,dist_m_r4
+      real alm_r4,azm_r4,elgms_r4,r4_mag,ht,earth_radius,r4_obsc
+
+      save SXG,SYG,SZG,MXG,MYG,MZG,i4time_last,ET,UT,LST
+      save NX,NY,NZ,EX,EY,EZ,ZNX,ZNY,ZNZ
+
+      n_loc = 1
+
+      if(idebug .ge. 1)then
+         write(6,*)
+         write(6,*)' subroutine sun_eclipse_parms...'
+      endif
+
+      rlon = rlon_r4
+
+      if(i4time .ne. i4time_last)then
+        i4time_last = i4time
+ 
+        call i4time_to_jd(i4time,tb,istatus)
+        tf = tb
+
+        ti=ti/1440.d0 ! input in minutes
+C
+C ENTER LOOPS
+        L = 1
+        RSN = 1.0
+        ITER=3
+
+C
+C ENTER TIME LOOPS
+        t = tb
+
+        DELTAT=delta_t(T)
+        UT = T
+        ET = UT + DELTAT
+
+        call sidereal_time(UT,rlon,LST)
+
+        do 1000 i = 1,iter
+C
+C CALCULATE POSITION OF EARTH (1950 coordinates - antedated)
+840       continue
+!         CALL POSINT(ET-RSN/C,1,SXG,SYG,SZG)
+          CALL POSIN(ET-RSN/C,1,SXG,SYG,SZG)
+          call xyz_to_polar_r(-SXG,-SYG,-SZG,DECS,RAS,RSN)
+C         write(13,843)R,SI
+843       FORMAT(6F10.6)
+
+1000    CONTINUE
+C
+C CALCULATE COORDINATES OF SUN (coordinates of date)
+        CALL PRECES(T1950,ET,SXG,SYG,SZG,1)
+C
+C CALCULATE POSITION OF MOON (topocentric coordinates of date)
+        CALL MOON_BRWN(ET,MXG,MYG,MZG)
+
+        write(6,*)
+        write(6,*)' Sun coords  = ',SXG,SYG,SZG
+        write(6,*)' Moon coords = ',MXG,MYG,MZG
+
+!       Calculate Eclipse Conditions at each grid point
+        phi = rlat_r4*rpd
+        topo_flag = 1.0 + ht/earth_radius
+
+        CALL TOPO(phi,rlon,UT,TX,TY,TZ)
+
+        TX = TX * topo_flag
+        TY = TY * topo_flag
+        TZ = TZ * topo_flag
+
+        TMAG = SQRT(TX**2 + TY**2 + TZ**2)
+
+!       Get direction cosines based on alt/azi (north along the horizon)
+!       RA is 180 degrees from RA of meridian
+!       DEC is 90 - latitude
+        RAN = 180. + LST
+        DECN = 90. - rlat_r4       
+        NX = COSD(DECN) * COSD(RAN)
+        NY = COSD(DECN) * SIND(RAN)
+        NZ = SIND(DECN)
+
+!       Direction cosines of zenith
+        ZNX = TX / TMAG
+        ZNY = TY / TMAG
+        ZNZ = TZ / TMAG
+
+!       East horizon is N horizon cross product with zenith unit vector
+        call crossproduct(NX,NY,NZ,ZNX,ZNY,ZNZ,EX,EY,EZ)
+
+        write(6,*)' Zenith unit vector    ',ZNX,ZNY,ZNZ
+        write(6,*)' N horizon unit vector ',NX,NY,NZ
+        write(6,*)' E horizon unit vector ',EX,EY,EZ
+
+      endif ! new time
+
+      SDIST_M = dist_m_r4 
+      SDIST_AU = (SDIST_M / earth_radius) * TMAG
+
+      SINALT = sind(alt_r4)
+      COSALT = cosd(alt_r4)
+      SINAZI = sind(azi_r4)
+      COSAZI = cosd(azi_r4)
+
+!     Component of ray along northern horizon
+      RX = TX + SDIST_AU * COSAZI * COSALT * NX
+      RY = TY + SDIST_AU * COSAZI * COSALT * NY
+      RZ = TZ + SDIST_AU * COSAZI * COSALT * NZ
+
+!     Component of ray along eastern horizon
+      RX = RX + SDIST_AU * SINAZI * COSALT * EX
+      RY = RY + SDIST_AU * SINAZI * COSALT * EY
+      RZ = RZ + SDIST_AU * SINAZI * COSALT * EZ
+
+!     Component of ray along zenith
+      RX = RX + SDIST_AU * SINALT * ZNX
+      RY = RY + SDIST_AU * SINALT * ZNY
+      RZ = RZ + SDIST_AU * SINALT * ZNZ
+
+      if(idebug .ge. 1)then
+         write(6,*)' rlat,rlon,UT,ht,topo_flag = '
+     1              ,rlat_r4,rlon,UT,ht,topo_flag
+         write(6,*)' SDIST_M,SDIST_AU = ',SDIST_M,SDIST_AU
+         write(6,*)' Topo coords = ',TX,TY,TZ
+         write(6,*)' Ray  coords = ',RX,RY,RZ
+      endif
+
+      SXR = SXG - RX
+      SYR = SYG - RY
+      SZR = SZG - RZ
+
+      call xyz_to_polar_r(-SXR,-SYR,-SZR,DECS,RAS,RSN)
+      HAS=angdif(RAMR,RAS)
+!     write(13,*)SZG,rsn,DECS/rpd,RAS/rpd,has/rpd
+
+C
+C CALCULATE ALT AND AZ of SUN
+      call equ_to_altaz_r(DECS,HAS,PHI,ALS,AZS)
+      als = als/rpd
+      call refract(als,apps,pres)
+
+      if(als .lt. -1.0)then
+          c8_apps = '        '
+      else
+          write(c8_apps,1002)apps
+1002      format(f8.2)
+      endif
+
+      azs = azs/rpd
+
+      MXR=MXG-RX
+      MYR=MYG-RY
+      MZR=MZG-RZ
+      call xyz_to_polar_r(MXR,MYR,MZR,DECM,RAM,RMN)
+
+      HAM=angdif(RAMR,RAM)
+
+      CALL anglevectors(-MXR,-MYR,-MZR,SXR,SYR,SZR,ELGARG)
+      ELGMST = ELGARG/RPD
+
+      CALL anglevectors(-MXG,-MYG,-MZG,SXG,SYG,SZG,ELGARG)
+      ELGMSG = ELGARG/RPD
+
+      if(idebug .ge. 1)then
+         write(6,*)' DECS / RAS / HAS = '
+     1              ,DECS/rpd,RAS/rpd,HAS/rpd
+         write(6,*)' DECM / RAM / HAM / ELSMST = '
+     1              ,DECM/rpd,RAM/rpd,HAM/rpd,ELGMST
+      endif
+
+!     Calculate Apparent Positions
+      call equ_to_altaz_r(DECM,HAM,PHI,ALM,AZM)
+
+      alm = alm/rpd
+      call refract(alm,appm,pres)
+
+      if(alm .lt. -1.0)then
+            c8_appm = '       '
+      else
+          write(c8_appm,1001)appm
+1001      format(f8.2)
+      endif
+
+      azm = azm/rpd
+
+      CALL CJYMD(UT,IYEAR,MONTH,DATE)
+
+      idt = int(date)
+      frac = (date - int(date)) * 2.d0 * pi
+      CALL CLOCK(frac,CTT)
+
+      call coords(decm,signm,dec_dg_m,dec_mn_m,dec_sc_m,
+     1            ram,       ra_hr_m, ra_mn_m, ra_sc_m)
+
+      call coords(decs,signs,dec_dg_s,dec_mn_s,dec_sc_s,
+     1            ras,       ra_hr_s, ra_mn_s, ra_sc_s)
+
+
+      alm_r4 = alm
+      azm_r4 = azm
+!     elgms_r4 = 10.
+      elgms_r4 = elgmst
+
+      phase_angle_deg = 180. - elgmst ! approximate
+
+      call phase_func_moon(phase_angle_deg,mode,area_rel,area_es
+     1                    ,phase_corr_moon)
+
+      r4_mag = -12.74 + phase_corr_moon
+
+      if(.true.)then
+
+!         Calculate Solar Eclipse Magnitude
+!         call magnitude(0,0,SXT,SYT,SZT,0.,0.,0.,amag
+!    1                                          ,diam_sun)
+!         call magnitude(1,1,SXT,SYT,SZT,
+!    1      SXG+MXG,SYG+MYG,SZG+MZG,amag,diam_moon)
+
+          diam_sun = 1800.
+          diam_moon = 1800.
+
+          overlap_sec = -(elgmst * 3600. - 0.5 * (diam_sun + diam_moon))
+          if(overlap_sec .gt. 0.)then
+              solar_eclipse_magnitude = overlap_sec / diam_sun
+              r4_obsc = solar_eclipse_magnitude**1.35
+          else
+              solar_eclipse_magnitude = 0.
+              r4_obsc = 0.
+          endif
+
+          r4_mag = solar_eclipse_magnitude
+  
+          if(idebug .ge. 1)then
+             write(6,*)' diam_sun,diam_moon,overlap_sec ',
+     1                   diam_sun,diam_moon,overlap_sec
+             write(6,*)
+          endif
+
+      endif ! .false.
+C
+      RETURN
+      END
+
       subroutine sun_moon(i4time,lat_2d,lon_2d,ni,nj,is,js,alm_r4,azm_r4
      1                   ,elgms_r4,r4_mag)                                     
 
@@ -148,7 +418,6 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
 !     RAM = ?
 !     CALL PRECES(2433282.423357D0,ET,DECM,RAM,RDUM,2)
 
-
       HAM=angdif(RAMR,RAM)
 
       CALL anglevectors(-MXT,-MYT,-MZT,SXT,SYT,SZT,ELGARG)
@@ -157,7 +426,7 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
       CALL anglevectors(-MXG,-MYG,-MZG,SXG,SYG,SZG,ELGARG)
       ELGMSG = ELGARG/RPD
 
-      write(6,*)' DEC / RA / HA = ',DECM/rpd,RAM/rpd,HAM/rpd
+      write(6,*)' DECM / RAM / HAM = ',DECM/rpd,RAM/rpd,HAM/rpd
 
 !     Calculate Apparent Positions
       call equ_to_altaz_r(DECM,HAM,PHI,ALM,AZM)
