@@ -14,6 +14,7 @@
      1                           ,alt_norm                             ! I
      1                           ,moon_alt,moon_azi                    ! I
      1                           ,moon_mag,moon_mag_thr                ! I
+     1                           ,l_solar_eclipse,rlat,rlon            ! I
      1                           ,minalt,maxalt,minazi,maxazi          ! I
      1                           ,alt_scale,azi_scale                  ! I
      1                           ,grid_spacing_m,r_missing_data)       ! I
@@ -70,6 +71,7 @@
         real obj_azi(ni,nj)
 
 !       logical l_process(minalt:maxalt,minazi:maxazi)
+        logical l_solar_eclipse
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         real elong(minalt:maxalt,minazi:maxazi)
@@ -149,8 +151,10 @@
         topo_max_ang = 45.0
         topo_max_ht = maxval(topo_a)
 
+!       Relative values using constants from 'module_cloud_rad.f90'
+!       Values are 1.5 / (rho * reff)
         cond_3d = clwc_3d +        cice_3d * 0.5 
-     1          + rain_3d * 0.02 + snow_3d * 0.05
+     1          + rain_3d * 0.02 + snow_3d * 0.0714
 
         ri = i
         rj = j
@@ -420,12 +424,6 @@
                         dxy1_h = (-sqrt(discriminant) - bterm) 
      1                                           / (2.*aterm)
                     endif
-                    if(.false.)then
-                        argd1 = ( sqrt(discriminant) - bterm) 
-     1                                           / (2.*aterm)
-                        argd2 = (-sqrt(discriminant) - bterm) 
-     1                                           / (2.*aterm)
-                    endif
                  
                     dxy2 = dxy1_h - dxy1_l
                   endif
@@ -460,6 +458,8 @@
                   ht_l = htstart + dz1_l
                   ht_h = htstart + dz1_h
 
+                  rk_h = r_missing_data
+
                   do k = 1,nk-1
                     if(heights_1d(k)   .le. ht_h .AND.
      1                 heights_1d(k+1) .ge. ht_h      )then
@@ -470,6 +470,8 @@
      1                       + (pres_1d(k+1)*frach)
                     endif
                   enddo
+
+                  rk = rk_h
 
                   airmass2 = (slant2 / 8000.) * (pr_h / pstd)
 
@@ -518,7 +520,8 @@
                 k_m = nint(rk_m)
 
                 if(rinew_h .ge. 1. .and. rinew_h .le. rni .AND. 
-     1             rjnew_h .ge. 1. .and. rjnew_h .le. rnj      )then 
+     1             rjnew_h .ge. 1. .and. rjnew_h .le. rnj .AND.
+     1             rk_h    .ne. r_missing_data )then 
 
 !                 Cloud present on any of 8 interpolation vertices
                   if(maxval(
@@ -568,7 +571,9 @@
                   aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
                   sum_aod = sum_aod + aero_ext_coeff * slant2
 
-                  clwc2alpha = 75. ! from clwc constants in 'get_cloud_rad'
+!                 Relative values using constants from 'module_cloud_rad.f90'
+!                 Values are 1.5 / (rho * reff)
+                  clwc2alpha = 75. 
 
                   if((cvr_path          .gt. 0.00) .AND.
      1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
@@ -662,7 +667,7 @@
                       endif
                   endif
                   ihit_bounds = 1
-                endif ! in horizontal domain
+                endif ! in horizontal/vertical domain
 
                 if(rk_h - rkstart .gt. 0.0)then
 !                 rkdelt = rkdelt2
@@ -703,11 +708,14 @@
 
 !        Get clear sky twilight brightness in ring
          if(sol_alt(i,j) .le. 0.)then
+!            write(6,*)' args: ',l_solar_eclipse,i4time,rlat,rlon
              call skyglow_phys(ialt,ialt,1,minazi,maxazi,jazi_delt
      1             ,minalt,maxalt,minazi,maxazi,idebug_a
      1             ,sol_alt(i,j),sol_azi(i,j),view_alt,view_az
      1             ,earth_radius,patm,aod_ray,aero_scaleht
-     1             ,clear_rad_c,elong                       )
+     1             ,htstart,redp_lvl                          ! I
+     1             ,l_solar_eclipse,i4time,rlat,rlon          ! I
+     1             ,clear_rad_c,elong                       ) ! O
          endif
 
          if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4)then ! fill missing azimuths
