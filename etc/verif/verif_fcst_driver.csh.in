@@ -4,15 +4,21 @@
 # arg2 is a dummy value for real-time cases - set to "archive" for archive cases
 # arg3 is the delay in hours for the modeltime relative to the crontime (e.g. 12.0) - set to dd-Mon-yyyy-hhmm for archive case
 # arg4 domain name (from the "on-the-fly" page)                                                  
-# arg5 is number of forecast times that have a valid analysis to compare with (excluding analysis, e.g. 2)
+# arg5 (optional) is number of forecast times that have a valid analysis to compare with (excluding analysis, e.g. 2)
 #      note this can represent a shorter time than what is in 'nest7grid.parms/model_fcst_len'
 
 setenv LAPSINSTALLROOT @prefix@
 setenv LAPS_DATA_ROOT $1
 setenv DOMAIN_NAME $4
 
-setenv N_VERIF_TIMES $5
-setenv NTIMES $5
+if ($5 == "") then
+    setenv N_VERIF_TIMES `@PERL@ @prefix@/etc/read_nl.pl -d $LAPS_DATA_ROOT -n nest7grid.parms -v n_verif_steps`
+    setenv NTIMES $N_VERIF_TIMES
+else
+    setenv N_VERIF_TIMES $5
+    setenv NTIMES $5
+endif
+
 setenv REPODIR $6
 
 @ NTIMES = $NTIMES + 1
