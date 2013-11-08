@@ -266,7 +266,16 @@
      1                          ,istatus)
                   if(istatus .ne. 1)then
                        write(6,*)' Error reading analyzed height '
-                       goto 990
+                       write(6,*)
+     1                 ' It will try reading forecasted height '
+   
+                       call get_lapsdata_3d(i4_initial,i4_valid
+     1                 ,ni,nj,nk,DIRECTORY,'HT ',units_2d,comment_2d
+     1                 ,heights_3d,istatus)
+                       if(istatus .ne. 1)then
+                            write(6,*)' Error reading fcst height '
+                            goto 990
+                       endif
                   endif
                   
                   write(6,*)' Reading 3D wind obs - i4_valid = '
@@ -298,7 +307,16 @@
      1                          ,istatus)
                   if(istatus .ne. 1)then
                        write(6,*)' Error reading analyzed height '
-                       goto 990
+                       write(6,*)
+     1                 ' It will try reading forecasted height '
+
+                       call get_lapsdata_3d(i4_initial,i4_valid
+     1                 ,ni,nj,nk,DIRECTORY,'HT ',units_2d,comment_2d
+     1                 ,heights_3d,istatus)
+                       if(istatus .ne. 1)then
+                            write(6,*)' Error reading fcst height '
+                            goto 990
+                       endif
                   endif
 
                   call get_pres_3d(i4_valid,ni,nj,nk,pres_3d,istatus)
