@@ -57,6 +57,7 @@
  i2_missing_data=-99,
  r_missing_data=+1e37,
  aod=0.05,
+ aero_scaleht=1500.,
  MAX_RADARS=13,        
  I_OFFSET_RADAR=0,
  ref_base=-10.,       
