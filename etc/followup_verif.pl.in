@@ -36,8 +36,6 @@ my @windowres;
 my $window;
 my $resolution;
 
-my @vars = qw(REF SWI S8A RTO);
-
 #my $fcstprd = "Radar_Comp";
 
 my @modelnames=&laps_tools::get_nl_value("nest7grid.parms","fdda_model_source",$dataroot);
@@ -176,6 +174,12 @@ my $modelrun;
 my $hhmm_modelrun;
 my $var;
 my $nimages;
+
+my $precip_var = "R03";
+
+my @vars = qw(REF SWI S8A RTO);
+push @vars, $precip_var;
+
 foreach $var (@vars) { 
 
   my $fcstprd;                   
@@ -202,6 +206,10 @@ foreach $var (@vars) {
   }elsif($var eq "RTO"){
     $fcstprd = "Precip";
     $analprd = "sto";
+    $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
+  }elsif($var eq "$precip_var"){
+    $fcstprd = "Precip_Inc";
+    $analprd = "ptt";
     $imageoutdir = "$dataroot/lapsprd/verif/$var/pt/";          
   }else{
     $fcstprd = "11u";
