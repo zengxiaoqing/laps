@@ -3856,9 +3856,10 @@ Outputs:
                                 mixing ratio if desired by dividing through
                                 by the air density. 
 
-	lil     2d grid		Vertically integrated cloud liquid water content
-                                (lwc). This is the total cloud liquid condensed
-                                in the column.
+	lil     2d grids	Vertically integrated cloud fields:
+                                Cloud Liquid (LIL)
+                                Cloud Ice (LIC)
+                                Cloud Optical Depth (COD)
 
 	lct     2d grid		SFC precip type (SPT,PTT) 
                                     Types are:
