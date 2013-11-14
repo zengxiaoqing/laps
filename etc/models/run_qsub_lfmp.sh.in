@@ -56,9 +56,9 @@ echo "nx = $nx"
 nodetype=hserial
 
 if test "$nx" > "1500"; then
-    vmem=11.0G
+    vmem=11000M
 else
-    vmem=6.0G
+    vmem=6000M
 fi
 echo "nodetype = $nodetype"
 
@@ -92,6 +92,7 @@ script=$modelroot/qsub_lfmpost.sh
 echo "#!/bin/sh --login"         > $script
 echo "#PBS -l procs=1"          >> $script
 echo "#PBS -l walltime=$wallclock:00" >> $script
+echo "#PBS -l vmem=$vmem"       >> $script
 echo "#PBS -m n"                >> $script
 echo "#PBS -A dlaps"            >> $script
 echo "#PBS -N lfmp_$run"        >> $script
