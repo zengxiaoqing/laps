@@ -92,7 +92,7 @@
         real, allocatable, dimension(:,:) :: blog_v_roll                         
         real, allocatable, dimension(:,:) :: blog_moon_roll                         
         real, allocatable, dimension(:,:) :: blog_sun_roll                         
-        real, allocatable, dimension(:,:) :: glow_stars                        
+        real, allocatable, dimension(:,:,:) :: glow_stars                        
         real, allocatable, dimension(:,:) :: elong_roll                        
         real, allocatable, dimension(:,:) :: airmass_2_cloud_3d
         real, allocatable, dimension(:,:) :: airmass_2_topo_3d                        
@@ -100,6 +100,7 @@
         real, allocatable, dimension(:,:,:) :: topo_albedo
         real, allocatable, dimension(:,:) :: aod_2_cloud
         real, allocatable, dimension(:,:) :: aod_2_topo
+        real, allocatable, dimension(:,:) :: aod_ill
         real, allocatable, dimension(:,:) :: r_cloud_trans ! sun to cloud transmissivity (direct+fwd scat)
         real, allocatable, dimension(:,:,:) :: cloud_rad_c ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real, allocatable, dimension(:,:,:) :: clear_rad_c ! clear sky illumination
@@ -625,6 +626,8 @@
                return
             endif
 
+            where(topo(:,:) .ge. 3200.); land_use(:,:) = 19.; end where
+
             write(6,*)' Set 3-color albedo based on land use'
             call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
 
@@ -658,6 +661,12 @@
      1                 ,aod_3d)
 
         I4_elapsed = ishow_timer()
+      
+        if(.false.)then
+            call get_cloud_rad(obj_alt,obj_azi,clwc_3d,cice_3d
+     1               ,rain_3d,snow_3d,topo_a
+     1               ,heights_3d,transm_3d,transm_4d,i,j,NX_L,NY_L,NZ_L)
+        endif
 
         do iloc = 1,nloc
           write(6,*)
@@ -690,7 +699,7 @@
           allocate(blog_v_roll(minalt:maxalt,minazi:maxazi))
           allocate(blog_moon_roll(minalt:maxalt,minazi:maxazi))
           allocate(blog_sun_roll(minalt:maxalt,minazi:maxazi))
-          allocate(glow_stars(minalt:maxalt,minazi:maxazi))
+          allocate(glow_stars(nc,minalt:maxalt,minazi:maxazi))
           allocate(elong_roll(minalt:maxalt,minazi:maxazi))
           allocate(airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi))
           allocate(airmass_2_topo_3d(minalt:maxalt,minazi:maxazi))
@@ -698,6 +707,7 @@
           allocate(topo_albedo(nc,minalt:maxalt,minazi:maxazi))
           allocate(aod_2_cloud(minalt:maxalt,minazi:maxazi))
           allocate(aod_2_topo(minalt:maxalt,minazi:maxazi))
+          allocate(aod_ill(minalt:maxalt,minazi:maxazi))
           allocate(r_cloud_trans(minalt:maxalt,minazi:maxazi))
           allocate(cloud_rad_c(nc,minalt:maxalt,minazi:maxazi))
           allocate(clear_rad_c(nc,minalt:maxalt,minazi:maxazi))
@@ -718,15 +728,20 @@
           rlon = lon(isound,jsound)
 
           write(6,*)' solar alt/az (2d array)',sol_alt_2d(isound,jsound)       
-     1                                        ,sol_azi_2d(isound,jsound)       
+     1                                        ,sol_azi_2d(isound,jsound) 
 
 !         Calculate solar position for all-sky point
-          call solar_position(soundlat(iloc),soundlon(iloc)
-     1                       ,i4time_solar,solar_alt     
-     1                       ,solar_dec,solar_ha)
-          call equ_to_altaz_d(solar_dec,solar_ha,soundlat(iloc)                 
-     1                                ,altdum,solar_az)               
-          if(solar_az .lt. 0.)solar_az = solar_az + 360.
+          if(.false.)then
+              call solar_position(soundlat(iloc),soundlon(iloc)
+     1                           ,i4time_solar,solar_alt     
+     1                           ,solar_dec,solar_ha)
+              call equ_to_altaz_d(solar_dec,solar_ha,soundlat(iloc)
+     1                           ,altdum,solar_az)               
+              if(solar_az .lt. 0.)solar_az = solar_az + 360.
+          else ! ensure consistency between both solar positions
+              solar_alt = sol_alt_2d(isound,jsound)
+              solar_az = sol_azi_2d(isound,jsound)              
+          endif
 
           write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
 
@@ -752,6 +767,8 @@
               l_solar_eclipse = .false.
           endif
 
+!         l_solar_eclipse = .false. ! test
+
 !         alm = -90.          ! Test for disabling
 !         moon_mag = -4.0    ! Test for disabling
           moon_mag_thr = -6.0
@@ -772,12 +789,14 @@
           enddo
 
 !         Get line of sight from isound/jsound
-          call get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d  ! I
+          call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
+     1                     ,heights_3d                           ! I
      1                     ,rain_3d,snow_3d                      ! I
      1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
      1                     ,topo_albedo_2d                       ! I
      1                     ,topo_swi,topo_albedo                 ! O
      1                     ,aod_ray,aod_2_cloud,aod_2_topo       ! O
+     1                     ,aod_ill,transm_obs                   ! O
      1                     ,r_cloud_3d,cloud_od                  ! O
      1                     ,r_cloud_trans,cloud_rad_c            ! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
@@ -914,20 +933,32 @@
      1                     ,glow_stars)                                  ! O
 
               write(6,*)' range of glow_stars (before) is',
-     1             minval(glow_stars),maxval(glow_stars)
+     1             minval(glow_stars(2,:,:)),maxval(glow_stars(2,:,:))
 
               write(6,*)' range of moonglow is',
      1             minval(blog_moon_roll),maxval(blog_moon_roll)
 
               write(6,*)' Moonglow is being added to starlight'       
-              glow_stars(:,:) = 
-     1              addlogs(glow_stars(:,:),blog_moon_roll(:,:))
+              do ic = 1,nc
+                glow_stars(ic,:,:) = 
+     1              addlogs(glow_stars(ic,:,:),blog_moon_roll(:,:))
+              enddo ! ic
 
               write(6,*)' range of glow_stars (after) is',
-     1             minval(glow_stars),maxval(glow_stars)
+     1             minval(glow_stars(2,:,:)),maxval(glow_stars(2,:,:))
             endif
 
             I4_elapsed = ishow_timer()
+
+            if(solar_alt .gt. 0.)then
+                call get_idx(solar_alt,minalt,alt_scale,ialt_sun)
+                call get_idx(solar_az ,minazi,azi_scale,jazi_sun)
+                ialt_sun = ialt_sun - minalt + 1
+                jazi_sun = jazi_sun - minazi + 1
+                write(6,*)' solar_alt,minalt,alt_scale = '
+     1                     ,solar_alt,minalt,alt_scale
+                write(6,*)' ialt_sun,jazi_sun = ',ialt_sun,jazi_sun
+            endif
 
             write(6,*)' call get_sky_rgb with cyl data'
             call get_sky_rgb(r_cloud_3d           ! cloud opacity
@@ -942,10 +973,12 @@
      1                    ,blog_moon_roll         ! moonglow
      1                    ,glow_stars             ! starglow
      1                    ,aod_ray 
+     1                    ,transm_obs             ! observer illumination
+     1                    ,ialt_sun,jazi_sun      ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo
-     1                    ,aod_2_cloud,aod_2_topo 
+     1                    ,aod_2_cloud,aod_2_topo,aod_ill 
      1                    ,alt_a_roll,azi_a_roll       
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
@@ -1011,6 +1044,7 @@
           deallocate(topo_albedo)
           deallocate(aod_2_cloud)
           deallocate(aod_2_topo)
+          deallocate(aod_ill)
           deallocate(r_cloud_trans)
           deallocate(cloud_rad_c)
           deallocate(clear_rad_c)
