@@ -11,11 +11,11 @@
 
         airmass_lit = 0.
         sat_ramp = 1.0
-        sat_twi_ramp = 0.6
+        sat_twi_ramp = 0.4
 
         rint_alt_ramp = sqrt(airmass)
 
-        glow_lp = 1000. ! from city lights (nL)
+        glow_lp = 500. ! from city lights (nL)
         glow_alt = glow_lp * rint_alt_ramp
 
 !       HSI
@@ -32,16 +32,18 @@
 
         real alt_a(minalt:maxalt,minazi:maxazi)
         real azi_a(minalt:maxalt,minazi:maxazi)
-        real glow_stars(minalt:maxalt,minazi:maxazi) ! log nL
+        real glow_stars(3,minalt:maxalt,minazi:maxazi) ! log nL
 
         parameter (nstars = 2000)
-        real dec_d(nstars),ra_d(nstars),mag_stars(nstars)
+        real dec_d(nstars),ra_d(nstars),mag_stars(nstars),bmv(nstars)
         real alt_stars(nstars),azi_stars(nstars),ext_mag(nstars),lst_deg
         real*8 angdif,jed,r8lon,lst,has(nstars),phi,als,azs,ras,x,y,decr
 
         character*20 starnames(nstars)
 
         ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
+!       addmags(a,b)=log10(10.**(-a*0.4) + 10.**(-b*0.4)) * (-2.5)
+        addlogs(x,y) = log10(10.**x + 10.**y)
 
         write(6,*)' subroutine get_starglow...'
         write(6,*)' lat/lon = ',rlat,rlon             
@@ -57,7 +59,7 @@
         write(6,*)' sidereal time (deg) = ',lst_deg               
 
 !       Obtain stars data
-        call read_bsc(nstars,ns,dec_d,ra_d,mag_stars,starnames)
+        call read_bsc(nstars,ns,dec_d,ra_d,mag_stars,bmv,starnames)
 
         do is = 1,ns        
           RAS = ra_d(is) * rpd
@@ -79,6 +81,7 @@
             write(6,*)' Call sun_planet for ',iobj
             call sun_planet(i4time,iobj,rlat,rlon,dec_d(ns),ra_d(ns),alt_stars(ns),azi_stars(ns),elgms_r4,mag_stars(ns))
             starnames(ns) = 'planet'
+            bmv(ns) = 0.
           endif
         enddo ! iobj
 
@@ -96,8 +99,8 @@
           endif
 
           if(is .le. 100 .OR. (is .gt. 100 .and. is .ge. ns-4))then
-            write(6,7)is,starnames(is),dec_d(is),ra_d(is),has(is)/rpd,alt_stars(is),azi_stars(is),mag_stars(is),ext_mag(is)
-7           format('dec/ra/ha/al/az/mg/ext',i4,1x,a20,1x,f9.1,4f9.3,2f9.1)
+            write(6,7)is,starnames(is),dec_d(is),ra_d(is),has(is)/rpd,alt_stars(is),azi_stars(is),mag_stars(is),bmv(is),ext_mag(is)
+7           format('dec/ra/ha/al/az/mg/bmv/ext',i5,1x,a20,1x,f9.1,4f9.3,3f7.1)
           endif
         enddo ! is
 
@@ -110,6 +113,7 @@
 
             size_glow_sqdg = 0.5  ! alt/az grid
             size_glow_sqdg = 0.1  ! final polar kernel size?
+            size_glow_sqdg = 0.3  ! empirical middle ground 
             size_glow_sqdg = 0.5  ! empirical middle ground 
 
             alt = alt_a(ialt,jazi)
@@ -118,8 +122,8 @@
             if(alt .ge. -2.)then
 
               alt_cos = min(alt,89.)
-              alt_dist = alt_scale / 2.0
-              azi_dist = alt_dist / cosd(alt_cos)         
+              alt_dist = alt_scale / 2.0          * 1.3
+              azi_dist = alt_dist / cosd(alt_cos) * 1.3   
 
               do is = 1,ns        
                 if(abs(alt_stars(is)-alt) .le. alt_dist .AND. abs(azi_stars(is)-azi) .le. azi_dist)then
@@ -127,14 +131,17 @@
                     rmag_per_sqarcsec = mag_stars(is) + ext_mag(is) + delta_mag                  
 
 !                   Convert to nanolamberts
-!                   glow_stars(ialt,jazi) = 5.0 - (mag_stars(is)+ext_mag(is))*0.4
+!                   glow_stars(:,ialt,jazi) = 5.0 - (mag_stars(is)+ext_mag(is))*0.4
 
-                    glow_nl = v_to_b(rmag_per_sqarcsec)
-!                   glow_stars(ialt,jazi) = log10(glow_nl)             
-                    glow_stars(ialt,jazi) = glow_stars(ialt,jazi) + log10(glow_nl)             
+                    glow_nl = log10(v_to_b(rmag_per_sqarcsec))
+                    do ic = 1,3
+!                     glow_stars(:,ialt,jazi) = log10(glow_nl)             
+!                     glow_stars(:,ialt,jazi) = addlogs(glow_stars(ic,ialt,jazi),glow_nl)             
+                      glow_stars(ic,ialt,jazi) = log10(10.**glow_stars(ic,ialt,jazi) + 10.**glow_nl)             
+                    enddo ! ic
 
                     if(is .le. 50 .AND. abs(azi_stars(is)-azi) .le. 0.5)then
-                        write(6,91)is,rmag_per_sqarcsec,delta_mag,glow_nl,glow_stars(ialt,jazi)
+                        write(6,91)is,rmag_per_sqarcsec,delta_mag,glow_nl,glow_stars(2,ialt,jazi)
 91                      format(' rmag_per_sqarcsec/dmag/glow_nl/glow_stars = ',i4,4f10.3)             
                     endif
                 endif ! within star kernel
@@ -195,11 +202,11 @@
         return
         end
 
-        subroutine read_bsc(nstars,ns,dec_d,ra_d,mag_stars,starnames)
+        subroutine read_bsc(nstars,ns,dec_d,ra_d,mag_stars,bmv,starnames)
 
 !       http://tdc-www.harvard.edu/catalogs/bsc5.html
 
-        real dec_d(nstars),ra_d(nstars),mag_stars(nstars)
+        real dec_d(nstars),ra_d(nstars),mag_stars(nstars),bmv(nstars)
         character*20 starnames(nstars)
 
         character*150 static_dir,filename
@@ -222,8 +229,8 @@
             enddo ! ic
         endif
 
-        read(cline,4,err=5)ih,im,c1_dec,id,idm,mag_stars(is)
-4       format(75x,i2,i2,4x,a1,i2,i2,14x,f5.0)
+        read(cline,4,err=5)ih,im,c1_dec,id,idm,mag_stars(is),bmv(is)
+4       format(75x,i2,i2,4x,a1,i2,i2,14x,f5.0,2x,f5.2)
 5       continue
 !       read(cline(66:70),*,err=6)mag_stars(is)
 6       continue
@@ -249,8 +256,8 @@
         if(mag_stars(is) .lt. 2.0 .and. iqc .eq. 1)then ! magnitude limit
 !           write(6,*)' name is: ',
 !           write(6,*)' mag string is: ',cline(91:95)
-            write(6,13)is,starnames(is),ih,im,dec_d(is),ra_d(is),mag_stars(is)
-13          format(i4,1x,a10,' ih/im',2i4,2f7.2,f7.1)
+            write(6,13)is,starnames(is),ih,im,dec_d(is),ra_d(is),mag_stars(is),bmv(is)
+13          format(i4,1x,a10,' ih/im',2i4,2f7.2,' mag/bmv',2f7.1)
         endif
 
         if(mag_stars(is) .gt. 5.0)then ! magnitude limit
@@ -285,14 +292,12 @@
         ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
 
         write(6,*)' subroutine get_glow_obj...'
-        write(6,*)' lat/lon = ',rlat,rlon             
+        write(6,*)' alt/az/mag = ',alt_obj,azi_obj,mag_obj
 
         rpd = 3.14159265 / 180.
 
         I4_elapsed = ishow_timer()
 
-        starnames = 'moon'
- 
 !       Calculate extinction
         patm = 1.0     
 
@@ -304,8 +309,8 @@
             ext_mag = 0.0
         endif
 
-        write(6,7)starnames,dec_d,ra_d,has/rpd,alt_obj,azi_obj,mag_obj,ext_mag
-7       format('dec/ra/ha/al/az/mg/ext',1x,a20,1x,f9.1,4f9.3,2f9.1)
+        write(6,7)dec_d,ra_d,has/rpd,alt_obj,azi_obj,mag_obj,ext_mag
+7       format('dec/ra/ha/al/az/mg/ext',1x,f9.1,4f9.3,2f9.1)
 
         glow_obj = 1.0 ! cosmic background level
 
@@ -371,7 +376,13 @@
         enddo ! j
         enddo ! i
 
-        twi_glow_ave = log10(sum/cnt)
+        if(cnt .gt. 0.)then
+            twi_glow_ave = log10(sum/cnt)
+        else
+            write(6,*)' ERROR in get_twi_glow_ave'
+            write(6,*)' sol_az = ',sol_az
+            twi_glow_ave = 1.0
+        endif
 
         return
         end
