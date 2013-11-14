@@ -1,7 +1,7 @@
 
 
       subroutine get_cloud_rad(sol_alt,sol_azi,clwc_3d,cice_3d,rain_3d,snow_3d, &
-                               heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk)
+                    topo_a,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk)
 
       use mem_namelist, ONLY: r_missing_data, earth_radius
       use cloud_rad ! Cloud Radiation and Microphysics Parameters
@@ -24,8 +24,8 @@
       real snow_3d(ni,nj,nk) ! kg/m**3
       real heights_3d(ni,nj,nk)
       real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
-      real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for solar intensity at top of cloud
-
+      real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for
+                                  ! solar intensity at top of cloud
       real sol_alt(ni,nj)
       real sol_azi(ni,nj)
 
@@ -35,6 +35,7 @@
       real snow_int(ni,nj)
       real backscatter_int(ni,nj)
       real aod_2d(ni,nj)          ! aerosol optical depth (tau per airmass) 
+      real topo_a(ni,nj)
 
 !     n                                    (number concentration:   m**-3)
 !     sigma                                (cross-section:          m**2)
@@ -66,6 +67,8 @@
       sinazi = sind(sol_azi(idb,jdb))
       cosazi = cosd(sol_azi(idb,jdb))
 
+      terr_max = maxval(topo_a)
+
       do k = nk-1,1,-1
 
         patm_k = ztopsa(heights_3d(idb,jdb,k)) / 1013.
@@ -82,6 +85,14 @@
         djl =  cosazi * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
         dju =  cosazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
 
+        if(heights_3d(1,1,kl) .lt. terr_max)then
+            nsub = max(nint(dij),1)
+        else
+            nsub = 1
+        endif
+        write(6,*)'k,nsub = ',k,nsub
+
+!       Loop through array of slant columns
         do i = 1,ni
         do j = 1,nj
 
@@ -102,8 +113,32 @@
           cice_m = 0.5 * (cice_3d(iu,ju,ku) + cice_3d(il,jl,kl))
           rain_m = 0.5 * (rain_3d(iu,ju,ku) + rain_3d(il,jl,kl))
           snow_m = 0.5 * (snow_3d(iu,ju,ku) + snow_3d(il,jl,kl))
- 
-          if(clwc_m+cice_m+rain_m+snow_m .gt. 0.)then ! for efficiency
+
+          ihit_terrain = 0
+          do isub = 1,nsub
+            fracs = float(isub) / float(nsub)
+            dis = dil * fracs + diu * (1. - fracs)
+            djs = djl * fracs + dju * (1. - fracs)
+            is = i + nint(dis) ; is = max(is,1) ; is = min(is,ni)
+            js = j + nint(djs) ; js = max(js,1) ; js = min(js,nj)
+            rks = float(kl) + fracs
+            height_int = heights_3d(is,js,kl) * fracs + heights_3d(is,js,ku) * (1. - fracs)
+            if(height_int .lt. topo_a(is,js))then
+              ihit_terrain = ihit_terrain + 1
+            endif
+            if(idebug .eq. 1)then
+              write(6,91)is,js,rks,height_int,topo_a(is,js),ihit_terrain
+91            format(' Compare height with terrain: ',2i6,f8.1,2f10.2,i4)
+            endif
+          enddo ! i
+
+          if(ihit_terrain .ge. 1)then
+            transm_3d(il,jl,kl) = 0. ! terrain shadow
+            if(idebug .eq. 1)then
+                write(6,*)' Set terrain shadow for ',il,jl,kl
+            endif
+
+          elseif(clwc_m+cice_m+rain_m+snow_m .gt. 0.)then ! for efficiency
 
             clwc_lyr_int = clwc_m * ds ! LWP                             
             cice_lyr_int = cice_m * ds                                   
@@ -131,7 +166,8 @@
 !           Convert to transmittance
             transm_3d(il,jl,kl) = 1. - albedo_int
 
-            if(idebug .eq. 1)then
+            if( idebug .eq. 1 .OR. &
+               (transm_3d(il,jl,kl) .eq. 0. .and. jl .eq. jdb) )then
               write(6,101)k,il,clwc_m,cice_m,rain_m,snow_m &
                      ,clwc_lyr_int,cice_lyr_int,rain_lyr_int,snow_lyr_int &
                      ,od_lyr_clwc,od_lyr_cice,od_lyr_rain,od_lyr_snow &
@@ -141,11 +177,12 @@
 
           else ! for efficiency
             transm_3d(il,jl,kl) = transm_3d(iu,ju,ku)
-            if(idebug .eq. 1)then
+            if( idebug .eq. 1 .OR. &
+               (transm_3d(il,jl,kl) .eq. 0. .and. jl .eq. jdb) )then
               write(6,102)k,heights_3d(il,jl,kl),transm_3d(il,jl,kl),dh,ds&
-                         ,sol_alt(il,jl),sol_azi(il,jl),di,dj,il,iu,jl,ju
+                         ,sol_alt(il,jl),sol_azi(il,jl),di,dj,il,jl,iu,ju
 102           format('k/ht/trans/dhds/solaltaz/dij ' &
-                     ,i5,f8.0,f8.5,1x,2f9.2,1x,2f7.2,1x,2f7.3,4i4)
+                    ,i5,f8.0,f8.5,1x,2f9.2,1x,2f7.2,1x,2f7.3,2x,2i4,2x,2i4)
             endif
           endif
 
@@ -210,6 +247,25 @@
         enddo ! j
         enddo ! i
       enddo ! k
+
+!     Check the presence of terrain shadow grid points
+      n_terr_shadow = 0.
+      do k = 1,nk
+      do i = 1,ni
+      do j = 1,nj
+          if(heights_3d(i,j,k) .gt. topo_a(i,j) .AND. transm_3d(i,j,k) .eq. 0.)then
+              n_terr_shadow = n_terr_shadow + 1
+              if(n_terr_shadow .le. 10)then
+                  write(6,*)' terrain shadow is at ',i,j,k
+              endif
+          endif 
+      enddo ! j
+      enddo ! i
+      enddo ! k      
+
+      write(6,*)' Number of points above ground and in shadow is',n_terr_shadow
+
+      write(6,*)' Returning from get_cloud_rad...'
 
       return
       end
