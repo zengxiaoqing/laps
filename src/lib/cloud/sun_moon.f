@@ -31,13 +31,14 @@
       real alm_r4,azm_r4,elgms_r4,r4_mag,ht,earth_radius,r4_obsc
 
       save SXG,SYG,SZG,MXG,MYG,MZG,i4time_last,ET,UT,LST
-      save NX,NY,NZ,EX,EY,EZ,ZNX,ZNY,ZNZ
+      save NX,NY,NZ,EX,EY,EZ,ZNX,ZNY,ZNZ,TX,TY,TZ,TMAG
+      save topo_flag
 
       n_loc = 1
 
       if(idebug .ge. 1)then
          write(6,*)
-         write(6,*)' subroutine sun_eclipse_parms...'
+         write(6,*)' subroutine sun_eclipse_parms:',i4time,i4time_last
       endif
 
       rlon = rlon_r4
@@ -102,7 +103,7 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
 !       Get direction cosines based on alt/azi (north along the horizon)
 !       RA is 180 degrees from RA of meridian
 !       DEC is 90 - latitude
-        RAN = 180. + LST
+        RAN = 180. + LST/rpd
         DECN = 90. - rlat_r4       
         NX = COSD(DECN) * COSD(RAN)
         NY = COSD(DECN) * SIND(RAN)
@@ -116,6 +117,8 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
 !       East horizon is N horizon cross product with zenith unit vector
         call crossproduct(NX,NY,NZ,ZNX,ZNY,ZNZ,EX,EY,EZ)
 
+        write(6,*)' LST,RLON-LST ',LST/rpd,RLON-LST/rpd
+        write(6,*)' DECN,RAN ',DECN,RAN
         write(6,*)' Zenith unit vector    ',ZNX,ZNY,ZNZ
         write(6,*)' N horizon unit vector ',NX,NY,NZ
         write(6,*)' E horizon unit vector ',EX,EY,EZ
@@ -146,11 +149,21 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
       RZ = RZ + SDIST_AU * SINALT * ZNZ
 
       if(idebug .ge. 1)then
+
+         RAYMAG = SQRT(RX**2 + RY**2 + RZ**2)
+
+         RAYLAT = ASIND(RZ/RAYMAG)
+         RAYLST = ATAN2D(RX,RY)+180.
+         RAYLON = RAYLST + (RLON-LST/rpd)
+         RAYALT = ((RAYMAG/TMAG) - 1.0) * earth_radius
+
          write(6,*)' rlat,rlon,UT,ht,topo_flag = '
      1              ,rlat_r4,rlon,UT,ht,topo_flag
          write(6,*)' SDIST_M,SDIST_AU = ',SDIST_M,SDIST_AU
          write(6,*)' Topo coords = ',TX,TY,TZ
          write(6,*)' Ray  coords = ',RX,RY,RZ
+         write(6,*)' Ray  lat/lst/lon = ',RAYLAT,RAYLST,RAYLON
+         write(6,*)' Ray  mag/tmag/alt = ',RAYMAG,TMAG,RAYALT
       endif
 
       SXR = SXG - RX
@@ -189,7 +202,7 @@ C CALCULATE ALT AND AZ of SUN
       CALL anglevectors(-MXG,-MYG,-MZG,SXG,SYG,SZG,ELGARG)
       ELGMSG = ELGARG/RPD
 
-      if(idebug .ge. 1)then
+      if(idebug .ge. 2)then
          write(6,*)' DECS / RAS / HAS = '
      1              ,DECS/rpd,RAS/rpd,HAS/rpd
          write(6,*)' DECM / RAM / HAM / ELSMST = '
@@ -258,7 +271,7 @@ C CALCULATE ALT AND AZ of SUN
 
           r4_mag = solar_eclipse_magnitude
   
-          if(idebug .ge. 1)then
+          if(idebug .ge. 2)then
              write(6,*)' diam_sun,diam_moon,overlap_sec ',
      1                   diam_sun,diam_moon,overlap_sec
              write(6,*)
