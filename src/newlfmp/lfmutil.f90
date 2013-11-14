@@ -253,6 +253,7 @@ real :: r_missing_data, aglhgt
 real :: stefan_boltzmann, b_olr, eff_emissivity
 real :: bt_flux_equiv
 real :: coeff
+real :: a1,b1,c1,d1,e1,alpha(lx,ly)
 
 !beka
 
@@ -765,8 +766,17 @@ endif ! large_ngrid
 
 ! Visibility.
 
-visibility=6000000.*(tsfc-tdsfc)/(rhsfc**1.75)  ! in meters
-where(visibility > 99990.) visibility = 99990.
+if(.true.)then
+! Note that hydrometeor mixing ratios have previously been converted to concentrations
+  a1 = 75.; b1 = 37.5; c1 = 1.5; d1 = 5.357; e1 = 1.2
+  alpha(:,:) = a1 * hcldliqmr_sig(:,:,1) + b1 * hcldicemr_sig(:,:,1) &
+             + c1 * hrainmr_sig(:,:,1) + d1 * hsnowmr_sig(:,:,1) + e1 * hgraupelmr_sig(:,:,1)
+! meteorological visibility, tau ~= 2.8, with lower bound added on alpha
+  visibility(:,:) = 2.8 / max(alpha(:,:),.00004) 
+else
+  visibility=6000000.*(tsfc-tdsfc)/(rhsfc**1.75)  ! in meters
+  where(visibility > 99990.) visibility = 99990.
+endif
 
 ! Compute heat index if temp is above 80F (300K).
 
