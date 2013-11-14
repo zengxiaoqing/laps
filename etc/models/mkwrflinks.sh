@@ -5,7 +5,7 @@
 LOCAL_WRF_ROOT=$1
 LAPS_DATA_ROOT=$2
 REMOTE_WRF_ROOT=$3                      
-DELAY=$4
+DELAY=$4             # Hours
 
 #LOCAL_WRF_ROOT=/lfs0/projects/hmtb/hwt_domains/hrrr_conus
 #LAPS_DATA_ROOT=/pan1/projects/dlaps/analysis/wiap 
