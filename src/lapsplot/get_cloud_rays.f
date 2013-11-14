@@ -1,23 +1,24 @@
          
-        subroutine get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d    ! I
-     1                           ,rain_3d,snow_3d                      ! I
-     1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d! I 
-     1                           ,topo_albedo_2d                       ! I
-     1                           ,topo_swi,topo_albedo                 ! O
-     1                           ,aod_ray,aod_2_cloud,aod_2_topo       ! O
-     1                           ,r_cloud_3d,cloud_od                  ! O
-     1                           ,cloud_rad,cloud_rad_c                ! O
-     1                           ,clear_rad_c,clear_radf_c,patm        ! O
-     1                           ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
-     1                           ,ni,nj,nk,i,j,kstart                  ! I
-     1                           ,view_alt,view_az,sol_alt,sol_azi     ! I
-     1                           ,alt_norm                             ! I
-     1                           ,moon_alt,moon_azi                    ! I
-     1                           ,moon_mag,moon_mag_thr                ! I
-     1                           ,l_solar_eclipse,rlat,rlon            ! I
-     1                           ,minalt,maxalt,minazi,maxazi          ! I
-     1                           ,alt_scale,azi_scale                  ! I
-     1                           ,grid_spacing_m,r_missing_data)       ! I
+        subroutine get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d     ! I
+     1                           ,rain_3d,snow_3d                       ! I
+     1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d ! I 
+     1                           ,topo_albedo_2d                        ! I
+     1                           ,topo_swi,topo_albedo                  ! O
+     1                           ,aod_ray,aod_2_cloud,aod_2_topo,aod_ill! O
+     1                           ,transm_obs                            ! O
+     1                           ,r_cloud_3d,cloud_od                   ! O
+     1                           ,cloud_rad,cloud_rad_c                 ! O
+     1                           ,clear_rad_c,clear_radf_c,patm         ! O
+     1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
+     1                           ,ni,nj,nk,i,j,kstart                   ! I
+     1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
+     1                           ,alt_norm                              ! I
+     1                           ,moon_alt,moon_azi                     ! I
+     1                           ,moon_mag,moon_mag_thr                 ! I
+     1                           ,l_solar_eclipse,rlat,rlon             ! I
+     1                           ,minalt,maxalt,minazi,maxazi           ! I
+     1                           ,alt_scale,azi_scale                   ! I
+     1                           ,grid_spacing_m,r_missing_data)        ! I
 
         use mem_namelist, ONLY: earth_radius,aod,aero_scaleht,redp_lvl
 
@@ -75,6 +76,7 @@
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         real elong(minalt:maxalt,minazi:maxazi)
+        real aod_ray_eff(minalt:maxalt,minazi:maxazi)
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)     ! cloud opacity
         real cloud_od(minalt:maxalt,minazi:maxazi)       ! cloud optical depth
         real cloud_rad(minalt:maxalt,minazi:maxazi)      ! sun to cloud transmissivity (direct+fwd scat)
@@ -88,13 +90,14 @@
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
         real aod_2_cloud(minalt:maxalt,minazi:maxazi)
         real aod_2_topo(minalt:maxalt,minazi:maxazi)
+        real aod_ill(minalt:maxalt,minazi:maxazi)
         real sum_odrad_c(nc)
 
         character*1 cslant
 
         I4_elapsed = ishow_timer()
 
-        write(6,*)' Subroutine get_cloud_rays ',i,j
+        write(6,*)' Subroutine get_cloud_rays... ',i,j
 
 !       moon_alt = -10.0
 !       moon_azi = 0.
@@ -138,11 +141,13 @@
         write(6,*)' range of heights is ',minval(heights_3d)
      1                                   ,maxval(heights_3d)
 
-        write(6,*)' call get_cloud_rad'
-
-        call get_cloud_rad(obj_alt,obj_azi,clwc_3d,cice_3d
-     1                    ,rain_3d,snow_3d
+        write(6,*)' call get_cloud_rad...'
+      
+        if(.true.)then
+            call get_cloud_rad(obj_alt,obj_azi,clwc_3d,cice_3d
+     1                    ,rain_3d,snow_3d,topo_a
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk)
+        endif
 
         transm_4d = transm_4d * obj_bri ! correct for sun/moon brightness
 
@@ -188,6 +193,8 @@
 
         write(6,*)' rkstart/htstart/patm = ',rkstart,htstart,patm
         write(6,*)' aod/redp_lvl/aod_ray = ',aod,redp_lvl,aod_ray
+
+        aod_ray_eff = aod_ray
 
         heights_1d(:) = heights_3d(i,j,:)
         pres_1d(:)    = pres_3d(i,j,:)
@@ -244,6 +251,7 @@
           sum_odrad_c = 0.
           sum_clrrad = 0.
           sum_aod = 0.
+          sum_aod_ill = 0.
           sum_am2cld_num = 0.
           sum_am2cld_den = 0.
 
@@ -301,7 +309,8 @@
 12              format('   dz1_l   dz1_h   dxy1_l   dxy1_h  rin',
      1           'ew  rjnew   rk    ht_m   topo_m  ',
      1           ' path     lwc    ice    rain   snow      slant',
-     1           '  cvrpathsum  cloudfrac  airmass cloud_rad')
+     1           '  cvrpathsum  cloudfrac  airmass cloud_rad',
+     1           ' aeroext  transm aod_sum aod_sum_ill')
               endif
 
 !             Initialize ray
@@ -569,7 +578,9 @@
      1                                    * (airmass1_h - airmass1_l)
 
                   aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
-                  sum_aod = sum_aod + aero_ext_coeff * slant2
+                  sum_aod     = sum_aod     + aero_ext_coeff * slant2
+                  sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
+     1                        * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
 
 !                 Relative values using constants from 'module_cloud_rad.f90'
 !                 Values are 1.5 / (rho * reff)
@@ -614,8 +625,6 @@
 
                   if(topo_m .gt. ht_m .AND. ihit_topo .eq. 0)then
                       ihit_topo = 1
-                      airmass_2_topo_3d(ialt,jazi) 
-     1                                 = 0.5 * (airmass1_l + airmass1_h)
 
 !                     Land illumination related to terrain slope
                       if(sol_alt(inew_m,jnew_m)  .gt. 0. )then  
@@ -635,12 +644,24 @@
 
                       topo_albedo(:,ialt,jazi) = 
      1                    topo_albedo_2d(:,inew_m,jnew_m)
-                      aod_2_topo(ialt,jazi) = sum_aod
+
+!                     Test for first segment
+                      if(dxy1_l .eq. 0. .AND. htstart .eq. topo_sfc)then
+                          airmass_2_topo_3d(ialt,jazi) = 1e-5
+                          aod_2_topo(ialt,jazi)        = 1e-5
+                          sum_aod_ill                  = 1e-5
+                      else
+                          airmass_2_topo_3d(ialt,jazi) 
+     1                                 = 0.5 * (airmass1_l + airmass1_h)
+                          aod_2_topo(ialt,jazi) = sum_aod
+                      endif
+
                       if(idebug .eq. 1)write(6,91)solar_corr  
-     1                                       ,topo_swi(ialt,jazi)
-     1                                       ,topo_albedo(:,ialt,jazi)
-     1                                       ,aod_2_topo(ialt,jazi)
-91                    format(' Hit topo ',f8.3,f8.2,f8.3,f8.3)
+     1                                    ,topo_swi(ialt,jazi)
+     1                                    ,topo_albedo(:,ialt,jazi)
+     1                                    ,aod_2_topo(ialt,jazi)
+     1                                    ,airmass_2_topo_3d(ialt,jazi)
+91                    format(' Hit topo ',f8.3,f8.2,3f8.3,2f8.3)
                   endif
 
                   cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
@@ -654,8 +675,12 @@
      1                     ,r_cloud_3d(ialt,jazi)
      1                     ,airmass_2_cloud_3d(ialt,jazi)
      1                     ,cloud_rad(ialt,jazi)
+     1                     ,aero_ext_coeff
+     1                     ,transm_3d(inew_m,jnew_m,int(rk_m)+1)
+     1                     ,sum_aod,sum_aod_ill
  101              format(2f8.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
-     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,f9.4)
+     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,f9.4
+     1                  ,f10.5,3f8.2)
                 else
                   if(idebug .eq. 1)then
                       write(6,*)' out of bounds ',ialt,jazi
@@ -680,6 +705,8 @@
 !           enddo ! k
 
           endif ! true
+
+          aod_ill(ialt,jazi) = sum_aod_ill
 
           if(r_cloud_3d(ialt,jazi) .gt. .5)then
               icloud = 1
@@ -712,7 +739,7 @@
              call skyglow_phys(ialt,ialt,1,minazi,maxazi,jazi_delt
      1             ,minalt,maxalt,minazi,maxazi,idebug_a
      1             ,sol_alt(i,j),sol_azi(i,j),view_alt,view_az
-     1             ,earth_radius,patm,aod_ray,aero_scaleht
+     1             ,earth_radius,patm,aod_ray_eff,aero_scaleht
      1             ,htstart,redp_lvl                          ! I
      1             ,l_solar_eclipse,i4time,rlat,rlon          ! I
      1             ,clear_rad_c,elong                       ) ! O
@@ -744,6 +771,9 @@
               airmass_2_topo_3d(ialt,jazi) = 
      1                fm * airmass_2_topo_3d(ialt,jazim) 
      1              + fp * airmass_2_topo_3d(ialt,jazip)
+              aod_ill(ialt,jazi) = 
+     1                fm * aod_ill(ialt,jazim) 
+     1              + fp * aod_ill(ialt,jazip)
               topo_swi(ialt,jazi) = 
      1                fm * topo_swi(ialt,jazim) 
      1              + fp * topo_swi(ialt,jazip)
@@ -751,8 +781,8 @@
      1                fm * topo_albedo(:,ialt,jazim) 
      1              + fp * topo_albedo(:,ialt,jazip)
             endif ! ir .ne. 0
-          enddo
-         endif
+          enddo ! jazi interp
+         endif ! fill azimuth
 
         enddo ! ialt
 
@@ -781,6 +811,9 @@
             airmass_2_topo_3d(ialt,:) =
      1           fm * airmass_2_topo_3d(ialtm,:) 
      1         + fp * airmass_2_topo_3d(ialtp,:)
+            aod_ill(ialt,:) =
+     1           fm * aod_ill(ialtm,:) 
+     1         + fp * aod_ill(ialtp,:)
             topo_swi(ialt,:) =
      1         fm * topo_swi(ialtm,:)      + fp * topo_swi(ialtp,:)
             topo_albedo(:,ialt,:) =
@@ -815,6 +848,10 @@
         write(6,*)' Range of clear_radf_c 3 ='
      1                                      ,minval(clear_radf_c(3,:,:))
      1                                      ,maxval(clear_radf_c(3,:,:))
+
+        transm_obs = transm_3d(i,j,int(rkstart)+1)
+        write(6,*)' transm of observer is ',i,j,int(rkstart)+1
+     1                                     ,transm_obs
 
         I4_elapsed = ishow_timer()
  
