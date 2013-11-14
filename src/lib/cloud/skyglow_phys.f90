@@ -15,8 +15,8 @@
         trans(od) = exp(-od)
 !       brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness (max~7)
         brt(a) = (1.0 - exp(-.14 * a))     ! relative sky brightness (max=1)
-        brtf(am,od_per_am) = 1.0 - exp(-am*od_per_am) ! relative sky brightness (max=1)
-        brto(od) = 1.0 - exp(-od)                     ! relative sky brightness (max=1)
+        brtf(am,od_per_am) = 1.0 - exp(-am*od_per_am) ! rel. sky brightness (max=1)
+        brto(od) = 1.0 - exp(-od)                     ! rel. sky brightness (max=1)
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
         angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
@@ -34,11 +34,16 @@
 
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! integrated fraction of air illuminated by the sun along line of sight
                                            ! (consider Earth's shadow + clouds)
+        real aod_ray(minalt:maxalt,minazi:maxazi)
         real elong(minalt:maxalt,minazi:maxazi)
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         real view_alt(minalt:maxalt,minazi:maxazi)
         real view_az(minalt:maxalt,minazi:maxazi)
+
+        logical l_solar_eclipse
+
+!       write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
 
         do ialt = ialt_start,ialt_end,ialt_delt
   
@@ -88,7 +93,7 @@
 !           HG illumination
             hg2 = 0.85 * hg(0.65,elong(ialt,jazi)) &
                 + 0.15 * hg(0.95,elong(ialt,jazi))
-            mie = brt(aod_ray*airmass_g) * hg2                        
+            mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2                        
 
             if(.false.)then ! sum brightness from gas and aerosols
 
@@ -103,7 +108,7 @@
                 if(idebug .ge. 1 .and. ic .eq. 2)then
                   write(6,71)day_int,elong(ialt,jazi),airmass_g,brtf(airmass_g,od_per_am) &
                             ,rayleigh,mie,hg2,clear_rad_c(2,ialt,jazi)
-71                format('day_int/elong/am/brt/rayleigh/mie/hg2/clrrd2',f12.0,6f8.3,f11.0)      
+71                format('day_int/elong/am/brt/rayleigh/mie/hg2/clrrd2',f12.0,6f8.3,f12.0)      
                 endif
 
                enddo ! ic
@@ -116,7 +121,7 @@
             else ! assume two scattering layers (g+a, g)
               do ic = 1,nc
                 od_g = ext_g(ic)*airmass_g
-                od_a = aod_ray*aa
+                od_a = aod_ray(ialt,jazi)*aa
                 alpha_g = od_g / 8000.
                 alpha_a = od_a / aero_scaleht
                 if(od_a .gt. 0)then
@@ -144,7 +149,7 @@
                 clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2)
 
                 if(idebug .ge. 1 .and. ic .eq. 2)then
-                  write(6,73)day_int,airmass_g,od_g,aod_ray,od_a,alpha_g*1e3,alpha_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
+                  write(6,73)day_int,airmass_g,od_g,aod_ray(ialt,jazi),od_a,alpha_g*1e3,alpha_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
 73                format('day_int/airmass_g/od_g/aod_ray/od_a/alpha_g/alpha_a/od_g1/od_g2/clear_rad :' &
                         ,f12.0,4f7.3,2x,2f7.3,2x,2f7.3,f11.0)      
                   write(6,*)'am_sun,solar_int_g2 = ',am_sun,solar_int_g2
@@ -206,7 +211,7 @@
               ht_ray_plane = dist_ray_plane * sind(altray) + bterm
               if(ht_ray_plane .le. 99000.)then
                 patm_ray_plane = min(ZtoPsa(ht_ray_plane) / 1013.,1.0) * patm
-                aero_ray_plane = aod_ray*exp(-ht_ray_plane/aero_scaleht)
+                aero_ray_plane = aod_ray(ialt,jazi)*exp(-ht_ray_plane/aero_scaleht)
                 po3_ray_plane = .02 *ay
               else
                 patm_ray_plane = 0.
@@ -243,8 +248,8 @@
                   frac_airmass_unlit = 1.0 - frac_airmass_lit
                   airmass_unlit = airmass_tot - airmass_lit
 
-                  aod_path = aod_ray * airmassf(z,1.0)
-                  frac_aero_lit = aero_ray_plane / aod_ray
+                  aod_path = aod_ray(ialt,jazi) * airmassf(z,1.0)
+                  frac_aero_lit = aero_ray_plane / aod_ray(ialt,jazi)
                   aod_lit = aod_path * frac_aero_lit
                   aod_unlit = aod_path * (1.-frac_aero_lit)
 !                 arg = aod_lit * 0.5 * (1. - cosd(elong(ialt,jazi)))
@@ -278,8 +283,8 @@
                                                               ,1e3)       
                 if(idebug .ge. 2)then
                   write(6,91)elong(ialt,jazi) &
-                            ,rayleigh,brt(airmass_lit),twi_trans_c(1)
-91                format('elong/rayleigh/brt/twi_trans ',4f9.5)
+                            ,rayleigh,brt(airmass_lit),twi_trans_c(1),twi_int,clear_int
+91                format('elong/rayleigh/brt/twi_trans/day_int/clear_int ',4f9.5,2f11.0)
                 endif
                 clear_intf = clear_int / twi_int
               endif
@@ -308,19 +313,25 @@
             hue_ramp2 = 1.0 ! sat_sol_ramp * (1.0 - hue_alt_ramp)
             hue_coeff = max(1.0 + min((sol_alt+3.),0.) /  6.,0.2)
 
+!           The value of 'sat_twi_ramp_nt' should also appear in
+!           subroutine 'get_clr_rad_nt', variable 'sat_twi_ramp'
+            sat_twi_ramp_nt = 0.4
+
 !           clear_int here represents intensity at the zenith
             if(clear_intf .gt. skyref*10.)then      ! mid twilight
                 sat_twi_ramp = 1.0
                 rint_alt_ramp = 1.0
             elseif(clear_intf .le. skyref)then ! night or late twilight
-                sat_twi_ramp = 0.6
+                sat_twi_ramp = sat_twi_ramp_nt
                 am_term = min(sqrt(airmass_g),5.)
                 rint_alt_ramp = am_term                  
                 clear_intf = skyref
                 clear_int  = clear_intf * twi_int                           
             else                              ! late twilight
                 frac_twi_ramp = (clear_intf - skyref) / (9.*skyref)
-                sat_twi_ramp = 0.6 + 0.4 * scurve(frac_twi_ramp)
+!               sat_twi_ramp = 0.6 + 0.4 * scurve(frac_twi_ramp)
+                sat_twi_ramp = sat_twi_ramp_nt &
+                       + (1. - sat_twi_ramp_nt) * scurve(frac_twi_ramp)
                 am_term = min(sqrt(airmass_g),5.)
                 rint_alt_ramp = (1.0       *        frac_twi_ramp) &
                               +  am_term   * (1.0 - frac_twi_ramp)
@@ -377,8 +388,9 @@
 101           format('airmass_lit/tot/unlit/huec/huea/hue',6f9.5)
               write(6,102)aod_lit,aod_unlit,aero_red &         
                          ,aero_red/clear_intf &                
+                         ,clear_intf,skyref & 
                          ,sat_arg,sat_ramp,sat_twi_ramp
-102           format('aod_lit/unlit/red/rat/sat',4f9.5,2x,3f9.5)
+102           format('aod_lit/unlit/red/rat/ref/sat',4f9.5,2x,2f9.5,2x,3f9.5)
               rmaglim = b_to_maglim(clear_rad_c(3,ialt,jazi))
             endif
 
@@ -405,7 +417,7 @@
        'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/a/t/clrrad' &
 !                 ,2i5,2f7.3,2f8.2,2f10.1,2x,4f8.5,f8.0,f8.5,2x,3f8.5) &
                   ,2i4,2x,2f6.2,2f10.1,2x,3f8.4,2x,f8.4,2f8.5 &
-                                      ,2x,f7.4,f7.4,f10.0)
+                                      ,2x,f7.4,f7.4,f11.0)
 
               if(idebug .ge. 2)then
                 write(6,121)rmaglim
