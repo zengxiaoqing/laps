@@ -28,7 +28,7 @@ include 'lapsparms.for'
         integer iverbose
         real    r_missing_data
         integer  MAX_RADARS
-        real aod
+        real aod,aod_bin(3),aod_asy(3)
         real aero_scaleht
         real ref_base
         real ref_base_useable
@@ -224,7 +224,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,model_cycle_time, model_fcst_intvl, model_fcst_len &
                   ,purge_time &
                   ,i2_missing_data, iverbose, r_missing_data, MAX_RADARS, i_offset_radar &
-                  ,aod,aero_scaleht,ref_base,ref_base_useable,r_hybrid_first_gate &
+                  ,aod,aod_bin,aod_asy,aero_scaleht,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
                   ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
                   ,hydrometeor_scale_pcp,hydrometeor_scale_cld &
@@ -360,8 +360,24 @@ elseif (namelist_name == 'lapsparms') then
    l_dual_pol       = .false.
    iverbose = 0
    i_offset_radar = -1
-   aod = 0.25              ! default column aerosol optical depth
+   aod = 0.05              ! default column aerosol optical depth
    aero_scaleht = 1500.    ! default aerosol scale height (m)
+
+!  fraction of aerosols in each bin & asymmetry factor
+!  Factor of 10 back scatter increase from minimum
+   aod_bin(1) = 0.70  ;   aod_asy(1) = +0.65  
+   aod_bin(2) = 0.12   ;   aod_asy(2) = +0.95      
+   aod_bin(3) = 0.18   ;   aod_asy(3) = -0.65      
+
+!  Factor of ~3 back scatter increase from minimum
+!  aod_bin(1) = 0.80   ;   aod_asy(1) = +0.65  
+!  aod_bin(2) = 0.14   ;   aod_asy(2) = +0.95      
+!  aod_bin(3) = 0.06   ;   aod_asy(3) = -0.65      
+
+!  Original
+!  aod_bin(1) = 0.85   ;   aod_asy(1) = +0.65  
+!  aod_bin(2) = 0.15   ;   aod_asy(2) = +0.95      
+!  aod_bin(3) = 0.00   ;   aod_asy(3) = -0.65      
 
    read (12, lapsparms_nl, err=901)
    
