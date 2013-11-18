@@ -71,13 +71,17 @@ SUBROUTINE OUTPTLAPS
   ! REAL          :: TP(FCSTGRD(1),FCSTGRD(2)),DS,LV(FCSTGRD(3))
   REAL          :: DS,LV(FCSTGRD(3))
 
-  REAL          :: HT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
-  REAL          :: RH(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))		! RELATIVE HUMIDITY
-  REAL          :: T3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
-  REAL          :: W3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2)	! 3D WIND: UV
-  REAL          :: SF(FCSTGRD(1),FCSTGRD(2),2)	! SURFACE WIND: UV
-  REAL          :: SP(FCSTGRD(1),FCSTGRD(2))	! SURFACE PRESSURE
-  REAL          :: TPW(FCSTGRD(1),FCSTGRD(2))	! TOTAL PRECIPITABLE WATER
+  ! REAL          :: HT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+  ! REAL          :: RH(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))		! RELATIVE HUMIDITY
+  ! REAL          :: T3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+  ! REAL          :: W3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2)	! 3D WIND: UV
+  ! REAL          :: SF(FCSTGRD(1),FCSTGRD(2),2)	! SURFACE WIND: UV
+  ! REAL          :: SP(FCSTGRD(1),FCSTGRD(2))	! SURFACE PRESSURE
+  ! REAL          :: TPW(FCSTGRD(1),FCSTGRD(2))	! TOTAL PRECIPITABLE WATER
+
+  ! YUANFU: MAKE ALL LARGE ARRAYS INTO ALLOCATABLE ONES FROM AUTOMATIC:
+  REAL, ALLOCATABLE :: HT(:,:,:),RH(:,:,:),T3(:,:,:),W3(:,:,:,:),SF(:,:,:),SP(:,:),TPW(:,:)
+
   REAL          :: HEIGHT_TO_ZCOORD3,SSH2,MAKE_RH,MAKE_SSH,RM,A,DLNP
 !ADDED BY SHUYUAN 20100722 FOR REFLECTIVITY
   REAL          :: REF_OUT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
@@ -89,12 +93,17 @@ integer   :: istatus2d(FCSTGRD(1),FCSTGRD(2)),istatus3d(FCSTGRD(1),FCSTGRD(2))
 integer   :: CLOUD_BASE,CLOUD_TOP,K400
 REAL :: closest_radar(FCSTGRD(1),FCSTGRD(2)),AT
 REAL ::  rlat,rlon,rhgt
+REAL :: FRACTION
 i4_tol=900
 i4_ret=0
 ! --------------------
 
   ! ALLOCATE MEMORY:
-  ALLOCATE(ANA(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4),NUMSTAT),STAT=ST)
+  ALLOCATE(ANA(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4),NUMSTAT), &
+           HT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)),RH(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)), &
+           T3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)),W3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2), &
+           SF(FCSTGRD(1),FCSTGRD(2),2),SP(FCSTGRD(1),FCSTGRD(2)),TPW(FCSTGRD(1),FCSTGRD(2)), &
+          STAT=ST)
   
   DO I=1,FCSTGRD(1)
     XF(I)=(I-1)*1.0D0
@@ -392,14 +401,16 @@ goto 222
     DO K=1,FCSTGRD(3)-1
       IF (BK0(I,J,K+1,IFRAME,3) .LE. TOPOGRPH(I,J)) CYCLE
 
-      ! For the top of interval is above topography: summed up
-      TPW(I,J) = TPW(I,J) + 0.5*(BK0(I,J,K,IFRAME,5)+BK0(I,J,K+1,IFRAME,5))* &
-                 (LV(K)-LV(K+1))/100.0 ! PRESSURE IN MB
-
       ! Topography is between this interval: take a fraction
+      FRACTION = 1.0
       IF (BK0(I,J,K,IFRAME,3) .LE. TOPOGRPH(I,J)) &
-        TPW(I,J) = TPW(I,J)*(BK0(I,J,K+1,IFRAME,3)-TOPOGRPH(I,J))/ &
-                            (BK0(I,J,K+1,IFRAME,3)-BK0(I,J,K,IFRAME,3))
+        FRACTION = (BK0(I,J,K+1,IFRAME,3)-TOPOGRPH(I,J))/ &
+                   (BK0(I,J,K+1,IFRAME,3)-BK0(I,J,K,IFRAME,3))
+
+      ! For the top of interval is above topography: summed up
+      TPW(I,J) = TPW(I,J) + 0.5*FRACTION* &
+                 (BK0(I,J,K,IFRAME,5)+BK0(I,J,K+1,IFRAME,5))* &
+                 (LV(K)-LV(K+1))/100.0 ! PRESSURE IN MB
     ENDDO
     ! FROM G/KG TO CM:
     TPW(I,J) = TPW(I,J)/100.0/9.8 ! FOLLOWING DAN'S INT_IPW.F ROUTINE
