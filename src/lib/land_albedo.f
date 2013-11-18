@@ -12,9 +12,9 @@
       do i = 1,ni
       do j = 1,nj
           if(lu(i,j) .eq. 1.)then      ! Urban and Built-up Land   (.18 Gray)
-              albedo(1,i,j) = 0.18
+              albedo(1,i,j) = 0.13
               albedo(2,i,j) = 0.18
-              albedo(3,i,j) = 0.18
+              albedo(3,i,j) = 0.11
           elseif(lu(i,j) .eq. 2.)then  ! Dryland Cropland/Pasture  (.17 Brown)
               albedo(1,i,j) = 0.17
               albedo(2,i,j) = 0.17
@@ -60,25 +60,25 @@
               albedo(2,i,j) = 0.14
               albedo(3,i,j) = 0.07
           elseif(lu(i,j) .eq. 13.)then ! Evergreen Broadleaf       (.12 Green)
-              albedo(1,i,j) = 0.09
-              albedo(2,i,j) = 0.12
-              albedo(3,i,j) = 0.06
+              albedo(1,i,j) = 0.07
+              albedo(2,i,j) = 0.09
+              albedo(3,i,j) = 0.045
           elseif(lu(i,j) .eq. 14.)then ! Evergreen Needleleaf      (.12 Green)
-              albedo(1,i,j) = 0.09
-              albedo(2,i,j) = 0.12
-              albedo(3,i,j) = 0.06
+              albedo(1,i,j) = 0.07
+              albedo(2,i,j) = 0.09
+              albedo(3,i,j) = 0.045
           elseif(lu(i,j) .eq. 15.)then ! Mixed Forest              (.13 Green)
-              albedo(1,i,j) = 0.10
-              albedo(2,i,j) = 0.13
-              albedo(3,i,j) = 0.07
+              albedo(1,i,j) = 0.075
+              albedo(2,i,j) = 0.10
+              albedo(3,i,j) = 0.05
           elseif(lu(i,j) .eq. 16.)then ! water (.08)
               albedo(1,i,j) = 0.04
               albedo(2,i,j) = 0.04
               albedo(3,i,j) = 0.12
           elseif(lu(i,j) .eq. 19.)then ! Barren or Sparsely Vegetated (.25 Brown)
               albedo(1,i,j) = 0.25
-              albedo(2,i,j) = 0.25
-              albedo(3,i,j) = 0.10
+              albedo(2,i,j) = 0.15
+              albedo(3,i,j) = 0.07
           else ! default
               albedo(1,i,j) = 0.19
               albedo(2,i,j) = 0.19
