@@ -64,27 +64,27 @@ c       Compute solar altitude normal to the terrain
 	do j=2,nj-1
 	do i=2,ni-1
 
-!           Determine terrain slope
-            dterdx = (topo(i,j)+topo(i,j-1)-topo(i-1,j)-topo(i-1,j-1)
-     1                ) * .5 / dx(i,j)
-            dterdy = (topo(i,j)+topo(i-1,j)-topo(i-1,j-1)-topo(i,j-1)
-     1                ) * .5 / dy(i,j)
+!           Determine centered terrain slope
+            dterdx = (topo(i+1,j  )-topo(i-1,j  )) / (2. * dx(i,j))
+            dterdy = (topo(i  ,j+1)-topo(i  ,j-1)) / (2. * dy(i,j))
 
             terrain_slope = sqrt(dterdx**2 + dterdy**2)
 
             if(terrain_slope .gt. .001)then ! machine/terrain epsilon threshold
 
 !             Direction cosines of terrain normal
-              dircos_tx = dterdx / (sqrt(dterdx**2 + 1.))
-              dircos_ty = dterdy / (sqrt(dterdy**2 + 1.))
+              dircos_tx = -dterdx / (sqrt(dterdx**2 + 1.))
+              dircos_ty = -dterdy / (sqrt(dterdy**2 + 1.))
               dircos_tz = 1.0 / sqrt(1.0 + terrain_slope**2)
 
               sol_azi_grid = sol_azi(i,j) - rot(i,j) 
 
-              dircos_sx = sind(sol_azi_grid)
-              dircos_sy = cosd(sol_azi_grid)
+!             Direction cosines of sun
+              dircos_sx = cosd(sol_alt(i,j)) * sind(sol_azi_grid)
+              dircos_sy = cosd(sol_alt(i,j)) * cosd(sol_azi_grid)
               dircos_sz = sind(sol_alt(i,j))
 
+!             Angle between terrain normal and sun
               result = angleunitvectors(dircos_tx,dircos_ty,dircos_tz
      1                                 ,dircos_sx,dircos_sy,dircos_sz)
 
@@ -95,6 +95,7 @@ c       Compute solar altitude normal to the terrain
      1             sol_alt(i,j),sol_azi(i,j),dterdx,dterdy,alt_norm(i,j)        
                 write(6,*)' dircos_t ',dircos_tx,dircos_ty,dircos_tz
                 write(6,*)' dircos_s ',dircos_sx,dircos_sy,dircos_sz
+                write(6,*)' terrain slope angle: ',90.-asind(dircos_tz)
                 write(6,*)' rot = ',rot(i,j)
               endif
 
