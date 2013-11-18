@@ -171,7 +171,8 @@
         do imodel = 2,n_fdda_models
 
 !           Advection available just for LMR out to 3 hours
-            if(trim(c_fdda_mdl_src(imodel)) .eq. 'advection')then
+            if(.false.)then
+              if(trim(c_fdda_mdl_src(imodel)) .eq. 'advection')then
                 do ifield = 1,n_fields 
                     if(var_a(ifield) .ne. 'LMR')then ! only LMR is available
                         n_plot_times_m(imodel,:,ifield) = 0
@@ -184,6 +185,7 @@
                         endif
                     endif
                 enddo
+              endif
             endif
 
 !           Only LMR available from the HRRR
