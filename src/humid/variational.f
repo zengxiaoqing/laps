@@ -1118,7 +1118,8 @@ c     write out solution details
                else
                   write(6,33) 'TEML ',abs(x(1)), abs(x(2)),abs(x(3)),
      1                 i,j,fret,iter(i,j)
- 33               format(a5,3(e11.6,2x),i3,1x,i3,1x,e11.6,i3)
+!HJ: W>=D+7 for e11.6. 10/15/2013
+ 33               format(a5,3(e13.6,2x),i3,1x,i3,1x,e13.6,i3)
                endif
             endif
                
