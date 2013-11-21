@@ -77,8 +77,9 @@
      *   dd(j)
          n= n+1
       enddo
+!HJ: W>=D=3. 10/14/2013
 10    format( 2a2, a4, 2f5.2, 2f5.0, i1, f5.0, i1, 2x, f5.0, 5x, a2,
-     *        7(a3,f5.0), 3x, f5.1, 16x, 3(f5.0,i1), 10x, f5.3, 12x, 
+     *        7(a3,f5.0), 3x, f5.1, 16x, 3(f5.0,i1), 10x, f6.3, 12x, 
      *        3a2 )
 
 c         -------       read the elevations of all stations      -------
