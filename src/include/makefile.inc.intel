@@ -1,0 +1,67 @@
+# Used by configure to create makefile.inc 
+# 
+#
+INSTALLROOT=/home/oplapb/builds_intel_test/laps
+DATAROOT=/home/oplapb/builds_intel_test/laps/domains
+
+# define CRTMROOT here. Hongli Jiang 10/15/2015
+CRTMROOT=/scratch2/portfolios/BMC/cwb-lnwp/REL-2.1.3-intel
+
+CC=icc
+
+CFLAGS=  -O3 -fno-builtin-exit -fno-builtin-strcat -fno-builtin-strncat -fno-builtin-strcpy -fno-builtin-strlen -fno-builtin-calloc 
+DBCFLAGS= -g -O0 -traceback -ftrapuv -DDEBUG=1
+
+
+
+FC       = ifort
+#
+# NCAR graphics is used by lapsplot only.
+#
+NCARGFC  = /apps/ncl/6.1.2/intel.bin/ncargf90
+
+FFLAGS =  -warn usage $(INC) -fpp -O3
+LITTLEFLAGS =  -warn usage $(INC) -O3
+FREE = -FR
+FIXED = 
+DBFLAGS =  -warn usage $(INC) -fpp -g -O0 -traceback -ftrapuv 
+
+# Define pre-processor command line options for .F files.
+
+CPP = ifort -c -fpp
+CPPFLAGS = $(INC)  -Dx86_64 -DFORTRANUNDERSCORE -DNODYNAMIC -DMULTI_EXEC
+
+# Define include paths.
+NETCDF=/apps/netcdf/3.6.3/intel
+INC = -I$(SRCROOT)/src/include -I$(NETCDF)/include -I$(SRCROOT)/src/lib -I$(SRCROOT)/src/lib/modules -I$(SRCROOT)/src/lib/cloud -I$(SRCROOT)/src/lib/radar/synp -I$(SRCROOT)/src/lib/degrib -I$(SRCROOT)/src/lib/w3lib -I$(CRTMROOT)/include -DCRTM
+
+AR  = ar
+RANLIB   = ranlib
+INSTALL=$(SRCROOT)/util/install-sh
+PERL = /usr/bin/perl
+LIBPATHFLAG=-L
+
+# Grib1 and Grib2 decoder libs and flags
+DEGRIBLIBS=-ljasper -lpng -lz 
+DEGRIBFLAGS=-DUSE_JPEG2000 -DUSE_PNG
+CDEGRIBFLAGS=-DUSE_JPEG2000 -DUSE_PNG -DLINUX -DFORTRANUNDERSCORE
+
+LAPSLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib -llaps
+DBLAPSLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib -ldebuglaps
+
+BGDATALIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/bgdata -lbgdata
+DBBGDATALIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/bgdata -ldebugbgdata
+
+GRIBLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib -lgrib
+DBGRIBLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib -ldebuggrib
+
+MTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -lmthermo
+DBMTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -ldebugmthermo
+
+UTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -lutil
+DBUTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -ldebugutil
+
+OTHERLIBS = $(LIBPATHFLAG)$(NETCDF)/lib -lnetcdf   -lgcc -lpthread -L$(CRTMROOT)/lib -lCRTM
+
+GRIB2LIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib2 -lgrib2
+DBGRIB2LIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib2 -ldebuggrib2
