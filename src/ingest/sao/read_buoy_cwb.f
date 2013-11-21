@@ -110,7 +110,8 @@ cdis
       enddo
 
 10    format ( a3, i5, 4x, 2f5.2, 2x, 5a2, i3 )
-20    format ( 2f3.0, i1, f4.1, i1, f5.1, 2i1, f3.1 ) 
+!HJ: W>=D+3. 10/14/2013
+20    format ( 2f3.0, i1, f4.1, i1, f5.1, 2i1, f4.1 ) 
 30    format ( f4.1, i1, 22x, f5.1, i1 )
 40    format ( 30x, f3.0 )
 
