@@ -1191,8 +1191,9 @@ c modified by Tin
          read (11,511,end=600,err=990) stname(i),lats(i),
      ~                                 lons(i),elev(i),dd(i),
      ~                                 ff(i),t(i),rh(i),p(i),hhmm(i)
+!HJ W>=D+3 change f4.2 to f5.2
  511     format(a6,21x,f7.4,2x,f8.4,2x,f6.1,2x,f6.1,
-     ~          1x,f6.1,1x,f6.1,4x,f4.2,2x,f6.1,90x,a4)
+     ~          1x,f6.1,1x,f6.1,4x,f5.2,2x,f6.1,90x,a4)
          num= num +1
       enddo
 
@@ -1360,6 +1361,8 @@ c
 c======================================================================
 c
       integer, parameter :: loopnum = 800 
+chj num23 is not defined in this subroution. Added. HJ 10/14/2013
+      integer, parameter :: num23= 23
 
       real :: lats(maxobs), lons(maxobs), elev(maxobs)
       real :: pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
