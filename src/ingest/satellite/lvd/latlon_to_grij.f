@@ -2,7 +2,7 @@
         subroutine latlon_to_grij(lat_l,lon_l,nx_l,ny_l,
      1                            lat_s,lon_s,gri,grj,nx_s,ny_s)
 
-        ANGDIF(X,Y)=MOD(X-Y+540.,360.)-180.
+        ANGDIF(XX,Y)=MOD(XX-Y+540.,360.)-180.
 
 !       Determine i/j satellite coordinates for each LAPS grid point
 
