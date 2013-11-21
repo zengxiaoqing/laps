@@ -344,11 +344,12 @@ c      ------   give initial values to avoid data stack problem  ------
       enddo
 
 20    format ( a3, i5, f4.0, 2f5.2, 2x, 5a2 )
-30    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
-     ~         f2.0 )
-40    format ( f3.1, i1, 1x, i2, f3.1, i1, 3(1x, f4.1), 8x, f3.0 )
-50    format ( 3(a2, 2x, f2.0), 8x, f4.1 )
-60    format ( a2, 2x, f2.0 )
+30    format ( 2x, 2f3.0, i1, f3.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
+     ~         f3.0 )
+40    format ( f4.1, i1, 1x, i2, f4.1, i1, 3(1x, f4.1), 8x, f3.0 )
+50    format ( 3(a2, 2x, f3.0), 8x, f4.1 )
+!HJ: W>=D+3. 10/14/2013
+60    format ( a2, 2x, f3.0 )
 
 c     --- eliminate duplicate data coming from international broadcast ---
 99    do 100 k= 1,9
