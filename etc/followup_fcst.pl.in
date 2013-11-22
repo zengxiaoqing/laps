@@ -10,7 +10,7 @@ use strict;
 
 # Setup command line options:
 #    -m model (e.g. wrf,arw,ensemble)
-#    -a model configuration (e.g. schultz,spaghetti)
+#    -a model configuration (e.g. schultz,spaghetti) [optional]
 #    -d domain (e.g. dwr)
 #    -r laps dataroot
 #    -f forecast output interval (hours) [optional]
