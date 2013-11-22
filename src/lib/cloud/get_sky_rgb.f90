@@ -130,6 +130,7 @@
         else
             rob_sun = 1.
             rog_sun = 1.
+            am = -99.9
         endif
         write(6,5)sol_alt_red_thr,od_atm_a,am,rob_sun,rog_sun
 5       format('  sol_alt_red_thr/od_atm_a/am/rob_sun/rog_sun = ',5f9.3)
@@ -176,8 +177,6 @@
 
             I4_elapsed = ishow_timer()
 
-            write(6,*)' call get_skyglow_phys:'
-
             write(6,*)' isun,jsun=',isun,jsun
 
 !           Determine if observer is in terrain shadow
@@ -185,7 +184,7 @@
                 write(6,*)' Sun is behind terrain'
                 od_atm_a_eff = 0.
                 sun_vis = 0.
-            else
+            else ! sun is outside of terrain
                 if(transm_obs .gt. 0.9)then
                     od_atm_a_eff = od_atm_a
                     sun_vis = 1.
@@ -195,12 +194,33 @@
                 endif
             endif
 
-            where(airmass_2_topo(:,:) .eq. 0.)
-                od_atm_a_eff(:,:) = aod_ill(:,:) ! experimental
-            end where
+!           Calculate normalized illuminated aerosol optical depth (zenith)
+            do i = ni,1,-1
+!             call get_airmass(alt_a(i,1),htmsl,patm &   ! I
+!                             ,redp_lvl,aero_scaleht &   ! I
+!                             ,earth_radius &            ! I
+!                             ,ag,ao,aa)                 ! O 
+              do j = 1,nj
+!               Crepuscular ray experiments
 
-            write(6,6)transm_obs,od_atm_a_eff(isun,jsun),sun_vis
-6           format(' transm_obs,od_atm_a_eff,sun_vis=',3f8.3)
+!               if(.true.)then ! Division by zero can occur with aod_2_topo
+!               if(airmass_2_topo(i,j) .gt. 0. .OR. transm_obs .lt. 0.9)then
+                if(airmass_2_topo(i,j) .gt. 0.)then ! "operational"
+                  od_atm_a_eff(i,j) = od_atm_a * aod_ill(i,j) / aod_2_topo(i,j)
+                  if(idebug_a(i,j) .eq. 1)then
+                    od_atm_test = od_atm_a * aod_ill(i,j) / aod_2_topo(i,j)
+                    write(6,6)alt_a(i,j),od_atm_a,aod_2_topo(i,j) &
+                             ,aod_ill(i,j),od_atm_test     
+6                   format(' alt/od_atm_a/aod2topo/aod_ill/od_atm_test',2f9.3,2f10.5,f9.3)
+                  endif
+                endif
+              enddo ! j
+            enddo ! i
+
+            write(6,7)transm_obs,od_atm_a,od_atm_a_eff(isun,jsun),sun_vis
+7           format(' transm_obs,od_atm_a,od_atm_a_eff,sun_vis=',4f8.3)
+
+            write(6,*)' call skyglow_phys:'
 
             call skyglow_phys(1,ni,1 &                               ! I
                      ,1,nj,1 &                                       ! I
@@ -296,18 +316,29 @@
 !               (0.25 is dark cloud base value)                                  
               rint_top  = 240.                              * pf_scat 
               rint_base = 240. * (  0.35                  ) * pf_scat 
+
 !             Gamma color correction applied when sun is near horizon 
-              cld_rgb_rat(:) = (cloud_rad_c(:,i,j) / cloud_rad_c(1,i,j)) ** 0.45
+              if(cloud_rad_c(1,i,j) .gt. 0.)then
+                  cld_rgb_rat(:) = (cloud_rad_c(:,i,j)/cloud_rad_c(1,i,j))**0.35
+              else
+                  cld_rgb_rat(:) = 1.0
+              endif
+
+!             rintensity = min(rintensity,255.)
               rintensity(:) = rint_top  * cld_rgb_rat(:) * r_cloud_rad(i,j) &
                             + rint_base * (1.0 - r_cloud_rad(i,j))
-!             rintensity = min(rintensity,255.)
-              rintensity = max(rintensity,0.)
+              rintensity = max(rintensity(:),0.)
+
+!             if(idebug_a(i,j) .eq. 1)then
+!                 write(6,41)rint_base,r_cloud_rad(i,j),rintensity(1),(rint_top  * cld_rgb_rat(1) * r_cloud_rad(i,j)),rint_base * (1.0 - r_cloud_rad(i,j))
+!41               format(' rintensity(1) = ',5f9.3)
+!             endif
 
 !             Apply cloud reddening
               do ic = 1,nc
                   trans_c(ic) = trans(ext_g(ic) * airmass_2_cloud(i,j))              
               enddo
-              rintensity = rintensity * (trans_c/trans_c(1))**0.25 ! 0.45
+              rintensity(:) = rintensity(:) * (trans_c(:)/trans_c(1))**0.25 ! 0.45
 
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
               glow_cld_nt = log10(5000.) ! 10 * clear sky zenith value (log nl)
@@ -346,16 +377,18 @@
                 rintensity_glow = min(((glow_tot -7.3) * 100.),255.)
 
 !               Convert RGB brightness into image counts preserving color balance
+                gamclr = 0.70
+                purple = 0.45
                 bog_rad = clear_rad_c(3,i,j) / clear_rad_c(2,i,j) 
-                if(bog_rad .gt. 2.)then
-                    rog_exp = 0.45
-                elseif(bog_rad .lt. 1.)then
-                    rog_exp = 0.80
+                if(bog_rad .gt. 2.)then ! Rayleigh Value
+                    rog_exp = purple    ! boost red component
+                elseif(bog_rad .lt. 1.)then ! Mie Yellow/Red
+                    rog_exp = gamclr
                 else
-                    rog_exp = 0.80 - 0.35 * (bog_rad - 1.0)
+                    rog_exp = gamclr - (gamclr-purple) * (bog_rad - 1.0)
                 endif
                 rog = (clear_rad_c(1,i,j) / clear_rad_c(2,i,j))**rog_exp
-                bog = (clear_rad_c(3,i,j) / clear_rad_c(2,i,j))**0.80
+                bog = (clear_rad_c(3,i,j) / clear_rad_c(2,i,j))**gamclr
                 clr_red = rintensity_glow * rog
                 clr_grn = rintensity_glow
                 clr_blu = rintensity_glow * bog
