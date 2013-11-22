@@ -11,6 +11,8 @@
 
         include 'trigd.inc'
 
+        use mem_namelist, ONLY: aod_bin, aod_asy 
+
 !       Statement Functions
         trans(od) = exp(-od)
 !       brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness (max~7)
@@ -43,7 +45,11 @@
 
         logical l_solar_eclipse
 
-!       write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
+        if(sol_alt .gt. 0.)then
+            write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
+            write(6,*)' aod_bin = ',aod_bin
+            write(6,*)' aod_asy = ',aod_asy
+        endif
 
         do ialt = ialt_start,ialt_end,ialt_delt
   
@@ -91,9 +97,10 @@
             day_int = 3e9 / 10.**(0.4 * sb_corr)
 
 !           HG illumination
-            hg2 = 0.85 * hg(0.65,elong(ialt,jazi)) &
-                + 0.15 * hg(0.95,elong(ialt,jazi))
-            mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2                        
+            hg2 = aod_bin(1) * hg(aod_asy(1),elong(ialt,jazi)) &
+                + aod_bin(2) * hg(aod_asy(2),elong(ialt,jazi)) &
+                + aod_bin(3) * hg(aod_asy(3),elong(ialt,jazi)) 
+            mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2                       
 
             if(.false.)then ! sum brightness from gas and aerosols
 
@@ -171,7 +178,7 @@
             airmass_g = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
 
             day_int = 3e9
-            twi_int = 3e9 / 6.
+            twi_int = 3e9 ! / 6.
 
             alt_plane = 90. - abs(sol_alt)
             azi_plane = sol_azi
@@ -190,6 +197,7 @@
 
             horz_dep_r = -sol_alt * rpd                                                  
             dist_pp_plane = horz_dep_r**2 * earth_radius / 2.0 ! approx perpendicular dist
+            dist_pp_plane = dist_pp_plane + 13000.             ! shadow enlargement
 
             if(.true.)then ! get light ray distance to shadow cylinder
                 xcos = cosd(angle_r) ! points along the sun's azimuth at 90 degees elong
@@ -203,7 +211,7 @@
                 dist_ray_plane = linecylp(xcos,ycos,x1,earth_radius) 
             endif
 
-            skyref = .000001 ! related to airglow / surface lighting?
+            skyref = .0000001 ! related to airglow / surface lighting?
 
             if(.true.)then ! assume part of atmosphere is illuminated by the sun
 !             dist_ray_plane = dist_pp_plane / sind(angle_plane) ! distance along ray
