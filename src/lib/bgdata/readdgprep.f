@@ -283,6 +283,7 @@ c           enddo
 
          elseif (cwb_type.eq.'nf15'.or.cwb_type.eq.'gfs'
      &.or.cwb_type.eq.'nf45'.or.cwb_type.eq.'tfs')then
+            print *,'read nf model with read_nf15km' 
 
             t_at_sfc = r_missing_data
 
