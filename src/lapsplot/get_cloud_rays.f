@@ -192,6 +192,7 @@
         aod_ray = aod * exp(-(htstart-redp_lvl)/aero_scaleht)
 
         write(6,*)' rkstart/htstart/patm = ',rkstart,htstart,patm
+        write(6,*)' aero_scaleht = ',aero_scaleht
         write(6,*)' aod/redp_lvl/aod_ray = ',aod,redp_lvl,aod_ray
 
         aod_ray_eff = aod_ray
@@ -579,8 +580,14 @@
 
                   aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
                   sum_aod     = sum_aod     + aero_ext_coeff * slant2
-                  sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
-     1                        * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
+
+                  if(rk_m .lt. (rkstart + 1.0))then ! near topo
+                    sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
+     1                          * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
+                  else
+                    sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
+     1                          * transm_3d_m
+                  endif
 
 !                 Relative values using constants from 'module_cloud_rad.f90'
 !                 Values are 1.5 / (rho * reff)
@@ -648,8 +655,9 @@
 !                     Test for first segment
                       if(dxy1_l .eq. 0. .AND. htstart .eq. topo_sfc)then
                           airmass_2_topo_3d(ialt,jazi) = 1e-5
-                          aod_2_topo(ialt,jazi)        = 1e-5
-                          sum_aod_ill                  = 1e-5
+                          aod_2_topo(ialt,jazi)        = 1e-4
+                          sum_aod_ill                  = 1e-4 
+     1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
                       else
                           airmass_2_topo_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
