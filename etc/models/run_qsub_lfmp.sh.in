@@ -127,8 +127,8 @@ echo "maxHrsRun=24"                                             >> $script
 echo "name=$name"                                               >> $script
 echo " echo 'Running this lfmpost.pl command...'"               >> $script
 if test "$name" == "advection"; then # (e.g. advection)
-    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -C 3600 -Z 3600 -W $mdlfilewait' " >> $script
-    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -C 3600 -Z 3600 -W $mdlfilewait"   >> $script
+    echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -C 21600 -Z 21600 -W $mdlfilewait' " >> $script
+    echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -C 21600 -Z 21600 -W $mdlfilewait"   >> $script
 elif test "$name" != "none"; then    # (e.g. ewp0)
     echo " echo '/usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait' " >> $script
     echo "       /usr/bin/perl @prefix@/etc/lfmpost.pl -q -m $modelarg -r $modelroot -d $model_run_time -f $numFcsts -i $fcstIncrMin -w \$maxWaitSec -e \$maxHrsRun -n $name -P $project -g $nest -W $mdlfilewait"   >> $script
