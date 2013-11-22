@@ -128,6 +128,8 @@ cdis
 
         if(iwrite_output .ge. 1)then
             call open_lapsprd_file(lun_hmg,i4time_sys,ext,istatus)
+            write(6,*)' Could not open file for writing: '
+     1               ,lun_hmg,i4time_sys,ext
             if(istatus .ne. 1)return
         endif
 
