@@ -360,7 +360,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_gribprep_header(field,units,desc,p_pa(k))
       d2d = lwc(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. from F8.6 to F9.6 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_lwc 
 
@@ -378,7 +379,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_gribprep_header(field,units,desc,p_pa(k))
       d2d = ice(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. from F8.6 to F9.6 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_ice
 
@@ -396,7 +398,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_gribprep_header(field,units,desc,p_pa(k))
       d2d = rai(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. from F8.6 to F9.6 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_rai
 
@@ -414,7 +417,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_gribprep_header(field,units,desc,p_pa(k))
       d2d = sno(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. from F8.6 to F9.6 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_sno
 
@@ -432,7 +436,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_gribprep_header(field,units,desc,p_pa(k))
       d2d = pic(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. from F8.6 to F9.6 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_pic
 
@@ -744,7 +749,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_metgrid_header(field,units,desc,p_pa(k))
       d2d = lwc(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_lwc
 
@@ -762,7 +768,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_metgrid_header(field,units,desc,p_pa(k))
       d2d = ice(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_ice
 
@@ -781,7 +788,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_metgrid_header(field,units,desc,p_pa(k))
       d2d = rai(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_rai
 
@@ -799,7 +807,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_metgrid_header(field,units,desc,p_pa(k))
       d2d = sno(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_sno
 
@@ -817,7 +826,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       CALL write_metgrid_header(field,units,desc,p_pa(k))
       d2d = pic(:,:,k)
       WRITE ( output_unit ) d2d
-      PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
+!HJ: W>=D+3. 10/14/2013
+      PRINT '(A,F9.1,A,F9.6,A,F9.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_pic
 
