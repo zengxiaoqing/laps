@@ -86,7 +86,7 @@ if(l_process_cdf)then
     write(6,*)' Get dimensions from input file: ',trim(fullname_in)
     call getdims_lapsprd(fullname_in,nxbg,nybg,nzbg,istatus)
     if(istatus .ne. 1)then
-        goto900
+        goto 900
     endif
 
     write(6,*)' input nxbg,nybg,nzbg = ',nxbg,nybg,nzbg
@@ -98,7 +98,7 @@ if(l_process_cdf)then
                projname, La2,Lo2, istatus) 
         if(istatus.ne.1)then
             print*,'error returned: read_lapsprd_attr'
-            goto900
+            goto 900
         endif
     else
         write(6,*)' Assume hard wired nav info from input file'
