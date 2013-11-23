@@ -507,9 +507,7 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
 
     ! LBFGS: SINGLE PRECISION
     CALL LBFGSB(NUMVARS,MM,GRDANALS,LB,UB,NB,COSTFUN,GRADINT,FA,WA,IW,TA,IP,ISBMN,CS,LS,IS,DS)
-
-    IF(GRDLEVL.LE.MIDGRID.AND.IT.GT.COSSTEP)EXIT
-    IF(GRDLEVL.GT.MIDGRID.AND.IT.GT.FINSTEP)EXIT
+    
 !    IF(GRDLEVL.EQ.2.AND.IT.EQ.1)CALL CHECK_F_G
 
     IF(TA(1:2).EQ.'FG')THEN
@@ -587,6 +585,11 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
       ENDIF
       I0=I0+1
       IT = IT+1
+
+      ! Exceeds maximum iterations:
+      IF(GRDLEVL.LE.MIDGRID.AND.IT.GT.COSSTEP) EXIT ITERLOOP
+      IF(GRDLEVL.GT.MIDGRID.AND.IT.GT.FINSTEP) EXIT ITERLOOP
+
       CYCLE ITERLOOP
     ELSE
       IF(IP.LE.-1.AND.TA(1:4).NE.'STOP')WRITE(6,*)TA
