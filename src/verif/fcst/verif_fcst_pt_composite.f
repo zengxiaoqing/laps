@@ -1,11 +1,13 @@
-          
+! Hongli Jiang: NX_L, NY_L, and NZ_L were commented out. Uncomment them
+! and also added in verif_fcst where verif_fcst_compostie is called. 10/14/2013          
+
         subroutine verif_fcst_composite(i4time_sys,a9time,
      1                  model_fcst_intvl,
      1                  model_fcst_len,
      1                  model_cycle_time_in,
      1                  laps_cycle_time,
-!    1                  NX_L,NY_L,
-!    1                  NZ_L,
+     1                  NX_L,NY_L,
+     1                  NZ_L,
      1                  r_missing_data,
      1                  n_plot_times,
      1                  j_status)
@@ -75,7 +77,8 @@
         integer maxthr
         parameter (maxthr=5)
 
-        real cont_4d(NX_L,NY_L,NZ_L,maxthr)
+      ! Never being used! Yuanfu covers this for now
+        ! real cont_4d(NX_L,NY_L,NZ_L,maxthr)
 
         real obs_mean(maxbgmodels,0:max_fcst_times,max_regions)
         real fcst_mean(maxbgmodels,0:max_fcst_times,max_regions)
@@ -387,7 +390,7 @@
                    if(a24time_valid_file .ne. 
      1                a24time_valid_expected)then
                        write(6,*)
-     1                 ,' WARNING: imodel / a24time (expected/file)'
+     1                 ' WARNING: imodel / a24time (expected/file)'
      1                 ,imodel,itime,a24time_valid_expected
      1                              ,a24time_valid_file     
                        goto958
