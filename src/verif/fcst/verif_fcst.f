@@ -131,11 +131,16 @@
         read(lun_plot_times,*)n_plot_times
         close(lun_plot_times)
 
+! Hongli Jiang: NX_L, NY_L, NZ_L are not passed in from here. But
+! verif_fcst_pt_composite.f expecting NX_L, NY_L, and NZ_L. Add here after
+! laps_cycle_time. 10/14/2013
         call verif_fcst_composite(i4time,a9time,                    
      1                     model_fcst_intvl,
      1                     model_fcst_len,
      1                     model_cycle_time,
      1                     laps_cycle_time,
+     1                     NX_L,NY_L,
+     1                     NZ_L,
      1                     r_missing_data,
 !    1                     model_verif_intvl,
      1                     n_plot_times,
