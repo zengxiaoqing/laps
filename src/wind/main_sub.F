@@ -187,7 +187,7 @@ cdis
         NZ_L = nk_laps
         
         ! Set up pointers to mem_wind arrays so names do not need to be changed
-        !    Can't do this with the USE rename list
+        !    Can not do this with the USE rename list
         uanl => wind%uanl
         vanl => wind%vanl
         uanl_sfcitrp => wind%uanl_sfcitrp
@@ -537,7 +537,7 @@ cdis
         I4_elapsed = ishow_timer()
 
 #ifdef MULTI_EXEC
-!       Need to allocate actual datatype member, can't use wanl pointer for 
+!       Need to allocate actual datatype member, can not use wanl pointer for 
 !       allocation
         allocate( wind%wanl(NX_L,NY_L,nk_laps), STAT=istat_alloc )
         if(istat_alloc .ne. 0)then
