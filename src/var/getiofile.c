@@ -33,6 +33,10 @@ int getfilenames(char *path,int *size,char *files,int *rtn)
       *size=strlen(files);
       return(*rtn);
    }
+/* added: return here in response to compiler warning
+ * getiofile.c(36): warning #1011: missing return statement 
+ * at end of non-void function "getfilenames_". Hongli Jiang 10/21/2013 */
+     return(*rtn);
 }
 
 
@@ -59,7 +63,7 @@ int rioreadfile(char *fname,char *buf,int *size,int *rtn_code)
      /** check if buffer size smaller than file size, if yes,
          return error */
      if ( st_file.st_size > *size ) {
-        printf("buffer size too small,real size is %d",st_file.st_size);
+        printf("buffer size too small,real size is %ld",st_file.st_size);
         *rtn_code=-2;
         return(*rtn_code);
      }
