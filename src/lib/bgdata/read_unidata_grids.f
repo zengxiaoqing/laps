@@ -1689,7 +1689,8 @@ c          Also convert surface mixrat into spechum
         print 850, k,prbght(ic,jc,k),ht(ic,jc,k),tp(ic,jc,k), 
      +              sh(ic,jc,k),uw(ic,jc,k),vw(ic,jc,k),ww(ic,jc,k)
       enddo
- 850  FORMAT(I2,1x,F6.1,1x,F7.1,1x,F5.1,1x,F7.5,1x,F5.1,1x,F5.1,1x,
+! Honglig Jiang: change from F7.5 to F8.5. 11/27/2013
+ 850  FORMAT(I2,1x,F6.1,1x,F7.1,1x,F5.1,1x,F8.5,1x,F5.1,1x,F5.1,1x,
      +   F8.5)
     
       istatus =  1
