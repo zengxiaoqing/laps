@@ -477,7 +477,7 @@ cdoc    Calculate a variety of stability indices from an input sounding
         DATA BLTHCK/50.0/
         DATA RPD/.0174532925063/
  1      format('    MIXED PARCEL IS:',F10.1,'MB',F15.3,'C       '
-     1          ,'MIXING RATIO=',F9.7)
+     1          ,'MIXING RATIO=',F10.7)
 
 c       WRITE(6,15)
  15     FORMAT('          PRESSURE     TEMP.    DEW PT.     '
@@ -985,7 +985,8 @@ C
 
         IF(IO.GE.2)WRITE(6,1)I,P(I),T(I),Q(I),WT,SUMWT,SUMT,SUMQ,BT,BQ
      +              ,INTLOG,HH
- 1      FORMAT(1x,I2,F6.0,F6.1,F6.4,2F7.1,2F11.4,F11.6,F9.6,F9.3,F6.2)
+! Hongli Jiang: W>=D+3 from F6.4 to F7.4 10/14/2013
+ 1      FORMAT(1x,I2,F6.0,F6.1,F7.4,2F7.1,2F11.4,F11.6,F9.6,F9.3,F6.2)
 C
         PMEAN=P(LOWEST)-.5*THKNES
         SUMWTI=1./SUMWT
