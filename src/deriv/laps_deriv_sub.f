@@ -695,7 +695,7 @@ c read in laps lat/lon and topo
      1                  (grid_spacing_cen_m/1000.)
         endif
 
-        cld_ice_ub_gpm3 = .01
+        cld_ice_ub_gpm3 = .03
 
         do k = 1,NZ_L
         do j = 1,NY_L
@@ -722,6 +722,11 @@ c read in laps lat/lon and topo
             write(6,*)' Bad status return from insert_thin_lwc_ice'
             goto 999
         endif
+
+        where(cice(:,:,:) .ne. r_missing_data .AND.
+     1        cice(:,:,:) .gt. cld_ice_ub_gpm3      )    
+              cice(:,:,:) = cld_ice_ub_gpm3
+        end where
 
         I4_elapsed = ishow_timer()
 
