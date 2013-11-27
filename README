@@ -192,15 +192,17 @@
 
                       --- 2.1.1  NetCDF library  ---
  
-     The netCDF package is required for laps, it is available via internet at 
-     'http://www.unidata.ucar.edu/packages/netcdf/'
-     netCDF 3.3.1 or a higher 3.x is required. Note that netCDF versions 4.x
-     aren't yet supported. Once netCDF is properly installed, check that the 
-     'ncdump' and 'ncgen' programs are in your path (e.g. 'which ncdump'), so 
-     that 'configure' will find them and provide the laps package with the 
-     proper path. The path setting will also help LAPS programs to run properly.
-     Note that this path specficiation will override anything supplied with the 
-     '--netcdf' command line argument. 
+     The netCDF package is required for laps, we suggest using version 3.6.0
+     available here: 
+
+     http://www.unidata.ucar.edu/downloads/netcdf/netcdf-3_6_0/index.jsp
+
+     Once netCDF is properly installed, check that the 'ncdump' and 'ncgen' 
+     programs are in your path (e.g. 'which ncdump'), so that 'configure' will 
+     find them and provide the laps package with the proper path. The path 
+     setting will also help LAPS programs to run properly. Note that this path 
+     specficiation will override anything supplied with the '--netcdf' command 
+     line argument. 
 
      NetCDF is a general format structure. The detailed format of each data 
      file is self-describing (via 'ncdump'), and is mirrored in a separate 
@@ -428,7 +430,8 @@
                --- 2.1.9  GRIB2 external libraries ---
 
      The background models read by the model first guess ingest program (LGA)
-     include GRIB1 and GRIB2-formatted files. 
+     include GRIB1 and GRIB2-formatted files. If you are reading model first
+     guess data in GRIB2 format, then you will want to install these libraries.
 
      The external compression libraries required for processing GRIB2-formatted 
      files are libjasper.a, libpng.a, and libz.a. They are usually found in 
@@ -520,6 +523,8 @@
              world_topo_30s
              albedo_ncep
              landuse_30s
+             soiltype_bot_30s
+             soiltype_top_30s
          laps-m-n-o.tar
          laps-m-n-o/                          ($LAPS_SRC_ROOT=$LAPSINSTALLROOT)
              Makefile
@@ -566,6 +571,8 @@
              world_topo_30s
              albedo_ncep
              landuse_30s
+             soiltype_bot_30s
+             soiltype_top_30s
          raw_data/                                     (optional raw test data)
          laps/                     
              data*/               ($LAPS_DATA_ROOT, set up during localization)
@@ -684,7 +691,7 @@
      FFLAGS=-O
      </pre>
      Errors linking to other LAPS C routines can be addressed with other
-     adjustments to the CCPFLAGS (among FORTRANUNDERSCORE and 
+     adjustments to the CPPFLAGS (among FORTRANUNDERSCORE and 
      FORTRANDOUBLEUNDERSCORE) or the FFLAGS.
 
                 --- 2.2.3   Ingest Software changes ---
@@ -705,8 +712,8 @@
                 ----   2.2.4  Running make ---
 
      The next step is to build and install the executables, this can be done 
-     by running the following (note the syntax might vary depending on the
-     shell you are using)...
+     by running the following (note the syntax might vary if the shell you
+     are using is different from Bourne shell)...
 
      prompt> cd $LAPS_SRC_ROOT
      prompt> make                  1> make.out 2>&1 
@@ -1353,14 +1360,14 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            Surface observations of various types, covering much of the
            world are available in realtime from GSD's MADIS system (with some
            restrictions). This data, generally in 'WFO/AWIPS' netCDF format, 
-           are distributed via the MADIS server at 
-           http://www-sdd.fsl.noaa.gov/MADIS/. The supported MADIS surface
-           observation datasets include 'metar' (METAR/SYNOP), 'maritime'
-           (Buoy/Ship), 'mesonet', 'urbanet', and others. This is an excellent  
-           source of surface observations for most users outside of ESRL/GSD
-           to start with. To request a real-time data stream please go to
-           the MADIS data application page at this link:
-           http://www-sdd.fsl.noaa.gov/MADIS/data_application.html 
+           are distributed via the MADIS server at http://madis.noaa.gov. 
+           
+           The supported MADIS surface observation datasets include 'metar' 
+           (METAR/SYNOP), 'maritime' (Buoy/Ship), 'mesonet', 'urbanet', and 
+           others. This is an excellent source of surface observations for 
+           most users outside of ESRL/GSD to start with. To request a real-time
+           data stream please go to the MADIS data application page at this 
+           link: http://madis.noaa.gov/data_application.html 
 
            A few other METAR/SYNOP formats are now being supported in LAPS        
            software as listed in the 'static/obs_driver.nl' namelist. The GSD
@@ -1429,7 +1436,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            The NPN wind profiler data is available via another route from 
            GSD with some restrictions. This data, in 'WFO/AWIPS' netCDF format,
            is distributed via GSD's MADIS project at 
-           http://www-sdd.fsl.noaa.gov/MADIS/
+           http://madis.noaa.gov
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
@@ -1442,7 +1449,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            observations. The wind, temperature and humidity obs are appended 
            to our intermediate "PIN" file. A NIMBUS equivalent netCDF database 
            is available (with some restrictions) on the Web via MADIS at
-           http://www-sdd.fsl.noaa.gov/MADIS/
+           http://madis.noaa.gov
 
            Note the TAMDAR is presently being screened out from the NIMBUS
            database while this data source is being validated.
@@ -1453,7 +1460,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            GSD NIMBUS, WFO/AWIPS, CWB, or AFWA databases. These are available 
            in real-time from GSD with some restrictions. RAOB data in 
            'WFO/AWIPS' netCDF format is distributed via GSD's MADIS project at 
-           http://www-sdd.fsl.noaa.gov/MADIS/
+           http://madis.noaa.gov
 
      Dropsondes (snd):
            A Dropsonde ingest module has been developed for the CWB database. 
@@ -1465,7 +1472,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      Radiometers (snd):
            A radiometer ingest module has been developed for the MADIS
-           database - http://www-sdd.fsl.noaa.gov/MADIS/ 
+           database - http://madis.noaa.gov
 
                       ----   2.3.7  Satellite ---
 
