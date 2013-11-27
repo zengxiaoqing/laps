@@ -2893,7 +2893,8 @@ c                                 the truncated Newton has been used.
  1004 format (/,a4, 1p, 6(1x,d11.4),/,(4x,1p,6(1x,d11.4)))
  2001 format
      +  (/,'At iterate',i5,4x,'f= ',1p,d12.5,4x,'|proj g|= ',1p,d12.5)
- 3001 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d7.1),1p,2(1x,d10.3))
+! Hongli Jiang: w>=d+7 from d7.1 to d8.1. 11/27/2013
+ 3001 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d8.1),1p,2(1x,d10.3))
 
       return
 
@@ -2984,7 +2985,8 @@ c     ************
       endif
 
  1004 format (/,a4, 1p, 6(1x,d11.4),/,(4x,1p,6(1x,d11.4)))
- 3002 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d7.1),6x,'-',10x,'-')
+! Hongli Jiang: W>=D+7, from d7.1 to d8.1, 11/27/2013
+ 3002 format(2(1x,i4),2(1x,i5),2x,a3,1x,i4,1p,2(2x,d8.1),6x,'-',10x,'-')
  3003 format (/,
      + '           * * *',/,/,
      + 'Tit   = total number of iterations',/,
@@ -3917,7 +3919,8 @@ c       if tlmda is outside of the box; otherwise it is tlmda.
       endif
       if (iprint .ge. 99) write (6,1301)
  1001 format (/,'----------------SUBDUAL entered-----------------',/)
- 1101 format ( 'ALPHA = ',f7.5,' backtrack to the BOX')	
+! Hongli Jiang: W>=D+3, from f7.5 to f8.5. 11/27/2013
+ 1101 format ( 'ALPHA = ',f8.5,' backtrack to the BOX')	
  1201 format ('Subspace solution X =  ',/,(4x,1p,6(1x,d11.4)))
  1301 format (/,'----------------exit SUBDUAL --------------------',/)
  
@@ -4199,7 +4202,8 @@ c     Backtrack to the feasible region.
       if (iprint .ge. 99) write (6,1004)
 
  1001 format (/,'----------------SUBSM entered-----------------',/)
- 1002 format ( 'ALPHA = ',f7.5,' backtrack to the BOX')	
+! Hongli Jiang: change from f7.5 to f8.5, 11/27/2013
+ 1002 format ( 'ALPHA = ',f8.5,' backtrack to the BOX')	
  1003 format ('Subspace solution X =  ',/,(4x,1p,6(1x,d11.4)))
  1004 format (/,'----------------exit SUBSM --------------------',/)
 
