@@ -1123,7 +1123,8 @@ C
       ELSE
 C
         WRITE(K6,1111)'The calculated MVD = ',XMVD(I),' microns.'
- 1111   FORMAT(1X,A,F3.1,A)
+! Hongli Jiang: change f3.1 to F4.1. 11/27/2013
+ 1111   FORMAT(1X,A,F4.1,A)
         WRITE(K6,*)'This is not within the  possible values of 10-50 mic
      1rons.  Thus, the'
         WRITE(K6,*)'icing severity index is not available for this case.
