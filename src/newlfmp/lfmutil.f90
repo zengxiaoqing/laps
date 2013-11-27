@@ -519,11 +519,11 @@ if (make_micro) then
                           ,hzsig                                   &     ! I
                           ,umean,vmean,ustorm,vstorm,status)             ! O
           write(6,*)' Advect Surface Reflectivity ',fcsttime,i4_adv_pcp
-          call advect(ustorm,vstorm,refl_sfc,array_buf,ngrid_spacingx & 
+          call advect(umean,vmean,refl_sfc,array_buf,ngrid_spacingx & 
                      ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
           refl_sfc = array_out
           write(6,*)' Advect Max Reflectivity ',fcsttime,i4_adv_pcp
-          call advect(ustorm,vstorm,max_refl,array_buf,ngrid_spacingx & 
+          call advect(umean,vmean,max_refl,array_buf,ngrid_spacingx & 
                      ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
           max_refl = array_out
       else
