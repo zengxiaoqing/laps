@@ -1372,7 +1372,7 @@ c       include 'satellite_dims_lvd.inc'
      1                                  ,ext,var_2d,units_2d,comment_2d
      1                                  ,NX_L,NY_L,w_2d,k_mb,istatus)
                     call mklabel(k_mb
-     1                     ,' Cloud Omega ubar/s',c_label)       
+     1                     ,' Cloud Omega 0.1ubar/s',c_label)       
 
                     i4_valid = i4time_nearest
 
@@ -1384,7 +1384,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,w_2d,k_mb,istatus)
                     call mklabel(k_mb
-     1                     ,' Anlyz Omega ubar/s',c_label)       
+     1                     ,' Anlyz Omega 0.1ubar/s',c_label)       
 
                     i4_valid = i4time_nearest
 
@@ -1399,7 +1399,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ,units_2d,comment_2d,NX_L,NY_L,w_2d,k_mb,istatus)       
 
                     call mklabel(k_mb
-     1                     ,' Balnc Omega ubar/s',c_label)       
+     1                     ,' Balnc Omega 0.1ubar/s',c_label)       
 
                     i4_valid = i4time_3dw
 
@@ -1431,11 +1431,11 @@ c       include 'satellite_dims_lvd.inc'
 !    1                         //' OM ubar/s',c_label)
 
                        call mk_fcst_hlabel(k_mb,'Omega',fcst_hhmm
-     1                                 ,ext(1:3),'ubar/s'
+     1                                 ,ext(1:3),'0.1ubar/s'
      1                                 ,c_model,c_label)
                    else
                        call mklabel(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' OM ubar/s',c_label)
+     1                    //' '//ext(1:3)//' OM 0.1ubar/s',c_label)
                    endif
                 endif
 
@@ -1447,7 +1447,7 @@ c       include 'satellite_dims_lvd.inc'
                 enddo ! i
                 enddo ! j
 
-                scale = 1e-1
+                scale = 1e-2
                 if(i_image .eq. 0)then
                     cint = -1. * 2. ** (-density)
                 else
