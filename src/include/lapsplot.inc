@@ -21,6 +21,7 @@
           real chigh_cape
           real chigh_tpw
           real power_tpw
+          real scale_omega
 
           integer latlon_int
           integer mode_supmap
