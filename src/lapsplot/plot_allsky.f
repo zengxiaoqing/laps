@@ -62,6 +62,7 @@
         character*125 comment_2d
         character*40 c_model
         character*9 a9time
+        character*24 a24time
         character*5 fcst_hhmm
         character*3 c3_string
         character*4 c4_string
@@ -424,6 +425,7 @@
      1          (i4time_ref,10800,i4time_lwc,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,clwc_3d,istat_lwc)
             call make_fnam_lp(i4time_lwc,a9time,istatus)
+            call cv_i4tim_asc_lp(i4time_lwc,a24time,istatus)
             i4time_solar = i4time_lwc
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'LWC'
@@ -908,6 +910,7 @@
 !         Write time label
           open(53,file='label.'//clun,status='unknown')
           write(53,*)a9time
+          write(53,*)a24time(1:17)
           close(53)
 
           if(.true.)then
@@ -919,9 +922,10 @@
 !           Write lat/lon and other info for label
             open(54,file='label2.'//clun,status='unknown')
             write(54,54)soundlat(iloc),soundlon(iloc),
-     1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl
+     1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
+     1                  solar_alt,solar_az
             close(54)
- 54         format(2f8.2/6i8)
+ 54         format(2f8.2/6i8/2f8.2)
 
             I4_elapsed = ishow_timer()
 
