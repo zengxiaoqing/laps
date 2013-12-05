@@ -957,7 +957,8 @@ c read in laps lat/lon and topo
                     c_wind = 'k'
                 endif
 
-            elseif(c_field(1:2) .eq. 'om' .and. c_prodtype .eq. 'A')then       
+            elseif(c_field(1:2) .eq. 'om' .and. 
+     1             (c_prodtype .eq. 'A' .or. c_prodtype .eq. 'N') )then       
                 write(6,105)
 105             format('  Omega field: Kinematic (lw3), '
      1                ,'Cloud Bogused'
@@ -973,6 +974,7 @@ c read in laps lat/lon and topo
                 ext_wind = 'balance'
                 call get_directory(ext_wind,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'lw3/*.lw3'
+                ext = 'lw3'
 
             elseif(c_wind .eq. 'c')then
                 ext_wind = 'lco'
@@ -993,11 +995,11 @@ c read in laps lat/lon and topo
 
             endif
 
-
-            if(.not. l_wind_read)then
+!           if(.not. l_wind_read)then
+            if(.true.)then
                 write(6,*)
                 write(6,*)' Looking for 3D wind data: ',ext_wind(1:10)
-     1                   ,' ',ext,c_field,c_wind
+     1                   ,' ',trim(ext),trim(c_field),trim(c_wind)
 
                 if(c_field .ne. 'w ' .and. c_field(1:2) .ne. 'om')then ! Non-omega
                     write(6,*)' Reading U/V'
@@ -1052,6 +1054,7 @@ c read in laps lat/lon and topo
                     if(c_prodtype .eq. 'B' .or. 
      1                 c_prodtype .eq. 'F')then ! c_prodtype
                         var_2d = 'OM'
+                        write(6,*)'call get_lapsdata_3d',trim(directory)      
                         call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
      1                              ,directory,var_2d
@@ -1065,10 +1068,12 @@ c read in laps lat/lon and topo
      1                                    ,i4time_ref,i4time_3dw)
 
                         if(c_wind .eq. 'c')then
+                            write(6,*)'call get_w_3d ',trim(ext_wind)
                             call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
      1                                      ,field_3d,ext_wind,istatus)  
 
                         elseif(c_prodtype .eq. 'A')then
+                            write(6,*)'call get_w_3d ',trim(ext_wind)
                             call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
      1                                      ,field_3d,ext_wind,istatus)
 
@@ -1076,6 +1081,8 @@ c read in laps lat/lon and topo
                             directory = directory(1:len_dir)//'lw3'
                             ext = 'lw3'
                             var_2d = 'OM'
+
+                            write(6,*)'call get_3dgrid_dname ',trim(ext)
 
                             call get_3dgrid_dname(directory
      1                      ,i4time_ref,laps_cycle_time*10000,i4time_3dw       
@@ -1154,7 +1161,8 @@ c read in laps lat/lon and topo
                 do k = 1,NZ_C
                 do i = 1,NX_C
                     if(field_vert(i,k) .ne. r_missing_data)then
-                        field_vert(i,k) = field_vert(i,k)*10. ! Pa/S to ubar/S
+!                       field_vert(i,k) = field_vert(i,k)*10. ! Pa/S to ubar/S
+                        field_vert(i,k) = field_vert(i,k) * 100.! .1 ubar/S
                     else
                         field_vert(i,k) = -1e-30
                     endif
@@ -1176,7 +1184,8 @@ c read in laps lat/lon and topo
                 do k = NZ_C,1,-1
                 do i = 1,NX_C
                     if(field_vert(i,k) .ne. r_missing_data)then
-                        field_vert(i,k) = field_vert(i,k)*10. ! Pa/S to ubar/S
+!                       field_vert(i,k) = field_vert(i,k) * 10. ! Pa/S to ubar/S
+                        field_vert(i,k) = field_vert(i,k) * 100.! .1 ubar/S
 !                   else
 !                       field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
                     endif
@@ -1187,10 +1196,10 @@ c read in laps lat/lon and topo
 
             colortable = 'omega'
 
-            if(i_image .eq. 0)then
+            if(i_image .eq. 0)then ! contour plot
                 cint = -1. * 2. ** (-density)
                 i_contour = 1
-            else
+            else                   ! image plot
 !               cint = 0.
                 cint = 10. 
 
@@ -1207,31 +1216,35 @@ c read in laps lat/lon and topo
                     chigh = 800.
                     clow = -800.
                 endif
+                i_contour = 1
 
-                i_contour = -1
             endif
 
+            write(6,*)' omega i_image/i_contour is ',i_image,i_contour
+
             if       (c_prodtype .eq. 'N')then
-                c_label = 'LAPS Omega (balanced)      ubar/s'
+                c_label = 'LAPS Omega (balanced)  0.1ubar/s'
             else   if(c_wind .eq. 'c')then
-                c_label = 'LAPS Omega (cloud)         ubar/s'
+                c_label = 'LAPS Omega (cloud)     0.1ubar/s'
             else   if(c_prodtype .eq. 'A')then
-                c_label = 'LAPS Omega (analyzed)      ubar/s'
+                c_label = 'LAPS Omega (analyzed)  0.1ubar/s'
             else   if(c_prodtype .eq. 'B')then
                 c_label = 'LAPS  Bkgnd   Omega  '//fcst_hhmm
-     1                                             //'  ubar/s'
+     1                                          //'  0.1ubar/s'
             else   if(c_prodtype .eq. 'F')then
 !               c_label = 'LAPS  FUA     Omega  '//fcst_hhmm
 !    1                                             //'  ubar/s'
 !               c_label = 'LAPS  '//c_model//' Omega  '//fcst_hhmm
 !    1                                             //'  ubar/s'
                 call mk_fcst_xlabel('Omega',fcst_hhmm
-     1                             ,ext(1:3),'ubar/s',c_model,c_label)       
+     1                       ,ext(1:3),'0.1ubar/s',c_model,c_label)
             else
                 c_label = '                                 '
             endif
 
         elseif(c_field .eq. 'w ' )then
+
+            i_contour = 1
 
             if(ext_wind .eq. 'lco')then ! Cloud Omega
 
@@ -1298,8 +1311,6 @@ c read in laps lat/lon and topo
                 cint = -1. * 2. ** (-density)
 
             endif ! LCO field
-
-            i_contour = 1
 
             if       (c_prodtype .eq. 'N')then
                 c_label = 'LAPS W (bal)   Vert X-Sect (cm/s)'
@@ -1507,7 +1518,9 @@ c read in laps lat/lon and topo
             elseif   (c_prodtype .eq. 'B')then
                 c_label = 'LAPS Divergence  (Bkgnd) [1e-5/s]'
             elseif   (c_prodtype .eq. 'F')then
-                c_label = 'LAPS Divergence  (Fcst)  [1e-5/s]'
+!               c_label = 'LAPS Divergence  (Fcst)  [1e-5/s]'
+                call mk_fcst_xlabel('Divergence',fcst_hhmm
+     1                             ,ext(1:3),'1e-5/s',c_model,c_label)       
             endif
 
             plot_parms%iraster = 1
@@ -3212,8 +3225,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         write(6,*)' Plotting, Overlay = ',i_graphics_overlay
      1                                   ,i_label_overlay
-     1                                   ,i_image
-     1                                   ,i_contour
+     1                                   ,' i_image ',i_image
+     1                                   ,' i_contour ',i_contour
 
         ifield_found = 1
 
@@ -3336,7 +3349,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 endif
 
-            else ! logarithmic contour plot
+            elseif(i_image .eq. 0)then ! logarithmic contour plot
               if(.false.)then
                 call conrec(field_vert(1,ibottom)
      1                     ,NX_C,NX_C,(NZ_C-ibottom+1)
