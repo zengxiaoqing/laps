@@ -59,5 +59,8 @@
 
        write(6,*)' alt(1,1) = ',alt_a(1,1)       
 
+!      Fill in corners of polar array (below horizon) with zero values
+       where(alt_a(:,:) .eq. r_missing_data)polar(:,:) = 0.
+      
        return
        end
