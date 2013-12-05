@@ -196,10 +196,10 @@
 
 !           Calculate normalized illuminated aerosol optical depth (zenith)
             do i = ni,1,-1
-!             call get_airmass(alt_a(i,1),htmsl,patm &   ! I
-!                             ,redp_lvl,aero_scaleht &   ! I
-!                             ,earth_radius &            ! I
-!                             ,ag,ao,aa)                 ! O 
+              call get_airmass(alt_a(i,1),htmsl,patm &   ! I
+                              ,redp_lvl,aero_scaleht &   ! I
+                              ,earth_radius &            ! I
+                              ,ag,ao,aa)                 ! O 
               do j = 1,nj
 !               Crepuscular ray experiments
 
@@ -213,6 +213,8 @@
                              ,aod_ill(i,j),od_atm_test     
 6                   format(' alt/od_atm_a/aod2topo/aod_ill/od_atm_test',2f9.3,2f10.5,f9.3)
                   endif
+                elseif(.true.)then ! outside of terrain
+                  od_atm_a_eff(i,j) = (od_atm_a * aod_ill(i,j)) / (aa * od_atm_a)
                 endif
               enddo ! j
             enddo ! i
@@ -549,10 +551,11 @@
 
 !             Consider solar altitude from the sloping terrain?             
 !             if(sol_alt .le. 7. .AND. sol_az .gt. 180.)then ! mountain shadow
-!               od_2_topo = 0. ! (od_atm_g + od_atm_a) * airmass_2_topo(i,j)
-!             else ! eventually use clear_rad influenced by topo
+              if(sol_alt .le. 0.)then 
+                od_2_topo = 0. ! (od_atm_g + od_atm_a) * airmass_2_topo(i,j)
+              else ! eventually use clear_rad influenced by topo
                 od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
-!             endif
+              endif
 
               topo_visibility = exp(-1.00*od_2_topo)                    
 
