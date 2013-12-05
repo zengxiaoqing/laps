@@ -75,10 +75,15 @@
         logical l_solar_eclipse
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
+        parameter (nsp = 4)
+        real cvr_path_sum_sp(nsp)
+        real wt_sp(nsp) ; data wt_sp /1.0,0.5,0.02,0.0714/
+
         real elong(minalt:maxalt,minazi:maxazi)
         real aod_ray_eff(minalt:maxalt,minazi:maxazi)
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)     ! cloud opacity
         real cloud_od(minalt:maxalt,minazi:maxazi)       ! cloud optical depth
+        real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)! cloud species tau
         real cloud_rad(minalt:maxalt,minazi:maxazi)      ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
@@ -248,6 +253,7 @@
 
           icloud = 0
           cvr_path_sum = 0.
+          cvr_path_sum_sp = 0.
           sum_odrad = 0.
           sum_odrad_c = 0.
           sum_clrrad = 0.
@@ -260,6 +266,7 @@
 !           do k = ksfc,ksfc
               r_cloud_3d(ialt,jazi) = 0.
               cloud_od(ialt,jazi) = 0.
+              cloud_od_sp(ialt,jazi,:) = 0.
               
               ri1 = ri
               rj1 = rj
@@ -540,11 +547,6 @@
      1                     ,int(rk_m)   :int(rk_m)+1    ) ) .gt. 0.)then        
                       call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
      1                                   ,cond_3d,cond_m)
-                  else
-                      cond_m = 0.
-                  endif
-
-                  if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
                       call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
      1                                   ,clwc_3d,clwc_m)
                       call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
@@ -553,11 +555,25 @@
      1                                   ,rain_3d,rain_m)
                       call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
      1                                   ,snow_3d,snow_m)
+                  else
+                      cond_m = 0.
+                      clwc_m = 0.
+                      cice_m = 0.
+                      rain_m = 0.
+                      snow_m = 0.
                   endif
 
                   cvr_path = cond_m                                 
                   cvr_path_sum_last = cvr_path_sum
                   cvr_path_sum      = cvr_path_sum + cvr_path * slant2       
+                  cvr_path_sum_sp(1) = 
+     1            cvr_path_sum_sp(1) + clwc_m * wt_sp(1)
+                  cvr_path_sum_sp(2) = 
+     1            cvr_path_sum_sp(2) + cice_m * wt_sp(2)
+                  cvr_path_sum_sp(3) = 
+     1            cvr_path_sum_sp(3) + rain_m * wt_sp(3)
+                  cvr_path_sum_sp(4) = 
+     1            cvr_path_sum_sp(4) + snow_m * wt_sp(4)
 
                   if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
@@ -673,6 +689,8 @@
                   endif
 
                   cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
+                  cloud_od_sp(ialt,jazi,:) 
+     1                                = clwc2alpha*cvr_path_sum_sp(:)   
                   r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
                   if(idebug .eq. 1)write(6,101)dz1_l,dz1_h,dxy1_l,dxy1_h
      1                     ,cslant
