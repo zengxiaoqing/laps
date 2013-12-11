@@ -3,6 +3,10 @@ MODULE OUTPUT_ANALS
 ! OUTPUT THE ANALYSIS RESULT
 ! HISTORY: SEPTEMBER 2007, CODED by WEI LI.
 !          FEBRUARY 2008,  ZHONGJIE HE.
+!
+!          DECEMBER 2013, YUANFU XIE:
+!          a) CHANGE ANA DIMENSION FOR SAVING MEMORY
+!          b) MODIFY THE TPW CALCULATION
 !*************************************************
 
   USE PRMTRS_STMAS
@@ -38,8 +42,7 @@ SUBROUTINE OUTPTLAPS
   CHARACTER(LEN=200) :: DR
   REAL     :: XB(MAXGRID(1)),YB(MAXGRID(2)),ZB(MAXGRID(3)),TB(MAXGRID(4))
   REAL     :: XF(FCSTGRD(1)),YF(FCSTGRD(2)),ZF(FCSTGRD(3)),TF(FCSTGRD(4))
-  ! REAL     :: ANA(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4),NUMSTAT)
-  REAL, ALLOCATABLE :: ANA(:,:,:,:,:)
+  REAL, ALLOCATABLE :: ANA(:,:,:,:)
   INTEGER  :: FG(MAXDIMS),MG(MAXDIMS)
   REAL     :: Z1(1),T1(1),Z2(1),T2(1),DX,DY
 
@@ -71,14 +74,6 @@ SUBROUTINE OUTPTLAPS
   ! REAL          :: TP(FCSTGRD(1),FCSTGRD(2)),DS,LV(FCSTGRD(3))
   REAL          :: DS,LV(FCSTGRD(3))
 
-  ! REAL          :: HT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
-  ! REAL          :: RH(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))		! RELATIVE HUMIDITY
-  ! REAL          :: T3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
-  ! REAL          :: W3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2)	! 3D WIND: UV
-  ! REAL          :: SF(FCSTGRD(1),FCSTGRD(2),2)	! SURFACE WIND: UV
-  ! REAL          :: SP(FCSTGRD(1),FCSTGRD(2))	! SURFACE PRESSURE
-  ! REAL          :: TPW(FCSTGRD(1),FCSTGRD(2))	! TOTAL PRECIPITABLE WATER
-
   ! YUANFU: MAKE ALL LARGE ARRAYS INTO ALLOCATABLE ONES FROM AUTOMATIC:
   REAL, ALLOCATABLE :: HT(:,:,:),RH(:,:,:),T3(:,:,:),W3(:,:,:,:),SF(:,:,:),SP(:,:),TPW(:,:)
 
@@ -99,8 +94,7 @@ i4_ret=0
 ! --------------------
 
   ! ALLOCATE MEMORY:
-  ALLOCATE(ANA(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4),NUMSTAT), &
-           HT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)),RH(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)), &
+  ALLOCATE(HT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)),RH(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)), &
            T3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)),W3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),2), &
            SF(FCSTGRD(1),FCSTGRD(2),2),SP(FCSTGRD(1),FCSTGRD(2)),TPW(FCSTGRD(1),FCSTGRD(2)), &
           STAT=ST)
@@ -159,39 +153,45 @@ i4_ret=0
   print*,'Increment 4: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,4)))
   print*,'Increment 5: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,5)))
   IF (NUMSTAT .GT. 5) print*,'Increment 6: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,6)))
-  ANA = 0.0
-  CALL BKGTOFINE(NUMSTAT,MAXGRID,XB,YB,ZB,TB,FCSTGRD,XF,YF,ZF,TF,GRDBKGD0,ANA)
 
-  ! MAKE SURE INTERPOLATED SH ANALYSIS POSITIVE:
-  DO T=1,FCSTGRD(4)
-  DO K=1,FCSTGRD(3)
-  DO J=1,FCSTGRD(2)
-  DO I=1,FCSTGRD(1)
-    ANA(I,J,K,T,HUMIDITY) = &
-      MAX(-BK0(I,J,K,T,HUMIDITY),ANA(I,J,K,T,HUMIDITY))
-  ENDDO
-  ENDDO
-  ENDDO
-  ENDDO
+  ! Yuanfu: Change Ana to a 4 dimensional array to save space:
+  ! ALLOCATE MEMORY:
+  ALLOCATE(ANA(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4)),STAT=ST)
 
-  ! ADD INCREMENT TO BK0:
+  ! LOOP THROUGH ALL ANALYSIS VARIABLES:
   DO S=1,NUMSTAT
     print * ,'------------------------------------------------------'
-    
+    ANA = 0.0
+    CALL BKGTOFINE(1,MAXGRID,XB,YB,ZB,TB,FCSTGRD,XF,YF,ZF,TF,GRDBKGD0(:,:,:,:,S),ANA)
+
+    ! MAKE SURE INTERPOLATED SH ANALYSIS POSITIVE:
+    IF (S .EQ. HUMIDITY) THEN
+      DO T=1,FCSTGRD(4)
+      DO K=1,FCSTGRD(3)
+      DO J=1,FCSTGRD(2)
+      DO I=1,FCSTGRD(1)
+        ANA(I,J,K,T) = &
+          MAX(-BK0(I,J,K,T,HUMIDITY),ANA(I,J,K,T))
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDDO
+    ENDIF
+
+    ! ADD INCREMENT ANA TO BK0:
     DO T=1,FCSTGRD(4)
     DO K=1,FCSTGRD(3)
     DO J=1,FCSTGRD(2)
     DO I=1,FCSTGRD(1)
-      BK0(I,J,K,T,S) = BK0(I,J,K,T,S)+ANA(I,J,K,T,S)
-     
+      BK0(I,J,K,T,S) = BK0(I,J,K,T,S)+ANA(I,J,K,T)
     ENDDO
     ENDDO
     ENDDO
     ENDDO
     print*,'bko_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S)),S
-    print*,'        ',maxval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S))
+    print*,'        ',maxval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2))
     print*,'bko_min=',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S)),S
-    print*,'        ',minval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S))
+    print*,'        ',minval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2))
   ENDDO
 print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,5))
 print*,'Specific humidity upp bound: ',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,5))
@@ -399,18 +399,16 @@ goto 222
   DO I=1,FCSTGRD(1)
     TPW(I,J) = 0.0
     DO K=1,FCSTGRD(3)-1
-      IF (BK0(I,J,K+1,IFRAME,3) .LE. TOPOGRPH(I,J)) CYCLE
-
-      ! Topography is between this interval: take a fraction
-      FRACTION = 1.0
-      IF (BK0(I,J,K,IFRAME,3) .LE. TOPOGRPH(I,J)) &
-        FRACTION = (BK0(I,J,K+1,IFRAME,3)-TOPOGRPH(I,J))/ &
-                   (BK0(I,J,K+1,IFRAME,3)-BK0(I,J,K,IFRAME,3))
-
-      ! For the top of interval is above topography: summed up
-      TPW(I,J) = TPW(I,J) + 0.5*FRACTION* &
+      IF (LV(K)/100.0 .LE. p_sfc_f(i,j)) THEN
+        ! above topography: summed up
+        TPW(I,J) = TPW(I,J) + 0.5* &
                  (BK0(I,J,K,IFRAME,5)+BK0(I,J,K+1,IFRAME,5))* &
                  (LV(K)-LV(K+1))/100.0 ! PRESSURE IN MB
+
+      ELSEIF (LV(K+1)/100.0 .LE. p_sfc_f(i,j)) THEN
+        TPW(I,J) = TPW(I,J) + BK0(I,J,K+1,IFRAME,5)* &
+                   (p_sfc_f(i,j)-LV(k)/100.0)
+      ENDIF
     ENDDO
     ! FROM G/KG TO CM:
     TPW(I,J) = TPW(I,J)/100.0/9.8 ! FOLLOWING DAN'S INT_IPW.F ROUTINE
