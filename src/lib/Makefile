@@ -161,7 +161,10 @@ SRC	= machine_dependent.F \
           snooze_gg.f \
           solar_normal.f \
           spread.f \
-          sroutines.f \
+          xlbfgsb.f \
+          xlinpack.f \
+          xblas.f \
+          xtimer_lbfgs.f \
           ssh2.f \
           stats_1d.f \
           subcon.f \
