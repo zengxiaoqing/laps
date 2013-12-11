@@ -131,22 +131,23 @@ SUBROUTINE RDLAPSBKG
 ! READ IN BACKGROUND FROM LAPS SYSTEM
 ! HISTORY: SEPTEMBER 2007, CODED by WEI LI.
 !          OCTOBER   2007, by YUANFU XIE (USE LAPS)
+!
+!          MODIFIED DEC. 2013 BY YUANFU READING IN
+!          SURFACE PRESSURE.
 !*************************************************
   IMPLICIT NONE
 ! --------------------
   INTEGER  :: I,J,K,T,LN
-  CHARACTER(LEN=200) :: DR
+  CHARACTER(LEN=256) :: DR
+  CHARACTER*4  :: LVL_COORD
+  CHARACTER*10 :: UNIT
+  CHARACTER*125 :: COMMENT
   REAL  :: OX,OY,EX,EY
 
   CHARACTER*4  :: VN            ! VARNAME ADDED BY YUANFU
   CHARACTER*9  :: TM            ! ASCII TIME ADDED BY YUANFU
   INTEGER      :: ST            ! STATUS OF LAPS CALLS ADDED BY YUANFU
   INTEGER*4    :: I4            ! SYSTEM I4 TIME ADDED BY YUANFU
-  ! REAL         :: HT(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)), &
-  !                 T3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)), &
-  !                 U3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)), &
-  !                 V3(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)), &
-  !                 SH(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)), &
   REAL         :: P1(FCSTGRD(3)),DS(2)
 
   integer :: mxi,mxj,mxk,mxt
@@ -228,6 +229,13 @@ SUBROUTINE RDLAPSBKG
     print*,'Minvalue of LAPS SH: ', &
       minval(BK0(1:FCSTGRD(1),1:FCSTGRD(2),1:FCSTGRD(3),T,HUMIDITY))
 
+    ! SURFACE PRESSURE:
+    IF (T .EQ. 2) THEN
+      VN = 'PS'
+      CALL GET_DIRECTORY('lsx',DR,LN)
+      CALL READ_LAPS(I4,I4,DR,'lsx',FCSTGRD(1),FCSTGRD(2),1,1,VN,0, &
+                     LVL_COORD,UNIT,COMMENT,P_SFC_F,ST)
+    ENDIF
   ENDDO
 
   ! INTERPOLATE THE BACKGROUND AT PREVIOUS AND AFTER TIME FRAMES:
@@ -339,7 +347,6 @@ print*,'nonhydrostatic: ',amx,mxi,mxj,mxk
   ENDDO
   ENDDO
   ENDDO
-  CALL GET_DIRECTORY('static',DR,LN)
 !===============
   DO K=1,FCSTGRD(3)
     Z_FCSTGD(K)=P00(K)
