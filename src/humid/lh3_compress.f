@@ -49,6 +49,8 @@ c     $log: lh3_compress.for,v $
 c     revision 1.5  1996/03/05  21:11:36  birk
 c     modified i/o interface to enable subhourly cycle
 c     
+c     revision 1.5 2013/12/11   16:22:00  yuanfu
+c     change automatic arrays to allocatable ones for saving stack memory
 c     revision 1.4  1995/09/13  21:35:52  birk
 c     added disclaimer to files
 c     
@@ -96,8 +98,8 @@ c     parameter variables
 c variables requiring dynamic allocation
 
       integer double_lvl(kk*2)
-        real rhdata(ii,jj,kk),rhdata_l(ii,jj,kk),
-     1  equivalenced_rh(ii,jj,kk*2)
+        real,allocatable :: rhdata(:,:,:),rhdata_l(:,:,:),
+     1  equivalenced_rh(:,:,:)
       character var(kk*2)*3,
      1        lvl_coord(kk*2)*4,
      1        units(kk*2)*10,
@@ -123,6 +125,8 @@ c internal variables
       data ext /'lq3'/
       data rhext /'lh3'/
 
+        allocate(rhdata(ii,jj,kk),rhdata_l(ii,jj,kk),
+     1  equivalenced_rh(ii,jj,kk*2),stat=istatus)
 
       istatus = 0               ! bad
 
@@ -311,7 +315,7 @@ c     replace equivalence statments with do loops
          return
       endif
 
-
+      deallocate(rhdata,rhdata_l,equivalenced_rh,stat=istatus)
 
       istatus = 1               ! good
 
