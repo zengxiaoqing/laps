@@ -406,6 +406,16 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
 !                 pass in penalty for each var
 !       Modified: 11-2008 by min-ken hsieh.
 !                 pass in hbg,huc to calcualte Jb
+!       Modified: 12-2013 by YUANFU XIE:
+!                 New LBFGSB 3.0 fixes machine eps calculation
+!                 Yuanfu adjust LBFGSB 3.0 for solving a super
+!                 large minimization.
+!                 a) Switch to LBFGSB.3.0 with Yuanfu's
+!                    modification for super large minimization
+!                 b) Adjust wkspc dimension for new LBFGSB and
+!                    add a new parameter pg for new LBFGSB
+!                 c) Change automatic arrays of wkspc, wrka, 
+!                    bdlow, bdupp, nbund to allocatables
 !==========================================================
 
   IMPLICIT NONE
@@ -423,33 +433,39 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
 
   CHARACTER*60 :: ctask,csave		! Evaluation flag
 
-  REAL :: wkspc(ngrd(1)*ngrd(2)*ngrd(3)*(2*msave+4)+ &
-	        12*msave*msave+12*msave)! Working space
-  REAL :: bdlow(ngrd(1)*ngrd(2)*ngrd(3))! Lower bounds
-  REAL :: bdupp(ngrd(1)*ngrd(2)*ngrd(3))! Upper bounds
-  REAL :: factr,dsave(29)
+  REAL, ALLOCATABLE :: wkspc(:),bdlow(:),bdupp(:)
+  REAL :: factr,pg,dsave(29)            ! Yuanfu added pg for using setulb
 
   INTEGER :: iprnt,isbmn,isave(44)
-  INTEGER :: nbund(ngrd(1)*ngrd(2)*ngrd(3)) ! Bound flags
-  INTEGER :: iwrka(3*ngrd(1)*ngrd(2)*ngrd(3))
+  INTEGER, ALLOCATABLE :: nbund(:) ! Bound flags
+  INTEGER, ALLOCATABLE :: iwrka(:)
 
   LOGICAL :: lsave(4)
 
   !** End of LBFGS_B declarations.
 
   ! Local variables:
-  INTEGER :: itr,sts,nvr,i,j,k
+  INTEGER :: itr,sts,nvr,i,j,k,istatus
   REAL :: fcn,fnp,fnm,ggg,eps
   REAL :: gdt(ngrd(1),ngrd(2),ngrd(3))	! Gradients
   REAL :: grd(ngrd(1),ngrd(2),ngrd(3))  ! Grid function
   REAL :: egd(ngrd(1),ngrd(2),ngrd(3))  ! Grid function
   
-
+  ! Dec 2013: Yuanfu changed the wkspc dimension from (2*msave+4)
+  ! to (2*msave+5) for both old and new versions of LBFGSB:
+  allocate(wkspc(ngrd(1)*ngrd(2)*ngrd(3)*(2*msave+5)+ &
+                12*msave*msave+12*msave), &
+           iwrka(3*ngrd(1)*ngrd(2)*ngrd(3)), STAT=istatus)
+  allocate(bdlow(ngrd(1)*ngrd(2)*ngrd(3)), &
+           bdupp(ngrd(1)*ngrd(2)*ngrd(3)), &
+           nbund(ngrd(1)*ngrd(2)*ngrd(3)), STAT=istatus)
+           
 
   ! Start LBFGS_B:
   ctask = 'START'
   nvr = ngrd(1)*ngrd(2)*ngrd(3)		! Number of controls
   factr = 1.0d2
+  pg = 1.0e-4        ! Yuanfu added for using setulb
   iprnt = 1
   isbmn = 1
 
@@ -464,8 +480,8 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
   ! Iterations:
 1 CONTINUE
 
-  CALL LBFGSB(nvr,msave,grd,bdlow,bdupp,nbund,fcn,gdt,factr, &
-	wkspc,iwrka,ctask,iprnt,isbmn,csave,lsave,isave,dsave)
+  CALL SETULB(nvr,msave,grd,bdlow,bdupp,nbund,fcn,gdt,factr, &
+	      pg,wkspc,iwrka,ctask,iprnt,csave,lsave,isave,dsave)
 
   ! Exit iteration if succeed:
   IF (ctask(1:11) .EQ. 'CONVERGENCE') GOTO 2
