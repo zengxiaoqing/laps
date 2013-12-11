@@ -255,6 +255,13 @@ SUBROUTINE MINIMIZER_XIE
 !
 !          MODIFIED BY YUANFU FOR USING A SINGLE
 !          PRECISION LBFGS ROUTINE
+!
+!          DECEMBER 2013 MODIFIED BY YUANFU FOR
+!          a) CHANGING AUTOMATIC ARRAYS TO ALLOCATABLES
+!          b) SWITCHING TO LBFGSB 3.0 WITH YUANFU'S
+!             MODIFICATION FOR SUPER LARGE MINIMIZATION
+!          c) REMOVING INITIALIZATION OF IW and WA FOR
+!             EFFICIENCY
 !*************************************************
   IMPLICIT NONE
 ! --------------------
@@ -262,11 +269,12 @@ SUBROUTINE MINIMIZER_XIE
   CHARACTER(LEN=60) :: TA,CS
   LOGICAL           :: LS(4)
   INTEGER    :: I0,IC,IP,IT,ISBMN,N,O,S,T,K,J,I,NO,ER
-  INTEGER    :: IS(44),NB(NUMVARS),IW(3*NUMVARS)
+  INTEGER    :: IS(44)
+  INTEGER, ALLOCATABLE :: NB(:),IW(:)
   INTEGER    :: NN(MAXDIMS+1),NG(MAXDIMS+1),NC
   REAL       :: MN(NUMSTAT+3),MX(NUMSTAT+3)
 
-  REAL :: LB(NUMVARS), UB(NUMVARS)
+  REAL, ALLOCATABLE :: LB(:), UB(:)
   REAL :: FA, PG, DS(29)
   REAL,ALLOCATABLE :: WA(:)
 
@@ -275,7 +283,8 @@ SUBROUTINE MINIMIZER_XIE
 ! --------------------
 
   ! ALLOCATE WORKING ARRAY:
-  ALLOCATE(WA(2*MM*NUMVARS+4*NUMVARS+12*MM*MM+12*MM),STAT=ER)
+  ALLOCATE(WA(2*MM*NUMVARS+5*NUMVARS+12*MM*MM+12*MM), &
+           LB(NUMVARS),UB(NUMVARS),NB(NUMVARS),IW(3*NUMVARS),STAT=ER)
   IF (ER .NE. 0) THEN
     PRINT*,'MINIMIZER: Cannot allocate enough memory for the working array'
     STOP
@@ -422,12 +431,7 @@ SUBROUTINE MINIMIZER_XIE
     ENDDO
     ENDDO
   ENDIF
-! FOR 3D RADAR
-  DO N=1,3*NUMVARS
-    IW(N)=0
-  ENDDO
 
-  WA=0.0
   TA='START'
   I0=0
   IC=0
@@ -488,27 +492,22 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
             CALL PSTN2NUMB(5,NN,NG,NC)
 
             NB(NC) = 1
-            LB(NC) = -GRDBKGND(I,J,K,T,6)
+            LB(NC) = -GRDBKGND(I,J,K,T,ROUR_CMPNNT)
 
             NN(5)=7  ! POSITION OF SNOW
            
             CALL PSTN2NUMB(5,NN,NG,NC)
 
             NB(NC) = 1
-            LB(NC) = -GRDBKGND(I,J,K,T,7)
+            LB(NC) = -GRDBKGND(I,J,K,T,ROUS_CMPNNT)
           ENDDO
         ENDDO
       ENDDO
     ENDDO
     ENDIF
  
-    ! CALL SETULB(NUMVARS,MM,GRDANALS,LB,UB,NB,COSTFUN,GRADINT,FA,PG,WA,IW, &
-    !            TA,IP,CS,LS,IS,DS,IT)
-
-    ! LBFGS: SINGLE PRECISION
-    CALL LBFGSB(NUMVARS,MM,GRDANALS,LB,UB,NB,COSTFUN,GRADINT,FA,WA,IW,TA,IP,ISBMN,CS,LS,IS,DS)
-    
-!    IF(GRDLEVL.EQ.2.AND.IT.EQ.1)CALL CHECK_F_G
+    CALL SETULB(NUMVARS,MM,GRDANALS,LB,UB,NB,COSTFUN,GRADINT,FA,PG,WA,IW, &
+                TA,IP,CS,LS,IS,DS)
 
     IF(TA(1:2).EQ.'FG')THEN
       IF(W_CMPNNT.NE.0) THEN         ! BY ZHONGJIE HE
@@ -518,62 +517,6 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
         CALL WCOMPGERNL
         CALL COSTFUNCT2
         CALL COSTGRADT2
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!for test
-       temp=0
-      temp0=0
-!      T=2
-!     DO K=1,NUMGRID(3)
-!        DO J=10,NUMGRID(2)
-!        DO I=20,NUMGRID(1)
-    !      I=33
-    !      J=31
-   !       K=7
-!         GRDANALS(I,J,K,T,ROUR_CMPNNT)=GRDANALS(I,J,K,T,ROUR_CMPNNT)+0.01
-!         CALL COSTFUNCT2
-!          temp1=COSTFUN
-!          GRDANALS(I,J,K,T,ROUR_CMPNNT)=GRDANALS(I,J,K,T,ROUR_CMPNNT)-2.0*0.01
-!         CALL COSTFUNCT2
-!         temp2=COSTFUN 
-               
-!          dif1=(temp1-temp2)/(2.0*0.01)
-!          dif2=ABS(dif1-GRADINT(I,J,K,T,ROUR_CMPNNT))
-
- !         print*,'    GRADINT(I,J,K,T,ROUR_CMPNNT )=   ',GRADINT(I,J,K,2,ROUR_CMPNNT)
- !          print*,'    costfun1=    ', temp1
- !          print*,'    costfun2=    ', temp2
- !          print*,'    dif1=    ', dif1       
- !          print*,'    dif2=    ', dif2
- !         if(dif2>temp)then
- !          temp=dif2
- !          temp0=dif1
- !          locx=I
- !          locy=J
- !          locz=K
- !          loct=T 
- !          if(dif2>0.01)then 
- !             print*,'    GRADINT(I,J,K,T,ROUR_CMPNNT )=   ',GRADINT(locx,locy,locz,2,ROUR_CMPNNT)
- !              print*,'    dif1=    ', temp0       
- !             print*,'    dif2=    ', temp
- !             print*,'    x=    ', locx
- !             print*,'    y=    ', locy
- !             print*,'    z=    ', locz       
- !             print*,'    t=    ', loct 
- !             stop
- !          endif        
- !          endif
- !       ENDDO
- !     ENDDO
- !    ENDDO  
-    ! print*,'    GRADINT(I,J,K,T,ROUR_CMPNNT )=   ',GRADINT(locx,locy,locz,2,ROUR_CMPNNT)
-   !  print*,'    dif1=    ', temp0       
-  !   print*,'    dif2=    ', temp
- !     print*,'    x=    ', locx
-  !    print*,'    y=    ', locy
-   !   print*,'    z=    ', locz       
-  !    print*,'    t=    ', loct 
-  !    stop
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!     
-       
       ENDIF
       IC=IC+1
       CYCLE ITERLOOP
@@ -598,7 +541,7 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
   END DO ITERLOOP
   1003 FORMAT (2(1x,i4),5x,'-',3x,1p,2(1x,d10.3))
   9001 FORMAT (/,3x,'it',3x,'nf',2x,'stepl',5x,'projg',8x,'f')
-  3001 FORMAT (2(1x,i4),1p,2x,d7.1,1p,2(1x,d10.3))
+  3001 FORMAT (2(1x,i4),1p,2x,d8.1,1p,2(1x,d10.3))
 
   IF(W_CMPNNT.NE.0) THEN         ! BY ZHONGJIE HE
     CALL COSTFUNCT1
@@ -612,7 +555,7 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
   ENDIF
 
   ! DEALLOCATE WORKING ARRAY:
-  DEALLOCATE(WA,STAT=ER)
+  DEALLOCATE(WA,LB,UB,NB,IW,STAT=ER)
   IF (ER .NE. 0) THEN
     PRINT*,'MINIMIZER: Cannot deallocate enough memory for the working array'
     STOP
