@@ -487,14 +487,14 @@ print*,'minvalue of bk: ',minval(grdbkgnd(1:numgrid(1),1:numgrid(2),1:numgrid(3)
             NN(2)=J
             NN(3)=K
             NN(4)=T
-            NN(5)=6  ! POSITION OF RAIN
+            NN(5)=ROUR_CMPNNT  ! POSITION OF RAIN
            
             CALL PSTN2NUMB(5,NN,NG,NC)
 
             NB(NC) = 1
             LB(NC) = -GRDBKGND(I,J,K,T,ROUR_CMPNNT)
 
-            NN(5)=7  ! POSITION OF SNOW
+            NN(5)=ROUS_CMPNNT  ! POSITION OF SNOW
            
             CALL PSTN2NUMB(5,NN,NG,NC)
 
