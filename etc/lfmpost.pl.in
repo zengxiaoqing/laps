@@ -317,6 +317,7 @@ for ($g=1; $g<=$ngrid; $g++) {
      }
    }
    if (! -e "$lapsdataroot/time/c_time.dat") {
+       print "Making fua/fsf directories since c_time.dat from local LAPS is not present\n";
        if (! -e "$model_output_dir/d$dom/fua") {
          mkdir ("$model_output_dir/d$dom/fua",0775);
        }
