@@ -179,63 +179,64 @@ if test "$NCARG_ROOT" = "allsky"; then
 
 # Annotate Model
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    convert -annotate +15+20  "NOAA LAPS"  -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +5+20  "LAPS Simulated" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    convert -annotate +15+20  "NOAA LAPS"  -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    convert -fill white -annotate +15+20  "LAPS Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
   fi
 
 # Annotate Time
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    convert -annotate +393+500 `cat label.$ILOC`   -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+#   convert -fill white -annotate +393+500 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +363+500 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $WINDOW -ge 181; then
-      convert -annotate +1550+20 `cat label.$ILOC`   -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill white -annotate +1550+20 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
-      convert -annotate +725+20 `cat label.$ILOC`   -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill white -annotate +725+20 "`head -2 label.$ILOC | tail -1`"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     fi
   fi
 
 # Annotate Lat/Lon
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    echo "convert -annotate +363+20 "`head -1 label2.$ILOC`" -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
-          convert -annotate +363+20 "`head -1 label2.$ILOC`" -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    echo "convert -fill white -annotate +363+20 "`head -1 label2.$ILOC`" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
+          convert -fill white -annotate +363+20 "`head -1 label2.$ILOC`" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $WINDOW -ge 181; then
-      convert -annotate +1780+20 "`head -1 label2.$ILOC`" -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill white -annotate +1840+20 "`head -1 label2.$ILOC`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
-      convert -annotate +890+20  "`head -1 label2.$ILOC`" -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill white -annotate +920+20  "`head -1 label2.$ILOC`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     fi
   fi
 
 # Annotate Field
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    convert -annotate +20+500 "All Sky"          -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +20+500 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
-  if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    convert -annotate +20+500 "All Sky"          -pointsize 20 -fill white allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-  fi
+# if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
+#   convert -fill white -annotate +20+500 "All-Sky"   -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+# fi
 
 # Annotate Directions
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    convert -annotate +55+60     "$DIR1"            -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-    convert -annotate +40+450    "$DIR2"            -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-    convert -annotate +440+450   "$DIR3"            -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-    convert -annotate +435+60    "$DIR4"            -pointsize 20 -fill white allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +55+60     "$DIR1"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +40+450    "$DIR2"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +440+450   "$DIR3"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +435+60    "$DIR4"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $WINDOW -ge 181; then
-      convert -annotate +1040+20   "$DIRCYL"          -pointsize 20 -fill orange allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate +1040+20   "$DIRCYL"          -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       echo "WINDOW is large "$WINDOW
     else
-      convert -annotate +520+20    "$DIRCYL"          -pointsize 20 -fill orange allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate +520+20    "$DIRCYL"          -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       echo "WINDOW is small "$WINDOW
     fi
   fi
