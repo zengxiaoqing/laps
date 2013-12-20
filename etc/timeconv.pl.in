@@ -17,6 +17,7 @@
 #                                               yyyymmdd_hhmm (13 character date)
 #                                               yyyymmddhh
 #                                               yyyy_mm_dd_hhmm (lfmpost.pl input format)
+#                                               ascii_time      (mm/dd/yyyy hh:mm)
 #
 # -t (optional)        add this number of seconds to the input time
 #
