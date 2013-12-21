@@ -78,8 +78,9 @@ SUBROUTINE read_namelist
                     cosstep,midgrid,finstep,pnlt0hy,taul_hy, &
                     endhylv,endgslv
 
-  INTEGER :: n,nm,ns,ierr
   CHARACTER(LEN=256) ::filename
+  INTEGER :: n,nm,ns,ierr,limgrid(2)
+  REAL :: ratio
 
   ! Get namelist file from LAPS static:
   CALL get_directory('static',filename,n)
@@ -148,9 +149,18 @@ SUBROUTINE read_namelist
     CALL get_LAPS_dimensions(fcstgrd(3),ierr)
     fcstgrd(4) = 3    ! Hardcode for now
 
-    ! For X and Y directions
+    ! For X and Y directions:
+    ! Limit of 401 maxgrid in x and y directions:
+    ratio = FLOAT(fcstgrd(1)-1)/FLOAT(fcstgrd(2)-1)
+    limgrid(1) = MIN(fcstgrd(1),401)
+    limgrid(2) = MIN(fcstgrd(2),401)
+    IF (ratio .GE. 1.0) THEN
+      limgrid(2) = INT((limgrid(1)-1)/ratio)+1
+    ELSE
+      limgrid(1) = INT((limgrid(2)-1)/ratio)+1
+    ENDIF
     DO n=1,2
-       numgrid(n) = INT((fcstgrd(n)-1)/2**(fnstgrd-1))
+       numgrid(n) = INT((limgrid(n)-1)/2**(fnstgrd-1))
        maxgrid(n) = 2**(fnstgrd-1)*numgrid(n)+1
        numgrid(n) = numgrid(n)+1
     ENDDO
@@ -182,7 +192,7 @@ SUBROUTINE read_namelist
     DO n=1,numdims
       IF(maxgrid(n) .GT. 1 .AND. numgrid(n) .GT. 1) THEN
         IF(MOD(maxgrid(n)-1,numgrid(n)-1) .EQ. 0) THEN
-          nm=(MAXGRID(N)-1)/(NUMGRID(N)-1)
+          nm=(maxgrid(N)-1)/(numgrid(N)-1)
           ns=1
           DO WHILE(nm .GE. 2)
             IF(MOD(nm,2) .EQ. 0) THEN
@@ -213,6 +223,12 @@ SUBROUTINE read_namelist
   ! Initial vertical temporarl gridspacing
   grdspac(3:4) = 0.0
   IF (maxgrid(3) .GT. 1) grdspac(3) = (maxgrid(3)-1)/FLOAT(numgrid(3)-1)
+
+  PRINT*,''
+  PRINT*,'STMAS namelist has been read with'
+  WRITE(*,1) numgrid, maxgrid
+1 FORMAT(' numgrid: ',4i4,' maxgrid: ',4i4)
+  PRINT*,''
 
 END SUBROUTINE read_namelist
 
