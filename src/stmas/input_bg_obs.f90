@@ -35,6 +35,187 @@ MODULE INPUT_BG_OBS
 
 CONTAINS
 
+!doc==================================================================
+!
+!>
+!! This is a function of input_bg_obs module and included in
+!! input_bg_obs.f90 for reading in STMAS 3D analysis namelist.
+!! All of the namelist variables are defined in prmtrs_stmas.f90.
+!!
+!! \author Yuanfu Xie
+!!
+!! \b History \n
+!! Created: Dec. 2013
+!!
+!endoc================================================================
+
+!doc==================================================================
+!
+!>
+!! This is a function of input_bg_obs module and included in
+!! input_bg_obs.f90 for reading in STMAS 3D analysis namelist.
+!! All of the namelist variables are defined in prmtrs_stmas.f90.
+!!
+!! \author Yuanfu Xie
+!!
+!! \b History \n
+!! Created: Dec. 2013
+!!
+!endoc================================================================
+
+SUBROUTINE read_namelist
+
+  IMPLICIT NONE
+
+  NAMELIST /number_states/numstat
+
+  NAMELIST /stmas3d/ifbkgnd,ifbound,ifpcdnt, &
+                    penal0x,penal0y,penal0z,penal0t, &
+                    pnlt0pu,pnlt0pv,fnstgrd, &
+                    numdims,numgrid,maxgrid, &
+                    u_cmpnnt,v_cmpnnt,w_cmpnnt,pressure,temprtur,humidity, &
+                    raincont,snowcont,grapcont,cloudice,cloudwat, &
+                    cosstep,midgrid,finstep,pnlt0hy,taul_hy, &
+                    endhylv,endgslv
+
+  INTEGER :: n,nm,ns,ierr
+  CHARACTER(LEN=256) ::filename
+
+  ! Get namelist file from LAPS static:
+  CALL get_directory('static',filename,n)
+  filename(n:n+11) = '/stmas3d.nl'
+
+  ! Open file for read:
+  OPEN(11,file=filename(1:n+11))
+  READ(11,NML=number_states,IOSTAT=ierr)
+
+  ! Allocate memory:
+  ALLOCATE(sl0(numstat),penal0x(numstat),penal0y(numstat),penal0z(numstat), &
+           penal0t(numstat),penal_x(numstat),penal_y(numstat),penal_z(numstat), &
+           penal_t(numstat),obradius(maxdims,numstat), STAT=ierr)
+
+  READ(11,NML=stmas3d,IOSTAT=ierr)
+  CLOSE(11)
+
+  ! Default scaling:
+  sl0 = 1.0
+
+  ! Radar data influence radius: Option later for readin from namelist
+  DO ns=1,numstat
+    obradius(1:2,ns) = 200000.0
+    obradius(3,ns) = 50000.0
+    obradius(4,ns) = 0.0
+  ENDDO
+
+  ! Initial grid positions:
+  oripstn = 0
+
+  ! Coordinate indices:
+  xsl = 1
+  ysl = 2
+  psl = 3
+  csl = 4
+  dsl = 5
+
+  ! Unit conversion to meters:
+  xytrans = 1.0
+  z_trans = 1.0
+
+  ! For testing: if_test = 1; otherwise,
+  if_test = 0
+
+  ! Multigrid V cycle option: 1 full cycle (coarse to fine repeated); 
+  !                           0 half cycle (one coarse to fine)
+  ifrepet = 0
+  itrepet = 0
+
+  ! Threshold values QC observation in the vertical and time:
+  limit_3 = 10
+  limit_4 = 1
+
+  ! Initializing STMAS grids:
+  ngptobs = 2**numdims        ! Number of observation grid indices
+  nallobs = 0                ! Total number of all observations
+
+  ! Multigrid setup:
+  IF (maxgrid(1) .EQ. 0) THEN
+
+    ! Using a default multigrid setup based on the fcstgrd:
+    fnstgrd = 4       ! Default levels of multigrid
+
+    ! Get LAPS fcstgrd:
+    CALL get_grid_dim_xy(fcstgrd(1),fcstgrd(2),ierr)
+    CALL get_LAPS_dimensions(fcstgrd(3),ierr)
+    fcstgrd(4) = 3    ! Hardcode for now
+
+    ! For X and Y directions
+    DO n=1,2
+       numgrid(n) = INT((fcstgrd(n)-1)/2**(fnstgrd-1))
+       maxgrid(n) = 2**(fnstgrd-1)*numgrid(n)+1
+       numgrid(n) = numgrid(n)+1
+    ENDDO
+
+    ! For Z direction:
+    nm = 0
+    numgrid(3) = fcstgrd(3)-1
+    DO n=1,fnstgrd
+      IF (MOD(numgrid(3),2) .EQ. 0) THEN
+        numgrid(3) = numgrid(3)/2
+        nm = nm+1
+      ELSEIF (nm .EQ. 0) THEN
+        PRINT*,'Currently, the number of analysis vertical levels must be even!'
+        STOP
+      ELSE
+        EXIT      ! Use current numgrid(3) to start multigrid
+      ENDIF
+    ENDDO
+    maxgrid(3) = numgrid(3)*2**(fnstgrd-1)+1
+    numgrid(3) = numgrid(3)+1
+
+    ! For T direction:
+    numgrid(4) = 2
+    maxgrid(4) = 3
+
+  ELSE
+
+    ! Using maxgrid to setup multigrid:
+    DO n=1,numdims
+      IF(maxgrid(n) .GT. 1 .AND. numgrid(n) .GT. 1) THEN
+        IF(MOD(maxgrid(n)-1,numgrid(n)-1) .EQ. 0) THEN
+          nm=(MAXGRID(N)-1)/(NUMGRID(N)-1)
+          ns=1
+          DO WHILE(nm .GE. 2)
+            IF(MOD(nm,2) .EQ. 0) THEN
+              nm=nm/2
+              ns=ns+1
+            ELSE
+              PRINT*, 'MAXGRID SHOULD BE (NUMGRID-1)*2**N+1'
+              STOP
+            ENDIF
+          ENDDO
+        ELSE
+          PRINT*, 'MAXGRID SHOULD BE (NUMGRID-1)*2**N+1'
+          STOP
+        ENDIF
+        IF(ns .GT. fnstgrd) THEN
+          maxgrid(n)=(numgrid(n)-1)*2**(fnstgrd-1)+1
+        ENDIF
+      ENDIF
+    ENDDO
+
+  ENDIF ! End multigrid setup
+
+  ! Maxgrid in time is the same as final analysis:
+  fcstgrd(4) = maxgrid(4)
+
+  inigrid = numgrid          ! Save initial start multigrid numbers
+
+  ! Initial vertical temporarl gridspacing
+  grdspac(3:4) = 0.0
+  IF (maxgrid(3) .GT. 1) grdspac(3) = (maxgrid(3)-1)/FLOAT(numgrid(3)-1)
+
+END SUBROUTINE read_namelist
+
 ! INCLUDE 'laps_configs.f90'
 SUBROUTINE LAPS_CONFIG
 
@@ -124,7 +305,9 @@ SUBROUTINE BKGRNDOBS
   INTEGER      :: ISTATE
 
   PRINT*,'READNMLST'
-  CALL READNMLST
+  ! CALL READNMLST
+  CALL read_namelist
+
   PRINT*,'BKGMEMALC'
   CALL BKGMEMALC
   PRINT*,'RDBCKGRND'
@@ -261,7 +444,7 @@ SUBROUTINE READNMLST
   READ(NU,*)U_CMPNNT
   READ(NU,*)V_CMPNNT
   READ(NU,*)W_CMPNNT
-  READ(NU,*)PRESSURE         ! 'PRESSURE' IS REALLY PRESSURE FOR Z COORDINATE, WHILE FOR PRESURE COORDINATE IT IS HEIGHT
+  READ(NU,*)PRESSURE         ! 'PRESSURE' IS FOR Z COORDINATE, FOR PRESURE COORDINATE IT IS HEIGHT
   READ(NU,*)TEMPRTUR
   READ(NU,*)HUMIDITY
   IF (NUMSTAT .GT. 5) &
