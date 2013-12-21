@@ -77,6 +77,13 @@ MODULE PRMTRS_STMAS
   INTEGER              :: PRESSURE           ! PRESSURE INDEX
   INTEGER              :: TEMPRTUR           ! TEMPERATURE INDEX
   INTEGER              :: HUMIDITY           ! SPECIFIC HUMIDITY INDEX
+!added by Juxiang for cloud optical depth
+  INTEGER              :: CLOUDICE           ! CLOUD ICE INDEX
+  INTEGER              :: CLOUDWAT           ! CLOUD WATER INDEX
+  INTEGER              :: RAINCONT           ! RAIN CONTENT INDEX
+  INTEGER              :: SNOWCONT           ! SNOW CONTENT INDEX
+  INTEGER              :: GRAPCONT           ! GRAUPEL CONTENT INDEX
+  
 !added by shuyuan 20100721 for radar reflectivity
   INTEGER              :: ROUR_CMPNNT        ! DENSITY*RAIN WATER MIXING RATIO
   INTEGER              :: ROUS_CMPNNT        ! DENSITY*SNOW WATER MIXING RATIO
