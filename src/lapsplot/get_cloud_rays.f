@@ -6,7 +6,7 @@
      1                           ,topo_swi,topo_albedo                  ! O
      1                           ,aod_ray,aod_2_cloud,aod_2_topo,aod_ill! O
      1                           ,transm_obs                            ! O
-     1                           ,r_cloud_3d,cloud_od                   ! O
+     1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,cloud_rad,cloud_rad_c                 ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
@@ -21,6 +21,8 @@
      1                           ,grid_spacing_m,r_missing_data)        ! I
 
         use mem_namelist, ONLY: earth_radius,aod,aero_scaleht,redp_lvl
+
+        use cloud_rad
 
         include 'trigd.inc'
 
@@ -47,6 +49,7 @@
         real snow_3d(ni,nj,nk) ! kg/m**3
         real cond_3d(ni,nj,nk) ! kg/m**3 (effective LWC)
         real aod_3d(ni,nj,nk)  ! aerosol optical depth (per vertical atmosphere)
+        real tri_coeff(2,2,2)
         real heights_3d(ni,nj,nk) ! MSL
         real transm_3d(ni,nj,nk)
         real transm_4d(ni,nj,nk,nc) ! L
@@ -146,6 +149,8 @@
         write(6,*)' range of heights is ',minval(heights_3d)
      1                                   ,maxval(heights_3d)
 
+        I4_elapsed = ishow_timer()
+
         write(6,*)' call get_cloud_rad...'
       
         if(.true.)then
@@ -163,8 +168,16 @@
 
 !       Relative values using constants from 'module_cloud_rad.f90'
 !       Values are 1.5 / (rho * reff)
-        cond_3d = clwc_3d +        cice_3d * 0.5 
-     1          + rain_3d * 0.02 + snow_3d * 0.0714
+!       clwc2alpha = 75. 
+        clwc2alpha = 1.5 / (rholiq  * reff_clwc)
+        cice2alpha = 1.5 / (rholiq  * reff_cice)
+        rain2alpha = 1.5 / (rholiq  * reff_rain)
+        snow2alpha = 1.5 / (rhosnow * reff_snow)
+
+        cond_3d = clwc_3d 
+     1          + cice_3d * (cice2alpha/clwc2alpha)
+     1          + rain_3d * (rain2alpha/clwc2alpha) 
+     1          + snow_3d * (snow2alpha/clwc2alpha)
 
         ri = i
         rj = j
@@ -209,6 +222,10 @@
 
 !       azid1 = 46. ; azid2 = 226.
         azid1 = 90. ; azid2 = 270.
+        if(sol_alt(i,j) .gt. 0.)then
+            azid1 = nint(sol_azi(i,j))
+            azid2 = mod(azid1+180.,360.)
+        endif
 
         do ialt = minalt,maxalt
 
@@ -233,8 +250,8 @@
 
           if((view_azi_deg .eq. azid1 .or. 
      1        view_azi_deg .eq. azid2)            .AND.
-     1        (abs(altray) .eq. 12 .or. abs(altray) .eq. 9 .or.
-     1         abs(altray) .le. 6  .or. ialt .eq. minalt .or.
+     1        (abs(altray) .eq. 12  .or. abs(altray) .eq. 9 .or.
+     1         abs(altray) .le.  9. .or. ialt .eq. minalt .or.
      1         abs(altray) .eq. 20. .or. altray .eq. 30. .or.
      1             altray  .eq. 40. .or. altray .eq. 50.)      )then
               idebug = 1
@@ -545,16 +562,49 @@
      1              cond_3d(int(rinew_m):int(rinew_m)+1
      1                     ,int(rjnew_m):int(rjnew_m)+1
      1                     ,int(rk_m)   :int(rk_m)+1    ) ) .gt. 0.)then        
-                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                   ,cond_3d,cond_m)
-                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                   ,clwc_3d,clwc_m)
-                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                   ,cice_3d,cice_m)
-                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                   ,rain_3d,rain_m)
-                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                   ,snow_3d,snow_m)
+
+                      i1 = min(int(rinew_m),ni-1)
+                      j1 = min(int(rjnew_m),nj-1) 
+                      k1 = min(int(rk_m)   ,nk-1) 
+
+                      fi = rinew_m - i1; i2=i1+1
+                      fj = rjnew_m - j1; j2=j1+1
+                      fk = rk_m    - k1; k2=k1+1
+
+                      tri_coeff(1,1,1) = (1.-fi) * (1.-fj) * (1.- fk)
+                      tri_coeff(2,1,1) = fi      * (1.-fj) * (1.- fk)
+                      tri_coeff(1,2,1) = (1.-fi) *     fj  * (1.- fk)
+                      tri_coeff(1,1,2) = (1.-fi) * (1.-fj) *      fk
+                      tri_coeff(1,2,2) = (1.-fi) *     fj  *      fk
+                      tri_coeff(2,1,2) = fi      * (1.-fj) *      fk
+                      tri_coeff(2,2,1) = fi      *     fj  * (1.- fk)
+                      tri_coeff(2,2,2) = fi      *     fj  *      fk
+
+                      cond_m = sum(tri_coeff(:,:,:) * 
+     1                             cond_3d(i1:i2,j1:j2,k1:k2))
+
+                      clwc_m = sum(tri_coeff(:,:,:) * 
+     1                             clwc_3d(i1:i2,j1:j2,k1:k2))
+
+                      cice_m = sum(tri_coeff(:,:,:) * 
+     1                             cice_3d(i1:i2,j1:j2,k1:k2))
+
+                      rain_m = sum(tri_coeff(:,:,:) * 
+     1                             rain_3d(i1:i2,j1:j2,k1:k2))
+
+                      snow_m = sum(tri_coeff(:,:,:) * 
+     1                             snow_3d(i1:i2,j1:j2,k1:k2))
+
+!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+!    1                                   ,cond_3d,cond_m)
+!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+!    1                                   ,clwc_3d,clwc_m)
+!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+!    1                                   ,cice_3d,cice_m)
+!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+!    1                                   ,rain_3d,rain_m)
+!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+!    1                                   ,snow_3d,snow_m)
                   else
                       cond_m = 0.
                       clwc_m = 0.
@@ -565,31 +615,47 @@
 
                   cvr_path = cond_m                                 
                   cvr_path_sum_last = cvr_path_sum
-                  cvr_path_sum      = cvr_path_sum + cvr_path * slant2       
+                  cvr_path_sum      = cvr_path_sum + cvr_path * slant2
                   cvr_path_sum_sp(1) = 
-     1            cvr_path_sum_sp(1) + clwc_m * wt_sp(1)
+     1            cvr_path_sum_sp(1) + clwc_m * wt_sp(1) * slant2
                   cvr_path_sum_sp(2) = 
-     1            cvr_path_sum_sp(2) + cice_m * wt_sp(2)
+     1            cvr_path_sum_sp(2) + cice_m * wt_sp(2) * slant2
                   cvr_path_sum_sp(3) = 
-     1            cvr_path_sum_sp(3) + rain_m * wt_sp(3)
+     1            cvr_path_sum_sp(3) + rain_m * wt_sp(3) * slant2
                   cvr_path_sum_sp(4) = 
-     1            cvr_path_sum_sp(4) + snow_m * wt_sp(4)
+     1            cvr_path_sum_sp(4) + snow_m * wt_sp(4) * slant2
 
                   if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
-                    call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                                 ,transm_3d,transm_3d_m)
+
+                    if(cond_m .eq. 0.)then ! wasn't computed above
+                      i1 = min(int(rinew_m),ni-1)
+                      j1 = min(int(rjnew_m),nj-1) 
+                      k1 = min(int(rk_m)   ,nk-1) 
+
+                      fi = rinew_m - i1; i2=i1+1
+                      fj = rjnew_m - j1; j2=j1+1
+                      fk = rk_m    - k1; k2=k1+1
+                    endif
+
+                    transm_3d_m = sum(tri_coeff(:,:,:) * 
+     1                            transm_3d(i1:i2,j1:j2,k1:k2))
+
+!                   call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+!    1                                 ,transm_3d,transm_3d_m)
 
                     sum_odrad = sum_odrad + 
      1               (cvr_path * slant2 * transm_3d_m)       
 
                     do ic = 1,nc
-                      call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-     1                            ,transm_4d(:,:,:,ic),transm_4d_m(ic))
+                      transm_4d_m(ic) = sum(tri_coeff(:,:,:) * 
+     1                              transm_4d(i1:i2,j1:j2,k1:k2,ic))
+!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
+!    1                            ,transm_4d(:,:,:,ic),transm_4d_m(ic))
                     enddo ! ic
 
                     sum_odrad_c(:) = sum_odrad_c(:) + 
      1              (cvr_path * slant2 * transm_4d_m(:))
-                  endif
+                  endif ! idebug .eq. 1 .OR. cond_m .gt. 0.
 
                   sum_clrrad = sum_clrrad + transm_3d(inew_m,jnew_m,k_m) 
      1                                    * (airmass1_h - airmass1_l)
@@ -604,10 +670,6 @@
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
      1                          * transm_3d_m
                   endif
-
-!                 Relative values using constants from 'module_cloud_rad.f90'
-!                 Values are 1.5 / (rho * reff)
-                  clwc2alpha = 75. 
 
                   if((cvr_path          .gt. 0.00) .AND.
      1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
@@ -780,6 +842,9 @@
      1         fm * r_cloud_3d(ialt,jazim) + fp * r_cloud_3d(ialt,jazip)
               cloud_od(ialt,jazi) = 
      1         fm * cloud_od(ialt,jazim)   + fp * cloud_od(ialt,jazip)
+              cloud_od_sp(ialt,jazi,:) = 
+     1         fm * cloud_od_sp(ialt,jazim,:) 
+     1                                  + fp * cloud_od_sp(ialt,jazip,:)
               cloud_rad(ialt,jazi) = 
      1         fm * cloud_rad(ialt,jazim)  + fp * cloud_rad(ialt,jazip)
               cloud_rad_c(:,ialt,jazi) = 
@@ -823,6 +888,8 @@
      1       fm * r_cloud_3d(ialtm,:) + fp * r_cloud_3d(ialtp,:)
             cloud_od(ialt,:) =
      1       fm * cloud_od(ialtm,:)   + fp * cloud_od(ialtp,:)
+            cloud_od_sp(ialt,:,:) =
+     1       fm * cloud_od_sp(ialtm,:,:) + fp * cloud_od_sp(ialtp,:,:)
             cloud_rad(ialt,:) =
      1       fm * cloud_rad(ialtm,:)  + fp * cloud_rad(ialtp,:)
             cloud_rad_c(:,ialt,:) =
@@ -855,6 +922,12 @@
 
         write(6,*)' Range of cloud_od = ',minval(cloud_od)
      1                                   ,maxval(cloud_od)
+
+        do isp = 1,nsp
+          write(6,*)' Range of cloud_od_sp = ',isp
+     1                                    ,minval(cloud_od_sp(:,:,isp))
+     1                                    ,maxval(cloud_od_sp(:,:,isp))
+        enddo ! isp
 
         write(6,*)' Range of cloud_rad = ',minval(cloud_rad)
      1                                    ,maxval(cloud_rad)
