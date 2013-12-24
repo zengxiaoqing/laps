@@ -14,7 +14,7 @@ if test "$9" != ""; then # Example: 02:00 (optional)
     wallclock=$9
 fi
 
-if test "$name" != "wrf-hrrr"; then                           #                  
+if test "$name" != "wrf-hrrr" && test "$name" != "advection"; then                           #                  
     mdlfilewait=200
 else
     mdlfilewait=5  
@@ -55,8 +55,8 @@ echo "nx = $nx"
 
 nodetype=hserial
 
-if test "$nx" > "1500"; then
-    vmem=11000M
+if test "$nx" -gt "1500"; then
+    vmem=16000M
 else
     vmem=6000M
 fi
@@ -65,7 +65,7 @@ echo "nodetype = $nodetype"
 # Use the forecast increment from the namelist, except establish a floor of 15 minutes for the HRRR
 fcstIncrMin_nl=`@PERL@ @prefix@/etc/read_nl.pl -d $lapsdataroot -n nest7grid.parms -v fcst_intvl_min`
 if test "$physics" = hrrr; then
-    if test "$fcstIncrMin_nl" > 15; then
+    if test "$fcstIncrMin_nl" -gt 15; then
         fcstIncrMin=$fcstIncrMin_nl
     else
         fcstIncrMin=15
