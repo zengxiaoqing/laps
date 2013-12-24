@@ -4329,7 +4329,7 @@ c abdel
 !    1          c_label,i_overlay,c_display,lat,lon,jdot,
 !    1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-          scale = 1e-3
+          scale = 1e-3 ! data are in M, plot is in mm
           plot_parms%color_power = 0.3
 
           call plot_field_2d(i4time_cloud,c_type_i,field_2d
@@ -5093,7 +5093,7 @@ c                   cint = -1.
             c_label = 'Total Precipitable Water  cm     '
 
 !           cint = 0.25
-            scale = 1e-2
+            scale = 1e-2 ! Data in M, plot in CM
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
@@ -5568,8 +5568,7 @@ c                   cint = -1.
                 endif
 
             elseif(var_2d .eq. 'TPW')then       
-!               scale = 10.     ! Convert from KG/M**2 (mm) to cm
-                scale = 1e-2    ! Convert from M (mm) to cm (inverse)
+                scale = 1e-2    ! Data are in M, display is cm
                 units_2d = 'cm'
 
             elseif(var_2d .eq. 'UMF')then       
@@ -5936,7 +5935,7 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
-        elseif(c_type .eq. 'ps' .or. c_type .eq. 'al')then ! Surface Pressure
+        elseif(c_type_i .eq. 'ps' .or. c_type_i .eq. 'al')then ! Surface Pres
             var_2d = 'PS'
 
             if(i_balance .eq. 1)then
@@ -5955,7 +5954,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            if(c_type .eq. 'ps')then
+            if(c_type_i .eq. 'ps')then
                 c_label = 'Surface Pressure        (mb)     '
             else ! convert to altimeter setting
                 c_label = 'Altimeter Setting       (mb)     '
