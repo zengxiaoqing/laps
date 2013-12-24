@@ -1,9 +1,9 @@
 
-        subroutine get_sky_rgb(r_cloud_3d,cloud_od,r_cloud_rad, &
-                               cloud_rad_c, &
+        subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
+                               r_cloud_rad,cloud_rad_c, &
                                clear_rad_c,clear_radf_c,patm, &
-                               glow,glow_sun,glow_moon,glow_stars,od_atm_a, &
-                               transm_obs,isun,jsun, &                  ! I
+                               glow,glow_sun,glow_moon,glow_stars, &
+                               od_atm_a,transm_obs,isun,jsun, &         ! I
                                airmass_2_cloud,airmass_2_topo, &
                                topo_swi,topo_albedo, & 
                                aod_2_cloud,aod_2_topo,aod_ill, &
@@ -17,6 +17,7 @@
 !       Statement functions
         addlogs(x,y) = log10(10.**x + 10.**y)
         trans(od) = exp(-od)
+        opac(od) = 1.0 - exp(-od)
         brt(a,ext) = 1.0 - exp(-a*ext)
         rad_to_counts(rad) = (log10(rad)-7.3)*100.
         counts_to_rad(counts) = 10.**((counts/100.)+7.3)
@@ -25,6 +26,7 @@
 
         real r_cloud_3d(ni,nj)      ! cloud opacity
         real cloud_od(ni,nj)        ! cloud optical depth
+        real cloud_od_sp(ni,nj,nsp) ! cloud species optical depth
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,ni,nj)  ! clear sky illumination
@@ -153,6 +155,10 @@
 
 !       azid1 = 46. ; azid2 = 226.
         azid1 = 90. ; azid2 = 270.
+        if(sol_alt .gt. 0.)then
+            azid1 = nint(sol_az)
+            azid2 = mod(azid1+180.,360.)
+        endif
 
         do j = 1,nj
         do i = 1,ni
@@ -249,8 +255,8 @@
         if(.true.)then
           if(sol_alt .ge. 0.)then       ! daylight
             write(6,11)
-11          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    ', &
-                   'rinten   airtopo  switopo topoalb aodill  topood topovis cld_visb  glow      skyrgb')
+11          format('    i   j   alt   azi  elong   pf_scat   opac    od /        species            alb    cloud airmass   rad   ', &
+                   'rinten   airtopo  switopo topoalb aodill  topood topovis cld_visb   glow      skyrgb')
           elseif(sol_alt .ge. -16.)then ! twilight
             write(6,12)
 12          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    ', &
@@ -283,32 +289,46 @@
 !         using 'rill' is a substitute for considering the slant path
 !         in 'get_cloud_rad'
           rill = (1. - cosd(elong_a(i,j)))/2.
-          whiteness_thk = r_cloud_rad(i,j) ! * rill ! default is 0.
-!         rint_coeff =  380. * (1. - whiteness_thk) ! default is 380.
-!         rint_coeff =  900. * (1. - whiteness_thk) ! default is 380.
-
-!         rintensity = 250. - ((abs(r_cloud_3d(i,j)-0.6)**2.0) * rint_coeff)
 
 !         Phase function that depends on degree of forward scattering in cloud    
 !         pwr controls angular extent of forward scattering peak of a thin cloud
 !         Useful reference: http://www-evasion.imag.fr/Publications/2008/BNMBC08/clouds.pdf
-          if(elong_a(i,j) .le. 90.)then
+          if(elong_a(i,j) .le. 90.)then ! low elongation phase function
               pwr = 3.0
               ampl = r_cloud_rad(i,j) * 0.7; b = 1.0 + pwr * r_cloud_rad(i,j)
               pf_scat = 0.9 + ampl * (cosd(min(elong_a(i,j),89.99))**b)
-              cloud_odl  = -99.9 ! flag value for logging
               bkscat_alb = -99.9 ! flag value for logging
-          else
+          else                          ! high elongation phase function
 !             convert from opacity to albedo
-!             bkscat_alb = r_cloud_3d(i,j) ** 2.0 ! approx opacity to albedo
               cloud_opacity = min(r_cloud_3d(i,j),0.999999)
-              cloud_odl = -log(1.0 - cloud_opacity)
-!             bksc_eff_od = cloud_odl     * 0.12 ! > .10 due to machine epsilon
               bksc_eff_od = cloud_od(i,j) * 0.10 
               cloud_rad_trans = exp(-bksc_eff_od)
               bkscat_alb = 1.0 - cloud_rad_trans 
               ampl = 0.15 * bkscat_alb
               pf_scat = 0.9 + ampl * (-cosd(elong_a(i,j)))
+          endif
+
+!         Separate snow phase function
+!         opac_nonsnow  =  opac(cloud_od(i,j) - cloud_od_sp(i,j,4))
+          trans_nonsnow = trans(cloud_od(i,j) - cloud_od_sp(i,j,4))
+          cloud_od_snow = cloud_od_sp(i,j,4)
+          cloud_od_tot  = cloud_od(i,j)
+
+          snow_bin1 = exp(-cloud_od_snow/5.)
+          snow_bin2 = 1.0 - snow_bin1
+
+          pf_snow = snow_bin1 * hg(.95,elong_a(i,j)) &
+                  + snow_bin2 * hg(0.0,elong_a(i,j))
+
+          if(cloud_od_tot .gt. 0.)then
+              snow_factor = trans_nonsnow * (cloud_od_snow / cloud_od_tot)
+          else
+              snow_factor = 0.
+          endif
+
+          pf_scat = pf_snow * snow_factor + pf_scat * (1.0 - snow_factor)
+          if(airmass_2_topo(i,j) .gt. 0.)then ! cloud in front of terrain
+              pf_scat = pf_scat**r_cloud_rad(i,j)
           endif
 
 !         Obtain cloud brightness
@@ -585,7 +605,7 @@
               call apply_rel_extinction(rmaglim,alt_a(i,j),od_atm_g+od_atm_a)
               if(sol_alt .ge. 0.)then        ! daylight
                   write(6,102)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
-                      ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
+                      ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),cloud_od_sp(i,j,:),bkscat_alb &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
                       ,topo_swi(i,j),topo_albedo(1,i,j),aod_ill(i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow &
                       ,nint(sky_rgb(:,i,j)),nint(cld_red),nint(cld_grn),nint(cld_blu)
@@ -603,7 +623,7 @@
                       ,glow_cld_nt,glow_cld,glow_cld_moon,glow_secondary_clr,rmaglim &
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:)
               endif
-102           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.4,f7.1,f9.3,f9.1,5f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
+102           format(2i5,3f6.1,f9.3,f9.4,5f6.2,3f8.3,f8.4,f7.1,f9.3,f9.1,5f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
 103           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.4,f7.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',2f9.5,f9.0,3i4)
 104           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
           endif
