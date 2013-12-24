@@ -94,7 +94,7 @@ C
       call get_r_missing_data(r_missing_data,istatus)
 
       call array_range(field_in,MREG,NREG,rmin,rmax,r_missing_data)
-      write(6,*)' input array range: ',rmin,rmax
+      write(6,*)' data array range (before scaling): ',rmin,rmax
       write(6,*)' input scale: ',scale
       write(6,*)' scaled range: ',rmin/scale,rmax/scale
      1                                      ,(rmax/scale)**power
@@ -437,7 +437,15 @@ C
           do m = 1,MREG
           do n = 1,NREG
               ZREG(m,n) = ZREG(m,n) + (col_offset * scale_loc)
-              COLIA(m,n) = int( (ZREG(m,n)-cmn)/cis ) + 3
+
+              colia_arg = (ZREG(m,n)-cmn)/cis
+              if(abs(colia_arg) .le. 1e9)then
+                  COLIA(m,n) = int(colia_arg) + 3
+              else
+                  COLIA(m,n) = 0
+              endif
+
+!             COLIA(m,n) = int( (ZREG(m,n)-cmn)/cis ) + 3
 
               icol_min = min(COLIA(m,n),icol_min)
               icol_max = max(COLIA(m,n),icol_max)
@@ -504,20 +512,27 @@ C
           crange = cmx-cmn
           do m = 1,MREG
           do n = 1,NREG
-              COLIA(m,n) = int( (ZREG(m,n)-cmn)/cis ) + 3
+              colia_arg = (ZREG(m,n)-cmn)/cis
+              if(abs(colia_arg) .le. 1e9)then
+                  COLIA(m,n) = int(colia_arg) + 3
+              else
+                  COLIA(m,n) = 0
+              endif
+!             write(6,*)m,n,colia(m,n)
           enddo ! n
           enddo ! m
 
-          write(6,*)' ZREG range ',minval(ZREG),maxval(ZREG)
+          write(6,*)' ZREG range (2)',minval(ZREG),maxval(ZREG)
           write(6,*)' COLIA range (2) ',icol_min,icol_max
 
           call get_r_missing_data(r_missing_data,istatus)
+
           if(c5_sect .eq. 'xsect')then
               where(ZREG(:,:) .eq. r_missing_data)
      1              COLIA(:,:) = 0
           endif
 
-          write(6,*)' COLIA range (3) ',minval(COLIA),maxval(COLIA)
+          write(6,*)' COLIA range (3) ' ! ,minval(COLIA),maxval(COLIA)
 
           write(6,*)' Calling GCA for Raster Fill Plot'
           call get_border(MREG,NREG,x_1,x_2,y_1,y_2)
