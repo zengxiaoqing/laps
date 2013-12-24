@@ -1,7 +1,7 @@
 
 
-      subroutine get_cloud_rad(sol_alt,sol_azi,clwc_3d,cice_3d,rain_3d,snow_3d, &
-                    topo_a,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk)
+      subroutine get_cloud_rad(sol_alt,sol_azi,clwc_3d,cice_3d,rain_3d, &
+            snow_3d,topo_a,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk)
 
       use mem_namelist, ONLY: r_missing_data, earth_radius
       use cloud_rad ! Cloud Radiation and Microphysics Parameters
@@ -22,6 +22,7 @@
       real cice_3d(ni,nj,nk) ! kg/m**3
       real rain_3d(ni,nj,nk) ! kg/m**3
       real snow_3d(ni,nj,nk) ! kg/m**3
+      real cond_3d(ni,nj,2)
       real heights_3d(ni,nj,nk)
       real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
       real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for
@@ -75,6 +76,12 @@
 
         ku = k+1 ; kl = k
 
+        cond_3d(:,:,1) = clwc_3d(:,:,kl) + cice_3d(:,:,kl) &
+                       + rain_3d(:,:,kl) + snow_3d(:,:,kl)
+
+        cond_3d(:,:,2) = clwc_3d(:,:,ku) + cice_3d(:,:,ku) &
+                       + rain_3d(:,:,ku) + snow_3d(:,:,ku)
+
         dh = heights_3d(1,1,ku) - heights_3d(1,1,kl)
         ds = dh * ds_dh
         dij = (dh * dxy_dh) / grid_spacing_m           
@@ -90,15 +97,17 @@
         else
             nsub = 1
         endif
+        write(6,*)
         write(6,*)'k,nsub = ',k,nsub
 
-!       Loop through array of slant columns
+!       Loop through array of slant columns passing through i,j at sea level
         do i = 1,ni
-        do j = 1,nj
+!        il,ih,jl,jh are offset in reference to MSL height
+         il = i + nint(dil) ; il = max(il,1) ; il = min(il,ni)
+         iu = i + nint(diu) ; iu = max(iu,1) ; iu = min(iu,ni)
 
-!         il,ih,jl,jh are offset in reference to MSL height
-          il = i + nint(dil) ; il = max(il,1) ; il = min(il,ni)
-          iu = i + nint(diu) ; iu = max(iu,1) ; iu = min(iu,ni)
+         do j = 1,nj
+
           jl = j + nint(djl) ; jl = max(jl,1) ; jl = min(jl,nj)
           ju = j + nint(dju) ; ju = max(ju,1) ; ju = min(ju,nj)
 
@@ -108,37 +117,41 @@
               idebug = 0
           endif
 
-!         Calculate cloud integrated species along slant path
-          clwc_m = 0.5 * (clwc_3d(iu,ju,ku) + clwc_3d(il,jl,kl))
-          cice_m = 0.5 * (cice_3d(iu,ju,ku) + cice_3d(il,jl,kl))
-          rain_m = 0.5 * (rain_3d(iu,ju,ku) + rain_3d(il,jl,kl))
-          snow_m = 0.5 * (snow_3d(iu,ju,ku) + snow_3d(il,jl,kl))
+          cond_m = 0.5 * (cond_3d(iu,ju,2 ) + cond_3d(il,jl, 1))   
 
+!         Check slant ray & terrain within grid box coming toward MSL observer
           ihit_terrain = 0
-          do isub = 1,nsub
+          do isub = nsub,1,-1 
             fracs = float(isub) / float(nsub)
-            dis = dil * fracs + diu * (1. - fracs)
-            djs = djl * fracs + dju * (1. - fracs)
-            is = i + nint(dis) ; is = max(is,1) ; is = min(is,ni)
-            js = j + nint(djs) ; js = max(js,1) ; js = min(js,nj)
-            rks = float(kl) + fracs
-            height_int = heights_3d(is,js,kl) * fracs + heights_3d(is,js,ku) * (1. - fracs)
+            is = float(iu) * fracs + float(il) * (1. - fracs)
+            js = float(ju) * fracs + float(jl) * (1. - fracs)
+            height_int = heights_3d(is,js,ku) * fracs + heights_3d(is,js,kl) * (1. - fracs)
             if(height_int .lt. topo_a(is,js))then
               ihit_terrain = ihit_terrain + 1
             endif
             if(idebug .eq. 1)then
-              write(6,91)is,js,rks,height_int,topo_a(is,js),ihit_terrain
-91            format(' Compare height with terrain: ',2i6,f8.1,2f10.2,i4)
+              rks = float(kl) + fracs
+              write(6,91)is,js,fracs,rks,height_int,topo_a(is,js),ihit_terrain
+91            format(' Compare height with terrain: ',2i6,2f8.1,2f10.2,i4)
             endif
-          enddo ! i
+          enddo ! isub
 
           if(ihit_terrain .ge. 1)then
             transm_3d(il,jl,kl) = 0. ! terrain shadow
             if(idebug .eq. 1)then
-                write(6,*)' Set terrain shadow for ',il,jl,kl
+                ht_agl = heights_3d(il,jl,kl)-topo_a(il,jl)
+                write(6,92)il,jl,kl,ht_agl
+92              format(' Set terrain shadow for ',2i5,i4,f8.1,'M AGL')
             endif
 
-          elseif(clwc_m+cice_m+rain_m+snow_m .gt. 0.)then ! for efficiency
+!         elseif(clwc_m+cice_m+rain_m+snow_m .gt. 0.)then ! for efficiency
+          elseif(cond_m .gt. 0.)then ! for efficiency
+
+!           Calculate cloud integrated species along slant path
+            clwc_m = 0.5 * (clwc_3d(iu,ju,ku) + clwc_3d(il,jl,kl))
+            cice_m = 0.5 * (cice_3d(iu,ju,ku) + cice_3d(il,jl,kl))
+            rain_m = 0.5 * (rain_3d(iu,ju,ku) + rain_3d(il,jl,kl))
+            snow_m = 0.5 * (snow_3d(iu,ju,ku) + snow_3d(il,jl,kl))
 
             clwc_lyr_int = clwc_m * ds ! LWP                             
             cice_lyr_int = cice_m * ds                                   
@@ -180,9 +193,9 @@
             if( idebug .eq. 1 .OR. &
                (transm_3d(il,jl,kl) .eq. 0. .and. jl .eq. jdb) )then
               write(6,102)k,heights_3d(il,jl,kl),transm_3d(il,jl,kl),dh,ds&
-                         ,sol_alt(il,jl),sol_azi(il,jl),di,dj,il,jl,iu,ju
-102           format('k/ht/trans/dhds/solaltaz/dij ' &
-                    ,i5,f8.0,f8.5,1x,2f9.2,1x,2f7.2,1x,2f7.3,2x,2i4,2x,2i4)
+                         ,sol_alt(il,jl),sol_azi(il,jl),di,dj,iu,ju,il,jl,i,j
+102           format('k/ht/trans/dhds/solaltaz/dij/u/l/ij ' &
+                    ,i5,f8.0,f8.5,1x,2f9.2,1x,2f7.2,1x,2f7.3,3(2x,2i4))
             endif
           endif
 
@@ -201,23 +214,12 @@
           sol_alt_cld = sol_alt(il,jl) + horz_dep_d + refraction
 
 !         Estimate solar extinction/reddening by Rayleigh scattering at this cloud altitude
-          z = 90. - sol_alt_cld
-!         airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
-!         extinction = 0.28 * airmass * patm
-
-          ramp_ang = 100.0 ! 5.0
           if(sol_alt_cld .lt. 0.)then    ! (early) twilight cloud lighting
             twi_int = .1 * 10.**(+sol_alt_cld * 0.4) ! magnitudes per deg
             rint = twi_int
             grn_rat = 1.0 ; blu_rat = 1.0            
-          elseif(sol_alt_cld .le. ramp_ang .AND. & 
-                 sol_alt_cld .ge. 0.            )then ! low daylight sun
-            if(.false.)then
-              ramp_slope = 1. / ramp_ang
-              rint    = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 1.0),0.0)
-              blu_rat = max( (1.0 - (ramp_ang - sol_alt_cld) * ramp_slope * 2.0),0.0)
-              grn_rat = blu_rat ** 0.3
-            else
+          elseif(sol_alt_cld .ge. 0.)then            ! low daylight sun
+            if(.true.)then
 !             Direct illumination of the cloud is calculated here
 !             Indirect illumination is factored in via 'scat_frac'
               am = airmassf(cosd(90. - max(sol_alt(il,jl),-3.0)))
@@ -229,9 +231,6 @@
               grn_rat = trans_c(2) / trans_c(1)
               blu_rat = trans_c(3) / trans_c(1)
             endif
-          else                                        ! full daylight
-            rint = 1.
-            grn_rat = 1.0 ; blu_rat = 1.0            
           endif  
 
           if(idebug .eq. 1)then
@@ -239,14 +238,18 @@
 103           format('k/salt/hdep/salt_cld/amk/R/G/B',43x,i4,3f6.2,f8.2,2x,3f6.2)                                   
           endif
 
-!         Modify transm array for each of 3 colors depending on solar intensity and color at cloud (top)
+!         Modify transm array for each of 3 colors depending on solar intensity and color
           transm_4d(il,jl,kl,1) = transm_3d(il,jl,kl) * rint
           transm_4d(il,jl,kl,2) = transm_3d(il,jl,kl) * rint * grn_rat      
           transm_4d(il,jl,kl,3) = transm_3d(il,jl,kl) * rint * blu_rat   
 
-        enddo ! j
+         enddo ! j
         enddo ! i
+        I4_elapsed = ishow_timer()
+        write(6,*)' Finished loop for k = ',k
       enddo ! k
+
+      I4_elapsed = ishow_timer()
 
 !     Check the presence of terrain shadow grid points
       n_terr_shadow = 0.
