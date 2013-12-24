@@ -33,6 +33,8 @@
 
         character*1 c_loop
 
+        real bi_coeff(2,2)
+
         write(6,*)' Subroutine latlon_to_grij...'
 
         call get_r_missing_data(r_missing_data,istatus)
@@ -135,6 +137,14 @@
                 idebug = 0
             endif
 
+            if(emission_angle_d(il,jl) .gt. 360.)then
+                write(6,*)
+     1              ' ERROR in latlon_to_grij.f: large emission angle'
+     1             ,emission_angle_d(il,jl)
+                istatus = 0
+                return
+            endif
+
             if(idebug .eq. 1)then
                 write(6,*)'Debugging - reached ',il,jl
                 write(6,51)lat_l(il,jl),lon_l(il,jl)
@@ -212,8 +222,19 @@
                 endif ! bnorm > 1.1
 
 !               Interpolate to get laps i,j at current guessed sat i,j
-                call bilinear_laps(ri_s,rj_s,nx_s,ny_s,rilaps_s,result1)
-                call bilinear_laps(ri_s,rj_s,nx_s,ny_s,rjlaps_s,result2)
+                i1 = min(int(ri_s),nx_s-1); fi = ri_s - i1; i2=i1+1
+                j1 = min(int(rj_s),ny_s-1); fj = rj_s - j1; j2=j1+1
+
+                bi_coeff(1,1) = (1.-fi) * (1.-fj)
+                bi_coeff(2,1) = fi      * (1.-fj)
+                bi_coeff(1,2) = (1.-fi) *     fj 
+                bi_coeff(2,2) = fi      *     fj 
+
+                result1 = sum(bi_coeff(:,:) * rilaps_s(i1:i2,j1:j2))
+                result2 = sum(bi_coeff(:,:) * rjlaps_s(i1:i2,j1:j2))
+
+!               call bilinear_laps(ri_s,rj_s,nx_s,ny_s,rilaps_s,result1)
+!               call bilinear_laps(ri_s,rj_s,nx_s,ny_s,rjlaps_s,result2)
 
 !               call bilinear_interp_extrap(ri_s,rj_s,nx_s,ny_s
 !    1                                     ,rilaps_s,result1,istat_bil)
