@@ -88,8 +88,10 @@
         character*5 c5_name, c5_name_a(max_snd_grid), c5_name_min
         character*8 obstype(max_snd_grid)
 
+        parameter (nsp = 4)
         real, allocatable, dimension(:,:) :: r_cloud_3d ! cloud opacity        
         real, allocatable, dimension(:,:) :: cloud_od   ! cloud optical depth  
+        real, allocatable, dimension(:,:,:) :: cloud_od_sp ! cloud species tau
         real, allocatable, dimension(:,:) :: blog_v_roll                         
         real, allocatable, dimension(:,:) :: blog_moon_roll                         
         real, allocatable, dimension(:,:) :: blog_sun_roll                         
@@ -680,17 +682,8 @@
           minazi = 0
           maxazi = maxalt * 4
 
-          if(maxalt .eq. 180)then
-            alt_scale = 0.5 
-          else
-            alt_scale = 1.0 
-          endif
-
-          if(maxazi .eq. 720)then
-            azi_scale = 0.5 
-          else
-            azi_scale = 1.0
-          endif
+          alt_scale = 90. / float(maxalt)
+          azi_scale = alt_scale
 
           write(6,*)' minalt/maxalt = ',minalt,maxalt
           write(6,*)' minazi/maxazi = ',minazi,maxazi
@@ -698,6 +691,7 @@
 
           allocate(r_cloud_3d(minalt:maxalt,minazi:maxazi))
           allocate(cloud_od(minalt:maxalt,minazi:maxazi))
+          allocate(cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp))
           allocate(blog_v_roll(minalt:maxalt,minazi:maxazi))
           allocate(blog_moon_roll(minalt:maxalt,minazi:maxazi))
           allocate(blog_sun_roll(minalt:maxalt,minazi:maxazi))
@@ -799,7 +793,7 @@
      1                     ,topo_swi,topo_albedo                 ! O
      1                     ,aod_ray,aod_2_cloud,aod_2_topo       ! O
      1                     ,aod_ill,transm_obs                   ! O
-     1                     ,r_cloud_3d,cloud_od                  ! O
+     1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
      1                     ,r_cloud_trans,cloud_rad_c            ! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
@@ -967,6 +961,7 @@
             write(6,*)' call get_sky_rgb with cyl data'
             call get_sky_rgb(r_cloud_3d           ! cloud opacity
      1                    ,cloud_od               ! cloud optical depth
+     1                    ,cloud_od_sp,nsp        ! cloud species optical depth
      1                    ,r_cloud_trans          ! cloud solar transmittance
      1                    ,cloud_rad_c            ! cloud solar transmittance / color
      1                    ,clear_rad_c            ! clear sky illumination by sun     
@@ -1037,6 +1032,7 @@
 
           deallocate(r_cloud_3d)
           deallocate(cloud_od)
+          deallocate(cloud_od_sp)
           deallocate(blog_v_roll)
           deallocate(blog_moon_roll)
           deallocate(blog_sun_roll)
