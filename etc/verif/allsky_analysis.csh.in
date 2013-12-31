@@ -1,0 +1,159 @@
+#!@CSH@
+
+setenv LAPSINSTALLROOT @prefix@
+setenv LAPS_DATA_ROOT $1
+setenv LOGDIR $LAPS_DATA_ROOT/log
+setenv IMGDIR $LAPS_DATA_ROOT/lapsprd/verif/allsky
+setenv VERIFDIR $LAPS_DATA_ROOT/lapsprd/verif/allsky
+
+setenv DOMAIN_NAME_IN $2
+setenv DOMAIN_NAME `echo $DOMAIN_NAME_IN | sed 's/_/ /g'`
+
+echo "DOMAIN_NAME is $DOMAIN_NAME"                                    
+
+setenv SITE $3
+
+setenv SITE_UC `echo $SITE | tr "[a-z]" "[A-Z]"`
+
+setenv STAT accuracy
+
+# parse allsky verif logfiles to make a temporary data file for input to gnuplot
+# this could eventually be done from the WGI script so we just grep one log file at a time
+setenv STATSFILE $LAPS_DATA_ROOT/lapsprd/verif/allsky/allsky_stats_$SITE.log
+mkdir -p $LAPS_DATA_ROOT/lapsprd/verif/allsky
+echo "parsed log file = $STATSFILE"
+
+cd $LOGDIR
+
+grep -h --no-filename gnuplot verif_allsky_anal.$SITE.* > $STATSFILE
+cat  $STATSFILE
+
+echo " "
+
+setenv FIRSTFILE `ls -1 verif_allsky_anal.$SITE.* | head -1 | cut -c24-32`
+setenv LASTFILE  `ls -1 verif_allsky_anal.$SITE.* | tail -1 | cut -c24-32`
+
+# obtain xrange times from the data file
+setenv STARTTIME1 `head -1 $STATSFILE | cut -c1-11` ; echo STARTTIME1 = $STARTTIME1
+setenv STARTTIME2 `head -1 $STATSFILE | cut -c12-18`; echo STARTTIME2 = $STARTTIME2
+setenv STOPTIME1  `tail -1 $STATSFILE | cut -c1-11` ; echo STOPTIME1 = $STOPTIME1
+setenv STOPTIME2  `tail -1 $STATSFILE | cut -c12-18`; echo STOPTIME2 = $STOPTIME2
+
+setenv YYYY       `tail -1 $STATSFILE | cut -c7-10` ; echo YYYY = $YYYY
+setenv MON        `tail -1 $STATSFILE | cut -c1-2`  ; echo MON = $MON
+setenv DD         `tail -1 $STATSFILE | cut -c4-5`  ; echo DD = $DD
+setenv HH         `tail -1 $STATSFILE | cut -c12-13`; echo HH = $HH
+setenv MM         `tail -1 $STATSFILE | cut -c15-16`; echo MM = $MM
+
+# Setup True Type fonts and related environment variables
+setenv GNUPLOT_DEFAULT_GDFONT VeraBd                
+
+if (-d /usr/X11R6/lib/X11/fonts/truetype) then
+    setenv GDFONTPATH /usr/X11R6/lib/X11/fonts/truetype
+else if (-d /usr/share/fonts/bitstream-vera) then
+    setenv GDFONTPATH /usr/share/fonts/bitstream-vera  
+else if (-d /usr/share/fonts/dejavu) then
+    setenv GDFONTPATH /usr/share/fonts/dejavu           
+    setenv GNUPLOT_DEFAULT_GDFONT DejaVuSans-Bold            
+else if (-d /usr/share/fonts/msttcore) then
+    setenv GDFONTPATH /usr/share/fonts/msttcore
+    setenv GNUPLOT_DEFAULT_GDFONT verdanab            
+else
+    setenv GDFONTPATH /dev/null
+endif
+
+setenv FONTFILE $GDFONTPATH/$GNUPLOT_DEFAULT_GDFONT.ttf
+
+if (-e $FONTFILE) then
+    echo "GNUPLOT FONT is $FONTFILE"                                    
+#   setenv TERM_FONT 'enhanced font "'$GNUPLOT_DEFAULT_GDFONT', 12"'
+    setenv TERM_FONT 'enhanced'
+    setenv DEFAULT_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',12"'
+    setenv TITLE_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',20"'
+    setenv MEMBER_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',16"'
+    if (-d /w3/lapb) then
+        setenv KEY_WIDTH -3
+    else
+        setenv KEY_WIDTH -3 
+    endif
+    setenv KEY_HEIGHT 0.3
+    setenv KEY_SPACING 0.7
+    setenv TH "{/$GNUPLOT_DEFAULT_GDFONT=8 "
+    setenv TF \}
+else
+    echo "FONTFILE $FONTFILE does not exist"
+    setenv TERM_FONT ""                             
+    setenv DEFAULT_FONT ""
+    setenv TITLE_FONT ""
+    setenv MEMBER_FONT ""
+    setenv KEY_FONT ""
+    setenv KEY_WIDTH 1
+    setenv KEY_HEIGHT 0
+    setenv KEY_SPACING 1.0
+    setenv TH ""             
+    setenv TF ""
+endif
+
+# Construct gnuplot .gp file
+setenv GNUPLOTFILE $VERIFDIR/allsky_analysis_$SITE\_$STAT.gp
+setenv DQUOTE \"
+echo 'set terminal png '$TERM_FONT' size 1200,800'                    > $GNUPLOTFILE
+echo 'set xdata time'                                   >> $GNUPLOTFILE
+echo 'set timefmt "%m/%d/%Y %H:%M:%S"'                  >> $GNUPLOTFILE
+echo 'set bmargin 3'                                    >> $GNUPLOTFILE
+echo 'set output '$DQUOTE$IMGDIR'/allsky_'$SITE'.png'$DQUOTE >> $GNUPLOTFILE
+echo '' >> $GNUPLOTFILE
+echo '# time range must be in same format as data file' >> $GNUPLOTFILE
+echo 'set xrange ['$DQUOTE$STARTTIME1' '$STARTTIME2$DQUOTE':'$DQUOTE$STOPTIME1' '$STOPTIME2$DQUOTE']' >> $GNUPLOTFILE
+echo 'set yrange [0:1]'                                 >> $GNUPLOTFILE
+echo 'set grid'                                         >> $GNUPLOTFILE
+echo 'set datafile missing "-99.900"'                   >> $GNUPLOTFILE
+#echo 'set xlabel "Date Time"'    $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
+echo 'set ylabel "        "' $MEMBER_FONT textcolor lt 2 >> $GNUPLOTFILE
+if ($DOMAIN_NAME_IN == "") then
+    echo 'set title "All-Sky LAPS Analysis vs '$SITE_UC' Camera"' $TITLE_FONT >> $GNUPLOTFILE
+else
+    echo 'set title "All-Sky LAPS Analysis vs '$SITE_UC' Camera ('$DOMAIN_NAME' domain)"' $TITLE_FONT >> $GNUPLOTFILE
+endif
+echo 'set key ins'                                      >> $GNUPLOTFILE
+echo 'set key left box'                                 >> $GNUPLOTFILE
+echo 'set key spacing' $KEY_SPACING                     >> $GNUPLOTFILE
+echo 'set key height' $KEY_HEIGHT                       >> $GNUPLOTFILE
+echo 'set key width' $KEY_WIDTH                         >> $GNUPLOTFILE
+echo 'set style line 1 lt 1 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
+echo 'set style line 2 lt 2 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
+echo 'set style line 3 lt 3 lw 3 pt 5 ps 1.0'           >> $GNUPLOTFILE
+echo 'set style line 4 lt 4 lw 1 pt 5 ps 1.0'           >> $GNUPLOTFILE
+echo 'plot '$DQUOTE$STATSFILE$DQUOTE' using 1:3 title '$DQUOTE"$TH"' Camera Cloud'"$TF"$DQUOTE' with linespoints ls 1          , \' >> $GNUPLOTFILE
+echo        $DQUOTE$STATSFILE$DQUOTE' using 1:4 title '$DQUOTE"$TH"' Analyzed Cld'"$TF"$DQUOTE' with linespoints ls 2          , \' >> $GNUPLOTFILE
+echo        $DQUOTE$STATSFILE$DQUOTE' using 1:5 title '$DQUOTE"$TH"' Accuracy    '"$TF"$DQUOTE' with linespoints ls 3          , \' >> $GNUPLOTFILE
+echo        $DQUOTE$STATSFILE$DQUOTE' using 1:6 title '$DQUOTE"$TH"' Random Acc. '"$TF"$DQUOTE' with linespoints ls 4             ' >> $GNUPLOTFILE
+
+
+# Run gnuplot
+gnuplot < $GNUPLOTFILE
+
+echo " "
+echo "outputs..."  
+ls -l $GNUPLOTFILE
+ls -l $IMGDIR/load.png
+
+if ($HH == 06 && $MM == 00) then # save daily image
+    echo "saving daily image"
+    cp $IMGDIR/load.png $IMGDIR/$YYYY$MON$DD.png
+    ls -l $IMGDIR/$YYYY$MON$DD.png
+else
+    echo "skip saving daily image"
+endif
+
+# Create summary file
+cd $LOGDIR
+foreach wgi (cloud.wgi.*)
+    echo " "                                        > solar.log     
+    echo " $wgi"                                   >> solar.log
+    grep bias $wgi | grep -v residuals             >> solar.log
+    grep means $wgi                                >> solar.log
+    grep sensitivity $wgi                          >> solar.log
+#   echo "    Sta   i    j   VIS frac tb8_k  t_gnd_k t_sfc_k cv_s_mx cvr_mx solalt 9pt  rad_an rad_ob rad_th ratio cv_sol  df" >> solar.log
+#   grep sv $log | grep -e ' \*' -e ' +' -e ' - '  >> solar.log
+end 
