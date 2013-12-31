@@ -237,6 +237,7 @@ subroutine lfm_derived
 
 use lfmgrid
 use constants
+use cloud_rad ! Cloud Radiation and Microphysics Parameters
 
 implicit none
 
@@ -254,6 +255,7 @@ real :: stefan_boltzmann, b_olr, eff_emissivity
 real :: bt_flux_equiv
 real :: coeff
 real :: a1,b1,c1,d1,e1,alpha(lx,ly)
+real :: const_lwp,const_iwp
 
 !beka
 
@@ -436,17 +438,22 @@ if (make_micro) then
                 ! we might use a new module for this derived from these files
                 ! in  'src/lib/cloud/get_cloud_rad.f90':
                 ! and 'src/lib/modules/module_cloud_rad.f90'
+
+  const_lwp = 1.5 / (rholiq * reff_clwc)
+  const_iwp = 1.5 / (rholiq * reff_cice)
+
   do j=1,ly
-   do i=1,lx
+    do i=1,lx
       if(intliqwater(i,j) < rmsg .AND. intcldice(i,j) < rmsg)then
 !        cldamt(i,j) = (intliqwater(i,j) * 100.) ** 0.3333333 ! this might work empirically if small integrated liq/ice
 !        cldamt(i,j) = min(cldamt(i,j),1.0)                   ! values have smaller mean diameters, so the dependence
 !                                                             ! is a weaker one
 !        liquid water is assumed to have smaller particles contributing to a larger constant
-         cldamt(i,j) = 1. - (exp( -(24000. * intliqwater(i,j) + 16000. * intcldice(i,j))) ) 
+!        Cloud amount is opacity of cloud liquid and cloud ice hydrometeors
+         cldamt(i,j) = 1. - (exp( -(const_lwp * intliqwater(i,j) + const_iwp * intcldice(i,j))) ) 
       endif
-   enddo ! i
-   enddo ! j
+    enddo ! i
+  enddo ! j
  endif ! true
 
  if(.not. large_ngrid)then
@@ -730,8 +737,13 @@ if(.not. large_ngrid)then
 
  write(6,*)' Calculating helicity, stability indices'
  call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
+
+ I4_elapsed = ishow_timer()
+
  call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
  print *,'Min/Max uhel =',minval(uhel),maxval(uhel)
+
+ I4_elapsed = ishow_timer()
 
  call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
              ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
@@ -899,9 +911,9 @@ if (verbose .and. .not. large_ngrid) then
    print*,'Min/Max cldtop    = ',minval(cldtop),maxval(cldtop)
    print*,'Min/Max ceiling   = ',minval(ceiling),maxval(ceiling)
    print*,'Min/Max cldamt    = ',minval(cldamt),maxval(cldamt)
-   print*,'Min/Max intliqwat = ',minval(intliqwater)*1000.,maxval(intliqwater)*1000.
-   print*,'Min/Max intcldice = ',minval(intcldice)*1000.,maxval(intcldice)*1000.
-   print*,'Min/Max totpcpwat = ',minval(totpcpwater)*1000.,maxval(totpcpwater)*1000.
+   print*,'Min/Max intliqwat = ',minval(intliqwater),maxval(intliqwater)
+   print*,'Min/Max intcldice = ',minval(intcldice),maxval(intcldice)
+   print*,'Min/Max totpcpwat = ',minval(totpcpwater),maxval(totpcpwater)
    print*,'Min/Max max refl  = ',minval(max_refl),maxval(max_refl)
    print*,'Min/Max echo tops = ',minval(echo_tops),maxval(echo_tops)
    print*,'Min/Max refl sfc  = ',minval(refl_sfc),maxval(refl_sfc)
@@ -1238,8 +1250,13 @@ implicit none
   
 integer :: nx,ny,nz,i,j,k 
 real :: height_top,height_bot,dz,rmsg
-real, dimension(nx,ny) :: topo,intliqwater,totpcpwater,intcldice
-real, dimension(nx,ny,nz) :: cond_mr,vapor_mr,cice_mr,rho,height
+real, dimension(nx,ny) :: topo,intliqwater,totpcpwater,intcldice  ! M
+real, dimension(nx,ny,nz) :: cond_mr,vapor_mr,cice_mr             ! KG/KG
+real, dimension(nx,ny,nz) :: rho                                  ! KG/M**3
+real, dimension(nx,ny,nz) :: height                               ! M
+real rho_h2o                                                      ! KG/M**3
+
+rho_h2o = 1000.                                                   ! KG/M**3
 
 do j=1,ny
 do i=1,nx
@@ -1259,9 +1276,9 @@ do i=1,nx
          height_top=0.5*(height(i,j,k)+height(i,j,k+1))
       endif
       dz=height_top-height_bot
-      if(cond_mr(i,j,k) < rmsg)intliqwater(i,j)=intliqwater(i,j)+cond_mr(i,j,k)*rho(i,j,k)*dz*0.001  ! meters
-      if(cice_mr(i,j,k) < rmsg)intcldice(i,j)  =intcldice(i,j)  +cice_mr(i,j,k)*rho(i,j,k)*dz*0.001  ! meters
-      totpcpwater(i,j)=totpcpwater(i,j)+vapor_mr(i,j,k)*rho(i,j,k)*dz*0.001  ! meters
+      if(cond_mr(i,j,k) < rmsg)intliqwater(i,j)=intliqwater(i,j)+cond_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
+      if(cice_mr(i,j,k) < rmsg)intcldice(i,j)  =intcldice(i,j)  +cice_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
+      totpcpwater(i,j)=totpcpwater(i,j)                         +vapor_mr(i,j,k)*(rho(i,j,k)/rho_h2o)*dz  ! meters
    enddo
 enddo
 enddo
@@ -2480,6 +2497,9 @@ kl = -999
 
 do j=1,ly
 do i=1,lx
+   if(maxval(tp(i,j,:)) .lt. 273.15+threshold)then ! subfreezing sigma column
+       goto 2
+   endif
    if(kl .ne. -999)then ! use the previously found bracketing levels for efficiency
      twu=tw(tp(i,j,ku),td(i,j,ku),pr(i,j,ku))
      do k=kl,kl
@@ -2519,6 +2539,7 @@ do i=1,lx
       endif
       twu=twl
    enddo
+2  continue ! check surface wet bulb
    twl=tw(stp(i,j),std(i,j),spr(i,j))
    if (twu <= 273.15+threshold .and. twl > 273.15+threshold) then
       rat=(twl-(273.15+threshold))/(twl-twu)
