@@ -33,6 +33,8 @@ if ($STEP_START < 0) then
 endif
 echo "STEP_START is $STEP_START"
 
+setenv MODE_VERIF 1
+
 foreach EXE (obs_driver)
   setenv BINARY $EXE.x
 
