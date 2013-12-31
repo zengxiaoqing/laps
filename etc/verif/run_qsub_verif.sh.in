@@ -76,16 +76,16 @@ else
 
     echo " "
     echo "Making reflectivity montage via ssh"
-    echo ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
-         ssh pinky.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
+    echo ssh dlaps-ms1.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
+         ssh dlaps-ms1.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
 
     rsync_qsub=yes 
 
     if test "$rsync_qsub" == "yes"; then   
 
 #       Rsync the verification data to remote dataroot
-        echo "@prefix@/etc/rsync_out.sh $lapsdataroot pinky.fsl.noaa.gov:$remote_dataroot qsub 01:00 8"
-              @prefix@/etc/rsync_out.sh $lapsdataroot pinky.fsl.noaa.gov:$remote_dataroot qsub 01:00 8
+        echo "@prefix@/etc/rsync_out.sh $lapsdataroot dlaps-ms1.fsl.noaa.gov:$remote_dataroot qsub 01:00 8"
+              @prefix@/etc/rsync_out.sh $lapsdataroot dlaps-ms1.fsl.noaa.gov:$remote_dataroot qsub 01:00 8
 
     else
 
