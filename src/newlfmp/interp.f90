@@ -94,6 +94,7 @@ real, allocatable, dimension(:,:,:) :: logp
 parameter (lapse=0.0065,gor=9.8/287.04,rog=287.04/9.8)
 
 integer :: i,j,k,kk,icall
+integer :: i4_elapsed, ishow_timer, kkguess
 
 real :: pla,dz,plo,phi,slope
 
@@ -110,6 +111,7 @@ if(.not. large_pgrid .and. icall .eq. 1)then
 
   do k=1,lz
     pla=lprsl(k)
+    kkguess = 1
     do j=1,ly
     do i=1,lx
       if (hpsig(i,j,1) <= lprs(k)) then
@@ -124,6 +126,18 @@ if(.not. large_pgrid .and. icall .eq. 1)then
          tprs(i,j,k)=htsig(i,j,nz)
          if(.not. large_ngrid)zprs(i,j,k)=hzsig(i,j,nz)+rog*htsig(i,j,nz)*alog(hpsig(i,j,nz)/lprs(k))
       else
+         do kk=kkguess,kkguess
+            if (hpsig(i,j,kk) >= lprs(k) .and. hpsig(i,j,kk+1) <= lprs(k)) then
+
+               plo=logp(i,j,kk)
+               phi=logp(i,j,kk+1)
+               slope=(plo-pla)/(plo-phi)
+
+               if(.not. large_ngrid)zprs(i,j,k)=hzsig(i,j,kk)-slope*(hzsig(i,j,kk)-hzsig(i,j,kk+1))
+               tprs(i,j,k)=htsig(i,j,kk)-slope*(htsig(i,j,kk)-htsig(i,j,kk+1))
+               goto 10
+            endif
+         enddo
          do kk=1,nz-1
             if (hpsig(i,j,kk) >= lprs(k) .and. hpsig(i,j,kk+1) <= lprs(k)) then
 
@@ -133,12 +147,18 @@ if(.not. large_pgrid .and. icall .eq. 1)then
 
                if(.not. large_ngrid)zprs(i,j,k)=hzsig(i,j,kk)-slope*(hzsig(i,j,kk)-hzsig(i,j,kk+1))
                tprs(i,j,k)=htsig(i,j,kk)-slope*(htsig(i,j,kk)-htsig(i,j,kk+1))
+               goto 10
             endif
          enddo
       endif
-    enddo
-    enddo
+10    continue
+    enddo ! i
+    enddo ! j
   enddo
+
+  write(6,*)' Completed T,Z vinterp'
+
+  I4_elapsed = ishow_timer()
 
   if (minval(hmrsig)  < rmsg) call vinterp_single(logp,hmrsig,shprs)
 
@@ -190,10 +210,12 @@ use lfmgrid
 implicit none
 
 integer :: i,j,k,kk
+integer :: i4_elapsed, ishow_timer, kkguess
 real :: logp(lx,ly,nz),sig(lx,ly,nz),prs(lx,ly,lz),pla,plo,phi,slope
 
 do k=1,lz
    pla=lprsl(k)
+   kkguess = 1
    do j=1,ly
    do i=1,lx
       if (hpsig(i,j,1) <= lprs(k)) then
@@ -201,18 +223,34 @@ do k=1,lz
       elseif (hpsig(i,j,nz) >= lprs(k)) then
          prs(i,j,k)=sig(i,j,nz)
       else
+         do kk=kkguess,kkguess
+            if (hpsig(i,j,kk) >= lprs(k) .and. hpsig(i,j,kk+1) <= lprs(k)) then
+               plo=logp(i,j,kk)
+               phi=logp(i,j,kk+1)
+               slope=(plo-pla)/(plo-phi)
+               prs(i,j,k)=sig(i,j,kk)-slope*(sig(i,j,kk)-sig(i,j,kk+1))
+               goto 10
+            endif
+         enddo
          do kk=1,nz-1
             if (hpsig(i,j,kk) >= lprs(k) .and. hpsig(i,j,kk+1) <= lprs(k)) then
                plo=logp(i,j,kk)
                phi=logp(i,j,kk+1)
                slope=(plo-pla)/(plo-phi)
                prs(i,j,k)=sig(i,j,kk)-slope*(sig(i,j,kk)-sig(i,j,kk+1))
+               kkguess = kk
+               goto 10
             endif
          enddo
       endif
-   enddo
-   enddo
+10    continue
+   enddo ! i
+   enddo ! j
 enddo
+
+write(6,*)' Completed vinterp_single'
+
+I4_elapsed = ishow_timer()
 
 return
 end
