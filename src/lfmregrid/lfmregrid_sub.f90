@@ -76,8 +76,8 @@ real wwvi(nx_bg,ny_bg,NZ_L)
 real lat(NX_L,NY_L)         ! LAPS lat
 real lon(NX_L,NY_L)         ! LAPS lon
 real topo(NX_L,NY_L)        ! LAPS lon
-real grx(NX_L,NY_L)         ! hinterp factor
-real gry(NX_L,NY_L)         ! hinterp factor
+real grx(NX_L,NY_L)         ! hinterp factor (background grid x index)
+real gry(NX_L,NY_L)         ! hinterp factor (background grid y index)
 real lmr_laps(NX_L,NY_L)
 real tsf_laps(NX_L,NY_L)
 real dsf_laps(NX_L,NY_L)
@@ -262,14 +262,27 @@ if(.true.)then
 
         if(trim(cmodel) .eq. 'HRRR')then
 !         Convert sh from dpt into actual sh
+          itesth = 1; jtesth = 1
+          itestl = 506; jtestl = 128
+          if(NX_L .gt. itestl .and. NY_L .gt. jtestl)then ! DFW LAPS grid location (HWT domain)
+              itesth = nint(grx(506,128))
+              jtesth = nint(gry(506,128))
+              write(6,*)' Convert sh from dpt to actual sh at lat/lon ',lat(itestl,jtestl),lon(itestl,jtestl)            
+              write(6,*)' LAPS gridpt',itestl,jtestl,' HRRR gridpt',itesth,jtesth
+          endif
+              
           do k = 1,NZ_L
-            p_mb = pres_1d(k) / 100.
+            kflip = (NZ_L+1) - k
+            p_mb = pres_1d(kflip) / 100.
             do i = 1,nx_bg
             do j = 1,ny_bg
                 sh_orig = shbg(i,j,k)
                 td_c = k_to_c(shbg(i,j,k))
                 shbg(i,j,k) = ssh(p_mb,td_c) / 1000.
-                if(i .eq. 1 .and. j .eq. 1)write(6,*)' sh_orig,td_c,sh: ',sh_orig,td_c,shbg(i,j,k)
+                if(i .eq. itesth .and. j .eq. jtesth)then
+                    write(6,11)p_mb,tpbg(i,j,k),sh_orig,td_c,shbg(i,j,k)
+                endif
+11              format(' p,t,sh_orig,td_c,sh: ',4f10.3,f10.4)
             enddo ! j 
             enddo ! i
           enddo ! k
