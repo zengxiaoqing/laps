@@ -90,6 +90,7 @@ c
         character*8   metar_format, c8_project
 	character     atime*24, filename9*9
         character*10  madis_dirs(n_madis_dirs)
+        character*10 c_mode
 
         logical l_allow_empty_lso,l_multiple_reports,l_dupe_names
 
@@ -140,6 +141,13 @@ c
      1                           ,n_cycles,nominal_latency
      1                           ,istatus)
         if(istatus .ne. 1)stop
+
+        call GETENV('MODE_VERIF',c_mode)
+        if(trim(c_mode) .eq. '1')then
+            write(6,*)
+     1          ' MODE_VERIF = 1: setting l_multiple_reports to false'
+            l_multiple_reports = .false.
+        endif
 
         call s_len(metar_format,len_metar_format)
         if(metar_format(1:len_metar_format) .eq. 'default')then
