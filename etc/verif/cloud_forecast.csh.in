@@ -66,6 +66,9 @@ else if (-d /usr/share/fonts/bitstream-vera) then
 else if (-d /usr/share/fonts/dejavu) then
     setenv GDFONTPATH /usr/share/fonts/dejavu           
     setenv GNUPLOT_DEFAULT_GDFONT DejaVuSans-Bold            
+else if (-d /usr/share/fonts/msttcore) then
+    setenv GDFONTPATH /usr/share/fonts/msttcore
+    setenv GNUPLOT_DEFAULT_GDFONT verdanab            
 else
     setenv GDFONTPATH /dev/null
 endif
@@ -143,7 +146,7 @@ mkdir -p $PNGDIR
 setenv PNGFILE     $VAR_LC\_$TYPE\_fcst\_$MODELTIME.png
 
 setenv DQUOTE \"
-echo 'set terminal png '$TERM_FONT' size 1200,800'                        > $GNUPLOTFILE
+echo 'set terminal png '$TERM_FONT' size 1500,1000'                        > $GNUPLOTFILE
 if ($DURATION == "") then 
     echo 'set xdata time'                                                    >> $GNUPLOTFILE
     echo 'set timefmt "%d-%b-%Y %H:%M:%S"'                                   >> $GNUPLOTFILE
@@ -212,10 +215,10 @@ while ($IMEMBER <= $NMEMBERS)
             if (-d /w3/lapb) then
                 setenv LW 3
             else
-                setenv LW 2
+                setenv LW 1
             endif
         else 
-            setenv LS 2
+            setenv LS 1
             setenv LW 1
         endif
 
