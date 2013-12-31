@@ -38,8 +38,8 @@ OTHERLIBS=-L$(NETCDF)/lib -lnetcdf
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
-           $(SRCROOT)/src/lib/modules/libmodules.a  \
+LAPSLIBS = $(SRCROOT)/src/lib/modules/libmodules.a  \
+           $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  \
 	   $(SRCROOT)/src/lib/grib/libgrib.a  \
@@ -47,8 +47,8 @@ LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
 	   $(SRCROOT)/src/lib/radar/rutil/librutil.a \
 	   $(SRCROOT)/src/lib/radar/synp/libsynp.a
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
-             $(SRCROOT)/src/lib/modules/libdebugmodules.a \
+DBLAPSLIBS = $(SRCROOT)/src/lib/modules/libdebugmodules.a \
+             $(SRCROOT)/src/lib/libdebuglaps.a  \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
 	     $(SRCROOT)/src/lib/grib/libdebuggrib.a  \
