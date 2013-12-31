@@ -147,11 +147,11 @@ netcdf fsf {
             lig(record,z,y,x);
             lig:_FillValue = 1.e+37f;
             lig:long_name="Integrated Graupel Depth          ";
-            lig:units="kg/m**2";
+            lig:units="m";
             lig:valid_range= 0.f, 1.f;
             lig:LAPS_var="LIG";
             lig:lvl_coord="AGL";
-            lig:LAPS_units="KG/M**2";
+            lig:LAPS_units="M";
 
         //      LAPS Fcst integrated cloud liquid depth         
         //      bigfile name = ilw
@@ -159,22 +159,22 @@ netcdf fsf {
             lil(record,z,y,x);
             lil:_FillValue = 1.e+37f;
             lil:long_name="Integrated Cloud Liquid Depth          ";
-            lil:units="kg/m**2";
+            lil:units="m";
             lil:valid_range= 0.f, 1.f;
             lil:LAPS_var="LIL";
             lil:lvl_coord="AGL";
-            lil:LAPS_units="KG/M**2";
+            lil:LAPS_units="M";
 
         //      LAPS Fcst integrated cloud ice depth         
         float
             lic(record,z,y,x);
             lic:_FillValue = 1.e+37f;
             lic:long_name="Integrated Cloud Ice Depth          ";
-            lic:units="kg/m**2";
+            lic:units="m";
             lic:valid_range= 0.f, 1.f;
             lic:LAPS_var="LIC";
             lic:lvl_coord="AGL";
-            lic:LAPS_units="KG/M**2";
+            lic:LAPS_units="M";
 
         //      LAPS Fcst integrated total precip water depth        
         //      bigfile name = tpw
@@ -182,11 +182,11 @@ netcdf fsf {
             tpw(record,z,y,x);
             tpw:_FillValue = 1.e+37f;
             tpw:long_name="Precipitable Water Depth          ";
-            tpw:units="KG/M**2";
+            tpw:units="m";
             tpw:valid_range= 0.f, 1.f;
             tpw:LAPS_var="TPW";
             tpw:lvl_coord="AGL";
-            tpw:LAPS_units="KG/M**2";
+            tpw:LAPS_units="M";
 
         //      LAPS Fcst increment precip accumulation depth        
         //      bigfile name = pc
@@ -290,12 +290,23 @@ netcdf fsf {
         float
             lcv(record,z,y,x);
             lcv:_FillValue = 1.e+37f;
-            lcv:long_name="Cloud Cover          ";
+            lcv:long_name="Cloud Cover (opacity)";
             lcv:units="none";
             lcv:valid_range= 0.f, 1.f;
             lcv:LAPS_var="LCV";
             lcv:lvl_coord="MSL";
-            lcv:LAPS_units="FRACTION";
+            lcv:LAPS_units="none";
+
+        //      LAPS Fcst cloud albedo
+        float
+            cla(record,z,y,x);
+            cla:_FillValue = 1.e+37f;
+            cla:long_name="Cloud Albedo";
+            cla:units="none";
+            cla:valid_range= 0.f, 1.f;
+            cla:LAPS_var="CLA";
+            cla:lvl_coord="MSL";
+            cla:LAPS_units="none";
 
         //      LAPS Fcst cloud ceiling           //
         float
@@ -720,6 +731,7 @@ netcdf fsf {
             pbe_comment(record,z,namelen),
             nbe_comment(record,z,namelen),
             lcv_comment(record,z,namelen),
+            cla_comment(record,z,namelen),
             cce_comment(record,z,namelen),
             lmt_comment(record,z,namelen),
             lmr_comment(record,z,namelen),
@@ -851,6 +863,10 @@ netcdf fsf {
         short
             lcv_fcinv(record, z);
             lcv_fcinv:_FillValue= 0s;
+
+        short
+            cla_fcinv(record, z);
+            cla_fcinv:_FillValue= 0s;
 
         short
             cce_fcinv(record, z);
