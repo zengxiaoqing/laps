@@ -1,7 +1,8 @@
 
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
                                r_cloud_rad,cloud_rad_c, &
-                               clear_rad_c,clear_radf_c,patm, &
+                               clear_rad_c, &
+                               clear_radf_c,patm,htmsl, &               ! I
                                glow,glow_sun,glow_moon,glow_stars, &
                                od_atm_a,transm_obs,isun,jsun, &         ! I
                                airmass_2_cloud,airmass_2_topo, &
@@ -30,7 +31,9 @@
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,ni,nj)  ! clear sky illumination
-        real clear_radf_c(nc,ni,nj) ! integrated fraction of air illuminated by the sun along line of sight             
+                                    ! local/input when sun is above/below horizon
+        real clear_radf_c(nc,ni,nj) ! integrated fraction of air illuminated 
+                                    ! by the sun along line of sight             
                                     ! (accounting for Earth shadow + clouds)
         real clear_rad_c_nt(3)      ! HSV night sky brightness
         real glow(ni,nj)            ! skyglow (log b in nanolamberts)
@@ -44,7 +47,7 @@
         real aod_2_cloud(ni,nj)     ! future use
         real aod_2_topo(ni,nj)      ! aerosol optical depth to topo
         real aod_ill(ni,nj)         ! aerosol illuminated optical depth 
-        real od_atm_a_eff(ni,nj)
+        real od_atm_a_eff(ni,nj)    ! aerosol illuminated tau per airmass
         real alt_a(ni,nj)
         real azi_a(ni,nj)
         real elong_a(ni,nj)
@@ -63,7 +66,7 @@
 
         idebug_a = 0
 
-        htmsl = psatoz(patm*1013.25)
+!       htmsl = psatoz(patm*1013.25)
 
         if(sol_alt .le. 0.)then
 
@@ -201,6 +204,7 @@
             endif
 
 !           Calculate normalized illuminated aerosol optical depth (zenith)
+            iprint = 0
             do i = ni,1,-1
               call get_airmass(alt_a(i,1),htmsl,patm &   ! I
                               ,redp_lvl,aero_scaleht &   ! I
@@ -208,10 +212,8 @@
                               ,ag,ao,aa)                 ! O 
               do j = 1,nj
 !               Crepuscular ray experiments
-
-!               if(.true.)then ! Division by zero can occur with aod_2_topo
 !               if(airmass_2_topo(i,j) .gt. 0. .OR. transm_obs .lt. 0.9)then
-                if(airmass_2_topo(i,j) .gt. 0.)then ! "operational"
+                if(airmass_2_topo(i,j) .gt. 0.)then ! inside terrain 
                   od_atm_a_eff(i,j) = od_atm_a * aod_ill(i,j) / aod_2_topo(i,j)
                   if(idebug_a(i,j) .eq. 1)then
                     od_atm_test = od_atm_a * aod_ill(i,j) / aod_2_topo(i,j)
@@ -219,14 +221,36 @@
                              ,aod_ill(i,j),od_atm_test     
 6                   format(' alt/od_atm_a/aod2topo/aod_ill/od_atm_test',2f9.3,2f10.5,f9.3)
                   endif
-                elseif(.true.)then ! outside of terrain
+
+                else ! outside of terrain
                   od_atm_a_eff(i,j) = (od_atm_a * aod_ill(i,j)) / (aa * od_atm_a)
+                  if((i .eq. isun .AND. j .eq. jsun) .OR. &
+                     (clear_radf_c(2,i,j) .lt. 0.5 .AND. iprint .le. 30) .OR. &
+                     (cloud_od(i,j) .eq. 0. .AND. &
+                      od_atm_a_eff(i,j)/od_atm_a .le. 0.5 .AND. &
+                      alt_a(i,j) .gt. 3.0                 .AND. &
+                      iprint .le. 30)                              )then
+                      if(i .eq. isun .AND. j .eq. jsun)then   
+                          write(6,*)'Calcs at solar location outside of terrain:'
+                      elseif(clear_radf_c(2,i,j) .lt. 0.5)then
+                          write(6,*)'Clear with cloud shadowing outside of terrain:'
+                      else
+                          write(6,*)'Clear with aerosol shadowing outside of terrain:'
+                      endif
+                      write(6,7)alt_a(i,j),azi_a(i,j),od_atm_a,aod_ill(i,j),aa &
+                               ,od_atm_a_eff(i,j),clear_radf_c(2,i,j)
+7                     format(' altaz/od_atm_a/aod_ill/aa/od_atm_a_eff/clr_radf =   ',2f9.2,3f9.3,2f9.3)
+                      iprint = iprint + 1
+                  endif
                 endif
+
               enddo ! j
             enddo ! i
 
-            write(6,7)transm_obs,od_atm_a,od_atm_a_eff(isun,jsun),sun_vis
-7           format(' transm_obs,od_atm_a,od_atm_a_eff,sun_vis=',4f8.3)
+            write(6,8)transm_obs,od_atm_a,od_atm_a_eff(isun,jsun),sun_vis
+8           format(' transm_obs,od_atm_a,od_atm_a_eff,sun_vis=',4f8.3)
+
+            write(6,*)' od_atm_a_eff range = ',minval(od_atm_a_eff),maxval(od_atm_a_eff)
 
             write(6,*)' call skyglow_phys:'
 
@@ -237,6 +261,7 @@
                      ,earth_radius,patm,od_atm_a_eff,aero_scaleht &  ! I
                      ,htmsl,redp_lvl &                               ! I
                      ,.false.,i4time,rlat,rlon &                     ! I
+                     ,clear_radf_c &                                 ! I
                      ,clear_rad_c,elong_a                     )      ! O
 
             write(6,*)' range of clear_rad_c(2) is ',minval(clear_rad_c(2,:,:)),maxval(clear_rad_c(2,:,:))
@@ -263,7 +288,7 @@
                    'rinten glw_cld_nt glw_cld  glw_twi glw2ndclr rmaglim  cld_visb  glow      skyrgb')
           else                          ! night
             write(6,13)
-13          format('    i   j      alt      azi     elong   pf_scat2  opac       od      alb     cloud  airmass   rade-3 ', &
+13          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rade-3 ', &
                    'rinten glw_cld_nt glw_cld glwcldmn glw2ndclr rmaglim  cld_visb  glow      skyrgb')
           endif
         endif
@@ -363,18 +388,23 @@
               rintensity(:) = rintensity(:) * (trans_c(:)/trans_c(1))**0.25 ! 0.45
 
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
-              glow_cld_nt = log10(5000.) ! 10 * clear sky zenith value (log nl)
+!             glow_cld_nt = log10(5000.) ! 10 * clear sky zenith value (log nl)
+              glow_cld_nt = log10(1.)    ! Place holder essentially zero value 
               glow_cld = addlogs(glow_cld_nt,glow_secondary_cld) ! 2ndary sct
 
               glow_twi = glow(i,j) + log10(clear_rad_c(3,i,j)) ! phys val
 
               if(sol_alt .lt. -16.)then
 !                 Add phys term for scattering by moonlight on the clouds
-                  pf_scat2 = 5. ** (pf_scat - 1.1)
+!                 pf_scat2 = 5. ** (pf_scat - 1.1)
 !                 glow_cld_day = 2e10 ! nanolamberts (actual about 3e9)
-                  glow_cld_moon = log10(glow_cld_day * cloud_rad_c(2,i,j) * pf_scat2)
+                  glow_cld_moon = log10(glow_cld_day * cloud_rad_c(2,i,j) * pf_scat)
                   glow_cld = addlogs(glow_cld,glow_cld_moon)
               endif
+
+!             Note that cloud_rad_c should have surface night lighting included
+              glow_cld_nt = log10(glow_cld_day * cloud_rad_c(1,i,j))
+              glow_cld = addlogs(glow_cld,glow_cld_nt)
 
 !             During twilight, compare with clear sky background
 !             Note that secondary scattering might also be considered in
@@ -390,7 +420,7 @@
 !         Obtain brightness (glow) of clear sky
           if(sol_alt .gt. 0.)then ! Daylight from skyglow routine
               if(new_skyglow .eq. 1)then
-                glow_tot = log10(clear_rad_c(2,i,j)) + log10(clear_radf_c(2,i,j))
+                glow_tot = log10(clear_rad_c(2,i,j)) ! + log10(clear_radf_c(2,i,j))
                 if(sun_vis .eq. 1.0)then
                     glow_tot = addlogs(glow_tot,glow_sun(i,j))
                 endif
@@ -416,7 +446,7 @@
                 clr_blu = rintensity_glow * bog
 
               else ! consider color
-                glow_tot = glow(i,j) + log10(clear_radf_c(3,i,j))
+                glow_tot = glow(i,j) ! + log10(clear_radf_c(3,i,j))
 !               rintensity_glow = min(((glow(i,j)-7.) * 100.),255.)
                 rintensity_glow = min(((glow_tot -7.) * 100.),255.)
                 z = 90. - alt_a(i,j)        
@@ -569,12 +599,13 @@
 !         Use topo value if airmass to topo > 0
           if(airmass_2_topo(i,j) .gt. 0.)then
 
-!             Consider solar altitude from the sloping terrain?             
-!             if(sol_alt .le. 7. .AND. sol_az .gt. 180.)then ! mountain shadow
+!             The sky RGB values should already include reductions from
+!             cloud/terrain shadowing and limited distance to the topography
               if(sol_alt .le. 0.)then 
                 od_2_topo = 0. ! (od_atm_g + od_atm_a) * airmass_2_topo(i,j)
-              else ! eventually use clear_rad influenced by topo
+              else ! eventually use clear_rad influenced by topo?
                 od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
+!               od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_ill(i,j)
               endif
 
               topo_visibility = exp(-1.00*od_2_topo)                    
@@ -618,8 +649,9 @@
                       ,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)                              
               else ! night
                   write(6,104)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
-                      ,pf_scat2,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
-                      ,frac_cloud,airmass_2_cloud(i,j),cloud_rad_c(2,i,j)*1e3,rintensity(1) &
+                      ,pf_scat,r_cloud_3d(i,j),cloud_od(i,j),bkscat_alb &
+!                     ,frac_cloud,airmass_2_cloud(i,j),cloud_rad_c(2,i,j)*1e3,rintensity(1) &
+                      ,frac_cloud,airmass_2_cloud(i,j),cloud_rad_c(1,i,j)*1e3,rintensity(1) &
                       ,glow_cld_nt,glow_cld,glow_cld_moon,glow_secondary_clr,rmaglim &
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:)
               endif
