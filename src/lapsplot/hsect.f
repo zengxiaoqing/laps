@@ -4668,8 +4668,13 @@ c
                     write(6,*)' Plotting Q directly, range is: ',
      1                        minval(sh_2d),maxval(sh_2d)
 
-                    call mklabel(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' Q  (x1e3)',c_label)
+!                   call mklabel(k_mb,' '//fcst_hhmm
+!    1                         //' '//ext(1:3)//' Q  (x1e3)',c_label)
+                    comment_2d = 'Q'     ! for label
+                    units_2d = '(x1e3)'  ! for label
+                    call mk_fcst_hlabel(k_mb,comment_2d,fcst_hhmm
+     1                                 ,ext(1:3),units_2d
+     1                                 ,c_model,c_label)
 
                     clow = 0.
                     chigh = +25.
@@ -5810,7 +5815,8 @@ c                   cint = -1.
      1                         ,colortable,n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
 
-                elseif(var_2d .eq. 'LCV')then
+                elseif(var_2d .eq. 'LCV' .or. var_2d .eq. 'CLA' .or. 
+     1                 var_2d .eq. 'SMV')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
      1                         ,n_image,scale,'hsect',plot_parms
      1                         ,namelist_parms)        
@@ -5982,11 +5988,17 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
-            call plot_cont(field_2d,scale,clow,chigh,cint
-     1             ,asc9_tim,namelist_parms,plot_parms
-     1             ,c_label,i_overlay,c_display
-     1             ,lat,lon,jdot
-     1             ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,scale,clow,chigh,cint
+!    1             ,asc9_tim,namelist_parms,plot_parms
+!    1             ,c_label,i_overlay,c_display
+!    1             ,lat,lon,jdot
+!    1             ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
         elseif(c_type .eq. 'vv')then
             var_2d = 'VV'
