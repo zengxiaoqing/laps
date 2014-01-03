@@ -7,6 +7,7 @@
 
         use mem_namelist, ONLY: max_snd_grid, max_snd_levels
      1                        , grid_spacing_m, aod, aero_scaleht
+        use ppm
 
         include 'lapsplot.inc'
 
@@ -797,13 +798,14 @@
      1                     ,r_cloud_trans,cloud_rad_c            ! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
+     1                     ,htmsl                                ! O
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,kstart  ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,alt_norm                             ! I
      1                     ,moon_alt_2d,moon_azi_2d              ! I
      1                     ,moon_mag,moon_mag_thr                ! I
-     1                     ,l_solar_eclipse,rlat,rlon            ! I
+     1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
      1                     ,minalt,maxalt,minazi,maxazi          ! I
      1                     ,alt_scale,azi_scale                  ! I
      1                     ,grid_spacing_m,r_missing_data)       ! I
@@ -966,7 +968,7 @@
      1                    ,cloud_rad_c            ! cloud solar transmittance / color
      1                    ,clear_rad_c            ! clear sky illumination by sun     
      1                    ,clear_radf_c           ! clear sky frac illumination by sun     
-     1                    ,patm
+     1                    ,patm,htmsl
      1                    ,blog_v_roll            ! skyglow
      1                    ,blog_sun_roll          ! sunglow
      1                    ,blog_moon_roll         ! moonglow
@@ -989,10 +991,14 @@
 !             Write all sky for cyl
               isky_rgb_cyl = sky_rgb_cyl   
               npts = 3*(maxalt-minalt+1)*(maxazi-minazi+1)
-              write(6,*)' Write all sky cyl text file ',npts
-              open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
-              write(55,*)isky_rgb_cyl           
-              close(55)
+!             write(6,*)' Write all sky cyl text file ',npts
+!             open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
+!             write(55,*)isky_rgb_cyl           
+!             close(55)
+              write(6,*)' Write all sky cyl ppm file '
+              call writeppm3Matrix(
+     1                   isky_rgb_cyl(0,:,:),isky_rgb_cyl(1,:,:)
+     1                  ,isky_rgb_cyl(2,:,:),'allsky_rgb_cyl_'//clun)
             endif
 
             if(l_polar .eqv. .true.)then
@@ -1016,11 +1022,15 @@
 !             Write all sky for polar
               isky_rgb_polar = sky_rgb_polar
               npts = 3*ni_polar*nj_polar
-              write(6,*)' Write all sky polar text file'
-     1                  ,isky_rgb_polar(:,255,255),npts
-              open(54,file='allsky_rgb_polar.'//clun,status='unknown')
-              write(54,*)isky_rgb_polar
-              close(54)
+!             write(6,*)' Write all sky polar text file'
+!    1                  ,isky_rgb_polar(:,255,255),npts
+!             open(54,file='allsky_rgb_polar.'//clun,status='unknown')
+!             write(54,*)isky_rgb_polar
+!             close(54)
+              write(6,*)' Write all sky polar ppm file '
+              call writeppm3Matrix(
+     1                  isky_rgb_polar(0,:,:),isky_rgb_polar(1,:,:)
+     1                 ,isky_rgb_polar(2,:,:),'allsky_rgb_polar_'//clun)
             endif
 
           endif ! mode_polar = 0 or 2
