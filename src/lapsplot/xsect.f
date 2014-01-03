@@ -1002,8 +1002,8 @@ c read in laps lat/lon and topo
      1                   ,' ',trim(ext),trim(c_field),trim(c_wind)
 
                 if(c_field .ne. 'w ' .and. c_field(1:2) .ne. 'om')then ! Non-omega
-                    write(6,*)' Reading U/V'
                     if(c_prodtype .eq. 'N')then
+                        write(6,*)' Reading U/V via get_3dgrid_dname'
                         directory = directory(1:len_dir)//'lw3'
                         ext = 'lw3'
 
@@ -1022,18 +1022,21 @@ c read in laps lat/lon and topo
      1                  ,comment_2d,NX_L,NY_L,NZ_L,v_3d,istatus)       
 
                     elseif(c_prodtype .eq. 'A')then
+                        write(6,*)' Reading U/V via get_uv_3d'
                         call get_file_time(c_filespec,i4time_ref
      1                                               ,i4time_3dw)
                         call get_uv_3d(i4time_3dw,NX_L,NY_L,NZ_L
      1                                  ,u_3d,v_3d,ext_wind,istatus)
 
                     else ! Background or Forecast
+                        write(6,*)' Reading U/V via get_lapsdata_3d'
                         var_2d = 'U3'
                         call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,u_3d
      1                              ,istatus)
+                        write(6,*)' istatus from U3 read is ',istatus
 
                         var_2d = 'V3'
                         call get_lapsdata_3d(i4_initial,i4_valid
@@ -1041,10 +1044,11 @@ c read in laps lat/lon and topo
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,v_3d
      1                              ,istatus)
+                        write(6,*)' istatus from V3 read is ',istatus
 
                     endif
 
-                    call make_fnam_lp(i4time_3dw,a9time,istatus)
+                    call make_fnam_lp(i4time_3dw,a9time,istat_a9)
                     write(6,*)' a9time = ',a9time
 
                 elseif(c_field .eq. 'w ' .or. 
@@ -1061,7 +1065,7 @@ c read in laps lat/lon and topo
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istatus)
 
-                        call make_fnam_lp(i4_valid,a9time,istatus)
+                        call make_fnam_lp(i4_valid,a9time,istat_a9)
 
                     else 
                         call get_file_time(c_filespec
@@ -1090,7 +1094,7 @@ c read in laps lat/lon and topo
      1                      ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istatus)       
                         endif
 
-                        call make_fnam_lp(i4time_3dw,a9time,istatus)
+                        call make_fnam_lp(i4time_3dw,a9time,istat_a9)
 
                     endif ! c_prodtype
                 endif
@@ -1100,6 +1104,8 @@ c read in laps lat/lon and topo
             if(istatus .ne. 1)then
                 write(6,*)' Error reading in wind field'
                 goto100
+            else
+                write(6,*)' istatus from wind read is ',istatus
             endif
 
         endif
