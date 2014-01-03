@@ -7,6 +7,7 @@
                    ,earth_radius,patm,aod_ray,aero_scaleht    &! I
                    ,htmsl,redp_lvl                            &! I
                    ,l_solar_eclipse,i4time,rlat,rlon          &! I
+                   ,clear_radf_c                              &! I
                    ,clear_rad_c,elong                       )  ! O
 
         include 'trigd.inc'
@@ -34,9 +35,16 @@
 
         real mie, alpha_g, alpha_a
 
-        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! integrated fraction of air illuminated by the sun along line of sight
-                                           ! (consider Earth's shadow + clouds)
-        real aod_ray(minalt:maxalt,minazi:maxazi)
+        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
+        real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
+               ! fraction of air illuminated by the sun along line of sight
+               ! (consider Earth's shadow + clouds, used when sun is below
+               !  the horizon)
+        real aod_ray(minalt:maxalt,minazi:maxazi) ! aerosol optical depth
+                                                  ! (zenithal) may be adjusted
+                                                  ! for illumination
+        real patm_ray(minalt:maxalt,minazi:maxazi)! effective patm adjusted
+                                                  ! for illumination
         real elong(minalt:maxalt,minazi:maxazi)
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
@@ -45,16 +53,22 @@
 
         logical l_solar_eclipse
 
+        patm_ray = patm
+
+        aero_refht = redp_lvl
+
         if(sol_alt .gt. 0.)then
             write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
             write(6,*)' aod_bin = ',aod_bin
             write(6,*)' aod_asy = ',aod_asy
+            write(6,*)' htmsl / aero_refht = ',htmsl,aero_refht
+            write(6,*)' aod_ray max = ',maxval(aod_ray)
+!           write(6,*)' patm_ray max = ',maxval(patm_ray)
         endif
 
         do ialt = ialt_start,ialt_end,ialt_delt
   
          altray = view_alt(ialt,jazi_start)
-         aero_refht = redp_lvl
          call get_airmass(altray,htmsl,patm &       ! I
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius &            ! I
@@ -84,10 +98,8 @@
 
           if(sol_alt .gt. 0.)then
 
-!           Fraction of atmosphere illuminated by the sun
-!           clear_rad_c(3,ialt,jazi) = 1. 
-!           clear_rad_c(3,ialt,jazi) = 0.25&! secondary scattering in cloud shadow
-!                                    + 0.75 * (sum_clrrad/airmass1_h)
+!           Fraction of atmosphere illuminated by the sun 
+!           clear_radf_c(3,ialt,jazi) = 1. 
             angle_plane = 0.; dist_ray_plane = 0.; ht_ray_plane = 0.
 
 !           Illumination using Rayleigh and HG phase functions
@@ -110,7 +122,7 @@
                 rayleigh = brtf(airmass_g,od_per_am) * rayleigh_pf(elong(ialt,jazi)) 
 
 !               Total illumination
-                clear_rad_c(ic,ialt,jazi) = day_int * (rayleigh + mie)
+                clear_rad_c(ic,ialt,jazi) = day_int * (rayleigh + mie * ext_a(ic))
 
                 if(idebug .ge. 1 .and. ic .eq. 2)then
                   write(6,71)day_int,elong(ialt,jazi),airmass_g,brtf(airmass_g,od_per_am) &
@@ -128,7 +140,7 @@
             else ! assume two scattering layers (g+a, g)
               do ic = 1,nc
                 od_g = ext_g(ic)*airmass_g
-                od_a = aod_ray(ialt,jazi)*aa
+                od_a = aod_ray(ialt,jazi)*aa*ext_a(ic)
                 alpha_g = od_g / 8000.
                 alpha_a = od_a / aero_scaleht
                 if(od_a .gt. 0)then
@@ -140,26 +152,28 @@
 
                 if(.true.)then ! available light for Mie scattering, relative to Rayleigh scattering
                     am_sun = airmassf(90. - sol_alt,patm) * (od_g2/od_g)
-                    sun_trans_g2 = trans(am_sun*ext_g(ic))
-                    solar_int_g2 = sun_trans_g2 * 10.**(0.4*sbcorr)
-                    solar_int_g2 = min(solar_int_g2,1.0)
+                    solar_int_g2 = trans(am_sun*ext_g(ic))
                 else
                     solar_int_g2 = 1.0
                 endif
 
-                pf_eff1 = (rayleigh_pf(elong(ialt,jazi)) * alpha_g + hg2 * alpha_a * solar_int_g2) &
+!               Effective Rayleigh Phase Factor considering shadowing
+                rayleigh_pf_eff = rayleigh_pf(elong(ialt,jazi)) * clear_radf_c(ic,ialt,jazi)
+                pf_eff1 = (rayleigh_pf_eff * alpha_g + hg2 * alpha_a * solar_int_g2) &
                         / (alpha_g + alpha_a * solar_int_g2)
                 od_1 = od_g1 + od_a
                 brt1 = brto(od_1) * pf_eff1
-                brt2 = brto(od_g2) * rayleigh_pf(elong(ialt,jazi))
+                brt2 = brto(od_g2) * rayleigh_pf_eff
                 trans1 = trans(od_1)
                 clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2)
 
                 if(idebug .ge. 1 .and. ic .eq. 2)then
-                  write(6,73)day_int,airmass_g,od_g,aod_ray(ialt,jazi),od_a,alpha_g*1e3,alpha_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
-73                format('day_int/airmass_g/od_g/aod_ray/od_a/alpha_g/alpha_a/od_g1/od_g2/clear_rad :' &
-                        ,f12.0,4f7.3,2x,2f7.3,2x,2f7.3,f11.0)      
-                  write(6,*)'am_sun,solar_int_g2 = ',am_sun,solar_int_g2
+                  write(6,73)day_int,airmass_g,od_g,aod_ray(ialt,jazi),aa,od_a &
+                            ,alpha_g*1e3,alpha_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
+73                format('day_int/ag/od_g/aod_ray/aa/od_a/alpha_g/alpha_a/od_g1/od_g2/clr_rad :' &
+                        ,f12.0,5f7.3,2x,2f7.3,2x,2f7.3,f12.0)      
+                  write(6,74)am_sun,solar_int_g2
+74                format('am_sun,solar_int_g2 = ',2f10.4)                  
                 endif
 
              enddo ! ic
@@ -262,9 +276,10 @@
                   aod_unlit = aod_path * (1.-frac_aero_lit)
 !                 arg = aod_lit * 0.5 * (1. - cosd(elong(ialt,jazi)))
 !                 Note: is the 40. factor too large?
-                  aero_red = (1.0 - exp(-40. * aod_lit)) &       ! aod factor   (0-1)
+!                 aero_red = (1.0 - exp(-20. * aod_lit)) &  ! aod fct (0-1)
+                  aero_red = (1.0 - exp(-40. * aod_lit)) &  ! aod fct (0-1)
                            * 0.5 * (1. - cosd(elong(ialt,jazi)))&! elong factor (0-1) 
-                           * min(-sol_alt*0.7,1.0)               ! solalt factor(0-1)
+                           * min(-sol_alt*0.7,1.0)       ! solalt fct (0-1)
               endif
 
               airmass_to_twi = airmass_unlit
@@ -407,7 +422,7 @@
           if(idebug .ge. 1)then 
               if(sol_alt .gt. 0.)then
                 write(6,111)ialt,jazi,sol_alt &
-                      ,angle_plane,dist_ray_plane,ht_ray_plane &
+                      ,od_a,dist_ray_plane,ht_ray_plane &
                       ,clear_rad_c(:,ialt,jazi)/1e9
               else
                 write(6,112)ialt,jazi,sol_alt &
@@ -419,7 +434,7 @@
                       ,clear_rad_c(3,ialt,jazi) ! /1e9
               endif
 111           format( &
-       'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/clrrd' &
+       'ialt/jazi/salt/od_a/ds_ray/ht_ray/clrrd' &
                   ,2i4,2x,2f6.2,2f10.1,2x,3f8.3)
 112           format( &
        'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/a/t/clrrad' &
