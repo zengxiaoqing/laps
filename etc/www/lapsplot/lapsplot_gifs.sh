@@ -119,9 +119,11 @@ if test "$NCARG_ROOT" = "allsky"; then
 
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
     echo " "
-    echo "Will run IDL polar conversion to PNG"
-    rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky.pro allsky.pro
-    echo allsky | /usr/local/share/rsi/idl/bin/idl
+#   echo "Will run IDL polar conversion to PNG"
+#   rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky.pro allsky.pro
+#   echo allsky | /usr/local/share/rsi/idl/bin/idl
+    echo "Will run convert -flip allsky_rgb_polar_$ILOC.ppm allsky_polar_$ILOC.png"
+    convert -flip allsky_rgb_polar_$ILOC.ppm allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
@@ -129,10 +131,17 @@ if test "$NCARG_ROOT" = "allsky"; then
     export ALLSKY_IDIM=$NJ_CYL
     export ALLSKY_JDIM=$NI_CYL
     echo " "
-    echo "Will run IDL cyl conversion to PNG: ALLSKY_IDIM/ALLSKY_JDIM is $ALLSKY_IDIM $ALLSKY_JDIM"
-    rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky_cyl.pro allsky_cyl.pro
-    echo allsky_cyl | /usr/local/share/rsi/idl/bin/idl
-    convert -resize 300% allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+#   echo "Will run IDL cyl conversion to PNG: ALLSKY_IDIM/ALLSKY_JDIM is $ALLSKY_IDIM $ALLSKY_JDIM"
+#   rm -f allsky*.pro; ln -s /home/fab/albers/ast/skyglow/allsky_cyl.pro allsky_cyl.pro
+#   echo allsky_cyl | /usr/local/share/rsi/idl/bin/idl
+    echo "Will run convert -flip allsky_rgb_cyl_$ILOC.ppm allsky_cyl_$ILOC.png"
+    convert -flip allsky_rgb_cyl_$ILOC.ppm allsky_cyl_$ILOC.png
+    if test $WINDOW -ge 361; then
+      echo "cylindrical image is of sufficient size - no enlargement"
+    else
+      echo "enlarge cylindrical image by 300%"
+      convert -resize 300% allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    fi
   fi
 
   echo " "
@@ -169,7 +178,9 @@ if test "$NCARG_ROOT" = "allsky"; then
       DIR4=SE
   fi
   if test "$RESOLUTION_CYL" = "360c"; then # roll horizontally by half the image
-      if test $WINDOW -ge 181; then
+      if test $WINDOW -ge 361; then
+          convert allsky_cyl_$ILOC.png -roll  +720+0 allsky_cyl_$ILOC.png
+      elif test $WINDOW -ge 181; then
           convert allsky_cyl_$ILOC.png -roll +1080+0 allsky_cyl_$ILOC.png
       else
           convert allsky_cyl_$ILOC.png -roll  +540+0 allsky_cyl_$ILOC.png
@@ -183,7 +194,11 @@ if test "$NCARG_ROOT" = "allsky"; then
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    convert -fill white -annotate +15+20  "LAPS Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      if test $WINDOW -ge 361; then
+          convert -fill white -annotate +15+20  "LAPS Simulated"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      else
+          convert -fill white -annotate +15+20  "LAPS Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      fi
   fi
 
 # Annotate Time
@@ -193,7 +208,9 @@ if test "$NCARG_ROOT" = "allsky"; then
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    if test $WINDOW -ge 181; then
+    if test $WINDOW -ge 361; then
+      convert -fill white -annotate +1033+20 "`head -2 label.$ILOC | tail -1`" -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    elif test $WINDOW -ge 181; then
       convert -fill white -annotate +1550+20 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
       convert -fill white -annotate +725+20 "`head -2 label.$ILOC | tail -1`"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
@@ -207,7 +224,9 @@ if test "$NCARG_ROOT" = "allsky"; then
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    if test $WINDOW -ge 181; then
+    if test $WINDOW -ge 361; then
+      convert -fill white -annotate +1227+20 "`head -1 label2.$ILOC`" -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    elif test $WINDOW -ge 181; then
       convert -fill white -annotate +1840+20 "`head -1 label2.$ILOC`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
       convert -fill white -annotate +920+20  "`head -1 label2.$ILOC`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
@@ -232,7 +251,10 @@ if test "$NCARG_ROOT" = "allsky"; then
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    if test $WINDOW -ge 181; then
+    if test $WINDOW -ge 361; then
+      convert -fill orange -annotate  +693+20   "$DIRCYL"          -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      echo "WINDOW is large "$WINDOW
+    elif test $WINDOW -ge 181; then
       convert -fill orange -annotate +1040+20   "$DIRCYL"          -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       echo "WINDOW is large "$WINDOW
     else
