@@ -3,6 +3,8 @@ subroutine cloud_var(i4time,lat,lon,ni,nj,nk,kcld,heights_3d,temp_3d,t_gnd_k,clo
                     ,di_dh,dj_dh)                                                  ! O
 
 ! This routine evaluates the cost function of the cloud cover field using simple forward models for visible and 11 micron satellite data
+! We might consider a version of this routine that uses cloud optical depth (2D and 3D) instead of cloud cover (fraction).
+! Another version of this routine can use cloud hydrometeor fields. 
 
 include 'trigd.inc'
 
