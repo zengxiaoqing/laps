@@ -1297,34 +1297,6 @@ c          ,rmeantemp(135),rmeantemp(180)
       return
       end
 c
-c------------------------------------------------------------------
-c
-       subroutine get_gridnl(mode)
-       implicit none
-       integer mode
-       integer len
-       integer istatus
-       character*256 directory
-       character*256 fname
-       character*200 cdataroot
-       character*10  c10_grid_fname
-       namelist /grid_nl/ mode
-
-       mode = 0
-       call find_domain_name(cdataroot,c10_grid_fname,istatus)
-       if(istatus.ne.1)then
-          print*,'Error returned from find_domain_name'
-          return
-       endif
-       call get_directory(c10_grid_fname,directory,len)
-       fname = directory(1:len)//'grid.nl'
-       open(3,file=fname,status='old',err=101)
-       read(3,grid_nl,err=101,end=101)
-       close(3)
-
-101    return
-       end
-c
 c ---------------------------------------------------------
 c
       subroutine eval_localization(cstaticdir,nest,localize
