@@ -947,7 +947,7 @@ c
           
         endif !istatus_30s ... data processed ok 
 
-       else ! read topo data from wps output netCDF file
+       elseif(.false.)then ! read topo data from wps output netCDF file
           write(6,*)' calling read_wrfstatic for wps topo'
           call s_len(path_to_topt30s,lenp)
           filename_wps = path_to_topt30s(1:lenp)//'/geo_em.d01.nc'
@@ -957,6 +957,16 @@ c
               write(6,*)' Error - no wrf static data: returning'
               return
           endif
+
+       else                ! read topo data from LAPS/WRF FSF file
+          call get_systime_i4(i4time_sys,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' Error - no systime: returning'
+              return
+          endif
+          
+          call get_modelfg_2d(i4time_sys,'TER',nnxp,nnyp,topt_out
+     1                                                  ,istatus)       
 
        endif
 
