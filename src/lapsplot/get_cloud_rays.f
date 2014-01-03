@@ -7,15 +7,16 @@
      1                           ,aod_ray,aod_2_cloud,aod_2_topo,aod_ill! O
      1                           ,transm_obs                            ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
-     1                           ,cloud_rad,cloud_rad_c                 ! O
+     1                           ,r_cloud_rad,cloud_rad_c               ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
+     1                           ,htstart                               ! O
      1                           ,ni,nj,nk,i,j,kstart                   ! I
      1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
      1                           ,alt_norm                              ! I
      1                           ,moon_alt,moon_azi                     ! I
      1                           ,moon_mag,moon_mag_thr                 ! I
-     1                           ,l_solar_eclipse,rlat,rlon             ! I
+     1                           ,l_solar_eclipse,rlat,rlon,lat,lon     ! I
      1                           ,minalt,maxalt,minazi,maxazi           ! I
      1                           ,alt_scale,azi_scale                   ! I
      1                           ,grid_spacing_m,r_missing_data)        ! I
@@ -49,13 +50,15 @@
         real snow_3d(ni,nj,nk) ! kg/m**3
         real cond_3d(ni,nj,nk) ! kg/m**3 (effective LWC)
         real aod_3d(ni,nj,nk)  ! aerosol optical depth (per vertical atmosphere)
-        real tri_coeff(2,2,2)
+        real bi_coeff(2,2),tri_coeff(2,2,2)
         real heights_3d(ni,nj,nk) ! MSL
         real transm_3d(ni,nj,nk)
         real transm_4d(ni,nj,nk,nc) ! L
         real transm_4d_m(nc)
         real heights_1d(nk)
         real topo_a(ni,nj)
+        real lat(ni,nj)
+        real lon(ni,nj)
         real swi_2d(ni,nj)
         real topo_albedo_2d(nc,ni,nj)
         real pres_3d(ni,nj,nk)
@@ -87,11 +90,13 @@
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)     ! cloud opacity
         real cloud_od(minalt:maxalt,minazi:maxazi)       ! cloud optical depth
         real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)! cloud species tau
-        real cloud_rad(minalt:maxalt,minazi:maxazi)      ! sun to cloud transmissivity (direct+fwd scat)
+        real r_cloud_rad(minalt:maxalt,minazi:maxazi)    ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
-        real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated fraction of air illuminated by the sun along line of sight
-                                           ! (consider Earth's shadow + clouds)
+        real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated 
+               ! fraction of air illuminated by the sun along line of sight
+               ! (consider Earth's shadow + clouds, used when sun is below
+               !  the horizon)
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
         real topo_swi(minalt:maxalt,minazi:maxazi)
@@ -116,7 +121,7 @@
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
         topo_swi = 0.
-        cloud_rad = 1.
+        r_cloud_rad = 1.
         clear_rad_c = 0.
         clear_radf_c = 0.
 
@@ -155,7 +160,7 @@
       
         if(.true.)then
             call get_cloud_rad(obj_alt,obj_azi,clwc_3d,cice_3d
-     1                    ,rain_3d,snow_3d,topo_a
+     1                    ,rain_3d,snow_3d,topo_a,lat,lon
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk)
         endif
 
@@ -678,7 +683,7 @@
 !    1                                 = 0.5 * (airmass1_l + airmass1_h)
 
 !                     Average value over cloud path (tau ~1)
-                      cloud_rad(ialt,jazi) = sum_odrad / cvr_path_sum 
+                      r_cloud_rad(ialt,jazi) = sum_odrad / cvr_path_sum 
                       cloud_rad_c(:,ialt,jazi) 
      1                                = sum_odrad_c(:) / cvr_path_sum 
 
@@ -702,8 +707,16 @@
                   if(ht_m   .le. topo_max_ht .AND. 
      1               altray .le. topo_max_ang     )then 
 !                 if(ht_m   .le. topo_max_ht)then 
-                    call bilinear_laps(rinew_m,rjnew_m,ni,nj
-     1                                ,topo_a,topo_m)
+                    i1 = min(int(rinew_m),ni-1); fi = rinew_m - i1; i2=i1+1
+                    j1 = min(int(rjnew_m),nj-1); fj = rjnew_m - j1; j2=j1+1
+
+                    bi_coeff(1,1) = (1.-fi) * (1.-fj)
+                    bi_coeff(2,1) = fi      * (1.-fj)
+                    bi_coeff(1,2) = (1.-fi) *     fj 
+                    bi_coeff(2,2) = fi      *     fj 
+                    topo_m = sum(bi_coeff(:,:) * topo_a(i1:i2,j1:j2))
+!                   call bilinear_laps(rinew_m,rjnew_m,ni,nj
+!    1                                ,topo_a,topo_m)
                   else
                     topo_m = topo_a(inew_m,jnew_m)
                   endif
@@ -713,8 +726,10 @@
 
 !                     Land illumination related to terrain slope
                       if(sol_alt(inew_m,jnew_m)  .gt. 0. )then  
-                        if(alt_norm(inew_m,jnew_m) .gt. 0. )then
-                          solar_corr = sind(alt_norm(inew_m,jnew_m)) 
+                        alt_norm_int = sum(bi_coeff(:,:) 
+     1                               * alt_norm(i1:i2,j1:j2))
+                        if(alt_norm_int .gt. 0. )then
+                          solar_corr = sind(alt_norm_int) 
      1                               / sind(sol_alt(inew_m,jnew_m))
                           solar_corr = min(max(solar_corr,0.2),2.0) 
                         else ! land is shadowed
@@ -724,11 +739,18 @@
                           solar_corr = 1.0
                       endif
 
-                      topo_swi(ialt,jazi) = swi_2d(inew_m,jnew_m) 
+                      topo_swi(ialt,jazi) = 
+     1                  sum(bi_coeff(:,:) * swi_2d(i1:i2,j1:j2))
      1                                    * solar_corr
+!                     topo_swi(ialt,jazi) = swi_2d(inew_m,jnew_m) 
+!    1                                    * solar_corr
 
-                      topo_albedo(:,ialt,jazi) = 
-     1                    topo_albedo_2d(:,inew_m,jnew_m)
+                      do ic = 1,nc
+                        topo_albedo(ic,ialt,jazi) = sum(bi_coeff(:,:) 
+     1                                 * topo_albedo_2d(ic,i1:i2,j1:j2))
+                      enddo ! ic
+!                     topo_albedo(:,ialt,jazi) = 
+!    1                    topo_albedo_2d(:,inew_m,jnew_m)
 
 !                     Test for first segment
                       if(dxy1_l .eq. 0. .AND. htstart .eq. topo_sfc)then
@@ -762,7 +784,7 @@
      1                     ,slant2,cvr_path_sum
      1                     ,r_cloud_3d(ialt,jazi)
      1                     ,airmass_2_cloud_3d(ialt,jazi)
-     1                     ,cloud_rad(ialt,jazi)
+     1                     ,r_cloud_rad(ialt,jazi)
      1                     ,aero_ext_coeff
      1                     ,transm_3d(inew_m,jnew_m,int(rk_m)+1)
      1                     ,sum_aod,sum_aod_ill
@@ -830,10 +852,12 @@
      1             ,earth_radius,patm,aod_ray_eff,aero_scaleht
      1             ,htstart,redp_lvl                          ! I
      1             ,l_solar_eclipse,i4time,rlat,rlon          ! I
+     1             ,clear_radf_c                              ! I (dummy)
      1             ,clear_rad_c,elong                       ) ! O
          endif
 
-         if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4)then ! fill missing azimuths
+         if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4 .OR. 
+     1      jazi_delt .eq. 8               )then ! fill missing azimuths
           do jazi = minazi,maxazi
             call get_interp_parms(minazi,maxazi,jazi_delt,jazi       ! I
      1                           ,fm,fp,jazim,jazip,ir)              ! O
@@ -845,8 +869,8 @@
               cloud_od_sp(ialt,jazi,:) = 
      1         fm * cloud_od_sp(ialt,jazim,:) 
      1                                  + fp * cloud_od_sp(ialt,jazip,:)
-              cloud_rad(ialt,jazi) = 
-     1         fm * cloud_rad(ialt,jazim)  + fp * cloud_rad(ialt,jazip)
+              r_cloud_rad(ialt,jazi) = 
+     1         fm * r_cloud_rad(ialt,jazim)+fp * r_cloud_rad(ialt,jazip)      
               cloud_rad_c(:,ialt,jazi) = 
      1         fm * cloud_rad_c(:,ialt,jazim)  
      1                                 + fp *cloud_rad_c(:,ialt,jazip)
@@ -890,8 +914,8 @@
      1       fm * cloud_od(ialtm,:)   + fp * cloud_od(ialtp,:)
             cloud_od_sp(ialt,:,:) =
      1       fm * cloud_od_sp(ialtm,:,:) + fp * cloud_od_sp(ialtp,:,:)
-            cloud_rad(ialt,:) =
-     1       fm * cloud_rad(ialtm,:)  + fp * cloud_rad(ialtp,:)
+            r_cloud_rad(ialt,:) =
+     1       fm * r_cloud_rad(ialtm,:)  + fp * r_cloud_rad(ialtp,:)
             cloud_rad_c(:,ialt,:) =
      1       fm * cloud_rad_c(:,ialtm,:) + fp * cloud_rad_c(:,ialtp,:)
             clear_rad_c(:,ialt,:) =
@@ -929,8 +953,8 @@
      1                                    ,maxval(cloud_od_sp(:,:,isp))
         enddo ! isp
 
-        write(6,*)' Range of cloud_rad = ',minval(cloud_rad)
-     1                                    ,maxval(cloud_rad)
+        write(6,*)' Range of r_cloud_rad = ',minval(r_cloud_rad)
+     1                                    ,maxval(r_cloud_rad)
 
         write(6,*)' Range of cloud_rad_c R =',minval(cloud_rad_c(1,:,:))
      1                                       ,maxval(cloud_rad_c(1,:,:))
