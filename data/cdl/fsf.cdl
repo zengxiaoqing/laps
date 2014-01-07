@@ -142,17 +142,6 @@ netcdf fsf {
             psf:lvl_coord="AGL";
             psf:LAPS_units="PA";
 
-        //      LAPS Fcst integrated graupel depth         
-        float
-            lig(record,z,y,x);
-            lig:_FillValue = 1.e+37f;
-            lig:long_name="Integrated Graupel Depth          ";
-            lig:units="m";
-            lig:valid_range= 0.f, 1.f;
-            lig:LAPS_var="LIG";
-            lig:lvl_coord="AGL";
-            lig:LAPS_units="M";
-
         //      LAPS Fcst integrated cloud liquid depth         
         //      bigfile name = ilw
         float
@@ -488,6 +477,17 @@ netcdf fsf {
             s8a:lvl_coord=" ";
             s8a:LAPS_units="K";
 
+        //      LAPS Fcst Visible (Satellite) Albedo
+        float
+            smv(record,z,y,x);
+            smv:_FillValue = 1.e+37f;
+            smv:long_name="Visible Albedo";
+            smv:units="none";
+            smv:valid_range= 0.f, 1.f;
+            smv:LAPS_var="SMV";
+            smv:lvl_coord="MSL";
+            smv:LAPS_units="none";
+
         //      Predicted outgoing LW radiation     //
         //      bigfile name = not used
         float
@@ -718,7 +718,6 @@ netcdf fsf {
             slp_comment(record,z,namelen),
             p_comment(record,z,namelen),
             psf_comment(record,z,namelen),
-            lig_comment(record,z,namelen),
             lil_comment(record,z,namelen),
             lic_comment(record,z,namelen),
             tpw_comment(record,z,namelen),
@@ -747,6 +746,7 @@ netcdf fsf {
             tw1_comment(record,z,namelen),
             ter_comment(record,z,namelen),
             s8a_comment(record,z,namelen),
+            smv_comment(record,z,namelen),
             lwo_comment(record,z,namelen),
             swi_comment(record,z,namelen),
             swo_comment(record,z,namelen),
@@ -811,10 +811,6 @@ netcdf fsf {
         short
             psf_fcinv(record, z);
             psf_fcinv:_FillValue= 0s;
-
-        short
-            lig_fcinv(record, z);
-            lig_fcinv:_FillValue= 0s;
 
         short
             lil_fcinv(record, z);
@@ -927,6 +923,10 @@ netcdf fsf {
         short
             s8a_fcinv(record, z);
             s8a_fcinv:_FillValue= 0s;
+
+        short
+            smv_fcinv(record, z);
+            smv_fcinv:_FillValue= 0s;
 
         short
             lwo_fcinv(record, z);
