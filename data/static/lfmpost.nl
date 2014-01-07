@@ -15,8 +15,8 @@ make_donefile=.false.,
 precip_dt=10800,
 c_m2z='rams',
 
-n3d_pts_thr=33000000,
-p3d_pts_thr=28000000,
+n3d_pts_thr=99000000,
+p3d_pts_thr=99000000,
 
 &end
 
