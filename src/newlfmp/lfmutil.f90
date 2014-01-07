@@ -255,7 +255,8 @@ real :: stefan_boltzmann, b_olr, eff_emissivity
 real :: bt_flux_equiv
 real :: coeff
 real :: a1,b1,c1,d1,e1,alpha(lx,ly)
-real :: const_lwp,const_iwp
+real :: const_lwp,const_iwp,const_rwp,const_swp,const_gwp
+real :: const_lwp_bks,const_iwp_bks,const_rwp_bks,const_swp_bks,const_gwp_bks
 
 !beka
 
@@ -266,9 +267,9 @@ character*10    units_2d
 character*50    ext
 integer        len_dir,istatus
 character*3    var_2d
-real :: ldf(lx,ly),lat(lx,ly),lon(lx,ly),avg(lx,ly)
+real :: ldf(lx,ly),lat(lx,ly),lon(lx,ly),avg(lx,ly),static_albedo(lx,ly)
 real :: windspeed(lx,ly),soil_moist(lx,ly),snow_cover(lx,ly)
-! real :: intcldice(lx,ly) 
+real :: intrain(lx,ly),intsnow(lx,ly),intgraupel(lx,ly)
 
 integer ::        ismoist,isnow
 integer ::        status
@@ -310,6 +311,9 @@ real :: ghi_ratio(lx,ly)
         call rd_laps_static (directory,ext,lx,ly,1,var_2d, &
                              units_2d,comment_2d,lon,      &
                              rspacing_dum,istatus)
+
+        call get_static_field_interp('albedo',laps_valtime,lx,ly &
+                                    ,static_albedo,istatus)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ! Extrapolate a surface temp if not available.
@@ -428,19 +432,34 @@ if (make_micro) then
    if (maxval(hgraupelmr_sig) < rmsg) pcpmr_sig=pcpmr_sig+hgraupelmr_sig
    where(pcpmr_sig < zero_thresh) pcpmr_sig=0.
    rhodrysig=hpsig/(r*htsig)
-   call lfm_integrated_liquid(lx,ly,nz,hcldliqmr_sig,hcldicemr_sig,hmrsig,rhodrysig,hzsig,zsfc  &
-                             ,intliqwater,intcldice,totpcpwater,rmsg)
+   call lfm_integrated_liquid(lx,ly,nz,hcldliqmr_sig,hcldicemr_sig,hmrsig,hrainmr_sig,hsnowmr_sig,hgraupelmr_sig,rhodrysig,hzsig,zsfc  &
+                             ,intliqwater,intcldice,totpcpwater,intrain,intsnow,intgraupel,rmsg)
  endif ! large_ngrid
 
  if(.true.)then ! supercedes binary cldamt calculated earlier
-                ! for liquid we can augment this noting that tau = (3 * intliqwater) / (2 * rho * radius)
+                ! units of integrated vertical quantities (e.g. intliqwater) is meters
+                ! for liquid we can augment this noting that tau = (3 * intliqwater * rholiq) / (2 * rho * radius)
                 ! cldamt should be related to opacity and optical depth
                 ! we might use a new module for this derived from these files
                 ! in  'src/lib/cloud/get_cloud_rad.f90':
                 ! and 'src/lib/modules/module_cloud_rad.f90'
 
-  const_lwp = 1.5 / (rholiq * reff_clwc)
-  const_iwp = 1.5 / (rholiq * reff_cice)
+  const_lwp = (1.5 * rholiq) / (rholiq     * reff_clwc)
+  const_lwp_bks = const_lwp * bksct_eff_clwc
+
+  const_iwp = (1.5 * rholiq) / (rholiq     * reff_cice)
+  const_iwp_bks = const_iwp * bksct_eff_cice
+
+  const_rwp = (1.5 * rholiq) / (rholiq     * reff_rain)
+  const_rwp_bks = const_rwp * bksct_eff_rain
+
+  const_swp = (1.5 * rholiq) / (rhosnow    * reff_snow)
+  const_swp_bks = const_swp * bksct_eff_snow
+
+  const_gwp = (1.5 * rholiq) / (rhograupel * reff_graupel)
+  const_gwp_bks = const_gwp * bksct_eff_graupel
+
+  write(6,*)' simvis constants ',const_lwp_bks,const_iwp_bks,const_rwp_bks,const_swp_bks,const_gwp_bks
 
   do j=1,ly
     do i=1,lx
@@ -451,6 +470,11 @@ if (make_micro) then
 !        liquid water is assumed to have smaller particles contributing to a larger constant
 !        Cloud amount is opacity of cloud liquid and cloud ice hydrometeors
          cldamt(i,j) = 1. - (exp( -(const_lwp * intliqwater(i,j) + const_iwp * intcldice(i,j))) ) 
+
+!        Rain, Snow, and Graupel are added for the cldalb & simvis computation
+         cldalb(i,j) = 1. - (exp( -(const_lwp_bks * intliqwater(i,j) + const_iwp_bks * intcldice(i,j) + &
+                                    const_rwp_bks * intrain(i,j)     + const_swp_bks * intsnow(i,j)   + const_gwp_bks * intgraupel(i,j)) ) ) 
+         simvis(i,j) = cldalb(i,j) + (1.-cldalb(i,j)) * static_albedo(i,j)
       endif
     enddo ! i
   enddo ! j
@@ -914,6 +938,10 @@ if (verbose .and. .not. large_ngrid) then
    print*,'Min/Max intliqwat = ',minval(intliqwater),maxval(intliqwater)
    print*,'Min/Max intcldice = ',minval(intcldice),maxval(intcldice)
    print*,'Min/Max totpcpwat = ',minval(totpcpwater),maxval(totpcpwater)
+   print*,'Min/Max intrain   = ',minval(intrain),maxval(intrain)
+   print*,'Min/Max intsnow   = ',minval(intsnow),maxval(intsnow)
+   print*,'Min/Max intgraupel= ',minval(intgraupel),maxval(intgraupel)
+   print*,'Min/Max simvis    = ',minval(simvis),maxval(simvis)
    print*,'Min/Max max refl  = ',minval(max_refl),maxval(max_refl)
    print*,'Min/Max echo tops = ',minval(echo_tops),maxval(echo_tops)
    print*,'Min/Max refl sfc  = ',minval(refl_sfc),maxval(refl_sfc)
@@ -1239,8 +1267,8 @@ end
 
 !===============================================================================
 
-subroutine lfm_integrated_liquid(nx,ny,nz,cond_mr,cice_mr,vapor_mr,rho,height,topo  &
-                                ,intliqwater,intcldice,totpcpwater,rmsg)
+subroutine lfm_integrated_liquid(nx,ny,nz,cond_mr,cice_mr,vapor_mr,rain_mr,snow_mr,graupel_mr,rho,height,topo  &
+                                ,intliqwater,intcldice,totpcpwater,intrain,intsnow,intgraupel,rmsg)
 
 ! Computes integrated liquid water and total precip. water in a column.  
 !  Adapted from USAF Weather Agency MM5 Post Processor
@@ -1250,8 +1278,10 @@ implicit none
   
 integer :: nx,ny,nz,i,j,k 
 real :: height_top,height_bot,dz,rmsg
-real, dimension(nx,ny) :: topo,intliqwater,totpcpwater,intcldice  ! M
+real, dimension(nx,ny) :: newtopo,intliqwater,totpcpwater,intcldice  ! M
+real, dimension(nx,ny) :: topo,intrain,intsnow,intgraupel         ! M
 real, dimension(nx,ny,nz) :: cond_mr,vapor_mr,cice_mr             ! KG/KG
+real, dimension(nx,ny,nz) :: rain_mr,snow_mr,graupel_mr           ! KG/KG
 real, dimension(nx,ny,nz) :: rho                                  ! KG/M**3
 real, dimension(nx,ny,nz) :: height                               ! M
 real rho_h2o                                                      ! KG/M**3
@@ -1263,6 +1293,9 @@ do i=1,nx
    intliqwater(i,j)=0.0
    totpcpwater(i,j)=0.0
    intcldice(i,j)=0.0
+   intrain(i,j)=0.0
+   intsnow(i,j)=0.0
+   intgraupel(i,j)=0.0
    do k=1,nz
 ! Compute layer thickness
       if (k == 1) then
@@ -1278,6 +1311,9 @@ do i=1,nx
       dz=height_top-height_bot
       if(cond_mr(i,j,k) < rmsg)intliqwater(i,j)=intliqwater(i,j)+cond_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
       if(cice_mr(i,j,k) < rmsg)intcldice(i,j)  =intcldice(i,j)  +cice_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
+      if(rain_mr(i,j,k) < rmsg)intrain(i,j)    =intrain(i,j)    +rain_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
+      if(snow_mr(i,j,k) < rmsg)intsnow(i,j)    =intsnow(i,j)    +snow_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
+      if(graupel_mr(i,j,k) < rmsg)intgraupel(i,j) =intgraupel(i,j)    +graupel_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
       totpcpwater(i,j)=totpcpwater(i,j)                         +vapor_mr(i,j,k)*(rho(i,j,k)/rho_h2o)*dz  ! meters
    enddo
 enddo
