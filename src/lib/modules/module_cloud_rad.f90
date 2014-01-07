@@ -2,18 +2,21 @@
 MODULE cloud_rad    
 
 !     Cloud Radiation and Microphysics Parameters
-      real, parameter :: bksct_eff_clwc = .063
-      real, parameter :: bksct_eff_cice = .14
-      real, parameter :: bksct_eff_rain = .063
-      real, parameter :: bksct_eff_snow = .14
+      real, parameter :: bksct_eff_clwc    = .063
+      real, parameter :: bksct_eff_cice    = .14
+      real, parameter :: bksct_eff_rain    = .063
+      real, parameter :: bksct_eff_snow    = .14
+      real, parameter :: bksct_eff_graupel = .30
 
-      real, parameter :: rholiq =    1e3 ! kilograms per cubic meter
-      real, parameter :: rhosnow = .07e3 ! kilograms per cubic meter
+      real, parameter :: rholiq     =   1e3 ! kilograms per cubic meter
+      real, parameter :: rhosnow    = .07e3 ! kilograms per cubic meter
+      real, parameter :: rhograupel = .50e3 ! kilograms per cubic meter
 
-      real, parameter :: reff_clwc = .000020 ! m
-      real, parameter :: reff_cice = .000040 ! m
-      real, parameter :: reff_rain = .001000 ! m
-      real, parameter :: reff_snow = .004000 ! m
+      real, parameter :: reff_clwc    = .000020 ! m
+      real, parameter :: reff_cice    = .000040 ! m
+      real, parameter :: reff_rain    = .001000 ! m
+      real, parameter :: reff_snow    = .004000 ! m
+      real, parameter :: reff_graupel = .010000 ! m
 
       PUBLIC albedo_to_clouds
 
