@@ -118,12 +118,13 @@ real, pointer, dimension(:,:) ::  &
       ,thetaesfc    ,tdsfc        ,redp         ,pmsl         ,upbl        &
       ,vpbl         ,u80          ,v80          ,clwmrsfc     ,icemrsfc     ,snowmrsfc    ,rainmrsfc   &
       ,graupmrsfc   ,cldbase      ,cldtop       ,cldamt       ,ceiling     &
-      ,intliqwater  ,intcldice    ,intgraupel   ,totpcpwater  ,max_refl     ,echo_tops    ,refl_sfc    &
+      ,intliqwater  ,intcldice    ,totpcpwater  ,max_refl     ,echo_tops    ,refl_sfc    &
       ,pcptype_sfc  ,pcp_inc      ,snow_inc     ,snow_tot &
       ,srhel        ,uhel         ,cape         ,cin          ,liftedind   &
       ,visibility   ,heatind      ,lwout        ,swout        ,lwdown      &
       ,swdown       ,shflux       ,lhflux       ,vnt_index    ,ham_index   &
-      ,hah_index    ,fwi_index    ,fwx_index    ,upflux       ,bt11u
+      ,hah_index    ,fwi_index    ,fwx_index    ,upflux       ,bt11u       &
+      ,cldalb       ,simvis
 integer,            allocatable, dimension(:) :: lvls2d
 character(len=3),   allocatable, dimension(:) :: name2d
 character(len=10),  allocatable, dimension(:) :: units2d
@@ -402,7 +403,7 @@ implicit none
 integer :: ct
 
 if (trim(mtype) /= 'st4') then
-  nvar2dout=50
+  nvar2dout=52
   if (make_micro) nvar2dout=nvar2dout+5
   if (make_firewx) nvar2dout=nvar2dout+7
 
@@ -439,6 +440,7 @@ if (trim(mtype) /= 'st4') then
   lhflux     =>sgrid(1:lx,1:ly,ct); name2d(ct)='LHF'; com2d(ct)='Latent Heat Flux'           ; ct=ct+1
   upflux     =>sgrid(1:lx,1:ly,ct); name2d(ct)='UMF'; com2d(ct)='Upslope Moisture Flux'      ; ct=ct+1
   bt11u      =>sgrid(1:lx,1:ly,ct); name2d(ct)='S8A'; com2d(ct)='11u Brightness Temperature' ; ct=ct+1
+  simvis     =>sgrid(1:lx,1:ly,ct); name2d(ct)='SMV'; com2d(ct)='Albedo (Vis Satellite)'     ; ct=ct+1
 
 
   thetasfc   =>sgrid(1:lx,1:ly,ct); name2d(ct)='TH '; com2d(ct)='Sfc Potential Temperature'       ; ct=ct+1
@@ -451,11 +453,12 @@ if (trim(mtype) /= 'st4') then
   ztw1       =>sgrid(1:lx,1:ly,ct); name2d(ct)='TW1'; com2d(ct)='Height of wet-bulb = 1.3'        ; ct=ct+1
   cldbase    =>sgrid(1:lx,1:ly,ct); name2d(ct)='LCB'; com2d(ct)='Cloud Base ASL'                  ; ct=ct+1
   cldtop     =>sgrid(1:lx,1:ly,ct); name2d(ct)='LCT'; com2d(ct)='Cloud Top ASL'                   ; ct=ct+1
-  cldamt     =>sgrid(1:lx,1:ly,ct); name2d(ct)='LCV'; com2d(ct)='Cloud Fraction'                  ; ct=ct+1
+  cldamt     =>sgrid(1:lx,1:ly,ct); name2d(ct)='LCV'; com2d(ct)='Cloud Opacity'                   ; ct=ct+1
+  cldalb     =>sgrid(1:lx,1:ly,ct); name2d(ct)='CLA'; com2d(ct)='Cloud Albedo'                    ; ct=ct+1
   ceiling    =>sgrid(1:lx,1:ly,ct); name2d(ct)='CCE'; com2d(ct)='Cloud Ceiling AGL'               ; ct=ct+1
   intliqwater=>sgrid(1:lx,1:ly,ct); name2d(ct)='LIL'; com2d(ct)='Integrated Cloud Liquid'         ; ct=ct+1
   intcldice  =>sgrid(1:lx,1:ly,ct); name2d(ct)='LIC'; com2d(ct)='Integrated Cloud Ice'            ; ct=ct+1
-  intgraupel =>sgrid(1:lx,1:ly,ct); name2d(ct)='LIG'; com2d(ct)='Integrated Graupel'              ; ct=ct+1
+! intgraupel =>sgrid(1:lx,1:ly,ct); name2d(ct)='LIG'; com2d(ct)='Integrated Graupel'              ; ct=ct+1
   totpcpwater=>sgrid(1:lx,1:ly,ct); name2d(ct)='TPW'; com2d(ct)='Total Precipitable Water'        ; ct=ct+1
   max_refl   =>sgrid(1:lx,1:ly,ct); name2d(ct)='LMR'; com2d(ct)='Composite Reflectivity'          ; ct=ct+1
   echo_tops  =>sgrid(1:lx,1:ly,ct); name2d(ct)='LMT'; com2d(ct)='Radar Echo Tops'                 ; ct=ct+1
