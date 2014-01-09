@@ -159,12 +159,20 @@
         write(6,*)' call get_cloud_rad...'
       
         if(.true.)then
-            call get_cloud_rad(obj_alt,obj_azi,clwc_3d,cice_3d
+            call get_cloud_rad(obj_alt,obj_azi,sol_alt(i,j),sol_azi(i,j)
+     1                    ,clwc_3d,cice_3d
      1                    ,rain_3d,snow_3d,topo_a,lat,lon
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk)
         endif
 
-        transm_4d = transm_4d * obj_bri ! correct for sun/moon brightness
+        if(sol_alt(i,j) .lt. -4.)then ! Modify moon glow section in green channel
+                                      ! Preserve sfc sky glow section in red channel
+            transm_4d(:,:,:,2) = transm_4d(:,:,:,2) * obj_bri ! correct for sun/moon brightness
+        else
+            transm_4d(:,:,:,:) = transm_4d(:,:,:,:) * obj_bri ! correct for sun/moon brightness
+        endif
+        write(6,*)' Range of transm_4d(red channel) = '
+     1           ,minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
 
         I4_elapsed = ishow_timer()
 
