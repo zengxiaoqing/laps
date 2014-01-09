@@ -127,6 +127,7 @@ if test "$NCARG_ROOT" = "allsky"; then
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
+    WINDOW=$NI_CYL # Resetting WINDOW
 #   export ALLSKY_JDIM=$WINDOW
     export ALLSKY_IDIM=$NJ_CYL
     export ALLSKY_JDIM=$NI_CYL
