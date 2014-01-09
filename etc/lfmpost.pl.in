@@ -324,7 +324,7 @@ for ($g=1; $g<=$ngrid; $g++) {
        if (! -e "$model_output_dir/d$dom/fsf") {
          mkdir ("$model_output_dir/d$dom/fsf",0775);
        }
-   }else{ # local laps being run on JET
+   }else{ # local laps being run on machine
        print "Attempt to create fua/fsf links since we have a local LAPS on JET\n";
        if(defined($opt_n)){
            $subdir = $opt_n;
@@ -334,6 +334,12 @@ for ($g=1; $g<=$ngrid; $g++) {
 
        if (! -e "$model_output_dir/d$dom/fua") {
          if (defined ($opt_y) || defined ($opt_n)) {
+### Hongli Jiang add: mkdir since $subdir doesn't exist. 1/9/2014
+           if (! -e "$lapsdataroot/lapsprd/fua/$subdir") {
+             mkdir ("$lapsdataroot/lapsprd/fua/$subdir",0775);
+             print "mkdir $lapsdataroot/lapsprd/fua/$subdir\n";
+           }
+### end HJ add
            print   "ln -s $lapsdataroot/lapsprd/fua/$subdir $model_output_dir/d$dom/fua\n";
            system ("ln -s $lapsdataroot/lapsprd/fua/$subdir $model_output_dir/d$dom/fua");
 
@@ -353,6 +359,12 @@ for ($g=1; $g<=$ngrid; $g++) {
 
        if (! -e "$model_output_dir/d$dom/fsf") {
          if (defined ($opt_y) || defined ($opt_n)) {
+### Hongli Jiang add: mkdir since $subdir doesn't exist. 1/9/2014
+           if (! -e "$lapsdataroot/lapsprd/fsf/$subdir") {
+             mkdir ("$lapsdataroot/lapsprd/fsf/$subdir",0775);
+             print "$lapsdataroot/lapsprd/fsf/$subdir\n";
+           }
+### end HJ add
            print   "ln -s $lapsdataroot/lapsprd/fsf/$subdir $model_output_dir/d$dom/fsf\n";
            system ("ln -s $lapsdataroot/lapsprd/fsf/$subdir $model_output_dir/d$dom/fsf");
 
