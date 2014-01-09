@@ -1,6 +1,6 @@
 
 
-      subroutine get_cloud_rad(sol_alt,sol_azi,clwc_3d,cice_3d,rain_3d, &
+      subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
             snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk)
 
       use mem_namelist, ONLY: r_missing_data, earth_radius
@@ -27,8 +27,8 @@
       real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
       real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for
                                   ! solar intensity at top of cloud
-      real sol_alt(ni,nj)
-      real sol_azi(ni,nj)
+      real obj_alt(ni,nj)
+      real obj_azi(ni,nj)
       real sfc_glow(ni,nj)        ! surface lighting intensity (nl)                 
 
       real clwc_int(ni,nj)
@@ -61,21 +61,26 @@
 
       call get_grid_spacing_cen(grid_spacing_m,istatus)
 
-!     Note that idb,jdb is a "nominal" grid point location from which we derive a constant solar alt/az for some purposes
-      sol_alt_eff = max(sol_alt(idb,jdb),1.5)
-      if(sol_alt(idb,jdb) .le. -2.0)sol_alt_eff = +5.0 ! twilight arch light source
-      ds_dh = 1. / sind(sol_alt_eff)
-      dxy_dh = 1. / tand(sol_alt_eff)
+!     Note that idb,jdb is a "nominal" grid point location from 
+!     which we derive a constant object alt/az for some purposes
+      obj_alt_eff = max(obj_alt(idb,jdb),1.5)
+      if(obj_alt(idb,jdb) .le. -2.0)obj_alt_eff = +5.0 ! twilight arch light source
+      ds_dh = 1. / sind(obj_alt_eff)
+      dxy_dh = 1. / tand(obj_alt_eff)
 
       transm_3d(:,:,:) = 1.
 
-      sinazi = sind(sol_azi(idb,jdb))
-      cosazi = cosd(sol_azi(idb,jdb))
+      sinazi = sind(obj_azi(idb,jdb))
+      cosazi = cosd(obj_azi(idb,jdb))
 
       terr_max = maxval(topo_a); terr_min = minval(topo_a)
 
-      if(sol_alt(idb,jdb) .lt. -4.)then
+      if(solalt .lt. -4.)then
+          write(6,*)' Call get_sfc_glow'
           call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow)
+          write(6,*)' Glow at observer location is ',sfc_glow(idb,jdb)
+      else
+          write(6,*)' Skip call to get_sfc_glow - solalt is',solalt
       endif
 
       I4_elapsed = ishow_timer()
@@ -263,7 +268,7 @@
 !              (transm_3d(il,jl,kl) .eq. 0. .and. jl .eq. jdb) )then
             if( idebug .eq. 1 )then 
               write(6,102)k,heights_3d_il_jl_kl,transm_3d(il,jl,kl),dh,ds&
-                         ,sol_alt(il,jl),sol_azi(il,jl),di,dj,iu,ju,il,jl,i,j
+                         ,obj_alt(il,jl),obj_azi(il,jl),di,dj,iu,ju,il,jl,i,j
 102           format('k/ht/trans/dhds/solaltaz/dij/u/l/ij ' &
                     ,i4,f8.0,f8.5,1x,2f9.2,1x,2f7.2,1x,2f7.3,3(2x,2i4))
             endif
@@ -282,17 +287,17 @@
 
             refraction = 0.5 ! typical value near horizon
 
-            sol_alt_cld = sol_alt(il,jl) + horz_dep_d + refraction
+            obj_alt_cld = obj_alt(il,jl) + horz_dep_d + refraction
 
 !           Estimate solar extinction/reddening by Rayleigh scattering at this cloud altitude
-            if(sol_alt_cld .lt. 0.)then    ! (early) twilight cloud lighting
-              twi_int = .1 * 10.**(+sol_alt_cld * 0.4) ! magnitudes per deg
+            if(obj_alt_cld .lt. 0.)then    ! (early) twilight cloud lighting
+              twi_int = .1 * 10.**(+obj_alt_cld * 0.4) ! magnitudes per deg
               rint = twi_int
               grn_rat = 1.0 ; blu_rat = 1.0            
-            elseif(sol_alt_cld .ge. 0.)then            ! low daylight sun
+            elseif(obj_alt_cld .ge. 0.)then            ! low daylight sun
 !             Direct illumination of the cloud is calculated here
 !             Indirect illumination is factored in via 'scat_frac'
-              am = airmassf(cosd(90. - max(sol_alt(il,jl),-3.0)))
+              am = airmassf(cosd(90. - max(obj_alt(il,jl),-3.0)))
               scat_frac = 0.75
               do ic = 1,nc
                 trans_c(ic) = trans(am*ext_g(ic)*patm_k*scat_frac)
@@ -303,7 +308,7 @@
             endif  
 
             if(idebug .eq. 1)then
-              write(6,103)k,sol_alt(il,jl),horz_dep_d,sol_alt_cld,am*patm_k,rint,rint*blu_rat**0.3,rint*blu_rat
+              write(6,103)k,obj_alt(il,jl),horz_dep_d,obj_alt_cld,am*patm_k,rint,rint*blu_rat**0.3,rint*blu_rat
 103           format('k/salt/hdep/salt_cld/amk/R/G/B',43x,i4,3f6.2,f8.2,2x,3f6.2)                                   
             endif
 
@@ -335,17 +340,17 @@
                   write(6,*)' terrain shadow is at ',i,j,k
               endif
           endif 
-          if(sol_alt(i,j) .lt. -4.)then ! use red channel for sfc lighting
-              transm_4d(i,j,k,1) = sfc_glow(i,j)/day_int 
+          if(solalt .lt. -4.)then ! use red channel for sfc lighting
+              transm_4d(i,j,k,1) = sfc_glow(i,j) ! /day_int 
           endif
       enddo ! i
       enddo ! j
       enddo ! k      
 
       write(6,*)' Number of points above ground and in shadow is',n_terr_shadow
-!     if(sol_alt(idb,jdb) .lt. -8.)then ! use red channel for sfc lighting
-!         write(6,*)' Range of transm_4d(red channel) = ',minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
-!     endif
+      if(solalt .lt. -4.)then ! use red channel for sfc lighting
+          write(6,*)' Range of transm_4d(red channel nl) = ',minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
+      endif
 
       I4_elapsed = ishow_timer()
 
