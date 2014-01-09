@@ -95,9 +95,9 @@ if (-e $FONTFILE) then
     setenv MEMBER_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',16"'
     if (-d /w3/lapb) then
         if ($SUBTYPE == "") then 
-            setenv KEY_WIDTH -19.0
+            setenv KEY_WIDTH -3
         else
-            setenv KEY_WIDTH -12.5
+            setenv KEY_WIDTH -3
         endif
     else
         setenv KEY_WIDTH -3 
@@ -125,7 +125,7 @@ if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be pr
     setenv PCT_SUCCESS     `tail -1 $SUMMARY_FILE`
 #   setenv L_PLOT_CRITERIA T  # for testing
     if (-d /w3/lapb) then
-        setenv KEY_WIDTH -22.5
+        setenv KEY_WIDTH -20
     else
         setenv KEY_WIDTH -10
     endif
@@ -133,9 +133,9 @@ if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be pr
 else                                                     # Percentage will not be present
     setenv L_PLOT_CRITERIA T 
     if (-d /w3/lapb) then
-        setenv KEY_WIDTH -19.0
+        setenv KEY_WIDTH -7
     else
-         setenv KEY_WIDTH -7
+        setenv KEY_WIDTH -7
     endif
     setenv XKEY 0.180
 endif
@@ -296,7 +296,7 @@ while ($IMEMBER <= $NMEMBERS)
         echo "PCT_SUCCESS being compared to threshold of 80 is: $PCT_SUCCESS"
         if ($PCT_SUCCESS >= 80) then
             if (-d /w3/lapb) then
-                setenv LW 3
+                setenv LW 2
             else
                 if ($NMEMBERS >= 7) then
                     setenv LW 1
@@ -312,7 +312,7 @@ while ($IMEMBER <= $NMEMBERS)
         setenv PCT ""
         setenv TITLE `echo $MEMBER | sed 's/_/ /g'`
         if (-d /w3/lapb) then
-            setenv LW 3
+            setenv LW 2
         else
             if ($NMEMBERS >= 7) then
                 setenv LW 1
@@ -324,6 +324,12 @@ while ($IMEMBER <= $NMEMBERS)
     endif
 
     echo "IMEMBER MEMBER IBLOCK TITLE: $IMEMBER $MEMBER $IBLOCK $TITLE"
+
+    if ($MEMBER == "advection") then
+        setenv LW 1
+    endif
+
+    echo "LW $LW"
 
     if ($DURATION == "") then 
         setenv TIME 1
@@ -385,14 +391,14 @@ while ($IMEMBER <= $NMEMBERS)
     else # NFIELDS = 1
 
         if ($NMEMBERS == 1) then
-            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
         else if ($IMEMBER == 1) then
-            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
+            echo 'plot '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
         else if ($IMEMBER == $NMEMBERS) then
-            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt 5 ps 1 lt '$IMEMBER      >> $GNUPLOTFILE
 
         else
-            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw 3 pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
+            echo '     '$DQUOTE$FILE$DQUOTE' index '$IBLOCK' using '$TIME':3 title "'"$TH"$T1 $TITLE$TF'" with linespoints lw '$LW' pt 5 ps 1 lt '$IMEMBER', \' >> $GNUPLOTFILE
         endif
 
     endif
