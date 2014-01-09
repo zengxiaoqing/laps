@@ -275,6 +275,8 @@ c
 
         include 'trigd.inc'
 
+        use mem_namelist, ONLY: laps_cycle_time
+
         logical exist,new_DEM
         logical lforce_ter_2_zero
 !mp
@@ -964,9 +966,17 @@ c
               write(6,*)' Error - no systime: returning'
               return
           endif
-          
-          call get_modelfg_2d(i4time_sys,'TER',nnxp,nnyp,topt_out
-     1                                                  ,istatus)       
+
+          istatus = 0
+          ntrys = 40
+          itry = 0
+          do while (itry .le. ntrys .AND. istatus .eq. 0)
+              i4time_try = i4time_sys - (itry * laps_cycle_time)
+              write(6,*)' Trying for FSF data at',itry,i4time_try
+              call get_modelfg_2d(i4time_try,'TER',nnxp,nnyp,topt_out
+     1                                                      ,istatus)       
+              itry = itry + 1
+          enddo
 
        endif
 
