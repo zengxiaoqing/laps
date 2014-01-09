@@ -402,9 +402,13 @@
                   glow_cld = addlogs(glow_cld,glow_cld_moon)
               endif
 
-!             Note that cloud_rad_c should have surface night lighting included
-              glow_cld_nt = log10(glow_cld_day * cloud_rad_c(1,i,j))
+!             Note that cloud_rad_c(1) is surface night lighting of clouds (nl)
+!             glow_cld_nt = log10(glow_cld_day * cloud_rad_c(1,i,j))
+              glow_cld_nt = log10(cloud_rad_c(1,i,j))
               glow_cld = addlogs(glow_cld,glow_cld_nt)
+!             if(idebug .eq. 1)then
+!                 write(6,*)'cloud_rad_c/glow_cld_nt',cloud_rad_c(1,i,j),glow_cld_nt
+!             endif
 
 !             During twilight, compare with clear sky background
 !             Note that secondary scattering might also be considered in
