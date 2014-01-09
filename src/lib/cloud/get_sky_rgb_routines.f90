@@ -316,6 +316,12 @@
 
         sqarcsec_per_sqdeg = 3600.**2
 
+        if(mag_obj .lt. -5.)then ! sun or moon (0.5 degree diameter)
+            alt_dist = 0.25 
+        else                     ! star or planet (point object)
+            alt_dist = alt_scale / 2.0
+        endif
+
         do ialt = minalt,maxalt
         do jazi = minazi,maxazi
 
@@ -329,7 +335,6 @@
             if(alt .ge. -2.)then
 
               alt_cos = min(alt,89.)
-              alt_dist = alt_scale / 2.0
               azi_dist = alt_dist / cosd(alt_cos)         
 
                 if(abs(alt_obj-alt) .le. alt_dist .AND. abs(azi_obj-azi) .le. azi_dist)then
