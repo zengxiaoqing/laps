@@ -220,8 +220,8 @@ cdis
 
           elseif(iter .gt. 1)then
               if(r0_barnes_max_in .lt. 1.7 * grid_spacing_m)then
-                  write(6,*)' Radius reached small criterion
-     1                     , exit iter loop '
+                  write(6,*)
+     1                ' Radius reached small criterion, exit iter loop '
      1                     ,iter,r0_barnes_max_in,grid_spacing_m
                   goto900
               endif
@@ -812,7 +812,7 @@ csms$parallel(grid_dh, <ii>) begin
                         enddo ! jj
                       enddo ! ii
 
-                    elseif(kk_higher_pair .eq. 1)then ! double up the k's
+                    elseif(kk_higher_pair .eq. 1)then ! double up the k s
                       varl1 = varl(1)
                       varl2 = varl(2)
 
