@@ -811,6 +811,7 @@ cdoc                            calls read_multiradar_3dref.
 558                 format(2f9.3,f8.0,i7,a4)
 
                     if(l_low_fill .or. l_high_fill)then
+                        I4_elapsed = ishow_timer()
                         call ref_fill_vert(grid_ra_ref,imax,jmax,kmax
      1                          ,l_low_fill,l_high_fill,lat,lon,topo
      1                          ,heights_3d
