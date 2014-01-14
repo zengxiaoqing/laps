@@ -57,7 +57,7 @@ cdoc    Used to read in a surface grid with inputs of time and ext
 
         call make_fnam_lp(i4time,asc9_tim,istatus)
 
-        write(6,11)directory(1:45),asc9_tim,ext,var_2d
+        write(6,11)trim(directory),asc9_tim,ext,var_2d
 11      format(' Reading 2d ',a,1x,a,1x,a,1x,a)
 
         lvl_2d = 0
@@ -180,8 +180,7 @@ c          endif
 
         call make_fnam_lp(i4time,asc9_tim,istatus)
 
-        write(6,11)directory(1:len_dir),ext_int(1:len)
-     1,var_2d
+        write(6,11)trim(directory),ext_int(1:len),var_2d
 11      format(' Reading 2d ',a,1x,a5,1x,a3)
 
         lvl_2d = 0
@@ -278,8 +277,8 @@ cdoc    Returns a 2-D grid. Inputs include the extension and time window.
 
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
-            write(6,11)directory(1:45),asc9_tim,ext(1:5),var_2d
-11          format(' Reading 2d ',a45,1x,a9,1x,a5,1x,a3)
+            write(6,11)trim(directory),asc9_tim,ext(1:5),var_2d
+11          format(' Reading 2d ',a,1x,a9,1x,a5,1x,a3)
 
             CALL READ_LAPS_DATA(I4TIME_nearest,DIRECTORY,EXT,imax,jmax,
      1                     1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
@@ -371,8 +370,8 @@ cdoc    Returns a 2-D grid. Inputs include the directory, ext, and time window.
 
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
-            write(6,11)directory(1:52),asc9_tim,ext(1:5),var_2d
-11          format(' Reading 2d ',a52,1x,a9,1x,a5,1x,a3)
+            write(6,11)trim(directory),asc9_tim,ext(1:5),var_2d
+11          format(' Reading 2d ',a,1x,a9,1x,a5,1x,a3)
 
             CALL READ_LAPS_DATA(I4TIME_nearest,DIRECTORY,EXT,imax,jmax,
      1                     1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
@@ -541,8 +540,8 @@ c
 
                 call make_fnam_lp(i4times(i),asc9_tim,istatus)
 
-                write(6,11)directory(1:45),asc9_tim,ext(1:5),var_2d
-11              format(' Reading 2d ',a45,1x,a9,1x,a5,1x,a3)
+                write(6,11)trim(directory),asc9_tim,ext(1:5),var_2d
+11              format(' Reading 2d ',a,1x,a9,1x,a5,1x,a3)
 
                 CALL READ_LAPS_DATA(i4times(i),DIRECTORY,EXT,imax
      1            ,jmax,1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D
@@ -1710,8 +1709,8 @@ c          return
               lvl_coord_2d = 'MSL'
               call make_fnam_lp(i4times(j),asc9_tim,istatus)
 
-              write(6,11)satdir(1:lsdir),asc9_tim,ext(1:5),var_2d
-11            format(' Reading 2d ',a61,1x,a9,1x,a5,1x,a3)
+              write(6,11)trim(satdir),asc9_tim,ext(1:5),var_2d
+11            format(' Reading 2d ',a,1x,a9,1x,a5,1x,a3)
 
               CALL READ_LAPS_DATA(i4times(j),satdir,EXT,imax
      1            ,jmax,1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D
@@ -2124,7 +2123,7 @@ cdoc    Used to read in one or more surface grids with inputs of time and ext
 
         call make_fnam_lp(i4time,asc9_tim,istatus)
 
-        write(6,11)directory(1:45),asc9_tim,ext,var_2d
+        write(6,11)trim(directory),asc9_tim,ext,var_2d
 11      format(' Reading 2d ',a,1x,a,1x,a,1x,a)
 
         lvl_2d = 0
