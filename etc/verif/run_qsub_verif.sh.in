@@ -35,7 +35,7 @@ script=$lapsdataroot/log/qsub_verif.sh
 echo "#!/bin/sh --login"           > $script
 echo "#PBS -l procs=1"            >> $script
 echo "#PBS -l walltime=$hhmm:00"  >> $script
-echo "#PBS -l vmem=3500M"         >> $script
+echo "#PBS -l vmem=4500M"         >> $script
 echo "#PBS -A dlaps"              >> $script
 echo "#PBS -N vrf_$domain_name"   >> $script
 #echo "#PBS -S /bin/sh"            >> $script
