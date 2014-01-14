@@ -75,7 +75,7 @@
          3.1.2 ..................  Surface Lookup Tables (gensfclut.exe)
          3.1.3 ..................  Satellite Lookup Tables (genlvdlut.exe)
          3.2 ..............  Ingest Processes
-         3.2.1 ..................  LGA Model
+         3.2.1 ..................  LGA Model Background
          3.2.2 ..................  Surface Data Ingest
          3.2.2.1 .....................  obs_driver.x
          3.2.2.2 .....................  sfc_qc.exe
@@ -1339,9 +1339,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                                    well as echo tops (MSL).
 </pre>
 
-     A flow chart showing radar data usage in LAPS is on the Web at:
-     'http://laps.noaa.gov/albers/laps/radar/laps_radar_ingest.html',
-     together with some text details in:
+     A description and flow chart showing polar radar data usage in LAPS is on 
+     the Web at: 'http://laps.noaa.gov/albers/remapper_raw.html',
+     with some additional text details for various types of radar data in:
      'http://laps.noaa.gov/albers/radar_decision_tree.txt'.
      These include information on which types of radar data are processed 
      via the various intermediate data files.
@@ -2515,7 +2515,7 @@ Additional information on the lookup tables can be found in the file
 As mentioned above, a flow chart for the ingest processes may be found at
 'http://laps.noaa.gov/doc/slide1_v3.gif'.
 
------- 3.2.1 -------------------- LGA Model ---------------------------------
+------ 3.2.1 ----------------- LGA Model Background -------------------------
 
 Package: lga.exe - ingest background model data 
              (contact: Steve Albers - Steve.Albers@noaa.gov).
