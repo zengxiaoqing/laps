@@ -238,14 +238,14 @@ echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt T
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100. 0.:50. '"Surface Temperature" "Deg F"' $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/tsf_fcst_comp2.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt TSF 0.:100. 0.:50.  "Surface Temperature" "Deg F"  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/tsf_fcst_comp2.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. same '"Surface Dewpoint" "Deg F"'  $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/dsf_fcst.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. same  "Surface Dewpoint" "Deg F"   $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/dsf_fcst.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. 0.:40. '"Surface Dewpoint" "Deg F"'  $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/dsf_fcst.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. 0.:40.  "Surface Dewpoint" "Deg F"   $DOMAIN_NAME >& $LAPS_DATA_ROOT/log/dsf_fcst.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. same '"Surface Dewpoint" "Deg F"'  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/dsf_fcst_comp.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. same  "Surface Dewpoint" "Deg F"   $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/dsf_fcst_comp.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. 0.:40. '"Surface Dewpoint" "Deg F"'  $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/dsf_fcst_comp.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. 0.:40.  "Surface Dewpoint" "Deg F"   $DOMAIN_NAME comp >& $LAPS_DATA_ROOT/log/dsf_fcst_comp.log
 
-echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. same '"Surface Dewpoint" "Deg F"'  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/dsf_fcst_comp2.log"
-      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. same  "Surface Dewpoint" "Deg F"   $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/dsf_fcst_comp2.log
+echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. 0.:40. '"Surface Dewpoint" "Deg F"'  $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/dsf_fcst_comp2.log"
+      $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt DSF 0.:80. 0.:40.  "Surface Dewpoint" "Deg F"   $DOMAIN_NAME comp2 >& $LAPS_DATA_ROOT/log/dsf_fcst_comp2.log
 
 echo "$LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt USF -20.:20. same '"Sfc Wind U Component"'  "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/usf_fcst.log"
       $LAPSINSTALLROOT/etc/verif/verif_forecast.csh $LAPS_DATA_ROOT $NTIMES pt USF -20.:20. same  "Sfc Wind U Component"   "m/s"  $DOMAIN_NAME  >& $LAPS_DATA_ROOT/log/usf_fcst.log
