@@ -284,8 +284,9 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
 c       write(6,*)' i = ',i
         do j = 1,nj
 
-            IF(i .eq. i/20*20 .AND. j .eq. nj/2)then
-                idebug = 2
+!           IF(i .eq. i/20*20 .AND. j .eq. nj/2)then
+            IF(i .eq. i/20*20 .AND. j .eq. nj)then
+                idebug = 2 ! 1
             else 
                 idebug = 0
             endif
@@ -587,6 +588,12 @@ C  CALCULATE WET BULB ZERO LEVEL
 !       Calculate theta(e) based on sfc parcel
         THETAE=OE_FAST(T(1),TD(1),P(1)) + 273.15
 
+        if(idebug .ge. 2)then
+            THETAE2=OE(T(1),TD(1),P(1)) + 273.15
+            write(6,510)P(1),T(1),TD(1),THETAE,THETAE2
+ 510        format(' P/T/TD/THETAE',5f8.2)
+        endif
+
 !       Calculate "fast" LCL based on sfc parcel
         CALL LCL_fast(P(1),T(1),TD(1),LCL_AGL,TLCL_PBE,PLCL_PBE)
 
@@ -728,6 +735,7 @@ C                   MOIST ADIABATIC PART
             else ! Lower Level is above LCL
                 if(idebug .ge. 2)then
                   WRITE(6,*)' GETTING PARCEL TEMPERATURE FOR MOIST CASE'
+     1                     ,blthte,P(n)
                 endif
                 partem(n) = tmlaps_fast(blthte,P(n))
 
