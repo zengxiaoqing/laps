@@ -17,7 +17,7 @@ logical :: out_cdf=.true.,out_grib=.false.,out_v5d=.true.
 logical :: make_micro=.true.,make_firewx=.true.,make_points(maxdomains)=.false.
 logical :: verbose=.true.
 logical :: realtime=.true.
-logical :: write_to_lapsdir=.false.
+logical :: write_to_lapsdir=.true.
 logical :: make_donefile=.true.
 logical :: large_pgrid=.false.
 logical :: large_ngrid=.false.
