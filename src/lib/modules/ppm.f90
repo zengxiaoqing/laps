@@ -123,6 +123,13 @@ contains
     maxvalue = max( maxval(maxval(R,dim=1),dim=1)&
                    ,maxval(maxval(G,dim=1),dim=1)&
                    ,maxval(maxval(B,dim=1),dim=1))
+    write(6,*)' Image maxvalue is ',maxvalue
+    if(maxvalue .lt. 128)then
+        maxvalue = 2 * maxvalue
+    else
+        maxvalue = 255
+    endif
+    write(6,*)' Image scaled to   ',maxvalue
     write(100,'( i )') maxvalue
     
     ! Write Image
