@@ -56,6 +56,9 @@ cdis
 !       Steve Albers            1994          Set msg data to ref_base
 !       Steve Albers            1998          Read in ref_base, r_missing_data
 !            "              Feb 1998          Allows output of missing data
+!            "                  2014          More efficient version
+
+        use mem_namelist, ONLY: grid_spacing_m
 
 !       ni,nj,nk are input LAPS grid dimensions
 !       rlat_radar,rlon_radar,rheight_radar are input radar coordinates
@@ -89,52 +92,60 @@ cdis
         thresh_low_fill_ht = 3000.     ! Height of echoes used to extrapolate
                                        ! downward (meters AGL)
 
+        call latlon_to_rlapsgrid(rlat_radar,
+     &                           rlon_radar,
+     &                           lat,lon,
+     &                           ni,nj,    
+     &                           ri,rj,
+     &                           jstatus)
+
+        rgrid_radar = 460000. / grid_spacing_m ! square containing radar
+        ilow = max(nint(ri-rgrid_radar),1)
+        jlow = max(nint(rj-rgrid_radar),1)
+        ihigh = min(nint(ri+rgrid_radar),ni)
+        jhigh = min(nint(rj+rgrid_radar),nj)
+
 !       Set missing values to ref_base for internal & external processing
 !       write(6,*)' ref_fill_vert: Setting r_missing_data/qc values to '
 !    1             ,ref_base
 
+        ref_3d(:,:,:) = ref_base
         do k = 1,nk
-        do j = 1,nj
-        do i = 1,ni
+        do j = jlow,jhigh
+        do i = ilow,ihigh
             if(     ref_3d_io(i,j,k) .eq. -101.                 ! QC flags
      1         .or. ref_3d_io(i,j,k) .eq. -102.           )then
                 ref_3d_io(i,j,k) = ref_base
             endif
 
-            if(     ref_3d_io(i,j,k) .eq. r_missing_data  )then
-                ref_3d(i,j,k) = ref_base
-            else
+            if(     ref_3d_io(i,j,k) .ne. r_missing_data  )then
                 ref_3d(i,j,k) = ref_3d_io(i,j,k)
             endif
         enddo
         enddo
         enddo
 
-
         write(6,*)
-     1       ' ref_fill_vert: Interpolating vertically through gaps'      
+     1    ' ref_fill_vert: Interpolating vertically through gaps'
+     1     ,ni,ilow,ihigh,nj,jlow,jhigh 
 
         n_low_fill = 0
         n_high_fill = 0
 
         isum_test = nint(ref_base) * nk
 
-        do j = 1,nj
-        do i = 1,ni
-            isum_ref_2d(i,j) = 0
-        enddo
-        enddo
+        isum_ref_2d(:,:) = 0
+        l_nonmissing(:,:) = .false.
 
-        do i = 1,ni
-        do j = 1,nj
-            l_nonmissing(i,j) = .false.
-            do k = 1,nk
-                isum_ref_2d(i,j) = isum_ref_2d(i,j) 
-     1                           + nint(ref_3d(i,j,k))
-                if(ref_3d_io(i,j,k) .ne. r_missing_data)then
-                    l_nonmissing(i,j) = .true.
-                endif
-            enddo
+        do k = 1,nk
+        do j = jlow,jhigh
+        do i = ilow,ihigh
+            isum_ref_2d(i,j) = isum_ref_2d(i,j) 
+     1                       + nint(ref_3d(i,j,k))
+            if(ref_3d_io(i,j,k) .ne. r_missing_data)then
+                l_nonmissing(i,j) = .true.
+            endif
+        enddo
         enddo
         enddo
 
