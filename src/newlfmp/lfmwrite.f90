@@ -28,6 +28,7 @@ character(len=255) :: output_dir,cdl_dir
 character(len=9) :: gtime
 character(len=5) :: fcst_hhmm
 character(len=2) :: domnum_str
+logical :: outdir_defined
 
 !beka
 integer ISTAT, I4_elapsed, ishow_timer, init_timer
@@ -49,6 +50,8 @@ cdl_levels=lprs(lz:1:-1)*0.01
 if (trim(mtype) /= 'st4') then
 
 ! Write out the 3D stuff using LAPS library routine
+
+  write(6,*)' write_to_lapsdir = ',write_to_lapsdir
 
   if (.not. write_to_lapsdir) then
      output_dir=trim(lfmprd_dir)//'/d'//domnum_str//'/fua/'
@@ -72,6 +75,11 @@ if (trim(mtype) /= 'st4') then
 	
   print*,' '
   print*,'Writing 3d fields to netcdf: ',trim(output_file)
+  inquire(FILE=trim(output_dir),EXIST=outdir_defined)
+  if(outdir_defined .eqv. .false.)then
+      write(6,*)' ERROR: output directory does not exist'
+      stop
+  endif
   lvls3d=lvls3d*0.01
   call write_laps_lfm(laps_reftime,laps_valtime,trim(output_dir),trim(cdl_dir)   &
                      ,'fua'                                          &
@@ -116,6 +124,11 @@ call cvt_fname_v3(output_dir,gtime,fcst_hhmm,'fsf',3,output_file  &
                  ,fnlen,istatus)
 
 print*,'Writing 2d fields to netcdf: ',trim(output_file)
+inquire(FILE=trim(output_dir),EXIST=outdir_defined)
+if(outdir_defined .eqv. .false.)then
+    write(6,*)' ERROR: output directory does not exist'
+    stop
+endif
     
 call write_laps_lfm(laps_reftime,laps_valtime,trim(output_dir),cdl_dir  &
                    ,'fsf'                                               &
