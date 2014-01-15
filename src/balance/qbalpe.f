@@ -868,9 +868,11 @@ c ******** 10/08 ***** Ed Tollerud
 c     call put_sfc_bal(i4time,t_bal,ht_bal,u_bal,v_bal         ! Input
 c    1                       ,topo,ni,nj,nk                           ! Input
 c    1                       ,istatus                              )  ! Output
+
       call put_sfc_bal(i4time_sys,t,phi,u,v               ! Input
      1                       ,ter,nx,ny,nz                           ! Input
      1                       ,istatus                              )  ! Output
+      istatus = ishow_timer()
 c
 c
 c Write balance output (balance/lt1 and balance/lw3).
