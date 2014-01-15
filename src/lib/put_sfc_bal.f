@@ -241,10 +241,14 @@
 
 !      Write balanced LSX file
        call get_directory('balance/lsx',dir_out,len_dir_out)
+       print*,'Writing out balanced lsx...'
        call write_laps_data(i4time,dir_out,ext,ni,nj,n_sfc,n_sfc,    ! I
      1                      var,lvl_req,                             ! I
      1                      lvl_coord_req,                           ! O
      1                      units_req,comment_req,data,istatus)      ! I/O
+       if (istatus .NE. 1) then
+         print*,'Problem writing out lsx!'
+       endif
 
        istatus = 1
 
