@@ -87,7 +87,7 @@ include 'lapsparms.for'
 
         logical*1    l_compress_radar,l_dual_pol,l_use_tamdar,l_3dvar,l_pad1
         logical*1    l_accum_fg, l_accum_radar, l_accum_gauge
-        logical*1    l_superob_barnes, l_mosaic_sat
+        logical*1    l_superob_barnes, l_mosaic_sat, l_fsf_gridgen
 
         common  /lapsparms/ iflag_lapsparms &
         ,max_radar_files_nl,PRESSURE_INTERVAL_L,PRESSURE_0_L &
@@ -243,6 +243,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,path_to_qc_acars,path_to_wisdom &
                   ,c8_project,c8_blpfmt &
                   ,c_raddat_type, c80_description &
+                  ,l_fsf_gridgen &
                   ,path_to_topt30s ,path_to_topt10m &
                   ,path_to_soiltype_top30s, path_to_soiltype_bot30s &
                   ,path_to_landuse30s,path_to_greenfrac &
@@ -358,6 +359,7 @@ elseif (namelist_name == 'lapsparms') then
    l_superob_barnes = .false.
    l_mosaic_sat     = .false.
    l_dual_pol       = .false.
+   l_fsf_gridgen    = .false.
    iverbose = 0
    i_offset_radar = -1
    aod = 0.05              ! default column aerosol optical depth
