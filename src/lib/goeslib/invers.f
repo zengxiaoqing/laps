@@ -1230,6 +1230,7 @@ c            1 3-jun-j4 debug
 c
 c               type 1090, isat
 
+      write(6,*)' PLNKIV 1'
       call get_directory('static',file,len_file)
       file = file(1:len_file)//'goeslib/for044.dat'
       call s_len(file,len_file)
@@ -1250,11 +1251,13 @@ c               type 1000, (fnu(iii), fk1(iii), fk2(iii), iii = 1, nc)
 1000            format (/, 1x, 'fnu         fk1          fk2', /,
      1                (3e12.4))
       n=nc*3
+      write(6,*)' PLNKIV 2'
       do 130 j=1,nc
       do 120 i=1,2
       n=n+1
   120 tc(i,j)=buf(n)
   130 continue
+      write(6,*)' PLNKIV 3'
 c
 c            1 3-jun-84 debug
 c
@@ -1263,6 +1266,7 @@ c               type 1010, ((tc(iii, jjj), iii = 1, 2), jjj = 1, nc)
       do 140 i=1,nc
       n=n+1
   140 gv(i)=buf(n)
+      write(6,*)' PLNKIV 3a'
 c
 c            1 3-jun-84 debug
 c
@@ -1271,6 +1275,7 @@ c               type 1020, (gv(iii), iii = 1, nc)
       do 150 i=1,nc
       n=n+1
   150 dv(i)=buf(n)
+      write(6,*)' PLNKIV 3b'
 c
 c            1 3-jun-84 debug
 c
@@ -1279,6 +1284,7 @@ c               type 1030, (dv(iii), iii = 1, nc)
       do 160 i=1,nc
       n=n+1
   160 ev(i)=buf(n)
+      write(6,*)' PLNKIV 3c'
 c
 c            1 3-jun-84 debug
 c
@@ -1290,6 +1296,7 @@ c               type 1040, (ev(iii), iii = 1, nc)
       n=n+1
   170 tsc(i,j)=buf(n)
   180 continue
+      write(6,*)' PLNKIV 4'
 c
 c            1 3-jun-84 debug
 c
@@ -1323,6 +1330,7 @@ c               type 1070, (chkc(iii), iii = 1, 5)
       n=n+1
   220 tse(i,j)=buf(n)
   230 continue
+      write(6,*)' PLNKIV 5'
 c
 c            1 3-jun-84 debug
 c
