@@ -1,7 +1,7 @@
 
 
       subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
-            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk)
+            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,gnd_glow)
 
       use mem_namelist, ONLY: r_missing_data, earth_radius
       use cloud_rad ! Cloud Radiation and Microphysics Parameters
@@ -30,6 +30,7 @@
       real obj_alt(ni,nj)
       real obj_azi(ni,nj)
       real sfc_glow(ni,nj)        ! surface lighting intensity (nl)                 
+      real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
 
       real clwc_int(ni,nj)
       real cice_int(ni,nj)
@@ -77,8 +78,8 @@
 
       if(solalt .lt. -4.)then
           write(6,*)' Call get_sfc_glow'
-          call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow)
-          write(6,*)' Glow at observer location is ',sfc_glow(idb,jdb)
+          call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow,gnd_glow)
+          write(6,*)' Sky glow at observer location is ',sfc_glow(idb,jdb)
       else
           write(6,*)' Skip call to get_sfc_glow - solalt is',solalt
       endif
@@ -359,13 +360,14 @@
       return
       end
 
-      subroutine get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow)
+      subroutine get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow,gnd_glow)
 
 !     Simple surface lighting model for Boulder
 
       real lat(ni,nj)
       real lon(ni,nj)
-      real sfc_glow(ni,nj)        ! surface lighting intensity (nl)                 
+      real sfc_glow(ni,nj)        ! surface lighting intensity of clouds (nl)                 
+      real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
 
       parameter (ncities = 17)
       real ctylat(ncities)
@@ -396,6 +398,8 @@
       ctylat(17)=40.04; ctylon(17)=-105.04; ctypop(17)=  19000 ! Erie
 
       sfc_glow = 0.
+      gnd_glow = 0.
+
       do icity = 1,ncities
 !       if(icity .eq. 1)then ! Boulder
 !         glow_city = 5000.  ! at city edge
@@ -406,18 +410,22 @@
 !       endif
         glow_city = 5500.
         radius_city = (ctypop(icity)/100000.)**0.38 * 6000.
-        write(6,*)' pop/radius/glow = ',ctypop(icity),radius_city,glow_city
-
         call latlon_to_rlapsgrid(ctylat(icity),ctylon(icity),lat,lon,ni,nj &
                                 ,ricity,rjcity,istatus)
+
+        write(6,11)ctypop(icity),radius_city,glow_city,ricity,rjcity
+11      format(' pop/radius/glow/i/j = ',f10.0,f10.3,f8.1,f8.1,f8.1)
+
         do j = 1,nj
         do i = 1,ni
           dist_city = sqrt( (float(i)-ricity)**2 + (float(j)-rjcity)**2 ) * grid_spacing_m
           radii_city = dist_city / radius_city
           if(radii_city .gt. 1.0)then
               sfc_glow(i,j) = sfc_glow(i,j) + (glow_city / (radii_city**2.5))
+!             gnd_glow(i,j) = 0.
           else
               sfc_glow(i,j) = sfc_glow(i,j) +  glow_city                      ! nl
+              gnd_glow(i,j) = gnd_glow(i,j) +  glow_city
           endif
 !         if(j .eq. nj/2)then
 !           write(6,*)' dist/radii/glow = ',dist_city,radii_city,sfc_glow(i,j)
@@ -426,5 +434,6 @@
         enddo ! j
       enddo ! icity
       write(6,*)' range of sfc_glow (nl) is ',minval(sfc_glow),maxval(sfc_glow)
+      write(6,*)' range of gnd_glow (nl) is ',minval(gnd_glow),maxval(gnd_glow)
       return
       end
