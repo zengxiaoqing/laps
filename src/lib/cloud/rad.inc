@@ -17,7 +17,11 @@
 !       Ozone airmasses adapted from Schaefer S&T code
         airmasso(z,htmsl) = 1./SQRT(1.0-(SIND(min(z,90.))/(1.0+(20e3-htmsl)/6378e3))**2)
 
-        rayleigh_pf(theta) = (1. + cosd(theta)**2) / (4./3.)
+!       Rayleigh scattering phase function including secondary scattering
+!       This assumes 0.1 effective optical depth / secondary scattering
+!                                   (this can be made variable later)
+!                                        Primary                               Sec atm    
+        rayleigh_pf(theta) = (0.90 * ( (1. + cosd(theta)**2) / (4./3.) ) ) + (0.10 * 1.0) 
 
 !       Error function from Wikipedia
         erf(x) = 1.-1./(1.+.278393*x+.230389*x**2+.000972*x**3+.078108*x**4)**4
