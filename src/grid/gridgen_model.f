@@ -275,7 +275,7 @@ c
 
         include 'trigd.inc'
 
-        use mem_namelist, ONLY: laps_cycle_time
+        use mem_namelist, ONLY: laps_cycle_time, l_fsf_gridgen
 
         logical exist,new_DEM
         logical lforce_ter_2_zero
@@ -468,7 +468,7 @@ cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
            return
         endif
 
-        l_topo_wps = l_parse(path_to_topt30s,'wps')
+!       l_topo_wps = l_parse(path_to_topt30s,'wps')
 
         call get_path_to_soiltype_top(path_to_soiltype_top_30s
      +,istatus)
@@ -519,12 +519,6 @@ cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
         if(istatus .ne. 1)then
            print*, 'Error getting path_to_islope'
            return
-        endif
-
-        if(.not. l_topo_wps)then                        
-           call s_len(path_to_topt30s,len)
-           print*,'path to topt30s:        ',path_to_topt30s(1:len)
-           path_to_topt30s(len+1:len+2)='/U'
         endif
 
         call s_len(path_to_topt10m,len)
@@ -842,14 +836,21 @@ c type = U
 c
        itstatus=ishow_timer()
        print*
-       print*,' Processing 30s topo data, l_topo_wps = ',l_topo_wps
+       print*,' Processing 30s topo data, l_fsf_gridgen = '
+     1                                   ,l_fsf_gridgen      
 
        allocate (topt_30(nnxp,nnyp),
      +           topt_30_s(nnxp,nnyp),
      +           topt_30_ln(nnxp,nnyp),
      +           topt_30_lt(nnxp,nnyp))
 
-       if(.not. l_topo_wps)then
+       l_topo_wps = l_fsf_gridgen
+
+ 600   if(.not. l_topo_wps)then
+
+        call s_len(path_to_topt30s,len)
+        print*,'path to topt30s:        ',path_to_topt30s(1:len)
+        path_to_topt30s(len+1:len+2)='/U'
 
         IF (c6_maproj .eq. 'rotlat') THEN
 	 categorical=.false.
@@ -977,6 +978,13 @@ c
      1                                                      ,istatus)       
               itry = itry + 1
           enddo
+
+          if(itry .eq. ntrys)then
+              write(6,*)' Reached maximum number of tries'
+              write(6,*)' Use geog topo data instead'
+              l_topo_wps = .false.
+              goto 600
+          endif
 
        endif
 
