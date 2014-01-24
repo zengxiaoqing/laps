@@ -53,6 +53,8 @@
 
         logical l_solar_eclipse
 
+        sfc_alb = 0.15 ! pass this in and account for snow cover?
+
         patm_ray = patm
 
         aero_refht = redp_lvl
@@ -119,7 +121,8 @@
               do ic = 1,nc
 !               Rayleigh illumination
                 od_per_am = ext_g(ic)
-                rayleigh = brtf(airmass_g,od_per_am) * rayleigh_pf(elong(ialt,jazi)) 
+                rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
+                rayleigh = brtf(airmass_g,od_per_am) * rayleigh_gnd
 
 !               Total illumination
                 clear_rad_c(ic,ialt,jazi) = day_int * (rayleigh + mie * ext_a(ic))
@@ -158,7 +161,8 @@
                 endif
 
 !               Effective Rayleigh Phase Factor considering shadowing
-                rayleigh_pf_eff = rayleigh_pf(elong(ialt,jazi)) * clear_radf_c(ic,ialt,jazi)
+                rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
+                rayleigh_pf_eff = rayleigh_gnd * clear_radf_c(ic,ialt,jazi)
                 pf_eff1 = (rayleigh_pf_eff * alpha_g + hg2 * alpha_a * solar_int_g2) &
                         / (alpha_g + alpha_a * solar_int_g2)
                 od_1 = od_g1 + od_a
@@ -300,7 +304,8 @@
 !                  max(     brt(airmass_lit)*twi_trans_c(1)     ,.00001)
                 clear_intf = clear_int
               else ! experimental absolute illumination (nl)
-                rayleigh = rayleigh_pf(elong(ialt,jazi))  ! phase function
+                rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
+                rayleigh = rayleigh_gnd  ! phase function
                 clear_int = &
                   max(twi_int*ecl_int*rayleigh*brt(airmass_lit)*twi_trans_c(1) &
                                                               ,1e3)       
@@ -435,11 +440,11 @@
               endif
 111           format( &
        'ialt/jazi/salt/od_a/ds_ray/ht_ray/clrrd' &
-                  ,2i4,2x,2f6.2,2f10.1,2x,3f8.3)
+                  ,i4,i5,2x,2f6.2,2f10.1,2x,3f8.3)
 112           format( &
        'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/a/t/clrrad' &
 !                 ,2i5,2f7.3,2f8.2,2f10.1,2x,4f8.5,f8.0,f8.5,2x,3f8.5) &
-                  ,2i4,2x,2f6.2,2f10.1,2x,3f8.4,2x,f8.4,2f8.5 &
+                  ,i4,i5,2x,2f6.2,2f10.1,2x,3f8.4,2x,f8.4,2f8.5 &
                                       ,2x,f7.4,f7.4,f11.0)
 
               if(idebug .ge. 2)then
