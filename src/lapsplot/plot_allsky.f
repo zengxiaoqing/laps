@@ -667,12 +667,6 @@
 
         I4_elapsed = ishow_timer()
       
-        if(.false.)then
-            call get_cloud_rad(obj_alt,obj_azi,clwc_3d,cice_3d
-     1               ,rain_3d,snow_3d,topo_a
-     1               ,heights_3d,transm_3d,transm_4d,i,j,NX_L,NY_L,NZ_L)
-        endif
-
         do iloc = 1,nloc
           write(6,*)
           write(6,*)' iloc = ',iloc
@@ -849,9 +843,10 @@
 !         if(solar_alt .ge. 0.)then
           if(.true.)then
             I4_elapsed = ishow_timer()
-            write(6,*)' call get_skyglow_cyl for sun or moon...'
+!           write(6,*)' call get_skyglow_cyl for sun or moon...'
 
-            if(solar_alt .ge. -16.)then
+!           if(solar_alt .ge. -16.)then
+            if(.false.)then
                 write(6,*)' Sun is significant, alt is:',solar_alt
                 call skyglow_cyl(solar_alt,solar_az,blog_v_roll  ! IO
      1                          ,elong_roll,aod_ray              ! OI
@@ -869,8 +864,9 @@
                 endif
             endif ! solar_alt .ge. -16.
 
-            if(solar_alt .lt. -16. .AND. moon_mag .lt. moon_mag_thr
-     1                             .AND. alm .gt. 0.         )then
+!           if(solar_alt .lt. -16. .AND. moon_mag .lt. moon_mag_thr
+!    1                             .AND. alm .gt. 0.         )then
+            if(.false.)then
                 write(6,*)' Moon skyglow significant: mag ',moon_mag
                 call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,aod_ray 
      1                          ,minalt,maxalt,minazi,maxazi
