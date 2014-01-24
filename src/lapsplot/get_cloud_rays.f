@@ -1,7 +1,7 @@
          
         subroutine get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d     ! I
      1                           ,rain_3d,snow_3d                       ! I
-     1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d ! I 
+     1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d ! I
      1                           ,topo_albedo_2d                        ! I
      1                           ,topo_swi,topo_albedo                  ! O
      1                           ,aod_ray,aod_2_cloud,aod_2_topo,aod_ill! O
@@ -77,6 +77,8 @@
         real obj_alt(ni,nj)
         real obj_azi(ni,nj)
 
+        real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
+
 !       logical l_process(minalt:maxalt,minazi:maxazi)
         logical l_solar_eclipse
         integer idebug_a(minalt:maxalt,minazi:maxazi)
@@ -99,7 +101,7 @@
                !  the horizon)
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
-        real topo_swi(minalt:maxalt,minazi:maxazi)
+        real topo_swi(minalt:maxalt,minazi:maxazi)       ! short wave down W/m**2
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
         real aod_2_cloud(minalt:maxalt,minazi:maxazi)
         real aod_2_topo(minalt:maxalt,minazi:maxazi)
@@ -162,7 +164,15 @@
             call get_cloud_rad(obj_alt,obj_azi,sol_alt(i,j),sol_azi(i,j)
      1                    ,clwc_3d,cice_3d
      1                    ,rain_3d,snow_3d,topo_a,lat,lon
-     1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk)
+     1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk
+     1                    ,gnd_glow)
+!           do jj = 1,nj
+!           do ii = 1,ni
+!               if(gnd_glow(ii,jj) .gt. 0.)then
+!                   write(6,*)' ii,jj,gndglow',ii,jj,gnd_glow(ii,jj)
+!               endif
+!           enddo ! i
+!           enddo ! j
         endif
 
         if(sol_alt(i,j) .lt. -4.)then ! Modify moon glow section in green channel
@@ -237,6 +247,9 @@
         azid1 = 90. ; azid2 = 270.
         if(sol_alt(i,j) .gt. 0.)then
             azid1 = nint(sol_azi(i,j))
+            azid2 = mod(azid1+180.,360.)
+        elseif(moon_alt(i,j) .gt. 0.)then
+            azid1 = nint(moon_azi(i,j))
             azid2 = mod(azid1+180.,360.)
         endif
 
@@ -753,6 +766,19 @@
 !                     topo_swi(ialt,jazi) = swi_2d(inew_m,jnew_m) 
 !    1                                    * solar_corr
 
+!                     City lights on the ground
+                      if(sol_alt(inew_m,jnew_m) .lt. -4.)then  
+                        topo_swi(ialt,jazi) = topo_swi(ialt,jazi) + 
+     1                    sum(bi_coeff(:,:) * gnd_glow(i1:i2,j1:j2))
+                        if(gnd_glow(inew_m,jnew_m) .gt. 0. .OR. 
+     1                                                idebug .eq. 1)then
+                          write(6,81)ialt,jazi,inew_m,jnew_m
+     1                              ,gnd_glow(inew_m,jnew_m)
+ 81                       format(' gnd glow adding to topo_swi',4i5
+     1                          ,f9.1)
+                        endif
+                      endif
+
                       do ic = 1,nc
                         topo_albedo(ic,ialt,jazi) = sum(bi_coeff(:,:) 
      1                                 * topo_albedo_2d(ic,i1:i2,j1:j2))
@@ -777,7 +803,8 @@
      1                                    ,topo_albedo(:,ialt,jazi)
      1                                    ,aod_2_topo(ialt,jazi)
      1                                    ,airmass_2_topo_3d(ialt,jazi)
-91                    format(' Hit topo ',f8.3,f8.2,3f8.3,2f8.3)
+     1                                    ,gnd_glow(inew_m,jnew_m)
+91                    format(' Hit topo ',f8.3,f8.2,3f8.3,3f8.3)
                   endif
 
                   cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
@@ -979,6 +1006,13 @@
         write(6,*)' Range of clear_radf_c 3 ='
      1                                      ,minval(clear_radf_c(3,:,:))
      1                                      ,maxval(clear_radf_c(3,:,:))
+
+        write(6,*)' Range of topo_swi = ',minval(topo_swi)
+     1                                   ,maxval(topo_swi)
+
+        write(6,*)' Range of topo_albedo 2 = '
+     1                                       ,minval(topo_albedo(2,:,:))
+     1                                       ,maxval(topo_albedo(2,:,:))
 
         transm_obs = transm_3d(i,j,int(rkstart)+1)
         write(6,*)' transm of observer is ',i,j,int(rkstart)+1
