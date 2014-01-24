@@ -34,6 +34,7 @@
  
  l_superob_barnes=.false.,
  l_mosaic_sat=.true.,
+ l_fsf_gridgen=.false.,
 
  path_to_topt30s='/data/lapb/projects/geog/world_topo_30s',
  path_to_landuse30s='/data/lapb/projects/geog/landuse_30s',
