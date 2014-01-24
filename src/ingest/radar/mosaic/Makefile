@@ -17,7 +17,8 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
 
 EXE = mosaic_radar.x
 
-SRC =  getlapsvxx.f \
+SRC =  clean_radar.f \
+       getlapsvxx.f \
        mosaic_ref_3d.f
 
 MAIN=mosaic_radar.f
