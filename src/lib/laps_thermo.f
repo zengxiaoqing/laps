@@ -280,12 +280,17 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
         call get_pres_3d(i4time,ni,nj,nk,pres_3d,istatus)
         if(istatus .ne. 1)stop
 
+        if(nj .gt. 600)then
+            jint = 40
+        else
+            jint = 20
+        endif
+
+        do j = 1,nj
         do i = 1,ni
 c       write(6,*)' i = ',i
-        do j = 1,nj
 
-!           IF(i .eq. i/20*20 .AND. j .eq. nj/2)then
-            IF(i .eq. i/20*20 .AND. j .eq. nj)then
+            IF(j .eq. (j/jint)*jint .AND. i .eq. ni/2)then
                 idebug = 2 ! 1
             else 
                 idebug = 0
@@ -440,8 +445,8 @@ C  ALTERNATIVE OUTPUTTING
 
 2000        endif
 
-        enddo ! j
         enddo ! i
+        enddo ! j
 C
  9999   CONTINUE
 
