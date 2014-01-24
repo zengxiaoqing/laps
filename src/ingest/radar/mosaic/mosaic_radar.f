@@ -744,6 +744,8 @@ c
 c vrz output. 
 c
           if(imosaic_3d.eq.1.or.imosaic_3d.eq.2)then
+             call clean_radar(grid_mosaic_3dref,nx_l,ny_l,nz_l)
+
              write(6,*)' Output VRZ file, n_valid_radars = '
      1                ,n_valid_radars       
              ext_vrz = 'vrz'
