@@ -21,7 +21,7 @@ use cloud_rad
 ! Note kcld is on the cloud height grid
 ! Note nk is on the LAPS grid
 
-real cloudcvr(ni,nj,kcld)              ! I/O
+real cloudcvr(ni,nj,kcld)              ! I
 real cld_hts(kcld)                     ! I
 real tb8_k(ni,nj)                      ! I
 real t_gnd_k(ni,nj)                    ! I
@@ -68,6 +68,8 @@ I4_elapsed = ishow_timer()
 
 print*,'start subroutine cloud_var'
 
+write(6,*)' Range of t_gnd_k = ',minval(t_gnd_k),maxval(t_gnd_k)
+
 JCOST_TB8 = 0.
 
 ! Satellite geometry for parallax offset 
@@ -76,11 +78,15 @@ range_m = 42155680.00
 call satgeom(i4time,lat,lon,ni,nj &
             ,subpoint_lat_clo_vis,subpoint_lon_clo_vis,range_m,r_missing_data,Phase &
             ,Spec,alt,azi,istatus)
+
 call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
+
+write(6,*)' Calling projrot_latlon_2d'
 call projrot_latlon_2d(lat,lon,ni,nj,projrot_laps,istatus)
 
-! Adjust cloudcvr based on values of tb8 and cloud_frac_vis_a
+! Eventually adjust cloudcvr based on values of tb8 and cloud_frac_vis_a
 
+write(6,*)' Calculate cvr_to_tb8_effective loop'
 ! Call cvr_to_tb8_effective as a simple forward model (for each grid column)
 do i = 1,ni
 do j = 1,nj
@@ -112,7 +118,7 @@ do j = 1,nj
     if(i .eq. ni/2 .AND. j .eq. nj/2)then
         idebug = 1
     else
-        idebug = 0
+        idebug = 0 ! 1
     endif
 
     if(idebugsub .eq. 1)then
@@ -128,6 +134,10 @@ do j = 1,nj
         cldcvr_1d(k) = cloudcvr(ip,jp,k)
     enddo ! k
 
+    if(t_gnd_k(i,j) .eq. 0.)then
+        write(6,*)' ERROR: t_gnd_k = 0.'
+    endif  
+
     call cvr_to_tb8_effective(kcld,temp_3d,nk,i,j,ni,nj,a      &
                              ,f,ilyr,cldcvr_1d,cld_hts,t_gnd_k(i,j)  &
                              ,heights_3d,t_effective,nlyr      &
@@ -140,6 +150,7 @@ do j = 1,nj
         write(6,*)'ilyr: ',ilyr(:)
         write(6,*)'nlyr,f: ',nlyr,(f(l),l=1,nlyr)
     endif
+
 
     JCOST_TB8 = JCOST_TB8 + abs(tb8_k(i,j) - t_effective)
 enddo
