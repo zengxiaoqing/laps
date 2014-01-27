@@ -103,7 +103,7 @@
 # -x                   If supplied, specify amount of files to be transferred (used with -R)
 #                      [1=2D, 2=3D, 3=3D+LGA, an internal default value is 1 is used if -x is not supplied in the cron line] 
 #
-# -y                   If supplied, the file transfer method (used with -R)
+# -y                   If supplied, the file transfer method (used with -R), if not supplied the default is 'rsync'
 #                      [e.g. rsync,exchange_zip,exchange_zip2] 
 #
 # -C                   Copy file $LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2 to $opt_C/$yyjjjhhmm.gr2
