@@ -51,4 +51,4 @@ main                                                     laps_cloud.f
             stats_1d                                     stats_1d.f
         array_plot
         get_cloud_deriv                                  lib/get_cloud_deriv.f
-        cloud_var                                        lib/cloud/cloud_var.f90
+        cloud_var                                        lib/cloud/cloud_var.F90
