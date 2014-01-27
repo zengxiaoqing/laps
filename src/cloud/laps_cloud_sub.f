@@ -771,7 +771,6 @@ C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
         enddo
         enddo
         enddo
-        I4_elapsed = ishow_timer()
 
         var = 'SC'
         ext = 'lm2'
@@ -788,6 +787,8 @@ C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
             enddo
         endif
 
+        I4_elapsed = ishow_timer()
+
 C READ IN SATELLITE DATA
         call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,     ! I
      1                    NX_L,NY_L,r_missing_data,                      ! I
@@ -799,6 +800,8 @@ C READ IN SATELLITE DATA
      1                    sst_k,istat_sst,comment_sst,                   ! O
      1                    cldtop_co2_pa_a,cloud_frac_co2_a,              ! O
      1                    istat_co2,lstat_co2_a)                         ! O
+
+        I4_elapsed = ishow_timer()
 
 !       Calculate solar altitude
         do j = 1,NY_L
@@ -842,6 +845,7 @@ C READ IN SATELLITE DATA
 
         if(i_varadj .eq. 1)then
             write(6,*)' Call cloud_var before insert_sat'
+            t_gnd_k = t_sfc_k ! initialize with preliminary value
             call cloud_var(i4time,lat,lon
      1                    ,NX_L,NY_L,NZ_L,KCLOUD,heights_3d,temp_3d
      1                    ,t_gnd_k,clouds_3d,cld_hts,tb8_k
