@@ -176,7 +176,7 @@ c
 
         logical lstat_co2_a(imax,jmax)
 
-        real k_to_f
+        real k_to_f, k_to_c
 
 !       Control search box for SAO analyzed data
         integer idelt(3)
@@ -355,7 +355,7 @@ c
         nskip_max = 4 ! 'See barnes_r5'
 
         if(imax .lt. 1000)then
-            iskd = 4
+            iskd = 20 ! 4
             jskd = 20
         else
             iskd = 40
@@ -366,10 +366,10 @@ c
         do i=1,imax
 
          jp10 = j+10
-         if(jp10 .eq. (jp10/jskd)*jskd .and. i .eq. (i/jskd)*jskd)then
-          idebug=1
+         if(j .eq. (j/jskd)*jskd .and. i .eq. (i/jskd)*jskd)then
+          idebug = 1
          else
-          idebug=0
+          idebug = 0
          endif
 
          if(imax-i .le. nskip_max .or. jmax-j .le. nskip_max)then
@@ -382,9 +382,11 @@ c
 
 !         Compare brightness temp to surface temperature
           if(idebug .eq. 1)then
-              write(6,111,err=112)i,j,k_to_f(tb8_k(i,j))
-     1                               ,k_to_f(t_gnd_k(i,j))
-111           format(/1x,2i4,' tb8/sfc',12x,f8.1,8x,f8.1)
+              tb8_c = k_to_c(tb8_k(i,j))
+              t_gnd_c = k_to_c(t_gnd_k(i,j))
+              write(6,111,err=112)i,j,tb8_c,t_gnd_c
+     1                               ,tb8_c-t_gnd_c
+111           format(/1x,2i4,' tb8/sfc',12x,f8.1,4x,f8.1,8x,f8.1)
 112       endif
 
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
@@ -536,20 +538,39 @@ c
                   tb8_calculated = t_gnd_k(i,j)
                 endif
 
+!               Set thresh_tb8 to +8 in snowy situations where more IR clearing
+!               is needed and to +0 in dark land situations where the VIS can
+!               do more clearing.
+                if(cvr_snow(i,j) .gt. 0. .AND. 
+     1             cvr_snow(i,j) .ne. r_missing_data)then
+                    thresh_tb8_clr = -8. * (cvr_snow(i,j)**0.3)
+!                   thresh_tb8_clr =  0.
+!                   tb8_calculated = t_gnd_k(i,j)
+                    thresh_tb8_clr2 = -8.          
+                else ! no snow case
+                    thresh_tb8_clr =  0.
+                    thresh_tb8_clr2 = 99999.
+                endif
 
-!               Test if clouds detected by SAO/PIREP should have been
-!               detected by the satellite (if satellite is warmer than analysis)
-                if(tb8_calculated - tb8_k(i,j) .lt. -0.)then
+!               Test if clouds analyzed by SAO/PIREP should have been
+!               detected by the satellite (sat tb8 may countermand previous analysis)
+                iclr = 0
+                if(tb8_k(i,j) - tb8_calculated .gt. thresh_tb8_clr
+     1         .OR.tb8_k(i,j) - t_gnd_k(i,j)   .gt. thresh_tb8_clr2
+     1                                                             )then ! Sat warmer than calc
 
-!                 Don't touch points within buffer of surface
+!                 Only touch points above surface buffer    
                   if(cld_hts(k) - topo(i,j) .gt. surface_sao_buffer)then
-                    if(.false.)then
+!                   if(thresh_tb8_clr .gt. 0.)then ! clear clouds when snow present
+                    if(.true.)then                                                 
                       cldcv(itn:itx,jt,k)=default_clear_cover
-                    else ! .true.
+                      iclr = 1
+                    else ! .false.
 !                     Does satellite still imply at least some cloud?
-                      if(t_gnd_k(i,j) - tb8_k(i,j)  .gt. 8.0)then ! Some cloud
+                      if(tb8_k(i,j) - t_gnd_k(i,j)  .lt. -8.0)then ! Some cloud
                         if(cldcv(it,jt,k) .gt. 0.9)then ! Lower top of solid cld
                             cldcv(itn:itx,jt,k)=default_clear_cover
+                            iclr = 2
                         else                          ! Cover < 0.9, correct it
                             call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)       
      1                                          ,temp_grid_point,idebug
@@ -569,12 +590,22 @@ c
 !                       if(temp_grid_point .lt. t_gnd_k(i,j))then
                             cldcv(itn:itx,jt,k)=default_clear_cover ! not in inversion, 
                                                                     ! clear it out
+                            iclr = 3
                         endif
                       endif ! IR signature present
                     endif ! .true.
                   endif ! Analysis has cloud above surface buffer
 
-                endif ! SAO grid point is colder than SAT
+                endif ! SAT is warmer than SAO grid point (calc tb8)
+
+                if(idebug .ge. 1)then
+                  write(6,141)i,j,k,t_gnd_k(i,j)
+     1                       ,tb8_calculated,tb8_k(i,j)
+     1                       ,tb8_calculated-tb8_k(i,j),thresh_tb8_clr
+     1                       ,cvr_snow(i,j),iclr
+ 141              format(9x,'ijk/gnd/calc/tb8/diff/thr/sncv = ',3i4
+     1                  ,6f8.2,i2)
+                endif
 
               endif ! Current Cloud Cover is significant (> .04)
 
@@ -726,8 +757,8 @@ c
 
 !             Compare brightness temp to surface temperature
               if(idebug .eq. 1)then
-                  write(6,206,err=207)i,j,k_to_f(tb8_k(i,j))
-     1                                   ,k_to_f(t_gnd_k(i,j))
+                  write(6,206,err=207)i,j,k_to_c(tb8_k(i,j))
+     1                                   ,k_to_c(t_gnd_k(i,j))
 206               format(1x,2i4,'tb8_cold/sfc',6x,f8.1,8x,f8.1)
 207           endif
 
@@ -748,7 +779,6 @@ c
      1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
      1            ,cldtop_m(i,j),l_cloud_present                         ! O
      1            ,sat_cover)                                            ! O
-
 
 !             Calculate the cover (opacity) given the brightness temperature,
 !             ground temperature, and assumed ambient cloud-top temperature.
@@ -1086,7 +1116,6 @@ c
         real k_to_f, jcost_cldtop
 
 !       Call the CO2 slicing method to get cloud tops
-
         if(init_co2 .eq. 0)istatus_co2 = 0
         istatus_co2 = -3
 
@@ -1223,10 +1252,10 @@ c
 111                     format(1x,f10.0,1x,f10.0)
 
 121                     write(6,122,err=123)i,j,kl,frac_k
-     1                           ,k_to_f(cldtop_temp_k_before)
-     1                           ,k_to_f(cldtop_temp_k)
-     1                           ,arg,topo,k_to_f(temp_3d(i,j,kl))
-     1                           ,k_to_f(temp_above)
+     1                           ,k_to_c(cldtop_temp_k_before)
+     1                           ,k_to_c(cldtop_temp_k)
+     1                           ,arg,topo,k_to_c(temp_3d(i,j,kl))
+     1                           ,k_to_c(temp_above)
      1                           ,costmin_x
 122                     format(1x,2i4,' cldtp_t',i4,f8.3,2f8.1,f11.1
      1                           ,f21.1,2f6.1,f9.2)
@@ -1429,7 +1458,7 @@ c
         enddo
 
         write(6,201)min_count,ioff_min,joff_min
-201     format('  Minimum of',i5,' points flagged with an offset of',2i4
+201     format('  Minimum of',i6,' points flagged with an offset of',2i4
      1)
 
         return
@@ -1621,11 +1650,13 @@ c
         tb8_g_clr_sn_sumsq = 0.
         tb8_a_clr_sn_sumsq = 0.
 
+        idebug_tb8 = 0
+
         do j = 1,jmax
         do i = 1,imax
 
           jp10 = j+10
-          if(jp10 .eq. (jp10/20)*20 .and. i .eq. (i/4)*4)then
+          if(j .eq. (j/20)*20 .and. i .eq. (i/4)*4)then
             l_output = .true.
           else
             l_output = .false.
@@ -1730,7 +1761,6 @@ c
                 else
                     i_correct = 0
                 endif
-
 
                 if(iwrite .le. 100 .and. l_output)then
                     iwrite = iwrite + 1
