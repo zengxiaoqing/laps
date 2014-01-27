@@ -354,6 +354,9 @@ c       include 'satellite_dims_lvd.inc'
         hel_l = -800.
         hel_h = +800.
 
+        cloud_albedo_f = .60
+        cloud_albedo_a = .60
+
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus) 
 
         call get_max_radar_files(max_radar_files,istatus)      
@@ -2172,8 +2175,7 @@ c
              elseif(var_2d.eq.'ALB')then
               c_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
-              cloud_albedo = .4485300
-              scale_h = cloud_albedo  ! for image plots
+              scale_h = cloud_albedo_a! for image plots
              elseif(var_2d.eq.'SVS')then
               c_label='VIS counts (raw) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
@@ -2418,8 +2420,7 @@ c
             elseif(var_2d_in.eq.'ALB')then
 !             c_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
-              cloud_albedo = .4485300
-              scale_h = cloud_albedo  ! for image plots
+              scale_h = cloud_albedo_a! for image plots
             elseif(var_2d_in.eq.'SVS')then
               c_label='VIS counts (raw) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
@@ -2714,7 +2715,7 @@ cabdel
                 write(6,2023)
 2023            format(/'  [rf-i] Reflectivity Data, '
      1                 /'  [mr-i] Column Max Ref, [mt] Max Tops,'       
-     1                 /'  [lr-i] Low Lvl Ref, '
+     1                 /'  [lr-i] Low Lvl Refl, '
      1                 ,'[f1] 1 HR Fcst Max Reflectivity,'
      1                 /' ',61x,' [q] Quit ? ',$)
 
@@ -2861,11 +2862,11 @@ cabdel
 
                     call make_fnam_lp(i4time_lr,asc9_tim_r,istatus)
 
-                    c_label = 'Low LVL Ref   (Anlyzd/DBZ)  '
+                    c_label = 'Low Lvl Refl (Analyzed/dBZ)  '
 
                 elseif(c_type .eq. 'ra')then
                     radar_array = field_2d
-                    c_label = 'Low Lvl Ref  (interim-vrc)  '    
+                    c_label = 'Low Lvl Refl  (interim-vrc)  '    
 
                 else
                     write(6,*)' error: unknown c_type'
@@ -5817,9 +5818,9 @@ c                   cint = -1.
 
                 elseif(var_2d .eq. 'LCV' .or. var_2d .eq. 'CLA' .or. 
      1                 var_2d .eq. 'SMV')then
-                    call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
-     1                         ,n_image,scale,'hsect',plot_parms
-     1                         ,namelist_parms)        
+                    call ccpfil(field_2d,NX_L,NY_L,0.0,cloud_albedo_f
+     1                         ,'linear',n_image,scale,'hsect'
+     1                         ,plot_parms,namelist_parms)        
 !               elseif(var_2d .eq. 'LIL')then
 !                   call ccpfil(field_2d,NX_L,NY_L,0.0,2.0,'moist'
 !    1                         ,n_image,scale,'hsect',plot_parms
