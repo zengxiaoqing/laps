@@ -78,8 +78,8 @@ cdis
         write(6,*)
         write(6,*)' Getting first guess cloud cover'
 
-!       mode = 1 ! Prefer LWC if available
-        mode = 2 ! use maximum of LWC and RH cloud
+!       mode = 1 ! Prefer cloud derived from model RH 
+        mode = 2 ! use maximum of first guess LWC and RH implied cloud
 
 !       Initialize model first guess cover field with default value
         do k = 1,KCLOUD
