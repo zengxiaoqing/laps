@@ -834,8 +834,8 @@
      1                              ,units_2d,comment_2d
      1                              ,NX_L,NY_L
      1                              ,pw_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)pw_2d = r_missing_data
+     1                              ,istat_tpw)
+            if(istat_tpw .ne. 1)pw_2d = r_missing_data
 
             var_2d = 'PBE'
             call get_lapsdata_2d(i4_initial,i4_valid
@@ -843,8 +843,8 @@
      1                              ,units_2d,comment_2d
      1                              ,NX_L,NY_L
      1                              ,cape_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)cape_2d = r_missing_data
+     1                              ,istat_pbe)
+            if(istat_pbe .ne. 1)cape_2d = r_missing_data
 
             var_2d = 'LIL'
             call get_lapsdata_2d(i4_initial,i4_valid
@@ -852,8 +852,8 @@
      1                              ,units_2d,comment_2d
      1                              ,NX_L,NY_L
      1                              ,lil_2d
-     1                              ,istat_sfc)
-            if(istat_sfc .ne. 1)lil_2d = r_missing_data
+     1                              ,istat_lil)
+            if(istat_lil .ne. 1)lil_2d = r_missing_data
 
             var_2d = 'LIC'
             call get_lapsdata_2d(i4_initial,i4_valid
@@ -933,6 +933,7 @@
         write(6,*)' Sfc P (mb) = ', p_sfc_mb     
      1           ,' Terrain Height (m)= ',topo_sfc 
         write(6,*)' Sfc T (c) = ', k_to_c(t_sfc_k)
+        write(6,*)' Sfc Td (c) = ', td_sfc_c
         write(6,*)' TPW (cm) [read in/computed] = ', 
      1                            pw_sfc*100.,pw_cpt*100.
         write(6,*)' SBCAPE (J/KG) = ', cape_sfc
