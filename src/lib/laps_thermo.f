@@ -292,6 +292,9 @@ c       write(6,*)' i = ',i
 
             IF(j .eq. (j/jint)*jint .AND. i .eq. ni/2)then
                 idebug = 2 ! 1
+                write(6,*)
+                write(6,*)
+     1          ' --- stability index debugging at gridpoint ---',i,j
             else 
                 idebug = 0
             endif
@@ -479,6 +482,9 @@ cdoc    Calculate a variety of stability indices from an input sounding
         ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
      1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
 !       TDEW(E)=237.7/((7.5/ALOG10(E/6.11))-1.)
+
+        logical l_large_domain
+
         DATA EPSILN/.6220/,G/9.80665/
         DATA BLTHCK/50.0/
         DATA RPD/.0174532925063/
@@ -490,6 +496,8 @@ c       WRITE(6,15)
      1          ,'Q      WET BULB')
 
         IOUT=IO
+
+        l_large_domain = .false.
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -591,12 +599,24 @@ C  CALCULATE WET BULB ZERO LEVEL
         call wtblb_lvl(twet_snow,P,T,Q,WB,MXL,NLEVEL,PWB_snow,HWB_snow)       
 
 !       Calculate theta(e) based on sfc parcel
-        THETAE=OE_FAST(T(1),TD(1),P(1)) + 273.15
+        if(l_large_domain)then
+            THETAE=OE_FAST(T(1),TD(1),P(1)) + 273.15
+        else
+            THETAE=OE(T(1),TD(1),P(1)) + 273.15
+        endif
 
         if(idebug .ge. 2)then
-            THETAE2=OE(T(1),TD(1),P(1)) + 273.15
-            write(6,510)P(1),T(1),TD(1),THETAE,THETAE2
- 510        format(' P/T/TD/THETAE',5f8.2)
+            if(l_large_domain)then
+                THETAE2=OE(T(1),TD(1),P(1)) + 273.15
+                write(6,510)P(1),T(1),TD(1),THETAE,THETAE2
+ 510            format(' P/T/TD/THETAE',5f8.2)
+                if(abs(THETAE-THETAE2) .gt. 1.0)then
+                    write(6,*)' ERROR: large difference in THETA values'
+                    stop
+                endif
+            else
+                write(6,510)P(1),T(1),TD(1),THETAE
+            endif
         endif
 
 !       Calculate "fast" LCL based on sfc parcel
@@ -1352,8 +1372,12 @@ cdoc    Quick way to get Theta(e) using lookup table
 
         real thetae_lut(0:n_t,0:n_tdprs,0:n_pres2)
 
+        logical l_write_lut
+
         save init,thetae_lut
         data init/0/
+
+        l_write_lut = .false.
 
         if(init .eq. 0)then
             ext = 'dat'
@@ -1370,8 +1394,10 @@ cdoc    Quick way to get Theta(e) using lookup table
      1'
             close(11)
 
-            open(12,file=directory(1:len_dir)//'thetae_lut.dat'
-     1                     ,form='unformatted',status='unknown')
+            if(l_write_lut)then
+                open(12,file=directory(1:len_dir)//'thetae_lut.dat'
+     1                         ,form='unformatted',status='unknown')
+            endif
             i = 0
             do t = t_low,t_high,t_interval
 
@@ -1400,8 +1426,10 @@ cdoc    Quick way to get Theta(e) using lookup table
 
             enddo
 
-            write(12)thetae_lut
-            close(12)
+            if(l_write_lut)then
+                write(12)thetae_lut
+                close(12)
+            endif
 
 20      endif
 
