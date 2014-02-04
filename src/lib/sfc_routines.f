@@ -253,9 +253,16 @@ c
 
         character*9 a9time                              ! L
 
+        data icount /0/
+
+        save icount
+
         if(int_obtime .lt. 0)then ! (e.g. flag value of -100)
-            write(6,*)' get_sfc_obtime: int_obtime = ',int_obtime
-            go to 900
+            icount = icount + 1
+            if(icount .le. 1000)then
+                write(6,*)' get_sfc_obtime: int_obtime = ',int_obtime
+                go to 900
+            endif
         endif
 
         call make_fnam_lp(i4time_lso,a9time,istatus)
@@ -280,7 +287,9 @@ c
         istatus = 1
         return
 
- 900    write(6,*)' Error in get_sfc_obtime, unresolved ob time'
+ 900    if(icount .le. 1000)then
+            write(6,*)' Error in get_sfc_obtime, unresolved ob time'
+        endif
         i4time_ob = i4time_lso ! Assume obtime equals the file time
         istatus = 0
         return
