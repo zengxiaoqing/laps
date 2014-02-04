@@ -109,6 +109,8 @@ C
       character*9    laps_dom_file
       character*24   asctime
       character*40   v_g
+      character*256  syscmd
+      logical outfile_defined
 C
       common         /prt/flag
 C
@@ -232,6 +234,24 @@ C
       i_reftime = reftime - 315619200
       i_valtime = valtime - 315619200
 
+!     if(imax*jmax*kmax > 50000000)then
+      if(.true.)then 
+!         Call ncgen here since it may not work from the C code
+          syscmd = 'ncgen -o '//trim(file_name)
+     1             //' '//trim(cdldir)//trim(ext)//'.cdl'
+          write(6,*)' FORTRAN syscmd = ',trim(syscmd)
+          call system(trim(syscmd))
+          inquire(FILE=trim(file_name),EXIST=outfile_defined)
+          if(outfile_defined .eqv. .false.)then
+              write(6,*)' ERROR: output file does not exist'
+              stop
+          else
+              write(6,*)
+     1       ' output file successfully created via FORTRAN system call'
+          endif
+      else
+          write(6,*)' Small domain, use C code to run ncgen'
+      endif
 C
 C **** write out netCDF file
 C
