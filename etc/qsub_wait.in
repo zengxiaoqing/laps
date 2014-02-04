@@ -18,3 +18,9 @@ echo "qsub -A $project $script"
 
 @prefix@/etc/wait_for_file.sh $flagfile 120 60
 
+if [ -f $flagfile ]
+    then
+    echo successful completion of qsub_wait...
+else
+    echo ERROR: qsub_wait did not complete...
+fi
