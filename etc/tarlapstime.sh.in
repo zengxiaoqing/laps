@@ -93,7 +93,7 @@ find ./lapsprd/www/anal2d/recent    -type f -name "gmeta*latest.gif" -print   >>
 if test "$FILES" -ge 2; then
     find ./lapsprd -type f -name "$YYDDDHHMM.*" -print | grep -v gr2 | grep -v www | grep -v "\.v[0-9][0-9]" | grep -v "\.d[0-9][0-9]"  >> $LAPSTAR_TXT
 else
-    for ext in lso snd hmg tmg prg pig lsx lmr liw lmt lcb lcv lh4 lil l1s gr2; do
+    for ext in lso snd hmg tmg prg pig lsx lst lmr liw lmt lcb lcv lh4 lil l1s gr2; do
 	echo "./lapsprd/$ext/$YYDDDHHMM.$ext"  >> $LAPSTAR_TXT     
     done
 fi
