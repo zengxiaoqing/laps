@@ -824,6 +824,8 @@ cdoc                            calls read_multiradar_3dref.
                             write(6,*)' Reflectivity data fill error'
                         endif
 
+                        I4_elapsed = ishow_timer()
+
                     else
                         write(6,*)' Reflectivity not filled in'
 
