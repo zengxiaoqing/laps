@@ -1374,11 +1374,16 @@ cdoc    Correct precip type for snow drying in sub-cloud layer based on sfc rh
 
         use constants_laps, ONLY: grav ! m/s**2
 
+        implicit none
+
         real sh(ni,nj,nk)     ! (dimensionless)          Input
         real sh_sfc           ! (dimensionless)          Input
         real p(ni,nj,nk)      ! (Pa)                     Input
         real psfc             ! (Pa)                     Input
         real tpw(ni,nj)       ! (meters)                 Output
+
+        integer ni,nj,nk,i,j,k
+        real pbot,ptop,shbot,shtop,shave,dp,rho_water
 
         rho_water = 1e3       ! mass in kilograms of a cubic meter of water
 
@@ -1395,7 +1400,7 @@ cdoc    Correct precip type for snow drying in sub-cloud layer based on sfc rh
                 elseif(p(i,j,k) .lt. psfc) then ! layer straddles the sfc
                     pbot = psfc          
                     ptop = p(i,j,k)
-                    shbot = shsfc          
+                    shbot = sh_sfc          
                     shtop = sh(i,j,k)
                 else                            ! layer is all below the sfc
                     pbot = 0.
