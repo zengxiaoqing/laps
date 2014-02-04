@@ -77,7 +77,7 @@ real, pointer, dimension(:,:) ::  &
        nzsfc    ,npsfc    ,ntsfc    ,nmrsfc   ,nusfc     &
       ,nvsfc    ,nwsfc    ,nground_t,npblhgt  ,npcp_tot  &
       ,nlwout   ,nswout   ,nlwdown  ,nswdown  ,nshflux   &
-      ,nlhflux  
+      ,nlhflux  ,nsnowc
 real, pointer, dimension(:,:,:) :: &
        npsig    ,nzsig    ,ntsig    ,nmrsig   ,nusig     &
       ,nvsig    ,nwsig    ,ntkesig                       &
@@ -96,7 +96,7 @@ real, pointer, dimension(:,:,:) :: &
 
 real, allocatable, dimension(:) :: lprs,lprsl
 real, pointer, dimension(:,:,:) ::  &
-       zprs         ,rhprs        ,tprs         ,shprs        ,uprs          &
+       zprs                       ,tprs         ,shprs        ,uprs          &
       ,vprs         ,wprs         ,omprs        ,cldliqmr_prs  &
       ,cldicemr_prs ,rainmr_prs   ,snowmr_prs   ,graupelmr_prs,refl_prs      &
       ,zdr_prs      ,ldr_prs                                                 &
@@ -119,7 +119,7 @@ real, pointer, dimension(:,:) ::  &
       ,vpbl         ,u80          ,v80          ,clwmrsfc     ,icemrsfc     ,snowmrsfc    ,rainmrsfc   &
       ,graupmrsfc   ,cldbase      ,cldtop       ,cldamt       ,ceiling     &
       ,intliqwater  ,intcldice    ,totpcpwater  ,max_refl     ,echo_tops    ,refl_sfc    &
-      ,pcptype_sfc  ,pcp_inc      ,snow_inc     ,snow_tot &
+      ,pcptype_sfc  ,pcp_inc      ,snow_inc     ,snow_tot     ,snow_cvr    &
       ,srhel        ,uhel         ,cape         ,cin          ,liftedind   &
       ,visibility   ,heatind      ,lwout        ,swout        ,lwdown      &
       ,swdown       ,shflux       ,lhflux       ,vnt_index    ,ham_index   &
@@ -152,7 +152,7 @@ implicit none
 integer :: ct
 
 if (trim(mtype) /= 'st4') then
-  nvar2d=16
+  nvar2d=17
   if(.not. large_ngrid)then
       nvar3d=7 ! add 1 for tkesig if needed 
   else ! large_ngrid
@@ -195,6 +195,7 @@ if (trim(mtype) /= 'st4') then
   nswdown  =>ngrid(1:nx,1:ny,ct); ct=ct+1
   nshflux  =>ngrid(1:nx,1:ny,ct); ct=ct+1
   nlhflux  =>ngrid(1:nx,1:ny,ct); ct=ct+1
+  nsnowc   =>ngrid(1:nx,1:ny,ct); ct=ct+1
 
   npsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_p = .true.
   nzsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_z = .true.
@@ -315,7 +316,7 @@ implicit none
 integer :: ct
 
 if(.not. large_pgrid)then ! state variables
-   nvar3dout=8
+   nvar3dout=7
 else
    nvar3dout=0
 endif
@@ -341,7 +342,7 @@ ct=1
 
 if(.not. large_pgrid)then
    zprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='HT '; com3d(ct:ct+lz-1)='Geopotential Height'       ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
-   rhprs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='RH3'; com3d(ct:ct+lz-1)='Relative Humidity'         ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
+!  rhprs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='RH3'; com3d(ct:ct+lz-1)='Relative Humidity'         ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
    tprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='T3 '; com3d(ct:ct+lz-1)='Temperature'               ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
    shprs =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='SH '; com3d(ct:ct+lz-1)='Specific Humidity'         ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
    uprs  =>pgrid(1:lx,1:ly,ct:ct+lz-1); name3d(ct:ct+lz-1)='U3 '; com3d(ct:ct+lz-1)='U-component Wind'          ; lvls3d(ct:ct+lz-1)=nint(lprs); ct=ct+lz
@@ -370,7 +371,7 @@ endif
 if (out_grib) then
    ct=1
    gribitua(ct)=.true.; paramua(ct)=7  ; scalep10(ct)=0 ; ct=ct+1  ! zprs
-   gribitua(ct)=.false.;                                ; ct=ct+1  ! rhprs
+!  gribitua(ct)=.false.;                                ; ct=ct+1  ! rhprs
    gribitua(ct)=.true.; paramua(ct)=11 ; scalep10(ct)=2 ; ct=ct+1  ! tprs
    gribitua(ct)=.true.; paramua(ct)=51 ; scalep10(ct)=8 ; ct=ct+1  ! shprs
    gribitua(ct)=.true.; paramua(ct)=33 ; scalep10(ct)=1 ; ct=ct+1  ! uprs
@@ -403,7 +404,7 @@ implicit none
 integer :: ct
 
 if (trim(mtype) /= 'st4') then
-  nvar2dout=52
+  nvar2dout=53
   if (make_micro) nvar2dout=nvar2dout+5
   if (make_firewx) nvar2dout=nvar2dout+7
 
@@ -467,6 +468,7 @@ if (trim(mtype) /= 'st4') then
   pcp_inc    =>sgrid(1:lx,1:ly,ct); name2d(ct)='R01'; com2d(ct)='Incremental Tot. Liq. Precip'    ; ct=ct+1
   snow_inc   =>sgrid(1:lx,1:ly,ct); name2d(ct)='S01'; com2d(ct)='Incremental Snow Depth'          ; ct=ct+1
   snow_tot   =>sgrid(1:lx,1:ly,ct); name2d(ct)='STO'; com2d(ct)='Run-total Snow Accum'            ; ct=ct+1
+  snow_cvr   =>sgrid(1:lx,1:ly,ct); name2d(ct)='SC' ; com2d(ct)='Snow Cover Fraction'             ; ct=ct+1
   srhel      =>sgrid(1:lx,1:ly,ct); name2d(ct)='LHE'; com2d(ct)='Storm Relative Helicity'         ; ct=ct+1
   uhel       =>sgrid(1:lx,1:ly,ct); name2d(ct)='UHE'; com2d(ct)='Updraft Helicity'                ; ct=ct+1
   cape       =>sgrid(1:lx,1:ly,ct); name2d(ct)='PBE'; com2d(ct)='CAPE'                            ; ct=ct+1
