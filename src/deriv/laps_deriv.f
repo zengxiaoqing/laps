@@ -277,6 +277,8 @@ cdis
                 go to 999
             endif
 
+            I4_elapsed = ishow_timer()
+
             write(6,*)
             write(6,*)' Calling put_stability'
             call put_stability(
@@ -296,6 +298,8 @@ cdis
             write(6,*)' put_stability not called for LST file'
 
         endif
+
+        I4_elapsed = ishow_timer()
 
 !       If we need space we can deallocate rh_3d_pct here
 !       If we need space we can allocate u_3d, v_3d here
