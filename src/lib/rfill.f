@@ -72,6 +72,8 @@ cdis
 
         logical l_low_fill, l_high_fill, l_test, l_nonmissing(ni,nj)  
 
+        write(6,*)' ref_fill_vert: begin'
+
         rpd = 3.14159265/180.     
 
         call get_r_missing_data(r_missing_data,istatus)
@@ -125,6 +127,8 @@ cdis
         enddo
         enddo
 
+        I4_elapsed = ishow_timer()
+
         write(6,*)
      1    ' ref_fill_vert: Interpolating vertically through gaps'
      1     ,ni,ilow,ihigh,nj,jlow,jhigh 
@@ -149,6 +153,8 @@ cdis
         enddo
         enddo
 
+        I4_elapsed = ishow_timer()
+
         if(l_low_fill)then
           if(lat(1,1) .eq. 0. .or. lon(1,1)  .eq. 0.
      1                        .or. topo(1,1) .eq. r_missing_data)then
@@ -158,6 +164,9 @@ cdis
             return
           endif
         endif
+
+        write(6,*)
+     1    ' ref_fill_vert: start main fill loop'
 
         do j = 1,nj
 c       write(6,*)' Doing Column ',j
@@ -354,7 +363,6 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                 endif ! Bottom of radar echo above ground
 
             endif ! l_low_fill
-
 
           endif ! echo present
 
