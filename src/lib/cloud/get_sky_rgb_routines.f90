@@ -402,5 +402,8 @@
         delta_mag = od_slant * 1.086
         rmaglim = rmaglim - delta_mag
 
+!       write(6,1)airmass,od_zen,od_slant,delta_mag,rmaglim 
+1       format(6x,'airmass,od_zen,od_slant,delta_mag,rmaglim ',5f9.2)
+
         return
         end
