@@ -51,6 +51,9 @@
         real view_alt(minalt:maxalt,minazi:maxazi)
         real view_az(minalt:maxalt,minazi:maxazi)
 
+        parameter (nsc = 3)
+        real aod_asy_eff(nsc)
+
         logical l_solar_eclipse
 
         sfc_alb = 0.15 ! pass this in and account for snow cover?
@@ -75,6 +78,29 @@
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius &            ! I
                          ,ag,ao,aa)                 ! O
+
+!        Determine multiple scattering order
+!        altscat = 1.00 * altray + 0.00 * sol_alt
+!        altscat = max(altray,sol_alt)
+         altscat = sqrt(0.5 * (altray**2 + solalt**2))
+         call get_airmass(altscat,htmsl,patm &      ! I
+                         ,aero_refht,aero_scaleht & ! I
+                         ,earth_radius &            ! I
+                         ,agdum,aodum,aascat)       ! O
+!        scatter_order = 1.0 ! f(altray,sol_alt)
+         scatter_order = max(aod_ray(ialt,minazi)*aascat,1.0)**0.5
+
+!        Determine effective asymmetry parameter from multiple scattering
+!        http://www.arm.gov/publications/proceedings/conf15/extended_abs/sakerin_sm.pdf
+         do isc = 1,nsc
+             if(aod_asy(isc) .gt. 0.)then
+                 aod_asy_eff(isc) = aod_asy(isc) ** scatter_order
+             elseif(aod_asy(isc) .lt. 0.)then
+                 aod_asy_eff(isc) = -(abs(aod_asy(isc)) ** scatter_order)
+             else
+                 aod_asy_eff(isc) = 0. 
+             endif
+         enddo ! isc
 
          do jazi = jazi_start,jazi_end,jazi_delt
 
@@ -111,9 +137,9 @@
             day_int = 3e9 / 10.**(0.4 * sb_corr)
 
 !           HG illumination
-            hg2 = aod_bin(1) * hg(aod_asy(1),elong(ialt,jazi)) &
-                + aod_bin(2) * hg(aod_asy(2),elong(ialt,jazi)) &
-                + aod_bin(3) * hg(aod_asy(3),elong(ialt,jazi)) 
+            hg2 = aod_bin(1) * hg(aod_asy_eff(1),elong(ialt,jazi)) &
+                + aod_bin(2) * hg(aod_asy_eff(2),elong(ialt,jazi)) &
+                + aod_bin(3) * hg(aod_asy_eff(3),elong(ialt,jazi)) 
             mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2                       
 
             if(.false.)then ! sum brightness from gas and aerosols
