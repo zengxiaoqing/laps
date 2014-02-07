@@ -3,7 +3,7 @@ ROUTINE NAME                                 FILE
 verif_fcst_main                              verif_fcst.f
     verif_fcst_pt_2d                              "
         get_fdda_model_source                     
-        read_surface_obs
+        read_surface_data
         get_lapsdata_2d
         stats_1d
     verif_fcst_pt_3d                         verif_fcst_pt_3d.f
