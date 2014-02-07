@@ -37,6 +37,7 @@ istatus = 1  ! assume good return
 
 
 narg=iargc()
+write(6,*)' narg = ',narg
 
 !call ugetarg(1,mtype)
 !call ugetarg(2,filename)
@@ -51,12 +52,22 @@ call getarg(4,atime)
 call getarg(5,afcst)
 if(narg .eq. 6)then
     call getarg(6,laps_data_root)
-elseif(narg .eq. 8)then
+elseif(narg .eq. 8)then ! advection options are supplied
     call getarg(6,c_adv_cld)
     write(6,*)' c_adv_cld = ',c_adv_cld
     call getarg(7,c_adv_pcp)
     write(6,*)' c_adv_pcp = ',c_adv_pcp
     call getarg(8,laps_data_root)
+
+    call s_len(c_adv_cld,len_str)
+    if(len_str .gt. 0)then
+        read(c_adv_cld,'(i)',err=900) i4_adv_cld
+    endif
+
+    call s_len(c_adv_pcp,len_str)
+    if(len_str .gt. 0)then
+        read(c_adv_pcp,'(i)',err=900) i4_adv_pcp
+    endif
 else
     call usage
 endif
@@ -71,16 +82,7 @@ fcsttime=laps_valtime
 laps_valtime=laps_reftime+laps_valtime
 write(domnum_fstr,'("d",i2.2)') domnum
 
-call s_len(c_adv_cld,len_str)
-if(len_str .gt. 0)then
-    read(c_adv_cld,'(i)',err=900) i4_adv_cld
-endif
 write(6,*)' i4_adv_cld = ',i4_adv_cld
-
-call s_len(c_adv_pcp,len_str)
-if(len_str .gt. 0)then
-    read(c_adv_pcp,'(i)',err=900) i4_adv_pcp
-endif
 write(6,*)' i4_adv_pcp = ',i4_adv_pcp
 
 ! Convert mtype to lower case and check for valid model type.
