@@ -399,15 +399,15 @@ goto 222
   DO I=1,FCSTGRD(1)
     TPW(I,J) = 0.0
     DO K=1,FCSTGRD(3)-1
-      IF (LV(K)/100.0 .LE. p_sfc_f(i,j)) THEN
+      IF (LV(K) .LE. p_sfc_f(i,j)) THEN
         ! above topography: summed up
         TPW(I,J) = TPW(I,J) + 0.5* &
                  (BK0(I,J,K,IFRAME,5)+BK0(I,J,K+1,IFRAME,5))* &
                  (LV(K)-LV(K+1))/100.0 ! PRESSURE IN MB
 
-      ELSEIF (LV(K+1)/100.0 .LE. p_sfc_f(i,j)) THEN
+      ELSEIF (LV(K+1) .LE. p_sfc_f(i,j)) THEN
         TPW(I,J) = TPW(I,J) + BK0(I,J,K+1,IFRAME,5)* &
-                   (p_sfc_f(i,j)-LV(k+1)/100.0)
+                   (p_sfc_f(i,j)-LV(k+1))/100.0
       ENDIF
     ENDDO
     ! FROM G/KG TO CM:
