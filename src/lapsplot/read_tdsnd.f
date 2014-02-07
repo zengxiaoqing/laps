@@ -128,9 +128,14 @@ cdis
 
         if(iwrite_output .ge. 1)then
             call open_lapsprd_file(lun_hmg,i4time_sys,ext,istatus)
-            write(6,*)' Could not open file for writing: '
-     1               ,lun_hmg,i4time_sys,ext
-            if(istatus .ne. 1)return
+            if(istatus .ne. 1)then
+                write(6,*)' Could not open file for writing: '
+     1                   ,lun_hmg,i4time_sys,ext
+                return
+            else
+                write(6,*)' Opened file for writing (good status): '
+     1                   ,lun_hmg,i4time_sys,ext
+            endif
         endif
 
         n_rass = 0
@@ -170,7 +175,9 @@ c
         i4time_snd = i4time_nearest
 
         call open_lapsprd_file_read(12,i4time_snd,ext,istatus)
-        if(istatus .ne. 1)go to 890
+        if(istatus .ne. 1)then
+            go to 890
+        endif
 
         do i_tdsnd = n_rass+1,max_snd
 
@@ -429,6 +436,7 @@ c       1                ,t_diff
         goto 900
 
 890     write(6,*)' Warning: could not open current SND file'
+        write(6,*)' Warning: as a result GPS read was skipped'
         istatus = 1
 
 900     n_tdsnd = n_rass + n_snde
