@@ -6,7 +6,7 @@
                                glow,glow_sun,glow_moon,glow_stars, &
                                od_atm_a,transm_obs,isun,jsun, &         ! I
                                airmass_2_cloud,airmass_2_topo, &
-                               topo_swi,topo_albedo, & 
+                               topo_swi,topo_albedo,albedo_sfc, &       ! I
                                aod_2_cloud,aod_2_topo,aod_ill, &
                                alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az, &
                                moon_alt,moon_az,moon_mag, &
@@ -74,17 +74,10 @@
 
         if(sol_alt .le. 0.)then
 
-!       Use maximum sky brightness to calculate a secondary glow (twilight)
-          if(.false.)then
-            call get_twi_glow_ave(glow(:,:) + log10(clear_rad_c(3,:,:)) &
+!         Use max sky brightness to calculate a secondary glow (twilight)
+          call get_twi_glow_ave(            log10(clear_rad_c(3,:,:)) &
                      ,alt_a,azi_a,ni,nj,sol_alt,sol_az,twi_glow_ave)
-!           arg = maxval(glow(:,:) + log10(clear_rad_c(3,:,:))) ! phys val
-!           arg = maxval(8.0       + log10(clear_rad_c(3,:,:))) ! avoid moon
-          else
-            call get_twi_glow_ave(            log10(clear_rad_c(3,:,:)) &
-                     ,alt_a,azi_a,ni,nj,sol_alt,sol_az,twi_glow_ave)
-            arg = maxval(            log10(clear_rad_c(3,:,:))) ! avoid moon
-          endif
+          arg = maxval(log10(clear_rad_c(3,:,:))) ! avoid moon
 
           write(6,*)' twi_glow_ave = ',twi_glow_ave
           write(6,*)' twi_glow_max = ',arg
@@ -121,21 +114,17 @@
         glow_cld_day = v_to_b(-26.74 + log10(5.346e11)*2.5)
         write(6,*)' glow_cld_day (nl) = ',glow_cld_day
 
-!       Redness section (sun and aureole at low solar altitude)
+!       Redness section (sun at low solar altitude)
 !       Compare with 'get_cloud_rad' redness calculation?
         sol_alt_red_thr = 9.0 + (od_atm_a * 20.)
         if(sol_alt .le. sol_alt_red_thr .and. sol_alt .gt. -16.0)then
-          if(.false.)then
-            redness = min((sol_alt_red_thr - sol_alt) / sol_alt_red_thr,1.0)**1.5
-          else
+!           Add aerosols to trans calculation (call 'get_airmass')
             am = airmassf(90.-sol_alt,patm)
-            scat_frac = 0.75
             do ic = 1,nc
-              trans_c(ic) = trans(am*ext_g(ic)*patm*scat_frac)
+              trans_c(ic) = trans(am*ext_g(ic)*patm)
             enddo
             rob_sun = trans_c(1) / trans_c(3)
             rog_sun = trans_c(1) / trans_c(2)
-          endif
         else
             rob_sun = 1.
             rog_sun = 1.
@@ -326,7 +315,7 @@
         endif
 
         call get_cld_pf(elong_a,r_cloud_rad,cloud_od,cloud_od_sp,airmass_2_topo,ni,nj & ! I
-                       ,pf_scat1,pf_scat2,pf_scat,bkscat_alb)                           ! O
+                       ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
         do j = 1,nj
         do i = 1,ni
@@ -343,8 +332,8 @@
 !             Potential intensity of cloud if it is opaque 
 !               (240. is nominal intensity of a white cloud far from the sun)
 !               (0.25 is dark cloud base value)                                  
-              rint_top  = 240.                              * pf_scat(i,j) 
-              rint_base = 240. * (  0.35                  ) * pf_scat(i,j) 
+              rint_top  = 240.                                * pf_scat(i,j) 
+              rint_base = 240. * (  0.3 * (1. + albedo_sfc) ) * pf_scat(i,j) 
 
 !             Gamma color correction applied when sun is near horizon 
               if(cloud_rad_c(1,i,j) .gt. 0.)then
@@ -433,33 +422,6 @@
                 clr_red = rintensity_glow * rog
                 clr_grn = rintensity_glow
                 clr_blu = rintensity_glow * bog
-
-              else ! consider color
-                glow_tot = glow(i,j) ! + log10(clear_radf_c(3,i,j))
-!               rintensity_glow = min(((glow(i,j)-7.) * 100.),255.)
-                rintensity_glow = min(((glow_tot -7.) * 100.),255.)
-                z = 90. - alt_a(i,j)        
-                airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
-                ray_red = brt(airmass,ext_g(1)*patm*0.50) ! + od_atm_a?
-                ray_grn = brt(airmass,ext_g(2)*patm*0.50) ! + od_atm_a?
-                ray_blu = brt(airmass,ext_g(3)*patm*0.50) ! + od_atm_a?
-                elong_gn = 55. + 10. * sind(sol_alt)
-                frac_ray = max(min((elong_a(i,j)-elong_gn)/35.,1.0),0.0)
-                frac_ray = frac_ray * cosd(alt_a(i,j)) * 0.5
-                if(idebug .eq. 1)then
-!                   write(6,115)alt_a(i,j),elong_a(i,j),airmass,ray_red,ray_grn,ray_blu
-115                 format('frac_ray',3f8.2,3f8.4)
-                endif
-!               frac_ray = 1.0
-!               gob = max((rintensity_glow/255.)**0.8,((ray_grn/ray_blu)**0.885)*frac_ray)
-!               rob = max( rintensity_glow/255.      ,((ray_red/ray_blu)**0.885)*frac_ray)
-                exr = 1.0 * (1.0 - 0.2*grnness)
-                exg = 0.8 * (1.0 - 0.5*grnness)
-                gob = (1.0-frac_ray) * (rintensity_glow/255.)**exg+((ray_grn/ray_blu)**0.885)*frac_ray
-                rob = (1.0-frac_ray) * (rintensity_glow/255.)**exr+((ray_red/ray_blu)**0.885)*frac_ray
-                clr_red = rintensity_glow *  rob
-                clr_grn = rintensity_glow *  gob
-                clr_blu = rintensity_glow  
               endif
 
           elseif(sol_alt .ge. -16.)then ! Twilight from clear_rad_c array
@@ -496,9 +458,6 @@
 !                 write(6,61)glow_tot, argref, rintensity_glow,nint(clr_red),nint(clr_grn),nint(clr_blu)
 61                format('Twi Clr RGB = ',3f9.3,3i5)
 !             endif
-!             clr_red = rintensity_glow * clear_rad_c(2,i,j)
-!             clr_blu = rintensity_glow * clear_rad_c(3,i,j)
-!             clr_grn = 0.5 * (clr_red + clr_blu)                               
 
           else ! Night from clear_rad_c array (default flat value of glow)
               call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),clear_rad_c_nt)
@@ -535,30 +494,18 @@
 !         Apply redness to clear sky / sun
 !         Define area around the sun that is reddenned since scattering by aerosols
 !         is dominant. Try and preserve both original luminance and desired color         
-          if(od_atm_a .ge. 0.03)then
-              elong_red = 20.0
-          elseif(od_atm_a .le. 0.02)then
-              elong_red = 1.0
-          else
-              elong_red = 1. + 1900. * (od_atm_a-.02)
-          endif
 !         if(sol_alt .gt. 0)then
-          if(.false.)then
-              elong_red = min(elong_red,10.)
-              elong_red = min(elong_red,1.5 + sol_alt * 5.)
-          else
-              elong_red = 0.25 ! only redden solar disk
-          endif
+          elong_red = 0.25 ! only redden solar disk
           if(sol_alt .ge. -2.0)then
             if(elong_a(i,j) .le. elong_red)then
 !           if(.false.)then                        
               clr_luma1 = .30 * clr_red + .59 * clr_grn + .11 * clr_blu
-              red_elong = ((elong_red - elong_a(i,j)) / elong_red)**2
+!             red_elong = ((elong_red - elong_a(i,j)) / elong_red)**2
               red_elong = 1.0
-              red_sun = 255.
-              clr_red = clr_red*(1.-red_elong) +  red_sun * red_elong
-              clr_grn = clr_grn*(1.-red_elong) + (red_sun / (rog_sun**(0.25))) * red_elong                   
-              clr_blu = clr_blu*(1.-red_elong) + (red_sun / (rob_sun**(0.25))) * red_elong
+              red_sun = 255. ! Unless slant trans < 1./160000.
+              clr_red =  red_sun 
+              clr_grn = (red_sun / (rog_sun**(0.25))) 
+              clr_blu = (red_sun / (rob_sun**(0.25))) 
               clr_luma2 = .30 * clr_red + .59 * clr_grn + .11 * clr_blu
               ratio_luma = min(clr_luma1 / clr_luma2,255. / clr_red)
               clr_red = clr_red * ratio_luma               
@@ -595,7 +542,7 @@
 !             The sky RGB values should already include reductions from
 !             cloud/terrain shadowing and limited distance to the topography
               if(sol_alt .le. 0.)then 
-                od_2_topo = 0. ! (od_atm_g + od_atm_a) * airmass_2_topo(i,j)
+                od_2_topo = 0. !(od_atm_g + od_atm_a) * airmass_2_topo(i,j)
               else ! eventually use clear_rad influenced by topo?
                 od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
 !               od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_ill(i,j)
@@ -667,78 +614,3 @@
 
         return
         end
-
-        subroutine get_cld_pf(elong_a,r_cloud_rad,cloud_od,cloud_od_sp,airmass_2_topo,ni,nj & ! I
-                             ,pf_scat1,pf_scat2,pf_scat,bkscat_alb)            ! O
-        include 'trigd.inc'
-
-!       Statement functions
-        trans(od) = exp(-od)
-        opac(od) = 1.0 - exp(-od)
-
-        include 'rad.inc'
-        real elong_a(ni,nj)
-        real cloud_od(ni,nj)        ! cloud optical depth
-        real cloud_od_sp(ni,nj,nsp) ! cloud species optical depth
-        real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
-        real airmass_2_topo(ni,nj)  ! airmass to topo  
-        real pf_scat(ni,nj), pf_scat1(ni,nj), pf_scat2(ni,nj)
-        real bkscat_alb(ni,nj)
-
-        do j = 1,nj
-        do i = 1,ni
-
-!         a substitute for cloud_rad could be arg2 = (cosd(alt))**3.
-
-!         Phase function that depends on degree of forward scattering in cloud    
-!         pwr controls angular extent of forward scattering peak of a thin cloud
-!         Useful reference: http://www-evasion.imag.fr/Publications/2008/BNMBC08/clouds.pdf
-          if(elong_a(i,j) .le. 90.)then ! low elongation phase function
-              pwr = 3.0
-              ampl = r_cloud_rad(i,j) * 0.7; b = 1.0 + pwr * r_cloud_rad(i,j)
-              pf_scat1(i,j) = 0.9 + ampl * (cosd(min(elong_a(i,j),89.99))**b)
-              bkscat_alb(i,j) = -99.9 ! flag value for logging
-          else                          ! high elongation phase function
-!             convert from opacity to albedo
-!             cloud_opacity = min(r_cloud_3d(i,j),0.999999)
-              bksc_eff_od = cloud_od(i,j) * 0.10 
-              cloud_rad_trans = exp(-bksc_eff_od)
-              bkscat_alb(i,j) = 1.0 - cloud_rad_trans 
-              ampl = 0.15 * bkscat_alb(i,j)
-              pf_scat1(i,j) = 0.9 + ampl * (-cosd(elong_a(i,j)))
-          endif
-
-!         Separate snow phase function
-!         opac_nonsnow  =  opac(cloud_od(i,j) - cloud_od_sp(i,j,4))
-          trans_nonsnow = trans(cloud_od(i,j) - cloud_od_sp(i,j,4))
-          cloud_od_snow = cloud_od_sp(i,j,4)
-          cloud_od_tot  = cloud_od(i,j)
-
-          snow_bin1 = exp(-cloud_od_snow/5.)
-          snow_bin2 = 1.0 - snow_bin1
-
-          pf_snow = snow_bin1 * hg(.95,elong_a(i,j)) &
-                  + snow_bin2 * hg(0.0,elong_a(i,j))
-
-          if(cloud_od_tot .gt. 0.)then
-              snow_factor = trans_nonsnow * (cloud_od_snow / cloud_od_tot)
-          else
-              snow_factor = 0.
-          endif
-
-          pf_scat2(i,j) = pf_snow * snow_factor + pf_scat1(i,j) * (1.0 - snow_factor)
-
-!         Suppress phase function if terrain is close in the light ray
-          if(airmass_2_topo(i,j) .gt. 0.)then ! cloud in front of terrain
-!             pf_scat(i,j) = pf_scat2(i,j)**r_cloud_rad(i,j)
-              pf_scat(i,j) = pf_scat2(i,j)**opac(cloud_od_tot)
-          else
-              pf_scat(i,j) = pf_scat2(i,j)
-          endif
-
-        enddo ! j
-        enddo ! i
-
-        return
-        end
-
