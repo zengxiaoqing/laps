@@ -55,7 +55,7 @@
         character*10 compdir
 
         integer n_fields
-        parameter (n_fields=13)
+        parameter (n_fields=16)
         character*10 var_a(n_fields)
         integer nthr_a(n_fields)     ! number of thresholds for each field
         integer istart_a(n_fields)   ! start time for each field              
@@ -67,10 +67,11 @@
 !       Specify what is being verified
         data var_a      
      1     /'SWI','TSF','DSF','USF','VSF','SSF','WSF'
-     1     ,'T3' ,'W3' ,'TPW','R01','RTO','S8A'/     
-        data nthr_a     /1,1,1,1,1,1,1,1,1,1,1,1,1/        
-        data istart_a   /0,0,0,0,0,0,0,0,0,0,1,1,1/        
-        data ipersist_a /0,0,0,0,0,0,0,0,0,1,0,0,1/        
+     1     ,'T3' ,'W3' ,'TPW','R01','R03','R06','R24'
+     1     ,'RTO','S8A'/     
+        data nthr_a     /1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1/        
+        data istart_a   /0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1/        
+        data ipersist_a /0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1/        
 
         integer contable(0:1,0:1)
 
