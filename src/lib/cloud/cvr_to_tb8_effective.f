@@ -74,7 +74,7 @@
             iz_temp = int(z_temp)
             frac = z_temp - iz_temp
             temp_lyr(n) = temp_3d(i,j,iz_temp)    * (1. - frac)
-     1               +  temp_3d(i,j,iz_temp+1)  * frac
+     1                 +  temp_3d(i,j,iz_temp+1)  * frac
         enddo ! n
 
 !       Add a layer for the ground
@@ -98,6 +98,9 @@
 !       Calculate total radiance from all cloud layers + ground
         rsum = 0
         do n = 1,nlyr
+!           if(idebug .eq. 1)then
+!               write(6,*)n,temp_lyr(n),f(n),' call temp_to_rad'
+!           endif
             rsum = rsum + temp_to_rad(temp_lyr(n)) * f(n)
             if(idebug .eq. 1)then
                 write(6,*)n,temp_lyr(n),f(n),rsum
@@ -118,6 +121,7 @@
         if(init .eq. 0)then
             init = 1
             NSAT = 3
+            write(6,*)' call PLNKIV'
             call PLNKIV(NSAT)
         endif
 
