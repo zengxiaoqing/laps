@@ -5,7 +5,7 @@
      1                           ,topo_albedo_2d                        ! I
      1                           ,topo_swi,topo_albedo                  ! O
      1                           ,aod_ray,aod_2_cloud,aod_2_topo,aod_ill! O
-     1                           ,transm_obs                            ! O
+     1                           ,aod_tot,transm_obs                    ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,r_cloud_rad,cloud_rad_c               ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
@@ -88,7 +88,7 @@
         real wt_sp(nsp) ; data wt_sp /1.0,0.5,0.02,0.0714/
 
         real elong(minalt:maxalt,minazi:maxazi)
-        real aod_ray_eff(minalt:maxalt,minazi:maxazi)
+        real aod_ray_eff(minalt:maxalt,minazi:maxazi)    ! zenithal
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)     ! cloud opacity
         real cloud_od(minalt:maxalt,minazi:maxazi)       ! cloud optical depth
         real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)! cloud species tau
@@ -103,9 +103,10 @@
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
         real topo_swi(minalt:maxalt,minazi:maxazi)       ! short wave down W/m**2
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
-        real aod_2_cloud(minalt:maxalt,minazi:maxazi)
-        real aod_2_topo(minalt:maxalt,minazi:maxazi)
-        real aod_ill(minalt:maxalt,minazi:maxazi)
+        real aod_2_cloud(minalt:maxalt,minazi:maxazi)    ! slant path
+        real aod_2_topo(minalt:maxalt,minazi:maxazi)     ! slant path
+        real aod_ill(minalt:maxalt,minazi:maxazi)        ! slant path
+        real aod_tot(minalt:maxalt,minazi:maxazi)        ! slant path
         real sum_odrad_c(nc)
 
         character*1 cslant
@@ -852,6 +853,7 @@
           endif ! true
 
           aod_ill(ialt,jazi) = sum_aod_ill
+          aod_tot(ialt,jazi) = sum_aod
 
           if(r_cloud_3d(ialt,jazi) .gt. .5)then
               icloud = 1
@@ -924,6 +926,9 @@
               aod_ill(ialt,jazi) = 
      1                fm * aod_ill(ialt,jazim) 
      1              + fp * aod_ill(ialt,jazip)
+              aod_tot(ialt,jazi) = 
+     1                fm * aod_tot(ialt,jazim) 
+     1              + fp * aod_tot(ialt,jazip)
               topo_swi(ialt,jazi) = 
      1                fm * topo_swi(ialt,jazim) 
      1              + fp * topo_swi(ialt,jazip)
@@ -966,6 +971,9 @@
             aod_ill(ialt,:) =
      1           fm * aod_ill(ialtm,:) 
      1         + fp * aod_ill(ialtp,:)
+            aod_tot(ialt,:) =
+     1           fm * aod_tot(ialtm,:) 
+     1         + fp * aod_tot(ialtp,:)
             topo_swi(ialt,:) =
      1         fm * topo_swi(ialtm,:)      + fp * topo_swi(ialtp,:)
             topo_albedo(:,ialt,:) =
