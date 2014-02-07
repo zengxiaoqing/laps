@@ -540,12 +540,15 @@ c
 
 !               Set thresh_tb8 to +8 in snowy situations where more IR clearing
 !               is needed and to +0 in dark land situations where the VIS can
-!               do more clearing.
+!               do more clearing. Same is done if no visible data are present
                 if(cvr_snow(i,j) .gt. 0. .AND. 
      1             cvr_snow(i,j) .ne. r_missing_data)then
-                    thresh_tb8_clr = -8. * (cvr_snow(i,j)**0.3)
 !                   thresh_tb8_clr =  0.
 !                   tb8_calculated = t_gnd_k(i,j)
+                    thresh_tb8_clr  = -8. * (cvr_snow(i,j)**0.3)
+                    thresh_tb8_clr2 = -8.          
+                elseif(cloud_frac_vis_a(i,j) .eq. r_missing_data)then ! low sun/night
+                    thresh_tb8_clr  = -8.
                     thresh_tb8_clr2 = -8.          
                 else ! no snow case
                     thresh_tb8_clr =  0.
@@ -561,6 +564,7 @@ c
 
 !                 Only touch points above surface buffer    
                   if(cld_hts(k) - topo(i,j) .gt. surface_sao_buffer)then
+!                 if(cld_hts(k) - topo(i,j) .gt. 1200.)then
 !                   if(thresh_tb8_clr .gt. 0.)then ! clear clouds when snow present
                     if(.true.)then                                                 
                       cldcv(itn:itx,jt,k)=default_clear_cover
