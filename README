@@ -4523,9 +4523,15 @@ LAPS Variables and netCDF File Organization
         (author: Linda Wharton - Linda.S.Wharton AT noaa.gov)
 
 LAPS output is written in netCDF format as summarized below. Each file 
-extension goes into a separate directory under '$LAPS_DATA_ROOT/lapsprd/'.
+extension contains a set of variables that goes into a separate directory under 
+'$LAPS_DATA_ROOT/lapsprd/'. This directory includes so-called pre-balanced 
+files, while the final balanced output is in the 'lapsprd/balance' subdirectory.
+For example the LT1 temperature grid is written with the pre-balanced version 
+in 'lapsprd/lt1' and the balanced version in 'lapsprd/balance/lt1'. 
+
 Note that netCDF information on the units of the fields, etc. is contained in 
-the '$LAPS_DATA_ROOT/cdl/*.cdl' files.
+the '$LAPS_DATA_ROOT/cdl/*.cdl' files. At the bottom of the list is a section
+on the "intermediate" files that are computed while the ingest is running.
 
 
                 File LAPS CDF    Num
@@ -4653,7 +4659,7 @@ Process soil:   LM1  LSM  lsm      3  Soil Moisture
 		     DWF  dwf	   1  Depth to wetting front
 		     WX   wx       1  Wet/Dry grid point
 		     EVP  evp      1  Evaporation Data
-		     SC   sc       1  Snow covered
+		     SC   sc       1  Snow cover
 		     SM   sm       1  Snow melt
 		     MWF  mwf      1  Soil Moisture content Wetting Front
 
@@ -4736,10 +4742,6 @@ Process lga.exe (background model):
                      RSF  rsf      1  Model Specific Humidity
 		     P	  p 	   1  Model reduced pressure
                      PCP  pcp      1  Model Precipitation
-
-Process LH1: 	LH1  PW   pw	   1  Precipitable Water Vapor
-
-Process LH2: 	LH2  PW   lpw	   3  Layer Precipitable Water Vapor
 
 Process lvd_sat_ingest:
                      LVD  S8W  s8w 1  GOES IR band-8 bright temp warmest pixel
