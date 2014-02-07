@@ -510,6 +510,8 @@
             do iz = 1,NZ_L
                 t_c         = k_to_c(temp_vert(iz)) 
                 td_vert(iz) = DWPT(t_c,rh_vert(iz))
+                p_mb        = pres_1d(iz)/100.
+                sh_vert(iz) = make_ssh(p_mb,t_c,rh_vert(iz),-132.)
             enddo ! iz
 
             istat_td = 1
@@ -925,7 +927,7 @@
 
         td_sfc_c = k_to_c(td_sfc_k)
         p_sfc_mb = p_sfc_pa/100.
-        sh_sfc = make_ssh(p_mb,td_sfc_c,1.0,-132.) / 1000.
+        sh_sfc = make_ssh(p_sfc_mb,td_sfc_c,1.0,-132.) / 1000.
 
         call integrate_tpw(sh_vert,sh_sfc,pres_1d,p_sfc_pa
      1                    ,1,1,NZ_L,pw_cpt)
