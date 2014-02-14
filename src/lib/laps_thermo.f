@@ -1380,24 +1380,29 @@ cdoc    Quick way to get Theta(e) using lookup table
         l_write_lut = .false.
 
         if(init .eq. 0)then
-            ext = 'dat'
-            call get_directory(ext,directory,len_dir)
-
-            write(6,*)' Reading thetae_lut.dat from file'
-            open(11,file=directory(1:len_dir)//'thetae_lut.dat'
-     1                ,form='unformatted',status='old',err=10)
-            read(11,err=10)thetae_lut
-            close(11)
             init = 1
-            goto20
-10          write(6,*)' Generating thetae_lut.dat - no valid file exists
-     1'
-            close(11)
 
             if(l_write_lut)then
+                ext = 'dat'
+                call get_directory(ext,directory,len_dir)
+
+                write(6,*)' Reading thetae_lut.dat from file'
+                open(11,file=directory(1:len_dir)//'thetae_lut.dat'
+     1                    ,form='unformatted',status='old',err=10)
+                read(11,err=10)thetae_lut
+                close(11)
+                goto20
+10              continue
+                close(11)
+
+                write(6,*)
+     1            ' Generating thetae_lut.dat - no valid file exists'
                 open(12,file=directory(1:len_dir)//'thetae_lut.dat'
      1                         ,form='unformatted',status='unknown')
+            else
+                write(6,*)' Generating thetae lut in memory...'
             endif
+
             i = 0
             do t = t_low,t_high,t_interval
 
