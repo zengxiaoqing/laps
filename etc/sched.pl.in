@@ -803,7 +803,7 @@ foreach $exe (@LAPS_EXE){
                     }elsif($qsub_mode eq "multi"){ # Traditional LAPS in multi mode
                         if($execount == 1){ # first set of executables 
                             if($npts > 50000000){
-                                $vmem_gb=3.5 
+                                $vmem_gb=5.0 
                             }else{
                                 $vmem_gb=2.0
                             }
