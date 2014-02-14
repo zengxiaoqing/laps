@@ -2,7 +2,7 @@
 
       subroutine clean_radar(ref,ni,nj,nk)
 
-      use mem_namelist, ONLY: grid_spacing_m, ref_base
+      use mem_namelist, ONLY: grid_spacing_m, ref_base, r_missing_data
 
       real ref(ni,nj,nk)
       real ref_buf(ni,nj,nk)
@@ -22,11 +22,13 @@
       do j = 2,nj-1
       do i = 2,ni-1
           sum9 = sum(ref(i-1:i+1,j-1:j+1,k))
-          sum8 = sum9 - ref(i,j,k)
-          ave8 = sum8 / 8.
-          if(ref(i,j,k) .gt. ave8 + 20.)then
-              ref_buf(i,j,k) = ave8 ! ref_base
-              nclean = nclean + 1
+          if(abs(sum9) .le. 1e6)then ! screen out summed missing data values
+              sum8 = sum9 - ref(i,j,k)
+              ave8 = sum8 / 8.
+              if(ref(i,j,k) .gt. ave8 + 20.)then
+                  ref_buf(i,j,k) = ave8 ! ref_base
+                  nclean = nclean + 1
+              endif
           endif
       enddo ! i
       enddo ! j
