@@ -184,6 +184,8 @@ C
       if(istatus .ne. 1)then
           write(6,*)' Error in get_domain_perimeter'
           return
+      else
+          write(6,*)' NSEW perimeter is ',rnorth,south,east,west
       endif
 
 !.............................................................................
@@ -276,6 +278,7 @@ C
           else
               write(6,*)
      1            ' Outside domain lat/lon perimeter - reject'
+     1           ,stalat(isnd),stalon(isnd)
               goto 999
           endif
 
