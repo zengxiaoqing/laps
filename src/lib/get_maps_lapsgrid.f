@@ -300,9 +300,11 @@ c    1         ,comment_2d,imax,jmax,field_3d_laps(1,1,1),0,istatus)
        endif
 
        if(istatus .eq. 1)then
+          call s_len(comment_2d,lenc)
+          lenc = max(lenc,1)
           write(6,*)' Successfully obtained: '
      1                        ,c_fnames(i)(lend+1:lenf),' '
-     1                        ,ext(1:6),var_2d
+     1                        ,ext(1:6),var_2d,comment_2d(1:lenc)
           write(6,*)' Exiting get_modelfg_3d_sub'
           write(6,*)
           return
