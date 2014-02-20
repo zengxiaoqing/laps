@@ -53,8 +53,13 @@ subroutine radialwind
   logical   :: apply_map ! LAPS does not use this for radial wind
   real      :: volnyqt,rlat,rlon,rhgt,op(4),az,sr,ea
 
+  ! For radial wind data on maxgrid:
+  INTEGER   :: istart,iend,jstart,jend
+  REAL      :: ri,rj,grid_spacing_actual_mx,grid_spacing_actual_my
+  REAL      :: xradius,yradius
+
   ! Functions:
-  real :: height_of_level
+  real :: height_of_level,init_timer,ishow_timer
   
   ! Allocatable arrays:
   real,allocatable :: velo(:,:,:), nyqt(:,:,:),zero(:,:,:)
@@ -66,6 +71,7 @@ subroutine radialwind
            stat=istatus)
 
   ! Ingest:
+  PRINT*,'Starting ingest radial wind: ', init_timer()
   do iradar=1,max_radars ! look through all radar
 
     write(6,*)' Looking for potential radar # ',iradar
@@ -86,12 +92,12 @@ subroutine radialwind
     dir = dir(1:len_dir)//'*.'//ext
 
     ! Frequency of reading radial wind data:
-    do ll=1,2 ! read data at current and previous cycle
+    do ll=2,2 ! read data at current ONLY !and previous cycle
 
-      call get_file_time(dir,lapsi4t+(ll-2)*icycle,i4radar)
+      call get_file_time(dir,lapsi4t+(ll-2)*INT(0.5*icycle),i4radar)
 
       ! Check file availability:
-      if (abs(i4radar-(lapsi4t+(ll-2)*icycle)) .ge. icycle) then
+      if (abs(i4radar-(lapsi4t+(ll-2)*0.5*icycle)) .ge. 0.5*icycle) then
         write(6,10) lapsi4t+(ll-2)*icycle,dir(1:len_dir)
 10      format('No radial wind avail at ',i10,' under ', &
           /,' in directory: ',a50)
@@ -110,11 +116,33 @@ subroutine radialwind
                             bk0(1,1,1,ll,1),bk0(1,1,1,ll,2),volnyqt, &
                             l_correct_unfolding,l_grid_north,istatus)
 
+          ! Estimate this radar coverage:
+          CALL latlon_to_rlapsgrid(rlat,rlon,latitude,longitud, &
+                                   fcstgrd(1),fcstgrd(2),ri,rj,istatus)
+ 
+          ! Grid spacing:
+          CALL get_grid_spacing_actual_xy(rlat,rlon &
+                            ,grid_spacing_actual_mx &
+                            ,grid_spacing_actual_my &
+                            ,istatus)
+
+          ! Radius on fcstgrid:
+          xradius = 300000.0/grid_spacing_actual_mx  ! Radius of radial wind in X
+          yradius = 300000.0/grid_spacing_actual_my  ! Radius of radial wind in Y
+
+          ! Start and end points on fcstgrd:
+          istart = MAX(NINT(ri-xradius),1)
+          jstart = MAX(NINT(rj-yradius),1)
+          iend = MIN(NINT(ri+xradius),fcstgrd(1))
+          jend = MIN(NINT(rj+yradius),fcstgrd(2))
+
           ! Pass radial wind to STMAS data structure:
           do k=1,fcstgrd(3)
-          do j=1,fcstgrd(2)
-          do i=1,fcstgrd(1)
+          do j=jstart,jend
+          do i=istart,iend
+
             if (velo(i,j,k) .ne. rmissing) then
+
               ! Calculate azimuth/elevation/slant range:
               call latlon_to_radar(latitude(i,j),longitud(i,j), &
                                    bk0(i,j,k,ll,3),az,sr,ea,rlat,rlon,rhgt)
@@ -122,7 +150,8 @@ subroutine radialwind
               op(1) = longitud(i,j)
               op(2) = latitude(i,j)
               op(3) = z_fcstgd(k)
-              op(4) = i4radar-itime2(1)
+              ! Treat data as observed at analysis time frames:
+              op(4) = 0.5*icycle ! i4radar-itime2(1)
 
               call handleobs_sigma(op,velo(i,j,k),0.5, & ! radial obs error: 0.5
                                    numstat+1,nallobs,1,az,ea,sid)
@@ -136,6 +165,7 @@ subroutine radialwind
     enddo
 
   enddo
+  PRINT*,'Ending ingest radial wind: ', init_timer()
 
   ! Release local allocatables:
   deallocate(velo,nyqt,zero,stat=istatus)
