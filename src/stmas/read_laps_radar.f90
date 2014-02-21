@@ -59,7 +59,8 @@ subroutine radialwind
   REAL      :: xradius,yradius
 
   ! Functions:
-  real :: height_of_level,init_timer,ishow_timer
+  integer :: init_timer,ishow_timer
+  real :: height_of_level
   
   ! Allocatable arrays:
   real,allocatable :: velo(:,:,:), nyqt(:,:,:),zero(:,:,:)
@@ -165,7 +166,7 @@ subroutine radialwind
     enddo
 
   enddo
-  PRINT*,'Ending ingest radial wind: ', init_timer()
+  PRINT*,'Ending ingest radial wind: ', ishow_timer()
 
   ! Release local allocatables:
   deallocate(velo,nyqt,zero,stat=istatus)
