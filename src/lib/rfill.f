@@ -100,12 +100,30 @@ cdis
      &                           ni,nj,    
      &                           ri,rj,
      &                           jstatus)
+        if(jstatus .lt. 0)then
+            write(6,*)' ref_fill_vert: Error radar lat/lon unavailable'
+            return
+        else
+            write(6,*)' Radar ri/rj is ',ri,rj
+        endif
 
-        rgrid_radar = 460000. / grid_spacing_m ! square containing radar
-        ilow = max(nint(ri-rgrid_radar),1)
-        jlow = max(nint(rj-rgrid_radar),1)
-        ihigh = min(nint(ri+rgrid_radar),ni)
-        jhigh = min(nint(rj+rgrid_radar),nj)
+        call get_grid_spacing_actual_xy(rlat_radar,rlon_radar
+     1                                 ,grid_spacing_actual_mx
+     1                                 ,grid_spacing_actual_my
+     1                                 ,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)
+     1          ' ref_fill_vert: Error from get_grid_spacing_actual_xy'
+            return
+        endif
+
+!       Range limit is 460km plus a ~10% cushion
+        rgrid_radarx = 500000. / grid_spacing_actual_mx ! rectangle around radar
+        rgrid_radary = 500000. / grid_spacing_actual_my ! rectangle around radar
+        ilow = max(nint(ri-rgrid_radarx),1)
+        jlow = max(nint(rj-rgrid_radary),1)
+        ihigh = min(nint(ri+rgrid_radarx),ni)
+        jhigh = min(nint(rj+rgrid_radary),nj)
 
 !       Set missing values to ref_base for internal & external processing
 !       write(6,*)' ref_fill_vert: Setting r_missing_data/qc values to '
@@ -136,6 +154,7 @@ cdis
         n_low_fill = 0
         n_high_fill = 0
 
+!       Column sum value assuming all levels have 'ref_base'
         isum_test = nint(ref_base) * nk
 
         isum_ref_2d(:,:) = 0
@@ -168,12 +187,16 @@ cdis
         write(6,*)
      1    ' ref_fill_vert: start main fill loop'
 
+        n_columns = 0
+
         do j = 1,nj
 c       write(6,*)' Doing Column ',j
 
         do i = 1,ni
 
           if(isum_ref_2d(i,j) .ne. isum_test)then ! Test for presence of echo
+
+            n_columns = n_columns + 1
 
             call latlon_to_radar(lat(i,j),lon(i,j),topo(i,j)
      1                  ,azimuth,slant_range,elev_topo
@@ -376,6 +399,8 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         enddo ! i
         enddo ! j
 
+        write(6,*)' n_gridpts = ',ni*nj
+        write(6,*)' n_columns = ',n_columns
         write(6,*)' n_low_fill = ',n_low_fill
         write(6,*)' n_high_fill = ',n_high_fill
 
