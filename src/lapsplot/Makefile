@@ -34,6 +34,7 @@ SRC= lapsplot_main.f \
      array_range.f \
      aski4t.f \
      hsect.f \
+     hsect_img.f \
      xsect.f \
      divergence.f \
      lapsplot.f \
