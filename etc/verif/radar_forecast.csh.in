@@ -119,16 +119,16 @@ if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be pr
 #   setenv L_PLOT_CRITERIA T  # for testing
     if (-d /w3/lapb) then
         if ($DURATION == "") then 
-            setenv KEY_WIDTH -19.5 
+            setenv KEY_WIDTH -7.1  
         else
-            setenv KEY_WIDTH -19.5 
+            setenv KEY_WIDTH -7.1  
         endif
     else
         setenv KEY_WIDTH -7.1
     endif
 else                                                     # Percentage will not be present
     if (-d /w3/lapb) then
-        setenv KEY_WIDTH -16.2 
+        setenv KEY_WIDTH -4.0 
     else
         setenv KEY_WIDTH -4.0
     endif
