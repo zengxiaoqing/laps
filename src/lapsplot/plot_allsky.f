@@ -821,10 +821,11 @@
           if(moon_mag .lt. moon_mag_thr .AND.
      1     alm      .gt. 0.                 )then
             write(6,*)' Moon glow being calculated: ',alm,azm
+            diam_deg = 0.5
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                       ,minalt,maxalt,minazi,maxazi 
      1                       ,alt_scale,azi_scale
-     1                       ,alm,azm,moon_mag
+     1                       ,alm,azm,moon_mag,diam_deg
      1                       ,blog_moon_roll)
 
             write(6,*)' range of blog_moon_roll is',
@@ -834,10 +835,11 @@
           blog_sun_roll = 0
           write(6,*)' Sun glow being calculated: '
      1                 ,solar_alt,solar_az
+          diam_deg = 0.5
           call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
-     1                     ,solar_alt,solar_az,-26.9   
+     1                     ,solar_alt,solar_az,-26.9,diam_deg
      1                     ,blog_sun_roll)
           write(6,*)' range of blog_sun_roll is',
      1          minval(blog_sun_roll),maxval(blog_sun_roll)
