@@ -328,6 +328,11 @@ cdis
                 call frame
             endif
 
+        elseif(c_section .eq. 'hi')THEN ! hsect images
+            call hsect_img(i4time_ref,lun,NX_L,NY_L,NZ_L
+     1                        ,r_missing_data,laps_cycle_time
+     1                        ,plot_parms,namelist_parms)
+
         endif ! c_section
 
         write(6,901)
