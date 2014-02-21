@@ -54,6 +54,8 @@ cdis
      1                        twet_snow,                 ! O
      1                        j_status,istatus)
 
+        use cloud_rad ! Cloud Radiation and Microphysics Parameters
+
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                  sys_abort_prod
 
@@ -222,11 +224,16 @@ cdis
         real slwc_int(NX_L,NY_L)
         real cice_int(NX_L,NY_L)
         real rain_int(NX_L,NY_L)
+        real snow_int(NX_L,NY_L)
+        real pice_int(NX_L,NY_L)
 
         real pcpcnc(NX_L,NY_L,NZ_L)
         real raicnc(NX_L,NY_L,NZ_L)
         real snocnc(NX_L,NY_L,NZ_L)
         real piccnc(NX_L,NY_L,NZ_L)
+
+        real cldamt(NX_L,NY_L)
+        real cldalb(NX_L,NY_L)
 
 !       real snow_2d(NX_L,NY_L)
 
@@ -736,6 +743,29 @@ c read in laps lat/lon and topo
         call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
         call integrate_slwc(cice,heights_3d,NX_L,NY_L,NZ_L,cice_int)
 
+!       Calculate cloud optical depth and cloud albedo
+        const_lwp = (1.5 * rholiq) / (rholiq     * reff_clwc)
+        const_lwp_bks = const_lwp * bksct_eff_clwc
+
+        const_iwp = (1.5 * rholiq) / (rholiq     * reff_cice)
+        const_iwp_bks = const_iwp * bksct_eff_cice
+
+        const_rwp = (1.5 * rholiq) / (rholiq     * reff_rain)
+        const_rwp_bks = const_rwp * bksct_eff_rain
+  
+        const_swp = (1.5 * rholiq) / (rhosnow    * reff_snow)
+        const_swp_bks = const_swp * bksct_eff_snow
+
+        const_gwp = (1.5 * rholiq) / (rhograupel * reff_graupel)
+        const_gwp_bks = const_gwp * bksct_eff_graupel
+
+!       Cloud amount is opacity of cloud liquid and cloud ice hydrometeors
+        cldamt(i,j) = 1. - (exp( -(const_lwp * slwc_int(i,j) 
+     1                           + const_iwp * cice_int(i,j))) ) 
+
+!       Rain, Snow, and Graupel are added for the cldalb & simvis computation
+!       cldalb(i,j) = 1. - (exp( -(const_lwp_bks * intliqwater(i,j) + const_iwp_bks * intcldice(i,j) + &
+!                                  const_rwp_bks * intrain(i,j)     + const_swp_bks * intsnow(i,j)   + const_gwp_bks * intgraupel(i,j)) ) ) 
 
 !       Write LIL/LIC
 !       Note that these arrays start off with 1 as the first index
@@ -1079,8 +1109,28 @@ c read in laps lat/lon and topo
             write(6,*)' Calculating Integrated Rainwater'
             call integrate_slwc(raicnc,heights_3d,NX_L,NY_L,NZ_L
      1                                                     ,rain_int)
-            write(6,*)' Rainwater range is ',minval(rain_int)
-     1                                      ,maxval(rain_int)
+            write(6,*)' Integrated rain range is ',minval(rain_int)
+     1                                           ,maxval(rain_int)
+
+            I4_elapsed = ishow_timer()
+
+!           Calculate Integrated 
+            write(6,*)
+            write(6,*)' Calculating Integrated Snow'
+            call integrate_slwc(snocnc,heights_3d,NX_L,NY_L,NZ_L
+     1                                                     ,snow_int)
+            write(6,*)' Integrated snow range is ',minval(snow_int)
+     1                                            ,maxval(snow_int)
+
+            I4_elapsed = ishow_timer()
+
+!           Calculate Integrated Precipitating Ice
+            write(6,*)
+            write(6,*)' Calculating Integrated Precip. Ice'
+            call integrate_slwc(piccnc,heights_3d,NX_L,NY_L,NZ_L
+     1                                                     ,pice_int)
+            write(6,*)' Integrated pice range is ',minval(pice_int)
+     1                                            ,maxval(pice_int)
 
             I4_elapsed = ishow_timer()
 
@@ -1144,7 +1194,25 @@ c read in laps lat/lon and topo
         comment_a(5) = 'Snow Content'
         comment_a(6) = 'Precipitating Ice Content'
 
-        call put_laps_3d_multi(i4time,ext,var_a,units_a,comment_a
+        slwc_max = maxval(slwc)
+        cice_max = maxval(cice)
+        pcpcnc_max = maxval(pcpcnc)
+        raicnc_max = maxval(raicnc)
+        snocnc_max = maxval(snocnc)
+        piccnc_max = maxval(piccnc)
+
+        write(6,*)' Max slwc = ',slwc_max
+        write(6,*)' Max cice = ',cice_max
+        write(6,*)' Max pcpcnc = ',pcpcnc_max
+        write(6,*)' Max raicnc = ',raicnc_max
+        write(6,*)' Max snocnc = ',snocnc_max
+        write(6,*)' Max piccnc = ',piccnc_max
+
+        if(slwc_max   .le. 1e6 .AND. cice_max   .le. 1e6 .AND.
+     1     pcpcnc_max .le. 1e6 .AND. raicnc_max .le. 1e6 .AND.
+     1     snocnc_max .le. 1e6 .AND. piccnc_max .le. 1e6       )then
+
+            call put_laps_3d_multi(i4time,ext,var_a,units_a,comment_a
      1                        ,slwc,cice
      1                        ,pcpcnc,raicnc
      1                        ,snocnc,piccnc
@@ -1155,7 +1223,10 @@ c read in laps lat/lon and topo
      1                        ,NX_L,NY_L,NZ_L
      1                        ,NX_L,NY_L,NZ_L
      1                        ,nf,istatus)
-        if(istatus .eq. 1)j_status(n_lwc) = ss_normal
+            if(istatus .eq. 1)j_status(n_lwc) = ss_normal
+        else
+            write(6,*)' ERROR: large hydrometeor values LWC not written'
+        endif
 
 !       Write out Mean Volume Diameter field (Potentially compressible)
         ext = 'lmd'
