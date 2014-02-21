@@ -457,7 +457,7 @@
            open(lun_ets_in,file=ets_file_in,status='old')
 
 !          Read comment with model member names
-           read(lun_bias_in,*)
+           read(lun_bias_in,*,err=958,end=958)
            read(lun_ets_in,51,err=958,end=958) cline
  51        format(a)
            write(6,*)'cline = ',cline
@@ -550,9 +550,9 @@
 !                      n(:,itime_fcst,iregion,idbz,in,jn) = 0
 !                  endwhere
 
-                   write(6,915)in,jn,itime_fcst,
-     1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
-     1                              ,imodel=2,n_fdda_models)     
+!                  write(6,915)in,jn,itime_fcst,
+!    1                 (n(imodel,itime_fcst,iregion,idbz,in,jn)
+!    1                              ,imodel=2,n_fdda_models)     
 915                format('in,jn,itime,n',i2,i2,i4,20i10)
 
                    call left_justify(a24time_valid)
