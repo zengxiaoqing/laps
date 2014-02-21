@@ -277,7 +277,7 @@
        
         subroutine get_glow_obj(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi &
                                ,alt_scale,azi_scale &
-                               ,alt_obj,azi_obj,mag_obj,glow_obj)
+                               ,alt_obj,azi_obj,mag_obj,diam_deg,glow_obj)
 
         real alt_a(minalt:maxalt,minazi:maxazi)
         real azi_a(minalt:maxalt,minazi:maxazi)
@@ -317,7 +317,7 @@
         sqarcsec_per_sqdeg = 3600.**2
 
         if(mag_obj .lt. -5.)then ! sun or moon (0.5 degree diameter)
-            alt_dist = 0.25 
+            alt_dist = diam_deg / 2.0
         else                     ! star or planet (point object)
             alt_dist = alt_scale / 2.0
         endif
