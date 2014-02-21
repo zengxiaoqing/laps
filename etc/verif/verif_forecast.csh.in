@@ -95,9 +95,9 @@ if (-e $FONTFILE) then
     setenv MEMBER_FONT 'font "'$GNUPLOT_DEFAULT_GDFONT',16"'
     if (-d /w3/lapb) then
         if ($SUBTYPE == "") then 
-            setenv KEY_WIDTH -3
-        else
-            setenv KEY_WIDTH -3
+            setenv KEY_WIDTH +3
+        else # 7/30 day
+            setenv KEY_WIDTH +8
         endif
     else
         setenv KEY_WIDTH -3 
@@ -125,7 +125,7 @@ if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be pr
     setenv PCT_SUCCESS     `tail -1 $SUMMARY_FILE`
 #   setenv L_PLOT_CRITERIA T  # for testing
     if (-d /w3/lapb) then
-        setenv KEY_WIDTH -20
+        setenv KEY_WIDTH -7 
     else
         setenv KEY_WIDTH -10
     endif
@@ -133,9 +133,9 @@ if ($SUMMARY_FILE != /dev/null && -e $SUMMARY_FILE) then # Percentage will be pr
 else                                                     # Percentage will not be present
     setenv L_PLOT_CRITERIA T 
     if (-d /w3/lapb) then
-        setenv KEY_WIDTH -7
+        setenv KEY_WIDTH -5
     else
-        setenv KEY_WIDTH -7
+        setenv KEY_WIDTH -5
     endif
     setenv XKEY 0.180
 endif
