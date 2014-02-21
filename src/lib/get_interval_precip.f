@@ -108,6 +108,7 @@ C    abdel
                 call get_laps_2d(i4time,ext,var_2d
      1                          ,units_2d,comment_2d,ni,nj
      1                          ,pcp_buf_2d,istatus_file)
+                write(6,*)' istatus_file from get_laps_2d:',istatus_file
 
             endif
             if(istatus_file .ne. 1 .and. istatus_file .ne. -1)then
