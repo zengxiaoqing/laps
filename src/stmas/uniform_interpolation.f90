@@ -5,7 +5,45 @@
 !! \b History: Feb. 2014
 !
 
-SUBROUTINE uniform_interpolation(nfrom,nto,vfrom,vto)
+SUBROUTINE uniform_interpolation2(nfrom,nto,vfrom,vto)
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: nfrom(2),nto(2)
+  REAL,    INTENT(IN) :: vfrom(nfrom(1),nfrom(2))
+  REAL,    INTENT(OUT) :: vto(nto(1),nto(2))
+
+  ! Local variables:
+  INTEGER :: indx(2,2),i,j,ii,jj
+  REAL    :: coef(2,2)
+
+  DO j=1,nto(2)
+    coef(1,2) = FLOAT(nfrom(2)-1)*(j-1)/FLOAT(nto(2)-1)+1.0 ! real position from (1,nfrom)
+    indx(1,2) = INT(coef(1,2))                              ! left grid
+    coef(2,2) = coef(1,2)-indx(1,2)                         ! distance to left: weight on right
+    indx(2,2) = MIN(indx(1,2)+1,nfrom(2))                   ! right grid
+    coef(1,2) = 1.0-coef(2,2)                               ! distance to right: weight to left
+  DO i=1,nto(1)
+    coef(1,1) = FLOAT(nfrom(1)-1)*(i-1)/FLOAT(nto(1)-1)+1.0 ! real position from (1,nfrom)
+    indx(1,1) = INT(coef(1,1))                              ! left grid
+    coef(2,1) = coef(1,1)-indx(1,1)                         ! distance to left: weight on right
+    indx(2,1) = MIN(indx(1,1)+1,nfrom(1))                   ! right grid
+    coef(1,1) = 1.0-coef(2,1)                               ! distance to right: weight to left
+
+    ! Interpolation:
+    vto(i,j) = 0.0
+    DO jj=1,2
+    DO ii=1,2
+      vto(i,j) = vto(i,j)+coef(ii,1)*coef(jj,2)* &
+                              vfrom(indx(ii,1),indx(jj,2))
+    ENDDO
+    ENDDO
+  ENDDO
+  ENDDO
+
+END SUBROUTINE uniform_interpolation2
+
+SUBROUTINE uniform_interpolation3(nfrom,nto,vfrom,vto)
 
   IMPLICIT NONE
 
@@ -50,4 +88,4 @@ SUBROUTINE uniform_interpolation(nfrom,nto,vfrom,vto)
   ENDDO
   ENDDO
 
-END SUBROUTINE uniform_interpolation
+END SUBROUTINE uniform_interpolation3
