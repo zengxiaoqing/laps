@@ -63,6 +63,7 @@ ANA_CG=STMAS3D_CG.exe
 STMAS= \
         prmtrs_stmas.f90 \
         GPSwetdelays.f90 \
+        uniform_interpolation.f90 \
         generaltools.f90 \
         drawcountour.f90 \
         read_backgrd.f90 \
