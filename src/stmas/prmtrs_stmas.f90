@@ -4,6 +4,7 @@ MODULE PRMTRS_STMAS
   CHARACTER*9          :: LAPSAST            ! LAPS ASCII TIME
   INTEGER              :: LAPSI4T            ! LAPS I4TIME
   INTEGER              :: ICYCLE	     ! LAPS CYCLE TIME
+  INTEGER              :: UNIFORM            ! 1 UNIFORM VERTICAL GRID
 
   REAL                 :: RMISSING           ! LAPS DEFAULT MISSING VALUE (YUANFU)
   REAL                 :: BADSFCDT           ! LAPS DEFAULT BAD SURFACE (YUANFU)
