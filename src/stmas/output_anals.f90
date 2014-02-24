@@ -42,7 +42,7 @@ SUBROUTINE OUTPTLAPS
   CHARACTER(LEN=200) :: DR
   REAL     :: XB(MAXGRID(1)),YB(MAXGRID(2)),ZB(MAXGRID(3)),TB(MAXGRID(4))
   REAL     :: XF(FCSTGRD(1)),YF(FCSTGRD(2)),ZF(FCSTGRD(3)),TF(FCSTGRD(4))
-  REAL, ALLOCATABLE :: ANA(:,:,:,:)
+  REAL, ALLOCATABLE :: ANA(:,:,:)
   INTEGER  :: FG(MAXDIMS),MG(MAXDIMS)
   REAL     :: Z1(1),T1(1),Z2(1),T2(1),DX,DY
 
@@ -89,6 +89,10 @@ integer   :: CLOUD_BASE,CLOUD_TOP,K400
 REAL :: closest_radar(FCSTGRD(1),FCSTGRD(2)),AT
 REAL ::  rlat,rlon,rhgt
 REAL :: FRACTION
+
+  ! Yuanfu add integer arrays for interpolation dimensions:
+  integer :: nanal(4),nbkgd(4)
+
 i4_tol=900
 i4_ret=0
 ! --------------------
@@ -135,6 +139,13 @@ i4_ret=0
     TB(T)=(ITIME2(2)-ITIME2(1))*(T-1)/(MAXGRID(4)-1)
   ENDDO
 
+  ! Output time frame: 2 current by Yuanfu Xie 2014 Feb.
+  iframe = 2
+  nanal = maxgrid
+  nanal(4) = 1 ! Only output time frame
+  nbkgd = fcstgrd
+  nbkgd(4) = 1 ! Only output time frame
+
   ! HEIGHT FROM HYDROSTATIC:
   ! WRITE(15,*) MAXGRID,GRDBKGD0(1:MAXGRID(1),1:MAXGRID(2),1:MAXGRID(3),2,3)
   ! DO K=2,MAXGRID(3)
@@ -147,57 +158,57 @@ i4_ret=0
    !  ENDDO
   ! ENDDO
   ! WRITE(15,*) MAXGRID,GRDBKGD0(1:MAXGRID(1),1:MAXGRID(2),1:MAXGRID(3),2,3)
-  print*,'Increment 1: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,1)))
-  print*,'Increment 2: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,2)))
-  print*,'Increment 3: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,3)))
-  print*,'Increment 4: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,4)))
-  print*,'Increment 5: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),1:3,5)))
-  IF (NUMSTAT .GT. 5) print*,'Increment 6: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),1:3,6)))
+  print*,'Increment 1: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),iframe,1)))
+  print*,'Increment 2: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),iframe,2)))
+  print*,'Increment 3: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),iframe,3)))
+  print*,'Increment 4: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),iframe,4)))
+  print*,'Increment 5: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),iframe,5)))
+  IF (NUMSTAT .GT. 5) print*,'Increment 6: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),iframe,raincont)))
 
   ! Yuanfu: Change Ana to a 4 dimensional array to save space:
   ! ALLOCATE MEMORY:
-  ALLOCATE(ANA(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),FCSTGRD(4)),STAT=ST)
+  ALLOCATE(ANA(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)),STAT=ST)
 
   ! LOOP THROUGH ALL ANALYSIS VARIABLES:
   DO S=1,NUMSTAT
     print * ,'------------------------------------------------------'
     ANA = 0.0
-    CALL BKGTOFINE(1,MAXGRID,XB,YB,ZB,TB,FCSTGRD,XF,YF,ZF,TF,GRDBKGD0(:,:,:,:,S),ANA)
+    IF (UNIFORM .EQ. 0) THEN
+      CALL BKGTOFINE(1,nanal,XB,YB,ZB,TB(iframe), &
+                     nbkgd,XF,YF,ZF,TF(iframe),GRDBKGD0(:,:,:,iframe,S),ANA)
+    ELSE
+      CALL uniform_interpolation3(maxgrid,fcstgrd,GRDBKGD0(:,:,:,iframe,S),ANA)
+    ENDIF
+    ! CALL BKGTOFINE(1,MAXGRID,XB,YB,ZB,TB,FCSTGRD,XF,YF,ZF,TF,GRDBKGD0(:,:,:,:,S),ANA)
 
     ! MAKE SURE INTERPOLATED SH ANALYSIS POSITIVE:
     IF (S .EQ. HUMIDITY) THEN
-      DO T=1,FCSTGRD(4)
       DO K=1,FCSTGRD(3)
       DO J=1,FCSTGRD(2)
       DO I=1,FCSTGRD(1)
-        ANA(I,J,K,T) = &
-          MAX(-BK0(I,J,K,T,HUMIDITY),ANA(I,J,K,T))
-      ENDDO
+        ANA(I,J,K) = &
+          MAX(-BK0(I,J,K,iframe,HUMIDITY),ANA(I,J,K))
       ENDDO
       ENDDO
       ENDDO
     ENDIF
 
     ! ADD INCREMENT ANA TO BK0:
-    DO T=1,FCSTGRD(4)
     DO K=1,FCSTGRD(3)
     DO J=1,FCSTGRD(2)
     DO I=1,FCSTGRD(1)
-      BK0(I,J,K,T,S) = BK0(I,J,K,T,S)+ANA(I,J,K,T)
+      BK0(I,J,K,iframe,S) = BK0(I,J,K,iframe,S)+ANA(I,J,K)
     ENDDO
     ENDDO
     ENDDO
-    ENDDO
-    print*,'bko_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S)),S
-    print*,'        ',maxval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2))
-    print*,'bko_min=',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2,S)),S
-    print*,'        ',minval(ANA(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),1:2))
+    print*,'bko_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),iframe,S)),S
+    print*,'        ',maxval(ANA)
+    print*,'bko_min=',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),iframe,S)),S
+    print*,'        ',minval(ANA)
   ENDDO
-print*,'Specific humidity low bound: ',minval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,5))
-print*,'Specific humidity upp bound: ',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,5))
 
   CALL GET_GRID_SPACING_ACTUAL(LATITUDE((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1), &
-                                LONGITUD((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1),DS,ST)
+                               LONGITUD((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1),DS,ST)
   ! PRESSURE LEVELS:
   CALL GET_PRES_1D(LAPSI4T,FCSTGRD(3),LV,ST)
   ILV = LV/100.0   ! INTEGER PRESSURES NEEDED IN HUMID LH3 OUTPUT
@@ -241,16 +252,8 @@ print*,'Specific humidity upp bound: ',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fc
         ! V3(K)=V3(K-1)-DZ*(UX+VY):
         T3(I,J,K) = T3(I,J,K-1) - 0.5* &
           (LV(K)-LV(K-1))*( &
-          ! (BK0(I,J,K,FCSTGRD(4),3)-BK0(I,J,K-1,FCSTGRD(4),3))*( &
           (BK0(I+1,J,K,IFRAME,1)-BK0(I-1,J,K,IFRAME,1))/DS+ &
           (BK0(I,J+1,K,IFRAME,2)-BK0(I,J-1,K,IFRAME,2))/DS )
-        ! BK0(I,J,K,FCSTGRD(4),2) =  1.0e5*(BK0(I+1,J,K,FCSTGRD(4),3)-BK0(I-1,J,K,FCSTGRD(4),3))/DS
-        ! BK0(I,J,K,FCSTGRD(4),1) = -1.0e5*(BK0(I,J+1,K,FCSTGRD(4),3)-BK0(I,J-1,K,FCSTGRD(4),3))/DS
-
-	! Test vorticity:
-	! T3(I,J,K) = (BK0(I+1,J,K,FCSTGRD(4),2)-BK0(I-1,J,K,FCSTGRD(4),2))/DS- &
-        !             (BK0(I,J+1,K,FCSTGRD(4),1)-BK0(I,J-1,K,FCSTGRD(4),1))/DS
-        ! T3(I,J,K) = T3(I,J,K)*1.0e4
       ENDDO
     ENDDO
   ENDDO
@@ -261,7 +264,7 @@ GOTO 111
     DO J=1,FCSTGRD(2)
       DO I=1,FCSTGRD(1)
         ! Assume saturation: TD = T:
-        IF (BK0(I,J,K,IFRAME,6) .GT. 0.0) &
+        IF (BK0(I,J,K,IFRAME,raincont) .GT. 0.0) &
           BK0(I,J,K,IFRAME,5) = SSH2(LV(k)/100.0,BK0(I,J,K,IFRAME,4)-273.15,BK0(I,J,K,IFRAME,4)-273.15,-132.0)
       ENDDO
     ENDDO
@@ -273,7 +276,7 @@ goto 222
   do k=1,fcstgrd(3)
   do j=1,fcstgrd(2)
   do i=1,fcstgrd(1)
-    bk0(i,j,k,iframe,5) = max(bk0(i,j,k,iframe,5),bk0(i,j,k,iframe,6))
+    bk0(i,j,k,iframe,5) = max(bk0(i,j,k,iframe,5),bk0(i,j,k,iframe,raincont))
   enddo
   enddo
   enddo
@@ -330,7 +333,7 @@ goto 222
         density = LV(K)/r_dry/BK0(I,J,K,IFRAME,4)
         ! Adjusted temperature:
         BK0(I,J,K,IFRAME,4) = LV(K)/r_dry/ &
-          (density+BK0(I,J,K,IFRAME,6)*0.001+BK0(I,J,K,IFRAME,7)*0.001)
+          (density+BK0(I,J,K,IFRAME,raincont)*0.001+BK0(I,J,K,IFRAME,snowcont)*0.001)
       ENDDO
     ENDDO
   ENDDO
@@ -453,58 +456,52 @@ goto 222
 ! CALCULATE AND OUTPUT REFLECTIVITY
   ! CHECK IF RAIN AND SNOW IS ANALYZED:
   IF (NUMSTAT .LE. 5) GOTO 555 ! BY YUANFU
-   T=2
-   DO K=1,FCSTGRD(3)
-    DO J=1,FCSTGRD(2)
-      DO I=1,FCSTGRD(1)
-      REF_OUT(I,J,K)= 0.
-      if(BK0(I,J,K,T,6).GT. 0.0 ) then 
-       !20100907
-      ! REF_OUT(I,J,K)=REF_OUT(I,J,K)+(BK0(I,J,K,T,6))**1.75*17300.
-        REF_OUT(I,J,K)=REF_OUT(I,J,K)+43.1+17.5*ALOG10(BK0(I,J,K,T,6))           
-      else
-       ! LAPS uses -10 as base value for reflectivity:
-       REF_OUT(I,J,K)=-10.
-      endif 
+  DO K=1,FCSTGRD(3)
+  DO J=1,FCSTGRD(2)
+  DO I=1,FCSTGRD(1)
+    REF_OUT(I,J,K)= 0.
+    if(BK0(I,J,K,iframe,raincont).GT. 0.0 ) then 
+      REF_OUT(I,J,K)=REF_OUT(I,J,K)+43.1+17.5*ALOG10(BK0(I,J,K,iframe,raincont))
+    else
+     ! LAPS uses -10 as base value for reflectivity:
+     REF_OUT(I,J,K)=-10.
+    endif 
  
-      if( REF_OUT(I,J,K) .LT. 0.) then
-        ! LAPS uses -10 as base value for reflectivity:
-        REF_OUT(I,J,K)=-10.
-      endif    
-      ENDDO
-    ENDDO
-   ENDDO 
-   print*,'ref_max=',maxval(REF_OUT(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3)))
-   print*,'ref_min=',minval(REF_OUT(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3)))
-   call put_laps_3d(LAPSI4T,'lps',RE,'dBZ',RC,REF_OUT(1,1,1),FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
-             !RC,BK0(1,1,1,T,10),FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
-             
+    if( REF_OUT(I,J,K) .LT. 0.) then
+      ! LAPS uses -10 as base value for reflectivity:
+      REF_OUT(I,J,K)=-10.
+    endif    
+  ENDDO
+  ENDDO
+  ENDDO 
+  print*,'ref_max=',maxval(REF_OUT(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3)))
+  print*,'ref_min=',minval(REF_OUT(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3)))
+  call put_laps_3d(LAPSI4T,'lps',RE,'dBZ',RC,REF_OUT(1,1,1),FCSTGRD(1),FCSTGRD(2),FCSTGRD(3))
+
   !RAIN CONTENT(AIR DENSITY* RAIN WATER MIXING RATIO(kg/m3),
   !SNOW CONTENT(AIR DENSITY * SNOW WATER MIXING RATIO)
-   N_3D_FIELDS=2   ! variable number
-   istatus=0 
+  N_3D_FIELDS=2   ! variable number
+  istatus=0 
   !convert rc sc to rour rous 
-   DO K=1,FCSTGRD(3)
-    DO J=1,FCSTGRD(2)
-     DO I=1,FCSTGRD(1)
-     if(BK0(I,J,K,T,6) .NE. 0)then
-     !BK0(I,J,K,T,6)=(BK0(I,J,K,T,6)/17300.)**(4./7.)/1000
-      BK0(I,J,K,T,6)=BK0(I,J,K,T,6)/1000.  !20100907  kg/m3
-     endif
-     if(BK0(I,J,K,T,7) .NE. 0)then
-     !BK0(I,J,K,T,7)=(BK0(I,J,K,T,7)/38000.)**(5./11.)/1000
-      BK0(I,J,K,T,7)=BK0(I,J,K,T,7)/1000.   !20100907
-     endif
-     ENDDO
-    ENDDO
-   ENDDO  
-   print*,'bko6_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,6))
-   print*,'bko7_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),2,7))
-   ! OUT PUT SNOW CONTENT(SNO) AND RAI   
-   call put_laps_3d_multi_R(LAPSI4T,'lwc',QW,units_3D,QWC ,  &
-              BK0(1,1,1,T,6),BK0(1,1,1,T,7),     &                                                             
-              FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),            &
-              FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),N_3D_FIELDS,istatus)         
+  DO K=1,FCSTGRD(3)
+  DO J=1,FCSTGRD(2)
+  DO I=1,FCSTGRD(1)
+    if(BK0(I,J,K,iframe,raincont) .NE. 0)then
+      BK0(I,J,K,iframe,raincont)=BK0(I,J,K,iframe,raincont)/1000.  ! kg/m3
+    endif
+    if(BK0(I,J,K,iframe,snowcont) .NE. 0)then
+      BK0(I,J,K,iframe,snowcont)=BK0(I,J,K,iframe,snowcont)/1000.   !20100907
+    endif
+  ENDDO
+  ENDDO
+  ENDDO  
+  print*,'bko6_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),iframe,raincont))
+  print*,'bko7_max=',maxval(BK0(1:fcstgrd(1),1:fcstgrd(2),1:fcstgrd(3),iframe,snowcont))
+  ! OUT PUT SNOW CONTENT(SNO) AND RAI   
+  call put_laps_3d_multi_R(LAPSI4T,'lwc',QW,units_3D,QWC ,  &
+            BK0(1,1,1,iframe,raincont),BK0(1,1,1,iframe,snowcont),     & 
+            FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),            &
+            FCSTGRD(1),FCSTGRD(2),FCSTGRD(3),N_3D_FIELDS,istatus)         
 !--END OUTPUT REF RAI SNO  BY SHUYUAN---------------------
 
   ! SKIP OUTPUT RAIN AND SNOW IF NOT ANALYZED:
