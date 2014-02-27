@@ -689,6 +689,22 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
 
+  ! Surface fractional snow cover
+  ! Dividing by 6 translates a 0.3 threshold into .05 for WRF
+  IF(snow_thresh .le. 1.0)then
+      field = 'SNOWH    '
+      units = '                         '
+      desc  = 'Snow cover (fraction)                         '
+      PRINT *, 'FIELD = ', field
+      PRINT *, 'UNITS = ', units
+      PRINT *, 'DESC =  ',desc
+      CALL write_metgrid_header(field,units,desc,p_pa(z3+1))
+      d2d = snocov/6.
+      WRITE ( output_unit ) d2d
+      PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(d2d),&
+            ' Max: ', MAXVAL(d2d)
+  ENDIF
+
   ! Skin temperature
   IF (use_laps_skintemp) THEN
       field = 'SKINTEMP '
