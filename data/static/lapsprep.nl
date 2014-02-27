@@ -49,10 +49,18 @@ c      'cdf':  Generic netCDF format used by FSL RAMS for hot start.
 c
 c  snow_thresh:
 c    Real value, controls the setting of the snow cover flag in the output.
+c
+c    WPS format:
+c    Any value of snow cover fraction <= 1.0 will turn on the output of
+c    snow cover in the WPS output. The value of the snow cover will be divided
+c    by 6 so that a value of 0.3 will trigger the 0.05 threshold in WRF.
+c    To disable the writing of the field, set > 1.0
+c 
+c    Gribprep format:
 c    Any value of snow cover fraction from the LAPS analysis (0.->1.0) 
 c    exceeding this threshold will cause the snow cover flag to be set
 c    in the output.  To prevent any snow cover flags from being set, set
-c    this value > 1.0.  THIS FIELD IS NOT OUTPUT FOR "wps" FORMAT
+c    this value > 1.0.
 c
 c  lwc2vapor_thresh:
 c    Real value, controls the saturation of cloud condensate.  Set
