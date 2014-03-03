@@ -105,6 +105,7 @@
         real, allocatable, dimension(:,:) :: aod_2_cloud
         real, allocatable, dimension(:,:) :: aod_2_topo
         real, allocatable, dimension(:,:) :: aod_ill
+        real, allocatable, dimension(:,:) :: aod_ill_dir
         real, allocatable, dimension(:,:) :: aod_tot
         real, allocatable, dimension(:,:) :: r_cloud_trans ! sun to cloud transmissivity (direct+fwd scat)
         real, allocatable, dimension(:,:,:) :: cloud_rad_c ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
@@ -700,6 +701,7 @@
           allocate(aod_2_cloud(minalt:maxalt,minazi:maxazi))
           allocate(aod_2_topo(minalt:maxalt,minazi:maxazi))
           allocate(aod_ill(minalt:maxalt,minazi:maxazi))
+          allocate(aod_ill_dir(minalt:maxalt,minazi:maxazi))
           allocate(aod_tot(minalt:maxalt,minazi:maxazi))
           allocate(r_cloud_trans(minalt:maxalt,minazi:maxazi))
           allocate(cloud_rad_c(nc,minalt:maxalt,minazi:maxazi))
@@ -789,7 +791,8 @@
      1                     ,topo_albedo_2d                       ! I
      1                     ,topo_swi,topo_albedo                 ! O
      1                     ,aod_ray,aod_2_cloud,aod_2_topo       ! O
-     1                     ,aod_ill,aod_tot,transm_obs           ! O
+     1                     ,aod_ill,aod_ill_dir                  ! O
+     1                     ,aod_tot,transm_obs                   ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
      1                     ,r_cloud_trans,cloud_rad_c            ! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
@@ -980,7 +983,7 @@
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo
      1                    ,topo_albedo_2d(2,isound,jsound)
-     1                    ,aod_2_cloud,aod_2_topo,aod_ill 
+     1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,alt_a_roll,azi_a_roll       
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
@@ -1000,6 +1003,10 @@
               call writeppm3Matrix(
      1                   isky_rgb_cyl(0,:,:),isky_rgb_cyl(1,:,:)
      1                  ,isky_rgb_cyl(2,:,:),'allsky_rgb_cyl_'//clun)
+              do iaz = 0,maxazi,20
+               write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz
+     1                       ,isky_rgb_cyl(:,maxalt/2,iaz)
+              enddo ! iaz
             endif
 
             if(l_polar .eqv. .true.)then
@@ -1056,6 +1063,7 @@
           deallocate(aod_2_cloud)
           deallocate(aod_2_topo)
           deallocate(aod_ill)
+          deallocate(aod_ill_dir)
           deallocate(r_cloud_trans)
           deallocate(cloud_rad_c)
           deallocate(clear_rad_c)
