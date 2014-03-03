@@ -64,8 +64,8 @@
 
 !         Suppress phase function if terrain is close in the light ray
           if(airmass_2_topo(i,j) .gt. 0.)then ! cloud in front of terrain
-!             pf_scat(i,j) = pf_scat2(i,j)**r_cloud_rad(i,j)
-              pf_scat(i,j) = pf_scat2(i,j)**opac(cloud_od_tot)
+              pf_scat(i,j) = pf_scat2(i,j)**(r_cloud_rad(i,j)**2.0)
+!             pf_scat(i,j) = pf_scat2(i,j)**opac(cloud_od_tot)
           else
               pf_scat(i,j) = pf_scat2(i,j)
           endif
