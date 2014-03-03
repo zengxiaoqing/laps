@@ -4,7 +4,8 @@
      1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d ! I
      1                           ,topo_albedo_2d                        ! I
      1                           ,topo_swi,topo_albedo                  ! O
-     1                           ,aod_ray,aod_2_cloud,aod_2_topo,aod_ill! O
+     1                           ,aod_ray,aod_2_cloud,aod_2_topo        ! O
+     1                           ,aod_ill,aod_ill_dir                   ! O
      1                           ,aod_tot,transm_obs                    ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,r_cloud_rad,cloud_rad_c               ! O
@@ -88,9 +89,10 @@
         real wt_sp(nsp) ; data wt_sp /1.0,0.5,0.02,0.0714/
 
         real elong(minalt:maxalt,minazi:maxazi)
-        real aod_ray_eff(minalt:maxalt,minazi:maxazi)    ! zenithal
-        real r_cloud_3d(minalt:maxalt,minazi:maxazi)     ! cloud opacity
-        real cloud_od(minalt:maxalt,minazi:maxazi)       ! cloud optical depth
+        real aod_ray_eff(minalt:maxalt,minazi:maxazi) ! zenithal
+        real aod_ray_dir(minalt:maxalt,minazi:maxazi) ! zenithal direct (dummy)
+        real r_cloud_3d(minalt:maxalt,minazi:maxazi)  ! cloud opacity
+        real cloud_od(minalt:maxalt,minazi:maxazi)    ! cloud optical depth
         real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)! cloud species tau
         real r_cloud_rad(minalt:maxalt,minazi:maxazi)    ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
@@ -101,12 +103,13 @@
                !  the horizon)
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
-        real topo_swi(minalt:maxalt,minazi:maxazi)       ! short wave down W/m**2
+        real topo_swi(minalt:maxalt,minazi:maxazi)    ! short wave down W/m**2
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
-        real aod_2_cloud(minalt:maxalt,minazi:maxazi)    ! slant path
-        real aod_2_topo(minalt:maxalt,minazi:maxazi)     ! slant path
-        real aod_ill(minalt:maxalt,minazi:maxazi)        ! slant path
-        real aod_tot(minalt:maxalt,minazi:maxazi)        ! slant path
+        real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
+        real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
+        real aod_ill(minalt:maxalt,minazi:maxazi)     ! slant path
+        real aod_ill_dir(minalt:maxalt,minazi:maxazi) ! slant path
+        real aod_tot(minalt:maxalt,minazi:maxazi)     ! slant path
         real sum_odrad_c(nc)
 
         character*1 cslant
@@ -238,6 +241,7 @@
         write(6,*)' aod/redp_lvl/aod_ray = ',aod,redp_lvl,aod_ray
 
         aod_ray_eff = aod_ray
+        aod_ray_dir = aod_ray
 
         heights_1d(:) = heights_3d(i,j,:)
         pres_1d(:)    = pres_3d(i,j,:)
@@ -303,6 +307,7 @@
           sum_clrrad = 0.
           sum_aod = 0.
           sum_aod_ill = 0.
+          sum_aod_ill_dir = 0.
           sum_am2cld_num = 0.
           sum_am2cld_den = 0.
 
@@ -693,9 +698,24 @@
                   if(rk_m .lt. (rkstart + 1.0))then ! near topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
      1                          * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
-                  else
+                    if(transm_3d(inew_m,jnew_m,int(rk_m)+1) .gt. .1)then
+                        transm_3d_dir = 
+     1                exp(log(transm_3d(inew_m,jnew_m,int(rk_m)+1))*10.)
+                    else
+                        transm_3d_dir = 0.
+                    endif
+                    sum_aod_ill_dir = sum_aod_ill_dir 
+     1                         + aero_ext_coeff * slant2 * transm_3d_dir
+                  else ! typical case far from topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
      1                          * transm_3d_m
+                    if(transm_3d_m .gt. .1)then
+                        transm_3d_dir = exp(log(transm_3d_m)*10.)
+                    else
+                        transm_3d_dir = 0.
+                    endif
+                    sum_aod_ill_dir = sum_aod_ill_dir 
+     1                         + aero_ext_coeff * slant2 * transm_3d_dir
                   endif
 
                   if((cvr_path          .gt. 0.00) .AND.
@@ -793,6 +813,8 @@
                           aod_2_topo(ialt,jazi)        = 1e-4
                           sum_aod_ill                  = 1e-4 
      1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
+                          sum_aod_ill_dir              = 1e-4 
+     1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
                       else
                           airmass_2_topo_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
@@ -823,10 +845,10 @@
      1                     ,r_cloud_rad(ialt,jazi)
      1                     ,aero_ext_coeff
      1                     ,transm_3d(inew_m,jnew_m,int(rk_m)+1)
-     1                     ,sum_aod,sum_aod_ill
+     1                     ,sum_aod,sum_aod_ill,sum_aod_ill_dir
  101              format(2f8.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,f9.4
-     1                  ,f10.5,3f8.2)
+     1                  ,f10.5,4f8.2)
                 else
                   if(idebug .eq. 1)then
                       write(6,*)' out of bounds ',ialt,jazi
@@ -853,6 +875,7 @@
           endif ! true
 
           aod_ill(ialt,jazi) = sum_aod_ill
+          aod_ill_dir(ialt,jazi) = sum_aod_ill_dir
           aod_tot(ialt,jazi) = sum_aod
 
           if(r_cloud_3d(ialt,jazi) .gt. .5)then
@@ -886,8 +909,8 @@
              call skyglow_phys(ialt,ialt,1,minazi,maxazi,jazi_delt
      1             ,minalt,maxalt,minazi,maxazi,idebug_a
      1             ,sol_alt(i,j),sol_azi(i,j),view_alt,view_az
-     1             ,earth_radius,patm,aod_ray_eff,aero_scaleht
-     1             ,htstart,redp_lvl                          ! I
+     1             ,earth_radius,patm,aod_ray_eff,aod_ray_dir
+     1             ,aero_scaleht,htstart,redp_lvl             ! I
      1             ,l_solar_eclipse,i4time,rlat,rlon          ! I
      1             ,clear_radf_c                              ! I (dummy)
      1             ,clear_rad_c,elong                       ) ! O
@@ -926,6 +949,9 @@
               aod_ill(ialt,jazi) = 
      1                fm * aod_ill(ialt,jazim) 
      1              + fp * aod_ill(ialt,jazip)
+              aod_ill_dir(ialt,jazi) = 
+     1                fm * aod_ill_dir(ialt,jazim) 
+     1              + fp * aod_ill_dir(ialt,jazip)
               aod_tot(ialt,jazi) = 
      1                fm * aod_tot(ialt,jazim) 
      1              + fp * aod_tot(ialt,jazip)
@@ -971,6 +997,9 @@
             aod_ill(ialt,:) =
      1           fm * aod_ill(ialtm,:) 
      1         + fp * aod_ill(ialtp,:)
+            aod_ill_dir(ialt,:) =
+     1           fm * aod_ill_dir(ialtm,:) 
+     1         + fp * aod_ill_dir(ialtp,:)
             aod_tot(ialt,:) =
      1           fm * aod_tot(ialtm,:) 
      1         + fp * aod_tot(ialtp,:)
@@ -997,7 +1026,7 @@
         enddo ! isp
 
         write(6,*)' Range of r_cloud_rad = ',minval(r_cloud_rad)
-     1                                    ,maxval(r_cloud_rad)
+     1                                      ,maxval(r_cloud_rad)
 
         write(6,*)' Range of cloud_rad_c R =',minval(cloud_rad_c(1,:,:))
      1                                       ,maxval(cloud_rad_c(1,:,:))
@@ -1021,6 +1050,12 @@
         write(6,*)' Range of topo_albedo 2 = '
      1                                       ,minval(topo_albedo(2,:,:))
      1                                       ,maxval(topo_albedo(2,:,:))
+
+        write(6,*)' Range of aod_ill = ',minval(aod_ill)
+     1                                  ,maxval(aod_ill)       
+
+        write(6,*)' Range of aod_ill_dir = ',minval(aod_ill_dir)
+     1                                      ,maxval(aod_ill_dir)       
 
         transm_obs = transm_3d(i,j,int(rkstart)+1)
         write(6,*)' transm of observer is ',i,j,int(rkstart)+1
