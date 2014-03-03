@@ -3200,7 +3200,8 @@ Cabdel
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif( c_type(1:2) .eq. 'sa' .or. c_type(1:2) .eq. 'pa' 
-     1                                .or. c_type(1:2) .eq. 's4')then       
+     1     .or. c_type(1:2) .eq. 'fa' .or. c_type(1:2) .eq. 's4')then       
+            ipcp_cycle_time = laps_cycle_time
             if(c_type(1:2) .eq. 'sa')then
                 write(6,1321)
 1321            format('     ','Enter # of Hours of Snow Accumulation,',
@@ -3221,11 +3222,26 @@ Cabdel
      1          ' [-99 for Storm Total]   ','? ',$)
                 var_2d = 'ppt'
                 ext = 'st4'
+            elseif(c_type(1:2) .eq. 'fa')then
+                write(6,*)' Enter model for fsf'
+                read(lun,*)ext
+                write(6,*)'ext = ',ext
+                write(6,*)' Enter model initialization time'
+                read(lun,*)asc9_tim
+                write(6,*)'asc9_tim = ',asc9_tim
+                call i4time_fname_lp(asc9_tim,i4_dum,istatus)
+                write(6,1324)
+1324            format('     '
+     1          ,'Enter # of Hours of Fcst Precip Accum',
+     1          ' [-99 for Storm Total]   ','? ',$)
+                var_2d = 'r01'
+                if(trim(ext) .eq. 'nam-nh')then
+                    ipcp_cycle_time = 21600
+                endif
             endif
 
             read(lun,*)r_hours
-
-            write(6,*)
+            write(6,*)r_hours
 
             call get_directory(ext,directory,len_dir)
 
@@ -3281,7 +3297,8 @@ Cabdel
 
             elseif(.true.)then ! precip interval (via r_hours)
 !               Near Realtime - look for snow accumulation files
-                if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
+!               if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
+                if(.false.)then
                    !Find latest time of radar data
                     if(.true.)then ! Read MHR packed data
                         c_filespec = c_filespec_ra
@@ -3305,9 +3322,10 @@ Cabdel
                 write(6,*)' Range of precip interval is ',a9_start,' '
      1                                                   ,a9_end
  
+                write(6,*)' Calling get_interval_precip',ipcp_cycle_time
                 call get_interval_precip(var_2d(1:1),ext(1:3)
      1                                  ,i4time_start,i4time_end
-     1                                  ,laps_cycle_time,i4_dum
+     1                                  ,ipcp_cycle_time,i4_dum
      1                                  ,r_missing_data       
      1                                  ,NX_L,NY_L,nf,accum_2d,istatus)
 
@@ -3329,6 +3347,9 @@ Cabdel
                         c_label = c9_string//' Prcp Accum  (in)'
                     elseif(c_type(1:2) .eq. 's4')then
                         c_label = c9_string//' Stage IV Prcp Accum (in)'
+                    elseif(c_type(1:2) .eq. 'fa')then
+                        c_label = c9_string//' '//trim(ext)
+     1                                     //' Prcp Accum (in)'
                     endif
                 endif
 
