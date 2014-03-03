@@ -2,15 +2,15 @@
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
                                r_cloud_rad,cloud_rad_c, &
                                clear_rad_c, &
-                               clear_radf_c,patm,htmsl, &               ! I
+                               clear_radf_c,patm,htmsl, &                    ! I
                                glow,glow_sun,glow_moon,glow_stars, &
-                               od_atm_a,transm_obs,isun,jsun, &         ! I
+                               od_atm_a,transm_obs,isun,jsun, &              ! I
                                airmass_2_cloud,airmass_2_topo, &
-                               topo_swi,topo_albedo,albedo_sfc, &       ! I
-                               aod_2_cloud,aod_2_topo,aod_ill, &
+                               topo_swi,topo_albedo,albedo_sfc, &            ! I
+                               aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir, & ! I
                                alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az, &
                                moon_alt,moon_az,moon_mag, &
-                               sky_rgb)                                 ! O
+                               sky_rgb)                                      ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl
         include 'trigd.inc'
@@ -33,9 +33,9 @@
         real clear_rad_c(nc,ni,nj)  ! clear sky illumination
                                     ! local/input when sun is above/below horizon
         real moon_rad_c(nc,ni,nj)   ! clear sky illumination from moon
-        real clear_radf_c(nc,ni,nj) ! integrated fraction of air illuminated 
-                                    ! by the sun along line of sight  
-                                    ! (accounting for Earth shadow + clouds)
+        real clear_radf_c(nc,ni,nj) ! integrated fraction of air illumin- 
+                                    ! ated by the sun along line of sight  
+                                    ! (accounting for Earth shadow+clouds)
         real clear_rad_c_nt(3)      ! HSV night sky brightness
         real glow(ni,nj)            ! skyglow (log b in nl, sun or moon from 'vi')           
         real glow_sun(ni,nj)        ! sunglow (log b in nl, extended obj)
@@ -49,7 +49,9 @@
         real aod_2_cloud(ni,nj)     ! future use
         real aod_2_topo(ni,nj)      ! aerosol optical depth to topo
         real aod_ill(ni,nj)         ! aerosol illuminated optical depth 
+        real aod_ill_dir(ni,nj)     ! aerosol directly illuminated optical depth 
         real od_atm_a_eff(ni,nj)    ! aerosol illuminated tau per airmass
+        real od_atm_a_dir(ni,nj)    ! aerosol directly illuminated tau per airmass
         real alt_a(ni,nj)
         real azi_a(ni,nj)
         real elong_a(ni,nj)
@@ -153,7 +155,8 @@
         azid1 = 90. ; azid2 = 270.
         if(sol_alt .gt. 0.)then
             azid1 = nint(sol_az)
-            azid2 = mod(azid1+180.,360.)
+            azid2 = azid1 ! block antisolar az               
+!           azid2 = mod(azid1+180.,360.)
         elseif(moon_alt .gt. 0.)then
             azid1 = nint(moon_az)
             azid2 = mod(azid1+180.,360.)
@@ -188,13 +191,16 @@
             if(airmass_2_topo(isun,jsun) .gt. 0.)then 
                 write(6,*)' Sun is behind terrain'
                 od_atm_a_eff = 0.
+                od_atm_a_dir = 0.
                 sun_vis = 0.
             else ! sun is outside of terrain
                 if(transm_obs .gt. 0.9)then
                     od_atm_a_eff = od_atm_a
+                    od_atm_a_dir = od_atm_a
                     sun_vis = 1.
                 else ! in cloud/terrain shadow
                     od_atm_a_eff = 0.
+                    od_atm_a_dir = 0.
                     sun_vis = 0.
                 endif
             endif
@@ -210,16 +216,19 @@
 !               Crepuscular ray experiments
 !               if(airmass_2_topo(i,j) .gt. 0. .OR. transm_obs .lt. 0.9)then
                 if(airmass_2_topo(i,j) .gt. 0.)then ! inside terrain 
+!                 Note that aod_ill_dir discriminates between direct/diffuse
                   od_atm_a_eff(i,j) = od_atm_a * aod_ill(i,j) / aod_2_topo(i,j)
+                  od_atm_a_dir(i,j) = od_atm_a * aod_ill_dir(i,j) / aod_2_topo(i,j)
                   if(idebug_a(i,j) .eq. 1)then
                     od_atm_test = od_atm_a * aod_ill(i,j) / aod_2_topo(i,j)
                     write(6,6)alt_a(i,j),od_atm_a,aod_2_topo(i,j) &
-                             ,aod_ill(i,j),od_atm_test     
-6                   format(' alt/od_atm_a/aod2topo/aod_ill/od_atm_test',2f9.3,2f10.5,f9.3)
+                             ,aod_ill(i,j),aod_ill_dir(i,j),od_atm_test     
+6                   format(' alt/od_atm_a/aod2topo/aod_ill/dir/od_atm_test',2f9.3,3f10.5,f9.3)
                   endif
 
                 else ! outside of terrain
-                  od_atm_a_eff(i,j) = (od_atm_a * aod_ill(i,j)) / (aa * od_atm_a)
+                  od_atm_a_eff(i,j) = (od_atm_a * aod_ill(i,j))     / (aa * od_atm_a)
+                  od_atm_a_dir(i,j) = (od_atm_a * aod_ill_dir(i,j)) / (aa * od_atm_a)
                   if((i .eq. isun .AND. j .eq. jsun) .OR. &
                      (clear_radf_c(2,i,j) .lt. 0.5 .AND. iprint .le. 30) .OR. &
                      (cloud_od(i,j) .eq. 0. .AND. &
@@ -233,12 +242,19 @@
                       else
                           write(6,*)'Clear with aerosol shadowing outside of terrain:'
                       endif
-                      write(6,7)alt_a(i,j),azi_a(i,j),od_atm_a,aod_ill(i,j),aa &
-                               ,od_atm_a_eff(i,j),clear_radf_c(2,i,j)
-7                     format(' altaz/od_atm_a/aod_ill/aa/od_atm_a_eff/clr_radf =   ',2f9.2,3f9.3,2f9.3)
+                      write(6,7)alt_a(i,j),azi_a(i,j),od_atm_a,aod_ill(i,j),aod_ill_dir(i,j),aa &
+                               ,od_atm_a_eff(i,j),od_atm_a_dir(i,j),clear_radf_c(2,i,j)
+7                     format(' altaz/od_atm_a/aod_ill/dir/aa/od_atm_a_eff/dir/clr_radf =   ',2f9.2,4f9.3,3f9.3)
                       iprint = iprint + 1
                   endif
                 endif
+
+!               if(idebug_a(i,j) .eq. 1)then
+!                   if(aod_ill_dir(i,j) .gt. aod_ill(i,j))then
+!                       write(6,71)alt_a(i,j),azi_a(i,j),aod_ill(i,j),aod_ill_dir(i,j) 
+!71                     format('WARNING: large aod_ill_dir at',2f9.2,2f9.4)
+!                   endif
+!               endif
 
               enddo ! j
             enddo ! i
@@ -247,23 +263,31 @@
 8           format(' transm_obs,od_atm_a,od_atm_a_eff,sun_vis=',4f8.3)
 
             write(6,*)' od_atm_a_eff range = ',minval(od_atm_a_eff),maxval(od_atm_a_eff)
+            write(6,*)' od_atm_a_dir range = ',minval(od_atm_a_dir),maxval(od_atm_a_dir)
 
+!           if(maxval(od_atm_a_dir) .gt. maxval(od_atm_a_eff))then
+!               write(6,*)' WARNING: od_atm_a_dir larger than od_atm_a_eff'
+!           endif
+                 
             write(6,*)' call skyglow_phys:'
 
             call skyglow_phys(1,ni,1 &                               ! I
                      ,1,nj,1 &                                       ! I
                      ,1,ni,1,nj,idebug_a &                           ! I
                      ,sol_alt,sol_az,alt_a,azi_a &                   ! I
-                     ,earth_radius,patm,od_atm_a_eff,aero_scaleht &  ! I
+                     ,earth_radius,patm,od_atm_a_eff,od_atm_a_dir &  ! I
+                     ,aero_scaleht &                                 ! I
                      ,htmsl,redp_lvl &                               ! I
                      ,.false.,i4time,rlat,rlon &                     ! I
                      ,clear_radf_c &                                 ! I
                      ,clear_rad_c,elong_a                     )      ! O
 
+            write(6,*)' range of clear_radf_c(2) is ',minval(clear_radf_c(2,:,:)),maxval(clear_radf_c(2,:,:))
             write(6,*)' range of clear_rad_c(2) is ',minval(clear_rad_c(2,:,:)),maxval(clear_rad_c(2,:,:))
 
         elseif(sol_alt .lt. -16. .and. moon_alt .gt. 0.)then ! sun below -16. and moon is up
             od_atm_a_eff = od_atm_a
+            od_atm_a_dir = od_atm_a
 
             write(6,*)' range of clear_radf_c is ',minval(clear_radf_c(2,:,:)),maxval(clear_radf_c(2,:,:))
 
@@ -272,7 +296,8 @@
                      ,1,nj,1 &                                       ! I
                      ,1,ni,1,nj,idebug_a &                           ! I
                      ,moon_alt,moon_az,alt_a,azi_a &                 ! I
-                     ,earth_radius,patm,od_atm_a_eff,aero_scaleht &  ! I
+                     ,earth_radius,patm,od_atm_a_eff,od_atm_a_dir &  ! I
+                     ,aero_scaleht &                                 ! I
                      ,htmsl,redp_lvl &                               ! I
                      ,.false.,i4time,rlat,rlon &                     ! I
                      ,clear_radf_c &                                 ! I
@@ -578,7 +603,7 @@
               od_2_topo = 0.
           endif
 
-          sky_rgb(:,i,j) = min(sky_rgb(:,i,j) * ramp_night,255.)
+          sky_rgb(:,i,j) = max(min(sky_rgb(:,i,j) * ramp_night,255.),0.)
 
           if(idebug .eq. 1)then
               rmaglim = b_to_maglim(10.**glow_tot)
