@@ -302,14 +302,18 @@
      1                          ,var_fcst_2d
      1                          ,istatus)
 
-!                 Suppress 00hr SWI if from wrf-hrrr since it would have been
+!                 Suppress 00hr SWI if from some models since it would have been
 !                 pulled in via LFMPOST from a LAPS analysis
 
                   if(trim(var_2d) .eq. 'SWI')then              
-                     l_parse_result=l_parse(c_model(1:len_model),'hrrr')
+                     l_parse_result=
+     1                   (l_parse(c_model(1:len_model),'hrrr') .OR.
+     1                    l_parse(c_model(1:len_model),'rr'  ) .OR.
+     1                    l_parse(c_model(1:len_model),'rap-nh'))
                      if(l_parse_result .eqv. .true.)then       
                         if(i4_valid .eq. i4_initial)then
-                           write(6,*)' Suppressing 00hr hrrr SWI'
+                           write(6,*)' Suppressing 00hr SWI from '
+     1                                ,c_model(1:len_model)
                           istatus = 0
                         endif
                      endif
