@@ -4,7 +4,8 @@
                    ,jazi_start,jazi_end,jazi_delt             &! I
                    ,minalt,maxalt,minazi,maxazi,idebug_a      &! I
                    ,sol_alt,sol_azi,view_alt,view_az          &! I
-                   ,earth_radius,patm,aod_ray,aero_scaleht    &! I
+                   ,earth_radius,patm,aod_ray,aod_ray_dir     &! I
+                   ,aero_scaleht                              &! I
                    ,htmsl,redp_lvl                            &! I
                    ,l_solar_eclipse,i4time,rlat,rlon          &! I
                    ,clear_radf_c                              &! I
@@ -37,12 +38,14 @@
 
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
-               ! fraction of air illuminated by the sun along line of sight
-               ! (consider Earth's shadow + clouds, used when sun is below
-               !  the horizon)
-        real aod_ray(minalt:maxalt,minazi:maxazi) ! aerosol optical depth
-                                                  ! (zenithal) may be adjusted
-                                                  ! for illumination
+               ! fraction of air molecules illuminated by the sun along
+               ! line of sight (consider Earth's shadow + clouds)
+        real aod_ray(minalt:maxalt,minazi:maxazi)     ! aerosol optical 
+                                         ! depth (zenithal) may be adjusted
+                                         ! for illumination
+        real aod_ray_dir(minalt:maxalt,minazi:maxazi) ! aerosol optical 
+                                         ! depth (zenithal) may be adjusted
+                                         ! for direct illumination
         real patm_ray(minalt:maxalt,minazi:maxazi)! effective patm adjusted
                                                   ! for illumination
         real elong(minalt:maxalt,minazi:maxazi)
@@ -79,7 +82,7 @@
                          ,earth_radius &            ! I
                          ,ag,ao,aa)                 ! O
 
-!        Determine multiple scattering order
+!        Determine aerosol multiple scattering order
 !        altscat = 1.00 * altray + 0.00 * sol_alt
 !        altscat = max(altray,sol_alt)
          altscat = sqrt(0.5 * (altray**2 + solalt**2))
@@ -140,7 +143,20 @@
             hg2 = aod_bin(1) * hg(aod_asy_eff(1),elong(ialt,jazi)) &
                 + aod_bin(2) * hg(aod_asy_eff(2),elong(ialt,jazi)) &
                 + aod_bin(3) * hg(aod_asy_eff(3),elong(ialt,jazi)) 
-            mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2                       
+            if(aod_ray(ialt,jazi) .gt. 0.)then
+                aod_dir_rat = aod_ray_dir(ialt,jazi) / aod_ray(ialt,jazi)
+            else
+                aod_dir_rat = 0.
+            endif
+            hg2d = (hg2 * aod_dir_rat) + (1.0 - aod_dir_rat) ! direct ill 
+            mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2d 
+
+            if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
+                write(6,*)' ERROR in skyglow_phys: aod_dir_rat out of bounds'
+                write(6,*)' ialt/jazi/altray = ',ialt,jazi,altray
+                write(6,*)' aod_ray_dir/ray = ',aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi),aod_dir_rat
+                stop
+            endif
 
             if(.false.)then ! sum brightness from gas and aerosols
 
@@ -155,8 +171,8 @@
 
                 if(idebug .ge. 1 .and. ic .eq. 2)then
                   write(6,71)day_int,elong(ialt,jazi),airmass_g,brtf(airmass_g,od_per_am) &
-                            ,rayleigh,mie,hg2,clear_rad_c(2,ialt,jazi)
-71                format('day_int/elong/am/brt/rayleigh/mie/hg2/clrrd2',f12.0,6f8.3,f12.0)      
+                            ,rayleigh,mie,hg2,hg2d,clear_rad_c(2,ialt,jazi)
+71                format('day_int/elong/am/brt/rayleigh/mie/hg2/hg2d/clrrd2',f12.0,7f8.3,f12.0)      
                 endif
 
                enddo ! ic
@@ -189,7 +205,8 @@
 !               Effective Rayleigh Phase Factor considering shadowing
                 rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
                 rayleigh_pf_eff = rayleigh_gnd * clear_radf_c(ic,ialt,jazi)
-                pf_eff1 = (rayleigh_pf_eff * alpha_g + hg2 * alpha_a * solar_int_g2) &
+                pf_eff1 = (rayleigh_pf_eff * alpha_g + hg2d * alpha_a * solar_int_g2) &
+!               pf_eff1 = (rayleigh_pf_eff * alpha_g + hg2 * alpha_a * solar_int_g2) &
                         / (alpha_g + alpha_a * solar_int_g2)
                 od_1 = od_g1 + od_a
                 brt1 = brto(od_1) * pf_eff1
@@ -202,8 +219,8 @@
                             ,alpha_g*1e3,alpha_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
 73                format('day_int/ag/od_g/aod_ray/aa/od_a/alpha_g/alpha_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,5f7.3,2x,2f7.3,2x,2f7.3,f12.0)      
-                  write(6,74)am_sun,solar_int_g2
-74                format('am_sun,solar_int_g2 = ',2f10.4)                  
+                  write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d
+74                format('altaz,am_sun,solar_int_g2,hg2,hg2d = ',2f8.2,4f10.4)                  
                 endif
 
              enddo ! ic
