@@ -760,35 +760,12 @@ c read in laps lat/lon and topo
         const_gwp_bks = const_gwp * bksct_eff_graupel
 
 !       Cloud amount is opacity of cloud liquid and cloud ice hydrometeors
-        cldamt(i,j) = 1. - (exp( -(const_lwp * slwc_int(i,j) 
-     1                           + const_iwp * cice_int(i,j))) ) 
-
-!       Rain, Snow, and Graupel are added for the cldalb & simvis computation
-!       cldalb(i,j) = 1. - (exp( -(const_lwp_bks * intliqwater(i,j) + const_iwp_bks * intcldice(i,j) + &
-!                                  const_rwp_bks * intrain(i,j)     + const_swp_bks * intsnow(i,j)   + const_gwp_bks * intgraupel(i,j)) ) ) 
-
-!       Write LIL/LIC
-!       Note that these arrays start off with 1 as the first index
-        var_a(1) = 'LIL'
-        var_a(2) = 'LIC'
-        ext = 'lil'
-        units_a(1) = 'M'
-        units_a(2) = 'M'
-        comment_a(1) = 'Analyzed Integrated Cloud Liquid'
-        comment_a(2) = 'Analyzed Integrated Cloud Ice'
-
-        call move(slwc_int,out_array_3d(1,1,1),NX_L,NY_L)
-        call move(cice_int,out_array_3d(1,1,2),NX_L,NY_L)
-
-        call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1      comment_a,out_array_3d,NX_L,NY_L,2,istatus)
-
-        if(istatus .eq. 1)then
-            j_status(n_lil) = ss_normal
-            write(6,*)' Success in writing out LIL'
-        else
-            write(6,*)' Error detected writing out LIL'
-        endif
+        do j = 1,nj
+        do i = 1,ni
+            cldamt(i,j) = 1. - (exp( -(const_lwp * slwc_int(i,j) 
+     1                               + const_iwp * cice_int(i,j))) ) 
+        enddo ! i
+        enddo ! j
 
         I4_elapsed = ishow_timer()
 
@@ -1072,6 +1049,8 @@ c read in laps lat/lon and topo
 
         endif ! istat_radar_3dref
 
+ 700    continue
+
         if(istat_radar_3dref .eq. 1)then
             if(l_flag_bogus_w .and. l_bogus_radar_w) then    ! Adan add
 !             Re-calculate cloud bogus omega within radar echo area
@@ -1114,7 +1093,7 @@ c read in laps lat/lon and topo
 
             I4_elapsed = ishow_timer()
 
-!           Calculate Integrated 
+!           Calculate Integrated Snow
             write(6,*)
             write(6,*)' Calculating Integrated Snow'
             call integrate_slwc(snocnc,heights_3d,NX_L,NY_L,NZ_L
@@ -1141,7 +1120,45 @@ c read in laps lat/lon and topo
 
         endif
 
- 700    continue
+!       Rain, Snow, and Graupel are added for the cldalb & simvis computation
+        do j = 1,nj
+        do i = 1,ni
+            cldalb(i,j) = 1. - (exp( -(const_lwp_bks * slwc_int(i,j) + 
+     1                                 const_iwp_bks * cice_int(i,j) + 
+     1                                 const_rwp_bks * rain_int(i,j) + 
+     1                                 const_swp_bks * snow_int(i,j) + 
+     1                                 const_gwp_bks * pice_int(i,j)) ))
+        enddo ! i
+        enddo ! j
+
+!       Write LIL file
+!       Note that these arrays start off with 1 as the first index
+        ext = 'lil'
+        var_a(1) = 'LIL'
+        var_a(2) = 'LIC'
+        var_a(3) = 'COD'
+        var_a(4) = 'CLA'
+        units_a(1) = 'M'
+        units_a(2) = 'M'
+        units_a(3) = ' '
+        units_a(4) = ' '
+        comment_a(1) = 'Integrated Cloud Liquid'
+        comment_a(2) = 'Integrated Cloud Ice'
+        comment_a(3) = 'Cloud Optical Depth'
+        comment_a(4) = 'Cloud Albedo'
+
+        call move(slwc_int,out_array_3d(1,1,1),NX_L,NY_L)
+        call move(cice_int,out_array_3d(1,1,2),NX_L,NY_L)
+
+        call put_laps_multi_2d(i4time,ext,var_a,units_a,
+     1      comment_a,out_array_3d,NX_L,NY_L,2,istatus)
+
+        if(istatus .eq. 1)then
+            j_status(n_lil) = ss_normal
+            write(6,*)' Success in writing out LIL'
+        else
+            write(6,*)' Error detected writing out LIL'
+        endif
 
 !       Convert SLWC and CICE from g/m**3 to kg/m**3
         do k = 1,NZ_L
@@ -1301,7 +1318,6 @@ c read in laps lat/lon and topo
      1                 comment_a,out_array_3d,NX_L,NY_L,3,istatus)
 
         if(istatus .eq. 1)j_status(n_lct) = ss_normal
-
 
 !       Write out Cloud derived Omega field
         var = 'COM'
