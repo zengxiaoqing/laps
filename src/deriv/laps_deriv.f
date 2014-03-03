@@ -285,7 +285,7 @@ cdis
      1           i4time                          ! I
      1          ,NX_L,NY_L,NZ_L                  ! I
      1          ,heights_3d                      ! I
-     1          ,topo                            ! I
+     1          ,lat,lon,topo                    ! I
      1          ,laps_cycle_time                 ! I
      1          ,temp_3d                         ! I
      1          ,rh_3d_pct                       ! I
