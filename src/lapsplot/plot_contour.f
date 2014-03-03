@@ -421,7 +421,9 @@ C Black
       CALL GSCR (1,21,0.,0.,0.)
 C Quasi Black
       CALL GSCR (1,22,0.05,0.05,0.05)
-      CALL GSCR (1,23,.0,.0,.7)
+C Medium Gray
+      CALL GSCR (1,23,.3,.3,.3)
+! Unused...
       CALL GSCR (1,24,.0,.7,.0)
 ! Dark Gray
       CALL GSCR (1,25,.1,.1,.1)
@@ -429,6 +431,7 @@ C Quasi Black
       CALL GSCR (1,26,.6,.3,.1)
 C Orchid
       CALL GSCR (1,27, 0.85, 0.45, 0.8)
+! Unused...
       CALL GSCR (1,28,.0,.0,.95)
 ! Paler Yellow
       CALL GSCR (1,29,.50,.38,.0)
