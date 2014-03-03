@@ -17,11 +17,15 @@
         character*10  units_2d(nf)
         character*125 comment_2d(nf)
         character*9 a9_start,a9_end
+        character*9 a9_init,a9_valid
         character*10 c_model
         character*255 directory
         character*4 LVL_COORD_2d
 
         ext = ext_in(1:31)
+
+        write(6,*)' get_interval_precip ext_in/ext: '
+     1                     ,trim(ext_in),' ',trim(ext)
 
         call make_fnam_lp(i4time_start,a9_start,istatus)   
         call make_fnam_lp(i4time_end  ,a9_end  ,istatus)   
@@ -43,7 +47,7 @@
             c_model = ext
             ext = 'fsf'
             var_2d(1) = c_pcp(1:1)//'01'
-            ipcp_cycle_time = laps_cycle_time ! from model_fcst_intvl
+            ipcp_cycle_time = laps_cycle_time ! (e.g. from model_fcst_intvl)
         endif
 
         i4_loop_start = i4time_start+ipcp_cycle_time
@@ -53,6 +57,7 @@
 !       Exception for 'nam-nh' (precip convention depends on file time)
         if(trim(c_model) .eq. 'nam-nh')then
             i4_fcst_end = i4time_end - i4_model_init
+!           6h fcst ending at 00/12Z for initialization at 00/12Z
             if(mod(i4_fcst_end,43200) .eq. 0 .AND. 
      1         mod(i4_model_init,43200) .eq. 0 .AND.
      1         i4time_end-i4time_start .eq. 21600)then
@@ -61,9 +66,13 @@
                 i4_loop_end   = i4time_end
                 i4_loop_int   = ipcp_cycle_time
             else
-                write(6,*)' nam-nh situation not handled...'
-                istatus = 0
-                return
+                write(6,*)' nam-nh situation pass through..'
+                write(6,*)' i4_model_init = ',i4_model_init
+                write(6,*)' i4_fcst_end   = ',i4_fcst_end
+                write(6,*)' i4time_end    = ',i4time_end
+                write(6,*)' i4time_start  = ',i4time_start
+!               istatus = 0
+!               return
             endif
         endif
 
@@ -98,6 +107,11 @@ C    abdel
      1              directory(1:len_dir)//c_model(1:len_model)//'/'
 
                 level = 0
+                call make_fnam_lp(i4_model_init,a9_init,istatus)
+                call make_fnam_lp(i4time,a9_valid,istatus)
+                write(6,*)' call read_laps for pcp '
+     1                        ,i4_model_init,i4time
+     1                        ,trim(ext),' ',a9_init,' ',a9_valid
                 CALL READ_LAPS(i4_model_init,i4time,DIRECTORY,
      1                        ext,ni,nj,1,1,       
      1                        VAR_2d,level,LVL_COORD_2d,
@@ -105,6 +119,7 @@ C    abdel
      1                        pcp_buf_2d,istatus_file)
 
             else ! this can be turned on for testing if needed
+                write(6,*)' call get_laps_2d for pcp'
                 call get_laps_2d(i4time,ext,var_2d
      1                          ,units_2d,comment_2d,ni,nj
      1                          ,pcp_buf_2d,istatus_file)
