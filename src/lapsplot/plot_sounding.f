@@ -83,9 +83,21 @@
         character*5 c5_name, c5_name_a(max_snd_grid), c5_name_min
         character*8 obstype(max_snd_grid)
 
+        include 'lapsparms.for'
+        integer MXL
+        parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
+
+        COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
+     1  ,TDFCR(20,2),VEL(20)
+     1  ,temdif(MXL),partem(MXL),pbe(MXL)
+     #  ,DD85,FF85,DD50,FF50
+        REAL LCL,LI,K_INDEX
+
         common /image/ n_image
 
         skewt(t_c,logp) = t_c - (logp - logp_bottom) * 32.
+
+        pbe = 0. ! Initialize
 
         nsmooth = plot_parms%obs_size
         if(nsmooth .ne. 3)then
@@ -932,13 +944,56 @@
         call integrate_tpw(sh_vert,sh_sfc,pres_1d,p_sfc_pa
      1                    ,1,1,NZ_L,pw_cpt)
 
+!       Compute CAPE and other indices
+        twet_snow = +1.3 ! also in deriv.nl
+        p(1) = p_sfc_mb                                  
+        t(1) = k_to_c(t_sfc_k)
+        td(1) = td_sfc_c
+        ht(1) = topo_sfc 
+
+        do k = 1,NZ_L
+            if(pres_1d(k) .lt. p_sfc_pa)then ! First level above sfc
+                n_first_level = k
+                goto100
+            endif
+        enddo
+100     write(6,*)' n_first_level = ',n_first_level
+
+        n = 1
+        do k = n_first_level,NZ_L
+            n = n + 1
+            P(N) = pres_1d(k) / 100.       ! Pa to mb
+            T(N) = k_to_c(temp_vert(k))
+            TD(N)= td_vert(k)
+            HT(N)= ht_vert(k)     
+        enddo ! k
+
+        I4_elapsed = ishow_timer()
+
+        IO = 2
+        idebug = 2
+        NLEVEL = n
+        CALL SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT
+     1                ,twet_snow                                        ! I
+     1                ,HWB0,HWB_snow                                    ! O
+     1                ,PLCL,LCL,CCL
+     1                ,TCONV,IO
+     1                ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI
+     1                ,VELNEG,WATER,IHOUR,idebug,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' WARNING: Bad istatus returned from SINDX'
+!           return
+        endif
+
+        I4_elapsed = ishow_timer()
+
         write(6,*)' Sfc P (mb) = ', p_sfc_mb     
      1           ,' Terrain Height (m)= ',topo_sfc 
         write(6,*)' Sfc T (c) = ', k_to_c(t_sfc_k)
         write(6,*)' Sfc Td (c) = ', td_sfc_c
         write(6,*)' TPW (cm) [read in/computed] = ', 
      1                            pw_sfc*100.,pw_cpt*100.
-        write(6,*)' SBCAPE (J/KG) = ', cape_sfc
+        write(6,*)' SBCAPE (J/KG) = ', cape_sfc,PBEPOS
         write(6,*)' Integrated Cloud Water (mm) [read in/computed] = ',
      1                            lil_sfc*1000.,lil_cpt*1000.
         write(6,*)' Integrated Cloud Ice (mm) [read in/computed] = ',
@@ -981,7 +1036,36 @@
             call line(x1,y1,x2,y2) 
         enddo ! it
 
-!       Plot theta scale
+!       Plot mixing ratio scale
+        call setusv_dum(2hIN,23) ! Medium Gray
+        do im = -1,5                      
+          w_gkg = 2.**im                  
+          do ip = 1000,100,-100
+            p1 = ip + 100
+            p2 = ip
+            y1 = log(p1*100.)    
+            y2 = log(p2*100.)  
+            tdsat1 = tmr(w_gkg,p1) 
+            tdsat2 = tmr(w_gkg,p2)
+            x1 = skewt(tdsat1,y1)
+            x2 = skewt(tdsat2,y2)
+            call line(x1,y1,x2,y2) ! plot a curve
+          enddo ! ip
+
+!         Add label for this mixing ratio value
+          x = tmr(w_gkg,1060.) - 0.4 
+          y = log(106000.) ! + .04 * .8/box_diff   
+          if(im .ge. 0)then
+              write(c3_string,2013)nint(w_gkg)
+          else
+              write(c3_string,2012)w_gkg
+2012          format(f3.1)
+          endif
+          call pwrity (x, y, c3_string, 3, 0, 0, 0)
+        enddo ! im
+
+!       Plot theta(e) scale
+        call setusv_dum(2hIN,32) ! Yellow
 !       do it = -80, nint(thigh_c), 10
 !           y1 = logp_bottom
 !           y2 = logp_top
