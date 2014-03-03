@@ -188,8 +188,10 @@
               endif
             endif
 
-!           Only LMR available from the HRRR
-            if(trim(c_fdda_mdl_src(imodel)) .eq. 'wrf-hrrr')then
+!           Only LMR available from the HRRR, RR, RAP-NH
+            if(trim(c_fdda_mdl_src(imodel)) .eq. 'wrf-hrrr' .OR.
+     1         trim(c_fdda_mdl_src(imodel)) .eq. 'rr'       .OR.
+     1         trim(c_fdda_mdl_src(imodel)) .eq. 'rap-nh'        )then
                 do ifield = 1,n_fields ! only LMR is available
                     if(var_a(ifield) .ne. 'LMR')then
                         n_plot_times_m(imodel,:,ifield) = 0
@@ -713,9 +715,9 @@
                      idbz = 1
 
                      call skill_scores(contable,0                      ! I
+     1                                ,frac_cvr_val                    ! O
      1                                ,frac_obs                        ! O
      1                                ,frac_fcst                       ! O
-     1                                ,frac_cvr_val                    ! O
      1                                ,bias_val                        ! O
      1                                ,ets_val)                        ! O
 
@@ -842,31 +844,6 @@
 
          write(6,*)'l_plot_criteria = ',l_plot_criteria
 
-!        Define and write to summary*.txt file
-         summary_file_out = verif_dir(1:len_verif)//var_2d(1:lenvar)
-     1                              //'/plot'
-     1                              //'/summary_'//trim(compdir)//'.txt'       
-
-         write(6,*)'summary_file_out = ',summary_file_out
-
-         open(lun_summary_out,file=summary_file_out,status='unknown')
-         do imodel=2,n_fdda_models
-             ipct = nint(  (float(nsuccess_m(imodel)) 
-     1                    / float(n_init_times+1))*100.)
-             write(lun_summary_out,969)ipct                        
- 969         format(i3)
-         enddo ! imodel
-         write(lun_summary_out,*)l_plot_criteria
-         ipct = nint(  (float(nsuccess          ) 
-     1                / float(n_init_times+1))*100.)
-         write(lun_summary_out,969)ipct                        
-         close(lun_summary_out)
-
-         if(nsuccess .lt. nsuccess_thr)then
-             write(6,*)' Insufficient successful times to plot'
-             goto 980
-         endif
-
 !        Calculate composite bias/ets
          do idbz = 1,nthr
            do imodel=2,n_fdda_models
@@ -895,9 +872,9 @@
                  if(nsuccess_m(imodel) .ge. nsuccess_thr)then ! satisfies completeness criteria
                    lun_out = 6
                    call skill_scores(contable,lun_out                  ! I
-     1                  ,frac_obs                                      ! O
-     1                  ,frac_fcst                                     ! O
      1                  ,frac_cvr_comp(imodel,itime_fcst,iregion,idbz) ! O
+     1                  ,frac_obs_comp                                 ! O
+     1                  ,frac_fcst                                     ! O
      1                  ,bias_comp(imodel,itime_fcst,iregion,idbz)     ! O
      1                  , ets_comp(imodel,itime_fcst,iregion,idbz))    ! O
 
@@ -911,6 +888,32 @@
              enddo ! itime_fcst
            enddo ! imodel
          enddo ! idbz
+
+!        Define and write to summary*.txt file
+         summary_file_out = verif_dir(1:len_verif)//var_2d(1:lenvar)
+     1                              //'/plot'
+     1                              //'/summary_'//trim(compdir)//'.txt'       
+
+         write(6,*)'summary_file_out = ',summary_file_out
+
+         open(lun_summary_out,file=summary_file_out,status='unknown')
+         do imodel=2,n_fdda_models
+             ipct = nint(  (float(nsuccess_m(imodel)) 
+     1                    / float(n_init_times+1))*100.)
+             write(lun_summary_out,969)ipct                        
+ 969         format(i3)
+         enddo ! imodel
+         write(lun_summary_out,*)l_plot_criteria
+         ipct = nint(  (float(nsuccess          ) 
+     1                / float(n_init_times+1))*100.)
+         write(lun_summary_out,969)ipct                        
+!        write(lun_summary_out,*)frac_obs_comp
+         close(lun_summary_out)
+
+         if(nsuccess .lt. nsuccess_thr)then
+             write(6,*)' Insufficient successful times to plot'
+             goto 980
+         endif
 
          write(6,*)
          write(6,*)
