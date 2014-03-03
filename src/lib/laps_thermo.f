@@ -34,7 +34,7 @@ cdis
      1           i4time_needed                   ! Input
      1          ,NX_L,NY_L,NZ_L                  ! Input
      1          ,heights_3d                      ! Input
-     1          ,topo                            ! Input
+     1          ,lat,lon,topo                    ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,temp_3d                         ! Input
      1          ,rh_3d_pct                       ! Input
@@ -52,6 +52,8 @@ cdoc    Calculate and write out set of 2-D stability grids
         real heights_3d(NX_L,NY_L,NZ_L)
         real temp_sfc_k(NX_L,NY_L)
         real pres_sfc_pa(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
 
 !       Output
@@ -150,7 +152,7 @@ cdoc    Calculate and write out set of 2-D stability grids
         enddo ! j
         enddo ! k            
 
-        call laps_be(NX_L,NY_L,NZ_L,twet_snow
+        call laps_be(NX_L,NY_L,NZ_L,twet_snow,lat,lon
      1              ,temp_sfc_k,td_sfc_k,pres_sfc_pa
      1              ,temp_3d,td_3d_k,heights_3d,topo,blayr_thk_pa
      1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
@@ -230,7 +232,7 @@ cdoc    Calculate and write out set of 2-D stability grids
         end
 
 
-        subroutine laps_be(ni,nj,nk,twet_snow
+        subroutine laps_be(ni,nj,nk,twet_snow,lat,lon
      1        ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
      1        ,blayr_thk_pa,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
      1        ,wb1_2d,r_missing_data,istatus)
@@ -239,6 +241,8 @@ cdoc    Calculate and write out set of 2-D stability grids
 cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
 !                                                                    i.e. sfc
 
+        real lat(ni,nj)
+        real lon(ni,nj)
         real t_sfc_k(ni,nj)
         real td_sfc_k(ni,nj)
         real p_sfc_pa(ni,nj)
@@ -377,7 +381,7 @@ c       write(6,*)' i = ',i
             IF(idebug .ge. 1 .OR. iwarn .eq. 1)then
 
                 write(6,*)
-                write(6,*)' Indices at:',i,j
+                write(6,*)' Indices at:',i,j,lat(i,j),lon(i,j)
 
                 write(6,*)' n    p         t         td'
      1                   ,'         ht       tdif       be'
@@ -479,9 +483,11 @@ cdoc    Calculate a variety of stability indices from an input sounding
      1              ,TDFCR(20,2),VEL(20),temdif(MXL),partem(MXL)
      1              ,pbe(MXL),DD85,FF85,DD50,FF50
         REAL LI,K,LCL_AGL,LCL_PBE_MSL
-        ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
-     1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
+!       ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
+!    1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
 !       TDEW(E)=237.7/((7.5/ALOG10(E/6.11))-1.)
+
+        ESL(X)=6.1121*exp(17.67*x/(x+243.5)) 
 
         logical l_large_domain
 
@@ -515,7 +521,7 @@ c       WRITE(6,15)
                 IF(T(N).LT.-40.)TD(N)=T(N)                           
             ENDIF                                                           
                                                                           
- 	    Q(N)=(ES(TD(N))*EPSILN)/P(N)                             
+ 	    Q(N)=(ESL(TD(N))*EPSILN)/P(N)                             
  	    Q(N)=max(Q(N),0.0001)                                    
  	    W(N)=Q(N)/(1.-Q(N))                                      
  	    IOUT=IO                                                  
@@ -523,8 +529,11 @@ c       WRITE(6,15)
 
  	    WB(N)=WTBLB(P(N),T(N),W(N),0,istatus)                            
             if(istatus .ne. 1)then
-                write(6,*)' Bad istatus return from WTBLB: P,T,W = '
-     1                   ,P(N),T(N),W(N)
+                write(6,*)' Bad istatus return from WTBLB: '
+                write(6,*)'P,T,TD,ES,EPSILN,Q,W = '
+                write(6,*)P(N),T(N),TD(N),ESL(TD(N)),EPSILN,Q(N),W(N)
+!               write(6,*)'ES calc:',
+!    1                         6.1121*exp(17.67*TD(N)/(TD(N)+243.5))
                 return
             endif
 
@@ -545,7 +554,7 @@ C  CALCULATE LIFTED INDEX
 !WNI level, which cause a complete abort of put stability.  Now,
 !WNI we just fill indices dependent on 500mb to missing if this happens.
 !WNI Brent Shaw, WNI, Dec 2006
-!	WREQ50=ES(TP500)/500.                                                   
+!	WREQ50=ESL(TP500)/500.                                                   
 !	IF(WREQ50.LT.WMEAN)GOTO40                                               
 
 C                                                                         
@@ -688,7 +697,7 @@ cdoc    Calculate a PBE/LCL related indices from an input sounding
 
         if(idebug .ge. 2)then
             WRITE(6,*)
-            WRITE(6,*)' SUBROUTINE POTBE'
+            WRITE(6,*)' SUBROUTINE POTBE: BLTHTE = ',BLTHTE
         endif
 
         call get_r_missing_data(r_missing_data,istatus)
@@ -758,11 +767,10 @@ C                   MOIST ADIABATIC PART
                 endif ! Upper level below LCL (Dry or bracket)
 
             else ! Lower Level is above LCL
-                if(idebug .ge. 2)then
-                  WRITE(6,*)' GETTING PARCEL TEMPERATURE FOR MOIST CASE'
-     1                     ,blthte,P(n)
-                endif
                 partem(n) = tmlaps_fast(blthte,P(n))
+                if(idebug .ge. 2)then
+                  WRITE(6,*)' MOIST CASE',blthte,P(n),partem(n)
+                endif
 
           !     Add Layer
                 TEMDIF(N)=PARTEM(N)-T(N)
@@ -775,8 +783,9 @@ C                   MOIST ADIABATIC PART
             if(idebug .ge. 2)then
                 WRITE(6,777)N,P(N),PARTEM(N),T(N)
      #                ,TEMDIF(N),TEMDIF(N-1),DELTAH(N),HT(N),PBE(N)
+!    #                ,BLTHTE
             endif
- 777        format(' PBE DATA',I3,F6.1,6F8.2,F12.3)
+ 777        format(' PBE DATA',I3,F6.1,6F8.2,F12.3,F8.2)
 
  800    CONTINUE
 C
@@ -1044,7 +1053,7 @@ cdoc    Calculate LCL properties from an input parcel
 !       Steve Albers 1991
 
         REAL LCL,KAPPA
-        ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
+        ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
      1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
         DATA EPSILN/.62197/,GAMMAI/102.4596/ ! Lapse Rate m/deg
         TK=273.15+TC
@@ -1060,13 +1069,13 @@ cdoc    Calculate LCL properties from an input parcel
  25     FORMAT(' TLCL=',5F12.5)
         IF(ABS(RES)-.05)150,150,130
  130    TLCL=TLCL+DELTA
- 140    RES=(ES(TLCL-273.15)/E)**KAPPA*TK-TLCL
+ 140    RES=(ESL(TLCL-273.15)/E)**KAPPA*TK-TLCL
         IF(ITER.NE.1)SLOPE=(RES-RESOLD)/DELTA
         DELTA=-RES/SLOPE
         RESOLD=RES
         GOTO100
  150    TLCL=TLCL-273.15
-        PLCL=P*ES(TLCL)/E
+        PLCL=P*ESL(TLCL)/E
         LCL=(TC-TLCL)*GAMMAI
         RETURN
         END
@@ -1078,12 +1087,12 @@ cdoc    Calculate LCL properties from an input sounding (efficiently)
 
 !       Steve Albers 1991
 
-        ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
+        ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
      1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
         DATA EPSILN/.62197/,GAMMAI/102.4596/        ! Lapse Rate m/deg
 
         TLCL = TD - (0.212 + 0.001571 * TD - 0.000436 * TC) * (TC - TD)
-        PLCL=P*ES(TLCL)/ES(TD)
+        PLCL=P*ESL(TLCL)/ESL(TD)
         HLCL=(TC-TLCL)*GAMMAI
 
         RETURN
@@ -1164,6 +1173,14 @@ cdoc    Calculate along a moist adiabat. Solve for T, given ThetaE and P
 !       Steve Albers 1991
 
         DIMENSION TEMPNW(4)
+
+        if(THETAE .gt. 600.)then
+            write(6,*)' Error: passed in THETAE too large in MSAD5'
+     1                ,THETAE
+            istatus = 0
+            return
+        endif
+
         I1=0
         I2=0
         IA=0
@@ -1189,6 +1206,9 @@ C  DETERMINE LATENT HEAT RELEASED ABOVE 500MB
             write(6,*)' Error, too many I1 loops in MSAD5'
             istatus = 0
             return
+        elseif(I1 .gt. 199980)then
+            write(6,*)' Warning, too many I1 loops in MSAD5'
+            write(6,*)THETAE,TEMPNW(ITER),PRESNW,EPSILN  
         endif
 
 C  TEST FOR CONVERGENCE
@@ -1242,10 +1262,10 @@ cdoc   Calculate Theta(e), given T, Td, P
 C
 C   COMPUTES THE EQUIVALENT POTENTIAL TEMPURATURE (K).
 C    (USING THE ROSSBY DEFINITION)
-        ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
+        ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
      1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
         T=TC+273.15
-        E=ES(TD)
+        E=ESL(TD)
         PMEI=1./(P-E)
         W=(E*.62197)*PMEI
         T=T*(1.+W)/(1.+W*.62197)
@@ -1332,7 +1352,7 @@ cdoc   (USING THE ROSSBY DEFINITION)
        END
 C
 
-        function oe_fast(t,td,pres)
+        function oe_fast(t_in,td_in,pres)
 
 !       Steve Albers 1991
 
@@ -1438,15 +1458,15 @@ cdoc    Quick way to get Theta(e) using lookup table
 
 20      endif
 
-        tdprs = t - td
+        tdprs = t_in - td_in
 
-        if(t     .ge. float(t_high))    t     = float(t_high)     - 1e-5
+        if(t_in  .ge. float(t_high))    t_in  = float(t_high)     - 1e-5
         if(tdprs .ge. float(tdprs_high))tdprs = float(tdprs_high) - 1e-5
         if(pres  .ge. float(pres2_high))pres  = float(pres2_high) - 1e-2
 
-        ri = (t -     float(t_low)    ) / float(t_interval)
+        ri = (t_in  - float(t_low)    ) / float(t_interval)
         rj = (tdprs - float(tdprs_low)) / float(tdprs_interval)
-        rk = (pres -  float(pres2_low)) / float(pres2_interval)
+        rk = (pres  - float(pres2_low)) / float(pres2_interval)
 
         i = int(ri)
         j = int(rj)
@@ -1474,14 +1494,14 @@ cdoc    Quick way to get Theta(e) using lookup table
 
         oe_fast = thetae_low * (1. - frack) + thetae_high * frack
 
-c       residual = abs(oe_fast - oe(t,t-tdprs,pres))
-c       write(6,101)t,t-tdprs,pres,oe(t,t-tdprs,pres),residual
+c       residual = abs(oe_fast - oe(t_in,t_in-tdprs,pres))
+c       write(6,101)t_in,t_in-tdprs,pres,oe(t_in,t-tdprs,pres),residual
 c101    format(1x,3f10.2,f10.4)
 
         return
         end
 
-        function tmlaps_fast(thetae,pres)
+        function tmlaps_fast(thetae_in,pres_in)
 
 !       Steve Albers 1991
 
@@ -1515,25 +1535,36 @@ cdoc    This uses a lookup table
 
         real t_moist(0:n_thetae,0:n_pres)
 
+        logical l_write_lut
+
         save init,t_moist
         data init/0/
 
+        l_write_lut = .false.
+
         if(init .eq. 0)then
-            ext = 'dat'
-            call get_directory(ext,directory,len_dir)
-
-            write(6,*)' Reading tmlaps_lut.dat from file'
-            open(11,file=directory(1:len_dir)//'tmlaps_lut.dat'
-     1          ,form='unformatted',status='old',err=10)
-            read(11,err=10)t_moist
-            close(11)
             init = 1
-            goto20
-10          write(6,*)' Generating tmlaps_lut.dat - no valid file exists
-     1'
 
-            open(11,file=directory(1:len_dir)//'tmlaps_lut.dat'
+            if(l_write_lut)then
+                ext = 'dat'
+                call get_directory(ext,directory,len_dir)
+
+                write(6,*)' Reading tmlaps_lut.dat from file'
+                open(11,file=directory(1:len_dir)//'tmlaps_lut.dat'
+     1                    ,form='unformatted',status='old',err=10)
+                read(11,err=10)t_moist
+                close(11)
+                goto20
+10              continue
+                close(11)
+
+                write(6,*)
+     1            ' Generating tmlaps_lut.dat - no valid file exists'
+                open(11,file=directory(1:len_dir)//'tmlaps_lut.dat'
      1                             ,form='unformatted',status='new')
+            else
+                write(6,*)' Generating tmlaps lut in memory...'
+            endif
 
             i = 0
             do thetae = thetae_low,thetae_high,thetae_interval
@@ -1544,7 +1575,7 @@ cdoc    This uses a lookup table
                     t_moist(i,j) = tmlaps(thetae-273.15,pres)
 
                     if(i/5*5 .eq. i .and. j/5*5 .eq. j)then
-                        write(6,201)pres,thetae,t_moist(i,j)
+!                       write(6,201)pres,thetae,t_moist(i,j)
 201                     format(1x,f10.0,f10.0,f10.2)
                     endif
                     j = j + 1
@@ -1554,13 +1585,15 @@ cdoc    This uses a lookup table
 
             enddo
 
-            write(11)t_moist
-            close(11)
+            if(l_write_lut)then
+                write(11)t_moist
+                close(11)
+            endif
 
 20      endif
 
-        ri = (thetae - float(thetae_low)) / float(thetae_interval)
-        rj = (pres -   float(pres_low)  ) / float(pres_interval)
+        ri = (thetae_in - float(thetae_low)) / float(thetae_interval)
+        rj = (pres_in   - float(pres_low)  ) / float(pres_interval)
 
         if(ri .ge. float(n_thetae))ri = float(n_thetae) - 1e-2
         if(rj .ge. float(n_pres))  rj = float(n_pres)   - 1e-2
