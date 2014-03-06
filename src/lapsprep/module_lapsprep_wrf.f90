@@ -510,6 +510,14 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   INTEGER            :: istatus
   REAL               :: r_missing_data
 
+
+  call get_r_missing_data(r_missing_data,istatus)
+	print*,'output_metgrid_format r_missing_data ',r_missing_data
+  if(istatus .ne. 1)then
+      write(6,*)' Bad status for r_missing_data'
+      stop
+  endif
+
   ! Allocate a scratch 2d array
   ALLOCATE (d2d (x,y) )
   ALLOCATE (p_pa (z3+1))
@@ -699,7 +707,14 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       PRINT *, 'UNITS = ', units
       PRINT *, 'DESC =  ',desc
       CALL write_metgrid_header(field,units,desc,p_pa(z3+1))
-      d2d = snocov/6.
+
+!     Initialize output snow cover field to missing value
+      d2d=0.
+
+!     Convert from fraction to mask using namelist entry snow_thresh
+      WHERE(snocov .ge. snow_thresh .AND. snocov .ne. r_missing_data) d2d = 1.0
+      WHERE(snocov .lt. snow_thresh .AND. snocov .ne. r_missing_data) d2d = 0.0
+
       WRITE ( output_unit ) d2d
       PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
@@ -742,13 +757,6 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   WRITE ( output_unit ) psfc
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(psfc),&
             ' Max: ', MAXVAL(psfc)
-
-  call get_r_missing_data(r_missing_data,istatus)
-	print*,'output_metgrid_format r_missing_data ',r_missing_data
-  if(istatus .ne. 1)then
-      write(6,*)' Bad status for r_missing_data'
-      stop
-  endif
 
   ! Get cloud species if this is a hot start
   IF (hotstart) THEN
