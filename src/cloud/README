@@ -40,6 +40,8 @@ main                                                     laps_cloud.f
         qc_clouds_3d                                     laps_cloud_sub.f
         get_max_ref
         insert_radar                                     insertradar.f
+        cloud_var                                        lib/cloud/cloud_var.F90
+        get_parallax_info                                laps_cloud_sub.f
         insert_vis   (subtract based on vis/3.9u)        insertvis.f
         compare_cloud_radar                              laps_cloud_sub.f
         put_clouds_3d
@@ -51,4 +53,3 @@ main                                                     laps_cloud.f
             stats_1d                                     stats_1d.f
         array_plot
         get_cloud_deriv                                  lib/get_cloud_deriv.f
-        cloud_var                                        lib/cloud/cloud_var.F90
