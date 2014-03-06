@@ -153,14 +153,19 @@ integer :: ct
 
 if (trim(mtype) /= 'st4') then
   nvar2d=17
-  if(.not. large_ngrid)then
+  if(.not. large_ngrid)then   
       nvar3d=7 ! add 1 for tkesig if needed 
+      l_process_uv = .true.
+      l_process_w = .true.
   else ! large_ngrid
-    if(.not. large_pgrid)then ! process U,V
-      nvar3d=6
-    else
-      nvar3d=4
-    endif
+      l_process_w = .false.
+      if(.not. large_pgrid)then     
+        nvar3d=6
+        l_process_uv = .true.
+      else
+        nvar3d=4                
+        l_process_uv = .false.
+      endif
   endif
   if (make_micro) then
       nvar3d=nvar3d+5
@@ -202,12 +207,13 @@ if (trim(mtype) /= 'st4') then
   ntsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_t = .true.
   nmrsig   =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_mr = .true.
 
-  if(.not. large_pgrid)then
-      nusig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_uv = .true.
+  if(l_process_uv)then
+      nusig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
       nvsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
-      if(.not. large_ngrid)then   
-          nwsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz; l_process_w = .true.
-      endif
+  endif
+
+  if(l_process_w)then   
+      nwsig    =>ngrid(1:nx,1:ny,ct:ct+nz-1); ct=ct+nz
   endif
 
   if (make_micro) then
