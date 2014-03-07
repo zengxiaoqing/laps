@@ -2112,9 +2112,9 @@ c
 
       endif
 c
-      if(staval.eq.missingflag)then
-         print*,'gdtost_i: staval = missingflag'
-      endif
+C      if(staval.eq.missingflag)then
+C         print*,'gdtost_i: staval = missingflag'
+C      endif
       return
       end
 
