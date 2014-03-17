@@ -51,7 +51,7 @@ subroutine output(hdate, nlvl, maxlvl, plvl, interval, iflag, out_format, prefix
 ! DATELEN:  length of date strings to use for our output file names.
   integer :: datelen
 
-  write(6,*)' Subroutine output - debug_level is ',debug_level
+  write(6,*)' Subroutine output (output.F90) - debug_level is ',debug_level
 
 ! Decide the length of date strings to use for output file names.  
 ! DATELEN is 13 for hours, 16 for minutes, and 19 for seconds.
@@ -64,6 +64,10 @@ subroutine output(hdate, nlvl, maxlvl, plvl, interval, iflag, out_format, prefix
   endif
  
   call get_plvls(plvl, maxlvl, nlvl)
+
+  if(nlvl .gt. maxlvl)then
+      write(6,*)' WARNING: get_plvls returned nlvl > maxlvl ',nlvl,maxlvl
+  endif
 
   if ( debug_level .ge. 0 ) then
   write(*,119) hdate(1:10), hdate(12:19)
@@ -341,9 +345,16 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
 
      include 'constants.inc' ! for grav
 
-     write(6,*)' Subroutine get_lapsbg...'
+     write(6,*)' Subroutine get_lapsbg (output.F90)...'
 
      call get_plvls(plvl, maxlvl, nlvl)
+
+     if(nlvl .gt. maxlvl)then
+         write(6,*)' WARNING: get_plvls returned nlvl > maxlvl ',nlvl,maxlvl
+     else
+         write(6,*)' nlvl/maxlvl = ',nlvl,maxlvl
+         write(6,*)' plvl = ',plvl
+     endif
 
      NLOOP : do m = 1, maxvar
      idx=0
