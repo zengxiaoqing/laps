@@ -233,7 +233,9 @@ cdis
         real piccnc(NX_L,NY_L,NZ_L)
 
         real cldamt(NX_L,NY_L)
-        real cldalb(NX_L,NY_L)
+        real cldalb_in(NX_L,NY_L)
+        real cldalb_out(NX_L,NY_L)
+        real cldod_out(NX_L,NY_L)
 
 !       real snow_2d(NX_L,NY_L)
 
@@ -521,6 +523,16 @@ c read in laps lat/lon and topo
                 goto999
             endif
 
+            var = 'CLA'
+            ext = 'lcv'
+            call get_laps_2d(i4time,ext,var,units,comment
+     1                  ,NX_L,NY_L,cldalb_in,istatus)
+
+            if(istatus .ne. 1 .and. istatus .ne. -1)THEN
+                write(6,*)' Error Reading Cloud Albedo Analysis - abort'
+                goto999
+            endif
+
             var = 'CCE'
             ext = 'lcb'
             call get_laps_2d(i4time,ext,var,units,comment
@@ -760,8 +772,8 @@ c read in laps lat/lon and topo
         const_gwp_bks = const_gwp * bksct_eff_graupel
 
 !       Cloud amount is opacity of cloud liquid and cloud ice hydrometeors
-        do j = 1,nj
-        do i = 1,ni
+        do j = 1,NY_L
+        do i = 1,NX_L
             cldamt(i,j) = 1. - (exp( -(const_lwp * slwc_int(i,j) 
      1                               + const_iwp * cice_int(i,j))) ) 
         enddo ! i
@@ -1121,13 +1133,20 @@ c read in laps lat/lon and topo
         endif
 
 !       Rain, Snow, and Graupel are added for the cldalb & simvis computation
-        do j = 1,nj
-        do i = 1,ni
-            cldalb(i,j) = 1. - (exp( -(const_lwp_bks * slwc_int(i,j) + 
+        do j = 1,NY_L
+        do i = 1,NX_L
+            cldalb_out(i,j) 
+     1                  = 1. - (exp( -(const_lwp_bks * slwc_int(i,j) + 
      1                                 const_iwp_bks * cice_int(i,j) + 
      1                                 const_rwp_bks * rain_int(i,j) + 
      1                                 const_swp_bks * snow_int(i,j) + 
      1                                 const_gwp_bks * pice_int(i,j)) ))
+            cldod_out(i,j) = const_lwp * slwc_int(i,j)
+     1                     + const_iwp * cice_int(i,j)  
+     1                     + const_rwp * rain_int(i,j)  
+     1                     + const_swp * snow_int(i,j)  
+     1                     + const_gwp * pice_int(i,j)  
+!           write(6,*)'i,j,cld_od',i,j,cldod_out(i,j)
         enddo ! i
         enddo ! j
 
@@ -1147,11 +1166,13 @@ c read in laps lat/lon and topo
         comment_a(3) = 'Cloud Optical Depth'
         comment_a(4) = 'Cloud Albedo'
 
-        call move(slwc_int,out_array_3d(1,1,1),NX_L,NY_L)
-        call move(cice_int,out_array_3d(1,1,2),NX_L,NY_L)
+        call move(slwc_int,  out_array_3d(1,1,1),NX_L,NY_L)
+        call move(cice_int,  out_array_3d(1,1,2),NX_L,NY_L)
+        call move(cldod_out, out_array_3d(1,1,3),NX_L,NY_L)
+        call move(cldalb_out,out_array_3d(1,1,4),NX_L,NY_L)
 
         call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1      comment_a,out_array_3d,NX_L,NY_L,2,istatus)
+     1      comment_a,out_array_3d,NX_L,NY_L,4,istatus)
 
         if(istatus .eq. 1)then
             j_status(n_lil) = ss_normal
