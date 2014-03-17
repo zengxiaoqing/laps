@@ -124,6 +124,8 @@ c
 
       lun=10
 c
+      write(6,*)' start read_dgprep for bgmodel = ',bgmodel
+
       if(bgmodel.eq.6.or.bgmodel.eq.8.or.bgmodel.eq.12)then
 
          call s_len(path,l)
