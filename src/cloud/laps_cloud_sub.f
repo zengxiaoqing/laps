@@ -191,7 +191,7 @@ cdis
         real heights_3d(NX_L,NY_L,NZ_L)
 
 !       Output array declarations
-        real out_array_3d(NX_L,NY_L,8)
+        real out_array_3d(NX_L,NY_L,9)
 
 !       real snow_2d(NX_L,NY_L)
 
@@ -251,6 +251,10 @@ cdis
         integer istat_39_add_a(NX_L,NY_L)
         integer istat_vis_potl_a(NX_L,NY_L)
         integer istat_vis_added_a(NX_L,NY_L)
+
+        real cloud_albedo(NX_L,NY_L)      ! Cloud albedo
+        real cloud_od(NX_L,NY_L)          ! Cloud optical depth
+        real cloud_op(NX_L,NY_L)          ! Cloud opacity
 
         real temp_3d(NX_L,NY_L,NZ_L)
 
@@ -1111,6 +1115,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
      1        ,solar_alt,solar_az                                     ! I
      1        ,di_dh,dj_dh,i_fill_seams                               ! I
      1        ,cldtop_tb8_m                                           ! I
+     1        ,cloud_albedo,cloud_od,cloud_op                         ! O
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
         endif
 
@@ -1475,8 +1480,8 @@ C       EW SLICES
      1   kloud,store_amt,store_hgt,                                ! O
      1   rad_s,solar_ea,obstime,istatus)                           ! O
 
-        call compare_analysis_to_rad(i4time,NX_L,NY_L,cvr_sao_max
-     1  ,solar_alt,cvr_snow
+        call compare_analysis_to_rad(i4time,NX_L,NY_L,cvr_sao_max  ! I
+     1  ,solar_alt,cvr_snow,cloud_albedo                           ! I
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,td_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s
@@ -1497,8 +1502,9 @@ C       EW SLICES
             var_a(4) = 'S8A'
             var_a(5) = 'S3A'
             var_a(6) = 'ALB'
-            var_a(7) = 'RQC'
-            var_a(8) = 'SWI'
+            var_a(7) = 'CLA'
+            var_a(8) = 'RQC'
+            var_a(9) = 'SWI'
             units_a(1) = 'UNDIM'
             units_a(2) = 'UNDIM'
             units_a(3) = 'K'
@@ -1506,15 +1512,17 @@ C       EW SLICES
             units_a(5) = 'K'
             units_a(6) = ' '
             units_a(7) = ' '
-            units_a(8) = 'W/M**2'
+            units_a(8) = ' '
+            units_a(9) = 'W/M**2'
             comment_a(1) = 'LAPS Cloud Cover'
             comment_a(2) = 'LAPS Cloud Analysis Implied Snow Cover'
             comment_a(3) = 'LAPS Clear Sky Water Temp'
             comment_a(4) = comment_tb8
             comment_a(5) = comment_t39
             comment_a(6) = comment_alb
-            comment_a(7) = 'LAPS Radar Quality'
-            comment_a(8) = 'Downward Solar Radiation'
+            comment_a(7) = 'Cloud Albedo'
+            comment_a(8) = 'LAPS Radar Quality'
+            comment_a(9) = 'Downward Solar Radiation'
 
 
             call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
@@ -1523,11 +1531,12 @@ C       EW SLICES
             call move(tb8_k         ,out_array_3d(1,1,4),NX_L,NY_L)
             call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
             call move(albedo        ,out_array_3d(1,1,6),NX_L,NY_L)
-            call move(rqc_2d        ,out_array_3d(1,1,7),NX_L,NY_L)
-            call move(swi_2d        ,out_array_3d(1,1,8),NX_L,NY_L)
+            call move(cloud_albedo  ,out_array_3d(1,1,7),NX_L,NY_L)
+            call move(rqc_2d        ,out_array_3d(1,1,8),NX_L,NY_L)
+            call move(swi_2d        ,out_array_3d(1,1,9),NX_L,NY_L)
 
             call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1              comment_a,out_array_3d,NX_L,NY_L,8,istatus)
+     1              comment_a,out_array_3d,NX_L,NY_L,9,istatus)
 
             if(istatus .eq. 1)j_status(n_lcv) = ss_normal
         endif ! iwrite_output
