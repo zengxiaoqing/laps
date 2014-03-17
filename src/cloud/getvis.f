@@ -341,11 +341,11 @@ cdis
 
         function albedo_to_cloudfrac2(clear_albedo,albedo)
 
-        cloud_albedo = .4485300
+        cloud_albedo_ref = .4485300
 
         arg = albedo
 
-        call stretch2(clear_albedo,cloud_albedo,0.,1.,arg)
+        call stretch2(clear_albedo,cloud_albedo_ref,0.,1.,arg)
 
         albedo_to_cloudfrac2 = arg
 
