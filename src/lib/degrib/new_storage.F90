@@ -153,6 +153,16 @@ contains
           endif
        enddo LEVLOOP
     enddo SEARCH
+
+    if(nlvl .gt. maxlvl)then
+       write(6,*)' ERROR: nlvl > maxlvl in get_plvls'
+       write(6,*)' nlvl/maxlvl = ',nlvl,maxlvl
+       write(6,*)' plvl = ',plvl
+       stop
+!      write(6,*)' reset nlvl to maxlvl'
+!      nlvl = maxlvl
+    endif
+ 
   end subroutine get_plvls
 
   subroutine put_storage(icode, inname, data, idum, jdum)
