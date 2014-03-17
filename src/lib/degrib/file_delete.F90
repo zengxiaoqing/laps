@@ -39,9 +39,8 @@ subroutine file_delete(hdates, ndates, root, interval)
      datelen = 19
   end if
 
-  write(*, '(/,10("*"), /, &
-       &    "Deleting temporary files created by ungrib...",/, &
-       &    10("*")/)')
+  write(*, &
+  '(/,10("*"), /,"Deleting temporary files created by ungrib...",/,10("*")/)')
 
   do idate = 1, ndates
      flnm=trim(root)//hdates(idate)(1:datelen)
@@ -57,8 +56,7 @@ subroutine file_delete(hdates, ndates, root, interval)
      endif
   enddo
 
-  write(*, '(/,10("*"), /, &
-       &    "Done deleting temporary files.",/, &
-       &    10("*")/)')
+  write(*, &
+  '(/,10("*"), /,"Done deleting temporary files.",/,10("*")/)')
 
 end subroutine file_delete
