@@ -46,7 +46,7 @@ cdis
      1      ,solar_alt,solar_az
      1      ,di_dh,dj_dh,i_fill_seams                                 ! I
      1      ,cldtop_tb8_m                                             ! I
-!    1      ,cloud_albedo,cloud_od,cloud_op                           ! O
+     1      ,cloud_albedo,cloud_od,cloud_op                           ! O
      1      ,dbz_max_2d,surface_sao_buffer,istatus)
 
 !       Steve Albers 1999 Added 3.9u cloud clearing step in NULL Mode
@@ -100,6 +100,11 @@ cdis
 
         call get_grid_spacing_cen(grid_spacing_m,istatus)
 
+!       Initialize
+        cloud_albedo = r_missing_data
+        cloud_od = r_missing_data
+        cloud_op = r_missing_data
+
         if(l_use_39)then
             write(6,*)' subroutine insert_vis (with 3.9u)...'
         else
@@ -146,17 +151,18 @@ cdis
 
 !         Calculate upper bound to cloud cover (through the column)
           if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then ! VIS (Daytime)
-              call albedo_to_clouds(albedo(i,j),trans,cloud_od(i,j)
-     1                                               ,cloud_op(i,j))
+              albedo_eff = cloud_frac_vis_a(i,j)
+              call albedo_to_clouds(albedo_eff,trans,cloud_od(i,j)
+     1                                              ,cloud_op(i,j))
               cloud_frac_uprb = cloud_frac_vis_a(i,j)
 
               if(idebug .eq. 1)then
-                  write(6,51)cloud_frac_vis_a(i,j),albedo(i,j)
+                  write(6,51)cloud_frac_vis_a(i,j),albedo_eff
      1                       ,trans,cloud_od(i,j),cloud_op(i,j)
 51                format('cf_vis/albedo/trans/od/op',5f9.3)
               endif
 
-              cloud_albedo(i,j) = albedo(i,j)
+              cloud_albedo(i,j) = albedo_eff
 
           else                                              ! 3.9u (Nighttime)
               n_missing_albedo =  n_missing_albedo + 1
@@ -219,7 +225,7 @@ cdis
 
 !               Clear only low clouds
                 if(cld_hts(k) .gt. topo(i,j) + 5000.)then
-                    cushion = 999. ! disable clearing
+                    cushion = 0.3 * (1.0 - cloud_frac_uprb) ! 999. ! reduce clearing
 !               Modify the cloud field with the vis input - allow .3 vis err?
                 elseif(cld_hts(k).gt.topo(i,j) + surface_sao_buffer)then
                     cushion = 0.0 ! 0.3
