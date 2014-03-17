@@ -1,6 +1,6 @@
 
-        subroutine compare_analysis_to_rad(i4time,ni,nj
-     1  ,cvr_sao_max,solar_alt,cvr_snow
+        subroutine compare_analysis_to_rad(i4time,ni,nj          ! I
+     1  ,cvr_sao_max,solar_alt,cvr_snow,cloud_albedo             ! I
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,td_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns
@@ -12,7 +12,7 @@
         real cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
      1        ,td_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
      1        ,dbz_max_2d(ni,nj),solar_alt(ni,nj),swi_2d(ni,nj)
-     1        ,cvr_snow(ni,nj)
+     1        ,cvr_snow(ni,nj),cloud_albedo(ni,nj)
 
 !       How much the solar radiation varies with changes in cloud fraction
         real cvr_scl_a(ni,nj) 
@@ -108,14 +108,26 @@
                 if(cvr_snow(i,j) .eq. r_missing_data .OR. 
      1             cvr_snow(i,j) .le. 0.50                )then 
                     cvr_scl_a(i,j) = 1.0 ! scaling where we have VIS data
-                    cvr_rad(i,j) = cvr_max(i,j) ! cloud_frac_vis_a(i,j)
+                    if(cloud_albedo(i,j) .ne. r_missing_data)then
+                        cvr_rad(i,j) = cloud_albedo(i,j)
+                    else
+                        cvr_rad(i,j) = cvr_max(i,j) ! cloud_frac_vis_a(i,j)
+                    endif
                 else
                     cvr_scl_a(i,j) = 1.0 ! scaling where we have VIS data & snow cover
-                    cvr_rad(i,j) = cvr_max(i,j)
+                    if(cloud_albedo(i,j) .ne. r_missing_data)then
+                        cvr_rad(i,j) = cloud_albedo(i,j)
+                    else
+                        cvr_rad(i,j) = cvr_max(i,j)
+                    endif
                 endif
             else
                 cvr_scl_a(i,j) = 0.7 ! scaling without VIS data (just IR)
-                cvr_rad(i,j) = cvr_max(i,j)
+                if(cloud_albedo(i,j) .ne. r_missing_data)then
+                    cvr_rad(i,j) = cloud_albedo(i,j)
+                else
+                    cvr_rad(i,j) = cvr_max(i,j)
+                endif
             endif
 
             if(model .eq. 1)then ! simple formula (radiation on horizontal)
