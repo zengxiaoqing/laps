@@ -89,6 +89,17 @@ netcdf lcv {
             alb:lvl_coord=" ";
             alb:LAPS_units=" ";
 
+        //      cloud albedo
+        float
+            cla(record,z,y,x);
+            cla:_FillValue = 1.e+37f;
+            cla:long_name="Cloud Albedo";
+            cla:units="none";
+            cla:valid_range= 0.f, 1.f;
+            cla:LAPS_var="CLA";
+            cla:lvl_coord="MSL";
+            cla:LAPS_units="none";
+
         //      incoming SW radiation at surface //
         float
             swi(record,z,y,x);
@@ -129,6 +140,7 @@ netcdf lcv {
             s8a_comment(record,z,namelen),
             s3a_comment(record,z,namelen),
             alb_comment(record,z,namelen),
+            cla_comment(record,z,namelen),
             swi_comment(record,z,namelen),
             rqc_comment(record,z,namelen),
             asctime(record,namelen);
@@ -159,6 +171,10 @@ netcdf lcv {
         short
             alb_fcinv(record, z);
             alb_fcinv:_FillValue= 0s;
+              	
+        short
+            cla_fcinv(record, z);
+            cla_fcinv:_FillValue= 0s;
               	
         short
             swi_fcinv(record, z);
