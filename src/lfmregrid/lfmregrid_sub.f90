@@ -1,9 +1,9 @@
 
 subroutine lfmregrid_sub(nx_bg,ny_bg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,fname_in,NX_L,NY_L,NZ_L,gproj,bgmodel,cmodel,laps_data_root,mtype,laps_reftime,laps_valtime,l_process_grib,l_process_cdf,l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf)
 
-use mem_namelist
+!use mem_namelist
 use storage_module, ONLY: get_plvls
-integer, parameter :: maxbglvl = 42 
+integer, parameter :: maxbglvl = 52 ! Dimension is maxbglvl in 'degrib_nav' routine
 
 character*256 fname_in, fullname_in, laps_data_root, fname_bg, bgpath
 character*132 cmodel
