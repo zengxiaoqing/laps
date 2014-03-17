@@ -43,7 +43,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   character(LEN=9)   :: field
   character(LEN=2)   :: gproj
   character(LEN=1)   :: cgrddef
-  integer, parameter :: maxbglvl = 42 
+  integer, parameter :: maxbglvl = 52 
   integer, dimension(255) :: iuarr = 0
   integer :: iplvl
   integer :: nlvl
@@ -221,7 +221,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   character(LEN=150) :: gribflnm
   character(LEN=19)  :: hdate
   character(LEN=9)   :: field
-  integer, parameter :: maxbglvl = 42  
+  integer, parameter :: maxbglvl = 52  
   integer, dimension(255) :: iuarr = 0
   integer :: nunit1 = 12
   integer :: debug_level = 1 

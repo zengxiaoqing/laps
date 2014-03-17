@@ -50,7 +50,7 @@ c KML: END
       use storage_module, ONLY: get_plvls
  
       implicit none
-      integer, parameter :: maxbglvl = 42 
+      integer, parameter :: maxbglvl = 52 
 
       real    prtop ! pa
       include 'bgdata.inc'
