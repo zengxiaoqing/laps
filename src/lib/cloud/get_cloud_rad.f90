@@ -86,6 +86,8 @@
 
       I4_elapsed = ishow_timer()
 
+      ht_ref = 5000. ! 0.
+
       do k = nk-1,1,-1
 
         patm_k = ztopsa(heights_3d(idb,jdb,k)) / 1013.
@@ -97,10 +99,14 @@
         dij = (dh * dxy_dh) / grid_spacing_m           
         di =  sinazi * dij
         dj =  cosazi * dij
-        dil =  sinazi * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
-        diu =  sinazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
-        djl =  cosazi * (heights_3d(1,1,kl) * dxy_dh) / grid_spacing_m
-        dju =  cosazi * (heights_3d(1,1,ku) * dxy_dh) / grid_spacing_m
+        dil =  sinazi * ((heights_3d(1,1,kl)-ht_ref) * dxy_dh) &
+                                                        / grid_spacing_m
+        diu =  sinazi * ((heights_3d(1,1,ku)-ht_ref) * dxy_dh) &
+                                                        / grid_spacing_m
+        djl =  cosazi * ((heights_3d(1,1,kl)-ht_ref) * dxy_dh) &
+                                                        / grid_spacing_m
+        dju =  cosazi * ((heights_3d(1,1,ku)-ht_ref) * dxy_dh) &
+                                                        / grid_spacing_m
 
 !       Convert hydrometeor concentration to backscatter optical depth
         const_clwc = ((1.5 / rholiq ) / reff_clwc) * bksct_eff_clwc * ds
