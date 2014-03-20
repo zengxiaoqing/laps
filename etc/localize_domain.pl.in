@@ -417,9 +417,13 @@ if($WHICH_TYPE eq "laps"){
 # -------------------
 # update version file 
 # -------------------
-   $command="cp $SOURCE_ROOT/version.src $DATA_ROOT/version.localized";
-   print "Copy $SOURCE_ROOT/version.src to $DATA_ROOT/version.localized";
-   run_sys::run_sys($command);
+   if(-e "$SOURCE_ROOT/version.src"){
+      $command="cp $SOURCE_ROOT/version.src $DATA_ROOT/version.localized";
+      print "Copy $SOURCE_ROOT/version.src to $DATA_ROOT/version.localized\n";
+      run_sys::run_sys($command);
+   }else{
+      print "$SOURCE_ROOT/version.src not present - skipping copy\n";
+   }
 
 }
 
