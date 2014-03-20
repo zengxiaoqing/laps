@@ -16,7 +16,10 @@ subroutine output_laps(lfmprd_dir,laps_data_root,domnum_in,laps_reftime,laps_val
 ! Note that the only variable that is supported in the netCDF files but
 ! not produced by this routine is the fire index.  
 
-use lfmgrid
+use lfmgrid, only : domnum, verbose, lx, ly, lz, lprs, mtype, write_to_lapsdir, &
+    nvar3dout, name3d, lvltype3d, units3d, com3d, pgrid, realtime, make_donefile, &
+    lvls2d, lvls3d, nvar2dout, name2d, lvltype2d, &
+    units2d, com2d, sgrid
 
 implicit none
    
@@ -155,7 +158,10 @@ end
 
 subroutine grib_sfc_vars(laps_reftime,laps_valtime)
 
-use lfmgrid
+use lfmgrid, only : precip_dt, lx, ly, nvar2dout, gribit, sgrid, verbose, rmsg, &
+                    com2d, timerange, table_version, center_id, subcenter_id, &
+                    process_id, param, leveltype, level1, level2, scalep10, &
+                    igds, funit, startbyte, nbytes
 use grib
 
 implicit none
@@ -243,7 +249,9 @@ end
 
 subroutine grib_ua_vars(laps_reftime,laps_valtime)
 
-use lfmgrid
+use lfmgrid, only : precip_dt, lx, ly, lz, lprs, nvar3dout, gribitua, pgrid, &
+                    rmsg, verbose, com3d, table_version, center_id, subcenter_id, &
+                    process_id, paramua, scalep10, igds, funit, startbyte, nbytes
 use grib
 
 implicit none
