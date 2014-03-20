@@ -193,14 +193,14 @@
                        if(blog_v(0,iazim) .gt. 0.)then
                            iazi_m = iazim
                            distm = iazi - iazim
-                           goto21
+                           goto 21
                        endif
                    enddo
 21                 do iazip = iazi+1,maxazi/2,+1
                        if(blog_v(0,iazip) .gt. 0.)then
                            iazi_p = iazip
                            distp = iazip - iazi 
-                           goto22
+                           goto 22
                        endif
                    enddo
 22                 continue
