@@ -72,6 +72,7 @@ cdis
 !       98-Mar-23        "          Added lvd subdirectory flexibility.
 
         use mem_namelist, ONLY: MAX_SND_GRID,MAX_SND_LEVELS
+     1                         ,model_fcst_intvl
 
         include 'trigd.inc'
 
@@ -3237,6 +3238,8 @@ Cabdel
                 var_2d = 'r01'
                 if(trim(ext) .eq. 'nam-nh')then
                     ipcp_cycle_time = 21600
+                else
+                    ipcp_cycle_time = model_fcst_intvl
                 endif
             endif
 
@@ -4250,7 +4253,7 @@ c abdel
 
         elseif(c_type_i .eq. 'ia' .or. c_type_i .eq. 'ij'
      1    .or. c_type_i .eq. 'ie' .or. c_type_i .eq. 'is'
-     1    .or. c_type_i .eq. 'in'                        )then       
+     1    .or. c_type_i .eq. 'in' .or. c_type_i .eq. 'od')then       
 
           call input_product_info(    i4time_ref            ! I
      1                             ,laps_cycle_time         ! I
@@ -4265,7 +4268,9 @@ c abdel
      1                             ,istatus)                ! O
 
 
-          if(c_type_i .ne. 'ie')then
+          if(c_type_i .eq. 'od')then
+              var_2d = 'COD'
+          elseif(c_type_i .ne. 'ie')then
               var_2d = 'LIL'
           else
               var_2d = 'LIC'
@@ -4277,7 +4282,9 @@ c abdel
      1                             ext,var_2d,units_2d,comment_2d,
      1                             NX_L,NY_L,field_2d,0,istatus)
 
-              if(c_type_i .ne. 'ie')then
+              if(c_type_i .eq. 'od')then
+                  c_label = 'Cloud Optical Depth'
+              elseif(c_type_i .ne. 'ie')then
                   c_label = 'Integrated Cloud Liquid (mm) '
               else
                   c_label = 'Integrated Cloud Ice (mm)    '
@@ -4343,23 +4350,23 @@ c abdel
           call make_fnam_lp(i4time_cloud,asc9_tim,istatus)
 
           clow = 0.
-          chigh = +2.
           cint = -0.1
 
-!         call plot_cont(column_max,1e-3,
-!    1          clow,chigh,cint,asc9_tim,namelist_parms,plot_parms,
-!    1          c_label,i_overlay,c_display,lat,lon,jdot,
-!    1          NX_L,NY_L,r_missing_data,laps_cycle_time)
-
-          scale = 1e-3 ! data are in M, plot is in mm
-          plot_parms%color_power = 0.3
+          if(c_type_i .eq. 'od')then
+              scale = 1.
+              chigh = +10.
+          else
+              scale = 1e-3 ! data are in M, plot is in mm
+              chigh = +2.
+          endif
+          plot_parms%color_power = 0.7
 
           call plot_field_2d(i4time_cloud,c_type_i,field_2d
      1                        ,scale
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'moist')
+     1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
 
         elseif(c_type(1:2) .eq. 'pe' .or. c_type(1:2) .eq. 'ne')then        
