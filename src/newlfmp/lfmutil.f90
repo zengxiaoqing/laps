@@ -37,7 +37,7 @@ end
 
 subroutine get_native_dims(mtype,filename,nx,ny,nz,istatus)
 
-use lfmgrid
+use lfmgrid, only : n3d_pts_thr, large_ngrid 
 
 implicit none
 
@@ -154,7 +154,7 @@ write(6,*)' # of 3D LAPS grid points, large_pgrid thresh = ',lx*ly*lz,p3d_pts_th
 if(lx*ly*lz > p3d_pts_thr)then
    write(6,*)' Large LAPS grid - process reduced set of 3-D fields'
    large_pgrid = .true.
-   large_ngrid = .true.
+!  large_ngrid = .true.
 endif
 
 return
@@ -270,6 +270,7 @@ character*3    var_2d
 real :: ldf(lx,ly),lat(lx,ly),lon(lx,ly),avg(lx,ly),static_albedo(lx,ly)
 real :: windspeed(lx,ly),soil_moist(lx,ly),snow_cover(lx,ly)
 real :: intrain(lx,ly),intsnow(lx,ly),intgraupel(lx,ly)
+real :: const_pcpadj
 
 integer ::        ismoist,isnow
 integer ::        status
@@ -352,11 +353,13 @@ if (.true.)               mrsfc(:,:)=hmrsig(:,:,1)
 
 print *,'Min/Max mrsfc (model sfc grids) =',minval(mrsfc),maxval(mrsfc)
 
-if(.not. large_ngrid)then
+if(l_process_uv)then
   if (maxval(usfc) > 1000.) usfc(:,:)=husig(:,:,1)
   if (maxval(vsfc) > 1000.) vsfc(:,:)=hvsig(:,:,1)
+endif
+if(l_process_w)then
   if (maxval(wsfc) > 1000.) wsfc(:,:)=hwsig(:,:,1)
-endif ! large_ngrid
+endif
 
 ! Other derived surface fields.
 where(mrsfc < zero_thresh) mrsfc = zero_thresh
@@ -618,7 +621,7 @@ if (make_micro) then
       print *,'Min/Max hsnowmr_sig =',minval(hsnowmr_sig),maxval(hsnowmr_sig)
       print *,'Min/Max hgraupelmr_sig =',minval(hgraupelmr_sig),maxval(hgraupelmr_sig)
    endif
-   if (minval(hrainmr_sig) < rmsg .and. (.not. large_ngrid) .and.  &
+   if (minval(hrainmr_sig) < rmsg .and. (.not. large_pgrid) .and.  &
        minval(hsnowmr_sig) < rmsg .and. minval(hgraupelmr_sig) < rmsg) then
       call lfm_sfc_pcptype(lx,ly,nz,hrainmr_sig,hsnowmr_sig,hgraupelmr_sig  &
                           ,pcptype_sfc)
@@ -716,6 +719,13 @@ if (verbose) then
 endif
 deallocate(pcp_init)
 deallocate(pcp_06)
+
+! Adjust precip/snow fields with a constant (for now) bias correction
+const_pcpadj = 1.00 ! 0.65
+where(pcp_inc .ne. r_missing_data)pcp_inc = pcp_inc * const_pcpadj
+where(pcp_tot .ne. r_missing_data)pcp_tot = pcp_tot * const_pcpadj
+where(snow_inc .ne. r_missing_data)snow_inc = snow_inc * const_pcpadj
+where(snow_tot .ne. r_missing_data)snow_tot = snow_tot * const_pcpadj
 
 ! Temporary variables needed to derive some fields.
 
