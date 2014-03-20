@@ -256,7 +256,7 @@ integer :: ct
 if(.not. large_ngrid)then ! state variables
    nvar3dh=7
 else
-   if(.not. large_pgrid)then ! process U,V
+   if(l_process_uv)then ! process U,V
       nvar3dh=6
    else
       nvar3dh=4
@@ -284,13 +284,14 @@ hzsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 htsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 hmrsig   =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 
-if(.not. large_pgrid)then
+if(l_process_uv)then
    husig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
    hvsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-   if(.not. large_ngrid)then   
-      hwsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
-   endif
 !  htkesig  =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
+endif
+
+if(l_process_w)then   
+   hwsig    =>hgrid(1:lx,1:ly,ct:ct+nz-1); ct=ct+nz
 endif
 
 if (make_micro) then
