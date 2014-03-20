@@ -252,7 +252,8 @@
         azid1 = 90. ; azid2 = 270.
         if(sol_alt(i,j) .gt. 0.)then
             azid1 = nint(sol_azi(i,j))
-            azid2 = mod(azid1+180.,360.)
+!           azid2 = mod(azid1+180.,360.)
+            azid2 = azid1
         elseif(moon_alt(i,j) .gt. 0.)then
             azid1 = nint(moon_azi(i,j))
             azid2 = mod(azid1+180.,360.)
@@ -657,7 +658,8 @@
                   cvr_path_sum_sp(4) = 
      1            cvr_path_sum_sp(4) + snow_m * wt_sp(4) * slant2
 
-                  if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
+!                 if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
+                  if(.true.)then
 
                     if(cond_m .eq. 0.)then ! wasn't computed above
                       i1 = min(int(rinew_m),ni-1)
@@ -696,6 +698,7 @@
                   sum_aod     = sum_aod     + aero_ext_coeff * slant2
 
                   if(rk_m .lt. (rkstart + 1.0))then ! near topo
+!                 if(.false.)then ! near topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
      1                          * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
                     if(transm_3d(inew_m,jnew_m,int(rk_m)+1) .gt. .1)then
@@ -844,7 +847,8 @@
      1                     ,airmass_2_cloud_3d(ialt,jazi)
      1                     ,r_cloud_rad(ialt,jazi)
      1                     ,aero_ext_coeff
-     1                     ,transm_3d(inew_m,jnew_m,int(rk_m)+1)
+!    1                     ,transm_3d(inew_m,jnew_m,int(rk_m)+1)
+     1                     ,transm_3d_m
      1                     ,sum_aod,sum_aod_ill,sum_aod_ill_dir
  101              format(2f8.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,f9.4
