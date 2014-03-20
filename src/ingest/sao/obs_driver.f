@@ -935,6 +935,7 @@ c
      &                  (var_b(i,j), j=1,max_bvar)
 	enddo !i
  903	format(1x,a20,2x,i3,20(2x,a3))
+        close(11)
 c
 c.....  Have blacklist info.  Now flag the var_b's at each station_b as bad.
 c
