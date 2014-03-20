@@ -953,7 +953,7 @@
 
             I4_elapsed = ishow_timer()
 
-            if(solar_alt .gt. 0.)then
+            if(solar_alt .gt. -3.)then
                 call get_idx(solar_alt,minalt,alt_scale,ialt_sun)
                 call get_idx(solar_az ,minazi,azi_scale,jazi_sun)
                 ialt_sun = ialt_sun - minalt + 1
