@@ -26,7 +26,7 @@ if test "$3" == "bbcp"; then
     echo "bbcp -s 32 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR"
           bbcp -s 32 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR
 
-elif test "$3" == "exchange"; then
+elif test "$3" == "exchange"; then # best for subdirectories
     echo "scp -o ConnectTimeout=200 -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
           scp -o ConnectTimeout=200 -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
 
@@ -162,6 +162,11 @@ elif test "$3" == "exchange_zip"; then
     if test -e $FILENAME; then                                                       
         echo $DESTDIR > destdirname
 
+        if test ! -f destdirname; then
+            echo "ERROR: unable to create destdirname"
+            exit
+        fi
+
         echo " "
         echo "make local zip file from filelist"
         echo  zip $TEMPFILE.z destdirname `cat $FILENAME`   
@@ -179,9 +184,14 @@ elif test "$3" == "exchange_zip"; then
 
     fi
 
-elif test "$3" == "exchange_zip2"; then
+elif test "$3" == "exchange_zip2"; then # for files or file list
     if test -e $FILENAME; then                                                       
         echo $DESTDIR > destdirname
+
+        if test ! -f destdirname; then
+            echo "ERROR: unable to create destdirname"
+            exit
+        fi
 
         echo " "
         echo "make local zip file from filelist"
@@ -196,6 +206,16 @@ elif test "$3" == "exchange_zip2"; then
         echo  scp -o ConnectTimeout=200 $TEMPFILE.z2 jetscp.rdhpcs.noaa.gov:$TEMPDIR              
               scp -o ConnectTimeout=200 $TEMPFILE.z2 jetscp.rdhpcs.noaa.gov:$TEMPDIR               
 
+        echo "exit status (first scp try) is $?"
+
+        if test "$?" != "0"; then 
+            echo "error scp failed, trying again..." 
+            echo  scp -o ConnectTimeout=200 $TEMPFILE.z2 jetscp.rdhpcs.noaa.gov:$TEMPDIR              
+                  scp -o ConnectTimeout=200 $TEMPFILE.z2 jetscp.rdhpcs.noaa.gov:$TEMPDIR               
+        fi
+
+        echo "exit status (second scp try) is $?"
+
         date -u
 
         TEMPFILE2=`basename $TEMPFILE`                        
@@ -204,6 +224,8 @@ elif test "$3" == "exchange_zip2"; then
         echo "unzip from $TEMPDIR into second directory"
         echo  ssh $REMOTE_NODE "cd $DESTDIR; unzip -o $TEMPDIR/$TEMPFILE2.z2; rm -f $TEMPDIR/$TEMPFILE2.z2"
               ssh $REMOTE_NODE "cd $DESTDIR; unzip -o $TEMPDIR/$TEMPFILE2.z2; rm -f $TEMPDIR/$TEMPFILE2.z2"
+
+        echo "exit status is $?"
        
         date -u
 
