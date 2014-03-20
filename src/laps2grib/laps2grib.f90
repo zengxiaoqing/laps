@@ -313,6 +313,7 @@ PROGRAM laps2grib
 
       filestatus = 0
       CALL ncread_2d(lapsfile,nx,ny,meta_accum2d(n)%var,lapsdata2d,val_time,ref_time,istatus)
+      PRINT *, "ncread_2d(", lapsfile,nx,ny,n, val_time,ref_time,istatus, ")"
       IF (istatus .EQ. 1) THEN
         filestatus = 1  ! ncread_2d returned data...OK to write out grib2
         CALL calc_val_ref_times(val_time,ref_time,time_unit_indicator,time_range,istatus)
@@ -344,16 +345,26 @@ PROGRAM laps2grib
 			   time_unit_indicator,time_range,etime_unit,etime_value,istatus)
         IF (istatus .EQ. 0) PRINT *, "Problem with CALC_ACCUM_TIME"
 
+        PRINT *, 'after calc_accum_time ', ref_time, ', ', ref_time, ' ', &
+           accum_time
+        PRINT *, 'etime: ', etime_unit, ', ', etime_value
+
         ! Octet 49-50, set to current runtime
         meta_accum2d(n)%etime_unit = etime_unit 
         meta_accum2d(n)%etime_value= etime_value
 
-        !val_time = val_time + 315619200 
+        ! cv_i4tim_int_lp expects LAPS time  KLH - 20 MAR 2014
+        val_time = val_time + 315619200 
 	! --- Valid date, time to describe data for GRIB2.
         CALL cv_i4tim_int_lp(val_time,eyear,emonth,eday,ehour,eminute,esecond,istatus)
+        !PRINT *, 'cv_i4tim_int_lp(', val_time,eyear,emonth,eday,ehour,&
+        !eminute,esecond,istatus, ')'
         ! Add 10 to eyear to have time in grib2 files to account for 10 yr difference between i4time and unixtime
         ! Octet 35-40, set to current runtime
-        meta_accum2d(n)%eyear = eyear + 1900 + 10
+        !meta_accum2d(n)%eyear = eyear + 1900 + 10
+        ! This 10 year offset is not needed when valid LAPS time is passed to cv_itim_int_lp   KLH -- 20 MAR 2014
+
+        meta_accum2d(n)%eyear = eyear + 1900
         meta_accum2d(n)%emon  = emonth
         meta_accum2d(n)%eday  = eday
         meta_accum2d(n)%ehour = ehour
