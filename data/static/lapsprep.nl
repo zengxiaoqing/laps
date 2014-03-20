@@ -5,7 +5,7 @@
   hydrometeor_scale_factor_pcp = 1.0,
   hydrometeor_scale_factor_cld = 1.0,
   output_format = 'wps',
-  snow_thresh = 1.1,
+  snow_thresh = 0.3,
   lwc2vapor_thresh = 0.,
   ice2vapor_thresh = 0.,
   make_sfc_uv = .false.,
@@ -51,10 +51,9 @@ c  snow_thresh:
 c    Real value, controls the setting of the snow cover flag in the output.
 c
 c    WPS format:
-c    Any value of snow cover fraction <= 1.0 will turn on the output of
-c    snow cover in the WPS output. The value of the snow cover will be divided
-c    by 6 so that a value of 0.3 will trigger the 0.05 threshold in WRF.
-c    To disable the writing of the field, set > 1.0
+c    Threshold LAPS snow cover fraction used to set the SNOWH variable to either
+c    0.0 or 1.0 in the WPS output. To disable the writing of the field, 
+c    set > 1.0
 c 
 c    Gribprep format:
 c    Any value of snow cover fraction from the LAPS analysis (0.->1.0) 
