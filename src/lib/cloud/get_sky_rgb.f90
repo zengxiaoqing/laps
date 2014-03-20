@@ -2,15 +2,15 @@
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
                                r_cloud_rad,cloud_rad_c, &
                                clear_rad_c, &
-                               clear_radf_c,patm,htmsl, &                    ! I
+                               clear_radf_c,patm,htmsl, &               ! I
                                glow,glow_sun,glow_moon,glow_stars, &
-                               od_atm_a,transm_obs,isun,jsun, &              ! I
+                               od_atm_a,transm_obs,isun,jsun, &         ! I
                                airmass_2_cloud,airmass_2_topo, &
-                               topo_swi,topo_albedo,albedo_sfc, &            ! I
+                               topo_swi,topo_albedo,albedo_sfc, &       ! I
                                aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir, & ! I
                                alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az, &
                                moon_alt,moon_az,moon_mag, &
-                               sky_rgb)                                      ! O
+                               sky_rgb)                                 ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl
         include 'trigd.inc'
@@ -65,6 +65,8 @@
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag
 
+        logical l_pf_rad /.true./
+
         new_skyglow = 1
 
         write(6,*)' get_sky_rgb: sol_alt = ',sol_alt
@@ -85,8 +87,8 @@
           write(6,*)' twi_glow_max = ',arg
 
 !         glow_secondary = arg - 1.5  ! one thirtieth of max sky brightness
-          glow_diff_cld      = 0.8
-          glow_diff_clr      = 1.2 ! 1.5
+          glow_diff_cld      = 0.8 ! 1.1
+          glow_diff_clr      = 1.2 ! 1.5 ! 1.5
           glow_secondary_cld = twi_glow_ave - glow_diff_cld
           glow_secondary_clr = twi_glow_ave - glow_diff_clr
 
@@ -310,6 +312,37 @@
             write(6,*)' range of glow_moon_sc is ',minval(glow_moon_sc(:,:)),maxval(glow_moon_sc(:,:))
             write(6,*)' range of glow is ',minval(glow(:,:)),maxval(glow(:,:))
 
+        elseif(sol_alt .lt. -6. .and. moon_alt .gt. 0.)then ! sun below -6. and moon is up
+            write(6,*)' fill elong_a array based on lunar elongation'
+            call get_elong_a(1,ni,1 &                                ! I
+                     ,1,nj,1 &                                       ! I
+                     ,1,ni,1,nj &                                    ! I
+                     ,moon_alt,moon_az,alt_a,azi_a &                 ! I
+                     ,elong_a                                 )      ! O
+
+        else ! get just solar elongation
+            write(6,*)' fill elong_a array based on solar elongation'
+            call get_elong_a(1,ni,1 &                                ! I
+                     ,1,nj,1 &                                       ! I
+                     ,1,ni,1,nj &                                    ! I
+                     ,sol_alt,sol_az,alt_a,azi_a &                   ! I
+                     ,elong_a                                 )      ! O
+
+            if(isun .gt. 0 .AND. jsun .gt. 0 .AND. isun .le. ni .AND. jsun .le. nj)then
+                write(6,*)' isun,jsun,am_2_topo=',isun,jsun,airmass_2_topo(isun,jsun)
+
+!               Determine if observer is in terrain shadow
+                if(airmass_2_topo(isun,jsun) .gt. 0.)then 
+                    write(6,*)' Sun is behind terrain/horizon'
+                    sun_vis = 0.
+                else
+                    write(6,*)' Sun is above terrain/horizon'
+                    sun_vis = 1.
+                endif
+            else
+                write(6,*)' Sun is outside window'
+                sun_vis = 0.
+            endif
         endif
 
         write(6,*)' range of glow_sun is ',minval(glow_sun),maxval(glow_sun)
@@ -339,7 +372,7 @@
           endif
         endif
 
-        call get_cld_pf(elong_a,r_cloud_rad,cloud_od,cloud_od_sp,airmass_2_topo,ni,nj & ! I
+        call get_cld_pf(elong_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,ni,nj & ! I
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
         do j = 1,nj
@@ -357,8 +390,17 @@
 !             Potential intensity of cloud if it is opaque 
 !               (240. is nominal intensity of a white cloud far from the sun)
 !               (0.25 is dark cloud base value)                                  
-              rint_top  = 240.                                * pf_scat(i,j) 
-              rint_base = 240. * (  0.3 * (1. + albedo_sfc) ) * pf_scat(i,j) 
+!             Add gamma correction to pf_scat 
+              if(l_pf_rad)then
+                  rad = counts_to_rad(240.)                                 * pf_scat(i,j)
+                  rint_top = rad_to_counts(rad)
+
+                  rad = counts_to_rad(240. * (  0.3 * (1. + albedo_sfc) ) ) * pf_scat(i,j)
+                  rint_base = rad_to_counts(rad)
+              else
+                  rint_top  = 240.                                * pf_scat(i,j)! **0.45 
+                  rint_base = 240. * (  0.3 * (1. + albedo_sfc) ) * pf_scat(i,j)! **0.45 
+              endif
 
 !             Gamma color correction applied when sun is near horizon 
               if(cloud_rad_c(1,i,j) .gt. 0.)then
@@ -374,7 +416,8 @@
 
               if(idebug_a(i,j) .eq. 1 .AND. abs(alt_a(i,j)) .le. 2.0)then
 !                 write(6,41)pf_scat1(i,j),elong_a(i,j),pf_snow,snow_factor,pf_scat(i,j),rint_base,r_cloud_rad(i,j),(rint_top  * cld_rgb_rat(1) * r_cloud_rad(i,j)),rint_base * (1.0 - r_cloud_rad(i,j)),rintensity(1)
-                  write(6,41)pf_scat1(i,j),elong_a(i,j),cloud_od_snow,cloud_od_tot,snow_bin1,pf_snow,snow_factor,pf_scat2(i,j),pf_scat(i,j),rintensity(1)
+!                 write(6,41)pf_scat1(i,j),elong_a(i,j),cloud_od_snow,cloud_od_tot,snow_bin1,pf_snow,snow_factor,pf_scat2(i,j),pf_scat(i,j),rintensity(1)
+                  write(6,41)elong_a(i,j),pf_scat(i,j),rintensity(1)
  41               format(' pf/rintensity(1) = ',10f9.3)
               endif
 
@@ -387,9 +430,9 @@
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
               glow_cld = glow_secondary_cld                                     
 
-              if(sol_alt .lt. -16.)then
+              if(sol_alt .lt. -6. .and. moon_alt .gt. 0.)then
 !                 Add phys term for scattering by moonlight on the clouds
-                  pf_scat_moon = pf_scat(i,j)**1. ! empirically stronger due to linear scale?             
+                  pf_scat_moon = pf_scat(i,j)
                   glow_cld_moon = log10(glow_cld_day * cloud_rad_c(2,i,j) * pf_scat_moon)
                   glow_cld = addlogs(glow_cld,glow_cld_moon)
               else
@@ -432,8 +475,9 @@
                 rintensity_glow = min(((glow_tot -7.3) * 100.),255.)
 
 !               Convert RGB brightness into image counts preserving color balance
-                gamclr = 0.70
-                purple = 0.45
+                ramp_alt = sind(min(2.*sol_alt,90.))**2
+                gamclr = 0.45 * (1.0-ramp_alt) + 0.70 * ramp_alt
+                purple = 0.35 * (1.0-ramp_alt) + 0.45 * ramp_alt
                 bog_rad = clear_rad_c(3,i,j) / clear_rad_c(2,i,j) 
                 if(bog_rad .gt. 2.)then ! Rayleigh Value
                     rog_exp = purple    ! boost red component
@@ -447,6 +491,10 @@
                 clr_red = rintensity_glow * rog
                 clr_grn = rintensity_glow
                 clr_blu = rintensity_glow * bog
+              endif
+              if(idebug .eq. 1 .and. elong_a(i,j) .lt. 20.)then
+                  write(6,60)elong_a(i,j),clear_rad_c(:,i,j),bog_rad
+60                format('   elong / Clr RGB / bog = ',f9.2,3f14.0,f9.3)
               endif
 
           elseif(sol_alt .ge. -16.)then ! Twilight from clear_rad_c array
@@ -470,8 +518,13 @@
               glow_tot = addlogs(glow_twi,glow_stars(2,i,j))  ! with stars 
               star_ratio = 10. ** ((glow_tot - glow_twi) * 0.45)
 
+              if(sun_vis .eq. 1.0)then ! sun glowing below horizon
+                  glow_tot = addlogs(glow_tot,glow_sun(i,j))
+              endif
+
 !             arg = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15             
               arg = glow_tot                                  ! experiment?            
+
               rintensity_floor = 0. ! 75. + sol_alt
 
 !             rintensity_glow = max(min(((arg     -7.) * 100.),255.),rintensity_floor)
@@ -536,7 +589,8 @@
               clr_red = clr_red * ratio_luma               
               clr_grn = clr_grn * ratio_luma              
               clr_blu = clr_blu * ratio_luma               
-              write(6,*)' alt/azi/elong_red/elong/redelong: ',alt_a(i,j),azi_a(i,j),elong_red,elong_a(i,j),red_elong,nint(clr_red),nint(clr_grn),nint(clr_blu)
+              write(6,95)alt_a(i,j),azi_a(i,j),elong_red,elong_a(i,j),red_elong,nint(clr_red),nint(clr_grn),nint(clr_blu)
+95            format(' alt/azi/elong_red/elong/redelong: ',5f9.3,3i5)
             endif
           endif
 
@@ -551,7 +605,12 @@
           frac_cloud = r_cloud_3d(i,j)
 !         frac_cloud = 0.0 ; Testing
           frac_cloud = frac_cloud * cloud_visibility  
-          frac_clr = 1.0 - frac_cloud                         
+
+!         Consider frac_clr also in relation to fraction of airmass between
+!         the observer and the cloud contributing to Rayleigh/Mie scattered light.
+!         This helps for the case of thin cirrus adding to the clear sky light.
+          frac_clr = 1.0 - frac_cloud                          
+
           sky_rgb(0,I,J) = clr_red * frac_clr + cld_red * frac_cloud
           sky_rgb(1,I,J) = clr_grn * frac_clr + cld_grn * frac_cloud
           sky_rgb(2,I,J) = clr_blu * frac_clr + cld_blu * frac_cloud
@@ -630,7 +689,7 @@
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:)
               endif
 102           format(2i5,3f6.1,f9.3,f9.4,5f6.2,3f8.3,f8.4,f7.1,f9.3,f9.1,5f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
-103           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.4,f7.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',2f9.5,f9.0,3i4)
+103           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.4,f7.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',2f9.5,f11.0,3i4)
 104           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
           endif
 
