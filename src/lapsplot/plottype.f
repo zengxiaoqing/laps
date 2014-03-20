@@ -67,7 +67,7 @@ cdis
 
         character*1 c1_precip_types(0:10)
         data c1_precip_types
-     1  /' ','R','*','Z','I','H','L','F',' ',' ',' '/
+     1  /' ','R','*','Z','I','H','L','F','M','M',' '/
 
         ANGD = 0.
 
