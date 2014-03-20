@@ -125,7 +125,7 @@
 
           elong(ialt,jazi) = angleunitvectors(xs,ys,zs,xo,yo,zo)
 
-          idebug = idebug_a(ialt,jazi)
+          idebug = idebug_a(ialt,jazi) * 2
 
           if(sol_alt .gt. 0.)then
 
@@ -258,7 +258,16 @@
 
             horz_dep_r = -sol_alt * rpd                                                  
             dist_pp_plane = horz_dep_r**2 * earth_radius / 2.0 ! approx perpendicular dist
-            dist_pp_plane = dist_pp_plane + 13000.             ! shadow enlargement
+
+!           Enlarge the shadow except when near the sun and near sunrise
+!           shadow_enlarge_high = 13000. * (1.0 - cosd(elong(ialt,jazi)))/2
+            elong_arg = min(elong(ialt,jazi),90.)
+            shadow_enlarge_high = 13000. * sind(elong_arg)
+            shadow_enlarge_low  = 13000.                                     
+            ramp_enl = min(max(1.0 - (-2. - sol_alt) / 2.0,0.),1.)
+            shadow_enlarge = shadow_enlarge_high * ramp_enl + shadow_enlarge_low * (1. - ramp_enl)
+            dist_pp_plane = dist_pp_plane + shadow_enlarge ! shadow enlargement
+!           dist_pp_plane = dist_pp_plane + 13000.
 
             if(.true.)then ! get light ray distance to shadow cylinder
                 xcos = cosd(angle_r) ! points along the sun's azimuth at 90 degees elong
@@ -317,7 +326,8 @@
                   frac_airmass_unlit = 1.0 - frac_airmass_lit
                   airmass_unlit = airmass_tot - airmass_lit
 
-                  aod_path = aod_ray(ialt,jazi) * airmassf(z,1.0)
+!                 aod_path = aod_ray(ialt,jazi) * airmassf(z,1.0)
+                  aod_path = aod_ray(ialt,jazi)*aa*ext_a(2)
                   frac_aero_lit = aero_ray_plane / aod_ray(ialt,jazi)
                   aod_lit = aod_path * frac_aero_lit
                   aod_unlit = aod_path * (1.-frac_aero_lit)
@@ -347,7 +357,7 @@
 !                  max(     brt(airmass_lit)*twi_trans_c(1)     ,.00001)
                 clear_intf = clear_int
               else ! experimental absolute illumination (nl)
-                rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
+                rayleigh_gnd = rayleigh_pf(elong(ialt,jazi))
                 rayleigh = rayleigh_gnd  ! phase function
                 clear_int = &
                   max(twi_int*ecl_int*rayleigh*brt(airmass_lit)*twi_trans_c(1) &
@@ -355,7 +365,7 @@
                 if(idebug .ge. 2)then
                   write(6,91)elong(ialt,jazi) &
                             ,rayleigh,brt(airmass_lit),twi_trans_c(1),twi_int,clear_int
-91                format('elong/rayleigh/brt/twi_trans/day_int/clear_int ',4f9.5,2f11.0)
+91                format('elong/rayleigh/brt/twi_trans/day_int/clear_int ',4f9.5,2f12.0)
                 endif
                 clear_intf = clear_int / twi_int
               endif
@@ -457,11 +467,11 @@
               write(6,101) airmass_lit,airmass_tot,airmass_unlit&
                           ,hue_coeff,huea,hue  
 101           format('airmass_lit/tot/unlit/huec/huea/hue',6f9.5)
-              write(6,102)aod_lit,aod_unlit,aero_red &         
+              write(6,102)aa,aod_lit,aod_unlit,aero_red &         
                          ,aero_red/clear_intf &                
                          ,clear_intf,skyref & 
                          ,sat_arg,sat_ramp,sat_twi_ramp
-102           format('aod_lit/unlit/red/rat/ref/sat',4f9.5,2x,2f9.5,2x,3f9.5)
+102           format('aa/aod_lit/unlit/red/rat/ref/sat',5f9.5,2x,2f9.5,2x,3f9.5)
               rmaglim = b_to_maglim(clear_rad_c(3,ialt,jazi))
             endif
 
@@ -474,7 +484,7 @@
                       ,clear_rad_c(:,ialt,jazi)/1e9
               else
                 write(6,112)ialt,jazi,sol_alt &
-                      ,angle_plane,dist_ray_plane,ht_ray_plane &
+                      ,angle_plane,dist_ray_plane,ht_ray_plane,shadow_enlarge &
                       ,patm_ray_plane,airmass_lit,airmass_unlit &
                       ,twi_trans,clear_intf,rint_alt_ramp &
                       ,clear_rad_c(1,ialt,jazi) &
@@ -485,10 +495,10 @@
        'ialt/jazi/salt/od_a/ds_ray/ht_ray/clrrd' &
                   ,i4,i5,2x,2f6.2,2f10.1,2x,3f8.3)
 112           format( &
-       'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/a/t/clrrad' &
-!                 ,2i5,2f7.3,2f8.2,2f10.1,2x,4f8.5,f8.0,f8.5,2x,3f8.5) &
-                  ,i4,i5,2x,2f6.2,2f10.1,2x,3f8.4,2x,f8.4,2f8.5 &
-                                      ,2x,f7.4,f7.4,f11.0)
+       'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/enl/a/t/clrrad' &
+!                 ,2i5,2f7.3,3f8.2,2f10.1,2x,4f8.5,f8.0,f8.5,2x,3f8.5) &
+                  ,i4,i5,2x,2f6.2,2f10.1,f8.1,2x,3f8.4,2x,f8.4,2f8.5 &
+                                      ,2x,f7.4,f7.4,f12.0)
 
               if(idebug .ge. 2)then
                 write(6,121)rmaglim
