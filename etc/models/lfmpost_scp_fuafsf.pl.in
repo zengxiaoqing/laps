@@ -25,7 +25,7 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -x <blank> if present an awips bigfile will be created
 #    -e avoid exiting if a particular file is missing (position as last argument or supply dummy value)
 #    -c remote copy method (rsync, scp, exchange, bbcp), default is rsync [optional]
-#    -R copy surface fsf or upper air fua only (specify "fua" or "fsf") [optional]
+#    -R copy surface fsf or upper air fua only (specify "fua", "fsf", or "both") [optional]
 
 use vars qw($opt_a $opt_l $opt_L $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_M $opt_S $opt_x $opt_e $opt_c $opt_R $opt_D);
 #getopt('l:Lm:a:r:d:g:f:i:s:p:w:M:Sxec:RD');
