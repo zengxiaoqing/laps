@@ -189,10 +189,10 @@ cdis
 
         n_columns = 0
 
-        do j = 1,nj
+        do j = jlow,jhigh
 c       write(6,*)' Doing Column ',j
 
-        do i = 1,ni
+        do i = ilow,ihigh
 
           if(isum_ref_2d(i,j) .ne. isum_test)then ! Test for presence of echo
 
