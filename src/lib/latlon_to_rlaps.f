@@ -1040,6 +1040,7 @@ cdoc  as well as various grid conversion routines.
      1     ,dist_calc
 
       endif
+
 !...........................................................................
 
       call latlon_to_xy(lat(1,1),lon(1,1),erad,x1,y1)
@@ -1051,6 +1052,32 @@ cdoc  as well as various grid conversion routines.
      1 ' grid spacing on projection plane using "latlon_to_xy" is:'      
      1 ,dist
       
+!...........................................................................
+
+      if(c6_maproj .eq. 'lambrt')then
+          call get_standard_latitudes(std_lat1,std_lat2,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)
+     1        ' Error calling get_standard_latitudes from check_domain'
+              return
+          endif
+
+          ave_lat = (std_lat1 + std_lat2) / 2.
+
+          call get_grid_spacing_actual(ave_lat,lon(icen,jcen)
+     1                                      ,dist_calc,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)
+     1        ' Error calling get_grid_spacing_actual from check_domain'       
+              return
+          endif
+
+          write(6,*)' calculated grid spacing on '
+     1      ,'earths surface at average lambert latitude:'       
+     1     ,ave_lat,dist_calc
+
+      endif
+
 !...........................................................................
 
       write(6,*)
