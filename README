@@ -366,8 +366,9 @@
      the various plotting packages to the online LAPS forum. 
       
      Another note of interest is that LAPS is visualized as an integral part of
-     the AWIPS & ALPS systems. If you have AWIPS, then LAPS should be running on
-     it and you can view its output on the workstation.
+     the AWIPS & ALPS systems. If you have AWIPS (including either AWIPS-I or 
+     AWIPS-II), then LAPS should be running on it and you can view its output 
+     on the workstation.
 
                  ----  2.1.8.1 Web Display  ---
 
@@ -2331,7 +2332,8 @@ can be gotten directly from GSD)
    in each directory, as well as the youngest and oldest file ages in hours.
    The data flow is generally from top to bottom on the product list, starting
    with analyses and ending with forecast model (fua/fsf) output being listed 
-   at the very bottom.
+   at the very bottom. In general the root cause of missing products would be
+   the first one that is missing along the data flow.
 
    To check what model background and observational data were used in the 
    analyses as well as some QC and error (verification) statistics, you can 
