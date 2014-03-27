@@ -1019,6 +1019,14 @@ c----------------------------------------------------------
           init = 1
       endif
 
+      if(nk_laps .gt. MAX_LVLS)then
+          write(6,*)
+     1  ' ERROR: number of laps levels exceeds coded limit of ',MAX_LVLS
+          write(6,*)' To increase the limit edit lapsparms.for'
+          istatus = 0
+          return
+      endif
+
       nk = nk_laps
 
       istatus = 1
