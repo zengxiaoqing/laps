@@ -399,6 +399,10 @@ SUBROUTINE LAPSOBSV(m)
 
   REAL :: t_c,d_c,f_to_c,c_to_f,dwpt	! for converting rh to td
 
+  ! Terrain interpolation variables:
+  INTEGER :: ix,ix1,jy,jy1
+  REAL :: alpha,beta,topo
+
   ! Read observation data by LAPS time frames:
   numobs = 0
   DO i=1,numtmf
@@ -412,8 +416,7 @@ SUBROUTINE LAPSOBSV(m)
 	solea,sltea,slmea,pcpea,snwea,amt,cht,mxstts,err)
 
     IF (err .NE. 1) THEN
-      PRINT*,'LAPSOBSV: error in reading LSO data, check!'
-      STOP
+      PRINT*,'LAPSOBSV: error in reading LSO data, check!',i
     ENDIF
 
     ! Read in surface data from sondes: 
@@ -515,9 +518,9 @@ SUBROUTINE LAPSOBSV(m)
               rawobs(1,numobs(j)+k,j) = dew(k)
 	      weight(numobs(j)+k,j) = dewea(k)
             ELSEIF (rhd(k) .NE. mising .AND. &
-                     rhd(k) .NE. badsfc .AND. &
-                     tmp(k) .NE. mising .AND. &
-                     tmp(k) .NE. badsfc) THEN
+                    rhd(k) .NE. badsfc .AND. &
+                    tmp(k) .NE. mising .AND. &
+                    tmp(k) .NE. badsfc) THEN
                 ! obs value:
                 t_c = f_to_c(tmp(k))
                 d_c = dwpt(t_c,rhd(k))
@@ -551,8 +554,25 @@ SUBROUTINE LAPSOBSV(m)
 		(spr(k) .NE. badsfc)) THEN
 	      prs = spr(k)
 	    ELSEIF ((alt(k) .NE. mising) .AND. &
-		    (alt(k) .NE. badsfc)) THEN
-	      prs = ALT_2_SFC_PRESS(alt(k),elv(k))
+		    (alt(k) .NE. badsfc) .AND. &
+                    (rawobs(2,numobs(j)+k,j) .NE. mising) .AND. &
+                    (rawobs(3,numobs(j)+k,j) .NE. badsfc)) THEN
+
+              ! Grid indices and interpolation coefficiences
+              ix = INT(rawobs(2,numobs(j)+k,j))
+              ix1 = MIN(ix+1,numgrd(1))
+              jy = INT(rawobs(3,numobs(j)+k,j))
+              jy1 = MIN(jy+1,numgrd(2))
+
+              alpha = rawobs(2,numobs(j)+k,j)-ix
+              beta  = rawobs(3,numobs(j)+k,j)-jy
+
+              topo = (1.0-alpha)*(1.0-beta)*topogr(ix ,jy )+ &
+                          alpha *(1.0-beta)*topogr(ix1,jy )+ &
+                     (1.0-alpha)*     beta *topogr(ix ,jy1)+ &
+                          alpha *     beta *topogr(ix1,jy1)
+
+	      prs = ALT_2_SFC_PRESS(alt(k),topo)
 	    ELSE
 	      prs = badsfc
 	    ENDIF
@@ -565,9 +585,8 @@ SUBROUTINE LAPSOBSV(m)
                 rawobs(1,numobs(j)+k,j) = prs
               ELSE
                 ! Use reduce_p to reduce prs to the reduced pressure level:
-	        IF (tmp(k) .NE. badsfc .AND. dew(k) .NE. badsfc .AND. &
-                    elv(k) .NE. badsfc) THEN
-	          CALL REDUCE_P(tmp(k),dew(k),prs,elv(k), &
+	        IF (tmp(k) .NE. badsfc .AND. dew(k) .NE. badsfc) THEN
+	          CALL REDUCE_P(tmp(k),dew(k),prs,topo, &
 		                lapses(1),lapses(2), &
 		                rawobs(1,numobs(j)+k,j),rdplvl,badsfc)
                 ELSE
@@ -586,8 +605,29 @@ SUBROUTINE LAPSOBSV(m)
 		(spr(k) .NE. badsfc)) THEN
 	      rawobs(1,numobs(j)+k,j) = spr(k)
 	    ELSEIF ((alt(k) .NE. mising) .AND. &
-		    (alt(k) .NE. badsfc)) THEN
-	      rawobs(1,numobs(j)+k,j) = ALT_2_SFC_PRESS(alt(k),elv(k))
+		    (alt(k) .NE. badsfc) .AND. &
+                    (rawobs(2,numobs(j)+k,j) .NE. mising) .AND. &
+                    (rawobs(3,numobs(j)+k,j) .NE. badsfc) ) THEN
+
+              ! Grid indices and interpolation coefficiences
+              ix = INT(rawobs(2,numobs(j)+k,j))
+              ix1 = MIN(ix+1,numgrd(1))
+              jy = INT(rawobs(3,numobs(j)+k,j))
+              jy1 = MIN(jy+1,numgrd(2))
+
+              alpha = rawobs(2,numobs(j)+k,j)-ix
+              beta  = rawobs(3,numobs(j)+k,j)-jy
+
+              topo = (1.0-alpha)*(1.0-beta)*topogr(ix ,jy )+ &
+                          alpha *(1.0-beta)*topogr(ix1,jy )+ &
+                     (1.0-alpha)*     beta *topogr(ix ,jy1)+ &
+                          alpha *     beta *topogr(ix1,jy1)
+
+	      rawobs(1,numobs(j)+k,j) = ALT_2_SFC_PRESS(alt(k),topo)
+if (stn(k) .EQ. 'KSPR') then
+print*,'E1452: ',topo, elv(k),alt(k),rawobs(1,numobs(j)+k,j)
+endif
+
 	    ELSE
 	      rawobs(1,numobs(j)+k,j) = badsfc
 	    ENDIF
