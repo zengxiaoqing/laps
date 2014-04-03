@@ -4355,9 +4355,12 @@ c abdel
           if(c_type_i .eq. 'od')then
               scale = 1.
               chigh = +10.
+              cint = 2.
+              colortable = 'linear'
           else
               scale = 1e-3 ! data are in M, plot is in mm
               chigh = +2.
+              colortable = 'tpw'
           endif
           plot_parms%color_power = 0.7
 
@@ -4366,7 +4369,7 @@ c abdel
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'tpw')
+     1                        ,NX_L,NY_L,r_missing_data,colortable)
 
 
         elseif(c_type(1:2) .eq. 'pe' .or. c_type(1:2) .eq. 'ne')then        
