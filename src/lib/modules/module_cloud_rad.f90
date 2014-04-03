@@ -2,23 +2,34 @@
 MODULE cloud_rad    
 
 !     Cloud Radiation and Microphysics Parameters
+
+!     Backscattering efficiencies
       real, parameter :: bksct_eff_clwc    = .063
       real, parameter :: bksct_eff_cice    = .14
       real, parameter :: bksct_eff_rain    = .063
       real, parameter :: bksct_eff_snow    = .14
       real, parameter :: bksct_eff_graupel = .30
 
+!     Scattering efficiencies
+      real, parameter :: q_clwc    = 2.0
+      real, parameter :: q_cice    = 2.0
+      real, parameter :: q_rain    = 1.0
+      real, parameter :: q_snow    = 1.0
+      real, parameter :: q_graupel = 1.0
+
+!     Densities
       real, parameter :: rholiq     =   1e3 ! kilograms per cubic meter
       real, parameter :: rhosnow    = .07e3 ! kilograms per cubic meter
       real, parameter :: rhograupel = .50e3 ! kilograms per cubic meter
 
+!     Effective radii
       real, parameter :: reff_clwc    = .000020 ! m
       real, parameter :: reff_cice    = .000040 ! m
       real, parameter :: reff_rain    = .001000 ! m
       real, parameter :: reff_snow    = .004000 ! m
       real, parameter :: reff_graupel = .010000 ! m
 
-      PUBLIC albedo_to_clouds
+      PUBLIC albedo_to_clouds, albedo_to_clouds2
 
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -57,7 +68,39 @@ CONTAINS
 
         return
    
-   END subroutine albedo_to_clouds    
+     END subroutine albedo_to_clouds    
+
+     subroutine albedo_to_clouds2(albedo                                 & ! I
+                                 ,cloud_trans_l,cloud_trans_i            & ! O
+                                 ,cloud_od_l,cloud_od_i                  & ! O
+                                 ,cloud_opac_l,cloud_opac_i)               ! O
+
+        use mem_namelist, ONLY: r_missing_data
+
+        if(albedo .eq. r_missing_data)then
+            cloud_trans_l = r_missing_data
+            cloud_trans_i = r_missing_data
+            cloud_od_l = r_missing_data
+            cloud_od_i = r_missing_data
+            cloud_opac_l = r_missing_data
+            cloud_opac_i = r_missing_data
+            return
+        endif
+
+        cloud_albedo = min(albedo,0.99999)     ! Back Scattered
+
+        cloud_trans_l = 1.0 - cloud_albedo     ! Fwd Scattered + Direct Transmission
+        cloud_trans_i = 1.0 - cloud_albedo     ! Fwd Scattered + Direct Transmission
+
+        cloud_od_l = cloud_albedo / (bksct_eff_clwc * (1.-cloud_albedo)) ! Tau
+        cloud_od_i = cloud_albedo / (bksct_eff_cice * (1.-cloud_albedo)) ! Tau
+
+        cloud_opac_l = 1.0 - exp(-cloud_od_l) ! 1 - Direct Transmission
+        cloud_opac_i = 1.0 - exp(-cloud_od_i) ! 1 - Direct Transmission
+
+        return
+   
+     END subroutine albedo_to_clouds2
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
