@@ -29,7 +29,7 @@
         include 'trigd.inc'
 
 !       Statement Functions
-        trans(od) = exp(-od)
+        trans(od) = exp(-min(od,80.))
 !       brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness (max~7)
         brt(a) = (1.0 - exp(-.14 * a))     ! relative sky brightness (max=1)
 
@@ -724,15 +724,16 @@
                   if((cvr_path          .gt. 0.00) .AND.
      1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
      1                cvr_path_sum_last .eq. 0.  )            )then 
-!                     airmass_2_cloud_3d(ialt,jazi) 
-!    1                                 = 0.5 * (airmass1_l + airmass1_h)
+                      aod_2_cloud(ialt,jazi) = sum_aod
+                  endif
 
-!                     Average value over cloud path (tau ~1)
+                  if((cvr_path          .gt. 0.00) .AND.
+     1               (cvr_path_sum      .le.  .130     .OR. ! tau ~10
+     1                cvr_path_sum_last .eq. 0.  )            )then 
+!                     Average value over cloud path (tau ~10)
                       r_cloud_rad(ialt,jazi) = sum_odrad / cvr_path_sum 
                       cloud_rad_c(:,ialt,jazi) 
      1                                = sum_odrad_c(:) / cvr_path_sum 
-
-                      aod_2_cloud(ialt,jazi) = sum_aod
                   endif
 
 !                 Calculated weighted value of airmass to cloud
