@@ -5,6 +5,8 @@
 # Supports composite reflectivity data for the HRRR, and can be more 
 # generalized later to other fields/models
 
+uname -a
+
 setenv LAPS_DATA_ROOT $1
 setenv MODELS "$2"
 
@@ -72,6 +74,16 @@ foreach MODEL ($MODELS)
     setenv CMODEL RR
     setenv MODE_FSF REGRID
     setenv GRIBINDIR $GSDPUBLIC/data/grids/rap/iso_130/grib2
+    if ($FCSTINTVL <= 3600) then
+        setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18'
+    else
+        setenv HHTIMES '00 03 06 09 12 15 18'
+    endif
+    setenv MMTIMES '00'
+  else if ($MODEL == rap-nh) then
+    setenv CMODEL RR 
+    setenv MODE_FSF REGRID # WGRIB
+    setenv GRIBINDIR $GSDPUBLIC/data/gsd/rap/83_full/wrftwo 
     if ($FCSTINTVL <= 3600) then
         setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18'
     else
@@ -163,8 +175,8 @@ foreach MODEL ($MODELS)
       ls -l $NCTEMPLATE_FSF
 
       if (! -e $NCTEMPLATE_FSF) then
-        echo "ERROR $NCTEMPLATE_FSF does not exist"
-        exit
+        echo "WARNING $NCTEMPLATE_FSF does not exist - create template"
+        ncgen -o $NCTEMPLATE_FSF $LAPS_DATA_ROOT/cdl/fsf.cdl
       endif
   endif
 
@@ -245,7 +257,11 @@ foreach MODEL ($MODELS)
         echo "Processing forecast time/record $FCSTTIME $REC_LMR"
 
 #       setenv GRIBIN /home/Steve.Albers$GSDPUBLIC/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
-        setenv GRIBIN $GSDPUBLIC/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
+        if ($MODEL == wrf-hrrr) then
+            setenv GRIBIN $GSDPUBLIC/data/fsl/hrrr/conus/wrftwo_subh/$YYDDDHHMM$FCST_HH\00         
+        else
+            setenv GRIBIN $GRIBINDIR/$YYDDDHHMM$FCST_HH\00         
+        endif
 
 #       setenv TMPOUT_FSF /home/Steve.Albers/outdir/$YYDDDHHMM$FCSTTIME.fsf
         setenv NCOUT_FSF $OUTDIR_FSF/$YYDDDHHMM$FCSTTIME.fsf
@@ -486,6 +502,11 @@ foreach MODEL ($MODELS)
                     date -u
                     echo " "
 
+                    if (! -e $NCTEMPLATE_FUA) then
+                        echo "WARNING $NCTEMPLATE_FUA does not exist - create template"
+                        ncgen -o $NCTEMPLATE_FUA $LAPS_DATA_ROOT/cdl/fua.cdl
+                    endif
+
                     if (-e $NCTEMPLATE_FUA) then
                         echo "ncks -A -v t3_comment,sh_comment,u3_comment,v3_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,u3_fcinv,v3_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA"
                               ncks -A -v t3_comment,sh_comment,u3_comment,v3_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,u3_fcinv,v3_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA 
@@ -609,11 +630,15 @@ foreach MODEL ($MODELS)
         endif # on the hour
 
       else # other model
-        setenv FCSTTIME_IN  00$FILE_HH    
+        if ($MODEL == rap-nh) then
+            setenv FCSTTIME_IN  $FILE_HH\00    
+        else
+            setenv FCSTTIME_IN  00$FILE_HH    
+        endif
         setenv FCSTTIME_OUT $FILE_HH$FMM
 
         echo " "
-        echo "Processing model $CMODEL with input/output forecast time of $FCSTTIME_IN/$FCSTTIME_OUT"
+        echo "Processing $MODEL $CMODEL with input/output forecast time of $FCSTTIME_IN/$FCSTTIME_OUT"
         echo "lfmregrid method..."
 
         setenv GRIB_PRES_IN $GRIBINDIR/$YYDDDHHMM$FCSTTIME_IN
