@@ -205,7 +205,8 @@ if test "$NCARG_ROOT" = "allsky"; then
 # Annotate Time
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
 #   convert -fill white -annotate +393+500 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-    convert -fill white -annotate +363+500 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+#   convert -fill white -annotate +363+500 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +360+503 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
