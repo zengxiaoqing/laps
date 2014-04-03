@@ -367,7 +367,7 @@ elseif (namelist_name == 'lapsparms') then
 
 !  fraction of aerosols in each bin & asymmetry factor
 !  Factor of 10 back scatter increase from minimum
-   aod_bin(1) = 0.70  ;   aod_asy(1) = +0.65  
+   aod_bin(1) = 0.70   ;   aod_asy(1) = +0.65  
    aod_bin(2) = 0.12   ;   aod_asy(2) = +0.95      
    aod_bin(3) = 0.18   ;   aod_asy(3) = -0.65      
 
