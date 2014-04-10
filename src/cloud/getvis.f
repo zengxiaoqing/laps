@@ -41,8 +41,9 @@ cdis
      1                    ,l_use_vis_partial,lat,lon                ! I
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
      1                    ,rlaps_land_frac,topo                     ! I
+     1                    ,cvr_snow                                 ! I
      1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb    ! O
-     1                    ,static_albedo                            ! O
+     1                    ,static_albedo,sfc_albedo                 ! O
      1                    ,subpoint_lat_clo,subpoint_lon_clo        ! O 
      1                    ,comment                                  ! O
      1                    ,ni,nj,nk,r_missing_data                  ! I
@@ -60,6 +61,7 @@ cdis
         real sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
         real static_albedo(ni,nj)   ! Static albedo database
         real vis_albedo(ni,nj)
+        real cvr_snow(ni,nj)
         real rlaps_land_frac(ni,nj)
         real topo(ni,nj)
         real subpoint_lat_clo(ni,nj)
@@ -100,6 +102,7 @@ cdis
 
         call get_sfc_albedo(ni,nj,lat,r_missing_data,i4time              ! I
      1                     ,rlaps_land_frac,topo                         ! I
+     1                     ,cvr_snow                                     ! I
      1                     ,sfc_albedo,sfc_albedo_lwrb                   ! O
      1                     ,static_albedo,istat_sfc_alb)                 ! O
 
@@ -158,6 +161,12 @@ cdis
 
         n_missing_albedo = 0
 
+!       Compute parallax info?
+!       call get_parallax_info(ni,nj,i4time                              ! I
+!    1                        ,lat,lon                                   ! I
+!    1                        ,subpoint_lat_clo,subpoint_lon_clo         ! I
+!    1                        ,di_dh,dj_dh,i_fill_seams)                 ! O
+
 !       Horizontal array loop
         do i = 1,ni
         do j = 1,nj
@@ -205,9 +214,10 @@ cdis
             cloud_frac_vis_a(i,j) = cloud_frac_vis
 
 !           Is there enough of a signal from the VIS to say a cloud is present?
+!           Consider doing this comparison with parallax info
             if(       cloud_frac_vis_a(i,j) .gt. 0.3 
      1          .and. sfc_albedo(i,j) .ne. r_missing_data
-     1          .and. sfc_albedo(i,j) .le. 0.3              
+!    1          .and. sfc_albedo(i,j) .le. 0.3 ! test now done in 'cloud_top'
      1          .and. l_use_vis_add                         )then
                 istat_vis_a(i,j) = 1
                 icount_vis_add_potl = icount_vis_add_potl + 1
@@ -252,6 +262,7 @@ cdis
 
         subroutine get_sfc_albedo(ni,nj,lat,r_missing_data,i4time    ! I
      1                           ,rlaps_land_frac,topo               ! I
+     1                           ,cvr_snow                           ! I
      1                           ,sfc_albedo,sfc_albedo_lwrb         ! O
      1                           ,static_albedo                      ! O
      1                           ,istat_sfc_alb)                     ! O
@@ -273,6 +284,7 @@ cdis
 
         real rlaps_land_frac(ni,nj)
         real topo(ni,nj)
+        real cvr_snow(ni,nj)
 
         write(6,*)' Subroutine get_sfc_albedo...'
 
@@ -312,8 +324,12 @@ cdis
                   endif
 
                 else                                           ! over land
-                  sfc_albedo(i,j)      = r_missing_data
-
+                  if(cvr_snow(i,j) .ne. r_missing_data)then
+                      sfc_albedo(i,j) = 
+     1                max(static_albedo(i,j),cvr_snow(i,j))
+                  else
+                      sfc_albedo(i,j)      = r_missing_data
+                  endif
                 endif
 
             else ! static database not available
