@@ -156,7 +156,7 @@
 !       azid1 = 46. ; azid2 = 226.
         azid1 = 90. ; azid2 = 270.
         if(sol_alt .gt. 0.)then
-            azid1 = nint(sol_az)
+            azid1 = azi_a(isun,jsun) ! nint(sol_az)
             azid2 = azid1 ! block antisolar az               
 !           azid2 = mod(azid1+180.,360.)
         elseif(moon_alt .gt. 0.)then
@@ -239,6 +239,7 @@
                       iprint .le. 30)                              )then
                       if(i .eq. isun .AND. j .eq. jsun)then   
                           write(6,*)'Calcs at solar location outside of terrain:'
+                          write(6,*)'cloud_od (slant/vert) = ',cloud_od(i,j),cloud_od(i,j)*sind(sol_alt)
                       elseif(clear_radf_c(2,i,j) .lt. 0.5)then
                           write(6,*)'Clear with cloud shadowing outside of terrain:'
                       else
@@ -391,6 +392,7 @@
 !               (240. is nominal intensity of a white cloud far from the sun)
 !               (0.25 is dark cloud base value)                                  
 !             Add gamma correction to pf_scat 
+!             Use surface albedo equation?
               if(l_pf_rad)then
                   rad = counts_to_rad(240.)                                 * pf_scat(i,j)
                   rint_top = rad_to_counts(rad)
@@ -667,7 +669,13 @@
           if(idebug .eq. 1)then
               rmaglim = b_to_maglim(10.**glow_tot)
               call apply_rel_extinction(rmaglim,alt_a(i,j),od_atm_g+od_atm_a)
+              if(i .eq. ni)then
+                  write(6,*)' ******* zenith location ********************* od'
+              endif
               if(sol_alt .ge. 0.)then        ! daylight
+                  if(i .eq. isun .and. j .eq. jsun)then
+                      write(6,*)' ******* solar location ********************** od'
+                  endif
                   write(6,102)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat(i,j),r_cloud_3d(i,j),cloud_od(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
