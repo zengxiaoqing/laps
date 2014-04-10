@@ -475,6 +475,14 @@ SUBROUTINE LAPSOBSV(m)
         ! Good station locations:
         IF (err .EQ. 1) THEN
 
+          ! LAPS latlon_to_rlapsgrid returns xyt(1:2) ranging from:
+          ! (0.5,numgrid(1:2)+0.5). STMAS treats them on the edge of
+          ! the domain:
+          IF (xyt(1) .LT. 1) xyt(1) = 1.0
+          IF (xyt(1) .GT. numgrid(1)) xyt(1) = numgrid(1) 
+          IF (xyt(2) .LT. 1) xyt(2) = 1.0
+          IF (xyt(2) .GT. numgrid(2)) xyt(2) = numgrid(2) 
+
 	  ! T: from LAPS time form: HHMM to seconds
 	  ! hrs = otm(j)/100
 	  ! mns = otm(j)-hrs*100
@@ -624,9 +632,6 @@ SUBROUTINE LAPSOBSV(m)
                           alpha *     beta *topogr(ix1,jy1)
 
 	      rawobs(1,numobs(j)+k,j) = ALT_2_SFC_PRESS(alt(k),topo)
-if (stn(k) .EQ. 'KSPR') then
-print*,'E1452: ',topo, elv(k),alt(k),rawobs(1,numobs(j)+k,j)
-endif
 
 	    ELSE
 	      rawobs(1,numobs(j)+k,j) = badsfc
