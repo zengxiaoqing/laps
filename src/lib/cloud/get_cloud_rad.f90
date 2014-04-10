@@ -69,7 +69,14 @@
       ds_dh = 1. / sind(obj_alt_eff)
       dxy_dh = 1. / tand(obj_alt_eff)
 
+!     Initialize
       transm_3d(:,:,:) = 1.
+      transm_4d(:,:,:,:) = r_missing_data ! Zero gives slightly better results than
+                              ! one. We might try a more explicit
+                              ! calculation for those points that aren't
+                              ! covered by the slant rays. In that case
+                              ! 'r_missing_data' should be initialized
+                              ! here.                
 
       sinazi = sind(obj_azi(idb,jdb))
       cosazi = cosd(obj_azi(idb,jdb))
@@ -236,7 +243,10 @@
                                            + cond_m
 
 !           albedo_int = od_to_albedo(backscatter_int(i,j))                                                            
-            albedo_int = 1.0 - exp(-backscatter_int(i,j))                                                            
+!           albedo_int = 1.0 - exp(-backscatter_int(i,j))                                                            
+
+!           New albedo relationship
+            albedo_int = backscatter_int(i,j) / (backscatter_int(i,j) + 1.)
 
 !           Convert to transmittance
             transm_3d(il,jl,kl) = 1. - albedo_int
@@ -336,11 +346,15 @@
       I4_elapsed = ishow_timer()
 
 !     Check the presence of terrain shadow grid points + add sfc glow
+      write(6,*)' heights_3d column = ',heights_3d(idb,jdb,:)
+      write(6,*)' transm_3d column = ',transm_3d(idb,jdb,:)
+      write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,1)
       n_terr_shadow = 0.
       day_int = 3e9 ! nl
       do k = 1,nk
-      do j = 1,nj
-      do i = 1,ni
+        patm_k = ztopsa(heights_3d(idb,jdb,k)) / 1013.
+        do j = 1,nj
+        do i = 1,ni
           if(heights_3d(i,j,k) .gt. topo_a(i,j) .AND. transm_3d(i,j,k) .eq. 0.)then
               n_terr_shadow = n_terr_shadow + 1
               if(n_terr_shadow .le. 10)then
@@ -349,10 +363,55 @@
           endif 
           if(solalt .lt. -4.)then ! use red channel for sfc lighting
               transm_4d(i,j,k,1) = sfc_glow(i,j) ! /day_int 
+          elseif(transm_4d(i,j,k,1) .eq. r_missing_data)then 
+!             Consider filling in missing transm_4d with low sun
+!             values assuming transm_3d = 1
+              if(.true.)then
+                  topo = 1500. ! generic topo value (possibly redp_lvl?)
+                  ht_agl = heights_3d(i,j,k) - topo
+
+!                 See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
+                  if(ht_agl .gt. 0.)then                               
+                    horz_dep_d = sqrt(2.0 * ht_agl / earth_radius) * 180./3.14
+                  else
+                    horz_dep_d = 0.
+                  endif
+
+                  refraction = 0.5 ! typical value near horizon
+
+                  obj_alt_cld = obj_alt(i,j) + horz_dep_d + refraction
+
+!                 Estimate solar extinction/reddening by Rayleigh scattering at this cloud altitude
+                  if(obj_alt_cld .lt. 0.)then    ! (early) twilight cloud lighting
+                    twi_int = .1 * 10.**(+obj_alt_cld * 0.4) ! magnitudes per deg
+                    rint = twi_int
+                    grn_rat = 1.0 ; blu_rat = 1.0            
+                  elseif(obj_alt_cld .ge. 0.)then            ! low daylight sun
+!                   Direct illumination of the cloud is calculated here
+!                   Indirect illumination is factored in via 'scat_frac'
+                    am = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)))
+                    scat_frac = 0.75
+                    do ic = 1,nc
+                      trans_c(ic) = trans(am*ext_g(ic)*patm_k*scat_frac)
+                    enddo
+                    rint = trans_c(1)
+                    grn_rat = trans_c(2) / trans_c(1)
+                    blu_rat = trans_c(3) / trans_c(1)
+                  endif  
+                  transm_3d_generic = 0.5
+                  transm_4d(i,j,k,1) = transm_3d_generic * rint
+                  transm_4d(i,j,k,2) = transm_3d_generic * grn_rat
+                  transm_4d(i,j,k,3) = transm_3d_generic * blu_rat
+              else ! generic fill in value
+                  transm_4d(i,j,k,1) = 0.7
+                  transm_4d(i,j,k,2) = 0.5
+                  transm_4d(i,j,k,3) = 0.15
+              endif
           endif
-      enddo ! i
-      enddo ! j
+        enddo ! i
+        enddo ! j
       enddo ! k      
+      write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,1)
 
       write(6,*)' Number of points above ground and in shadow is',n_terr_shadow
       if(solalt .lt. -4.)then ! use red channel for sfc lighting
