@@ -277,13 +277,13 @@ C CALCULATE ALT AND AZ of SUN
              write(6,*)
           endif
 
-      endif ! .false.
+      endif ! .true. 
 C
       RETURN
       END
 
       subroutine sun_moon(i4time,lat_2d,lon_2d,ni,nj,is,js,alm_r4,azm_r4
-     1                   ,elgms_r4,r4_mag)                                     
+     1                   ,elgms_r4,r4_mag)                               ! O   
 
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
 !     include '../util/utilparms.for'
@@ -482,66 +482,77 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
 
       if(.false.)then
 
-!     Calculate Solar Eclipse Magnitude
-      call magnitude(0,0,SXT,SYT,SZT,0.,0.,0.,amag
+!         Calculate Solar Eclipse Magnitude
+          call magnitude(0,0,SXT,SYT,SZT,0.,0.,0.,amag
      1                                          ,diam_sun)
-      call magnitude(1,1,SXT,SYT,SZT,
-     1  SXG+MXG,SYG+MYG,SZG+MZG,amag,diam_moon)
+          call magnitude(1,1,SXT,SYT,SZT,
+     1      SXG+MXG,SYG+MYG,SZG+MZG,amag,diam_moon)
 
-      overlap_sec = -(elgmst * 3600. - 0.5 * (diam_sun + diam_moon))
-      solar_eclipse_magnitude = overlap_sec / diam_sun
+          overlap_sec = -(elgmst * 3600. - 0.5 * (diam_sun + diam_moon))
+          solar_eclipse_magnitude = overlap_sec / diam_sun
 
-      if(solar_eclipse_magnitude .gt. 0.)then
-          elgmst = solar_eclipse_magnitude * 100.
-      endif
-
-      if(elgmsg .lt. 90.)goto500
-
-!     Calculate Lunar Eclipse Magnitude
-      delta_moon_au = mag(MXG,MYG,MZG)
-      delta_sun_au  = mag(SXG,SYG,SZG)
-      delta_moon_km = delta_moon_au * km_per_au
-      delta_sun_km  = delta_sun_au  * km_per_au
-
-      diam_moon_km = r_m_km * 2d0
-
-      elgsupl = 180d0 - elgmsg
-
-      x_moon =     delta_moon_km * cosd(elgsupl)
-      y_moon = abs(delta_moon_km * sind(elgsupl))
-
-      umbral_length_km = delta_sun_km / (R_S_km / R_E_km - 1d0)
-
-      angrad = asin(r_e_km/umbral_length_km)
-      umbral_height_km = (umbral_length_km - x_moon)
-     1                          * tan(angrad) * 1.02
-
-      dist_center_km = (y_moon - umbral_height_km) * cos(angrad)
-      umbral_magnitude = -(dist_center_km / diam_moon_km) + 0.5
-
-
-      penumbral_length_km = delta_sun_km / (R_S_km / R_E_km + 1d0)
-
-      angrad = asin(r_e_km/penumbral_length_km)
-      penumbral_height_km  = (penumbral_length_km + x_moon)
-     1                          * tan(angrad)
-
-      dist_center_km = (y_moon - penumbral_height_km) * cos(angrad)
-      penumbral_magnitude = -(dist_center_km / diam_moon_km) + 0.5
-
-
-
-
-      if(penumbral_magnitude .gt. 0.)then
-          elgmst = penumbral_magnitude * 100.
-!         elgmst = umbral_magnitude * 100.
-      endif
-
-      if(umbral_magnitude .gt. 0.)then
-          elgmst = umbral_magnitude * 100.
-      endif
+          if(solar_eclipse_magnitude .gt. 0.)then
+              elgmst = solar_eclipse_magnitude * 100.
+          endif
 
       endif ! .false.
+
+!     Correct moon's magnitude for lunar eclipse
+      if(elgmsg .gt. 177.)then
+
+!         Calculate Lunar Eclipse Magnitude
+          delta_moon_au = mag(MXG,MYG,MZG)
+          delta_sun_au  = mag(SXG,SYG,SZG)
+          delta_moon_km = delta_moon_au * km_per_au
+          delta_sun_km  = delta_sun_au  * km_per_au
+
+          diam_moon_km = r_m_km * 2d0
+
+          elgsupl = 180d0 - elgmsg
+
+          x_moon =     delta_moon_km * cosd(elgsupl)
+          y_moon = abs(delta_moon_km * sind(elgsupl))
+
+          umbral_length_km = delta_sun_km / (R_S_km / R_E_km - 1d0)
+
+          angrad = asin(r_e_km/umbral_length_km)
+          umbral_height_km = (umbral_length_km - x_moon)
+     1                              * tan(angrad) * 1.02
+
+          dist_center_km = (y_moon - umbral_height_km) * cos(angrad)
+          umbral_magnitude = -(dist_center_km / diam_moon_km) + 0.5
+
+          penumbral_length_km = delta_sun_km / (R_S_km / R_E_km + 1d0)
+
+          angrad = asin(r_e_km/penumbral_length_km)
+          penumbral_height_km  = (penumbral_length_km + x_moon)
+     1                              * tan(angrad)
+
+          dist_center_km = (y_moon - penumbral_height_km) * cos(angrad)
+          penumbral_magnitude = -(dist_center_km / diam_moon_km) + 0.5
+
+          if(umbral_magnitude .gt. 0.)then
+              write(6,*)' umbral_magnitude = ',umbral_magnitude
+              write(6,*)' penumbral_magnitude = ',penumbral_magnitude
+              frac_bri_pen = 1.0 - (penumbral_magnitude * 0.5)
+              frac_bri = max(frac_bri_pen 
+     1                 * (1.0d0 - umbral_magnitude),.0001d0)
+          elseif(penumbral_magnitude .gt. 0.)then
+              write(6,*)' penumbral_magnitude = ',penumbral_magnitude
+              frac_bri = 1.0 - (penumbral_magnitude * 0.5)
+          else
+              frac_bri = 1.0
+          endif
+
+          rmag_corr = -log10(frac_bri) * 2.5
+
+          r4_mag = r4_mag + rmag_corr
+
+          write(6,451)frac_bri,rmag_corr,r4_mag
+451       format(' Lunar Eclipse: frac_bri/rmag_corr/r4_mag'
+     1          ,f11.6,2f9.3)
+
+      endif ! Lunar eclipse magnitude correction
 
 C
 C WRITE OUT DATA
