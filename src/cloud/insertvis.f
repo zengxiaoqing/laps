@@ -143,7 +143,7 @@ cdis
         do i = 1,ni
         do j = 1,nj    
 
-          if(j .eq. nj/2)then
+          if(i .eq. ni/2 .AND. j .eq. nj/2)then
               idebug = 1
           else
               idebug = 0
@@ -152,8 +152,9 @@ cdis
 !         Calculate upper bound to cloud cover (through the column)
           if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then ! VIS (Daytime)
               albedo_eff = cloud_frac_vis_a(i,j)
-              call albedo_to_clouds(albedo_eff,trans,cloud_od(i,j)
-     1                                              ,cloud_op(i,j))
+              call albedo_to_clouds2(albedo_eff,trans,trans_i
+     1                              ,cloud_od(i,j),cloud_od_i
+     1                              ,cloud_op(i,j),cloud_op_i)
               cloud_frac_uprb = cloud_frac_vis_a(i,j)
 
               if(idebug .eq. 1)then
@@ -216,14 +217,7 @@ cdis
 
                 cloud_frac_in = clouds_3d(it,jt,k)
 
-                if(idebug .eq. 1 .and. k .eq. nk/2)then
-                    write(6,201)i,j,it,jt,di_dh(i,j),dj_dh(i,j)
-     1                         ,cloud_frac_in,cld_hts(k)
- 201                format('i,j,it,jt,didh,djdh,cloud_frac_in,cldht'
-     1                    ,4i6,2f9.5,f9.3,f9.1)
-                endif
-
-!               Clear only low clouds
+!               Clear stronger with low clouds, weaker with high clouds
                 if(cld_hts(k) .gt. topo(i,j) + 5000.)then
                     cushion = 0.3 * (1.0 - cloud_frac_uprb) ! 999. ! reduce clearing
 !               Modify the cloud field with the vis input - allow .3 vis err?
@@ -231,6 +225,14 @@ cdis
                     cushion = 0.0 ! 0.3
                 else
                     cushion = 0.0
+                endif
+
+                if(idebug .eq. 1 .and. k .eq. nk/2)then
+                    write(6,201)i,j,it,jt,di_dh(i,j),dj_dh(i,j)
+     1                         ,cloud_frac_in,cld_hts(k)
+     1                         ,cloud_frac_uprb,cushion
+ 201                format('i,j,it,jt,didh,djdh,cloud_frac_in,cldht'
+     1                    ,4i6,2f9.5,f7.3,f9.1,2f7.3)
                 endif
 
 !               Test input clouds against upper bound + cushion
@@ -290,8 +292,16 @@ cdis
                    endif
 
                    clouds_3d(itn:itx,jt,k) = cloud_frac_out ! Modify the output
+                   if(idebug .eq. 1 .and. k .eq. nk/2)then
+                       write(6,*)' cloud_frac_out modified to '
+     1                          ,cloud_frac_out
+                   endif
                 else
                    cloud_frac_out = cloud_frac_in
+                   if(idebug .eq. 1 .and. k .eq. nk/2)then
+                       write(6,*)' cloud_frac_out kept at '
+     1                          ,cloud_frac_out
+                   endif
                 endif
 
 !               Update Histograms
@@ -332,8 +342,10 @@ cdis
 !               Blank out radar column for this grid point
 
                 if(colmaxout .le. vis_radar_thresh_cvr)then
-                    write(6,1)i,j,colmaxout,dbz_max_2d(i,j)
-     1                       ,cloud_frac_uprb
+                    if(idebug .eq. 1)then
+                        write(6,1)i,j,colmaxout,dbz_max_2d(i,j)
+     1                           ,cloud_frac_uprb
+                    endif
 1                   format(
      1              ' VIS_RDR - Blank out radar: cvr/dbz/vis      < '       
      1                    ,2i4,f8.2,f8.1,f8.2)
@@ -342,8 +354,10 @@ cdis
                      ! We are "saved" by the VIS cushion
                      ! May not show up in comparisons
 
-                    write(6,2)i,j,colmaxout,dbz_max_2d(i,j)
-     1                       ,cloud_frac_uprb
+                    if(idebug .eq. 1)then
+                        write(6,2)i,j,colmaxout,dbz_max_2d(i,j)
+     1                           ,cloud_frac_uprb
+                    endif
 2                   format(
      1              ' VIS_RDR - Blank out radar: cvr/dbz/vis-s    < '
      1                    ,2i4,f8.2,f8.1,f8.2)
@@ -361,8 +375,10 @@ cdis
 !               Cloud cvr has been reset to threshold value above VIS
 
                 if(colmaxout .le. vis_radar_thresh_cvr)then
-                    write(6,3)i,j,colmaxout,dbz_max_2d(i,j)
+                    if(idebug .eq. 1)then
+                        write(6,3)i,j,colmaxout,dbz_max_2d(i,j)
      1                       ,cloud_frac_uprb,vis_radar_thresh_cvr
+                    endif
 3                   format(
      1              ' VIS_RDR - Reset vis:       cvr/dbz/vis/thr* > '
      1                    ,2i4,f8.2,f8.1,2f8.2)
@@ -372,8 +388,10 @@ cdis
                      ! May not show up in comparisons
                      ! Is resetting the VIS perhaps not necessary?
 
-                    write(6,4)i,j,colmaxout,dbz_max_2d(i,j)
+                    if(idebug .eq. 1)then
+                        write(6,4)i,j,colmaxout,dbz_max_2d(i,j)
      1                       ,cloud_frac_uprb,vis_radar_thresh_cvr
+                    endif
 4                   format(
      1              ' VIS_RDR - Reset vis:       cvr/dbz/vis/thr-s> '
      1                    ,2i4,f8.2,f8.1,2f8.2)
@@ -383,8 +401,8 @@ cdis
 
             endif
 
-            if(j .eq. (j-9/10)*10+9
-!           if(j .gt. 28 .and. j .lt. 38
+!           if(j .eq. (j-9/10)*10+9
+            if(idebug .eq. 1                 
      1                  .and. colmaxin-colmaxout .gt. 0.1)then
                 write(6,12)i,j,colmaxin,colmaxout
 12              format(1x,'Vismod',2i4,2f5.2)
