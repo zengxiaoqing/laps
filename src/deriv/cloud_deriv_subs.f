@@ -39,20 +39,26 @@ cdis
 
         subroutine insert_thin_lwc_ice(clouds_3d,clouds_3d_pres
      1        ,heights_3d
-     1        ,temp_3d,cld_hts,ni,nj,nk,kcld,thresh_thin_lwc_ice
+     1        ,temp_3d,cldalb_in,cld_hts,ni,nj,nk,kcld
+     1        ,thresh_thin_lwc_ice
      1        ,pres_3d,slwc,cice,istatus)
+
+        use mem_namelist, ONLY: r_missing_data
+        use cloud_rad
 
         include 'laps_cloud.inc'
 
 !       Insert LWC and ICE in areas of thin cloud layers
         real clouds_3d(ni,nj,kcld)       ! Input
         real clouds_3d_pres(ni,nj,nk)    ! Input
+        real cldalb_in(ni,nj)            ! Input
         real heights_3d(ni,nj,nk)        ! Input
         real temp_3d(ni,nj,nk)           ! Input
         real slwc(ni,nj,nk)              ! Input/Output (g/m**3)
         real cice(ni,nj,nk)              ! Input/Output (g/m**3)
         real pres_3d(ni,nj,nk)           ! Input
         real pressures_pa(nk)            ! Local
+        real k_to_c
 
         integer max_layers
         parameter (max_layers=100)
@@ -69,9 +75,19 @@ cdis
 
         iwrite = 0
 
+        write(6,*)
+     1  '  i   j   k thick    tau    cvr    t_c     slwc     cice' 
+     1  ,'   ilyr nlyr'
+
 !       Convert from cloud cover to discreet cloud layer indices (cvr to a)
         do i = 1,ni
         do j = 1,nj
+          if(i .eq. ni/2 .AND. j .eq. nj/2)then
+            idebug = 1
+          else
+            idebug = 0
+          endif
+           
           do k = 1,nk
              pressures_pa(k) = pres_3d(i,j,k)
           enddo ! k
@@ -110,6 +126,8 @@ cdis
 
           enddo ! k
 
+!         Set up layer thickness, mean svp arrays
+
 !         Find thickness of layer
           do ilyr = 1,nlyr
               if(kbot(ilyr) .eq. 1)then
@@ -141,7 +159,33 @@ cdis
               else
                   tau = 30.
               endif
+
               scattering_coeff = tau / thickness                  ! meters**-1
+
+!             Convert from implied albedo to column optical depth
+              albarg = min(a(ilyr),0.930)
+              call albedo_to_clouds2(albarg
+     1                             ,cloud_trans_l,cloud_trans_i
+     1                             ,cloud_od_l,cloud_od_i
+     1                             ,cloud_opac_l,cloud_opac_i)
+
+              tau_l = cloud_od_l / float(nlyr)
+              tau_i = cloud_od_i / float(nlyr)
+
+              if(idebug .eq. 1)then
+                  write(6,*)' albarg/cloud_od_l/cloud_od_i',
+     1                        albarg,cloud_od_l,cloud_od_i
+              endif
+
+              scattering_coeff_l = tau_l / thickness              ! meters**-1
+              scattering_coeff_i = tau_i / thickness              ! meters**-1
+
+!             Note tau = 3./2. * LWP / reff
+!                  LWP = (tau / 1.5) * reff
+!                  Density = (alpha / 1.5) * reff
+!             Is scattering efficiency (Q) being accounted for and is density 
+!             being overestimated by a factor of ~2? Consider adding new
+!             Q parameters from module 'cloud_rad'.
 
 !             Ice Clouds
               rmvd = .000060                                      ! meters     (60 microns)
@@ -150,7 +194,9 @@ cdis
    
               rnumber_density = scattering_coeff / rma            ! meters**-3
               h20_density = 1e6                                   ! g/m**3
-              density_ave_i = rnumber_density * rmv * h20_density
+              density_ave_i = rnumber_density * rmv * h20_density ! g/m**3
+              density_ave_i = (scattering_coeff_i/1.5) * reff_cice
+     1                                                 * h20_density
 
 !             Liquid Clouds
               rmvd = .000020                                      ! meters     (20 microns)
@@ -159,7 +205,9 @@ cdis
    
               rnumber_density = scattering_coeff / rma            ! meters**-3
               h20_density = 1e6                                   ! g/m**3
-              density_ave_l = rnumber_density * rmv * h20_density
+              density_ave_l = rnumber_density * rmv * h20_density ! g/m**3
+              density_ave_l = (scattering_coeff_l/1.5) * reff_clwc
+     1                                                 * h20_density
 
 !             Determine LAPS pressure levels of cloud base and top
 !             QC cases where cloud layer on the height grid is near or above 
@@ -206,9 +254,12 @@ cdis
               do k = k_1d_base,k_1d_top
 
 !                 Test if no condensate is currently at the grid point from the
-!                 modified S-F method that is only applied to thick clouds
-                  if(slwc(i,j,k) .eq. zero .and. 
-     1               cice(i,j,k) .eq. zero       )then
+!                 modified S-F method that was only applied to thick clouds
+                  if((slwc(i,j,k) .eq. zero .and. 
+     1                cice(i,j,k) .eq. zero       )  
+     1                          .OR. ! use density value from cloud
+     1                               ! optical depth when available, instead of S-F
+     1               cldalb_in(i,j) .ne. r_missing_data)then
 
 !                   Density is normalized according to cloud fraction within layer
                     density_l = density_ave_l * clouds_3d_pres(i,j,k) 
@@ -217,44 +268,51 @@ cdis
                     density_i = density_ave_i * clouds_3d_pres(i,j,k) 
      1                                      / a(ilyr)
 
-                    temp1_c = -00.
-                    temp2_c = -05.
+                    temp1_c = -10.
+                    temp2_c = -30.
 
                     temp1_k = c_to_k(temp1_c)
                     temp2_k = c_to_k(temp2_c)
 
                     if(temp_3d(i,j,k) .le. temp2_k)then          ! ICE
                         cice(i,j,k) = density_i
+                        tau_eff = tau_i 
                     elseif(temp_3d(i,j,k) .ge. temp1_k)then      ! LWC
                         slwc(i,j,k) = density_l
+                        tau_eff = tau_l 
                     else                                        ! Mixed
                         frac = (temp_3d(i,j,k) - temp2_k) 
      1                               / (temp1_k - temp2_k)
                         slwc(i,j,k) = density_l * frac
                         cice(i,j,k) = density_i * (1. - frac)
+                        tau_eff = tau_l * frac + tau_i * (1. - frac)
                     endif
 
 
-                    if(iwrite .lt. 50.)then
+                    if(iwrite .lt. 30. .OR. idebug .eq. 1)then
                         iwrite = iwrite + 1
-                        write(6,1)i,j,k,thickness,tau               
-     1                           ,clouds_3d_pres(i,j,k),temp_3d(i,j,k)
+                        write(6,1)i,j,k,thickness,tau_eff               
+     1                           ,clouds_3d_pres(i,j,k)
+     1                           ,k_to_c(temp_3d(i,j,k))
      1                           ,slwc(i,j,k),cice(i,j,k)
-1                       format(3i4,f7.0,2f7.3,f7.1,2f9.4)
+     1                           ,ilyr,nlyr
+1                       format(3i4,f7.0,2f7.3,f7.1,2f9.4,2i5)
                     endif
 
                   else ! Write out some thick cloud values
-                    if(iwrite .lt. 50.)then
+                    if(iwrite .lt. 30. .OR. idebug .eq. 1)then
                         iwrite = iwrite + 1
                         write(6,2)i,j,k,thickness,tau             
-     1                           ,clouds_3d_pres(i,j,k),temp_3d(i,j,k)
+     1                           ,clouds_3d_pres(i,j,k)
+     1                           ,k_to_c(temp_3d(i,j,k))
      1                           ,slwc(i,j,k),cice(i,j,k)
-2                       format(3i4,f7.0,2f7.3,f7.1,2f9.4,' *')
+     1                           ,ilyr,nlyr
+2                       format(3i4,f7.0,2f7.3,f7.1,2f9.4,2i5,' *')
                     endif
 
                   endif
 
-            enddo ! k
+              enddo ! k
 
  100      enddo ! ilyr
 
