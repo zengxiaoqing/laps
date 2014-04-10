@@ -108,6 +108,12 @@
               pf_scat(i,j) = pf_scat2(i,j)
           endif
 
+!         Add simple rainbow (red is 42 degrees radius, blue is 40)
+          if(abs(elong_a(i,j)-149.) .lt. 1.0)then
+              rain_factor = opac(cloud_od_sp(i,j,3))
+              pf_scat(i,j) = pf_scat(i,j) * (1.0 + 3. * rain_factor * r_cloud_rad(i,j)**10.)
+          endif
+
         enddo ! j
         enddo ! i
 
