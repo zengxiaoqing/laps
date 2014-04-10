@@ -30,7 +30,7 @@ main                                                     laps_cloud.f
         GET_ISTAT_39 (cloud mask from 3.9u)              get_istat_39.f
         qc_clouds_3d                                     laps_cloud_sub.f
         insert_sat   (add based on IR/3.9u)              insertsat.f
-            correlation                                      "
+            correlation                                      "  
             cloud_top                                        "
             correct_cover                                    "
                 get_band8_cover                              "
