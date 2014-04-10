@@ -237,14 +237,17 @@ cdis
         real tb8_cold_k(NX_L,NY_L)
         real albedo(NX_L,NY_L)
         real static_albedo(NX_L,NY_L)              ! Static albedo database
+        real sfc_albedo(NX_L,NY_L)           
         real cloud_frac_vis_a(NX_L,NY_L)
         real cloud_frac_co2_a(NX_L,NY_L)
         real subpoint_lat_clo_vis(NX_L,NY_L)
         real subpoint_lon_clo_vis(NX_L,NY_L)
         real subpoint_lat_clo_s8a(NX_L,NY_L)
         real subpoint_lon_clo_s8a(NX_L,NY_L)
-        real di_dh(NX_L,NY_L)                      
-        real dj_dh(NX_L,NY_L)                      
+        real di_dh_ir(NX_L,NY_L)                      
+        real dj_dh_ir(NX_L,NY_L)                      
+        real di_dh_vis(NX_L,NY_L)                      
+        real dj_dh_vis(NX_L,NY_L)                      
         integer i_fill_seams(NX_L,NY_L)
 
         integer istat_39_a(NX_L,NY_L)
@@ -826,12 +829,15 @@ C READ IN SATELLITE DATA
 !       Cloud cover QC check
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
+!       Consider passing out parallax info, used with vis & cvr_snow, to be
+!       later used in other ways such as IR
         call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add            ! I
      1              ,l_use_vis_partial,lat,lon                           ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,rlaps_land_frac,topo                                ! I
+     1              ,cvr_snow                                            ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
-     1              ,static_albedo                                       ! O
+     1              ,static_albedo,sfc_albedo                            ! O
      1              ,subpoint_lat_clo_vis,subpoint_lon_clo_vis           ! O 
      1              ,comment_alb                                         ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
@@ -856,17 +862,25 @@ C READ IN SATELLITE DATA
      1                    ,cloud_frac_vis_a
      1                    ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a  ! I 
      1                    ,r_missing_data                             ! I
-     1                    ,di_dh,dj_dh)                               ! O 
+     1                    ,di_dh_ir,dj_dh_ir)                         ! O 
             if(l_corr_parallax .eqv. .false.)then
                 write(6,*)' turn off parallax correction'
-                di_dh = 0. ! for testing
-                dj_dh = 0. ! for testing
+                di_dh_ir = 0. ! for testing
+                dj_dh_ir = 0. ! for testing
             endif
         endif
 
-        call get_parallax_info(NX_L,NY_L                                 ! I
+        write(6,*)' Call get_parallax_info before insert_sat (VIS)'
+        call get_parallax_info(NX_L,NY_L,i4time                          ! I
+     1                        ,lat,lon                                   ! I
+     1                        ,subpoint_lat_clo_vis,subpoint_lon_clo_vis ! I
+     1                        ,di_dh_vis,dj_dh_vis,i_fill_seams)         ! O
+
+        write(6,*)' Call get_parallax_info before insert_sat (IR)'
+        call get_parallax_info(NX_L,NY_L,i4time                          ! I
+     1                        ,lat,lon                                   ! I
      1                        ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a ! I
-     1                        ,i_fill_seams)                             ! O
+     1                        ,di_dh_ir,dj_dh_ir,i_fill_seams)           ! O
 
         I4_elapsed = ishow_timer()
 
@@ -875,7 +889,8 @@ C READ IN SATELLITE DATA
      1       tb8_k,istat_tb8,                                           ! I
      1       sst_k,istat_sst,                                           ! I
      1       istat_39_a, l_use_39,                                      ! I
-     1       di_dh,dj_dh,                                               ! I
+     1       di_dh_ir,dj_dh_ir,                                         ! I
+     1       di_dh_ir,dj_dh_ir,                                         ! I
      1       i_fill_seams,                                              ! I
      1       istat_39_add_a,                                            ! O
      1       tb8_cold_k,                                                ! O
@@ -887,7 +902,7 @@ C READ IN SATELLITE DATA
      1       rlaps_land_frac,                                           ! I
      1       topo,heights_3d,temp_3d,t_sfc_k,td_sfc_k,pres_sfc_pa,      ! I
      1       t_modelfg,sh_modelfg,pres_3d,                              ! I
-     1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,             ! I
+     1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,sfc_albedo,  ! I
      1       t_gnd_k,                                                   ! O
      1       cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,             ! O
      1       istatus)                                                   ! O
@@ -896,6 +911,8 @@ C READ IN SATELLITE DATA
             write(6,*)' Error: Bad status returned from insert_sat'
             goto999
         endif
+
+!       write(6,*)' cldcv section 1b:',clouds_3d(660,60:110,22)
 
 !       Cloud cover QC check
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
@@ -1050,6 +1067,8 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
         enddo ! j
         enddo ! i
 
+!       write(6,*)' cldcv section 1c:',clouds_3d(660,60:110,22)
+
 C INSERT RADAR DATA
         if(n_radar_3dref .gt. 0)then
             call get_max_reflect(radar_ref_3d,NX_L,NY_L,NZ_L,ref_base       
@@ -1082,6 +1101,8 @@ C INSERT RADAR DATA
 
         endif
 
+!       write(6,*)' cldcv section 2:',clouds_3d(660,60:110,22)
+
         if(i_varadj .eq. 1)then
             write(6,*)' Call cloud_var before insert vis'
             call cloud_var(i4time,lat,lon
@@ -1090,17 +1111,18 @@ C INSERT RADAR DATA
      1                    ,cloud_frac_vis_a
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
      1                    ,r_missing_data                             ! I
-     1                    ,di_dh,dj_dh)                               ! O
+     1                    ,di_dh_vis,dj_dh_vis)                       ! O
             if(l_corr_parallax .eqv. .false.)then
                 write(6,*)' turn off parallax correction'
-                di_dh = 0. ! for testing
-                dj_dh = 0. ! for testing
+                di_dh_vis = 0. ! for testing
+                dj_dh_vis = 0. ! for testing
             endif
         endif
 
-        call get_parallax_info(NX_L,NY_L                                 ! I
+        call get_parallax_info(NX_L,NY_L,i4time                          ! I
+     1                        ,lat,lon                                   ! I
      1                        ,subpoint_lat_clo_vis,subpoint_lon_clo_vis ! I
-     1                        ,i_fill_seams)                             ! O
+     1                        ,di_dh_vis,dj_dh_vis,i_fill_seams)         ! O
 
         I4_elapsed = ishow_timer()
 
@@ -1113,11 +1135,13 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base
      1        ,solar_alt,solar_az                                     ! I
-     1        ,di_dh,dj_dh,i_fill_seams                               ! I
+     1        ,di_dh_vis,dj_dh_vis,i_fill_seams                       ! I
      1        ,cldtop_tb8_m                                           ! I
      1        ,cloud_albedo,cloud_od,cloud_op                         ! O
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
         endif
+
+!       write(6,*)' cldcv section 3:',clouds_3d(660,60:110,22)
 
 C Clear out stuff below ground
         do k = 1,KCLOUD
@@ -1363,7 +1387,8 @@ C       EW SLICES
 
 !       Calculate cloud analysis implied snow cover
         call cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_tb8_m
-     1          ,tb8_k,NX_L,NY_L,r_missing_data,cvr_snow_cycle)
+     1          ,tb8_k,topo,di_dh_vis,dj_dh_vis,i_fill_seams,NX_L,NY_L
+     1          ,r_missing_data,cvr_snow_cycle)
 
 !       MORE ASCII PLOTS
         write(6,801)
@@ -1585,7 +1610,7 @@ C       EW SLICES
      1                    ,cloud_frac_vis_a
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
      1                    ,r_missing_data                             ! I
-     1                    ,di_dh,dj_dh)                               ! O
+     1                    ,di_dh_vis,dj_dh_vis)                       ! O
         endif
 
 999     continue
@@ -1706,12 +1731,17 @@ C       EW SLICES
 
 
         subroutine cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_tb8_m
-     1             ,tb8_k,ni,nj,r_missing_data,cvr_snow_cycle)
+     1             ,tb8_k,topo,di_dh,dj_dh,i_fill_seams,ni,nj
+     1             ,r_missing_data,cvr_snow_cycle)
 
         real cvr_max(ni,nj)          ! Input
         real cloud_frac_vis_a(ni,nj) ! Input
         real cldtop_tb8_m(ni,nj)     ! Input
         real tb8_k(ni,nj)            ! Input
+        real topo(ni,nj)             ! Input
+        real di_dh(ni,nj)            ! Input           
+        real dj_dh(ni,nj)            ! Input
+        integer i_fill_seams(ni,nj)  ! Input
         real cvr_snow_cycle(ni,nj)   ! Output
 
         logical l_cvr_max              ! Local
@@ -1724,6 +1754,8 @@ C       EW SLICES
         n_snow = 0
         n_nosnow = 0
         n_missing = 0
+
+        cvr_snow_cycle = r_missing_data ! initialize
 
         do i = 1,ni
         do j = 1,nj
@@ -1747,19 +1779,38 @@ C       EW SLICES
                 n_cld_pts = n_cld_pts + 1
             endif
 
+!           Add parallax correction to snow cover
+            it = i - nint(di_dh(i,j) * topo(i,j))
+            jt = j - nint(dj_dh(i,j) * topo(i,j))
+            it = max(min(it,ni),1)
+            jt = max(min(jt,nj),1)
+            if(i_fill_seams(i,j) .ne. 0)then
+                itn = min(i,it)
+                itx = max(i,it)
+            else
+                itn = it
+                itx = it
+            endif
+!           itn = i
+!           itx = i
+!           jt = j
+
             if(        .not. l_cvr_max                          ! No Cld Cover
 !           if(                cvr_max(i,j) .le. 0.1            ! No Cld Cover
      1          .and. cloud_frac_vis_a(i,j) .ne. r_missing_data
 !    1          .and. cldtop_tb8_m(i,j)     .eq. r_missing_data ! No Band 8 clds
      1                                                    )then ! Definitely clear
-                cvr_snow_cycle(i,j) = cloud_frac_vis_a(i,j)
-                cvr_snow_cycle(i,j) = max(cvr_snow_cycle(i,j),0.)
-                cvr_snow_cycle(i,j) = min(cvr_snow_cycle(i,j),1.)
+
+                arg = cloud_frac_vis_a(i,j)
+                arg = max(arg,0.)
+                arg = min(arg,1.)
+
+                cvr_snow_cycle(itn:itx,jt) = arg
 
                 n_csc_pts = n_csc_pts + 1
 
             else                               ! Cloud Cover or missing albedo
-                cvr_snow_cycle(i,j) = r_missing_data
+                cvr_snow_cycle(itn:itx,jt) = r_missing_data
                 n_no_csc_pts = n_no_csc_pts + 1
 
             endif
@@ -1769,8 +1820,14 @@ C       EW SLICES
      1       .and.        tb8_k(i,j) .gt. 281.15
      1       .and.         cvr_max(i,j) .le. 0.1
      1                                                       )then
-                cvr_snow_cycle(i,j) = 0.
+                cvr_snow_cycle(itn:itx,jt) = 0.
             endif
+
+        enddo ! j
+        enddo ! i
+
+        do i = 1,ni
+        do j = 1,nj
 
 !           Count various categories of CSC
             if(cvr_snow_cycle(i,j) .ne. r_missing_data)then
@@ -2253,15 +2310,37 @@ C       EW SLICES
         return
         end
 
-
-        subroutine get_parallax_info(ni,nj                             ! I
+        subroutine get_parallax_info(ni,nj,i4time                      ! I
+     1                              ,lat,lon                           ! I
      1                              ,subpoint_lat_clo,subpoint_lon_clo ! I
-     1                              ,i_fill_seams)                     ! O
+     1                              ,di_dh,dj_dh,i_fill_seams)         ! O
 
-        real subpoint_lat_clo(ni,nj)
-        real subpoint_lon_clo(ni,nj)
+        real subpoint_lat_clo(ni,nj)           ! I
+        real subpoint_lon_clo(ni,nj)           ! I
+        real lat(ni,nj)                        ! I
+        real lon(ni,nj)                        ! I
+        real alt(ni,nj)                        ! L
+        real azi(ni,nj)                        ! L
+        real phase(ni,nj)                      ! L
+        real spec(ni,nj)                       ! L
+        real dx(ni,nj)                         ! L
+        real dy(ni,nj)                         ! L
+        real projrot_laps(ni,nj)               ! L
 
-        integer i_fill_seams(ni,nj)
+        integer i_fill_seams(ni,nj)            ! O
+        real di_dh(ni,nj)                      ! O
+        real dj_dh(ni,nj)                      ! O
+
+        I4_elapsed = ishow_timer()
+
+!       Satellite geometry for parallax offset
+        write(6,*)' Calling satgeom...'
+        range_m = 42155680.00
+        call satgeom(i4time,lat,lon,ni,nj 
+     1      ,subpoint_lat_clo,subpoint_lon_clo
+     1      ,range_m,r_missing_data,Phase,Spec,alt,azi,istatus)
+
+        call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
 
         do j = 1,nj
         do i = 1,ni
@@ -2276,6 +2355,8 @@ C       EW SLICES
             endif
         enddo ! i
         enddo ! j
+
+        I4_elapsed = ishow_timer()
 
         return
         end
