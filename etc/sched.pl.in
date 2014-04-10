@@ -51,13 +51,13 @@
 #
 # -Y                   Override default amount of memory in qsub environment
 #
+# -U                   Urgent queue in PBS
+#
 # -M                   Runs just the executables for the surface analysis. The argument value
 #                      denotes the name of the surface analysis executable (e.g. 'stmas_mg.x' 
 #                      'laps_sfc.x', or 'recurs_iter.x')
 #
 # -s                   Runs surface analysis only (equivalent to '-M laps_sfc.x')
-#
-# -K                   Runs just the executables for the Kalman filter
 #
 # -w                   Option for creating the WFO big file when LAPS is 
 #                      running outside of the WFO environment.
@@ -117,11 +117,11 @@
                
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R $opt_x $opt_y $opt_Y
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_U $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R $opt_x $opt_y $opt_Y
             $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X $opt_C $opt_N);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:P:S:XR:x:y:C:NY:');
+getopts('d:c:a:rm:t:e:q:Q:UV:M:n:A:f:F:wslu:vp:TE:P:S:XR:x:y:C:NY:');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -880,6 +880,9 @@ foreach $exe (@LAPS_EXE){
                             print TFILE "#\$ -cwd\n";
                         }else{
                             print TFILE "#PBS -A $opt_q\n";
+                            if($opt_U){
+                                print TFILE "#PBS -q urgent\n";
+                            }
                             print TFILE "#PBS -N $qsub_name\n";
                             print TFILE "#PBS -j oe\n";
                             print TFILE "#PBS -o $LAPS_LOG_PATH/$qsub_log_name\_$execount.log\n";
