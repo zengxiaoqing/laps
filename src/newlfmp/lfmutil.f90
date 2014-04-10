@@ -251,7 +251,7 @@ real, allocatable, dimension(:,:,:) :: htdsig,hrhsig,hthetasig,hthetaesig,hzsigf
 !beka
 real :: dx(lx,ly),dy(lx,ly)  
 real :: r_missing_data, aglhgt
-real :: stefan_boltzmann, b_olr, eff_emissivity
+real :: stefan_boltzmann, b_olr, eff_emissivity, b_tau
 real :: bt_flux_equiv
 real :: coeff
 real :: a1,b1,c1,d1,e1,alpha(lx,ly)
@@ -475,9 +475,10 @@ if (make_micro) then
          cldamt(i,j) = 1. - (exp( -(const_lwp * intliqwater(i,j) + const_iwp * intcldice(i,j))) ) 
 
 !        Rain, Snow, and Graupel are added for the cldalb & simvis computation
-         cldalb(i,j) = 1. - (exp( -(const_lwp_bks * intliqwater(i,j) + const_iwp_bks * intcldice(i,j) + &
-                                    const_rwp_bks * intrain(i,j)     + const_swp_bks * intsnow(i,j)   + const_gwp_bks * intgraupel(i,j)) ) ) 
-         simvis(i,j) = cldalb(i,j) + (1.-cldalb(i,j)) * static_albedo(i,j)
+         b_tau = const_lwp_bks * intliqwater(i,j) + const_iwp_bks * intcldice(i,j) + &
+                 const_rwp_bks * intrain(i,j)     + const_swp_bks * intsnow(i,j)   + const_gwp_bks * intgraupel(i,j) 
+         cldalb(i,j) = b_tau / (b_tau + 1.)
+         simvis(i,j) = cldalb(i,j) + (1.-cldalb(i,j))**2 * (static_albedo(i,j)/(1.-cldalb(i,j)*static_albedo(i,j)))
       endif
     enddo ! i
   enddo ! j
