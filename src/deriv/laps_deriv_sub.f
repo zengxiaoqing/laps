@@ -734,7 +734,8 @@ c read in laps lat/lon and topo
         write(6,*)
         write(6,*)' Inserting thin clouds into LWC/ICE fields'
         call insert_thin_lwc_ice(clouds_3d,clouds_3d_pres,heights_3d
-     1       ,temp_3d,cld_hts,NX_L,NY_L,NZ_L,KCLOUD,thresh_thin_lwc_ice       
+     1       ,temp_3d,cldalb_in,cld_hts,NX_L,NY_L,NZ_L,KCLOUD
+     1       ,thresh_thin_lwc_ice       
      1       ,pres_3d,slwc,cice,istatus)
 
         if(istatus .ne. 1)then
@@ -1146,7 +1147,10 @@ c read in laps lat/lon and topo
      1                     + const_rwp * rain_int(i,j)  
      1                     + const_swp * snow_int(i,j)  
      1                     + const_gwp * pice_int(i,j)  
-!           write(6,*)'i,j,cld_od',i,j,cldod_out(i,j)
+            if(i .eq. NX_L/2 .AND. j .eq. NY_L/2)then
+                write(6,*)'i,j,lat,lon,cld_od:'
+     1                    ,i,j,lat(i,j),lon(i,j),cldod_out(i,j)
+            endif
         enddo ! i
         enddo ! j
 
