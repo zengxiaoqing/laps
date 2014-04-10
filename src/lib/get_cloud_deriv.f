@@ -207,7 +207,8 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         write(6,*)
 
         if(iflag_slwc .ne. 0)then
-            write(6,*)' Initializing SLWC/CICE arrays'
+            write(6,*)' Initializing SLWC/CICE arrays, iflag_slwc = '
+     1               ,iflag_slwc
             slwc_3d = zero
             cice_3d = zero
         endif
@@ -497,10 +498,13 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                                  if(cloud_type_1d(k_1d) .ne. 10)then ! Not CB
 
-                                  if(radar_3d(i,j,k_1d) .le. 8.)then ! No Depletion
+                                  depl1 = 25. 
+                                  depl2 = 30.
+
+                                  if(radar_3d(i,j,k_1d) .le. depl1)then ! No Depletion
                                     continue
 
-                                  elseif(radar_3d(i,j,k_1d) .gt. 11.
+                                  elseif(radar_3d(i,j,k_1d) .gt. depl2 
      1                                                  )then ! Total Depletion
                                     cice_1d(k_1d) = cice_1d(k_1d) 
      1                                            + slwc_1d(k_1d)
@@ -508,7 +512,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                                   else ! Ramped Depletion
                                     ramp = 1.0 - 
-     1                                  ((radar_3d(i,j,k_1d) - 8.) / 3.)       
+     1                                  ((radar_3d(i,j,k_1d) - depl1) 
+     1                                                / (depl2-depl1))       
                                     cice_1d(k_1d) = cice_1d(k_1d) 
      1                                       + slwc_1d(k_1d) * (1.-ramp)       
                                     slwc_1d(k_1d) = slwc_1d(k_1d) * ramp
