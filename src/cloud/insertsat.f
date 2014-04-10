@@ -39,27 +39,28 @@ cdis
 c
 c
         subroutine insert_sat(i4time,cldcv,
-     1  cldcv_sao,cld_hts,rlat,rlon,                                     ! I
-     1  pct_req_lvd_s8a,default_clear_cover,                             ! I
-     1  tb8_k,istat_tb8,                                                 ! I
-     1  sst_k,istat_sst,                                                 ! I
-     1  istat_39_a, l_use_39,                                            ! I
-     1  di_dh,dj_dh,                                                     ! I
-     1  i_fill_seams,                                                    ! I
-     1  istat_39_add_a,                                                  ! O
-     1  tb8_cold_k,                                                      ! O
-     1  grid_spacing_m,surface_sao_buffer,                               ! I
-     1  cloud_frac_vis_a,istat_vis_potl_a,                               ! I
-     1  istat_vis_added_a,                                               ! O
-     1  solar_alt,solar_ha,solar_dec,                                    ! I
-     1  lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,                  ! I
-     1  rlaps_land_frac,                                                 ! I
-     1  topo,heights_3d,temp_3d,t_sfc_k,td_sfc_k,pres_sfc_pa,            ! I
-     1  t_modelfg,sh_modelfg,pres_3d,                                    ! I
-     1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
-     1  t_gnd_k,                                                         ! O
-     1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,                   ! O
-     1  istatus)                                                         ! O
+     1  cldcv_sao,cld_hts,rlat,rlon,                                    ! I
+     1  pct_req_lvd_s8a,default_clear_cover,                            ! I
+     1  tb8_k,istat_tb8,                                                ! I
+     1  sst_k,istat_sst,                                                ! I
+     1  istat_39_a, l_use_39,                                           ! I
+     1  di_dh_ir,dj_dh_ir,                                              ! I
+     1  di_dh_vis,dj_dh_vis,                                            ! I
+     1  i_fill_seams,                                                   ! I
+     1  istat_39_add_a,                                                 ! O
+     1  tb8_cold_k,                                                     ! O
+     1  grid_spacing_m,surface_sao_buffer,                              ! I
+     1  cloud_frac_vis_a,istat_vis_potl_a,                              ! I
+     1  istat_vis_added_a,                                              ! O
+     1  solar_alt,solar_ha,solar_dec,                                   ! I
+     1  lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,                 ! I
+     1  rlaps_land_frac,                                                ! I
+     1  topo,heights_3d,temp_3d,t_sfc_k,td_sfc_k,pres_sfc_pa,           ! I
+     1  t_modelfg,sh_modelfg,pres_3d,                                   ! I
+     1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,sfc_albedo,        ! I
+     1  t_gnd_k                                                         ! O
+     1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,                  ! O
+     1  istatus)                                                        ! O
 c
 c*************************************************************************
 c
@@ -124,8 +125,10 @@ c
         real cldcv_sao(imax,jmax,kcld)       ! 3D Cloud cover array
         real rlat(imax,jmax),rlon(imax,jmax)
         real tb8_k(imax,jmax)
-        real di_dh(imax,jmax)              ! Parallax offset for sat data
-        real dj_dh(imax,jmax)              ! Parallax offset for sat data
+        real di_dh_ir(imax,jmax)           ! Parallax offset for sat data
+        real dj_dh_ir(imax,jmax)           ! Parallax offset for sat data
+        real di_dh_vis(imax,jmax)          ! Parallax offset for sat data
+        real dj_dh_vis(imax,jmax)          ! Parallax offset for sat data
         real sst_k(imax,jmax)
         real tb8_cold_k(imax,jmax)
         real topo(imax,jmax)
@@ -141,6 +144,7 @@ c
         real t_sfc_k(imax,jmax)
         real td_sfc_k(imax,jmax)
         real cvr_snow(imax,jmax)
+        real sfc_albedo(imax,jmax)
         real pres_sfc_pa(imax,jmax)
         real heights_3d(imax,jmax,klaps)
         real cloud_frac_co2_a(imax,jmax)
@@ -175,6 +179,10 @@ c
      1          ,l_no_sao_vis
 
         logical lstat_co2_a(imax,jmax)
+        logical l_clear_ir /.true./
+        logical l_add_ir /.true./
+
+        integer idebug_a(imax,jmax)        ! L
 
         real k_to_f, k_to_c
 
@@ -254,6 +262,8 @@ c
         enddo
         enddo
 
+        I4_elapsed = ishow_timer()
+
         valid_pct = (1.- float(icount)/float(imax*jmax) ) * 100.
 
         if(valid_pct .lt. pct_req_lvd_s8a)then
@@ -268,8 +278,8 @@ c
             
         endif
 
-!       Calculate cold filtered temperatures (over ~20km box)
-        i_delt = max(1,nint(10000./grid_spacing_m))
+!       Calculate cold filtered temperatures (over ~10km box - mode_sao=2)
+        i_delt = max(1,nint(5000./grid_spacing_m))
         do j = 1,jmax
             jl = max(1   ,j-i_delt)
             jh = min(jmax,j+i_delt)
@@ -336,9 +346,7 @@ c
         enddo ! j
         enddo ! k
 
-
         I4_elapsed = ishow_timer()
-
 
         write(6,*)
         write(6,*)'  cldtp_t  i  j  k   frac_k   cldtop_temp_f   ',       
@@ -366,11 +374,14 @@ c
         do i=1,imax
 
          jp10 = j+10
-         if(j .eq. (j/jskd)*jskd .and. i .eq. (i/jskd)*jskd)then
-          idebug = 1
+!        if(j .eq. (j/jskd)*jskd .and. i .eq. (i/iskd)*iskd)then
+         if(i .eq. imax/2 .AND. j .eq. jmax/2)then
+             idebug_a(i,j) = 1
+             write(6,*)' Debugging at lat/lon ',i,j,rlat(i,j),rlon(i,j)
          else
-          idebug = 0
+             idebug_a(i,j) = 0
          endif
+         idebug = idebug_a(i,j)
 
          if(imax-i .le. nskip_max .or. jmax-j .le. nskip_max)then
              l_poss_extrap = .true. ! Extrapolation edge effects possible
@@ -386,37 +397,32 @@ c
               t_gnd_c = k_to_c(t_gnd_k(i,j))
               write(6,111,err=112)i,j,tb8_c,t_gnd_c
      1                               ,tb8_c-t_gnd_c
-111           format(/1x,2i4,' tb8/sfc',12x,f8.1,4x,f8.1,8x,f8.1)
+111           format(/1x,2i4,' 1st cloud_top call: tb8/sfc'
+     1              ,12x,f8.1,4x,f8.1,8x,f8.1)
 112       endif
 
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
           call cloud_top( init_co2,i4time,tb8_k(i,j),idebug
-     1     ,cloud_frac_co2_a(i,j)                                         ! I
-     1     ,t_gnd_k,pres_sfc_pa
+     1     ,cloud_frac_co2_a(i,j)                                        ! I
+     1     ,t_gnd_k,sfc_albedo,pres_sfc_pa
      1     ,thresh_ir_diff1,topo(i,j),r_missing_data
-     1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
-     1     ,istat_39_a(i,j), l_use_39                                     ! I
-     1     ,istat_39_add_a(i,j),istat_vis_added_a(i,j)                    ! O
-     1     ,cloud_frac_vis_a,istat_vis_potl_a(i,j)                        ! I
-     1     ,cloud_frac_vis_s                                              ! I
-     1     ,lstat_co2_a(i,j)                                              ! I
-     1     ,t_modelfg,sh_modelfg                                          ! I
-     1     ,pres_3d                                                       ! I
-     1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
-     1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
-     1     ,cldtop_m(i,j),l_cloud_present                                 ! O
-     1     ,sat_cover)                                                    ! O
+     1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p      
+     1     ,istat_39_a(i,j), l_use_39                                    ! I
+     1     ,istat_39_add_a(i,j),istat_vis_added_a(i,j)                   ! O
+     1     ,cloud_frac_vis_a,istat_vis_potl_a(i,j)                       ! I
+     1     ,di_dh_vis(i,j),dj_dh_vis(i,j)                                ! I
+     1     ,cloud_frac_vis_s                                             ! I
+     1     ,lstat_co2_a(i,j)                                             ! I
+     1     ,t_modelfg,sh_modelfg                                         ! I
+     1     ,pres_3d                                                      ! I
+     1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2        ! O
+     1     ,cldtop_tb8_m(i,j),l_tb8                                      ! O
+     1     ,cldtop_m(i,j),l_cloud_present                                ! O
+     1     ,sat_cover)                                                   ! O
 
           if(istat_vis_potl_a(i,j) .eq. 1)then ! vis potl added
               iwrite = iwrite + 1
-              if((iwrite .lt. 1000 .and. iwrite .eq. (iwrite/10)*10)
-     1                              .OR. 
-     1                    (iwrite .eq. (iwrite/100)*100)
-     1                              .OR. 
-     1                       (.not. l_cloud_present)
-     1                              .OR. 
-     1                       (idebug .eq. 1)
-     1                                                          )then
+              if(idebug .eq. 1)then
                   write(6,113)i,j,istat_vis_added_a(i,j),l_tb8
      1                       ,l_cloud_present
      1                       ,cldtop_m(i,j),cldtop_tb8_m(i,j)
@@ -461,15 +467,15 @@ c
 
           endif
 
-          if(.true.)then ! Use Band 8 (11.2 mm)
+          if(l_clear_ir)then ! Use Band 8 (11.2 mm)
 
-!           Modify those levels where the satellite shows warmer than the
-!           calculated brightness temp from the analysis of SAO/Pireps
+!           Modify (clear) those levels where the satellite shows warmer than
+!           the calculated brightness temp from the analysis of SAO/Pireps
 
             do k=kcld,1,-1
 
-              it = i - nint(di_dh(i,j) * cld_hts(k))
-              jt = j - nint(dj_dh(i,j) * cld_hts(k))
+              it = i - nint(di_dh_ir(i,j) * cld_hts(k))
+              jt = j - nint(dj_dh_ir(i,j) * cld_hts(k))
               it = max(min(it,imax),1)
               jt = max(min(jt,jmax),1)
               if(i_fill_seams(i,j) .ne. 0)then
@@ -619,7 +625,7 @@ c
 
 !         Test if we're confident that a cloud is present and we know where
 !         the cloud top is.
-          IF(l_cloud_present) then ! Insert satellite clouds
+          IF(l_cloud_present .and. l_add_ir) then ! Insert satellite clouds
 
 !           Set initial satellite cloud base
 !           Use LCL as a constraint when cloud base is just below it     
@@ -737,6 +743,7 @@ c
               endif
 
             elseif(ht_sao_base .eq. r_missing_ht)then 
+!           elseif(.false.)then 
                                                 ! Non-vis Sat with no SAO cloud
               n_no_sao2 = n_no_sao2 + 1
               mode_sao = 2
@@ -761,28 +768,30 @@ c
 
 !             Compare brightness temp to surface temperature
               if(idebug .eq. 1)then
-                  write(6,206,err=207)i,j,k_to_c(tb8_k(i,j))
+                  write(6,206,err=207)i,j,k_to_c(tb8_cold_k(i,j))
      1                                   ,k_to_c(t_gnd_k(i,j))
-206               format(1x,2i4,'tb8_cold/sfc',6x,f8.1,8x,f8.1)
+206               format(1x,2i4,' 2nd cloud_top call: tb8_cold/sfc'
+     1                         ,6x,f8.1,8x,f8.1)
 207           endif
 
               call cloud_top(init_co2,i4time,tb8_cold_k(i,j),idebug
-     1            ,cloud_frac_co2_a(i,j)                                 ! I
-     1            ,t_gnd_k,pres_sfc_pa
+     1            ,cloud_frac_co2_a(i,j)                                ! I
+     1            ,t_gnd_k,sfc_albedo,pres_sfc_pa
      1            ,thresh_ir_diff1,topo(i,j),r_missing_data
      1            ,i,j,imax,jmax,klaps,heights_3d,temp_3d
      1            ,k_terrain(i,j),laps_p
-     1            ,istat_39_a(i,j), l_use_39                             ! I
-     1            ,istat_39_add_dum,istat_vis_added_dum                  ! O
-     1            ,cloud_frac_vis_a,istat_vis_potl_a(i,j)                ! I
-     1            ,cloud_frac_vis_s                                      ! I
-     1            ,lstat_co2_a(i,j)                                      ! I
-     1            ,t_modelfg,sh_modelfg                                  ! I
-     1            ,pres_3d                                               ! I
-     1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
-     1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
-     1            ,cldtop_m(i,j),l_cloud_present                         ! O
-     1            ,sat_cover)                                            ! O
+     1            ,istat_39_a(i,j), l_use_39                            ! I
+     1            ,istat_39_add_dum,istat_vis_added_dum                 ! O
+     1            ,cloud_frac_vis_a,istat_vis_potl_a(i,j)               ! I
+     1            ,di_dh_vis(i,j),dj_dh_vis(i,j)                        ! I
+     1            ,cloud_frac_vis_s                                     ! I
+     1            ,lstat_co2_a(i,j)                                     ! I
+     1            ,t_modelfg,sh_modelfg                                 ! I
+     1            ,pres_3d                                              ! I
+     1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2! O
+     1            ,cldtop_tb8_m(i,j),l_tb8                              ! O
+     1            ,cldtop_m(i,j),l_cloud_present                        ! O
+     1            ,sat_cover)                                           ! O
 
 !             Calculate the cover (opacity) given the brightness temperature,
 !             ground temperature, and assumed ambient cloud-top temperature.
@@ -795,48 +804,22 @@ c
               if(htbase .gt. cldtop_m(i,j))then
                   n_no_sao3 = n_no_sao3 + 1
                   mode_sao = 3
-              else
-                  write(6,211,err=212)i,j,tb8_k(i,j),tb8_cold_k(i,j)
-     1                   ,cldtop_m_avg,cldtop_m(i,j)
-!       1                        ,cldtop_m_avg,cldtop_m_cold
-     1                   ,cover
-211               format(1x,2i4,' AVG/COLD',2f7.1,2x,2f7.0,f9.3)
-212           endif
+              endif
 
-            elseif(ht_sao_base .gt. cldtop_m(i,j) .and. .false.)then        
-                                                    ! Satellite top below 
-                                                    ! ceiling (lowest SAO base)
-              mode_sao = 4
-              cover=sat_cover
-              htbase = ht_sao_base
-              cldtop_old = cldtop_m(i,j)
-              thk_lyr = cld_thk(htbase)
-              cldtop_m(i,j) = htbase + thk_lyr
+              if(idebug .eq. 1)then
+                  write(6,211,err=212)i,j,mode_sao
+     1                               ,tb8_k(i,j),tb8_cold_k(i,j)
+     1                               ,cldtop_m_avg,cldtop_m(i,j)
+!       1                            ,cldtop_m_avg,cldtop_m_cold
+     1                               ,cover
+211               format(1x,2i4,' mode_sao =',i2,': AVG/COLD'
+     1                  ,2f7.1,2x,2f7.0,f9.3)
+212               continue
+              endif
 
-!             Find a thinner value for cloud cover consistent with the new
-!             higher cloud top and the known brightness temperature.
-!             This works OK if tb8_k is warmer than T at the assumed cloud top
-              if(.true.)then ! Should this depend on co2?
-
-                  call correct_cover(cover,cover_new,cldtop_old
-     1                              ,cldtop_m(i,j)
-     1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
-     1                              ,heights_3d
-     1                              ,imax,jmax,klaps,i,j,idebug,istatus)       
-                  if(istatus .ne. 1)then
-                      write(6,*)' Correct_cover: tb8_k < t_cld'
-                      thk_lyr = cld_thk(cldtop_m(i,j))
-                      write(6,*)cldtop_old,cldtop_m(i,j)
-     1                         ,htbase,thk_lyr,cover
-                      write(6,*)(heights_3d(i,j,k),k=1,klaps)
-!                     return
-                  endif
-                  cover = cover_new
-              endif ! .true.
-
-            elseif(  htbase .lt. lcl_2d(i,j)           .AND.      
+            elseif(htbase .lt. lcl_2d(i,j) .AND. ! .false. .AND.      
      1             ( (lcl_2d(i,j)+thk_lyr) .gt. ht_sao_top(i,j) .OR.
-     1               ht_sao_top(i,j) .eq. r_missing_ht      )
+     1               ht_sao_top(i,j) .eq. r_missing_ht    )
      1                                                        )then        
                                              ! Cloud base is below lcl
                                              ! & lcl+thk is higher than ht_sao_top
@@ -866,6 +849,11 @@ c
                           write(6,*)(heights_3d(i,j,k),k=1,klaps)
 !                         return
                       endif
+                  endif
+                  if(idebug .eq. 1)then
+                      write(6,261)i,j,cover,cover_new
+     1                           ,cldtop_old,cldtop_m(i,j)
+ 261                  format(' mode_sao = 4: i/j/cvrs/tops ',2i4,4f8.2)
                   endif
                   cover = cover_new
               endif ! .true.
@@ -970,10 +958,12 @@ c
 
             if(htbase .lt. lcl_2d(i,j))then
 !               Consider relocating cloud above the lcl
-                write(6,305)i,j,htbase,lcl_2d(i,j),mode_sao
-     1                     ,cldtop_m(i,j),ht_sao_top(i,j)
- 305            format(' WARNING: sat cloud base below LCL     '
-     1                ,2i6,2f8.1,i4,2f8.1)       
+                if(idebug .eq. 1)then
+                    write(6,305)i,j,htbase,lcl_2d(i,j),mode_sao
+     1                         ,cldtop_m(i,j),ht_sao_top(i,j)
+ 305                format(' WARNING: sat cloud base below LCL     '
+     1                    ,2i6,2f8.1,i4,2f8.1)       
+                endif
             endif
 
 !           Test for unreasonable cloud layer
@@ -999,8 +989,13 @@ c
               do k=kcld,1,-1
                 if(cld_hts(k) .ge. htbase  .and.
      1             cld_hts(k) .le. cldtop_m(i,j) )then ! in satellite layer
-                   it = i - nint(di_dh(i,j) * cld_hts(k))
-                   jt = j - nint(dj_dh(i,j) * cld_hts(k))
+                   if(istat_vis_added_a(i,j) .eq. 1)then
+                       it = i - nint(di_dh_vis(i,j) * cld_hts(k))
+                       jt = j - nint(dj_dh_vis(i,j) * cld_hts(k))
+                   else
+                       it = i - nint(di_dh_ir(i,j) * cld_hts(k))
+                       jt = j - nint(dj_dh_ir(i,j) * cld_hts(k))
+                   endif
                    it = max(min(it,imax),1)
                    jt = max(min(jt,jmax),1)
                    if(i_fill_seams(i,j) .ne. 0)then
@@ -1013,6 +1008,12 @@ c
                        itx = it
                    endif
                    cldcv(itn:itx,jt,k)=cover
+                   if(idebug .eq. 1)then
+!                  if(it.eq.660 .and. jt.gt.50 .and. jt.lt.120)then
+                       write(6,331)i,j,it,jt,k,cover
+     1                            ,istat_vis_added_a(i,j)
+331                    format(' added ijk/cvr:',5i5,f8.2,i2)
+                   endif
                 endif
               enddo
             endif ! ierr = 0 (unreasonable cloud that was below zero cover)
@@ -1024,6 +1025,8 @@ c
         enddo ! imax
         enddo ! jmax
 
+        write(6,*)' cldcv section 1:',cldcv(660,60:110,22)
+
 !       Write stats on CO2 and Band 8 (11.2mm) methods
         write(6,*)' n_valid_co2 = '  ,n_valid_co2
      1           ,' n_missing_co2 = ',n_missing_co2
@@ -1033,8 +1036,8 @@ c
         I4_elapsed = ishow_timer()
 
         call compare_radiation(kcld,temp_3d,klaps,imax,jmax
-     1               ,cldcv,cldcv_1d,cld_hts,t_sfc_k,t_gnd_k,tb8_k
-     1               ,r_missing_data,cvr_snow,heights_3d,nlyr,istatus)
+     1       ,cldcv,cldcv_1d,cld_hts,t_sfc_k,t_gnd_k,tb8_k
+     1       ,idebug_a,r_missing_data,cvr_snow,heights_3d,nlyr,istatus)
         if(istatus .ne. 1)then
             write(6,*)
      1           ' Warning: bad status returned from compare_radiation'       
@@ -1052,17 +1055,20 @@ c
         write(6,*)' n_vis_add_potl = ',n_vis_add_potl
      1           ,' n_vis_added = ',n_vis_added
 
+        write(6,*)' cldcv section 1a:',cldcv(660,60:110,22)
+
         istatus = 1
         return
         end
 
         subroutine cloud_top( init_co2,i4time,tb8_k,idebug             ! I
      1  ,cloud_frac_co2                                                ! I
-     1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data       ! I
+     1  ,t_gnd_k,sfc_albedo,pres_sfc_pa,thresh_ir_diff1,topo           ! I
+     1  ,r_missing_data                                                ! I
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p       ! I
      1  ,istat_39, l_use_39                                            ! I
      1  ,istat_39_add,istat_vis_added                                  ! O
-     1  ,cloud_frac_vis_a,istat_vis_potl                               ! I
+     1  ,cloud_frac_vis_a,istat_vis_potl,di_dh_vis,dj_dh_vis           ! I
      1  ,cloud_frac_vis_s                                              ! I
      1  ,lstat_co2                                                     ! I
      1  ,t_modelfg,sh_modelfg                                          ! I
@@ -1089,6 +1095,7 @@ c
         real cloud_frac_vis_s(imax,jmax)      ! Input (vis cloud building)
         integer i,j,imax,jmax,klaps           ! Input
         real t_gnd_k(imax,jmax)               ! Input
+        real sfc_albedo(imax,jmax)            ! Input
         real pres_sfc_pa(imax,jmax)           ! Input
         real t_modelfg(imax,jmax,klaps)       ! Input
         real sh_modelfg(imax,jmax,klaps)      ! Input
@@ -1103,12 +1110,12 @@ c
         real laps_p(klaps)                    ! Input
         integer n_valid_co2,n_missing_co2     ! Input/Output
         real cldtop_co2_m                     ! Output
-        logical lstat_co2,l_use_39              ! Input
-        integer istat_co2                       ! Output (not presently used)
+        logical lstat_co2,l_use_39            ! Input
+        integer istat_co2                     ! Output (not presently used)
         real cldtop_tb8_m                     ! Output
-        logical l_tb8                           ! Output
+        logical l_tb8                         ! Output
         real cldtop_m                         ! Output
-        logical l_cloud_present                 ! Output
+        logical l_cloud_present               ! Output
         real sat_cover                        ! Output
 
 !       Local
@@ -1172,52 +1179,27 @@ c
      1                     .OR. 
      1       (istat_vis_potl .eq. 1 .and. 
      1        cloud_frac_vis_a(i,j) .ne. r_missing_data)       
-     1                                              )then ! get 11u cloud top
+     1                                            )then ! get 11u cloud top
             cldtop_temp_k_before = tb8_k
 
-!           Correct the cloud top temperature for thin clouds using VIS data
+!           Correct cloud top temperature for thin clouds using VIS data
             call correct_cldtop_t_rad(tb8_k,t_gnd_k(i,j)               ! I
      1                           ,cloud_frac_vis_s(i,j)                ! I
      1                           ,istat_vis_potl                       ! I
      1                           ,cldtop_temp_k,istat_vis_corr)        ! O
+            if(istatus .eq. -1)then
+                write(6,*)
+     1      '-1 status returned from correct_cldtop_t_rad at i,j = ',i,j
+            endif
 
 !           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point)
 
             costmin_x = 9999. ! Initial cost value from crossing points
 
-! abdel added this when the model is the brightness temp is too cold than the model a klaps level
-	               
 	    if (cldtop_temp_k .le. temp_3d(i,j,klaps))then ! Restrict to top
                 cldtop_temp_k = temp_3d(i,j,klaps)
             endif
 
-	    if (.false.)then ! Extrapolate
-                frac_k = (temp_3d(i,j,klaps) - temp_3d(i,j,klaps-1))
-     1                 /  (cldtop_temp_k     - temp_3d(i,j,klaps))
-              
-                arg = heights_3d(i,j,klaps) + frac_k *
-     1               (heights_3d(i,j,klaps) - heights_3d(i,j,klaps-1))
-
-                if(arg .ge. topo)then
-                    cldtop_tb8_m = arg
-                endif
-
-                qamb = sh_modelfg(i,j,klaps) + frac_k *
-     1                (sh_modelfg(i,j,klaps) - sh_modelfg(i,j,klaps-1))
-
-                arg =  alog(pres_3d(i,j,klaps)) + frac_k *
-     1                (alog(pres_3d(i,j,klaps)) 
-     1               - alog(pres_3d(i,j,klaps-1)))
-
-                p_pa = exp(arg)
-
-                if(p_pa .ge. 5000.)then
-                    costmin_x = jcost_cldtop(cldtop_temp_k,tb8_k,qamb
-     1                                                    ,p_pa,idebug)      
-                endif
-
-            endif 
-		
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! original version
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
@@ -1253,7 +1235,7 @@ c
                         endif
 
                         write(6,111,err=121)cldtop_tb8_m,cldtop_co2_m
-111                     format(1x,f10.0,1x,f10.0)
+111                     format(1x,'cloud_top tb8/co2:'f10.0,1x,f10.0)
 
 121                     write(6,122,err=123)i,j,kl,frac_k
      1                           ,k_to_c(cldtop_temp_k_before)
@@ -1292,6 +1274,11 @@ c
 
             if(costmin_lvl .lt. costmin_x)then
 
+                if(idebug .eq. 1)then
+                    write(6,*)i,j,
+     1            'cloud_top: found lower cost function, call corr-cvr '
+                endif
+
 !               Calculate pot'l new cloud top and cover                             
                 cldtop_new_potl_m = heights_3d(i,j,kl_min)
 
@@ -1323,18 +1310,18 @@ c
      1                     ,costmin_lvl,tb8_k,temp_3d(i,j,kl_min)
      1                     ,cloud_frac_tb8_potl
      1                     ,cldtop_new_potl_m              
-131                 format(1x,'Found lower cost function at: ',8x,2i6,i4
-     1                ,f12.4,2f8.1,f6.2,f8.0)
+131                 format(' cloud_top: found lower cost function at: '
+     1                    ,2i6,i4,f12.4,2f8.1,f6.2,f8.0)
                 endif
 
-            else
+            else ! no lower cost function
                 if(idebug .eq. 1)then
-                    write(6,*)' No lower cost function '          
+                    write(6,*)' cloud_top: no lower cost function '          
      1                        ,costmin_lvl,costmin_x                 
                 endif
             endif
 
-        endif ! We will want to use a 11u determined cloud top
+        endif ! We will want to use a sat/model determined cloud top
 
         istat_39_add = 0
         istat_vis_added = 0
@@ -1366,38 +1353,48 @@ c
             istat_39_add = 1
 
         elseif( (.not. l_tb8) .AND. istat_vis_potl .eq. 1 
-     1                .AND. cloud_frac_vis_a(i,j) .ne. r_missing_data        
-     1                .AND. cldtop_tb8_m          .ne. r_missing_data        
+     1                .AND. cloud_frac_vis_a(i,j) .ne. r_missing_data
+     1                .AND. cldtop_tb8_m          .ne. r_missing_data
      1                                                            ) then      
 
 !           Band 8 (11mm) threshold says no but visible says yes
 !           We did still get a valid Band 8 derived cloud top
 
-            mode_top = 3
-            l_cloud_present = .true.
-            cldtop_m = cldtop_tb8_m
-            sat_cover = cloud_frac_vis_a(i,j) 
-            istat_vis_added = 1
+!           Compare to sfc_albedo using parallax and topo?
+!           Find ig,jg given i,j
+            ig = i - nint(di_dh_vis * (cldtop_tb8_m-topo))
+            jg = j - nint(dj_dh_vis * (cldtop_tb8_m-topo))
+            ig = max(min(ig,imax),1)
+            jg = max(min(jg,jmax),1)
 
+            if(cloud_frac_vis_a(i,j) .gt. sfc_albedo(ig,jg) + 0.3)then
+                mode_top = 3
+                l_cloud_present = .true.
+                cldtop_m = cldtop_tb8_m
+                sat_cover = cloud_frac_vis_a(i,j) 
+                istat_vis_added = 1
+                if(idebug .eq. 1)then
+                    write(6,*)i,j,' visible is being added',ig,jg
+                endif
+            else
+                mode_top = 4
+                l_cloud_present = .false.
+            endif
         else                          ! Using Band 8 (11.2mm) data only
-            mode_top = 4
+            mode_top = 5
             l_cloud_present = l_tb8
             cldtop_m = cldtop_tb8_m
             sat_cover = cloud_frac_tb8
 
         endif
 
+        ierr = 0
         if(l_cloud_present)then
           if(cldtop_m .eq. r_missing_data .OR.
      1       sat_cover .lt. 0.            .OR.
      1       sat_cover .gt. 1.                 )then
-            write(6,*)' ERROR in cloud_top: ',i,j,l_cloud_present
-     1               ,mode_top
-     1               ,istat_vis_added,istat_39_add,cldtop_m       
-     1               ,t_gnd_k(i,j),tb8_k,cloud_frac_vis_a(i,j)
-     1               ,cloud_frac_vis_s(i,j)
-     1               ,cldtop_temp_k,sat_cover
-     1               ,cloud_frac_tb8
+            write(6,*)' ERROR in cloud_top: ',i,j
+            ierr = 1
             if(sat_cover .gt. 1.)then
                 sat_cover = 1.
             endif
@@ -1405,6 +1402,17 @@ c
                 sat_cover = 0.
             endif
           endif
+        endif
+
+        if(idebug .eq. 1 .OR. ierr .eq. 1)then
+            write(6,*)' cloud_top info: '
+     1               ,i,j,l_cloud_present
+     1               ,mode_top
+     1               ,istat_vis_added,istat_39_add,cldtop_m       
+     1               ,t_gnd_k(i,j),tb8_k,cloud_frac_vis_a(i,j)
+     1               ,cloud_frac_vis_s(i,j)
+     1               ,cldtop_temp_k,sat_cover
+     1               ,cloud_frac_tb8
         endif
 
         return
@@ -1556,8 +1564,8 @@ c
 
         if(lwrite)then
             write(6,1,err=2)i,j,t_gnd_k,temp_old,temp_new,cldtop_old
-     1                     ,cldtop_new,cover_new,cover_new_f
-1           format(1x,'Corr-cvr ',2i5,3f7.0,2f8.0,2f8.2)
+     1                     ,cldtop_new,cover_in,cover_new,cover_new_f
+1           format(1x,'Corr-cvr t/top/cvr',2i5,3f7.0,2f8.0,3f8.2)
 2           continue
         endif
 
@@ -1599,7 +1607,7 @@ c
 
         subroutine compare_radiation(kcld,temp_3d,klaps,imax,jmax
      1      ,cldcv,cldcv_1d,cld_hts,t_sfc_k,t_gnd_k,tb8_k
-     1           ,r_missing_data,cvr_snow,heights_3d,nlyr,istatus)
+     1      ,idebug_a,r_missing_data,cvr_snow,heights_3d,nlyr,istatus)
 
         include 'laps_cloud.inc'
 
@@ -1614,6 +1622,7 @@ c
         real cldcv(imax,jmax,kcld)
         real cldcv_1d(kcld) ! ,cld_hts(kcld)
         logical l_correct,l_output
+        integer idebug_a(imax,jmax)        
 
 !       This routine compares the analyzed clouds to the 11.2mm radiation
 !       and determines adjusted cloud fractions of the cloud layers to yield
@@ -1659,8 +1668,7 @@ c
         do j = 1,jmax
         do i = 1,imax
 
-          jp10 = j+10
-          if(j .eq. (j/20)*20 .and. i .eq. (i/4)*4)then
+          if(idebug_a(i,j) .eq. 1)then
             l_output = .true.
           else
             l_output = .false.
@@ -1733,11 +1741,12 @@ c
 901             format(1x,2i4,i3,2f7.0,f7.1,f7.3,l2,' *',10f6.2)
 902         endif
 
-!           This corrective section is now turned on
+!           This corrective section is turned off since it is not yet parallax
+!           corrected
             iter = 0
             delta_cover = 0.
 
-905         if(l_correct)then
+905         if(l_correct .AND. .false.)then
                 iter = iter + 1
                 tdiff_ref = tdiff
                 delta_cover_ref = delta_cover
@@ -1971,6 +1980,8 @@ c
      1                                 ,istat_vis_potl                    ! I
      1                                 ,cldtop_temp_k,istatus)            ! O
 
+        use cloud_rad
+
         cldtop_temp_k = tb8_k ! default value
         istatus = 0
 
@@ -1982,7 +1993,11 @@ c
 
             diff = tb8_rad - t_gnd_rad
             if(diff .lt. 0.)then            
-                diff2 = diff * 1./cloud_frac_vis
+                call albedo_to_clouds2(cloud_frac_vis
+     1                                ,cloud_trans_l,cloud_trans_i
+     1                                ,cloud_od_l,cloud_od_i
+     1                                ,cloud_opac_l,cloud_opac_i)
+                diff2 = diff * 1./cloud_opac_i
                 cldtop_temp_rad = t_gnd_rad + diff2
 
                 if (cldtop_temp_rad .le. 0.0) then
@@ -1991,7 +2006,8 @@ c
                    write(6,*) 't_gnd_k ',t_gnd_k, ' t_gnd_rad ',
      1                                              t_gnd_rad
                    write(6,*) 'cloud_frac_vis ',cloud_frac_vis
-                   istatus = 0
+                   write(6,*) 'cloud_opac_i ',cloud_opac_i
+                   istatus = -1
                    return
                 endif
 
