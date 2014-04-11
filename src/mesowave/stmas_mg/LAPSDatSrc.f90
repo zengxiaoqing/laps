@@ -476,12 +476,12 @@ SUBROUTINE LAPSOBSV(m)
         IF (err .EQ. 1) THEN
 
           ! LAPS latlon_to_rlapsgrid returns xyt(1:2) ranging from:
-          ! (0.5,numgrid(1:2)+0.5). STMAS treats them on the edge of
+          ! (0.5,numgrd(1:2)+0.5). STMAS treats them on the edge of
           ! the domain:
           IF (xyt(1) .LT. 1) xyt(1) = 1.0
-          IF (xyt(1) .GT. numgrid(1)) xyt(1) = numgrid(1) 
+          IF (xyt(1) .GT. numgrd(1)) xyt(1) = numgrd(1) 
           IF (xyt(2) .LT. 1) xyt(2) = 1.0
-          IF (xyt(2) .GT. numgrid(2)) xyt(2) = numgrid(2) 
+          IF (xyt(2) .GT. numgrd(2)) xyt(2) = numgrd(2) 
 
 	  ! T: from LAPS time form: HHMM to seconds
 	  ! hrs = otm(j)/100
