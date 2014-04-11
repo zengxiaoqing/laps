@@ -216,7 +216,7 @@ subroutine reflectivity
     stat=istatus)
   
   ! Reference temperaure for converison between SH and RH:
-  tref = -132.0
+  tref = 0.0 !-132.0
 
   ! Get reflectivity at pressure levels:
   ext = 'lps '
