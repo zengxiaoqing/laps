@@ -441,7 +441,7 @@ SUBROUTINE LAPSOBSV(m)
 
     IF (nob .EQ. 0) THEN
       PRINT*,'LAPSOBSV: No sfc obs found!'
-      STOP
+      ! STOP ! Cover it up for allowing analysis to proceed without obs
     ELSE
         ! Convert LAPS surface obs time to i4time:
       DO j=1,nob
