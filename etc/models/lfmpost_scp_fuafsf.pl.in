@@ -268,7 +268,7 @@ if (! $opt_S){ # test for skipping remote copy
             print "    LFM post process wait for FUA timed out after $elapsed seconds: maxwait = $maxwait\n\n";
             print "    fua_file = $fua_dir/$fua_file\n";
             if (! defined ($opt_e)){
-                exit;
+                goto MSS;
             }
             print " Skip exit, look for next file...\n";
             $skip=1;
@@ -292,7 +292,7 @@ if (! $opt_S){ # test for skipping remote copy
             print "    LFM post process wait for FSF timed out after $elapsed seconds: maxwait = $maxwait\n\n";
             print "    fsf_file = $fsf_dir/$fsf_file\n";
             if (! $opt_e){
-                exit;
+                goto MSS;
             }
             print " Skip exit, look for next file...\n";
             $skip=1;
@@ -422,6 +422,8 @@ if (! $opt_S){ # test for skipping remote copy
 
 } # test of $opt_S 
 
+MSS:
+
 if(! defined $opt_M){
     print "no MSS copy is needed\n";
     exit;
@@ -496,11 +498,7 @@ for ($n=0; $n<$nfcst; $n++) {
   $msspath = $opt_M;
   $mssfullpath = "$msspath/$yyyy/$mm/$date_a9";
 
-  my $mss_cmd;
-
-  $mss_cmd = "mkdir -p $mssfullpath/fua/$name";
-  print "Running command: $mss_cmd\n";
-  system ($mss_cmd);
+  my ($hsi_cmd,$mss_cmd);
 
 # Add counting for multiple domains
 
@@ -508,16 +506,22 @@ for ($n=0; $n<$nfcst; $n++) {
   for ($g=1; $g<=$ngrid; $g++) {
     $grid = $grid[$g];
 
-    $mss_cmd = "cp $fua_dir/$fua_file $mssfullpath/fua/$name";
+    $mss_cmd = "hsi mkdir -p $mssfullpath/fua/$name";
+    print "Running command: $mss_cmd\n";
+    system ($mss_cmd);
+
+    $hsi_cmd = 'cd $mssfullpath/fua/$name; cput $fua_dir/$fua_file';
+    $mss_cmd = 'hsi "'.$hsi_cmd.'"';
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
     system ("date");
 
-    $mss_cmd = "mkdir -p $mssfullpath/fsf/$name";
+    $mss_cmd = "hsi mkdir -p $mssfullpath/fsf/$name";
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
 
-    $mss_cmd = "cp $fsf_dir/$fsf_file $mssfullpath/fsf/$name";
+    $hsi_cmd = 'cd $mssfullpath/fsf/$name; cput $fsf_dir/$fsf_file';
+    $mss_cmd = 'hsi "'.$hsi_cmd.'"';
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
     system ("date");
