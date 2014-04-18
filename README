@@ -232,6 +232,9 @@
      also work, however if you find you are having problems in this area please
      try obtaining and using gnu make. Check that 'make' is in your path.
 
+     If you are running AIX, 'make' should be used from the AIX toolbox:
+     http://www-03.ibm.com/systems/power/software/aix/linux/index.html
+
                      --- 2.1.4  C Compiler ---
 
      In general, an ANSI compliant C compiler should be used. On some hardware
@@ -246,9 +249,7 @@
 
      With the Intel 'ifort' FORTRAN compiler, 'icc' is recommended.
 
-     For Solaris platforms, 'cc' is recommended.
-
-     For HP-UX platforms, 'cc' is suggested.
+     For AIX, Solaris, HP_UX platforms, 'cc' is recommended.
 
                     ---  2.1.5  FORTRAN Compiler ---
 
