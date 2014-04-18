@@ -42,6 +42,14 @@ cdis
 
 cdoc    This routine assumes a polar stereographic, lambert conformal,
 cdoc    or mercator projection.
+cdoc
+cdoc    Values returned are on the LAPS grid where I ranges from 1,ni and
+cdoc    J ranges from 1,nj. Istatus is set to 1 if a valid I,J was determined
+cdoc    to be in the LAPS domain, except that a buffer of 0.5 grid points 
+cdoc    around the perimenter is allowed. If the point is farther outside
+cdoc    the domain, values of I,J will still be returned, while istatus is set
+cdoc    to 0. I increased from grid west to grid east, and J increases from
+cdoc    grid south to grid north.
 
         real rlat                         ! Input Lat
         real rlon                         ! Input Lon
