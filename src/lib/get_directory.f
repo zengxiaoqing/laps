@@ -128,6 +128,11 @@ c           directory = generic_data_root(1:len_root)//'etc/'
            goto 999
         endif
 
+        if(ext(1:4) .eq. 'root' .OR. ext(1:8) .eq. 'dataroot')then
+           directory = generic_data_root(1:len_root)//'/'
+           goto 999
+        endif
+
 !       In this section, we assume the extension points to a product file
         call s_len(ext,len_ext)
 
