@@ -364,13 +364,19 @@ cdis
 
 10            kstart = kht
 
-!d            write(6,1)lvl,kht_low,kht_high,frac_low,frac_high
-!d      1            ,cld_pres_3d(i,j,kht_low),heights_3d(i,j,lvl),cld_pres_3d(i,j,kht_high)
-!d1           format(1x,' Reading Clouds LVL ',i5,3x,2i5,3x,2f8.3,2x,3f8.2)
-
               clouds_3d_pres(i,j,lvl)
      1                = clouds_3d_height(i,j,kht_low ) * frac_low
-     1                      + clouds_3d_height(i,j,kht_high) * frac_high
+     1                + clouds_3d_height(i,j,kht_high) * frac_high
+
+              if(i .eq. imax/2 .and. j .eq. jmax/2)then
+                  write(6,1)lvl,kht_low,kht_high,frac_low,frac_high
+     1                     ,clouds_3d_height(i,j,kht_low)
+     1                     ,clouds_3d_height(i,j,kht_high)
+     1                     ,heights_3d(i,j,lvl)
+     1                     ,clouds_3d_pres(i,j,lvl)
+ 1                format(1x,' Reading Clouds LVL ',i5,3x,2i5,3x,2f8.3
+     1                                            ,2x,4f8.2)
+              endif
 
             enddo ! lvl
         enddo ! i
