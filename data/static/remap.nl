@@ -6,7 +6,7 @@
  ref_min=0.0,
  min_ref_samples=-1,
  min_vel_samples=-1,
- dgr=1.1,
+ dgr=0.55,
  abs_vel_min=2.0,
  l_line_ref_qc=.false.,
  l_hybrid_first_gate=.false.,
