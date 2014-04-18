@@ -1,6 +1,6 @@
 # Perl Routines to Manipulate CGI input
 # cgi-lib@pobox.com
-# $Id$
+#                                                            
 #
 # Copyright (c) 1993-1998 Steven E. Brenner  
 # Unpublished work.
@@ -13,7 +13,7 @@
 # For more information, see:
 #     http://cgi-lib.stanford.edu/cgi-lib/
 
-$cgi_lib'version = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
+$cgi_lib'version = sprintf("1.1");
 
 
 # Parameters affecting cgi-lib behavior
