@@ -209,6 +209,9 @@ subroutine reflectivity
   real, allocatable :: refl(:,:,:,:),cldf(:,:,:,:),cldh(:,:,:,:)
   real :: cld_hgt(kcloud),cld_prs(kcloud)
 
+  ! Include a statement function for converting sh to 'rh' = sh/s2r(p) by Yuanfu Xie:
+  include 'sh2rh.inc'
+
   ! Allocate memory:
   allocate(refl(fcstgrd(1),fcstgrd(2),fcstgrd(3),3), &
            cldf(fcstgrd(1),fcstgrd(2),fcstgrd(3),3), &
@@ -326,6 +329,17 @@ subroutine reflectivity
   enddo
   enddo
   print*,'Reflectivity bound derived: ',reflectivity_bound
+
+  ! Convert derived bounds for SH to 'RH' = SH/s2r(p) by Yuanfu Xie Dec. 2013:
+  do ll=1,fcstgrd(4)
+  do k=1,fcstgrd(3)
+  do j=1,fcstgrd(2)
+  do i=1,fcstgrd(1)
+    bk0(i,j,k,ll,numstat+1) = bk0(i,j,k,ll,numstat+1)/s2r(z_fcstgd(k)/100.0)
+  enddo
+  enddo
+  enddo
+  enddo
 
   ! Assign reflectivity derived bounds to GRDBKGD0:
   do j=1,maxgrid(2)
