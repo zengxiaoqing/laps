@@ -93,6 +93,9 @@ REAL :: FRACTION
   ! Yuanfu add integer arrays for interpolation dimensions:
   integer :: nanal(4),nbkgd(4)
 
+ ! Include a statement function for converting sh to 'rh' = sh/s2r(p) by Yuanfu Xie:
+  include 'sh2rh.inc'
+
 i4_tol=900
 i4_ret=0
 ! --------------------
@@ -165,9 +168,13 @@ i4_ret=0
   print*,'Increment 5: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),1:maxgrid(3),iframe,5)))
   IF (NUMSTAT .GT. 5) print*,'Increment 6: ',maxval(ABS(grdbkgd0(1:maxgrid(1),1:maxgrid(2),maxgrid(3),iframe,raincont)))
 
-  ! Yuanfu: Change Ana to a 4 dimensional array to save space:
+  ! Yuanfu: Change Ana to a 3 dimensional array to save space:
   ! ALLOCATE MEMORY:
   ALLOCATE(ANA(FCSTGRD(1),FCSTGRD(2),FCSTGRD(3)),STAT=ST)
+
+  ! PRESSURE LEVELS:
+  CALL GET_PRES_1D(LAPSI4T,FCSTGRD(3),LV,ST)
+  ILV = LV/100.0   ! INTEGER PRESSURES NEEDED IN HUMID LH3 OUTPUT
 
   ! LOOP THROUGH ALL ANALYSIS VARIABLES:
   DO S=1,NUMSTAT
@@ -186,8 +193,12 @@ i4_ret=0
       DO K=1,FCSTGRD(3)
       DO J=1,FCSTGRD(2)
       DO I=1,FCSTGRD(1)
+
+        ! Convert 'RH' = SH/s2r(p) back to SH by Yuanfu Xie:
         ANA(I,J,K) = &
-          MAX(-BK0(I,J,K,iframe,HUMIDITY),ANA(I,J,K))
+          MAX(-BK0(I,J,K,iframe,HUMIDITY),ANA(I,J,K))*s2r(lv(k)/100.0)
+        BK0(I,J,K,iframe,HUMIDITY) = BK0(I,J,K,iframe,HUMIDITY)*s2r(lv(k)/100.0)
+
       ENDDO
       ENDDO
       ENDDO
@@ -209,9 +220,7 @@ i4_ret=0
 
   CALL GET_GRID_SPACING_ACTUAL(LATITUDE((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1), &
                                LONGITUD((FCSTGRD(1)-1)/2+1,(FCSTGRD(2)-1)/2+1),DS,ST)
-  ! PRESSURE LEVELS:
-  CALL GET_PRES_1D(LAPSI4T,FCSTGRD(3),LV,ST)
-  ILV = LV/100.0   ! INTEGER PRESSURES NEEDED IN HUMID LH3 OUTPUT
+
   CALL GET_R_MISSING_DATA(RM,ST)
 
   ! OUTPUT: WIND BY YUANFU --
