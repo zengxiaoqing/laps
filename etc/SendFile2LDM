@@ -35,7 +35,7 @@
 #  11/03/97  Glen Pankow       Version 1.4     Quoting fix.
 #  11/07/97  Glen Pankow       Version 1.5     Backward-compatiblity fix.
 #------------------------------------------------------------------------------
-# $Id$
+#                                                              
 
 #set -xv
 
