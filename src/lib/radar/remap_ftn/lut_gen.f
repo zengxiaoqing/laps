@@ -113,6 +113,10 @@ c
 
       write(6,*)' Radar Name  ',c4_radarname
       write(6,*)' Radar Coords',rlat_radar,rlon_radar,rheight_radar
+      call latlon_to_rlapsgrid(rlat_radar,rlon_radar,lat,lon,
+     1                         NX_L,NY_L,ri,rj,istatus)
+      write(6,*)' LAPS Grid Coords of radar ',ri,rj
+
 
       call s_len(c4_radarname,lenr)
       if(lenr .eq. 0)then
