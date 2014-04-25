@@ -531,15 +531,29 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
           dist_center_km = (y_moon - penumbral_height_km) * cos(angrad)
           penumbral_magnitude = -(dist_center_km / diam_moon_km) + 0.5
 
-          if(umbral_magnitude .gt. 0.)then
+          penumbral_width = penumbral_magnitude - umbral_magnitude
+
+          bri_2nd = .0002
+
+          if(umbral_magnitude .gt. 1.)then          ! Total    
+              write(6,*)' Total'           
+              write(6,*)' umbral_magnitude = ',umbral_magnitude
+              frac_bri = bri_2nd / umbral_magnitude**4
+          elseif(umbral_magnitude .gt. 0.)then      ! Partial
+              write(6,*)' Partial'         
               write(6,*)' umbral_magnitude = ',umbral_magnitude
               write(6,*)' penumbral_magnitude = ',penumbral_magnitude
-              frac_bri_pen = 1.0 - (penumbral_magnitude * 0.5)
-              frac_bri = max(frac_bri_pen 
-     1                 * (1.0d0 - umbral_magnitude),.0001d0)
-          elseif(penumbral_magnitude .gt. 0.)then
+              write(6,*)' penumbral_width = ',penumbral_width
+              frac_bri = ((1.0 - umbral_magnitude) * 0.5) 
+     1                 / penumbral_width
+!             frac_bri = max(frac_bri,bri_2nd) 
+              frac_bri = frac_bri + umbral_magnitude * bri_2nd
+          elseif(penumbral_magnitude .gt. 0.)then   ! Penumbral
+              write(6,*)' Penumbral'       
               write(6,*)' penumbral_magnitude = ',penumbral_magnitude
+              write(6,*)' penumbral_width = ',penumbral_width
               frac_bri = 1.0 - (penumbral_magnitude * 0.5)
+     1                       / penumbral_width
           else
               frac_bri = 1.0
           endif
