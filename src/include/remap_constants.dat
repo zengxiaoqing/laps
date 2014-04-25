@@ -45,7 +45,7 @@ c
       parameter (MAX_RANGE_M = GATE_SPACING_M * MAX_GATES_LUT)
 
       integer  LUT_RANGES,LUT_AZIMUTHS
-      parameter (LUT_RANGES = 460)
+      parameter (LUT_RANGES = 920) ! Allow 500m LUT range resolution
       parameter (LUT_AZIMUTHS = 720) 
 
 c     For normal scans, this is the ratio of gate spacing in the radar
