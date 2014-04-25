@@ -283,7 +283,6 @@
         real azi_a(minalt:maxalt,minazi:maxazi)
         real glow_obj(minalt:maxalt,minazi:maxazi) ! log nL
 
-        parameter (nstars = 320)
         real ext_mag,lst_deg,mag_obj
         real*8 angdif,jed,lst,has,als,azs,ras,x,y,decr
 
@@ -316,7 +315,8 @@
 
         sqarcsec_per_sqdeg = 3600.**2
 
-        if(mag_obj .lt. -5.)then ! sun or moon (0.5 degree diameter)
+!       if(mag_obj .lt. -5.)then ! sun or moon (0.5 degree diameter)
+        if(diam_deg .ge. 0.25)then ! sun or moon (0.5 degree diameter)
             alt_dist = diam_deg / 2.0
         else                     ! star or planet (point object)
             alt_dist = alt_scale / 2.0
