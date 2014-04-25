@@ -39,6 +39,7 @@
         real land_use(NX_L,NY_L)
         real snow_cover(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
+        real albedo_bm(nc,NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
@@ -635,8 +636,17 @@
 
             where(topo(:,:) .ge. 3200.); land_use(:,:) = 19.; end where
 
-            write(6,*)' Set 3-color albedo based on land use'
-            call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
+!           call land_albedo_bm(rlat_laps,rlon_laps,NX_L,NY_L,albedo_bm
+!    1                         ,istatus)
+            istatus = 0
+ 
+            if(istatus .eq. 1)then
+                write(6,*)' Set 3-color albedo based on Blue Marble'
+                topo_albedo_2d = albedo_bm
+            else
+                write(6,*)' Set 3-color albedo based on land use'
+                call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
+            endif
 
             where(snow_cover(:,:) .ne. r_missing_data)
               do ic = 1,3
@@ -820,9 +830,11 @@
           write(clun,14)ilun
 14        format(i3.3)
 
+!         Moon glow in cylindrical coordinates (add color info)?                   
           blog_moon_roll = 0.
-          if(moon_mag .lt. moon_mag_thr .AND.
-     1     alm      .gt. 0.                 )then
+!         if(moon_mag .lt. moon_mag_thr .AND.
+          if(.true.                     .AND.
+     1       alm      .gt. 0.                 )then
             write(6,*)' Moon glow being calculated: ',alm,azm
             diam_deg = 0.5
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
@@ -835,6 +847,7 @@
      1          minval(blog_moon_roll),maxval(blog_moon_roll)
           endif
 
+!         Sun glow in cylindrical coordinates, treated as round?
           blog_sun_roll = 0
           write(6,*)' Sun glow being calculated: '
      1                 ,solar_alt,solar_az
