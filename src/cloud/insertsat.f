@@ -47,6 +47,7 @@ c
      1  di_dh_ir,dj_dh_ir,                                              ! I
      1  di_dh_vis,dj_dh_vis,                                            ! I
      1  i_fill_seams,                                                   ! I
+     1  offset_ir_i,offset_ir_j,                                        ! I
      1  istat_39_add_a,                                                 ! O
      1  tb8_cold_k,                                                     ! O
      1  grid_spacing_m,surface_sao_buffer,                              ! I
@@ -129,6 +130,8 @@ c
         real dj_dh_ir(imax,jmax)           ! Parallax offset for sat data
         real di_dh_vis(imax,jmax)          ! Parallax offset for sat data
         real dj_dh_vis(imax,jmax)          ! Parallax offset for sat data
+        real offset_ir_i(imax,jmax)        ! Sat I minus actual I
+        real offset_ir_j(imax,jmax)        ! Sat J minus actual J
         real sst_k(imax,jmax)
         real tb8_cold_k(imax,jmax)
         real topo(imax,jmax)
@@ -370,6 +373,11 @@ c
             jskd = 40
         endif
 
+        write(6,81)
+     1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k=kcld,1,-1)
+81      format(' cldcv section 0 (fg/sao):'                
+     1                  /'    ht      cvr',50(/f8.1,f8.3))
+
         do j=1,jmax
         do i=1,imax
 
@@ -377,7 +385,8 @@ c
 !        if(j .eq. (j/jskd)*jskd .and. i .eq. (i/iskd)*iskd)then
          if(i .eq. imax/2 .AND. j .eq. jmax/2)then
              idebug_a(i,j) = 1
-             write(6,*)' Debugging at lat/lon ',i,j,rlat(i,j),rlon(i,j)
+             write(6,91)i,j,rlat(i,j),rlon(i,j)
+91           format(' Debugging at lat/lon ',2i6,2f8.2)
          else
              idebug_a(i,j) = 0
          endif
@@ -474,8 +483,8 @@ c
 
             do k=kcld,1,-1
 
-              it = i - nint(di_dh_ir(i,j) * cld_hts(k))
-              jt = j - nint(dj_dh_ir(i,j) * cld_hts(k))
+              it = i - nint(di_dh_ir(i,j)*cld_hts(k) - offset_ir_i(i,j))
+              jt = j - nint(dj_dh_ir(i,j)*cld_hts(k) - offset_ir_j(i,j))
               it = max(min(it,imax),1)
               jt = max(min(jt,jmax),1)
               if(i_fill_seams(i,j) .ne. 0)then
@@ -613,8 +622,8 @@ c
      1                       ,tb8_calculated,tb8_k(i,j)
      1                       ,tb8_calculated-tb8_k(i,j),thresh_tb8_clr
      1                       ,cvr_snow(i,j),iclr
- 141              format(9x,'ijk/gnd/calc/tb8/diff/thr/sncv = ',3i4
-     1                  ,6f8.2,i2)
+ 141              format(' Clr: ijk/gnd/calc/tb8/diff/thr/sncv/iclr = ' 
+     1                  ,3i4,6f8.2,i2)
                 endif
 
               endif ! Current Cloud Cover is significant (> .04)
@@ -993,8 +1002,10 @@ c
                        it = i - nint(di_dh_vis(i,j) * cld_hts(k))
                        jt = j - nint(dj_dh_vis(i,j) * cld_hts(k))
                    else
-                       it = i - nint(di_dh_ir(i,j) * cld_hts(k))
-                       jt = j - nint(dj_dh_ir(i,j) * cld_hts(k))
+                       it = i - nint(di_dh_ir(i,j) * cld_hts(k) 
+     1                                             - offset_ir_i(i,j))
+                       jt = j - nint(dj_dh_ir(i,j) * cld_hts(k) 
+     1                                             - offset_ir_j(i,j))
                    endif
                    it = max(min(it,imax),1)
                    jt = max(min(jt,jmax),1)
@@ -1018,6 +1029,11 @@ c
               enddo
             endif ! ierr = 0 (unreasonable cloud that was below zero cover)
 
+          ELSE
+            if(idebug .eq. 1)then
+                write(6,*)' Cloud not present for adding at i,j = ',i,j
+            endif
+
           ENDIF ! l_cloud_present (Cloudy)
 
          endif ! tb8_k(i,j) .ne. r_missing_data
@@ -1025,7 +1041,10 @@ c
         enddo ! imax
         enddo ! jmax
 
-        write(6,*)' cldcv section 1:',cldcv(660,60:110,22)
+        write(6,332)
+     1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k=kcld,1,-1)
+332     format(' cldcv section 1 (after subtract/add):'
+     1                  /'    ht      cvr',50(/f8.1,f8.3))
 
 !       Write stats on CO2 and Band 8 (11.2mm) methods
         write(6,*)' n_valid_co2 = '  ,n_valid_co2
@@ -1055,7 +1074,10 @@ c
         write(6,*)' n_vis_add_potl = ',n_vis_add_potl
      1           ,' n_vis_added = ',n_vis_added
 
-        write(6,*)' cldcv section 1a:',cldcv(660,60:110,22)
+        write(6,342)
+     1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k=kcld,1,-1)
+342     format(' cldcv section 1a (comp rad):'
+     1                  /'    ht      cvr',50(/f8.1,f8.3))
 
         istatus = 1
         return
