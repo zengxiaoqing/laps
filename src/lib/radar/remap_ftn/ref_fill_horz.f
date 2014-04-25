@@ -49,6 +49,12 @@
             return
         endif
 
+        if(dgr .eq. 0.0)then
+            write(6,*)' dgr = 0. skip ref_fill_horz'
+            istatus = 1
+            return
+        endif
+
 !       Calculate radar distance array
         do io = 1,nx_r
         do jo = 1,ny_r
@@ -56,13 +62,19 @@
           j = jo + joffset
 
           if(i.ge.1 .and. i.le.ni .and. j.ge.1 .and. j.le.nj)then
+!           Speedup with new routine 'latlon_to_radar_2d'?
             call latlon_to_radar(lat(i,j),lon(i,j),0.,
      1                           azimuth,slant_range,elev,
      1                           rlat_radar,rlon_radar,rheight_radar)
             radar_dist(io,jo) = slant_range
 
 !           Determine number of gridpoints in potential gaps = f(radar_dist)
-            ngrids(io,jo) = radar_dist(io,jo) * (dgr / 57.) 
+            if(radar_dist(io,jo) .gt. 100000.)then ! use namelist far out
+                dgr_eff = dgr  
+            else ! assume set azimuthal resolution close in
+                dgr_eff = 1.10
+            endif
+            ngrids(io,jo) = radar_dist(io,jo) * (dgr_eff / 57.) 
      1                                        / grid_spacing_m       
 
             if(ngrids(io,jo)   .ge. 1 
@@ -80,6 +92,10 @@
 
         enddo ! jo
         enddo ! io
+
+        write(6,*)' ref_fill_horz: radar distance array computed'
+
+        I4_elapsed = ishow_timer()
 
 !       Fill weight_a array (we can make this a Barnes weight later)
         do iw = -ngrids_max,+ngrids_max
@@ -122,21 +138,22 @@
                         weight = weight_a(iw,jw)
 
                         n_neighbors_pot = n_neighbors_pot + 1
-                        if(ref_3d(ii,jj,k) .ne. r_missing_data   )then
+                        if(ref_3d(ii,jj,k) .ne. r_missing_data)then 
                             n_neighbors = n_neighbors + 1
-                            ref_sum = ref_sum + ref_3d(ii,jj,k) * weight       
+                            ref_eff = max(ref_3d(ii,jj,k),ref_base)
+                            ref_sum = ref_sum + ref_eff * weight       
 
-                            ilut_ref = nint(ref_3d(ii,jj,k) * 10.)
+                            ilut_ref = nint(ref_eff * 10.)
                             ilut_ref = max(ilut_ref, -1000)
                             z = dbz_to_z_lut(ilut_ref)
                             z_sum = z_sum + z * weight
                           
                             wt_sum = wt_sum + weight
-                            if(n_add_lvl .le. 20)then
+                            if(n_add_lvl .lt. 20)then
                                 write(6,10)io,jo,ngrids(io,jo)
      1                                    ,n_neighbors       
-     1                                    ,ii,jj,ref_3d(ii,jj,k)
- 10                             format(2i5,' neighbor ',2i3,2i5,f9.1)
+     1                                    ,ii,jj,ref_3d(ii,jj,k),ref_eff
+ 10                             format(2i5,' neighbor ',2i3,2i5,2f9.1)
                             endif
                         endif
 
@@ -179,8 +196,9 @@
                     ref_2d_buf(io,jo) = ref_fill ! ref_3d(io,jo,k) (test disable)
                     n_add_lvl = n_add_lvl + 1
                     if(n_add_lvl .le. 20)then
-                        write(6,*)io,jo,ngrids(io,jo),n_neighbors
-     1                           ,n_neighbors_pot,ref_fill
+                        write(6,11)io,jo,slant_range,ngrids(io,jo)
+     1                           ,n_neighbors,n_neighbors_pot,ref_fill
+ 11                     format(2i5,f9.0,i3,i3,i3,f8.1)
                     endif
 
                 else          ! do not fill in this grid point
@@ -188,8 +206,9 @@
                     if(n_add_lvl .le. 20 
      1                           .and. n_neighbors     .gt. 0
      1                           .and. n_neighbors_pot .gt. 0)then
-                        write(6,*)io,jo,ngrids(io,jo),n_neighbors
-     1                           ,n_neighbors_pot,' not filled'
+                        write(6,12)io,jo,slant_range,ngrids(io,jo)
+     1                           ,n_neighbors,n_neighbors_pot        
+ 12                     format(2i5,f9.0,i3,i3,i3,' not filled')
                     endif
 
                 endif         ! enough neighbors to fill in a grid point
@@ -199,8 +218,8 @@
 
 !           Copy buffer array to main array
             if(n_add_lvl .gt. 0)then ! efficiency test
-                write(6,11)k,n_add_lvl
- 11             format(' lvl/n_added ',2i7)
+                write(6,21)k,n_add_lvl
+ 21             format(' lvl/n_added ',2i7)
                 call move(ref_2d_buf,ref_3d(1,1,k),nx_r,ny_r)
             endif
 
