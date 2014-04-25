@@ -1,13 +1,14 @@
 
         subroutine get_cld_pf(elong_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,ni,nj & ! I
-                             ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
+                             ,pf_scat1,pf_scat2,pf_scat,pf_thk_a) ! O
         include 'trigd.inc'
 
 !       Statement functions
         trans(od) = exp(-od)
         opac(od) = 1.0 - exp(-od)
         counts_to_rad(counts) = 10.**((counts/100.)+7.3)
-        pf_bk(elong,alb) = 1.0 + cosd(180. - elong)
+!       pf_bk(elong,alb) = 1.0 + cosd(180. - elong)
+        alb(bt) = bt / (1.+bt)
 
         include 'rad.inc'
         real elong_a(ni,nj)
@@ -16,9 +17,12 @@
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         real pf_scat(ni,nj), pf_scat1(ni,nj), pf_scat2(ni,nj)
-        real bkscat_alb(ni,nj)
+        real pf_thk_a(ni,nj)
+        real*8 phase_angle_d,phase_corr
 
         logical l_pf_new /.true./
+
+        scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
 
         do j = 1,nj
         do i = 1,ni
@@ -30,6 +34,7 @@
 !         General references: 
 !         http://www.uni-leipzig.de/~strahlen/web/research/de_index.php?goto=arctic
 !         http://www-evasion.imag.fr/Publications/2008/BNMBC08/clouds.pdf
+!         http://pubs.giss.nasa.gov/docs/1969/1969_Hansen_2.pdf
 !         http://rtweb.aer.com/rrtm_frame.html
 !         http://wiki.seas.harvard.edu/geos-chem/images/Guide_to_GCRT_Oct2013.pdf
 
@@ -45,32 +50,47 @@
             clwc_bin1 = exp(-(cloud_od_clwc/10.)**2) ! optically thin
             clwc_bin1 = clwc_bin1 * r_cloud_rad(i,j)**10. ! direct lighting
             clwc_bin1a = 0.80**sco             ! forward peak
-            clwc_bin1c = opac(0.00*sco)        ! backscattering
-            clwc_bin1b = 1.0 - (clwc_bin1a + clwc_bin1c) ! mid    
+!           clwc_bin1c = opac(0.00*sco)        ! backscattering
+            clwc_bin1b = 1.0 - (clwc_bin1a)    ! mid    
             clwc_bin2 = 1.0 - clwc_bin1        ! optically thick 
+
+!           Derived using phase function of Venus (a thick cloud analog)
+!           Specifically the Venus phase angle magnitude corr
+            iplan = 3
+            isat = 0
+            phase_angle_d = 180. - elong_a(i,j)
+            call phase_func(iplan,isat,phase_angle_d,phase_corr)       
+            r_ill = (1. + cosd(phase_angle_d)) / 2.
+
+!           Set to 2. if we're at cloud base
+            pf_thk = (1.94 / (10.**(phase_corr * 0.4))) / r_ill
+            pf_thk = min(pf_thk,2.0) ! limit fwd scattering peak
+
+!           This might need expanded support for increased forward scattering 
+!           when looking down on a layer of cloud from the air.
+!           Eventually sky average r_cloud_rad can help decide the regime for
+!           determination of pf_thk? 'scurve' is also available if needed.
+
+!           if(elong_a(i,j) .gt. 90.)then
+!               pf_thk = 1.0 +  (elong_a(i,j)-90.)/90.
+!           else
+!               pf_thk = 1.0 + ((90.-elong_a(i,j))/90.)**2
+!           endif
+            alb_clwc = alb(0.06*cloud_od_clwc)
+
+            radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
+            pf_thk = pf_thk*radfrac + hg(-0.3 ,elong_a(i,j)) * (1.-radfrac)
+            pf_thk_a(i,j) = pf_thk
 
             pf_clwc = clwc_bin1a * clwc_bin1 * hg(.94**hgp,elong_a(i,j)) & ! corona
                     + clwc_bin1b * clwc_bin1 * hg(.60**hgp,elong_a(i,j)) &
                     + clwc_bin1c * clwc_bin1 * hg(.00     ,elong_a(i,j)) &
-                    + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
+!                   + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
+!                   + clwc_bin2  * 2.0    ! add albedo term?     
+                    + clwc_bin2  * pf_thk ! add albedo term?     
 
             pf_scat1(i,j) = pf_clwc
 
-          else ! old liquid phase function
-            if(elong_a(i,j) .le. 90.)then ! low elongation phase function
-              pwr = 3.0
-              ampl = r_cloud_rad(i,j) * 0.7; b = 1.0 + pwr * r_cloud_rad(i,j)
-              pf_scat1(i,j) = 0.9 + ampl * (cosd(min(elong_a(i,j),89.99))**b)
-              bkscat_alb(i,j) = -99.9 ! flag value for logging
-            else                          ! high elongation phase function
-              bksc_eff_od = cloud_od(i,j) * 0.10 
-              cloud_rad_trans = exp(-bksc_eff_od)
-              bkscat_alb(i,j) = 1.0 - cloud_rad_trans 
-              ampl = 0.15 * bkscat_alb(i,j)
-              pf_scat1(i,j) = 0.9 + ampl * (-cosd(elong_a(i,j)))
-            endif
-
-            pf_scat1(i,j) = counts_to_rad(240. * pf_scat1(i,j)) / counts_to_rad(240.)
           endif
 
 !         Separate snow (+cice) phase function
@@ -108,10 +128,16 @@
               pf_scat(i,j) = pf_scat2(i,j)
           endif
 
-!         Add simple rainbow (red is 42 degrees radius, blue is 40)
+!         Add primary rainbow (red is 42 degrees radius, blue is 40)
           if(abs(elong_a(i,j)-149.) .lt. 1.0)then
               rain_factor = opac(cloud_od_sp(i,j,3))
-              pf_scat(i,j) = pf_scat(i,j) * (1.0 + 3. * rain_factor * r_cloud_rad(i,j)**10.)
+              pf_scat(i,j) = pf_scat(i,j) * (1.0 + 4.5 * rain_factor * r_cloud_rad(i,j)**10.)
+          endif
+
+!         Add secondary rainbow (red is 54.5 degrees radius, blue is 52)
+          if(abs(elong_a(i,j)-126.75) .lt. 1.25)then
+              rain_factor = opac(cloud_od_sp(i,j,3))
+              pf_scat(i,j) = pf_scat(i,j) * (1.0 + 1.5 * rain_factor * r_cloud_rad(i,j)**10.)
           endif
 
         enddo ! j
