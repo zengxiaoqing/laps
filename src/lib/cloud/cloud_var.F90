@@ -1,6 +1,6 @@
 subroutine cloud_var(i4time,lat,lon,ni,nj,nk,kcld,heights_3d,temp_3d,t_gnd_k,cloudcvr,cld_hts,tb8_k,cloud_albedo_vis_a &
                     ,subpoint_lat_clo_vis,subpoint_lon_clo_vis,r_missing_data &    ! I 
-                    ,di_dh,dj_dh)                                                  ! O
+                    ,di_dh,dj_dh)                                                  ! I
 
 ! This routine evaluates the cost function of the cloud cover field using simple forward models for visible and 11 micron satellite data
 ! We might consider a version of this routine that uses cloud optical depth (2D and 3D) instead of cloud cover (fraction).
@@ -35,8 +35,8 @@ real lat(ni,nj)                        ! I
 real lon(ni,nj)                        ! I
 real subpoint_lat_clo_vis(ni,nj)       ! I
 real subpoint_lon_clo_vis(ni,nj)       ! I
-real di_dh(ni,nj)                      ! O
-real dj_dh(ni,nj)                      ! O
+real di_dh(ni,nj)                      ! I
+real dj_dh(ni,nj)                      ! I
 
 real alt(ni,nj)                        ! L
 real azi(ni,nj)                        ! L
@@ -73,16 +73,16 @@ write(6,*)' Range of t_gnd_k = ',minval(t_gnd_k),maxval(t_gnd_k)
 JCOST_TB8 = 0.
 
 ! Satellite geometry for parallax offset 
-write(6,*)' Calling satgeom...'
-range_m = 42155680.00
-call satgeom(i4time,lat,lon,ni,nj &
-            ,subpoint_lat_clo_vis,subpoint_lon_clo_vis,range_m,r_missing_data,Phase &
-            ,Spec,alt,azi,istatus)
+!write(6,*)' Calling satgeom...'
+!range_m = 42155680.00
+!call satgeom(i4time,lat,lon,ni,nj &
+!           ,subpoint_lat_clo_vis,subpoint_lon_clo_vis,range_m,r_missing_data,Phase &
+!           ,Spec,alt,azi,istatus)
 
-call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
+!call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
 
-write(6,*)' Calling projrot_latlon_2d'
-call projrot_latlon_2d(lat,lon,ni,nj,projrot_laps,istatus)
+!iwrite(6,*)' Calling projrot_latlon_2d'
+!call projrot_latlon_2d(lat,lon,ni,nj,projrot_laps,istatus)
 
 ! Eventually adjust cloudcvr based on values of tb8 and cloud_frac_vis_a
 
@@ -92,21 +92,21 @@ do i = 1,ni
 do j = 1,nj
 
 !   Calculate parallax offset (sat/lvd grid index minus analysis grid index)
-    if(alt(i,j) .gt. 0.)then
-        ds_dh = tand(90. - alt(i,j))
-        azi_grid = azi(i,j) - projrot_laps(i,j)
+!   if(alt(i,j) .gt. 0.)then
+!       ds_dh = tand(90. - alt(i,j))
+!       azi_grid = azi(i,j) - projrot_laps(i,j)
         do k = 1,kcld
-            di_dh(i,j) = (ds_dh / dx(i,j)) * (-sind(azi_grid))
-            dj_dh(i,j) = (ds_dh / dy(i,j)) * (-cosd(azi_grid))
+!           di_dh(i,j) = (ds_dh / dx(i,j)) * (-sind(azi_grid))
+!           dj_dh(i,j) = (ds_dh / dy(i,j)) * (-cosd(azi_grid))
             di(k) = cld_hts(k) * di_dh(i,j)
             dj(k) = cld_hts(k) * dj_dh(i,j)
         enddo ! k
-    else
-        di = 0. 
-        dj = 0.
-        di_dh(i,j) = 0.
-        dj_dh(i,j) = 0.
-    endif
+!   else
+!       di = 0. 
+!       dj = 0.
+!       di_dh(i,j) = 0.
+!       dj_dh(i,j) = 0.
+!   endif
 
     intvl = max(ni/41,1)
     if(j .eq. nj/2 .AND. i .eq. (i/intvl)*intvl)then
@@ -144,6 +144,9 @@ do j = 1,nj
                              ,idebug,istatus)
 
     if(idebug .eq. 1 .OR. istatus .ne. 1)then
+        if(istatus .ne. 1)then
+            write(6,*)' WARNING: bad istatus in cvr_to_tb8_effective'
+        endif
         write(6,*)'tb8 fwd mdl - max cldcvr: ',i,j,maxval(cloudcvr(i,j,:))
         write(6,*)'cldcvr column: ',i,j,cloudcvr(i,j,:)
         write(6,*)'t_effective/t_gnd_k/tb8: ',t_effective,t_gnd_k(i,j),tb8_k(i,j)
