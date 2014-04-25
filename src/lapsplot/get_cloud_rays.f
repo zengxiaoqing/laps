@@ -727,13 +727,21 @@
                       aod_2_cloud(ialt,jazi) = sum_aod
                   endif
 
-                  if((cvr_path          .gt. 0.00) .AND.
-     1               (cvr_path_sum      .le.  .130     .OR. ! tau ~10
-     1                cvr_path_sum_last .eq. 0.  )            )then 
+!                 Determine backscatter threshold for averaging cloud rad
+!                 This can be refined by determining the phase of the
+!                 cloud so far in the ray traversal
+                  if(cvr_path .gt. 0.00)then  
+                    frac_liq = (cvr_path_sum_sp(1) + cvr_path_sum_sp(3))
+     1                       / cvr_path_sum
+                    tau_thr = 15. * frac_liq + 7. * (1.-frac_liq)
+                    bks_thr = tau_thr / clwc2alpha
+                    if(cvr_path_sum      .le.  bks_thr .OR. ! tau ~7-15
+     1                 cvr_path_sum_last .eq. 0.            )then 
 !                     Average value over cloud path (tau ~10)
                       r_cloud_rad(ialt,jazi) = sum_odrad / cvr_path_sum 
                       cloud_rad_c(:,ialt,jazi) 
      1                                = sum_odrad_c(:) / cvr_path_sum 
+                    endif
                   endif
 
 !                 Calculated weighted value of airmass to cloud
