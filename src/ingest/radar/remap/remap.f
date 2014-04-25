@@ -46,6 +46,8 @@ cdis
 
       character c_radar_start*10,c_radar_end*10,agroup*10
 
+      character dataroot*255
+
       real, allocatable, dimension(:,:) :: lat,lon,topo,dum_2d
        
       logical l_realtime
@@ -120,6 +122,8 @@ cdis
           i_radar_end = n_radars_remap
       endif
 
+      call get_grid_center(grid_cen_lat_orig,grid_cen_lon_orig,istatus)
+
       write(6,*)' REMAP > call get_laps_domain_95'
       call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
      1                       ,dum_2d,grid_spacing_cen_m
@@ -130,6 +134,25 @@ cdis
       endif
 
       do i_radar = i_radar_start,i_radar_end
+
+!        Update grid namelist parameters in case domain has relocalized
+         call get_directory('root',dataroot,len_root)
+         call force_get_laps_config(dataroot,istatus)
+         call get_grid_center(grid_cen_lat,grid_cen_lon,istatus)
+
+!        Update lat/lon grid if grid location has changed
+         if(grid_cen_lat .ne. grid_cen_lat_orig .OR.
+     1      grid_cen_lon .ne. grid_cen_lon_orig      )then
+            write(6,*)' REMAP > recall get_laps_domain_95'
+            call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
+     1                             ,dum_2d,grid_spacing_cen_m
+     1                             ,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' ERROR return from get_laps_domain_95'
+                goto 999
+            endif
+          endif
+
           write(6,*)
           write(6,*)' Obtaining parameters for radar # ',i_radar
           call get_remap_parms(i_radar,n_radars_remap,max_times       ! I/O
