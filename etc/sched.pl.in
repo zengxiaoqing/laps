@@ -108,6 +108,9 @@
 #
 # -C                   Copy file $LAPS_DATA_ROOT/lapsprd/gr2/$yyjjjhhmm.gr2 to $opt_C/$yyjjjhhmm.gr2
 #
+# -H                   Also transfer tar files to the HPSS Mass Store file system with supplied path
+#                      on the Mass Store (-y should be set with exchange_zip or exchange_zip2)
+#
 # -N                   Disable the purger                                                                  
 #
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
@@ -118,10 +121,10 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_U $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w $opt_R $opt_x $opt_y $opt_Y
-            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X $opt_C $opt_N);
+            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E $opt_P $opt_S $opt_X $opt_C $opt_N $opt_H);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:UV:M:n:A:f:F:wslu:vp:TE:P:S:XR:x:y:C:NY:');
+getopts('d:c:a:rm:t:e:q:Q:UV:M:n:A:f:F:wslu:vp:TE:P:S:XR:x:y:C:NY:H:');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -1237,7 +1240,7 @@ if(defined $opt_R){
             if(defined $opt_x){
                 $xferfiles = $opt_x;
             }
-            $command = "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm $xferfiles $opt_y";
+            $command = "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm $xferfiles $opt_y $opt_H";
         }
 #       print "\nCommand file:\n";
 #       system("cat $LAPS_LOG_PATH/qsub_xfer_laps.sh");
