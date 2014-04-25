@@ -3,7 +3,7 @@
                                r_cloud_rad,cloud_rad_c, &
                                clear_rad_c, &
                                clear_radf_c,patm,htmsl, &               ! I
-                               glow,glow_sun,glow_moon,glow_stars, &
+                               glow,glow_sun,glow_moon,glow_stars, &    ! I
                                od_atm_a,transm_obs,isun,jsun, &         ! I
                                airmass_2_cloud,airmass_2_topo, &
                                topo_swi,topo_albedo,albedo_sfc, &       ! I
@@ -115,6 +115,7 @@
 !       Sun is -26.74 mag per sphere (UBVRI: -25.96, -26.09, -26.74, -27.26, -27.55)
 !       (180/pi)^2 * 4 * pi = 41250 square degrees in a sphere.
 !       5.346e11 square arcsec in a sphere
+!       0.76 mag per square arcsec
         glow_cld_day = v_to_b(-26.74 + log10(5.346e11)*2.5)
         write(6,*)' glow_cld_day (nl) = ',glow_cld_day
 
@@ -157,8 +158,8 @@
         azid1 = 90. ; azid2 = 270.
         if(sol_alt .gt. 0.)then
             azid1 = azi_a(isun,jsun) ! nint(sol_az)
-            azid2 = azid1 ! block antisolar az               
-!           azid2 = mod(azid1+180.,360.)
+!           azid2 = azid1 ! block antisolar az               
+            azid2 = mod(azid1+180.,360.)
         elseif(moon_alt .gt. 0.)then
             azid1 = nint(moon_az)
             azid2 = mod(azid1+180.,360.)
@@ -190,6 +191,7 @@
             write(6,*)' isun,jsun=',isun,jsun
 
 !           Determine if observer is in terrain shadow
+!           Note sun_vis is used only for sun glowing below horizon
             if(airmass_2_topo(isun,jsun) .gt. 0.)then 
                 write(6,*)' Sun is behind terrain'
                 od_atm_a_eff = 0.
@@ -203,7 +205,8 @@
                 else ! in cloud/terrain shadow
                     od_atm_a_eff = 0.
                     od_atm_a_dir = 0.
-                    sun_vis = 0.
+                    sun_vis = 1. ! (render attenuated sun better)
+!                   sun_vis = 0. 
                 endif
             endif
 
@@ -360,19 +363,20 @@
         if(.true.)then
           if(sol_alt .ge. 0.)then       ! daylight
             write(6,11)
-11          format('    i   j   alt   azi  elong   pf_scat   opac    od /        species            alb    cloud airmass   rad   ', &
+11          format('    i   j   alt   azi  elong   pf_scat     opac    od /        species            alb    cloud airmass   rad   ', &
                    'rinten   airtopo  switopo topoalb aodill  topood topovis cld_visb   glow      skyrgb')
           elseif(sol_alt .ge. -16.)then ! twilight
             write(6,12)
-12          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rad    ', &
+12          format('    i   j      alt      azi     elong   pf_scat     opac       od      alb     cloud  airmass   rad    ', &
                    'rinten glw_cld_nt glw_cld  glw_twi glw2ndclr rmaglim  cld_visb  glow      skyrgb')
           else                          ! night
             write(6,13)
-13          format('    i   j      alt      azi     elong   pf_scat   opac       od      alb     cloud  airmass   rade-3 ', &
+13          format('    i   j      alt      azi     elong   pf_scat     opac       od      alb     cloud  airmass   rade-3 ', &
                    'rinten glw_cld_nt glwcldmn glw_cld glw2ndclr rmaglim  cld_visb  glow      skyrgb')
           endif
         endif
 
+        bkscat_alb = -99.9 ! dummy value to initialize for logging
         call get_cld_pf(elong_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,ni,nj & ! I
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
@@ -397,11 +401,11 @@
                   rad = counts_to_rad(240.)                                 * pf_scat(i,j)
                   rint_top = rad_to_counts(rad)
 
-                  rad = counts_to_rad(240. * (  0.3 * (1. + albedo_sfc) ) ) * pf_scat(i,j)
+                  rad = counts_to_rad(240. * (  0.25 * (1. + albedo_sfc) ) ) * pf_scat(i,j)
                   rint_base = rad_to_counts(rad)
               else
                   rint_top  = 240.                                * pf_scat(i,j)! **0.45 
-                  rint_base = 240. * (  0.3 * (1. + albedo_sfc) ) * pf_scat(i,j)! **0.45 
+                  rint_base = 240. * (  0.25 * (1. + albedo_sfc) ) * pf_scat(i,j)! **0.45 
               endif
 
 !             Gamma color correction applied when sun is near horizon 
@@ -469,12 +473,14 @@
           if(sol_alt .gt. 0.)then ! Daylight from skyglow routine
               if(new_skyglow .eq. 1)then
                 glow_tot = log10(clear_rad_c(2,i,j)) ! + log10(clear_radf_c(2,i,j))
-                if(sun_vis .eq. 1.0)then
+!               if(sun_vis .eq. 1.0)then
+                if(airmass_2_topo(i,j) .eq. 0.)then ! free of terrain
                     glow_tot = addlogs(glow_tot,glow_sun(i,j))
                 endif
                 glow_tot = addlogs(glow_tot,glow_moon(i,j))
 !               glow_tot = log10(clear_rad_c(2,i,j))
-                rintensity_glow = min(((glow_tot -7.3) * 100.),255.)
+!               rintensity_glow = min(((glow_tot -7.3) * 100.),255.)
+                rintensity_glow =     ((glow_tot -7.3) * 100.)   ! test  
 
 !               Convert RGB brightness into image counts preserving color balance
                 ramp_alt = sind(min(2.*sol_alt,90.))**2
@@ -517,7 +523,9 @@
 !                 write(6,*)'i,j,glow_stars',i,j,glow_stars(2,i,j)
               endif
 !             glow_stars(i,j) = 1.0                           ! test
-              glow_tot = addlogs(glow_twi,glow_stars(2,i,j))  ! with stars 
+              if(airmass_2_topo(i,j) .eq. 0.)then ! free of terrain
+                  glow_tot = addlogs(glow_twi,glow_stars(2,i,j))  ! add stars 
+              endif
               star_ratio = 10. ** ((glow_tot - glow_twi) * 0.45)
 
               if(sun_vis .eq. 1.0)then ! sun glowing below horizon
@@ -540,6 +548,7 @@
 !             endif
 
           else ! Night from clear_rad_c array (default flat value of glow)
+            if(airmass_2_topo(i,j) .eq. 0.)then ! free of terrain
               call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),clear_rad_c_nt)
               hue = clear_rad_c_nt(1)
               sat = clear_rad_c_nt(2)
@@ -568,7 +577,7 @@
 !             rintensity_glow = max(min(((glow_tot - 2.3) * 100.),255.),20.)
               rintensity_glow = max(min(((glow_tot - argref) * contrast + 128.),255.),20.)
               call hsl_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
-
+            endif
           endif
 
 !         Apply redness to clear sky / sun
@@ -590,9 +599,10 @@
               ratio_luma = min(clr_luma1 / clr_luma2,255. / clr_red)
               clr_red = clr_red * ratio_luma               
               clr_grn = clr_grn * ratio_luma              
-              clr_blu = clr_blu * ratio_luma               
+              clr_blu = clr_blu * ratio_luma           
               write(6,95)alt_a(i,j),azi_a(i,j),elong_red,elong_a(i,j),red_elong,nint(clr_red),nint(clr_grn),nint(clr_blu)
 95            format(' alt/azi/elong_red/elong/redelong: ',5f9.3,3i5)
+              write(6,*)' rintensity_glow = ',rintensity_glow
             endif
           endif
 
@@ -642,10 +652,14 @@
 
               if(sol_alt .gt. -4.0)then 
 !                 Daytime assume topo is lit by sunlight (W/m**2)
-                  topo_swi_frac = (max(topo_swi(i,j),001.) / 1000.) ** 0.45
-                  rtopo_red = 120. * topo_swi_frac * (topo_albedo(1,i,j)/.15)**0.45
-                  rtopo_grn = 120. * topo_swi_frac * (topo_albedo(2,i,j)/.15)**0.45
-                  rtopo_blu = 120. * topo_swi_frac * (topo_albedo(3,i,j)/.15)**0.45
+!                 topo_swi_frac = (max(topo_swi(i,j),001.) / 1000.) ** 0.45
+!                 rtopo_red = 120. * topo_swi_frac * (topo_albedo(1,i,j)/.15)**0.45
+!                 rtopo_grn = 120. * topo_swi_frac * (topo_albedo(2,i,j)/.15)**0.45
+!                 rtopo_blu = 120. * topo_swi_frac * (topo_albedo(3,i,j)/.15)**0.45
+                  rad = counts_to_rad(240.)
+                  rtopo_red = rad_to_counts(rad * topo_swi(i,j)/1300. * topo_albedo(1,i,j))
+                  rtopo_grn = rad_to_counts(rad * topo_swi(i,j)/1300. * topo_albedo(2,i,j))
+                  rtopo_blu = rad_to_counts(rad * topo_swi(i,j)/1300. * topo_albedo(3,i,j))
               else
 !                 Nighttime assume topo is lit by city lights (nL)
                   topo_swi_frac = (max(topo_swi(i,j),001.) / 5000.) ** 0.45
@@ -670,11 +684,11 @@
               rmaglim = b_to_maglim(10.**glow_tot)
               call apply_rel_extinction(rmaglim,alt_a(i,j),od_atm_g+od_atm_a)
               if(i .eq. ni)then
-                  write(6,*)' ******* zenith location ********************* od'
+                  write(6,*)' ******* zenith location *********************** od'
               endif
               if(sol_alt .ge. 0.)then        ! daylight
                   if(i .eq. isun .and. j .eq. jsun)then
-                      write(6,*)' ******* solar location ********************** od'
+                      write(6,*)' ******* solar location ************************ od'
                   endif
                   write(6,102)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat(i,j),r_cloud_3d(i,j),cloud_od(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
@@ -696,9 +710,9 @@
                       ,glow_cld_nt,glow_cld_moon,glow_cld,glow_secondary_clr,rmaglim &
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:)
               endif
-102           format(2i5,3f6.1,f9.3,f9.4,5f6.2,3f8.3,f8.4,f7.1,f9.3,f9.1,5f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
-103           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.4,f7.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',2f9.5,f11.0,3i4)
-104           format(2i5,3f9.2,f9.3,f9.4,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
+102           format(2i5,3f6.1,f9.3,f11.6,5f6.2,3f8.3,f8.4,f7.1,f9.3,f9.1,5f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
+103           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.4,f7.1,f9.3,f9.1,4f9.3,f9.2,2x,3i4,' clrrad',2f9.5,f11.0,3i4)
+104           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
           endif
 
         enddo ! i
