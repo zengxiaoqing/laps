@@ -110,6 +110,7 @@
 !       Convert to effective temperature and compare to observed brightness temp
         t_effective = rad_to_temp(rsum)
 
+        istatus = 1
         return
         end
 
