@@ -1,170 +1,170 @@
 
 
-      subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
-            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,gnd_glow)
+     subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
+           snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,gnd_glow)
 
-      use mem_namelist, ONLY: r_missing_data, earth_radius
-      use cloud_rad ! Cloud Radiation and Microphysics Parameters
-      include 'trigd.inc'
+     use mem_namelist, ONLY: r_missing_data, earth_radius
+     use cloud_rad ! Cloud Radiation and Microphysics Parameters
+     include 'trigd.inc'
 
-!     airmass(z) = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z))) ! if z <= 91
-      airmassn(cosz) =           1.002432 * cosz**2 + 0.148386  * cosz + 0.0096467
-      airmassd(cosz) = cosz**3 + 0.149864 * cosz**2 + 0.0102963 * cosz + .000303978
-      airmassf(cosz) = airmassn(cosz) / airmassd(cosz)         ! if z <= 93
-      trans(od) = exp(-min(od,80.))
+!    airmass(z) = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z))) ! if z <= 91
+     airmassn(cosz) =           1.002432 * cosz**2 + 0.148386  * cosz + 0.0096467
+     airmassd(cosz) = cosz**3 + 0.149864 * cosz**2 + 0.0102963 * cosz + .000303978
+     airmassf(cosz) = airmassn(cosz) / airmassd(cosz)         ! if z <= 93
+     trans(od) = exp(-min(od,80.))
 
-      parameter (nc = 3)
+     parameter (nc = 3)
 
-      real ext_g(nc),trans_c(nc)  ! od per airmass, transmissivity
-      data ext_g /.07,.14,.28/    ! refine via Schaeffer
+     real ext_g(nc),trans_c(nc)  ! od per airmass, transmissivity
+     data ext_g /.07,.14,.28/    ! refine via Schaeffer
 
-      real clwc_3d(ni,nj,nk) ! kg/m**3
-      real cice_3d(ni,nj,nk) ! kg/m**3
-      real rain_3d(ni,nj,nk) ! kg/m**3
-      real snow_3d(ni,nj,nk) ! kg/m**3
-      real cond_3d(ni,nj,2)
-      real heights_3d(ni,nj,nk)
-      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
-      real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for
+     real clwc_3d(ni,nj,nk) ! kg/m**3
+     real cice_3d(ni,nj,nk) ! kg/m**3
+     real rain_3d(ni,nj,nk) ! kg/m**3
+     real snow_3d(ni,nj,nk) ! kg/m**3
+     real cond_3d(ni,nj,2)
+     real heights_3d(ni,nj,nk)
+     real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
+     real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for
                                   ! solar intensity at top of cloud
-      real obj_alt(ni,nj)
-      real obj_azi(ni,nj)
-      real sfc_glow(ni,nj)        ! surface lighting intensity (nl)                 
-      real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
+     real obj_alt(ni,nj)
+     real obj_azi(ni,nj)
+     real sfc_glow(ni,nj)        ! surface lighting intensity (nl)                 
+     real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
 
-      real clwc_int(ni,nj)
-      real cice_int(ni,nj)
-      real rain_int(ni,nj)
-      real snow_int(ni,nj)
-      real backscatter_int(ni,nj)
-      real aod_2d(ni,nj)          ! aerosol optical depth (tau per airmass) 
-      real topo_a(ni,nj)
-      real lat(ni,nj)
-      real lon(ni,nj)
-      real bi_coeff(2,2)
+     real clwc_int(ni,nj)
+     real cice_int(ni,nj)
+     real rain_int(ni,nj)
+     real snow_int(ni,nj)
+     real backscatter_int(ni,nj)
+     real aod_2d(ni,nj)          ! aerosol optical depth (tau per airmass) 
+     real topo_a(ni,nj)
+     real lat(ni,nj)
+     real lon(ni,nj)
+     real bi_coeff(2,2)
 
-!     n                                    (number concentration:   m**-3)
-!     sigma                                (cross-section:          m**2)
-!     kappa = n * sigma / rho              (opacity:                m**2 per kg)
-!     K or alpha = sigma * n = kappa * rho (extinction coefficient: m**-1)
-!     tau = K * s = kappa * rho * s        (optical depth:          dimensionless)
+!    n                                    (number concentration:   m**-3)
+!    sigma                                (cross-section:          m**2)
+!    kappa = n * sigma / rho              (opacity:                m**2 per kg)
+!    K or alpha = sigma * n = kappa * rho (extinction coefficient: m**-1)
+!    tau = K * s = kappa * rho * s        (optical depth:          dimensionless)
 
-!     Statement functions
-!     od_to_albedo_lwc(tau) = 1. - exp(-tau*.07) ! lwc bkscat eff. term 
-!     od_to_albedo_ice(tau) = 1. - exp(-tau*.14) ! ice bkscat eff. term 
-!     od_to_albedo(tau_bks) = 1. - exp(-tau_bks)
+!    Statement functions
+!    od_to_albedo_lwc(tau) = 1. - exp(-tau*.07) ! lwc bkscat eff. term 
+!    od_to_albedo_ice(tau) = 1. - exp(-tau*.14) ! ice bkscat eff. term 
+!    od_to_albedo(tau_bks) = 1. - exp(-tau_bks)
 
-      clwc_int = 0.
-      cice_int = 0.
-      rain_int = 0.
-      snow_int = 0.
-      backscatter_int = 0.
+     clwc_int = 0.
+     cice_int = 0.
+     rain_int = 0.
+     snow_int = 0.
+     backscatter_int = 0.
 
-      call get_grid_spacing_cen(grid_spacing_m,istatus)
+     call get_grid_spacing_cen(grid_spacing_m,istatus)
 
-!     Note that idb,jdb is a "nominal" grid point location from 
-!     which we derive a constant object alt/az for some purposes
-      obj_alt_eff = max(obj_alt(idb,jdb),1.5)
-      if(obj_alt(idb,jdb) .le. -2.0)obj_alt_eff = +5.0 ! twilight arch light source
-      ds_dh = 1. / sind(obj_alt_eff)
-      dxy_dh = 1. / tand(obj_alt_eff)
+!    Note that idb,jdb is a "nominal" grid point location from 
+!    which we derive a constant object alt/az for some purposes
+     obj_alt_eff = max(obj_alt(idb,jdb),1.5)
+     if(obj_alt(idb,jdb) .le. -2.0)obj_alt_eff = +5.0 ! twilight arch light source
+     ds_dh = 1. / sind(obj_alt_eff)
+     dxy_dh = 1. / tand(obj_alt_eff)
 
-!     Initialize
-      transm_3d(:,:,:) = 1.
-      transm_4d(:,:,:,:) = r_missing_data ! Zero gives slightly better results than
+!    Initialize
+     transm_3d(:,:,:) = 1.
+     transm_4d(:,:,:,:) = r_missing_data ! Zero gives slightly better results than
                               ! one. We might try a more explicit
                               ! calculation for those points that aren't
                               ! covered by the slant rays. In that case
                               ! 'r_missing_data' should be initialized
                               ! here.                
 
-      sinazi = sind(obj_azi(idb,jdb))
-      cosazi = cosd(obj_azi(idb,jdb))
+     sinazi = sind(obj_azi(idb,jdb))
+     cosazi = cosd(obj_azi(idb,jdb))
 
-      terr_max = maxval(topo_a); terr_min = minval(topo_a)
+     terr_max = maxval(topo_a); terr_min = minval(topo_a)
 
-      if(solalt .lt. -4.)then
-          write(6,*)' Call get_sfc_glow'
-          call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow,gnd_glow)
-          write(6,*)' Sky glow at observer location is ',sfc_glow(idb,jdb)
-      else
-          write(6,*)' Skip call to get_sfc_glow - solalt is',solalt
-      endif
+     if(solalt .lt. -4.)then
+         write(6,*)' Call get_sfc_glow'
+         call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow,gnd_glow)
+         write(6,*)' Sky glow at observer location is ',sfc_glow(idb,jdb)
+     else
+         write(6,*)' Skip call to get_sfc_glow - solalt is',solalt
+     endif
 
-      I4_elapsed = ishow_timer()
+     I4_elapsed = ishow_timer()
 
-      ht_ref = 5000. ! 0.
+     ht_ref = 5000. ! 0.
 
-      do k = nk-1,1,-1
+     do k = nk-1,1,-1
 
-        patm_k = ztopsa(heights_3d(idb,jdb,k)) / 1013.
+       patm_k = ztopsa(heights_3d(idb,jdb,k)) / 1013.
 
-        ku = k+1 ; kl = k
+       ku = k+1 ; kl = k
 
-        dh = heights_3d(1,1,ku) - heights_3d(1,1,kl)
-        ds = dh * ds_dh
-        dij = (dh * dxy_dh) / grid_spacing_m           
-        di =  sinazi * dij
-        dj =  cosazi * dij
-        dil =  sinazi * ((heights_3d(1,1,kl)-ht_ref) * dxy_dh) &
-                                                        / grid_spacing_m
-        diu =  sinazi * ((heights_3d(1,1,ku)-ht_ref) * dxy_dh) &
-                                                        / grid_spacing_m
-        djl =  cosazi * ((heights_3d(1,1,kl)-ht_ref) * dxy_dh) &
-                                                        / grid_spacing_m
-        dju =  cosazi * ((heights_3d(1,1,ku)-ht_ref) * dxy_dh) &
-                                                        / grid_spacing_m
+       dh = heights_3d(1,1,ku) - heights_3d(1,1,kl)
+       ds = dh * ds_dh
+       dij = (dh * dxy_dh) / grid_spacing_m           
+       di =  sinazi * dij
+       dj =  cosazi * dij
+       dil =  sinazi * ((heights_3d(1,1,kl)-ht_ref) * dxy_dh) &
+                                                       / grid_spacing_m
+       diu =  sinazi * ((heights_3d(1,1,ku)-ht_ref) * dxy_dh) &
+                                                       / grid_spacing_m
+       djl =  cosazi * ((heights_3d(1,1,kl)-ht_ref) * dxy_dh) &
+                                                       / grid_spacing_m
+       dju =  cosazi * ((heights_3d(1,1,ku)-ht_ref) * dxy_dh) &
+                                                       / grid_spacing_m
 
-!       Convert hydrometeor concentration to backscatter optical depth
-        const_clwc = ((1.5 / rholiq ) / reff_clwc) * bksct_eff_clwc * ds
-        const_cice = ((1.5 / rholiq ) / reff_cice) * bksct_eff_cice * ds
-        const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
-        const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
+!      Convert hydrometeor concentration to backscatter optical depth
+       const_clwc = ((1.5 / rholiq ) / reff_clwc) * bksct_eff_clwc * ds
+       const_cice = ((1.5 / rholiq ) / reff_cice) * bksct_eff_cice * ds
+       const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
+       const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
 
-        if(ku .eq. nk)then
-            cond_3d(:,:,2) &
-                = clwc_3d(:,:,ku)*const_clwc + cice_3d(:,:,ku)*const_cice &
-                + rain_3d(:,:,ku)*const_rain + snow_3d(:,:,ku)*const_snow
-        else
-            cond_3d(:,:,2) = cond_3d(:,:,1)  
-        endif
+       if(ku .eq. nk)then
+           cond_3d(:,:,2) &
+               = clwc_3d(:,:,ku)*const_clwc + cice_3d(:,:,ku)*const_cice &
+               + rain_3d(:,:,ku)*const_rain + snow_3d(:,:,ku)*const_snow
+       else
+           cond_3d(:,:,2) = cond_3d(:,:,1)  
+       endif
 
-        cond_3d(:,:,1) &
-                = clwc_3d(:,:,kl)*const_clwc + cice_3d(:,:,kl)*const_cice &
-                + rain_3d(:,:,kl)*const_rain + snow_3d(:,:,kl)*const_snow
+       cond_3d(:,:,1) &
+               = clwc_3d(:,:,kl)*const_clwc + cice_3d(:,:,kl)*const_cice &
+               + rain_3d(:,:,kl)*const_rain + snow_3d(:,:,kl)*const_snow
 
-        write(6,*)
+       write(6,*)
 
-!       Compare heights to terrain zone (move inside ij loops?)
-!       if(heights_3d(1,1,kl) .le. terr_max .AND. &
-!          heights_3d(1,1,kl) .ge. terr_min       )then ! between
-!           nsub = max(nint(dij),1)
-!       elseif(heights_3d(1,1,kl) .gt. terr_max)then    ! above
-!           nsub = 0
-!           ihit_terrain_ref = 0
-!       else                                            ! below
-!           nsub = 0
-!           ihit_terrain_ref = 1
-!       endif
+!      Compare heights to terrain zone (move inside ij loops?)
+!      if(heights_3d(1,1,kl) .le. terr_max .AND. &
+!         heights_3d(1,1,kl) .ge. terr_min       )then ! between
+!          nsub = max(nint(dij),1)
+!      elseif(heights_3d(1,1,kl) .gt. terr_max)then    ! above
+!          nsub = 0
+!          ihit_terrain_ref = 0
+!      else                                            ! below
+!          nsub = 0
+!          ihit_terrain_ref = 1
+!      endif
 
-        write(6,*)'k = ',k        
-        write(6,51)dij,heights_3d(1,1,kl),terr_max,terr_min
-51      format(' dij,height,terr range',f8.3,3f8.1)
+       write(6,*)'k = ',k        
+       write(6,51)dij,heights_3d(1,1,kl),terr_max,terr_min
+51     format(' dij,height,terr range',f8.3,3f8.1)
 
-!       Loop through array of slant columns passing through i,j at sea level
-        do j = 1,nj
+!      Loop through array of slant columns passing through i,j at ht_ref
+       do j = 1,nj
 
-!        il,ih,jl,jh are offset in reference to MSL height
-         rjl = j + djl ; rjl = max(rjl,1.) ; rjl = min(rjl,float(nj))
-                                              jl = nint(rjl)
-         rju = j + dju ; rju = max(rju,1.) ; rju = min(rju,float(nj))
-                                              ju = nint(rju)
+!       il,ih,jl,jh are offset in reference to MSL height
+        rjl = j + djl ; rjl = max(rjl,1.) ; rjl = min(rjl,float(nj))
+                                             jl = nint(rjl)
+        rju = j + dju ; rju = max(rju,1.) ; rju = min(rju,float(nj))
+                                             ju = nint(rju)
 
-         do i = 1,ni
-          ril = i + dil ; ril = max(ril,1.) ; ril = min(ril,float(ni))
-                                               il = nint(ril)
-          riu = i + diu ; riu = max(riu,1.) ; riu = min(riu,float(ni))
-                                               iu = nint(riu)
+        do i = 1,ni
+         ril = i + dil ; ril = max(ril,1.) ; ril = min(ril,float(ni))
+                                              il = nint(ril)
+         riu = i + diu ; riu = max(riu,1.) ; riu = min(riu,float(ni))
+                                              iu = nint(riu)
 
           if(il .eq. idb .AND. jl .eq. jdb)then
               idebug = 1
