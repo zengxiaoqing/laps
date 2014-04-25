@@ -219,7 +219,7 @@ cdis
 
 !               Clear stronger with low clouds, weaker with high clouds
                 if(cld_hts(k) .gt. topo(i,j) + 5000.)then
-                    cushion = 0.3 * (1.0 - cloud_frac_uprb) ! 999. ! reduce clearing
+                    cushion = 0.10 * (1.0 - cloud_frac_uprb) ! 999. ! reduce clearing
 !               Modify the cloud field with the vis input - allow .3 vis err?
                 elseif(cld_hts(k).gt.topo(i,j) + surface_sao_buffer)then
                     cushion = 0.0 ! 0.3
@@ -227,17 +227,9 @@ cdis
                     cushion = 0.0
                 endif
 
-                if(idebug .eq. 1 .and. k .eq. nk/2)then
-                    write(6,201)i,j,it,jt,di_dh(i,j),dj_dh(i,j)
-     1                         ,cloud_frac_in,cld_hts(k)
-     1                         ,cloud_frac_uprb,cushion
- 201                format('i,j,it,jt,didh,djdh,cloud_frac_in,cldht'
-     1                    ,4i6,2f9.5,f7.3,f9.1,2f7.3)
-                endif
-
 !               Test input clouds against upper bound + cushion
                 if(cloud_frac_in - cloud_frac_uprb .gt. cushion)then
-                   cloud_frac_out = cloud_frac_uprb
+                   cloud_frac_out = max(cloud_frac_uprb,cushion)
 
 !                  Determine if we need to reconcile VIS with radar
                    if(      istat_radar .eq. 1
@@ -292,16 +284,19 @@ cdis
                    endif
 
                    clouds_3d(itn:itx,jt,k) = cloud_frac_out ! Modify the output
-                   if(idebug .eq. 1 .and. k .eq. nk/2)then
-                       write(6,*)' cloud_frac_out modified to '
-     1                          ,cloud_frac_out
-                   endif
+!                  if(idebug .eq. 1)then
+!                      write(6,202)
+!    1                   k,cloud_frac_out,cloud_frac_in,cushion
+!202                   format(' cloud_frac_out modified out/in/cushion '
+!    1                       ,i4,3f8.2)
+!                  endif
                 else
                    cloud_frac_out = cloud_frac_in
-                   if(idebug .eq. 1 .and. k .eq. nk/2)then
-                       write(6,*)' cloud_frac_out kept at '
-     1                          ,cloud_frac_out
-                   endif
+!                  if(idebug .eq. 1)then
+!                      write(6,203)k,cloud_frac_out
+!203                   format(' cloud_frac_out kept at                 '
+!    1                       ,i4,f8.2)
+!                  endif
                 endif
 
 !               Update Histograms
@@ -331,6 +326,15 @@ cdis
 
                 colmaxin  = max(colmaxin,cloud_frac_in)
                 colmaxout = max(colmaxout,cloud_frac_out)
+
+                if(idebug .eq. 1)then
+                    write(6,201)i,j,k,it,jt,di_dh(i,j),dj_dh(i,j)
+     1                         ,cld_hts(k),cloud_frac_in,cloud_frac_out
+     1                         ,cloud_frac_uprb,cushion
+ 201                format(
+     1               'ijk,it,jt,didh,djdh,cldht,cldfracin/out,uprb,cush'
+     1                    ,5i6,2f9.5,f9.1,2f7.3,2f7.3)
+                endif
 
             enddo ! k
 
