@@ -293,7 +293,7 @@ cdis
             endif
 
             if(iflag_cv .eq. 1)then
-                c_label(14:38) =  ' Ceil (hm) & Vis (miles)'
+                c_label(14:50) = ' Cloud Base (hm) & Visibility (miles)'
             elseif(iflag_cv .eq. 2)then
                 if(c_field(3:4) .eq. '24')then
                   if(namelist_parms%c_units_type .eq. 'english')then
