@@ -23,6 +23,8 @@
 # METHOD is eighth argument (if FILES is supplied)
 #       [optional - exchange_zip, rsync, etc., default value is rsync if not supplied]
 
+# MSSPATH is ninth argument (if METHOD is supplied)
+
 umask 002
 
 setenv LAPS_DATA_ROOT $1                      
@@ -74,6 +76,8 @@ if ($METHOD == "") then
     setenv METHOD rsync
 endif
 
+setenv MSSPATH $9
+
 cd $LAPS_DATA_ROOT
 
 date -u
@@ -104,15 +108,20 @@ else
 
 endif
 
-if ($3 == "mss") then
-    echo "MSSFULLPATH = $MSSPATH/$YYYY/$MONTH"
+if ($MSSPATH != "") then
 
-    mssMkdir -p $MSSPATH/$YYYY/$MONTH
+    module load hpss
 
-    mssPut laps_$YYDDDHHMM.tar* $MSSPATH/$YYYY/$MONTH
+    cd $LAPS_DATA_ROOT/log
 
-    rm -f laps_$YYDDDHHMM.tar*
+    echo  "MSSFULLPATH = $MSSPATH/$YYYY/$MONTH/$DATE/laps"
+    setenv MSSFULLPATH   $MSSPATH/$YYYY/$MONTH/$DATE/laps
 
+    hsi "mkdir -p $MSSFULLPATH"
+
+    hsi "cd $MSSFULLPATH; cput lapstar_www.txt.$YYDDDHHMM.*"
+    hsi "cd $MSSFULLPATH; cput lapstar2.txt.$YYDDDHHMM.*"
+ 
     date -u
 
 endif
