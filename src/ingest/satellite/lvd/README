@@ -52,6 +52,7 @@
            set_missing_flag                  setmissingflag.f
                set_missing_sat               set_missing_sat.f
            btemp_convert_asc                 btempconv_asc.f
+           latlon_to_grij                    latlon_to_grij.f
            process_ir_satellite              satir_process.f
                satdat2laps_ir                satir2laps.f 
                check                         check_data.f       
