@@ -194,4 +194,29 @@ contains
     write(*,*) "writeppm3Matrix"
   end subroutine
 
+  subroutine read_ppm(u,img,ncol,iwidth,iheight)
+
+    integer ncol,iwidth,iheight
+    integer ncol2,iwidth2,iheight2
+
+    integer img(ncol,iwidth,iheight)
+    integer u
+    character(2) :: sign
+
+    read(u, '(A2)') sign
+    read(u, *) iwidth2,iheight2
+    read(u, *) ncol2
+
+    write(6,*) sign
+    write(6,*) iwidth2,iheight2
+    write(6,*) ncol2
+
+    if ( ncol2 .ne. 255 ) return
+
+    read(u,*)img
+
+    write(6,*)' Image has been read in subroutine read_ppm'
+
+  end subroutine
+
 end module
