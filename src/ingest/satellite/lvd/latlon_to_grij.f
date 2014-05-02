@@ -35,6 +35,8 @@
 
         real bi_coeff(2,2)
 
+        itstatus=ishow_timer()
+
         write(6,*)' Subroutine latlon_to_grij...'
 
         call get_r_missing_data(r_missing_data,istatus)
@@ -52,7 +54,7 @@
 
         dist_min_thr = 0.5
 
-        epsilon = .00015 ! degrees
+        epsilon = .00040 ! degrees
 
 !       Start with i/j LAPS coordinate for each satellite grid point
         do is = 1,nx_s
@@ -173,11 +175,22 @@
                     
 !                   Determine satellite grid point having the closest lat/lon
 !                   to the LAPS grid point
-                    call get_closest_point(lat_l(il,jl),lon_l(il,jl)
-     1                                    ,r_missing_data           
-     1                                    ,lat_s,lon_s,nx_s,ny_s 
-     1                                    ,iclo_loop,i_loop
-     1                                    ,iclo,jclo,dist_min) 
+
+!                   Apply initial check prior to routine to reduce calling
+!                   Check if we've moved far enough since the last full calculation
+                    delt_pt = sqrt((rlat_last-lat_l(il,jl))**2 
+     1                           + (rlon_last-lon_l(il,jl))**2)
+                    if((dist_min_last - delt_pt) .gt. 1.0)then
+                        i_loop = 0
+                        continue ! return
+                    else 
+                        call get_closest_point(lat_l(il,jl),lon_l(il,jl)
+     1                            ,r_missing_data           
+     1                            ,lat_s,lon_s,nx_s,ny_s 
+     1                            ,iclo_loop,i_loop                  ! I/O
+     1                            ,rlat_last,rlon_last,dist_min_last ! I/O
+     1                            ,iclo,jclo,dist_min) 
+                    endif
 
                     if(i_loop .eq. 1)then
                         c_loop = '*'
@@ -408,14 +421,13 @@
         subroutine get_closest_point(rlat,rlon,r_missing_data	
      1                              ,lat_s,lon_s,nx_s,ny_s 
      1                              ,iclo_loop,i_loop
-     1                              ,iclo,jclo,dist_min)                               
+     1                              ,rlat_last,rlon_last,dist_min_last ! I/O
+     1                              ,iclo,jclo,dist_min)                
 
         include 'trigd.inc'
 
         real lat_s(nx_s,ny_s)
         real lon_s(nx_s,ny_s)
-
-        save rlat_last, rlon_last, dist_min_last
 
 !       Determine satellite grid point having the closest lat/lon
 !       to the LAPS grid point
