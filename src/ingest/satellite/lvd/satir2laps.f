@@ -119,7 +119,7 @@ c
            lforce_switch=.true.
            print*,'More than 10% of data missing: '
      &,float(icnt)/float(imax*jmax)
-           print*,'Force grid point averaging in satir2laps'
+           print*,'Thus force grid point averaging in satir2laps'
         endif
  
         insufdata=0
@@ -130,8 +130,13 @@ c
 
         if(r_grid_ratio.lt.rgrid_ratio_thresh.or.lforce_switch)then
 
-          write(6,*)'Grid ratio .lt. 0.5'
-          write(6,*)'Use pixel avg to get IR Tb'
+          if(r_grid_ratio.lt.rgrid_ratio_thresh)then
+            write(6,*)'Grid ratio < thresh',r_grid_ratio
+     1                                     ,rgrid_ratio_thresh
+            write(6,*)'Use pixel avg to get IR Tb (coarse LAPS grid)'
+          else
+            write(6,*)'Use pixel avg to get IR Tb (due to force switch)'
+          endif
 
           max_wi=10.
           max_wj=10.
@@ -351,8 +356,7 @@ c          close(29)
         else      ! here the input data resolution is course relative to
 c                   the analysis domain
 
-          print*,'Image data res similar to domain res'
-          print*,'Use spline - gdtost'
+          print*,'Fine LAPS grid: use spline - gdtost'   
 
           DO 30 J=1,JMAX
           DO 30 I=1,IMAX
