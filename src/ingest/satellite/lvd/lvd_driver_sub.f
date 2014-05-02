@@ -953,6 +953,7 @@ c ----------  GMS SATELLITE SWITCH -------
             if(ispec.eq.4)then
               if(r_image_status(j,i).le.0.3333)then
 
+!              Is this needed for coarse LAPS grids using pixel averaging?
                if(csattype.eq.'rll')then
                    write(6,*)' Calling latlon_to_grij'
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
