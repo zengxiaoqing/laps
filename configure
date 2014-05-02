@@ -1197,6 +1197,8 @@ then
 fi
 if test "$arch" = "rs6000" 
 then
+  echo "force CC to be cc for rs6000"
+  CC="cc"
   FFLAGS="$FFLAGS"
   LITTLEFLAGS="$LITTLEFLAGS"
   FIXED="-qfixed"
