@@ -55,6 +55,10 @@ cdis
      1                        j_status,istatus)
 
         use cloud_rad ! Cloud Radiation and Microphysics Parameters
+        use constants_laps, ONLY: R
+
+        ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
+     1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                  sys_abort_prod
@@ -595,8 +599,14 @@ c read in laps lat/lon and topo
 !       Write out cloud grid in pressure coordinates
         write(6,*)' Writing out grid in pressure coordinates'
 
+        write(6,*)' clouds_3d_pres section (LC3)'
+     1           ,clouds_3d(NX_L/2,NY_L/2,:)
+
         call interp_height_pres_fast(NX_L,NY_L,NZ_L,kcloud
      1  ,clouds_3d_pres,clouds_3d,heights_3d,cld_hts,istatus)
+
+        write(6,*)' clouds_3d_pres section (LCP)'
+     1           ,clouds_3d_pres(NX_L/2,NY_L/2,:)
 
         var = 'LCP'
         ext = 'lcp'
@@ -743,10 +753,31 @@ c read in laps lat/lon and topo
             goto 999
         endif
 
-        where(cice(:,:,:) .ne. r_missing_data .AND.
-     1        cice(:,:,:) .gt. cld_ice_ub_gpm3      )    
-              cice(:,:,:) = cld_ice_ub_gpm3
-        end where
+!       Apply temperature dependent upper bound to cloud ice
+        do k = 1,NZ_L
+        do j = 1,NY_L
+        do i = 1,NX_L
+!           Temperature dependent threshold, we can consider basing this
+!           from saturation vapor density (SVD * .05) = (ES/RT) * .05
+!           where .05 means 5% of water saturation
+            es_pa = ESL(temp_3d(i,j,k) - 273.15) * 100.
+            cld_ice_ub_gpm3 = 1000. * .05 * es_pa / (R * temp_3d(i,j,k))
+            if(i .eq. NX_L/2 .and. j .eq. NY_L/2)then
+                write(6,701)k,temp_3d(i,j,k),es_pa,cld_ice_ub_gpm3
+701             format('k/t/e/cld_ice_uprb_gpm3',i4,f8.2,f8.1,f9.5)
+            endif
+!           if(temp_3d(i,j,k) .gt. 243.15)then
+!               cld_ice_ub_gpm3 = 0.1
+!           else
+!               cld_ice_ub_gpm3 = 0.03
+!           endif
+            if(cice(i,j,k) .ne. r_missing_data .AND.
+     1         cice(i,j,k) .gt. cld_ice_ub_gpm3      )then
+               cice(i,j,k) = cld_ice_ub_gpm3
+            endif         
+        enddo
+        enddo
+        enddo
 
         I4_elapsed = ishow_timer()
 
