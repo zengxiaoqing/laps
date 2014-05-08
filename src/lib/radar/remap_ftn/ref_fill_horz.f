@@ -69,7 +69,7 @@
             radar_dist(io,jo) = slant_range
 
 !           Determine number of gridpoints in potential gaps = f(radar_dist)
-            if(radar_dist(io,jo) .gt. 100000.)then ! use namelist far out
+            if(radar_dist(io,jo) .gt. 105000.)then ! use namelist far out
                 dgr_eff = dgr  
             else ! assume set azimuthal resolution close in
                 dgr_eff = 1.10
