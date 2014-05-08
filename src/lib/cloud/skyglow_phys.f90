@@ -7,8 +7,9 @@
                    ,earth_radius,patm,aod_ray,aod_ray_dir     &! I
                    ,aero_scaleht                              &! I
                    ,htmsl,redp_lvl                            &! I
+                   ,aod_ill                                   &! I
                    ,l_solar_eclipse,i4time,rlat,rlon          &! I
-                   ,clear_radf_c                              &! I
+                   ,clear_radf_c,ag_2d                        &! I
                    ,clear_rad_c,elong                       )  ! O
 
         include 'trigd.inc'
@@ -17,8 +18,8 @@
 
 !       Statement Functions
         trans(od) = exp(-od)
-!       brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness (max~7)
-        brt(a) = (1.0 - exp(-.14 * a))     ! relative sky brightness (max=1)
+!       brt(a) = (1.0 - exp(-.14 * a))/.14 ! rel. sky brightness (max~7)
+        brt(a) = (1.0 - exp(-.14 * a))     ! rel. sky brightness (max=1)
         brtf(am,od_per_am) = 1.0 - exp(-am*od_per_am) ! rel. sky brightness (max=1)
         brto(od) = 1.0 - exp(-od)                     ! rel. sky brightness (max=1)
 
@@ -40,12 +41,14 @@
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
                ! fraction of air molecules illuminated by the sun along
                ! line of sight (consider Earth's shadow + clouds)
+        real ag_2d(minalt:maxalt,minazi:maxazi)       ! gas airmass (topo/notopo)
+        real aod_ill(minalt:maxalt,minazi:maxazi)     ! aerosol illuminated optical depth (topo/notopo)
         real aod_ray(minalt:maxalt,minazi:maxazi)     ! aerosol optical 
                                          ! depth (zenithal) may be adjusted
                                          ! for illumination
         real aod_ray_dir(minalt:maxalt,minazi:maxazi) ! aerosol optical 
                                          ! depth (zenithal) may be adjusted
-                                         ! for direct illumination
+                                         ! for direct illumination / topo
         real patm_ray(minalt:maxalt,minazi:maxazi)! effective patm adjusted
                                                   ! for illumination
         real elong(minalt:maxalt,minazi:maxazi)
@@ -148,7 +151,10 @@
             else
                 aod_dir_rat = 0.
             endif
-            hg2d = (hg2 * aod_dir_rat) + (1.0 - aod_dir_rat) ! direct ill 
+
+!           Consider arg for sideways scattering from downward diffuse
+!           is ~hg(90.) or an evaluated integral. Use 0.5 for now.
+            hg2d = (hg2 * aod_dir_rat) + (0.5 - aod_dir_rat) ! direct ill 
             mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2d 
 
             if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
@@ -184,6 +190,7 @@
 
             else ! assume two scattering layers (g+a, g)
               do ic = 1,nc
+                gasfrac = ag_2d(ialt,jazi) / airmass_g ! topo illuminated fraction of gas
                 od_g = ext_g(ic)*airmass_g
                 od_a = aod_ray(ialt,jazi)*aa*ext_a(ic)
                 alpha_g = od_g / 8000.
@@ -206,11 +213,12 @@
                 rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
                 rayleigh_pf_eff = rayleigh_gnd * clear_radf_c(ic,ialt,jazi)
                 pf_eff1 = (rayleigh_pf_eff * alpha_g + hg2d * alpha_a * solar_int_g2) &
-!               pf_eff1 = (rayleigh_pf_eff * alpha_g + hg2 * alpha_a * solar_int_g2) &
                         / (alpha_g + alpha_a * solar_int_g2)
-                od_1 = od_g1 + od_a
+!               od_1 = od_g1*gasfrac + od_a
+                od_1 = od_g1*gasfrac + aod_ill(ialt,jazi)
                 brt1 = brto(od_1) * pf_eff1
-                brt2 = brto(od_g2) * rayleigh_pf_eff
+!               brt2 = brto(od_g2) * rayleigh_pf_eff
+                brt2 = brto(od_g2*gasfrac) * rayleigh_pf_eff
                 trans1 = trans(od_1)
                 clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2)
 
@@ -219,8 +227,8 @@
                             ,alpha_g*1e3,alpha_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
 73                format('day_int/ag/od_g/aod_ray/aa/od_a/alpha_g/alpha_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,5f7.3,2x,2f7.3,2x,2f7.3,f12.0)      
-                  write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d
-74                format('altaz,am_sun,solar_int_g2,hg2,hg2d = ',2f8.2,4f10.4)                  
+                  write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aod_ill(ialt,jazi)
+74                format('altaz,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aodill = ',2f8.2,4f10.4,2f9.6)                  
                 endif
 
              enddo ! ic
