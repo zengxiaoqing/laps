@@ -88,7 +88,7 @@ cdis
             return
         endif
 
-        thresh_low_fill_elev = 1.5     ! Elevation of echoes used to extrapolate
+        thresh_low_fill_elev = 1.6     ! Elevation of echoes used to extrapolate
                                        ! downward (degress)
 
         thresh_low_fill_ht = 3000.     ! Height of echoes used to extrapolate
@@ -263,8 +263,10 @@ c       write(6,*)' Doing Column ',j
      1                  ,azimuth,slant_range,elev_top_deg
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
-!               5 degrees is used because of larger tilt gaps in upper tilts
+!               Adjust for larger tilt gaps in upper tilts
                 if(elev_top_deg .gt. 9.0)then
+                    tilt_gap_rad = 6.0 * rpd
+                elseif(elev_top_deg .gt. 5.5)then
                     tilt_gap_rad = 5.0 * rpd
                 else
                     tilt_gap_rad = 2.0 * rpd
@@ -363,7 +365,8 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                         n_low_fill = n_low_fill + 1
 
                         if(n_low_fill .le. 8)then
-!                       if(nint(azimuth) .eq. 222)then
+!                       if(nint(azimuth) .eq. 270)then
+!                       if(j .eq. 258)then
                             write(6,211)i,j
      1                                 ,k_topo,k_topo_buffer,k_bottom
      1                                 ,elev_bottom
@@ -372,8 +375,9 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                         endif
 
                    else
+!                       if(j .eq. 258)then
                         if(.false.)then
-!                       if(nint(azimuth) .eq. 222)then
+!                       if(nint(azimuth) .eq. 270)then
                             write(6,212)i,j
      1                                 ,k_topo,k_topo_buffer,k_bottom
      1                                 ,elev_bottom
