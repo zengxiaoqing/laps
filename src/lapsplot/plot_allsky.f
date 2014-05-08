@@ -40,6 +40,7 @@
         real snow_cover(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
         real albedo_bm(nc,NX_L,NY_L)
+        integer ialbedo_bm(nc,NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
@@ -636,25 +637,62 @@
 
             where(topo(:,:) .ge. 3200.); land_use(:,:) = 19.; end where
 
-!           call land_albedo_bm(rlat_laps,rlon_laps,NX_L,NY_L,albedo_bm
-!    1                         ,istatus)
-            istatus = 0
+            call land_albedo_bm(lat,lon,NX_L,NY_L,albedo_bm,istatus)
  
             if(istatus .eq. 1)then
                 write(6,*)' Set 3-color albedo based on Blue Marble'
+
+!               Test a flop if needed
+!               do i = 1,NX_L
+!               do j = 1,NY_L
+!                   topo_albedo_2d(:,NX_L+1-i,NY_L+1-j) 
+!    1                 = albedo_bm(:,i,j)
+!                   topo_albedo_2d(:,i,j) 
+!    1                 = albedo_bm(:,i,j)
+!               enddo ! j
+!               enddo ! i
+
                 topo_albedo_2d = albedo_bm
+
+                write(6,*)' Row of green albedo'
+                jrow = NY_L/2
+                do i = 1,NX_L
+                    if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
+                        write(6,*)i,topo_albedo_2d(2,i,jrow)
+                    endif
+                enddo ! i
+                alb_min = minval(topo_albedo_2d(2,:,jrow))
+                alb_max = maxval(topo_albedo_2d(2,:,jrow))
+                write(6,*)' Min/Max in row is ',alb_min,alb_max
+
+                alb_max = maxval(topo_albedo_2d(2,:,:))
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    if(topo_albedo_2d(2,i,j) .eq. alb_max)then
+                        write(6,*)' Max albedo at ',i,j
+     1                            ,topo_albedo_2d(:,i,j)
+                    endif
+                enddo ! j
+                enddo ! i
+!               ialbedo_bm(:,:,:) = nint(topo_albedo_2d(:,:,:)*255.)
+!               call writeppm3Matrix(
+!    1                   ialbedo_bm(1,:,:),ialbedo_bm(2,:,:)
+!    1                  ,ialbedo_bm(3,:,:),'ialbedo_bm')
             else
                 write(6,*)' Set 3-color albedo based on land use'
                 call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
             endif
 
-            where(snow_cover(:,:) .ne. r_missing_data)
-              do ic = 1,3
-                topo_albedo_2d(ic,:,:) = 
-     1          max(topo_albedo_2d(ic,:,:),snow_cover(:,:))
-              enddo ! ic
-            end where
- 
+            do j = 1,NY_L
+            do i = 1,NX_L
+              if(snow_cover(i,j) .ne. r_missing_data)then
+                do ic = 1,3
+                  topo_albedo_2d(ic,i,j) = 
+     1              max(topo_albedo_2d(ic,i,j),snow_cover(i,j))
+                enddo ! ic
+              endif
+            enddo ! i 
+            enddo ! j
           endif
 
           I4_elapsed = ishow_timer()
@@ -728,6 +766,7 @@
           topo_sfc = topo(isound,jsound)
  
           write(6,*)' i/j/topo_sfc ',isound,jsound,topo_sfc
+          write(6,*)' albedo RGB',topo_albedo_2d(:,isound,jsound)
 
           rlat = lat(isound,jsound)
           rlon = lon(isound,jsound)
@@ -878,8 +917,12 @@
      1             alm      .gt. 0.                 )then
                     if(solar_alt .ge. 0.)then ! valid only in daytime
                         write(6,*)' Moonglow is being added to daylight'       
-                        blog_v_roll(:,:) = 
-     1                     addlogs(blog_v_roll(:,:),blog_moon_roll(:,:))      
+                        do j = minazi,maxazi
+                        do i = minalt,maxalt
+                           blog_v_roll(i,j) = 
+     1                     addlogs(blog_v_roll(i,j),blog_moon_roll(i,j))
+                        enddo ! i
+                        enddo ! j
                     endif
                 endif
             endif ! solar_alt .ge. -16.
@@ -955,10 +998,14 @@
      1             minval(blog_moon_roll),maxval(blog_moon_roll)
 
               write(6,*)' Moonglow is being added to starlight'       
-              do ic = 1,nc
-                glow_stars(ic,:,:) = 
-     1              addlogs(glow_stars(ic,:,:),blog_moon_roll(:,:))
-              enddo ! ic
+              do j = minazi,maxazi
+              do i = minalt,maxalt
+                do ic = 1,nc
+                  glow_stars(ic,i,j) = 
+     1              addlogs(glow_stars(ic,i,j),blog_moon_roll(i,j))
+                enddo ! ic
+              enddo ! i 
+              enddo ! j 
 
               write(6,*)' range of glow_stars (after) is',
      1             minval(glow_stars(2,:,:)),maxval(glow_stars(2,:,:))
