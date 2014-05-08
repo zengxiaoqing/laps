@@ -6812,9 +6812,9 @@ c                   cint = -1.
             endif
 
             if(c_type .eq. 'cv')then
-                clow = 0.2
-                chigh = 0.8
-                cint = 0.2
+                clow = 0.1
+                chigh = 0.9
+                cint = 0.1
                 call plot_cont(cloud_cvr,1e0,clow,chigh,cint,
      1               asc9_tim,namelist_parms,plot_parms,c_label,        
      1               i_overlay,c_display,lat,lon,jdot,
@@ -6823,7 +6823,7 @@ c                   cint = -1.
             else ! 'cg'
                 write(6,*)' calling solid fill cloud plot'
                 
-                if(NX_L*NY_L .gt. 55000)then
+                if(NX_L*NY_L .gt. 1000000)then
                     colortable = 'linear_reduced'
                 else
                     colortable = 'linear'
