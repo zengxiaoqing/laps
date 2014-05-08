@@ -372,7 +372,15 @@ c                   write(6,*)' khigh = ',kk
             if(echo_top(i,j) .ne. r_missing_data)then
                 if(echo_top_agl(i,j) .lt. echo_agl_thr(i,j) .and. 
      1             (l_resolved(i,j).eqv..true.)       )then
+
 !                   Should we set these to unresolved here or better yet above?
+                    if(echo_top_temp(i,j) .ge. 278.15)then
+                      iwarm_resolved = 1
+                      l_resolved(i,j) = .false.
+                    else
+                      iwarm_resolved = 0
+                    endif
+
                     if(idebug_a(i,j) .eq. 1)then 
                       write(6,610)i,j       
      1                        ,nint(echo_top_agl(i,j))
@@ -380,8 +388,9 @@ c                   write(6,*)' khigh = ',kk
      1                        ,nint(echo_top(i,j))
      1                        ,nint(cloud_base(i,j))
      1                        ,nint(cloud_base_buf(i,j))
+     1                        ,echo_top_temp(i,j),iwarm_resolved
  610                  format('CLD_RDR - Low echo top yet resolved '
-     1                    ,3i5,' ET',2i5,' Base',2i7)
+     1                    ,3i5,' ET',2i5,' Base',2i7,f7.1,i3)
                     endif
                 endif
             endif
