@@ -101,6 +101,7 @@
                ! fraction of air illuminated by the sun along line of sight
                ! (consider Earth's shadow + clouds, used when sun is below
                !  the horizon)
+        real ag_2d(minalt:maxalt,minazi:maxazi)       ! dummy
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
         real topo_swi(minalt:maxalt,minazi:maxazi)    ! short wave down W/m**2
@@ -924,8 +925,9 @@
      1             ,sol_alt(i,j),sol_azi(i,j),view_alt,view_az
      1             ,earth_radius,patm,aod_ray_eff,aod_ray_dir
      1             ,aero_scaleht,htstart,redp_lvl             ! I
+     1             ,aod_ill                                   ! I (dummy)
      1             ,l_solar_eclipse,i4time,rlat,rlon          ! I
-     1             ,clear_radf_c                              ! I (dummy)
+     1             ,clear_radf_c,ag_2d                        ! I (ag2d is dummy)
      1             ,clear_rad_c,elong                       ) ! O
          endif
 
