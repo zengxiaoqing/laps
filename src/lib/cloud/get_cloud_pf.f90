@@ -62,7 +62,7 @@
             call phase_func(iplan,isat,phase_angle_d,phase_corr)       
             r_ill = (1. + cosd(phase_angle_d)) / 2.
 
-!           Set to 2. if we're at cloud base
+!           Set to 1 or 2 if we're at cloud base?
             pf_thk = (1.94 / (10.**(phase_corr * 0.4))) / r_ill
             pf_thk = min(pf_thk,2.0) ! limit fwd scattering peak
 
@@ -79,7 +79,8 @@
             alb_clwc = alb(0.06*cloud_od_clwc)
 
             radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
-            pf_thk = pf_thk*radfrac + hg(-0.3 ,elong_a(i,j)) * (1.-radfrac)
+!                     illuminated                unilluminated
+            pf_thk = pf_thk*radfrac + hg(-0.0 ,elong_a(i,j)) * (1.-radfrac)
             pf_thk_a(i,j) = pf_thk
 
             pf_clwc = clwc_bin1a * clwc_bin1 * hg(.94**hgp,elong_a(i,j)) & ! corona
