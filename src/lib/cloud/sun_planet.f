@@ -14,7 +14,8 @@
 
       CHARACTER BLANK,TWI,MOON,RISE,SET,SIGN,PLUS,MINUS
       DIMENSION R(3),RR(3),RHO(3),RRI(3),P(3),Q(3),W(3),PP(3),QQ(3)
-     +,WW(3),D1(3),D2(3),I1(3),I2(3),MNTH(12)
+     +,WW(3),D1(3),D2(3),I1(3),I2(3)
+      CHARACTER*3 MNTH(12)
       REAL*8 I,M,MAG,LNOD,MU,NLC,LON,MDEGTL,LHMSH,MX,MY,MZ,LAT
       REAL*8 MX_1950, MY_1950, MZ_1950
       INTEGER RAH,DECD,FRAME,ELGMC,ALTDK1
@@ -35,8 +36,8 @@
       DATA FRAME/2/
       DATA RISE/'R'/,SET/'S'/,BLANK/' '/,C5_BLANK/'     '/
       DATA PLUS/'+'/,MINUS/'-'/
-      DATA MNTH/3HJAN,3HFEB,3HMAR,3HAPR,3HMAY,3HJUN,3HJUL,3HAUG,3HSEP
-     .,3HOCT,3HNOV,3HDEC/
+      DATA MNTH/'JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP'
+     .,'OCT','NOV','DEC'/
       Data names/'Earth','Mercury','Venus','Mars','Jupiter','Saturn',
      1         'Uranus','Neptune','Pluto',4*' '/
 
