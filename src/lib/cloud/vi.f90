@@ -347,7 +347,7 @@
 
        call calc_extinction(altsource,patm,airmass,totexts)
        C4 = 10.0**(-.4*totexts)
-       FS=6.2E+07*(elong**-2.0)+(10**(6.15-elong/40.))
+       FS=6.2E+07*(elong**(-2.0))+(10**(6.15-elong/40.))
        FS=FS+(10**5.36)*(1.06+((COSD(elong))**2))    ! Rayleigh Scattering
        BD=10.**(-.4*(rmag-MO+43.27))
 
