@@ -349,6 +349,9 @@
       write(6,*)' heights_3d column = ',heights_3d(idb,jdb,:)
       write(6,*)' transm_3d column = ',transm_3d(idb,jdb,:)
       write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,1)
+
+      write(6,*)' Additional filling of missing areas and at night...'
+
       n_terr_shadow = 0.
       day_int = 3e9 ! nl
       do k = 1,nk
@@ -402,6 +405,11 @@
                   transm_4d(i,j,k,1) = transm_3d_generic * rint
                   transm_4d(i,j,k,2) = transm_3d_generic * grn_rat
                   transm_4d(i,j,k,3) = transm_3d_generic * blu_rat
+                   
+                  if(i .eq. idb .AND. j .eq. jdb)then
+                      write(6,103)k,obj_alt(i,j),horz_dep_d,obj_alt_cld,am*patm_k,rint,rint*blu_rat**0.3,rint*blu_rat
+                  endif
+
               else ! generic fill in value
                   transm_4d(i,j,k,1) = 0.7
                   transm_4d(i,j,k,2) = 0.5
@@ -448,13 +456,13 @@
       ctylat(2)=39.76;  ctylon(2)=-104.88;  ctypop(2) =1000000 ! Denver
       ctylat(3)=39.93;  ctylon(3)=-105.16;  ctypop(3) =  12000 ! Superior
       ctylat(4)=39.97;  ctylon(4)=-105.14;  ctypop(4) =  19000 ! Louisville
-      ctylat(5)=40.17;  ctylon(5)=-105.10;  ctypop(5) =  88000 ! Louisville
+      ctylat(5)=40.17;  ctylon(5)=-105.10;  ctypop(5) =  88000 ! Longmont
       ctylat(6)=40.00;  ctylon(6)=-105.10;  ctypop(6) =  25000 ! Lafayette 
       ctylat(7)=38.83;  ctylon(7)=-104.82;  ctypop(7) = 416000 ! Co Springs
       ctylat(8)=39.73;  ctylon(8)=-104.83;  ctypop(8) = 325000 ! Aurora
       ctylat(9) =40.58; ctylon(9) =-105.08; ctypop(9) = 144000 ! Ft Collins
       ctylat(10)=39.71; ctylon(10)=-105.08; ctypop(10)= 143000 ! Lakewood
-      ctylat(11)=39.87; ctylon(11)=-104.97; ctypop(11)= 119000 ! Thronton
+      ctylat(11)=39.87; ctylon(11)=-104.97; ctypop(11)= 119000 ! Thornton
       ctylat(12)=38.25; ctylon(12)=-104.61; ctypop(12)= 106000 ! Pueblo
       ctylat(13)=39.80; ctylon(13)=-105.09; ctypop(13)= 106000 ! Arvada
       ctylat(14)=39.84; ctylon(14)=-105.03; ctypop(14)= 106000 ! Wstminster
