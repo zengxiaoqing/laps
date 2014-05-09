@@ -234,6 +234,8 @@ SUBROUTINE RDLAPSBKG
     DO J=1,FCSTGRD(2)
     DO K=1,FCSTGRD(3)
       BK0(I,J,K,T,HUMIDITY) = BK0(I,J,K,T,HUMIDITY)*1000.0/s2r(P1(K)/100.0) ! LGA HUMIDITY: KG/KG
+      IF (P1(k) .LE. 10000.0 .AND. BK0(I,J,K,T,HUMIDITY) .GT. 1.0) &
+        BK0(I,J,K,T,HUMIDITY) = 1.0  ! LGA may have constant SH above 100hPa.
     ENDDO
     ENDDO
     ENDDO
