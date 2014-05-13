@@ -91,7 +91,7 @@ c     get the  filenames available from get_filenames
       maxhash = ' '
       hash = ' '
       
-      do i = 1,numoffiles
+      do i = numoffiles,1,-1    !,numoffiles
          hashpoint = index (filenames(i),de(1:dei))
          if (hashpoint .ne. 0) hash = filenames(i)
          hashpoint = index (hash,'.')
@@ -108,9 +108,10 @@ c     determine i4 times of pertenant files
 c     compute time difference
       
          i4time_difference = i4time_input-i4time_found
-         i4time_difference  = abs(i4time_difference)
+         i4time_difference  = (i4time_difference)
       
-         if (i4time_difference .lt. time_diff) then !success in finding file
+         if (i4time_difference .lt. time_diff 
+     1                 .and. i4time_difference .gt. 0) then !success in finding file
             file = file_new
             write(6,*) 'Found file ', file_new//'.'//ext(1:ei)
             write(6,*) 
