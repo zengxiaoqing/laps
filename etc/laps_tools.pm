@@ -597,7 +597,7 @@ sub wait_for_file {
 
     while ($iwait > 0) {
         if (! -e $file) {
-            print "wait_for_file sleeping for $wait_interval seconds\n";
+            print "wait_for_file sleeping for $wait_interval seconds at ".`date`;
             sleep $wait_interval;
             $iwait--;
         } else {
