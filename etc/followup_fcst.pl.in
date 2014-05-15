@@ -27,6 +27,7 @@ use Getopt::Std;
 getopts('a:d:r:f:c:l:m:t:o:w:s');
 
 print "Running followup_fcst.pl...\n";
+system("uname -ns");
 print "user defined paths\n";
 print "model: $opt_m\n";
 print "model configuration: $opt_a\n";
@@ -175,6 +176,7 @@ print "laps_fua: $local_fsf\n";
 
 my $num_files = int(($fcst_len/$output_inc) + 0.5)+1;
 print "output_inc: $output_inc\n";
+print "fcst_len: $fcst_len\n";
 print "num_files: $num_files\n";
 
 my $fcsttime = 0;
