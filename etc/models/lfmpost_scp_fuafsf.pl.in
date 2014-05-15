@@ -157,6 +157,7 @@ $date_a9="$yy$jy$hh$mn";
 
 my $nfcst = 12;
 $nfcst = $opt_f if defined ($opt_f);
+my $n;
 
 my $finc = 3;
 $finc = $opt_i/60 if defined ($opt_i);
@@ -224,7 +225,7 @@ if (! $opt_S){ # test for skipping remote copy
 # Wait for fsf and fua file and make sure file size is greater than zero.
   my $fcst_mn = $n * $finc_mn;
   my $fcst_hr = int($fcst_mn/60);
-  my $fcst_mn = $fcst_mn - ($fcst_hr*60);
+  $fcst_mn = $fcst_mn - ($fcst_hr*60);
   $fcst_hr = "0".$fcst_hr while (length($fcst_hr)<2);
   $fcst_mn = "0".$fcst_mn while (length($fcst_mn)<2);
 
@@ -431,7 +432,7 @@ if(! defined $opt_M){
 
 # Loop through each forecast time for MSS copy
 for ($n=0; $n<$nfcst; $n++) {
-  print "loop increment is $n\n";
+  print "MSS loop increment is $n out of $nfcst-1\n";
   $current_sec = timegm(gmtime);
   if ( $current_sec > $endsec && (! defined($opt_d)) )
   {
@@ -442,13 +443,20 @@ for ($n=0; $n<$nfcst; $n++) {
   }
 
 # Wait for fsf and fua file and make sure file size is greater than zero.
-  my $fcst_hr = $n * $finc;
-  my $fcst_time = $fcst_hr."00";
-  $fcst_time = "0".$fcst_time while (length($fcst_time)<4);
+  my $fcst_mn = $n * $finc_mn;
+  my $fcst_hr = int($fcst_mn/60);
+  $fcst_mn = $fcst_mn - ($fcst_hr*60);
+  $fcst_hr = "0".$fcst_hr while (length($fcst_hr)<2);
+  $fcst_mn = "0".$fcst_mn while (length($fcst_mn)<2);
+
+  my $fcst_time = $fcst_hr.$fcst_mn;
+
 
   my $fua_file = "$date_a9$fcst_time".".fua";
   my $fsf_file = "$date_a9$fcst_time".".fsf";
 
+  print "date_a9 = $date_a9\n";
+  print "fcst_time = $fcst_time\n";
   print "fua_file = $fua_file\n";
 
   while ( !(-e "$fua_dir/$fua_file")) {
@@ -496,7 +504,7 @@ for ($n=0; $n<$nfcst; $n++) {
 
 # $msspath = "/mss/fsl/frd/lapb/hmt_2008";
   $msspath = $opt_M;
-  $mssfullpath = "$msspath/$yyyy/$mm/$date_a9";
+  $mssfullpath = "$msspath/$yyyy/$mm/$dd/$date_a9";
 
   my ($hsi_cmd,$mss_cmd);
 
@@ -510,8 +518,9 @@ for ($n=0; $n<$nfcst; $n++) {
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
 
-    $hsi_cmd = 'cd $mssfullpath/fua/$name; cput $fua_dir/$fua_file';
-    $mss_cmd = 'hsi "'.$hsi_cmd.'"';
+    chdir($fua_dir);
+    $hsi_cmd = "cd $mssfullpath/fua/$name; cput $fua_file";
+    $mss_cmd = "hsi \"$hsi_cmd\"";
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
     system ("date");
@@ -520,8 +529,9 @@ for ($n=0; $n<$nfcst; $n++) {
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
 
-    $hsi_cmd = 'cd $mssfullpath/fsf/$name; cput $fsf_dir/$fsf_file';
-    $mss_cmd = 'hsi "'.$hsi_cmd.'"';
+    chdir($fsf_dir);
+    $hsi_cmd = "cd $mssfullpath/fsf/$name; cput $fsf_file";
+    $mss_cmd = "hsi \"$hsi_cmd\"";
     print "Running command: $mss_cmd\n";
     system ($mss_cmd);
     system ("date");
