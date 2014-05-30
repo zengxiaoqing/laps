@@ -37,6 +37,9 @@ main                                      obs_driver.f
             read_buoy_cwb                 read_buoy_cwb.f        CWB/GTS
             read_ship_cwb                 read_ship_cwb.f        CWB/GTS
 
+        get_synop_obs                     get_synop_obs.f        synop obs
+            read_synop                    read_synop.f           NIMBUS
+
         get_gps_obs                       get_gps_obs.f          gps obs
             read_gps                      read_gps.f             NIMBUS
 
