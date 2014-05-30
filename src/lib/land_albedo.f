@@ -135,7 +135,7 @@
       write(6,*)' dims ',ncol,iwidth,iheight
       
 !     Read section of NASA Blue Marble Image in PPM format
-      open(u,file=trim(file),status='old')
+      open(u,file=trim(file),status='old',err=999)
       call read_ppm (u,img,ncol,iwidth,iheight)
       close(u)
 
@@ -211,4 +211,9 @@ cdoc  points.
       I4_elapsed = ishow_timer()
 
       return
+
+!     Error condition
+999   istatus = 0
+      return
+
       end
