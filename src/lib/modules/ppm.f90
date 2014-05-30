@@ -53,7 +53,7 @@ contains
     ! Write Image Size
     cols = size(M,2)
     rows = size(M,1)
-    write(100,'( i, 1x, i )') cols, rows
+    write(100,'( i6, 1x, i6 )') cols, rows
     
     ! Write Image
     do i=1,rows
@@ -83,11 +83,11 @@ contains
     ! Write Image Size
     cols = size(M,2)
     rows = size(M,1)
-    write(100,'( i, 1x, i )') cols, rows
+    write(100,'( i6, 1x, i6 )') cols, rows
     
     ! Write Maximum Value
     maxvalue = maxval(maxval(M,dim=1),dim=1)
-    write(100,'( i )') maxvalue
+    write(100,'( i6 )') maxvalue
     
     ! Write Image
     do i=1,rows
@@ -117,7 +117,7 @@ contains
     ! Write Image Size
     cols = size(R,2)
     rows = size(R,1)
-    write(100,'( i, 1x, i )') cols, rows
+    write(100,'( i6, 1x, i6 )') cols, rows
     
     ! Write Maximum Value
     maxvalue = max( maxval(maxval(R,dim=1),dim=1)&
@@ -130,7 +130,7 @@ contains
         maxvalue = 255
     endif
     write(6,*)' Image scaled to   ',maxvalue
-    write(100,'( i )') maxvalue
+    write(100,'( i6 )') maxvalue
     
     ! Write Image
     do i=1,rows
