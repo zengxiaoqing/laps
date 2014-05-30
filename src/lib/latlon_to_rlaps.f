@@ -1070,9 +1070,10 @@ cdoc  as well as various grid conversion routines.
               return
           endif
 
-          ave_lat = (std_lat1 + std_lat2) / 2.
+          call lambert_parms(std_lat1,std_lat2,constn,consts,constr)
+          single_lat = (acosd(constn) - 90.)/(-consts)
 
-          call get_grid_spacing_actual(ave_lat,lon(icen,jcen)
+          call get_grid_spacing_actual(single_lat,lon(icen,jcen)
      1                                      ,dist_calc,istatus)
           if(istatus .ne. 1)then
               write(6,*)
@@ -1081,8 +1082,8 @@ cdoc  as well as various grid conversion routines.
           endif
 
           write(6,*)' calculated grid spacing on '
-     1      ,'earths surface at average lambert latitude:'       
-     1     ,ave_lat,dist_calc
+     1      ,'earths surface at single lambert latitude:'       
+     1     ,single_lat,dist_calc
 
       endif
 
