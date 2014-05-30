@@ -87,6 +87,7 @@ c
         character*200 path_to_buoy_data
         character*200 path_to_gps_data
         character*200 path_to_tower_data
+        character*200 path_to_synop_data
         character*8   metar_format, c8_project
 	character     atime*24, filename9*9
         character*10  madis_dirs(n_madis_dirs)
@@ -128,6 +129,7 @@ c
      1                           ,path_to_buoy_data
      1                           ,path_to_gps_data
      1                           ,path_to_tower_data
+     1                           ,path_to_synop_data
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
@@ -184,6 +186,7 @@ c
      1                           ,path_to_buoy_data
      1                           ,path_to_gps_data
      1                           ,path_to_tower_data
+     1                           ,path_to_synop_data
      1                           ,c8_project,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
@@ -207,6 +210,7 @@ c
      1                           ,path_to_buoy_data
      1                           ,path_to_gps_data
      1                           ,path_to_tower_data
+     1                           ,path_to_synop_data
      1                           ,c8_project,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
@@ -252,6 +256,7 @@ c
         character*200 path_to_buoy_data
         character*200 path_to_gps_data
         character*200 path_to_tower_data
+        character*200 path_to_synop_data
         character*8   metar_format, c8_project
         character*8   a9_to_a8, a8_time
         character*10  madis_dirs(n_madis_dirs)
@@ -809,6 +814,7 @@ c
      1                         ,path_to_buoy_data
      1                         ,path_to_gps_data
      1                         ,path_to_tower_data
+     1                         ,path_to_synop_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
@@ -830,6 +836,7 @@ c
        character*200 path_to_buoy_data
        character*200 path_to_gps_data
        character*200 path_to_tower_data
+       character*200 path_to_synop_data
        character*8   metar_format
        character*10  madis_dirs(n_madis_dirs)
        logical l_allow_empty_lso,l_multiple_reports,l_dupe_names
@@ -839,6 +846,7 @@ c
      1                         ,path_to_buoy_data
      1                         ,path_to_gps_data
      1                         ,path_to_tower_data
+     1                         ,path_to_synop_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
