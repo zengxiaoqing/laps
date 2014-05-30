@@ -441,6 +441,7 @@
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,clwc_3d
      1                              ,istat_lwc)
+            call cv_i4tim_asc_lp(i4_valid,a24time,istatus)
             i4time_solar = i4_valid
           endif
 
@@ -597,8 +598,24 @@
             endif
             write(6,*)' range of snow_cover is',
      1                minval(snow_cover),maxval(snow_cover)
+
+!           Read in pw data
+!           ext = 'lh4'
+!           var_2d = 'TPW'
+!           call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
+!    1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+!    1                      ,pw_2d,0,istat_sfc)
+!           if(istat_sfc .ne. 1)then
+!               write(6,*)' Error reading LH4/PW field in plot_allsky'      
+!               return
+!           endif
+!           write(6,*)' range of pw_2d is',
+!    1                minval(pw_2d),maxval(pw_2d)
+            pw_2d = r_missing_data
+
           else
             snow_cover = r_missing_data
+            pw_2d = r_missing_data
           endif
 
           call get_static_field_interp('albedo',i4time_lwc,NX_L,NY_L
@@ -714,6 +731,12 @@
 !       Get Atmospheric Optical Depth (3D field)
         call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L
      1                 ,aod_3d)
+
+        if(pw_2d(NX_L/2,NY_L/2) .ne. r_missing_data)then
+!           scaleht_sh = (tpw/sh_sfc) * const
+!           write(6,*)' scaleht_sh = ',scaleht_sh
+            write(6,*)' scaleht_sh is UNDER CONSTRUCTION'
+        endif
 
         I4_elapsed = ishow_timer()
       
