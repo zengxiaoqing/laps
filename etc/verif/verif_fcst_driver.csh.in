@@ -1,8 +1,13 @@
 #!@CSH@
 
+# This script verifies LAPS forecast FUA/FSF files against various types of observations
+# The FUA/FSF files are assumed to be in 'lapsprd/f??/*' subdirectories. These subdirectories
+# should be consistent with the 'fdda_model_source' parameter in 'nest7grid.parms'.
+
 # arg1 is the LAPS_DATA_ROOT (e.g. /data/fab/projects/dwr)
 # arg2 is a dummy value for real-time cases - set to "archive" for archive cases
-# arg3 is the delay in hours for the modeltime relative to the crontime (e.g. 12.0) - set to dd-Mon-yyyy-hhmm for archive case
+# arg3 is the delay in hours for the modeltime relative to the crontime (e.g. 12.0) 
+#      set to dd-Mon-yyyy-hhmm for an archive case (e.g. 02-May-2014-2330)
 # arg4 domain name (from the "on-the-fly" page)                                                  
 # arg5 (optional) is number of forecast times that have a valid analysis to compare with (excluding analysis, e.g. 2)
 #      note this can represent a shorter time than what is in 'nest7grid.parms/model_fcst_len'
