@@ -9,7 +9,10 @@ setenv VERIFDIR $LAPS_DATA_ROOT/lapsprd/verif/allsky
 setenv DOMAIN_NAME_IN $2
 setenv DOMAIN_NAME `echo $DOMAIN_NAME_IN | sed 's/_/ /g'`
 
+echo "Start allsky_analysis.csh"
+
 echo "DOMAIN_NAME is $DOMAIN_NAME"                                    
+echo "LAPS_DATA_ROOT is $LAPS_DATA_ROOT"
 
 setenv SITE $3
 
