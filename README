@@ -263,8 +263,9 @@
 
      For Solaris & HP-UX platforms, 'f90' works well.
 
-     For Linux platforms (i386,i686,x86_64), 'pgf90' is suggested while
-                         'ifort' and 'gfortran' are being tested
+     For Linux platforms (i386,i686,x86_64), 'pgf90' is suggested      
+                         'ifort' (version 12.0.4 or later) is being tested
+                         'gfortran' is being tested
 
      For Linux platforms (Alpha chip), 'fort' is suggested (normal serial use).
 
