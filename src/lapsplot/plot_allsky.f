@@ -600,18 +600,17 @@
      1                minval(snow_cover),maxval(snow_cover)
 
 !           Read in pw data
-!           ext = 'lh4'
-!           var_2d = 'TPW'
-!           call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
-!    1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-!    1                      ,pw_2d,0,istat_sfc)
-!           if(istat_sfc .ne. 1)then
-!               write(6,*)' Error reading LH4/PW field in plot_allsky'      
-!               return
-!           endif
-!           write(6,*)' range of pw_2d is',
-!    1                minval(pw_2d),maxval(pw_2d)
-            pw_2d = r_missing_data
+            ext = 'lh4'
+            var_2d = 'TPW'
+            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,pw_2d,0,istat_sfc)
+            if(istat_sfc .ne. 1)then
+                write(6,*)' Error reading LH4/PW field in plot_allsky'      
+                return
+            endif
+            write(6,*)' range of pw_2d is',
+     1                minval(pw_2d),maxval(pw_2d)
 
           else
             snow_cover = r_missing_data
@@ -728,15 +727,27 @@
 
         write(6,*)' a9time is ',a9time
 
-!       Get Atmospheric Optical Depth (3D field)
-        call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L
-     1                 ,aod_3d)
 
-        if(pw_2d(NX_L/2,NY_L/2) .ne. r_missing_data)then
-!           scaleht_sh = (tpw/sh_sfc) * const
-!           write(6,*)' scaleht_sh = ',scaleht_sh
-            write(6,*)' scaleht_sh is UNDER CONSTRUCTION'
+!       Determine aod_ref as aerosol optical depth
+        pw_ref = pw_2d(NX_L/2,NY_L/2)
+        if(pw_ref .eq. r_missing_data)then
+           write(6,*)' pw_ref is missing, use default value'
+           aod_ref = .07
+        elseif(aod .lt. 0.)then
+           write(6,*)' aod is < 0, use as scale factor with pw_ref'
+           aod_ref = pw_ref * (-aod)
+        else
+           write(6,*)' aod is >= 0, use directly for aod_ref'
+           aod_ref = aod
         endif
+
+        write(6,91,err=92)pw_ref,aod,aod_ref
+91      format(' pw_ref,aod,aod_ref = ',3f10.3)
+92      continue
+
+!       Get Atmospheric Optical Depth (3D field)
+        call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L,aod_ref
+     1                 ,aod_3d)
 
         I4_elapsed = ishow_timer()
       
@@ -870,6 +881,7 @@
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
      1                     ,htmsl                                ! O
+     1                     ,aod_ref                              ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,kstart  ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
