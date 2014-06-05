@@ -12,6 +12,7 @@
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
      1                           ,htstart                               ! O
+     1                           ,aod                                   ! I
      1                           ,ni,nj,nk,i,j,kstart                   ! I
      1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
      1                           ,alt_norm                              ! I
@@ -22,7 +23,7 @@
      1                           ,alt_scale,azi_scale                   ! I
      1                           ,grid_spacing_m,r_missing_data)        ! I
 
-        use mem_namelist, ONLY: earth_radius,aod,aero_scaleht,redp_lvl
+        use mem_namelist, ONLY: earth_radius,aero_scaleht,redp_lvl
 
         use cloud_rad
 
