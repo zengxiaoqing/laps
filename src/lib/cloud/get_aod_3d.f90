@@ -1,7 +1,7 @@
 
-       subroutine get_aod_3d(pres_3d,heights_3d,topo_2d,ni,nj,nk,aod_3d)
+       subroutine get_aod_3d(pres_3d,heights_3d,topo_2d,ni,nj,nk,aod,aod_3d)
 
-       use mem_namelist, ONLY: aod,redp_lvl,aero_scaleht
+       use mem_namelist, ONLY: redp_lvl,aero_scaleht
 
        real aod_3d(ni,nj,nk) ! aerosol extinction coefficient
        real pres_3d(ni,nj,nk)
