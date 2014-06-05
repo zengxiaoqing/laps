@@ -32,7 +32,7 @@ main                                      obs_driver.f
                 read_cum_cwb                   "                      "
                 read_shp_cwb                   "                      "
 
-        get_buoy_obs                      get_maritime_obs.f     maritime obs
+        get_maritime_obs                  get_maritime_obs.f     maritime obs
             read_maritime                 read_maritime.f        NIMBUS/WFO
             read_buoy_cwb                 read_buoy_cwb.f        CWB/GTS
             read_ship_cwb                 read_ship_cwb.f        CWB/GTS
