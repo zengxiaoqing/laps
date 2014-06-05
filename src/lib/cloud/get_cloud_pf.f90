@@ -50,7 +50,7 @@
 
           cloud_od_cice = cloud_od_sp(i,j,2)
 
-          if(l_pf_new)then ! new liquid phase function
+          if(.true.)then ! new liquid phase function
             cloud_od_liq = cloud_od_sp(i,j,1) + cloud_od_sp(i,j,3)
 
             hgp = max(cloud_od_liq,1.0)       ! multiple scattering phase func
@@ -100,13 +100,13 @@
 !                   + clwc_bin2  * 2.0    ! add albedo term?     
                     + clwc_bin2  * pf_thk ! add albedo term?     
 
-            clwc_bin1c = .00
+!           clwc_bin1c = .00
             clwc_bin1a = clwc_bin1a - .00
             clwc_bin1b = clwc_bin1b - .00
 
             pf_rain = clwc_bin1a * clwc_bin1 * hg(.94**hgp,elong_a(i,j)) &         
                     + clwc_bin1b * clwc_bin1 * hg(.60**hgp,elong_a(i,j)) &
-                    + clwc_bin1c * clwc_bin1 * hg(.00     ,elong_a(i,j)) &
+!                   + clwc_bin1c * clwc_bin1 * hg(.00     ,elong_a(i,j)) &
 !                   + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
 !                   + clwc_bin2  * 2.0    ! add albedo term?     
                     + clwc_bin2  * pf_thk ! add albedo term?     
@@ -117,7 +117,7 @@
                 pf_scat1(i,j) = pf_rain
             endif
 
-          endif
+          endif ! .true.
 
 !         Separate snow (+cice) phase function
           cloud_od_snow = cloud_od_sp(i,j,4) + cloud_od_sp(i,j,2)
@@ -129,13 +129,13 @@
 
 !         snow_bin1 = exp(-cloud_od_snow/5.) ! optically thin snow
           snow_bin1a = 0.60**sco             ! forward peak
-          snow_bin1c = opac(0.10*sco)        ! backscattering
+          snow_bin1c = opac(0.10*sco)        ! backscattering (thick)
           snow_bin1b = 1.0 - (snow_bin1a + snow_bin1c) ! mid
 !         snow_bin2 = 1.0 - snow_bin1        ! optically thick snow
 
           pf_snow = snow_bin1a * hg(.98**hgp,elong_a(i,j)) & ! plates
                   + snow_bin1b * hg(.50**hgp,elong_a(i,j)) &
-                  + snow_bin1c * hg(.00     ,elong_a(i,j))  
+                  + snow_bin1c * pf_thk
 !                 + snow_bin2  * hg(0.0     ,elong_a(i,j))  
 
           if(cloud_od_tot .gt. 0.)then
