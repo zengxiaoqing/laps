@@ -984,6 +984,7 @@ c..... Precip
             if(dataProvider(i)(1:lenp) .eq. 'HADS' .AND.
      1         precipRateDD(i) .ne. 'Z')then
                pcp1 = precipRate(i) * (3600. / .0254) ! convert m/s to inches
+               if(pcp1 .lt. 0. .OR. pcp1 .ge. 1e3)pcp1 = badflag       
                write(6,*)' Found a local 1hr HADS precip rate ob: '
      1                 ,pcp1,' ',dataProvider(i)(1:lenp),' '
      1                 ,stationId(i),' '
@@ -993,7 +994,7 @@ c..... Precip
             if(code1PST(iprov_pst) .eq. -3 .AND. 
      1         dataProvider(i)(1:lenp) .eq. 'HADS')then  
                pcp24 = precipAccum(i) / 25.4 ! convert mm to inches
-               if(pcp24 .lt. 0. .OR. pcp24 .gt. 1e4)pcp24 = badflag       
+               if(pcp24 .lt. 0. .OR. pcp24 .ge. 1e3)pcp24 = badflag       
                if(precipAccumDD(i) .eq. 'X')pcp24 = badflag
                write(6,*)' Found a local 24hr HADS precip ob    : '
      1                 ,pcp24,' ',dataProvider(i)(1:lenp),' '
@@ -1002,7 +1003,7 @@ c..... Precip
             elseif(code1PST(iprov_pst) .eq. -2 .AND. ! 24hr ob at 00UT
      1             i4time_sys .eq. ((i4time_sys/86400) * 86400) )then                         
                pcp24 = precipAccum(i) / 25.4 ! convert mm to inches
-               if(pcp24 .lt. 0. .OR. pcp24 .gt. 1e4)pcp24 = badflag       
+               if(pcp24 .lt. 0. .OR. pcp24 .ge. 1e3)pcp24 = badflag       
                write(6,*)' Found a local 24hr 00UTC precip ob: '
      1                 ,pcp24,' ',dataProvider(i)(1:lenp),' '
      1                 ,stationId(i),' '
