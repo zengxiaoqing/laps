@@ -2,6 +2,7 @@
  path_to_metar='/public/data/metar/netcdf/',
  path_to_local_data='/public/data/madis/LDAD/',
  path_to_buoy_data='/public/data/maritime/netcdf/',
+ path_to_synop_data='/null/public/data/synop/netcdf/',
  path_to_gps_data='/null/public/data/gpsmet/netcdf/',
  path_to_tower_data='/data/fxa/LDAD/mesonet/met-tower/netCDF/',
  metar_format='default',
@@ -35,6 +36,8 @@ c                        stored. For MADIS data the 'path_to_local_data'
 c                        variable must include the string 'madis'.
 c
 c 'path_to_buoy_data' - Directory for buoy/ship (maritime) data
+c
+c 'path_to_synop_data' - Directory for SYNOP data
 c
 c 'path_to_gps_data' - Directory for gps/profiler surface data in the event
 c                      this is stored separately from LDAD
