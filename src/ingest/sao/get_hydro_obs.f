@@ -550,6 +550,7 @@ c..... Precip 1hr
          pcp1 = badflag
          if(.true.                            .AND.
      1      precip1hr(i) .ge. 0.              .AND.    
+     1      precip1hr(i) .lt. 10000.          .AND.    
      1      precip1hr(i) .ne. badflag               )then
              pcp1 = precip1hr(i) / 25.4 ! convert mm to inches
              write(6,*)' Found a hydro 1hr precip ob: '
@@ -561,6 +562,7 @@ c..... Precip 3hr
          pcp3 = badflag
          if(.true.                            .AND.
      1      precip3hr(i) .ge. 0.              .AND.    
+     1      precip3hr(i) .lt. 10000.          .AND.    
      1      precip3hr(i) .ne. badflag               )then
              pcp3 = precip3hr(i) / 25.4 ! convert mm to inches
              write(6,*)' Found a hydro 3hr precip ob: '
@@ -572,6 +574,7 @@ c..... Precip 6hr
          pcp6 = badflag
          if(.true.                            .AND.
      1      precip6hr(i) .ge. 0.              .AND.    
+     1      precip6hr(i) .lt. 10000.          .AND.    
      1      precip6hr(i) .ne. badflag               )then
              pcp6 = precip6hr(i) / 25.4 ! convert mm to inches
              write(6,*)' Found a hydro 6hr precip ob: '
@@ -583,6 +586,7 @@ c..... Precip 24hr
          pcp24 = badflag
          if(.true.                            .AND.
      1      precip24hr(i) .ge. 0.             .AND.    
+     1      precip24hr(i) .lt. 10000.         .AND.    
      1      precip24hr(i) .ne. badflag               )then
              pcp24 = precip24hr(i) / 25.4 ! convert mm to inches
              write(6,*)' Found a hydro 24hr precip ob: '
