@@ -583,12 +583,40 @@ c
         endif
 c
 c
-c.....  Call the routine that reads the Buoy data files, then get
+c.....  Call the routine that reads the Maritime data files, then get
 c.....  the data.
 c
 c
         call get_maritime_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_buoy_data,metar_format,
+     &                      itime_before,itime_after,
+     &                      grid_east,grid_west,grid_north,grid_south,
+     &                      lat,lon,ni,nj,grid_spacing,
+     &                      nn,n_buoy_g,n_buoy_b,stations,
+     &                      reptype,atype,weather,wmoid,
+     &                      store_1,store_2,store_2ea,
+     &                      store_3,store_3ea,store_4,store_4ea,
+     &                      store_5,store_5ea,store_6,store_6ea,
+     &                      store_7,store_cldht,store_cldamt,
+     &                      provider, jstatus)
+c
+	if(jstatus .ne. 1) then
+	   print *, ' WARNING. Bad status return from GET_MARITIME_OBS'       
+	   print *,' '
+	endif
+
+        if(nn .gt. maxsta)then
+           write(6,*)' ERROR: nn > maxsta ',nn,maxsta
+           return
+        endif
+c
+c
+c.....  Call the routine that reads the SYNOP data files, then get
+c.....  the data.
+c
+c
+        call get_synop_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_synop_data,metar_format,
      &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
