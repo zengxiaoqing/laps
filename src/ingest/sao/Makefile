@@ -40,6 +40,8 @@ SRC   = obs_driver_sub_af.f \
         read_maritime.f \
         read_buoy_cwb.f \
         read_ship_cwb.f \
+        get_synop_obs.f \
+        read_synop.f \
         get_gps_obs.f \
         read_gps.f \
         tower_sfc_driver.f 
