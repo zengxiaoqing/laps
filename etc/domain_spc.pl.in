@@ -1,0 +1,232 @@
+#!@PERL@
+# Generated automatically from cloud.pl.in by configure.
+
+# Looks in logdir (from command line) or $LAPS_DATA_ROOT/log.
+# The other command line argument is the hour of the LAPS run
+# if not current.  Both command line arguments are optional;
+# order doesn't matter.
+
+# Should be run as oplapb@dlaps.ms1
+
+require '@prefix@/etc/wgi_utils.pm';
+
+my ($ptsfile);
+
+# Obtain SPC web page - for convective outlook text
+#my $webdir = "http://www.spc.noaa.gov/products/outlook/archive/2014";
+my $ptsfile = "latest.txt";
+#my $sys = "wget $webdir/$ptsfile";
+#system($sys);
+
+# Read lines from downloaded file
+my $localdir = "/public/data/spc/day1";
+my $filename = "$localdir/$ptsfile";
+print "\nReading from points file $filename\n\n";
+open(FILE,$filename) or die "Can't open $filename.";
+@lines = <FILE>;
+print @lines;
+
+# Checkfor TSTMS
+my $category;
+foreach (@lines) {
+#   print "$_\n";
+    if (/^TSTM /) {
+        $category = "TSTM";
+        print "category is $category\n";
+        next;
+    }
+}
+
+# Checkfor SLGT
+foreach (@lines) {
+#   print "$_\n";
+    if (/^SLGT /) {
+        $category = "SLGT";
+        print "category is $category\n";
+    }
+}
+
+# Checkfor MDT
+foreach (@lines) {
+#   print "$_\n";
+    if (/^MDT /) {
+        $category = "MDT";
+        print "category is $category\n";
+    }
+}
+
+print "highest category is $category\n";
+
+# Loop through lines
+my $reached_categorical = 0;
+my ($ptschars,@pts,@ptsall);
+
+foreach (@lines) {
+
+#   grep for $category
+
+    if (/... CATEGORICAL .../) {
+        print "start categorical\n";
+        $reached_categorical = 1;
+#       print "$_\n";
+    }
+    if (/^SLGT/ && $reached_categorical == 2) {
+        print "end $category\n";
+#       print "$_\n";
+        goto ENDLOOP;
+    }
+    if (/^TSTM/ && $reached_categorical == 2) {
+        print "end $category\n";
+#       print "$_\n";
+        goto ENDLOOP;
+    }
+    if (/^$category/ && $reached_categorical >= 1) {
+        print "start $category\n";
+        $reached_categorical = 2;
+#       print "$_\n";
+    }
+    if (/&&/ && $reached_categorical >= 1) {
+        print "end $category\n";
+#       print "$_\n";
+        goto ENDLOOP;
+    }
+    if ($reached_categorical == 2) {
+        $ptschars = substr($_,7,53);
+        print "pts are $ptschars\n";
+
+#       split line to yield @pts
+        @pts = split (' ',$ptschars);
+
+#       push @pts into @ptsall
+        push(@ptsall,@pts);  
+    }
+}
+
+ENDLOOP:
+
+print "ptsall array is: @ptsall\n";
+
+my $lat_min = +99.;
+my $lat_max = -99.;
+
+my $lat_min_w = +99.;
+my $lat_max_w = -99.;
+
+my $lon_min = +180.;
+my $lon_max = -180.;
+
+my $lat_sum = 0.;
+my $lon_sum = 0.;
+my $pt_count = 0.;
+
+my $lat_sum_w = 0.;
+my $lon_sum_w = 0.;
+my $pt_count_w = 0.;
+
+foreach (@ptsall) {
+    my $point = $_;
+
+    my $lat_str = substr($_,0,4); 
+    my $lat = $lat_str / 100.; 
+    if($lat < $lat_min){$lat_min = $lat}
+    if($lat > $lat_max){$lat_max = $lat}
+
+    my $lon_str = substr($_,4,4); 
+    my $lon = -$lon_str / 100.; 
+    if($lon > -50.){$lon = $lon - 100.}
+    if($lon < $lon_min){$lon_min = $lon}
+    if($lon > $lon_max){$lon_max = $lon}
+
+    print "point is $point lat is $lat $lon\n";
+
+    $lat_sum = $lat_sum + $lat;
+    $lon_sum = $lon_sum + $lon;
+    $pt_count = $pt_count + 1.;
+}
+
+foreach (@ptsall) {
+    my $lat_str = substr($_,0,4); 
+    my $lat = $lat_str / 100.; 
+
+    my $lon_str = substr($_,4,4); 
+    my $lon = -$lon_str / 100.; 
+    if($lon > -50.){$lon = $lon - 100.}
+
+    if($lon < $lon_min + 8.){
+        if($lat < $lat_min_w){$lat_min_w = $lat}
+        if($lat > $lat_max_w){$lat_max_w = $lat}
+
+        $lat_sum_w = $lat_sum_w + $lat;
+        $lon_sum_w = $lon_sum_w + $lon;
+        $pt_count_w = $pt_count_w + 1.;
+        print "point_w is $point lat is $lat $lon\n";
+    }
+}
+
+my $lat_centroid = $lat_sum / $pt_count;    
+my $lon_centroid = $lon_sum / $pt_count;    
+
+my $lat_centroid_w = $lat_sum_w / $pt_count_w;    
+my $lon_centroid_w = $lon_sum_w / $pt_count_w;    
+
+print "centroid   lat/lon is $lat_centroid $lon_centroid\n";
+print "centroid_w lat/lon is $lat_centroid_w $lon_centroid_w\n";
+
+# Choose method
+my $method;
+#$method = "bounding rectangle";
+
+if($lon_min < -100.0){ # focus on convective initiation in high plains
+   $method = "hybrid";
+}else{
+   $method = "centroid";
+}
+
+print "\nmethod is $method\n";
+my ($lat_mean,$lon_mean);
+
+if($method eq "bounding rectangle"){
+    print "lat range is $lat_min $lat_max\n";
+    $lat_mean = ($lat_min + $lat_max)/2.;
+
+    print "lon range is $lon_min $lon_max\n";
+    $lon_mean = ($lon_min + $lon_max)/2.;
+
+    print "mean lat/lon is $lat_mean $lon_mean\n";
+}elsif($method eq "centroid"){
+    $lat_mean = $lat_centroid;
+    $lon_mean = $lon_centroid;
+    print "centroid method lat/lon is $lat_mean $lon_mean\n";
+}else{ # hybrid method (prefer western part to get convective initiation)
+#   $lat_mean = $lat_centroid_w;
+    $lat_mean = ($lat_min_w + $lat_max_w)/2.;
+    $lon_mean = $lon_min + 4.0;             
+    print "lat_range is $lat_min $lat_max\n";
+    print "lat_range_w is $lat_min_w $lat_max_w\n";
+    print "lon_range is $lon_min $lon_max\n";
+#   if($lon_mean - $lon_min > 4.){
+#       $lon_mean = $lon_min + 4.
+#   }
+    if($lon_max > -98. && $lon_mean < -102.){ # avoid high terrain
+        print "shift back from $lon_mean to -102.\n";    
+        $lon_mean = -102.;
+    }
+    print "hybrid method lat/lon is $lat_mean $lon_mean\n";
+}
+
+#my $locfilename = ">/scratch/staging/fab/albers/locfile.txt";
+#open(LOCFILE,$locfilename) or die "Can't open $locfilename";
+#print LOCFILE "$lat_mean\n$lon_mean\n";
+#close(LOCFILE);
+
+# Run commands similar to relocalization web page
+my $grid = "HWT";
+my $syscmd;
+
+$syscmd = "/home/lapb/oplapb/etc/triggerfiles.sh $grid $lat_mean $lon_mean 'automated SPC convective outlook' > /home/fab/oplapb/log/domain_spc_triggerfiles.log";
+system($syscmd);
+
+$syscmd = "echo `date -u` autolocalization to $lat_mean $lon_mean >> /w3/lapb/relocate/laps_request.log";
+system($syscmd);
+
+exit;
