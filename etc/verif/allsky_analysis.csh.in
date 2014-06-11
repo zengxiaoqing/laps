@@ -28,7 +28,7 @@ echo "parsed log file = $STATSFILE"
 
 cd $LOGDIR
 
-grep -h --no-filename gnuplot verif_allsky_anal.$SITE.* > $STATSFILE
+grep -h --no-filename gnuplot $LAPS_DATA_ROOT/lapsprd/verif/allsky/stats/verif_allsky_anal.$SITE.* > $STATSFILE
 cat  $STATSFILE
 
 echo " "
