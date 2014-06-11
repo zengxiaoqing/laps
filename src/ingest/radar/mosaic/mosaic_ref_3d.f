@@ -92,7 +92,9 @@ c
                     write(6,*)
      1               'Error computing ri/rj for radar (outside domain)?'    
                 endif
-                write(6,*)'Name: ',radar_name(k),ri(k),rj(k),k
+                write(6,*)radar_name(k),k,ri(k),rj(k)
+     1                   ,rlat_radar(k),rlon_radar(k)
+51              format('Valid lat/lon: ',a,i5,2f8.1,2f8.2)
                 l_valid_latlon(k) = .true.
 
                 if(l_offset)then
@@ -272,10 +274,10 @@ c
       print*,'Num points < 0.0  ',icntn
       print*,'Num points = base ',icntb
 
-      intvl = int(nx/68) + 1
+      intvl = int(nx/80) + 1
 
       write(6,*)
-      write(6,*)' Map of radars used: intvl = ',intvl
+      write(6,*)' Map of ',i_ra_count,' valid radars used:'
 
       do j = ny,1,-intvl
           write(6,101)(lr_2d(i,j),i=1,nx,intvl) 
