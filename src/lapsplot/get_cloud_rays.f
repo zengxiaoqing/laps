@@ -241,6 +241,31 @@
         write(6,*)' rkstart/htstart/patm = ',rkstart,htstart,patm
         write(6,*)' aero_scaleht = ',aero_scaleht
         write(6,*)' aod/redp_lvl/aod_ray = ',aod,redp_lvl,aod_ray
+                  
+!       Calculate observer mean free paths
+        k_obs = nint(rkstart)
+        aero_ext_coeff = aod_3d(i,j,k_obs)             
+        if(aero_ext_coeff .gt. 0.)then
+            write(6,5)1.0/aero_ext_coeff,lat(i,j),lon(i,j)
+ 5          format(' observer aerosol mean free path / lat / lon = '
+     1               ,f10.3,5x,2f8.2)
+        endif
+        if(clwc_3d(i,j,k_obs) .gt. 0.)then
+            write(6,*)' observer clwc mean free path  = '
+     1               ,1.0/clwc_3d(i,j,k_obs)
+        endif
+        if(cice_3d(i,j,k_obs) .gt. 0.)then
+            write(6,*)' observer cice mean free path  = '
+     1               ,1.0/cice_3d(i,j,k_obs)
+        endif
+        if(rain_3d(i,j,k_obs) .gt. 0.)then
+            write(6,*)' observer rain mean free path  = '
+     1               ,1.0/rain_3d(i,j,k_obs)
+        endif
+        if(snow_3d(i,j,k_obs) .gt. 0.)then
+            write(6,*)' observer snow mean free path  = '
+     1               ,1.0/snow_3d(i,j,k_obs)
+        endif
 
         aod_ray_eff = aod_ray
         aod_ray_dir = aod_ray
