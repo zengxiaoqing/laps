@@ -17,7 +17,7 @@
 
 !       Statement functions
         addlogs(x,y) = log10(10.**x + 10.**y)
-        trans(od) = exp(-od)
+        trans(od) = exp(-min(od,80.))
         opac(od) = 1.0 - exp(-od)
         brt(a,ext) = 1.0 - exp(-a*ext)
         rad_to_counts(rad) = (log10(rad)-7.3)*100.
@@ -309,6 +309,9 @@
 
             write(6,*)' range of clear_radf_c(2) is ',minval(clear_radf_c(2,:,:)),maxval(clear_radf_c(2,:,:))
             write(6,*)' range of clear_rad_c(2) is ',minval(clear_rad_c(2,:,:)),maxval(clear_rad_c(2,:,:))
+            if(minval(clear_rad_c(2,:,:)) .le. 0.)then
+                write(6,*)' ERROR: clear_rad_c(2,:,:) has min <= 0.'
+            endif
             write(6,*)' clear_rad_c(2) in solar column:',clear_rad_c(2,:,jsun)
 
         elseif(sol_alt .lt. -16. .and. moon_alt .gt. 0.)then ! sun below -16. and moon is up
@@ -490,6 +493,9 @@
 !         Obtain brightness (glow) of clear sky
           if(sol_alt .gt. 0.)then ! Daylight from skyglow routine
               if(new_skyglow .eq. 1)then
+                if(clear_rad_c(2,i,j) .le. 0.)then
+                    write(6,*)' ERROR: clear_rad_c(2,i,j) <= 0.',clear_rad_c(:,i,j)
+                endif
                 glow_tot = log10(clear_rad_c(2,i,j)) ! + log10(clear_radf_c(2,i,j))
 !               if(sun_vis .eq. 1.0)then
                 if(airmass_2_topo(i,j) .eq. 0.)then ! free of terrain
@@ -514,6 +520,7 @@
                 endif
                 rog = (clear_rad_c(1,i,j) / clear_rad_c(2,i,j))**rog_exp
                 bog = (clear_rad_c(3,i,j) / clear_rad_c(2,i,j))**gamclr
+
                 clr_red = rintensity_glow * rog
                 clr_grn = rintensity_glow
                 clr_blu = rintensity_glow * bog
@@ -666,7 +673,7 @@
 !               od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_ill(i,j)
               endif
 
-              topo_visibility = exp(-1.00*od_2_topo)                    
+              topo_visibility = trans(+1.00*od_2_topo)                    
 
               if(airmass_2_cloud(i,j) .gt. 0. .AND. airmass_2_cloud(i,j) .lt. airmass_2_topo(i,j)) then
                   topo_visibility = topo_visibility * (1.0 - r_cloud_3d(i,j))
