@@ -17,11 +17,11 @@
         use mem_namelist, ONLY: aod_bin, aod_asy 
 
 !       Statement Functions
-        trans(od) = exp(-od)
+        trans(od) = exp(-min(od,80.))
 !       brt(a) = (1.0 - exp(-.14 * a))/.14 ! rel. sky brightness (max~7)
         brt(a) = (1.0 - exp(-.14 * a))     ! rel. sky brightness (max=1)
         brtf(am,od_per_am) = 1.0 - exp(-am*od_per_am) ! rel. sky brightness (max=1)
-        brto(od) = 1.0 - exp(-od)                     ! rel. sky brightness (max=1)
+        brto(od) = 1.0 - exp(-min(od,80.))            ! rel. sky brightness (max=1)
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
         angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
@@ -154,7 +154,7 @@
 
 !           Consider arg for sideways scattering from downward diffuse
 !           is ~hg(90.) or an evaluated integral. Use 0.5 for now.
-            hg2d = (hg2 * aod_dir_rat) + (0.5 - aod_dir_rat) ! direct ill 
+            hg2d = (hg2 * aod_dir_rat) + (0.5 * (1.0 - aod_dir_rat)) ! direct ill 
             mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2d 
 
             if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
