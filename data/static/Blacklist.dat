@@ -1,4 +1,4 @@
- 00119
+ 00120
  PIKES                 001  WND
  GRANA                 001  WND
  BLDER                 001  WND
@@ -69,7 +69,7 @@
  KRKR                  002  DEW  HUM
  KYM2                  003  DEW  TMP  HUM
  aw219                 001  WND
- APRSWXNET             101  WND
+ APRSWXNET             104  WND  TMP  DEW  HUM
  ap264                 002  DEW  HUM
  ap864                 001  TMP
  as573                 002  DEW  HUM
@@ -109,7 +109,7 @@
  SG04                  002  DEW  HUM
  SG12                  002  DEW  HUM
  MOComAgNet            101  WND
- NEDOR                 101  WND
+ NEDOR                 104  WND  TMP  DEW  HUM
  GLDNWS                101  WND
  KDOT                  101  WND
  ABLE                  101  WND
@@ -117,4 +117,5 @@
  OCS                   101  WND 
  UDFCD                 101  SOL
  KO69                  001  CLD
- NE059                 001  TMP
+ AWS                   102  DEW  HUM
+ NonFedAWOS            103  DEW  TMP  HUM
