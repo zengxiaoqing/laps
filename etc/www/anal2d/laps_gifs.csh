@@ -224,9 +224,9 @@ if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Upslope Moisture Flux
-    echo "Generating Ventilation Index & PBL Mean Wind"; date -u
-    setenv prod umf
-    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+#   echo "Generating Ventilation Index & PBL Mean Wind"; date -u
+#   setenv prod umf
+#   $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Solar Radiation    
     echo "Generating Solar Radiation"; date -u
@@ -246,6 +246,11 @@ if (-e $LAPS_DATA_ROOT/lapsprd/lt1/$datetime.lt1 || \
 #   Sfc Fireweather
     echo "Generating SFC Fireweather Product"; date -u
     setenv prod fw
+    $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   PBL Depth & PBL Mean Wind
+    echo "Generating PBL Depth & PBL Mean Wind"; date -u
+    setenv prod pbl
     $SCRIPTDIR/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $LAPS_A9TIME $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 #   Ventilation Index & PBL Mean Wind
