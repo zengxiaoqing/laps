@@ -1504,6 +1504,8 @@ c
 
 !       Find a thinner value for cloud cover consistent with the new
 !       higher cloud top and the known brightness temperature.
+!       The cover in this routine should represent visible opacity as this
+!       is most in line with IR emissivity
 
         real temp_3d(imax,jmax,klaps)
         real heights_3d(imax,jmax,klaps)
