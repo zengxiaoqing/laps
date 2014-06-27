@@ -374,7 +374,8 @@ verif/T3  verif/T3/pt verif/T3/pt/comp verif/T3/pt/comp2
 verif/S8A verif/S8A/pt verif/S8A/pt/comp verif/S8A/pt/comp2
 ensemble
 ensemble/mean
-gr2);
+gr2
+grb);
 
      if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
         print "using LAPS_DATA_ROOT nest7grid.parms for fdda dirs\n";
