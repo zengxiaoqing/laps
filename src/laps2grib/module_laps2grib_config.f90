@@ -224,6 +224,7 @@ CONTAINS
       ENDIF
       IF (LEN_TRIM(output_path).LT.1) THEN 
         output_path = TRIM(laps_data_root)//'/lapsprd/gr2'
+        output_path2 = TRIM(laps_data_root)//'/lapsprd/grb'
       ENDIF
  
       PRINT *, "-- Other configuration: "
