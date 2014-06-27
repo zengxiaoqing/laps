@@ -1,0 +1,135 @@
+# This file is used by laps2grib.exe to map desired
+# LAPS varibles (defined by their file name extension
+# and their netCDF name) to the appropriate GRIB2
+# table values. You must understand GRIB-2 before
+# you try to edit this file!  
+# 
+# 3d variables.  All 3-d variables must beginw
+# with "3d" starting exactly in column 1.  Any other
+# characters in columns 1 and 2 will cause the line
+# to be skipped, which makes it easy to comment out
+# things you don't want. For the 3D variables, currently on those
+# LAPS variables that are on the LAPS 3D pressure grid are supported.
+#
+# Following the 3d, there are 10 entries:
+#  qbal: set to 0 to use standard LAPS variables
+#        or 1 to use the version under the
+#        lapsprd/balance tree (only really applies
+#        to lt1, lh3, and lq3)
+#  ext:  quoted 3-character string defining LAPS 
+#        file name extension to use.  Case must
+#        match case of file names (generally lower
+#        case)
+#  var:  quoted 3-character string defining which
+#        netCDF variable to extract from the file
+#        (case sensitive, generally lower case)
+#  pmin: Minimum pressure level (Pa) to extract and
+#        output
+#  pmax: Maximum pressure level (Pa) to extract and
+#        output
+#  conv_factor: Real value that will be multiplied by the raw
+#        laps data to convert to WMO standard units.  In most cases, this 
+#        value is 1.
+#  scale_factor: Integer that represents the power of 10 that will be
+#        used to scale the raw data prior to doing the GRIB compression.  
+#        In general, this is equal to the number of signficant digits of
+#        precision that need to be preserved when compressing, so this is
+#        mostly important for data that has small values (like mixing ratio)
+#  discipline:  The GRIB-2 discipline number (usually 0 for meteorological 
+#        products)
+#  category:  The GRIB-2 parameter category ID to use.
+#  param_id:  The GRIB-2 parameter number within the category to use.
+ 
+#3d 0,'lt1','t3 ', 1000.,110000.,  1., 0,0, 0,  0
+#3d 0,'lt1','ht ', 1000.,110000.,  1., 0,0, 3,  5
+#3d 0,'lh3','rhl', 1000.,110000.,  1., 0,0, 1,  1
+#3d 0,'lw3','u3 ', 1000.,110000.,  1., 1,0, 2,  2
+#3d 0,'lw3','v3 ', 1000.,110000.,  1., 1,0, 2,  3
+#3d 0,'lw3','om ', 1000.,110000.,  1., 1,0, 2,  8
+#3d 0,'lq3','sh ', 1000.,110000.,  1., 7,0, 1,  0
+
+3d 0,'lt1','ht ', 92500.,92500.,  1., 0,0, 3,  5
+3d 0,'lw3','u3 ', 92500.,92500.,  1., 1,0, 2,  2
+3d 0,'lw3','v3 ', 92500.,92500.,  1., 1,0, 2,  3
+3d 0,'lt1','t3 ', 92500.,92500.,  1., 0,0, 0,  0
+3d 0,'lq3','sh ', 92500.,92500.,  1., 7,0, 1,  0
+3d 0,'lw3','om ', 92500.,92500.,  1., 1,0, 2,  8
+
+3d 0,'lt1','ht ', 85000.,85000.,  1., 0,0, 3,  5
+3d 0,'lw3','u3 ', 85000.,85000.,  1., 1,0, 2,  2
+3d 0,'lw3','v3 ', 85000.,85000.,  1., 1,0, 2,  3
+3d 0,'lt1','t3 ', 85000.,85000.,  1., 0,0, 0,  0
+3d 0,'lq3','sh ', 85000.,85000.,  1., 7,0, 1,  0
+3d 0,'lw3','om ', 85000.,85000.,  1., 1,0, 2,  8
+
+3d 0,'lt1','ht ', 50000.,50000.,  1., 0,0, 3,  5
+3d 0,'lw3','u3 ', 50000.,50000.,  1., 1,0, 2,  2
+3d 0,'lw3','v3 ', 50000.,50000.,  1., 1,0, 2,  3
+3d 0,'lt1','t3 ', 50000.,50000.,  1., 0,0, 0,  0
+3d 0,'lq3','sh ', 50000.,50000.,  1., 7,0, 1,  0
+3d 0,'lw3','om ', 50000.,50000.,  1., 1,0, 2,  8
+
+# 2d variables
+# Similar to the 3D variables, but in this case you don't need to
+# specify the pmin and pmax values, and instead must provide the
+# level encoding values.
+#
+# Following the "2d" flag in columns 1 and 2, you must have:
+#
+# ext:  Same as for 3d
+# var:  Same as for 3d
+# conv_factor: Same as for 3d
+# scale_fator: Same as for 3d
+# Lev1_Type: GRIB-2 code indicating type of surface for the first 
+#    (or only) level of the data
+# Lev1_Scale: Power of 10 used to scale the value of the level to
+#    an integer with appropriate precision
+# Lev1_Value: The scaled integer level value
+# Lev2_Type/Lev2_Scale/Lev2_Value: Only used for layer products, where
+#   values are defined the same way as Lev1 but for the second level
+#   that defines the layer.  For non-layer products, these must be
+#   set to 255.
+# discipline:  Same as 3d
+# category:  Same as 3d
+# param_id:  Same as 3d
+#
+#  NOTE: you can extract fields from the static file by
+#  using "n7g" as the extension
+#2d 'n7g','avg',  1., 0,  1, 0, 0,255,255,255,0, 3,  5
+#2d 'n7g','lat',  1., 0,  1, 0, 0,255,255,255,0,191,192
+#2d 'n7g','lon',  1., 0,  1, 0, 0,255,255,255,0,191,193
+#  NOTE: you can extract a 2d field and converts
+#  to single layer of a 3d field, eg 925mb
+#2d 'fsf','u01',  1., 1,100, 0,92500,255,255,255,0,2,2
+2d 'lsx','msl',  1., 0,  1, 0, 0,255,255,255,0, 3,  1
+#2d 'lsx','ps ',  1., 0,  1, 0, 0,255,255,255,0, 3,  0
+2d 'lsx','t  ',  1., 1,103, 0, 2,255,255,255,0, 0,  0
+2d 'lsx','td ',  1., 1,103, 0, 2,255,255,255,0, 0,  6
+#2d 'lsx','rh ',  1., 0,103, 0, 2,255,255,255,0, 1,  1
+2d 'lsx','u  ',  1., 1,103, 0,10,255,255,255,0, 2,  2
+2d 'lsx','v  ',  1., 1,103, 0,10,255,255,255,0, 2,  3
+#2d 'lsx','vis',  1.,-2,  1, 0, 0,255,255,255,0,19,  0
+#2d 'lsx','tgd',  1., 1,  1, 0, 0,255,255,255,0, 0,  0
+#2d 'lcb','cce',  1.,-1,  1, 0, 0,255,255,255,0, 6, 13
+#2d 'lcb','lcb',  1.,-1,  1, 0, 0,255,255,255,0, 6, 11
+#2d 'lcb','lct',  1.,-1,  1, 0, 0,255,255,255,0, 6, 12
+#2d 'lcv','lcv',100., 0,  1, 0, 0,255,255,255,0, 6,  1
+#2d 'lhe','lhe',  1., 0,  1, 0, 0,255,255,255,0, 7,  8
+#2d 'lst','li',   1., 0,  1, 0, 0,255,255,255,0, 7,  0
+2d 'lst','pbe',  1., 0,  1, 0, 0,255,255,255,0, 7,  6
+2d 'lst','nbe', -1., 0,  1, 0, 0,255,255,255,0, 7,  7
+#2d 'lmt','llr',  1., 0,  1, 0, 0,255,255,255,0,15,  1
+2d 'lsx','vv ',  1., 1,103, 0,10,255,255,255,0, 2,  8
+#2d 'lct','pty',  1., 0,  1, 0, 0,255,255,255,0, 1, 19
+2d 'l1s','r01',1000.,4,  1, 0, 0,255,255,255,0, 1,  8
+2d 'l1s','s01',  1., 4,  1, 0, 0,255,255,255,0, 1, 29
+#2d 'lmr','r',    1., 0,  1, 0, 0,255,255,255,0, 15, 4
+2d 'lh4','tpw',1000.,4,  1, 0, 0,255,255,255,0,  1, 3
+#2d 'lst','wb0',  1., 0,245, 0, 0,255,255,255,0,  3, 5
+#2d 'lm2','sc',  100.,0,  1, 0, 0,255,255,255,0,  1,42
+
+# Accumulated 2d variables (a2d)
+# Similar to the 2D variables, but in this case the variable
+# is accumulated over time using GRIB2 template 4.8.
+a2d 'l1s','rto',1000.,4,  1, 0, 0,255,255,255,0, 1, 8
+a2d 'l1s','sto',   1.,4,  1, 0, 0,255,255,255,0, 1,29
