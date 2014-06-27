@@ -100,6 +100,7 @@ CONTAINS
 
     n_iso = 0
     n_2d = 0
+    n_accum2d = 0
     OPEN (FILE=vtab,UNIT=lun,ACCESS='SEQUENTIAL',FORM='FORMATTED',STATUS='OLD')
     readfile: DO 
       READ(lun,'(A)',IOSTAT=fstat) fline
