@@ -9,6 +9,8 @@
 !!		07 Dec 2006	Brent Shaw	Initial version
 !!		25 Nov 2011 	Paula McCaslin	Modified to add accumulated varaibles
 !!		15 Dec 2011 	Paula McCaslin	Modified to add model varaibles (from fsf, fua)
+!!		28 May 2014    	Craig Hartsough	Modified to add multiple output
+!!                                              option
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 PROGRAM laps2grib
@@ -43,6 +45,7 @@ PROGRAM laps2grib
   INTEGER                     :: val_time, ref_time, accum_time
   INTEGER                     :: eyear,emonth,eday,ehour,eminute,esecond
   INTEGER                     :: etime_value, etime_unit
+  INTEGER                     :: igrid
   
   REAL, ALLOCATABLE           :: lapsdata2d(:,:),lapsdata3d(:,:,:),slab(:,:)
   REAL                        :: r_missing, rhhmm
@@ -54,6 +57,7 @@ PROGRAM laps2grib
   INTEGER                     :: i, iargc, max_args, ihhmm
   INTEGER                     :: modeltime_passed_in
   CHARACTER(LEN=100)          :: vtab, forecast_id
+  CHARACTER(LEN=100)          :: vtab2
   CHARACTER(LEN=5)            :: hhmm
   CHARACTER(LEN=14)           :: file_a9time, modeltime
   LOGICAL                     :: dir_exists
@@ -69,6 +73,7 @@ PROGRAM laps2grib
   print *, "=================================================================="
 
   vtab = 'laps2grib.vtab'
+  vtab2 = 'laps2grib.vtab2'
   reftime_sig = 0
   forecast_id = ''
   hhmm = ''
@@ -148,6 +153,15 @@ PROGRAM laps2grib
   file_a9time=a9time
   IF (hhmm .NE. '') file_a9time=a9time//hhmm
   PRINT *, "-- Using Timestamp: ", file_a9time
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! run the remainder of the program once for each desired output file  !
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  DO igrid=1,num_grids
+    IF (igrid .GT. 1) THEN
+      vtab = vtab2
+      output_path = output_path2
+    ENDIF
 
   ! Configure the variable list
   CALL get_data_config(laps_data_root,vtab)
@@ -397,6 +411,9 @@ PROGRAM laps2grib
   syscmd = 'mv '// TRIM(g2file_tmp) // ' ' // TRIM(g2file)   
   PRINT *, TRIM(syscmd)
   CALL system(syscmd)
+
+  END DO  ! igrid
+
   PRINT *, "======================================================"
   PRINT *, "**********      laps2grib completed         **********"
   PRINT *, "======================================================"
