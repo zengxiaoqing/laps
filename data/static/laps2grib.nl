@@ -4,5 +4,7 @@
   subcenter_id = 2,
   process_id = 103,
   prod_status = 0,
+  num_grids = 2
   output_path = "",
+  output_path2 = "",
 /
