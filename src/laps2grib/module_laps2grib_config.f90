@@ -12,9 +12,10 @@ MODULE laps2grib_config
   TYPE (proj_info)           :: laps_proj
   INTEGER                    :: nx,ny,nz
   INTEGER                    :: i4time
+  INTEGER                    :: num_grids
   CHARACTER(LEN=9)           :: a9time
   REAL, ALLOCATABLE          :: plevels_pa(:)
-  CHARACTER(LEN=512)         :: output_path
+  CHARACTER(LEN=512)         :: output_path,output_path2
   INTEGER                    :: center_id, subcenter_id
   INTEGER                    :: process_id,prod_status
   LOGICAL                    :: lrun_laps2grib
@@ -196,12 +197,15 @@ CONTAINS
       CHARACTER(LEN=*), INTENT(IN)   :: laps_data_root
       CHARACTER(LEN=256)             :: nl_file
       LOGICAL                        :: file_exists
-      NAMELIST /laps2grib_nl/ output_path,center_id,subcenter_id,&
+      NAMELIST /laps2grib_nl/ output_path,output_path2,num_grids,&
+                              center_id,subcenter_id,&
                               process_id, prod_status,lrun_laps2grib
 
 
       ! Set defaults
-      output_path(:) = " "
+      num_grids=1
+      output_path(:)  = " "
+      output_path2(:) = " "
       center_id = 59 ! NOAA ESRL GSD (aka FSL), for use with templates
       subcenter_id = 1
       process_id = 100
