@@ -176,7 +176,7 @@ print "centroid_w lat/lon is $lat_centroid_w $lon_centroid_w\n";
 my $method;
 #$method = "bounding rectangle";
 
-if($lon_min < -100.0){ # focus on convective initiation in high plains
+if($lon_min < -100.0 && $lat_max_w > 33.0){ # focus on convective initiation in high plains
    $method = "hybrid";
 }else{
    $method = "centroid";
