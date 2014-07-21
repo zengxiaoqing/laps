@@ -111,10 +111,10 @@
         do ialt = minalt,maxalt
         do jazi = minazi,maxazi
 
-            size_glow_sqdg = 0.5  ! alt/az grid
-            size_glow_sqdg = 0.1  ! final polar kernel size?
             size_glow_sqdg = 0.3  ! empirical middle ground 
             size_glow_sqdg = 0.5  ! empirical middle ground 
+            size_glow_sqdg = 0.0625  ! alt/az grid
+            size_glow_sqdg = 0.1  ! final polar kernel size?
 
             alt = alt_a(ialt,jazi)
             azi = azi_a(ialt,jazi)
