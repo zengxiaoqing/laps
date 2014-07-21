@@ -299,7 +299,8 @@
                      ,1,nj,1 &                                       ! I
                      ,1,ni,1,nj,idebug_a &                           ! I
                      ,sol_alt,sol_az,alt_a,azi_a &                   ! I
-                     ,earth_radius,patm,od_atm_a_eff,od_atm_a_dir &  ! I
+                     ,earth_radius,patm &                            ! I
+                     ,od_atm_a,od_atm_a_eff,od_atm_a_dir &           ! I
                      ,aero_scaleht &                                 ! I
                      ,htmsl,redp_lvl &                               ! I
                      ,aod_ill &                                      ! I
@@ -325,11 +326,13 @@
                      ,1,nj,1 &                                       ! I
                      ,1,ni,1,nj,idebug_a &                           ! I
                      ,moon_alt,moon_az,alt_a,azi_a &                 ! I
-                     ,earth_radius,patm,od_atm_a_eff,od_atm_a_dir &  ! I
+                     ,earth_radius,patm &                            ! I
+                     ,od_atm_a,od_atm_a_eff,od_atm_a_dir &           ! I
                      ,aero_scaleht &                                 ! I
                      ,htmsl,redp_lvl &                               ! I
+                     ,aod_ill &                                      ! I
                      ,.false.,i4time,rlat,rlon &                     ! I
-                     ,clear_radf_c &                                 ! I
+                     ,clear_radf_c,ag_2d &                           ! I
                      ,moon_rad_c,elong_a                     )       ! O
 
             glow_moon_sc(:,:) = log10(moon_rad_c(2,:,:)) + (-26.7 - moon_mag) * 0.4
