@@ -1865,11 +1865,11 @@ c       include 'satellite_dims_lvd.inc'
             call get_file_time(c_filespec,i4time_ref,i4time_plot)
             call make_fnam_lp(i4time_plot,a9time,istatus)
 
-            if(c_type(1:2) .eq. 'st')iflag = 0 ! Station Locations
             if(c_type(2:2) .eq. 's' )iflag = 0 ! Station Locations
             if(c_type      .eq. 'ms')iflag = 1
             if(c_type(2:2) .ne. 's' )iflag = 2
             if(c_type(1:2) .eq. 'mw')iflag = 0 ! MesoWx Points Locations
+            if(c_type(1:2) .eq. 'st')iflag = 0 ! Station Locations
 
             c_label = '                                 '
 
@@ -1951,6 +1951,12 @@ c       include 'satellite_dims_lvd.inc'
             call get_laps_2dgrid(i4time_ref,lagt,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                  ,field_2d,0,istatus)
+            if(istatus .eq. 0)then
+                write(6,*)' Cant find ',var_2d,' Analysis ',istatus
+                goto1200
+            else
+                write(6,*)' Comment is ',trim(comment_2d)
+            endif
 
             i4time_3dw = i4time_nearest
             call make_fnam_lp(I4time_3dw,asc9_tim,istatus)
