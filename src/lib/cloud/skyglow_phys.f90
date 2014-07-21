@@ -1,20 +1,20 @@
 
 
-        subroutine skyglow_phys(ialt_start,ialt_end,ialt_delt &! I
-                   ,jazi_start,jazi_end,jazi_delt             &! I
-                   ,minalt,maxalt,minazi,maxazi,idebug_a      &! I
-                   ,sol_alt,sol_azi,view_alt,view_az          &! I
-                   ,earth_radius,patm,aod_ray,aod_ray_dir     &! I
-                   ,aero_scaleht                              &! I
-                   ,htmsl,redp_lvl                            &! I
-                   ,aod_ill                                   &! I
-                   ,l_solar_eclipse,i4time,rlat,rlon          &! I
-                   ,clear_radf_c,ag_2d                        &! I
-                   ,clear_rad_c,elong                       )  ! O
+        subroutine skyglow_phys(ialt_start,ialt_end,ialt_delt     &! I
+                   ,jazi_start,jazi_end,jazi_delt                 &! I
+                   ,minalt,maxalt,minazi,maxazi,idebug_a          &! I
+                   ,sol_alt,sol_azi,view_alt,view_az              &! I
+                   ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir &! I
+                   ,aero_scaleht                                  &! I
+                   ,htmsl,redp_lvl                                &! I
+                   ,aod_ill                                       &! I
+                   ,l_solar_eclipse,i4time,rlat,rlon              &! I
+                   ,clear_radf_c,ag_2d                            &! I
+                   ,clear_rad_c,elong                       )      ! O
 
         include 'trigd.inc'
 
-        use mem_namelist, ONLY: aod_bin, aod_asy 
+        use mem_namelist, ONLY: aod_bin, aod_asy
 
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
@@ -35,7 +35,8 @@
 
         real twi_trans_c(nc)           ! transmissivity
 
-        real mie, alpha_g, alpha_a
+        real mie, alphav_g, alphav_a
+        real srcdir_90(nc),srcdir(nc)
 
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
@@ -73,9 +74,28 @@
             write(6,*)' aod_bin = ',aod_bin
             write(6,*)' aod_asy = ',aod_asy
             write(6,*)' htmsl / aero_refht = ',htmsl,aero_refht
+            write(6,*)' aod_vrt = ',aod_vrt
             write(6,*)' aod_ray max = ',maxval(aod_ray)
 !           write(6,*)' patm_ray max = ',maxval(patm_ray)
         endif
+
+!       Obtain reference values of source term
+        write(6,*)' Obtain reference values of source term'
+        call get_airmass(90.,htmsl,patm &       ! I
+                         ,aero_refht,aero_scaleht & ! I
+                         ,earth_radius &            ! I
+                         ,ag,ao,aa)                 ! O
+        do ic = 1,nc
+         od_g_vert = ext_g(ic) * patm
+         od_a_vert = aod_vrt * ext_a(ic)
+         if(ic .eq. 2)then
+             idebug = 1
+         else
+             idebug = 0
+         endif
+         call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert,ag,aa,idebug,srcdir_90(ic))
+         write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
+        enddo ! ic
 
         do ialt = ialt_start,ialt_end,ialt_delt
   
@@ -84,6 +104,17 @@
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius &            ! I
                          ,ag,ao,aa)                 ! O
+
+!        Determine src term and ratio with zenith value
+         do ic = 1,nc
+          od_g_vert = ext_g(ic) * patm
+          od_a_vert = aod_vrt * ext_a(ic)
+          idebug = 0
+          call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert,ag,aa,idebug,srcdir(ic))
+          if(ic .eq. 2)then
+              write(6,*)' alt/srcdir/ratio:',altray,srcdir(ic),srcdir(ic)/srcdir_90(ic)
+          endif
+         enddo ! ic
 
 !        Determine aerosol multiple scattering order
 !        altscat = 1.00 * altray + 0.00 * sol_alt
@@ -191,12 +222,12 @@
             else ! assume two scattering layers (g+a, g)
               do ic = 1,nc
                 gasfrac = ag_2d(ialt,jazi) / airmass_g ! topo illuminated fraction of gas
-                od_g = ext_g(ic)*airmass_g
-                od_a = aod_ray(ialt,jazi)*aa*ext_a(ic)
-                alpha_g = od_g / 8000.
-                alpha_a = od_a / aero_scaleht
+                od_g = ext_g(ic)*airmass_g             ! slant od
+                od_a = aod_ray(ialt,jazi)*aa*ext_a(ic) ! slant od
+                alphav_g = od_g / 8000.                ! extinction per vert m
+                alphav_a = od_a / aero_scaleht         ! extinction per vert m
                 if(od_a .gt. 0)then
-                    od_g1 = od_a * (alpha_g / alpha_a)
+                    od_g1 = od_a * (alphav_g / alphav_a)
                 else
                     od_g1 = 0.
                 endif
@@ -212,8 +243,8 @@
 !               Effective Rayleigh Phase Factor considering shadowing
                 rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
                 rayleigh_pf_eff = rayleigh_gnd * clear_radf_c(ic,ialt,jazi)
-                pf_eff1 = (rayleigh_pf_eff * alpha_g + hg2d * alpha_a * solar_int_g2) &
-                        / (alpha_g + alpha_a * solar_int_g2)
+                pf_eff1 = (rayleigh_pf_eff * alphav_g + hg2d * alphav_a * solar_int_g2) &
+                        / (alphav_g + alphav_a * solar_int_g2)
 !               od_1 = od_g1*gasfrac + od_a
                 od_1 = od_g1*gasfrac + aod_ill(ialt,jazi)
                 brt1 = brto(od_1) * pf_eff1
@@ -224,8 +255,8 @@
 
                 if(idebug .ge. 1 .and. ic .eq. 2)then
                   write(6,73)day_int,airmass_g,od_g,aod_ray(ialt,jazi),aa,od_a &
-                            ,alpha_g*1e3,alpha_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
-73                format('day_int/ag/od_g/aod_ray/aa/od_a/alpha_g/alpha_a/od_g1/od_g2/clr_rad :' &
+                            ,alphav_g*1e3,alphav_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
+73                format('day_int/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,5f7.3,2x,2f7.3,2x,2f7.3,f12.0)      
                   write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aod_ill(ialt,jazi)
 74                format('altaz,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aodill = ',2f8.2,4f10.4,2f9.6)                  
@@ -289,7 +320,8 @@
                 dist_ray_plane = linecylp(xcos,ycos,x1,earth_radius) 
             endif
 
-            skyref = .0000001 ! related to airglow / surface lighting?
+            skyref = .00000003 ! smaller values reduce twilight
+                               ! artifacts, setting also related to airglow?
 
             if(.true.)then ! assume part of atmosphere is illuminated by the sun
 !             dist_ray_plane = dist_pp_plane / sind(angle_plane) ! distance along ray
