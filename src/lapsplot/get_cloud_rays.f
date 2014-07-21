@@ -4,7 +4,7 @@
      1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d ! I
      1                           ,topo_albedo_2d                        ! I
      1                           ,topo_swi,topo_albedo                  ! O
-     1                           ,aod_ray,aod_2_cloud,aod_2_topo        ! O
+     1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
      1                           ,aod_tot,transm_obs                    ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
@@ -236,11 +236,11 @@
           write(6,*)' Start aloft at k = ',kstart
         endif
 
-        aod_ray = aod * exp(-(htstart-redp_lvl)/aero_scaleht)
+        aod_vrt = aod * exp(-(htstart-redp_lvl)/aero_scaleht)
 
         write(6,*)' rkstart/htstart/patm = ',rkstart,htstart,patm
         write(6,*)' aero_scaleht = ',aero_scaleht
-        write(6,*)' aod/redp_lvl/aod_ray = ',aod,redp_lvl,aod_ray
+        write(6,*)' aod/redp_lvl/aod_vrt = ',aod,redp_lvl,aod_vrt
                   
 !       Calculate observer mean free paths
         k_obs = nint(rkstart)
@@ -267,8 +267,8 @@
      1               ,1.0/snow_3d(i,j,k_obs)
         endif
 
-        aod_ray_eff = aod_ray
-        aod_ray_dir = aod_ray
+        aod_ray_eff = aod_vrt
+        aod_ray_dir = aod_vrt
 
         heights_1d(:) = heights_3d(i,j,:)
         pres_1d(:)    = pres_3d(i,j,:)
@@ -949,7 +949,7 @@
              call skyglow_phys(ialt,ialt,1,minazi,maxazi,jazi_delt
      1             ,minalt,maxalt,minazi,maxazi,idebug_a
      1             ,sol_alt(i,j),sol_azi(i,j),view_alt,view_az
-     1             ,earth_radius,patm,aod_ray_eff,aod_ray_dir
+     1             ,earth_radius,patm,aod_vrt,aod_ray_eff,aod_ray_dir
      1             ,aero_scaleht,htstart,redp_lvl             ! I
      1             ,aod_ill                                   ! I (dummy)
      1             ,l_solar_eclipse,i4time,rlat,rlon          ! I
