@@ -526,6 +526,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/models/lfmpost_test.csh
           etc/models/mdlpost.csh
           etc/models/run_qsub_lfmp.sh 
+          etc/verif/allsky_analysis.csh
           etc/verif/ingest_rerun_verif.csh
           etc/verif/verif_fcst_driver.csh
           etc/verif/verif_forecast.csh
