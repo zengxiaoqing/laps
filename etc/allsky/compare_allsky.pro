@@ -30,11 +30,15 @@ help,model_polar
 
 print,' lapsdataroot = ',lapsdataroot
 
-idim = 511     
-jdim = 511 
+idim = 511L     
+jdim = 511L 
 
 imax = idim-1
 jmax = jdim-1
+
+; Dimension mask arrays
+cont_table_mask = bytarr(3,idim,jdim)
+cont_table_mask[*,*,*] = 0
 
 ; Define alt/azi arrays for polar image
 
@@ -61,7 +65,7 @@ if(site EQ 'las')then begin
 
 endif else if(site EQ 'dsrc')then begin
 ;               0          90           180            270            360
-    terralt = [ 5., 5., 5., 5., 5.,  7.,  7., 10., 13., 10., 10.,  6.,  5.]
+    terralt = [ 5., 5., 5., 5., 5.,  7.,  7., 12., 13., 12., 10.,  6.,  5.]
     if(solar_alt GT 20)then begin
         blue_camera_thresh = 20. ; 1.30
     endif else begin
@@ -84,9 +88,14 @@ print, 'thresh_pix is:        ',thresh_pix
 
 for i = 0,imax    do begin
 for j = jmax,0,-1 do begin
+    ip = (i+1) < imax
+    im = (i-1) > 0
+    jp = (j+1) < jmax
+    jm = (j-1) > 0
+
     rilaps_cen = i - 256.
     rjlaps_cen = j - 256.
-    azi_r = atan(rilaps_cen,rjlaps_cen)
+    azi_r = atan(-rilaps_cen,+rjlaps_cen)
     azi_d = azi_r / rpd
     if(azi_d lt 0.)then begin
         azi_d = azi_d + 360.
@@ -100,9 +109,14 @@ for j = jmax,0,-1 do begin
 
     terrain_alt = terralt[itn]
 
-    max_pix = (camera_polar[0,i,j] > camera_polar[1,i,j]) > camera_polar[2,i,j]                    
+;   Center point
+    max_pix  =  (camera_polar[0,i,j] > camera_polar[1,i,j]) > camera_polar[2,i,j]                    
 
-    if(alt_d GE terrain_alt AND max_pix LT 253 AND max_pix GT thresh_pix)then begin
+;   Add Surrounding points
+    max_pix2 = ((camera_polar[0,ip,j] > camera_polar[1,ip,j]) > camera_polar[2,ip,j]) > max_pix
+    max_pix2 = ((camera_polar[0,i,jp] > camera_polar[1,i,jp]) > camera_polar[2,i,jp]) > max_pix2
+
+    if(alt_d GE terrain_alt AND max_pix2 LT 253 AND max_pix GT thresh_pix)then begin
 
 ;       color_convert,camera_polar[0,i,j],camera_polar[1,i,j],camera_polar[2,i,j],huec,satc,valuec,/RGB_HSV
 ;       color_convert, model_polar[0,i,j], model_polar[1,i,j], model_polar[2,i,j],huem,satm,valuem,/RGB_HSV
@@ -152,6 +166,18 @@ for j = jmax,0,-1 do begin
 
         endelse
 
+        cont_table_mask[0,i,j] = ((icloud_model-icloud_camera) > 0) * 200 ; overforecast is red
+
+        if(icloud_model LT icloud_camera)then begin                       ; underforecast is blue
+            cont_table_mask[2,i,j] = 255 
+            cont_table_mask[1,i,j] =  95 
+            cont_table_mask[0,i,j] =  95 
+        endif
+
+        if(icloud_camera * icloud_model GT 0)then begin
+            cont_table_mask[*,i,j] = 220                                  ; correct hit is white
+        endif
+
         if(i EQ 256)then begin
 ;           print,'model polar RG',float(model_polar[0,i,j]),float(model_polar[1,i,j])
 ;           print,'camera polar RG',float(camera_polar[0,i,j]),float(camera_polar[1,i,j])
@@ -168,7 +194,15 @@ for j = jmax,0,-1 do begin
         ncloud_camera = ncloud_camera + icloud_camera
         ncloud_model  = ncloud_model  + icloud_model
 
-    endif
+    endif else begin
+        imask_red = 60
+        imask_grn = 80
+        imask_blu = 60
+        cont_table_mask[0,i,j] = imask_red                                      ; masked out area is roughly gray
+        cont_table_mask[1,i,j] = imask_grn                                      ; masked out area is roughly gray
+        cont_table_mask[2,i,j] = imask_blu                                      ; masked out area is roughly gray
+
+    endelse
 
 
 endfor
@@ -239,11 +273,17 @@ print,' Percent correct is         ',accuracy*100.
 
 print,' Percent correct random is  ',accuracy_random*100.
 
+;   Write out mask image
+dirout = lapsdataroot + '/' + 'lapsprd/verif/allsky/stats'
+maskfile = dirout + '/' + 'verif_allsky_mask' + '.' + site + '.' + a9time + '.png'
+print,' maskfile is  ',maskfile
+WRITE_PNG,maskfile,cont_table_mask
 
 ;   Compare to random analysis having either 50% or the actual percentage of clouds
-dirout = lapsdataroot + '/' + 'lapsprd/verif/allsky/stats'
 ; dirout = '/data/fab/dlaps/projects/roc/hires2/log'
 statsfile = 'verif_allsky_anal' + '.' + site + '.' + a9time
+print,' full statsfile is  ',dirout + '/' + statsfile
+
 openw, 1, dirout + '/' + statsfile
 
 printf,1,'       hits       misses     false_alarms correct_negatives total'
@@ -257,8 +297,38 @@ bias = (float(hits) + float(false_alarms)) / (float(hits) + float(misses))
 printf,1,FORMAT = '("Bias: ",F7.3,"    ETS: ",F7.3)',bias,ets
 printf,1,FORMAT = '(A16,4f10.4," gnuplot")',filetime,frac_obs,frac_fcst,accuracy,accuracy_random
 printf,1,FORMAT = '("    solar_alt: ",F7.3)',solar_alt
+printf,1,FORMAT = '("    solar_az: ",F7.3)',solar_az
+
+ijdim = idim*jdim
+print,' dimension of correlation array is  ',ijdim
+for ic = 0,2 do begin
+    slow = 0L & shigh = 0L & scr = -1L                  
+    model_rebin = intarr(ijdim)
+    help,model_rebin
+
+    camera_rebin = intarr(ijdim)
+    help,camera_rebin
+
+    for ii = 0,imax do begin
+      for jj = 0,jmax do begin
+        if(cont_table_mask[1,ii,jj] NE imask_grn)then begin ; not a masked point
+          scr = scr + 1
+          model_rebin[scr]   = model_polar[ic,ii,jj]             
+          camera_rebin[scr]  = camera_polar[ic,ii,jj]             
+          if(jj EQ 256)then begin
+            print,ic,ii,scr,model_rebin(scr),camera_rebin(scr)
+          endif
+        endif
+      endfor
+    endfor
+    print,    'total scr is ',scr
+    print,    'correlation of color ',ic,CORRELATE(model_rebin[0:scr],camera_rebin[0:scr])
+    printf,1, 'correlation of color ',ic,CORRELATE(model_rebin[0:scr],camera_rebin[0:scr])
+endfor
 
 close,1
+
+print,' compare_allsky.pro completed...'
 
 exit
 
