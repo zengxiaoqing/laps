@@ -137,13 +137,16 @@ echo        $DQUOTE$STATSFILE$DQUOTE' using 1:6 title '$DQUOTE"$TH"' Random Acc.
 gnuplot < $GNUPLOTFILE
 
 echo " "
-echo "outputs..."  
+echo "verification outputs..."  
+echo "GNUPLOTFILE is $GNUPLOTFILE"
 ls -l $GNUPLOTFILE
-ls -l $IMGDIR/load.png
+
+echo "Check allsky_$SITE.png in IMGDIR directory $IMGDIR"
+ls -l $IMGDIR/allsky_$SITE.png
 
 if ($HH == 06 && $MM == 00) then # save daily image
     echo "saving daily image"
-    cp $IMGDIR/load.png $IMGDIR/$YYYY$MON$DD.png
+    cp $IMGDIR/allsky_$SITE.png $IMGDIR/$YYYY$MON$DD.png
     ls -l $IMGDIR/$YYYY$MON$DD.png
 else
     echo "skip saving daily image"
@@ -160,3 +163,5 @@ foreach wgi (cloud.wgi.*)
 #   echo "    Sta   i    j   VIS frac tb8_k  t_gnd_k t_sfc_k cv_s_mx cvr_mx solalt 9pt  rad_an rad_ob rad_th ratio cv_sol  df" >> solar.log
 #   grep sv $log | grep -e ' \*' -e ' +' -e ' - '  >> solar.log
 end 
+
+echo "completed allsky_analysis.csh"
