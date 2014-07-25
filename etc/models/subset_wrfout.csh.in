@@ -1,0 +1,59 @@
+#!@CSH@
+
+# Input directory (e.g. model root for time)
+#setenv WRFOUTDIR $1  
+#setenv RUNTIME 2014070312
+setenv MODEL_CYCLE_TIME $1 # 10800
+setenv DELAY            $2 # 4.0
+setenv SCRATCH /scratch1/portfolios/BMC/dlaps/scratch/step
+
+setenv LAPSINSTALLROOT @prefix@
+
+setenv TZ GMT
+
+setenv RUNTIME `@PERL@ $LAPSINSTALLROOT/etc/sched_sys.pl -c $MODEL_CYCLE_TIME -d $DELAY -f yyyymmddhh`
+echo "RUNTIME = $RUNTIME"
+
+setenv WRFOUTDIR /scratch2/portfolios/BMC/odvars/conus_domains/laps_conus/$RUNTIME/wrfprd  
+
+# Output directory (e.g. /rt/step)
+#setenv DESTDIR $2
+setenv DESTDIR /rt/step
+
+cd $WRFOUTDIR
+
+pwd
+
+module load nco
+
+rm -f $SCRATCH/*
+
+setenv SN_RANGE 464,725
+setenv WE_RANGE 534,889
+
+foreach FILE (wrfout*:00:00)
+    ls -l $FILE
+
+#   Run ncea
+    if (! -e $SCRATCH/$FILE.subset) then
+        echo "ncea -d west_east,$WE_RANGE -d west_east_stag,$WE_RANGE -d south_north,$SN_RANGE -d south_north_stag,$SN_RANGE $FILE $SCRATCH/$FILE.subset.$RUNTIME"
+              ncea -d west_east,$WE_RANGE -d west_east_stag,$WE_RANGE -d south_north,$SN_RANGE -d south_north_stag,$SN_RANGE $FILE $SCRATCH/$FILE.subset.$RUNTIME
+
+        echo "ncatted -a CEN_LAT,global,o,f,'40.0'   $SCRATCH/$FILE.subset.$RUNTIME"
+        echo "ncatted -a CEN_LON,global,o,f,'-104.0' $SCRATCH/$FILE.subset.$RUNTIME"
+
+              ncatted -a CEN_LAT,global,o,f,'40.0'   $SCRATCH/$FILE.subset.$RUNTIME
+              ncatted -a CEN_LON,global,o,f,'-104.0' $SCRATCH/$FILE.subset.$RUNTIME
+
+        echo "gzip $SCRATCH/$FILE.subset.$RUNTIME"
+              gzip $SCRATCH/$FILE.subset.$RUNTIME
+
+#       Transfer file to jetscp
+        echo "scp $SCRATCH/$FILE.subset.$RUNTIME.gz jetscp.rdhpcs.noaa.gov:$DESTDIR"
+              scp $SCRATCH/$FILE.subset.$RUNTIME.gz jetscp.rdhpcs.noaa.gov:$DESTDIR
+
+    else
+        echo "$DESTDIR/$FILE.subset.$RUNTIME already exists"
+    endif
+end
+
