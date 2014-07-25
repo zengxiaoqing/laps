@@ -1,0 +1,83 @@
+#!/bin/csh
+
+setenv LAPS_A9TIME $1
+
+setenv SITE $2
+
+setenv ILOC $3
+
+setenv LAPSINSTALLROOT $4
+setenv LAPS_SRC_ROOT   /usr/nfs/common/lapb/parallel/laps
+
+setenv LAPS_A13TIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $LAPS_A9TIME -o yyyymmdd_hhmm`
+setenv SITESDIR /w3/lapb/allsky/sites
+
+setenv LAPS_ASCIITIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $LAPS_A9TIME -o ascii_time`
+
+#setenv LAPS_DATA_ROOT /data/fab/dlaps/projects/roc/hires
+setenv LAPS_DATA_ROOT $5
+
+date -u
+
+echo " "
+echo "starting montage_images script for $SITE..."
+
+# Process for polar images
+
+#setenv ALSDIR /data/fab/dlaps/projects/roc/hires/lapsprd/www/anal2d/archive/als/$SITE/polar
+setenv ALSDIR $LAPS_DATA_ROOT/lapsprd/www/anal2d/archive/als/$SITE/polar
+
+echo "make polar montage for $SITE..."
+pwd
+mkdir -p output4
+if (-e output3/$LAPS_A13TIME\_$SITE.png) then
+    echo "montage $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png -mode concatenate output4/combined_$LAPS_A9TIME.png"
+          montage $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png -mode concatenate output4/combined_$LAPS_A9TIME.png
+else
+    echo "WARNING: output3/$LAPS_A13TIME\_$SITE.png is not present - exiting montage_images..."
+    exit
+endif
+
+echo " "
+echo "make polar blinking comparison for $SITE..."
+pwd
+mkdir -p output4b
+echo "convert -delay 150 -loop 0  $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png output4b/$LATEST_DATA\_blink.gif"
+      convert -delay 150 -loop 0  $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png output4b/$LATEST_DATA\_blink.gif     
+cp output4b/$LATEST_DATA\_blink.gif /w3/lapb/allsky/blink_comparison.gif
+
+# Process for cyl images
+
+setenv ALSDIR $LAPS_DATA_ROOT/lapsprd/www/anal2d/archive/als/$SITE/cyl  
+
+echo "make cyl montage for $SITE..."
+pwd
+mkdir -p output4c
+
+echo "montage $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png -mode concatenate -tile 1x -border 1 output4c/combined_$LAPS_A9TIME.png"
+      montage $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png -mode concatenate -tile 1x -border 1 output4c/combined_$LAPS_A9TIME.png
+      identify $ALSDIR/$LAPS_A9TIME.png
+      identify output3c/$LAPS_A13TIME\_$SITE.png
+
+ls -l $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png output4c/combined_$LAPS_A9TIME.png
+
+date -u
+
+# Verification stats and plot (from polar images)
+#cd $LAPS_SRC_ROOT/etc/allsky
+cd $LAPSINSTALLROOT/etc/allsky
+setenv ALSDIR $LAPS_DATA_ROOT/lapsprd/www/anal2d/archive/als/$SITE/polar
+echo " "
+echo "test IDL comparison procedure"
+setenv FILE_MODEL_POLAR $ALSDIR/$LAPS_A9TIME.png
+setenv FILE_CAMERA_POLAR $SITESDIR/$SITE/output3/$LAPS_A13TIME\_$SITE.png
+setenv SOLAR_ALT `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c1-8`
+setenv SOLAR_AZ  `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c9-16`
+echo compare_allsky | /usr/local/share/rsi/idl/bin/idl
+echo " "
+echo "run verification plots"                  
+$LAPSINSTALLROOT/etc/verif/allsky_analysis.csh $LAPS_DATA_ROOT co_hi $SITE     
+echo "returned from verification allsky_analysis.csh"                  
+
+echo "completed montage_images script for $SITE..."
+
