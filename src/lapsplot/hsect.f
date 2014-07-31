@@ -4368,7 +4368,7 @@ c abdel
               chigh = +2.
               colortable = 'tpw'
           endif
-          plot_parms%color_power = 0.6
+          plot_parms%color_power = 0.4
 
           call plot_field_2d(i4time_cloud,c_type_i,field_2d
      1                        ,scale
