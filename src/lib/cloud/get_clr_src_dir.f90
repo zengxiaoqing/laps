@@ -25,9 +25,12 @@
 
      if(idebug .eq. 1)then
          write(6,*)
+         write(6,*)'ag/aa = ',ag,aa
          write(6,*)'od_g_vert = ',od_g_vert
          write(6,*)'od_a_vert = ',od_a_vert
          write(6,*)'opac_vert = ',opac_vert
+         write(6,*)'od_g_slant = ',od_g_slant
+         write(6,*)'od_a_slant = ',od_a_slant
          write(6,*)'opac_slant = ',opac_slant
          write(6,*)'od_slant = ',od_slant
      endif ! i
