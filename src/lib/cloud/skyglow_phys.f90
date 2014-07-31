@@ -81,10 +81,17 @@
 
 !       Obtain reference values of source term
         write(6,*)' Obtain reference values of source term'
-        call get_airmass(90.,htmsl,patm &       ! I
+        call get_airmass(90.,htmsl,patm &           ! I
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius &            ! I
                          ,ag,ao,aa)                 ! O
+        ag_90 = ag
+        aa_90 = aa
+
+        if(sol_alt .gt. 0.)then
+         write(6,*)'ag_90/aa_90 = ',ag_90,aa_90
+        endif
+
         do ic = 1,nc
          od_g_vert = ext_g(ic) * patm
          od_a_vert = aod_vrt * ext_a(ic)
@@ -93,7 +100,7 @@
          else
              idebug = 0
          endif
-         call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert,ag,aa,idebug,srcdir_90(ic))
+         call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert,ag/ag_90,aa/aa_90,idebug,srcdir_90(ic))
          write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
         enddo ! ic
 
@@ -110,7 +117,7 @@
           od_g_vert = ext_g(ic) * patm
           od_a_vert = aod_vrt * ext_a(ic)
           idebug = 0
-          call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert,ag,aa,idebug,srcdir(ic))
+          call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert,ag/ag_90,aa/aa_90,idebug,srcdir(ic))
           if(ic .eq. 2)then
               write(6,*)' alt/srcdir/ratio:',altray,srcdir(ic),srcdir(ic)/srcdir_90(ic)
           endif
@@ -251,7 +258,7 @@
 !               brt2 = brto(od_g2) * rayleigh_pf_eff
                 brt2 = brto(od_g2*gasfrac) * rayleigh_pf_eff
                 trans1 = trans(od_1)
-                clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2)
+                clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic))
 
                 if(idebug .ge. 1 .and. ic .eq. 2)then
                   write(6,73)day_int,airmass_g,od_g,aod_ray(ialt,jazi),aa,od_a &
