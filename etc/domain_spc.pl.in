@@ -8,6 +8,11 @@
 
 # Should be run as oplapb@dlaps.ms1
 
+use vars qw($opt_s);
+use Getopt::Std;
+
+getopts('s');
+
 require '@prefix@/etc/wgi_utils.pm';
 
 my ($ptsfile);
@@ -223,10 +228,17 @@ if($method eq "bounding rectangle"){
 my $grid = "HWT";
 my $syscmd;
 
-$syscmd = "/home/lapb/oplapb/etc/triggerfiles.sh $grid $lat_mean $lon_mean 'automated SPC convective outlook' > /home/fab/oplapb/log/domain_spc_triggerfiles.log";
-system($syscmd);
+if(!defined $opt_s){ # active relocalization
+    $syscmd = "/home/lapb/oplapb/etc/triggerfiles.sh $grid $lat_mean $lon_mean 'automated SPC convective outlook' > /home/fab/oplapb/log/domain_spc_triggerfiles.log";
+    system($syscmd);
 
-$syscmd = "echo `date -u` autolocalization to $lat_mean $lon_mean >> /w3/lapb/relocate/laps_request.log";
-system($syscmd);
+    $syscmd = "echo `date -u` autolocalization to $lat_mean $lon_mean >> /w3/lapb/relocate/laps_request.log";
+    system($syscmd);
+
+}else{               # suggestion only
+    $syscmd = "echo Suggested latitude and longitude for $grid domain based on SPC Convective Outlook is $lat_mean $lon_mean > /home/fab/oplapb/log/domain_spc_triggerfiles.log";
+    system($syscmd);
+}
+
 
 exit;
