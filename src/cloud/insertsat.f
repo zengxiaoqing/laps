@@ -566,7 +566,8 @@ c
                     thresh_tb8_clr  = -8.
                     thresh_tb8_clr2 = -8.          
                 else ! no snow case
-                    thresh_tb8_clr =  0.
+!                   thresh_tb8_clr =  0.    ! low aerosol case?
+                    thresh_tb8_clr =  -8.   ! high aerosol case?
                     thresh_tb8_clr2 = 99999.
                 endif
 
@@ -619,10 +620,10 @@ c
 
                 if(idebug .ge. 1)then
                   write(6,141)i,j,k,t_gnd_k(i,j)
-     1                       ,tb8_calculated,tb8_k(i,j)
-     1                       ,tb8_calculated-tb8_k(i,j),thresh_tb8_clr
+     1                       ,tb8_k(i,j),tb8_calculated
+     1                       ,tb8_k(i,j)-tb8_calculated,thresh_tb8_clr
      1                       ,cvr_snow(i,j),iclr
- 141              format(' Clr: ijk/gnd/calc/tb8/diff/thr/sncv/iclr = ' 
+ 141              format(' Clr: ijk/gnd/tb8/calc/diff/thr/sncv/iclr = ' 
      1                  ,3i4,6f8.2,i2)
                 endif
 
