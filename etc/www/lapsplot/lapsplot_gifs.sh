@@ -148,6 +148,8 @@ if test "$NCARG_ROOT" = "allsky"; then
   echo " "
 
   DIRCYL=South
+  DIRCYLL=East
+  DIRCYLR=West
 
 # Other orientations
   if test "$RESOLUTION_POLAR" = "180pr"; then
@@ -211,7 +213,8 @@ if test "$NCARG_ROOT" = "allsky"; then
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $WINDOW -ge 361; then
-      convert -fill white -annotate +1033+20 "`head -2 label.$ILOC | tail -1`" -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+#     convert -fill white -annotate +1033+20 "`head -2 label.$ILOC | tail -1`" -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill white -annotate  +815+20 "`head -2 label.$ILOC | tail -1`" -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $WINDOW -ge 181; then
       convert -fill white -annotate +1550+20 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
@@ -255,6 +258,8 @@ if test "$NCARG_ROOT" = "allsky"; then
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $WINDOW -ge 361; then
       convert -fill orange -annotate  +693+20   "$DIRCYL"          -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate  +339+20   "$DIRCYLL"         -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate  +1055+20  "$DIRCYLR"         -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       echo "WINDOW is large "$WINDOW
     elif test $WINDOW -ge 181; then
       convert -fill orange -annotate +1040+20   "$DIRCYL"          -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
