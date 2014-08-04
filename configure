@@ -1577,7 +1577,7 @@ then
     FREE="-FR"
     C_OPT="-O3"
     F_OPT="-O3"
-
+    OTHERLIBS="$OTHERLIBS -lnetcdff"
 
     grep 'icc' << EOF
     $CC
