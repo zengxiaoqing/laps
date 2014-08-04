@@ -314,6 +314,7 @@ then
     FREE="-FR"
     C_OPT="-O3"
     F_OPT="-O3"
+    OTHERLIBS="$OTHERLIBS -lnetcdff"
 
 
 dnl Set DBCFLAGS to smaller set if C compiler is other than 'icc'
