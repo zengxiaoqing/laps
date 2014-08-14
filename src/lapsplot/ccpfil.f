@@ -595,7 +595,7 @@ C
           if(colortable .eq. 'linear_reduced')then
               ncols = 10
           else
-              ncols = 20
+              ncols = 40
           endif
 
           rcols = ncols - 1
@@ -609,7 +609,7 @@ C
 
 !             rintens = 0.08 + (rintens * 0.92) ! brighten on the monitor
 !             rintens = (rintens**0.76) * 0.95  ! brighten on the monitor
-              rintens = (rintens**0.60) * 0.95  ! brighten on the monitor
+              rintens = (rintens**0.40) * 0.95  ! brighten on the monitor
 
               if(ireverse .eq. 1)rintens = 1.0 - rintens
               call GSCR(IWKID, i+icol_offset, rintens, rintens, rintens)
