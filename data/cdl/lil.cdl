@@ -63,6 +63,19 @@ netcdf lil {
             cla:lvl_coord="MSL";
             cla:LAPS_units="none";
 
+         //      visibility              //
+         float
+            vis(record,z,y,x);
+            vis:navigation_dim = "nav";
+            vis:record = "valtime, reftime";
+            vis:_FillValue = 1.e+37f;
+            vis:long_name="visibility";
+            vis:units="meters";
+            vis:valid_range= 0.f, 500000.f;
+            vis:LAPS_var="VIS";
+            vis:lvl_coord="AGL";
+            vis:LAPS_units="M";
+
         //	LAPS variables
 
         long
@@ -76,6 +89,7 @@ netcdf lil {
             lic_comment(record,z,namelen),
             cod_comment(record,z,namelen),
             cla_comment(record,z,namelen),
+            vis_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -96,6 +110,10 @@ netcdf lil {
         short
             cla_fcinv(record, z);
             cla_fcinv:_FillValue= 0s;
+              	
+        short
+            vis_fcinv(record, z);
+            vis_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
