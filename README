@@ -3875,6 +3875,8 @@ Outputs:
                                 Cloud Liquid (LIL)
                                 Cloud Ice (LIC)
                                 Cloud Optical Depth (COD)
+                                Cloud Albedo (CLA)
+                                Visibility (VIS)
 
 	lct     2d grid		SFC precip type (SPT,PTT) 
                                     Types are:
@@ -4619,7 +4621,12 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
 		     SNO  sno     21  Snow Concentration
 		     PIC  pic     21  Precipitating Ice Concentration
 
-           	LIL  LIL  ilw      1  Integrated Liquid Water
+           	LIL  LIL  lil      1  Integrated Liquid Water
+                          lic      1  Cloud Ice
+                          cod      1  Cloud Optical Depth
+                          cla      1  Cloud Albedo
+                          vis      1  Visibility
+
         	LCT  PTY  spt      1  Sfc Precip Type
                      PTT  ptt      1  LAPS Sfc Precip Type
                      SCT  sct      1  Sfc Cloud Type
