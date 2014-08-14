@@ -4363,12 +4363,13 @@ c abdel
               chigh = +40.
               cint = 5.
               colortable = 'linear'
+              plot_parms%color_power = 0.40
           else
               scale = 1e-3 ! data are in M, plot is in mm
               chigh = +2.
               colortable = 'tpw'
+              plot_parms%color_power = 0.33
           endif
-          plot_parms%color_power = 0.4
 
           call plot_field_2d(i4time_cloud,c_type_i,field_2d
      1                        ,scale
@@ -6702,7 +6703,7 @@ c                   cint = -1.
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
         elseif(c_type(1:2) .eq. 'cb' .or. c_type(1:2) .eq. 'ct' 
-     1                               .or. c_type .eq. 'cc')then
+     1                               .or. c_type(1:2) .eq. 'cc')then
             ext = 'lcb'
 
             if(c_type(1:2) .eq. 'cb')then ! Cloud Base
@@ -6721,11 +6722,12 @@ c                   cint = -1.
                 chigh_img = 14000.
                 cint = 1000.
 
-            elseif(c_type .eq. 'cc')then ! Cloud Ceiling
+            elseif(c_type(1:2) .eq. 'cc')then ! Cloud Ceiling
                 var_2d = 'CCE'
                 c_label = 'Cloud Ceiling      m   AGL       '
                 clow = 0.
                 chigh = 0.
+                chigh_img = 8000.
                 cint = -100.
 
             endif
