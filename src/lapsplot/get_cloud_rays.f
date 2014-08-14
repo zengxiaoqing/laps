@@ -319,6 +319,11 @@
               idebug = 0
           endif
 
+          if(jazi .eq. minazi .and. altray .eq. 90.)then
+              idebug = 1
+              idebug_a(ialt,jazi) = 1
+          endif
+
 !         Trace towards sky from each grid point
 !         view_altitude_deg = max(altray,0.) ! handle Earth curvature later
           view_altitude_deg = altray
