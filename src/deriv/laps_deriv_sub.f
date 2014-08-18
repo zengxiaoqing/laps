@@ -57,8 +57,7 @@ cdis
         use cloud_rad ! Cloud Radiation and Microphysics Parameters
         use constants_laps, ONLY: R
 
-        ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
-     1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
+        ESL(X) = 6.1121*exp(17.67*X/(X+243.5))
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                  sys_abort_prod
@@ -129,7 +128,7 @@ cdis
         parameter (thresh_cvr_ceiling = thresh_cvr)
 
         real thresh_thin_lwc_ice     ! Threshold cover for thin cloud LWC/ICE
-        parameter (thresh_thin_lwc_ice = 0.1)
+        parameter (thresh_thin_lwc_ice = 0.05)
 
         real vis_radar_thresh_cvr,vis_radar_thresh_dbz
         parameter (vis_radar_thresh_cvr = 0.2)  ! 0.2, 0.0
@@ -240,6 +239,7 @@ cdis
         real cldalb_in(NX_L,NY_L)
         real cldalb_out(NX_L,NY_L)
         real cldod_out(NX_L,NY_L)
+        real visibility(NX_L,NY_L)
 
 !       real snow_2d(NX_L,NY_L)
 
@@ -787,6 +787,12 @@ c read in laps lat/lon and topo
         call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
         call integrate_slwc(cice,heights_3d,NX_L,NY_L,NZ_L,cice_int)
 
+        write(6,*)' Integrated slwc range is ',minval(slwc_int)
+     1                                        ,maxval(slwc_int)
+
+        write(6,*)' Integrated cice range is ',minval(cice_int)
+     1                                        ,maxval(cice_int)
+
 !       Calculate cloud optical depth and cloud albedo
         const_lwp = (1.5 * rholiq) / (rholiq     * reff_clwc)
         const_lwp_bks = const_lwp * bksct_eff_clwc
@@ -1133,7 +1139,7 @@ c read in laps lat/lon and topo
             call integrate_slwc(raicnc,heights_3d,NX_L,NY_L,NZ_L
      1                                                     ,rain_int)
             write(6,*)' Integrated rain range is ',minval(rain_int)
-     1                                           ,maxval(rain_int)
+     1                                            ,maxval(rain_int)
 
             I4_elapsed = ishow_timer()
 
@@ -1185,37 +1191,6 @@ c read in laps lat/lon and topo
         enddo ! i
         enddo ! j
 
-!       Write LIL file
-!       Note that these arrays start off with 1 as the first index
-        ext = 'lil'
-        var_a(1) = 'LIL'
-        var_a(2) = 'LIC'
-        var_a(3) = 'COD'
-        var_a(4) = 'CLA'
-        units_a(1) = 'M'
-        units_a(2) = 'M'
-        units_a(3) = ' '
-        units_a(4) = ' '
-        comment_a(1) = 'Integrated Cloud Liquid'
-        comment_a(2) = 'Integrated Cloud Ice'
-        comment_a(3) = 'Cloud Optical Depth'
-        comment_a(4) = 'Cloud Albedo'
-
-        call move(slwc_int,  out_array_3d(1,1,1),NX_L,NY_L)
-        call move(cice_int,  out_array_3d(1,1,2),NX_L,NY_L)
-        call move(cldod_out, out_array_3d(1,1,3),NX_L,NY_L)
-        call move(cldalb_out,out_array_3d(1,1,4),NX_L,NY_L)
-
-        call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1      comment_a,out_array_3d,NX_L,NY_L,4,istatus)
-
-        if(istatus .eq. 1)then
-            j_status(n_lil) = ss_normal
-            write(6,*)' Success in writing out LIL'
-        else
-            write(6,*)' Error detected writing out LIL'
-        endif
-
 !       Convert SLWC and CICE from g/m**3 to kg/m**3
         do k = 1,NZ_L
         do j = 1,NY_L
@@ -1229,6 +1204,71 @@ c read in laps lat/lon and topo
         enddo 
         enddo
         enddo
+
+!       Calculate low level hydrometeor fields and visibility
+!       These constants can be derived from microphysical constants
+        a1 = 75.
+        b1 = 37.5
+        c1 = 1.5
+        d1 = 5.357
+        e1 = 1.2
+       
+        iwrite = 0
+
+        do j = 1,NY_L
+        do i = 1,NX_L
+            k_topo = int(zcoord_of_pressure(pres_sfc_pa(i,j)))
+            slwc_low = slwc(i,j,k_topo+1)
+            cice_low = cice(i,j,k_topo+1)
+            rain_low = raicnc(i,j,k_topo+1)
+            snow_low = snocnc(i,j,k_topo+1)
+            pice_low = piccnc(i,j,k_topo+1)
+            alpha = a1 * slwc_low + b1 * cice_low + c1 * rain_low 
+     1            + d1 * snow_low + e1 * pice_low
+            visibility(i,j) = 2.8 / max(alpha,.00004) 
+            if(alpha .gt. 0.0002 .AND. iwrite .le. 5)then
+                write(6,*)'visibility terms at',i,j,k_topo
+                write(6,*)slwc_low,cice_low,rain_low,snow_low,pice_low
+     1                   ,alpha,visibility(i,j)
+                iwrite = iwrite + 1
+            endif
+        enddo ! i
+        enddo ! j
+      
+!       Write LIL file
+!       Note that these arrays start off with 1 as the first index
+        ext = 'lil'
+        var_a(1) = 'LIL'
+        var_a(2) = 'LIC'
+        var_a(3) = 'COD'
+        var_a(4) = 'CLA'
+        var_a(5) = 'VIS'
+        units_a(1) = 'M'
+        units_a(2) = 'M'
+        units_a(3) = ' '
+        units_a(4) = ' '
+        units_a(5) = 'M'
+        comment_a(1) = 'Integrated Cloud Liquid'
+        comment_a(2) = 'Integrated Cloud Ice'
+        comment_a(3) = 'Cloud Optical Depth'
+        comment_a(4) = 'Cloud Albedo'
+        comment_a(5) = 'Visibility'
+
+        call move(slwc_int,  out_array_3d(1,1,1),NX_L,NY_L)
+        call move(cice_int,  out_array_3d(1,1,2),NX_L,NY_L)
+        call move(cldod_out, out_array_3d(1,1,3),NX_L,NY_L)
+        call move(cldalb_out,out_array_3d(1,1,4),NX_L,NY_L)
+        call move(visibility,out_array_3d(1,1,5),NX_L,NY_L)
+
+        call put_laps_multi_2d(i4time,ext,var_a,units_a,
+     1      comment_a,out_array_3d,NX_L,NY_L,5,istatus)
+
+        if(istatus .eq. 1)then
+            j_status(n_lil) = ss_normal
+            write(6,*)' Success in writing out LIL'
+        else
+            write(6,*)' Error detected writing out LIL'
+        endif
 
 !       Apply hydrometeor scale to precip
         if(hydrometeor_scale_pcp .ge. 0.)then
