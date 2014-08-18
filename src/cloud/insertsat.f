@@ -1020,7 +1020,8 @@ c
                        itx = it
                    endif
                    cldcv(itn:itx,jt,k)=cover
-                   if(idebug .eq. 1)then
+!                  if(idebug .eq. 1)then
+                   if(it .eq. imax/2 .AND. jt .eq. jmax/2)then
 !                  if(it.eq.660 .and. jt.gt.50 .and. jt.lt.120)then
                        write(6,331)i,j,it,jt,k,cover
      1                            ,istat_vis_added_a(i,j)
@@ -1043,9 +1044,10 @@ c
         enddo ! jmax
 
         write(6,332)
-     1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k=kcld,1,-1)
+     1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k
+     1                                           ,k=kcld,1,-1)
 332     format(' cldcv section 1 (after subtract/add):'
-     1                  /'    ht      cvr',50(/f8.1,f8.3))
+     1                  /'    ht      cvr    k',50(/f8.1,f8.3,i4))
 
 !       Write stats on CO2 and Band 8 (11.2mm) methods
         write(6,*)' n_valid_co2 = '  ,n_valid_co2
