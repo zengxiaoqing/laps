@@ -487,7 +487,7 @@ cdoc    Calculate a variety of stability indices from an input sounding
 !    1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
 !       TDEW(E)=237.7/((7.5/ALOG10(E/6.11))-1.)
 
-        ESL(X)=6.1121*exp(17.67*x/(x+243.5)) 
+        ESL(X)=6.1121*exp(17.67*X/(X+243.5)) 
 
         logical l_large_domain
 
@@ -1053,8 +1053,7 @@ cdoc    Calculate LCL properties from an input parcel
 !       Steve Albers 1991
 
         REAL LCL,KAPPA
-        ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
-     1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
+        ESL(X)=6.1121*exp(17.67*X/(X+243.5)) 
         DATA EPSILN/.62197/,GAMMAI/102.4596/ ! Lapse Rate m/deg
         TK=273.15+TC
         TLCL=TK
@@ -1087,8 +1086,7 @@ cdoc    Calculate LCL properties from an input sounding (efficiently)
 
 !       Steve Albers 1991
 
-        ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
-     1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
+        ESL(X)=6.1121*exp(17.67*X/(X+243.5)) 
         DATA EPSILN/.62197/,GAMMAI/102.4596/        ! Lapse Rate m/deg
 
         TLCL = TD - (0.212 + 0.001571 * TD - 0.000436 * TC) * (TC - TD)
@@ -1262,8 +1260,7 @@ cdoc   Calculate Theta(e), given T, Td, P
 C
 C   COMPUTES THE EQUIVALENT POTENTIAL TEMPURATURE (K).
 C    (USING THE ROSSBY DEFINITION)
-        ESL(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
-     1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
+        ESL(X)=6.1121*exp(17.67*X/(X+243.5)) 
         T=TC+273.15
         E=ESL(TD)
         PMEI=1./(P-E)
