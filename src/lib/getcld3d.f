@@ -375,7 +375,7 @@ cdis
      1                     ,heights_3d(i,j,lvl)
      1                     ,clouds_3d_pres(i,j,lvl)
  1                format(1x,' Reading Clouds LVL ',i5,3x,2i5,3x,2f8.3
-     1                                            ,2x,4f8.2)
+     1                                            ,2x,2f8.2,f8.1,f8.2)
               endif
 
             enddo ! lvl
