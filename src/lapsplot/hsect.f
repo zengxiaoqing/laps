@@ -6595,7 +6595,7 @@ c                   cint = -1.
             if(i_balance .eq. 1)then
                 ext = 'balance'
             else
-                ext = 'lsx'
+                ext = 'lil'
             endif
 
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -6610,10 +6610,11 @@ c                   cint = -1.
 
             c_label = 'Sfc Visibility       (miles)     '
 
-            clow = 50.
+            clow = 30.
             chigh = +0.
             cint = -0.1
             scale = 1600.
+            plot_parms%color_power = 2.0 
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
