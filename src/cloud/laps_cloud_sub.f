@@ -771,11 +771,14 @@ C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
         endif
 
 !       Use model first guess in upper part of domain (or use zero)
-!       ktop = 22 ! restrict where analysis occurs (helps with IR/VIS)
+        ktop = 22 ! restrict where analysis occurs (helps with IR/VIS)
+
 !       No restriction where analysis occurs (mainly for IR)
-        ktop = KCLOUD 
+!       ktop = KCLOUD 
+
         if(ktop .lt. KCLOUD)then
-            write(6,*)' Use model first guess above k = ',ktop
+            write(6,*)' Use model first guess w/o barnes above k = '
+     1               ,ktop
             clouds_3d(:,:,ktop+1:KCLOUD) = cf_modelfg(:,:,ktop+1:KCLOUD)
 !           write(6,*)' Use zero first guess above k =  ',ktop
 !           clouds_3d(:,:,ktop+1:KCLOUD) = 0.          
@@ -1197,7 +1200,7 @@ C ASCII PLOTS in HORIZONTAL AND VERTICAL SLICES
 
 C       HORIZONTAL SLICES
 
-        DO K=4,KCLOUD,4
+        DO K=4,KCLOUD,2
             CALL SLICE(cf_modelfg,NX_L,NY_L,KCLOUD,CVHZ1
      1                ,NX_L,NY_L,1,0,0,K,0,0)
             CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,cvr_max
