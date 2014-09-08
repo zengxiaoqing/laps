@@ -35,12 +35,15 @@ driver                                            lapsplot_main.f
             solar_position                        lib/sunfuncs.f
             equ_to_altaz_d                        lib/equtoaltazd.f
             sun_moon                              lib/cloud/sun_moon.f
-            get_cloud_rays                        get_cloud_rays.f
-                get_cloud_rad                     lib/cloud/get_cloud_rad.f90
+            get_cloud_rays                        get_cloud_rays.f            (second raytrace)
+                skyglow_phys                      lib/cloud/skyglow_phys.f90  (clear sky brightness - night)
+                get_cloud_rad                     lib/cloud/get_cloud_rad.f90 (first raytrace 3-D radiation)
             get_skyglow_cyl                       lib/cloud/skyglow_cyl.f90
             cyl_to_polar 
             get_starglow                          lib/cloud/get_sky_rgb_routines.f90
                 read_stars                          "
                 sun_planet                        lib/cloud/sun_planet.f
-            get_sky_rgb                           lib/cloud/get_sky_rgb.f90
+            get_sky_rgb                           lib/cloud/get_sky_rgb.f90   (put it all together - RGB)
+                skyglow_phys                      lib/cloud/skyglow_phys.f90  (clear sky brightness - day)
+                get_cld_pf                        lib/cloud/get_cloud_pf.f90  (hydrometeor phase functions)
                 get_clr_rad_nt                      "
