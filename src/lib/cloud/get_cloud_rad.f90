@@ -42,6 +42,7 @@
      real lat(ni,nj)
      real lon(ni,nj)
      real bi_coeff(2,2)
+     real eclipse(ni,nj) ; logical l_solar_eclipse /.false./
 
 !    n                                    (number concentration:   m**-3)
 !    sigma                                (cross-section:          m**2)
@@ -53,6 +54,8 @@
 !    od_to_albedo_lwc(tau) = 1. - exp(-tau*.07) ! lwc bkscat eff. term 
 !    od_to_albedo_ice(tau) = 1. - exp(-tau*.14) ! ice bkscat eff. term 
 !    od_to_albedo(tau_bks) = 1. - exp(-tau_bks)
+
+     eclipse = 1.0 ! Default is no solar eclipse
 
      clwc_int = 0.
      cice_int = 0.
@@ -330,9 +333,9 @@
             endif
 
 !           Modify transm array for each of 3 colors depending on solar intensity and color
-            transm_4d(il,jl,kl,1) = transm_3d(il,jl,kl) * rint
-            transm_4d(il,jl,kl,2) = transm_3d(il,jl,kl) * rint * grn_rat
-            transm_4d(il,jl,kl,3) = transm_3d(il,jl,kl) * rint * blu_rat   
+            transm_4d(il,jl,kl,1) = transm_3d(il,jl,kl) * rint           * eclipse(i,j)
+            transm_4d(il,jl,kl,2) = transm_3d(il,jl,kl) * rint * grn_rat * eclipse(i,j)
+            transm_4d(il,jl,kl,3) = transm_3d(il,jl,kl) * rint * blu_rat * eclipse(i,j)
 
           else
             transm_4d(il,jl,kl,:) = 0.
@@ -402,9 +405,9 @@
                     blu_rat = trans_c(3) / trans_c(1)
                   endif  
                   transm_3d_generic = 0.5
-                  transm_4d(i,j,k,1) = transm_3d_generic * rint
-                  transm_4d(i,j,k,2) = transm_3d_generic * grn_rat
-                  transm_4d(i,j,k,3) = transm_3d_generic * blu_rat
+                  transm_4d(i,j,k,1) = transm_3d_generic * rint    * eclipse(i,j)
+                  transm_4d(i,j,k,2) = transm_3d_generic * grn_rat * eclipse(i,j)
+                  transm_4d(i,j,k,3) = transm_3d_generic * blu_rat * eclipse(i,j)
                    
                   if(i .eq. idb .AND. j .eq. jdb)then
                       write(6,103)k,obj_alt(i,j),horz_dep_d,obj_alt_cld,am*patm_k,rint,rint*blu_rat**0.3,rint*blu_rat
