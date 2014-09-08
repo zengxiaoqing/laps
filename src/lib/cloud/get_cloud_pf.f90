@@ -17,7 +17,8 @@
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         integer idebug_a(ni,nj)
-        real pf_scat(nc,ni,nj), pf_scat1(ni,nj), pf_scat2(ni,nj)
+        real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
+        real pf_clwc(nc),pf_rain(nc)
         real pf_thk_a(ni,nj)
         real*8 phase_angle_d,phase_corr
 
@@ -36,6 +37,8 @@
 
         do j = 1,nj
          do i = 1,ni
+
+          ic = 2
 
 !         a substitute for cloud_rad could be arg2 = (cosd(alt))**3.
 
@@ -112,9 +115,9 @@
                     + clwc_bin2  * pf_thk ! add albedo term?     
 
             if(cloud_od_liq .eq. cloud_od_sp(i,j,1))then ! cloud liquid
-                pf_scat1(i,j) = pf_clwc
+                pf_scat1(ic,i,j) = pf_clwc(ic)
             else                                         ! rain
-                pf_scat1(i,j) = pf_rain
+                pf_scat1(ic,i,j) = pf_rain(ic)
             endif
 
           endif ! .true.
@@ -144,14 +147,14 @@
               snow_factor = 0.
           endif
 
-          pf_scat2(i,j) = pf_snow * snow_factor + pf_scat1(i,j) * (1.0 - snow_factor)
+          pf_scat2(ic,i,j) = pf_snow * snow_factor + pf_scat1(ic,i,j) * (1.0 - snow_factor)
 
 !         Suppress phase function if terrain is close in the light ray
           if(airmass_2_topo(i,j) .gt. 0.)then ! cloud in front of terrain
-              pf_scat(:,i,j) = pf_scat2(i,j)**(r_cloud_rad(i,j)**2.0)
-!             pf_scat(:,i,j) = pf_scat2(i,j)**opac(cloud_od_tot)
+              pf_scat(:,i,j) = pf_scat2(ic,i,j)**(r_cloud_rad(i,j)**2.0)
+!             pf_scat(:,i,j) = pf_scat2(ic,i,j)**opac(cloud_od_tot)
           else
-              pf_scat(:,i,j) = pf_scat2(i,j)
+              pf_scat(:,i,j) = pf_scat2(ic,i,j)
           endif
 
 !         Add rainbows
@@ -213,8 +216,8 @@
           endif ! rain_factor > 0
 
           if(idebug_a(i,j) .eq. 1)then
-              write(6,101)i,j,pf_clwc,pf_rain,r_cloud_rad(i,j),radfrac,pf_scat1(i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
-101           format(' clwc/rain/rad/radf/pf1/trans/snow/rain factors = ',2i5,2f9.3,2x,2f9.3,2x,4f9.3,f9.3)
+              write(6,101)i,j,elong_a(i,j),pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
+101           format(' elg/clwc/rain/rad/radf/pf1/pf2/pfs/trans/snow/rain factors = ',2i5,f8.2,2f9.3,2x,2f9.3,2x,6f8.3,f9.3)
           endif
 
          enddo ! i (altitude)
