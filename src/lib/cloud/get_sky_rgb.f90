@@ -51,8 +51,8 @@
         real topo_albedo(nc,ni,nj)  ! terrain albedo (* sin solar alt)
         real aod_2_cloud(ni,nj)     ! future use
         real aod_2_topo(ni,nj)      ! aerosol optical depth to topo
-        real aod_ill(ni,nj)         ! aerosol illuminated optical depth (topo/notopo)
-        real aod_ill_dir(ni,nj)     ! aerosol directly illuminated optical depth 
+        real aod_ill(ni,nj)         ! aerosol illuminated slant optical depth (topo/notopo)
+        real aod_ill_dir(ni,nj)     ! aerosol directly slant illuminated optical depth 
         real od_atm_a_eff(ni,nj)    ! aerosol illuminated tau per airmass
         real od_atm_a_dir(ni,nj)    ! aerosol directly illuminated tau per airmass
         real alt_a(ni,nj)
@@ -60,7 +60,7 @@
         real elong_a(ni,nj)
         integer idebug_a(ni,nj)
         real rintensity(nc), cld_rgb_rat(nc), glow_cld_c(nc)
-        real pf_scat(nc,ni,nj), pf_scat1(ni,nj), pf_scat2(ni,nj)
+        real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
         real bkscat_alb(ni,nj)
         real rint_top(nc),rint_base(nc)
        
@@ -182,7 +182,9 @@
               endif
           else ! cyl
               if(azi_a(i,j) .eq. azid1 .OR. azi_a(i,j) .eq. azid2)then ! constant azimuth
-                  idebug_a(i,j) = 1
+                  if(alt_a(i,j) .lt. 20. .OR. alt_a(i,j) .eq. nint(alt_a(i,j)))then
+                      idebug_a(i,j) = 1
+                  endif
               endif
           endif
          endif
