@@ -171,6 +171,7 @@
      1                    ,clwc_3d,cice_3d
      1                    ,rain_3d,snow_3d,topo_a,lat,lon
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk
+!    1                    ,l_solar_eclipse
      1                    ,gnd_glow)
 !           do jj = 1,nj
 !           do ii = 1,ni
@@ -278,11 +279,11 @@
 !       azid1 = 46. ; azid2 = 226.
         azid1 = 90. ; azid2 = 270.
         if(sol_alt(i,j) .gt. 0.)then
-            azid1 = nint(sol_azi(i,j))
-!           azid2 = mod(azid1+180.,360.)
-            azid2 = azid1
+            azid1 = sol_azi(i,j)
+            azid2 = mod(azid1+180.,360.)
+!           azid2 = azid1
         elseif(moon_alt(i,j) .gt. 0.)then
-            azid1 = nint(moon_azi(i,j))
+            azid1 = moon_azi(i,j)
             azid2 = mod(azid1+180.,360.)
         endif
 
@@ -304,15 +305,18 @@
              jazi_delt = 1
          endif
 
+         azi_delt_2 = float(jazi_delt) * azi_scale * 0.5
+
          do jazi = minazi,maxazi,jazi_delt
           view_azi_deg = float(jazi) * azi_scale
 
-          if((view_azi_deg .eq. azid1 .or. 
-     1        view_azi_deg .eq. azid2)            .AND.
+          if((abs(view_azi_deg - azid1) .lt. azi_delt_2 .or. 
+     1        abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
      1        (abs(altray) .eq. 12  .or. abs(altray) .eq. 9 .or.
      1         abs(altray) .le.  9. .or. ialt .eq. minalt .or.
      1         abs(altray) .eq. 20. .or. altray .eq. 30. .or.
-     1             altray  .eq. 40. .or. altray .eq. 50.)      )then
+     1             altray  .eq. 40. .or. altray .eq. 50.) .AND. 
+     1             altray .eq. nint(altray) )then
               idebug = 1
               idebug_a(ialt,jazi) = 1
           else
@@ -380,8 +384,8 @@
                   rkdelt1 = 1.00 * grid_factor
                   rkdelt2 = 1.00 * grid_factor
               else
-                  rkdelt1 = 1.0
-                  rkdelt2 = 1.0
+                  rkdelt1 = 0.50
+                  rkdelt2 = 0.50
               endif
 
 !             arg = max(view_altitude_deg,1.0)
