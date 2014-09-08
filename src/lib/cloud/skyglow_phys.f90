@@ -42,9 +42,10 @@
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
                ! fraction of air molecules illuminated by the sun along
                ! line of sight (consider Earth's shadow + clouds)
-        real ag_2d(minalt:maxalt,minazi:maxazi)       ! gas airmass (topo/notopo)
-        real aod_ill(minalt:maxalt,minazi:maxazi)     ! aerosol illuminated optical depth (topo/notopo)
-        real aod_ray(minalt:maxalt,minazi:maxazi)     ! aerosol optical 
+        real ag_2d(minalt:maxalt,minazi:maxazi)   ! gas airmass (topo/notopo)
+        real aod_ill(minalt:maxalt,minazi:maxazi) ! aerosol illuminated
+                                         ! optical depth (slant - topo/notopo)
+        real aod_ray(minalt:maxalt,minazi:maxazi) ! aerosol optical 
                                          ! depth (zenithal) may be adjusted
                                          ! for illumination
         real aod_ray_dir(minalt:maxalt,minazi:maxazi) ! aerosol optical 
@@ -118,7 +119,7 @@
           od_a_vert = aod_vrt * ext_a(ic)
           idebug = 0
           call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert,ag/ag_90,aa/aa_90,idebug,srcdir(ic))
-          if(ic .eq. 2)then
+          if(ic .eq. 2 .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
               write(6,*)' alt/srcdir/ratio:',altray,srcdir(ic),srcdir(ic)/srcdir_90(ic)
           endif
          enddo ! ic
@@ -267,6 +268,8 @@
                         ,f12.0,5f7.3,2x,2f7.3,2x,2f7.3,f12.0)      
                   write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aod_ill(ialt,jazi)
 74                format('altaz,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aodill = ',2f8.2,4f10.4,2f9.6)                  
+                  write(6,75)od_1,pf_eff1,brt1,brt2,trans1
+75                format('od_1/pf_eff1/brt1/brt2/trans1',5f9.4)
                 endif
 
              enddo ! ic
