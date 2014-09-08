@@ -109,6 +109,8 @@ c find max and min
 
       jskip = max(jmax/32,2)
 
+      write(6,*)'iskip/jskip/nplot/ihigh',iskip,jskip,nplot,ihigh
+
       do j = 1,jmax
       do i = 1,ihigh,iskip
         c1a_array(i,j)=c1_cov(int(min(max(A(I,J)*10.*scale,-1.),13.)))
@@ -153,8 +155,8 @@ c find max and min
       elseif(NAME(1:4) .eq. 'HORZ')then ! Horizontal array plot
           do j = jmax,1,-jskip
 
-              do i1 = 1,max_plot
-                  i2 = 1 + (i1-1) * iskip
+              do i1 = 1,max_plot          ! small grid
+                  i2 = 1 + (i1-1) * iskip ! large grid
                   if(i2 .le. ihigh)then
                       c_mxp_a(i1:i1) = c1a_array(i2,j)
                       c_mxp_b(i1:i1) = c1b_array(i2,j)
