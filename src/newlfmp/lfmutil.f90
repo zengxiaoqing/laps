@@ -257,6 +257,7 @@ real :: coeff
 real :: a1,b1,c1,d1,e1,alpha(lx,ly)
 real :: const_lwp,const_iwp,const_rwp,const_swp,const_gwp
 real :: const_lwp_bks,const_iwp_bks,const_rwp_bks,const_swp_bks,const_gwp_bks
+real :: clwc2alpha,cice2alpha,rain2alpha,snow2alpha,pice2alpha
 
 !beka
 
@@ -814,8 +815,21 @@ endif ! large_ngrid
 ! Visibility.
 
 if(.true.)then
-! Note that hydrometeor mixing ratios have previously been converted to concentrations
-  a1 = 75.; b1 = 37.5; c1 = 1.5; d1 = 5.357; e1 = 1.2
+! a1 = 75.; b1 = 37.5; c1 = 1.5; d1 = 5.357; e1 = 1.2
+
+  clwc2alpha = 1.5 / (rholiq  * reff_clwc)
+  cice2alpha = 1.5 / (rholiq  * reff_cice)
+  rain2alpha = 1.5 / (rholiq  * reff_rain)
+  snow2alpha = 1.5 / (rhosnow * reff_snow)
+  pice2alpha = 1.5 / (rhograupel * reff_graupel)
+
+  a1 = clwc2alpha
+  b1 = cice2alpha
+  c1 = rain2alpha
+  d1 = snow2alpha
+  e1 = pice2alpha
+
+! Note that hydrometeor mixing ratios have previously been converted to content
   alpha(:,:) = a1 * hcldliqmr_sig(:,:,1) + b1 * hcldicemr_sig(:,:,1) &
              + c1 * hrainmr_sig(:,:,1) + d1 * hsnowmr_sig(:,:,1) + e1 * hgraupelmr_sig(:,:,1)
 ! meteorological visibility, tau ~= 2.8, with lower bound added on alpha
