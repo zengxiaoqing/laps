@@ -1207,12 +1207,18 @@ c read in laps lat/lon and topo
 
 !       Calculate low level hydrometeor fields and visibility
 !       These constants can be derived from microphysical constants
-        a1 = 75.
-        b1 = 37.5
-        c1 = 1.5
-        d1 = 5.357
-        e1 = 1.2
-       
+        clwc2alpha = 1.5 / (rholiq  * reff_clwc)
+        cice2alpha = 1.5 / (rholiq  * reff_cice)
+        rain2alpha = 1.5 / (rholiq  * reff_rain)
+        snow2alpha = 1.5 / (rhosnow * reff_snow)
+        pice2alpha = 1.5 / (rhograupel * reff_graupel)
+
+        a1 = clwc2alpha
+        b1 = cice2alpha
+        c1 = rain2alpha
+        d1 = snow2alpha
+        e1 = pice2alpha
+      
         iwrite = 0
 
         do j = 1,NY_L
@@ -1226,10 +1232,11 @@ c read in laps lat/lon and topo
             alpha = a1 * slwc_low + b1 * cice_low + c1 * rain_low 
      1            + d1 * snow_low + e1 * pice_low
             visibility(i,j) = 2.8 / max(alpha,.00004) 
-            if(alpha .gt. 0.0002 .AND. iwrite .le. 5)then
+            if(alpha .gt. 0.0002 .AND. iwrite .le. 5 .OR.
+     1             i .eq. NX_L/2 .and. j .eq. NY_L/2      )then
                 write(6,*)'visibility terms at',i,j,k_topo
                 write(6,*)slwc_low,cice_low,rain_low,snow_low,pice_low
-     1                   ,alpha,visibility(i,j)
+     1                   ,dbz_low_2d(i,j),alpha,visibility(i,j)
                 iwrite = iwrite + 1
             endif
         enddo ! i
