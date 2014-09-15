@@ -35,8 +35,8 @@
 
         real twi_trans_c(nc)           ! transmissivity
 
-        real mie, alphav_g, alphav_a
-        real srcdir_90(nc),srcdir(nc)
+        real hg2d(nc), alphav_g, alphav_a
+        real srcdir_90(nc),srcdir(nc),clear_int_c(nc)
 
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
@@ -194,7 +194,6 @@
 !           Consider arg for sideways scattering from downward diffuse
 !           is ~hg(90.) or an evaluated integral. Use 0.5 for now.
             hg2d = (hg2 * aod_dir_rat) + (0.5 * (1.0 - aod_dir_rat)) ! direct ill 
-            mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2d 
 
             if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
                 write(6,*)' ERROR in skyglow_phys: aod_dir_rat out of bounds'
@@ -204,6 +203,7 @@
             endif
 
             if(.false.)then ! sum brightness from gas and aerosols
+!             mie = brt(aod_ray(ialt,jazi)*airmass_g) * hg2d 
 
               do ic = 1,nc
 !               Rayleigh illumination
@@ -216,7 +216,7 @@
 
                 if(idebug .ge. 1 .and. ic .eq. 2)then
                   write(6,71)day_int,elong(ialt,jazi),airmass_g,brtf(airmass_g,od_per_am) &
-                            ,rayleigh,mie,hg2,hg2d,clear_rad_c(2,ialt,jazi)
+                            ,rayleigh,mie,hg2,hg2d(ic),clear_rad_c(2,ialt,jazi)
 71                format('day_int/elong/am/brt/rayleigh/mie/hg2/hg2d/clrrd2',f12.0,7f8.3,f12.0)      
                 endif
 
@@ -251,7 +251,7 @@
 !               Effective Rayleigh Phase Factor considering shadowing
                 rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
                 rayleigh_pf_eff = rayleigh_gnd * clear_radf_c(ic,ialt,jazi)
-                pf_eff1 = (rayleigh_pf_eff * alphav_g + hg2d * alphav_a * solar_int_g2) &
+                pf_eff1 = (rayleigh_pf_eff * alphav_g + hg2d(ic) * alphav_a * solar_int_g2) &
                         / (alphav_g + alphav_a * solar_int_g2)
 !               od_1 = od_g1*gasfrac + od_a
                 od_1 = od_g1*gasfrac + aod_ill(ialt,jazi)
@@ -266,7 +266,7 @@
                             ,alphav_g*1e3,alphav_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
 73                format('day_int/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,5f7.3,2x,2f7.3,2x,2f7.3,f12.0)      
-                  write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aod_ill(ialt,jazi)
+                  write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d(ic),gasfrac,aod_ill(ialt,jazi)
 74                format('altaz,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aodill = ',2f8.2,4f10.4,2f9.6)                  
                   write(6,75)od_1,pf_eff1,brt1,brt2,trans1
 75                format('od_1/pf_eff1/brt1/brt2/trans1',5f9.4)
@@ -397,18 +397,14 @@
 !             twi_trans_c(:) = trans(ext_g(:) * airmass_to_twi * 0.75) 
 !             twi_trans = twi_trans_c(1)
 
-              if(.false.)then ! fractional illumination of sunrise/set value
-!               clear_int = max(min(airmass_lit,32.0),.00001)               
-                clear_int = &
-                   max(min(frac_airmass_lit *twi_trans     ,1.0),.00001)
-!               clear_int = &
-!                  max(min(     airmass_lit *twi_trans_c(1),1.0),.00001)
-!               clear_int = &
-!                  max(     brt(airmass_lit)*twi_trans_c(1)     ,.00001)
-                clear_intf = clear_int
-              else ! experimental absolute illumination (nl)
-                rayleigh_gnd = rayleigh_pf(elong(ialt,jazi))
-                rayleigh = rayleigh_gnd  ! phase function
+              rayleigh_gnd = rayleigh_pf(elong(ialt,jazi))
+              rayleigh = rayleigh_gnd  ! phase function
+
+              mode_twi = 1
+              if(mode_twi .eq. 2)then ! RGB twilight
+                continue
+
+              else ! experimental absolute illumination (nl), HSI
                 clear_int = &
                   max(twi_int*ecl_int*rayleigh*brt(airmass_lit)*twi_trans_c(1) &
                                                               ,1e3)       
@@ -441,7 +437,7 @@
 
 !           Ramp2 is zero with either high sun or high alt
             hue_alt_ramp = (sind(altray))**2.0     ! 0-1 (higher alt)
-            hue_ramp2 = 1.0 ! sat_sol_ramp * (1.0 - hue_alt_ramp)
+!           hue_ramp2 = 1.0 ! sat_sol_ramp * (1.0 - hue_alt_ramp)
             hue_coeff = max(1.0 + min((sol_alt+3.),0.) /  6.,0.2)
 
 !           The value of 'sat_twi_ramp_nt' should also appear in
@@ -475,11 +471,12 @@
 !           Higher exp coefficient (or low hue) makes it more red
 !           Also set to blue with high alt or high sun (near horizon)
 !           Aero_red reddens due to aerosols (if value is 1)
+!           Increase huea coefficient to redden the horizon?
 !           hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
             huea = exp(-airmass_unlit*0.12*hue_coeff) ! 0:R 1:B 2:G 3:R
             hue = min(huea,(1.0 - aero_red))
-            hue2 = (2.7 - 1.7 * hue ** 1.6) *      hue_ramp2 &
-                                      + 1.0 * (1.0-hue_ramp2)
+            hue2 = (2.7 - 1.7 * hue ** 1.6)!*      hue_ramp2 &
+!                                     + 1.0 * (1.0-hue_ramp2)
             hue2 = max(hue2,1.5) ! keep aqua color high up
 
 !           Redden further based on aerosols
@@ -491,32 +488,40 @@
                 hue2 = 2.0 + .836 * sqrt(hue2 - 2.0)
             endif
 
-            clear_rad_c(1,ialt,jazi) = hue2                          ! Hue
+            if(mode_twi .eq. 1)then ! HSI twilight
 
-!           Saturation
-            if(hue2 .gt. 2.0)then ! Red End                          
-                sat_arg = 0.7*abs((hue2-2.0))**1.5
-            else                  ! Blue End
-                sat_arg = 0.4*abs((hue2-2.0))**1.5
-            endif
-            clear_rad_c(2,ialt,jazi) = 0.00 + (sat_arg) &            ! Sat
+              clear_rad_c(1,ialt,jazi) = hue2                        ! Hue
+
+!             Saturation
+              if(hue2 .gt. 2.0)then ! Red End                          
+                  sat_arg = 0.7*abs((hue2-2.0))**1.5
+              else                  ! Blue End
+                  sat_arg = 0.4*abs((hue2-2.0))**1.5
+              endif
+              clear_rad_c(2,ialt,jazi) = 0.00 + (sat_arg) &          ! Sat
                                            * sat_ramp &                 
                                            * sat_twi_ramp 
 
-!           Intensity
-            clear_rad_c(3,ialt,jazi) = clear_int * rint_alt_ramp     ! Int
+!             Intensity
+              clear_rad_c(3,ialt,jazi) = clear_int * rint_alt_ramp   ! Int
 
-            if(clear_rad_c(3,ialt,jazi) .lt. .0000099)then
-                write(6,*)' WARNING: low value of clear_rad_c' &
-                         ,clear_rad_c(3,ialt,jazi),z,airmass_g &
-                         ,rint_alt_ramp,clear_int,angle_plane &
-                         ,ht_ray_plane,ZtoPsa(ht_ray_plane)
-            endif
+              if(clear_rad_c(3,ialt,jazi) .lt. .0000099)then
+                  write(6,*)' WARNING: low value of clear_rad_c' &
+                           ,clear_rad_c(3,ialt,jazi),z,airmass_g &
+                           ,rint_alt_ramp,clear_int,angle_plane &
+                           ,ht_ray_plane,ZtoPsa(ht_ray_plane)
+              endif
+
+            else ! RGB twilight
+              do ic = 1,nc
+                  clear_rad_c(ic,ialt,jazi) = clear_int_c(ic)
+              enddo ! ic                
+            endif          
 
             if(idebug .ge. 2)then
               write(6,101) airmass_lit,airmass_tot,airmass_unlit&
-                          ,hue_coeff,huea,hue  
-101           format('airmass_lit/tot/unlit/huec/huea/hue',6f9.5)
+                          ,hue_coeff,huea,hue,hue2
+101           format('airmass_lit/tot/unlit/huec/huea/hue/hue2',7f9.5)
               write(6,102)aa,aod_lit,aod_unlit,aero_red &         
                          ,aero_red/clear_intf &                
                          ,clear_intf,skyref & 
@@ -569,7 +574,8 @@
                               ,earth_radius &            ! I
                               ,ag,ao,aa)                 ! O
 
-!       Airmasses relative to zenith at sea level pressure
+!       Airmasses relative to zenith at sea level pressure (for gas)
+!                                    at aero refht         (for aerosol)
 
         include 'trigd.inc'
 
