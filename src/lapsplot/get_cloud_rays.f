@@ -12,6 +12,7 @@
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
      1                           ,htstart                               ! O
+!    1                           ,elong                                 ! I
      1                           ,aod                                   ! I
      1                           ,ni,nj,nk,i,j,kstart                   ! I
      1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
@@ -89,7 +90,8 @@
         real cvr_path_sum_sp(nsp)
         real wt_sp(nsp) ; data wt_sp /1.0,0.5,0.02,0.0714/
 
-        real elong(minalt:maxalt,minazi:maxazi)
+        real elong_p(minalt:maxalt,minazi:maxazi)     ! dummy
+        real elong(minalt:maxalt,minazi:maxazi)       ! potential future
         real aod_ray_eff(minalt:maxalt,minazi:maxazi) ! zenithal
         real aod_ray_dir(minalt:maxalt,minazi:maxazi) ! zenithal direct (dummy)
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)  ! cloud opacity
@@ -287,6 +289,8 @@
             azid2 = mod(azid1+180.,360.)
         endif
 
+        write(6,*)'azid1/azid2 = ',azid1,azid2
+
         do ialt = minalt,maxalt
 
 !        l_process = .false.
@@ -313,10 +317,12 @@
           if((abs(view_azi_deg - azid1) .lt. azi_delt_2 .or. 
      1        abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
      1        (abs(altray) .eq. 12  .or. abs(altray) .eq. 9 .or.
-     1         abs(altray) .le.  9. .or. ialt .eq. minalt .or.
+     1         (altray .ge. -3. .and. altray .le. 9.) .or. 
+     1         ialt .eq. minalt .or.
      1         abs(altray) .eq. 20. .or. altray .eq. 30. .or.
-     1             altray  .eq. 40. .or. altray .eq. 50.) .AND. 
-     1             altray .eq. nint(altray) )then
+     1             altray  .eq. 40. .or. altray .eq. 50.) 
+!    1               .AND. altray .eq. nint(altray) 
+     1                                                   )then
               idebug = 1
               idebug_a(ialt,jazi) = 1
           else
@@ -384,8 +390,8 @@
                   rkdelt1 = 1.00 * grid_factor
                   rkdelt2 = 1.00 * grid_factor
               else
-                  rkdelt1 = 0.50
-                  rkdelt2 = 0.50
+                  rkdelt1 = 0.25
+                  rkdelt2 = 0.25
               endif
 
 !             arg = max(view_altitude_deg,1.0)
@@ -770,6 +776,7 @@
                     frac_liq = (cvr_path_sum_sp(1) + cvr_path_sum_sp(3))
      1                       / cvr_path_sum
                     tau_thr = 15. * frac_liq + 7. * (1.-frac_liq)
+!                   tau_thr = 2.
                     bks_thr = tau_thr / clwc2alpha
                     if(cvr_path_sum      .le.  bks_thr .OR. ! tau ~7-15
      1                 cvr_path_sum_last .eq. 0.            )then 
@@ -781,7 +788,7 @@
                   endif
 
 !                 Calculated weighted value of airmass to cloud
-!                 Summation(airmass*cvrpath*trans) / Summation(cvrpath*trans)
+!                 Summation(airmass*cvrpath*trans)/Summation(cvrpath*trans)
                   if(cvr_path .gt. 0.00)then
                       am2cld_den = cvr_path 
      1                           * trans(clwc2alpha*cvr_path_sum)
@@ -963,7 +970,7 @@
      1             ,aod_ill                                   ! I (dummy)
      1             ,l_solar_eclipse,i4time,rlat,rlon          ! I
      1             ,clear_radf_c,ag_2d                        ! I (ag2d is dummy)
-     1             ,clear_rad_c,elong                       ) ! O
+     1             ,clear_rad_c,elong_p                     ) ! O (dummy)
          endif
 
          if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4 .OR. 
