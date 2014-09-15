@@ -406,7 +406,7 @@
 
         bkscat_alb = -99.9 ! dummy value to initialize for logging
         write(6,*)' max of idebug_a (1) = ',maxval(idebug_a)
-        call get_cld_pf(elong_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
+        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
         do j = 1,nj
