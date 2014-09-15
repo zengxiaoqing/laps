@@ -1,17 +1,16 @@
 
-        subroutine get_cld_pf(elong_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
+        subroutine get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_scat1,pf_scat2,pf_scat,pf_thk_a) ! O
         include 'trigd.inc'
 
 !       Statement functions
         trans(od) = exp(-od)
         opac(od) = 1.0 - exp(-od)
-        counts_to_rad(counts) = 10.**((counts/100.)+7.3)
-!       pf_bk(elong,alb) = 1.0 + cosd(180. - elong)
         alb(bt) = bt / (1.+bt)
 
         include 'rad.inc'
         real elong_a(ni,nj)
+        real alt_a(ni,nj)
         real cloud_od(ni,nj)        ! cloud optical depth (tau)
         real cloud_od_sp(ni,nj,nsp) ! cloud species tau (clwc,cice,rain,snow)
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
@@ -21,6 +20,7 @@
         real pf_clwc(nc),pf_rain(nc)
         real pf_thk_a(ni,nj)
         real*8 phase_angle_d,phase_corr
+        real asy_clwc(nc)  /0.96,0.95,0.94/
 
         real anglebow1(nc) /41.80,41.20,40.60/
         real anglebow2(nc) /52.50,53.20,53.90/
@@ -37,8 +37,6 @@
 
         do j = 1,nj
          do i = 1,ni
-
-          ic = 2
 
 !         a substitute for cloud_rad could be arg2 = (cosd(alt))**3.
 
@@ -93,32 +91,38 @@
 
             radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
 !                     illuminated                unilluminated
-            pf_thk = pf_thk*radfrac + hg(-0.0 ,elong_a(i,j)) * (1.-radfrac)
+            pf_thk = pf_thk*radfrac + hg(-0.,elong_a(i,j)) * (1.-radfrac) &
+                                        * (2./3. * (1. + sind(alt_a(i,j))))
             pf_thk_a(i,j) = pf_thk
 
-            pf_clwc = clwc_bin1a * clwc_bin1 * hg(.94**hgp,elong_a(i,j)) & ! corona
-                    + clwc_bin1b * clwc_bin1 * hg(.60**hgp,elong_a(i,j)) &
-!                   + clwc_bin1c * clwc_bin1 * hg(.00     ,elong_a(i,j)) &
-!                   + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
-!                   + clwc_bin2  * 2.0    ! add albedo term?     
-                    + clwc_bin2  * pf_thk ! add albedo term?     
+            do ic = 1,nc
+              pf_clwc(ic) &
+             = clwc_bin1a * clwc_bin1 * hg(asy_clwc(ic)**hgp,elong_a(i,j))& ! corona
+             + clwc_bin1b * clwc_bin1 * hg(.60**hgp         ,elong_a(i,j))&
+!            + clwc_bin1c * clwc_bin1 * hg(.00              ,elong_a(i,j))&
+!            + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
+!            + clwc_bin2  * 2.0    ! add albedo term?     
+             + clwc_bin2  * pf_thk ! add albedo term?     
 
-!           clwc_bin1c = .00
-            clwc_bin1a = clwc_bin1a - .00
-            clwc_bin1b = clwc_bin1b - .00
+!             clwc_bin1c = .00
+              clwc_bin1a = clwc_bin1a - .00
+              clwc_bin1b = clwc_bin1b - .00
 
-            pf_rain = clwc_bin1a * clwc_bin1 * hg(.94**hgp,elong_a(i,j)) &         
-                    + clwc_bin1b * clwc_bin1 * hg(.60**hgp,elong_a(i,j)) &
-!                   + clwc_bin1c * clwc_bin1 * hg(.00     ,elong_a(i,j)) &
-!                   + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
-!                   + clwc_bin2  * 2.0    ! add albedo term?     
-                    + clwc_bin2  * pf_thk ! add albedo term?     
+              pf_rain(ic) & 
+                      = clwc_bin1a * clwc_bin1 * hg(.94**hgp,elong_a(i,j))&
+                      + clwc_bin1b * clwc_bin1 * hg(.60**hgp,elong_a(i,j))&
+!                     + clwc_bin1c * clwc_bin1 * hg(.00     ,elong_a(i,j))&
+!                     + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
+!                     + clwc_bin2  * 2.0    ! add albedo term?     
+                      + clwc_bin2  * pf_thk ! add albedo term?     
 
-            if(cloud_od_liq .eq. cloud_od_sp(i,j,1))then ! cloud liquid
-                pf_scat1(ic,i,j) = pf_clwc(ic)
-            else                                         ! rain
-                pf_scat1(ic,i,j) = pf_rain(ic)
-            endif
+              if(cloud_od_liq .eq. cloud_od_sp(i,j,1))then ! cloud liquid
+                  pf_scat1(ic,i,j) = pf_clwc(ic)
+              else                                         ! rain
+                  pf_scat1(ic,i,j) = pf_rain(ic)
+              endif
+
+            enddo ! ic
 
           endif ! .true.
 
@@ -147,14 +151,14 @@
               snow_factor = 0.
           endif
 
-          pf_scat2(ic,i,j) = pf_snow * snow_factor + pf_scat1(ic,i,j) * (1.0 - snow_factor)
+          pf_scat2(:,i,j) = pf_snow * snow_factor + pf_scat1(:,i,j) * (1.0 - snow_factor)
 
 !         Suppress phase function if terrain is close in the light ray
           if(airmass_2_topo(i,j) .gt. 0.)then ! cloud in front of terrain
-              pf_scat(:,i,j) = pf_scat2(ic,i,j)**(r_cloud_rad(i,j)**2.0)
-!             pf_scat(:,i,j) = pf_scat2(ic,i,j)**opac(cloud_od_tot)
+              pf_scat(:,i,j) = pf_scat2(:,i,j)**(r_cloud_rad(i,j)**2.0)
+!             pf_scat(:,i,j) = pf_scat2(:,i,j)**opac(cloud_od_tot)
           else
-              pf_scat(:,i,j) = pf_scat2(ic,i,j)
+              pf_scat(:,i,j) = pf_scat2(:,i,j)
           endif
 
 !         Add rainbows
