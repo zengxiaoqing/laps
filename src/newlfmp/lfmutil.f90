@@ -635,6 +635,7 @@ if (make_micro) then
         print *,'Min/Max pcptype_sfc =',minval(pcptype_sfc),maxval(pcptype_sfc)
         print *,'Min/Max pcptype_prs =',minval(pcptype_prs),maxval(pcptype_prs)
      endif
+ 
    else
       pcptype_sfc=rmsg
       pcptype_prs=rmsg
@@ -683,11 +684,12 @@ if (fcsttime > 0) then
    if(.not. large_ngrid)then
       print*,'Min/Max snow tot (previous) = ',minval(snow_tot),maxval(snow_tot)
 
-      allocate(fallen_precip_type(lx,ly))
-      call wintprec(htsig,hzsig,zprs,psfc,tsfc,tdsfc,zsfc,pcp_inc,lx,ly  &
-                ,nz,lz,k700,k850,k1000,pcp_inc,fallen_precip_type)
-      call snowfall(htsig,tsfc,pcp_inc,fallen_precip_type,lx,ly,nz,snow_inc,snow_tot)
-      deallocate(fallen_precip_type)
+!     allocate(fallen_precip_type(lx,ly))
+!     call wintprec(htsig,hzsig,zprs,psfc,tsfc,tdsfc,zsfc,pcp_inc,lx,ly  &
+!               ,nz,lz,k700,k850,k1000,pcp_inc,fallen_precip_type)
+!     call snowfall(htsig,tsfc,pcp_inc,fallen_precip_type,lx,ly,nz,snow_inc,snow_tot)
+      call snowfall(htsig,tsfc,pcp_inc,pcptype_sfc,lx,ly,nz,snow_inc,snow_tot)
+!     deallocate(fallen_precip_type)
    endif
 
 else ! no incremental precip at time zero
@@ -2472,10 +2474,9 @@ subroutine snowfall(tsig,tsfc,prcpinc,preciptype,imax,jmax,ksig,snowinc,snowtot)
 ! prcpinc          real     input   3hr precip accum
 !                                   array(2-D)
 ! preciptype       integer  input   0 - is no precip
-!                                   1 - is rain
-!                                   2 - is freezing rain
-!                                   3 - is ice/mixed
-!                                   4 - is snow
+!                                     - is rain
+!                                   2 - is snow
+!                                     - is ice/mixed
 ! snowinc          real     output  3hr snow accum
 !                                       array(2-D)
 ! snowtot          real     output  total snow accum
@@ -2510,7 +2511,7 @@ do i=1,imax
             
 ! Check if precipitation type is snow.
 
-   if (preciptype(i,j) == 5) then
+   if (preciptype(i,j) == 2) then
 
       if(.true.)then ! Liquid equivalent of snow depends on column max temp
           tcolmax = maxval(tsig(i,j,:))
