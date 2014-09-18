@@ -131,6 +131,7 @@
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
         topo_swi = 0.
+        topo_albedo = 0.0 ! initialize
         r_cloud_rad = 1.
         clear_rad_c = 0.
         clear_radf_c = 0.
@@ -410,7 +411,7 @@
      1           'ew  rjnew   rk    ht_m   topo_m  ',
      1           ' path     lwc    ice    rain   snow      slant',
      1           '  cvrpathsum  cloudfrac  airmass cloud_rad',
-     1           ' aeroext  transm aod_sum aod_sum_ill')
+     1           ' aeroext transm3 aod_sum aod_sum_ill')
               endif
 
 !             Initialize ray
@@ -632,28 +633,28 @@
      1             rjnew_h .ge. 1. .and. rjnew_h .le. rnj .AND.
      1             rk_h    .ne. r_missing_data )then 
 
+                  i1 = min(int(rinew_m),ni-1)
+                  j1 = min(int(rjnew_m),nj-1) 
+                  k1 = min(int(rk_m)   ,nk-1) 
+
+                  fi = rinew_m - i1; i2=i1+1
+                  fj = rjnew_m - j1; j2=j1+1
+                  fk = rk_m    - k1; k2=k1+1
+
+                  tri_coeff(1,1,1) = (1.-fi) * (1.-fj) * (1.- fk)
+                  tri_coeff(2,1,1) = fi      * (1.-fj) * (1.- fk)
+                  tri_coeff(1,2,1) = (1.-fi) *     fj  * (1.- fk)
+                  tri_coeff(1,1,2) = (1.-fi) * (1.-fj) *      fk
+                  tri_coeff(1,2,2) = (1.-fi) *     fj  *      fk
+                  tri_coeff(2,1,2) = fi      * (1.-fj) *      fk
+                  tri_coeff(2,2,1) = fi      *     fj  * (1.- fk)
+                  tri_coeff(2,2,2) = fi      *     fj  *      fk
+
 !                 Cloud present on any of 8 interpolation vertices
                   if(maxval(
      1              cond_3d(int(rinew_m):int(rinew_m)+1
      1                     ,int(rjnew_m):int(rjnew_m)+1
      1                     ,int(rk_m)   :int(rk_m)+1    ) ) .gt. 0.)then        
-
-                      i1 = min(int(rinew_m),ni-1)
-                      j1 = min(int(rjnew_m),nj-1) 
-                      k1 = min(int(rk_m)   ,nk-1) 
-
-                      fi = rinew_m - i1; i2=i1+1
-                      fj = rjnew_m - j1; j2=j1+1
-                      fk = rk_m    - k1; k2=k1+1
-
-                      tri_coeff(1,1,1) = (1.-fi) * (1.-fj) * (1.- fk)
-                      tri_coeff(2,1,1) = fi      * (1.-fj) * (1.- fk)
-                      tri_coeff(1,2,1) = (1.-fi) *     fj  * (1.- fk)
-                      tri_coeff(1,1,2) = (1.-fi) * (1.-fj) *      fk
-                      tri_coeff(1,2,2) = (1.-fi) *     fj  *      fk
-                      tri_coeff(2,1,2) = fi      * (1.-fj) *      fk
-                      tri_coeff(2,2,1) = fi      *     fj  * (1.- fk)
-                      tri_coeff(2,2,2) = fi      *     fj  *      fk
 
                       cond_m = sum(tri_coeff(:,:,:) * 
      1                             cond_3d(i1:i2,j1:j2,k1:k2))
@@ -702,16 +703,6 @@
 
 !                 if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
                   if(.true.)then
-
-                    if(cond_m .eq. 0.)then ! wasn't computed above
-                      i1 = min(int(rinew_m),ni-1)
-                      j1 = min(int(rjnew_m),nj-1) 
-                      k1 = min(int(rk_m)   ,nk-1) 
-
-                      fi = rinew_m - i1; i2=i1+1
-                      fj = rjnew_m - j1; j2=j1+1
-                      fk = rk_m    - k1; k2=k1+1
-                    endif
 
                     transm_3d_m = sum(tri_coeff(:,:,:) * 
      1                            transm_3d(i1:i2,j1:j2,k1:k2))
