@@ -33,6 +33,8 @@
 
         include 'rad.inc'
 
+        cosp(b,x) = (1. + b/2.) * cosd(x/2)**b
+
         real twi_trans_c(nc)           ! transmissivity
 
         real hg2d(nc), alphav_g, alphav_a
@@ -66,6 +68,14 @@
 
         sfc_alb = 0.15 ! pass this in and account for snow cover?
 
+        aod_bin(1) = .000
+        aod_bin(2) = .987
+        aod_bin(3) = .013
+
+        aod_asy(1) =  .75
+        aod_asy(2) =  .70
+        aod_asy(3) = -.65
+
         patm_ray = patm
 
         aero_refht = redp_lvl
@@ -81,7 +91,6 @@
         endif
 
 !       Obtain reference values of source term
-        write(6,*)' Obtain reference values of source term'
         call get_airmass(90.,htmsl,patm &           ! I
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius &            ! I
@@ -90,20 +99,21 @@
         aa_90 = aa
 
         if(sol_alt .gt. 0.)then
+         write(6,*)' Obtain reference values of source term'
          write(6,*)'ag_90/aa_90 = ',ag_90,aa_90
-        endif
 
-        do ic = 1,nc
-         od_g_vert = ext_g(ic) * patm
-         od_a_vert = aod_vrt * ext_a(ic)
-         if(ic .eq. 2)then
-             idebug = 1
-         else
-             idebug = 0
-         endif
-         call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert,ag/ag_90,aa/aa_90,idebug,srcdir_90(ic))
-         write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
-        enddo ! ic
+         do ic = 1,nc
+          od_g_vert = ext_g(ic) * patm
+          od_a_vert = aod_vrt * ext_a(ic)
+          if(ic .eq. 2)then
+              idebug = 1
+          else
+              idebug = 0
+          endif
+          call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert,ag/ag_90,aa/aa_90,idebug,srcdir_90(ic))
+          write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
+         enddo ! ic
+        endif
 
         do ialt = ialt_start,ialt_end,ialt_delt
   
@@ -114,15 +124,17 @@
                          ,ag,ao,aa)                 ! O
 
 !        Determine src term and ratio with zenith value
-         do ic = 1,nc
-          od_g_vert = ext_g(ic) * patm
-          od_a_vert = aod_vrt * ext_a(ic)
-          idebug = 0
-          call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert,ag/ag_90,aa/aa_90,idebug,srcdir(ic))
-          if(ic .eq. 2 .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
-              write(6,*)' alt/srcdir/ratio:',altray,srcdir(ic),srcdir(ic)/srcdir_90(ic)
-          endif
-         enddo ! ic
+         if(sol_alt .gt. 0.)then
+          do ic = 1,nc
+           od_g_vert = ext_g(ic) * patm
+           od_a_vert = aod_vrt * ext_a(ic)
+           idebug = 0
+           call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert,ag/ag_90,aa/aa_90,idebug,srcdir(ic))
+           if(ic .eq. 2 .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
+               write(6,*)' alt/srcdir/ratio:',altray,srcdir(ic),srcdir(ic)/srcdir_90(ic)
+           endif
+          enddo ! ic
+         endif
 
 !        Determine aerosol multiple scattering order
 !        altscat = 1.00 * altray + 0.00 * sol_alt
@@ -185,6 +197,11 @@
             hg2 = aod_bin(1) * hg(aod_asy_eff(1),elong(ialt,jazi)) &
                 + aod_bin(2) * hg(aod_asy_eff(2),elong(ialt,jazi)) &
                 + aod_bin(3) * hg(aod_asy_eff(3),elong(ialt,jazi)) 
+
+            fc = 0.09 * 0.5**(scatter_order-1.0)
+            gc = 2300. / scatter_order**2
+            hg2 = (1.-fc) * hg2 + fc * cosp(gc,elong(ialt,jazi))
+
             if(aod_ray(ialt,jazi) .gt. 0.)then
                 aod_dir_rat = aod_ray_dir(ialt,jazi) / aod_ray(ialt,jazi)
             else
@@ -266,8 +283,9 @@
                             ,alphav_g*1e3,alphav_a*1e3,od_g1,od_g2,clear_rad_c(2,ialt,jazi)
 73                format('day_int/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,5f7.3,2x,2f7.3,2x,2f7.3,f12.0)      
-                  write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d(ic),gasfrac,aod_ill(ialt,jazi)
-74                format('altaz,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aodill = ',2f8.2,4f10.4,2f9.6)                  
+                  write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,hg2,hg2d(ic),gasfrac,aod_ill(ialt,jazi) & 
+                            ,aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi),aod_dir_rat
+74                format('altaz,am_sun,solar_int_g2,hg2,hg2d,gasfrac,aod ill/dir/ray/rat = ',2f8.2,4f10.4,2f9.6,3f8.3)                  
                   write(6,75)od_1,pf_eff1,brt1,brt2,trans1
 75                format('od_1/pf_eff1/brt1/brt2/trans1',5f9.4)
                 endif
@@ -438,7 +456,7 @@
 !           Ramp2 is zero with either high sun or high alt
             hue_alt_ramp = (sind(altray))**2.0     ! 0-1 (higher alt)
 !           hue_ramp2 = 1.0 ! sat_sol_ramp * (1.0 - hue_alt_ramp)
-            hue_coeff = max(1.0 + min((sol_alt+3.),0.) /  6.,0.2)
+            hue_coeff = 0.2 ! max(1.0 + min((sol_alt+3.),0.) /  6.,0.2)
 
 !           The value of 'sat_twi_ramp_nt' should also appear in
 !           subroutine 'get_clr_rad_nt', variable 'sat_twi_ramp'
@@ -473,10 +491,9 @@
 !           Aero_red reddens due to aerosols (if value is 1)
 !           Increase huea coefficient to redden the horizon?
 !           hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
-            huea = exp(-airmass_unlit*0.12*hue_coeff) ! 0:R 1:B 2:G 3:R
+            huea = exp(-airmass_unlit*0.36*hue_coeff) ! 0:R 1:B 2:G 3:R
             hue = min(huea,(1.0 - aero_red))
-            hue2 = (2.7 - 1.7 * hue ** 1.6)!*      hue_ramp2 &
-!                                     + 1.0 * (1.0-hue_ramp2)
+            hue2 = (2.7 - 1.7 * hue ** 1.6)
             hue2 = max(hue2,1.5) ! keep aqua color high up
 
 !           Redden further based on aerosols
