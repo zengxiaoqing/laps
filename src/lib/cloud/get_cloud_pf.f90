@@ -20,7 +20,7 @@
         real pf_clwc(nc),pf_rain(nc)
         real pf_thk_a(ni,nj)
         real*8 phase_angle_d,phase_corr
-        real asy_clwc(nc)  /0.96,0.95,0.94/
+        real asy_clwc(nc)  /0.94,0.95,0.96/
 
         real anglebow1(nc) /41.80,41.20,40.60/
         real anglebow2(nc) /52.50,53.20,53.90/
@@ -183,7 +183,7 @@
                   super_phase = ((anglebow1(ic)-bow_hw) - antisol_rad) * super_omega
                   super_amp = 0.1 - (0.1 * cosd(super_phase) * (antisol_rad / (anglebow1(ic)-bow_hw))**15.)
                   bow_int = (2.0 + 1.0 * antisol_rad / (anglebow1(ic)-bow_hw)) * super_amp
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (.053 * bow_int * rain_factor * r_cloud_rad(i,j)**10.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (.053 * bow_int * rain_factor * r_cloud_rad(i,j)**2.)
               endif
 
 !             Primary rainbow (red is 42 degrees radius, blue is 40)
@@ -192,7 +192,7 @@
                   bow_frac = abs(antisol_rad-anglebow1(ic)) / bow_hw
 !                 ratio_bow = max(1.0 / pf_scat(ic,i,j) - 1.0, 0.)
                   bow_int = (1.0 - bow_frac) ** 1.0 
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (1.0 * frac_single * bow_int * rain_factor * r_cloud_rad(i,j)**10.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (1.0 * frac_single * bow_int * rain_factor * r_cloud_rad(i,j)**2.)
               endif
 
 !             Alexander's dark band
@@ -213,7 +213,7 @@
                   bow_frac = abs(antisol_rad-anglebow2(ic)) / bow_hw 
 !                 ratio_bow = max(0.2 / pf_scat(ic,i,j) - 1.0, 0.)
                   bow_int = (1.0 - bow_frac) ** 0.5 
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (0.2 * frac_single * bow_int * rain_factor * r_cloud_rad(i,j)**10.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (0.2 * frac_single * bow_int * rain_factor * r_cloud_rad(i,j)**2.)
               endif
             enddo ! ic
 
