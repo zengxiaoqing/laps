@@ -346,6 +346,7 @@
           icloud = 0
           cvr_path_sum = 0.
           cvr_path_sum_sp = 0.
+          ltype_1st = 0
           sum_odrad = 0.
           sum_odrad_c = 0.
           sum_clrrad = 0.
@@ -758,6 +759,9 @@
      1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
      1                cvr_path_sum_last .eq. 0.  )            )then 
                       aod_2_cloud(ialt,jazi) = sum_aod
+                    if(cvr_path_sum_sp(3) .gt. 0.)then
+                      ltype_1st = 3 ! first hydrometeors contain rain                     
+                    endif
                   endif
 
 !                 Determine backscatter threshold for averaging cloud rad
@@ -766,8 +770,11 @@
                   if(cvr_path .gt. 0.00)then  
                     frac_liq = (cvr_path_sum_sp(1) + cvr_path_sum_sp(3))
      1                       / cvr_path_sum
-                    tau_thr = 15. * frac_liq + 7. * (1.-frac_liq)
-!                   tau_thr = 2.
+                    if(ltype_1st .eq. 3)then ! 1st hydrometeors have rain
+                        tau_thr = 2. ! 0.5
+                    else                   
+                        tau_thr = 15. * frac_liq + 7. * (1.-frac_liq)
+                    endif
                     bks_thr = tau_thr / clwc2alpha
                     if(cvr_path_sum      .le.  bks_thr .OR. ! tau ~7-15
      1                 cvr_path_sum_last .eq. 0.            )then 
