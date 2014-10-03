@@ -482,30 +482,30 @@
                               +  am_term   * (1.0 - frac_twi_ramp)
             endif
 
-!           HSI
-
-!           Hue
-!           Hue tends to red with high airmass and blue with low airmass
-!           Higher exp coefficient (or low hue) makes it more red
-!           Also set to blue with high alt or high sun (near horizon)
-!           Aero_red reddens due to aerosols (if value is 1)
-!           Increase huea coefficient to redden the horizon?
-!           hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
-            huea = exp(-airmass_unlit*0.36*hue_coeff) ! 0:R 1:B 2:G 3:R
-            hue = min(huea,(1.0 - aero_red))
-            hue2 = (2.7 - 1.7 * hue ** 1.6)
-            hue2 = max(hue2,1.5) ! keep aqua color high up
-
-!           Redden further based on aerosols
-!           hue2 = min(max(hue2,aero_red/clear_intf),2.7)
-
-            if(hue2 .lt. 2.0)then
-                hue2 = 2.0 - sqrt(2.0 - hue2)
-            else
-                hue2 = 2.0 + .836 * sqrt(hue2 - 2.0)
-            endif
-
             if(mode_twi .eq. 1)then ! HSI twilight
+
+!             HSI
+
+!             Hue
+!             Hue tends to red with high airmass and blue with low airmass
+!             Higher exp coefficient (or low hue) makes it more red
+!             Also set to blue with high alt or high sun (near horizon)
+!             Aero_red reddens due to aerosols (if value is 1)
+!             Increase huea coefficient to redden the horizon?
+!             hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
+              huea = exp(-airmass_unlit*0.36*hue_coeff) ! 0:R 1:B 2:G 3:R
+              hue = min(huea,(1.0 - aero_red))
+              hue2 = (2.7 - 1.7 * hue ** 1.6)
+              hue2 = max(hue2,1.5) ! keep aqua color high up
+
+!             Redden further based on aerosols
+!             hue2 = min(max(hue2,aero_red/clear_intf),2.7)
+
+              if(hue2 .lt. 2.0)then
+                  hue2 = 2.0 - sqrt(2.0 - hue2)
+              else
+                  hue2 = 2.0 + .836 * sqrt(hue2 - 2.0)
+              endif
 
               clear_rad_c(1,ialt,jazi) = hue2                        ! Hue
 
@@ -515,9 +515,11 @@
               else                  ! Blue End
                   sat_arg = 0.4*abs((hue2-2.0))**1.5
               endif
+              sat_aod_ramp = 1.2 - (aod_vrt * 2.)
               clear_rad_c(2,ialt,jazi) = 0.00 + (sat_arg) &          ! Sat
                                            * sat_ramp &                 
-                                           * sat_twi_ramp 
+                                           * sat_twi_ramp &
+                                           * sat_aod_ramp
 
 !             Intensity
               clear_rad_c(3,ialt,jazi) = clear_int * rint_alt_ramp   ! Int
