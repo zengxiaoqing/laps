@@ -1,6 +1,6 @@
 
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
-                               r_cloud_rad,cloud_rad_c, &
+                               r_cloud_rad,cloud_rad_c,cloud_rad_w, &
                                clear_rad_c, &
                                clear_radf_c,patm,htmsl, &               ! I
                                glow,glow_sun,glow_moon,glow_stars, &    ! I
@@ -30,6 +30,7 @@
         real cloud_od_sp(ni,nj,nsp) ! cloud species optical depth
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
+        real cloud_rad_w(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat) * rad
         real clear_rad_c(nc,ni,nj)  ! clear sky illumination
                                     ! local/input when sun is above/below horizon
         real moon_rad_c(nc,ni,nj)   ! clear sky illumination from moon
@@ -117,10 +118,13 @@
 !         Test at -3.2 solar alt
           fracalt = sol_alt_eff / (-16.)
           corr1 = 8.6; corr2 = 3.612
-          corr1 = 8.6; corr2 = 3.412
+          corr1 = 8.6; corr2 = 3.412 ! darkness of start/end of twilight
+          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight
 !         argref = corr1 + (fracalt**0.83 * (corr2-corr1))
-          argref = corr1 + (fracalt**0.68 * (corr2-corr1))
-          contrast = 70. + 30. * (abs(sol_alt_eff + 8.)/8.)**2
+!         argref = corr1 + (fracalt**0.68 * (corr2-corr1))
+          argref = corr1 + (fracalt**0.93 * (corr2-corr1)) ! darkness of mid-twi
+!         contrast = 70. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
+          contrast = 54. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
           write(6,*)' argref = ',argref
           write(6,*)' contrast = ',contrast
         endif
@@ -406,7 +410,8 @@
 
         bkscat_alb = -99.9 ! dummy value to initialize for logging
         write(6,*)' max of idebug_a (1) = ',maxval(idebug_a)
-        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
+        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp & ! I
+                       ,nsp,airmass_2_topo,idebug_a,ni,nj &   ! I
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
         do j = 1,nj
