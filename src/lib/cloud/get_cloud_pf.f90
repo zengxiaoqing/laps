@@ -1,5 +1,5 @@
 
-        subroutine get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_od,cloud_od_sp,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
+        subroutine get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_scat1,pf_scat2,pf_scat,pf_thk_a) ! O
         include 'trigd.inc'
 
@@ -7,6 +7,7 @@
         trans(od) = exp(-od)
         opac(od) = 1.0 - exp(-od)
         alb(bt) = bt / (1.+bt)
+        rad2tau(b,r) = (1.-r)/(r*b)
 
         include 'rad.inc'
         real elong_a(ni,nj)
@@ -14,6 +15,7 @@
         real cloud_od(ni,nj)        ! cloud optical depth (tau)
         real cloud_od_sp(ni,nj,nsp) ! cloud species tau (clwc,cice,rain,snow)
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
+        real cloud_rad_w(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat) * rad
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         integer idebug_a(ni,nj)
         real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
@@ -50,6 +52,7 @@
 !         http://wiki.seas.harvard.edu/geos-chem/images/Guide_to_GCRT_Oct2013.pdf
 
           cloud_od_cice = cloud_od_sp(i,j,2)
+          cloud_od_rain = cloud_od_sp(i,j,3)
 
           if(.true.)then ! new liquid phase function
             cloud_od_liq = cloud_od_sp(i,j,1) + cloud_od_sp(i,j,3)
@@ -95,6 +98,10 @@
                                         * (2./3. * (1. + sind(alt_a(i,j))))
             pf_thk_a(i,j) = pf_thk
 
+            rain_peak = exp(-rad2tau(.06,r_cloud_rad(i,j))/2.)
+            rain_bin1 = exp(-(cloud_od_liq/10.)**2) ! optically thin
+            rain_bin1 = rain_bin1 * rain_peak ! direct lighting
+
             do ic = 1,nc
               pf_clwc(ic) &
              = clwc_bin1a * clwc_bin1 * hg(asy_clwc(ic)**hgp,elong_a(i,j))& ! corona
@@ -104,14 +111,10 @@
 !            + clwc_bin2  * 2.0    ! add albedo term?     
              + clwc_bin2  * pf_thk ! add albedo term?     
 
-!             clwc_bin1c = .00
-              clwc_bin1a = clwc_bin1a - .00
-              clwc_bin1b = clwc_bin1b - .00
-
               pf_rain(ic) & 
-                      = clwc_bin1a * clwc_bin1 * hg(.94**hgp,elong_a(i,j))&
-                      + clwc_bin1b * clwc_bin1 * hg(.60**hgp,elong_a(i,j))&
-!                     + clwc_bin1c * clwc_bin1 * hg(.00     ,elong_a(i,j))&
+                      = clwc_bin1a * rain_bin1 * hg(.94**hgp,elong_a(i,j))&
+                      + clwc_bin1b * rain_bin1 * hg(.60**hgp,elong_a(i,j))&
+!                     + clwc_bin1c * rain_bin1 * hg(.00     ,elong_a(i,j))&
 !                     + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
 !                     + clwc_bin2  * 2.0    ! add albedo term?     
                       + clwc_bin2  * pf_thk ! add albedo term?     
@@ -162,13 +165,13 @@
           endif
 
 !         Add rainbows
-!         rain_factor = opac(cloud_od_sp(i,j,3))
+          rain_factor = opac(cloud_od_sp(i,j,3))**0.333
 !         rain_factor = cloud_od_sp(i,j,3) / cloud_od_tot
-          if(cloud_od_sp(i,j,3) .gt. 0.)then
-            rain_factor = 1.
-          else
-            rain_factor = 0.
-          endif
+!         if(cloud_od_sp(i,j,3) .gt. 0.)then
+!           rain_factor = 1.
+!         else
+!           rain_factor = 0.
+!         endif
 
           if(rain_factor .gt. 0.)then
             antisol_rad = 180. - elong_a(i,j)
@@ -183,7 +186,7 @@
                   super_phase = ((anglebow1(ic)-bow_hw) - antisol_rad) * super_omega
                   super_amp = 0.1 - (0.1 * cosd(super_phase) * (antisol_rad / (anglebow1(ic)-bow_hw))**15.)
                   bow_int = (2.0 + 1.0 * antisol_rad / (anglebow1(ic)-bow_hw)) * super_amp
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (.053 * bow_int * rain_factor * r_cloud_rad(i,j)**2.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (.053 * bow_int * rain_factor * cloud_rad_w(i,j)**3.)
               endif
 
 !             Primary rainbow (red is 42 degrees radius, blue is 40)
@@ -192,7 +195,7 @@
                   bow_frac = abs(antisol_rad-anglebow1(ic)) / bow_hw
 !                 ratio_bow = max(1.0 / pf_scat(ic,i,j) - 1.0, 0.)
                   bow_int = (1.0 - bow_frac) ** 1.0 
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (1.0 * frac_single * bow_int * rain_factor * r_cloud_rad(i,j)**2.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (1.0 * frac_single * bow_int * rain_factor * cloud_rad_w(i,j)**3.)
               endif
 
 !             Alexander's dark band
@@ -201,10 +204,15 @@
               if(abs(antisol_rad-angle_alex) .lt. alex_hw)then
                   frac_alex1 = abs(antisol_rad-angle_alex) / alex_hw
                   frac_alex2 = 1.0 - frac_alex1**8
-                  frac_alex = frac_alex2 * rain_factor * r_cloud_rad(i,j)**10.
-                  frac_alex = frac_alex * clwc_bin1 ! optically thin
+                  frac_alex = frac_alex2 * rain_factor * cloud_rad_w(i,j)**3. ! direct lighting
+!                 frac_alex = frac_alex2 * rain_factor * rain_peak            ! direct lighting
+!                 frac_alex = frac_alex * rain_bin1 ! optically thin
                   pf_alex = .02
                   pf_scat(ic,i,j) = pf_alex * frac_alex + pf_scat(ic,i,j) * (1.0 - frac_alex)
+                  if(ic .eq. 2 .and. idebug_a(i,j) .eq. 1)then
+                      write(6,91)rain_peak,rain_bin1,frac_alex2,frac_alex
+91                    format(' rain_peak/rain_bin1/alex2/alex',2f9.6,f9.3,f9.6)
+                  endif
               endif
 
 !             Secondary rainbow (red is 54.5 degrees radius, blue is 52)
@@ -213,15 +221,16 @@
                   bow_frac = abs(antisol_rad-anglebow2(ic)) / bow_hw 
 !                 ratio_bow = max(0.2 / pf_scat(ic,i,j) - 1.0, 0.)
                   bow_int = (1.0 - bow_frac) ** 0.5 
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (0.2 * frac_single * bow_int * rain_factor * r_cloud_rad(i,j)**2.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (0.2 * frac_single * bow_int * rain_factor * cloud_rad_w(i,j)**3.)
               endif
+
             enddo ! ic
 
           endif ! rain_factor > 0
 
           if(idebug_a(i,j) .eq. 1)then
-              write(6,101)i,j,elong_a(i,j),pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
-101           format(' elg/clwc/rain/rad/radf/pf1/pf2/pfs/trans/snow/rain factors = ',2i5,f8.2,2f9.3,2x,2f9.3,2x,6f8.3,f9.3)
+              write(6,101)i,j,elong_a(i,j),pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
+101           format(' elg/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/snow/rain factors = ',2i5,f8.2,2f9.3,2x,3f8.4,2x,6f8.3,f9.3)
           endif
 
          enddo ! i (altitude)
