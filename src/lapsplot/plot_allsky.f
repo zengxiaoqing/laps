@@ -111,6 +111,7 @@
         real, allocatable, dimension(:,:) :: aod_tot
         real, allocatable, dimension(:,:) :: r_cloud_trans ! sun to cloud transmissivity (direct+fwd scat)
         real, allocatable, dimension(:,:,:) :: cloud_rad_c ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
+        real, allocatable, dimension(:,:) :: cloud_rad_w   ! sun to cloud transmissivity (direct+fwd scat) * rad
         real, allocatable, dimension(:,:,:) :: clear_rad_c ! clear sky illumination
         real, allocatable, dimension(:,:,:) :: clear_radf_c! integrated fraction of air illuminated by the sun along line of sight
         real, allocatable, dimension(:,:) :: alt_a_roll
@@ -787,6 +788,7 @@
           allocate(aod_tot(minalt:maxalt,minazi:maxazi))
           allocate(r_cloud_trans(minalt:maxalt,minazi:maxazi))
           allocate(cloud_rad_c(nc,minalt:maxalt,minazi:maxazi))
+          allocate(cloud_rad_w(minalt:maxalt,minazi:maxazi))
           allocate(clear_rad_c(nc,minalt:maxalt,minazi:maxazi))
           allocate(clear_radf_c(nc,minalt:maxalt,minazi:maxazi))
           allocate(alt_a_roll(minalt:maxalt,minazi:maxazi))
@@ -877,7 +879,7 @@
      1                     ,aod_ill,aod_ill_dir                  ! O
      1                     ,aod_tot,transm_obs                   ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
-     1                     ,r_cloud_trans,cloud_rad_c            ! O
+     1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
      1                     ,htmsl                                ! O
@@ -1059,21 +1061,22 @@
             endif
 
             write(6,*)' call get_sky_rgb with cyl data'
-            call get_sky_rgb(r_cloud_3d           ! cloud opacity
-     1                    ,cloud_od               ! cloud optical depth
-     1                    ,cloud_od_sp,nsp        ! cloud species optical depth
-     1                    ,r_cloud_trans          ! cloud solar transmittance
-     1                    ,cloud_rad_c            ! cloud solar transmittance / color
-     1                    ,clear_rad_c            ! clear sky illumination by sun     
-     1                    ,clear_radf_c           ! clear sky frac illumination by sun     
+            call get_sky_rgb(r_cloud_3d      ! cloud opacity
+     1                    ,cloud_od          ! cloud optical depth
+     1                    ,cloud_od_sp,nsp   ! cloud species optical depth
+     1                    ,r_cloud_trans     ! cloud solar transmittance
+     1                    ,cloud_rad_c       ! cloud solar transmittance / color
+     1                    ,cloud_rad_w       ! cloud solar transmittance * rad
+     1                    ,clear_rad_c       ! clear sky illumination by sun     
+     1                    ,clear_radf_c      ! clear sky frac illumination by sun     
      1                    ,patm,htmsl
-     1                    ,blog_v_roll            ! skyglow
-     1                    ,blog_sun_roll          ! sunglow
-     1                    ,blog_moon_roll         ! moonglow
-     1                    ,glow_stars             ! starglow
+     1                    ,blog_v_roll       ! skyglow
+     1                    ,blog_sun_roll     ! sunglow
+     1                    ,blog_moon_roll    ! moonglow
+     1                    ,glow_stars        ! starglow
      1                    ,aod_ray 
-     1                    ,transm_obs             ! observer illumination
-     1                    ,ialt_sun,jazi_sun      ! sun location
+     1                    ,transm_obs        ! observer illumination
+     1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo
@@ -1082,8 +1085,8 @@
      1                    ,alt_a_roll,azi_a_roll       
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
-     1                    ,solar_alt,solar_az     ! sun alt/az
-     1                    ,alm,azm,moon_mag       ! moon alt/az/mag
+     1                    ,solar_alt,solar_az! sun alt/az
+     1                    ,alm,azm,moon_mag  ! moon alt/az/mag
      1                    ,sky_rgb_cyl)   
 
             if(l_cyl .eqv. .true.)then
@@ -1161,6 +1164,7 @@
           deallocate(aod_ill_dir)
           deallocate(r_cloud_trans)
           deallocate(cloud_rad_c)
+          deallocate(cloud_rad_w)
           deallocate(clear_rad_c)
           deallocate(clear_radf_c)
           deallocate(alt_a_roll)
