@@ -8,7 +8,7 @@
      1                           ,aod_ill,aod_ill_dir                   ! O
      1                           ,aod_tot,transm_obs                    ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
-     1                           ,r_cloud_rad,cloud_rad_c               ! O
+     1                           ,r_cloud_rad,cloud_rad_c,cloud_rad_w   ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
      1                           ,htstart                               ! O
@@ -99,6 +99,7 @@
         real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)! cloud species tau
         real r_cloud_rad(minalt:maxalt,minazi:maxazi)    ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
+        real cloud_rad_w(minalt:maxalt,minazi:maxazi)    ! sun to cloud transmissivity (direct+fwd scat) * trans
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated 
                ! fraction of air illuminated by the sun along line of sight
@@ -115,6 +116,7 @@
         real aod_ill_dir(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_tot(minalt:maxalt,minazi:maxazi)     ! slant path
         real sum_odrad_c(nc)
+        real sum_odrad_c_last(nc)
 
         character*1 cslant
 
@@ -133,6 +135,7 @@
         topo_swi = 0.
         topo_albedo = 0.0 ! initialize
         r_cloud_rad = 1.
+        cloud_rad_w = 1.
         clear_rad_c = 0.
         clear_radf_c = 0.
 
@@ -349,6 +352,7 @@
           ltype_1st = 0
           sum_odrad = 0.
           sum_odrad_c = 0.
+          sum_odrad_w = 0.
           sum_clrrad = 0.
           sum_aod = 0.
           sum_aod_ill = 0.
@@ -411,8 +415,8 @@
 12              format('   dz1_l   dz1_h   dxy1_l   dxy1_h  rin',
      1           'ew  rjnew   rk    ht_m   topo_m  ',
      1           ' path     lwc    ice    rain   snow      slant',
-     1           '  cvrpathsum  cloudfrac  airmass cloud_rad',
-     1           ' aeroext transm3 aod_sum aod_sum_ill')
+     1           '  cvrpathsum  cloudfrac  airmass cld_rd',
+     1           ' cld_rd_w  aeroext  transm3 aod_sum aod_sum_ill')
               endif
 
 !             Initialize ray
@@ -714,6 +718,9 @@
                     sum_odrad = sum_odrad + 
      1               (cvr_path * slant2 * transm_3d_m)       
 
+                    sum_odrad_w = sum_odrad_w + 
+     1               (cvr_path * slant2 * transm_3d_m**2)       
+
                     do ic = 1,nc
                       transm_4d_m(ic) = sum(tri_coeff(:,:,:) * 
      1                              transm_4d(i1:i2,j1:j2,k1:k2,ic))
@@ -770,20 +777,63 @@
                   if(cvr_path .gt. 0.00)then  
                     frac_liq = (cvr_path_sum_sp(1) + cvr_path_sum_sp(3))
      1                       / cvr_path_sum
-                    if(ltype_1st .eq. 3)then ! 1st hydrometeors have rain
+!                   if(ltype_1st .eq. 3)then ! 1st hydrometeors have rain
+                    if(.true.)then
                         tau_thr = 2. ! 0.5
                     else                   
                         tau_thr = 15. * frac_liq + 7. * (1.-frac_liq)
                     endif
                     bks_thr = tau_thr / clwc2alpha
+
                     if(cvr_path_sum      .le.  bks_thr .OR. ! tau ~7-15
      1                 cvr_path_sum_last .eq. 0.            )then 
 !                     Average value over cloud path (tau ~10)
                       r_cloud_rad(ialt,jazi) = sum_odrad / cvr_path_sum 
+                      if(sum_odrad .gt. 0.)then
+                          cloud_rad_w(ialt,jazi) = sum_odrad_w 
+     1                                           / sum_odrad
+                      else
+                          cloud_rad_w(ialt,jazi) = 0.
+                      endif
                       cloud_rad_c(:,ialt,jazi) 
      1                                = sum_odrad_c(:) / cvr_path_sum 
-                    endif
-                  endif
+                      rad_last = r_cloud_rad(ialt,jazi) 
+                      rad_last_w = cloud_rad_w(ialt,jazi) 
+                      sum_odrad_c_last = cloud_rad_c(:,ialt,jazi)
+
+                    elseif(cvr_path_sum      .gt.  bks_thr .AND.
+     1                     cvr_path_sum_last .le.  bks_thr .AND.
+     1                     cvr_path_sum_last .gt.  0.           )then
+!                     Find average value right at tau_thr boundary
+                      frac_path = (bks_thr - cvr_path_sum_last)
+     1                          / (cvr_path_sum - cvr_path_sum_last)
+
+                      rad_new = sum_odrad      / cvr_path_sum
+                      if(sum_odrad .gt. 0.)then
+                          rad_w_new = sum_odrad_w   / sum_odrad
+                      else
+                          rad_w_new = 0.
+                      endif
+
+                      r_cloud_rad(ialt,jazi) = 
+     1                                 rad_last         * (1.-frac_path)
+     1                + (sum_odrad      / cvr_path_sum) * (   frac_path)
+                      cloud_rad_w(ialt,jazi) = 
+     1                                 rad_last_w       * (1.-frac_path)
+     1                + (rad_w_new)                     * (   frac_path)
+                      cloud_rad_c(:,ialt,jazi) = 
+     1                                 sum_odrad_c_last * (1.-frac_path)
+     1                + (sum_odrad_c(:) / cvr_path_sum) * (   frac_path)
+                      if(idebug .eq. 1)then
+                        write(6,71)rad_last,rad_new 
+     1                           ,frac_path,r_cloud_rad(ialt,jazi)
+     1                           ,cloud_rad_w(ialt,jazi)
+71                      format(' last/new/frac/rad/radw',5f9.4)
+                      endif
+
+                    endif ! near tau_thr boundary
+
+                  endif ! cvr_path > 0
 
 !                 Calculated weighted value of airmass to cloud
 !                 Summation(airmass*cvrpath*trans)/Summation(cvrpath*trans)
@@ -896,12 +946,13 @@
      1                     ,r_cloud_3d(ialt,jazi)
      1                     ,airmass_2_cloud_3d(ialt,jazi)
      1                     ,r_cloud_rad(ialt,jazi)
+     1                     ,cloud_rad_w(ialt,jazi)
      1                     ,aero_ext_coeff
 !    1                     ,transm_3d(inew_m,jnew_m,int(rk_m)+1)
      1                     ,transm_3d_m
      1                     ,sum_aod,sum_aod_ill,sum_aod_ill_dir
  101              format(2f8.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
-     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,f9.4
+     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,2f8.4
      1                  ,f10.5,4f8.2)
                 else
                   if(idebug .eq. 1)then
@@ -989,6 +1040,8 @@
               cloud_rad_c(:,ialt,jazi) = 
      1         fm * cloud_rad_c(:,ialt,jazim)  
      1                                 + fp *cloud_rad_c(:,ialt,jazip)
+              cloud_rad_w(ialt,jazi) = 
+     1         fm * cloud_rad_w(ialt,jazim)+fp * cloud_rad_w(ialt,jazip)      
               clear_rad_c(:,ialt,jazi) = 
      1         fm * clear_rad_c(:,ialt,jazim)   
      1                                 + fp * clear_rad_c(:,ialt,jazip)
@@ -1039,6 +1092,8 @@
      1       fm * r_cloud_rad(ialtm,:)  + fp * r_cloud_rad(ialtp,:)
             cloud_rad_c(:,ialt,:) =
      1       fm * cloud_rad_c(:,ialtm,:) + fp * cloud_rad_c(:,ialtp,:)
+            cloud_rad_w(ialt,:) =
+     1       fm * cloud_rad_w(ialtm,:)  + fp * cloud_rad_w(ialtp,:)
             clear_rad_c(:,ialt,:) =
      1       fm * clear_rad_c(:,ialtm,:) + fp * clear_rad_c(:,ialtp,:)
             clear_radf_c(:,ialt,:) =
@@ -1094,6 +1149,9 @@
 
         write(6,*)' Range of clear_rad_c 3 =',minval(clear_rad_c(3,:,:))
      1                                       ,maxval(clear_rad_c(3,:,:))
+
+        write(6,*)' Range of cloud_rad_w = ',minval(cloud_rad_w)
+     1                                      ,maxval(cloud_rad_w)
 
         write(6,*)' Range of clear_radf_c 3 ='
      1                                      ,minval(clear_radf_c(3,:,:))
