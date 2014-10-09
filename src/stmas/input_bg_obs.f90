@@ -7,9 +7,16 @@ MODULE INPUT_BG_OBS
   USE READ_BACKGRD, ONLY : RDLAPSBKG, RDBCKGRND, ALLOCTBKG, DEALCTBKG, BK0, C00, D00, X00, Y00, P00,  &
                            DX0, DY0, Z00, DZ0, DT0, HEIGHTU, HEIGHTL, RDBKGTEST
 
+  ! IPW data ingest:
+  USE lapsdata
+
   IMPLICIT NONE
   INTEGER  ,ALLOCATABLE :: GRIDMASK(:,:,:,:,:)
   REAL     ,ALLOCATABLE :: OBRADIUS(:,:)
+  
+  ! For reading in IPW data namelist:
+  TYPE(lapsData_t) :: ipws
+  CLASS(lapsData_t), POINTER :: idat
 
   PUBLIC           BKGRNDOBS
   PRIVATE          READNMLST, BKGMEMALC, OBSMEMALC, MEMORYALC, MEMORYRLS, ADDBKGRND, GETBKGRND_NEW
@@ -173,13 +180,13 @@ SUBROUTINE read_namelist
         numgrid(3) = numgrid(3)/2
         nm = nm+1
       ELSEIF (nm .EQ. 0) THEN
-        PRINT*,'Currently, the number of analysis vertical levels must be even!'
+        PRINT*,'Currently, the number of analysis vertical levels must be odd!'
         STOP
       ELSE
         EXIT      ! Use current numgrid(3) to start multigrid
       ENDIF
     ENDDO
-    maxgrid(3) = numgrid(3)*2**(fnstgrd-1)+1
+    maxgrid(3) = numgrid(3)*2**(nm-1)+1
     numgrid(3) = numgrid(3)+1
 
     ! For T direction:
@@ -223,6 +230,9 @@ SUBROUTINE read_namelist
   ! Initial vertical temporarl gridspacing
   grdspac(3:4) = 0.0
   IF (maxgrid(3) .GT. 1) grdspac(3) = (maxgrid(3)-1)/FLOAT(numgrid(3)-1)
+  
+  ! IPW data namelist:
+  CALL ipws%getNamelist
 
   PRINT*,''
   PRINT*,'STMAS namelist has been read with'
@@ -318,7 +328,11 @@ SUBROUTINE BKGRNDOBS
 !*************************************************
   IMPLICIT NONE
 
-  INTEGER      :: ISTATE
+  INTEGER      :: ISTATE,i
+  
+  INTEGER      :: nfiles
+  CLASS(*), POINTER :: t
+  TYPE(list), POINTER :: c
 
   PRINT*,'READNMLST'
   ! CALL READNMLST
@@ -353,7 +367,40 @@ SUBROUTINE BKGRNDOBS
     ! CALL RDLAPSRDR
     call read_laps_radar  ! Switch to a new routine using less memory by Yuanfu
     ! CALL GPSWDELAY
-  ELSE
+    
+    ! IPW data: by Yuanfu Xie 2014: 
+    ! numins: number of instruments from lapsdata module:
+    IF (numins .GT. 0) THEN
+      ALLOCATE(ipwdata,STAT=istate)
+      CALL ipwdata%initial
+
+      DO i=1,numins
+print*,'Ins: ',names(i),trim(paths(i)),' ',trim(patterns(i)),' ',trim(xpatterns(i))
+        ! GPS is located at index 1: only gps data ingested
+        SELECT CASE (TRIM(names(i)))
+        CASE ('gps')
+          ALLOCATE(gpsTPW_t :: idat)
+        CASE ('snd')
+          ALLOCATE(sndIPW_t :: idat)
+        CASE DEFAULT
+          PRINT*,'Undefined IPW data'
+          STOP
+        END SELECT
+           
+        idat%a9time = ipws%a9time
+        idat%timeWindow = ipws%timeWindow
+        idat%numFiles = ipws%numFiles
+        idat%filenames = ipws%filenames
+        CALL idat%getFilePath(i)
+    
+        CALL idat%readData(i,ipwdata,p_sfc_f,latitude,longitud,fcstgrd)
+        
+        DEALLOCATE(idat)
+      ENDDO
+      
+    ENDIF
+    
+  ELSE 
     CALL RDOBSTEST
   ENDIF
   IF(IFBKGND.EQ.1)THEN
