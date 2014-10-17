@@ -1,5 +1,5 @@
 
-     subroutine get_clr_src_dir(solalt,viewalt,od_g_vert,od_a_vert,ag,aa,idebug,srcdir)
+     subroutine get_clr_src_dir(solalt,viewalt,od_g_vert,od_a_vert,ag,aa,ags,aas,idebug,srcdir)
 
 !    Input idebug for select angles
 
@@ -17,7 +17,7 @@
      scale_ht_g = 8000.
      alpha_sfc_g = od_g_vert / scale_ht_g
 
-     scale_ht_a = 2000.
+     scale_ht_a = 1500. ! Input this?
      alpha_sfc_a = od_a_vert / scale_ht_a
 
      opac_vert = opac(od_g_vert + od_a_vert)
@@ -25,7 +25,9 @@
 
      if(idebug .eq. 1)then
          write(6,*)
-         write(6,*)'ag/aa = ',ag,aa
+         write(6,*)'solalt/viewalt = ',solalt,viewalt
+         write(6,*)'ags/aas = ',ags,aas
+         write(6,*)'agv/aav = ',ag,aa
          write(6,*)'od_g_vert = ',od_g_vert
          write(6,*)'od_a_vert = ',od_a_vert
          write(6,*)'opac_vert = ',opac_vert
@@ -61,10 +63,9 @@
      do i = 1,nsteps
          xbar = (float(i)-0.5) * dx
          htbar = xbar * sind(viewalt)
-         htbar = htbar + xbar**2 / (2.667 * r_e)
+         htbar = htbar + xbar**2 / (2.667 * r_e) ! Earth Curvature
 
-         od_solar_vert = od_g_vert * exp(-htbar/scale_ht_g) + od_a_vert * exp(-htbar/scale_ht_a)
-         od_solar_slant = od_solar_vert / sind(solalt)
+         od_solar_slant = od_g_vert * ags * exp(-htbar/scale_ht_g) + od_a_vert * aas * exp(-htbar/scale_ht_a)
 
          alphabar_g = alpha_sfc_g * exp(-htbar/scale_ht_g) 
          alphabar_a = alpha_sfc_a * exp(-htbar/scale_ht_a)  
@@ -77,7 +78,7 @@
 
 !        rad = 1.0
          rad = trans(od_solar_slant)
-         rad = max(rad,.15)
+         rad = max(rad,.03) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
          di = do * rad
