@@ -322,7 +322,8 @@
      1        abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
      1        (abs(altray) .eq. 12  .or. abs(altray) .eq. 9 .or.
      1         (altray .ge. -3. .and. altray .le. 9.) .or. 
-     1         ialt .eq. minalt .or.
+     1         ialt .eq. minalt .or. abs(altray) .eq. 14. .or.
+     1         abs(altray) .eq. 16. .or.
      1         abs(altray) .eq. 20. .or. altray .eq. 30. .or.
      1             altray  .eq. 40. .or. altray .eq. 50.) 
 !    1               .AND. altray .eq. nint(altray) 
