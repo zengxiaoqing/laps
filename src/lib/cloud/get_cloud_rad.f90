@@ -392,6 +392,10 @@
                     twi_int = .1 * 10.**(+obj_alt_cld * 0.4) ! magnitudes per deg
                     rint = twi_int
                     grn_rat = 1.0 ; blu_rat = 1.0            
+                    transm_3d_generic = 0.5
+                    transm_4d(i,j,k,1) = transm_3d_generic * rint * eclipse(i,j)
+                    transm_4d(i,j,k,2) = transm_3d_generic * rint * eclipse(i,j)
+                    transm_4d(i,j,k,3) = transm_3d_generic * rint * eclipse(i,j)
                   elseif(obj_alt_cld .ge. 0.)then            ! low daylight sun
 !                   Direct illumination of the cloud is calculated here
 !                   Indirect illumination is factored in via 'scat_frac'
@@ -403,11 +407,11 @@
                     rint = trans_c(1)
                     grn_rat = trans_c(2) / trans_c(1)
                     blu_rat = trans_c(3) / trans_c(1)
+                    transm_3d_generic = 0.5
+                    transm_4d(i,j,k,1) = transm_3d_generic * rint    * eclipse(i,j)
+                    transm_4d(i,j,k,2) = transm_3d_generic * grn_rat * eclipse(i,j)
+                    transm_4d(i,j,k,3) = transm_3d_generic * blu_rat * eclipse(i,j)
                   endif  
-                  transm_3d_generic = 0.5
-                  transm_4d(i,j,k,1) = transm_3d_generic * rint    * eclipse(i,j)
-                  transm_4d(i,j,k,2) = transm_3d_generic * grn_rat * eclipse(i,j)
-                  transm_4d(i,j,k,3) = transm_3d_generic * blu_rat * eclipse(i,j)
                    
                   if(i .eq. idb .AND. j .eq. jdb)then
                       write(6,103)k,obj_alt(i,j),horz_dep_d,obj_alt_cld,am*patm_k,rint,rint*blu_rat**0.3,rint*blu_rat
