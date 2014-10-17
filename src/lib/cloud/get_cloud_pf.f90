@@ -111,12 +111,16 @@
 !            + clwc_bin2  * 2.0    ! add albedo term?     
              + clwc_bin2  * pf_thk ! add albedo term?     
 
+              rain_bin1a =   .10
+              rain_bin1b =  1.05
+              rain_bin1c = -0.35
+              rain_bin1d =   .20
+
               pf_rain(ic) & 
-                      = clwc_bin1a * rain_bin1 * hg(.94**hgp,elong_a(i,j))&
-                      + clwc_bin1b * rain_bin1 * hg(.60**hgp,elong_a(i,j))&
-!                     + clwc_bin1c * rain_bin1 * hg(.00     ,elong_a(i,j))&
-!                     + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
-!                     + clwc_bin2  * 2.0    ! add albedo term?     
+                      = rain_bin1a * rain_bin1 * hg(0.99**hgp,elong_a(i,j))&
+                      + rain_bin1b * rain_bin1 * hg(0.75**hgp,elong_a(i,j))&
+                      + rain_bin1c * rain_bin1 * hg(0.00     ,elong_a(i,j))&
+                      + rain_bin1d * rain_bin1 * hg(-.20     ,elong_a(i,j))&
                       + clwc_bin2  * pf_thk ! add albedo term?     
 
               if(cloud_od_liq .eq. cloud_od_sp(i,j,1))then ! cloud liquid
@@ -173,29 +177,38 @@
 !           rain_factor = 0.
 !         endif
 
+          cre = 3.5
+
           if(rain_factor .gt. 0.)then
             antisol_rad = 180. - elong_a(i,j)
-            frac_single = 0.7 + 0.3 * clwc_bin1 ! optically thin
+            frac_single = 1.0 ! 0.7 + 0.3 * clwc_bin1 ! optically thin
             do ic = 1,nc
 
 !             Reflection inside primary rainbow + supernumerary rainbows
               bow_hw = 0.8
-              if(antisol_rad .lt. anglebow1(ic)-bow_hw)then
+              if(antisol_rad .lt. anglebow1(ic))then
 !                 Calculate super_omega (degrees phase per degree elongation/radius)
                   super_omega = 450. + (float(ic-1) * 75.) 
-                  super_phase = ((anglebow1(ic)-bow_hw) - antisol_rad) * super_omega
-                  super_amp = 0.1 - (0.1 * cosd(super_phase) * (antisol_rad / (anglebow1(ic)-bow_hw))**15.)
+                  super_phase = (anglebow1(ic) - antisol_rad) * super_omega
+                  super_amp = 0.4 * (antisol_rad / (anglebow1(ic)))**60.
                   bow_int = (2.0 + 1.0 * antisol_rad / (anglebow1(ic)-bow_hw)) * super_amp
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (.053 * bow_int * rain_factor * cloud_rad_w(i,j)**3.)
+                  horn1dist = anglebow1(ic) - antisol_rad
+                  horn1 = 1.0 * exp(-horn1dist/5.)
+                  horn1 = horn1 * (1. + super_amp * (cosd(super_phase)-1.)/2.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (3.0 * horn1 * rain_factor * cloud_rad_w(i,j)**cre)
+                  if(ic .eq. 2 .and. idebug_a(i,j) .eq. 1)then
+                      write(6,91)antisol_rad,horn1,rain_factor,cloud_rad_w(i,j)**3.,super_amp
+91                    format(' antisol_rad,horn1,rainfact,cldrdw3,sup',f9.3,f9.6,3f9.3)
+                  endif
               endif
 
 !             Primary rainbow (red is 42 degrees radius, blue is 40)
               bow_hw = 0.8
-              if(abs(antisol_rad-anglebow1(ic)) .lt. bow_hw)then
+              if(abs(antisol_rad-anglebow1(ic)) .le. bow_hw .AND. antisol_rad .ge. anglebow1(ic))then
                   bow_frac = abs(antisol_rad-anglebow1(ic)) / bow_hw
 !                 ratio_bow = max(1.0 / pf_scat(ic,i,j) - 1.0, 0.)
                   bow_int = (1.0 - bow_frac) ** 1.0 
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (1.0 * frac_single * bow_int * rain_factor * cloud_rad_w(i,j)**3.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (3.0 * frac_single * bow_int * rain_factor * cloud_rad_w(i,j)**cre)
               endif
 
 !             Alexander's dark band
@@ -204,24 +217,43 @@
               if(abs(antisol_rad-angle_alex) .lt. alex_hw)then
                   frac_alex1 = abs(antisol_rad-angle_alex) / alex_hw
                   frac_alex2 = 1.0 - frac_alex1**8
-                  frac_alex = frac_alex2 * rain_factor * cloud_rad_w(i,j)**3. ! direct lighting
+                  frac_alex = frac_alex2 * rain_factor * cloud_rad_w(i,j)**cre ! direct lighting
 !                 frac_alex = frac_alex2 * rain_factor * rain_peak            ! direct lighting
 !                 frac_alex = frac_alex * rain_bin1 ! optically thin
                   pf_alex = .02
                   pf_scat(ic,i,j) = pf_alex * frac_alex + pf_scat(ic,i,j) * (1.0 - frac_alex)
                   if(ic .eq. 2 .and. idebug_a(i,j) .eq. 1)then
-                      write(6,91)rain_peak,rain_bin1,frac_alex2,frac_alex
-91                    format(' rain_peak/rain_bin1/alex2/alex',2f9.6,f9.3,f9.6)
+                      write(6,93)rain_peak,rain_bin1,frac_alex2,frac_alex
+93                    format(' rain_peak/rain_bin1/alex2/alex',2f9.6,f9.3,f9.6)
                   endif
               endif
 
 !             Secondary rainbow (red is 54.5 degrees radius, blue is 52)
               bow_hw = 0.8
-              if(abs(antisol_rad-anglebow2(ic)) .lt. bow_hw)then
+              if(abs(antisol_rad-anglebow2(ic)) .le. bow_hw .AND. antisol_rad .le. anglebow2(ic))then
                   bow_frac = abs(antisol_rad-anglebow2(ic)) / bow_hw 
-!                 ratio_bow = max(0.2 / pf_scat(ic,i,j) - 1.0, 0.)
                   bow_int = (1.0 - bow_frac) ** 0.5 
-                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (0.2 * frac_single * bow_int * rain_factor * cloud_rad_w(i,j)**3.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (0.56* frac_single * bow_int * rain_factor * cloud_rad_w(i,j)**cre)
+              endif
+
+!             Reflection outside secondary rainbow + supernumerary rainbows
+              bow_hw = 0.8
+              if(antisol_rad .gt. anglebow2(ic) .AND. antisol_rad .lt. anglebow2(ic) + 30.)then
+!                 Calculate super_omega (degrees phase per degree elongation/radius)
+                  super_omega = 450. + (float(ic-1) * 75.) 
+                  super_phase = (antisol_rad - anglebow2(ic)) * super_omega
+                  super_amp = 0.4 * (1.0 - (antisol_rad - anglebow2(ic))/30.)**15.
+                  super_amp = max(super_amp,0.0)
+!                 super_amp = (1.0 - (antisol_rad - anglebow2(ic))/30.)**15.
+                  bow_int = (2.0 + 1.0 * antisol_rad / (anglebow1(ic)-bow_hw)) * super_amp
+                  horn2dist = antisol_rad - anglebow2(ic)
+                  horn2 = 1.0 * exp(-horn2dist/2.0)
+                  horn2 = horn2 * (1. + super_amp * (cosd(super_phase)-1.)/2.)
+                  pf_scat(ic,i,j) = pf_scat(ic,i,j) + (0.56 * horn2 * rain_factor * cloud_rad_w(i,j)**cre)
+                  if(ic .eq. 2 .and. idebug_a(i,j) .eq. 1)then
+                      write(6,94)antisol_rad,horn2
+94                    format(' antisol_rad,horn2',f9.3,f9.6)
+                  endif
               endif
 
             enddo ! ic
