@@ -259,9 +259,10 @@
               do ic = 1,nc
                 gasfrac = ag_2d(ialt,jazi) / airmass_g ! topo illuminated fraction of gas
                 od_g = ext_g(ic)*airmass_g             ! slant od
-                od_a = aod_ray(ialt,jazi)*aa*ext_a(ic) ! slant od
-                alphav_g = od_g / 8000.                ! extinction per vert m
-                alphav_a = od_a / aero_scaleht         ! extinction per vert m
+!               od_a = aod_ray(ialt,jazi)*aa*ext_a(ic) ! slant od
+                od_a = aod_vrt           *aa*ext_a(ic) ! slant od
+                alphav_g = od_g / 8000.             ! extinction per vert m
+                alphav_a = od_a / aero_scaleht      ! extinction per vert m
                 if(od_a .gt. 0)then
                     od_g1 = od_a * (alphav_g / alphav_a)
                 else
@@ -566,11 +567,11 @@
               write(6,101) airmass_lit,airmass_tot,airmass_unlit&
                           ,hue_coeff,huea,hue,hue2
 101           format('airmass_lit/tot/unlit/huec/huea/hue/hue2',f12.8,6f9.5)
-              write(6,102)aa,aod_lit,aero_ray_plane,aero_red &         
+              write(6,102)aa,ht_ray_plane_s,aod_lit,aero_ray_plane,aero_red &         
                          ,aero_red/clear_intf &                
                          ,clear_intf,skyref & 
                          ,sat_arg,sat_ramp,sat_twi_ramp
-102           format('aa/aod_lit/plane/red/rat/cif/skr/sat',5f9.5,2x,2f14.10,2x,3f9.5)
+102           format('aa/htryplns/aod_lit/plane/red/rat/cif/skr/sat',f9.5,f9.0,3f9.5,f10.3,f10.3,f14.10,2x,3f9.5)
               rmaglim = b_to_maglim(clear_rad_c(3,ialt,jazi))
             endif
 
