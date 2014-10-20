@@ -378,11 +378,24 @@
 
         I4_elapsed = ishow_timer()
 
+        bkscat_alb = -99.9 ! dummy value to initialize for logging
+        write(6,*)' max of idebug_a (1) = ',maxval(idebug_a)
+        if(sol_alt .lt. -4.)then
+            idebug_pf = 0
+        else
+            idebug_pf = idebug_a
+        endif
+        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp & ! I
+                       ,nsp,airmass_2_topo,idebug_pf,ni,nj &  ! I
+                       ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
+
+        write(6,*)
         if(ni .eq. nj)then ! polar
             write(6,*)' slice from SW to NE through midpoint'
         else
             write(6,*)' slices at degrees azimuth: ',azid1,azid2
         endif
+        write(6,*)
 
         if(.true.)then
           if(sol_alt .ge. 0.)then       ! daylight
@@ -399,17 +412,6 @@
                    'rinten glw_cld_nt glwcldmn glw_cld glw2ndclr rmaglim  cld_visb  glow      skyrgb')
           endif
         endif
-
-        bkscat_alb = -99.9 ! dummy value to initialize for logging
-        write(6,*)' max of idebug_a (1) = ',maxval(idebug_a)
-        if(sol_alt .lt. -4.)then
-            idebug_pf = 0
-        else
-            idebug_pf = idebug_a
-        endif
-        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp & ! I
-                       ,nsp,airmass_2_topo,idebug_pf,ni,nj &  ! I
-                       ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
         do j = 1,nj
         do i = 1,ni
@@ -535,9 +537,9 @@
                 clr_grn = rintensity_glow
                 clr_blu = rintensity_glow * bog
               endif
-              if(idebug .eq. 1 .and. elong_a(i,j) .lt. 20.)then
+              if(idebug .eq. 1 .AND. (elong_a(i,j) .lt. 20. .or. abs(alt_a(i,j)) .le. 2.0 ))then
                   write(6,60)elong_a(i,j),clear_rad_c(:,i,j),bog_rad
-60                format('   elong / Clr RGB / bog = ',f9.2,3f14.0,f9.3)
+60                format(' elong / Clr RGB / bog = ',f9.2,3f14.0,f9.3)
               endif
 
           elseif(sol_alt .ge. -16.)then ! Twilight from clear_rad_c array
@@ -672,9 +674,9 @@
           sky_rgb(2,I,J) = clr_blu * frac_clr + cld_blu * frac_cloud
           sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
 
-!         if(idebug_a(i,j) .eq. 1 .AND. abs(alt_a(i,j)) .le. 2.0)then
-!             write(6,*)'cld_red/sky_rgb',cld_red,sky_rgb(0,I,J)
-!         endif
+          if(idebug_a(i,j) .eq. 1 .AND. abs(alt_a(i,j)) .le. 2.0)then
+              write(6,*)'clr_red/cld_red/sky_rgb',clr_red,cld_red,sky_rgb(0,I,J)
+          endif
 
 !         Use topo value if airmass to topo > 0
           if(airmass_2_topo(i,j) .gt. 0.)then
@@ -708,8 +710,12 @@
 !                 rtopo_blu = rad_to_counts(rad * topo_swi(i,j)/1300. * topo_albedo(3,i,j))
 
 !                 Add topo brightness to line of sight sky brightness in radiation space
-!                 Consider secondary twilight cloud glow as lower bound 
-                  rindirect = 1300. * (10.**glow_secondary_cld / glow_cld_day)
+!                 Using secondary cloud glow as lower bound during twilight
+                  if(sol_alt .gt. 0.)then ! floor of SWI field (W/m**2)
+                      rindirect = 10.
+                  else
+!                     rindirect = 1300. * (10.**glow_secondary_cld / glow_cld_day)
+                  endif
                   topo_swi_frac = max(topo_swi(i,j),rindirect) / 1300. 
                   rtopo_red = 2. * topo_swi_frac * topo_albedo(1,i,j)
                   rtopo_grn = 2. * topo_swi_frac * topo_albedo(2,i,j)
@@ -724,6 +730,10 @@
                           + counts_to_rad(sky_rgb(2,I,J)) * sky_frac_aero 
                   rog = red_rad / grn_rad
                   bog = blu_rad / grn_rad
+                  if(idebug .eq. 1)then
+                      write(6,97)rtopo_grn,rindirect,topo_swi_frac,topo_albedo(2,i,j),nint(sky_rgb(:,i,j))
+97                    format(' rtopo/rind/swi/alb/rgb',4f9.3,2x,3i4)
+                  endif
                   sky_rgb(0,I,J) = nint(rad_to_counts(red_rad))
                   sky_rgb(1,I,J) = nint(rad_to_counts(grn_rad))
                   sky_rgb(2,I,J) = nint(rad_to_counts(blu_rad))
