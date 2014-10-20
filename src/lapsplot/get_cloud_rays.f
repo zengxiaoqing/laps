@@ -872,13 +872,17 @@
 
 !                     Land illumination related to terrain slope
                       if(sol_alt(inew_m,jnew_m)  .gt. 0. )then  
+                        frac_ghi_dir = 0.9 *
+     1                               sind(sol_alt(inew_m,jnew_m))**0.5
                         alt_norm_int = sum(bi_coeff(:,:) 
      1                               * alt_norm(i1:i2,j1:j2))
                         if(alt_norm_int .gt. 0. )then
                           solar_corr = sind(alt_norm_int) 
      1                               / sind(sol_alt(inew_m,jnew_m))
+                          solar_corr = (solar_corr*frac_ghi_dir) + 
+     1                                 1.0 * (1. - frac_ghi_dir) 
                           solar_corr = min(max(solar_corr,0.2),2.0) 
-                        else ! land is shadowed
+                        else ! land is shadowed (all indirect)
                           solar_corr = 0.2
                         endif
                       else ! sun is down     
@@ -888,8 +892,6 @@
                       topo_swi(ialt,jazi) = 
      1                  sum(bi_coeff(:,:) * swi_2d(i1:i2,j1:j2))
      1                                    * solar_corr
-!                     topo_swi(ialt,jazi) = swi_2d(inew_m,jnew_m) 
-!    1                                    * solar_corr
 
 !                     City lights on the ground
                       if(sol_alt(inew_m,jnew_m) .lt. -4.)then  
