@@ -732,6 +732,8 @@ c --------------------
              headers_file=outdir(1:lenh)//'/Variable_Tables/headers.txt'       
              call s_len(headers_file,lenhf)
              write(6,*)' Write headers file = ',headers_file(1:lenhf)
+             close(22) ! A bug: channel 22 is left open in LAPS; by
+Yuanfu Xie
              open(22,file=headers_file(1:lenhf),status='unknown')
              nheaders = 1
              write(22,*)nheaders
