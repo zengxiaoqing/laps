@@ -1,7 +1,7 @@
 
 
      subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
-           snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,gnd_glow)
+           snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,sfc_glow)
 
      use mem_namelist, ONLY: r_missing_data, earth_radius
      use cloud_rad ! Cloud Radiation and Microphysics Parameters
@@ -30,7 +30,6 @@
      real obj_alt(ni,nj)
      real obj_azi(ni,nj)
      real sfc_glow(ni,nj)        ! surface lighting intensity (nl)                 
-     real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
 
      real clwc_int(ni,nj)
      real cice_int(ni,nj)
@@ -49,11 +48,6 @@
 !    kappa = n * sigma / rho              (opacity:                m**2 per kg)
 !    K or alpha = sigma * n = kappa * rho (extinction coefficient: m**-1)
 !    tau = K * s = kappa * rho * s        (optical depth:          dimensionless)
-
-!    Statement functions
-!    od_to_albedo_lwc(tau) = 1. - exp(-tau*.07) ! lwc bkscat eff. term 
-!    od_to_albedo_ice(tau) = 1. - exp(-tau*.14) ! ice bkscat eff. term 
-!    od_to_albedo(tau_bks) = 1. - exp(-tau_bks)
 
      eclipse = 1.0 ! Default is no solar eclipse
 
@@ -85,14 +79,6 @@
      cosazi = cosd(obj_azi(idb,jdb))
 
      terr_max = maxval(topo_a); terr_min = minval(topo_a)
-
-     if(solalt .lt. -4.)then
-         write(6,*)' Call get_sfc_glow'
-         call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow,gnd_glow)
-         write(6,*)' Sky glow at observer location is ',sfc_glow(idb,jdb)
-     else
-         write(6,*)' Skip call to get_sfc_glow - solalt is',solalt
-     endif
 
      I4_elapsed = ishow_timer()
 
