@@ -1198,52 +1198,30 @@ if(defined $opt_R){
         $wallclock_time_min = 2.0 * $cycle_time_min;
 #   }    
 
+#   Determine $xmm
+    my $ddd = substr($yyjjjhhmm,2,3);
+    my $yy  = substr($yyjjjhhmm,0,2);
+    my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
+    my $xmm = @mmmdd[0];
+    $xmm="0".$xmm if(length($xmm)<2);
+
+#   Determine $yyyymmdd_hhmm
+    my $yyyy;
+    if($yy < 60){
+        $yyyy = "20".$yy
+    }else{
+        $yyyy = "19".$yy
+    }
+    my $dd = @mmmdd[1];
+    $dd="0".$dd if(length($dd)<2);
+    my $hhmm = substr($yyjjjhhmm,5,4);
+    my $yyyymmdd_hhmm="$yyyy$xmm$dd"."_"."$hhmm";
+
     if(defined $opt_Q || defined $opt_q){
-        my $wall_time_hr  = int( ( $wallclock_time_min / 60.) + $extend_time  ); 
+#       my $wall_time_hr  = int( ( $wallclock_time_min / 60.) + $extend_time  ); 
 
-        my $wall_time_min = int($wallclock_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
-        $wall_time_min="0".$wall_time_min if(length($wall_time_min)<2);
-
-        my $xfer_name;
-        if(defined $opt_f){
-          $xfer_name = "xfer_$opt_f";    
-        }else{
-          $xfer_name = "xferlaps";    
-        }
-
-#       Determine $xmm
-        my $ddd = substr($yyjjjhhmm,2,3);
-        my $yy  = substr($yyjjjhhmm,0,2);
-        my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
-        my $xmm = @mmmdd[0];
-        $xmm="0".$xmm if(length($xmm)<2);
-
-#       Determine $yyyymmdd_hhmm
-        my $yyyy;
-        if($yy < 60){
-            $yyyy = "20".$yy
-        }else{
-            $yyyy = "19".$yy
-        }
-        my $dd = @mmmdd[1];
-        $dd="0".$dd if(length($dd)<2);
-        my $hhmm = substr($yyjjjhhmm,5,4);
-        my $yyyymmdd_hhmm="$yyyy$xmm$dd"."_"."$hhmm";
-
-#       open(TFILE,">$LAPS_LOG_PATH/qsub_xfer_laps.sh");
-#       print TFILE "#!/bin/sh --login\n";
-#       print TFILE "#\$ -N $xfer_name\n";
-#       print TFILE "#\$ -A $opt_Q\n";
-#       print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
-#       print TFILE "#\$ -S /bin/sh\n";
-#       print TFILE "#\$ -cwd\n";
-#       print TFILE "#\$ -pe service 1\n";
-#       print TFILE "#\$ -o $LAPS_LOG_PATH/xferlaps.log.$yyjjjhhmm\n";
-#       print TFILE "#\$ -j y\n";
-#       print TFILE "\n";
-#       print TFILE "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm\n";
-#       print TFILE "#exit\n";
-#       close(TFILE);
+#       my $wall_time_min = int($wallclock_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
+#       $wall_time_min="0".$wall_time_min if(length($wall_time_min)<2);
 
         if(defined $opt_Q){ # JET
             $command = "$LAPSROOT/etc/qsub $LAPS_LOG_PATH/qsub_xfer_laps.sh";
@@ -1260,9 +1238,18 @@ if(defined $opt_R){
 #       print "\nCommand file:\n";
 #       system("cat $LAPS_LOG_PATH/qsub_xfer_laps.sh");
 
-        print "\nExecuting $command\n";
-        system("$command");
+    }else{ # not -Q or -q
+
+        my $xferfiles = 1;
+        if(defined $opt_x){
+           $xferfiles = $opt_x;
+        }
+        $command = "$LAPSROOT/etc/xferlaps.csh $LAPS_DATA_ROOT $domain $remote_data_root $remote_purge_time $yyjjjhhmm $yyyymmdd_hhmm $xferfiles $opt_y $opt_H";
     }
+
+    print "\nExecuting $command\n";
+    system("$command");
+
 }
 
 print $t." Running product monitor\n";
