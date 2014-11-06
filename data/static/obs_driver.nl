@@ -11,7 +11,7 @@
  itime_before=900,
  itime_after=900,
  madis_dirs='mesonet','urbanet','hfmetar','nepp','crn','hcn','hydro',
- maxobs=320000,
+ maxobs=400000,
  i4wait_local_obs_max=0,
  local_obs_thresh=0,
  l_allow_empty_lso=.false.,
