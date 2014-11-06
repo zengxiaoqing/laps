@@ -361,7 +361,7 @@ netcdf fsf {
         float
             lhe(record,z,y,x);
             lhe:_FillValue = 1.e+37f;
-            lhe:long_name="SR Helicity       ";
+            lhe:long_name="SR Helicity (0-3km agl) ";
             lhe:units="m/s**2";
             lhe:valid_range= 0.f, 10000.f;
             lhe:LAPS_var="LHE";
@@ -379,6 +379,30 @@ netcdf fsf {
             uhe:LAPS_var="UHE";
             uhe:lvl_coord="MSL ";
             uhe:LAPS_units="M**2/S**2";
+
+        //      LAPS Bulk Shear (sfc-6km agl)
+        //      not transferred to bigfile
+        float
+            bsh(record,z,y,x);
+            bsh:_FillValue = 1.e+37f;
+            bsh:long_name="Bulk Shear (sfc-6km agl) ";
+            bsh:units="m/s";
+            bsh:valid_range= 0.f, 200.f;
+            bsh:LAPS_var="BSH";
+            bsh:lvl_coord="MSL ";
+            bsh:LAPS_units="M/S";
+
+        //      LAPS Supercell Composite Parameter
+        //      not transferred to bigfile
+        float
+            scp(record,z,y,x);
+            scp:_FillValue = 1.e+37f;
+            scp:long_name="Supercell Composite Parameter ";
+            scp:units="none";
+            scp:valid_range= 0.f, 1000.f;
+            scp:LAPS_var="SCP";
+            scp:lvl_coord="MSL ";
+            scp:LAPS_units="none";
 
         //     LAPS Fcst lifted index            //
         //     bigfile name = sli
@@ -738,6 +762,8 @@ netcdf fsf {
             spt_comment(record,z,namelen),
             lhe_comment(record,z,namelen),
             uhe_comment(record,z,namelen),
+            bsh_comment(record,z,namelen),
+            scp_comment(record,z,namelen),
             li_comment(record,z,namelen),
             hi_comment(record,z,namelen),
             vis_comment(record,z,namelen),
@@ -891,6 +917,14 @@ netcdf fsf {
         short
             uhe_fcinv(record, z);
             uhe_fcinv:_FillValue= 0s;
+
+        short
+            bsh_fcinv(record, z);
+            bsh_fcinv:_FillValue= 0s;
+
+        short
+            scp_fcinv(record, z);
+            scp_fcinv:_FillValue= 0s;
 
         short
             li_fcinv(record, z);
