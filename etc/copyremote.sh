@@ -4,9 +4,17 @@
 
 # Argument 2: Destination directory (without remote node)
 
-# Argument 3: Copy method (bbcp, exchange, rsync, exchange_tar, exchange_tarfilelist, 
+# Argument 3: Copy method (bbcp, exchange, exchange_loop, rsync, exchange_tar, exchange_tarfilelist, 
 #                          exchange_tarfilelist_z, exchange_filelist, exchange_zip, exchange_zip2)
-
+#
+#     Summary of Argument 3 options (best initiated from the oplapb account)
+#  
+#     exchange: copy individual files by the faster double hop
+#               also works for directories up to about 10GB in size
+#
+#     exchange_loop: experimental option to copy each file in supplied subdirectory
+#                    one file at a time to save space on /exchange, still using the
+#                    double hop
 # .................................................................................
 
 FILENAME=$1
@@ -26,7 +34,7 @@ if test "$3" == "bbcp"; then
     echo "bbcp -s 32 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR"
           bbcp -s 32 -w 1M -P 5 -V $FILENAME $REMOTE_NODE:$DESTDIR
 
-elif test "$3" == "exchange"; then # best for subdirectories
+elif test "$3" == "exchange"; then # best for subdirectories up to 10GB in size
     echo "scp -o ConnectTimeout=200 -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
           scp -o ConnectTimeout=200 -r $FILENAME jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
 
@@ -42,6 +50,19 @@ elif test "$3" == "exchange"; then # best for subdirectories
         echo "ssh $REMOTE_NODE_MV mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME"
               ssh $REMOTE_NODE_MV mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILENAME 
     fi
+
+elif test "$3" == "exchange_loop"; then # subdirectory containing set of files
+    cd $FILENAME
+
+    for FILE in *; do
+        echo "scp -o ConnectTimeout=200 $FILE jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE" 
+              scp -o ConnectTimeout=200 $FILE jetscp.rdhpcs.noaa.gov:$TEMPDIR/$TEMPFILE  
+
+        date -u
+        echo "second hop of file"
+        echo "ssh $REMOTE_NODE_MV mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILE"
+              ssh $REMOTE_NODE_MV mv $TEMPDIR/$TEMPFILE $DESTDIR/$FILE 
+    done
 
 elif test "$3" == "exchange_tar"; then
     if test -d $FILENAME; then                                                       
