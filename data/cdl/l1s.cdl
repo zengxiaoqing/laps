@@ -18,12 +18,12 @@ netcdf l1s {
             s01:_FillValue = 1.e+37f;
             s01:long_name="LAPS 60 minute snow accum.";
             s01:units="meters";
-            s01:valid_range= -200.f, 200.f;
+            s01:valid_range= 0.f, 100.f;
             s01:LAPS_var="S01";
             s01:lvl_coord="MSL";
 	    s01:LAPS_units="M";
                 	        
-        //	storm total accumulation
+        //	storm total snow accumulation
 
 	float                                  
             sto(record,z,y,x);
@@ -32,7 +32,7 @@ netcdf l1s {
             sto:_FillValue = 1.e+37f;
             sto:long_name="storm total snow accumulation";
             sto:units="meters";
-            sto:valid_range= -200.f, 200.f;
+            sto:valid_range= 0.f, 100.f;
             sto:LAPS_var="STO";
             sto:lvl_coord="MSL";
 	    sto:LAPS_units="M";
@@ -46,7 +46,7 @@ netcdf l1s {
             r01:_FillValue = 1.e+37f;
             r01:long_name="LAPS 60 minute precip. accum.";
             r01:units="meters";
-            r01:valid_range= -200.f, 200.f;
+            r01:valid_range= 0.f, 10.f;
             r01:LAPS_var="R01";
             r01:lvl_coord="MSL";
 	    r01:LAPS_units="M";
@@ -60,10 +60,24 @@ netcdf l1s {
             rto:_FillValue = 1.e+37f;
             rto:long_name="storm total precip. accum.";
             rto:units="meters";
-            rto:valid_range= -200.f, 200.f;
+            rto:valid_range= 0.f, 10.f;
             rto:LAPS_var="RTO";
             rto:lvl_coord="MSL";
 	    rto:LAPS_units="M";
+                	        
+        //	snow depth
+
+	float                                  
+            sdp(record,z,y,x);
+            sdp:navigation_dim = "nav";
+            sdp:record = "valtime, reftime";
+            sdp:_FillValue = 1.e+37f;
+            sdp:long_name="snow depth";
+            sdp:units="meters";
+            sdp:valid_range= 0.f, 100.f;
+            sdp:LAPS_var="SDP";
+            sdp:lvl_coord="MSL";
+	    sdp:LAPS_units="M";
                 	        
         //	LAPS variables
 
@@ -78,6 +92,7 @@ netcdf l1s {
             sto_comment(record,z,namelen),
             r01_comment(record,z,namelen),
             rto_comment(record,z,namelen),
+            sdp_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -98,6 +113,10 @@ netcdf l1s {
         short
             rto_fcinv(record, z);
             rto_fcinv:_FillValue= 0s;
+              	
+        short
+            sdp_fcinv(record, z);
+            sdp_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
