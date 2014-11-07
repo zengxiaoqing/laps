@@ -7,6 +7,7 @@
      1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
      1                           ,aod_tot,transm_obs                    ! O
+     1                           ,transm_3d,transm_4d                   ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,r_cloud_rad,cloud_rad_c,cloud_rad_w   ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
@@ -54,9 +55,9 @@
         real cond_3d(ni,nj,nk) ! kg/m**3 (effective LWC)
         real aod_3d(ni,nj,nk)  ! aerosol optical depth (per vertical atmosphere)
         real bi_coeff(2,2),tri_coeff(2,2,2)
-        real heights_3d(ni,nj,nk) ! MSL
-        real transm_3d(ni,nj,nk)
-        real transm_4d(ni,nj,nk,nc) ! L
+        real heights_3d(ni,nj,nk)    ! MSL
+        real transm_3d(ni,nj,nk)     ! O
+        real transm_4d(ni,nj,nk,nc)  ! O
         real transm_4d_m(nc)
         real heights_1d(nk)
         real topo_a(ni,nj)
@@ -81,6 +82,7 @@
         real obj_azi(ni,nj)
 
         real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
+        real sfc_glow(ni,nj)        ! pass into get_cloud_rad
 
 !       logical l_process(minalt:maxalt,minazi:maxazi)
         logical l_solar_eclipse
@@ -119,6 +121,10 @@
         real sum_odrad_c_last(nc)
 
         character*1 cslant
+        character var*3,comment*125,ext*31,units*10
+
+        integer icall_rad /0/
+        save icall_rad
 
         I4_elapsed = ishow_timer()
 
@@ -169,24 +175,66 @@
      1                                   ,maxval(heights_3d)
 
         I4_elapsed = ishow_timer()
-
-        write(6,*)' call get_cloud_rad...'
       
+        if(sol_alt(i,j) .lt. -4.)then
+          write(6,*)' Call get_sfc_glow'
+          call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon
+     1                     ,sfc_glow,gnd_glow)
+          write(6,*)' Sky glow at observer location is ',sfc_glow(i,j)
+        else
+          write(6,*)' Skip call to get_sfc_glow - solalt is'
+     1                                                  ,sol_alt(i,j)      
+        endif
+
+        I4_elapsed = ishow_timer()
+
         if(.true.)then
+            write(6,*)' call get_cloud_rad...'
             call get_cloud_rad(obj_alt,obj_azi,sol_alt(i,j),sol_azi(i,j)
      1                    ,clwc_3d,cice_3d
      1                    ,rain_3d,snow_3d,topo_a,lat,lon
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk
 !    1                    ,l_solar_eclipse
-     1                    ,gnd_glow)
-!           do jj = 1,nj
-!           do ii = 1,ni
-!               if(gnd_glow(ii,jj) .gt. 0.)then
-!                   write(6,*)' ii,jj,gndglow',ii,jj,gnd_glow(ii,jj)
-!               endif
-!           enddo ! i
-!           enddo ! j
+     1                    ,sfc_glow) ! I
+
+        else
+            if(icall_rad .eq. 0)then
+              call get_cloud_rad_faces(              
+     1          obj_alt,obj_azi,                   ! I
+     1          sol_alt(i,j),sol_azi(i,j),         ! I 
+     1          clwc_3d,cice_3d,rain_3d,snow_3d,   ! I
+     1          topo_a,                            ! I
+     1          ni,nj,nk,i,j,                      ! I
+     1          heights_3d,                        ! I 
+     1          sfc_glow,                          ! I
+     1          transm_3d,transm_4d)               ! O
+              icall_rad = 1
+            else
+              write(6,*)' skip call to get_cloud_rad_faces'
+            endif
+
+            I4_elapsed = ishow_timer()
+
+!           Write out transm_3d field
+            var = 'TRN'
+            ext = 'trn'
+            units = 'none'
+            comment = 
+     1         '3D downward shortwave from cloud (relative to TOA)'     
+            call put_laps_3d(i4time,ext,var,units,comment,transm_3d
+     1                      ,ni,nj,nk)
+
         endif
+
+!       do jj = 1,nj
+!       do ii = 1,ni
+!           if(gnd_glow(ii,jj) .gt. 0.)then
+!               write(6,*)' ii,jj,gndglow',ii,jj,gnd_glow(ii,jj)
+!           endif
+!       enddo ! i
+!       enddo ! j
+
+        I4_elapsed = ishow_timer()
 
         if(sol_alt(i,j) .lt. -4.)then ! Modify moon glow section in green channel
                                       ! Preserve sfc sky glow section in red channel
@@ -676,17 +724,6 @@
 
                       snow_m = sum(tri_coeff(:,:,:) * 
      1                             snow_3d(i1:i2,j1:j2,k1:k2))
-
-!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-!    1                                   ,cond_3d,cond_m)
-!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-!    1                                   ,clwc_3d,clwc_m)
-!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-!    1                                   ,cice_3d,cice_m)
-!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-!    1                                   ,rain_3d,rain_m)
-!                     call trilinear_laps(rinew_m,rjnew_m,rk_m,ni,nj,nk
-!    1                                   ,snow_3d,snow_m)
                   else
                       cond_m = 0.
                       clwc_m = 0.
@@ -982,7 +1019,10 @@
 
           endif ! true
 
-          aod_ill(ialt,jazi) = sum_aod_ill
+!         Account for multiple scattering in aod_ill
+          aod_ill(ialt,jazi) = 0.75 * sum_aod_ill + 0.25 * sum_aod
+!         aod_ill(ialt,jazi) = sum_aod_ill
+
           aod_ill_dir(ialt,jazi) = sum_aod_ill_dir
           aod_tot(ialt,jazi) = sum_aod
 
