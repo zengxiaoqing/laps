@@ -158,7 +158,7 @@ cdis
 1090    write(6,*)
         write(6,*)
         I4TIME_ref = ASKI4T()
-        i4time_ref = (i4time_ref)/60*60
+!       i4time_ref = (i4time_ref)/60*60
 
 1100    write(6,1110)
 1110    format(/////'     [h/hz]  Horizontal Plan View '
