@@ -24,6 +24,8 @@
 !       real rh_3d(NX_L,NY_L,NZ_L)
 
         parameter (nc = 3)
+        real transm_3d(NX_L,NY_L,NZ_L)
+        real transm_4d(NX_L,NY_L,NZ_L,nc) 
 
         real pres_2d(NX_L,NY_L)
         real t_2d(NX_L,NY_L)
@@ -49,9 +51,12 @@
         real alt_norm(NX_L,NY_L)
         real sol_alt_2d(NX_L,NY_L)
         real sol_azi_2d(NX_L,NY_L)
+        real eobsc(NX_L,NY_L)
         real moon_alt_2d(NX_L,NY_L)
         real moon_azi_2d(NX_L,NY_L)
         real moon_mag,moon_mag_thr
+
+        real pres_1d(NZ_L)
 
         real lil_sfc, lic_sfc, lil_cpt, lic_cpt
   
@@ -77,7 +82,8 @@
         logical l_latlon, l_parse, l_plotobs, l_solar_eclipse
         logical l_idl /.false./
         logical l_cyl               
-        logical l_polar               
+        logical l_polar 
+        logical l_allsky_clouds /.true./ ! requiring cloud data to run
 
         integer i_overlay
 
@@ -292,7 +298,7 @@
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
 
-        if(l_plotobs .eqv. .false.)then
+        if(l_allsky_clouds .eqv. .true.)then
 
           n_lvls_snd = NZ_L
 
@@ -312,12 +318,6 @@
      1                         ,istatus)                ! O
 
           write(6,*)' a9time is ',a9time
-
-        endif
-
-200     continue
-
-        if(l_plotobs .eqv. .false.)then
 
 !         Read Height
           if(c_prodtype .eq. 'A')then
@@ -432,8 +432,8 @@
             call get_laps_3dgrid
      1          (i4time_ref,10800,i4time_lwc,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,clwc_3d,istat_lwc)
-            call make_fnam_lp(i4time_lwc,a9time,istatus)
-            call cv_i4tim_asc_lp(i4time_lwc,a24time,istatus)
+!           call make_fnam_lp(i4time_lwc,a9time,istatus)
+!           call cv_i4tim_asc_lp(i4time_lwc,a24time,istatus)
             i4time_solar = i4time_lwc
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'LWC'
@@ -450,18 +450,6 @@
               write(6,*)' Error reading LWC field in plot_allsky'
               return
           endif
-
-!         Calculate solar position for 2D array of grid points
-          do i = 1,NX_L
-          do j = 1,NY_L
-            call solar_position(lat(i,j),lon(i,j),i4time_solar
-     1                         ,sol_alt_2d(i,j),solar_dec,solar_ha)
-            call equ_to_altaz_d(solar_dec,solar_ha,lat(i,j)
-     1                         ,altdum,sol_azi_2d(i,j))               
-            if(sol_azi_2d(i,j) .lt. 0.)sol_azi_2d(i,j) = 
-     1                                 sol_azi_2d(i,j) + 360.
-          enddo ! j
-          enddo ! i
 
           if(istat_lwc .eq. 1)then
             continue
@@ -642,92 +630,135 @@
 
           endif
 
-          if(.true.)then
-!           Consider additional albedo info based on land use 
-!           This also includes snow cover
-            var_2d='USE'
-            call read_static_grid(NX_L,NY_L,var_2d,land_use,istatus)
-            if(istatus .ne. 1)then
-               print*,' Warning: could not read static-landuse'
-               return
-            endif
+          I4_elapsed = ishow_timer()
 
-            where(topo(:,:) .ge. 3200.); land_use(:,:) = 19.; end where
+!         Calculate solar position for 2D array of grid points
+          do i = 1,NX_L
+          do j = 1,NY_L
+            call solar_position(lat(i,j),lon(i,j),i4time_solar
+     1                         ,sol_alt_2d(i,j),solar_dec,solar_ha)
+            call equ_to_altaz_d(solar_dec,solar_ha,lat(i,j)
+     1                         ,altdum,sol_azi_2d(i,j))               
+            if(sol_azi_2d(i,j) .lt. 0.)sol_azi_2d(i,j) = 
+     1                                 sol_azi_2d(i,j) + 360.
+          enddo ! j
+          enddo ! i
 
-            call land_albedo_bm(lat,lon,NX_L,NY_L,albedo_bm,istatus)
- 
-            if(istatus .eq. 1)then
-                write(6,*)' Set 3-color albedo based on Blue Marble'
+        else
+          i4time_solar = i4time_ref
 
-!               Test a flop if needed
-!               do i = 1,NX_L
-!               do j = 1,NY_L
-!                   topo_albedo_2d(:,NX_L+1-i,NY_L+1-j) 
-!    1                 = albedo_bm(:,i,j)
-!                   topo_albedo_2d(:,i,j) 
-!    1                 = albedo_bm(:,i,j)
-!               enddo ! j
-!               enddo ! i
+!         Calculate solar position for 2D array of grid points
+          do i = 1,NX_L
+          do j = 1,NY_L
+            call solar_position(lat(i,j),lon(i,j),i4time_solar
+     1                         ,sol_alt_2d(i,j),solar_dec,solar_ha)
+            call equ_to_altaz_d(solar_dec,solar_ha,lat(i,j)
+     1                         ,altdum,sol_azi_2d(i,j))               
+            if(sol_azi_2d(i,j) .lt. 0.)sol_azi_2d(i,j) = 
+     1                                 sol_azi_2d(i,j) + 360.
+          enddo ! j
+          enddo ! i
 
-                topo_albedo_2d = albedo_bm
+          swi_2d = 1300. * sind(max(sol_alt_2d,0.))
 
-                write(6,*)' Row of green albedo'
-                jrow = NY_L/2
-                do i = 1,NX_L
-                    if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
-                        write(6,*)i,topo_albedo_2d(2,i,jrow)
-                    endif
-                enddo ! i
-                alb_min = minval(topo_albedo_2d(2,:,jrow))
-                alb_max = maxval(topo_albedo_2d(2,:,jrow))
-                write(6,*)' Min/Max in row is ',alb_min,alb_max
+          read(lun,*) ! advance through input data
+          write(6,*)' Running without cloud and other current data'
+          snow_cover = r_missing_data
 
-                alb_max = maxval(topo_albedo_2d(2,:,:))
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    if(topo_albedo_2d(2,i,j) .eq. alb_max)then
-                        write(6,*)' Max albedo at ',i,j
-     1                            ,topo_albedo_2d(:,i,j)
-                    endif
-                enddo ! j
-                enddo ! i
-!               ialbedo_bm(:,:,:) = nint(topo_albedo_2d(:,:,:)*255.)
-!               call writeppm3Matrix(
-!    1                   ialbedo_bm(1,:,:),ialbedo_bm(2,:,:)
-!    1                  ,ialbedo_bm(3,:,:),'ialbedo_bm')
-            else
-                write(6,*)' Set 3-color albedo based on land use'
-                call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
-            endif
-
-            do j = 1,NY_L
-            do i = 1,NX_L
-              if(snow_cover(i,j) .ne. r_missing_data)then
-                do ic = 1,3
-                  topo_albedo_2d(ic,i,j) = 
-     1              max(topo_albedo_2d(ic,i,j),snow_cover(i,j))
-                enddo ! ic
-              endif
-            enddo ! i 
-            enddo ! j
+!         Use standard atmosphere for heights (uniform pressure grid)
+          call get_pres_1d(i4time_ref,NZ_L,pres_1d,istatus)
+          if(istatus .ne. 1)then
+            write(6,*)' error getting 1d pressures'
+            return
           endif
+          do k = 1,NZ_L
+            heights_3d(:,:,k) = psatoz(pres_1d(k)/100.)
+          enddo ! k
 
-          I4_elapsed = ishow_timer()
+        endif ! l_allsky_clouds is TRUE
 
-          call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
+        call make_fnam_lp(i4time_solar,a9time,istatus)
+        call cv_i4tim_asc_lp(i4time_solar,a24time,istatus)
 
-          I4_elapsed = ishow_timer()
+!       Consider additional albedo info based on land use 
+!       This also includes snow cover
+        var_2d='USE'
+        call read_static_grid(NX_L,NY_L,var_2d,land_use,istatus)
+        if(istatus .ne. 1)then
+           print*,' Warning: could not read static-landuse'
+           return
+        endif
 
-          call solar_normal(NX_L,NY_L,topo,dx,dy,lat,lon ! I
-     1                     ,sol_alt_2d,sol_azi_2d        ! I
-     1                     ,alt_norm)                    ! O
+        where(topo(:,:) .ge. 3200.); land_use(:,:) = 19.; end where
 
-          I4_elapsed = ishow_timer()
+        call land_albedo_bm(lat,lon,NX_L,NY_L,albedo_bm,istatus)
+ 
+        if(istatus .eq. 1)then
+            write(6,*)' Set 3-color albedo based on Blue Marble'
 
-        endif ! l_plotobs is FALSE
+!           Test a flop if needed
+!           do i = 1,NX_L
+!           do j = 1,NY_L
+!               topo_albedo_2d(:,NX_L+1-i,NY_L+1-j) 
+!    1             = albedo_bm(:,i,j)
+!               topo_albedo_2d(:,i,j) 
+!    1             = albedo_bm(:,i,j)
+!           enddo ! j
+!           enddo ! i
+
+            topo_albedo_2d = albedo_bm
+
+            write(6,*)' Row of green albedo'
+            jrow = NY_L/2
+            do i = 1,NX_L
+                if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
+                    write(6,*)i,topo_albedo_2d(2,i,jrow)
+                endif
+            enddo ! i
+            alb_min = minval(topo_albedo_2d(2,:,jrow))
+            alb_max = maxval(topo_albedo_2d(2,:,jrow))
+            write(6,*)' Min/Max in row is ',alb_min,alb_max
+
+            alb_max = maxval(topo_albedo_2d(2,:,:))
+            do i = 1,NX_L
+            do j = 1,NY_L
+                if(topo_albedo_2d(2,i,j) .eq. alb_max)then
+                    write(6,*)' Max albedo at ',i,j
+     1                        ,topo_albedo_2d(:,i,j)
+                endif
+            enddo ! j
+            enddo ! i
+!           ialbedo_bm(:,:,:) = nint(topo_albedo_2d(:,:,:)*255.)
+!           call writeppm3Matrix(
+!    1               ialbedo_bm(1,:,:),ialbedo_bm(2,:,:)
+!    1              ,ialbedo_bm(3,:,:),'ialbedo_bm')
+        else
+            write(6,*)' Set 3-color albedo based on land use'
+            call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
+        endif
+        
+        do j = 1,NY_L
+        do i = 1,NX_L
+          if(snow_cover(i,j) .ne. r_missing_data)then
+            do ic = 1,3
+              topo_albedo_2d(ic,i,j) = 
+     1          max(topo_albedo_2d(ic,i,j),snow_cover(i,j))
+            enddo ! ic
+          endif
+        enddo ! i 
+        enddo ! j
+
+        call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
+
+        I4_elapsed = ishow_timer()
+
+        call solar_normal(NX_L,NY_L,topo,dx,dy,lat,lon ! I
+     1                   ,sol_alt_2d,sol_azi_2d        ! I
+     1                   ,alt_norm)                    ! O
+
+        I4_elapsed = ishow_timer()
 
         write(6,*)' a9time is ',a9time
-
 
 !       Determine aod_ref as aerosol optical depth
         pw_ref = pw_2d(NX_L/2,NY_L/2)
@@ -826,25 +857,56 @@
           write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
 
           write(6,*)' call sun_moon at grid point ',isound,jsound
+          idebug = 2
           call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,isound,jsound
-     1                 ,alm,azm,elgms,moon_mag)
+     1                 ,alm,azm,idebug,elgms,moon_mag 
+     1                 ,solar_eclipse_magnitude,eobsf,eobsl)
           write(6,24)alm,azm,elgms,moon_mag 
-24        format('  alt/az/elg/mag = ',4f8.2)
+24        format('  alt/az/elg/mnmag = ',2f8.2,f9.4,f8.2)
 
 !         Consider passing 'topo_flag' into 'sun_moon' to consider either
 !         solar or lunar eclipses
 !         http://www.jgisen.de/eclipse
           if(elgms .lt. 0.5)then
-              emag = 1. - (2. * elgms)
-              eobs = emag**1.35 ! valid with sun & moon of equal radius
-              write(6,*)' NOTE: Solar Eclipse Conditions: mag/obsc = '
-     1                  ,emag,eobs
-              l_solar_eclipse = .true.
+            write(6,25)solar_eclipse_magnitude,eobsf,eobsl
+25          format(' NOTE: Solar Eclipse Conditions: mag/obsc = '
+     1            ,f9.6,2f9.6)
+            l_solar_eclipse = .true.
           elseif(elgms .lt. 0.6)then
-              write(6,*)' NOTE: Possible Solar Eclipse Conditions'
-              l_solar_eclipse = .true.
+            write(6,*)' NOTE: Possible Solar Eclipse Conditions'
+            l_solar_eclipse = .true.
           else
-              l_solar_eclipse = .false.
+            l_solar_eclipse = .false.
+          endif
+
+          if(maxval(sol_alt_2d) .gt. 0. .and. 
+     1       l_solar_eclipse .eqv. .true.)then
+            write(6,*)' Calculate gridded eclipse obscuration'
+            elgmin = 9999.
+            idebug = 0
+            do i = 1,NX_L
+            do j = 1,NY_L
+              call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i,j
+     1                     ,almgrd,azmgrd,idebug,elggrd,grdmoon_mag
+     1                     ,solar_eclipse_magnitude,eobsf,eobsc(i,j))
+
+              if(elggrd .lt. elgmin)then
+                elgmin = elggrd
+                emagmax = solar_eclipse_magnitude
+                eobsmax = eobsc(i,j)
+                imxecl = i
+                jmxecl = j
+              endif
+
+            enddo ! j
+            enddo ! i
+
+            write(6,*)' range of eobsc is',minval(eobsc),maxval(eobsc)
+            write(6,*)' best elg/mag/eobs ',elgmin,emagmax,eobsmax,
+     1                ' at',i,j,lat(imxecl,jmxecl),lon(imxecl,jmxecl)
+
+          else
+            eobsc = 0.
           endif
 
 !         l_solar_eclipse = .false. ! test
@@ -878,6 +940,7 @@
      1                     ,aod_ray,aod_2_cloud,aod_2_topo       ! O
      1                     ,aod_ill,aod_ill_dir                  ! O
      1                     ,aod_tot,transm_obs                   ! O
+     1                     ,transm_3d,transm_4d                  ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
      1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
@@ -1021,7 +1084,7 @@
 
             I4_elapsed = ishow_timer()
 
-            if(solar_alt .lt. 0.)then
+            if(solar_alt .lt. 0. .OR. l_solar_eclipse .eqv. .true.)then
               write(6,*)' call get_starglow with cyl data'
               call get_starglow(i4time_solar,alt_a_roll,azi_a_roll       ! I
      1                     ,minalt,maxalt,minazi,maxazi                  ! I
@@ -1068,6 +1131,7 @@
      1                    ,cloud_rad_c       ! cloud solar transmittance / color
      1                    ,cloud_rad_w       ! cloud solar transmittance * rad
      1                    ,clear_rad_c       ! clear sky illumination by sun     
+     1                    ,l_solar_eclipse,i4time_solar,rlat,rlon,eobsl
      1                    ,clear_radf_c      ! clear sky frac illumination by sun     
      1                    ,patm,htmsl
      1                    ,blog_v_roll       ! skyglow
