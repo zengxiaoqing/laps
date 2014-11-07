@@ -40,18 +40,24 @@ cdis
 
         function aski4t()
 
-        character*9 asc9_tim
+        character*11 asc9_tim
         integer aski4t
 
         write(6,*)'Enter time, <yydddhhmm>, or <RETURN> for latest:'
 
         read(5,1)asc9_tim
-1       format(a9)
+1       format(a)
 
         if(asc9_tim .eq. '         ')then
             i4time = i4time_now_gg()
+        elseif(len(asc9_tim) .eq. 11)then
+            call cv_asc_i4time(asc9_tim(1:9),i4time)
+            read(asc9_tim,2)isec
+2           format(9x,i2.2)
+            i4time = i4time + isec
+            write(6,*)' 11 character input, i4time = ',i4time
         else
-            call cv_asc_i4time(asc9_tim,i4time)
+            call cv_asc_i4time(asc9_tim(1:9),i4time)
         endif
 
         aski4t = i4time
