@@ -21,7 +21,7 @@
 !       brt(a) = (1.0 - exp(-.14 * a))/.14 ! rel. sky brightness (max~7)
         brt(a) = (1.0 - exp(-.14 * a))     ! rel. sky brightness (max=1)
         brtf(am,od_per_am) = 1.0 - exp(-am*od_per_am) ! rel. sky brightness (max=1)
-        brto(od) = 1.0 - exp(-min(od,80.))            ! rel. sky brightness (max=1)
+        brto(od) = 1.0 - exp(-min(od,80.)) ! rel. sky brightness (max=1)
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
         angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
@@ -39,11 +39,14 @@
 
         real hg2d(nc), alphav_g, alphav_a ! hg2(nc)
         real srcdir_90(nc),srcdir(nc),clear_int_c(nc)
+        real ecl_intd(nc),ecl_dir_rat(nc),ecl_scat(nc)
 
-        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
+        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi)  ! clear sky illumination
+        real clear_rad_c0(nc,minalt:maxalt,minazi:maxazi) ! clear sky (no eclipse)
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
                ! fraction of air molecules illuminated by the sun along
                ! line of sight (consider Earth's shadow + clouds)
+               ! topo and multiple scattering is accounted for
         real ag_2d(minalt:maxalt,minazi:maxazi) ! gas airmass (topo/notopo)
         real aod_ill(minalt:maxalt,minazi:maxazi) ! aerosol illuminated
                                       ! optical depth (slant - topo/notopo)
@@ -65,6 +68,14 @@
         real aod_asy_eff(nsc) ! ,nc (add nc dimension throughout)
 
         logical l_solar_eclipse
+
+        parameter (nsteps = 10000)
+        parameter (nopac = 10)
+
+        real distecl(nopac,nc)
+        real tausum_a(nsteps)
+        real taumid(nopac),opacmid(nopac),eobsc_a(nopac,nc)
+        real eobsc(nc),eobsc_sum(nc)
 
         sfc_alb = 0.15 ! pass this in and account for snow cover?
 
@@ -103,21 +114,23 @@
                          ,ag_s,ao_s,aa_s)           ! O
 
         if(sol_alt .gt. 0.)then
-         write(6,*)' Obtain reference values of source term'
-         write(6,*)'ag_90/aa_90 = ',ag_90,aa_90
-         write(6,*)'ag_s/aa_s = ',ag_s,aa_s
+          write(6,*)' Obtain reference values of source term'
+          write(6,*)'ag_90/aa_90 = ',ag_90,aa_90
+          write(6,*)'ag_s/aa_s = ',ag_s,aa_s
 
-         do ic = 1,nc
-          od_g_vert = ext_g(ic) * patm
-          od_a_vert = aod_vrt * ext_a(ic)
-          if(ic .eq. 2)then
+          do ic = 1,nc
+            od_g_vert = ext_g(ic) * patm
+            od_a_vert = aod_vrt * ext_a(ic)
+            if(ic .eq. 2)then
               idebug = 1
-          else
+            else
               idebug = 0
-          endif
-          call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert,ag_90/ag_90,aa_90/aa_90,ag_s/ag_90,aa_s/aa_90,idebug,srcdir_90(ic))
-          write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
-         enddo ! ic
+            endif
+            call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert, &
+                ag_90/ag_90,aa_90/aa_90,ag_s/ag_90,aa_s/aa_90, &
+                idebug,srcdir_90(ic),opac_slant,nsteps,dx,tausum_a)
+            write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
+          enddo ! ic
         endif
 
         do ialt = ialt_start,ialt_end,ialt_delt
@@ -130,15 +143,44 @@
 
 !        Determine src term and ratio with zenith value
          if(sol_alt .gt. 0.)then
-          do ic = 1,nc
-           od_g_vert = ext_g(ic) * patm
-           od_a_vert = aod_vrt * ext_a(ic)
-           idebug = 0
-           call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert,ag/ag_90,aa/aa_90,ag_s/ag_90,aa_s/aa_90,idebug,srcdir(ic))
-           if(ic .eq. 2 .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
-               write(6,*)' alt/srcdir/ratio:',altray,srcdir(ic),srcdir(ic)/srcdir_90(ic)
-           endif
-          enddo ! ic
+           do ic = 1,nc
+             od_g_vert = ext_g(ic) * patm
+             od_a_vert = aod_vrt * ext_a(ic)
+             idebug = 0
+             call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert, &
+                ag/ag_90,aa/aa_90,ag_s/ag_90,aa_s/aa_90, &
+                idebug,srcdir(ic),opac_slant,nsteps,dx,tausum_a)
+
+             if(l_solar_eclipse .eqv. .true.)then
+               do iopac = 1,nopac
+                 opacmid(iopac) = opac_slant * (float(iopac) - 0.5) / float(nopac)
+                 taumid(iopac) = -log(1.0 - opacmid(iopac))              
+!                taumid(iopac) = 1.0 ! align with earlier test
+                 do i = 1,nsteps
+                   xbar = (float(i)-0.5) * dx
+                   if(tausum_a(i) .lt. taumid(iopac))distecl(iopac,ic) = xbar
+                 enddo ! i 
+
+!                earlier method for testing
+                 dist500 = 18000./sind(max(altray,4.0))            
+                 distecl(iopac,ic) = min(distecl(iopac,ic),dist500)
+
+               enddo ! iopac         
+
+               if(ic .eq. ic .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
+                write(6,65)ic,altray,srcdir(ic),srcdir(ic)/srcdir_90(ic) &
+                          ,opac_slant,opacmid(1),opacmid(nopac),taumid(1),taumid(nopac),distecl(1,ic),distecl(nopac,ic)
+65              format(' ic/alt/srcdir/ratio/opacsl/opacmid/taumid/distecl:',i3,3f9.3,5f7.3,2f9.1)
+               endif
+
+             else ! l_solar_eclipse = F
+               if(ic .eq. 2 .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
+                write(6,66)altray,srcdir(ic),srcdir(ic)/srcdir_90(ic)
+66              format(' alt/srcdir/ratio:',3f9.3)
+               endif
+
+             endif ! l_solar_eclipse
+           enddo ! ic
          endif
 
 !        Determine aerosol multiple scattering order
@@ -156,13 +198,13 @@
 !        Determine effective asymmetry parameter from multiple scattering
 !        http://www.arm.gov/publications/proceedings/conf15/extended_abs/sakerin_sm.pdf
          do isc = 1,nsc
-             if(aod_asy(isc) .gt. 0.)then
-                 aod_asy_eff(isc) = aod_asy(isc) ** scatter_order
-             elseif(aod_asy(isc) .lt. 0.)then
-                 aod_asy_eff(isc) = -(abs(aod_asy(isc)) ** scatter_order)
-             else
-                 aod_asy_eff(isc) = 0. 
-             endif
+           if(aod_asy(isc) .gt. 0.)then
+              aod_asy_eff(isc) = aod_asy(isc) ** scatter_order
+           elseif(aod_asy(isc) .lt. 0.)then
+              aod_asy_eff(isc) = -(abs(aod_asy(isc)) ** scatter_order)
+           else
+              aod_asy_eff(isc) = 0. 
+           endif
          enddo ! isc
 
 !        cosp_frac = max(1.-scatter_order,0.)
@@ -191,6 +233,62 @@
 
           if(sol_alt .gt. 0.)then
 
+!           Get eclipse parms if applicable (and effective brightness)
+            if(l_solar_eclipse .eqv. .true.)then
+              do ic = 1,nc
+                if(idebug .ge. 1 .and. ic .eq. 2)then
+                  idebuge = 2
+                else
+                  idebuge = 0
+                endif
+
+!               Compute weighted intensity using distecl
+                eobsc_sum(:) = 0.
+                emag_sum = 0.
+                do iopac = 1,nopac
+                  call sun_eclipse_parms(i4time,rlat,rlon,htmsl,idebuge &
+                                 ,altray,view_azi_deg,distecl(iopac,ic) &
+                                 ,earth_radius,elgms,emag,eobscf,eobsc_a(iopac,:))
+                  eobsc_sum(:) = eobsc_sum(:) + eobsc_a(iopac,:)
+                  emag_sum  = emag_sum  + emag
+                enddo
+
+                eobsc(:) = eobsc_sum(:) / float(nopac)
+                emag  = emag_sum  / float(nopac)
+
+!               Secondary scattering for each color
+!               arg1 = .00004 + float(nc-1) * .00003
+                arg1 = .000004 + float(ic-1) * .000002
+                arg2 = 5e-7                         
+
+                if(emag .gt. 1.0)then
+                  ecl_scat(ic) = arg1 - (emag-1.0) * arg2
+                else
+                  ecl_scat(ic) = arg1 * eobsc(ic)
+                endif
+
+!               Totality darkness fraction
+!               Hardwired temporal and spatial variability
+                ecl_intd(ic) = (1.0 - eobsc(ic)) + ecl_scat(ic) * eobsc(ic)
+
+                ecl_dir_rat(ic) = 1.0 - (ecl_scat(ic) / ecl_intd(ic))
+
+                if(idebuge .ge. 1)then
+                  write(6,67)altray,distecl(1,ic),distecl(nopac,ic),elgms,emag &
+                            ,eobsc_a(1,ic),eobsc_a(nopac,ic),eobsc(ic) &
+                            ,ecl_scat(ic),ecl_intd(ic),ecl_dir_rat(ic)
+67                format('eclipse altray/dist/elg/emag',f9.2,2f9.1,f9.4,f7.4, &
+                         ' eobsc',3f7.4,' scat/int/dir',2f10.7,f7.4)
+                endif
+              enddo ! ic
+              if(idebug .ge. 1)then
+                  write(6,*)'ecl_scat = ',ecl_scat
+              endif
+            else ! no eclipse
+              ecl_intd(:) = 1.0          
+              ecl_dir_rat(:) = 1.0
+            endif
+
 !           Fraction of atmosphere illuminated by the sun 
 !           clear_radf_c(3,ialt,jazi) = 1. 
             angle_plane = 0.; dist_ray_plane = 0.; ht_ray_plane = 0.
@@ -198,8 +296,9 @@
 !           Illumination using Rayleigh and HG phase functions
             z = (90. - altray) + refractd_app(altray      ,patm)
             airmass_g = ag
-            sb_corr = 2.0 * (1.0 - (sind(sol_alt)**0.5))
-            day_int = 3e9 / 10.**(0.4 * sb_corr)
+!           sb_corr = 2.0 * (1.0 - (sind(sol_alt)**0.5)) ! magnitudes
+            sb_corr = 0.0
+!           day_int = 3e9 / 10.**(0.4 * sb_corr) * ecl_intd
 
 !           HG illumination
 !           do ic = 1,nc
@@ -221,13 +320,20 @@
 
 !           Consider arg for sideways scattering from downward diffuse
 !           is ~hg(90.) or an evaluated integral. Use 0.5 for now.
-            hg2d = (hg2 * aod_dir_rat) + (0.5 * (1.0 - aod_dir_rat)) ! direct ill 
+            if(l_solar_eclipse .eqv. .false.)then
+              hg2d = (hg2 * aod_dir_rat) + (0.5 * (1.0 - aod_dir_rat)) 
+            else
+              do ic = 1,nc
+                arg = aod_dir_rat * ecl_dir_rat(ic)
+                hg2d(ic) = (hg2 * arg) + (0.5 * (1.0 - arg)) 
+              enddo ! ic
+            endif
 
             if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
-                write(6,*)' ERROR in skyglow_phys: aod_dir_rat out of bounds'
-                write(6,*)' ialt/jazi/altray = ',ialt,jazi,altray
-                write(6,*)' aod_ray_dir/ray = ',aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi),aod_dir_rat
-                stop
+              write(6,*)' ERROR in skyglow_phys: aod_dir_rat out of bounds',aod_dir_rat
+              write(6,*)' ialt/jazi/altray = ',ialt,jazi,altray
+              write(6,*)' aod_ray_dir/aod_ray = ',aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi)
+              stop
             endif
 
             if(.false.)then ! sum brightness from gas and aerosols
@@ -235,6 +341,7 @@
 
               do ic = 1,nc
 !               Rayleigh illumination
+                day_int = 3e9 * (1.0 - eobsc(ic))
                 od_per_am = ext_g(ic)
                 rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
                 rayleigh = brtf(airmass_g,od_per_am) * rayleigh_gnd
@@ -288,7 +395,14 @@
 !               brt2 = brto(od_g2) * rayleigh_pf_eff
                 brt2 = brto(od_g2*gasfrac) * rayleigh_pf_eff
                 trans1 = trans(od_1)
-                clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic))
+
+                day_int = 3e9 * (1.0 - eobsc(ic))
+                if(l_solar_eclipse .eqv. .false.)then
+                  clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic)) ! + ecl_scat(ic)*3e9
+                else
+                  clear_rad_c0(ic,ialt,jazi) = 3e9    * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic)) ! + ecl_scat(ic)*3e9
+                  clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic)) ! + ecl_scat(ic)*3e9
+                endif
 
                 if(idebug .ge. 1 .AND. (ic .eq. 2 .or. abs(elong(ialt,jazi)-90.) .le. 0.5) )then
                   write(6,73)day_int,elong(ialt,jazi),airmass_g,od_g,aod_ray(ialt,jazi),aa &
@@ -343,8 +457,8 @@
 !           Enlarge the shadow except when near the sun and near sunrise
 !           shadow_enlarge_high = 13000. * (1.0 - cosd(elong(ialt,jazi)))/2
             elong_arg = min(elong(ialt,jazi),90.)
-            shadow_enlarge_high = 13000. * sind(elong_arg)
-            shadow_enlarge_low  = 13000.                                     
+            shadow_enlarge_high = (14600.-htmsl) * sind(elong_arg)
+            shadow_enlarge_low  =  14600.-htmsl                                      
             ramp_enl = min(max(1.0 - (-2. - sol_alt) / 2.0,0.),1.)
             shadow_enlarge = shadow_enlarge_high * ramp_enl + shadow_enlarge_low * (1. - ramp_enl)
             dist_pp_plane = dist_pp_plane + shadow_enlarge ! shadow enlargement
@@ -390,10 +504,10 @@
               if(l_solar_eclipse .eqv. .true.)then ! get lat/lon of light ray hitting shadow cylinder
                   call sun_eclipse_parms(i4time,rlat,rlon,htmsl,idebug &
                                     ,altray,view_azi_deg,dist_ray_plane &
-                                    ,earth_radius,elgms,emag,eobsc)
-                  ecl_int = 1.0 - eobsc
+                                    ,earth_radius,elgms,emag,eobscf,eobsc(:))
+                  ecl_int = 1.0 - eobsc(2)
                   if(idebug .ge. 1)then
-                      write(6,*)' eclipse elg,emag,eobs ',elgms,emag,eobsc
+                      write(6,*)' eclipse elg,emag,eobs ',elgms,emag,eobsc(2)
                   endif
               else
                   ecl_int = 1.0          
@@ -418,10 +532,11 @@
                   aod_unlit = aod_path * (1.-frac_aero_lit)
 !                 arg = aod_lit * 0.5 * (1. - cosd(elong(ialt,jazi)))
 !                 Note: is the 40. factor too large?
-!                 aero_red = (1.0 - exp(-20. * aod_lit)) &  ! aod fct (0-1)
-                  aero_red = (1.0 - exp(-40. * aod_lit)) &  ! aod fct (0-1)
+!                 aero_red = (1.0 - exp(-40. * aod_lit)) &  ! aod fct (0-1)
+                  aero_red = (1.0 - exp(-240. * aod_lit)) &  ! aod fct (0-1)
                            * 0.5 * (1. - cosd(elong(ialt,jazi)))&! elong factor (0-1) 
-                           * min(-sol_alt*0.7,1.0)       ! solalt fct (0-1)
+                           * min(-sol_alt*0.7,1.0) &     ! solalt fct (0-1)
+                           * cosd(altray)**30.           ! alt fact   (0-1)
               endif
 
               airmass_to_twi = airmass_unlit
@@ -519,9 +634,9 @@
 !             Aero_red reddens due to aerosols (if value is 1)
 !             Increase huea coefficient to redden the horizon?
 !             hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
-              huea = exp(-airmass_unlit*0.36*hue_coeff) ! 0:R 1:B 2:G 3:R
-              hue = min(huea,(1.0 - aero_red)) 
-              hue2 = (2.8 - 1.8 * hue ** 1.6)
+              huea = exp(-airmass_unlit*0.36*hue_coeff) 
+              hue = min(huea,(1.0 - aero_red)) ! set hue to 0 via aero_red
+              hue2 = (2.8 - 1.8 * hue ** 1.6)  ! 0:R 1:B 2:G 3:R
               hue2 = max(hue2,1.5) ! keep aqua color high up
 
 !             Redden further based on aerosols
@@ -567,11 +682,11 @@
               write(6,101) airmass_lit,airmass_tot,airmass_unlit&
                           ,hue_coeff,huea,hue,hue2
 101           format('airmass_lit/tot/unlit/huec/huea/hue/hue2',f12.8,6f9.5)
-              write(6,102)aa,ht_ray_plane_s,aod_lit,aero_ray_plane,aero_red &         
-                         ,aero_red/clear_intf &                
+              write(6,102)aa,ht_ray_plane_s,aero_ray_plane,aod_lit &         
+                         ,aero_red,aero_red/clear_intf &                
                          ,clear_intf,skyref & 
                          ,sat_arg,sat_ramp,sat_twi_ramp
-102           format('aa/htryplns/aod_lit/plane/red/rat/cif/skr/sat',f9.5,f9.0,3f9.5,f10.3,f10.3,f14.10,2x,3f9.5)
+102           format('aa/htryplns/plane/aod_lit/red/rat/cif/skr/sat',f9.5,f9.0,3f9.5,f10.3,f10.3,f14.10,2x,3f9.5)
               rmaglim = b_to_maglim(clear_rad_c(3,ialt,jazi))
             endif
 
@@ -583,7 +698,7 @@
                       ,od_a,dist_ray_plane,ht_ray_plane &
                       ,clear_rad_c(:,ialt,jazi)/1e9
               else
-                write(6,112)ialt,jazi,sol_alt &
+                write(6,112)altray,view_azi_deg,sol_alt &
                       ,angle_plane,dist_ray_plane,ht_ray_plane,shadow_enlarge &
                       ,patm_ray_plane,airmass_lit,airmass_unlit &
                       ,twi_trans,clear_intf,rint_alt_ramp &
@@ -595,9 +710,8 @@
        'ialt/jazi/salt/od_a/ds_ray/ht_ray/clrrd' &
                   ,i4,i5,2x,2f6.2,2f10.1,2x,3f8.3)
 112           format( &
-       'ialt/jazi/salt/ang_pln/ds_ray/ht_ray/enl/a/t/clrrad' &
-!                 ,2i5,2f7.3,3f8.2,2f10.1,2x,4f8.5,f8.0,f8.5,2x,3f8.5) &
-                  ,i4,i5,2x,2f6.2,2f10.1,f8.1,2x,3f8.4,2x,f8.4,2f8.5 &
+       'alt/azi/salt/ang_pln/ds_ray/ht_ray/enl/a/t/clrrad' &
+                  ,2f6.1,1x,2f6.2,2f10.1,f8.1,2x,3f8.4,2x,f8.4,2f8.5 &
                                       ,2x,f7.4,f7.4,f12.0)
 
               if(idebug .ge. 2)then
@@ -610,6 +724,28 @@
 
          enddo ! jazi
         enddo ! ialt
+
+        if(sol_alt .ge. 0. .and. l_solar_eclipse .eqv. .true.)then
+            write(6,*)' Calling to get_sky_rad_ave in eclipse'
+            do ic = 1,nc ! secondary scattering in each color
+!               Good temporal variability, constant for spatial
+                call get_sky_rad_ave(clear_rad_c(ic,:,:) &
+                    ,alt_a,azi_a,maxalt-minalt+1,maxazi-minazi+1 &
+                    ,sol_alt,sol_azi,sky_rad_ave)
+                od_g_vert = ext_g(ic) * patm
+                od_a_vert = aod_vrt * ext_a(ic)
+                od_vert = od_g_vert + od_a_vert
+!               Assuming non-reflective land for now
+                highalt_adjust = 1.5
+                sky_rad_scat = (sky_rad_ave/2.) * od_vert * highalt_adjust   
+                clear_rad_c(ic,:,:) = clear_rad_c(ic,:,:) + sky_rad_scat
+                sky_rad_ratio = clear_rad_c(ic,maxalt,1) / 3e9
+                scatfrac = sky_rad_scat / clear_rad_c(ic,maxalt,1)
+                ri_over_i0 = clear_rad_c(ic,maxalt,1) / clear_rad_c0(ic,maxalt,1)
+                write(6,201)ic,sky_rad_ave,od_vert,sky_rad_scat,sky_rad_ratio,scatfrac,ri_over_i0
+201             format('ic/sky_rad_ave/od/scat/rad/scatf/ii0',i3,f10.1,f9.3,f10.1,3f10.7)
+            enddo ! ic
+        endif
 
         return
         end
