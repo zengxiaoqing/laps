@@ -392,6 +392,35 @@
         return
         end
 
+        subroutine get_sky_rad_ave(rad,alt_a,azi_a,ni,nj &
+                                  ,sol_alt,sol_az,sky_rad_ave)
+
+        real rad(ni,nj)
+        real alt_a(ni,nj)
+        real azi_a(ni,nj)
+
+        cnt = 0.
+        sum = 0.
+
+        do i = 1,ni
+            cosi = cosd(alt_a(i,1))
+            do j = 1,nj
+                cnt = cnt + (1.0      * cosi)
+                sum = sum + (rad(i,j) * cosi)     
+            enddo ! j
+        enddo ! i
+
+        if(cnt .gt. 0.)then
+            sky_rad_ave = sum/cnt
+        else
+            write(6,*)' ERROR in get_sky_rad_ave'
+            write(6,*)' sol_az = ',sol_az
+            sky_rad_ave = 10. 
+        endif
+
+        return
+        end
+
         subroutine apply_rel_extinction(rmaglim,alt,od_zen)
 
         include 'trigd.inc'
