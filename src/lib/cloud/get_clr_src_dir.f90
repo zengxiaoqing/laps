@@ -1,12 +1,12 @@
 
-     subroutine get_clr_src_dir(solalt,viewalt,od_g_vert,od_a_vert,ag,aa,ags,aas,idebug,srcdir)
+     subroutine get_clr_src_dir(solalt,viewalt,od_g_vert,od_a_vert,ag,aa,ags,aas,idebug,srcdir,opac_slant,nsteps,dx,tausum_a)
 
 !    Input idebug for select angles
 
      trans(od) = exp(-min(od,80.))
      opac(od) = 1.0 - trans(od)
 
-     nsteps = 2
+     real tausum_a(nsteps)
 
 !    Calculate src term of gas+aerosol along ray normalized by TOA radiance
      od_g_slant = od_g_vert * ag        
@@ -39,18 +39,18 @@
 
      delta_slant = opac_slant / float(nsteps)
 
-     do i = 1,nsteps
-         opac_slant_step = (float(i) - 0.5) * delta_slant
-         od_slant_step = -log(1.0 - opac_slant_step)
-         if(idebug .eq. 1)then
-           write(6,*)'i/opac_slant_step/od_slant_step=',i,opac_slant_step,od_slant_step
-         endif
-     enddo ! i
+!    do i = 1,nsteps
+!        opac_slant_step = (float(i) - 0.5) * delta_slant
+!        od_slant_step = -log(1.0 - opac_slant_step)
+!        if(idebug .eq. 1)then
+!          write(6,*)'i/opac_slant_step/od_slant_step=',i,opac_slant_step,od_slant_step
+!        endif
+!    enddo ! i
 
 !    Integral [0 to x] a * exp(-b*x) = a * (1. - exp*(-b*x)) / b
      dx = 25.
-     nsteps = 1000
-     nsteps = 10000
+!    nsteps = 1000
+!    nsteps = 10000
      tausum = 0.
      sumi = 0.
 
@@ -71,6 +71,8 @@
          alphabar_a = alpha_sfc_a * exp(-htbar/scale_ht_a)  
          dtau = dx * (alphabar_g + alphabar_a)
          tausum = tausum + dtau
+!        if(tausum .lt. 1.0)distod1 = xbar
+         tausum_a(i) = tausum
 
          opac_last = opac_curr
          opac_curr = opac(tausum)
