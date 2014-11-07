@@ -1,7 +1,8 @@
 
       subroutine sun_eclipse_parms(i4time,rlat_r4,rlon_r4,ht,idebug
      1                            ,alt_r4,azi_r4,dist_m_r4
-     1                            ,earth_radius,elgms_r4,r4_mag,r4_obsc)
+     1                            ,earth_radius,elgms_r4
+     1                            ,r4_mag,r4_obsc,obsc_limb)
 
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
       include '../../include/astparms.for'
@@ -28,7 +29,10 @@
       integer i4time,istatus
       integer i4time_last /0/
       real rlat_r4,rlon_r4,alt_r4,azi_r4,dist_m_r4
-      real alm_r4,azm_r4,elgms_r4,r4_mag,ht,earth_radius,r4_obsc
+      real alm_r4,azm_r4,elgms_r4,r4_mag,ht,earth_radius
+
+      parameter (nc=3)
+      real r4_ratio,r4_obsc,wa(nc),obsc_limb(nc),solar_eclipse_magnitude
 
       save SXG,SYG,SZG,MXG,MYG,MZG,i4time_last,ET,UT,LST
       save NX,NY,NZ,EX,EY,EZ,ZNX,ZNY,ZNZ,TX,TY,TZ,TMAG
@@ -37,13 +41,16 @@
       n_loc = 1
 
       if(idebug .ge. 1)then
-         write(6,*)
-         write(6,*)' subroutine sun_eclipse_parms:',i4time,i4time_last
+        write(6,*)
+        write(6,*)' subroutine sun_eclipse_parms:',i4time,i4time_last
       endif
 
       rlon = rlon_r4
 
       if(i4time .ne. i4time_last)then
+        write(6,*)
+        write(6,*)' initialize sun_eclipse_parms:',i4time,i4time_last
+
         i4time_last = i4time
  
         call i4time_to_jd(i4time,tb,istatus)
@@ -258,12 +265,25 @@ C CALCULATE ALT AND AZ of SUN
 !    1      SXG+MXG,SYG+MYG,SZG+MZG,amag,diam_moon)
 
           diam_sun = 1800.
-          diam_moon = 1800.
+          diam_moon = 1852.2
+          elgsec = elgmst * 3600.
 
-          overlap_sec = -(elgmst * 3600. - 0.5 * (diam_sun + diam_moon))
+          overlap_sec = -(elgsec - 0.5 * (diam_sun + diam_moon))
           if(overlap_sec .gt. 0.)then
               solar_eclipse_magnitude = overlap_sec / diam_sun
-              r4_obsc = solar_eclipse_magnitude**1.35
+!             Larger term will increase exponent
+!             fracmag = solar_eclipse_magnitude**30.
+!             exponent = 1.35*(1.-fracmag) + 0.5*fracmag
+!             r4_obsc = solar_eclipse_magnitude**exponent
+!             r4_obsc = min(r4_obsc,1.0)
+              r4_ratio = diam_moon/diam_sun
+              call get_obscuration(solar_eclipse_magnitude,r4_ratio
+     1                            ,r4_obsc,nc,wa,obsc_limb)
+              if(r4_obsc/r4_obsc .ne. 1.0)then
+                  write(6,*)' ERROR in sun_eclipse_parms r4_obsc ='
+     1                         ,r4_obsc,solar_eclipse_magnitude,r4_ratio
+                  stop
+              endif
           else
               solar_eclipse_magnitude = 0.
               r4_obsc = 0.
@@ -283,7 +303,9 @@ C
       END
 
       subroutine sun_moon(i4time,lat_2d,lon_2d,ni,nj,is,js,alm_r4,azm_r4
-     1                   ,elgms_r4,r4_mag)                               ! O   
+     1                   ,idebug                           ! I
+     1                   ,elgms_r4,r4_mag                  ! O
+     1                   ,solar_eclipse_magnitude,r4_obsc,obsc_limb) ! O   
 
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
 !     include '../util/utilparms.for'
@@ -303,7 +325,7 @@ C
       character c8_appm*8,c8_apps*8
       character*20 c20_site
       DIMENSION LAT(9),LON(9)
-      DATA MODE/1/,IFL/0/,TIME/0.0D0/,TIMEOL/0.D0/,IPRINT/1/
+      DATA MODE/1/,IFL/0/,TIME/0.0D0/,TIMEOL/0.D0/,IPRINT/0/
       DATA FRAME/2/
       DATA RISE/'R'/,SET/'S'/,BLANK/' '/,C5_BLANK/'     '/
       DATA MNTH/'JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP'
@@ -313,6 +335,8 @@ C
       real lat_2d(ni,nj)
       real lon_2d(ni,nj)
       real alm_r4,azm_r4,elgms_r4,r4_mag
+      real solar_eclipse_magnitude
+      real r4_ratio,r4_obsc,obsc_limb,wa(3),obsc_limbc(3)
 C
       n_loc = 1
       lat = lat_2d(is,js)
@@ -370,8 +394,8 @@ c calculate position of observer's zenith (coordinates of date)
       CALL TOPO_ff1(PHI,LON(L),UT,TXZ,TYZ,TZZ)
       RAMR=ATAN3(TYZ,TXZ)
 
-      write(6,*)' lat,lon = ',LAT(L),LON(L)
-      write(6,*)' TXZ,TYZ,TZZ,RAMR',TXZ,TYZ,TZZ,RAMR/rpd
+      IF(IPRINT.EQ.1)write(6,*)' lat,lon = ',LAT(L),LON(L)
+      IF(IPRINT.EQ.1)write(6,*)' TXZ,TYZ,TZZ,RAMR',TXZ,TYZ,TZZ,RAMR/rpd
 
       CALL TOPO(PHI,LON(L),UT,TX,TY,TZ)
 
@@ -411,7 +435,7 @@ C CALCULATE ALT AND AZ of SUN
       if(als .lt. -1.0)then
           c8_apps = '        '
       else
-          write(c8_apps,1002)apps
+          IF(IPRINT.EQ.1)write(c8_apps,1002)apps
 1002      format(f8.2)
       endif
 
@@ -439,7 +463,8 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
       CALL anglevectors(-MXG,-MYG,-MZG,SXG,SYG,SZG,ELGARG)
       ELGMSG = ELGARG/RPD
 
-      write(6,*)' DECM / RAM / HAM = ',DECM/rpd,RAM/rpd,HAM/rpd
+      IF(IPRINT.EQ.1)write(6,*)' DECM / RAM / HAM = '
+     1                          ,DECM/rpd,RAM/rpd,HAM/rpd
 
 !     Calculate Apparent Positions
       call equ_to_altaz_r(DECM,HAM,PHI,ALM,AZM)
@@ -450,7 +475,7 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
       if(alm .lt. -1.0)then
           c8_appm = '       '
       else
-          write(c8_appm,1001)appm
+          IF(IPRINT.EQ.1)write(c8_appm,1001)appm
 1001      format(f8.2)
       endif
 
@@ -480,22 +505,44 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
 
       r4_mag = -12.74 + phase_corr_moon
 
-      if(.false.)then
+      if(.true.)then
 
 !         Calculate Solar Eclipse Magnitude
-          call magnitude(0,0,SXT,SYT,SZT,0.,0.,0.,amag
-     1                                          ,diam_sun)
-          call magnitude(1,1,SXT,SYT,SZT,
-     1      SXG+MXG,SYG+MYG,SZG+MZG,amag,diam_moon)
+!         call magnitude(0,0,SXT,SYT,SZT,0.,0.,0.,amag
+!    1                                          ,diam_sun)
+!         call magnitude(1,1,SXT,SYT,SZT,
+!    1      SXG+MXG,SYG+MYG,SZG+MZG,amag,diam_moon)
 
-          overlap_sec = -(elgmst * 3600. - 0.5 * (diam_sun + diam_moon))
+          diam_sun = 1800.
+          diam_moon = 1852.2
+          elgsec = elgmst * 3600.
+
+          overlap_sec = -(elgsec - 0.5 * (diam_sun + diam_moon))
           solar_eclipse_magnitude = overlap_sec / diam_sun
 
           if(solar_eclipse_magnitude .gt. 0.)then
-              elgmst = solar_eclipse_magnitude * 100.
+!             Larger term will increase exponent
+              fracmag = solar_eclipse_magnitude**30.
+              exponent = 1.35*(1.-fracmag) + 0.5*fracmag
+!             r4_obsc = solar_eclipse_magnitude**exponent
+!             r4_obsc = min(r4_obsc,1.0)
+              r4_ratio = diam_moon/diam_sun
+              call get_obscuration(solar_eclipse_magnitude,r4_ratio
+     1                            ,r4_obsc,3,wa,obsc_limbc)
+              obsc_limb = obsc_limbc(2)
+          else
+              r4_obsc = 0.
           endif
 
-      endif ! .false.
+          if(idebug .ge. 2)then
+             write(6,*)
+             write(6,*)' sun_moon debug:'
+             write(6,*)' diam_sun,diam_moon,overlap_sec,mag,r4_obsc ',
+     1diam_sun,diam_moon,overlap_sec,solar_eclipse_magnitude,r4_obsc
+             write(6,*)
+          endif
+
+      endif ! .true.
 
 !     Correct moon's magnitude for lunar eclipse
       if(elgmsg .gt. 177.)then
@@ -536,22 +583,27 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
           bri_2nd = .0002
 
           if(umbral_magnitude .gt. 1.)then          ! Total    
-              write(6,*)' Total'           
-              write(6,*)' umbral_magnitude = ',umbral_magnitude
+              IF(IPRINT.EQ.1)write(6,*)' Total'           
+              IF(IPRINT.EQ.1)write(6,*)' umbral_magnitude = '
+     1                                  ,umbral_magnitude
               frac_bri = bri_2nd / umbral_magnitude**4
           elseif(umbral_magnitude .gt. 0.)then      ! Partial
-              write(6,*)' Partial'         
-              write(6,*)' umbral_magnitude = ',umbral_magnitude
-              write(6,*)' penumbral_magnitude = ',penumbral_magnitude
-              write(6,*)' penumbral_width = ',penumbral_width
+              IF(IPRINT.EQ.1)then
+                write(6,*)' Partial'         
+                write(6,*)' umbral_magnitude = ',umbral_magnitude
+                write(6,*)' penumbral_magnitude = ',penumbral_magnitude
+                write(6,*)' penumbral_width = ',penumbral_width
+              endif
               frac_bri = ((1.0 - umbral_magnitude) * 0.5) 
      1                 / penumbral_width
 !             frac_bri = max(frac_bri,bri_2nd) 
               frac_bri = frac_bri + umbral_magnitude * bri_2nd
           elseif(penumbral_magnitude .gt. 0.)then   ! Penumbral
-              write(6,*)' Penumbral'       
-              write(6,*)' penumbral_magnitude = ',penumbral_magnitude
-              write(6,*)' penumbral_width = ',penumbral_width
+              IF(IPRINT.EQ.1)then
+                write(6,*)' Penumbral'       
+                write(6,*)' penumbral_magnitude = ',penumbral_magnitude
+                write(6,*)' penumbral_width = ',penumbral_width
+              endif
               frac_bri = 1.0 - (penumbral_magnitude * 0.5)
      1                       / penumbral_width
           else
@@ -562,7 +614,7 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
 
           r4_mag = r4_mag + rmag_corr
 
-          write(6,451)frac_bri,rmag_corr,r4_mag
+          IF(IPRINT.EQ.1)write(6,451)frac_bri,rmag_corr,r4_mag
 451       format(' Lunar Eclipse: frac_bri/rmag_corr/r4_mag'
      1          ,f11.6,2f9.3)
 
@@ -570,7 +622,8 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
 
 C
 C WRITE OUT DATA
-500   write(6,2)IYEAR,MNTH(MONTH),idt,ctt,
+500   continue
+      IF(IPRINT.EQ.1)write(6,2)IYEAR,MNTH(MONTH),idt,ctt,
      1  alm,c8_appm(2:8),azm,signm,int(abs(dec_dg_m)),int(dec_mn_m),dec_
      1sc_m,
      1                        int(ra_hr_m),      int(ra_mn_m), ra_sc_m,
@@ -612,6 +665,77 @@ C
         ra_hr = ra_rd / rpd / 15d0
         ra_mn = (ra_hr - int(ra_hr)) * 60d0
         ra_sc = (ra_mn - int(ra_mn)) * 60d0
+
+        return
+        end
+
+        subroutine get_obscuration(rmag,ratio,obscuration
+     1                            ,nc,wa,obsc_limb)
+
+!       Eclipse obscuration where ratio is moon/sun angular diameter
+
+!       Limb darkening reference
+!       www.physics.hmc.edu/faculty/esin/a101/limbdarkening.pdf
+
+        real wa(nc),obsc_limb(nc)
+
+        parameter (pi = 3.14159265)
+        seg_area(theta,r) = 0.5 * r**2 * (theta - sin(theta))
+
+        real mu
+        mu(r) = sqrt(1.-r**2)
+        rlimbdk(r,u,alphal) = 1. - (u * (1. - (mu(r))**alphal))
+
+        u = 1.00
+
+        if(rmag .ge. 0.99999)then
+            obscuration = 1.0
+            obsc_limb = 1.0         
+            return
+        elseif(rmag .eq. 0.)then 
+            obscuration = 0.0
+            obsc_limb = 0.0            
+        endif
+
+        rs = 1.0
+        rm = rs*ratio
+
+        oa = -(rmag * (2.*rs) - (rs + rm))
+        a = (rs**2 - rm**2 + oa**2) / (2. * oa)
+
+        alpha = 2. * acos(a/rs)
+        beta  = 2. * acos((oa-a)/rm)
+
+        seg1 = seg_area(alpha,rs)
+        seg2 = seg_area(beta,rm)  
+
+        obscuration = (seg1 + seg2) / pi
+
+        if(rmag .le. 0.5)then
+            obsc_limb = obscuration
+        else
+!           calculate mean radius of "quadratic" segment
+            rmean = 1. - ((1.-rmag)*(1./3.)) 
+            do ic = 1,nc
+!               alphal = 0.8 
+                alphal = -0.023 + .292 / wa(ic)
+                rmean_ill = rlimbdk(rmean,u,alphal)
+                obsc_limb = 1.0 - ((1.0 - obscuration) * rmean_ill)
+            enddo ! ic
+        endif
+
+!       write(6,*)'rmag/obscuration/obsc_limb = '
+!    1            ,rmag,obscuration,obsc_limb
+!       write(6,*)'rmean/rmean_ill/mu = ',rmean,rmean_ill,mu(rmean)
+!       write(6,*)'mu(r)/mu(r)**alphal',mu(rmean),mu(rmean)**alphal
+!       write(6,*)'rmean_ill derived',(1.-obsc_limb)/(1.-obscuration)
+!       stop
+
+!       write(6,1)rmag,ratio,oa,a
+!1      format('rmag/ratio/oa/a',4f10.5)
+!       write(6,2)alpha,beta,seg1,seg2,obscuration
+!2      format('alpha/beta/seg1/seg2/obsc',5f10.5)
+!       stop
 
         return
         end
