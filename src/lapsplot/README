@@ -35,6 +35,7 @@ driver                                            lapsplot_main.f
             solar_position                        lib/sunfuncs.f
             equ_to_altaz_d                        lib/equtoaltazd.f
             sun_moon                              lib/cloud/sun_moon.f
+                sun_eclipse_parms                   ""
             get_cloud_rays                        get_cloud_rays.f            (second raytrace)
                 skyglow_phys                      lib/cloud/skyglow_phys.f90  (clear sky brightness - night)
                 get_cloud_rad                     lib/cloud/get_cloud_rad.f90 (first raytrace 3-D radiation)
