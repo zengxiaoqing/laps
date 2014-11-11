@@ -163,6 +163,8 @@ cdis
               scattering_coeff = tau / thickness                  ! meters**-1
 
 !             Convert from implied albedo to column optical depth
+!             Should maximum albedo of whole cloud column be used instead of
+!             just this layer?
               albarg = min(a(ilyr),0.930)
               call albedo_to_clouds2(albarg
      1                             ,cloud_trans_l,cloud_trans_i
