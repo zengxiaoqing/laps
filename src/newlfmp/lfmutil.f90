@@ -288,6 +288,7 @@ real :: umean(lx,ly),vmean(lx,ly),ustorm(lx,ly),vstorm(lx,ly)
 real :: array_buf(lx,ly),array_out(lx,ly)
 
 real :: ghi_ratio(lx,ly)
+real :: arg
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !Beka!!!!!!!!!!!!! obtaining ldf, lat and lon !!!!!!!!!!!!!!!!!!!!
@@ -773,18 +774,34 @@ if(.not. large_ngrid)then
 
 ! Helicity, cape, cin, LI.
 
- write(6,*)' Calculating helicity, stability indices'
- call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
+  write(6,*)' Calculating helicity, stability indices'
+  call helicity(husig,hvsig,hzsig,usfc,vsfc,zsfc,lx,ly,nz,srhel)
 
- I4_elapsed = ishow_timer()
+  I4_elapsed = ishow_timer()
 
- call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
- print *,'Min/Max uhel =',minval(uhel),maxval(uhel)
+  call updraft_helicity(husig,hvsig,hwsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,uhel)
+  print *,'Min/Max uhel =',minval(uhel),maxval(uhel)
 
- I4_elapsed = ishow_timer()
+  call bulk_shear(husig,hvsig,hzsig,hzsigf,zsfc,llat,llon,lx,ly,nz,bshr)
 
- call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
-             ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
+  I4_elapsed = ishow_timer()
+
+  call capecin(hpsig*0.01,htsig,hthetaesig,hthetasig,hrhsig  &
+              ,hzsigf,tprs,liftedind,cape,cin,k500,lx,ly,nz,lz)
+ 
+! supercell composite parameter
+  do i = 1,lx
+  do j = 1,ly
+    if(bshr(i,j) .ge. 20.)then
+      arg = 1.0
+    elseif(bshr(i,j) .ge. 10.)then
+      arg = bshr(i,j)/20.
+    else
+      arg = 0.0
+    endif
+    scp(i,j) = cape(i,j)/1000. * (srhel(i,j)/50.) * arg
+  enddo ! j
+  enddo ! i
 endif ! large_ngrid
 
 deallocate(hthetasig,hthetaesig,hzsigf)
@@ -1849,6 +1866,59 @@ do i=2,imax-1
       endif
    enddo
    uhel(i,j)=sumhel
+enddo
+enddo
+
+return
+end
+
+
+!===============================================================================
+
+subroutine bulk_shear(usig,vsig,zsig,zsigf,terrain,lat,lon,imax,jmax,ksig,bshr)
+
+! bulk_shear - sfc to 6km agl
+
+use constants
+
+implicit none
+
+integer :: i,imax,j,jmax,k,k0km,k6km,ksig
+real    :: usigl,usigh,vsigl,vsigh,ushr,vshr
+real, dimension(imax,jmax) :: bshr,terrain,lat,lon
+real, dimension(imax,jmax,ksig) :: usig,vsig,zsig
+real, dimension(imax,jmax,ksig+1) :: zsigf
+
+! Determine indices of 0 and 6 km layers (above ground level).
+
+do j=1,jmax
+do i=1,imax
+   do k=1,ksig
+      if (((zsig(i,j,k)-terrain(i,j)) >=    0.)) then
+         k0km=k
+         exit
+      endif
+   enddo
+
+   do k=ksig,k0km,-1
+      if (((zsig(i,j,k)-terrain(i,j)) <= 6000.)) then
+         k6km=k
+         exit 
+      endif
+   enddo
+
+! Calculate bulk shear.  Difference between 0 and 6 km.
+
+   usigl = usig(i,j,k0km)
+   usigh = usig(i,j,k6km)
+   vsigl = vsig(i,j,k0km)
+   vsigh = vsig(i,j,k6km)
+
+   ushr = usigh - usigl
+   vshr = vsigh - vsigl
+
+   bshr(i,j)=sqrt(ushr**2 + vshr**2)
+
 enddo
 enddo
 
