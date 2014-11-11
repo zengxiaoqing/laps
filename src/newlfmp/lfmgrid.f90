@@ -120,7 +120,7 @@ real, pointer, dimension(:,:) ::  &
       ,graupmrsfc   ,cldbase      ,cldtop       ,cldamt       ,ceiling     &
       ,intliqwater  ,intcldice    ,totpcpwater  ,max_refl     ,echo_tops    ,refl_sfc    &
       ,pcptype_sfc  ,pcp_inc      ,snow_inc     ,snow_tot     ,snow_cvr    &
-      ,srhel        ,uhel         ,cape         ,cin          ,liftedind   &
+      ,srhel        ,uhel         ,bshr         ,scp          ,cape         ,cin          ,liftedind   &
       ,visibility   ,heatind      ,lwout        ,swout        ,lwdown      &
       ,swdown       ,shflux       ,lhflux       ,vnt_index    ,ham_index   &
       ,hah_index    ,fwi_index    ,fwx_index    ,upflux       ,bt11u       &
@@ -411,7 +411,7 @@ implicit none
 integer :: ct
 
 if (trim(mtype) /= 'st4') then
-  nvar2dout=53
+  nvar2dout=55
   if (make_micro) nvar2dout=nvar2dout+5
   if (make_firewx) nvar2dout=nvar2dout+7
 
@@ -480,6 +480,8 @@ if (trim(mtype) /= 'st4') then
   uhel       =>sgrid(1:lx,1:ly,ct); name2d(ct)='UHE'; com2d(ct)='Updraft Helicity'                ; ct=ct+1
   cape       =>sgrid(1:lx,1:ly,ct); name2d(ct)='PBE'; com2d(ct)='CAPE'                            ; ct=ct+1
   cin        =>sgrid(1:lx,1:ly,ct); name2d(ct)='NBE'; com2d(ct)='CIN'                             ; ct=ct+1
+  bshr       =>sgrid(1:lx,1:ly,ct); name2d(ct)='BSH'; com2d(ct)='Bulk Shear'                      ; ct=ct+1
+  scp        =>sgrid(1:lx,1:ly,ct); name2d(ct)='SCP'; com2d(ct)='Supercell Composite Parameter'   ; ct=ct+1
   liftedind  =>sgrid(1:lx,1:ly,ct); name2d(ct)='LI '; com2d(ct)='Lifted Index'                    ; ct=ct+1
   visibility =>sgrid(1:lx,1:ly,ct); name2d(ct)='VIS'; com2d(ct)='Sfc. Visibility'                 ; ct=ct+1
   heatind    =>sgrid(1:lx,1:ly,ct); name2d(ct)='HI '; com2d(ct)='Heat Index'                      ; ct=ct+1
