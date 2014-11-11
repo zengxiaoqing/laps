@@ -782,6 +782,7 @@ c read in laps lat/lon and topo
         I4_elapsed = ishow_timer()
 
 !       Calculate and Write Integrated LWC
+!       Note slwc/cice is here in g/m**3
         write(6,*)
         write(6,*)' Calculating Integrated LWC and CICE'
         call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
@@ -794,19 +795,20 @@ c read in laps lat/lon and topo
      1                                        ,maxval(cice_int)
 
 !       Calculate cloud optical depth and cloud albedo
-        const_lwp = (1.5 * rholiq) / (rholiq     * reff_clwc)
+!       Note the 1e3 term converts units from metric tons per m**2 to kg/m**2
+        const_lwp = (1.5 * 1e3) / (rholiq     * reff_clwc)
         const_lwp_bks = const_lwp * bksct_eff_clwc
 
-        const_iwp = (1.5 * rholiq) / (rholiq     * reff_cice)
+        const_iwp = (1.5 * 1e3) / (rholiq     * reff_cice)
         const_iwp_bks = const_iwp * bksct_eff_cice
 
-        const_rwp = (1.5 * rholiq) / (rholiq     * reff_rain)
+        const_rwp = (1.5 * 1e3) / (rholiq     * reff_rain)
         const_rwp_bks = const_rwp * bksct_eff_rain
   
-        const_swp = (1.5 * rholiq) / (rhosnow    * reff_snow)
+        const_swp = (1.5 * 1e3) / (rhosnow    * reff_snow)
         const_swp_bks = const_swp * bksct_eff_snow
 
-        const_gwp = (1.5 * rholiq) / (rhograupel * reff_graupel)
+        const_gwp = (1.5 * 1e3) / (rhograupel * reff_graupel)
         const_gwp_bks = const_gwp * bksct_eff_graupel
 
 !       Cloud amount is opacity of cloud liquid and cloud ice hydrometeors
@@ -1173,12 +1175,14 @@ c read in laps lat/lon and topo
 !       Rain, Snow, and Graupel are added for the cldalb & simvis computation
         do j = 1,NY_L
         do i = 1,NX_L
-            cldalb_out(i,j) 
-     1                  = 1. - (exp( -(const_lwp_bks * slwc_int(i,j) + 
-     1                                 const_iwp_bks * cice_int(i,j) + 
-     1                                 const_rwp_bks * rain_int(i,j) + 
-     1                                 const_swp_bks * snow_int(i,j) + 
-     1                                 const_gwp_bks * pice_int(i,j)) ))
+!           Albedo = (b * tau) / (1. + b * tau)
+            btau = (const_lwp_bks * slwc_int(i,j) + 
+     1              const_iwp_bks * cice_int(i,j) + 
+     1              const_rwp_bks * rain_int(i,j) + 
+     1              const_swp_bks * snow_int(i,j) + 
+     1              const_gwp_bks * pice_int(i,j)   ) 
+            cldalb_out(i,j) = btau / (1. + btau) 
+
             cldod_out(i,j) = const_lwp * slwc_int(i,j)
      1                     + const_iwp * cice_int(i,j)  
      1                     + const_rwp * rain_int(i,j)  
