@@ -72,11 +72,16 @@ cdis
 
         real snow_2d(NX_L,NY_L)
         real snow_2d_tot(NX_L,NY_L)
+        real snow_2d_depth(NX_L,NY_L)
+        real snow_cover(NX_L,NY_L)
 
         real precip_2d(NX_L,NY_L)
         real precip_2d_tot(NX_L,NY_L)
 
-        real field_2d(NX_L,NY_L,4)
+        integer nfields
+        parameter (nfields = 5)
+
+        real field_2d(NX_L,NY_L,nfields)
 
         real precip_type_2d(NX_L,NY_L)
 
@@ -194,6 +199,16 @@ c read in laps lat/lon and topo
         comment_r = '           Null Comment'
         comment_s = '           Null Comment'
 
+        var = 'SDP'
+        call get_laps_2d_prior(i4time,ilaps_cycle_time,ext,var,units
+     1               ,comment_r,NX_L,NY_L,snow_2d_depth,istatus_sdp)
+        if(istatus_sdp .eq. 1)then
+            write(6,*)' Success reading prior snow depth'
+        else
+            write(6,*)' Failed reading prior snow depth'
+            snow_2d_depth = 0.
+        endif
+
 !       Get storm total from previous analysis cycle
         if(istatus_inc .eq. 1)then
             write(6,*)' Getting Previous Storm Total Accumulations'
@@ -206,6 +221,9 @@ c read in laps lat/lon and topo
                 var = 'RTO'
                 call get_laps_2d(i4time-ilaps_cycle_time,ext,var,units
      1                  ,comment_r,NX_L,NY_L,precip_2d_tot,istatus_tot)
+            endif
+
+            if(istatus_tot .eq. 1)then
             endif
 
             if(istatus_tot .ne. 1)then
@@ -288,15 +306,25 @@ c read in laps lat/lon and topo
 
         write(6,*)' l_reset = ',l_reset
 
+!       Nominal melt rate of 1mm/hr
+        rate_melt = .001 / 3600.
+        snow_melt = rate_melt * float(laps_cycle_time) 
+
         if(istatus_inc .eq. 1)then
 !           Add current hour precip/snow accumulation to storm total
             if(istatus_tot .eq. 1 .and. (.not. l_reset) )then
                 write(6,*)' Adding latest increment for new Storm Total'      
-     1                   ,' Accumulation'
+     1                   ,' Accumulation & Depth'
                 call add_miss(snow_2d,  snow_2d_tot,  snow_2d_tot  
      1                       ,NX_L,NY_L)     
                 call add_miss(precip_2d,precip_2d_tot,precip_2d_tot
      1                       ,NX_L,NY_L)
+                call add_miss(snow_2d,  snow_2d_depth,snow_2d_depth
+     1                       ,NX_L,NY_L)     
+
+                call add_miss(snow_2d,  snow_2d_depth,snow_2d_depth
+     1                       ,NX_L,NY_L)     
+                snow_2d_depth = snow_2d_depth - snow_melt
 
             else ! reset storm total
                 write(6,*)' Resetting Storm Total Accumulations to '
@@ -312,8 +340,33 @@ c read in laps lat/lon and topo
 
                 call move(snow_2d  ,snow_2d_tot  ,NX_L,NY_L)
                 call move(precip_2d,precip_2d_tot,NX_L,NY_L)
+                call move(snow_2d  ,snow_2d_depth,NX_L,NY_L)
 
             endif ! Valid continuation of storm total
+
+
+!           Compare snow depth with analyzed snow cover field
+            ext = 'lm2'
+            var = 'SC'
+            call get_laps_2d(i4time,ext,var,units
+     1                    ,comment_s,NX_L,NY_L,snow_cover,istatus_cover)
+            if(istatus_cover .eq. 1)then
+                write(6,*)' Read in Snow Cover OK for comparison'
+            endif
+
+            do i = 1,NX_L
+            do j = 1,NY_L
+                if(snow_cover(i,j) .ne. r_missing_data)then
+                    if(snow_cover(i,j) .gt. 0.3 .AND. 
+     1                 snow_2d_depth(i,j) .eq. 0.)then
+                        snow_2d_depth(i,j) = 3.
+                    elseif(snow_cover(i,j) .eq. 0.3 .AND. 
+     1                     snow_2d_depth(i,j) .gt. 0.)then
+                        snow_2d_depth(i,j) = 0.
+                    endif
+                endif
+            enddo ! j
+            enddo ! i
 
             write(6,*)' Writing Incr / Storm Total Accumulations'
             write(6,*)comment_r(1:80)
@@ -326,10 +379,11 @@ c read in laps lat/lon and topo
             call move(snow_2d_tot,  field_2d(1,1,2),NX_L,NY_L)
             call move(precip_2d,    field_2d(1,1,3),NX_L,NY_L)
             call move(precip_2d_tot,field_2d(1,1,4),NX_L,NY_L)
+            call move(snow_2d_depth,field_2d(1,1,5),NX_L,NY_L)
 
             call put_precip_2d(i4time,directory,ext,var,units
      1       ,comment_s,comment_r,NX_L,NY_L,field_2d,ilaps_cycle_time
-     1       ,istatus)
+     1       ,nfields,istatus)
             if(istatus .eq. 1)then
                 j_status(n_l1s) = ss_normal
             else
@@ -355,10 +409,7 @@ c read in laps lat/lon and topo
         subroutine put_precip_2d(i4time,DIRECTORY,EXT,var,units,
      1                  comment_s,comment_r,imax,jmax,field_2dsnow
      1                                          ,ilaps_cycle_time
-     1                                                  ,istatus)
-
-        integer nfields
-        parameter (nfields = 4)
+     1                                          ,nfields,istatus)
 
         character*(*) DIRECTORY
         character*31 EXT
@@ -382,6 +433,7 @@ c read in laps lat/lon and topo
         var_2d(2) = 'STO'
         var_2d(3) = 'R01'
         var_2d(4) = 'RTO'
+        var_2d(5) = 'SDP'
 
         minutes = ilaps_cycle_time/60
 
@@ -394,6 +446,8 @@ c read in laps lat/lon and topo
 22      format('LAPS',i3,' Minute Precip Accumulation')
 
         comment_2d(4) = comment_r
+
+        comment_2d(5) = 'LAPS Snow Depth'
 
         do k = 1,nfields
             LVL_2d(k) = LVL
@@ -411,5 +465,28 @@ c read in laps lat/lon and topo
             write(6,*)' Bad status returned from write_laps_data'
         endif
      
+        return
+        end
+
+        subroutine get_laps_2d_prior(i4time,ilaps_cycle_time,ext,var
+     1             ,units,comment_r,NX_L,NY_L,field_2d,istatus)
+
+        character*31 EXT
+        character*125 comment
+        character*10 units
+        character*3 var
+
+        real field_2d(NX_L,NY_L)
+
+        do iloop = 1,50
+            call get_laps_2d(i4time-ilaps_cycle_time*iloop,ext,var,units
+     1                  ,comment,NX_L,NY_L,field_2d,istatus)
+            if(istatus .eq. 1)then
+                write(6,*)' Success in get_laps_2d_prior'
+     1                    ,iloop,iloop*ilaps_cycle_time
+                return
+            endif
+        enddo
+
         return
         end
