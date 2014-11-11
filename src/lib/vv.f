@@ -112,7 +112,7 @@ cdis
          If (vv .gt. 0.) then
           w(k) = vv
          Else
-          w(k) = 0.
+          w(k) = 0. ! could wipe out VV from another layer
          End if
         End do
         k1 = k1 + 1
