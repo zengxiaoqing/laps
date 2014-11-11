@@ -1361,12 +1361,18 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                        ----   2.3.3  Surface Data ---
 
      Sfc Obs (lso): GSD uses surface observations as input with the default 
-           being GSD's NIMBUS netCDF format.
+           being GSD's NIMBUS netCDF format. These are generally used when
+           running LAPS within ESRL/GSD using data from /public, and is only
+           available within GSD unless one is working with the supplied test
+           data case.
  
            Surface observations of various types, covering much of the
            world are available in realtime from GSD's MADIS system (with some
            restrictions). This data, generally in 'WFO/AWIPS' netCDF format, 
            are distributed via the MADIS server at http://madis.noaa.gov. 
+           Thus MADIS is available both inside and outside ESRL/GSD. The
+           MADIS netCDF has additional variables (such as QC flags) that go
+           beyond what is in the NIMBUS format.
            
            The supported MADIS surface observation datasets include 'metar' 
            (METAR/SYNOP), 'maritime' (Buoy/Ship), 'mesonet', 'urbanet', and 
