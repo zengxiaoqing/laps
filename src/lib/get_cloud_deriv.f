@@ -767,6 +767,7 @@ cdoc    Compute 3D Precip Type given profiles of T, RH, Reflectivity
                     endif ! Temp is freezing
 
 !                   Calculate Hail/Graupel threshold with temperature factored in
+!                   Threshold is lowest when temperature is -5C
                     h_thr_depr = max(10. - abs(-5. - temp_3d(i,j,k)),0.)         
                     hail_ref_thresh = hail_ref_thresh1 - 3. * h_thr_depr
                     hail_ref_thresh = max(hail_ref_thresh,30.)                    
@@ -1087,7 +1088,8 @@ cdoc    Integrates cloud liquid through the column
 
         real slwc(imax,jmax,kmax)       ! Input in g/m**3
         real heights_3d(imax,jmax,kmax) ! Input 
-        real slwc_int(imax,jmax)  ! Output in m (metric tons of water / m**2)
+        real slwc_int(imax,jmax)  ! LWP in metric tons of water / m**2 
+                                  ! Corresponds to a depth in meters
         real depth(kmax)          ! Local
 
         do j = 1,jmax
