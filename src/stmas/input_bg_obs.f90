@@ -157,7 +157,7 @@ SUBROUTINE read_namelist
     IF (ratio .GE. 1.0) THEN
       limgrid(2) = INT((limgrid(1)-1)/ratio)+1
     ELSE
-      limgrid(1) = INT((limgrid(2)-1)/ratio)+1
+      limgrid(1) = INT((limgrid(2)-1)*ratio)+1
     ENDIF
     DO n=1,2
        numgrid(n) = INT((limgrid(n)-1)/2**(fnstgrd-1))
@@ -179,7 +179,7 @@ SUBROUTINE read_namelist
         EXIT      ! Use current numgrid(3) to start multigrid
       ENDIF
     ENDDO
-    maxgrid(3) = numgrid(3)*2**(nm-1)+1
+    maxgrid(3) = numgrid(3)*2**(nm)+1
     numgrid(3) = numgrid(3)+1
 
     ! For T direction:
