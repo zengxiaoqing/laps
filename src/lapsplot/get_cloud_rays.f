@@ -1054,7 +1054,7 @@
 !        Get clear sky twilight brightness in ring
          if(sol_alt(i,j) .le. 0.)then
 !            write(6,*)' args: ',l_solar_eclipse,i4time,rlat,rlon
-             call skyglow_phys(ialt,ialt,1,minazi,maxazi,jazi_delt
+             call skyglow_phys_twi(ialt,ialt,1,minazi,maxazi,jazi_delt
      1             ,minalt,maxalt,minazi,maxazi,idebug_a
      1             ,sol_alt(i,j),sol_azi(i,j),view_alt,view_az
      1             ,earth_radius,patm,aod_vrt,aod_ray_eff,aod_ray_dir
