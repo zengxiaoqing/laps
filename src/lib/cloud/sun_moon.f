@@ -2,10 +2,11 @@
       subroutine sun_eclipse_parms(i4time,rlat_r4,rlon_r4,ht,idebug
      1                            ,alt_r4,azi_r4,dist_m_r4
      1                            ,earth_radius,elgms_r4
-     1                            ,r4_mag,r4_obsc,obsc_limb)
+     1                            ,r4_mag,r4_obsc,obsc_limbc)
 
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
       include '../../include/astparms.for'
+      include 'wa.inc'
 
       ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)
      .-3.1415926535897932D0
@@ -31,8 +32,7 @@
       real rlat_r4,rlon_r4,alt_r4,azi_r4,dist_m_r4
       real alm_r4,azm_r4,elgms_r4,r4_mag,ht,earth_radius
 
-      parameter (nc=3)
-      real r4_ratio,r4_obsc,wa(nc),obsc_limb(nc),solar_eclipse_magnitude
+      real r4_ratio,r4_obsc,obsc_limbc(nc),solar_eclipse_magnitude
 
       save SXG,SYG,SZG,MXG,MYG,MZG,i4time_last,ET,UT,LST
       save NX,NY,NZ,EX,EY,EZ,ZNX,ZNY,ZNZ,TX,TY,TZ,TMAG
@@ -278,7 +278,7 @@ C CALCULATE ALT AND AZ of SUN
 !             r4_obsc = min(r4_obsc,1.0)
               r4_ratio = diam_moon/diam_sun
               call get_obscuration(solar_eclipse_magnitude,r4_ratio
-     1                            ,r4_obsc,nc,wa,obsc_limb)
+     1                            ,r4_obsc,obsc_limbc)
               if(r4_obsc/r4_obsc .ne. 1.0)then
                   write(6,*)' ERROR in sun_eclipse_parms r4_obsc ='
      1                         ,r4_obsc,solar_eclipse_magnitude,r4_ratio
@@ -310,6 +310,7 @@ C
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
 !     include '../util/utilparms.for'
       include '../../include/astparms.for'
+      include 'wa.inc'
 
       ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)
      .-3.1415926535897932D0
@@ -336,7 +337,7 @@ C
       real lon_2d(ni,nj)
       real alm_r4,azm_r4,elgms_r4,r4_mag
       real solar_eclipse_magnitude
-      real r4_ratio,r4_obsc,obsc_limb,wa(3),obsc_limbc(3)
+      real r4_ratio,r4_obsc,obsc_limb,obsc_limbc(nc)
 C
       n_loc = 1
       lat = lat_2d(is,js)
@@ -528,7 +529,7 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
 !             r4_obsc = min(r4_obsc,1.0)
               r4_ratio = diam_moon/diam_sun
               call get_obscuration(solar_eclipse_magnitude,r4_ratio
-     1                            ,r4_obsc,3,wa,obsc_limbc)
+     1                            ,r4_obsc,obsc_limbc)
               obsc_limb = obsc_limbc(2)
           else
               r4_obsc = 0.
@@ -669,32 +670,41 @@ C
         return
         end
 
-        subroutine get_obscuration(rmag,ratio,obscuration
-     1                            ,nc,wa,obsc_limb)
+        subroutine get_obscuration(rmag,ratio,obscuration,obsc_limbc)
 
 !       Eclipse obscuration where ratio is moon/sun angular diameter
 
-!       Limb darkening reference
+!       Limb darkening reference (Hestroffer and Magnan, 1997)
 !       www.physics.hmc.edu/faculty/esin/a101/limbdarkening.pdf
 
-        real wa(nc),obsc_limb(nc)
+!       Optional switch to first Pierce Method in Astrophysical Quantities 
+        include 'wa.inc'
+
+        parameter (method = 3) ! first Pierce Method
+
+        real obsc_limbc(nc)
+        real a_a(nc)  / 0.78, 0.74, 0.54/
+        real b_a(nc)  / 0.39, 0.43, 0.60/
+        real c_a(nc)  /-0.57,-0.56,-0.44/
 
         parameter (pi = 3.14159265)
         seg_area(theta,r) = 0.5 * r**2 * (theta - sin(theta))
 
         real mu
         mu(r) = sqrt(1.-r**2)
-        rlimbdk(r,u,alphal) = 1. - (u * (1. - (mu(r))**alphal))
+        rlimbdk1(r,u,alphal) = 1. - (u * (1. - (mu(r))**alphal))
+        rlimbdk3(r,a,b,c) = a + b*mu(r) 
+     1                        + c * (1.0-mu(r) * log(1.0 + 1./mu(r)))
 
         u = 1.00
 
         if(rmag .ge. 0.99999)then
             obscuration = 1.0
-            obsc_limb = 1.0         
+            obsc_limbc(:) = 1.0         
             return
         elseif(rmag .eq. 0.)then 
             obscuration = 0.0
-            obsc_limb = 0.0            
+            obsc_limbc(:) = 0.0            
         endif
 
         rs = 1.0
@@ -712,23 +722,27 @@ C
         obscuration = (seg1 + seg2) / pi
 
         if(rmag .le. 0.5)then
-            obsc_limb = obscuration
+            obsc_limbc(:) = obscuration
         else
 !           calculate mean radius of "quadratic" segment
-            rmean = 1. - ((1.-rmag)*(1./3.)) 
+            rmean = 1. - ((1.-rmag)*(2./3.)) 
             do ic = 1,nc
 !               alphal = 0.8 
                 alphal = -0.023 + .292 / wa(ic)
-                rmean_ill = rlimbdk(rmean,u,alphal)
-                obsc_limb = 1.0 - ((1.0 - obscuration) * rmean_ill)
+                if(method .eq. 1)then
+                    rmean_ill = rlimbdk1(rmean,u,alphal)
+                else
+                    rmean_ill = rlimbdk3(rmean,a_a(ic),b_a(ic),c_a(ic))
+                endif
+                obsc_limbc(ic) = 1.0 - ((1.0 - obscuration) * rmean_ill)
             enddo ! ic
         endif
 
-!       write(6,*)'rmag/obscuration/obsc_limb = '
-!    1            ,rmag,obscuration,obsc_limb
+!       write(6,*)'rmag/obscuration/obsc_limbc = '
+!    1            ,rmag,obscuration,obsc_limbc
 !       write(6,*)'rmean/rmean_ill/mu = ',rmean,rmean_ill,mu(rmean)
 !       write(6,*)'mu(r)/mu(r)**alphal',mu(rmean),mu(rmean)**alphal
-!       write(6,*)'rmean_ill derived',(1.-obsc_limb)/(1.-obscuration)
+!       write(6,*)'rmean_ill derived',(1.-obsc_limbc)/(1.-obscuration)
 !       stop
 
 !       write(6,1)rmag,ratio,oa,a
