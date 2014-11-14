@@ -436,3 +436,24 @@
 
         return
         end
+
+        subroutine nl_to_rad(nl,nc,wa,rad)
+
+!       Partly based on equations by Brad Schaffer,  Sky and Telescope, 
+!                                                    Februrary 1992
+
+        real nl(nc),wa(nc),rad(nc)
+
+        dist_au = 1.0
+        ts = 5700 ! Kelvin
+
+        do ic = 1,nc
+            bb = (.0000374*wa(nc)**-5) / (exp(1.43/(wa(ic)*ts))-1.0)
+            solar_rad = (1./dist_au**2) * bb * 1e-8 ! erg/cm2/sr/A
+            rad(ic) = (nl(ic)/3e9) * solar_rad
+        enddo ! ic
+
+        continue
+
+        return
+        end
