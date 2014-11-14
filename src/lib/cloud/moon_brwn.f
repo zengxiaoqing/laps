@@ -174,6 +174,7 @@ c2      FORMAT(1X,'After additive terms: LL,W,N,LP,WP,D,L,F'/8F10.4/)
 
         LONGTERMS = LONGTERMS/3600.D0
         LONG = LL + LONGTERMS
+        LONG = LONG -.0072 ! correct longitude
         LONG = DMOD(LONG+360.D0,360.D0)
 
 C       CALCULATE LATITUDE
@@ -254,6 +255,7 @@ C       CALCULATE LATITUDE
         LAT = (18518.511+1.189+GAMMA1_C) * SIN(S)
      1          - 6.241 * SIN(3.*S) + NTERMS
         LAT = LAT * (1.-OMEGA1-OMEGA2)/3600.
+        LAT = LAT + .0026 ! correct latitude (.0025)
 
 C       CALCULATE DISTANCE
 
