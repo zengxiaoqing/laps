@@ -138,17 +138,32 @@
           trans_nonsnow = trans(cloud_od(i,j) - cloud_od_snow)
           cloud_od_tot  = cloud_od(i,j)
 
-          hgp = max(cloud_od_snow,1.0)       ! multiple scattering phase func
-          sco = hgp
+          if(cloud_od_snow .gt. 0.)then
+              fsnow = cloud_od_sp(i,j,4) / cloud_od_snow
+              fcice = cloud_od_sp(i,j,2) / cloud_od_snow
+          else
+              fsnow = 1.0; fcice = 0.0
+          endif
 
-!         snow_bin1 = exp(-cloud_od_snow/5.) ! optically thin snow
-          snow_bin1a = 0.60**sco             ! forward peak
-          snow_bin1c = opac(0.10*sco)        ! backscattering (thick)
-          snow_bin1b = 1.0 - (snow_bin1a + snow_bin1c) ! mid
+          sco = max(cloud_od_snow,1.0) ! multiple scatter order 
+          hgp = sco                    ! multiple scatter order
+
+!         snow_bin1 = exp(-cloud_od_snow/5.)      ! optically thin snow
+          snow_bin1c = opac(0.10*(sco**1.9 - 1.0))  ! backscattering (thick)
+          snow_bin1a = (1. - snow_bin1c)
+!         snow_bin1a = 0.50**sco             ! forward peak
+!         snow_bin1b = 1.0 - (snow_bin1a + snow_bin1c) ! mid
 !         snow_bin2 = 1.0 - snow_bin1        ! optically thick snow
 
-          pf_snow = snow_bin1a * hg(.98**hgp,elong_a(i,j)) & ! plates
-                  + snow_bin1b * hg(.50**hgp,elong_a(i,j)) &
+          arg1 = 0.50 * fsnow + 0.50 * fcice
+          arg2 = 0.45 * fsnow + 0.28 * fcice
+          arg3 = 0.03 * fsnow + 0.20 * fcice
+          arg4 = 0.02 * fsnow + 0.02 * fcice
+
+          pf_snow = snow_bin1a * arg1 * hg( .999**hgp,elong_a(i,j)) & ! plates
+                  + snow_bin1a * arg2 * hg( .860**hgp,elong_a(i,j)) &
+                  + snow_bin1a * arg3 * hg( .000     ,elong_a(i,j)) & ! isotropic
+                  + snow_bin1a * arg4 * hg(-.600     ,elong_a(i,j)) & ! backscat
                   + snow_bin1c * pf_thk
 !                 + snow_bin2  * hg(0.0     ,elong_a(i,j))  
 
