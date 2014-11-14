@@ -513,7 +513,7 @@
           if(sol_alt .gt. 0.)then ! Daylight from skyglow routine
               if(new_skyglow .eq. 1)then
                 if(clear_rad_c(2,i,j) .le. 0.)then
-                    write(6,*)' ERROR: clear_rad_c(2,i,j) <= 0.',clear_rad_c(:,i,j)
+                    write(6,*)' ERROR: clear_rad_c(2,i,j) <= 0.',clear_rad_c(:,i,j),i,j
                 endif
                 glow_tot = log10(clear_rad_c(2,i,j)) ! + log10(clear_radf_c(2,i,j))
 !               if(sun_vis .eq. 1.0)then
@@ -538,8 +538,10 @@
                       write(6,*)' area of Venus?',i,j,glow_stars(2,i,j),glow_tot
                     endif
                   endif
-                  ramp_eobs = -log10(1.-min(eobs,.9999)) ! ranges 1-4
-!                 arge = 7.3 - ramp_eobs*0.7
+                  ramp_eobs = -log10(1.-min(eobs,.9995)) ! ranges 1-3
+!                 arge = 5.0 ! reasonable avoidance of saturation     
+!                 arge = 7.3 - ramp_eobs*0.55
+!                 arge = 7.3 - ramp_eobs*0.7 ! for 11070[2-8]a version
                   arge = 7.3 - ramp_eobs*0.9
 !                 if(eobs .gt. 0.997)then
 !                     arge = 4.8                  
@@ -548,7 +550,7 @@
 !                     arge = 6.3 * (1.-frace) + 4.8 * frace
 !                 endif
                   if(i .eq. isun .and. j .eq. jsun)then
-                      write(6,*)' eobs/arge/ramp_eobs',eobs,arge,ramp_eobs
+                      write(6,*)' eobs/ramp_eobs/arge',eobs,ramp_eobs,arge
                   endif
                   
                   rintensity_glow =     ((glow_tot -arge) * 100.)  
@@ -613,9 +615,12 @@
                   sat = sat * (1.-frac_sec) + 0.5 * frac_sec
                   glow_tot = addlogs(glow_tot,glow_stars(2,i,j))! add stars 
               else ! bluish twilight 2ndary scattering in front of terrain
+                  glow_tot = glow_secondary_clr
                   frac_sec = ((10.**glow_secondary_clr) / (10.**glow_tot))**6
                   hue = hue * (1.-frac_sec) + 1.4 * frac_sec
                   sat = sat * (1.-frac_sec) + 0.5 * frac_sec
+                  satmax = 0.10 + abs(hue-2.0)**2 ! chromaticity curve
+                  sat = min(sat,satmax)
               endif
 
               star_ratio = 10. ** ((glow_tot - glow_twi) * 0.45)
