@@ -6703,6 +6703,34 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
+        elseif(c_type(1:2) .eq. 'sd')then       
+            var_2d = 'SC'
+            ext = 'lm2'
+            c_label = 'Snow Depth Analysis    (in) '
+
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
+
+            IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
+                write(6,*)' Error Reading Snow Depth ',ext(1:3)
+     1                   ,' ',var_2d
+                goto1200
+            endif
+
+            clow = 0.
+            chigh = +20.
+            cint = 1.
+
+            scale = 1. / (100./2.54) ! DENOMINATOR = (IN/M)
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'linear')
+
         elseif(c_type(1:2) .eq. 'cb' .or. c_type(1:2) .eq. 'ct' 
      1                               .or. c_type(1:2) .eq. 'cc')then
             ext = 'lcb'
