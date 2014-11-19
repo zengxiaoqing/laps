@@ -61,8 +61,8 @@ C RLNG           I      R*4     Longitude (degrees)
 
         is = i4time - ((i4time / 60) * 60)
 
-        EQT=TIMEQ(JD)/rpd               ! Equation of Time (Degrees)
-        DEC=SOLDEC(JD)/rpd              ! Solar declination (Degrees)
+        EQT=TIMEQ2(i4time)/rpd          ! Equation of Time (Degrees)
+        DEC=SOLDEC2(i4time)/rpd         ! Solar declination (Degrees)
         hrangle = (ih-12)*15. + im/4. + is/240. + rlon + EQT
 
         COSZEN=SIND(RLAT)*SIND(DEC)+COSD(RLAT)*COSD(DEC)*COSD(hrangle)
@@ -100,8 +100,8 @@ C RLNG           I      R*4     Longitude (degrees)
         read(asc9_time,3)im
 3       format(7x,i2)
 
-        EQT=TIMEQ(JD)/rpd               ! Equation of Time (Degrees)
-        DEC=SOLDEC(JD)/rpd              ! Solar declination (Degrees)
+        EQT=TIMEQ2(i4time)/rpd          ! Equation of Time (Degrees)
+        DEC=SOLDEC2(i4time)/rpd         ! Solar declination (Degrees)
         HRANGLE = (ih-12)*15. + im/4. + rlon + EQT
 
         COSZEN=SIND(RLAT)*SIND(DEC)+COSD(RLAT)*COSD(DEC)*COSD(HRANGLE)
@@ -140,8 +140,8 @@ C RLNG           I      R*4     Longitude (degrees)
         read(asc9_time,3)im
 3       format(7x,i2)
 
-        EQT=TIMEQ(JD)/rpd               ! Equation of Time (Degrees)
-        DEC=SOLDEC(JD)/rpd              ! Solar declination (Degrees)
+        EQT=TIMEQ2(i4time)/rpd          ! Equation of Time (Degrees)
+        DEC=SOLDEC2(i4time)/rpd         ! Solar declination (Degrees)
 
         do i = 1,ni
         do j = 1,nj
@@ -196,6 +196,29 @@ C***JD is input Julian day number
         RETURN
         END
 C------------------------------------------------------------------------------
+        FUNCTION SOLDEC2(i4time)
+C***Solar declination angle (radians)
+        double precision jd,by
+
+!       Compute Astronomical Julian Date
+        call i4time_to_jd(i4time,jd,istatus)
+
+!       Compute Besselian Year
+        by = 1900.0 + (jd - 2415020.31352) / 365.242198781
+        by_frac = by - int(by)
+
+        DAYANG1=2.*3.14159265*by_frac     
+        DAYANG2=2.*DAYANG1
+        DAYANG3=3.*DAYANG1
+
+        SOLDEC2= 0.006918
+     1          -0.399912*COS(DAYANG1)+0.070257*SIN(DAYANG1)
+     2          -0.006758*COS(DAYANG2)+0.000907*SIN(DAYANG2)
+     3          -0.002697*COS(DAYANG3)+0.001480*SIN(DAYANG3)
+
+        RETURN
+        END
+C------------------------------------------------------------------------------
         FUNCTION TIMEQ(JD)
 C***Equation of time (radians)
 C***JD is input Julian day number
@@ -203,6 +226,27 @@ C***JD is input Julian day number
         DAYANG2=2.*DAYANG1
 
         TIMEQ=   0.000075
+     1          +0.001868*COS(DAYANG1)-0.032077*SIN(DAYANG1)
+     2          -0.014615*COS(DAYANG2)-0.040849*SIN(DAYANG2)
+
+        RETURN
+        END
+C------------------------------------------------------------------------------
+        FUNCTION TIMEQ2(i4time)
+C***Equation of time (radians)
+        double precision jd,by
+
+!       Compute Astronomical Julian Date
+        call i4time_to_jd(i4time,jd,istatus)
+
+!       Compute Besselian Year
+        by = 1900.0 + (jd - 2415020.31352) / 365.242198781
+        by_frac = by - int(by)
+
+        DAYANG1=2.*3.14159265*by_frac    
+        DAYANG2=2.*DAYANG1
+
+        TIMEQ2=  0.000075
      1          +0.001868*COS(DAYANG1)-0.032077*SIN(DAYANG1)
      2          -0.014615*COS(DAYANG2)-0.040849*SIN(DAYANG2)
 
