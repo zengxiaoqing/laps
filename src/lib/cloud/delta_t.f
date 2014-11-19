@@ -3,7 +3,7 @@
         IMPLICIT REAL*8 (A-Z)
 
         integer*4 n_entries
-        parameter (n_entries = 31)
+        parameter (n_entries = 34)
 
         real ar(2,n_entries)
 
