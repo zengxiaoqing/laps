@@ -656,6 +656,11 @@
      1                         ,altdum,sol_azi_2d(i,j))               
             if(sol_azi_2d(i,j) .lt. 0.)sol_azi_2d(i,j) = 
      1                                 sol_azi_2d(i,j) + 360.
+            if(i .eq. 71 .and. j .eq. 275)then
+              write(6,*)'i/j/lat/lon/solar_dec/solar_ha/sol_alt_2d(i,j)'
+     1                  ,i,j,lat(i,j),lon(i,j),solar_dec,solar_ha
+     1                  ,sol_alt_2d(i,j)
+            endif
           enddo ! j
           enddo ! i
 
@@ -973,7 +978,8 @@
           blog_moon_roll = 0.
 !         if(moon_mag .lt. moon_mag_thr .AND.
           if(.true.                     .AND.
-     1       alm      .gt. 0.                 )then
+     1       alm      .gt. 0.           .AND.
+     1       l_solar_eclipse .eqv. .false.    )then
             write(6,*)' Moon glow being calculated: ',alm,azm
             diam_deg = 0.5
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
@@ -988,16 +994,31 @@
 
 !         Sun glow in cylindrical coordinates, treated as round?
           blog_sun_roll = 0
+          if(l_solar_eclipse .eqv. .true.)then
+              if(eobsl .ge. 1.0)then
+                  s_mag = -12.5
+                  diam_deg = 8.0    
+              else
+                  s_mag = -26.74 - (log10(1.0-eobsl))*2.5
+                  if(s_mag .lt. -12.5)then
+                      diam_deg = 0.5    
+                  else ! show corona even outside totality
+                      diam_deg = 8.0    
+                  endif
+              endif
+          else
+              s_mag = -26.74
+              diam_deg = 0.5
+          endif
           write(6,*)' Sun glow being calculated: '
-     1                 ,solar_alt,solar_az
-          diam_deg = 0.5
+     1                 ,solar_alt,solar_az,s_mag
           call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
-     1                     ,solar_alt,solar_az,-26.9,diam_deg
+     1                     ,solar_alt,solar_az,s_mag,diam_deg
      1                     ,blog_sun_roll)
           write(6,*)' range of blog_sun_roll is',
-     1          minval(blog_sun_roll),maxval(blog_sun_roll)
+     1        minval(blog_sun_roll),maxval(blog_sun_roll),diam_deg
 
 !         if(solar_alt .ge. 0.)then
           if(.true.)then
@@ -1034,7 +1055,7 @@
                 call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,aod_ray 
      1                          ,minalt,maxalt,minazi,maxazi
      1                          ,alt_scale,azi_scale)
-                blog_v_roll = blog_v_roll + (-26.7 - moon_mag) * 0.4
+                blog_v_roll = blog_v_roll + (-26.74 - moon_mag) * 0.4
                 write(6,*)' Range of blog_v_roll for moon is',
      1                    minval(blog_v_roll),maxval(blog_v_roll)
                 I4_elapsed = ishow_timer()
@@ -1048,19 +1069,19 @@
 !         Reproject Polar Cloud Plot
           lunsky = 60 
           write(lunsky,*)rmaglim_v
-          call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,minalt,maxalt
-     1                   ,maxazi,alt_scale,azi_scale
-     1                   ,alt_a_polar,azi_a_polar
-     1                   ,ni_polar,nj_polar)
+!         call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,minalt,maxalt
+!    1                   ,maxazi,alt_scale,azi_scale
+!    1                   ,alt_a_polar,azi_a_polar
+!    1                   ,ni_polar,nj_polar)
 !         write(6,*)' cyl slice at 40alt ',r_cloud_3d(40,:)
 !         write(6,*)' polar slice at 256 ',r_cloud_3d_polar(256,:)
 
 !         Reproject Skyglow Field
-          call cyl_to_polar(blog_v_roll,blog_v_roll_polar
-     1                               ,minalt,maxalt,maxazi
-     1                               ,alt_scale,azi_scale
-     1                               ,alt_a_polar,azi_a_polar
-     1                               ,ni_polar,nj_polar)
+!         call cyl_to_polar(blog_v_roll,blog_v_roll_polar
+!    1                               ,minalt,maxalt,maxazi
+!    1                               ,alt_scale,azi_scale
+!    1                               ,alt_a_polar,azi_a_polar
+!    1                               ,ni_polar,nj_polar)
 
 !         Write time label
           open(53,file='label.'//clun,status='unknown')
