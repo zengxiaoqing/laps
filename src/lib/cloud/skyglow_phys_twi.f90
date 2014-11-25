@@ -487,7 +487,7 @@
 !             Aero_red reddens due to aerosols (if value is 1)
 !             Increase huea coefficient to redden the horizon?
 !             hue = exp(-airmass_lit*0.75) ! 0:R 1:B 2:G 3:R
-              huea = exp(-airmass_unlit*0.36*hue_coeff) 
+              huea = exp(-(airmass_unlit-4.0)*0.40*hue_coeff) 
               hue = min(huea,(1.0 - aero_red)) ! set hue to 0 via aero_red
               hue2 = (2.8 - 1.8 * hue ** 1.6)  ! 0:R 1:B 2:G 3:R
               hue2 = max(hue2,1.5) ! keep aqua color high up
