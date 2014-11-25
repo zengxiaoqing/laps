@@ -79,12 +79,13 @@
         real distecl(nopac,nc)
         real tausum_a(nsteps)
         real taumid(nopac),opacmid(nopac),eobsc_a(nopac,nc)
-        real eobsc(nc),eobsc_sum(nc)
+        real eobsc(nc,minazi:maxazi),eobsc_sum(nc),emag_a(minazi:maxazi)
         real sky_rad_scat(nc,minalt:maxalt,minazi:maxazi)            
         real sky_rad_scata(minazi:maxazi)
         real ags_a(-5:+5), aas_a(-5:+5)
 
-        sfc_alb = 0.15 ! pass this in and account for snow cover?
+        eobsc(:,:) = 0. ! initialize
+        sfc_alb = 0.15  ! pass this in and account for snow cover?
 
         aod_bin(1) = .000
         aod_bin(2) = .987
@@ -318,40 +319,46 @@
                 endif
 
 !               Compute weighted intensity using distecl
-                eobsc_sum(:) = 0.
-                emag_sum = 0.
-                do iopac = 1,nopac
-                  call sun_eclipse_parms(i4time,rlat,rlon,htmsl,0 &
+                if( ((jazi-1)/2)*2+1 .eq. jazi)then
+!               if(.true.)then
+                  eobsc_sum(:) = 0.
+                  emag_sum = 0.
+                  do iopac = 1,nopac
+                    call sun_eclipse_parms(i4time,rlat,rlon,htmsl,0 &
                      ,altray,view_azi_deg,distecl(iopac,ic) &
                      ,earth_radius,elgms,emag,eobscf,eobsc_a(iopac,:))
-                  eobsc_sum(:) = eobsc_sum(:) + eobsc_a(iopac,:)
-                  emag_sum  = emag_sum  + emag
-                enddo
+                    eobsc_sum(:) = eobsc_sum(:) + eobsc_a(iopac,:)
+                    emag_sum  = emag_sum  + emag
+                  enddo
 
-                eobsc(:) = eobsc_sum(:) / float(nopac)
-                emag  = emag_sum  / float(nopac)
+                  eobsc(:,jazi) = eobsc_sum(:) / float(nopac)
+                  emag_a(jazi)  = emag_sum  / float(nopac)
+                else ! fill in from previous azimuth
+                  eobsc(:,jazi) = eobsc(:,jazi-1)
+                  emag_a(jazi) = emag_a(jazi-1)
+                endif
 
 !               Secondary scattering for each color
 !               arg1 = .00004 + float(nc-1) * .00003
                 arg1 = .000004 + float(ic-1) * .000002
                 arg2 = 5e-7                         
 
-                if(emag .gt. 1.0)then
-                  ecl_scat(ic) = arg1 - (emag-1.0) * arg2
+                if(emag_a(jazi) .gt. 1.0)then
+                  ecl_scat(ic) = arg1 - (emag_a(jazi)-1.0) * arg2
                 else
-                  ecl_scat(ic) = arg1 * eobsc(ic)
+                  ecl_scat(ic) = arg1 * eobsc(ic,jazi)
                 endif
 
 !               Totality darkness fraction
 !               Hardwired temporal and spatial variability only used here
-                ecl_intd(ic) = (1.0 - eobsc(ic)) + ecl_scat(ic) * eobsc(ic)
+                ecl_intd(ic) = (1.0 - eobsc(ic,jazi)) + ecl_scat(ic) * eobsc(ic,jazi)
 
                 ecl_dir_rat(ic) = 1.0 - (ecl_scat(ic) / ecl_intd(ic))
 
                 if(idebuge .ge. 1)then
                   write(6,71)altray,distecl(1,ic),distecl(nopac,ic),elgms &
-                          ,emag,eobsc_a(1,ic),eobsc_a(nopac,ic),eobsc(ic) &
-                          ,ecl_scat(ic),ecl_intd(ic),ecl_dir_rat(ic)
+                      ,emag_a(jazi),eobsc_a(1,ic),eobsc_a(nopac,ic),eobsc(ic,jazi) &
+                      ,ecl_scat(ic),ecl_intd(ic),ecl_dir_rat(ic)
 71                format('eclipse altray/dist/elg/emag',f9.2,2f9.1,f9.4,f7.4, &
                          ' eobsc',3f7.4,' scat/int/dir',2f10.7,f7.4)
                 endif
@@ -448,7 +455,7 @@
                 brt2 = brto(od_g2*gasfrac) * rayleigh_pf_eff
                 trans1 = trans(od_1)
 
-                day_int = 3e9 * (1.0 - eobsc(ic))
+                day_int = 3e9 * (1.0 - eobsc(ic,jazi))
                 if(l_solar_eclipse .eqv. .false.)then
                   clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic)) ! + ecl_scat(ic)*3e9
                 else
@@ -457,6 +464,8 @@
                 endif
 
                 if(idebug .ge. 1 .AND. (ic .eq. 2 .or. abs(elong(ialt,jazi)-90.) .le. 0.5) )then
+                  write(6,72)day_int,ic,jazi,eobsc(ic,jazi-1:jazi)
+72                format('day_int/eobsc',f12.0,2i5,2f8.4)           
                   write(6,73)day_int,elong(ialt,jazi),airmass_g,od_g,aod_ray(ialt,jazi),aa &
                             ,od_a,alphav_g*1e3,alphav_a*1e3,od_g1,od_g2 &
                             ,clear_rad_c(ic,ialt,jazi)
@@ -513,6 +522,8 @@
          enddo ! jazi
         enddo ! ialt
 
+        I4_elapsed = ishow_timer()
+
         if(sol_alt .ge. 0. .and. l_solar_eclipse .eqv. .true.)then
             write(6,*)' Calling to get_sky_rad_ave in eclipse'
             do ic = 1,nc ! secondary scattering in each color
@@ -526,8 +537,9 @@
                 od_vert = od_g_vert + od_a_vert
 !               Assuming non-reflective land for now
                 znave = clear_rad_c(ic,maxalt,1) / sky_rad_ave
-                highalt_adjust = max(min(-log10(znave),3.0),1.0)
-                write(6,*)'ialt_end,maxalt,znave,hadj',ialt_end,maxalt,znave,highalt_adjust
+                highalt_adjust = max(min(-log10(znave/5.0),3.0),1.0)
+                write(6,191)ialt_end,maxalt,znave,highalt_adjust
+191             format('ialt_end,maxalt,znave,hadj',2i7,2f9.5)
                 do ialt = ialt_start,ialt_end
                   altray = view_alt(ialt,jazi_start)
                   arg = sind(min(max(altray,1.5),90.))
