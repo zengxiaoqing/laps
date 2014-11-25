@@ -337,17 +337,49 @@
               alt_cos = min(alt,89.)
               azi_dist = alt_dist / cosd(alt_cos)         
 
+                distr = sqrt(((alt_obj-alt)/alt_dist)**2 + ((azi_obj-azi)/azi_dist)**2)
+
                 if(abs(alt_obj-alt) .le. alt_dist .AND. abs(azi_obj-azi) .le. azi_dist)then
-                    delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
-                    rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+                    if(diam_deg .ge. 0.75)then  ! solar corona
+                        size_glow_sqdg = 0.2    ! sun/moon area           
+                        delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
+                        distr = sqrt(((alt_obj-alt))**2 + ((azi_obj-azi)*cosd(alt_cos))**2)
+                        if(distr .ge. 0.25)then ! corona
+                            distr2 = max(distr,0.40) ! account for pixel size 
+                            spowerk =  5.7 +      (distr2/0.25) * 2.0
+                            spowerf = 10.0 + log10(distr2/0.25) * 2.0
+                            smag_eff = -26.7 + 2.5 * min(spowerk,spowerf)
+                            rmag_per_sqarcsec = smag_eff + ext_mag + delta_mag 
+                        else                    ! dark side of moon
+                            rmag_per_sqarcsec = +2.5 + ext_mag + delta_mag
+                        endif
+!                       if(abs(alt_obj-alt) .le. 0.15)then                  
+                        if(.true.)then                                      
+                            write(6,81)ialt,jazi,alt,alt_obj,azi,azi_obj,distr,smag_eff
+81                          format(' alt,alt_obj,azi,azi_obj,distr (deg) =',2i4,5f9.3,f7.2)
+                        endif
+                    elseif(diam_deg .ge. 0.25)then ! regular sun or moon
+                        size_glow_sqdg = 0.2    ! sun/moon area           
+                        delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
+                        rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+                    else                        ! star
+                        delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
+                        rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+                    endif
 
 !                   Convert to nanolamberts
                     glow_nl = v_to_b(rmag_per_sqarcsec)
                     glow_obj(ialt,jazi) = log10(glow_nl)             
 
-                    if(abs(azi_obj-azi) .le. 0.5)then
-                        write(6,91)rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
-91                      format(' rmag_per_sqarcsec/dmag/glow_nl/glow_nl/glow_obj = ',2f10.3,e12.4,f11.2)
+                    if(.true.)then                          
+!                   if(abs(alt_obj-alt) .le. 0.15)then                  
+                        if(glow_nl .lt. 1e5)then
+                            write(6,91)rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
+91                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj = ',2f10.3,e12.4,f11.2)
+                        else
+                            write(6,92)rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
+92                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj = ',2f10.3,e12.4,f11.2,' ***GLOW***')
+                        endif
                     endif
                 endif ! within star kernel
             endif ! alt > -2.
