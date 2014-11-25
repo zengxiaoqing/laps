@@ -460,7 +460,8 @@
                             + rint_base(:) * (1.0 - r_cloud_rad(i,j))
               rintensity = max(rintensity(:),0.)
 
-              if(idebug_a(i,j) .eq. 1 .AND. abs(alt_a(i,j)) .le. 4.0)then
+              if((idebug_a(i,j) .eq. 1 .AND. abs(alt_a(i,j)) .le. 4.0) .OR. &
+                  i .eq. isun .and. j .eq. jsun)then
 !                 write(6,41)pf_scat1(i,j),elong_a(i,j),pf_snow,snow_factor,pf_scat(2,i,j),rint_base(1),r_cloud_rad(i,j),(rint_top(1)  * cld_rgb_rat(1) * r_cloud_rad(i,j)),rint_base(1) * (1.0 - r_cloud_rad(i,j)),rintensity(1)
 !                 write(6,41)pf_scat1(i,j),elong_a(i,j),cloud_od_snow,cloud_od_tot,snow_bin1,pf_snow,snow_factor,pf_scat2(i,j),pf_scat(2,i,j),rintensity(1)
                   write(6,41)elong_a(i,j),pf_scat(2,i,j),rintensity(1),r_cloud_rad(i,j),cloud_rad_c(:,i,j)
@@ -498,6 +499,9 @@
               rintensity(:) = max(min(((glow_cld_c(:) -argref) * contrast + 128.),455.),0.)
 
               if(idebug .eq. 1 .AND. r_cloud_3d(i,j) .gt. 0.)then ! cloud present
+                  if(cloud_rad_c(2,i,j) .ge. 1e20)then
+                      write(6,*)' WARNING: large cloud_rad_c',glow_cld_c(:),glow_cld,glow_cld_moon,glow_cld_nt
+                  endif
                   write(6,51)cloud_rad_c(1:2,i,j),r_cloud_rad(i,j),pf_scat_moon,glow_secondary_cld &
                             ,glow_cld_moon,glow_cld_nt,glow_cld_c(2),nint(rintensity(:))
 51                format('   cld_rad_c/crad/pf/glow: sec|moon|nt|cld rint',2e11.4,6f8.2,3i5)
@@ -579,7 +583,7 @@
                 clr_grn = rintensity_glow
                 clr_blu = rintensity_glow * bog
               endif
-              if(idebug .eq. 1 .AND. (elong_a(i,j) .lt. 20. .or. &
+              if(idebug .eq. 1 .AND. (elong_a(i,j) .lt. 0. .or. &
                  abs(alt_a(i,j)) .le. 2.0 .or. l_solar_eclipse .eqv. .true.) )then
                   write(6,60)elong_a(i,j),clear_rad_c(:,i,j),bog_rad
 60                format(' elong / Clr RGB / bog = ',f9.2,3f14.0,f9.3)
@@ -596,7 +600,7 @@
               glow_tot = addlogs(glow_twi,glow_secondary_clr)
               glow_tot = addlogs(glow_tot,glow_nt)
 
-!             frac_twi  = (10.**glow_twi)           / (10.**glow_tot)
+              frac_twi  = (10.**glow_twi)           / (10.**glow_tot)
               frac_sec  = (10.**glow_secondary_clr) / (10.**glow_tot)
               frac_nt   = (10.**glow_nt)            / (10.**glow_tot)
               alt_ramp = cosd(alt_a(i,j))**40. ! hits 0.5 at ~10 deg
@@ -610,14 +614,16 @@
 !             glow_stars(i,j) = 1.0                           ! test
 
               if(airmass_2_topo(i,j) .eq. 0.)then ! free of terrain
-                  frac_sec = ((10.**glow_secondary_clr) / (10.**glow_tot))**3
-                  hue = hue * (1.-frac_sec) + 1.4 * frac_sec
-                  sat = sat * (1.-frac_sec) + 0.5 * frac_sec
+                  frac_nt = ((10.**glow_nt) / (10.**glow_tot))**1
+!                 Presently a bit gray on the horizon for -9 degrees
+!                 Consider if secondary scattering is more than nt value?
+!                 hue = hue * frac_nt + 1.3 * (1. - frac_nt)
+!                 sat = sat * frac_nt + 0.5 * (1. - frac_nt)
                   glow_tot = addlogs(glow_tot,glow_stars(2,i,j))! add stars 
               else ! bluish twilight 2ndary scattering in front of terrain
                   glow_tot = glow_secondary_clr
                   frac_sec = ((10.**glow_secondary_clr) / (10.**glow_tot))**6
-                  hue = hue * (1.-frac_sec) + 1.4 * frac_sec
+                  hue = hue * (1.-frac_sec) + 1.3 * frac_sec
                   sat = sat * (1.-frac_sec) + 0.5 * frac_sec
                   satmax = 0.10 + abs(hue-2.0)**2 ! chromaticity curve
                   sat = min(sat,satmax)
@@ -639,9 +645,9 @@
 !             rintensity_glow = min(rintensity_glow*star_ratio,255.)              
 
               call hsl_to_rgb(hue,sat,rintensity_glow,clr_red,clr_grn,clr_blu)
-              if(idebug .eq. 1 .and. sol_alt .gt. -4.0)then
-                  write(6,61)glow_twi,glow_secondary_clr,glow_tot,argref,rintensity_glow,hue,sat,nint(clr_red),nint(clr_grn),nint(clr_blu)
-61                format('Twi Sec Tot Clr hue sat RGB = ',5f9.3,2f9.3,3i5)
+              if(idebug .eq. 1 .and. sol_alt .gt. -10.0)then
+                  write(6,61)glow_twi,glow_secondary_clr,glow_tot,frac_sec,rintensity_glow,hue,sat,nint(clr_red),nint(clr_grn),nint(clr_blu)
+61                format('Twi Sec Tot Frcs Rint hue sat RGB = ',5f9.3,2f9.3,3i5)
               endif
 
           else ! Night from clear_rad_c array (default flat value of glow)
