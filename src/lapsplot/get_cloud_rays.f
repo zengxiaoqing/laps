@@ -239,6 +239,10 @@
         if(sol_alt(i,j) .lt. -4.)then ! Modify moon glow section in green channel
                                       ! Preserve sfc sky glow section in red channel
             transm_4d(:,:,:,2) = transm_4d(:,:,:,2) * obj_bri ! correct for sun/moon brightness
+            write(6,*)
+     1    ' transm_4d red is sky brightness, green is moon brightness'
+            write(6,*)' Range of transm_4d(green channel) = '
+     1            ,minval(transm_4d(:,:,:,2)),maxval(transm_4d(:,:,:,2))
         else
             transm_4d(:,:,:,:) = transm_4d(:,:,:,:) * obj_bri ! correct for sun/moon brightness
         endif
