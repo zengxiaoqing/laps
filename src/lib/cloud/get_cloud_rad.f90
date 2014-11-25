@@ -8,15 +8,18 @@
      include 'trigd.inc'
 
 !    airmass(z) = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z))) ! if z <= 91
-     airmassn(cosz) =           1.002432 * cosz**2 + 0.148386  * cosz + 0.0096467
-     airmassd(cosz) = cosz**3 + 0.149864 * cosz**2 + 0.0102963 * cosz + .000303978
-     airmassf(cosz) = airmassn(cosz) / airmassd(cosz)         ! if z <= 93
+!    airmassn(cosz) =           1.002432 * cosz**2 + 0.148386  * cosz + 0.0096467
+!    airmassd(cosz) = cosz**3 + 0.149864 * cosz**2 + 0.0102963 * cosz + .000303978
+!    airmassf(cosz) = airmassn(cosz) / airmassd(cosz)         ! if z <= 93
+     include 'rad.inc'
+
      trans(od) = exp(-min(od,80.))
 
-     parameter (nc = 3)
+!    parameter (nc = 3)
 
-     real ext_g(nc),trans_c(nc)  ! od per airmass, transmissivity
-     data ext_g /.07,.14,.28/    ! refine via Schaeffer
+!    real ext_g(nc)           ! od per airmass
+     real trans_c(nc)         ! transmissivity
+!    data ext_g /.07,.14,.28/ ! refine via Schaeffer
 
      real clwc_3d(ni,nj,nk) ! kg/m**3
      real cice_3d(ni,nj,nk) ! kg/m**3
@@ -303,10 +306,12 @@
             elseif(obj_alt_cld .ge. 0.)then            ! low daylight sun
 !             Direct illumination of the cloud is calculated here
 !             Indirect illumination is factored in via 'scat_frac'
-              am = airmassf(cosd(90. - max(obj_alt(il,jl),-3.0)))
-              scat_frac = 0.75
+!             am = airmassf(cosd(90. - max(obj_alt(il,jl),-3.0)))
+              am = airmassf(90.-obj_alt(il,jl),patm_k)
+              scat_frac = 1.00
               do ic = 1,nc
-                trans_c(ic) = trans(am*ext_g(ic)*patm_k*scat_frac)
+!               trans_c(ic) = trans(am*ext_g(ic)*patm_k*scat_frac)
+                trans_c(ic) = trans(am*ext_g(ic)       *scat_frac)
               enddo
               rint = trans_c(1)
               grn_rat = trans_c(2) / trans_c(1)
@@ -339,6 +344,11 @@
       write(6,*)' transm_3d column = ',transm_3d(idb,jdb,:)
       write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,1)
 
+!     if(solalt .lt. -4.)then ! use red channel for sfc lighting
+!         write(6,*)' Range of transm_4d(red channel nl) = ',minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
+!         write(6,*)' Range of transm_4d(grn channel nl) = ',minval(transm_4d(:,:,:,2)),maxval(transm_4d(:,:,:,2))
+!     endif
+
       write(6,*)' Additional filling of missing areas and at night...'
 
       n_terr_shadow = 0.
@@ -355,6 +365,10 @@
           endif 
           if(solalt .lt. -4.)then ! use red channel for sfc lighting
               transm_4d(i,j,k,1) = sfc_glow(i,j) ! /day_int 
+              if(transm_4d(i,j,k,2) .eq. r_missing_data)then
+!                 write(6,*)' WARNING transm_4d green channel missing',i,j,k
+                  transm_4d(i,j,k,2) = 0.
+              endif
           elseif(transm_4d(i,j,k,1) .eq. r_missing_data)then 
 !             Consider filling in missing transm_4d with low sun
 !             values assuming transm_3d = 1
@@ -385,10 +399,12 @@
                   elseif(obj_alt_cld .ge. 0.)then            ! low daylight sun
 !                   Direct illumination of the cloud is calculated here
 !                   Indirect illumination is factored in via 'scat_frac'
-                    am = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)))
+!                   am = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)))
+                    am = airmassf(90.-obj_alt(i,j),patm_k)
                     scat_frac = 0.75
                     do ic = 1,nc
-                      trans_c(ic) = trans(am*ext_g(ic)*patm_k*scat_frac)
+!                     trans_c(ic) = trans(am*ext_g(ic)*patm_k*scat_frac)
+                      trans_c(ic) = trans(am*ext_g(ic)       *scat_frac)
                     enddo
                     rint = trans_c(1)
                     grn_rat = trans_c(2) / trans_c(1)
@@ -417,6 +433,7 @@
       write(6,*)' Number of points above ground and in shadow is',n_terr_shadow
       if(solalt .lt. -4.)then ! use red channel for sfc lighting
           write(6,*)' Range of transm_4d(red channel nl) = ',minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
+          write(6,*)' Range of transm_4d(grn channel nl) = ',minval(transm_4d(:,:,:,2)),maxval(transm_4d(:,:,:,2))
       endif
 
       I4_elapsed = ishow_timer()
