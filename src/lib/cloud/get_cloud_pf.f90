@@ -149,16 +149,17 @@
           hgp = sco                    ! multiple scatter order
 
 !         snow_bin1 = exp(-cloud_od_snow/5.)      ! optically thin snow
-          snow_bin1c = opac(0.10*(sco**1.9 - 1.0))  ! backscattering (thick)
+          snow_bin1c = opac(0.10*(sco**1.2 - 1.0))  ! backscattering (thick)
           snow_bin1a = (1. - snow_bin1c)
 !         snow_bin1a = 0.50**sco             ! forward peak
 !         snow_bin1b = 1.0 - (snow_bin1a + snow_bin1c) ! mid
 !         snow_bin2 = 1.0 - snow_bin1        ! optically thick snow
 
-          arg1 = 0.50 * fsnow + 0.50 * fcice
-          arg2 = 0.45 * fsnow + 0.28 * fcice
-          arg3 = 0.03 * fsnow + 0.20 * fcice
-          arg4 = 0.02 * fsnow + 0.02 * fcice
+          arg1 = (0.50 * fsnow + 0.50 * fcice) * 2.**(-(hgp-1.0))
+          arg3 =  0.03 * fsnow + 0.20 * fcice
+          arg4 =  0.02 * fsnow + 0.02 * fcice
+!         arg2 =  0.45 * fsnow + 0.28 * fcice
+          arg2 =  1.0 - (arg1 + arg3 + arg4)
 
           pf_snow = snow_bin1a * arg1 * hg( .999**hgp,elong_a(i,j)) & ! plates
                   + snow_bin1a * arg2 * hg( .860**hgp,elong_a(i,j)) &
@@ -184,7 +185,14 @@
           endif
 
 !         Add rainbows
-          rain_factor = opac(cloud_od_sp(i,j,3))**0.333
+!         Ramping this in between an OD range of .01 to .1
+          if(cloud_od_sp(i,j,3) .gt. 0.1)then
+              rain_factor = 1.0
+          elseif(cloud_od_sp(i,j,3) .gt. 0.01)then
+              rain_factor = log10(cloud_od_sp(i,j,3) + 2.)
+          else ! < .01
+              rain_factor = 0.0
+          endif
 !         rain_factor = cloud_od_sp(i,j,3) / cloud_od_tot
 !         if(cloud_od_sp(i,j,3) .gt. 0.)then
 !           rain_factor = 1.
