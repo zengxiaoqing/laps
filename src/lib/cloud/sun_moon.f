@@ -538,6 +538,9 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
           if(idebug .ge. 2)then
              write(6,*)
              write(6,*)' sun_moon debug:'
+             write(6,*)' i4time,tb,lat,lon',i4time,tb,lat(1),lon(1)
+             write(6,*)' deltat/sec',DELTAT,DELTAT*86400.
+             write(6,*)' elgmst/sec',elgmst,elgmst*3600.
              write(6,*)' diam_sun,diam_moon,overlap_sec,mag,r4_obsc ',
      1diam_sun,diam_moon,overlap_sec,solar_eclipse_magnitude,r4_obsc
              write(6,*)
