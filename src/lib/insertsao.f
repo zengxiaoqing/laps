@@ -285,7 +285,7 @@ c place station at proper laps grid point
 
               cover = 0.
 
-              ht_base=ht_base_ret(i,l) ! Meters
+              ht_base=ht_base_ret(i,l) ! Meters MSL
 
               if(ht_base .gt. ht_defined+1.)then
 
@@ -423,10 +423,10 @@ C CLOUDS ARE NOW IN MSL
                   lcl_thresh = 0.   
               endif
 
-              if(ht_base .lt. (ht_lcl_agl - lcl_thresh))then
-                  write(6,111)t(i),td(i),ht_base,ht_lcl_agl                       
-111               format(' WARNING: ht_base << ht_lcl_agl (m) ',2f8.1 
-     1                                                         ,2f9.1)       
+              if((ht_base-elev(i)) .lt. (ht_lcl_agl - lcl_thresh))then
+                  write(6,111)t(i),td(i),ht_base-elev(i),ht_lcl_agl             
+111               format(' WARNING: ht_base_agl << ht_lcl_agl (m) ' 
+     1                                                   ,2f8.1,2f9.1)       
                   goto 126                               ! Loop to next station
 
               elseif(ht_base .lt. ht_lcl_agl)then
