@@ -374,9 +374,6 @@ SUBROUTINE COSTFUNCT2
   REAL  ::Temp_ref,tempr,temps
   INTEGER  :: RR,RS  
   REAL  :: D2R
-  
-  ! Yuanfu: new IPW cost:
-  real  :: rh(numgrid(1),numgrid(2),numgrid(3)),p(numgrid(3))
 
   D2R = 3.14159/180.0
 
@@ -537,12 +534,6 @@ SUBROUTINE COSTFUNCT2
 555 CONTINUE
 
   COSTFUN=0.5D0*COSTFUN
-  
-  ! Yuanfu adds the IPW assimilation: 2014-04
-  CM = COSTFUN
-  CALL IPWCOST(0)
-  CM = COSTFUN-CM
-  PRINT*,'IPW COST: ',CM
 
 ! SMOOTH TERM
   CM=COSTFUN
@@ -600,9 +591,6 @@ SUBROUTINE COSTGRADT2
   REAL  :: Segma     !variance  for ref_obs
   REAL  ::Temp_ref,temp,temp1
   REAL  :: D2R
-  
-  ! Yuanfu: new IPW cost:
-  real  :: rh(numgrid(1),numgrid(2),numgrid(3)),p(numgrid(3))
    
   D2R = 3.14159/180.0
 
@@ -816,9 +804,6 @@ SUBROUTINE COSTGRADT2
  ! SKIP REFLECTIVITY:
 555 CONTINUE
 
-  ! Yuanfu adds the IPW assimilation: 2014-04
-  CALL IPWCOST(1)
-  
 ! SMOOTH TERM
   CALL SMOTHGRAD
 
