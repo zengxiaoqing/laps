@@ -173,7 +173,7 @@ SUBROUTINE read_namelist
         numgrid(3) = numgrid(3)/2
         nm = nm+1
       ELSEIF (nm .EQ. 0) THEN
-        PRINT*,'Currently, the number of analysis vertical levels must be even!'
+        PRINT*,'Currently, the number of analysis vertical levels must be odd!'
         STOP
       ELSE
         EXIT      ! Use current numgrid(3) to start multigrid
