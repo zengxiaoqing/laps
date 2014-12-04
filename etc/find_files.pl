@@ -53,7 +53,7 @@ if ($opt_p =~ "yyyymmddhhmm") {       # standard date
 my $epoch_t = timelocal(0,$minute_t,$hour_t,$day_t,$month_t-1,$year_t-1900);
 
 # Open file for outputing filenames within the given time window:
-open(OUT,">/tmp/temp.files");
+open(OUT,">/tmp/temp.files$opt_t");
 
 # Check director existing:
 if (defined $opt_d && -d $opt_d) {
