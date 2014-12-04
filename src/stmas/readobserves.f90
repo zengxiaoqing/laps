@@ -1586,19 +1586,8 @@ SUBROUTINE HANDLEOBS_SIGMA(OP,OB,OE,OS,O,IP,AZ,EA,SID)
     ENDDO
     HT=(TU*SIN(D2R*AZ)+TV*COS(D2R*AZ))*COS(D2R*EA)+TW*SIN(D2R*EA)
   ELSEIF(OS.EQ.NUMSTAT+2) THEN        ! FOR SFMR DATA , BY ZHONGJIE HE
-    DO T=NP(4),MIN0(NP(4)+1,FCSTGRD(4))
-    DO K=NP(3),MIN0(NP(3)+1,FCSTGRD(3))
-    DO J=NP(2),MIN0(NP(2)+1,FCSTGRD(2))
-    DO I=NP(1),MIN0(NP(1)+1,FCSTGRD(1))
-      M=M+1
-      TU=TU+CO(M)*BK0(I,J,K,T,UU)
-      TV=TV+CO(M)*BK0(I,J,K,T,VV)
-      IF(WW.NE.0) TW=TW+CO(M)*BK0(I,J,K,T,WW)
-    ENDDO
-    ENDDO
-    ENDDO
-    ENDDO
-    HT=SQRT(TU*TU+TV*TV+TW*TW)
+    ! For SFMR data, no substract the background as its operator is nonlinear
+    HT = 0.0
   ELSEIF(OS.EQ.NUMSTAT+3) THEN        
     HT =0.0
   ENDIF
