@@ -1,5 +1,5 @@
 
-     subroutine get_clr_src_dir(solalt,viewalt,od_g_vert,od_a_vert,ag,aa,ags,aas,idebug,srcdir,opac_slant,nsteps,ds,tausum_a)
+     subroutine get_clr_src_dir(solalt,viewalt,od_g_vert,od_a_vert,htmsl,ssa,ag,aa,ags,aas,idebug,srcdir,opac_slant,nsteps,ds,tausum_a)
 
      include 'trigd.inc'
 
@@ -68,6 +68,11 @@
 !        if(tausum .lt. 1.0)distod1 = sbar
          tausum_a(i) = tausum
 
+         if(htbar .lt. -(htmsl+500.))then
+!            tausum_a(min(i+1,nsteps):nsteps) = tausum
+             goto900
+         endif
+
          opac_last = opac_curr
          opac_curr = opac(tausum)
          do = opac_curr - opac_last
@@ -77,7 +82,12 @@
          rad = max(rad,.03) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
-         di = do * rad
+         if(dtau .gt. 0.)then
+             ssa_eff = (ssa * alphabar_a + alphabar_g) / (alphabar_a + alphabar_g)
+         else
+             ssa_eff = 1.0
+         endif
+         di = do * rad * ssa_eff
          sumi = sumi + di
          frac_opac = opac_curr / opac_slant
 
@@ -93,14 +103,16 @@
          endif
      enddo ! i
 
+900  continue
+
      srcdir = sumi_extrap
 
      return
      end
 
      subroutine get_clr_src_dir_low(solalt,solazi,viewalt,viewazi &
-                   ,od_g_vert,od_a_vert,ag,aa,ags_in,aas_in,ags_a,aas_a &
-                   ,idebug,srcdir,opac_slant,nsteps,ds,tausum_a)
+           ,od_g_vert,od_a_vert,htmsl,ssa,ag,aa,ags_in,aas_in,ags_a,aas_a &
+           ,idebug,srcdir,opac_slant,nsteps,ds,tausum_a)
 
      include 'trigd.inc'
 
@@ -152,6 +164,7 @@
      tausum = 0.
      sumi = 0.
      httopill = max(130000.-sind(solalt)*90000.,40000.)
+     htbotill = -(htmsl + 500.)
 
      if(idebug .eq. 1)then
        write(6,*)'         sbar     htbar    dtau    tausum  dsolalt     ags      aas   od_solar   rad       di      sumi  opac_curr frac_opac sumi_mn sumi_ext'
@@ -184,7 +197,7 @@
 !        if(tausum .lt. 1.0)distod1 = sbar
 !        tausum_a(i) = tausum
 
-         if(htbar .gt. httopill)then ! efficiency
+         if(htbar .gt. httopill .or. htbar .lt. htbotill)then ! efficiency
 !            tausum_a(min(i+1,nsteps):nsteps) = tausum
              goto900
          endif
@@ -198,7 +211,12 @@
          rad = max(rad,.03) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
-         di = do * rad
+         if(dtau .gt. 0.)then
+             ssa_eff = (ssa * alphabar_a + alphabar_g) / (alphabar_a + alphabar_g)
+         else
+             ssa_eff = 1.0
+         endif
+         di = do * rad * ssa_eff
          sumi = sumi + di
          frac_opac = opac_curr / opac_slant
 
@@ -215,7 +233,10 @@
      enddo ! i
 
 900  continue
-     write(6,11)i,sbar,htbar,dtau,tausum,dsolalt,ags,aas,od_solar_slant,rad,di,sumi,opac_curr,frac_opac,sumi_mean,sumi_extrap
+
+     if(idebug .eq. 1)then
+       write(6,11)i,sbar,htbar,dtau,tausum,dsolalt,ags,aas,od_solar_slant,rad,di,sumi,opac_curr,frac_opac,sumi_mean,sumi_extrap
+     endif
 
      srcdir = sumi_extrap
 
