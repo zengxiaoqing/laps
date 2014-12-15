@@ -478,7 +478,7 @@
       ctylat(14)=39.84; ctylon(14)=-105.03; ctypop(14)= 106000 ! Wstminster
       ctylat(15)=39.58; ctylon(15)=-104.88; ctypop(15)= 100000 ! Centennial
       ctylat(16)=39.95; ctylon(16)=-105.05; ctypop(16)=  58000 ! Broomfield
-      ctylat(17)=40.04; ctylon(17)=-105.04; ctypop(17)=  19000 ! Erie
+      ctylat(17)=40.045; ctylon(17)=-105.064; ctypop(17)=  19000 ! Erie
 
       sfc_glow = 0.
       gnd_glow = 0.
