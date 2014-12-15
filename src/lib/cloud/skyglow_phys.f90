@@ -86,6 +86,8 @@
 
         eobsc(:,:) = 0. ! initialize
         sfc_alb = 0.15  ! pass this in and account for snow cover?
+        twi_0 = 0.
+        ssa = 0.80
 
         aod_bin(1) = .000
         aod_bin(2) = .987
@@ -150,8 +152,9 @@
             else
               idebug = 0
             endif
-            call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert, &
-                ag_90/ag_90,aa_90/aa_90,ag_s/ag_90,aa_s/aa_90, &
+            ssa90 = 1.0
+            call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert,htmsl, &
+                ssa90,ag_90/ag_90,aa_90/aa_90,ag_s/ag_90,aa_s/aa_90, &
                 idebug,srcdir_90(ic),opac_slant,nsteps,ds,tausum_a)
             write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
           enddo ! ic
@@ -170,13 +173,15 @@
            do ic = 1,nc
              od_g_vert = ext_g(ic) * patm
              od_a_vert = aod_vrt * ext_a(ic)
-             if((l_solar_eclipse .eqv. .true.) .AND. ic .eq. 2)then
+!            if((l_solar_eclipse .eqv. .true.) .AND. ic .eq. 2)then
+             if(ic .eq. 2)then
                idebug = 1
+               write(6,*)' call get_clr_src_dir for altitude ',altray
              else
                idebug = 0
              endif
              call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert, &
-                ag/ag_90,aa/aa_90,ag_s/ag_90,aa_s/aa_90, &
+                htmsl,ssa,ag/ag_90,aa/aa_90,ag_s/ag_90,aa_s/aa_90, &
                 idebug,srcdir(ic),opac_slant,nsteps,ds,tausum_a)
 
              if(l_solar_eclipse .eqv. .true.)then
@@ -192,11 +197,6 @@
 64                   format('ic/i/tausum/mid/ds/sbar/dst',2i5,3f9.3,2f9.1)
                    endif
                  enddo ! i 
-
-!                earlier eclipse method for testing
-!                dist500 = 18000./sind(max(altray,4.0))            
-!                distecl(iopac,ic) = min(distecl(iopac,ic),dist500)
-
                enddo ! iopac         
 
                if(ic .eq. ic .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
@@ -250,20 +250,24 @@
 
 !         if(jazi .eq. jazi_end)then ! test for now
           if(.true.)then ! test for now
-            if(ialt .eq. ialt_start)then
-              idebug_clr = 1
-            else
-              idebug_clr = 0
-            endif
-
             do ic = 1,nc
+              od_g_vert = ext_g(ic) * patm
+              od_a_vert = aod_vrt * ext_a(ic)
 
 !             Needed when sol_alt and altray are low
-              if(sol_alt * altray .lt. 100. .AND. .false.)then ! testing
+              if(sol_alt * altray .lt. 100.)then ! testing
+                if(ialt .eq. ialt_start .AND. ic .eq. 2)then
+                  idebug_clr = 1
+                elseif(jazi .eq. jazi_start .AND. ic .eq. 2)then
+                  idebug_clr = 1
+                else
+                  idebug_clr = 0
+                endif
+
                 if(idebug_clr .eq. 1)write(6,68)ialt,jazi,ic,sol_alt,altray
 68              format(' call get_clr_src_dir_low',i4,2i5,2f8.2)
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
-                     altray,view_azi_deg,od_g_vert,od_a_vert, &
+                     altray,view_azi_deg,od_g_vert,od_a_vert,htmsl,ssa, &
                      ag/ag_90,aa/aa_90,ag_s/ag_90,aa_s/aa_90,ags_a,aas_a, &
                      idebug_clr,srcdir_a(ic,jazi),opac_slant,nsteps,dsl,tausum_a)
                 write(6,69)ialt,jazi,ic,sol_alt,altray &
@@ -279,7 +283,39 @@
           endif ! .true.
          enddo ! jazi
 
-         do jazi = jazi_start,jazi_end
+         do jazi = jazi_start,jazi_end,2 ! get eclipse parms at selected azimuths
+          altray = view_alt(ialt,jazi)
+          view_azi_deg = view_az(ialt,jazi)
+          if(sol_alt .gt. 0.)then
+
+!           Get eclipse parms if applicable (and effective brightness)
+            if(l_solar_eclipse .eqv. .true.)then
+              do ic = 1,nc
+!               Compute/Interpolate weighted intensity using distecl
+                if( ((jazi-1)/2)*2+1 .eq. jazi)then
+!               if(.true.)then
+                  eobsc_sum(:) = 0.
+                  emag_sum = 0.
+                  do iopac = 1,nopac
+                    call sun_eclipse_parms(i4time,rlat,rlon,htmsl,0 &
+                     ,altray,view_azi_deg,distecl(iopac,ic) &
+                     ,earth_radius,elgms,emag,eobscf,eobsc_a(iopac,:))
+                    eobsc_sum(:) = eobsc_sum(:) + eobsc_a(iopac,:)
+                    emag_sum  = emag_sum  + emag
+                  enddo
+
+                  eobsc(:,jazi) = eobsc_sum(:) / float(nopac)
+                  emag_a(jazi)  = emag_sum  / float(nopac)
+!               else ! fill in from previous azimuth
+!                 eobsc(:,jazi) = eobsc(:,jazi-1)
+!                 emag_a(jazi) = emag_a(jazi-1)
+                endif
+              enddo ! ic
+            endif
+          endif ! sun above horizon
+         enddo ! jazi
+
+         do jazi = jazi_start,jazi_end ! main azimuth loop
           altray = view_alt(ialt,jazi)
           view_altitude_deg = altray
           view_azi_deg = view_az(ialt,jazi)
@@ -292,8 +328,8 @@
           endif
           jazi_interph = jazi_interpl + jazi_d10 
           fazi = (float(jazi) - float(jazi_interpl)) / float(jazi_d10)
-!         srcdir(:) = (1.-fazi) * srcdir_a(:,jazi_interpl) & ! testing
-!                   +     fazi  * srcdir_a(:,jazi_interph)
+          srcdir(:) = (1.-fazi) * srcdir_a(:,jazi_interpl) & ! testing
+                    +     fazi  * srcdir_a(:,jazi_interph)
 
           xs = cosd(sol_alt) * cosd(sol_azi)
           ys = cosd(sol_alt) * sind(sol_azi)
@@ -318,21 +354,9 @@
                   idebuge = 0
                 endif
 
-!               Compute weighted intensity using distecl
+!               Compute/Interpolate weighted intensity using distecl
                 if( ((jazi-1)/2)*2+1 .eq. jazi)then
-!               if(.true.)then
-                  eobsc_sum(:) = 0.
-                  emag_sum = 0.
-                  do iopac = 1,nopac
-                    call sun_eclipse_parms(i4time,rlat,rlon,htmsl,0 &
-                     ,altray,view_azi_deg,distecl(iopac,ic) &
-                     ,earth_radius,elgms,emag,eobscf,eobsc_a(iopac,:))
-                    eobsc_sum(:) = eobsc_sum(:) + eobsc_a(iopac,:)
-                    emag_sum  = emag_sum  + emag
-                  enddo
-
-                  eobsc(:,jazi) = eobsc_sum(:) / float(nopac)
-                  emag_a(jazi)  = emag_sum  / float(nopac)
+                  continue
                 else ! fill in from previous azimuth
                   eobsc(:,jazi) = eobsc(:,jazi-1)
                   emag_a(jazi) = emag_a(jazi-1)
@@ -429,19 +453,17 @@
                 od_a = aod_vrt           *aa*ext_a(ic) ! slant od
                 alphav_g = od_g / 8000.             ! extinction per vert m
                 alphav_a = od_a / aero_scaleht      ! extinction per vert m
-                if(od_a .gt. 0)then
+                if(od_a .gt. 0)then ! lower layer
                     od_g1 = od_a * (alphav_g / alphav_a)
                 else
-                    od_g1 = 0.
+                    od_g1 = 0.      ! upper layer
                 endif
                 od_g2 = od_g - od_g1
 
-                if(.true.)then ! available light for Mie scattering, relative to Rayleigh scattering
-                    am_sun = airmassf(90. - sol_alt,patm) * (od_g2/od_g)
-                    solar_int_g2 = trans(am_sun*ext_g(ic))
-                else
-                    solar_int_g2 = 1.0
-                endif
+!               am_sun = airmassf(90. - (0.5*(sol_alt+altray)),patm) ! test2
+!               am_sun = airmassf(90. - sol_alt,patm)                ! test1
+                am_sun = airmassf(90. - sol_alt,patm) * (od_g2/od_g) ! oper
+                solar_int_g2 = trans(am_sun*ext_g(ic))
 
 !               Effective Rayleigh Phase Factor considering shadowing
                 rayleigh_gnd = rayleigh_pf(elong(ialt,jazi)) + sfc_alb * sind(sol_alt)
@@ -463,10 +485,14 @@
                   clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic)) ! + ecl_scat(ic)*3e9
                 endif
 
-                if(idebug .ge. 1 .AND. (ic .eq. 2 .or. abs(elong(ialt,jazi)-90.) .le. 0.5) )then
-                  write(6,72)day_int,ic,jazi,eobsc(ic,jazi-1:jazi)
+                if(idebug .ge. 1 .AND. (ic .eq. 2 .or. &
+                        abs(elong(ialt,jazi)-90.) .le. 0.5 .or. &
+                        abs(elong(ialt,jazi)    ) .le. 0.5)           )then
+                  jazim1 = max(jazi-1,minazi)
+                  write(6,72)day_int,ic,jazi,eobsc(ic,jazim1:jazi)
 72                format('day_int/eobsc',f12.0,2i5,2f8.4)           
-                  write(6,73)day_int,elong(ialt,jazi),airmass_g,od_g,aod_ray(ialt,jazi),aa &
+                  write(6,73)day_int,elong(ialt,jazi),airmass_g,od_g &
+                            ,aod_ray(ialt,jazi),aa &
                             ,od_a,alphav_g*1e3,alphav_a*1e3,od_g1,od_g2 &
                             ,clear_rad_c(ic,ialt,jazi)
 73                format('day_int/elg/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
@@ -496,12 +522,12 @@
                       ,od_a,clear_rad_c(:,ialt,jazi)/1e9 
               else
                 write(6,112)altray,view_azi_deg,sol_alt &
-                      ,angle_plane,dist_ray_plane,ht_ray_plane,shadow_enlarge &
-                      ,patm_ray_plane,airmass_lit,airmass_unlit &
-                      ,twi_trans,clear_intf,rint_alt_ramp &
-                      ,clear_rad_c(1,ialt,jazi) &
-                      ,clear_rad_c(2,ialt,jazi) &
-                      ,clear_rad_c(3,ialt,jazi) ! /1e9
+                  ,angle_plane,dist_ray_plane,ht_ray_plane,shadow_enlarge &
+                  ,patm_ray_plane,airmass_lit,airmass_unlit &
+                  ,twi_trans,clear_intf,rint_alt_ramp &
+                  ,clear_rad_c(1,ialt,jazi) &
+                  ,clear_rad_c(2,ialt,jazi) &
+                  ,clear_rad_c(3,ialt,jazi) ! /1e9
               endif
 111           format( &
        'ialt/jazi/salt/od_a/clrrd' &
@@ -524,7 +550,8 @@
 
         I4_elapsed = ishow_timer()
 
-        if(sol_alt .ge. 0. .and. l_solar_eclipse .eqv. .true.)then
+        if(sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.) .OR. &
+          (sol_alt .lt. 0. .and. sol_alt .gt. twi_0)              )then
             write(6,*)' Calling to get_sky_rad_ave in eclipse'
             do ic = 1,nc ! secondary scattering in each color
 !               Good temporal variability, constant for spatial
@@ -549,10 +576,10 @@
                   if(ic .eq. 2)then
                     write(6,*)'alt,od_slant,clear_rad_c',altray,od_slant,clear_rad_c(ic,ialt,1)
                   endif
-                  sky_rad_scatg =        sky_rad_ave                                 & 
-                                * fracg * opac(od_slant) * highalt_adjust   
+                  sky_rad_scatg =        sky_rad_ave                    & 
+                                * fracg * opac(od_slant) * highalt_adjust
                   sky_rad_scata = (0.4 * sky_rad_ave + 0.6 * clear_rad_c(ic,ialt,:)) & 
-                                * fraca * opac(od_slant) * highalt_adjust   
+                                * fraca * opac(od_slant) * highalt_adjust
                   sky_rad_scat(ic,ialt,:) = sky_rad_scatg + sky_rad_scata
                   clear_rad_c(ic,ialt,:) = clear_rad_c(ic,ialt,:) + sky_rad_scat(ic,ialt,:)
                   if(ialt .eq. ialt_end)then                                   
