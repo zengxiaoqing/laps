@@ -142,6 +142,7 @@
 
         real xsound(maxloc),ysound(maxloc)
         real soundlat(maxloc),soundlon(maxloc)
+        real htagl(maxloc)
 
         data ilun /0/
         character*3 clun
@@ -252,8 +253,11 @@
             endif
           endif
 
+          read(5,*)htagl(iloc)
+
           write(6,*)' soundlat/soundlon ',soundlat(iloc),soundlon(iloc)
           write(6,*)' xsound/ysound ',xsound(iloc),ysound(iloc)
+          write(6,*)' htagl ',htagl(iloc)
 
         enddo ! nloc
 
@@ -795,11 +799,15 @@
           write(6,*)' Enter minalt,maxalt (e.g. 0,90 0,180)'
           read(lun,*)minalt,maxalt           
 
-          minazi = 0
-          maxazi = maxalt * 4
+          write(6,*)' Enter minazi,maxazi'                     
+          read(lun,*)minazi,maxazi           
+!         minazi = 0
+!         maxazi = maxalt * 4
 
-          alt_scale = 90. / float(maxalt)
-          azi_scale = alt_scale
+          write(6,*)' Enter alt_scale,azi_scale'               
+          read(lun,*)alt_scale,azi_scale     
+!         alt_scale = 90. / float(maxalt)
+!         azi_scale = alt_scale
 
           write(6,*)' minalt/maxalt = ',minalt,maxalt
           write(6,*)' minazi/maxazi = ',minazi,maxazi
@@ -923,8 +931,6 @@
           moon_alt_2d = alm
           moon_azi_2d = azm
 
-          kstart = 0 ! 0 means sfc, otherwise level of start
-
 !         Get alt_a_roll and azi_a_roll arrays (needs to be generalized)?
           do i = minalt,maxalt
             call get_val(i,minalt,alt_scale,altobj)
@@ -942,7 +948,7 @@
      1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
      1                     ,topo_albedo_2d                       ! I
      1                     ,topo_swi,topo_albedo                 ! O
-     1                     ,aod_ray,aod_2_cloud,aod_2_topo       ! O
+     1                     ,aod_vrt,aod_2_cloud,aod_2_topo       ! O
      1                     ,aod_ill,aod_ill_dir                  ! O
      1                     ,aod_tot,transm_obs                   ! O
      1                     ,transm_3d,transm_4d                  ! O
@@ -951,8 +957,9 @@
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
      1                     ,htmsl                                ! O
+     1                     ,htagl(iloc)                          ! I
      1                     ,aod_ref                              ! I
-     1                     ,NX_L,NY_L,NZ_L,isound,jsound,kstart  ! I
+     1                     ,NX_L,NY_L,NZ_L,isound,jsound         ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,alt_norm                             ! I
@@ -964,7 +971,7 @@
      1                     ,grid_spacing_m,r_missing_data)       ! I
 
           write(6,*)' Return from get_cloud_rays: ',a9time
-     1             ,' aod_ray is ',aod_ray
+     1             ,' aod_vrt is ',aod_vrt
 
  900      continue
 
@@ -1029,7 +1036,7 @@
             if(.false.)then
                 write(6,*)' Sun is significant, alt is:',solar_alt
                 call skyglow_cyl(solar_alt,solar_az,blog_v_roll  ! IO
-     1                          ,elong_roll,aod_ray              ! OI
+     1                          ,elong_roll,aod_vrt              ! OI
      1                          ,minalt,maxalt,minazi,maxazi     ! I
      1                          ,alt_scale,azi_scale)            ! I
                 I4_elapsed = ishow_timer()
@@ -1052,7 +1059,7 @@
 !    1                             .AND. alm .gt. 0.         )then
             if(.false.)then
                 write(6,*)' Moon skyglow significant: mag ',moon_mag
-                call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,aod_ray 
+                call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,aod_vrt 
      1                          ,minalt,maxalt,minazi,maxazi
      1                          ,alt_scale,azi_scale)
                 blog_v_roll = blog_v_roll + (-26.74 - moon_mag) * 0.4
@@ -1099,9 +1106,9 @@
             open(54,file='label2.'//clun,status='unknown')
             write(54,54)soundlat(iloc),soundlon(iloc),
      1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
-     1                  solar_alt,solar_az
+     1                  solar_alt,solar_az,alt_scale,azi_scale
             close(54)
- 54         format(2f8.2/6i8/2f8.2)
+ 54         format(2f8.2/6i8/2f8.2,2f7.2)
 
             I4_elapsed = ishow_timer()
 
@@ -1159,7 +1166,7 @@
      1                    ,blog_sun_roll     ! sunglow
      1                    ,blog_moon_roll    ! moonglow
      1                    ,glow_stars        ! starglow
-     1                    ,aod_ray 
+     1                    ,aod_vrt 
      1                    ,transm_obs        ! observer illumination
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
