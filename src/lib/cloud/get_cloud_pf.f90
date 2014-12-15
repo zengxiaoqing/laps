@@ -117,11 +117,11 @@
               rain_bin1d =   .20
 
               pf_rain(ic) & 
-                      = rain_bin1a * rain_bin1 * hg(0.99**hgp,elong_a(i,j))&
-                      + rain_bin1b * rain_bin1 * hg(0.75**hgp,elong_a(i,j))&
-                      + rain_bin1c * rain_bin1 * hg(0.00     ,elong_a(i,j))&
-                      + rain_bin1d * rain_bin1 * hg(-.20     ,elong_a(i,j))&
-                      + clwc_bin2  * pf_thk ! add albedo term?     
+                     = rain_bin1a * rain_bin1 * hg(0.99**hgp,elong_a(i,j))&
+                     + rain_bin1b * rain_bin1 * hg(0.75**hgp,elong_a(i,j))&
+                     + rain_bin1c * rain_bin1 * hg(0.00     ,elong_a(i,j))&
+                     + rain_bin1d * rain_bin1 * hg(-.20     ,elong_a(i,j))&
+                     + clwc_bin2  * pf_thk ! add albedo term?     
 
               if(cloud_od_liq .eq. cloud_od_sp(i,j,1))then ! cloud liquid
                   pf_scat1(ic,i,j) = pf_clwc(ic)
