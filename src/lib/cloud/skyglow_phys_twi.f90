@@ -119,26 +119,6 @@
                          ,earth_radius &            ! I
                          ,ag_s,ao_s,aa_s)           ! O
 
-        if(sol_alt .gt. 0.)then
-          write(6,*)' Obtain reference values of source term'
-          write(6,*)'ag_90/aa_90 = ',ag_90,aa_90
-          write(6,*)'ag_s/aa_s = ',ag_s,aa_s
-
-          do ic = 1,nc
-            od_g_vert = ext_g(ic) * patm
-            od_a_vert = aod_vrt * ext_a(ic)
-            if(ic .eq. 2)then
-              idebug = 1
-            else
-              idebug = 0
-            endif
-            call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert, &
-                ag_90/ag_90,aa_90/aa_90,ag_s/ag_90,aa_s/aa_90, &
-                idebug,srcdir_90(ic),opac_slant,nsteps,ds,tausum_a)
-            write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
-          enddo ! ic
-        endif
-
         do ialt = ialt_start,ialt_end,ialt_delt
   
          altray = view_alt(ialt,jazi_start)
@@ -146,56 +126,6 @@
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius &            ! I
                          ,ag,ao,aa)                 ! O
-
-!        Determine src term and ratio with zenith value
-         if(sol_alt .gt. 0.)then
-           do ic = 1,nc
-             od_g_vert = ext_g(ic) * patm
-             od_a_vert = aod_vrt * ext_a(ic)
-             if((l_solar_eclipse .eqv. .true.) .AND. ic .eq. 2)then
-               idebug = 1
-             else
-               idebug = 0
-             endif
-             call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert, &
-                ag/ag_90,aa/aa_90,ag_s/ag_90,aa_s/aa_90, &
-                idebug,srcdir(ic),opac_slant,nsteps,ds,tausum_a)
-
-             if(l_solar_eclipse .eqv. .true.)then
-               do iopac = 1,nopac
-                 opacmid(iopac) = opac_slant * (float(iopac) - 0.5) / float(nopac)
-                 taumid(iopac) = -log(1.0 - opacmid(iopac))              
-!                taumid(iopac) = 1.0 ! align with earlier test
-                 do i = 1,nsteps
-                   sbar = (float(i)-0.5) * ds
-                   if(tausum_a(i) .lt. taumid(iopac))distecl(iopac,ic) = sbar
-                   if(iopac .eq. nopac .and. ic .eq. 2 .and. ialt .eq. ialt_start .and. jazi .eq. jazi_start)then
-                     write(6,64)i,tausum_a(i),taumid(iopac),ds,sbar,distecl(iopac,ic)
-64                   format('ic/i/tausum/mid/ds/sbar/dst',2i5,3f9.3,2f9.1)
-                   endif
-                 enddo ! i 
-
-!                earlier method for testing
-!                dist500 = 18000./sind(max(altray,4.0))            
-!                distecl(iopac,ic) = min(distecl(iopac,ic),dist500)
-
-               enddo ! iopac         
-
-               if(ic .eq. ic .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
-                write(6,65)ic,altray,srcdir(ic),srcdir(ic)/srcdir_90(ic) &
-                          ,opac_slant,opacmid(1),opacmid(nopac),taumid(1),taumid(nopac),distecl(1,ic),distecl(nopac,ic)
-65              format(' ic/alt/srcdir/ratio/opacsl/opacmid/taumid/distecl:',i3,f7.1,2f9.3,f7.3,2(1x,2f7.3),2f9.1)
-               endif
-
-             else ! l_solar_eclipse = F
-               if(ic .eq. 2 .AND. (altray .eq. nint(altray) .OR. altray .le. 20.) )then
-                write(6,66)altray,srcdir(ic),srcdir(ic)/srcdir_90(ic)
-66              format(' alt/srcdir/ratio:',3f9.3)
-               endif
-
-             endif ! l_solar_eclipse
-           enddo ! ic
-         endif
 
 !        Determine aerosol multiple scattering order
 !        altscat = 1.00 * altray + 0.00 * sol_alt
@@ -244,21 +174,6 @@
           altray = view_alt(ialt,jazi)
           view_altitude_deg = altray
           view_azi_deg = view_az(ialt,jazi)
-
-!         if(jazi .eq. jazi_end)then ! test for now
-          if(.false.)then ! test for now
-            if(idebug_a(ialt,jazi) .eq. 1)then
-              idebug = 1
-            else
-              idebug = 0
-            endif
-            do ic = 1,nc
-              call get_clr_src_dir_low(sol_alt,sol_azi, &
-                     altray,view_azi_deg,od_g_vert,od_a_vert, &
-                     ag/ag_90,aa/aa_90,ag_s/ag_90,aa_s/aa_90,ags_a,aas_a, &
-                     idebug,srcdir(ic),opac_slant,nsteps,ds,tausum_a)
-            enddo ! ic
-          endif
 
 !         include 'skyglow_phys.inc'
 !         include 'skyglow_phys.inc'
