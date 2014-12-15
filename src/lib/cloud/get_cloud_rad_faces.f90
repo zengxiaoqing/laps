@@ -38,7 +38,7 @@
      real heights_1d(nk)
 
      real trans_c(nc)
-     real bi_coeff(2,2)
+     real bi_coeff(2,2),tri_coeff(2,2,2),b_alpha_cube(2,2,2)
 
      parameter (htlutlo = -1000)
      parameter (htluthi = 30000)
@@ -70,6 +70,7 @@
      real, parameter :: reff_snow    = .004000 ! m
      real, parameter :: reff_graupel = .010000 ! m
 
+     logical l_same_point
 
      clwc2alpha = 1.5 / (rholiq  * reff_clwc)
      cice2alpha = 1.5 / (rholiq  * reff_cice)
@@ -83,7 +84,7 @@
      earth_radius = 6371000.
 
      grid_spacing_m = 500.
-
+     twi_alt = -4.5
      transm_3d = r_missing_data
      transm_4d = 0.                   
 
@@ -117,6 +118,8 @@
      faceperim = 0.4
      facestepij = 0.80 ! 0.85 causes missing points at 15.5 deg (top face)
      raysteps = 0.5 * grid_spacing_m
+
+     refr_mn = 0.0
 
      do if = 1,6
        write(6,*)
@@ -169,14 +172,15 @@
          do ls = 0,4000
 
            if(ls .eq. 0)then ! values at start of trace                
-             objalt = obj_alt(id,jd)
+             objalt = obj_alt(id,jd) + refr_mn
              objazi = obj_azi(id,jd)
              dids = -sind(objazi)*cosd(objalt)/grid_spacing_m
-             djds =  cosd(objazi)*cosd(objalt)/grid_spacing_m
+             djds = -cosd(objazi)*cosd(objalt)/grid_spacing_m
              dhtds = -sind(objalt)                                 
              dxyds =  cosd(objalt)
            else
              slast = s
+             htlast = ht
            endif
 
 !          if(idebug .eq. 1)write(6,*)'dids/djds/dhtds = ',dids,djds,dhtds
@@ -207,7 +211,12 @@
            ri = rit + dids*s
            rj = rjt + djds*s
 
-           ht = htt + dhtds*s + (dxyds*s)**2 / (2.66666*earth_radius)
+           ht = htt + dhtds*s + (dxyds*s)**2 / (2.0*earth_radius)
+
+!          This can be used as part of a refraction strategy
+!          refk = 0.179
+!          ht = htt + dhtds*s + (dxyds*s)**2 / ((2.0/(1.-refk))*earth_radius)
+
            if(ht .le. float(htluthi) .and. ht .ge. float(htlutlo))then
              rk = htlut(nint(ht))
 !          elseif(ht .ge. htlutlo-500.)then
@@ -243,13 +252,28 @@
                nnew = nnew + 1
              endif
 
+!            if(if .eq. 3 .AND. jt .eq. ni/2 .AND. kt .eq. nk/2)then
+!              alt_theo2 = -atand((ht-htlast) / (s-slast))
+!              write(6,7)id,jd,s,obj_alt(id,jd),alt_theo2
+!7             format('key ray',2i5,f9.1,2f9.4)
+!            endif
+
 !            Valid trace (even if already assigned)
+             illast = il; jllast = jl; kllast = kl
+
+             il = max(min(int(ri),ni-1),1); fi = ri - il; ih=il+1
+             jl = max(min(int(rj),nj-1),1); fj = rj - jl; jh=jl+1
+             kl = max(min(int(rk),nk-1),1); fk = rk - kl; kh=kl+1
+
+             if(il .eq. illast .and. jl .eq. jllast .and. kl .eq. kllast)then
+               l_same_point = .true.
+             else
+               l_same_point = .false.
+             endif
 
              if(ht - topo_a(id,jd) .le. 1000. .AND. ihit_terrain .ne. 1)then
 
 !              Interpolate to get topography at fractional grid point
-               il = max(min(int(ri),ni-1),1); fi = ri - il; ih=il+1
-               jl = max(min(int(rj),nj-1),1); fj = rj - jl; jh=jl+1
 
 !              if(il .le. 0)then
 !                write(6,*)' il bounds check',il,id,ri,rj
@@ -278,14 +302,44 @@
 !              transm_4d(id,jd,kd,:) = 0.0                      
              else ! trace free of terrain
                ds = s - slast
-               db_alpha_m = 0.5 * (b_alpha_3d(id,jd,kd) + b_alpha_3d(idlast,jdlast,kdlast))
-               dbtau = ds * db_alpha_m
-               btau = btau + dbtau
-               albedo = btau / (1. + btau)       
-               if(albedo .gt. 1.0 .or. albedo .lt. 0.0)then
-                 write(6,*)' ERROR in albedo ',albedo,btau,dbtau,ds,db_alpha_m,s,slast
+               b_alpha_last = b_alpha_new
+
+               tri_coeff(1,1,1) = (1.-fi) * (1.-fj) * (1.- fk)
+               tri_coeff(2,1,1) = fi      * (1.-fj) * (1.- fk)
+               tri_coeff(1,2,1) = (1.-fi) *     fj  * (1.- fk)
+               tri_coeff(1,1,2) = (1.-fi) * (1.-fj) *      fk
+               tri_coeff(1,2,2) = (1.-fi) *     fj  *      fk
+               tri_coeff(2,1,2) = fi      * (1.-fj) *      fk
+               tri_coeff(2,2,1) = fi      *     fj  * (1.- fk)
+               tri_coeff(2,2,2) = fi      *     fj  *      fk
+
+               if(l_same_point .eqv. .false.)then
+                 b_alpha_cube(:,:,:) = b_alpha_3d(il:ih,jl:jh,kl:kh)
+               endif
+
+               b_alpha_new = sum(tri_coeff(:,:,:)*b_alpha_cube(:,:,:))
+               b_alpha_new = max(b_alpha_new,0.) ! clean up far edge extrapolation
+               if(ls .gt. 0)then
+!                b_alpha_m = 0.5 * (b_alpha_3d(id,jd,kd) + b_alpha_3d(idlast,jdlast,kdlast))
+                 b_alpha_m = 0.5 * (b_alpha_new + b_alpha_last)
+                 dbtau = ds * b_alpha_m
+                 btau = btau + dbtau
+                 albedo = btau / (1. + btau)       
+               else
+                 b_alpha_last = b_alpha_new
+                 albedo = 0.
+               endif
+
+               if(b_alpha_new .lt. 0.)then
+                 write(6,*)' ERROR in b_alpha_new',b_alpha_new,ri,rj,rk,fi,fj,fk
+                 write(6,*)'b_alpha_3d',b_alpha_3d(il:ih,jl:jh,kl:kh)
                  stop
                endif
+               if(albedo .gt. 1.0 .or. albedo .lt. 0.0)then
+                 write(6,*)' ERROR in albedo ',albedo,btau,dbtau,ds,b_alpha_m,b_alpha_new,b_alpha_last,s,slast
+                 stop
+               endif
+
                transm_3d(id,jd,kd) = 1. - albedo              
              endif
 
@@ -320,14 +374,14 @@
      arg1 = minval(transm_3d)
      arg2 = maxval(transm_3d)
      if(arg1 .lt. 0. .OR. arg2 .gt. 1.0)then
-       write(6,*)' ERROR: Range of transm_3d = ',arg1,arg2
-       stop
+       write(6,*)' WARNING: Range of transm_3d = ',arg1,arg2
+!      stop
      else
        write(6,*)' range of transm_3d = ',arg1,arg2
      endif
 
      nshadow = 0
-     if(solalt .ge. -4.)then ! daylight or early twilight
+     if(solalt .ge. twi_alt)then ! daylight or early twilight
        do k = 1,nk
          patm_k = exp(-heights_1d(k)/8000.)
 !        patm_k = ztopsa(heights_1d(k)) / 1013.
@@ -379,7 +433,7 @@
                  am = airmassf(90.-obj_alt(i,j), patm_k)
                  obj_alt_last = obj_alt(i,j)
                endif                                                     
-               scat_frac = 0.75
+               scat_frac = 1.00
                do ic = 1,nc
                  trans_c(ic) = trans(am*ext_g(ic)*scat_frac)
                enddo
@@ -403,8 +457,8 @@
      write(6,*)' nshadow = ',nshadow
 
      if(fractot .lt. 1.0)then
-         write(6,*)' ERROR: missing points in get_cloud_rad_faces',fractot
-         stop
+         write(6,*)' WARNING: missing points in get_cloud_rad_faces',fractot
+!        stop
      endif
 
      I4_elapsed = ishow_timer()
