@@ -489,3 +489,12 @@
 
         return
         end
+
+        subroutine get_auroraglow(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi,rlat,rlon,alt_scale,azi_scale,glow_aurora)
+
+        real glow_aurora(3,minalt:maxalt,minazi:maxazi) ! log nL
+        real alt_a(minalt:maxalt,minazi:maxazi)
+        real azi_a(minalt:maxalt,minazi:maxazi)
+
+        return
+        end
