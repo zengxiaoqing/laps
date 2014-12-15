@@ -13,9 +13,10 @@
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
      1                           ,htstart                               ! O
+     1                           ,htagl                                 ! I
 !    1                           ,elong                                 ! I
      1                           ,aod                                   ! I
-     1                           ,ni,nj,nk,i,j,kstart                   ! I
+     1                           ,ni,nj,nk,i,j                          ! I
      1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
      1                           ,alt_norm                              ! I
      1                           ,moon_alt,moon_azi                     ! I
@@ -102,7 +103,7 @@
         real r_cloud_rad(minalt:maxalt,minazi:maxazi)    ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real cloud_rad_w(minalt:maxalt,minazi:maxazi)    ! sun to cloud transmissivity (direct+fwd scat) * trans
-        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination
+        real clear_rad_c(nc,minalt:maxalt,minazi:maxazi) ! clear sky illumination (twilight)
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated 
                ! fraction of air illuminated by the sun along line of sight
                ! (consider Earth's shadow + clouds, used when sun is below
@@ -119,6 +120,7 @@
         real aod_tot(minalt:maxalt,minazi:maxazi)     ! slant path
         real sum_odrad_c(nc)
         real sum_odrad_c_last(nc)
+        real maxalt_deg
 
         character*1 cslant
         character var*3,comment*125,ext*31,units*10
@@ -126,9 +128,11 @@
         integer icall_rad /0/
         save icall_rad
 
+        kstart = 0 ! 0 means sfc, otherwise level of start
+
         I4_elapsed = ishow_timer()
 
-        write(6,*)' Subroutine get_cloud_rays... ',i,j
+        write(6,*)' Subroutine get_cloud_rays... ',i,j,htagl
 
 !       moon_alt = -10.0
 !       moon_azi = 0.
@@ -175,8 +179,10 @@
      1                                   ,maxval(heights_3d)
 
         I4_elapsed = ishow_timer()
+
+        twi_alt = -4.5
       
-        if(sol_alt(i,j) .lt. -4.)then
+        if(sol_alt(i,j) .lt. twi_alt)then
           write(6,*)' Call get_sfc_glow'
           call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon
      1                     ,sfc_glow,gnd_glow)
@@ -188,7 +194,9 @@
 
         I4_elapsed = ishow_timer()
 
-        if(.true.)then
+!       Note early twilight will not have 'get_cloud_rad' using a special
+!       twilight source as 'get_cloud_rad_faces' is used more explicitly
+        if(obj_alt(i,j) .ge. 3.0)then ! as uncorrected for refraction
             write(6,*)' call get_cloud_rad...'
             call get_cloud_rad(obj_alt,obj_azi,sol_alt(i,j),sol_azi(i,j)
      1                    ,clwc_3d,cice_3d
@@ -199,6 +207,7 @@
 
         else
             if(icall_rad .eq. 0)then
+              write(6,*)' call get_cloud_rad_faces...'
               call get_cloud_rad_faces(              
      1          obj_alt,obj_azi,                   ! I
      1          sol_alt(i,j),sol_azi(i,j),         ! I 
@@ -236,7 +245,7 @@
 
         I4_elapsed = ishow_timer()
 
-        if(sol_alt(i,j) .lt. -4.)then ! Modify moon glow section in green channel
+        if(sol_alt(i,j) .lt. twi_alt)then ! Modify moon glow section in green channel
                                       ! Preserve sfc sky glow section in red channel
             transm_4d(:,:,:,2) = transm_4d(:,:,:,2) * obj_bri ! correct for sun/moon brightness
             write(6,*)
@@ -272,7 +281,7 @@
 
 !       kstart = 0 ! 0 means sfc, otherwise level of start
 
-        if(kstart .eq. 0)then ! start from sfc
+        if(htagl .eq. 0.)then ! start from sfc
           htstart = topo_sfc  ! MSL
           write(6,*)' i/j/topo_sfc = ',i,j,topo_sfc
           write(6,*)' height column = ',heights_3d(i,j,:)
@@ -289,10 +298,20 @@
           rkstart = rksfc
           patm = pres_3d(i,j,ksfc) / 101325.
         else ! start aloft
-          rkstart = kstart
-          htstart = heights_3d(i,j,kstart)
-          patm = pres_3d(i,j,kstart) / 101325.
-          write(6,*)' Start aloft at k = ',kstart
+          htstart = topo_sfc+htagl  ! MSL
+          do k = 1,nk-1
+            if(heights_3d(i,j,k)   .le. htstart .AND.
+     1         heights_3d(i,j,k+1) .ge. htstart      )then
+                frach = (htstart - heights_3d(i,j,k)) / 
+     1                  (heights_3d(i,j,k+1) - heights_3d(i,j,k))
+                fracl = 1.0 - frach
+                kstart = k
+                rkstart = float(kstart) + frach
+            endif
+          enddo
+          patm = (  pres_3d(i,j,kstart)   * fracl 
+     1            + pres_3d(i,j,kstart+1) * frach ) / 101325.
+          write(6,*)' Start aloft at k/rk/p = ',kstart,rkstart,patm
         endif
 
         aod_vrt = aod * exp(-(htstart-redp_lvl)/aero_scaleht)
@@ -333,6 +352,7 @@
         pres_1d(:)    = pres_3d(i,j,:)
 
         idelt = nint(2. / alt_scale)
+        maxalt_deg = float(maxalt) * alt_scale
 
 !       azid1 = 46. ; azid2 = 226.
         azid1 = 90. ; azid2 = 270.
@@ -359,7 +379,7 @@
              else
                  jazi_delt = maxazi
              endif
-         elseif(altray .ge. 10.)then ! alt_scale, 1 deg azi
+         elseif(abs(altray) .ge. 10.)then ! alt_scale, 1 deg azi
              jazi_delt = nint(1. / azi_scale)
          else                        ! alt_scale, azi_scale
              jazi_delt = 1
@@ -390,6 +410,9 @@
               idebug = 1
               idebug_a(ialt,jazi) = 1
           endif
+
+!         Non-verbose
+          idebug = 0; idebug_a(ialt,jazi) = 0
 
 !         Trace towards sky from each grid point
 !         view_altitude_deg = max(altray,0.) ! handle Earth curvature later
@@ -935,7 +958,7 @@
      1                                    * solar_corr
 
 !                     City lights on the ground
-                      if(sol_alt(inew_m,jnew_m) .lt. -4.)then  
+                      if(sol_alt(inew_m,jnew_m) .lt. twi_alt)then  
                         topo_swi(ialt,jazi) = topo_swi(ialt,jazi) + 
      1                    sum(bi_coeff(:,:) * gnd_glow(i1:i2,j1:j2))
                         if(gnd_glow(inew_m,jnew_m) .gt. 0. .OR. 
@@ -1070,7 +1093,8 @@
          endif
 
          if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4 .OR. 
-     1      jazi_delt .eq. 8               )then ! fill missing azimuths
+     1      jazi_delt .eq. 5 .OR. jazi_delt .eq. 8 .OR.
+     1      jazi_delt .eq. 10 .OR. jazi_delt .eq. 16)then ! fill missing azimuths
           do jazi = minazi,maxazi
             call get_interp_parms(minazi,maxazi,jazi_delt,jazi       ! I
      1                           ,fm,fp,jazim,jazip,ir)              ! O
@@ -1089,12 +1113,23 @@
      1                                 + fp *cloud_rad_c(:,ialt,jazip)
               cloud_rad_w(ialt,jazi) = 
      1         fm * cloud_rad_w(ialt,jazim)+fp * cloud_rad_w(ialt,jazip)      
-              clear_rad_c(:,ialt,jazi) = 
-     1         fm * clear_rad_c(:,ialt,jazim)   
+
+              if(sol_alt(i,j) .le. 0.)then
+                clear_rad_c(:,ialt,jazi) = 
+     1           fm * clear_rad_c(:,ialt,jazim)   
      1                                 + fp * clear_rad_c(:,ialt,jazip)
+              endif
+
               clear_radf_c(:,ialt,jazi) = 
      1         fm * clear_radf_c(:,ialt,jazim)   
      1                                 + fp * clear_radf_c(:,ialt,jazip)  
+
+!             if(altray .eq. -15.0)then
+!               write(6,121)jazi,clear_radf_c(:,ialt,jazi)
+!    1            ,clear_radf_c(:,ialt,jazim),clear_radf_c(:,ialt,jazip)
+121             format('interpa',i5,9f12.0)            
+!             endif
+
               airmass_2_cloud_3d(ialt,jazi) = 
      1                fm * airmass_2_cloud_3d(ialt,jazim) 
      1              + fp * airmass_2_cloud_3d(ialt,jazip)
@@ -1107,6 +1142,9 @@
               aod_ill_dir(ialt,jazi) = 
      1                fm * aod_ill_dir(ialt,jazim) 
      1              + fp * aod_ill_dir(ialt,jazip)
+              aod_2_topo(ialt,jazi) = 
+     1                fm * aod_2_topo(ialt,jazim) 
+     1              + fp * aod_2_topo(ialt,jazip)
               aod_tot(ialt,jazi) = 
      1                fm * aod_tot(ialt,jazim) 
      1              + fp * aod_tot(ialt,jazip)
@@ -1123,7 +1161,7 @@
         enddo ! ialt
 
         call get_idx(20.,minalt,alt_scale,ialt_min)
-        call get_idx(90.,minalt,alt_scale,ialt_max)
+        call get_idx(maxalt_deg,minalt,alt_scale,ialt_max)
 
         do ialt = ialt_min,ialt_max ! fill in missing alt rings
           call get_interp_parms(minalt,maxalt,idelt,ialt           ! I
@@ -1157,6 +1195,9 @@
             aod_ill_dir(ialt,:) =
      1           fm * aod_ill_dir(ialtm,:) 
      1         + fp * aod_ill_dir(ialtp,:)
+            aod_2_topo(ialt,:) =
+     1           fm * aod_2_topo(ialtm,:) 
+     1         + fp * aod_2_topo(ialtp,:)
             aod_tot(ialt,:) =
      1           fm * aod_tot(ialtm,:) 
      1         + fp * aod_tot(ialtp,:)
