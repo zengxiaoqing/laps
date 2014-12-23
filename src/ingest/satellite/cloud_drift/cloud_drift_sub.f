@@ -59,7 +59,7 @@ cdis
 
       logical l_new_fmt, l_parse
       
-      l_new_fmt = .false.
+      l_new_fmt = .true. ! .false.
       if(l_parse(filename,'goes11'))l_new_fmt = .true.
       if(l_parse(filename,'goes12'))l_new_fmt = .true.
 
