@@ -144,7 +144,6 @@
       do i = 1,i_nbr_files_ret
           call make_fnam_lp(i4times(i),a9_time,istatus)
           filename_in = c_fnames(i)
-
 !         Test whether we want the NetCDF file for this time
           i4time_file_earliest = i4time_sys - i4_acars_window
      1                                      - lag_time_report
@@ -164,6 +163,7 @@
               if(c8_file_fmt .eq. 'NIMBUS')then ! NIMBUS NetCDF
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
+!                 ingest_acars_sub.f
                   call get_acars_data(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
      1                                      ,c8_file_fmt
