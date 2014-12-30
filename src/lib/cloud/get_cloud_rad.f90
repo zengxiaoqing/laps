@@ -449,10 +449,10 @@
 
       real lat(ni,nj)
       real lon(ni,nj)
-      real sfc_glow(ni,nj)        ! surface lighting intensity of clouds (nl)                 
-      real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
+      real sfc_glow(ni,nj)   ! surface lighting intensity of clouds (nl)
+      real gnd_glow(ni,nj)   ! ground lighting intensity (nl)      
 
-      parameter (ncities = 17)
+      parameter (ncities = 25)
       real ctylat(ncities)
       real ctylon(ncities)
       real ctypop(ncities)
@@ -478,7 +478,15 @@
       ctylat(14)=39.84; ctylon(14)=-105.03; ctypop(14)= 106000 ! Wstminster
       ctylat(15)=39.58; ctylon(15)=-104.88; ctypop(15)= 100000 ! Centennial
       ctylat(16)=39.95; ctylon(16)=-105.05; ctypop(16)=  58000 ! Broomfield
-      ctylat(17)=40.045; ctylon(17)=-105.064; ctypop(17)=  19000 ! Erie
+      ctylat(17)=40.048; ctylon(17)=-105.067; ctypop(17)=  19000 ! Erie
+      ctylat(18)=40.084; ctylon(18)=-104.937; ctypop(18)=   4000 ! Dacono
+      ctylat(19)=40.083; ctylon(19)=-104.811; ctypop(19)=   7600 ! Ft.Lptn
+      ctylat(20)=40.112; ctylon(20)=-104.936; ctypop(20)=  11000 ! Firestn
+      ctylat(21)=40.102; ctylon(21)=-104.937; ctypop(21)=   9400 ! Frdrck
+      ctylat(22)=39.985; ctylon(22)=-104.815; ctypop(22)=  34000 ! Brghtn
+      ctylat(23)=39.823; ctylon(23)=-104.921; ctypop(23)=  48000 ! ComrcCty
+      ctylat(24)=40.099; ctylon(24)=-105.161; ctypop(24)=   4000 ! Niwot
+      ctylat(25)=40.065; ctylon(25)=-105.191; ctypop(25)=   9300 ! Gunbrl
 
       sfc_glow = 0.
       gnd_glow = 0.
