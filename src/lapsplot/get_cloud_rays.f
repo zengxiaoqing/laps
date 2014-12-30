@@ -5,6 +5,7 @@
      1                           ,topo_albedo_2d                        ! I
      1                           ,topo_swi,topo_albedo                  ! O
      1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
+     1                           ,dist_2_topo                           ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
      1                           ,aod_tot,transm_obs                    ! O
      1                           ,transm_3d,transm_4d                   ! O
@@ -64,7 +65,7 @@
         real topo_a(ni,nj)
         real lat(ni,nj)
         real lon(ni,nj)
-        real swi_2d(ni,nj)
+        real swi_2d(ni,nj) ! global terrain normal irradiance
         real topo_albedo_2d(nc,ni,nj)
         real pres_3d(ni,nj,nk)
         real pres_1d(nk)
@@ -84,6 +85,8 @@
 
         real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
         real sfc_glow(ni,nj)        ! pass into get_cloud_rad
+        real ghi_2d(ni,nj)          ! derived from cloud rad 
+        real dhi_2d(ni,nj)          ! derived from cloud rad 
 
 !       logical l_process(minalt:maxalt,minazi:maxazi)
         logical l_solar_eclipse
@@ -111,10 +114,11 @@
         real ag_2d(minalt:maxalt,minazi:maxazi)       ! dummy
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
-        real topo_swi(minalt:maxalt,minazi:maxazi)    ! short wave down W/m**2
+        real topo_swi(minalt:maxalt,minazi:maxazi) ! global terrain normal irradiance
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
+        real dist_2_topo(minalt:maxalt,minazi:maxazi) 
         real aod_ill(minalt:maxalt,minazi:maxazi)     ! slant path
         real aod_ill_dir(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_tot(minalt:maxalt,minazi:maxazi)     ! slant path
@@ -142,6 +146,7 @@
         pstd = 101325.
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
+        dist_2_topo = 0.
         topo_swi = 0.
         topo_albedo = 0.0 ! initialize
         r_cloud_rad = 1.
@@ -234,6 +239,35 @@
      1                      ,ni,nj,nk)
 
         endif
+
+!       Obtain surface rad from 3D cloud rad fields
+        do ii = 1,ni
+        do jj = 1,nj
+          if(sol_alt(ii,jj) .gt. 0.)then
+            do kk = 1,nk
+              if(transm_3d(ii,jj,kk) .gt. 0. .and. 
+     1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
+
+!               Correct for diffuse radiation at low sun altitude
+                solalt_eff = sol_alt(ii,jj) 
+     1                     + (1.5 * cosd(sol_alt(ii,jj))**100.)
+
+                ghi_2d(ii,jj) = transm_3d(ii,jj,kk)    
+     1                        * sind(solalt_eff)          * 1109.46
+                dhi_2d(ii,jj) = transm_3d(ii,jj,kk)**2 
+     1                        * sind(sol_alt(ii,jj))**1.3 * 1109.46
+                goto 4
+              endif
+            enddo ! kk
+4           continue
+          else
+            ghi_2d(ii,jj) = 0.1
+            dhi_2d(ii,jj) = 0.1
+          endif
+        enddo ! jj
+        enddo ! ii
+        write(6,*)' range of ghi_2d = ',minval(ghi_2d),maxval(ghi_2d)
+        write(6,*)' range of dhi_2d = ',minval(dhi_2d),maxval(dhi_2d)
 
 !       do jj = 1,nj
 !       do ii = 1,ni
@@ -953,8 +987,8 @@
                           solar_corr = 1.0
                       endif
 
-                      topo_swi(ialt,jazi) = 
-     1                  sum(bi_coeff(:,:) * swi_2d(i1:i2,j1:j2))
+                      topo_swi(ialt,jazi) = ! instead of swi_2d
+     1                  sum(bi_coeff(:,:) * ghi_2d(i1:i2,j1:j2))
      1                                    * solar_corr
 
 !                     City lights on the ground
@@ -981,6 +1015,7 @@
                       if(dxy1_l .eq. 0. .AND. htstart .eq. topo_sfc)then
                           airmass_2_topo_3d(ialt,jazi) = 1e-5
                           aod_2_topo(ialt,jazi)        = 1e-4
+                          dist_2_topo(ialt,jazi)       = 1.0
                           sum_aod_ill                  = 1e-4 
      1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
                           sum_aod_ill_dir              = 1e-4 
@@ -989,15 +1024,17 @@
                           airmass_2_topo_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
                           aod_2_topo(ialt,jazi) = sum_aod
+                          dist_2_topo(ialt,jazi) = dxy1_h
                       endif
 
                       if(idebug .eq. 1)write(6,91)solar_corr  
      1                                    ,topo_swi(ialt,jazi)
      1                                    ,topo_albedo(:,ialt,jazi)
      1                                    ,aod_2_topo(ialt,jazi)
+     1                                    ,dist_2_topo(ialt,jazi)
      1                                    ,airmass_2_topo_3d(ialt,jazi)
      1                                    ,gnd_glow(inew_m,jnew_m)
-91                    format(' Hit topo ',f8.3,f8.2,3f8.3,3f8.3)
+91                    format(' Hit topo ',f8.3,f8.2,2f8.3,f8.0,2f8.3)
                   endif
 
                   cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
@@ -1092,12 +1129,19 @@
      1             ,clear_rad_c,elong_p                     ) ! O (dummy)
          endif
 
+!        Pixels per degree times 1 and times 2
          if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4 .OR. 
      1      jazi_delt .eq. 5 .OR. jazi_delt .eq. 8 .OR.
-     1      jazi_delt .eq. 10 .OR. jazi_delt .eq. 16)then ! fill missing azimuths
+     1      jazi_delt .eq. 10 .OR. jazi_delt .eq. 16 .OR.
+     1      jazi_delt .eq. 20                 )then ! fill missing azimuths
           do jazi = minazi,maxazi
             call get_interp_parms(minazi,maxazi,jazi_delt,jazi       ! I
-     1                           ,fm,fp,jazim,jazip,ir)              ! O
+     1                           ,fm,fp,jazim,jazip,ir,istatus)      ! O
+            if(istatus .ne. 1)then
+              write(6,*)' ERROR in jazi call: minazi,maxazi,jazi'
+              stop
+            endif
+
             if(ir .ne. 0)then
               r_cloud_3d(ialt,jazi) = 
      1         fm * r_cloud_3d(ialt,jazim) + fp * r_cloud_3d(ialt,jazip)
@@ -1145,6 +1189,9 @@
               aod_2_topo(ialt,jazi) = 
      1                fm * aod_2_topo(ialt,jazim) 
      1              + fp * aod_2_topo(ialt,jazip)
+              dist_2_topo(ialt,jazi) = 
+     1                fm * dist_2_topo(ialt,jazim) 
+     1              + fp * dist_2_topo(ialt,jazip)
               aod_tot(ialt,jazi) = 
      1                fm * aod_tot(ialt,jazim) 
      1              + fp * aod_tot(ialt,jazip)
@@ -1166,6 +1213,11 @@
         do ialt = ialt_min,ialt_max ! fill in missing alt rings
           call get_interp_parms(minalt,maxalt,idelt,ialt           ! I
      1                         ,fm,fp,ialtm,ialtp,ir)              ! O
+          if(istatus .ne. 1)then
+            write(6,*)' ERROR in ialt call: minalt,maxalt,ialt'
+            stop
+          endif
+
           if(ir .ne. 0)then
             r_cloud_3d(ialt,:) =
      1       fm * r_cloud_3d(ialtm,:) + fp * r_cloud_3d(ialtp,:)
@@ -1198,6 +1250,9 @@
             aod_2_topo(ialt,:) =
      1           fm * aod_2_topo(ialtm,:) 
      1         + fp * aod_2_topo(ialtp,:)
+            dist_2_topo(ialt,:) =
+     1           fm * dist_2_topo(ialtm,:) 
+     1         + fp * dist_2_topo(ialtp,:)
             aod_tot(ialt,:) =
      1           fm * aod_tot(ialtm,:) 
      1         + fp * aod_tot(ialtp,:)
@@ -1259,8 +1314,10 @@
      1                                      ,maxval(aod_ill_dir)       
 
         transm_obs = transm_3d(i,j,int(rkstart)+1)
-        write(6,*)' transm of observer is ',i,j,int(rkstart)+1
+        write(6,*)'transm of observer is ',i,j,int(rkstart)+1
      1                                     ,transm_obs
+        write(6,*)'ghi of observer is ',i,j,ghi_2d(i,j)
+        write(6,*)'dhi of observer is ',i,j,dhi_2d(i,j)
 
         I4_elapsed = ishow_timer()
  
