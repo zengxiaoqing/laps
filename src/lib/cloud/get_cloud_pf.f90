@@ -93,9 +93,11 @@
             alb_clwc = alb(0.06*cloud_od_liq)
 
             radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
+            pf_thk_alt = (2./3.) * (1. + sind(alt_a(i,j)))
 !                     illuminated                unilluminated
-            pf_thk = pf_thk*radfrac + hg(-0.,elong_a(i,j)) * (1.-radfrac) &
-                                        * (2./3. * (1. + sind(alt_a(i,j))))
+!           pf_thk = pf_thk*radfrac + hg(-0.,elong_a(i,j)) * (1.-radfrac) &
+!                                       * (2./3. * (1. + sind(alt_a(i,j))))
+            pf_thk = pf_thk*radfrac + pf_thk_alt*(1.-radfrac) 
             pf_thk_a(i,j) = pf_thk
 
             rain_peak = exp(-rad2tau(.06,r_cloud_rad(i,j))/2.)
@@ -176,10 +178,12 @@
 
           pf_scat2(:,i,j) = pf_snow * snow_factor + pf_scat1(:,i,j) * (1.0 - snow_factor)
 
-!         Suppress phase function if terrain is close in the light ray
+!         Suppress/cap phase function if terrain is close in the light ray
+!         if(airmass_2_topo(i,j) .gt. 0. .and. pf_scat2(2,i,j) .gt. 1.0)then ! cloud in front of terrain
           if(airmass_2_topo(i,j) .gt. 0.)then ! cloud in front of terrain
-              pf_scat(:,i,j) = pf_scat2(:,i,j)**(r_cloud_rad(i,j)**2.0)
 !             pf_scat(:,i,j) = pf_scat2(:,i,j)**opac(cloud_od_tot)
+!             pf_scat(:,i,j) = pf_scat2(:,i,j)**(r_cloud_rad(i,j)**2.0)
+              pf_scat(:,i,j) = pf_scat2(:,i,j) * radfrac + pf_thk_alt * (1.-radfrac)
           else
               pf_scat(:,i,j) = pf_scat2(:,i,j)
           endif
@@ -284,14 +288,14 @@
           endif ! rain_factor > 0
 
           if(idebug_a(i,j) .eq. 1)then
-              write(6,101)i,j,elong_a(i,j),pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
-101           format(' elg/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/snow/rain factors = ',2i5,f8.2,2f9.3,2x,3f8.4,2x,6f8.3,f9.3)
+              write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
+101           format(' alt/elg/cod/thk/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,4f9.3,2x,3f8.4,2x,6f8.3,f9.3)
           endif
 
          enddo ! i (altitude)
 
          if(j .eq. nj/2)then
-             write(6,*)'get_cld_pf (zenith) ',pf_scat(:,ni,j)
+             write(6,*)' get_cld_pf (zenith) ',pf_scat(:,ni,j)
          endif
 
         enddo ! j (azimuth)
