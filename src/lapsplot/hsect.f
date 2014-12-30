@@ -2428,6 +2428,10 @@ c
 !             c_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
               scale_h = cloud_albedo_a! for image plots
+            elseif(var_2d_in.eq.'CLA')then
+!             c_label='Albedo '//c_sat_id(k)
+              scale_l = 0.00          ! for image plots
+              scale_h = cloud_albedo_a! for image plots
             elseif(var_2d_in.eq.'SVS')then
               c_label='VIS counts (raw) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
