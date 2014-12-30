@@ -33,15 +33,17 @@
 
         hg(g,pha) = (1.-g**2) / (1. + g**2 - 2.*g*cosd(pha))**1.5
 
-        parameter (nc = 3)
+        include 'wa.inc'
+
+!       parameter (nc = 3)
         real ext_g(nc)                 ! od per airmass
         data ext_g /.090,.144,.312/    ! 0.14 * (wa/.55)**(-4)              
 
         real ext_o(nc)                 ! od per airmass
         data ext_o /.000,.016,.004/    ! scaled to 1/2 Schaeffer "OZ" values
 
-        real wa(nc)                    ! wavelength (um)
-        data wa    /.615,.546,.450/
+!       real wa(nc)                    ! wavelength (um)
+!       data wa    /.615,.546,.450/
 
         real ext_a(nc)                 ! aerosol extinction relative to .55um
         data ext_a /1.00,1.00,1.00/    ! could change to (wa/.55)**(-1.3)
