@@ -5,9 +5,9 @@
                    ,minalt,maxalt,minazi,maxazi,idebug_a          &! I
                    ,sol_alt,sol_azi,view_alt,view_az              &! I
                    ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir &! I
-                   ,aero_scaleht                                  &! I
+                   ,aero_scaleht,dist_2_topo                      &! I
                    ,htmsl,redp_lvl                                &! I
-                   ,aod_ill                                       &! I
+                   ,aod_ill,aod_2_topo                            &! I
                    ,l_solar_eclipse,i4time,rlat,rlon              &! I
                    ,clear_radf_c,ag_2d                            &! I
                    ,clear_rad_c,elong                       )      ! O
@@ -54,6 +54,7 @@
         real ag_2d(minalt:maxalt,minazi:maxazi) ! gas airmass (topo/notopo)
         real aod_ill(minalt:maxalt,minazi:maxazi) ! aerosol illuminated
                                       ! optical depth (slant - topo/notopo)
+        real aod_2_topo(minalt:maxalt,minazi:maxazi) ! slant
         real aod_ray(minalt:maxalt,minazi:maxazi) ! aerosol optical 
                                       ! depth (zenithal) may be adjusted
                                       ! for illumination
@@ -62,6 +63,7 @@
                                       ! for direct illumination / topo
         real patm_ray(minalt:maxalt,minazi:maxazi)! effective patm adjusted
                                       ! for illumination
+        real dist_2_topo(minalt:maxalt,minazi:maxazi)
         real elong(minalt:maxalt,minazi:maxazi)
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
@@ -71,7 +73,7 @@
         parameter (nsc = 3)
         real aod_asy_eff(nsc) ! ,nc (add nc dimension throughout)
 
-        logical l_solar_eclipse
+        logical l_solar_eclipse, l_2lyr
 
         parameter (nsteps = 100000)
         parameter (nopac = 10)
@@ -225,6 +227,7 @@
                          ,agdum,aodum,aascat)       ! O
 !        scatter_order = 1.0 ! f(altray,sol_alt)
          scatter_order = max(aod_vrt*aascat,1.0)**1.0 ! 0.5-1.5
+         scatter_order_t = 1.0
 !        write(6,*)' aod_ray/aascat/sco',aod_ray(ialt,minazi),aascat,scatter_order
 
 !        Determine effective asymmetry parameter from multiple scattering
@@ -242,6 +245,11 @@
 !        cosp_frac = max(1.-scatter_order,0.)
 
 !        Get src term at selected azimuths (every 10 degrees)
+         if(maxval(dist_2_topo(ialt,:)) .eq. 0.)then ! full ring w terrain
+          l_2lyr = .false.
+         else
+          l_2lyr = .true.
+         endif
          jazi_d10 = 40
          do jazi = jazi_start,jazi_end,jazi_d10
           altray = view_alt(ialt,jazi)
@@ -380,10 +388,10 @@
                 ecl_dir_rat(ic) = 1.0 - (ecl_scat(ic) / ecl_intd(ic))
 
                 if(idebuge .ge. 1)then
-                  write(6,71)altray,distecl(1,ic),distecl(nopac,ic),elgms &
+                  write(6,70)altray,distecl(1,ic),distecl(nopac,ic),elgms &
                       ,emag_a(jazi),eobsc_a(1,ic),eobsc_a(nopac,ic),eobsc(ic,jazi) &
                       ,ecl_scat(ic),ecl_intd(ic),ecl_dir_rat(ic)
-71                format('eclipse altray/dist/elg/emag',f9.2,2f9.1,f9.4,f7.4, &
+70                format('eclipse altray/dist/elg/emag',f9.2,2f9.1,f9.4,f7.4, &
                          ' eobsc',3f7.4,' scat/int/dir',2f10.7,f7.4)
                 endif
               enddo ! ic
@@ -413,10 +421,15 @@
                 + aod_bin(3) * hg(aod_asy_eff(3),elong(ialt,jazi)) 
 !           enddo ! ic
 
+            hg2t = hg2
+
             fc = 0.09 * 0.5**(scatter_order-1.0)
             gc = 2300. / scatter_order**2
             hg2 = (1.-fc) * hg2 + fc * cosp(gc,elong(ialt,jazi))
 !           hg2(:) = (1.-fc) * hg2(:) + fc * cosp(gc,elong(ialt,jazi))
+
+!           topo phase function is sans scatter order
+            hg2t = (1.-0.09) * hg2t + 0.09 * cosp(2300.,elong(ialt,jazi))
 
             if(aod_ray(ialt,jazi) .gt. 0.)then
                 aod_dir_rat = aod_ray_dir(ialt,jazi) / aod_ray(ialt,jazi)
@@ -427,7 +440,8 @@
 !           Consider arg for sideways scattering from downward diffuse
 !           is ~hg(90.) or an evaluated integral. Use 0.5 for now.
             if(l_solar_eclipse .eqv. .false.)then
-              hg2d = (hg2 * aod_dir_rat) + (0.5 * (1.0 - aod_dir_rat)) 
+              hg2d = (hg2  * aod_dir_rat) + (0.5 * (1.0 - aod_dir_rat)) 
+              hg2t = (hg2t * aod_dir_rat) + (0.5 * (1.0 - aod_dir_rat)) 
             else
               do ic = 1,nc
                 arg = aod_dir_rat * ecl_dir_rat(ic)
@@ -436,7 +450,8 @@
             endif
 
             if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
-              write(6,*)' ERROR in skyglow_phys: aod_dir_rat out of bounds',aod_dir_rat
+              write(6,*) &
+            ' ERROR in skyglow_phys: aod_dir_rat out of bounds',aod_dir_rat
               write(6,*)' ialt/jazi/altray = ',ialt,jazi,altray
               write(6,*)' aod_ray_dir/aod_ray = ',aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi)
               stop
@@ -448,17 +463,52 @@
             else ! assume two scattering layers (g+a [lower-1], g [upper-2])
               do ic = 1,nc
                 gasfrac = ag_2d(ialt,jazi) / airmass_g ! topo illuminated fraction of gas
-                od_g = ext_g(ic)*airmass_g             ! slant od
-!               od_a = aod_ray(ialt,jazi)*aa*ext_a(ic) ! slant od
-                od_a = aod_vrt           *aa*ext_a(ic) ! slant od
+                if(dist_2_topo(ialt,jazi) .eq. 0.)then    ! free of topo
+                  od_g = ext_g(ic)*airmass_g              ! slant od
+!                 od_a = aod_ray(ialt,jazi)*aa*ext_a(ic)  ! slant od
+                  od_a = aod_vrt           *aa*ext_a(ic)  ! slant od
+                  nlyr = 2
+                else                                      ! hitting topo
+                  ht_to_topo = dist_2_topo(ialt,jazi) * sind(altray)
+                  od_g_vert = ext_g(ic) * patm
+                  od_a_vert = aod_vrt * ext_a(ic)
+                  alpha_g = od_g_vert / 8000.
+                  alpha_a = od_a_vert / aero_scaleht
+                  od_g = dist_2_topo(ialt,jazi) * alpha_g ! slant od
+                  od_a = dist_2_topo(ialt,jazi) * alpha_a ! slant od
+                  if(ht_to_topo .gt. aero_scaleht)then
+                    nlyr = 2
+                  else
+                    nlyr = 1
+                  endif
+                  if(.true.)then
+                    if(idebug_a(ialt,jazi) .gt. 0 .and. ic .eq. 2)then
+                      idebug_topo = 1
+                    else
+                      idebug_topo = 0
+                    endif
+                    call get_clr_src_dir_topo(sol_alt,sol_azi, &
+                     altray,view_azi_deg, &
+                     od_g_vert,od_a_vert,htmsl,dist_2_topo(ialt,jazi),ssa, &
+                     ag/ag_90,aa/aa_90, &
+                     ag_s/ag_90,aa_s/aa_90,ags_a,aas_a,idebug_topo,nsteps, &
+                     sumi_g,sumi_a,opac_slant,dst,tausum_a)
+                    if(idebug_topo .gt. 0)then
+                      write(6,71)ialt,jazi,ic,sol_alt,altray &
+                                ,dist_2_topo(ialt,jazi),sumi_g,sumi_a
+71                    format(' called get_clr_src_dir_topo',i4,i5,i4,2f8.2,f8.0,2f9.4)
+                    endif ! write log info
+                  endif ! call get_clr_src_dir_topo
+                endif ! hitting topo
+
                 alphav_g = od_g / 8000.             ! extinction per vert m
                 alphav_a = od_a / aero_scaleht      ! extinction per vert m
-                if(od_a .gt. 0)then ! lower layer
+                if(od_a .gt. 0)then  ! lower layer
                     od_g1 = od_a * (alphav_g / alphav_a)
                 else
-                    od_g1 = 0.      ! upper layer
+                    od_g1 = 0.       
                 endif
-                od_g2 = od_g - od_g1
+                od_g2 = od_g - od_g1 ! upper layer
 
 !               am_sun = airmassf(90. - (0.5*(sol_alt+altray)),patm) ! test2
 !               am_sun = airmassf(90. - sol_alt,patm)                ! test1
@@ -471,18 +521,39 @@
                 pf_eff1 = (rayleigh_pf_eff * alphav_g + hg2d(ic) * alphav_a * solar_int_g2) &
                         / (alphav_g + alphav_a * solar_int_g2)
 !               od_1 = od_g1*gasfrac + od_a
-                od_1 = od_g1*gasfrac + aod_ill(ialt,jazi)
+                od_1 = od_g1*gasfrac + aod_ill(ialt,jazi) ! lower layer ill od
                 brt1 = brto(od_1) * pf_eff1
 !               brt2 = brto(od_g2) * rayleigh_pf_eff
                 brt2 = brto(od_g2*gasfrac) * rayleigh_pf_eff
                 trans1 = trans(od_1)
 
                 day_int = 3e9 * (1.0 - eobsc(ic,jazi))
-                if(l_solar_eclipse .eqv. .false.)then
-                  clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic)) ! + ecl_scat(ic)*3e9
-                else
-                  clear_rad_c0(ic,ialt,jazi) = 3e9    * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic)) ! + ecl_scat(ic)*3e9
-                  clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1) * brt1 + trans1 * brt2) * (srcdir(ic)/srcdir_90(ic)) ! + ecl_scat(ic)*3e9
+                if(nlyr .eq. 2)then ! free of topo, or high topo case
+                  if(l_solar_eclipse .eqv. .false.)then
+                    clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1)*brt1 + trans1*brt2) * (srcdir(ic)/srcdir_90(ic))
+                  else
+                    clear_rad_c0(ic,ialt,jazi) = 3e9    * ((1.-trans1)*brt1 + trans1*brt2) * (srcdir(ic)/srcdir_90(ic))
+                    clear_rad_c(ic,ialt,jazi) = day_int * ((1.-trans1)*brt1 + trans1*brt2) * (srcdir(ic)/srcdir_90(ic))
+                  endif
+                else                ! single layer, hitting (low) topo
+                  if(l_solar_eclipse .eqv. .false.)then
+                    clear_rad_c(ic,ialt,jazi) = day_int *              brt1                * (srcdir(ic)/srcdir_90(ic))
+                  else
+                    clear_rad_c0(ic,ialt,jazi) = 3e9    *              brt1                * (srcdir(ic)/srcdir_90(ic))
+                    clear_rad_c(ic,ialt,jazi) = day_int *              brt1                * (srcdir(ic)/srcdir_90(ic))
+                  endif
+                endif
+
+                clear_rad_2lyr = clear_rad_c(ic,ialt,jazi)
+
+                if(dist_2_topo(ialt,jazi) .gt. 0.)then    ! hit topo
+                  aodf = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi)
+                  clear_rad_topo = day_int * &
+                        (sumi_g * rayleigh_gnd * clear_radf_c(ic,ialt,jazi) + &
+                         sumi_a * hg2t         * aodf * ssa)
+                  if(l_solar_eclipse .eqv. .false.)then ! experimental
+                    clear_rad_c(ic,ialt,jazi) = clear_rad_topo
+                  endif
                 endif
 
                 if(idebug .ge. 1 .AND. (ic .eq. 2 .or. &
@@ -494,14 +565,20 @@
                   write(6,73)day_int,elong(ialt,jazi),airmass_g,od_g &
                             ,aod_ray(ialt,jazi),aa &
                             ,od_a,alphav_g*1e3,alphav_a*1e3,od_g1,od_g2 &
-                            ,clear_rad_c(ic,ialt,jazi)
+                            ,clear_rad_2lyr            
 73                format('day_int/elg/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,f7.2,5f7.3,1x,2f7.3,1x,2f8.4,f12.0)      
                   write(6,74)altray,view_azi_deg,am_sun,solar_int_g2,aascat,scatter_order,hg2,hg2d(ic),gasfrac,aod_ill(ialt,jazi) & 
                             ,aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi),aod_dir_rat
 74                format('altaz/amsun/solarintg2/aasc/sco/hg2/hg2d/gasfrac/aodill/dir/ray/rat = ',2f8.2,6f9.4,2f10.6,3f7.3)                  
-                  write(6,75)od_1,clear_radf_c(ic,ialt,jazi),rayleigh_pf_eff,pf_eff1,brt1,brt2,trans1
-75                format('od_1/radf/pf_eff/pf_eff1/brt1/brt2/trans1',8f9.4)
+                  write(6,75)dist_2_topo(ialt,jazi),nlyr,od_1,clear_radf_c(ic,ialt,jazi),rayleigh_pf_eff,pf_eff1,brt1,brt2,trans1
+75                format('dst/nlyr/od_1/radf/pf_eff/pf_eff1/brt1/brt2/trans1',f8.0,i2,8f9.4)
+                  if(dist_2_topo(ialt,jazi) .gt. 0.)then    ! hit topo
+                    write(6,81)elong(ialt,jazi),sumi_g,rayleigh_gnd &
+                       ,clear_radf_c(ic,ialt,jazi),sumi_a,hg2t,aodf &
+                       ,clear_rad_topo      
+81                  format('elg/ig/ray/radf/ia/hg/aodf/clear_rad_topo =',f7.2,3x,3f9.4,3x,3f9.4,3x,f12.0)
+                  endif
                 endif
 
              enddo ! ic
@@ -538,8 +615,13 @@
                                       ,2x,f7.4,f7.4,f12.0)
 
               if(idebug .ge. 2)then
-                write(6,121)rmaglim
-121             format('rmaglim = ',f8.3)
+                if(altray .ne. 0 .or. view_azi_deg .le. 180.)then
+                  write(6,121)rmaglim
+121               format('rmaglim = ',f8.3)
+                else
+                  write(6,122)rmaglim
+122               format('rmaglim = ',f8.3,'    horizon')
+                endif
               endif
               write(6,*)
 
@@ -582,7 +664,7 @@
                                 * fraca * opac(od_slant) * highalt_adjust
                   sky_rad_scat(ic,ialt,:) = sky_rad_scatg + sky_rad_scata
                   clear_rad_c(ic,ialt,:) = clear_rad_c(ic,ialt,:) + sky_rad_scat(ic,ialt,:)
-                  if(ialt .eq. ialt_end)then                                   
+                  if(ialt .eq. ialt_end)then
                     scatfrac = sky_rad_scat(ic,maxalt,1) / clear_rad_c(ic,maxalt,1)
                     ri_over_i0 = clear_rad_c(ic,maxalt,1) / clear_rad_c0(ic,maxalt,1)
                     ri_over_f0 = clear_rad_c(ic,maxalt,1) / 3e9                            
@@ -592,56 +674,6 @@
                 enddo ! ialt
             enddo ! ic
         endif
-
-        return
-        end
-
-        subroutine get_airmass(alt,htmsl,patm &          ! I
-                              ,aero_refht,aero_scaleht & ! I
-                              ,earth_radius &            ! I
-                              ,ag,ao,aa)                 ! O
-
-!       Airmasses relative to zenith at sea level pressure (for gas)
-!                                    at aero refht         (for aerosol)
-
-        include 'trigd.inc'
-
-        include 'rad.inc'
-
-        zapp = 90. - alt
-
-        ztrue = zapp + refractd_app(alt ,patm)
-
-!       If alt < 0 we might calculate htmin 
-        if(alt .lt. 0)then
-          patm2 = patm
-          niter = 2; iter = 1
-          do while (iter .le. niter)
-            rk = 0.5*(patm+patm2) * 0.13 ! curvature at midpoint of ray
-            erad_eff = earth_radius / (1. - rk)
-            htmin = htmsl - erad_eff * (alt*rpd)**2 / 2.
-            patm2 = ztopsa(htmin) / 1013.25
-!           write(6,1)iter,htmin,patm,patm2
-1           format('     iter/htmin/patm/patm2 = ',i4,3f10.2)
-            iter = iter + 1
-          enddo ! while
-        endif
-
-!       Gas component for Rayleigh Scattering
-        ag = airmassf(ztrue,patm)
-
-!       Ozone component
-        ao = airmasso(zapp,htmsl) * patm_o3(htmsl)
-
-!       Aerosol component
-
-!       Note that near the horizon the aerosol airmass should
-!       exceed the gas component by the inverse square root of the
-!       respective scale heights.
-
-        patm_aero = exp(-((htmsl-aero_refht) / aero_scaleht))
-        ZZ = (min(zapp,90.)) * rpd
-        aa=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm_aero
 
         return
         end
