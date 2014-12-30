@@ -250,7 +250,9 @@
        end
 
        subroutine get_interp_parms(minidx,maxidx,intidx,idx &         ! I
-                                  ,fm,fp,im,ip,ir)                    ! O
+                                  ,fm,fp,im,ip,ir,istatus)            ! O
+
+       istatus = 1
 
        ir = mod(idx-minidx,intidx)
        if(ir .ne. 0)then
@@ -266,8 +268,8 @@
        endif
 
        if(ip .gt. maxidx .OR. im .lt. minidx)then
-           write(6,*)' ERROR in get_interp_parms',ip,im,idx,minidx,maxidx
-           stop
+           write(6,*)' ERROR in get_interp_parms',minidx,maxidx,idx,im,ip
+           istatus = 0
        endif
 
        return
