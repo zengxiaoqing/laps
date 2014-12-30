@@ -37,6 +37,8 @@
         real lil_2d(NX_L,NY_L)
         real lic_2d(NX_L,NY_L)
         real swi_2d(NX_L,NY_L)
+!       real ghi_2d(NX_L,NY_L)
+!       real dhi_2d(NX_L,NY_L)
         real static_albedo(NX_L,NY_L)
         real land_use(NX_L,NY_L)
         real snow_cover(NX_L,NY_L)
@@ -112,6 +114,7 @@
         real, allocatable, dimension(:,:,:) :: topo_albedo
         real, allocatable, dimension(:,:) :: aod_2_cloud
         real, allocatable, dimension(:,:) :: aod_2_topo
+        real, allocatable, dimension(:,:) :: dist_2_topo
         real, allocatable, dimension(:,:) :: aod_ill
         real, allocatable, dimension(:,:) :: aod_ill_dir
         real, allocatable, dimension(:,:) :: aod_tot
@@ -746,16 +749,28 @@
             call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
         endif
         
-        do j = 1,NY_L
+        write(6,*)' Row of albedobm / snow / albedo / topo'
+        jrow = NY_L/2
         do i = 1,NX_L
-          if(snow_cover(i,j) .ne. r_missing_data)then
-            do ic = 1,3
-              topo_albedo_2d(ic,i,j) = 
-     1          max(topo_albedo_2d(ic,i,j),snow_cover(i,j))
-            enddo ! ic
+          do j = 1,NY_L
+            if(snow_cover(i,j) .ne. r_missing_data)then
+              if(topo(i,j) .gt. 2000. .and. topo(i,j) .le. 3500.)then
+                snowalb = min(snow_cover(i,j),0.2)
+              else
+                snowalb = snow_cover(i,j)
+              endif
+              do ic = 1,3
+                topo_albedo_2d(ic,i,j) = 
+     1            max(topo_albedo_2d(ic,i,j),snowalb)
+              enddo ! ic
+            endif
+          enddo ! j
+          if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
+            write(6,51)i,albedo_bm(2,i,jrow),snow_cover(i,jrow)
+     1               ,topo_albedo_2d(2,i,jrow),topo(i,jrow)
+ 51         format(i5,3f9.3,f9.0)
           endif
         enddo ! i 
-        enddo ! j
 
         call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
 
@@ -827,6 +842,7 @@
           allocate(topo_albedo(nc,minalt:maxalt,minazi:maxazi))
           allocate(aod_2_cloud(minalt:maxalt,minazi:maxazi))
           allocate(aod_2_topo(minalt:maxalt,minazi:maxazi))
+          allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
           allocate(aod_ill(minalt:maxalt,minazi:maxazi))
           allocate(aod_ill_dir(minalt:maxalt,minazi:maxazi))
           allocate(aod_tot(minalt:maxalt,minazi:maxazi))
@@ -931,7 +947,7 @@
           moon_alt_2d = alm
           moon_azi_2d = azm
 
-!         Get alt_a_roll and azi_a_roll arrays (needs to be generalized)?
+!         Get alt_a_roll and azi_a_roll arrays
           do i = minalt,maxalt
             call get_val(i,minalt,alt_scale,altobj)
             alt_a_roll(i,:) = altobj
@@ -941,6 +957,11 @@
             azi_a_roll(:,j) = aziobj
           enddo
 
+          write(6,*)' alt range is ',alt_a_roll(minalt,minazi)
+     1                              ,alt_a_roll(maxalt,minazi)
+          write(6,*)' azi range is ',azi_a_roll(minalt,minazi)
+     1                              ,azi_a_roll(minalt,maxazi)
+
 !         Get line of sight from isound/jsound
           call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
      1                     ,heights_3d                           ! I
@@ -948,7 +969,9 @@
      1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
      1                     ,topo_albedo_2d                       ! I
      1                     ,topo_swi,topo_albedo                 ! O
+!    1                     ,ghi_2d,dhi_2d                        ! O
      1                     ,aod_vrt,aod_2_cloud,aod_2_topo       ! O
+     1                     ,dist_2_topo                          ! O
      1                     ,aod_ill,aod_ill_dir                  ! O
      1                     ,aod_tot,transm_obs                   ! O
      1                     ,transm_3d,transm_4d                  ! O
@@ -1174,7 +1197,8 @@
      1                    ,topo_swi,topo_albedo
      1                    ,topo_albedo_2d(2,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
-     1                    ,alt_a_roll,azi_a_roll       
+     1                    ,dist_2_topo
+     1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
      1                    ,solar_alt,solar_az! sun alt/az
@@ -1193,7 +1217,7 @@
               call writeppm3Matrix(
      1                   isky_rgb_cyl(0,:,:),isky_rgb_cyl(1,:,:)
      1                  ,isky_rgb_cyl(2,:,:),'allsky_rgb_cyl_'//clun)
-              do iaz = 0,maxazi,20
+              do iaz = minazi,maxazi,40
                write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz
      1                       ,isky_rgb_cyl(:,maxalt/2,iaz)
               enddo ! iaz
@@ -1201,7 +1225,7 @@
 
             if(l_polar .eqv. .true.)then
 !             Reproject sky_rgb array from cyl to polar    
-              do iaz = 0,maxazi,20
+              do iaz = minazi,maxazi,20
                write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz
      1                       ,sky_rgb_cyl(1,maxalt/2,iaz)
               enddo ! iaz
@@ -1211,7 +1235,7 @@
               do ic = 0,nc-1
                 call cyl_to_polar(sky_rgb_cyl(ic,:,:)
      1                           ,sky_rgb_polar(ic,:,:)
-     1                           ,minalt,maxalt,maxazi
+     1                           ,minalt,maxalt,minazi,maxazi
      1                           ,alt_scale,azi_scale
      1                           ,alt_a_polar,azi_a_polar
      1                           ,ni_polar,nj_polar)
@@ -1219,6 +1243,10 @@
 
 !             Write all sky for polar
               isky_rgb_polar = sky_rgb_polar
+              where(sky_rgb_polar .eq. r_missing_data)
+     1              isky_rgb_polar = 0
+!             write(6,*)' ipolar array',
+!    1            isky_rgb_polar(2,ni_polar/2,1:nj_polar)
               npts = 3*ni_polar*nj_polar
 !             write(6,*)' Write all sky polar text file'
 !    1                  ,isky_rgb_polar(:,255,255),npts
@@ -1252,6 +1280,7 @@
           deallocate(topo_albedo)
           deallocate(aod_2_cloud)
           deallocate(aod_2_topo)
+          deallocate(dist_2_topo)
           deallocate(aod_ill)
           deallocate(aod_ill_dir)
           deallocate(r_cloud_trans)
