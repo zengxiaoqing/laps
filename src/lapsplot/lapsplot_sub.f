@@ -168,7 +168,9 @@ cdis
      1        /'     [nt]  New Time'
      1        /' ',60x,'[q] QUIT ? ',$)
         read(lun,1111)c_section
-1111    format(a)
+1111    format(a2)
+
+        write(6,*)' c_section is :',c_section
 
         if(c_section .eq. 'nt')then
 !           write(6,*)' Setting namelist_parms%iraster to -1'
