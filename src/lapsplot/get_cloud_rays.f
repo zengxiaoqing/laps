@@ -3,7 +3,7 @@
      1                           ,rain_3d,snow_3d                       ! I
      1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d ! I
      1                           ,topo_albedo_2d                        ! I
-     1                           ,topo_swi,topo_albedo                  ! O
+     1                           ,topo_swi,topo_albedo,ghic             ! O
      1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
      1                           ,dist_2_topo                           ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
@@ -21,7 +21,7 @@
      1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
      1                           ,alt_norm                              ! I
      1                           ,moon_alt,moon_azi                     ! I
-     1                           ,moon_mag,moon_mag_thr                 ! I
+     1                           ,moon_mag,moon_mag_thr,twi_0           ! I
      1                           ,l_solar_eclipse,rlat,rlon,lat,lon     ! I
      1                           ,minalt,maxalt,minazi,maxazi           ! I
      1                           ,alt_scale,azi_scale                   ! I
@@ -86,10 +86,12 @@
         real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
         real sfc_glow(ni,nj)        ! pass into get_cloud_rad
         real ghi_2d(ni,nj)          ! derived from cloud rad 
-        real dhi_2d(ni,nj)          ! derived from cloud rad 
+        real dhi_2d(ni,nj)          ! diffuse
 
-!       logical l_process(minalt:maxalt,minazi:maxazi)
-        logical l_solar_eclipse
+!       Spectral irradiance W/m2/nm OR s/m2 normalized to solar spectrum?              
+        real ghic_2d(nc,ni,nj)      ! 2 W/m**2/nm 
+
+        logical l_solar_eclipse, l_radtran /.false./
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         parameter (nsp = 4)
@@ -116,6 +118,7 @@
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
         real topo_swi(minalt:maxalt,minazi:maxazi) ! global terrain normal irradiance
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
+        real ghic(nc,minalt:maxalt,minazi:maxazi) 
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
         real dist_2_topo(minalt:maxalt,minazi:maxazi) 
@@ -240,7 +243,7 @@
 
         endif
 
-!       Obtain surface rad from 3D cloud rad fields
+!       Obtain surface rad from 3D cloud rad fields, etc.
         do ii = 1,ni
         do jj = 1,nj
           if(sol_alt(ii,jj) .gt. 0.)then
@@ -251,18 +254,22 @@
 !               Correct for diffuse radiation at low sun altitude
                 solalt_eff = sol_alt(ii,jj) 
      1                     + (1.5 * cosd(sol_alt(ii,jj))**100.)
-
                 ghi_2d(ii,jj) = transm_3d(ii,jj,kk)    
-     1                        * sind(solalt_eff)          * 1109.46
-                dhi_2d(ii,jj) = transm_3d(ii,jj,kk)**2 
-     1                        * sind(sol_alt(ii,jj))**1.3 * 1109.46
+     1                        * sind(solalt_eff) * 1109.46
+                sb_corr = 2.0 * (1.0 - (sind(sol_alt(ii,jj))**0.5))
+                frac_dir = max(transm_3d(ii,jj,kk)**4.,.0039) ! 5 deg circ
+                dhi_2d_clr = 1109.46 * 0.09 * 10.**(-0.4*sb_corr)
+                dhi_2d(ii,jj) =
+     1                      max(dhi_2d_clr,(1.0-frac_dir)*ghi_2d(ii,jj))
+                dhi_2d(ii,jj) = min(dhi_2d(ii,jj),ghi_2d(ii,jj))
                 goto 4
               endif
             enddo ! kk
 4           continue
           else
-            ghi_2d(ii,jj) = 0.1
-            dhi_2d(ii,jj) = 0.1
+            dhi_power = max(0.4*0.7*sol_alt(ii,jj),-5.)
+            dhi_2d(ii,jj) = 28. * 10.**(dhi_power)
+            ghi_2d(ii,jj) = dhi_2d(ii,jj)
           endif
         enddo ! jj
         enddo ! ii
@@ -870,6 +877,12 @@
                     endif
                   endif
 
+                  if(l_radtran .eqv. .true.)then
+                    dopac = 1.
+                    di_a = di_a + dopac * rad * aero_ext_coeff 
+     1                          / (aero_ext_coeff + alphabar_g)
+                  endif
+
 !                 Determine backscatter threshold for averaging cloud rad
 !                 This can be refined by determining the phase of the
 !                 cloud so far in the ray traversal
@@ -970,8 +983,11 @@
 
 !                     Land illumination related to terrain slope
                       if(sol_alt(inew_m,jnew_m)  .gt. 0. )then  
-                        frac_ghi_dir = 0.9 *
-     1                               sind(sol_alt(inew_m,jnew_m))**0.5
+!                       frac_ghi_dir = 0.9 *
+!    1                               sind(sol_alt(inew_m,jnew_m))**0.5
+                        frac_ghi_dir = 
+     1                     (ghi_2d(inew_m,jnew_m)-dhi_2d(inew_m,jnew_m))
+     1                    / ghi_2d(inew_m,jnew_m)
                         alt_norm_int = sum(bi_coeff(:,:) 
      1                               * alt_norm(i1:i2,j1:j2))
                         if(alt_norm_int .gt. 0. )then
@@ -1034,7 +1050,10 @@
      1                                    ,dist_2_topo(ialt,jazi)
      1                                    ,airmass_2_topo_3d(ialt,jazi)
      1                                    ,gnd_glow(inew_m,jnew_m)
-91                    format(' Hit topo ',f8.3,f8.2,2f8.3,f8.0,2f8.3)
+     1                                    ,ghi_2d(inew_m,jnew_m)
+     1                                    ,dhi_2d(inew_m,jnew_m)
+91                    format(' Hit topo',f8.3,f8.2,2f8.3,f8.0,2f8.3
+     1                                  ,2f8.1)
                   endif
 
                   cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
@@ -1102,7 +1121,8 @@
 
 !         include '../lib/cloud/skyglow_phys.inc'
 
-          if(sol_alt(i,j) .gt. 0.)then
+!         if(sol_alt(i,j) .gt. 0.)then
+          if(obj_alt(i,j) .gt. twi_0)then ! experiment
 
 !           Get clear sky daylight brightness ratio at point
 !           (i.e. fraction of atmosphere illuminated by the sun)
