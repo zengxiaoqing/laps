@@ -2,16 +2,16 @@
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
                    r_cloud_rad,cloud_rad_c,cloud_rad_w, &
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobs, & ! I
-                   clear_radf_c,patm,htmsl, &               ! I
-                   glow,glow_sun,glow_moon,glow_stars, &    ! I
-                   od_atm_a,transm_obs,isun,jsun, &         ! I
+                   clear_radf_c,patm,htmsl, &                           ! I
+                   glow,glow_sun,glow_moon,glow_stars, &                ! I
+                   od_atm_a,transm_obs,isun,jsun, &                     ! I
                    airmass_2_cloud,airmass_2_topo, &
-                   topo_swi,topo_albedo,albedo_sfc, &       ! I
-                   aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir, & ! I
+                   topo_swi,topo_albedo,albedo_sfc, &                   ! I
+                   aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir, &        ! I
                    dist_2_topo, &
-                   alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az, &
-                   moon_alt,moon_az,moon_mag, &
-                   sky_rgb)                                 ! O
+                   alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az,twi_0, &
+                   moon_alt,moon_az,moon_mag, &                         ! I
+                   sky_rgb)                                             ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl
         include 'trigd.inc'
@@ -58,14 +58,15 @@
         real aod_ill_dir(ni,nj)     ! aerosol directly slant illuminated optical depth 
         real dist_2_topo(ni,nj)     ! distance to topo (m)
         real od_atm_a_eff(ni,nj)    ! aerosol illuminated tau per airmass
-        real od_atm_a_dir(ni,nj)    ! aerosol directly illuminated tau per airmass
-        real aod_slant(ni,nj)       ! aerosol optical depth along slant path
+        real od_atm_a_dir(ni,nj)    ! aerosol directly ill tau per airmass
+        real aod_slant(ni,nj)       ! aerosol optical depth (slant path)
         real alt_a(ni,nj)
         real azi_a(ni,nj)
-        real elong_a(ni,nj)
+        real elong_a(ni,nj)         ! elong of sun or moon
         integer idebug_a(ni,nj), idebug_pf(ni,nj)
-        real cld_radt(nc), cld_radb(nc), cld_rad(nc)
+        real cld_radt(nc), cld_radb(nc), cld_rad(nc), sky_rad(nc)
         real rintensity(nc), cld_rgb_rat(nc), glow_cld_c(nc), ref_nl(nc)
+        real rad_sec_cld(nc)
         real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
         real pf_land(nc,ni,nj)
         real bkscat_alb(ni,nj)
@@ -75,7 +76,8 @@
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag
 
-        logical l_new_color /.true./
+        integer new_color /2/
+
         logical l_solar_eclipse, l_sun_behind_terrain
 
         write(6,*)' get_sky_rgb: sol_alt = ',sol_alt
@@ -98,7 +100,7 @@
 !       0.76 mag per square arcsec
         glow_cld_day = v_to_b(-26.74 + log10(5.346e11)*2.5)
         write(6,*)' glow_cld_day (nl) = ',glow_cld_day
-        twi_alt = -4.5; twi_0 = 0.
+        twi_alt = -4.5
 
         if(sol_alt .le. 0.)then
 
@@ -122,6 +124,7 @@
           glow_secondary_cld = twi_glow_ave - glow_diff_cld
           glow_secondary_clr = twi_glow_ave - glow_diff_clr
           rindirect = 1300. * (10.**glow_secondary_cld / glow_cld_day)
+          rad_sec_cld(:) = 10.**glow_secondary_cld
 
           write(6,*)' glow_secondary_cld = ',glow_secondary_cld
           write(6,*)' glow_secondary_clr = ',glow_secondary_clr
@@ -144,23 +147,33 @@
           write(6,*)' argref/argbri = ',argref,argbri
           glwlow = 7.3 - argbri
 
-        else
+        else ! sun above horizon
           glow_secondary_cld = 1. ! dark default in daytime
+!         2.0 is mean airmasses relative to zenith, 0.5 is 90deg phase func
+          sb_corr = 2.0 * (1.0 - (sind(sol_alt)**0.5)) 
+          rad_sec_cld(:) = (day_int * ext_g(:) * patm * 2.0 * 0.5) / 10.**(0.4*sb_corr)
           glwlow = 7.3
           argbri = 0.
           contrast = 100.
         endif
         offset = 0.
+        glwmid = glwlow + 128. / contrast
         write(6,*)' glwlow/contrast/offset = ',glwlow,contrast,offset
+        write(6,*)' glwmid = ',glwmid
 
-!       ref_nl = day_int0
-!       if(l_new_color .eqv. .true.)then ! not used at present
-!         call nl_to_RGB(ref_nl(:),glwlow,contrast & 
-!                       ,offset,0,ref_red,ref_grn,ref_blu)
-!       else
-!         ref_red = 240.; ref_grn = 240.; ref_blu = 240.
-!       endif
-!       write(6,*)' ref RGB = ',ref_red,ref_grn,ref_blu
+        ref_nl = day_int0
+        if(new_color .gt. 0)then
+          call nl_to_RGB(ref_nl(:),glwmid,contrast & 
+                        ,128.,1,ref_red,ref_grn,ref_blu)
+        else
+          ref_red = 240.; ref_grn = 240.; ref_blu = 240.
+        endif
+        refcolmax = max(ref_red,ref_grn,ref_blu)
+        refred1 = (ref_red/refcolmax) * 255.
+        refgrn1 = (ref_grn/refcolmax) * 255.
+        refblu1 = (ref_blu/refcolmax) * 255.
+        write(6,4)new_color,ref_red,ref_grn,ref_blu,refred1,refgrn1,refblu1
+4       format(' newc/reference RGB = ',i2,3f7.1,3x,3f7.1)
 
 !       Redness section (sun at low solar altitude)
 !       Compare with 'get_cloud_rad' redness calculation?
@@ -194,22 +207,48 @@
             azid1 = azi_a(isun,jsun) ! nint(sol_az)
             azid2 = mod(azid1+180.,360.)
 !           azid2 = azid1 ! block antisolar az               
-        elseif(moon_alt .gt. 0.)then
+            moon_cond = 0
+        elseif(moon_alt .gt. 0. .and. sol_alt .lt. -6.)then
             azid1 = nint(moon_az)
             azid2 = mod(azid1+180.,360.)
-            azid1 = 90. ; azid2 = 270. ! block moon alt/az
+!           azid1 = 90. ; azid2 = 270. ! block moon alt/az
+            moon_cond = 1
+        else ! generic night
+            azid1 = 90. ; azid2 = 270.
+            moon_cond = 0
         endif
 !       azid1 = 90. ; azid2 = 170. ! custom
+
+        if(moon_cond .eq. 0)then ! sun
+            write(6,*)' fill elong_a array based on solar elongation'
+            call get_elong_a(1,ni,1 &                                ! I
+                     ,1,nj,1 &                                       ! I
+                     ,1,ni,1,nj &                                    ! I
+                     ,sol_alt,sol_az,alt_a,azi_a &                   ! I
+                     ,elong_a                                 )      ! O
+        else                    ! moon
+            write(6,*)' fill elong_a array based on lunar elongation'
+            call get_elong_a(1,ni,1 &                                ! I
+                     ,1,nj,1 &                                       ! I
+                     ,1,ni,1,nj &                                    ! I
+                     ,moon_alt,moon_az,alt_a,azi_a &                 ! I
+                     ,elong_a                                 )      ! O
+        endif
 
         do j = 1,nj
         do i = 1,ni
             if(abs(azi_a(i,j)-azid1) .le. .001 .OR. & 
                abs(azi_a(i,j)-azid2) .le. .001     )then ! constant azimuth
-                if(alt_a(i,j) .lt. 20. .OR. alt_a(i,j) .eq. nint(alt_a(i,j)))then
+                if(abs(alt_a(i,j)) .le. 2.0)then
+                    idebug_a(i,j) = 1
+                elseif(alt_a(i,j) .lt. 20. .AND. &
+                       alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
+                    idebug_a(i,j) = 1
+                elseif(alt_a(i,j) .eq. float((nint(alt_a(i,j))/5)*5))then
                     idebug_a(i,j) = 1
                 endif
             endif
-!           if(alt_a(i,j) .eq. -15.0)then
+!           if(alt_a(i,j) .eq. +45.0 .and. azi_a(i,j) .eq. nint(azi_a(i,j)))then
 !               idebug_a(i,j) = 1
 !           endif
         enddo ! i
@@ -341,7 +380,7 @@
             call skyglow_phys(1,ni,1 &                               ! I
                      ,1,nj,1 &                                       ! I
                      ,1,ni,1,nj,idebug_a &                           ! I
-                     ,sol_alt,sol_az,alt_a,azi_a &                   ! I
+                     ,sol_alt,sol_az,alt_a,azi_a,twi_0 &             ! I
                      ,earth_radius,patm &                            ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &           ! I
                      ,aero_scaleht,dist_2_topo &                     ! I
@@ -349,7 +388,7 @@
                      ,aod_ill,aod_2_topo &                           ! I
                      ,l_solar_eclipse,i4time,rlat,rlon &             ! I
                      ,clear_radf_c,ag_2d &                           ! I
-                     ,clear_rad_c,elong_a                     )      ! O
+                     ,clear_rad_c,elong_a                     )      ! O/I
 
             write(6,*)' range of clear_radf_c(2) is ',minval(clear_radf_c(2,:,:)),maxval(clear_radf_c(2,:,:))
             write(6,*)' range of clear_rad_c(2) is ',minval(clear_rad_c(2,:,:)),maxval(clear_rad_c(2,:,:))
@@ -360,11 +399,18 @@
               write(6,*)' clear_rad_c(2) in solar column:',clear_rad_c(2,:,jsun)
             endif
 
-        elseif(sol_alt .lt. -16. .and. moon_alt .gt. 0.)then ! sun below -16. and moon is up
+        elseif(moon_cond .eq. 1)then 
             od_atm_a_eff = od_atm_a
             od_atm_a_dir = od_atm_a
 
             write(6,*)' range of clear_radf_c is ',minval(clear_radf_c(2,:,:)),maxval(clear_radf_c(2,:,:))
+            do i = ni,1,-1
+              call get_airmass(alt_a(i,1),htmsl,patm &   ! I
+                              ,redp_lvl,aero_scaleht &   ! I
+                              ,earth_radius &            ! I
+                              ,ag,ao,aa)                 ! O 
+              ag_2d(i,:) = ag
+            enddo ! i
 
             I4_elapsed = ishow_timer()
 
@@ -372,7 +418,7 @@
             call skyglow_phys(1,ni,1 &                               ! I
                      ,1,nj,1 &                                       ! I
                      ,1,ni,1,nj,idebug_a &                           ! I
-                     ,moon_alt,moon_az,alt_a,azi_a &                 ! I
+                     ,moon_alt,moon_az,alt_a,azi_a,twi_0 &           ! I
                      ,earth_radius,patm &                            ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &           ! I
                      ,aero_scaleht,dist_2_topo &                     ! I
@@ -380,31 +426,18 @@
                      ,aod_ill,aod_2_topo &                           ! I
                      ,.false.,i4time,rlat,rlon &                     ! I
                      ,clear_radf_c,ag_2d &                           ! I
-                     ,moon_rad_c,elong_a                     )       ! O
+                     ,moon_rad_c,elong_a                     )       ! O/I
 
             glow_moon_sc(:,:) = log10(moon_rad_c(2,:,:)) + (-26.7 - moon_mag) * 0.4
             glow(:,:) = glow_moon_sc(:,:) ! experimental
 
             write(6,*)' range of moon_rad_c(2) is ',minval(moon_rad_c(2,:,:)),maxval(moon_rad_c(2,:,:))
+            write(6,*)' log correction is ',(-26.7 - moon_mag) * 0.4
             write(6,*)' range of glow_moon_sc is ',minval(glow_moon_sc(:,:)),maxval(glow_moon_sc(:,:))
             write(6,*)' range of glow is ',minval(glow(:,:)),maxval(glow(:,:))
-
-        elseif(sol_alt .lt. -6. .and. moon_alt .gt. 0.)then ! sun below -6. and moon is up
-            write(6,*)' fill elong_a array based on lunar elongation'
-            call get_elong_a(1,ni,1 &                                ! I
-                     ,1,nj,1 &                                       ! I
-                     ,1,ni,1,nj &                                    ! I
-                     ,moon_alt,moon_az,alt_a,azi_a &                 ! I
-                     ,elong_a                                 )      ! O
+            write(6,*)' moonglow1:',glow(ni/2,1:nj:10)
 
         else ! get just solar elongation
-            write(6,*)' fill elong_a array based on solar elongation'
-            call get_elong_a(1,ni,1 &                                ! I
-                     ,1,nj,1 &                                       ! I
-                     ,1,ni,1,nj &                                    ! I
-                     ,sol_alt,sol_az,alt_a,azi_a &                   ! I
-                     ,elong_a                                 )      ! O
-
             if(isun .gt. 0 .AND. jsun .gt. 0 .AND. isun .le. ni .AND. jsun .le. nj)then
                 write(6,*)' isun,jsun,am_2_topo=',isun,jsun,airmass_2_topo(isun,jsun)
 
@@ -485,21 +518,37 @@
 !               (240. is nominal intensity of a white cloud far from the sun)
 !                217 would better match -7.3 value above
 !               (0.25 is dark cloud base value)                                  
-!             Add gamma correction to pf_scat 
 !             Use surface albedo equation?
               do ic = 1,nc
-                  rad = counts_to_rad(240.)                                 * pf_scat(ic,i,j)
+                  if(new_color .ge. 2)then
+                    rad = day_int             * pf_scat(ic,i,j)
+                  else
+                    rad = counts_to_rad(240.) * pf_scat(ic,i,j)
+                  endif
+
 !                 Improve sunset clouds
 !                 rad = rad * cloud_rad_c(1,i,j) / r_cloud_rad(i,j) 
 !                 rint_top(ic) = rad_to_counts(rad)
-                  cld_radt(ic) = rad + 10.**(glow_secondary_cld+argbri)
+
+                  if(new_color .ge. 2)then
+                    cld_radt(ic) = rad * cloud_rad_c(ic,i,j) + rad_sec_cld(ic)
+                  else                 ! active < 0 solalt
+                    cld_radt(ic) = rad + 10.**(glow_secondary_cld+argbri)
+                  endif
                   rint_top(ic) = rad_to_counts(cld_radt(ic))
 
-                  rad = counts_to_rad(240. * (  0.15 * (1. + albedo_sfc) ) ) * pf_scat(ic,i,j)
+                  if(new_color .ge. 2)then
+                    rad = day_int            * (0.02 * (1. + albedo_sfc))   * pf_scat(ic,i,j)
+                    cld_radb(ic) = rad + 10.**(glow_secondary_cld)
+                  else
+                    rad = counts_to_rad(240. * (0.15 * (1. + albedo_sfc)) ) * pf_scat(ic,i,j)
+                    cld_radb(ic) = rad + 10.**(glow_secondary_cld+argbri)
+                  endif
+
 !                 Improve sunset clouds
 !                 rad = rad * cloud_rad_c(1,i,j) / r_cloud_rad(i,j)
 !                 rint_base(ic) = rad_to_counts(rad)
-                  cld_radb(ic) = rad + 10.**(glow_secondary_cld+argbri)
+
                   rint_base(ic) = rad_to_counts(cld_radb(ic))
               enddo ! ic
 
@@ -515,26 +564,39 @@
               rintensity(:) = rint_top(:)  * cld_rgb_rat(:) * r_cloud_rad(i,j) &
                             + rint_base(:) * (1.0 - r_cloud_rad(i,j))
               rintensity = max(rintensity(:),0.)
-
-              if((idebug_a(i,j) .eq. 1 .AND. abs(alt_a(i,j)) .le. 4.0) .OR. &
-                  i .eq. isun .and. j .eq. jsun)then
-!                 write(6,41)pf_scat1(i,j),elong_a(i,j),pf_snow,snow_factor,pf_scat(2,i,j),rint_base(1),r_cloud_rad(i,j),(rint_top(1)  * cld_rgb_rat(1) * r_cloud_rad(i,j)),rint_base(1) * (1.0 - r_cloud_rad(i,j)),rintensity(1)
-!                 write(6,41)pf_scat1(i,j),elong_a(i,j),cloud_od_snow,cloud_od_tot,snow_bin1,pf_snow,snow_factor,pf_scat2(i,j),pf_scat(2,i,j),rintensity(1)
-                  write(6,41)elong_a(i,j),pf_scat(2,i,j),rintensity(2) &
-                            ,r_cloud_rad(i,j),cloud_rad_c(:,i,j),rint_top(2),rint_base(2),cld_rgb_rat(2)
- 41               format(' elg/pf/rint(2)/cldrd/cldrdc = ',10f9.3)
-              endif
+              cld_rad(:) = cld_radt(:) * r_cloud_rad(i,j) & ! * cld_rgb_rat(:) 
+                         + cld_radb(:) * (1.0 - r_cloud_rad(i,j))
 
 !             Apply cloud reddening
               do ic = 1,nc
-                  trans_c(ic) = trans(ext_g(ic) * airmass_2_cloud(i,j))              
+                  trans_c(ic) = trans(ext_g(ic) * airmass_2_cloud(i,j)) 
               enddo
               rintensity(:) = rintensity(:) * (trans_c(:)/trans_c(1))**0.25 ! 0.45
+              cld_rad(:) = cld_rad(:) * trans_c(:)
+
+              if( ( idebug_a(i,j) .eq. 1 .AND. & 
+                    (abs(alt_a(i,j)) .le. 40.0 .or. i .eq. ni) )  &
+                  .OR. (i .eq. isun .and. j .eq. jsun) )then
+               if(r_cloud_3d(i,j) .gt. 0.)then
+                if(new_color .lt. 2)then
+                  write(6,41)elong_a(i,j),pf_scat(2,i,j),rintensity(2) &
+                            ,r_cloud_rad(i,j),cloud_rad_c(:,i,j),rint_top(2),rint_base(2),cld_rgb_rat(2)
+ 41               format(' elg/pf/rint(2)/cldrd/cldrdc = ',10f9.3)
+                else
+                  write(6,42)i,j,elong_a(i,j),pf_scat(2,i,j),rintensity(2)&
+                   ,trans_c(2),r_cloud_rad(i,j) &
+                   ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
+                   ,cld_radb(:)/1e6,(cld_rad(:)/1e6)/trans_c(:) &
+                   ,cld_rad(:)/1e6,rad_sec_cld(:)/1e6
+ 42               format(' elg/pf/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,5f9.3,' c',3f7.3,2x,3f6.0,2x,3f6.0,2x,3f5.0,2x,3f6.0,2x,3f6.0)
+                endif
+               endif ! cloud present
+              endif
 
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
               glow_cld = glow_secondary_cld ! + log10(r_cloud_rad(i,j))                                     
 
-              if(sol_alt .lt. -6. .and. moon_alt .gt. 0.)then
+              if(moon_cond .eq. 1)then
 !                 Add phys term for scattering by moonlight on the clouds
                   pf_scat_moon = pf_scat(2,i,j)
                   glow_cld_moon = log10(glow_cld_day * cloud_rad_c(2,i,j) * pf_scat_moon)
@@ -566,9 +628,15 @@
 
           endif
 
-          cld_red = nint(rintensity(1))                
-          cld_grn = nint(rintensity(2))                        
-          cld_blu = nint(rintensity(3))                         
+!         Note cld_rad not yet defined for sol_alt < twi_alt
+          if(new_color .lt. 2 .or. sol_alt .lt. twi_alt)then
+              cld_red = nint(rintensity(1))                
+              cld_grn = nint(rintensity(2))                        
+              cld_blu = nint(rintensity(3))                         
+          else
+              call nl_to_RGB(cld_rad(:),glwmid,contrast & 
+                            ,128.,0,cld_red,cld_grn,cld_blu)
+          endif
 
 !         Obtain brightness (glow) of clear sky
           if(sol_alt .gt. twi_0)then ! Daylight from skyglow routine
@@ -641,14 +709,14 @@
                 rog = (clear_rad_c(1,i,j) / clear_rad_c(2,i,j))**rog_exp
                 bog = (clear_rad_c(3,i,j) / clear_rad_c(2,i,j))**gamblu
 
-                if(l_new_color .eqv. .false.)then
+                if(new_color .eq. 0)then
                     clr_red = rintensity_glow * rog
                     clr_grn = rintensity_glow
                     clr_blu = rintensity_glow * bog
                 else 
 !                   call nl_to_RGB(clear_rad_c(:,i,j),glwlow,contrast & 
 !                                 ,offset,0,clr_red,clr_grn,clr_blu)
-                    glwmid = glwlow + 128. / contrast
+!                   glwmid = glwlow + 128. / contrast
                     call nl_to_RGB(clear_rad_c(:,i,j),glwmid,contrast & 
                                   ,128.,0,clr_red,clr_grn,clr_blu)
                 endif
@@ -663,6 +731,13 @@
           elseif(sol_alt .ge. -16.)then ! Twilight from clear_rad_c array
               call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),clear_rad_c_nt)
               glow_nt = log10(clear_rad_c_nt(3)) ! log nL           
+
+              if(moon_cond .eq. 1)then
+                  glow_moon_s = glow(i,j)
+              else
+                  glow_moon_s = 1.
+              endif
+              glow_nt = addlogs(glow_nt,glow_moon_s)
 
               hue = clear_rad_c(1,i,j)
               sat = clear_rad_c(2,i,j)
@@ -686,9 +761,9 @@
 
               if(airmass_2_topo(i,j) .eq. 0.)then ! free of terrain
                   frac_nt = ((10.**glow_nt) / (10.**glow_tot))**1
-                  frac_sat = frac_sec**6. ! * (1. - sat)**6.              
-!                 Presently a bit gray on the horizon for -9 degrees
-!                 Consider if secondary scattering is more than nt value?
+                  frac_sat = frac_sec**3. ! (0-1 if frac_sec is high)     
+!                 Has been a bit green on the anti-twi horizon for -9 deg
+!                 Now trying to reduce above exponent from 6 to 3
                   hueo = hue ; sato = sat
                   hue = 1.3 * frac_sat + hue * (1. - frac_sat)
                   sat = 0.4 * frac_sat + sat * (1. - frac_sat)
@@ -725,7 +800,8 @@
                 write(6,61)glow_twi,glow_secondary_clr,glow_tot,frac_sec &
                       ,frac_nt,rintensity_glow,hueo,sato,hue,sat &
                       ,nint(clr_red),nint(clr_grn),nint(clr_blu)
-61              format('Twi Sec Tot Frcs Frcn Rint',6f9.3,' hue sat RGB = ',4f9.3,3i5)
+61              format('Twi Sec Tot Frcs Frcn Rint',6f9.3 &
+                      ,' hue sat RGB = ',4f9.3,3i5)
               endif
 
           else ! Night from clear_rad_c array (default flat value of glow)
@@ -735,7 +811,7 @@
               sat = clear_rad_c_nt(2)
               glow_nt = log10(clear_rad_c_nt(3)) ! log nL           
 
-              if(moon_alt .gt. 0.)then ! add moon mag condition
+              if(moon_cond .eq. 1)then ! add moon mag condition
 !               Glow from Rayleigh, no clear_rad crepuscular rays yet
 !               argm = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15
                 glow_moon_s = glow(i,j)          ! log nL                 
@@ -750,10 +826,11 @@
 
 !!            if((idebug .eq. 1 .and. moon_alt .gt. 0.) .OR. glow_stars(2,i,j) .gt. 1.0)then
 !             if((idebug .eq. 1) .OR. glow_stars(2,i,j) .gt. 3.0)then
-!                 write(6,91)i,j,idebug,glow_nt,glow_moon_s,glow_stars(2,i,j),glow_tot
-91                format('   glow: nt/moon/stars/tot = ',3i5,4f9.3)
+              if(idebug .eq. 1)then
+                  write(6,91)i,j,idebug,elong_a(i,j),glow_nt,glow_moon_s,glow_stars(2,i,j),glow_tot
+91                format('   glow: elg/nt/moon/stars/tot = ',3i5,f7.1,4f9.3)
 !                 idebug = 1 ! for subsequent writing at this grid point
-!             endif
+              endif
 
 !             rintensity_glow = max(min(((glow_tot - 2.3) * 100.),255.),20.)
               rintensity_glow = max(min(((glow_tot - argref) * contrast + 128.),255.),20.)
@@ -766,7 +843,11 @@
           od_2_cloud = (od_atm_g + od_atm_a) * airmass_2_cloud(i,j)
 
 !         Empirical correction to account for bright clouds being visible
-          cloud_visibility = exp(-0.71*od_2_cloud) ! empirical coefficient
+          if(new_color .ge. 2)then
+            cloud_visibility = exp(     -od_2_cloud) ! empirical coeff
+          else
+            cloud_visibility = exp(-0.71*od_2_cloud) ! empirical coeff
+          endif
 
 !         Use clear sky values if cloud cover is less than 0.5
           frac_cloud = r_cloud_3d(i,j)
@@ -780,14 +861,26 @@
 !         radiatively a la topo?
           frac_clr = 1.0 - frac_cloud                          
 
-          sky_rgb(0,I,J) = clr_red * frac_clr + cld_red * frac_cloud
-          sky_rgb(1,I,J) = clr_grn * frac_clr + cld_grn * frac_cloud
-          sky_rgb(2,I,J) = clr_blu * frac_clr + cld_blu * frac_cloud
-          sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
+          if(sol_alt .gt. twi_0 .and. new_color .ge. 2)then ! Daylight (+ rad space)
+            sky_rad(:) = clear_rad_c(:,i,j) * frac_clr + cld_rad(:) * frac_cloud
+            call nl_to_RGB(sky_rad(:),glwmid,contrast & 
+                          ,128.,0,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+            sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
+          else
+            sky_rgb(0,I,J) = clr_red * frac_clr + cld_red * frac_cloud
+            sky_rgb(1,I,J) = clr_grn * frac_clr + cld_grn * frac_cloud
+            sky_rgb(2,I,J) = clr_blu * frac_clr + cld_blu * frac_cloud
+            sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
+          endif
 
           if(idebug_a(i,j) .eq. 1 .AND. abs(alt_a(i,j)) .le. 2.0)then
+            if(new_color .lt. 2)then
               write(6,*)'clr_red/cld_red/sky_rgb',clr_red,cld_red,sky_rgb(0,I,J)
-!             write(6,*)'contrast = ',contrast
+            else
+              write(6,96)clr_red,cld_rad/1e6,cld_red,sky_rgb(0,I,J)
+96            format('clr_red/cld_rad/cld_red/sky_rgb',f9.3,3f7.0,f9.3,f7.1)
+            endif
+!           write(6,*)'contrast = ',contrast
           endif
 
 !         Use topo value if airmass to topo > 0
@@ -953,7 +1046,7 @@
               if(i .eq. ni)then
                   write(6,*)' ******* zenith location *********************** od'
                   write(6,101)clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)
-101               format('clrrad/RGB = ',3f11.0,3i4)
+101               format('clrrad/RGB = ',3f12.0,3i4)
               endif
               if(abs(elong_a(i,j) - 90.) .le. 0.5)then
                   write(6,*)' ******* 90 elong location ***********************'
