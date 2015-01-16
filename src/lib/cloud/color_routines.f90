@@ -37,6 +37,11 @@
             init = 1
         endif
 
+        if(maxval(rad(:)) .eq. 0.)then
+            rc = 0.; gc = 0.; bc = 0.
+            return
+        endif
+
 !       nl_int = rgb_to_y(rad(1),rad(2),rad(3))
 
         rel_solar(:) = rad(:) / day_int
@@ -171,9 +176,20 @@
 
         subroutine xyztosrgb(x,y,z,r,g,b)
 
-        r =  3.2406*x -1.5372*y -0.4986*z
-        g = -0.9689*x +1.8758*y +0.0415*z
-        b =  0.0557*x -0.2040*y +1.0570*z
+        if(.false.)then ! D65
+            r =  3.2406*x -1.5372*y -0.4986*z
+            g = -0.9689*x +1.8758*y +0.0415*z
+            b =  0.0557*x -0.2040*y +1.0570*z
+        else            ! D50
+            r =  3.1339*x -1.6169*y -0.4906*z
+            g = -0.9785*x +1.9160*y +0.0333*z
+            b =  0.0720*x -0.2290*y +1.4057*z
+        endif
+
+!       Clip at 0. when outside the gamut
+        r = max(r,0.)
+        g = max(g,0.)
+        b = max(b,0.)
 
         return
         end
@@ -197,8 +213,9 @@
 
         if(iverbose .eq. 1)write(6,*)'  subroutine get_fluxsun',nc,wa
 
-        TS = 5780.
-        RS = 1.0 ; DS = 1.0
+        TS = 5900. ! 5780.
+        DS = 1.0 * 1.496e13 ! au to cm
+        RS = 1.0 * 6.96e10  ! solar radii to cm
         xc = 0.; yc = 0.; zc = 0.
 
         do ic = 1,nc   
@@ -206,7 +223,8 @@
           w_ang = wa(ic) * 10000.
           BB = (.0000374/(W**5.)) / (EXP(1.43/(W*TS))-1.)
           if(iverbose .eq. 1)write(6,*)'ic/w/bb',ic,w,bb
-          FA(IC)=((RS/DS)**2)*BB*1E-8
+          FA(IC)=((RS/DS)**2)*BB*1E-8 ! erg/cm2/s/A
+          FA(IC)=FA(IC) * .01         ! convert to W/m2/nm
         enddo ! ic
 
         if(iverbose .eq. 1)write(6,*)'fa sun is ',fa   
@@ -258,7 +276,7 @@
 
           if(iverbose .eq. 1)then
             write(6,1)ic,w_ang,fa(ic),xs,ys,zs,xc,yc,zc
-1           format(' ic,wa,fa',i4,f8.0,f10.0,' xyzs',3f10.0,' xyzc',3f10.0)
+1           format(' ic,wa,fa',i4,f8.0,f10.5,' xyzs',3f10.5,' xyzc',3f10.5)
           endif
  
         enddo ! ic
