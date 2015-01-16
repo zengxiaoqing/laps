@@ -236,7 +236,7 @@ cdis
         real tb8_k_offset(NX_L,NY_L)
         real t39_k(NX_L,NY_L)
         real tb8_cold_k(NX_L,NY_L)
-        real albedo(NX_L,NY_L)
+        real sat_albedo(NX_L,NY_L)
         real static_albedo(NX_L,NY_L)              ! Static albedo database
         real sfc_albedo(NX_L,NY_L)           
         real cloud_frac_vis_a(NX_L,NY_L)
@@ -351,6 +351,7 @@ cdis
         write(6,*)' Welcome to the LAPS gridded cloud analysis'
 
         lstat_radar_3dref_orig_a = .false.
+        cloud_albedo = r_missing_data ! initialize
 
         call get_i_perimeter(I_PERIMETER,istatus)
         if (istatus .ne. 1) then
@@ -707,7 +708,8 @@ C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
      1  ,elev_s                                ! ret for comparisons
      1  ,rad_s,solar_ea                        !  "   "       "   
      1  ,istat_sfc,maxstns,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH)
-
+   
+        
         if(istat_sfc .ne. 1)then
             write(6,*)' No SAO data inserted: Aborting cloud analysis'
             goto999
@@ -763,7 +765,7 @@ C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
      1     ,cf_modelfg,l_perimeter,cld_snd,wt_snd,r_missing_data
      1     ,grid_spacing_cen_m,i_snd,j_snd,n_cld_snd,max_cld_snd
      1     ,max_obs,weight_modelfg,NX_DIM_LUT,NY_DIM_LUT
-     1     ,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm,istatus)      
+     1     ,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm,istatus) 
         if(istatus .ne. 1)then
             write(6,*)
      1      ' Error: Bad status from barnes_r5, aborting cloud analysis'
@@ -853,7 +855,7 @@ C READ IN SATELLITE DATA
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,rlaps_land_frac,topo                                ! I
      1              ,cvr_snow                                            ! I
-     1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
+     1              ,cloud_frac_vis_a,sat_albedo,ihist_alb               ! O
      1              ,static_albedo,sfc_albedo                            ! O
      1              ,subpoint_lat_clo_vis,subpoint_lon_clo_vis           ! O 
      1              ,comment_alb                                         ! O
@@ -1169,7 +1171,7 @@ C INSERT RADAR DATA
 C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
         if(istat_vis .eq. 1 .OR. (istat_t39 .eq. 1 .and. l_use_39) )then
             call insert_vis(i4time,clouds_3d,cld_hts
-     1        ,topo,cloud_frac_vis_a,albedo,ihist_alb                 ! I
+     1        ,topo,cloud_frac_vis_a,sat_albedo,ihist_alb             ! I
      1        ,istat_39_a,l_use_39                                    ! I
      1        ,NX_L,NY_L,KCLOUD,r_missing_data                        ! I
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
@@ -1608,7 +1610,7 @@ C       EW SLICES
             call move(cvr_water_temp,out_array_3d(1,1,3),NX_L,NY_L)
             call move(tb8_k_offset  ,out_array_3d(1,1,4),NX_L,NY_L)
             call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
-            call move(albedo        ,out_array_3d(1,1,6),NX_L,NY_L)
+            call move(sat_albedo    ,out_array_3d(1,1,6),NX_L,NY_L)
             call move(cloud_albedo  ,out_array_3d(1,1,7),NX_L,NY_L)
             call move(rqc_2d        ,out_array_3d(1,1,8),NX_L,NY_L)
             call move(swi_2d        ,out_array_3d(1,1,9),NX_L,NY_L)
