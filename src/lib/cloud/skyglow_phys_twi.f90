@@ -308,12 +308,10 @@
               endif
 
               airmass_to_twi = airmass_unlit
-              twi_trans = exp(-.14 * 0.75 * airmass_to_twi)
               do ic = 1,nc
-                twi_trans_c(ic) = trans(ext_g(ic)*airmass_to_twi*0.75) 
+                twi_od_eff = ext_g(ic)*airmass_to_twi + aod_unlit*0.75
+                twi_trans_c(ic) = trans(twi_od_eff)
               enddo ! ic
-!             twi_trans_c(:) = trans(ext_g(:) * airmass_to_twi * 0.75) 
-!             twi_trans = twi_trans_c(1)
 
               rayleigh_gnd = rayleigh_pf(elong(ialt,jazi))
               rayleigh = rayleigh_gnd  ! phase function
@@ -468,7 +466,7 @@
                 write(6,112)altray,view_azi_deg,sol_alt &
                       ,angle_plane,dist_ray_plane,ht_ray_plane,shadow_enlarge &
                       ,patm_ray_plane,airmass_lit,airmass_unlit &
-                      ,twi_trans,clear_intf,rint_alt_ramp &
+                      ,twi_trans_c(1),clear_intf,rint_alt_ramp &
                       ,clear_rad_c(1,ialt,jazi) &
                       ,clear_rad_c(2,ialt,jazi) &
                       ,clear_rad_c(3,ialt,jazi) ! /1e9
@@ -491,47 +489,6 @@
 
          enddo ! jazi
         enddo ! ialt
-
-        if(sol_alt .ge. 0. .and. l_solar_eclipse .eqv. .true.)then
-            write(6,*)' Calling to get_sky_rad_ave in eclipse'
-            do ic = 1,nc ! secondary scattering in each color
-!               Good temporal variability, constant for spatial
-                call get_sky_rad_ave(clear_rad_c(ic,:,:) &
-                    ,view_alt,view_az,maxalt-minalt+1,maxazi-minazi+1 &
-                    ,sol_alt,sol_azi,sky_rad_ave)
-                write(6,*)' range of clear_rad_c',minval(clear_rad_c(ic,:,:)),maxval(clear_rad_c(ic,:,:))
-                od_g_vert = ext_g(ic) * patm
-                od_a_vert = aod_vrt * ext_a(ic)
-                od_vert = od_g_vert + od_a_vert
-!               Assuming non-reflective land for now
-                znave = clear_rad_c(ic,maxalt,1) / sky_rad_ave
-                highalt_adjust = max(min(-log10(znave),3.0),1.0)
-                write(6,*)'ialt_end,maxalt,znave,hadj',ialt_end,maxalt,znave,highalt_adjust
-                do ialt = ialt_start,ialt_end,ialt_delt
-                  altray = view_alt(ialt,jazi_start)
-                  arg = sind(min(max(altray,1.5),90.))
-                  od_slant = od_vert / arg                      
-                  fracg = od_g_vert / od_vert
-                  fraca = od_a_vert / od_vert
-                  if(ic .eq. 2)then
-                    write(6,*)'alt,od_slant,clear_rad_c',altray,od_slant,clear_rad_c(ic,ialt,1)
-                  endif
-                  sky_rad_scatg =        sky_rad_ave                                 & 
-                                * fracg * opac(od_slant) * highalt_adjust   
-                  sky_rad_scata = (0.4 * sky_rad_ave + 0.6 * clear_rad_c(ic,ialt,:)) & 
-                                * fraca * opac(od_slant) * highalt_adjust   
-                  sky_rad_scat(ic,ialt,:) = sky_rad_scatg + sky_rad_scata
-                  clear_rad_c(ic,ialt,:) = clear_rad_c(ic,ialt,:) + sky_rad_scat(ic,ialt,:)
-                  if(ialt .eq. ialt_end)then                                   
-                    scatfrac = sky_rad_scat(ic,maxalt,1) / clear_rad_c(ic,maxalt,1)
-                    ri_over_i0 = clear_rad_c(ic,maxalt,1) / clear_rad_c0(ic,maxalt,1)
-                    ri_over_f0 = clear_rad_c(ic,maxalt,1) / 3e9                            
-                    write(6,201)ic,sky_rad_ave,od_vert,clear_rad_c0(ic,maxalt,1),sky_rad_scat(ic,maxalt,1),clear_rad_c(ic,maxalt,1),scatfrac,ri_over_i0
-201                 format('ic/sky_rad_ave/od/c0/scat/rad/rat/scatf/ii0/if0',i2,f11.0,f6.3,f11.0,f9.0,f11.0,f7.4,2f10.7)
-                  endif ! at zenith 
-                enddo ! ialt
-            enddo ! ic
-        endif
 
         return
         end
