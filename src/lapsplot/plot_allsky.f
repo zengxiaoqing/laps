@@ -112,6 +112,7 @@
         real, allocatable, dimension(:,:) :: airmass_2_topo_3d                        
         real, allocatable, dimension(:,:) :: topo_swi                        
         real, allocatable, dimension(:,:,:) :: topo_albedo
+        real, allocatable, dimension(:,:,:) :: ghic
         real, allocatable, dimension(:,:) :: aod_2_cloud
         real, allocatable, dimension(:,:) :: aod_2_topo
         real, allocatable, dimension(:,:) :: dist_2_topo
@@ -840,6 +841,7 @@
           allocate(airmass_2_topo_3d(minalt:maxalt,minazi:maxazi))
           allocate(topo_swi(minalt:maxalt,minazi:maxazi))
           allocate(topo_albedo(nc,minalt:maxalt,minazi:maxazi))
+          allocate(ghic(nc,minalt:maxalt,minazi:maxazi))
           allocate(aod_2_cloud(minalt:maxalt,minazi:maxazi))
           allocate(aod_2_topo(minalt:maxalt,minazi:maxazi))
           allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
@@ -962,13 +964,15 @@
           write(6,*)' azi range is ',azi_a_roll(minalt,minazi)
      1                              ,azi_a_roll(minalt,maxazi)
 
+          twi_0 = 0.
+
 !         Get line of sight from isound/jsound
           call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
      1                     ,heights_3d                           ! I
      1                     ,rain_3d,snow_3d                      ! I
      1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
      1                     ,topo_albedo_2d                       ! I
-     1                     ,topo_swi,topo_albedo                 ! O
+     1                     ,topo_swi,topo_albedo,ghic            ! O
 !    1                     ,ghi_2d,dhi_2d                        ! O
      1                     ,aod_vrt,aod_2_cloud,aod_2_topo       ! O
      1                     ,dist_2_topo                          ! O
@@ -987,7 +991,7 @@
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,alt_norm                             ! I
      1                     ,moon_alt_2d,moon_azi_2d              ! I
-     1                     ,moon_mag,moon_mag_thr                ! I
+     1                     ,moon_mag,moon_mag_thr,twi_0          ! I
      1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
      1                     ,minalt,maxalt,minazi,maxazi          ! I
      1                     ,alt_scale,azi_scale                  ! I
@@ -1201,7 +1205,7 @@
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
-     1                    ,solar_alt,solar_az! sun alt/az
+     1                    ,solar_alt,solar_az,twi_0 
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
      1                    ,sky_rgb_cyl)   
 
@@ -1278,6 +1282,7 @@
           deallocate(airmass_2_topo_3d)
           deallocate(topo_swi)
           deallocate(topo_albedo)
+          deallocate(ghic)
           deallocate(aod_2_cloud)
           deallocate(aod_2_topo)
           deallocate(dist_2_topo)
