@@ -34,7 +34,7 @@
         iwrite = 0
 
         write(6,11)
-11      format('  i    j     alt_a   azi_a   sol_azi  azidiff  ', &
+11      format('  i    j   ic  alt_a   azi_a   sol_azi  azidiff  ', &
                '  ampl   snw_fac   phland   phsnow    ph1    radfrac     alb') 
 
         do j = 1,nj
@@ -43,44 +43,46 @@
             sol_clr = 1109.46 * sind(max(sol_alt,1.5))
 !           tfrac = topo_swi(i,j) / sol_clr                   
             tfrac = transm_obs      
-            if(sol_alt .lt. 2.0 .and. sol_alt .ge. 0.0)then
-                tfrac = tfrac * (sol_alt/2.0)**2
-            endif
-            radfrac = scurve(tfrac**3) ! high for illuminated clouds
-!                     illuminated                unilluminated
+            do ic = 1,nc
+              alt_thresh = 22. * ext_g(ic) 
+              if(sol_alt .lt. alt_thresh .and. sol_alt .ge. 0.0)then
+                tfrac = tfrac * (sol_alt/alt_thresh)**2
+              endif
+              radfrac = scurve(tfrac**3) ! high for illuminated clouds
+!                       illuminated                unilluminated
 
-            alb_term = scurve((1. - topo_albedo(2,i,j))**2)
-            snow_factor = 1.0 - alb_term ! 0 is land, 1 is snow
+              alb_term = scurve((1. - topo_albedo(2,i,j))**2)
+              snow_factor = 1.0 - alb_term ! 0 is land, 1 is snow
 
-            spot = radfrac * alb_term
-            arg2 = spot * 0.010 ; arg1 = (1. - arg2)
-            azidiff = angdif(azi_a(i,j),sol_azi)
-            ampl = 0.5 * cosd(sol_alt)**5 * cosd(alt_a(i,j))**5 * radfrac
+              spot = radfrac * alb_term
+              arg2 = spot * 0.010 ; arg1 = (1. - arg2)
+              azidiff = angdif(azi_a(i,j),sol_azi)
+              ampl = 0.5 * cosd(sol_alt)**5 * cosd(alt_a(i,j))**5 * radfrac
 
-            phland = exp(ampl * cosd(azidiff))
+              phland = exp(ampl * cosd(azidiff))
 
-!           Should approximately integrate to 1 over the "cylinder"
-            g = 0.3 * radfrac
-            phsnow = hg(g,azidiff) / (1. + 1.3*g**2)
+!             Should approximately integrate to 1 over the "cylinder"
+              g = 0.3 * radfrac
+              phsnow = hg(g,azidiff) / (1. + 1.3*g**2)
 
-            ph1 = phland * (1.-snow_factor) + phsnow * snow_factor
+              ph1 = phland * (1.-snow_factor) + phsnow * snow_factor
 
-            if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
-               (abs(azidiff) .lt. 0.10 .and. i .eq. (i/10)*10 .and. alt_a(i,j) .lt. 0.) )then
-                write(6,1)i,j,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl,snow_factor,phland,phsnow,ph1,radfrac,topo_albedo(2,i,j)
-1               format(i4,i5,4f9.2,6f9.4,f9.2)
-            endif
+              if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
+                 (abs(azidiff) .lt. 0.10 .and. i .eq. (i/10)*10 .and. alt_a(i,j) .lt. 0.) )then
+                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl,snow_factor,phland,phsnow,ph1,radfrac,topo_albedo(2,i,j)
+1                 format(i4,i5,i2,4f9.2,6f9.4,f9.2)
+              endif
 
-            if(elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0)then
+              if(elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0)then
                 write(6,2)elong_a(i,j),topo_swi(i,j),sol_alt,transm_obs,radfrac,alb_term,spot
 2               format(' elg/tswi/solalt/trnm/radf/albt/spot/ph-ls1',f9.3,6f9.4)
                 iwrite = iwrite + 1
-            endif
+              endif
 
-            do ic = 1,nc
               pf_land(ic,i,j) & 
                       = arg1 * ph1 & 
                       + arg2 * hg(-.90,elong_a(i,j)) 
+
             enddo ! ic
 
          enddo ! i (altitude)
