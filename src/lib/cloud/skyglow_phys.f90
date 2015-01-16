@@ -3,14 +3,14 @@
         subroutine skyglow_phys(ialt_start,ialt_end,ialt_delt     &! I
                    ,jazi_start,jazi_end,jazi_delt                 &! I
                    ,minalt,maxalt,minazi,maxazi,idebug_a          &! I
-                   ,sol_alt,sol_azi,view_alt,view_az              &! I
+                   ,sol_alt,sol_azi,view_alt,view_az,twi_0        &! I
                    ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir &! I
                    ,aero_scaleht,dist_2_topo                      &! I
                    ,htmsl,redp_lvl                                &! I
                    ,aod_ill,aod_2_topo                            &! I
                    ,l_solar_eclipse,i4time,rlat,rlon              &! I
                    ,clear_radf_c,ag_2d                            &! I
-                   ,clear_rad_c,elong                       )      ! O
+                   ,clear_rad_c,elong                       )      ! O/I
 
 !       Sky glow with solar altitude > 0
 
@@ -88,7 +88,6 @@
 
         eobsc(:,:) = 0. ! initialize
         sfc_alb = 0.15  ! pass this in and account for snow cover?
-        twi_0 = 0.
         ssa = 0.80
 
         aod_bin(1) = .000
@@ -98,6 +97,9 @@
         aod_asy(1) =  .75
         aod_asy(2) =  .70
         aod_asy(3) = -.65
+
+        fcterm = 0.05 ! range from 0.00 to 0.09 (large aerosol population)
+                      ! peak phase function of 20 to 110
 
         patm_ray = patm
 
@@ -110,6 +112,7 @@
             write(6,*)' htmsl / aero_refht = ',htmsl,aero_refht
             write(6,*)' aod_vrt = ',aod_vrt
             write(6,*)' aod_ray max = ',maxval(aod_ray)
+            write(6,*)' fcterm = ',fcterm
 !           write(6,*)' patm_ray max = ',maxval(patm_ray)
         endif
 
@@ -220,7 +223,7 @@
 !        Determine aerosol multiple scattering order
 !        altscat = 1.00 * altray + 0.00 * sol_alt
 !        altscat = max(altray,sol_alt)
-         altscat = sqrt(0.5 * (altray**2 + solalt**2))
+         altscat = sqrt(0.5 * (altray**2 + sol_alt**2))
          call get_airmass(altscat,htmsl,patm &      ! I
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius &            ! I
@@ -228,7 +231,7 @@
 !        scatter_order = 1.0 ! f(altray,sol_alt)
          scatter_order = max(aod_vrt*aascat,1.0)**1.0 ! 0.5-1.5
          scatter_order_t = 1.0
-!        write(6,*)' aod_ray/aascat/sco',aod_ray(ialt,minazi),aascat,scatter_order
+         write(6,*)' altscat/aascat/sco',altscat,aascat,scatter_order
 
 !        Determine effective asymmetry parameter from multiple scattering
 !        http://www.arm.gov/publications/proceedings/conf15/extended_abs/sakerin_sm.pdf
@@ -265,9 +268,9 @@
 !             Needed when sol_alt and altray are low
               if(sol_alt * altray .lt. 100.)then ! testing
                 if(ialt .eq. ialt_start .AND. ic .eq. 2)then
-                  idebug_clr = 1
+                  idebug_clr = 1 * idebug_a(ialt,jazi)
                 elseif(jazi .eq. jazi_start .AND. ic .eq. 2)then
-                  idebug_clr = 1
+                  idebug_clr = 1 * idebug_a(ialt,jazi)
                 else
                   idebug_clr = 0
                 endif
@@ -278,9 +281,11 @@
                      altray,view_azi_deg,od_g_vert,od_a_vert,htmsl,ssa, &
                      ag/ag_90,aa/aa_90,ag_s/ag_90,aa_s/aa_90,ags_a,aas_a, &
                      idebug_clr,srcdir_a(ic,jazi),opac_slant,nsteps,dsl,tausum_a)
-                write(6,69)ialt,jazi,ic,sol_alt,altray &
-                          ,srcdir(ic),srcdir_a(ic,jazi)
-69              format(' called get_clr_src_dir_low',i4,2i5,2f8.2,2f9.4)
+                if(idebug_clr .eq. 1)then
+                  write(6,69)ialt,jazi,ic,sol_alt,altray &
+                            ,srcdir(ic),srcdir_a(ic,jazi)
+69                format(' called get_clr_src_dir_low',i4,2i5,2f8.2,2f9.4)
+                endif
 
               else ! use generic values for azimuths every 10 degrees
                 srcdir_a(ic,jazi) = srcdir(ic)
@@ -347,7 +352,7 @@
           yo = cosd(altray) * sind(view_azi_deg)
           zo = sind(altray)
 
-          elong(ialt,jazi) = angleunitvectors(xs,ys,zs,xo,yo,zo)
+!         elong(ialt,jazi) = angleunitvectors(xs,ys,zs,xo,yo,zo)
 
           idebug = idebug_a(ialt,jazi) * 2
 
@@ -423,13 +428,14 @@
 
             hg2t = hg2
 
-            fc = 0.09 * 0.5**(scatter_order-1.0)
+            fc = fcterm * 0.5**(scatter_order-1.0)
             gc = 2300. / scatter_order**2
             hg2 = (1.-fc) * hg2 + fc * cosp(gc,elong(ialt,jazi))
 !           hg2(:) = (1.-fc) * hg2(:) + fc * cosp(gc,elong(ialt,jazi))
 
 !           topo phase function is sans scatter order
-            hg2t = (1.-0.09) * hg2t + 0.09 * cosp(2300.,elong(ialt,jazi))
+            fc = fcterm
+            hg2t = (1.-fc) * hg2t + fc * cosp(2300.,elong(ialt,jazi))
 
             if(aod_ray(ialt,jazi) .gt. 0.)then
                 aod_dir_rat = aod_ray_dir(ialt,jazi) / aod_ray(ialt,jazi)
@@ -482,7 +488,8 @@
                     nlyr = 1
                   endif
                   if(.true.)then
-                    if(idebug_a(ialt,jazi) .gt. 0 .and. ic .eq. 2)then
+                    if( idebug_a(ialt,jazi) .gt. 0 .AND. &
+                       (ic .eq. 2 .or. sol_alt .lt. 4.)     )then
                       idebug_topo = 1
                     else
                       idebug_topo = 0
@@ -556,9 +563,15 @@
                   endif
                 endif
 
+                if(dist_2_topo(ialt,jazi) .gt. 0.)then
+                  elglim = 5.0 ! catch aureole on topo
+                else
+                  elglim = 0.5
+                endif
+
                 if(idebug .ge. 1 .AND. (ic .eq. 2 .or. &
                         abs(elong(ialt,jazi)-90.) .le. 0.5 .or. &
-                        abs(elong(ialt,jazi)    ) .le. 0.5)           )then
+                            elong(ialt,jazi)      .le. elglim)         )then
                   jazim1 = max(jazi-1,minazi)
                   write(6,72)day_int,ic,jazi,eobsc(ic,jazim1:jazi)
 72                format('day_int/eobsc',f12.0,2i5,2f8.4)           
@@ -573,6 +586,8 @@
 74                format('altaz/amsun/solarintg2/aasc/sco/hg2/hg2d/gasfrac/aodill/dir/ray/rat = ',2f8.2,6f9.4,2f10.6,3f7.3)                  
                   write(6,75)dist_2_topo(ialt,jazi),nlyr,od_1,clear_radf_c(ic,ialt,jazi),rayleigh_pf_eff,pf_eff1,brt1,brt2,trans1
 75                format('dst/nlyr/od_1/radf/pf_eff/pf_eff1/brt1/brt2/trans1',f8.0,i2,8f9.4)
+                  write(6,76)ag_2d(ialt,jazi),airmass_g,gasfrac
+76                format('ag2d/airmass_g/gasfrac',f10.4,f9.3,f10.4)
                   if(dist_2_topo(ialt,jazi) .gt. 0.)then    ! hit topo
                     write(6,81)elong(ialt,jazi),sumi_g,rayleigh_gnd &
                        ,clear_radf_c(ic,ialt,jazi),sumi_a,hg2t,aodf &
@@ -632,9 +647,11 @@
 
         I4_elapsed = ishow_timer()
 
-        if(sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.) .OR. &
-          (sol_alt .lt. 0. .and. sol_alt .gt. twi_0)              )then
-            write(6,*)' Calling to get_sky_rad_ave in eclipse'
+!       write(6,*)' clearrad1:',clear_rad_c(2,maxalt/2,1:50)
+
+        if( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
+            (sol_alt .lt. 1. .and. sol_alt .gt. twi_0)               )then
+            write(6,*)' Calling get_sky_rad_ave'
             do ic = 1,nc ! secondary scattering in each color
 !               Good temporal variability, constant for spatial
                 call get_sky_rad_ave(clear_rad_c(ic,:,:) &
@@ -674,6 +691,8 @@
                 enddo ! ialt
             enddo ! ic
         endif
+
+        write(6,*)' clearrad2:',clear_rad_c(2,maxalt/2,minazi:maxazi:10)
 
         return
         end
