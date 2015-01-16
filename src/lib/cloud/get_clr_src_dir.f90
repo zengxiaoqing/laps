@@ -75,9 +75,10 @@
          opac_curr = opac(tausum)
          do = opac_curr - opac_last
 
+!        Experiment with in tandem with 'skyglow_phys'
 !        rad = 1.0
          rad = trans(od_solar_slant)
-         rad = max(rad,.03) ! secondary scattering
+         rad = max(rad,.01) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
          if(dtau .gt. 0.)then
@@ -204,7 +205,7 @@
 
 !        rad = 1.0
          rad = trans(od_solar_slant)
-         rad = max(rad,.03) ! secondary scattering
+         rad = max(rad,.01) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
          if(dtau .gt. 0.)then
@@ -298,7 +299,7 @@
      httopill = max(130000.-sind(solalt)*90000.,40000.)
      htbotill = -(htmsl + 500.)
 
-     if(idebug .eq. 1)then
+     if(idebug .eq. 1)then ! substitute radg/rada?
        write(6,*)'     sbar    htbar    dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g   sumi_a opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
@@ -335,7 +336,9 @@
 
 !        rad = 1.0
          rad = trans(od_solar_slant)
-         rad = max(rad,.03) ! secondary scattering
+         radg = max(rad,.01) ! secondary scattering
+         rada = max(rad,.001) ! secondary scattering
+         rad = max(rad,.01) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
          if(dtau .gt. 0.)then
@@ -344,9 +347,9 @@
              ssa_eff = 1.0
          endif
 
-         di   = do * rad * ssa_eff
-         di_g = do * rad * alphabar_g / (alphabar_g + alphabar_a)
-         di_a = do * rad * alphabar_a / (alphabar_g + alphabar_a)
+         di   = do * rad  * ssa_eff
+         di_g = do * radg * alphabar_g / (alphabar_g + alphabar_a)
+         di_a = do * rada * alphabar_a / (alphabar_g + alphabar_a)
 
          sumi   = sumi   + di
          sumi_g = sumi_g + di_g
