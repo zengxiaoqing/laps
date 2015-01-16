@@ -198,6 +198,9 @@
                stop
              endif
 
+           elseif(objalt .lt. 3.0 .and. if .eq. 1)then
+             s = float(ls) * grid_spacing_m
+
            else
              s = float(ls) * raysteps
 
@@ -382,6 +385,7 @@
 
      nshadow = 0
      if(solalt .ge. twi_alt)then ! daylight or early twilight
+       imiss = 0
        do k = 1,nk
          patm_k = exp(-heights_1d(k)/8000.)
 !        patm_k = ztopsa(heights_1d(k)) / 1013.
@@ -399,6 +403,10 @@
 
          do i = 1,ni; do j = 1,nj
            if(transm_3d(i,j,k) .eq. r_missing_data)then
+             imiss = imiss + 1
+             if(imiss .le. 10)then
+               write(6,*)' missing at ',i,j,k
+             endif
              if(i .eq. 10 * (i/10) .and. j .eq. 10 * (j/10))then
                write(6,*)' missing at ',i,j,k
              endif
@@ -410,8 +418,7 @@
 !          elseif(transm_3d(i,j,k) .gt. 1.)then
 !            write(6,*)' ERROR: transm_3d > 1',i,j,k,transm_3d(i,j,k)
 !            stop
-           else
-!            Calculate transm_4d
+           else ! Calculate transm_4d
              refraction = 0.5 ! typical value near horizon
 
              obj_alt_cld = obj_alt(i,j) + horz_dep_d + refraction
