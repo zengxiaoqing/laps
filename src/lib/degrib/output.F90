@@ -325,8 +325,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
      real :: vwbg_sfc(nx,ny)
      real :: shbg_sfc(nx,ny)
      real :: tdbg_sfc(nx,ny)
-     real :: tpbg_sfc(nx,ny)
-     real :: t_at_sfc(nx,ny)
+     real :: tpbg_sfc(nx,ny) ! 2m temp
+     real :: t_at_sfc(nx,ny) ! skin temp
      real :: htbg_sfc(nx,ny)
      real :: mslpbg(nx,ny)
      real :: pcpbg(nx,ny)
@@ -400,7 +400,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
               elseif (field.eq.'GEOPT_SFC') then
                  htbg_sfc = scr2d
               elseif (field.eq.'TT_SKIN') then
-                 tpbg_sfc = scr2d
+                 t_at_sfc = scr2d
               elseif (field.eq.'TD_SFC') then
                  tdbg_sfc = scr2d 
                  write(6,*)' Filling tdbg_sfc with TD_SFC'
@@ -418,7 +418,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
               elseif (field.eq.'VV_SFC') then
                  vwbg_sfc = scr2d
               elseif (field.eq.'TT_SFC') then
-                 t_at_sfc = scr2d
+                 tpbg_sfc = scr2d
               elseif (field.eq.'PSFC') then
                  prbg_sfc = scr2d
                  write(6,*)' Filling prbg_sfc with PSFC'
