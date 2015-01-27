@@ -28,7 +28,7 @@ include 'lapsparms.for'
         integer iverbose
         real    r_missing_data
         integer  MAX_RADARS
-        real aod,aod_bin(3),aod_asy(3)
+        real aod,aod_bin(3),aod_asy(3),fcterm
         real aero_scaleht
         real ref_base
         real ref_base_useable
@@ -224,7 +224,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,model_cycle_time, model_fcst_intvl, model_fcst_len &
                   ,purge_time &
                   ,i2_missing_data, iverbose, r_missing_data, MAX_RADARS, i_offset_radar &
-                  ,aod,aod_bin,aod_asy,aero_scaleht,ref_base,ref_base_useable,r_hybrid_first_gate &
+                  ,aod,aod_bin,aod_asy,fcterm,aero_scaleht,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
                   ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
                   ,hydrometeor_scale_pcp,hydrometeor_scale_cld &
@@ -364,6 +364,7 @@ elseif (namelist_name == 'lapsparms') then
    i_offset_radar = -1
    aod = 0.05              ! default column aerosol optical depth
    aero_scaleht = 1500.    ! default aerosol scale height (m)
+   fcterm = 0.09           ! range from 0.00 to 0.09 for large aerosols
 
 !  fraction of aerosols in each bin & asymmetry factor
 !  Factor of 2 back scatter increase from minimum, peak of 50
