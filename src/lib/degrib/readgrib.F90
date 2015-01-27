@@ -252,8 +252,8 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real :: vwbg_sfc(nx,ny)
   real :: shbg_sfc(nx,ny)
   real :: tdbg_sfc(nx,ny)
-  real :: tpbg_sfc(nx,ny)
-  real :: t_at_sfc(nx,ny)
+  real :: tpbg_sfc(nx,ny) ! 2m temp
+  real :: t_at_sfc(nx,ny) ! skin temp
   real :: htbg_sfc(nx,ny)
   real :: mslpbg(nx,ny)
   real :: pcpbg(nx,ny)
