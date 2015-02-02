@@ -5725,7 +5725,7 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
      1                         ,n_image,scale,'hsect',plot_parms
      1                         ,namelist_parms)        
-                elseif(var_2d .eq. 'TSF')then
+                elseif(var_2d .eq. 'TSF' .or. var_2d .eq. 'TGD')then
                     call ccpfil(field_2d,NX_L,NY_L,sfctf_l,sfctf_h      
      1                         ,'temp',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
