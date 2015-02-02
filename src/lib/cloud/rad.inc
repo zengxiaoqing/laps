@@ -27,9 +27,14 @@
         erf(x) = 1.-1./(1.+.278393*x+.230389*x**2+.000972*x**3+.078108*x**4)**4
         gaussint(x) = 0.5 * sqrt(pi) * (1. - erf(abs(x)) * x/(abs(x)+1e-6))
 
+        parameter (h_o3 = 25000.)
+        parameter (d_o3 = 5000.)
+
 !       patm_o3(ht) = max(min((32000. - ht) / 14000.,1.0),0.)
 !       patm_o3(ht) = 1.0 - (gaussint((ht-25000.)/5000.) / 1.77245)
         patm_o3(ht) =        gaussint((ht-25000.)/5000.) / 1.77245 
+
+        alpha_o3(ext_o3,htmsl) = (ext_o3 * exp(-((htmsl-h_o3)/d_o3)**2)) / (d_o3 * sqrt(pi))
 
         hg(g,pha) = (1.-g**2) / (1. + g**2 - 2.*g*cosd(pha))**1.5
 
@@ -40,7 +45,7 @@
         data ext_g /.090,.144,.312/    ! 0.14 * (wa/.55)**(-4)              
 
         real ext_o(nc)                 ! od per airmass
-        data ext_o /.000,.016,.004/    ! scaled to 1/2 Schaeffer "OZ" values
+        data ext_o /.037,.029,.001/    ! interp from gflash.bas (300DU)
 
 !       real wa(nc)                    ! wavelength (um)
 !       data wa    /.615,.546,.450/
