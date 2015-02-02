@@ -149,7 +149,7 @@
             endif ! alt > -2.
         enddo ! jazi
         enddo ! ialt
-
+ 
         return
         end 
 
@@ -415,10 +415,11 @@
 
         if(cnt .gt. 0.)then
             twi_glow_ave = log10(sum/cnt)
-        else
-            write(6,*)' ERROR in get_twi_glow_ave'
-            write(6,*)' sol_az = ',sol_az
-            twi_glow_ave = 1.0
+        else ! tested at -6.2 degrees
+            write(6,*)' WARNING in get_twi_glow_ave - using empirical function'
+            twi_glow_ave = 8.8 + (sol_alt*0.3)
+            write(6,*)' sol_alt/sol_az/twi_glow_ave = ' &
+                       ,sol_alt,sol_az,twi_glow_ave
         endif
 
         return
@@ -495,56 +496,6 @@
         real glow_aurora(3,minalt:maxalt,minazi:maxazi) ! log nL
         real alt_a(minalt:maxalt,minazi:maxazi)
         real azi_a(minalt:maxalt,minazi:maxazi)
-
-        return
-        end
-
-        subroutine get_airmass(alt,htmsl,patm &          ! I
-                              ,aero_refht,aero_scaleht & ! I
-                              ,earth_radius &            ! I
-                              ,ag,ao,aa)                 ! O
-
-!       Airmasses relative to zenith at sea level pressure (for gas)
-!                                    at aero refht         (for aerosol)
-
-        include 'trigd.inc'
-
-        include 'rad.inc'
-
-        zapp = 90. - alt
-
-        ztrue = zapp + refractd_app(alt ,patm)
-
-!       If alt < 0 we might calculate htmin 
-        if(alt .lt. 0)then
-          patm2 = patm
-          niter = 2; iter = 1
-          do while (iter .le. niter)
-            rk = 0.5*(patm+patm2) * 0.13 ! curvature at midpoint of ray
-            erad_eff = earth_radius / (1. - rk)
-            htmin = htmsl - erad_eff * (alt*rpd)**2 / 2.
-            patm2 = ztopsa(htmin) / 1013.25
-!           write(6,1)iter,htmin,patm,patm2
-1           format('     iter/htmin/patm/patm2 = ',i4,3f10.2)
-            iter = iter + 1
-          enddo ! while
-        endif
-
-!       Gas component for Rayleigh Scattering
-        ag = airmassf(ztrue,patm)
-
-!       Ozone component
-        ao = airmasso(zapp,htmsl) * patm_o3(htmsl)
-
-!       Aerosol component
-
-!       Note that near the horizon the aerosol airmass should
-!       exceed the gas component by the inverse square root of the
-!       respective scale heights.
-
-        patm_aero = exp(-((htmsl-aero_refht) / aero_scaleht))
-        ZZ = (min(zapp,90.)) * rpd
-        aa=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm_aero
 
         return
         end
