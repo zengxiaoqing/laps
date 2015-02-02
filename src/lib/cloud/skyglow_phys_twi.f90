@@ -68,7 +68,7 @@
         real view_az(minalt:maxalt,minazi:maxazi)
 
         parameter (nsc = 3)
-        real aod_asy_eff(nsc) ! ,nc (add nc dimension throughout)
+!       real aod_asy_eff(nsc) ! ,nc (add nc dimension throughout)
 
         logical l_solar_eclipse
 
@@ -108,48 +108,53 @@
         endif
 
 !       Obtain reference values of source term
-        call get_airmass(90.,htmsl,patm &           ! I
-                         ,aero_refht,aero_scaleht & ! I
-                         ,earth_radius &            ! I
-                         ,ag_90,ao_90,aa_90)        ! O
+!       call get_airmass(90.,htmsl,patm &           ! I
+!                        ,aero_refht,aero_scaleht & ! I
+!                        ,earth_radius,1 &          ! I
+!                        ,ag_90,ao_90,aa_90)        ! O
 
 !       Obtain reference values for sun             
-        call get_airmass(sol_alt,htmsl,patm &       ! I
-                         ,aero_refht,aero_scaleht & ! I
-                         ,earth_radius &            ! I
-                         ,ag_s,ao_s,aa_s)           ! O
+!       call get_airmass(sol_alt,htmsl,patm &       ! I
+!                        ,aero_refht,aero_scaleht & ! I
+!                        ,earth_radius,1 &          ! I
+!                        ,ag_s,ao_s,aa_s)           ! O
 
         do ialt = ialt_start,ialt_end,ialt_delt
   
          altray = view_alt(ialt,jazi_start)
+         if(altray .eq. nint(altray))then
+           iverbose = 1
+         else
+           iverbose = 0
+         endif
          call get_airmass(altray,htmsl,patm &       ! I
                          ,aero_refht,aero_scaleht & ! I
-                         ,earth_radius &            ! I
+                         ,earth_radius,iverbose &   ! I
                          ,ag,ao,aa)                 ! O
 
 !        Determine aerosol multiple scattering order
 !        altscat = 1.00 * altray + 0.00 * sol_alt
 !        altscat = max(altray,sol_alt)
-         altscat = sqrt(0.5 * (altray**2 + solalt**2))
-         call get_airmass(altscat,htmsl,patm &      ! I
-                         ,aero_refht,aero_scaleht & ! I
-                         ,earth_radius &            ! I
-                         ,agdum,aodum,aascat)       ! O
+!        altscat = sqrt(0.5 * (altray**2 + solalt**2))
+!        call get_airmass(altscat,htmsl,patm &      ! I
+!                        ,aero_refht,aero_scaleht & ! I
+!                        ,earth_radius,1 &          ! I
+!                        ,agdum,aodum,aascat)       ! O
 !        scatter_order = 1.0 ! f(altray,sol_alt)
-         scatter_order = max(aod_vrt*aascat,1.0)**1.0 ! 0.5-1.5
+!        scatter_order = max(aod_vrt*aascat,1.0)**1.0 ! 0.5-1.5
 !        write(6,*)' aod_ray/aascat/sco',aod_ray(ialt,minazi),aascat,scatter_order
 
 !        Determine effective asymmetry parameter from multiple scattering
 !        http://www.arm.gov/publications/proceedings/conf15/extended_abs/sakerin_sm.pdf
-         do isc = 1,nsc
-           if(aod_asy(isc) .gt. 0.)then
-              aod_asy_eff(isc) = aod_asy(isc) ** scatter_order
-           elseif(aod_asy(isc) .lt. 0.)then
-              aod_asy_eff(isc) = -(abs(aod_asy(isc)) ** scatter_order)
-           else
-              aod_asy_eff(isc) = 0. 
-           endif
-         enddo ! isc
+!        do isc = 1,nsc
+!          if(aod_asy(isc) .gt. 0.)then
+!             aod_asy_eff(isc) = aod_asy(isc) ** scatter_order
+!          elseif(aod_asy(isc) .lt. 0.)then
+!             aod_asy_eff(isc) = -(abs(aod_asy(isc)) ** scatter_order)
+!          else
+!             aod_asy_eff(isc) = 0. 
+!          endif
+!        enddo ! isc
 
 !        cosp_frac = max(1.-scatter_order,0.)
 
@@ -157,12 +162,12 @@
          if(.false.)then
            ags_a = ag_s/ag_90
            aas_a = aa_s/aa_90
-         else
+         elseif(.false.)then
            do isolalt = -5,+5
              sol_alt_a = sol_alt + float(isolalt)
              call get_airmass(sol_alt_a,htmsl,patm &    ! I
                              ,aero_refht,aero_scaleht & ! I
-                             ,earth_radius &            ! I
+                             ,earth_radius,1 &          ! I
                              ,ag_s,ao_s,aa_s)           ! O
              ags_a(isolalt) = ag_s / ag_90
              aas_a(isolalt) = aa_s / aa_90
