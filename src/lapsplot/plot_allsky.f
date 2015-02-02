@@ -142,7 +142,7 @@
         integer, allocatable, dimension(:,:,:) :: isky_rgb_cyl
 
         integer maxloc
-        parameter (maxloc = 10)
+        parameter (maxloc = 1000)
 
         real xsound(maxloc),ysound(maxloc)
         real soundlat(maxloc),soundlon(maxloc)
@@ -807,6 +807,10 @@
      1                 ,aod_3d)
 
         I4_elapsed = ishow_timer()
+
+        rlat_last = 0.
+        rlon_last = 0.
+        i4time_last = 0.
       
         do iloc = 1,nloc
           write(6,*)
@@ -868,6 +872,15 @@
 
           rlat = lat(isound,jsound)
           rlon = lon(isound,jsound)
+
+          if(rlat .ne. rlat_last .or. rlon .ne. rlon_last .or. 
+     1       i4time_solar .ne. i4time_last)then
+            newloc = 1
+          else
+            newloc = 0
+          endif
+          rlat_last = rlat; rlon_last = rlon; i4time_last = i4time_solar
+          write(6,*)' newloc = ',newloc
 
           write(6,*)' solar alt/az (2d array)',sol_alt_2d(isound,jsound)       
      1                                        ,sol_azi_2d(isound,jsound) 
@@ -964,7 +977,7 @@
           write(6,*)' azi range is ',azi_a_roll(minalt,minazi)
      1                              ,azi_a_roll(minalt,maxazi)
 
-          twi_0 = 0.
+          twi_0 = -0.0 ! testing from 0.0 and -4.0 
 
 !         Get line of sight from isound/jsound
           call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
@@ -986,7 +999,7 @@
      1                     ,htmsl                                ! O
      1                     ,htagl(iloc)                          ! I
      1                     ,aod_ref                              ! I
-     1                     ,NX_L,NY_L,NZ_L,isound,jsound         ! I
+     1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,alt_norm                             ! I
@@ -1193,7 +1206,7 @@
      1                    ,blog_sun_roll     ! sunglow
      1                    ,blog_moon_roll    ! moonglow
      1                    ,glow_stars        ! starglow
-     1                    ,aod_vrt 
+     1                    ,aod_vrt,aod_ref 
      1                    ,transm_obs        ! observer illumination
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
