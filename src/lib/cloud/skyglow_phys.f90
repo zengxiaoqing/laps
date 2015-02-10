@@ -42,7 +42,8 @@
         real twi_trans_c(nc)           ! transmissivity
 
         real hg2d(nc), alphav_g, alphav_a ! hg2(nc)
-        real srcdir_90(nc),srcdir(nc),clear_int_c(nc),sumigc(nc),sumiac(nc)
+        real srcdir_90(nc),srcdir(nc),clear_int_c(nc)
+        real sumi_gc(nc),sumi_ac(nc)
         real srcdir_a(nc,minazi:maxazi)
         real sumi_g_a(nc,minazi:maxazi),sumi_a_a(nc,minazi:maxazi)
         real ecl_intd(nc),ecl_dir_rat(nc),ecl_scat(nc)
@@ -203,9 +204,11 @@
             else
                 aa_s_o_aa_90 = 0.
             endif
-            call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert,htmsl, &
-                ssa90,ag_90/ag_90,aa_90_o_aa_90,ag_s/ag_90,aa_s_o_aa_90, &
-                idebug,srcdir_90(ic),opac_slant,nsteps,ds,tausum_a)
+            call get_clr_src_dir(sol_alt,90.,od_g_vert,od_a_vert, &
+                htmsl,ssa90,ag_90/ag_90,ao_90,aa_90_o_aa_90, &
+                ag_s/ag_90,aa_s_o_aa_90,ic,idebug, &
+                srcdir_90(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
+                nsteps,ds,tausum_a)
             write(6,*)' Returning with srcdir_90 of ',srcdir_90(ic)
           enddo ! ic
         endif
@@ -217,6 +220,7 @@
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius,1 &          ! I
                          ,ag,ao,aa)                 ! O
+         write(6,*)' returned from get_airmass with alt/ao = ',altray,ao
 
 !        write(6,*)'az range at this alt1',ialt,minval(view_az(ialt,:)) &
 !                                              ,maxval(view_az(ialt,:))
@@ -228,7 +232,8 @@
              od_o_vert = ext_o(ic) * patm_o3(htmsl)
              od_a_vert = aod_vrt * ext_a(ic)
 !            if((l_solar_eclipse .eqv. .true.) .AND. ic .eq. 2)then
-             if(ic .eq. 2)then
+             if((ic .eq. 2 .and. altray .eq. nint(altray)) .OR. &
+                                 altray .eq. 90.)then
                idebug = 1
                write(6,*)' alt/ag/aa =',altray,ag,aa
                write(6,*)' call get_clr_src_dir for altitude ',altray
@@ -243,8 +248,10 @@
                  aa_s_o_aa_90 = 0.
              endif
              call get_clr_src_dir(sol_alt,altray,od_g_vert,od_a_vert, &
-                htmsl,ssa,ag/ag_90,aa_o_aa_90,ag_s/ag_90,aa_s_o_aa_90, &
-                idebug,srcdir(ic),opac_slant,nsteps,ds,tausum_a)
+                htmsl,ssa,ag/ag_90,ao,aa_o_aa_90, &
+                ag_s/ag_90,aa_s_o_aa_90,ic,idebug, &
+                srcdir(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
+                nsteps,ds,tausum_a)
 
              if(l_solar_eclipse .eqv. .true.)then
                do iopac = 1,nopac
@@ -333,9 +340,10 @@
               if((sol_alt * altray .lt. 100.) .AND. &
                  (l_2lyr .eqv. .true.)           )then ! testing
                 if(jazi .eq. jazi_start .AND. altray .eq. nint(altray) &
+                                        .AND. sol_alt .ge. 0. &
                                         .AND. ic .eq. 2)then
                   idebug_clr = 1 ! * idebug_a(ialt,jazi)
-                elseif(sol_alt .ge. twi_0 .AND. ic .eq. 2)then
+                elseif(sol_alt .ge. twi_0 .AND. (ic .eq. 2 .or. altray .eq. 90.))then
 !               elseif(ialt .eq. ialt_start .AND. ic .eq. 2)then
                   idebug_clr = 1 * idebug_a(ialt,jazi)
                 else
@@ -344,8 +352,8 @@
 
                 if(idebug_clr .eq. 1)then
                   write(6,68)ialt,jazi,ic,sol_alt,altray,view_azi_deg &
-                            ,dmintopo,dmaxtopo
-68                format(/' call   get_clr_src_dir_low',i4,2i5,3f8.2,2f9.0)
+                            ,dmintopo,dmaxtopo,ao
+68                format(/' call   get_clr_src_dir_low',i4,2i5,3f8.2,2f9.0,f9.3)
                 endif
                 if(aa_90 .gt. 0.)then
                   aa_o_aa_90 = aa/aa_90
@@ -357,10 +365,10 @@
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
                   altray,view_azi_deg, &
                   ext_g(ic),od_g_vert,ext_o(ic),od_o_vert,od_a_vert,htmsl,ssa, &
-                  ag/ag_90,aa_o_aa_90, &
+                  ag/ag_90,ao,aa_o_aa_90, &
                   aod_ref,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
-                  ags_a,aas_a,idebug_clr, &
+                  ags_a,aas_a,ic,idebug_clr, &
                   srcdir_a(ic,jazi),sumi_g_a(ic,jazi),sumi_a_a(ic,jazi),&
                   opac_slant,nsteps,dsl,tausum_a)
                 if(idebug_clr .eq. 1)then
@@ -371,6 +379,8 @@
 
               else ! use generic values for azimuths every 10 degrees
                 srcdir_a(ic,jazi) = srcdir(ic)
+                sumi_g_a(ic,jazi) = sumi_gc(ic)
+                sumi_a_a(ic,jazi) = sumi_ac(ic)
 
               endif
             enddo ! ic
@@ -415,7 +425,7 @@
           view_altitude_deg = altray
           view_azi_deg = view_az(ialt,jazi)
 
-!         Interp srcdir(:), sumigc, sumiac
+!         Interp srcdir(:), sumi_gc, sumi_ac
           if(jazi .lt. jazi_end)then
             jazi_interpl = ((jazi-1)/jazi_d10) * jazi_d10 + 1
           else
@@ -425,10 +435,10 @@
           fazi = (float(jazi) - float(jazi_interpl)) / float(jazi_d10)
           srcdir(:) = (1.-fazi) * srcdir_a(:,jazi_interpl) & ! testing
                     +     fazi  * srcdir_a(:,jazi_interph)
-          sumigc(:) = (1.-fazi) * sumi_g_a(:,jazi_interpl) & ! testing
-                    +     fazi  * sumi_g_a(:,jazi_interph)
-          sumiac(:) = (1.-fazi) * sumi_a_a(:,jazi_interpl) & ! testing
-                    +     fazi  * sumi_a_a(:,jazi_interph)
+          sumi_gc(:) = (1.-fazi) * sumi_g_a(:,jazi_interpl) & ! testing
+                     +     fazi  * sumi_g_a(:,jazi_interph)
+          sumi_ac(:) = (1.-fazi) * sumi_a_a(:,jazi_interpl) & ! testing
+                     +     fazi  * sumi_a_a(:,jazi_interph)
 
           xs = cosd(sol_alt) * cosd(sol_azi)
           ys = cosd(sol_alt) * sind(sol_azi)
@@ -514,12 +524,13 @@
 
             hg2t = hg2
 
+!           non-topo phase function with variable scatter order
             fc = fcterm * 0.5**(scatter_order-1.0)
             gc = 2300. / scatter_order**2
             hg2 = (1.-fc) * hg2 + fc * cosp(gc,elong(ialt,jazi))
 !           hg2(:) = (1.-fc) * hg2(:) + fc * cosp(gc,elong(ialt,jazi))
 
-!           topo phase function is sans scatter order
+!           topo phase function assumes scatter order is 1
             fc = fcterm
             hg2t = (1.-fc) * hg2t + fc * cosp(2300.,elong(ialt,jazi))
 
@@ -552,18 +563,37 @@
             rayleigh_pfunc = rayleigh_pf(elong(ialt,jazi))
             rayleigh_gnd = rayleigh_pfunc + sfc_alb * sind(sol_alt)
 
-            if(sol_alt .lt. 0.)then ! sun below horizon (simple approach)
-              mode_sky = 4
+            if(htmsl .le. 150000. .and. dist_2_topo(ialt,jazi) .eq. 0.)then ! test
+!           if(sol_alt .lt. 0.)then ! sun below horizon (operational)
+              mode_sky = 4 ! simple approach
               do ic = 1,nc
                 day_int = 3e9 * (1.0 - eobsc(ic,jazi))
+
+                gasf = ag_2d(ialt,jazi) / airmass_g
+
+!               od_a = aod_ref * aa * ext_a(ic)  ! slant od
+                od_a_slant = od_a_vert * aa_o_aa_90 
+                od_a = od_slant
+                if(od_a_slant .gt. 0.)then
+                  aodf = min(aod_ill(ialt,jazi)/od_a_slant,1.0)
+                else
+                  aodf = 1.0
+                endif
+
+!               We can still add in gasf and aodf
                 clear_rad_c(ic,ialt,jazi) = day_int * &
-                    (rayleigh_pfunc * sumigc(ic)) + (hg2d(ic) * sumiac(ic))
-                if(idebug .ge. 1 .and. ic .eq. 2)then
-                  write(6,71)day_int,elong(ialt,jazi) &
-                      ,sumigc(ic),sumiac(ic) &
-                      ,rayleigh_pfunc,hg2,hg2d(ic),clear_rad_c(2,ialt,jazi)
-71                format('day_int/elong/sumi_g/sumi_a/rayleigh', &
-                         '/hg2/hg2d/clrrd2',f12.0,6f8.3,f12.0)      
+                    (rayleigh_pfunc * sumi_gc(ic) * gasf + &
+                     hg2d(ic)       * sumi_ac(ic) * aodf   )
+
+                if(idebug .ge. 1 .AND. &
+                                      (ic .eq. 2 .or. altray .eq. 90.))then
+                  write(6,71)ic,day_int,elong(ialt,jazi) &
+                      ,sumi_gc(ic),sumi_ac(ic),gasf,aodf &
+                      ,rayleigh_pfunc,hg2,hg2d(ic) &
+                      ,clear_rad_c(ic,ialt,jazi)
+71                format('day_int/elong/sumi_g/sumi_a/gasf/aodf', &
+                         '/rayleigh/hg2/hg2d/clrrd', &
+                         i2,f12.0,f8.3,2x,2f8.3,2x,2f8.3,2x,3f8.3,f12.0)      
                 endif
               enddo ! ic
 
@@ -577,7 +607,7 @@
                 day_int = 3e9 * (1.0 - eobsc(ic,jazi))
                 od_per_am = ext_g(ic)
                 rayleigh = brtf(airmass_g,od_per_am) * rayleigh_gnd
-                od_a = aod_vrt * aa * ext_a(ic)  ! slant od
+                od_a = aod_ref * aa * ext_a(ic)  ! slant od
                 brta = opac(od_a) * hg2d(ic)
 
 !               Total illumination
@@ -604,7 +634,7 @@
                 if(dist_2_topo(ialt,jazi) .eq. 0.)then    ! free of topo
                   od_g = ext_g(ic)*airmass_g              ! slant od
 !                 od_a = aod_ray(ialt,jazi)*aa*ext_a(ic)  ! slant od
-                  od_a = aod_vrt           *aa*ext_a(ic)  ! slant od
+                  od_a = aod_ref           *aa*ext_a(ic)  ! slant od
 !                 if(altray .gt. 0.)then
                     nlyr = 2
 !                 else ! simplify things
@@ -644,7 +674,7 @@
                      htmsl,dist_2_topo(ialt,jazi), &
                      ssa,ag/ag_90,aa_o_aa_90, &
                      aod_ref,aero_refht,aero_scaleht, &
-                     ag_s/ag_90,aa_s_o_aa_90,ags_a,aas_a,idebug_topo, &
+                     ag_s/ag_90,aa_s_o_aa_90,ags_a,aas_a,ic,idebug_topo, &
                      nsteps,sumi_g,sumi_a,opac_slant,dst,tausum_a)
                     if(idebug_topo .gt. 0)then
                       write(6,81)ialt,jazi,ic,sol_alt,altray &
@@ -692,9 +722,9 @@
                           / (alphav_g + alphav_a * solar_int_g2)
 !                 od_1 = od_g1*gasfrac + od_a
                   od_1 = od_g1*gasfrac + aod_ill(ialt,jazi) ! lower layer ill od
-                  brt1 = brto(od_1) * pf_eff1
+                  brt1 = brto(od_1) * pf_eff1 ! lower layer
 !                 brt2 = brto(od_g2) * rayleigh_pf_eff
-                  brt2 = brto(od_g2*gasfrac) * rayleigh_pf_eff
+                  brt2 = brto(od_g2*gasfrac) * rayleigh_pf_eff ! upper layer
                   if(brt2 .eq. 0)brt2 = (od_g2*gasfrac) * rayleigh_pf_eff
                   trans1 = trans(od_1)
 
