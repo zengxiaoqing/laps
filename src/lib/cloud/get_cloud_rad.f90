@@ -288,6 +288,7 @@
             ht_agl = heights_3d_il_jl_kl - topo
 
 !           See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
+!           Use new statement function?
             if(ht_agl .gt. 0.)then                               
               horz_dep_d = sqrt(2.0 * ht_agl / earth_radius) * 180./3.14
             else
