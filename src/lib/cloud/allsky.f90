@@ -1,5 +1,5 @@
 
-       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale,alt_a,azi_a,ni_polar,nj_polar)
+       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale,polat,alt_a,azi_a,ni_polar,nj_polar)
 
        use mem_namelist, ONLY: r_missing_data
 
@@ -12,13 +12,15 @@
        real ri_a(ni_polar,nj_polar)
        real rj_a(ni_polar,nj_polar)
 
+       posign = polat / 90.
+
        altmin = float(minalt) * alt_scale
        azimin = float(minazi) * azi_scale
 
        ri_polar_mid = ((ni_polar - 1.0) / 2.0) + 1.0
        rj_polar_mid = ((nj_polar - 1.0) / 2.0) + 1.0
 
-       write(6,*)'cyl_to_polar ',ni_polar,nj_polar,ri_polar_mid,rj_polar_mid
+       write(6,*)'cyl_to_polar ',ni_polar,nj_polar,ri_polar_mid,rj_polar_mid,posign
        write(6,*)'minalt,maxalt,minazi,maxazi',minalt,maxalt,minazi,maxazi
        write(6,*)'alt_scale,azi_scale',alt_scale,azi_scale
        write(6,*)'altmin,azimin',altmin,azimin
@@ -39,10 +41,10 @@
            delti = rip-ri_polar_mid
            deltj = rjp-rj_polar_mid
            zenith_angle = sqrt(delti**2 + deltj**2) * (90. / ri_polar_mid)
-           alt = 90. - zenith_angle
-           if(alt .ge. 0.)then
+           alt = (90. - zenith_angle) * posign
+           if(alt*posign .ge. 0.)then
                azi_last = azi
-               azi = atan3d(+deltj,delti) ! minus sign on deltj flips left/right
+               azi = atan3d(-deltj*posign,delti) ! minus sign on deltj flips left/right
 !              i_cyl = nint(alt)    
 !              j_cyl = nint(azi) 
 !              polar(ip,jp) = cyl(i_cyl,j_cyl)
