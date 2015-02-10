@@ -85,7 +85,7 @@
         logical l_idl /.false./
         logical l_cyl               
         logical l_polar 
-        logical l_allsky_clouds /.true./ ! requiring cloud data to run
+        logical l_require_clouds /.true./ ! requiring cloud data to run
 
         integer i_overlay
 
@@ -306,7 +306,7 @@
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
 
-        if(l_allsky_clouds .eqv. .true.)then
+        if(l_require_clouds .eqv. .true.)then
 
           n_lvls_snd = NZ_L
 
@@ -688,7 +688,7 @@
             heights_3d(:,:,k) = psatoz(pres_1d(k)/100.)
           enddo ! k
 
-        endif ! l_allsky_clouds is TRUE
+        endif ! l_require_clouds is TRUE
 
         call make_fnam_lp(i4time_solar,a9time,istatus)
         call cv_i4tim_asc_lp(i4time_solar,a24time,istatus)
@@ -977,10 +977,16 @@
           write(6,*)' azi range is ',azi_a_roll(minalt,minazi)
      1                              ,azi_a_roll(minalt,maxazi)
 
-          twi_0 = -0.0 ! testing from 0.0 and -4.0 
+          if(.false.)then
+            call calc_allsky()
 
-!         Get line of sight from isound/jsound
-          call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
+          else
+
+!           -0.8 is possibly dark and uniform, -3.6 has white screen
+            twi_0 = -0.0 ! testing from 0.0 and -4.0 
+
+!           Get line of sight from isound/jsound
+            call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
      1                     ,heights_3d                           ! I
      1                     ,rain_3d,snow_3d                      ! I
      1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
@@ -1010,38 +1016,34 @@
      1                     ,alt_scale,azi_scale                  ! I
      1                     ,grid_spacing_m,r_missing_data)       ! I
 
-          write(6,*)' Return from get_cloud_rays: ',a9time
-     1             ,' aod_vrt is ',aod_vrt
+            write(6,*)' Return from get_cloud_rays: ',a9time
+     1               ,' aod_vrt is ',aod_vrt
 
- 900      continue
+            ilun = ilun + 1
+            write(clun,14)ilun
+14          format(i3.3)
 
-1000      continue
-
-          ilun = ilun + 1
-          write(clun,14)ilun
-14        format(i3.3)
-
-!         Moon glow in cylindrical coordinates (add color info)?                   
-          blog_moon_roll = 0.
-!         if(moon_mag .lt. moon_mag_thr .AND.
-          if(.true.                     .AND.
+!           Moon glow in cylindrical coordinates (add color info)?                   
+            blog_moon_roll = 0.
+!           if(moon_mag .lt. moon_mag_thr .AND.
+            if(.true.                     .AND.
      1       alm      .gt. 0.           .AND.
      1       l_solar_eclipse .eqv. .false.    )then
-            write(6,*)' Moon glow being calculated: ',alm,azm
-            diam_deg = 0.5
-            call get_glow_obj(i4time,alt_a_roll,azi_a_roll
-     1                       ,minalt,maxalt,minazi,maxazi 
-     1                       ,alt_scale,azi_scale
-     1                       ,alm,azm,moon_mag,diam_deg
-     1                       ,blog_moon_roll)
+              write(6,*)' Moon glow being calculated: ',alm,azm
+              diam_deg = 0.5
+              call get_glow_obj(i4time,alt_a_roll,azi_a_roll
+     1                         ,minalt,maxalt,minazi,maxazi 
+     1                         ,alt_scale,azi_scale
+     1                         ,alm,azm,moon_mag,diam_deg
+     1                         ,blog_moon_roll)
 
-            write(6,*)' range of blog_moon_roll is',
-     1          minval(blog_moon_roll),maxval(blog_moon_roll)
-          endif
+              write(6,*)' range of blog_moon_roll is',
+     1            minval(blog_moon_roll),maxval(blog_moon_roll)
+            endif
 
-!         Sun glow in cylindrical coordinates, treated as round?
-          blog_sun_roll = 0
-          if(l_solar_eclipse .eqv. .true.)then
+!           Sun glow in cylindrical coordinates, treated as round?
+            blog_sun_roll = 0
+            if(l_solar_eclipse .eqv. .true.)then
               if(eobsl .ge. 1.0)then
                   s_mag = -12.5
                   diam_deg = 8.0    
@@ -1053,22 +1055,22 @@
                       diam_deg = 8.0    
                   endif
               endif
-          else
+            else
               s_mag = -26.74
               diam_deg = 0.5
-          endif
-          write(6,*)' Sun glow being calculated: '
-     1                 ,solar_alt,solar_az,s_mag
-          call get_glow_obj(i4time,alt_a_roll,azi_a_roll
+            endif
+            write(6,*)' Sun glow being calculated: '
+     1                   ,solar_alt,solar_az,s_mag
+            call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
      1                     ,solar_alt,solar_az,s_mag,diam_deg
      1                     ,blog_sun_roll)
-          write(6,*)' range of blog_sun_roll is',
+            write(6,*)' range of blog_sun_roll is',
      1        minval(blog_sun_roll),maxval(blog_sun_roll),diam_deg
 
-!         if(solar_alt .ge. 0.)then
-          if(.true.)then
+!           if(solar_alt .ge. 0.)then
+!           if(.true.)then
             I4_elapsed = ishow_timer()
 !           write(6,*)' call get_skyglow_cyl for sun or moon...'
 
@@ -1108,35 +1110,22 @@
                 I4_elapsed = ishow_timer()
             endif
 
-          else
-            blog_v_roll = 8.0
+!           else
+!             blog_v_roll = 8.0
 
-          endif
+!           endif
 
-!         Reproject Polar Cloud Plot
-          lunsky = 60 
-          write(lunsky,*)rmaglim_v
-!         call cyl_to_polar(r_cloud_3d,r_cloud_3d_polar,minalt,maxalt
-!    1                   ,maxazi,alt_scale,azi_scale
-!    1                   ,alt_a_polar,azi_a_polar
-!    1                   ,ni_polar,nj_polar)
-!         write(6,*)' cyl slice at 40alt ',r_cloud_3d(40,:)
-!         write(6,*)' polar slice at 256 ',r_cloud_3d_polar(256,:)
+!           Reproject Polar Cloud Plot
+            lunsky = 60 
+            write(lunsky,*)rmaglim_v
 
-!         Reproject Skyglow Field
-!         call cyl_to_polar(blog_v_roll,blog_v_roll_polar
-!    1                               ,minalt,maxalt,maxazi
-!    1                               ,alt_scale,azi_scale
-!    1                               ,alt_a_polar,azi_a_polar
-!    1                               ,ni_polar,nj_polar)
+!           Write time label
+            open(53,file='label.'//clun,status='unknown')
+            write(53,*)a9time
+            write(53,*)a24time(1:17)
+            close(53)
 
-!         Write time label
-          open(53,file='label.'//clun,status='unknown')
-          write(53,*)a9time
-          write(53,*)a24time(1:17)
-          close(53)
-
-          if(.true.)then
+!           if(.true.)then
 
 !           Get all sky for cyl   
             ni_cyl = maxalt - minalt + 1
@@ -1222,6 +1211,8 @@
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
      1                    ,sky_rgb_cyl)   
 
+          endif ! call calc_allsky
+
             if(l_cyl .eqv. .true.)then
 !             Write all sky for cyl
               isky_rgb_cyl = sky_rgb_cyl   
@@ -1249,11 +1240,17 @@
 
               write(6,*)' Call cyl_to_polar with sky rgb data'
 
+              if(htmsl .le. 18000.)then
+                polat = +90. ! +/-90 for zenith or nadir at center of plot
+              else
+                polat = -90.
+              endif
+
               do ic = 0,nc-1
                 call cyl_to_polar(sky_rgb_cyl(ic,:,:)
      1                           ,sky_rgb_polar(ic,:,:)
      1                           ,minalt,maxalt,minazi,maxazi
-     1                           ,alt_scale,azi_scale
+     1                           ,alt_scale,azi_scale,polat
      1                           ,alt_a_polar,azi_a_polar
      1                           ,ni_polar,nj_polar)
               enddo ! ic
@@ -1274,9 +1271,13 @@
               call writeppm3Matrix(
      1                  isky_rgb_polar(0,:,:),isky_rgb_polar(1,:,:)
      1                 ,isky_rgb_polar(2,:,:),'allsky_rgb_polar_'//clun)
-            endif
+            endif ! l_polar
 
-          endif ! mode_polar = 0 or 2
+!         endif ! mode_polar = 0 or 2
+
+ 900      continue
+
+1000      continue
 
           write(6,*)' End of plot_allsky for iloc...',iloc
           write(6,*)
