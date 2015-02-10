@@ -114,6 +114,7 @@ cdis
 
               l_good_pirep = .false.
 
+!             PIN file input heights are feet MSL
               do i = 1,max_layers
                 read(11,203,err=500)cbase_ft,ctop_ft,icover
 203             format (12x,2f8.0,i5)
