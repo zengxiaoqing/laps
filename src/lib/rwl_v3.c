@@ -1036,7 +1036,7 @@ fint4 lm1_levels;
         dim_val = (long)dim_len;
 
         if (*imax != dim_val) {
-          printf("x dimension in output file does not match IMAX passed in.\n");
+          printf("x dimension in output file does not match IMAX passed in rwl_v3.c: %d %d\n",*imax,dim_val);
           return -1;
         }
 
@@ -1054,7 +1054,7 @@ fint4 lm1_levels;
         dim_val = (long)dim_len;
 
         if (*jmax != dim_val) {
-          printf("y dimension in output file does not match JMAX passed in.\n");
+          printf("y dimension in output file does not match JMAX passed in rwl_v3.c: %d %d\n",*jmax,dim_val);
           return -1;
         }
 
