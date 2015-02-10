@@ -41,7 +41,7 @@ C*  atmosphere in millibars.
 
       Real T0,p0,p11,z11,c1,c2,z,Flag,Flg
 
-      Data Flag,Flg/99999.,99998./
+      Data Flag,Flg/1e-30,199998./
       Data T0/288./
       Data c1,c2/5.256,14600./
       Data z11,p11/11000.,226.0971/
@@ -50,11 +50,11 @@ C*  atmosphere in millibars.
 
       If (Z.gt.Flg) Then
           ZtoPsa=Flag
-        Else If (Z.lt.z11) Then
+      Else If (Z.lt.z11) Then
           ZtoPsa=p0*((T0-gamma*Z)/T0)**c1
-        Else
+      Else
           ZtoPsa=p11*10.**((z11-Z)/c2)
-       End If
+      End If
 
       Return
       End
