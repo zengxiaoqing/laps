@@ -9,7 +9,7 @@
                    topo_swi,topo_albedo,albedo_sfc, &                   ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir, &        ! I
                    dist_2_topo, &
-                   alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az,twi_0, &    ! I 
+                   alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az,twi_0, &    ! I
                    moon_alt,moon_az,moon_mag, &                         ! I
                    sky_rgb)                                             ! O
 
@@ -870,6 +870,9 @@
 !         frac_cloud = 0.0 ; Testing
           frac_cloud = frac_cloud * cloud_visibility  
 
+          btau = 0.10 * cloud_od(i,j)
+          cloud_albedo = btau / (1. + btau)
+
 !         Consider frac_clr also in relation to fraction of airmass between
 !         the observer and the cloud contributing to Rayleigh/Mie scattered 
 !         light. This helps for the case of thin cirrus adding to the clear
@@ -919,6 +922,15 @@
                   topo_visibility = topo_visibility * (1.0 - r_cloud_3d(i,j))
               endif
 
+!             If the view altitude is near -90, we can consider the topo as
+!             adding to the cloud via forward scattering
+              if(alt_a(i,j) .lt. 0.)then
+                  rlnd_fwsc = -sind(alt_a(i,j))
+                  topo_rad = 1.0 - cloud_albedo
+                  topo_visibility = topo_visibility * (1.0-rlnd_fwsc) &
+                                  + topo_rad        * rlnd_fwsc
+              endif
+
               if(sol_alt .gt. twi_alt)then 
 !                 Daytime assume topo is lit by sunlight (W/m**2)
 !                 Add topo brightness to line of sight sky brightness in radiation space
@@ -950,10 +962,15 @@
                                 ,nint(rad_to_counts(grn_rad))
 97                    format(' rtopo/rind/swi/swif/alb/dst/rgb/grn',2f9.3,f9.1,2f9.3,f8.0,2x,3i4,2x,i4)
                   endif
+
+                  sky_rad(1) = sky_rad(1) * red_rad
+                  sky_rad(2) = sky_rad(2) * grn_rad
+                  sky_rad(3) = sky_rad(3) * blu_rad
+
                   sky_rgb(0,I,J) = nint(rad_to_counts(red_rad))
                   sky_rgb(1,I,J) = nint(rad_to_counts(grn_rad))
                   sky_rgb(2,I,J) = nint(rad_to_counts(blu_rad))
-                
+
              else
 !                 Nighttime assume topo is lit by city lights (nL)
                   topo_swi_frac = (max(topo_swi(i,j),001.) / 5000.) ** 0.45
