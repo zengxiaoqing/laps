@@ -14,27 +14,38 @@
         airmassf(z,patm) = min(patm*airmass_cosz(cosd(min(z,93.))) &
                               ,40.*(1.0+sqrt(max(1.0-patm,0.)))) 
 
-!       Ozone airmasses adapted from Schaefer S&T code
-        airmasso(z,htmsl) = 1./SQRT(1.0-(SIND(min(z,90.))/(1.0+(20e3-htmsl)/6378e3))**2)
+!       Minimum height of ray having negative altitude
+        htminf(htmsl,alt,erad) = ((erad+htmsl) * cosd(alt)) - erad
+
+        horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
+
+!       Ozone 
+        parameter (o3_du = 300.)
+        parameter (h_o3 = 22000.)
+        parameter (d_o3 = 11000.)
+
+!       Column integrated value per meter
+        scalei_o3(htmsl) = exp(-((htmsl-h_o3)/d_o3)**2) / (sqrt(pi) * d_o3)
+
+!       Airmasses estimated for thick shell
+        hshellf(h) = max(h_o3-h,d_o3/2.) 
+        airmasso(z,htmsl) = 1./SQRT(1.0-(SIND(min(z,90.))/(1.0+hshellf(htmsl)/6371e3))**2)
+
+!       Error function from Wikipedia
+        erf(x) = 1.-1./(1.+.278393*x+.230389*x**2+.000972*x**3+.078108*x**4)**4
+        gaussint(x) = 0.5 * sqrt(pi) * (1. - erf(abs(x)) * x/(abs(x)+1e-6))
+
+!       patm_o3(ht) = max(min((32000. - ht) / 14000.,1.0),0.)
+!       patm_o3(ht) = 1.0 - (gaussint((ht-25000.)/5000.) / 1.77245)
+        patm_o3(ht) =        gaussint((ht-h_o3)/d_o3) / 1.77245 
+
+        alpha_o3(ext_o3,htmsl) = (ext_o3 * exp(-((htmsl-h_o3)/d_o3)**2)) / (d_o3 * sqrt(pi))
 
 !       Rayleigh scattering phase function including secondary scattering
 !       This assumes 0.1 effective optical depth / secondary scattering
 !                                   (this can be made variable later)
 !                                        Primary                               Sec atm    
         rayleigh_pf(theta) = (0.90 * ( (1. + cosd(theta)**2) / (4./3.) ) ) + (0.10 * 1.0) 
-
-!       Error function from Wikipedia
-        erf(x) = 1.-1./(1.+.278393*x+.230389*x**2+.000972*x**3+.078108*x**4)**4
-        gaussint(x) = 0.5 * sqrt(pi) * (1. - erf(abs(x)) * x/(abs(x)+1e-6))
-
-        parameter (h_o3 = 25000.)
-        parameter (d_o3 = 5000.)
-
-!       patm_o3(ht) = max(min((32000. - ht) / 14000.,1.0),0.)
-!       patm_o3(ht) = 1.0 - (gaussint((ht-25000.)/5000.) / 1.77245)
-        patm_o3(ht) =        gaussint((ht-25000.)/5000.) / 1.77245 
-
-        alpha_o3(ext_o3,htmsl) = (ext_o3 * exp(-((htmsl-h_o3)/d_o3)**2)) / (d_o3 * sqrt(pi))
 
         hg(g,pha) = (1.-g**2) / (1. + g**2 - 2.*g*cosd(pha))**1.5
 
