@@ -555,8 +555,11 @@
                   iabove = 1 ! vantage point above domain
                   rkdelt1 =  0.0
                   rkdelt2 =  0.0
+                  slant2_optimal = 
+     1               min(500./sind(-view_altitude_deg),grid_spacing_m)
               else
                   iabove = 0
+                  slant2_optimal = grid_spacing_m
               endif
 
 !             arg = max(view_altitude_deg,1.0)
@@ -566,10 +569,10 @@
               if(idebug .eq. 1)write(6,*)
               if(idebug .eq. 1)then
                 write(6,11)altray,view_azi_deg,ialt,jazi,jazi_delt
-     1                    ,rkdelt,i,j
+     1                    ,rkdelt,i,j,slant2_optimal
 11              format(
      1      'Trace the slant path (alt/azi/ialt/jazi/jdelt/rkdelt/i/j):'
-     1                ,2f6.1,3i5,f6.2,2i5)                                     
+     1                ,2f6.1,3i5,f6.2,2i5,f7.0)                                     
                 write(6,12)                                   
 12              format('    dz1_l    dz1_h   dxy1_l   dxy1_h  rin',
      1           'ew  rjnew   rk    ht_m   topo_m  ',
@@ -716,7 +719,7 @@
                   endif
 
                 else  ! Trace by slant range (rkdelt = 0. )
-                  slant2 = grid_spacing_m
+                  slant2 = slant2_optimal
                   slant1_l = slant1_h
                   slant1_h = slant1_h + slant2
 
