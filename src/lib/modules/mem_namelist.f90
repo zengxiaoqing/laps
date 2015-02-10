@@ -364,7 +364,8 @@ elseif (namelist_name == 'lapsparms') then
    i_offset_radar = -1
    aod = 0.05              ! default column aerosol optical depth
    aero_scaleht = 1500.    ! default aerosol scale height (m)
-   fcterm = 0.09           ! range from 0.00 to 0.09 for large aerosols
+   fcterm = 0.05           ! range from 0.00 to 0.09 for large aerosols
+                           ! corresponding phase function peak from 20-110
 
 !  fraction of aerosols in each bin & asymmetry factor
 !  Factor of 2 back scatter increase from minimum, peak of 50
