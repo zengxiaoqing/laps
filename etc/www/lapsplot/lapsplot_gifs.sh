@@ -174,27 +174,27 @@ if test "$NCARG_ROOT" = "allsky"; then
 
 # Other orientations
   if test "$RESOLUTION_POLAR" = "180pr"; then
-      convert allsky_polar_$ILOC.png -rotate 180 allsky_polar_$ILOC.png
+      convert allsky_polar_$ILOC.png -rotate 180 -flop allsky_polar_$ILOC.png
       DIR1=SE
       DIR2=NE
       DIR3=NW
       DIR4=SW
   fi
   if test "$RESOLUTION_POLAR" = "360pr"; then # default           
+      convert allsky_polar_$ILOC.png -flop allsky_polar_$ILOC.png
       DIR1=NW
       DIR2=SW
       DIR3=SE
       DIR4=NE
   fi
   if test "$RESOLUTION_POLAR" = "360p"; then # flip left/right
-      convert allsky_polar_$ILOC.png -flop allsky_polar_$ILOC.png
       DIR1=NE
       DIR2=SE
       DIR3=SW
       DIR4=NW
   fi
   if test "$RESOLUTION_POLAR" = "180p"; then # rotate and flip left/right
-      convert allsky_polar_$ILOC.png -rotate 180 -flop allsky_polar_$ILOC.png
+      convert allsky_polar_$ILOC.png -rotate 180 allsky_polar_$ILOC.png
 #     convert allsky_polar_$ILOC.png -flop allsky_polar_$ILOC.png
       DIR1=SW
       DIR2=NW
