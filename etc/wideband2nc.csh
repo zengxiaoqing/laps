@@ -38,14 +38,35 @@ if (! -e $LAPS_DATA_ROOT/static/widebandlist.txt) then
 endif
 
 #Obtain location of installed software that converts radar files
-setenv INSTALLROOT `head -1 $LAPS_DATA_ROOT/static/widebandlist.txt`
-if (! -e $INSTALLROOT) then
-    echo "ERROR: WIDEBAND software INSTALLROOT $INSTALLROOT not found..."
+setenv JAVA `head -1 $LAPS_DATA_ROOT/static/widebandlist.txt`
+if (! -e $JAVA) then
+    echo "ERROR: WIDEBAND software JAVA $JAVA not found..."
+    exit
+endif
+
+#Obtain NXJAR
+setenv NXJAR `head -2 $LAPS_DATA_ROOT/static/widebandlist.txt | tail -1`
+if (! -e $NXJAR) then
+    echo "ERROR: NXJAR $NXJAR not found..."
+    exit
+endif
+
+#Obtain NCJAR
+setenv NCJAR `head -3 $LAPS_DATA_ROOT/static/widebandlist.txt | tail -1`
+if (! -e $NCJAR) then
+    echo "ERROR: NCJAR $NCJAR not found..."
+    exit
+endif
+
+#Obtain DASET
+setenv DASET `head -4 $LAPS_DATA_ROOT/static/widebandlist.txt | tail -1`
+if (! -e $NCJAR) then
+    echo "ERROR: DASET $DASET not found..."
     exit
 endif
 
 #Obtain location of Archive-II data files
-setenv INPUTROOT `head -2 $LAPS_DATA_ROOT/static/widebandlist.txt | tail -1`
+setenv INPUTROOT `head -5 $LAPS_DATA_ROOT/static/widebandlist.txt | tail -1`
 if (! -e $INPUTROOT) then
     echo "ERROR: WIDEBAND INPUTROOT data directory $INPUTROOT not found..."
     exit
@@ -76,11 +97,18 @@ else # archive case
     setenv HOUR $10
     setenv YYDDD $11
 
+#   Use of Java for archive:
+    # Due complication with laps_driver.pl, Yuanfu decided to use environment variables to pass in $JAVA, NXJAR and NCJAR instead of through arguments:
+#   setenv DASET "ucar.nc2.dataset.NetcdfDataset" # Check with JAVA script option
     echo "YEAR=$YEAR"
     echo "DATE=$DATE"
     echo "HOUR=$HOUR"
     echo "YYDDD=$YYDDD"
     echo "MONTH=$MONTH"
+    echo "JAVA=$JAVA"
+    echo "NXJAR=$NXJAR"
+    echo "NCJAR=$NCJAR"
+    echo "DASET=$DASET"
 
     setenv A9TIME $YYDDD$HOUR\00
 
@@ -107,20 +135,14 @@ setenv CDL wsr88d_super_res_wideband.cdl
 echo " "
 
 echo "INPUTROOT=$INPUTROOT"
-echo "INSTALLROOT=$INSTALLROOT"
+#echo "INSTALLROOT=$INSTALLROOT"
 echo "OUTPUTROOT=$OUTPUTROOT"
 
-setenv NEXRAD_SITES $INSTALLROOT/NexradSite.cfg
-if (! -e $NEXRAD_SITES) then
-    echo "ERROR: $NEXRAD_SITES not found..."
-    exit
-endif
-
-if (! -e $INSTALLROOT/bin/$NEXRAD_2_NETCDF) then
-    echo "ERROR: $INSTALLROOT/bin/$NEXRAD_2_NETCDF not found..."
-    echo "Check to see if executable should be renamed to $NEXRAD_2_NETCDF"
-    exit
-endif
+#setenv NEXRAD_SITES $INSTALLROOT/NexradSite.cfg
+#if (! -e $NEXRAD_SITES) then
+#    echo "ERROR: $NEXRAD_SITES not found..."
+#    exit
+#endif
 
 #Check and skip over any radars that were already processed for the hour 
 
@@ -207,7 +229,8 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
 #         Filename convention for NCDC
 #         ls -l $INPUTROOT
-          ls -l $INPUTROOT/*$RADAR$YEAR$MONTH$DATE\_$HOUR*
+	  echo "$INPUTROOT $RADAR $YEAR $MONTH $DATE $HOUR"
+          ls -l $INPUTROOT/$RADAR$YEAR$MONTH$DATE\_$HOUR*
           setenv COUNT_NCDC `ls -1 $INPUTROOT/*$RADAR$YEAR$MONTH$DATE\_$HOUR* | wc -l`
           if ($COUNT_NCDC != "0") then
             echo " "
@@ -216,27 +239,87 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 #           Process low res data (parse compressed hhmmss files by hour)
             setenv CDL wsr88d_low_res_wideband.cdl 
 
-            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
-            echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
+            #echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
+            #echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
 
-            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-                                    -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
+            # Using ITS Java script to convert NCDC data to netCDF by Yuanfu Xie
+
+            # Check availability of environment varibles needed for java converter:
+            if (! $?JAVA || ! $?NXJAR || ! $?NCJAR) then
+              echo "To use Java converter, one has to set environment variables:"
+              echo "JAVA to where Java executable is"
+              echo "NXJAR to where nexrad-nyquist jar file is"
+              echo "NCJAR to where netcdfAll*.jar file is"
+              echo "These are needed for the current Java converter; otherwise"
+              echo "  check the java script for the options!"
+              echo "Set them and try again! Bye"
+              exit
+            endif
+            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z" -exec $JAVA -cp $NXJAR\:$NCJAR $DASET -in inputfile -out outputfile 
+
+            # Comment out LAPS conversion: 2 lines
+            # find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+            #                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
+
+            echo ""
+            echo "***Start trying files in form *$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z"
+            pushd $INPUTROOT
+            find . -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????.Z" \
+              -exec $JAVA -cp $NXJAR\:$NCJAR $DASET \
+              -in {} -out $OUTPUTROOT/$RADAR/netcdf/\{}.nc \;
+            popd
+            echo "***Exit first try"
+            echo ""
 
 #           Process low res data (parse uncompressed hhmmss files by hour)
-            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
-            echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
 
-            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-                                    -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
+            # Comment out LAPS conversion: 4 lines by Yuanfu Xie
+            # echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log/$YEAR$MONTH$DATE\_$HOUR.log 
+            #echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
+
+            # find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+            #                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
+
+            # Use ITS java by Yuanfu Xie
+            echo ""
+            echo "***Start try files in form *$RADAR$YEAR$MONTH$DATE\_$HOUR????"
+            pushd $INPUTROOT
+            find . -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????" \
+              -exec $JAVA -cp $NXJAR\:$NCJAR $DASET \
+              -in {} -out $OUTPUTROOT/$RADAR/netcdf/\{}.nc \;
+            popd
+            echo "Exit second try"
+            echo ""
 
 #           Process super res data (parse hhmmss files by hour)
             setenv CDL wsr88d_super_res_wideband.cdl
 
-            echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V0?*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
-            echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
+            # Comment out LAPS conversion: 4 lines by Yuanfu Xie
+            # echo find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V0?*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log 
+            # echo "                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;"
+            #find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V0?*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+            #                        -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
 
-            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V0?*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-                                    -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/$CDL -t {} \;
+            # Use ITS Java conversion: by Yuanfu Xie
+            echo ""
+            echo "***Start try files in form *$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V0?*"
+            pushd $INPUTROOT
+            find . -name "*$RADAR$YEAR$MONTH$DATE\_$HOUR????\_V0?*" \
+              -exec $JAVA -cp $NXJAR\:$NCJAR $DASET \
+              -in {} -out $OUTPUTROOT/$RADAR/netcdf/\{}.nc \;
+            popd
+            echo "***Exit third try"
+            echo ""
+
+            echo "Rename and gunzip the files in $OUTPUTROOT/$RADAR/netcdf"
+            pushd $OUTPUTROOT/$RADAR/netcdf
+                rm *.gz.nc
+                foreach OUTFILE (*.nc)
+                    setenv OUTFILE2 `echo $OUTFILE | sed 's/\.[^.]*$//'`
+                    echo "mv $OUTFILE $OUTFILE2"
+                          mv $OUTFILE $OUTFILE2
+                end                
+            popd
 
             echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
             setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
