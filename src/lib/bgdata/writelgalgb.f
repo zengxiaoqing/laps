@@ -548,6 +548,7 @@ c --- T
       units='K'
       var='TSF'
       print*,'TSF'
+      comment=cmodel(1:ic)//' 2-m Temp FG'
       call write_laps(bgtime,bgvalid,outdir,ext
      .           ,nx_laps,ny_laps,1,1,var,0,lvl_coord
      .           ,units,comment,tp_sfc,istatus)
@@ -569,6 +570,7 @@ c --- T at Sfc
       units='K'
       var='TGD'
       print*,'TGD'
+      comment=cmodel(1:ic)//' Ground Temp FG'
       call write_laps(bgtime,bgvalid,outdir,ext
      .           ,nx_laps,ny_laps,1,1,var,0,lvl_coord
      .           ,units,comment,t_sfc,istatus)
