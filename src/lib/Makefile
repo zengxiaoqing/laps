@@ -192,6 +192,7 @@ SRC	= machine_dependent.F \
           zr.f \
           zs.f \
           ztopsa.f \
+          ztotsa.f \
           getfilenames_c.c \
           i4time_now_gg.c \
           regex.c \
