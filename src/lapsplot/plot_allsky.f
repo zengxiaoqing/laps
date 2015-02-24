@@ -977,13 +977,36 @@
           write(6,*)' azi range is ',azi_a_roll(minalt,minazi)
      1                              ,azi_a_roll(minalt,maxazi)
 
+!         -0.8 is possibly dark and uniform, -3.6 has white screen
+          twi_0 = -12.0 ! testing from 0.0 and -4.0 
+
+          ilun = ilun + 1
+          write(clun,14)ilun
+14        format(i3.3)
+
           if(.false.)then
-            call calc_allsky()
+            write(6,*)' call calc_allsky'
+            call calc_allsky(i4time_solar,clwc_3d,cice_3d
+     1                     ,heights_3d                           ! I
+     1                     ,rain_3d,snow_3d                      ! I
+     1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
+     1                     ,topo_albedo_2d                       ! I
+     1                     ,htagl                                ! I
+     1                     ,aod_ref                              ! I
+     1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
+     1                     ,alt_a_roll,azi_a_roll                ! I
+     1                     ,sol_alt_2d,sol_azi_2d                ! I
+     1                     ,alt_norm                             ! I
+     1                     ,moon_alt_2d,moon_azi_2d              ! I
+     1                     ,moon_mag,moon_mag_thr                ! I
+     1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
+     1                     ,minalt,maxalt,minazi,maxazi,nc       ! I
+     1                     ,alt_scale,azi_scale                  ! I
+     1                     ,grid_spacing_m,r_missing_data        ! I
+     1                     ,twi_0                                ! I
+     1                     ,sky_rgb_cyl)                         ! O
 
           else
-
-!           -0.8 is possibly dark and uniform, -3.6 has white screen
-            twi_0 = -0.0 ! testing from 0.0 and -4.0 
 
 !           Get line of sight from isound/jsound
             call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
@@ -1019,9 +1042,9 @@
             write(6,*)' Return from get_cloud_rays: ',a9time
      1               ,' aod_vrt is ',aod_vrt
 
-            ilun = ilun + 1
-            write(clun,14)ilun
-14          format(i3.3)
+!           ilun = ilun + 1
+!           write(clun,14)ilun
+!14         format(i3.3)
 
 !           Moon glow in cylindrical coordinates (add color info)?                   
             blog_moon_roll = 0.
@@ -1116,30 +1139,16 @@
 !           endif
 
 !           Reproject Polar Cloud Plot
-            lunsky = 60 
-            write(lunsky,*)rmaglim_v
-
-!           Write time label
-            open(53,file='label.'//clun,status='unknown')
-            write(53,*)a9time
-            write(53,*)a24time(1:17)
-            close(53)
+!           lunsky = 60 
+!           write(lunsky,*)rmaglim_v
 
 !           if(.true.)then
+
+            I4_elapsed = ishow_timer()
 
 !           Get all sky for cyl   
             ni_cyl = maxalt - minalt + 1
             nj_cyl = maxazi - minazi + 1
-
-!           Write lat/lon and other info for label
-            open(54,file='label2.'//clun,status='unknown')
-            write(54,54)soundlat(iloc),soundlon(iloc),
-     1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
-     1                  solar_alt,solar_az,alt_scale,azi_scale
-            close(54)
- 54         format(2f8.2/6i8/2f8.2,2f7.2)
-
-            I4_elapsed = ishow_timer()
 
             if(solar_alt .lt. 0. .OR. l_solar_eclipse .eqv. .true.)then
               write(6,*)' call get_starglow with cyl data'
@@ -1212,6 +1221,22 @@
      1                    ,sky_rgb_cyl)   
 
           endif ! call calc_allsky
+
+
+!           Write time label
+            open(53,file='label.'//clun,status='unknown')
+            write(53,*)a9time
+            write(53,*)a24time(1:17)
+            close(53)
+
+
+!           Write lat/lon and other info for label
+            open(54,file='label2.'//clun,status='unknown')
+            write(54,54)soundlat(iloc),soundlon(iloc),
+     1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
+     1                  solar_alt,solar_az,alt_scale,azi_scale
+            close(54)
+ 54         format(2f8.2/6i8/2f8.2,2f7.2)
 
             if(l_cyl .eqv. .true.)then
 !             Write all sky for cyl
