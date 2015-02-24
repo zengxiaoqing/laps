@@ -8,14 +8,25 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
+#GFORTRAN LAPSLIBS = $(SRCROOT)/src/lib/bgdata/libbgdata.a \
+#GFORTRAN           $(SRCROOT)/src/lib/util/libutil.a \
+#GFORTRAN           $(SRCROOT)/src/lib/liblaps.a  \
+#GFORTRAN           $(SRCROOT)/src/lib/mthermo/libmthermo.a \
+#GFORTRAN           $(SRCROOT)/src/lib/modules/libmodules.a \
+#GFORTRAN           $(SRCROOT)/src/lib/degrib/libdegrib.a \
+#GFORTRAN           $(SRCROOT)/src/lib/w3lib/libw3.a \
+#GFORTRAN           $(SRCROOT)/src/lib/g2lib/libg2_4.a 
+#GFORTRAN modifications begin
 LAPSLIBS = $(SRCROOT)/src/lib/bgdata/libbgdata.a \
            $(SRCROOT)/src/lib/util/libutil.a \
            $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a \
            $(SRCROOT)/src/lib/modules/libmodules.a \
            $(SRCROOT)/src/lib/degrib/libdegrib.a \
+           $(SRCROOT)/src/lib/modules/libmodules.a \
            $(SRCROOT)/src/lib/w3lib/libw3.a \
            $(SRCROOT)/src/lib/g2lib/libg2_4.a 
+#GFORTRAN modifications end
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a \
              $(SRCROOT)/src/lib/util/libdebugutil.a \
