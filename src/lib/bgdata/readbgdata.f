@@ -60,7 +60,7 @@ c
       real :: vwbg_sfc(nx_bg,ny_bg)
       real :: tdbg_sfc(nx_bg,ny_bg)
       real :: tpbg_sfc(nx_bg,ny_bg)
-      real :: t_at_sfc(nx_bg,ny_bg)
+      real :: t_at_sfc(nx_bg,ny_bg)       !Skin/Ground Temperature
       real :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
       real :: crefbg(nx_bg,ny_bg)         !Composite Reflectivity
       real tpw(nx_bg,ny_bg)
