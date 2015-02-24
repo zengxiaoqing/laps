@@ -27,8 +27,12 @@
 !       Column integrated value per meter
         scalei_o3(htmsl) = exp(-((htmsl-h_o3)/d_o3)**2) / (sqrt(pi) * d_o3)
 
-!       Airmasses estimated for thick shell
-        hshellf(h) = max(h_o3-h,d_o3/2.) 
+!       Airmasses estimated for thick shell (both below and above O3 max)
+!       Effective scale height above h_o3 varies with 1./d_o3
+        relscale_ht_o3(h) = d_o3 / (max(h+2.5*d_o3,h_o3+100.)-h_o3)
+        hshellf(h) = max(h_o3-h,d_o3/2.5) * min(1.0,relscale_ht_o3(h))
+
+!       hshellf(h) = max(h_o3-h,d_o3/2.5) * min(1.0,(h_o3/h)**2)
         airmasso(z,htmsl) = 1./SQRT(1.0-(SIND(min(z,90.))/(1.0+hshellf(htmsl)/6371e3))**2)
 
 !       Error function from Wikipedia
