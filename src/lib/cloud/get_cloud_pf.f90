@@ -22,7 +22,7 @@
         real pf_clwc(nc),pf_rain(nc)
         real pf_thk_a(ni,nj)
         real*8 phase_angle_d,phase_corr
-        real asy_clwc(nc)  /0.94,0.95,0.96/
+        real asy_clwc(nc)  /0.945,0.950,0.955/
 
         real anglebow1(nc) /41.80,41.20,40.60/
         real anglebow2(nc) /52.50,53.20,53.90/
