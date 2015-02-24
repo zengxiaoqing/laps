@@ -12,6 +12,7 @@
      include 'rad.inc'
 
      trans(od) = exp(-min(od,80.))
+     scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! x/scurve range is 0-1
 
 !                  T  B  W  E  N  S
      real i1(6)  / 1, 1, 1, 2, 1, 1/            
@@ -86,6 +87,17 @@
      grid_spacing_m = 500.
      twi_alt = -4.5
      transm_3d = r_missing_data
+
+     do k = 1,nk
+     do i = 1,ni
+     do j = 1,nj
+       if(topo_a(i,j) .gt. heights_3d(i,j,k))then
+         transm_3d(i,j,k) = 0.
+       endif
+     enddo ! j
+     enddo ! i
+     enddo ! k
+
      transm_4d = 0.                   
 
      b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
@@ -425,13 +437,14 @@
 
 !            Estimate solar extinction/reddening by Rayleigh scattering
 !            at this cloud altitude
-             if(obj_alt_cld .lt. 0.)then ! (early) twilight cloud lighting
-               twi_int = .1 * 10.**(+obj_alt_cld * 0.4) ! magnitudes per deg
+             if(obj_alt_cld .lt. -0.25)then ! (early) twilight cloud lighting
+!              twi_int = .1 * 10.**(+obj_alt_cld * 0.4) ! magnitudes per deg
+               twi_int = 0.
                rint = twi_int
                gint = twi_int
                bint = twi_int
 
-             elseif(obj_alt_cld .ge. 0.)then   ! low daylight sun
+             else ! low daylight sun
 !              Direct illumination of the cloud is calculated here
 !              Indirect illumination is factored in via 'scat_frac'
                obj_alt_thr = abs(obj_alt(i,j)) * .00
@@ -444,9 +457,18 @@
                do ic = 1,nc
                  trans_c(ic) = trans(am*ext_g(ic)*scat_frac)
                enddo
-               rint = trans_c(1)
-               gint = trans_c(2)                 
-               bint = trans_c(3)               
+
+!              Fraction of solar disk (approximate)
+               if(obj_alt(i,j) .gt. 0.25)then
+                 sol_occ = 1.0
+               else
+                 occfrac = (obj_alt(i,j) - (-0.25)) / 0.5             
+                 sol_occ = scurve(occfrac)             
+               endif
+
+               rint = trans_c(1) * sol_occ
+               gint = trans_c(2) * sol_occ       
+               bint = trans_c(3) * sol_occ              
              endif  
 
              transm_4d(i,j,k,1) = transm_3d(i,j,k) * rint
