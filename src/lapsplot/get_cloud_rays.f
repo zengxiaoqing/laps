@@ -275,9 +275,8 @@
               endif
             enddo ! kk
 4           continue
-          else
-            dhi_power = max(0.4*0.7*sol_alt(ii,jj),-5.)
-            dhi_2d(ii,jj) = 28. * 10.**(dhi_power)
+          else ! compare with compare_analysis_to_rad.f
+            dhi_2d(ii,jj) = 10. * exp(1.0*sol_alt(ii,jj))
             ghi_2d(ii,jj) = dhi_2d(ii,jj)
           endif
         enddo ! jj
