@@ -23,6 +23,7 @@
         brt(a,ext) = 1.0 - exp(-a*ext)
         rad_to_counts(rad) = (log10(rad)-7.3)*contrast ! 7.1 matches 240
         counts_to_rad(counts) = 10.**((counts/contrast)+7.3)
+        scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
 
         include 'rad.inc'
         include 'wac.inc'
@@ -109,8 +110,6 @@
                      ,alt_a,azi_a,ni,nj,sol_alt,sol_az,twi_glow_ave)
           arg = maxval(log10(clear_rad_c(3,:,:))) ! avoid moon
 
-!         Try get_sky_glow_ave for twilight and/or daylight?
-
           write(6,*)' twi_glow_ave = ',twi_glow_ave
           write(6,*)' twi_glow_max = ',arg
 
@@ -120,10 +119,15 @@
           else
               glow_diff_cld      = 0.8 ! 1.1
           endif
-          glow_diff_clr      = 1.2 ! 1.5 ! 1.5
           glow_secondary_cld = twi_glow_ave - glow_diff_cld
-          glow_secondary_clr = twi_glow_ave - glow_diff_clr
-          rindirect = 1300. * (10.**glow_secondary_cld / glow_cld_day)
+
+!         This is used only when sol_alt < twi_0
+          glow_diff_clr      = 1.5 ! 1.5 ! 1.5
+          glow_secondary_clr = twi_glow_ave - glow_diff_clr 
+
+!         Last coefficient represents altitude of incident twilight glow
+!         Try get_sky_glow_ave for twilight and/or daylight?
+          rindirect = 1300. * (10.**glow_secondary_cld / glow_cld_day) * 0.1
           rad_sec_cld(:) = 10.**glow_secondary_cld
 
           write(6,*)' glow_secondary_cld = ',glow_secondary_cld
@@ -136,15 +140,23 @@
 !         Test at -3.2 solar alt
           fracalt = sol_alt_eff / (-16.)
           corr1 = 8.6; corr2 = 3.612
-          corr1 = 8.6; corr2 = 3.412 ! darkness of start/end of twilight
           corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight
+          corr1 = 8.5; corr2 = 3.412 ! darkness of start/end of twilight
+!         corr1 = 8.3; corr2 = 3.412 ! darkness of start/end of twilight
+
+!         A higher coefficient darkens mid-twilight
 !         argref = corr1 + (fracalt**0.83 * (corr2-corr1))
 !         argref = corr1 + (fracalt**0.68 * (corr2-corr1))
-          argref = corr1 + (fracalt**0.93 * (corr2-corr1)) ! darkness of mid-twi
+!         argref = corr1 + (fracalt**0.40 * (corr2-corr1))
+!         fraccorr = 0.1 * fracalt + 0.9 * scurve(fracalt)
+!         fraccorr = scurve(fracalt**0.40)
+          fraccorr = scurve(fracalt**(0.45-fracalt*0.1))
+          argref = corr1 + fraccorr * (corr2-corr1)
+
           argbri = corr1-argref
 !         contrast = 70. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
           contrast = 54. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
-          write(6,*)' argref/argbri = ',argref,argbri
+          write(6,*)' argref/argbri/fraccorr = ',argref,argbri,fraccorr
           glwlow = 7.3 - argbri
 
         else ! sun above horizon
@@ -152,14 +164,15 @@
 !         2.0 is mean airmasses relative to zenith, 0.5 is 90deg phase func
           sb_corr = 2.0 * (1.0 - (sind(sol_alt)**0.5)) 
           rad_sec_cld(:) = (day_int * ext_g(:) * patm * 2.0 * 0.5) / 10.**(0.4*sb_corr)
-          glwlow = 7.3
-          argbri = 0.
+          argbri = sb_corr * 0.30
+          glwlow = 7.3 - argbri
+          write(6,*)' sb_corr/argbri = ',sb_corr,argbri
           contrast = 100.
         endif
         offset = 0.
         glwmid = glwlow + 128. / contrast
-        write(6,*)' glwlow/contrast/offset = ',glwlow,contrast,offset
-        write(6,*)' glwmid = ',glwmid
+        write(6,3)sol_alt,glwlow,glwmid,contrast,offset
+3       format('  sol_alt/glwlow/glwmid/contrast/offset',f9.2,2f9.3,2f9.1)
 
         ref_nl = day_int0
         if(new_color .gt. 0)then
@@ -548,7 +561,11 @@
                   rint_top(ic) = rad_to_counts(cld_radt(ic))
 
                   if(new_color .ge. 2)then
-                    rad = day_int            * (0.02 * (1. + albedo_sfc))   * pf_scat(ic,i,j)
+                    if(sol_alt .gt. 0.)then
+                      rad = day_int * (0.02 * (1. + albedo_sfc))   * pf_scat(ic,i,j)
+                    else ! secondary scattering term allowed to dominate
+                      rad = 0.
+                    endif
                     cld_radb(ic) = rad + 10.**(glow_secondary_cld)
                   else
                     rad = counts_to_rad(240. * (0.15 * (1. + albedo_sfc)) ) * pf_scat(ic,i,j)
@@ -598,7 +615,8 @@
                    ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
                    ,cld_radb(:)/1e6,(cld_rad(:)/1e6)/trans_c(:) &
                    ,cld_rad(:)/1e6,rad_sec_cld(:)/1e6
- 42               format(' elg/pf/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,5f9.3,' c',3f7.3,2x,3f6.0,2x,3f6.0,2x,3f5.0,2x,3f6.0,2x,3f6.0)
+ 42               format(&
+                  ' elg/pf/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,5f9.3,' c',3f7.3,2x,3f6.0,2x,3f6.0,2x,3f5.0,2x,3f6.0,2x,3f6.0)
                 endif
                endif ! cloud present
               endif
@@ -625,7 +643,8 @@
 !             Note that secondary scattering might also be considered in
 !             early twilight away from the bright twilight arch.
 !             The result creates a contrast effect for clouds vs twilight            
-              rintensity(:) = max(min(((glow_cld_c(:) -argref) * contrast + 128.),455.),0.)
+!             rintensity(:) = max(min(((glow_cld_c(:) -argref) * contrast + 128.),455.),0.)
+              rintensity(:) = max(min(((glow_cld_c(:) -glwmid) * contrast + 128.),455.),0.)
 
               if(idebug .eq. 1 .AND. r_cloud_3d(i,j) .gt. 0.)then ! cloud present
                   if(cloud_rad_c(2,i,j) .ge. 1e20)then
@@ -636,9 +655,11 @@
 51                format('   cld_rad_c/crad/pf/glow: sec|moon|nt|cld rint',2e11.4,6f8.2,3i5)
               endif
 
+              cld_rad(:) = 10. ** glow_cld_c(:) ! newly defined
+
           endif
 
-!         Note cld_rad not yet defined for sol_alt < twi_alt
+!         Note cld_rad only newly defined for sol_alt < twi_alt
           if(new_color .lt. 2 .or. sol_alt .lt. twi_alt)then
               cld_red = nint(rintensity(1))                
               cld_grn = nint(rintensity(2))                        
@@ -868,7 +889,11 @@
 !         Use clear sky values if cloud cover is less than 0.5
           frac_cloud = r_cloud_3d(i,j)
 !         frac_cloud = 0.0 ; Testing
-          frac_cloud = frac_cloud * cloud_visibility  
+          if(sol_alt .gt. 0.)then ! distant clouds fade more during day
+            frac_cloud = frac_cloud * cloud_visibility  
+          else ! fade only when opposite the twilight arch
+            frac_cloud = frac_cloud * cloud_visibility**scurve(elong_a(i,j)/180.)
+          endif
 
           btau = 0.10 * cloud_od(i,j)
           cloud_albedo = btau / (1. + btau)
@@ -878,6 +903,8 @@
 !         light. This helps for the case of thin cirrus adding to the clear
 !         sky light. Consider a new option to blend clr/cld more 
 !         radiatively a la topo?
+!         Note cloud may be located in front of or behind clear sky glow
+!         It would generally be in front of during twilight
           frac_clr = 1.0 - frac_cloud                          
 
           if(sol_alt .gt. twi_0 .and. new_color .ge. 2)then ! Daylight (+ rad space)
@@ -897,7 +924,7 @@
               write(6,*)'clr_red/cld_red/sky_rgb',clr_red,cld_red,sky_rgb(0,I,J)
             else
               write(6,96)clr_red,cld_rad/1e6,cld_red,sky_rgb(:,I,J)
-96            format('clr_red/cld_rad/cld_red/sky_rgb',f9.3,3f7.0,f9.3,3f7.1)
+96            format(' clr_red/cld_rad/cld_red/sky_rgb',f9.3,3f7.0,f9.3,3f7.1)
             endif
 !           write(6,*)'contrast = ',contrast
           endif
@@ -942,34 +969,39 @@
 !                     rindirect = 1300. * (10.**glow_secondary_cld / glow_cld_day)
                   endif
 
-                  topo_swi_frac = max(topo_swi(i,j),rindirect) / 1300. 
+!                 topo_swi_frac = max(topo_swi(i,j),rindirect) / 1300. 
+                  topo_swi_frac =     topo_swi(i,j)            / 1300. 
                   rtopo_red = 2. * topo_swi_frac * topo_albedo(1,i,j) * pf_land(1,i,j)
                   rtopo_grn = 2. * topo_swi_frac * topo_albedo(2,i,j) * pf_land(2,i,j)
                   rtopo_blu = 2. * topo_swi_frac * topo_albedo(3,i,j) * pf_land(3,i,j)
                   sky_frac_topo = 1.00               ! hopefully temporary
                   sky_frac_aero = 1.00               ! hopefully temporary
-                  red_rad = day_int * rtopo_red*topo_visibility*sky_frac_topo &
-                          + counts_to_rad(sky_rgb(0,I,J)) * sky_frac_aero 
-                  grn_rad = day_int * rtopo_grn*topo_visibility*sky_frac_topo &
-                          + counts_to_rad(sky_rgb(1,I,J)) * sky_frac_aero
-                  blu_rad = day_int * rtopo_blu*topo_visibility*sky_frac_topo &
-                          + counts_to_rad(sky_rgb(2,I,J)) * sky_frac_aero 
-                  rog = red_rad / grn_rad
-                  bog = blu_rad / grn_rad
+                  red_rad = day_int * rtopo_red*topo_visibility*sky_frac_topo
+!                         + counts_to_rad(sky_rgb(0,I,J)) * sky_frac_aero 
+                  grn_rad = day_int * rtopo_grn*topo_visibility*sky_frac_topo
+!                         + counts_to_rad(sky_rgb(1,I,J)) * sky_frac_aero
+                  blu_rad = day_int * rtopo_blu*topo_visibility*sky_frac_topo
+!                         + counts_to_rad(sky_rgb(2,I,J)) * sky_frac_aero 
+!                 rog = red_rad / grn_rad
+!                 bog = blu_rad / grn_rad
                   if(idebug .eq. 1)then
-                      write(6,97)rtopo_grn,rindirect,topo_swi(i,j),topo_swi_frac &
-                                ,topo_albedo(2,i,j),dist_2_topo(i,j),nint(sky_rgb(:,i,j)) &
-                                ,nint(rad_to_counts(grn_rad))
-97                    format(' rtopo/rind/swi/swif/alb/dst/rgb/grn',2f9.3,f9.1,2f9.3,f8.0,2x,3i4,2x,i4)
+                    write(6,97)rtopo_grn,rindirect,topo_swi(i,j),topo_swi_frac &
+                              ,topo_albedo(2,i,j),dist_2_topo(i,j) &
+                              ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
+97                  format(' rtopo/rind/swi/swif/alb/dst/rgb/trad', &
+                           2f9.3,f9.1,f9.4,f9.3,f8.0,2x,3i4,2x,3f9.0)
                   endif
 
-                  sky_rad(1) = sky_rad(1) * red_rad
-                  sky_rad(2) = sky_rad(2) * grn_rad
-                  sky_rad(3) = sky_rad(3) * blu_rad
+                  sky_rad(1) = sky_rad(1) + red_rad
+                  sky_rad(2) = sky_rad(2) + grn_rad
+                  sky_rad(3) = sky_rad(3) + blu_rad
+ 
+                  call nl_to_RGB(sky_rad(:),glwmid,contrast & 
+                          ,128.,0,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 
-                  sky_rgb(0,I,J) = nint(rad_to_counts(red_rad))
-                  sky_rgb(1,I,J) = nint(rad_to_counts(grn_rad))
-                  sky_rgb(2,I,J) = nint(rad_to_counts(blu_rad))
+!                 sky_rgb(0,I,J) = nint(rad_to_counts(red_rad))
+!                 sky_rgb(1,I,J) = nint(rad_to_counts(grn_rad))
+!                 sky_rgb(2,I,J) = nint(rad_to_counts(blu_rad))
 
              else
 !                 Nighttime assume topo is lit by city lights (nL)
