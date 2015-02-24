@@ -8,7 +8,7 @@
 !       Airmasses relative to zenith at sea level pressure (ao - ozone)
 !       Airmasses relative to zenith at aero refht         (aa - aerosol)
 
-        use mem_namelist, ONLY: r_missing_data, earth_radius
+        use mem_namelist, ONLY: r_missing_data ! , earth_radius
 
         include 'trigd.inc'
         include 'rad.inc'
@@ -16,13 +16,13 @@
         zapp = 90. - alt
         zappi = 90. + alt
 
-        ztrue = zapp + refractd_app(alt ,patm)
+        ztrue  = zapp  + refractd_app(alt ,patm)
         ztruei = zappi + refractd_app(abs(alt) ,patm)
 
         if(iverbose .eq. 1)then
-          write(6,11)alt,htmsl,patm
-11        format(/' start get_airmass: alt/htmsl/patm' &
-                 ,f8.2,f11.1,f9.4)
+          write(6,11)alt,htmsl,patm,earth_radius
+11        format(/' start get_airmass: alt/htmsl/patm/erad' &
+                 ,f8.2,f11.1,f9.4,f10.0)
         endif
 
         call get_htmin(alt,patm,htmsl,earth_radius,iverbose & ! I
@@ -31,15 +31,14 @@
 !       Gas component for Rayleigh Scattering
         if(alt .lt. -3.)then ! high looking down
           if(htmin .lt. 0.0)then ! hit ground
-            patm_refht = ztopsa(aero_refht) / 1013.25
-            ag = airmassf(zappi,(patm_refht-patm))
-            if(iverbose .eq. 1)write(6,21)zappi,patm_refht,patm,ag
+            patm_gnd = max(ztopsa(aero_refht)/1013.25,patm) ! assumed ground
+            ag = airmassf(zappi,(patm_gnd-patm))
+            if(iverbose .eq. 1)write(6,21)zappi,patm_gnd,patm,ag
 21          format('  high gas   hitting ground',4f9.4)
           else ! grazes atmosphere
             ztrue0 = 90. + refractd_app(0.,patm2)
 !           alttrue0 = -refractd_app(0.,patm2)
-            ag = (airmassf(ztruei,patm2)-airmassf(ztruei,patm)) &
-                + airmassf(ztrue0,patm2)
+            ag = (2.*airmassf(ztrue0,patm2)) - airmassf(ztruei,patm)
             if(iverbose .eq. 1)then
               write(6,*)' high gas   looking down at htmin',htmin,ag
             endif
@@ -54,9 +53,10 @@
 !       Ozone component
         if(alt .lt. 0.)then ! high looking down
           if(htmin .lt. 0.0)then ! hit ground
-            patm_refht = patm_o3(aero_refht)
+            patm_refht = patm_o3(min(aero_refht,htmsl))
             ao = airmasso(zappi,aero_refht)  &
                * (patm_o3(aero_refht)-patm_o3(htmsl))
+            ao = max(ao,0.)
             if(iverbose.eq.1)write(6,31)zappi,patm_refht,patm_o3(htmsl),ao
 31          format('  high ozone hitting ground',4f9.4)
           else ! grazes atmosphere
@@ -64,18 +64,20 @@
             patm2o = patm_o3(htmin)
             ztrue0 = 90. + refractd_app(0.,patm2o)
 !           alttrue0 = -refractd_app(0.,patm2o)
-            ao1 = airmasso(ztruei,patm2o) * patm2o
-            ao2 = airmasso(ztruei,patmo)  * patmo
-            ao3 = airmasso(ztrue0,patm2o) * patm2o
-            ao = (ao1-ao2) + ao3
+!           ao1 = airmasso(ztruei,htmin) * patm2o ! ztruei from htmin
+            ao2 = airmasso(ztruei,htmsl) * patmo  ! upward from observer
+            ao3 = airmasso(ztrue0,htmin) * patm2o ! 0 deg from htmin
+            ao = (ao3-ao2) + ao3
             if(iverbose .eq. 1)then
-              write(6,*)' high ozone looking down at htmin',htmin,ao
+              write(6,32)htmin,ao2,ao3,ao
+32            format('  high ozone looking down at htmin',f12.2,3f9.3)
             endif
           endif
         else
           ao = airmasso(zapp,htmsl) * patm_o3(htmsl)
           if(iverbose .eq. 1)then
-            write(6,*)' standard ozone situation',htmsl,alt,ao
+            write(6,33)htmsl,hshellf(htmsl),alt,ao
+33          format('  standard ozone situation',f12.2,f9.2,f9.2,f9.3)
           endif
         endif
 
@@ -90,6 +92,7 @@
           if(htmin .lt. 0.0)then ! hit ground
             ZZ = zappi * rpd
             aa=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * (1.0-patm_aero)
+            aa = max(aa,0.)
             if(iverbose .eq. 1)then
               write(6,41)zappi,htmin,patm_aero,aa    
 41            format('  high aero  hitting ground',4f9.4)           
@@ -97,11 +100,11 @@
           else ! grazes atmosphere
             ZZ = zappi * rpd
             patm2_aero = exp(-((htmin-aero_refht) / aero_scaleht))
-            aa1=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm2_aero
+!           aa1=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm2_aero
             aa2=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm_aero
             ZZ = 90. * rpd
             aa3=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm2_aero
-            aa = (aa1-aa2) + aa3
+            aa = (aa3-aa2) + aa3
             if(iverbose .eq. 1)then
               write(6,*)' high aero  looking down at htmin',htmin,aa 
             endif
