@@ -140,6 +140,15 @@
                 rad_clr(i,j) = max(rad_zenith_clr * altfunc 
      1                           * trans_h2o_2d(i,j),0.)
 
+!               Add term when sun is near or below the horizon
+                if(x .gt. 0.)then
+                    ghi_twiterm = 10. * exp(-((x/5.)**2))
+                else ! twilight
+                    ghi_twiterm = 10. * exp(0.5*x)
+                endif
+
+                rad_clr(i,j) = rad_clr(i,j) + ghi_twiterm
+
             elseif(model .eq. 2)then ! start to using Laue formula 
                                      ! (normal to sun's rays)
                 a = 0.14
