@@ -287,7 +287,17 @@ foreach $dir (keys(%clean_dirs)){
     closedir(DIR);
     next unless(-d $dir);
     print "Purging in $dir $clean_dirs{$dir}\n";
-    next if($#filelist < $min_files);
+    my $min_files2 = $min_files;
+    if($dir =~ "verif\/" && ($dir =~ "\/pt" || $dir =~ "\/plot") && $dir =~ /\d\d\d\d\d\d\d\d\d/){ 
+        if($#filelist == 0){ 
+            print "Exception - removing empty verif directory $dir\n";
+            system("rmdir $dir") ;
+        }else{
+            print "Exception - verif directory with files $dir\n";
+            $min_files2 = 0;
+        }
+    }
+    next if($#filelist < $min_files2);
     $i=$#filelist;
     my($file, $age,$age_thresh);
     foreach $file (sort @filelist){
@@ -306,14 +316,18 @@ foreach $dir (keys(%clean_dirs)){
             $age_thresh = $clean_dirs{$dir};
         }
 
-        if($age > $age_thresh && $i >= $min_files){
+        if($dir =~ "verif\/" && ($dir =~ "\/pt" || $dir =~ "\/plot") && $dir =~ /\d\d\d\d\d\d\d\d\d/){ 
+#           print "resetting $age_thresh to $verif_time for $file\n";
+            $age_thresh = $verif_time;
+        }
+
+        if($age > $age_thresh && $i >= $min_files2){
             $i--;
             print "Removing file $dir/$file $age $clean_dirs{$dir}\n";
             system("rm -f $dir/$file") ;
         }else{
 #           print "Keeping file $dir/$file $age $clean_dirs{$dir}\n";
 	}         
-
     }
 }
 
