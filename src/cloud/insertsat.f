@@ -170,7 +170,6 @@ c
         real P(1),T(1),TD(1),LCL_AGL,TLCL_PBE,PLCL_PBE ! used for LCL (abdel)
 	real lcl_2d(imax,jmax)
 
-        real k_terrain(imax,jmax)
         real zcoords_1d(klaps)
         real cldcv_1d(kcloud)
         real laps_p(klaps)
@@ -186,6 +185,7 @@ c
         logical l_add_ir /.true./
 
         integer idebug_a(imax,jmax)        ! L
+        integer k_terrain(imax,jmax)
 
         real k_to_f, k_to_c
 
@@ -1131,7 +1131,7 @@ c
         integer istat_vis_potl                ! Input (vis cloud building)
         real heights_3d(imax,jmax,klaps)      ! Input
         real temp_3d(imax,jmax,klaps)         ! Input
-        real k_terrain                        ! Input
+        integer k_terrain                     ! Input
         real laps_p(klaps)                    ! Input
         integer n_valid_co2,n_missing_co2     ! Input/Output
         real cldtop_co2_m                     ! Output
