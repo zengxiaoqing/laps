@@ -96,7 +96,7 @@ if test "$NCARG_ROOT" = "allsky"; then
       MODE_ALLSKY=polar
  fi
 
- NLOC=`head -4      $LAPSPLOT_IN | tail -1`
+ NLOC=`head -5      $LAPSPLOT_IN | tail -1`
  echo "NLOC from input file $LAPSPLOT_IN is $NLOC"
 
 #NLOC=1
