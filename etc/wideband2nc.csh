@@ -313,16 +313,17 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
             echo "Rename and gunzip the files in $OUTPUTROOT/$RADAR/netcdf"
             pushd $OUTPUTROOT/$RADAR/netcdf
-                rm *.gz.nc
-                foreach OUTFILE (*.nc)
-                    setenv OUTFILE2 `echo $OUTFILE | sed 's/\.[^.]*$//'`
-                    echo "mv $OUTFILE $OUTFILE2"
-                          mv $OUTFILE $OUTFILE2
+                foreach OUTFILE (*.gz.nc)
+                    setenv OUTFILE2 `echo $OUTFILE  | sed 's/\.[^.]*$//'`
+                    setenv OUTFILE3 `echo $OUTFILE2 | sed 's/\.[^.]*$//'`
+                    setenv OUTFILE4 $OUTFILE3.nc
+                    echo "mv $OUTFILE $OUTFILE4"
+                          mv $OUTFILE $OUTFILE4
                 end                
             popd
 
-            echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
-            setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
+            echo         "ls -1 $OUTPUTROOT/$RADAR/netcdf/$RADAR$YEAR$MONTH$DATE\_$HOUR* | wc -l"
+            setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$RADAR$YEAR$MONTH$DATE\_$HOUR* | wc -l`
             echo "Updated # of output files is $COUNT"
             echo "Finished radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
