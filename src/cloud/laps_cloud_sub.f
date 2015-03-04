@@ -67,6 +67,7 @@ cdis
      1             sys_no_data    =3, ! no data
      1             sys_abort_prod =4) ! failed to make a prod
 
+        include 'trigd.inc'
         include 'cloud.inc'
 
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
@@ -2375,6 +2376,8 @@ C       EW SLICES
      1                              ,lat,lon                           ! I
      1                              ,subpoint_lat_clo,subpoint_lon_clo ! I
      1                              ,di_dh,dj_dh,i_fill_seams)         ! O
+
+        include 'trigd.inc'
 
         real subpoint_lat_clo(ni,nj)           ! I
         real subpoint_lon_clo(ni,nj)           ! I
