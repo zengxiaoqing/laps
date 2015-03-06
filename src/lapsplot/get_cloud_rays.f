@@ -28,7 +28,6 @@
      1                           ,grid_spacing_m,r_missing_data)        ! I
 
         use mem_namelist, ONLY: earth_radius,aero_scaleht,redp_lvl
-
         use cloud_rad
 
         include 'trigd.inc'
@@ -42,6 +41,10 @@
         angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
 
         curvat(hdst,radius) = hdst**2 / (2. * radius)
+        curvat2(sdst,radius_start,altray) = 
+     1       sqrt(sdst**2 + radius_start**2 
+     1         - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
+        horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
 
         parameter (rpd = 3.14159 / 180.)
 
@@ -94,7 +97,7 @@
         real ghic_2d(nc,ni,nj)      ! 2 W/m**2/nm 
         real dhic_2d(nc,ni,nj)      ! 2 W/m**2/nm 
 
-        logical l_solar_eclipse, l_radtran /.false./
+        logical l_solar_eclipse, l_radtran /.false./, l_spherical
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         parameter (nsp = 4)
@@ -276,7 +279,7 @@
             enddo ! kk
 4           continue
           else ! compare with compare_analysis_to_rad.f
-            dhi_2d(ii,jj) = 10. * exp(1.0*sol_alt(ii,jj))
+            dhi_2d(ii,jj) = 10. * exp(0.5*sol_alt(ii,jj))
             ghi_2d(ii,jj) = dhi_2d(ii,jj)
           endif
         enddo ! jj
@@ -366,15 +369,27 @@
             rkstart = float(nk) + (htstart - heights_3d(i,j,nk))/1000. 
             kstart = int(rkstart)
             patm = (ztopsa(htstart)*100.) / 101325.
-            horz_dep_tod_d = 
-     1sqrt(2.0 * (htstart - heights_3d(i,j,nk)) / earth_radius) * 180./3.14
-            write(6,*)' horizon tod depression = ',horz_dep_tod_d
+            horz_dep_tod_d = horz_depf(htstart - heights_3d(i,j,nk)
+     1                                ,earth_radius)
+            write(6,*)' horizon tod depression / tod ang diam = '
+     1                 ,horz_dep_tod_d, 180.-2.*horz_dep_tod_d
           endif
           write(6,*)' Start aloft at k/rk/p = ',kstart,rkstart,patm
         endif
 
-        horz_dep_d = sqrt(2.0 * max(htstart,0.) / earth_radius) * 180./3.14
-        write(6,*)' horizon depression = ',horz_dep_d
+        radius_earth_eff = earth_radius * (1. + (0.33333 * patm))
+        radius_start_eff = radius_earth_eff + htstart
+        radius_start     = earth_radius     + htstart
+
+!       horz_dep_d = sqrt(2.0 * max(htstart,0.) / earth_radius) * 180./3.14
+        horz_dep_d = horz_depf(max(htstart,0.),earth_radius)
+        write(6,*)' horizon depression of limb = ',horz_dep_d
+        write(6,*)' radius_start = ',radius_start
+        if(horz_dep_d .gt. 10.)then
+          l_spherical = .true.
+        else
+          l_spherical = .false.
+        endif
 
         aod_vrt = aod * exp(-(htstart-redp_lvl)/aero_scaleht)
 
@@ -453,6 +468,14 @@
 
          call get_htmin(altray,patm,htstart,earth_radius,1,patm2,htmin)
 
+         if(htstart .gt. 100000. .and. altray .lt. 0.)then
+          write(6,*)'altray/htmin = ',altray,htmin
+         endif
+
+         if(altray .eq. -63.5 .or. altray .eq. -87.)then
+          write(6,*)' debug point for altray'
+         endif
+
          do jazi = minazi,maxazi,jazi_delt
           view_azi_deg = float(jazi) * azi_scale
 
@@ -462,8 +485,9 @@
      1         (altray .ge. -5. .and. altray .le. 9.) .or. 
      1         ialt .eq. minalt .or. abs(altray) .eq. 14. .or.
      1         abs(altray) .eq. 16. .or.
-     1         abs(altray) .eq. 20. .or. altray .eq. 30. .or.
-     1         abs(altray) .eq. 45. .or. altray .eq. 60.) 
+     1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
+     1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
+     1         abs(altray) .eq. 75.) 
 !    1               .AND. altray .eq. nint(altray) 
      1                                                   )then
               idebug = 1
@@ -479,7 +503,12 @@
 
 !         Non-verbose
           if(htstart .lt. 10000.)then
-              idebug = 0; idebug_a(ialt,jazi) = 0
+!             idebug = 0; idebug_a(ialt,jazi) = 0
+          endif
+
+!         Extra verbose
+          if(altray .le. -60. .and. view_azi_deg .eq. 0.)then
+             write(6,*)'alt/azi = ',altray,view_azi_deg
           endif
 
 !         Trace towards sky from each grid point
@@ -588,6 +617,8 @@
               ihit_topo = 0
               ihit_bounds = 0
               rk_h = rkstart
+              rinew_h = i ! for l_spherical = T
+              rjnew_h = j ! for l_spherical = T
 
               rkdelt = rkdelt1
 
@@ -603,6 +634,18 @@
 
                 ls = ls + 1
 
+!               Extra verbose
+                if(altray .le. -60. .and. 
+     1              (idebug .eq. 1))then
+                  if(ls .le. 10 .or. ls .eq. 100 .or. ls .eq. 1000
+     1                          .or. ls .eq. 10000)then
+                    write(6,*)'   ls/rk/ht = ',ls,rk,ht_h
+                  elseif(altray .eq. -63.5)then
+                    write(6,*)'   ls/rk/ht = ',ls,rk,ht_h
+!                   idebug = 1
+                  endif
+                endif
+
                 if(rkdelt .ne. 0.)then ! trace by pressure levels
 
                   if(.false.)then ! optimize step size
@@ -617,7 +660,7 @@
                     if(idebug .eq. 1)then
                       write(6,*)' rk,rkdelt_vert,rkdelt_horz,rkdelt',
      1                            rk,rkdelt_vert,rkdelt_horz,rkdelt
-                      write(6,*)' view_altitude_deg,delta_grid_height',      
+                      write(6,*)' view_altitude_deg,delta_grid_height',
      1                            view_altitude_deg,delta_grid_height
                       write(6,*)' aspect_ratio',
      1                            aspect_ratio
@@ -727,8 +770,17 @@
 
 !                 Determine height from distance and elev
                   dz1_l = dz1_h
-                  dz1_h = slant1_h * sind(altray) 
-     1                  + dxy1_h**2 / (2. * radius_earth_8_thirds)
+
+                  if(l_spherical .eqv. .false.)then ! more approximate
+                    dz1_h = slant1_h * sind(altray) 
+!    1                    + dxy1_h**2 / (2. * radius_earth_eff)
+     1                    + curvat(dxy1_h,radius_start_eff)
+!                   gc_deg = (dxy1_h/radius_start)/rpd
+                  else ! need more accuracy
+                    dz1_h = curvat2(slant1_h,radius_start_eff,altray)
+                    gc_deg = asind(cosd(altray) 
+     1                     * slant1_h / (radius_start+dz1_h)) 
+                  endif
 
                   rk_l = rk_h
                   ht_l = htstart + dz1_l
@@ -760,34 +812,9 @@
 
                 endif ! rkdelt .ne. 0.
 
-                cslant = ' '
-
-                dx1_l = dxy1_l * xcos
-                dy1_l = dxy1_l * ycos
-
-                dx1_h = dxy1_h * xcos
-                dy1_h = dxy1_h * ycos
-
-                airmass1_l = airmass1_h
-                airmass1_h = airmass1_h + airmass2
-
-                ridelt_l = dx1_l / grid_spacing_m
-                rjdelt_l = dy1_l / grid_spacing_m
-
-                ridelt_h = dx1_h / grid_spacing_m
-                rjdelt_h = dy1_h / grid_spacing_m
-
-                rinew_l = ri + ridelt_l
-                rinew_h = ri + ridelt_h
-
-                rjnew_l = rj + rjdelt_l
-                rjnew_h = rj + rjdelt_h
-
-                rinew_m = 0.5 * (rinew_l + rinew_h)
-                rjnew_m = 0.5 * (rjnew_l + rjnew_h)
-
                 rk_m = 0.5 * (rk_l + rk_h)
                 ht_m = 0.5 * (ht_l + ht_h)
+                k_m = nint(rk_m)
 
                 if((rk_h-rk_l) .gt. 0.)then
                     grid_dh = (ht_h-ht_l) / (rk_h-rk_l)
@@ -796,16 +823,68 @@
                     grid_tan = 0.25 ! nominal value
                 endif
 
-                rni = ni
-                rnj = nj
+                cslant = ' '
 
-                inew_m = nint(rinew_m); jnew_m = nint(rjnew_m)
-                k_m = nint(rk_m)
+                ioutside_domain = 0
 
-                if(rinew_h .ge. 1. .and. rinew_h .le. rni .AND. 
-     1             rjnew_h .ge. 1. .and. rjnew_h .le. rnj .AND.
-     1             rk_m    .lt. float(nk)                 .AND.
-     1             rk_h    .ne. r_missing_data )then 
+                if(rk_m    .lt. float(nk) .AND.
+     1             rk_h    .ne. r_missing_data )then ! in vertical domain
+
+                 if(l_spherical .eqv. .true.)then ! more exact
+                  rinew_l = rinew_h
+                  rjnew_l = rjnew_h
+
+!                 Obtain latlon from spherical geometry
+                  TLat = ASinD(ycos*SinD(gc_deg)*CosD(rLat) 
+     1                 + SinD(rLat)*CosD(gc_deg))
+
+                  CosDLon = (CosD(gc_deg) - SinD(rLat)*SinD(TLat)) 
+     1                    / (CosD(rLat)*CosD(TLat))
+                  If(Abs(CosDLon).gt.1.)CosDLon=Sign(1.,CosDLon)
+                  DLon = ACosD(CosDLon)
+                  If(view_azi_deg.ge..0.and.view_azi_deg.le.180.)Then
+                   TLon=rLon+DLon
+                  Else
+                   TLon=rLon-DLon
+                  EndIf
+
+                  call latlon_to_rlapsgrid(tlat,tlon,lat,lon,ni,nj
+     1                                    ,rinew_h,rjnew_h,istatus)
+                 
+                 else ! more approximate
+                  dx1_l = dxy1_l * xcos
+                  dy1_l = dxy1_l * ycos
+
+                  dx1_h = dxy1_h * xcos
+                  dy1_h = dxy1_h * ycos
+
+                  ridelt_l = dx1_l / grid_spacing_m
+                  rjdelt_l = dy1_l / grid_spacing_m
+
+                  ridelt_h = dx1_h / grid_spacing_m
+                  rjdelt_h = dy1_h / grid_spacing_m
+
+                  rinew_l = ri + ridelt_l
+                  rinew_h = ri + ridelt_h
+
+                  rjnew_l = rj + rjdelt_l
+                  rjnew_h = rj + rjdelt_h
+
+                 endif ! l_spherical
+
+                 rinew_m = 0.5 * (rinew_l + rinew_h)
+                 rjnew_m = 0.5 * (rjnew_l + rjnew_h)
+
+                 rni = ni
+                 rnj = nj
+
+                 airmass1_l = airmass1_h
+                 airmass1_h = airmass1_h + airmass2
+
+                 inew_m = nint(rinew_m); jnew_m = nint(rjnew_m)
+
+                 if(rinew_h .ge. 1. .and. rinew_h .le. rni .AND. 
+     1              rjnew_h .ge. 1. .and. rjnew_h .le. rnj)then ! horz domain
 
                   i1 = min(int(rinew_m),ni-1)
                   j1 = min(int(rjnew_m),nj-1) 
@@ -1130,11 +1209,20 @@
 101               format(2f9.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,2f8.4
      1                  ,f10.5,4f8.2)
-                else
-                  if(.not.(iabove .eq. 1 .and. rk_m .gt. float(nk) 
-     1                                   .and. rk_h .lt. rk_m)    )then
-                      ihit_bounds = 1
-                  endif
+                 else ! outside horizontal domain
+                  ioutside_domain = 1
+
+                 endif ! in horizontal domain
+
+                else  ! outside vertical domain
+                 ioutside_domain = 1
+                 if(.not.(iabove .eq. 1 .and. rk_m .gt. float(nk) 
+     1                                  .and. rk_h .lt. rk_m)    )then
+                     ihit_bounds = 1
+                 endif
+                endif ! in vertical domain
+
+                if(outside_domain .eq. 1)then
                   if(idebug .eq. 1 .and. 
      1               (iwrite .le. 10 .or. ls .eq. (ls/40)*40) )then
                       iwrite = iwrite + 1
@@ -1151,7 +1239,7 @@
 !                       write(6,*)' argd1/argd2=',argd1,argd2
                       endif
                   endif
-                endif ! in horizontal/vertical domain
+                endif
 
                 if(rk_h - rkstart .gt. 0.0)then
 !                 rkdelt = rkdelt2
@@ -1161,7 +1249,16 @@
                 endif
               enddo ! while kk/rk
 
-!           enddo ! k
+!             Extra verbose
+              if(idebug .eq. 1 .and. altray .lt. 0.)then
+                write(6,*)'   ls/rk/ht = ',ls,rk,ht_h,' eor'
+                write(6,113)ls,rk,rk_h,rk_m,ht_h,ihit_topo,ihit_bounds
+     1                     ,iabove,gc_deg,slant1_h,dz1_h,tlat,tlon
+     1                     ,idebug
+113             format(
+     1    ' end of ray ls/rk3/ht/ihit-tb/iab/gc/sl1h/dz1h/latlon/idebug'
+     1                ,i6,3f10.3,f10.1,3i3,f9.3,2f11.1,2f9.2,i3)           
+              endif        
 
           endif ! true
 
