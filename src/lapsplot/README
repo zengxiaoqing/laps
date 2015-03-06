@@ -47,7 +47,7 @@ driver                                            lapsplot_main.f
                 sun_planet                        lib/cloud/sun_planet.f
             get_sky_rgb                           lib/cloud/get_sky_rgb.f90   (put it all together - RGB)
                 skyglow_phys                      lib/cloud/skyglow_phys.f90  (clear sky brightness - day)
-                    get_clr_src_dir               lib/cloud/get_clr_src_dir.f
+                    get_clr_src_dir               lib/cloud/get_clr_src_dir.f90
                     get_clr_src_dir_low             "
                     sun_eclipse_parms             lib/cloud/sun_moon.f
                     get_sky_rad_ave               lib/cloud/get_sky_rgb_routines.f90
