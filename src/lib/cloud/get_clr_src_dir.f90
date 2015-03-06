@@ -183,7 +183,8 @@
      subroutine get_clr_src_dir_low(solalt,solazi,viewalt,viewazi & ! I
            ,od_g_msl,od_g_vert,od_o_msl,od_o_vert,od_a_vert,htmsl & ! I
            ,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a &            ! I
-           ,ags_in,aas_in,ags_a,aas_a,ic,idebug &                   ! I
+           ,ags_in,aas_in,ags_a,aas_a,isolalt_lo,isolalt_hi &       ! I
+           ,ic,idebug &                                             ! I
            ,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
      use mem_namelist, ONLY: earth_radius
@@ -203,8 +204,8 @@
      real aav      ! aero  relative to zenith value for observer ht/viewalt
      real ags_in   ! gas   relative to zenith value for observer ht/solalt
      real aas_in   ! aero  relative to zenith value for observer ht/solalt
-     real ags_a(-5:+5) ! gas relative to zenith value for obs ht/solalt
-     real aas_a(-5:+5) ! aero relative to zenith value for obs ht/solalt
+     real ags_a(isolalt_lo:isolalt_hi) ! gas rel to zen val fr obs ht/salt
+     real aas_a(isolalt_lo:isolalt_hi) ! aero rel to zen val fr obs ht/salt
 
 !    return ! timing
 
@@ -322,7 +323,8 @@
 !        Update ags,aas
          dsolalt = dsolalt_dxy * xybar
          solalt_step = solalt + dsolalt
-         dsolaltb = max(min(dsolalt,4.9999),-5.0)
+         dsolaltb = &
+            max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
          fsolalt = dsolaltb - float(isolaltl)
          ags = ags_a(isolaltl) * (1.-fsolalt) + ags_a(isolalth) * fsolalt
@@ -423,10 +425,13 @@
      subroutine get_clr_src_dir_topo(solalt,solazi,viewalt,viewazi &   ! I
            ,od_g_msl,od_g_vert,od_a_vert,htmsl,dist_to_topo &          ! I
            ,ssa,agv,aav,aod_ref,redp_lvl,scale_ht_a &                  ! I
-           ,ags_in,aas_in,ags_a,aas_a,ic,idebug,nsteps &               ! I
+           ,ags_in,aas_in,ags_a,aas_a,isolalt_lo,isolalt_hi &          ! I
+           ,ic,idebug,nsteps &                                         ! I
            ,sumi_g,sumi_a,opac_slant,ds,tausum_a)                      ! O
 
+     use mem_namelist, ONLY: earth_radius
      include 'trigd.inc'
+     include 'rad.inc'
 
      trans(od) = exp(-min(od,80.))
      opac(od) = 1.0 - trans(od)
@@ -435,7 +440,8 @@
 
      real tausum_a(nsteps)
 
-     real ags_a(-5:+5), aas_a(-5:+5)
+     real ags_a(isolalt_lo:isolalt_hi) ! gas rel to zen val fr obs ht/salt
+     real aas_a(isolalt_lo:isolalt_hi) ! aero rel to zen val fr obs ht/salt
 
 !    Calculate src term of gas+aerosol along ray normalized by TOA radiance
      od_g_slant = od_g_vert * agv        
@@ -511,19 +517,33 @@
 
 !        Update ags,aas
          dsolalt = dsolalt_dxy * xybar
-         dsolaltb = max(min(dsolalt,4.9999),-5.0)
+         dsolaltb = &
+            max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
          fsolalt = dsolaltb - float(isolaltl)
          ags = ags_a(isolaltl) * (1.-fsolalt) + ags_a(isolalth) * fsolalt
          aas = aas_a(isolaltl) * (1.-fsolalt) + aas_a(isolalth) * fsolalt
+
+!        Considering smoothing out with solar disk
+         horz_dep = horz_depf(htbar_msl,earth_radius)
+         if(solalt_step + 0.5 .lt. -horz_dep)then 
+            sol_occ = 0.0 ! invisible
+         else
+            sol_occ = 1.0 ! visible
+         endif
 
          if(i .eq. nsteps_topo .and. idebug .eq. 1)then
              write(6,*)'aas terms',isolaltl,aas_a(isolaltl),isolalth,aas_a(isolalth),fsolalt
              write(6,*)'od_solar_slant terms',od_g_vert,ags,htbar,scale_ht_g,exp(-htbar/scale_ht_g),aod_ref,aas,htbar,scale_ht_a,exp(-(htbar_msl-redp_lvl)/scale_ht_a)
              iwrite_slant = 1
          endif
-         od_solar_slant = od_g_msl * ags * exp(-htbar_msl/scale_ht_g) &
+
+         if(sol_occ .gt. 0.)then
+           od_solar_slant = od_g_msl * ags * exp(-htbar_msl/scale_ht_g) &
                     + aod_ref * aas * exp(-(htbar_msl-redp_lvl)/scale_ht_a)
+         else
+           od_solar_slant = 999.
+         endif
 
 !        alphabar_g = alpha_sfc_g * exp(-htbar/scale_ht_g) 
          alphabar_g = alpha_ref_g * exp(-htbar_msl/scale_ht_g) 
@@ -540,9 +560,9 @@
 
 !        rad = 1.0
          rad = trans(od_solar_slant)
-         radg = max(rad,.01) ! secondary scattering
-         rada = max(rad,.001) ! secondary scattering
-         rad = max(rad,.01) ! secondary scattering
+         radg = rad ! max(rad,.01) ! secondary scattering
+         rada = rad ! max(rad,.001) ! secondary scattering
+!        rad = max(rad,.01) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
          if(dtau .gt. 0.)then
