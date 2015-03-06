@@ -10,13 +10,13 @@
                    ,aod_ill,aod_2_topo                            &! I
                    ,l_solar_eclipse,i4time,rlat,rlon              &! I
                    ,clear_radf_c,ag_2d                            &! I
-                   ,clear_rad_c,elong                       )      ! O/I
+                   ,clear_rad_c,sky_rad_ave,elong           )      ! O/I
 
 !       Sky glow with solar altitude > 0
 
         include 'trigd.inc'
 
-        use mem_namelist, ONLY: fcterm, aod_bin, aod_asy
+        use mem_namelist, ONLY: fcterm, aod_bin, aod_asy, r_missing_data
 
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
@@ -89,9 +89,13 @@
 !       real sky_rad_scata(minazi:maxazi)
 
 !       Airmasses relative to zenith for observer ht
-        real ags_a(-5:+5), aas_a(-5:+5), aos_a(-5:+5)
+        parameter (isolalt_lo=-11,isolalt_hi=+11)
+        real ags_a(isolalt_lo:isolalt_hi)
+        real aas_a(isolalt_lo:isolalt_hi)
+        real aos_a(isolalt_lo:isolalt_hi)
 
         eobsc(:,:) = 0. ! initialize
+        sky_rad_ave = r_missing_data
         sfc_alb = 0.15  ! pass this in and account for snow cover?
         ssa = 0.80
 
@@ -135,13 +139,13 @@
                          ,earth_radius,1 &          ! I
                          ,ag_s,ao_s,aa_s)           ! O
 
-!       Set this for values of -5 to +5 degrees of solar altitude
+!       Set this for range of values of solar altitude
         if(.false.)then
           ags_a = ag_s/ag_90
           aas_a = aa_s/aa_90
         else
           patm_refht = ztopsa(aero_refht)/1013.25
-          do isolalt = -5,+5
+          do isolalt = isolalt_lo,isolalt_hi
             sol_alt_a = sol_alt + float(isolalt)
             if(sol_alt_a .gt. 0.)then
               call get_airmass(sol_alt_a,0.,1. &                     ! I
@@ -372,7 +376,7 @@
                   ag/ag_90,ao,aa_o_aa_90, &
                   aod_ref,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
-                  ags_a,aas_a,ic,idebug_clr, &
+                  ags_a,aas_a,isolalt_lo,isolalt_hi,ic,idebug_clr, &
                   srcdir_a(ic,jazi),sumi_g_a(ic,jazi),sumi_a_a(ic,jazi),&
                   opac_slant,nsteps,dsl,tausum_a)
                 if(idebug_clr .eq. 1)then
@@ -682,7 +686,8 @@
                      htmsl,dist_2_topo(ialt,jazi), &
                      ssa,ag/ag_90,aa_o_aa_90, &
                      aod_ref,aero_refht,aero_scaleht, &
-                     ag_s/ag_90,aa_s_o_aa_90,ags_a,aas_a,ic,idebug_topo, &
+                     ag_s/ag_90,aa_s_o_aa_90,ags_a,aas_a, &
+                     isolalt_lo,isolalt_hi,ic,idebug_topo, &
                      nsteps,sumi_g,sumi_a,opac_slant,dst,tausum_a)
                     if(idebug_topo .gt. 0)then
                       write(6,81)ialt,jazi,ic,sol_alt,altray &
@@ -839,7 +844,7 @@
                 call get_sky_rad_ave(clear_rad_c(ic,:,:) &
                     ,view_alt,view_az,maxalt-minalt+1,maxazi-minazi+1 &
                     ,sol_alt,sol_azi,sky_rad_ave)
-                write(6,*)' range of clear_rad_c',minval(clear_rad_c(ic,:,:)),maxval(clear_rad_c(ic,:,:))
+                write(6,*)'range of clear_rad_c',minval(clear_rad_c(ic,:,:)),maxval(clear_rad_c(ic,:,:))
                 od_g_vert = ext_g(ic) * patm
                 od_o_vert = ext_o(ic) * patm_o3(htmsl)
                 od_a_vert = aod_vrt * ext_a(ic)
@@ -853,7 +858,12 @@
                   highalt_adjust = 1.0 + (-sol_alt/6.0)
                 endif
                 write(6,191)ialt_end,maxalt,znave,highalt_adjust
-191             format('ialt_end,maxalt,znave,hadj',2i7,2f9.5)
+191             format(' ialt_end,maxalt,znave,hadj',2i7,2f9.5)
+
+                jazi_dbg = min(360,maxazi)
+                if(ic .eq. 2)then
+                  write(6,*)' single scat clear rad at ic/azi',ic,view_az(ialt_start,jazi_dbg)
+                endif
 
                 do ialt = ialt_start,ialt_end
                   altray = view_alt(ialt,jazi_start)
@@ -862,7 +872,7 @@
                   fracg = od_g_vert / od_vert
                   fraca = od_a_vert / od_vert
                   if(ic .eq. 2)then
-                    write(6,*)'alt,od_slant,clear_rad_c(2)',altray,od_slant,clear_rad_c(ic,ialt,1)
+                    write(6,*)'alt,od_slant,clear_rad_c(2)',altray,od_slant,clear_rad_c(ic,ialt,jazi_dbg)
                   endif
 
                   do jazi = jazi_start,jazi_end
@@ -880,18 +890,22 @@
                   enddo ! jazi
 
                   clear_rad_c(ic,ialt,:) = clear_rad_c(ic,ialt,:) + sky_rad_scat(ic,ialt,:)
-                  if(ialt .eq. ialt_end)then
+                  if(ialt .eq. ialt_end)then ! zenith/high point info
                     scatfrac = sky_rad_scat(ic,maxalt,1) / clear_rad_c(ic,maxalt,1)
                     ri_over_i0 = clear_rad_c(ic,maxalt,1) / clear_rad_c0(ic,maxalt,1)
                     ri_over_f0 = clear_rad_c(ic,maxalt,1) / 3e9                            
                     rmaglim = b_to_maglim(clear_rad_c(2,ialt_end,minazi))
                     write(6,201)ic,altray,sky_rad_ave,od_vert,clear_rad_c0(ic,maxalt,1),sky_rad_scat(ic,maxalt,1),clear_rad_c(ic,maxalt,1),scatfrac,ri_over_i0
-201                 format('ic/alt/sky_rad_ave/od/c0/scat/rad/rat/scatf/ii0/if0/rmaglim',i2,f9.2,f11.0,f6.3,f11.0,2e12.4,f7.4,2f10.7)
+201                 format(' ic/alt/sky_rad_ave/od/c0/scat/rad/rat/scatf/ii0',i2,f9.2,f11.0,f6.3,f11.0,2e12.4,f7.4,2f10.7)
+                    if(ic .eq. 2)then
+                      b = clear_rad_c(2,ialt_end,minazi)
+                      write(6,211)b,b_to_v(b),rmaglim
+                    endif
+211                 format(' b/mag/rmaglim at high point (second scat) =' &
+                          ,f10.1,2f9.2)
                   endif ! at zenith 
                 enddo ! ialt
             enddo ! ic
-            rmaglim = b_to_maglim(clear_rad_c(2,ialt_end,minazi))
-            write(6,*)' rmaglim at high point (second scat) = ',rmaglim
         endif
 
         write(6,*)' clearrad2:',clear_rad_c(2,maxalt/2,minazi:maxazi:10)
