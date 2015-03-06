@@ -1,6 +1,7 @@
 
         subroutine plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
 !    1                          ,minalt,maxalt,minazi,maxazi
+     1                          ,ni_polar,nj_polar
      1                          ,r_missing_data,laps_cycle_time,maxstns
      1                          ,i_overlay,plot_parms,namelist_parms
      1                          ,l_polar,l_cyl)       
@@ -127,8 +128,6 @@
         real, allocatable, dimension(:,:) :: alt_a_roll
         real, allocatable, dimension(:,:) :: azi_a_roll
 
-        parameter (ni_polar = 511)
-        parameter (nj_polar = 511)
         real r_cloud_3d_polar(ni_polar,nj_polar)
         real blog_v_roll_polar(ni_polar,nj_polar)
         real alt_a_polar(ni_polar,nj_polar)
@@ -202,7 +201,9 @@
 
         write(6,*)
         write(6,*)' Input number of all-sky locations...'
-        read(5,*)nloc
+        read(lun,*)nloc
+
+        write(6,*)' Number of all-sky locations from file is ',nloc
 
         do iloc = 1,nloc
 
