@@ -11,9 +11,6 @@
 
         parameter (day_int = 3e9)
 
-        counts_to_rad(counts) = 10.**(((counts-cntref)/contrast)+glwref)
-        rad_to_counts(rad) = (log10(rad)-glwref)*contrast + cntref
-
         expgamma(x) = 1. - exp(-x**(1./gamma))
         expgaminv(x) = (-(log(1.-x)))**gamma ! inverse of expgamma
         radhi(glwref,cntref) = (10.**glwref) / (expgaminv(cntref/255.))
@@ -78,9 +75,7 @@
         call linearrgb_to_counts(r,g,b,rc,gc,bc)
 
         if(iverbose .eq. 1)write(6,*)'glwref/contrast = ',glwref,contrast
-!       if(iverbose .eq. 1)write(6,*)'rad of 240 counts = ',counts_to_rad(240.)
 
-!       desired_rad = counts_to_rad(240.) * rel_solar_luminance
 !       if(iverbose .eq. 1)write(6,*)'desired rad = ',desired_rad
 
         luma_of_counts = RGB2luma(rc,gc,bc)
