@@ -19,6 +19,8 @@
      1                     ,twi_0                                ! I
      1                     ,sky_rgb_cyl)                         ! O
 
+        addlogs(x,y) = log10(10.**x + 10.**y)
+
 !       Input arrays
         real clwc_3d(NX_L,NY_L,NZ_L)      ! Control Variable
         real cice_3d(NX_L,NY_L,NZ_L)      ! Control Variable
