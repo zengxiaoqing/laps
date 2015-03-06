@@ -36,8 +36,10 @@
         airmasso(z,htmsl) = 1./SQRT(1.0-(SIND(min(z,90.))/(1.0+hshellf(htmsl)/6371e3))**2)
 
 !       Error function from Wikipedia
-        erf(x) = 1.-1./(1.+.278393*x+.230389*x**2+.000972*x**3+.078108*x**4)**4
-        gaussint(x) = 0.5 * sqrt(pi) * (1. - erf(abs(x)) * x/(abs(x)+1e-6))
+        erf_pos(x) = 1.-1./(1.+.278393*x+.230389*x**2+.000972*x**3+.078108*x**4)**4
+        erf(x) = sign(erf_pos(abs(x)),x)
+!       gaussint(x) = 0.5 * sqrt(pi) * (1. - erf(abs(x)) * x/(abs(x)+1e-6))
+        gaussint(x) = 0.5 * sqrt(pi) * (1. - erf(x))
 
 !       patm_o3(ht) = max(min((32000. - ht) / 14000.,1.0),0.)
 !       patm_o3(ht) = 1.0 - (gaussint((ht-25000.)/5000.) / 1.77245)
