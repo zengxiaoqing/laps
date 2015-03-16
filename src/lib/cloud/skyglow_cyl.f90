@@ -171,7 +171,7 @@
 !              ialt = nint((altobj-altmin)/alt_scale)
                call get_idx(altobj,minalt,alt_scale,ialt)
                call get_interp_parms(minalt,maxalt,ialt_delt,ialt &     ! I
-                                    ,fm,fp,ialtm,ialtp,ir)              ! O
+                                    ,fm,fp,ialtm,ialtp,ir,istatus)      ! O
                write(6,*)' altobj/fm/fp/ialtm/ialtp',altobj,fm,fp,ialtm,ialtp
                if(ir .ne. 0)then
                  blog_v(ialt,:)  = fm * blog_v(ialtm,:)  + fp * blog_v(ialtp,:)
