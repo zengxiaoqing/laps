@@ -399,8 +399,8 @@
      if(solalt .ge. twi_alt)then ! daylight or early twilight
        imiss = 0
        do k = 1,nk
-         patm_k = exp(-heights_1d(k)/8000.)
-!        patm_k = ztopsa(heights_1d(k)) / 1013.
+!        patm_k = exp(-heights_1d(k)/8000.)
+         patm_k = ztopsa(heights_1d(k)) / 1013.
          topo = 1500. ! generic topo value (possibly redp_lvl?)
          ht_agl = heights_1d(k) - topo
 
@@ -447,22 +447,22 @@
              else ! low daylight sun
 !              Direct illumination of the cloud is calculated here
 !              Indirect illumination is factored in via 'scat_frac'
-               obj_alt_thr = abs(obj_alt(i,j)) * .00
-               if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr)then
+!              obj_alt_thr = abs(obj_alt(i,j)) * .00
+!              if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr)then
 !                am = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)),patm_k)
                  am = airmassf(90.-obj_alt(i,j), patm_k)
                  obj_alt_last = obj_alt(i,j)
-               endif                                                     
+!              endif                                                     
                scat_frac = 1.00
                do ic = 1,nc
                  trans_c(ic) = trans(am*ext_g(ic)*scat_frac)
                enddo
 
 !              Fraction of solar disk (approximate)
-               if(obj_alt(i,j) .gt. 0.25)then
+               if(obj_alt_cld .gt. 0.25)then
                  sol_occ = 1.0
                else
-                 occfrac = (obj_alt(i,j) - (-0.25)) / 0.5             
+                 occfrac = (obj_alt_cld - (-0.25)) / 0.5             
                  sol_occ = scurve(occfrac)             
                endif
 
