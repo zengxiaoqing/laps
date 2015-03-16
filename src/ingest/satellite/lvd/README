@@ -10,9 +10,11 @@
               satdata_lvd_table              include/satdata_lvd_table.for
        compute_nav_ll                        compute_nav_llij.f
            genlvdlut_lvd                     lib/satellite/genlvdlut_lvd.f 
-               get_lut_lambert               lib/satellite/gen_lut_lambert.f
+               gen_lut_lambert               lib/satellite/gen_lut_lambert.f
+                   get_wfo_nav_parms         lib/satellite/update_gvarimg_parms.f
+                       get_attribute_wfo     lib/satellite/get_attr_satellite.f
                    rdcdfhead                 lib/satellite/rdcdfhead.f
-                   get_sat_boundary          lib/satellite/getsat_boundary.f
+                   get_sat_boundary          lib/satellite/getsat_boundary.f 
                gen_gvarimage_lut             lib/satellite/gen_lut_gvar.f
                    update_gvarimg_parms      lib/satellite/update_gvarimg_parms.f
                        rd_gvarimg_cdf_header lib/satellite/rdgvarimg_cdf_header.f
@@ -22,10 +24,12 @@
                    setcon                         "
                    lmodel                         "
                    get_sat_boundary          lib/satellite/getsat_boundary.f
-               get_lut_mercator
-               get_lut_ps
+               get_lut_mercator              lib/satellite/gen_lut_mercator.f
+               get_lut_ps                    lib/satellite/genlutps.f
        lvd_driver_sub                        lvd_driver_sub.f
            readlut                           readlut.f
+               get_wfo_nav_parms             lib/satellite/update_gvarimg_parms.f
+                   get_attribute_wfo         lib/satellite/get_attr_satellite.f
            lvd_file_specifier                lib/satellite/lvd_file_specifier.f
            getcdf_satdat                     getcdf_satdat.f
                lvd_file_specifier            lvd_file_specifier.f
@@ -63,29 +67,25 @@
            write_laps_data
 
 The lvd code is written to process the block of satellite data
-that covers a laps domain. The software is dynamic and uses i/j start
-end values contained in satellite_lvd.nl. lvd uses a complex namelist
-file: data/static/satellite_lvd.nl which is rewritten when the
-mapping (domain or satellite navigation) information changes. Although
-complex, the namelist does not require significant understanding to
-modify.  The file has been designed such that a user typically only
-has to modify the PATH_TO_RAW_SAT, ISATS, ITYPES, and ICHANNELS
+that covers a laps domain. LVD uses a namelist file: 
+data/static/satellite_lvd.nl The file has been designed such that a user 
+typically only has to modify the PATH_TO_RAW_SAT, ISATS, ITYPES, and ICHANNELS
 parameters. These, and other specific modifications are discussed below.
 
-   If the raw satellite data does not cover the entire LAPS domain,
+If the raw satellite data does not cover the entire LAPS domain,
 lvd uses the internal missing_data flag to identify these grid points.
 The cloud analysis software uses a namelist parameter (see 
 static/cloud.nl ... pct_req_lvd_s8a) to accept or reject satellite
 data that partially covers a domain. All other analyses use any
 satellite data available in the lvd intermediate files.
 
-   lvd computes the navigation/remapping (lat-lon to i-j) look-up-
+lvd computes the navigation/remapping (lat-lon to i-j) look-up-
 tables dynamically.  However, a separate executable (genlvdlut.exe)
 is also built (not used) for diagnostic purposes when a user needs
 to check the remapping look-up-table (LUT) generation.  The LUT's
 are written to static/lvd/"satid"-llij-"channel"-"type".lut
 
-   lvd_sat_ingest checks if the LUT's exist or whether the existing
+lvd_sat_ingest checks if the LUT's exist or whether the existing
 LUT is accurate for the data type being processed. The LUT generation
 code is in src/lib/satellite. The localization script removes any
 existing LUT's in static/lvd which forces lvd_sat_ingest.exe to
@@ -94,7 +94,7 @@ are used thereafter until the satellite navigation or laps domain
 parameters change. Note that for GVAR (gvr) type data, new LUT's are
 generated automatically once per day (at ~ 0000).
 
-   The LAPS satellite ingest creates an intermediate file with
+The LAPS satellite ingest creates an intermediate file with
 extension "lvd" (lapsprd/lvd/"satid"/.   The
 namelist works in conjunction with a data include file
 src/include/sat_data_static.inc which contains static information
