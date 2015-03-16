@@ -44,6 +44,7 @@
         real hg2d(nc), alphav_g, alphav_a ! hg2(nc)
         real srcdir_90(nc),srcdir(nc),clear_int_c(nc)
         real sumi_gc(nc),sumi_ac(nc)
+        real sumi_gct(nc),sumi_act(nc)
         real srcdir_a(nc,minazi:maxazi)
         real sumi_g_a(nc,minazi:maxazi),sumi_a_a(nc,minazi:maxazi)
         real ecl_intd(nc),ecl_dir_rat(nc),ecl_scat(nc)
@@ -76,7 +77,7 @@
         parameter (nsc = 3)
         real aod_asy_eff(nsc) ! ,nc (add nc dimension throughout)
 
-        logical l_solar_eclipse, l_2lyr
+        logical l_solar_eclipse, l_2lyr, l_topo_a(minazi:maxazi)
 
         parameter (nsteps = 100000)
         parameter (nopac = 10)
@@ -228,8 +229,17 @@
          write(6,63)altray,ag,ao,aa
 63       format(' returned from get_airmass with alt/ag/ao/aa = ',f9.0,3e12.4)
 
-!        write(6,*)'az range at this alt1',ialt,minval(view_az(ialt,:)) &
-!                                              ,maxval(view_az(ialt,:))
+!        Set sparse azimuth array for topo calls
+         if(altray .ge. 0.)then
+           jazi_delt_topo = 1
+         elseif(altray .eq. -90.)then
+           jazi_delt_topo = maxazi-minazi
+         else
+           jazi_delt_topo = int(1./cosd(altray))
+         endif
+         l_topo_a = .false.
+         l_topo_a(minazi:maxazi:jazi_delt_topo) = .true.
+         write(6,*)'topo az delt at alt:',altray,jazi_delt_topo
 
 !        Determine src term and ratio with zenith value
          if(sol_alt .gt. 0.)then
@@ -666,9 +676,13 @@
                   else
                     nlyr = 1
                   endif
-                  if(.true.)then
+                  if(l_topo_a(jazi) .eqv. .true.)then
                     if( idebug_a(ialt,jazi) .gt. 0 .AND. &
                        (ic .eq. 2 .or. sol_alt .lt. 4.)     )then
+                      idebug_topo = 1
+                    elseif(altray .le. -60. .and. altray .eq. nint(altray)&
+                     .and. htmsl .gt. 1000000. .and. ic .eq. 2 &
+                     .and. jazi .eq. minazi)then
                       idebug_topo = 1
                     else
                       idebug_topo = 0
@@ -688,19 +702,20 @@
                      aod_ref,aero_refht,aero_scaleht, &
                      ag_s/ag_90,aa_s_o_aa_90,ags_a,aas_a, &
                      isolalt_lo,isolalt_hi,ic,idebug_topo, &
-                     nsteps,sumi_g,sumi_a,opac_slant,dst,tausum_a)
+                     nsteps,sumi_gct(ic),sumi_act(ic),opac_slant,dst, & 
+                     tausum_a)
                     if(idebug_topo .gt. 0)then
                       write(6,81)ialt,jazi,ic,sol_alt,altray &
-                                ,dist_2_topo(ialt,jazi),sumi_g,sumi_a
-81                    format(' called get_clr_src_dir_topo',i4,i5,i4,2f8.2,f8.0,2f9.4)
+                         ,dist_2_topo(ialt,jazi),sumi_gct(ic),sumi_act(ic)
+81                    format(' called get_clr_src_dir_topo',i4,i5,i4,2f8.2,f10.0,2f9.4)
                     endif ! write log info
                   endif ! call get_clr_src_dir_topo
 
                   aodf = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi)
                   day_int = 3e9 * (1.0 - eobsc(ic,jazi))
                   clear_rad_topo = day_int * &
-                    (sumi_g * rayleigh_gnd * clear_radf_c(ic,ialt,jazi) + &
-                     sumi_a * hg2t         * aodf * ssa)
+                    (sumi_gct(ic) * rayleigh_gnd * clear_radf_c(ic,ialt,jazi) + &
+                     sumi_act(ic) * hg2t         * aodf * ssa)
                   if(l_solar_eclipse .eqv. .false.)then ! experimental
                     clear_rad_c(ic,ialt,jazi) = clear_rad_topo
                   endif
@@ -708,9 +723,9 @@
                   mode_sky = 2
 
                   if(idebug .ge. 1 .AND. ic .eq. 2)then
-                    write(6,91)elong(ialt,jazi),sumi_g,rayleigh_gnd &
-                       ,clear_radf_c(ic,ialt,jazi),sumi_a,hg2t,aodf,ssa &
-                       ,clear_rad_topo      
+                    write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
+                       ,clear_radf_c(ic,ialt,jazi),sumi_act(ic),hg2t &
+                       ,aodf,ssa,clear_rad_topo      
 91                  format('elg/ig/ray/radf/ia/hg2t/aodf/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,3f9.4,f7.2,3x,f12.0)
                   endif
 
@@ -808,7 +823,7 @@
               write(6,111)altray,view_azi_deg,sol_alt,mode_sky,od_a &
                        ,dist_2_topo(ialt,jazi),clear_rad_c(:,ialt,jazi)/1e9 
 111           format('alt/azi/salt/mode/od_a/dst/clrrd' &
-                    ,2f6.1,1x,f6.2,i3,f10.5,f8.0,3e14.5)
+                    ,2f6.1,1x,f6.2,i3,f10.5,f9.0,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
