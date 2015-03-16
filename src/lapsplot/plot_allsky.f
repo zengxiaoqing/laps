@@ -113,6 +113,9 @@
         real, allocatable, dimension(:,:) :: airmass_2_topo_3d                        
         real, allocatable, dimension(:,:) :: topo_swi                        
         real, allocatable, dimension(:,:,:) :: topo_albedo
+        real, allocatable, dimension(:,:) :: topo_ri
+        real, allocatable, dimension(:,:) :: topo_rj
+        real, allocatable, dimension(:,:) :: topo_solalt
         real, allocatable, dimension(:,:,:) :: ghic
         real, allocatable, dimension(:,:) :: aod_2_cloud
         real, allocatable, dimension(:,:) :: aod_2_topo
@@ -846,6 +849,9 @@
           allocate(airmass_2_topo_3d(minalt:maxalt,minazi:maxazi))
           allocate(topo_swi(minalt:maxalt,minazi:maxazi))
           allocate(topo_albedo(nc,minalt:maxalt,minazi:maxazi))
+          allocate(topo_ri(minalt:maxalt,minazi:maxazi))
+          allocate(topo_rj(minalt:maxalt,minazi:maxazi))
+          allocate(topo_solalt(minalt:maxalt,minazi:maxazi))
           allocate(ghic(nc,minalt:maxalt,minazi:maxazi))
           allocate(aod_2_cloud(minalt:maxalt,minazi:maxazi))
           allocate(aod_2_topo(minalt:maxalt,minazi:maxazi))
@@ -992,7 +998,7 @@
      1                     ,rain_3d,snow_3d                      ! I
      1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
      1                     ,topo_albedo_2d                       ! I
-     1                     ,htagl                                ! I
+     1                     ,htagl(iloc)                          ! I
      1                     ,aod_ref                              ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
@@ -1007,7 +1013,7 @@
      1                     ,twi_0                                ! I
      1                     ,sky_rgb_cyl)                         ! O
 
-          else
+           else
 
 !           Get line of sight from isound/jsound
             call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
@@ -1016,6 +1022,7 @@
      1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
      1                     ,topo_albedo_2d                       ! I
      1                     ,topo_swi,topo_albedo,ghic            ! O
+     1                     ,topo_ri,topo_rj                      ! O
 !    1                     ,ghi_2d,dhi_2d                        ! O
      1                     ,aod_vrt,aod_2_cloud,aod_2_topo       ! O
      1                     ,dist_2_topo                          ! O
@@ -1190,6 +1197,19 @@
                 write(6,*)' ialt_sun,jazi_sun = ',ialt_sun,jazi_sun
             endif
 
+            do j = minazi,maxazi
+            do i = minalt,maxalt
+                itopo = nint(topo_ri(i,j))
+                jtopo = nint(topo_rj(i,j))
+                if(itopo .ge. 1 .and. itopo .le. NX_L .and.
+     1             jtopo .ge. 1 .and. jtopo .le. NY_L)then
+                    topo_solalt(i,j) = sol_alt_2d(itopo,jtopo)
+                else
+                    topo_solalt(i,j) = 0.
+                endif
+            enddo ! i
+            enddo ! j
+
             write(6,*)' call get_sky_rgb with cyl data'
             call get_sky_rgb(r_cloud_3d      ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
@@ -1213,7 +1233,7 @@
      1                    ,topo_swi,topo_albedo
      1                    ,topo_albedo_2d(2,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
-     1                    ,dist_2_topo
+     1                    ,dist_2_topo,topo_solalt
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
@@ -1223,6 +1243,7 @@
 
           endif ! call calc_allsky
 
+          write(6,*)' end of subroutine call block'
 
 !           Write time label
             open(53,file='label.'//clun,status='unknown')
@@ -1322,6 +1343,9 @@
           deallocate(airmass_2_topo_3d)
           deallocate(topo_swi)
           deallocate(topo_albedo)
+          deallocate(topo_ri)
+          deallocate(topo_rj)
+          deallocate(topo_solalt)
           deallocate(ghic)
           deallocate(aod_2_cloud)
           deallocate(aod_2_topo)
