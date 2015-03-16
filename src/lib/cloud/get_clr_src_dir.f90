@@ -437,6 +437,9 @@
      opac(od) = 1.0 - trans(od)
      angdif(X,Y)=MOD(X-Y+540.,360.)-180.
      curvat(hdst,radius) = hdst**2 / (2. * radius)
+     curvat2(sdst,radius_start,altray) = &
+             sqrt(sdst**2 + radius_start**2 &
+               - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
 
      real tausum_a(nsteps)
 
@@ -448,6 +451,9 @@
      od_a_slant = od_a_vert * aav        
      od_slant = od_g_slant + od_a_slant
      r_e = 6371.e3
+     patm_htmsl = ztopsa(htmsl) / 1013.25
+     radius_earth_eff = earth_radius * (1. + (0.33333 * patm_htmsl))
+     radius_start_eff = radius_earth_eff + htmsl
 
      scale_ht_g = 8000.
 !    alpha_sfc_g = od_g_vert / scale_ht_g
@@ -465,16 +471,17 @@
          opac_slant = od_g_slant + od_a_slant
      endif
 
-     nsteps_topo = max(10,int(htmsl/1000.))
-
 !    ags_a = ags_in; aas_a = aas_in ! test
 
 !    Integral [0 to x] a * exp(-b*x) = a * (1. - exp*(-b*x)) / b
-     ds = dist_to_topo / float(nsteps_topo)
+     ds = min(dist_to_topo/10.,1000.)           
+     nsteps_topo = nint(dist_to_topo/ds) ! max(10,int(htmsl/1000.))
      tausum = 0.
      sumi = 0.; sumi_g = 0.; sumi_a = 0.
      httopill = max(130000.-sind(solalt)*90000.,40000.)
      htbotill = -(htmsl + 500.)
+     httopo = 0.
+     istart = max(1,nint((htmsl-100000.)/ds))
 
      if(idebug .eq. 1)then
          write(6,*)
@@ -492,12 +499,12 @@
          write(6,*)'opac_slant = ',opac_slant
          write(6,*)'od_slant = ',od_slant
          write(6,*)'dist_to_topo = ',dist_to_topo
-         write(6,*)'nsteps_topo = ',nsteps_topo
+         write(6,*)'istart/nsteps_topo/ds = ',istart,nsteps_topo,ds
          write(6,*)'htbotill/httopill',htbotill,httopill
      endif ! i
 
      if(idebug .eq. 1)then ! substitute radg/rada?
-       write(6,*)'     sbar     htbar   htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g   sumi_a opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'        sbar     htbar     htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g   sumi_a opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -506,11 +513,12 @@
 
      iwrite_slant = 0
 
-     do i = 1,nsteps_topo
+     do i = istart,nsteps_topo
        sbar = (float(i)-0.5) * ds
-       htbar = sbar * sind(viewalt)
+!      htbar = sbar * sind(viewalt)
        xybar = sbar * cosd(viewalt)
-       htbar = htbar + curvat(xybar,r_e*(4./3.)) ! Earth Curvature
+!      htbar = htbar + curvat(xybar,earth_radius*(4./3.)) ! Earth Curvature
+       htbar = curvat2(sbar,radius_start_eff,viewalt)
        htbar_msl = htbar+htmsl
        if(htbar_msl .lt. httopill)then
          xybar = sbar * cosd(viewalt)
@@ -588,11 +596,17 @@
          if(idebug .eq. 1)then
 !          if(i .le. 10)then
              write(6,11)i,sbar,htbar,htbar_msl,dtau,tausum,dsolalt,alphabar_g,alphabar_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i3,f8.0,2f9.0,f9.4,f9.6,f9.4,2f9.6,9f9.4)
+11           format(i6,f9.0,f10.0,f9.0,f9.4,f9.6,f9.4,2f9.6,9f9.4)
 !          endif
          endif
        endif ! htbar < httopill
+
+       if(htbar_msl .lt. httopo .or. (htbar_msl .gt. httopill .and. viewalt .gt. 0.))then
+         goto900
+       endif
      enddo ! i
+
+900  continue
 
      return
      end
