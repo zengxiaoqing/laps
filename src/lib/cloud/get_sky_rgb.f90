@@ -8,7 +8,7 @@
                    airmass_2_cloud,airmass_2_topo, &
                    topo_swi,topo_albedo,albedo_sfc, &                   ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir, &        ! I
-                   dist_2_topo, &
+                   dist_2_topo,topo_solalt, &                           ! I
                    alt_a,azi_a,elong_a,ni,nj,sol_alt,sol_az,twi_0, &    ! I
                    moon_alt,moon_az,moon_mag, &                         ! I
                    sky_rgb)                                             ! O
@@ -58,6 +58,7 @@
         real aod_ill(ni,nj)         ! aerosol illuminated slant optical depth (topo/notopo)
         real aod_ill_dir(ni,nj)     ! aerosol directly slant illuminated optical depth 
         real dist_2_topo(ni,nj)     ! distance to topo (m)
+        real topo_solalt(ni,nj)     ! solar altitude from ground
         real od_atm_a_eff(ni,nj)    ! aerosol illuminated tau per airmass
         real od_atm_a_dir(ni,nj)    ! aerosol directly ill tau per airmass
         real aod_slant(ni,nj)       ! aerosol optical depth (slant path)
@@ -170,6 +171,11 @@
           glwlow = 7.3 - argbri
           write(6,*)' sb_corr/argbri = ',sb_corr,argbri
           contrast = 100.
+
+          if(htmsl .gt. 1000000.)then ! outer space views
+              corr1 = corr1 + 0.3
+          endif
+
         endif
 
         fracerf = (sol_alt - (-5.0)) * 0.15
@@ -178,8 +184,8 @@
 
         offset = 0.
         glwlow = glwmid - 128. / 100. ! contrast
-        write(6,3)sol_alt,glwlow,glwmid,contrast,offset
-3       format('  sol_alt/glwlow/glwmid/contrast/offset',f9.2,2f9.3,2f9.1)
+        write(6,3)sol_alt,corr1,glwlow,glwmid,contrast,offset
+3       format('  sol_alt/corr1/glwlow/glwmid/contrast/offset',f9.2,3f9.3,2f9.1)
 
         ref_nl = day_int0
         if(new_color .gt. 0)then
@@ -261,7 +267,13 @@
                abs(azi_a(i,j)-azid2) .le. .001     )then ! constant azimuth
                 if(abs(alt_a(i,j)) .le. 2.0)then
                     idebug_a(i,j) = 1
-                elseif(alt_a(i,j) .lt. 20. .AND. &
+                elseif(abs(alt_a(i,j)) .le. 20. .AND. &
+                       alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
+                    idebug_a(i,j) = 1
+!               elseif(abs(alt_a(i,j)) .le. 21.)then   
+!                   idebug_a(i,j) = 1
+                elseif(alt_a(i,j) .ge. -75. .AND. &
+                       alt_a(i,j) .le. -65. .AND. &
                        alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
                     idebug_a(i,j) = 1
                 elseif(alt_a(i,j) .eq. float((nint(alt_a(i,j))/5)*5))then
@@ -504,6 +516,7 @@
 
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_swi,topo_albedo    & ! I
                        ,cloud_od,cloud_od_sp,transm_obs             & ! I
+                       ,dist_2_topo,topo_solalt                     & ! I
                        ,sol_alt,sol_az,nsp,airmass_2_topo,idebug_pf & ! I
                        ,ni,nj,pf_land) ! O
 
@@ -597,7 +610,8 @@
               cld_rad(:) = cld_rad(:) * trans_c(:)
 
               if( ( idebug_a(i,j) .eq. 1 .AND. & 
-                    (abs(alt_a(i,j)) .le. 40.0 .or. i .eq. ni) )  &
+!                   (abs(alt_a(i,j)) .le. 40.0 .or. i .eq. ni) )  &
+                (abs(alt_a(i,j)).le.40.0 .or. abs(alt_a(i,j)).eq.90.0) )  &
                   .OR. (i .eq. isun .and. j .eq. jsun) )then
                if(r_cloud_3d(i,j) .gt. 0.)then
                   write(6,42)i,j,elong_a(i,j),pf_scat(2,i,j),rintensity(2)&
@@ -713,9 +727,11 @@
           elseif(sol_alt .ge. -16.)then ! Twilight from clear_rad_c array
               call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),clear_rad_c_nt)
               glow_nt = log10(clear_rad_c_nt(3)) ! log nL           
+              clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + clear_rad_c_nt(3)
 
               if(moon_cond .eq. 1)then
                   glow_moon_s = glow(i,j)
+                  clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + 10.**glow_moon_sc(i,j)
               else
                   glow_moon_s = 1.
               endif
@@ -799,6 +815,7 @@
 !               argm = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15
                 glow_moon_s = glow(i,j)          ! log nL                 
                 glow_tot = addlogs(glow_nt,glow_moon_s)
+                clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + 10.**glow_moon_sc(i,j)
               else
                 glow_tot = glow_nt
                 glow_moon_s = 0.
@@ -833,7 +850,10 @@
 !         frac_cloud = 0.0 ; Testing
           if(sol_alt .gt. 0.)then ! distant clouds fade more during day
             frac_cloud = frac_cloud * cloud_visibility  
+            frac_front = 0.0               ! frac clear/lit air in front of cloud
+            frac_behind = 1.0 - frac_front ! frac clear/lit air behind cloud
           else ! fade only when opposite the twilight arch
+            frac_behind = 1.0              ! frac clear/lit air behind cloud
             frac_cloud = frac_cloud * cloud_visibility**scurve(elong_a(i,j)/180.)
           endif
 
@@ -847,7 +867,7 @@
 !         radiatively a la topo?
 !         Note cloud may be located in front of or behind clear sky glow
 !         It would generally be in front of during twilight
-          frac_clr = 1.0 - frac_cloud                          
+          frac_clr = 1.0 - frac_cloud*frac_behind ! clear sky behind cloud                         
 
           if(sol_alt .gt. twi_0 .or. .true.)then ! Daylight (+ rad space)
             sky_rad(:) = clear_rad_c(:,i,j) * frac_clr + cld_rad(:) * frac_cloud
@@ -923,9 +943,10 @@
                   if(idebug .eq. 1)then
                     write(6,97)rtopo_grn,rindirect,topo_swi(i,j),topo_swi_frac &
                               ,topo_albedo(2,i,j),dist_2_topo(i,j) &
-                              ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
-97                  format(' rtopo/rind/swi/swif/alb/dst/rgb/trad', &
-                           2f9.3,f9.1,f9.4,f9.3,f8.0,2x,3i4,2x,3f9.0)
+!                             ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
+                              ,sky_rad(:),red_rad,grn_rad,blu_rad
+97                  format(' rtopo/rind/swi/swif/alb/dst/srad/trad', &
+                           2f9.3,f9.1,f9.4,f9.3,f9.0,2x,3f12.0,2x,3f12.0)
                   endif
 
                   sky_rad(1) = sky_rad(1) + red_rad
