@@ -40,7 +40,6 @@ SRC= lapsplot_main.f \
      lapsplot.f \
      frame2.f \
      getuv2d.f \
-     get_cloud_rays.f \
      hsv_to_rgb.f \
      logit.f \
      plotobs.f \
