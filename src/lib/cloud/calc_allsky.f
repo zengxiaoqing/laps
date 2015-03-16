@@ -11,7 +11,7 @@
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,alt_norm                             ! I
      1                     ,moon_alt_2d,moon_azi_2d              ! I
-     1                     ,moon_mag,moon_mag_thr                ! I
+     1                     ,moon_mag,moon_mag_thr ! I
      1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
      1                     ,minalt,maxalt,minazi,maxazi,nc       ! I
      1                     ,alt_scale,azi_scale                  ! I
@@ -72,9 +72,11 @@
         real blog_sun_roll(minalt:maxalt,minazi:maxazi)
         real glow_stars(nc,minalt:maxalt,minazi:maxazi)
 
-        data ilun /0/
-        character*3 clun
-        character*24 a24time
+        logical l_solar_eclipse
+
+        write(6,*)' subroutine calc_allsky...'
+
+        write(6,*)' call get_cloud_rays...'
 
 !         Get line of sight from isound/jsound
           call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
@@ -94,7 +96,7 @@
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
      1                     ,htmsl                                ! O
-     1                     ,htagl(iloc)                          ! I
+     1                     ,htagl                                ! I
      1                     ,aod_ref                              ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
