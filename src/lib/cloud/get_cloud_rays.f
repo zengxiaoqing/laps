@@ -3,12 +3,12 @@
      1                           ,rain_3d,snow_3d                       ! I
      1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d ! I
      1                           ,topo_albedo_2d                        ! I
-     1                           ,topo_swi,topo_albedo,ghic             ! O
+     1                           ,topo_gti,topo_albedo,gtic             ! O
      1                           ,topo_ri,topo_rj                       ! O
      1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
      1                           ,dist_2_topo                           ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
-     1                           ,aod_tot,transm_obs                    ! O
+     1                           ,aod_tot,transm_obs,obs_glow_zen       ! O
      1                           ,transm_3d,transm_4d                   ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,r_cloud_rad,cloud_rad_c,cloud_rad_w   ! O
@@ -71,7 +71,7 @@
         real topo_a(ni,nj)
         real lat(ni,nj)
         real lon(ni,nj)
-        real swi_2d(ni,nj) ! global terrain normal irradiance
+        real swi_2d(ni,nj) ! global terrain NI
         real topo_albedo_2d(nc,ni,nj)
         real pres_3d(ni,nj,nk)
         real pres_1d(nk)
@@ -95,8 +95,9 @@
         real dhi_2d(ni,nj)          ! diffuse horizontal irradiance
 
 !       Spectral irradiance W/m2/nm OR s/m2 normalized to solar spectrum?              
+!       www.soda-is.com/eng/education/plane_orientations.html
         real ghic_2d(nc,ni,nj)      ! 2 W/m**2/nm 
-        real dhic_2d(nc,ni,nj)      ! 2 W/m**2/nm 
+        real dhic_2d(nc,ni,nj)      ! 2 W/m**2/nm (diffuse)
 
         logical l_solar_eclipse, l_radtran /.false./, l_spherical
         integer idebug_a(minalt:maxalt,minazi:maxazi)
@@ -123,11 +124,12 @@
         real ag_2d(minalt:maxalt,minazi:maxazi)       ! dummy
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
-        real topo_swi(minalt:maxalt,minazi:maxazi) ! global terrain normal irradiance
+        real topo_gti(minalt:maxalt,minazi:maxazi) ! global terrain normal irradiance
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
         real topo_ri(minalt:maxalt,minazi:maxazi)
         real topo_rj(minalt:maxalt,minazi:maxazi)
-        real ghic(nc,minalt:maxalt,minazi:maxazi) 
+        real gtic(nc,minalt:maxalt,minazi:maxazi) 
+        real dtic(nc,minalt:maxalt,minazi:maxazi)     ! diffuse
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
         real dist_2_topo(minalt:maxalt,minazi:maxazi) ! slant dist
@@ -161,12 +163,14 @@
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
         dist_2_topo = 0.
-        topo_swi = 0.
+        topo_gti = 0.
         topo_albedo = 0.0 ! initialize
         r_cloud_rad = 1.
         cloud_rad_w = 1.
         clear_rad_c = 0.
         clear_radf_c = 0.
+        topo_ri = 0.
+        topo_rj = 0.
 
         idebug_a = 0
 
@@ -210,11 +214,14 @@
           write(6,*)' Call get_sfc_glow'
           call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon
      1                     ,sfc_glow,gnd_glow)
-          write(6,*)' Sky glow at observer location is ',sfc_glow(i,j)
+          write(6,*)' Cloud glow at observer location is ',sfc_glow(i,j)
+          obs_glow_zen = sfc_glow(i,j) / 10.
         else
           write(6,*)' Skip call to get_sfc_glow - solalt is'
      1                                                  ,sol_alt(i,j)      
+          obs_glow_zen = 0.
         endif
+        write(6,*)' Clear sky glow at observer location is',obs_glow_zen
 
         I4_elapsed = ishow_timer()
 
@@ -229,6 +236,16 @@
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk
 !    1                    ,l_solar_eclipse
      1                    ,sfc_glow) ! I
+
+!           Write out transm_3d field
+            var = 'TRN'
+            ext = 'trn'
+            units = 'none'
+            comment = 
+     1         '3D downward shortwave from cloud (relative to TOA)'     
+            call put_laps_3d(i4time,ext,var,units,comment
+     1                      ,transm_4d(:,:,:,1),ni,nj,nk)
+
           else
             write(6,*)' Skip call to get_cloud_rad'
           endif
@@ -453,6 +470,9 @@
             azid1 = moon_azi(i,j)
             azid2 = mod(azid1+180.,360.)
         endif
+!       if(htstart .gt. 1000e3)then
+!           azid1 = 0. ; azid2 = 180. ! custom
+!       endif
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
 
@@ -468,7 +488,9 @@
              else
                  jazi_delt = maxazi
              endif
-         elseif(abs(altray) .ge. 10.)then ! alt_scale, 1 deg azi
+         elseif(altray .ge. 10.)then ! alt_scale, 1 deg azi
+             jazi_delt = nint(1. / azi_scale)
+         elseif(altray .le. -10. .and. htstart .lt. 100000.)then 
              jazi_delt = nint(1. / azi_scale)
          else                        ! alt_scale, azi_scale
              jazi_delt = 1
@@ -495,10 +517,8 @@
      1         (altray .ge. -5. .and. altray .le. 9.) .or. 
      1         ialt .eq. minalt .or. abs(altray) .eq. 14. .or.
      1         abs(altray) .eq. 16. .or.
-     1         abs(altray) .eq. 20.25 .or.
-     1         abs(altray) .eq. 20.50 .or.
-     1         abs(altray) .eq. 20.75 .or.
      1         abs(altray) .eq. 21.00 .or.
+     1         (altray .ge. -78. .and. altray .le. -75.) .or.
      1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
      1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
      1         abs(altray) .eq. 75.) 
@@ -510,14 +530,14 @@
               idebug = 0
           endif
 
-          if(jazi .eq. minazi .and. altray .eq. 90.)then
+          if(jazi .eq. minazi .and. abs(altray) .eq. 90.)then
               idebug = 1
               idebug_a(ialt,jazi) = 1
           endif
 
 !         Non-verbose
           if(htstart .lt. 10000.)then
-              idebug = 0; idebug_a(ialt,jazi) = 0
+              idebug = 0 ! ; idebug_a(ialt,jazi) = 0
           endif
 
 !         Extra verbose
@@ -597,8 +617,8 @@
                   iabove = 1 ! vantage point above domain
                   rkdelt1 =  0.0
                   rkdelt2 =  0.0
-                  slant2_optimal = 
-     1               min(500./sind(-view_altitude_deg),grid_spacing_m)
+                  sind_view = sind(-view_altitude_deg)
+                  slant2_optimal = min(250./sind_view,grid_spacing_m)
               else
                   iabove = 0
                   slant2_optimal = grid_spacing_m
@@ -647,18 +667,6 @@
      1           .AND. cvr_path_sum .le. 1.0) ! Tau < ~75
 
                 ls = ls + 1
-
-!               Extra verbose
-                if(altray .le. -60. .and. 
-     1              (idebug .eq. 1))then
-                  if(ls .le. 10 .or. ls .eq. 100 .or. ls .eq. 1000
-     1                          .or. ls .eq. 10000)then
-                    write(6,*)'   ls/rk/ht = ',ls,rk,ht_h
-                  elseif(altray .eq. -63.5)then
-                    write(6,*)'   ls/rk/ht = ',ls,rk,ht_h
-!                   idebug = 1
-                  endif
-                endif
 
                 if(rkdelt .ne. 0.)then ! trace by pressure levels
 
@@ -714,10 +722,13 @@
 
                     pr_h = pres_1d(kk_h)
                   else
-                    write(6,*)' ERROR: rk_h is out of bounds ',rk_h,nk
-     1                                                        ,rkdelt
+                    write(6,*)' ERROR: rk_h is out of bounds ',ls
+     1                       ,rk_h,nk,rkdelt,ht_h,ht_m,topo_m,ihit_topo
+     1                       ,rjnew_l,rjnew_h,jnew_m
+     1                       ,dy1_l,dy1_h,rj,ycos
                     istatus = 0
-                    return
+                    stop
+!                   return
                   endif
 
                   dz1_l = ht_l - htstart        
@@ -730,7 +741,15 @@
                     dxy2   = dz2   * tand(90. - view_altitude_deg)
                   else ! horzdist call (determine distance from height & elev)
                     aterm = 1. / radius_earth_8_thirds
-                    bterm = tand(min(view_altitude_deg,89.9))
+
+                    if(view_altitude_deg .gt. 89.99)then
+                       tanterm = 89.99
+                    elseif(view_altitude_deg .lt. -89.99)then
+                       tanterm = -89.99
+                    else
+                       tanterm = view_altitude_deg
+                    endif
+                    bterm = tand(tanterm)
 
                     cterm = dz1_l                                            
                     discriminant = 4.*aterm*cterm + bterm**2.
@@ -777,7 +796,19 @@
                 else  ! Trace by slant range (rkdelt = 0. )
                   dz1_l = dz1_h
                   ht_l = htstart + dz1_l
-                  slant2 = max(slant2_optimal,ht_l-100000.)
+
+                  if(iabove .eq. 1)then
+                    if(ht_l .lt. 10000.)then
+                      htarg = 200.
+                    else
+                      htarg = 500.
+                    endif
+                    slant2_optimal = min(htarg/sind_view,grid_spacing_m)
+                    slant2 = max(slant2_optimal,ht_l-30000.)
+                  else
+                    slant2 = max(slant2_optimal,ht_l-30000.)
+                  endif
+
                   slant1_l = slant1_h
                   slant1_h = slant1_h + slant2
 
@@ -801,17 +832,6 @@
 
                   rk_h = r_missing_data
 
-                  do k = 1,nk-1
-                    if(heights_1d(k)   .le. ht_h .AND.
-     1                 heights_1d(k+1) .ge. ht_h      )then
-                        frach = (ht_h - heights_1d(k)) / 
-     1                          (heights_1d(k+1) - heights_1d(k))      
-                        rk_h = float(k) + frach
-                        pr_h = (pres_1d(k)*(1.-frach)) 
-     1                       + (pres_1d(k+1)*frach)
-                    endif
-                  enddo
-
 !                 Pseudo grid values above/below LAPS domain
                   if(ht_h .gt. heights_1d(nk) .and. iabove .eq. 1)then
                     rk_h = float(nk) + (ht_h - heights_1d(nk)) / 1000.
@@ -821,6 +841,17 @@
                     rk_h = 1.        + (ht_h - heights_1d(1))  / 1000.
                     pr_h = pres_1d(1)
      1                   * exp(-(ht_h - heights_1d(1))  / 8000.)
+                  else ! inside vertical domain
+                    do k = 1,nk-1
+                      if(heights_1d(k)   .le. ht_h .AND.
+     1                   heights_1d(k+1) .ge. ht_h      )then
+                          frach = (ht_h - heights_1d(k)) / 
+     1                            (heights_1d(k+1) - heights_1d(k))      
+                          rk_h = float(k) + frach
+                          pr_h = (pres_1d(k)*(1.-frach)) 
+     1                         + (pres_1d(k+1)*frach)
+                      endif
+                    enddo
                   endif
 
                   rk = rk_h
@@ -828,6 +859,18 @@
                   airmass2 = (slant2 / 8000.) * (pr_h / pstd)
 
                 endif ! rkdelt .ne. 0.
+
+!               Extra verbose
+                if(altray .le. -60. .and. 
+     1              (idebug .eq. 1))then
+                  if(ls .le. 10 .or. ls .eq. 100 .or. ls .eq. 1000
+     1                          .or. ls .eq. 10000)then
+                    write(6,*)'   ls/rk/ht = ',ls,rk,ht_h
+                  elseif(altray .eq. -63.5)then
+                    write(6,*)'   ls/rk/ht = ',ls,rk,ht_h
+!                   idebug = 1
+                  endif
+                endif
 
                 rk_m = 0.5 * (rk_l + rk_h)
                 ht_m = 0.5 * (ht_l + ht_h)
@@ -1152,19 +1195,19 @@
                           solar_corr = 1.0
                       endif
 
-                      topo_swi(ialt,jazi) = ! instead of swi_2d
+                      topo_gti(ialt,jazi) = ! instead of swi_2d
      1                  sum(bi_coeff(:,:) * ghi_2d(i1:i2,j1:j2))
      1                                    * solar_corr
 
 !                     City lights on the ground
                       if(sol_alt(inew_m,jnew_m) .lt. twi_alt)then  
-                        topo_swi(ialt,jazi) = topo_swi(ialt,jazi) + 
+                        topo_gti(ialt,jazi) = topo_gti(ialt,jazi) + 
      1                    sum(bi_coeff(:,:) * gnd_glow(i1:i2,j1:j2))
-                        if(gnd_glow(inew_m,jnew_m) .gt. 0. .OR. 
+                        if(gnd_glow(inew_m,jnew_m) .gt. 0. .AND. ! .OR. 
      1                                                idebug .eq. 1)then
                           write(6,81)ialt,jazi,inew_m,jnew_m
      1                              ,gnd_glow(inew_m,jnew_m)
- 81                       format(' gnd glow adding to topo_swi',4i5
+ 81                       format(' gnd glow adding to topo_gti',4i5
      1                          ,f9.1)
                         endif
                       endif
@@ -1197,7 +1240,7 @@
                       endif
 
                       if(idebug .eq. 1)write(6,91)ht_m,topo_m,solar_corr  
-     1                                    ,topo_swi(ialt,jazi)
+     1                                    ,topo_gti(ialt,jazi)
      1                                    ,topo_albedo(:,ialt,jazi)
      1                                    ,aod_2_topo(ialt,jazi)
      1                                    ,dist_2_topo(ialt,jazi)
@@ -1335,7 +1378,7 @@
 
          enddo ! jazi
 
-         write(6,*)' debug 1'
+!        I4_elapsed = ishow_timer()
 
 !        Get clear sky twilight brightness in ring
          if(sol_alt(i,j) .le. 0.)then
@@ -1344,11 +1387,11 @@
      1             ,minalt,maxalt,minazi,maxazi,idebug_a
      1             ,sol_alt(i,j),sol_azi(i,j),view_alt,view_az
      1             ,earth_radius,patm,aod_vrt,aod_ray_eff,aod_ray_dir
-     1             ,aero_scaleht,htstart,redp_lvl             ! I
-     1             ,aod_ill                                   ! I (dummy)
-     1             ,l_solar_eclipse,i4time,rlat,rlon          ! I
-     1             ,clear_radf_c,ag_2d                        ! I (ag2d is dummy)
-     1             ,clear_rad_c,elong_p                     ) ! O (dummy)
+     1             ,aero_scaleht,htstart,redp_lvl     ! I
+     1             ,aod_ill                           ! I (dummy)
+     1             ,l_solar_eclipse,i4time,rlat,rlon  ! I
+     1             ,clear_radf_c,ag_2d                ! I (ag2d is dummy)
+     1             ,clear_rad_c,elong_p             ) ! O (elongp is dummy)
          endif
 
 !        Pixels per degree times 1 and times 2
@@ -1417,9 +1460,9 @@
               aod_tot(ialt,jazi) = 
      1                fm * aod_tot(ialt,jazim) 
      1              + fp * aod_tot(ialt,jazip)
-              topo_swi(ialt,jazi) = 
-     1                fm * topo_swi(ialt,jazim) 
-     1              + fp * topo_swi(ialt,jazip)
+              topo_gti(ialt,jazi) = 
+     1                fm * topo_gti(ialt,jazim) 
+     1              + fp * topo_gti(ialt,jazip)
               topo_albedo(:,ialt,jazi) = 
      1                fm * topo_albedo(:,ialt,jazim) 
      1              + fp * topo_albedo(:,ialt,jazip)
@@ -1429,11 +1472,32 @@
               topo_rj(ialt,jazi) = 
      1                fm * topo_rj(ialt,jazim) 
      1              + fp * topo_rj(ialt,jazip)
+            else
+              if(cloud_rad_c(1,ialt,jazi) .eq. .250 .or. 
+     1           cloud_rad_c(1,ialt,jazi) .eq. .500)then
+                write(6,201)ialt,jazi,view_alt(ialt,jazi)
+     1                               ,view_az(ialt,jazi)          
+     1                               ,cloud_rad_c(1,ialt,jazi)
+ 201            format(' cloud_rad_c before interp:',2i5,2f9.2,f9.3)
+              endif
+
             endif ! ir .ne. 0
           enddo ! jazi interp
          endif ! fill azimuth
 
         enddo ! ialt
+
+        do ialt = minalt,maxalt
+        do jazi = minazi,maxazi
+          if(cloud_rad_c(1,ialt,jazi) .eq. .250 .or. 
+     1       cloud_rad_c(1,ialt,jazi) .eq. .500)then
+            write(6,202)ialt,jazi,view_alt(ialt,jazi)
+     1                           ,view_az(ialt,jazi)          
+     1                           ,cloud_rad_c(1,ialt,jazi)
+ 202        format(' cloud_rad_c before alt interp:',2i5,2f9.2,f9.3)
+          endif
+        enddo 
+        enddo
 
         call get_idx(20.,minalt,alt_scale,ialt_min)
         call get_idx(maxalt_deg,minalt,alt_scale,ialt_max)
@@ -1484,8 +1548,8 @@
             aod_tot(ialt,:) =
      1           fm * aod_tot(ialtm,:) 
      1         + fp * aod_tot(ialtp,:)
-            topo_swi(ialt,:) =
-     1         fm * topo_swi(ialtm,:)      + fp * topo_swi(ialtp,:)
+            topo_gti(ialt,:) =
+     1         fm * topo_gti(ialtm,:)      + fp * topo_gti(ialtp,:)
             topo_albedo(:,ialt,:) =
      1         fm * topo_albedo(:,ialtm,:) + fp * topo_albedo(:,ialtp,:)
             topo_ri(ialt,:) =
@@ -1532,8 +1596,8 @@
      1                                      ,minval(clear_radf_c(3,:,:))
      1                                      ,maxval(clear_radf_c(3,:,:))
 
-        write(6,*)' Range of topo_swi = ',minval(topo_swi)
-     1                                   ,maxval(topo_swi)
+        write(6,*)' Range of topo_gti = ',minval(topo_gti)
+     1                                   ,maxval(topo_gti)
 
         write(6,*)' Range of topo_albedo 2 = '
      1                                       ,minval(topo_albedo(2,:,:))
@@ -1550,6 +1614,18 @@
 
         write(6,*)' Range of aod_ill_dir = ',minval(aod_ill_dir)
      1                                      ,maxval(aod_ill_dir)       
+
+        do ialt = minalt,maxalt
+        do jazi = minazi,maxazi
+          if(cloud_rad_c(1,ialt,jazi) .eq. .250 .or. 
+     1       cloud_rad_c(1,ialt,jazi) .eq. .500)then
+            write(6,203)ialt,jazi,view_alt(ialt,jazi)
+     1                           ,view_az(ialt,jazi)          
+     1                           ,cloud_rad_c(1,ialt,jazi)
+ 203        format(' cloud_rad_c after interp:',2i5,2f9.2,f9.3)
+          endif
+        enddo 
+        enddo
 
         if(int(rkstart)+1 .le. nk)then
             transm_obs = transm_3d(i,j,int(rkstart)+1)
