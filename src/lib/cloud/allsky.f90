@@ -1,5 +1,5 @@
 
-       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale,polat,alt_a,azi_a,ni_polar,nj_polar)
+       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale,polat,pomag,alt_a,azi_a,ni_polar,nj_polar)
 
        use mem_namelist, ONLY: r_missing_data
 
@@ -24,6 +24,7 @@
        write(6,*)'minalt,maxalt,minazi,maxazi',minalt,maxalt,minazi,maxazi
        write(6,*)'alt_scale,azi_scale',alt_scale,azi_scale
        write(6,*)'altmin,azimin',altmin,azimin
+       write(6,*)'polat,pomag',polat,pomag
 
 !      do iaz = minazi,maxazi,20
 !          write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz,cyl(maxalt/2,iaz)
@@ -41,6 +42,7 @@
            delti = rip-ri_polar_mid
            deltj = rjp-rj_polar_mid
            zenith_angle = sqrt(delti**2 + deltj**2) * (90. / ri_polar_mid)
+           zenith_angle = zenith_angle / pomag
            alt = (90. - zenith_angle) * posign
            if(alt*posign .ge. 0.)then
                azi_last = azi
