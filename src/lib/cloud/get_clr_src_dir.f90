@@ -184,7 +184,7 @@
            ,od_g_msl,od_g_vert,od_o_msl,od_o_vert,od_a_vert,htmsl & ! I
            ,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a &            ! I
            ,ags_in,aas_in,ags_a,aas_a,isolalt_lo,isolalt_hi &       ! I
-           ,ic,idebug &                                             ! I
+           ,ic,idebug,refdist_solalt,solalt_ref &                   ! I
            ,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
      use mem_namelist, ONLY: earth_radius
@@ -193,8 +193,10 @@
      include 'trigd.inc'
      include 'rad.inc'
 
-     trans(od) = exp(-min(od,80.))
-     opac(od) = 1.0 - trans(od)
+     real*8 opac_last,opac_curr,tausum,trans,opac,od
+
+     trans(od) = exp(-min(od,80d0))
+     opac(od) = 1d0 - trans(od)
      angdif(X,Y)=MOD(X-Y+540.,360.)-180.
 
      real tausum_a(nsteps)
@@ -251,7 +253,7 @@
      if(idebug .eq. 1)then
          write(6,*)
          write(6,*)'subroutine get_clr_src_dir_low'
-         write(6,*)'solalt/solazi = ',solalt,solazi
+         write(6,*)'solalt/ref/solazi = ',solalt,solalt_ref,solazi
          write(6,*)'viewalt/viewazi = ',viewalt,viewazi
          write(6,*)'ags/aas = ',ags_in,aas_in
          write(6,*)'agv/aav = ',agv,aav
@@ -279,7 +281,7 @@
      htbotill = -(htmsl + 500.)
 
      if(idebug .eq. 1)then
-       write(6,*)'         sbar     htbar   dtaug    tausum  dsolalt    ags      aas   od_sol_o3 od_solar  rad        di     sumi_g   sumi_a opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'         sbar     htbar   dtaug    tausum  dsolalt     ags      aas   od_sol_o3 od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -401,11 +403,13 @@
          sumi_extrap = (sumi_mean * frac_opac) + (1.-frac_opac) * rad
 
          if(idebug .eq. 1)then
-           if(i .eq. 10 .or. i .eq. 100 .or. i .eq. 1000 .or. i .eq. 10000)then
+           if(i .eq. 10 .or. i .eq. 100 .or. i .eq. 200 .or. i .eq. 500 .or. i .eq. 600 .or. i .eq. 700 .or. i .eq. 800. .or. i .eq. 1000 .or. i .eq. 10000)then
              write(6,11)i,sbar,htbar,alphabar_g*ds,tausum,dsolalt,ags,aas,od_solar_slant_o3,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i6,f9.0,f9.1,f9.6,7f9.4,f9.5,2f9.6,2f9.4,2f9.4)
-             write(6,12)horz_dep,htmin_ray,sol_occ,ao2,ao3,ao
-12           format(40x,'   horz_dep/htmin/sol_occ/ao = ',f9.2,f9.0,f9.3,3f9.4)
+11           format(i6,f9.0,f9.1,f9.6,2f9.4,f10.2,4f9.4,e9.2,f11.8,f9.6,2f9.4,2f9.4)
+             if(sol_occ.gt.0.)then
+               write(6,12)horz_dep,htmin_ray,sol_occ ! ,ao2,ao3,ao
+             endif
+12           format(33x,'   horz_dep/htmin/sol_occ = ',f9.2,f9.0,f9.3,3f9.4)
            endif
          endif
      enddo ! i
@@ -414,6 +418,7 @@
 
      if(idebug .eq. 1)then
        write(6,11)i,sbar,htbar,alphabar_g*ds,tausum,dsolalt,ags,aas,od_solar_slant_o3,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+       if(sol_occ.gt.0.)write(6,12)horz_dep,htmin_ray,sol_occ ! ,ao2,ao3,ao
      endif
 
      srcdir = sumi_extrap
@@ -425,8 +430,8 @@
      subroutine get_clr_src_dir_topo(solalt,solazi,viewalt,viewazi &   ! I
            ,od_g_msl,od_g_vert,od_a_vert,htmsl,dist_to_topo &          ! I
            ,ssa,agv,aav,aod_ref,redp_lvl,scale_ht_a &                  ! I
-           ,ags_in,aas_in,ags_a,aas_a,isolalt_lo,isolalt_hi &          ! I
-           ,ic,idebug,nsteps &                                         ! I
+           ,ags_a,aas_a,isolalt_lo,isolalt_hi &                        ! I
+           ,ic,idebug,nsteps,refdist_solalt,solalt_ref &               ! I
            ,sumi_g,sumi_a,opac_slant,ds,tausum_a)                      ! O
 
      use mem_namelist, ONLY: earth_radius
@@ -471,8 +476,6 @@
          opac_slant = od_g_slant + od_a_slant
      endif
 
-!    ags_a = ags_in; aas_a = aas_in ! test
-
 !    Integral [0 to x] a * exp(-b*x) = a * (1. - exp*(-b*x)) / b
      ds = min(dist_to_topo/10.,1000.)           
      nsteps_topo = nint(dist_to_topo/ds) ! max(10,int(htmsl/1000.))
@@ -486,9 +489,8 @@
      if(idebug .eq. 1)then
          write(6,*)
          write(6,*)'subroutine get_clr_src_dir_topo'
-         write(6,*)'solalt/solazi = ',solalt,solazi
+         write(6,*)'solalt/ref/solazi = ',solalt,solalt_ref,solazi
          write(6,*)'viewalt/viewazi = ',viewalt,viewazi
-         write(6,*)'ags/aas = ',ags_in,aas_in
          write(6,*)'agv/aav = ',ag,aa
          write(6,*)'od_g_vert = ',od_g_vert
          write(6,*)'od_a_vert = ',od_a_vert
@@ -516,15 +518,16 @@
      do i = istart,nsteps_topo
        sbar = (float(i)-0.5) * ds
 !      htbar = sbar * sind(viewalt)
-       xybar = sbar * cosd(viewalt)
+!      xybar = sbar * cosd(viewalt)
 !      htbar = htbar + curvat(xybar,earth_radius*(4./3.)) ! Earth Curvature
        htbar = curvat2(sbar,radius_start_eff,viewalt)
        htbar_msl = htbar+htmsl
        if(htbar_msl .lt. httopill)then
-         xybar = sbar * cosd(viewalt)
+         xybar = (sbar - refdist_solalt) * cosd(viewalt)
 
 !        Update ags,aas
          dsolalt = dsolalt_dxy * xybar
+         solalt_step = solalt_ref + dsolalt
          dsolaltb = &
             max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
