@@ -1,5 +1,5 @@
 
-        subroutine get_clr_rad_nt(alt,azi,clear_rad_c_nt)
+        subroutine get_clr_rad_nt(alt,azi,obs_glow_zen,clear_rad_c_nt)
 
         include 'trigd.inc'
 
@@ -15,7 +15,10 @@
 
         rint_alt_ramp = sqrt(airmass)
 
-        glow_lp = 500. ! from city lights (nL)
+        airglow = 75.  ! nL (range from ~60-90 with solar cycle)
+
+!       glow_lp = 500. ! from city lights (nL)
+        glow_lp = obs_glow_zen + airglow ! from city lights + airglow (nL)
         glow_alt = glow_lp * rint_alt_ramp
 
 !       HSI
