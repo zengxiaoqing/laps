@@ -1,7 +1,7 @@
 
         subroutine plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
 !    1                          ,minalt,maxalt,minazi,maxazi
-     1                          ,ni_polar,nj_polar
+     1                          ,ni_polar,nj_polar,ipolar_sizeparm
      1                          ,r_missing_data,laps_cycle_time,maxstns
      1                          ,i_overlay,plot_parms,namelist_parms
      1                          ,l_polar,l_cyl)       
@@ -86,7 +86,7 @@
         logical l_idl /.false./
         logical l_cyl               
         logical l_polar 
-        logical l_require_clouds /.true./ ! requiring cloud data to run
+        logical l_require_clouds ! requiring cloud data to run
 
         integer i_overlay
 
@@ -171,6 +171,7 @@
         write(6,*)
         write(6,*)' subroutine plot_allsky: nsmooth/aod is ',nsmooth,aod
         write(6,*)' l_cyl/l_polar = ',l_cyl,l_polar
+        write(6,*)' ipolar_sizeparm = ',ipolar_sizeparm
 
         itd = 2 ! dashed dewpoint lines
 
@@ -309,6 +310,12 @@
 !       Get 3-D pressure field
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
+
+        if(i4time_ref - i4time_now_gg() .lt. 86400)then ! present/past
+          l_require_clouds = .true.
+        else                                            ! future
+          l_require_clouds = .false.
+        endif
 
         if(l_require_clouds .eqv. .true.)then
 
@@ -1027,7 +1034,7 @@
      1                     ,aod_vrt,aod_2_cloud,aod_2_topo       ! O
      1                     ,dist_2_topo                          ! O
      1                     ,aod_ill,aod_ill_dir                  ! O
-     1                     ,aod_tot,transm_obs                   ! O
+     1                     ,aod_tot,transm_obs,obs_glow_zen      ! O
      1                     ,transm_3d,transm_4d                  ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
      1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w! O
@@ -1205,7 +1212,7 @@
      1             jtopo .ge. 1 .and. jtopo .le. NY_L)then
                     topo_solalt(i,j) = sol_alt_2d(itopo,jtopo)
                 else
-                    topo_solalt(i,j) = 0.
+                    topo_solalt(i,j) = solar_alt
                 endif
             enddo ! i
             enddo ! j
@@ -1226,7 +1233,7 @@
      1                    ,blog_moon_roll    ! moonglow
      1                    ,glow_stars        ! starglow
      1                    ,aod_vrt,aod_ref 
-     1                    ,transm_obs        ! observer illumination
+     1                    ,transm_obs,obs_glow_zen ! observer illumination
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
@@ -1293,11 +1300,20 @@
                 polat = -90.
               endif
 
+!             if(ipolar_sizeparm .ge. 3)then
+              if(htagl(iloc) .gt. 7000e3)then
+                pomag = 3.0
+              elseif(htagl(iloc) .gt. 3500e3)then
+                pomag = 2.0
+              else
+                pomag = 1.0
+              endif
+
               do ic = 0,nc-1
                 call cyl_to_polar(sky_rgb_cyl(ic,:,:)
      1                           ,sky_rgb_polar(ic,:,:)
      1                           ,minalt,maxalt,minazi,maxazi
-     1                           ,alt_scale,azi_scale,polat
+     1                           ,alt_scale,azi_scale,polat,pomag
      1                           ,alt_a_polar,azi_a_polar
      1                           ,ni_polar,nj_polar)
               enddo ! ic
