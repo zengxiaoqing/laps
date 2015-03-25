@@ -322,10 +322,10 @@
               rayleigh = rayleigh_gnd  ! phase function
 
               mode_twi = 1
-              if(mode_twi .eq. 2)then ! RGB twilight
+              if(mode_twi .eq. 2)then ! rad twilight
                 continue
 
-              else ! experimental absolute illumination (nl), HSI
+              else ! absolute illumination (nl), HSI
                 if(airmass_lit .gt. 1.e-5)then
                     brta = brt(airmass_lit)
 
@@ -443,11 +443,19 @@
                            ,ht_ray_plane,ZtoPsa(ht_ray_plane)
               endif
 
-            else ! RGB twilight
+            else ! rad twilight (experimental)
               do ic = 1,nc
                   clear_rad_c(ic,ialt,jazi) = clear_int_c(ic)
               enddo ! ic                
             endif          
+
+            huecall = clear_rad_c(1,ialt,jazi)
+            satcall = min(clear_rad_c(2,ialt,jazi)*2.0, 1.0)
+            rincall = clear_rad_c(3,ialt,jazi) * 0.3
+            call hsl_to_rgb(huecall,satcall,rincall,  &
+                            clear_rad_c(1,ialt,jazi), &
+                            clear_rad_c(2,ialt,jazi), &
+                            clear_rad_c(3,ialt,jazi) ) 
 
             if(idebug .ge. 2)then
               write(6,101) airmass_lit,airmass_tot,airmass_unlit&
@@ -482,7 +490,7 @@
 112           format( &
        'alt/azi/salt/ang_pln/ds_ray/ht_ray/enl/a/t/clrrad' &
                   ,2f6.1,1x,2f6.2,2f10.1,f8.1,2x,3f8.4,2x,f8.4,2f8.5 &
-                                      ,2x,f7.4,f7.4,f12.0)
+                                      ,2x,3f12.0)
 
               if(idebug .ge. 2)then
                 write(6,121)rmaglim
