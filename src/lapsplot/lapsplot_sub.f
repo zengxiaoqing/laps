@@ -327,7 +327,7 @@ cdis
 
             call plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
 !    1                        ,minalt,maxalt,minazi,maxazi
-     1                        ,ni_polar,nj_polar
+     1                        ,ni_polar,nj_polar,ipolar_sizeparm
      1                        ,r_missing_data,laps_cycle_time,maxstns
      1                        ,i_overlay,plot_parms,namelist_parms
      1                        ,l_polar,l_cyl)       
