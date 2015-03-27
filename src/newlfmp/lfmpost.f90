@@ -6,7 +6,8 @@ use mem_namelist, only : model_fcst_intvl
 
 implicit none
 
-integer, external :: iargc
+!GFORTRAN integer, external :: iargc
+integer :: iargc
 integer :: narg,chr,nc,i,j,k
 integer :: istatus
 integer :: len_str
@@ -61,12 +62,18 @@ elseif(narg .eq. 8)then ! advection options are supplied
 
     call s_len(c_adv_cld,len_str)
     if(len_str .gt. 0)then
-        read(c_adv_cld,'(i)',err=900) i4_adv_cld
+!GFORTRAN        read(c_adv_cld,'(i)',err=900) i4_adv_cld
+!GFORTRAN modifications begin
+            read(c_adv_cld,'(i4)',err=900) i4_adv_cld
+!GFORTRAN modifications end
     endif
 
     call s_len(c_adv_pcp,len_str)
     if(len_str .gt. 0)then
-        read(c_adv_pcp,'(i)',err=900) i4_adv_pcp
+!GFORTRAN        read(c_adv_pcp,'(i)',err=900) i4_adv_pcp
+!GFORTRAN modifications begin
+        read(c_adv_pcp,'(i4)',err=900) i4_adv_pcp
+!GFORTRAN modifications end
     endif
 else
     call usage
@@ -400,8 +407,15 @@ subroutine usage
 
 implicit none
 
-print*,'Usage: lfmpost.exe ''model type'' ''filename'' ''grid no'' ''laps i4time'' ''fcst time (sec)'' ''laps_data_root'''
-print*,'OR:    lfmpost.exe ''model type'' ''filename'' ''grid no'' ''laps i4time'' ''fcst time (sec)'' ''adv cloud (sec)'' ''adv pcp (sec)'' ''laps_data_root'''
+!GFORTRAN print*,'Usage: lfmpost.exe ''model type'' ''filename'' ''grid no'' ''laps i4time'' ''fcst time (sec)'' ''laps_data_root'''
+!GFORTRAN print*,'OR:    lfmpost.exe ''model type'' ''filename'' ''grid no'' ''laps i4time'' ''fcst time (sec)'' ''adv cloud (sec)'' ''adv pcp (sec)'' ''laps_data_root'''
+!GFORTRAN modifications begin
+print*,'Usage: lfmpost.exe ''model type'' ''filename'' ''grid no''',&
+        ' ''laps i4time'' ''fcst time (sec)'' ''laps_data_root'''
+print*,'OR:    lfmpost.exe ''model type'' ''filename'' ''grid no''',&
+        ' ''laps i4time'' ''fcst time (sec)'' ''adv cloud (sec)''',&
+!GFORTRAN modifications end
+        ' ''adv pcp (sec)'' ''laps_data_root'''
 
 stop
 
