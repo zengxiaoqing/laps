@@ -187,7 +187,7 @@ c
         integer idebug_a(imax,jmax)        ! L
         integer k_terrain(imax,jmax)
 
-        real k_to_f, k_to_c
+        real k_to_c
 
 !       Control search box for SAO analyzed data
         integer idelt(3)
@@ -1149,7 +1149,7 @@ c
         integer kl
 
 !       Function calls
-        real k_to_f, jcost_cldtop
+        real k_to_c, jcost_cldtop
 
 !       Call the CO2 slicing method to get cloud tops
         if(init_co2 .eq. 0)istatus_co2 = 0
