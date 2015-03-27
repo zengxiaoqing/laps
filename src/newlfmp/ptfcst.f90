@@ -1,5 +1,8 @@
 subroutine lfm_initpts(lfmprd_dir,a24time,a9time)
 
+!GFORTRAN additions begin
+include 'trigd.inc' 
+!GFORTRAN additions end
 use lfmgrid
 
 implicit none
