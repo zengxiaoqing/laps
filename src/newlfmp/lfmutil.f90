@@ -437,8 +437,9 @@ if (make_micro) then
    if (maxval(hgraupelmr_sig) < rmsg) pcpmr_sig=pcpmr_sig+hgraupelmr_sig
    where(pcpmr_sig < zero_thresh) pcpmr_sig=0.
    rhodrysig=hpsig/(r*htsig)
-   call lfm_integrated_liquid(lx,ly,nz,hcldliqmr_sig,hcldicemr_sig,hmrsig,hrainmr_sig,hsnowmr_sig,hgraupelmr_sig,rhodrysig,hzsig,zsfc  &
-                             ,intliqwater,intcldice,totpcpwater,intrain,intsnow,intgraupel,rmsg)
+   call lfm_integrated_liquid(lx,ly,nz,hcldliqmr_sig,hcldicemr_sig,hmrsig,&
+       hrainmr_sig,hsnowmr_sig,hgraupelmr_sig,rhodrysig,hzsig,zsfc,  &
+       intliqwater,intcldice,totpcpwater,intrain,intsnow,intgraupel,rmsg)
  endif ! large_ngrid
 
  if(.true.)then ! supercedes binary cldamt calculated earlier
@@ -624,18 +625,26 @@ if (make_micro) then
       print *,'Min/Max hsnowmr_sig =',minval(hsnowmr_sig),maxval(hsnowmr_sig)
       print *,'Min/Max hgraupelmr_sig =',minval(hgraupelmr_sig),maxval(hgraupelmr_sig)
    endif
-   if (minval(hrainmr_sig) < rmsg .and. (.not. large_pgrid) .and.  &
+   if (minval(hrainmr_sig) < rmsg .and.                            &
        minval(hsnowmr_sig) < rmsg .and. minval(hgraupelmr_sig) < rmsg) then
+
       call lfm_sfc_pcptype(lx,ly,nz,hrainmr_sig,hsnowmr_sig,hgraupelmr_sig  &
                           ,pcptype_sfc)
-      call lfm_ua_pcptype(lx,ly,lz,rainmr_prs,snowmr_prs,graupelmr_prs  &
-                         ,pcptype_prs)
       if (verbose) then
         print*,' '
-        print *,'After lfm_ua_pcptype.'
+        print *,'After lfm_sfc_pcptype.'
         print *,'Min/Max pcptype_sfc =',minval(pcptype_sfc),maxval(pcptype_sfc)
-        print *,'Min/Max pcptype_prs =',minval(pcptype_prs),maxval(pcptype_prs)
-     endif
+      endif
+
+      if(large_pgrid .eqv. .false.)then
+        call lfm_ua_pcptype(lx,ly,lz,rainmr_prs,snowmr_prs,graupelmr_prs  &
+                           ,pcptype_prs)
+        if (verbose) then
+          print*,' '
+          print *,'After lfm_ua_pcptype.'
+          print *,'Min/Max pcptype_prs =',minval(pcptype_prs),maxval(pcptype_prs)
+        endif
+      endif
  
    else
       pcptype_sfc=rmsg
@@ -2728,10 +2737,10 @@ write(6,*)' Range of solalt2 is ',minval(solalt2),maxval(solalt2)
 do i = 1,ni
 do j = 1,nj
 
-    floor = max(.01 * (1.+solalt1(i,j)/+3.),0.)
+    floor = max(.01 * (1.+solalt1(i,j)/3.),0.)
     zenfrac1 = max(sind(solalt1(i,j)),floor)
 
-    floor = max(.01 * (1.+solalt2(i,j)/+3.),0.)
+    floor = max(.01 * (1.+solalt2(i,j)/3.),0.)
     zenfrac2 = max(sind(solalt2(i,j)),floor)
 
     if(zenfrac1 .gt. 0)then
