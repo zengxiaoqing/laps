@@ -17,7 +17,7 @@
 !       Minimum height of ray having negative altitude
         htminf(htmsl,alt,erad) = ((erad+htmsl) * cosd(alt)) - erad
 
-        horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
+        horz_depf(htmsl,erad) = acosd(erad/(erad+max(htmsl,0.)))
 
 !       Ozone 
         parameter (o3_du = 300.)
@@ -69,3 +69,10 @@
 
         real ext_a(nc)                 ! aerosol extinction relative to .55um
         data ext_a /1.00,1.00,1.00/    ! could change to (wa/.55)**(-1.3)
+
+!       Brightness conversions
+        s10_to_magsecsq(s10) = 10. - (2.5 * log10(s10/12.96e6))
+        s10_to_nl(x) = x * 0.26189                     ! Chad Moore
+  
+        real magsecsq_to_s10
+        magsecsq_to_s10(x) = 10.**((18.89075625-x)*0.4)
