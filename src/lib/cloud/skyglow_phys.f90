@@ -1,16 +1,17 @@
 
 
         subroutine skyglow_phys(ialt_start,ialt_end,ialt_delt     &! I
-                   ,jazi_start,jazi_end,jazi_delt                 &! I
+                   ,jazi_start,jazi_end,jazi_delt,azi_scale       &! I
                    ,minalt,maxalt,minazi,maxazi,idebug_a          &! I
                    ,sol_alt,sol_azi,view_alt,view_az,twi_0        &! I
-                   ,isolalt_lo,isolalt_hi,topo_solalt             &! I
+                   ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt&! I
                    ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir &! I
                    ,aod_ref,aero_scaleht,dist_2_topo              &! I
                    ,htmsl,redp_lvl                                &! I
                    ,aod_ill,aod_2_topo                            &! I
                    ,l_solar_eclipse,i4time,rlat,rlon              &! I
                    ,clear_radf_c,ag_2d                            &! I
+                   ,od_g_slant_a,od_o_slant_a,od_a_slant_a        &! O
                    ,clear_rad_c,sky_rad_ave,elong           )      ! O/I
 
 !       Sky glow with solar altitude > 0
@@ -70,16 +71,21 @@
                                       ! for illumination
         real dist_2_topo(minalt:maxalt,minazi:maxazi)
         real topo_solalt(minalt:maxalt,minazi:maxazi)
+        real trace_solalt(minalt:maxalt,minazi:maxazi)
         real elong(minalt:maxalt,minazi:maxazi)
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         real view_alt(minalt:maxalt,minazi:maxazi)
         real view_az(minalt:maxalt,minazi:maxazi)
 
+        real od_g_slant_a(nc,minalt:maxalt) ! use for solar attenuation
+        real od_o_slant_a(nc,minalt:maxalt)
+        real od_a_slant_a(nc,minalt:maxalt)
+
         parameter (nsc = 3)
         real aod_asy_eff(nsc) ! ,nc (add nc dimension throughout)
 
-        logical l_solar_eclipse, l_2lyr, l_topo_a(minazi:maxazi)
+        logical l_solar_eclipse, l_dlow, l_dlow2, l_topo_a(minazi:maxazi)
 
         parameter (nsteps = 100000)
         parameter (nopac = 10)
@@ -96,7 +102,7 @@
         real aas_a(isolalt_lo:isolalt_hi)
         real aos_a(isolalt_lo:isolalt_hi)
 
-        icd = 3
+        icd = 2
 
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
@@ -232,6 +238,16 @@
          write(6,63)altray,ag,ao,aa
 63       format(' returned from get_airmass with alt/ag/ao/aa = ',f9.0,3e12.4)
 
+!        od_g_slant_a(:,ialt) = ext_g(:) * patm * ag/ag90 ! for export
+         od_g_slant_a(:,ialt) = ext_g(:) * ag             ! for export
+         od_o_slant_a(:,ialt) = (o3_du/300.) * ext_o(:) * ao
+!        if(aa_90 .gt. 0.)then
+!          od_a_slant_a(:,ialt) = aod_vert * ext_a(:) * aa/aa_90
+!        else
+!          od_a_slant_a(:,ialt) = 0.
+!        endif
+         od_a_slant_a(:,ialt) = aod_ref * aa
+
 !        Set sparse azimuth array for topo calls
          if(altray .ge. 0.)then
            jazi_delt_topo = 1
@@ -242,7 +258,7 @@
          endif
          l_topo_a = .false.
          l_topo_a(minazi:maxazi:jazi_delt_topo) = .true.
-         write(6,*)'topo az delt at alt:',altray,jazi_delt_topo
+!        write(6,*)'topo az delt at alt:',altray,jazi_delt_topo
 
 !        Determine src term and ratio with zenith value
          if(sol_alt .gt. 0.)then
@@ -334,14 +350,29 @@
 !        cosp_frac = max(1.-scatter_order,0.)
 
 !        Get src term at selected azimuths (every 10 degrees)
+         if(altray .ge. 0.)then
+           htmin_view = htmsl
+         else
+           htmin_view = htminf(htmsl,altray,earth_radius)
+         endif
+
          dmintopo = minval(dist_2_topo(ialt,:))
          dmaxtopo = maxval(dist_2_topo(ialt,:))
-         if(dmintopo .eq. 0. .and. htmsl .le. 18000.)then 
-          l_2lyr = .true.  ! incomplete terrain in ring and low
+         if(dmintopo .eq. 0. .and. htmin_view .le. 130000.)then 
+           l_dlow = .true.  ! incomplete terrain in ring and ray in atm
          else
-          l_2lyr = .false. ! complete terrain in ring or high
+           l_dlow = .false. ! complete terrain in ring or ray outside atm
          endif
-         jazi_d10 = 40
+
+         if((sol_alt * altray .lt. 100. .or. sol_alt .lt. 0. .or. altray .lt. 0.) .AND. (l_dlow .eqv. .true.) )then
+           l_dlow2 = .true.
+         else
+           l_dlow2 = .false.
+         endif
+
+         jazi_d10 = nint(10./azi_scale)
+         write(6,67)altray,sol_alt,sol_alt*altray,dmintopo,htmin_view,l_dlow,l_dlow2
+67       format(' altray/sol_alt/prod/dmintopo/htmin_view/l_dlow,l_dlow2',2f8.2,f8.1,2f12.0,2l2)
 !        write(6,*)'az range at this alt2',ialt &
 !                  ,minval(view_az(ialt,:)),maxval(view_az(ialt,:))
          do jazi = jazi_start,jazi_end,jazi_d10
@@ -357,11 +388,12 @@
               od_o_vert = ext_o(ic) * patm_o3(htmsl)
               od_a_vert = aod_vrt * ext_a(ic)
 
-!             Needed when sol_alt and altray are low
-              if((sol_alt * altray .lt. 100.) .AND. &
-                 (l_2lyr .eqv. .true.)           )then ! testing
-                if(jazi .eq. jazi_start .AND. altray .eq. nint(altray) &
-                                        .AND. sol_alt .ge. 0. &
+!             Needed when sol_alt and/or altray are low
+              if((sol_alt * altray .lt. 100. .or. sol_alt .lt. 0. .or. altray .lt. 0.)  &
+                               .AND.(l_dlow .eqv. .true.) )then 
+!               if(jazi .eq. jazi_start .AND. altray .eq. nint(altray) &
+                if(view_azi_deg .eq. 250..AND. altray .eq. nint(altray) & 
+!                                       .AND. sol_alt .ge. 0. &
                                         .AND. ic .eq. icd)then
                   idebug_clr = 1 ! * idebug_a(ialt,jazi)
                 elseif(sol_alt .ge. twi_0 .AND. (ic .eq. icd .or. altray .eq. 90. .or. altray .eq. 0.))then
@@ -387,6 +419,26 @@
                 refdist_solalt = 0.
                 solalt_ref = sol_alt
 
+                if(htmsl .gt. 150e3)then ! highalt strategy
+                  if(altray .gt. 0.)then
+                    refdist_solalt = 0.
+                    solalt_ref = sol_alt
+                  else
+                    refdist_solalt = sqrt( (earth_radius+htmsl)**2 &
+                                          - earth_radius**2       )
+                    if(trace_solalt(ialt,jazi) .ne. sol_alt)then ! valid trace
+                      solalt_ref = trace_solalt(ialt,jazi)
+                    else
+                      solalt_ref = sol_alt - (altray*cosd(view_azi_deg-sol_azi))
+                      solalt_ref = min(solalt_ref,+180.-solalt_ref)
+                      solalt_ref = max(solalt_ref,-180.-solalt_ref)
+                    endif
+                  endif
+                else
+                  refdist_solalt = 0.
+                  solalt_ref = sol_alt
+                endif
+
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
                   altray,view_azi_deg, &
                   ext_g(ic),od_g_vert,ext_o(ic),od_o_vert,od_a_vert,htmsl,ssa, &
@@ -398,9 +450,9 @@
                   srcdir_a(ic,jazi),sumi_g_a(ic,jazi),sumi_a_a(ic,jazi),&
                   opac_slant,nsteps,dsl,tausum_a)
                 if(idebug_clr .eq. 1)then
-                  write(6,69)ialt,jazi,ic,sol_alt,altray &
+                  write(6,69)ialt,jazi,ic,sol_alt,trace_solalt(ialt,jazi),altray &
                             ,srcdir(ic),srcdir_a(ic,jazi)
-69                format(' called get_clr_src_dir_low',i4,2i5,2f8.2,2f9.4/)
+69                format(' called get_clr_src_dir_low',i4,2i5,3f8.2,2f9.4/)
                 endif
 
               else ! use generic values for azimuths every 10 degrees
@@ -589,9 +641,9 @@
             rayleigh_pfunc = rayleigh_pf(elong(ialt,jazi))
             rayleigh_gnd = rayleigh_pfunc + sfc_alb * sind(sol_alt)
 
-            if(htmsl .le. 150000. .and. dist_2_topo(ialt,jazi) .eq. 0.)then ! test
+            if(htmsl .le. 250000. .and. dist_2_topo(ialt,jazi) .eq. 0.)then 
 !           if(sol_alt .lt. 0.)then ! sun below horizon (operational)
-              mode_sky = 4 ! simple approach
+              mode_sky = 4 ! simple approach (<150km non-topo case)
               do ic = 1,nc
                 day_int = 3e9 * (1.0 - eobsc(ic,jazi))
 
@@ -629,12 +681,25 @@
 
 !           The first option has a discontinuity around -15 degrees above 20km
 !           The second option has a brightness jump around 18000m
-            elseif(htmsl .gt. 18000. .and. dist_2_topo(ialt,jazi) .eq. 0.)then ! high vantage point
+!           elseif(htmsl .gt. 18000. .and. dist_2_topo(ialt,jazi) .eq. 0.)then ! high vantage point
+            elseif(dist_2_topo(ialt,jazi) .eq. 0.)then ! high vantage point
 !           elseif(htmsl .gt. 18000.)then ! high vantage point
+
+!             Consider case where 'dist_2_topo' is zero (in a cloud) and
+!             'topo_solalt' wasn't set. In this case 'day_int' wouldn't 
+!             be properly determined. Here we use info from a new array 
+!             called 'trace_solalt'.
+              solalt_atmos = trace_solalt(ialt,jazi) 
+              if(solalt_atmos .gt. 0.)then
+                sol_occ = 1.0 ! visible
+              else
+                sol_occ = 0.0 ! invisible
+              endif
+
 !             Use/restore simpler approach for downward rays from high alt
               do ic = 1,nc
 !               Rayleigh illumination
-                day_int = 3e9 * (1.0 - eobsc(ic,jazi))
+                day_int = 3e9 * sol_occ * (1.0 - eobsc(ic,jazi))
                 od_per_am = ext_g(ic)
                 rayleigh = brtf(airmass_g,od_per_am) * rayleigh_gnd
                 od_a = aod_ref * aa * ext_a(ic)  ! slant od
@@ -642,7 +707,7 @@
 
 !               Total illumination
                 clear_rad_c(ic,ialt,jazi) = day_int * (rayleigh + brta)
-                mode_sky = 3
+                mode_sky = 3 ! high vantage point >250km (non-topo)
 
                 if(idebug .ge. 1 .and. ic .eq. icd)then
                   write(6,72)day_int,elong(ialt,jazi),airmass_g,brtf(airmass_g,od_per_am) &
@@ -701,7 +766,7 @@
                       aa_o_aa_90 = 0.
                     endif
 
-                    if(htmsl .gt. 300e3)then ! highalt strategy
+                    if(htmsl .gt. 150e3)then ! highalt strategy
                       refdist_solalt = dist_2_topo(ialt,jazi)
                       solalt_ref = topo_solalt(ialt,jazi)
                     else
@@ -736,7 +801,7 @@
                     clear_rad_c(ic,ialt,jazi) = clear_rad_topo
                   endif
                   elglim = 5.0 ! catch aureole on topo
-                  mode_sky = 2
+                  mode_sky = 2 ! hitting topo case
 
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
@@ -791,7 +856,7 @@
 
                   clear_rad_2lyr = clear_rad_c(ic,ialt,jazi)
                   elglim = 0.5
-                  mode_sky = 1
+                  mode_sky = 1 ! free of topo (discontinued)
                   write(6,*)' Stop to check if mode_sky=1 is still used'
                   stop
                 endif ! free of topo
@@ -838,10 +903,11 @@
           endif ! sun above horizon
 
           if(idebug .ge. 1)then 
-              write(6,111)altray,view_azi_deg,sol_alt,mode_sky,od_a &
+              write(6,111)altray,view_azi_deg,sol_alt,topo_solalt(ialt,jazi) &
+                       ,trace_solalt(ialt,jazi),mode_sky,od_a &
                        ,dist_2_topo(ialt,jazi),clear_rad_c(:,ialt,jazi)/1e9 
-111           format('alt/azi/salt/mode/od_a/dst/clrrd' &
-                    ,2f6.1,1x,f6.2,i3,f10.5,f9.0,3e14.5)
+111           format('alt/azi/salt-t-t/mode/od_a/dst/clrrd' &
+                    ,2f6.1,1x,3f7.2,i3,f12.5,f9.0,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
