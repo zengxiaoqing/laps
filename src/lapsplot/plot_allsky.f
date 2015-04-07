@@ -9,24 +9,25 @@
         use mem_namelist, ONLY: max_snd_grid, max_snd_levels
      1                        , grid_spacing_m, aod, aero_scaleht
         use ppm
+        use mem_allsky
 
         include 'lapsplot.inc'
 
         addlogs(x,y) = log10(10.**x + 10.**y)
 
-        real pres_3d(NX_L,NY_L,NZ_L)
+!       real pres_3d(NX_L,NY_L,NZ_L)
         real field_3d(NX_L,NY_L,NZ_L)
-        real heights_3d(NX_L,NY_L,NZ_L)
-        real clwc_3d(NX_L,NY_L,NZ_L)
-        real cice_3d(NX_L,NY_L,NZ_L)
-        real rain_3d(NX_L,NY_L,NZ_L)
-        real snow_3d(NX_L,NY_L,NZ_L)
-        real aod_3d(NX_L,NY_L,NZ_L)
+!       real heights_3d(NX_L,NY_L,NZ_L)
+!       real clwc_3d(NX_L,NY_L,NZ_L)
+!       real cice_3d(NX_L,NY_L,NZ_L)
+!       real rain_3d(NX_L,NY_L,NZ_L)
+!       real snow_3d(NX_L,NY_L,NZ_L)
+!       real aod_3d(NX_L,NY_L,NZ_L)
 !       real rh_3d(NX_L,NY_L,NZ_L)
 
         parameter (nc = 3)
-        real transm_3d(NX_L,NY_L,NZ_L)
-        real transm_4d(NX_L,NY_L,NZ_L,nc) 
+!       real transm_3d(NX_L,NY_L,NZ_L)
+!       real transm_4d(NX_L,NY_L,NZ_L,nc) 
 
         real pres_2d(NX_L,NY_L)
         real t_2d(NX_L,NY_L)
@@ -115,7 +116,10 @@
         real, allocatable, dimension(:,:,:) :: topo_albedo
         real, allocatable, dimension(:,:) :: topo_ri
         real, allocatable, dimension(:,:) :: topo_rj
+        real, allocatable, dimension(:,:) :: trace_ri
+        real, allocatable, dimension(:,:) :: trace_rj
         real, allocatable, dimension(:,:) :: topo_solalt
+        real, allocatable, dimension(:,:) :: trace_solalt
         real, allocatable, dimension(:,:,:) :: ghic
         real, allocatable, dimension(:,:) :: aod_2_cloud
         real, allocatable, dimension(:,:) :: aod_2_topo
@@ -154,6 +158,8 @@
         character*3 clun
  
         common /image/ n_image
+
+        call alloc_allsky(NX_L,NY_L,NZ_L,nc,istatus)
 
         if(l_polar .eqv. .true.)then
             mode_polar = 2
@@ -858,7 +864,10 @@
           allocate(topo_albedo(nc,minalt:maxalt,minazi:maxazi))
           allocate(topo_ri(minalt:maxalt,minazi:maxazi))
           allocate(topo_rj(minalt:maxalt,minazi:maxazi))
+          allocate(trace_ri(minalt:maxalt,minazi:maxazi))
+          allocate(trace_rj(minalt:maxalt,minazi:maxazi))
           allocate(topo_solalt(minalt:maxalt,minazi:maxazi))
+          allocate(trace_solalt(minalt:maxalt,minazi:maxazi))
           allocate(ghic(nc,minalt:maxalt,minazi:maxazi))
           allocate(aod_2_cloud(minalt:maxalt,minazi:maxazi))
           allocate(aod_2_topo(minalt:maxalt,minazi:maxazi))
@@ -991,9 +1000,6 @@
           write(6,*)' azi range is ',azi_a_roll(minalt,minazi)
      1                              ,azi_a_roll(minalt,maxazi)
 
-!         -0.8 is possibly dark and uniform, -3.6 has white screen
-          twi_0 = -12.0 ! testing from 0.0 and -4.0 
-
           ilun = ilun + 1
           write(clun,14)ilun
 14        format(i3.3)
@@ -1030,17 +1036,19 @@
      1                     ,topo_albedo_2d                       ! I
      1                     ,topo_swi,topo_albedo,ghic            ! O
      1                     ,topo_ri,topo_rj                      ! O
+     1                     ,trace_ri,trace_rj                    ! O
 !    1                     ,ghi_2d,dhi_2d                        ! O
      1                     ,aod_vrt,aod_2_cloud,aod_2_topo       ! O
      1                     ,dist_2_topo                          ! O
      1                     ,aod_ill,aod_ill_dir                  ! O
      1                     ,aod_tot,transm_obs,obs_glow_zen      ! O
-     1                     ,transm_3d,transm_4d                  ! O
+!    1                     ,transm_3d,transm_4d                  ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
      1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
-     1                     ,htmsl                                ! O
+     1                     ,htmsl,horz_dep,twi_0                 ! O
+     1                     ,solalt_limb_true                     ! O
      1                     ,htagl(iloc)                          ! I
      1                     ,aod_ref                              ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
@@ -1048,7 +1056,7 @@
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,alt_norm                             ! I
      1                     ,moon_alt_2d,moon_azi_2d              ! I
-     1                     ,moon_mag,moon_mag_thr,twi_0          ! I
+     1                     ,moon_mag,moon_mag_thr                ! I
      1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
      1                     ,minalt,maxalt,minazi,maxazi          ! I
      1                     ,alt_scale,azi_scale                  ! I
@@ -1072,7 +1080,7 @@
               call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                         ,minalt,maxalt,minazi,maxazi 
      1                         ,alt_scale,azi_scale
-     1                         ,alm,azm,moon_mag,diam_deg
+     1                         ,alm,azm,moon_mag,diam_deg,horz_dep
      1                         ,blog_moon_roll)
 
               write(6,*)' range of blog_moon_roll is',
@@ -1102,7 +1110,7 @@
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
-     1                     ,solar_alt,solar_az,s_mag,diam_deg
+     1                     ,solar_alt,solar_az,s_mag,diam_deg,horz_dep
      1                     ,blog_sun_roll)
             write(6,*)' range of blog_sun_roll is',
      1        minval(blog_sun_roll),maxval(blog_sun_roll),diam_deg
@@ -1169,7 +1177,7 @@
               write(6,*)' call get_starglow with cyl data'
               call get_starglow(i4time_solar,alt_a_roll,azi_a_roll       ! I
      1                     ,minalt,maxalt,minazi,maxazi                  ! I
-     1                     ,rlat,rlon,alt_scale,azi_scale                ! I
+     1                     ,rlat,rlon,alt_scale,azi_scale,horz_dep       ! I
      1                     ,glow_stars)                                  ! O
 
               write(6,*)' range of glow_stars (before) is',
@@ -1194,7 +1202,7 @@
 
             I4_elapsed = ishow_timer()
 
-            if(solar_alt .gt. -3.)then
+            if(solar_alt .gt. -3. .or. solalt_limb_true .gt. 0.)then
                 call get_idx(solar_alt,minalt,alt_scale,ialt_sun)
                 call get_idx(solar_az ,minazi,azi_scale,jazi_sun)
                 ialt_sun = ialt_sun - minalt + 1
@@ -1206,14 +1214,25 @@
 
             do j = minazi,maxazi
             do i = minalt,maxalt
+                trace_solalt(i,j) = solar_alt
+                topo_solalt(i,j) = solar_alt
+
+                itrace = nint(trace_ri(i,j))
+                jtrace = nint(trace_rj(i,j))
+                if(htmsl .gt. 100000. .and. alt_a_roll(i,j) .lt. 0.)then
+                    if(itrace .ge. 1 .and. itrace .le. NX_L .and.
+     1                 jtrace .ge. 1 .and. jtrace .le. NY_L)then
+                        trace_solalt(i,j) = sol_alt_2d(itrace,jtrace)
+                    endif
+                endif
+
                 itopo = nint(topo_ri(i,j))
                 jtopo = nint(topo_rj(i,j))
                 if(itopo .ge. 1 .and. itopo .le. NX_L .and.
      1             jtopo .ge. 1 .and. jtopo .le. NY_L)then
                     topo_solalt(i,j) = sol_alt_2d(itopo,jtopo)
-                else
-                    topo_solalt(i,j) = solar_alt
                 endif
+
             enddo ! i
             enddo ! j
 
@@ -1240,13 +1259,14 @@
      1                    ,topo_swi,topo_albedo
      1                    ,topo_albedo_2d(2,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
-     1                    ,dist_2_topo,topo_solalt
+     1                    ,dist_2_topo,topo_solalt,trace_solalt
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
-     1                    ,ni_cyl,nj_cyl  
-     1                    ,solar_alt,solar_az,twi_0 
+     1                    ,ni_cyl,nj_cyl,azi_scale
+     1                    ,solar_alt,solar_az,twi_0,horz_dep
+     1                    ,solalt_limb_true
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
-     1                    ,sky_rgb_cyl)   
+     1                    ,sky_rgb_cyl)      ! O
 
           endif ! call calc_allsky
 
@@ -1361,6 +1381,8 @@
           deallocate(topo_albedo)
           deallocate(topo_ri)
           deallocate(topo_rj)
+          deallocate(trace_ri)
+          deallocate(trace_rj)
           deallocate(topo_solalt)
           deallocate(ghic)
           deallocate(aod_2_cloud)
@@ -1379,6 +1401,8 @@
           deallocate(isky_rgb_cyl)
 
         enddo ! iloc
+
+        call dealloc_allsky
 
         write(6,*)
         write(6,*)' End of plot_allsky...'
