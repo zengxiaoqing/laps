@@ -237,12 +237,12 @@
 !    alpha_sfc_a = od_a_vert / scale_ht_a
      alpha_ref_a = aod_ref / scale_ht_a
 
-     opac_vert = opac(od_g_vert + od_o_vert + od_a_vert)
+     opac_vert = opac(dble(od_g_vert + od_o_vert + od_a_vert))
      if(opac_vert .eq. 0)then ! very small od
          opac_vert = od_g_vert + od_o_vert + od_a_vert
      endif
 
-     opac_slant = opac(od_slant)
+     opac_slant = opac(dble(od_slant))
      if(opac_slant .eq. 0)then ! very small od
          opac_slant = od_slant
      endif
@@ -299,7 +299,7 @@
          htbar = sbar * sind(viewalt)
          htbar = htbar + sbar**2 / (rearg * r_e) ! Earth Curvature
          htbar_msl = htbar+htmsl
-         xybar = sbar * cosd(viewalt)
+         xybar = (sbar - refdist_solalt) * cosd(viewalt)
 
          patm_bar = ztopsa(htbar_msl) / 1013.25
          scale_ht_g = R * ztotsa(htbar_msl) / GRAV
@@ -313,7 +313,7 @@
 !        if(tausum .lt. 1.0)distod1 = sbar
 !        tausum_a(i) = tausum
 
-         if(htbar .gt. httopill .or. htbar .lt. htbotill .or. frac_opac .gt. 1.2)then ! efficiency
+         if(htbar .gt. httopill .or. htbar .lt. htbotill .or. frac_opac .gt. 1.2 .or. (sbar.gt.refdist_solalt .and. htbar_msl.gt.130e3))then ! efficiency
 !          tausum_a(min(i+1,nsteps):nsteps) = tausum
            goto900
          endif
@@ -324,7 +324,7 @@
 
 !        Update ags,aas
          dsolalt = dsolalt_dxy * xybar
-         solalt_step = solalt + dsolalt
+         solalt_step = solalt_ref + dsolalt
          dsolaltb = &
             max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
@@ -363,13 +363,18 @@
 
          if(sol_occ .gt. 0.)then
 
-!                      M         L              S
-           od_solar_slant = &
+           if(htmsl .le. 150e3)then
+!                        M         L              S
+             od_solar_slant = &
                     od_g_vert * ags * exp(-htbar/scale_ht_g)  &
                   + od_solar_slant_o3 &
                   + od_a_vert * aas * exp(-htbar/scale_ht_a) * frac_iso_a
+           else ! presently testing
+             od_solar_slant = od_g_msl * ags * exp(-htbar_msl/scale_ht_g) &
+                    + aod_ref * aas * exp(-(htbar_msl-redp_lvl)/scale_ht_a)
+           endif
 
-           rad = trans(od_solar_slant)
+           rad = trans(dble(od_solar_slant))
            radg = max(rad,.01) ! secondary scattering
            rada = max(rad,.001) ! secondary scattering
            rad = max(rad,.01) ! secondary scattering
@@ -382,8 +387,13 @@
            endif
 
            alphabar = alphabar_g + alphabar_o + alphabar_a
-           di_g = do * radg * ssa * (alphabar_g / alphabar)
-           di_a = do * rada       * (alphabar_a / alphabar)
+           if(alphabar .gt. 0.)then
+             di_g = do * radg * ssa * (alphabar_g / alphabar)
+             di_a = do * rada       * (alphabar_a / alphabar)
+           else
+             di_g = 0.
+             di_a = 0.
+           endif
            di = di_g + di_a
 
          else ! sol_occ = 0
@@ -403,13 +413,13 @@
          sumi_extrap = (sumi_mean * frac_opac) + (1.-frac_opac) * rad
 
          if(idebug .eq. 1)then
-           if(i .eq. 10 .or. i .eq. 100 .or. i .eq. 200 .or. i .eq. 500 .or. i .eq. 600 .or. i .eq. 700 .or. i .eq. 800. .or. i .eq. 1000 .or. i .eq. 10000)then
-             write(6,11)i,sbar,htbar,alphabar_g*ds,tausum,dsolalt,ags,aas,od_solar_slant_o3,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i6,f9.0,f9.1,f9.6,2f9.4,f10.2,4f9.4,e9.2,f11.8,f9.6,2f9.4,2f9.4)
+           if(i .eq. 10 .or. i .eq. 100 .or. i .eq. 200 .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
+             write(6,11)i,sbar,htbar,alphabar*ds,tausum,dsolalt,ags,aas,od_solar_slant_o3,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+11           format(i6,f9.0,f9.1,e9.2,2f9.4,f10.2,4f9.4,e9.2,f11.8,f9.6,2f9.4,2f9.4)
              if(sol_occ.gt.0.)then
-               write(6,12)horz_dep,htmin_ray,sol_occ ! ,ao2,ao3,ao
+               write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
              endif
-12           format(33x,'   horz_dep/htmin/sol_occ = ',f9.2,f9.0,f9.3,3f9.4)
+12           format(33x,'   horz_dep/solalt/htmin/sol_occ = ',2f8.2,f9.0,f8.3,3f9.4)
            endif
          endif
      enddo ! i
@@ -418,7 +428,7 @@
 
      if(idebug .eq. 1)then
        write(6,11)i,sbar,htbar,alphabar_g*ds,tausum,dsolalt,ags,aas,od_solar_slant_o3,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-       if(sol_occ.gt.0.)write(6,12)horz_dep,htmin_ray,sol_occ ! ,ao2,ao3,ao
+       if(sol_occ.gt.0.)write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
      endif
 
      srcdir = sumi_extrap
