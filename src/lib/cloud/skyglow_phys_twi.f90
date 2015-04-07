@@ -224,16 +224,20 @@
 !           write(6,*)'angle_r/angle_plane = ',angle_r,angle_plane ! test
 
             horz_dep_r = -sol_alt * rpd                                                  
-            dist_pp_plane = horz_dep_r**2 * earth_radius / 2.0 ! approx perpendicular dist
+            dist_pp_plane = (horz_dep_r**2 * earth_radius / 2.0) - htmsl ! approx perpendicular dist
             dist_pp_plane_s = dist_pp_plane
 
 !           Enlarge the shadow except when near the sun and near sunrise
 !           shadow_enlarge_high = 13000. * (1.0 - cosd(elong(ialt,jazi)))/2
-            elong_arg = min(elong(ialt,jazi),90.)
-            shadow_enlarge_high = (14600.-htmsl) * sind(elong_arg)
-            shadow_enlarge_low  =  14600.-htmsl                                      
-            ramp_enl = min(max(1.0 - (-2. - sol_alt) / 2.0,0.),1.)
-            shadow_enlarge = shadow_enlarge_high * ramp_enl + shadow_enlarge_low * (1. - ramp_enl)
+            if(htmsl .le. 14600.)then
+                elong_arg = min(elong(ialt,jazi),90.)
+                shadow_enlarge_high = (14600.-htmsl) * sind(elong_arg)
+                shadow_enlarge_low  =  14600.-htmsl                     
+                ramp_enl = min(max(1.0 - (-2. - sol_alt) / 2.0,0.),1.)
+                shadow_enlarge = shadow_enlarge_high * ramp_enl + shadow_enlarge_low * (1. - ramp_enl)
+            else
+                shadow_enlarge = 0.
+            endif
             dist_pp_plane = dist_pp_plane + shadow_enlarge ! shadow enlargement
 !           dist_pp_plane = dist_pp_plane + 13000.
 
@@ -253,20 +257,21 @@
 
             if(.true.)then ! assume part of atmosphere is illuminated by the sun
               bterm = dist_ray_plane**2 / (2. * earth_radius)
-              ht_ray_plane = dist_ray_plane * sind(altray) + bterm
+              ht_ray_plane = (dist_ray_plane * sind(altray) + bterm) + htmsl
 
               if(ht_ray_plane .le. 99000.)then
 !               Pressure at ray plane intersection in standard atmospheres?
-                patm_ray_plane = min(ZtoPsa(ht_ray_plane) / 1013.,1.0) * patm
+                patm_ray_plane = min(ZtoPsa(ht_ray_plane)/1013.,1.0) !*patm
               else
 !               Pressure at ray plane intersection in standard atmospheres?
-                patm_ray_plane = min(ZtoPsa(99000.) / 1013.,1.0) * patm
+                patm_ray_plane = min(ZtoPsa(99000.) / 1013.,1.0) !*patm
                 scalehts = min((ht_ray_plane - 99000.) / 8000.,10.)
                 patm_ray_plane = patm_ray_plane * exp(-scalehts)
               endif
 
               bterm = dist_ray_plane_s**2 / (2. * earth_radius)
-              ht_ray_plane_s = dist_ray_plane_s * sind(altray) + bterm
+              ht_ray_plane_s = (dist_ray_plane_s * sind(altray) + bterm) &
+                             + htmsl
 
               if(ht_ray_plane_s .le. 99000.)then
                 aero_ray_plane = aod_vrt * exp(-ht_ray_plane_s/aero_scaleht)
@@ -292,15 +297,22 @@
                   z = (90. - altray_plane) &
                     + refractd_app(altray_plane,patm)
                   airmass_lit = airmassf(z,patm_ray_plane)
-                  z = (90. - altray) + refractd_app(altray      ,patm)
-                  airmass_tot = airmassf(z,patm)
+
+                  za = (90. - altray) + refractd_app(altray      ,patm)
+!                 airmass_tot = airmassf(za,patm)
+                  airmass_tot = ag
+
                   frac_airmass_lit = airmass_lit / airmass_tot
                   frac_airmass_unlit = 1.0 - frac_airmass_lit
                   airmass_unlit = airmass_tot - airmass_lit
 
 !                 aod_path = aod_ray(ialt,jazi) * airmassf(z,1.0)
                   aod_path = aod_ray(ialt,jazi)*aa*ext_a(2)
-                  frac_aero_lit = aero_ray_plane / aod_ray(ialt,jazi)
+                  if(aod_ray(ialt,jazi) .gt. 0.)then
+                      frac_aero_lit = aero_ray_plane / aod_ray(ialt,jazi)
+                  else
+                      frac_aero_lit = 0.
+                  endif
                   aod_lit = aod_path * frac_aero_lit
                   aod_unlit = aod_path * (1.-frac_aero_lit)
 !                 arg = aod_lit * 0.5 * (1. - cosd(elong(ialt,jazi)))
@@ -438,7 +450,7 @@
 
               if(clear_rad_c(3,ialt,jazi) .lt. .0000099)then
                   write(6,*)' WARNING: low value of clear_rad_c' &
-                           ,clear_rad_c(3,ialt,jazi),z,airmass_g &
+                           ,clear_rad_c(3,ialt,jazi),za,airmass_g &
                            ,rint_alt_ramp,clear_int,angle_plane &
                            ,ht_ray_plane,ZtoPsa(ht_ray_plane)
               endif
@@ -451,7 +463,7 @@
 
             huecall = clear_rad_c(1,ialt,jazi)
             satcall = min(clear_rad_c(2,ialt,jazi)*2.0, 1.0)
-            rincall = clear_rad_c(3,ialt,jazi) * 0.3
+            rincall = clear_rad_c(3,ialt,jazi) * 0.255
             call hsl_to_rgb(huecall,satcall,rincall,  &
                             clear_rad_c(1,ialt,jazi), &
                             clear_rad_c(2,ialt,jazi), &
@@ -465,7 +477,7 @@
                          ,aero_red,aero_red/clear_intf &                
                          ,clear_intf,skyref & 
                          ,sat_arg,sat_ramp,sat_twi_ramp
-102           format('aa/htryplns/plane/aod_lit/red/rat/cif/skr/sat',f9.5,f9.0,3f9.5,f10.3,f10.3,f14.10,2x,3f9.5)
+102           format('aa/htryplns/plane/aod_lit/red/rat/cif/skr/sat',f9.5,f10.0,3f9.5,f10.3,f10.3,f14.10,2x,3f9.5)
               rmaglim = b_to_maglim(clear_rad_c(3,ialt,jazi))
             endif
 
@@ -477,7 +489,7 @@
                       ,od_a,clear_rad_c(:,ialt,jazi)/1e9 
               else
                 write(6,112)altray,view_azi_deg,sol_alt &
-                      ,angle_plane,dist_ray_plane,ht_ray_plane,shadow_enlarge &
+                      ,angle_plane,dist_pp_plane,dist_ray_plane,ht_ray_plane,shadow_enlarge &
                       ,patm_ray_plane,airmass_lit,airmass_unlit &
                       ,twi_trans_c(1),clear_intf,rint_alt_ramp &
                       ,clear_rad_c(1,ialt,jazi) &
@@ -488,8 +500,8 @@
        'ialt/jazi/salt/od_a/clrrd' &
                   ,i4,i5,2x,2f6.2,2f10.1,2x,f8.3)
 112           format( &
-       'alt/azi/salt/ang_pln/ds_ray/ht_ray/enl/a/t/clrrad' &
-                  ,2f6.1,1x,2f6.2,2f10.1,f8.1,2x,3f8.4,2x,f8.4,2f8.5 &
+       'alt/azi/salt/ang_pln/ds_pp/ds_ray/ht_ray/enl/a/t/clrrad' &
+                  ,2f6.1,1x,2f6.2,3f11.1,f9.0,2x,3f8.4,2x,f8.4,2f8.5 &
                                       ,2x,3f12.0)
 
               if(idebug .ge. 2)then
