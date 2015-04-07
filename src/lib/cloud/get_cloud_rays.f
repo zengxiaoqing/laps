@@ -5,16 +5,18 @@
      1                           ,topo_albedo_2d                        ! I
      1                           ,topo_gti,topo_albedo,gtic             ! O
      1                           ,topo_ri,topo_rj                       ! O
+     1                           ,trace_ri,trace_rj                     ! O
      1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
      1                           ,dist_2_topo                           ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
      1                           ,aod_tot,transm_obs,obs_glow_zen       ! O
-     1                           ,transm_3d,transm_4d                   ! O
+!    1                           ,transm_3d,transm_4d                   ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,r_cloud_rad,cloud_rad_c,cloud_rad_w   ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
-     1                           ,htstart                               ! O
+     1                           ,htstart,horz_dep_d,twi_0              ! O
+     1                           ,solalt_limb_true                      ! O
      1                           ,htagl                                 ! I
 !    1                           ,elong                                 ! I
      1                           ,aod                                   ! I
@@ -22,7 +24,7 @@
      1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
      1                           ,alt_norm                              ! I
      1                           ,moon_alt,moon_azi                     ! I
-     1                           ,moon_mag,moon_mag_thr,twi_0           ! I
+     1                           ,moon_mag,moon_mag_thr                 ! I
      1                           ,l_solar_eclipse,rlat,rlon,lat,lon     ! I
      1                           ,minalt,maxalt,minazi,maxazi           ! I
      1                           ,alt_scale,azi_scale                   ! I
@@ -64,8 +66,8 @@
         real aod_3d(ni,nj,nk)  ! aerosol extinction coefficient
         real bi_coeff(2,2),tri_coeff(2,2,2)
         real heights_3d(ni,nj,nk)    ! MSL
-        real transm_3d(ni,nj,nk)     ! O
-        real transm_4d(ni,nj,nk,nc)  ! O
+        real transm_3d(ni,nj,nk)     ! L
+        real transm_4d(ni,nj,nk,nc)  ! L
         real transm_4d_m(nc)
         real heights_1d(nk)
         real topo_a(ni,nj)
@@ -128,6 +130,8 @@
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
         real topo_ri(minalt:maxalt,minazi:maxazi)
         real topo_rj(minalt:maxalt,minazi:maxazi)
+        real trace_ri(minalt:maxalt,minazi:maxazi)
+        real trace_rj(minalt:maxalt,minazi:maxazi)
         real gtic(nc,minalt:maxalt,minazi:maxazi) 
         real dtic(nc,minalt:maxalt,minazi:maxazi)     ! diffuse
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
@@ -164,13 +168,19 @@
         airmass_2_topo_3d = 0.
         dist_2_topo = 0.
         topo_gti = 0.
-        topo_albedo = 0.0 ! initialize
+        topo_albedo = 0.0 
         r_cloud_rad = 1.
+        cloud_od = 0.
+        cloud_od_sp = 0.
+        aod_2_cloud = 0.
+        aod_2_topo = 0.
         cloud_rad_w = 1.
         clear_rad_c = 0.
         clear_radf_c = 0.
         topo_ri = 0.
         topo_rj = 0.
+        trace_ri = 0.
+        trace_rj = 0.
 
         idebug_a = 0
 
@@ -250,7 +260,7 @@
             write(6,*)' Skip call to get_cloud_rad'
           endif
 
-        else
+        else ! called if obj_alt < 3.0
             if(icall_rad .eq. 0)then
               write(6,*)' call get_cloud_rad_faces...'
               call get_cloud_rad_faces(              
@@ -418,6 +428,14 @@
           l_spherical = .false.
         endif
 
+        solalt_limb_true = sol_alt(i,j) + horz_dep_d
+        write(6,*)' solalt_true = ',sol_alt(i,j)
+        write(6,*)' solalt_limb_true = ',solalt_limb_true
+
+!       Used to call skyglow_phys vs skyglow_phys_twi for example
+        twi_0 = min(-12.0,-horz_dep_d) ! output
+        write(6,*)' twi_0 = ',twi_0
+
         aod_vrt = aod * exp(-(htstart-redp_lvl)/aero_scaleht)
 
         write(6,*)' rkstart/htstart/patm = ',rkstart,htstart,patm
@@ -519,6 +537,7 @@
      1         abs(altray) .eq. 16. .or.
      1         abs(altray) .eq. 21.00 .or.
      1         (altray .ge. -78. .and. altray .le. -75.) .or.
+     1         (altray .ge. -67. .and. altray .le. -65.) .or.
      1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
      1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
      1         abs(altray) .eq. 75.) 
@@ -636,8 +655,8 @@
      1      'Trace the slant path (alt/azi/ialt/jazi/jdelt/rkdelt/i/j):'
      1                ,2f6.1,3i5,f6.2,2i5,f7.0)                                     
                 write(6,12)                                   
-12              format('     dz1_l      dz1_h    dxy1_l   dxy1_h  rin',
-     1           'ew  rjnew   rk    ht_m   topo_m  ',
+12              format('     dz1_l      dz1_h     dxy1_l    dxy1_h  ',
+     1           'rinew  rjnew   rk    ht_m   topo_m  ',
      1           ' path     lwc    ice    rain   snow      slant',
      1           '  cvrpathsum  cloudfrac  airmass cld_rd',
      1           ' cld_rd_w  aeroext  transm3 aod_sum aod_sum_ill')
@@ -659,6 +678,7 @@
               rk = rkstart          
               ls = 0
               iwrite = 0
+              trace_minalt = 1e10
 
               do while((rk .le. float(nk)-rkdelt .or. iabove .eq. 1)
      1           .AND. ihit_topo .eq. 0
@@ -934,6 +954,12 @@
 
                  rinew_m = 0.5 * (rinew_l + rinew_h)
                  rjnew_m = 0.5 * (rjnew_l + rjnew_h)
+
+                 if(ht_m .lt. trace_minalt)then
+                   trace_ri(ialt,jazi) = rinew_m
+                   trace_rj(ialt,jazi) = rjnew_m
+                   trace_minalt = ht_m
+                 endif
 
                  rni = ni
                  rnj = nj
@@ -1270,7 +1296,7 @@
 !    1                     ,transm_3d(inew_m,jnew_m,int(rk_m)+1)
      1                     ,transm_3d_m
      1                     ,sum_aod,sum_aod_ill,sum_aod_ill_dir
-101               format(2f11.1,2f9.1,a1,f6.1,f7.1,f6.2,2f8.1
+101               format(2f11.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,f9.2,2f8.4
      1                  ,f10.5,4f8.2)
                  else ! outside horizontal domain
@@ -1318,10 +1344,10 @@
                 write(6,*)'   ls/rk/ht = ',ls,rk,ht_h,' eor'
                 write(6,113)ls,rk,rk_h,rk_m,ht_h,ihit_topo,ihit_bounds
      1                     ,iabove,gc_deg,slant1_h,dz1_h,tlat,tlon
-     1                     ,idebug
-113             format(
-     1    ' end of ray ls/rk3/ht/ihit-tb/iab/gc/sl1h/dz1h/latlon/idebug'
-     1                ,i6,3f10.3,f10.1,3i3,f9.3,2f11.1,2f9.2,i3)           
+     1                     ,cvr_path_sum,idebug
+113             format(' end of ray ',
+     1      'ls/rk3/ht/ihit-tb/iab/gc/sl1h/dz1h/latlon/cvr/idebug'
+     1                ,i6,3f10.3,f10.1,3i3,f9.3,2f11.1,2f9.2,f7.2,i3)           
               endif        
 
           endif ! true
@@ -1472,6 +1498,12 @@
               topo_rj(ialt,jazi) = 
      1                fm * topo_rj(ialt,jazim) 
      1              + fp * topo_rj(ialt,jazip)
+              trace_ri(ialt,jazi) = 
+     1                fm * trace_ri(ialt,jazim) 
+     1              + fp * trace_ri(ialt,jazip)
+              trace_rj(ialt,jazi) = 
+     1                fm * trace_rj(ialt,jazim) 
+     1              + fp * trace_rj(ialt,jazip)
             else
               if(cloud_rad_c(1,ialt,jazi) .eq. .250 .or. 
      1           cloud_rad_c(1,ialt,jazi) .eq. .500)then
@@ -1556,6 +1588,10 @@
      1         fm * topo_ri(ialtm,:) + fp * topo_ri(ialtp,:)
             topo_rj(ialt,:) =
      1         fm * topo_rj(ialtm,:) + fp * topo_rj(ialtp,:)
+            trace_ri(ialt,:) =
+     1         fm * trace_ri(ialtm,:) + fp * trace_ri(ialtp,:)
+            trace_rj(ialt,:) =
+     1         fm * trace_rj(ialtm,:) + fp * trace_rj(ialtp,:)
           endif ! ir .ne. 0
         enddo ! ialt
 
