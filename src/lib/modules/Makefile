@@ -58,7 +58,7 @@ ARCHIVE = ar rv
 			$(ARCHIVE) $(LIB) $(<:.f90=.o)
 
 
-FMOD = mem_namelist.o mem_grid.o mem_static.o mem_wind.o mem_sfcanl.o mem_temp.o mem_vol.o module_auto_mod.o \
+FMOD = mem_allsky.o mem_namelist.o mem_grid.o mem_static.o mem_wind.o mem_sfcanl.o mem_temp.o mem_vol.o module_auto_mod.o \
        module_cloud_rad.o module_constants_laps.o \
        module_horiz_interp.o  module_grib.o module_map_utils.o \
        module_mm5v3_io.o module_time_utils.o module_vinterp_utils.o \
