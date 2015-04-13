@@ -113,7 +113,7 @@
 #
 # -N                   Disable the purger                                                                  
 #
-# second to last arg   $LAPSINSTALLROOT, one level above bin directory
+# second to last arg   $LAPSINSTALLROOT, one level above bin directory (internal variable name is $LAPSROOT)
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
 #                      purger (see call to purger.pl)
@@ -341,7 +341,7 @@ if(defined $opt_s){ # "surface only"
 		  wind.exe 
                   ingest_lrs.exe lvd_sat_ingest.exe 
                   laps_sfc.x temp.exe 
-                  mosaic_radar.x cloud.exe lq3driver.x deriv.exe accum.exe  
+                  mosaic_radar.x runLDA.NOAA.sh cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe qbalpe.exe lapsprep.exe laps2grib.exe);
 #   if($opt_S eq "multi"){
 #       $lga_proc = "ingest_aircraft.exe";                                                    
