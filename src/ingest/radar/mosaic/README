@@ -16,3 +16,4 @@ mosaic_radar                                 mosaic_radar.f
         mosaic_ref_multi                     mosaic_ref_3d.f
         write_laps_data
         put_laps_3d
+    process_mrms                                process_mrms.f
