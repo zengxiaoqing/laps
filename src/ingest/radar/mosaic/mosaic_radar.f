@@ -44,7 +44,11 @@ c namelist items
      & i_window,mosaic_cycle_time,imosaic_3d,n_radars_wideband,
      & n_radars_narrowband,
      & istatus)      
-    
+
+      if(n_radars_wideband .eq. 0. .and. n_radars_narrowband .eq. 0)then    
+          c_radar_mosaic = 'mrm'
+      endif
+
       if(n_radars_wideband .ne. 0)then  
           write(6,*)     
           write(6,*)' Wideband scenario'
@@ -145,6 +149,10 @@ c namelist items
              print*,'Error in mosaic_radar_sub'
           endif
 
+      endif
+
+      if(c_radar_mosaic .eq. 'mrm')then
+          call process_mrms(nx_l,ny_l,nz_l)
       endif
 
 1000  stop
