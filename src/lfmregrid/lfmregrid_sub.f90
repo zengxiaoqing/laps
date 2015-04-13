@@ -1,5 +1,12 @@
 
-subroutine lfmregrid_sub(nx_bg,ny_bg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,fname_in,NX_L,NY_L,NZ_L,gproj,bgmodel,cmodel,laps_data_root,mtype,laps_reftime,laps_valtime,l_process_grib,l_process_cdf,l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf)
+!GFORTRAN subroutine lfmregrid_sub(nx_bg,ny_bg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,fname_in,NX_L,NY_L,NZ_L,gproj,bgmodel,cmodel,laps_data_root,mtype,laps_reftime,laps_valtime,l_process_grib,l_process_cdf,l_grib_fua,l_grib_fsf,l_cdf_fua,l_cdf_fsf)
+!GFORTRAN modifications begin
+subroutine lfmregrid_sub(nx_bg,ny_bg,nzbg,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,&
+                         fname_in,NX_L,NY_L,NZ_L,gproj,bgmodel,cmodel,&
+                         laps_data_root,mtype,laps_reftime,laps_valtime,&
+                         l_process_grib,l_process_cdf,l_grib_fua,l_grib_fsf,&
+                         l_cdf_fua,l_cdf_fsf)
+!GFORTRAN modifications end
 
 !use mem_namelist
 use storage_module, ONLY: get_plvls
@@ -445,7 +452,12 @@ if(.true.)then
     write(6,*)' Calling output_laps_rg: NX_L,NY_L,NZ_L is ',NX_L,NY_L,NZ_L              
     write(6,*)' laps_data_root is: ',laps_data_root
     write(6,*)' pgrid is ',pgrid(1,1,:) 
-    call output_laps_rg(laps_data_root,mtype,domnum_in,laps_reftime,laps_valtime,pgrid,sgrid,name2d,name3d,com2d,com3d,lvls3d,n2df,n3df,pres_1d,NX_L,NY_L,NZ_L)
+!GFORTRAN    call output_laps_rg(laps_data_root,mtype,domnum_in,laps_reftime,laps_valtime,pgrid,sgrid,name2d,name3d,com2d,com3d,lvls3d,n2df,n3df,pres_1d,NX_L,NY_L,NZ_L)
+!GFORTRAN modifications begin
+    call output_laps_rg(laps_data_root,mtype,domnum_in,laps_reftime,&
+                        laps_valtime,pgrid,sgrid,name2d,name3d,com2d,com3d,&
+                        lvls3d,n2df,n3df,pres_1d,NX_L,NY_L,NZ_L)
+!GFORTRAN modifications end
 
 endif ! .true. (formerly l_process_cdf)
 
