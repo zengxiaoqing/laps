@@ -405,8 +405,8 @@ while ($i4time70<=$i4time70_end)
 
                      }
 
-#remap run matching the systime is skipped, since the previous run will usually catch the window (with 90 minute forward time window)
-                     if($i4time70_driver == $i4time70 && $laps_driver_exe =~ /^remap/){last;}
+#remap run matching the systime is no longer skipped, since the previous run will usually catch the window (with 90 minute forward time window)
+#                    if($i4time70_driver == $i4time70 && $laps_driver_exe =~ /^remap/){last;}
 
                      if(defined $multi_machine){
                         $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > /tmp/time/systime.dat";
