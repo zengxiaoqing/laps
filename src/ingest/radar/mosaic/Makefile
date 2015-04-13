@@ -19,7 +19,8 @@ EXE = mosaic_radar.x
 
 SRC =  clean_radar.f \
        getlapsvxx.f \
-       mosaic_ref_3d.f
+       mosaic_ref_3d.f \
+       process_mrms.f
 
 MAIN=mosaic_radar.f
 
