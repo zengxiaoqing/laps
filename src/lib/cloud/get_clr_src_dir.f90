@@ -84,7 +84,7 @@
      sumi = 0. ; sumi_g = 0.; sumi_a = 0.
      frac_opac = 0.
 
-     httopill = 130000.
+     httopill = 100000.
 
      if(idebug .eq. 1)then
        write(6,*)'         sbar     htbar     dtaug    dtauo  tausum od_sol_o3  od_solar   rad       di     sumi_g   sum_a  opac_curr frac_opac sumi_mn sumi_ext'
@@ -151,8 +151,8 @@
          endif
 
          alphabar = alphabar_g + alphabar_o + alphabar_a
-         di_g = do * radg * ssa * (alphabar_g / alphabar)
-         di_a = do * rada       * (alphabar_a / alphabar)
+         di_g = do * radg       * (alphabar_g / alphabar)
+         di_a = do * rada * ssa * (alphabar_a / alphabar)
          di = di_g + di_a
 
          sumi_g = sumi_g + di_g
@@ -264,7 +264,7 @@
          write(6,*)'od_a_vert = ',od_a_vert
          write(6,*)'opac_vert = ',opac_vert
          write(6,*)'od_g_slant = ',od_g_slant
-         write(6,*)'od_o_slant,ao = ',od_o_slant,ao
+         write(6,*)'od_o_slant/ao = ',od_o_slant,ao
          write(6,*)'od_a_slant = ',od_a_slant
          write(6,*)'opac_slant = ',opac_slant
          write(6,*)'od_slant = ',od_slant
@@ -277,7 +277,7 @@
      frac_opac = 0.
 
      solaltill = max(solalt,0.)
-     httopill = max(130000.-sind(solaltill)*90000.,40000.)
+     httopill = max(100000.-sind(solaltill)*60000.,40000.)
      htbotill = -(htmsl + 500.)
 
      if(idebug .eq. 1)then
@@ -363,7 +363,7 @@
 
          if(sol_occ .gt. 0.)then
 
-           if(htmsl .le. 150e3)then
+           if(htmsl .le. 150e3 .and. .false.)then
 !                        M         L              S
              od_solar_slant = &
                     od_g_vert * ags * exp(-htbar/scale_ht_g)  &
@@ -371,6 +371,7 @@
                   + od_a_vert * aas * exp(-htbar/scale_ht_a) * frac_iso_a
            else ! presently testing
              od_solar_slant = od_g_msl * ags * exp(-htbar_msl/scale_ht_g) &
+                    + od_solar_slant_o3 &
                     + aod_ref * aas * exp(-(htbar_msl-redp_lvl)/scale_ht_a)
            endif
 
@@ -388,8 +389,8 @@
 
            alphabar = alphabar_g + alphabar_o + alphabar_a
            if(alphabar .gt. 0.)then
-             di_g = do * radg * ssa * (alphabar_g / alphabar)
-             di_a = do * rada       * (alphabar_a / alphabar)
+             di_g = do * radg       * (alphabar_g / alphabar)
+             di_a = do * rada * ssa * (alphabar_a / alphabar)
            else
              di_g = 0.
              di_a = 0.
@@ -413,7 +414,7 @@
          sumi_extrap = (sumi_mean * frac_opac) + (1.-frac_opac) * rad
 
          if(idebug .eq. 1)then
-           if(i .eq. 10 .or. i .eq. 100 .or. i .eq. 200 .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
+           if(i .le. 10 .or. i .eq. 100 .or. i .eq. 200 .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
              write(6,11)i,sbar,htbar,alphabar*ds,tausum,dsolalt,ags,aas,od_solar_slant_o3,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
 11           format(i6,f9.0,f9.1,e9.2,2f9.4,f10.2,4f9.4,e9.2,f11.8,f9.6,2f9.4,2f9.4)
              if(sol_occ.gt.0.)then
@@ -445,6 +446,7 @@
            ,sumi_g,sumi_a,opac_slant,ds,tausum_a)                      ! O
 
      use mem_namelist, ONLY: earth_radius
+     use constants_laps, ONLY: R, GRAV
      include 'trigd.inc'
      include 'rad.inc'
 
@@ -455,6 +457,7 @@
      curvat2(sdst,radius_start,altray) = &
              sqrt(sdst**2 + radius_start**2 &
                - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
+     expbl(x) = exp(max(x,-80.))
 
      real tausum_a(nsteps)
 
@@ -470,8 +473,11 @@
      radius_earth_eff = earth_radius * (1. + (0.33333 * patm_htmsl))
      radius_start_eff = radius_earth_eff + htmsl
 
-     scale_ht_g = 8000.
+     scale_ht_g = R * ztotsa(htmsl) / GRAV
 !    alpha_sfc_g = od_g_vert / scale_ht_g
+
+!    scale_ht_g = 8000.
+     scale_ht_g = R * ztotsa(0.) / GRAV
      alpha_ref_g = od_g_msl  / scale_ht_g
 
 !    alpha_sfc_a = od_a_vert / scale_ht_a
@@ -491,7 +497,7 @@
      nsteps_topo = nint(dist_to_topo/ds) ! max(10,int(htmsl/1000.))
      tausum = 0.
      sumi = 0.; sumi_g = 0.; sumi_a = 0.
-     httopill = max(130000.-sind(solalt)*90000.,40000.)
+     httopill = max(100000.-sind(solalt)*60000.,40000.)
      htbotill = -(htmsl + 500.)
      httopo = 0.
      istart = max(1,nint((htmsl-100000.)/ds))
@@ -503,6 +509,8 @@
          write(6,*)'viewalt/viewazi = ',viewalt,viewazi
          write(6,*)'agv/aav = ',ag,aa
          write(6,*)'od_g_vert = ',od_g_vert
+         write(6,*)'scale_ht_g = ',scale_ht_g
+         write(6,*)'alpha_sfc_g/alpha_ref_g = ',alpha_sfc_g,alpha_ref_g
          write(6,*)'od_a_vert = ',od_a_vert
          write(6,*)'opac_vert = ',opac_vert
          write(6,*)'aod_ref/redp_lvl/scale_ht_a',aod_ref,redp_lvl,scale_ht_a
@@ -555,21 +563,25 @@
 
          if(i .eq. nsteps_topo .and. idebug .eq. 1)then
              write(6,*)'aas terms',isolaltl,aas_a(isolaltl),isolalth,aas_a(isolalth),fsolalt
-             write(6,*)'od_solar_slant terms',od_g_vert,ags,htbar,scale_ht_g,exp(-htbar/scale_ht_g),aod_ref,aas,htbar,scale_ht_a,exp(-(htbar_msl-redp_lvl)/scale_ht_a)
+             write(6,*)'od_solar_slant terms',od_g_vert,ags,htbar,scale_ht_g,exp(-htbar/scale_ht_g),aod_ref,aas,htbar,scale_ht_a,expbl(-(htbar_msl-redp_lvl)/scale_ht_a)
              iwrite_slant = 1
          endif
 
          if(sol_occ .gt. 0.)then
-           od_solar_slant = od_g_msl * ags * exp(-htbar_msl/scale_ht_g) &
-                    + aod_ref * aas * exp(-(htbar_msl-redp_lvl)/scale_ht_a)
+           od_solar_slant = od_g_msl * ags * expbl(-htbar_msl/scale_ht_g) &
+                    + aod_ref * aas * expbl(-(htbar_msl-redp_lvl)/scale_ht_a)
          else
            od_solar_slant = 999.
          endif
 
 !        alphabar_g = alpha_sfc_g * exp(-htbar/scale_ht_g) 
-         alphabar_g = alpha_ref_g * exp(-htbar_msl/scale_ht_g) 
+!        alphabar_g = alpha_ref_g * exp(-htbar_msl/scale_ht_g) 
+         patm_bar = ztopsa(htbar_msl) / 1013.25
+         scale_ht_g = R * ztotsa(htbar_msl) / GRAV
+         alphabar_g = (od_g_msl * patm_bar) / scale_ht_g
+
 !        alphabar_a = alpha_sfc_a * exp(-htbar/scale_ht_a)  
-         alphabar_a = alpha_ref_a * exp(-(htbar_msl-redp_lvl)/scale_ht_a)
+         alphabar_a = alpha_ref_a * expbl(-(htbar_msl-redp_lvl)/scale_ht_a)
          dtau = ds * (alphabar_g + alphabar_a)
          tausum = tausum + dtau
 !        if(tausum .lt. 1.0)distod1 = sbar
@@ -593,8 +605,8 @@
          endif
 
          di   = do * rad  * ssa_eff
-         di_g = do * radg * alphabar_g / (alphabar_g + alphabar_a)
-         di_a = do * rada * alphabar_a / (alphabar_g + alphabar_a)
+         di_g = do * radg       * alphabar_g / (alphabar_g + alphabar_a)
+         di_a = do * rada * ssa * alphabar_a / (alphabar_g + alphabar_a)
 
          sumi   = sumi   + di
          sumi_g = sumi_g + di_g
