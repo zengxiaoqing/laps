@@ -38,11 +38,11 @@ cdis
 cdis
 
  
-       subroutine radar_init(i_radar,path_to_radar,path_to_vrc,itimes   ! I
-     1                      ,b_missing_data                             ! I
-     1                      ,i_tilt_proc                                ! I/O
-     1                      ,l_realtime                                 ! O
-     1                      ,i_last_scan,istatus)                       ! O
+       subroutine radar_init(i_radar,path_to_radar,path_to_vrc,itimes  ! I
+     1                      ,b_missing_data                            ! I
+     1                      ,i_tilt_proc                               ! I/O
+     1                      ,l_realtime                                ! O
+     1                      ,i_last_scan,istatus)                      ! O
 
        use mem_vol
  
@@ -154,26 +154,33 @@ c      Determine output filename extension
            c2_tilt = '02'
            c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
 
+           write(6,*)' itimes = ',itimes
+
            if(itimes .eq. 1)then
+               i_nbr_files_vol = 0
+
                call get_file_names(c_filespec,i_nbr_files_2nd,c_fnames
      1                            ,max_files,istatus)
                if(istatus .ne. 1)then
                    write(6,*)' istatus returned from get_file_names ='        
      1                      ,istatus
+                   write(6,*)' assume no directory present (tilt)'
                    return
                endif
 
-               i_nbr_files_vol = 0
-
                if(i_nbr_files_2nd .eq. 0)then ! try for volume files
                    c_filespec = path_to_radar(1:len_path)//'/*.nc'
+                   write(6,*)' Volume filespec = ',trim(c_filespec)
                    call get_file_names(c_filespec,i_nbr_files_vol
      1                                ,c_fnames_in,max_files,istatus)
                    if(istatus .ne. 1)then
                        write(6,*)
      1                       ' istatus returned from get_file_names ='  
      1                        ,istatus
+                       write(6,*)' assume no directory present (vol)'
                        return
+                   else
+                       write(6,*)' i_nbr_files_vol = ',i_nbr_files_vol
                    endif
                endif
 
@@ -187,7 +194,8 @@ c      Determine output filename extension
            I4_elapsed = ishow_timer()
 
            if(i_nbr_files_vol .gt. 0)then
-               write(6,*)' We have volume data'
+               write(6,*)' We have volume data, # files ='
+     1                                        ,i_nbr_files_vol
                c8_fname_format = 'VOLUME'
                c_filespec = path_to_radar(1:len_path)//'/*.nc'
 
@@ -206,6 +214,8 @@ c      Determine output filename extension
                endif
 
                i_nbr_files_raw = i_nbr_files_vol
+
+               write(6,*)' # of (volume) raw files = ',i_nbr_files_raw
 
            else
                if(i_nbr_files_2nd .gt. 0)then
@@ -226,9 +236,9 @@ c      Determine output filename extension
      1                                ,istatus)
                endif
 
-           endif
+               write(6,*)' # of (1st tilt) raw files = ',i_nbr_files_raw
 
-           write(6,*)' # of 1st tilt raw files = ',i_nbr_files_raw
+           endif
 
            I4_elapsed = ishow_timer()
 
@@ -259,7 +269,7 @@ c      Determine output filename extension
 !          Get i4times of output files 
            if(itimes .eq. 1)then
                call get_file_times(c_filespec,max_files,c_fnames
-     1                            ,i4times_lapsprd,i_nbr_lapsprd_files       
+     1                            ,i4times_lapsprd,i_nbr_lapsprd_files
      1                            ,istatus)
 
            else ! more efficiency for subsequent radars
@@ -375,7 +385,7 @@ c      Determine output filename extension
                stop
            endif
            filename = c_fnames_in(i_process)
-!          write(6,*)' c_fnames array',(c_fnames_in(i),i=1,i_process)
+           write(6,*)' c_fnames array',(c_fnames_in(i),i=1,i_process)
          endif ! first tilt
        endif
 
