@@ -1416,7 +1416,7 @@
      1             ,aero_scaleht,htstart,redp_lvl     ! I
      1             ,aod_ill                           ! I (dummy)
      1             ,l_solar_eclipse,i4time,rlat,rlon  ! I
-     1             ,clear_radf_c,ag_2d                ! I (ag2d is dummy)
+     1             ,clear_radf_c,horz_dep_d,ag_2d     ! I (ag2d is dummy)
      1             ,clear_rad_c,elong_p             ) ! O (elongp is dummy)
          endif
 
