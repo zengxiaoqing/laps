@@ -192,6 +192,9 @@ cdis
 !                     istatus, and we assume that all radar times are experiencing
 !                     the missing tilts
                       go to 900 ! saves computer time searching directories
+                  else
+                      write(6,*)' skip rest of times, go to next radar'
+                      go to 900 
                   endif
               endif
           enddo ! itimes
