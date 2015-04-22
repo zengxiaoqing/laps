@@ -9,7 +9,7 @@
                    ,htmsl,redp_lvl                                &! I
                    ,aod_ill                                       &! I
                    ,l_solar_eclipse,i4time,rlat,rlon              &! I
-                   ,clear_radf_c,ag_2d                            &! I
+                   ,clear_radf_c,horz_dep_d,ag_2d                 &! I
                    ,clear_rad_c,elong                       )      ! O
 
 !       Sky glow with solar altitude <= 0
@@ -195,7 +195,7 @@
 
           idebug = idebug_a(ialt,jazi) * 2
 
-          if(sol_alt .gt. 0.)then
+          if(sol_alt .gt. 0. .or. altray .lt. -horz_dep_d)then
             continue
 
           else ! sun below horizon (twilight / night brightness)
