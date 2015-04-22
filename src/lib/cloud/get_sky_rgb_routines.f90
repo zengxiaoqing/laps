@@ -1,41 +1,142 @@
 
-        subroutine get_clr_rad_nt(alt,azi,obs_glow_zen,patm,htmsl,clear_rad_c_nt)
+        subroutine get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen & ! I
+                                    ,patm,htmsl,horz_dep &      ! I
+                                    ,clear_rad_c_nt)            ! O
 
+        use mem_namelist, ONLY: earth_radius
         include 'trigd.inc'
+        include 'rad.inc'
 
-        real clear_rad_c_nt(3)      ! night sky brightness
-                                    ! 3 color radiance (Nanolamberts)
+        am_thsh(z,h,r) = 1./ sqrt( 1.-( (r/(r+h))**2 * (sind(z))**2) )
 
-        z = min(90. - alt,91.)        
-        airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
+        am_thsh_indefint(z,h,r) = (2.*h**2 + 4.*h*r + r**2 * cosd(2.*z) + r**2) / &
+            (2.*(h+r)*sqrt(1.-r**2*sind(z)**2/(h+r)**2))
 
-        airmass_lit = 0.
-        sat_ramp = 1.0
-        sat_twi_ramp = 0.4
+        am_thsh_defint(z,h1,h2,r) = am_thsh_indefint(z,h2,r) - am_thsh_indefint(z,h1,r) 
 
-        if(htmsl .lt. 100000.)then ! below airglow
-          airglow = 75.  ! nL (range from ~60-90 with solar cycle)
-          rint_alt_ramp = sqrt(airmass)
-        elseif(alt .lt. -12)then ! atmosphere from above airglow
-          airglow = 75.
-          rint_alt_ramp = 1.
-        else
-          airglow = 0.
-          rint_alt_ramp = 1.
-        endif
+        real alt_a(ni,nj)
+        real azi_a(ni,nj)
+        real clear_rad_c_nt(3,ni,nj)      ! night sky brightness
+                                          ! 3 color radiance (Nanolamberts)
 
-!       glow_lp = 500. ! from city lights (nL)
-        glow_lp = obs_glow_zen * patm + airglow ! from city lights + airglow (nL)
-        glow_alt = glow_lp * rint_alt_ramp
+        real glow_alt(3),airglow(3),airglow_zen(3)
 
-!       HSI
-        hue = exp(-airmass_lit*0.2) ! 0:R 1:B
-        clear_rad_c_nt(1) = hue                             ! Hue
-        clear_rad_c_nt(2) = abs(hue-0.5) * 0.8 * sat_ramp   &                        
-                                             * sat_twi_ramp ! Sat
+        airglow_zen(1) = 75. ! nL (range from ~60-90 with solar cycle)
+        airglow_zen(2) = 75. 
+        airglow_zen(3) = 35. 
 
-!       Now returned as radiance (nL)
-        clear_rad_c_nt(:) = glow_alt                        ! Int
+        ht_lyr = 85000.
+        thk_lyr = 10000.
+        bot_lyr = ht_lyr - thk_lyr/2.
+        top_lyr = ht_lyr + thk_lyr/2.
+
+        flyr_abv = max( min( (top_lyr-htmsl)/thklyr, 1.) ,0.)
+        flyr_blw = max( min( (htmsl-top_lyr)/thklyr, 1.) ,0.)
+
+        write(6,*)' get_clr_rad_nt_2d: abv/blw ',flyr_abv,flyr_blw
+
+        do ialt = 1,ni ! Process all azimuths at once for this altitude
+
+          alt = alt_a(ialt,1)
+          z = min(90. - alt,91.)        
+          airmass = 1. / (cosd(z) + 0.025 * exp(-11 * cosd(z)))
+
+          airmass_lit = 0.
+          sat_ramp = 1.0
+          sat_twi_ramp = 0.4
+
+!         https://farm7.staticflickr.com/6116/6258799449_17eb754b08_o.jpg
+!         http://spaceflight.nasa.gov/gallery/images/station/crew-30/hires/iss030e007397.jpg
+          if(htmsl .le. bot_lyr)then ! below airglow
+            rint_alt_ramp = sqrt(airmass)
+
+!           airglow(:) = airglow_zen(:) * rint_alt_ramp
+
+            z = 90. - alt
+            h = ht_lyr - htmsl
+            thickness = thk_lyr
+
+!           Case when shell is entirely higher than observer,
+!           looking above or below horizon
+!           am1 = am_thsh(z,h,earth_radius)
+ 
+            h1 = h - thickness/2.
+            h2 = h + thickness/2.
+            if(h1 .ne. 0. .OR. z .ne. 90.)then
+              am2 = (1./thickness) * am_thsh_defint(z,h1,h2,earth_radius)
+            else ! indefint at h1 is near zero or can blow up
+              am2 = (1./thickness) * am_thsh_indefint(z,h2,earth_radius)
+            endif
+
+            airglow(:) = airglow_zen(:) * am2
+
+
+          elseif(htmsl .ge. top_lyr)then ! above airglow
+            horz_dep_airglow = horz_depf(htmsl-90000.,earth_radius)
+            if(alt .lt. -horz_dep_airglow)then
+              z = 90. ! 90. + alt
+              htmin_ray = htminf(htmsl,alt,earth_radius) ! msl
+              h = 90000. - htmin_ray
+              thickness = 10000.
+              h = max(h,thickness) ! approximation for partial thickness
+
+              erad_eff = earth_radius + htmin_ray
+
+!             Case when shell is entirely higher than observer,
+!             looking above or below horizon
+!             am1 = am_thsh(z,h,earth_radius)
+ 
+              h1 = h - thickness/2.
+              h2 = h + thickness/2.
+              if(h1 .ne. 0. .OR. z .ne. 90.)then
+                am2 = (1./thickness) * am_thsh_defint(z,h1,h2,erad_eff)
+              else ! indefint at h1 is near zero or can blow up
+                am2 = (1./thickness) * am_thsh_indefint(z,h2,erad_eff)
+              endif
+
+              if(alt .gt. -horz_dep)then ! pass twice through shell
+                airglow(:) = airglow_zen(:) * am2 * 2.
+              else                       ! pass once through shell
+                airglow(:) = airglow_zen(:) * am2
+              endif
+
+            else
+              h = 0. ! flag value
+              airglow(:) = 0.
+              rint_alt_ramp = 1.
+
+            endif
+
+          else
+            airglow(:) = 0.
+            rint_alt_ramp = 1.
+          endif
+
+!         glow_lp = 500. ! from city lights (nL)
+          glow_lp = (obs_glow_zen * patm * rint_alt_ramp) ! from city lights (nL)
+          glow_alt(:) = glow_lp + airglow(:) ! from city lights + airglow (nL)
+
+!         HSI
+!         hue = exp(-airmass_lit*0.2) ! 0:R 1:B
+!         clear_rad_c_nt(1) = hue                             ! Hue
+!         clear_rad_c_nt(2) = abs(hue-0.5) * 0.8 * sat_ramp   &                        
+!                                              * sat_twi_ramp ! Sat
+
+!         Now returned as radiance (nL)
+          do ic = 1,3
+            clear_rad_c_nt(ic,ialt,:) = glow_alt(ic)          ! Int
+          enddo
+
+!         if(ialt .eq. ni)then
+          if(ialt .eq. ni .or. alt .eq. nint(alt))then
+            write(6,1)alt,h,am2,obs_glow_zen,airglow(2),glow_lp,glow_alt(2)
+1           format(' get_clr_rad_nt_2d: alt,h,am2,obsg,airg,glow lp/alt',f9.2,f10.0,f9.3,4f10.0)
+!           if(htmsl .ge. 90000.)then ! above airglow
+!             write(6,*)'   horz_dep_airglow = ',horz_dep_airglow
+!           endif
+          endif
+
+        enddo ! ialt
 
         return
         end
