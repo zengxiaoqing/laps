@@ -13,7 +13,7 @@
 
 # Fifth command line argument is FILES [1=2D, 2=3D, 3=3D+LGA]           
 
-# Sixth argument is for expanded output and/or copy method [expand,noexpand,tar,rsync,scp,exchange]
+# Sixth argument is for expanded output and/or copy method [expand,noexpand,tar,rsync,scp,exchange,none]
 
 # Seventh argument is for including static files [static,nostatic]
 
@@ -255,8 +255,8 @@ elif test "$EXPAND" = scp; then
 elif test "$EXPAND" = exchange; then
     echo "call copy_remote with exchange_tarfilelist option"  
 
-    grep www       $LAPSTAR_TXT > $LAPSTAR_WWW_TXT
-    grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT
+    grep www       $LAPSTAR_TXT > $LAPSTAR_WWW_TXT # web archive plus recent
+    grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT    # lapsprd plus web archive
 
     echo " "
     date -u
@@ -316,6 +316,32 @@ elif test "$EXPAND" = rsync; then # rsync compression allows faster transmission
 
     echo "rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT"
           rsync -vvzlptg -e ssh --files-from=$LAPSTAR2_TXT --timeout=200 $LAPS_DATA_ROOT $DOMAIN_NAME$COLON$REMOTE_DATA_ROOT
+
+elif test "$EXPAND" = none; then 
+    echo "no remote copy, set up the two zip files just for possible MSS archiving"
+
+    grep www       $LAPSTAR_TXT > $LAPSTAR_WWW_TXT
+    grep -v recent $LAPSTAR_TXT > $LAPSTAR2_TXT
+ 
+    FILENAME=$LAPSTAR_WWW_TXT
+    TEMPFILE=$FILENAME.$$
+    echo  zip $TEMPFILE.z2 `cat $FILENAME`   
+          zip $TEMPFILE.z2 `cat $FILENAME`                                                                         
+    ls -l $TEMPFILE.z2
+
+    echo " "
+    date -u
+    echo " "
+
+    FILENAME=$LAPSTAR2_TXT
+    TEMPFILE=$FILENAME.$$
+    echo  zip $TEMPFILE.z2 `cat $FILENAME`   
+          zip $TEMPFILE.z2 `cat $FILENAME`                                                                         
+    ls -l $TEMPFILE.z2
+
+    echo " "
+    date -u
+    echo " "
 
 else # generic option
     echo "call copy_remote with $EXPAND option"  
