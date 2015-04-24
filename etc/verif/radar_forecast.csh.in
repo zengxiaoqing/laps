@@ -2,7 +2,7 @@
 
 # First argument is $LAPS_DATA_ROOT
 
-# Second argument is number of forecast time steps
+# Second argument is number of forecast time steps (including analysis time)
 
 # Third argument is the type of statistic
 
