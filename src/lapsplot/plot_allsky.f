@@ -1259,6 +1259,7 @@
      1                    ,topo_swi,topo_albedo
      1                    ,topo_albedo_2d(2,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
+     1                    ,aod_tot
      1                    ,dist_2_topo,topo_solalt,trace_solalt
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
