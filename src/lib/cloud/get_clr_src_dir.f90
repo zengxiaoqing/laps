@@ -414,9 +414,9 @@
          sumi_extrap = (sumi_mean * frac_opac) + (1.-frac_opac) * rad
 
          if(idebug .eq. 1)then
-           if(i .le. 10 .or. i .eq. 100 .or. i .eq. 200 .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
+           if(i .le. 10 .or. i .eq. 50 .or. i .eq. 100 .or. i .eq. 200 .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
              write(6,11)i,sbar,htbar,alphabar*ds,tausum,dsolalt,ags,aas,od_solar_slant_o3,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i6,f9.0,f9.1,e9.2,2f9.4,f10.2,4f9.4,e9.2,f11.8,f9.6,2f9.4,2f9.4)
+11           format(i6,f9.0,f9.1,e10.3,f8.4,f9.4,f10.2,4f9.4,e9.2,f11.8,f9.6,2f9.4,2f9.4)
              if(sol_occ.gt.0.)then
                write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
              endif
