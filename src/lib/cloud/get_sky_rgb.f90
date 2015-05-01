@@ -116,9 +116,9 @@
         twi_alt = -4.5
 
         if(sol_alt .ge. twi_0)then
-          corr1 = 8.5; corr2 = 3.412 ! darkness of start/end of twilight
+          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight
         else
-          corr1 = 8.5; corr2 = 3.412 ! darkness of start/end of twilight
+          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight
         endif
 
         if(sol_alt .le. 0.)then
@@ -278,7 +278,7 @@
         do i = 1,ni
             if(abs(azi_a(i,j)-azid1) .le. .001 .OR. & 
                abs(azi_a(i,j)-azid2) .le. .001     )then ! constant azimuth
-                if(abs(alt_a(i,j)) .le. 2.0)then
+                if(abs(alt_a(i,j)+horz_dep) .le. 2.0)then ! near horizon/limb
                     idebug_a(i,j) = 1
                 elseif(abs(alt_a(i,j)) .le. 20. .AND. &
                        alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
@@ -380,8 +380,10 @@
                     od_atm_a_eff(i,j) = (           aod_ill(i,j))     / (aa           )
                     od_atm_a_dir(i,j) = (           aod_ill_dir(i,j)) / (aa           )
                   else ! might make use of more accurate aa below horizon
-                    od_atm_a_eff(i,j) = 1.0
-                    od_atm_a_dir(i,j) = 1.0
+!                   od_atm_a_eff(i,j) = 1.0
+!                   od_atm_a_dir(i,j) = 1.0
+                    od_atm_a_eff(i,j) = (           aod_ill(i,j))     / (aa           )
+                    od_atm_a_dir(i,j) = (           aod_ill_dir(i,j)) / (aa           )
                   endif
                   if((i .eq. isun .AND. j .eq. jsun) .OR. &
                      (alt_a(i,j) .lt. 0. .and. idebug_a(i,j) .eq. 1) .OR. &
@@ -444,7 +446,7 @@
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
-                     ,htmsl,redp_lvl &                                 ! I
+                     ,htmsl,redp_lvl,horz_dep &                        ! I
                      ,aod_ill,aod_2_topo,aod_tot &                     ! I
                      ,l_solar_eclipse,i4time,rlat,rlon &               ! I
                      ,clear_radf_c,ag_2d &                             ! I
@@ -486,7 +488,7 @@
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
-                     ,htmsl,redp_lvl &                                 ! I
+                     ,htmsl,redp_lvl,horz_dep &                        ! I
                      ,aod_ill,aod_2_topo,aod_tot &                     ! I
                      ,.false.,i4time,rlat,rlon &                       ! I
                      ,clear_radf_c,ag_2d &                             ! I
@@ -595,9 +597,27 @@
 
           idebug = idebug_a(i,j)
 
+!         Determine relevant solar altitude along ray
+          if(htmsl .gt. 150e3)then ! highalt strategy
+            if(alt_a(i,j) .gt. 0.)then
+              solalt_ref = sol_alt
+            else
+              if(trace_solalt(i,j) .ne. sol_alt)then ! valid trace
+                solalt_ref = trace_solalt(i,j)
+              else
+                solalt_ref = sol_alt - (altray*cosd(view_azi_deg-sol_azi))
+                solalt_ref = min(solalt_ref,+180.-solalt_ref)
+                solalt_ref = max(solalt_ref,-180.-solalt_ref)
+              endif
+            endif
+          else
+            solalt_ref = topo_solalt(i,j)
+          endif
+
 !         Obtain cloud brightness
 !         if(sol_alt .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
-          if(topo_solalt(i,j) .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
+!         if(topo_solalt(i,j) .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
+          if(solalt_ref .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
 !             Potential intensity of cloud if it is opaque 
 !               (240. is nominal intensity of a white cloud far from the sun)
 !                217 would better match -7.3 value above
@@ -653,13 +673,14 @@
                 (abs(alt_a(i,j)).le.40.0 .or. abs(alt_a(i,j)).eq.90.0 .or. abs(alt_a(i,j)+70.).lt.7.) )  &
                   .OR. (i .eq. isun .and. j .eq. jsun) )then
                if(r_cloud_3d(i,j) .gt. 0.)then
+                  write(6,*)' solalt_ref/twi_alt ',solalt_ref,twi_alt
                   write(6,42)i,j,elong_a(i,j),pf_scat(2,i,j),rintensity(2)&
                    ,trans_c(2),r_cloud_rad(i,j) &
                    ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
                    ,cld_radb(:)/1e6,(cld_rad(:)/1e6)/trans_c(:) &
                    ,cld_rad(:)/1e6,rad_sec_cld(:)/1e6
  42               format(&
-                  ' elg/pf/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,5f9.3,' c',3f7.3,2x,3f6.0,2x,3f6.0,2x,3f5.0,2x,3f6.0,2x,3f6.0)
+                  ' elg/pf/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,5f9.3,' c',3f8.5,2x,3f6.0,2x,3f6.0,2x,3f5.0,2x,3f6.0,2x,3f5.0)
                endif ! cloud present
               endif
 
@@ -714,14 +735,14 @@
                   if(cloud_rad_c(2,i,j) .ge. 1e20)then
                       write(6,*)' WARNING: large cloud_rad_c',glow_cld_c(:),glow_cld,glow_cld_moon,glow_cld_nt
                   endif
-                  write(6,51)cloud_rad_c(1:2,i,j),r_cloud_rad(i,j),pf_scat_moon,glow_cld1 &
+                  write(6,51)solalt_ref,twi_alt,cloud_rad_c(1:2,i,j),r_cloud_rad(i,j),pf_scat_moon,glow_cld1 &
                             ,glow_cld_moon,glow_cld_nt,glow_cld,glow_cld_c(:),cld_rad(:)
-51                format('   cloud_rad_c/crad/pf/glow: cld1|moon|nt|cldc cldrad',2e11.4,9f8.2,3f10.0)
+51                format('   salt-rf-tw/cloud_rad_c/crad/pf/glow: cld1|moon|nt|cldc cldrad',2f8.2,2e11.4,9f8.2,3f10.0)
               endif
 
               cld_rad(:) = 10. ** glow_cld_c(:) ! newly defined
 
-          endif
+          endif ! solalt_ref > twi_alt
 
 !         Note cld_rad only newly defined for sol_alt < twi_alt
           call nl_to_RGB(cld_rad(:),glwmid,contrast & 
@@ -910,16 +931,18 @@
 !         frac_cloud = 0.0 ; Testing
           if(sol_alt .gt. 0.)then ! distant clouds fade more during day
             frac_cloud = frac_cloud * cloud_visibility  
+
             if(alt_a(i,j) .lt. 0. .and. airmass_2_topo(i,j) .gt. 0.)then
               frac_front = sind(-alt_a(i,j)) * airmass_2_cloud(i,j)/airmass_2_topo(i,j)
-            else
-              frac_front = 0.0        ! frac clr/lit air in front of cloud
+            else ! frac clr/lit air in front of cloud
+              frac_front = opac(od_2_cloud) / opac(clr_od(2)) 
+              frac_front = min(frac_front,1.0)
             endif
             frac_behind = 1.0 - frac_front ! frac clr/lit air behind cloud
 
           else ! fade only when opposite the twilight arch
-            frac_behind = 1.0              ! frac clr/lit air behind cloud
             frac_cloud = frac_cloud * cloud_visibility**scurve(elong_a(i,j)/180.)
+            frac_behind = 1.0              ! frac clr/lit air behind cloud
 
           endif
 
@@ -942,8 +965,8 @@
 
 !         if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 2.0)then
           if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 90.0)then
-            write(6,96)clear_rad_c(:,i,j),cld_rad,sky_rad
-96          format(' clr_rad/cld_rad/sky_rad',3f12.0,2x,3f12.0,2x,3f12.0,2x,3i4)
+            write(6,96)frac_front,frac_clr,frac_cloud,clear_rad_c(:,i,j),cld_rad,sky_rad
+96          format(' ffnt/fclr/fcld/clr_rad/cld_rad/sky_rad',3f7.3,3f14.0,2x,3f14.0,2x,3f14.0,2x,3i4)
           endif
 
 !         Use topo value if airmass to topo > 0
