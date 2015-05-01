@@ -355,7 +355,7 @@ c       include 'satellite_dims_lvd.inc'
         hel_l = -800.
         hel_h = +800.
 
-        cloud_albedo_f = .60
+        cloud_albedo_f = 1.00 
         cloud_albedo_a = .60
 
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus) 
@@ -4263,7 +4263,8 @@ c abdel
 
         elseif(c_type_i .eq. 'ia' .or. c_type_i .eq. 'ij'
      1    .or. c_type_i .eq. 'ie' .or. c_type_i .eq. 'is'
-     1    .or. c_type_i .eq. 'in' .or. c_type_i .eq. 'od')then       
+     1    .or. c_type_i .eq. 'in' .or. c_type_i .eq. 'od'
+     1    .or. c_type_i .eq. 'ca')then       
 
           call input_product_info(    i4time_ref            ! I
      1                             ,laps_cycle_time         ! I
@@ -4280,6 +4281,8 @@ c abdel
 
           if(c_type_i .eq. 'od')then
               var_2d = 'COD'
+          elseif(c_type_i .eq. 'ca')then
+              var_2d = 'CLA'
           elseif(c_type_i .ne. 'ie')then
               var_2d = 'LIL'
           else
@@ -4293,7 +4296,9 @@ c abdel
      1                             NX_L,NY_L,field_2d,0,istatus)
 
               if(c_type_i .eq. 'od')then
-                  c_label = 'Cloud Optical Depth'
+                  c_label = 'LIL Cloud Optical Depth '
+              elseif(c_type_i .eq. 'ca')then
+                  c_label = 'LIL Cloud Albedo '
               elseif(c_type_i .ne. 'ie')then
                   c_label = 'Integrated Cloud Liquid (mm) '
               else
@@ -4366,6 +4371,12 @@ c abdel
               scale = 1.
               chigh = +40.
               cint = 5.
+              colortable = 'linear'
+              plot_parms%color_power = 0.40
+          elseif(c_type_i .eq. 'ca')then
+              scale = 1.
+              chigh = +1.
+              cint = 0.2
               colortable = 'linear'
               plot_parms%color_power = 0.40
           else
