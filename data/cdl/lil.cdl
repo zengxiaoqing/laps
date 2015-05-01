@@ -63,6 +63,17 @@ netcdf lil {
             cla:lvl_coord="MSL";
             cla:LAPS_units="none";
 
+        //      Visible (Satellite) Albedo
+        float
+            smv(record,z,y,x);
+            smv:_FillValue = 1.e+37f;
+            smv:long_name="Visible Albedo";
+            smv:units="none";
+            smv:valid_range= 0.f, 1.f;
+            smv:LAPS_var="SMV";
+            smv:lvl_coord="MSL";
+            smv:LAPS_units="none";
+
          //      visibility              //
          float
             vis(record,z,y,x);
@@ -89,6 +100,7 @@ netcdf lil {
             lic_comment(record,z,namelen),
             cod_comment(record,z,namelen),
             cla_comment(record,z,namelen),
+            smv_comment(record,z,namelen),
             vis_comment(record,z,namelen),
             asctime(record,namelen);
 
@@ -110,6 +122,10 @@ netcdf lil {
         short
             cla_fcinv(record, z);
             cla_fcinv:_FillValue= 0s;
+
+        short
+            smv_fcinv(record, z);
+            smv_fcinv:_FillValue= 0s;
               	
         short
             vis_fcinv(record, z);
