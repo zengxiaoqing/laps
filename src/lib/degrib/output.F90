@@ -332,6 +332,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
      real :: pcpbg(nx,ny)
      real :: crefbg(nx,ny)
      real :: pwatbg(nx,ny)
+     real :: pratebg(nx,ny)
 
 ! *** 3D background arrays.
 
@@ -368,10 +369,15 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
         units = dunits(m)
         if (desc(1:1).ne.' ') then
 
+          if(ilev .ge. 200000)write(6,*)'ilev/desc ',ilev,desc
+
           if (is_there(ilev,field)) then 
-            call get_dims(ilev, field)
-            call refr_storage(ilev, field, scr2d, map%nx, map%ny)
-            !write (*,* ) m, idx, field, units(1:5), Desc(1:20), ilev
+              call get_dims(ilev, field)
+              call refr_storage(ilev, field, scr2d, map%nx, map%ny)
+              if(ilev .ge. 200000)then
+                write(6,11)m, idx, field, units(1:5), Desc(1:20), ilev
+11              format('  isthere',2i5,a,a,a,i8)
+              endif
 
               if(map%nx .gt. nx .OR. map%ny .gt. ny &
                                 .OR. idx    .gt. nz)then      
@@ -426,16 +432,21 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  mslpbg = scr2d
               elseif (field.eq.'APCP') then
                  pcpbg = scr2d
+                 write(6,*)' Filling pcpbg with APCP'
               elseif (field.eq.'REFC') then
                  crefbg = scr2d
+                 write(6,*)' Filling crefbg with REFC'
               elseif (field.eq.'PWAT') then
                  pwatbg = scr2d
+              elseif (field.eq.'PRATE') then
+                 pratebg = scr2d
+                 write(6,*)' Filling pratebg with PRATE'
               else
                  write(6,*)' field not filled: ',trim(field)
               endif
               nullify(scr2d)
 
-          elseif (field.eq.'APCP') then
+          elseif  (ilev .ge. 200000)  then
               write(6,*)' field is not there: ',ilev,trim(field)
 
           endif ! if parm exists
