@@ -139,6 +139,7 @@ my $LAPSROOT=shift || die "LAPS root directory required\n";
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+$ENV{LAPSINSTALLROOT} = $LAPSROOT ;
 
 require "$LAPSROOT/etc/laps_tools.pm";
 my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project",$LAPS_DATA_ROOT);
@@ -293,6 +294,9 @@ if(defined $opt_s){ # "surface only"
                   cloud.exe STMAS3D_crtm.exe deriv.exe accum.exe lsm5.exe
                   qbalpe.exe lapsprep.exe laps2grib.exe);
     $lga_proc = "obs_convert.exe";
+
+}elsif( ($opt_V eq "statistics")) { # Build bkg err statistics by YF 5/13/2015
+    @LAPS_EXE = qw(lga.exe);
 
 }elsif($opt_V eq "GSI_Post"){ # GSI analysis
     @LAPS_EXE = qw(GSI_Post.exe
