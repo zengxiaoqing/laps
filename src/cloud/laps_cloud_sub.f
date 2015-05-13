@@ -269,6 +269,7 @@ cdis
         real t_gnd_k(NX_L,NY_L)
         real sst_k(NX_L,NY_L)
         real td_sfc_k(NX_L,NY_L)
+        real tgd_sfc_k(NX_L,NY_L)
         real pres_sfc_pa(NX_L,NY_L)
 
 !       Declarations for LSO file stuff
@@ -668,7 +669,6 @@ C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
         ext = 'lsx'
         call get_laps_2d(i4time,ext,var,units,comment
      1                  ,NX_L,NY_L,pres_sfc_pa,istatus)
-
         IF(istatus .ne. 1)THEN
             write(6,*)
      1  ' Error Reading Surface Pres Analyses - abort cloud analysis'
@@ -679,7 +679,6 @@ C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
         ext = 'lsx'
         call get_laps_2d(i4time,ext,var,units,comment
      1                  ,NX_L,NY_L,t_sfc_k,istatus)
-
         if(istatus .ne. 1)then
             write(6,*)' Error reading SFC Temps - abort cloud analysis'
             goto999
@@ -689,9 +688,17 @@ C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
         ext = 'lsx'
         call get_laps_2d(i4time,ext,var,units,comment
      1                  ,NX_L,NY_L,td_sfc_k,istatus)
-
         if(istatus .ne. 1)then
             write(6,*)' Error reading SFC Td - abort cloud analysis'
+            goto999
+        endif
+
+        var = 'TGD'
+        ext = 'lsx'
+        call get_laps_2d(i4time,ext,var,units,comment
+     1                  ,NX_L,NY_L,tgd_sfc_k,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading SFC Tgd - abort cloud analysis'
             goto999
         endif
 
@@ -1436,6 +1443,7 @@ C       EW SLICES
 !       Calculate cloud analysis implied snow cover
         call cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_tb8_m
      1          ,tb8_k,topo,di_dh_vis,dj_dh_vis,i_fill_seams,NX_L,NY_L
+     1          ,rlaps_land_frac,tgd_sfc_k
      1          ,grid_spacing_cen_m,r_missing_data,cvr_snow_cycle)
 
         I4_elapsed = ishow_timer()
@@ -1788,19 +1796,22 @@ C       EW SLICES
 
         subroutine cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_tb8_m
      1             ,tb8_k,topo,di_dh,dj_dh,i_fill_seams,ni,nj
+     1             ,rlaps_land_frac,tgd_sfc_k                          ! I
      1             ,grid_spacing_cen_m,r_missing_data,cvr_snow_cycle)
 
         real cvr_max(ni,nj)          ! Input
         real cloud_frac_vis_a(ni,nj) ! Input
         real cldtop_tb8_m(ni,nj)     ! Input
         real tb8_k(ni,nj)            ! Input
+        real tgd_sfc_k(ni,nj)        ! Input
         real topo(ni,nj)             ! Input
+        real rlaps_land_frac(ni,nj)  ! Input
         real di_dh(ni,nj)            ! Input           
         real dj_dh(ni,nj)            ! Input
         integer i_fill_seams(ni,nj)  ! Input
         real cvr_snow_cycle(ni,nj)   ! Output
 
-        logical l_cvr_max              ! Local
+        logical l_cvr_max            ! Local
 
         n_csc_pts = 0
         n_no_csc_pts = 0
@@ -1877,12 +1888,32 @@ C       EW SLICES
 
             endif
 
-!           If ground is warm then no snow is present
+            if(rlaps_land_frac(i,j) .le. 0.25 .and. 
+     1         topo(i,j) .le. 10.                   )then
+                iocean = 1 
+            else
+                iocean = 0 
+            endif
+            tb8_snow_thr = 281.15 - float(iocean) * 6.
+
+!           If ground/ocean is warm then no snow is present
             if(tb8_k(i,j) .ne. r_missing_data
-     1       .and.        tb8_k(i,j) .gt. 281.15
-     1       .and.         cvr_max(i,j) .le. 0.1
-     1                                                       )then
+     1       .and.        tb8_k(i,j) .gt. tb8_snow_thr
+     1       .and.        cvr_max(i,j) .le. 0.1     )then
                 cvr_snow_cycle(itn:itx,jt) = 0.
+            endif
+
+!           If no IR set snow cover based on ocean "ground" temp
+            if(tb8_k(i,j) .eq. r_missing_data .AND.         
+     1         iocean .eq. 1                  .AND. 
+     1         tgd_sfc_k(i,j) .ne. r_missing_data   )then
+              if(tgd_sfc_k(i,j) .gt. 274.15)then      
+                cvr_snow_cycle(itn:itx,jt) = 0.
+              elseif(tgd_sfc_k(i,j) .lt. 272.15)then
+                cvr_snow_cycle(itn:itx,jt) = 1.
+              else
+                cvr_snow_cycle(itn:itx,jt) = (274.15-tgd_sfc_k(i,j))/2.
+              endif
             endif
 
         enddo ! j
