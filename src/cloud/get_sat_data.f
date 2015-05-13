@@ -50,6 +50,8 @@ c
      1  sst_k,istat_sst,comment_sst,                                     ! O
      1  cldtop_co2_pa_a,cloud_frac_co2_a,istat_co2,lstat_co2_a)          ! O
 
+        use mem_namelist, ONLY: l_use_s8a
+
 !       Input
         real lat(imax,jmax)
         real lon(imax,jmax)
@@ -85,15 +87,20 @@ c
         ext = lvd_ext
         var = 'S8A'
         ilevel = 0
-        call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
+        if(l_use_s8a .eqv. .true.)then
+          call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window    
      1                     ,i4time_s8a,lat,lon
      1                     ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a     ! O 
      1                     ,EXT,var,units
      1                     ,comment_s8a,imax,jmax,s8a_k,ilevel
      1                     ,istat_s8a)      
-        if(istat_s8a .ne. 1)then
+          if(istat_s8a .ne. 1)then
             write(6,*)' No S8A data available, i4_sat_window is: '
      1               ,i4_sat_window
+          endif
+        else
+          write(6,*)' Skipping read of S8A satellite data'
+          istat_s8a = 0
         endif
 
 !       Final QC check on band 8 (11.2 mm) brightness temps
