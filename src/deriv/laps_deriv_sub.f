@@ -240,6 +240,9 @@ cdis
         real cldalb_out(NX_L,NY_L)
         real cldod_out(NX_L,NY_L)
         real visibility(NX_L,NY_L)
+        real simvis(NX_L,NY_L)
+        real static_albedo(NX_L,NY_L)
+        real sfc_albedo(NX_L,NY_L)
 
 !       real snow_2d(NX_L,NY_L)
 
@@ -346,6 +349,14 @@ cdis
         ISTAT = INIT_TIMER()
 
         write(6,*)' Welcome to the laps_deriv_sub (derived cloud prods)'       
+
+        call get_static_field_interp('albedo',i4time,NX_L,NY_L 
+     1                              ,static_albedo,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR in obtaining static albedo'
+            return
+        endif
+        sfc_albedo = static_albedo
 
         allocate( slwc(NX_L,NY_L,NZ_L), STAT=istat_alloc )
         if(istat_alloc .ne. 0)then
@@ -1188,10 +1199,15 @@ c read in laps lat/lon and topo
      1                     + const_rwp * rain_int(i,j)  
      1                     + const_swp * snow_int(i,j)  
      1                     + const_gwp * pice_int(i,j)  
+
+            simvis(i,j) = cldalb_out(i,j) + (1.-cldalb_out(i,j))**2 
+     1          * (sfc_albedo(i,j)/(1.-cldalb_out(i,j)*sfc_albedo(i,j)))
+
             if(i .eq. NX_L/2 .AND. j .eq. NY_L/2)then
-                write(6,*)'i,j,lat,lon,cld_od:'
-     1                    ,i,j,lat(i,j),lon(i,j),cldod_out(i,j)
+                write(6,*)'i,j,lat,lon,cld_od,smv:'
+     1              ,i,j,lat(i,j),lon(i,j),cldod_out(i,j),simvis(i,j)
             endif
+
         enddo ! i
         enddo ! j
 
@@ -1254,25 +1270,29 @@ c read in laps lat/lon and topo
         var_a(3) = 'COD'
         var_a(4) = 'CLA'
         var_a(5) = 'VIS'
+        var_a(6) = 'SMV'
         units_a(1) = 'M'
         units_a(2) = 'M'
         units_a(3) = ' '
         units_a(4) = ' '
         units_a(5) = 'M'
+        units_a(6) = ' '
         comment_a(1) = 'Integrated Cloud Liquid'
         comment_a(2) = 'Integrated Cloud Ice'
         comment_a(3) = 'Cloud Optical Depth'
         comment_a(4) = 'Cloud Albedo'
         comment_a(5) = 'Visibility'
+        comment_a(6) = 'Visible Albedo'
 
         call move(slwc_int,  out_array_3d(1,1,1),NX_L,NY_L)
         call move(cice_int,  out_array_3d(1,1,2),NX_L,NY_L)
         call move(cldod_out, out_array_3d(1,1,3),NX_L,NY_L)
         call move(cldalb_out,out_array_3d(1,1,4),NX_L,NY_L)
         call move(visibility,out_array_3d(1,1,5),NX_L,NY_L)
+        call move(simvis    ,out_array_3d(1,1,6),NX_L,NY_L)
 
         call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1      comment_a,out_array_3d,NX_L,NY_L,5,istatus)
+     1      comment_a,out_array_3d,NX_L,NY_L,6,istatus)
 
         if(istatus .eq. 1)then
             j_status(n_lil) = ss_normal
