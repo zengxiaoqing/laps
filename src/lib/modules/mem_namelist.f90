@@ -167,8 +167,8 @@ real     :: weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp, radiometer_
 integer  :: max_obs, mode_adjust_heights
 
 ! cloud_nl variables
-logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 &
-           ,l_use_metars, l_use_radar, l_corr_parallax
+logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_s8a,l_use_39 &
+           ,l_use_pireps ,l_use_metars, l_use_radar, l_corr_parallax
 integer  :: latency_co2,i4_sat_window,i4_sat_window_offset,i_varadj
 real     :: pct_req_lvd_s8a, echotop_thr_a(3), cld_weight_modelfg
 
@@ -184,7 +184,7 @@ real    :: cloud_weight_nl
 real    :: radio_wt_nl
 character(len=256) ::  path_to_gvap12, path_to_gvap10, path_to_gps, path2covar
 
-! lapsprep_nl variables
+! lapsprep_nl variables (not yet used)
 logical ::  hotstart, balance, make_sfc_uv 
 character(len=16) :: output_format(10)
 real ::  snow_thresh, lwc2vapor_thresh,rai_frac, sno_frac
@@ -284,7 +284,7 @@ namelist /temp_nl/ l_read_raob_t, l_use_raob_t, mode_adjust_heights  &
                   ,max_obs, radiometer_ht_temp
 
 namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
-                   ,l_use_39, l_use_metars, l_use_radar, l_corr_parallax &
+                   ,l_use_s8a, l_use_pireps, l_use_39, l_use_metars, l_use_radar, l_corr_parallax &
                    ,latency_co2 &
                    ,pct_req_lvd_s8a, echotop_thr_a &
                    ,cld_weight_modelfg &
@@ -435,6 +435,8 @@ elseif (namelist_name == 'cloud_anal') then
 
    i_varadj = 1                    ! keep this on as a default          
    l_corr_parallax = .true.
+   l_use_s8a = .true.
+   l_use_pireps = .true.
 
    read (12, cloud_nl, err=908)
    
