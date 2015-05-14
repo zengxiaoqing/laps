@@ -2045,7 +2045,7 @@ c     include 'bgdata.inc'
       integer oldest_forecast
       integer max_forecast_delta
       integer forecast_length
-      integer itime_inc
+      integer itime_inc,ntmin,ntmax
       integer nbgm
       logical sfc_bkgd
       logical use_analysis
@@ -2058,7 +2058,10 @@ c     include 'bgdata.inc'
       call get_background_info(bgpaths,bgmodels
      +,forecast_length
      +,use_analysis,use_forecast
-     +,cmodel,itime_inc,smooth_fields,sfc_bkgd,lgb_only)
+     +,cmodel,itime_inc,smooth_fields
+     +,sfc_bkgd
+     +,ntmin,ntmax
+     +,lgb_only)
 
       nbgm=0
       do i=1,maxbgmodels
