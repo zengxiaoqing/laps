@@ -1,8 +1,8 @@
 
 
-		subroutine start_up_mix(ni,nj,niveau)
+		subroutine start_up_mix(ni,nj,niveau,intliq700)
 		
-                use lfmgrid, ONLY: hzsig,htsig,hpsig,hmrsig,husig,hvsig,hwsig,llat,llon
+                use lfmgrid, ONLY: hzsig,htsig,hpsig,hmrsig,husig,hvsig,hwsig,hrefl_sig,hgraupelmr_sig,hcldliqmr_sig,intliqwater,llat,llon
 
                 w_to_omegaf(w,pres,scaleht) = - (w * pressure_pa) / scale_height 
 
@@ -32,11 +32,13 @@
 		END TYPE myStruct
 
                 real dx(ni,nj),dy(ni,nj),vort_2d(ni,nj),div_2d(ni,nj)
+                real intliq700(ni,nj)
 
 		!!----------------------------------------------------
 		!! Defined const needed throughout the program 
 		!!----------------------------------------------------
 		INTEGER, PARAMETER :: DEBUG = 1  		!! DEBUG == 0 to not print any of the steps / DEBUG ==1 to print every steps 
+		INTEGER, PARAMETER :: VALEUR_BIDON = -99999     ! Flag value for skipping variable  		
 		
 		!!-------------------------------------------------------
 		!! Define 3D variable position in the 3D array called
@@ -114,7 +116,7 @@
 		REAL  ProbTV(0:(ni*nj)-1)
 		
 		character*6 FILE_name
-		
+
 		TYPE(myStruct):: ParamConfig;                       
 		
 		FILE_name="TV.cfg"
@@ -125,6 +127,7 @@
                 scaleht = 8000.
                 call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
 
+!               3D fields
                 do k = 1,niveau
 
                   call get_grid_spacing_array(llat,llon,ni,nj,dx,dy)
@@ -133,27 +136,48 @@
                   do j = 1,nj
                   do i = 1,ni
                     ij = (j-1)*ni + (i-1)
-		    fields3d(ij,0:k-1,GZ) = hzsig(i,j,k)
-		    fields3d(ij,0:k-1,TT) = htsig(i,j,k)
-		    fields3d(ij,0:k-1,HU) = hmrsig(i,j,k) ! mixing ratio is used for now
+		    fields3d(ij,k-1,GZ) = hzsig(i,j,k)
+		    fields3d(ij,k-1,TT) = htsig(i,j,k)
+		    fields3d(ij,k-1,HU) = hmrsig(i,j,k) ! mixing ratio is used for now
 
 		    speed = sqrt(husig(i,j,k)**2+hvsig(i,j,k)**2)
-		    fields3d(ij,0:k-1,UV) = speed
-                    fields3d(ij,0:k-1,WW) = w_to_omegaf(hwsig(i,j,k),hwsig(i,j,k),scaleht)
+		    fields3d(ij,k-1,UV) = speed
+                    fields3d(ij,k-1,WW) = w_to_omegaf(hwsig(i,j,k),hwsig(i,j,k),scaleht)
                     if(speed .gt. 0.)then
-                      fields3d(ij,0:k-1,WD) = atan3d(-husig(i,j,k),-hvsig(i,j,k))
+                      fields3d(ij,k-1,WD) = atan3d(-husig(i,j,k),-hvsig(i,j,k))
                     else
-                      fields3d(ij,0:k-1,WD) = 0.
+                      fields3d(ij,k-1,WD) = 0.
                     endif
 
-                    fields3d(ij,0:k-1,QR) = vort_2d(i,j)                                      
+                    fields3d(ij,k-1,QR) = vort_2d(i,j)                                      
+		    fields3d(ij,k-1,ZET) = hrefl_sig(i,j,k)
+		    fields3d(ij,k-1,QJT1) = hgraupelmr_sig(i,j,k)
+ 	            fields3d(ij,k-1,QIT1) = 0.
+		    fields3d(ij,k-1,QHT1) = 0.
+
+                    if(htsig(i,j,k) .gt. 273.15)then
+  		      fields3d(ij,k-1,SLW) = 0.
+                    else
+  		      fields3d(ij,k-1,SLW) = hcldliqmr_sig(i,j,k)
+                    endif                        
+
+		    fields3d(ij,k-1,DMH) = VALEUR_BIDON
 
                   enddo ! i
                   enddo ! j
                   
 
                 enddo ! k
+
                 fields2d=0
+                do j = 1,nj
+                do i = 1,ni
+                  ij = (j-1)*ni + (i-1)
+		  fields2d(ij,SWEAT) = VALEUR_BIDON
+		  fields2d(ij,LWC) = intliqwater(i,j)
+		  fields2d(ij,LWC_700) = intliq700(i,j)
+                enddo ! i
+                enddo ! j
 
 		!!-------------------------------------------
 		!! Read the configuration file
