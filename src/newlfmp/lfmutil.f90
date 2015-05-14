@@ -270,7 +270,7 @@ integer        len_dir,istatus
 character*3    var_2d
 real :: ldf(lx,ly),lat(lx,ly),lon(lx,ly),avg(lx,ly),static_albedo(lx,ly)
 real :: windspeed(lx,ly),soil_moist(lx,ly),snow_cover(lx,ly)
-real :: intrain(lx,ly),intsnow(lx,ly),intgraupel(lx,ly)
+real :: intrain(lx,ly),intsnow(lx,ly),intgraupel(lx,ly),intliq700(lx,ly)
 real :: const_pcpadj
 
 integer ::        ismoist,isnow
@@ -438,8 +438,8 @@ if (make_micro) then
    where(pcpmr_sig < zero_thresh) pcpmr_sig=0.
    rhodrysig=hpsig/(r*htsig)
    call lfm_integrated_liquid(lx,ly,nz,hcldliqmr_sig,hcldicemr_sig,hmrsig,&
-       hrainmr_sig,hsnowmr_sig,hgraupelmr_sig,rhodrysig,hzsig,zsfc,  &
-       intliqwater,intcldice,totpcpwater,intrain,intsnow,intgraupel,rmsg)
+       hrainmr_sig,hsnowmr_sig,hgraupelmr_sig,rhodrysig,hzsig,hpsig,zsfc,  &
+       intliqwater,intliq700,intcldice,totpcpwater,intrain,intsnow,intgraupel,rmsg)
  endif ! large_ngrid
 
  if(.true.)then ! supercedes binary cldamt calculated earlier
@@ -1320,8 +1320,8 @@ end
 
 !===============================================================================
 
-subroutine lfm_integrated_liquid(nx,ny,nz,cond_mr,cice_mr,vapor_mr,rain_mr,snow_mr,graupel_mr,rho,height,topo  &
-                                ,intliqwater,intcldice,totpcpwater,intrain,intsnow,intgraupel,rmsg)
+subroutine lfm_integrated_liquid(nx,ny,nz,cond_mr,cice_mr,vapor_mr,rain_mr,snow_mr,graupel_mr,rho,height,pressure,topo  &
+                                ,intliqwater,intliq700,intcldice,totpcpwater,intrain,intsnow,intgraupel,rmsg)
 
 ! Computes integrated liquid water and total precip. water in a column.  
 !  Adapted from USAF Weather Agency MM5 Post Processor
@@ -1330,13 +1330,15 @@ subroutine lfm_integrated_liquid(nx,ny,nz,cond_mr,cice_mr,vapor_mr,rain_mr,snow_
 implicit none
   
 integer :: nx,ny,nz,i,j,k 
-real :: height_top,height_bot,dz,rmsg
+real :: height_top,height_bot,dz,dz700,rmsg
 real, dimension(nx,ny) :: newtopo,intliqwater,totpcpwater,intcldice  ! M
 real, dimension(nx,ny) :: topo,intrain,intsnow,intgraupel         ! M
+real, dimension(nx,ny) :: intliq700                               ! M
 real, dimension(nx,ny,nz) :: cond_mr,vapor_mr,cice_mr             ! KG/KG
 real, dimension(nx,ny,nz) :: rain_mr,snow_mr,graupel_mr           ! KG/KG
 real, dimension(nx,ny,nz) :: rho                                  ! KG/M**3
 real, dimension(nx,ny,nz) :: height                               ! M
+real, dimension(nx,ny,nz) :: pressure                             ! Pa
 real rho_h2o                                                      ! KG/M**3
 
 rho_h2o = 1000.                                                   ! KG/M**3
@@ -1344,6 +1346,7 @@ rho_h2o = 1000.                                                   ! KG/M**3
 do j=1,ny
 do i=1,nx
    intliqwater(i,j)=0.0
+   intliq700(i,j)=0.0
    totpcpwater(i,j)=0.0
    intcldice(i,j)=0.0
    intrain(i,j)=0.0
@@ -1361,8 +1364,16 @@ do i=1,nx
          height_bot=0.5*(height(i,j,k-1)+height(i,j,k))
          height_top=0.5*(height(i,j,k)+height(i,j,k+1))
       endif
+
       dz=height_top-height_bot
+      if(pressure(i,j,k) .lt. 70000.)then
+         dz700 = dz
+      else
+         dz700 = 0.
+      endif
+
       if(cond_mr(i,j,k) < rmsg)intliqwater(i,j)=intliqwater(i,j)+cond_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
+      if(cond_mr(i,j,k) < rmsg)intliq700(i,j)  =intliq700(i,j)  +cond_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz700 ! meters
       if(cice_mr(i,j,k) < rmsg)intcldice(i,j)  =intcldice(i,j)  +cice_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
       if(rain_mr(i,j,k) < rmsg)intrain(i,j)    =intrain(i,j)    +rain_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
       if(snow_mr(i,j,k) < rmsg)intsnow(i,j)    =intsnow(i,j)    +snow_mr(i,j,k) *(rho(i,j,k)/rho_h2o)*dz  ! meters
