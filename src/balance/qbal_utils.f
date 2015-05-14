@@ -411,7 +411,7 @@ c     terscl=sqrt(sumt/(nx*ny))
  
 
       integer   bgmodels(maxbgmodels)
-      integer   itime_inc
+      integer   itime_inc,ntmin,ntmax
 
       character(len=256), allocatable, dimension(:) ::
      .        names,reject_names,bg_names,bgpaths
@@ -479,6 +479,7 @@ c
       call get_background_info(bgpaths,bgmodels,forecast_length
      +,use_analysis,use_forecast,cmodels,itime_inc,smooth_fields
      +,luse_sfc_bkgd
+     +,ntmin,ntmax
      +,lgb_only)
 
       call s_len(cmodels(1),lenm)
