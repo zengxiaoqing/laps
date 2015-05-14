@@ -691,7 +691,7 @@ cdoc                            calls read_multiradar_3dref.
 
         real grid_ra_ref(imax,jmax,kmax)
         real heights_3d(imax,jmax,kmax)
-        real radar_2dref(imax,jmax)
+        real radar_2dref(imax,jmax)                                     ! L
         real closest_vxx(imax,jmax)
         real closest_vrc(imax,jmax)
         real closest_radar(imax,jmax)
@@ -748,6 +748,7 @@ cdoc                            calls read_multiradar_3dref.
 
 !       Initialize 3d reflectivity array with default value
         grid_ra_ref = r_missing_data ! ref_base 
+        radar_2dref = r_missing_data ! ref_base 
 
         if(radarext(1:2) .eq. 'v0' .or.
      1     radarext(1:2) .eq. 'v1' .or.
