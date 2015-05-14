@@ -150,7 +150,7 @@ c Read information from static/background.nl
 c
       call get_background_info(bgpaths,bgmodels
      +,forecast_length,use_analysis,use_forecast,cmodels
-     +,itime,smooth_fields,luse_sfc_bkgd,lgb_only)
+     +,itime,smooth_fields,luse_sfc_bkgd,ntmin,ntmax,lgb_only)
 
       nbgmodels=0
       do i=1,maxbgmodels
@@ -198,9 +198,9 @@ c
       if(lgb_only)then
           ntmin = 0
           ntmax = 0
-      else
-          ntmin = -1
-          ntmax = +1
+!     else
+!         ntmin = -1
+!         ntmax = +1
 !         ntmin = 0
 !         ntmax = +6
       endif
@@ -218,7 +218,7 @@ c
        elseif(itime_inc.eq.0)then
         print*,'Start cycle time interpolation'
        else
-        print*,'Start time-plus-one cycle time interpolation'
+        print*,'Start time-plus',itime_inc,'cycle time interpolation'
        endif
        print*,'----------------------------------------------'
        print*
