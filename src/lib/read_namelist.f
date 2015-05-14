@@ -320,6 +320,7 @@ c
      +,use_analysis
      +,use_forecast  
      +,cmodel,itime_inc,smooth_fields,luse_sfc_bkgd
+     +,ntmin,ntmax
      +,lgb_only)
 
 cdoc reads static/background.nl
@@ -333,7 +334,7 @@ cdoc reads static/background.nl
       character*132 cmodel(maxbgmodels)
       integer bgmodels(maxbgmodels), len_dir
       integer forecast_length
-      integer itime_inc
+      integer itime_inc,ntmin,ntmax
       logical luse_sfc_bkgd
       logical use_analysis
       logical use_forecast
@@ -344,10 +345,13 @@ cdoc reads static/background.nl
      +,use_analysis
      +,use_forecast 
      +,cmodel,itime_inc,smooth_fields,luse_sfc_bkgd
+     +,ntmin,ntmax
      +,lgb_only
 
       use_forecast = .true.
       smooth_fields = .false.
+      ntmin = -1
+      ntmax = +1
       call get_directory(grid_fnam_common,nest7grid,len_dir)
       if(nest7grid(len_dir:len_dir).ne.'/') then
         len_dir=len_dir+1
