@@ -70,11 +70,11 @@
       call s_len(dir_in,len_dir_in)
 
 
-      if(c8_project .eq. 'WFO')then
+!     if(c8_project .eq. 'WFO')then
         c_filespec = dir_in(1:len_dir_in)
-      else
-        c_filespec = dir_in(1:len_dir_in)//'*0005r'
-      endif
+!     else
+!       c_filespec = dir_in(1:len_dir_in)//'*0005r'
+!     endif
 
       call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
