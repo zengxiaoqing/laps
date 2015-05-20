@@ -150,9 +150,9 @@ C	    IF(OLDWEA.LE.0.)XTHI=THI     ! I'm Not Sure  about this statement
              Laps_SMC_3D(I,J,3) = 0.0
           else
 	     THSPER = THS / 100.0 
-	     Laps_SMC_3D(I,J,1) = THI1/ THSPER
-	     Laps_SMC_3D(I,J,2) = THI2/ THSPER
-	     Laps_SMC_3D(I,J,3) = THI3/ THSPER
+	     Laps_SMC_3D(I,J,1) = THI1 ! / THSPER
+	     Laps_SMC_3D(I,J,2) = THI2 ! / THSPER
+	     Laps_SMC_3D(I,J,3) = THI3 ! / THSPER
 
           endif
 
@@ -170,9 +170,9 @@ C	    IF(OLDWEA.LE.0.)XTHI=THI     ! I'm Not Sure  about this statement
              Laps_SMC_3D(I,J,3) = 0.0
           else
 	     THSPER = ths / 100.0 
-	     Laps_SMC_3D(I,J,1) = ths/ THSPER
-	     Laps_SMC_3D(I,J,2) = ths/ THSPER
-	     Laps_SMC_3D(I,J,3) = ths/ THSPER
+	     Laps_SMC_3D(I,J,1) = ths ! / THSPER
+	     Laps_SMC_3D(I,J,2) = ths ! / THSPER
+	     Laps_SMC_3D(I,J,3) = ths ! / THSPER
           endif
 
         endif
