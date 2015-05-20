@@ -57,7 +57,7 @@ cdis
      1                         ,cld_weight_modelfg
      1                         ,i4_sat_window,i4_sat_window_offset     
      1                         ,l_use_metars,l_use_radar,iwrite_output
-     1                         ,i_varadj,l_corr_parallax
+     1                         ,l_use_pireps,i_varadj,l_corr_parallax
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                sys_abort_prod
@@ -725,19 +725,23 @@ C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
 
 
 C READ IN AND INSERT PIREP DATA AS CLOUD SOUNDINGS
-        write(6,*)' Using Pireps stored in LAPS realtime system'
+        if(l_use_pireps .eqv. .true.)then
+          write(6,*)' Using Pireps'
 
-        call insert_pireps(i4time,cld_hts
+          call insert_pireps(i4time,cld_hts
      1      ,default_clear_cover
      1      ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1      ,lat,lon,NX_L,NY_L,KCLOUD,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH
      1      ,N_PIREP,istatus)
-        if(istatus .ne. 1)then
+          if(istatus .ne. 1)then
             write(6,*)' Error: Bad status from insert_pireps,'
      1               ,' aborting cloud analysis'
             goto999
+          endif
+          I4_elapsed = ishow_timer()
+        else
+          write(6,*)' Withholding pireps'
         endif
-        I4_elapsed = ishow_timer()
 
 C READ IN AND INSERT CO2 SLICING DATA AS CLOUD SOUNDINGS
         if(l_use_co2_mode1)then
