@@ -47,7 +47,7 @@ c
        integer*4 istatus
        integer*4 i,j,k,n
        integer*4 icntm,icnts
-       integer*4 ii, jj, istat
+       integer*4 ii, jj, istat, istat_nan
 c
        icnts = 0
        icntm = 0
@@ -62,7 +62,10 @@ c
        do j=2,ny_l-1
        do i=2,nx_l-1
 
-          if(data(i,j,k).lt.r_low.or.data(i,j,k).gt.r_high)then
+          call check_nan(data(i,j,k),istat_nan)
+
+          if(data(i,j,k).lt.r_low .or. data(i,j,k).gt.r_high .or.
+     1       istat_nan .eq. 0)then
 
              n=0
              do jj = j-1,j+1
@@ -95,26 +98,30 @@ c
 c take of boundaries
 c
        do i=1,nx_l
+          call check_nan(data(i,ny_l,k),istat_nan)
           if(data(i,ny_l,k).lt.r_low.or.
-     &       data(i,ny_l,k).gt.r_high)then
+     &       data(i,ny_l,k).gt.r_high.or.istat_nan.eq.0)then
              data(i,ny_l,k)=r_missing_data
              icntm=icntm-1
           endif
+          call check_nan(data(i,1,k),istat_nan)
           if(data(i,1,k).lt.r_low.or.
-     &       data(i,1,k).gt.r_high)then
+     &       data(i,1,k).gt.r_high.or.istat_nan.eq.0)then
              data(i,1,k)=r_missing_data
              icntm=icntm-1
           endif
        enddo
 c
        do j=1,ny_l
+          call check_nan(data(nx_l,j,k),istat_nan)
           if(data(nx_l,j,k).lt.r_low.or.
-     &       data(nx_l,j,k).gt.r_high)then
+     &       data(nx_l,j,k).gt.r_high.or.istat_nan.eq.0)then
              data(ny_l,j,k)=r_missing_data
              icntm=icntm-1
           endif
+          call check_nan(data(1,j,k),istat_nan)
           if(data(1,j,k).lt.r_low.or.
-     &       data(1,j,k).gt.r_high)then
+     &       data(1,j,k).gt.r_high.or.istat_nan.eq.0)then
              data(1,j,k)=r_missing_data
              icntm=icntm-1
           endif
