@@ -74,7 +74,7 @@ RM=rm -f
 			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.f90
 
 EXE=lfmpost.exe
-FSRC=lfmpost.f90 lfmutil.f90 start_up_mix.f90 lfmgrid.f90 interp.f90 metfunc.f90 constants.f90  \
+FSRC=lfmpost.f90 lfmutil.f90 lfmgrid.f90 interp.f90 metfunc.f90 constants.f90  \
      mm5util.f90 wrfutil.f90 nmmutil.f90 st4util.f90  \
      ptfcst.f90 lfmwrite.f90
 
