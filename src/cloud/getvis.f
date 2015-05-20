@@ -254,6 +254,10 @@ cdis
 11          format(i4,i12,i12,i12)
         enddo ! i
 
+        write(6,*)' End of get_vis: cloud_frac_vis_a range/center  '
+     1           ,minval(cloud_frac_vis_a),maxval(cloud_frac_vis_a)
+     1           ,cloud_frac_vis_a(ni/2,nj/2)
+
         write(6,*)
         istatus = 1
 
