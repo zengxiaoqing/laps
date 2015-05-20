@@ -35,7 +35,7 @@ cdis
 cdis
 cdis
 cdis   
-cdis
+cdis 
 
         subroutine get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add ! I
      1                    ,l_use_vis_partial,lat,lon                ! I
