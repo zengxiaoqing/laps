@@ -4027,6 +4027,7 @@ Inputs:
       * lsx	     grid	LAPS surface data grids
         l1s	     grid	LAPS surface precipitation
         lcv          grid       LAPS satellite derived snow cover
+        lm2          grid       Previous soil moisture information
 
 Outputs:
 	LM1          3d grid    Soil moisture (3-layer)
@@ -4481,7 +4482,6 @@ Source directory: 'laps/src/newlfmp' (new default version)
 -------  5.0 --  LAPS Output Variables and netCDF File Organization -----------
 
 LAPS Variables and netCDF File Organization
-        (author: Linda Wharton - Linda.S.Wharton AT noaa.gov)
 
 LAPS output is written in netCDF format as summarized below. Each file 
 extension contains a set of variables that goes into a separate directory under 
@@ -4489,6 +4489,13 @@ extension contains a set of variables that goes into a separate directory under
 files, while the final balanced output is in the 'lapsprd/balance' subdirectory.
 For example the LT1 temperature grid is written with the pre-balanced version 
 in 'lapsprd/lt1' and the balanced version in 'lapsprd/balance/lt1'. 
+
+Map projection attributes are specified in the NetCDF files. Here are some
+of their definitions:
+
+Lat1: latitude of lower left corner grid point
+Lon1: longitude of lower left corner grid point
+Lov:  longitude on map projection where grid is oriented along true north-south
 
 Note that netCDF information on the units of the fields, etc. is contained in 
 the '$LAPS_DATA_ROOT/cdl/*.cdl' files. At the bottom of the list is a section
