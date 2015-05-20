@@ -64,7 +64,7 @@ elseif(narg .eq. 8)then ! advection options are supplied
     if(len_str .gt. 0)then
 !GFORTRAN        read(c_adv_cld,'(i)',err=900) i4_adv_cld
 !GFORTRAN modifications begin
-            read(c_adv_cld,'(i4)',err=900) i4_adv_cld
+            read(c_adv_cld,*,err=900) i4_adv_cld
 !GFORTRAN modifications end
     endif
 
@@ -72,7 +72,7 @@ elseif(narg .eq. 8)then ! advection options are supplied
     if(len_str .gt. 0)then
 !GFORTRAN        read(c_adv_pcp,'(i)',err=900) i4_adv_pcp
 !GFORTRAN modifications begin
-        read(c_adv_pcp,'(i4)',err=900) i4_adv_pcp
+        read(c_adv_pcp,*,err=900) i4_adv_pcp
 !GFORTRAN modifications end
     endif
 else
