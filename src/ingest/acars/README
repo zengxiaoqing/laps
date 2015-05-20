@@ -1,6 +1,7 @@
 
 ingest_aircraft                                   ingest_aircraft.f
-    ingest_pireps
+    ingest_pireps                                 ingest_pireps.f
+        get_pirep_data                            ingest_pireps_sub.f
     ingest_acars                                  ingest_acars.f
         get_acars_data                            ingest_acars_sub.f
             acars_sub                                    "
