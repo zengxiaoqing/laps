@@ -1,4 +1,10 @@
 
 
 main                                                     lsm5.f           
-    laps_cloud_sub                                       laps_cloud_sub.f
+    lm5_sub                                              
+    soil_in5                                             soil_in5.f
+    read_csc
+    soil_moisture
+    lsm_qc_check                                         lsm_qc.f
+    write_laps_data
+
