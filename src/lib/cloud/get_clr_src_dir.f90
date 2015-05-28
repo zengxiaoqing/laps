@@ -507,7 +507,7 @@
          write(6,*)'subroutine get_clr_src_dir_topo'
          write(6,*)'solalt/ref/solazi = ',solalt,solalt_ref,solazi
          write(6,*)'viewalt/viewazi = ',viewalt,viewazi
-         write(6,*)'agv/aav = ',ag,aa
+         write(6,*)'agv/aav = ',agv,aav
          write(6,*)'od_g_vert = ',od_g_vert
          write(6,*)'scale_ht_g = ',scale_ht_g
          write(6,*)'alpha_sfc_g/alpha_ref_g = ',alpha_sfc_g,alpha_ref_g
