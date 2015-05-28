@@ -365,6 +365,16 @@
      1          + rain_3d * (rain2alpha/clwc2alpha) 
      1          + snow_3d * (snow2alpha/clwc2alpha)
 
+        wt_sp(1) = clwc2alpha/clwc2alpha
+        wt_sp(2) = cice2alpha/clwc2alpha
+        wt_sp(3) = rain2alpha/clwc2alpha
+        wt_sp(4) = snow2alpha/clwc2alpha
+
+        write(6,*)'wt_sp(1) = ',wt_sp(1)
+        write(6,*)'wt_sp(2) = ',wt_sp(2)
+        write(6,*)'wt_sp(3) = ',wt_sp(3)
+        write(6,*)'wt_sp(4) = ',wt_sp(4)
+
         ri = i
         rj = j
 
