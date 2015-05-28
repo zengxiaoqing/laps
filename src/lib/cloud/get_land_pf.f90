@@ -9,8 +9,8 @@
         include 'trigd.inc'
 
 !       Statement functions
-        trans(od) = exp(-od)
-        opac(od) = 1.0 - exp(-od)
+        trans(od) = exp(-min(od,80.))
+        opac(od) = 1.0 - trans(od)
         alb(bt) = bt / (1.+bt)
         rad2tau(b,r) = (1.-r)/(r*b)
         ANGDIF(X,Y)=MOD(X-Y+540.,360.)-180.
