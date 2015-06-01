@@ -6628,13 +6628,22 @@ c                   cint = -1.
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
      1                          ,field_2d,0,istatus)
-
             IF(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Surface ',var_2d
-                goto1200
+                write(6,*)' Error Reading lil visibility, try lsx '
+     1                                                      ,var_2d
+                ext = 'lsx'
+                call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
+                IF(istatus .ne. 1)THEN
+                    goto1200
+                ELSE
+                    c_label = 'Sfc Visibility  (miles - lsx file) '
+                ENDIF
+            else
+                c_label = 'Sfc Visibility  (miles - lil file) '
             endif
-
-            c_label = 'Sfc Visibility       (miles)     '
 
             clow = 30.
             chigh = +0.
