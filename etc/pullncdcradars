@@ -21,9 +21,9 @@ mkdir -p $dir
 
 cd $dir
 
-wget -r -l 2 ftp3.ncdc.noaa.gov/pub/has/$HAS/
+wget -r -l 2 www1.ncdc.noaa.gov/pub/has/$HAS/
 
-setenv outdir $dir/ftp3.ncdc.noaa.gov/pub/has/$HAS
+setenv outdir $dir/www1.ncdc.noaa.gov/pub/has/$HAS
 
 cd $outdir
 
@@ -47,6 +47,6 @@ ls -l $outdir
 echo " "
 echo "Summary of this and previously downloaded directories..."
 
-ls -l $dir/ftp3.ncdc.noaa.gov/pub/has
+ls -l $dir/www1.ncdc.noaa.gov/pub/has
 
 echo "Note that .Z files can be left as is without uncompressing, this is optional"
