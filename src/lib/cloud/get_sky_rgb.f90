@@ -11,7 +11,7 @@
                    dist_2_topo,topo_solalt,trace_solalt,          &     ! I
                    alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
                    twi_0,horz_dep,solalt_limb_true, &                   ! I
-                   moon_alt,moon_az,moon_mag, &                         ! I
+                   moon_alt,moon_az,moon_mag,corr1_in, &                ! I
                    sky_rgb)                                             ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl
@@ -116,9 +116,11 @@
         twi_alt = -4.5
 
         if(sol_alt .ge. twi_0)then
-          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight
+          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight (expgamma)
+          corr1 = corr1_in; corr2 = 3.412 ! darkness of start/end of twilight (gamma)
         else
-          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight
+          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight (expgamma)
+          corr1 = corr1_in; corr2 = 3.412 ! darkness of start/end of twilight (gamma)
         endif
 
         if(sol_alt .le. 0.)then
@@ -182,10 +184,6 @@
           glwlow = 7.3 - argbri
           write(6,*)' sb_corr/argbri = ',sb_corr,argbri
           contrast = 100.
-
-          if(htmsl .gt. 1000000.)then ! outer space views
-              corr1 = corr1 + 0.3
-          endif
 
         endif
 
