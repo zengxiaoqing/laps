@@ -49,7 +49,7 @@ cdis
         include 'laps_cloud.inc'
 
 !       Insert LWC and ICE in areas of thin cloud layers
-        real clouds_3d(ni,nj,kcld)       ! Input
+        real clouds_3d(ni,nj,kcld)       ! Input cloud fraction   
         real clouds_3d_pres(ni,nj,nk)    ! Input
         real cldalb_in(ni,nj)            ! Input
         real heights_3d(ni,nj,nk)        ! Input
@@ -165,7 +165,12 @@ cdis
 !             Convert from implied albedo to column optical depth
 !             Should maximum albedo of whole cloud column be used instead of
 !             just this layer?
-              albarg = min(a(ilyr),0.930)
+!             albarg = min(a(ilyr),0.930) ! bounded cloud fraction
+              albarg = min(maxval(a(1:nlyr)),.930)
+!             if(cldalb_in(i,j) .ne. r_missing_data)then          ! use vis sat
+!                 albarg = min(cldalb_in(i,j),0.930)
+!             endif
+
               call albedo_to_clouds2(albarg
      1                             ,cloud_trans_l,cloud_trans_i
      1                             ,cloud_od_l,cloud_od_i
@@ -175,8 +180,9 @@ cdis
               tau_i = cloud_od_i / float(nlyr)
 
               if(idebug .eq. 1)then
-                  write(6,*)' albarg/cloud_od_l/cloud_od_i',
-     1                        albarg,cloud_od_l,cloud_od_i
+                  write(6,11)ilyr,a(ilyr),albarg,cloud_od_l,cloud_od_i
+11                format(' CTR ilyr,a,albarg/cloud_od_l/cloud_od_i'
+     1                             ,i3,4f9.4)
               endif
 
               scattering_coeff_l = tau_l / thickness              ! meters**-1
