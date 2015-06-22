@@ -11,10 +11,17 @@
 
         parameter (day_int = 3e9)
 
-        expgamma(x) = 1. - exp(-x**(1./gamma))
-        expgaminv(x) = (-(log(1.-x)))**gamma ! inverse of expgamma
-        radhi(glwref,cntref) = (10.**glwref) / (expgaminv(cntref/255.))
-        rad_to_counts2(rad) = expgamma(rad/radhi(glwref,cntref)) * 255.
+!       Exponential clipping of gamma function
+!       expgamma(x) = 1. - exp(-x**(1./gamma))
+!       expgaminv(x) = (-(log(1.-x)))**gamma ! inverse of expgamma
+!       radhi(glwref,cntref) = (10.**glwref) / (expgaminv(cntref/255.))
+!       rad_to_counts2(rad) = expgamma(rad/radhi(glwref,cntref)) * 255.
+
+!       Straight gamma function
+        fgamma(x) = x**(1./gamma)
+        fgaminv(x) = x**gamma ! inverse of expgamma
+        radhi(glwref,cntref) = (10.**glwref) / (fgaminv(cntref/255.))
+        rad_to_counts2(rad) = fgamma(rad/radhi(glwref,cntref)) * 255.
 
 !       Convert nl to rintensity
 
