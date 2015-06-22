@@ -85,8 +85,8 @@
         character*255 new_dataroot
         logical l_latlon, l_parse, l_plotobs, l_solar_eclipse
         logical l_idl /.false./
-        logical l_cyl               
-        logical l_polar 
+        logical l_cyl, l_polar 
+        logical l_binary /.false./
         logical l_require_clouds ! requiring cloud data to run
 
         integer i_overlay
@@ -152,7 +152,7 @@
 
         real xsound(maxloc),ysound(maxloc)
         real soundlat(maxloc),soundlon(maxloc)
-        real htagl(maxloc)
+        real htagl(maxloc),corr1_a(maxloc)
 
         data ilun /0/
         character*3 clun
@@ -606,7 +606,7 @@
             call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,snow_cover,0,istat_sfc)
-            if(istat_sfc .ne. 1)then
+            if(istat_sfc .ne. 1 .and. istat_sfc .ne. -1)then
                 write(6,*)' Error reading LM2/SC field in plot_allsky'      
                 return
             endif
@@ -891,7 +891,8 @@
           topo_sfc = topo(isound,jsound)
  
           write(6,*)' i/j/topo_sfc ',isound,jsound,topo_sfc
-          write(6,*)' albedo RGB',topo_albedo_2d(:,isound,jsound)
+          write(6,11)topo_albedo_2d(:,isound,jsound)
+11        format(' albedo RGB of observer ',3f9.3)
 
           rlat = lat(isound,jsound)
           rlon = lon(isound,jsound)
@@ -1020,13 +1021,13 @@
      1                     ,moon_alt_2d,moon_azi_2d              ! I
      1                     ,moon_mag,moon_mag_thr                ! I
      1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
-     1                     ,minalt,maxalt,minazi,maxazi,nc       ! I
+     1                     ,minalt,maxalt,minazi,maxazi,nc,nsp   ! I
      1                     ,alt_scale,azi_scale                  ! I
      1                     ,grid_spacing_m,r_missing_data        ! I
      1                     ,twi_0                                ! I
      1                     ,sky_rgb_cyl)                         ! O
 
-           else
+          else
 
 !           Get line of sight from isound/jsound
             call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
@@ -1143,30 +1144,6 @@
                 endif
             endif ! solar_alt .ge. -16.
 
-!           if(solar_alt .lt. -16. .AND. moon_mag .lt. moon_mag_thr
-!    1                             .AND. alm .gt. 0.         )then
-            if(.false.)then
-                write(6,*)' Moon skyglow significant: mag ',moon_mag
-                call skyglow_cyl(alm,azm,blog_v_roll,elong_roll,aod_vrt 
-     1                          ,minalt,maxalt,minazi,maxazi
-     1                          ,alt_scale,azi_scale)
-                blog_v_roll = blog_v_roll + (-26.74 - moon_mag) * 0.4
-                write(6,*)' Range of blog_v_roll for moon is',
-     1                    minval(blog_v_roll),maxval(blog_v_roll)
-                I4_elapsed = ishow_timer()
-            endif
-
-!           else
-!             blog_v_roll = 8.0
-
-!           endif
-
-!           Reproject Polar Cloud Plot
-!           lunsky = 60 
-!           write(lunsky,*)rmaglim_v
-
-!           if(.true.)then
-
             I4_elapsed = ishow_timer()
 
 !           Get all sky for cyl   
@@ -1236,8 +1213,25 @@
             enddo ! i
             enddo ! j
 
-            write(6,*)' call get_sky_rgb with cyl data'
-            call get_sky_rgb(r_cloud_3d      ! cloud opacity
+            if(l_binary .eqv. .false.)then
+              write(6,*)' call get_sky_rgb with cyl data'
+
+              if(htagl(iloc) .eq. 1000e3)then                  ! High alt
+                corr1_a(iloc) = 9.0
+              elseif(htagl(iloc) .eq. 300.)then                ! BAO
+                if(solar_alt .lt. 30.)then
+                  corr1_a(iloc) = 9.2                          ! low sun
+                elseif(solar_alt .gt. 50.)then
+                  corr1_a(iloc) = 8.7                          ! high sun
+                else
+                  corr1_a(iloc) = 9.2 - (solar_alt-30.)/40.    ! med sun
+                endif
+              else
+                corr1_a(iloc) = 9.0
+              endif
+              write(6,*)' corr1 in plot_allsky ',corr1_a(iloc)
+
+              call get_sky_rgb(r_cloud_3d      ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
      1                    ,cloud_od_sp,nsp   ! cloud species optical depth
      1                    ,r_cloud_trans     ! cloud solar transmittance
@@ -1267,7 +1261,13 @@
      1                    ,solar_alt,solar_az,twi_0,horz_dep
      1                    ,solalt_limb_true
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
+     1                    ,corr1_a(iloc)
      1                    ,sky_rgb_cyl)      ! O
+
+            else
+              continue ! use cloud_od to drive categorical output
+
+            endif ! l_binary
 
           endif ! call calc_allsky
 
