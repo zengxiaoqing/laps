@@ -13,7 +13,7 @@
      1                     ,moon_alt_2d,moon_azi_2d              ! I
      1                     ,moon_mag,moon_mag_thr ! I
      1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
-     1                     ,minalt,maxalt,minazi,maxazi,nc       ! I
+     1                     ,minalt,maxalt,minazi,maxazi,nc,nsp   ! I
      1                     ,alt_scale,azi_scale                  ! I
      1                     ,grid_spacing_m,r_missing_data        ! I
      1                     ,twi_0                                ! I
@@ -45,9 +45,15 @@
 !       Output arrays
         real sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi) ! Observed Variable
 
-!       Local arrays (i.e. outputs from get_cloud_rays)
+!       Local arrays (e.g. outputs from get_cloud_rays)
         real topo_swi(minalt:maxalt,minazi:maxazi)
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
+        real topo_ri(minalt:maxalt,minazi:maxazi)
+        real topo_rj(minalt:maxalt,minazi:maxazi)
+        real trace_ri(minalt:maxalt,minazi:maxazi)
+        real trace_rj(minalt:maxalt,minazi:maxazi)
+        real topo_solalt(minalt:maxalt,minazi:maxazi)
+        real trace_solalt(minalt:maxalt,minazi:maxazi)
         real ghic(nc,minalt:maxalt,minazi:maxazi)
         real aod_2_cloud(minalt:maxalt,minazi:maxazi)
         real aod_2_topo(minalt:maxalt,minazi:maxazi)
@@ -85,17 +91,20 @@
      1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
      1                     ,topo_albedo_2d                       ! I
      1                     ,topo_swi,topo_albedo,ghic            ! O
+     1                     ,topo_ri,topo_rj                      ! O
+     1                     ,trace_ri,trace_rj                    ! O
 !    1                     ,ghi_2d,dhi_2d                        ! O
      1                     ,aod_vrt,aod_2_cloud,aod_2_topo       ! O
      1                     ,dist_2_topo                          ! O
      1                     ,aod_ill,aod_ill_dir                  ! O
-     1                     ,aod_tot,transm_obs                   ! O
+     1                     ,aod_tot,transm_obs,obs_glow_zen      ! O
      1                     ,transm_3d,transm_4d                  ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
      1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
-     1                     ,htmsl                                ! O
+     1                     ,htmsl,horz_dep,twi_0                 ! O
+     1                     ,solalt_limb_true                     ! O
      1                     ,htagl                                ! I
      1                     ,aod_ref                              ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
@@ -103,12 +112,11 @@
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,alt_norm                             ! I
      1                     ,moon_alt_2d,moon_azi_2d              ! I
-     1                     ,moon_mag,moon_mag_thr,twi_0          ! I
+     1                     ,moon_mag,moon_mag_thr                ! I
      1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
      1                     ,minalt,maxalt,minazi,maxazi          ! I
      1                     ,alt_scale,azi_scale                  ! I
-     1                     ,grid_spacing_m,r_missing_data        ! I
-     1                     ,sky_rgb_cyl)                         ! O
+     1                     ,grid_spacing_m,r_missing_data)       ! I
 
           write(6,*)' Return from get_cloud_rays: ',a9time
      1             ,' aod_vrt is ',aod_vrt
@@ -214,6 +222,30 @@
                 write(6,*)' ialt_sun,jazi_sun = ',ialt_sun,jazi_sun
           endif
 
+          do j = minazi,maxazi
+          do i = minalt,maxalt
+                trace_solalt(i,j) = solar_alt
+                topo_solalt(i,j) = solar_alt
+
+                itrace = nint(trace_ri(i,j))
+                jtrace = nint(trace_rj(i,j))
+                if(htmsl .gt. 100000. .and. alt_a_roll(i,j) .lt. 0.)then
+                    if(itrace .ge. 1 .and. itrace .le. NX_L .and.
+     1                 jtrace .ge. 1 .and. jtrace .le. NY_L)then
+                        trace_solalt(i,j) = sol_alt_2d(itrace,jtrace)
+                    endif
+                endif
+
+                itopo = nint(topo_ri(i,j))
+                jtopo = nint(topo_rj(i,j))
+                if(itopo .ge. 1 .and. itopo .le. NX_L .and.
+     1             jtopo .ge. 1 .and. jtopo .le. NY_L)then
+                    topo_solalt(i,j) = sol_alt_2d(itopo,jtopo)
+                endif
+
+          enddo ! i
+          enddo ! j
+
           write(6,*)' call get_sky_rgb with cyl data'
           call get_sky_rgb(r_cloud_3d      ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
@@ -237,7 +269,7 @@
      1                    ,topo_swi,topo_albedo
      1                    ,topo_albedo_2d(2,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
-     1                    ,dist_2_topo
+     1                    ,dist_2_topo,topo_solalt,trace_solalt
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl  
