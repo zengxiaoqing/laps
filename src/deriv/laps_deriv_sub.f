@@ -1204,9 +1204,9 @@ c read in laps lat/lon and topo
      1          * (sfc_albedo(i,j)/(1.-cldalb_out(i,j)*sfc_albedo(i,j)))
 
             if(i .eq. NX_L/2 .AND. j .eq. NY_L/2)then
-                write(6,1201)cldod_out(i,j),cldalb_out(i,j)
-     1                      ,sfc_albedo(i,j),simvis(i,j)
- 1201           format(' Center cloud od/alb/sfc/smv:',4f9.3)
+                write(6,1201)cldod_out(i,j),cldalb_in(i,j)
+     1                      ,cldalb_out(i,j),sfc_albedo(i,j),simvis(i,j)
+ 1201           format(' CTR cloud od/albi-o/sfc/smv:',5f9.3)
             endif
 
         enddo ! i
