@@ -114,7 +114,7 @@
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
         sfc_alb = 0.15  ! pass this in and account for snow cover?
-        ssa = 0.80
+        ssa = 0.90
 
         aod_bin(1) = .000
         aod_bin(2) = .987
@@ -624,9 +624,9 @@
               hg2t = (1.-fc) * hg2t + fc * cosp(2300.,elong(ialt,jazi))
 
             else
-              fb = 0.40**scatter_order
-              g1 = 0.70**scatter_order
-              g2 = 0.95**scatter_order
+              fb = 0.55**scatter_order
+              g1 = 0.58**scatter_order
+              g2 = 0.962**scatter_order
               hg2 = dhg2(elong(ialt,jazi),fb,fcterm)
 
 !             topo phase function assumes scatter order is non-topo 
