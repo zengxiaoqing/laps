@@ -1216,15 +1216,15 @@
             if(l_binary .eqv. .false.)then
               write(6,*)' call get_sky_rgb with cyl data'
 
-              if(htagl(iloc) .eq. 1000e3)then                  ! High alt
+              if(htagl(iloc) .eq. 1000e3)then                    ! High alt
                 corr1_a(iloc) = 9.0
-              elseif(htagl(iloc) .eq. 300.)then                ! BAO
+              elseif(htagl(iloc) .eq. 300.)then                  ! BAO
                 if(solar_alt .lt. 30.)then
-                  corr1_a(iloc) = 9.2                          ! low sun
-                elseif(solar_alt .gt. 50.)then
-                  corr1_a(iloc) = 8.7                          ! high sun
+                  corr1_a(iloc) = 9.2                            ! low sun
+                elseif(solar_alt .gt. 60.)then
+                  corr1_a(iloc) = 8.9                            ! high sun
                 else
-                  corr1_a(iloc) = 9.2 - (solar_alt-30.)/40.    ! med sun
+                  corr1_a(iloc) = 9.2 - (solar_alt-30.)*(0.3/30.)! med sun
                 endif
               else
                 corr1_a(iloc) = 9.0
@@ -1251,7 +1251,7 @@
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo
-     1                    ,topo_albedo_2d(2,isound,jsound)
+     1                    ,topo_albedo_2d(:,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,aod_tot
      1                    ,dist_2_topo,topo_solalt,trace_solalt
