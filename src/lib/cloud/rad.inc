@@ -68,7 +68,10 @@
 !       data wa    /.615,.546,.450/
 
         real ext_a(nc)                 ! aerosol extinction relative to .55um
-        data ext_a /1.00,1.00,1.00/    ! could change to (wa/.55)**(-1.3)
+!       data ext_a /0.90,1.00,1.10/    ! could change to (wa/.55)**(-1.3)
+
+        real angstrom_exp
+        data angstrom_exp /1.3/
 
 !       Brightness conversions
         s10_to_magsecsq(s10) = 10. - (2.5 * log10(s10/12.96e6))
