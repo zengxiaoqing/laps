@@ -307,7 +307,7 @@
                   airmass_unlit = airmass_tot - airmass_lit
 
 !                 aod_path = aod_ray(ialt,jazi) * airmassf(z,1.0)
-                  aod_path = aod_ray(ialt,jazi)*aa*ext_a(2)
+                  aod_path = aod_ray(ialt,jazi)*aa ! *ext_a(2)
                   if(aod_ray(ialt,jazi) .gt. 0.)then
                       frac_aero_lit = aero_ray_plane / aod_ray(ialt,jazi)
                   else
