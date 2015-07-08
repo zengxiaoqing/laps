@@ -1487,6 +1487,9 @@
               aod_ill_dir(ialt,jazi) = 
      1                fm * aod_ill_dir(ialt,jazim) 
      1              + fp * aod_ill_dir(ialt,jazip)
+              aod_2_cloud(ialt,jazi) = 
+     1                fm * aod_2_cloud(ialt,jazim) 
+     1              + fp * aod_2_cloud(ialt,jazip)
               aod_2_topo(ialt,jazi) = 
      1                fm * aod_2_topo(ialt,jazim) 
      1              + fp * aod_2_topo(ialt,jazip)
@@ -1581,6 +1584,9 @@
             aod_ill_dir(ialt,:) =
      1           fm * aod_ill_dir(ialtm,:) 
      1         + fp * aod_ill_dir(ialtp,:)
+            aod_2_cloud(ialt,:) =
+     1           fm * aod_2_cloud(ialtm,:) 
+     1         + fp * aod_2_cloud(ialtp,:)
             aod_2_topo(ialt,:) =
      1           fm * aod_2_topo(ialtm,:) 
      1         + fp * aod_2_topo(ialtp,:)
