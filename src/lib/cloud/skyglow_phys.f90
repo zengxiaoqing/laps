@@ -11,7 +11,7 @@
                    ,aod_ill,aod_2_topo,aod_tot                    &! I
                    ,l_solar_eclipse,i4time,rlat,rlon              &! I
                    ,clear_radf_c,ag_2d                            &! I
-                   ,od_g_slant_a,od_o_slant_a,od_a_slant_a        &! O
+                   ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a  &! O
                    ,clear_rad_c,sky_rad_ave,elong           )      ! O/I
 
 !       Sky glow with solar altitude > 0
@@ -132,7 +132,7 @@
 
         aero_refht = redp_lvl
 
-        if(sol_alt .gt. 0.)then
+        if(sol_alt .gt. 0. .or. .true.)then
             write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
             write(6,*)' aod_bin = ',aod_bin
             write(6,*)' aod_asy = ',aod_asy
@@ -142,7 +142,13 @@
             write(6,*)' aod_ray max = ',maxval(aod_ray)
             write(6,*)' fcterm = ',fcterm
 !           write(6,*)' patm_ray max = ',maxval(patm_ray)
+            write(6,*)' angstrom_exp = ',angstrom_exp
         endif
+
+        do ic = 1,nc
+            ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp)
+            write(6,*)' ic/wa/ext_a ',ic,wa(ic),ext_a(ic)
+        enddo ! ic
 
 !       Obtain reference values of source term
         call get_airmass(90.,htmsl,patm &           ! I
@@ -260,7 +266,7 @@
 !        else
 !          od_a_slant_a(:,ialt) = 0.
 !        endif
-         od_a_slant_a(:,ialt) = aod_ref * aa
+         od_a_slant_a(:,ialt) = aod_ref * aa * ext_a(:)
 
 !        do ic = 1,nc
 !          od_g_slant(ic,ialt) = ext_g(ic) * patm * ag/ag_90
