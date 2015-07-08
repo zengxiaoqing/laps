@@ -71,7 +71,7 @@
         integer idebug_a(ni,nj), idebug_pf(ni,nj)
         real cld_radt(nc), cld_radb(nc), cld_rad(nc), sky_rad(nc)
         real rintensity(nc), cld_rgb_rat(nc), glow_cld_c(nc), ref_nl(nc)
-        real rad_sec_cld(nc)
+        real rad_sec_cld(nc), albedo_sfc(nc)
         real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
         real pf_land(nc,ni,nj)
         real bkscat_alb(ni,nj)
@@ -117,10 +117,10 @@
 
         if(sol_alt .ge. twi_0)then
           corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight (expgamma)
-          corr1 = corr1_in; corr2 = 3.412 ! darkness of start/end of twilight (gamma)
+          corr1 = corr1_in; corr2 = 3.55  ! darkness of start/end of twilight (gamma)
         else
           corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight (expgamma)
-          corr1 = corr1_in; corr2 = 3.412 ! darkness of start/end of twilight (gamma)
+          corr1 = corr1_in; corr2 = 3.55  ! darkness of start/end of twilight (gamma)
         endif
 
         if(sol_alt .le. 0.)then
@@ -297,6 +297,9 @@
 !           if(alt_a(i,j) .eq. +45.0 .and. azi_a(i,j) .eq. nint(azi_a(i,j)))then
 !               idebug_a(i,j) = 1
 !           endif
+!           if(alt_a(i,j) .eq. +15.0)then
+!               idebug_a(i,j) = 1
+!           endif
         enddo ! i
         enddo ! j
 
@@ -448,7 +451,7 @@
                      ,aod_ill,aod_2_topo,aod_tot &                     ! I
                      ,l_solar_eclipse,i4time,rlat,rlon &               ! I
                      ,clear_radf_c,ag_2d &                             ! I
-                     ,od_g_slant_a,od_o_slant_a,od_a_slant_a &         ! O
+                     ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
                      ,clear_rad_c,sky_rad_ave,elong_a         )      ! O/I
 
             write(6,*)' range of clear_radf_c(2) is ',minval(clear_radf_c(2,:,:)),maxval(clear_radf_c(2,:,:))
@@ -490,7 +493,7 @@
                      ,aod_ill,aod_2_topo,aod_tot &                     ! I
                      ,.false.,i4time,rlat,rlon &                       ! I
                      ,clear_radf_c,ag_2d &                             ! I
-                     ,od_g_slant_a,od_o_slant_a,od_a_slant_a &         ! O
+                     ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
                      ,moon_rad_c,sky_rad_ave,elong_a         )       ! O/I
 
             glow_moon_sc(:,:) = 0.
@@ -548,7 +551,7 @@
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_swi,topo_albedo    & ! I
-                       ,cloud_od,cloud_od_sp,transm_obs             & ! I
+                       ,transm_obs                                  & ! I
                        ,dist_2_topo,topo_solalt                     & ! I
                        ,sol_alt,sol_az,nsp,airmass_2_topo,idebug_pf & ! I
                        ,ni,nj,pf_land) ! O
@@ -557,7 +560,7 @@
                               ,patm,htmsl,horz_dep &                  ! I
                               ,clear_rad_c_nt)                        ! O
 
-        write(6,*)' albedo_sfc = ',albedo_sfc
+        write(6,*)' albedo_sfc = ',albedo_sfc(:)
         write(6,*)
         if(ni .eq. nj)then ! polar
             write(6,*)' slice from SW to NE through midpoint'
@@ -632,7 +635,9 @@
                   rint_top(ic) = rad_to_counts(cld_radt(ic))
 
                   if(sol_alt .gt. 0.)then
-                      rad = day_int * (0.02 * (1. + albedo_sfc))   * pf_scat(ic,i,j)
+!                     Calculate 'sky_rad_ave' upstream for each color
+!                     topo_arg = sky_rad_ave * albedo_sfc(ic)
+                      rad = day_int * (0.02 * (1. + albedo_sfc(ic)))   * pf_scat(ic,i,j)
                   else ! secondary scattering term allowed to dominate
                       rad = 0.
                   endif
@@ -917,46 +922,54 @@
             endif
           endif
 
+          do ic = 1,nc 
+
 !                     Rayleigh  Ozone   Mag per optical depth            
-          od_atm_g = (0.1451  + .016) / 1.086
-          od_2_cloud = (od_atm_g + od_atm_a) * airmass_2_cloud(i,j)
+            od_atm_g = (0.1451  + .016) / 1.086
+!           od_2_cloud = (od_atm_g + od_atm_a*ext_a(ic)) * airmass_2_cloud(i,j)
+            od_2_cloud = ext_g(ic)*airmass_2_cloud(i,j) &
+                       + aod_2_cloud(i,j) * ext_a(ic)
 
-!         Empirical correction to account for bright clouds being visible
-          cloud_visibility = exp(-od_2_cloud) ! empirical coeff
+!           Empirical correction to account for bright clouds being visible
+            cloud_visibility = exp(-od_2_cloud) ! empirical coeff
 
-!         Use clear sky values if cloud cover is less than 0.5
-          frac_cloud = r_cloud_3d(i,j)
-!         frac_cloud = 0.0 ; Testing
-          if(sol_alt .gt. 0.)then ! distant clouds fade more during day
-            frac_cloud = frac_cloud * cloud_visibility  
+!           Use clear sky values if cloud cover is less than 0.5
+            frac_cloud = r_cloud_3d(i,j)
+!           frac_cloud = 0.0 ; Testing
+            if(sol_alt .gt. 0.)then ! distant clouds fade more during day
+              frac_cloud = frac_cloud * cloud_visibility  
 
-            if(alt_a(i,j) .lt. 0. .and. airmass_2_topo(i,j) .gt. 0.)then
-              frac_front = sind(-alt_a(i,j)) * airmass_2_cloud(i,j)/airmass_2_topo(i,j)
-            else ! frac clr/lit air in front of cloud
-              frac_front = opac(od_2_cloud) / opac(clr_od(2)) 
-              frac_front = min(frac_front,1.0)
+              if(alt_a(i,j) .lt. 0. .and. airmass_2_topo(i,j) .gt. 0.)then
+                frac_front = sind(-alt_a(i,j)) * airmass_2_cloud(i,j)/airmass_2_topo(i,j)
+              else ! frac clr/lit air in front of cloud
+                frac_front = opac(od_2_cloud) / opac(clr_od(ic)) 
+                frac_front = min(frac_front,1.0)
+              endif
+              frac_behind = 1.0 - frac_front ! frac clr/lit air behind cloud
+
+            else ! fade only when opposite the twilight arch
+              frac_cloud = frac_cloud * cloud_visibility**scurve(elong_a(i,j)/180.)
+              frac_behind = 1.0              ! frac clr/lit air behind cloud
+
             endif
-            frac_behind = 1.0 - frac_front ! frac clr/lit air behind cloud
 
-          else ! fade only when opposite the twilight arch
-            frac_cloud = frac_cloud * cloud_visibility**scurve(elong_a(i,j)/180.)
-            frac_behind = 1.0              ! frac clr/lit air behind cloud
+            btau = 0.10 * cloud_od(i,j)
+            cloud_albedo = btau / (1. + btau)
 
-          endif
+!           Consider frac_clr also in relation to fraction of airmass 
+!           between the observer and the cloud contributing to Rayleigh/Mie
+!           scattered light. This helps for the case of thin cirrus adding
+!           to the clear sky light. Consider a new option to blend clr/cld 
+!           more radiatively a la topo?
+!           Note cloud may be located in front of or behind clear sky glow
+!           It would generally be in front of during twilight
+            frac_clr = 1.0 - frac_cloud*frac_behind ! clear sky behind cloud                         
 
-          btau = 0.10 * cloud_od(i,j)
-          cloud_albedo = btau / (1. + btau)
+            sky_rad(ic) = clear_rad_c(ic,i,j) * frac_clr &
+                        + cld_rad(ic) * frac_cloud
 
-!         Consider frac_clr also in relation to fraction of airmass between
-!         the observer and the cloud contributing to Rayleigh/Mie scattered 
-!         light. This helps for the case of thin cirrus adding to the clear
-!         sky light. Consider a new option to blend clr/cld more 
-!         radiatively a la topo?
-!         Note cloud may be located in front of or behind clear sky glow
-!         It would generally be in front of during twilight
-          frac_clr = 1.0 - frac_cloud*frac_behind ! clear sky behind cloud                         
+          enddo ! ic
 
-          sky_rad(:) = clear_rad_c(:,i,j) * frac_clr + cld_rad(:) * frac_cloud
           call nl_to_RGB(sky_rad(:),glwmid,contrast & 
                         ,128.,0,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
           sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
