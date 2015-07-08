@@ -1,6 +1,6 @@
 
         subroutine get_lnd_pf(elong_a,alt_a,azi_a,topo_swi,topo_albedo & ! I
-                             ,cloud_od,cloud_od_sp,transm_obs &          ! I
+                             ,transm_obs &                               ! I
                              ,dist_2_topo,topo_solalt &                  ! I
                              ,sol_alt,sol_azi,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_land) ! O
@@ -19,8 +19,6 @@
         real elong_a(ni,nj)
         real alt_a(ni,nj)
         real azi_a(ni,nj)
-        real cloud_od(ni,nj)        ! cloud optical depth (tau)
-        real cloud_od_sp(ni,nj,nsp) ! cloud species tau (clwc,cice,rain,snow)
         real topo_swi(ni,nj)        ! topo normal global irradiance
         real topo_albedo(nc,ni,nj)  ! topo albedo
         real topo_solalt(ni,nj)     ! solar altitude
