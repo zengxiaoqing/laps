@@ -378,6 +378,8 @@ c
 81      format(' cldcv section 0 (fg/sao):'                
      1                  /'    ht      cvr',50(/f8.1,f8.3))
 
+        mode_prlx = 2
+
         do j=1,jmax
         do i=1,imax
 
@@ -428,6 +430,11 @@ c
      1     ,cldtop_tb8_m(i,j),l_tb8                                      ! O
      1     ,cldtop_m(i,j),l_cloud_present                                ! O
      1     ,sat_cover)                                                   ! O
+
+!         This can be set up for mode_prlx = 3
+!         if(cldtop_tb8_m(i,j) .ne. r_missing_data)then
+!             cldht_prlx = cldtop_tb8_m(i,j)
+!         endif
 
           if(istat_vis_potl_a(i,j) .eq. 1)then ! vis potl added
               iwrite = iwrite + 1
@@ -483,8 +490,14 @@ c
 
             do k=kcld,1,-1
 
-              it = i - nint(di_dh_ir(i,j)*cld_hts(k) - offset_ir_i(i,j))
-              jt = j - nint(dj_dh_ir(i,j)*cld_hts(k) - offset_ir_j(i,j))
+              if(mode_prlx .eq. 2)then
+                  cldht_prlx = 5000.
+              else
+                  cldht_prlx = cld_hts(k)
+              endif 
+                  
+              it = i - nint(di_dh_ir(i,j)*cldht_prlx - offset_ir_i(i,j))
+              jt = j - nint(dj_dh_ir(i,j)*cldht_prlx - offset_ir_j(i,j))
               it = max(min(it,imax),1)
               jt = max(min(jt,jmax),1)
               if(i_fill_seams(i,j) .ne. 0)then
@@ -997,15 +1010,21 @@ c
 !           Add satellite cloud to array
             if(ierr .eq. 0)then
               do k=kcld,1,-1
+                if(mode_prlx .eq. 2)then
+                    cldht_prlx = 5000.
+                else
+                    cldht_prlx = cld_hts(k)
+                endif
+
                 if(cld_hts(k) .ge. htbase  .and.
      1             cld_hts(k) .le. cldtop_m(i,j) )then ! in satellite layer
                    if(istat_vis_added_a(i,j) .eq. 1)then
-                       it = i - nint(di_dh_vis(i,j) * cld_hts(k))
-                       jt = j - nint(dj_dh_vis(i,j) * cld_hts(k))
+                       it = i - nint(di_dh_vis(i,j) * cldht_prlx)
+                       jt = j - nint(dj_dh_vis(i,j) * cldht_prlx)
                    else
-                       it = i - nint(di_dh_ir(i,j) * cld_hts(k) 
+                       it = i - nint(di_dh_ir(i,j) * cldht_prlx
      1                                             - offset_ir_i(i,j))
-                       jt = j - nint(dj_dh_ir(i,j) * cld_hts(k) 
+                       jt = j - nint(dj_dh_ir(i,j) * cldht_prlx
      1                                             - offset_ir_j(i,j))
                    endif
                    it = max(min(it,imax),1)
