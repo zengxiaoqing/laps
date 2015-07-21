@@ -105,6 +105,8 @@ cdis
         cloud_od = r_missing_data
         cloud_op = r_missing_data
 
+        mode_prlx = 2
+
         if(l_use_39)then
             write(6,*)' subroutine insert_vis (with 3.9u)...'
         else
@@ -142,6 +144,11 @@ cdis
 !       Horizontal array loop
         do i = 1,ni
         do j = 1,nj    
+
+!         This can be set up for mode_prlx = 3
+!         if(cldtop_tb8_m(i,j) .ne. r_missing_data)then
+!             cldht_prlx = cldtop_tb8_m(i,j)
+!         endif
 
           if(i .eq. ni/2 .AND. j .eq. nj/2)then
               idebug = 1
@@ -198,8 +205,14 @@ cdis
             l_39_clr_2d = .false.
 
             do k = 1,nk
-                it = i - nint(di_dh(i,j) * cld_hts(k))
-                jt = j - nint(dj_dh(i,j) * cld_hts(k))
+                if(mode_prlx .eq. 2)then
+                    cldht_prlx = 5000.
+                else
+                    cldht_prlx = cld_hts(k)
+                endif 
+
+                it = i - nint(di_dh(i,j) * cldht_prlx)
+                jt = j - nint(dj_dh(i,j) * cldht_prlx)
                 it = max(min(it,ni),1)
                 jt = max(min(jt,nj),1)
                 if(i_fill_seams(i,j) .ne. 0)then
