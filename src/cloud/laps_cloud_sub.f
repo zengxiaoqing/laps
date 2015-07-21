@@ -1198,7 +1198,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
         write(6,491)(heights_3d(NX_L/2,NY_L/2,k)
      1              ,clouds_3d(NX_L/2,NY_L/2,k),k=KCLOUD,1,-1)
 491     format(' cldcv section 3 (after insert_vis):'
-     1                  /'    ht      cvr',50(/f8.1,f8.3))
+     1        /'    ht      cvr',50(/f8.1,f8.3,'   ctr3'))
 
 C Clear out stuff below ground
         do k = 1,KCLOUD
@@ -1584,6 +1584,7 @@ C       EW SLICES
                 tb8_k_offset(i,j) = tb8_k(ioff,joff)
                 if(i .eq. NX_L/2 .AND. j .eq. NY_L/2)then
                     write(6,*)'tb8_offset',i,j,ioff,joff
+                    write(6,*)'CTR cloud albedo',cloud_albedo(i,j)
                 endif
             enddo ! j
             enddo ! i
