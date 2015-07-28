@@ -187,14 +187,17 @@
 
         endif
 
-        fracerf = (sol_alt - (-5.0)) * 0.15
+!       First arg increase will brighten all altitudes
+!       Second arg increase will darken shallow twilight and brighten
+!       deep twilight
+        fracerf = (sol_alt - (-5.00)) * 0.105
         erfterm = (erf(fracerf) + 1.) / 2.
         glwmid = corr2*(1.-erfterm) + corr1*erfterm
 
         offset = 0.
         glwlow = glwmid - 128. / 100. ! contrast
-        write(6,3)sol_alt,corr1,glwlow,glwmid,contrast,offset
-3       format('  sol_alt/corr1/glwlow/glwmid/contrast/offset',f9.2,3f9.3,2f9.1)
+        write(6,3)sol_alt,corr1,glwlow,glwmid,contrast,fracerf,erfterm
+3       format('  sol_alt/corr1/glwlow/glwmid/contrast/fracerf/erfterm',f9.2,3f9.3,f9.1,2f9.3)
 
         ref_nl = day_int0
         if(new_color .gt. 0)then
@@ -1226,9 +1229,10 @@
               if(i .eq. isun .and. j .eq. jsun)then
 !             if(elong_a(i,j) .le. 0.5)then
                   write(6,*)' ******* solar location ************************ od'
-                  write(6,102)glow_sun(i,j),10.**glow_sun(i,j) &
-                             ,rad_sun_r,rad_sun_g,rad_sun_b,trans(cloud_od(i,j) + aod_slant(i,j)),glwlow 
-102               format('glow_sun/rad_sun/trans',f9.4,4e16.6,f11.8,f9.4)
+                  write(6,102)glow_sun(i,j),10.**glow_sun(i,j),alt_a(i,j) &
+                             ,rad_sun_r,rad_sun_g,rad_sun_b &
+                             ,trans(cloud_od(i,j) + aod_slant(i,j)),glwlow 
+102               format('glow_sun/alt/rad_sun/trans',f9.4,e16.6,f9.4,3e16.6,f11.8,f9.4)
                   write(6,*)'od_g_slant = ',od_g_slant_a(:,i)
                   write(6,*)'od_o_slant = ',od_o_slant_a(:,i)
                   write(6,*)'od_a_slant = ',od_a_slant_a(:,i)
