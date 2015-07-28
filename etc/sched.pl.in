@@ -917,6 +917,7 @@ foreach $exe (@LAPS_EXE){
                     print TFILE "ulimit -s 512000\n";
                     print TFILE "ulimit -a\n";
                     print TFILE "module load perlmod\n";
+                    print TFILE "module load pgi netcdf/3.6.3\n";
                     print TFILE "cd $LAPS_LOG_PATH\n";
                     print TFILE "  \n";
                 }
