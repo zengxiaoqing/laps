@@ -132,6 +132,8 @@
 
         aero_refht = redp_lvl
 
+        angstrom_exp = 1.8 - (fcterm * 10.)
+
         if(sol_alt .gt. 0. .or. .true.)then
             write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
             write(6,*)' aod_bin = ',aod_bin
