@@ -178,7 +178,7 @@
 
         subroutine xyztosrgb(x,y,z,r,g,b)
 
-        if(.false.)then ! D65
+        if(.true.)then ! D65
             r =  3.2406*x -1.5372*y -0.4986*z
             g = -0.9689*x +1.8758*y +0.0415*z
             b =  0.0557*x -0.2040*y +1.0570*z
