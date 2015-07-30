@@ -76,7 +76,9 @@
         if(iverbose .eq. 1)write(6,*)'luminance farad = ',luminance
 
 !       Convert xyz to (linear) rgb
-        call xyztosrgb(x,y,z,r,g,b)             
+        ct = 5780.
+        if(iverbose .eq. 1)write(6,*)'ct = ',ct
+        call xyztosrgb(x,y,z,ct,r,g,b)             
 
 !       Convert rintensity to rgb
         call linearrgb_to_counts(r,g,b,rc,gc,bc)
@@ -90,7 +92,12 @@
 
 !       solar_counts = 240.
         solar_counts = rad_to_counts2(day_int)
-        if(iverbose .eq. 1)write(6,*)'solar_counts = ',solar_counts
+        if(iverbose .eq. 1)then 
+            write(6,*)'day_int = ',day_int
+            write(6,*)'glwref = ',glwref
+            write(6,*)'cntref = ',cntref
+            write(6,*)'solar_counts = ',solar_counts
+        endif
 
 !       desired_luma = 240. * rel_solar_luminance**(1./gamma)
 !       desired_luma = solar_counts + log10(rel_solar_luminance) * contrast
@@ -176,17 +183,21 @@
         return
         end
 
-        subroutine xyztosrgb(x,y,z,r,g,b)
+        subroutine xyztosrgb(x,y,z,ct,r,g,b)
 
-        if(.true.)then ! D65
-            r =  3.2406*x -1.5372*y -0.4986*z
-            g = -0.9689*x +1.8758*y +0.0415*z
-            b =  0.0557*x -0.2040*y +1.0570*z
-        else            ! D50
-            r =  3.1339*x -1.6169*y -0.4906*z
-            g = -0.9785*x +1.9160*y +0.0333*z
-            b =  0.0720*x -0.2290*y +1.4057*z
-        endif
+        colfrac = (ct - 5000.) / (6500. - 5000.)
+ 
+        r65 =  3.2406*x -1.5372*y -0.4986*z
+        g65 = -0.9689*x +1.8758*y +0.0415*z
+        b65 =  0.0557*x -0.2040*y +1.0570*z
+
+        r50 =  3.1339*x -1.6169*y -0.4906*z
+        g50 = -0.9785*x +1.9160*y +0.0333*z
+        b50 =  0.0720*x -0.2290*y +1.4057*z
+
+        r = r65 * colfrac + r50 * (1.-colfrac)
+        g = g65 * colfrac + g50 * (1.-colfrac)
+        b = b65 * colfrac + b50 * (1.-colfrac)
 
 !       Clip at 0. when outside the gamut
         r = max(r,0.)
@@ -233,6 +244,7 @@
 
         return
         end
+
 
         subroutine get_tricolor(fa,iverbose,xc,yc,zc,x,y,z,luminance)
 
@@ -294,4 +306,3 @@
 
         return
         end
-
