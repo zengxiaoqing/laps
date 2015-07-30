@@ -1096,6 +1096,10 @@ c
         write(6,*)' n_vis_add_potl = ',n_vis_add_potl
      1           ,' n_vis_added = ',n_vis_added
 
+        write(6,*)'section pt vis potl/added'
+     1        ,istat_vis_potl_a(imax/2,jmax/2)
+     1        ,istat_vis_added_a(imax/2,jmax/2)
+
         write(6,342)
      1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k=kcld,1,-1)
 342     format(' cldcv section 1a (comp rad):'
@@ -1411,7 +1415,7 @@ c
             ig = max(min(ig,imax),1)
             jg = max(min(jg,jmax),1)
 
-            if(cloud_frac_vis_a(i,j) .gt. sfc_albedo(ig,jg) + 0.3)then
+            if(cloud_frac_vis_a(i,j) .gt. sfc_albedo(ig,jg) + 0.2)then
                 mode_top = 3
                 l_cloud_present = .true.
                 cldtop_m = cldtop_tb8_m
@@ -1449,14 +1453,15 @@ c
         endif
 
         if(idebug .eq. 1 .OR. ierr .eq. 1)then
-            write(6,*)' cloud_top info: '
-     1               ,i,j,l_cloud_present
+            write(6,201)i,j,l_cloud_present
      1               ,mode_top
      1               ,istat_vis_added,istat_39_add,cldtop_m       
      1               ,t_gnd_k(i,j),tb8_k,cloud_frac_vis_a(i,j)
      1               ,cloud_frac_vis_s(i,j)
      1               ,cldtop_temp_k,sat_cover
      1               ,cloud_frac_tb8
+ 201        format('cloud_top info: ',2i5,l2,3i2,f9.0,2f9.2,2f7.4,f9.2
+     1               ,2f7.3)
         endif
 
         return
