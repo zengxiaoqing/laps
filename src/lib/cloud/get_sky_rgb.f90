@@ -189,7 +189,8 @@
 
 !       First arg increase will brighten all altitudes
 !       Second arg increase will darken shallow twilight and brighten
-!       deep twilight
+!       deep twilight.
+!       Presently images look a bit bright when sol_alt = -2.5
         fracerf = (sol_alt - (-5.00)) * 0.105
         erfterm = (erf(fracerf) + 1.) / 2.
         glwmid = corr2*(1.-erfterm) + corr1*erfterm
