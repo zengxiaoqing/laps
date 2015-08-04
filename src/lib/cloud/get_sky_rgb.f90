@@ -554,15 +554,21 @@
                        ,nsp,airmass_2_topo,idebug_pf,ni,nj &  ! I
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
+        I4_elapsed = ishow_timer()
+
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_swi,topo_albedo    & ! I
                        ,transm_obs                                  & ! I
                        ,dist_2_topo,topo_solalt                     & ! I
                        ,sol_alt,sol_az,nsp,airmass_2_topo,idebug_pf & ! I
                        ,ni,nj,pf_land) ! O
 
+        I4_elapsed = ishow_timer()
+
         call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &             ! I
                               ,patm,htmsl,horz_dep &                  ! I
                               ,clear_rad_c_nt)                        ! O
+
+        I4_elapsed = ishow_timer()
 
         write(6,*)' albedo_sfc = ',albedo_sfc(:)
         write(6,*)
