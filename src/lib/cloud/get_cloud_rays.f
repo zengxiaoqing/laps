@@ -520,6 +520,18 @@
              jazi_delt = nint(1. / azi_scale)
          elseif(altray .le. -10. .and. htstart .lt. 100000.)then 
              jazi_delt = nint(1. / azi_scale)
+         elseif(htagl .gt. 30000e3)then  ! near geosynchronous
+             if    (altray .le. -86.42)then
+                 jazi_delt = 16                       
+             elseif(altray .le. -82.82)then
+                 jazi_delt = 8                       
+             elseif(altray .le. -75.52)then
+                 jazi_delt = 4                       
+             elseif(altray .le. -60.00)then
+                 jazi_delt = 2                       
+             else
+                 jazi_delt = 1                       
+             endif
          else                        ! alt_scale, azi_scale
              jazi_delt = 1
          endif
@@ -659,6 +671,7 @@
               
               if(idebug .eq. 1)write(6,*)
               if(idebug .eq. 1)then
+                if(htagl .gt. 8000e3)I4_elapsed = ishow_timer()
                 write(6,11)altray,view_azi_deg,ialt,jazi,jazi_delt
      1                    ,rkdelt,i,j,slant2_optimal
 11              format(
@@ -985,6 +998,10 @@
                   i1 = min(int(rinew_m),ni-1)
                   j1 = min(int(rjnew_m),nj-1) 
                   k1 = min(int(rk_m)   ,nk-1) 
+
+                  if(i1 .le. 0)then
+                   write(6,*)' software error ',i1,rinew_l,rinew_m,rinew_h,rk_m
+                  endif
 
                   fi = rinew_m - i1; i2=i1+1
                   fj = rjnew_m - j1; j2=j1+1
@@ -1398,7 +1415,7 @@
             if(idebug .eq. 1)then
               write(6,119)rkstart,nk,view_altitude_deg,horz_dep_d
      1                   ,clear_radf_c(2,ialt,jazi)
-119           format('alt/dep/radf',f8.2,i3,3f9.3)
+119           format('alt/dep/radf',f9.2,i3,3f9.3)
             endif
 
 !           Fill in pseudo topo outside horizontal domain
@@ -1547,6 +1564,18 @@
         call get_idx(20.,minalt,alt_scale,ialt_min)
         call get_idx(maxalt_deg,minalt,alt_scale,ialt_max)
 
+        I4_elapsed = ishow_timer()
+
+        if(htagl .gt. 30000e3)then ! skip fill for very high altitudes
+          ialt_min = minalt+1
+          ialt_max = minalt
+          write(6,*)' Skip filling missing data in altitude rings'
+        else
+          write(6,*)' Filling missing data in altitude rings'
+          write(6,*)' ialtmin/ialtmax/deg = '
+     1               ,ialt_min,ialt_max,maxalt_deg
+        endif
+
         do ialt = ialt_min,ialt_max ! fill in missing alt rings
           call get_interp_parms(minalt,maxalt,idelt,ialt           ! I
      1                         ,fm,fp,ialtm,ialtp,ir,istatus)      ! O
@@ -1610,6 +1639,8 @@
      1         fm * trace_rj(ialtm,:) + fp * trace_rj(ialtp,:)
           endif ! ir .ne. 0
         enddo ! ialt
+
+        I4_elapsed = ishow_timer()
 
         write(6,*)' Number of rays with cloud = ',icloud_tot
      1           ,' out of ',91*361
