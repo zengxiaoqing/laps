@@ -8,6 +8,7 @@
 
         use mem_namelist, ONLY: max_snd_grid, max_snd_levels
      1                        , grid_spacing_m, aod, aero_scaleht
+     1                        , earth_radius
         use ppm
         use mem_allsky
 
@@ -1217,7 +1218,7 @@
               write(6,*)' call get_sky_rgb with cyl data'
 
               if(htagl(iloc) .eq. 1000e3)then                    ! High alt
-                corr1_a(iloc) = 9.0
+                corr1_a(iloc) = 9.2
               elseif(htagl(iloc) .eq. 300.)then                  ! BAO
                 if(solar_alt .lt. 30.)then
                   corr1_a(iloc) = 9.2                            ! low sun
@@ -1322,9 +1323,11 @@
               endif
 
 !             if(ipolar_sizeparm .ge. 3)then
-              if(htagl(iloc) .gt. 7000e3)then
+              if(htagl(iloc) .gt. earth_radius*2.5)then
+                pomag = htagl(iloc) / (earth_radius*0.7)
+              elseif(htagl(iloc) .gt. earth_radius*1.1)then
                 pomag = 3.0
-              elseif(htagl(iloc) .gt. 3500e3)then
+              elseif(htagl(iloc) .gt. earth_radius*0.5)then
                 pomag = 2.0
               else
                 pomag = 1.0
