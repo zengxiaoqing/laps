@@ -324,6 +324,7 @@ cdis
             nj_polar = (256 * 2**(ipolar_sizeparm)) - 1
 
             write(6,*)' call plot_allsky',ni_polar,nj_polar
+     1                                   ,ipolar_sizeparm
 
             call plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
 !    1                        ,minalt,maxalt,minazi,maxazi
