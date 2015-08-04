@@ -13,6 +13,11 @@
         include 'trigd.inc'
         include 'rad.inc'
 
+!       Traditional aerosol empirical forumla (valid at H = 1900m)
+!       Try using new relationship that includes scale height
+        am_aero(z)=1./(COS(Z)+.0123*EXP(-24.5*COS(Z))) ! radians apparent
+        am_homo_wiki(z,h,r) = r/h * sqrt(cos(z)**2 + 2.*h/r + (h/r)**2) - (r/h) * cos(z)
+
         zapp = 90. - alt
         zappi = 90. + alt
 
@@ -91,7 +96,8 @@
         if(alt .lt. 0.)then ! high looking down
           if(htmin .lt. 0.0)then ! hit ground
             ZZ = zappi * rpd
-            aa=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * (1.0-patm_aero)
+            aa=am_aero(ZZ)                                * (1.0-patm_aero)
+!           aa=am_homo_wiki(ZZ,aero_scaleht,earth_radius) * (1.0-patm_aero)
             aa = max(aa,0.)
             if(iverbose .eq. 1)then
               write(6,41)zappi,htmin,patm_aero,aa    
@@ -100,10 +106,14 @@
           else ! grazes atmosphere
             ZZ = zappi * rpd
             patm2_aero = exp(-((htmin-aero_refht) / aero_scaleht))
-!           aa1=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm2_aero
-            aa2=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm_aero
+!           aa1=am_aero(ZZ)                                * patm2_aero
+            aa2=am_aero(ZZ)                                * patm_aero
+!           aa2=am_homo_wiki(ZZ,aero_scaleht,earth_radius) * patm_aero
+
             ZZ = 90. * rpd
-            aa3=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm2_aero
+            aa3=am_aero(ZZ)                                * patm2_aero
+!           aa3=am_homo_wiki(ZZ,aero_scaleht,earth_radius) * patm2_aero
+
             aa = (aa3-aa2) + aa3
             if(iverbose .eq. 1)then
               write(6,*)' high aero  looking down at htmin',htmin,aa 
@@ -111,7 +121,8 @@
           endif
         else
           ZZ = (min(zapp,90.)) * rpd
-          aa=1./(COS(ZZ)+.0123*EXP(-24.5*COS(ZZ))) * patm_aero
+          aa=am_aero(ZZ)                                * patm_aero
+!         aa=am_homo_wiki(ZZ,aero_scaleht,earth_radius) * patm_aero
           if(iverbose .eq. 1)then
             write(6,*)' standard aero  situation',htmsl,alt,aa       
           endif
