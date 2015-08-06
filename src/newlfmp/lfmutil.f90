@@ -284,7 +284,7 @@ real :: tvprs
 ! Variables for low level reflectivity
 integer :: klow, khigh
 real :: ht_1km, frack
-real :: umean(lx,ly),vmean(lx,ly),ustorm(lx,ly),vstorm(lx,ly)
+real :: umean(lx,ly),vmean(lx,ly),ustorm(lx,ly),vstorm(lx,ly),ushear(lx,ly),vshear(lx,ly)
 real :: array_buf(lx,ly),array_out(lx,ly)
 
 real :: ghi_ratio(lx,ly)
@@ -555,7 +555,7 @@ if (make_micro) then
 
           call mean_wind_bunkers(husig,hvsig,hzsig(:,:,1),lx,ly,nz &     ! I
                           ,hzsig                                   &     ! I
-                          ,umean,vmean,ustorm,vstorm,status)             ! O
+                          ,umean,vmean,ushear,vshear,ustorm,vstorm,status)    ! O
           write(6,*)' Advect Surface Reflectivity ',fcsttime,i4_adv_pcp
           call advect(umean,vmean,refl_sfc,array_buf,ngrid_spacingx & 
                      ,lx,ly,array_out,float(fcsttime),1.0,lon,rmsg)
@@ -929,7 +929,7 @@ endif
 if(fcsttime .le. i4_adv_cld)then
   call mean_wind_bunkers(husig,hvsig,hzsig(:,:,1),lx,ly,nz &     ! I
                         ,hzsig                                   &     ! I
-                        ,umean,vmean,ustorm,vstorm,status)             ! O
+                        ,umean,vmean,ushear,vshear,ustorm,vstorm,status)    ! O
   ext = 'lcv'
   var_2d = 'SWI'
   call get_laps_2d(laps_reftime,ext,var_2d,units_2d,comment_2d,lx,ly,swdown,istatus)
