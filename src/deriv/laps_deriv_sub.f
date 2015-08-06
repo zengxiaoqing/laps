@@ -773,10 +773,6 @@ c read in laps lat/lon and topo
 !           where .05 means 5% of water saturation
             es_pa = ESL(temp_3d(i,j,k) - 273.15) * 100.
             cld_ice_ub_gpm3 = 1000. * .05 * es_pa / (R * temp_3d(i,j,k))
-            if(i .eq. NX_L/2 .and. j .eq. NY_L/2)then
-                write(6,701)k,temp_3d(i,j,k),es_pa,cld_ice_ub_gpm3
-701             format('k/t/e/cld_ice_uprb_gpm3',i4,f8.2,f8.1,f9.5)
-            endif
 !           if(temp_3d(i,j,k) .gt. 243.15)then
 !               cld_ice_ub_gpm3 = 0.1
 !           else
@@ -786,6 +782,12 @@ c read in laps lat/lon and topo
      1         cice(i,j,k) .gt. cld_ice_ub_gpm3      )then
                cice(i,j,k) = cld_ice_ub_gpm3
             endif         
+            if(i .eq. NX_L/2 .and. j .eq. NY_L/2)then
+                write(6,701)k,temp_3d(i,j,k),es_pa,cld_ice_ub_gpm3
+     1                       ,cice(i,j,k),slwc(i,j,k)
+701             format('k/t/e/cld_ice_uprb_gpm3/cice/slwc',i4,f8.2,f8.1
+     1                       ,3f9.5)
+            endif
         enddo
         enddo
         enddo
@@ -1207,6 +1209,8 @@ c read in laps lat/lon and topo
                 write(6,1201)cldod_out(i,j),cldalb_in(i,j)
      1                      ,cldalb_out(i,j),sfc_albedo(i,j),simvis(i,j)
  1201           format(' CTR cloud od/albi-o/sfc/smv:',5f9.3)
+                write(6,1202)slwc_int(i,j),cice_int(i,j)
+ 1202           format(' CTR slwc_int/cice_int ',2f10.6)
             endif
 
         enddo ! i
