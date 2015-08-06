@@ -83,10 +83,19 @@ c     prep code
       desired_ext = 'nc'
 
 
+!GFORTRAN modifications begin
+      extension_index = 0
+!GFORTRAN modifications end
       call get_newest_file (filename, time_diff,file_name_length,
      1     path,ptg_index,filefound,desired_ext, de_index,
      1     extension, extension_index, istatus)
 
+!GFORTRAN modifications begin
+      if (istatus.ne.1) then    !failure, return with failure code
+         write(6,*) 'No GPS data'
+         return
+      endif
+!GFORTRAN modifications end
 c     prep filename to fit
 
 
