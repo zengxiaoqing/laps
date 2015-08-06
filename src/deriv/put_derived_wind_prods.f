@@ -80,8 +80,9 @@ cdis
 
 !       Stuff for SFC and MEAN winds
         real umean(NX_L,NY_L),vmean(NX_L,NY_L)
+        real ushear(NX_L,NY_L),vshear(NX_L,NY_L)
         real ustorm(NX_L,NY_L),vstorm(NX_L,NY_L)
-        real out_lhe_3d(NX_L,NY_L,3)
+        real out_lhe_3d(NX_L,NY_L,5)
 
 !       Stuff for reading radar reflectivity
         character*4 radar_name
@@ -271,7 +272,8 @@ cdis
         else
             call mean_wind_bunkers(uanl,vanl,topo,imax,jmax,kmax       ! I
      1                    ,heights_3d                                  ! I
-     1                    ,umean,vmean,ustorm,vstorm,istatus)          ! O
+     1                    ,umean,vmean,ushear,vshear,ustorm,vstorm     ! O
+     1                    ,istatus)                                    ! O
         endif
 
         if(istatus .ne. 1)then
@@ -451,21 +453,29 @@ ccc202              format('H',i2)
                 var_a(0) = 'LHE'
                 var_a(1) = 'MU'
                 var_a(2) = 'MV'
+                var_a(3) = 'SHU'
+                var_a(4) = 'SHV'
 
                 units_a(0) = 'm/s**2'
                 units_a(1) = 'm/s'
                 units_a(2) = 'm/s'
+                units_a(3) = 'm/s'
+                units_a(4) = 'm/s'
 
                 comment_a(0) = 'LAPS Helicity'
-                comment_a(1) = 'LAPS Mean Wind SFC - 300mb'
-                comment_a(2) = 'LAPS Mean Wind SFC - 300mb'
+                comment_a(1) = 'LAPS Mean Wind 0-6km AGL'
+                comment_a(2) = 'LAPS Mean Wind 0-6km AGL'
+                comment_a(3) = 'U Shear Component 0-6km AGL'
+                comment_a(4) = 'V Shear Component 0-6km AGL'
 
                 call move(helicity,out_lhe_3d(1,1,1),NX_L,NY_L)
                 call move(umean   ,out_lhe_3d(1,1,2),NX_L,NY_L)
                 call move(vmean   ,out_lhe_3d(1,1,3),NX_L,NY_L)
+                call move(ushear  ,out_lhe_3d(1,1,4),NX_L,NY_L)
+                call move(vshear  ,out_lhe_3d(1,1,5),NX_L,NY_L)
 
                 call put_laps_multi_2d(i4time_sys,ext,var_a
-     1          ,units_a,comment_a,out_lhe_3d,NX_L,NY_L,3,istatus)
+     1          ,units_a,comment_a,out_lhe_3d,NX_L,NY_L,5,istatus)
                  istat_lhe = istatus
 
             else
