@@ -2,12 +2,14 @@
         subroutine mean_wind_bunkers(uanl,vanl,topo,imax,jmax,kmax  ! I
      1                              ,heights_3d                     ! I
      1                              ,umean,vmean                    ! O
+     1                              ,ushear,vshear                  ! O
      1                              ,ustorm,vstorm,istatus)         ! O
 
         logical ltest_vertical_grid
 
         real umean(imax,jmax),vmean(imax,jmax)                    ! O
         real ustorm(imax,jmax),vstorm(imax,jmax)                  ! O
+        real ushear(imax,jmax),vshear(imax,jmax)                  ! O
         real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)            ! I
         real heights_3d(imax,jmax,kmax)                           ! I
 
@@ -74,13 +76,14 @@ C            THROUGH THE 0-6 KM MEAN WIND.
 !            Shear Vector through the layer
              if(uanl(i,j,klow(i,j)) .ne. r_missing_data .and.
      1          vanl(i,j,klow(i,j)) .ne. r_missing_data       )then
-                 ushear = uanl(i,j,khigh(i,j)) - uanl(i,j,klow(i,j))
-                 vshear = vanl(i,j,khigh(i,j)) - vanl(i,j,klow(i,j))
+                 ushear(i,j) = uanl(i,j,khigh(i,j))-uanl(i,j,klow(i,j))
+                 vshear(i,j) = vanl(i,j,khigh(i,j))-vanl(i,j,klow(i,j))
 
-                 shearspeed = sqrt(ushear*ushear+vshear*vshear)
+                 shearspeed = sqrt(ushear(i,j)*ushear(i,j)
+     1                            +vshear(i,j)*vshear(i,j))
 
-                 ustorm(i,j) = umean(i,j) + (7.5*vshear/shearspeed)
-                 vstorm(i,j) = vmean(i,j) - (7.5*ushear/shearspeed)
+                 ustorm(i,j) = umean(i,j) + (7.5*vshear(i,j)/shearspeed)
+                 vstorm(i,j) = vmean(i,j) - (7.5*ushear(i,j)/shearspeed)
 
              else
                  write(6,*)' Error in meanwind, missing low level wind'       
