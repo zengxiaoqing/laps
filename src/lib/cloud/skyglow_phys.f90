@@ -687,7 +687,7 @@
 !               od_a = aod_ref * aa * ext_a(ic)  ! slant od
                 od_a_slant = od_a_vert * aa_o_aa_90 
                 od_a = od_slant
-                if(od_a_slant .gt. 0.)then ! maybe too small
+                if(od_a_slant .gt. 0.)then ! normalize with extinction?
 !                 aodf = min(aod_ill(ialt,jazi)/od_a_slant,1.0)
                   aodf = min(aod_ill(ialt,jazi)/aod_tot(ialt,jazi),1.0)
                 else
@@ -833,7 +833,8 @@
                     endif ! write log info
                   endif ! call get_clr_src_dir_topo
 
-                  aodf = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi)
+!                 Normalize by extinction?
+                  aodf = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi) 
                   day_int = 3e9 * (1.0 - eobsc(ic,jazi))
                   clear_rad_topo = day_int * &
                     (sumi_gct(ic) * rayleigh_gnd * clear_radf_c(ic,ialt,jazi) + &
@@ -852,7 +853,7 @@
                     write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
                        ,clear_radf_c(ic,ialt,jazi),sumi_act(ic),hg2t &
                        ,aodf,ssa,clear_rad_topo      
-91                  format('elg/ig/ray/radf/ia/hg2t/aodf/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,3f9.4,f7.2,3x,f12.0)
+91                  format('elg/ig/rayg/radf/ia/hg2t/aodf/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,3f9.4,f7.2,3x,f12.0)
                   endif
 
                 endif ! hitting topo
@@ -950,9 +951,9 @@
           if(idebug .ge. 1)then 
               write(6,111)altray,view_azi_deg,sol_alt,topo_solalt(ialt,jazi) &
                        ,trace_solalt(ialt,jazi),mode_sky,od_a &
-                       ,dist_2_topo(ialt,jazi),clear_rad_c(:,ialt,jazi)
-111           format('alt/azi/salt-t-t/mode/od_a/dst/clrrd' &
-                    ,2f6.1,1x,3f7.2,i3,f12.5,f9.0,3e14.5)
+                       ,dist_2_topo(ialt,jazi),aodf,clear_rad_c(:,ialt,jazi)
+111           format('alt/azi/salt-t-t/mode/od_a/dst/aodf/clrrd' &
+                    ,2f6.1,1x,3f7.2,i3,f12.5,f9.0,f9.4,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
