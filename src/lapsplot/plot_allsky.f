@@ -893,7 +893,7 @@
  
           write(6,*)' i/j/topo_sfc ',isound,jsound,topo_sfc
           write(6,11)topo_albedo_2d(:,isound,jsound)
-11        format(' albedo RGB of observer ',3f9.3)
+11        format('  albedo RGB of observer ',3f9.3)
 
           rlat = lat(isound,jsound)
           rlon = lon(isound,jsound)
@@ -927,11 +927,13 @@
 
           write(6,*)' call sun_moon at grid point ',isound,jsound
           idebug = 2
-          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,isound,jsound
-     1                 ,alm,azm,idebug,elgms,moon_mag 
-     1                 ,solar_eclipse_magnitude,eobsf,eobsl)
-          write(6,24)alm,azm,elgms,moon_mag 
-24        format('  alt/az/elg/mnmag = ',2f8.2,f9.4,f8.2)
+          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,isound,jsound ! I
+     1                 ,alm,azm,idebug                               ! I
+     1                 ,htagl(iloc),earth_radius                     ! I
+     1                 ,elgms,moon_mag,rmn                           ! O 
+     1                 ,solar_eclipse_magnitude,eobsf,eobsl)         ! O
+          write(6,24)alm,azm,elgms,moon_mag,rmn
+24        format('  alt/az/elg/mnmag/rmn = ',2f8.2,f9.4,f8.2,f9.4)
 
 !         Consider passing 'topo_flag' into 'sun_moon' to consider either
 !         solar or lunar eclipses
@@ -956,7 +958,9 @@
             do i = 1,NX_L
             do j = 1,NY_L
               call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i,j
-     1                     ,almgrd,azmgrd,idebug,elggrd,grdmoon_mag
+     1                     ,almgrd,azmgrd,idebug
+     1                     ,htagl(iloc),earth_radius                   ! I
+     1                     ,elggrd,grdmoon_mag,rmn                     ! O
      1                     ,solar_eclipse_magnitude,eobsf,eobsc(i,j))
 
               if(elggrd .lt. elgmin)then
@@ -1044,7 +1048,7 @@
      1                     ,dist_2_topo                          ! O
      1                     ,aod_ill,aod_ill_dir                  ! O
      1                     ,aod_tot,transm_obs,obs_glow_zen      ! O
-!    1                     ,transm_3d,transm_4d                  ! O
+     1                     ,transm_3d,transm_4d                  ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
      1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w! O
      1                     ,clear_rad_c,clear_radf_c,patm        ! O
