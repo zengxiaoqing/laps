@@ -304,7 +304,8 @@ C
 
       subroutine sun_moon(i4time,lat_2d,lon_2d,ni,nj,is,js,alm_r4,azm_r4
      1                   ,idebug                           ! I
-     1                   ,elgms_r4,r4_mag                  ! O
+     1                   ,ht,earth_radius                  ! I
+     1                   ,elgms_r4,r4_mag,r4_rmn           ! O
      1                   ,solar_eclipse_magnitude,r4_obsc,obsc_limb) ! O   
 
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
@@ -335,14 +336,13 @@ C
       integer i4time,istatus
       real lat_2d(ni,nj)
       real lon_2d(ni,nj)
-      real alm_r4,azm_r4,elgms_r4,r4_mag
-      real solar_eclipse_magnitude
+      real alm_r4,azm_r4,elgms_r4,r4_mag,r4_rmn
+      real solar_eclipse_magnitude,ht,earth_radius
       real r4_ratio,r4_obsc,obsc_limb,obsc_limbc(nc)
 C
       n_loc = 1
       lat = lat_2d(is,js)
       lon = lon_2d(is,js)
-      topo_flag = 1.0
 
       call i4time_to_jd(i4time,tb,istatus)
       tf = tb
@@ -397,6 +397,8 @@ c calculate position of observer's zenith (coordinates of date)
 
       IF(IPRINT.EQ.1)write(6,*)' lat,lon = ',LAT(L),LON(L)
       IF(IPRINT.EQ.1)write(6,*)' TXZ,TYZ,TZZ,RAMR',TXZ,TYZ,TZZ,RAMR/rpd
+
+      topo_flag = 1.0 + ht/earth_radius
 
       CALL TOPO(PHI,LON(L),UT,TX,TY,TZ)
 
