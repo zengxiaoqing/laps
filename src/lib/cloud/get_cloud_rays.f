@@ -10,7 +10,7 @@
      1                           ,dist_2_topo                           ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
      1                           ,aod_tot,transm_obs,obs_glow_zen       ! O
-!    1                           ,transm_3d,transm_4d                   ! O
+     1                           ,transm_3d,transm_4d                   ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,r_cloud_rad,cloud_rad_c,cloud_rad_w   ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
@@ -66,8 +66,8 @@
         real aod_3d(ni,nj,nk)  ! aerosol extinction coefficient
         real bi_coeff(2,2),tri_coeff(2,2,2)
         real heights_3d(ni,nj,nk)    ! MSL
-        real transm_3d(ni,nj,nk)     ! L
-        real transm_4d(ni,nj,nk,nc)  ! L
+        real transm_3d(ni,nj,nk)     ! O
+        real transm_4d(ni,nj,nk,nc)  ! O
         real transm_4d_m(nc)
         real heights_1d(nk)
         real topo_a(ni,nj)
@@ -139,16 +139,20 @@
         real dist_2_topo(minalt:maxalt,minazi:maxazi) ! slant dist
         real aod_ill(minalt:maxalt,minazi:maxazi)     ! slant path
         real aod_ill_dir(minalt:maxalt,minazi:maxazi) ! slant path
+        real aod_ill_opac(minalt:maxalt,minazi:maxazi)! slant path
         real aod_tot(minalt:maxalt,minazi:maxazi)     ! slant path
         real sum_odrad_c(nc)
         real sum_odrad_c_last(nc)
-        real maxalt_deg
+        real minalt_deg,maxalt_deg,minazi_deg,maxazi_deg
 
         character*1 cslant
         character var*3,comment*125,ext*31,units*10
 
         integer icall_rad /0/
-        save icall_rad
+        save icall_rad               
+
+        real solalt_last /0.0/
+        save solalt_last
 
         kstart = 0 ! 0 means sfc, otherwise level of start
 
@@ -261,6 +265,12 @@
           endif
 
         else ! called if obj_alt < 3.0
+            if( (sol_alt(i,j) - twi_alt) * 
+     1          (solalt_last  - twi_alt) .le. 0.)then
+                write(6,*)' Crossed twi_alt compared with prior call'
+                icall_rad = 0 
+            endif
+
             if(icall_rad .eq. 0)then
               write(6,*)' call get_cloud_rad_faces...'
               call get_cloud_rad_faces(              
@@ -486,7 +496,13 @@
         pres_1d(:)    = pres_3d(i,j,:)
 
         idelt = nint(2. / alt_scale)
+        minalt_deg = float(minalt) * alt_scale
         maxalt_deg = float(maxalt) * alt_scale
+        minazi_deg = float(minazi) * alt_scale
+        maxazi_deg = float(maxazi) * alt_scale
+
+        write(6,*)' range of altitudes is ',minalt_deg,maxalt_deg
+        write(6,*)' range of azimuths is  ',minazi_deg,maxazi_deg
 
 !       azid1 = 46. ; azid2 = 226.
         azid1 = 90. ; azid2 = 270.
@@ -520,6 +536,8 @@
              jazi_delt = nint(1. / azi_scale)
          elseif(altray .le. -10. .and. htstart .lt. 100000.)then 
              jazi_delt = nint(1. / azi_scale)
+         elseif(altray .le.  -5. .and. htstart .lt. 100000.)then 
+             jazi_delt = max(nint(0.4/ azi_scale),1)
          elseif(htagl .gt. 30000e3)then  ! near geosynchronous
              if    (altray .le. -86.42)then
                  jazi_delt = 16                       
@@ -605,6 +623,7 @@
           sum_aod = 0.
           sum_aod_ill = 0.
           sum_aod_ill_dir = 0.
+          sum_aod_ill_opac = 0.
           sum_am2cld_num = 0.
           sum_am2cld_den = 0.
 
@@ -1719,6 +1738,8 @@
      1                                     ,transm_obs
         write(6,*)'ghi of observer is ',i,j,ghi_2d(i,j)
         write(6,*)'dhi of observer is ',i,j,dhi_2d(i,j)
+
+        solalt_last = sol_alt(i,j)
 
         I4_elapsed = ishow_timer()
  
