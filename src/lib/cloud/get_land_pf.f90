@@ -1,7 +1,7 @@
 
-        subroutine get_lnd_pf(elong_a,alt_a,azi_a,topo_swi,topo_albedo & ! I
-                             ,transm_obs &                               ! I
-                             ,dist_2_topo,topo_solalt &                  ! I
+        subroutine get_lnd_pf(elong_a,alt_a,azi_a &                     ! I
+                             ,topo_swi,topo_albedo,transm_obs &         ! I
+                             ,dist_2_topo,topo_solalt &                 ! I
                              ,sol_alt,sol_azi,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_land) ! O
 
@@ -56,8 +56,12 @@
               radfrac = scurve(tfrac**3) ! high for illuminated clouds
 !                       illuminated                unilluminated
 
-              fland = scurve((1. - topo_albedo(2,i,j))**2)
-              fsnow = 1.0 - fland ! 0 is land, 1 is snow
+!             fland = scurve((1. - topo_albedo(2,i,j))**2)
+!             fsnow = 1.0 - fland ! 0 is land, 1 is snow
+
+              fsnow = (topo_albedo(2,i,j) - 0.15) / (1.0 - 0.15)
+              fsnow = max(fsnow,0.)
+              fland = 1.0 - fsnow
 
               if(topo_albedo(1,i,j) .eq. .08 .and. topo_albedo(2,i,j) .eq. .08 .and. topo_albedo(3,i,j) .eq. .08)then
                   fwater = 1.0
@@ -71,9 +75,10 @@
               spot = radfrac * fland
               arg2 = spot * 0.010 ; arg1 = (1. - arg2)
               azidiff = angdif(azi_a(i,j),sol_azi)
-              ampl = 0.5 * cosd(sol_alt)**5 * cosd(alt_a(i,j))**5 * radfrac
+              ampl = -0.7 * cosd(sol_alt)**2 * cosd(alt_a(i,j))**5 * radfrac
 
               phland = exp(ampl * cosd(azidiff))
+!             phland = 1.0 + (ampl * cosd(azidiff))
 
 !             Snow
 !             Should approximately integrate to 1 over the "cylinder"
@@ -103,7 +108,7 @@
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
                 if((i .eq. 1 .and. j .eq. (j/40)*40) .OR.  &
-                 (abs(azidiff) .lt. 0.10 .and. i .eq. (i/10)*10 .and. alt_a(i,j) .lt. 0.) )then
+                 (abs(azidiff) .lt. 0.10 .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) )then
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),specang,topo_albedo(2,i,j)
 1                 format(i4,i5,i2,4f9.2,9f9.4,f9.0,4f9.2)
                 endif
