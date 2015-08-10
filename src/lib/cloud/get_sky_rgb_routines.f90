@@ -587,6 +587,7 @@
                 distr = sqrt(((alt_obj-alt)/alt_dist)**2 + ((azi_obj-azi)/azi_dist)**2)
 
                 if(abs(alt_obj-alt) .le. alt_dist .AND. abs(azi_obj-azi) .le. azi_dist)then
+                    grid_frac_obj = 1.0
                     if(diam_deg .ge. 0.75)then  ! solar corona
                         size_glow_sqdg = 0.2    ! sun/moon area           
                         delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
