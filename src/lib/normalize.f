@@ -116,8 +116,18 @@ C***Local variables
         call make_fnam_lp (i4time,a9time,istatus)
         if(istatus .ne. 1)return
 
-        write(lun,*)' Begin normalization routine (V970519) for ',a9time       
+        write(lun,*)' Begin normalization routine for ',a9time       
         write(lun,*)' Sub Lat/Lon/Rng = ',sublat_d,sublon_d,range_m
+        write(lun,*)' iskip_bilin = ',iskip_bilin
+
+        nilut = (ni-2) / iskip_bilin + 2
+        njlut = (nj-2) / iskip_bilin + 2
+
+        write(lun,*)' ni/nj/nilut/njlut = ',ni,nj,nilut,njlut
+        write(lun,*)' corner SW ',lat(1,1),lon(1,1)
+        write(lun,*)' corner SE ',lat(ni,1),lon(ni,1)
+        write(lun,*)' corner NW ',lat(1,nj),lon(1,nj)
+        write(lun,*)' corner NE ',lat(ni,nj),lon(ni,nj)
 
         call zero(phase_angle_d,ni,nj)
         call zero(emission_angle_d,ni,nj)
@@ -146,13 +156,11 @@ C***Where's the sun?
         SATY = sind(sublon_d) * cosd(sublat_d) * sat_radius
         SATZ = sind(sublat_d)                  * sat_radius
 
-        write(lun,*)'    I    J    ALT    EMIS   PHA    PF   VIS  SPEC'       
+!       write(lun,*)
+!    1 '   I    J    ALT    EMIS   PHA    PF   VIS  SPEC      LAT    LON'       
 
 C***Fill the solar brightness and phase angle arrays
         normfac=sind(58.)       ! Normalized sun angle
-
-        nilut = (ni-2) / iskip_bilin + 2
-        njlut = (nj-2) / iskip_bilin + 2
 
         if(nilut .gt. maxlut .or. njlut .gt. maxlut)then
             write(lun,*)'WARNING: Insufficient dimension for maxlut'
@@ -224,8 +232,9 @@ C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
      1            ' Check your satellite subpoint and lat/lons'
                   write(6,*)'i,j,lat(i,j),lon(i,j),sublat_d,sublon_d'        
                   write(6,*)i,j,lat(i,j),lon(i,j),sublat_d,sublon_d
+                  write(6,*)'image counts is ',image(i,j)
                   iwrite = iwrite + 1
-                else ! iwrite .le. 1
+                elseif(iwrite .le. 10)then
                   write(6,*)
      1'Warning, Emission_angle_d < 0 (i/j/lat/lon/E): ',i,j,lat(i,j)
      1,lon(i,j),Emission_angle_d(i,j)
@@ -285,7 +294,7 @@ C   Compute Specular Reflection Angle
 !         the land areas at low phase angle and low solar altitude.
 
 
-          if(ilut .eq. ilut/10*10 .and. jlut .eq. jlut/10*10)then
+          if(ilut .eq. ilut/20*20 .and. jlut .eq. jlut/20*20)then
 
               imgtmp=image(i,j)
               if(imgtmp.eq.r_missing_data)imgtmp=-99.00
@@ -310,7 +319,8 @@ C   Compute Specular Reflection Angle
 
 C***Apply the solar brightness normalization to the image
         if(iskip_bilin .eq. 1)write(lun,*)
-     1    '    I    J    ALT    EMIS   PHA    PF      VIS     SPEC'     
+     1   '   I    J    ALT    EMIS   PHA    '
+     1  ,'PF   VISI  VISO  SPEC   LAT  LON'     
         jlut=1
         JSpace=img_j(jlut+1)-img_j(jlut)
 
@@ -397,7 +407,7 @@ C   uniform in brightness.
             endif
 
             if(iskip_bilin .eq. 1)then ! print output visible counts
-              if(i .eq. i/10*10 .and. j .eq. j/10*10)then
+              if(i .eq. i/20*20 .and. j .eq. j/20*20)then
                 write(lun,61)i,j,solar_alt_d(i,j)
      1                  ,emission_angle_d(i,j),phase_angle_d(i,j)
      1                  ,phase_factor(ilut,jlut),imgtmp,image(i,j)
