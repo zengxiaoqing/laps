@@ -25,10 +25,6 @@ SRC	= machine_dependent.F \
           fort2c_str.c \
           static_routines.c \
           waiting_c.c  \
-          CalculProbTempsViolent.c \
-          Functions.c \
-          TV_Algorithms.c \
-          TV_Variables.c \
           fsystem_dum.f \
           add.f \
           addcon.f \
