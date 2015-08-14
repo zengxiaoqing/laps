@@ -728,7 +728,8 @@ c =============================================
        end if
        call check(albedo,r_missing_data,istatus_a,imax,jmax)
        if(istatus_a .lt. 1) then
-          print*,' +++ WARNING. Visible status = ',istatus_a
+          print*,' +++ WARNING. Visible albedo status = ',istatus_a
+     1                                                   ,imax*jmax
           istatus(3) = istatus_a
        endif
 c
