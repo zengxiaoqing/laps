@@ -1925,7 +1925,7 @@ c
       endif
 c
       if(staval.eq.missingflag)then
-         print*,'gdtost: staval = missingflag'
+         print*,'gdtost: ',stax,stay,' staval = missingflag' 
       endif
       return
       end
