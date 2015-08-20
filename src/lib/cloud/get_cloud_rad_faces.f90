@@ -9,6 +9,8 @@
                 sfc_glow,                        & ! I
                 transm_3d,transm_4d)               ! O
 
+     use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
+                            ,aod,aero_scaleht,fcterm,redp_lvl
      include 'rad.inc'
 
      trans(od) = exp(-min(od,80.))
@@ -80,11 +82,8 @@
      pice2alpha = 1.5 / (rhograupel * reff_graupel)
 
      idebug = 0
+     angstrom_exp = 1.8 - (fcterm * 10.)
 
-     r_missing_data = 1e37
-     earth_radius = 6371000.
-
-     grid_spacing_m = 500.
      twi_alt = -4.5
      transm_3d = r_missing_data
 
@@ -414,6 +413,11 @@
          obj_alt_last = r_missing_data
 
          do i = 1,ni; do j = 1,nj
+           if(i .eq. ni/2 .and. j .eq. nj/2 .and. k .eq. k)then
+             iverbose = 1
+           else
+             iverbose = 0
+           endif
            if(transm_3d(i,j,k) .eq. r_missing_data)then
              imiss = imiss + 1
              if(imiss .le. 10)then
@@ -447,15 +451,39 @@
              else ! low daylight sun
 !              Direct illumination of the cloud is calculated here
 !              Indirect illumination is factored in via 'scat_frac'
-!              obj_alt_thr = abs(obj_alt(i,j)) * .00
-!              if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr)then
-!                am = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)),patm_k)
-                 am = airmassf(90.-obj_alt(i,j), patm_k)
+               obj_alt_thr = .01 ! abs(obj_alt(i,j)) * .00
+               if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr .OR. iverbose .eq. 1)then
+!                ag = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)),patm_k)
+                 ag = airmassf(90.-obj_alt(i,j), patm_k)
+
+                 if(.true.)then
+                   aero_refht = redp_lvl
+                   call get_airmass(obj_alt(i,j),heights_3d(i,j,k),patm_k & ! I 
+                                   ,aero_refht,aero_scaleht &   ! I
+                                   ,earth_radius,iverbose &     ! I
+                                   ,agdum,aodum,aa)             ! O
+                 else
+                   aa = 0.
+                 endif
+
                  obj_alt_last = obj_alt(i,j)
-!              endif                                                     
+               endif                                                     
+
                scat_frac = 1.00
                do ic = 1,nc
-                 trans_c(ic) = trans(am*ext_g(ic)*scat_frac)
+                 od_g = ag * ext_g(ic) * scat_frac
+
+                 ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp)
+                 od_a = aa * ext_a(ic) * aod
+
+                 trans_c(ic) = trans(od_g + od_a)
+
+                 if(iverbose .eq. 1)then
+                   write(6,21)k,ic,obj_alt(i,j)
+21                 format(' k/ic/objalt ',i4,i3,f9.2)
+                   write(6,22)ag,agdum,aa,od_g,od_a
+22                 format(' ag/agd/aa/od_g/od_a',5f9.4)
+                 endif
                enddo
 
 !              Fraction of solar disk (approximate)
@@ -500,4 +528,4 @@
 !       at 2.2,4 degrees solalt works well - runs slow in top face
 !       at 1330UTC -0.45 deg looks OK
 !       at 1315UTC -3.19 deg good illumination - some banding
-!                  turning off am for transm_4d still has banding
+!                  turning off ag for transm_4d still has banding
