@@ -1,6 +1,7 @@
 
 MODULE mem_allsky
 
+!     Arrays on model grid
       real, allocatable, dimension(:,:,:) :: pres_3d
       real, allocatable, dimension(:,:,:) :: heights_3d
       real, allocatable, dimension(:,:,:) :: clwc_3d
@@ -10,6 +11,10 @@ MODULE mem_allsky
       real, allocatable, dimension(:,:,:) :: aod_3d
       real, allocatable, dimension(:,:,:) :: transm_3d
       real, allocatable, dimension(:,:,:,:) :: transm_4d
+
+!     2D arrays on sky grid
+      real, allocatable, dimension(:,:) :: aod_ill_opac
+      real, allocatable, dimension(:,:) :: aod_ill_opac_potl
 
       PUBLIC alloc_allsky, dealloc_allsky
 
