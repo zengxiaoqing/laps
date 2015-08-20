@@ -19,6 +19,7 @@
         include 'trigd.inc'
 
         use mem_namelist, ONLY: fcterm, aod_bin, aod_asy, r_missing_data
+        use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! I
 
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
@@ -54,7 +55,7 @@
         real sumi_gct(nc),sumi_act(nc)
         real srcdir_a(nc,minazi:maxazi)
         real sumi_g_a(nc,minazi:maxazi),sumi_a_a(nc,minazi:maxazi)
-        real ecl_intd(nc),ecl_dir_rat(nc),ecl_scat(nc)
+        real ecl_intd(nc),ecl_dir_rat(nc),ecl_scat(nc),sky_rad_ave(nc)
 
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi)  ! clear sky illumination
         real clear_rad_c0(nc,minalt:maxalt,minazi:maxazi) ! clear sky (no eclipse)
@@ -523,7 +524,7 @@
 
 !         Interp srcdir(:), sumi_gc, sumi_ac
           if(jazi .lt. jazi_end)then
-            jazi_interpl = ((jazi-1)/jazi_d10) * jazi_d10 + 1
+            jazi_interpl = ((jazi-jazi_start)/jazi_d10) * jazi_d10 + jazi_start
           else
             jazi_interpl = jazi_end - jazi_d10
           endif
@@ -689,8 +690,10 @@
                 od_a = od_slant
                 if(od_a_slant .gt. 0.)then ! normalize with extinction?
 !                 aodf = min(aod_ill(ialt,jazi)/od_a_slant,1.0)
-                  aodf = min(aod_ill(ialt,jazi)/aod_tot(ialt,jazi),1.0)
+                  aodfo = min(aod_ill(ialt,jazi)/aod_tot(ialt,jazi),1.0)
+                  aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
                 else
+                  aodfo = 1.0
                   aodf = 1.0
                 endif
 
@@ -703,12 +706,12 @@
                 if(idebug .ge. 1 .AND. &
                                     (ic .eq. icd .or. altray .eq. 90.))then
                   write(6,71)ic,day_int,elong(ialt,jazi) &
-                      ,sumi_gc(ic),sumi_ac(ic),gasf,aodf &
+                      ,sumi_gc(ic),sumi_ac(ic),gasf,aodf,aodfo &
                       ,rayleigh_pfunc,hg2,aod_dir_rat,hg2d(ic) &
                       ,clear_rad_c(ic,ialt,jazi)
-71                format('day_int/elong/sumi_g/sumi_a/gasf/aodf', &
+71                format('day_int/elong/sumi_g/sumi_a/gasf/aodf/aodfo', &
                          '/rayleigh/hg2/aodr/hg2d/clrrd4', &
-                         i2,f12.0,f8.3,2x,2f11.8,2x,2f8.3,2x,4f8.3,f12.0)      
+                         i2,f12.0,f8.3,2x,2f11.8,2x,3f8.3,2x,4f8.3,f12.0)      
                 endif
               enddo ! ic
 
@@ -834,7 +837,8 @@
                   endif ! call get_clr_src_dir_topo
 
 !                 Normalize by extinction?
-                  aodf = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi) 
+                  aodfo = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi) 
+                  aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
                   day_int = 3e9 * (1.0 - eobsc(ic,jazi))
                   clear_rad_topo = day_int * &
                     (sumi_gct(ic) * rayleigh_gnd * clear_radf_c(ic,ialt,jazi) + &
@@ -852,8 +856,8 @@
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
                        ,clear_radf_c(ic,ialt,jazi),sumi_act(ic),hg2t &
-                       ,aodf,ssa,clear_rad_topo      
-91                  format('elg/ig/rayg/radf/ia/hg2t/aodf/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,3f9.4,f7.2,3x,f12.0)
+                       ,aodf,aodfo,ssa,clear_rad_topo      
+91                  format('elg/ig/rayg/radf/ia/hg2t/aodf/aodfo/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,4f9.4,f7.2,3x,f12.0)
                   endif
 
                 endif ! hitting topo
@@ -951,9 +955,9 @@
           if(idebug .ge. 1)then 
               write(6,111)altray,view_azi_deg,sol_alt,topo_solalt(ialt,jazi) &
                        ,trace_solalt(ialt,jazi),mode_sky,od_a &
-                       ,dist_2_topo(ialt,jazi),aodf,clear_rad_c(:,ialt,jazi)
-111           format('alt/azi/salt-t-t/mode/od_a/dst/aodf/clrrd' &
-                    ,2f6.1,1x,3f7.2,i3,f12.5,f9.0,f9.4,3e14.5)
+                       ,dist_2_topo(ialt,jazi),aodf,aodfo,clear_rad_c(:,ialt,jazi)
+111           format('alt/azi/salt-t-t/mode/od_a/dst/aodf/aodfo/clrrd' &
+                    ,2f6.1,1x,3f7.2,i3,f12.5,f9.0,2f9.4,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
@@ -970,7 +974,7 @@
                 endif
               endif
               write(6,*)
-              write(6,*)' clearrad1 column:',clear_rad_c(1,1:10,1)
+              write(6,*)' clearrad1 column:',clear_rad_c(1,minalt:minalt+9,minazi)
           endif ! idebug .eq. 1
 
          enddo ! jazi
@@ -978,7 +982,7 @@
 
         I4_elapsed = ishow_timer()
 
-        write(6,*)' clearrad1 column:',clear_rad_c(1,1:10,1)
+        write(6,*)' clearrad1 column:',clear_rad_c(1,minalt:minalt+9,minazi)
 
 !       Apply during daylight eclipses or during twilight
         if( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
@@ -988,7 +992,7 @@
 !               Good temporal variability, constant for spatial
                 call get_sky_rad_ave(clear_rad_c(ic,:,:) &
                     ,view_alt,view_az,maxalt-minalt+1,maxazi-minazi+1 &
-                    ,sol_alt,sol_azi,sky_rad_ave)
+                    ,sol_alt,sol_azi,sky_rad_ave(ic))
                 write(6,*)'range of clear_rad_c',minval(clear_rad_c(ic,:,:)),maxval(clear_rad_c(ic,:,:))
                 od_g_vert = ext_g(ic) * patm
                 od_o_vert = ext_o(ic) * patm_o3(htmsl)
@@ -996,7 +1000,7 @@
                 od_vert = od_g_vert + od_a_vert
 
 !               Assuming non-reflective land for now
-                znave = clear_rad_c(ic,maxalt,1) / sky_rad_ave
+                znave = clear_rad_c(ic,maxalt,minazi) / sky_rad_ave(ic)
                 if(sol_alt .gt. 0.)then
                   highalt_adjust = max(min(-log10(znave/5.0),3.0),1.0)
                 else
@@ -1022,25 +1026,25 @@
 
                   do jazi = jazi_start,jazi_end
                     if(dist_2_topo(ialt,jazi) .eq. 0.)then ! unobstructed by terrain
-                      sky_rad_scatg = sky_rad_ave & 
+                      sky_rad_scatg = sky_rad_ave(ic) & 
                                     * fracg * opac(od_slant) * highalt_adjust
-                      sky_rad_scata = (0.4 * sky_rad_ave + 0.6 * clear_rad_c(ic,ialt,jazi)) & 
+                      sky_rad_scata = (0.4 * sky_rad_ave(ic) + 0.6 * clear_rad_c(ic,ialt,jazi)) & 
                                     * fraca * opac(od_slant) * highalt_adjust
                     else ! topo in path
                       od_slant_a = aod_2_topo(ialt,jazi)
                       sky_rad_scatg = 0. ! neglected term for now
-                      sky_rad_scata = sky_rad_ave * opac(od_slant_a) * highalt_adjust
+                      sky_rad_scata = sky_rad_ave(ic) * opac(od_slant_a) * highalt_adjust
                     endif
                     sky_rad_scat(ic,ialt,jazi) = sky_rad_scatg + sky_rad_scata
                   enddo ! jazi
 
                   clear_rad_c(ic,ialt,:) = clear_rad_c(ic,ialt,:) + sky_rad_scat(ic,ialt,:)
                   if(ialt .eq. ialt_end)then ! zenith/high point info
-                    scatfrac = sky_rad_scat(ic,maxalt,1) / clear_rad_c(ic,maxalt,1)
-                    ri_over_i0 = clear_rad_c(ic,maxalt,1) / clear_rad_c0(ic,maxalt,1)
-                    ri_over_f0 = clear_rad_c(ic,maxalt,1) / 3e9                            
+                    scatfrac = sky_rad_scat(ic,maxalt,minazi) / clear_rad_c(ic,maxalt,minazi)
+                    ri_over_i0 = clear_rad_c(ic,maxalt,minazi) / clear_rad_c0(ic,maxalt,minazi)
+                    ri_over_f0 = clear_rad_c(ic,maxalt,minazi) / 3e9                            
                     rmaglim = b_to_maglim(clear_rad_c(2,ialt_end,minazi))
-                    write(6,201)ic,altray,sky_rad_ave,od_vert,clear_rad_c0(ic,maxalt,1),sky_rad_scat(ic,maxalt,1),clear_rad_c(ic,maxalt,1),scatfrac,ri_over_i0
+                    write(6,201)ic,altray,sky_rad_ave(ic),od_vert,clear_rad_c0(ic,maxalt,minazi),sky_rad_scat(ic,maxalt,minazi),clear_rad_c(ic,maxalt,minazi),scatfrac,ri_over_i0
 201                 format(' ic/alt/sky_rad_ave/od/c0/scat/rad/rat/scatf/ii0',i2,f9.2,f11.0,f6.3,f11.0,2e12.4,f7.4,2f10.7)
                     if(ic .eq. icd)then
                       b = clear_rad_c(2,ialt_end,minazi)
@@ -1053,7 +1057,7 @@
             enddo ! ic
         endif
 
-        write(6,*)' clearrad2:',clear_rad_c(2,maxalt/2,minazi:maxazi:10)
+        write(6,*)' clearrad2:',clear_rad_c(2,(minalt+maxalt)/2,minazi:maxazi:10)
 
         return
         end
