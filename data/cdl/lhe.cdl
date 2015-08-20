@@ -49,6 +49,32 @@ netcdf lhe {
             mv:lvl_coord = "MSL" ;
             mv:LAPS_units = "M/S" ;
 
+        //	SFC-6km agl wind-u shear component
+        float 
+            shu(record,z,y,x) ;
+            shu:navigation_dim = "nav";
+            shu:record = "valtime, reftime";
+            shu:_FillValue = 1.e+37f;
+            shu:long_name = "SFC-6km agl mean wind-u component" ;
+            shu:units = "meters/second" ;
+            shu:valid_range = 0.f, 0.1f ;
+            shu:LAPS_var = "SHU" ;
+            shu:lvl_coord = "MSL" ;
+            shu:LAPS_units = "M/S" ;
+
+        //	SFC-6km agl wind-v shear component
+        float 
+            shv(record,z,y,x) ;
+            shv:navigation_dim = "nav";
+            shv:record = "valtime, reftime";
+            shv:_FillValue = 1.e+37f;
+            shv:long_name = "SFC-6km agl mean wind-v component" ;
+            shv:units = "meters/second" ;
+            shv:valid_range = 0.f, 0.1f ;
+            shv:LAPS_var = "SHV" ;
+            shv:lvl_coord = "MSL" ;
+            shv:LAPS_units = "M/S" ;
+
         //	LAPS variables
 
         long
@@ -61,6 +87,8 @@ netcdf lhe {
             lhe_comment(record,z,namelen),
             mu_comment(record,z,namelen),
             mv_comment(record,z,namelen),
+            shu_comment(record,z,namelen),
+            shv_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -77,6 +105,14 @@ netcdf lhe {
         short
             mv_fcinv(record, z);
             mv_fcinv:_FillValue= 0s;
+              	
+        short
+            shu_fcinv(record, z);
+            shu_fcinv:_FillValue= 0s;
+              	
+        short
+            shv_fcinv(record, z);
+            shv_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
