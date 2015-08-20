@@ -831,8 +831,14 @@
         i4time_last = 0.
       
         do iloc = 1,nloc
+          isound = nint(xsound(iloc))
+          jsound = nint(ysound(iloc))
+
+          rlat = lat(isound,jsound)
+          rlon = lon(isound,jsound)
+
           write(6,*)
-          write(6,*)' iloc = ',iloc
+          write(6,*)' iloc = ',iloc,rlat,rlon
 
           write(6,*)' Enter minalt,maxalt (e.g. 0,90 0,180)'
           read(lun,*)minalt,maxalt           
@@ -875,6 +881,8 @@
           allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
           allocate(aod_ill(minalt:maxalt,minazi:maxazi))
           allocate(aod_ill_dir(minalt:maxalt,minazi:maxazi))
+          allocate(aod_ill_opac(minalt:maxalt,minazi:maxazi))
+          allocate(aod_ill_opac_potl(minalt:maxalt,minazi:maxazi))
           allocate(aod_tot(minalt:maxalt,minazi:maxazi))
           allocate(r_cloud_trans(minalt:maxalt,minazi:maxazi))
           allocate(cloud_rad_c(nc,minalt:maxalt,minazi:maxazi))
@@ -886,17 +894,11 @@
           allocate(sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
           allocate(isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
 
-          isound = nint(xsound(iloc))
-          jsound = nint(ysound(iloc))
-
           topo_sfc = topo(isound,jsound)
  
           write(6,*)' i/j/topo_sfc ',isound,jsound,topo_sfc
           write(6,11)topo_albedo_2d(:,isound,jsound)
 11        format('  albedo RGB of observer ',3f9.3)
-
-          rlat = lat(isound,jsound)
-          rlon = lon(isound,jsound)
 
           if(rlat .ne. rlat_last .or. rlon .ne. rlon_last .or. 
      1       i4time_solar .ne. i4time_last)then
@@ -1263,7 +1265,9 @@
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl,azi_scale
-     1                    ,solar_alt,solar_az,twi_0,horz_dep
+     1                    ,solar_alt,solar_az
+     1                    ,minalt,maxalt,minazi,maxazi                  ! I
+     1                    ,twi_0,horz_dep
      1                    ,solalt_limb_true
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
      1                    ,corr1_a(iloc)
@@ -1289,9 +1293,10 @@
             open(54,file='label2.'//clun,status='unknown')
             write(54,54)soundlat(iloc),soundlon(iloc),
      1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
-     1                  solar_alt,solar_az,alt_scale,azi_scale
+     1                  solar_alt,solar_az,alt_scale,azi_scale,
+     1                  ni_polar,nj_polar
             close(54)
- 54         format(2f8.2/6i8/2f8.2,2f7.2)
+ 54         format(2f8.2/6i8/2f8.2,2f7.2/2i6)
 
             if(l_cyl .eqv. .true.)then
 !             Write all sky for cyl
@@ -1398,6 +1403,8 @@
           deallocate(dist_2_topo)
           deallocate(aod_ill)
           deallocate(aod_ill_dir)
+          deallocate(aod_ill_opac)
+          deallocate(aod_ill_opac_potl)
           deallocate(r_cloud_trans)
           deallocate(cloud_rad_c)
           deallocate(cloud_rad_w)
