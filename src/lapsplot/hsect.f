@@ -5496,6 +5496,108 @@ c                   cint = -1.
      1                     ,NX_L,NY_L,r_missing_data,laps_cycle_time
      1                     ,jdot)
 
+        elseif(c_type .eq. 'w6')then ! 0-6km shear
+            ext = 'lhe'
+            var_2d = 'SHU'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,u_2d,0,istatus)      
+            var_2d = 'SHV'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,v_2d,0,istatus)      
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading 0-6km Shear Vector'
+                goto1200
+            endif
+
+            c_label = '0-6km AGL Wind Shear     (kt)    '
+
+            nxz = float(NX_L) / zoom
+            nyz = float(NY_L) / zoom
+
+            interval = int(max(nxz,nyz) / 65.) + 1
+            size = float(interval) * .15
+
+            call make_fnam_lp(i4time_pw,asc9_tim,istatus)
+
+            call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
+     1                     ,asc9_tim,namelist_parms,plot_parms
+     1                     ,c_label,c_field,k_level
+     1                     ,i_overlay,c_display
+     1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
+!    1                     ,grid_ra_ref_dum,grid_ra_vel_dum
+     1                     ,NX_L,NY_L,r_missing_data,laps_cycle_time
+     1                     ,jdot)
+
+        elseif(c_type_i .eq. 's6')then ! 0-6km shear vector magnitude
+            ext = 'lhe'
+            var_2d = 'SHU'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,u_2d,0,istatus)      
+            var_2d = 'SHV'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,v_2d,0,istatus)      
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading 0-6km Shear Vector'
+                goto1200
+            endif
+
+            c_label = '0-6km AGL Wind Shear     (kt)    '
+
+            nxz = float(NX_L) / zoom
+            nyz = float(NY_L) / zoom
+
+            interval = int(max(nxz,nyz) / 65.) + 1
+            size = float(interval) * .15
+
+            call make_fnam_lp(i4time_pw,asc9_tim,istatus)
+
+            do i = 1,NX_L
+            do j = 1,NY_L
+                if(u_2d(i,j) .eq. r_missing_data
+     1            .or. v_2d(i,j) .eq. r_missing_data)then
+                    dir(i,j)  = r_missing_data
+                    spds(i,j) = r_missing_data
+                else
+                    call uvgrid_to_disptrue(u_2d(i,j),
+     1                              v_2d(i,j),
+     1                              dir(i,j),
+     1                              spds(i,j),
+     1                              lat(i,j),
+     1                              lon(i,j)     )
+                    spds(i,j) = spds(i,j) / mspkt
+                endif
+            enddo ! j
+            enddo ! i
+
+            field_2d = spds ! support for diff option
+
+            call make_fnam_lp(i4time_pw,asc9_tim,istatus)
+
+            c_label = '0-6km AGL Shear Vector magnitude (kt)'
+            scale = 1.
+            clow = 0.
+            chigh = chigh_sfcwind
+            cint = 0.
+            plot_parms%color_power = 1.0
+            colortable = 'spectral'
+
+            call plot_field_2d(i4time_pw,c_type,spds,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,colortable)
+
+            if(i_image .eq. 1 .and. (.not. namelist_parms%l_sphere)
+     1                                                         )then      
+                plot_parms%icol_barbs = +1 ! keep future sfc barbs plots bright
+            endif
+
         elseif(c_type .eq. 'bs')then ! surface backgrounds 
             write(6,711)
  711        format('   Background extension [lgb,fsf]',5x,'? ',$)
