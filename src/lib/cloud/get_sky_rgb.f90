@@ -10,6 +10,7 @@
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,trace_solalt,          &     ! I
                    alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
+                   minalt,maxalt,minazi,maxazi, &                       ! I
                    twi_0,horz_dep,solalt_limb_true, &                   ! I
                    moon_alt,moon_az,moon_mag,corr1_in, &                ! I
                    sky_rgb)                                             ! O
@@ -80,7 +81,7 @@
         real od_g_slant_a(nc,ni)    ! use for solar attenuation        
         real od_o_slant_a(nc,ni)
         real od_a_slant_a(nc,ni)
-        real clr_od(nc)
+        real clr_od(nc), sky_rad_ave(nc)
 
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag
@@ -153,6 +154,8 @@
           write(6,*)' glow_secondary_cld = ',glow_secondary_cld
           write(6,*)' glow_secondary_clr = ',glow_secondary_clr
           write(6,*)' rindirect = ',rindirect                 
+          write(6,2)rad_sec_cld(:)
+2         format('  rad_sec_cld (based on glow_secondary_cld) = ',3f12.0)
 
 !         Note that 'argref' is applied to the clear sky from solar alt
 !         0 down to -16 and applied to clouds just from -4 down to -16.
@@ -180,12 +183,16 @@
 !         2.0 is mean airmasses relative to zenith, 0.5 is 90deg phase func
           sb_corr = 2.0 * (1.0 - (sind(sol_alt)**0.5)) 
           rad_sec_cld(:) = (day_int * ext_g(:) * patm * 2.0 * 0.5) / 10.**(0.4*sb_corr)
+          write(6,23)rad_sec_cld(:)
+23        format('  rad_sec_cld (based on day_int) = ',3f12.0)
           argbri = sb_corr * 0.30
           glwlow = 7.3 - argbri
           write(6,*)' sb_corr/argbri = ',sb_corr,argbri
           contrast = 100.
 
         endif
+
+        write(6,*)' rad_sec_cld = ',rad_sec_cld(:)
 
 !       First arg increase will brighten all altitudes
 !       Second arg increase will darken shallow twilight and brighten
@@ -437,9 +444,9 @@
             write(6,*)' call skyglow_phys for daytime or solalt > twi_0:'
 
 !           Introduced airmass_2_topo effect in ag_2d
-            call skyglow_phys(1,ni,1 &                                 ! I
-                     ,1,nj,1,azi_scale &                               ! I
-                     ,1,ni,1,nj,idebug_a &                             ! I
+            call skyglow_phys(minalt,maxalt,1 &                        ! I
+                     ,minazi,maxazi,1,azi_scale &                      ! I
+                     ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,sol_alt,sol_az,alt_a,azi_a,twi_0 &               ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm &                              ! I
@@ -460,7 +467,8 @@
             if(jsun .gt. 0 .and. jsun .le. nj)then
               write(6,*)' clear_rad_c(2) in solar column:',clear_rad_c(2,:,jsun)
             endif
-            write(6,*)' sky_rad_ave = ',sky_rad_ave
+!           Returned when 'sol_alt' is between 'twi_alt' and 10.
+            write(6,*)' sky_rad_ave = ',sky_rad_ave(:)
 
         elseif(moon_cond .eq. 1)then 
             od_atm_a_eff = od_atm_a
@@ -479,9 +487,9 @@
 
             isolalt_lo=-11; isolalt_hi=+11
             write(6,*)' call skyglow_phys for moon testing:'
-            call skyglow_phys(1,ni,1 &                                 ! I
-                     ,1,nj,1,azi_scale &                               ! I
-                     ,1,ni,1,nj,idebug_a &                             ! I
+            call skyglow_phys(minalt,maxalt,1 &                        ! I
+                     ,minazi,maxazi,1,azi_scale &                      ! I
+                     ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,moon_alt,moon_az,alt_a,azi_a,twi_0 &             ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm &                              ! I
@@ -640,12 +648,12 @@
 
                   if(sol_alt .gt. 0.)then
 !                     Calculate 'sky_rad_ave' upstream for each color
-!                     topo_arg = sky_rad_ave * albedo_sfc(ic)
+!                     topo_arg = sky_rad_ave(ic) * albedo_sfc(ic)
                       rad = day_int * (0.02 * (1. + albedo_sfc(ic)))   * pf_scat(ic,i,j)
                   else ! secondary scattering term allowed to dominate
                       rad = 0.
                   endif
-                  cld_radb(ic) = rad + 10.**(glow_secondary_cld)
+                  cld_radb(ic) = rad + rad_sec_cld(ic)
 
 !                 Improve sunset clouds
 !                 rad = rad * cloud_rad_c(1,i,j) / r_cloud_rad(i,j)
@@ -693,14 +701,14 @@
 
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
 
-              if(sky_rad_ave .eq. r_missing_data)then
+              if(sky_rad_ave(2) .eq. r_missing_data)then
                   glow_cld1 = glow_secondary_cld ! + log10(r_cloud_rad(i,j))                                     
-              elseif(sky_rad_ave .gt. 0.)then
+              elseif(sky_rad_ave(2) .gt. 0.)then
                   if(moon_cond .eq. 0)then
-                      glow_cld1 = log10(sky_rad_ave)
+                      glow_cld1 = log10(sky_rad_ave(2))
                   else ! moon present - reduce sky_rad_ave
                       ratio_moonsun = 10. ** ((-26.7 - moon_mag) * 0.4)
-                      glow_cld1 = log10(sky_rad_ave * ratio_moonsun)
+                      glow_cld1 = log10(sky_rad_ave(2) * ratio_moonsun)
                   endif
               else
                   glow_cld1 = 0.
@@ -952,7 +960,6 @@
 !           When scurve=0 and cloud_visibility remains at 1
 !           When scurve=1 cloud visibility is active
             if(sol_alt .gt. -4.5)then ! distant clouds fade more during day
-              frac_cloud = frac_cloud * cloud_visibility**scurve_term  
 
               if(alt_a(i,j) .lt. 0. .and. airmass_2_topo(i,j) .gt. 0.)then
                 frac_front = sind(-alt_a(i,j)) * airmass_2_cloud(i,j)/airmass_2_topo(i,j)
@@ -965,10 +972,12 @@
               frac_behind = 1.0 - frac_front * (1.0-ramp_cld_nt)
 
             else ! fade only when opposite the twilight arch
-              frac_cloud = frac_cloud * cloud_visibility**scurve(elong_a(i,j)/180.)
               frac_behind = 1.0              ! frac clr/lit air behind cloud
 
             endif
+
+!           Fade in daytime and if opposite the twilight arch
+            frac_cloud = frac_cloud * cloud_visibility**scurve_term  
 
             btau = 0.10 * cloud_od(i,j)
             cloud_albedo = btau / (1. + btau)
