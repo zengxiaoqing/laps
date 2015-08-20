@@ -31,6 +31,7 @@
      1                           ,grid_spacing_m,r_missing_data)        ! I
 
         use mem_namelist, ONLY: earth_radius,aero_scaleht,redp_lvl
+        use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! O
         use cloud_rad
 
         include 'trigd.inc'
@@ -139,7 +140,6 @@
         real dist_2_topo(minalt:maxalt,minazi:maxazi) ! slant dist
         real aod_ill(minalt:maxalt,minazi:maxazi)     ! slant path
         real aod_ill_dir(minalt:maxalt,minazi:maxazi) ! slant path
-        real aod_ill_opac(minalt:maxalt,minazi:maxazi)! slant path
         real aod_tot(minalt:maxalt,minazi:maxazi)     ! slant path
         real sum_odrad_c(nc)
         real sum_odrad_c_last(nc)
@@ -624,8 +624,10 @@
           sum_aod_ill = 0.
           sum_aod_ill_dir = 0.
           sum_aod_ill_opac = 0.
+          sum_aod_ill_opac_potl = 0.
           sum_am2cld_num = 0.
           sum_am2cld_den = 0.
+          sum_god = 0.
 
           if(.true.)then
 !           do k = ksfc,ksfc
@@ -1118,8 +1120,19 @@
                     else
                         transm_3d_dir = 0.
                     endif
+
                     sum_aod_ill_dir = sum_aod_ill_dir 
      1                         + aero_ext_coeff * slant2 * transm_3d_dir
+
+                    sum_aod_ill_opac = sum_aod_ill_opac 
+     1                          + aero_ext_coeff * slant2
+     1                          * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
+     1                          * trans(sum_aod+sum_god)
+
+                    sum_aod_ill_opac_potl = sum_aod_ill_opac_potl 
+     1                          + aero_ext_coeff * slant2
+     1                          * trans(sum_aod+sum_god)
+
                   else ! typical case far from topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
      1                          * transm_3d_m
@@ -1128,8 +1141,18 @@
                     else
                         transm_3d_dir = 0.
                     endif
+
                     sum_aod_ill_dir = sum_aod_ill_dir 
      1                         + aero_ext_coeff * slant2 * transm_3d_dir
+
+                    sum_aod_ill_opac = sum_aod_ill_opac 
+     1                         + (aero_ext_coeff * slant2 * transm_3d_m)
+     1                         * trans(sum_aod+sum_god)
+
+                    sum_aod_ill_opac_potl = sum_aod_ill_opac_potl
+     1                         + (aero_ext_coeff * slant2 * 1.0)
+     1                         * trans(sum_aod+sum_god)
+
                   endif
 
                   if((cvr_path          .gt. 0.00) .AND.
@@ -1303,6 +1326,9 @@
      1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
                           sum_aod_ill_dir              = 1e-4 
      1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
+                          sum_aod_ill_opac             = 1e-4 
+     1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
+                          sum_aod_ill_opac_potl        = 1e-4 
                       else
                           airmass_2_topo_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
@@ -1404,6 +1430,8 @@
 
           aod_ill_dir(ialt,jazi) = sum_aod_ill_dir
           aod_tot(ialt,jazi) = sum_aod
+          aod_ill_opac(ialt,jazi) = sum_aod_ill_opac
+          aod_ill_opac_potl(ialt,jazi) = sum_aod_ill_opac_potl
 
           if(r_cloud_3d(ialt,jazi) .gt. .5)then
               icloud = 1
@@ -1523,6 +1551,12 @@
               aod_ill_dir(ialt,jazi) = 
      1                fm * aod_ill_dir(ialt,jazim) 
      1              + fp * aod_ill_dir(ialt,jazip)
+              aod_ill_opac(ialt,jazi) = 
+     1                fm * aod_ill_opac(ialt,jazim) 
+     1              + fp * aod_ill_opac(ialt,jazip)
+              aod_ill_opac_potl(ialt,jazi) = 
+     1                fm * aod_ill_opac_potl(ialt,jazim) 
+     1              + fp * aod_ill_opac_potl(ialt,jazip)
               aod_2_cloud(ialt,jazi) = 
      1                fm * aod_2_cloud(ialt,jazim) 
      1              + fp * aod_2_cloud(ialt,jazip)
@@ -1632,6 +1666,12 @@
             aod_ill_dir(ialt,:) =
      1           fm * aod_ill_dir(ialtm,:) 
      1         + fp * aod_ill_dir(ialtp,:)
+            aod_ill_opac(ialt,:) =
+     1           fm * aod_ill_opac(ialtm,:) 
+     1         + fp * aod_ill_opac(ialtp,:)
+            aod_ill_opac_potl(ialt,:) =
+     1           fm * aod_ill_opac_potl(ialtm,:) 
+     1         + fp * aod_ill_opac_potl(ialtp,:)
             aod_2_cloud(ialt,:) =
      1           fm * aod_2_cloud(ialtm,:) 
      1         + fp * aod_2_cloud(ialtp,:)
@@ -1716,6 +1756,12 @@
 
         write(6,*)' Range of aod_ill_dir = ',minval(aod_ill_dir)
      1                                      ,maxval(aod_ill_dir)       
+
+        write(6,*)' Range of aod_ill_opac = ',minval(aod_ill_opac)
+     1                                       ,maxval(aod_ill_opac)       
+
+        write(6,*)' Range of aod_ill_opac_potl = '
+     1        ,minval(aod_ill_opac_potl),maxval(aod_ill_opac_potl)       
 
         do ialt = minalt,maxalt
         do jazi = minazi,maxazi
