@@ -370,14 +370,8 @@ c -- Inputs to stretch for albedo calc --
       VIS_CNT_RANGE_OUT(2,8)=255.00
 
 c -- geostationary satellite height (m) above earth surface
-      SAT_RANGE_M(1)=42155680.00
-      SAT_RANGE_M(2)=42155680.00
-      SAT_RANGE_M(3)=42155680.00
-      SAT_RANGE_M(4)=42155680.00
-      SAT_RANGE_M(5)=42155680.00
-      SAT_RANGE_M(6)=42155680.00
-      SAT_RANGE_M(7)=42155680.00
-      SAT_RANGE_M(8)=870000.00
+!     SAT_RANGE_M(:)=42155680.00
+      SAT_RANGE_M(:)=35786000.00
 c -- sub lat/lon for each geostationary satellite
       R_SAT_SUB_LAT(1)=0.0
       R_SAT_SUB_LAT(2)=0.0
