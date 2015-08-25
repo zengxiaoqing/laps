@@ -555,7 +555,7 @@ c================================================================
 C   Compute equatorial coordinates of point on sfc of earth
         TX = cosd(lon) * cosd(lat) * radius_earth_m / au_m
         TY = sind(lon) * cosd(lat) * radius_earth_m / au_m
-        TZ = sind(lat)                  * radius_earth_m / au_m
+        TZ = sind(lat)             * radius_earth_m / au_m
 
 C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
         Call AngleVectors(SATX-TX,SATY-TY,SATZ-TZ,TX,TY,TZ
