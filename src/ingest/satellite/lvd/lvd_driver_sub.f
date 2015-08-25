@@ -378,13 +378,19 @@ c Find and read current satellite files... as many as 4 ir channels and vis.
                return
            endif
            if(ispec.eq.1)then
-             n_vis_elem=i_end_vis(jtype,ksat)-i_start_vis(jtype,ksat)+1
+             n_vis_elem= i_end_vis(jtype,ksat)-i_start_vis(jtype,ksat)+1
+             if(n_vis_elem .lt. 0)then
+               write(6,*)' error in n_vis_elem',i_end_vis(jtype,ksat)
+     1                                         ,i_start_vis(jtype,ksat)
+               istatus = 1
+               return
+             endif
              n_vis_lines=j_end_vis(jtype,ksat)-j_start_vis(jtype,ksat)+1
            elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
-             n_ir_elem=i_end_ir(jtype,ksat)-i_start_ir(jtype,ksat)+1
+             n_ir_elem= i_end_ir(jtype,ksat)-i_start_ir(jtype,ksat)+1
              n_ir_lines=j_end_ir(jtype,ksat)-j_start_ir(jtype,ksat)+1
            elseif(ispec.eq.3)then
-             n_wv_elem=i_end_wv(jtype,ksat)-i_start_wv(jtype,ksat)+1
+             n_wv_elem= i_end_wv(jtype,ksat)-i_start_wv(jtype,ksat)+1
              n_wv_lines=j_end_wv(jtype,ksat)-j_start_wv(jtype,ksat)+1
            endif
          endif ! valid channel
@@ -1176,6 +1182,9 @@ c
                   call move(albedo,laps_data(1,1,nlf),nx_l,ny_l)
                   var_lvd(nlf) = 'ALB'       ! albedo
                   c_lvd(nlf)= csatid//' (VISIBLE) ALBEDO'
+               else
+                  write(6,*)'ALB not moved',nx_l*ny_l+istatus_vis(3)
+     &                                     ,good_vis_data_thresh
                endif
 
             else
