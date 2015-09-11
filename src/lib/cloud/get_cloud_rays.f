@@ -243,12 +243,13 @@
 !       twilight source as 'get_cloud_rad_faces' is used more explicitly
         if(obj_alt(i,j) .ge. 3.0)then ! as uncorrected for refraction
           if(newloc .eq. 1)then
-            write(6,*)' call get_cloud_rad...'
+            write(6,*)' call get_cloud_rad (newloc = 1)'
             call get_cloud_rad(obj_alt,obj_azi,sol_alt(i,j),sol_azi(i,j)
      1                    ,clwc_3d,cice_3d
      1                    ,rain_3d,snow_3d,topo_a,lat,lon
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk
 !    1                    ,l_solar_eclipse
+     1                    ,twi_alt   ! I
      1                    ,sfc_glow) ! I
 
 !           Write out transm_3d field
@@ -261,7 +262,7 @@
      1                      ,transm_4d(:,:,:,1),ni,nj,nk)
 
           else
-            write(6,*)' Skip call to get_cloud_rad'
+            write(6,*)' Skip call to get_cloud_rad (newloc = 0)'
           endif
 
         else ! called if obj_alt < 3.0
@@ -1284,7 +1285,8 @@
      1                                 1.0 * (1. - frac_ghi_dir) 
                           solar_corr = min(max(solar_corr,0.2),2.0) 
                         else ! land is shadowed (all indirect)
-                          solar_corr = 0.2
+                          solar_corr = 0.0 *     frac_ghi_dir 
+     1                               + 1.0 * (1.-frac_ghi_dir)
                         endif
                       else ! sun is down     
                           solar_corr = 1.0
