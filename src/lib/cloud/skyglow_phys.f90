@@ -110,7 +110,7 @@
         real aas_a(isolalt_lo:isolalt_hi)
         real aos_a(isolalt_lo:isolalt_hi)
 
-        icd = 1
+        icd = 3
 
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
@@ -133,7 +133,7 @@
 
         aero_refht = redp_lvl
 
-        angstrom_exp = 1.8 - (fcterm * 10.)
+        angstrom_exp = 2.4 - (fcterm * 15.)
 
         if(sol_alt .gt. 0. .or. .true.)then
             write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
@@ -458,9 +458,11 @@
                   solalt_ref = sol_alt
                 endif
 
+                od_o_msl = (o3_du/300.) * ext_o(ic)
+
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
                   altray,view_azi_deg, &
-                  ext_g(ic),od_g_vert,ext_o(ic),od_o_vert,od_a_vert,htmsl,ssa, &
+                  ext_g(ic),od_g_vert,od_o_msl,od_o_vert,od_a_vert,htmsl,ssa, &
                   ag/ag_90,ao,aa_o_aa_90, &
                   aod_ref,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
@@ -634,7 +636,8 @@
 
             else
               fb = 0.55**scatter_order
-              g1 = 0.58**scatter_order
+!             g1 = 0.58**scatter_order
+              g1 = 0.45**scatter_order
               g2 = 0.962**scatter_order
               hg2 = dhg2(elong(ialt,jazi),fb,fcterm)
 
@@ -818,9 +821,11 @@
                       solalt_ref = sol_alt
                     endif
 
+                    od_o_msl = (o3_du/300.) * ext_o(ic)
+
                     call get_clr_src_dir_topo(sol_alt,sol_azi, &        ! I
                      altray,view_azi_deg, &
-                     ext_g(ic),od_g_vert,od_a_vert, &
+                     ext_g(ic),od_g_vert,od_o_msl,od_a_vert, &          ! I
                      htmsl,dist_2_topo(ialt,jazi), &
                      ssa,ag/ag_90,aa_o_aa_90, &
                      aod_ref,aero_refht,aero_scaleht, &                 ! I
@@ -987,7 +992,8 @@
 !       Apply during daylight eclipses or during twilight
         if( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
             (sol_alt .lt. 10. .and. sol_alt .gt. twi_0)               )then
-            write(6,*)' Calling get_sky_rad_ave'
+
+            write(6,*)'Calling get_sky_rad_ave'
             do ic = 1,nc ! secondary scattering in each color
 !               Good temporal variability, constant for spatial
                 call get_sky_rad_ave(clear_rad_c(ic,:,:) &
@@ -1003,16 +1009,21 @@
                 znave = clear_rad_c(ic,maxalt,minazi) / sky_rad_ave(ic)
                 if(sol_alt .gt. 0.)then
                   highalt_adjust = max(min(-log10(znave/5.0),3.0),1.0)
+                  viewalt_adjust = 1.0
                 else
-                  highalt_adjust = 1.0 + (-sol_alt/6.0)
+                  highalt_adjust = 1.0 ! + (-sol_alt/6.0)
+                  viewalt_adjust = 1.0 ! view_alt(maxalt,minazi)/90. 
                 endif
-                write(6,191)ialt_end,maxalt,znave,highalt_adjust
-191             format(' ialt_end,maxalt,znave,hadj',2i7,2f9.5)
+                write(6,191)ialt_end,maxalt,znave,highalt_adjust,viewalt_adjust
+191             format(' ialt_end,maxalt,znave,hadj,vadj',2i7,f9.5,2f9.3)
 
                 jazi_dbg = min(540,maxazi)
                 if(ic .eq. icd)then
                   write(6,*)' single scat clear rad at ic/azi',ic,view_az(ialt_start,jazi_dbg)
                 endif
+
+                clear_rad_ref = clear_rad_c0(ic,maxalt,minazi) ! eclipse
+                clear_rad_ref = clear_rad_c(ic,maxalt,minazi)  ! no eclipse
 
                 do ialt = ialt_start,ialt_end
                   altray = view_alt(ialt,jazi_start)
@@ -1024,30 +1035,32 @@
                     write(6,*)'alt,od_slant,clear_rad_c',altray,od_slant,clear_rad_c(ic,ialt,jazi_dbg)
                   endif
 
+                  sph_rad_ave = sky_rad_ave(ic) * 0.5 ! sphere ave, drk gnd
+
                   do jazi = jazi_start,jazi_end
                     if(dist_2_topo(ialt,jazi) .eq. 0.)then ! unobstructed by terrain
-                      sky_rad_scatg = sky_rad_ave(ic) & 
+                      sky_rad_scatg = sph_rad_ave * viewalt_adjust & 
                                     * fracg * opac(od_slant) * highalt_adjust
-                      sky_rad_scata = (0.4 * sky_rad_ave(ic) + 0.6 * clear_rad_c(ic,ialt,jazi)) & 
+                      sky_rad_scata = (0.4 * sph_rad_ave * viewalt_adjust + 0.6 * clear_rad_c(ic,ialt,jazi)) & 
                                     * fraca * opac(od_slant) * highalt_adjust
                     else ! topo in path
                       od_slant_a = aod_2_topo(ialt,jazi)
                       sky_rad_scatg = 0. ! neglected term for now
-                      sky_rad_scata = sky_rad_ave(ic) * opac(od_slant_a) * highalt_adjust
+                      sky_rad_scata = sph_rad_ave * opac(od_slant_a) * highalt_adjust * viewalt_adjust
                     endif
                     sky_rad_scat(ic,ialt,jazi) = sky_rad_scatg + sky_rad_scata
                   enddo ! jazi
 
                   clear_rad_c(ic,ialt,:) = clear_rad_c(ic,ialt,:) + sky_rad_scat(ic,ialt,:)
                   if(ialt .eq. ialt_end)then ! zenith/high point info
-                    scatfrac = sky_rad_scat(ic,maxalt,minazi) / clear_rad_c(ic,maxalt,minazi)
-                    ri_over_i0 = clear_rad_c(ic,maxalt,minazi) / clear_rad_c0(ic,maxalt,minazi)
-                    ri_over_f0 = clear_rad_c(ic,maxalt,minazi) / 3e9                            
-                    rmaglim = b_to_maglim(clear_rad_c(2,ialt_end,minazi))
-                    write(6,201)ic,altray,sky_rad_ave(ic),od_vert,clear_rad_c0(ic,maxalt,minazi),sky_rad_scat(ic,maxalt,minazi),clear_rad_c(ic,maxalt,minazi),scatfrac,ri_over_i0
-201                 format(' ic/alt/sky_rad_ave/od/c0/scat/rad/rat/scatf/ii0',i2,f9.2,f11.0,f6.3,f11.0,2e12.4,f7.4,2f10.7)
+                    scatfrac = sky_rad_scat(ic,maxalt,jazi_dbg) / clear_rad_c(ic,maxalt,jazi_dbg)
+                    ri_over_i0 = clear_rad_c(ic,maxalt,jazi_dbg) / clear_rad_c0(ic,maxalt,jazi_dbg)
+                    ri_over_f0 = clear_rad_c(ic,maxalt,jazi_dbg) / 3e9                            
+                    rmaglim = b_to_maglim(clear_rad_c(2,ialt_end,jazi_dbg))
+                    write(6,201)ic,altray,view_az(ialt_end,jazi_dbg),sph_rad_ave,od_vert,clear_rad_ref,sky_rad_scat(ic,maxalt,jazi_dbg),clear_rad_c(ic,maxalt,jazi_dbg),scatfrac,ri_over_i0
+201                 format(' ic/alt/az/sph_rad_ave/od/c0/scat/rad/rat/scatf/ii0',i2,2f9.2,f11.0,f6.3,f11.0,2f11.0,f7.4,2f10.7)
                     if(ic .eq. icd)then
-                      b = clear_rad_c(2,ialt_end,minazi)
+                      b = clear_rad_c(2,ialt_end,jazi_dbg)
                       write(6,211)b,b_to_v(b),rmaglim
                     endif
 211                 format(' b/mag/rmaglim at high point (second scat) =' &
