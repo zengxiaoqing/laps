@@ -387,7 +387,8 @@ c                 call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
              enddo
 
           elseif(csatid.eq.'goes12'.or.csatid.eq.'goes11'
-     1      .or. csatid.eq.'goessw'.or.csatid.eq.'goesse')then
+     1      .or. csatid.eq.'goessw'.or.csatid.eq.'goesse'
+     1      .or. csatid.eq.'goesea'.or.csatid.eq.'goeswe')then
 
              isat = 5
              print*,'Stretch ',csatid,' to goes7 look-a-like'
@@ -497,7 +498,8 @@ c                  call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
              enddo
 
           elseif(csatid.eq.'goes12'.or.csatid.eq.'goes11'
-     1      .or. csatid.eq.'goessw'.or.csatid.eq.'goesse')then
+     1      .or. csatid.eq.'goessw'.or.csatid.eq.'goesse'
+     1      .or. csatid.eq.'goesea'.or.csatid.eq.'goeswe')then
 
              isat = 5 
              if(csatid.eq.'goes11')isat=7
