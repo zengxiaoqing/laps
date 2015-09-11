@@ -1,7 +1,7 @@
 
 
      subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
-           snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,sfc_glow)
+           snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt,sfc_glow)
 
      use mem_namelist, ONLY: r_missing_data, earth_radius
      use cloud_rad ! Cloud Radiation and Microphysics Parameters
@@ -364,8 +364,8 @@
                   write(6,*)' terrain shadow is at ',i,j,k
               endif
           endif 
-          if(solalt .lt. -4.)then ! use red channel for sfc lighting
-              transm_4d(i,j,k,1) = sfc_glow(i,j) ! /day_int 
+          if(solalt .lt. twi_alt)then ! use red channel for sfc lighting
+              transm_4d(i,j,k,1) = sfc_glow(i,j) * 0.3 ! nominal backsct
               if(transm_4d(i,j,k,2) .eq. r_missing_data)then
 !                 write(6,*)' WARNING transm_4d green channel missing',i,j,k
                   transm_4d(i,j,k,2) = 0.
