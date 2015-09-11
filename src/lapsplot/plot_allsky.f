@@ -160,6 +160,8 @@
  
         common /image/ n_image
 
+        rpd = 3.141592653589/180.
+
         call alloc_allsky(NX_L,NY_L,NZ_L,nc,istatus)
 
         if(l_polar .eqv. .true.)then
@@ -785,9 +787,9 @@
             endif
           enddo ! j
           if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
-            write(6,51)i,albedo_bm(2,i,jrow),snow_cover(i,jrow)
+            write(6,18)i,albedo_bm(2,i,jrow),snow_cover(i,jrow)
      1               ,topo_albedo_2d(2,i,jrow),topo(i,jrow)
- 51         format(i5,3f9.3,f9.0)
+18          format(i5,3f9.3,f9.0)
           endif
         enddo ! i 
 
@@ -816,9 +818,9 @@
            aod_ref = aod
         endif
 
-        write(6,91,err=92)pw_ref,aod,aod_ref
-91      format(' pw_ref,aod,aod_ref = ',3f10.3)
-92      continue
+        write(6,19,err=20)pw_ref,aod,aod_ref
+19      format(' pw_ref,aod,aod_ref = ',3f10.3)
+20      continue
 
 !       Get Atmospheric Optical Depth (3D field)
         call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L,aod_ref
@@ -826,8 +828,8 @@
 
         I4_elapsed = ishow_timer()
 
-        rlat_last = 0.
-        rlon_last = 0.
+        rlat_last = -999.
+        rlon_last = -999.
         i4time_last = 0.
       
         do iloc = 1,nloc
@@ -897,17 +899,8 @@
           topo_sfc = topo(isound,jsound)
  
           write(6,*)' i/j/topo_sfc ',isound,jsound,topo_sfc
-          write(6,11)topo_albedo_2d(:,isound,jsound)
-11        format('  albedo RGB of observer ',3f9.3)
-
-          if(rlat .ne. rlat_last .or. rlon .ne. rlon_last .or. 
-     1       i4time_solar .ne. i4time_last)then
-            newloc = 1
-          else
-            newloc = 0
-          endif
-          rlat_last = rlat; rlon_last = rlon; i4time_last = i4time_solar
-          write(6,*)' newloc = ',newloc
+          write(6,22)topo_albedo_2d(:,isound,jsound)
+22        format('  albedo RGB of observer ',3f9.3)
 
           write(6,*)' solar alt/az (2d array)',sol_alt_2d(isound,jsound)       
      1                                        ,sol_azi_2d(isound,jsound) 
@@ -926,6 +919,32 @@
           endif
 
           write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
+
+          hdist_loc = sqrt((rlat-rlat_last)**2 + (rlon-rlon_last)**2)
+!         if(solar_alt .gt. 4.0)then
+!             hdist_loc_thr = 0.3
+!         else
+!             hdist_loc_thr = 0.0
+!         endif
+
+          thr1 = ((grid_spacing_m / 10000.) / rpd) * sind(solar_alt) 
+          thr2 = solar_alt * 0.1
+          thr3 = solar_alt - 3.0
+          hdist_loc_thr = max(min(thr1,thr2,thr3),0.0)
+
+          if(hdist_loc .gt. hdist_loc_thr .OR. 
+     1       i4time_solar .ne. i4time_last    )then
+            newloc = 1
+            rlat_last = rlat; rlon_last = rlon
+            i4time_last = i4time_solar
+          else
+            newloc = 0
+          endif
+
+          write(6,*)' i4time_last/i4time_solar = '
+     1               ,i4time_last,i4time_solar
+          write(6,23)hdist_loc,hdist_loc_thr,newloc
+23        format('  hdist_loc/hdist_loc_thr/newloc = ',2f9.3,i3)
 
           write(6,*)' call sun_moon at grid point ',isound,jsound
           idebug = 2
@@ -1009,8 +1028,8 @@
      1                              ,azi_a_roll(minalt,maxazi)
 
           ilun = ilun + 1
-          write(clun,14)ilun
-14        format(i3.3)
+          write(clun,34)ilun
+34        format(i3.3)
 
           if(.false.)then
             write(6,*)' call calc_allsky'
@@ -1074,8 +1093,8 @@
      1               ,' aod_vrt is ',aod_vrt
 
 !           ilun = ilun + 1
-!           write(clun,14)ilun
-!14         format(i3.3)
+!           write(clun,34)ilun
+!34         format(i3.3)
 
 !           Moon glow in cylindrical coordinates (add color info)?                   
             blog_moon_roll = 0.
