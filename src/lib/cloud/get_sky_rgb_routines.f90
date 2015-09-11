@@ -176,7 +176,7 @@
         real dec_d(nstars),ra_d(nstars),mag_stars(nstars),bmv(nstars)
         real alt_stars(nstars),azi_stars(nstars),ext_mag(nstars),lst_deg
         real angdif
-        real*8 dangdif,jed,r8lon,lst,has(nstars),phi,als,azs,ras,x,y,decr
+        real*8 dangdif,jed,r8lon,lst,has(nstars),phi,als,azs,ras,decr
         real*8 dalt,dazi,dha,ddec,dra,sol_meanlon,sol_meananom
 
         character*20 starnames(nstars)
