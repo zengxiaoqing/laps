@@ -82,7 +82,7 @@
      pice2alpha = 1.5 / (rhograupel * reff_graupel)
 
      idebug = 0
-     angstrom_exp = 1.8 - (fcterm * 10.)
+     angstrom_exp = 2.4 - (fcterm * 15.)
 
      twi_alt = -4.5
      transm_3d = r_missing_data
@@ -199,7 +199,7 @@
            if(objalt .gt. 15. .AND. if .le. 2)then ! march by height levels
              nksteps = 2
              rkmarch = rkt - float(ls)/float(nksteps)
-             if(rkmarch .le. 0.)goto10 ! going outside the domain
+             if(rkmarch .le. 0.)goto 10 ! going outside the domain
              kmarch = nint(rkmarch) ! kl,kh
              htmarch = heights_1d(max(kmarch,1))
              s = (htt - htmarch) / (-dhtds)
@@ -231,13 +231,14 @@
 !          refk = 0.179
 !          ht = htt + dhtds*s + (dxyds*s)**2 / ((2.0/(1.-refk))*earth_radius)
 
-           if(ht .le. float(htluthi) .and. ht .ge. float(htlutlo))then
+!          if(ht .le. float(htluthi) .and. ht .ge. float(htlutlo))then
+           if(ht .le.  1.0*(htluthi) .and. ht .ge.  1.0*(htlutlo))then
              rk = htlut(nint(ht))
 !          elseif(ht .ge. htlutlo-500.)then
 !            rk = 1.0
            else
              if(idebug .eq. 1)write(6,*)' ht outside lut',ht,heights_1d(1)
-             goto10
+             goto 10
            endif
 
            idlast = id; jdlast = jd; kdlast = kd
@@ -507,7 +508,7 @@
        enddo ! k
      else ! use red channel for sfc lighting
        do k = 1,nk       
-         transm_4d(:,:,k,1) = sfc_glow(:,:) ! /day_int 
+         transm_4d(:,:,k,1) = sfc_glow(:,:) * 0.3 ! nominal backsct
        enddo ! k
      endif
 
