@@ -47,6 +47,12 @@
 
         alpha_o3(ext_o3,htmsl) = (ext_o3 * exp(-((htmsl-h_o3)/d_o3)**2)) / (d_o3 * sqrt(pi))
 
+!       Airmasses for thick shell - direct geometry
+        s_homo(z,h,re) = &
+               re * (sqrt(cosd(z)**2 + 2.*h/re + (h/re)**2) - cosd(z) )
+        am_homo_lyr(z,h1,h2,re) = &
+               (s_homo(z,h2,re) - s_homo(z,h1,re)) / (h2 - h1)
+
 !       Rayleigh scattering phase function including secondary scattering
 !       This assumes 0.1 effective optical depth / secondary scattering
 !                                   (this can be made variable later)
