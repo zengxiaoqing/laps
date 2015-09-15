@@ -221,13 +221,13 @@ if test "$NCARG_ROOT" = "allsky"; then
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
       if test $AZI_SCALE == 0.10; then
-          convert -fill white -annotate +19+447 "LAPS Simulated"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +19+447 "LAPS Simulated"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       elif test $AZI_SCALE == 0.20; then
-          convert -fill white -annotate +19+179 "LAPS Simulated"  -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +19+179 "LAPS Simulated"  -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       elif test $AZI_SCALE == 0.25; then
-          convert -fill white -annotate +15+$YDISP  "LAPS Simulated"  -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +15+$YDISP  "LAPS Simulated"  -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       else
-          convert -fill white -annotate +15+20  "LAPS Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +15+20  "LAPS Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       fi
   fi
 
@@ -240,35 +240,35 @@ if test "$NCARG_ROOT" = "allsky"; then
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $AZI_SCALE == 0.10; then
-      convert -fill white -annotate +525+447 "`head -2 label.$ILOC | tail -1`"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +525+447 "`head -2 label.$ILOC | tail -1`"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.20; then
-      convert -fill white -annotate +918+179 "`head -2 label.$ILOC | tail -1`" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +918+179 "`head -2 label.$ILOC | tail -1`" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.25; then
-      convert -fill white -annotate  +815+$YDISP "`head -2 label.$ILOC | tail -1`" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate  +815+$YDISP "`head -2 label.$ILOC | tail -1`" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.50; then
-      convert -fill white -annotate +1550+20 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +1550+20 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
-      convert -fill white -annotate +725+20 "`head -2 label.$ILOC | tail -1`"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +725+20 "`head -2 label.$ILOC | tail -1`"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     fi
   fi
 
 # Annotate Lat/Lon
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    echo "convert -fill white -annotate +363+20 "`head -1 label2.$ILOC`" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
-          convert -fill white -annotate +363+20 "`head -1 label2.$ILOC`" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    echo "convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
+          convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $AZI_SCALE == 0.10; then
-      convert -fill white -annotate +820+447 "`head -1 label2.$ILOC`" -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +820+447 "$LATLON" -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.20; then
-      convert -fill white -annotate +1434+179 "`head -1 label2.$ILOC`" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +1434+179 "$LATLON" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.25; then
-      convert -fill white -annotate +1227+$YDISP "`head -1 label2.$ILOC`" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +1227+$YDISP "$LATLON" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.50; then
-      convert -fill white -annotate +1840+20 "`head -1 label2.$ILOC`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +1840+20 "$LATLON" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
-      convert -fill white -annotate +920+20  "`head -1 label2.$ILOC`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +920+20  "$LATLON" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     fi
   fi
 
