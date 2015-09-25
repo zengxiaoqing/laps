@@ -3,6 +3,8 @@
 
        use mem_namelist, ONLY: redp_lvl,aero_scaleht
 
+       include 'rad.inc'
+
        real aod_3d(ni,nj,nk) ! aerosol extinction coefficient
        real pres_3d(ni,nj,nk)
        real heights_3d(ni,nj,nk)
@@ -19,8 +21,15 @@
          do k = 1,nk
 !          pratio = pres_3d(i,j,k) / pref
            h_agl = heights_3d(i,j,k) - redp_lvl 
-           aod_3d(i,j,k) = (aod/aero_scaleht) * exp(-h_agl/aero_scaleht)
-
+           alpha_low = (aod/aero_scaleht) * exp(-h_agl/aero_scaleht)
+           if(heights_3d(i,j,k) .gt. h1_ha .and. & 
+              heights_3d(i,j,k) .le. h2_ha .and. aod_ha .gt. 0.)then
+               alpha_high = alpha_ha
+           else
+               alpha_high = 0.
+           endif
+           aod_3d(i,j,k) = alpha_low + alpha_high
+         
            if(i .eq. ni/2 .and. j .eq. nj/2)then
                if(h_agl .gt. 0.)then
                    ave_aod = 0.5 * (aod_3d(i,j,k)+aod_3d(i,j,k-1))
