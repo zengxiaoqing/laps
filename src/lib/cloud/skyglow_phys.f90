@@ -1,18 +1,18 @@
 
 
-        subroutine skyglow_phys(ialt_start,ialt_end,ialt_delt     &! I
-                   ,jazi_start,jazi_end,jazi_delt,azi_scale       &! I
-                   ,minalt,maxalt,minazi,maxazi,idebug_a          &! I
-                   ,sol_alt,sol_azi,view_alt,view_az,twi_0        &! I
-                   ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt&! I
-                   ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir &! I
-                   ,aod_ref,aero_scaleht,dist_2_topo              &! I
-                   ,htmsl,redp_lvl,horz_dep                       &! I
-                   ,aod_ill,aod_2_topo,aod_tot                    &! I
-                   ,l_solar_eclipse,i4time,rlat,rlon              &! I
-                   ,clear_radf_c,ag_2d                            &! I
-                   ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a  &! O
-                   ,clear_rad_c,sky_rad_ave,elong           )      ! O/I
+        subroutine skyglow_phys(ialt_start,ialt_end,ialt_delt      &! I
+                   ,jazi_start,jazi_end,jazi_delt,azi_scale        &! I
+                   ,minalt,maxalt,minazi,maxazi,idebug_a           &! I
+                   ,sol_alt,sol_azi,view_alt,view_az,twi_0,twi_alt &! I
+                   ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt &! I
+                   ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir  &! I
+                   ,aod_ref,aero_scaleht,dist_2_topo               &! I
+                   ,htmsl,redp_lvl,horz_dep                        &! I
+                   ,aod_ill,aod_2_topo,aod_tot                     &! I
+                   ,l_solar_eclipse,i4time,rlat,rlon               &! I
+                   ,clear_radf_c,ag_2d                             &! I
+                   ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a   &! O
+                   ,clear_rad_c,sky_rad_ave,elong           )       ! O/I
 
 !       Sky glow with solar altitude > 0
 
@@ -86,7 +86,7 @@
         real view_alt(minalt:maxalt,minazi:maxazi)
         real view_az(minalt:maxalt,minazi:maxazi)
 
-        real od_g_slant_a(nc,minalt:maxalt) ! use for solar attenuation
+        real od_g_slant_a(nc,minalt:maxalt) ! use for sun/moon/star attenuation
         real od_o_slant_a(nc,minalt:maxalt)
         real od_a_slant_a(nc,minalt:maxalt)
 
@@ -110,7 +110,7 @@
         real aas_a(isolalt_lo:isolalt_hi)
         real aos_a(isolalt_lo:isolalt_hi)
 
-        icd = 3
+        icd = 1
 
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
@@ -133,7 +133,10 @@
 
         aero_refht = redp_lvl
 
-        angstrom_exp = 2.4 - (fcterm * 15.)
+        ramp_fc_nt = min(max((-sol_alt/3.0),0.),1.)               
+        fcterm2 = fcterm * (1.0 - ramp_fc_nt)
+        angstrom_exp_a = 2.4 - (fcterm * 15.)
+        angstrom_exp_ha = 2.0
 
         if(sol_alt .gt. 0. .or. .true.)then
             write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
@@ -143,13 +146,14 @@
             write(6,*)' aod_vrt = ',aod_vrt
             write(6,*)' aod_ref = ',aod_ref
             write(6,*)' aod_ray max = ',maxval(aod_ray)
-            write(6,*)' fcterm = ',fcterm
+            write(6,*)' fcterm/fcterm2 = ',fcterm,fcterm2
 !           write(6,*)' patm_ray max = ',maxval(patm_ray)
-            write(6,*)' angstrom_exp = ',angstrom_exp
+            write(6,*)' angstrom_exp_a = ',angstrom_exp_a
         endif
 
         do ic = 1,nc
-            ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp)
+            ext_a(ic)  = (wa(ic)/.55)**(-angstrom_exp_a)
+            ext_ha(ic) = (wa(ic)/.55)**(-angstrom_exp_ha)
             write(6,*)' ic/wa/ext_a ',ic,wa(ic),ext_a(ic)
         enddo ! ic
 
@@ -235,7 +239,7 @@
                 aa_s_o_aa_90 = 0.
             endif
             call get_clr_src_dir(sol_alt,90.,ext_g(ic), &
-                od_g_vert,od_a_vert, &
+                od_g_vert,od_a_vert,ext_ha(ic), &
                 htmsl,ssa90,ag_90/ag_90,ao_90,aa_90_o_aa_90, &
                 aod_ref,aero_refht,aero_scaleht,ag_s/ag_90,aa_s_o_aa_90,ic,idebug, &
                 srcdir_90(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
@@ -310,7 +314,7 @@
                  aa_s_o_aa_90 = 0.
              endif
              call get_clr_src_dir(sol_alt,altray,ext_g(ic), &
-                od_g_vert,od_a_vert, &
+                od_g_vert,od_a_vert,ext_ha(ic), &
                 htmsl,ssa,ag/ag_90,ao,aa_o_aa_90, &
                 aod_ref,aero_refht,aero_scaleht, &
                 ag_s/ag_90,aa_s_o_aa_90,ic,idebug, &
@@ -391,7 +395,12 @@
            l_dlow2 = .false.
          endif
 
-         jazi_d10 = nint(10./azi_scale)
+         if(altray .le. 10.0)then
+           jazi_d10 = nint(5./azi_scale)
+         else
+           jazi_d10 = nint(10./azi_scale)
+         endif
+
          write(6,67)altray,sol_alt,sol_alt*altray,dmintopo,htmin_view,l_dlow,l_dlow2
 67       format(' altray/sol_alt/prod/dmintopo/htmin_view/l_dlow,l_dlow2',2f8.2,f8.1,2f12.0,2l2)
 !        write(6,*)'az range at this alt2',ialt &
@@ -413,7 +422,14 @@
               if((sol_alt * altray .lt. 100. .or. sol_alt .lt. 0. .or. altray .lt. 0.)  &
                                .AND.(l_dlow .eqv. .true.) )then 
 !               if(jazi .eq. jazi_start .AND. altray .eq. nint(altray) &
-                if(view_azi_deg .eq. 270..AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
+                if(sol_azi .gt. 180)then
+                  azi_ref = 270.                 
+                else
+                  azi_ref = 90.                 
+                endif
+!               azi_ref = 175. ! volcanic test
+                if(view_azi_deg .eq. azi_ref.AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
+!               if(abs(180. - view_azi_deg) .eq. 1.0 .AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
 !                                       .AND. sol_alt .ge. 0. &
                                         .AND. ic .eq. icd)then
                   idebug_clr = 1 ! * idebug_a(ialt,jazi)
@@ -462,7 +478,8 @@
 
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
                   altray,view_azi_deg, &
-                  ext_g(ic),od_g_vert,od_o_msl,od_o_vert,od_a_vert,htmsl,ssa, &
+                  ext_g(ic),od_g_vert,od_o_msl,od_o_vert, &
+                  od_a_vert,ext_ha(ic),htmsl,ssa, &
                   ag/ag_90,ao,aa_o_aa_90, &
                   aod_ref,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
@@ -625,13 +642,13 @@
               hg2t = hg2
 
 !             non-topo phase function with variable scatter order
-              fc = fcterm * 0.5**(scatter_order-1.0)
+              fc = fcterm2 * 0.5**(scatter_order-1.0)
               gc = 2300. / scatter_order**2
               hg2 = (1.-fc) * hg2 + fc * cosp(gc,elong(ialt,jazi))
 !             hg2(:) = (1.-fc) * hg2(:) + fc * cosp(gc,elong(ialt,jazi))
 
 !             topo phase function assumes scatter order is 1
-              fc = fcterm
+              fc = fcterm2
               hg2t = (1.-fc) * hg2t + fc * cosp(2300.,elong(ialt,jazi))
 
             else
@@ -639,7 +656,7 @@
 !             g1 = 0.58**scatter_order
               g1 = 0.45**scatter_order
               g2 = 0.962**scatter_order
-              hg2 = dhg2(elong(ialt,jazi),fb,fcterm)
+              hg2 = dhg2(elong(ialt,jazi),fb,fcterm2)
 
 !             topo phase function assumes scatter order is non-topo 
 !             value (for now)
@@ -691,7 +708,7 @@
 !               od_a = aod_ref * aa * ext_a(ic)  ! slant od
                 od_a_slant = od_a_vert * aa_o_aa_90 
                 od_a = od_slant
-                if(od_a_slant .gt. 0.)then ! normalize with extinction?
+                if(od_a_slant .gt. 0. .and. sol_alt .gt. twi_alt)then ! normalize with extinction?
 !                 aodf = min(aod_ill(ialt,jazi)/od_a_slant,1.0)
                   aodfo = min(aod_ill(ialt,jazi)/aod_tot(ialt,jazi),1.0)
                   aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
@@ -1071,6 +1088,7 @@
         endif
 
         write(6,*)' clearrad2:',clear_rad_c(2,(minalt+maxalt)/2,minazi:maxazi:10)
+        write(6,*)' returning from skyglow_phys'
 
         return
         end
