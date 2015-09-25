@@ -154,6 +154,8 @@
         real solalt_last /0.0/
         save solalt_last
 
+        crep_thr = 0.25
+
         kstart = 0 ! 0 means sfc, otherwise level of start
 
         I4_elapsed = ishow_timer()
@@ -565,6 +567,10 @@
 
          if(altray .eq. -63.5 .or. altray .eq. -87.)then
           write(6,*)' debug point for altray'
+         endif
+
+         if(altray .eq. nint(altray) .and. htstart .lt. 10000.)then
+           write(6,*)'alt/jazi_delt',ialt,altray,jazi_delt
          endif
 
          do jazi = minazi,maxazi,jazi_delt
@@ -1427,7 +1433,8 @@
           endif ! true
 
 !         Account for multiple scattering in aod_ill
-          aod_ill(ialt,jazi) = 0.75 * sum_aod_ill + 0.25 * sum_aod
+          aod_ill(ialt,jazi) = (1.0 - crep_thr) * sum_aod_ill 
+     1                              + crep_thr  * sum_aod
 !         aod_ill(ialt,jazi) = sum_aod_ill
 
           aod_ill_dir(ialt,jazi) = sum_aod_ill_dir
@@ -1458,8 +1465,8 @@
      1             view_altitude_deg .ge. -horz_dep_d)then
               clear_radf_c(:,ialt,jazi) = 1.00 ! correct inaccuracy
             else
-              clear_radf_c(:,ialt,jazi) = 0.25 ! secondary scattering in cloud shadow
-     1                                  + 0.75 * (sum_clrrad/airmass1_h)
+              clear_radf_c(:,ialt,jazi) = crep_thr ! secondary scattering in cloud shadow
+     1                      + (1.0 - crep_thr) * (sum_clrrad/airmass1_h)
             endif
             if(idebug .eq. 1)then
               write(6,119)rkstart,nk,view_altitude_deg,horz_dep_d
@@ -1790,6 +1797,8 @@
         solalt_last = sol_alt(i,j)
 
         I4_elapsed = ishow_timer()
+
+        write(6,*)' returning from get_cloud_rays'
  
         return
         end
