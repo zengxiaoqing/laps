@@ -48,6 +48,13 @@
         alpha_o3(ext_o3,htmsl) = (ext_o3 * exp(-((htmsl-h_o3)/d_o3)**2)) / (d_o3 * sqrt(pi))
 
 !       Airmasses for thick shell - direct geometry
+        parameter (h1_ha = 13000.)
+        parameter (h2_ha = 25000.)
+        parameter (h3_ha = 31000.)
+        parameter (aod_ha = .020)
+        parameter (alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha)))
+        patm_ah(h,h1,h2) = max(min(1.0,(h2-h)/(h2-h1)),0.)
+
         s_homo(z,h,re) = &
                re * (sqrt(cosd(z)**2 + 2.*h/re + (h/re)**2) - cosd(z) )
         am_homo_lyr(z,h1,h2,re) = &
@@ -64,17 +71,18 @@
         include 'wa.inc'
 
 !       parameter (nc = 3)
-        real ext_g(nc)                 ! od per airmass
-        data ext_g /.090,.144,.312/    ! 0.14 * (wa/.55)**(-4)              
+        real ext_g(nc)               ! od per airmass
+        data ext_g /.090,.144,.312/  ! 0.14 * (wa/.55)**(-4)              
 
-        real ext_o(nc)                 ! od per airmass
-        data ext_o /.037,.029,.001/    ! interp from gflash.bas (300DU)
+        real ext_o(nc)               ! od per airmass
+        data ext_o /.037,.029,.001/  ! interp from gflash.bas (300DU)
 
-!       real wa(nc)                    ! wavelength (um)
+!       real wa(nc)                  ! wavelength (um)
 !       data wa    /.615,.546,.450/
 
-        real ext_a(nc)                 ! aerosol extinction relative to .55um
-!       data ext_a /0.90,1.00,1.10/    ! could change to (wa/.55)**(-1.3)
+        real ext_a(nc)               ! aerosol extinction relative to .55um
+!       data ext_a /0.90,1.00,1.10/  ! could change to (wa/.55)**(-1.3)
+        real ext_ha(nc)              ! high aerosol ext. relative to .55um
 
         real angstrom_exp
 !       data angstrom_exp /1.3/
