@@ -1255,6 +1255,8 @@
               else
                 corr1_a(iloc) = 9.0
               endif
+              if(solar_alt .lt. 0.)corr1_a(iloc) = 9.26 ! volcanic value
+
               write(6,*)' corr1 in plot_allsky ',corr1_a(iloc)
 
               call get_sky_rgb(r_cloud_3d      ! cloud opacity
