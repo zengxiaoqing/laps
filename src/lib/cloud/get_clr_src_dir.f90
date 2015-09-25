@@ -1,5 +1,5 @@
 
-     subroutine get_clr_src_dir(solalt,viewalt,od_g_msl,od_g_vert,od_a_vert,htmsl,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a,ags,aas,ic,idebug,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
+     subroutine get_clr_src_dir(solalt,viewalt,od_g_msl,od_g_vert,od_a_vert,ext_haero,htmsl,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a,ags,aas,ic,idebug,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
      use constants_laps, ONLY: R, GRAV
 
@@ -10,6 +10,7 @@
 
      trans(od) = exp(-min(od,80.))
      opac(od) = 1.0 - trans(od)
+     scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5
 
      real tausum_a(nsteps)
 
@@ -19,11 +20,6 @@
      real ags      ! gas   relative to zenith value for observer ht/solalt
      real aos      ! ozone relative to zenith value for observer ht/solalt
      real aas      ! aero  relative to zenith value for observer ht/solalt
-
-     h1_ha = 0000.
-     h2_ha = 25000.
-     aod_ha = .026
-     alpha_ha = aod_ha / (h2_ha-h1_ha)
 
      od_o_msl = (o3_du/300.) * ext_o(ic)
      od_o_vert = od_o_msl * patm_o3(htmsl)
@@ -125,6 +121,15 @@
          alphabar_o = alpha_o3(od_o_msl,htbar_msl)
 !        alphabar_a = alpha_sfc_a * exp(-htbar/scale_ht_a)  
          alphabar_a = alpha_ref_a * exp(-(htbar_msl-redp_lvl)/scale_ht_a)
+
+!        AOD stratospheric = .012 (nighttime - layer extends above observer)
+         if(htbar_msl .gt. h1_ha .and. htbar_msl .le. h2_ha .and. solalt .lt. 3. .and. aod_ha .gt. 0.)then
+             alphabar_a = alphabar_a + alpha_ha * ext_haero
+         elseif(htbar_msl .gt. h2_ha .and. htbar_msl .lt. h3_ha)then
+             frac_ha = (h3_ha - htbar_msl) / (h3_ha - h2_ha)
+             alphabar_a = alphabar_a + alpha_ha * ext_haero * scurve(frac_ha)
+         endif
+
          dtau = ds * (alphabar_g + alphabar_o + alphabar_a)
          tausum = tausum + dtau
 !        if(tausum .lt. 1.0)distod1 = sbar
@@ -146,9 +151,9 @@
 !        Experiment with in tandem with 'skyglow_phys'
 !        rad = 1.0
          rad = trans(od_solar_slant)
-         radg = max(rad,.01) ! secondary scattering
-         rada = max(rad,.001) ! secondary scattering
-         rad = max(rad,.01) ! secondary scattering
+         radg = max(rad,.0001) ! secondary scattering
+         rada = max(rad,.00001) ! secondary scattering
+         rad = max(rad,.0001) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
          if(dtau .gt. 0.)then
@@ -188,7 +193,8 @@
      end
 
      subroutine get_clr_src_dir_low(solalt,solazi,viewalt,viewazi & ! I
-           ,od_g_msl,od_g_vert,od_o_msl,od_o_vert,od_a_vert,htmsl & ! I
+           ,od_g_msl,od_g_vert,od_o_msl,od_o_vert                 & ! I
+           ,od_a_vert,ext_haero,htmsl                             & ! I
            ,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a &            ! I
            ,ags_in,aas_in,ags_a,aas_a,isolalt_lo,isolalt_hi &       ! I
            ,ic,idebug,refdist_solalt,solalt_ref &                   ! I
@@ -201,11 +207,13 @@
      include 'rad.inc'
 
      real*8 opac_last,opac_curr,tausum,trans,opac,od
+     real logint
 
      trans(od) = exp(-min(od,80d0))
      opac(od) = 1d0 - trans(od)
      angdif(X,Y)=MOD(X-Y+540.,360.)-180.
-     patm_ah(h,h1,h2) = max(min(1.0,(h2-h)/(h2-h1)),0.)
+     scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5
+     logint(y1,y2,f) = exp(log(y1)*(1.-f) + log(y2)*f)
 
      real tausum_a(nsteps)
 
@@ -247,7 +255,7 @@
      od_o_slant = od_o_msl  * ao
      od_a_slant = od_a_vert * aav        
      od_h_slant = od_h_vert * ah
-     od_slant = od_g_slant + od_o_slant + od_a_slant
+     od_slant = od_g_slant + od_o_slant + od_a_slant + od_h_slant
      od_slant = max(od_slant,1e-30) ! QC check
      r_e = 6371.e3
 
@@ -286,6 +294,7 @@
          write(6,*)'alpha_sfc_g/alpha_ref_g = ',alpha_sfc_g,alpha_ref_g
          write(6,*)'od_o_msl/vert = ',od_o_msl,od_o_vert
          write(6,*)'od_a_vert = ',od_a_vert
+         write(6,*)'alpha_ha / ext_haero = ',alpha_ha,ext_haero
          write(6,*)'opac_vert = ',opac_vert
          write(6,*)'od_g_slant = ',od_g_slant
          write(6,*)'od_o_slant/ao = ',od_o_slant,ao
@@ -306,7 +315,7 @@
      htbotill = -(htmsl + 500.)
 
      if(idebug .eq. 1)then
-       write(6,*)'         sbar     htbar   dtau     tausum  dsolalt      ags     aas   od_sol_a  od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'         sbar     htbar   dtau_g   dtau_a    tausum  dsolalt      ags     aas   od_sol_g  od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -335,8 +344,11 @@
          alphabar_a = alpha_ref_a * exp(-(htbar_msl-redp_lvl)/scale_ht_a) 
 
 !        AOD stratospheric = .012 (nighttime - layer extends above observer)
-         if(htbar_msl .gt. h1_ha .and. htbar_msl .le. h2_ha .and. solalt .lt. 3. .and. od_h_vert .gt. 0.)then
-             alphabar_a = alphabar_a + alpha_ha
+         if(htbar_msl .gt. h1_ha .and. htbar_msl .le. h2_ha .and. solalt .lt. 3. .and. aod_ha .gt. 0.)then
+             alphabar_a = alphabar_a + alpha_ha * ext_haero
+         elseif(htbar_msl .gt. h2_ha .and. htbar_msl .lt. h3_ha)then
+             frac_ha = (h3_ha - htbar_msl) / (h3_ha - h2_ha)
+             alphabar_a = alphabar_a + alpha_ha * ext_haero * scurve(frac_ha)
          endif
 
          dtau = ds * (alphabar_g + alphabar_o + alphabar_a)
@@ -360,8 +372,10 @@
             max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
          fsolalt = dsolaltb - float(isolaltl)
-         ags = ags_a(isolaltl) * (1.-fsolalt) + ags_a(isolalth) * fsolalt
-         aas = aas_a(isolaltl) * (1.-fsolalt) + aas_a(isolalth) * fsolalt
+!        ags = ags_a(isolaltl) * (1.-fsolalt) + ags_a(isolalth) * fsolalt
+!        aas = aas_a(isolaltl) * (1.-fsolalt) + aas_a(isolalth) * fsolalt
+         ags = logint(ags_a(isolaltl),ags_a(isolalth),fsolalt)
+         aas = logint(aas_a(isolaltl),aas_a(isolalth),fsolalt)
 
 !        Considering smoothing out with solar disk
          horz_dep = horz_depf(htbar_msl,earth_radius)
@@ -408,9 +422,9 @@
            endif
 
            rad = trans(dble(od_solar_slant))
-           radg = max(rad,.01) ! secondary scattering
-           rada = max(rad,.001) ! secondary scattering
-           rad = max(rad,.01) ! secondary scattering
+           radg = max(rad,.0001) ! secondary scattering
+           rada = max(rad,.00001) ! secondary scattering
+           rad = max(rad,.0001) ! secondary scattering
 
 !          di = (dtau * rad) * exp(-tausum)
            if(dtau .gt. 0.)then
@@ -446,13 +460,13 @@
          sumi_extrap = (sumi_mean * frac_opac) + (1.-frac_opac) * rad
 
          if(idebug .eq. 1)then
-           if(i .le. 10 .or. i .eq. 50 .or. i .eq. 100 .or. i .eq. 200 .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
-             write(6,11)i,sbar,htbar,alphabar*ds,tausum,dsolalt,ags,aas,od_solar_slant_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i6,f9.0,f9.1,e10.3,f8.4,f9.4,f10.2,4f9.4,e9.2,f11.8,f9.6,2f9.4,2f9.4)
+           if(i .le. 10 .or. ((i .eq. (i/25)*25) .and. i .le. 400) .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
              if(sol_occ.gt.0.)then
                write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
              endif
 12           format(33x,'   horz_dep/solalt/htmin/sol_occ = ',2f8.2,f9.0,f8.3,3f9.4)
+             write(6,11)i,sbar,htbar,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+11           format(i6,f9.0,f9.1,2e10.3,f8.4,f9.4,f10.2,4f9.4,e9.2,2f11.8,2f9.4,2f9.4)
            endif
          endif
      enddo ! i
@@ -460,7 +474,7 @@
 900  continue
 
      if(idebug .eq. 1)then
-       write(6,11)i,sbar,htbar,alphabar*ds,tausum,dsolalt,ags,aas,od_solar_slant_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+       write(6,11)i,sbar,htbar,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
        if(sol_occ.gt.0.)write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
      endif
 
@@ -557,7 +571,7 @@
      endif ! i
 
      if(idebug .eq. 1)then ! substitute radg/rada?
-       write(6,*)'        sbar     htbar     htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g   sumi_a opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'        sbar     htbar     htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g    sumi_a  opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -634,9 +648,9 @@
 
 !        rad = 1.0
          rad = trans(od_solar_slant)
-         radg = rad ! max(rad,.01) ! secondary scattering
-         rada = rad ! max(rad,.001) ! secondary scattering
-!        rad = max(rad,.01) ! secondary scattering
+         radg = rad ! max(rad,.0001) ! secondary scattering
+         rada = rad ! max(rad,.00001) ! secondary scattering
+!        rad = max(rad,.0001) ! secondary scattering
 
 !        di = (dtau * rad) * exp(-tausum)
          if(dtau .gt. 0.)then
