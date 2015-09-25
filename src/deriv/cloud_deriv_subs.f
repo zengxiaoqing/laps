@@ -76,7 +76,7 @@ cdis
         iwrite = 0
 
         write(6,*)
-     1  '  i   j   k thick    tau    cvr    t_c     slwc     cice' 
+     1  '  i   j   k thick    tau     cvr    t_c     slwc     cice' 
      1  ,'   ilyr nlyr'
 
 !       Convert from cloud cover to discreet cloud layer indices (cvr to a)
@@ -315,7 +315,7 @@ cdis
      1                           ,k_to_c(temp_3d(i,j,k))
      1                           ,slwc(i,j,k),cice(i,j,k)
      1                           ,ilyr,nlyr
-2                       format(3i4,f7.0,2f7.3,f7.1,2f9.4,2i5,' *')
+2                       format(3i4,f7.0,f8.3,f7.3,f7.1,2f9.4,2i5,' K')
                     endif
 
                   endif
