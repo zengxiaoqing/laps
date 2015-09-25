@@ -82,7 +82,7 @@
      pice2alpha = 1.5 / (rhograupel * reff_graupel)
 
      idebug = 0
-     angstrom_exp = 2.4 - (fcterm * 15.)
+     angstrom_exp_a = 2.4 - (fcterm * 15.)
 
      twi_alt = -4.5
      transm_3d = r_missing_data
@@ -474,7 +474,7 @@
                do ic = 1,nc
                  od_g = ag * ext_g(ic) * scat_frac
 
-                 ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp)
+                 ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp_a)
                  od_a = aa * ext_a(ic) * aod
 
                  trans_c(ic) = trans(od_g + od_a)
