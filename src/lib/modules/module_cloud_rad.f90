@@ -24,7 +24,7 @@ MODULE cloud_rad
 
 !     Effective radii
       real, parameter :: reff_clwc    = .000007 ! m
-      real, parameter :: reff_cice    = .000013 ! m
+      real, parameter :: reff_cice    = .000034 ! m
       real, parameter :: reff_rain    = .000750 ! m
       real, parameter :: reff_snow    = .004000 ! m
       real, parameter :: reff_graupel = .010000 ! m
