@@ -273,9 +273,10 @@ close LAPSPRD;
 @frames_list[13] = "24";
 @frames_list[14] = "auto-2";
 @frames_list[15] = "auto-4";
-@frames_list[16] = "auto-a";
-@frames_list[17] = "auto-f";
-@frames_list[18] = "auto-v";
+@frames_list[16] = "auto-6";
+@frames_list[17] = "auto-a";
+@frames_list[18] = "auto-f";
+@frames_list[19] = "auto-v";
 
 @delay_list[0] = "25";
 @delay_list[1] = "50";
@@ -414,12 +415,16 @@ print <<"EOF";
 <option $selected{'C_OMEGA'}> C_OMEGA
 <option $selected{'CAPE'}> CAPE
 <option $selected{'CIN'}> CIN
-<option $selected{'CLD_CVR'}> <FONT COLOR="#AA0000">CLD_CVR</FONT>
+<option $selected{'CLD_ALB'}> <FONT COLOR="#AA0000">CLD_ALB</FONT>
+<option $selected{'CLD_ALB1'}> CLD_ALB1
 <option $selected{'CLD_BASE'}> CLD_BASE
-<option $selected{'CLD_TOP'}> CLD_TOP
-<option $selected{'CLD_LIQ'}> CLD_LIQ
-<option $selected{'CLD_ICE'}> CLD_ICE
+<option $selected{'CLD_CEIL'}> CLD_CEIL
 <option $selected{'CLD_CND'}> CLD_CND
+<option $selected{'CLD_CVR'}> <FONT COLOR="#AA0000">CLD_CVR</FONT>
+<option $selected{'CLD_ICE'}> CLD_ICE
+<option $selected{'CLD_LIQ'}> CLD_LIQ
+<option $selected{'CLD_OD'}> CLD_OD
+<option $selected{'CLD_TOP'}> CLD_TOP
 <option $selected{'DEWPOINT'}> DEWPOINT
 <option $selected{'FIREWX'}> FIREWX
 <option $selected{'FIRE_FBG'}> FIRE_FBG
@@ -436,6 +441,7 @@ print <<"EOF";
 <option $selected{'MR'}> MR
 <option $selected{'P_MSL'}> P_MSL
 <option $selected{'P_RED'}> P_RED
+<option $selected{'P_STN'}> P_STN
 <option $selected{'P_PRIME'}> P_PRIME
 <option $selected{'PCP_RAI'}> PCP_RAI
 <option $selected{'PCP_SNO'}> PCP_SNO
@@ -456,12 +462,14 @@ print <<"EOF";
 <option $selected{'SAT_39U'}> SAT_39U
 <option $selected{'SAT_D39'}> SAT_D39
 <option $selected{'SAT_VIS_ALB'}> SAT_VIS_ALB
+<option $selected{'SAT_VIS'}> SAT_VIS
 <option $selected{'SE_FLUX'}> SE_FLUX
 <option $selected{'SFCT'}> SFCT
 <option $selected{'SH'}> SH
 <option $selected{'SNOW_INC'}> SNOW_INC
 <option $selected{'SNOW_STO'}> SNOW_STO
 <option $selected{'SNOW_CVR'}> SNOW_CVR
+<option $selected{'SNOW_DEPTH'}> SNOW_DEPTH
 <option $selected{'SW_DOWN'}> SW_DOWN
 <option $selected{'SW_OUT'}> SW_OUT
 <option $selected{'TEMP'}> TEMP
@@ -485,13 +493,14 @@ print <<"EOF";
 <option $selected{'c_omega'}> c_omega
 <option $selected{'cape'}> cape
 <option $selected{'cin'}> cin
-<option $selected{'cld_cvr'}> cld_cvr
 <option $selected{'cld_base'}> cld_base
 <option $selected{'cld_ceil'}> cld_ceil
-<option $selected{'cld_top'}> cld_top
-<option $selected{'cld_liq'}> cld_liq
-<option $selected{'cld_ice'}> cld_ice
 <option $selected{'cld_cnd'}> cld_cnd
+<option $selected{'cld_cvr'}> cld_cvr
+<option $selected{'cld_ice'}> cld_ice
+<option $selected{'cld_liq'}> cld_liq
+<option $selected{'cld_od'}> cld_od
+<option $selected{'cld_top'}> cld_top
 <option $selected{'cld_type'}> cld_type
 <option $selected{'dewpoint'}> dewpoint
 <option $selected{'firewx'}> firewx
@@ -503,6 +512,7 @@ print <<"EOF";
 <option $selected{'helicity'}> helicity
 <option $selected{'ht'}> ht
 <option $selected{'land_frac'}> land_frac
+<option $selected{'locations'}> locations
 <option $selected{'mconv'}> mconv
 <option $selected{'mr'}> mr
 <option $selected{'p_msl'}> p_msl
@@ -538,6 +548,7 @@ print <<"EOF";
 <option $selected{'thetae'}> thetae
 <option $selected{'wind'}> wind
 <option $selected{'wind_spd'}> wind_spd
+<option $selected{'wind_spd_0-6'}> wind_spd_0-6
 <option $selected{'wind_u'}> wind_u
 <option $selected{'wind_v'}> wind_v
 <option $selected{'wind_div'}> wind_div
@@ -581,6 +592,7 @@ foreach $file (@domain_levels) {
 
 
 print <<"EOF";
+<option $selected{'0-6km'}> 0-6km
 <option $selected{'sfc/2d'}> sfc/2d
 <option $selected{'soil1'}> soil1
 <option $selected{'soil2'}> soil2
@@ -753,7 +765,7 @@ window.open(open_string,window_name,'width=1069,height=951,resizable');
 <A HREF="http://www.fsl.noaa.gov/fsl/docs/wthr/fsl-weather.html">FSL Wx</A>
 |
 -->
-<A HREF="http://esrl.noaa.gov/gsd/fab/">FAB Home</A>
+<A HREF="http://esrl.noaa.gov/gsd/emb/">EMB Home</A>
 |
 <A HREF="http://laps.noaa.gov">LAPS</A>
 |
@@ -764,7 +776,7 @@ Realtime LAPS Products</A>
 Forecasts</A>
 |
 <a href="javascript:loop('On-The-Fly','pub_onthefly')">
-Java Loop</A> <FONT COLOR="#EE9900">(NEW)</FONT>
+Java Loop</A> <!--<FONT COLOR="#EE9900">(NEW)</FONT>-->
 |
 Log Info:
 <A HREF="lapsplot/lapsplot.in">
