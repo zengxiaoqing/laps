@@ -3,7 +3,7 @@
                    r_cloud_rad,cloud_rad_c,cloud_rad_w, &
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobs, & ! I
                    clear_radf_c,patm,htmsl, &                           ! I
-                   glow,glow_sun,glow_moon,glow_stars, &                ! I
+                   glow_sun,glow_moon,glow_stars, &                     ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo, &
                    topo_swi,topo_albedo,albedo_sfc, &                   ! I
@@ -46,7 +46,7 @@
 !       real clear_radf_c_eff(nc,ni,nj) ! accounts for airmass_2_topo         
         real clear_rad_c_nt(3,ni,nj)! night sky brightness
         real ag_2d(ni,nj)           ! gas airmass (topo/notopo)
-        real glow(ni,nj)            ! skyglow (log b in nl, sun or moon from 'vi')           
+        real glow_moon1(ni,nj)      ! glow (experimental)
         real glow_sun(ni,nj)        ! sunglow (log nl, extendd obj, extnct)
         real glow_moon(ni,nj)       ! moonglow (log b in nl, extended obj)
         real glow_moon_sc(ni,nj)    ! moonglow (log b in nl, scattered)
@@ -209,7 +209,11 @@
 !       Second arg increase will darken shallow twilight and brighten
 !       deep twilight.
         altmidcorr = -6.00 + (od_atm_a * 3.0) 
-        fracerf = (sol_alt - altmidcorr) * 0.116 
+        if(sol_alt .gt. altmidcorr)then ! shallow twilight
+          fracerf = (sol_alt - altmidcorr) * 0.116 
+        else                            ! deep twilight
+          fracerf = (sol_alt - altmidcorr) * 0.127 
+        endif
         erfterm = (erf(fracerf) + 1.) / 2.
         glwmid = corr2*(1.-erfterm) + corr1*erfterm
 
@@ -536,13 +540,13 @@
                 rad_moon_sc(ic,:,:) = log10(moon_rad_c(ic,:,:)) + (-26.7 - moon_mag) * 0.4
               enddo ! ic
             endwhere
-            glow(:,:) = glow_moon_sc(:,:) ! experimental
+            glow_moon1(:,:) = glow_moon_sc(:,:) ! experimental
 
             write(6,*)' range of moon_rad_c(2) is ',minval(moon_rad_c(2,:,:)),maxval(moon_rad_c(2,:,:))
             write(6,*)' log correction is ',(-26.7 - moon_mag) * 0.4
             write(6,*)' range of glow_moon_sc is ',minval(glow_moon_sc(:,:)),maxval(glow_moon_sc(:,:))
-            write(6,*)' range of glow is ',minval(glow(:,:)),maxval(glow(:,:))
-            write(6,*)' moonglow1:',glow(ni/2,1:nj:10)
+            write(6,*)' range of glow_moon1 is ',minval(glow_moon1(:,:)),maxval(glow_moon1(:,:))
+            write(6,*)' moonglow1:',glow_moon1(ni/2,1:nj:10)
 
         else ! get just solar elongation
             if(isun .gt. 0 .AND. jsun .gt. 0 .AND. isun .le. ni .AND. jsun .le. nj)then
@@ -861,7 +865,7 @@
               clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + clear_rad_c_nt(:,i,j)
 
               if(moon_cond_clr .eq. 1)then
-                  glow_moon_s = glow(i,j)
+                  glow_moon_s = glow_moon1(i,j)
 !                 clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + 10.**glow_moon_sc(i,j)
                   clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + rad_moon_sc(:,i,j)
               else
@@ -936,7 +940,7 @@
               if(moon_cond_clr .eq. 1)then ! add moon mag condition
 !               Glow from Rayleigh, no clear_rad crepuscular rays yet
 !               argm = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15
-                glow_moon_s = glow(i,j)          ! log nL                 
+                glow_moon_s = glow_moon1(i,j)          ! log nL                 
                 glow_tot = addlogs(glow_nt,glow_moon_s)
 !               clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + 10.**glow_moon_sc(i,j)
                 clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + rad_moon_sc(:,i,j)
