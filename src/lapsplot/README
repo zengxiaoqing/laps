@@ -37,7 +37,8 @@ driver                                            lapsplot_main.f
             land_albedo_bm                        lib/land_albedo.f
             sun_moon                              lib/cloud/sun_moon.f
                 sun_eclipse_parms                   ""
-            get_cloud_rays                        get_cloud_rays.f            (second raytrace)
+            calc_allsky                           lib/cloud/calc_allsky.f (future more consolidated subroutine)
+            get_cloud_rays                        get_cloud_rays.f
                 skyglow_phys_twi                  lib/cloud/skyglow_phys_twi.f90 (clear sky brightness - night)
                 get_cloud_rad                     lib/cloud/get_cloud_rad.f90 (first raytrace 3-D radiation)
             get_glow_obj                          lib/cloud/get_sky_rgb_routines.f90
