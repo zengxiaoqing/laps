@@ -1,8 +1,9 @@
 
-          subroutine calc_allsky(i4time_solar,clwc_3d,cice_3d
-     1                     ,heights_3d                           ! I
-     1                     ,rain_3d,snow_3d                      ! I
-     1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
+          subroutine calc_allsky(i4time_solar ! ,clwc_3d,cice_3d
+!    1                     ,heights_3d                           ! I
+!    1                     ,rain_3d,snow_3d                      ! I
+!    1                     ,pres_3d,aod_3d                       ! I
+     1                     ,topo_sfc,topo,swi_2d                 ! I
      1                     ,topo_albedo_2d                       ! I
      1                     ,htagl                                ! I
      1                     ,aod_ref                              ! I
@@ -16,19 +17,21 @@
      1                     ,minalt,maxalt,minazi,maxazi,nc,nsp   ! I
      1                     ,alt_scale,azi_scale                  ! I
      1                     ,grid_spacing_m,r_missing_data        ! I
-     1                     ,twi_0                                ! I
+     1                     ,twi_0,l_binary                       ! I
      1                     ,sky_rgb_cyl)                         ! O
+
+        use mem_allsky
 
         addlogs(x,y) = log10(10.**x + 10.**y)
 
 !       Input arrays
-        real clwc_3d(NX_L,NY_L,NZ_L)      ! Control Variable
-        real cice_3d(NX_L,NY_L,NZ_L)      ! Control Variable
-        real heights_3d(NX_L,NY_L,NZ_L)   ! Control Variable
-        real rain_3d(NX_L,NY_L,NZ_L)      ! Control Variable
-        real snow_3d(NX_L,NY_L,NZ_L)      ! Control Variable
-        real pres_3d(NX_L,NY_L,NZ_L)      ! Control Variable
-        real aod_3d(NX_L,NY_L,NZ_L)       
+!       real clwc_3d(NX_L,NY_L,NZ_L)      ! Control Variable
+!       real cice_3d(NX_L,NY_L,NZ_L)      ! Control Variable
+!       real heights_3d(NX_L,NY_L,NZ_L)   ! Control Variable
+!       real rain_3d(NX_L,NY_L,NZ_L)      ! Control Variable
+!       real snow_3d(NX_L,NY_L,NZ_L)      ! Control Variable
+!       real pres_3d(NX_L,NY_L,NZ_L)      ! Control Variable
+!       real aod_3d(NX_L,NY_L,NZ_L)       
         real topo(NX_L,NY_L)
         real swi_2d(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
@@ -46,6 +49,15 @@
         real sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi) ! Observed Variable
 
 !       Local arrays (e.g. outputs from get_cloud_rays)
+!       real transm_3d(NX_L,NY_L,NZ_L)
+!       real transm_4d(NX_L,NY_L,NZ_L,nc) 
+
+        real r_cloud_3d(minalt:maxalt,minazi:maxazi)
+        real cloud_od(minalt:maxalt,minazi:maxazi)
+        real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)
+        real elong_roll(minalt:maxalt,minazi:maxazi)
+        real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
+        real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
         real topo_swi(minalt:maxalt,minazi:maxazi)
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
         real topo_ri(minalt:maxalt,minazi:maxazi)
@@ -60,25 +72,19 @@
         real dist_2_topo(minalt:maxalt,minazi:maxazi)
         real aod_ill(minalt:maxalt,minazi:maxazi)
         real aod_ill_dir(minalt:maxalt,minazi:maxazi)
-        real transm_3d(NX_L,NY_L,NZ_L)
-        real transm_4d(NX_L,NY_L,NZ_L,nc) 
-        real r_cloud_3d(minalt:maxalt,minazi:maxazi)
-        real cloud_od(minalt:maxalt,minazi:maxazi)
-        real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)
+        real aod_tot(minalt:maxalt,minazi:maxazi)
         real r_cloud_trans(minalt:maxalt,minazi:maxazi)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi)
         real cloud_rad_w(minalt:maxalt,minazi:maxazi)
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi)
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)
-        real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
-        real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
 
 !       Other Local Arrays
         real blog_moon_roll(minalt:maxalt,minazi:maxazi)
         real blog_sun_roll(minalt:maxalt,minazi:maxazi)
         real glow_stars(nc,minalt:maxalt,minazi:maxazi)
 
-        logical l_solar_eclipse
+        logical l_solar_eclipse, l_binary
 
         write(6,*)' subroutine calc_allsky...'
 
@@ -172,11 +178,6 @@
           I4_elapsed = ishow_timer()
 !         write(6,*)' call get_skyglow_cyl for sun or moon...'
 
-
-!         Reproject Polar Cloud Plot
-!         lunsky = 60 
-!         write(lunsky,*)rmaglim_v
-
 !         Get all sky for cyl   
           ni_cyl = maxalt - minalt + 1
           nj_cyl = maxazi - minazi + 1
@@ -246,6 +247,25 @@
           enddo ! i
           enddo ! j
 
+          if(.true.)then
+              if(htagl .eq. 1000e3)then                    ! High alt
+                corr1_a = 9.2
+              elseif(htagl .eq. 300.)then                  ! BAO
+                if(solar_alt .lt. 30.)then
+                  corr1_a = 9.2                            ! low sun
+                elseif(solar_alt .gt. 60.)then
+                  corr1_a = 8.9                            ! high sun
+                else
+                  corr1_a = 9.2 - (solar_alt-30.)*(0.3/30.)! med sun
+                endif
+              else
+                corr1_a = 9.0
+              endif
+              if(solar_alt .lt. 0.)corr1_a = 9.26 ! volcanic value
+
+              write(6,*)' corr1 in calc_allsky ',corr1_a
+          endif
+
           write(6,*)' call get_sky_rgb with cyl data'
           call get_sky_rgb(r_cloud_3d      ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
@@ -257,24 +277,29 @@
      1                    ,l_solar_eclipse,i4time_solar,rlat,rlon,eobsl
      1                    ,clear_radf_c      ! clear sky frac illumination by sun     
      1                    ,patm,htmsl
-     1                    ,blog_v_roll       ! skyglow
+!    1                    ,blog_v_roll       ! skyglow
      1                    ,blog_sun_roll     ! sunglow
      1                    ,blog_moon_roll    ! moonglow
      1                    ,glow_stars        ! starglow
      1                    ,aod_vrt,aod_ref 
-     1                    ,transm_obs        ! observer illumination
+     1                    ,transm_obs,obs_glow_zen ! observer illumination
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo
-     1                    ,topo_albedo_2d(2,isound,jsound)
+     1                    ,topo_albedo_2d(:,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
+     1                    ,aod_tot
      1                    ,dist_2_topo,topo_solalt,trace_solalt
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
-     1                    ,ni_cyl,nj_cyl  
-     1                    ,solar_alt,solar_az,twi_0 
+     1                    ,ni_cyl,nj_cyl,azi_scale  
+     1                    ,solar_alt,solar_az
+     1                    ,minalt,maxalt,minazi,maxazi                  ! I
+     1                    ,twi_0,horz_dep
+     1                    ,solalt_limb_true
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
+     1                    ,corr1_a
      1                    ,sky_rgb_cyl)   
 
           return
