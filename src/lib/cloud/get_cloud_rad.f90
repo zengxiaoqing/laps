@@ -446,7 +446,9 @@
 
       subroutine get_sfc_glow(ni,nj,grid_spacing_m,lat,lon,sfc_glow,gnd_glow)
 
-!     Simple surface lighting model for Boulder
+!     Simple surface lighting model for Boulder area based on city populations. 
+!     We can later use DMSP or VIIRS imagery for more detailed information
+!     on a more global basis.
 
       real lat(ni,nj)
       real lon(ni,nj)
@@ -456,13 +458,14 @@
       parameter (ncities = 25)
       real ctylat(ncities)
       real ctylon(ncities)
-      real ctypop(ncities)
+      real ctypop(ncities)   ! population
 
 !     http://www.geonames.org/US/CO/largest-cities-in-colorado.html
 !     http://download.geonames.org/export/dump/US.zip
 !     http://voices.yahoo.com/largest-cities-colorado-2011-5984666.html?cat=16
 !     http://en.wikipedia.org/wiki/List_of_cities_and_towns_in_Colorado
 
+!     Latitude, Longitude, and Population of Cities
       ctylat(1)=40.03;  ctylon(1)=-105.25;  ctypop(1) = 100000 ! Boulder
       ctylat(2)=39.76;  ctylon(2)=-104.88;  ctypop(2) =1000000 ! Denver
       ctylat(3)=39.93;  ctylon(3)=-105.16;  ctypop(3) =  12000 ! Superior
