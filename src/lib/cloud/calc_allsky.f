@@ -10,11 +10,13 @@
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
+     1                     ,solar_alt,solar_az                   ! I
      1                     ,alt_norm                             ! I
-     1                     ,moon_alt_2d,moon_azi_2d              ! I
-     1                     ,moon_mag,moon_mag_thr ! I
+     1                     ,moon_alt_2d,moon_azi_2d,alm,azm      ! I
+     1                     ,moon_mag,moon_mag_thr                ! I
      1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
      1                     ,minalt,maxalt,minazi,maxazi,nc,nsp   ! I
+     1                     ,ni_cyl,nj_cyl                        ! I
      1                     ,alt_scale,azi_scale                  ! I
      1                     ,grid_spacing_m,r_missing_data        ! I
      1                     ,twi_0,l_binary                       ! I
@@ -84,6 +86,7 @@
         real blog_sun_roll(minalt:maxalt,minazi:maxazi)
         real glow_stars(nc,minalt:maxalt,minazi:maxazi)
 
+        real moon_mag,moon_mag_thr
         logical l_solar_eclipse, l_binary
 
         write(6,*)' subroutine calc_allsky...'
@@ -138,7 +141,7 @@
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                       ,minalt,maxalt,minazi,maxazi 
      1                       ,alt_scale,azi_scale
-     1                       ,alm,azm,moon_mag,diam_deg
+     1                       ,alm,azm,moon_mag,diam_deg,horz_dep
      1                       ,blog_moon_roll)
 
             write(6,*)' range of blog_moon_roll is',
@@ -168,7 +171,7 @@
           call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
-     1                     ,solar_alt,solar_az,s_mag,diam_deg
+     1                     ,solar_alt,solar_az,s_mag,diam_deg,horz_dep
      1                     ,blog_sun_roll)
           write(6,*)' range of blog_sun_roll is',
      1        minval(blog_sun_roll),maxval(blog_sun_roll),diam_deg
@@ -247,7 +250,8 @@
           enddo ! i
           enddo ! j
 
-          if(.true.)then
+          if(l_binary .eqv. .false.)then
+              write(6,*)' call get_sky_rgb with cyl data'
               if(htagl .eq. 1000e3)then                    ! High alt
                 corr1_a = 9.2
               elseif(htagl .eq. 300.)then                  ! BAO
@@ -264,10 +268,9 @@
               if(solar_alt .lt. 0.)corr1_a = 9.26 ! volcanic value
 
               write(6,*)' corr1 in calc_allsky ',corr1_a
-          endif
 
-          write(6,*)' call get_sky_rgb with cyl data'
-          call get_sky_rgb(r_cloud_3d      ! cloud opacity
+              write(6,*)' call get_sky_rgb with cyl data'
+              call get_sky_rgb(r_cloud_3d    ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
      1                    ,cloud_od_sp,nsp   ! cloud species optical depth
      1                    ,r_cloud_trans     ! cloud solar transmittance
@@ -301,6 +304,11 @@
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
      1                    ,corr1_a
      1                    ,sky_rgb_cyl)   
+
+          else
+              continue ! use cloud_od to drive categorical output
+
+          endif ! l_binary
 
           return
           end
