@@ -997,6 +997,11 @@
           write(clun,34)ilun
 34        format(i3.3)
 
+          allocate(aod_ill_opac(minalt:maxalt,minazi:maxazi))
+          allocate(aod_ill_opac_potl(minalt:maxalt,minazi:maxazi))
+
+!         We can set this to .true. after figuring out the seg fault when
+!         initializing 'glow_stars' in 'get_starglow'
           if(.false.)then
             write(6,*)' call calc_allsky'
             call calc_allsky(i4time_solar ! ,clwc_3d,cice_3d
@@ -1010,11 +1015,13 @@
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
+     1                     ,solar_alt,solar_az                   ! I
      1                     ,alt_norm                             ! I
-     1                     ,moon_alt_2d,moon_azi_2d              ! I
+     1                     ,moon_alt_2d,moon_azi_2d,alm,azm      ! I
      1                     ,moon_mag,moon_mag_thr                ! I
      1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
      1                     ,minalt,maxalt,minazi,maxazi,nc,nsp   ! I
+     1                     ,ni_cyl,nj_cyl                        ! I
      1                     ,alt_scale,azi_scale                  ! I
      1                     ,grid_spacing_m,r_missing_data        ! I
      1                     ,twi_0,l_binary                       ! I
@@ -1043,8 +1050,6 @@
             allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
             allocate(aod_ill(minalt:maxalt,minazi:maxazi))
             allocate(aod_ill_dir(minalt:maxalt,minazi:maxazi))
-            allocate(aod_ill_opac(minalt:maxalt,minazi:maxazi))
-            allocate(aod_ill_opac_potl(minalt:maxalt,minazi:maxazi))
             allocate(aod_tot(minalt:maxalt,minazi:maxazi))
             allocate(r_cloud_trans(minalt:maxalt,minazi:maxazi))
             allocate(cloud_rad_c(nc,minalt:maxalt,minazi:maxazi))
@@ -1273,8 +1278,40 @@
             endif ! l_binary
 
 !           Deallocate arrays here (that are local in 'calc_allsky')
+            deallocate(r_cloud_3d)
+            deallocate(cloud_od)
+            deallocate(cloud_od_sp)
+            deallocate(elong_roll)
+            deallocate(airmass_2_cloud_3d)
+            deallocate(airmass_2_topo_3d)
+            deallocate(topo_swi)
+            deallocate(topo_albedo)
+            deallocate(topo_ri)
+            deallocate(topo_rj)
+            deallocate(trace_ri)
+            deallocate(trace_rj)
+            deallocate(topo_solalt)
+            deallocate(trace_solalt)
+            deallocate(ghic)
+            deallocate(aod_2_cloud)
+            deallocate(aod_2_topo)
+            deallocate(dist_2_topo)
+            deallocate(aod_ill)
+            deallocate(aod_ill_dir)
+            deallocate(aod_tot)
+            deallocate(r_cloud_trans)
+            deallocate(cloud_rad_c)
+            deallocate(cloud_rad_w)
+            deallocate(clear_rad_c)
+            deallocate(clear_radf_c)
+            deallocate(blog_moon_roll)
+            deallocate(blog_sun_roll)
+            deallocate(glow_stars)
 
           endif ! call calc_allsky
+
+          deallocate(aod_ill_opac)
+          deallocate(aod_ill_opac_potl)
 
           write(6,*)' end of subroutine call block'
 
@@ -1375,39 +1412,6 @@
           write(6,*)
 
           I4_elapsed = ishow_timer()
-
-!         Many of these should be local in 'calc_allsky'
-          deallocate(r_cloud_3d)
-          deallocate(cloud_od)
-          deallocate(cloud_od_sp)
-          deallocate(elong_roll)
-          deallocate(airmass_2_cloud_3d)
-          deallocate(airmass_2_topo_3d)
-          deallocate(topo_swi)
-          deallocate(topo_albedo)
-          deallocate(topo_ri)
-          deallocate(topo_rj)
-          deallocate(trace_ri)
-          deallocate(trace_rj)
-          deallocate(topo_solalt)
-          deallocate(trace_solalt)
-          deallocate(ghic)
-          deallocate(aod_2_cloud)
-          deallocate(aod_2_topo)
-          deallocate(dist_2_topo)
-          deallocate(aod_ill)
-          deallocate(aod_ill_dir)
-          deallocate(aod_ill_opac)
-          deallocate(aod_ill_opac_potl)
-          deallocate(aod_tot)
-          deallocate(r_cloud_trans)
-          deallocate(cloud_rad_c)
-          deallocate(cloud_rad_w)
-          deallocate(clear_rad_c)
-          deallocate(clear_radf_c)
-          deallocate(blog_moon_roll)
-          deallocate(blog_sun_roll)
-          deallocate(glow_stars)
 
           deallocate(alt_a_roll)
           deallocate(azi_a_roll)
