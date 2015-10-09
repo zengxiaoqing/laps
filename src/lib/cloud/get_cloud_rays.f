@@ -393,6 +393,8 @@
 
 !       kstart = 0 ! 0 means sfc, otherwise level of start
 
+!       Set up starting information for ray trace from observer
+
         if(htagl .eq. 0.)then ! start from sfc
           htstart = topo_sfc  ! MSL
           write(6,*)' i/j/topo_sfc = ',i,j,topo_sfc
@@ -523,6 +525,7 @@
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
 
+!       Loop through altitudes as seen from the observer
         do ialt = minalt,maxalt
 
 !        l_process = .false.
@@ -1489,7 +1492,7 @@
 
 !        I4_elapsed = ishow_timer()
 
-!        Get clear sky twilight brightness in ring
+!        Get clear sky twilight brightness in ring of constant altitude
          if(sol_alt(i,j) .le. 0.)then
 !            write(6,*)' args: ',l_solar_eclipse,i4time,rlat,rlon
              call skyglow_phys_twi(ialt,ialt,1,minazi,maxazi,jazi_delt
