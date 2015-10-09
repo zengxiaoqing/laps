@@ -272,15 +272,15 @@
         do ialt = minalt,maxalt
         do jazi = minazi,maxazi
 
-            alt = alt_a(ialt,jazi)
-            azi = azi_a(ialt,jazi)
+            altg = alt_a(ialt,jazi)
+            azig = azi_a(ialt,jazi)
 
             size_glow_sqdg = 0.3  ! empirical middle ground 
             size_glow_sqdg = 0.5  ! empirical middle ground 
             size_glow_sqdg = 0.0625  ! alt/az grid
             size_glow_sqdg = 0.1  ! final polar kernel size?
 
-            if(alt .ge. -horz_dep)then
+            if(altg .ge. -horz_dep)then
 
 !             Milky Way (mainly from stars from 6-16 magnitude)
               explatterm = (abs(gallat_a(ialt,jazi)/20.))**1.5
@@ -353,10 +353,10 @@
 !               glow_stars(ic,ialt,jazi) = log10(10.**glow_stars(ic,ialt,jazi))             
               enddo ! ic
 
-              if((azi .eq. 0.0 .or. azi .eq. 180.) .AND. &
-                  (alt .eq. 0.0 .or. alt .eq. 10. .or. alt .eq. 20. .or. alt .eq. 30. .or. alt .eq. 40. .or. alt .eq. 60. .or. alt .eq. 90.) &
+              if((azig .eq. 0.0 .or. azig .eq. 180.) .AND. &
+                  (altg .eq. 0.0 .or. altg .eq. 10. .or. altg .eq. 20. .or. altg .eq. 30. .or. altg .eq. 40. .or. altg .eq. 60. .or. altg .eq. 90.) &
                                                                                                                             )then
-                write(6,71)alt,azi,dec_a(ialt,jazi),ra_a(ialt,jazi) &
+                write(6,71)altg,azig,dec_a(ialt,jazi),ra_a(ialt,jazi) &
                           ,gallat_a(ialt,jazi),gallon_a(ialt,jazi) &
                           ,helioeclipticlat_a(ialt,jazi),helioeclipticlon_a(ialt,jazi)
 71              format(' alt-azi/dec-ra/gallat-lon/helioecllat-lon',4(2x,2f8.2))
@@ -368,12 +368,15 @@
                 write(6,*)'s10zod/s10gal/glowstars',s10zod2,s10gal,glow_stars(2,ialt,jazi)
               endif
 
-              alt_cos = min(alt,89.)
+              alt_cos = min(altg,89.)
               alt_dist = alt_scale / 2.0          * 1.3
               azi_dist = alt_dist / cosd(alt_cos) * 1.3   
 
               do is = 1,ns        
-                if(abs(alt_stars(is)-alt) .le. alt_dist .AND. abs(azi_stars(is)-azi) .le. azi_dist)then
+!               Place star in center of grid box
+                alts = nint(alt_stars(is)/alt_scale) * alt_scale
+                azis = nint(azi_stars(is)/azi_scale) * azi_scale
+                if(abs(alts-altg) .le. alt_dist .AND. abs(azis-azig) .le. azi_dist)then
                     delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
                     rmag_per_sqarcsec = mag_stars(is) + ext_mag(is) + delta_mag                  
 
@@ -383,7 +386,7 @@
                       glow_stars(ic,ialt,jazi) = log10(10.**glow_stars(ic,ialt,jazi) + 10.**glow_nl)             
                     enddo ! ic
 
-                    if(is .le. 50 .AND. abs(azi_stars(is)-azi) .le. 0.5)then
+                    if(is .le. 50 .AND. abs(azis-azig) .le. 0.5)then
                         write(6,91)is,rmag_per_sqarcsec,delta_mag,glow_nl,glow_stars(2,ialt,jazi)
 91                      format( &
                          ' rmag_per_sqarcsec/dmag/glow_nl/glow_stars = ',i4,4f10.3)             
@@ -523,7 +526,8 @@
        
         subroutine get_glow_obj(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi &
                                ,alt_scale,azi_scale &
-                               ,alt_obj,azi_obj,mag_obj,diam_deg,horz_dep,glow_obj)
+                               ,alt_obj_in,azi_obj_in,mag_obj &
+                               ,diam_deg,horz_dep,glow_obj)
 
         real alt_a(minalt:maxalt,minazi:maxazi)
         real azi_a(minalt:maxalt,minazi:maxazi)
@@ -537,7 +541,13 @@
         ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
 
         write(6,*)' subroutine get_glow_obj...'
-        write(6,*)' alt/az/mag = ',alt_obj,azi_obj,mag_obj
+        write(6,*)' alt/az/mag = ',alt_obj_in,azi_obj_in,mag_obj
+
+        r_missing_data = 1e37
+
+!       Place object in center of grid box
+        alt_obj = nint(alt_obj_in/alt_scale) * alt_scale
+        azi_obj = nint(azi_obj_in/azi_scale) * azi_scale
 
         rpd = 3.14159265 / 180.
 
@@ -569,6 +579,8 @@
             alt_dist = alt_scale / 2.0
         endif
 
+        radius_deg = diam_deg / 2.0
+    
         do ialt = minalt,maxalt
         do jazi = minazi,maxazi
 
@@ -576,51 +588,74 @@
             size_glow_sqdg = 0.1  ! final polar kernel size
             size_glow_sqdg = 0.3  ! empirical middle ground 
 
-            alt = alt_a(ialt,jazi)
-            azi = azi_a(ialt,jazi)
+            altg = alt_a(ialt,jazi)
+            azig = azi_a(ialt,jazi)
 
             if(alt .ge. -2. .or. alt .ge. -horz_dep)then
 
-              alt_cos = min(alt,89.)
-              azi_dist = alt_dist / cosd(alt_cos)         
+                alt_cos = min(altg,89.)
+                azi_dist = alt_dist / cosd(alt_cos)         
 
-                distr = sqrt(((alt_obj-alt)/alt_dist)**2 + ((azi_obj-azi)/azi_dist)**2)
+!               Calculate distance in object/grid radii in cyl projection
+                distr = sqrt(((alt_obj-altg)/alt_dist)**2 + ((azi_obj-azig)/azi_dist)**2)
 
-                if(abs(alt_obj-alt) .le. alt_dist .AND. abs(azi_obj-azi) .le. azi_dist)then
-                    grid_frac_obj = 1.0
-                    if(diam_deg .ge. 0.75)then  ! solar corona
-                        size_glow_sqdg = 0.2    ! sun/moon area           
-                        delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
-                        distr = sqrt(((alt_obj-alt))**2 + ((azi_obj-azi)*cosd(alt_cos))**2)
-                        if(distr .ge. 0.25)then ! corona
-                            distr2 = max(distr,0.40) ! account for pixel size 
-                            spowerk =  5.7 +      (distr2/0.25) * 2.0
-                            spowerf = 10.0 + log10(distr2/0.25) * 2.0
-                            smag_eff = -26.7 + 2.5 * min(spowerk,spowerf)
-                            rmag_per_sqarcsec = smag_eff + ext_mag + delta_mag 
-                        else                    ! dark side of moon
-                            rmag_per_sqarcsec = +2.5 + ext_mag + delta_mag
-                        endif
-!                       if(abs(alt_obj-alt) .le. 0.15)then                  
-                        if(.true.)then                                      
-                            write(6,81)ialt,jazi,alt,alt_obj,azi,azi_obj,distr,smag_eff
-81                          format(' alt,alt_obj,azi,azi_obj,distr (deg) =',2i4,5f9.3,f7.2)
-                        endif
-                    elseif(diam_deg .ge. 0.25)then ! regular sun or moon
-                        size_glow_sqdg = 0.2    ! sun/moon area           
-                        delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
-                        rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
-                    else                        ! star
-                        delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
-                        rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+                frac_lit = 1.0
+                grid_frac_obj = 1.0
+
+                if(diam_deg .ge. 0.75 .and. distr .le. radius_deg)then  ! solar corona
+                    size_glow_sqdg = 0.2    ! sun/moon area           
+                    delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
+                    distr = sqrt(((alt_obj-alt))**2 + ((azi_obj-azi)*cosd(alt_cos))**2)
+                    if(distr .ge. 0.25)then ! corona
+                        distr2 = max(distr,0.40) ! account for pixel size 
+                        spowerk =  5.7 +      (distr2/0.25) * 2.0
+                        spowerf = 10.0 + log10(distr2/0.25) * 2.0
+                        smag_eff = -26.7 + 2.5 * min(spowerk,spowerf)
+                        rmag_per_sqarcsec = smag_eff + ext_mag + delta_mag 
+                    else                    ! dark side of moon
+                        rmag_per_sqarcsec = +2.5 + ext_mag + delta_mag
+                    endif
+!                   if(abs(alt_obj-alt) .le. 0.15)then                  
+                    if(.true.)then                                      
+                        write(6,81)ialt,jazi,altg,alt_obj,azig,azi_obj,distr,smag_eff
+81                      format(' altg,alt_obj,azig,azi_obj,distr (deg) =',2i4,5f9.3,f7.2)
+                    endif
+                elseif(diam_deg .ge. 0.25 .and. distr .le. 2.0)then ! regular sun or moon
+                    size_glow_sqdg = 0.2    ! sun/moon area           
+
+!                   Calculate fraction of grid box illuminated by object
+                    if(distr .le. 0.5)then
+                        frac_lit = 1.0
+                    elseif(distr .gt. 1.5)then
+                        frac_lit = 0.0
+                    else
+                        frac_lit = 1.5 - distr
                     endif
 
-!                   Convert to nanolamberts
-                    glow_nl = v_to_b(rmag_per_sqarcsec)
-                    glow_obj(ialt,jazi) = log10(glow_nl)             
+                    write(6,89)ialt,jazi,altg,alt_obj,azig,azi_obj,distr,frac_lit
+89                  format(' altg/alt_obj/azig/azi_obj/distr (deg)/frac_lit =',2i4,5f9.3,f7.2)
 
-                    if(.true.)then                          
-!                   if(abs(alt_obj-alt) .le. 0.15)then                  
+                    if(frac_lit .gt. 0.)then
+                        delta_mag = log10((size_glow_sqdg*sqarcsec_per_sqdeg)/frac_lit)*2.5
+                        rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+                    else
+                        rmag_per_sqarcsec = r_missing_data
+                    endif
+
+                elseif(distr .le. radius_deg)then ! star
+                    delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
+                    rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+                else
+                    rmag_per_sqarcsec = r_missing_data
+                endif
+
+                if(rmag_per_sqarcsec .ne. r_missing_data)then
+!                 Convert to nanolamberts
+                  glow_nl = v_to_b(rmag_per_sqarcsec)
+                  glow_obj(ialt,jazi) = log10(glow_nl)             
+
+                  if(.true.)then                          
+!                 if(abs(alt_obj-alt) .le. 0.15)then                  
                         if(glow_nl .lt. 1e5)then
                             write(6,91)rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
 91                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj = ',2f10.3,e12.4,f11.2)
@@ -628,7 +663,7 @@
                             write(6,92)rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
 92                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj = ',2f10.3,e12.4,f11.2,' ***GLOW***')
                         endif
-                    endif
+                  endif
                 endif ! within star kernel
             endif ! alt > -2.
         enddo ! jazi
