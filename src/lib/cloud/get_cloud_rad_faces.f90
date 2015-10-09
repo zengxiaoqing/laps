@@ -9,6 +9,9 @@
                 sfc_glow,                        & ! I
                 transm_3d,transm_4d)               ! O
 
+!    Calculate 3D radiation field looping through each of the 6 faces in
+!    the domain.
+
      use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
                             ,aod,aero_scaleht,fcterm,redp_lvl
      include 'rad.inc'
@@ -16,6 +19,8 @@
      trans(od) = exp(-min(od,80.))
      scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! x/scurve range is 0-1
 
+!    For each face, set start/end points to loop in the i,j,k dimension
+!    Index of 1 points to the 1st element, 2 points to the last element
 !                  T  B  W  E  N  S
      real i1(6)  / 1, 1, 1, 2, 1, 1/            
      real i2(6)  / 2, 2, 1, 2, 2, 2/           
@@ -31,8 +36,8 @@
      real rain_3d(ni,nj,nk)  ! kg/m**3
      real snow_3d(ni,nj,nk)  ! kg/m**3
      real b_alpha_3d(ni,nj,nk) ! m**-1          
-     real transm_3d(ni,nj,nk)
-     real transm_4d(ni,nj,nk,nc)
+     real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
+     real transm_4d(ni,nj,nk,nc) ! color information added
 
      real obj_alt(ni,nj),obj_azi(ni,nj)
      real topo_a(ni,nj)
@@ -42,11 +47,13 @@
 
      real trans_c(nc)
      real bi_coeff(2,2),tri_coeff(2,2,2),b_alpha_cube(2,2,2)
+     equivalence (s,scurr) ! needed only during transition from s to scurr
 
      parameter (htlutlo = -1000)
      parameter (htluthi = 30000)
      real htlut(htlutlo:htluthi)
 
+!    These parameters can be obtained/updated from the 'cloud_rad' module
 !    Backscattering efficiencies
      real, parameter :: bksct_eff_clwc    = .063
      real, parameter :: bksct_eff_cice    = .14
@@ -67,8 +74,8 @@
      real, parameter :: rhograupel = .50e3 ! kilograms per cubic meter
 
 !    Effective radii
-     real, parameter :: reff_clwc    = .000020 ! m
-     real, parameter :: reff_cice    = .000040 ! m
+     real, parameter :: reff_clwc    = .000007 ! m
+     real, parameter :: reff_cice    = .000034 ! m
      real, parameter :: reff_rain    = .000750 ! m
      real, parameter :: reff_snow    = .004000 ! m
      real, parameter :: reff_graupel = .010000 ! m
@@ -175,12 +182,32 @@
          ihit_terrain = 0
  
          slast = 0
+         b_alpha_new = 0.
          btau = 0.
+
+!        We presently do ray marching a constant distance intervals.
+!        It may be more efficient to have successive steps march 
+!        to the next 3D grid box boundary. We can then interpolate
+!        from these "end points" to form the needed integrated values
+!        at these grid box boundaries. We'd also want to know the
+!        integrated values at the location where the ray comes closest
+!        to the center of the grid box that is traverses.
+
+!        When doing bilinear or trilinear interpolation, we're looking at
+!        squares/cubes that have grid points lying on the vertices and the
+!        'int' operation is used. When assigning the radiance values to the
+!        grid, we are considering the nearest grid point using the 'nint'
+!        operation. Here the cube is centered on a grid point.
+
+!        Intersections with terrain are considered by finding maxima in the
+!        bilinearly interpolated terrain field, relative to the ray height.
+!        These maxima are thought to be located along lines connecting two
+!        adjacent or diagonally adjacent grid points.
 
 !        Start ray trace at this point
          if(idebug .eq. 1)write(6,1)if,it,jt,kt
 1        format(4i3)
-         do ls = 0,4000
+         do ls = 0,4000 ! max number of ray segments
 
            if(ls .eq. 0)then ! values at start of trace                
              objalt = obj_alt(id,jd) + refr_mn
@@ -189,33 +216,35 @@
              djds = -cosd(objazi)*cosd(objalt)/grid_spacing_m
              dhtds = -sind(objalt)                                 
              dxyds =  cosd(objalt)
-           else
-             slast = s
+           else            ! ls > 0, thus after first looping
+             slast = scurr ! initialized down below
              htlast = ht
            endif
 
 !          if(idebug .eq. 1)write(6,*)'dids/djds/dhtds = ',dids,djds,dhtds
 
+!          Calculate 'scurr' as the total path traversed so far by the ray.
+!          The incremental path length ('ds') will be calculated later on.
            if(objalt .gt. 15. .AND. if .le. 2)then ! march by height levels
              nksteps = 2
              rkmarch = rkt - float(ls)/float(nksteps)
              if(rkmarch .le. 0.)goto 10 ! going outside the domain
              kmarch = nint(rkmarch) ! kl,kh
              htmarch = heights_1d(max(kmarch,1))
-             s = (htt - htmarch) / (-dhtds)
+             scurr = (htt - htmarch) / (-dhtds)
 
-             if(s .lt. slast)then
+             if(scurr .lt. slast)then
                write(6,*)' ERROR s<slast 1:',s,slast,ls,htt,htmarch,rkmarch
                stop
              endif
 
            elseif(objalt .lt. 3.0 .and. if .eq. 1)then
-             s = float(ls) * grid_spacing_m
+             scurr = float(ls) * grid_spacing_m
 
            else
-             s = float(ls) * raysteps
+             scurr = float(ls) * raysteps
 
-             if(s .lt. slast)then
+             if(scurr .lt. slast)then
                write(6,*)' ERROR s<slast 2:',s,slast,ls,raysteps
                stop
              endif
