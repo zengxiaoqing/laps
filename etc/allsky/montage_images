@@ -33,18 +33,20 @@ mkdir -p output4
 if (-e output3/$LAPS_A13TIME\_$SITE.png) then
     echo "montage $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png -mode concatenate output4/combined_$LAPS_A9TIME.png"
           montage $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png -mode concatenate output4/combined_$LAPS_A9TIME.png
-else
-    echo "WARNING: output3/$LAPS_A13TIME\_$SITE.png is not present - exiting montage_images..."
-    exit
-endif
 
-echo " "
-echo "make polar blinking comparison for $SITE..."
-pwd
-mkdir -p output4b
-echo "convert -delay 150 -loop 0  $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png output4b/$LATEST_DATA\_blink.gif"
-      convert -delay 150 -loop 0  $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png output4b/$LATEST_DATA\_blink.gif     
-cp output4b/$LATEST_DATA\_blink.gif /w3/lapb/allsky/blink_comparison.gif
+    echo " "
+    echo "make polar blinking comparison for $SITE..."
+    pwd
+    mkdir -p output4b
+    echo "convert -delay 150 -loop 0  $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png output4b/$LATEST_DATA\_blink.gif"
+          convert -delay 150 -loop 0  $ALSDIR/$LAPS_A9TIME.png output3/$LAPS_A13TIME\_$SITE.png output4b/$LATEST_DATA\_blink.gif     
+    cp output4b/$LATEST_DATA\_blink.gif /w3/lapb/allsky/blink_comparison.gif
+
+else
+    echo "WARNING: output3/$LAPS_A13TIME\_$SITE.png is not present - skipping polar montage..."
+#   exit
+
+endif
 
 # Process for cyl images
 
@@ -53,13 +55,20 @@ setenv ALSDIR $LAPS_DATA_ROOT/lapsprd/www/anal2d/archive/als/$SITE/cyl
 echo "make cyl montage for $SITE..."
 pwd
 mkdir -p output4c
+if (-e output3c/$LAPS_A13TIME\_$SITE.png) then
 
-echo "montage $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png -mode concatenate -tile 1x -border 1 output4c/combined_$LAPS_A9TIME.png"
-      montage $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png -mode concatenate -tile 1x -border 1 output4c/combined_$LAPS_A9TIME.png
-      identify $ALSDIR/$LAPS_A9TIME.png
-      identify output3c/$LAPS_A13TIME\_$SITE.png
+    echo "montage $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png -mode concatenate -tile 1x -background gray40 -border 1 output4c/combined_$LAPS_A9TIME.png"
+          montage $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png -mode concatenate -tile 1x -background gray40 -border 1 output4c/combined_$LAPS_A9TIME.png
+          identify $ALSDIR/$LAPS_A9TIME.png
+          identify output3c/$LAPS_A13TIME\_$SITE.png
 
-ls -l $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png output4c/combined_$LAPS_A9TIME.png
+    ls -l $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png output4c/combined_$LAPS_A9TIME.png
+
+else
+    echo "WARNING: output3c/$LAPS_A13TIME\_$SITE.png is not present - skipping cyl montage..."
+#   exit
+
+endif
 
 date -u
 
