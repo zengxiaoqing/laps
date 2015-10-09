@@ -126,11 +126,11 @@
         twi_alt = -4.5
 
         if(sol_alt .ge. twi_0)then
-          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight (expgamma)
           corr1 = corr1_in; corr2 = 3.55  ! darkness of start/end of twilight (gamma)
+          corr1 = corr1_in; corr2 = 3.75  ! darkness of start/end of twilight (gamma)
         else
-          corr1 = 8.7; corr2 = 3.412 ! darkness of start/end of twilight (expgamma)
           corr1 = corr1_in; corr2 = 3.55  ! darkness of start/end of twilight (gamma)
+          corr1 = corr1_in; corr2 = 3.75  ! darkness of start/end of twilight (gamma)
         endif
 
         if(sol_alt .le. 0.)then
