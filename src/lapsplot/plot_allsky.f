@@ -113,7 +113,7 @@
         real, allocatable, dimension(:,:) :: elong_roll                        
         real, allocatable, dimension(:,:) :: airmass_2_cloud_3d
         real, allocatable, dimension(:,:) :: airmass_2_topo_3d                        
-        real, allocatable, dimension(:,:) :: topo_swi                        
+        real, allocatable, dimension(:,:) :: topo_gti                        
         real, allocatable, dimension(:,:,:) :: topo_albedo
         real, allocatable, dimension(:,:) :: topo_ri
         real, allocatable, dimension(:,:) :: topo_rj
@@ -121,7 +121,7 @@
         real, allocatable, dimension(:,:) :: trace_rj
         real, allocatable, dimension(:,:) :: topo_solalt
         real, allocatable, dimension(:,:) :: trace_solalt
-        real, allocatable, dimension(:,:,:) :: ghic
+        real, allocatable, dimension(:,:,:) :: gtic
         real, allocatable, dimension(:,:) :: aod_2_cloud
         real, allocatable, dimension(:,:) :: aod_2_topo
         real, allocatable, dimension(:,:) :: dist_2_topo
@@ -318,7 +318,7 @@
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
 
-        if(i4time_ref - i4time_now_gg() .lt. 86400)then ! present/past
+        if(i4time_ref - i4time_now_gg() .lt. 21600)then ! present/past
           l_require_clouds = .true.
         else                                            ! future
           l_require_clouds = .false.
@@ -1036,7 +1036,7 @@
             allocate(elong_roll(minalt:maxalt,minazi:maxazi))
             allocate(airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi))
             allocate(airmass_2_topo_3d(minalt:maxalt,minazi:maxazi))
-            allocate(topo_swi(minalt:maxalt,minazi:maxazi))
+            allocate(topo_gti(minalt:maxalt,minazi:maxazi))
             allocate(topo_albedo(nc,minalt:maxalt,minazi:maxazi))
             allocate(topo_ri(minalt:maxalt,minazi:maxazi))
             allocate(topo_rj(minalt:maxalt,minazi:maxazi))
@@ -1044,7 +1044,7 @@
             allocate(trace_rj(minalt:maxalt,minazi:maxazi))
             allocate(topo_solalt(minalt:maxalt,minazi:maxazi))
             allocate(trace_solalt(minalt:maxalt,minazi:maxazi))
-            allocate(ghic(nc,minalt:maxalt,minazi:maxazi))
+            allocate(gtic(nc,minalt:maxalt,minazi:maxazi))
             allocate(aod_2_cloud(minalt:maxalt,minazi:maxazi))
             allocate(aod_2_topo(minalt:maxalt,minazi:maxazi))
             allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
@@ -1064,9 +1064,9 @@
             call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
      1                     ,heights_3d                           ! I
      1                     ,rain_3d,snow_3d                      ! I
-     1                     ,pres_3d,aod_3d,topo_sfc,topo,swi_2d  ! I
+     1                     ,pres_3d,aod_3d,topo_sfc,topo         ! I
      1                     ,topo_albedo_2d                       ! I
-     1                     ,topo_swi,topo_albedo,ghic            ! O
+     1                     ,topo_gti,topo_albedo,gtic            ! O
      1                     ,topo_ri,topo_rj                      ! O
      1                     ,trace_ri,trace_rj                    ! O
 !    1                     ,ghi_2d,dhi_2d                        ! O
@@ -1256,7 +1256,7 @@
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
-     1                    ,topo_swi,topo_albedo
+     1                    ,topo_gti,topo_albedo
      1                    ,topo_albedo_2d(:,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,aod_tot
@@ -1284,7 +1284,7 @@
             deallocate(elong_roll)
             deallocate(airmass_2_cloud_3d)
             deallocate(airmass_2_topo_3d)
-            deallocate(topo_swi)
+            deallocate(topo_gti)
             deallocate(topo_albedo)
             deallocate(topo_ri)
             deallocate(topo_rj)
@@ -1292,7 +1292,7 @@
             deallocate(trace_rj)
             deallocate(topo_solalt)
             deallocate(trace_solalt)
-            deallocate(ghic)
+            deallocate(gtic)
             deallocate(aod_2_cloud)
             deallocate(aod_2_topo)
             deallocate(dist_2_topo)
