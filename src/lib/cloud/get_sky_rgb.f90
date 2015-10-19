@@ -6,7 +6,7 @@
                    glow_sun,glow_moon,glow_stars, &                     ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo, &
-                   topo_swi,topo_albedo,albedo_sfc, &                   ! I
+                   topo_gti,topo_albedo,albedo_sfc, &                   ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,trace_solalt,          &     ! I
                    alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
@@ -54,7 +54,7 @@
         real glow_stars(nc,ni,nj)   ! starglow (log b in nl)           
         real airmass_2_cloud(ni,nj) ! airmass to cloud 
         real airmass_2_topo(ni,nj)  ! airmass to topo  
-        real topo_swi(ni,nj)        ! terrain normal global irradiance
+        real topo_gti(ni,nj)        ! terrain normal global irradiance
         real topo_albedo(nc,ni,nj)  ! terrain albedo
         real aod_2_cloud(ni,nj)     ! future use
         real aod_2_topo(ni,nj)      ! aerosol optical depth to topo (slant)
@@ -157,14 +157,14 @@
 
 !         Last coefficient represents altitude of incident twilight glow
 !         Try get_sky_glow_ave for twilight and/or daylight?
-          rindirect = 1300. * (10.**glow_secondary_cld / rad_cld_day) * 0.1
+!         rindirect = 1300. * (10.**glow_secondary_cld / rad_cld_day) * 0.1
           rad_sec_cld(:) = 10.**glow_secondary_cld
 
           write(6,*)' glow_secondary_cld = ',glow_secondary_cld
           if(sol_alt .lt. twi_0)then
               write(6,*)' glow_secondary_clr = ',glow_secondary_clr
           endif
-          write(6,*)' rindirect = ',rindirect                 
+!         write(6,*)' rindirect = ',rindirect                 
           write(6,2)rad_sec_cld(:)
 2         format('  rad_sec_cld (based on glow_secondary_cld) = ',3f12.0)
 
@@ -212,7 +212,7 @@
         if(sol_alt .gt. altmidcorr)then ! shallow twilight
           fracerf = (sol_alt - altmidcorr) * 0.116 
         else                            ! deep twilight
-          fracerf = (sol_alt - altmidcorr) * 0.127 
+          fracerf = (sol_alt - altmidcorr) * 0.160 
         endif
         erfterm = (erf(fracerf) + 1.) / 2.
         glwmid = corr2*(1.-erfterm) + corr1*erfterm
@@ -436,9 +436,9 @@
                       else
                           write(6,*)'Clear with aerosol shadowing outside of terrain:'
                       endif
-                      write(6,7)alt_a(i,j),azi_a(i,j),od_atm_a,aod_ill(i,j),aod_ill_dir(i,j),aa &
+                      write(6,7)alt_a(i,j),azi_a(i,j),od_atm_a,aod_tot(i,j),aod_ill(i,j),aod_ill_dir(i,j),aa &
                                ,od_atm_a_eff(i,j),od_atm_a_dir(i,j),clear_radf_c(2,i,j)
-7                     format(' altaz/od_atm_a/aod_ill/dir/aa/od_atm_a_eff/dir/clr_radf =   ',2f9.2,4f9.3,3f9.3)
+7                     format(' altaz/od_atm_a/aod_tot/ill/dir/aa/od_atm_a_eff/dir/clr_radf =   ',2f9.2,5f9.3,3f9.3)
                       iprint2 = iprint2 + 1
                   endif
 !                 clear_radf_c_eff(:,i,j) = clear_radf_c(:,i,j)
@@ -603,7 +603,7 @@
 
         I4_elapsed = ishow_timer()
 
-        call get_lnd_pf(elong_a,alt_a,azi_a,topo_swi,topo_albedo    & ! I
+        call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
                        ,transm_obs                                  & ! I
                        ,dist_2_topo,topo_solalt                     & ! I
                        ,sol_alt,sol_az,nsp,airmass_2_topo,idebug_pf & ! I
@@ -631,7 +631,7 @@
           if(sol_alt .ge. twi_alt)then  ! daylight
             write(6,11)
 11          format('    i   j   alt   azi  elong   pf_scat     opac    od /        species            alb    cloud airmass   rad', &
-                   '   rinten  airtopo   switopo topoalb aodill  topood topovis cld_visb   glow      skyrgb')
+                   '   rinten  airtopo   gtitopo topoalb aodill  topood topovis cld_visb   glow      skyrgb')
           elseif(sol_alt .ge. -16.)then ! twilight
             write(6,12)
 12          format('    i   j      alt      azi     elong   pf_scat     opac       od      alb     cloud  airmass   rad    ', &
@@ -987,8 +987,8 @@
             cloud_visibility = exp(-od_2_cloud) ! empirical coeff
 
 !           Use clear sky values if cloud cover is less than 0.5
-            frac_cloud = r_cloud_3d(i,j)
-!           frac_cloud = 0.0 ; Testing
+            opac_cloud = r_cloud_3d(i,j)
+!           opac_cloud = 0.0 ; Testing
 
 !           0 by day and 1 by night
             ramp_cld_nt = min(max((-sol_alt/3.0),0.),1.)               
@@ -1017,10 +1017,10 @@
 
             endif
 
-            frac_cloud_2nd = frac_cloud * cloud_visibility
+!           frac_cloud_2nd = opac_cloud * cloud_visibility
 
 !           Fade in daytime and if opposite the twilight arch
-            frac_cloud = frac_cloud * cloud_visibility**scurve_term  
+            frac_cloud = opac_cloud * cloud_visibility**scurve_term  
 
             btau = 0.10 * cloud_od(i,j)
             cloud_albedo = btau / (1. + btau)
@@ -1032,10 +1032,32 @@
 !           more radiatively a la topo?
 !           Note cloud may be located in front of or behind clear sky glow
 !           It would generally be in front of during twilight
-            frac_clr = 1.0 - frac_cloud*frac_behind ! clear sky behind cloud                         
 
-            sky_rad(ic) = clear_rad_c(ic,i,j) * frac_clr &
-                        + cld_rad(ic) * frac_cloud
+!           if(sol_alt .gt. 0.0)then ! daytime
+!             frac_clr = 1.0 - frac_cloud
+!           else
+              frac_clr = 1.0 - frac_cloud*frac_behind ! clear sky behind cloud                         
+!             frac_clr = frac_clr * clear_radf_c(ic,i,j)
+!           endif
+
+!           Clear sky radiance should be modulated by the cloud if it has to
+!           go through the cloud. It can be added to the cloud if the cloud
+!           is transparent, or if the illuminated air is in front of the cloud.
+!           radf_through_cloud = 1.0 - r_cloud_3d(i,j)
+
+!           This should be turned on when we are looking at a dark cloud
+!           lying in front of the sun and the sub-cloud air (particularly
+!           the aerosol component) is unilluminated. Thus the aureole from 
+!           clear air scattering should not show up projected in front of 
+!           a cloud, if the line of sight from the observer to the cloud
+!           is in shadow.
+!           if(sol_alt .gt. 0.0 .and. .false.)then ! daytime
+!             sky_rad(ic) = clear_rad_c(ic,i,j) * radf_through_cloud &
+!                         + cld_rad(ic) * frac_cloud
+!           else
+              sky_rad(ic) = clear_rad_c(ic,i,j) * frac_clr &
+                          + cld_rad(ic) * frac_cloud
+!           endif
 
           enddo ! ic
 
@@ -1045,8 +1067,8 @@
 
 !         if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 2.0)then
           if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 90.0)then
-            write(6,96)frac_front,frac_clr,frac_cloud,scurve_term,clear_rad_c(:,i,j),cld_rad,sky_rad
-96          format(' ffnt/fclr/fcld/scrv/clr_rad/cld_rad/sky_rad',4f7.3,3f14.0,2x,3f14.0,2x,3f14.0,2x,3i4)
+            write(6,96)frac_front,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_clr,frac_cloud,scurve_term,clear_rad_c(:,i,j),cld_rad,sky_rad
+96          format(' ffnt/rcld/radf/fclr/fcld/scrv/clr_rad/cld_rad/sky_rad',6f7.3,3f14.0,2x,3f14.0,2x,3f14.0,2x,3i4)
           endif
 
 !         Use topo value if airmass to topo > 0
@@ -1083,17 +1105,17 @@
 !                 Add topo brightness to line of sight sky brightness in radiation space
 
 !                 Using secondary cloud glow as lower bound during twilight
-                  if(sol_alt .gt. 0.)then ! floor of SWI field (W/m**2)
-                      rindirect = 25.
-                  else
+!                 if(sol_alt .gt. 0.)then ! floor of SWI/GTI field (W/m**2)
+!                     rindirect = 25.
+!                 else
 !                     rindirect = 1300. * (10.**glow_secondary_cld / rad_cld_day)
-                  endif
+!                 endif
 
-!                 topo_swi_frac = max(topo_swi(i,j),rindirect) / 1300. 
-                  topo_swi_frac =     topo_swi(i,j)            / 1300. 
-                  rtopo_red = 2. * topo_swi_frac * topo_albedo(1,i,j) * pf_land(1,i,j)
-                  rtopo_grn = 2. * topo_swi_frac * topo_albedo(2,i,j) * pf_land(2,i,j)
-                  rtopo_blu = 2. * topo_swi_frac * topo_albedo(3,i,j) * pf_land(3,i,j)
+!                 topo_gti_frac = max(topo_swi(i,j),rindirect) / 1300. 
+                  topo_gti_frac =     topo_gti(i,j)            / 1300. 
+                  rtopo_red = 2. * topo_gti_frac * topo_albedo(1,i,j) * pf_land(1,i,j)
+                  rtopo_grn = 2. * topo_gti_frac * topo_albedo(2,i,j) * pf_land(2,i,j)
+                  rtopo_blu = 2. * topo_gti_frac * topo_albedo(3,i,j) * pf_land(3,i,j)
                   sky_frac_topo = 1.00               ! hopefully temporary
                   sky_frac_aero = 1.00               ! hopefully temporary
                   red_rad = day_int * rtopo_red*topo_visibility*sky_frac_topo
@@ -1103,14 +1125,14 @@
                   blu_rad = day_int * rtopo_blu*topo_visibility*sky_frac_topo
 !                         + counts_to_rad(sky_rgb(2,I,J)) * sky_frac_aero 
                   if(idebug .eq. 1)then
-                    write(6,97)rtopo_grn,rindirect,topo_swi(i,j),topo_swi_frac &
+                    write(6,97)rtopo_grn,topo_gti(i,j),topo_gti_frac &
                               ,topo_albedo(2,i,j),topo_solalt(i,j) &
                               ,dist_2_topo(i,j) &
 !                             ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
                               ,red_rad,grn_rad,blu_rad,sky_rad(:)
 97                  format( &
-                        ' rtopo/rind/swi/swif/alb/tsalt/dst/trad/srad', &
-                           2f9.3,f9.1,f9.4,f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
+                        ' rtopo/gti/swif/alb/tsalt/dst/trad/srad', &
+                           f9.3,f9.1,f9.4,f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
                   endif
 
                   sky_rad(1) = sky_rad(1) + red_rad
@@ -1130,10 +1152,10 @@
 !                 can be added if viewpoint is in space using
 !                 'clear_rad_c', 'sky_rad', or 'clear_rad_c_nt'
 
-                  topo_swi_frac = (max(topo_swi(i,j),001.) / 5000.) ** 0.45
-                  rtopo_red = topo_swi(i,j) * 1.5
-                  rtopo_grn = topo_swi(i,j) * 1.0
-                  rtopo_blu = topo_swi(i,j) * 0.5
+                  topo_gti_frac = (max(topo_gti(i,j),001.) / 5000.) ** 0.45
+                  rtopo_red = topo_gti(i,j) * 1.5
+                  rtopo_grn = topo_gti(i,j) * 1.0
+                  rtopo_blu = topo_gti(i,j) * 0.5
 
                   topo_viseff = topo_visibility * patm ! allow airglow
 
@@ -1321,7 +1343,7 @@
                   write(6,116)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat(2,i,j),r_cloud_3d(i,j),cloud_od(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
-                      ,topo_swi(i,j),topo_albedo(1,i,j),aod_ill(i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow &
+                      ,topo_gti(i,j),topo_albedo(1,i,j),aod_ill(i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow &
                       ,nint(sky_rgb(:,i,j)),nint(cld_red),nint(cld_grn),nint(cld_blu)
               elseif(sol_alt .ge. -16.)then ! twilight
                   write(6,117)i,j,alt_a(i,j),azi_a(i,j),elong_s(i,j) & 
