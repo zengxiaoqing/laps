@@ -51,7 +51,7 @@
         parameter (h1_ha = 13000.)
         parameter (h2_ha = 25000.)
         parameter (h3_ha = 31000.)
-        parameter (aod_ha = .020)
+        parameter (aod_ha = .015)
         parameter (alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha)))
         patm_ah(h,h1,h2) = max(min(1.0,(h2-h)/(h2-h1)),0.)
 
@@ -59,6 +59,7 @@
                re * (sqrt(cosd(z)**2 + 2.*h/re + (h/re)**2) - cosd(z) )
         am_homo_lyr(z,h1,h2,re) = &
                (s_homo(z,h2,re) - s_homo(z,h1,re)) / (h2 - h1)
+        patm_a(ht,hr,hs) = exp(-(ht-hr)/hs) ! aerosols in column
 
 !       Rayleigh scattering phase function including secondary scattering
 !       This assumes 0.1 effective optical depth / secondary scattering
