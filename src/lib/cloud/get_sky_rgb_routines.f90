@@ -541,7 +541,8 @@
         ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
 
         write(6,*)' subroutine get_glow_obj...'
-        write(6,*)' alt/az/mag = ',alt_obj_in,azi_obj_in,mag_obj
+        write(6,21)alt_obj_in,azi_obj_in,mag_obj,diam_deg
+21      format(' alt/az/mag/diam = ',4f9.3)
 
         r_missing_data = 1e37
 
@@ -624,12 +625,20 @@
                     size_glow_sqdg = 0.2    ! sun/moon area           
 
 !                   Calculate fraction of grid box illuminated by object
-                    if(distr .le. 0.5)then
+                    if(.false.)then ! very simple anti-aliasing 
+                      if(distr .le. 0.5)then ! object radii
                         frac_lit = 1.0
-                    elseif(distr .gt. 1.5)then
+                      elseif(distr .gt. 1.5)then
                         frac_lit = 0.0
-                    else
+                      else
                         frac_lit = 1.5 - distr
+                      endif
+                    else           ! more accurate anti-aliasing scheme
+                      radius_pix = radius_deg / alt_scale
+                      ricen = (azi_obj-azig)/azi_dist
+                      rjcen = (alt_obj-altg)/alt_dist
+                      aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
+                      call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit,0,0,1)
                     endif
 
                     write(6,89)ialt,jazi,altg,alt_obj,azig,azi_obj,distr,frac_lit
