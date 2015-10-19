@@ -1,6 +1,6 @@
 
         subroutine get_lnd_pf(elong_a,alt_a,azi_a &                     ! I
-                             ,topo_swi,topo_albedo,transm_obs &         ! I
+                             ,topo_gti,topo_albedo,transm_obs &         ! I
                              ,dist_2_topo,topo_solalt &                 ! I
                              ,sol_alt,sol_azi,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_land) ! O
@@ -19,7 +19,7 @@
         real elong_a(ni,nj)
         real alt_a(ni,nj)
         real azi_a(ni,nj)
-        real topo_swi(ni,nj)        ! topo normal global irradiance
+        real topo_gti(ni,nj)        ! topo normal global irradiance
         real topo_albedo(nc,ni,nj)  ! topo albedo
         real topo_solalt(ni,nj)     ! solar altitude
         real dist_2_topo(ni,nj)     
@@ -27,8 +27,8 @@
         integer idebug_a(ni,nj)
         real pf_land(nc,ni,nj)
 
-!       topo_swi may be too low when sun is near horizon
-!       solar elev    topo_swi
+!       topo_gti may be too low when sun is near horizon
+!       solar elev    topo_gti
 !          0            12
 !          1            34
 !          2            56
@@ -46,7 +46,7 @@
          do i = 1,ni
 
             sol_clr = 1109.46 * sind(max(sol_alt,1.5))
-!           tfrac = topo_swi(i,j) / sol_clr                   
+!           tfrac = topo_gti(i,j) / sol_clr                   
             do ic = 1,nc
               tfrac = transm_obs      
               alt_thresh = 22. * ext_g(ic) 
@@ -115,8 +115,8 @@
               endif
 
               if(elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0)then
-                write(6,2)elong_a(i,j),topo_swi(i,j),sol_alt,transm_obs,radfrac,fland,fsnow,fwater,spot
-2               format(' elg/tswi/solalt/trnm/radf/albt/spot/ph-lsw1',f9.3,7f9.4)
+                write(6,2)elong_a(i,j),topo_gti(i,j),sol_alt,transm_obs,radfrac,fland,fsnow,fwater,spot
+2               format(' elg/tgti/solalt/trnm/radf/albt/spot/ph-lsw1',f9.3,7f9.4)
                 iwrite = iwrite + 1
               endif
 
