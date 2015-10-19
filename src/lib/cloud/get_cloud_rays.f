@@ -1,7 +1,7 @@
          
         subroutine get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d     ! I
      1                           ,rain_3d,snow_3d                       ! I
-     1                           ,pres_3d,aod_3d,topo_sfc,topo_a,swi_2d ! I
+     1                           ,pres_3d,aod_3d,topo_sfc,topo_a        ! I
      1                           ,topo_albedo_2d                        ! I
      1                           ,topo_gti,topo_albedo,gtic             ! O
      1                           ,topo_ri,topo_rj                       ! O
@@ -74,7 +74,6 @@
         real topo_a(ni,nj)
         real lat(ni,nj)
         real lon(ni,nj)
-        real swi_2d(ni,nj) ! global terrain NI
         real topo_albedo_2d(nc,ni,nj)
         real pres_3d(ni,nj,nk)
         real pres_1d(nk)
@@ -97,8 +96,12 @@
         real ghi_2d(ni,nj)          ! derived from cloud rad 
         real dhi_2d(ni,nj)          ! diffuse horizontal irradiance
 
+!       Note that 'ghi_2d' and 'dhi_2d' are not yet passed back for wider use.
+!       However they are used to calculate 'topo_gti' and 'gtic' that are 
+!       passed back. 'topo_gti' is presently used and 'gtic' is for future use.
+
 !       Spectral irradiance W/m2/nm OR s/m2 normalized to solar spectrum?              
-!       www.soda-is.com/eng/education/plane_orientations.html
+!       http://www.soda-is.com/eng/education/plane_orientations.html
         real ghic_2d(nc,ni,nj)      ! 2 W/m**2/nm 
         real dhic_2d(nc,ni,nj)      ! 2 W/m**2/nm (diffuse)
 
@@ -133,7 +136,7 @@
         real topo_rj(minalt:maxalt,minazi:maxazi)
         real trace_ri(minalt:maxalt,minazi:maxazi)
         real trace_rj(minalt:maxalt,minazi:maxazi)
-        real gtic(nc,minalt:maxalt,minazi:maxazi) 
+        real gtic(nc,minalt:maxalt,minazi:maxazi)     ! spectral terrain GNI
         real dtic(nc,minalt:maxalt,minazi:maxazi)     ! diffuse
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
@@ -306,12 +309,23 @@
 !       Obtain surface rad from 3D cloud rad fields, etc.
         do ii = 1,ni
         do jj = 1,nj
-          if(sol_alt(ii,jj) .gt. 0.)then
+          if(sol_alt(ii,jj) .gt. 0.)then ! sun above horizon
             do kk = 1,nk
               if(transm_3d(ii,jj,kk) .gt. 0. .and. 
      1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
 
 !               Correct for diffuse radiation at low sun altitude
+!               'solalt_eff' is an empirical function to force the effective
+!               solar altitude to be 1.5 degrees when the actual is 0.
+!               Zenithal GHI is assumed to be about 80% of the solar constant 
+!               or 1109.46 w/m**2.
+!               'sb_corr' is an empirical sky brightness correction in 
+!               astronomical magnitudes.
+!               These empirical forumlae should give a reasonable value for 
+!               DHI even when the sun is very near the horizon.
+!               'frac_dir' is an estimate of the direct solar radiation now
+!               including scattered light in a 5 degree radius of the sun.
+
                 solalt_eff = sol_alt(ii,jj) 
      1                     + (1.5 * cosd(sol_alt(ii,jj))**100.)
                 ghi_2d(ii,jj) = transm_3d(ii,jj,kk)    
@@ -319,15 +333,17 @@
                 sb_corr = 2.0 * (1.0 - (sind(sol_alt(ii,jj))**0.5))
                 frac_dir = max(transm_3d(ii,jj,kk)**4.,.0039) ! 5 deg circ
                 dhi_2d_clr = 1109.46 * 0.09 * 10.**(-0.4*sb_corr)
-                dhi_2d(ii,jj) =
+                dhi_2d(ii,jj) = ! diffuse
      1                      max(dhi_2d_clr,(1.0-frac_dir)*ghi_2d(ii,jj))
                 dhi_2d(ii,jj) = min(dhi_2d(ii,jj),ghi_2d(ii,jj))
-                goto 4
+                goto 4 ! we have risen above the terrain
               endif
             enddo ! kk
 4           continue
-          else ! compare with compare_analysis_to_rad.f
-            dhi_2d(ii,jj) = 10. * exp(0.5*sol_alt(ii,jj))
+          else ! compare with compare_analysis_to_rad.f (cloud analysis code)
+!           Empirical forumlae for DHI and GHI when the sun is below the horizon.
+!           Note they are equal since the direct is zero.
+            dhi_2d(ii,jj) = 10. * exp(0.5*sol_alt(ii,jj)) ! diffuse
             ghi_2d(ii,jj) = dhi_2d(ii,jj)
           endif
         enddo ! jj
@@ -622,6 +638,7 @@
           xcos = sind(view_azi_deg)
           ycos = cosd(view_azi_deg)
 
+!         Initialize variables for this ray
           icloud = 0
           cvr_path_sum = 0.
           cvr_path_sum_sp = 0.
@@ -638,6 +655,7 @@
           sum_am2cld_num = 0.
           sum_am2cld_den = 0.
           sum_god = 0.
+          frac_subcloud = 1.0
 
           if(.true.)then
 !           do k = ksfc,ksfc
@@ -1120,6 +1138,18 @@
                   aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
                   sum_aod     = sum_aod     + aero_ext_coeff * slant2
 
+                  if((cvr_path          .gt. 0.00) .AND.
+     1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
+     1                cvr_path_sum_last .eq. 0.  )            )then 
+                      aod_2_cloud(ialt,jazi) = sum_aod
+                    if(cvr_path_sum_sp(3) .gt. 0.)then
+                      ltype_1st = 3 ! first hydrometeors contain rain                     
+                    endif
+                    frac_subcloud = 1.0
+                  elseif(cvr_path_sum .gt. .013)then 
+                    frac_subcloud = 0.0 ! make a more continuous function? 
+                  endif
+
                   if(rk_m .lt. (rkstart + 1.0))then ! near topo
 !                 if(.false.)then ! near topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
@@ -1133,6 +1163,7 @@
 
                     sum_aod_ill_dir = sum_aod_ill_dir 
      1                         + aero_ext_coeff * slant2 * transm_3d_dir
+     1                                          * frac_subcloud
 
                     sum_aod_ill_opac = sum_aod_ill_opac 
      1                          + aero_ext_coeff * slant2
@@ -1154,6 +1185,7 @@
 
                     sum_aod_ill_dir = sum_aod_ill_dir 
      1                         + aero_ext_coeff * slant2 * transm_3d_dir
+     1                                          * frac_subcloud
 
                     sum_aod_ill_opac = sum_aod_ill_opac 
      1                         + (aero_ext_coeff * slant2 * transm_3d_m)
@@ -1163,15 +1195,6 @@
      1                         + (aero_ext_coeff * slant2 * 1.0)
      1                         * trans(sum_aod+sum_god)
 
-                  endif
-
-                  if((cvr_path          .gt. 0.00) .AND.
-     1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
-     1                cvr_path_sum_last .eq. 0.  )            )then 
-                      aod_2_cloud(ialt,jazi) = sum_aod
-                    if(cvr_path_sum_sp(3) .gt. 0.)then
-                      ltype_1st = 3 ! first hydrometeors contain rain                     
-                    endif
                   endif
 
                   if(l_radtran .eqv. .true.)then
