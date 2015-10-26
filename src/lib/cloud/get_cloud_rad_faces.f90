@@ -139,7 +139,11 @@
 
      refr_mn = 0.0
 
-     do if = 1,6
+!    Different criteria might be used at high altitude depending on how far
+!    away the limb is, in turn related to horz_dep for the observer
+     if(solalt .ge. twi_alt)then ! daylight or early twilight
+
+      do if = 1,6
        write(6,*)
        is = 1 + (ni-1)*(i1(if)-1)
        ie = 1 + (ni-1)*(i2(if)-1)
@@ -408,7 +412,13 @@
 
        I4_elapsed = ishow_timer()
 
-     enddo ! if
+      enddo ! if
+
+     else  ! solalt < twi_alt
+      write(6,*)' solalt < twi_alt, raytrace not needed: ',solalt,twi_alt
+      I4_elapsed = ishow_timer()
+
+     endif ! solalt
 
      npts = ni*nj*nk
      fractot = float(ntot)/float(npts)
@@ -423,6 +433,8 @@
      else
        write(6,*)' range of transm_3d = ',arg1,arg2
      endif
+
+     I4_elapsed = ishow_timer()
 
      nshadow = 0
      if(solalt .ge. twi_alt)then ! daylight or early twilight
@@ -535,10 +547,11 @@
            endif
          enddo ; enddo ! ij
        enddo ! k
-     else ! use red channel for sfc lighting
+     else ! nighttime: use red channel for sfc lighting
        do k = 1,nk       
          transm_4d(:,:,k,1) = sfc_glow(:,:) * 0.3 ! nominal backsct
        enddo ! k
+       transm_3d(:,:,:) = 0.
      endif
 
      write(6,*)' nshadow = ',nshadow
