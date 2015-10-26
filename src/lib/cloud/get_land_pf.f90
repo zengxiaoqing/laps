@@ -6,6 +6,7 @@
                              ,pf_land) ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius
+        use cloud_rad, ONLY: ghi_zen_toa, zen_kt
         include 'trigd.inc'
 
 !       Statement functions
@@ -45,7 +46,7 @@
         do j = 1,nj
          do i = 1,ni
 
-            sol_clr = 1109.46 * sind(max(sol_alt,1.5))
+            sol_clr = (ghi_zen_toa * zen_kt) * sind(max(sol_alt,1.5))
 !           tfrac = topo_gti(i,j) / sol_clr                   
             do ic = 1,nc
               tfrac = transm_obs      
