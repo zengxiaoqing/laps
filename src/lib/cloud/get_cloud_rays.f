@@ -317,8 +317,6 @@
 !               Correct for diffuse radiation at low sun altitude
 !               'solalt_eff' is an empirical function to force the effective
 !               solar altitude to be 1.5 degrees when the actual is 0.
-!               Zenithal GHI is assumed to be about 80% of the solar constant 
-!               or 1109.46 w/m**2.
 !               'sb_corr' is an empirical sky brightness correction in 
 !               astronomical magnitudes.
 !               These empirical forumlae should give a reasonable value for 
@@ -332,7 +330,8 @@
      1                        * sind(solalt_eff) * 1109.46
                 sb_corr = 2.0 * (1.0 - (sind(sol_alt(ii,jj))**0.5))
                 frac_dir = max(transm_3d(ii,jj,kk)**4.,.0039) ! 5 deg circ
-                dhi_2d_clr = 1109.46 * 0.09 * 10.**(-0.4*sb_corr)
+                arg1 = ghi_zen_toa * zen_kt ! from cloud_rad module
+                dhi_2d_clr = arg1 * 0.09 * 10.**(-0.4*sb_corr)
                 dhi_2d(ii,jj) = ! diffuse
      1                      max(dhi_2d_clr,(1.0-frac_dir)*ghi_2d(ii,jj))
                 dhi_2d(ii,jj) = min(dhi_2d(ii,jj),ghi_2d(ii,jj))
@@ -1341,6 +1340,9 @@
                         endif
                       endif
 
+!                     Monochromatic for now
+                      gtic(:,ialt,jazi) = topo_gti(ialt,jazi) 
+
                       do ic = 1,nc
                         topo_albedo(ic,ialt,jazi) = sum(bi_coeff(:,:) 
      1                                 * topo_albedo_2d(ic,i1:i2,j1:j2))
@@ -1516,7 +1518,9 @@
 !        I4_elapsed = ishow_timer()
 
 !        Get clear sky twilight brightness in ring of constant altitude
-         if(sol_alt(i,j) .le. 0.)then
+!        if(sol_alt(i,j) .le. 0.)then
+         if(sol_alt(i,j) .le. twi_0 .and. 
+     1      sol_alt(i,j) .ge. (-horz_dep_d - 18.0))then ! narrower range
 !            write(6,*)' args: ',l_solar_eclipse,i4time,rlat,rlon
              call skyglow_phys_twi(ialt,ialt,1,minazi,maxazi,jazi_delt
      1             ,minalt,maxalt,minazi,maxazi,idebug_a
