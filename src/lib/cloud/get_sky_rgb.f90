@@ -5,8 +5,8 @@
                    clear_radf_c,patm,htmsl, &                           ! I
                    glow_sun,glow_moon,glow_stars, &                     ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
-                   airmass_2_cloud,airmass_2_topo, &
-                   topo_gti,topo_albedo,albedo_sfc, &                   ! I
+                   airmass_2_cloud,airmass_2_topo, &                    ! I
+                   topo_gti,topo_albedo,gtic,albedo_sfc, &              ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,trace_solalt,          &     ! I
                    alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
@@ -56,6 +56,7 @@
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         real topo_gti(ni,nj)        ! terrain normal global irradiance
         real topo_albedo(nc,ni,nj)  ! terrain albedo
+        real gtic(nc,ni,nj)         ! spectral terrain normal "radiance"
         real aod_2_cloud(ni,nj)     ! future use
         real aod_2_topo(ni,nj)      ! aerosol optical depth to topo (slant)
         real aod_ill(ni,nj)         ! aerosol illuminated slant optical depth (topo/notopo)
@@ -358,6 +359,11 @@
             else
                l_sun_behind_terrain = .false. 
             endif
+
+            if(sol_alt .lt. solalt_limb_true)then ! below horizon
+               write(6,*)' Sun is below horizon'
+               l_sun_behind_terrain = .true. 
+            endif
                 
             if(l_sun_behind_terrain .eqv. .true.)then 
                 write(6,*)' Sun is behind terrain'
@@ -365,6 +371,7 @@
                 od_atm_a_dir = 0.
                 sun_vis = 0.
             else ! sun is outside of terrain
+                write(6,*)' Sun is outside of terrain'
                 if(transm_obs .gt. 0.9)then
                     od_atm_a_eff = od_atm_a
                     od_atm_a_dir = od_atm_a
@@ -1037,8 +1044,11 @@
 !             frac_clr = 1.0 - frac_cloud
 !           else
               frac_clr = 1.0 - frac_cloud*frac_behind ! clear sky behind cloud                         
-!             frac_clr = frac_clr * clear_radf_c(ic,i,j)
 !           endif
+
+            if(sol_alt .gt. 0.0)then ! daytime
+              frac_clr = frac_clr * clear_radf_c(ic,i,j)
+            endif
 
 !           Clear sky radiance should be modulated by the cloud if it has to
 !           go through the cloud. It can be added to the cloud if the cloud
