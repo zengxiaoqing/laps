@@ -105,6 +105,8 @@
             write(6,*)' aod_vrt = ',aod_vrt
             write(6,*)' aod_ray max = ',maxval(aod_ray)
 !           write(6,*)' patm_ray max = ',maxval(patm_ray)
+        else
+            write(6,*)' skyglow_phys_twi: sol_alt/ialt is ',sol_alt,ialt_start
         endif
 
 !       Obtain reference values of source term
