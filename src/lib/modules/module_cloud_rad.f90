@@ -29,6 +29,10 @@ MODULE cloud_rad
       real, parameter :: reff_snow    = .004000 ! m
       real, parameter :: reff_graupel = .010000 ! m
 
+!     GHI related
+      real, parameter :: ghi_zen_toa = 1361.5 ! solar const, W/m**2 at 1AU
+      real, parameter :: zen_kt = 0.815       ! zenithal attenuation of GHI
+
       PUBLIC albedo_to_clouds, albedo_to_clouds2
 
 CONTAINS
