@@ -191,7 +191,7 @@
               write(6,*)' call get_starglow with cyl data'
               call get_starglow(i4time_solar,alt_a_roll,azi_a_roll       ! I
      1                     ,minalt,maxalt,minazi,maxazi                  ! I
-     1                     ,rlat,rlon,alt_scale,azi_scale                ! I
+     1                     ,rlat,rlon,alt_scale,azi_scale,horz_dep       ! I
      1                     ,glow_stars)                                  ! O
 
               write(6,*)' range of glow_stars (before) is',
@@ -289,7 +289,7 @@
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
-     1                    ,topo_swi,topo_albedo
+     1                    ,topo_swi,topo_albedo,gtic
      1                    ,topo_albedo_2d(:,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,aod_tot
