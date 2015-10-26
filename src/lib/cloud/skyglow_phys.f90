@@ -1006,7 +1006,7 @@
 
         write(6,*)' clearrad1 column:',clear_rad_c(1,minalt:minalt+9,minazi)
 
-!       Apply during daylight eclipses or during twilight
+!       Apply during daylight eclipses or during low sun / twilight
         if( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
             (sol_alt .lt. 10. .and. sol_alt .gt. twi_0)               )then
 
