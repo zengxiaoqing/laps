@@ -247,7 +247,7 @@
 !       http://www.ing.iac.es/Astronomy/observing/conditions/skybr/skybr.html
 !       http://aas.aanda.org/articles/aas/pdf/1998/01/ds1449.pdf
 !       http://download.springer.com/static/pdf/80/art%253A10.1186%252FBF03352136.pdf?auth66=1427760212_d8fc6d84b219c957974dd2b221bc226a&ext=.pdf
-        glow_stars = 1.0 ! cosmic background level
+        glow_stars = 1.0 ! initialize to cosmic background level
 
         sqarcsec_per_sqdeg = 3600.**2
 
