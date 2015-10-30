@@ -20,7 +20,7 @@
      1                           ,htagl                                 ! I
 !    1                           ,elong                                 ! I
      1                           ,aod                                   ! I
-     1                           ,ni,nj,nk,i,j,newloc                   ! I
+     1                           ,ni,nj,nk,i,j,newloc,ri_obs,rj_obs     ! I
      1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
      1                           ,alt_norm                              ! I
      1                           ,moon_alt,moon_azi                     ! I
@@ -163,7 +163,8 @@
 
         I4_elapsed = ishow_timer()
 
-        write(6,*)' Subroutine get_cloud_rays... ',i,j,htagl
+        write(6,3)i,j,htagl,ri_obs,rj_obs     
+3       format(' Subroutine get_cloud_rays... ',2i5,f8.2,2f9.3)
 
 !       moon_alt = -10.0
 !       moon_azi = 0.
@@ -403,8 +404,8 @@
         write(6,*)'wt_sp(3) = ',wt_sp(3)
         write(6,*)'wt_sp(4) = ',wt_sp(4)
 
-        ri = i
-        rj = j
+        ri = ri_obs ! i
+        rj = rj_obs ! j
 
 !       kstart = 0 ! 0 means sfc, otherwise level of start
 
