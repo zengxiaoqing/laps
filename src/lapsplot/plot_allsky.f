@@ -641,7 +641,7 @@
           enddo ! j
           enddo ! i
 
-        else
+        else ! l_require_clouds = F
           i4time_solar = i4time_ref
 
 !         Calculate solar position for 2D array of grid points
@@ -802,11 +802,17 @@
         i4time_last = 0.
       
         do iloc = 1,nloc
-          isound = nint(xsound(iloc))
-          jsound = nint(ysound(iloc))
+          i_obs = nint(xsound(iloc))
+          j_obs = nint(ysound(iloc))
 
-          rlat = lat(isound,jsound)
-          rlon = lon(isound,jsound)
+          ri_obs = xsound(iloc)
+          rj_obs = ysound(iloc)
+
+          rlat = lat(i_obs,j_obs)
+          rlon = lon(i_obs,j_obs)
+
+          rlat = soundlat(iloc)
+          rlon = soundlon(iloc)
 
           write(6,*)
           write(6,*)' iloc = ',iloc,rlat,rlon
@@ -833,17 +839,21 @@
           allocate(sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
           allocate(isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
 
-          topo_sfc = topo(isound,jsound)
+          if(.false.)then
+              topo_sfc = topo(i_obs,j_obs)
+          else
+              call bilinear_laps(ri_obs,rj_obs,NX_L,NY_L,topo,topo_sfc)
+          endif
  
-          write(6,*)' i/j/topo_sfc ',isound,jsound,topo_sfc
-          write(6,22)topo_albedo_2d(:,isound,jsound)
+          write(6,*)' ri/rj/topo_sfc ',ri_obs,rj_obs,topo_sfc
+          write(6,22)topo_albedo_2d(:,i_obs,j_obs)
 22        format('  albedo RGB of observer ',3f9.3)
 
-          write(6,*)' solar alt/az (2d array)',sol_alt_2d(isound,jsound)       
-     1                                        ,sol_azi_2d(isound,jsound) 
+          write(6,*)' solar alt/az (2d array)',sol_alt_2d(i_obs,j_obs)       
+     1                                        ,sol_azi_2d(i_obs,j_obs) 
 
 !         Calculate solar position for all-sky point
-          if(.false.)then
+          if(.true.)then ! test this again to allow fractional gridpoints?
               call solar_position(soundlat(iloc),soundlon(iloc)
      1                           ,i4time_solar,solar_alt     
      1                           ,solar_dec,solar_ha)
@@ -851,8 +861,8 @@
      1                           ,altdum,solar_az)               
               if(solar_az .lt. 0.)solar_az = solar_az + 360.
           else ! ensure consistency between both solar positions
-              solar_alt = sol_alt_2d(isound,jsound)
-              solar_az = sol_azi_2d(isound,jsound)              
+              solar_alt = sol_alt_2d(i_obs,j_obs)
+              solar_az = sol_azi_2d(i_obs,j_obs)              
           endif
 
           write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
@@ -883,9 +893,9 @@
           write(6,23)hdist_loc,hdist_loc_thr,newloc
 23        format('  hdist_loc/hdist_loc_thr/newloc = ',2f9.3,i3)
 
-          write(6,*)' call sun_moon at grid point ',isound,jsound
+          write(6,*)' call sun_moon at grid point ',i_obs,j_obs
           idebug = 2
-          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,isound,jsound ! I
+          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs ! I
      1                 ,alm,azm,idebug                               ! I
      1                 ,htagl(iloc),earth_radius                     ! I
      1                 ,elgms,moon_mag,rmn                           ! O 
@@ -983,7 +993,8 @@
      1                     ,topo_albedo_2d                       ! I
      1                     ,htagl(iloc)                          ! I
      1                     ,aod_ref                              ! I
-     1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
+     1                     ,NX_L,NY_L,NZ_L,i_obs,j_obs,newloc  ! I
+     1                     ,ri_obs,rj_obs                        ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,solar_alt,solar_az                   ! I
