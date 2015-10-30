@@ -8,6 +8,7 @@
      1                     ,htagl                                ! I
      1                     ,aod_ref                              ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
+     1                     ,ri_obs,rj_obs                        ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,solar_alt,solar_az                   ! I
@@ -117,6 +118,7 @@
      1                     ,htagl                                ! I
      1                     ,aod_ref                              ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
+     1                     ,ri_obs,rj_obs                        ! I
      1                     ,alt_a_roll,azi_a_roll                ! I
      1                     ,sol_alt_2d,sol_azi_2d                ! I
      1                     ,alt_norm                             ! I
