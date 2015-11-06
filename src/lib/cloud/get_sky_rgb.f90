@@ -258,9 +258,11 @@
 
 !       Determine moon_cond_clr and azid1/d2 
         azid1 = 90. ; azid2 = 270. ! default
-        if(sol_alt .gt. 0. .and. isun .ge. 1  .and. jsun .ge. 1 &
-                           .and. isun .le. ni .and. jsun .le. nj)then
-            azid1 = azi_a(isun,jsun) ! nint(sol_az)
+!       if(sol_alt .gt. 0. .and. isun .ge. 1  .and. jsun .ge. 1 &
+!                          .and. isun .le. ni .and. jsun .le. nj)then
+        if(sol_alt .gt. 0. .and. jsun .ge. 1 &
+                           .and. jsun .le. nj)then ! solar azimuth
+            azid1 = azi_a(1,jsun) ! nint(sol_az)
             azid2 = mod(azid1+180.,360.)
 !           azid2 = azid1 ! block antisolar az               
             moon_cond_clr = 0
