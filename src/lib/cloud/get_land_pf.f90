@@ -1,6 +1,7 @@
 
         subroutine get_lnd_pf(elong_a,alt_a,azi_a &                     ! I
                              ,topo_gti,topo_albedo,transm_obs &         ! I
+!                            ,gtic,dtic                                 ! I
                              ,dist_2_topo,topo_solalt &                 ! I
                              ,sol_alt,sol_azi,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_land) ! O
@@ -23,10 +24,13 @@
         real topo_gti(ni,nj)        ! topo normal global irradiance
         real topo_albedo(nc,ni,nj)  ! topo albedo
         real topo_solalt(ni,nj)     ! solar altitude
+        real gtic(nc,ni,nj)         ! spectral terrain GNI
+        real dtic(nc,ni,nj)         ! spectral terrain diffuse NI 
         real dist_2_topo(ni,nj)     
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         integer idebug_a(ni,nj)
-        real pf_land(nc,ni,nj)
+        real pf_land(nc,ni,nj)      ! anisotropy factor 
+                                    ! (weighted by direct/diffuse illumination)
 
 !       topo_gti may be too low when sun is near horizon
 !       solar elev    topo_gti
@@ -54,6 +58,10 @@
               if(sol_alt .lt. alt_thresh .and. sol_alt .ge. 0.0)then
                 tfrac = tfrac * (sol_alt/alt_thresh)**2
               endif
+
+!             radfrac - 1 means relatively high direct / global horizontal ratio
+!                       0 means zero direct / global ratio
+!                       calculate from (gtic - dtic) / gtic ?
               radfrac = scurve(tfrac**3) ! high for illuminated clouds
 !                       illuminated                unilluminated
 
@@ -73,6 +81,7 @@
               endif
 
 !             Land
+!             Should look brighter opposite direct sun in low sun case
               spot = radfrac * fland
               arg2 = spot * 0.010 ; arg1 = (1. - arg2)
               azidiff = angdif(azi_a(i,j),sol_azi)
@@ -122,8 +131,8 @@
               endif
 
               pf_land(ic,i,j) & 
-                      = arg1 * ph1 & 
-                      + arg2 * hg(-.90,elong_a(i,j)) 
+                      = arg1 * ph1 &                 ! non-spot
+                      + arg2 * hg(-.90,elong_a(i,j)) ! spot
 
             enddo ! ic
 
