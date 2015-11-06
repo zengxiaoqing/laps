@@ -865,7 +865,7 @@
               solar_az = sol_azi_2d(i_obs,j_obs)              
           endif
 
-          write(6,*)' solar alt/az (all-sky)',solar_alt,solar_az
+          write(6,*)' solar alt/az (observer)',solar_alt,solar_az
 
           hdist_loc = sqrt((rlat-rlat_last)**2 + (rlon-rlon_last)**2)
 !         if(solar_alt .gt. 4.0)then
