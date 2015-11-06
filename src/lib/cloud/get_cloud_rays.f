@@ -43,12 +43,12 @@
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
         angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
-
         curvat(hdst,radius) = hdst**2 / (2. * radius)
         curvat2(sdst,radius_start,altray) = 
      1       sqrt(sdst**2 + radius_start**2 
      1         - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
         horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
+        scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5
 
         parameter (rpd = 3.14159 / 180.)
 
@@ -308,10 +308,16 @@
         endif
 
 !       Obtain surface rad from 3D cloud rad fields, etc.
+        ghi_zen_sfc = ghi_zen_toa * zen_kt ! from cloud_rad module
+        arg2 = asind(10./ghi_zen_sfc)      ! approximately 0.5 degrees
+        write(6,*)'ghi_zen_sfc/arg2=',ghi_zen_sfc,arg2
+
         do ii = 1,ni
         do jj = 1,nj
           if(sol_alt(ii,jj) .gt. 0.)then ! sun above horizon
             do kk = 1,nk
+!             Consider first point above terrain instead so we can capture
+!             terrain shadowing?
               if(transm_3d(ii,jj,kk) .gt. 0. .and. 
      1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
 
@@ -325,14 +331,21 @@
 !               'frac_dir' is an estimate of the direct solar radiation now
 !               including scattered light in a 5 degree radius of the sun.
 
+!               Note the 1.5 value should be set to 'arg2' (about 0.5) to 
+!               match the sun below horizon case. 'transm' should 
+!               asymptotically be forced to a value of 1 when the sun is 
+!               on the horizon.
+
+!               We might want to calculate the direct independently, then
+!               set GHI = Diffuse Horizontal + Direct Horizontal
+
                 solalt_eff = sol_alt(ii,jj) 
      1                     + (1.5 * cosd(sol_alt(ii,jj))**100.)
                 ghi_2d(ii,jj) = transm_3d(ii,jj,kk)    
-     1                        * sind(solalt_eff) * 1109.46
+     1                        * sind(solalt_eff) * ghi_zen_sfc
                 sb_corr = 2.0 * (1.0 - (sind(sol_alt(ii,jj))**0.5))
                 frac_dir = max(transm_3d(ii,jj,kk)**4.,.0039) ! 5 deg circ
-                arg1 = ghi_zen_toa * zen_kt ! from cloud_rad module
-                dhi_2d_clr = arg1 * 0.09 * 10.**(-0.4*sb_corr)
+                dhi_2d_clr = ghi_zen_sfc * 0.09 * 10.**(-0.4*sb_corr)
                 dhi_2d(ii,jj) = ! diffuse
      1                      max(dhi_2d_clr,(1.0-frac_dir)*ghi_2d(ii,jj))
                 dhi_2d(ii,jj) = min(dhi_2d(ii,jj),ghi_2d(ii,jj))
@@ -340,6 +353,18 @@
               endif
             enddo ! kk
 4           continue
+
+!           Gradual transition from daytime to nighttime equations
+            ramp_day = min(sol_alt(ii,jj)/3.,1.) ! ramp from 0-3 deg    
+            if(ramp_day .lt. 1.0)then
+              dhi_nt = 10. * exp(0.5*sol_alt(ii,jj))
+              ghi_nt = dhi_nt
+              dhi_2d(ii,jj) = ramp_day * dhi_2d(ii,jj) 
+     1                      + (1.-ramp_day) * dhi_nt
+              ghi_2d(ii,jj) = ramp_day * ghi_2d(ii,jj) 
+     1                      + (1.-ramp_day) * ghi_nt
+            endif
+
           else ! compare with compare_analysis_to_rad.f (cloud analysis code)
 !           Empirical forumlae for DHI and GHI when the sun is below the horizon.
 !           Note they are equal since the direct is zero.
@@ -1820,10 +1845,18 @@
         else
             transm_obs = 1
         endif
+
+!       Terrain shadowing not yet accounted for in this step
         write(6,*)'transm of observer is ',i,j,int(rkstart)+1
      1                                     ,transm_obs
-        write(6,*)'ghi of observer is ',i,j,ghi_2d(i,j)
-        write(6,*)'dhi of observer is ',i,j,dhi_2d(i,j)
+        write(6,*)'GHI of observer is        ',i,j,ghi_2d(i,j)
+        write(6,*)'Diffuse HI of observer is ',i,j,dhi_2d(i,j)
+        write(6,*)'Direct HI of observer is  ',i,j
+     1                                        ,ghi_2d(i,j)-dhi_2d(i,j)
+        if(sol_alt(i,j) .gt. 0.)then
+            write(6,*)'DNI of observer is        ',i,j
+     1                ,(ghi_2d(i,j)-dhi_2d(i,j)) / sind(sol_alt(i,j))
+        endif
 
         solalt_last = sol_alt(i,j)
 
