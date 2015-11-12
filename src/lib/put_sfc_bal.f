@@ -98,8 +98,11 @@
            if(istatus .ne. 1)then
                write(6,*)' lapswind_anal: error in height_to_zcoord2'
      1                  ,' in sfc wind interpolation',istatus
-               write(6,*)i,j,zlow,topo(i,j),
-     1                   (ht_bal(i,j,k),k=1,nk)
+               write(6,*)i,j,zlow,topo(i,j)
+               write(6,*)' Heights of column'
+               do k = 1,nk
+                 write(6,*)k,ht_bal(i,j,k)
+               enddo ! k
                istatus = 0
                return
            endif
