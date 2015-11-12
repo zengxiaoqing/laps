@@ -448,6 +448,7 @@ c
               if(len_root.eq.0)then
                  print*,'Use either command line or ENV variable for ',
      +'system DATAROOT'
+                 print*,'Stop in get_config'
                  stop
               endif
            endif
