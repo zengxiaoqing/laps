@@ -78,8 +78,10 @@ cdis
         write(6,*)
         write(6,*)' Getting first guess cloud cover'
 
-!       mode = 1 ! Prefer cloud derived from model RH 
-        mode = 2 ! use maximum of first guess LWC and RH implied cloud
+!       mode_fg = 1 ! Prefer cloud derived from model RH 
+        mode_fg = 2 ! use maximum of first guess LWC and RH implied cloud
+!       mode_fg = 3 ! always use first guess LWC
+!       mode_fg = 4 ! set first guess to default_clear_cover
 
 !       Initialize model first guess cover field with default value
         do k = 1,KCLOUD
@@ -132,6 +134,8 @@ cdis
 
         if(istat_sh .ne. 1)then
             write(6,*)' No first guess available for ',var_2d
+            write(6,*)' cf_modelfg set to ',default_clear_cover
+            write(6,*)' Returning from get_modelfg with istatus = 0'
             istatus = 0
             return
         endif
@@ -263,11 +267,18 @@ cdis
                                                         ! counters model (ruc) 
                                                         ! moist bias
 
-                if(mode .eq. 1)then
-                    cf_modelfg(i,j,k) = rh_to_cldcv(rh_qc)       ! fractional_rh
-                else
+                if(mode_fg .eq. 1)then
+                    cf_modelfg(i,j,k) = rh_to_cldcv(rh_qc)    ! fractional_rh
+                elseif(mode_fg .eq. 2)then
                     cf_modelfg(i,j,k) = 
-     1              max(cf_modelfg(i,j,k),rh_to_cldcv(rh_qc))    ! fractional_rh
+     1              max(cf_modelfg(i,j,k),rh_to_cldcv(rh_qc)) ! fractional_rh
+                elseif(mode_fg .eq. 3)then
+                    continue
+                elseif(mode_fg .eq. 4)then
+                    cf_modelfg(i,j,k) = default_clear_cover
+                else
+                    write(6,*)' ERROR: mode_fg not defined'
+                    stop
                 endif
 
               endif
@@ -284,7 +295,13 @@ cdis
      1            ,i_grid_high
         write(6,*)' # points set to cloud based on condensate = '
      1           ,i_condensate
+               
+        if(mode_fg .eq. 2)then
+            write(6,*)
+     1          ' Used maximum of first guess LWC and RH implied cloud'
+        endif
 
+        write(6,*)' Returning from get_modelfg with istatus = 1'
         istatus = 1
 
         return
