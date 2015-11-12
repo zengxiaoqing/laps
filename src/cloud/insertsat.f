@@ -379,6 +379,7 @@ c
      1                  /'    ht      cvr',50(/f8.1,f8.3))
 
         mode_prlx = 2
+        cldht_prlx_fixed = 3000.
 
         do j=1,jmax
         do i=1,imax
@@ -491,7 +492,7 @@ c
             do k=kcld,1,-1
 
               if(mode_prlx .eq. 2)then
-                  cldht_prlx = 5000.
+                  cldht_prlx = cldht_prlx_fixed
               else
                   cldht_prlx = cld_hts(k)
               endif 
@@ -1011,7 +1012,7 @@ c
             if(ierr .eq. 0)then
               do k=kcld,1,-1
                 if(mode_prlx .eq. 2)then
-                    cldht_prlx = 5000.
+                    cldht_prlx = cldht_prlx_fixed
                 else
                     cldht_prlx = cld_hts(k)
                 endif
