@@ -1801,8 +1801,8 @@ c
         endif
 
         call move(field_2d_save(1,1,jf),field_2d,imax,jmax)
-        print*,'Returning requested field from',
-     1' get_laps_lvd    ',asc9_time(jf),'     ',var_2d
+        print*,'Returning requested field from ',
+     1' get_laps_lvd  ',c_sat_id,'   ',asc9_time(jf),'   ',var_2d
         i4time_nearest=i4times_data(jf)
         comment_2d=comment_2d_save(jf)
         istatus = 1
