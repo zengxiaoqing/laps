@@ -106,6 +106,7 @@ cdis
         cloud_op = r_missing_data
 
         mode_prlx = 2
+        cldht_prlx_fixed = 3000.
 
         if(l_use_39)then
             write(6,*)' subroutine insert_vis (with 3.9u)...'
@@ -206,7 +207,7 @@ cdis
 
             do k = 1,nk
                 if(mode_prlx .eq. 2)then
-                    cldht_prlx = 5000.
+                    cldht_prlx = cldht_prlx_fixed
                 else
                     cldht_prlx = cld_hts(k)
                 endif 
