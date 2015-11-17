@@ -57,6 +57,8 @@
         real topo_gti(ni,nj)        ! terrain normal global irradiance
         real topo_albedo(nc,ni,nj)  ! terrain albedo
         real gtic(nc,ni,nj)         ! spectral terrain normal "radiance"
+        real dtic(nc,ni,nj)         ! 
+        real btic(nc,ni,nj)         ! 
         real aod_2_cloud(ni,nj)     ! future use
         real aod_2_topo(ni,nj)      ! aerosol optical depth to topo (slant)
         real aod_ill(ni,nj)         ! aerosol illuminated slant optical depth (topo/notopo)
@@ -614,6 +616,7 @@
 
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
                        ,transm_obs                                  & ! I
+                       ,gtic,dtic,btic                              & ! I
                        ,dist_2_topo,topo_solalt                     & ! I
                        ,sol_alt,sol_az,nsp,airmass_2_topo,idebug_pf & ! I
                        ,ni,nj,pf_land)                                ! O
@@ -1220,6 +1223,9 @@
 !               rad_sun_r = rad_sun * rob_sun
 !               rad_sun_g = rad_sun *(rob_sun/rog_sun)
 !               rad_sun_b = rad_sun
+
+!               These calculations of 'rad_r', 'rad_g', and 'rad_b' may be
+!               unneeded
                 rad_r = rad_r + rad_sun_r
                 rad_g = rad_g + rad_sun_g
                 rad_b = rad_b + rad_sun_b
@@ -1248,6 +1254,8 @@
 !                 write(6,*)'rad_r/rad_moon',rad_r,rad_moon
 !               endif
 
+!               These calculations of 'rad_r', 'rad_g', and 'rad_b' may be
+!               unneeded
                 rad_r = rad_r + rad_moon
                 rad_g = rad_g + rad_moon
                 rad_b = rad_b + rad_moon
