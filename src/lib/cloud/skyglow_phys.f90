@@ -396,10 +396,11 @@
          endif
 
          if(altray .le. 10.0)then
-           jazi_d10 = nint(5./azi_scale)
+           azi_d10 = 5.
          else
-           jazi_d10 = nint(10./azi_scale)
+           azi_d10 = 10.
          endif
+         jazi_d10 = nint(azi_d10/azi_scale)
 
          write(6,67)altray,sol_alt,sol_alt*altray,dmintopo,htmin_view,l_dlow,l_dlow2
 67       format(' altray/sol_alt/prod/dmintopo/htmin_view/l_dlow,l_dlow2',2f8.2,f8.1,2f12.0,2l2)
@@ -421,6 +422,7 @@
 !             Needed when sol_alt and/or altray are low
               if((sol_alt * altray .lt. 100. .or. sol_alt .lt. 0. .or. altray .lt. 0.)  &
                                .AND.(l_dlow .eqv. .true.) )then 
+
 !               if(jazi .eq. jazi_start .AND. altray .eq. nint(altray) &
                 if(sol_azi .gt. 180)then
                   azi_ref = 270.                 
@@ -428,6 +430,8 @@
                   azi_ref = 90.                 
                 endif
 !               azi_ref = 175. ! volcanic test
+                azi_ref = nint(sol_azi / azi_d10) * azi_d10
+
                 if(view_azi_deg .eq. azi_ref.AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
 !               if(abs(180. - view_azi_deg) .eq. 1.0 .AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
 !                                       .AND. sol_alt .ge. 0. &
@@ -444,6 +448,7 @@
                   write(6,68)ialt,jazi,ic,sol_alt,altray,view_azi_deg &
                             ,dmintopo,dmaxtopo,ao
 68                format(/' call   get_clr_src_dir_low',i4,2i5,3f8.2,2f9.0,f9.3)
+!                 write(6,*)'sol_azi,azi_ref,jazi_d10',sol_azi,azi_ref,jazi_d10
                 endif
                 if(aa_90 .gt. 0.)then
                   aa_o_aa_90 = aa/aa_90
