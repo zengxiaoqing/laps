@@ -1503,6 +1503,9 @@ c
         elseif(nsats .gt.1 .and. (.not. l_mosaic_sat))then
            write(6,*)
            write(6,*)'Found data for ',nsats,' satellites'
+
+!          This option may never be exercised since 'i4time_first' is earlier
+!          set to 0.
            do i=1,nsats
               if(i4timedata(i).eq.i4time_first)then
                  call make_fnam_lp(i4timedata(i),asc9_tim,istatus)
@@ -1515,6 +1518,10 @@ c
               endif
            enddo
 
+!          If two satellites are equally close the nominal time, the one
+!          showing up earlier in the list of satellite IDs 
+!          (in satdata_lvd_table.for) will be chosen. At present the subpoint
+!          is not considered.
            min_i4time=i4time_sys
            do i=1,nsats
               i4time_min=abs(i4timedata(i)-i4time_sys)
