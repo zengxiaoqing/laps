@@ -1,7 +1,7 @@
 
         subroutine get_lnd_pf(elong_a,alt_a,azi_a &                     ! I
                              ,topo_gti,topo_albedo,transm_obs &         ! I
-!                            ,gtic,dtic                                 ! I
+                             ,gtic,dtic,btic &                          ! I
                              ,dist_2_topo,topo_solalt &                 ! I
                              ,sol_alt,sol_azi,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_land) ! O
@@ -26,6 +26,7 @@
         real topo_solalt(ni,nj)     ! solar altitude
         real gtic(nc,ni,nj)         ! spectral terrain GNI
         real dtic(nc,ni,nj)         ! spectral terrain diffuse NI 
+        real btic(nc,ni,nj)         ! spectral terrain beam (direct) NI 
         real dist_2_topo(ni,nj)     
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         integer idebug_a(ni,nj)
