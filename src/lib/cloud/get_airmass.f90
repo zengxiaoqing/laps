@@ -139,6 +139,8 @@
 !       Find minimum MSL height of a light ray compared to Earth sfc
 !       Refraction is taken into account
 
+        include 'trigd.inc'
+
         parameter (pi=3.14159265)
         parameter (rpd=pi/180.)
 
