@@ -145,14 +145,22 @@ foreach SUBDIR (REF LMR PCP_01 PCP_03 PCP_06 PCP_24) # Radar + Precip SUBDIRs
         setenv IMAGES "$IM1 $IM2 $IM3 $IM4 $IM5 $IM6"
     endif
 
+    echo "check if montage is available"
+    which montage
+
     setenv IMOUT $IMGDIR/radar_fcst_all_$LAPS_A9TIME.png
     echo "montage $IMAGES -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT"
           montage $IMAGES -mode Concatenate -tile 2x3 -border 1x1 -bordercolor grey50 $IMOUT
 
     setenv LAPS_HHMM `echo $LAPS_A9TIME | cut -c6-9`
     setenv HHMM_LINK radar_fcst_all_$LAPS_HHMM.png
-    echo "cd $IMGDIR; rm -f $HHMM_LINK; ln -s radar_fcst_all_$LAPS_A9TIME.png $HHMM_LINK"
-          cd $IMGDIR; rm -f $HHMM_LINK; ln -s radar_fcst_all_$LAPS_A9TIME.png $HHMM_LINK 
+
+    if (-e $IMOUT) then
+        echo "cd $IMGDIR; rm -f $HHMM_LINK; ln -s radar_fcst_all_$LAPS_A9TIME.png $HHMM_LINK"
+              cd $IMGDIR; rm -f $HHMM_LINK; ln -s radar_fcst_all_$LAPS_A9TIME.png $HHMM_LINK 
+    else
+        echo "WARNING: $IMOUT was not created, soft link to $HHMM_LINK skipped"
+    endif
 
     echo ""
 
