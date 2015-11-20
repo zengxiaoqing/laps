@@ -6,7 +6,7 @@
                    glow_sun,glow_moon,glow_stars, &                     ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo, &                    ! I
-                   topo_gti,topo_albedo,gtic,albedo_sfc, &              ! I
+                   topo_gti,topo_albedo,gtic,dtic,btic,albedo_sfc, &    ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,trace_solalt,          &     ! I
                    alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
@@ -211,9 +211,18 @@
 !       First arg (altmidcorr) increase will brighten all altitudes
 !       Second arg increase will darken shallow twilight and brighten
 !       deep twilight.
-        altmidcorr = -6.00 + (od_atm_a * 3.0) 
+!       Higher 'fracerf0' will darken sunrise/set.
+!       Brighten the mid-twilight image with thicker tropospheric aerosols.
+!       Darken the mid-twilight image with thicker stratospheric aerosols?
+        if(.false.)then ! avoid saturation on the bright end
+          altmidcorr = -5.95 + (od_atm_a * 2.5) 
+          fracerf0 = 0.69 ! value with sun on horizon
+        else              ! show more like the camera
+          altmidcorr = -3.30
+          fracerf0 = 0.59 ! value with sun on horizon
+        endif
         if(sol_alt .gt. altmidcorr)then ! shallow twilight
-          fracerf = (sol_alt - altmidcorr) * 0.116 
+          fracerf = (sol_alt - altmidcorr) * (-fracerf0/altmidcorr)
         else                            ! deep twilight
           fracerf = (sol_alt - altmidcorr) * 0.160 
         endif
@@ -758,6 +767,7 @@
 
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
 
+!             This might consider the optical thickness and albedo of the cloud as well?
               if(sky_rad_ave(2) .eq. r_missing_data)then
                   glow_cld1 = glow_secondary_cld ! + log10(r_cloud_rad(i,j))                                     
               elseif(sky_rad_ave(2) .gt. 0.)then
@@ -809,7 +819,7 @@
                   endif
                   write(6,51)solalt_ref,twi_alt,cloud_rad_c(1:2,i,j),r_cloud_rad(i,j),pf_scat_moon,glow_cld1 &
                             ,glow_cld_moon,glow_cld_nt,glow_cld,glow_cld_c(:),cld_rad(:)
-51                format('   salt-rf-tw/cloud_rad_c/crad/pf/glow: cld1|moon|nt|cldc cldrad',2f8.2,2e11.4,9f8.2,3f10.0)
+51                format('   salt-rf-tw/cloud_rad_c/crad/pf/glow: cld1|moon|nt|cld|cldc cldrad',2f8.2,2e11.4,9f8.2,3f10.0)
               endif
 
               cld_rad(:) = 10. ** glow_cld_c(:) ! newly defined
@@ -1128,9 +1138,9 @@
 
 !                 topo_gti_frac = max(topo_swi(i,j),rindirect) / 1300. 
                   topo_gti_frac =     topo_gti(i,j)            / 1300. 
-                  rtopo_red = 2. * topo_gti_frac * topo_albedo(1,i,j) * pf_land(1,i,j)
-                  rtopo_grn = 2. * topo_gti_frac * topo_albedo(2,i,j) * pf_land(2,i,j)
-                  rtopo_blu = 2. * topo_gti_frac * topo_albedo(3,i,j) * pf_land(3,i,j)
+                  rtopo_red = 2. * gtic(1,i,j) * topo_albedo(1,i,j) * pf_land(1,i,j)
+                  rtopo_grn = 2. * gtic(2,i,j) * topo_albedo(2,i,j) * pf_land(2,i,j) 
+                  rtopo_blu = 2. * gtic(3,i,j) * topo_albedo(3,i,j) * pf_land(3,i,j) 
                   sky_frac_topo = 1.00               ! hopefully temporary
                   sky_frac_aero = 1.00               ! hopefully temporary
                   red_rad = day_int * rtopo_red*topo_visibility*sky_frac_topo
@@ -1140,13 +1150,13 @@
                   blu_rad = day_int * rtopo_blu*topo_visibility*sky_frac_topo
 !                         + counts_to_rad(sky_rgb(2,I,J)) * sky_frac_aero 
                   if(idebug .eq. 1)then
-                    write(6,97)rtopo_grn,topo_gti(i,j),topo_gti_frac &
+                    write(6,97)rtopo_grn,topo_gti(i,j),gtic(2,i,j) &
                               ,topo_albedo(2,i,j),topo_solalt(i,j) &
                               ,dist_2_topo(i,j) &
 !                             ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
                               ,red_rad,grn_rad,blu_rad,sky_rad(:)
 97                  format( &
-                        ' rtopo/gti/swif/alb/tsalt/dst/trad/srad', &
+                        ' rtopo/gti/gtic/alb/tsalt/dst/trad/srad', &
                            f9.3,f9.1,f9.4,f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
                   endif
 
