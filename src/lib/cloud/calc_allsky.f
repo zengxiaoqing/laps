@@ -70,6 +70,8 @@
         real topo_solalt(minalt:maxalt,minazi:maxazi)
         real trace_solalt(minalt:maxalt,minazi:maxazi)
         real gtic(nc,minalt:maxalt,minazi:maxazi)
+        real dtic(nc,minalt:maxalt,minazi:maxazi)
+        real btic(nc,minalt:maxalt,minazi:maxazi)
         real aod_2_cloud(minalt:maxalt,minazi:maxazi)
         real aod_2_topo(minalt:maxalt,minazi:maxazi)
         real dist_2_topo(minalt:maxalt,minazi:maxazi)
@@ -100,7 +102,7 @@
      1                     ,rain_3d,snow_3d                      ! I
      1                     ,pres_3d,aod_3d,topo_sfc,topo         ! I
      1                     ,topo_albedo_2d                       ! I
-     1                     ,topo_swi,topo_albedo,gtic            ! O
+     1                     ,topo_swi,topo_albedo,gtic,dtic,btic  ! O
      1                     ,topo_ri,topo_rj                      ! O
      1                     ,trace_ri,trace_rj                    ! O
 !    1                     ,ghi_2d,dhi_2d                        ! O
@@ -291,7 +293,7 @@
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
-     1                    ,topo_swi,topo_albedo,gtic
+     1                    ,topo_swi,topo_albedo,gtic,dtic,btic
      1                    ,topo_albedo_2d(:,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,aod_tot
