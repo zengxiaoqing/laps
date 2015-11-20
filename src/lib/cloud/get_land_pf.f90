@@ -66,6 +66,10 @@
               radfrac = scurve(tfrac**3) ! high for illuminated clouds
 !                       illuminated                unilluminated
 
+              if(gtic(ic,i,j) .gt. 0.)then
+                radfrac = btic(ic,i,j)/gtic(ic,i,j)
+              endif
+
 !             fland = scurve((1. - topo_albedo(2,i,j))**2)
 !             fsnow = 1.0 - fland ! 0 is land, 1 is snow
 
@@ -84,7 +88,8 @@
 !             Land
 !             Should look brighter opposite direct sun in low sun case
               spot = radfrac * fland
-              arg2 = spot * 0.010 ; arg1 = (1. - arg2)
+              arg2 = spot * 0.020 ! fraction of energy in the spot 
+              arg1 = (1. - arg2)
               azidiff = angdif(azi_a(i,j),sol_azi)
               ampl = -0.7 * cosd(sol_alt)**2 * cosd(alt_a(i,j))**5 * radfrac
 
@@ -127,7 +132,9 @@
 
               if(elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0)then
                 write(6,2)elong_a(i,j),topo_gti(i,j),sol_alt,transm_obs,radfrac,fland,fsnow,fwater,spot
-2               format(' elg/tgti/solalt/trnm/radf/albt/spot/ph-lsw1',f9.3,7f9.4)
+2               format(' elg/tgti/solalt/trnm/radf/fland/fsnow/fwater/fspot',f9.3,8f9.4)
+                write(6,3)gtic(:,i,j),dtic(:,i,j),btic(:,i,j)
+3               format(' gtic',3f9.4,'  dtic',3f9.4,'  btic',3f9.4)
                 iwrite = iwrite + 1
               endif
 
