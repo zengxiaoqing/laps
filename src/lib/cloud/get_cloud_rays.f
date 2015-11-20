@@ -3,7 +3,7 @@
      1                           ,rain_3d,snow_3d                       ! I
      1                           ,pres_3d,aod_3d,topo_sfc,topo_a        ! I
      1                           ,topo_albedo_2d                        ! I
-     1                           ,topo_gti,topo_albedo,gtic             ! O
+     1                           ,topo_gti,topo_albedo,gtic,dtic,btic   ! O
      1                           ,topo_ri,topo_rj                       ! O
      1                           ,trace_ri,trace_rj                     ! O
      1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
@@ -150,7 +150,8 @@
         real trace_ri(minalt:maxalt,minazi:maxazi)
         real trace_rj(minalt:maxalt,minazi:maxazi)
         real gtic(nc,minalt:maxalt,minazi:maxazi)     ! spectral terrain GNI
-        real dtic(nc,minalt:maxalt,minazi:maxazi)     ! diffuse
+        real dtic(nc,minalt:maxalt,minazi:maxazi)     ! sp terrain diffuse
+        real btic(nc,minalt:maxalt,minazi:maxazi)     ! sp beam terrain normal
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
         real dist_2_topo(minalt:maxalt,minazi:maxazi) ! slant dist
@@ -726,6 +727,7 @@
           sum_am2cld_den = 0.
           sum_god = 0.
           frac_subcloud = 1.0
+          ray_topo_diff = 0.
 
           if(.true.)then
 !           do k = ksfc,ksfc
@@ -1368,8 +1370,14 @@
                     topo_m = topo_a(inew_m,jnew_m)
                   endif
 
+!                 Use _h values instead of _m?
+                  ray_topo_diff_last = ray_topo_diff
+                  ray_topo_diff = ht_m - topo_m
+
                   if(topo_m .gt. ht_m .AND. ihit_topo .eq. 0)then
                       ihit_topo = 1
+
+                      ray_topo_delt = ray_topo_diff - ray_topo_diff_last
 
 !                     Land illumination related to terrain slope
                       if(sol_alt(inew_m,jnew_m)  .gt. 0. )then  
@@ -1381,17 +1389,19 @@
                         alt_norm_int = sum(bi_coeff(:,:) 
      1                               * alt_norm(i1:i2,j1:j2))
                         if(alt_norm_int .gt. 0. )then
-                          solar_corr = sind(alt_norm_int) 
-     1                               / sind(sol_alt(inew_m,jnew_m))
-                          solar_corr = (solar_corr*frac_ghi_dir) + 
+                          solar_corrb = sind(alt_norm_int) 
+     1                                / sind(sol_alt(inew_m,jnew_m))
+                          solar_corr = (solar_corrb*frac_ghi_dir) + 
      1                                 1.0 * (1. - frac_ghi_dir) 
                           solar_corr = min(max(solar_corr,0.2),2.0) 
                         else ! land is shadowed (all indirect)
                           solar_corr = 0.0 *     frac_ghi_dir 
      1                               + 1.0 * (1.-frac_ghi_dir)
+                          solar_corrb = 0.
                         endif
                       else ! sun is down     
                           solar_corr = 1.0
+                          solar_corrb = 0.
                       endif
 
                       topo_gti(ialt,jazi) = ! instead of swi_2d
@@ -1429,6 +1439,15 @@
      1                              ,f9.1)
                             endif
                           endif
+
+                          dtic(ic,ialt,jazi) = 
+     1                      sum(bi_coeff(:,:) * dhic_2d(ic,i1:i2,j1:j2))
+
+!                         Could be computed from 'bhic' or 'bnic'
+                          btic(ic,ialt,jazi) = 
+     1                      sum(bi_coeff(:,:) * bhic_2d(ic,i1:i2,j1:j2))
+     1                                        * solar_corrb
+
                       enddo ! ic                
 
 !                     Topo albedo
@@ -1705,6 +1724,15 @@
               topo_gti(ialt,jazi) = 
      1                fm * topo_gti(ialt,jazim) 
      1              + fp * topo_gti(ialt,jazip)
+              gtic(:,ialt,jazi) = 
+     1                fm * gtic(:,ialt,jazim) 
+     1              + fp * gtic(:,ialt,jazip)
+              dtic(:,ialt,jazi) = 
+     1                fm * dtic(:,ialt,jazim) 
+     1              + fp * dtic(:,ialt,jazip)
+              btic(:,ialt,jazi) = 
+     1                fm * btic(:,ialt,jazim) 
+     1              + fp * btic(:,ialt,jazip)
               topo_albedo(:,ialt,jazi) = 
      1                fm * topo_albedo(:,ialt,jazim) 
      1              + fp * topo_albedo(:,ialt,jazip)
@@ -1819,6 +1847,12 @@
      1         + fp * aod_tot(ialtp,:)
             topo_gti(ialt,:) =
      1         fm * topo_gti(ialtm,:)      + fp * topo_gti(ialtp,:)
+            gtic(:,ialt,:) =
+     1         fm * gtic(:,ialtm,:) + fp * gtic(:,ialtp,:)
+            dtic(:,ialt,:) =
+     1         fm * dtic(:,ialtm,:) + fp * dtic(:,ialtp,:)
+            btic(:,ialt,:) =
+     1         fm * btic(:,ialtm,:) + fp * btic(:,ialtp,:)
             topo_albedo(:,ialt,:) =
      1         fm * topo_albedo(:,ialtm,:) + fp * topo_albedo(:,ialtp,:)
             topo_ri(ialt,:) =
