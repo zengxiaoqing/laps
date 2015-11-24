@@ -374,9 +374,9 @@
                 dhi_2d(ii,jj) = min(dhi_2d(ii,jj),ghi_2d(ii,jj))
 
 !               Spectral normalized values (under construction)
-                arg_airmass = airmassf(90.-sol_alt(ii,jj),1.0)
+                airmass_g = airmassf(90.-sol_alt(ii,jj),patm_sfc)
                 bnic_2d(:,ii,jj) = frac_dir * 
-     1              trans(arg_airmass * ext_g(:))
+     1              trans(airmass_g * ext_g(:))
 
                 bhic_2d(:,ii,jj) = 
      1              bnic_2d(:,ii,jj) * sind(sol_alt(ii,jj))
@@ -1208,6 +1208,38 @@
      1                                    * (airmass1_h - airmass1_l)
 
                   aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
+
+!                 Assess topo height with respect to ray
+!                 if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
+                  if(ht_m   .le. topo_max_ht .AND. 
+     1               altray .le. topo_max_ang     )then 
+!                 if(ht_m   .le. topo_max_ht)then 
+                    i1 = min(int(rinew_m),ni-1); fi = rinew_m - i1; i2=i1+1
+                    j1 = min(int(rjnew_m),nj-1); fj = rjnew_m - j1; j2=j1+1
+
+                    bi_coeff(1,1) = (1.-fi) * (1.-fj)
+                    bi_coeff(2,1) = fi      * (1.-fj)
+                    bi_coeff(1,2) = (1.-fi) *     fj 
+                    bi_coeff(2,2) = fi      *     fj 
+                    topo_m = sum(bi_coeff(:,:) * topo_a(i1:i2,j1:j2))
+
+                    i1 = min(int(rinew_h),ni-1); fi = rinew_h - i1; i2=i1+1
+                    j1 = min(int(rjnew_h),nj-1); fj = rjnew_h - j1; j2=j1+1
+
+                    bi_coeff(1,1) = (1.-fi) * (1.-fj)
+                    bi_coeff(2,1) = fi      * (1.-fj)
+                    bi_coeff(1,2) = (1.-fi) *     fj 
+                    bi_coeff(2,2) = fi      *     fj 
+                    topo_h = sum(bi_coeff(:,:) * topo_a(i1:i2,j1:j2))
+                  else
+                    topo_m = topo_a(inew_m,jnew_m)
+                    topo_h = topo_m
+                  endif
+
+!                 Use _h values instead of (or in addition to) _m?
+                  ray_topo_diff_last = ray_topo_diff
+                  ray_topo_diff = ht_m - topo_m
+
                   sum_aod     = sum_aod     + aero_ext_coeff * slant2
 
                   if((cvr_path          .gt. 0.00) .AND.
@@ -1352,30 +1384,18 @@
      1                                              / sum_am2cld_den
                   endif
 
-!                 if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
-                  if(ht_m   .le. topo_max_ht .AND. 
-     1               altray .le. topo_max_ang     )then 
-!                 if(ht_m   .le. topo_max_ht)then 
-                    i1 = min(int(rinew_m),ni-1); fi = rinew_m - i1; i2=i1+1
-                    j1 = min(int(rjnew_m),nj-1); fj = rjnew_m - j1; j2=j1+1
-
-                    bi_coeff(1,1) = (1.-fi) * (1.-fj)
-                    bi_coeff(2,1) = fi      * (1.-fj)
-                    bi_coeff(1,2) = (1.-fi) *     fj 
-                    bi_coeff(2,2) = fi      *     fj 
-                    topo_m = sum(bi_coeff(:,:) * topo_a(i1:i2,j1:j2))
-!                   call bilinear_laps(rinew_m,rjnew_m,ni,nj
-!    1                                ,topo_a,topo_m)
-                  else
-                    topo_m = topo_a(inew_m,jnew_m)
-                  endif
-
-!                 Use _h values instead of _m?
-                  ray_topo_diff_last = ray_topo_diff
-                  ray_topo_diff = ht_m - topo_m
-
-                  if(topo_m .gt. ht_m .AND. ihit_topo .eq. 0)then
+!                 Check both mid-point and end-point of ray segment
+                  if((topo_m .gt. ht_m .or. topo_h .gt. ht_h) .AND. 
+     1                                             ihit_topo .eq. 0)then
                       ihit_topo = 1
+
+                      if(topo_m .gt. ht_m)then ! mid-point hit topo
+                          ihit_topo_mid = 1
+                          ihit_topo_end = 0
+                      else                     ! end-point hit topo
+                          ihit_topo_mid = 0
+                          ihit_topo_end = 1
+                      endif
 
                       ray_topo_delt = ray_topo_diff - ray_topo_diff_last
 
