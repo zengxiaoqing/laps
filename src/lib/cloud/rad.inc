@@ -89,6 +89,7 @@
 !       data angstrom_exp /1.3/
 
 !       Brightness conversions
+!       https://irmafiles.nps.gov/reference/holding/476525
         s10_to_magsecsq(s10) = 10. - (2.5 * log10(s10/12.96e6))
         s10_to_nl(x) = x * 0.26189                     ! Chad Moore
   
