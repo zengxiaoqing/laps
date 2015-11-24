@@ -39,8 +39,9 @@ driver                                            lapsplot_main.f
                 sun_eclipse_parms                       "
             calc_allsky                           lib/cloud/calc_allsky.f 
                 get_cloud_rays                    lib/cloud/get_cloud_rays.f
+                    get_sfc_glow                  lib/cloud/get_cloud_rad.f90
+                    get_cloud_rad                       "                        (first raytrace 3-D radiation)
                     skyglow_phys_twi              lib/cloud/skyglow_phys_twi.f90 (clear sky brightness - night)
-                    get_cloud_rad                 lib/cloud/get_cloud_rad.f90 (first raytrace 3-D radiation)
                 get_glow_obj                      lib/cloud/get_sky_rgb_routines.f90
                 get_skyglow_cyl                   lib/cloud/skyglow_cyl.f90
                 get_starglow                      lib/cloud/get_sky_rgb_routines.f90
