@@ -74,7 +74,12 @@
        jmax = maxazi-minazi+1
        write(6,*)' imax/jmax = ',imax,jmax
 
+       gamma = 2.2
+       where(cyl .ne. r_missing_data)cyl = cyl**gamma
+
        call bilinear_laps_2d(ri_a,rj_a,imax,jmax,ni_polar,nj_polar,cyl,polar)
+
+       where(polar .ne. r_missing_data)polar = polar**(1./gamma)
 
 !      write(6,*)' polar array',polar(ni_polar/2,1:nj_polar)
 
