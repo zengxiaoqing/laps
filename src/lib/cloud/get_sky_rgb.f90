@@ -626,7 +626,7 @@
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
                        ,transm_obs                                  & ! I
                        ,gtic,dtic,btic                              & ! I
-                       ,dist_2_topo,topo_solalt                     & ! I
+                       ,dist_2_topo,topo_solalt,azi_scale           & ! I
                        ,sol_alt,sol_az,nsp,airmass_2_topo,idebug_pf & ! I
                        ,ni,nj,pf_land)                                ! O
 
