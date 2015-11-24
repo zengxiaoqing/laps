@@ -834,6 +834,11 @@
           write(6,*)' minazi/maxazi = ',minazi,maxazi
           write(6,*)' alt_scale/azi_scale = ',alt_scale,azi_scale
 
+          if(minazi .eq. maxazi)then
+            write(6,*)' Error minazi = maxazi'
+            stop
+          endif
+
           allocate(alt_a_roll(minalt:maxalt,minazi:maxazi))
           allocate(azi_a_roll(minalt:maxalt,minazi:maxazi))
           allocate(sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
@@ -1062,7 +1067,7 @@
 
               write(6,*)' Call cyl_to_polar with sky rgb data'
 
-              if(htmsl .le. 18000.)then
+              if(htmsl .le. 18000. .and. (maxalt+minalt) .gt. 0)then
                 polat = +90. ! +/-90 for zenith or nadir at center of plot
               else
                 polat = -90.
