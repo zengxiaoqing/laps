@@ -2,13 +2,14 @@
         subroutine get_lnd_pf(elong_a,alt_a,azi_a &                     ! I
                              ,topo_gti,topo_albedo,transm_obs &         ! I
                              ,gtic,dtic,btic &                          ! I
-                             ,dist_2_topo,topo_solalt &                 ! I
+                             ,dist_2_topo,topo_solalt,azi_scale &       ! I
                              ,sol_alt,sol_azi,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_land) ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius
         use cloud_rad, ONLY: ghi_zen_toa, zen_kt
         include 'trigd.inc'
+        include 'rad.inc'
 
 !       Statement functions
         trans(od) = exp(-min(od,80.))
@@ -16,8 +17,10 @@
         alb(bt) = bt / (1.+bt)
         rad2tau(b,r) = (1.-r)/(r*b)
         ANGDIF(X,Y)=MOD(X-Y+540.,360.)-180.
+        scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
+        ph_exp(ampl1,azidiff1) = exp(ampl1 * cosd(azidiff1)) / (1. + abs(ampl1)*.16)
+        hg_cyl(g,pha) = hg(g,pha) / (1. + 1.3*g**2)   ! integrate to ~1
 
-        include 'rad.inc'
         real elong_a(ni,nj)
         real alt_a(ni,nj)
         real azi_a(ni,nj)
@@ -33,26 +36,38 @@
         real pf_land(nc,ni,nj)      ! anisotropy factor 
                                     ! (weighted by direct/diffuse illumination)
 
+        real nonspot
+
 !       topo_gti may be too low when sun is near horizon
 !       solar elev    topo_gti
 !          0            12
 !          1            34
 !          2            56
 
-        scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
-
         write(6,*)' subroutine get_lnd_pf...'
         iwrite = 0
 
         write(6,11)
 11      format('  i    j  ic   alt_a    azi_a   sol_azi azidiff  ', &
-               '  ampl     fland    fsnow   fwater   phland   phsnow   phwater    ph1    radfrac  dst2topo gndarc  toposalt  specang    alb') 
+               ' ampl_l    fland    fsnow   fwater   phland   phsnow   phwater    ph1    radfrac  dst2topo gndarc  toposalt emis_ang  specang    alb') 
 
         do j = 1,nj
          do i = 1,ni
 
             sol_clr = (ghi_zen_toa * zen_kt) * sind(max(sol_alt,1.5))
 !           tfrac = topo_gti(i,j) / sol_clr                   
+            azidiff = angdif(azi_a(i,j),sol_azi)
+ 
+!           Approximate specular reflection angle
+            gnd_arc = asind(sind(90.+alt_a(i,j))*dist_2_topo(i,j)/earth_radius)
+            c = 180. - (gnd_arc + (90.+alt_a(i,j)))
+            emis_ang = c - 90.
+!           topo_salt = sol_alt + gnd_arc
+            specangvert = abs(emis_ang - topo_solalt(i,j))
+            specangvert2 = specangvert * sind(emis_ang)
+            azidiff2 = azidiff * cosd(emis_ang)
+            specang = sqrt(specangvert**2 + azidiff2**2)
+
             do ic = 1,nc
               tfrac = transm_obs      
               alt_thresh = 22. * ext_g(ic) 
@@ -62,12 +77,11 @@
 
 !             radfrac - 1 means relatively high direct / global horizontal ratio
 !                       0 means zero direct / global ratio
-!                       calculate from (gtic - dtic) / gtic ?
-              radfrac = scurve(tfrac**3) ! high for illuminated clouds
-!                       illuminated                unilluminated
-
+!                       calculate from (gtic - dtic) / gtic  
               if(gtic(ic,i,j) .gt. 0.)then
-                radfrac = btic(ic,i,j)/gtic(ic,i,j)
+                radfrac = btic(ic,i,j)/gtic(ic,i,j)         
+              else
+                radfrac = 0.
               endif
 
 !             fland = scurve((1. - topo_albedo(2,i,j))**2)
@@ -87,33 +101,27 @@
 
 !             Land
 !             Should look brighter opposite direct sun in low sun case
-              spot = radfrac * fland
-              arg2 = spot * 0.020 ! fraction of energy in the spot 
-              arg1 = (1. - arg2)
-              azidiff = angdif(azi_a(i,j),sol_azi)
-              ampl = -0.7 * cosd(sol_alt)**2 * cosd(alt_a(i,j))**5 * radfrac
-
-              phland = exp(ampl * cosd(azidiff))
-!             phland = 1.0 + (ampl * cosd(azidiff))
+              spot = 0.020 ! fraction of energy in the spot 
+              nonspot = (1. - spot)
+              ampl_l = -1.0 * cosd(sol_alt)**2 * cosd(alt_a(i,j))**5 
+              arf_b = nonspot * ph_exp(ampl_l,azidiff) &
+                    + spot    * hg(-.90,elong_a(i,j))               
+              arf_d = 1.0
+              phland = arf_b * radfrac + arf_d * (1. - radfrac)  
 
 !             Snow
-!             Should approximately integrate to 1 over the "cylinder"
-              g = 0.3 * radfrac
+              g1 = 0.0 ; g2 = 0.7
               ampl_s = cosd(alt_a(i,j))
-              phsnow = ampl_s * hg(g,azidiff) / (1. + 1.3*g**2)
+              hg_2param = 0.75 * hg_cyl(g1,azidiff) + 0.25 * hg_cyl(g2,azidiff)
+              arf_b = ampl_s * hg_2param
+              arf_d = 1.0
+              phsnow = arf_b * radfrac + arf_d * (1. - radfrac)  
 
 !             Water
               g = 0.6 * radfrac
               ampl_w = cosd(alt_a(i,j))
 
-              gnd_arc = asind(sind(90.+alt_a(i,j))*dist_2_topo(i,j)/earth_radius)
-              c = 180. - (gnd_arc + (90.+alt_a(i,j)))
-              emis_ang = c - 90.
-!             topo_salt = sol_alt + gnd_arc
-              specangvert = abs(emis_ang - topo_solalt(i,j))
-              specangvert2 = specangvert * sind(emis_ang)
-              azidiff2 = azidiff * cosd(emis_ang)
-              specang = sqrt(specangvert2**2 + azidiff2**2)
+!             Use approximate specular reflection angle
               argexp = min(specang/5.,8.)
               specamp = exp(-(argexp)**2)
 
@@ -124,9 +132,10 @@
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
                 if((i .eq. 1 .and. j .eq. (j/40)*40) .OR.  &
-                 (abs(azidiff) .lt. 0.10 .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) )then
-                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),specang,topo_albedo(2,i,j)
-1                 format(i4,i5,i2,4f9.2,9f9.4,f9.0,4f9.2)
+                 ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
+                          .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) )then
+                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
+1                 format(i4,i5,i2,4f9.2,9f9.4,f9.0,5f9.2)
                 endif
               endif
 
@@ -138,9 +147,7 @@
                 iwrite = iwrite + 1
               endif
 
-              pf_land(ic,i,j) & 
-                      = arg1 * ph1 &                 ! non-spot
-                      + arg2 * hg(-.90,elong_a(i,j)) ! spot
+              pf_land(ic,i,j) = ph1
 
             enddo ! ic
 
