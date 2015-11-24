@@ -145,9 +145,16 @@
 
         include 'rad.inc'
 
+!       http://arxiv.org/pdf/astro-ph/9706111.pdf
+!       http://adsabs.harvard.edu/abs/1986PASP...98..364G
+!       1 nL = 1.31e6  photons (550nm) sec**-1 cm**-2 sterad**-1
+!       1 nL = 1.31e10 photons (550nm) sec**-1  m**-2 sterad**-1
+!       1 Watt = 2.76877e18 photons (550nm) / sec
+!       1 nL = 4.7313e-9 watts m**-2 sterad**-1 (550nm)
+!       wm2sr_to_nl(x) = 2.113e8 * x     ! (550nm)
+!       wm2sr_to_nl(x) = 2145.707e9 * x
         wm2srum_to_s10(x) = x / 1.261e-8 ! 550nm
         s10_to_wm2srum(x) = x * 1.261e-8 ! 550nm
-!       wm2sr_to_nl(x) = 2145.707e9 * x
         wm2_to_wm2nm(x)     = 0.00136 * x ! solar 550nm approx
         wm2sr_to_wm2srnm(x) = 0.00136 * x ! solar 550nm approx
         wm2sr_to_wm2srum(x) = x * 1.36 ! solar 550nm approx
@@ -380,17 +387,30 @@
                     delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
                     rmag_per_sqarcsec = mag_stars(is) + ext_mag(is) + delta_mag                  
 
-!                   Convert to nanolamberts
+!                   Convert to log nanolamberts
                     glow_nl = log10(v_to_b(rmag_per_sqarcsec))
                     do ic = 1,3
-                      glow_stars(ic,ialt,jazi) = log10(10.**glow_stars(ic,ialt,jazi) + 10.**glow_nl)             
-                    enddo ! ic
+                      if(ic .eq. 1)then
+                        glow_delt = (bmv(is)-0.6) * 0.7 * 0.4
+                      elseif(ic .eq. 2)then
+                        glow_delt = 0.
+                      elseif(ic .eq. 3)then
+                        glow_delt = -(bmv(is)-0.6) * 0.4
+                      endif
 
-                    if(is .le. 50 .AND. abs(azis-azig) .le. 0.5)then
-                        write(6,91)is,rmag_per_sqarcsec,delta_mag,glow_nl,glow_stars(2,ialt,jazi)
-91                      format( &
-                         ' rmag_per_sqarcsec/dmag/glow_nl/glow_stars = ',i4,4f10.3)             
-                    endif
+                      glow_nl = glow_nl + glow_delt
+
+                      glow_stars(ic,ialt,jazi) = log10(10.**glow_stars(ic,ialt,jazi) + 10.**glow_nl)             
+
+                      if(is .le. 50 .AND. abs(azis-azig) .le. azi_scale)then
+                        if(ic .eq. 2)then
+                          write(6,91)is,mag_stars(is),bmv(is),rmag_per_sqarcsec,delta_mag,glow_nl,glow_stars(ic,ialt,jazi)
+91                        format( &
+                          ' mag/bmv/rmag_per_sqsec/dmag/glow_nl/glow_stars = ',i4,2f8.2,4f10.3)             
+                        endif
+                      endif
+
+                    enddo ! ic
                 endif ! within star kernel
               enddo ! is
             endif ! alt > -20.
