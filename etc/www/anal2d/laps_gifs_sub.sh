@@ -36,7 +36,7 @@ if test -r etc/ncarg_root; then
     ls -l etc/ncarg_root
     export NCARG_ROOT=`cat etc/ncarg_root`
 else
-    echo "unable to find etc/ncarg_root file"
+    echo "unable to find ~/etc/ncarg_root file"
 fi
 
 #alias ctrans '/usr/local/apps/ncarg-4.0.1/bin/ctrans  -verbose'
