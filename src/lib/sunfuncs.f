@@ -42,7 +42,11 @@ C Steve Albers Jan 1994
 C Argument      I/O     Type                    Description
 C --------      ---     ----    -----------------------------------------------
 C RLAT           I      R*4     Latitude (degrees)
-C RLNG           I      R*4     Longitude (degrees)
+C RLON           I      R*4     Longitude (degrees)
+C I4TIME         I      I*4     Time (seconds since 1-1-1960)
+C ALT            O      R*4     Solar Elevation Angle (degrees)
+C DEC            O      R*4     Solar Declination (degrees)
+C HRANGLE        O      R*4     Solar Hour Angle (degrees)
         include 'trigd.inc'
         character*9 asc9_time
 
