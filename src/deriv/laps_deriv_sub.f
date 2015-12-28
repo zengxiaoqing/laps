@@ -610,14 +610,18 @@ c read in laps lat/lon and topo
 !       Write out cloud grid in pressure coordinates
         write(6,*)' Writing out grid in pressure coordinates'
 
-        write(6,*)' clouds_3d_pres section (LC3)'
-     1           ,clouds_3d(NX_L/2,NY_L/2,:)
+        do k = KCLOUD,1,-1
+          write(6,*)' clouds_3d_pres CTR (LC3)'
+     1           ,k,clouds_3d(NX_L/2,NY_L/2,k)
+        enddo ! k
 
         call interp_height_pres_fast(NX_L,NY_L,NZ_L,kcloud
      1  ,clouds_3d_pres,clouds_3d,heights_3d,cld_hts,istatus)
 
-        write(6,*)' clouds_3d_pres section (LCP)'
-     1           ,clouds_3d_pres(NX_L/2,NY_L/2,:)
+        do k = NZ_L,1,-1
+          write(6,*)' clouds_3d_pres CTR (LCP)'
+     1           ,k,clouds_3d_pres(NX_L/2,NY_L/2,k)
+        enddo ! k
 
         var = 'LCP'
         ext = 'lcp'
@@ -769,10 +773,10 @@ c read in laps lat/lon and topo
         do j = 1,NY_L
         do i = 1,NX_L
 !           Temperature dependent threshold, we can consider basing this
-!           from saturation vapor density (SVD * .05) = (ES/RT) * .05
-!           where .05 means 5% of water saturation
+!           from saturation vapor density (SVD * .025) = (ES/RT) * .025
+!           where .025 means 2.5% of water saturation
             es_pa = ESL(temp_3d(i,j,k) - 273.15) * 100.
-            cld_ice_ub_gpm3 = 1000. * .05 * es_pa / (R * temp_3d(i,j,k))
+            cld_ice_ub_gpm3 = 1e3 * .025 * es_pa / (R * temp_3d(i,j,k))
 !           if(temp_3d(i,j,k) .gt. 243.15)then
 !               cld_ice_ub_gpm3 = 0.1
 !           else
