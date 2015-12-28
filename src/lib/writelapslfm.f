@@ -234,11 +234,15 @@ C
       i_reftime = reftime - 315619200
       i_valtime = valtime - 315619200
 
-!     if(imax*jmax*kmax > 50000000)then
       if(.true.)then 
 !         Call ncgen here since it may not work from the C code
-          syscmd = 'ncgen -o '//trim(file_name)
-     1             //' '//trim(cdldir)//trim(ext)//'.cdl'
+          if(imax*jmax*kmax .gt. 50000000)then
+            syscmd = 'ncgen -v 2 -x -o '//trim(file_name)
+     1               //' '//trim(cdldir)//trim(ext)//'.cdl'
+          else
+            syscmd = 'ncgen -x -o '//trim(file_name)
+     1               //' '//trim(cdldir)//trim(ext)//'.cdl'
+          endif
           write(6,*)' FORTRAN syscmd = ',trim(syscmd)
           call system(trim(syscmd))
           inquire(FILE=trim(file_name),EXIST=outfile_defined)
@@ -250,7 +254,7 @@ C
      1       ' output file successfully created via FORTRAN system call'
           endif
       else
-          write(6,*)' Small domain, use C code to run ncgen'
+          write(6,*)' use C code to run ncgen'
       endif
 C
 C **** write out netCDF file
