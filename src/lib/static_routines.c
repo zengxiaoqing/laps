@@ -5,6 +5,7 @@
 #include <netcdf.h>
 
 #define SYSCMD "ncgen -o %s %s"
+#define SYSCMD2 "ncgen -v 2 -o %s %s"
 #define LAT "lat"
 #define LON "lon"
 #define LAH "lah"
@@ -737,8 +738,13 @@ fint4 *status;
  
         /* SYSCMD contains "ncgen -o %s %s\0" which
            is 16 char, cdlfile, and fname  + 10 extra  */
-        syscmd = malloc((strlen(SYSCMD)+*cdl_len+*s_length+10) * sizeof(char));
-        sprintf(syscmd,SYSCMD, fname, cdlfile);
+        if (nx_cdl * ny_cdl > 4000000) {
+          syscmd = malloc((strlen(SYSCMD2)+*cdl_len+*s_length+10) * sizeof(char));
+          sprintf(syscmd,SYSCMD2, fname, cdlfile);
+        } else {
+          syscmd = malloc((strlen(SYSCMD)+*cdl_len+*s_length+10) * sizeof(char));
+          sprintf(syscmd,SYSCMD, fname, cdlfile);
+        }
         free(cdlfile);
  
 /* create output file */
