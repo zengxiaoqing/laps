@@ -264,6 +264,11 @@ else
 
 endif
 
+if (-e /home/oplapb/lapsplot.exe) then
+    echo "Copy pregenerated version of lapsplot.exe"
+    cp /home/oplapb/lapsplot.exe $LAPSINSTALLROOT/bin
+endif
+
 echo "End of install_laps.csh..."
 
 
