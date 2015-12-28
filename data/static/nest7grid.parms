@@ -59,6 +59,7 @@
  r_missing_data=+1e37,
  aod=0.05,
  aero_scaleht=1500.,
+ fcterm = 0.060,
  MAX_RADARS=13,        
  I_OFFSET_RADAR=0,
  ref_base=-10.,       
@@ -229,7 +230,8 @@ c                     This corresponds to the available 'lapsprd/fua/*'
 c                     subdirectories. Lapsplot will plot only among those
 c                     listed elements. The list of models (other than lga)
 c                     is used for reference during localization and 
-c                     verification.
+c                     verification. 'lga' is generally specified as the
+c                     first element and is ignored during the verification.
 c
 c model_cycle_time - Time between successive model initializations (seconds) 
 c
