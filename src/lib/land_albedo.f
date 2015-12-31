@@ -105,43 +105,84 @@
 !     world.200404.3x21600x21600.A1.png world.200404.3x21600x21600.A1.crop2.ppm
 
       character*255 directory
-      character*255 file
-      integer u
+      character*255 file,file_bm 
+      character*10  c10_fname /'nest7grid'/
+      integer u,u_out
+      logical l_there
 
       integer ncol,iwidth,iheight
       parameter (ncol=3)
-      parameter (iwidth=2000)
-      parameter (iheight=2000)
+!     parameter (iwidth=2000)
+!     parameter (iheight=2000)
 
-      real rlat_img(iwidth,iheight)
-      real rlon_img(iwidth,iheight)
+!     real rlat_img(iwidth,iheight)
+!     real rlon_img(iwidth,iheight)
+      real, allocatable :: rlat_img(:,:),rlon_img(:,:) 
       real ri_img(ni,nj)            
       real rj_img(ni,nj)             
       real rlat_laps(ni,nj)
       real rlon_laps(ni,nj)
+      real topo_laps_dum(ni,nj)
 
-      integer img(ncol,iwidth,iheight)                                               
-      real array_2d(iwidth,iheight)
+!     integer img(ncol,iwidth,iheight)                                               
+      integer, allocatable :: img(:,:,:)                   
+!     real array_2d(iwidth,iheight)
+      real, allocatable :: array_2d(:,:)                   
       u = 11
-
-      I4_elapsed = ishow_timer()
 
       write(6,*)' Subroutine land_albedo_bm...'
 
       call get_directory('static',directory,len_dir)
-      file=trim(directory)//'world.200405.3x21600x21600.A1.crop.ppm'
+      file_bm=trim(directory)//'albedo_multispectral.dat'
+      inquire(file=trim(file_bm),exist=l_there)
 
-      write(6,*)' Open ',trim(file)
-      write(6,*)' dims ',ncol,iwidth,iheight
-      
+      if(l_there)then
+        write(6,*)' Blue Marble binary remapped albedo file exists'
+        open(u,file=trim(file_bm),form='unformatted' 
+     1      ,status='old',err=999)
+        write(6,*)' Successful open, now reading'
+        read(u,err=999)albedo
+        close(u)
+        write(6,*)' first point is ',albedo(1,1,1)
+        if(albedo(1,1,1) .gt. 1.0)then
+          write(6,*)' ERROR bad first point'
+          goto 999
+        endif
+      else
+        write(6,*)
+     1' Blue Marble binary file is absent, generate and create it'       
+
+      file=trim(directory)//'world.200405.3x21600x21600.crop.ppm'
+
+      write(6,*)' Open for reading ',trim(file)
+
 !     Read section of NASA Blue Marble Image in PPM format
       open(u,file=trim(file),status='old',err=999)
+      read(u,*)   
+      read(u,*)iwidth,iheight
+      rewind(u)
+      write(6,*)' dynamic dims ',ncol,iwidth,iheight
+      allocate(img(ncol,iwidth,iheight))
       call read_ppm (u,img,ncol,iwidth,iheight)
       close(u)
 
+      allocate(rlat_img(iwidth,iheight))
+      allocate(rlon_img(iwidth,iheight))
+      allocate(array_2d(iwidth,iheight))
+
+!     Consider dynamic means to get rlat_start and rlon_start
+!     Use domain lat/lon bounds with a 0.2 deg cushion
+      call get_domain_perimeter(ni,nj,c10_fname  
+     1                  ,rlat_laps,rlon_laps,topo_laps_dum
+     1                  ,0.2,rnorth,south,east,west,istatus)
+
+      write(6,*)' NSEW',rnorth,south,east,west
+
       pix_latlon = 1. / 240
-      rlat_start =   90. - 11000. * pix_latlon
-      rlon_start = -180. + 17000. * pix_latlon
+!     rlat_start =   90. - 11000. * pix_latlon
+!     rlon_start = -180. + 17000. * pix_latlon
+      rlat_start = rnorth                         
+      rlon_start = west                          
       rlat_end = rlat_start - float(iheight)  * pix_latlon
       rlon_end = rlon_start + float(iwidth)  * pix_latlon
 
@@ -207,13 +248,58 @@ cdoc  points.
 
       write(6,*)' Interpolated albedo: ',albedo(:,ni/2,nj/2)
 
-      istatus = 1
-      I4_elapsed = ishow_timer()
+      if(albedo(2,ni/2,nj/2) .gt. 1.0)then
+        write(6,*)' ERROR bad interpolated albedo point'
+        goto 999
+      endif
 
-      return
+!     Write albedo file in binary format
+      u_out = 12
+      file_bm=trim(directory)//'albedo_multispectral.dat'
+      write(6,*)' Writing albedo file to '//file_bm
+      open(u_out,file=trim(file_bm),form='unformatted'
+     1    ,status='new',err=999)
+      write(u_out)albedo
+      close(u_out)
+
+      endif ! binary file exists
+
+!     Normal end
+      istatus = 1
+      goto 9999
 
 !     Error condition
 999   istatus = 0
-      return
+      write(6,*)' error in land_albedo_bm'
 
+9999  if(allocated(rlat_img))deallocate(rlat_img)
+      if(allocated(rlon_img))deallocate(rlon_img)
+      if(allocated(img))deallocate(img)
+      if(allocated(array_2d))deallocate(array_2d)
+
+      return
       end
+
+      subroutine compare_land_albedo(lu,ni,nj,albedo_usgs,albedo_bm
+     1                                       ,albedo_static)
+
+!     This routine compares USGS, Blue Marble, and static albedo fields
+
+      real lu(ni,nj)               ! Land Use (USGS 24 category)
+      real albedo_usgs(3,ni,nj)    ! Albedo (Red, Green, Blue)
+      real albedo_bm(3,ni,nj)      ! Albedo (Red, Green, Blue)
+      real albedo_static(ni,nj)    ! Albedo (broadband)
+
+
+      write(6,*)' subroutine compare_land_albedo...'
+
+      rpts = ni*nj
+      albedo_mean_bm = sum(albedo_bm(2,:,:))/rpts
+      albedo_mean_usgs = sum(albedo_usgs(2,:,:))/rpts
+      albedo_mean_static = sum(albedo_static(:,:))/rpts
+
+      write(6,11)albedo_mean_bm,albedo_mean_usgs,albedo_mean_static
+11    format('  Mean albedo bm/usgs/static ',3f9.4)
+
+      return
+      end 
