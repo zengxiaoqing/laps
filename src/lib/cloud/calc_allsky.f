@@ -72,6 +72,7 @@
         real gtic(nc,minalt:maxalt,minazi:maxazi)
         real dtic(nc,minalt:maxalt,minazi:maxazi)
         real btic(nc,minalt:maxalt,minazi:maxazi)
+        real emic(nc,minalt:maxalt,minazi:maxazi)
         real aod_2_cloud(minalt:maxalt,minazi:maxazi)
         real aod_2_topo(minalt:maxalt,minazi:maxazi)
         real dist_2_topo(minalt:maxalt,minazi:maxazi)
@@ -94,6 +95,10 @@
 
         write(6,*)' subroutine calc_allsky...'
 
+        iobs = nint(ri_obs)
+        jobs = nint(rj_obs)
+        write(6,*)' swi_2d at observer location = ',swi_2d(iobs,jobs)
+
         write(6,*)' call get_cloud_rays...'
 
 !         Get line of sight from isound/jsound
@@ -102,7 +107,9 @@
      1                     ,rain_3d,snow_3d                      ! I
      1                     ,pres_3d,aod_3d,topo_sfc,topo         ! I
      1                     ,topo_albedo_2d                       ! I
-     1                     ,topo_swi,topo_albedo,gtic,dtic,btic  ! O
+     1                     ,swi_2d                               ! I
+     1                     ,topo_swi,topo_albedo                 ! O
+     1                     ,gtic,dtic,btic,emic                  ! O
      1                     ,topo_ri,topo_rj                      ! O
      1                     ,trace_ri,trace_rj                    ! O
 !    1                     ,ghi_2d,dhi_2d                        ! O
@@ -273,6 +280,12 @@
 
               write(6,*)' corr1 in calc_allsky ',corr1_a
 
+!             This can be more accurate by using surface pressure
+              patm_sfc = ztopsa(topo(isound,jsound)) / 1013.25
+              patm_sfc = max(patm_sfc,patm)
+
+              write(6,*)' patm/patm_sfc in calc_allsky ',patm,patm_sfc
+
               write(6,*)' call get_sky_rgb with cyl data'
               call get_sky_rgb(r_cloud_3d    ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
@@ -283,7 +296,7 @@
      1                    ,clear_rad_c       ! clear sky illumination by sun     
      1                    ,l_solar_eclipse,i4time_solar,rlat,rlon,eobsl
      1                    ,clear_radf_c      ! clear sky frac illumination by sun     
-     1                    ,patm,htmsl
+     1                    ,patm,patm_sfc,htmsl
 !    1                    ,blog_v_roll       ! skyglow
      1                    ,blog_sun_roll     ! sunglow
      1                    ,blog_moon_roll    ! moonglow
@@ -293,7 +306,7 @@
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
-     1                    ,topo_swi,topo_albedo,gtic,dtic,btic
+     1                    ,topo_swi,topo_albedo,gtic,dtic,btic,emic
      1                    ,topo_albedo_2d(:,isound,jsound)
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,aod_tot
