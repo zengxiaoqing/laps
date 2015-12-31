@@ -48,6 +48,7 @@
         real topo_albedo_2d(nc,NX_L,NY_L)
         real albedo_bm(nc,NX_L,NY_L)
         integer ialbedo_bm(nc,NX_L,NY_L)
+        real albedo_usgs(nc,NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
         real topo(NX_L,NY_L)
@@ -262,8 +263,8 @@
 
         if(.true.)then ! force config with new dataroot
             write(6,*)' Enter new dataroot:'
-            read(5,17)new_dataroot
- 17         format(a)
+            read(5,15)new_dataroot
+ 15         format(a)
             call s_len(new_dataroot,lenroot)
 
             if(new_dataroot(1:1) .eq. 'q')then
@@ -603,11 +604,15 @@
             pw_2d = r_missing_data
           endif
 
+          write(6,*)
+     1          ' calling get_static_field_interp for static_albedo'
           call get_static_field_interp('albedo',i4time_lwc,NX_L,NY_L
      1                                ,static_albedo,istat_sfc)
           if(istat_sfc .ne. 1)then
-              write(6,*)' Error reading albedo field in plot_allsky'      
+              write(6,*)' Error in get_static_field_interp'      
               return
+          else
+              write(6,*)' success from get_static_field_interp'
           endif
 
           if(.true.)then ! initial setting of albedo
@@ -630,6 +635,7 @@
           I4_elapsed = ishow_timer()
 
 !         Calculate solar position for 2D array of grid points
+          write(6,*)' call solar_position for 2D array'
           do i = 1,NX_L
           do j = 1,NY_L
             call solar_position(lat(i,j),lon(i,j),i4time_solar
@@ -682,21 +688,34 @@
         call make_fnam_lp(i4time_solar,a9time,istatus)
         call cv_i4tim_asc_lp(i4time_solar,a24time,istatus)
 
+        I4_elapsed = ishow_timer()
+
 !       Consider additional albedo info based on land use 
 !       This also includes snow cover
         var_2d='USE'
+        write(6,*)' calling read_static_grid for land use'
         call read_static_grid(NX_L,NY_L,var_2d,land_use,istatus)
         if(istatus .ne. 1)then
            print*,' Warning: could not read static-landuse'
            return
+        else
+           write(6,*)' Successful return from read_static_grid'
         endif
+
+        I4_elapsed = ishow_timer()
 
         where(topo(:,:) .ge. 3200.); land_use(:,:) = 19.; end where
 
-        call land_albedo_bm(lat,lon,NX_L,NY_L,albedo_bm,istatus)
+        call land_albedo(land_use,NX_L,NY_L,albedo_usgs)
+        write(6,*)' debias albedo_usgs by a factor of 1.25'
+        albedo_usgs = albedo_usgs / 1.25
+
+        call land_albedo_bm(lat,lon,NX_L,NY_L,albedo_bm,istat_bm)
+
+        I4_elapsed = ishow_timer()
  
-        if(istatus .eq. 1)then
-            write(6,*)' Set 3-color albedo based on Blue Marble'
+        if(istat_bm .eq. 1)then
+            write(6,*)' Use 3-color albedo based on Blue Marble'
 
 !           Test a flop if needed
 !           do i = 1,NX_L
@@ -710,11 +729,12 @@
 
             topo_albedo_2d = albedo_bm
 
-            write(6,*)' Row of green albedo'
+            write(6,*)' Row of multi-spectral albedo'
             jrow = NY_L/2
             do i = 1,NX_L
                 if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
-                    write(6,*)i,topo_albedo_2d(2,i,jrow)
+                    write(6,16)i,lon(i,jrow),topo_albedo_2d(:,i,jrow)
+16                  format(i5,f9.3,2x,3f9.3)                 
                 endif
             enddo ! i
             alb_min = minval(topo_albedo_2d(2,:,jrow))
@@ -730,16 +750,24 @@
                 endif
             enddo ! j
             enddo ! i
-!           ialbedo_bm(:,:,:) = nint(topo_albedo_2d(:,:,:)*255.)
-!           call writeppm3Matrix(
-!    1               ialbedo_bm(1,:,:),ialbedo_bm(2,:,:)
-!    1              ,ialbedo_bm(3,:,:),'ialbedo_bm')
+
+            if(.false.)then
+                write(6,*)' Write test blue marble albedo image'
+                call get_directory('static',directory,len_dir)
+                ialbedo_bm(:,:,:) = nint(topo_albedo_2d(:,:,:)*255.)
+                call writeppm3Matrix(
+     1               ialbedo_bm(1,:,:),ialbedo_bm(2,:,:)
+     1              ,ialbedo_bm(3,:,:),trim(directory)//'/ialbedo_bm')
+            endif
         else
-            write(6,*)' Set 3-color albedo based on land use'
-            call land_albedo(land_use,NX_L,NY_L,topo_albedo_2d)
+            write(6,*)' Use 3-color albedo based on land use'
+            topo_albedo_2d = albedo_usgs
         endif
+
+        call compare_land_albedo(land_use,NX_L,NY_L,albedo_usgs
+     1                          ,albedo_bm,static_albedo)
         
-        write(6,*)' Row of albedobm / snow / albedo / topo'
+        write(6,*)' Row of albedo_bm / snow /  albedo /  topo'
         jrow = NY_L/2
         do i = 1,NX_L
           do j = 1,NY_L
@@ -758,9 +786,11 @@
           if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
             write(6,18)i,albedo_bm(2,i,jrow),snow_cover(i,jrow)
      1               ,topo_albedo_2d(2,i,jrow),topo(i,jrow)
-18          format(i5,3f9.3,f9.0)
+18          format(i5,2x,3f9.3,f9.0)
           endif
         enddo ! i 
+
+        I4_elapsed = ishow_timer()
 
         call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
 
@@ -1053,8 +1083,8 @@
      1                   isky_rgb_cyl(0,:,:),isky_rgb_cyl(1,:,:)
      1                  ,isky_rgb_cyl(2,:,:),'allsky_rgb_cyl_'//clun)
               do iaz = minazi,maxazi,40
-               write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz
-     1                       ,isky_rgb_cyl(:,maxalt/2,iaz)
+               write(6,*)'iaz,cyl(maxalt/1,iaz)',iaz
+     1                       ,isky_rgb_cyl(:,maxalt/1,iaz)
               enddo ! iaz
             endif
 
