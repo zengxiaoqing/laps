@@ -20,20 +20,21 @@
         scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
         ph_exp(ampl1,azidiff1) = exp(ampl1 * cosd(azidiff1)) / (1. + abs(ampl1)*.16)
         hg_cyl(g,pha) = hg(g,pha) / (1. + 1.3*g**2)   ! integrate to ~1
+        fslope(x,s) = s*x - (s-1.)*x**((s+1.)/s)
 
         real elong_a(ni,nj)
-        real alt_a(ni,nj)
+        real alt_a(ni,nj)           ! 90. - u
         real azi_a(ni,nj)
         real topo_gti(ni,nj)        ! topo normal global irradiance
         real topo_albedo(nc,ni,nj)  ! topo albedo
-        real topo_solalt(ni,nj)     ! solar altitude
+        real topo_solalt(ni,nj)     ! 90. - u0 (solar altitude)
         real gtic(nc,ni,nj)         ! spectral terrain GNI
         real dtic(nc,ni,nj)         ! spectral terrain diffuse NI 
         real btic(nc,ni,nj)         ! spectral terrain beam (direct) NI 
         real dist_2_topo(ni,nj)     
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         integer idebug_a(ni,nj)
-        real pf_land(nc,ni,nj)      ! anisotropy factor 
+        real pf_land(nc,ni,nj)      ! anisotropic reflectance factor (ARF)
                                     ! (weighted by direct/diffuse illumination)
 
         real nonspot
@@ -99,21 +100,39 @@
                   fwater = 0.0
               endif
 
+              fice = 0.0
+
 !             Land
 !             Should look brighter opposite direct sun in low sun case
-              spot = 0.020 ! fraction of energy in the spot 
+              spot = 0.005 ! fraction of energy in the spot 
               nonspot = (1. - spot)
               ampl_l = -1.0 * cosd(sol_alt)**2 * cosd(alt_a(i,j))**5 
+
+!             Elliptical opposition effect
+              aspect = 3. ! horizontal contraction of spot
+              hemisphere_int = 2. / aspect
+              alt_antisolar = abs(alt_a(i,j)+sol_alt) ! alt diff from antisolar point
+!             azi_antisolar = 180. - (abs(azidiff)*cosd(sol_alt)) * aspect
+              azi_antisolar = 180. - abs(azidiff)     ! azi diff from antisolar point
+              azi_antisolar_eff = fslope(azi_antisolar*cosd(sol_alt)/180.,aspect) * 180.
+              elong_antisolar = 180. - sqrt(alt_antisolar**2 + azi_antisolar_eff**2)
+              elong_antisolar = max(elong_antisolar,0.)
+              elong_eff = elong_antisolar * cosd(sol_alt)**2 + elong_a(i,j) * sind(sol_alt)**2
+
               arf_b = nonspot * ph_exp(ampl_l,azidiff) &
-                    + spot    * hg(-.90,elong_a(i,j))               
+!                   + spot    * hg(-.90,elong_a(i,j))               
+                    + spot    * hg(-.90,elong_eff) / hemisphere_int
               arf_d = 1.0
               phland = arf_b * radfrac + arf_d * (1. - radfrac)  
 
 !             Snow
-              g1 = 0.0 ; g2 = 0.7
+              g1 = 0.0                
               ampl_s = cosd(alt_a(i,j))
-              hg_2param = 0.75 * hg_cyl(g1,azidiff) + 0.25 * hg_cyl(g2,azidiff)
-              arf_b = ampl_s * hg_2param
+              fzen = sind(topo_solalt(i,j))
+              g2 = 0.5 * ampl_s
+              hg_2param = 0.25 * 1.0 + 0.75 * hg_cyl(g2,azidiff)
+              brdf_zen = 0.7 + 0.3 * (2. * sind(alt_a(i,j)))
+              arf_b = hg_2param * (1.-fzen) + brdf_zen * fzen
               arf_d = 1.0
               phsnow = arf_b * radfrac + arf_d * (1. - radfrac)  
 
@@ -127,6 +146,9 @@
 
               phwater = 0.2 + 3.0 * specamp ! ampl_w * hg(g,azidiff) / (1. + 1.3*g**2)
 
+!             Ice
+              phice = 1.0
+
               ph1 = phland * fland + phsnow * fsnow + phwater * fwater
 
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
@@ -136,6 +158,8 @@
                           .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) )then
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
 1                 format(i4,i5,i2,4f9.2,9f9.4,f9.0,5f9.2)
+                  write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
+111               format('   antisolar alt/azi/azeff/elg/elg_a/eff',6f9.2)
                 endif
               endif
 
