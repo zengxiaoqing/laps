@@ -163,8 +163,13 @@
          endif
 
          alphabar = alphabar_g + alphabar_o + alphabar_a
-         di_g = do * radg       * (alphabar_g / alphabar)
-         di_a = do * rada * ssa * (alphabar_a / alphabar)
+         if(alphabar .gt. 0.)then
+             di_g = do * radg       * (alphabar_g / alphabar)
+             di_a = do * rada * ssa * (alphabar_a / alphabar)
+         else
+             di_g = 0.
+             di_a = 0.
+         endif
          di = di_g + di_a
 
          sumi_g = sumi_g + di_g
