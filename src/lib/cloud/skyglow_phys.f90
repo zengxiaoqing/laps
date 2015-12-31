@@ -12,6 +12,7 @@
                    ,l_solar_eclipse,i4time,rlat,rlon               &! I
                    ,clear_radf_c,ag_2d                             &! I
                    ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a   &! O
+                   ,sky_rad_scat                                   &! O
                    ,clear_rad_c,sky_rad_ave,elong           )       ! O/I
 
 !       Sky glow with solar altitude > 0
@@ -86,7 +87,9 @@
         real view_alt(minalt:maxalt,minazi:maxazi)
         real view_az(minalt:maxalt,minazi:maxazi)
 
-        real od_g_slant_a(nc,minalt:maxalt) ! use for sun/moon/star attenuation
+!       If below the limb this probably is set using aerosol reference
+!       height under the observer
+        real od_g_slant_a(nc,minalt:maxalt)
         real od_o_slant_a(nc,minalt:maxalt)
         real od_a_slant_a(nc,minalt:maxalt)
 
@@ -712,10 +715,12 @@
 
 !               od_a = aod_ref * aa * ext_a(ic)  ! slant od
                 od_a_slant = od_a_vert * aa_o_aa_90 
-                od_a = od_slant
-                if(od_a_slant .gt. 0. .and. sol_alt .gt. twi_alt)then ! normalize with extinction?
+                od_a = od_a_slant
+                if(od_a_slant .gt. 0. .and. sol_alt .gt. twi_alt .and. &
+                   aod_ill_opac_potl(ialt,jazi) .gt. 0.)then ! normalize with extinction?
 !                 aodf = min(aod_ill(ialt,jazi)/od_a_slant,1.0)
                   aodfo = min(aod_ill(ialt,jazi)/aod_tot(ialt,jazi),1.0)
+!                 May be large when viewer is in stratosphere
                   aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
                 else
                   aodfo = 1.0
@@ -1057,7 +1062,8 @@
                     write(6,*)'alt,od_slant,clear_rad_c',altray,od_slant,clear_rad_c(ic,ialt,jazi_dbg)
                   endif
 
-                  sph_rad_ave = sky_rad_ave(ic) * 0.5 ! sphere ave, drk gnd
+!                 sphere ave, drk gnd
+                  sph_rad_ave = sky_rad_ave(ic) * 0.5 * (1. + sfc_alb)
 
                   do jazi = jazi_start,jazi_end
                     if(dist_2_topo(ialt,jazi) .eq. 0.)then ! unobstructed by terrain
@@ -1090,6 +1096,8 @@
                   endif ! at zenith 
                 enddo ! ialt
             enddo ! ic
+        else
+            sky_rad_scat(:,:,:) = 0.
         endif
 
         write(6,*)' clearrad2:',clear_rad_c(2,(minalt+maxalt)/2,minazi:maxazi:10)
