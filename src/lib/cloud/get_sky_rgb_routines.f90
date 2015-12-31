@@ -1,7 +1,12 @@
 
         subroutine get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen & ! I
                                     ,patm,htmsl,horz_dep &      ! I
+                                    ,airmass_2_topo &           ! I
                                     ,clear_rad_c_nt)            ! O
+
+!       Calculate sky glow due to city lights + airglow. This takes into
+!       account the limb when determining airglow. The effect of the
+!       city lights part is considered based on atmosphere and terrain.
 
         use mem_namelist, ONLY: earth_radius
         include 'trigd.inc'
@@ -16,6 +21,7 @@
 
         real alt_a(ni,nj)
         real azi_a(ni,nj)
+        real airmass_2_topo(ni,nj)
         real clear_rad_c_nt(3,ni,nj)      ! night sky brightness
                                           ! 3 color radiance (Nanolamberts)
 
@@ -33,7 +39,9 @@
         flyr_abv = max( min( (top_lyr-htmsl)/thklyr, 1.) ,0.)
         flyr_blw = max( min( (htmsl-top_lyr)/thklyr, 1.) ,0.)
 
-        write(6,*)' get_clr_rad_nt_2d: abv/blw ',flyr_abv,flyr_blw
+        write(6,*)' get_clr_rad_nt_2d: abv/blw',flyr_abv,flyr_blw
+        write(6,*)' get_clr_rad_nt_2d: htmsl',htmsl
+        write(6,*)' get_clr_rad_nt_2d: patm/obs_glow_zen',patm,obs_glow_zen                    
 
         do ialt = 1,ni ! Process all azimuths at once for this altitude
 
@@ -69,7 +77,6 @@
             endif
 
             airglow(:) = airglow_zen(:) * am2
-
 
           elseif(htmsl .ge. top_lyr)then ! above airglow
             horz_dep_airglow = horz_depf(htmsl-90000.,earth_radius)
@@ -112,25 +119,29 @@
             rint_alt_ramp = 1.
           endif
 
-!         glow_lp = 500. ! from city lights (nL)
-          glow_lp = (obs_glow_zen * patm * rint_alt_ramp) ! from city lights (nL)
-          glow_alt(:) = glow_lp + airglow(:) ! from city lights + airglow (nL)
+!         Add city lights when we are in the atmosphere (nL)
+          do jazi = 1,nj                 
 
-!         HSI
-!         hue = exp(-airmass_lit*0.2) ! 0:R 1:B
-!         clear_rad_c_nt(1) = hue                             ! Hue
-!         clear_rad_c_nt(2) = abs(hue-0.5) * 0.8 * sat_ramp   &                        
-!                                              * sat_twi_ramp ! Sat
+!           City lights part
+!           Determine if we hit topo from within atmosphere
+            if(patm .gt. 0. .and. airmass_2_topo(ialt,jazi) .ne. 0.)then
+!             Fraction of air in the path, use fracod instead?
+              fracair = min((airmass_2_topo(ialt,jazi)/(airmass*patm)),1.0)
+              glow_lp = obs_glow_zen * patm * fracair                ! (nL)
+            else
+              fracair = 1.0
+              glow_lp = (obs_glow_zen * patm * rint_alt_ramp)        ! (nL)
+            endif
 
-!         Now returned as radiance (nL)
-          do ic = 1,3
-            clear_rad_c_nt(ic,ialt,:) = glow_alt(ic)          ! Int
-          enddo
+!           City lights + airglow
+            glow_alt(:) = glow_lp + airglow(:)                       ! (nL)
+            clear_rad_c_nt(:,ialt,jazi) = glow_alt(:)                ! (nL)
+          enddo ! jazi
 
 !         if(ialt .eq. ni)then
           if(ialt .eq. ni .or. alt .eq. nint(alt))then
-            write(6,1)alt,h,am2,obs_glow_zen,airglow(2),glow_lp,glow_alt(2)
-1           format(' get_clr_rad_nt_2d: alt,h,am2,obsg,airg,glow lp/alt',f9.2,f10.0,f9.3,4f10.0)
+            write(6,5)alt,h,am2,fracair,obs_glow_zen,airglow(2),glow_lp,glow_alt(2)
+5           format(' get_clr_rad_nt_2d: alt/h/am2/fair/obsg/airg/glow lp-alt',f9.2,f10.0,2f9.3,4f10.0)
 !           if(htmsl .ge. 90000.)then ! above airglow
 !             write(6,*)'   horz_dep_airglow = ',horz_dep_airglow
 !           endif
@@ -740,13 +751,17 @@
         subroutine get_sky_rad_ave(rad,alt_a,azi_a,ni,nj &
                                   ,sol_alt,sol_az,sky_rad_ave)
 
+        include 'trigd.inc'
+
         real rad(ni,nj)
         real alt_a(ni,nj)
         real azi_a(ni,nj)
 
+        alt_top = alt_a(ni,1)
+
+!       Average over window
         cnt = 0.
         sum = 0.
-
         do i = 1,ni
           cosi = cosd(alt_a(i,1))
           if(alt_a(i,1) .ge. 0.)then ! above horizontal
@@ -758,11 +773,45 @@
         enddo ! i
 
         if(cnt .gt. 0.)then
-            sky_rad_ave = sum/cnt
+            sky_rad_ave_wdw = sum/cnt
         else
             write(6,*)' ERROR in get_sky_rad_ave'
             write(6,*)' sol_az = ',sol_az
-            sky_rad_ave = 10. 
+            sky_rad_ave_wdw = 10. 
+        endif
+
+!       Average on top row
+        cnt = 0.
+        sum = 0.
+        do i = ni,ni
+          cosi = cosd(alt_a(i,1))
+          if(alt_a(i,1) .ge. 0.)then ! above horizontal
+            do j = 1,nj
+                cnt = cnt + (1.0      * cosi)
+                sum = sum + (rad(i,j) * cosi)     
+            enddo ! j
+          endif
+        enddo ! i
+
+        if(cnt .gt. 0.)then
+            sky_rad_ave_top = sum/cnt
+        else
+            write(6,*)' WARNING in get_sky_rad_ave'
+            write(6,*)' alt_top = ',alt_top
+            sky_rad_ave_top = rad(ni,1)
+        endif
+
+!       If needed, the average on the top row is extrapolated for the
+!       portion of the sky above the camera field of view (when alt_top 
+!       is less than 90 degrees).
+        if(alt_top .gt. 0.)then
+          write(6,*)' get_sky_rad_ave: top above horizon ',alt_top
+          area_frac = sind(alt_top)
+          write(6,*)' area_frac/wdw/top = ',area_frac,sky_rad_ave_wdw,sky_rad_ave_top
+          sky_rad_ave = sky_rad_ave_wdw * area_frac + sky_rad_ave_top * (1.-area_frac)
+        else
+          write(6,*)' get_sky_rad_ave: top below horizon ',alt_top
+          sky_rad_ave = sky_rad_ave_wdw
         endif
 
         return
