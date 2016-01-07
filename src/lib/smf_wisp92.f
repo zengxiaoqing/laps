@@ -91,6 +91,8 @@ cc
 cc   -------------------------------------------------------------
       nll_index = nll - 1
       do 100 ilevel=1,nll_index
+        kcb = 0
+        kctop = 0
         if(zlevel(ilevel).lt.zcb.and.
      1     zlevel(ilevel+1).gt.zcb) then
             kcb=ilevel
