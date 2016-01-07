@@ -56,6 +56,7 @@ cd $SCRATCH_DIR/$proc
 
 date -u
 echo "Running $EXE_DIR/lapsplot.exe < $LAPSPLOT_IN on $MACHINE $NODE"
+rm -f gmeta
 #$EXE_DIR/lapsplot.exe                                          < $LAPS_GIFS/lapsplot.in
 $EXE_DIR/lapsplot.exe                                           < $LAPSPLOT_IN
 
@@ -340,6 +341,10 @@ else
   echo "regular ncar graphics option"
   pwd
   ls -l $SCRATCH_DIR/$proc/gmeta
+  if test ! -e gmeta; then
+    echo "ERROR: gmeta does not exist in lapsplot_gifs.sh - exiting"
+    exit
+  fi
 
   if test "$MACHINE" = "AIX"; then
 
