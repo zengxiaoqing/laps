@@ -112,7 +112,8 @@
          scale_ht_g = R * ztotsa(htbar_msl) / GRAV
          alphabar_g = (od_g_msl * patm_bar) / scale_ht_g
 
-         od_solar_slant_g = od_g_vert * ags * exp(-htbar/scale_ht_g)
+!        od_solar_slant_g = od_g_vert * ags * exp(-htbar/scale_ht_g)
+         od_solar_slant_g = od_g_msl  * ags * exp(-htbar_msl/scale_ht_g)
 !        od_solar_slant_a = od_a_vert * aas * exp(-htbar/scale_ht_a) 
          od_solar_slant_a = aod_ref   * aas * exp(-(htbar_msl-redp_lvl)/scale_ht_a) * frac_iso_a
          od_solar_slant = od_solar_slant_g &
@@ -219,6 +220,10 @@
      angdif(X,Y)=MOD(X-Y+540.,360.)-180.
      scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5
      logint(y1,y2,f) = exp(log(y1)*(1.-f) + log(y2)*f)
+     curvat2(sdst,radius_start,altray) = &
+             sqrt(sdst**2 + radius_start**2 &
+               - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
+     expbl(x) = exp(max(x,-80.))
 
      real tausum_a(nsteps)
 
@@ -240,6 +245,8 @@
 !    patm_htmsl = ztopsa(htmin_view) / 1013.25
      patm_htmsl = ztopsa(htmsl) / 1013.25
      rearg = 2.0 + 0.667 * patm_htmsl
+     radius_earth_eff = earth_radius * (1. + (0.33333 * patm_htmsl))
+     radius_start_eff = radius_earth_eff + htmsl
 
 !    High aerosols (just during low sun)
      if(solalt .lt. 3.)then
@@ -286,6 +293,7 @@
 
 !    Integral [0 to x] a * exp(-b*x) = a * (1. - exp*(-b*x)) / b
      ds = 100. / max(sind(viewalt),0.1)
+     istart = max(1,nint((htmsl-100000.)/ds))
 
      if(idebug .eq. 1)then
          write(6,*)
@@ -307,7 +315,7 @@
          write(6,*)'od_h_vert/slant = ',od_h_vert,od_h_slant
          write(6,*)'opac_slant = ',opac_slant
          write(6,*)'od_slant = ',od_slant
-         write(6,*)'ds = ',ds
+         write(6,*)'istart/ds = ',istart,ds
      endif ! i
 
 !    ags_a = ags_in; aas_a = aas_in ! test
@@ -333,10 +341,15 @@
          frac_iso_a = 0.5
      endif
 
-     do i = 1,nsteps
+     do i = istart,nsteps
          sbar = (float(i)-0.5) * ds
-         htbar = sbar * sind(viewalt)
-         htbar = htbar + sbar**2 / (rearg * r_e) ! Earth Curvature
+
+!        htbar = sbar * sind(viewalt)            ! Works at low altitude
+!        htbar = htbar + sbar**2 / (rearg * r_e) ! Works at LEO   
+         htbar = curvat2(sbar,radius_start_eff,viewalt) ! Works at GEO
+!        Works from moon
+!        htbar = curvat2(dble(sbar),dble(radius_start_eff),dble(viewalt)) 
+
          htbar_msl = htbar+htmsl
          xybar = (sbar - refdist_solalt) * cosd(viewalt)
 
@@ -346,7 +359,7 @@
 
          alphabar_o = alpha_o3(od_o_msl,htbar_msl)
 !        alphabar_a = alpha_sfc_a * exp(-htbar/scale_ht_a)  
-         alphabar_a = alpha_ref_a * exp(-(htbar_msl-redp_lvl)/scale_ht_a) 
+         alphabar_a = alpha_ref_a * expbl(-(htbar_msl-redp_lvl)/scale_ht_a) 
 
 !        AOD stratospheric = .012 (nighttime - layer extends above observer)
          if(htbar_msl .gt. h1_ha .and. htbar_msl .le. h2_ha .and. solalt .lt. 3. .and. aod_ha .gt. 0.)then
