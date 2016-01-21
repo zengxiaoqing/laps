@@ -161,16 +161,16 @@
         enddo ! ic
 
 !       Obtain reference values of source term
-        call get_airmass(90.,htmsl,patm &           ! I
-                         ,aero_refht,aero_scaleht & ! I
-                         ,earth_radius,1 &          ! I
-                         ,ag_90,ao_90,aa_90)        ! O
+        call get_airmass(90.,htmsl,patm &             ! I
+                         ,aero_refht,aero_scaleht &   ! I
+                         ,earth_radius,1 &            ! I
+                         ,ag_90,ao_90,aa_90,refr_deg) ! O
 
 !       Obtain reference values for sun             
         call get_airmass(sol_alt,htmsl,patm &       ! I
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius,1 &          ! I
-                         ,ag_s,ao_s,aa_s)           ! O
+                         ,ag_s,ao_s,aa_s,refr_deg)  ! O
 
 !       Set this for range of values of solar altitude
         if(.false.)then
@@ -184,12 +184,13 @@
               call get_airmass(sol_alt_a,0.,1. &                     ! I
                               ,aero_refht,aero_scaleht &             ! I
                               ,earth_radius,1 &                      ! I
-                              ,ags_a(isolalt),aos_a(isolalt),aa_dum) ! O
+                              ,ags_a(isolalt),aos_a(isolalt),aa_dum &! O
+                              ,refr_deg)                             ! O
 
               call get_airmass(sol_alt_a,aero_refht,patm_refht &     ! I
                               ,aero_refht,aero_scaleht &             ! I
                               ,earth_radius,1 &                      ! I
-                              ,ag_dum,ao_dum,aas_a(isolalt))         ! O
+                              ,ag_dum,ao_dum,aas_a(isolalt),refr_deg)! O
               write(6,51)isolalt,sol_alt_a,ags_a(isolalt),aos_a(isolalt) &
                                           ,aas_a(isolalt)
 51            format('isolalt/solalt/ags_a/aos_a/aas_a',i3,f9.2,3f9.4)
@@ -202,7 +203,7 @@
               call get_airmass(sol_alt_a,ht_shadow,patm_shadow &     ! I
                               ,aero_refht,aero_scaleht &             ! I
                               ,earth_radius,1 &                      ! I
-                              ,ag_sz,ao_sz,aa_sz)                    ! O
+                              ,ag_sz,ao_sz,aa_sz,refr_deg)           ! O
               ags_a(isolalt) = ag_sz / patm_shadow
               if(patmo3_shadow .gt. 0.)then
                 aos_a(isolalt) = ao_sz / patmo3_shadow
@@ -264,7 +265,7 @@
          call get_airmass(altray,htmsl,patm &       ! I
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius,0 &          ! I
-                         ,ag,ao,aa)                 ! O
+                         ,ag,ao,aa,refr_deg)        ! O
          write(6,63)altray,ag,ao,aa
 63       format(' returned from get_airmass with alt/ag/ao/aa = ',f9.0,3e12.4)
 
@@ -360,10 +361,10 @@
 !        altscat = 1.00 * altray + 0.00 * sol_alt
 !        altscat = max(altray,sol_alt)
          altscat = sqrt(0.5 * (altray**2 + sol_alt**2))
-         call get_airmass(altscat,htmsl,patm &      ! I
-                         ,aero_refht,aero_scaleht & ! I
-                         ,earth_radius,0 &          ! I
-                         ,agdum,aodum,aascat)       ! O
+         call get_airmass(altscat,htmsl,patm &         ! I
+                         ,aero_refht,aero_scaleht &    ! I
+                         ,earth_radius,0 &             ! I
+                         ,agdum,aodum,aascat,refr_deg) ! O
 !        scatter_order = 1.0 ! f(altray,sol_alt)
          scatter_order = max(aod_vrt*aascat,1.0)**1.0 ! 0.5-1.5
          scatter_order_t = 1.0
