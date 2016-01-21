@@ -226,7 +226,7 @@
         else              ! show more like the camera
           alt_top = alt_a(ni,1)
           if(alt_top .eq. 90.)then ! fisheye lens
-            altmidcorr = -3.30
+            altmidcorr = -3.60
             fracerf0 = 0.59  ! value with sun on horizon
           else                     ! panoramic camera
             altmidcorr = -4.89
@@ -237,7 +237,7 @@
         if(sol_alt .gt. altmidcorr)then ! shallow twilight
           fracerf = (sol_alt - altmidcorr) * (-fracerf0/altmidcorr)
         else                            ! deep twilight
-          fracerf = (sol_alt - altmidcorr) * 0.160 
+          fracerf = (sol_alt - altmidcorr) * 0.220 
         endif
         erfterm = (erf(fracerf) + 1.) / 2.
         glwmid = corr2*(1.-erfterm) + corr1*erfterm
@@ -418,7 +418,7 @@
               call get_airmass(alt_a(i,1),htmsl,patm &   ! I
                               ,redp_lvl,aero_scaleht &   ! I
                               ,earth_radius,1 &          ! I
-                              ,ag,ao,aa)                 ! O 
+                              ,ag,ao,aa,refr_deg)        ! O 
               ag_2d(i,:) = ag
               aod_slant(i,:) = aa * od_atm_a ! od_atm_a (should) = aod_vert 
               do j = 1,nj
@@ -552,7 +552,7 @@
               call get_airmass(alt_a(i,1),htmsl,patm &   ! I
                               ,redp_lvl,aero_scaleht &   ! I
                               ,earth_radius,0 &          ! I
-                              ,ag,ao,aa)                 ! O 
+                              ,ag,ao,aa,refr_deg)        ! O 
               ag_2d(i,:) = ag
             enddo ! i
 
@@ -613,7 +613,7 @@
               call get_airmass(alt_a(i,1),htmsl,patm &   ! I
                               ,redp_lvl,aero_scaleht &   ! I
                               ,earth_radius,0 &          ! I
-                              ,ag,ao,aa)                 ! O 
+                              ,ag,ao,aa,refr_deg)        ! O 
               od_g_slant_a(:,i) = ext_g(:) * ag 
               od_o_slant_a(:,i) = (o3_du/300.) * ext_o(:) * ao
               od_a_slant_a(:,i) = aod_ref * aa * ext_a(:)
@@ -1286,32 +1286,19 @@
           else ! not looking at terrain
               od_2_topo = 0.
 
-!             Presently solar gas attenuation is done up front in
-!             'get_glow_obj' via extinction. This can be instead be done
-!             here multispectrally using newly passed in 'od_slant_g_a'.
-!             The same can possibly be done for ozone and/or aerosols.
+!             Any refraction can be done up front in 'get_glow_obj'.
+!             This can theoretically be done here multispectrally 
+!             using newly passed in 'od_slant_g_a'.
 
               if(sol_alt .gt. -3. .or. solalt_limb_true .gt. 0.)then
 !             if(.false.)then
 !               Add sun to existing sky radiance (blue extinction)
-                call rgb_to_rad(sky_rgb(0,I,J),sky_rgb(1,I,J) &
-                 ,sky_rgb(2,I,J),glwlow,contrast,offset,rad_r,rad_g,rad_b)
-                rad_sun = 10.**glow_sun(i,j)  &
-                        * trans(cloud_od(i,j) + aod_slant(i,j)) 
                 rad_sun_r = 10.**glow_sun(i,j)  &
                           * trans(cloud_od(i,j) + clr_od(1)) 
                 rad_sun_g = 10.**glow_sun(i,j)  &
                           * trans(cloud_od(i,j) + clr_od(2)) 
                 rad_sun_b = 10.**glow_sun(i,j)  &
                           * trans(cloud_od(i,j) + clr_od(3)) 
-
-!               These calculations of 'rad_r', 'rad_g', and 'rad_b' may be
-!               unneeded
-                rad_r = rad_r + rad_sun_r
-                rad_g = rad_g + rad_sun_g
-                rad_b = rad_b + rad_sun_b
-!               call rad_to_rgb(rad_r,rad_g,rad_b,glwlow,contrast,offset &
-!                            ,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 
                 sky_rad(1) = sky_rad(1) + rad_sun_r
                 sky_rad(2) = sky_rad(2) + rad_sun_g
@@ -1320,8 +1307,6 @@
                 
 !             Add moon/stars to existing sky radiance (blue extinction?)
               if(sol_alt .gt. 0. .and. (l_solar_eclipse .eqv. .false.))then
-                call rgb_to_rad(sky_rgb(0,I,J),sky_rgb(1,I,J) &
-                  ,sky_rgb(2,I,J),glwlow,contrast,offset,rad_r,rad_g,rad_b)
                 rad_moon = 10.**glow_moon(i,j)  &
                           * trans(cloud_od(i,j) + aod_slant(i,j)) 
                 rad_moon_r = 10.**glow_sun(i,j)  &
@@ -1331,20 +1316,9 @@
                 rad_moon_b = 10.**glow_sun(i,j)  &
                            * trans(cloud_od(i,j) + clr_od(3)) 
 
-!               if(idebug .eq. 1)then
-!                 write(6,*)'rad_r/rad_moon',rad_r,rad_moon
-!               endif
-
-!               These calculations of 'rad_r', 'rad_g', and 'rad_b' may be
-!               unneeded
-                rad_r = rad_r + rad_moon
-                rad_g = rad_g + rad_moon
-                rad_b = rad_b + rad_moon
                 sky_rad(1) = sky_rad(1) + rad_moon_r
                 sky_rad(2) = sky_rad(2) + rad_moon_g
                 sky_rad(3) = sky_rad(3) + rad_moon_b
-!               call rad_to_rgb(rad_r,rad_g,rad_b,glwlow,contrast,offset &
-!                            ,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
               else ! stars that also contain the moon
 !               if(idebug .eq. 1)then
 !                 write(6,*)'rgb before stars/moon',sky_rgb(:,I,J)
