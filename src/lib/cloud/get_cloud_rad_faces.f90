@@ -503,7 +503,7 @@
                    call get_airmass(obj_alt(i,j),heights_3d(i,j,k),patm_k & ! I 
                                    ,aero_refht,aero_scaleht &   ! I
                                    ,earth_radius,iverbose &     ! I
-                                   ,agdum,aodum,aa)             ! O
+                                   ,agdum,aodum,aa,refr_deg)    ! O
                  else
                    aa = 0.
                  endif
