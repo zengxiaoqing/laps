@@ -2,13 +2,16 @@
         subroutine get_airmass(alt,htmsl,patm &          ! I (add htagl?)
                               ,aero_refht,aero_scaleht & ! I
                               ,earth_radius,iverbose &   ! I
-                              ,ag,ao,aa)                 ! O
+                              ,ag,ao,aa,refr_deg)        ! O
 
+!       INPUTS:
+!       Apparent altitude (90-zenith angle) in degrees     (alt)
+
+!       OUTPUTS:
 !       Airmasses relative to zenith at sea level pressure (ag - gas)
 !       Airmasses relative to zenith at sea level pressure (ao - ozone)
 !       Airmasses relative to zenith at aero refht         (aa - aerosol)
-
-        use mem_namelist, ONLY: r_missing_data ! , earth_radius
+!       Refraction (apparent altitude - true altitude)     (refr_deg)
 
         include 'trigd.inc'
         include 'rad.inc'
@@ -23,6 +26,9 @@
 
         ztrue  = zapp  + refractd_app(alt ,patm)
         ztruei = zappi + refractd_app(abs(alt) ,patm)
+
+!       Altitude relative to limb
+        alt_limb = alt + acosd(earth_radius/(earth_radius+htmsl))
 
         if(iverbose .eq. 1)then
           write(6,11)alt,htmsl,patm,earth_radius
@@ -54,6 +60,8 @@
             write(6,*)' standard gas   situation',htmsl,alt,ag
           endif
         endif
+
+        refr_deg = (1.02/60.) * ag * cosd(alt_limb)
 
 !       Ozone component
         if(alt .lt. 0.)then ! high looking down
