@@ -557,9 +557,13 @@
        
         subroutine get_glow_obj(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi &
                                ,alt_scale,azi_scale &
+                               ,htmsl,patm & 
                                ,alt_obj_in,azi_obj_in,mag_obj &
                                ,diam_deg,horz_dep,glow_obj)
 
+        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl
+
+        real alt_obj_in ! I (true altitude uncorrected for refraction)
         real alt_a(minalt:maxalt,minazi:maxazi)
         real azi_a(minalt:maxalt,minazi:maxazi)
         real glow_obj(minalt:maxalt,minazi:maxazi) ! log nL
@@ -575,7 +579,17 @@
         write(6,21)alt_obj_in,azi_obj_in,mag_obj,diam_deg
 21      format(' alt/az/mag/diam = ',4f9.3)
 
-        r_missing_data = 1e37
+!       We may want to efficiently apply refraction here to the object altitude
+!       to convert from true altitude to apparent. It may be more accurate and
+!       slower to calculate refraction down below instead.
+
+        iverbose = 0
+        call       get_airmass(alt_obj_in,htmsl,patm &   ! I 
+                              ,redp_lvl,aero_scaleht &   ! I
+                              ,earth_radius,iverbose &   ! I
+                              ,ag,ao,aa,refr_deg)        ! O
+
+        write(6,*)' refr_deg = ',refr_deg
 
 !       Place object in center of grid box
         alt_obj = nint(alt_obj_in/alt_scale) * alt_scale
@@ -620,6 +634,8 @@
             size_glow_sqdg = 0.1  ! final polar kernel size
             size_glow_sqdg = 0.3  ! empirical middle ground 
 
+!           This is apparent altitude, though we can use refraction to convert it
+!           to true altitude.
             altg = alt_a(ialt,jazi)
             azig = azi_a(ialt,jazi)
 
