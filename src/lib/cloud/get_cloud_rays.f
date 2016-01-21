@@ -1303,7 +1303,26 @@
                   ray_topo_diff_m = ht_m - topo_m
                   ray_topo_diff_h = ht_h - topo_h
 
-                  sum_aod     = sum_aod     + aero_ext_coeff * slant2
+!                 Check both mid-point and end-point of ray segment
+                  if((topo_m .gt. ht_m .or. topo_h .gt. ht_h) .AND. 
+     1                                             ihit_topo .eq. 0)then
+                      ihit_topo = 1
+
+                      if(topo_m .gt. ht_m)then ! mid-point hit topo
+                          ihit_topo_mid = 1
+                          ihit_topo_end = 0
+                          frac_step_topo = 0.5 * ray_topo_diff_h_last /
+     1                     (ray_topo_diff_h_last-ray_topo_diff_m)
+                      else                     ! end-point hit topo
+                          ihit_topo_mid = 0
+                          ihit_topo_end = 1
+                          frac_step_topo = 0.5 * ray_topo_diff_m      /
+     1                     (ray_topo_diff_m     -ray_topo_diff_h) + 0.5
+                      endif
+                  endif ! determine if we are hitting topo
+
+                  aod_inc = aero_ext_coeff * slant2
+                  sum_aod = sum_aod + aod_inc
 
                   if((cvr_path          .gt. 0.00) .AND.
      1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
@@ -1454,22 +1473,8 @@
      1                             + airmass2 * trans(taucloud) 
 !                 airmass_2_cloud_3d(ialt,jazi) = sum_am2cld_atten
 
-!                 Check both mid-point and end-point of ray segment
-                  if((topo_m .gt. ht_m .or. topo_h .gt. ht_h) .AND. 
-     1                                             ihit_topo .eq. 0)then
-                      ihit_topo = 1
-
-                      if(topo_m .gt. ht_m)then ! mid-point hit topo
-                          ihit_topo_mid = 1
-                          ihit_topo_end = 0
-                          frac_step_topo = 0.5 * ray_topo_diff_h_last /
-     1                     (ray_topo_diff_h_last-ray_topo_diff_m)
-                      else                     ! end-point hit topo
-                          ihit_topo_mid = 0
-                          ihit_topo_end = 1
-                          frac_step_topo = 0.5 * ray_topo_diff_m      /
-     1                     (ray_topo_diff_m     -ray_topo_diff_h) + 0.5
-                      endif
+!                 Determined earlier that we are hitting topo
+                  if(ihit_topo .eq. 1)then
 
 !                     Land illumination related to terrain slope
                       if(sol_alt(inew_m,jnew_m)  .gt. 0. )then  
@@ -1574,8 +1579,9 @@
                           airmass_2_topo_3d(ialt,jazi) 
      1                                 = 0.5 * (airmass1_l + airmass1_h)
                           aod_2_topo(ialt,jazi) = sum_aod
+     1                                   - aod_inc * (1.-frac_step_topo)
                           dist_2_topo(ialt,jazi) = slant1_h 
-     1                                    - slant2 * (1.-frac_step_topo)
+     1                                   - slant2  * (1.-frac_step_topo)
 !    1                        sqrt(dxy1_h**2 + dz1_h**2)
                       endif
 
@@ -1593,7 +1599,7 @@
                       endif
 91                    format(' Hit topo',2f8.1,2f8.3,f8.2,4f8.3,f9.0
      1                                  ,2f8.3,2f8.1)
-                  endif
+                  endif ! hit topo
 
                   cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
                   cloud_od_sp(ialt,jazi,:) 
