@@ -109,18 +109,6 @@
             write(6,*)' skyglow_phys_twi: sol_alt/ialt is ',sol_alt,ialt_start
         endif
 
-!       Obtain reference values of source term
-!       call get_airmass(90.,htmsl,patm &           ! I
-!                        ,aero_refht,aero_scaleht & ! I
-!                        ,earth_radius,1 &          ! I
-!                        ,ag_90,ao_90,aa_90)        ! O
-
-!       Obtain reference values for sun             
-!       call get_airmass(sol_alt,htmsl,patm &       ! I
-!                        ,aero_refht,aero_scaleht & ! I
-!                        ,earth_radius,1 &          ! I
-!                        ,ag_s,ao_s,aa_s)           ! O
-
         do ialt = ialt_start,ialt_end,ialt_delt
   
          altray = view_alt(ialt,jazi_start)
@@ -132,7 +120,7 @@
          call get_airmass(altray,htmsl,patm &       ! I
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius,iverbose &   ! I
-                         ,ag,ao,aa)                 ! O
+                         ,ag,ao,aa,refr_deg)        ! O
 
 !        Determine aerosol multiple scattering order
 !        altscat = 1.00 * altray + 0.00 * sol_alt
@@ -141,7 +129,7 @@
 !        call get_airmass(altscat,htmsl,patm &      ! I
 !                        ,aero_refht,aero_scaleht & ! I
 !                        ,earth_radius,1 &          ! I
-!                        ,agdum,aodum,aascat)       ! O
+!                        ,agdum,aodum,aascat,refr_deg) ! O
 !        scatter_order = 1.0 ! f(altray,sol_alt)
 !        scatter_order = max(aod_vrt*aascat,1.0)**1.0 ! 0.5-1.5
 !        write(6,*)' aod_ray/aascat/sco',aod_ray(ialt,minazi),aascat,scatter_order
@@ -170,7 +158,7 @@
              call get_airmass(sol_alt_a,htmsl,patm &    ! I
                              ,aero_refht,aero_scaleht & ! I
                              ,earth_radius,1 &          ! I
-                             ,ag_s,ao_s,aa_s)           ! O
+                             ,ag_s,ao_s,aa_s,refr_deg)  ! O
              ags_a(isolalt) = ag_s / ag_90
              aas_a(isolalt) = aa_s / aa_90
            enddo 
