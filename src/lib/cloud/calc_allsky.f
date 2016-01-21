@@ -152,6 +152,7 @@
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                       ,minalt,maxalt,minazi,maxazi 
      1                       ,alt_scale,azi_scale
+     1                       ,htmsl,patm
      1                       ,alm,azm,moon_mag,diam_deg,horz_dep
      1                       ,blog_moon_roll)
 
@@ -182,6 +183,7 @@
           call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
+     1                     ,htmsl,patm
      1                     ,solar_alt,solar_az,s_mag,diam_deg,horz_dep
      1                     ,blog_sun_roll)
           write(6,*)' range of blog_sun_roll is',
