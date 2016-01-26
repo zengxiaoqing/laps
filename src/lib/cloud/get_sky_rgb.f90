@@ -62,11 +62,11 @@
         real dtic(nc,ni,nj)         !    "        "    diffuse     "
         real btic(nc,ni,nj)         !    "        "    beam/direct "
         real emic(nc,ni,nj)         ! spectral exitance (from sfc lights)
-        real aod_2_cloud(ni,nj)     ! future use
+        real aod_2_cloud(ni,nj)     ! aerosol optical depth to cloud
         real aod_2_topo(ni,nj)      ! aerosol optical depth to topo (slant)
         real aod_ill(ni,nj)         ! aerosol illuminated slant optical depth (topo/notopo)
         real aod_ill_dir(ni,nj)     ! aerosol directly slant illuminated optical depth, atten bhd clds 
-        real aod_tot(ni,nj)         ! aerosol slant (in domain) optical depth 
+        real aod_tot(ni,nj)         ! aerosol slant (in domain) OD
         real dist_2_topo(ni,nj)     ! distance to topo (m)
         real topo_solalt(ni,nj)     ! solar altitude from ground
         real trace_solalt(ni,nj)    ! solar altitude from ray trace
@@ -144,9 +144,9 @@
         if(sol_alt .le. 0.)then
 
 !         Use max sky brightness to calculate a secondary glow (twilight)
-          call get_twi_glow_ave(            log10(clear_rad_c(3,:,:)) &
+          call get_twi_glow_ave(log10(max(clear_rad_c(3,:,:),1.0)) &
                      ,alt_a,azi_a,ni,nj,sol_alt,sol_az,twi_glow_ave)
-          arg = maxval(log10(clear_rad_c(3,:,:))) ! avoid moon
+          arg = maxval(log10(max(clear_rad_c(3,:,:),1.0))) ! avoid moon
 
           write(6,*)' twi_glow_ave = ',twi_glow_ave
           write(6,*)' twi_glow_max = ',arg
@@ -162,6 +162,9 @@
 !         This is used only when sol_alt < twi_0
           glow_diff_clr      = 1.5 ! 1.5 ! 1.5
           glow_secondary_clr = twi_glow_ave - glow_diff_clr 
+          if(sol_alt .lt. twi_0)then ! may be used
+              write(6,*)' glow_secondary_clr = ',glow_secondary_clr
+          endif
 
 !         Last coefficient represents altitude of incident twilight glow
 !         Try get_sky_glow_ave for twilight and/or daylight?
@@ -169,9 +172,6 @@
           rad_sec_cld(:) = 10.**glow_secondary_cld
 
           write(6,*)' glow_secondary_cld = ',glow_secondary_cld
-          if(sol_alt .lt. twi_0)then
-              write(6,*)' glow_secondary_clr = ',glow_secondary_clr
-          endif
 !         write(6,*)' rindirect = ',rindirect                 
           write(6,2)rad_sec_cld(:)
 2         format('  rad_sec_cld (based on glow_secondary_cld) = ',3f12.0)
@@ -229,7 +229,7 @@
             altmidcorr = -3.60
             fracerf0 = 0.59  ! value with sun on horizon
           else                     ! panoramic camera
-            altmidcorr = -4.89
+            altmidcorr = -5.29
             fracerf0 = 0.65  ! value with sun on horizon
           endif
           write(6,*)' alt_top,altmidcorr: ',alt_top,altmidcorr
@@ -688,6 +688,8 @@
           endif
         endif
 
+        glwmid_ref = glwmid
+
         do j = 1,nj
         do i = 1,ni
 
@@ -826,6 +828,7 @@
                   endif
                   glow_cld = addlogs(glow_cld1,glow_cld_moon)
               else
+                  pf_scat_moon = 1.0
                   glow_cld_moon = -999.
                   glow_cld = glow_cld1
               endif
@@ -895,10 +898,11 @@
 !                 arge = 7.3 - ramp_eobs*0.55
 !                 arge = 7.3 - ramp_eobs*0.7 ! for 11070[2-8]a version
                   arge = 7.3 - ramp_eobs*0.9
-                  fstops = (7.3-arge) / log10(2.)
+                  glwmid = glwmid_ref - ramp_eobs*0.9
+                  fstops = (glwmid_ref-glwmid) / log10(2.)
                   if(i .eq. isun .and. j .eq. jsun)then
-                      write(6,55)eobs,ramp_eobs,arge,fstops
-55                    format(' eobs/ramp_eobs/arge/fstops',f9.5,3f9.3)
+                      write(6,55)eobs,ramp_eobs,glwmid,fstops
+55                    format(' eobs/ramp_eobs/glwmid/fstops',f9.5,3f9.3)
                   endif
                   glwlow = arge
                 endif
