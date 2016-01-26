@@ -113,7 +113,7 @@
         real aas_a(isolalt_lo:isolalt_hi)
         real aos_a(isolalt_lo:isolalt_hi)
 
-        icd = 1
+        icd = 2
 
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
@@ -303,10 +303,10 @@
              od_a_vert = aod_vrt * ext_a(ic)
 !            if((l_solar_eclipse .eqv. .true.) .AND. ic .eq. icd)then
              if((ic .eq. icd .and. altray .eq. nint(altray)) .OR. &
-                      altray .eq. 0. .OR. altray .eq. 90.)then
+                      altray .eq. 0. .OR. altray .eq. -2. .OR. altray .eq. 90.)then
                idebug = 1
                write(6,*)' alt/ag/aa =',altray,ag,aa
-               write(6,*)' call get_clr_src_dir for altitude ',altray
+               write(6,*)' call get_clr_src_dir for altitude ',altray,ic
              else
                idebug = 0
              endif
@@ -385,10 +385,13 @@
 !        cosp_frac = max(1.-scatter_order,0.)
 
 !        Get src term at selected azimuths (every 10 degrees)
+!        How should dmintopo be set if the ray hits the earth outside the
+!        domain? If htmin_view < 0. then l_dlow should perhaps be False.
          dmintopo = minval(dist_2_topo(ialt,:))
          dmaxtopo = maxval(dist_2_topo(ialt,:))
-         if(dmintopo .eq. 0. .and. htmin_view .le. 130000.)then 
-           l_dlow = .true.  ! incomplete terrain in ring and ray not above atm
+         if(dmintopo .eq. 0. .and. htmin_view .le. 130000. .and. &
+                                   htmin_view .ge. 0.            )then 
+           l_dlow = .true.  ! incomplete terrain in ring and ray grazes atm
          else
            l_dlow = .false. ! complete terrain in ring or ray outside atm
          endif
@@ -434,6 +437,7 @@
                   azi_ref = 90.                 
                 endif
 !               azi_ref = 175. ! volcanic test
+!               azi_ref = 340. ! 300km test
                 azi_ref = nint(sol_azi / azi_d10) * azi_d10
 
                 if(view_azi_deg .eq. azi_ref.AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
@@ -467,7 +471,8 @@
                   if(altray .gt. 0.)then
                     refdist_solalt = 0.
                     solalt_ref = sol_alt
-                  else
+                  else ! is refdist_solalt generalized enough?
+!                   distance to limb
                     refdist_solalt = sqrt( (earth_radius+htmsl)**2 &
                                           - earth_radius**2       )
                     if(trace_solalt(ialt,jazi) .ne. sol_alt)then ! valid trace
@@ -476,6 +481,9 @@
                       solalt_ref = sol_alt - (altray*cosd(view_azi_deg-sol_azi))
                       solalt_ref = min(solalt_ref,+180.-solalt_ref)
                       solalt_ref = max(solalt_ref,-180.-solalt_ref)
+                    endif
+                    if(idebug_clr .eq. 1)then
+                      write(6,*)'salt/tr/ref',sol_alt,trace_solalt(ialt,jazi),solalt_ref
                     endif
                   endif
                 else
@@ -592,8 +600,9 @@
                 if( ((jazi-1)/2)*2+1 .eq. jazi)then
                   continue
                 else ! fill in from previous azimuth
-                  eobsc(:,jazi) = eobsc(:,jazi-1)
-                  emag_a(jazi) = emag_a(jazi-1)
+                  jazim1 = max(jazi-1,jazi_start)
+                  eobsc(:,jazi) = eobsc(:,jazim1)
+                  emag_a(jazi) = emag_a(jazim1)
                 endif
 
 !               Secondary scattering for each color
@@ -617,7 +626,7 @@
                   write(6,70)altray,distecl(1,ic),distecl(nopac,ic),elgms &
                       ,emag_a(jazi),eobsc_a(1,ic),eobsc_a(nopac,ic),eobsc(ic,jazi) &
                       ,ecl_scat(ic),ecl_intd(ic),ecl_dir_rat(ic)
-70                format('eclipse altray/dist/elg/emag',f9.2,2f9.1,f9.4,f7.4, &
+70                format('eclipse altray/dist/elg/emag',f9.2,2f10.1,f9.4,f7.4, &
                          ' eobsc',3f7.4,' scat/int/dir',2f10.7,f7.4)
                 endif
               enddo ! ic
