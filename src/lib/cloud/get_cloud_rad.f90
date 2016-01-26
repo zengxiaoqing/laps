@@ -519,7 +519,7 @@
               sfc_glow(i,j) = sfc_glow(i,j) + (glow_city / (radii_city**2.5))
 !             gnd_glow(i,j) = 0.
           else
-              sfc_glow(i,j) = sfc_glow(i,j) +  glow_city                      ! nl
+              sfc_glow(i,j) = sfc_glow(i,j) +  glow_city               ! nl
               gnd_glow(i,j) = gnd_glow(i,j) +  glow_city
           endif
 !         if(j .eq. nj/2)then
