@@ -589,7 +589,7 @@
                               ,earth_radius,iverbose &   ! I
                               ,ag,ao,aa,refr_deg)        ! O
 
-        write(6,*)' refr_deg = ',refr_deg
+        write(6,*)' refr_deg (informational) = ',refr_deg
 
 !       Place object in center of grid box
         alt_obj = nint(alt_obj_in/alt_scale) * alt_scale
@@ -600,7 +600,7 @@
         I4_elapsed = ishow_timer()
 
 !       Calculate extinction
-        patm = 1.0     
+!       patm = 1.0     
 
         if(alt_obj .gt. 0.0)then
             call calc_extinction(90.    ,patm,airmass,zenext)
@@ -628,15 +628,23 @@
         radius_deg = diam_deg / 2.0
     
         do ialt = minalt,maxalt
-        do jazi = minazi,maxazi
+
+!         This is apparent altitude, and we can use refraction to convert it
+!         to true altitude.
+          altg_app = alt_a(ialt,minazi)
+          iverbose = 0
+          call       get_airmass(altg_app,htmsl,patm &     ! I 
+                                ,redp_lvl,aero_scaleht &   ! I
+                                ,earth_radius,iverbose &   ! I
+                                ,ag,ao,aa,refr_deg)        ! O
+          altg = altg_app - refr_deg ! true altitude of grid
+
+          do jazi = minazi,maxazi
 
             size_glow_sqdg = 1.0  ! alt/az grid
             size_glow_sqdg = 0.1  ! final polar kernel size
             size_glow_sqdg = 0.3  ! empirical middle ground 
 
-!           This is apparent altitude, though we can use refraction to convert it
-!           to true altitude.
-            altg = alt_a(ialt,jazi)
             azig = azi_a(ialt,jazi)
 
             if(alt .ge. -2. .or. alt .ge. -horz_dep)then
@@ -688,8 +696,8 @@
                       call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit,0,0,1)
                     endif
 
-                    write(6,89)ialt,jazi,altg,alt_obj,azig,azi_obj,distr,frac_lit
-89                  format(' altg/alt_obj/azig/azi_obj/distr (deg)/frac_lit =',2i4,5f9.3,f7.2)
+                    write(6,89)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distr,frac_lit
+89                  format(' altga-t/alt_obj/azig/azi_obj/distr (deg)/frac_lit =',2i4,6f9.3,f7.2)
 
                     if(frac_lit .gt. 0.)then
                         delta_mag = log10((size_glow_sqdg*sqarcsec_per_sqdeg)/frac_lit)*2.5
@@ -722,7 +730,7 @@
                   endif
                 endif ! within star kernel
             endif ! alt > -2.
-        enddo ! jazi
+          enddo ! jazi
         enddo ! ialt
 
         return
