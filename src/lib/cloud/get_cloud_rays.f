@@ -27,7 +27,7 @@
      1                           ,alt_norm                              ! I
      1                           ,moon_alt,moon_azi                     ! I
      1                           ,moon_mag,moon_mag_thr                 ! I
-     1                           ,l_solar_eclipse,rlat,rlon,lat,lon     ! I
+     1                           ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon!I
      1                           ,minalt,maxalt,minazi,maxazi           ! I
      1                           ,alt_scale,azi_scale                   ! I
      1                           ,grid_spacing_m,r_missing_data)        ! I
@@ -40,8 +40,8 @@
 
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
-!       brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness (max~7)
-        brt(a) = (1.0 - exp(-.14 * a))     ! relative sky brightness (max=1)
+!       brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness (mx~7)
+        brt(a) = (1.0 - exp(-.14 * a))     ! relative sky brightness (mx=1)
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
         angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
@@ -98,6 +98,7 @@
         real sol_alt(ni,nj)
         real sol_azi(ni,nj)
         real alt_norm(ni,nj)
+        real eobsc(ni,nj)
 
         real moon_alt(ni,nj)
         real moon_azi(ni,nj)
@@ -162,10 +163,10 @@
         real topo_rj(minalt:maxalt,minazi:maxazi)
         real trace_ri(minalt:maxalt,minazi:maxazi)
         real trace_rj(minalt:maxalt,minazi:maxazi)
-        real gtic(nc,minalt:maxalt,minazi:maxazi)     ! spectral terrain GNI
-        real dtic(nc,minalt:maxalt,minazi:maxazi)     ! sp terrain diffuse
-        real btic(nc,minalt:maxalt,minazi:maxazi)     ! sp beam terrain normal
-        real emic(nc,minalt:maxalt,minazi:maxazi)     ! spectral exitance    
+        real gtic(nc,minalt:maxalt,minazi:maxazi)  ! spectral terrain GNI
+        real dtic(nc,minalt:maxalt,minazi:maxazi)  ! sp terrain diffuse
+        real btic(nc,minalt:maxalt,minazi:maxazi)  ! sp beam terrain normal
+        real emic(nc,minalt:maxalt,minazi:maxazi)  ! spectral exitance    
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
         real dist_2_topo(minalt:maxalt,minazi:maxazi) ! slant dist
@@ -272,6 +273,12 @@
      1                     ,sfc_glow,gnd_glow)
           write(6,*)' Cloud glow at observer location is ',sfc_glow(i,j)
           write(6,*)' Grnd glow at observer location is ',gnd_glow(i,j)
+
+!         Update just the gnd_glow with 'get_nlights'
+          write(6,*)' Call get_nlights'
+          call get_nlights(ni,nj,grid_spacing_m,lat,lon
+     1                    ,gnd_glow)
+          write(6,*)' Grnd glow at observer location is ',gnd_glow(i,j)
           obs_glow_zen = sfc_glow(i,j) / 10.
         else
           write(6,*)' Skip call to get_sfc_glow - solalt is'
@@ -354,6 +361,7 @@
         do ii = 1,ni
         do jj = 1,nj
           if(obj_alt(ii,jj) .gt. 0.)then ! sun or moon above horizon
+            ecl = 1. - eobsc(ii,jj)
             do kk = 1,nk
 !             Consider first point above terrain instead so we can capture
 !             terrain shadowing?
@@ -380,7 +388,7 @@
 
                 objalt_eff = obj_alt(ii,jj) 
      1                     + (1.5 * cosd(obj_alt(ii,jj))**100.)
-                ghi_clr = obj_bri * sind(objalt_eff) * ghi_zen_sfc
+                ghi_clr = obj_bri * sind(objalt_eff) * ghi_zen_sfc * ecl
                 ghi_2d(ii,jj) = transm_3d(ii,jj,kk) * ghi_clr    
 
 !               Diffuse
@@ -390,7 +398,8 @@
                 sb_corr = 2.0 * (1.0 - (sind(obj_alt(ii,jj))**0.5))
                 dhi_grn_clr_frac = ext_g(2) * patm_sfc 
      1                           * 10.**(-0.4*sb_corr)
-                dhi_2d_clear = ghi_zen_toa * dhi_grn_clr_frac * obj_bri
+                dhi_2d_clear = ghi_zen_toa * ecl * dhi_grn_clr_frac 
+     1                       * obj_bri
 
                 dhi_2d(ii,jj) = ghi_2d(ii,jj) * (1. - frac_dir) 
      1                     * transm_3d(ii,jj,kk)
@@ -400,7 +409,7 @@
 
 !               Spectral normalized values (under construction)
                 airmass_g = airmassf(90.-obj_alt(ii,jj),patm_sfc)
-                bni_clr(:) = obj_bri * trans(airmass_g * ext_g(:))
+                bni_clr(:) = obj_bri * ecl * trans(airmass_g * ext_g(:))
                 bnic_2d(:,ii,jj) = bni_clr(:) * frac_dir   
 
                 bhi_clr(:) = bni_clr(:) * sind(obj_alt(ii,jj))
@@ -410,21 +419,23 @@
                 colexp = 0.5 ! color based on clearness of sky
                 dhic_clr(:) = dhi_grn_clr_frac * (ext_g(:)/.09)**colexp
 !               dhic_2d(:,ii,jj) = dhi_2d(ii,jj) / ghi_zen_toa
-                dhic_2d(:,ii,jj) = obj_bri * dhic_clr(:) * frac_dir ! clr
+                dhic_2d(:,ii,jj) 
+     1             = obj_bri * ecl * dhic_clr(:) * frac_dir           ! clr
      1             + bhi_clr(:) * transm_3d(ii,jj,kk) * (1.-frac_dir) ! cld
 
                 ghic_clr = ghi_clr / ghi_zen_toa
                 ghic_2d(:,ii,jj) = bhic_2d(:,ii,jj) + dhic_2d(:,ii,jj) 
 
-                if(ii .eq. ni/2 .and. jj .eq. nj/2)then
-                   write(6,*)' ghi_clr  CTR =',ghi_clr  
-                   write(6,*)' ghic_clr CTR =',ghic_clr  
-                   write(6,*)' dhic_clr CTR =',dhic_clr  
-                   write(6,*)' frac_dir CTR =',frac_dir
-                   write(6,*)' transm   CTR =',transm_3d(ii,jj,kk)
-                   write(6,*)' bhic_2d  CTR =',bhic_2d(:,ii,jj)
-                   write(6,*)' dhic_2d  CTR =',dhic_2d(:,ii,jj)
-                   write(6,*)' ghic_2d  CTR =',ghic_2d(:,ii,jj)
+                if(ii .eq. i .and. jj .eq. j)then
+                   write(6,*)' bhi_clr  observer =',bhi_clr  
+                   write(6,*)' ghi_clr  observer =',ghi_clr  
+                   write(6,*)' ghic_clr observer =',ghic_clr  
+                   write(6,*)' dhic_clr observer =',dhic_clr  
+                   write(6,*)' frac_dir observer =',frac_dir
+                   write(6,*)' transm   observer =',transm_3d(ii,jj,kk)
+                   write(6,*)' bhic_2d  observer =',bhic_2d(:,ii,jj)
+                   write(6,*)' dhic_2d  observer =',dhic_2d(:,ii,jj)
+                   write(6,*)' ghic_2d  observer =',ghic_2d(:,ii,jj)
                 endif
 
                 goto 4 ! we have risen above the terrain
@@ -692,7 +703,15 @@
          elseif(altray .le.  -5. .and. htstart .lt. 100000.)then 
              jazi_delt = max(nint(0.4/ azi_scale),1)
          elseif(htagl .gt. 30000e3)then  ! near geosynchronous
-             if    (altray .le. -86.42)then
+             if    (altray .le. -89.775)then
+                 jazi_delt = 256
+             elseif(altray .le. -89.55)then
+                 jazi_delt = 128                       
+             elseif(altray .le. -89.10)then
+                 jazi_delt = 64                       
+             elseif(altray .le. -88.21)then
+                 jazi_delt = 32                       
+             elseif(altray .le. -86.42)then
                  jazi_delt = 16                       
              elseif(altray .le. -82.82)then
                  jazi_delt = 8                       
@@ -967,7 +986,7 @@
                     dxy1_l = dz1_l * tand(90. - view_altitude_deg)
                     dxy1_h = dz1_h * tand(90. - view_altitude_deg)
                     dxy2   = dz2   * tand(90. - view_altitude_deg)
-                  else ! horzdist call (determine distance from height & elev)
+                  else ! horzdist call (determine dist from height & elev)
                     aterm = 1. / radius_earth_8_thirds
 
                     if(view_altitude_deg .gt. 89.99)then
@@ -1324,6 +1343,7 @@
                   aod_inc = aero_ext_coeff * slant2
                   sum_aod = sum_aod + aod_inc
 
+!                 Test for hitting tau ~1 (nominal cloud edge)
                   if((cvr_path          .gt. 0.00) .AND.
      1               (cvr_path_sum      .le.  .013     .OR. ! tau ~1
      1                cvr_path_sum_last .eq. 0.  )            )then 
@@ -1336,6 +1356,12 @@
                   elseif(cvr_path_sum .gt. .013)then 
 !                   frac_fntcloud = 0.0 ! make a more continuous function? 
                     frac_fntcloud = trans(cvr_path_sum/.013) ! tau
+                    if(cvr_path_sum_last .le. .013)then ! fractional gridpt
+                      frac_cvr_path = (.013-cvr_path_sum_last) / 
+     1                                (cvr_path_sum-cvr_path_sum_last)
+                      aod_2_cloud(ialt,jazi) = sum_aod - 
+     1                                    (1.-frac_cvr_path) * aod_inc
+                    endif
                   else
                     frac_fntcloud = 1.0
                   endif
@@ -1505,21 +1531,6 @@
      1                  sum(bi_coeff(:,:) * ghi_2d(i1:i2,j1:j2))
      1                                    * solar_corr
 
-!                     City lights on the ground (topo_gti)
-!                     if(sol_alt(inew_m,jnew_m) .lt. twi_alt)then  
-                      if(.false.)then ! emic is handling the lights now
-                        topo_gti(ialt,jazi) = topo_gti(ialt,jazi) + 
-     1                    sum(bi_coeff(:,:) * gnd_glow(i1:i2,j1:j2))
-     1                                   * ghi_zen_toa / 3e9 ! nL to W/m**2
-                        if(gnd_glow(inew_m,jnew_m) .gt. 0. .AND. ! .OR. 
-     1                                                idebug .eq. 1)then
-                          write(6,81)ialt,jazi,inew_m,jnew_m
-     1                              ,gnd_glow(inew_m,jnew_m)
- 81                       format(' gnd glow adding to topo_gti',4i5
-     1                          ,f9.1)
-                        endif
-                      endif
-
 !                     Terrain spectral radiance (normalized)
                       do ic = 1,nc
                           gtic(ic,ialt,jazi) = 
@@ -1564,7 +1575,8 @@
                       topo_rj(ialt,jazi) = rjnew_m
 
 !                     Test for first segment
-                      if(dxy1_l .eq. 0. .AND. htstart .eq. topo_sfc)then
+                      if(dxy1_l .eq. 0. .AND. frac_step_topo .eq. 0.
+     1                                  .AND. htstart .eq. topo_sfc)then
                           airmass_2_topo_3d(ialt,jazi) = 1e-5
                           aod_2_topo(ialt,jazi)        = 1e-4
                           dist_2_topo(ialt,jazi)       = 1.0
@@ -1576,8 +1588,9 @@
      1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
                           sum_aod_ill_opac_potl        = 1e-4 
                       else
-                          airmass_2_topo_3d(ialt,jazi) 
-     1                                 = 0.5 * (airmass1_l + airmass1_h)
+                          airmass_2_topo_3d(ialt,jazi)
+     1                                = airmass1_l * (1.-frac_step_topo) 
+     1                                + airmass1_h * frac_step_topo
                           aod_2_topo(ialt,jazi) = sum_aod
      1                                   - aod_inc * (1.-frac_step_topo)
                           dist_2_topo(ialt,jazi) = slant1_h 
@@ -1601,11 +1614,13 @@
      1                                  ,2f8.3,2f8.1)
                   endif ! hit topo
 
-                  cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
-                  cloud_od_sp(ialt,jazi,:) 
+                  if(idebug .eq. 1)then
+                      cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
+                      cloud_od_sp(ialt,jazi,:) 
      1                                = clwc2alpha*cvr_path_sum_sp(:)   
-                  r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
-                  if(idebug .eq. 1)write(6,101)dz1_l,dz1_h,dxy1_l,dxy1_h
+                      r_cloud_3d(ialt,jazi) 
+     1                                = 1.-(exp(-cloud_od(ialt,jazi)))
+                      write(6,101)dz1_l,dz1_h,dxy1_l,dxy1_h
      1                     ,cslant
      1                     ,rinew_h,rjnew_h,rk,ht_m,topo_m 
      1                     ,cvr_path*1e3
@@ -1617,12 +1632,13 @@
      1                     ,r_cloud_rad(ialt,jazi)
      1                     ,cloud_rad_w(ialt,jazi)
      1                     ,aero_ext_coeff
-!    1                     ,transm_3d(inew_m,jnew_m,int(rk_m)+1)
      1                     ,transm_3d_m
      1                     ,sum_aod,sum_aod_ill,sum_aod_ill_dir
-101               format(2f11.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
+101                   format(2f11.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,3f8.2,2f8.4
      1                  ,f10.5,4f7.2)
+                  endif ! idebug
+
                  else ! outside horizontal domain
                   ioutside_domain = 1
                   sum_clrrad = sum_clrrad + airmass2                     
@@ -1678,6 +1694,11 @@
               endif        
 
           endif ! true
+
+!         Store various accumulated sums
+          cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
+          cloud_od_sp(ialt,jazi,:) = clwc2alpha*cvr_path_sum_sp(:)   
+          r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
 
           airmass_2_cloud_3d(ialt,jazi) = sum_am2cld_atten
 
