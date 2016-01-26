@@ -136,7 +136,7 @@
 !        if(tausum .lt. 1.0)distod1 = sbar
          tausum_a(i) = tausum
 
-         if(htbar .gt. httopill .or. htbar .lt. -(htmsl+500.) .or. frac_opac .gt. 1.2)then
+         if(htbar .gt. httopill .or. htbar .lt. -(htmsl+500.) .or. frac_opac .gt. 11.4)then
            if(idebug .eq. 1)then
 !            write(6,*)' criteria ',htbar,httopill,-(htmsl+500.),frac_opac
              write(6,11)i,sbar,htbar,alphabar_g*ds,alphabar_o*ds,tausum,od_solar_slant_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
@@ -374,7 +374,7 @@
 !        if(tausum .lt. 1.0)distod1 = sbar
 !        tausum_a(i) = tausum
 
-         if(htbar .gt. httopill .or. htbar .lt. htbotill .or. frac_opac .gt. 1.2 .or. (sbar.gt.refdist_solalt .and. htbar_msl.gt.130e3))then ! efficiency
+         if(htbar .gt. httopill .or. htbar .lt. htbotill .or. frac_opac .gt. 11.4 .or. (sbar.gt.refdist_solalt .and. htbar_msl.gt.130e3))then ! efficiency
 !          tausum_a(min(i+1,nsteps):nsteps) = tausum
            goto 900
          endif
