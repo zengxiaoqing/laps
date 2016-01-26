@@ -51,7 +51,8 @@
 !           alttrue0 = -refractd_app(0.,patm2)
             ag = (2.*airmassf(ztrue0,patm2)) - airmassf(ztruei,patm)
             if(iverbose .eq. 1)then
-              write(6,*)' high gas   looking down at htmin',htmin,ag
+              write(6,22)htmin,ag,ztrue0,ztruei,patm,patm2,airmassf(ztrue0,patm2),airmassf(ztruei,patm)
+22            format('  high gas   looking down at htmin',f9.1,f9.3,2f9.3,4f9.4)
             endif
           endif
         else ! standard situation
