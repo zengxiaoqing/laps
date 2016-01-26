@@ -124,8 +124,8 @@ contains
                    ,maxval(maxval(G,dim=1),dim=1)&
                    ,maxval(maxval(B,dim=1),dim=1))
     write(6,*)' Image maxvalue is ',maxvalue
-    if(maxvalue .lt. 128)then
-        maxvalue = 2 * maxvalue
+    if(maxvalue .lt. 64)then
+        maxvalue = 4 * maxvalue
     else
         maxvalue = 255
     endif
@@ -211,7 +211,10 @@ contains
     write(6,*) iwidth2,iheight2
     write(6,*) ncol2
 
-    if ( ncol2 .ne. 255 ) return
+    if (ncol2 .ne. 255 .and. ncol2 .ne. 65535)then
+        write(6,*)' error in read_ppm - ncol2 appears incorrect: ',ncol2
+        return
+    endif
 
     read(u,*)img
 
