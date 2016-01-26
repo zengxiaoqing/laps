@@ -745,8 +745,10 @@
             do i = 1,NX_L
             do j = 1,NY_L
                 if(topo_albedo_2d(2,i,j) .eq. alb_max)then
+                  if(alb_max .le. 1.0)then
                     write(6,*)' Max albedo at ',i,j
      1                        ,topo_albedo_2d(:,i,j)
+                  endif
                 endif
             enddo ! j
             enddo ! i
@@ -778,8 +780,10 @@
                 snowalb = snow_cover(i,j)
               endif
               do ic = 1,3
-                topo_albedo_2d(ic,i,j) = 
-     1            max(topo_albedo_2d(ic,i,j),snowalb)
+!               topo_albedo_2d(ic,i,j) = 
+!    1            max(topo_albedo_2d(ic,i,j),snowalb)
+                topo_albedo_2d(ic,i,j) = snowalb + 
+     1                   (1.0-snowalb) * topo_albedo_2d(ic,i,j)
               enddo ! ic
             endif
           enddo ! j
@@ -1021,28 +1025,28 @@
           if(.true.)then
             write(6,*)' call calc_allsky'
             call calc_allsky(i4time_solar ! ,clwc_3d,cice_3d
-!    1                     ,heights_3d                           ! I
-!    1                     ,rain_3d,snow_3d                      ! I
-!    1                     ,pres_3d,aod_3d                       ! I
-     1                     ,topo_sfc,topo,swi_2d                 ! I
-     1                     ,topo_albedo_2d                       ! I
-     1                     ,htagl(iloc)                          ! I
-     1                     ,aod_ref                              ! I
-     1                     ,NX_L,NY_L,NZ_L,i_obs,j_obs,newloc  ! I
-     1                     ,ri_obs,rj_obs                        ! I
-     1                     ,alt_a_roll,azi_a_roll                ! I
-     1                     ,sol_alt_2d,sol_azi_2d                ! I
-     1                     ,solar_alt,solar_az                   ! I
-     1                     ,alt_norm                             ! I
-     1                     ,moon_alt_2d,moon_azi_2d,alm,azm      ! I
-     1                     ,moon_mag,moon_mag_thr                ! I
-     1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
-     1                     ,minalt,maxalt,minazi,maxazi,nc,nsp   ! I
-     1                     ,ni_cyl,nj_cyl                        ! I
-     1                     ,alt_scale,azi_scale                  ! I
-     1                     ,grid_spacing_m,r_missing_data        ! I
-     1                     ,twi_0,l_binary                       ! I
-     1                     ,sky_rgb_cyl)                         ! O
+!    1                     ,heights_3d                              ! I
+!    1                     ,rain_3d,snow_3d                         ! I
+!    1                     ,pres_3d,aod_3d                          ! I
+     1                     ,topo_sfc,topo,swi_2d                    ! I
+     1                     ,topo_albedo_2d                          ! I
+     1                     ,htagl(iloc)                             ! I
+     1                     ,aod_ref                                 ! I
+     1                     ,NX_L,NY_L,NZ_L,i_obs,j_obs,newloc       ! I
+     1                     ,ri_obs,rj_obs                           ! I
+     1                     ,alt_a_roll,azi_a_roll                   ! I
+     1                     ,sol_alt_2d,sol_azi_2d                   ! I
+     1                     ,solar_alt,solar_az                      ! I
+     1                     ,alt_norm                                ! I
+     1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
+     1                     ,moon_mag,moon_mag_thr                   ! I
+     1                     ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon ! I
+     1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
+     1                     ,ni_cyl,nj_cyl                           ! I
+     1                     ,alt_scale,azi_scale                     ! I
+     1                     ,grid_spacing_m,r_missing_data           ! I
+     1                     ,twi_0,l_binary                          ! I
+     1                     ,sky_rgb_cyl)                            ! O
 
           else
             continue
