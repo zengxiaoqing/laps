@@ -1,27 +1,27 @@
 
           subroutine calc_allsky(i4time_solar ! ,clwc_3d,cice_3d
-!    1                     ,heights_3d                           ! I
-!    1                     ,rain_3d,snow_3d                      ! I
-!    1                     ,pres_3d,aod_3d                       ! I
-     1                     ,topo_sfc,topo,swi_2d                 ! I
-     1                     ,topo_albedo_2d                       ! I
-     1                     ,htagl                                ! I
-     1                     ,aod_ref                              ! I
-     1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
-     1                     ,ri_obs,rj_obs                        ! I
-     1                     ,alt_a_roll,azi_a_roll                ! I
-     1                     ,sol_alt_2d,sol_azi_2d                ! I
-     1                     ,solar_alt,solar_az                   ! I
-     1                     ,alt_norm                             ! I
-     1                     ,moon_alt_2d,moon_azi_2d,alm,azm      ! I
-     1                     ,moon_mag,moon_mag_thr                ! I
-     1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
-     1                     ,minalt,maxalt,minazi,maxazi,nc,nsp   ! I
-     1                     ,ni_cyl,nj_cyl                        ! I
-     1                     ,alt_scale,azi_scale                  ! I
-     1                     ,grid_spacing_m,r_missing_data        ! I
-     1                     ,twi_0,l_binary                       ! I
-     1                     ,sky_rgb_cyl)                         ! O
+!    1                     ,heights_3d                              ! I
+!    1                     ,rain_3d,snow_3d                         ! I
+!    1                     ,pres_3d,aod_3d                          ! I
+     1                     ,topo_sfc,topo,swi_2d                    ! I
+     1                     ,topo_albedo_2d                          ! I
+     1                     ,htagl                                   ! I
+     1                     ,aod_ref                                 ! I
+     1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc     ! I
+     1                     ,ri_obs,rj_obs                           ! I
+     1                     ,alt_a_roll,azi_a_roll                   ! I
+     1                     ,sol_alt_2d,sol_azi_2d                   ! I
+     1                     ,solar_alt,solar_az                      ! I
+     1                     ,alt_norm                                ! I
+     1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
+     1                     ,moon_mag,moon_mag_thr                   ! I
+     1                     ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon ! I
+     1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
+     1                     ,ni_cyl,nj_cyl                           ! I
+     1                     ,alt_scale,azi_scale                     ! I
+     1                     ,grid_spacing_m,r_missing_data           ! I
+     1                     ,twi_0,l_binary                          ! I
+     1                     ,sky_rgb_cyl)                            ! O
 
         use mem_allsky
 
@@ -43,6 +43,7 @@
         real sol_alt_2d(NX_L,NY_L)
         real sol_azi_2d(NX_L,NY_L)
         real alt_norm(NX_L,NY_L)
+        real eobsc(NX_L,NY_L)
         real moon_alt_2d(NX_L,NY_L)
         real moon_azi_2d(NX_L,NY_L)
         real lat(NX_L,NY_L)
@@ -98,45 +99,47 @@
         iobs = nint(ri_obs)
         jobs = nint(rj_obs)
         write(6,*)' swi_2d at observer location = ',swi_2d(iobs,jobs)
+        eobsl = eobsc(iobs,jobs)
+        write(6,*)' eobsl = ',eobsl
 
         write(6,*)' call get_cloud_rays...'
 
 !         Get line of sight from isound/jsound
           call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
-     1                     ,heights_3d                           ! I
-     1                     ,rain_3d,snow_3d                      ! I
-     1                     ,pres_3d,aod_3d,topo_sfc,topo         ! I
-     1                     ,topo_albedo_2d                       ! I
-     1                     ,swi_2d                               ! I
-     1                     ,topo_swi,topo_albedo                 ! O
-     1                     ,gtic,dtic,btic,emic                  ! O
-     1                     ,topo_ri,topo_rj                      ! O
-     1                     ,trace_ri,trace_rj                    ! O
-!    1                     ,ghi_2d,dhi_2d                        ! O
-     1                     ,aod_vrt,aod_2_cloud,aod_2_topo       ! O
-     1                     ,dist_2_topo                          ! O
-     1                     ,aod_ill,aod_ill_dir                  ! O
-     1                     ,aod_tot,transm_obs,obs_glow_zen      ! O
-     1                     ,transm_3d,transm_4d                  ! O
-     1                     ,r_cloud_3d,cloud_od,cloud_od_sp      ! O
-     1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w! O
-     1                     ,clear_rad_c,clear_radf_c,patm        ! O
-     1                     ,airmass_2_cloud_3d,airmass_2_topo_3d ! O
-     1                     ,htmsl,horz_dep,twi_0                 ! O
-     1                     ,solalt_limb_true                     ! O
-     1                     ,htagl                                ! I
-     1                     ,aod_ref                              ! I
-     1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc  ! I
-     1                     ,ri_obs,rj_obs                        ! I
-     1                     ,alt_a_roll,azi_a_roll                ! I
-     1                     ,sol_alt_2d,sol_azi_2d                ! I
-     1                     ,alt_norm                             ! I
-     1                     ,moon_alt_2d,moon_azi_2d              ! I
-     1                     ,moon_mag,moon_mag_thr                ! I
-     1                     ,l_solar_eclipse,rlat,rlon,lat,lon    ! I
-     1                     ,minalt,maxalt,minazi,maxazi          ! I
-     1                     ,alt_scale,azi_scale                  ! I
-     1                     ,grid_spacing_m,r_missing_data)       ! I
+     1                     ,heights_3d                              ! I
+     1                     ,rain_3d,snow_3d                         ! I
+     1                     ,pres_3d,aod_3d,topo_sfc,topo            ! I
+     1                     ,topo_albedo_2d                          ! I
+     1                     ,swi_2d                                  ! I
+     1                     ,topo_swi,topo_albedo                    ! O
+     1                     ,gtic,dtic,btic,emic                     ! O
+     1                     ,topo_ri,topo_rj                         ! O
+     1                     ,trace_ri,trace_rj                       ! O
+!    1                     ,ghi_2d,dhi_2d                           ! O
+     1                     ,aod_vrt,aod_2_cloud,aod_2_topo          ! O
+     1                     ,dist_2_topo                             ! O
+     1                     ,aod_ill,aod_ill_dir                     ! O
+     1                     ,aod_tot,transm_obs,obs_glow_zen         ! O
+     1                     ,transm_3d,transm_4d                     ! O
+     1                     ,r_cloud_3d,cloud_od,cloud_od_sp         ! O
+     1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w   ! O
+     1                     ,clear_rad_c,clear_radf_c,patm           ! O
+     1                     ,airmass_2_cloud_3d,airmass_2_topo_3d    ! O
+     1                     ,htmsl,horz_dep,twi_0                    ! O
+     1                     ,solalt_limb_true                        ! O
+     1                     ,htagl                                   ! I
+     1                     ,aod_ref                                 ! I
+     1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc     ! I
+     1                     ,ri_obs,rj_obs                           ! I
+     1                     ,alt_a_roll,azi_a_roll                   ! I
+     1                     ,sol_alt_2d,sol_azi_2d                   ! I
+     1                     ,alt_norm                                ! I
+     1                     ,moon_alt_2d,moon_azi_2d                 ! I
+     1                     ,moon_mag,moon_mag_thr                   ! I
+     1                     ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon ! I
+     1                     ,minalt,maxalt,minazi,maxazi             ! I
+     1                     ,alt_scale,azi_scale                     ! I
+     1                     ,grid_spacing_m,r_missing_data)          ! I
 
           write(6,*)' Return from get_cloud_rays: ',a9time
      1             ,' aod_vrt is ',aod_vrt
