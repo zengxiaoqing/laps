@@ -75,7 +75,7 @@ else
           @prefix@/etc/qsub_wait $script $log.done
 
     echo " "
-    echo "Making reflectivity montage via ssh"
+    echo "Making image montages via ssh"
     echo ssh dlaps-ms1.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps 
          ssh dlaps-ms1.fsl.noaa.gov /usr/bin/perl /usr/nfs/lapb/parallel/laps/etc/followup_verif.pl -r $remote_dataroot -d $domain_name -y $delay -t $n_verif_steps  
 
