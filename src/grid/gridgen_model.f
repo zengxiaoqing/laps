@@ -801,27 +801,21 @@ C*****************************************************************
 	ENDIF ! NOTE: totally avoided check_domain for rotlat & icshdr
 
 
-! We will end at this step given the showgrid or max/min lat lon
-! options.
-       if(mode.eq.2) then
-
-           print*,'We no longer run showgrid in gridgen_model'
-           return
-
-       elseif(mode.eq.3)then
-
+       if(.true.)then       
            print*,'get perimeter of grid'
            call get_domain_perimeter_grid(nnxp,nnyp,c10_grid_f
      1                  ,lats(1,1,ns),lons(1,1,ns)
-     1                  ,1.0,rnorth,south,east,west,istatus)
+     1                  ,0.0,rnorth,south,east,west,istatus)
            print*,'static dir = ',static_dir(1:lens)
            open(10,file=static_dir(1:lens)//'/llbounds.dat'
      +         ,status='unknown')
 
            print*,'write llbounds.dat'
-           write(10,*)rnorth,south,east,west
+           write(10,*)rnorth                 
+           write(10,*)south          
+           write(10,*)east
+           write(10,*)west
            close(10)
-	   return
        endif
 
        write(6,*)'deltax = ',deltax
