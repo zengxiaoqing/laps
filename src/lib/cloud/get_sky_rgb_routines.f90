@@ -1,7 +1,7 @@
 
         subroutine get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen & ! I
                                     ,patm,htmsl,horz_dep &      ! I
-                                    ,airmass_2_topo &           ! I
+                                    ,airmass_2_topo,frac_lp &   ! I
                                     ,clear_rad_c_nt)            ! O
 
 !       Calculate sky glow due to city lights + airglow. This takes into
@@ -134,12 +134,12 @@
             endif
 
 !           City lights + airglow
-            glow_alt(:) = glow_lp + airglow(:)                       ! (nL)
+            glow_alt(:) = glow_lp * frac_lp + airglow(:)             ! (nL)
             clear_rad_c_nt(:,ialt,jazi) = glow_alt(:)                ! (nL)
           enddo ! jazi
 
 !         if(ialt .eq. ni)then
-          if(ialt .eq. ni .or. alt .eq. nint(alt))then
+          if(mod(alt,5.) .eq. 2.)then
             write(6,5)alt,h,am2,fracair,obs_glow_zen,airglow(2),glow_lp,glow_alt(2)
 5           format(' get_clr_rad_nt_2d: alt/h/am2/fair/obsg/airg/glow lp-alt',f9.2,f10.0,2f9.3,4f10.0)
 !           if(htmsl .ge. 90000.)then ! above airglow
