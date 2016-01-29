@@ -1,5 +1,5 @@
 
-          subroutine calc_allsky(i4time_solar ! ,clwc_3d,cice_3d
+          subroutine calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
 !    1                     ,heights_3d                              ! I
 !    1                     ,rain_3d,snow_3d                         ! I
 !    1                     ,pres_3d,aod_3d                          ! I
@@ -282,6 +282,7 @@
                 corr1_a = 9.0
               endif
               if(solar_alt .lt. 0.)corr1_a = 9.26 ! volcanic value
+              corr1_a = corr1_a - log10(exposure)
 
               write(6,*)' corr1 in calc_allsky ',corr1_a
 
