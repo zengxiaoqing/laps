@@ -363,11 +363,11 @@
        write(6,*)' NSEW',rnorth,south,east,west
 
        pix_latlon = 1. / 240.
-!      rlat_start =   90. - 11000. * pix_latlon
-!      rlon_start = -180. + 17000. * pix_latlon
-       rlat_start = rnorth                         
-       rlon_start = west                          
-       rlat_end = rlat_start - float(iheight)  * pix_latlon
+       offset_lat = -.008  ! positional error in remapping
+       offset_lon = +.0035 !             "
+       rlat_start = rnorth - offset_lat                         
+       rlon_start = west   - offset_lon                       
+       rlat_end = rlat_start - float(iheight) * pix_latlon
        rlon_end = rlon_start + float(iwidth)  * pix_latlon
 
        write(6,*)' NL PPM lat range: ',rlat_start,rlat_end
