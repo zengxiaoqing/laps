@@ -2,6 +2,7 @@
         subroutine plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
 !    1                          ,minalt,maxalt,minazi,maxazi
      1                          ,ni_polar,nj_polar,ipolar_sizeparm
+     1                          ,density     
      1                          ,r_missing_data,laps_cycle_time,maxstns
      1                          ,i_overlay,plot_parms,namelist_parms
      1                          ,l_polar,l_cyl)       
@@ -151,6 +152,7 @@
         write(6,*)' subroutine plot_allsky: nsmooth/aod is ',nsmooth,aod
         write(6,*)' l_cyl/l_polar = ',l_cyl,l_polar
         write(6,*)' ipolar_sizeparm = ',ipolar_sizeparm
+        write(6,*)' density = ',density
 
         itd = 2 ! dashed dewpoint lines
 
@@ -1020,11 +1022,13 @@
           allocate(aod_ill_opac(minalt:maxalt,minazi:maxazi))
           allocate(aod_ill_opac_potl(minalt:maxalt,minazi:maxazi))
 
+          exposure = density
+
 !         We can set this to .true. after figuring out the seg fault when
 !         initializing 'glow_stars' in 'get_starglow'
           if(.true.)then
             write(6,*)' call calc_allsky'
-            call calc_allsky(i4time_solar ! ,clwc_3d,cice_3d
+            call calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
 !    1                     ,heights_3d                              ! I
 !    1                     ,rain_3d,snow_3d                         ! I
 !    1                     ,pres_3d,aod_3d                          ! I
