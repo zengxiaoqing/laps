@@ -317,7 +317,8 @@ cdis
      1                   ,' l_cyl = ',l_cyl
 !               l_polar = .true.
 !               l_cyl = .true.
-                read(lun,*)ipolar_sizeparm
+!               Exposure will be controlled by density
+                read(lun,*)ipolar_sizeparm,density
             endif
 
             ni_polar = (256 * 2**(ipolar_sizeparm)) - 1
@@ -328,7 +329,7 @@ cdis
 
             call plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
 !    1                        ,minalt,maxalt,minazi,maxazi
-     1                        ,ni_polar,nj_polar,ipolar_sizeparm
+     1                        ,ni_polar,nj_polar,ipolar_sizeparm,density
      1                        ,r_missing_data,laps_cycle_time,maxstns
      1                        ,i_overlay,plot_parms,namelist_parms
      1                        ,l_polar,l_cyl)       
