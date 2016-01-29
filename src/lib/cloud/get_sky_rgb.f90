@@ -578,16 +578,18 @@
 
             glow_moon_sc(:,:) = 0.; rad_moon_sc(:,:,:) = 0.
             where(moon_rad_c(2,:,:) .gt. 0.)
-              glow_moon_sc(:,:) = log10(moon_rad_c(2,:,:)) + (-26.7 - moon_mag) * 0.4
               do ic = 1,nc
-                rad_moon_sc(ic,:,:) = log10(moon_rad_c(ic,:,:)) + (-26.7 - moon_mag) * 0.4
+                glow_moon_sc(:,:) = log10(moon_rad_c(2,:,:)) + (-26.7 - moon_mag) * 0.4
+                rad_moon_sc(ic,:,:) = 10.**glow_moon_sc(:,:)
               enddo ! ic
+              glow_moon_sc(:,:) = log10(moon_rad_c(2,:,:)) + (-26.7 - moon_mag) * 0.4
             endwhere
             glow_moon1(:,:) = glow_moon_sc(:,:) ! experimental
 
             write(6,*)' range of moon_rad_c(2) is ',minval(moon_rad_c(2,:,:)),maxval(moon_rad_c(2,:,:))
             write(6,*)' log correction is ',(-26.7 - moon_mag) * 0.4
             write(6,*)' range of glow_moon_sc is ',minval(glow_moon_sc(:,:)),maxval(glow_moon_sc(:,:))
+            write(6,*)' range of rad_moon_sc is ',minval(rad_moon_sc(2,:,:)),maxval(rad_moon_sc(2,:,:))
             write(6,*)' range of glow_moon1 is ',minval(glow_moon1(:,:)),maxval(glow_moon1(:,:))
             write(6,*)' moonglow1:',glow_moon1(ni/2,1:nj:10)
 
@@ -655,9 +657,14 @@
 
         I4_elapsed = ishow_timer()
 
+        if(sol_alt .lt. -3.)then
+            frac_lp = 1.0 ! city lights on
+        else
+            frac_lp = 0.0
+        endif
         call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &             ! I
                               ,patm,htmsl,horz_dep &                  ! I
-                              ,airmass_2_topo &                       ! I
+                              ,airmass_2_topo,frac_lp &               ! I
                               ,clear_rad_c_nt)                        ! O
 
         I4_elapsed = ishow_timer()
@@ -871,7 +878,7 @@
           if(sol_alt .gt. twi_0)then ! Daylight to intermediate twilight
                                      ! from skyglow routine
               if(.true.)then
-                if(sol_alt .lt. -4.)then ! city lights on
+                if(frac_lp .gt. 0.)then
                   clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + clear_rad_c_nt(:,i,j)
                   clear_rad_2nd_c(:,i,j) = clear_rad_2nd_c(:,i,j) + clear_rad_c_nt(:,i,j)
                 endif
