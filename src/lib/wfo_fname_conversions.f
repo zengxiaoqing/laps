@@ -194,7 +194,7 @@ c
        integer    i4time
        integer    i4time_temp
 
-cdoc   Convert i4time to wfo filename*13
+cdoc   Convert i4time to wfo filename*13 yyyymmdd_hhmm
 
 c
 c first convert i4time to ascii filename *9
