@@ -1172,9 +1172,9 @@ cdoc    Calculate along a moist adiabat. Solve for T, given ThetaE and P
 
         DIMENSION TEMPNW(4)
 
-        if(THETAE .gt. 600.)then
+        if(THETAE .gt. 700.)then
             write(6,*)' Error: passed in THETAE too large in MSAD5'
-     1                ,THETAE
+     1                ,THETAE,PRESNW
             istatus = 0
             return
         endif
