@@ -64,6 +64,14 @@ if (-e output3c/$LAPS_A13TIME\_$SITE.png) then
 
     ls -l $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png output4c/combined_$LAPS_A9TIME.png
 
+    if (! -e output3/$LAPS_A13TIME\_$SITE.png) then
+        echo "polar image absent - make cylindrical blinking comparison for $SITE..."
+        pwd
+        mkdir -p output4b
+        echo "convert -delay 150 -loop 0  $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png output4b/$LATEST_DATA\_blink.gif"
+              convert -delay 150 -loop 0  $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png output4b/$LATEST_DATA\_blink.gif
+    endif
+
 else
     echo "WARNING: output3c/$LAPS_A13TIME\_$SITE.png is not present - skipping cyl montage..."
 #   exit
