@@ -90,8 +90,8 @@
       return
       end
 
-      subroutine land_albedo_bm(rlat_laps,rlon_laps,ni,nj,albedo
-     1                         ,istatus)
+      subroutine land_albedo_bm(rlat_laps,rlon_laps,ni,nj,i4time
+     1                         ,albedo,istatus)
 
       use ppm
 
@@ -100,6 +100,8 @@
 
       real albedo(3,ni,nj)    ! Albedo (Red, Green, Blue)
       real result(ni,nj)      ! Interpolated image channel
+      character*13 cvt_i4time_wfo_fname13,c13_time
+      character*2 c2_mn
 
 !     convert -crop 2000x2000+12000+9000 -compress none
 !     world.200404.3x21600x21600.A1.png world.200404.3x21600x21600.A1.crop2.ppm
@@ -130,7 +132,10 @@
       real, allocatable :: array_2d(:,:)                   
       u = 11
 
-      write(6,*)' Subroutine land_albedo_bm...'
+      c13_time = cvt_i4time_wfo_fname13(i4time)
+      c2_mn = c13_time(5:6)
+
+      write(6,*)' Subroutine land_albedo_bm...',c2_mn
 
       call get_directory('static',directory,len_dir)
       file_bm=trim(directory)//'albedo_multispectral.dat'
