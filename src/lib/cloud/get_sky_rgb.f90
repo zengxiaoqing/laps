@@ -1,7 +1,7 @@
 
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
                    r_cloud_rad,cloud_rad_c,cloud_rad_w, &
-                   clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobs, & ! I
+                   clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobsl,& ! I
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
                    glow_sun,glow_moon,glow_stars, &                     ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
@@ -356,12 +356,13 @@
                     idebug_a(i,j) = 1
                 endif
             endif
-!           if(alt_a(i,j) .eq. +45.0 .and. azi_a(i,j) .eq. nint(azi_a(i,j)))then
+!           if(alt_a(i,j) .eq. -37.5 .and. azi_a(i,j) .eq. nint(azi_a(i,j)))then
 !               idebug_a(i,j) = 1
 !           endif
-!           if(alt_a(i,j) .eq. +15.0)then
-!               idebug_a(i,j) = 1
-!           endif
+            if(alt_a(i,j) .ge. -07.5 .and. alt_a(i,j) .le. -07.5 .and. &
+               azi_a(i,j) .ge. 345.0 .and. azi_a(i,j) .le. 347.0)then
+                idebug_a(i,j) = 1
+            endif
         enddo ! i
         enddo ! j
 
@@ -515,7 +516,7 @@
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
-                     ,htmsl,redp_lvl,horz_dep &                        ! I
+                     ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
                      ,aod_ill,aod_2_topo,aod_tot &                     ! I
                      ,l_solar_eclipse,i4time,rlat,rlon &               ! I
                      ,clear_radf_c,ag_2d &                             ! I
@@ -568,7 +569,7 @@
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
-                     ,htmsl,redp_lvl,horz_dep &                        ! I
+                     ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
                      ,aod_ill,aod_2_topo,aod_tot &                     ! I
                      ,.false.,i4time,rlat,rlon &                       ! I
                      ,clear_radf_c,ag_2d &                             ! I
@@ -657,7 +658,7 @@
 
         I4_elapsed = ishow_timer()
 
-        if(sol_alt .lt. -3.)then
+        if(sol_alt .lt. -3. .or. (l_solar_eclipse .eqv. .true.))then
             frac_lp = 1.0 ! city lights on
         else
             frac_lp = 0.0
@@ -666,6 +667,7 @@
                               ,patm,htmsl,horz_dep &                  ! I
                               ,airmass_2_topo,frac_lp &               ! I
                               ,clear_rad_c_nt)                        ! O
+        write(6,*)' frac_lp = ',frac_lp
 
         I4_elapsed = ishow_timer()
 
@@ -898,18 +900,25 @@
 54                format(' clrradc/nt',3f12.0,3x,3f10.0)
                 endif
 
-                if((l_solar_eclipse .eqv. .true.) .and. eobs .gt. 0.9)then
-                  ramp_eobs = -log10(1.-min(eobs,.9995)) ! ranges 1-3
-                  ramp_eobs = -log10(1.-min(eobs,.9975)) ! test      
+                if((l_solar_eclipse .eqv. .true.) .and. eobsl .gt. 0.9)then
+                  if(htmsl .le. 10000.)then
+                      xmag = .9910
+                      ramp_coeff = 0.0
+                  else ! view from stratosphere
+                      xmag = .9800 ! .95 ! .90
+                      ramp_coeff = 0.06
+                  endif
+                  eobs_limb = max((eobsl - ramp_coeff),0.0)
+                  ramp_eobs = -log10(1.-min(eobs_limb,xmag))     
 !                 arge = 5.0 ! reasonable avoidance of saturation     
 !                 arge = 7.3 - ramp_eobs*0.55
 !                 arge = 7.3 - ramp_eobs*0.7 ! for 11070[2-8]a version
                   arge = 7.3 - ramp_eobs*0.9
-                  glwmid = glwmid_ref - ramp_eobs*0.9
+                  glwmid = glwmid_ref - ramp_eobs
                   fstops = (glwmid_ref-glwmid) / log10(2.)
                   if(i .eq. isun .and. j .eq. jsun)then
-                      write(6,55)eobs,ramp_eobs,glwmid,fstops
-55                    format(' eobs/ramp_eobs/glwmid/fstops',f9.5,3f9.3)
+                      write(6,55)eobsl,ramp_eobs,glwmid,fstops
+55                    format(' eobsl/ramp_eobs/glwmid/fstops',f9.5,3f9.3)
                   endif
                   glwlow = arge
                 endif
@@ -1085,8 +1094,9 @@
                 frac_front = opac(od_2_cloud) / opac(clr_od(ic)) ! gas+aero
               endif
               frac_front = min(frac_front,1.0)
+!             frac_front = frac_front * (1. - eobsl)**0.1 ! eclipse effect
 
-!             Fraction of clr/lit air behind cloud
+!             Fraction of clr/lit air behind topo/cloud
               frac_behind = 1.0 - frac_front * (1.0-ramp_cld_nt)
 
             else ! fade only when opposite the twilight arch
