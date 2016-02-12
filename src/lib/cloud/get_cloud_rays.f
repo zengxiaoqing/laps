@@ -362,6 +362,7 @@
         do jj = 1,nj
           if(obj_alt(ii,jj) .gt. 0.)then ! sun or moon above horizon
             ecl = 1. - eobsc(ii,jj)
+            ecld = max(ecl,.0015)
             do kk = 1,nk
 !             Consider first point above terrain instead so we can capture
 !             terrain shadowing?
@@ -388,7 +389,7 @@
 
                 objalt_eff = obj_alt(ii,jj) 
      1                     + (1.5 * cosd(obj_alt(ii,jj))**100.)
-                ghi_clr = obj_bri * sind(objalt_eff) * ghi_zen_sfc * ecl
+                ghi_clr = obj_bri * sind(objalt_eff) * ghi_zen_sfc *ecld
                 ghi_2d(ii,jj) = transm_3d(ii,jj,kk) * ghi_clr    
 
 !               Diffuse
@@ -398,7 +399,7 @@
                 sb_corr = 2.0 * (1.0 - (sind(obj_alt(ii,jj))**0.5))
                 dhi_grn_clr_frac = ext_g(2) * patm_sfc 
      1                           * 10.**(-0.4*sb_corr)
-                dhi_2d_clear = ghi_zen_toa * ecl * dhi_grn_clr_frac 
+                dhi_2d_clear = ghi_zen_toa * ecld * dhi_grn_clr_frac 
      1                       * obj_bri
 
                 dhi_2d(ii,jj) = ghi_2d(ii,jj) * (1. - frac_dir) 
@@ -420,7 +421,7 @@
                 dhic_clr(:) = dhi_grn_clr_frac * (ext_g(:)/.09)**colexp
 !               dhic_2d(:,ii,jj) = dhi_2d(ii,jj) / ghi_zen_toa
                 dhic_2d(:,ii,jj) 
-     1             = obj_bri * ecl * dhic_clr(:) * frac_dir           ! clr
+     1             = obj_bri * ecld * dhic_clr(:) * frac_dir          ! clr
      1             + bhi_clr(:) * transm_3d(ii,jj,kk) * (1.-frac_dir) ! cld
 
                 ghic_clr = ghi_clr / ghi_zen_toa
@@ -702,6 +703,13 @@
              jazi_delt = nint(1. / azi_scale)
          elseif(altray .le.  -5. .and. htstart .lt. 100000.)then 
              jazi_delt = max(nint(0.4/ azi_scale),1)
+             if(jazi_delt .eq. 3)jazi_delt = 2
+             if(jazi_delt .eq. 6)jazi_delt = 5
+             if(jazi_delt .eq. 7)jazi_delt = 5
+             if(jazi_delt .eq. 9)jazi_delt = 8
+             if(jazi_delt .gt. 10 .and. jazi_delt .lt. 16)jazi_delt = 10
+             if(jazi_delt .gt. 16 .and. jazi_delt .lt. 20)jazi_delt = 16
+             if(jazi_delt .gt. 20 .and. jazi_delt .lt. 99)jazi_delt = 20
          elseif(htagl .gt. 30000e3)then  ! near geosynchronous
              if    (altray .le. -89.775)then
                  jazi_delt = 256
@@ -738,7 +746,7 @@
           write(6,*)' debug point for altray'
          endif
 
-         if(altray .eq. nint(altray) .and. htstart .lt. 10000.)then
+         if(altray .eq. nint(altray) .and. htstart .lt. 40000.)then
            write(6,*)'alt/jazi_delt',ialt,altray,jazi_delt
          endif
 
@@ -751,6 +759,7 @@
      1         (altray .ge. -5. .and. altray .le. 9.) .or. 
      1         ialt .eq. minalt .or. abs(altray) .eq. 14. .or.
      1         abs(altray) .eq. 16. .or.
+     1         altray .eq. -7.5 .or.
      1         abs(altray) .eq. 21.00 .or.
      1         (altray .ge. -78. .and. altray .le. -75.) .or.
      1         (altray .ge. -67. .and. altray .le. -65.) .or.
@@ -807,7 +816,7 @@
           sum_am2cld_atten = 0.
           sum_god = 0.
           frac_fntcloud = 1.0
-          ray_topo_diff_h = 0.
+          ray_topo_diff_h = htagl ! 0.
           ray_topo_diff_m = 0.
 
           if(.true.)then
@@ -1294,8 +1303,10 @@
                   if(ht_m   .le. topo_max_ht .AND. 
      1               altray .le. topo_max_ang     )then 
 !                 if(ht_m   .le. topo_max_ht)then 
-                    i1 = min(int(rinew_m),ni-1); fi = rinew_m - i1; i2=i1+1
-                    j1 = min(int(rjnew_m),nj-1); fj = rjnew_m - j1; j2=j1+1
+                    i1 = min(int(rinew_m),ni-1); fi = rinew_m - i1
+                    i2=i1+1
+                    j1 = min(int(rjnew_m),nj-1); fj = rjnew_m - j1
+                    j2=j1+1
 
                     bi_coeff(1,1) = (1.-fi) * (1.-fj)
                     bi_coeff(2,1) = fi      * (1.-fj)
@@ -1303,8 +1314,10 @@
                     bi_coeff(2,2) = fi      *     fj 
                     topo_m = sum(bi_coeff(:,:) * topo_a(i1:i2,j1:j2))
 
-                    i1 = min(int(rinew_h),ni-1); fi = rinew_h - i1; i2=i1+1
-                    j1 = min(int(rjnew_h),nj-1); fj = rjnew_h - j1; j2=j1+1
+                    i1 = min(int(rinew_h),ni-1); fi = rinew_h - i1
+                    i2=i1+1
+                    j1 = min(int(rjnew_h),nj-1); fj = rjnew_h - j1
+                    j2=j1+1
 
                     bi_coeff(1,1) = (1.-fi) * (1.-fj)
                     bi_coeff(2,1) = fi      * (1.-fj)
@@ -1317,7 +1330,7 @@
                   endif
 
 !                 Use _h values in addition to _m
-                  ray_topo_diff_m_last = ray_topo_diff_m
+!                 ray_topo_diff_m_last = ray_topo_diff_m
                   ray_topo_diff_h_last = ray_topo_diff_h
                   ray_topo_diff_m = ht_m - topo_m
                   ray_topo_diff_h = ht_h - topo_h
@@ -1532,6 +1545,7 @@
      1                                    * solar_corr
 
 !                     Terrain spectral radiance (normalized)
+!                     Should gtic = dtic + btic?
                       do ic = 1,nc
                           gtic(ic,ialt,jazi) = 
      1                      sum(bi_coeff(:,:) * ghic_2d(ic,i1:i2,j1:j2))
@@ -2043,6 +2057,15 @@
 
         write(6,*)' Range of topo_gti = ',minval(topo_gti)
      1                                   ,maxval(topo_gti)
+
+        write(6,*)' Range of gtic 2 = ',minval(gtic(2,:,:))
+     1                                 ,maxval(gtic(2,:,:))
+
+        write(6,*)' Range of btic 2 = ',minval(btic(2,:,:))
+     1                                 ,maxval(btic(2,:,:))
+
+        write(6,*)' Range of dtic 2 = ',minval(dtic(2,:,:))
+     1                                 ,maxval(dtic(2,:,:))
 
         write(6,*)' Range of topo_albedo 2 = '
      1                                       ,minval(topo_albedo(2,:,:))
