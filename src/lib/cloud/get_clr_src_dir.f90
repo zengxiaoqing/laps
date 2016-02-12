@@ -82,6 +82,7 @@
      endif ! i
 
      tausum = 0.
+     tausum_a(:) = 0.
      sumi = 0. ; sumi_g = 0.; sumi_a = 0.
      frac_opac = 0.
 
@@ -124,7 +125,7 @@
          alphabar_a = alpha_ref_a * exp(-(htbar_msl-redp_lvl)/scale_ht_a)
 
 !        AOD stratospheric = .012 (nighttime - layer extends above observer)
-         if(htbar_msl .gt. h1_ha .and. htbar_msl .le. h2_ha .and. solalt .lt. 3. .and. aod_ha .gt. 0.)then
+         if(htbar_msl .gt. h1_ha .and. htbar_msl .le. h2_ha .and. solalt .lt. 333. .and. aod_ha .gt. 0.)then
              alphabar_a = alphabar_a + alpha_ha * ext_haero
          elseif(htbar_msl .gt. h2_ha .and. htbar_msl .lt. h3_ha)then
              frac_ha = (h3_ha - htbar_msl) / (h3_ha - h2_ha)
@@ -249,7 +250,7 @@
      radius_start_eff = radius_earth_eff + htmsl
 
 !    High aerosols (just during low sun)
-     if(solalt .lt. 3.)then
+     if(solalt .lt. 333.)then
          od_h_vert = aod_ha * patm_ah(htmsl,h1_ha,h2_ha)
      else
          od_h_vert = 0.
@@ -362,7 +363,7 @@
          alphabar_a = alpha_ref_a * expbl(-(htbar_msl-redp_lvl)/scale_ht_a) 
 
 !        AOD stratospheric = .012 (nighttime - layer extends above observer)
-         if(htbar_msl .gt. h1_ha .and. htbar_msl .le. h2_ha .and. solalt .lt. 3. .and. aod_ha .gt. 0.)then
+         if(htbar_msl .gt. h1_ha .and. htbar_msl .le. h2_ha .and. solalt .lt. 333. .and. aod_ha .gt. 0.)then
              alphabar_a = alphabar_a + alpha_ha * ext_haero
          elseif(htbar_msl .gt. h2_ha .and. htbar_msl .lt. h3_ha)then
              frac_ha = (h3_ha - htbar_msl) / (h3_ha - h2_ha)
