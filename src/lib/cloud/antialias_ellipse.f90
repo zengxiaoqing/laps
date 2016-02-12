@@ -1,6 +1,11 @@
 
        subroutine antialias_ellipse(radius,ricen,rjcen,aspect_ratio,array,ni,nj,iverbose)
 
+!      radius        radius in pixels of ellipse vertical axis        I
+!      ricen         location in pixels of ellipse center             I
+!      ni,nj         half size of pixel box to evaluate               I
+!      array         array of fractional pixels inside ellipse        O
+
        real array(-ni:ni,-nj:nj)
        real m,k
 
