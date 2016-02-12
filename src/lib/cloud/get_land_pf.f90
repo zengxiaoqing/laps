@@ -80,7 +80,13 @@
 !                       0 means zero direct / global ratio
 !                       calculate from (gtic - dtic) / gtic  
               if(gtic(ic,i,j) .gt. 0.)then
-                radfrac = btic(ic,i,j)/gtic(ic,i,j)         
+                if(btic(ic,i,j) .le. gtic(ic,i,j))then
+                  radfrac = btic(ic,i,j)/gtic(ic,i,j)         
+                  iwarn = 0
+                else
+                  radfrac = 1.0
+                  iwarn = 1
+                endif
               else
                 radfrac = 0.
               endif
@@ -126,13 +132,12 @@
               phland = arf_b * radfrac + arf_d * (1. - radfrac)  
 
 !             Snow
-              g1 = 0.0                
               ampl_s = cosd(alt_a(i,j))
-              fzen = sind(topo_solalt(i,j))
-              g2 = 0.5 * ampl_s
+              fszen = sind(topo_solalt(i,j))
+              g2 = 0.45 * ampl_s ! previously 0.50 * ampl_s
               hg_2param = 0.25 * 1.0 + 0.75 * hg_cyl(g2,azidiff)
-              brdf_zen = 0.7 + 0.3 * (2. * sind(alt_a(i,j)))
-              arf_b = hg_2param * (1.-fzen) + brdf_zen * fzen
+              brdf_szen = 0.7 + 0.3 * (2. * sind(alt_a(i,j)))
+              arf_b = hg_2param * (1.-fszen) + brdf_szen * fszen
               arf_d = 1.0
               phsnow = arf_b * radfrac + arf_d * (1. - radfrac)  
 
@@ -153,7 +158,7 @@
 
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
-                if((i .eq. 1 .and. j .eq. (j/40)*40) .OR.  &
+                if((i .eq. 1 .and. j .eq. (j/40)*40) .OR. ph1 .lt. 0. .OR.&
                  ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
                           .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) )then
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
@@ -163,11 +168,12 @@
                 endif
               endif
 
-              if(elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0)then
+              if((elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0) .OR. iwarn .eq. 1)then
                 write(6,2)elong_a(i,j),topo_gti(i,j),sol_alt,transm_obs,radfrac,fland,fsnow,fwater,spot
 2               format(' elg/tgti/solalt/trnm/radf/fland/fsnow/fwater/fspot',f9.3,8f9.4)
-                write(6,3)gtic(:,i,j),dtic(:,i,j),btic(:,i,j)
-3               format(' gtic',3f9.4,'  dtic',3f9.4,'  btic',3f9.4)
+                write(6,3)gtic(:,i,j),dtic(:,i,j),btic(:,i,j),iwarn
+!               format(' gtic',3f11.6,'  dtic',3f11.6,'  btic',3f11.6,i3)
+3               format(' gtic',3e12.4,'  dtic',3e12.4,'  btic',3e12.4,i3)
                 iwrite = iwrite + 1
               endif
 
