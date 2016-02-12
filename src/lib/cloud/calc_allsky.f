@@ -15,7 +15,8 @@
      1                     ,alt_norm                                ! I
      1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
      1                     ,moon_mag,moon_mag_thr                   ! I
-     1                     ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon ! I
+     1                     ,l_solar_eclipse,eobsc,emag              ! I
+     1                     ,rlat,rlon,lat,lon                       ! I
      1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
      1                     ,ni_cyl,nj_cyl                           ! I
      1                     ,alt_scale,azi_scale                     ! I
@@ -92,7 +93,7 @@
         real glow_stars(nc,minalt:maxalt,minazi:maxazi)
 
         real moon_mag,moon_mag_thr
-        logical l_solar_eclipse, l_binary
+        logical l_solar_eclipse, l_binary, l_zod
 
         write(6,*)' subroutine calc_allsky...'
 
@@ -156,41 +157,52 @@
      1                       ,minalt,maxalt,minazi,maxazi 
      1                       ,alt_scale,azi_scale
      1                       ,htmsl,patm
-     1                       ,alm,azm,moon_mag,diam_deg,horz_dep
-     1                       ,blog_moon_roll)
+     1                       ,alm,azm,moon_mag,.false.
+     1                       ,dum1,dum2,dum3
+     1                       ,diam_deg,horz_dep,blog_moon_roll)
 
             write(6,*)' range of blog_moon_roll is',
      1          minval(blog_moon_roll),maxval(blog_moon_roll)
           endif
 
 !         Sun glow in cylindrical coordinates, treated as round?
-          blog_sun_roll = 0
+          blog_sun_roll = 0.
           if(l_solar_eclipse .eqv. .true.)then
-              if(eobsl .ge. 1.0)then
+              if(eobsl .ge. 1.0)then ! totality
                   s_mag = -12.5
-                  diam_deg = 8.0    
-              else
+              else                   ! partial
                   s_mag = -26.74 - (log10(1.0-eobsl))*2.5
-                  if(s_mag .lt. -12.5)then
-                      diam_deg = 0.5    
-                  else ! show corona even outside totality
-                      diam_deg = 8.0    
-                  endif
               endif
-          else
-              s_mag = -26.74
-              diam_deg = 0.5
-          endif
-          write(6,*)' Sun glow being calculated: '
-     1                 ,solar_alt,solar_az,s_mag
-          call get_glow_obj(i4time,alt_a_roll,azi_a_roll
+              diam_deg = 8.0    
+              write(6,*)' Corona glow being calculated: '
+              call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
      1                     ,htmsl,patm
-     1                     ,solar_alt,solar_az,s_mag,diam_deg,horz_dep
-     1                     ,blog_sun_roll)
-          write(6,*)' range of blog_sun_roll is',
-     1        minval(blog_sun_roll),maxval(blog_sun_roll),diam_deg
+     1                     ,solar_alt,solar_az,s_mag,l_solar_eclipse
+     1                     ,alm,azm,emag ! used for solar eclipse
+     1                     ,diam_deg,horz_dep,blog_sun_roll)
+              write(6,31)minval(blog_sun_roll)
+     1                  ,maxval(blog_sun_roll),eobsl,s_mag
+ 31           format('  range of blog_sun_roll (corona) is',4f10.4)
+          endif
+
+          if(emag .lt. 1.0)then
+            s_mag = -26.74
+            diam_deg = 0.5
+            write(6,*)' Sun glow being calculated: '
+            call get_glow_obj(i4time,alt_a_roll,azi_a_roll
+     1                     ,minalt,maxalt,minazi,maxazi 
+     1                     ,alt_scale,azi_scale
+     1                     ,htmsl,patm
+     1                     ,solar_alt,solar_az,s_mag,l_solar_eclipse
+     1                     ,alm,azm,emag ! used for solar eclipse
+     1                     ,diam_deg,horz_dep,blog_sun_roll)
+            write(6,*)' range of blog_sun_roll is',
+     1          minval(blog_sun_roll),maxval(blog_sun_roll),diam_deg
+          else
+            write(6,*)' Total eclipse, sun glow not calculated'
+          endif
 
 !         if(solar_alt .ge. 0.)then
 !         if(.true.)then
@@ -205,9 +217,11 @@
 
           if(solar_alt .lt. 0. .OR. l_solar_eclipse .eqv. .true.)then
               write(6,*)' call get_starglow with cyl data'
+              l_zod = (.not. l_solar_eclipse)
               call get_starglow(i4time_solar,alt_a_roll,azi_a_roll       ! I
      1                     ,minalt,maxalt,minazi,maxazi                  ! I
      1                     ,rlat,rlon,alt_scale,azi_scale,horz_dep       ! I
+     1                     ,l_zod                                        ! I
      1                     ,glow_stars)                                  ! O
 
               write(6,*)' range of glow_stars (before) is',
