@@ -58,7 +58,7 @@
         real alt_norm(NX_L,NY_L)
         real sol_alt_2d(NX_L,NY_L)
         real sol_azi_2d(NX_L,NY_L)
-        real eobsc(NX_L,NY_L)
+        real eobsc(NX_L,NY_L)            ! array of 'eobsl' values
         real moon_alt_2d(NX_L,NY_L)
         real moon_azi_2d(NX_L,NY_L)
         real moon_mag,moon_mag_thr
@@ -712,7 +712,8 @@
         write(6,*)' debias albedo_usgs by a factor of 1.25'
         albedo_usgs = albedo_usgs / 1.25
 
-        call land_albedo_bm(lat,lon,NX_L,NY_L,albedo_bm,istat_bm)
+        call land_albedo_bm(lat,lon,NX_L,NY_L,i4time_solar
+     1                     ,albedo_bm,istat_bm)
 
         I4_elapsed = ishow_timer()
  
@@ -777,9 +778,9 @@
           do j = 1,NY_L
             if(snow_cover(i,j) .ne. r_missing_data)then
               if(topo(i,j) .gt. 2000. .and. topo(i,j) .le. 3500.)then
-                snowalb = min(snow_cover(i,j),0.2)
+                snowalb = snow_cover(i,j) * 0.5
               else
-                snowalb = snow_cover(i,j)
+                snowalb = snow_cover(i,j) * 0.8
               endif
               do ic = 1,3
 !               topo_albedo_2d(ic,i,j) = 
@@ -890,6 +891,8 @@
           write(6,22)topo_albedo_2d(:,i_obs,j_obs)
 22        format('  albedo RGB of observer ',3f9.3)
 
+          write(6,*)' snow cover of observer: ',snow_cover(i_obs,j_obs)  
+
           write(6,*)' solar alt/az (2d array)',sol_alt_2d(i_obs,j_obs)       
      1                                        ,sol_azi_2d(i_obs,j_obs) 
 
@@ -940,15 +943,20 @@
      1                 ,alm,azm,idebug                               ! I
      1                 ,htagl(iloc),earth_radius                     ! I
      1                 ,elgms,moon_mag,rmn                           ! O 
-     1                 ,solar_eclipse_magnitude,eobsf,eobsl)         ! O
+     1                 ,emag,eobsf,eobsl)                            ! O
           write(6,24)alm,azm,elgms,moon_mag,rmn
 24        format('  alt/az/elg/mnmag/rmn = ',2f8.2,f9.4,f8.2,f9.4)
 
 !         Consider passing 'topo_flag' into 'sun_moon' to consider either
 !         solar or lunar eclipses
 !         http://www.jgisen.de/eclipse
+
+!         'emag' is solar eclipse magnitude for the observer
+!         'eobsf' is observer obscuration
+!         'eobsl' includes limb darkening for observer obscuration
+
           if(elgms .lt. 0.5)then
-            write(6,25)solar_eclipse_magnitude,eobsf,eobsl
+            write(6,25)emag,eobsf,eobsl
 25          format(' NOTE: Solar Eclipse Conditions: mag/obsc = '
      1            ,f9.6,2f9.6)
             l_solar_eclipse = .true.
@@ -1024,8 +1032,6 @@
 
           exposure = density
 
-!         We can set this to .true. after figuring out the seg fault when
-!         initializing 'glow_stars' in 'get_starglow'
           if(.true.)then
             write(6,*)' call calc_allsky'
             call calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
@@ -1044,7 +1050,8 @@
      1                     ,alt_norm                                ! I
      1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
      1                     ,moon_mag,moon_mag_thr                   ! I
-     1                     ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon ! I
+     1                     ,l_solar_eclipse,eobsc,emag              ! I
+     1                     ,rlat,rlon,lat,lon                       ! I
      1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
      1                     ,ni_cyl,nj_cyl                           ! I
      1                     ,alt_scale,azi_scale                     ! I
