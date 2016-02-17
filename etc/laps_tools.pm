@@ -602,11 +602,13 @@ sub wait_for_file {
             sleep $wait_interval;
             $iwait--;
         } else {
+            print "wait_for_file found $file at ".`date`;
+            system("ls -l --full-time $file");
             $iwait=0;
         }
     }
 
-    print "wait_for_file found $file now returning...\n";
+    print "wait_for_file now returning...\n";
 
     return ($iwait);
 }
