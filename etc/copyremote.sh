@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# This script copies files outward from the HPCC systems. It should be run
+# from the directory where the file or subdirectory is located.
+
 # Argument 1: filename (individual file, subdirectory, or file list)
 
 # Argument 2: Destination directory (without remote node)
