@@ -242,20 +242,21 @@ if(defined $multi_machine){
 # this is pretty specific and allows the path in remap.nl to work when the
 # scratch disk is scratch2
 # ---------------------------------------------------------------------------
-my @parts = split "/", $wideband_2_netcdf;
-if($parts[2] eq "scratch2"){
-   if(-e $wideband_2_netcdf){
+if(defined $wideband_2_netcdf){ # safety measure
+  my @parts = split "/", $wideband_2_netcdf;
+  if($parts[2] eq "scratch2"){
+    if(-e $wideband_2_netcdf){
       system("rm -rf  $wideband_2_netcdf");
       mkdir "/export/scratch2/wideband", 0777;
-   }
-   if(-e "/export/scratch/wideband"){
+    }
+    if(-e "/export/scratch/wideband"){
       system("rm -rf  /export/scratch/wideband");
-   }
-   system("ln -sf /export/scratch2/wideband /export/scratch/wideband");
+    }
+    system("ln -sf /export/scratch2/wideband /export/scratch/wideband");
 
-}else{ # remove any previous files within output netcdf subdirectories
-   system("rm -rf  $wideband_2_netcdf/*/netcdf");
-
+  }else{ # remove any previous files within output netcdf subdirectories
+    system("rm -rf  $wideband_2_netcdf/*/netcdf");
+  }
 }
 #-------------------------
 # main loop for casererun
