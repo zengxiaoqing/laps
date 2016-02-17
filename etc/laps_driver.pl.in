@@ -242,7 +242,8 @@ if($opt_q || $opt_Q){
       my @xdim=&laps_tools::get_nl_value("nest7grid.parms","nx_l","$LAPS_DATA_ROOT"); 
       my @ydim=&laps_tools::get_nl_value("nest7grid.parms","ny_l","$LAPS_DATA_ROOT"); 
       my @zdim=&laps_tools::get_nl_value("nest7grid.parms","nk_laps","$LAPS_DATA_ROOT"); 
-      my $npts = $xdim[0] * $ydim[0] * $zdim[0];
+      my $npts    = $xdim[0] * $ydim[0] * $zdim[0];
+      my $npts_xy = $xdim[0] * $ydim[0];
 
       my ($walltime,$vmem_gb);
 
@@ -255,6 +256,10 @@ if($opt_q || $opt_Q){
           $vmem_gb = 1.1 + ($npts / 16000000.);
           if ($vmem_gb > 12.0) { $vmem_gb = 12.0; }
           print "x/y/zdim = $xdim[0] $ydim[0] $zdim[0], npts = $npts, vmem_gb = $vmem_gb\n";
+
+      }elsif($exe eq "lvd_sat_ingest.exe" && $npts_xy > 15000000){
+          $vmem_gb = 4.0;
+          $walltime = "00:10:00";
 
       }elsif($exe eq "ensemble_mean.exe"){
           $walltime = "00:15:00";
@@ -304,6 +309,8 @@ if($opt_q || $opt_Q){
 #       print TFILE "export PBS_MODE=1\n";
 #     }
       print TFILE "  \n";
+      print TFILE "module load pgi netcdf/3.6.3\n";
+      print TFILE "  \n";
       print TFILE "cd $LAPS_LOG_PATH\n";
       print TFILE "  \n";
       print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
@@ -323,7 +330,7 @@ if($opt_q || $opt_Q){
 
       chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
       if(defined $opt_w && ($ngroups eq 1) ){
-        if($opt_q){ # SGE queueing syntax (ZEUS)
+        if($opt_q){ # SGE queueing syntax (THEIA)
           $command = "qsub -A $opt_q $LAPS_LOG_PATH/$qsubfile";
           print "Executing $command\n";
           system("$command");
