@@ -474,7 +474,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   END SUBROUTINE write_gribprep_header
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE output_metgrid_format(p, t, ht, u, v, w, rh, slp, psfc, &
-                               lwc, rai, sno, ice, pic, snocov,tskin)
+                               lwc, rai, sno, ice, pic, snocov, tskin, soilt, soilm)
 
   !  Subroutine of lapsprep that will build a file the
   !  WPS format that can be read by metgrid
@@ -497,6 +497,8 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   REAL, INTENT(IN)                   :: sno(:,:,:)  ! Snow (kg/kg)
   REAL, INTENT(IN)                   :: ice(:,:,:)  ! Ice (kg/kg)
   REAL, INTENT(IN)                   :: pic(:,:,:)  ! Graupel (kg/kg)
+  REAL, INTENT(IN)                   :: soilt(:,:,:)! Soil Temp (K)
+  REAL, INTENT(IN)                   :: soilm(:,:,:)! Soil moist (kg/kg)
   REAL, INTENT(IN)                   :: snocov(:,:) ! Snow cover (fract)
   REAL, INTENT(IN)                   :: tskin(:,:)  ! Skin temperature
 
@@ -509,7 +511,11 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   INTEGER            :: k,yyyyddd
   INTEGER            :: istatus
   REAL               :: r_missing_data
-
+  
+  ! Yuanfu added LAPS soil moisture level depth information in centi-meters:
+  INTEGER :: lk
+  REAL, PARAMETER :: lsm3(3) = (/ 15.2, 30.5, 91.4 /)
+  REAL    :: alpha
 
   call get_r_missing_data(r_missing_data,istatus)
 	print*,'output_metgrid_format r_missing_data ',r_missing_data
@@ -733,6 +739,60 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
       PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), &
          ' Min: ', MINVAL(tskin), ' Max: ', MAXVAL(tskin)
   ENDIF
+  
+  ! Soil temperature and moisture: by Yuanfu Xie 2015/05
+  IF (num_soil_layers .GT. 0) THEN
+    field = 'SOILT       '
+    units = 'K                        '
+    desc  = 'Soil temperature                                '
+    PRINT *, 'FIELD = ', field
+    PRINT *, 'UNITS = ', units
+    PRINT *, 'DESC =  ',desc
+    var_soilt : DO k = 1 , num_soil_layers
+    CALL write_metgrid_header(field,units,desc,soil_layer_depths(k))
+    d2d = tskin  ! Test of skin temperature for now
+    WRITE ( output_unit ) d2d
+    PRINT '(A,F9.1,A,F5.1,A,F5.1)', 'Level (cm):', soil_layer_depths(k), ' Min: ', MINVAL(d2d),&
+            ' Max: ', MAXVAL(d2d)
+print*,'Yuanfu Debugger: ',d2d(1,1),tskin(1,1),x,y
+    ENDDO var_soilt
+    
+    field = 'SOILM       '
+    units = 'KG/KG                    '
+    desc  = 'Soil Moisture                                    '
+    PRINT *, 'FIELD = ', field
+    PRINT *, 'UNITS = ', units
+    PRINT *, 'DESC =  ',desc
+    var_soilm : DO k = 1 , num_soil_layers
+      CALL write_metgrid_header(field,units,desc,soil_layer_depths(k))
+      
+      ! Test soil moisture from laps lm1: by Yuanfu Xie
+      d2d = 12.3  ! Test
+      print*,'Soil_Layer_depths: ',soil_layer_depths(1:4),lsm3(1:3), maxval(soilm)
+      IF (soil_layer_depths(k) .LE. lsm3(3)) THEN
+        ! Interpolated from lm1:
+        IF      (soil_layer_depths(k) .LE. lsm3(1)) THEN
+          alpha = 1.0
+          lk = 1
+        ELSE IF (soil_layer_depths(k) .LE. lsm3(2)) THEN
+          alpha = (lsm3(2)-soil_layer_depths(k))/(lsm3(2)-lsm3(1))
+          lk = 1
+        ELSE
+          alpha = (lsm3(3)-soil_layer_depths(k))/(lsm3(3)-lsm3(2))
+          lk = 2
+        ENDIF
+        d2d = alpha*soilm(:,:,lk)+(1.0-alpha)*soilm(:,:,lk+1)
+      ELSE
+        ! set to the deepest level of LAPS lm1
+        d2d = soilm(:,:,3)
+      ENDIF
+      
+      WRITE ( output_unit ) d2d/100.0  ! Temporarily change the scale to 0-1
+      PRINT '(A,F9.1,A,F5.1,A,F5.1)', 'Level (cm):', soil_layer_depths(k), ' Min: ', MINVAL(d2d),&
+            ' Max: ', MAXVAL(d2d)
+print*,'Xie debugger: ',d2d(1,1)
+    ENDDO var_soilm
+  ENDIF
 
   ! Sea-level Pressure field
   field = 'PMSL     '
@@ -742,6 +802,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   PRINT *, 'UNITS = ', units
   PRINT *, 'DESC =  ',desc
   CALL write_metgrid_header(field,units,desc,slp_level)
+print*,'XXXX : ',slp(1,198)
   WRITE ( output_unit ) slp
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', slp_level, ' Min: ', MINVAL(slp),&
             ' Max: ', MAXVAL(slp)
@@ -754,6 +815,7 @@ SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
   PRINT *, 'UNITS = ', units
   PRINT *, 'DESC =  ',desc
   CALL write_metgrid_header(field,units,desc,p_pa(z3+1))
+print*,'YYYY : ',psfc(1,198)
   WRITE ( output_unit ) psfc
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(psfc),&
             ' Max: ', MAXVAL(psfc)
