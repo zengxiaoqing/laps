@@ -89,8 +89,10 @@
     ! Arrays for data
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , w, t , rh , ht, &   
                                              lwc,rai,sno,pic,ice, sh, mr, vv, & 
-                                             virtual_t, rho,lcp, mvd
-    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin,tpw_before,tpw_after
+                                             virtual_t, rho,lcp, mvd, &
+                                             soilt,soilm
+    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin, &
+                                             tpw_before,tpw_after
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
     REAL , PARAMETER                       :: tiny = 1.0e-30
     
@@ -318,6 +320,8 @@
         ALLOCATE ( virtual_t ( x , y , z3 ) )
         ALLOCATE ( sh ( x , y , z3 ) )
         ALLOCATE ( mr ( x , y , z3+1 ) )
+        ALLOCATE ( soilt ( x , y , 10 ) )
+        ALLOCATE ( soilm ( x , y , 10 ) )
 
         ! Initialize the non-mandatory values
 
@@ -406,9 +410,26 @@
 
         mr(:,:,z3+1)=mr(:,:,z3+1)*0.001
 
-      ELSE IF ( ext(loop) .EQ. 'lm2' ) THEN
+      ! Yuanfu: add lm1 input for soil moisture and possible future temperature:
+      ELSE IF ( ext(loop) .EQ. 'lm1' ) THEN
 
         var_l1s : DO var_loop = 1 , num_cdf_var(loop)
+
+          !  Get the variable ID.
+
+          vid = NCVID ( cdfid , TRIM(cdf_var_name(var_loop,loop)) , rcode )
+          start = (/ 1 , 1 , 1 , 1 /)
+          count = (/ x , y , 1 , 1 /)
+
+          IF      ( cdf_var_name(var_loop,loop) .EQ. 'lsm' ) THEN
+            CALL NCVGT ( cdfid , vid , start , count , soilm      , rcode )
+          END IF
+
+        END DO var_l1s
+
+      ELSE IF ( ext(loop) .EQ. 'lm2' ) THEN
+
+        var_l2s : DO var_loop = 1 , num_cdf_var(loop)
 
           !  Get the variable ID.
 
@@ -420,7 +441,7 @@
             CALL NCVGT ( cdfid , vid , start , count , snocov        , rcode )
           END IF
 
-        END DO var_l1s                             
+        END DO var_l2s                              
         
       ELSE IF ( ext(loop) .EQ. 'lt1' ) THEN
 
@@ -744,7 +765,6 @@
       enddo
       enddo
 
-
     ENDIF
 
     ! If make_sfc_uv set, then replace surface winds with 
@@ -784,14 +804,14 @@
       select_output: SELECT CASE (output_format(out_loop))
         CASE ('mm5 ')
           CALL output_pregrid_format(p, t, ht, u, v, rh, slp, &
-                            lwc, rai, sno, ice, pic,snocov, tskin)
+                            lwc, rai, sno, ice, pic, snocov, tskin)
 
         CASE ('wrf ')
           CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
-                             lwc, rai, sno, ice, pic,snocov, tskin)
+                             lwc, rai, sno, ice, pic, snocov, tskin)
         CASE ('wps ')
           CALL output_metgrid_format(p, t, ht, u, v, w, rh, slp, psfc,&
-                             lwc, rai, sno, ice, pic,snocov, tskin)
+                             lwc, rai, sno, ice, pic, snocov, tskin, soilt, soilm)
      
         CASE ('rams') 
           CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snocov,tskin)
