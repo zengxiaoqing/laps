@@ -217,6 +217,8 @@ if test "$NCARG_ROOT" = "allsky"; then
 
 # Annotate Model
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
+    IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
+    echo "polar IMGGEOM = $IMGGEOM"
     convert -fill white -annotate +5+20  "LAPS Simulated" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
@@ -234,9 +236,13 @@ if test "$NCARG_ROOT" = "allsky"; then
 
 # Annotate Time
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-#   convert -fill white -annotate +393+500 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-#   convert -fill white -annotate +363+500 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-    convert -fill white -annotate +360+503 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   if test "$IMGGEOM" = "511x511"; then
+    convert -fill white -annotate +360+503  "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   elif test "$IMGGEOM" = "1023x1023"; then
+    convert -fill white -annotate +720+1015 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   else
+    convert -fill white -annotate +1080+1527 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   fi
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
@@ -255,8 +261,13 @@ if test "$NCARG_ROOT" = "allsky"; then
 
 # Annotate Lat/Lon
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
+   if test "$IMGGEOM" = "511x511"; then
     echo "convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
           convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   else
+    echo "convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
+          convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   fi
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
@@ -275,7 +286,13 @@ if test "$NCARG_ROOT" = "allsky"; then
 
 # Annotate Field
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    convert -fill white -annotate +20+500 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    if test "$IMGGEOM" = "511x511"; then
+      convert -fill white -annotate +20+500  "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    elif test "$IMGGEOM" = "1023x1023"; then
+      convert -fill white -annotate +20+1012 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    else
+      convert -fill white -annotate +20+1524 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    fi
   fi
 
 # if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
@@ -284,10 +301,12 @@ if test "$NCARG_ROOT" = "allsky"; then
 
 # Annotate Directions
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
+   if test "$IMGGEOM" = "511x511"; then
     convert -fill white -annotate +55+60     "$DIR1"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
     convert -fill white -annotate +40+450    "$DIR2"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
     convert -fill white -annotate +440+450   "$DIR3"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
     convert -fill white -annotate +435+60    "$DIR4"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   fi
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
