@@ -41,6 +41,7 @@
 
      real obj_alt(ni,nj),obj_azi(ni,nj)
      real topo_a(ni,nj)
+     real projrot(ni,nj)
      real sfc_glow(ni,nj)
 
      real heights_1d(nk)
