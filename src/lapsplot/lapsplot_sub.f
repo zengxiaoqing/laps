@@ -321,8 +321,10 @@ cdis
                 read(lun,*)ipolar_sizeparm,density
             endif
 
-            ni_polar = (256 * 2**(ipolar_sizeparm)) - 1
-            nj_polar = (256 * 2**(ipolar_sizeparm)) - 1
+!           ni_polar = (256 * 2**(ipolar_sizeparm)) - 1
+!           nj_polar = (256 * 2**(ipolar_sizeparm)) - 1
+            ni_polar = (256 * 2 * (ipolar_sizeparm)) - 1
+            nj_polar = (256 * 2 * (ipolar_sizeparm)) - 1
 
             write(6,*)' call plot_allsky',ni_polar,nj_polar
      1                                   ,ipolar_sizeparm
