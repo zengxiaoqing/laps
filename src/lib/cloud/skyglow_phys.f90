@@ -268,7 +268,7 @@
                          ,earth_radius,0 &          ! I
                          ,ag,ao,aa,refr_deg)        ! O
          write(6,63)altray,ag,ao,aa
-63       format(' returned from get_airmass with alt/ag/ao/aa = ',f9.0,3e12.4)
+63       format(' returned from get_airmass with alt/ag/ao/aa = ',f9.1,3e12.4)
 
 !        od_g_slant_a(:,ialt) = ext_g(:) * patm * ag/ag90 ! for export
          od_g_slant_a(:,ialt) = ext_g(:) * ag             ! for export
@@ -450,9 +450,11 @@
                 else
                   azi_ref = 90.                 
                 endif
+                azi_ref = nint(sol_azi / azi_d10) * azi_d10
+
 !               azi_ref = 175. ! volcanic test
 !               azi_ref = 340. ! 300km test
-                azi_ref = nint(sol_azi / azi_d10) * azi_d10
+!               azi_ref = 128. ! limb test  
 
                 if(view_azi_deg .eq. azi_ref.AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
 !               if(abs(180. - view_azi_deg) .eq. 1.0 .AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
@@ -900,6 +902,10 @@
                     else
                       idebug_topo = 0
                     endif
+                    if(altray .le. -80. .and. jazi .eq. 2048)then ! limb test
+                      idebug_topo = 1
+                    endif
+
                     if(aa_90 .gt. 0.)then
                       aa_o_aa_90 = aa/aa_90
                     else
@@ -930,7 +936,7 @@
                     if(idebug_topo .gt. 0)then
                       write(6,81)ialt,jazi,ic,sol_alt,altray &
                          ,dist_2_topo(ialt,jazi),sumi_gct(ic),sumi_act(ic)
-81                    format(' called get_clr_src_dir_topo',i4,i5,i4,2f8.2,f10.0,2f9.4)
+81                    format(' called get_clr_src_dir_topo',i5,i5,i4,2f8.2,f10.0,2f9.4)
                     endif ! write log info
                   endif ! call get_clr_src_dir_topo
 
@@ -1009,7 +1015,7 @@
                        ,trace_solalt(ialt,jazi),mode_sky,od_a &
                        ,dist_2_topo(ialt,jazi),aodf,aodfo,clear_rad_c(:,ialt,jazi)
 111           format('alt/azi/salt-t-t/mode/od_a/dst/aodf/aodfo/clrrd' &
-                    ,2f6.1,1x,3f7.2,i3,f12.5,f9.0,2f9.4,3e14.5)
+                    ,2f6.1,1x,3f7.2,i3,f12.5,f10.0,2f9.4,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
@@ -1037,9 +1043,9 @@
         write(6,*)' clearrad1 column:',clear_rad_c(1,minalt:minalt+9,minazi)
 
 !       Apply during daylight eclipses or during low sun / twilight
-        if( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
-            (sol_alt .lt. 10. .and. sol_alt .gt. twi_0)               )then
-
+        if( ( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
+            (sol_alt .lt. 10. .and. sol_alt .gt. twi_0) ) .AND. & 
+                                                  htmsl .le. 100e3 )then
             write(6,*)'Calling get_sky_rad_ave'
             do ic = 1,nc ! secondary scattering in each color
 !               Good temporal variability, constant for spatial
