@@ -22,7 +22,7 @@
         am_homo_wiki(z,h,r) = r/h * sqrt(cos(z)**2 + 2.*h/r + (h/r)**2) - (r/h) * cos(z)
 
         zapp = 90. - alt
-        zappi = 90. + alt
+        zappi = 90. + alt ! zenith ang ray in opposite dir
 
         ztrue  = zapp  + refractd_app(alt ,patm)
         ztruei = zappi + refractd_app(abs(alt) ,patm)
@@ -30,10 +30,27 @@
 !       Altitude relative to limb
         alt_limb = alt + acosd(earth_radius/(earth_radius+htmsl))
 
+!       Altitude relative to surface normal (emission angle)
+        if(alt .ne. 0.)then
+          slope = tand(90. - abs(alt))
+          c = ((earth_radius+htmsl) / earth_radius) * slope
+          call line_ellipse(slope,c,0.,0.,1.,1.,r_missing_data,x1,x2,y1,y2)
+          gc = atan2d(+y1,-x1) ! great circle dist to ground pt
+          if(alt .gt. 0.)then
+            alt_norm = alt - gc
+          else
+            alt_norm = alt + gc
+          endif
+        else
+          alt_norm = 0.  
+        endif
+
+        zappin = 90. + alt_norm ! normal ang ray in opposite dir
+
         if(iverbose .eq. 1)then
-          write(6,11)alt,htmsl,patm,earth_radius
-11        format(/' start get_airmass: alt/htmsl/patm/erad' &
-                 ,f8.2,f11.1,f9.4,f10.0)
+          write(6,11)alt,gc,alt_norm,htmsl,patm,earth_radius
+11        format(/' start get_airmass: alt/gc/altn/htmsl/patm/erad' &
+                 ,3f8.3,f11.1,f9.4,f10.0)
         endif
 
         call get_htmin(alt,patm,htmsl,earth_radius,iverbose & ! I
@@ -43,8 +60,8 @@
         if(alt .lt. -3.)then ! high looking down
           if(htmin .lt. 0.0)then ! hit ground
             patm_gnd = max(ztopsa(aero_refht)/1013.25,patm) ! assumed ground
-            ag = airmassf(zappi,(patm_gnd-patm))
-            if(iverbose .eq. 1)write(6,21)zappi,patm_gnd,patm,ag
+            ag = airmassf(zappin,(patm_gnd-patm))
+            if(iverbose .eq. 1)write(6,21)zappin,patm_gnd,patm,ag
 21          format('  high gas   hitting ground',4f9.4)
           else ! grazes atmosphere
             ztrue0 = 90. + refractd_app(0.,patm2)
@@ -68,10 +85,10 @@
         if(alt .lt. 0.)then ! high looking down
           if(htmin .lt. 0.0)then ! hit ground
             patm_refht = patm_o3(min(aero_refht,htmsl))
-            ao = airmasso(zappi,aero_refht)  &
+            ao = airmasso(zappin,aero_refht)  &
                * (patm_o3(aero_refht)-patm_o3(htmsl))
             ao = max(ao,0.)
-            if(iverbose.eq.1)write(6,31)zappi,patm_refht,patm_o3(htmsl),ao
+            if(iverbose.eq.1)write(6,31)zappin,patm_refht,patm_o3(htmsl),ao
 31          format('  high ozone hitting ground',4f9.4)
           else ! grazes atmosphere
             patmo  = patm_o3(htmsl)
@@ -104,12 +121,12 @@
         patm_aero = exp(-((htmsl-aero_refht) / aero_scaleht))
         if(alt .lt. 0.)then ! high looking down
           if(htmin .lt. 0.0)then ! hit ground
-            ZZ = zappi * rpd
+            ZZ = zappin * rpd
 !           aa=am_aero(ZZ)                                * (1.0-patm_aero)
             aa=am_homo_wiki(ZZ,aero_scaleht,earth_radius) * (1.0-patm_aero)
             aa = max(aa,0.)
             if(iverbose .eq. 1)then
-              write(6,41)zappi,htmin,patm_aero,aa    
+              write(6,41)zappin,htmin,patm_aero,aa    
 41            format('  high aero  hitting ground',4f9.4)           
             endif
           else ! grazes atmosphere
@@ -174,7 +191,7 @@
             if(iverbose .eq. 1)then
               write(6,1)iter,htmsl,alt,cosd(alt),htmin_s,htmin_l,htmin,patm,patm2,rk
             endif
-1           format('    iter/htmsl/alt/cosd/htmin/patm/patm2/rk = ',i4,f10.1,2f9.3,2f11.0,f11.1,2f10.7,f9.5)
+1           format('    iter/htmsl/alt/cosd/htmin/patm/patm2/rk = ',i3,f11.1,2f9.3,2f11.0,f11.1,2f10.7,f9.5)
             iter = iter + 1
           enddo ! while
         else
