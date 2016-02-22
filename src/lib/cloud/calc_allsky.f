@@ -296,7 +296,7 @@
                 corr1_a = 9.0
               endif
               if(solar_alt .lt. 0.)corr1_a = 9.26 ! volcanic value
-              corr1_a = corr1_a - log10(exposure)
+              corr1_a = corr1_a ! - log10(exposure)
 
               write(6,*)' corr1 in calc_allsky ',corr1_a
 
@@ -339,7 +339,7 @@
      1                    ,twi_0,horz_dep
      1                    ,solalt_limb_true
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
-     1                    ,corr1_a
+     1                    ,corr1_a,exposure
      1                    ,sky_rgb_cyl)   
 
           else
