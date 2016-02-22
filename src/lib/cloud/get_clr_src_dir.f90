@@ -296,6 +296,8 @@
      ds = 100. / max(sind(viewalt),0.1)
      istart = max(1,nint((htmsl-100000.)/ds))
 
+     dsolalt_ref = solalt_ref - solalt
+
      if(idebug .eq. 1)then
          write(6,*)
          write(6,*)'subroutine get_clr_src_dir_low'
@@ -385,8 +387,8 @@
          do = opac_curr - opac_last
 
 !        Update ags,aas
-         dsolalt = dsolalt_dxy * xybar
-         solalt_step = solalt_ref + dsolalt
+         dsolalt = dsolalt_ref + dsolalt_dxy * xybar
+         solalt_step = solalt + dsolalt
          dsolaltb = &
             max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
@@ -567,6 +569,8 @@
      httopo = 0.
      istart = max(1,nint((htmsl-100000.)/ds))
 
+     dsolalt_ref = solalt_ref - solalt
+
      if(idebug .eq. 1)then
          write(6,*)
          write(6,*)'subroutine get_clr_src_dir_topo'
@@ -590,7 +594,7 @@
      endif ! i
 
      if(idebug .eq. 1)then ! substitute radg/rada?
-       write(6,*)'        sbar     htbar     htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g    sumi_a  opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'         sbar     htbar     htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g    sumi_a  opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -610,8 +614,8 @@
          xybar = (sbar - refdist_solalt) * cosd(viewalt)
 
 !        Update ags,aas
-         dsolalt = dsolalt_dxy * xybar
-         solalt_step = solalt_ref + dsolalt
+         dsolalt = dsolalt_ref + dsolalt_dxy * xybar
+         solalt_step = solalt + dsolalt
          dsolaltb = &
             max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
@@ -695,12 +699,15 @@
          if(idebug .eq. 1)then
 !          if(i .le. 10)then
              write(6,11)i,sbar,htbar,htbar_msl,dtau,tausum,dsolalt,alphabar_g,alphabar_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i6,f9.0,f10.0,f9.0,f9.4,f9.6,f9.4,2f9.6,9f9.4)
+11           format(i6,f10.0,f10.0,f9.0,f9.4,f9.6,f9.4,2f9.6,9f9.4)
 !          endif
          endif
        endif ! htbar < httopill
 
        if(htbar_msl .lt. httopo .or. (htbar_msl .gt. httopill .and. viewalt .gt. 0.))then
+         if(idebug .eq. 1)then
+           write(6,*)' end of loop:',htbar_msl,httopo
+         endif
          goto 900
        endif
      enddo ! i
