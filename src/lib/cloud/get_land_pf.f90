@@ -50,7 +50,7 @@
 
         write(6,11)
 11      format('  i    j  ic   alt_a    azi_a   sol_azi azidiff  ', &
-               ' ampl_l    fland    fsnow   fwater   phland   phsnow   phwater    ph1    radfrac  dst2topo gndarc  toposalt emis_ang  specang    alb') 
+               ' ampl_l    fland    fsnow   fwater   phland   phsnow   phwater    ph1    radfrac  dst2topo  gndarc  toposalt emis_ang  specang    alb') 
 
         do j = 1,nj
          do i = 1,ni
@@ -68,6 +68,28 @@
             specangvert2 = specangvert * sind(emis_ang)
             azidiff2 = azidiff * cosd(emis_ang)
             specang = sqrt(specangvert**2 + azidiff2**2)
+
+!           Land surface type
+!           fland = scurve((1. - topo_albedo(2,i,j))**2)
+!           fsnow = 1.0 - fland ! 0 is land, 1 is snow
+
+            fsnow = (topo_albedo(2,i,j) - 0.15) / (1.0 - 0.15)
+            fsnow = max(fsnow,0.)
+            fland = 1.0 - fsnow
+
+            if(topo_albedo(1,i,j) .eq. .08 .and. topo_albedo(2,i,j) .eq. .08 .and. topo_albedo(3,i,j) .eq. .08)then
+                fwater = 1.0
+                fland = 0.
+                fsnow = 0.
+            elseif(topo_albedo(3,i,j) / topo_albedo(1,i,j) .gt. 5.0)then
+                fwater = 1.0
+                fland = 0.
+                fsnow = 0.
+            else
+                fwater = 0.0
+            endif
+
+            fice = 0.0
 
             do ic = 1,nc
               tfrac = transm_obs      
@@ -90,23 +112,6 @@
               else
                 radfrac = 0.
               endif
-
-!             fland = scurve((1. - topo_albedo(2,i,j))**2)
-!             fsnow = 1.0 - fland ! 0 is land, 1 is snow
-
-              fsnow = (topo_albedo(2,i,j) - 0.15) / (1.0 - 0.15)
-              fsnow = max(fsnow,0.)
-              fland = 1.0 - fsnow
-
-              if(topo_albedo(1,i,j) .eq. .08 .and. topo_albedo(2,i,j) .eq. .08 .and. topo_albedo(3,i,j) .eq. .08)then
-                  fwater = 1.0
-                  fland = 0.
-                  fsnow = 0.
-              else
-                  fwater = 0.0
-              endif
-
-              fice = 0.0
 
 !             Land
 !             Should look brighter opposite direct sun in low sun case
@@ -146,10 +151,14 @@
               ampl_w = cosd(alt_a(i,j))
 
 !             Use approximate specular reflection angle
-              argexp = min(specang/5.,8.)
+              argexp = min(specang/10.0,8.)
               specamp = exp(-(argexp)**2)
 
               phwater = 0.2 + 3.0 * specamp ! ampl_w * hg(g,azidiff) / (1. + 1.3*g**2)
+
+!             Add sunlight reflecting off the water surface
+              arg_glint = opac(phwater * fwater)
+              topo_albedo(ic,i,j) = 0.05 * arg_glint + topo_albedo(ic,i,j) * (1.-arg_glint)
 
 !             Ice
               phice = 1.0
@@ -162,7 +171,7 @@
                  ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
                           .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) )then
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
-1                 format(i4,i5,i2,4f9.2,9f9.4,f9.0,5f9.2)
+1                 format(i4,i5,i2,4f9.2,9f9.4,f10.0,5f9.2)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
 111               format('   antisolar alt/azi/azeff/elg/elg_a/eff',6f9.2)
                 endif
