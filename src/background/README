@@ -38,6 +38,9 @@ program lga                                      lga.f
              tcbogus                             bgdata/tcbogus.f
              make_td                             lib/make_td.f
          degrib_data                             degrib/readgrib.F90
+            rd_grib1                             degrib/rd_grib1.F90
+            rd_grib2                             degrib/rd_grib2.F90
+            put_storage                          degrib/readgrib.F90
             get_lapsbg                           degrib/output.F90          #13
       vinterp                                    bgdata/vinterp.f 
          vinterp_sub                                     "
