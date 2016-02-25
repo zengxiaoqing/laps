@@ -444,7 +444,7 @@ c ------------------------------------------------------------------------------
 c
       subroutine write_lgb(nx_laps,ny_laps,bgtime,bgvalid,cmodel
      .,missflag,uw_sfc,vw_sfc,tp_sfc,t_sfc,qsfc,pr_sfc,mslp,td_sfc
-     .,rp_sfc,pcp_sfc,istatus)
+     .,rp_sfc,pcp_sfc,cw_sfc,istatus)
 
       implicit none
 
@@ -464,6 +464,7 @@ c
      .          pr_sfc(nx_laps,ny_laps),
      .          rp_sfc(nx_laps,ny_laps),
      .          pcp_sfc(nx_laps,ny_laps),
+     .          cw_sfc(nx_laps,ny_laps),
      .          mslp(nx_laps,ny_laps)
 
       character*256 outdir
@@ -702,6 +703,28 @@ c --- Precipitation
      .           ,units,comment,pcp_sfc,istatus)
       if (istatus .ne. 1) then
          print*,'Error writing interpolated data to LAPS lgb - PCP'
+         return
+      endif
+
+c --- Cloud Water
+      warncnt=0
+      do i=1,nx_laps
+      do j=1,ny_laps
+         if(cw_sfc(i,j).ge.missflag.and.warncnt.lt.100)
+     +              then
+            print*,'Missing data at ',i,j,' in cw_sfc'
+            warncnt=warncnt+1
+         endif
+      enddo
+      enddo
+      var='CW'
+      units='M' 
+      print*,'CW'
+      call write_laps(bgtime,bgvalid,outdir,ext
+     .           ,nx_laps,ny_laps,1,1,var,0,lvl_coord
+     .           ,units,comment,cw_sfc,istatus)
+      if (istatus .ne. 1) then
+         print*,'Error writing interpolated data to LAPS lgb - CW'
          return
       endif
 
