@@ -274,7 +274,7 @@ end subroutine output
 
 subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
          ,prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, htbg_sfc, tpbg_sfc, shbg_sfc& 
-         ,uwbg_sfc, vwbg_sfc, tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, pwatbg, istatus)
+         ,uwbg_sfc, vwbg_sfc, tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, pwatbg, cwatbg, istatus)
 !                                                                             !
 !*****************************************************************************!
 !  Write output to a file.
@@ -332,6 +332,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
      real :: pcpbg(nx,ny)
      real :: crefbg(nx,ny)
      real :: pwatbg(nx,ny)
+     real :: cwatbg(nx,ny)
      real :: pratebg(nx,ny)
 
 ! *** 3D background arrays.
@@ -387,6 +388,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                   write(6,*)' idx/nz = ',idx,nz                            
               endif
 
+!             Names being mentioned on the right handside are obtained from
+!             the GRIB table.
               if (field.eq.'HGT') then
                  htbg(:,:,idx) = scr2d
               elseif (field.eq.'GEOPT') then
@@ -438,6 +441,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  write(6,*)' Filling crefbg with REFC'
               elseif (field.eq.'PWAT') then
                  pwatbg = scr2d
+              elseif (field.eq.'CWAT') then
+                 cwatbg = scr2d
               elseif (field.eq.'PRATE') then
                  pratebg = scr2d
                  write(6,*)' Filling pratebg with PRATE'
