@@ -49,7 +49,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   integer :: nlvl
   integer :: ierr
   integer :: nunit1 = 12
-  integer :: debug_level = 1 
+  integer :: debug_level = 1000
   integer :: grib_version
   integer :: vtable_columns
   integer :: istatus
@@ -206,7 +206,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 subroutine degrib_data(gribflnm, nx, ny, nz, &
          prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, &
          htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, &
-         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, pwatbg, istatus)
+         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, pwatbg, cwatbg, istatus)
 
   use table
   use gridinfo
@@ -224,7 +224,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   integer, parameter :: maxbglvl = 52  
   integer, dimension(255) :: iuarr = 0
   integer :: nunit1 = 12
-  integer :: debug_level = 1 
+  integer :: debug_level = 1000
   integer :: iplvl
   integer :: nlvl
   integer :: itime
@@ -259,6 +259,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real :: pcpbg(nx,ny)
   real :: crefbg(nx,ny)
   real :: pwatbg(nx,ny)
+  real :: cwatbg(nx,ny)
 
 ! *** 3D background arrays.
   real :: prbght(nx,ny,nz)
@@ -362,7 +363,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
         call get_lapsbg(nlvl, maxbglvl, plvl, debug_level, nx, ny, nz, &
          prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, &
          htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, &
-         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, pwatbg, istatus)
+         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, crefbg, pwatbg, cwatbg, istatus)
 
 !-----
 
