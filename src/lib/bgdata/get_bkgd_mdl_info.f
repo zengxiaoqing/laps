@@ -716,7 +716,7 @@ c --------------------
 !            fullname, vtable are assumed as inputs, the rest outputs
 
              write(*,*) "CALL DEGRIB_NAV to obtain header info:" 
-             write(*,*) " grib filename", trim(fullname)
+             write(*,*) " grib filename ", trim(fullname)
 
              call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
      &       gproj,dlat,dlon,Lat0,Lat1,Lon0,cgrddef,cross_dateline,
