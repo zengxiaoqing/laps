@@ -123,6 +123,7 @@ c
       real, allocatable  :: pcpbg(:,:)       !Precip at surface, ACPC (k/m^2)
       real, allocatable  :: crefbg(:,:)      !Composite Reflectivity (dBZ)
       real, allocatable  :: tpwbg(:,:)       !Total Precipitable Water
+      real, allocatable  :: cwatbg(:,:)      !Cloud Water (Vert Integrated)
       real, allocatable  :: swibg(:,:)       !Downward Solar Radiation (GHI)
 
 c
@@ -183,6 +184,7 @@ c
      .          rp_sfc(nx_laps,ny_laps),     !Reduced pressure
      .          mslp(nx_laps,ny_laps),       !in Pascals
      .          pcp_sfc(nx_laps,ny_laps),
+     .          cw_sfc(nx_laps,ny_laps),
      .          dum1_2d(nx_laps,ny_laps),
      .          dum2_2d(nx_laps,ny_laps)
 
@@ -260,7 +262,7 @@ c
      +,prbght,prbgsh,prbguv,prbgww
      +,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg,tpwbg,swibg
+     +,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg,tpwbg,cwatbg,swibg
      +,istatus)
 c
          real  :: prbg_sfc(nx_bg,ny_bg)
@@ -275,6 +277,7 @@ c
          real  :: pcpbg(nx_bg,ny_bg)
          real  :: crefbg(nx_bg,ny_bg)
          real  :: tpwbg(nx_bg,ny_bg)
+         real  :: cwatbg(nx_bg,ny_bg)
          real  :: swibg(nx_bg,ny_bg)
 c
          real  :: prbght(nx_bg,ny_bg,nzbg_ht)
@@ -701,6 +704,7 @@ c             goto900
        allocate (pcpbg(nx_bg,ny_bg))
        allocate (crefbg(nx_bg,ny_bg))
        allocate (tpwbg(nx_bg,ny_bg))
+       allocate (cwatbg(nx_bg,ny_bg))
        allocate (swibg(nx_bg,ny_bg))
 
        t_at_sfc=missingflag
@@ -713,7 +717,7 @@ c             goto900
      +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
      +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,crefbg
-     +    ,tpwbg,swibg
+     +    ,tpwbg,cwatbg,swibg
      +    ,istatus_prep(nf))
 
        istatus=ishow_timer()
@@ -815,7 +819,7 @@ c         convert to wfo if necessary
      +               tpbg_sfc,
      +               t_at_sfc,
      +               mslpbg,
-     +               pcpbg,crefbg,tpwbg,swibg)
+     +               pcpbg,crefbg,tpwbg,cwatbg,swibg)
 
  
        else   !processing the file because it is not a reject
@@ -1347,7 +1351,7 @@ c    .                     uw(i,j,k),vw(i,j,k)) .ge. missingflag)then
      +                          ,tpbg_sfc
      +                          ,t_at_sfc
      +                          ,mslpbg
-     +                          ,pcpbg,crefbg,tpwbg,swibg)
+     +                          ,pcpbg,crefbg,tpwbg,cwatbg,swibg)
 
                      goto 999 ! deallocate/return
 
@@ -1456,12 +1460,15 @@ c
      .        grx,gry,mslpbg,mslp,wrapped)
             call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,pcpbg,pcp_sfc,wrapped)
+            call hinterp_field_2d(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,cwatbg,cw_sfc,wrapped)
 
             write(6,*)' ht_sfc range = ',minval(ht_sfc),maxval(ht_sfc)
             write(6,*)' pr_sfc range = ',minval(pr_sfc),maxval(pr_sfc)
             write(6,*)' td_sfc range = ',minval(td_sfc),maxval(td_sfc)
             write(6,*)' sh_sfc range = ',minval(sh_sfc),maxval(sh_sfc)
             write(6,*)' mslp range = ',minval(mslp),maxval(mslp)
+            write(6,*)' cw_sfc range = ',minval(cw_sfc),maxval(cw_sfc)
 
             if(maxval(mslp) .le. 70000.) then
               print *,' ERROR: MSLP out of allowed range'
@@ -1525,7 +1532,7 @@ c
            deallocate (tpbg_sfc)
            deallocate (t_at_sfc) 
            deallocate (mslpbg)
-           deallocate (pcpbg,crefbg,tpwbg,swibg)
+           deallocate (pcpbg,crefbg,tpwbg,cwatbg,swibg)
 c
 c... Do the temp, moisture (sh_sfc returns with Td), and pressures
 c... Only ETA48_CONUS and namelist switch "luse_sfc_bkgd" enable the use
@@ -1730,6 +1737,7 @@ c         td_sfc=tdbg_sfc
           uw_sfc=uwbg_sfc
           vw_sfc=vwbg_sfc
           pcp_sfc=pcpbg
+          cw_sfc=cwatbg
 c
 c LAPS_FUA doesn't require interp but we still want to recompute
 c pr_sfc, tp_sfc and sh_sfc using high res terrain
@@ -1767,7 +1775,7 @@ c
      +        ,prbght, prbguv, prbgsh, prbgww )
           deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
      +        ,vwbg_sfc,tdbg_sfc, tpbg_sfc, t_at_sfc, mslpbg, pcpbg
-     +        ,crefbg, tpwbg, swibg)
+     +        ,crefbg, tpwbg, cwatbg, swibg)
 
          endif !(linterp)
 
@@ -1837,7 +1845,7 @@ c              sfcgrid(i,j,kk+4)=missingflag
           enddo
           call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
      .,cmodel,missingflag,uw_sfc,vw_sfc,tp_sfc,t_sfc,qsfc
-     .,pr_sfc,mslp,td_sfc_hi,rp_sfc,pcp_sfc,istatus)
+     .,pr_sfc,mslp,td_sfc_hi,rp_sfc,pcp_sfc,cw_sfc,istatus)
           if(istatus.ne.1)then
             print*,'Error writing lgb - returning to main'
             return
