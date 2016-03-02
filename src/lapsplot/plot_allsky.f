@@ -317,7 +317,7 @@
      1                         ,i4_valid                ! O
      1                         ,istatus)                ! O
 
-          write(6,*)' a9time is ',a9time
+          write(6,*)' a9time (product info) is ',a9time
 
 !         Read Height
           if(c_prodtype .eq. 'A')then
@@ -434,7 +434,7 @@
      1          ,ext,var_2d,units_2d,comment_2d,clwc_3d,istat_lwc)
 !           call make_fnam_lp(i4time_lwc,a9time,istatus)
 !           call cv_i4tim_asc_lp(i4time_lwc,a24time,istatus)
-            i4time_solar = i4time_lwc
+            i4time_data  = i4time_lwc
           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'LWC'
             call get_lapsdata_3d(i4_initial,i4_valid
@@ -443,7 +443,7 @@
      1                              ,units_2d,comment_2d,clwc_3d
      1                              ,istat_lwc)
             call cv_i4tim_asc_lp(i4_valid,a24time,istatus)
-            i4time_solar = i4_valid
+            i4time_data  = i4_valid
           endif
 
           if(istat_lwc .ne. 1)then
@@ -636,6 +636,12 @@
 
           I4_elapsed = ishow_timer()
 
+          if(.true.)then ! experimental
+            i4time_solar = i4time_ref
+          else
+            i4time_solar = i4time_data
+          endif
+
 !         Calculate solar position for 2D array of grid points
           write(6,*)' call solar_position for 2D array'
           do i = 1,NX_L
@@ -809,7 +815,7 @@
 
         I4_elapsed = ishow_timer()
 
-        write(6,*)' a9time is ',a9time
+        write(6,*)' a9time (solar) is ',a9time
 
 !       Determine aod_ref as aerosol optical depth
         pw_ref = pw_2d(NX_L/2,NY_L/2)
@@ -904,6 +910,8 @@
               call equ_to_altaz_d(solar_dec,solar_ha,soundlat(iloc)
      1                           ,altdum,solar_az)               
               if(solar_az .lt. 0.)solar_az = solar_az + 360.
+              solar_lat = solar_dec
+              solar_lon = soundlon(iloc) - solar_ha
           else ! ensure consistency between both solar positions
               solar_alt = sol_alt_2d(i_obs,j_obs)
               solar_az = sol_azi_2d(i_obs,j_obs)              
@@ -1047,6 +1055,7 @@
      1                     ,alt_a_roll,azi_a_roll                   ! I
      1                     ,sol_alt_2d,sol_azi_2d                   ! I
      1                     ,solar_alt,solar_az                      ! I
+     1                     ,solar_lat,solar_lon                     ! I
      1                     ,alt_norm                                ! I
      1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
      1                     ,moon_mag,moon_mag_thr                   ! I
