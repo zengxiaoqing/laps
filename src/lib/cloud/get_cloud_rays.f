@@ -27,7 +27,8 @@
      1                           ,alt_norm                              ! I
      1                           ,moon_alt,moon_azi                     ! I
      1                           ,moon_mag,moon_mag_thr                 ! I
-     1                           ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon!I
+     1                           ,l_solar_eclipse,eobsc                 ! I
+     1                           ,rlat,rlon,lat,lon                     ! I
      1                           ,minalt,maxalt,minazi,maxazi           ! I
      1                           ,alt_scale,azi_scale                   ! I
      1                           ,grid_spacing_m,r_missing_data)        ! I
@@ -49,6 +50,11 @@
         curvat2(sdst,radius_start,altray) = 
      1       sqrt(sdst**2 + radius_start**2 
      1         - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
+
+        real*8 dsdst,dradius_start,daltray,dcurvat2
+        dcurvat2(dsdst,dradius_start,daltray) = 
+     1      sqrt(dsdst**2 + dradius_start**2 
+     1   - (2D0*dsdst*dradius_start*cosd(90D0+daltray))) - dradius_start      
         horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
         scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5
 
@@ -63,6 +69,8 @@
 !       Twilight GHI (http://www.lotek.com/blue_twilight.pdf)
         difftwi(altf) = ! W/m**2                      
      1  4. * exp(0.50 * altf - 0.108 * altf**2 - .0044 * altf**3)
+
+        yinterp(x1,x2,y1,y2,x) = y1 + ((x-x1)/(x2-x1)) * (y2-y1) 
 
         parameter (rpd = 3.14159 / 180.)
 
@@ -208,7 +216,7 @@
 !       Initialize
         airmass_2_cloud_3d = 0.
         airmass_2_topo_3d = 0.
-        dist_2_topo = 0.
+!       dist_2_topo = 0.
         topo_gti = 0.
         topo_albedo = 0.0 
         r_cloud_rad = 1.
@@ -711,6 +719,23 @@
 
          call get_val(ialt,minalt,alt_scale,altray)
 
+!        Fill in pseudo topo outside horizontal domain
+!        if(dist_2_topo(ialt,jazi) .eq. 0. .and. 
+!    1      view_altitude_deg .lt. -horz_dep_d)then
+!           dist_2_topo(ialt,jazi) = htstart / 
+!    1                               sind(-view_altitude_deg)
+!        endif
+
+         if(altray .lt. -horz_dep_d)then
+           call get_topo_info(altray,htstart,earth_radius,alt_norm
+     1                       ,dist_to_topo)
+         else
+           dist_to_topo = 0.
+         endif
+
+         dist_2_topo(ialt,:) = dist_to_topo ! initialize
+         grdasp = (alt_scale / azi_scale) 
+
          if(altray .ge. 20.)then     ! 2 deg alt, 2 deg azi
              if(ialt .eq. (ialt/idelt)*idelt)then
                  jazi_delt = nint(2. / azi_scale)
@@ -731,25 +756,31 @@
              if(jazi_delt .gt. 16 .and. jazi_delt .lt. 20)jazi_delt = 16
              if(jazi_delt .gt. 20 .and. jazi_delt .lt. 99)jazi_delt = 20
          elseif(htagl .gt. 30000e3)then  ! near geosynchronous
+             grdasp = (alt_scale / azi_scale) 
+     1              / cosd(min(abs(altray),89.999))
              jazi_delt_max = nint(8./azi_scale)
-             if    (altray .le. -89.775)then
+             if(altray .lt. 0.)then
+               if    (grdasp .ge. 256.0)then
                  jazi_delt = 256
-             elseif(altray .le. -89.55)then
+               elseif(grdasp .ge. 128.0)then
                  jazi_delt = 128                       
-             elseif(altray .le. -89.10)then
+               elseif(grdasp .ge. 64.0)then
                  jazi_delt = 64                       
-             elseif(altray .le. -88.21)then
+               elseif(grdasp .ge. 32.0)then
                  jazi_delt = 32                       
-             elseif(altray .le. -86.42)then
+               elseif(grdasp .ge. 16.0)then
                  jazi_delt = 16                       
-             elseif(altray .le. -82.82)then
+               elseif(grdasp .ge. 8.0)then
                  jazi_delt = 8                       
-             elseif(altray .le. -75.52)then
+               elseif(grdasp .ge. 4.0)then
                  jazi_delt = 4                       
-             elseif(altray .le. -60.00)then
+               elseif(grdasp .ge. 2.0)then
                  jazi_delt = 2                       
-             else
+               else
                  jazi_delt = 1                       
+               endif
+             else
+               jazi_delt = 1                       
              endif
              jazi_delt = min(jazi_delt,jazi_delt_max)
          else                        ! alt_scale, azi_scale
@@ -765,7 +796,8 @@
          call get_htmin(altray,patm,htstart,earth_radius,1,patm2,htmin)
 
          if(htstart .gt. 100000. .and. altray .lt. 0.)then
-          write(6,*)'altray/htmin = ',altray,htmin
+          write(6,*)'altray/htmin/dist_to_topo = '
+     1              ,altray,htmin,dist_to_topo
          endif
 
          if(altray .eq. -63.5 .or. altray .eq. -87.)then
@@ -773,10 +805,11 @@
          endif
 
          if(altray .eq. nint(altray) .and. htstart .lt. 40000.)then
-           write(6,*)'alt/jazi_delt',ialt,altray,jazi_delt
+           write(6,*)'alt/jazi_delt/grdasp',ialt,altray,jazi_delt,grdasp
          endif
 
          altray_limb = altray + horz_dep_d
+         radius_limb = 90. - horz_dep_d
 
          do jazi = minazi,maxazi,jazi_delt
           view_azi_deg = float(jazi) * azi_scale
@@ -789,7 +822,7 @@
      1         abs(altray) .eq. 16. .or.
      1         altray .eq. -7.5 .or.
      1         abs(altray) .eq. 21.00 .or.
-     1         (altray_limb .ge. -3. .and. altray_limb .le. 2.) .or.
+     1         (abs(altray_limb) / radius_limb .le. 0.04) .or.
      1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
      1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
      1         abs(altray) .eq. 75.) 
@@ -845,6 +878,8 @@
           frac_fntcloud = 1.0
           ray_topo_diff_h = htagl ! 0.
           ray_topo_diff_m = 0.
+          ichecksum = 0
+          box_max = 0.
 
           if(.true.)then
 !           do k = ksfc,ksfc
@@ -1106,7 +1141,8 @@
 !                   gc_deg = (dxy1_h/radius_start)/rpd
                   else ! need more accuracy
                     slant1_h = dslant1_h
-                    dz1_h = curvat2(slant1_h,radius_start_eff,altray)
+                    dz1_h = dcurvat2(dslant1_h,dble(radius_start_eff)
+     1                                        ,dble(altray))   
                     gc_deg = asind(cosd(altray) 
      1                     * dslant1_h / (radius_start+dz1_h)) 
                   endif
@@ -1147,7 +1183,7 @@
 !               Extra verbose
                 if(altray .le. -60. .and. 
      1              (idebug .eq. 1))then
-                  if(ls .le. 10 .or. ls .eq. 100 .or. ls .eq. 1000
+                  if(ls .le. 15 .or. ls .eq. 100 .or. ls .eq. 1000
      1                          .or. ls .eq. 10000)then
                     write(6,61)ls,rk,ht_h,dslant1_h,slant1_h
 61                  format('  ls/rk/ht/dsl1/sl1 =',i6,f9.3,f10.0,2f10.0)
@@ -1193,8 +1229,24 @@
                    TLon=rLon-DLon
                   EndIf
 
-                  call latlon_to_rlapsgrid(tlat,tlon,lat,lon,ni,nj
-     1                                    ,rinew_h,rjnew_h,istatus)
+                  if(.false.)then ! speed test
+                    call latlon_to_rlapsgrid(tlat,tlon,lat,lon,ni,nj
+     1                                      ,rinew_h,rjnew_h,istatus)
+                  else ! assume a lat/lon grid
+                    if(tlon .gt. 180.)then
+                        tlon1 = tlon - 360.
+                    elseif(tlon .lt. -180.)then
+                        tlon1 = tlon + 360.
+                    else
+                        tlon1 = tlon
+                    endif
+                    rinew_h = yinterp(lon(1,1),lon(ni,1)
+     1                               ,1.,float(ni),tlon1)
+                    rinew_h = min(max(rinew_h,1.),float(ni))
+                    rjnew_h = yinterp(lat(1,1),lat(1,nj)
+     1                               ,1.,float(nj),tlat)
+                    rjnew_h = min(max(rjnew_h,1.),float(nj))
+                  endif
                  
                  else ! more approximate
                   dx1_l = dxy1_l * xcos
@@ -1216,6 +1268,11 @@
                   rjnew_h = rj + rjdelt_h
 
                  endif ! l_spherical
+
+!                Can be used to target box boundaries
+!                dids = (rinew_h - rinew_l) / slant2
+!                djds = (rjnew_h - rjnew_l) / slant2
+!                dkds = (rknew_h - rknew_l) / slant2
 
                  rinew_m = 0.5 * (rinew_l + rinew_h)
                  rjnew_m = 0.5 * (rjnew_l + rjnew_h)
@@ -1258,9 +1315,15 @@
                   tri_coeff(2,2,1) = fi      *     fj  * (1.- fk)
                   tri_coeff(2,2,2) = fi      *     fj  *      fk
 
+!                 Update box_max only if crossed into new box
+!                 ichecksum_last = ichecksum; ichecksum = i1+j1+k1
+!                 if(ichecksum .ne. ichecksum_last)then
+                    box_max = maxval(cond_3d(i1:i2,j1:j2,k1:k2))
+!                 endif
+
                   if(cvr_path_sum .le. cvr_path_thr)then ! consider clouds
 !                   Cloud present on any of 8 interpolation vertices
-                    if(maxval(cond_3d(i1:i2,j1:j2,k1:k2) ) .gt. 0.)then
+                    if(box_max .gt. 0.)then
                       cond_m = sum(tri_coeff(:,:,:) * 
      1                             cond_3d(i1:i2,j1:j2,k1:k2))
 
@@ -1333,7 +1396,7 @@
                     i1 = max(min(int(rinew_m),ni-1),1)
                     fi = rinew_m - i1
                     i2 = i1+1
-                    j1 = min(int(rjnew_m),nj-1)
+                    j1 = max(min(int(rjnew_m),nj-1),1)
                     fj = rjnew_m - j1
                     j2 = j1+1
 
@@ -1418,7 +1481,9 @@
      1                         * airmass2                     
                   endif  
 
-                  if(rk_m .lt. (rkstart + 1.0))then ! near topo
+!                 Check whether near start of ray and near topo
+                  if(rk_m .lt. (rkstart + 1.0) .AND. 
+     1               htagl .lt. 1000.)then
 !                 if(.false.)then ! near topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
      1                          * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
@@ -1728,13 +1793,15 @@
 
 !             Extra verbose
               if(idebug .eq. 1 .and. altray .lt. 0.)then
-                write(6,*)'   ls/rk/ht = ',ls,rk,ht_h,' eor'
-                write(6,113)ls,rk,rk_h,rk_m,ht_h,ihit_topo,ihit_bounds
+                write(6,113)ls,rk,ht_h,trace_ri(ialt,jazi)
+     1                                ,trace_rj(ialt,jazi)
+113             format('   ls/rk/ht = ',i4,f8.3,f12.1,' eor trij',2f8.2) 
+                write(6,114)ls,rk,rk_h,rk_m,ht_h,ihit_topo,ihit_bounds
      1                     ,iabove,gc_deg,dslant1_h,dz1_h,tlat,tlon
      1                     ,cvr_path_sum,idebug
-113             format(' end of ray ',
+114             format(' end of ray ',
      1      'ls/rk3/ht/ihit-tb/iab/gc/sl1h/dz1h/latlon/cvr/idebug'
-     1                ,i6,3f10.3,f10.1,3i3,f9.3,2f11.1,2f9.2,f7.2,i3)           
+     1              ,i6,3f10.3,f10.1,3i3,f9.3,f12.1,f12.0,2f9.2,f7.2,i3)
               endif        
 
           endif ! true
@@ -1790,13 +1857,6 @@
      1                                              ,2f9.3,f9.1)
             endif
 
-!           Fill in pseudo topo outside horizontal domain
-!           if(dist_2_topo(ialt,jazi) .eq. 0. .and. 
-!    1         view_altitude_deg .lt. -horz_dep_d)then
-!              dist_2_topo(ialt,jazi) = htstart / 
-!    1                                  sind(-view_altitude_deg)
-!           endif
-
           endif
 
 !         end include 'skyglow.inc'
@@ -1806,6 +1866,7 @@
 !        I4_elapsed = ishow_timer()
 
 !        Get clear sky twilight brightness in ring of constant altitude
+!        Approximate method used only in deep twilight
 !        if(sol_alt(i,j) .le. 0.)then
          if(sol_alt(i,j) .le. twi_0 .and. 
      1      sol_alt(i,j) .ge. (-horz_dep_d - 18.0))then ! narrower range
@@ -1956,6 +2017,7 @@
         enddo 
         enddo
 
+!       We normally fill missing rings above 20 degrees 
         call get_idx(20.,minalt,alt_scale,ialt_min)
         call get_idx(maxalt_deg,minalt,alt_scale,ialt_max)
 
@@ -2174,5 +2236,39 @@
 
         write(6,*)' returning from get_cloud_rays'
  
+        return
+        end
+
+        subroutine get_topo_info(alt,htmsl,earth_radius,alt_norm
+     1                          ,dist_to_topo)
+
+        real alt                  ! I elevation angle
+        real htmsl                ! I observer height MSL
+        real earth_radius         ! I earth radius (meters)
+        real alt_norm             ! O elevation angle rel to sfc normal
+        real dist_to_topo         ! O distance to sfc (meters)
+
+!       Altitude relative to surface normal (emission angle)
+        if(alt .ne. 0.)then
+          slope = tand(90. - abs(alt))
+          htrad = (earth_radius+htmsl) / earth_radius
+          c = htrad * slope
+          call line_ellipse(slope,c,0.,0.,1.,1.,r_missing_data,x1,x2
+     1                                                        ,y1,y2)
+          gc = atan2d(+y1,-x1) ! great circle dist to ground pt
+          if(alt .gt. 0.)then
+            alt_norm = alt - gc
+          else
+            alt_norm = alt + gc
+          endif
+          distrad = sqrt((htrad+x1)**2 + y1**2)
+          dist_to_topo = distrad * earth_radius
+
+          write(6,1)distrad,htrad,x1,y1
+ 1        format(' distrad,htrad,x1,y1',4f13.8)
+        else
+          alt_norm = 0.  
+        endif
+
         return
         end
