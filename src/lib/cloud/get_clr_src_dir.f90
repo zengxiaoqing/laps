@@ -224,6 +224,10 @@
      curvat2(sdst,radius_start,altray) = &
              sqrt(sdst**2 + radius_start**2 &
                - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
+     real*8 dsdst,dradius_start,daltray,dcurvat2
+     dcurvat2(dsdst,dradius_start,daltray) = &
+              sqrt(dsdst**2 + dradius_start**2 &
+       - (2D0*dsdst*dradius_start*cosd(90D0+daltray))) - dradius_start      
      expbl(x) = exp(max(x,-80.))
 
      real tausum_a(nsteps)
@@ -331,7 +335,7 @@
      htbotill = -(htmsl + 500.)
 
      if(idebug .eq. 1)then
-       write(6,*)'         sbar     htbar   dtau_g   dtau_a    tausum  dsolalt      ags     aas   od_sol_g  od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'           sbar    htbar_msl   dtau_g   dtau_a    tausum  dsolalt      ags     aas   od_sol_g  od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -344,14 +348,16 @@
          frac_iso_a = 0.5
      endif
 
-     do i = istart,nsteps
+     iend = max(istart+50000,nsteps)
+
+     do i = istart,iend ! nsteps
          sbar = (float(i)-0.5) * ds
 
 !        htbar = sbar * sind(viewalt)            ! Works at low altitude
 !        htbar = htbar + sbar**2 / (rearg * r_e) ! Works at LEO   
-         htbar = curvat2(sbar,radius_start_eff,viewalt) ! Works at GEO
+!        htbar = curvat2(sbar,radius_start_eff,viewalt) ! Works at GEO
 !        Works from moon
-!        htbar = curvat2(dble(sbar),dble(radius_start_eff),dble(viewalt)) 
+         htbar = dcurvat2(dble(sbar),dble(radius_start_eff),dble(viewalt)) 
 
          htbar_msl = htbar+htmsl
          xybar = (sbar - refdist_solalt) * cosd(viewalt)
@@ -481,13 +487,14 @@
          sumi_extrap = (sumi_mean * frac_opac) + (1.-frac_opac) * rad
 
          if(idebug .eq. 1)then
-           if(i .le. 10 .or. ((i .eq. (i/25)*25) .and. i .le. 400) .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
+!          if(i .le. 10 .or. ((i .eq. (i/25)*25) .and. i .le. 400) .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
+           if((i .le. 10 .or. i .eq. (i/25)*25) .and. htbar_msl .gt. 0. .and. htbar_msl .le. 110e3)then
              if(sol_occ.gt.0.)then
                write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
              endif
 12           format(33x,'   horz_dep/solalt/htmin/sol_occ = ',2f8.2,f9.0,f8.3,3f9.4)
-             write(6,11)i,sbar,htbar,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i6,f9.0,f9.1,2e10.3,f8.4,f9.4,f10.2,4f9.4,e9.2,2f11.8,2f9.4,2f9.4)
+             write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+11           format(i6,f11.0,f12.1,2e10.3,f8.4,f9.4,f10.2,4f9.4,e9.2,2f11.8,2f9.4,2f9.4)
            endif
          endif
      enddo ! i
@@ -495,7 +502,7 @@
 900  continue
 
      if(idebug .eq. 1)then
-       write(6,11)i,sbar,htbar,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+       write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
        if(sol_occ.gt.0.)write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
      endif
 
@@ -524,6 +531,10 @@
      curvat2(sdst,radius_start,altray) = &
              sqrt(sdst**2 + radius_start**2 &
                - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
+     real*8 dsdst,dradius_start,daltray,dcurvat2
+     dcurvat2(dsdst,dradius_start,daltray) = &
+              sqrt(dsdst**2 + dradius_start**2 &
+       - (2D0*dsdst*dradius_start*cosd(90D0+daltray))) - dradius_start      
      expbl(x) = exp(max(x,-80.))
 
      real tausum_a(nsteps)
@@ -594,7 +605,7 @@
      endif ! i
 
      if(idebug .eq. 1)then ! substitute radg/rada?
-       write(6,*)'         sbar     htbar     htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g    sumi_a  opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'         sbar      htbar      htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g    sumi_a  opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -608,7 +619,8 @@
 !      htbar = sbar * sind(viewalt)
 !      xybar = sbar * cosd(viewalt)
 !      htbar = htbar + curvat(xybar,earth_radius*(4./3.)) ! Earth Curvature
-       htbar = curvat2(sbar,radius_start_eff,viewalt)
+!      htbar = curvat2(sbar,radius_start_eff,viewalt) ! From GEO
+       htbar = dcurvat2(dble(sbar),dble(radius_start_eff),dble(viewalt)) ! From Moon
        htbar_msl = htbar+htmsl
        if(htbar_msl .lt. httopill)then
          xybar = (sbar - refdist_solalt) * cosd(viewalt)
@@ -699,7 +711,7 @@
          if(idebug .eq. 1)then
 !          if(i .le. 10)then
              write(6,11)i,sbar,htbar,htbar_msl,dtau,tausum,dsolalt,alphabar_g,alphabar_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i6,f10.0,f10.0,f9.0,f9.4,f9.6,f9.4,2f9.6,9f9.4)
+11           format(i6,f11.0,f11.0,f9.0,f9.4,f9.6,f9.4,2f9.6,9f9.4)
 !          endif
          endif
        endif ! htbar < httopill
