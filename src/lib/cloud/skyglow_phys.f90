@@ -4,6 +4,7 @@
                    ,jazi_start,jazi_end,jazi_delt,azi_scale        &! I
                    ,minalt,maxalt,minazi,maxazi,idebug_a           &! I
                    ,sol_alt,sol_azi,view_alt,view_az,twi_0,twi_alt &! I
+                   ,sol_lat,sol_lon                                &! I
                    ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt &! I
                    ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir  &! I
                    ,aod_ref,aero_scaleht,dist_2_topo               &! I
@@ -32,6 +33,7 @@
 
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
         angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
+        angdist(p1,p2,dlon) = acosd(sind(p1) * sind(p2) + cosd(p1) * cosd(p2) * cosd(dlon))
         scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
         curvat(hdst,radius) = hdst**2 / (2. * radius)
         expbh(x) = exp(min(x,+80.))
@@ -291,13 +293,14 @@
            jazi_delt_topo = maxazi-minazi
          else
            jazi_delt_topo = int(1./cosd(altray))
+           jazi_delt_topo = min(jazi_delt_topo,8)
          endif
          l_topo_a = .false.
          l_topo_a(minazi:maxazi:jazi_delt_topo) = .true.
-!        write(6,*)'topo az delt at alt:',altray,jazi_delt_topo
+         write(6,*)'topo az delt at alt:',altray,jazi_delt_topo
 
 !        Determine src term and ratio with zenith value
-         if(sol_alt .gt. 0.)then
+         if(sol_alt .gt. 0. .and. htmsl .lt. 50000e3)then
            do ic = 1,nc
              od_g_vert = ext_g(ic) * patm
              od_o_vert = ext_o(ic) * patm_o3(htmsl)
@@ -367,6 +370,9 @@
 
              endif ! l_solar_eclipse
            enddo ! ic
+         else
+           sumi_gc(:) = 0.
+           sumi_ac(:) = 0.
          endif ! solalt > 0
 
 !        Determine aerosol multiple scattering order
@@ -454,7 +460,7 @@
 
 !               azi_ref = 175. ! volcanic test
 !               azi_ref = 340. ! 300km test
-!               azi_ref = 128. ! limb test  
+                azi_ref = 315. ! limb test  
 
                 if(view_azi_deg .eq. azi_ref.AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
 !               if(abs(180. - view_azi_deg) .eq. 1.0 .AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
@@ -471,7 +477,7 @@
                 if(idebug_clr .eq. 1)then
                   write(6,68)ialt,jazi,ic,sol_alt,altray,view_azi_deg &
                             ,dmintopo,dmaxtopo,ao
-68                format(/' call   get_clr_src_dir_low',i4,2i5,3f8.2,2f9.0,f9.3)
+68                format(/' call   get_clr_src_dir_low',i6,2i5,3f8.2,2f9.0,f9.3)
 !                 write(6,*)'sol_azi,azi_ref,jazi_d10',sol_azi,azi_ref,jazi_d10
                 endif
                 if(aa_90 .gt. 0.)then
@@ -487,18 +493,23 @@
                   if(altray .gt. 0.)then
                     refdist_solalt = 0.
                     solalt_ref = sol_alt
-                  else ! is refdist_solalt generalized enough?
+                  else ! refdist_solalt is hopefully generalized enough
 !                   distance to limb
                     refdist_solalt = sqrt( (earth_radius+htmsl)**2 &
                                           - earth_radius**2       )
                     if(trace_solalt(ialt,jazi) .ne. sol_alt)then ! valid trace
                       solalt_ref = trace_solalt(ialt,jazi)
                     else ! angular distance to htmin
-                      solalt_ref = sol_alt - (altray*cosd(view_azi_deg-sol_azi))
-                      solalt_ref = min(solalt_ref,+180.-solalt_ref)
-                      solalt_ref = max(solalt_ref,-180.-solalt_ref)
+                      gcdist_km = (horz_dep * rpd * earth_radius) / 1000.
+                      call RAzm_Lat_Lon_GM(rlat,rlon,gcdist_km &
+                             ,view_azi_deg,rlat_limb,rlon_limb,istatus)
+                      solzen_ref = angdist(rlat_limb,sol_lat &
+                                          ,rlon_limb-sol_lon)
+                      solalt_ref = 90. - solzen_ref
                     endif
                     if(idebug_clr .eq. 1)then
+                      write(6,681)rlat,rlon,sol_lat,sol_lon,rlat_limb,rlon_limb,gcdist_km
+681                   format(' lat-lon obs/sol/limb = ',6f8.2,' gc = ',f9.0)
                       write(6,*)'salt/tr/ref',sol_alt,trace_solalt(ialt,jazi),solalt_ref
                     endif
                   endif
@@ -523,7 +534,7 @@
                 if(idebug_clr .eq. 1)then
                   write(6,69)ialt,jazi,ic,sol_alt,trace_solalt(ialt,jazi),altray &
                             ,srcdir(ic),srcdir_a(ic,jazi)
-69                format(' called get_clr_src_dir_low',i4,2i5,3f8.2,2f9.4/)
+69                format(' called get_clr_src_dir_low',i6,2i5,3f8.2,2f9.4/)
                 endif
 
               else ! use generic values for azimuths every 10 degrees
@@ -902,7 +913,7 @@
                     else
                       idebug_topo = 0
                     endif
-                    if(altray .le. -80. .and. jazi .eq. 2048)then ! limb test
+                    if(altray .le. -89.02 .and. altray .ge. -89.12 .and. jazi .eq. 2048)then ! limb test
                       idebug_topo = 1
                     endif
 
@@ -913,8 +924,31 @@
                     endif
 
                     if(htmsl .gt. 150e3)then ! highalt strategy
+
+!                     Strategy from above dir_low section
+                      if(altray .gt. 0.)then
+                        refdist_solalt = 0.
+                        solalt_ref = sol_alt
+                      else ! is refdist_solalt generalized enough?
+!                       distance to limb
+                        refdist_solalt = sqrt( (earth_radius+htmsl)**2 &
+                                              - earth_radius**2       )
+                        if(trace_solalt(ialt,jazi) .ne. sol_alt)then ! valid trace
+                          solalt_ref = trace_solalt(ialt,jazi)
+                        else ! should consider angular distance to surface
+                          solalt_ref = sol_alt - (altray*cosd(view_azi_deg-sol_azi))
+                          solalt_ref = min(solalt_ref,+180.-solalt_ref)
+                          solalt_ref = max(solalt_ref,-180.-solalt_ref)
+                        endif
+!                       if(idebug_clr .eq. 1)then
+!                         write(6,*)'salt/tr/ref',sol_alt,trace_solalt(ialt,jazi),solalt_ref
+!                       endif
+                      endif
+
+!                     Alternative strategy
                       refdist_solalt = dist_2_topo(ialt,jazi)
-                      solalt_ref = topo_solalt(ialt,jazi)
+!                     solalt_ref = topo_solalt(ialt,jazi)
+
                     else
                       refdist_solalt = 0.
                       solalt_ref = sol_alt
@@ -936,7 +970,7 @@
                     if(idebug_topo .gt. 0)then
                       write(6,81)ialt,jazi,ic,sol_alt,altray &
                          ,dist_2_topo(ialt,jazi),sumi_gct(ic),sumi_act(ic)
-81                    format(' called get_clr_src_dir_topo',i5,i5,i4,2f8.2,f10.0,2f9.4)
+81                    format(' called get_clr_src_dir_topo',i7,i5,i4,2f8.2,f11.0,2f9.4)
                     endif ! write log info
                   endif ! call get_clr_src_dir_topo
 
@@ -1015,7 +1049,7 @@
                        ,trace_solalt(ialt,jazi),mode_sky,od_a &
                        ,dist_2_topo(ialt,jazi),aodf,aodfo,clear_rad_c(:,ialt,jazi)
 111           format('alt/azi/salt-t-t/mode/od_a/dst/aodf/aodfo/clrrd' &
-                    ,2f6.1,1x,3f7.2,i3,f12.5,f10.0,2f9.4,3e14.5)
+                    ,f7.2,f6.1,1x,3f7.2,i3,f12.5,f11.0,2f9.4,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
