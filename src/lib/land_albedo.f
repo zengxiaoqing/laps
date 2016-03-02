@@ -94,6 +94,7 @@
      1                         ,albedo,istatus)
 
       use ppm
+      use mem_namelist, ONLY: c6_maproj 
 
 !     Read and interpolate from sector of Blue Marble Image
 !     See code in /scratch/staging/fab/albers/nasa
@@ -105,6 +106,8 @@
 
 !     convert -crop 2000x2000+12000+9000 -compress none
 !     world.200404.3x21600x21600.A1.png world.200404.3x21600x21600.A1.crop2.ppm
+!     convert -compress none
+!     world.200408.3x5400x2700.png world.200408.3x5400x2700.ppm
 
       character*255 directory
       character*255 file,file_bm 
@@ -157,7 +160,13 @@
         write(6,*)
      1' Blue Marble binary file is absent, generate and create it'       
 
-      file=trim(directory)//'world.200405.3x21600x21600.crop.ppm'
+      if(c6_maproj .ne. 'latlon')then ! local domain
+        file=trim(directory)//'world.200405.3x21600x21600.crop.ppm'
+        pix_latlon = 1. / 240.
+      else ! assume latlon global projection
+        file=trim(directory)//'world.200408.3x5400x2700.ppm'
+        pix_latlon = 1. / 15.
+      endif
 
       write(6,*)' Open for reading ',trim(file)
 
@@ -184,7 +193,6 @@
       write(6,5)rnorth,south,east,west
 5     format('  NSEW Domain 0.2deg perimeter',4f9.3)                 
 
-      pix_latlon = 1. / 240.
 !     rlat_start =   90. - 11000. * pix_latlon
 !     rlon_start = -180. + 17000. * pix_latlon
       rlat_start = rnorth                         
