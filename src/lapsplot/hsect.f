@@ -2185,12 +2185,12 @@ c
               scale_h = cloud_albedo_a! for image plots
              elseif(var_2d.eq.'SVS')then
               c_label='VIS counts (raw) - '//c_sat_id(k)
-              scale_l = 30.           ! for image plots
-              scale_h = 100.          ! for image plots
+              scale_l = 35.           ! for image plots
+              scale_h = 210.          ! for image plots
              else
               c_label='VIS counts (normalized) - '//c_sat_id(k)
-              scale_l = 30.           ! for image plots
-              scale_h = 230.          ! for image plots
+              scale_l = 20.           ! for image plots
+              scale_h = 110.          ! for image plots
              endif
 
              call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
