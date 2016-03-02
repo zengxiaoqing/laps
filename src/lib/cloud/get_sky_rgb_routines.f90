@@ -710,7 +710,7 @@
                       aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
                       if(abs(alt_obj-altg) .le. 0.15)then                  
 !                       write(6,*)' Calling antialias_ellipse with iverbose = 1'
-                        call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit,0,0,1)
+                        call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit,0,0,0)
                       else
 !                       write(6,*)' Calling antialias_ellipse with iverbose = 0'
                         call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit,0,0,0)
@@ -766,7 +766,7 @@
                       ricen = (azi_obj-azig)/azi_scale
                       rjcen = (alt_obj-altg)/alt_scale
                       aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
-                      call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit1,0,0,1)
+                      call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit1,0,0,0)
                     endif
 
 !                   Consider second "object" for obscuration or phase
@@ -777,7 +777,7 @@
                       rjcen = (alt_obj2-altg)/alt_scale
                       aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
                       call antialias_ellipse(radius_pix2,ricen,rjcen &
-                                            ,aspect_ratio,frac_lit2,0,0,1)
+                                            ,aspect_ratio,frac_lit2,0,0,0)
 
 !                     Thresholded and Random strategies are being tested. 
 !                     It might work better for the 'antialias_ellipse' 
@@ -806,7 +806,7 @@
                       frac_lit = frac_lit1
                     endif
 
-                    write(6,89)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
+!                   write(6,89)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
 89                  format(' altga-t/alt_obj/azig/azi_obj/distd/frac_lit =',2i5,6f9.3,2f7.2,f7.4)
 
                     if(frac_lit .gt. 0.)then
