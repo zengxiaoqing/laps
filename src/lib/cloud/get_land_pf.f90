@@ -21,6 +21,7 @@
         ph_exp(ampl1,azidiff1) = exp(ampl1 * cosd(azidiff1)) / (1. + abs(ampl1)*.16)
         hg_cyl(g,pha) = hg(g,pha) / (1. + 1.3*g**2)   ! integrate to ~1
         fslope(x,s) = s*x - (s-1.)*x**((s+1.)/s)
+        angdist(p1,p2,dlon) = acosd(sind(p1) * sind(p2) + cosd(p1) * cosd(p2) * cosd(dlon))
 
         real elong_a(ni,nj)
         real alt_a(ni,nj)           ! 90. - u
@@ -66,8 +67,9 @@
 !           topo_salt = sol_alt + gnd_arc
             specangvert = abs(emis_ang - topo_solalt(i,j))
             specangvert2 = specangvert * sind(emis_ang)
-            azidiff2 = azidiff * cosd(emis_ang)
-            specang = sqrt(specangvert**2 + azidiff2**2)
+            azidiff2 = azidiff / sind(max(emis_ang,.001))
+!           specang = sqrt(specangvert**2 + azidiff2**2)
+            specang = angdist(emis_ang,topo_solalt(i,j),azidiff2)
 
 !           Land surface type
 !           fland = scurve((1. - topo_albedo(2,i,j))**2)
