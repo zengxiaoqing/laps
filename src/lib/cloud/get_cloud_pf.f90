@@ -60,13 +60,18 @@
             hgp = max(cloud_od_liq,1.0)       ! multiple scattering phase func
             sco = hgp
 
+            bf = 0.06
+
 !           Check for being optically thin with direct light source
-            clwc_bin1 = exp(-(cloud_od_liq/10.)**2) ! optically thin
+!           clwc_bin1 = exp(-(cloud_od_liq/10.)**2) ! optically thin
+            clwc_bin1 = 1. -                      & ! optically thin
+                (bf * cloud_od_liq / (1. + bf * cloud_od_liq))
             clwc_bin1 = clwc_bin1 * r_cloud_rad(i,j)**10. ! direct lighting
-            clwc_bin1a = 0.80**sco             ! forward peak
-!           clwc_bin1c = opac(0.00*sco)        ! backscattering
-            clwc_bin1b = 1.0 - (clwc_bin1a)    ! mid    
-            clwc_bin2 = 1.0 - clwc_bin1        ! optically thick 
+            clwc_bin1a = 0.80**sco                  ! forward peak
+            clwc_bin1b =  1.08 - (clwc_bin1a)       ! mid    
+            clwc_bin1c =  0.02 ! opac(0.00*sco)     ! backscattering
+            clwc_bin1d = -0.10 ! opac(0.00*sco)     ! backscattering
+            clwc_bin2 = 1.0 - clwc_bin1             ! optically thick 
 
 !           Derived using phase function of Venus (a thick cloud analog)
 !           Specifically the Venus phase angle magnitude corr
@@ -108,7 +113,8 @@
               pf_clwc(ic) &
              = clwc_bin1a * clwc_bin1 * hg(asy_clwc(ic)**hgp,elong_a(i,j))& ! corona
              + clwc_bin1b * clwc_bin1 * hg(.60**hgp         ,elong_a(i,j))&
-!            + clwc_bin1c * clwc_bin1 * hg(.00              ,elong_a(i,j))&
+             + clwc_bin1c * clwc_bin1 * hg(-.60             ,elong_a(i,j))&
+             + clwc_bin1d * clwc_bin1 * hg(-.00             ,elong_a(i,j))&
 !            + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
 !            + clwc_bin2  * 2.0    ! add albedo term?     
              + clwc_bin2  * pf_thk ! add albedo term?     
