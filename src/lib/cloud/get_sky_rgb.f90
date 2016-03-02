@@ -10,6 +10,7 @@
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,trace_solalt,          &     ! I
                    alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
+                   sol_lat,sol_lon, &                                   ! I
                    minalt,maxalt,minazi,maxazi, &                       ! I
                    twi_0,horz_dep,solalt_limb_true, &                   ! I
                    moon_alt,moon_az,moon_mag,corr1_in,exposure, &       ! I
@@ -88,7 +89,7 @@
         integer idebug_a(ni,nj), idebug_pf(ni,nj)
         real cld_radt(nc), cld_radb(nc), cld_rad(nc), sky_rad(nc)
         real rintensity(nc), cld_rgb_rat(nc), glow_cld_c(nc), ref_nl(nc)
-        real rad_sec_cld(nc), albedo_sfc(nc)
+        real rad_sec_cld(nc), rad_sec_cld_top(nc), albedo_sfc(nc)
         real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
         real pf_land(nc,ni,nj)
         real bkscat_alb(ni,nj)
@@ -106,7 +107,7 @@
         logical l_solar_eclipse, l_sun_behind_terrain
 
         write(6,1)sol_alt,horz_dep,solalt_limb_true
-1       format(' get_sky_rgb: sol_alt/horz_dep/solalt_limb_true = ',3f9.2)
+1       format(' get_sky_rgb: sol_alt/horz_dep/solalt_limb_true = ',3f9.3)
         write(6,*)' moon alt/az/mag = ',moon_alt,moon_az,moon_mag
         write(6,*)' range of r_cloud_rad is ',minval(r_cloud_rad),maxval(r_cloud_rad)
 
@@ -216,7 +217,8 @@
 
         endif
 
-        write(6,*)' rad_sec_cld (top of code) = ',rad_sec_cld(:)
+        rad_sec_cld_top(:) = rad_sec_cld(:)
+        write(6,*)' rad_sec_cld (top of code) = ',rad_sec_cld_top(:)
 
 !       First arg (altmidcorr) increase will brighten all altitudes
 !       Second arg increase will darken shallow twilight and brighten
@@ -309,9 +311,8 @@
             moon_cond_clr = 0
         endif
 !       if(htmsl .gt. 1000e3)then
-!           azid1 = 215. ; azid2 = 215. ! custom
+!           azid1 = 200. ; azid2 = 210. ! high custom
 !       endif
-!       azid1 = 179. ; azid2 = 181. ! custom volcanic
 
         write(6,*)' azid1/2 are at ',azid1,azid2
 
@@ -340,11 +341,14 @@
                      ,elong_s                                 )      ! O
         endif
 
+        radius_limb = 90. - horz_dep
+
         do j = 1,nj
         do i = 1,ni
             if(abs(azi_a(i,j)-azid1) .le. .001 .OR. & 
                abs(azi_a(i,j)-azid2) .le. .001     )then ! constant azimuth
-                if(abs(alt_a(i,j)+horz_dep) .le. 3.4)then ! near horizon/limb
+                altray_limb = alt_a(i,j) + horz_dep
+                if(abs(altray_limb) / radius_limb .le. 0.04)then ! near horizon/limb
                     idebug_a(i,j) = 1
                 elseif(abs(alt_a(i,j)) .le. 20. .AND. &
                        alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
@@ -360,18 +364,24 @@
                     idebug_a(i,j) = 1
                 elseif(alt_a(i,j) .eq. float((nint(alt_a(i,j))/5)*5))then
                     idebug_a(i,j) = 1
+                elseif(i .ge. 110 .and. i .le. 130)then
+                    idebug_a(i,j) = 1
                 elseif(abs(topo_solalt(i,j) - (-4.5)) .le. 2.0 .AND. &
                         htmsl .gt. 1000e3 .AND. alt_a(i,j) .le. -75.)then
                     idebug_a(i,j) = 1
                 endif
             endif
-            if(abs(alt_a(i,j)+horz_dep) .le. 0.1 .AND. azi_a(i,j)/1. .eq. nint(azi_a(i,j)/1.))then
-                idebug_a(i,j) = 1
-            endif
-!           if(alt_a(i,j) .ge. -07.5 .and. alt_a(i,j) .le. -07.5 .and. &
-!              azi_a(i,j) .ge. 345.0 .and. azi_a(i,j) .le. 347.0)then
+!           if(abs(alt_a(i,j)+horz_dep) .le. 0.1 .AND. azi_a(i,j)/10. .eq. nint(azi_a(i,j)/10.))then
 !               idebug_a(i,j) = 1
 !           endif
+!           if(alt_a(i,j) .ge. -89.254 .and. alt_a(i,j) .le. -89.25 .and. &
+!              azi_a(i,j) .ge. 200.0  .and. azi_a(i,j) .le. 210.0)then
+!               idebug_a(i,j) = 1
+!           endif
+            if(i .eq. 81 .AND. & ! azi slice
+               azi_a(i,j) .ge. 196.0  .and. azi_a(i,j) .le. 210.0)then
+                idebug_a(i,j) = 1
+            endif
         enddo ! i
         enddo ! j
 
@@ -521,6 +531,7 @@
                      ,minazi,maxazi,1,azi_scale &                      ! I
                      ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,sol_alt,sol_az,alt_a,azi_a,twi_0,twi_alt &       ! I
+                     ,sol_lat,sol_lon &                                ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
@@ -574,6 +585,7 @@
                      ,minazi,maxazi,1,azi_scale &                      ! I
                      ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,moon_alt,moon_az,alt_a,azi_a,twi_0,twi_alt &     ! I
+                     ,sol_lat,sol_lon &                                ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
@@ -693,7 +705,7 @@
 !         if(sol_alt .ge. -2.0)then     ! daylight
           if(sol_alt .ge. twi_alt)then  ! daylight
             write(6,11)
-11          format('    i   j   alt   azi  elong   pf_scat     opac     od /         species            alb    cloud airmass   rad', &
+11          format('    i   j    alt   azi  elong   pf_scat     opac     od /         species            alb    cloud airmass   rad', &
                    '   rinten  airtopo   gtitopo topoalb aodill  topood topovis cld_visb   glow      skyrgb')
           elseif(sol_alt .ge. -16.)then ! twilight
             write(6,12)
@@ -710,6 +722,7 @@
 
         do j = 1,nj
         do i = 1,ni
+          rad_sec_cld(:) = rad_sec_cld_top(:)
 
           sky_rgb(:,i,j) = 0.          
           clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i) &
@@ -785,11 +798,14 @@
               call nl_to_RGB(cld_rad(:),glwmid,contrast & 
                         ,128.,0,rintensity(1),rintensity(2),rintensity(3))
 
-              if( ( idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .eq. nint(alt_a(i,j)) .AND. & 
-                (abs(alt_a(i,j)).le.40.0 .or. abs(alt_a(i,j)).eq.90.0 .or. abs(alt_a(i,j)+70.).lt.7.) )  &
+!             if( ( idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .eq. nint(alt_a(i,j)) .AND. & 
+!               (abs(alt_a(i,j)).le.40.0 .or. abs(alt_a(i,j)).eq.90.0 .or. abs(alt_a(i,j)+70.).lt.7.) )  &
+              if(   idebug_a(i,j) .eq. 1 &
                   .OR. (i .eq. isun .and. j .eq. jsun) )then
                if(r_cloud_3d(i,j) .gt. 0.)then
-                  write(6,*)' solalt_ref/twi_alt ',solalt_ref,twi_alt
+                  htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
+                  write(6,41)solalt_ref,twi_alt,htmin_view
+ 41               format(' solalt_ref/twi_alt/htmin ',2f9.2,f11.0)
                   write(6,42)i,j,elong_a(i,j),pf_scat(2,i,j),rintensity(2)&
                    ,trans_c(2),r_cloud_rad(i,j) &
                    ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
@@ -1418,7 +1434,7 @@
                       ,glow_cld_nt,glow_cld_moon,glow_cld,glow_secondary_clr,rmaglim &
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_nt(:,i,j)
               endif
-116           format(2i5,3f6.1,f9.3,f11.6,2f7.2,3f6.2,3f8.3,f8.4,f7.1,f9.5,f9.1,f8.3,2f8.5,2f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
+116           format(2i5,f7.2,2f6.1,f9.3,f11.6,2f7.2,3f6.2,3f8.3,f8.4,f7.1,f9.5,f9.1,f8.3,2f8.5,2f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
 117           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.4,f7.1,f9.3,f8.1,6f7.3,f9.2,2x,3i4,' clrrad',3f10.0,3i4)
 118           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
           endif
