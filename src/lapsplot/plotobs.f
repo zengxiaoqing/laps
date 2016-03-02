@@ -290,7 +290,7 @@ cdis
         write(6,*)
         write(6,*)' Derived Radar Obs'
 
-        call setusv_dum(2hIN,7)
+        call setusv_dum(2hIN,5) ! Orange
 
         lun = 61
 
