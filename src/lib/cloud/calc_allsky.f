@@ -12,6 +12,7 @@
      1                     ,alt_a_roll,azi_a_roll                   ! I
      1                     ,sol_alt_2d,sol_azi_2d                   ! I
      1                     ,solar_alt,solar_az                      ! I
+     1                     ,solar_lat,solar_lon                     ! I
      1                     ,alt_norm                                ! I
      1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
      1                     ,moon_mag,moon_mag_thr                   ! I
@@ -335,6 +336,7 @@
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl,azi_scale  
      1                    ,solar_alt,solar_az
+     1                    ,solar_lat,solar_lon                          ! I
      1                    ,minalt,maxalt,minazi,maxazi                  ! I
      1                    ,twi_0,horz_dep
      1                    ,solalt_limb_true
