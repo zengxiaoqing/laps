@@ -33,7 +33,7 @@ cdis
      1          r4_Azimuth,r4_TLat,r4_TLon,Status)
         include 'trigd.inc'
 C***Given a range and azimuth from some site, calculate the latitude and
-C   longitude.
+C   longitude. Range is considered to be a great circle arc length.
 
 C       J. Wakefield    25 Apr 86       Original version.
 C       S. Albers       8  May 90       Calculations done in Double Precision
@@ -49,8 +49,9 @@ C TLat,TLon      O      R*4     Location of target (deg).
 C Status         O      I*4     Standard system status.
 
 
-        real*8           km_per_Deg
-        Parameter       (km_per_Deg=111.12d0)   !km per degree of latitude
+!       Assumed earth radius is 6370000m
+        real*8          km_per_Deg
+        Parameter      (km_per_Deg=111.17747d0) ! km per degree of latitude
 
 C***Parameter list variables
         Real          r4_SLat,r4_SLon,r4_Range,r4_Azimuth,r4_TLat,r4_T
