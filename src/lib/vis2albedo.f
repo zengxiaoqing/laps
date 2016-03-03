@@ -52,6 +52,7 @@ c
         Real          albedo
         Real          albedo_out(imax,jmax)
         Real          albedo_min,albedo_max
+        Real          r_norm_vis_cnts_mn,r_norm_vis_cnts_mx 
         Real          r_missing_data
         Real          jline, iline, jdiff, idiff
         Real          Emission_angle_d(imax,jmax)
@@ -65,6 +66,9 @@ c     ------------------------- BEGIN ---------------------------------
 
         albedo_min=1.0
         albedo_max=0.0
+
+        r_norm_vis_cnts_mx = 0.
+        r_norm_vis_cnts_mn = 256.
 
         write(6,*)' Subroutine vis2albedo:'
 c
@@ -104,7 +108,6 @@ c             end if
      &                   (cld_albedo - rlnd_albedo)
                    albedo_out(i,j)=min(max(albedo,-0.5),+1.5) ! Reasonable
 
-
                    if(solar_alt_d .lt. 20.)then ! enabled for now
 !                    Fudge the albedo at low solar elevation angles < 20 deg
                      frac = (20. - solar_alt_d) / 10.
@@ -124,6 +127,10 @@ c             end if
 c                                                               excesses
 c Accumulate extrema
 c
+                   r_norm_vis_cnts_mn = min(r_norm_vis_cnts_in(i,j)
+     1                                     ,r_norm_vis_cnts_mn)
+                   r_norm_vis_cnts_mx = max(r_norm_vis_cnts_in(i,j)
+     1                                     ,r_norm_vis_cnts_mx)
                    albedo_min = min(albedo_out(i,j),albedo_min)
                    albedo_max = max(albedo_out(i,j),albedo_max)
    
@@ -145,10 +152,11 @@ c
          end do
 
          write(6,*)' n_missing_albedo = ',n_missing_albedo
-         write(6,*)'       Mins and Maxs'
-         write(6,105)csatid,albedo_min,albedo_max
+         write(6,105)csatid,r_norm_vis_cnts_mn,r_norm_vis_cnts_mx
+         write(6,106)csatid,albedo_min,albedo_max
 
- 105     format(1x,a6,'  ALBEDO      ',2f10.2)
+ 105     format(1x,a6,'  Normalized Counts Range: ',2f10.2)
+ 106     format(1x,a6,'  ALBEDO Range:            ',2f10.2)
 
         Return
         End
