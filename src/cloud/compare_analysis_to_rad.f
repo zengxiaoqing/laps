@@ -9,6 +9,9 @@
 
         include 'trigd.inc'
 
+        difftwi(altf) = ! W/m**2                      
+     1         4. * exp(0.50 * altf - 0.108 * altf**2 - .0044 * altf**3)
+
         real cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
      1        ,td_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
      1        ,dbz_max_2d(ni,nj),solar_alt(ni,nj),swi_2d(ni,nj)
@@ -142,9 +145,11 @@
 
 !               Add term when sun is near or below the horizon
                 if(x .gt. 0.)then
-                    ghi_twiterm = 10. * exp(-((x/5.)**2))
-                else ! twilight
-                    ghi_twiterm = 10. * exp(0.5*x)
+                    ghi_twiterm = 4. * exp(-((x/5.)**2))
+                elseif(x .gt. -18.)then ! twilight
+                    ghi_twiterm = difftwi(x)      
+                else
+                    ghi_twiterm = 0.
                 endif
 
                 rad_clr(i,j) = rad_clr(i,j) + ghi_twiterm
@@ -167,9 +172,14 @@
         enddo ! i
         enddo ! j
 
-        if(.true.)then
-            write(6,*)' cvr_scl_a(1,1) = ',cvr_scl_a(1,1)
+        write(6,*)' solar_alt CTR = ',solar_alt(ni/2,nj/2)
+        write(6,*)' cloud_alb CTR = ',cloud_albedo(ni/2,nj/2)
+        write(6,*)' rad_clr   CTR = ',rad_clr(ni/2,nj/2)
+        write(6,*)' cvr_scl_a CTR = ',cvr_scl_a(ni/2,nj/2)
+        write(6,*)' cvr_rad   CTR = ',cvr_rad(ni/2,nj/2)
+        write(6,*)' swi_2d    CTR = ',swi_2d(ni/2,nj/2)
 
+        if(.true.)then
             iwrite = 0
 
             n_ovc = 0
