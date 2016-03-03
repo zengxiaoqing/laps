@@ -369,8 +369,8 @@ c
             iskd = 20 ! 4
             jskd = 20
         else
-            iskd = 40
-            jskd = 40
+            iskd = 50
+            jskd = 50
         endif
 
         write(6,81)
@@ -385,11 +385,11 @@ c
         do i=1,imax
 
          jp10 = j+10
-!        if(j .eq. (j/jskd)*jskd .and. i .eq. (i/iskd)*iskd)then
-         if(i .eq. imax/2 .AND. j .eq. jmax/2)then
+         if(j .eq. (j/jskd)*jskd .and. i .eq. (i/iskd)*iskd)then
+!        if(i .eq. imax/2 .AND. j .eq. jmax/2)then
              idebug_a(i,j) = 1
              write(6,91)i,j,rlat(i,j),rlon(i,j)
-91           format(' Debugging at lat/lon ',2i6,2f8.2)
+91           format(/' Debugging at lat/lon ',2i6,2f8.2)
          else
              idebug_a(i,j) = 0
          endif
@@ -409,7 +409,7 @@ c
               t_gnd_c = k_to_c(t_gnd_k(i,j))
               write(6,111,err=112)i,j,tb8_c,t_gnd_c
      1                               ,tb8_c-t_gnd_c
-111           format(/1x,2i4,' 1st cloud_top call: tb8/sfc'
+111           format(1x,2i4,' 1st cloud_top call: tb8/sfc'
      1              ,12x,f8.1,4x,f8.1,8x,f8.1)
 112       endif
 
@@ -1375,6 +1375,8 @@ c
         istat_39_add = 0
         istat_vis_added = 0
         mode_top = 0
+        ig = i
+        jg = j
 
 !       Set variables depending on whether in Band 8 or CO2 mode
         if(lstat_co2)then ! Using CO2 method
@@ -1416,7 +1418,7 @@ c
             ig = max(min(ig,imax),1)
             jg = max(min(jg,jmax),1)
 
-            if(cloud_frac_vis_a(i,j) .gt. sfc_albedo(ig,jg) + 0.2)then
+            if(cloud_frac_vis_a(i,j) .gt. sfc_albedo(ig,jg) + 0.1)then
                 mode_top = 3
                 l_cloud_present = .true.
                 cldtop_m = cldtop_tb8_m
@@ -1458,10 +1460,10 @@ c
      1               ,mode_top
      1               ,istat_vis_added,istat_39_add,cldtop_m       
      1               ,t_gnd_k(i,j),tb8_k,cloud_frac_vis_a(i,j)
-     1               ,cloud_frac_vis_s(i,j)
+     1               ,cloud_frac_vis_s(i,j),sfc_albedo(ig,jg)
      1               ,cldtop_temp_k,sat_cover
      1               ,cloud_frac_tb8
- 201        format('cloud_top info: ',2i5,l2,3i2,f9.0,2f9.2,2f7.4,f9.2
+ 201        format('cloud_top info: ',2i5,l2,3i2,f9.0,2f9.2,2f7.4,2f9.2
      1               ,2f7.3)
         endif
 
