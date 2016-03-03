@@ -41,8 +41,8 @@ cdis
      1                    ,l_use_vis_partial,lat,lon                ! I
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
      1                    ,rlaps_land_frac,topo                     ! I
-     1                    ,cvr_snow                                 ! I
-     1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb    ! O
+     1                    ,cvr_snow,tgd_sfc_k                       ! I
+     1                    ,cloud_frac_vis_a,sat_albedo,ihist_alb    ! O
      1                    ,static_albedo,sfc_albedo                 ! O
      1                    ,subpoint_lat_clo,subpoint_lon_clo        ! O 
      1                    ,comment                                  ! O
@@ -60,8 +60,9 @@ cdis
         real lat(ni,nj), lon(ni,nj)
         real sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
         real static_albedo(ni,nj)   ! Static albedo database
-        real vis_albedo(ni,nj)
+        real sat_albedo(ni,nj)
         real cvr_snow(ni,nj)
+        real tgd_sfc_k(ni,nj)
         real rlaps_land_frac(ni,nj)
         real topo(ni,nj)
         real subpoint_lat_clo(ni,nj)
@@ -94,7 +95,7 @@ cdis
 !       Initialize
         do i = 1,ni
         do j = 1,nj
-            vis_albedo(i,j) = r_missing_data
+            sat_albedo(i,j) = r_missing_data
             cloud_frac_vis_a(i,j) = r_missing_data
             istat_vis_a(i,j) = 0
         enddo ! j
@@ -102,7 +103,7 @@ cdis
 
         call get_sfc_albedo(ni,nj,lat,r_missing_data,i4time              ! I
      1                     ,rlaps_land_frac,topo                         ! I
-     1                     ,cvr_snow                                     ! I
+     1                     ,cvr_snow,tgd_sfc_k                           ! I
      1                     ,sfc_albedo,sfc_albedo_lwrb                   ! O
      1                     ,static_albedo,istat_sfc_alb)                 ! O
 
@@ -132,8 +133,8 @@ cdis
      1                     ,i4time_nearest,lat,lon
      1                     ,subpoint_lat_clo,subpoint_lon_clo      ! O 
      1                     ,EXT,var,units
-     1                     ,comment,ni,nj,vis_albedo,ilevel,istatus)
-            write(6,*)' istatus from vis_albedo data = ',istatus
+     1                     ,comment,ni,nj,sat_albedo,ilevel,istatus)
+            write(6,*)' istatus from sat_albedo data = ',istatus
             itry = itry + 1
         enddo ! itry
 
@@ -147,12 +148,12 @@ cdis
 !       Initial test for missing albedo (and partial data coverage)
         do i = 1,ni
         do j = 1,nj
-            if(vis_albedo(i,j) .eq. r_missing_data .and. 
+            if(sat_albedo(i,j) .eq. r_missing_data .and. 
      1                          (.not. l_use_vis_partial)      )then
                 write(6,*)
      1              ' No VIS / ALBEDO available (missing data found)'          
                 write(6,*)' return from get_vis'
-                vis_albedo = r_missing_data
+                sat_albedo = r_missing_data
                 istatus = 0
                 return
             endif
@@ -174,20 +175,20 @@ cdis
 !         We will now only use the VIS data if the solar alt exceeds 15 deg
 !         7 degrees now used to allow 30 min slack in data availability
           if(solar_alt(i,j) .lt. 7.0)then
-              if(vis_albedo(i,j) .ne. r_missing_data)then
-                  write(6,*)' Error -  vis_albedo not missing:'
+              if(sat_albedo(i,j) .ne. r_missing_data)then
+                  write(6,*)' Error -  sat_albedo not missing:'
      1                     ,solar_alt(i,j)
                   stop
               endif
-!             vis_albedo(i,j) = r_missing_data
+!             sat_albedo(i,j) = r_missing_data
           endif
 
-          if(vis_albedo(i,j) .ne. r_missing_data)then
+          if(sat_albedo(i,j) .ne. r_missing_data)then
 
-!           Translate the vis_albedo into cloud fraction
+!           Translate the sat_albedo into cloud fraction
 
 !           Store histogram information for satellite data
-            iscr_alb  = nint(vis_albedo(i,j)*10.)
+            iscr_alb  = nint(sat_albedo(i,j)*10.)
             iscr_alb  = min(max(iscr_alb,-10),20)
             ihist_alb(iscr_alb) = ihist_alb(iscr_alb) + 1
 
@@ -200,7 +201,7 @@ cdis
 
             clear_albedo = sfc_albedo_lwrb(i,j)
             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
-     1                                           ,vis_albedo(i,j))
+     1                                           ,sat_albedo(i,j))
 
             iscr_frac_sat = nint(cloud_frac_vis*10.)
             iscr_frac_sat = min(max(iscr_frac_sat,-10),20)
@@ -267,7 +268,7 @@ cdis
 
         subroutine get_sfc_albedo(ni,nj,lat,r_missing_data,i4time    ! I
      1                           ,rlaps_land_frac,topo               ! I
-     1                           ,cvr_snow                           ! I
+     1                           ,cvr_snow,tgd_sfc_k                 ! I
      1                           ,sfc_albedo,sfc_albedo_lwrb         ! O
      1                           ,static_albedo                      ! O
      1                           ,istat_sfc_alb)                     ! O
@@ -290,6 +291,7 @@ cdis
         real rlaps_land_frac(ni,nj)
         real topo(ni,nj)
         real cvr_snow(ni,nj)
+        real tgd_sfc_k(ni,nj)
 
         write(6,*)' Subroutine get_sfc_albedo...'
 
@@ -319,7 +321,9 @@ cdis
 !               Consider lat/topo now - later also SST (tgd) > 5C ? 
 
                 if(rlaps_land_frac(i,j) .le. 0.25)then         ! over water
-                  if((abs(lat(i,j)) .le. 40. .and. topo(i,j) .le.  100.)
+!                 if((abs(lat(i,j)) .le. 40. .and. topo(i,j) .le.  100.)
+                  if((tgd_sfc_k(i,j) .gt. 278.15 .and. 
+     1                                             topo(i,j) .le.  100.)
      1                                     .OR.
      1               (abs(lat(i,j)) .le. 20. .and. topo(i,j) .le. 3000.)
      1                                          )then          ! it's reliable
@@ -362,7 +366,8 @@ cdis
 
         function albedo_to_cloudfrac2(clear_albedo,albedo)
 
-        cloud_albedo_ref = .4485300
+!       cloud_albedo_ref = .4485300
+        cloud_albedo_ref = .38       
 
         arg = albedo
 
