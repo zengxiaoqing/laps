@@ -866,7 +866,7 @@ C READ IN SATELLITE DATA
      1              ,l_use_vis_partial,lat,lon                           ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,rlaps_land_frac,topo                                ! I
-     1              ,cvr_snow                                            ! I
+     1              ,cvr_snow,tgd_sfc_k                                  ! I
      1              ,cloud_frac_vis_a,sat_albedo,ihist_alb               ! O
      1              ,static_albedo,sfc_albedo                            ! O
      1              ,subpoint_lat_clo_vis,subpoint_lon_clo_vis           ! O 
@@ -1198,7 +1198,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
         write(6,491)(heights_3d(NX_L/2,NY_L/2,k)
      1              ,clouds_3d(NX_L/2,NY_L/2,k),k=KCLOUD,1,-1)
 491     format(' cldcv section 3 (after insert_vis):'
-     1        /'    ht      cvr',50(/f8.1,f8.3,'   ctr3'))
+     1        /'    ht      cvr',50(/f8.1,f8.3,'   CTR3'))
 
 C Clear out stuff below ground
         do k = 1,KCLOUD
