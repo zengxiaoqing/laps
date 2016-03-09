@@ -83,7 +83,9 @@
 
 !           Set to 1 or 2 if we're at cloud base?
             pf_thk = (1.94 / (10.**(phase_corr * 0.4))) / r_ill
-            pf_thk = min(pf_thk,2.0) ! limit fwd scattering peak
+            pf_thk = min(pf_thk,600.0) ! limit fwd scattering peak
+!           pf_thk = min(pf_thk,2.0) ! limit fwd scattering peak
+            pf_thk1 = pf_thk
 
 !           This might need expanded support for increased forward scattering 
 !           when looking down on a layer of cloud from the air.
@@ -294,8 +296,8 @@
           endif ! rain_factor > 0
 
           if(idebug_a(i,j) .eq. 1)then
-              write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
-101           format(' alt/elg/cod/thk/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,4f9.3,2x,3f8.4,2x,6f8.3,f9.3)
+              write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk1,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
+101           format(' alt/elg/cod/thk/thk1/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
           endif
 
          enddo ! i (altitude)
