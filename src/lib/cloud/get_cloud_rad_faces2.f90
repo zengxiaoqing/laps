@@ -43,6 +43,7 @@
      real topo_a(ni,nj)
      real projrot(ni,nj)
      real sfc_glow(ni,nj)
+     real tbuff(ni,nj)
 
      real heights_1d(nk)
 
@@ -154,7 +155,11 @@
        if(grid_spacing_m .lt. 10000.)then
          facestepij = 0.80 ! 0.85 causes missing points at 15.5 deg (top)
        else ! large domains
-         facestepij = 0.80 ! 0.85 causes missing points at 15.5 deg (top)
+         if(if .eq. 1)then
+           facestepij = 1.00 ! 0.85 causes missing points at 15.5 deg (top)
+         else
+           facestepij = 0.80 ! 0.85 causes missing points at 15.5 deg (top)
+         endif
        endif
 
        write(6,*)
@@ -471,6 +476,8 @@
 
          obj_alt_last = r_missing_data
 
+         tbuff(:,:) = transm_3d(:,:,k)
+
          do i = 1,ni; do j = 1,nj
            if(i .eq. idb .and. j .eq. jdb .and. k .eq. k)then
              iverbose = 1
@@ -489,8 +496,26 @@
 11           format(' missing at ',3i5,f9.3)
 
 !            Assign/Interpolate
-             transm_3d(i,j,k) = 0.5
-           endif
+             if(i .gt. i .and. i .lt. ni .and. j .gt. 1 .and. j .lt. nj)then
+               sumval = 0.
+               cnt = 0.
+               do ii = i-1,i+1   
+               do jj = j-1,j+1
+                 if(tbuff(ii,jj) .ne. r_missing_data)then
+                   sumval = sumval + transm_3d(ii,jj,k)
+                   cnt = cnt + 1.
+                 endif
+               enddo ! jj
+               enddo ! ii
+               if(cnt .gt. 0.)then
+                 transm_3d(i,j,k) = sumval / cnt
+               else
+                 transm_3d(i,j,k) = 0.5
+               endif
+             else
+               transm_3d(i,j,k) = 0.5
+             endif ! inside horizontal domain
+           endif ! missing value
 
            if(transm_3d(i,j,k) .eq. 0.)then
              nshadow = nshadow + 1
