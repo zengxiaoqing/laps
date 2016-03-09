@@ -8291,7 +8291,18 @@ c abdel
             c5_grid = c4_grid
         endif
 
-!       Top Label               
+!       Set for zoom
+        zfrac = 1.0 / plot_parms%zoom_wdw
+
+!       Note that "square" case works for aspect ratio up to 1.192
+        frame_factx = 1.0  ! / 0.75
+        frame_facty = 1.0  ! / 0.8
+
+        zxcen = (0.5 + ((plot_parms%xcen - 0.5) * frame_factx)) * 1023.
+        zycen = (0.5 + ((plot_parms%ycen - 0.5) * frame_facty)) * 1023.
+
+!       Top Left Label               
+
         iy = y_2 * 1024
 !       ix = 170 
 
@@ -8302,6 +8313,9 @@ c abdel
             ix = 70
             rsize = .011
         endif
+
+        ix = zxcen + (float(ix-512) / plot_parms%zoom_wdw)
+        iy = zycen + (float(iy-512) / plot_parms%zoom_wdw)
 
         call s_len2(namelist_parms%c_institution,len_inst)
 
@@ -8317,6 +8331,7 @@ c abdel
             endif
 
         else ! hsect
+
             if(len_inst .le. 9)then
                 c_ul = namelist_parms%c_institution(1:len_inst)
      1                 //' LAPS '//c5_grid
@@ -8327,7 +8342,9 @@ c abdel
 
         endif
 
-        CALL PCHIQU (cpux(ix),cpux(iy),c_ul,rsize,0,-1.0)   
+        rsize_zoom = rsize/plot_parms%zoom_wdw
+
+        CALL PCHIQU (cpux(ix),cpux(iy),c_ul,rsize_zoom,0,-1.0)   
 
 !       if(c5_sect .eq. 'sound')then
 !           call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
@@ -8365,16 +8382,6 @@ c abdel
         endif
 
         iy = y_1 * 1024
-
-!       Set for zoom
-        zfrac = 1.0 / plot_parms%zoom_wdw
-
-!       Note that "square" case works for aspect ratio up to 1.192
-        frame_factx = 1.0  ! / 0.75
-        frame_facty = 1.0  ! / 0.8
-
-        zxcen = (0.5 + ((plot_parms%xcen - 0.5) * frame_factx)) * 1023.
-        zycen = (0.5 + ((plot_parms%ycen - 0.5) * frame_facty)) * 1023.
 
 !       If Zoom is one, coordinates are original ix,iy
 !       As zoom goes towards infinity coordinates go zxcen,zycen
