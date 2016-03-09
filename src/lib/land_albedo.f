@@ -110,7 +110,8 @@
 !     world.200408.3x5400x2700.png world.200408.3x5400x2700.ppm
 
       character*255 directory
-      character*255 file,file_bm 
+      character*255 file    ! Blue Marble image data
+      character*255 file_bm ! remapped to model grid
       character*10  c10_fname /'nest7grid'/
       integer u,u_out
       logical l_there
@@ -141,7 +142,7 @@
       write(6,*)' Subroutine land_albedo_bm...',c2_mn
 
       call get_directory('static',directory,len_dir)
-      file_bm=trim(directory)//'albedo_multispectral.dat'
+      file_bm=trim(directory)//'albedo_multispectral_'//c2_mn//'.dat'
       inquire(file=trim(file_bm),exist=l_there)
 
       if(l_there)then
@@ -164,7 +165,7 @@
         file=trim(directory)//'world.200405.3x21600x21600.crop.ppm'
         pix_latlon = 1. / 240.
       else ! assume latlon global projection
-        file=trim(directory)//'world.200408.3x5400x2700.ppm'
+        file=trim(directory)//'world.2004'//c2_mn//'.3x5400x2700.ppm'
         pix_latlon = 1. / 15.
       endif
 
@@ -264,7 +265,6 @@
 
 !     Write albedo file in binary format
       u_out = 12
-      file_bm=trim(directory)//'albedo_multispectral.dat'
       write(6,*)' Writing albedo file to '//file_bm
       open(u_out,file=trim(file_bm),form='unformatted'
      1    ,status='new',err=999)
