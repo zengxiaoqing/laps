@@ -140,7 +140,7 @@
         real bnic_2d(nc,ni,nj)      ! (direct/beam normal) 
 
         logical l_solar_eclipse, l_radtran /.false./, l_spherical
-        logical l_atten_bhd /.true./
+        logical l_atten_bhd /.true./, l_box
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         parameter (nsp = 4)
@@ -185,7 +185,7 @@
         real sum_odrad_c_last(nc)
         real minalt_deg,maxalt_deg,minazi_deg,maxazi_deg
 
-        real*8 dslant1_h,dslant2
+        real*8 dslant1_h,dslant2,dz1_l,dz1_h,ht_l,ht_h
 
         character*1 cslant
         character var*3,comment*125,ext*31,units*10
@@ -640,6 +640,8 @@
           l_spherical = .false.
         endif
 
+        l_box = l_spherical
+
         solalt_limb_true = sol_alt(i,j) + horz_dep_d
         write(6,*)' solalt_true = ',sol_alt(i,j)
         write(6,*)' solalt_limb_true = ',solalt_limb_true
@@ -840,8 +842,12 @@
           endif
 
 !         Non-verbose (low observer)                    
-          if(htstart .lt. 7500. .or. altray .gt. 0.0)then
+          if(l_box .eqv. .false.)then
+            if(htstart .lt. 7500. .or. altray .gt. 0.0)then
               idebug = 0 ! ; idebug_a(ialt,jazi) = 0
+            endif
+!         else ! extra verbose
+!           idebug = 1
           endif
 
 !         Extra verbose
@@ -880,6 +886,7 @@
           ray_topo_diff_m = 0.
           ichecksum = 0
           box_max = 0.
+          dist_box = 1e30
 
           if(.true.)then
 !           do k = ksfc,ksfc
@@ -951,9 +958,9 @@
      1                    ,rkdelt,i,j,slant2_optimal
 11              format(
      1      'Trace the slant path (alt/azi/ialt/jazi/jdelt/rkdelt/i/j):'
-     1                ,2f6.1,3i5,f6.2,2i5,f7.0)                                     
+     1                ,2f6.1,i6,2i5,f6.2,2i5,f7.0)                                     
                 write(6,12)                                   
-12              format('     dz1_l      dz1_h     dxy1_l    dxy1_h  ',
+12              format('      dz1_l       dz1_h     dxy1_l    dxy1_h  ',
      1           'rinew  rjnew   rk    ht_m   topo_m  ',
      1           ' path     lwc    ice    rain   snow      slant',
      1           '  cvrpathsum  cloudfrac  am2cld   smcrd  am1_h  cl',
@@ -1124,8 +1131,10 @@
                     endif
                     slant2_optimal = min(htarg/sind_view,grid_spacing_m)
                   endif
-                  dslant2=max(dble(slant2_optimal),dble(ht_l)-30000.D0)
-
+                  dslant2=max(dble(slant2_optimal),ht_l-30000.D0)
+                  if((l_box .eqv. .true.) .and. dist_box .lt. 1e30)then
+                    dslant2 = dble(dist_box)
+                  endif
                   slant1_l = dslant1_h
                   dslant1_h = dslant1_h + dslant2
                   slant2 = dslant2
@@ -1165,8 +1174,8 @@
                     do k = 1,nk-1
                       if(heights_1d(k)   .le. ht_h .AND.
      1                   heights_1d(k+1) .ge. ht_h      )then
-                          frach = (ht_h - heights_1d(k)) / 
-     1                            (heights_1d(k+1) - heights_1d(k))      
+                          delta_h = heights_1d(k+1) - heights_1d(k)
+                          frach = (ht_h - heights_1d(k)) / delta_h
                           rk_h = float(k) + frach
                           pr_h = (pres_1d(k)*(1.-frach)) 
      1                         + (pres_1d(k+1)*frach)
@@ -1186,7 +1195,7 @@
                   if(ls .le. 15 .or. ls .eq. 100 .or. ls .eq. 1000
      1                          .or. ls .eq. 10000)then
                     write(6,61)ls,rk,ht_h,dslant1_h,slant1_h
-61                  format('  ls/rk/ht/dsl1/sl1 =',i6,f9.3,f10.0,2f10.0)
+61                  format('  ls/rk/ht/dsl1/sl1 =',i6,f9.3,f10.0,2f11.0)
                   elseif(altray .eq. -63.5)then
                     write(6,61)ls,rk,ht_h,dslant1_h,slant1_h
 !                   idebug = 1
@@ -1270,9 +1279,11 @@
                  endif ! l_spherical
 
 !                Can be used to target box boundaries
-!                dids = (rinew_h - rinew_l) / slant2
-!                djds = (rjnew_h - rjnew_l) / slant2
-!                dkds = (rknew_h - rknew_l) / slant2
+                 if(l_box .eqv. .true.)then
+                   dids = (rinew_h - rinew_l) / slant2
+                   djds = (rjnew_h - rjnew_l) / slant2
+                   dhds = (ht_h - ht_l) / slant2
+                 endif
 
                  rinew_m = 0.5 * (rinew_l + rinew_h)
                  rjnew_m = 0.5 * (rjnew_l + rjnew_h)
@@ -1301,6 +1312,78 @@
                   if(i1 .le. 0)then
                    write(6,*)' software error ',i1,rinew_l,rinew_m,rinew_h,rk_m
                   endif
+
+!                 Along-ray distance to next box face, along each axis
+                  if(l_box .eqv. .true.)then
+                    fi = mod(rinew_h,1.)
+                    fj = mod(rjnew_h,1.)
+                    fk = mod(rk_h,1.)
+                    box_epsilon = 0.01
+
+                    if(dids .ne. 0.)then
+                      if(dids .lt. 0.)then
+                        bi = fi                   
+                      else
+                        bi = 1.-fi
+                      endif
+                      if(bi .lt. box_epsilon)then
+                        bi = bi + 1.
+                      endif
+                      disti = bi / abs(dids)
+                    else
+                      disti = 1e30
+                    endif
+
+                    if(djds .ne. 0.)then
+                      if(djds .lt. 0.)then
+                        bj = fj                   
+                      else
+                        bj = 1.-fj
+                      endif
+                      if(bj .lt. box_epsilon)then
+                        bj = bj + 1.
+                      endif
+                      distj = bj / abs(djds)
+                    else
+                      distj = 1e30
+                    endif
+
+                    if(dhds .ne. 0.)then
+                      if(dhds .lt. 0.)then          ! downward
+                        bk = fk    
+                        if(bk .gt. box_epsilon)then ! normal
+                          knext = int(rk_h)        
+                        else                        ! close to edge
+                          knext = int(rk_h) - 1
+                        endif
+                      elseif(dhds .gt. 0.)then      ! upward
+                        bk = 1.-fk
+                        if(bk .gt. box_epsilon)then ! normal
+                          knext = int(rk_h) + 1
+                        else                        ! close to edge
+                          knext = int(rk_h) + 2
+                        endif
+                      endif 
+                      if(knext .ge. 1 .and. knext .le. nk)then
+                        disth = abs( (heights_1d(knext) - ht_h) / dhds )
+                      else
+                        disth = 1e30
+                      endif
+                    else
+                      disth = 1e30
+                    endif
+
+                    dist_box = min(disti,distj,disth)
+                    if(idebug .eq. 1)then
+                       write(6,*)'fi/dids/disti',fi,dids,disti
+                       write(6,*)'fj/djds/distj',fj,djds,distj
+                       write(6,66)rk_h,knext,fk,dhds,disth
+     1                           ,ht_h,ht_l,slant2
+66                     format(' rk/knext/fk/dhds/disth/ht/sl'
+     1                       ,f9.3,i3,2f9.3,f10.1,3f12.0)
+                       write(6,*)'dist_box = ',dist_box
+                    endif
+                  endif ! l_box
 
                   fi = rinew_m - i1; i2=i1+1
                   fj = rjnew_m - j1; j2=j1+1
@@ -1743,7 +1826,7 @@
      1                     ,aero_ext_coeff
      1                     ,transm_3d_m
      1                     ,sum_aod,sum_aod_ill,sum_aod_ill_dir
-101                   format(2f11.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
+101                   format(2f12.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,3f8.2,2f8.4
      1                  ,f10.5,4f7.2)
                   endif ! idebug
@@ -1817,6 +1900,11 @@
           aod_ill(ialt,jazi) = (1.0 - crep_thr) * sum_aod_ill 
      1                              + crep_thr  * sum_aod
 !         aod_ill(ialt,jazi) = sum_aod_ill
+          if(aod_ill(ialt,jazi) .lt. 0.)then
+              write(6,*)' ERROR aod_ill < 0',ialt,jazi,altray
+     1                 ,view_azi_deg,sum_aod,sum_aod_ill
+              stop
+          endif
 
           aod_ill_dir(ialt,jazi) = sum_aod_ill_dir
           aod_tot(ialt,jazi) = sum_aod
@@ -1854,7 +1942,7 @@
      1                   ,clear_radf_c(icd,ialt,jazi)
      1                   ,sum_clrrad,airmass1_h,dz1_h
 119           format('alt/dep/radf/smclrrd/am/dz1_h',f9.2,i3,3f9.3
-     1                                              ,2f9.3,f9.1)
+     1                                              ,2f9.3,f12.1)
             endif
 
           endif
@@ -2171,6 +2259,9 @@
 
         write(6,*)' Range of topo_rj = ',minval(topo_rj)
      1                                  ,maxval(topo_rj)
+
+        write(6,*)' Range of aod_tot = ',minval(aod_tot)
+     1                                  ,maxval(aod_tot)       
 
         write(6,*)' Range of aod_ill = ',minval(aod_ill)
      1                                  ,maxval(aod_ill)       
