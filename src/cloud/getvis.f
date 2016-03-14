@@ -84,6 +84,7 @@ cdis
 
 !       l_use_vis_add = .false.
         icount_vis_add_potl = 0
+        visthr = 0.0 ! for adding visible
 
 !       Initialize histograms
         do i = -10,20
@@ -216,7 +217,7 @@ cdis
 
 !           Is there enough of a signal from the VIS to say a cloud is present?
 !           Consider doing this comparison with parallax info
-            if(       cloud_frac_vis_a(i,j) .gt. 0.3 
+            if(       cloud_frac_vis_a(i,j) .gt. visthr
      1          .and. sfc_albedo(i,j) .ne. r_missing_data
 !    1          .and. sfc_albedo(i,j) .le. 0.3 ! test now done in 'cloud_top'
      1          .and. l_use_vis_add                         )then
@@ -318,7 +319,10 @@ cdis
      1         static_albedo(i,j) .ne. r_missing_data)then ! static data avalbl
                 sfc_albedo_lwrb(i,j) = static_albedo(i,j)
 
-!               Consider lat/topo now - later also SST (tgd) > 5C ? 
+!               'sfc_albedo' is set to missing if we aren't confident enough
+!               in its value for use with visible satellite. Over water a
+!               warm sfc/gnd temperature is used to imply no ice cover and
+!               thus a confident value.
 
                 if(rlaps_land_frac(i,j) .le. 0.25)then         ! over water
 !                 if((abs(lat(i,j)) .le. 40. .and. topo(i,j) .le.  100.)
