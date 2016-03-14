@@ -1175,6 +1175,9 @@ c
 !       Function calls
         real k_to_c, jcost_cldtop
 
+!       Used for adding visible
+        visthr = 0.1
+
 !       Call the CO2 slicing method to get cloud tops
         if(init_co2 .eq. 0)istatus_co2 = 0
         istatus_co2 = -3
@@ -1418,7 +1421,9 @@ c
             ig = max(min(ig,imax),1)
             jg = max(min(jg,jmax),1)
 
-            if(cloud_frac_vis_a(i,j) .gt. sfc_albedo(ig,jg) + 0.1)then
+!           Test only works if 'sfc_albedo' is set to non-missing value
+            if(cloud_frac_vis_a(i,j) .gt. 
+     1                                 sfc_albedo(ig,jg) + visthr)then       
                 mode_top = 3
                 l_cloud_present = .true.
                 cldtop_m = cldtop_tb8_m
