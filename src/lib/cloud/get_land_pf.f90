@@ -2,9 +2,11 @@
         subroutine get_lnd_pf(elong_a,alt_a,azi_a &                     ! I
                              ,topo_gti,topo_albedo,transm_obs &         ! I
                              ,gtic,dtic,btic &                          ! I
-                             ,dist_2_topo,topo_solalt,azi_scale &       ! I
-                             ,sol_alt,sol_azi,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
-                             ,pf_land) ! O
+                             ,dist_2_topo,topo_solalt,topo_solazi,azi_scale &       ! I
+                             ,sol_alt,sol_azi,nsp,airmass_2_topo &      ! I
+                             ,idebug_a,ni,nj,i4time,rlat,rlon,htmsl &   ! I
+                             ,topo_lat,topo_lon &                       ! I
+                             ,pf_land)                                  ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius
         use cloud_rad, ONLY: ghi_zen_toa, zen_kt
@@ -29,10 +31,19 @@
         real topo_gti(ni,nj)        ! topo normal global irradiance
         real topo_albedo(nc,ni,nj)  ! topo albedo
         real topo_solalt(ni,nj)     ! 90. - u0 (solar altitude)
+        real topo_solazi(ni,nj)     ! 90. - u0 (solar altitude)
+        real topo_lat(ni,nj)        ! 
+        real topo_lon(ni,nj)        ! 
+        real rlat_a(ni,nj)          ! 
+        real rlon_a(ni,nj)          ! 
+        real Phase_angle_d(ni,nj)   ! 
+        real Specular_ref_angle_d(ni,nj) 
+        real emis_ang_a(ni,nj)      ! 
+        real azi_fm_lnd_a(ni,nj)    ! 
         real gtic(nc,ni,nj)         ! spectral terrain GNI
         real dtic(nc,ni,nj)         ! spectral terrain diffuse NI 
         real btic(nc,ni,nj)         ! spectral terrain beam (direct) NI 
-        real dist_2_topo(ni,nj)     
+        real*8 dist_2_topo(ni,nj)     
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         integer idebug_a(ni,nj)
         real pf_land(nc,ni,nj)      ! anisotropic reflectance factor (ARF)
@@ -46,12 +57,21 @@
 !          1            34
 !          2            56
 
-        write(6,*)' subroutine get_lnd_pf...'
+        write(6,*)' subroutine get_lnd_pf... solazi = ',sol_azi
         iwrite = 0
 
+        write(6,*)' call satgeom ',range_m
+        range_m = earth_radius + htmsl ! 42155680.00
+        rlat_a = rlat
+        rlon_a = rlon
+        call satgeom(i4time,topo_lat,topo_lon,ni,nj,rlat_a,rlon_a & ! I
+                    ,range_m,r_missing_data,Phase_angle_d &         ! I/O
+                    ,Specular_ref_angle_d,emis_ang_a &              ! O
+                    ,azi_fm_lnd_a,istatus)                          ! O
+
         write(6,11)
-11      format('  i    j  ic   alt_a    azi_a   sol_azi azidiff  ', &
-               ' ampl_l    fland    fsnow   fwater   phland   phsnow   phwater    ph1    radfrac  dst2topo  gndarc  toposalt emis_ang  specang    alb') 
+11      format('  i    j  ic   alt_a    azi_a  azitolnd  tsolazi azidiffg', &
+               '  ampl_l    fland    fsnow   fwater   phland   phsnow   phwater    ph1    radfrac   dst2topo  gndarc  toposalt emis_ang  specang    alb') 
 
         do j = 1,nj
          do i = 1,ni
@@ -62,14 +82,24 @@
  
 !           Approximate specular reflection angle
             gnd_arc = asind(sind(90.+alt_a(i,j))*dist_2_topo(i,j)/earth_radius)
+            gnd_arc2 = gnd_arc * 2.
+!           We expect sudden excursions in topo_solazi when the sun is at
+!           the zenith from the ground. Hopefully sudden excursions in
+!           'azidiffg' happen when the emis_ang is equal to topo_solalt? We may
+!           want a different definition of 'azidiffg'.
+            if(topo_solazi(i,j) .ne. r_missing_data)then 
+                azidiffg = angdif(azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j))
+            else
+                azidiffg = 180.
+            endif
             c = 180. - (gnd_arc + (90.+alt_a(i,j)))
             emis_ang = c - 90.
 !           topo_salt = sol_alt + gnd_arc
             specangvert = abs(emis_ang - topo_solalt(i,j))
             specangvert2 = specangvert * sind(emis_ang)
-            azidiff2 = azidiff / sind(max(emis_ang,.001))
-!           specang = sqrt(specangvert**2 + azidiff2**2)
-            specang = angdist(emis_ang,topo_solalt(i,j),azidiff2)
+            azidiffsp = azidiffg / sind(max(emis_ang,.001))
+!           specang = sqrt(specangvert**2 + azidiffsp**2)
+            specang = angdist(emis_ang,topo_solalt(i,j),azidiffsp)
 
 !           Land surface type
 !           fland = scurve((1. - topo_albedo(2,i,j))**2)
@@ -153,7 +183,8 @@
               ampl_w = cosd(alt_a(i,j))
 
 !             Use approximate specular reflection angle
-              argexp = min(specang/10.0,8.)
+              glint_radius = 20.
+              argexp = min(specang/glint_radius,8.)
               specamp = exp(-(argexp)**2)
 
               phwater = 0.2 + 3.0 * specamp ! ampl_w * hg(g,azidiff) / (1. + 1.3*g**2)
@@ -169,13 +200,18 @@
 
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
-                if((i .eq. 1 .and. j .eq. (j/40)*40) .OR. ph1 .lt. 0. .OR.&
+                if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. ph1 .lt. 0. .OR.&
                  ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
                           .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) )then
-                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),sol_azi,azidiff,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
-1                 format(i4,i5,i2,4f9.2,9f9.4,f10.0,5f9.2)
+                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
+1                 format(i4,i5,i2,5f9.2,9f9.4,f11.0,5f9.2)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
 111               format('   antisolar alt/azi/azeff/elg/elg_a/eff',6f9.2)
+!                 if(abs(emis_ang - emis_ang_a(i,j)) .gt. 0.1 .AND. emis_ang_a(i,j) .gt. 0.)then
+                  if(emis_ang_a(i,j) .gt. 0.)then
+                    write(6,112)emis_ang,emis_ang_a(i,j),azi_fm_lnd_a(i,j),topo_lat(i,j),topo_lon(i,j),topo_solalt(i,j),topo_solazi(i,j)
+112                 format('   EMISANG INFO:',7f9.3)
+                  endif
                 endif
               endif
 
