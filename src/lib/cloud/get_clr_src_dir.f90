@@ -1,6 +1,7 @@
 
-     subroutine get_clr_src_dir(solalt,viewalt,od_g_msl,od_g_vert,od_a_vert,ext_haero,htmsl,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a,ags,aas,ic,idebug,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
+     subroutine get_clr_src_dir(solalt,viewalt,od_g_msl,od_g_vert,od_a_vert,ext_haero,htmsl,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a,ags,aas,ic,idebug,istart,iend,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
+     use mem_namelist, ONLY: earth_radius
      use constants_laps, ONLY: R, GRAV
 
      include 'trigd.inc'
@@ -11,8 +12,13 @@
      trans(od) = exp(-min(od,80.))
      opac(od) = 1.0 - trans(od)
      scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5
+     real*8 dsdst,dradius_start,daltray,dcurvat2
+     dcurvat2(dsdst,dradius_start,daltray) = &
+              sqrt(dsdst**2 + dradius_start**2 &
+       - (2D0*dsdst*dradius_start*cosd(90D0+daltray))) - dradius_start      
 
-     real tausum_a(nsteps)
+     real tausum_a(istart:iend)
+     real*8 sbar,htbar
 
      real agv      ! gas   relative to zenith value for observer ht/viewalt
      real ao       ! ozone relative to zenith at sea level pressure/viewalt
@@ -57,7 +63,7 @@
      endif
 
 !    Integral [0 to x] a * exp(-b*x) = a * (1. - exp*(-b*x)) / b
-     ds = 25.
+!    ds = 25.
 
      if(idebug .eq. 1)then
          write(6,*)
@@ -89,7 +95,7 @@
      httopill = 100000.
 
      if(idebug .eq. 1)then
-       write(6,*)'         sbar     htbar     dtaug    dtauo   tausum od_sol_a  od_solar   rad       di     sumi_g   sumi_a opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'           sbar         htbar       dtaug    dtauo   tausum od_sol_a  od_solar   rad       di     sumi_g   sumi_a opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -100,10 +106,18 @@
          frac_iso_a = 0.5
      endif
 
-     do i = 1,nsteps
+     do i = istart,iend
          sbar = (float(i)-0.5) * ds
-         htbar = sbar * sind(viewalt)
-         htbar = htbar + sbar**2 / (rearg * r_e) ! Earth Curvature
+         if(htmsl .le. 1000e3)then ! low altitude
+           htbar = sbar * sind(viewalt)
+           xybar = sbar * cosd(viewalt)
+!          htbar = htbar + curvat(xybar,earth_radius*(4./3.)) ! Earth Curvature
+           htbar = htbar + xybar**2 / (rearg * r_e) ! Earth Curvature
+         else                      ! high altitude
+           radius_start_eff = earth_radius + htmsl      
+!          Is this showing up negative at nadir?
+           htbar = dcurvat2(sbar,dble(radius_start_eff),dble(viewalt)) 
+         endif
          htbar_msl = htbar+htmsl
 
          zapp = 90. - solalt
@@ -185,9 +199,9 @@
          sumi_extrap = (sumi_mean * frac_opac) + (1.-frac_opac) * rad
 
          if(idebug .eq. 1)then
-           if(i .eq. 10 .or. i .eq. 100 .or. i .eq. 1000 .or. i .eq. 10000 .or. i .eq. nsteps)then
+           if(i .eq. 10 .or. i .eq. 100 .or. i .eq. 1000 .or. i .eq. 10000 .or. i .eq. iend)then
              write(6,11)i,sbar,htbar,alphabar_g*ds,alphabar_o*ds,tausum,od_solar_slant_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
-11           format(i6,f9.0,f9.1,2f10.7,f8.4,f9.6,f9.4,2f9.5,6f9.4)
+11           format(i8,f11.0,f13.1,2f10.7,f8.4,f9.6,f9.4,2f9.5,6f9.4)
            endif
          endif
      enddo ! i
@@ -517,7 +531,7 @@
            ,ssa,agv,aav,aod_ref,redp_lvl,scale_ht_a &                  ! I
            ,ags_a,aas_a,isolalt_lo,isolalt_hi &                        ! I
            ,ic,idebug,nsteps,refdist_solalt,solalt_ref &               ! I
-           ,sumi_g,sumi_a,opac_slant,ds,tausum_a)                      ! O
+           ,sumi_g,sumi_a,opac_slant,tausum_a)                         ! O
 
      use mem_namelist, ONLY: earth_radius
      use constants_laps, ONLY: R, GRAV
@@ -532,13 +546,13 @@
              sqrt(sdst**2 + radius_start**2 &
                - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
      real*8 dsdst,dradius_start,daltray,dcurvat2
+     real*8 send,sbar,htbar,dist_to_topo,ds
      dcurvat2(dsdst,dradius_start,daltray) = &
               sqrt(dsdst**2 + dradius_start**2 &
        - (2D0*dsdst*dradius_start*cosd(90D0+daltray))) - dradius_start      
      expbl(x) = exp(max(x,-80.))
 
      real tausum_a(nsteps)
-
      real ags_a(isolalt_lo:isolalt_hi) ! gas rel to zen val fr obs ht/salt
      real aas_a(isolalt_lo:isolalt_hi) ! aero rel to zen val fr obs ht/salt
 
@@ -571,14 +585,18 @@
      endif
 
 !    Integral [0 to x] a * exp(-b*x) = a * (1. - exp*(-b*x)) / b
-     ds = min(dist_to_topo/10.,1000.)           
-     nsteps_topo = nint(dist_to_topo/ds) ! max(10,int(htmsl/1000.))
+     ds = min(dist_to_topo/10d0,1000d0)           
+     if(dist_to_topo .le. 10000d0)then
+       nsteps_topo = nint(dist_to_topo/ds) ! max(10,int(htmsl/1000.))
+     else
+       nsteps_topo = int(dist_to_topo/ds) + 1
+     endif
      tausum = 0.
      sumi = 0.; sumi_g = 0.; sumi_a = 0.
      httopill = max(100000.-sind(solalt)*60000.,40000.)
      htbotill = -(htmsl + 500.)
      httopo = 0.
-     istart = max(1,nint((htmsl-100000.)/ds))
+     istart = max(1,nint((htmsl-100000d0)/ds))
 
      dsolalt_ref = solalt_ref - solalt
 
@@ -605,7 +623,7 @@
      endif ! i
 
      if(idebug .eq. 1)then ! substitute radg/rada?
-       write(6,*)'         sbar      htbar      htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g    sumi_a  opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'         sbar      htbar      htmsl     dtau    tausum  dsolalt alphbr_g alphbr_a  od_solar   rad       di     sumi_g   sumi_a  opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -615,14 +633,23 @@
      iwrite_slant = 0
 
      do i = istart,nsteps_topo
-       sbar = (float(i)-0.5) * ds
+       sbar = (dble(i)-0.5d0) * ds
+       send =  dble(i)        * ds
 !      htbar = sbar * sind(viewalt)
 !      xybar = sbar * cosd(viewalt)
 !      htbar = htbar + curvat(xybar,earth_radius*(4./3.)) ! Earth Curvature
 !      htbar = curvat2(sbar,radius_start_eff,viewalt) ! From GEO
-       htbar = dcurvat2(dble(sbar),dble(radius_start_eff),dble(viewalt)) ! From Moon
+       htbar = dcurvat2(sbar,dble(radius_start_eff),dble(viewalt)) !Fm Moon
+       htbar_msl_last = htbar_msl
        htbar_msl = htbar+htmsl
+       ht_msl_last = ht_msl
+       ht_msl = 1.5 * htbar_msl - 0.5 * htbar_msl_last
        if(htbar_msl .lt. httopill)then
+         if(send .lt. dist_to_topo)then
+           frac_step = 1.0
+         else
+           frac_step = 1d0 - (send - dist_to_topo)/ds
+         endif
          xybar = (sbar - refdist_solalt) * cosd(viewalt)
 
 !        Update ags,aas
@@ -646,7 +673,19 @@
          if(solalt_step .ge. 0.)then
            zapp = 90. - solalt_step
            od_solar_slant_o3 = od_o_msl * patm_o3(htbar_msl) * airmasso(zapp,htbar_msl)
-         else
+         elseif(sol_occ .gt. 0.)then
+           zappi = 90. + solalt_step
+           patm = exp(-(htbar_msl/scale_ht_g))
+           ztruei = zappi + refractd_app(abs(solalt_step) ,patm)
+           patmo  = patm_o3(htbar_msl)
+           htmin_ray = htminf(htbar_msl,solalt_step,earth_radius)
+           patm2o = patm_o3(htmin_ray)
+           ztrue0 = 90. + refractd_app(0.,patm2o)
+           ao2 = airmasso(ztruei,htbar_msl) * patmo  ! upward from observer
+           ao3 = airmasso(ztrue0,htmin_ray) * patm2o ! 0 deg from htmin
+           ao_calc = (ao3-ao2) + ao3
+           od_solar_slant_o3 = od_o_msl * ao_calc * sol_occ
+         else ! more accurate calculation technique was imported
            od_solar_slant_o3 = 0.
          endif
 
@@ -672,7 +711,7 @@
 
 !        alphabar_a = alpha_sfc_a * exp(-htbar/scale_ht_a)  
          alphabar_a = alpha_ref_a * expbl(-(htbar_msl-redp_lvl)/scale_ht_a)
-         dtau = ds * (alphabar_g + alphabar_a)
+         dtau = ds * (alphabar_g + alphabar_a) * frac_step
          tausum = tausum + dtau
 !        if(tausum .lt. 1.0)distod1 = sbar
 !        tausum_a(i) = tausum
@@ -718,11 +757,15 @@
 
        if(htbar_msl .lt. httopo .or. (htbar_msl .gt. httopill .and. viewalt .gt. 0.))then
          if(idebug .eq. 1)then
-           write(6,*)' end of loop:',htbar_msl,httopo
+           write(6,*)' exit loop:',htbar_msl,ht_msl,httopo,frac_step
          endif
          goto 900
        endif
      enddo ! i
+
+     if(idebug .eq. 1)then
+       write(6,*)' end of loop:',htbar_msl,ht_msl,httopo,frac_step
+     endif
 
 900  continue
 
