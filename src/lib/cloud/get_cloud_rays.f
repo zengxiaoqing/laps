@@ -94,6 +94,7 @@
         real transm_4d_m(nc)
         real heights_1d(nk)
         real topo_a(ni,nj)
+        real grdasp_ll(ni,nj)
         real lat(ni,nj)
         real lon(ni,nj)
         real topo_albedo_2d(nc,ni,nj)
@@ -106,7 +107,7 @@
         real sol_alt(ni,nj)
         real sol_azi(ni,nj)
         real alt_norm(ni,nj)
-        real eobsc(ni,nj)
+        real eobsc(ni,nj)                ! array of 'eobsl' values
 
         real moon_alt(ni,nj)
         real moon_azi(ni,nj)
@@ -177,7 +178,7 @@
         real emic(nc,minalt:maxalt,minazi:maxazi)  ! spectral exitance    
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
-        real dist_2_topo(minalt:maxalt,minazi:maxazi) ! slant dist
+        real*8 dist_2_topo(minalt:maxalt,minazi:maxazi) ! slant dist
         real aod_ill(minalt:maxalt,minazi:maxazi)     ! slant path
         real aod_ill_dir(minalt:maxalt,minazi:maxazi) ! slant path, atten behind clouds
         real aod_tot(minalt:maxalt,minazi:maxazi)     ! slant path
@@ -258,7 +259,7 @@
             write(6,*)' Object is sun, brightness is:',obj_bri
         endif
 
-        obj_bri_a = obj_bri ! not yet used
+        obj_bri_a(:,:) = obj_bri * (1. - eobsc(:,:))
 
 !       Possibly cloud_rad_c = r_missing_data would help interp
         if(sol_alt(i,j) .gt. 0.)then
@@ -350,12 +351,13 @@
      1            sfc_glow,                          ! I
      1            transm_3d,transm_4d)               ! O
               else ! consider experimental version for global domain
+                grdasp_ll(:,:) = min(1.0 / cosd(lat(:,:)),20.)
                 write(6,*)' call get_cloud_rad_faces2...'
                 call get_cloud_rad_faces2(              
      1            obj_alt,obj_azi,                   ! I
      1            sol_alt(i,j),sol_azi(i,j),         ! I 
      1            clwc_3d,cice_3d,rain_3d,snow_3d,   ! I
-     1            topo_a,                            ! I
+     1            topo_a,grdasp_ll,                  ! I
      1            ni,nj,nk,i,j,                      ! I
      1            heights_3d,                        ! I 
      1            sfc_glow,                          ! I
@@ -391,11 +393,14 @@
           if(obj_alt(ii,jj) .gt. 0.)then ! sun or moon above horizon
             ecl = 1. - eobsc(ii,jj)
             ecld = max(ecl,.0015)
+
             do kk = 1,nk
 !             Consider first point above terrain instead so we can capture
 !             terrain shadowing?
               if(transm_3d(ii,jj,kk) .gt. 0. .and. 
      1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
+
+                transm_tn = transm_3d(ii,jj,kk)
 
 !               Correct for diffuse radiation at low obj altitude
 !               'solalt_eff' is an empirical function to force the effective
@@ -418,10 +423,10 @@
                 objalt_eff = obj_alt(ii,jj) 
      1                     + (1.5 * cosd(obj_alt(ii,jj))**100.)
                 ghi_clr = obj_bri * sind(objalt_eff) * ghi_zen_sfc *ecld
-                ghi_2d(ii,jj) = transm_3d(ii,jj,kk) * ghi_clr    
+                ghi_2d(ii,jj) = transm_tn * ghi_clr    
 
 !               Diffuse
-                frac_dir = max(transm_3d(ii,jj,kk)**4.,.0039) ! 5 deg circ
+                frac_dir = max(transm_tn**4.,.0039) ! 5 deg circ
 
                 patm_sfc = ztopsa(topo_a(ii,jj)) / 1013.25
                 sb_corr = 2.0 * (1.0 - (sind(obj_alt(ii,jj))**0.5))
@@ -431,7 +436,7 @@
      1                       * obj_bri
 
                 dhi_2d(ii,jj) = ghi_2d(ii,jj) * (1. - frac_dir) 
-     1                     * transm_3d(ii,jj,kk)
+     1                     * transm_tn
      1                     + dhi_2d_clear * frac_dir
 !               dhi_2d(ii,jj) = max(dhi_2d_clear,dhi_2d_est) 
 !               dhi_2d(ii,jj) = min(dhi_2d(ii,jj),ghi_2d(ii,jj))
@@ -449,8 +454,8 @@
                 dhic_clr(:) = dhi_grn_clr_frac * (ext_g(:)/.09)**colexp
 !               dhic_2d(:,ii,jj) = dhi_2d(ii,jj) / ghi_zen_toa
                 dhic_2d(:,ii,jj) 
-     1             = obj_bri * ecld * dhic_clr(:) * frac_dir          ! clr
-     1             + bhi_clr(:) * transm_3d(ii,jj,kk) * (1.-frac_dir) ! cld
+     1             = obj_bri * ecld * dhic_clr(:) * frac_dir ! clr
+     1             + bhi_clr(:) * transm_tn * (1.-frac_dir)  ! cld
 
                 ghic_clr = ghi_clr / ghi_zen_toa
                 ghic_2d(:,ii,jj) = bhic_2d(:,ii,jj) + dhic_2d(:,ii,jj) 
@@ -461,7 +466,8 @@
                    write(6,*)' ghic_clr observer =',ghic_clr  
                    write(6,*)' dhic_clr observer =',dhic_clr  
                    write(6,*)' frac_dir observer =',frac_dir
-                   write(6,*)' transm   observer =',transm_3d(ii,jj,kk)
+                   write(6,*)' transm   observer =',transm_tn
+                   write(6,*)' ecl      observer =',ecl
                    write(6,*)' bhic_2d  observer =',bhic_2d(:,ii,jj)
                    write(6,*)' dhic_2d  observer =',dhic_2d(:,ii,jj)
                    write(6,*)' ghic_2d  observer =',ghic_2d(:,ii,jj)
@@ -532,13 +538,19 @@
 
         if(sol_alt(i,j) .lt. twi_alt)then ! Modify moon glow section in green channel
                                       ! Preserve sfc sky glow section in red channel
-            transm_4d(:,:,:,2) = transm_4d(:,:,:,2) * obj_bri ! correct for sun/moon brightness
+            do k = 1,nk
+              transm_4d(:,:,k,2) = transm_4d(:,:,k,2) * obj_bri_a(:,:) ! correct for sun/moon brightness
+            enddo 
             write(6,*)
      1    ' transm_4d red is sky brightness, green is moon brightness'
             write(6,*)' Range of transm_4d(green channel) = '
      1            ,minval(transm_4d(:,:,:,2)),maxval(transm_4d(:,:,:,2))
         else
-            transm_4d(:,:,:,:) = transm_4d(:,:,:,:) * obj_bri ! correct for sun/moon brightness
+            do ic = 1,nc
+             do k = 1,nk
+              transm_4d(:,:,k,ic) = transm_4d(:,:,k,ic) * obj_bri_a(:,:) ! correct for sun/moon brightness
+             enddo ! k
+            enddo ! ic
             write(6,*)' transm_3d column = ',transm_3d(i,j,:)
             write(6,*)' transm_4d blue column = ',transm_4d(i,j,:,2)
         endif
@@ -827,6 +839,7 @@
      1         (abs(altray_limb) / radius_limb .le. 0.04) .or.
      1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
      1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
+     1         (altray .ge. -89.40 .and. altray .le. -89.07) .or.
      1         abs(altray) .eq. 75.) 
 !    1               .AND. altray .eq. nint(altray) 
      1                                                   )then
@@ -958,7 +971,7 @@
      1                    ,rkdelt,i,j,slant2_optimal
 11              format(
      1      'Trace the slant path (alt/azi/ialt/jazi/jdelt/rkdelt/i/j):'
-     1                ,2f6.1,i6,2i5,f6.2,2i5,f7.0)                                     
+     1                ,f8.3,f6.1,i6,2i5,f6.2,2i5,f7.0)                                     
                 write(6,12)                                   
 12              format('      dz1_l       dz1_h     dxy1_l    dxy1_h  ',
      1           'rinew  rjnew   rk    ht_m   topo_m  ',
@@ -1374,7 +1387,7 @@
                     endif
 
                     dist_box = min(disti,distj,disth)
-                    if(idebug .eq. 1)then
+                    if(idebug .eq. 1 .and. .false.)then
                        write(6,*)'fi/dids/disti',fi,dids,disti
                        write(6,*)'fj/djds/distj',fj,djds,distj
                        write(6,66)rk_h,knext,fk,dhds,disth
@@ -1770,7 +1783,7 @@
      1                                  .AND. htstart .eq. topo_sfc)then
                           airmass_2_topo_3d(ialt,jazi) = 1e-5
                           aod_2_topo(ialt,jazi)        = 1e-4
-                          dist_2_topo(ialt,jazi)       = 1.0
+                          dist_2_topo(ialt,jazi)       = 1d0
                           sum_aod_ill                  = 1e-4 
      1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
                           sum_aod_ill_dir              = 1e-4 
@@ -1785,7 +1798,7 @@
                           aod_2_topo(ialt,jazi) = sum_aod
      1                                   - aod_inc * (1.-frac_step_topo)
                           dist_2_topo(ialt,jazi) = dslant1_h 
-     1                                   - slant2  * (1.-frac_step_topo)
+     1                                  - slant2  * (1d0-frac_step_topo)
 !    1                        sqrt(dxy1_h**2 + dz1_h**2)
                       endif
 
@@ -1796,13 +1809,15 @@
      1                                    ,topo_albedo(:,ialt,jazi)
      1                                    ,aod_2_topo(ialt,jazi)
      1                                    ,dist_2_topo(ialt,jazi)
+     1                                    ,sum_aod_ill_opac     
+     1                                    ,sum_aod_ill_opac_potl 
      1                                    ,airmass_2_topo_3d(ialt,jazi)
      1                                    ,gnd_glow(inew_m,jnew_m)
      1                                    ,ghi_2d(inew_m,jnew_m)
      1                                    ,dhi_2d(inew_m,jnew_m)
                       endif
-91                    format(' Hit topo',2f8.1,2f8.3,f8.2,4f8.3,f10.0
-     1                                  ,2f8.3,2f8.1)
+91                    format(' Hit topo',2f8.1,2f8.3,f8.2,4f8.3,f12.0
+     1                                  ,4f8.3,2f8.1)
                   endif ! hit topo
 
                   if(idebug .eq. 1)then
@@ -1825,10 +1840,11 @@
      1                     ,cloud_rad_w(ialt,jazi)
      1                     ,aero_ext_coeff
      1                     ,transm_3d_m
-     1                     ,sum_aod,sum_aod_ill,sum_aod_ill_dir
+     1                     ,sum_aod,sum_aod_ill_opac
+     1                     ,sum_aod_ill_opac_potl
 101                   format(2f12.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,3f8.2,2f8.4
-     1                  ,f10.5,4f7.2)
+     1                  ,f10.5,4f7.3)
                   endif ! idebug
 
                  else ! outside horizontal domain
@@ -1876,9 +1892,17 @@
 
 !             Extra verbose
               if(idebug .eq. 1 .and. altray .lt. 0.)then
+                itrace = nint(trace_ri(ialt,jazi))
+                jtrace = nint(trace_rj(ialt,jazi))
+                if(itrace .ge. 1 .and. itrace .le. ni .AND.
+     1             jtrace .ge. 1 .and. jtrace .le. nj)then
+                  trsolalt = sol_alt(itrace,jtrace)
+                else
+                  trsolalt = -99.
+                endif
                 write(6,113)ls,rk,ht_h,trace_ri(ialt,jazi)
-     1                                ,trace_rj(ialt,jazi)
-113             format('   ls/rk/ht = ',i4,f8.3,f12.1,' eor trij',2f8.2) 
+     1                                ,trace_rj(ialt,jazi),trsolalt
+113             format('   ls/rk/ht = ',i4,f8.3,f12.1,' eor trij',3f8.2) 
                 write(6,114)ls,rk,rk_h,rk_m,ht_h,ihit_topo,ihit_bounds
      1                     ,iabove,gc_deg,dslant1_h,dz1_h,tlat,tlon
      1                     ,cvr_path_sum,idebug
@@ -1939,10 +1963,11 @@
             endif
             if(idebug .eq. 1)then
               write(6,119)rkstart,nk,view_altitude_deg,horz_dep_d
-     1                   ,clear_radf_c(icd,ialt,jazi)
-     1                   ,sum_clrrad,airmass1_h,dz1_h
-119           format('alt/dep/radf/smclrrd/am/dz1_h',f9.2,i3,3f9.3
-     1                                              ,2f9.3,f12.1)
+     1             ,clear_radf_c(icd,ialt,jazi)
+     1             ,aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
+     1             ,sum_clrrad,airmass1_h,dz1_h
+119           format(' alt/dep/radf/aodf/smclrrd/am/dz1_h',f10.2,i3
+     1                                        ,4f9.3,2f9.3,f13.1)
             endif
 
           endif
@@ -2249,6 +2274,9 @@
 
         write(6,*)' Range of dtic 2 = ',minval(dtic(2,:,:))
      1                                 ,maxval(dtic(2,:,:))
+
+        write(6,*)' Range of emic 2 = ',minval(emic(2,:,:))
+     1                                 ,maxval(emic(2,:,:))
 
         write(6,*)' Range of topo_albedo 2 = '
      1                                       ,minval(topo_albedo(2,:,:))
