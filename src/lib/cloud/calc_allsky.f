@@ -68,17 +68,21 @@
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
         real topo_ri(minalt:maxalt,minazi:maxazi)
         real topo_rj(minalt:maxalt,minazi:maxazi)
+        real topo_lat(minalt:maxalt,minazi:maxazi)
+        real topo_lon(minalt:maxalt,minazi:maxazi)
         real trace_ri(minalt:maxalt,minazi:maxazi)
         real trace_rj(minalt:maxalt,minazi:maxazi)
         real topo_solalt(minalt:maxalt,minazi:maxazi)
+        real topo_solazi(minalt:maxalt,minazi:maxazi)
         real trace_solalt(minalt:maxalt,minazi:maxazi)
+        real eobsc_sky(minalt:maxalt,minazi:maxazi)
         real gtic(nc,minalt:maxalt,minazi:maxazi)
         real dtic(nc,minalt:maxalt,minazi:maxazi)
         real btic(nc,minalt:maxalt,minazi:maxazi)
         real emic(nc,minalt:maxalt,minazi:maxazi)
         real aod_2_cloud(minalt:maxalt,minazi:maxazi)
         real aod_2_topo(minalt:maxalt,minazi:maxazi)
-        real dist_2_topo(minalt:maxalt,minazi:maxazi)
+        real*8 dist_2_topo(minalt:maxalt,minazi:maxazi)
         real aod_ill(minalt:maxalt,minazi:maxazi)
         real aod_ill_dir(minalt:maxalt,minazi:maxazi)
         real aod_tot(minalt:maxalt,minazi:maxazi)
@@ -261,6 +265,7 @@
           do i = minalt,maxalt
                 trace_solalt(i,j) = solar_alt
                 topo_solalt(i,j) = solar_alt
+                topo_solazi(i,j) = solar_az
 
                 itrace = nint(trace_ri(i,j))
                 jtrace = nint(trace_rj(i,j))
@@ -268,6 +273,7 @@
                     if(itrace .ge. 1 .and. itrace .le. NX_L .and.
      1                 jtrace .ge. 1 .and. jtrace .le. NY_L)then
                         trace_solalt(i,j) = sol_alt_2d(itrace,jtrace)
+                        eobsc_sky(i,j) = eobsc(itrace,jtrace)
                     endif
                 endif
 
@@ -276,6 +282,10 @@
                 if(itopo .ge. 1 .and. itopo .le. NX_L .and.
      1             jtopo .ge. 1 .and. jtopo .le. NY_L)then
                     topo_solalt(i,j) = sol_alt_2d(itopo,jtopo)
+                    topo_solazi(i,j) = sol_azi_2d(itopo,jtopo)
+                    eobsc_sky(i,j) = eobsc(itopo,jtopo)
+                    topo_lat(i,j) = lat(itopo,jtopo) ! bilin interp?
+                    topo_lon(i,j) = lon(itopo,jtopo) ! bilin interp?
                 endif
 
           enddo ! i
@@ -283,7 +293,7 @@
 
           if(l_binary .eqv. .false.)then
               write(6,*)' call get_sky_rgb with cyl data'
-              if(htagl .eq. 1000e3)then                    ! High alt
+              if(htagl .ge. 1000e3)then                    ! High alt
                 corr1_a = 9.2
               elseif(htagl .eq. 300.)then                  ! BAO
                 if(solar_alt .lt. 30.)then
@@ -329,9 +339,11 @@
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo,gtic,dtic,btic,emic
      1                    ,topo_albedo_2d(:,isound,jsound)
+     1                    ,topo_lat,topo_lon                            ! I
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,aod_tot
-     1                    ,dist_2_topo,topo_solalt,trace_solalt
+     1                    ,dist_2_topo,topo_solalt,topo_solazi
+     1                    ,trace_solalt,eobsc_sky
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl,azi_scale  
