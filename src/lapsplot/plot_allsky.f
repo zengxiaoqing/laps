@@ -945,15 +945,34 @@
           write(6,23)hdist_loc,hdist_loc_thr,newloc
 23        format('  hdist_loc/hdist_loc_thr/newloc = ',2f9.3,i3)
 
-          write(6,*)' call sun_moon at grid point ',i_obs,j_obs
+          write(6,*)' call sun_moon at sfc grid point ',i_obs,j_obs
           idebug = 2
+          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs ! I
+     1                 ,alm,azm,idebug                               ! I
+     1                 ,0.,earth_radius                              ! I
+     1                 ,elgms,moon_mag,rmn                           ! O 
+     1                 ,emag,eobsf,eobsl)                            ! O
+
+          if(elgms .lt. 1.4)then
+            write(6,24)emag,eobsf,eobsl
+ 24         format(' NOTE: Solar Eclipse Conditions: mag/obsc = '
+     1            ,f9.6,2f11.6)
+            l_solar_eclipse = .true.
+          elseif(elgms .lt. 0.6)then
+            write(6,*)' NOTE: Possible Solar Eclipse Conditions'
+            l_solar_eclipse = .true.
+          else
+            l_solar_eclipse = .false.
+          endif
+
+          write(6,*)' call sun_moon at grid point ',i_obs,j_obs
           call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs ! I
      1                 ,alm,azm,idebug                               ! I
      1                 ,htagl(iloc),earth_radius                     ! I
      1                 ,elgms,moon_mag,rmn                           ! O 
      1                 ,emag,eobsf,eobsl)                            ! O
-          write(6,24)alm,azm,elgms,moon_mag,rmn
-24        format('  alt/az/elg/mnmag/rmn = ',2f8.2,f9.4,f8.2,f9.4)
+          write(6,25)alm,azm,elgms,moon_mag,rmn
+ 25       format('  alt/az/elg/mnmag/rmn = ',2f8.2,f9.4,f8.2,f9.6)
 
 !         Consider passing 'topo_flag' into 'sun_moon' to consider either
 !         solar or lunar eclipses
@@ -963,32 +982,20 @@
 !         'eobsf' is observer obscuration
 !         'eobsl' includes limb darkening for observer obscuration
 
-          if(elgms .lt. 0.5)then
-            write(6,25)emag,eobsf,eobsl
-25          format(' NOTE: Solar Eclipse Conditions: mag/obsc = '
-     1            ,f9.6,2f9.6)
-            l_solar_eclipse = .true.
-          elseif(elgms .lt. 0.6)then
-            write(6,*)' NOTE: Possible Solar Eclipse Conditions'
-            l_solar_eclipse = .true.
-          else
-            l_solar_eclipse = .false.
-          endif
-
           if(maxval(sol_alt_2d) .gt. 0. .and. 
      1       l_solar_eclipse .eqv. .true.)then
-            write(6,*)' Calculate gridded eclipse obscuration'
+            write(6,*)' Calculate gridded sfc eclipse obscuration'
             elgmin = 9999.
             idebug = 0
             do i = 1,NX_L
             do j = 1,NY_L
               call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i,j
      1                     ,almgrd,azmgrd,idebug
-     1                     ,htagl(iloc),earth_radius                   ! I
+     1                     ,0.,earth_radius                            ! I
      1                     ,elggrd,grdmoon_mag,rmn                     ! O
      1                     ,solar_eclipse_magnitude,eobsf,eobsc(i,j))
 
-              if(elggrd .lt. elgmin)then
+              if(elggrd .lt. elgmin .and. sol_alt_2d(i,j) .gt. 0.)then
                 elgmin = elggrd
                 emagmax = solar_eclipse_magnitude
                 eobsmax = eobsc(i,j)
