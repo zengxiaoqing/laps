@@ -7,8 +7,9 @@
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo, &                    ! I
                    topo_gti,topo_albedo,gtic,dtic,btic,emic,albedo_sfc,&! I
+                   topo_lat,topo_lon, &                                 ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
-                   dist_2_topo,topo_solalt,trace_solalt,          &     ! I
+                   dist_2_topo,topo_solalt,topo_solazi,trace_solalt,eobsc_sky, &    ! I
                    alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
                    sol_lat,sol_lon, &                                   ! I
                    minalt,maxalt,minazi,maxazi, &                       ! I
@@ -74,9 +75,13 @@
         real aod_ill(ni,nj)         ! aerosol illuminated slant optical depth (topo/notopo)
         real aod_ill_dir(ni,nj)     ! aerosol directly slant illuminated optical depth, atten bhd clds 
         real aod_tot(ni,nj)         ! aerosol slant (in domain) OD
-        real dist_2_topo(ni,nj)     ! distance to topo (m)
+        real*8 dist_2_topo(ni,nj)   ! distance to topo (m)
         real topo_solalt(ni,nj)     ! solar altitude from ground
+        real topo_solazi(ni,nj)     ! solar azimuth from ground
         real trace_solalt(ni,nj)    ! solar altitude from ray trace
+        real topo_lat(ni,nj)        ! 
+        real topo_lon(ni,nj)        ! 
+        real eobsc_sky(ni,nj)       ! 
         real od_atm_a               ! zenithal AOD seen from observer (aod_vrt)
         real od_atm_a_eff(ni,nj)    ! aerosol illuminated tau per airmass
         real od_atm_a_dir(ni,nj)    ! aerosol directly ill tau per airmass
@@ -236,7 +241,7 @@
             altmidcorr = -3.60
             fracerf0 = 0.59  ! value with sun on horizon
           else                     ! panoramic camera
-            altmidcorr = -5.29
+            altmidcorr = -4.69 - aod_ha * 40.
             fracerf0 = 0.65  ! value with sun on horizon
           endif
           write(6,*)' alt_top,altmidcorr: ',alt_top,altmidcorr
@@ -366,7 +371,7 @@
                     idebug_a(i,j) = 1
                 elseif(i .ge. 110 .and. i .le. 130)then
                     idebug_a(i,j) = 1
-                elseif(abs(topo_solalt(i,j) - (-4.5)) .le. 2.0 .AND. &
+                elseif(abs(topo_solalt(i,j) - (-4.5)) .le. 8.0 .AND. &
                         htmsl .gt. 1000e3 .AND. alt_a(i,j) .le. -75.)then
                     idebug_a(i,j) = 1
                 endif
@@ -374,14 +379,15 @@
 !           if(abs(alt_a(i,j)+horz_dep) .le. 0.1 .AND. azi_a(i,j)/10. .eq. nint(azi_a(i,j)/10.))then
 !               idebug_a(i,j) = 1
 !           endif
-!           if(alt_a(i,j) .ge. -89.254 .and. alt_a(i,j) .le. -89.25 .and. &
-!              azi_a(i,j) .ge. 200.0  .and. azi_a(i,j) .le. 210.0)then
+!           if(alt_a(i,j) .ge. -89.80 .and. alt_a(i,j) .le. -89.70 .AND. &
+            if(alt_a(i,j) .ge. -89.30 .and. alt_a(i,j) .le. -89.07 .AND. &
+                                                     j .eq. 2048 )then
+                idebug_a(i,j) = 1 ! alt slice
+            endif
+!           if(i .eq. 81 .AND. &  ! azi slice
+!              azi_a(i,j) .ge. 196.0  .and. azi_a(i,j) .le. 210.0)then
 !               idebug_a(i,j) = 1
 !           endif
-            if(i .eq. 81 .AND. & ! azi slice
-               azi_a(i,j) .ge. 196.0  .and. azi_a(i,j) .le. 210.0)then
-                idebug_a(i,j) = 1
-            endif
         enddo ! i
         enddo ! j
 
@@ -673,9 +679,11 @@
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
                        ,transm_obs                                  & ! I
                        ,gtic,dtic,btic                              & ! I
-                       ,dist_2_topo,topo_solalt,azi_scale           & ! I
-                       ,sol_alt,sol_az,nsp,airmass_2_topo,idebug_pf & ! I
-                       ,ni,nj,pf_land)                                ! O
+                       ,dist_2_topo,topo_solalt,topo_solazi,azi_scale & ! I
+                       ,sol_alt,sol_az,nsp,airmass_2_topo           & ! I
+                       ,idebug_pf,ni,nj,i4time,rlat,rlon,htmsl      & ! I
+                       ,topo_lat,topo_lon                           & ! I
+                       ,pf_land)                                      ! O
 
         I4_elapsed = ishow_timer()
 
@@ -754,12 +762,17 @@
 
 !         if(sol_alt .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
 !         if(topo_solalt(i,j) .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
+!         'rad_sec_cld' should be attenuated if there is an eclipse and the
+!         observer is very high
           if(solalt_ref .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
               if(solalt_ref .lt. 0. .and. solalt_ref .ne. solalt)then
                   rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * 3e9 / 1300. * 5.
               endif
               if(solalt .le. 0.)then ! between shallow twilight and 0.
                   where(sph_rad_ave .ne. r_missing_data)rad_sec_cld = sph_rad_ave
+              endif
+              if(l_solar_eclipse .eqv. .true. .and. htmsl .gt. 1000e3)then
+                  rad_sec_cld(:) = rad_sec_cld(:) * (1.-eobsc_sky(i,j))
               endif
 !             Potential intensity of cloud if it is opaque 
 !               (240. is nominal intensity of a white cloud far from the sun)
@@ -1237,8 +1250,8 @@
 !                             ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
                               ,red_rad,grn_rad,blu_rad,sky_rad(:)
 98                  format( &
-                        ' rtopo/gti/gtic/alb/tsalt/dst/trad/srad', &
-                           f9.3,f9.1,f9.4,f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
+                        ' rtopo/gti/gtic/alb/tsalt/dst/trad/srad   ', &
+                           f9.3,f9.1,f9.4,11x,f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
                   endif
 
                   sky_rad(1) = sky_rad(1) + red_rad
@@ -1285,7 +1298,7 @@
 !                             ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
                               ,red_rad,grn_rad,blu_rad,sky_rad(:)
 99                  format( &
-                        ' rtopo/gti/gtic/alb/tsalt/dst/trad/srad', &
+                        ' rtopo/gti/gtic/em/alb/tsalt/dst/trad/srad', &
                            f9.0,f9.4,2f10.7,f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
                   endif
 
