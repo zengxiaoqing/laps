@@ -3,7 +3,7 @@
                 obj_alt,obj_azi,                 & ! I
                 solalt,solazi,                   & ! I 
                 clwc_3d,cice_3d,rain_3d,snow_3d, & ! I
-                topo_a,                          & ! I
+                topo_a,grdasp,                   & ! I
                 ni,nj,nk,idb,jdb,                & ! I
                 heights_3d,                      & ! I 
                 sfc_glow,                        & ! I
@@ -11,6 +11,11 @@
 
 !    Calculate 3D radiation field looping through each of the 6 faces in
 !    the domain.
+
+!    This version gives better handling of partial illumination of a
+!    grid box when the ray is descending below the terrain. A smoother
+!    sky illumination results with more consistent 'aodf' values that
+!    are responding to the 'transm' values.
 
      use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
                             ,aod,aero_scaleht,fcterm,redp_lvl
@@ -36,12 +41,14 @@
      real rain_3d(ni,nj,nk)  ! kg/m**3
      real snow_3d(ni,nj,nk)  ! kg/m**3
      real b_alpha_3d(ni,nj,nk) ! m**-1          
+     real transm_2d(ni,nj)    ! used for terrain surface (the "old" way) 
      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
-     real transm_4d(ni,nj,nk,nc) ! color information added
+     real transm_4d(ni,nj,nk,nc) ! color information added + limb shadow
 
      real obj_alt(ni,nj),obj_azi(ni,nj)
      real topo_a(ni,nj)
      real projrot(ni,nj)
+     real grdasp(ni,nj)
      real sfc_glow(ni,nj)
      real tbuff(ni,nj)
 
@@ -116,7 +123,7 @@
                 + rain_3d * rain2alpha * bksct_eff_rain &
                 + snow_3d * snow2alpha * bksct_eff_snow 
 
-     write(6,*)' subroutine get_cloud_rad_faces: solar alt/az ',solalt,solazi
+     write(6,*)' subroutine get_cloud_rad_faces2: solar alt/az ',solalt,solazi
 
      ntot = 0
      nsteps = 0
@@ -190,8 +197,10 @@
        do rit = ris,rie,facestepij
        do rjt = rjs,rje,facestepij
 
-!      do rkt = rks,rke,facestepk
-       do htt = heights_1d(ks),heights_1d(ke),facesteph
+        if(obj_alt(nint(rit),nint(rjt)) .ge. twi_alt)then
+
+!       do rkt = rks,rke,facestepk
+        do htt = heights_1d(ks),heights_1d(ke),facesteph
          rkt = htlut(nint(htt))
 
          it = rit; jt = rjt; kt = rkt
@@ -231,12 +240,14 @@
 !        Start ray trace at this point
          if(idebug .eq. 1)write(6,1)if,it,jt,kt
 1        format(4i3)
+         frac_abv_terrain = 1.0
          do ls = 0,4000 ! max number of ray segments
 
            if(ls .eq. 0)then ! values at start of trace                
              objalt = obj_alt(id,jd) + refr_mn
              objazi = obj_azi(id,jd)
              dids = -sind(objazi)*cosd(objalt)/grid_spacing_m
+             dids = dids * grdasp(id,jd)
              djds = -cosd(objazi)*cosd(objalt)/grid_spacing_m
              dhtds = -sind(objalt)                                 
              dxyds =  cosd(objalt)
@@ -339,7 +350,7 @@
                l_same_point = .false.
              endif
 
-             if(ht - topo_a(id,jd) .le. 1000. .AND. ihit_terrain .ne. 1)then
+             if(ht - topo_a(id,jd) .le. 1000. .AND. frac_abv_terrain .gt. 0.)then
 
 !              Interpolate to get topography at fractional grid point
 
@@ -360,15 +371,25 @@
 
                topo_bilin = sum(bi_coeff(:,:) * topo_a(il:ih,jl:jh))
 
+               agl_last = agl
+               agl = ht - topo_bilin
+
                if(ht .lt. topo_bilin)then
                  ihit_terrain = 1
+                 if(agl .gt. 0.)then
+                   frac_abv_terrain = 1.
+                 elseif(agl_last .le. 0.)then
+                   frac_abv_terrain = 0.
+                 else ! this segment intersects terrain
+                   frac_abv_terrain = agl_last / (agl_last - agl)
+                 endif
                endif
              endif
 
-             if(ihit_terrain .eq. 1)then
-               transm_3d(id,jd,kd) = 0.0                      
-!              transm_4d(id,jd,kd,:) = 0.0                      
-             else ! trace free of terrain
+             if(frac_abv_terrain .le. 0.)then
+!              transm_3d(id,jd,kd) = 0.0                      
+               transm_3d(id,jd,kd) = (1. - albedo) ! persistence
+             else ! trace (partly) free of terrain
                ds = s - slast
                b_alpha_last = b_alpha_new
 
@@ -408,7 +429,10 @@
                  stop
                endif
 
-               transm_3d(id,jd,kd) = 1. - albedo              
+               transm_3d(id,jd,kd) = (1. - albedo) ! * frac_abv_terrain              
+               if(frac_abv_terrain .lt. 1.0)then ! 1st terrain intersection
+                 transm_2d(id,jd) = (1. - albedo)
+               endif
              endif
 
              nfacesteps = nfacesteps + 1
@@ -423,7 +447,8 @@
 
 10       continue
 
-       enddo ! k
+        enddo ! htt
+        endif ! daytime / early twilight - trace column
        enddo ! j
        enddo ! i
 
