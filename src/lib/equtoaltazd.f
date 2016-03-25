@@ -12,7 +12,9 @@
         cosha  = COSD(ha)
 
         alt=ASIND (sinphi*sindec+cosphi*cosdec*cosha)
-        az =ACOSD((cosphi*sindec-sinphi*cosdec*cosha)/cosd(alt))
+        cosarg = (cosphi*sindec-sinphi*cosdec*cosha)/cosd(alt)
+        cosarg = min(max(cosarg,-1.),+1.)
+        az =ACOSD(cosarg)
 
         if(ha .gt. 0. .AND. ha .lt. 180.)az = 360.0 - az
 
