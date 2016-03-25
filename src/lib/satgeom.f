@@ -43,7 +43,7 @@ C istatus        O        I*4     Standard status return.
 C***Parameter list variables
         real          lat(ni,nj),lon(ni,nj)
         real          sublat_d_a(ni,nj),sublon_d_a(ni,nj)
-        Real          sublat_d,sublon_d,range_m
+        Real          sublat_d,sublon_d,range_m ! sat from Earth center
         Integer       i4time,istatus
 
 C***Local variables
