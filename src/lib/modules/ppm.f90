@@ -141,6 +141,44 @@ contains
   end subroutine
 
   !--------------------------------------------------------------
+  ! Portable PixMap Type 3 (RGB color)
+  subroutine writeppm3_16bit(R,G,B,text)
+    integer :: R(:,:),G(:,:),B(:,:)
+    character(len=*) :: text
+    integer :: cols,rows
+    integer :: i,j
+    integer :: maxvalue
+ 
+    ! Open File   
+    open(unit=100, file=trim(text)//".ppm", status='unknown')
+    
+    ! Write Header and ppm file type
+    write(100,'( A )') "P3"
+    write(100,'( A )') "# PPM Type 2 File (generated with fortran)"
+ 
+    ! Write Image Size
+    cols = size(R,2)
+    rows = size(R,1)
+    write(100,'( i6, 1x, i6 )') cols, rows
+    
+    ! Write Maximum Value
+    maxvalue = max( maxval(maxval(R,dim=1),dim=1)&
+                   ,maxval(maxval(G,dim=1),dim=1)&
+                   ,maxval(maxval(B,dim=1),dim=1))
+    write(6,*)' Image maxvalue is ',maxvalue
+    maxvalue = 65535
+    write(6,*)' Image scaled to   ',maxvalue
+    write(100,'( i6 )') maxvalue
+    
+    ! Write Image
+    do i=1,rows
+      do j=1,cols
+        write(100,'( 3(i5,1x) )') R(i,j),G(i,j),B(i,j)
+      enddo
+    enddo
+  end subroutine
+
+  !--------------------------------------------------------------
   ! Test Module
   subroutine testPPM
     integer,parameter :: N = 100
