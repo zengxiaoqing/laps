@@ -542,8 +542,9 @@ c
       real  sat_radius,au_m
 
 !     Coordinates are equatorial and relative to prime meridian
-      real*8  TX,TY,TZ,          ! O (Earth Surface)                                                   
-     1        SATX,SATY,SATZ,    ! I (Satellite)    
+      real*8  TX,TY,TZ,       ! O (Earth Surface)                   
+     1        SATX,SATY,SATZ, ! I (Satellite relative to Earth Center - AU)
+     1        STX,STY,STZ,
      1        R8Emission_angle_r     
 
       real  Emission_angle_d
@@ -557,8 +558,13 @@ C   Compute equatorial coordinates of point on sfc of earth
         TY = sind(lon) * cosd(lat) * radius_earth_m / au_m
         TZ = sind(lat)             * radius_earth_m / au_m
 
+C       Satellite relative to surface (AU)
+        STX = SATX-TX
+        STY = SATY-TY
+        STZ = SATZ-TZ
+
 C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
-        Call AngleVectors(SATX-TX,SATY-TY,SATZ-TZ,TX,TY,TZ
+        Call AngleVectors(STX,STY,STZ,TX,TY,TZ
      1                            ,R8Emission_angle_r)
         Emission_angle_d = 90. - R8Emission_angle_r / rpd
 
