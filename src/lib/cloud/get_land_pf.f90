@@ -1,6 +1,7 @@
 
         subroutine get_lnd_pf(elong_a,alt_a,azi_a &                     ! I
-                             ,topo_gti,topo_albedo,transm_obs &         ! I
+                             ,topo_gti,topo_albedo &                    ! I
+                             ,topo_lf,topo_sc,transm_obs &              ! I
                              ,gtic,dtic,btic &                          ! I
                              ,dist_2_topo,topo_solalt,topo_solazi,azi_scale &       ! I
                              ,sol_alt,sol_azi,nsp,airmass_2_topo &      ! I
@@ -34,6 +35,8 @@
         real topo_solazi(ni,nj)     ! 90. - u0 (solar altitude)
         real topo_lat(ni,nj)        ! 
         real topo_lon(ni,nj)        ! 
+        real topo_lf(ni,nj)         ! topo land fraction
+        real topo_sc(ni,nj)         ! topo snow/ice
         real rlat_a(ni,nj)          ! 
         real rlon_a(ni,nj)          ! 
         real Phase_angle_d(ni,nj)   ! 
@@ -98,6 +101,7 @@
             specangvert = abs(emis_ang - topo_solalt(i,j))
             specangvert2 = specangvert * sind(emis_ang)
             azidiffsp = azidiffg / sind(max(emis_ang,.001))
+            azidiffsp = min(max(azidiffsp,-180.),+180.)
 !           specang = sqrt(specangvert**2 + azidiffsp**2)
             specang = angdist(emis_ang,topo_solalt(i,j),azidiffsp)
 
@@ -107,19 +111,21 @@
 
             fsnow = (topo_albedo(2,i,j) - 0.15) / (1.0 - 0.15)
             fsnow = max(fsnow,0.)
-            fland = 1.0 - fsnow
+            fsnow = topo_sc(i,j)
 
-            if(topo_albedo(1,i,j) .eq. .08 .and. topo_albedo(2,i,j) .eq. .08 .and. topo_albedo(3,i,j) .eq. .08)then
+            if(topo_lf(i,j) .lt. 1.0)then
+                fwater = 1. - topo_lf(i,j)
+                fland = topo_lf(i,j)
+            elseif(topo_lf(i,j) .eq. 0.0)then
                 fwater = 1.0
                 fland = 0.
-                fsnow = 0.
-            elseif(topo_albedo(3,i,j) / topo_albedo(1,i,j) .gt. 5.0)then
-                fwater = 1.0
-                fland = 0.
-                fsnow = 0.
-            else
+            else ! land fraction = 1
                 fwater = 0.0
+                fland = 1.0
             endif
+
+            fland  = fland  * (1.0 - fsnow)
+            fwater = fwater * (1.0 - fsnow)
 
             fice = 0.0
 
@@ -183,7 +189,7 @@
               ampl_w = cosd(alt_a(i,j))
 
 !             Use approximate specular reflection angle
-              glint_radius = 20.
+              glint_radius = 22.
               argexp = min(specang/glint_radius,8.)
               specamp = exp(-(argexp)**2)
 
@@ -191,7 +197,7 @@
 
 !             Add sunlight reflecting off the water surface
               arg_glint = opac(phwater * fwater)
-              topo_albedo(ic,i,j) = 0.05 * arg_glint + topo_albedo(ic,i,j) * (1.-arg_glint)
+              topo_albedo(ic,i,j) = 0.045 * arg_glint + topo_albedo(ic,i,j) * (1.-arg_glint)
 
 !             Ice
               phice = 1.0
@@ -202,15 +208,16 @@
               if(ic .eq. 2)then
                 if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. ph1 .lt. 0. .OR.&
                  ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
-                          .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) )then
+                          .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) .OR. &
+                       (alt_a(i,j) .eq. -90. .and. j .eq. 64) )then ! nadir
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
 1                 format(i4,i5,i2,5f9.2,9f9.4,f11.0,5f9.2)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
 111               format('   antisolar alt/azi/azeff/elg/elg_a/eff',6f9.2)
 !                 if(abs(emis_ang - emis_ang_a(i,j)) .gt. 0.1 .AND. emis_ang_a(i,j) .gt. 0.)then
                   if(emis_ang_a(i,j) .gt. 0.)then
-                    write(6,112)emis_ang,emis_ang_a(i,j),azi_fm_lnd_a(i,j),topo_lat(i,j),topo_lon(i,j),topo_solalt(i,j),topo_solazi(i,j)
-112                 format('   EMISANG INFO:',7f9.3)
+                    write(6,112)emis_ang,emis_ang_a(i,j),azi_fm_lnd_a(i,j),topo_lat(i,j),topo_lon(i,j),topo_solalt(i,j),topo_solazi(i,j),topo_lf(i,j),topo_sc(i,j)
+112                 format('   EMISANG INFO:',9f9.3)
                   endif
                 endif
               endif
@@ -231,6 +238,12 @@
          enddo ! i (altitude)
 
         enddo ! j (azimuth)
+
+        write(6,*)' get_lnd_pf: range of lf = ',minval(topo_lf(:,:)) &
+                                               ,maxval(topo_lf(:,:))
+
+        write(6,*)' get_lnd_pf: range of sc = ',minval(topo_sc(:,:)) &
+                                               ,maxval(topo_sc(:,:))
 
         write(6,*)' get_lnd_pf: range of pf = ',minval(pf_land(2,:,:)) &
                                                ,maxval(pf_land(2,:,:))
