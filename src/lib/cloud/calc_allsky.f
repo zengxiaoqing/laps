@@ -4,7 +4,7 @@
 !    1                     ,rain_3d,snow_3d                         ! I
 !    1                     ,pres_3d,aod_3d                          ! I
      1                     ,topo_sfc,topo,swi_2d                    ! I
-     1                     ,topo_albedo_2d                          ! I
+     1                     ,topo_albedo_2d,land_frac,snow_cover     ! I
      1                     ,htagl                                   ! I
      1                     ,aod_ref                                 ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc     ! I
@@ -38,6 +38,10 @@
 !       real pres_3d(NX_L,NY_L,NZ_L)      ! Control Variable
 !       real aod_3d(NX_L,NY_L,NZ_L)       
         real topo(NX_L,NY_L)
+        real land_frac(NX_L,NY_L)
+        real snow_cover(NX_L,NY_L)
+        real du_2d(NX_L,NY_L)
+        real aod_2d(NX_L,NY_L)
         real swi_2d(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
         real alt_a_roll(minalt:maxalt,minazi:maxazi)
@@ -66,6 +70,10 @@
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
         real topo_swi(minalt:maxalt,minazi:maxazi)
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
+        real topo_lf(minalt:maxalt,minazi:maxazi)
+        real topo_sc(minalt:maxalt,minazi:maxazi)
+        real du_a(minalt:maxalt,minazi:maxazi)
+        real aod_a(minalt:maxalt,minazi:maxazi)
         real topo_ri(minalt:maxalt,minazi:maxazi)
         real topo_rj(minalt:maxalt,minazi:maxazi)
         real topo_lat(minalt:maxalt,minazi:maxazi)
@@ -286,6 +294,14 @@
                     eobsc_sky(i,j) = eobsc(itopo,jtopo)
                     topo_lat(i,j) = lat(itopo,jtopo) ! bilin interp?
                     topo_lon(i,j) = lon(itopo,jtopo) ! bilin interp?
+                    topo_lf(i,j) = land_frac(itopo,jtopo) ! bilin interp?
+                    if(snow_cover(itopo,jtopo) .ne. r_missing_data)then
+                        topo_sc(i,j) = snow_cover(itopo,jtopo)
+                    else
+                        topo_sc(i,j) = 0.
+                    endif
+                    du_a(i,j) = du_2d(itopo,jtopo) ! bilin interp?
+                    aod_a(i,j) = aod_2d(itopo,jtopo) ! bilin interp?
                 endif
 
           enddo ! i
@@ -294,7 +310,7 @@
           if(l_binary .eqv. .false.)then
               write(6,*)' call get_sky_rgb with cyl data'
               if(htagl .ge. 1000e3)then                    ! High alt
-                corr1_a = 9.2
+                corr1_a = 9.1             ! for high scattering angle
               elseif(htagl .eq. 300.)then                  ! BAO
                 if(solar_alt .lt. 30.)then
                   corr1_a = 9.2                            ! low sun
@@ -339,7 +355,7 @@
      1                    ,airmass_2_topo_3d      
      1                    ,topo_swi,topo_albedo,gtic,dtic,btic,emic
      1                    ,topo_albedo_2d(:,isound,jsound)
-     1                    ,topo_lat,topo_lon                            ! I
+     1                    ,topo_lat,topo_lon,topo_lf,topo_sc            ! I
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,aod_tot
      1                    ,dist_2_topo,topo_solalt,topo_solazi
