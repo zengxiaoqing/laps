@@ -948,7 +948,7 @@
                       idebug_topo = 0
                     endif
 !                   if(altray .le. -89.07 .and. altray .ge. -89.40 .and. jazi .eq. 2048)then ! limb test
-                    if(altray .le. -89.07 .and. altray .ge. -89.40 .and. jazi .eq. 2104)then ! limb test
+                    if(altray .le. -89.06 .and. altray .ge. -89.40 .and. jazi .eq. 2104)then ! limb test
                       if(ic .eq. icd)idebug_topo = 1
                     endif
 
@@ -1058,9 +1058,9 @@
 83                format(&
      'day_int/elg/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,f7.2,2f7.3,f8.3,2f7.3,1x,2f7.3,1x,2f8.4,f12.0)      
-                  write(6,84)altray,view_azi_deg,am_sun,solar_int_g2,aascat,scatter_order,hg2,hg2d(ic),gasfrac,aod_ill(ialt,jazi) & 
+                  write(6,84)altray,view_azi_deg,am_sun,aascat,scatter_order,hg2,hg2d(ic),gasfrac,aod_ill(ialt,jazi) & 
                             ,aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi),aod_dir_rat
-84                format('altaz/amsun/solarintg2/aasc/sco/hg2/hg2d/gasfrac/aodill/dir/ray/rat = ',2f8.2,6f9.4,2f10.6,3f7.3)                  
+84                format('altaz/amsun/aasc/sco/hg2/hg2d/gasfrac/aodill/dir/ray/rat = ',2f8.2,5f9.4,2f10.6,3f7.3)                  
                   write(6,86)ag_2d(ialt,jazi),airmass_g,gasfrac
 86                format('ag2d/airmass_g/gasfrac',f10.4,f9.3,f10.4)
 !                 if(dist_2_topo(ialt,jazi) .gt. 0.)then    ! hit topo
