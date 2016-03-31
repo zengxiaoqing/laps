@@ -557,6 +557,11 @@
         write(6,*)' Range of transm_4d(red channel) = '
      1           ,minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
 
+        write(6,*)' clwc column = ',clwc_3d(i,j,:)
+        write(6,*)' cice column = ',cice_3d(i,j,:)
+        write(6,*)' rain column = ',rain_3d(i,j,:)
+        write(6,*)' snow column = ',snow_3d(i,j,:)
+
         I4_elapsed = ishow_timer()
 
         topo_max_ang = 45.0
@@ -1061,9 +1066,9 @@
 
                     pr_h = pres_1d(kk_h)
                   else
-                    write(6,*)' ERROR: rk_h is out of bounds ',ls
-     1                       ,rk_h,nk,rkdelt,ht_h,ht_m,topo_m,ihit_topo
-     1                       ,rjnew_l,rjnew_h,jnew_m
+                    write(6,*)' ERROR: rk_h is out of bounds ',ls,iabove
+     1                       ,rkstart,rk_h,nk,rkdelt,ht_h,ht_m,topo_m
+     1                       ,ihit_topo,rjnew_l,rjnew_h,jnew_m
      1                       ,dy1_l,dy1_h,rj,ycos
                     istatus = 0
                     stop
