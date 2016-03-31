@@ -202,6 +202,7 @@
 !       do rkt = rks,rke,facestepk
         do htt = heights_1d(ks),heights_1d(ke),facesteph
          rkt = htlut(nint(htt))
+         kmarch = nint(rkt)
 
          it = rit; jt = rjt; kt = rkt
          id = nint(rit); jd = nint(rjt); kd = nint(rkt)
@@ -251,6 +252,7 @@
              djds = -cosd(objazi)*cosd(objalt)/grid_spacing_m
              dhtds = -sind(objalt)                                 
              dxyds =  cosd(objalt)
+             curve = 0.
            else            ! ls > 0, thus after first looping
              slast = scurr ! initialized down below
              htlast = ht
@@ -260,13 +262,16 @@
 
 !          Calculate 'scurr' as the total path traversed so far by the ray.
 !          The incremental path length ('ds') will be calculated later on.
-           if(objalt .gt. 15. .AND. if .le. 2 .and. grid_spacing_m .le. 10000.)then ! march by height levels
-             nksteps = 2
+!          altthr = 15. - (float(kmarch)/float(nk)) * 10. ! empirical for now
+           altthr = 10.
+           if(objalt .gt. altthr .AND. if .le. 2)then ! march by height levels
+             nksteps = 1
              rkmarch = rkt - float(ls)/float(nksteps)
              if(rkmarch .le. 0.)goto 10 ! going outside the domain
              kmarch = nint(rkmarch) ! kl,kh
              htmarch = heights_1d(max(kmarch,1))
-             scurr = (htt - htmarch) / (-dhtds)
+!            scurr = ((htt - htmarch) + curve) / (-dhtds)
+             scurr = ((htmarch - htt) - curve) / (+dhtds)
 
              if(scurr .lt. slast)then
                write(6,*)' ERROR s<slast 1:',s,slast,ls,htt,htmarch,rkmarch
@@ -289,7 +294,8 @@
            ri = rit + dids*s
            rj = rjt + djds*s
 
-           ht = htt + dhtds*s + (dxyds*s)**2 / (2.0*earth_radius)
+           curve = (dxyds*s)**2 / (2.0*earth_radius)
+           ht = htt + dhtds*s + curve
 
 !          This can be used as part of a refraction strategy
 !          refk = 0.179
@@ -307,6 +313,12 @@
 
            idlast = id; jdlast = jd; kdlast = kd
            id = nint(ri); jd = nint(rj); kd = nint(rk)
+
+           if(id .eq. idb .and. jd .eq. jdb)then
+             idebug = 1
+           else
+             idebug = 0
+           endif
 
            if(id .lt. 1 .or. id .gt. ni &
          .or. jd .lt. 1 .or. jd .gt. nj &
@@ -326,8 +338,8 @@
                  goto 9
                endif
              else ! transm_3d is missing
-               if(idebug .eq. 1)write(6,5)s,ri,rj,rk,ht,id,jd,kd             
-5              format('s/ri/rj/rk/ht = ',5f9.2,' new',3i4)
+               if(idebug .eq. 1)write(6,5)s,ri,rj,rk,ht,htt,htmarch,curve,id,jd,kd             
+5              format('s/ri/rj/rk/ht/cv = ',8f9.2,' new',3i4)
                nnew = nnew + 1
              endif
 
@@ -430,6 +442,12 @@
                endif
 
                transm_3d(id,jd,kd) = (1. - albedo) ! * frac_abv_terrain              
+
+               if(idebug .eq. 1)then
+                   write(6,8)id,jd,kd,transm_3d(id,jd,kd),b_alpha_new,b_alpha_last
+8                  format('ijk trn ba',3i5,f10.6,2e12.5)
+               endif
+
                if(frac_abv_terrain .lt. 1.0)then ! 1st terrain intersection
                  transm_2d(id,jd) = (1. - albedo)
                endif
@@ -491,6 +509,7 @@
          patm_k = ztopsa(heights_1d(k)) / 1013.
          topo = 1500. ! generic topo value (possibly redp_lvl?)
          ht_agl = heights_1d(k) - topo
+         patm_o3_msl = patm_o3(heights_1d(k))
 
 !        See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
          if(ht_agl .gt. 0.)then                               
@@ -577,7 +596,7 @@
                    call get_airmass(obj_alt(i,j),heights_3d(i,j,k) & ! I 
                                    ,patm_k,aero_refht,aero_scaleht & ! I
                                    ,earth_radius,iverbose &          ! I
-                                   ,agdum,aodum,aa,refr_deg)         ! O
+                                   ,agdum,ao,aa,refr_deg)            ! O
                  else
                    aa = 0.
                  endif
@@ -589,16 +608,18 @@
                do ic = 1,nc
                  od_g = ag * ext_g(ic) * scat_frac
 
+                 od_o = (o3_du/300.) * ext_o(ic) * ao * patm_o3_msl
+
                  ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp_a)
                  od_a = aa * ext_a(ic) * aod
 
-                 trans_c(ic) = trans(od_g + od_a)
+                 trans_c(ic) = trans(od_g + od_o + od_a)
 
                  if(iverbose .eq. 1)then
                    write(6,21)k,ic,heights_3d(i,j,k),obj_alt(i,j),obj_alt_cld
 21                 format(' k/ic/ht/objalt/cld ',i4,i3,f9.0,2f9.2)
-                   write(6,22)ag,agdum,aa,od_g,od_a,trans_c(ic)
-22                 format(' ag/agd/aa/od_g/od_a/trans',6f9.4)
+                   write(6,22)ag,agdum,ao,aa,od_g,od_o,od_a,trans_c(ic)
+22                 format(' ag/agd/ao/aa/od_g/od_o/od_a/trans',8f9.4)
                  endif
                enddo
 
