@@ -45,6 +45,7 @@
 !       real dhi_2d(NX_L,NY_L)
         real static_albedo(NX_L,NY_L)
         real land_use(NX_L,NY_L)
+        real land_frac(NX_L,NY_L)
         real snow_cover(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
         real albedo_bm(nc,NX_L,NY_L)
@@ -710,6 +711,16 @@
            write(6,*)' Successful return from read_static_grid'
         endif
 
+        var_2d='LDF'
+        write(6,*)' calling read_static_grid for land frac'
+        call read_static_grid(NX_L,NY_L,var_2d,land_frac,istatus)
+        if(istatus .ne. 1)then
+           print*,' Warning: could not read static-landfrac'
+           return
+        else
+           write(6,*)' Successful return from read_static_grid'
+        endif
+
         I4_elapsed = ishow_timer()
 
         where(topo(:,:) .ge. 3200.); land_use(:,:) = 19.; end where
@@ -945,7 +956,8 @@
           write(6,23)hdist_loc,hdist_loc_thr,newloc
 23        format('  hdist_loc/hdist_loc_thr/newloc = ',2f9.3,i3)
 
-          write(6,*)' call sun_moon at sfc grid point ',i_obs,j_obs
+          write(6,*)' call sun_moon at observer sfc grid point ',i_obs
+     1                                                          ,j_obs
           idebug = 2
           call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs ! I
      1                 ,alm,azm,idebug                               ! I
@@ -965,7 +977,8 @@
             l_solar_eclipse = .false.
           endif
 
-          write(6,*)' call sun_moon at grid point ',i_obs,j_obs
+          write(6,*)' call sun_moon at observer sfc grid point ',i_obs
+     1                                                          ,j_obs
           call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs ! I
      1                 ,alm,azm,idebug                               ! I
      1                 ,htagl(iloc),earth_radius                     ! I
@@ -1054,7 +1067,7 @@
 !    1                     ,rain_3d,snow_3d                         ! I
 !    1                     ,pres_3d,aod_3d                          ! I
      1                     ,topo_sfc,topo,swi_2d                    ! I
-     1                     ,topo_albedo_2d                          ! I
+     1                     ,topo_albedo_2d,land_frac,snow_cover     ! I
      1                     ,htagl(iloc)                             ! I
      1                     ,aod_ref                                 ! I
      1                     ,NX_L,NY_L,NZ_L,i_obs,j_obs,newloc       ! I
@@ -1158,6 +1171,7 @@
               isky_rgb_polar = sky_rgb_polar
               where(sky_rgb_polar .eq. r_missing_data)
      1              isky_rgb_polar = 0
+              write(6,*)' max polar is ',maxval(isky_rgb_polar)
 !             write(6,*)' ipolar array',
 !    1            isky_rgb_polar(2,ni_polar/2,1:nj_polar)
               npts = 3*ni_polar*nj_polar
