@@ -7,7 +7,7 @@
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo, &                    ! I
                    topo_gti,topo_albedo,gtic,dtic,btic,emic,albedo_sfc,&! I
-                   topo_lat,topo_lon, &                                 ! I
+                   topo_lat,topo_lon,topo_lf,topo_sc, &                 ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,topo_solazi,trace_solalt,eobsc_sky, &    ! I
                    alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
@@ -66,6 +66,8 @@
         real airmass_2_topo(ni,nj)  ! am to topo (rel to zen @ std atmos)
         real topo_gti(ni,nj)        ! terrain normal global irradiance
         real topo_albedo(nc,ni,nj)  ! terrain albedo
+        real topo_lf(ni,nj)         ! topo land fraction
+        real topo_sc(ni,nj)         ! topo snow/ice cover
         real gtic(nc,ni,nj)         ! spectral terrain normal irradiance
         real dtic(nc,ni,nj)         !    "        "    diffuse     "
         real btic(nc,ni,nj)         !    "        "    beam/direct "
@@ -125,6 +127,8 @@
             ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp_a)
             write(6,*)' ic/wa/ext_a ',ic,wa(ic),ext_a(ic)
         enddo ! ic
+
+        patm_o3_msl = patm_o3(htmsl)
 
 !       htmsl = psatoz(patm*1013.25)
 
@@ -380,7 +384,7 @@
 !               idebug_a(i,j) = 1
 !           endif
 !           if(alt_a(i,j) .ge. -89.80 .and. alt_a(i,j) .le. -89.70 .AND. &
-            if(alt_a(i,j) .ge. -89.30 .and. alt_a(i,j) .le. -89.07 .AND. &
+            if(alt_a(i,j) .ge. -89.30 .and. alt_a(i,j) .le. -89.06 .AND. &
                                                      j .eq. 2048 )then
                 idebug_a(i,j) = 1 ! alt slice
             endif
@@ -677,7 +681,7 @@
         I4_elapsed = ishow_timer()
 
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
-                       ,transm_obs                                  & ! I
+                       ,topo_lf,topo_sc,transm_obs                  & ! I
                        ,gtic,dtic,btic                              & ! I
                        ,dist_2_topo,topo_solalt,topo_solazi,azi_scale & ! I
                        ,sol_alt,sol_az,nsp,airmass_2_topo           & ! I
@@ -766,7 +770,11 @@
 !         observer is very high
           if(solalt_ref .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
               if(solalt_ref .lt. 0. .and. solalt_ref .ne. solalt)then
-                  rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * 3e9 / 1300. * 5.
+                  rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * 3e9 / 1300. * 7.0
+              elseif(solalt_ref .ge. 0. .and. solalt_ref .ne. solalt)then
+!                 sb_corr = 2.0 * (1.0 - (sind(solalt_ref)**0.5)) 
+                  sb_corr = 2.7 * (1.0 - (sind(solalt_ref+1.2)**0.5)) 
+                  rad_sec_cld(:) = (day_int * ext_g(:) * patm_sfc * 2.0 * 0.5) / 10.**(0.4*sb_corr)
               endif
               if(solalt .le. 0.)then ! between shallow twilight and 0.
                   where(sph_rad_ave .ne. r_missing_data)rad_sec_cld = sph_rad_ave
@@ -1077,7 +1085,8 @@
             od_atm_g = (0.1451  + .016) / 1.086
 !           od_2_cloud = (od_atm_g + od_atm_a*ext_a(ic)) * airmass_2_cloud(i,j)
             od_2_cloud = ext_g(ic) * airmass_2_cloud(i,j) &
-                       + ext_a(ic) * aod_2_cloud(i,j)
+                       + ext_a(ic) * aod_2_cloud(i,j) &
+                       + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
 
 !           Empirical correction to account for bright clouds being visible
             cloud_visibility = exp(-od_2_cloud) ! empirical coeff
@@ -1107,7 +1116,8 @@
             if(solalt_ref .gt. -4.5 .OR. htmsl .ge. 1000e3)then 
 
               if(airmass_2_topo(i,j) .gt. 0.)then ! terrain
-                od_2_topo = (ext_g(ic) * airmass_2_topo(i,j)) + aod_2_topo(i,j)
+                od_2_topo = (ext_g(ic) * airmass_2_topo(i,j)) + aod_2_topo(i,j) &
+                          + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
                 frac_front = opac(od_2_cloud) / opac(od_2_topo)
               else ! fraction of air/scatterers in front of cloud                
                 frac_front = opac(od_2_cloud) / opac(clr_od(ic)) ! gas+aero
@@ -1145,6 +1155,7 @@
             if(solalt_ref .gt. 0.0)then ! daytime
 !             frac_clr = 1.0 - frac_cloud
               frac_clr = frac_front + (1.-frac_front) * (1.-opac_cloud)
+              frac_clr_2nd = 0.
             else
 !             frac_clr = 1.0 - frac_cloud*frac_behind ! clear sky behind cloud                         
 !             frac_clr_2nd = clear_rad_2nd_c(ic,i,j) / (clear_rad_c(ic,i,j) + clear_rad_2nd_c(ic,i,j))
@@ -1223,12 +1234,11 @@
               endif
 
 !             If the view altitude is near -90, we can consider the topo as
-!             adding to the cloud via forward scattering
+!             adding to the cloud via forward scattering?
               if(alt_a(i,j) .lt. 0.)then
                   rlnd_fwsc = -sind(alt_a(i,j))
-                  topo_rad = 1.0 - cloud_albedo
-                  topo_visibility = topo_visibility * (1.0-rlnd_fwsc) &
-                                  + topo_rad        * rlnd_fwsc
+                  topo_rad = (1.0 - cloud_albedo) * rlnd_fwsc + (1.0-rlnd_fwsc)
+                  topo_visibility = topo_rad
               endif
 
               if(solalt_ref .gt. twi_alt)then 
@@ -1251,7 +1261,7 @@
                               ,red_rad,grn_rad,blu_rad,sky_rad(:)
 98                  format( &
                         ' rtopo/gti/gtic/alb/tsalt/dst/trad/srad   ', &
-                           f9.3,f9.1,f9.4,11x,f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
+                           f9.3,f9.1,f9.4,11x,f9.3,f9.2,f11.0,2x,3f12.0,2x,3f14.0)
                   endif
 
                   sky_rad(1) = sky_rad(1) + red_rad
