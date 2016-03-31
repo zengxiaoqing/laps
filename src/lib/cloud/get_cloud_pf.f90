@@ -50,6 +50,7 @@
 !         http://pubs.giss.nasa.gov/docs/1969/1969_Hansen_2.pdf
 !         http://rtweb.aer.com/rrtm_frame.html
 !         http://wiki.seas.harvard.edu/geos-chem/images/Guide_to_GCRT_Oct2013.pdf
+!         https://www.osapublishing.org/oe/abstract.cfm?uri=oe-23-9-11995
 
           cloud_od_cice = cloud_od_sp(i,j,2)
           cloud_od_rain = cloud_od_sp(i,j,3)
@@ -57,20 +58,20 @@
           if(.true.)then ! new liquid phase function
             cloud_od_liq = cloud_od_sp(i,j,1) + cloud_od_sp(i,j,3)
 
-            hgp = max(cloud_od_liq,1.0)       ! multiple scattering phase func
+            hgp = max(cloud_od_liq,1.0)    ! multiple scattering phase func
             sco = hgp
 
             bf = 0.06
 
 !           Check for being optically thin with direct light source
-!           clwc_bin1 = exp(-(cloud_od_liq/10.)**2) ! optically thin
-            clwc_bin1 = 1. -                      & ! optically thin
-                (bf * cloud_od_liq / (1. + bf * cloud_od_liq))
+!           Coefficient of 10. can be lower if needed
+            clwc_bin1 = exp(-(cloud_od_liq/10.)**2) ! optically thin
+            clwc_albedo = (bf * cloud_od_liq) / (1. + (bf * cloud_od_liq))
             clwc_bin1 = clwc_bin1 * r_cloud_rad(i,j)**10. ! direct lighting
             clwc_bin1a = 0.80**sco                  ! forward peak
-            clwc_bin1b =  1.08 - (clwc_bin1a)       ! mid    
+            clwc_bin1b =  1.06 - (clwc_bin1a)       ! mid    
             clwc_bin1c =  0.02 ! opac(0.00*sco)     ! backscattering
-            clwc_bin1d = -0.10 ! opac(0.00*sco)     ! backscattering
+            clwc_bin1d = -0.08 ! opac(0.00*sco)     ! backscattering
             clwc_bin2 = 1.0 - clwc_bin1             ! optically thick 
 
 !           Derived using phase function of Venus (a thick cloud analog)
@@ -87,8 +88,6 @@
 !           pf_thk = min(pf_thk,2.0) ! limit fwd scattering peak
             pf_thk1 = pf_thk
 
-!           This might need expanded support for increased forward scattering 
-!           when looking down on a layer of cloud from the air.
 !           Eventually sky average r_cloud_rad can help decide the regime for
 !           determination of pf_thk? 'scurve' is also available if needed.
 
@@ -97,14 +96,16 @@
 !           else
 !               pf_thk = 1.0 + ((90.-elong_a(i,j))/90.)**2
 !           endif
-            alb_clwc = alb(0.06*cloud_od_liq)
 
             radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
+            elgfrac = scurve(elong_a(i,j)/180.) * radfrac ! need radfrac?
+            alb_clwc = alb(0.06*cloud_od_liq) * elgfrac + (1.-elgfrac)
+
             pf_thk_alt = (2./3.) * (1. + sind(abs(alt_a(i,j))))
 !                     illuminated                unilluminated
 !           pf_thk = pf_thk*radfrac + hg(-0.,elong_a(i,j)) * (1.-radfrac) &
 !                                       * (2./3. * (1. + sind(alt_a(i,j))))
-            pf_thk = pf_thk*radfrac + pf_thk_alt*(1.-radfrac) 
+            pf_thk = pf_thk*radfrac*alb_clwc + pf_thk_alt*(1.-radfrac) 
             pf_thk_a(i,j) = pf_thk
 
             rain_peak = exp(-rad2tau(.06,r_cloud_rad(i,j))/2.)
@@ -158,12 +159,12 @@
           sco = max(cloud_od_snow,1.0) ! multiple scatter order 
           hgp = sco                    ! multiple scatter order
 
-!         snow_bin1 = exp(-cloud_od_snow/5.)      ! optically thin snow
+          snow_bin1 = exp(-cloud_od_snow/5.)      ! optically thin snow
           snow_bin1c = opac(0.10*(sco**1.2 - 1.0))  ! backscattering (thick)
           snow_bin1a = (1. - snow_bin1c)
 !         snow_bin1a = 0.50**sco             ! forward peak
 !         snow_bin1b = 1.0 - (snow_bin1a + snow_bin1c) ! mid
-!         snow_bin2 = 1.0 - snow_bin1        ! optically thick snow
+          snow_bin2 = 1.0 - snow_bin1        ! optically thick snow
 
           arg1 = (0.50 * fsnow + 0.50 * fcice) * 2.**(-(hgp-1.0))
           arg3 =  0.03 * fsnow + 0.20 * fcice
@@ -177,6 +178,10 @@
                   + snow_bin1a * arg4 * hg(-.600     ,elong_a(i,j)) & ! backscat
                   + snow_bin1c * pf_thk
 !                 + snow_bin2  * hg(0.0     ,elong_a(i,j))  
+
+          elgfrac = scurve(elong_a(i,j)/180.) * snow_bin2
+          alb_snow = alb(0.14*cloud_od_snow) ! * elgfrac + (1.-elgfrac)
+          pf_snow = pf_snow * (1.-elgfrac) + 2. * alb_snow * elgfrac
 
           if(cloud_od_tot .gt. 0.)then
               snow_factor = trans_nonsnow * (cloud_od_snow / cloud_od_tot)
@@ -298,12 +303,13 @@
           if(idebug_a(i,j) .eq. 1)then
               write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk1,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
 101           format(' alt/elg/cod/thk/thk1/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
+              write(6,*)' bf/od/clwc_bin2/alb_clwc = ',bf,cloud_od_liq,clwc_bin2,alb_clwc
           endif
 
          enddo ! i (altitude)
 
          if(j .eq. nj/2)then
-             write(6,*)' get_cld_pf (zenith) ',pf_scat(:,ni,j)
+             write(6,*)' get_cld_pf (zenith/nadir) ',pf_scat(:,ni,j)
          endif
 
         enddo ! j (azimuth)
