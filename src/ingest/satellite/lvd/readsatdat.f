@@ -71,8 +71,9 @@ c
       REAL    latin_vis,latin_ir,latin_wv
       REAL    lov_vis,lov_ir,lov_wv
 
-      write(6,*)' Subroutine readsatdat...',csat_type
+      write(6,*)' Subroutine readsatdat...',csat_type,csat_id
       write(6,*)' nelemir/nlinesir = ',nelemir,nlinesir               
+      write(6,*)' nelemvis/nlinesvis = ',nelemvis,nlinesvis               
 
       istatus=1
 
@@ -90,8 +91,18 @@ c
                n=index(c_filename,' ')
             elseif(csat_type.eq.'rll')then
                n=index(c_dir_path(1),' ')-1
-               c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
-     &                    '_'//c_type(j,i)//'8.nc'
+               if(trim(csat_id) .eq. 'mtsat')then
+                 if(trim(c_type(j,i)) .eq. '10p')then
+                   c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
+     &                        '_'//c_type(j,i)//'4.nc'
+                 else ! vis
+                   c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
+     &                        '_'//c_type(j,i)//'.nc'
+                 endif
+               else
+                 c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
+     &                      '_'//c_type(j,i)//'8.nc'
+               endif
             else
                n=index(c_dir_path(1),' ')-1
                c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
