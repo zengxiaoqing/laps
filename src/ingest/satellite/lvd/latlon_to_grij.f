@@ -56,6 +56,11 @@
 
         epsilon = .00040 ! degrees
 
+!       Initialize other variables
+        iclo = -1
+        jclo = -1
+        dist_min_last = -999.
+
 !       Start with i/j LAPS coordinate for each satellite grid point
         do is = 1,nx_s
         do js = 1,ny_s
@@ -189,7 +194,7 @@
      1                            ,lat_s,lon_s,nx_s,ny_s 
      1                            ,iclo_loop,i_loop                  ! I/O
      1                            ,rlat_last,rlon_last,dist_min_last ! I/O
-     1                            ,iclo,jclo,dist_min) 
+     1                            ,iclo,jclo,dist_min)               ! O
                     endif
 
                     if(i_loop .eq. 1)then
