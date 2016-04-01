@@ -1452,7 +1452,7 @@ c format type 4 (rll)
                 kk=kk+1
 
                 do ic = 1,maxchannel
-                    if(cchanneltypes(kk).eq.satellite_channels(it,js,ic)
+                    if(cchanneltypes(kk).eq.satellite_channels(it,ic,js)
      1                                                             )then  
                         write(6,*)' Test channel match ',it,js,ic 
      1                           ,kk,cchanneltypes(kk)
