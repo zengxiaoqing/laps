@@ -136,6 +136,7 @@ c
       logical found_lvd_match
       logical found_it
       logical lvis_flag
+      logical l_parse
 
       integer istatus
       integer jstatus
@@ -370,7 +371,12 @@ c
 !           So far jj (end of file index) is assumed to be the end of the
 !           channel part. We now strip off the '.nc' if present.
             if(c_filename_sat(i)(jj-2:jj) .eq. '.nc')then
-               jj = jj-4 ! (e.g. read '10p' part of filename)
+               if(l_parse(c_filename_sat(i),'_vis.nc') 
+     1                                        .eqv. .true.)then     
+                  jj = jj-3 ! (e.g. read 'vis' part of filename)
+               else
+                  jj = jj-4 ! (e.g. read '10p' part of filename)
+               endif
             endif
 
             do k=1,nchannels
