@@ -290,8 +290,8 @@ c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
       if(csattype .eq. 'rll')then ! Java NetCDF files now use this type
            print *,' Read lat/lon arrays to regenerate gri/grj'
-           print *,' Set i/j start/end for: ',jtype,ksat,
-     1               i_end_ir(jtype,ksat),j_end_ir(jtype,ksat)
+!          print *,' Set i/j start/end for: ',jtype,ksat,
+!    1               i_end_ir(jtype,ksat),j_end_ir(jtype,ksat)
 !          gri = 100.
 !          grj = 50.                               
 
@@ -305,7 +305,16 @@ c --------------------------------------------------------------------
                i_end_ir(jtype,ksat)   =  n_pixels_ir(jtype,ksat)
                j_start_ir(jtype,ksat) =  1                             
                j_end_ir(jtype,ksat)   =  n_lines_ir(jtype,ksat)                             
+
+               i_start_vis(jtype,ksat) =  1                             
+               i_end_vis(jtype,ksat)   =  n_pixels_vis(jtype,ksat)
+               j_start_vis(jtype,ksat) =  1                             
+               j_end_vis(jtype,ksat)   =  n_lines_vis(jtype,ksat)                             
 !          endif
+
+           print *,' Set i/j start/end from pixels/lines: ',jtype,ksat
+     1            ,i_end_ir(jtype,ksat),j_end_ir(jtype,ksat)
+     1            ,i_end_vis(jtype,ksat),j_end_vis(jtype,ksat)
 
       elseif(csatid.ne.'gmssat'.or.csattype.eq.'twn'.or.
      &   csattype.eq.'hko')then
