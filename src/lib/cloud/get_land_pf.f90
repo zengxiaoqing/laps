@@ -27,7 +27,7 @@
         angdist(p1,p2,dlon) = acosd(sind(p1) * sind(p2) + cosd(p1) * cosd(p2) * cosd(dlon))
 
         real elong_a(ni,nj)
-        real alt_a(ni,nj)           ! 90. - u
+        real alt_a(ni,nj)           ! 90. - u  (replace with emis angle?)
         real azi_a(ni,nj)
         real topo_gti(ni,nj)        ! topo normal global irradiance
         real topo_albedo(nc,ni,nj)  ! topo albedo
@@ -155,7 +155,9 @@
 !             Should look brighter opposite direct sun in low sun case
               spot = 0.005 ! fraction of energy in the spot 
               nonspot = (1. - spot)
-              ampl_l = -1.0 * cosd(sol_alt)**2 * cosd(alt_a(i,j))**5 
+!             First arg is max amplitude for low sun on the horizon
+!             Second arg reduces amplitude for mid sun
+              ampl_l = -2.0 * cosd(sol_alt)**4 * cosd(alt_a(i,j))**5 
 
 !             Elliptical opposition effect
               aspect = 3. ! horizontal contraction of spot
