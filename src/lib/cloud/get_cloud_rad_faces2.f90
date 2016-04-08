@@ -263,7 +263,7 @@
 !          Calculate 'scurr' as the total path traversed so far by the ray.
 !          The incremental path length ('ds') will be calculated later on.
 !          altthr = 15. - (float(kmarch)/float(nk)) * 10. ! empirical for now
-           altthr = 10.
+           altthr = 5.
            if(objalt .gt. altthr .AND. if .le. 2)then ! march by height levels
              nksteps = 1
              rkmarch = rkt - float(ls)/float(nksteps)
