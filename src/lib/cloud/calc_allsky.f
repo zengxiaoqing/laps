@@ -115,6 +115,7 @@
         write(6,*)' swi_2d at observer location = ',swi_2d(iobs,jobs)
         eobsl = eobsc(iobs,jobs)
         write(6,*)' eobsl = ',eobsl
+        eobsc_sky = 0. ! initialize
 
         write(6,*)' call get_cloud_rays...'
 
@@ -333,7 +334,8 @@
 
               write(6,*)' patm/patm_sfc in calc_allsky ',patm,patm_sfc
 
-              write(6,*)' call get_sky_rgb with cyl data'
+              write(6,*)' call get_sky_rgb with cyl data '
+     1                   ,l_solar_eclipse
               call get_sky_rgb(r_cloud_3d    ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
      1                    ,cloud_od_sp,nsp   ! cloud species optical depth
