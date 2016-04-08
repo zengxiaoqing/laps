@@ -590,6 +590,7 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_VIS(2,6)=0
       N_PIXELS_VIS(3,6)=0
       N_PIXELS_VIS(4,6)=1
+      N_PIXELS_VIS(4,9)=1375
       N_LINES_VIS(1,1)=3290
       N_LINES_VIS(1,1)=2042
       N_LINES_VIS(1,1)=897
