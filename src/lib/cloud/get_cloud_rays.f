@@ -1475,8 +1475,14 @@
                     sum_odrad = sum_odrad + 
      1               (cvr_path * slant2 * transm_3d_m)       
 
-                    sum_odrad_w = sum_odrad_w + 
-     1               (cvr_path * slant2 * transm_3d_m**2)       
+                    if(.true.)then
+                      sum_odrad_w = sum_odrad_w + 
+     1                 (cvr_path * slant2 * transm_3d_m**2)       
+                    else
+                      sum_odrad_w = sum_odrad_w + 
+     1                 (cvr_path * slant2 * transm_3d_m 
+     1                           * trans(cvr_path_sum/.013))       
+                    endif
 
                     do ic = 1,nc
                       transm_4d_m(ic) = sum(tri_coeff(:,:,:) * 
