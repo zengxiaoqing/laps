@@ -97,8 +97,12 @@
 !               pf_thk = 1.0 + ((90.-elong_a(i,j))/90.)**2
 !           endif
 
-            radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
-            elgfrac = scurve(elong_a(i,j)/180.) * radfrac ! need radfrac?
+!           radfrac (high for illuminated clouds) may have multiple
+!           purposes including suppressing phase function near terrain
+!           and ensuring high pf for backscattering with thick clouds
+!           radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
+            radfrac = scurve(scurve(r_cloud_rad(i,j))) ! high for illuminated clouds
+            elgfrac = scurve(elong_a(i,j)/180.) ! * radfrac ! need radfrac?
             alb_clwc = alb(0.06*cloud_od_liq) * elgfrac + (1.-elgfrac)
 
             pf_thk_alt = (2./3.) * (1. + sind(abs(alt_a(i,j))))
@@ -302,8 +306,9 @@
 
           if(idebug_a(i,j) .eq. 1)then
               write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk1,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
-101           format(' alt/elg/cod/thk/thk1/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
-              write(6,*)' bf/od/clwc_bin2/alb_clwc = ',bf,cloud_od_liq,clwc_bin2,alb_clwc
+101           format(' alt/elg/cod/thk1/thk/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
+              write(6,102)bf,cloud_od_liq,clwc_bin2,alb_clwc
+102           format(' bf/od/clwc_bin2/alb_clwc = ',f9.3,f9.4,2f12.6)
           endif
 
          enddo ! i (altitude)
