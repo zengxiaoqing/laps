@@ -116,6 +116,7 @@
         write(6,1)sol_alt,horz_dep,solalt_limb_true
 1       format(' get_sky_rgb: sol_alt/horz_dep/solalt_limb_true = ',3f9.3)
         write(6,*)' moon alt/az/mag = ',moon_alt,moon_az,moon_mag
+        write(6,*)' l_solar_eclipse = ',l_solar_eclipse
         write(6,*)' range of r_cloud_rad is ',minval(r_cloud_rad),maxval(r_cloud_rad)
 
         idebug_a = 0
@@ -245,7 +246,8 @@
             altmidcorr = -3.60
             fracerf0 = 0.59  ! value with sun on horizon
           else                     ! panoramic camera
-            altmidcorr = -4.69 - aod_ha * 40.
+!           altmidcorr = -4.69 - aod_ha * 40.
+            altmidcorr = -4.99 - aod_ha * 20.
             fracerf0 = 0.65  ! value with sun on horizon
           endif
           write(6,*)' alt_top,altmidcorr: ',alt_top,altmidcorr
@@ -388,10 +390,10 @@
                                                      j .eq. 2048 )then
                 idebug_a(i,j) = 1 ! alt slice
             endif
-!           if(i .eq. 81 .AND. &  ! azi slice
-!              azi_a(i,j) .ge. 196.0  .and. azi_a(i,j) .le. 210.0)then
-!               idebug_a(i,j) = 1
-!           endif
+            if(azi_scale .eq. .20 .AND. alt_a(i,j) .eq. 9.0 .AND. &  ! azi slice
+               azi_a(i,j) .ge. 110.0  .and. azi_a(i,j) .le. 130.0)then
+                idebug_a(i,j) = 1
+            endif
         enddo ! i
         enddo ! j
 
@@ -768,19 +770,24 @@
 !         if(topo_solalt(i,j) .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
 !         'rad_sec_cld' should be attenuated if there is an eclipse and the
 !         observer is very high
+          iradsec = 0
           if(solalt_ref .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
-              if(solalt_ref .lt. 0. .and. solalt_ref .ne. solalt)then
+              if(solalt_ref .lt. 0. .and. abs(solalt_ref-solalt) .gt. .01)then
                   rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * 3e9 / 1300. * 7.0
-              elseif(solalt_ref .ge. 0. .and. solalt_ref .ne. solalt)then
+                  iradsec = 1
+              elseif(solalt_ref .ge. 0. .and. abs(solalt_ref-solalt) .gt. .01)then
 !                 sb_corr = 2.0 * (1.0 - (sind(solalt_ref)**0.5)) 
                   sb_corr = 2.7 * (1.0 - (sind(solalt_ref+1.2)**0.5)) 
                   rad_sec_cld(:) = (day_int * ext_g(:) * patm_sfc * 2.0 * 0.5) / 10.**(0.4*sb_corr)
+                  iradsec = 2
               endif
               if(solalt .le. 0.)then ! between shallow twilight and 0.
                   where(sph_rad_ave .ne. r_missing_data)rad_sec_cld = sph_rad_ave
+                  iradsec = iradsec + 10
               endif
               if(l_solar_eclipse .eqv. .true. .and. htmsl .gt. 1000e3)then
                   rad_sec_cld(:) = rad_sec_cld(:) * (1.-eobsc_sky(i,j))
+                  iradsec = iradsec + 20
               endif
 !             Potential intensity of cloud if it is opaque 
 !               (240. is nominal intensity of a white cloud far from the sun)
@@ -788,7 +795,7 @@
 !               (0.25 is dark cloud base value)                                  
 !             Use surface albedo equation?
               do ic = 1,nc
-                  rad = day_int             * pf_scat(ic,i,j)
+                  rad = day_int * pf_scat(ic,i,j)
 
                   cld_radt(ic) = rad * cloud_rad_c(ic,i,j) + rad_sec_cld(ic)
 !                 rint_top(ic) = rad_to_counts(cld_radt(ic))
@@ -796,7 +803,16 @@
                   if(solalt_ref .gt. 0.)then
 !                     Calculate 'sky_rad_ave' upstream for each color
 !                     topo_arg = sky_rad_ave(ic) * albedo_sfc(ic)
-                      rad = day_int * (0.02 * (1. + albedo_sfc(ic)))   * pf_scat(ic,i,j)
+
+!                     Is pf_scat really needed for a less illuminated cloud base?
+                      if(htmsl .gt. 100e3 .and. dist_2_topo(i,j) .gt. 0.)then
+                          topo_arg = 2. * gtic(ic,i,j) * topo_albedo(ic,i,j)
+                          rad = day_int * topo_arg
+                      else
+!                         topo_arg = 2. * gtic(ic,i,j) * albedo_sfc(ic)
+!                         rad = day_int * topo_arg
+                          rad = day_int * (0.02 * (1. + albedo_sfc(ic))) * pf_scat(ic,i,j)
+                      endif
                   else ! secondary scattering term allowed to dominate
                       rad = 0.
                   endif
@@ -825,15 +841,15 @@
                   .OR. (i .eq. isun .and. j .eq. jsun) )then
                if(r_cloud_3d(i,j) .gt. 0.)then
                   htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
-                  write(6,41)solalt_ref,twi_alt,htmin_view
- 41               format(' solalt_ref/twi_alt/htmin ',2f9.2,f11.0)
+                  write(6,41)iradsec,solalt_ref,solalt,twi_alt,htmin_view
+ 41               format(' solalt_ref/solalt/twi_alt/htmin',i3,3f9.4,f11.0)
                   write(6,42)i,j,elong_a(i,j),pf_scat(2,i,j),rintensity(2)&
                    ,trans_c(2),r_cloud_rad(i,j) &
                    ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
                    ,cld_radb(:)/1e6,(cld_rad(:)/1e6)/trans_c(:) &
-                   ,cld_rad(:)/1e6,rad_sec_cld(:)/1e6
+                   ,cld_rad(:)/1e6,rad_sec_cld(:)/1e6,sb_corr
  42               format(&
-                  ' elg/pf/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,5f9.3,' c',3f8.5,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f5.0)
+                  ' elg/pf/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,5f9.3,' c',3f8.5,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f5.0,f6.2)
                endif ! cloud present
               endif
 
@@ -1282,11 +1298,12 @@
 !                 topo_gti_frac = (max(topo_gti(i,j),001.) / 5000.) ** 0.45
 !                 Get city + moon colors via 'topo_gtic'?
                   if(.true.)then ! experiment (relative solar to nL)
-                    rtopo_red = day_int * (emic(1,i,j) & 
+                    aef = 1. / sind(max(-alt_a(i,j),+6.))
+                    rtopo_red = day_int * (emic(1,i,j) * aef & 
                               + 2. * gtic(1,i,j) * topo_albedo(1,i,j) )
-                    rtopo_grn = day_int * (emic(2,i,j) &
+                    rtopo_grn = day_int * (emic(2,i,j) * aef &
                               + 2. * gtic(2,i,j) * topo_albedo(2,i,j) )
-                    rtopo_blu = day_int * (emic(3,i,j) &
+                    rtopo_blu = day_int * (emic(3,i,j) * aef &
                               + 2. * gtic(3,i,j) * topo_albedo(3,i,j) )
                   else ! nL (original city lights only)
                     rtopo_red = topo_gti(i,j) * 1.5
@@ -1302,14 +1319,14 @@
 
                   if(idebug .eq. 1)then
                     write(6,99)rtopo_grn,topo_gti(i,j),gtic(2,i,j) &
-                              ,emic(2,i,j) &
+                              ,emic(2,i,j),aef &
                               ,topo_albedo(2,i,j),topo_solalt(i,j) &
                               ,dist_2_topo(i,j) &
 !                             ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
                               ,red_rad,grn_rad,blu_rad,sky_rad(:)
 99                  format( &
-                        ' rtopo/gti/gtic/em/alb/tsalt/dst/trad/srad', &
-                           f9.0,f9.4,2f10.7,f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
+                        ' rtopo/gti/gtic/em/aef/alb/tsalt/dst/trad/srad', &
+                           f9.0,f9.4,2f10.7,2f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
                   endif
 
                   sky_rad(1) = sky_rad(1)*(1.0-topo_viseff) + red_rad
