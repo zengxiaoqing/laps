@@ -57,7 +57,7 @@ c
       character chtype*(*)
       character csatid*(*)
 
-      write(6,*)'Enter set_missing_sat: ',csattype
+      write(6,*)'Enter set_missing_sat: ',csattype,' ',chtype
 
 c
 c note that this quality control step is performed with satellite counts
@@ -90,19 +90,30 @@ c        rhigh=255.
       endif
 
       if(csattype.eq.'rll')then ! Bad range thresholds
-         write(6,*)' scale_img passed in = ',scale_img
-!        if(csatid .ne. 'meteos' .AND. csatid .ne. 'fy')then
+        if(chtype .ne. 'vis')then 
+          write(6,*)' scale_img passed in = ',scale_img
+!         if(csatid .ne. 'meteos' .AND. csatid .ne. 'fy')then
 !            scale_img = .01
-!        else
+!         else
 !            scale_img = .1
-!        endif
+!         endif
 
-         rhigh = 500. /scale_img
-         rlow  = 163.1/scale_img
+          rhigh = 500. /scale_img
+          rlow  = 163.1/scale_img
 
-         write(6,*)' Scale & Range testing thresholds set to '
-     1              ,scale_img,rlow,rhigh
+        else ! 'vis'
+          rhigh = 800.
+          rlow = 0.
+
+        endif
+
+        write(6,*)' Range testing thresholds set to ',rlow,rhigh
+
+      else
+        write(6,*)' Range testing thresholds set to ',rlow,rhigh
+
       endif
+
 
       istat_status=0
       imiss_status=0
