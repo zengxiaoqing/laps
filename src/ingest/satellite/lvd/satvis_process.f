@@ -659,9 +659,23 @@ c for goes8 - make it look like goes7
              enddo
              enddo
 
-          endif
+          endif ! c_sat_type
 
-       endif 
+       elseif(trim(csatid) .eq. 'mtsat')then
+
+          write(6,*)'Stretch vis data prior to normalization ',csatid
+
+          do j=1,jmax
+          do i=1,imax
+            if(laps_vis_norm(i,j).ne.r_missing_data)then
+c for goes8 - make it look like goes7
+              call stretch(0.,700.,50.,220.,laps_vis_norm(i,j))
+
+            endif
+          enddo
+          enddo
+
+       endif ! csatid
 c
 c ready to normalize vis counts to local domain
 c =============================================
