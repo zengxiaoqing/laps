@@ -480,7 +480,7 @@ c --------------------------------------------------------------------------
      &   csattype.eq.'wfo'.or.csattype.eq.'ncp'.or.
      &                        csattype.eq.'rll')then 
 
-       write(6,*)'Using getcdf_satdat routine'
+       write(6,*)'Using getcdf_satdat routine for ',csattype
 
          call getcdf_satdat(csatid,
      &                      csattype,
@@ -496,6 +496,7 @@ c --------------------------------------------------------------------------
      &                      image_ir,image_vis,
      &                      image_12,image_39,image_67,
      &                      image_lat_ir,image_lon_ir,
+!    &                      image_lat_vis,image_lon_vis, ! if needed
      &                      scale_img,
      &                      i4time_data,
      &                      istatus)
@@ -970,7 +971,7 @@ c ----------  GMS SATELLITE SWITCH -------
 
 !              Is this needed for coarse LAPS grids using pixel averaging?
                if(csattype.eq.'rll')then
-                   write(6,*)' Calling latlon_to_grij'
+                   write(6,*)' Calling latlon_to_grij for IR'
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 gri(1,1,ispec),grj(1,1,ispec),
@@ -1148,6 +1149,14 @@ c                    endif
             elseif(ispec.eq.1)then
             if(r_image_status(j,i).lt.0.3333)then
 
+               if(csattype.eq.'rll')then
+                   write(6,*)' Calling latlon_to_grij for VIS'
+                   call latlon_to_grij(lat,lon,nx_l,ny_l,
+     1                                 image_lat_ir,image_lon_ir,
+     1                                 gri(1,1,ispec),grj(1,1,ispec),
+     1                                 n_ir_elem,n_ir_lines)
+               endif
+
                call process_vis_satellite(csatid,
      &                      csattype,
      &                      i4time_data(i),
@@ -1198,6 +1207,7 @@ c
 
             else
                write(6,*)'vis not processed: too much missing data'
+     &                  ,r_image_status(j,i)
             endif
 
             endif
