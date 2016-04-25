@@ -72,6 +72,8 @@
 
         yinterp(x1,x2,y1,y2,x) = y1 + ((x-x1)/(x2-x1)) * (y2-y1) 
 
+        wm2sr_to_nl(x) = 2.113e8 * x     ! (550nm) 
+
         parameter (rpd = 3.14159 / 180.)
 
 !       Determine shadow regions of the input 3-D cloud array
@@ -118,7 +120,7 @@
         real obj_bri_a(ni,nj)
 
 !       https://en.wikipedia.org/wiki/Irradiance#Irradiance
-        real gnd_glow(ni,nj)        ! ground lighting intensity (nl)                 
+        real gnd_glow(ni,nj)        ! ground lighting intensity (nL)                 
         real sfc_glow(ni,nj)        ! pass into get_cloud_rad
         real city_colrat(nc)        /1.5,1.0,0.5/
         real ghi_2d(ni,nj)          ! derived from cloud rad 
@@ -289,7 +291,20 @@
           write(6,*)' Call get_nlights'
           call get_nlights(ni,nj,grid_spacing_m,lat,lon
      1                    ,gnd_glow)
-          write(6,*)' Grnd glow at observer location is ',gnd_glow(i,j)
+          
+          write(6,*)' Grnd glow (wm2sr) at observer location is '
+     1             ,gnd_glow(i,j)
+
+!         Temporary conversion from wm2sr to nL
+          do ii = 1,ni
+          do jj = 1,nj
+            gnd_glow(ii,jj) = wm2sr_to_nl(gnd_glow(ii,jj))
+          enddo ! j
+          enddo ! i
+          
+          write(6,*)' Grnd glow (nL) at observer location is '
+     1             ,gnd_glow(i,j)
+
           obs_glow_zen = sfc_glow(i,j) / 10.
         else
           write(6,*)' Skip call to get_sfc_glow - solalt is'
@@ -1754,6 +1769,9 @@
 
 !                         City lights on the ground (spec exitance - emic)
                           if(sol_alt(inew_m,jnew_m) .lt. twi_alt)then  
+
+!                           Now is nL
+!                           Aim for w/m2/sr/nm
                             emic(ic,ialt,jazi) = sum(bi_coeff(:,:)    
      1                        * gnd_glow(i1:i2,j1:j2)) * city_colrat(ic)
      1                        / 3e9
