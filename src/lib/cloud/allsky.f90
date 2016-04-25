@@ -77,6 +77,8 @@
        gamma = 2.2
        where(cyl .ne. r_missing_data)cyl = cyl**gamma
 
+!      Bilinear interpolation is most suited when the output grid spacing
+!      less than 1.5 times the input grid spacing
        call bilinear_laps_2d(ri_a,rj_a,imax,jmax,ni_polar,nj_polar,cyl,polar)
 
        where(polar .ne. r_missing_data)polar = polar**(1./gamma)
