@@ -144,6 +144,7 @@
       call get_directory('static',directory,len_dir)
       file_bm=trim(directory)//'albedo_multispectral_'//c2_mn//'.dat'
       inquire(file=trim(file_bm),exist=l_there)
+      write(6,*)' File being inquired is ',trim(file_bm)
 
       if(l_there)then
         write(6,*)' Blue Marble binary remapped albedo file exists'
@@ -159,7 +160,7 @@
         endif
       else
         write(6,*)
-     1' Blue Marble binary file is absent, generate and create it'       
+     1' Blue Marble binary file is absent, generate and create from ppm'
 
       if(c6_maproj .ne. 'latlon')then ! local domain
         file=trim(directory)//'world.200405.3x21600x21600.crop.ppm'
@@ -295,13 +296,14 @@
 !     Merging of code in 'get_sfc_glow' and 'land_albedo_bm'
 
       use ppm
+      use mem_namelist, ONLY: c6_maproj 
 
       real lat(ni,nj)
       real lon(ni,nj)
       real sfc_glow_c(3,ni,nj) ! Sfc Glow (Red, Green, Blue)
       real result(ni,nj)       ! Interpolated image channel
       real sfc_glow(ni,nj)     ! surface lighting intensity of clouds (nl)
-      real gnd_glow(ni,nj)     ! ground lighting intensity (nl)      
+      real gnd_glow(ni,nj)     ! zenithal ground lighting intensity (wm2sr)
       character*255 directory
       character*255 file,file_bm 
       character*10  c10_fname /'nest7grid'/
@@ -311,17 +313,24 @@
       integer ncol,iwidth,iheight
       parameter (ncol=3)
 
-      real, allocatable :: rlat_img(:,:),rlon_img(:,:) 
+!     ri_img/rj_img tells us the image pixel of each laps grid point
       real ri_img(ni,nj)            
       real rj_img(ni,nj)             
       real rlat_laps(ni,nj)
       real rlon_laps(ni,nj)
       real topo_laps_dum(ni,nj)
 
+      real nwcm2sr_to_wm2sr
+      nwcm2sr_to_wm2sr(x) = x * 1e-5
+
 !     integer img(ncol,iwidth,iheight)                                               
       integer, allocatable :: img(:,:,:)                   
 !     real array_2d(iwidth,iheight)
       real, allocatable :: array_2d(:,:)                   
+!     ri_laps/rj_laps tells us the laps grid point of each image pixel
+      real, allocatable :: rlat_img(:,:),rlon_img(:,:) 
+      real, allocatable :: ri_laps(:,:)                   
+      real, allocatable :: rj_laps(:,:)                   
       u = 11
 
       write(6,*)' Subroutine get_nlights...'
@@ -329,6 +338,7 @@
       call get_directory('static',directory,len_dir)
       file_bm=trim(directory)//'nlights_multispectral.dat'
       inquire(file=trim(file_bm),exist=l_there)
+      write(6,*)' File being inquired is ',trim(file_bm)
 
       if(l_there)then
         write(6,*)' Nlights binary remapped sfc_glow_c file exists'
@@ -346,9 +356,19 @@
 
       else ! binary file is absent
         write(6,*)
-     1' Nlights binary file is absent, generate and create it'       
+     1' Nlights binary file is absent, generate and create it from ppm'       
 
-       file=trim(directory)//'viirs_crop.ppm'
+       if(c6_maproj .ne. 'latlon')then ! local domain
+         file=trim(directory)//'viirs_crop.ppm'
+         pix_latlon = 1. / 240.
+         offset_lat = -.008  ! positional error in remapping
+         offset_lon = +.0035 !             "
+       else ! assume latlon global projection
+         file=trim(directory)//'viirs_global_montage.ppm'
+         pix_latlon = 1. / 12.
+         offset_lat = 0.     ! positional error in remapping
+         offset_lon = 0.     !             "
+       endif
 
        write(6,*)' Open for reading ',trim(file)
 
@@ -366,6 +386,8 @@
        allocate(rlat_img(iwidth,iheight))
        allocate(rlon_img(iwidth,iheight))
        allocate(array_2d(iwidth,iheight))
+       allocate(ri_laps(iwidth,iheight))
+       allocate(rj_laps(iwidth,iheight))
 
 !      Consider dynamic means to get rlat_start and rlon_start
 !      Use domain lat/lon bounds with a 0.2 deg cushion
@@ -375,9 +397,6 @@
 
        write(6,*)' NSEW',rnorth,south,east,west
 
-       pix_latlon = 1. / 240.
-       offset_lat = -.008  ! positional error in remapping
-       offset_lon = +.0035 !             "
        rlat_start = rnorth - offset_lat                         
        rlon_start = west   - offset_lon                       
        rlat_end = rlat_start - float(iheight) * pix_latlon
@@ -416,28 +435,62 @@
        enddo ! j
        enddo ! i
 
-       write(6,*)' img max = ',maxval(img)
+       write(6,*)' img max before interpolation (nwcm2sr) = '
+     1          ,maxval(img)
 
        I4_elapsed = ishow_timer()
 
-       write(6,*)' Bilinearly Interpolate'
+       reslights_m = 10000.
 
 !      Interpolate to LAPS grid using bilinear_laps_2d
        do ic = 1,3
         array_2d(:,:) = img(1,:,:)
-        call bilinear_laps_2d(ri_img,rj_img,iwidth,iheight,ni,nj 
-     1                       ,array_2d,result)
+
+        if(grid_spacing_m / reslights_m .lt. 1.5)then
+!       if(.true.)then
+          write(6,*)' Bilinearly Interpolate ',ic,grid_spacing_m
+     1                                           ,reslights_m
+          call bilinear_laps_2d(ri_img,rj_img,iwidth,iheight,ni,nj 
+     1                         ,array_2d,result)
+        else ! pixel average interpolation
+
+          if(ic .eq. 1)then
+
+!           Loop through image array
+            do i = 1,iwidth
+            do j = 1,iheight
+
+!             Fill lat/lon of each image pixel
+              rlon_img(i,j) = rlon_start + float(i) * pix_latlon
+              rlat_img(i,j) = rlat_start - float(j) * pix_latlon
+
+!             Fill LAPS ri/rj of each image pixel
+              call latlon_to_rlapsgrid(rlat_img(i,j),rlon_img(i,j)
+     1                                ,lat,lon,ni,nj
+     1                                ,ri_laps(i,j),rj_laps(i,j)
+     1                                ,istatus)
+
+            enddo ! j
+            enddo ! i
+
+          endif ! 1st color in loop
+
+          write(6,*)' Pixel Ave Interpolate ',ic,grid_spacing_m
+     1                                       ,reslights_m
+          call pixelave_interp(ri_laps,rj_laps,iwidth,iheight,ni,nj 
+     1                        ,0.,array_2d,result)
+          write(6,*)' Max result value is ',maxval(result)
+        endif ! interpolation method
+
         do i = 1,ni
         do j = 1,nj
-!         Convert units and such
-          sfc_glow(i,j) = result(i,j)
-          sfc_glow_c(ic,i,j) = result(i,j)
+!         Input unuts are nanoWatts/cm2/sr
+          arg1 = result(i,j)                     ! nanoWatts/cm2/sr
+          sfc_glow(i,j) = nwcm2sr_to_wm2sr(arg1) ! wm2sr
+          sfc_glow_c(ic,i,j) = sfc_glow(i,j)
         enddo ! j
         enddo ! i
        enddo ! ic
-
-       write(6,*)' range of sfc_glow is',minval(sfc_glow)
-     1                                  ,maxval(sfc_glow)      
 
 cdoc   Interpolate 2-d array to find the field values at fractional grid
 cdoc   points.
@@ -446,7 +499,8 @@ cdoc   points.
 !      real ri_a(nx_laps,ny_laps),rj_a(nx_laps,ny_laps) ! I
 !      real result(nx_laps,ny_laps)                     ! O
 
-       write(6,*)' Interpolated sfc_glow_c: ',sfc_glow_c(:,ni/2,nj/2)
+       write(6,*)' Interpolated sfc_glow_c (wm2sr): '
+     1          ,sfc_glow_c(:,ni/2,nj/2)
 
        if(sfc_glow_c(2,ni/2,nj/2) .lt. 0.0)then
         write(6,*)' ERROR bad interpolated sfc_glow_c point'
@@ -464,10 +518,14 @@ cdoc   points.
 
       endif ! binary file exists
 
+      write(6,*)' range of sfc_glow (wm2sr) is',minval(sfc_glow)
+     1                                         ,maxval(sfc_glow)      
+
       gnd_glow = sfc_glow
 
 !     Normal end
       istatus = 1
+      write(6,*)' normal return from get_nlights'
       goto 9999
 
 !     Error condition
@@ -478,6 +536,8 @@ cdoc   points.
       if(allocated(rlon_img))deallocate(rlon_img)
       if(allocated(img))deallocate(img)
       if(allocated(array_2d))deallocate(array_2d)
+      if(allocated(ri_laps))deallocate(ri_laps)
+      if(allocated(rj_laps))deallocate(rj_laps)
 
       return
       end
@@ -502,6 +562,58 @@ cdoc   points.
 
       write(6,11)albedo_mean_bm,albedo_mean_usgs,albedo_mean_static
 11    format('  Mean albedo bm/usgs/static ',3f9.4)
+
+      return
+      end 
+
+
+      subroutine pixelave_interp(ri_img,rj_img,ni1,nj1,ni2,nj2
+     1                          ,r_missing_data,array_2d,result)
+
+      real ri_img(ni1,nj1)
+      real rj_img(ni1,nj1)
+      real pixsum(ni2,nj2)
+      integer npix(ni2,nj2)
+      real array_2d(ni1,nj1)
+      real result(ni2,nj2)
+
+      pixsum = 0.
+      npix = 0
+
+      rimin = 0.5
+      rimax = float(ni2) + 0.5
+      rjmin = 0.5
+      rjmax = float(nj2) + 0.5
+
+      do i = 1,ni1
+      do j = 1,nj1
+
+        ri = ri_img(i,j)
+        rj = rj_img(i,j)
+
+        if(ri .gt. rimin .and. ri .lt. rimax .and.
+     1     rj .gt. rjmin .and. rj .lt. rjmax      )then
+
+          iout = nint(ri)
+          jout = nint(rj)
+       
+          npix(iout,jout) = npix(iout,jout) + 1
+          pixsum(iout,jout) = pixsum(iout,jout) + array_2d(i,j)
+ 
+        endif
+      enddo ! j
+      enddo ! i
+
+      do iout = 1,ni2
+      do jout = 1,nj2
+        if(npix(iout,jout) .gt. 0)then
+          result(iout,jout) = pixsum(iout,jout) 
+     1                      / float(npix(iout,jout))
+        else
+          result(iout,jout) = r_missing_data
+        endif
+      enddo ! jout
+      enddo ! iout      
 
       return
       end 
