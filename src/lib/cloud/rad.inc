@@ -93,6 +93,10 @@
 !       https://irmafiles.nps.gov/reference/holding/476525
         s10_to_magsecsq(s10) = 10. - (2.5 * log10(s10/12.96e6))
         s10_to_nl(x) = x * 0.26189                     ! Chad Moore
-  
+
         real magsecsq_to_s10
         magsecsq_to_s10(x) = 10.**((18.89075625-x)*0.4)
+
+        real nwcm2sr_to_wm2sr
+        nwcm2sr_to_wm2sr(x) = x * 1e-5
+        wm2sr_to_nl(x) = 2.113e8 * x     ! (550nm)  
