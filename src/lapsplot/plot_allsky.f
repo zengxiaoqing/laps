@@ -13,9 +13,11 @@
         use ppm
         use mem_allsky
 
+        include 'trigd.inc'
         include 'lapsplot.inc'
 
         addlogs(x,y) = log10(10.**x + 10.**y)
+        horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
 
 !       real pres_3d(NX_L,NY_L,NZ_L)
         real field_3d(NX_L,NY_L,NZ_L)
@@ -1141,22 +1143,32 @@
 
               write(6,*)' Call cyl_to_polar with sky rgb data'
 
-              if(htmsl .le. 18000. .and. (maxalt+minalt) .gt. 0)then
+              if(htagl(iloc) .le. 18000. .and. 
+     1                  (maxalt*2 + minalt) .gt. 0)then
                 polat = +90. ! +/-90 for zenith or nadir at center of plot
               else
                 polat = -90.
               endif
+
+              horz_dep = horz_depf(htagl(iloc),earth_radius)
 
 !             if(ipolar_sizeparm .ge. 3)then
               if(htagl(iloc) .gt. earth_radius*2.5)then
                 pomag = htagl(iloc) / (earth_radius*0.7)
               elseif(htagl(iloc) .gt. earth_radius*1.1)then
                 pomag = 3.0
+              elseif(htagl(iloc) .gt. earth_radius*0.75)then
+                pomag = 2.5
               elseif(htagl(iloc) .gt. earth_radius*0.5)then
                 pomag = 2.0
-              else
+              elseif(polat .eq. -90.)then ! looking down
+                write(6,*)' horz_dep = ',horz_dep
+                pomag = (90. / (90. - horz_dep)) * 0.98
+              else                        ! looking up
                 pomag = 1.0
               endif
+
+              write(6,*)'htrat/pomag',htagl(iloc)/earth_radius,pomag
 
               do ic = 0,nc-1
                 call cyl_to_polar(sky_rgb_cyl(ic,:,:)
