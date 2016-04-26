@@ -339,7 +339,28 @@
                 ainv = a
                 bsol = b
 
-                call gaussj(ainv,n,n,bsol,m,m,ierr)
+                if(.true.)then
+                    call gaussj(ainv,n,n,bsol,m,m,ierr)
+                else
+                    aa = dlapsi_dx
+                    bb = dlapsi_dy
+                    cc = dlapsj_dx
+                    dd = dlapsj_dy
+                    arg1 = aa * dd - bb * cc
+                    if(arg1 .eq. 0.)then
+                        continue
+                    else
+                        arg2 = 1. / arg1
+                    endif
+                    aainv =  dd * arg2
+                    bbinv = -bb * arg2
+                    ccinv = -cc * arg2
+                    ddinv =  aa * arg2
+
+!                   Note that X = ainv times b
+                    bsol(0) = aainv * b(0) + bbinv * b(1)
+                    bsol(1) = ccinv * b(0) + ddinv * b(1)
+                endif
 
                 icall_gaussj = icall_gaussj + 1
 
