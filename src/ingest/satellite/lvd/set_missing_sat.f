@@ -102,7 +102,7 @@ c        rhigh=255.
           rlow  = 163.1/scale_img
 
         else ! 'vis'
-          rhigh = 800.
+          rhigh = 900.
           rlow = 0.
 
         endif
