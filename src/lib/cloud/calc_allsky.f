@@ -305,6 +305,13 @@
                     aod_a(i,j) = aod_2d(itopo,jtopo) ! bilin interp?
                 endif
 
+                if(alt_a_roll(i,j) .eq. -90. .and. j .eq. 1)then
+                    write(6,*)' nadir info'
+                    write(6,*)' i/j/lat/lon/lf',itopo,jtopo
+     1                       ,topo_lat(i,j),topo_lon(i,j),topo_lf(i,j)
+     1                       ,topo_albedo(:,i,j)
+                endif
+
           enddo ! i
           enddo ! j
 
