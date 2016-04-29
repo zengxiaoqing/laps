@@ -264,6 +264,9 @@ if test "$NCARG_ROOT" = "allsky"; then
    if test "$IMGGEOM" = "511x511"; then
     echo "convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
           convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   elif test "$IMGGEOM" = "1023x1023"; then
+    echo "convert -fill white -annotate +875+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
+          convert -fill white -annotate +875+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    else
     echo "convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
           convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
