@@ -1298,7 +1298,7 @@
 !                 topo_gti_frac = (max(topo_gti(i,j),001.) / 5000.) ** 0.45
 !                 Get city + moon colors via 'topo_gtic'?
                   if(.true.)then ! experiment (relative solar to nL)
-                    aef = 1. / sind(max(-alt_a(i,j),+6.))
+                    aef = 1. / sind(max(-alt_a(i,j),+19.47))
                     rtopo_red = day_int * (emic(1,i,j) * aef & 
                               + 2. * gtic(1,i,j) * topo_albedo(1,i,j) )
                     rtopo_grn = day_int * (emic(2,i,j) * aef &
