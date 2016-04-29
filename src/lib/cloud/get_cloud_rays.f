@@ -143,7 +143,7 @@
         real bnic_2d(nc,ni,nj)      ! (direct/beam normal) 
 
         logical l_solar_eclipse, l_radtran /.false./, l_spherical
-        logical l_atten_bhd /.true./, l_box
+        logical l_atten_bhd /.true./, l_box, l_latlon_grid
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         parameter (nsp = 4)
@@ -215,6 +215,12 @@
         radius_earth_8_thirds = 6371.e3 * 2.6666666
 
         pstd = 101325.
+
+        if(lat(1,1) .eq. lat(2,1))then
+            l_latlon_grid = .true.
+        else
+            l_latlon_grid = .false.
+        endif
 
 !       Initialize
         airmass_2_cloud_3d = 0.
@@ -1271,7 +1277,7 @@
                    TLon=rLon-DLon
                   EndIf
 
-                  if(.false.)then ! speed test
+                  if(.not. l_latlon_grid)then ! speed test
                     call latlon_to_rlapsgrid(tlat,tlon,lat,lon,ni,nj
      1                                      ,rinew_h,rjnew_h,istatus)
                   else ! assume a lat/lon grid
