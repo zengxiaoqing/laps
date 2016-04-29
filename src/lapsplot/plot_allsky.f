@@ -751,12 +751,14 @@
 
             topo_albedo_2d = albedo_bm
 
-            write(6,*)' Row of multi-spectral albedo'
+            write(6,*)
+     1          ' Row of multi-spectral albedo (through domain center)'
             jrow = NY_L/2
             do i = 1,NX_L
                 if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
-                    write(6,16)i,lon(i,jrow),topo_albedo_2d(:,i,jrow)
-16                  format(i5,f9.3,2x,3f9.3)                 
+                    write(6,16)i,lon(i,jrow),land_frac(i,jrow)
+     1                        ,topo_albedo_2d(:,i,jrow)
+16                  format(i5,2f9.3,2x,3f9.3)                 
                 endif
             enddo ! i
             alb_min = minval(topo_albedo_2d(2,:,jrow))
@@ -1164,6 +1166,7 @@
               elseif(polat .eq. -90.)then ! looking down
                 write(6,*)' horz_dep = ',horz_dep
                 pomag = (90. / (90. - horz_dep)) * 0.98
+                pomag = max(pomag,1.0)
               else                        ! looking up
                 pomag = 1.0
               endif
