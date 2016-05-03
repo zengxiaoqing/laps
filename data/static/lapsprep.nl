@@ -12,6 +12,8 @@
   use_laps_skintemp = .true.,	
   use_laps_vv = .false.,	
   lapsprep_always_write = .false.,
+  num_soil_layers = 0,
+  soil_layer_depths = 0,0,0,0,0,0,0,0,0,0,
 /
  
 c
