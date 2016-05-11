@@ -401,7 +401,7 @@
           idebug_a(isun,jsun) = 1
         endif
 
-        if(sol_alt .gt. twi_0)then
+        if(solalt_limb_true .gt. twi_0)then
 
             I4_elapsed = ishow_timer()
 
@@ -543,7 +543,7 @@
                      ,minazi,maxazi,1,azi_scale &                      ! I
                      ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,sol_alt,sol_az,alt_a,azi_a,twi_0,twi_alt &       ! I
-                     ,sol_lat,sol_lon &                                ! I
+                     ,sol_lat,sol_lon,solalt_limb_true &               ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
@@ -597,7 +597,7 @@
                      ,minazi,maxazi,1,azi_scale &                      ! I
                      ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,moon_alt,moon_az,alt_a,azi_a,twi_0,twi_alt &     ! I
-                     ,sol_lat,sol_lon &                                ! I
+                     ,sol_lat,sol_lon,solalt_limb_true &               ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
