@@ -163,11 +163,12 @@
      1' Blue Marble binary file is absent, generate and create from ppm'
 
       if(c6_maproj .ne. 'latlon')then ! local domain
-        file=trim(directory)//'world.200405.3x21600x21600.crop.ppm'
-        pix_latlon = 1. / 240.
+        file=trim(directory)//'world.2004'
+     1                      //c2_mn//'.3x21600x21600.crop.ppm'
+        pix_latlon = 1. / 240. ! (500m pixels - 90x180 degree tile)
       else ! assume latlon global projection
         file=trim(directory)//'world.2004'//c2_mn//'.3x5400x2700.ppm'
-        pix_latlon = 1. / 15.
+        pix_latlon = 1. / 15.  ! (7.4km pixels)
       endif
 
       write(6,*)' Open for reading ',trim(file)
@@ -226,11 +227,16 @@
           write(6,*)' LAPS grid is contained within image'      
       endif
 
-      do i = 1,iwidth,200
-      do j = 1,iheight,200
+      write(6,*)' Sampling of image ',rlat_start,rlon_start,pix_latlon
+      do i = 1,iwidth,120
+!     do j = 1,iheight,200
+      do j = iheight/2,iheight/2,1
 
-        write(6,11)img(:,i,j),i,j
-11      format(5i6,2f8.3)
+        rlat_img_e = rlat_start - float(j) * pix_latlon
+        rlon_img_e = rlon_start + float(i) * pix_latlon
+
+        write(6,11)i,j,rlat_img_e,rlon_img_e,img(:,i,j)
+11      format(2i6,2x,2f8.3,2x,3i6)
 
       enddo ! j
       enddo ! i
@@ -358,16 +364,26 @@
         write(6,*)
      1' Nlights binary file is absent, generate and create it from ppm'       
 
-       if(c6_maproj .ne. 'latlon')then ! local domain
-         file=trim(directory)//'viirs_crop.ppm'
+       file=trim(directory)//'viirs_global_montage_20.ppm' 
+       inquire(file=trim(file),exist=l_there)
+       if(l_there)then                     ! local domain (2.5km pixels)
+         file=trim(directory)//'viirs_global_montage_20.ppm'
+         pix_latlon = 1. / 48.
+         offset_lat = 0.     ! positional error in remapping
+         offset_lon = 0.     !             "
+
+       elseif(c6_maproj .ne. 'latlon')then ! local domain (500m pixels)
+         file=trim(directory)//'viirs_crop.ppm' !         (120 degree tile)
          pix_latlon = 1. / 240.
          offset_lat = -.008  ! positional error in remapping
          offset_lon = +.0035 !             "
-       else ! assume latlon global projection
-         file=trim(directory)//'viirs_global_montage.ppm'
+
+       else                     ! latlon global projection (9km pixels)
+         file=trim(directory)//'viirs_global_montage.ppm' 
          pix_latlon = 1. / 12.
          offset_lat = 0.     ! positional error in remapping
          offset_lon = 0.     !             "
+
        endif
 
        write(6,*)' Open for reading ',trim(file)
