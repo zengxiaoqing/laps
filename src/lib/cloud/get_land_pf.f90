@@ -99,8 +99,9 @@
             emis_ang = c - 90.
 !           topo_salt = sol_alt + gnd_arc
             specangvert = abs(emis_ang - topo_solalt(i,j))
-            specangvert2 = specangvert * sind(emis_ang)
-            azidiffsp = azidiffg / sind(max(emis_ang,.001))
+!           specangvert2 = specangvert * sind(emis_ang)
+            alt_mean = 0.5 * (emis_ang + topo_solalt(i,j))
+            azidiffsp = azidiffg / sind(max(alt_mean,.001))
             azidiffsp = min(max(azidiffsp,-180.),+180.)
 !           specang = sqrt(specangvert**2 + azidiffsp**2)
             specang = angdist(emis_ang,topo_solalt(i,j),azidiffsp)
