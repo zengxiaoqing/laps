@@ -4,7 +4,7 @@
                    ,jazi_start,jazi_end,jazi_delt,azi_scale        &! I
                    ,minalt,maxalt,minazi,maxazi,idebug_a           &! I
                    ,sol_alt,sol_azi,view_alt,view_az,twi_0,twi_alt &! I
-                   ,sol_lat,sol_lon                                &! I
+                   ,sol_lat,sol_lon,solalt_limb_true               &! I
                    ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt &! I
                    ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir  &! I
                    ,aod_ref,aero_scaleht,dist_2_topo               &! I
@@ -229,7 +229,7 @@
           enddo 
         endif
 
-        if(sol_alt .gt. twi_0)then ! formerly 0.
+        if(solalt_limb_true .gt. twi_0)then ! formerly 0.
           write(6,*)' Obtain reference values of source term'
           write(6,*)'ag_90/aa_90 = ',ag_90,aa_90
           write(6,*)'ag_s/aa_s = ',ag_s,aa_s
@@ -494,7 +494,7 @@
 
 !               azi_ref = 175. ! volcanic test
 !               azi_ref = 340. ! 300km test
-                azi_ref = 315. ! limb test  
+!               azi_ref = 315. ! limb test  
 
                 if(view_azi_deg .eq. azi_ref.AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
 !               if(abs(180. - view_azi_deg) .eq. 1.0 .AND. (altray .eq. nint(altray) .or. abs(viewalt_limb_true) .le. 1.0) & 
@@ -671,7 +671,7 @@
 
           idebug = idebug_a(ialt,jazi) * 2
 
-          if(sol_alt .gt. twi_0)then ! formerly 0.
+          if(solalt_limb_true .gt. twi_0)then ! formerly 0.
 
 !           Get eclipse parms if applicable (and effective brightness)
             if(l_solar_eclipse .eqv. .true.)then
@@ -814,8 +814,8 @@
             rayleigh_pfunc = rayleigh_pf(elong(ialt,jazi))
             rayleigh_gnd = rayleigh_pfunc + sfc_alb * sind(sol_alt)
 
-            if(htmsl .le. 250000. .and. dist_2_topo(ialt,jazi) .eq. 0d0)then 
-!           if(htmsl .le. 100000e3 .and. dist_2_topo(ialt,jazi) .eq. 0.)then 
+!           Raising this further will reduce the use of mode_sky = 3
+            if(htmsl .le. 1000e3 .and. dist_2_topo(ialt,jazi) .eq. 0d0)then 
               mode_sky = 4 ! simple approach (<250km non-topo case)
               do ic = 1,nc
                 day_int = 3e9 * (1.0 - eobsc(ic,jazi))
