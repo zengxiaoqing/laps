@@ -101,11 +101,12 @@
 !           purposes including suppressing phase function near terrain
 !           and ensuring high pf for backscattering with thick clouds
 !           radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
-            radfrac = scurve(scurve(scurve(r_cloud_rad(i,j))))
+            radfrac = scurve(scurve(scurve(scurve(r_cloud_rad(i,j)))))
             elgfrac = scurve(elong_a(i,j)/180.) ! * radfrac ! need radfrac?
             alb_clwc = alb(0.06*cloud_od_liq) * elgfrac + (1.-elgfrac)
 
             pf_thk_alt = (2./3.) * (1. + sind(abs(alt_a(i,j))))
+            pf_thk_alt = 1. + 2. * (pf_thk_alt-1.)
 !                     illuminated                unilluminated
 !           pf_thk = pf_thk*radfrac + hg(-0.,elong_a(i,j)) * (1.-radfrac) &
 !                                       * (2./3. * (1. + sind(alt_a(i,j))))
