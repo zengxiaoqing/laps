@@ -1,10 +1,8 @@
 
         subroutine plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
-!    1                          ,minalt,maxalt,minazi,maxazi
      1                          ,ni_polar,nj_polar,ipolar_sizeparm
      1                          ,density     
-     1                          ,r_missing_data,laps_cycle_time,maxstns
-     1                          ,i_overlay,plot_parms,namelist_parms
+     1                          ,r_missing_data,laps_cycle_time
      1                          ,l_polar,l_cyl)       
 
         use mem_namelist, ONLY: max_snd_grid, max_snd_levels
@@ -14,7 +12,6 @@
         use mem_allsky
 
         include 'trigd.inc'
-        include 'lapsplot.inc'
 
         addlogs(x,y) = log10(10.**x + 10.**y)
         horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
@@ -95,8 +92,6 @@
         logical l_binary /.false./
         logical l_require_clouds ! requiring cloud data to run
 
-        integer i_overlay
-
         include 'icolors.inc'
 
 !       Sounding observation declarations
@@ -144,10 +139,7 @@
             mode_polar = 0
         endif
 
-        nsmooth = plot_parms%obs_size
-        if(nsmooth .ne. 3)then
-            nsmooth = 1
-        endif
+        nsmooth = 1
 
         I4_elapsed = ishow_timer()
 
@@ -849,7 +841,7 @@
 19      format(' pw_ref,aod,aod_ref = ',3f10.3)
 20      continue
 
-!       Get Atmospheric Optical Depth (3D field)
+!       Get Aersol Extinction Coefficient (3D field)
         call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L,aod_ref
      1                 ,aod_3d)
 
@@ -880,13 +872,9 @@
 
           write(6,*)' Enter minazi,maxazi'                     
           read(lun,*)minazi,maxazi           
-!         minazi = 0
-!         maxazi = maxalt * 4
 
           write(6,*)' Enter alt_scale,azi_scale'               
           read(lun,*)alt_scale,azi_scale     
-!         alt_scale = 90. / float(maxalt)
-!         azi_scale = alt_scale
 
           write(6,*)' minalt/maxalt = ',minalt,maxalt
           write(6,*)' minazi/maxazi = ',minazi,maxazi
