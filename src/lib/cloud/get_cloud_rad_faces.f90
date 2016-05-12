@@ -259,6 +259,9 @@
            ri = rit + dids*s
            rj = rjt + djds*s
 
+!          Update the height based on the slope of the ray with a correction
+!          for Earth curvature. The approximation is made that the curve of
+!          the Earth can be given by a quadratic (parabolic) expression.
            ht = htt + dhtds*s + (dxyds*s)**2 / (2.0*earth_radius)
 
 !          This can be used as part of a refraction strategy
