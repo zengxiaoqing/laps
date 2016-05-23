@@ -7,7 +7,7 @@
      1                     ,topo_albedo_2d,land_frac,snow_cover     ! I
      1                     ,htagl                                   ! I
      1                     ,aod_ref                                 ! I
-     1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc     ! I
+     1                     ,NX_L,NY_L,NZ_L,newloc                   ! I
      1                     ,ri_obs,rj_obs                           ! I
      1                     ,alt_a_roll,azi_a_roll                   ! I
      1                     ,sol_alt_2d,sol_azi_2d                   ! I
@@ -22,7 +22,7 @@
      1                     ,ni_cyl,nj_cyl                           ! I
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
-     1                     ,twi_0,l_binary                          ! I
+     1                     ,l_binary                                ! I
      1                     ,sky_rgb_cyl)                            ! O
 
         use mem_allsky
@@ -112,6 +112,8 @@
 
         iobs = nint(ri_obs)
         jobs = nint(rj_obs)
+        isound = iobs
+        jsound = jobs
         write(6,*)' swi_2d at observer location = ',swi_2d(iobs,jobs)
         eobsl = eobsc(iobs,jobs)
         write(6,*)' eobsl = ',eobsl
