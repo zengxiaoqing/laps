@@ -105,6 +105,7 @@
         real od_o_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real od_a_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real clr_od(nc), sky_rad_ave(nc), transterm(nc), sph_rad_ave(nc)
+        real topovis_c(nc), od2topo_c(nc)
 
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag
@@ -390,7 +391,7 @@
                                                      j .eq. 2048 )then
                 idebug_a(i,j) = 1 ! alt slice
             endif
-            if(azi_scale .eq. .20 .AND. alt_a(i,j) .eq. 9.0 .AND. &  ! azi slice
+            if(azi_scale .eq. .20 .AND. alt_a(i,j) .eq. 999.0 .AND. &  ! azi slice
                azi_a(i,j) .ge. 110.0  .and. azi_a(i,j) .le. 130.0)then
                 idebug_a(i,j) = 1
             endif
@@ -1088,9 +1089,9 @@
               clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + clear_rad_c_nt(:,i,j)
 
 !             Add in moonglow depending of opacity of airmass to terrain
-              od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
+              od2topo_c(:) = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
               clear_rad_c(:,i,j) = clear_rad_c(:,i,j) &
-                                 + rad_moon_sc(:,i,j) * opac(od_2_topo)
+                                 + rad_moon_sc(:,i,j) * opac(od2topo_c(:))
 
             endif
           endif
@@ -1132,9 +1133,9 @@
             if(solalt_ref .gt. -4.5 .OR. htmsl .ge. 1000e3)then 
 
               if(airmass_2_topo(i,j) .gt. 0.)then ! terrain
-                od_2_topo = (ext_g(ic) * airmass_2_topo(i,j)) + aod_2_topo(i,j) &
-                          + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
-                frac_front = opac(od_2_cloud) / opac(od_2_topo)
+                od2topo_c(ic) = (ext_g(ic) * airmass_2_topo(i,j)) + aod_2_topo(i,j) &
+                              + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
+                frac_front = opac(od_2_cloud) / opac(od2topo_c(ic))
               else ! fraction of air/scatterers in front of cloud                
                 frac_front = opac(od_2_cloud) / opac(clr_od(ic)) ! gas+aero
               endif
@@ -1223,7 +1224,7 @@
 
 !         if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 2.0)then
           if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 90.0)then
-            write(6,96)od_2_topo,od_2_cloud,clr_od(2),aod_2_cloud(i,j),cloud_albedo
+            write(6,96)od2topo_c(2),od_2_cloud,clr_od(2),aod_2_cloud(i,j),cloud_albedo
 96          format(' od2tpo/od2cld/odclr/aod2cld/cldalb',5f10.4)
             write(6,97)frac_front,frac_behind,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_clr,frac_clr_2nd,frac_cloud,scurve_term,clear_rad_c(:,i,j),cld_rad,sky_rad
 97          format(' ffnt/fbhd/rcld/radf/fclr/fclr2/fcld/scrv/clrrd/cldrd/skyrd',8f7.3,3f13.0,2x,3f13.0,2x,3f13.0,2x,3i4)
@@ -1237,25 +1238,28 @@
 !             This may however consider aerosol brightness and not gas
 !             component?
               if(solalt_ref .le. twi_alt)then 
-                od_2_topo = 0. !(od_atm_g + od_atm_a) * airmass_2_topo(i,j)
+                od2topo_c(:) = 0. !(od_atm_g + od_atm_a) * airmass_2_topo(i,j)
               else ! eventually use clear_rad influenced by topo?
-                od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
-!               od_2_topo = (od_atm_g * airmass_2_topo(i,j)) + aod_ill(i,j)
+                od2topo_c(:) = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
+!               od2topo_c(:) = (od_atm_g * airmass_2_topo(i,j)) + aod_ill(i,j)
               endif
 
-              topo_visibility = trans(+1.00*od_2_topo)                    
+              topo_visibility = trans(+1.00*od2topo_c(2))                    
 
               if(airmass_2_cloud(i,j) .gt. 0. .AND. airmass_2_cloud(i,j) .lt. airmass_2_topo(i,j)) then
                   topo_visibility = topo_visibility * (1.0 - r_cloud_3d(i,j))
               endif
 
 !             If the view altitude is near -90, we can consider the topo as
-!             adding to the cloud via forward scattering?
+!             adding to the cloud via forward scattering 
               if(alt_a(i,j) .lt. 0.)then
                   rlnd_fwsc = -sind(alt_a(i,j))
-                  topo_rad = (1.0 - cloud_albedo) * rlnd_fwsc + (1.0-rlnd_fwsc)
+                  topo_rad = (1.0 - cloud_albedo) * rlnd_fwsc &
+                           + topo_visibility * (1.0-rlnd_fwsc)
                   topo_visibility = topo_rad
               endif
+
+              topovis_c(:) = topo_visibility
 
               if(solalt_ref .gt. twi_alt)then 
 !                 Daytime assume topo is lit by sunlight (W/m**2)
@@ -1266,18 +1270,21 @@
                   rtopo_blu = 2. * gtic(3,i,j) * topo_albedo(3,i,j) * pf_land(3,i,j) 
                   sky_frac_topo = 1.00               ! hopefully temporary
                   sky_frac_aero = 1.00               ! hopefully temporary
-                  red_rad = day_int * rtopo_red*topo_visibility*sky_frac_topo
-                  grn_rad = day_int * rtopo_grn*topo_visibility*sky_frac_topo
-                  blu_rad = day_int * rtopo_blu*topo_visibility*sky_frac_topo
+                  red_rad = day_int * rtopo_red*topovis_c(1)*sky_frac_topo
+                  grn_rad = day_int * rtopo_grn*topovis_c(2)*sky_frac_topo
+                  blu_rad = day_int * rtopo_blu*topovis_c(3)*sky_frac_topo
                   if(idebug .eq. 1)then
                     write(6,98)rtopo_grn,topo_gti(i,j),gtic(2,i,j) &
                               ,topo_albedo(2,i,j),topo_solalt(i,j) &
                               ,dist_2_topo(i,j) &
-!                             ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
-                              ,red_rad,grn_rad,blu_rad,sky_rad(:)
+                              ,od2topo_c(2),topovis_c(2) &
+                              ,red_rad,grn_rad,blu_rad,sky_rad(:) &
+                              ,sky_rad(1) + red_rad &
+                              ,sky_rad(2) + grn_rad &
+                              ,sky_rad(3) + blu_rad
 98                  format( &
                         ' rtopo/gti/gtic/alb/tsalt/dst/trad/srad   ', &
-                           f9.3,f9.1,f9.4,11x,f9.3,f9.2,f11.0,2x,3f12.0,2x,3f14.0)
+                    f7.3,f9.1,f9.4,1x,f9.3,f9.2,f11.0,2f8.5,3(2x,3f13.0))
                   endif
 
                   sky_rad(1) = sky_rad(1) + red_rad
@@ -1341,7 +1348,7 @@
               rad_sun = 0.
 
           else ! not looking at terrain
-              od_2_topo = 0.
+              od2topo_c(:) = 0.
 
 !             Any refraction can be done up front in 'get_glow_obj'.
 !             This can theoretically be done here multispectrally 
@@ -1457,7 +1464,7 @@
                   write(6,116)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_scat(2,i,j),r_cloud_3d(i,j),cloud_od(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
-                      ,topo_gti(i,j),topo_albedo(1,i,j),aod_ill(i,j),od_2_topo,topo_visibility,cloud_visibility,rintensity_glow &
+                      ,topo_gti(i,j),topo_albedo(1,i,j),aod_ill(i,j),od2topo_c(2),topo_visibility,cloud_visibility,rintensity_glow &
                       ,nint(sky_rgb(:,i,j)),nint(cld_red),nint(cld_grn),nint(cld_blu)
               elseif(sol_alt .ge. -16.)then ! twilight
                   write(6,117)i,j,alt_a(i,j),azi_a(i,j),elong_s(i,j) & 
