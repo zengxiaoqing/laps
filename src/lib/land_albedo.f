@@ -114,7 +114,7 @@
       character*255 file_bm ! remapped to model grid
       character*10  c10_fname /'nest7grid'/
       integer u,u_out
-      logical l_there
+      logical l_there, l_global_bm
 
       integer ncol,iwidth,iheight
       parameter (ncol=3)
@@ -144,7 +144,7 @@
       call get_directory('static',directory,len_dir)
       file_bm=trim(directory)//'albedo_multispectral_'//c2_mn//'.dat'
       inquire(file=trim(file_bm),exist=l_there)
-      write(6,*)' File being inquired is ',trim(file_bm)
+      write(6,*)' File being inquired is ',trim(file_bm),' ',l_there
 
       if(l_there)then
         write(6,*)' Blue Marble binary remapped albedo file exists'
@@ -162,121 +162,138 @@
         write(6,*)
      1' Blue Marble binary file is absent, generate and create from ppm'
 
-      if(c6_maproj .ne. 'latlon')then ! local domain
         file=trim(directory)//'world.2004'
-     1                      //c2_mn//'.3x21600x21600.crop.ppm'
-        pix_latlon = 1. / 240. ! (500m pixels - 90x180 degree tile)
-      else ! assume latlon global projection
-        file=trim(directory)//'world.2004'//c2_mn//'.3x5400x2700.ppm'
-        pix_latlon = 1. / 15.  ! (7.4km pixels)
-      endif
+     1                      //c2_mn//'.global_montage.20.ppm'
+        inquire(file=trim(file),exist=l_there)
+        write(6,*)' File being inquired is ',trim(file),' ',l_there
+        if(l_there)then                      ! local domain (2.5km pixels)
+          pix_latlon = 1. / 48.              ! 17280x8640 image
+          l_global_bm = .true.
 
-      write(6,*)' Open for reading ',trim(file)
+        elseif(c6_maproj .ne. 'latlon')then  ! local domain  (500m pixels)
+          file=trim(directory)//'world.2004' 
+     1                        //c2_mn//'.3x21600x21600.crop.ppm'
+          pix_latlon = 1. / 240. !                    (90x180 degree tile)
+          l_global_bm = .false.
 
-!     Read section of NASA Blue Marble Image in PPM format
-      open(u,file=trim(file),status='old',err=999)
-      read(u,*)   
-      read(u,*)iwidth,iheight
-      rewind(u)
-      write(6,*)' dynamic dims ',ncol,iwidth,iheight
-      allocate(img(ncol,iwidth,iheight))
-      call read_ppm (u,img,ncol,iwidth,iheight)
-      close(u)
+        else                     ! latlon global projection (7.4km pixels)
+          file=trim(directory)//'world.2004'//c2_mn//'.3x5400x2700.ppm'
+          pix_latlon = 1. / 15.                             
+          l_global_bm = .true.
 
-      allocate(rlat_img(iwidth,iheight))
-      allocate(rlon_img(iwidth,iheight))
-      allocate(array_2d(iwidth,iheight))
+        endif
 
-!     Consider dynamic means to get rlat_start and rlon_start
-!     Use domain lat/lon bounds with a 0.2 deg cushion
-      call get_domain_perimeter(ni,nj,c10_fname  
+        write(6,*)' Open for reading ',trim(file)
+
+!       Read section of NASA Blue Marble Image in PPM format
+        open(u,file=trim(file),status='old',err=999)
+        read(u,*)   
+        read(u,*)iwidth,iheight
+        rewind(u)
+        write(6,*)' dynamic dims ',ncol,iwidth,iheight
+        allocate(img(ncol,iwidth,iheight))
+        call read_ppm (u,img,ncol,iwidth,iheight)
+        close(u)
+
+        allocate(rlat_img(iwidth,iheight))
+        allocate(rlon_img(iwidth,iheight))
+        allocate(array_2d(iwidth,iheight))
+
+!       Consider dynamic means to get rlat_start and rlon_start
+!       Use domain lat/lon bounds with a 0.2 deg cushion
+        call get_domain_perimeter(ni,nj,c10_fname  
      1                  ,rlat_laps,rlon_laps,topo_laps_dum
      1                  ,0.2,rnorth,south,east,west,istatus)
 
-      write(6,5)rnorth,south,east,west
-5     format('  NSEW Domain 0.2deg perimeter',4f9.3)                 
+        write(6,5)rnorth,south,east,west
+5       format('  NSEW Domain 0.2deg perimeter',4f9.3)                 
 
-!     rlat_start =   90. - 11000. * pix_latlon
-!     rlon_start = -180. + 17000. * pix_latlon
-      rlat_start = rnorth                         
-      rlon_start = west                          
-      rlat_end = rlat_start - float(iheight) * pix_latlon
-      rlon_end = rlon_start + float(iwidth)  * pix_latlon
-
-      write(6,*)' BM PPM lat range: ',rlat_start,rlat_end
-      write(6,*)' BM PPM lon range: ',rlon_start,rlon_end
-
-!     Fill arrays of image lat/lons and LAPS ri,rj
-      istatus_img = 1
-      do i = 1,ni     
-      do j = 1,nj     
-        rj_img(i,j) = (rlat_start - rlat_laps(i,j)) / pix_latlon
-        ri_img(i,j) = (rlon_laps(i,j) - rlon_start) / pix_latlon
-        if(rlat_laps(i,j) .gt. rlat_start .OR.
-     1     rlat_laps(i,j) .lt. rlat_end   .OR.
-     1     rlon_laps(i,j) .lt. rlon_start .OR. 
-     1     rlon_laps(i,j) .gt. rlon_end)then
-            istatus_img = 0
+        if(l_global_bm)then
+          rlat_start = +90.                         
+          rlon_start = -180.
+          rlat_end = rlat_start - float(iheight) * pix_latlon
+          rlon_end = rlon_start + float(iwidth)  * pix_latlon
+        else
+          rlat_start = rnorth                         
+          rlon_start = west                          
+          rlat_end = rlat_start - float(iheight) * pix_latlon
+          rlon_end = rlon_start + float(iwidth)  * pix_latlon
         endif
-      enddo ! j
-      enddo ! i
 
-      if(istatus_img .eq. 0)then
-          write(6,*)' WARNING: LAPS grid extends outside image'
-      else
-          write(6,*)' LAPS grid is contained within image'      
-      endif
+        write(6,*)' BM PPM lat range: ',rlat_start,rlat_end
+        write(6,*)' BM PPM lon range: ',rlon_start,rlon_end
 
-      write(6,*)' Sampling of image ',rlat_start,rlon_start,pix_latlon
-      do i = 1,iwidth,120
-!     do j = 1,iheight,200
-      do j = iheight/2,iheight/2,1
-
-        rlat_img_e = rlat_start - float(j) * pix_latlon
-        rlon_img_e = rlon_start + float(i) * pix_latlon
-
-        write(6,11)i,j,rlat_img_e,rlon_img_e,img(:,i,j)
-11      format(2i6,2x,2f8.3,2x,3i6)
-
-      enddo ! j
-      enddo ! i
-
-      I4_elapsed = ishow_timer()
-
-      write(6,*)' Bilinearly Interpolate'
-
-!     Interpolate to LAPS grid using bilinear_laps_2d
-      do ic = 1,3
-        array_2d(:,:) = img(ic,:,:)
-        call bilinear_laps_2d(ri_img,rj_img,iwidth,iheight,ni,nj 
-     1                       ,array_2d,result)
-        do i = 1,ni
-        do j = 1,nj
-          if(result(i,j) .le. 179.)then ! Based on NASA spline
-            albedo(ic,i,j) = result(i,j) / 716.                  
-          elseif(result(i,j) .le. 255.)then
-            albedo(ic,i,j) = 0.25 + (result(i,j) - 179.) / 122. 
-          else ! bad / default value
-            albedo(ic,i,j) = 0.2
+!       Fill arrays of image lat/lons and LAPS ri,rj
+        istatus_img = 1
+        do i = 1,ni     
+        do j = 1,nj     
+          rj_img(i,j) = (rlat_start - rlat_laps(i,j)) / pix_latlon
+          ri_img(i,j) = (rlon_laps(i,j) - rlon_start) / pix_latlon
+          if(rlat_laps(i,j) .gt. rlat_start .OR.
+     1       rlat_laps(i,j) .lt. rlat_end   .OR.
+     1       rlon_laps(i,j) .lt. rlon_start .OR. 
+     1       rlon_laps(i,j) .gt. rlon_end)then
+            istatus_img = 0
           endif
         enddo ! j
         enddo ! i
-      enddo ! ic
 
-      write(6,*)' Interpolated albedo: ',albedo(:,ni/2,nj/2)
+        if(istatus_img .eq. 0)then
+          write(6,*)' WARNING: LAPS grid extends outside image'
+        else
+          write(6,*)' LAPS grid is contained within image'      
+        endif
 
-      if(albedo(2,ni/2,nj/2) .gt. 1.0)then
-        write(6,*)' ERROR bad interpolated albedo point'
-        goto 999
-      endif
+        write(6,*)' Sampling of image ',rlat_start,rlon_start,pix_latlon
+        do i = 1,iwidth,120
+!       do j = 1,iheight,200
+        do j = iheight/2,iheight/2,1
 
-!     Write albedo file in binary format
-      u_out = 12
-      write(6,*)' Writing albedo file to '//file_bm
-      open(u_out,file=trim(file_bm),form='unformatted'
-     1    ,status='new',err=999)
-      write(u_out)albedo
-      close(u_out)
+          rlat_img_e = rlat_start - float(j) * pix_latlon
+          rlon_img_e = rlon_start + float(i) * pix_latlon
+
+          write(6,11)i,j,rlat_img_e,rlon_img_e,img(:,i,j)
+11        format(2i6,2x,2f8.3,2x,3i6)
+
+        enddo ! j
+        enddo ! i
+
+        I4_elapsed = ishow_timer()
+
+        write(6,*)' Bilinearly Interpolate'
+
+!       Interpolate to LAPS grid using bilinear_laps_2d
+        do ic = 1,3
+          array_2d(:,:) = img(ic,:,:)
+          call bilinear_laps_2d(ri_img,rj_img,iwidth,iheight,ni,nj 
+     1                         ,array_2d,result)
+          do i = 1,ni
+          do j = 1,nj
+            if(result(i,j) .le. 179.)then ! Based on NASA spline
+              albedo(ic,i,j) = result(i,j) / 716.                  
+            elseif(result(i,j) .le. 255.)then
+              albedo(ic,i,j) = 0.25 + (result(i,j) - 179.) / 122. 
+            else ! bad / default value
+              albedo(ic,i,j) = 0.2
+            endif
+          enddo ! j
+          enddo ! i
+        enddo ! ic
+
+        write(6,*)' Interpolated albedo: ',albedo(:,ni/2,nj/2)
+
+        if(albedo(2,ni/2,nj/2) .gt. 1.0)then
+          write(6,*)' ERROR bad interpolated albedo point'
+          goto 999
+        endif
+
+!       Write albedo file in binary format
+        u_out = 12
+        write(6,*)' Writing albedo file to '//file_bm
+        open(u_out,file=trim(file_bm),form='unformatted'
+     1      ,status='new',err=999)
+        write(u_out)albedo
+        close(u_out)
 
       endif ! binary file exists
 
@@ -314,7 +331,7 @@
       character*255 file,file_bm 
       character*10  c10_fname /'nest7grid'/
       integer u,u_out
-      logical l_there
+      logical l_there, l_global_nl
 
       integer ncol,iwidth,iheight
       parameter (ncol=3)
@@ -344,7 +361,7 @@
       call get_directory('static',directory,len_dir)
       file_bm=trim(directory)//'nlights_multispectral.dat'
       inquire(file=trim(file_bm),exist=l_there)
-      write(6,*)' File being inquired is ',trim(file_bm)
+      write(6,*)' File being inquired is ',trim(file_bm),' ',l_there
 
       if(l_there)then
         write(6,*)' Nlights binary remapped sfc_glow_c file exists'
@@ -367,22 +384,24 @@
        file=trim(directory)//'viirs_global_montage_20.ppm' 
        inquire(file=trim(file),exist=l_there)
        if(l_there)then                     ! local domain (2.5km pixels)
-         file=trim(directory)//'viirs_global_montage_20.ppm'
-         pix_latlon = 1. / 48.
+         pix_latlon = 1. / 48.             ! 17280x8640 image
          offset_lat = 0.     ! positional error in remapping
          offset_lon = 0.     !             "
+         l_global_nl = .true.
 
        elseif(c6_maproj .ne. 'latlon')then ! local domain (500m pixels)
          file=trim(directory)//'viirs_crop.ppm' !         (120 degree tile)
          pix_latlon = 1. / 240.
          offset_lat = -.008  ! positional error in remapping
          offset_lon = +.0035 !             "
+         l_global_nl = .false.
 
        else                     ! latlon global projection (9km pixels)
          file=trim(directory)//'viirs_global_montage.ppm' 
          pix_latlon = 1. / 12.
          offset_lat = 0.     ! positional error in remapping
          offset_lon = 0.     !             "
+         l_global_nl = .true.
 
        endif
 
