@@ -24,7 +24,6 @@
 !       real rain_3d(NX_L,NY_L,NZ_L)
 !       real snow_3d(NX_L,NY_L,NZ_L)
 !       real aod_3d(NX_L,NY_L,NZ_L)
-!       real rh_3d(NX_L,NY_L,NZ_L)
 
         parameter (nc = 3)
 !       real transm_3d(NX_L,NY_L,NZ_L)
@@ -361,61 +360,8 @@
 
           goto400
 
-!         Read RH/SH 
- 300      istat_td = 0
-          if(c_prodtype .eq. 'A')then ! Read RH
-            var_2d = 'RHL'
-            ext = 'lh3'
-            call get_laps_3dgrid
-     1          (i4time_nearest,0,i4time_nearest,NX_L,NY_L,NZ_L       
-     1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_rh)
-            if(istat_rh .ne. 1)goto1000
-
-          elseif(c_prodtype .eq. 'N')then ! Read RH
-            call get_directory('balance',directory,len_dir)
-            ext = 'lh3'
-            directory = directory(1:len_dir)//ext(1:3)
-
-            var_2d = 'RHL'
-
-            call get_3dgrid_dname(directory
-     1                  ,i4time_ref,laps_cycle_time*10000,i4time_nearest       
-     1                  ,ext,var_2d,units_2d
-     1                  ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istat_rh)       
-            if(istat_rh .ne. 1)goto1000
-
-          elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
-            var_2d = 'SH'
-            call get_lapsdata_3d(i4_initial,i4_valid
-     1                              ,NX_L,NY_L,NZ_L       
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d,field_3d
-     1                              ,istat_sh)
-            if(istat_sh .ne. 1)goto1000
-
-          else
-            write(6,*)' Sorry, RH/SH not yet supported for prodtype: '
-     1               ,c_prodtype
-            istat_rh = 0
-            goto1000
-
-          endif
-
-          if(c_prodtype .eq. 'A' .or. c_prodtype .eq. 'N')then
-            if(nsmooth .gt. 1)then
-                call smooth_box_3d(field_3d,NX_L,NY_L,NZ_L,nsmooth)
-            endif
-
-            istat_td = 1
-
-          else
-            if(nsmooth .gt. 1)then
-                call smooth_box_3d(field_3d,NX_L,NY_L,NZ_L,nsmooth)
-            endif
-
-            istat_td = 1
-
-          endif
+!         Read RH/SH (removed this section)
+300       continue 
 
 400       continue
 
@@ -1062,7 +1008,7 @@
      1                     ,topo_albedo_2d,land_frac,snow_cover     ! I
      1                     ,htagl(iloc)                             ! I
      1                     ,aod_ref                                 ! I
-     1                     ,NX_L,NY_L,NZ_L,i_obs,j_obs,newloc       ! I
+     1                     ,NX_L,NY_L,NZ_L,newloc                   ! I
      1                     ,ri_obs,rj_obs                           ! I
      1                     ,alt_a_roll,azi_a_roll                   ! I
      1                     ,sol_alt_2d,sol_azi_2d                   ! I
@@ -1077,7 +1023,7 @@
      1                     ,ni_cyl,nj_cyl                           ! I
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
-     1                     ,twi_0,l_binary                          ! I
+     1                     ,l_binary                                ! I
      1                     ,sky_rgb_cyl)                            ! O
 
           else
