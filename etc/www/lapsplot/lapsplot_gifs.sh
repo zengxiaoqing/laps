@@ -118,12 +118,13 @@ if test "$NCARG_ROOT" = "allsky"; then
   ALT_SCALE=`head -3 label2.$ILOC | tail -1 | cut -c17-23`
   AZI_SCALE=`head -3 label2.$ILOC | tail -1 | cut -c24-30`
   LATLON="`head -1 label2.$ILOC`"
+  LATLON=`echo $LATLON | sed 's/^[ \t]*//'` # remove leading spaces
 
   echo "MINALT/MAXALT/MINAZI/MAXAZI/NI_CYL/NJ_CYL = $MINALT $MAXALT $MINAZI $MAXAZI $NI_CYL $NJ_CYL"
   echo "ALT_SCALE/AZI_SCALE = $ALT_SCALE,$AZI_SCALE"
   echo "LATLON=$LATLON"
 
-  if test "$LATLON" = "   38.84 -105.04"; then
+  if test "$LATLON" = "38.84 -105.04"; then
     echo "Site is Pikes"
     YDISP=135
     POINT=12
@@ -235,31 +236,38 @@ if test "$NCARG_ROOT" = "allsky"; then
   fi
 
 # Annotate Time
+  ATIME=`head -2 label.$ILOC | tail -1`
+  ATIME=`echo $ATIME | sed 's/^[ \t]*//'` # remove leading spaces
+  echo "Annotate Time $ATIME"
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
    if test "$IMGGEOM" = "511x511"; then
-    convert -fill white -annotate +360+503  "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    echo 'convert -fill white -annotate +360+503  "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png'
+          convert -fill white -annotate +360+503  "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    elif test "$IMGGEOM" = "1023x1023"; then
-    convert -fill white -annotate +720+1015 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +720+1015 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    else
-    convert -fill white -annotate +1080+1527 "`head -2 label.$ILOC | tail -1`" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +1080+1527 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    fi
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $AZI_SCALE == 0.10; then
-      convert -fill yellow -annotate +525+447 "`head -2 label.$ILOC | tail -1`"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +525+447 "$ATIME"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.20; then
-      convert -fill yellow -annotate +918+179 "`head -2 label.$ILOC | tail -1`" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +918+179 "$ATIME" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.25; then
-      convert -fill yellow -annotate  +815+$YDISP "`head -2 label.$ILOC | tail -1`" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate  +815+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.50; then
-      convert -fill yellow -annotate +1550+20 "`head -2 label.$ILOC | tail -1`" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +1550+20 "$ATIME" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
-      convert -fill yellow -annotate +725+20 "`head -2 label.$ILOC | tail -1`"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +725+20 "$ATIME"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     fi
   fi
 
 # Annotate Lat/Lon
+# Try and strip off leading blanks?
+# LATLON="39.99 -105.26"
+  echo "Annotate Lat/Lon $LATLON"
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
    if test "$IMGGEOM" = "511x511"; then
     echo "convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
@@ -303,6 +311,7 @@ if test "$NCARG_ROOT" = "allsky"; then
 # fi
 
 # Annotate Directions
+  echo "Annotate Directions"
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
    if test "$IMGGEOM" = "511x511"; then
     convert -fill white -annotate +55+60     "$DIR1"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
