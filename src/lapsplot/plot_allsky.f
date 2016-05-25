@@ -90,6 +90,7 @@
         logical l_cyl, l_polar 
         logical l_binary /.false./
         logical l_require_clouds ! requiring cloud data to run
+        logical l_test_cloud /.false./
 
         include 'icolors.inc'
 
@@ -365,9 +366,11 @@
 
 400       continue
 
-!         Read Cloud Liquid
-          istat_lwc = 0
-          if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
+          if(.not. l_test_cloud)then
+
+!          Read Cloud Liquid
+           istat_lwc = 0
+           if(c_prodtype .eq. 'A')then ! Read Cloud Liquid
             var_2d = 'LWC'
             ext = 'lwc'
             call get_laps_3dgrid
@@ -376,7 +379,7 @@
 !           call make_fnam_lp(i4time_lwc,a9time,istatus)
 !           call cv_i4tim_asc_lp(i4time_lwc,a24time,istatus)
             i4time_data  = i4time_lwc
-          elseif(c_prodtype .eq. 'F')then 
+           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'LWC'
             call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
@@ -385,28 +388,28 @@
      1                              ,istat_lwc)
             call cv_i4tim_asc_lp(i4_valid,a24time,istatus)
             i4time_data  = i4_valid
-          endif
+           endif
 
-          if(istat_lwc .ne. 1)then
+           if(istat_lwc .ne. 1)then
               write(6,*)' Error reading LWC field in plot_allsky'
               return
-          endif
+           endif
 
-          if(istat_lwc .eq. 1)then
+           if(istat_lwc .eq. 1)then
             continue
-          else
+           else
             continue
-          endif
+           endif
 
-!       Read Cloud Ice
-          istat_ice = 0
-          if(c_prodtype .eq. 'A')then ! Read Cloud Ice
+!          Read Cloud Ice
+           istat_ice = 0
+           if(c_prodtype .eq. 'A')then ! Read Cloud Ice
             var_2d = 'ICE'
             ext = 'lwc'
             call get_laps_3dgrid
      1          (i4time_lwc,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,cice_3d,istat_ice)
-          elseif(c_prodtype .eq. 'F')then 
+           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'ICE'
             call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
@@ -414,26 +417,26 @@
      1                              ,units_2d,comment_2d,cice_3d
      1                              ,istat_ice)
 !           if(istat_ice .ne. 1)goto1000
-          endif
+           endif
 
-          if(istat_ice .eq. 1)then
+           if(istat_ice .eq. 1)then
             continue
-          else
+           else
             write(6,*)' Error reading ICE field in plot_allsky'
             return
-          endif
+           endif
  
-!         goto500
+!          goto500
 
-!         Read Precipitating Rain
-          istat_rain = 0
-          if(c_prodtype .eq. 'A')then ! Read Precipitating Rain
+!          Read Precipitating Rain
+           istat_rain = 0
+           if(c_prodtype .eq. 'A')then ! Read Precipitating Rain
             var_2d = 'RAI'
             ext = 'lwc'
             call get_laps_3dgrid
      1          (i4time_lwc,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,rain_3d,istat_rain)
-          elseif(c_prodtype .eq. 'F')then 
+           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'RAI'
             call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
@@ -441,24 +444,24 @@
      1                              ,units_2d,comment_2d,rain_3d
      1                              ,istat_rain)
 !           if(istat_rain .ne. 1)goto1000
-          endif
+           endif
 
-          if(istat_rain .eq. 1)then
+           if(istat_rain .eq. 1)then
             continue
-          else
+           else
             write(6,*)' Error reading RAI field in plot_allsky'
             return
-          endif
+           endif
 
 !         Read Precipitating Snow
-          istat_snow = 0
-          if(c_prodtype .eq. 'A')then ! Read Precipitating Snow
+           istat_snow = 0
+           if(c_prodtype .eq. 'A')then ! Read Precipitating Snow
             var_2d = 'SNO'
             ext = 'lwc'
             call get_laps_3dgrid
      1          (i4time_lwc,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,snow_3d,istat_snow)
-          elseif(c_prodtype .eq. 'F')then 
+           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'SNO'
             call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
@@ -466,26 +469,26 @@
      1                              ,units_2d,comment_2d,snow_3d
      1                              ,istat_snow)
 !           if(istat_snow .ne. 1)goto1000
-          endif
+           endif
 
-          if(istat_snow .eq. 1)then
+           if(istat_snow .eq. 1)then
             continue
-          else
+           else
             write(6,*)' Error reading SNO field in plot_allsky'
             return
-          endif
+           endif
 
-          goto500
+           goto500
 
-!         Read Precipitating Ice
-          istat_pice = 0
-          if(c_prodtype .eq. 'A')then ! Read Precipitating Ice
+!          Read Precipitating Ice
+           istat_pice = 0
+           if(c_prodtype .eq. 'A')then ! Read Precipitating Ice
             var_2d = 'PIC'
             ext = 'lwc'
             call get_laps_3dgrid
      1          (i4time_lwc,0,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,field_3d,istat_pice)
-          elseif(c_prodtype .eq. 'F')then 
+           elseif(c_prodtype .eq. 'F')then 
             var_2d = 'PIC'
             call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
@@ -493,13 +496,18 @@
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istat_pice)
 !           if(istat_pice .ne. 1)goto1000
-          endif
+           endif
 
-          if(istat_pice .eq. 1)then
+           if(istat_pice .eq. 1)then
             continue
-          else
+           else
             write(6,*)' Error reading PIC field in plot_allsky'
             return
+           endif
+
+          else ! l_test_cloud
+!          Generate idealized cloud fields instead
+
           endif
 
 500       continue
