@@ -114,7 +114,8 @@
         jobs = nint(rj_obs)
         isound = iobs
         jsound = jobs
-        write(6,*)' swi_2d at observer location = ',swi_2d(iobs,jobs)
+        swi_obs = swi_2d(iobs,jobs)
+        write(6,*)' swi_2d at observer location = ',swi_obs
         eobsl = eobsc(iobs,jobs)
         write(6,*)' eobsl = ',eobsl
         eobsc_sky = 0. ! initialize
@@ -364,6 +365,7 @@
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
+     1                    ,swi_obs           ! sw at ground below observer 
      1                    ,topo_swi,topo_albedo,gtic,dtic,btic,emic
      1                    ,topo_albedo_2d(:,isound,jsound)
      1                    ,topo_lat,topo_lon,topo_lf,topo_sc            ! I
