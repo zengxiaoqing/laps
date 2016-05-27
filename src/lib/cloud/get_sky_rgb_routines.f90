@@ -128,7 +128,7 @@
 !             Fraction of air in the path, use fracod instead?
               fracair = min((airmass_2_topo(ialt,jazi)/(airmass*patm)),1.0)
               glow_lp = obs_glow_zen * patm * fracair                ! (nL)
-            else
+            else ! view completely outside the atmosphere
               fracair = 1.0
               glow_lp = (obs_glow_zen * patm * rint_alt_ramp)        ! (nL)
             endif
