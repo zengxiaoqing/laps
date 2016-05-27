@@ -5,7 +5,7 @@
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
                    glow_sun,glow_moon,glow_stars, &                     ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
-                   airmass_2_cloud,airmass_2_topo, &                    ! I
+                   airmass_2_cloud,airmass_2_topo,swi_obs, &            ! I
                    topo_gti,topo_albedo,gtic,dtic,btic,emic,albedo_sfc,&! I
                    topo_lat,topo_lon,topo_lf,topo_sc, &                 ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
@@ -18,6 +18,7 @@
                    sky_rgb)                                             ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm
+        use cloud_rad, ONLY: ghi_zen_toa
         include 'trigd.inc'
 
 !       Statement functions
@@ -708,6 +709,7 @@
         I4_elapsed = ishow_timer()
 
         write(6,*)' albedo_sfc = ',albedo_sfc(:)
+        write(6,*)' swi_obs = ',swi_obs
         write(6,*)
         if(ni .eq. nj)then ! polar
             write(6,*)' slice from SW to NE through midpoint'
@@ -809,10 +811,10 @@
                       if(htmsl .gt. 100e3 .and. dist_2_topo(i,j) .gt. 0.)then
                           topo_arg = 2. * gtic(ic,i,j) * topo_albedo(ic,i,j)
                           rad = day_int * topo_arg
-                      else
+                      else ! cloud lit by light reflecting off of the ground
 !                         topo_arg = 2. * gtic(ic,i,j) * albedo_sfc(ic)
-!                         rad = day_int * topo_arg
-                          rad = day_int * (0.02 * (1. + albedo_sfc(ic))) * pf_scat(ic,i,j)
+                          rad = day_int * 2. * swi_obs/ghi_zen_toa * albedo_sfc(ic)
+!                         rad = day_int * (0.02 * (1. + albedo_sfc(ic))) * pf_scat(ic,i,j)
                       endif
                   else ! secondary scattering term allowed to dominate
                       rad = 0.
