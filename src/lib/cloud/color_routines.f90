@@ -80,7 +80,7 @@
         if(iverbose .eq. 1)write(6,*)'ct = ',ct
         call xyztosrgb(x,y,z,ct,r,g,b)             
 
-!       Convert rintensity to rgb
+!       Convert rintensity to rgb (gamma correction)
         call linearrgb_to_counts(r,g,b,rc,gc,bc)
 
         if(iverbose .eq. 1)write(6,*)'glwref/contrast = ',glwref,contrast
@@ -207,11 +207,21 @@
         return
         end
 
-        subroutine srgbtoxyz(r,g,b,x,y,z)
+        subroutine srgbtoxyz(r,g,b,ct,x,y,z)
  
-        x =  0.4124*r + 0.3576*g + 0.1805*b
-        y =  0.2126*r + 0.7152*g + 0.0722*b
-        z =  0.0193*r + 0.1192*g + 0.9505*b
+        colfrac = (ct - 5000.) / (6500. - 5000.)
+
+        x65 =  0.4124*r + 0.3576*g + 0.1805*b
+        y65 =  0.2126*r + 0.7152*g + 0.0722*b
+        z65 =  0.0193*r + 0.1192*g + 0.9505*b
+ 
+        x50 =  0.4361*r + 0.3851*g + 0.1430*b
+        y50 =  0.2225*r + 0.7169*g + 0.0606*b
+        z50 =  0.0139*r + 0.0971*g + 0.7141*b
+
+        x = x65 * colfrac + x50 * (1.-colfrac)
+        y = y65 * colfrac + y50 * (1.-colfrac)
+        z = z65 * colfrac + z50 * (1.-colfrac)
  
         return
         end
