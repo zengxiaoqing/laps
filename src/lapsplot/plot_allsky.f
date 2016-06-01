@@ -287,9 +287,12 @@
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
 
-        if(i4time_ref - i4time_now_gg() .lt. 21600)then ! present/past
+        if(i4time_ref - i4time_now_gg() .lt. 1e6)then      ! present/past
           l_require_clouds = .true.
-        else                                            ! future
+        elseif(i4time_ref - i4time_now_gg() .gt. 45e6)then ! >1.5y future
+          l_require_clouds = .false.
+          l_test_cloud = .true.
+        else                                               ! >10d future
           l_require_clouds = .false.
         endif
 
@@ -505,10 +508,11 @@
             return
            endif
 
-          else ! l_test_cloud
-!          Generate idealized cloud fields instead
+!         else ! l_test_cloud
+!          write(6,*)' generate idealized cloud fields'
+!          clwc_3d(:,:,14) = .001
 
-          endif
+          endif ! l_test_cloud is F
 
 500       continue
 
@@ -566,7 +570,7 @@
               write(6,*)' success from get_static_field_interp'
           endif
 
-          if(.true.)then ! initial setting of albedo
+          if(.true.)then ! initial setting of albedo (just a placeholder)
             do j = 1,NY_L
             do i = 1,NX_L
               if(static_albedo(i,j) .ne. 0.08)then ! brown land
@@ -605,6 +609,11 @@
           enddo ! i
 
         else ! l_require_clouds = F
+          if(l_test_cloud)then
+            write(6,*)' generate idealized cloud fields'
+            clwc_3d(:,:,14) = .001
+          endif
+
           i4time_solar = i4time_ref
 
 !         Calculate solar position for 2D array of grid points
