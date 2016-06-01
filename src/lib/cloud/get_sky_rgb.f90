@@ -819,7 +819,7 @@
                   else ! secondary scattering term allowed to dominate
                       rad = 0.
                   endif
-                  cld_radb(ic) = rad + rad_sec_cld(ic)
+                  cld_radb(ic) = rad ! + rad_sec_cld(ic)
               enddo ! ic
 
               cld_rad(:) = cld_radt(:) * r_cloud_rad(i,j) & 
