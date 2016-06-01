@@ -220,18 +220,18 @@ if test "$NCARG_ROOT" = "allsky"; then
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
     IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
     echo "polar IMGGEOM = $IMGGEOM"
-    convert -fill white -annotate +5+20  "LAPS Simulated" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +5+20  "Simulated" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
       if test $AZI_SCALE == 0.10; then
-          convert -fill yellow -annotate +19+447 "LAPS Simulated"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +19+447 "Simulated"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       elif test $AZI_SCALE == 0.20; then
-          convert -fill yellow -annotate +19+179 "LAPS Simulated"  -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +19+179 "Simulated"  -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       elif test $AZI_SCALE == 0.25; then
-          convert -fill yellow -annotate +15+$YDISP  "LAPS Simulated"  -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +15+$YDISP  "Simulated"  -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       else
-          convert -fill yellow -annotate +15+20  "LAPS Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +15+20  "Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       fi
   fi
 
