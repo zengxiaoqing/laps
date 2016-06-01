@@ -11,13 +11,15 @@
         save init
         data init/0/
 
-        integer*4 iby,i
+        integer*4 iby,i,len_dir
+        character*150 static_dir,filename
 
         include '../../include/astparms.for'
 
         if(init .eq. 0)then
-            open(1,file=
-     1   '/home/fab/albers/ast/util/delta_t.parms',status='old')
+            call get_directory('static',static_dir,len_dir)
+            filename = static_dir(1:len_dir)//'/delta_t.parms'          
+            open(1,file=trim(filename),status='old')
             read(1,*)ar
             init = 1
         endif
