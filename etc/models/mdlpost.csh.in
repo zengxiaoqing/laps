@@ -70,6 +70,12 @@ foreach MODEL ($MODELS)
     setenv GRIBINDIR $GSDPUBLIC/data/grids/nam/nh221/grib2 
     setenv HHTIMES '00 06 12 18 24 30 36 42 48 54 60 66 72 78 84'                                      
     setenv MMTIMES '00'
+  else if ($MODEL == fim) then
+    setenv CMODEL FIM
+    setenv MODE_FSF REGRID
+    setenv GRIBINDIR $GSDPUBLIC/data/gsd/fim9/0p125/grib2
+    setenv HHTIMES '00 06 12 18 24 30 36 42 48 54 60 66 72 78 84'                                      
+    setenv MMTIMES '00'
   else if ($MODEL == rr) then
     setenv CMODEL RR
     setenv MODE_FSF REGRID
@@ -82,7 +88,7 @@ foreach MODEL ($MODELS)
     setenv MMTIMES '00'
   else if ($MODEL == rap-nh) then
     setenv CMODEL RR 
-    setenv MODE_FSF REGRID # WGRIB
+    setenv MODE_FSF WGRIB # REGRID
     setenv GRIBINDIR $GSDPUBLIC/data/gsd/rap/83_full/wrftwo 
     if ($FCSTINTVL <= 3600) then
         setenv HHTIMES '00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18'
@@ -268,7 +274,7 @@ foreach MODEL ($MODELS)
         setenv NCOUT_FUA $OUTDIR_FUA/$YYDDDHHMM$FCSTTIME.fua
 
 #       Consider a local disk for faster intermediate file processing, otherwise use a dot file
-        if (-e /export/scratch) then
+        if (-e /export/scratch/null) then
             setenv TMPDIR /export/scratch/mdlpost
             mkdir -p $TMPDIR
             if (! -e $TMPDIR) then
@@ -471,7 +477,7 @@ foreach MODEL ($MODELS)
                     echo "output file..."
                     ls -l $TMPOUT_FUA
 
-                    if (-e /export/scratch) then
+                    if (-e /export/scratch/null) then
                         echo "output directory..."
                         ls -l $TMPDIR             
                     endif
