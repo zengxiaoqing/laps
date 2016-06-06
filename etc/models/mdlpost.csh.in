@@ -1,4 +1,4 @@
-#!/bin/csh          
+#!/bin/csh           
 
 # This script converts model data into FUA/FSF files 
 
