@@ -121,6 +121,8 @@
 
 !       https://en.wikipedia.org/wiki/Irradiance#Irradiance
         real gnd_glow(ni,nj)        ! ground lighting intensity (nL)                 
+        real gnd_radc(nc,ni,nj)     ! ground spectral radiance                 
+        real uprad_3d(nc,ni,nj)     ! layer spectral irradiance                 
         real sfc_glow(ni,nj)        ! pass into get_cloud_rad
         real city_colrat(nc)        /1.5,1.0,0.5/
         real ghi_2d(ni,nj)          ! derived from cloud rad 
@@ -195,6 +197,9 @@
 
         integer icall_rad /0/
         save icall_rad               
+
+        integer icall_uprad /0/
+        save icall_uprad               
 
         real solalt_last /0.0/
         save solalt_last
@@ -301,6 +306,22 @@
           write(6,*)' Grnd glow (wm2sr) at observer location is '
      1             ,gnd_glow(i,j)
 
+          obs_glow_zen = sfc_glow(i,j) / 10.
+
+!         Get upward radiation from ground lights
+          if(icall_uprad .eq. 0)then
+            I4_elapsed = ishow_timer()
+            do ic = 1,nc
+              gnd_radc(ic,:,:) = gnd_glow(:,:) ! wm2sr to wm2srnm?
+            enddo ! ic
+            do i = 1,2
+              write(6,*)' Looping level for uprad',i
+              ht = 2000. * i                ! height of aerosol layer
+              call get_uprad_lyr(nc,ni,nj,gnd_radc,ht,uprad_3d)
+            enddo ! i
+            icall_uprad = 1
+          endif ! icall_uprad
+
 !         Temporary conversion from wm2sr to nL
           do ii = 1,ni
           do jj = 1,nj
@@ -311,7 +332,6 @@
           write(6,*)' Grnd glow (nL) at observer location is '
      1             ,gnd_glow(i,j)
 
-          obs_glow_zen = sfc_glow(i,j) / 10.
         else
           write(6,*)' Skip call to get_sfc_glow - solalt is'
      1                                                  ,sol_alt(i,j)      
