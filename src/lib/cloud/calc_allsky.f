@@ -97,6 +97,7 @@
         real r_cloud_trans(minalt:maxalt,minazi:maxazi)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi)
         real cloud_rad_w(minalt:maxalt,minazi:maxazi)
+        real cloud_sfc_c(nc,minalt:maxalt,minazi:maxazi)  
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi)
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)
 
@@ -352,6 +353,7 @@
      1                    ,r_cloud_trans     ! cloud solar transmittance
      1                    ,cloud_rad_c       ! cloud solar transmittance / color
      1                    ,cloud_rad_w       ! cloud solar transmittance * rad
+     1                    ,cloud_sfc_c       ! cld rad from sfc lighting (sru)
      1                    ,clear_rad_c       ! clear sky illumination by sun     
      1                    ,l_solar_eclipse,i4time_solar,rlat,rlon,eobsl
      1                    ,clear_radf_c      ! clear sky frac illumination by sun     
