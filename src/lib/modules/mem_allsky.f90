@@ -1,7 +1,7 @@
 
 MODULE mem_allsky
 
-!     Arrays on model grid
+!     Input arrays on model grid
       real, allocatable, dimension(:,:,:) :: pres_3d
       real, allocatable, dimension(:,:,:) :: heights_3d
       real, allocatable, dimension(:,:,:) :: clwc_3d
@@ -9,8 +9,11 @@ MODULE mem_allsky
       real, allocatable, dimension(:,:,:) :: rain_3d
       real, allocatable, dimension(:,:,:) :: snow_3d
       real, allocatable, dimension(:,:,:) :: aod_3d
+
+!     Local arrays on model grid
       real, allocatable, dimension(:,:,:) :: transm_3d
       real, allocatable, dimension(:,:,:,:) :: transm_4d
+      real, allocatable, dimension(:,:,:,:) :: uprad_4d 
 
 !     2D arrays on sky grid
       real, allocatable, dimension(:,:) :: aod_ill_opac
@@ -21,6 +24,8 @@ MODULE mem_allsky
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      subroutine alloc_allsky(ni,nj,nk,nc,istatus)   ! I/O
+
+!       Allocate some though not all arrays mentioned above
 
         allocate(pres_3d(ni,nj,nk))
         allocate(heights_3d(ni,nj,nk))
@@ -40,6 +45,8 @@ CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      subroutine dealloc_allsky()             
+
+!       Deallocate some though not all arrays mentioned above
 
         deallocate(pres_3d)
         deallocate(heights_3d)
