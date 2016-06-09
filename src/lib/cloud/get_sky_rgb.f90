@@ -1,6 +1,6 @@
 
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
-                   r_cloud_rad,cloud_rad_c,cloud_rad_w, &
+                   r_cloud_rad,cloud_rad_c,cloud_rad_w,cloud_sfc_c, &   ! I
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobsl,& ! I
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
                    glow_sun,glow_moon,glow_stars, &                     ! I
@@ -45,6 +45,7 @@
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real cloud_rad_w(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat) * rad
+        real cloud_sfc_c(nc,ni,nj)  ! cloud radiance from surface lighting (sun relative units)
         real clear_rad_c(nc,ni,nj)  ! clear sky illumination
                                     ! local/input when sun is above/below horizon
         real clear_rad_2nd_c(nc,ni,nj) ! secondary scattering clear sky illumination
