@@ -1016,7 +1016,7 @@
           exposure = density
 
           if(.true.)then
-            write(6,*)' call calc_allsky'
+            write(6,*)' call calc_allsky at i4time_solar:',i4time_solar
             call calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
 !    1                     ,heights_3d                              ! I
 !    1                     ,rain_3d,snow_3d                         ! I
