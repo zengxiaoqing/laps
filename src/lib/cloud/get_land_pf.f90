@@ -88,8 +88,8 @@
             gnd_arc2 = gnd_arc * 2.
 !           We expect sudden excursions in topo_solazi when the sun is at
 !           the zenith from the ground. Hopefully sudden excursions in
-!           'azidiffg' happen when the emis_ang is equal to topo_solalt? We may
-!           want a different definition of 'azidiffg'.
+!           'azidiffg' happen when the emis_ang is equal to topo_solalt? We
+!           may want a different definition of 'azidiffg'.
             if(topo_solazi(i,j) .ne. r_missing_data)then 
                 azidiffg = angdif(azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j))
             else
@@ -103,8 +103,20 @@
             alt_mean = 0.5 * (emis_ang + topo_solalt(i,j))
             azidiffsp = azidiffg / sind(max(alt_mean,.001))
             azidiffsp = min(max(azidiffsp,-180.),+180.)
-!           specang = sqrt(specangvert**2 + azidiffsp**2)
-            specang = angdist(emis_ang,topo_solalt(i,j),azidiffsp)
+            if(.false.)then
+              specang = angdist(emis_ang,topo_solalt(i,j),azidiffsp)
+            else
+!             'specang' is calculated to be the zenith angle of the tilt required
+!             for the water to reflect between the light source at altitude 
+!             'topo_solalt', the observer at altitude 'emis_ang', and separated 
+!             in azimuth by 'azidiffg'. Coordinates are relative to the surface
+!             of the water at the point of reflection. This is a midpoint between
+!             vectors approach.
+              x1 = cosd(topo_solalt(i,j)) + cosd(emis_ang) * cosd(azidiffg)
+              y1 =                          cosd(emis_ang) * sind(azidiffg)
+              z1 = sind(topo_solalt(i,j)) + sind(emis_ang)
+              specang = acosd(z1/sqrt(x1**2+y1**2+z1**2))
+            endif
 
 !           Land surface type
 !           fland = scurve((1. - topo_albedo(2,i,j))**2)
@@ -193,7 +205,8 @@
 
 !             Use approximate specular reflection angle
               glint_radius = 22.
-              argexp = min(specang/glint_radius,8.)
+!             argexp = min(specang/glint_radius,8.)
+              argexp = min(specang/(glint_radius/2.),8.) ! for new specang
               specamp = exp(-(argexp)**2)
 
               phwater = 0.2 + 3.0 * specamp ! ampl_w * hg(g,azidiff) / (1. + 1.3*g**2)
