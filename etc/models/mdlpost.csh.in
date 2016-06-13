@@ -468,8 +468,8 @@ foreach MODEL ($MODELS)
             if (-e $GRIB_PRES_IN && -e $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua) then
                 if ($MODE_FUA == WGRIB) then
                     echo "wgrib2 method...."
-                    echo "wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT -e UGRD -e VGRD | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $TMPOUT_FUA"                   
-                          wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT -e UGRD -e VGRD | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $TMPOUT_FUA                    
+                    echo "wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT -e UGRD -e VGRD -e CLWMR -e CICE | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $TMPOUT_FUA"                   
+                          wgrib2  $GRIB_PRES_IN -s | grep -e TMP -e DPT -e UGRD -e VGRD -e CLWMR -e CICE | grep mb: | wgrib2 -i $GRIB_PRES_IN -nc_table $LAPS_DATA_ROOT/static/Variable_Tables/nctable.HRRR.fua $NEWGRID -netcdf $TMPOUT_FUA                    
 
 #                   echo "wgrib2  $GRIB_PRES_IN -s -match DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -append $NEWGRID -netcdf $NCOUT_FUA"                   
 #                         wgrib2  $GRIB_PRES_IN -s -match DPT | grep mb: | wgrib2 -i $GRIB_PRES_IN -append $NEWGRID -netcdf $NCOUT_FUA                    
@@ -514,8 +514,8 @@ foreach MODEL ($MODELS)
                     endif
 
                     if (-e $NCTEMPLATE_FUA) then
-                        echo "ncks -A -v t3_comment,sh_comment,u3_comment,v3_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,u3_fcinv,v3_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA"
-                              ncks -A -v t3_comment,sh_comment,u3_comment,v3_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,u3_fcinv,v3_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA 
+                        echo "ncks -A -v t3_comment,sh_comment,u3_comment,v3_comment,lwc_comment,ice_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,u3_fcinv,v3_fcinv,lwc_fcinv,ice_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA"
+                              ncks -A -v t3_comment,sh_comment,u3_comment,v3_comment,lwc_comment,ice_comment,imax,jmax,kmax,kdim,level,t3_fcinv,sh_fcinv,u3_fcinv,v3_fcinv,lwc_fcinv,ice_fcinv,grid_type,x_dim,y_dim,Nx,Ny,Dx,Dy,La1,Lo1,LoV,La2,Lo2,Latin1,Latin2 $NCTEMPLATE_FUA $TMPOUT_FUA 
 
                         echo "rm -f $TMPOUT_FUA.pid*nc*.tmp"
                               rm -f $TMPOUT_FUA.pid*nc*.tmp
