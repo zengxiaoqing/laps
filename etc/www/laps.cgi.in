@@ -241,13 +241,26 @@ close LAPSPRD;
 
 #print "@domainlist\n";
 
-@density_list[0] = "0.125";
-@density_list[1] = "0.25";
-@density_list[2] = "0.5";
-@density_list[3] = "1.0";
-@density_list[4] = "2.0";
-@density_list[5] = "4.0";
-@density_list[6] = "8.0";
+@density_list[0] = "0.0000001";
+@density_list[1] = "0.000001";
+@density_list[2] = "0.00001";
+@density_list[3] = "0.0001";
+@density_list[4] = "0.001";
+@density_list[5] = "0.01";
+@density_list[6] = "0.10";
+@density_list[7] = "0.125";
+@density_list[8] = "0.25";
+@density_list[9] = "0.5";
+@density_list[10] = "1.0";
+@density_list[11] = "2.0";
+@density_list[12] = "4.0";
+@density_list[13] = "8.0";
+@density_list[14] = "10.";
+@density_list[15] = "100.";
+@density_list[16] = "1000.";
+@density_list[17] = "10000.";
+@density_list[18] = "100000.";
+@density_list[19] = "1000000.";
 #print "@density_list\n";
 
 @thickness_list[0] = "1";
@@ -461,8 +474,9 @@ print <<"EOF";
 <option $selected{'SAT_WV'}>  SAT_WV
 <option $selected{'SAT_39U'}> SAT_39U
 <option $selected{'SAT_D39'}> SAT_D39
-<option $selected{'SAT_VIS_ALB'}> SAT_VIS_ALB
 <option $selected{'SAT_VIS'}> SAT_VIS
+<option $selected{'SAT_VIS_ALB'}> SAT_VIS_ALB
+<option $selected{'SAT_VIS_NRM'}> SAT_VIS_NRM
 <option $selected{'SE_FLUX'}> SE_FLUX
 <option $selected{'SFCT'}> SFCT
 <option $selected{'SH'}> SH
