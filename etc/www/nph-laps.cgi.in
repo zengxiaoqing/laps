@@ -468,6 +468,9 @@ foreach $source (@sources) {
     if($source eq "obs" && @fields[0] eq "REFLCT"){
         $n_sources_fields++
     }
+    if($source eq "obs" && @fields[0] =~ "SAT"){
+        $n_sources_fields++
+    }
     if($source eq "obs"){
         $n_sources_obs++
     }
@@ -959,7 +962,7 @@ if($err == 0) {
                           if($overlay == 0){
                              printf LAPSPLOT "az\n";
                              printf LAPSPLOT "$zoom_safe\n";
-                             printf LAPSPLOT "$thickness_safe\n";
+                             printf LAPSPLOT "$thickness_safe,$density_safe\n";
                              printf LAPSPLOT "1\n";
 
                              my($height,$height_in); # for ht agl
@@ -1161,9 +1164,9 @@ if($err == 0) {
                              printf LAPSPLOT "fc\n"; 
                           }
 #                         This change may help with obs montages, and may hurt with multiple domains and sources
-#                         if($i_montage < 1){
-#                             $animate = "yes";
-#                         }
+                          if($i_montage < 1){
+                              $animate = "yes";
+                          }
                       }else{
                           printf LAPSPLOT "fc\n"; 
                       }
@@ -2912,9 +2915,9 @@ if($err == 0) {
 
                 } # if level
            
-#           }elsif("$source" eq "obs"){
+            }elsif("$source" eq "obs"){
 #           }elsif( ("$source" eq "obs" || $n_sources_obs > 0) && $field eq $fields[$n_fields-1]){
-            }elsif("$source" eq "obs" && $field eq $fields[$n_fields-1]){
+#           }elsif("$source" eq "obs" && $field eq $fields[$n_fields-1]){
                 if("$level" eq "sfc/2d"){                                         # Sfc Obs
                     print "field, obs_sfc = $field $obs_sfc \n";
 
@@ -3040,6 +3043,12 @@ if($err == 0) {
                             printf LAPSPLOT "$hhmm\n"; 
                             printf LAPSPLOT "-1\n"; 
                             printf LAPSPLOT "SVS\n";
+
+                        }elsif("$field" eq "SAT_VIS_NRM"){ 
+                            printf LAPSPLOT "lv\n"; 
+                            printf LAPSPLOT "$hhmm\n"; 
+                            printf LAPSPLOT "-1\n"; 
+                            printf LAPSPLOT "SVN\n";
 
                        }elsif("$field" eq "sat_11u" ) { 
                            printf LAPSPLOT "lv\n"; 
@@ -4944,6 +4953,9 @@ if($err == 0) {
 
             if($n_domains == 1 && $n_sources > 1){ 
                 $nrows = $n_sources;
+                $ncols = $nmatrix / $nrows;
+            }elsif($n_domains > 1 && $n_sources == 1){ 
+                $nrows = $n_domains;
                 $ncols = $nmatrix / $nrows;
             }elsif($n_fields_uc > 1 && $n_levels > 1){ 
                 $ncols = $n_levels;
