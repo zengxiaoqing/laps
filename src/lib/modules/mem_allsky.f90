@@ -36,6 +36,7 @@ CONTAINS
         allocate(aod_3d(ni,nj,nk))
         allocate(transm_3d(ni,nj,nk))
         allocate(transm_4d(ni,nj,nk,nc))
+        allocate(uprad_4d(ni,nj,nk,nc))
 
         write(6,*)' allsky successfully allocated'
 
@@ -57,6 +58,7 @@ CONTAINS
         deallocate(aod_3d)
         deallocate(transm_3d)
         deallocate(transm_4d)
+        deallocate(uprad_4d)
 
         write(6,*)' allsky successfully deallocated'
 
