@@ -6,7 +6,7 @@
 
         real gnd_radc(nc,ni,nj) ! spectral exitance (from sfc lights)
         real sumrad(nc,ni,nj)
-        real uprad_3d(nc,ni,nj)
+        real uprad_3d(ni,nj,nc)
         real, allocatable :: drad(:,:)
 
         radius = 60000.
@@ -32,9 +32,10 @@
         write(6,*)' range of drad = ',minval(drad),maxval(drad)
         write(6,*)' sum of drad = ',sum(drad)
         sumrad = 0. ! initialize
+        uprad_3d(:,:,:) = 0.
 
         if(iradius .gt. 100)then
-          iskip = 6
+          iskip = 10
         elseif(iradius .gt. 50)then
           iskip = 3
         else
@@ -59,7 +60,7 @@
           jjmin = jmin-j
           jjmax = jmax-j
           do ic = 1,nc
-            uprad_3d(ic,i,j) = sum(drad(iimin:iimax,jjmin:jjmax) &
+            uprad_3d(i,j,ic) = sum(drad(iimin:iimax,jjmin:jjmax) &
                                  * gnd_radc(ic,imin:imax,jmin:jmax))
           enddo ! ic
 
@@ -72,7 +73,10 @@
 !       coefficient to obtain the emission density "S", equivalent to
 !       radiant flux per unit volume.
         do ic = 1,nc
-           write(6,*)'range of uprad ',minval(uprad_3d(ic,:,:)),maxval(uprad_3d(ic,:,:))
+           write(6,*)' fill for color ',ic
+           write(6,*)'range of uprad ',minval(uprad_3d(:,:,ic)),maxval(uprad_3d(:,:,ic))
+           call bilinear_fill(uprad_3d(:,:,ic),ni,nj,iskip,r_missing_data)
+           write(6,*)'range of uprad ',minval(uprad_3d(:,:,ic)),maxval(uprad_3d(:,:,ic))
         enddo ! ic
 
         deallocate(drad)
