@@ -16,6 +16,7 @@
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,r_cloud_rad,cloud_rad_c,cloud_rad_w   ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
+     1                           ,clear_rad_c_nt                        ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
      1                           ,htstart,horz_dep_d,twi_0              ! O
      1                           ,solalt_limb_true                      ! O
@@ -35,9 +36,11 @@
 
         use mem_namelist, ONLY: earth_radius,aero_scaleht,redp_lvl
         use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! O
+        use mem_allsky, ONLY: uprad_4d                                  ! L
         use cloud_rad
 
         include 'trigd.inc'
+        include 'wa.inc'
 
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
@@ -78,8 +81,6 @@
 
 !       Determine shadow regions of the input 3-D cloud array
 
-        parameter (nc = 3)
-
         real ext_g(nc),twi_trans_c(nc) ! od per airmass, tramsmissivity
         data ext_g /.090,.144,.312/  ! 0.14 * (wa/.55)**(-4)              
 
@@ -94,6 +95,8 @@
         real transm_3d(ni,nj,nk)     ! O
         real transm_4d(ni,nj,nk,nc)  ! O
         real transm_4d_m(nc)
+        real uprad_4d_m(nc)
+        real sum_aod_rad_opac(nc)
         real heights_1d(nk)
         real topo_a(ni,nj)
         real grdasp_ll(ni,nj)
@@ -167,6 +170,7 @@
                ! fraction of gas illuminated by the sun along line of sight
                ! (consider Earth's shadow + clouds, used when sun is below
                !  the horizon), attenuated behind clouds
+        real clear_rad_c_nt(nc,minalt:maxalt,minazi:maxazi)! night sky brightness
         real ag_2d(minalt:maxalt,minazi:maxazi)       ! dummy
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi) ! relative to zenith at std atmos
@@ -312,14 +316,32 @@
           if(icall_uprad .eq. 0)then
             I4_elapsed = ishow_timer()
             do ic = 1,nc
-              gnd_radc(ic,:,:) = gnd_glow(:,:) ! wm2sr to wm2srnm?
+!             wm2sr to wm2srnm (= wm2 to wm2nm)
+!             radiance to spectral radiance
+!             same as solar spectral irradance to solar irradiance
+              call get_fluxsun(wa(ic),1,1,fasun)
+              rad_to_sprad = fasun / ghi_zen_toa
+              write(6,31)ic,wa(ic),fasun,rad_to_sprad
+31            format('ic/wa(um)/fasun/rad_to_sprad',i3,2f9.5,f11.7)
+              gnd_radc(ic,:,:) = gnd_glow(:,:) * city_colrat(ic) 
             enddo ! ic
-            do i = 1,2
+            do i = 0,1
               write(6,*)' Looping level for uprad',i
-              ht = 2000. * i                ! height of aerosol layer
-              call get_uprad_lyr(nc,ni,nj,gnd_radc,ht,uprad_3d)
+              ht = (20000. * i) + 1000.       ! height of aerosol layer
+              call get_uprad_lyr(nc,ni,nj,gnd_radc,ht
+     1                          ,uprad_4d(:,:,i*(nk-1)+1,:))
             enddo ! i
             icall_uprad = 1
+
+            write(6,*)' Vertically interpolate uprad_4d'
+            do k = 2,nk-1
+              frack = float(k-1) / float(nk-1)
+              uprad_4d(:,:,k,:) = uprad_4d(:,:,1,:)  * (1.-frack) 
+     1                          + uprad_4d(:,:,nk,:) * frack 
+            enddo ! k
+          else
+              uprad_4d(:,:,:,:) = 0.
+
           endif ! icall_uprad
 
 !         Temporary conversion from wm2sr to nL
@@ -337,6 +359,9 @@
      1                                                  ,sol_alt(i,j)      
           obs_glow_zen = 0.
         endif
+
+!       We might use ray tracing calculations with 'uprad_4d' to arrive at
+!       a value for 'clear_rad_c_nt'
         write(6,*)' Clear sky glow at observer location is',obs_glow_zen
 
         I4_elapsed = ishow_timer()
@@ -566,6 +591,12 @@
         enddo ! ii
         write(6,*)' range of ghi_2d = ',minval(ghi_2d),maxval(ghi_2d)
         write(6,*)' range of dhi_2d = ',minval(dhi_2d),maxval(dhi_2d)
+        write(6,*)' range of dhic_2d(1) = '
+     1             ,minval(dhic_2d(1,:,:)),maxval(dhic_2d(1,:,:))
+        write(6,*)' range of dhic_2d(2) = '
+     1             ,minval(dhic_2d(2,:,:)),maxval(dhic_2d(2,:,:))
+        write(6,*)' range of dhic_2d(3) = '
+     1             ,minval(dhic_2d(3,:,:)),maxval(dhic_2d(3,:,:))
 
 !       do jj = 1,nj
 !       do ii = 1,ni
@@ -936,6 +967,7 @@
           sum_aod_ill_dir = 0.
           sum_aod_ill_opac = 0.
           sum_aod_ill_opac_potl = 0.
+          sum_aod_rad_opac(:) = 0.
           sum_am2cld_num = 0.
           sum_am2cld_den = 0.
           sum_am2cld_atten = 0.
@@ -1528,6 +1560,12 @@
                     do ic = 1,nc
                       transm_4d_m(ic) = sum(tri_coeff(:,:,:) * 
      1                              transm_4d(i1:i2,j1:j2,k1:k2,ic))
+                      if(icall_uprad .gt. 0)then
+                        uprad_4d_m(ic) = sum(tri_coeff(:,:,:) * 
+     1                              uprad_4d(i1:i2,j1:j2,k1:k2,ic))
+                      else
+                        uprad_4d_m(ic) = 0.
+                      endif
                     enddo ! ic
 
                     sum_odrad_c(:) = sum_odrad_c(:) + 
@@ -1629,9 +1667,13 @@
      1                         * airmass2                     
                   endif  
 
+                  slant2_od = aero_ext_coeff * slant2
+                  slant2_trans_od = slant2_od * trans(sum_aod+sum_god)
+
 !                 Check whether near start of ray and near topo
                   if(rk_m .lt. (rkstart + 1.0) .AND. 
      1               htagl .lt. 1000.)then
+
 !                 if(.false.)then ! near topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
      1                          * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
@@ -1643,17 +1685,21 @@
                     endif
 
                     sum_aod_ill_dir = sum_aod_ill_dir 
-     1                         + aero_ext_coeff * slant2 * transm_3d_dir
-     1                                          * frac_fntcloud
+     1                         + slant2_od * transm_3d_dir
+     1                                     * frac_fntcloud
 
                     sum_aod_ill_opac = sum_aod_ill_opac 
-     1                          + aero_ext_coeff * slant2
+     1                          + slant2_trans_od
      1                          * transm_3d(inew_m,jnew_m,int(rk_m)+1)  
-     1                          * trans(sum_aod+sum_god)
 
                     sum_aod_ill_opac_potl = sum_aod_ill_opac_potl 
-     1                          + aero_ext_coeff * slant2
-     1                          * trans(sum_aod+sum_god)
+     1                                    + slant2_trans_od
+
+                    if(icall_uprad .gt. 0)then
+                      sum_aod_rad_opac(:) = sum_aod_rad_opac(:)
+     1                         + slant2_trans_od
+     1                         * uprad_4d(inew_m,jnew_m,int(rk_m)+1,:)
+                    endif
 
                   else ! typical case far from topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
@@ -1665,16 +1711,17 @@
                     endif
 
                     sum_aod_ill_dir = sum_aod_ill_dir 
-     1                         + aero_ext_coeff * slant2 * transm_3d_dir
-     1                                          * frac_fntcloud
+     1                         + slant2_od * transm_3d_dir
+     1                                     * frac_fntcloud
 
                     sum_aod_ill_opac = sum_aod_ill_opac 
-     1                         + (aero_ext_coeff * slant2 * transm_3d_m)
-     1                         * trans(sum_aod+sum_god)
+     1                         + slant2_trans_od * transm_3d_m
 
                     sum_aod_ill_opac_potl = sum_aod_ill_opac_potl
-     1                         + (aero_ext_coeff * slant2 * 1.0)
-     1                         * trans(sum_aod+sum_god)
+     1                         + slant2_trans_od
+
+                    sum_aod_rad_opac(:) = sum_aod_rad_opac(:)
+     1                         + slant2_trans_od * uprad_4d_m(:)
 
                   endif
 
@@ -1989,6 +2036,7 @@
           aod_tot(ialt,jazi) = sum_aod
           aod_ill_opac(ialt,jazi) = sum_aod_ill_opac
           aod_ill_opac_potl(ialt,jazi) = sum_aod_ill_opac_potl
+          clear_rad_c_nt(:,ialt,jazi) = sum_aod_rad_opac(:)
 
           if(r_cloud_3d(ialt,jazi) .gt. .5)then
               icloud = 1
@@ -2085,7 +2133,10 @@
               if(sol_alt(i,j) .le. 0.)then
                 clear_rad_c(:,ialt,jazi) = 
      1           fm * clear_rad_c(:,ialt,jazim)   
-     1                                 + fp * clear_rad_c(:,ialt,jazip)
+     1                              + fp * clear_rad_c(:,ialt,jazip)
+                clear_rad_c_nt(:,ialt,jazi) = 
+     1           fm * clear_rad_c_nt(:,ialt,jazim)   
+     1                              + fp * clear_rad_c_nt(:,ialt,jazip)
               endif
 
               clear_radf_c(:,ialt,jazi) = 
@@ -2224,6 +2275,9 @@
      1       fm * cloud_rad_w(ialtm,:)  + fp * cloud_rad_w(ialtp,:)
             clear_rad_c(:,ialt,:) =
      1       fm * clear_rad_c(:,ialtm,:) + fp * clear_rad_c(:,ialtp,:)
+            clear_rad_c_nt(:,ialt,:) =
+     1         fm * clear_rad_c_nt(:,ialtm,:) 
+     1       + fp * clear_rad_c_nt(:,ialtp,:)
             clear_radf_c(:,ialt,:) =
      1       fm * clear_radf_c(:,ialtm,:) + fp * clear_radf_c(:,ialtp,:)
             airmass_2_cloud_3d(ialt,:) =
@@ -2310,6 +2364,10 @@
 
         write(6,*)' Range of clear_rad_c 3 =',minval(clear_rad_c(3,:,:))
      1                                       ,maxval(clear_rad_c(3,:,:))
+
+        write(6,*)' Range of clear_rad_c_nt 3 ='
+     1                                    ,minval(clear_rad_c_nt(3,:,:))
+     1                                    ,maxval(clear_rad_c_nt(3,:,:))
 
         write(6,*)' Range of cloud_rad_w = ',minval(cloud_rad_w)
      1                                      ,maxval(cloud_rad_w)
