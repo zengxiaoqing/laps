@@ -57,20 +57,21 @@
 
 !       1 lambert = 3183.0988 candela/m**2        (luminance)
 !       1 lux = 1 lumen/m**2                      (illuminance)
-!       1 candela = 1/683.002 watts/sr (at 550nm)                 
+!       1 lux = 1 lumen/m**2                      (luminous exitance)
+!       1 candela = 1/683.002 watts/sr (at 550nm) (luminous intensity)
 !       1 watt = 683 lumens (555nm source)        (radiant flux)
 !       1 watt =  93 lumens (solar spectrum)      (radiant flux)
 !       1 watt/m**2                               (irradiance)
 !       1 lumen = 1 cd*sr                         (luminous flux)
-!       1 candela = 1 lumen per steradian
+!       1 candela = 1 lumen per steradian         (luminous intensity)
         cdm2(:) = (rad(:)/1e9) * 3183.0988 ! nl to candela/m**2
 
 !       Extrapolate color            
-        call extrap_color(rel_solar,rel_solar_extrap)
-        farad(:) = fasun(:) * rel_solar_extrap(:)
+        call extrap_color(rel_solar,rel_solar_extrap) ! dimensionless
+        farad(:) = fasun(:) * rel_solar_extrap(:)     ! spect irradiance
         if(iverbose .eq. 1)write(6,*)' farad = ',farad
 
-!       Convert rad to xyz
+!       Convert sprad to xyz
         call get_tricolor(farad,iverbose,xx,yy,zz,x,y,z,luminance)
         if(iverbose .eq. 1)write(6,*)'xyzfarad = ',x,y,z
         if(iverbose .eq. 1)write(6,*)'luminance farad = ',luminance
@@ -231,8 +232,10 @@
 !       include 'wa.inc'
 !       include 'wac.inc'
 
-        real fa(nc) ! watts/(m**2 sr nm)
-        real wa(nc)
+!       Returns solar spectral irradiance for selected wavelengths
+
+        real fa(nc) ! watts/(m**2 nm)
+        real wa(nc) ! wavelengths in microns
 
         if(iverbose .eq. 1)write(6,*)'  subroutine get_fluxsun',nc,wa
 
@@ -255,14 +258,15 @@
         return
         end
 
-
         subroutine get_tricolor(fa,iverbose,xc,yc,zc,x,y,z,luminance)
 
         include 'wa.inc'
         include 'wac.inc'
 
-        real fa(nct)   ! 
-        real luminance ! candela / m**2
+!       Integrate spectral irradiance with the color matching functions
+
+        real fa(nct)   ! spectral irradiance array vs wavelength (Input)
+        real luminance ! candela / m**2                    (Output = yc)
         character*255 static_dir
 
 !       3500 to 8000 Angstroms in 10 steps (color matching functions)
