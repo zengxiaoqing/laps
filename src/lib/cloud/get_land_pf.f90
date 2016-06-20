@@ -152,7 +152,7 @@
 !             radfrac - 1 means relatively high direct / global horizontal ratio
 !                       0 means zero direct / global ratio
 !                       calculate from (gtic - dtic) / gtic  
-              if(gtic(ic,i,j) .gt. 0.)then
+              if(gtic(ic,i,j) .gt. 0. .and. dist_2_topo(i,j) .gt. 0.)then
                 if(btic(ic,i,j) .le. gtic(ic,i,j))then
                   radfrac = btic(ic,i,j)/gtic(ic,i,j)         
                   iwarn = 0
@@ -162,6 +162,7 @@
                 endif
               else
                 radfrac = 0.
+                iwarn = 0
               endif
 
 !             Land
@@ -222,7 +223,7 @@
 
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
-                if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. ph1 .lt. 0. .OR.&
+                if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. (ph1 .lt. 0. .and. dist_2_topo(i,j) .gt. 0.) .OR.&
                  ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
                           .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) .OR. &
                        (alt_a(i,j) .eq. -90. .and. j .eq. 64) )then ! nadir
@@ -238,18 +239,19 @@
                 endif
               endif
 
-              if((elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0) .OR. iwarn .eq. 1)then
+              pf_land(ic,i,j) = ph1
+
+            enddo ! ic
+
+            if((elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0) .OR. iwarn .eq. 1)then
+                if(iwarn .eq. 1)write(6,*)' alt_a = ',i,j,alt_a(i,j)
                 write(6,2)elong_a(i,j),topo_gti(i,j),sol_alt,transm_obs,radfrac,fland,fsnow,fwater,spot
 2               format(' elg/tgti/solalt/trnm/radf/fland/fsnow/fwater/fspot',f9.3,8f9.4)
                 write(6,3)gtic(:,i,j),dtic(:,i,j),btic(:,i,j),iwarn
 !               format(' gtic',3f11.6,'  dtic',3f11.6,'  btic',3f11.6,i3)
 3               format(' gtic',3e12.4,'  dtic',3e12.4,'  btic',3e12.4,i3)
                 iwrite = iwrite + 1
-              endif
-
-              pf_land(ic,i,j) = ph1
-
-            enddo ! ic
+            endif
 
          enddo ! i (altitude)
 
