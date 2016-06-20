@@ -19,7 +19,7 @@
      1                     ,l_solar_eclipse,eobsc,emag              ! I
      1                     ,rlat,rlon,lat,lon                       ! I
      1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
-     1                     ,ni_cyl,nj_cyl                           ! I
+     1                     ,ni_cyl,nj_cyl                           ! O
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary                                ! I
@@ -100,6 +100,7 @@
         real cloud_sfc_c(nc,minalt:maxalt,minazi:maxazi)  
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi)
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)
+        real clear_rad_c_nt(nc,minalt:maxalt,minazi:maxazi)
 
 !       Other Local Arrays
         real blog_moon_roll(minalt:maxalt,minazi:maxazi)
@@ -143,6 +144,7 @@
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp         ! O
      1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w   ! O
      1                     ,clear_rad_c,clear_radf_c,patm           ! O
+     1                     ,clear_rad_c_nt                          ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d    ! O
      1                     ,htmsl,horz_dep,twi_0                    ! O
      1                     ,solalt_limb_true                        ! O
@@ -358,6 +360,7 @@
      1                    ,l_solar_eclipse,i4time_solar,rlat,rlon,eobsl
      1                    ,clear_radf_c      ! clear sky frac illumination by sun     
      1                    ,patm,patm_sfc,htmsl
+     1                    ,clear_rad_c_nt    ! night sky brightness
 !    1                    ,blog_v_roll       ! skyglow
      1                    ,blog_sun_roll     ! sunglow
      1                    ,blog_moon_roll    ! moonglow
