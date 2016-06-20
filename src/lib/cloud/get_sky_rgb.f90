@@ -3,6 +3,7 @@
                    r_cloud_rad,cloud_rad_c,cloud_rad_w,cloud_sfc_c, &   ! I
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobsl,& ! I
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
+                   clear_rad_c_nt, &                                    ! I
                    glow_sun,glow_moon,glow_stars, &                     ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo,swi_obs, &            ! I
@@ -56,7 +57,7 @@
                                     ! though possibly not topo?
                                     ! attenuated behind clouds
 !       real clear_radf_c_eff(nc,ni,nj) ! accounts for airmass_2_topo         
-        real clear_rad_c_nt(3,ni,nj)! night sky brightness
+        real clear_rad_c_nt(nc,ni,nj)! night sky brightness
         real ag_2d(ni,nj)           ! gas airmass (topo/notopo)
         real glow_moon1(ni,nj)      ! glow (experimental)
         real glow_sun(ni,nj)        ! sunglow (log nl, extendd obj, extnct)
@@ -110,7 +111,7 @@
         real topovis_c(nc), od2topo_c(nc)
 
         real sky_rgb(0:2,ni,nj)
-        real moon_alt,moon_az,moon_mag
+        real moon_alt,moon_az,moon_mag,moonalt_limb_true
 
         integer new_color /2/ ! sky_rad can be more fully used still
 
@@ -596,11 +597,12 @@
 
             isolalt_lo=-11; isolalt_hi=+11
             write(6,*)' call skyglow_phys for moon testing:'
+            moonalt_limb_true = moon_alt ! include horz_dep of moon?
             call skyglow_phys(minalt,maxalt,1 &                        ! I
                      ,minazi,maxazi,1,azi_scale &                      ! I
                      ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,moon_alt,moon_az,alt_a,azi_a,twi_0,twi_alt &     ! I
-                     ,sol_lat,sol_lon,solalt_limb_true &               ! I
+                     ,sol_lat,sol_lon,moonalt_limb_true &              ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm &                              ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
@@ -701,11 +703,15 @@
         else
             frac_lp = 0.0
         endif
-        call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &             ! I
-                              ,patm,htmsl,horz_dep &                  ! I
-                              ,airmass_2_topo,frac_lp &               ! I
-                              ,clear_rad_c_nt)                        ! O
-        write(6,*)' frac_lp = ',frac_lp
+        if(.false.)then ! more approximate calculation
+            call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &         ! I
+                                 ,patm,htmsl,horz_dep &               ! I
+                                 ,airmass_2_topo,frac_lp &            ! I
+                                 ,clear_rad_c_nt)                     ! O
+            write(6,*)' frac_lp = ',frac_lp
+        else ! convert units of the inputted values
+            clear_rad_c_nt = clear_rad_c_nt * 1e7
+        endif
 
         I4_elapsed = ishow_timer()
 
