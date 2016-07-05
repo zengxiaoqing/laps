@@ -969,20 +969,23 @@
         return
         end
 
-        subroutine nl_to_rad(nl,nc,wa,rad)
+        subroutine nl_to_sprad(nl,nc,wa,sprad)
 
-!       Partly based on equations by Brad Schaffer,  Sky and Telescope, 
-!                                                    Februrary 1992
+        real nl(nc)       ! I (spectral radiance in scaled solar relative units)
+        real wa(nc)       ! I (wavelength in microns)
+        real fa(nc)       ! L (solar spectral irradiance W/(m**2 nm))
+        real sprad(nc)    ! O (spectral radiance in W/(m**2 nm sr)) units)
 
-        real nl(nc),wa(nc),rad(nc)
+!       constant 3e9      ! L (scaling constant, approx solar illuminance 
+                          !    spread over a spherical solid angle [nL])
 
-        dist_au = 1.0
-        ts = 5700 ! Kelvin
+        iverbose = 1
+
+!       Obtain solar spectral radiance
+        call get_fluxsun(wa,nc,iverbose,fa)
 
         do ic = 1,nc
-            bb = (.0000374*wa(nc)**-5) / (exp(1.43/(wa(ic)*ts))-1.0)
-            solar_rad = (1./dist_au**2) * bb * 1e-8 ! erg/cm2/sr/A
-            rad(ic) = (nl(ic)/3e9) * solar_rad
+            sprad(ic) = (nl(ic)/3e9) * fa(ic)
         enddo ! ic
 
         continue
