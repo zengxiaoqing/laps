@@ -123,8 +123,8 @@
         real obj_bri_a(ni,nj)
 
 !       https://en.wikipedia.org/wiki/Irradiance#Irradiance
-        real gnd_glow(ni,nj)        ! ground lighting intensity (nL)                 
-        real gnd_radc(nc,ni,nj)     ! ground spectral radiance                 
+        real gnd_glow(ni,nj)        ! ground lighting intensity (nL)    
+        real gnd_radc(nc,ni,nj)     ! ground spectral radiance (wm2srnm)
         real uprad_3d(nc,ni,nj)     ! layer spectral irradiance                 
         real sfc_glow(ni,nj)        ! pass into get_cloud_rad
         real city_colrat(nc)        /1.5,1.0,0.5/
@@ -317,13 +317,14 @@
             I4_elapsed = ishow_timer()
             do ic = 1,nc
 !             wm2sr to wm2srnm (= wm2 to wm2nm)
-!             radiance to spectral radiance
-!             same as solar spectral irradance to solar irradiance
+!             convert radiance to spectral radiance
+!             (same as solar irradance to solar spectral irradiance)
               call get_fluxsun(wa(ic),1,1,fasun)
               rad_to_sprad = fasun / ghi_zen_toa
               write(6,31)ic,wa(ic),fasun,rad_to_sprad
 31            format('ic/wa(um)/fasun/rad_to_sprad',i3,2f9.5,f11.7)
               gnd_radc(ic,:,:) = gnd_glow(:,:) * city_colrat(ic) 
+     1                         * rad_to_sprad
             enddo ! ic
             do i = 0,1
               write(6,*)' Looping level for uprad',i
