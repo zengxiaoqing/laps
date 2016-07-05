@@ -710,7 +710,13 @@
                                  ,clear_rad_c_nt)                     ! O
             write(6,*)' frac_lp = ',frac_lp
         else ! convert units of the inputted values
-            clear_rad_c_nt = clear_rad_c_nt * 1e7
+!           A proportionality constant is now used.
+!           We can convert from spectral radiance to scaled solar relative
+!           radiance where 3e9nl is defined as the sun at that color spread
+!           over a spherical solid angle.
+!           sprad_to_nl = 1. / nl_to_sprad(nl,nc,wa,sprad)
+!                             X      * 7e2
+            clear_rad_c_nt = clear_rad_c_nt * 7e9
         endif
 
         I4_elapsed = ishow_timer()
