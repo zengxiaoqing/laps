@@ -914,9 +914,9 @@
           write(6,*)' call sun_moon at observer sfc grid point ',i_obs
      1                                                          ,j_obs
           idebug = 2
-          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs ! I
-     1                 ,alm,azm,idebug                               ! I
-     1                 ,0.,earth_radius                              ! I
+          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs   ! I
+     1                 ,alm,azm                                      ! O
+     1                 ,idebug,0.,earth_radius                       ! I
      1                 ,elgms,moon_mag,rmn                           ! O 
      1                 ,emag,eobsf,eobsl)                            ! O
 
@@ -934,9 +934,9 @@
 
           write(6,*)' call sun_moon at observer sfc grid point ',i_obs
      1                                                          ,j_obs
-          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs ! I
-     1                 ,alm,azm,idebug                               ! I
-     1                 ,htagl(iloc),earth_radius                     ! I
+          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs   ! I
+     1                 ,alm,azm                                      ! O
+     1                 ,idebug,htagl(iloc),earth_radius              ! I
      1                 ,elgms,moon_mag,rmn                           ! O 
      1                 ,emag,eobsf,eobsl)                            ! O
           write(6,25)alm,azm,elgms,moon_mag,rmn
@@ -957,11 +957,11 @@
             idebug = 0
             do i = 1,NX_L
             do j = 1,NY_L
-              call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i,j
-     1                     ,almgrd,azmgrd,idebug
-     1                     ,0.,earth_radius                            ! I
+              call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i,j         ! I
+     1                     ,almgrd,azmgrd                              ! O
+     1                     ,idebug,0.,earth_radius                     ! I
      1                     ,elggrd,grdmoon_mag,rmn                     ! O
-     1                     ,solar_eclipse_magnitude,eobsf,eobsc(i,j))
+     1                     ,solar_eclipse_magnitude,eobsf,eobsc(i,j))  ! O
 
               if(elggrd .lt. elgmin .and. sol_alt_2d(i,j) .gt. 0.)then
                 elgmin = elggrd
