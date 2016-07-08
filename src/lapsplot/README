@@ -40,7 +40,9 @@ driver                                            lapsplot_main.f
             calc_allsky                           lib/cloud/calc_allsky.f 
                 get_cloud_rays                    lib/cloud/get_cloud_rays.f
                     get_sfc_glow                  lib/cloud/get_cloud_rad.f90
-                    get_cloud_rad                       "                        (first raytrace 3-D radiation)
+                    get_uprad_lyr                 lib/cloud/get_uprad_lyr.f90
+                        bilinear_fill             lib/cloud/bilinear_fill.f90
+                    get_cloud_rad                 lib/cloud/get_cloud_rad.f90    (first raytrace 3-D radiation)
                     skyglow_phys_twi              lib/cloud/skyglow_phys_twi.f90 (clear sky brightness - night)
                 get_glow_obj                      lib/cloud/get_sky_rgb_routines.f90
                 get_skyglow_cyl                   lib/cloud/skyglow_cyl.f90
@@ -54,5 +56,6 @@ driver                                            lapsplot_main.f
                         sun_eclipse_parms         lib/cloud/sun_moon.f
                         get_sky_rad_ave           lib/cloud/get_sky_rgb_routines.f90
                     get_cld_pf                    lib/cloud/get_cloud_pf.f90  (hydrometeor phase functions)
-                    get_clr_rad_nt                      "
+                    get_lnd_pf                    lib/cloud/get_land_pf.f90
+                    get_clr_rad_nt_2d             lib/cloud/get_sky_rgb_routines.f90
             cyl_to_polar                          lib/cloud/allsky.f90
