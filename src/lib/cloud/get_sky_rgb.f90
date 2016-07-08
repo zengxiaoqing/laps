@@ -57,7 +57,8 @@
                                     ! though possibly not topo?
                                     ! attenuated behind clouds
 !       real clear_radf_c_eff(nc,ni,nj) ! accounts for airmass_2_topo         
-        real clear_rad_c_nt(nc,ni,nj)! night sky brightness
+        real clear_rad_c_nt(nc,ni,nj) ! night sky spectral radiance from lights
+        real clear_rad_c_airglow(nc,ni,nj) ! airglow
         real ag_2d(ni,nj)           ! gas airmass (topo/notopo)
         real glow_moon1(ni,nj)      ! glow (experimental)
         real glow_sun(ni,nj)        ! sunglow (log nl, extendd obj, extnct)
@@ -703,21 +704,28 @@
         else
             frac_lp = 0.0
         endif
-        if(.false.)then ! more approximate calculation
-            call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &         ! I
-                                 ,patm,htmsl,horz_dep &               ! I
-                                 ,airmass_2_topo,frac_lp &            ! I
-                                 ,clear_rad_c_nt)                     ! O
-            write(6,*)' frac_lp = ',frac_lp
-        else ! convert units of the inputted values
-!           A proportionality constant is now used.
-!           We can convert from spectral radiance to scaled solar relative
-!           radiance where 3e9nl is defined as the sun at that color spread
-!           over a spherical solid angle.
-!           sprad_to_nl = 1. / nl_to_sprad(nl,nc,wa,sprad)
+
+        do ic = 1,nc
+!           Convert from spectral radiance to scaled solar relative
+!           radiance where 3e9nl is defined as the sun at that color
+!           spread over a spherical solid angle.
+            call nl_to_sprad(1.,1,wa(ic),sprad)
+            sprad_to_nl = 1. / sprad
 !                             X      * 7e2
-            clear_rad_c_nt = clear_rad_c_nt * 7e9
-        endif
+            write(6,*)' nlights glow: ic|sprad_to_nl ',ic,sprad_to_nl
+            clear_rad_c_nt(ic,:,:) = clear_rad_c_nt(ic,:,:) * sprad_to_nl
+            write(6,*)' Range of clear_rad_c_nt inputted (nL)',minval(clear_rad_c_nt(ic,:,:)),maxval(clear_rad_c_nt(ic,:,:))
+        enddo
+
+!       Add the airglow contribution
+        call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &          ! I
+                              ,patm,htmsl,horz_dep &               ! I
+                              ,airmass_2_topo,frac_lp &            ! I
+                              ,clear_rad_c_airglow)                ! O
+        write(6,*)' Range of clear_rad_c_airglow (nL)',minval(clear_rad_c_airglow(2,:,:)),maxval(clear_rad_c_airglow(2,:,:))
+
+        clear_rad_c_nt(:,:,:) = clear_rad_c_nt(:,:,:) + clear_rad_c_airglow(:,:,:)
+        write(6,*)' Range of clear_rad_c_nt total (nL)',minval(clear_rad_c_nt(2,:,:)),maxval(clear_rad_c_nt(2,:,:))
 
         I4_elapsed = ishow_timer()
 
@@ -993,7 +1001,6 @@
               endif
 
           elseif(sol_alt .ge. -16.)then ! Deep Twi from clear_rad_c array
-!             call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),obs_glow_zen,patm,htmsl,clear_rad_c_nt)
               glow_nt = log10(clear_rad_c_nt(3,i,j)) ! log nL           
  
 !             Gray out twilight clear_rad_c and add nt component
@@ -1066,13 +1073,10 @@
 !             rintensity_glow = min(rintensity_glow*star_ratio,255.)              
 
           else ! Night from clear_rad_c array (default flat value of glow)
-            if(airmass_2_topo(i,j) .eq. 0.)then ! free of terrain
-!             call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),obs_glow_zen,patm,htmsl,clear_rad_c_nt)
-              hue = 1. 
-              sat = 0. 
-              glow_nt = log10(clear_rad_c_nt(2,i,j)) ! log nL           
-              clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + clear_rad_c_nt(:,i,j)
+            glow_nt = log10(clear_rad_c_nt(2,i,j)) ! log nL           
+            clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + clear_rad_c_nt(:,i,j)
 
+            if(airmass_2_topo(i,j) .eq. 0.)then ! free of terrain
               if(moon_cond_clr .eq. 1)then ! add moon mag condition
 !               Glow from Rayleigh, no clear_rad crepuscular rays yet
 !               argm = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15
@@ -1088,27 +1092,21 @@
 !             Add in stars. Stars have a background glow of 1.0
 !             glow_tot = addlogs(glow_tot,glow_stars(2,i,j))
 
-!!            if((idebug .eq. 1 .and. moon_alt .gt. 0.) .OR. glow_stars(2,i,j) .gt. 1.0)then
-!             if((idebug .eq. 1) .OR. glow_stars(2,i,j) .gt. 3.0)then
-              if(idebug .eq. 1)then
-                  write(6,91)i,j,idebug,elong_a(i,j),glow_nt,glow_moon_s,glow_stars(2,i,j),glow_tot,clear_rad_c(:,i,j)
-91                format('   glow: elg/nt/moon/stars/tot/rad = ',3i5,f7.1,4f9.3,3f10.0)
-!                 idebug = 1 ! for subsequent writing at this grid point
-              endif
-
 !             rintensity_glow = max(min(((glow_tot - 2.3) * 100.),255.),20.)
               rintensity_glow = max(min(((glow_tot - argref) * contrast + 128.),255.),20.)
 
             else ! terrain present (catch airglow from above)
-!             call get_clr_rad_nt(alt_a(i,j),azi_a(i,j),obs_glow_zen,patm,htmsl,clear_rad_c_nt)
-              clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + clear_rad_c_nt(:,i,j)
-
 !             Add in moonglow depending of opacity of airmass to terrain
               od2topo_c(:) = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
               clear_rad_c(:,i,j) = clear_rad_c(:,i,j) &
                                  + rad_moon_sc(:,i,j) * opac(od2topo_c(:))
 
             endif
+          endif
+
+          if(idebug .eq. 1)then
+              write(6,91)i,j,idebug,elong_a(i,j),glow_nt,glow_moon_s,glow_stars(2,i,j),glow_tot,clear_rad_c(:,i,j)
+91            format('   glow: elg/nt/moon/stars/tot/rad = ',3i5,f7.1,4f9.3,3f10.0)
           endif
 
           do ic = 1,nc 
