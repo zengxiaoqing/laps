@@ -170,7 +170,7 @@
                ! fraction of gas illuminated by the sun along line of sight
                ! (consider Earth's shadow + clouds, used when sun is below
                !  the horizon), attenuated behind clouds
-        real clear_rad_c_nt(nc,minalt:maxalt,minazi:maxazi)! night sky brightness
+        real clear_rad_c_nt(nc,minalt:maxalt,minazi:maxazi)! sky spectral radiance from nlights
         real ag_2d(minalt:maxalt,minazi:maxazi)       ! dummy
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi) ! relative to zenith at std atmos
@@ -310,7 +310,7 @@
           write(6,*)' Grnd glow (wm2sr) at observer location is '
      1             ,gnd_glow(i,j)
 
-          obs_glow_zen = sfc_glow(i,j) / 10.
+          obs_glow_zen = sfc_glow(i,j) / 10. ! may be obsolete
 
 !         Get upward radiation from ground lights
           if(icall_uprad .eq. 0)then
@@ -326,11 +326,14 @@
               gnd_radc(ic,:,:) = gnd_glow(:,:) * city_colrat(ic) 
      1                         * rad_to_sprad
             enddo ! ic
-            do i = 0,1
-              write(6,*)' Looping level for uprad',i
-              ht = (20000. * i) + 1000.       ! height of aerosol layer
+            do il = 0,1
+              ilevel = il*(nk-1)+1
+              write(6,*)' Looping level for call to get_uprad_lyr'
+     1                  ,ilevel
+              ht = (20000. * il) + 1000.       ! height of aerosol layer
               call get_uprad_lyr(nc,ni,nj,gnd_radc,ht
-     1                          ,uprad_4d(:,:,i*(nk-1)+1,:))
+     1                          ,uprad_4d(:,:,ilevel,:))
+              I4_elapsed = ishow_timer()
             enddo ! i
             icall_uprad = 1
 
@@ -340,17 +343,14 @@
               uprad_4d(:,:,k,:) = uprad_4d(:,:,1,:)  * (1.-frack) 
      1                          + uprad_4d(:,:,nk,:) * frack 
             enddo ! k
-          else
-              uprad_4d(:,:,:,:) = 0.
-
           endif ! icall_uprad
 
 !         Temporary conversion from wm2sr to nL
           do ii = 1,ni
           do jj = 1,nj
             gnd_glow(ii,jj) = wm2sr_to_nl(gnd_glow(ii,jj))
-          enddo ! j
-          enddo ! i
+          enddo ! jj
+          enddo ! ii
           
           write(6,*)' Grnd glow (nL) at observer location is '
      1             ,gnd_glow(i,j)
@@ -358,12 +358,13 @@
         else
           write(6,*)' Skip call to get_sfc_glow - solalt is'
      1                                                  ,sol_alt(i,j)      
+          uprad_4d(:,:,:,:) = 0.
           obs_glow_zen = 0.
         endif
 
-!       We might use ray tracing calculations with 'uprad_4d' to arrive at
-!       a value for 'clear_rad_c_nt'
-        write(6,*)' Clear sky glow at observer location is',obs_glow_zen
+!       'obs_glow_zen' may be obsolete by now
+        write(6,*)' obs_glow_zen (nL) at observer location is'
+     1            ,obs_glow_zen
 
         I4_elapsed = ishow_timer()
 
@@ -2366,7 +2367,7 @@
         write(6,*)' Range of clear_rad_c 3 =',minval(clear_rad_c(3,:,:))
      1                                       ,maxval(clear_rad_c(3,:,:))
 
-        write(6,*)' Range of clear_rad_c_nt 3 ='
+        write(6,*)' Range of clear_rad_c_nt 3 (wm2srnm) ='
      1                                    ,minval(clear_rad_c_nt(3,:,:))
      1                                    ,maxval(clear_rad_c_nt(3,:,:))
 
