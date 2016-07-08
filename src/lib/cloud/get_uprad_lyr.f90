@@ -6,7 +6,7 @@
 
         real gnd_radc(nc,ni,nj) ! spectral exitance (from sfc lights)
         real sumrad(nc,ni,nj)
-        real uprad_3d(ni,nj,nc)
+        real uprad_3d(ni,nj,nc) ! spectral upward irradiance for layer
         real, allocatable :: drad(:,:)
 
         radius = 60000.
@@ -25,19 +25,24 @@
             sin_theta_r = ht/distr
             stearadians = sin_theta_r * (grid_spacing_m / distr)**2
             drad(ii,jj) = stearadians
+!           if(ii .eq. 0)then
+!               write(6,*)'jj|disti|distj|ht|distr|stearadians',jj,disti,distj,ht,distr,stearadians
+!           endif
         enddo ! ii
         enddo ! jj
 
-        write(6,*)' range of gnd_radc(1) = ',minval(gnd_radc(1,:,:)),maxval(gnd_radc(1,:,:))
+        write(6,*)' range of gnd_radc (red: wm2nm) = ',minval(gnd_radc(1,:,:)),maxval(gnd_radc(1,:,:))
         write(6,*)' range of drad = ',minval(drad),maxval(drad)
         write(6,*)' sum of drad = ',sum(drad)
         sumrad = 0. ! initialize
         uprad_3d(:,:,:) = 0.
 
-        if(iradius .gt. 100)then
+        if(iradius .ge. 100)then
           iskip = 10
-        elseif(iradius .gt. 50)then
+        elseif(iradius .ge. 50)then
           iskip = 3
+        elseif(iradius .ge. 20)then
+          iskip = 2
         else
           iskip = 1
         endif
@@ -73,10 +78,10 @@
 !       coefficient to obtain the emission density "S", equivalent to
 !       radiant flux per unit volume.
         do ic = 1,nc
-           write(6,*)' fill for color ',ic
-           write(6,*)'range of uprad ',minval(uprad_3d(:,:,ic)),maxval(uprad_3d(:,:,ic))
+           write(6,*)' fill horizontal layer to yield uprad (wm2nm) for color',ic
+           write(6,*)' range of uprad ',minval(uprad_3d(:,:,ic)),maxval(uprad_3d(:,:,ic))
            call bilinear_fill(uprad_3d(:,:,ic),ni,nj,iskip,r_missing_data)
-           write(6,*)'range of uprad ',minval(uprad_3d(:,:,ic)),maxval(uprad_3d(:,:,ic))
+           write(6,*)' range of uprad ',minval(uprad_3d(:,:,ic)),maxval(uprad_3d(:,:,ic))
         enddo ! ic
 
         deallocate(drad)
