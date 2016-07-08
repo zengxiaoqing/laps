@@ -7,6 +7,7 @@
 !       Calculate sky glow due to city lights + airglow. This takes into
 !       account the limb when determining airglow. The effect of the
 !       city lights part is considered based on atmosphere and terrain.
+!       City lights is now turned off leaving only airglow
 
         use mem_namelist, ONLY: earth_radius
         include 'trigd.inc'
@@ -133,9 +134,14 @@
               glow_lp = (obs_glow_zen * patm * rint_alt_ramp)        ! (nL)
             endif
 
-!           City lights + airglow
-            glow_alt(:) = glow_lp * frac_lp + airglow(:)             ! (nL)
-            clear_rad_c_nt(:,ialt,jazi) = glow_alt(:)                ! (nL)
+            if(.false.)then
+!             City lights + airglow
+              glow_alt(:) = glow_lp * frac_lp + airglow(:)           ! (nL)
+              clear_rad_c_nt(:,ialt,jazi) = glow_alt(:)              ! (nL)
+            else ! only airglow without city lights
+              glow_alt(:) = airglow(:)                               ! (nL)
+              clear_rad_c_nt(:,ialt,jazi) = glow_alt(:)              ! (nL)
+            endif
           enddo ! jazi
 
 !         if(ialt .eq. ni)then
