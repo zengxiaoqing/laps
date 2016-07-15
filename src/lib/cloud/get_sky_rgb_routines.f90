@@ -257,7 +257,7 @@
           if(alt_stars(is) .gt. 0.0)then
             call calc_extinction(90.          ,patm,airmass,zenext)
             call calc_extinction(alt_stars(is),patm,airmass,totexto)
-            ext_mag(is) = totexto - zenext 
+            ext_mag(is) = 0.0 ! totexto - zenext 
           else
             ext_mag(is) = 0.0
           endif
