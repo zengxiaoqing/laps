@@ -47,7 +47,7 @@
 
         alpha_o3(ext_o3,htmsl) = (ext_o3 * exp(-((htmsl-h_o3)/d_o3)**2)) / (d_o3 * sqrt(pi))
 
-!       Airmasses for thick shell - direct geometry
+!       High altitude aerosols, uniform shell with ramp above
         parameter (h1_ha = 13000.)
         parameter (h2_ha = 25000.)
         parameter (h3_ha = 31000.)
@@ -56,10 +56,14 @@
         parameter (alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha)))
         patm_ah(h,h1,h2) = max(min(1.0,(h2-h)/(h2-h1)),0.)
 
+!       Airmasses for thick homogenous elevated shell
+!       's_homo' is the slant path of a homogenous layer with observer at bottom edge
+!       'am_homo_lyr' is airmasses of partial elevated layer (base above observer)
         s_homo(z,h,re) = &
                re * (sqrt(cosd(z)**2 + 2.*h/re + (h/re)**2) - cosd(z) )
         am_homo_lyr(z,h1,h2,re) = &
                (s_homo(z,h2,re) - s_homo(z,h1,re)) / (h2 - h1)
+
         patm_a(ht,hr,hs) = exp(-(ht-hr)/hs) ! aerosols in column
 
 !       Rayleigh scattering phase function including secondary scattering
