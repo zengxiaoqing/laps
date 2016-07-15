@@ -97,6 +97,9 @@
         real transm_4d_m(nc)
         real uprad_4d_m(nc)
         real sum_aod_rad_opac(nc)
+        real slant2_odc(nc)
+        real slant2_trans_odc(nc)
+        real sum_god(nc)
         real heights_1d(nk)
         real topo_a(ni,nj)
         real grdasp_ll(ni,nj)
@@ -973,7 +976,7 @@
           sum_am2cld_num = 0.
           sum_am2cld_den = 0.
           sum_am2cld_atten = 0.
-          sum_god = 0.
+          sum_god(:) = 0.
           frac_fntcloud = 1.0
           ray_topo_diff_h = htagl ! 0.
           ray_topo_diff_m = 0.
@@ -1670,7 +1673,14 @@
                   endif  
 
                   slant2_od = aero_ext_coeff * slant2
-                  slant2_trans_od = slant2_od * trans(sum_aod+sum_god)
+                  slant2_trans_od = slant2_od * trans(sum_aod)
+
+                  do ic = 1,nc
+                    slant2_odc(ic) = aero_ext_coeff * slant2 
+     1                             + airmass2 * ext_g(ic)
+                    slant2_trans_odc(ic) = slant2_odc(ic) 
+     1                                   * trans(sum_aod+sum_god(ic))
+                  enddo ! ic
 
 !                 Check whether near start of ray and near topo
                   if(rk_m .lt. (rkstart + 1.0) .AND. 
@@ -1699,7 +1709,7 @@
 
                     if(icall_uprad .gt. 0)then
                       sum_aod_rad_opac(:) = sum_aod_rad_opac(:)
-     1                         + slant2_trans_od
+     1                         + slant2_trans_odc(:)
      1                         * uprad_4d(inew_m,jnew_m,int(rk_m)+1,:)
                     endif
 
@@ -1723,7 +1733,7 @@
      1                         + slant2_trans_od
 
                     sum_aod_rad_opac(:) = sum_aod_rad_opac(:)
-     1                         + slant2_trans_od * uprad_4d_m(:)
+     1                         + slant2_trans_odc(:) * uprad_4d_m(:)
 
                   endif
 
