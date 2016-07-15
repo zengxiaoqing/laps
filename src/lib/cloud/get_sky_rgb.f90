@@ -156,6 +156,7 @@
 
 !       corr1 = corr1_in; corr2 = 3.75  ! darkness of start/end of twilight (gamma)
         corr1 = corr1_in; corr2 = 3.55  ! darkness of start/end of twilight (gamma)
+!       corr1 = corr1_in; corr2 = 3.25  ! darkness of start/end of twilight (gamma)
 
         if(sol_alt .le. 0.)then
 
@@ -713,14 +714,23 @@
         enddo
 
 !       Add the airglow contribution
-        call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &          ! I
-                              ,patm,htmsl,horz_dep &               ! I
-                              ,airmass_2_topo,frac_lp &            ! I
-                              ,clear_rad_c_airglow)                ! O
-        write(6,*)' Range of clear_rad_c_airglow (nL)',minval(clear_rad_c_airglow(2,:,:)),maxval(clear_rad_c_airglow(2,:,:))
+        if(.false.)then
+            call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &          ! I
+                                  ,patm,htmsl,horz_dep &               ! I
+                                  ,airmass_2_topo,frac_lp &            ! I
+                                  ,clear_rad_c_airglow)                ! O
+        else
+            call get_airglow(alt_a,ni,nj,obs_glow_zen &                ! I
+                                  ,patm,htmsl,horz_dep &               ! I
+                                  ,airmass_2_topo,frac_lp &            ! I
+                                  ,clear_rad_c_airglow)                ! O
+        endif
+        write(6,*)' Range of clear_rad_c_airglow (nL-R)',minval(clear_rad_c_airglow(1,:,:)),maxval(clear_rad_c_airglow(1,:,:))
+        write(6,*)' Range of clear_rad_c_airglow (nL-G)',minval(clear_rad_c_airglow(2,:,:)),maxval(clear_rad_c_airglow(2,:,:))
+        write(6,*)' Range of clear_rad_c_airglow (nL-B)',minval(clear_rad_c_airglow(3,:,:)),maxval(clear_rad_c_airglow(3,:,:))
 
-        clear_rad_c_nt(:,:,:) = clear_rad_c_nt(:,:,:) + clear_rad_c_airglow(:,:,:)
-        write(6,*)' Range of clear_rad_c_nt total (nL)',minval(clear_rad_c_nt(2,:,:)),maxval(clear_rad_c_nt(2,:,:))
+!       clear_rad_c_nt(:,:,:) = clear_rad_c_nt(:,:,:) + clear_rad_c_airglow(:,:,:)
+!       write(6,*)' Range of clear_rad_c_nt total (nL)',minval(clear_rad_c_nt(2,:,:)),maxval(clear_rad_c_nt(2,:,:))
 
         I4_elapsed = ishow_timer()
 
@@ -760,6 +770,12 @@
           sky_rgb(:,i,j) = 0.          
           clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i) &
                     + od_a_slant_a(:,i)
+
+!         Add airglow to light from surface night lights
+          do ic = 1,nc
+            clear_rad_c_nt(ic,i,j) = clear_rad_c_nt(ic,i,j) + clear_rad_c_airglow(ic,i,j) * trans(clr_od(ic))
+          enddo ! ic
+
           if(azi_a(i,j) .eq. azid1 .OR. azi_a(i,j) .eq. azid2)then ! constant azimuth
               if(i .eq. 1)write(6,*)   
           endif
