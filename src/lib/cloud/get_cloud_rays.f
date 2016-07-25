@@ -734,7 +734,11 @@
           l_spherical = .false.
         endif
 
-        l_box = l_spherical
+        if(grid_spacing_m .ge. 9000.)then
+          l_box = .true.
+        else
+          l_box = l_spherical
+        endif
 
         solalt_limb_true = sol_alt(i,j) + horz_dep_d
         write(6,*)' solalt_true = ',sol_alt(i,j)
@@ -1029,6 +1033,11 @@
                   rkdelt2 = 0.25
               endif
 
+              if(l_box .eqv. .true.)then
+                  rkdelt1 =  0.0
+                  rkdelt2 =  0.0
+              endif
+
               if(rkstart .gt. float(nk) .and. 
      1           view_altitude_deg .lt. 0.0)then
                   iabove = 1 ! vantage point above domain
@@ -1051,10 +1060,10 @@
               if(idebug .eq. 1)then
                 if(htagl .gt. 8000e3)I4_elapsed = ishow_timer()
                 write(6,11)altray,view_azi_deg,ialt,jazi,jazi_delt
-     1                    ,rkdelt,i,j,slant2_optimal
+     1                    ,rkdelt,i,j,slant2_optimal,l_box
 11              format(
      1      'Trace the slant path (alt/azi/ialt/jazi/jdelt/rkdelt/i/j):'
-     1                ,f8.3,f6.1,i6,2i5,f6.2,2i5,f7.0)                                     
+     1                ,f8.3,f6.1,i6,2i5,f6.2,2i5,f7.0,l2)                                     
                 write(6,12)                                   
 12              format('      dz1_l       dz1_h     dxy1_l    dxy1_h  ',
      1           'rinew  rjnew   rk    ht_m   topo_m  ',
