@@ -58,14 +58,14 @@
                                     ! attenuated behind clouds
 !       real clear_radf_c_eff(nc,ni,nj) ! accounts for airmass_2_topo         
         real clear_rad_c_nt(nc,ni,nj) ! night sky spectral radiance from lights
-        real clear_rad_c_airglow(nc,ni,nj) ! airglow
+        real clear_rad_c_airglow(nc,ni,nj) ! airglow (nL)
         real ag_2d(ni,nj)           ! gas airmass (topo/notopo)
         real glow_moon1(ni,nj)      ! glow (experimental)
         real glow_sun(ni,nj)        ! sunglow (log nl, extendd obj, extnct)
         real glow_moon(ni,nj)       ! moonglow (log b in nl, extended obj)
         real glow_moon_sc(ni,nj)    ! moonglow (log b in nl, scattered)
         real rad_moon_sc(nc,ni,nj)  ! moonglow (nl, scattered multispctrl)
-        real glow_stars(nc,ni,nj)   ! starglow (log b in nl)           
+        real glow_stars(nc,ni,nj)   ! starglow+galactic (log b in nl)           
         real airmass_2_cloud(ni,nj) ! airmass to cloud 
         real airmass_2_topo(ni,nj)  ! am to topo (rel to zen @ std atmos)
         real topo_gti(ni,nj)        ! terrain normal global irradiance
@@ -1057,7 +1057,6 @@
                   sat = 0.4 * frac_sat + sat * (1. - frac_sat)
                   satmax = 0.10 + abs(hue-2.0)**2 ! chromaticity curve
                   sat = min(sat,satmax)  ! restrict by elongation if needed
-!                 glow_tot = addlogs(glow_tot,glow_stars(2,i,j))! add stars 
               else ! bluish twilight 2ndary scattering in front of terrain
                   glow_tot = glow_secondary_clr
                   frac_sec = ((10.**glow_secondary_clr)/(10.**glow_tot))**6
@@ -1070,11 +1069,6 @@
 
               star_ratio = 10. ** ((glow_tot - glow_twi) * 0.45)
 
-!             if(sun_vis .eq. 1.0)then ! sun glowing below horizon
-!                 glow_tot = addlogs(glow_tot,glow_sun(i,j))
-!             endif
-
-!             arg = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15             
               arg = glow_tot                                  ! experiment?            
 
               rintensity_floor = 0. ! 75. + sol_alt
@@ -1100,12 +1094,6 @@
                 glow_moon_s = 0.
               endif
 
-!             Add in stars. Stars have a background glow of 1.0
-!             glow_tot = addlogs(glow_tot,glow_stars(2,i,j))
-
-!             rintensity_glow = max(min(((glow_tot - 2.3) * 100.),255.),20.)
-              rintensity_glow = max(min(((glow_tot - argref) * contrast + 128.),255.),20.)
-
             else ! terrain present (catch airglow from above)
 !             Add in moonglow depending of opacity of airmass to terrain
               od2topo_c(:) = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
@@ -1115,9 +1103,12 @@
             endif
           endif
 
+          glow_air = log10(clear_rad_c_airglow(2,i,j)) ! log nL           
+          glow_tot = log10(clear_rad_c(2,i,j))         ! log nL           
+
           if(idebug .eq. 1)then
-              write(6,91)i,j,idebug,elong_a(i,j),glow_nt,glow_moon_s,glow_stars(2,i,j),glow_tot,clear_rad_c(:,i,j)
-91            format('   glow: elg/nt/moon/stars/tot/rad = ',3i5,f7.1,4f9.3,3f10.0)
+              write(6,91)i,j,idebug,elong_a(i,j),glow_air,glow_nt,glow_moon_s,glow_stars(2,i,j),glow_tot,clear_rad_c(:,i,j)
+91            format('   glow: elg/air/nt/moon/stars/tot/rad = ',3i5,f7.1,5f9.3,3f10.0)
           endif
 
           do ic = 1,nc 
@@ -1448,7 +1439,8 @@
           endif ! looking at terrain
 
           if(idebug .eq. 1)then
-              if(alt_a(i,j) .gt. 1.7 .and. alt_a(i,j) .le. 2.1)then
+              if(i .eq. ni)then
+!             if(alt_a(i,j) .gt. 1.7 .and. alt_a(i,j) .le. 2.1)then
                 call nl_to_RGB(sky_rad(:),glwmid,contrast & 
                           ,128.,0,rtotal,gtotal,btotal)                        
                 write(6,105)rtotal,gtotal,btotal,sky_rad(:)
