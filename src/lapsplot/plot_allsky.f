@@ -390,7 +390,8 @@
      1                              ,units_2d,comment_2d,clwc_3d
      1                              ,istat_lwc)
             call cv_i4tim_asc_lp(i4_valid,a24time,istatus)
-            i4time_data  = i4_valid
+            i4time_lwc  = i4_valid
+            i4time_data = i4_valid
            endif
 
            if(istat_lwc .ne. 1)then
