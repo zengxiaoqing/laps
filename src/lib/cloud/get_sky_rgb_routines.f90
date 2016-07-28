@@ -891,7 +891,7 @@
         end
 
         subroutine get_sky_rad_ave(rad,alt_a,azi_a,ni,nj &
-                                  ,sol_alt,sol_az,sky_rad_ave)
+                                  ,sky_rad_ave)
 
         include 'trigd.inc'
 
@@ -918,7 +918,6 @@
             sky_rad_ave_wdw = sum/cnt
         else
             write(6,*)' ERROR in get_sky_rad_ave'
-            write(6,*)' sol_az = ',sol_az
             sky_rad_ave_wdw = 10. 
         endif
 
