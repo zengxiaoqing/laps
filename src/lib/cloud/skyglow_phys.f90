@@ -1121,7 +1121,7 @@
 !               Good temporal variability, constant for spatial
                 call get_sky_rad_ave(clear_rad_c(ic,:,:) &
                     ,view_alt,view_az,maxalt-minalt+1,maxazi-minazi+1 &
-                    ,sol_alt,sol_azi,sky_rad_ave(ic))
+                    ,sky_rad_ave(ic))
                 write(6,*)'range of clear_rad_c',minval(clear_rad_c(ic,:,:)),maxval(clear_rad_c(ic,:,:))
                 od_g_vert = ext_g(ic) * patm
                 od_o_vert = ext_o(ic) * patm_o3(htmsl)
