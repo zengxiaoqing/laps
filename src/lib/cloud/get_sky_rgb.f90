@@ -59,6 +59,7 @@
 !       real clear_radf_c_eff(nc,ni,nj) ! accounts for airmass_2_topo         
         real clear_rad_c_nt(nc,ni,nj) ! night sky spectral radiance from lights
         real clear_rad_c_airglow(nc,ni,nj) ! airglow (nL)
+        real ave_rad_toa_c(nc,ni,nj)! average (airglow + stars and such)
         real ag_2d(ni,nj)           ! gas airmass (topo/notopo)
         real glow_moon1(ni,nj)      ! glow (experimental)
         real glow_sun(ni,nj)        ! sunglow (log nl, extendd obj, extnct)
@@ -109,7 +110,7 @@
         real od_o_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real od_a_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real clr_od(nc), sky_rad_ave(nc), transterm(nc), sph_rad_ave(nc)
-        real topovis_c(nc), od2topo_c(nc)
+        real topovis_c(nc), od2topo_c(nc), star_rad_ave(nc)
 
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
@@ -126,6 +127,7 @@
 
         idebug_a = 0
         clear_rad_2nd_c(:,:,:) = 0. ! set (initialize) for testing
+        ave_rad_toa_c(:,:,:) = 0.   ! initialize
         day_int = day_int0 ! via includes
 
         angstrom_exp_a = 2.4 - (fcterm * 15.)
@@ -724,10 +726,25 @@
                                   ,patm,htmsl,horz_dep &               ! I
                                   ,airmass_2_topo,frac_lp &            ! I
                                   ,clear_rad_c_airglow)                ! O
+            ave_rad_toa_c(:,:,:) = clear_rad_c_airglow(:,:,:)
+
+            do ic = 1,nc
+                ave_rad_toa_c(ic,:,:) = clear_rad_c_airglow(ic,:,:)
+                call get_sky_rad_ave(10.**(glow_stars(ic,:,:)) &
+                                    ,alt_a,azi_a,ni,nj &
+                                    ,star_rad_ave(ic))
+                ave_rad_toa_c(ic,:,:) = ave_rad_toa_c(ic,:,:) + star_rad_ave(ic)
+            enddo ! ic
+            write(6,*)' star_rad_ave = ',star_rad_ave
+
         endif
         write(6,*)' Range of clear_rad_c_airglow (nL-R)',minval(clear_rad_c_airglow(1,:,:)),maxval(clear_rad_c_airglow(1,:,:))
         write(6,*)' Range of clear_rad_c_airglow (nL-G)',minval(clear_rad_c_airglow(2,:,:)),maxval(clear_rad_c_airglow(2,:,:))
         write(6,*)' Range of clear_rad_c_airglow (nL-B)',minval(clear_rad_c_airglow(3,:,:)),maxval(clear_rad_c_airglow(3,:,:))
+
+        write(6,*)' Range of ave_rad_toa_c (nL-R)',minval(ave_rad_toa_c(1,:,:)),maxval(ave_rad_toa_c(1,:,:))
+        write(6,*)' Range of ave_rad_toa_c (nL-G)',minval(ave_rad_toa_c(2,:,:)),maxval(ave_rad_toa_c(2,:,:))
+        write(6,*)' Range of ave_rad_toa_c (nL-B)',minval(ave_rad_toa_c(3,:,:)),maxval(ave_rad_toa_c(3,:,:))
 
 !       clear_rad_c_nt(:,:,:) = clear_rad_c_nt(:,:,:) + clear_rad_c_airglow(:,:,:)
 !       write(6,*)' Range of clear_rad_c_nt total (nL)',minval(clear_rad_c_nt(2,:,:)),maxval(clear_rad_c_nt(2,:,:))
@@ -1158,11 +1175,11 @@
 !             frac_front = frac_front * (1. - eobsl)**0.1 ! eclipse effect
 
 !             Fraction of clr/lit air behind topo/cloud
-              frac_behind = 1.0 - frac_front * (1.0-ramp_cld_nt) ! not used
+!             frac_behind = 1.0 - frac_front * (1.0-ramp_cld_nt) ! not used
 
             else ! fade only when opposite the twilight arch
               frac_front = 0.
-              frac_behind = 1.0  ! frac clr/lit air behind cloud (not used)
+!             frac_behind = 1.0  ! frac clr/lit air behind cloud (not used)
 
             endif
 
@@ -1175,7 +1192,7 @@
             btau = 0.10 * cloud_od(i,j)
             cloud_albedo = btau / (1. + btau)
 
-!           Consider frac_clr also in relation to fraction of airmass 
+!           Consider 'frac_clr' also in relation to fraction of airmass 
 !           between the observer and the cloud contributing to Rayleigh/Mie
 !           scattered light. This helps for the case of thin cirrus adding
 !           to the clear sky light. Testing a new option to blend clr/cld 
@@ -1188,6 +1205,7 @@
 !             frac_clr = 1.0 - frac_cloud
               frac_clr = frac_front + (1.-frac_front) * (1.-opac_cloud)
               frac_clr_2nd = 0.
+              frac_scat = 0.
             else
 !             frac_clr = 1.0 - frac_cloud*frac_behind ! clear sky behind cloud                         
 !             frac_clr_2nd = clear_rad_2nd_c(ic,i,j) / (clear_rad_c(ic,i,j) + clear_rad_2nd_c(ic,i,j))
@@ -1200,7 +1218,12 @@
                 arg = ((1. - ramp_cld_nt) * (1. - frac_clr_2nd)) + (1. * frac_clr_2nd)
                 frac_front = frac_front * arg
               endif
+
+!             cloud_trans = (1.-opac_cloud)   ! direct transmissivity
+              cloud_trans = (1.-cloud_albedo) ! direct+fwd scat transmissivity (for airglow)
               frac_clr = frac_front + (1.-frac_front) * (1.-opac_cloud)
+              frac_clr_airglow = frac_front + (1.-frac_front) * (1.-cloud_albedo)
+              frac_scat = min(max(opac_cloud-cloud_albedo,0.),1.)
             endif
 
 !           Why is frac_clr slightly high on a cloudy day at the surface?
@@ -1227,7 +1250,7 @@
               sky_rad(ic) = clear_rad_c(ic,i,j) * frac_clr * radf_through_cloud &
                           + cld_rad(ic) * frac_cloud
             else ! always
-              sky_rad(ic) = clear_rad_c(ic,i,j) * frac_clr &
+              sky_rad(ic) = clear_rad_c(ic,i,j) * frac_clr + ave_rad_toa_c(ic,i,j) * frac_scat &
                           + cld_rad(ic) * frac_cloud
             endif
 
@@ -1241,8 +1264,8 @@
           if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 90.0)then
             write(6,96)od2topo_c(2),od_2_cloud,clr_od(2),aod_2_cloud(i,j),cloud_albedo
 96          format(' od2tpo/od2cld/odclr/aod2cld/cldalb',5f10.4)
-            write(6,97)frac_front,frac_behind,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_clr,frac_clr_2nd,frac_cloud,scurve_term,clear_rad_c(:,i,j),cld_rad,sky_rad
-97          format(' ffnt/fbhd/rcld/radf/fclr/fclr2/fcld/scrv/clrrd/cldrd/skyrd',8f7.3,3f13.0,2x,3f13.0,2x,3f13.0,2x,3i4)
+            write(6,97)frac_front,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_scat,frac_clr,frac_clr_2nd,frac_cloud,scurve_term,clear_rad_c(:,i,j),cld_rad,sky_rad
+97          format(' ffnt/rcld/radf/fsct/fclr/fclr2/fcld/scrv/clrrd/cldrd/skyrd',8f7.3,3f13.0,2x,3f13.0,2x,3f13.0,2x,3i4)
           endif
 
 !         Use topo value if airmass to topo > 0
