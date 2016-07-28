@@ -36,7 +36,7 @@
               ht_lyr = 85000.
               thk_lyr = 10000.
             else                   ! Atomic Oxygen
-              airglow_zen(1) = 75. ! nL (range from ~60-90 with solar cycle)
+              airglow_zen(1) = 50. ! nL 
               airglow_zen(2) = 0. 
               airglow_zen(3) = 0. 
               ht_lyr = 225000.
@@ -50,9 +50,9 @@
             flyr_blw = max( min( (htmsl-top_lyr)/thklyr, 1.) ,0.)
 
             if(ialt .eq. 1)then
-              write(6,*)' get_clr_rad_nt_2d: abv/blw',flyr_abv,flyr_blw
-              write(6,*)' get_clr_rad_nt_2d: htmsl',htmsl
-              write(6,*)' get_clr_rad_nt_2d: patm/obs_glow_zen',patm,obs_glow_zen                    
+              write(6,*)' get_airglow: abv/blw',flyr_abv,flyr_blw
+              write(6,*)' get_airglow: htmsl',htmsl
+              write(6,*)' get_airglow: patm/obs_glow_zen',patm,obs_glow_zen                    
             endif
 
             call get_airglow_lyr(htmsl,alt,airglow_zen,ht_lyr,thk_lyr,bot_lyr,top_lyr,flyr_blw,flyr_abv,airglow)
@@ -68,8 +68,8 @@
 
 !         if(ialt .eq. ni)then
           if(mod(alt,5.) .eq. 2.)then
-            write(6,5)alt,h,am2,fracair,obs_glow_zen,airglow(2),glow_lp,glow_alt(2)
-5           format(' get_airglow: alt/h/am2/fair/obsg/airg/glow lp-alt',f9.2,f10.0,2f9.3,4f10.0)
+            write(6,5)alt,h,fracair,obs_glow_zen,airglow(2),glow_alt(2)
+5           format(' get_airglow: alt/h/fair/obsg/airg/glow alt',f9.2,f10.0,f9.3,3f10.0)
 !           if(htmsl .ge. top_lyr)then ! above airglow
 !             write(6,*)'   horz_dep_airglow = ',horz_dep_airglow
 !           endif
