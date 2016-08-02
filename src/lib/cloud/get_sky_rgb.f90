@@ -716,12 +716,7 @@
         enddo
 
 !       Add the airglow contribution
-        if(.false.)then
-            call get_clr_rad_nt_2d(alt_a,ni,nj,obs_glow_zen &          ! I
-                                  ,patm,htmsl,horz_dep &               ! I
-                                  ,airmass_2_topo,frac_lp &            ! I
-                                  ,clear_rad_c_airglow)                ! O
-        else
+        if(.true.)then
             call get_airglow(alt_a,ni,nj,obs_glow_zen &                ! I
                                   ,patm,htmsl,horz_dep &               ! I
                                   ,airmass_2_topo,frac_lp &            ! I
