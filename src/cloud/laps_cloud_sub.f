@@ -59,6 +59,9 @@ cdis
      1                         ,l_use_metars,l_use_radar,iwrite_output
      1                         ,l_use_pireps,i_varadj,l_corr_parallax
 
+        include 'trigd.inc'
+        include 'cloud.inc'
+
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                sys_abort_prod
 
@@ -66,9 +69,6 @@ cdis
      1             sys_bad_prod   =2, ! inappropriate data, insufficient data
      1             sys_no_data    =3, ! no data
      1             sys_abort_prod =4) ! failed to make a prod
-
-        include 'trigd.inc'
-        include 'cloud.inc'
 
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
@@ -2419,7 +2419,7 @@ C       EW SLICES
         real subpoint_lon_clo(ni,nj)           ! I
         real lat(ni,nj)                        ! I
         real lon(ni,nj)                        ! I
-        real alt(ni,nj)                        ! L
+        real alt(ni,nj)                        ! L (emission angle)
         real azi(ni,nj)                        ! L
         real phase(ni,nj)                      ! L
         real spec(ni,nj)                       ! L
