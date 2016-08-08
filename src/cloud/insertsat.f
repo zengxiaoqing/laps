@@ -385,8 +385,8 @@ c
         do i=1,imax
 
          jp10 = j+10
-         if(j .eq. (j/jskd)*jskd .and. i .eq. (i/iskd)*iskd)then
-!        if(i .eq. imax/2 .AND. j .eq. jmax/2)then
+!        if(j .eq. (j/jskd)*jskd .and. i .eq. (i/iskd)*iskd)then
+         if(i .eq. imax/2 .AND. j .eq. jmax/2)then
              idebug_a(i,j) = 1
              write(6,91)i,j,rlat(i,j),rlon(i,j)
 91           format(/' Debugging at lat/lon ',2i6,2f8.2)
@@ -1176,7 +1176,7 @@ c
         real k_to_c, jcost_cldtop
 
 !       Used for adding visible
-        visthr = 0.1
+        visthr = 0.1 ! 0.0 (experiment)
 
 !       Call the CO2 slicing method to get cloud tops
         if(init_co2 .eq. 0)istatus_co2 = 0
