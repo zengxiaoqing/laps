@@ -258,7 +258,7 @@ cdis
 
         write(6,21)minval(cloud_frac_vis_a),maxval(cloud_frac_vis_a)
      1            ,cloud_frac_vis_a(ni/2,nj/2)
- 21     format(' End of get_vis: cloud_frac_vis_a range/center ',
+21      format(' End of get_vis: cloud_frac_vis_a range/center '
      1        ,2f7.3)
 
         write(6,*)
