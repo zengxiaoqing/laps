@@ -54,10 +54,10 @@
         real topo(NX_L,NY_L)
         real dx(NX_L,NY_L)
         real dy(NX_L,NY_L)
-        real alt_norm(NX_L,NY_L)
+        real alt_norm(NX_L,NY_L)     ! Solar Alt w.r.t. terrain normal
         real sol_alt_2d(NX_L,NY_L)
         real sol_azi_2d(NX_L,NY_L)
-        real eobsc(NX_L,NY_L)            ! array of 'eobsl' values
+        real eobsc(NX_L,NY_L)        ! array of 'eobsl' values
         real moon_alt_2d(NX_L,NY_L)
         real moon_azi_2d(NX_L,NY_L)
         real moon_mag,moon_mag_thr
