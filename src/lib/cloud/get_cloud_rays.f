@@ -114,7 +114,7 @@
 
         real sol_alt(ni,nj)
         real sol_azi(ni,nj)
-        real alt_norm(ni,nj)
+        real alt_norm(ni,nj)             ! Solar Alt w.r.t. terrain normal
         real eobsc(ni,nj)                ! array of 'eobsl' values
 
         real moon_alt(ni,nj)
@@ -827,7 +827,7 @@
 !        endif
 
          if(altray .lt. -horz_dep_d)then
-           call get_topo_info(altray,htstart,earth_radius,alt_norm
+           call get_topo_info(altray,htstart,earth_radius,alt_norm_dum
      1                       ,dist_to_topo)
          else
            dist_to_topo = 0.
