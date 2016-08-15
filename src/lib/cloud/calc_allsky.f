@@ -48,7 +48,7 @@
         real azi_a_roll(minalt:maxalt,minazi:maxazi)
         real sol_alt_2d(NX_L,NY_L)
         real sol_azi_2d(NX_L,NY_L)
-        real alt_norm(NX_L,NY_L)
+        real alt_norm(NX_L,NY_L)   ! Solar Alt w.r.t. terrain normal
         real eobsc(NX_L,NY_L)
         real moon_alt_2d(NX_L,NY_L)
         real moon_azi_2d(NX_L,NY_L)
