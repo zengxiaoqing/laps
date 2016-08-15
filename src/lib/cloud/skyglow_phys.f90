@@ -1085,12 +1085,17 @@
                        ,trace_solalt(ialt,jazi),mode_sky,od_a &
                        ,dist_2_topo(ialt,jazi),aodf,aodfo,clear_rad_c(:,ialt,jazi)
 111           format('alt/azi/salt-t-t/mode/od_a/dst/aodf/aodfo/clrrd' &
-                    ,f7.2,f6.1,1x,3f7.2,i3,f12.5,f11.0,2f9.4,3e14.5)
+                    ,f7.2,f6.1,1x,3f7.2,i3,f12.5,f12.0,2f9.4,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
 !               stop
               endif
+
+              if(dist_2_topo(ialt,jazi) .le. 0. .and. viewalt_limb_true .le. 0.)then
+                write(6,*)' ERROR: dist_2_topo/viewalt_limb =',dist_2_topo(ialt,jazi),viewalt_limb_true
+                stop
+              endif 
 
               if(idebug .ge. 2)then
                 if(altray .ne. 0 .or. view_azi_deg .le. 180.)then
