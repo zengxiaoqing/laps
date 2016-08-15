@@ -1,5 +1,6 @@
 
-        subroutine get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
+        subroutine get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp &
+                             ,emis_ang_a,nsp,airmass_2_topo,idebug_a,ni,nj & ! I
                              ,pf_scat1,pf_scat2,pf_scat,pf_thk_a) ! O
         include 'trigd.inc'
 
@@ -12,6 +13,7 @@
         include 'rad.inc'
         real elong_a(ni,nj)
         real alt_a(ni,nj)
+        real emis_ang_a(ni,nj)      ! 
         real cloud_od(ni,nj)        ! cloud optical depth (tau)
         real cloud_od_sp(ni,nj,nsp) ! cloud species tau (clwc,cice,rain,snow)
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
@@ -55,8 +57,20 @@
           cloud_od_cice = cloud_od_sp(i,j,2)
           cloud_od_rain = cloud_od_sp(i,j,3)
 
+!         Parameter for looking at normal face of a cloud is set to 1 if
+!         we're looking above the horizon, or below the horizon looking
+!         straight down. It is 0 if we're looking much below the horizon near
+!         the limb.
+          if(alt_a(i,j) .le. 0. .and. emis_ang_a(i,j) .gt. 0.)then
+              frac_alt = sind(abs(alt_a(i,j)))
+              frac_norm = frac_alt * sind(emis_ang_a(i,j)) + (1.-frac_alt) 
+          else ! above the horizon
+              frac_norm = 1.
+          endif
+
           if(.true.)then ! new liquid phase function
             cloud_od_liq = cloud_od_sp(i,j,1) + cloud_od_sp(i,j,3)
+!           cloud_od_liq = cloud_od_liq * frac_norm**2
 
             hgp = max(cloud_od_liq,1.0)    ! multiple scattering phase func
             sco = hgp
@@ -153,6 +167,7 @@
           cloud_od_snow = cloud_od_sp(i,j,4) + cloud_od_sp(i,j,2)
           trans_nonsnow = trans(cloud_od(i,j) - cloud_od_snow)
           cloud_od_tot  = cloud_od(i,j)
+!         cloud_od_snow = cloud_od_snow * frac_norm**2
 
           if(cloud_od_snow .gt. 0.)then
               fsnow = cloud_od_sp(i,j,4) / cloud_od_snow
@@ -308,8 +323,8 @@
           if(idebug_a(i,j) .eq. 1)then
               write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk1,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
 101           format(' alt/elg/cod/thk1/thk/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
-              write(6,102)bf,cloud_od_liq,clwc_bin2,alb_clwc
-102           format(' bf/od/clwc_bin2/alb_clwc = ',f9.3,f9.4,2f12.6)
+              write(6,102)bf,cloud_od_liq,clwc_bin2,alb_clwc,frac_norm
+102           format(' bf/od/clwc_bin2/alb_clwc/fnrm = ',f9.3,f9.4,2f12.6,f9.4)
           endif
 
          enddo ! i (altitude)
