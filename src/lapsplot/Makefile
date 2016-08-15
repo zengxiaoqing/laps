@@ -57,6 +57,7 @@ SRC= lapsplot_main.f \
      drawctymap.f \
      weight_vertical.f \
      ccpfil.f \
+     get_fim_data.f \
      callsup_gp.f
 
 MAIN=lapsplot_main.f
