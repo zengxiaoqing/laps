@@ -71,6 +71,8 @@ CONTAINS
        proj_code = PROJ_LC
      ELSEIF(grid_type(1:4) .EQ. 'pola') THEN
        proj_code = PROJ_PS
+     ELSEIF(grid_type(1:4) .EQ. 'latl') THEN
+       proj_code = PROJ_LATLON
      ELSE
        PRINT *,"-- Unknown LAPS grid_type: ",TRIM(grid_type)
        STOP "bad grid_type"
