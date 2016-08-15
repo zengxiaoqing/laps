@@ -406,6 +406,7 @@
        endif
 
        write(6,*)' Open for reading ',trim(file)
+       write(6,*)' pix_latlon,l_global_nl = ',pix_latlon,l_global_nl
 
 !      Read section of VIIRS Image in PPM format
        open(u,file=trim(file),status='old',err=999)
