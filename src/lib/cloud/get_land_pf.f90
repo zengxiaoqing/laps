@@ -7,7 +7,7 @@
                              ,sol_alt,sol_azi,nsp,airmass_2_topo &      ! I
                              ,idebug_a,ni,nj,i4time,rlat,rlon,htmsl &   ! I
                              ,topo_lat,topo_lon &                       ! I
-                             ,pf_land)                                  ! O
+                             ,pf_land,emis_ang_a)                       ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius
         use cloud_rad, ONLY: ghi_zen_toa, zen_kt
@@ -86,12 +86,10 @@
 !           Approximate specular reflection angle
             gnd_arc = asind(sind(90.+alt_a(i,j))*dist_2_topo(i,j)/earth_radius)
             gnd_arc2 = gnd_arc * 2.
-!           We expect sudden excursions in topo_solazi when the sun is at
-!           the zenith from the ground. Hopefully sudden excursions in
-!           'azidiffg' happen when the emis_ang is equal to topo_solalt? We
-!           may want a different definition of 'azidiffg'.
+
+!           'azidiffg' is computed from a ground reference point
             if(topo_solazi(i,j) .ne. r_missing_data)then 
-                azidiffg = angdif(azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j))
+                azidiffg = angdif(azi_fm_lnd_a(i,j),topo_solazi(i,j))
             else
                 azidiffg = 180.
             endif
@@ -223,9 +221,10 @@
 
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
-                if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. (ph1 .lt. 0. .and. dist_2_topo(i,j) .gt. 0.) .OR.&
-                 ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
-                          .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) .OR. &
+!               if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. (ph1 .lt. 0. .and. dist_2_topo(i,j) .gt. 0.) .OR.&
+!                ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
+!                         .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) .OR. &
+                if( (i .eq. (i/50)*50 .AND. j .eq. nj/2) .OR. &
                        (alt_a(i,j) .eq. -90. .and. j .eq. 64) )then ! nadir
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
 1                 format(i4,i5,i2,5f9.2,9f9.4,f11.0,5f9.2)
