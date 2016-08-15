@@ -95,6 +95,7 @@
         real aod_slant(ni,nj)       ! aerosol optical depth (slant path)
         real alt_a(ni,nj)
         real azi_a(ni,nj)
+        real emis_ang_a(ni,nj)      ! 
         real elong_a(ni,nj)         ! elong of sun or moon
         real elong_m(ni,nj)         ! elong of sun or moon
         real elong_s(ni,nj)         ! elong of sun or moon
@@ -362,7 +363,8 @@
             if(abs(azi_a(i,j)-azid1) .le. .001 .OR. & 
                abs(azi_a(i,j)-azid2) .le. .001     )then ! constant azimuth
                 altray_limb = alt_a(i,j) + horz_dep
-                if(abs(altray_limb) / radius_limb .le. 0.04)then ! near horizon/limb
+                altray_limb_rad = altray_limb / radius_limb
+                if(altray_limb_rad .ge. -0.06 .and. altray_limb_rad .le. 0.01)then ! near horizon/limb
                     idebug_a(i,j) = 1
                 elseif(abs(alt_a(i,j)) .le. 20. .AND. &
                        alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
@@ -378,8 +380,8 @@
                     idebug_a(i,j) = 1
                 elseif(alt_a(i,j) .eq. float((nint(alt_a(i,j))/5)*5))then
                     idebug_a(i,j) = 1
-                elseif(i .ge. 110 .and. i .le. 130)then
-                    idebug_a(i,j) = 1
+!               elseif(i .ge. 110 .and. i .le. 130)then
+!                   idebug_a(i,j) = 1
                 elseif(abs(topo_solalt(i,j) - (-4.5)) .le. 8.0 .AND. &
                         htmsl .gt. 1000e3 .AND. alt_a(i,j) .le. -75.)then
                     idebug_a(i,j) = 1
@@ -389,14 +391,16 @@
 !               idebug_a(i,j) = 1
 !           endif
 !           if(alt_a(i,j) .ge. -89.80 .and. alt_a(i,j) .le. -89.70 .AND. &
-            if(alt_a(i,j) .ge. -89.30 .and. alt_a(i,j) .le. -89.06 .AND. &
-                                                     j .eq. 2048 )then
-                idebug_a(i,j) = 1 ! alt slice
-            endif
+!           if(alt_a(i,j) .le. -89.30 .and. altray_limb .gt. -0.10 .and. altray_limb .lt. 0.01 .AND. &
+!                                                    j .eq. 2048 )then
+!               idebug_a(i,j) = 1 ! alt slice
+!           endif
+            if(ni .ge. 239)idebug_a(239,1:nj:50) = 1
             if(azi_scale .eq. .20 .AND. alt_a(i,j) .eq. 999.0 .AND. &  ! azi slice
                azi_a(i,j) .ge. 110.0  .and. azi_a(i,j) .le. 130.0)then
                 idebug_a(i,j) = 1
             endif
+
         enddo ! i
         enddo ! j
 
@@ -680,11 +684,6 @@
         else
             idebug_pf = idebug_a
         endif
-        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp & ! I
-                       ,nsp,airmass_2_topo,idebug_pf,ni,nj &  ! I
-                       ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
-
-        I4_elapsed = ishow_timer()
 
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
                        ,topo_lf,topo_sc,transm_obs                  & ! I
@@ -693,7 +692,13 @@
                        ,sol_alt,sol_az,nsp,airmass_2_topo           & ! I
                        ,idebug_pf,ni,nj,i4time,rlat,rlon,htmsl      & ! I
                        ,topo_lat,topo_lon                           & ! I
-                       ,pf_land)                                      ! O
+                       ,pf_land,emis_ang_a)                           ! O
+
+        I4_elapsed = ishow_timer()
+
+        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp & ! I
+                       ,emis_ang_a,nsp,airmass_2_topo,idebug_pf,ni,nj &  ! I
+                       ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
         I4_elapsed = ishow_timer()
 
@@ -775,8 +780,19 @@
 
         glwmid_ref = glwmid
 
+        iwrite_err = 0
+
         do j = 1,nj
         do i = 1,ni
+          altray_limb = alt_a(i,j) + horz_dep
+
+          if(altray_limb .lt. 0.0 .and. emis_ang_a(i,j) .le. 0.)then
+            if(iwrite_err .le. 100)then
+              write(6,*)'ERROR: altray_limb/emis',i,j,altray_limb,emis_ang_a(i,j),topo_lat(i,j),topo_lon(i,j)
+              iwrite_err = iwrite_err + 1
+            endif
+          endif
+
           rad_sec_cld(:) = rad_sec_cld_top(:)
 
           sky_rgb(:,i,j) = 0.          
@@ -1160,7 +1176,8 @@
             if(solalt_ref .gt. -4.5 .OR. htmsl .ge. 1000e3)then 
 
               if(airmass_2_topo(i,j) .gt. 0.)then ! terrain
-                od2topo_c(ic) = (ext_g(ic) * airmass_2_topo(i,j)) + aod_2_topo(i,j) &
+                od2topo_c(ic) = ext_g(ic) * airmass_2_topo(i,j) &
+                              + ext_a(ic) * aod_2_topo(i,j) &
                               + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
                 frac_front = opac(od_2_cloud) / opac(od2topo_c(ic))
               else ! fraction of air/scatterers in front of cloud                
@@ -1249,19 +1266,19 @@
                           + cld_rad(ic) * frac_cloud
             endif
 
+!           if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 2.0)then
+            if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 90.0 .AND. ic .eq. 2)then
+              write(6,96)od_2_cloud,od2topo_c(2),clr_od(2),aod_2_cloud(i,j),aod_2_topo(i,j),cloud_albedo,altray_limb,emis_ang_a(i,j)
+96            format(' od2cld/od2tpo/odclr/aod2cld/aod2tpo/cldalb/almb/em',6f10.4,f8.3,f8.2)
+              write(6,97)frac_front,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_scat,frac_clr,frac_clr_2nd,frac_cloud,scurve_term,clear_rad_c(2,i,j),cld_rad(2),sky_rad(2)
+97            format(' ffnt/rcld/radf/fsct/fclr/fclr2/fcld/scrv/clrrd/cldrd/skyrd',8f7.3,f13.0,2x,f13.0,2x,f13.0,2x,i4)
+            endif
+
           enddo ! ic
 
           call nl_to_RGB(sky_rad(:),glwmid,contrast & 
                         ,128.,0,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 !         sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
-
-!         if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 2.0)then
-          if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 90.0)then
-            write(6,96)od2topo_c(2),od_2_cloud,clr_od(2),aod_2_cloud(i,j),cloud_albedo
-96          format(' od2tpo/od2cld/odclr/aod2cld/cldalb',5f10.4)
-            write(6,97)frac_front,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_scat,frac_clr,frac_clr_2nd,frac_cloud,scurve_term,clear_rad_c(:,i,j),cld_rad,sky_rad
-97          format(' ffnt/rcld/radf/fsct/fclr/fclr2/fcld/scrv/clrrd/cldrd/skyrd',8f7.3,3f13.0,2x,3f13.0,2x,3f13.0,2x,3i4)
-          endif
 
 !         Use topo value if airmass to topo > 0
           if(airmass_2_topo(i,j) .gt. 0.)then ! looking at terrain
