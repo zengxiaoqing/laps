@@ -70,7 +70,7 @@
 
         character*1 c_prodtype, c_plotobs
         character*3 var_2d
-        character*150  directory
+        character*150  directory, filename
         character*31  ext
         character*10  units_2d
         character*125 comment_2d
@@ -89,7 +89,7 @@
         logical l_idl /.false./
         logical l_cyl, l_polar 
         logical l_binary /.false./
-        logical l_require_clouds ! requiring cloud data to run
+        logical l_require_all_fields ! requiring all LAPS fields to run
         logical l_test_cloud /.false./
 
         include 'icolors.inc'
@@ -287,16 +287,18 @@
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
 
-        if(i4time_ref - i4time_now_gg() .lt. 1e6)then      ! present/past
-          l_require_clouds = .true.
+        if(l_parse(directory,'fim'))then
+          l_require_all_fields = .false.
+        elseif(i4time_ref - i4time_now_gg() .lt. 1e6)then  ! present/past
+          l_require_all_fields = .true.
         elseif(i4time_ref - i4time_now_gg() .gt. 45e6)then ! >1.5y future
-          l_require_clouds = .false.
+          l_require_all_fields = .false.
           l_test_cloud = .true.
         else                                               ! >10d future
-          l_require_clouds = .false.
+          l_require_all_fields = .false.
         endif
 
-        if(l_require_clouds .eqv. .true.)then
+        if(l_require_all_fields .eqv. .true.)then
 
           n_lvls_snd = NZ_L
 
@@ -609,10 +611,22 @@
           enddo ! j
           enddo ! i
 
-        else ! l_require_clouds = F
+        else ! l_require_all_fields = F
           if(l_test_cloud)then
             write(6,*)' generate idealized cloud fields'
             clwc_3d(:,:,14) = .001
+          endif
+
+          if(l_parse(directory,'fim'))then
+            write(6,*)' Looking for FIM LWC data in ',trim(directory)
+            filename = '/scratch/staging/fab/albers/fimlarge.nc'
+            call get_fim_data
+     +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
+     +                   ,i4time_earliest,i4time_latest
+     +                   ,filename
+     +                   ,lun_out
+     +                   ,istatus)
+            write(6,*)' returned from get_fim_data'
           endif
 
           i4time_solar = i4time_ref
@@ -650,7 +664,7 @@
             heights_3d(:,:,k) = psatoz(pres_1d(k)/100.)
           enddo ! k
 
-        endif ! l_require_clouds is TRUE
+        endif ! l_require_all_fields is TRUE
 
         call make_fnam_lp(i4time_solar,a9time,istatus)
         call cv_i4tim_asc_lp(i4time_solar,a24time,istatus)
