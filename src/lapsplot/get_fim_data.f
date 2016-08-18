@@ -77,6 +77,9 @@ C
       include 'netcdf.inc'
       integer latitude, longitude, time,nf_fid, nf_vid, nf_status
 
+      real pres(longitude,latitude,65)
+      real clwc(longitude,latitude,65)
+
       real CLWMR_10hybridlevel( longitude,  latitude, time),
      +     CLWMR_11hybridlevel( longitude,  latitude, time),
      +     CLWMR_12hybridlevel( longitude,  latitude, time),
@@ -229,6 +232,8 @@ C
           return
       endif
 
+      write(6,*)' call read_fim_netcdf ',latitude,longitude,time
+
       call read_fim_netcdf(nf_fid, ! latitude, longitude, time, 
      +     CLWMR_10hybridlevel, CLWMR_11hybridlevel, 
      +     CLWMR_12hybridlevel, CLWMR_13hybridlevel, 
@@ -295,21 +300,139 @@ C
 C
 C The netcdf variables are filled - your zzz write call may go here
 C
-!     Initial loop through obs to get times and stanums
-      do iob = 1,recNum
-          iwmostanum(iob) = 0
-          if(abs(observationTime(iob)) .le. 1e10)then
-              i4time_ob = idint(observationTime(iob))+315619200
-              call make_fnam_lp(i4time_ob,a9time_ob_r(iob),istatus)
-          endif
 
-      enddo ! iob
+      pres(:,:,1) = PRES_1hybridlevel(:,:,1)
+      pres(:,:,2) = PRES_2hybridlevel(:,:,1)
+      pres(:,:,3) = PRES_3hybridlevel(:,:,1)
+      pres(:,:,4) = PRES_4hybridlevel(:,:,1)
+      pres(:,:,5) = PRES_5hybridlevel(:,:,1)
+      pres(:,:,6) = PRES_6hybridlevel(:,:,1)
+      pres(:,:,7) = PRES_7hybridlevel(:,:,1)
+      pres(:,:,8) = PRES_8hybridlevel(:,:,1)
+      pres(:,:,9) = PRES_9hybridlevel(:,:,1)
+      pres(:,:,10) = PRES_10hybridlevel(:,:,1)
+      pres(:,:,11) = PRES_11hybridlevel(:,:,1)
+      pres(:,:,12) = PRES_12hybridlevel(:,:,1)
+      pres(:,:,13) = PRES_13hybridlevel(:,:,1)
+      pres(:,:,14) = PRES_14hybridlevel(:,:,1)
+      pres(:,:,15) = PRES_15hybridlevel(:,:,1)
+      pres(:,:,16) = PRES_16hybridlevel(:,:,1)
+      pres(:,:,17) = PRES_17hybridlevel(:,:,1)
+      pres(:,:,18) = PRES_18hybridlevel(:,:,1)
+      pres(:,:,19) = PRES_19hybridlevel(:,:,1)
+      pres(:,:,20) = PRES_20hybridlevel(:,:,1)
+      pres(:,:,21) = PRES_21hybridlevel(:,:,1)
+      pres(:,:,22) = PRES_22hybridlevel(:,:,1)
+      pres(:,:,23) = PRES_23hybridlevel(:,:,1)
+      pres(:,:,24) = PRES_24hybridlevel(:,:,1)
+      pres(:,:,25) = PRES_25hybridlevel(:,:,1)
+      pres(:,:,26) = PRES_26hybridlevel(:,:,1)
+      pres(:,:,27) = PRES_27hybridlevel(:,:,1)
+      pres(:,:,28) = PRES_28hybridlevel(:,:,1)
+      pres(:,:,29) = PRES_29hybridlevel(:,:,1)
+      pres(:,:,30) = PRES_30hybridlevel(:,:,1)
+      pres(:,:,31) = PRES_31hybridlevel(:,:,1)
+      pres(:,:,32) = PRES_32hybridlevel(:,:,1)
+      pres(:,:,33) = PRES_33hybridlevel(:,:,1)
+      pres(:,:,34) = PRES_34hybridlevel(:,:,1)
+      pres(:,:,35) = PRES_35hybridlevel(:,:,1)
+      pres(:,:,36) = PRES_36hybridlevel(:,:,1)
+      pres(:,:,37) = PRES_37hybridlevel(:,:,1)
+      pres(:,:,38) = PRES_38hybridlevel(:,:,1)
+      pres(:,:,39) = PRES_39hybridlevel(:,:,1)
+      pres(:,:,40) = PRES_40hybridlevel(:,:,1)
+      pres(:,:,41) = PRES_41hybridlevel(:,:,1)
+      pres(:,:,42) = PRES_42hybridlevel(:,:,1)
+      pres(:,:,43) = PRES_43hybridlevel(:,:,1)
+      pres(:,:,44) = PRES_44hybridlevel(:,:,1)
+      pres(:,:,45) = PRES_45hybridlevel(:,:,1)
+      pres(:,:,46) = PRES_46hybridlevel(:,:,1)
+      pres(:,:,47) = PRES_47hybridlevel(:,:,1)
+      pres(:,:,48) = PRES_48hybridlevel(:,:,1)
+      pres(:,:,49) = PRES_49hybridlevel(:,:,1)
+      pres(:,:,50) = PRES_50hybridlevel(:,:,1)
+      pres(:,:,51) = PRES_51hybridlevel(:,:,1)
+      pres(:,:,52) = PRES_52hybridlevel(:,:,1)
+      pres(:,:,53) = PRES_53hybridlevel(:,:,1)
+      pres(:,:,54) = PRES_54hybridlevel(:,:,1)
+      pres(:,:,55) = PRES_55hybridlevel(:,:,1)
+      pres(:,:,56) = PRES_56hybridlevel(:,:,1)
+      pres(:,:,57) = PRES_57hybridlevel(:,:,1)
+      pres(:,:,58) = PRES_58hybridlevel(:,:,1)
+      pres(:,:,59) = PRES_59hybridlevel(:,:,1)
+      pres(:,:,60) = PRES_60hybridlevel(:,:,1)
+      pres(:,:,61) = PRES_61hybridlevel(:,:,1)
+      pres(:,:,62) = PRES_62hybridlevel(:,:,1)
+      pres(:,:,63) = PRES_63hybridlevel(:,:,1)
+      pres(:,:,64) = PRES_64hybridlevel(:,:,1)
+      pres(:,:,65) = PRES_65hybridlevel(:,:,1)
 
-      do iob = 1,recNum
-          height_m = r_missing_data
-          l_closest_time = .true.
+      clwc(:,:,1) = CLWMR_1hybridlevel(:,:,1)
+      clwc(:,:,2) = CLWMR_2hybridlevel(:,:,1)
+      clwc(:,:,3) = CLWMR_3hybridlevel(:,:,1)
+      clwc(:,:,4) = CLWMR_4hybridlevel(:,:,1)
+      clwc(:,:,5) = CLWMR_5hybridlevel(:,:,1)
+      clwc(:,:,6) = CLWMR_6hybridlevel(:,:,1)
+      clwc(:,:,7) = CLWMR_7hybridlevel(:,:,1)
+      clwc(:,:,8) = CLWMR_8hybridlevel(:,:,1)
+      clwc(:,:,9) = CLWMR_9hybridlevel(:,:,1)
+      clwc(:,:,10) = CLWMR_10hybridlevel(:,:,1)
+      clwc(:,:,11) = CLWMR_11hybridlevel(:,:,1)
+      clwc(:,:,12) = CLWMR_12hybridlevel(:,:,1)
+      clwc(:,:,13) = CLWMR_13hybridlevel(:,:,1)
+      clwc(:,:,14) = CLWMR_14hybridlevel(:,:,1)
+      clwc(:,:,15) = CLWMR_15hybridlevel(:,:,1)
+      clwc(:,:,16) = CLWMR_16hybridlevel(:,:,1)
+      clwc(:,:,17) = CLWMR_17hybridlevel(:,:,1)
+      clwc(:,:,18) = CLWMR_18hybridlevel(:,:,1)
+      clwc(:,:,19) = CLWMR_19hybridlevel(:,:,1)
+      clwc(:,:,20) = CLWMR_20hybridlevel(:,:,1)
+      clwc(:,:,21) = CLWMR_21hybridlevel(:,:,1)
+      clwc(:,:,22) = CLWMR_22hybridlevel(:,:,1)
+      clwc(:,:,23) = CLWMR_23hybridlevel(:,:,1)
+      clwc(:,:,24) = CLWMR_24hybridlevel(:,:,1)
+      clwc(:,:,25) = CLWMR_25hybridlevel(:,:,1)
+      clwc(:,:,26) = CLWMR_26hybridlevel(:,:,1)
+      clwc(:,:,27) = CLWMR_27hybridlevel(:,:,1)
+      clwc(:,:,28) = CLWMR_28hybridlevel(:,:,1)
+      clwc(:,:,29) = CLWMR_29hybridlevel(:,:,1)
+      clwc(:,:,30) = CLWMR_30hybridlevel(:,:,1)
+      clwc(:,:,31) = CLWMR_31hybridlevel(:,:,1)
+      clwc(:,:,32) = CLWMR_32hybridlevel(:,:,1)
+      clwc(:,:,33) = CLWMR_33hybridlevel(:,:,1)
+      clwc(:,:,34) = CLWMR_34hybridlevel(:,:,1)
+      clwc(:,:,35) = CLWMR_35hybridlevel(:,:,1)
+      clwc(:,:,36) = CLWMR_36hybridlevel(:,:,1)
+      clwc(:,:,37) = CLWMR_37hybridlevel(:,:,1)
+      clwc(:,:,38) = CLWMR_38hybridlevel(:,:,1)
+      clwc(:,:,39) = CLWMR_39hybridlevel(:,:,1)
+      clwc(:,:,40) = CLWMR_40hybridlevel(:,:,1)
+      clwc(:,:,41) = CLWMR_41hybridlevel(:,:,1)
+      clwc(:,:,42) = CLWMR_42hybridlevel(:,:,1)
+      clwc(:,:,43) = CLWMR_43hybridlevel(:,:,1)
+      clwc(:,:,44) = CLWMR_44hybridlevel(:,:,1)
+      clwc(:,:,45) = CLWMR_45hybridlevel(:,:,1)
+      clwc(:,:,46) = CLWMR_46hybridlevel(:,:,1)
+      clwc(:,:,47) = CLWMR_47hybridlevel(:,:,1)
+      clwc(:,:,48) = CLWMR_48hybridlevel(:,:,1)
+      clwc(:,:,49) = CLWMR_49hybridlevel(:,:,1)
+      clwc(:,:,50) = CLWMR_50hybridlevel(:,:,1)
+      clwc(:,:,51) = CLWMR_51hybridlevel(:,:,1)
+      clwc(:,:,52) = CLWMR_52hybridlevel(:,:,1)
+      clwc(:,:,53) = CLWMR_53hybridlevel(:,:,1)
+      clwc(:,:,54) = CLWMR_54hybridlevel(:,:,1)
+      clwc(:,:,55) = CLWMR_55hybridlevel(:,:,1)
+      clwc(:,:,56) = CLWMR_56hybridlevel(:,:,1)
+      clwc(:,:,57) = CLWMR_57hybridlevel(:,:,1)
+      clwc(:,:,58) = CLWMR_58hybridlevel(:,:,1)
+      clwc(:,:,59) = CLWMR_59hybridlevel(:,:,1)
+      clwc(:,:,60) = CLWMR_60hybridlevel(:,:,1)
+      clwc(:,:,61) = CLWMR_61hybridlevel(:,:,1)
+      clwc(:,:,62) = CLWMR_62hybridlevel(:,:,1)
+      clwc(:,:,63) = CLWMR_63hybridlevel(:,:,1)
+      clwc(:,:,64) = CLWMR_64hybridlevel(:,:,1)
+      clwc(:,:,65) = 0. ! CLWMR_65hybridlevel(:,:,1)
 
-      enddo ! iob
       return
       end
 C
@@ -514,6 +637,7 @@ C
 !     double precision latitude(latitude), longitude(longitude),
 !    +     time(time)
 
+      write(6,*)' read_fim_netcdf ',latitude,longitude,time
 
 C   Variables of type REAL
 C
@@ -2203,6 +2327,8 @@ C
 C     Variable        NETCDF Long Name
 C     latitude      "latitude"
 C
+      if(.false.)then
+
       nf_status=NF_INQ_VARID(nf_fid,'latitude',nf_vid)
       if(nf_status.ne.NF_NOERR) then
        print *, NF_STRERROR(nf_status),' for latitude'
@@ -2238,7 +2364,8 @@ C
         print *, NF_STRERROR(nf_status),' for time'
        endif
       endif
-
+ 
+      endif
 
 C   Variables of type CHAR
 C
