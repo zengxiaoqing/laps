@@ -395,7 +395,7 @@
 !                                                    j .eq. 2048 )then
 !               idebug_a(i,j) = 1 ! alt slice
 !           endif
-            if(ni .ge. 239)idebug_a(239,1:nj:50) = 1
+            if(ni .ge. 250)idebug_a(230:250,1) = 1
             if(azi_scale .eq. .20 .AND. alt_a(i,j) .eq. 999.0 .AND. &  ! azi slice
                azi_a(i,j) .ge. 110.0  .and. azi_a(i,j) .le. 130.0)then
                 idebug_a(i,j) = 1
@@ -787,8 +787,11 @@
           altray_limb = alt_a(i,j) + horz_dep
 
           if(altray_limb .lt. 0.0 .and. emis_ang_a(i,j) .le. 0.)then
+!           Call 'get_topo_info' to obtain 'emis_ang'
+            call get_topo_info(alt_a(i,j),htmsl,earth_radius,0 &
+                              ,emis_ang_a(i,j),dist_to_topo)
             if(iwrite_err .le. 100)then
-              write(6,*)'ERROR: altray_limb/emis',i,j,altray_limb,emis_ang_a(i,j),topo_lat(i,j),topo_lon(i,j)
+              write(6,*)'WARNING: altray_limb/emis',i,j,altray_limb,emis_ang_a(i,j),topo_lat(i,j),topo_lon(i,j)
               iwrite_err = iwrite_err + 1
             endif
           endif
@@ -1236,6 +1239,16 @@
               frac_clr = frac_front + (1.-frac_front) * (1.-opac_cloud)
               frac_clr_airglow = frac_front + (1.-frac_front) * (1.-cloud_albedo)
               frac_scat = min(max(opac_cloud-cloud_albedo,0.),1.)
+            endif
+
+            if(htmsl .ge. 1000e3)then ! experimental (e.g. DSCOVR)
+                frac_clr = max(frac_clr,cosd(solalt_ref)**50.0)
+!               frac_clr = frac_clr**sind(solalt_ref**50.0))
+                if(solalt_ref .le. 0.)frac_clr = 1.0
+                emis_arg = max(sind(solalt_ref),0.)
+                emis_arg = max(emis_arg**0.25,0.5)
+                frac_cloud = frac_cloud * emis_arg
+!               frac_scat = frac_scat * emis_arg
             endif
 
 !           Why is frac_clr slightly high on a cloudy day at the surface?
