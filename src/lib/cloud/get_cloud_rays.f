@@ -827,8 +827,8 @@
 !        endif
 
          if(altray .lt. -horz_dep_d)then
-           call get_topo_info(altray,htstart,earth_radius,alt_norm_dum
-     1                       ,dist_to_topo)
+           call get_topo_info(altray,htstart,earth_radius,1
+     1                       ,alt_norm_dum,dist_to_topo)
          else
            dist_to_topo = 0.
          endif
@@ -970,7 +970,8 @@
           sum_odrad = 0.
           sum_odrad_c = 0.
           sum_odrad_w = 0.
-          sum_clrrad = 0. ! used for clear_radf_c
+          sum_clrrad = 0.     ! used for clear_radf_c
+          sum_clrrad_pot = 0. ! used for clear_radf_c
           sum_aod = 0.
           sum_aod_ill = 0.
           sum_aod_ill_dir = 0.
@@ -1671,10 +1672,18 @@
                     frac_fntcloud = 1.0
                   endif
 
-                  if(l_atten_bhd)then
-                    sum_clrrad = sum_clrrad 
-     1                         + transm_3d(inew_m,jnew_m,k_m) 
-     1                         * airmass2 * frac_fntcloud   
+                  if(l_atten_bhd)then ! .true.
+                    clrrad_inc_pot = airmass2
+     1                             * frac_fntcloud ! was just in numerator
+
+!                   Add term for clear air attenuation
+!                   Keep term for frac_fntcloud?
+                    clrrad_inc = clrrad_inc_pot 
+     1                         * transm_3d(inew_m,jnew_m,k_m) 
+
+                    sum_clrrad_pot = sum_clrrad_pot + clrrad_inc_pot
+                    sum_clrrad     = sum_clrrad     + clrrad_inc
+
                   else
                     sum_clrrad = sum_clrrad 
      1                         + transm_3d(inew_m,jnew_m,k_m) 
@@ -1972,7 +1981,10 @@
 
                  else ! outside horizontal domain
                   ioutside_domain = 1
-                  sum_clrrad = sum_clrrad + airmass2                     
+                  sum_clrrad     = sum_clrrad     + airmass2  
+     1                           * frac_fntcloud
+                  sum_clrrad_pot = sum_clrrad_pot + airmass2  
+     1                           * frac_fntcloud
 !                 sum_aod_ill_dir = sum_aod_ill_dir 
 !    1                       + aero_ext_coeff * slant2 * 1.0
 !    1                                        * frac_fntcloud
@@ -2082,8 +2094,9 @@
      1             view_altitude_deg .ge. -horz_dep_d)then
               clear_radf_c(:,ialt,jazi) = 1.00 ! correct inaccuracy
             else
+!             sum_clrrad_pot = airmass1_h
               clear_radf_c(:,ialt,jazi) = crep_thr ! secondary scattering in cloud shadow
-     1                      + (1.0 - crep_thr) * (sum_clrrad/airmass1_h)
+     1                  + (1.0 - crep_thr) * (sum_clrrad/sum_clrrad_pot)
             endif
             if(idebug .eq. 1)then
               write(6,119)rkstart,nk,view_altitude_deg,horz_dep_d
@@ -2492,8 +2505,8 @@
         return
         end
 
-        subroutine get_topo_info(alt,htmsl,earth_radius,alt_norm
-     1                          ,dist_to_topo)
+        subroutine get_topo_info(alt,htmsl,earth_radius,idebug
+     1                          ,alt_norm,dist_to_topo)
 
         real alt                  ! I elevation angle
         real htmsl                ! I observer height MSL
@@ -2517,7 +2530,7 @@
           distrad = sqrt((htrad+x1)**2 + y1**2)
           dist_to_topo = distrad * earth_radius
 
-          write(6,1)distrad,htrad,x1,y1
+          if(idebug .eq. 1)write(6,1)distrad,htrad,x1,y1
  1        format(' distrad,htrad,x1,y1',4f13.8)
         else
           alt_norm = 0.  
