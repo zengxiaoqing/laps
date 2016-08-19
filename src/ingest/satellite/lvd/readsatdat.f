@@ -91,7 +91,7 @@ c
                n=index(c_filename,' ')
             elseif(csat_type.eq.'rll')then
                n=index(c_dir_path(1),' ')-1
-               if(trim(csat_id) .eq. 'mtsat')then
+               if(trim(csat_id) .eq. 'mtsat')then ! himawari
                  if(trim(c_type(j,i)) .eq. '10p')then
                    c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
      &                        '_'//c_type(j,i)//'4.nc'
@@ -99,9 +99,14 @@ c
                    c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
      &                        '_'//c_type(j,i)//'.nc'
                  endif
-               else
-                 c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
-     &                      '_'//c_type(j,i)//'8.nc'
+               else ! meteosat
+                 if(trim(c_type(j,i)) .eq. '10p')then
+                   c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
+     &                        '_'//c_type(j,i)//'8.nc'
+                 else ! vis
+                   c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
+     &                        '_'//c_type(j,i)//'.nc'
+                 endif
                endif
             else
                n=index(c_dir_path(1),' ')-1
