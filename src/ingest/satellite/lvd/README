@@ -61,6 +61,7 @@
                satdat2laps_ir                satir2laps.f 
                check                         check_data.f       
            process_vis_satellite             satvis_process.f       
+               satdat2laps_vis               satvis2laps.f
                normalize_brightness          lib/normalize.f
                    sat_angular_alt                 "
                vis_to_albedo                 lib/vis2albedo.f
