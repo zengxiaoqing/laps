@@ -624,6 +624,8 @@
      +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
      +                   ,i4time_earliest,i4time_latest
      +                   ,filename
+     +                   ,pres_3d
+     +                   ,clwc_3d
      +                   ,lun_out
      +                   ,istatus)
             write(6,*)' returned from get_fim_data'
@@ -1029,6 +1031,16 @@
           allocate(aod_ill_opac_potl(minalt:maxalt,minazi:maxazi))
 
           exposure = density
+
+          if(.false.)then ! water world experimental simulation
+            land_frac = 0.
+            snow_cover = 0.
+            topo = 0.
+            topo_sfc = 0.
+            topo_albedo_2d(1,:,:) = .003
+            topo_albedo_2d(2,:,:) = .007
+            topo_albedo_2d(3,:,:) = .028
+          endif
 
           if(.true.)then
             write(6,*)' call calc_allsky at i4time_solar:',i4time_solar
