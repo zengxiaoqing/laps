@@ -2,6 +2,8 @@
      +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
      +                   ,i4time_earliest,i4time_latest
      +                   ,filename
+     +                   ,pres_p
+     +                   ,clwc_p
      +                   ,lun_out
      +                   ,istatus)
 
@@ -10,6 +12,8 @@
       character*(*) filename
 
       integer latitude, longitude, time,nf_fid, nf_vid, nf_status
+      real pres_p(NX_L,NY_L,21)
+      real clwc_p(NX_L,NY_L,21)
 C
 C  Open netcdf File for reading
 C
@@ -63,7 +67,7 @@ C
       endif
       call read_fim_data(nf_fid, latitude, longitude, time,
      +     i4time_sys, ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
-     +     i4time_latest, lun_out, istatus)
+     +     i4time_latest, lun_out, pres_p, clwc_p, istatus)
 
       return
       end
@@ -71,11 +75,14 @@ C
 C
       subroutine read_fim_data(nf_fid, latitude, longitude, time,
      +     i4time_sys, ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
-     +     i4time_latest, lun_out, istatus)
+     +     i4time_latest, lun_out, pres_p, clwc_p, istatus)
 
 
       include 'netcdf.inc'
       integer latitude, longitude, time,nf_fid, nf_vid, nf_status
+
+      real pres_p(longitude,latitude,21)
+      real clwc_p(longitude,latitude,21)
 
       real pres(longitude,latitude,65)
       real clwc(longitude,latitude,65)
@@ -432,6 +439,9 @@ C
       clwc(:,:,63) = CLWMR_63hybridlevel(:,:,1)
       clwc(:,:,64) = CLWMR_64hybridlevel(:,:,1)
       clwc(:,:,65) = 0. ! CLWMR_65hybridlevel(:,:,1)
+
+!     Vertical Interpolation
+      clwc_p(:,:,10) = clwc(:,:,30)
 
       return
       end
