@@ -37,6 +37,7 @@
         real nl_int
 
         if(init .eq. 0)then
+            write(6,*)' initializing a call to get_fluxsun ',init
             call get_fluxsun(wa_tri,nct,1,fasun)
             init = 1
         endif
