@@ -619,13 +619,16 @@
                      ,moon_rad_c,sky_rad_ave,elong_a         )       ! O/I
 
             glow_moon_sc(:,:) = 0.; rad_moon_sc(:,:,:) = 0.
-            where(moon_rad_c(2,:,:) .gt. 0.)
-              do ic = 1,nc
-                glow_moon_sc(:,:) = log10(moon_rad_c(2,:,:)) + (-26.7 - moon_mag) * 0.4
-                rad_moon_sc(ic,:,:) = 10.**glow_moon_sc(:,:)
-              enddo ! ic
-              glow_moon_sc(:,:) = log10(moon_rad_c(2,:,:)) + (-26.7 - moon_mag) * 0.4
-            endwhere
+
+            do j = 1,nj
+            do i = 1,ni
+              if(moon_rad_c(2,i,j) .gt. 0.)then
+                glow_moon_sc(i,j) = log10(moon_rad_c(2,i,j)) + (-26.7 - moon_mag) * 0.4
+                rad_moon_sc(:,i,j) = 10.**glow_moon_sc(i,j)
+              endif
+            enddo ! i
+            enddo ! j
+
             glow_moon1(:,:) = glow_moon_sc(:,:) ! experimental
 
             write(6,*)' range of moon_rad_c(2) is ',minval(moon_rad_c(2,:,:)),maxval(moon_rad_c(2,:,:))
@@ -1128,9 +1131,10 @@
             else ! terrain present (catch airglow from above)
 !             Add in moonglow depending of opacity of airmass to terrain
               od2topo_c(:) = (od_atm_g * airmass_2_topo(i,j)) + aod_2_topo(i,j)
-              clear_rad_c(:,i,j) = clear_rad_c(:,i,j) &
-                                 + rad_moon_sc(:,i,j) * opac(od2topo_c(:))
-
+              do ic = 1,nc
+                clear_rad_c(ic,i,j) = clear_rad_c(ic,i,j) &
+                                    + rad_moon_sc(ic,i,j) * opac(od2topo_c(ic))
+              enddo ! ic
             endif
           endif
 
@@ -1553,8 +1557,10 @@
         enddo ! i
         enddo ! j
 
-        write(6,*)' max RGB = ',maxval(sky_rgb(0,:,:)) &
-        ,maxval(sky_rgb(1,:,:)),maxval(sky_rgb(2,:,:))
+        red_max = maxval(sky_rgb(0,:,:))
+        grn_max = maxval(sky_rgb(1,:,:))
+        blu_max = maxval(sky_rgb(2,:,:))
+        write(6,*)' max RGB = ',red_max,grn_max,blu_max
 
 !       Consider max RGB values where elong > 5 degrees
 
