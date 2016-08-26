@@ -4,12 +4,12 @@
 !      radius        radius in pixels of ellipse vertical axis        I
 !      ricen         location in pixels of ellipse center             I
 !      ni,nj         half size of pixel box to evaluate               I
-!      array         array of fractional pixels inside ellipse        O
+!      array         fractional area of pixels inside ellipse         O
 
        real array(-ni:ni,-nj:nj)
        real m,k
 
-       a = radius * aspect_ratio
+       a = radius * aspect_ratio 
        b = radius
        area_sum = 0.
 
@@ -51,15 +51,15 @@
              icond = 7
              overlap = r_missing_data
            endif
-           if(iverbose .ge. 2)write(6,1)i,j,y,xlo,xhi,x1,x2,overlap,icond
-1          format(2i4,f9.2,2f9.2,2f9.4,f9.4,i3)
+           if(iverbose .ge. 2)write(6,1)i,j,y,xlo,xhi,x1,x2,overlap,icond,radius,aspect_ratio
+1          format(2i4,f9.2,2f9.2,2f9.4,f9.4,i3,2f9.2)
            sum = sum + overlap
          enddo ! isub
 
          area = sum / float(10)
 
          if(iverbose .ge. 1)write(6,2)i,j,ricen,rjcen,area
-2        format(' i/j/ricen/rjcen/area',2x,2i3,2x,2f7.2,f10.4)
+2        format(' i/j/ricen/rjcen/area (sq pix)',2x,2i3,2x,2f7.2,f10.4)
 
          array(i,j) = area
 
@@ -71,7 +71,8 @@
        if(iverbose .ge. 1)then
          pi = 3.14159
          area_theo = (pi * radius**2) * aspect_ratio
-         write(6,*)'area_sum/theo = ',area_sum,area_theo
+         write(6,3)area_sum,area_theo
+3        format(' sum of illuminated area (sq pix): area_sum/theo = ',2f9.5)
        endif
        
        return
