@@ -51,6 +51,7 @@
         integer idebug_a(ni,nj)
         real pf_land(nc,ni,nj)      ! anisotropic reflectance factor (ARF)
                                     ! (weighted by direct/diffuse illumination)
+        real cld_brdf(nc,ni,nj)
 
         real nonspot
 
@@ -239,6 +240,7 @@
               endif
 
               pf_land(ic,i,j) = ph1
+              cld_brdf(ic,i,j) = phsnow
 
             enddo ! ic
 
