@@ -514,7 +514,10 @@
 
 !               Spectral normalized values (under construction)
                 airmass_g = airmassf(90.-obj_alt(ii,jj),patm_sfc)
-                bni_clr(:) = obj_bri * ecl * trans(airmass_g * ext_g(:))
+                do ic = 1,nc
+                  bni_clr(ic) = obj_bri * ecl 
+     1                        * trans(airmass_g * ext_g(ic))
+                enddo
                 bnic_2d(:,ii,jj) = bni_clr(:) * frac_dir   
 
                 bhi_clr(:) = bni_clr(:) * sind(obj_alt(ii,jj))
