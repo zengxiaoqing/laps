@@ -614,7 +614,12 @@
                       ricen = (azi_obj-azig)/azi_scale
                       rjcen = (alt_obj-altg)/alt_scale
                       aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
-                      call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit1,0,0,0)
+                      write(6,87)radius_deg,alt_scale,radius_pix
+87                    format(' call antialias_ellipse: raddeg/alt_scl/radpix = ',3f9.5)
+
+!                     Obtain fraction of pixel that is lit (frac_lit1)
+                      call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit1,0,0,2)
+                      area_pix = alt_scale * azi_scale
                     endif
 
 !                   Consider second "object" for obscuration or phase
@@ -650,14 +655,16 @@
                         write(6,88)aov1,aov2,aov3,fr1,fr2,fr3,approx_overlap,frac_lit
 88                      format(' aov',3f7.2,'  fr',3f7.2,'  overlap/frac_lit',2f7.4)
                       endif
-                    else
-                      frac_lit = frac_lit1
+                    else ! l_phase = F
+                      frac_lit = frac_lit1 
                     endif
 
 !                   write(6,89)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
 89                  format(' altga-t/alt_obj/azig/azi_obj/distd/frac_lit =',2i5,6f9.3,2f7.2,f7.4)
 
+!                   Determine surface brightness of object averaged over the pixel
                     if(frac_lit .gt. 0.)then
+!                       Average pixel surface brightness accounting for fraction of pixel that is lit
                         delta_mag = log10((size_glow_sqdg*sqarcsec_per_sqdeg)/frac_lit)*2.5
                         rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
                     else
@@ -678,12 +685,15 @@
 
 !                 if(.true.)then                          
                   if(abs(alt_obj-altg) .le. 0.15)then                  
+                        write(6,90)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
+90                      format(' altga-t/alt_obj/azig/azi_obj/distd/area/frclit =',2i5,6f9.3,2f7.2,f7.4)
+
                         if(glow_nl .lt. 1e5)then
                             write(6,91)ialt,jazi,diam_deg,rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
-91                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj = ',2i5,f5.2,2f10.3,e12.4,f11.2)
+91                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj =     ',2i5,f5.2,2f10.3,e12.4,f11.2)
                         else
                             write(6,92)ialt,jazi,diam_deg,rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
-92                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj = ',2i5,f5.2,2f10.3,e12.4,f11.2,' ***GLOW***')
+92                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj =     ',2i5,f5.2,2f10.3,e12.4,f11.2,' ***GLOW***')
                         endif
                   endif
                 endif ! within star kernel
