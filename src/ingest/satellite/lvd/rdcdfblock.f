@@ -14,6 +14,7 @@ c
 c
       Integer n_elems,n_lines,nch
       real    data(n_elems, n_lines)
+      Integer*2 data_int2(n_elems, n_lines)
 
       Integer n,nn
       Integer varid,ncid
@@ -86,9 +87,14 @@ c
       if(csat_type.eq.'rll')then
           write(6,*)'ncid/varid = ',ncid,varid
           write(6,*)'start=',start(1:2),' count=',count(1:2)
+          rcode=NF_GET_VARA_INT2(NCID,varid,START,COUNT,data_int2)
+          write(6,*)'center pixel i2: ',data_int2(n_elems/2,n_lines/2)
+          write(6,*)'rdblock_line_elem i2 data range: '
+     1              ,minval(data_int2),maxval(data_int2)
+          data(:,:) = data_int2(:,:)
+      else
+          rcode=NF_GET_VARA_REAL(NCID,varid,START,COUNT,data)
       endif
-
-      rcode=NF_GET_VARA_REAL(NCID,varid,START,COUNT,data)
 
       write(6,*)'rdblock_line_elem data range: '
      1          ,minval(data),maxval(data)
@@ -100,6 +106,8 @@ c
           enddo
           enddo
       endif
+
+      write(6,*)'center pixel r4: ',data(n_elems/2,n_lines/2)
 C
       istatus = 1
 1000  Return
