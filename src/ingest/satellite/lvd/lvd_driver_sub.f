@@ -1245,10 +1245,18 @@ c been mapped to the laps domain. AFWA's GMS so far.
 !               write(6,*)' i4time = ',i4time_data(ic)
             enddo ! i
 
+            do ilf = 1,n_lvd_fields_max
+                call array_range(laps_data(1,1,ilf),nx_l,ny_l
+     1                          ,rmin,rmax,r_missing_data)
+                write(6,313)ilf,var_lvd(ilf),rmin,rmax
+313             format(' (non-missing) range for field: '
+     1                ,i3,1x,a,1x,2f10.4)
+            enddo
+
             write(6,*)' Writing lvd. Total # of fields: ',nlf
             write(6,*)'    to ',dir_lvd(1:len_lvd)
-            write(6,313)csatid,c_fname,(var_lvd(ilf),ilf=1,nlf)
-313         format(' LVD fields for ',a6,1x,a9,':',30(1x,a))
+            write(6,314)csatid,c_fname,(var_lvd(ilf),ilf=1,nlf)
+314         format(' LVD fields for ',a6,1x,a9,':',30(1x,a))
             call write_laps_data(i4time_data(i),
      &                      dir_lvd,
      &                      ext_lvd,
