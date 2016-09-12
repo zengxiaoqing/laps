@@ -975,7 +975,8 @@ c ----------  GMS SATELLITE SWITCH -------
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 gri(1,1,ispec),grj(1,1,ispec),
-     1                                 n_ir_elem,n_ir_lines)
+     1                                 n_ir_elem,n_ir_lines,istatus)
+                   if(istatus .ne. 1)r_image_status(j,i) = 1.
                endif
 
                call process_ir_satellite(i4time_data(i),
@@ -1154,7 +1155,8 @@ c                    endif
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 gri(1,1,ispec),grj(1,1,ispec),
-     1                                 n_ir_elem,n_ir_lines)
+     1                                 n_ir_elem,n_ir_lines,istatus)
+                   if(istatus .ne. 1)r_image_status(j,i) = 1.
                endif
 
                call process_vis_satellite(csatid,
