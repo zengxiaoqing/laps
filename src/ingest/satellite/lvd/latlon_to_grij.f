@@ -1,6 +1,6 @@
 
         subroutine latlon_to_grij(lat_l,lon_l,nx_l,ny_l,
-     1                            lat_s,lon_s,gri,grj,nx_s,ny_s)
+     1                            lat_s,lon_s,gri,grj,nx_s,ny_s,istatus)
 
         ANGDIF(XX,Y)=MOD(XX-Y+540.,360.)-180.
 
@@ -38,6 +38,8 @@
         itstatus=ishow_timer()
 
         write(6,*)' Subroutine latlon_to_grij...'
+
+        istatus = 1
 
         call get_r_missing_data(r_missing_data,istatus)
 
@@ -398,6 +400,11 @@
      1                         ,emission_angle_d(il,jl)
 802                 format('Convergence not acheived at ',2i5,f14.5
      1                    ,2f8.2,' emission = ',f8.2)
+                    if(abs(lon_l(il,jl)) .lt. 179.50)then
+                        write(6,*)' ERROR not due to dateline'
+                        istatus = 0
+                        return
+                    endif
                 endif
                 if(idebug .eq. 1)write(6,*)
                 iwrite = iwrite + 1               
