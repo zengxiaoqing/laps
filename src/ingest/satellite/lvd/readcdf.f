@@ -76,6 +76,7 @@ C
       REAL      poLat
       REAL      La2,Lo2,level
       REAL      scale_img
+      real arg1,arg2
       INTEGER START(10)
       INTEGER COUNT(10)
       integer varid,ncid
@@ -133,8 +134,14 @@ c   code
             endif
          endif
          call clean_nan2(latitude,n_elem,n_lines,istatus)
-         write(6,*)'readcdf latitude range:       '
-     1          ,minval(latitude),maxval(latitude)
+         arg1 = minval(latitude)
+         arg2 = maxval(latitude)
+         write(6,*)'readcdf latitude range:       ',arg1,arg2
+         if(arg1 .eq. 0. .and. arg2 .eq. 0.)then
+            write(6,*)' ERROR in latitude range'
+            istatus = 0
+            return
+         endif
 
          rcode = NF_INQ_VARID(ncid,'longitude',varid)
          if(rcode.ne.NF_NOERR) then
