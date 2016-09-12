@@ -95,6 +95,7 @@ c       real fraci,fracj
         qcstatus=0
         fcount=0
 c
+        write(6,*)' Subroutine satdat2laps_ir'
         write(6,*)'   I   J   WarmPix  ColdPix  NPix Nwarm  CldTemp'
 c
 c The "10" loop represents input image resolution < output grid resolution such
@@ -115,11 +116,18 @@ c
         enddo
         enddo
 
+        call array_range(image_ir,elem_dim,line_dim,rmin,rmax
+     1                  ,r_missing_data)
+        write(6,*)' image_ir (non-missing) range is ',rmin,rmax
+
         if(icnt.gt.(pcnt_msng_thresh*elem_dim*line_dim))then
            lforce_switch=.true.
-           print*,'More than 10% of data missing: '
-     &,float(icnt)/float(imax*jmax)
+           print*,'More than 5% of data missing: '
+     &           ,float(icnt)/float(imax*jmax)
            print*,'Thus force grid point averaging in satir2laps'
+        else
+           print*,'Less than 5% of data missing: '
+     &           ,float(icnt)/float(imax*jmax)
         endif
  
         insufdata=0
@@ -274,15 +282,15 @@ cisid      if(sa(i,j).eq.r_missing_data)then
                 print*,'found missing data in ir remapping'
            endif
 
-!          if(i .eq. i/100*100 .and. j .eq. j/100*100       
-!    1        .OR.                   sa(i,j) .lt. 190.      
-!    1        .OR.                   
-!    1       (sa(i,j) .gt. 500. .and. sa(i,j) .ne. r_missing_data)
-!    1                                 )then
-!               write(6,5555)i,j,wm,wc,npix,nwarm,sa(i,j)
-!    1                      ,r_llij_lut_ri(i,j),r_llij_lut_rj(i,j)
-!555            format(1x,2i4,2f10.2,2i5,f10.2,2x,2f10.2)
-!          endif
+           if(i .eq. i/200*200 .and. j .eq. j/200*200       
+     1        .OR.                   sa(i,j) .lt. 190.      
+     1        .OR.                   
+     1       (sa(i,j) .gt. 500. .and. sa(i,j) .ne. r_missing_data)
+     1                                 )then
+                write(6,5555)i,j,wm,wc,npix,nwarm,sa(i,j)
+     1                      ,r_llij_lut_ri(i,j),r_llij_lut_rj(i,j)
+5555            format(1x,2i4,2f10.2,2i5,f10.2,2x,2f10.2)
+           endif
 
    10     CONTINUE ! I,J
           write(6,*)'Max num IR pix for avg: ',maxpix
