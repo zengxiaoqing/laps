@@ -6,5 +6,5 @@ installation and configuration.
     $ cd laps
     $ ./configure 
     $ make; make install
-    $ ./etc/window_domain_rt.pl (see README 2.2.6.1 and related sections)
+    $ perl ./etc/window_domain_rt.pl (see README 2.2.6.1 and related sections)
 
