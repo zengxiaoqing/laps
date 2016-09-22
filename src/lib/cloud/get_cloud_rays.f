@@ -422,7 +422,11 @@
      1            sfc_glow,                          ! I
      1            transm_3d,transm_4d)               ! O
               else ! consider experimental version for global domain
-                grdasp_ll(:,:) = min(1.0 / cosd(lat(:,:)),20.)
+                do ii = 1,ni
+                do jj = 1,nj
+                  grdasp_ll(ii,jj) = min(1.0 / cosd(lat(ii,jj)),20.)
+                enddo ! jj
+                enddo ! ii
                 write(6,*)' call get_cloud_rad_faces2...'
                 call get_cloud_rad_faces2(              
      1            obj_alt,obj_azi,                   ! I
