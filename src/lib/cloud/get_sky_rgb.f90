@@ -11,7 +11,7 @@
                    topo_lat,topo_lon,topo_lf,topo_sc, &                 ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,topo_solazi,trace_solalt,eobsc_sky, &    ! I
-                   alt_a,azi_a,elong_a,ni,nj,azi_scale,sol_alt,sol_az, &! I
+                   alt_a,azi_a,ni,nj,azi_scale,sol_alt,sol_az, &        ! I
                    sol_lat,sol_lon, &                                   ! I
                    minalt,maxalt,minazi,maxazi, &                       ! I
                    twi_0,horz_dep,solalt_limb_true, &                   ! I
@@ -100,11 +100,12 @@
         real elong_m(ni,nj)         ! elong of sun or moon
         real elong_s(ni,nj)         ! elong of sun or moon
         integer idebug_a(ni,nj), idebug_pf(ni,nj)
-        real cld_radt(nc), cld_radb(nc), cld_rad(nc), sky_rad(nc)
+        real cld_radt(nc), cld_radb(nc), cld_rad(nc), sky_rad(nc), pf_top(nc)
         real rintensity(nc), cld_rgb_rat(nc), glow_cld_c(nc), ref_nl(nc)
         real rad_sec_cld(nc), rad_sec_cld_top(nc), albedo_sfc(nc)
         real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
         real pf_land(nc,ni,nj)
+        real cld_brdf(nc,ni,nj)
         real bkscat_alb(ni,nj)
         real trans_c(nc)            ! transmissivity
         real od_g_slant_a(nc,ni)    ! use for sun/moon/star attenuation
@@ -325,9 +326,9 @@
             azid1 = 90. ; azid2 = 270.
             moon_cond_clr = 0
         endif
-!       if(htmsl .gt. 1000e3)then
-!           azid1 = 200. ; azid2 = 210. ! high custom
-!       endif
+        if(htmsl .gt. 1000e3)then
+            azid1 = 0. ; azid2 = 90. ! high custom
+        endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2
 
@@ -375,8 +376,7 @@
                        alt_a(i,j) .le. -65. .AND. &
                        alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
                     idebug_a(i,j) = 1
-                elseif(alt_a(i,j) .ge. -78. .AND. &
-                       alt_a(i,j) .le. -75.           )then
+                elseif(cloud_od(i,j) .ge. 5.0 .AND. alt_a(i,j) .le. -89.2)then
                     idebug_a(i,j) = 1
                 elseif(alt_a(i,j) .eq. float((nint(alt_a(i,j))/5)*5))then
                     idebug_a(i,j) = 1
@@ -556,7 +556,7 @@
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
                      ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
-                     ,aod_ill,aod_2_topo,aod_tot &                     ! I
+                     ,aod_ill,aod_2_topo,aod_tot,ext_g &               ! I
                      ,l_solar_eclipse,i4time,rlat,rlon &               ! I
                      ,clear_radf_c,ag_2d &                             ! I
                      ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
@@ -611,7 +611,7 @@
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
                      ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
-                     ,aod_ill,aod_2_topo,aod_tot &                     ! I
+                     ,aod_ill,aod_2_topo,aod_tot,ext_g &               ! I
                      ,.false.,i4time,rlat,rlon &                       ! I
                      ,clear_radf_c,ag_2d &                             ! I
                      ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
@@ -695,7 +695,7 @@
                        ,sol_alt,sol_az,nsp,airmass_2_topo           & ! I
                        ,idebug_pf,ni,nj,i4time,rlat,rlon,htmsl      & ! I
                        ,topo_lat,topo_lon                           & ! I
-                       ,pf_land,emis_ang_a)                           ! O
+                       ,pf_land,cld_brdf,emis_ang_a)                  ! O
 
         I4_elapsed = ishow_timer()
 
@@ -790,11 +790,12 @@
           altray_limb = alt_a(i,j) + horz_dep
 
           if(altray_limb .lt. 0.0 .and. emis_ang_a(i,j) .le. 0.)then
+            emis_orig = emis_ang_a(i,j)
 !           Call 'get_topo_info' to obtain 'emis_ang'
             call get_topo_info(alt_a(i,j),htmsl,earth_radius,0 &
                               ,emis_ang_a(i,j),dist_to_topo)
             if(iwrite_err .le. 100)then
-              write(6,*)'WARNING: altray_limb/emis',i,j,altray_limb,emis_ang_a(i,j),topo_lat(i,j),topo_lon(i,j)
+              write(6,*)'WARNING: altray_limb/emis',i,j,altray_limb,emis_orig,emis_ang_a(i,j),topo_lat(i,j),topo_lon(i,j)
               iwrite_err = iwrite_err + 1
             endif
           endif
@@ -847,6 +848,7 @@
               elseif(solalt_ref .ge. 0. .and. abs(solalt_ref-solalt) .gt. .01)then
 !                 sb_corr = 2.0 * (1.0 - (sind(solalt_ref)**0.5)) 
                   sb_corr = 2.7 * (1.0 - (sind(solalt_ref+1.2)**0.5)) 
+!                 sb_corr = 2.0 * (1.0 - (sind(solalt_ref+1.2)**0.5)) 
                   rad_sec_cld(:) = (day_int * ext_g(:) * patm_sfc * 2.0 * 0.5) / 10.**(0.4*sb_corr)
                   iradsec = 2
               endif
@@ -863,8 +865,18 @@
 !                217 would better match -7.3 value above
 !               (0.25 is dark cloud base value)                                  
 !             Use surface albedo equation?
+
+              btau = 0.10 * cloud_od(i,j)
+              cloud_albedo = btau / (1. + btau)
+
               do ic = 1,nc
-                  rad = day_int * pf_scat(ic,i,j)
+                  if(htmsl .ge. 1000e3 .and. .true.)then ! experimental (e.g. DSCOVR)
+                      pf_top(ic) = pf_scat(ic,i,j) * (1. - cloud_albedo) & ! thin
+                                 + 2. * cld_brdf(ic,i,j) * cloud_albedo * (sind(max(solalt_ref,0.)))**0.6 ! thick / lambert 
+                  else
+                      pf_top(ic) = pf_scat(ic,i,j)
+                  endif
+                  rad = day_int * pf_top(ic)
 
                   cld_radt(ic) = rad * cloud_rad_c(ic,i,j) + rad_sec_cld(ic)
 !                 rint_top(ic) = rad_to_counts(cld_radt(ic))
@@ -908,17 +920,17 @@
 !               (abs(alt_a(i,j)).le.40.0 .or. abs(alt_a(i,j)).eq.90.0 .or. abs(alt_a(i,j)+70.).lt.7.) )  &
               if(   idebug_a(i,j) .eq. 1 &
                   .OR. (i .eq. isun .and. j .eq. jsun) )then
-               if(r_cloud_3d(i,j) .gt. 0.)then
+               if(r_cloud_3d(i,j) .gt. 0. .or. abs(alt_a(i,j)).eq.90.0)then
                   htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
                   write(6,41)iradsec,solalt_ref,solalt,twi_alt,htmin_view
- 41               format(' solalt_ref/solalt/twi_alt/htmin',i3,3f9.4,f11.0)
-                  write(6,42)i,j,elong_a(i,j),pf_scat(2,i,j),rintensity(2)&
+ 41               format(' irs/solalt_ref/solalt/twi_alt/htmin',i3,3f9.4,f11.0)
+                  write(6,42)i,j,elong_a(i,j),cld_brdf(2,i,j),pf_top(2),rintensity(2)&
                    ,trans_c(2),r_cloud_rad(i,j) &
                    ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
                    ,cld_radb(:)/1e6,(cld_rad(:)/1e6)/trans_c(:) &
                    ,cld_rad(:)/1e6,rad_sec_cld(:)/1e6,sb_corr
  42               format(&
-                  ' elg/pf/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,5f9.3,' c',3f8.5,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f5.0,f6.2)
+                  ' elg/pf/br/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,6f9.3,' c',3f8.5,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f5.0,f6.2)
                endif ! cloud present
               endif
 
@@ -1245,13 +1257,13 @@
               frac_scat = min(max(opac_cloud-cloud_albedo,0.),1.)
             endif
 
-            if(htmsl .ge. 1000e3)then ! experimental (e.g. DSCOVR)
+            if(htmsl .ge. 1000e3 .and. .true.)then ! experimental (e.g. DSCOVR)
                 frac_clr = max(frac_clr,cosd(solalt_ref)**50.0)
 !               frac_clr = frac_clr**sind(solalt_ref**50.0))
                 if(solalt_ref .le. 0.)frac_clr = 1.0
-                emis_arg = max(sind(solalt_ref),0.)
-                emis_arg = max(emis_arg**0.25,0.5)
-                frac_cloud = frac_cloud * emis_arg
+!               emis_arg = max(sind(solalt_ref),0.)
+!               emis_arg = max(emis_arg**0.25,0.5)
+!               frac_cloud = frac_cloud * emis_arg
 !               frac_scat = frac_scat * emis_arg
             endif
 
@@ -1530,7 +1542,7 @@
 !             if(sol_alt .ge. -2.0)then      ! daylight
               if(sol_alt .ge. twi_alt)then   ! daylight
                   write(6,116)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
-                      ,pf_scat(2,i,j),r_cloud_3d(i,j),cloud_od(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
+                      ,pf_top(2),r_cloud_3d(i,j),cloud_od(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
                       ,topo_gti(i,j),topo_albedo(1,i,j),aod_ill(i,j),od2topo_c(2),topo_visibility,cloud_visibility,rintensity_glow &
                       ,nint(sky_rgb(:,i,j)),nint(cld_red),nint(cld_grn),nint(cld_blu)
