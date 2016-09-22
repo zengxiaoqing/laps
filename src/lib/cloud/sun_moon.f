@@ -4,6 +4,8 @@
      1                            ,earth_radius,elgms_r4
      1                            ,r4_mag,r4_obsc,obsc_limbc)
 
+      include 'trigd.inc'
+
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
       include '../../include/astparms.for'
       include 'wa.inc'
@@ -325,6 +327,7 @@ C
      1                   ,elgms_r4,r4_mag,r4_rmn           ! O
      1                   ,solar_eclipse_magnitude,r4_obsc,obsc_limb) ! O   
 
+      include 'trigd.inc'
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
 !     include '../util/utilparms.for'
       include '../../include/astparms.for'
