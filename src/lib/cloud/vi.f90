@@ -274,6 +274,8 @@
 
        subroutine calc_extinction_simple(alt,airmass,extinction)
 
+       include 'trigd.inc'
+
        airmass = 1. / sind(alt+1.4325)
        extinction = 0.28 * airmass
 
@@ -281,6 +283,8 @@
        end
 
        subroutine calc_extinction(alt,patm,airmass,extinction)
+
+       include 'trigd.inc'
 
        z = 90. - alt
        z = min(z,91.)
@@ -293,6 +297,8 @@
        end
 
        subroutine correct_skyglow(skyglow_in,alt,patm,skyglow_out,diff_mag)
+
+       include 'trigd.inc'
 
 !      Calculate change in skyglow from zenithal value for an idealized case
 
@@ -334,6 +340,8 @@
        end
 
        subroutine get_skyglow(rmag,altsource,altobj,elong,patm,skyglow)
+
+       include 'trigd.inc'
 
 !      REM  Daylight brightness
 !      C4=10.0^(-.4*K(I)*XS)                        (Extinction and Airmass) 
