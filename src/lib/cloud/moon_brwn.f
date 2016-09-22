@@ -5,6 +5,8 @@ c       T is the Julian Date (TDT)
 c       Mx, My, Mz are the Geocentric Coordinates of the Moon using the
 c               Mean Equinox and Ecliptic of Date (AU)
 
+        include 'trigd.inc'
+
         IMPLICIT REAL*8 (A-Z)
 
         include '.././include/astparms.for'
