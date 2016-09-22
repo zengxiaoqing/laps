@@ -9,6 +9,8 @@
                 sfc_glow,                        & ! I
                 transm_3d,transm_4d)               ! O
 
+     include 'trigd.inc'
+
 !    Calculate 3D radiation field looping through each of the 6 faces in
 !    the domain.
 
@@ -50,6 +52,7 @@
      real bi_coeff(2,2),tri_coeff(2,2,2),b_alpha_cube(2,2,2)
      equivalence (s,scurr) ! needed only during transition from s to scurr
 
+     integer htlutlo,htluthi
      parameter (htlutlo = -1000)
      parameter (htluthi = 30000)
      real htlut(htlutlo:htluthi)
