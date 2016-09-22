@@ -41,12 +41,13 @@
         real dec_d(nstars),ra_d(nstars),mag_stars(nstars),bmv(nstars)
         real alt_stars(nstars),azi_stars(nstars),ext_mag(nstars),lst_deg
         real angdif
-        real*8 dangdif,jed,r8lon,lst,has(nstars),phi,als,azs,ras,decr
+        real*8 dangdif,jed,r8lon,lst,has(nstars),phi,als,azs,ras,decr,xx,yy
         real*8 dalt,dazi,dha,ddec,dra,sol_meanlon,sol_meananom
 
         character*20 starnames(nstars)
+        logical l_zod
 
-        DANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
+        DANGDIF(XX,YY)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
         ANGDIFD(X,Y)=MOD(X-Y+540.,360.)-180.
 !       addmags(a,b)=log10(10.**(-a*0.4) + 10.**(-b*0.4)) * (-2.5)
         addlogs(x,y) = log10(10.**x + 10.**y)
@@ -135,7 +136,7 @@
         c_conv = 'decra2helioecliptic'
         call angcoord_2d(c_conv,nalt,nazi,sollon,arg2,dec_a,ra_a,argphi,helioeclipticlat_a,helioeclipticlon_a)
 
-        if(l_zod)then
+        if(l_zod .eqv. .true.)then
           write(6,*)' Computing Milky Way / Zodiacal Light / Corona'
         else
           write(6,*)' Skipping Milky Way / Zodiacal Light / Corona'
@@ -154,7 +155,7 @@
 
            if(altg .ge. -horz_dep)then
 
-             if(l_zod)then
+             if(l_zod .eqv. .true.)then
 
 !             Milky Way (mainly from stars from 6-16 magnitude)
               explatterm = (abs(gallat_a(ialt,jazi)/20.))**1.5
@@ -214,7 +215,7 @@
               else
                 pcoeff = 0.
               endif
-              fexp = -2.5*(1.-pcoeff) + -2.8*pcoeff
+              fexp = -2.5*(1.-pcoeff) + (-2.8*pcoeff)
               f_wm2srum = coeff * srad**fexp
               f_s10 = wm2srum_to_s10(f_wm2srum)
 !             f_nl  = wm2srum_to_nl(f_wm2srum)
