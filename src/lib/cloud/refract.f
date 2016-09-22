@@ -1,6 +1,8 @@
 
         subroutine refract(true,apparent,pres)
 
+        include 'trigd.inc'
+
         real*8 true,apparent,pres
 
         if(true .gt. -1.0d0)then
