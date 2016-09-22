@@ -65,7 +65,6 @@
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)
         real cloud_od(minalt:maxalt,minazi:maxazi)
         real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)
-        real elong_roll(minalt:maxalt,minazi:maxazi)
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
         real topo_swi(minalt:maxalt,minazi:maxazi)
@@ -379,7 +378,6 @@
      1                    ,dist_2_topo,topo_solalt,topo_solazi
      1                    ,trace_solalt,eobsc_sky
      1                    ,alt_a_roll,azi_a_roll ! I   
-     1                    ,elong_roll    
      1                    ,ni_cyl,nj_cyl,azi_scale  
      1                    ,solar_alt,solar_az
      1                    ,solar_lat,solar_lon                          ! I
