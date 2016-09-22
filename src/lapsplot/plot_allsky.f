@@ -87,7 +87,7 @@
         character*255 new_dataroot
         logical l_latlon, l_parse, l_plotobs, l_solar_eclipse
         logical l_idl /.false./
-        logical l_cyl, l_polar 
+        logical l_cyl, l_polar, l_water_world 
         logical l_binary /.false./
         logical l_require_all_fields ! requiring all LAPS fields to run
         logical l_test_cloud /.false./
@@ -287,12 +287,17 @@
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
 
+        l_water_world = .false.
         if(l_parse(directory,'fim'))then
           l_require_all_fields = .false.
         elseif(i4time_ref - i4time_now_gg() .lt. 1e6)then  ! present/past
           l_require_all_fields = .true.
+        elseif(i4time_ref - i4time_now_gg() .gt. 75e6)then ! >2.5y future 
+          l_require_all_fields = .false.                   ! water only
+          l_test_cloud = .false.
+          l_water_world = .true.
         elseif(i4time_ref - i4time_now_gg() .gt. 45e6)then ! >1.5y future
-          l_require_all_fields = .false.
+          l_require_all_fields = .false.                   ! test clouds
           l_test_cloud = .true.
         else                                               ! >10d future
           l_require_all_fields = .false.
@@ -773,7 +778,7 @@
               if(topo(i,j) .gt. 2000. .and. topo(i,j) .le. 3500.)then
                 snowalb = snow_cover(i,j) * 0.5
               else
-                snowalb = snow_cover(i,j) * 0.8
+                snowalb = snow_cover(i,j) * 0.6
               endif
               do ic = 1,3
 !               topo_albedo_2d(ic,i,j) = 
@@ -1032,7 +1037,7 @@
 
           exposure = density
 
-          if(.false.)then ! water world experimental simulation
+          if(l_water_world)then ! water world experimental simulation
             land_frac = 0.
             snow_cover = 0.
             topo = 0.
