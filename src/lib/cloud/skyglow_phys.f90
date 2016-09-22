@@ -9,7 +9,7 @@
                    ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir  &! I
                    ,aod_ref,aero_scaleht,dist_2_topo               &! I
                    ,htmsl,redp_lvl,horz_dep,eobsl                  &! I
-                   ,aod_ill,aod_2_topo,aod_tot                     &! I
+                   ,aod_ill,aod_2_topo,aod_tot,ext_g               &! I
                    ,l_solar_eclipse,i4time,rlat,rlon               &! I
                    ,clear_radf_c,ag_2d                             &! I
                    ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a   &! O
@@ -20,7 +20,7 @@
 
         include 'trigd.inc'
 
-        use mem_namelist, ONLY: fcterm, aod_bin, aod_asy, r_missing_data
+        use mem_namelist, ONLY: fcterm, aod_bin, aod_asy, ssa, r_missing_data
         use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! I
 
 !       Statement Functions
@@ -42,7 +42,7 @@
         linecylp(xcos,ycos,x1,r) = (-(2.*xcos*x1) + sqrt((2.*xcos*x1)**2 - 4. * (xcos**2 + ycos**2) * (x1**2 - r**2))) &
                                  /  (2. * (xcos**2 + ycos**2))
 
-        include 'rad.inc'
+        include 'rad_nodata.inc'
 
         cosp(b,x) = (1. + b/2.) * cosd(x/2)**b
         dhg_gterm(pha,g) = 1. / (1. + g**2 - 2.*g*cosd(pha))**1.5
@@ -126,15 +126,15 @@
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
         sfc_alb = 0.15  ! pass this in and account for snow cover?
-        ssa = 0.90
+!       ssa = 0.90
 
-        aod_bin(1) = .000
-        aod_bin(2) = .987
-        aod_bin(3) = .013
+!       aod_bin(1) = .000
+!       aod_bin(2) = .987
+!       aod_bin(3) = .013
 
-        aod_asy(1) =  .75
-        aod_asy(2) =  .70
-        aod_asy(3) = -.65
+!       aod_asy(1) =  .75
+!       aod_asy(2) =  .70
+!       aod_asy(3) = -.65
 
 !       Now read via namelist
 !       fcterm = 0.09 ! range from 0.00 to 0.09 (large aerosol population)
@@ -353,7 +353,7 @@
              endif
              call get_clr_src_dir(sol_alt,altray,ext_g(ic), &
                 od_g_vert,od_a_vert,ext_ha(ic), &
-                htmsl,ssa,ag/ag_90,ao,aa_o_aa_90, &
+                htmsl,ssa(ic),ag/ag_90,ao,aa_o_aa_90, &
                 aod_ref,aero_refht,aero_scaleht, &
                 ag_s/ag_90,aa_s_o_aa_90,ic,idebug, &
                 istart,iend, &
@@ -557,7 +557,7 @@
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
                   altray,view_azi_deg, &
                   ext_g(ic),od_g_vert,od_o_msl,od_o_vert, &
-                  od_a_vert,ext_ha(ic),htmsl,ssa, &
+                  od_a_vert,ext_ha(ic),htmsl,ssa(ic), &
                   ag/ag_90,ao,aa_o_aa_90, &
                   aod_ref,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
@@ -995,7 +995,7 @@
                      altray,view_azi_deg, &
                      ext_g(ic),od_g_vert,od_o_msl,od_a_vert, &          ! I
                      htmsl,dist_2_topo(ialt,jazi), &
-                     ssa,ag/ag_90,aa_o_aa_90, &
+                     ssa(ic),ag/ag_90,aa_o_aa_90, &
                      aod_ref,aero_refht,aero_scaleht, &                 ! I
                      ags_a,aas_a, &                                     ! I
                      isolalt_lo,isolalt_hi,ic,idebug_topo, &
@@ -1039,7 +1039,7 @@
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
                        ,clear_radf_c(ic,ialt,jazi),sumi_act(ic),hg2t &
-                       ,aodf,aodfo,ssa,clear_rad_topo      
+                       ,aodf,aodfo,ssa(ic),clear_rad_topo      
 91                  format('elg/ig/rayg/radf/ia/hg2t/aodf/aodfo/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,4f9.4,f7.2,3x,f12.0)
                   endif
 
