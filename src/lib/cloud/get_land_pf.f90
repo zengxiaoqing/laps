@@ -7,7 +7,7 @@
                              ,sol_alt,sol_azi,nsp,airmass_2_topo &      ! I
                              ,idebug_a,ni,nj,i4time,rlat,rlon,htmsl &   ! I
                              ,topo_lat,topo_lon &                       ! I
-                             ,pf_land,emis_ang_a)                       ! O
+                             ,pf_land,cld_brdf,emis_ang_a)              ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius
         use cloud_rad, ONLY: ghi_zen_toa, zen_kt
@@ -75,7 +75,8 @@
 
         write(6,11)
 11      format('  i    j  ic   alt_a    azi_a  azitolnd  tsolazi azidiffg', &
-               '  ampl_l    fland    fsnow   fwater   phland   phsnow   phwater    ph1    radfrac   dst2topo  gndarc  toposalt emis_ang  specang    alb') 
+               '  ampl_l    fland    fsnow   fwater   phland   phsnow   ', &
+               'phwater    ph1    radfrac   dst2topo  gndarc  toposalt emis_ang  specang    alb    cldbrdf') 
 
         do j = 1,nj
          do i = 1,ni
@@ -85,7 +86,7 @@
             azidiff = angdif(azi_a(i,j),sol_azi)
  
 !           Approximate specular reflection angle
-            gnd_arc = asind(sind(90.+alt_a(i,j))*dist_2_topo(i,j)/earth_radius)
+            gnd_arc = asind(sind(90d0+dble(alt_a(i,j)))*dist_2_topo(i,j)/dble(earth_radius))
             gnd_arc2 = gnd_arc * 2.
 
 !           'azidiffg' is computed from a ground reference point
@@ -190,14 +191,16 @@
               phland = arf_b * radfrac + arf_d * (1. - radfrac)  
 
 !             Snow
+!             http://www.sciencedirect.com/science/article/pii/S002240739900028X
               ampl_s = cosd(alt_a(i,j))
               fszen = sind(topo_solalt(i,j))
-              g2 = 0.45 * ampl_s ! previously 0.50 * ampl_s
+              g2 = 0.45 * ampl_s 
               hg_2param = 0.25 * 1.0 + 0.75 * hg_cyl(g2,azidiff)
-              brdf_szen = 0.7 + 0.3 * (2. * sind(alt_a(i,j)))
+              brdf_szen = 0.9 + 0.1 * (2. * sind(emis_ang))
               arf_b = hg_2param * (1.-fszen) + brdf_szen * fszen
               arf_d = 1.0
               phsnow = arf_b * radfrac + arf_d * (1. - radfrac)  
+              cld_brdf(ic,i,j) = 1.0 ! arf_b
 
 !             Water
               g = 0.6 * radfrac
@@ -225,22 +228,24 @@
 !               if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. (ph1 .lt. 0. .and. dist_2_topo(i,j) .gt. 0.) .OR.&
 !                ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
 !                         .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) .OR. &
-                if( (i .eq. (i/50)*50 .AND. j .eq. nj/2) .OR. &
+!               if( (i .eq. (i/40)*40 .AND. j .eq. nj/2) .OR. &
+                if( ((i .eq. (i/40)*40 .OR. i .ge. 480 .and. i .le. 490) .AND. (j .eq. 1 .OR. j .eq. nj/2) ) .OR. &
                        (alt_a(i,j) .eq. -90. .and. j .eq. 64) )then ! nadir
-                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j)
-1                 format(i4,i5,i2,5f9.2,9f9.4,f11.0,5f9.2)
+                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j),cld_brdf(2,i,j)
+1                 format(i4,i5,i2,f9.3,4f9.2,9f9.4,f11.0,5f9.2,f9.3)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
 111               format('   antisolar alt/azi/azeff/elg/elg_a/eff',6f9.2)
 !                 if(abs(emis_ang - emis_ang_a(i,j)) .gt. 0.1 .AND. emis_ang_a(i,j) .gt. 0.)then
-                  if(emis_ang_a(i,j) .gt. 0.)then
+                  if(emis_ang .gt. 0.)then
                     write(6,112)emis_ang,emis_ang_a(i,j),azi_fm_lnd_a(i,j),topo_lat(i,j),topo_lon(i,j),topo_solalt(i,j),topo_solazi(i,j),topo_lf(i,j),topo_sc(i,j)
 112                 format('   EMISANG INFO:',9f9.3)
                   endif
+                  write(6,113)ampl_s,fszen,g2,hg_2param,brdf_szen,arf_b 
+113               format('   SNOW BRDF:',6f9.3)
                 endif
               endif
 
               pf_land(ic,i,j) = ph1
-              cld_brdf(ic,i,j) = phsnow
 
             enddo ! ic
 
@@ -253,6 +258,8 @@
 3               format(' gtic',3e12.4,'  dtic',3e12.4,'  btic',3e12.4,i3)
                 iwrite = iwrite + 1
             endif
+
+            emis_ang_a(i,j) = emis_ang ! more accurate than from 'sat_geom'
 
          enddo ! i (altitude)
 
