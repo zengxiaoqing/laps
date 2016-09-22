@@ -335,6 +335,8 @@
 
         subroutine correct_near(radii,phase_angle_deg,mag_orig,mag_new)       
 
+        include 'trigd.inc'
+
         Implicit real*8(a-z)
 
         include '../../include/astparms.for'
