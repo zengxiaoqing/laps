@@ -9,6 +9,9 @@ c
        do i=1,nx_l
          if(data(i,j).ne.r_missing_data)goto 10
 c        if(data(i,j).gt.0. .and. data(i,j).lt.bad) go to 10
+         if(icnt .ge. -10)then
+           write(6,*)'check missing data on model grid at',i,j
+         endif
          icnt = icnt - 1
 10       enddo !i
        enddo !j
