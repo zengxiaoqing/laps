@@ -938,8 +938,8 @@
      $LAPS_SRC_ROOT, $LAPSINSTALLROOT, and $LAPS_DATA_ROOT, however, -s, -i, 
      and -d command-line inputs override those environment variables as 
      necessary depending on user needs.  The -t command-line input specifies the 
-     domain template directory and the script saves the log/lapsprd history if 
-     command line switch '-c' is not used; or, completely removes 
+     domain (input) template directory and the script saves the log/lapsprd 
+     history if command line switch '-c' is not used; or, completely removes 
      $LAPS_DATA_ROOT, then does a 'mkdir $LAPS_DATAROOT' if '-c' is supplied. 
      The '-w laps' is always required. The window script can be run manually 
      when configuring or reconfiguring localizations. Window copies the domain 
@@ -947,7 +947,8 @@
      subdirectory which, in turn, are merged with the full namelists by script 
      localize_domain.pl. Recall that $LAPSINSTALLROOT contains bin/ and etc/ 
      while $LAPS_SRC_ROOT contains the untarred full namelists from the 
-     repository.  
+     repository. In summary the template parameters are an input of the 
+     localization while the output appears in $LAPS_DATA_ROOT.
 
      In the event that $LAPS_SRC_ROOT does not exist, a data/ subdirectory 
      containing static/ and cdl/ must be available for use by 
