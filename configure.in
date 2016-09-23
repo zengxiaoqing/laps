@@ -339,7 +339,7 @@ $FC
 EOF
 if test $? -eq 0
 then
-    FFLAGS="$FFLAGS -fd-lines-as-comments"
+    FFLAGS="$FFLAGS -fd-lines-as-comments -ffree-line-length-none"
 fi
 
 dnl  Check to see if we are running the lahey
