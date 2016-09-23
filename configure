@@ -1605,7 +1605,7 @@ $FC
 EOF
 if test $? -eq 0
 then
-    FFLAGS="$FFLAGS -fd-lines-as-comments"
+    FFLAGS="$FFLAGS -fd-lines-as-comments -ffree-line-length-none"
 fi
 
 
@@ -1691,23 +1691,9 @@ EOF
      nameform3=`strings -a confftest.o | grep init_fop   | head -1`
      nameform4=`strings -a confftest.o | grep init_fop__ | head -1`
     fi
-    /bin/rm -f confftest.f confftest.o
-    if test -n "$nameform4" ; then
-	echo "$ac_t""Fortran externals are lower case and have 1 or 2 trailing underscores" 1>&6
-	WDEF=-DFORTRANDOUBLEUNDERSCORE
-    elif test -n "$nameform1" ; then
+#   /bin/rm -f confftest.f confftest.o
         echo "$ac_t""Fortran externals have a trailing underscore and are lowercase" 1>&6
 	WDEF=-DFORTRANUNDERSCORE
-    elif test -n "$nameform2" ; then
-	echo "$ac_t""Fortran externals are uppercase" 1>&6
-	WDEF=-DFORTRANCAPS 
-    elif test -n "$nameform3" ; then
-	echo "$ac_t""Fortran externals are lower case" 1>&6
-	WDEF=-DFORTRANNOUNDERSCORE 
-    else
-	{ echo "configure: error: Unable to determine the form of Fortran external names
-          Make sure that the compiler $FC can be run on this system" 1>&2; exit 1; }
-    fi
     fi
 CPPFLAGS="$CPPFLAGS $WDEF"
 
