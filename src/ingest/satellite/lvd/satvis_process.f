@@ -70,6 +70,7 @@ c       Notes:
 c       This program processes vis satellite data from ISPAN database
 c
 c       Variables:
+c       image_vis        RA       I       Visible (on satellite grid)
 c       laps_vis         RA       O       Visible (raw)
 c       vis_norm         RA       O       Visible (normalized)
 c       albedo           RA       O       Albedo (0.0 -- 1.0)
@@ -114,7 +115,7 @@ c
        real image_vis(n_vis_elem,n_vis_lines)
        real albedo_max,albedo_min
        real rspacing_dum
-       real r_missing_data
+       real r_missing_data,rmin,rmax
 c
        integer istatus_a
        integer istatus_l
@@ -182,14 +183,22 @@ c
        write(6,*)
        write(6,*)' Processing visible satellite data.'
        write(6,*)' ----------------------------------'
+
+       call array_range(image_vis,n_vis_elem,n_vis_lines,rmin,rmax
+     1                 ,r_missing_data)
+       write(6,*)'range of non-missing vis on sat grid is',rmin,rmax
+       write(6,*)'vis sat grid (center) = '
+     1          ,image_vis(n_vis_elem/2,n_vis_lines/2)
+
+
        call satdat2laps_vis(
      &                  r_grid_ratio,
      &                  r_llij_lut_ri,
      &                  r_llij_lut_rj,
      &                  imax,jmax,
      &                  n_vis_lines,n_vis_elem, ! image_vis array dimensions
-     &                  image_vis,
-     &                  laps_vis_raw,
+     &                  image_vis,              ! satellite grid
+     &                  laps_vis_raw,           ! model grid
      &                  istatus_v)
        if(istatus_v .ne. 1) then
           write(*,921)istatus_v
@@ -200,19 +209,25 @@ c
 c
        call check(laps_vis_raw,r_missing_data,istatus_v,imax,jmax)
        if(istatus_v .lt. 0) then
-          write(6,*)'Bad visible counts detected'
+          write(6,*)'Bad vis counts detected in process_vis_satellite'
           write(6,916) istatus_v
           istatus(1) = istatus_v
  916      format(' +++ WARNING. Visible status = ',i8)
        else
-          write(6,*)'All laps vis data checked out ok'
+          write(6,*)
+     1         'All vis data ok on model grid (process_vis_satellite)'         
        endif
+
+       call array_range(laps_vis_raw,imax,jmax,rmin,rmax,r_missing_data)
+       write(6,*)' range of non-missing vis on model grid is',rmin,rmax
 
        do j=1,jmax
        do i=1,imax
           laps_vis_norm(i,j)=laps_vis_raw(i,j)
        enddo
        enddo
+
+       write(6,*)'vis mdl grid (center) = ',laps_vis_raw(imax/2,jmax/2)
 c
 c.....       Normalize the VIS data.
 c
