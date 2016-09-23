@@ -35,8 +35,8 @@ cdis
      &                  r_llij_lut_rj,
      &                  imax,jmax,
      &                  line_dim,elem_dim, ! image_vis array dimensions
-     &                  image_vis,
-     &                  sv,
+     &                  image_vis,         ! satellite grid
+     &                  sv,                ! model grid
      &                  istatus)
 c
 c.....       This is the Chandran version returing visible values
@@ -57,9 +57,9 @@ c                                          as function of input/output ratio
        Integer imax, jmax
        Integer line_dim, elem_dim
 
-       Real sv(IMAX,JMAX)
+       Real sv(IMAX,JMAX)                  ! model grid
        Real t_array(max_line*max_elem)
-       Real image_vis(elem_dim,line_dim)
+       Real image_vis(elem_dim,line_dim)   ! satellite grid
        Real r_llij_lut_ri(imax,jmax)
        Real r_llij_lut_rj(imax,jmax)
        Real elem_mn,elem_mx
