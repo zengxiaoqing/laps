@@ -864,11 +864,24 @@ c ------------------------------------------------------------
                    if( (csatid.ne.'gmssat'.and.csatid.ne.'meteos').and.
      &                 (csattype.eq.'gvr'.or.csattype.eq.'gwc') )then
 
+                       call array_range(image_vis(1,1,i)
+     1                                 ,n_vis_elem,n_vis_lines,rmin,rmax
+     1                                 ,r_missing_data)
+                       write(6,*)' image_vis (non-missing) range 1 is '
+     1                          ,rmin,rmax
+
                        call btemp_convert(n_vis_elem,n_vis_lines,
      &                          vis_cnt_to_cnt_lut,
      &                          r_missing_data,
      &                          image_vis(1,1,i))
                        write(*,*)'VIS data converted - cnt-to-cnt lut'
+
+                       call array_range(image_vis(1,1,i)
+     1                                 ,n_vis_elem,n_vis_lines,rmin,rmax
+     1                                 ,r_missing_data)
+                       write(6,*)' image_vis (non-missing) range 2 is '
+     1                          ,rmin,rmax
+
                    else
                        write(*,*)'Not converting ',csattype,' vis data'
                    endif
