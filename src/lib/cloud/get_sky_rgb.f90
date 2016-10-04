@@ -327,7 +327,7 @@
             moon_cond_clr = 0
         endif
         if(htmsl .gt. 1000e3)then
-            azid1 = 0. ; azid2 = 90. ! high custom
+            azid1 = 96.6 ; azid2 = 96.6 ! high custom (South Am. tip)
         endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2
@@ -1000,6 +1000,10 @@
           call nl_to_RGB(cld_rad(:),glwmid,contrast & 
                         ,128.,0,cld_red,cld_grn,cld_blu)
 
+!         Initialize
+          glow_nt = 0.    
+          glow_moon_s = 0.
+
 !         Obtain brightness (glow) of clear sky
           if(sol_alt .gt. twi_0)then ! Daylight to intermediate twilight
                                      ! from skyglow routine
@@ -1155,7 +1159,7 @@
 
           if(idebug .eq. 1)then
               write(6,91)i,j,idebug,elong_a(i,j),glow_air,glow_nt,glow_moon_s,glow_stars(2,i,j),glow_tot,clear_rad_c(:,i,j)
-91            format('   glow: elg/air/nt/moon/stars/tot/rad = ',3i5,f7.1,5f9.3,3f10.0)
+91            format('   glow: elg/air/nt/moon/stars/tot/rad = ',3i5,f7.1,5f9.3,3f11.0)
           endif
 
           do ic = 1,nc 
@@ -1577,12 +1581,12 @@
 !       Consider max RGB values where elong > 5 degrees
 
 !       Add bounds to rgb values
-        do j = 1,nj
-        do i = 1,ni
-          final_scaling = 1.0
-          sky_rgb(:,i,j) = max(min(sky_rgb(:,i,j)*final_scaling,255.),0.)
-        enddo ! i
-        enddo ! j
+!       do j = 1,nj
+!       do i = 1,ni
+!         final_scaling = 1.0
+!         sky_rgb(:,i,j) = max(min(sky_rgb(:,i,j)*final_scaling,255.),0.)
+!       enddo ! i
+!       enddo ! j
 
 !       Convert nl values to spectral radiance
 !       sky_sprad = f(sky_cyl_nl)
