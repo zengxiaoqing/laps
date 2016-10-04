@@ -8,7 +8,9 @@
 
         include 'trigd.inc'
 
-        angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
+        cosunitvectors(a1,a2,a3,b1,b2,b3) = min(max(a1*b1+a2*b2+a3*b3,-1.),+1.)
+        angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(cosunitvectors(a1,a2,a3,b1,b2,b3))
+
         real elong(minalt:maxalt,minazi:maxazi)
         real view_alt(minalt:maxalt,minazi:maxazi)
         real view_az(minalt:maxalt,minazi:maxazi)
@@ -32,7 +34,7 @@
           yo = cosd(altray) * sind(view_azi_deg)
           zo = sind(altray)
 
-          elong(ialt,jazi) = angleunitvectors(xs,ys,zs,xo,yo,zo)
+          elong(ialt,jazi) = angleunitvectors(xs,ys,zs,xo,yo,zo)    
 
          enddo ! jazi
         enddo ! ialt
