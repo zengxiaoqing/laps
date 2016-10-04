@@ -106,6 +106,7 @@
 
         real, allocatable, dimension(:,:) :: alt_a_roll
         real, allocatable, dimension(:,:) :: azi_a_roll
+        real, allocatable, dimension(:,:) :: cloud_od
 
         real alt_a_polar(ni_polar,nj_polar)
         real azi_a_polar(ni_polar,nj_polar)
@@ -872,6 +873,7 @@
 
           allocate(alt_a_roll(minalt:maxalt,minazi:maxazi))
           allocate(azi_a_roll(minalt:maxalt,minazi:maxazi))
+          allocate(cloud_od(minalt:maxalt,minazi:maxazi))
           allocate(sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
           allocate(isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
 
@@ -1073,6 +1075,7 @@
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary                                ! I
+     1                     ,cloud_od                                ! O
      1                     ,sky_rgb_cyl)                            ! O
 
           else
@@ -1197,6 +1200,7 @@
 
           deallocate(alt_a_roll)
           deallocate(azi_a_roll)
+          deallocate(cloud_od)
           deallocate(sky_rgb_cyl)
           deallocate(isky_rgb_cyl)
 
