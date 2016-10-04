@@ -89,9 +89,9 @@
         aod_bin(2) = .987
         aod_bin(3) = .013
 
-        aod_asy(1) =  .75
-        aod_asy(2) =  .70
-        aod_asy(3) = -.65
+!       aod_asy(1) =  .75
+!       aod_asy(2) =  .70
+!       aod_asy(3) = -.65
 
         patm_ray = patm
 
