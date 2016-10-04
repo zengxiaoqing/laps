@@ -2,6 +2,7 @@
        
         subroutine get_starglow(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi,rlat,rlon,alt_scale,azi_scale,horz_dep,l_zod,glow_stars)
 
+        include 'trigd.inc'
         include 'rad.inc'
 
 !       http://arxiv.org/pdf/astro-ph/9706111.pdf
@@ -425,6 +426,7 @@
                                ,alt_obj2,azi_obj2,emag &
                                ,diam_deg,horz_dep,glow_obj)
 
+        include 'trigd.inc'
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl
 
         real alt_obj_in ! I (true altitude uncorrected for refraction)
