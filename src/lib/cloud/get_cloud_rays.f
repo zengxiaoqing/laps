@@ -521,7 +521,7 @@
                 do ic = 1,nc
                   bni_clr(ic) = obj_bri * ecl 
      1                        * trans(airmass_g * ext_g(ic))
-                enddo
+                enddo ! ic
                 bnic_2d(:,ii,jj) = bni_clr(:) * frac_dir   
 
                 bhi_clr(:) = bni_clr(:) * sind(obj_alt(ii,jj))
@@ -624,7 +624,7 @@
                                       ! Preserve sfc sky glow section in red channel
             do k = 1,nk
               transm_4d(:,:,k,2) = transm_4d(:,:,k,2) * obj_bri_a(:,:) ! correct for sun/moon brightness
-            enddo 
+            enddo ! k
             write(6,*)
      1    ' transm_4d red is sky brightness, green is moon brightness'
             write(6,*)' Range of transm_4d(green channel) = '
@@ -696,7 +696,7 @@
                 write(6,*)' Start at sfc, ksfc = ',ksfc
                 rksfc = float(ksfc) + frach
             endif
-          enddo
+          enddo ! k
           rkstart = rksfc
           patm = pres_3d(i,j,ksfc) / 101325.
         else ! start aloft
@@ -711,7 +711,7 @@
                 kstart = k
                 rkstart = float(kstart) + frach
               endif
-            enddo
+            enddo ! k
             patm = (  pres_3d(i,j,kstart)   * fracl 
      1              + pres_3d(i,j,kstart+1) * frach ) / 101325.
           else ! set up extended k values above the domain
@@ -1293,7 +1293,7 @@
                           pr_h = (pres_1d(k)*(1.-frach)) 
      1                         + (pres_1d(k+1)*frach)
                       endif
-                    enddo
+                    enddo ! k
                   endif
 
                   rk = rk_h
@@ -2274,8 +2274,8 @@
      1                           ,cloud_rad_c(1,ialt,jazi)
  202        format(' cloud_rad_c before alt interp:',2i5,2f9.2,f9.3)
           endif
-        enddo 
-        enddo
+        enddo ! jazi
+        enddo ! ialt
 
 !       We normally fill missing rings above 20 degrees 
         call get_idx(20.,minalt,alt_scale,ialt_min)
@@ -2466,8 +2466,8 @@
      1                           ,cloud_rad_c(1,ialt,jazi)
  203        format(' cloud_rad_c after interp:',2i5,2f9.2,f9.3)
           endif
-        enddo 
-        enddo
+        enddo ! jazi 
+        enddo ! ialt
 
         if(int(rkstart)+1 .le. nk)then
             transm_obs = transm_3d(i,j,int(rkstart)+1)
@@ -2514,6 +2514,8 @@
 
         subroutine get_topo_info(alt,htmsl,earth_radius,idebug
      1                          ,alt_norm,dist_to_topo)
+
+        include 'trigd.inc'
 
         real alt                  ! I elevation angle
         real htmsl                ! I observer height MSL
