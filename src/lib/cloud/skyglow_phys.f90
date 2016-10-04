@@ -52,7 +52,7 @@
 
         real twi_trans_c(nc)           ! transmissivity
 
-        real hg2d(nc), alphav_g, alphav_a ! hg2(nc)
+        real hg2d(nc), alphav_g, alphav_a, hg2(nc), hg2t(nc)
         real srcdir_90(nc),srcdir(nc),clear_int_c(nc)
         real sumi_gc(nc),sumi_ac(nc)
         real sumi_gct(nc),sumi_act(nc)
@@ -94,9 +94,6 @@
         real od_g_slant_a(nc,minalt:maxalt)
         real od_o_slant_a(nc,minalt:maxalt)
         real od_a_slant_a(nc,minalt:maxalt)
-
-        parameter (nsc = 3)
-        real aod_asy_eff(nsc) ! ,nc (add nc dimension throughout)
 
         logical l_solar_eclipse, l_dlow, l_dlow2, l_topo_a(minazi:maxazi)
 
@@ -424,15 +421,6 @@
 
 !        Determine effective asymmetry parameter from multiple scattering
 !        http://www.arm.gov/publications/proceedings/conf15/extended_abs/sakerin_sm.pdf
-         do isc = 1,nsc
-           if(aod_asy(isc) .gt. 0.)then
-              aod_asy_eff(isc) = aod_asy(isc) ** scatter_order
-           elseif(aod_asy(isc) .lt. 0.)then
-              aod_asy_eff(isc) = -(abs(aod_asy(isc)) ** scatter_order)
-           else
-              aod_asy_eff(isc) = 0. 
-           endif
-         enddo ! isc
 
 !        cosp_frac = max(1.-scatter_order,0.)
 
@@ -753,37 +741,20 @@
 !           day_int = 3e9 / 10.**(0.4 * sb_corr) * ecl_intd
 
 !           HG illumination
-            if(.false.)then
-!             do ic = 1,nc
-              hg2 = aod_bin(1) * hg(aod_asy_eff(1),elong(ialt,jazi)) &
-                  + aod_bin(2) * hg(aod_asy_eff(2),elong(ialt,jazi)) &
-                  + aod_bin(3) * hg(aod_asy_eff(3),elong(ialt,jazi)) 
-!             enddo ! ic
-
-              hg2t = hg2
-
-!             non-topo phase function with variable scatter order
-              fc = fcterm2 * 0.5**(scatter_order-1.0)
-              gc = 2300. / scatter_order**2
-              hg2 = (1.-fc) * hg2 + fc * cosp(gc,elong(ialt,jazi))
-!             hg2(:) = (1.-fc) * hg2(:) + fc * cosp(gc,elong(ialt,jazi))
-
-!             topo phase function assumes scatter order is 1
-              fc = fcterm2
-              hg2t = (1.-fc) * hg2t + fc * cosp(2300.,elong(ialt,jazi))
-
-            else
-              fb = 0.55**scatter_order
-!             g1 = 0.58**scatter_order
-              g1 = 0.45**scatter_order
-              g2 = 0.962**scatter_order
-              hg2 = dhg2(elong(ialt,jazi),fb,fcterm2)
+            do ic = 1,nc
+!             Check assignments in 'mem_namelist.f90'
+!             fb = 0.55**scatter_order  ! aod_asy(3,ic)
+!             g1 = 0.45**scatter_order  ! aod_asy(2,ic)
+!             g2 = 0.962**scatter_order ! aod_asy(1,ic)
+              fb = aod_asy(3,ic)**scatter_order
+              g1 = aod_asy(2,ic)**scatter_order
+              g2 = aod_asy(1,ic)**scatter_order
+              hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2)
 
 !             topo phase function assumes scatter order is non-topo 
 !             value (for now)
-              hg2t = hg2
-
-            endif
+              hg2t(ic) = hg2(ic)
+            enddo 
 
             if(aod_ray(ialt,jazi) .gt. 0.)then
                 aod_dir_rat = aod_ray_dir(ialt,jazi) / aod_ray(ialt,jazi)
@@ -799,7 +770,7 @@
             else
               do ic = 1,nc
                 arg = aod_dir_rat * ecl_dir_rat(ic)
-                hg2d(ic) = (hg2 * arg) + (0.5 * (1.0 - arg)) 
+                hg2d(ic) = (hg2(ic) * arg) + (0.5 * (1.0 - arg)) 
               enddo ! ic
             endif
 
@@ -847,10 +818,10 @@
                      hg2d(ic)       * sumi_ac(ic) * aodf   )
 
                 if(idebug .ge. 1 .AND. &
-                                    (ic .eq. icd .or. altray .eq. 90.))then
+                                    (ic .eq. ic  .or. altray .eq. 90.))then
                   write(6,71)ic,day_int,elong(ialt,jazi) &
                       ,sumi_gc(ic),sumi_ac(ic),gasf,aodf,aodfo &
-                      ,rayleigh_pfunc,hg2,aod_dir_rat,hg2d(ic) &
+                      ,rayleigh_pfunc,hg2(ic),aod_dir_rat,hg2d(ic) &
                       ,clear_rad_c(ic,ialt,jazi)
 71                format('day_int/elong/sumi_g/sumi_a/gasf/aodf/aodfo', &
                          '/rayleigh/hg2/aodr/hg2d/clrrd4', &
@@ -898,7 +869,7 @@
 
                 if(idebug .ge. 1 .and. ic .eq. icd)then
                   write(6,72)day_int,elong(ialt,jazi),airmass_g,brtf(airmass_g,od_per_am) &
-                            ,rayleigh,hg2,hg2d(ic),sumi_gc(ic),sumi_ac(ic),clear_rad_c(2,ialt,jazi)
+                            ,rayleigh,hg2(ic),hg2d(ic),sumi_gc(ic),sumi_ac(ic),clear_rad_c(2,ialt,jazi)
 72                format('day_int/elong/ag/brtf/rayleigh', &
                          '/hg2/hg2d/sumi/clrrd3',f12.0,6f8.3,2f10.5,f12.0)      
                 endif
@@ -1024,8 +995,8 @@
 
                   clear_rad_topo = day_int * &
                     (sumi_gct(ic) * rayleigh_gnd * clear_radf_c(ic,ialt,jazi) + &
-!                    sumi_act(ic) * hg2t         * aodf * ssa) ! take out ssa?
-                     sumi_act(ic) * hg2t         * aodf) 
+!                    sumi_act(ic) * hg2t(ic)     * aodf * ssa) ! take out ssa?
+                     sumi_act(ic) * hg2t(ic)     * aodf) 
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,85)ialt,jazi,ic,clear_rad_topo,sumi_gct(ic),sumi_act(ic)
 85                  format(' computed clear_rad_topo =  ',i7,i5,i4,3e15.7)
@@ -1038,7 +1009,7 @@
 
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
-                       ,clear_radf_c(ic,ialt,jazi),sumi_act(ic),hg2t &
+                       ,clear_radf_c(ic,ialt,jazi),sumi_act(ic),hg2t(ic) &
                        ,aodf,aodfo,ssa(ic),clear_rad_topo      
 91                  format('elg/ig/rayg/radf/ia/hg2t/aodf/aodfo/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,4f9.4,f7.2,3x,f12.0)
                   endif
@@ -1058,7 +1029,7 @@
 83                format(&
      'day_int/elg/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,f7.2,2f7.3,f8.3,2f7.3,1x,2f7.3,1x,2f8.4,f12.0)      
-                  write(6,84)altray,view_azi_deg,am_sun,aascat,scatter_order,hg2,hg2d(ic),gasfrac,aod_ill(ialt,jazi) & 
+                  write(6,84)altray,view_azi_deg,am_sun,aascat,scatter_order,hg2(ic),hg2d(ic),gasfrac,aod_ill(ialt,jazi) & 
                             ,aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi),aod_dir_rat
 84                format('altaz/amsun/aasc/sco/hg2/hg2d/gasfrac/aodill/dir/ray/rat = ',2f8.2,5f9.4,2f10.6,3f7.3)                  
                   write(6,86)ag_2d(ialt,jazi),airmass_g,gasfrac
@@ -1210,6 +1181,8 @@
 
         subroutine get_ray_info(alt,htmsl,htsfc,earth_radius,alt_norm &
                                ,r_missing_data,dist_to_sfc)
+
+        include 'trigd.inc'
 
         real alt                  ! I elevation angle
         real htmsl                ! I observer height MSL
