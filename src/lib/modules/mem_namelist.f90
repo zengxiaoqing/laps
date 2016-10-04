@@ -28,7 +28,7 @@ include 'lapsparms.for'
         integer iverbose
         real    r_missing_data
         integer  MAX_RADARS
-        real aod,aod_bin(3),aod_asy(3),fcterm,aod_ha,ht_ha(4),ssa(3)
+        real aod,aod_bin(3),aod_asy(3,3),fcterm,aod_ha,ht_ha(4),ssa(3)
         real aero_scaleht
         real ref_base
         real ref_base_useable
@@ -373,9 +373,18 @@ elseif (namelist_name == 'lapsparms') then
 
 !  fraction of aerosols in each bin & asymmetry factor
 !  Factor of 2 back scatter increase from minimum, peak of 50
-   aod_bin(1) = 0.000   ;   aod_asy(1) = +0.75  ;   ssa(1) = .90
-   aod_bin(2) = 0.987   ;   aod_asy(2) = +0.70  ;   ssa(2) = .90
-   aod_bin(3) = 0.013   ;   aod_asy(3) = -0.65  ;   ssa(3) = .90  
+   aod_bin(1) = 0.000   ;   ssa(1) = .90
+   aod_bin(2) = 0.987   ;   ssa(2) = .90
+   aod_bin(3) = 0.013   ;   ssa(3) = .90  
+
+!  Coarse mode aerosols (rgb)
+   aod_asy(1,1) = +0.957 ; aod_asy(1,2) = +0.962 ; aod_asy(1,3) = +0.967
+
+!  Fine mode aerosols (rgb)
+   aod_asy(2,1) = +0.44  ; aod_asy(2,2) = +0.45  ; aod_asy(2,3) = +0.46 
+
+!  Backscattering aerosols
+   aod_asy(3,:) = +0.55 
 
 !  Factor of 10 back scatter increase from minimum
 !  aod_bin(1) = 0.70   ;   aod_asy(1) = +0.65  
