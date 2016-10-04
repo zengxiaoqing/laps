@@ -23,6 +23,7 @@
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary                                ! I
+     1                     ,cloud_od                                ! O
      1                     ,sky_rgb_cyl)                            ! O
 
         use mem_allsky
@@ -113,8 +114,16 @@
 
         iobs = nint(ri_obs)
         jobs = nint(rj_obs)
+
+        if(iobs .lt. 1 .or. iobs .gt. NX_L .OR. 
+     1     jobs .lt. 1 .or. jobs .gt. NY_L)then
+          write(6,*)' ERROR, viewpoint outside of domain',iobs,jobs
+          return
+        endif
+
         isound = iobs
         jsound = jobs
+
         swi_obs = swi_2d(iobs,jobs)
         write(6,*)' swi_2d at observer location = ',swi_obs
         eobsl = eobsc(iobs,jobs)
@@ -261,6 +270,8 @@
 
               write(6,*)' range of glow_stars (after) is',
      1             minval(glow_stars(2,:,:)),maxval(glow_stars(2,:,:))
+          else
+              glow_stars(:,:,:) = 0. ! initialize
           endif
 
           I4_elapsed = ishow_timer()
@@ -323,22 +334,22 @@
           if(l_binary .eqv. .false.)then
               write(6,*)' call get_sky_rgb with cyl data'
               if(htagl .ge. 1000e3)then                    ! High alt
-                corr1_a = 9.1             ! for high scattering angle
+                corr1_in = 9.1             ! for high scattering angle
               elseif(htagl .eq. 300.)then                  ! BAO
                 if(solar_alt .lt. 30.)then
-                  corr1_a = 9.2                            ! low sun
+                  corr1_in = 9.2                            ! low sun
                 elseif(solar_alt .gt. 60.)then
-                  corr1_a = 8.9                            ! high sun
+                  corr1_in = 8.9                            ! high sun
                 else
-                  corr1_a = 9.2 - (solar_alt-30.)*(0.3/30.)! med sun
+                  corr1_in = 9.2 - (solar_alt-30.)*(0.3/30.)! med sun
                 endif
               else
-                corr1_a = 9.0
+                corr1_in = 9.0
               endif
-              if(solar_alt .lt. 0.)corr1_a = 9.26 ! volcanic value
-              corr1_a = corr1_a ! - log10(exposure)
+              if(solar_alt .lt. 0.)corr1_in = 9.26 ! volcanic value
+              corr1_in = corr1_in ! - log10(exposure)
 
-              write(6,*)' corr1 in calc_allsky ',corr1_a
+              write(6,*)' corr1 in calc_allsky ',corr1_in
 
 !             This can be more accurate by using surface pressure
               patm_sfc = ztopsa(topo(isound,jsound)) / 1013.25
@@ -385,8 +396,17 @@
      1                    ,twi_0,horz_dep
      1                    ,solalt_limb_true
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
-     1                    ,corr1_a,exposure
-     1                    ,sky_rgb_cyl)   
+     1                    ,corr1_in,exposure
+     1                    ,sky_rgb_cyl)                                 ! O   
+
+!             Add bounds to rgb values
+              do j = minazi,maxazi
+              do i = minalt,maxalt
+                final_scaling = 1.0
+                sky_rgb_cyl(:,i,j) = 
+     1            max(min(sky_rgb_cyl(:,i,j)*final_scaling,255.),0.)
+              enddo ! i
+              enddo ! j
 
           else
               continue ! use cloud_od to drive categorical output
