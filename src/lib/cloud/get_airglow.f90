@@ -68,8 +68,10 @@
 
 !         if(ialt .eq. ni)then
           if(mod(alt,5.) .eq. 2.)then
-            write(6,5)alt,h,fracair,obs_glow_zen,airglow(2),glow_alt(2)
-5           format(' get_airglow: alt/h/fair/obsg/airg/glow alt',f9.2,f10.0,f9.3,3f10.0)
+!           write(6,5)alt,h,fracair,obs_glow_zen,airglow(2),glow_alt(2)
+!5          format(' get_airglow: alt/h/fair/obsg/airg/glow alt',f9.2,f10.0,f9.3,3f10.0)
+            write(6,5)alt,obs_glow_zen,airglow(2),glow_alt(2)
+5           format(' get_airglow: alt/obsg/airg/glow alt',f9.2,3f10.0)
 !           if(htmsl .ge. top_lyr)then ! above airglow
 !             write(6,*)'   horz_dep_airglow = ',horz_dep_airglow
 !           endif
