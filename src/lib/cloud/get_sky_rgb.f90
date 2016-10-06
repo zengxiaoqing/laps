@@ -131,6 +131,7 @@
         clear_rad_2nd_c(:,:,:) = 0. ! set (initialize) for testing
         ave_rad_toa_c(:,:,:) = 0.   ! initialize
         day_int = day_int0 ! via includes
+        topo_visibility = 0.
 
         angstrom_exp_a = 2.4 - (fcterm * 15.)
         do ic = 1,nc
@@ -543,7 +544,7 @@
             write(6,*)' range of azi_a = ',minval(azi_a),maxval(azi_a)
                  
             isolalt_lo=-91; isolalt_hi=+91
-            write(6,*)' call skyglow_phys for daytime or solalt > twi_0:'
+            write(6,*)' call skyglow_phys for daytime or sol_alt > twi_0:'
 
 !           Introduced airmass_2_topo effect in ag_2d
             call skyglow_phys(minalt,maxalt,1 &                        ! I
@@ -842,17 +843,17 @@
 !         observer is very high
           iradsec = 0
           if(solalt_ref .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
-              if(solalt_ref .lt. 0. .and. abs(solalt_ref-solalt) .gt. .01)then
+              if(solalt_ref .lt. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
                   rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * 3e9 / 1300. * 7.0
                   iradsec = 1
-              elseif(solalt_ref .ge. 0. .and. abs(solalt_ref-solalt) .gt. .01)then
+              elseif(solalt_ref .ge. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
 !                 sb_corr = 2.0 * (1.0 - (sind(solalt_ref)**0.5)) 
                   sb_corr = 2.7 * (1.0 - (sind(solalt_ref+1.2)**0.5)) 
 !                 sb_corr = 2.0 * (1.0 - (sind(solalt_ref+1.2)**0.5)) 
                   rad_sec_cld(:) = (day_int * ext_g(:) * patm_sfc * 2.0 * 0.5) / 10.**(0.4*sb_corr)
                   iradsec = 2
               endif
-              if(solalt .le. 0.)then ! between shallow twilight and 0.
+              if(sol_alt .le. 0.)then ! between shallow twilight and 0.
                   where(sph_rad_ave .ne. r_missing_data)rad_sec_cld = sph_rad_ave
                   iradsec = iradsec + 10
               endif
@@ -922,7 +923,7 @@
                   .OR. (i .eq. isun .and. j .eq. jsun) )then
                if(r_cloud_3d(i,j) .gt. 0. .or. abs(alt_a(i,j)).eq.90.0)then
                   htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
-                  write(6,41)iradsec,solalt_ref,solalt,twi_alt,htmin_view
+                  write(6,41)iradsec,solalt_ref,sol_alt,twi_alt,htmin_view
  41               format(' irs/solalt_ref/solalt/twi_alt/htmin',i3,3f9.4,f11.0)
                   write(6,42)i,j,elong_a(i,j),cld_brdf(2,i,j),pf_top(2),rintensity(2)&
                    ,trans_c(2),r_cloud_rad(i,j) &
