@@ -504,6 +504,8 @@
         endif
 
         radius_deg = diam_deg / 2.0
+
+        iwrite = 0
     
         do ialt = minalt,maxalt
 
@@ -617,11 +619,19 @@
                       ricen = (azi_obj-azig)/azi_scale
                       rjcen = (alt_obj-altg)/alt_scale
                       aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
-                      write(6,87)radius_deg,alt_scale,radius_pix
-87                    format(' call antialias_ellipse: raddeg/alt_scl/radpix = ',3f9.5)
+
+!                     Lots of writes can happen with solar eclipses from DSCOVR
+                      iwrite = iwrite + 1
+                      if(iwrite .le. 100)then
+                        write(6,87)distd,altg,azig,radius_deg,alt_scale,radius_pix
+87                      format(' call antialias_ellipse: dist/alt/az/raddeg/alt_scl/radpix = ',3f8.3,3f10.5)
+                        iverb = 2
+                      else
+                        iverb = 0
+                      endif
 
 !                     Obtain fraction of pixel that is lit (frac_lit1)
-                      call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit1,0,0,2)
+                      call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit1,0,0,iverb)
                       area_pix = alt_scale * azi_scale
                     endif
 
@@ -663,7 +673,7 @@
                     endif
 
 !                   write(6,89)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
-89                  format(' altga-t/alt_obj/azig/azi_obj/distd/frac_lit =',2i5,6f9.3,2f7.2,f7.4)
+89                  format(' altga-t/alt_obj/azig/azi_obj/distd/frac_lit =',i6,i5,6f9.3,2f7.2,f7.4)
 
 !                   Determine surface brightness of object averaged over the pixel
                     if(frac_lit .gt. 0.)then
@@ -687,7 +697,7 @@
                   glow_obj(ialt,jazi) = addlogs(glow_obj(ialt,jazi),log10(glow_nl))
 
 !                 if(.true.)then                          
-                  if(abs(alt_obj-altg) .le. 0.15)then                  
+                  if(abs(alt_obj-altg) .le. 0.15 .and. iwrite .le. 100)then                  
                         write(6,90)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
 90                      format(' altga-t/alt_obj/azig/azi_obj/distd/area/frclit =',2i5,6f9.3,2f7.2,f7.4)
 
