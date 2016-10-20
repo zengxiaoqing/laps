@@ -167,7 +167,7 @@
      1                     ,moon_mag,moon_mag_thr                   ! I
      1                     ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon ! I
      1                     ,minalt,maxalt,minazi,maxazi             ! I
-     1                     ,alt_scale,azi_scale                     ! I
+     1                     ,alt_scale,azi_scale,l_binary            ! I
      1                     ,grid_spacing_m,r_missing_data)          ! I
 
           write(6,*)' Return from get_cloud_rays: ',a9time
@@ -344,7 +344,7 @@
                   corr1_in = 9.2 - (solar_alt-30.)*(0.3/30.)! med sun
                 endif
               else
-                corr1_in = 9.0
+                corr1_in = 9.1
               endif
               if(solar_alt .lt. 0.)corr1_in = 9.26 ! volcanic value
               corr1_in = corr1_in ! - log10(exposure)
