@@ -527,6 +527,7 @@
 
 
      subroutine get_clr_src_dir_topo(solalt,solazi,viewalt,viewazi &   ! I
+           ,emis_ang,r_missing_data &                                  ! I
            ,od_g_msl,od_g_vert,od_o_msl,od_a_vert,htmsl,dist_to_topo & ! I
            ,ssa,agv,aav,aod_ref,redp_lvl,scale_ht_a &                  ! I
            ,ags_a,aas_a,isolalt_lo,isolalt_hi &                        ! I
@@ -604,7 +605,7 @@
          write(6,*)
          write(6,*)'subroutine get_clr_src_dir_topo'
          write(6,*)'solalt/ref/solazi = ',solalt,solalt_ref,solazi
-         write(6,*)'viewalt/viewazi = ',viewalt,viewazi
+         write(6,*)'viewalt/viewazi/emis = ',viewalt,viewazi,emis_ang
          write(6,*)'agv/aav = ',agv,aav
          write(6,*)'od_g_vert = ',od_g_vert
          write(6,*)'scale_ht_g = ',scale_ht_g
@@ -650,7 +651,11 @@
          else
            frac_step = 1d0 - (send - dist_to_topo)/ds
          endif
-         xybar = (sbar - refdist_solalt) * cosd(viewalt)
+         if(emis_ang .ne. r_missing_data)then
+           xybar = (sbar - refdist_solalt) * cosd(emis_ang)
+         else
+           xybar = (sbar - refdist_solalt) * cosd(viewalt)
+         endif
 
 !        Update ags,aas
          dsolalt = dsolalt_ref + dsolalt_dxy * xybar
