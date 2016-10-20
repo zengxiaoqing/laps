@@ -58,8 +58,8 @@ cdoc    grid south to grid north.
         real ri,rj                        ! Output (I,J on LAPS Grid)
         integer istatus                   ! Input / Output
 
-        save init,umin,umax,vmin,vmax
-        data init/0/
+        save init,umin,umax,vmin,vmax,niprev,njprev
+        data init/0/, niprev/0/, njprev/0/
 
         include 'grid_fname.cmn'
 
@@ -71,13 +71,15 @@ cdoc    grid south to grid north.
            return
         endif
 
-        if(init.ne.nest)then
+        if(init.ne.nest .or. ni.ne.niprev .or. nj.ne.njprev)then
             call latlon_to_uv(lat(1,1),lon(1,1),umin,vmin,istatus)
             call latlon_to_uv(lat(ni,nj),lon(ni,nj),umax,vmax,istatus)
 
             write(6,101)umin,umax,vmin,vmax
 101         format(1x,' Initializing latlon_to_rlapsgrid',4f10.5)
             init = nest
+            niprev = ni
+            njprev = nj
         endif
 
         uscale = (umax - umin) / (float(ni) - 1.)
@@ -477,12 +479,15 @@ c           cenlon = grid_cen_lon_cmn
         function projrot_latlon(rlat,rlon,istatus)
         include 'trigd.inc'
 
-cdoc    1997 Steve Albers    Calculate map projection rotation, this is the
-cdoc                         angle between the y-axis (grid north) and
-cdoc                         true north. Units are degrees.
-!
-!                            projrot_laps = (true north value of wind direction
-!                                          - grid north value of wind direction)
+!       projrot is the clockwise angle of a vector pointing true north relative
+!       to a vector pointing to grid north. This is also the clockwise rotation
+!       of a longitude line plotted on the model grid. Units are degrees.
+
+!       For azimuth or wind direction angles:
+
+!       projrot = grid north - true north
+!       true north = grid north - projrot
+!       grid north = true north + projrot
        
 !       Added 8/4/2000 to make sure these are declared even if not passed in
         integer istatus
