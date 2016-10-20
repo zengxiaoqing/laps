@@ -325,6 +325,8 @@
 
           write(6,*)' a9time (product info) is ',a9time
 
+          i4_wdw = 108000
+
 !         Read Height
           if(c_prodtype .eq. 'A')then
             iflag_temp = 2 ! Returns Height
@@ -333,7 +335,7 @@
             var_2d = 'HT'
             ext = 'lt1'
             call get_laps_3dgrid
-     1          (i4time_ref,10800,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          (i4time_ref,i4_wdw,i4time_nearest,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,heights_3d,istatus)
 
 !           call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
@@ -385,7 +387,7 @@
             var_2d = 'LWC'
             ext = 'lwc'
             call get_laps_3dgrid
-     1          (i4time_ref,10800,i4time_lwc,NX_L,NY_L,NZ_L       
+     1          (i4time_ref,i4_wdw,i4time_lwc,NX_L,NY_L,NZ_L       
      1          ,ext,var_2d,units_2d,comment_2d,clwc_3d,istat_lwc)
 !           call make_fnam_lp(i4time_lwc,a9time,istatus)
 !           call cv_i4tim_asc_lp(i4time_lwc,a24time,istatus)
@@ -653,10 +655,11 @@
      1                  ,i,j,lat(i,j),lon(i,j),solar_dec,solar_ha
      1                  ,sol_alt_2d(i,j)
             endif
+   
+            swi_2d(i,j) = 1300. * sind(max(sol_alt_2d(i,j),0.))
+
           enddo ! j
           enddo ! i
-
-          swi_2d = 1300. * sind(max(sol_alt_2d,0.))
 
           read(lun,*) ! advance through input data
           write(6,*)' Running without cloud and other current data'
