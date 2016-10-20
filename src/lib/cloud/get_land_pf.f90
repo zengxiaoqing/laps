@@ -229,10 +229,10 @@
 !                ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
 !                         .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) .OR. &
 !               if( (i .eq. (i/40)*40 .AND. j .eq. nj/2) .OR. &
-                if( ((i .eq. (i/40)*40 .OR. i .ge. 480 .and. i .le. 490) .AND. (j .eq. 1 .OR. j .eq. nj/2) ) .OR. &
-                       (alt_a(i,j) .eq. -90. .and. j .eq. 64) )then ! nadir
+                if( ((i .eq. (i/40)*40 .OR. i .ge. 240 .and. i .le. 250) .AND. (j .eq. 2161) ) .OR. &
+                       (alt_a(i,j) .eq. -90. .and. j .eq. 2161) )then ! nadir
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j),cld_brdf(2,i,j)
-1                 format(i4,i5,i2,f9.3,4f9.2,9f9.4,f11.0,5f9.2,f9.3)
+1                 format(/i4,i5,i2,f9.4,4f9.2,9f9.4,f12.0,5f9.2,f9.3)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
 111               format('   antisolar alt/azi/azeff/elg/elg_a/eff',6f9.2)
 !                 if(abs(emis_ang - emis_ang_a(i,j)) .gt. 0.1 .AND. emis_ang_a(i,j) .gt. 0.)then
