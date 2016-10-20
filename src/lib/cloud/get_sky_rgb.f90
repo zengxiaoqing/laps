@@ -122,7 +122,7 @@
         logical l_solar_eclipse, l_sun_behind_terrain
 
         write(6,1)sol_alt,horz_dep,solalt_limb_true
-1       format(' get_sky_rgb: sol_alt/horz_dep/solalt_limb_true = ',3f9.3)
+1       format(' get_sky_rgb: sol_alt/horz_dep/solalt_limb_true = ',f9.3,f9.4,f9.3)
         write(6,*)' moon alt/az/mag = ',moon_alt,moon_az,moon_mag
         write(6,*)' l_solar_eclipse = ',l_solar_eclipse
         write(6,*)' range of r_cloud_rad is ',minval(r_cloud_rad),maxval(r_cloud_rad)
@@ -328,7 +328,7 @@
             moon_cond_clr = 0
         endif
         if(htmsl .gt. 1000e3)then
-            azid1 = 96.6 ; azid2 = 96.6 ! high custom (South Am. tip)
+            azid1 = 96.5 ; azid2 = 270.0 ! high custom (South Am. tip)
         endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2
@@ -937,6 +937,12 @@
 
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
 
+              if(htmsl .gt. 100e3)then
+                rad_sec_cld(:) = difftwi(max(solalt_ref,-16.)) * (ext_g(:)/.09) * 3e9 / 1300. * 7.0
+                iradsec = 1
+                glow_secondary_cld = log10(rad_sec_cld(2))
+              endif
+
 !             This might consider the optical thickness and albedo of the cloud as well?
               if(sph_rad_ave(2) .eq. r_missing_data)then
                   glow_cld1 = glow_secondary_cld ! + log10(r_cloud_rad(i,j))                                     
@@ -1180,7 +1186,7 @@
 !           opac_cloud = 0.0 ; Testing
 
 !           0 by day and 1 by night
-            ramp_cld_nt = min(max((-solalt_ref/3.0),0.),1.)               
+            ramp_cld_nt = min(max((-solalt_ref/2.0),0.),1.)               
             ramp_cld_nt = ramp_cld_nt**0.7
 
 !           Always 1 by day and goes to 0 at night near sun
@@ -1368,7 +1374,7 @@
                               ,sky_rad(3) + blu_rad
 98                  format( &
                         ' rtopo/gti/gtic/alb/tsalt/dst/trad/srad   ', &
-                    f7.3,f9.1,f9.4,1x,f9.3,f9.2,f11.0,2f8.5,3(2x,3f13.0))
+                    f7.3,f9.1,f9.4,1x,f9.3,f9.2,f12.0,2f8.5,3(2x,3f13.0))
                   endif
 
                   sky_rad(1) = sky_rad(1) + red_rad
