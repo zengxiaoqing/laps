@@ -31,7 +31,7 @@
      1                           ,l_solar_eclipse,eobsc                 ! I
      1                           ,rlat,rlon,lat,lon                     ! I
      1                           ,minalt,maxalt,minazi,maxazi           ! I
-     1                           ,alt_scale,azi_scale                   ! I
+     1                           ,alt_scale,azi_scale,l_binary          ! I
      1                           ,grid_spacing_m,r_missing_data)        ! I
 
         use mem_namelist, ONLY: earth_radius,aero_scaleht,redp_lvl
@@ -151,7 +151,7 @@
         real bnic_2d(nc,ni,nj)      ! (direct/beam normal) 
 
         logical l_solar_eclipse, l_radtran /.false./, l_spherical
-        logical l_atten_bhd /.true./, l_box, l_latlon_grid
+        logical l_atten_bhd /.true./, l_box, l_latlon_grid, l_binary
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         parameter (nsp = 4)
@@ -220,6 +220,10 @@
 
         write(6,3)i,j,htagl,ri_obs,rj_obs     
 3       format(' Subroutine get_cloud_rays... ',2i5,f8.2,2f9.3)
+        
+!       Grid north azimuth - true north value
+        projrot = projrot_latlon(rlat,rlon,istatus)
+        write(6,*)'lat/lon/projrot',rlat,rlon,projrot
 
 !       moon_alt = -10.0
 !       moon_azi = 0.
@@ -920,6 +924,7 @@
 
          do jazi = minazi,maxazi,jazi_delt
           view_azi_deg = float(jazi) * azi_scale
+          azigrid = view_azi_deg + projrot
 
           if((abs(view_azi_deg - azid1) .lt. azi_delt_2 .or. 
      1        abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
@@ -966,8 +971,8 @@
           view_altitude_deg = altray
 
 !         Get direction cosines based on azimuth
-          xcos = sind(view_azi_deg)
-          ycos = cosd(view_azi_deg)
+          xcos = sind(azigrid)
+          ycos = cosd(azigrid)
 
 !         Initialize variables for this ray
           icloud = 0
@@ -1067,11 +1072,11 @@
               if(idebug .eq. 1)write(6,*)
               if(idebug .eq. 1)then
                 if(htagl .gt. 8000e3)I4_elapsed = ishow_timer()
-                write(6,11)altray,view_azi_deg,ialt,jazi,jazi_delt
-     1                    ,rkdelt,i,j,slant2_optimal,l_box
+                write(6,11)altray,view_azi_deg,azigrid,ialt,jazi
+     1                    ,jazi_delt,rkdelt,i,j,slant2_optimal,l_box
 11              format(
-     1      'Trace the slant path (alt/azi/ialt/jazi/jdelt/rkdelt/i/j):'
-     1                ,f8.3,f6.1,i6,2i5,f6.2,2i5,f7.0,l2)                                     
+     1    'Trace the slant path (alt/azi-g/ialt/jazi/jdelt/rkdelt/i/j):'
+     1                ,f8.3,2f6.1,i6,2i5,f6.2,2i5,f7.0,l2)                                     
                 write(6,12)                                   
 12              format('      dz1_l       dz1_h     dxy1_l    dxy1_h  ',
      1           'rinew  rjnew   rk    ht_m   topo_m  ',
