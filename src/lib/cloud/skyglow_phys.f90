@@ -275,7 +275,11 @@
                          ,earth_radius,0 &          ! I
                          ,ag,ao,aa,refr_deg)        ! O
          write(6,63)altray,ag,ao,aa
-63       format(' returned from get_airmass with alt/ag/ao/aa = ',f9.1,3e12.4)
+63       format(' returned from get_airmass with alt/ag/ao/aa = ',f9.4,3e12.4)
+
+         htsfc = 0.
+         call get_ray_info(altray,htmsl,htsfc,earth_radius,emis_ang &
+                          ,r_missing_data,dist_to_sfc)
 
 !        od_g_slant_a(:,ialt) = ext_g(:) * patm * ag/ag90 ! for export
          od_g_slant_a(:,ialt) = ext_g(:) * ag             ! for export
@@ -451,8 +455,8 @@
          endif
          jazi_d10 = nint(azi_d10/azi_scale)
 
-         write(6,67)altray,sol_alt,sol_alt*altray,dmintopo,htmin_view,l_dlow,l_dlow2
-67       format(' altray/sol_alt/prod/dmintopo/htmin_view/l_dlow,l_dlow2',2f8.2,f8.1,2f12.0,2l2)
+         write(6,67)altray,sol_alt,sol_alt*altray,dmintopo,htmin_view,l_dlow,l_dlow2,emis_ang
+67       format(' altray/sol_alt/prod/dmintopo/htmin_view/l_dlow/l_dlow2/em',f8.4,f8.2,f8.1,2f12.0,2l2,f8.3)
 !        write(6,*)'az range at this alt2',ialt &
 !                  ,minval(view_az(ialt,:)),maxval(view_az(ialt,:))
          do jazi = jazi_start,jazi_end,jazi_d10
@@ -963,26 +967,33 @@
                     od_o_msl = (o3_du/300.) * ext_o(ic)
 
                     call get_clr_src_dir_topo(sol_alt,sol_azi, &        ! I
-                     altray,view_azi_deg, &
+                     altray,view_azi_deg,emis_ang,r_missing_data, &     ! I
                      ext_g(ic),od_g_vert,od_o_msl,od_a_vert, &          ! I
-                     htmsl,dist_2_topo(ialt,jazi), &
-                     ssa(ic),ag/ag_90,aa_o_aa_90, &
+                     htmsl,dist_2_topo(ialt,jazi), &                    ! I
+                     ssa(ic),ag/ag_90,aa_o_aa_90, &                     ! I
                      aod_ref,aero_refht,aero_scaleht, &                 ! I
                      ags_a,aas_a, &                                     ! I
-                     isolalt_lo,isolalt_hi,ic,idebug_topo, &
-                     nsteps_topo,refdist_solalt,solalt_ref, &
+                     isolalt_lo,isolalt_hi,ic,idebug_topo, &            ! I
+                     nsteps_topo,refdist_solalt,solalt_ref, &           ! I
                      sumi_gct(ic),sumi_act(ic),opac_slant,tausum_a)     ! O
   
                     if(idebug_topo .gt. 0)then
                       write(6,81)ialt,jazi,ic,sol_alt,altray &
                          ,dist_2_topo(ialt,jazi),sumi_gct(ic),sumi_act(ic)
-81                    format(' called get_clr_src_dir_topo',i7,i5,i4,2f8.2,f11.0,2f9.4)
+81                    format(' called get_clr_src_dir_topo',i7,i5,i4,2f8.2,f12.0,2f9.4)
                     endif ! write log info
                   endif ! call get_clr_src_dir_topo
 
 !                 Normalize by extinction?
                   aodfo = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi) 
                   aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
+
+                  if(htmsl .gt. 100e3 .and. solalt_ref .lt. 0.)then
+                    aodf = 1.0
+                    radf = 1.0
+                  else ! use original values
+                    radf = clear_radf_c(ic,ialt,jazi)
+                  endif
 
 !                 If we're hitting topo during an eclipse with a low vantage point
 !                 and we're looking above the limb this may need to trend closer
@@ -994,7 +1005,7 @@
                   endif
 
                   clear_rad_topo = day_int * &
-                    (sumi_gct(ic) * rayleigh_gnd * clear_radf_c(ic,ialt,jazi) + &
+                    (sumi_gct(ic) * rayleigh_gnd * radf + &
 !                    sumi_act(ic) * hg2t(ic)     * aodf * ssa) ! take out ssa?
                      sumi_act(ic) * hg2t(ic)     * aodf) 
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
@@ -1009,7 +1020,7 @@
 
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
-                       ,clear_radf_c(ic,ialt,jazi),sumi_act(ic),hg2t(ic) &
+                       ,radf,sumi_act(ic),hg2t(ic) &
                        ,aodf,aodfo,ssa(ic),clear_rad_topo      
 91                  format('elg/ig/rayg/radf/ia/hg2t/aodf/aodfo/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,4f9.4,f7.2,3x,f12.0)
                   endif
@@ -1056,7 +1067,7 @@
                        ,trace_solalt(ialt,jazi),mode_sky,od_a &
                        ,dist_2_topo(ialt,jazi),aodf,aodfo,clear_rad_c(:,ialt,jazi)
 111           format('alt/azi/salt-t-t/mode/od_a/dst/aodf/aodfo/clrrd' &
-                    ,f7.2,f6.1,1x,3f7.2,i3,f12.5,f12.0,2f9.4,3e14.5)
+                    ,f8.3,f6.1,1x,3f7.2,i3,f12.5,f12.0,2f9.4,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
@@ -1090,7 +1101,7 @@
 
 !       Apply during daylight eclipses or during low sun / twilight
         if( ( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
-            (sol_alt .lt. 10. .and. sol_alt .gt. twi_0) ) .AND. & 
+            (sol_alt .lt. 100. .and. sol_alt .gt. twi_0) ) .AND. & 
                                                   htmsl .le. 100e3 )then
             write(6,*)'Calling get_sky_rad_ave'
             do ic = 1,nc ! secondary scattering in each color
