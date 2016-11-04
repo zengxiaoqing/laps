@@ -82,13 +82,12 @@
 #
 # -f                   Run followup script to generate GIF images for the web.
 #                      The argument value is a shorthand name for the domain and
-#                      can be given a dummy value if the FSL Gizmo server is invisible
-#                      to you. 
+#                      can be given a dummy value if you are running outside of ESRL.
 #                      
 # -F                   Run followup script to generate GIF images for the web.
 #                      No other executables are run. The argument value is a shorthand 
-#                      name for the domain and can be given a dummy value if the GSD
-#                      Gizmo server is invisible to you. 
+#                      name for the domain and can be given a dummy value if you are
+#                      running outside of ESRL.
 #                      
 # -T                   Run with analysis only executables, useful with the
 #                      test dataset that comes with the LAPS software release.
@@ -689,6 +688,7 @@ foreach $exe (@LAPS_EXE){
                 print $t." Running $exe in background, waitdone is $waitdone\n";
                 my $sys="($LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1; touch $LAPS_LOG_PATH/$done; echo `date -u` $exe finished in background)&";
                 &forksub($sys,$lockfile);
+                system("ls -l --full-time $LAPS_LOG_PATH/$waitdone"); # for testing
             }elsif($exe eq $lga_proc){
                 print $t." Waiting for $waitdone to appear before running $exe\n";
                 my $iwait = &laps_tools::wait_for_file("$LAPS_LOG_PATH/$waitdone",5,1200);
@@ -700,6 +700,7 @@ foreach $exe (@LAPS_EXE){
                 print $t." Running $exe\n";
                 my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
                 &forksub($sys,$lockfile);
+                system("ls -l --full-time $LAPS_LOG_PATH/$waitdone"); # for testing
             }
 
             if(-e "$LAPSROOT/etc/$wgi_script_name\.pl"){
