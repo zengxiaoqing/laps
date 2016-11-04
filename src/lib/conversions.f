@@ -1077,7 +1077,8 @@ cdoc    given the longitude.
 
         if(speed .gt. 0)then
             di_grid = atan3d(-u_grid,-v_grid)
-            di_true = di_grid + projrot_latlon(latitude,longitude
+!           Switched the sign on this (in 2016)
+            di_true = di_grid - projrot_latlon(latitude,longitude
      1                                        ,istatus)
             di_true = mod(di_true+360.,360.)
         else
@@ -1205,7 +1206,8 @@ cdoc    Convert DIR and SPEED (true north) to U and V (grid north)
 
         latitude = -999. ! Since lat is not yet passed in
 
-        di_grid = di_true - projrot_latlon(latitude,longitude
+!       Switched the sign on this (in 2016)
+        di_grid = di_true + projrot_latlon(latitude,longitude
      1                                             ,istatus)
 
         call         disp_to_uv(di_grid,
@@ -1318,7 +1320,8 @@ cdoc    Convert wind vector from grid north to true north, given the longitude
 
       subroutine rotate_vec(u1,v1,u2,v2,angle)
 
-cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
+cdoc  Rotate vector (u1,v1) through a clockwise angle to obtain vector (u2,v2)
+cdoc  u points east and v points north
 
       include 'trigd.inc'
       u2 =  u1 * cosd(angle) + v1 * sind(angle)
@@ -1329,7 +1332,8 @@ cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
 
       subroutine rotate_vec_2d(u1,v1,u2,v2,angle,ni,nj)
 
-cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
+cdoc  Rotate vector (u1,v1) through a clockwise angle to obtain vector (u2,v2)
+cdoc  u points east and v points north
 
       parameter (pi = 3.1415926535897932)
       parameter (rpd = pi / 180.)
