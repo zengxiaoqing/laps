@@ -20,6 +20,11 @@ vmiss = -99.0
 print, 'site from env is: ',site
 print, 'solar alt/az is: ',solar_alt,'  ',solar_az
 
+;rilaps_cen = 2.0
+;rjlaps_cen = 3.0
+;azi_r = atan(-rilaps_cen,+rjlaps_cen)
+;print,'test atan ',rilaps_cen,rjlaps_cen,azi_r
+
 print,' Read camera polar image from ',file_camera_polar
 read_png,file_camera_polar,camera_polar
 help,camera_polar
@@ -38,7 +43,12 @@ jmax = jdim-1
 
 ; Dimension mask arrays
 cont_table_mask = bytarr(3,idim,jdim)
-cont_table_mask[*,*,*] = 0
+cont_table_mask[*,*,*] = 0 ; initialize black (clear sky)
+
+camera_mask = bytarr(3,idim,jdim)
+camera_mask[0,*,*] = 95  ; initialize blue (clear sky)
+camera_mask[1,*,*] = 95  ; initialize blue (clear sky)
+camera_mask[2,*,*] = 255 ; initialize blue (clear sky)
 
 ; Define alt/azi arrays for polar image
 
@@ -67,9 +77,9 @@ endif else if(site EQ 'dsrc')then begin
 ;               0          90           180            270            360
     terralt = [ 5., 5., 5., 5., 5.,  7.,  7., 12., 13., 12., 10.,  6.,  5.]
     if(solar_alt GT 20)then begin
-        blue_camera_thresh = 20. ; 1.30
+        blue_camera_thresh = 1.30
     endif else begin
-        blue_camera_thresh = 20. ; 1.15
+        blue_camera_thresh = 1.15
     endelse
     thresh_pix = 0
 
@@ -86,6 +96,9 @@ endif
 print, 'blue_camera_thresh is:',blue_camera_thresh
 print, 'thresh_pix is:        ',thresh_pix           
 
+;azi_r = atan(-rilaps_cen,+rjlaps_cen)
+;print,'test atan ',rilaps_cen,rjlaps_cen,azi_r
+
 for i = 0,imax    do begin
 for j = jmax,0,-1 do begin
     ip = (i+1) < imax
@@ -93,17 +106,25 @@ for j = jmax,0,-1 do begin
     jp = (j+1) < jmax
     jm = (j-1) > 0
 
-    rilaps_cen = i - 256.
-    rjlaps_cen = j - 256.
+    rilaps_cen = float(i - 256.)
+    rjlaps_cen = float(j - 256.)
     azi_r = atan(-rilaps_cen,+rjlaps_cen)
+
+;    if (I EQ 200) then begin
+;        azi_r = atan(-rilaps_cen,+rjlaps_cen)
+;        print,'test atan ',rilaps_cen,rjlaps_cen,azi_r
+;    endif
+
     azi_d = azi_r / rpd
-    if(azi_d lt 0.)then begin
+    if(azi_d LT 0.)then begin
         azi_d = azi_d + 360.
     endif
 
     sky_radii_laps = sqrt(rilaps_cen^2 + rjlaps_cen^2) / 256.
 
     alt_d = 90. - (sky_radii_laps * 90.) 
+
+    elg_d = acos( sin(alt_d*rpd) * sin(solar_alt*rpd) + cos(alt_d*rpd) * cos(solar_alt*rpd) * cos((azi_d-solar_az)*rpd) ) / rpd
 
     itn = round(azi_d / 30.)
 
@@ -116,7 +137,13 @@ for j = jmax,0,-1 do begin
     max_pix2 = ((camera_polar[0,ip,j] > camera_polar[1,ip,j]) > camera_polar[2,ip,j]) > max_pix
     max_pix2 = ((camera_polar[0,i,jp] > camera_polar[1,i,jp]) > camera_polar[2,i,jp]) > max_pix2
 
-    if(alt_d GE terrain_alt AND max_pix2 LT 253 AND max_pix GT thresh_pix)then begin
+;   Almucantar brightness
+    if(J EQ 256 AND I EQ (I/10)*10)then begin ; debug output
+;   if(abs(alt_d - solar_alt) LT 0.2)then begin
+        print,'maxpix2 ',alt_d,azi_d,elg_d,max_pix2
+    endif
+
+    if(elg_d GE 15 AND alt_d GE terrain_alt AND alt_d GE 15.0 AND max_pix2 LT 200 AND max_pix GT thresh_pix)then begin
 
 ;       color_convert,camera_polar[0,i,j],camera_polar[1,i,j],camera_polar[2,i,j],huec,satc,valuec,/RGB_HSV
 ;       color_convert, model_polar[0,i,j], model_polar[1,i,j], model_polar[2,i,j],huem,satm,valuem,/RGB_HSV
@@ -131,8 +158,8 @@ for j = jmax,0,-1 do begin
 ;       denom_model = ( ( float(model_polar[0,i,j]  + model_polar[1,i,j] ) ) * 0.5 )
         denom_model  = (float(model_polar[0,i,j]) + float(model_polar[1,i,j])) * 0.5
 
-;       blue_camera = numerator_camera / denom_camera
-        blue_camera = float(camera_polar[2,i,j]) - float(camera_polar[1,i,j])
+        blue_camera = numerator_camera / denom_camera
+;       blue_camera = float(camera_polar[2,i,j]) - float(camera_polar[1,i,j])
         blue_model  = numerator_model  / denom_model
 
         if(solar_alt GT -4.0)then begin ; day  
@@ -165,25 +192,48 @@ for j = jmax,0,-1 do begin
             endelse
 
         endelse
+        
+;       Note that correct clear is black for the contingency table (as initialized)
 
-        cont_table_mask[0,i,j] = ((icloud_model-icloud_camera) > 0) * 200 ; overforecast is red
+        if(icloud_model GT icloud_camera)then begin                       ; overforecast is red
+            cont_table_mask[0,i,j] = 255 
+            cont_table_mask[1,i,j] =  95 
+            cont_table_mask[2,i,j] =  95 
+
+            camera_mask[0,i,j] =  95                                      ; camera has clear 
+            camera_mask[1,i,j] =  95 
+            camera_mask[2,i,j] = 255 
+        endif
 
         if(icloud_model LT icloud_camera)then begin                       ; underforecast is blue
-            cont_table_mask[2,i,j] = 255 
-            cont_table_mask[1,i,j] =  95 
             cont_table_mask[0,i,j] =  95 
+            cont_table_mask[1,i,j] =  95 
+            cont_table_mask[2,i,j] = 255 
+
+            camera_mask[0,i,j] = 220                                      ; camera has cloud
+            camera_mask[1,i,j] = 220 
+            camera_mask[2,i,j] = 220 
         endif
 
         if(icloud_camera * icloud_model GT 0)then begin
             cont_table_mask[*,i,j] = 220                                  ; correct hit is white
+
+            camera_mask[0,i,j] = 220                                      ; camera has cloud
+            camera_mask[1,i,j] = 220 
+            camera_mask[2,i,j] = 220 
         endif
 
-        if(i EQ 256)then begin
+;       Observed is cloud   (Blue): 220,255
+;       Observed is clear   (Blue): 0, 95
+;       Observed is unknown (Blue): 60
+
+        if(J EQ 256 AND I EQ (I/10)*10)then begin ; debug output
+;       if(abs(alt_d - solar_alt) LT 0.2)then begin
 ;           print,'model polar RG',float(model_polar[0,i,j]),float(model_polar[1,i,j])
 ;           print,'camera polar RG',float(camera_polar[0,i,j]),float(camera_polar[1,i,j])
 ;           print,'num/denom',numerator_camera,numerator_model,denom_camera,denom_model
-            print,FORMAT = '("i,j,alt,azi,teralt,camera/model RGB,camera/model blue icloud",2I4,"  ",3F6.1,"  ",3I4,"  ",3I4,"  ",2F8.3,"  ",2I3)' $
-                             ,i,j,alt_d,azi_d,terrain_alt,camera_polar[0:2,i,j],model_polar[0:2,i,j],blue_camera,blue_model,icloud_camera,icloud_model
+            print,FORMAT = '("i,j,alt,azi,elg,teralt,camera/model RGB,camera/model blue icloud",2I4,"  ",4F6.1,"  ",3I4,"  ",3I4,"  ",2F8.3,"  ",2I3)' $
+                             ,i,j,alt_d,azi_d,elg_d,terrain_alt,camera_polar[0:2,i,j],model_polar[0:2,i,j],blue_camera,blue_model,icloud_camera,icloud_model
         endif
 
 ;       Note that when clouds are present the contingency table has a zero value
@@ -194,13 +244,17 @@ for j = jmax,0,-1 do begin
         ncloud_camera = ncloud_camera + icloud_camera
         ncloud_model  = ncloud_model  + icloud_model
 
-    endif else begin
+    endif else begin ; unknown point
         imask_red = 60
         imask_grn = 80
         imask_blu = 60
-        cont_table_mask[0,i,j] = imask_red                                      ; masked out area is roughly gray
-        cont_table_mask[1,i,j] = imask_grn                                      ; masked out area is roughly gray
-        cont_table_mask[2,i,j] = imask_blu                                      ; masked out area is roughly gray
+        cont_table_mask[0,i,j] = imask_red                                      ; masked out area is greenish gray
+        cont_table_mask[1,i,j] = imask_grn                                      ; masked out area is greenish gray
+        cont_table_mask[2,i,j] = imask_blu                                      ; masked out area is greenish gray
+
+        camera_mask[0,i,j] = imask_red                                          ; masked out area is greenish gray
+        camera_mask[1,i,j] = imask_grn                                          ; masked out area is greenish gray
+        camera_mask[2,i,j] = imask_blu                                          ; masked out area is greenish gray
 
     endelse
 
@@ -273,11 +327,17 @@ print,' Percent correct is         ',accuracy*100.
 
 print,' Percent correct random is  ',accuracy_random*100.
 
-;   Write out mask image
+;   Write out contingency table mask image
 dirout = lapsdataroot + '/' + 'lapsprd/verif/allsky/stats'
 maskfile = dirout + '/' + 'verif_allsky_mask' + '.' + site + '.' + a9time + '.png'
 print,' maskfile is  ',maskfile
 WRITE_PNG,maskfile,cont_table_mask
+
+;   Write out camera mask image
+dirout = lapsdataroot + '/' + 'lapsprd/verif/allsky/stats'
+maskfile = dirout + '/' + 'camera_allsky_mask' + '.' + site + '.' + a9time + '.png'
+print,' maskfile is  ',maskfile
+WRITE_PNG,maskfile,camera_mask
 
 ;   Compare to random analysis having either 50% or the actual percentage of clouds
 ; dirout = '/data/fab/dlaps/projects/roc/hires2/log'
