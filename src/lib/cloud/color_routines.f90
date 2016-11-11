@@ -9,7 +9,7 @@
         integer init /0/
         save init,fasun
 
-        parameter (day_int = 3e9)
+        parameter (day_int = day_int0)
 
 !       Exponential clipping of gamma function
 !       expgamma(x) = 1. - exp(-x**(1./gamma))
@@ -27,9 +27,9 @@
 
 !       Radiance units are watts/(m**2 sr nm)
 
-!       Input rad defined as 3e9 nl for each color normalized by solar
-!       spectrum reflecting off a lambertian surface. An input matching
-!       the solar spectrum has equal values in each color.
+!       Day_int0 is luminance of sunlight from 1AU distance uniformly 
+!       scattered throughout a 360 degree sphere. This will be defined as
+!       the spectral radiance matching that of the solar spectrum.
 !       Note solar constant is 1361.5 watts/m**2
         real rad(nc) 
         real rel_solar(nc), cdm2(nc)
