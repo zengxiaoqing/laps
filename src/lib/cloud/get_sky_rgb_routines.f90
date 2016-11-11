@@ -48,7 +48,7 @@
         character*20 starnames(nstars)
         logical l_zod
 
-        DANGDIF(XX,YY)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
+        DANGDIF(XX,YY)=DMOD(XX-YY+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
         ANGDIFD(X,Y)=MOD(X-Y+540.,360.)-180.
 !       addmags(a,b)=log10(10.**(-a*0.4) + 10.**(-b*0.4)) * (-2.5)
         addlogs(x,y) = log10(10.**x + 10.**y)
@@ -78,6 +78,10 @@
 
           alt_stars(is) = als / rpd
           azi_stars(is) = azs / rpd
+          if(is .le. 10)then
+            write(6,5)is,starnames(is),dec_d(is),ra_d(is),has(is)/rpd,alt_stars(is),azi_stars(is),mag_stars(is),bmv(is)
+5           format('dec/ra/ha/al/az/mg/bmv',i5,1x,a20,1x,f9.1,4f9.3,3f7.1)
+          endif
         enddo ! is
 
         I4_elapsed = ishow_timer()
@@ -449,8 +453,8 @@
         ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
 
         write(6,*)' subroutine get_glow_obj...'
-        write(6,21)alt_obj_in,azi_obj_in,mag_obj,diam_deg,l_phase,emag
-21      format('   alt/az/mag/diam/lphase/emag = ',4f9.3,l2,f7.4)
+        write(6,21)alt_obj_in,azi_obj_in,mag_obj,diam_deg,l_phase,emag,horz_dep
+21      format('   alt/az/mag/diam/lphase/emag/hrzdp = ',4f9.3,l2,f7.4,f7.2)
 
 !       We may want to efficiently apply refraction here to the object 
 !       altitude to convert from true altitude to apparent. It may be more 
@@ -545,6 +549,7 @@
 !               if(diam_deg .ge. 0.75 .and. distr .le. radius_deg)then  ! solar corona
                 if(diam_deg .ge. 0.75)then  ! solar corona
                   if(distd .le. 8.0)then
+                    iblock = 1
                     size_glow_sqdg = 0.2    ! sun/moon area           
                     delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
 !                   distr = sqrt(((alt_obj-alt))**2 + ((azi_obj-azi)*cosd(alt_cos))**2)
@@ -600,9 +605,11 @@
 81                      format(' cor: altg,alt_obj,azig,azi_obj,distd,spk,spf,spc,smag,rmag,flit =',2i5,5f9.3,6f7.2)
                     endif
                   else
+                    iblock = 2
                     rmag_per_sqarcsec = r_missing_data
                   endif
                 elseif(diam_deg .ge. 0.25 .and. diam_deg .lt. 0.75 .and. distd .le. 1.0)then ! regular sun or moon
+                    iblock = 3
                     size_glow_sqdg = 0.2    ! sun/moon area           
 
 !                   Calculate fraction of grid box illuminated by object
@@ -685,9 +692,11 @@
                     endif
 
                 elseif(distd .le. radius_deg)then ! star
+                    iblock = 4
                     delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
                     rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
                 else
+                    iblock = 5
                     rmag_per_sqarcsec = r_missing_data
                 endif
 
@@ -708,6 +717,10 @@
                             write(6,92)ialt,jazi,diam_deg,rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
 92                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj =     ',2i5,f5.2,2f10.3,e12.4,f11.2,' ***GLOW***')
                         endif
+                  endif
+                else ! missing rmag_per_sqarcsec
+                  if(distd .le. 0.15)then
+                    write(6,*)' WARNING: no glow assigned when close to object ',iblock
                   endif
                 endif ! within star kernel
             endif ! alt > -2.
@@ -846,6 +859,8 @@
         real fa(nc)       ! L (solar spectral irradiance W/(m**2 nm))
         real sprad(nc)    ! O (spectral radiance in W/(m**2 nm sr)) units)
 
+        parameter (pi=3.14159265)
+
 !       constant 3e9      ! L (scaling constant, approx solar illuminance 
                           !    spread over a spherical solid angle [nL])
 
@@ -855,7 +870,7 @@
         call get_fluxsun(wa,nc,iverbose,fa)
 
         do ic = 1,nc
-            sprad(ic) = (nl(ic)/3e9) * fa(ic)
+            sprad(ic) = (nl(ic)/3e9) * fa(ic) / (4. * pi)
         enddo ! ic
 
         continue
