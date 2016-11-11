@@ -16,6 +16,7 @@
 
      use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
                             ,aod,aero_scaleht,fcterm,redp_lvl
+     use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      include 'rad.inc'
 
      trans(od) = exp(-min(od,80.))
@@ -48,6 +49,7 @@
 
      real heights_1d(nk)
 
+     real sprad_to_nl(nc)
      real trans_c(nc)
      real bi_coeff(2,2),tri_coeff(2,2,2),b_alpha_cube(2,2,2)
      equivalence (s,scurr) ! needed only during transition from s to scurr
@@ -110,6 +112,11 @@
 
      transm_4d = 0.                   
 
+     do ic = 1,nc
+       call nl_to_sprad(1.,1,wa(ic),sprad)
+       sprad_to_nl(ic) = 1. / sprad
+     enddo ! ic
+
      b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
                 + cice_3d * cice2alpha * bksct_eff_cice &
                 + rain_3d * rain2alpha * bksct_eff_rain &
@@ -119,6 +126,7 @@
 
      ntot = 0
      nsteps = 0
+     refraction = 0.5 ! initialize
 
      heights_1d(:) = heights_3d(ni/2,nj/2,:)
 
@@ -265,11 +273,11 @@
 !          Update the height based on the slope of the ray with a correction
 !          for Earth curvature. The approximation is made that the curve of
 !          the Earth can be given by a quadratic (parabolic) expression.
-           ht = htt + dhtds*s + (dxyds*s)**2 / (2.0*earth_radius)
+!          ht = htt + dhtds*s + (dxyds*s)**2 / (2.0*earth_radius)
 
 !          This can be used as part of a refraction strategy
-!          refk = 0.179
-!          ht = htt + dhtds*s + (dxyds*s)**2 / ((2.0/(1.-refk))*earth_radius)
+           refk = 0.179
+           ht = htt + dhtds*s + (dxyds*s)**2 / ((2.0/(1.-refk))*earth_radius)
 
 !          if(ht .le. float(htluthi) .and. ht .ge. float(htlutlo))then
            if(ht .le.  1.0*(htluthi) .and. ht .ge.  1.0*(htlutlo))then
@@ -469,7 +477,7 @@
            endif
            if(transm_3d(i,j,k) .eq. r_missing_data)then
              imiss = imiss + 1
-             if(imiss .le. 10)then
+             if(imiss .le. 10 .or. iverbose .eq. 1)then
                write(6,*)' missing at ',i,j,k
              endif
              if(i .eq. 10 * (i/10) .and. j .eq. 10 * (j/10))then
@@ -477,6 +485,9 @@
              endif
            elseif(transm_3d(i,j,k) .eq. 0.)then
              nshadow = nshadow + 1
+             if(iverbose .eq. 1)then
+               write(6,*)' shadow at ',i,j,k,heights_3d(i,j,k)
+             endif
 !          elseif(transm_3d(i,j,k) .lt. 0.)then
 !            write(6,*)' ERROR: transm_3d < 0',i,j,k,transm_3d(i,j,k)
 !            stop
@@ -484,9 +495,35 @@
 !            write(6,*)' ERROR: transm_3d > 1',i,j,k,transm_3d(i,j,k)
 !            stop
            else ! Calculate transm_4d
-             refraction = 0.5 ! typical value near horizon
+
+!            Direct illumination of the cloud is calculated here
+!            Indirect illumination is factored in via 'scat_frac'
+             obj_alt_thr = .01 ! abs(obj_alt(i,j)) * .00
+             if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr .OR. iverbose .eq. 1)then
+!              ag = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)),patm_k)
+               ag = airmassf(90.-obj_alt(i,j), patm_k)
+
+               if(.true.)then
+                 aero_refht = redp_lvl
+                 obj_alt_app = obj_alt(i,j) + refraction
+                 call get_airmass(obj_alt_app,heights_3d(i,j,k),patm_k & ! I 
+                                   ,aero_refht,aero_scaleht &   ! I
+                                   ,earth_radius,iverbose &     ! I
+                                   ,agdum,aodum,aa,refr_deg)    ! O
+               else
+                 aa = 0.
+               endif
+
+               obj_alt_last = obj_alt(i,j)
+               refraction = refr_deg 
+             endif                                                     
 
              obj_alt_cld = obj_alt(i,j) + horz_dep_d + refraction
+
+             if(iverbose .eq. 1)then
+               write(6,20)heights_3d(i,j,k),obj_alt(i,j),refraction,horz_dep_d,obj_alt_cld
+20             format(' ht/alt/refr/hzdp/obj_alt_cld',5f9.3)
+             endif
 
 !            Estimate solar extinction/reddening by Rayleigh scattering
 !            at this cloud altitude
@@ -498,26 +535,6 @@
                bint = twi_int
 
              else ! low daylight sun
-!              Direct illumination of the cloud is calculated here
-!              Indirect illumination is factored in via 'scat_frac'
-               obj_alt_thr = .01 ! abs(obj_alt(i,j)) * .00
-               if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr .OR. iverbose .eq. 1)then
-!                ag = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)),patm_k)
-                 ag = airmassf(90.-obj_alt(i,j), patm_k)
-
-                 if(.true.)then
-                   aero_refht = redp_lvl
-                   call get_airmass(obj_alt(i,j),heights_3d(i,j,k),patm_k & ! I 
-                                   ,aero_refht,aero_scaleht &   ! I
-                                   ,earth_radius,iverbose &     ! I
-                                   ,agdum,aodum,aa,refr_deg)    ! O
-                 else
-                   aa = 0.
-                 endif
-
-                 obj_alt_last = obj_alt(i,j)
-               endif                                                     
-
                scat_frac = 1.00
                do ic = 1,nc
                  od_g = ag * ext_g(ic) * scat_frac
@@ -525,13 +542,15 @@
                  ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp_a)
                  od_a = aa * ext_a(ic) * aod
 
+                 od_o = (o3_du/300.) * ext_o(ic) * aodum
+
                  trans_c(ic) = trans(od_g + od_a)
 
                  if(iverbose .eq. 1)then
                    write(6,21)k,ic,obj_alt(i,j)
 21                 format(' k/ic/objalt ',i4,i3,f9.2)
-                   write(6,22)ag,agdum,aa,od_g,od_a
-22                 format(' ag/agd/aa/od_g/od_a',5f9.4)
+                   write(6,22)ag,agdum,aa,aodum,od_g,od_a,trans_c(ic)
+22                 format(' ag/agdm/aa/aodm/od_g/od_a/trn',7f9.4)
                  endif
                enddo
 
@@ -551,12 +570,19 @@
              transm_4d(i,j,k,1) = transm_3d(i,j,k) * rint
              transm_4d(i,j,k,2) = transm_3d(i,j,k) * gint
              transm_4d(i,j,k,3) = transm_3d(i,j,k) * bint
+
+             if(iverbose .eq. 1)then
+               write(6,23)sol_occ,rint,gint,bint,transm_4d(i,j,k,:)
+23             format(' solocc/rint/gint/bint/transm_4d',f8.3,2x,3f10.5,2x,3f10.5)
+             endif
+
            endif
          enddo ; enddo ! ij
        enddo ! k
      else ! nighttime: use red channel for sfc lighting
        do k = 1,nk       
-         transm_4d(:,:,k,1) = sfc_glow(:,:) * 0.3 ! nominal backsct
+!        transm_4d(:,:,k,1) = sfc_glow(:,:) * 0.3     ! nominal backsct
+         transm_4d(:,:,k,1) = (uprad_4d(:,:,k,2) / (2.*pi)) * sprad_to_nl(2)
        enddo ! k
        transm_3d(:,:,:) = 0.
      endif
