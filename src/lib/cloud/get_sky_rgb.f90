@@ -4,7 +4,7 @@
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobsl,& ! I
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
                    clear_rad_c_nt, &                                    ! I
-                   glow_sun,glow_moon,glow_stars, &                     ! I
+                   glow_sun,glow_moon,glow_stars,ext_g, &               ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo,swi_obs, &            ! I
                    topo_gti,topo_albedo,gtic,dtic,btic,emic,albedo_sfc,&! I
@@ -37,7 +37,7 @@
         difftwi(altf) = & ! W/m**2                      
         4. * exp(0.50 * altf - 0.108 * altf**2 - .0044 * altf**3)
 
-        include 'rad.inc'
+        include 'rad_nodata.inc'
         include 'wac.inc'
 
         real r_cloud_3d(ni,nj)      ! cloud opacity
@@ -76,7 +76,7 @@
         real gtic(nc,ni,nj)         ! spectral terrain normal irradiance
         real dtic(nc,ni,nj)         !    "        "    diffuse     "
         real btic(nc,ni,nj)         !    "        "    beam/direct "
-        real emic(nc,ni,nj)         ! spectral exitance (from sfc lights)
+        real emic(nc,ni,nj)         ! spectral exitance (from sfc lights - solar rel)
         real aod_2_cloud(ni,nj)     ! aerosol optical depth to cloud
         real aod_2_topo(ni,nj)      ! aerosol optical depth to topo (slant)
         real aod_ill(ni,nj)         ! aerosol illuminated slant optical depth (topo/notopo)
@@ -156,6 +156,14 @@
         write(6,*)' rad_cld_day (nl) = ',rad_cld_day
         rad_cld_day2 =  s10_to_nl(magsecsq_to_s10(0.76))
         write(6,*)' rad_cld_day2 (nl) = ',rad_cld_day2
+        rad_cld_day_nl = wm2sr_to_nl_sun(ghi_zen_toa / (4. * pi))               
+        write(6,*)' rad_cld_day_nl = ',rad_cld_day_nl
+        write(6,*)' day_int = ',day_int
+        write(6,*)' day_int0 = ',day_int0
+
+!       internal reference value for isotropic solar radiance, numerically equal to the
+!       isotropic solar luminance
+!       rad_cld_day = rad_cld_day_nl                                                         
 
         twi_alt = -4.5
 
@@ -396,7 +404,6 @@
 !                                                    j .eq. 2048 )then
 !               idebug_a(i,j) = 1 ! alt slice
 !           endif
-            if(ni .ge. 250)idebug_a(230:250,1) = 1
             if(azi_scale .eq. .20 .AND. alt_a(i,j) .eq. 999.0 .AND. &  ! azi slice
                azi_a(i,j) .ge. 110.0  .and. azi_a(i,j) .le. 130.0)then
                 idebug_a(i,j) = 1
@@ -404,6 +411,10 @@
 
         enddo ! i
         enddo ! j
+
+        if(htmsl .gt. 1000e3)then ! high custom
+            idebug_a(90:130,1930) = 1
+        endif
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
           idebug_a(isun,jsun) = 1
@@ -553,7 +564,7 @@
                      ,sol_alt,sol_az,alt_a,azi_a,twi_0,twi_alt &       ! I
                      ,sol_lat,sol_lon,solalt_limb_true &               ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
-                     ,earth_radius,patm &                              ! I
+                     ,earth_radius,patm,albedo_sfc &                   ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
                      ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
@@ -608,7 +619,7 @@
                      ,moon_alt,moon_az,alt_a,azi_a,twi_0,twi_alt &     ! I
                      ,sol_lat,sol_lon,moonalt_limb_true &              ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
-                     ,earth_radius,patm &                              ! I
+                     ,earth_radius,patm,albedo_sfc &                   ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
                      ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
@@ -844,7 +855,7 @@
           iradsec = 0
           if(solalt_ref .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
               if(solalt_ref .lt. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
-                  rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * 3e9 / 1300. * 7.0
+                  rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * day_int / 1300. * 7.0
                   iradsec = 1
               elseif(solalt_ref .ge. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
 !                 sb_corr = 2.0 * (1.0 - (sind(solalt_ref)**0.5)) 
@@ -938,7 +949,7 @@
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
 
               if(htmsl .gt. 100e3)then
-                rad_sec_cld(:) = difftwi(max(solalt_ref,-16.)) * (ext_g(:)/.09) * 3e9 / 1300. * 7.0
+                rad_sec_cld(:) = difftwi(max(solalt_ref,-16.)) * (ext_g(:)/.09) * day_int / 1300. * 7.0
                 iradsec = 1
                 glow_secondary_cld = log10(rad_sec_cld(2))
               endif
@@ -1395,7 +1406,8 @@
 !                 topo_gti_frac = (max(topo_gti(i,j),001.) / 5000.) ** 0.45
 !                 Get city + moon colors via 'topo_gtic'?
                   if(.true.)then ! experiment (relative solar to nL)
-                    aef = 1. / sind(max(-alt_a(i,j),+19.47))
+!                   Enhanced brightness of lights near the horizontal
+                    aef = aef_f(-alt_a(i,j))
                     rtopo_red = day_int * (emic(1,i,j) * aef & 
                               + 2. * gtic(1,i,j) * topo_albedo(1,i,j) )
                     rtopo_grn = day_int * (emic(2,i,j) * aef &
