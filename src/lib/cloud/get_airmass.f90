@@ -154,7 +154,9 @@
           endif
         endif
 
-        if(iverbose .eq. 1)write(6,*)' returning from get_airmass'
+        if(iverbose .eq. 1)then
+            write(6,*)' returning from get_airmass, refraction = ',refr_deg
+        endif
 
         return
         end
