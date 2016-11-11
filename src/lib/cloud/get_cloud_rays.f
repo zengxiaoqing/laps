@@ -32,15 +32,17 @@
      1                           ,rlat,rlon,lat,lon                     ! I
      1                           ,minalt,maxalt,minazi,maxazi           ! I
      1                           ,alt_scale,azi_scale,l_binary          ! I
-     1                           ,grid_spacing_m,r_missing_data)        ! I
+     1                           ,grid_spacing_m,r_missing_data         ! I
+     1                           ,istatus)                              ! O
 
         use mem_namelist, ONLY: earth_radius,aero_scaleht,redp_lvl
         use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! O
-        use mem_allsky, ONLY: uprad_4d                                  ! L
+        use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)   ! L
         use cloud_rad
 
         include 'trigd.inc'
         include 'wa.inc'
+        parameter (pi=3.14159265)
 
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
@@ -75,7 +77,9 @@
 
         yinterp(x1,x2,y1,y2,x) = y1 + ((x-x1)/(x2-x1)) * (y2-y1) 
 
-        wm2sr_to_nl(x) = 2.113e8 * x     ! (550nm) 
+        parameter (efficiency_lum_sun = .136)
+        wm2sr_to_nl_550(x) = 2.113e8 * x  
+        wm2sr_to_nl_sun(x) = wm2sr_to_nl_550(x) * efficiency_lum_sun
 
         parameter (rpd = 3.14159 / 180.)
 
@@ -152,6 +156,7 @@
 
         logical l_solar_eclipse, l_radtran /.false./, l_spherical
         logical l_atten_bhd /.true./, l_box, l_latlon_grid, l_binary
+        logical l_terrain_following /.false./
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         parameter (nsp = 4)
@@ -186,7 +191,7 @@
         real gtic(nc,minalt:maxalt,minazi:maxazi)  ! spectral terrain GNI
         real dtic(nc,minalt:maxalt,minazi:maxazi)  ! sp terrain diffuse
         real btic(nc,minalt:maxalt,minazi:maxazi)  ! sp beam terrain normal
-        real emic(nc,minalt:maxalt,minazi:maxazi)  ! spectral exitance    
+        real emic(nc,minalt:maxalt,minazi:maxazi)  ! spectral exitance (solar rel)   
         real aod_2_cloud(minalt:maxalt,minazi:maxazi) ! slant path
         real aod_2_topo(minalt:maxalt,minazi:maxazi)  ! slant path
         real*8 dist_2_topo(minalt:maxalt,minazi:maxazi) ! slant dist
@@ -306,8 +311,10 @@
           write(6,*)' Call get_sfc_glow'
           call get_sfc_glow(ni,nj,grid_spacing_m,lat,lon
      1                     ,sfc_glow,gnd_glow)
-          write(6,*)' Cloud glow at observer location is ',sfc_glow(i,j)
-          write(6,*)' Grnd glow at observer location is ',gnd_glow(i,j)
+          write(6,*)' Cloud glow for observer (pop nL) is '
+     1                     ,sfc_glow(i,j)
+          write(6,*)' Grnd glow at observer (pop nL) location is '
+     1                     ,gnd_glow(i,j)
 
 !         Update just the gnd_glow with 'get_nlights'
           write(6,*)' Call get_nlights'
@@ -338,7 +345,8 @@
               write(6,*)' Looping level for call to get_uprad_lyr'
      1                  ,ilevel
               ht = (20000. * il) + 1000.       ! height of aerosol layer
-              call get_uprad_lyr(nc,ni,nj,gnd_radc,ht
+!             use 'aef' in subroutine?
+              call get_uprad_lyr(ni,nj,gnd_radc,ht
      1                          ,uprad_4d(:,:,ilevel,:))
               I4_elapsed = ishow_timer()
             enddo ! i
@@ -352,10 +360,15 @@
             enddo ! k
           endif ! icall_uprad
 
+          do k = 1,nk
+              write(6,32)k,uprad_4d(i,j,k,2)
+32            format(1x,'uprad for observer (wm2nm)',i4,e14.3)
+          enddo ! k
+
 !         Temporary conversion from wm2sr to nL
           do ii = 1,ni
           do jj = 1,nj
-            gnd_glow(ii,jj) = wm2sr_to_nl(gnd_glow(ii,jj))
+            gnd_glow(ii,jj) = wm2sr_to_nl_sun(gnd_glow(ii,jj))
           enddo ! jj
           enddo ! ii
           
@@ -370,7 +383,7 @@
         endif
 
 !       'obs_glow_zen' may be obsolete by now
-        write(6,*)' obs_glow_zen (nL) at observer location is'
+        write(6,*)' obs_glow_zen (pop - nL) at observer location is'
      1            ,obs_glow_zen
 
         I4_elapsed = ishow_timer()
@@ -1118,8 +1131,10 @@
 !                 if(view_altitude_deg .gt. 0.)then ! optimize step size
                     rkdelt_vert = 1.0 - (rk - int(rk))
                     kk_ref = min(int(rk),nk-1)
-                    delta_grid_height = heights_1d(kk_ref+1)
-     1                                - heights_1d(kk_ref)
+                    if(.not. l_terrain_following)then
+                      delta_grid_height = heights_1d(kk_ref+1)
+     1                                  - heights_1d(kk_ref)
+                    endif
                     aspect_ratio = delta_grid_height / grid_spacing_m
                     rkdelt_horz = aspect_ratio / tand(view_altitude_deg) 
                     rkdelt = max(min(rkdelt_horz,rkdelt_vert),0.2)
@@ -1148,32 +1163,35 @@
                   kk_h = int(rk_h)
                   frac_h = rk_h - float(kk_h)
 
-                  ht_l = heights_1d(kk_l) * (1. - frac_l) 
-     1                 + heights_1d(kk_l+1) * frac_l
+                  if(.not. l_terrain_following)then
+                    ht_l = heights_1d(kk_l) * (1. - frac_l) 
+     1                   + heights_1d(kk_l+1) * frac_l
 
-                  pr_l = pres_1d(kk_l) * (1. - frac_l) 
-     1                 + pres_1d(kk_l+1) * frac_l
+                    pr_l = pres_1d(kk_l) * (1. - frac_l) 
+     1                   + pres_1d(kk_l+1) * frac_l
 
-                  if(rk_h .lt. float(nk) .AND. rk_h .ge. 1.0)then
-                    ht_h = heights_1d(kk_h) * (1. - frac_h) 
-     1                   + heights_1d(kk_h+1) * frac_h
+                    if(rk_h .lt. float(nk) .AND. rk_h .ge. 1.0)then
+                      ht_h = heights_1d(kk_h) * (1. - frac_h) 
+     1                     + heights_1d(kk_h+1) * frac_h
 
-                    pr_h = pres_1d(kk_h) * (1. - frac_h) 
-     1                   + pres_1d(kk_h+1) * frac_h
+                      pr_h = pres_1d(kk_h) * (1. - frac_h) 
+     1                     + pres_1d(kk_h+1) * frac_h
 
-                  elseif(rk_h .eq. float(nk))then
-                    ht_h = heights_1d(kk_h)
+                    elseif(rk_h .eq. float(nk))then
+                      ht_h = heights_1d(kk_h)
 
-                    pr_h = pres_1d(kk_h)
-                  else
-                    write(6,*)' ERROR: rk_h is out of bounds ',ls,iabove
+                      pr_h = pres_1d(kk_h)
+                    else
+                      write(6,*)' ERROR: rk_h is out of bounds '
+     1                       ,ls,iabove
      1                       ,rkstart,rk_h,nk,rkdelt,ht_h,ht_m,topo_m
      1                       ,ihit_topo,rjnew_l,rjnew_h,jnew_m
      1                       ,dy1_l,dy1_h,rj,ycos
-                    istatus = 0
-                    stop
-!                   return
-                  endif
+                      istatus = 0
+                      stop
+!                     return
+                    endif
+                  endif ! l_terrain_following
 
                   dz1_l = ht_l - htstart        
                   dz1_h = ht_h - htstart          
@@ -1280,26 +1298,28 @@
                   rk_h = r_missing_data
 
 !                 Pseudo grid values above/below LAPS domain
-                  if(ht_h .gt. heights_1d(nk) .and. iabove .eq. 1)then
-                    rk_h = float(nk) + (ht_h - heights_1d(nk)) / 1000.
-                    pr_h = pres_1d(nk)
+                  if(.not. l_terrain_following)then
+                    if(ht_h .gt. heights_1d(nk) .and. iabove .eq. 1)then
+                      rk_h = float(nk) + (ht_h - heights_1d(nk)) / 1000.
+                      pr_h = pres_1d(nk)
      1                   * exp(-(ht_h - heights_1d(nk)) / 8000.)
-                  elseif(ht_h .lt. heights_1d(1))then
-                    rk_h = 1.        + (ht_h - heights_1d(1))  / 1000.
-                    pr_h = pres_1d(1)
+                    elseif(ht_h .lt. heights_1d(1))then
+                      rk_h = 1.        + (ht_h - heights_1d(1))  / 1000.
+                      pr_h = pres_1d(1)
      1                   * exp(-(ht_h - heights_1d(1))  / 8000.)
-                  else ! inside vertical domain
-                    do k = 1,nk-1
-                      if(heights_1d(k)   .le. ht_h .AND.
-     1                   heights_1d(k+1) .ge. ht_h      )then
-                          delta_h = heights_1d(k+1) - heights_1d(k)
-                          frach = (ht_h - heights_1d(k)) / delta_h
-                          rk_h = float(k) + frach
-                          pr_h = (pres_1d(k)*(1.-frach)) 
-     1                         + (pres_1d(k+1)*frach)
-                      endif
-                    enddo ! k
-                  endif
+                    else ! inside vertical domain
+                      do k = 1,nk-1
+                        if(heights_1d(k)   .le. ht_h .AND.
+     1                     heights_1d(k+1) .ge. ht_h      )then
+                            delta_h = heights_1d(k+1) - heights_1d(k)
+                            frach = (ht_h - heights_1d(k)) / delta_h
+                            rk_h = float(k) + frach
+                            pr_h = (pres_1d(k)*(1.-frach)) 
+     1                           + (pres_1d(k+1)*frach)
+                        endif
+                      enddo ! k
+                    endif
+                  endif ! l_terrain_following
 
                   rk = rk_h
 
@@ -1483,7 +1503,15 @@
                         endif
                       endif 
                       if(knext .ge. 1 .and. knext .le. nk)then
-                        disth = abs( (heights_1d(knext) - ht_h) / dhds )
+                        if(.not. l_terrain_following)then
+                          disth = abs((heights_1d(knext) - ht_h) / dhds)
+                        else
+                          write(6,*)' ERROR in get_cloud_rays'
+                          write(6,*)
+     1                       ' l_box and l_terrain_following are both T'
+                          istatus = 0
+                          return
+                        endif
                       else
                         disth = 1e30
                       endif
@@ -1762,6 +1790,7 @@
                     sum_aod_ill_opac_potl = sum_aod_ill_opac_potl
      1                         + slant2_trans_od
 
+!                   Night lights and aerosols and gas irradiance sum
                     sum_aod_rad_opac(:) = sum_aod_rad_opac(:)
      1                         + slant2_trans_odc(:) * uprad_4d_m(:)
 
@@ -1885,11 +1914,11 @@
 !                         City lights on the ground (spec exitance - emic)
                           if(sol_alt(inew_m,jnew_m) .lt. twi_alt)then  
 
-!                           Now is nL
-!                           Aim for w/m2/sr/nm
+!                           'gnd_glow' is nL, consider w/m2/sr/nm
+!                           'emic' is relative to solar isotropic
                             emic(ic,ialt,jazi) = sum(bi_coeff(:,:)    
      1                        * gnd_glow(i1:i2,j1:j2)) * city_colrat(ic)
-     1                        / 3e9
+     1                        / 3e9 ! nl to solar isotropic (i.e. day_int)
                             if(gnd_glow(inew_m,jnew_m) .gt. 0. .AND. ! .OR. 
      1                                                idebug .eq. 1)then      
                               write(6,82)ialt,jazi,inew_m,jnew_m
@@ -2081,7 +2110,7 @@
           aod_tot(ialt,jazi) = sum_aod
           aod_ill_opac(ialt,jazi) = sum_aod_ill_opac
           aod_ill_opac_potl(ialt,jazi) = sum_aod_ill_opac_potl
-          clear_rad_c_nt(:,ialt,jazi) = sum_aod_rad_opac(:)
+          clear_rad_c_nt(:,ialt,jazi) = sum_aod_rad_opac(:) / (4.*pi)
 
           if(r_cloud_3d(ialt,jazi) .gt. .5)then
               icloud = 1
@@ -2514,6 +2543,7 @@
 
         write(6,*)' returning from get_cloud_rays'
  
+        istatus = 1
         return
         end
 
