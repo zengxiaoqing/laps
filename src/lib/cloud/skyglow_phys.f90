@@ -6,7 +6,8 @@
                    ,sol_alt,sol_azi,view_alt,view_az,twi_0,twi_alt &! I
                    ,sol_lat,sol_lon,solalt_limb_true               &! I
                    ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt &! I
-                   ,earth_radius,patm,aod_vrt,aod_ray,aod_ray_dir  &! I
+                   ,earth_radius,patm,sfc_alb_c                    &! I
+                   ,aod_vrt,aod_ray,aod_ray_dir                    &! I
                    ,aod_ref,aero_scaleht,dist_2_topo               &! I
                    ,htmsl,redp_lvl,horz_dep,eobsl                  &! I
                    ,aod_ill,aod_2_topo,aod_tot,ext_g               &! I
@@ -112,6 +113,7 @@
         real eobsc(nc,minazi:maxazi),eobsc_sum(nc),emag_a(minazi:maxazi)
         real sky_rad_scat(nc,minalt:maxalt,minazi:maxazi)            
 !       real sky_rad_scata(minazi:maxazi)
+        real sfc_alb_c(nc)
 
 !       Airmasses relative to zenith for observer ht
         real ags_a(isolalt_lo:isolalt_hi)
@@ -122,7 +124,7 @@
 
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
-        sfc_alb = 0.15  ! pass this in and account for snow cover?
+!       sfc_alb_c(:) = 0.15  ! pass this in and account for snow cover?
 !       ssa = 0.90
 
 !       aod_bin(1) = .000
@@ -742,7 +744,6 @@
             airmass_g = ag
 !           sb_corr = 2.0 * (1.0 - (sind(sol_alt)**0.5)) ! magnitudes
             sb_corr = 0.0
-!           day_int = 3e9 / 10.**(0.4 * sb_corr) * ecl_intd
 
 !           HG illumination
             do ic = 1,nc
@@ -787,13 +788,13 @@
             endif
 
             rayleigh_pfunc = rayleigh_pf(elong(ialt,jazi))
-            rayleigh_gnd = rayleigh_pfunc + sfc_alb * sind(sol_alt)
+            rayleigh_gnd = rayleigh_pfunc + sfc_alb_c(2) * sind(sol_alt)
 
 !           Raising this further will reduce the use of mode_sky = 3
             if(htmsl .le. 1000e3 .and. dist_2_topo(ialt,jazi) .eq. 0d0)then 
               mode_sky = 4 ! simple approach (<250km non-topo case)
               do ic = 1,nc
-                day_int = 3e9 * (1.0 - eobsc(ic,jazi))
+                day_inte = day_int0 * (1.0 - eobsc(ic,jazi))
 
                 if(airmass_g .gt. 0.)then
                   gasf = ag_2d(ialt,jazi) / airmass_g
@@ -816,18 +817,18 @@
                 endif
 
 !               We can still add in gasf and aodf
-                clear_rad_c(ic,ialt,jazi) = day_int * &
+                clear_rad_c(ic,ialt,jazi) = day_inte * &
 !                   (rayleigh_pfunc * sumi_gc(ic) * gasf + &
                     (rayleigh_gnd   * sumi_gc(ic) * gasf + &
                      hg2d(ic)       * sumi_ac(ic) * aodf   )
 
                 if(idebug .ge. 1 .AND. &
                                     (ic .eq. ic  .or. altray .eq. 90.))then
-                  write(6,71)ic,day_int,elong(ialt,jazi) &
+                  write(6,71)ic,day_inte,elong(ialt,jazi) &
                       ,sumi_gc(ic),sumi_ac(ic),gasf,aodf,aodfo &
                       ,rayleigh_pfunc,hg2(ic),aod_dir_rat,hg2d(ic) &
                       ,clear_rad_c(ic,ialt,jazi)
-71                format('day_int/elong/sumi_g/sumi_a/gasf/aodf/aodfo', &
+71                format('day_inte/elong/sumi_g/sumi_a/gasf/aodf/aodfo', &
                          '/rayleigh/hg2/aodr/hg2d/clrrd4', &
                          i2,f12.0,f8.3,2x,2f11.8,2x,3f8.3,2x,4f8.3,f12.0)      
                 endif
@@ -842,7 +843,7 @@
               mode_sky = 3 ! high vantage point >250km (non-topo)
 
 !             Consider case where 'dist_2_topo' is zero (in a cloud) and
-!             'topo_solalt' wasn't set. In this case 'day_int' wouldn't 
+!             'topo_solalt' wasn't set. In this case 'day_inte' wouldn't 
 !             be properly determined. Here we use info from a new array 
 !             called 'trace_solalt'.
               solalt_atmos = trace_solalt(ialt,jazi) 
@@ -855,7 +856,7 @@
 !             Use/restore simpler approach for downward rays from high alt
               do ic = 1,nc
 !               Rayleigh illumination
-                day_int = 3e9 * sol_occ * (1.0 - eobsc(ic,jazi))
+                day_inte = day_int0 * sol_occ * (1.0 - eobsc(ic,jazi))
                 od_per_am = ext_g(ic)
                 rayleigh = brtf(airmass_g,od_per_am) * rayleigh_gnd
                 od_a = aod_ref * aa * ext_a(ic)  ! slant od
@@ -863,8 +864,8 @@
 
 !               Total illumination
                 if(htmin_view .le. 100e3)then
-!                 clear_rad_c(ic,ialt,jazi) = day_int * (rayleigh + brta)
-                  clear_rad_c(ic,ialt,jazi) = day_int * &
+!                 clear_rad_c(ic,ialt,jazi) = day_inte * (rayleigh + brta)
+                  clear_rad_c(ic,ialt,jazi) = day_inte * &
                       (rayleigh       * sumi_gc(ic) + &
                        hg2d(ic)       * sumi_ac(ic)   )
                 else
@@ -872,17 +873,17 @@
                 endif
 
                 if(idebug .ge. 1 .and. ic .eq. icd)then
-                  write(6,72)day_int,elong(ialt,jazi),airmass_g,brtf(airmass_g,od_per_am) &
+                  write(6,72)day_inte,elong(ialt,jazi),airmass_g,brtf(airmass_g,od_per_am) &
                             ,rayleigh,hg2(ic),hg2d(ic),sumi_gc(ic),sumi_ac(ic),clear_rad_c(2,ialt,jazi)
-72                format('day_int/elong/ag/brtf/rayleigh', &
+72                format('day_inte/elong/ag/brtf/rayleigh', &
                          '/hg2/hg2d/sumi/clrrd3',f12.0,6f8.3,2f10.5,f12.0)      
                 endif
 
                enddo ! ic
 
                if(idebug .ge. 1)then
-                 write(6,73)day_int,elong(ialt,jazi),rayleigh,hg2d(2),clear_rad_c(:,ialt,jazi)
-73               format('day_int/elong/hg2/clear_rad :',f12.0,3f8.3,3f12.0)      
+                 write(6,73)day_inte,elong(ialt,jazi),rayleigh,hg2d(2),clear_rad_c(:,ialt,jazi)
+73               format('day_inte/elong/hg2/clear_rad :',f12.0,3f8.3,3f12.0)      
                endif
 
             else ! assume two scattering layers (g+a [lower-1], g [upper-2])
@@ -999,12 +1000,12 @@
 !                 and we're looking above the limb this may need to trend closer
 !                 to the observer obscuration.
                   if(htmsl .le. 10000. .and. altray .ge. 0.)then  
-                    day_int = 3e9 * (1.0 - eobsl)
+                    day_inte = day_int0 * (1.0 - eobsl)
                   else ! consider eobsc determined earlier
-                    day_int = 3e9 * (1.0 - eobsc(ic,jazi))
+                    day_inte = day_int0 * (1.0 - eobsc(ic,jazi))
                   endif
 
-                  clear_rad_topo = day_int * &
+                  clear_rad_topo = day_inte * &
                     (sumi_gct(ic) * rayleigh_gnd * radf + &
 !                    sumi_act(ic) * hg2t(ic)     * aodf * ssa) ! take out ssa?
                      sumi_act(ic) * hg2t(ic)     * aodf) 
@@ -1031,14 +1032,14 @@
                         abs(elong(ialt,jazi)-90.) .le. 0.5 .or. &
                             elong(ialt,jazi)      .le. elglim)        )then
                   jazim1 = max(jazi-1,minazi)
-                  write(6,82)ic,jazi,day_int,eobsc(ic,jazim1:jazi),srcdir(ic),srcdir_90(ic)
-82                format('day_int/eobsc/srcdir/90',2i5,f12.0,4f8.4)           
-!                 write(6,83)day_int,elong(ialt,jazi),airmass_g,od_g &
+                  write(6,82)ic,jazi,day_inte,eobsc(ic,jazim1:jazi),srcdir(ic),srcdir_90(ic)
+82                format('day_inte/eobsc/srcdir/90',2i5,f12.0,4f8.4)           
+!                 write(6,83)day_inte,elong(ialt,jazi),airmass_g,od_g &
 !                           ,aod_ray(ialt,jazi),aa &
 !                           ,od_a,alphav_g*1e3,alphav_a*1e3,od_g1,od_g2 &
 !                           ,clear_rad_2lyr            
 83                format(&
-     'day_int/elg/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
+     'day_inte/elg/ag/od_g/aod_ray/aa/od_a/alphav_g/alphav_a/od_g1/od_g2/clr_rad :' &
                         ,f12.0,f7.2,2f7.3,f8.3,2f7.3,1x,2f7.3,1x,2f8.4,f12.0)      
                   write(6,84)altray,view_azi_deg,am_sun,aascat,scatter_order,hg2(ic),hg2d(ic),gasfrac,aod_ill(ialt,jazi) & 
                             ,aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi),aod_dir_rat
@@ -1146,7 +1147,7 @@
                   endif
 
 !                 sphere ave, drk gnd
-                  sph_rad_ave = sky_rad_ave(ic) * 0.5 * (1. + sfc_alb)
+                  sph_rad_ave = sky_rad_ave(ic) * 0.5 * (1. + sfc_alb_c(ic))
 
                   do jazi = jazi_start,jazi_end
                     if(dist_2_topo(ialt,jazi) .eq. 0d0)then ! unobstructed by terrain
@@ -1166,7 +1167,7 @@
                   if(ialt .eq. ialt_end)then ! zenith/high point info
                     scatfrac = sky_rad_scat(ic,maxalt,jazi_dbg) / clear_rad_c(ic,maxalt,jazi_dbg)
                     ri_over_i0 = clear_rad_c(ic,maxalt,jazi_dbg) / clear_rad_c0(ic,maxalt,jazi_dbg)
-                    ri_over_f0 = clear_rad_c(ic,maxalt,jazi_dbg) / 3e9                            
+                    ri_over_f0 = clear_rad_c(ic,maxalt,jazi_dbg) / day_int0                            
                     rmaglim = b_to_maglim(clear_rad_c(2,ialt_end,jazi_dbg))
                     write(6,201)ic,altray,view_az(ialt_end,jazi_dbg),sph_rad_ave,od_vert,clear_rad_ref,sky_rad_scat(ic,maxalt,jazi_dbg),clear_rad_c(ic,maxalt,jazi_dbg),scatfrac,ri_over_i0
 201                 format(' ic/alt/az/sph_rad_ave/od/c0/scat/rad/rat/scatf/ii0',i2,2f9.2,f11.0,f6.3,f11.0,2f11.0,f7.4,2f10.7)
