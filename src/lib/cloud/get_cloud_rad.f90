@@ -4,6 +4,7 @@
            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt,sfc_glow)
 
      use mem_namelist, ONLY: r_missing_data, earth_radius
+     use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      use cloud_rad ! Cloud Radiation and Microphysics Parameters
      include 'trigd.inc'
 
@@ -19,6 +20,7 @@
 
 !    real ext_g(nc)           ! od per airmass
      real trans_c(nc)         ! transmissivity
+     real sprad_to_nl(nc)
 !    data ext_g /.07,.14,.28/ ! refine via Schaeffer
 
      real clwc_3d(ni,nj,nk) ! kg/m**3
@@ -86,6 +88,12 @@
      I4_elapsed = ishow_timer()
 
      ht_ref = 5000. ! 0.
+
+     do ic = 1,nc
+       call nl_to_sprad(1.,1,wa(ic),sprad)
+       sprad_to_nl(ic) = 1. / sprad
+     enddo ! ic
+     write(6,*)' sprad_to_nl = ',sprad_to_nl 
 
      do k = nk-1,1,-1
 
@@ -343,7 +351,9 @@
 !     Check the presence of terrain shadow grid points + add sfc glow
       write(6,*)' heights_3d column = ',heights_3d(idb,jdb,:)
       write(6,*)' transm_3d column = ',transm_3d(idb,jdb,:)
-      write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,1)
+      if(solalt .gt. twi_alt)then                                       
+        write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,2)
+      endif
 
 !     if(solalt .lt. -4.)then ! use red channel for sfc lighting
 !         write(6,*)' Range of transm_4d(red channel nl) = ',minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
@@ -365,7 +375,8 @@
               endif
           endif 
           if(solalt .lt. twi_alt)then ! use red channel for sfc lighting
-              transm_4d(i,j,k,1) = sfc_glow(i,j) * 0.3 ! nominal backsct
+!             transm_4d(i,j,k,1) = sfc_glow(i,j) * 0.3 ! nominal backsct
+              transm_4d(i,j,k,1) = (uprad_4d(i,j,k,2) / (2.*pi)) * sprad_to_nl(2) 
               if(transm_4d(i,j,k,2) .eq. r_missing_data)then
 !                 write(6,*)' WARNING transm_4d green channel missing',i,j,k
                   transm_4d(i,j,k,2) = 0.
@@ -429,12 +440,14 @@
         enddo ! i
         enddo ! j
       enddo ! k      
-      write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,1)
 
       write(6,*)' Number of points above ground and in shadow is',n_terr_shadow
-      if(solalt .lt. -4.)then ! use red channel for sfc lighting
+      if(solalt .lt. twi_alt)then ! use red channel for sfc lighting
+          write(6,*)' transm_4d observer column (nL) = ',transm_4d(idb,jdb,:,1)
           write(6,*)' Range of transm_4d(red channel nl) = ',minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
           write(6,*)' Range of transm_4d(grn channel nl) = ',minval(transm_4d(:,:,:,2)),maxval(transm_4d(:,:,:,2))
+      else
+          write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,1)
       endif
 
       I4_elapsed = ishow_timer()
