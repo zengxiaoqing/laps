@@ -105,4 +105,10 @@
 
         real nwcm2sr_to_wm2sr
         nwcm2sr_to_wm2sr(x) = x * 1e-5
-        wm2sr_to_nl(x) = 2.113e8 * x     ! (550nm)  
+
+        parameter (efficiency_lum_sun = .136)
+        wm2sr_to_nl_550(x) = 2.113e8 * x  
+        wm2sr_to_nl_sun(x) = wm2sr_to_nl_550(x) * efficiency_lum_sun
+
+!       Anisotropic exitance factor for sfc lights (angle above ground looking from lights)
+        aef_f(a) = 1. / sind(max(a,+19.47))
