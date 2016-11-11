@@ -24,7 +24,7 @@
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary                                ! I
      1                     ,cloud_od                                ! O
-     1                     ,sky_rgb_cyl)                            ! O
+     1                     ,sky_rgb_cyl,istatus)                    ! O
 
         use mem_allsky
 
@@ -107,10 +107,15 @@
         real blog_sun_roll(minalt:maxalt,minazi:maxazi)
         real glow_stars(nc,minalt:maxalt,minazi:maxazi)
 
+        real ext_g(nc)               ! od per airmass
         real moon_mag,moon_mag_thr
         logical l_solar_eclipse, l_binary, l_zod
 
         write(6,*)' subroutine calc_allsky...'
+
+        ext_g(1) = .090 ! 0.14 * (wa/.55)**(-4)
+        ext_g(2) = .144 ! 0.14 * (wa/.55)**(-4)
+        ext_g(3) = .312 ! 0.14 * (wa/.55)**(-4)
 
         iobs = nint(ri_obs)
         jobs = nint(rj_obs)
@@ -168,7 +173,8 @@
      1                     ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon ! I
      1                     ,minalt,maxalt,minazi,maxazi             ! I
      1                     ,alt_scale,azi_scale,l_binary            ! I
-     1                     ,grid_spacing_m,r_missing_data)          ! I
+     1                     ,grid_spacing_m,r_missing_data           ! I
+     1                     ,istatus)                                ! O
 
           write(6,*)' Return from get_cloud_rays: ',a9time
      1             ,' aod_vrt is ',aod_vrt
@@ -375,6 +381,7 @@
      1                    ,blog_sun_roll     ! sunglow
      1                    ,blog_moon_roll    ! moonglow
      1                    ,glow_stars        ! starglow
+     1                    ,ext_g
      1                    ,aod_vrt,aod_ref 
      1                    ,transm_obs,obs_glow_zen ! observer illumination
      1                    ,ialt_sun,jazi_sun ! sun location
