@@ -1079,7 +1079,11 @@
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary                                ! I
      1                     ,cloud_od                                ! O
-     1                     ,sky_rgb_cyl)                            ! O
+     1                     ,sky_rgb_cyl,istatus)                    ! O
+            if(istatus .ne. 1)then
+              write(6,*)' Error istatus returned from calc_allsky'
+              return
+            endif
 
           else
             continue
