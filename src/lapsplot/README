@@ -40,6 +40,7 @@ driver                                            lapsplot_main.f
             calc_allsky                           lib/cloud/calc_allsky.f 
                 get_cloud_rays                    lib/cloud/get_cloud_rays.f
                     get_sfc_glow                  lib/cloud/get_cloud_rad.f90
+                    get_nlights                   lib/land_albedo.f
                     get_uprad_lyr                 lib/cloud/get_uprad_lyr.f90
                         bilinear_fill             lib/cloud/bilinear_fill.f90
                     get_cloud_rad                 lib/cloud/get_cloud_rad.f90    (first raytrace 3-D radiation)
