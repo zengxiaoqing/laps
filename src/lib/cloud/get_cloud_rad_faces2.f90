@@ -557,10 +557,10 @@
                if(cnt .gt. 0.)then
                  transm_3d(i,j,k) = sumval / cnt
                else
-                 transm_3d(i,j,k) = 0.5
+                 transm_3d(i,j,k) = 1.0
                endif
              else
-               transm_3d(i,j,k) = 0.5
+               transm_3d(i,j,k) = 1.0
              endif ! inside horizontal domain
            endif ! missing value
 
