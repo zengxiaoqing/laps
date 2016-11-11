@@ -1,13 +1,16 @@
 
-        subroutine get_uprad_lyr(nc,ni,nj,gnd_radc,ht,uprad_3d)
+        subroutine get_uprad_lyr(ni,nj,gnd_radc,ht,uprad_3d)
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m 
-        parameter (rpd = 3.14159/180.)
 
-        real gnd_radc(nc,ni,nj) ! spectral exitance (from sfc lights)
+        include 'trigd.inc'
+        include 'rad_nodata.inc'
+
+        real gnd_radc(nc,ni,nj) ! spectral radiance (from sfc lights - wm2srnm)
         real sumrad(nc,ni,nj)
-        real uprad_3d(ni,nj,nc) ! spectral upward irradiance for layer
+        real uprad_3d(ni,nj,nc) ! spectral upward irradiance for layer (wm2nm)
         real, allocatable :: drad(:,:)
+        real, allocatable :: aef(:,:)
 
         radius = 60000.
         iradius = nint(radius / grid_spacing_m)
@@ -15,6 +18,7 @@
         write(6,*)' ht/radius/iradius = ',ht,radius,iradius
 
         allocate(drad(-iradius:+iradius,-iradius:+iradius))
+        allocate(aef(-iradius:+iradius,-iradius:+iradius))
 
 !       Determine radiation weighting function array
         do ii = -iradius,+iradius
@@ -25,6 +29,7 @@
             sin_theta_r = ht/distr
             stearadians = sin_theta_r * (grid_spacing_m / distr)**2
             drad(ii,jj) = stearadians
+            aef(ii,jj) = aef_f(asind(sin_theta_r))
 !           if(ii .eq. 0)then
 !               write(6,*)'jj|disti|distj|ht|distr|stearadians',jj,disti,distj,ht,distr,stearadians
 !           endif
@@ -65,8 +70,9 @@
           jjmin = jmin-j
           jjmax = jmax-j
           do ic = 1,nc
-            uprad_3d(i,j,ic) = sum(drad(iimin:iimax,jjmin:jjmax) &
-                                 * gnd_radc(ic,imin:imax,jmin:jmax))
+            uprad_3d(i,j,ic) = sum( drad(iimin:iimax,jjmin:jjmax) &
+                                  * gnd_radc(ic,imin:imax,jmin:jmax) &
+                                  * aef(iimin:iimax,jjmin:jjmax) )
           enddo ! ic
 
         enddo ! j
