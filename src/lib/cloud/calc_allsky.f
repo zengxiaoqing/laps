@@ -22,7 +22,7 @@
      1                     ,ni_cyl,nj_cyl                           ! O
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
-     1                     ,l_binary                                ! I
+     1                     ,l_binary,l_terrain_following            ! I
      1                     ,cloud_od                                ! O
      1                     ,sky_rgb_cyl,istatus)                    ! O
 
@@ -110,6 +110,7 @@
         real ext_g(nc)               ! od per airmass
         real moon_mag,moon_mag_thr
         logical l_solar_eclipse, l_binary, l_zod
+        logical l_terrain_following
 
         write(6,*)' subroutine calc_allsky...'
 
@@ -172,7 +173,8 @@
      1                     ,moon_mag,moon_mag_thr                   ! I
      1                     ,l_solar_eclipse,eobsc,rlat,rlon,lat,lon ! I
      1                     ,minalt,maxalt,minazi,maxazi             ! I
-     1                     ,alt_scale,azi_scale,l_binary            ! I
+     1                     ,alt_scale,azi_scale                     ! I
+     1                     ,l_binary,l_terrain_following            ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,istatus)                                ! O
 
@@ -192,6 +194,7 @@
      1                       ,alt_scale,azi_scale
      1                       ,htmsl,patm
      1                       ,alm,azm,moon_mag,.false.
+!    1                       ,l_phase,rill,va
      1                       ,dum1,dum2,dum3
      1                       ,diam_deg,horz_dep,blog_moon_roll)
 
@@ -214,6 +217,7 @@
      1                     ,alt_scale,azi_scale
      1                     ,htmsl,patm
      1                     ,solar_alt,solar_az,s_mag,l_solar_eclipse
+!    1                     ,l_phase,rill,va
      1                     ,alm,azm,emag ! used for solar eclipse
      1                     ,diam_deg,horz_dep,blog_sun_roll)
               write(6,31)minval(blog_sun_roll)
@@ -230,6 +234,7 @@
      1                     ,alt_scale,azi_scale
      1                     ,htmsl,patm
      1                     ,solar_alt,solar_az,s_mag,l_solar_eclipse
+!    1                     ,l_phase,rill,va
      1                     ,alm,azm,emag ! used for solar eclipse
      1                     ,diam_deg,horz_dep,blog_sun_roll)
             write(6,*)' range of blog_sun_roll is',
