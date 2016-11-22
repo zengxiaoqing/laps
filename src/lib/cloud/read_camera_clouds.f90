@@ -1,7 +1,7 @@
 
        subroutine get_camera_clouds(minalt,maxalt,minazi,maxazi,alt_scale,azi_scale, & ! I
-                                    i4time, &                                          ! I
-                                    mask_cyl)                                          ! O
+                                    i4time,camera_path,mode, &                         ! I
+                                    mask_cyl,istatus)                                  ! O
  
        use ppm
 
@@ -18,7 +18,7 @@
        integer, allocatable :: img(:,:,:)
        integer u /12/ 
 
-       character*255 imgfile,img_png,img_ppm,convert_cmd
+       character*255 imgfile,img_png,img_ppm,convert_cmd,camera_path
        character*13 a13name, cvt_i4time_wfo_fname13
        character*9 a9time
 
@@ -63,9 +63,9 @@
          close(u)
          write(6,*)' cyl image has been read in'
 
-       elseif(.true.)then ! Read polar mask
-         img_png = '/data/fab/dlaps/projects/roc/hires2/lapsprd/verif/allsky/stats/verif_allsky_mask.dsrc.'//a9time//'.png'
-         img_ppm = '/data/fab/dlaps/projects/roc/hires2/lapsprd/verif/allsky/stats/verif_allsky_mask.dsrc.'//a9time//'.ppm'
+       elseif(mode .eq. 1)then ! Read polar (contingency table) mask
+         img_png = trim(camera_path)//'/verif_allsky_mask.dsrc.'//a9time//'.png'
+         img_ppm = trim(camera_path)//'/verif_allsky_mask.dsrc.'//a9time//'.ppm'
         
          convert_cmd = 'convert -compress none '//trim(img_png)//' '//trim(img_ppm)
          write(6,*)trim(convert_cmd)
@@ -89,12 +89,12 @@
            enddo ! j
          enddo ! ic
 
-!        Convert to mask image
+!        Convert to camera cloud mask image
          do i = 1,nip
          do j = 1,njp
              if(img_polar(3,i,j) .gt. 200)then
                  mask_polar(i,j) = 2 ! cloud
-             elseif(img_polar(3,i,j) .ne. 60)then
+             elseif(img_polar(3,i,j) .eq. 255)then
                  mask_polar(i,j) = 1 ! clear
              else
                  mask_polar(i,j) = 0 ! unknown
@@ -113,13 +113,53 @@
          write(6,*)' Projecting to Cylindrical Mask'
          call polar_to_cyl(mask_polar,mask_cyl,nip,njp,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale)
 
-         do ialt = maxalt,minalt,-10
-             write(6,41)ialt,mask_cyl(ialt,minazi:maxazi:6)
-41           format(1x,i3,1x,300i1)
-         enddo ! j
-         
+       elseif(mode .eq. 2)then ! Read cyl mask (if produced by IDL code)
+         img_png = trim(camera_path)//'/camera_allsky_mask.dsrc.'//a9time//'.png'
+         img_ppm = trim(camera_path)//'/camera_allsky_mask.dsrc.'//a9time//'.ppm'
+        
+         convert_cmd = 'convert -compress none '//trim(img_png)//' '//trim(img_ppm)
+         write(6,*)trim(convert_cmd)
+         call system(trim(convert_cmd))
 
-       elseif(.false.)then ! Read cyl mask (if produced by IDL code)
+         open(u,file=trim(img_ppm),status='old',err=999)
+         read(u,*)   
+         read(u,*)iwidth,iheight
+         rewind(u)
+         write(6,*)' dynamic dims ',ncol,iwidth,iheight
+         ncol = 3
+         call read_ppm(u,img_polar,ncol,iwidth,iheight)
+         close(u)
+         write(6,*)' polar mask has been read into img_polar array'
+
+         do ic = 1,ncol
+           write(6,*)
+           do j = 1,nip,25
+             write(6,21)ic,j,img_polar(ic,1:nip:25,j)
+           enddo ! j
+         enddo ! ic
+
+!        Convert to camera cloud mask image
+         do i = 1,nip
+         do j = 1,njp
+             if(img_polar(1,i,j) .gt. 200)then
+                 mask_polar(i,j) = 2 ! cloud
+             elseif(img_polar(1,i,j) .eq. 0)then
+                 mask_polar(i,j) = 1 ! clear
+             else
+                 mask_polar(i,j) = 0 ! unknown
+             endif
+         enddo ! j
+         enddo ! i
+
+         do j = 1,njp,10
+             write(6,31)j,mask_polar(1:nip:6,j)
+         enddo ! j
+
+         write(6,*)' Sum of mask_polar is ',sum(mask_polar)
+
+!        Convert to cylindrical image
+         write(6,*)' Projecting to Cylindrical Mask'
+         call polar_to_cyl(mask_polar,mask_cyl,nip,njp,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale)
 
        endif
 
