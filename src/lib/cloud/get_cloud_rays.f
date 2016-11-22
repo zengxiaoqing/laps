@@ -31,7 +31,8 @@
      1                           ,l_solar_eclipse,eobsc                 ! I
      1                           ,rlat,rlon,lat,lon                     ! I
      1                           ,minalt,maxalt,minazi,maxazi           ! I
-     1                           ,alt_scale,azi_scale,l_binary          ! I
+     1                           ,alt_scale,azi_scale                   ! I
+     1                           ,l_binary,l_terrain_following          ! I
      1                           ,grid_spacing_m,r_missing_data         ! I
      1                           ,istatus)                              ! O
 
@@ -156,7 +157,7 @@
 
         logical l_solar_eclipse, l_radtran /.false./, l_spherical
         logical l_atten_bhd /.true./, l_box, l_latlon_grid, l_binary
-        logical l_terrain_following /.false./
+        logical l_terrain_following
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         parameter (nsp = 4)
@@ -1125,6 +1126,9 @@
 
                 ls = ls + 1
 
+                in_h = min(max(nint(rinew_h),1),ni)
+                jn_h = min(max(nint(rjnew_h),1),nj)
+
                 if(rkdelt .ne. 0.)then ! trace by pressure levels
 
                   if(.false.)then ! optimize step size
@@ -1134,6 +1138,9 @@
                     if(.not. l_terrain_following)then
                       delta_grid_height = heights_1d(kk_ref+1)
      1                                  - heights_1d(kk_ref)
+                    else
+                      delta_grid_height = heights_3d(in_h,jn_h,kk_ref+1)
+     1                                  - heights_3d(in_h,jn_h,kk_ref)
                     endif
                     aspect_ratio = delta_grid_height / grid_spacing_m
                     rkdelt_horz = aspect_ratio / tand(view_altitude_deg) 
@@ -1188,8 +1195,35 @@
      1                       ,ihit_topo,rjnew_l,rjnew_h,jnew_m
      1                       ,dy1_l,dy1_h,rj,ycos
                       istatus = 0
-                      stop
-!                     return
+                      return
+                    endif
+
+                  else ! l_terrain_following
+                    ht_l = heights_3d(in_h,jn_h,kk_l) * (1. - frac_l) 
+     1                   + heights_3d(in_h,jn_h,kk_l+1) * frac_l
+
+                    pr_l = pres_3d(in_h,jn_h,kk_l) * (1. - frac_l) 
+     1                   + pres_3d(in_h,jn_h,kk_l+1) * frac_l
+
+                    if(rk_h .lt. float(nk) .AND. rk_h .ge. 1.0)then
+                      ht_h = heights_3d(in_h,jn_h,kk_h) * (1. - frac_h) 
+     1                     + heights_3d(in_h,jn_h,kk_h+1) * frac_h
+
+                      pr_h = pres_3d(in_h,jn_h,kk_h) * (1. - frac_h) 
+     1                     + pres_3d(in_h,jn_h,kk_h+1) * frac_h
+
+                    elseif(rk_h .eq. float(nk))then
+                      ht_h = heights_3d(in_h,jn_h,kk_h)
+
+                      pr_h = pres_3d(in_h,jn_h,kk_h)
+                    else
+                      write(6,*)' ERROR: rk_h is out of bounds '
+     1                       ,ls,iabove
+     1                       ,rkstart,rk_h,nk,rkdelt,ht_h,ht_m,topo_m
+     1                       ,ihit_topo,rjnew_l,rjnew_h,jnew_m
+     1                       ,dy1_l,dy1_h,rj,ycos
+                      istatus = 0
+                      return
                     endif
                   endif ! l_terrain_following
 
@@ -1319,6 +1353,33 @@
                         endif
                       enddo ! k
                     endif
+
+                  else ! l_terrain_following
+                    if(ht_h .gt. heights_3d(in_h,jn_h,nk) .and. 
+     1                                         iabove .eq. 1)then
+                      rk_h = float(nk) + 
+     1                       (ht_h - heights_3d(in_h,jn_h,nk)) / 1000.
+                      pr_h = pres_1d(nk)
+     1                * exp(-(ht_h - heights_3d(in_h,jn_h,nk)) / 8000.)
+                    elseif(ht_h .lt. heights_3d(in_h,jn_h,1))then
+                      rk_h = 1.+ (ht_h - heights_3d(in_h,jn_h,1))/1000.       
+                      pr_h = pres_3d(in_h,jn_h,1)
+     1                   * exp(-(ht_h - heights_3d(in_h,jn_h,1)) /8000.)
+                    else ! inside vertical domain
+                      do k = 1,nk-1
+                        if(heights_3d(in_h,jn_h,k)   .le. ht_h .AND.
+     1                     heights_3d(in_h,jn_h,k+1) .ge. ht_h     )then
+                            delta_h = heights_3d(in_h,jn_h,k+1) 
+     1                              - heights_3d(in_h,jn_h,k)
+                            frach = (ht_h - heights_3d(in_h,jn_h,k)) 
+     1                            / delta_h
+                            rk_h = float(k) + frach
+                            pr_h = (pres_3d(in_h,jn_h,k)*(1.-frach)) 
+     1                           + (pres_3d(in_h,jn_h,k+1)*frach)
+                        endif
+                      enddo ! k
+                    endif
+
                   endif ! l_terrain_following
 
                   rk = rk_h
@@ -1448,7 +1509,10 @@
                   k1 = max(min(int(rk_m)   ,nk-1),1) 
 
                   if(i1 .le. 0)then
-                   write(6,*)' software error ',i1,rinew_l,rinew_m,rinew_h,rk_m
+                   write(6,*)' software error ',i1,rinew_l,rinew_m
+     1                                         ,rinew_h,rk_m
+                   istatus = 0
+                   return
                   endif
 
 !                 Along-ray distance to next box face, along each axis
@@ -2541,7 +2605,7 @@
 
         I4_elapsed = ishow_timer()
 
-        write(6,*)' returning from get_cloud_rays'
+        write(6,*)' successful return from get_cloud_rays'
  
         istatus = 1
         return
