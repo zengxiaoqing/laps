@@ -20,37 +20,17 @@
 
 !        Subdivide grid box into horizontal lines
          sum = 0.
+         xlo = float(i) - 0.5
+         xhi = float(i) + 0.5
+         
          do jsub = 0,9
            y = float(j) + float(jsub)/10. - 0.45
-           xlo = float(i) - 0.5
-           xhi = float(i) + 0.5
            c = y
            m = 0.
            h = ricen
            k = rjcen
            call line_ellipse(m,c,h,k,a,b,r_missing_data,x1,x2,y1,y2)
-           if(x1 .le. xlo .and. x2 .ge. xhi)then
-             icond = 1
-             overlap = 1.0
-           elseif(x2 .le. xlo .or. x1 .ge. xhi)then
-             icond = 2
-             overlap = 0.0
-           elseif(x1 .le. xlo .and. x2 .ge. xlo)then
-             icond = 3
-             overlap = x2 - xlo
-           elseif(x1 .le. xhi .and. x2 .ge. xhi)then
-             icond = 4
-             overlap = xhi - x1
-           elseif(x1 .eq. r_missing_data .or. x2 .eq. r_missing_data)then
-             icond = 5
-             overlap = 0.0
-           elseif(x1 .ge. xlo .and. x2 .le. xhi)then
-             icond = 6
-             overlap = x2-x1
-           else
-             icond = 7
-             overlap = r_missing_data
-           endif
+           call get_overlap(x1,x2,xlo,xhi,r_missing_data,icond,overlap,x1o,x2o)
            if(iverbose .ge. 2)write(6,1)i,j,y,xlo,xhi,x1,x2,overlap,icond,radius,aspect_ratio
 1          format(2i4,f9.2,2f9.2,2f9.4,f9.4,i3,2f9.2)
            sum = sum + overlap
@@ -78,6 +58,47 @@
        return
        end
 
+       subroutine get_overlap(x1,x2,xlo,xhi,r_missing_data,icond,overlap,x1o,x2o)
+
+       if(x1 .le. xlo .and. x2 .ge. xhi)then
+         icond = 1
+         overlap = 1.0
+         x1o = xlo
+         x2o = xhi
+       elseif(x2 .le. xlo .or. x1 .ge. xhi)then
+         icond = 2
+         overlap = 0.0
+         x1o = r_missing_data
+         x2o = r_missing_data
+       elseif(x1 .le. xlo .and. x2 .ge. xlo)then
+         icond = 3
+         overlap = x2 - xlo
+         x1o = xlo             
+         x2o = x2            
+       elseif(x1 .le. xhi .and. x2 .ge. xhi)then
+         icond = 4
+         overlap = xhi - x1
+         x1o = x1              
+         x2o = xhi           
+       elseif(x1 .eq. r_missing_data .or. x2 .eq. r_missing_data)then
+         icond = 5
+         overlap = 0.0
+         x1o = r_missing_data
+         x2o = r_missing_data
+       elseif(x1 .ge. xlo .and. x2 .le. xhi)then
+         icond = 6
+         overlap = x2-x1
+         x1o = x1
+         x2o = x2
+       else
+         icond = 7
+         overlap = r_missing_data
+         x1o = r_missing_data
+         x2o = r_missing_data
+       endif
+
+       return
+       end
 
        subroutine line_ellipse(m,c,h,k,a,b,r_missing_data,x1,x2,y1,y2)
 
@@ -108,3 +129,113 @@
 
        return
        end
+
+       subroutine antialias_phase(radius,ricen,rjcen,aspect_ratio,alt_scale,azi_scale,va,rill,array,ni,nj,iverbose)
+
+!      radius        radius in pixels of ellipse vertical axis        I
+!      ricen         location in pixels of ellipse center             I
+!      ni,nj         half size of pixel box to evaluate               I
+!      va            vertex angle of center of illuminated limb       I
+!                    (0 is up, 90 is left) 
+!      array         fractional area of pixels inside ellipse         O
+
+       parameter (rpd = 3.14159/180.)
+         
+!      radius of ellipse with theta measured from a (major) axis
+       rell(a,b,theta) = (a * b) / sqrt( (b*cos(theta))**2 + (a*sin(theta))**2 )
+!      rell(a,b,theta) = sqrt( (b*cos(theta))**2 + (a*sin(theta))**2 )
+
+       real array(-ni:ni,-nj:nj)
+       real m,k
+
+       xpix = ricen
+       ypix = rjcen
+
+       xdeg = xpix * azi_scale
+       ydeg = ypix * alt_scale
+
+       radpix = radius
+       raddeg = radius * alt_scale
+
+       bb = radius
+       area_sum = 0.
+
+!      Ratio of terminator minor axis / major axis
+       aspect2 = abs((2.*rill)-1.)
+
+       r_missing_data = 1e37
+
+       do i = -ni,+ni
+       do j = -nj,+nj
+
+!        Subdivide grid box into horizontal lines
+         sum = 0.
+         if(iverbose .ge. 2)write(6,*)'  i   j    xpix     ypix     rdeg  theta_minor rell1    rell2  aspect_rat rinc'
+         do isub = 0,9 
+         do jsub = 0,9 
+           xpix = float(i) + float(isub)/10. - 0.45
+           ypix = float(j) + float(jsub)/10. - 0.45
+
+           xdeg = xpix * azi_scale
+           ydeg = ypix * alt_scale
+
+           rdeg = sqrt(xdeg**2+ydeg**2)
+           theta_up = atan2(xdeg,ydeg)     
+           theta_minor = theta_up - va*rpd
+           theta_major=theta_minor+90.*rpd
+
+!          Determine r_el1, r_el2 and compare
+           rell1 = 0.25
+           rell2 = rell(rell1,rell1*aspect2,theta_major)
+           if(rdeg .lt. rell1)then
+             if(rill .ge. 0.5)then ! gibbous
+               if(cos(theta_minor).ge.0.)then ! illuminated half
+                 rinc = 1.      
+               elseif(rdeg .lt. rell2)then
+                 rinc = 1.      
+               else
+                 rinc = 0.
+               endif
+             else
+               if(cos(theta_minor).lt.0.)then ! unilluminated half
+                 rinc = 0.      
+               elseif(rdeg .lt. rell2)then
+                 rinc = 0.      
+               else
+                 rinc = 1.
+               endif
+             endif
+           else
+             rinc = 0.
+           endif
+           if(iverbose .ge. 2)write(6,1)i,j,xpix,ypix,rdeg,theta_minor/rpd,rell1,rell2,aspect2,rinc
+1          format(2i4,9f9.3)
+           sum = sum + rinc    
+         enddo ! jsub
+         enddo ! isub
+
+         area = sum / float(100)
+
+         if(iverbose .ge. 1)write(6,2)i,j,ricen,rjcen,area
+2        format(' i/j/ricen/rjcen/area (sq pix)',2x,2i3,2x,2f7.2,f10.4)
+
+         array(i,j) = area
+
+         area_sum = area_sum + area
+
+       enddo ! j
+       enddo ! i
+
+       if(iverbose .ge. 1)then
+         pi = 3.14159
+         area_theo = (pi * radius**2) * aspect_ratio
+         write(6,3)area_sum,area_theo
+3        format(' sum of illuminated area (sq pix): area_sum/theo = ',2f9.5)
+       endif
+
+       write(6,*)'array(0,0)=',array(0,0)
+
+       return
+       end
+
+       
