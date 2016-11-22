@@ -89,6 +89,7 @@
         logical l_idl /.false./
         logical l_cyl, l_polar, l_water_world 
         logical l_binary /.false./
+        logical l_terrain_following /.false./
         logical l_require_all_fields ! requiring all LAPS fields to run
         logical l_test_cloud /.false./
 
@@ -1077,7 +1078,7 @@
      1                     ,ni_cyl,nj_cyl                           ! O
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
-     1                     ,l_binary                                ! I
+     1                     ,l_binary,l_terrain_following            ! I
      1                     ,cloud_od                                ! O
      1                     ,sky_rgb_cyl,istatus)                    ! O
             if(istatus .ne. 1)then
