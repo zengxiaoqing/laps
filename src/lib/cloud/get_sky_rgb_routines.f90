@@ -426,7 +426,8 @@
         subroutine get_glow_obj(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi &
                                ,alt_scale,azi_scale &
                                ,htmsl,patm & 
-                               ,alt_obj_in,azi_obj_in,mag_obj,l_phase &
+                               ,alt_obj_in,azi_obj_in,mag_obj,l_obsc &
+!                              ,l_phase,rill,va &
                                ,alt_obj2,azi_obj2,emag &
                                ,diam_deg,horz_dep,glow_obj)
 
@@ -443,7 +444,7 @@
 
         character*20 starnames
 
-        logical l_phase 
+        logical l_obsc, l_phase /.false./
         real maginterp,magtobri0,bri0tomag
         magtobri0(a) = 10.**(-a*0.4)
         bri0tomag(a) = -log10(a) * 2.5
@@ -453,8 +454,8 @@
         ANGDIF(X,Y)=DMOD(X-Y+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
 
         write(6,*)' subroutine get_glow_obj...'
-        write(6,21)alt_obj_in,azi_obj_in,mag_obj,diam_deg,l_phase,emag,horz_dep
-21      format('   alt/az/mag/diam/lphase/emag/hrzdp = ',4f9.3,l2,f7.4,f7.2)
+        write(6,21)alt_obj_in,azi_obj_in,mag_obj,diam_deg,l_obsc,l_phase,emag,horz_dep
+21      format('   alt/az/mag/diam/lobsc/lphase/emag/hrzdp = ',4f9.3,2l2,f7.4,f7.2)
 
 !       We may want to efficiently apply refraction here to the object 
 !       altitude to convert from true altitude to apparent. It may be more 
@@ -643,7 +644,7 @@
                     endif
 
 !                   Consider second "object" for obscuration or phase
-                    if(l_phase)then 
+                    if(l_obsc)then 
                       rill = 0.5
                       radius_pix2 = radius_pix
                       ricen = (azi_obj2-azig)/azi_scale
@@ -675,7 +676,11 @@
                         write(6,88)aov1,aov2,aov3,fr1,fr2,fr3,approx_overlap,frac_lit
 88                      format(' aov',3f7.2,'  fr',3f7.2,'  overlap/frac_lit',2f7.4)
                       endif
-                    else ! l_phase = F
+                    elseif(l_phase)then
+                      if(frac_lit1 .gt. 0.)then ! potentially lit
+!                       call antialias_phase()
+                      endif    
+                    else ! l_obsc = F
                       frac_lit = frac_lit1 
                     endif
 
