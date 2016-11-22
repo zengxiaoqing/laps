@@ -51,6 +51,7 @@
                                     ! local/input when sun is above/below horizon
         real clear_rad_2nd_c(nc,ni,nj) ! secondary scattering clear sky illumination
         real moon_rad_c(nc,ni,nj)   ! clear sky illumination from moon
+        real moon_rad_2nd_c(nc,ni,nj) ! secondary scattering clear sky illumination
         real clear_radf_c(nc,ni,nj) ! integrated fraction of gas illumin- 
                                     ! ated by the sun along line of sight  
                                     ! (accounting for Earth shadow+clouds)
@@ -61,7 +62,6 @@
         real clear_rad_c_airglow(nc,ni,nj) ! airglow (nL)
         real ave_rad_toa_c(nc,ni,nj)! average (airglow + stars and such)
         real ag_2d(ni,nj)           ! gas airmass (topo/notopo)
-        real glow_moon1(ni,nj)      ! glow (experimental)
         real glow_sun(ni,nj)        ! sunglow (log nl, extendd obj, extnct)
         real glow_moon(ni,nj)       ! moonglow (log b in nl, extended obj)
         real glow_moon_sc(ni,nj)    ! moonglow (log b in nl, scattered)
@@ -112,7 +112,7 @@
         real od_o_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real od_a_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real clr_od(nc), sky_rad_ave(nc), transterm(nc), sph_rad_ave(nc)
-        real topovis_c(nc), od2topo_c(nc), star_rad_ave(nc)
+        real topovis_c(nc), od2topo_c(nc), moon_rad_ave(nc), star_rad_ave(nc)
 
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
@@ -129,6 +129,8 @@
 
         idebug_a = 0
         clear_rad_2nd_c(:,:,:) = 0. ! set (initialize) for testing
+        moon_rad_2nd_c(:,:,:) = 0. ! set (initialize) for testing
+        rad_moon_sc(:,:,:) = 0.     ! initialize
         ave_rad_toa_c(:,:,:) = 0.   ! initialize
         day_int = day_int0 ! via includes
         topo_visibility = 0.
@@ -323,7 +325,8 @@
             azid2 = mod(azid1+180.,360.)
 !           azid2 = azid1 ! block antisolar az               
             moon_cond_clr = 0
-        elseif(moon_alt .gt. -6. .and. sol_alt .lt. twi_0)then
+!       elseif(moon_alt .gt. -6. .and. sol_alt .lt. twi_0)then
+        elseif(moon_alt .gt. -6. .and. sol_alt .lt. -6.)then
             azid1 = nint(moon_az)
             azid2 = mod(azid1+180.,360.)
             if(sol_alt .gt. -8.)then ! block moon alt/az
@@ -340,6 +343,7 @@
         endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2
+        write(6,*)' moon_cond_clr = ',moon_cond_clr
 
         if(moon_cond_clr .eq. 0)then ! sun
             write(6,*)' fill elong_a array based on solar elongation'
@@ -594,7 +598,8 @@
             endwhere
             write(6,*)' sph_rad_ave = ',sph_rad_ave(:)
 
-        elseif(moon_cond_clr .eq. 1)then 
+        endif
+        if(moon_cond_clr .eq. 1)then 
             od_atm_a_eff = od_atm_a
             od_atm_a_dir = od_atm_a
 
@@ -627,8 +632,8 @@
                      ,.false.,i4time,rlat,rlon &                       ! I
                      ,clear_radf_c,ag_2d &                             ! I
                      ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
-                     ,clear_rad_2nd_c &                                ! O
-                     ,moon_rad_c,sky_rad_ave,elong_a         )       ! O/I
+                     ,moon_rad_2nd_c &                                 ! O
+                     ,moon_rad_c,moon_rad_ave,elong_a        )       ! O/I
 
             glow_moon_sc(:,:) = 0.; rad_moon_sc(:,:,:) = 0.
 
@@ -636,19 +641,17 @@
             do i = 1,ni
               if(moon_rad_c(2,i,j) .gt. 0.)then
                 glow_moon_sc(i,j) = log10(moon_rad_c(2,i,j)) + (-26.7 - moon_mag) * 0.4
-                rad_moon_sc(:,i,j) = 10.**glow_moon_sc(i,j)
+                rad_moon_factor = 10.**((-26.7 - moon_mag) * 0.4)
+                rad_moon_sc(:,i,j) = moon_rad_c(:,i,j) * rad_moon_factor
               endif
             enddo ! i
             enddo ! j
-
-            glow_moon1(:,:) = glow_moon_sc(:,:) ! experimental
 
             write(6,*)' range of moon_rad_c(2) is ',minval(moon_rad_c(2,:,:)),maxval(moon_rad_c(2,:,:))
             write(6,*)' log correction is ',(-26.7 - moon_mag) * 0.4
             write(6,*)' range of glow_moon_sc is ',minval(glow_moon_sc(:,:)),maxval(glow_moon_sc(:,:))
             write(6,*)' range of rad_moon_sc is ',minval(rad_moon_sc(2,:,:)),maxval(rad_moon_sc(2,:,:))
-            write(6,*)' range of glow_moon1 is ',minval(glow_moon1(:,:)),maxval(glow_moon1(:,:))
-            write(6,*)' moonglow1:',glow_moon1(ni/2,1:nj:10)
+            write(6,*)' glow_moon_sc:',glow_moon_sc(ni/2,1:nj:10)
 
         else ! get just solar elongation
             if(isun .gt. 0 .AND. jsun .gt. 0 .AND. isun .le. ni .AND. jsun .le. nj)then
@@ -1031,6 +1034,10 @@
                   clear_rad_2nd_c(:,i,j) = clear_rad_2nd_c(:,i,j) + clear_rad_c_nt(:,i,j)
                 endif
 
+                if(moon_cond_clr .eq. 1)then
+                    clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + rad_moon_sc(:,i,j)
+                endif
+
                 if(clear_rad_c(2,i,j) .le. 0.)then
                   if(idebug_a(i,j) .ge. 1)then
                     write(6,53)clear_rad_c(:,i,j),i,j,alt_a(i,j),azi_a(i,j)
@@ -1087,8 +1094,7 @@
               clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + clear_rad_c_nt(:,i,j)
 
               if(moon_cond_clr .eq. 1)then
-                  glow_moon_s = glow_moon1(i,j)
-!                 clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + 10.**glow_moon_sc(i,j)
+                  glow_moon_s = glow_moon_sc(i,j)
                   clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + rad_moon_sc(:,i,j)
               else
                   glow_moon_s = 1.
@@ -1153,9 +1159,8 @@
               if(moon_cond_clr .eq. 1)then ! add moon mag condition
 !               Glow from Rayleigh, no clear_rad crepuscular rays yet
 !               argm = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15
-                glow_moon_s = glow_moon1(i,j)          ! log nL                 
+                glow_moon_s = glow_moon_sc(i,j)          ! log nL                 
                 glow_tot = addlogs(glow_nt,glow_moon_s)
-!               clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + 10.**glow_moon_sc(i,j)
                 clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + rad_moon_sc(:,i,j)
               else
                 glow_tot = glow_nt
@@ -1475,11 +1480,11 @@
               if(sol_alt .gt. 0. .and. (l_solar_eclipse .eqv. .false.))then
                 rad_moon = 10.**glow_moon(i,j)  &
                           * trans(cloud_od(i,j) + aod_slant(i,j)) 
-                rad_moon_r = 10.**glow_sun(i,j)  &
+                rad_moon_r = 10.**glow_moon(i,j)  &
                            * trans(cloud_od(i,j) + clr_od(1)) 
-                rad_moon_g = 10.**glow_sun(i,j)  &
+                rad_moon_g = 10.**glow_moon(i,j)  &
                            * trans(cloud_od(i,j) + clr_od(2)) 
-                rad_moon_b = 10.**glow_sun(i,j)  &
+                rad_moon_b = 10.**glow_moon(i,j)  &
                            * trans(cloud_od(i,j) + clr_od(3)) 
 
                 sky_rad(1) = sky_rad(1) + rad_moon_r
