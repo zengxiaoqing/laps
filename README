@@ -2763,6 +2763,16 @@ Inputs:
         Sample polar netCDF files including a CDL may be found at:
         http://laps.noaa.gov/software/radar/wideband/
 
+        The transformations between counts and dbz can be found in the
+        'netcdfio.f' source code file in subroutines 'counts_to_dbz' and
+        'counts_to_vel'. 
+
+        In Nimbus NetCDF the range for dBZ and RadialVelocity is -128 to +128. 
+        
+        Z_nimbus_netcdf = (2 X Z_measure) -62
+
+        V_nimbus_netcdf = (2 X V_measure) 
+
 Outputs (LAPS intermediate files - depending on input parameters):
 <pre>
      v01         grids       3-D Radar reflectivity, velocity, and Nyquist vel
