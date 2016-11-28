@@ -14,6 +14,8 @@ MODULE mem_allsky
       real, allocatable, dimension(:,:,:) :: transm_3d
       real, allocatable, dimension(:,:,:,:) :: transm_4d
       real, allocatable, dimension(:,:,:,:) :: uprad_4d 
+      real, allocatable, dimension(:,:,:) :: upxrad_3d 
+      real, allocatable, dimension(:,:,:) :: upyrad_3d 
 
 !     2D arrays on sky grid
       real, allocatable, dimension(:,:) :: aod_ill_opac
@@ -37,6 +39,8 @@ CONTAINS
         allocate(transm_3d(ni,nj,nk))
         allocate(transm_4d(ni,nj,nk,nc))
         allocate(uprad_4d(ni,nj,nk,nc))
+        allocate(upxrad_3d(ni,nj,nk))
+        allocate(upyrad_3d(ni,nj,nk))
 
         write(6,*)' allsky successfully allocated'
 
@@ -59,6 +63,8 @@ CONTAINS
         deallocate(transm_3d)
         deallocate(transm_4d)
         deallocate(uprad_4d)
+        deallocate(upxrad_3d)
+        deallocate(upyrad_3d)
 
         write(6,*)' allsky successfully deallocated'
 
