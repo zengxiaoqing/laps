@@ -127,7 +127,7 @@ echo "ctransarg=$ctransarg"
 echo "ctransext=$ctransext"
 echo "netpbm=$netpbm"
 
-if test -r /opt/ncarg/bin/ctrans; then
+if test -r /opt/ncarg/bin/ctrans/null; then
     date
     echo "Running ctrans and netpbm programs to make gmeta_$prod.gif file on JET"
     COMFILE=$LAPS_DATA_ROOT/myctrans
