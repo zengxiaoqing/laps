@@ -138,6 +138,8 @@ contains
         write(100,'( 3(i5,1x) )') R(i,j),G(i,j),B(i,j)
       enddo
     enddo
+
+    close(100)
   end subroutine
 
   !--------------------------------------------------------------
