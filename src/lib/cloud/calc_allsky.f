@@ -15,7 +15,7 @@
      1                     ,solar_lat,solar_lon                     ! I
      1                     ,alt_norm                                ! I
      1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
-     1                     ,moon_mag,moon_mag_thr                   ! I
+     1                     ,moon_mag,moon_mag_thr,elgms             ! I
      1                     ,l_solar_eclipse,eobsc,emag              ! I
      1                     ,rlat,rlon,lat,lon                       ! I
      1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
@@ -23,9 +23,10 @@
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary,l_terrain_following            ! I
-     1                     ,cloud_od                                ! O
+     1                     ,cloud_od,dist_2_topo                    ! O
      1                     ,sky_rgb_cyl,istatus)                    ! O
 
+        include 'trigd.inc'
         use mem_allsky
 
         addlogs(x,y) = log10(10.**x + 10.**y)
@@ -58,13 +59,14 @@
 
 !       Output arrays
         real sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi) ! Observed Variable
+        real cloud_od(minalt:maxalt,minazi:maxazi)
+        real*8 dist_2_topo(minalt:maxalt,minazi:maxazi)
 
 !       Local arrays (e.g. outputs from get_cloud_rays)
 !       real transm_3d(NX_L,NY_L,NZ_L)
 !       real transm_4d(NX_L,NY_L,NZ_L,nc) 
 
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)
-        real cloud_od(minalt:maxalt,minazi:maxazi)
         real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
@@ -90,7 +92,6 @@
         real emic(nc,minalt:maxalt,minazi:maxazi)
         real aod_2_cloud(minalt:maxalt,minazi:maxazi)
         real aod_2_topo(minalt:maxalt,minazi:maxazi)
-        real*8 dist_2_topo(minalt:maxalt,minazi:maxazi)
         real aod_ill(minalt:maxalt,minazi:maxazi)
         real aod_ill_dir(minalt:maxalt,minazi:maxazi)
         real aod_tot(minalt:maxalt,minazi:maxazi)
@@ -109,7 +110,7 @@
 
         real ext_g(nc)               ! od per airmass
         real moon_mag,moon_mag_thr
-        logical l_solar_eclipse, l_binary, l_zod
+        logical l_solar_eclipse, l_binary, l_zod, l_phase
         logical l_terrain_following
 
         write(6,*)' subroutine calc_allsky...'
@@ -189,12 +190,16 @@
      1       l_solar_eclipse .eqv. .false.    )then
             write(6,*)' Moon glow being calculated: ',alm,azm
             diam_deg = 0.5
+            l_phase = .true.
+            call great_circle(alm,azm,solar_alt,solar_az,gcdist,va)
+            rill = (1. - cosd(elgms)) / 2.
+            write(6,*)' vertex angle / rill is ',va,rill
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                       ,minalt,maxalt,minazi,maxazi 
      1                       ,alt_scale,azi_scale
      1                       ,htmsl,patm
      1                       ,alm,azm,moon_mag,.false.
-!    1                       ,l_phase,rill,va
+     1                       ,l_phase,rill,va
      1                       ,dum1,dum2,dum3
      1                       ,diam_deg,horz_dep,blog_moon_roll)
 
@@ -212,12 +217,13 @@
               endif
               diam_deg = 8.0    
               write(6,*)' Corona glow being calculated: '
+              l_phase = .false.
               call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
      1                     ,htmsl,patm
      1                     ,solar_alt,solar_az,s_mag,l_solar_eclipse
-!    1                     ,l_phase,rill,va
+     1                     ,l_phase,rill,va
      1                     ,alm,azm,emag ! used for solar eclipse
      1                     ,diam_deg,horz_dep,blog_sun_roll)
               write(6,31)minval(blog_sun_roll)
@@ -229,12 +235,13 @@
             s_mag = -26.74
             diam_deg = 0.5
             write(6,*)' Sun glow being calculated: '
+            l_phase = .false.
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
      1                     ,minalt,maxalt,minazi,maxazi 
      1                     ,alt_scale,azi_scale
      1                     ,htmsl,patm
      1                     ,solar_alt,solar_az,s_mag,l_solar_eclipse
-!    1                     ,l_phase,rill,va
+     1                     ,l_phase,rill,va
      1                     ,alm,azm,emag ! used for solar eclipse
      1                     ,diam_deg,horz_dep,blog_sun_roll)
             write(6,*)' range of blog_sun_roll is',
