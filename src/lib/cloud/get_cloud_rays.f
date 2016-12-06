@@ -39,6 +39,8 @@
         use mem_namelist, ONLY: earth_radius,aero_scaleht,redp_lvl
         use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! O
         use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)   ! L
+        use mem_allsky, ONLY: upxrad_3d ! (upward irradiance xcos)      ! L
+        use mem_allsky, ONLY: upyrad_3d ! (upward irradiance ycos)      ! L
         use cloud_rad
 
         include 'trigd.inc'
@@ -348,22 +350,29 @@
               ht = (20000. * il) + 1000.       ! height of aerosol layer
 !             use 'aef' in subroutine?
               call get_uprad_lyr(ni,nj,gnd_radc,ht
-     1                          ,uprad_4d(:,:,ilevel,:))
+     1                          ,uprad_4d(:,:,ilevel,:)
+     1                          ,upxrad_3d(:,:,ilevel)
+     1                          ,upyrad_3d(:,:,ilevel))
               I4_elapsed = ishow_timer()
             enddo ! i
             icall_uprad = 1
 
-            write(6,*)' Vertically interpolate uprad_4d'
+            write(6,*)' Vertically interpolate uprad layers'
             do k = 2,nk-1
               frack = float(k-1) / float(nk-1)
               uprad_4d(:,:,k,:) = uprad_4d(:,:,1,:)  * (1.-frack) 
      1                          + uprad_4d(:,:,nk,:) * frack 
+              upxrad_3d(:,:,k)  = upxrad_3d(:,:,1)  * (1.-frack) 
+     1                          + upxrad_3d(:,:,nk) * frack 
+              upyrad_3d(:,:,k)  = upyrad_3d(:,:,1)  * (1.-frack) 
+     1                          + upyrad_3d(:,:,nk) * frack 
             enddo ! k
           endif ! icall_uprad
 
           do k = 1,nk
-              write(6,32)k,uprad_4d(i,j,k,2)
-32            format(1x,'uprad for observer (wm2nm)',i4,e14.3)
+              write(6,32)k,uprad_4d(i,j,k,2),upxrad_3d(i,j,k)
+     1                                      ,upyrad_3d(i,j,k)
+32            format(1x,'uprad for observer (wm2nm)',i4,e14.3,2f9.3)
           enddo ! k
 
 !         Temporary conversion from wm2sr to nL
@@ -1008,6 +1017,8 @@
           sum_am2cld_den = 0.
           sum_am2cld_atten = 0.
           sum_god(:) = 0.
+          sum_xcosup = 0.
+          sum_ycosup = 0.
           frac_fntcloud = 1.0
           ray_topo_diff_h = htagl ! 0.
           ray_topo_diff_m = 0.
@@ -1665,7 +1676,7 @@
      1                            transm_3d(i1:i2,j1:j2,k1:k2))
 
                     sum_odrad = sum_odrad + 
-     1               (cvr_path * slant2 * transm_3d_m)       
+     1                 (cvr_path * slant2 * transm_3d_m)       
 
                     if(.true.)then
                       sum_odrad_w = sum_odrad_w + 
@@ -1686,6 +1697,23 @@
                         uprad_4d_m(ic) = 0.
                       endif
                     enddo ! ic
+ 
+                    if(icall_uprad .gt. 0)then
+                      upxrad_3d_m = sum(tri_coeff(:,:,:) *
+     1                              upxrad_3d(i1:i2,j1:j2,k1:k2))
+                      upyrad_3d_m = sum(tri_coeff(:,:,:) *
+     1                              upxrad_3d(i1:i2,j1:j2,k1:k2))
+
+                      sum_xcosup = sum_xcosup + upxrad_3d_m
+     1                           * cvr_path * slant2
+                      sum_ycosup = sum_ycosup + upyrad_3d_m
+     1                           * cvr_path * slant2
+
+                    else
+                      upxrad_3d_m = 0.
+                      upyrad_3d_m = 0.
+
+                    endif
 
                     sum_odrad_c(:) = sum_odrad_c(:) + 
      1              (cvr_path * slant2 * transm_4d_m(:))
@@ -1896,6 +1924,9 @@
                       rad_last_w = cloud_rad_w(ialt,jazi) 
                       sum_odrad_c_last = cloud_rad_c(:,ialt,jazi)
 
+                      xcos_last = upxrad_3d_m
+                      ycos_last = upyrad_3d_m
+
                     elseif(cvr_path_sum      .gt.  bks_thr .AND.
      1                     cvr_path_sum_last .le.  bks_thr .AND.
      1                     cvr_path_sum_last .gt.  0.           )then
@@ -1925,6 +1956,9 @@
      1                           ,cloud_rad_w(ialt,jazi)
 71                      format(' last/new/frac/rad/radw',5f9.4)
                       endif
+
+!                     xcosup = ???
+!                     ycosup = ???
 
                     endif ! near tau_thr boundary
 
