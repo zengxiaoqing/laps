@@ -264,7 +264,7 @@
                 azis = nint(azi_stars(is)/azi_scale) * azi_scale
                 if(abs(alts-altg) .le. alt_dist .AND. abs(azis-azig) .le. azi_dist)then
                     delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
-                    rmag_per_sqarcsec = mag_stars(is) + ext_mag(is) + delta_mag                  
+                    rmag_per_sqarcsec = mag_stars(is) + delta_mag                  
 
 !                   Convert to log nanolamberts
                     glow_nl = log10(v_to_b(rmag_per_sqarcsec))
@@ -427,7 +427,7 @@
                                ,alt_scale,azi_scale &
                                ,htmsl,patm & 
                                ,alt_obj_in,azi_obj_in,mag_obj,l_obsc &
-!                              ,l_phase,rill,va &
+                               ,l_phase,rill,va &
                                ,alt_obj2,azi_obj2,emag &
                                ,diam_deg,horz_dep,glow_obj)
 
@@ -444,7 +444,7 @@
 
         character*20 starnames
 
-        logical l_obsc, l_phase /.false./
+        logical l_obsc, l_phase
         real maginterp,magtobri0,bri0tomag
         magtobri0(a) = 10.**(-a*0.4)
         bri0tomag(a) = -log10(a) * 2.5
@@ -543,9 +543,12 @@
 !               Calculate distance in degrees in cyl projection
                 distd = sqrt(((alt_obj-altg))**2 + ((azi_obj-azig)*cosd(alt_cos))**2)
 
+!               Initialize
                 frac_lit = 1.0
                 frac_lit2 = 0.0
                 grid_frac_obj = 1.0
+                iblock=0
+                rmag_per_sqarcsec = r_missing_data
 
 !               if(diam_deg .ge. 0.75 .and. distr .le. radius_deg)then  ! solar corona
                 if(diam_deg .ge. 0.75)then  ! solar corona
@@ -599,7 +602,7 @@
                     smag_effm = -2.5
                     smag_eff = maginterp(smag_effc,smag_effm,frac_lit)
 
-                    rmag_per_sqarcsec = smag_eff + ext_mag + delta_mag 
+                    rmag_per_sqarcsec = smag_eff + delta_mag 
                     if(abs(alt_obj-altg) .le. 0.15)then                  
 !                   if(.true.)then                                      
                         write(6,81)ialt,jazi,altg,alt_obj,azig,azi_obj,distd,spowerk,spowerf,spowerc,smag_eff,rmag_per_sqarcsec,frac_lit
@@ -609,6 +612,7 @@
                     iblock = 2
                     rmag_per_sqarcsec = r_missing_data
                   endif
+                 
                 elseif(diam_deg .ge. 0.25 .and. diam_deg .lt. 0.75 .and. distd .le. 1.0)then ! regular sun or moon
                     iblock = 3
                     size_glow_sqdg = 0.2    ! sun/moon area           
@@ -622,6 +626,21 @@
                       else
                         frac_lit = 1.5 - distr
                       endif
+                    elseif(l_phase)then
+                      iblock = 30    
+                      if(distr .le. 1.5)then ! potentially lit
+                        iverbose = 2  
+                        radius_pix = radius_deg / alt_scale
+                        ricen = (azi_obj-azig)/azi_scale
+                        rjcen = (alt_obj-altg)/alt_scale
+                        aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
+                        write(6,*)' Calling antialias_phase with iverbose = ',iverbose
+                        call antialias_phase(radius_pix,ricen,rjcen,aspect_ratio,alt_scale,azi_scale,va,rill,frac_lit1,0,0,iverbose)
+                        write(6,*)' frac_lit1 returned ',ialt,jazi,frac_lit1
+                        size_glow_sqdg = size_glow_sqdg * rill           
+                      else
+                        frac_lit1 = 0.
+                      endif    
                     else           ! more accurate anti-aliasing scheme
                       radius_pix = radius_deg / alt_scale
                       ricen = (azi_obj-azig)/azi_scale
@@ -676,10 +695,6 @@
                         write(6,88)aov1,aov2,aov3,fr1,fr2,fr3,approx_overlap,frac_lit
 88                      format(' aov',3f7.2,'  fr',3f7.2,'  overlap/frac_lit',2f7.4)
                       endif
-                    elseif(l_phase)then
-                      if(frac_lit1 .gt. 0.)then ! potentially lit
-!                       call antialias_phase()
-                      endif    
                     else ! l_obsc = F
                       frac_lit = frac_lit1 
                     endif
@@ -691,7 +706,7 @@
                     if(frac_lit .gt. 0.)then
 !                       Average pixel surface brightness accounting for fraction of pixel that is lit
                         delta_mag = log10((size_glow_sqdg*sqarcsec_per_sqdeg)/frac_lit)*2.5
-                        rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+                        rmag_per_sqarcsec = mag_obj + delta_mag                  
                     else
                         rmag_per_sqarcsec = r_missing_data
                     endif
@@ -699,7 +714,7 @@
                 elseif(distd .le. radius_deg)then ! star
                     iblock = 4
                     delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
-                    rmag_per_sqarcsec = mag_obj + ext_mag + delta_mag                  
+                    rmag_per_sqarcsec = mag_obj + delta_mag                  
                 else
                     iblock = 5
                     rmag_per_sqarcsec = r_missing_data
@@ -711,17 +726,18 @@
                   glow_obj(ialt,jazi) = addlogs(glow_obj(ialt,jazi),log10(glow_nl))
 
 !                 if(.true.)then                          
-                  if(abs(alt_obj-altg) .le. 0.15 .and. iwrite .le. 100)then                  
-                        write(6,90)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
-90                      format(' altga-t/alt_obj/azig/azi_obj/distd/area/frclit =',2i5,6f9.3,2f7.2,f7.4)
+!                 if(abs(alt_obj-altg) .le. 0.15 .and. iwrite .le. 100)then                  
+                  if(iblock.eq.30)then                  
+                      write(6,90)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
+90                    format(' altga-t/alt_obj/azig/azi_obj/distd/area/frclit =',2i5,6f9.3,2f7.2,f7.4)
 
-                        if(glow_nl .lt. 1e5)then
-                            write(6,91)ialt,jazi,diam_deg,rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
-91                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj =     ',2i5,f5.2,2f10.3,e12.4,f11.2)
-                        else
-                            write(6,92)ialt,jazi,diam_deg,rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
-92                          format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj =     ',2i5,f5.2,2f10.3,e12.4,f11.2,' ***GLOW***')
-                        endif
+                      if(glow_nl .lt. 1e5)then
+                          write(6,91)ialt,jazi,diam_deg,rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
+91                        format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj =     ',2i5,f5.2,2f10.3,e12.4,f11.2)
+                      else
+                          write(6,92)ialt,jazi,diam_deg,rmag_per_sqarcsec,delta_mag,glow_nl,glow_obj(ialt,jazi)
+92                        format(' rmag_per_sqarcsec/dmag/glow_nl/glow_obj =     ',2i5,f5.2,2f10.3,e12.4,f11.2,' ***GLOW***')
+                      endif
                   endif
                 else ! missing rmag_per_sqarcsec
                   if(distd .le. 0.15)then
