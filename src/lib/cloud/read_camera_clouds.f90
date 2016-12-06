@@ -1,6 +1,6 @@
 
        subroutine get_camera_clouds(minalt,maxalt,minazi,maxazi,alt_scale,azi_scale, & ! I
-                                    i4time,camera_path,mode, &                         ! I
+                                    i4time,fname_ppm,mode, &                         ! I
                                     mask_cyl,istatus)                                  ! O
  
        use ppm
@@ -21,6 +21,7 @@
        character*255 imgfile,img_png,img_ppm,convert_cmd,camera_path
        character*13 a13name, cvt_i4time_wfo_fname13
        character*9 a9time
+       character*10 fname_ppm
 
 !      Statement functions
        i2ialt(i) = minalt+i-1
@@ -114,14 +115,18 @@
          call polar_to_cyl(mask_polar,mask_cyl,nip,njp,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale)
 
        elseif(mode .eq. 2)then ! Read cyl mask (if produced by IDL code)
-         img_png = trim(camera_path)//'/camera_allsky_mask.dsrc.'//a9time//'.png'
-         img_ppm = trim(camera_path)//'/camera_allsky_mask.dsrc.'//a9time//'.ppm'
+         if(.false.)then
+           img_png = trim(camera_path)//'/camera_allsky_mask.dsrc.'//a9time//'.png'
+           img_ppm = trim(camera_path)//'/camera_allsky_mask.dsrc.'//a9time//'.ppm'
         
-         convert_cmd = 'convert -compress none '//trim(img_png)//' '//trim(img_ppm)
-         write(6,*)trim(convert_cmd)
-         call system(trim(convert_cmd))
+           convert_cmd = 'convert -compress none '//trim(img_png)//' '//trim(img_ppm)
+           write(6,*)trim(convert_cmd)
+           call system(trim(convert_cmd))
+           open(u,file=trim(img_ppm),status='old',err=999)
+         else
+           open(u,file=trim(fname_ppm),status='old',err=999)
+         endif
 
-         open(u,file=trim(img_ppm),status='old',err=999)
          read(u,*)   
          read(u,*)iwidth,iheight
          rewind(u)
