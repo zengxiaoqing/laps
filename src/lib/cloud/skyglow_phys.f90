@@ -64,9 +64,9 @@
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi)  ! clear sky illumination
         real clear_rad_c0(nc,minalt:maxalt,minazi:maxazi) ! clear sky (no eclipse)
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
-               ! fraction of air molecules illuminated by the sun along
-               ! line of sight (consider Earth's shadow + clouds)
-               ! topo and multiple scattering is accounted for
+               ! fraction of gas illuminated by the sun along line of sight
+               ! (consider Earth's shadow + clouds, used when sun is below
+               !  the horizon), attenuated from consideration behind clouds
         real ag_2d(minalt:maxalt,minazi:maxazi) ! gas airmass (topo/notopo)
         real aod_ill(minalt:maxalt,minazi:maxazi) ! aerosol illuminated
                                       ! optical depth (slant - topo/notopo)
@@ -806,7 +806,7 @@
                 od_a_slant = od_a_vert * aa_o_aa_90 
                 od_a = od_a_slant
                 if(od_a_slant .gt. 0. .and. sol_alt .gt. twi_alt .and. &
-                   aod_ill_opac_potl(ialt,jazi) .gt. 0.)then ! normalize with extinction?
+                  aod_ill_opac_potl(ialt,jazi) .gt. 0.)then ! normalize with extinction?
 !                 aodf = min(aod_ill(ialt,jazi)/od_a_slant,1.0)
                   aodfo = min(aod_ill(ialt,jazi)/aod_tot(ialt,jazi),1.0)
 !                 May be large when viewer is in stratosphere
@@ -816,21 +816,28 @@
                   aodf = 1.0
                 endif
 
+                if(solalt_ref .gt. twi_alt)then ! allow crepuscular rays?
+!               if(solalt_ref .gt. 0.0)then     ! allow only sun rays
+                  radf = clear_radf_c(ic,ialt,jazi)
+                else
+                  radf = 1.0
+                endif
+
 !               We can still add in gasf and aodf
                 clear_rad_c(ic,ialt,jazi) = day_inte * &
 !                   (rayleigh_pfunc * sumi_gc(ic) * gasf + &
-                    (rayleigh_gnd   * sumi_gc(ic) * gasf + &
+                    (rayleigh_gnd   * sumi_gc(ic) * gasf * radf + &
                      hg2d(ic)       * sumi_ac(ic) * aodf   )
 
                 if(idebug .ge. 1 .AND. &
                                     (ic .eq. ic  .or. altray .eq. 90.))then
                   write(6,71)ic,day_inte,elong(ialt,jazi) &
-                      ,sumi_gc(ic),sumi_ac(ic),gasf,aodf,aodfo &
+                      ,sumi_gc(ic),sumi_ac(ic),gasf,radr,aodf,aodfo &
                       ,rayleigh_pfunc,hg2(ic),aod_dir_rat,hg2d(ic) &
                       ,clear_rad_c(ic,ialt,jazi)
-71                format('day_inte/elong/sumi_g/sumi_a/gasf/aodf/aodfo', &
+71                format('day_inte/elong/sumi_g/sumi_a/gasf/radf/aodf/aodfo', &
                          '/rayleigh/hg2/aodr/hg2d/clrrd4', &
-                         i2,f12.0,f8.3,2x,2f11.8,2x,3f8.3,2x,4f8.3,f12.0)      
+                         i2,f12.0,f8.3,2x,2f11.8,2x,3f8.3,2x,5f8.3,f12.0)      
                 endif
               enddo ! ic
 
