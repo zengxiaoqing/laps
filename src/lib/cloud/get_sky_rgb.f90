@@ -44,8 +44,8 @@
         real cloud_od(ni,nj)        ! cloud optical depth
         real cloud_od_sp(ni,nj,nsp) ! cloud species optical depth
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
+        real cloud_rad_w(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat) * trans
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
-        real cloud_rad_w(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat) * rad
         real cloud_sfc_c(nc,ni,nj)  ! cloud radiance from surface lighting (sun relative units)
         real clear_rad_c(nc,ni,nj)  ! clear sky illumination
                                     ! local/input when sun is above/below horizon
