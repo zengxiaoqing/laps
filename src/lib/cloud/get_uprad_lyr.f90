@@ -1,5 +1,5 @@
 
-        subroutine get_uprad_lyr(ni,nj,gnd_radc,ht,uprad_3d)
+        subroutine get_uprad_lyr(ni,nj,gnd_radc,ht,uprad_3d,xcos,ycos)
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m 
 
@@ -9,8 +9,12 @@
         real gnd_radc(nc,ni,nj) ! spectral radiance (from sfc lights - wm2srnm)
         real sumrad(nc,ni,nj)
         real uprad_3d(ni,nj,nc) ! spectral upward irradiance for layer (wm2nm)
+        real xcos(ni,nj)
+        real ycos(ni,nj)
         real, allocatable :: drad(:,:)
         real, allocatable :: aef(:,:)
+        real, allocatable :: disti_a(:,:)
+        real, allocatable :: distj_a(:,:)
 
         radius = 60000.
         iradius = nint(radius / grid_spacing_m)
@@ -19,6 +23,8 @@
 
         allocate(drad(-iradius:+iradius,-iradius:+iradius))
         allocate(aef(-iradius:+iradius,-iradius:+iradius))
+        allocate(disti_a(-iradius:+iradius,-iradius:+iradius))
+        allocate(distj_a(-iradius:+iradius,-iradius:+iradius))
 
 !       Determine radiation weighting function array
         do ii = -iradius,+iradius
@@ -30,6 +36,8 @@
             stearadians = sin_theta_r * (grid_spacing_m / distr)**2
             drad(ii,jj) = stearadians
             aef(ii,jj) = aef_f(asind(sin_theta_r))
+            disti_a(ii,jj) = disti
+            distj_a(ii,jj) = distj
 !           if(ii .eq. 0)then
 !               write(6,*)'jj|disti|distj|ht|distr|stearadians',jj,disti,distj,ht,distr,stearadians
 !           endif
@@ -75,6 +83,36 @@
                                   * aef(iimin:iimax,jjmin:jjmax) )
           enddo ! ic
 
+          if(.true.)then
+         
+            ic = 2
+            xsum             = sum( drad(iimin:iimax,jjmin:jjmax) &
+                                  * gnd_radc(ic,imin:imax,jmin:jmax) &
+                                  * aef(iimin:iimax,jjmin:jjmax) &
+!                                 * 2000.0)
+                                  * disti_a(iimin:iimax,jjmin:jjmax))
+
+            ysum             = sum( drad(iimin:iimax,jjmin:jjmax) &
+                                  * gnd_radc(ic,imin:imax,jmin:jmax) &
+                                  * aef(iimin:iimax,jjmin:jjmax) &
+!                                 * 2000.0)
+                                  * distj_a(iimin:iimax,jjmin:jjmax))
+
+            npts = (iimax - iimin + 1) * (jjmax - jjmin + 1)
+
+            xave = xsum / uprad_3d(i,j,ic) 
+            yave = ysum / uprad_3d(i,j,ic) 
+
+            vecmag = sqrt(xave**2 + yave**2 + ht**2)
+
+            xcos(i,j) = xave / vecmag
+            ycos(i,j) = yave / vecmag
+
+            if(i .eq. 1 .and. j .eq. 1)then
+                write(6,*)'xyh ',i,j,xsum,ysum,xave,yave,ht
+            endif
+
+          endif
         enddo ! j
         enddo ! i
 
@@ -89,6 +127,8 @@
            call bilinear_fill(uprad_3d(:,:,ic),ni,nj,iskip,r_missing_data)
            write(6,*)' range of uprad ',minval(uprad_3d(:,:,ic)),maxval(uprad_3d(:,:,ic))
         enddo ! ic
+        call bilinear_fill(xcos(:,:),ni,nj,iskip,r_missing_data)
+        call bilinear_fill(ycos(:,:),ni,nj,iskip,r_missing_data)
 
         deallocate(drad)
 
