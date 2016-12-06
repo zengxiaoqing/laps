@@ -135,6 +135,7 @@
 !      radius        radius in pixels of ellipse vertical axis        I
 !      ricen         location in pixels of ellipse center             I
 !      ni,nj         half size of pixel box to evaluate               I
+!      aspect_ratio  circle projected onto alt/az grid                I
 !      va            vertex angle of center of illuminated limb       I
 !                    (0 is up, 90 is left) 
 !      array         fractional area of pixels inside ellipse         O
@@ -151,11 +152,11 @@
        xpix = ricen
        ypix = rjcen
 
-       xdeg = xpix * azi_scale
+       xdeg = xpix * azi_scale / aspect_ratio
        ydeg = ypix * alt_scale
 
        radpix = radius
-       raddeg = radius * alt_scale
+       raddeg = sqrt(xdeg**2+ydeg**2)
 
        bb = radius
        area_sum = 0.
@@ -173,15 +174,15 @@
          if(iverbose .ge. 2)write(6,*)'  i   j    xpix     ypix     rdeg  theta_minor rell1    rell2  aspect_rat rinc'
          do isub = 0,9 
          do jsub = 0,9 
-           xpix = float(i) + float(isub)/10. - 0.45
-           ypix = float(j) + float(jsub)/10. - 0.45
+           xpix = ricen + float(i) + float(isub)/10. - 0.45
+           ypix = rjcen + float(j) + float(jsub)/10. - 0.45
 
-           xdeg = xpix * azi_scale
+           xdeg = xpix * azi_scale / aspect_ratio
            ydeg = ypix * alt_scale
 
            rdeg = sqrt(xdeg**2+ydeg**2)
            theta_up = atan2(xdeg,ydeg)     
-           theta_minor = theta_up - va*rpd
+           theta_minor = theta_up + va*rpd
            theta_major=theta_minor+90.*rpd
 
 !          Determine r_el1, r_el2 and compare
@@ -216,8 +217,8 @@
 
          area = sum / float(100)
 
-         if(iverbose .ge. 1)write(6,2)i,j,ricen,rjcen,area
-2        format(' i/j/ricen/rjcen/area (sq pix)',2x,2i3,2x,2f7.2,f10.4)
+         if(iverbose .ge. 1)write(6,2)i,j,ricen,rjcen,rill,raddeg,area
+2        format(' i/j/ricen/rjcen/rill/raddeg/area (sq pix)',2x,2i3,2x,4f7.2,f10.4)
 
          array(i,j) = area
 
