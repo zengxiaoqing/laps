@@ -108,6 +108,7 @@
         real, allocatable, dimension(:,:) :: alt_a_roll
         real, allocatable, dimension(:,:) :: azi_a_roll
         real, allocatable, dimension(:,:) :: cloud_od
+        real*8, allocatable, dimension(:,:) :: dist_2_topo
 
         real alt_a_polar(ni_polar,nj_polar)
         real azi_a_polar(ni_polar,nj_polar)
@@ -878,6 +879,7 @@
           allocate(alt_a_roll(minalt:maxalt,minazi:maxazi))
           allocate(azi_a_roll(minalt:maxalt,minazi:maxazi))
           allocate(cloud_od(minalt:maxalt,minazi:maxazi))
+          allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
           allocate(sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
           allocate(isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
 
@@ -1071,7 +1073,7 @@
      1                     ,solar_lat,solar_lon                     ! I
      1                     ,alt_norm                                ! I
      1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
-     1                     ,moon_mag,moon_mag_thr                   ! I
+     1                     ,moon_mag,moon_mag_thr,elgms             ! I
      1                     ,l_solar_eclipse,eobsc,emag              ! I
      1                     ,rlat,rlon,lat,lon                       ! I
      1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
@@ -1079,7 +1081,7 @@
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary,l_terrain_following            ! I
-     1                     ,cloud_od                                ! O
+     1                     ,cloud_od,dist_2_topo                    ! O
      1                     ,sky_rgb_cyl,istatus)                    ! O
             if(istatus .ne. 1)then
               write(6,*)' Error istatus returned from calc_allsky'
@@ -1209,6 +1211,7 @@
           deallocate(alt_a_roll)
           deallocate(azi_a_roll)
           deallocate(cloud_od)
+          deallocate(dist_2_topo)
           deallocate(sky_rgb_cyl)
           deallocate(isky_rgb_cyl)
 
