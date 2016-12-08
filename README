@@ -384,7 +384,10 @@
      We have the option of making pre-generated GIF images that can be displayed
      on the web by invoking the 'sched.pl -f dummy' command line argument. 
      Please see section 2.4 for more info on 'sched.pl'. The web images appear 
-     as '.gif' files in the 'lapsprd/www/anal2d' directory. 
+     as '.gif' files in the 'lapsprd/www/anal2d' directory. It will be necessary
+     to set the relevant NCARG environment variables (e.g. $NCARG_ROOT) in your
+     .cshrc file since several of the scripts called by 'sched.pl' are CSH
+     scripts.
 
      The associated web related scripts (for analyses) such as 
      'etc/www/followup_ncarg.sh' are in the repository. These "wrapper" scripts 
