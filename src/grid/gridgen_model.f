@@ -282,7 +282,7 @@ c
 !mp
 	logical categorical, useland
 !mp
-        logical l_topo_wps, l_parse
+        logical l_topo_wps, l_parse, l_topo_1s
 
         integer nnxp,nnyp,mode
         integer ngrids
@@ -322,8 +322,9 @@ c
         real lats(nnxp,nnyp,n_staggers)
         real lons(nnxp,nnyp,n_staggers)
 
-	real, allocatable, dimension(:,:):: hlat,hlon,vlat,vlon
+	real*8 r8lat(nnxp,nnyp), r8lon(nnxp,nnyp)
 
+	real, allocatable, dimension(:,:):: hlat,hlon,vlat,vlon
 
         character (len=3),   allocatable :: var(:)
         character (len=125), allocatable :: comment(:)
@@ -469,6 +470,7 @@ cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
         endif
 
 !       l_topo_wps = l_parse(path_to_topt30s,'wps')
+        l_topo_1s = l_parse(path_to_topt30s,'topo_1s')
 
         call get_path_to_soiltype_top(path_to_soiltype_top_30s
      +,istatus)
@@ -592,18 +594,18 @@ c calculate delta x and delta y using grid and map projection parameters
 
 	IF (c6_maproj .ne. 'rotlat') THEN
 
-        call get_grid_spacing(grid_spacing_m,istatus)
-        if(istatus .ne. 1)then
+          call get_grid_spacing(grid_spacing_m,istatus)
+          if(istatus .ne. 1)then
             write(6,*)' Error calling laps routine'
             return
-        endif
+          endif
 
 	ELSE
 	
-        write(6,*)
+          write(6,*)
      1  'ERROR: get_nmm_grid_spacing not currently supported for rotlat'       
-        stop
-!       call get_nmm_grid_spacing(dlmd,dphd,grid_spacing_m)
+          stop
+!         call get_nmm_grid_spacing(dlmd,dphd,grid_spacing_m)
 
 	ENDIF
 
@@ -840,7 +842,7 @@ c
 
        l_topo_wps = l_fsf_gridgen
 
- 600   if(.not. l_topo_wps)then
+ 600   if(.not. l_topo_wps .and. .not. l_topo_1s)then
 
         call s_len(path_to_topt30s,len)
         print*,'path to topt30s:        ',path_to_topt30s(1:len)
@@ -943,6 +945,16 @@ c
           icount_30=nnyp*nnxp
           
         endif !istatus_30s ... data processed ok 
+
+       elseif(l_topo_1s .eqv. .true.)then
+          r8lat(:,:) = lats(:,:,1)
+	  r8lon(:,:) = lons(:,:,1)
+          call get_topo_1s(nnxp,nnyp,grid_spacing_m,r8lat,r8lon,topt_out
+     1                    ,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' Error in get_topo_1s routine: returning'
+              return
+          endif
 
        elseif(.false.)then ! read topo data from wps output netCDF file
           write(6,*)' calling read_wrfstatic for wps topo'
