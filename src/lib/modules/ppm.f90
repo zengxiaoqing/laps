@@ -124,11 +124,17 @@ contains
                    ,maxval(maxval(G,dim=1),dim=1)&
                    ,maxval(maxval(B,dim=1),dim=1))
     write(6,*)' Image maxvalue is ',maxvalue
-    if(maxvalue .lt. 64)then
-        maxvalue = 4 * maxvalue
+
+!   Set brightness scaling in the image at a floor value
+!   Image will always have a max >= 85 counts
+!   if(maxvalue .lt. 64)then
+!       maxvalue = 4 * maxvalue
+    if(maxvalue .lt. 85)then
+        maxvalue = 3 * maxvalue
     else
         maxvalue = 255
     endif
+
     write(6,*)' Image scaled to   ',maxvalue
     write(100,'( i6 )') maxvalue
     
