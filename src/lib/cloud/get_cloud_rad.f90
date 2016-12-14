@@ -47,6 +47,7 @@
      real lon(ni,nj)
      real bi_coeff(2,2)
      real eclipse(ni,nj) ; logical l_solar_eclipse /.false./
+     logical l_terrain_following /.false./
 
 !    n                                    (number concentration:   m**-3)
 !    sigma                                (cross-section:          m**2)
@@ -246,10 +247,18 @@
 !           albedo_int = 1.0 - exp(-backscatter_int(i,j))                                                            
 
 !           New albedo relationship
-            albedo_int = backscatter_int(i,j) / (backscatter_int(i,j) + 1.)
+            if(.true.)then
+              albedo_int = backscatter_int(i,j) / (backscatter_int(i,j) + 1.)
 
-!           Convert to transmittance
-            transm_3d(il,jl,kl) = 1. - albedo_int
+!             Convert to transmittance
+              transm_3d(il,jl,kl) = 1. - albedo_int
+            else
+              bks2 = backscatter_int(i,j) * sind(min(solalt,6.))
+              albedo_int = bks2 / (bks2 + 1.)
+
+!             Convert to transmittance
+              transm_3d(il,jl,kl) = (1. - albedo_int) * sind(min(solalt,6.))
+            endif
 
             if( idebug .eq. 1 .OR. &
                (transm_3d(il,jl,kl) .eq. 0. .and. jl .eq. jdb) )then
