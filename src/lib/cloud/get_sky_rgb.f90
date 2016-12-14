@@ -20,6 +20,7 @@
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm
         use cloud_rad, ONLY: ghi_zen_toa
+        use mem_allsky, ONLY: ghi_sim
         include 'trigd.inc'
 
 !       Statement functions
@@ -116,6 +117,8 @@
 
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
+        real sky_rad_a(nc,ni,nj)
+        real sp_rad_a(nc,ni,nj)
 
         integer new_color /2/ ! sky_rad can be more fully used still
 
@@ -1594,8 +1597,12 @@
 118           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
           endif
 
+          sky_rad_a(:,i,j) = sky_rad(:)
+
         enddo ! i
         enddo ! j
+
+        I4_elapsed = ishow_timer()
 
         red_max = maxval(sky_rgb(0,:,:))
         grn_max = maxval(sky_rgb(1,:,:))
@@ -1614,6 +1621,28 @@
 
 !       Convert nl values to spectral radiance
 !       sky_sprad = f(sky_cyl_nl)
+        solidangle_pix = (azi_scale*rpd) * (azi_scale*rpd)
+        do ic = 1,nc
+          write(6,*)
+          call get_sky_rad_ave(sky_rad_a(ic,:,:) &
+                              ,alt_a,azi_a,ni,nj &
+                              ,sky_rad_ave_out)
+
+          write(6,*)' sky_rad_ave_out for color is ',sky_rad_ave_out
+
+          call nl_to_sprad(1.,1,wa(ic),sprad_rat)
+          call get_sp_irrad(sky_rad_a(ic,:,:)*sprad_rat,alt_a,azi_a,ni,nj,solidangle_pix,sp_irrad)
+          write(6,*)' sp_irrad for color ',ic,sprad_rat,sp_irrad
+          if(ic .eq. 2)then
+             sp_irrad_550 = 1.86 ! W/m**2/nm
+             ghi_sim = (sp_irrad / sp_irrad_550) * ghi_zen_toa
+          endif
+        enddo ! ic 
+
+        write(6,*)
+        write(6,*)' Simulated GHI in w/m**2 is ',ghi_sim
+
+        I4_elapsed = ishow_timer()
 
         return
         end
