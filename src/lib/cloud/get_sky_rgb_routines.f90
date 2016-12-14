@@ -798,6 +798,8 @@
         real alt_a(ni,nj)
         real azi_a(ni,nj)
 
+        write(6,*)' rad range is ',minval(rad),maxval(rad)
+
         alt_top = alt_a(ni,1)
 
 !       Average over window
@@ -853,6 +855,84 @@
           write(6,*)' get_sky_rad_ave: top below horizon ',alt_top
           sky_rad_ave = sky_rad_ave_wdw
         endif
+
+        return
+        end
+
+        subroutine get_sp_irrad(rad,alt_a,azi_a,ni,nj,solidangle_pix,sp_irrad)
+
+        include 'trigd.inc'
+
+        parameter (pi=3.14159265)
+
+        real rad(ni,nj)
+        real alt_a(ni,nj)
+        real azi_a(ni,nj)
+
+        alt_top = alt_a(ni,1)
+
+!       Average over window
+        cnt = 0.
+        sum = 0.
+        do i = 1,ni
+          cosi = cosd(alt_a(i,1))
+          sini = sind(alt_a(i,1))
+          if(alt_a(i,1) .ge. 0.)then ! above horizontal
+            do j = 1,nj
+                sum = sum + (rad(i,j) * solidangle_pix * cosi * sini)     
+                cnt = cnt + (           solidangle_pix * cosi)
+            enddo ! j
+          endif
+        enddo ! i
+
+        if(cnt .gt. 0.)then
+            sky_rad_sum_wdw = sum
+        else
+            write(6,*)' ERROR in get_sp_irrad'
+            sky_rad_sum_wdw = 10. 
+        endif
+
+!       Average on top row
+        if(alt_top  .lt. 90.)then
+          cnt = 0.
+          sum = 0.
+          do i = ni,ni
+            cosi = cosd(alt_a(i,1))
+            sini = sind(alt_a(i,1))
+            if(alt_a(i,1) .ge. 0.)then ! above horizontal
+              do j = 1,nj
+                sum = sum + (rad(i,j) * cosi * sini)     
+                cnt = cnt + (1.0      * cosi)
+              enddo ! j
+            endif
+          enddo ! i
+
+          if(cnt .gt. 0.)then
+            sky_rad_ave_top = sum/cnt
+          else
+            write(6,*)' WARNING in get_sky_rad_ave'
+            write(6,*)' alt_top = ',alt_top
+            sky_rad_ave_top = rad(ni,1)
+          endif
+        endif
+
+!       If needed, the average on the top row is extrapolated for the
+!       portion of the sky above the camera field of view (when alt_top 
+!       is less than 90 degrees).
+        if(alt_top .eq. 90.)then
+          write(6,*)' get_sp_irrad: top at zenith ',alt_top
+          sp_irrad = sky_rad_sum_wdw
+        elseif(alt_top .gt. 0.)then
+          write(6,*)' get_sp_irrad: top above horizon ',alt_top
+          area_frac = sind(alt_top)
+          write(6,*)' area_frac/wdw/top = ',area_frac,sky_rad_ave_wdw,sky_rad_ave_top
+          sp_irrad = sky_rad_ave_wdw * area_frac + sky_rad_ave_top * (1.-area_frac)
+        else
+          write(6,*)' get_sp_irrad: top below horizon ',alt_top
+          sp_irrad = sky_rad_ave_wdw
+        endif
+
+!       sp_irrad = sp_irrad * 2. * pi ! solid angle above horizontal
 
         return
         end
