@@ -180,7 +180,7 @@
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated 
                ! fraction of gas illuminated by the sun along line of sight
                ! (consider Earth's shadow + clouds, used when sun is below
-               !  the horizon), attenuated behind clouds
+               !  the horizon), attenuated from consideration behind clouds
         real clear_rad_c_nt(nc,minalt:maxalt,minazi:maxazi)! sky spectral radiance from nlights
         real ag_2d(minalt:maxalt,minazi:maxazi)       ! dummy
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
