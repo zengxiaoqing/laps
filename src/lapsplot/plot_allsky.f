@@ -290,6 +290,8 @@
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
 
+        write(6,*)' time diff is ',i4time_ref - i4time_now_gg()
+
         l_water_world = .false.
         if(l_parse(directory,'fim'))then
           l_require_all_fields = .false.
@@ -310,7 +312,7 @@
 
           n_lvls_snd = NZ_L
 
-          write(6,*)' i4time_ref = ',i4time_ref
+          write(6,*)' requiring fields at i4time_ref = ',i4time_ref
 
 !         Read appropriate 3-D fields
 50        call input_product_info(i4time_ref            ! I
@@ -1111,8 +1113,22 @@
      1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
      1                  solar_alt,solar_az,alt_scale,azi_scale,
      1                  ni_polar,nj_polar
-            close(54)
  54         format(2f8.2/6i8/2f8.2,2f7.2/2i6)
+
+            if(ghi_sim .eq. r_missing_data)then
+                write(54,*)
+            elseif(ghi_sim .gt. 100.)then
+                write(54,55)nint(ghi_sim)
+ 55             format(i4)
+            elseif(ghi_sim .gt. 1.)then
+                write(54,56)ghi_sim
+ 56             format(f8.1)
+            else
+                write(54,57)ghi_sim
+ 57             format(f8.4)
+            endif
+                
+            close(54)
 
             if(l_cyl .eqv. .true.)then
 !             Write all sky for cyl
