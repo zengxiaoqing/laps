@@ -21,6 +21,9 @@ MODULE mem_allsky
       real, allocatable, dimension(:,:) :: aod_ill_opac
       real, allocatable, dimension(:,:) :: aod_ill_opac_potl
 
+!     Various non-gridded variables
+      real ghi_sim      
+
       PUBLIC alloc_allsky, dealloc_allsky
 
 CONTAINS
