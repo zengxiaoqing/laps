@@ -235,10 +235,13 @@ if test "$NCARG_ROOT" = "allsky"; then
       fi
   fi
 
-# Annotate Time
+# Annotate Time and GHI
   ATIME=`head -2 label.$ILOC | tail -1`
   ATIME=`echo $ATIME | sed 's/^[ \t]*//'` # remove leading spaces
-  echo "Annotate Time $ATIME"
+  GHIUNITS=W/m^2
+  GHI=`head -5 label2.$ILOC | tail -1`$GHIUNITS
+  GHI=`echo $GHI | sed 's/^[ \t]*//'`     # remove leading spaces
+  echo "Annotate Time $ATIME and GHI $GHI"
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
    if test "$IMGGEOM" = "511x511"; then
     echo 'convert -fill white -annotate +360+503  "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png'
@@ -256,9 +259,28 @@ if test "$NCARG_ROOT" = "allsky"; then
     elif test $AZI_SCALE == 0.20; then
       convert -fill yellow -annotate +918+179 "$ATIME" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.25; then
-      convert -fill yellow -annotate  +815+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      if test "$GHI" != ""; then
+        XDISP1=480
+        XDISP2=815
+        convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI" -annotate +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      else
+        echo 'convert -fill yellow -annotate  +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
+              convert -fill yellow -annotate  +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+        echo 'convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
+              convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      fi
     elif test $AZI_SCALE == 0.50; then
-      convert -fill yellow -annotate +1550+20 "$ATIME" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+#     convert -fill yellow -annotate +1550+20 "$ATIME" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      if test "$GHI" != ""; then
+        XDISP1=900
+        XDISP2=1550
+        convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI" -annotate +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      else
+        echo 'convert -fill yellow -annotate  +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
+              convert -fill yellow -annotate  +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+        echo 'convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
+              convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      fi
     else
       convert -fill yellow -annotate +725+20 "$ATIME"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     fi
