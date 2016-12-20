@@ -859,7 +859,7 @@
         return
         end
 
-        subroutine get_sp_irrad(rad,alt_a,azi_a,ni,nj,solidangle_pix,sp_irrad)
+        subroutine get_sp_irrad(rad,alt_a,azi_a,elong_a,ni,nj,solidangle_pix,sp_irrad)
 
         include 'trigd.inc'
 
@@ -868,25 +868,33 @@
         real rad(ni,nj)
         real alt_a(ni,nj)
         real azi_a(ni,nj)
+        real elong_a(ni,nj)
 
         alt_top = alt_a(ni,1)
 
 !       Average over window
         cnt = 0.
-        sum = 0.
+        sum_ghi = 0.
+        sum_dni = 0.
+        sum_diffuse = 0.
         do i = 1,ni
           cosi = cosd(alt_a(i,1))
           sini = sind(alt_a(i,1))
           if(alt_a(i,1) .ge. 0.)then ! above horizontal
             do j = 1,nj
-                sum = sum + (rad(i,j) * solidangle_pix * cosi * sini)     
+                sum_ghi         = sum_ghi     + (rad(i,j) * solidangle_pix * cosi * sini)     
+                if(elong_a(i,j) .le. 5.0)then
+                    sum_dni     = sum_dni     + (rad(i,j) * solidangle_pix * cosi)     
+                else
+                    sum_diffuse = sum_diffuse + (rad(i,j) * solidangle_pix * cosi * sini)     
+                endif
                 cnt = cnt + (           solidangle_pix * cosi)
             enddo ! j
           endif
         enddo ! i
 
         if(cnt .gt. 0.)then
-            sky_rad_sum_wdw = sum
+            sky_rad_sum_wdw = sum_ghi
         else
             write(6,*)' ERROR in get_sp_irrad'
             sky_rad_sum_wdw = 10. 
