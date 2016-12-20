@@ -49,7 +49,7 @@
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real cloud_sfc_c(nc,ni,nj)  ! cloud radiance from surface lighting (sun relative units)
         real clear_rad_c(nc,ni,nj)  ! clear sky illumination
-                                    ! local/input when sun is above/below horizon
+                                    ! local/input when sun is above/below twi_0
         real clear_rad_2nd_c(nc,ni,nj) ! secondary scattering clear sky illumination
         real moon_rad_c(nc,ni,nj)   ! clear sky illumination from moon
         real moon_rad_2nd_c(nc,ni,nj) ! secondary scattering clear sky illumination
@@ -278,6 +278,14 @@
         endif
         erfterm = (erf(fracerf) + 1.) / 2.
         glwmid = corr2*(1.-erfterm) + corr1*erfterm
+
+        if(moon_alt .gt. 10.)then ! find corr1_moon
+          delta_glow_moon = (-26.7 - moon_mag) * 0.4
+          corr1_moon = corr1 + delta_glow_moon
+          write(6,*)' corr1_moon is ',corr1_moon
+!         glwmid = max(glwmid,corr1_moon)
+        endif        
+
         glwmid = glwmid - log10(exposure)
 
         offset = 0.
@@ -871,12 +879,19 @@
                   iradsec = 2
               endif
               if(sol_alt .le. 0.)then ! between shallow twilight and 0.
-                  where(sph_rad_ave .ne. r_missing_data)rad_sec_cld = sph_rad_ave
+!                 where(sph_rad_ave(:) .ne. r_missing_data)
+!                    rad_sec_cld(:) = sph_rad_ave(:)
+!                 endwhere
+                  do ic = 1,nc
+                     if(sph_rad_ave(ic) .ne. r_missing_data)rad_sec_cld(ic) = sph_rad_ave(ic)
+                  enddo ! ic
                   iradsec = iradsec + 10
+                  if(idebug_a(i,j) .eq. 1 .and. abs(alt_a(i,j)) .eq. 90.0)write(6,*)'iradsec up to',iradsec
               endif
-              if(l_solar_eclipse .eqv. .true. .and. htmsl .gt. 1000e3)then
+              if((l_solar_eclipse .eqv. .true.) .and. htmsl .gt. 1000e3)then
                   rad_sec_cld(:) = rad_sec_cld(:) * (1.-eobsc_sky(i,j))
-                  iradsec = iradsec + 20
+                  iradsec = iradsec + 40
+                  if(idebug_a(i,j) .eq. 1 .and. abs(alt_a(i,j)) .eq. 90.0)write(6,*)'iradsec up to',iradsec
               endif
 !             Potential intensity of cloud if it is opaque 
 !               (240. is nominal intensity of a white cloud far from the sun)
@@ -942,6 +957,9 @@
                   htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
                   write(6,41)iradsec,solalt_ref,sol_alt,twi_alt,htmin_view
  41               format(' irs/solalt_ref/solalt/twi_alt/htmin',i3,3f9.4,f11.0)
+                  if(iradsec .ge. 10)then
+                    write(6,*)' WARNING: irs = ',iradsec,l_solar_eclipse,rad_sec_cld,sph_rad_ave
+                  endif
                   write(6,42)i,j,elong_a(i,j),cld_brdf(2,i,j),pf_top(2),rintensity(2)&
                    ,trans_c(2),r_cloud_rad(i,j) &
                    ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
@@ -1084,7 +1102,7 @@
               endif ! .true.
 
               if(idebug .eq. 1 .AND. (elong_a(i,j) .lt. 0. .or. &
-                 abs(alt_a(i,j)) .le. 2.0 .or. l_solar_eclipse .eqv. .true.) )then
+                 abs(alt_a(i,j)) .le. 2.0 .or. (l_solar_eclipse .eqv. .true.) ) )then
                   write(6,60)elong_a(i,j),alt_a(i,j),azi_a(i,j),clear_rad_c(:,i,j)
 60                format(' elong / altaz / Clrrad rgb = ',3f9.2,3f14.1)
               endif
@@ -1631,7 +1649,7 @@
           write(6,*)' sky_rad_ave_out for color is ',sky_rad_ave_out
 
           call nl_to_sprad(1.,1,wa(ic),sprad_rat)
-          call get_sp_irrad(sky_rad_a(ic,:,:)*sprad_rat,alt_a,azi_a,ni,nj,solidangle_pix,sp_irrad)
+          call get_sp_irrad(sky_rad_a(ic,:,:)*sprad_rat,alt_a,azi_a,elong_a,ni,nj,solidangle_pix,sp_irrad)
           write(6,*)' sp_irrad for color ',ic,sprad_rat,sp_irrad
           if(ic .eq. 2)then
              sp_irrad_550 = 1.86 ! W/m**2/nm
