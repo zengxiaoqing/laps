@@ -247,17 +247,20 @@
 !           albedo_int = 1.0 - exp(-backscatter_int(i,j))                                                            
 
 !           New albedo relationship
-            if(.true.)then
-              albedo_int = backscatter_int(i,j) / (backscatter_int(i,j) + 1.)
+            albedo_int = backscatter_int(i,j) / (backscatter_int(i,j) + 1.)
 
-!             Convert to transmittance
-              transm_3d(il,jl,kl) = 1. - albedo_int
-            else
-              bks2 = backscatter_int(i,j) * sind(min(solalt,6.))
+!           Convert to transmittance
+            transm_3d_arg1 = 1. - albedo_int
+
+            if(.true.)then
+              bks2 = backscatter_int(i,j) * sind(max(solalt,6.))
               albedo_int = bks2 / (bks2 + 1.)
 
 !             Convert to transmittance
-              transm_3d(il,jl,kl) = (1. - albedo_int) * sind(min(solalt,6.))
+              transm_3d_arg2 = (1. - albedo_int) * sind(max(solalt,6.))
+              transm_3d(il,jl,kl) = max(transm_3d_arg1,transm_3d_arg2)
+            else
+              transm_3d(il,jl,kl) = transm_3d_arg1
             endif
 
             if( idebug .eq. 1 .OR. &
@@ -284,8 +287,8 @@
               write(6,101)k,il,clwc_m,cice_m,rain_m,snow_m &
                      ,clwc_lyr_int,cice_lyr_int,rain_lyr_int,snow_lyr_int &
                      ,od_lyr_clwc,od_lyr_cice,od_lyr_rain,od_lyr_snow &
-                     ,backscatter_int(i,j),transm_3d(il,jl,kl)
-101           format('k/il/clwc/lwp/od/bks/transm: ',i3,i4,2x,4f9.6,2x,4f7.4,2x,4f7.4,1x,2f9.5)
+                     ,backscatter_int(i,j),transm_3d_arg1,transm_3d_arg2,transm_3d(il,jl,kl)
+101           format('k/il/clwc/lwp/od/bks/transm: ',i3,i4,2x,4f9.6,2x,4f7.4,2x,4f7.4,1x,4f9.5)
             endif
 
           else ! for efficiency
