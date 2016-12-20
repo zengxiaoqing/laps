@@ -270,7 +270,9 @@
           do i = 1,ni
           do j = 1,nj
             if(result(i,j) .le. 179.)then ! Based on NASA spline
-              albedo(ic,i,j) = result(i,j) / 716.                  
+!             albedo(ic,i,j) = result(i,j) / 716.                  
+              albedo(ic,i,j) = .0010 * result(i,j)
+     1                       + 6.92e-11 * result(i,j)**4.0
             elseif(result(i,j) .le. 255.)then
               albedo(ic,i,j) = 0.25 + (result(i,j) - 179.) / 122. 
             else ! bad / default value
