@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh           
 
 #laps_gifs_sub.sh
 
@@ -30,13 +30,19 @@ echo "PATH=$PATH"
 
 cd
 pwd
-ls -l etc/ncarg_root
-if test -r etc/ncarg_root; then
-    echo "Getting NCARG_ROOT from ~/etc/ncarg_root"
-    ls -l etc/ncarg_root
-    export NCARG_ROOT=`cat etc/ncarg_root`
+if test "$NCARG_ROOT" != ""; then
+    echo "NCARG_ROOT from environment is $NCARG_ROOT"
 else
-    echo "unable to find ~/etc/ncarg_root file"
+    echo "NCARG_ROOT is unavailable from environment"
+    ls -l etc/ncarg_root
+    if test -r etc/ncarg_root; then
+        echo "Getting NCARG_ROOT from ~/etc/ncarg_root"
+        ls -l etc/ncarg_root
+        export NCARG_ROOT=`cat etc/ncarg_root`
+    else
+        echo "ERROR: unable to find $NCARG_ROOT from environment or ~/etc/ncarg_root file"
+        exit
+    fi
 fi
 
 #alias ctrans '/usr/local/apps/ncarg-4.0.1/bin/ctrans  -verbose'
