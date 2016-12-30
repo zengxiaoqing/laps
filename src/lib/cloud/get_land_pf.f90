@@ -46,7 +46,7 @@
         real gtic(nc,ni,nj)         ! spectral terrain GNI
         real dtic(nc,ni,nj)         ! spectral terrain diffuse NI 
         real btic(nc,ni,nj)         ! spectral terrain beam (direct) NI 
-        real*8 dist_2_topo(ni,nj)     
+        real*8 dist_2_topo(ni,nj),sinarc     
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         integer idebug_a(ni,nj)
         real pf_land(nc,ni,nj)      ! anisotropic reflectance factor (ARF)
@@ -76,7 +76,7 @@
         write(6,11)
 11      format('  i    j  ic   alt_a    azi_a  azitolnd  tsolazi azidiffg', &
                '  ampl_l    fland    fsnow   fwater   phland   phsnow   ', &
-               'phwater    ph1    radfrac   dst2topo  gndarc  toposalt emis_ang  specang    alb    cldbrdf') 
+               'phwater    ph1    radfrac   dst2topo   gndarc  toposalt emis_ang  specang    alb    cldbrdf') 
 
         do j = 1,nj
          do i = 1,ni
@@ -86,7 +86,8 @@
             azidiff = angdif(azi_a(i,j),sol_azi)
  
 !           Approximate specular reflection angle
-            gnd_arc = asind(sind(90d0+dble(alt_a(i,j)))*dist_2_topo(i,j)/dble(earth_radius))
+            sinarc = sind(90d0+dble(alt_a(i,j)))*dist_2_topo(i,j)/dble(earth_radius)
+            gnd_arc = asind(min(sinarc,1d0))
             gnd_arc2 = gnd_arc * 2.
 
 !           'azidiffg' is computed from a ground reference point
@@ -225,12 +226,18 @@
 
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
+
+                call check_nan(ph1,istat_nan)
+                if(istat_nan .ne. 1)then
+                  write(6,*)' ERROR: NaN in pf_land ',i,j,sinarc
+                endif
+
 !               if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. (ph1 .lt. 0. .and. dist_2_topo(i,j) .gt. 0.) .OR.&
 !                ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
 !                         .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) .OR. &
 !               if( (i .eq. (i/40)*40 .AND. j .eq. nj/2) .OR. &
                 if( ((i .eq. (i/40)*40 .OR. i .ge. 240 .and. i .le. 250) .AND. (j .eq. 2161) ) .OR. &
-                       (alt_a(i,j) .eq. -90. .and. j .eq. 2161) )then ! nadir
+                       (alt_a(i,j) .eq. -90. .and. j .eq. 2161) .OR. istat_nan .ne. 1)then ! nadir
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j),cld_brdf(2,i,j)
 1                 format(/i4,i5,i2,f9.4,4f9.2,9f9.4,f12.0,5f9.2,f9.3)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
