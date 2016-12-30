@@ -455,7 +455,7 @@
 
         write(6,*)' subroutine get_glow_obj...'
         write(6,21)alt_obj_in,azi_obj_in,mag_obj,diam_deg,l_obsc,l_phase,emag,horz_dep
-21      format('   alt/az/mag/diam/lobsc/lphase/emag/hrzdp = ',4f9.3,2l2,f7.4,f7.2)
+21      format('   alt/az/mag/diam/lobsc/lphase/emag/hrzdp = ',4f9.3,2l2,f7.4,f9.4)
 
 !       We may want to efficiently apply refraction here to the object 
 !       altitude to convert from true altitude to apparent. It may be more 
@@ -522,7 +522,12 @@
                                 ,redp_lvl,aero_scaleht &   ! I
                                 ,earth_radius,iverbose &   ! I
                                 ,ag,ao,aa,refr_deg)        ! O
-          altg = altg_app - refr_deg ! true altitude of grid
+          altg1 = altg_app - refr_deg ! true altitude of grid
+          
+          if(refr_deg .gt. .100 .OR. (refr_deg .gt. 0. .and. htmsl .gt. 100e3 .and. (l_phase .eqv. .false.) ) )then
+            write(6,31)ialt,altg_app,altg1,refr_deg,ag
+31          format('altg_app/altg1/refr_deg/ag',i8,3f10.4,f9.2)
+          endif
 
           do jazi = minazi,maxazi
 
@@ -530,18 +535,35 @@
             size_glow_sqdg = 0.1  ! final polar kernel size
             size_glow_sqdg = 0.3  ! empirical middle ground 
 
-            azig = azi_a(ialt,jazi)
+            if(altg1 .ge. -90.)then 
+              altg = altg1
+              azig = azi_a(ialt,jazi)
+            else ! refracted below the nadir
+              altg = -180. - altg1
+              azig = mod(azi_a(ialt,jazi) + 180.,360.)
+            endif
 
-            if(altg .ge. -2. .or. altg .ge. -horz_dep)then
+            if(altg .ge. -2. .or. altg_app .ge. -horz_dep)then
 
                 alt_cos = min(altg,89.)
                 azi_dist = alt_dist / cosd(alt_cos)         
 
 !               Calculate distance in object/grid radii in cyl projection
-                distr = sqrt(((alt_obj-altg)/alt_dist)**2 + ((azi_obj-azig)/azi_dist)**2)
-
 !               Calculate distance in degrees in cyl projection
+                if(.false.)then
                 distd = sqrt(((alt_obj-altg))**2 + ((azi_obj-azig)*cosd(alt_cos))**2)
+                    distr = sqrt(((alt_obj-altg)/alt_dist)**2 + ((azi_obj-azig)/azi_dist)**2)
+                else
+                    call great_circle(alt_obj,azi_obj,altg,azig,distd,gcbearing)
+                    distr = distd / radius_deg
+                endif
+
+                if(.not. l_phase)then
+                  if(htmsl .ge. 100e3 .AND. (jazi .eq. (jazi/360)*360) )then
+                    write(6,41)ialt,jazi,alt_obj,azi_obj,altg,azig,distd,distr
+41                  format(i8,i6,2f8.3,2x,2f8.3,4x,2f8.3)
+                  endif
+                endif
 
 !               Initialize
                 frac_lit = 1.0
@@ -618,13 +640,15 @@
                     size_glow_sqdg = 0.2    ! sun/moon area           
 
 !                   Calculate fraction of grid box illuminated by object
-                    if(.false.)then ! very simple anti-aliasing 
-                      if(distr .le. 0.5)then ! object radii
-                        frac_lit = 1.0
-                      elseif(distr .gt. 1.5)then
-                        frac_lit = 0.0
+                    if(htmsl .gt. 100000e3)then ! very simple anti-aliasing 
+                      distr_thrl = 1.0 - 0. ! consider size of pixel relative to object radius
+                      distr_thrh = 1.0 + 0.
+                      if(distr .le. distr_thrl)then ! object radii
+                        frac_lit1 = 1.0
+                      elseif(distr .gt. distr_thrh)then
+                        frac_lit1 = 0.0
                       else
-                        frac_lit = 1.5 - distr
+                        frac_lit1 = 1.5 - distr
                       endif
                     elseif(l_phase)then
                       iblock = 30    
@@ -634,7 +658,7 @@
                         ricen = (azi_obj-azig)/azi_scale
                         rjcen = (alt_obj-altg)/alt_scale
                         aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
-                        write(6,*)' Calling antialias_phase with iverbose = ',iverbose
+                        write(6,*)' Calling antialias_phase with iverbose = ',iverbose,distd,distr
                         call antialias_phase(radius_pix,ricen,rjcen,aspect_ratio,alt_scale,azi_scale,va,rill,frac_lit1,0,0,iverbose)
                         write(6,*)' frac_lit1 returned ',ialt,jazi,frac_lit1
                         size_glow_sqdg = size_glow_sqdg * rill           
@@ -648,10 +672,13 @@
                       aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
 
 !                     Lots of writes can happen with solar eclipses from DSCOVR
-                      iwrite = iwrite + 1
                       if(iwrite .le. 100)then
-                        write(6,87)distd,altg,azig,radius_deg,alt_scale,radius_pix
-87                      format(' call antialias_ellipse: dist/alt/az/raddeg/alt_scl/radpix = ',3f8.3,3f10.5)
+!                     if(iwrite .le. 100 .AND. distd .lt. (alt_scale + radius_deg))then
+!                     if(jazi .eq. minazi)then
+!                     if(.true.)then
+                        iwrite = iwrite + 1
+                        write(6,87)jazi,iwrite,distd,altg,azig,radius_deg,alt_scale,radius_pix
+87                      format(' call antialias_ellipse: dist/alt/az/raddeg/alt_scl/radpix = ',i5,i5,3f8.3,3f10.5)
                         iverb = 2
                       else
                         iverb = 0
