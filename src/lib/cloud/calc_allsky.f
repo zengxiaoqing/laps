@@ -162,7 +162,7 @@
      1                     ,clear_rad_c_nt                          ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d    ! O
      1                     ,htmsl,horz_dep,twi_0                    ! O
-     1                     ,solalt_limb_true                        ! O
+!    1                     ,solalt_limb_true                        ! O
      1                     ,htagl                                   ! I
      1                     ,aod_ref                                 ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc     ! I
@@ -181,6 +181,10 @@
 
           write(6,*)' Return from get_cloud_rays: ',a9time
      1             ,' aod_vrt is ',aod_vrt
+
+          solalt_limb_true = solar_alt + horz_dep
+          write(6,*)' solalt_true = ',solar_alt
+          write(6,*)' solalt_limb_true = ',solalt_limb_true
 
 !         Moon glow in cylindrical coordinates (add color info)?                   
           blog_moon_roll = 0.
@@ -409,7 +413,7 @@
      1                    ,trace_solalt,eobsc_sky
      1                    ,alt_a_roll,azi_a_roll ! I   
      1                    ,ni_cyl,nj_cyl,azi_scale  
-     1                    ,solar_alt,solar_az
+     1                    ,solar_alt,solar_az                           ! I
      1                    ,solar_lat,solar_lon                          ! I
      1                    ,minalt,maxalt,minazi,maxazi                  ! I
      1                    ,twi_0,horz_dep
