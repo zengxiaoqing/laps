@@ -853,17 +853,17 @@
 !             'topo_solalt' wasn't set. In this case 'day_inte' wouldn't 
 !             be properly determined. Here we use info from a new array 
 !             called 'trace_solalt'.
-              solalt_atmos = trace_solalt(ialt,jazi) 
-              if(solalt_atmos .gt. 0.)then
-                sol_occ = 1.0 ! visible
-              else
-                sol_occ = 0.0 ! invisible
-              endif
+!             solalt_atmos = trace_solalt(ialt,jazi) 
+!             if(solalt_atmos .gt. 0.)then
+!               sol_occ = 1.0 ! visible
+!             else
+!               sol_occ = 1.0 ! 0.0 ! invisible
+!             endif
 
 !             Use/restore simpler approach for downward rays from high alt
               do ic = 1,nc
 !               Rayleigh illumination
-                day_inte = day_int0 * sol_occ * (1.0 - eobsc(ic,jazi))
+                day_inte = day_int0 * (1.0 - eobsc(ic,jazi))
                 od_per_am = ext_g(ic)
                 rayleigh = brtf(airmass_g,od_per_am) * rayleigh_gnd
                 od_a = aod_ref * aa * ext_a(ic)  ! slant od
