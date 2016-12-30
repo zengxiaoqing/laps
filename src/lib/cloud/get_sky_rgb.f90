@@ -428,7 +428,7 @@
         enddo ! j
 
         if(htmsl .gt. 1000e3)then ! high custom
-            idebug_a(90:130,1930) = 1
+            idebug_a(28,1:nj:10) = 1
         endif
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
@@ -1402,7 +1402,7 @@
                   blu_rad = day_int * rtopo_blu*topovis_c(3)*sky_frac_topo
                   if(idebug .eq. 1)then
                     write(6,98)rtopo_grn,topo_gti(i,j),gtic(2,i,j) &
-                              ,topo_albedo(2,i,j),topo_solalt(i,j) &
+                              ,topo_albedo(2,i,j),pf_land(2,i,j),topo_solalt(i,j) &
                               ,dist_2_topo(i,j) &
                               ,od2topo_c(2),topovis_c(2) &
                               ,red_rad,grn_rad,blu_rad,sky_rad(:) &
@@ -1410,8 +1410,8 @@
                               ,sky_rad(2) + grn_rad &
                               ,sky_rad(3) + blu_rad
 98                  format( &
-                        ' rtopo/gti/gtic/alb/tsalt/dst/trad/srad   ', &
-                    f7.3,f9.1,f9.4,1x,f9.3,f9.2,f12.0,2f8.5,3(2x,3f13.0))
+                        ' rtopo/gti/gtic/alb/pf/tsalt/dst/trad/srad   ', &
+                    f7.3,f9.1,f9.4,1x,f8.3,f7.2,f9.2,f12.0,2f8.5,3(2x,3f13.0))
                   endif
 
                   sky_rad(1) = sky_rad(1) + red_rad
@@ -1482,8 +1482,8 @@
 !             This can theoretically be done here multispectrally 
 !             using newly passed in 'od_slant_g_a'.
 
-              if(sol_alt .gt. -3. .or. solalt_limb_true .gt. 0.)then
-!             if(.false.)then
+!             if(sol_alt .gt. -3. .or. solalt_limb_true .gt. 0.)then
+              if(.true.)then
 !               Add sun to existing sky radiance (blue extinction)
                 rad_sun_r = 10.**glow_sun(i,j)  &
                           * trans(cloud_od(i,j) + clr_od(1)) 
@@ -1495,6 +1495,11 @@
                 sky_rad(1) = sky_rad(1) + rad_sun_r
                 sky_rad(2) = sky_rad(2) + rad_sun_g
                 sky_rad(3) = sky_rad(3) + rad_sun_b    
+
+                if(htmsl .gt. 1000e3 .and. glow_sun(i,j) .gt. 2.0)then
+                  write(6,100)i,j,alt_a(i,j),azi_a(i,j),glow_sun(i,j),rad_sun_r,od_g_slant_a(1,i),od_o_slant_a(1,i),od_a_slant_a(1,i),cloud_od(i,j)
+100               format(' sun from space ',i8,i6,f9.4,f9.3,f9.3,f15.0,' od ',4f9.3)
+                endif
               endif
                 
 !             Add moon/stars to existing sky radiance (blue extinction?)
@@ -1535,9 +1540,9 @@
                 sky_rad(3) = sky_rad(3) + rad_stars_b
 
                 if(idebug .eq. 1)then
-                  write(6,100)glow_stars(:,i,j),cloud_od(i,j),aod_slant(i,j) &
+                  write(6,102)glow_stars(:,i,j),cloud_od(i,j),aod_slant(i,j) &
                       ,transterm(:),rad_stars_r,rad_stars_g,rad_stars_b
-100               format(' glow/cod/aod/trans/rad_stars',3f9.2,5f8.3,3f12.1)
+102               format(' glow/cod/aod/trans/rad_stars',3f9.2,5f8.3,3f12.1)
                 endif
               endif
 
@@ -1612,7 +1617,7 @@
               endif
 116           format(2i5,f7.2,2f6.1,f9.3,f11.6,2f7.2,3f6.2,3f8.3,f8.4,f7.1,f9.5,f9.1,f8.3,2f8.5,2f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
 117           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.4,f7.1,f9.3,f8.1,6f7.3,f9.2,2x,3i4,' clrrad',3f10.0,3i4)
-118           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
+118           format(2i5,f9.4,2f9.3,f9.3,f11.6,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
           endif
 
           sky_rad_a(:,i,j) = sky_rad(:)
