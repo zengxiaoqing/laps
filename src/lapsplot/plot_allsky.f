@@ -2,6 +2,7 @@
         subroutine plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                          ,ni_polar,nj_polar,ipolar_sizeparm
      1                          ,density     
+     1                          ,iplo,iphi,jplo,jphi
      1                          ,r_missing_data,laps_cycle_time
      1                          ,l_polar,l_cyl)       
 
@@ -110,12 +111,14 @@
         real, allocatable, dimension(:,:) :: cloud_od
         real*8, allocatable, dimension(:,:) :: dist_2_topo
 
-        real alt_a_polar(ni_polar,nj_polar)
-        real azi_a_polar(ni_polar,nj_polar)
-        real elong_a_polar(ni_polar,nj_polar)
+        real alt_a_polar(iplo:iphi,jplo:jphi)
+        real azi_a_polar(iplo:iphi,jplo:jphi)
+        real elong_a_polar(iplo:iphi,jplo:jphi)
 
-        real sky_rgb_polar(0:2,ni_polar,nj_polar)
-        integer isky_rgb_polar(0:2,ni_polar,nj_polar)
+        real, allocatable, dimension(:,:,:) :: sky_rgb_polar
+        integer, allocatable, dimension(:,:,:) :: isky_rgb_polar
+!       real sky_rgb_polar(0:2,ni_polar,nj_polar)
+!       integer isky_rgb_polar(0:2,ni_polar,nj_polar)
 
         real, allocatable, dimension(:,:,:) :: sky_rgb_cyl
         integer, allocatable, dimension(:,:,:) :: isky_rgb_cyl
@@ -247,7 +250,7 @@
           write(6,*)' xsound/ysound ',xsound(iloc),ysound(iloc)
           write(6,*)' htagl ',htagl(iloc)
 
-        enddo ! nloc
+        enddo ! iloc
 
  40     continue
 !40     write(6,*)' Enter c_plotobs'
@@ -1097,6 +1100,10 @@
 
           deallocate(aod_ill_opac)
           deallocate(aod_ill_opac_potl)
+          deallocate(alt_a_roll)
+          deallocate(azi_a_roll)
+          deallocate(cloud_od)
+          deallocate(dist_2_topo)
 
           write(6,*)' end of subroutine call block'
 
@@ -1149,6 +1156,10 @@
             endif
 
             if(l_polar .eqv. .true.)then
+
+              allocate(sky_rgb_polar(0:2,iplo:iphi,jplo:jphi))
+              allocate(isky_rgb_polar(0:2,iplo:iphi,jplo:jphi))
+
 !             Reproject sky_rgb array from cyl to polar    
               do iaz = minazi,maxazi,20
                write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz
@@ -1191,17 +1202,38 @@
      1                           ,minalt,maxalt,minazi,maxazi
      1                           ,alt_scale,azi_scale,polat,pomag
      1                           ,alt_a_polar,azi_a_polar
+     1                           ,iplo,iphi,jplo,jphi
      1                           ,ni_polar,nj_polar)
               enddo ! ic
 
 !             Write all sky for polar
-              isky_rgb_polar = sky_rgb_polar
               where(sky_rgb_polar .eq. r_missing_data)
-     1              isky_rgb_polar = 0
-              write(6,*)' max polar is ',maxval(isky_rgb_polar)
+                  sky_rgb_polar = 0.
+                  isky_rgb_polar = 0
+              endwhere
+              isky_rgb_polar = sky_rgb_polar
+              write(6,*)' max polar 1 is ',maxval(sky_rgb_polar)
+     1                                    ,maxval(isky_rgb_polar)
+              write(6,*)' min polar 1 is ',minval(sky_rgb_polar)
+     1                                    ,minval(isky_rgb_polar)
+
+              if(minval(isky_rgb_polar) .lt. 0)then
+                write(6,*)' WARNING: maxval isky_rgb_polar < 0'
+              
+                where(isky_rgb_polar .lt. 0)
+                      isky_rgb_polar = 0
+                endwhere
+                write(6,*)' max polar 2 is ',maxval(sky_rgb_polar)
+     1                                      ,maxval(isky_rgb_polar)
+                write(6,*)' min polar 2 is ',minval(sky_rgb_polar)
+     1                                      ,minval(isky_rgb_polar)
+              endif
+
 !             write(6,*)' ipolar array',
 !    1            isky_rgb_polar(2,ni_polar/2,1:nj_polar)
-              npts = 3*ni_polar*nj_polar
+              nip_crop = iphi-iplo+1
+              njp_crop = jphi-jplo+1
+              npts = 3*nip_crop*njp_crop
 !             write(6,*)' Write all sky polar text file'
 !    1                  ,isky_rgb_polar(:,255,255),npts
 !             open(54,file='allsky_rgb_polar.'//clun,status='unknown')
@@ -1211,6 +1243,10 @@
               call writeppm3Matrix(
      1                  isky_rgb_polar(0,:,:),isky_rgb_polar(1,:,:)
      1                 ,isky_rgb_polar(2,:,:),'allsky_rgb_polar_'//clun)
+
+              deallocate(sky_rgb_polar)
+              deallocate(isky_rgb_polar)
+
             endif ! l_polar
 
 !         endif ! mode_polar = 0 or 2
@@ -1224,10 +1260,6 @@
 
           I4_elapsed = ishow_timer()
 
-          deallocate(alt_a_roll)
-          deallocate(azi_a_roll)
-          deallocate(cloud_od)
-          deallocate(dist_2_topo)
           deallocate(sky_rgb_cyl)
           deallocate(isky_rgb_cyl)
 
