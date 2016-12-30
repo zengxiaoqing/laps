@@ -79,7 +79,11 @@
           endif
         endif
 
-        refr_deg = (1.02/60.) * ag * cosd(alt_limb)
+        if(alt_limb .ge. 0.)then
+          refr_deg = (0.907/60.) * ag * cosd(alt_limb)
+        else ! behind limb yielding no refraction
+          refr_deg = 0.0
+        endif
 
 !       Ozone component
         if(alt .lt. 0.)then ! high looking down
