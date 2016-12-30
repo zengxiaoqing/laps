@@ -19,7 +19,7 @@
      1                           ,clear_rad_c_nt                        ! O
      1                           ,airmass_2_cloud_3d,airmass_2_topo_3d  ! O
      1                           ,htstart,horz_dep_d,twi_0              ! O
-     1                           ,solalt_limb_true                      ! O
+!    1                           ,solalt_limb_true                      ! O
      1                           ,htagl                                 ! I
 !    1                           ,elong                                 ! I
      1                           ,aod                                   ! I
@@ -774,9 +774,7 @@
           l_box = l_spherical
         endif
 
-        solalt_limb_true = sol_alt(i,j) + horz_dep_d
-        write(6,*)' solalt_true = ',sol_alt(i,j)
-        write(6,*)' solalt_limb_true = ',solalt_limb_true
+        write(6,*)' solalt observer grid = ',sol_alt(i,j)
 
 !       Used to call skyglow_phys vs skyglow_phys_twi for example
         twi_0 = min(-12.0,-horz_dep_d) ! output
@@ -938,9 +936,9 @@
           write(6,*)' debug point for altray'
          endif
 
-         if(altray .eq. nint(altray) .and. htstart .lt. 40000.)then
+!        if(altray .eq. nint(altray) .and. htstart .lt. 40000.)then
            write(6,*)'alt/jazi_delt/grdasp',ialt,altray,jazi_delt,grdasp
-         endif
+!        endif
 
          altray_limb = altray + horz_dep_d
          radius_limb = 90. - horz_dep_d
@@ -1511,6 +1509,7 @@
                  airmass1_h = airmass1_h + airmass2
 
                  inew_m = nint(rinew_m); jnew_m = nint(rjnew_m)
+                 inew_mb = max(min(inew_m,ni),1)
 
                  if(rinew_h .ge. 1. .and. rinew_h .le. rni .AND. 
      1              rjnew_h .ge. 1. .and. rjnew_h .le. rnj)then ! horz domain
@@ -1974,17 +1973,29 @@
                   if(ihit_topo .eq. 1)then
 
 !                     Land illumination related to terrain slope
-                      if(sol_alt(inew_m,jnew_m)  .gt. 0. )then  
+                      if(sol_alt(inew_mb,jnew_m)  .gt. 0. )then  
+
 !                       frac_ghi_dir = 0.9 *
-!    1                               sind(sol_alt(inew_m,jnew_m))**0.5
-                        frac_ghi_dir = 
-     1                     (ghi_2d(inew_m,jnew_m)-dhi_2d(inew_m,jnew_m))
-     1                    / ghi_2d(inew_m,jnew_m)
+!    1                               sind(sol_alt(inew_mb,jnew_m))**0.5
+
+                        if(ghi_2d(inew_mb,jnew_m) .gt. 0.)then
+                          frac_ghi_dir = 
+     1                   (ghi_2d(inew_mb,jnew_m)-dhi_2d(inew_mb,jnew_m))
+     1                    / ghi_2d(inew_mb,jnew_m)
+                        else
+                          write(6,*)' WARNING: ghi_2d = 0.'
+     1                             ,inew_mb,jnew_m
+     1                             ,sol_alt(inew_mb,jnew_m)
+     1                             ,lat(inew_mb,jnew_m)
+     1                             ,lon(inew_mb,jnew_m)
+                          frac_ghi_dir = 1.0
+                        endif
+
                         alt_norm_int = sum(bi_coeff(:,:) 
      1                               * alt_norm(i1:i2,j1:j2))
                         if(alt_norm_int .gt. 0. )then
                           solar_corrb = sind(alt_norm_int) 
-     1                                / sind(sol_alt(inew_m,jnew_m))
+     1                                / sind(sol_alt(inew_mb,jnew_m))
                           solar_corr = (solar_corrb*frac_ghi_dir) + 
      1                                 1.0 * (1. - frac_ghi_dir) 
                           solar_corr = min(max(solar_corr,0.2),2.0) 
@@ -2009,18 +2020,32 @@
      1                      sum(bi_coeff(:,:) * ghic_2d(ic,i1:i2,j1:j2))
      1                                        * solar_corr
 
+                          if(ialt .eq. minalt .and. jazi .eq. 2686)then
+                             write(6,*)'gtic check ',gtic(ic,ialt,jazi)
+     1                                ,i1,i2,ghic_2d(ic,i1:i2,j1:j2)
+     1                                ,bi_coeff,solar_corr
+                             write(6,*)'solar_corr',inew_mb,jnew_m
+     1                                ,sol_alt(inew_mb,jnew_m)
+     1                                ,lat(inew_mb,jnew_m)
+     1                                ,lon(inew_mb,jnew_m)
+     1                                ,ghi_2d(inew_mb,jnew_m)
+     1                                ,dhi_2d(inew_mb,jnew_m)
+     1                                ,alt_norm_int
+     1                                ,solar_corr
+                          endif
+
 !                         City lights on the ground (spec exitance - emic)
-                          if(sol_alt(inew_m,jnew_m) .lt. twi_alt)then  
+                          if(sol_alt(inew_mb,jnew_m) .lt. twi_alt)then  
 
 !                           'gnd_glow' is nL, consider w/m2/sr/nm
 !                           'emic' is relative to solar isotropic
                             emic(ic,ialt,jazi) = sum(bi_coeff(:,:)    
      1                        * gnd_glow(i1:i2,j1:j2)) * city_colrat(ic)
      1                        / 3e9 ! nl to solar isotropic (i.e. day_int)
-                            if(gnd_glow(inew_m,jnew_m) .gt. 0. .AND. ! .OR. 
+                            if(gnd_glow(inew_mb,jnew_m) .gt. 0. .AND. ! .OR. 
      1                                                idebug .eq. 1)then      
-                              write(6,82)ialt,jazi,inew_m,jnew_m
-     1                                  ,gnd_glow(inew_m,jnew_m)
+                              write(6,82)ialt,jazi,inew_mb,jnew_m
+     1                                  ,gnd_glow(inew_mb,jnew_m)
  82                           format(' gnd glow used for emic',4i5
      1                              ,f9.1)
                             endif
@@ -2044,7 +2069,7 @@
      1                                 * topo_albedo_2d(ic,i1:i2,j1:j2))
                       enddo ! ic
 !                     topo_albedo(:,ialt,jazi) = 
-!    1                    topo_albedo_2d(:,inew_m,jnew_m)
+!    1                    topo_albedo_2d(:,inew_mb,jnew_m)
 
                       topo_ri(ialt,jazi) = rinew_m
                       topo_rj(ialt,jazi) = rjnew_m
@@ -2056,11 +2081,11 @@
                           aod_2_topo(ialt,jazi)        = 1e-4
                           dist_2_topo(ialt,jazi)       = 1d0
                           sum_aod_ill                  = 1e-4 
-     1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
+     1                           * transm_3d(inew_mb,jnew_m,int(rk_m)+1)
                           sum_aod_ill_dir              = 1e-4 
-     1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
+     1                           * transm_3d(inew_mb,jnew_m,int(rk_m)+1)
                           sum_aod_ill_opac             = 1e-4 
-     1                            * transm_3d(inew_m,jnew_m,int(rk_m)+1)
+     1                           * transm_3d(inew_mb,jnew_m,int(rk_m)+1)
                           sum_aod_ill_opac_potl        = 1e-4 
                       else
                           airmass_2_topo_3d(ialt,jazi)
@@ -2083,9 +2108,9 @@
      1                                    ,sum_aod_ill_opac     
      1                                    ,sum_aod_ill_opac_potl 
      1                                    ,airmass_2_topo_3d(ialt,jazi)
-     1                                    ,gnd_glow(inew_m,jnew_m)
-     1                                    ,ghi_2d(inew_m,jnew_m)
-     1                                    ,dhi_2d(inew_m,jnew_m)
+     1                                    ,gnd_glow(inew_mb,jnew_m)
+     1                                    ,ghi_2d(inew_mb,jnew_m)
+     1                                    ,dhi_2d(inew_mb,jnew_m)
                       endif
 91                    format(' Hit topo',2f8.1,2f8.3,f8.2,4f8.3,f12.0
      1                                  ,4f8.3,2f8.1)
@@ -2256,6 +2281,8 @@
 
 !        Get clear sky twilight brightness in ring of constant altitude
 !        Approximate method used only in deep twilight
+!        A different condition could be added for very high altitudes
+!        by assessing range of solar altitudes around the limb
 !        if(sol_alt(i,j) .le. 0.)then
          if(sol_alt(i,j) .le. twi_0 .and. 
      1      sol_alt(i,j) .ge. (-horz_dep_d - 18.0))then ! narrower range
