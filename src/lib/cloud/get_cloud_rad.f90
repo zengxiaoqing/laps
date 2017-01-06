@@ -27,7 +27,7 @@
      real cice_3d(ni,nj,nk) ! kg/m**3
      real rain_3d(ni,nj,nk) ! kg/m**3
      real snow_3d(ni,nj,nk) ! kg/m**3
-     real cond_3d(ni,nj,2)
+     real btau_inc_3d(ni,nj,2)
      real heights_3d(ni,nj,nk)
      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
      real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for
@@ -123,14 +123,14 @@
        const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
 
        if(ku .eq. nk)then
-           cond_3d(:,:,2) &
+           btau_inc_3d(:,:,2) &
                = clwc_3d(:,:,ku)*const_clwc + cice_3d(:,:,ku)*const_cice &
                + rain_3d(:,:,ku)*const_rain + snow_3d(:,:,ku)*const_snow
        else
-           cond_3d(:,:,2) = cond_3d(:,:,1)  
+           btau_inc_3d(:,:,2) = btau_inc_3d(:,:,1)  
        endif
 
-       cond_3d(:,:,1) &
+       btau_inc_3d(:,:,1) &
                = clwc_3d(:,:,kl)*const_clwc + cice_3d(:,:,kl)*const_cice &
                + rain_3d(:,:,kl)*const_rain + snow_3d(:,:,kl)*const_snow
 
@@ -178,14 +178,14 @@
           if(heights_3d_il_jl_kl .gt. terr_max)then      ! above
             nsub = 0
             ihit_terrain_ref = 0
-            cond_m = 0.5 * (cond_3d(iu,ju,2 ) + cond_3d(il,jl, 1))   
+            btau_inc_m = 0.5 * (btau_inc_3d(iu,ju,2 ) + btau_inc_3d(il,jl, 1))   
           elseif(heights_3d(iu,ju,ku) .lt. terr_min)then ! below
             nsub = 0
             ihit_terrain_ref = 1
-            cond_m = 0.0                                             
+            btau_inc_m = 0.0                                             
           else                                           ! between                                                  
             nsub = max(nint(dij),1)
-            cond_m = 0.5 * (cond_3d(iu,ju,2 ) + cond_3d(il,jl, 1))   
+            btau_inc_m = 0.5 * (btau_inc_3d(iu,ju,2 ) + btau_inc_3d(il,jl, 1))   
           endif
 
 !         Check slant ray & terrain within grid box coming toward MSL observer
@@ -233,7 +233,7 @@
             endif
 
 !         elseif(clwc_m+cice_m+rain_m+snow_m .gt. 0.)then ! for efficiency
-          elseif(cond_m .gt. 0.)then ! for efficiency
+          elseif(btau_inc_m .gt. 0.)then ! for efficiency
 
 !           Convert to reflectance (using od_to_albedo)
             backscatter_int(i,j) = backscatter_int(i,j) &
@@ -241,7 +241,7 @@
 !                                          + od_lyr_cice * bksct_eff_cice &
 !                                          + od_lyr_rain * bksct_eff_rain &
 !                                          + od_lyr_snow * bksct_eff_snow  
-                                           + cond_m
+                                           + btau_inc_m
 
 !           albedo_int = od_to_albedo(backscatter_int(i,j))                                                            
 !           albedo_int = 1.0 - exp(-backscatter_int(i,j))                                                            
