@@ -112,6 +112,7 @@
         real grdasp_ll(ni,nj)
         real lat(ni,nj)
         real lon(ni,nj)
+        real projrot_2d(ni,nj)
         real topo_albedo_2d(nc,ni,nj)
         real swi_2d(ni,nj)           ! I (use during twilight)
         real pres_3d(ni,nj,nk)
@@ -219,6 +220,13 @@
         real solalt_last /0.0/
         save solalt_last
 
+        do ii = 1,ni
+        do jj = 1,nj
+           projrot_2d(ii,jj) =
+     1     projrot_latlon(lat(ii,jj),lon(ii,jj),istatus)
+        enddo ! jj
+        enddo ! ii
+
         crep_thr = 0. ! 0.25
         icd = 1
 
@@ -257,6 +265,11 @@
         cloud_od_sp = 0.
         aod_2_cloud = 0.
         aod_2_topo = 0.
+        aod_ill = 0.
+        aod_ill_dir = 0.
+        aod_ill_opac = 0.
+        aod_ill_opac_potl = 0.
+        aod_tot = 0.
         cloud_rad_w = 1.
         clear_rad_c = 0.
         clear_radf_c = 0.
@@ -279,13 +292,13 @@
      1                         .AND. 
      1                moon_mag .le. moon_mag_thr                  )then
             obj_alt = moon_alt
-            obj_azi = moon_azi
+            obj_azi = moon_azi + projrot_2d(i,j)
             obj_bri = 10. ** ((-26.7 - moon_mag)*0.4)
             moon_cond = 1
             write(6,*)' Object is moon, brightness is:',obj_bri
         else
             obj_alt = sol_alt
-            obj_azi = sol_azi
+            obj_azi = sol_azi + projrot_2d(i,j)
             obj_bri = 1.0
             moon_cond = 0
             write(6,*)' Object is sun, brightness is:',obj_bri
@@ -404,7 +417,7 @@
         write(6,*)' grid_size_deg = ',grid_size_deg
 
         if(obj_alt(i,j) .ge. 3.0  .AND. ! as uncorrected for refraction
-     1     htagl .lt. 30000e3           ! not near geosynchronous
+     1     htagl .lt. 300e3             ! not near geosynchronous
      1                                           )then 
           if(newloc .eq. 1)then
             write(6,*)' call get_cloud_rad (newloc = 1)'
@@ -437,7 +450,7 @@
             endif
 
             if(icall_rad .eq. 0)then
-              if(grid_size_deg .le. 180.)then
+              if(htagl .le. 300e3)then
                 write(6,*)' call get_cloud_rad_faces...'
                 call get_cloud_rad_faces(              
      1            obj_alt,obj_azi,                   ! I
@@ -451,7 +464,11 @@
               else ! consider experimental version for global domain
                 do ii = 1,ni
                 do jj = 1,nj
-                  grdasp_ll(ii,jj) = min(1.0 / cosd(lat(ii,jj)),20.)
+                  if(l_latlon_grid)then
+                    grdasp_ll(ii,jj) = min(1.0 / cosd(lat(ii,jj)),20.)
+                  else
+                    grdasp_ll(ii,jj) = 1.0
+                  endif
                 enddo ! jj
                 enddo ! ii
                 write(6,*)' call get_cloud_rad_faces2...'
@@ -492,6 +509,15 @@
 
         do ii = 1,ni
         do jj = 1,nj
+!         if(ii .eq. (ii/10)*10 .and. jj .eq. nj/2)then
+          if(ii .eq. i .and. jj .eq. j)then
+             idb_solar = 1
+             write(6,*) 
+             write(6,*)' obj_alt  observer =',ii,jj,obj_alt(ii,jj)
+          else
+             idb_solar = 0
+          endif
+
           if(obj_alt(ii,jj) .gt. 0.)then ! sun or moon above horizon
             ecl = 1. - eobsc(ii,jj)
             ecld = max(ecl,.0015)
@@ -503,6 +529,10 @@
      1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
 
                 transm_tn = transm_3d(ii,jj,kk)
+                cloud_albedo = 1. - transm_tn
+                transm_tn_pr1 = transm_tn
+     1                   / (1. - topo_albedo_2d(2,i,j) * cloud_albedo)
+                transm_tn_pr = transm_tn ! tn_pr1 or tn (testing)
 
 !               Correct for diffuse radiation at low obj altitude
 !               'solalt_eff' is an empirical function to force the effective
@@ -525,20 +555,20 @@
                 objalt_eff = obj_alt(ii,jj) 
      1                     + (1.5 * cosd(obj_alt(ii,jj))**100.)
                 ghi_clr = obj_bri * sind(objalt_eff) * ghi_zen_sfc *ecld
-                ghi_2d(ii,jj) = transm_tn * ghi_clr    
+                ghi_2d(ii,jj) = transm_tn_pr * ghi_clr    
 
 !               Diffuse
                 frac_dir = max(transm_tn**4.,.0039) ! 5 deg circ
 
                 patm_sfc = ztopsa(topo_a(ii,jj)) / 1013.25
-                sb_corr = 2.0 * (1.0 - (sind(obj_alt(ii,jj))**0.5))
+                sb_corr = 4.0 * (1.0 - (sind(obj_alt(ii,jj))**0.5))
                 dhi_grn_clr_frac = ext_g(2) * patm_sfc 
      1                           * 10.**(-0.4*sb_corr)
                 dhi_2d_clear = ghi_zen_toa * ecld * dhi_grn_clr_frac 
      1                       * obj_bri
 
                 dhi_2d(ii,jj) = ghi_2d(ii,jj) * (1. - frac_dir) 
-     1                     * transm_tn
+     1                     * transm_tn_pr
      1                     + dhi_2d_clear * frac_dir
 !               dhi_2d(ii,jj) = max(dhi_2d_clear,dhi_2d_est) 
 !               dhi_2d(ii,jj) = min(dhi_2d(ii,jj),ghi_2d(ii,jj))
@@ -559,19 +589,23 @@
                 dhic_clr(:) = dhi_grn_clr_frac * (ext_g(:)/.09)**colexp
 !               dhic_2d(:,ii,jj) = dhi_2d(ii,jj) / ghi_zen_toa
                 dhic_2d(:,ii,jj) 
-     1             = obj_bri * ecld * dhic_clr(:) * frac_dir ! clr
-     1             + bhi_clr(:) * transm_tn * (1.-frac_dir)  ! cld
+     1             = obj_bri * ecld * dhic_clr(:) * frac_dir   ! clr
+     1             + bhi_clr(:) * transm_tn_pr * (1.-frac_dir) ! cld
 
                 ghic_clr = ghi_clr / ghi_zen_toa
                 ghic_2d(:,ii,jj) = bhic_2d(:,ii,jj) + dhic_2d(:,ii,jj) 
 
-                if(ii .eq. i .and. jj .eq. j)then
+                if(idb_solar .eq. 1)then
                    write(6,*)' bhi_clr  observer =',bhi_clr  
                    write(6,*)' ghi_clr  observer =',ghi_clr  
                    write(6,*)' ghic_clr observer =',ghic_clr  
                    write(6,*)' dhic_clr observer =',dhic_clr  
                    write(6,*)' frac_dir observer =',frac_dir
                    write(6,*)' transm   observer =',transm_tn
+                   write(6,*)' trnalb   observer ='
+     1                                   ,topo_albedo_2d(2,i,j)
+                   write(6,*)' cldalb   observer =',cloud_albedo
+                   write(6,*)' transm_p observer =',transm_tn_pr1
                    write(6,*)' ecl      observer =',ecl
                    write(6,*)' bhic_2d  observer =',bhic_2d(:,ii,jj)
                    write(6,*)' dhic_2d  observer =',dhic_2d(:,ii,jj)
@@ -618,11 +652,21 @@
               write(6,*)' swi_2d      CTR = ',swi_2d(ii,jj)
             endif
 
+            if(idb_solar .eq. 1)then
+              write(6,*)' dhic_2d  observer 1 =',dhic_2d(:,ii,jj)
+              write(6,*)' ghic_2d  observer 1 =',ghic_2d(:,ii,jj)
+            endif
+            
 !           Add solar twilight to spectral normalized values
             dhic_2d(:,ii,jj) = dhic_2d(:,ii,jj) 
      1                       + diffuse_twi / ghi_zen_toa
             ghic_2d(:,ii,jj) = ghic_2d(:,ii,jj) 
      1                       + diffuse_twi / ghi_zen_toa
+
+            if(idb_solar .eq. 1)then
+              write(6,*)' dhic_2d  observer 2 =',dhic_2d(:,ii,jj)
+              write(6,*)' ghic_2d  observer 2 =',ghic_2d(:,ii,jj)
+            endif
 
           endif
 
@@ -945,7 +989,7 @@
 
          do jazi = minazi,maxazi,jazi_delt
           view_azi_deg = float(jazi) * azi_scale
-          azigrid = view_azi_deg + projrot
+          azigrid = modulo(view_azi_deg + projrot,360.)
 
           if((abs(view_azi_deg - azid1) .lt. azi_delt_2 .or. 
      1        abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
@@ -962,12 +1006,24 @@
      1         abs(altray) .eq. 75.) 
 !    1               .AND. altray .eq. nint(altray) 
      1                                                   )then
-              idebug = 1
-              idebug_a(ialt,jazi) = 1
+             idebug = 1
+             idebug_a(ialt,jazi) = 1
           else
-              idebug = 0
+             idebug = 0
           endif
 
+!         High custom
+          if(ialt .eq. (maxalt*2+minalt)/3)then
+             if(view_azi_deg .eq. nint(view_azi_deg))then
+                idebug = 1
+                idebug_a(ialt,jazi) = 1
+             else
+                idebug = 0
+                idebug_a(ialt,jazi) = 0
+             endif
+          endif
+
+!         Zenith / Nadir
           if(jazi .eq. minazi .and. abs(altray) .eq. 90.)then
               idebug = 1
               idebug_a(ialt,jazi) = 1
@@ -992,8 +1048,9 @@
           view_altitude_deg = altray
 
 !         Get direction cosines based on azimuth
-          xcos = sind(azigrid)
-          ycos = cosd(azigrid)
+          xcosg = sind(azigrid)
+          ycosg = cosd(azigrid)
+          ycost = cosd(view_azi_deg)
 
 !         Initialize variables for this ray
           icloud = 0
@@ -1202,7 +1259,7 @@
      1                       ,ls,iabove
      1                       ,rkstart,rk_h,nk,rkdelt,ht_h,ht_m,topo_m
      1                       ,ihit_topo,rjnew_l,rjnew_h,jnew_m
-     1                       ,dy1_l,dy1_h,rj,ycos
+     1                       ,dy1_l,dy1_h,rj,ycosg
                       istatus = 0
                       return
                     endif
@@ -1230,7 +1287,7 @@
      1                       ,ls,iabove
      1                       ,rkstart,rk_h,nk,rkdelt,ht_h,ht_m,topo_m
      1                       ,ihit_topo,rjnew_l,rjnew_h,jnew_m
-     1                       ,dy1_l,dy1_h,rj,ycos
+     1                       ,dy1_l,dy1_h,rj,ycosg
                       istatus = 0
                       return
                     endif
@@ -1433,22 +1490,28 @@
                   rjnew_l = rjnew_h
 
 !                 Obtain latlon from spherical geometry
-                  TLat = ASinD(ycos*SinD(gc_deg)*CosD(rLat) 
+                  TLat = ASinD(ycost*SinD(gc_deg)*CosD(rLat) 
      1                 + SinD(rLat)*CosD(gc_deg))
 
                   CosDLon = (CosD(gc_deg) - SinD(rLat)*SinD(TLat)) 
      1                    / (CosD(rLat)*CosD(TLat))
                   If(Abs(CosDLon).gt.1.)CosDLon=Sign(1.,CosDLon)
                   DLon = ACosD(CosDLon)
-                  If(view_azi_deg.ge..0.and.view_azi_deg.le.180.)Then
-                   TLon=rLon+DLon
-                  Else
-                   TLon=rLon-DLon
+                  
+                  If(view_azi_deg.ge..0.and.view_azi_deg.le.180.)Then ! east
+!                 If(azigrid.ge..0.and.azigrid.le.180.)Then ! grid east
+                    TLon=rLon+DLon
+                  Else ! west
+                    TLon=rLon-DLon
                   EndIf
 
                   if(.not. l_latlon_grid)then ! speed test
                     call latlon_to_rlapsgrid(tlat,tlon,lat,lon,ni,nj
      1                                      ,rinew_h,rjnew_h,istatus)
+!                   if(idebug .eq. 1)then
+!                      write(6,62)tlat,tlon,gc_deg,rinew_h,rjnew_h,dlon
+!62                    format('   check latlon',6f9.3)                    
+!                   endif
                   else ! assume a lat/lon grid
                     if(tlon .gt. 180.)then
                         tlon1 = tlon - 360.
@@ -1466,11 +1529,11 @@
                   endif
                  
                  else ! more approximate
-                  dx1_l = dxy1_l * xcos
-                  dy1_l = dxy1_l * ycos
+                  dx1_l = dxy1_l * xcosg
+                  dy1_l = dxy1_l * ycosg
 
-                  dx1_h = dxy1_h * xcos
-                  dy1_h = dxy1_h * ycos
+                  dx1_h = dxy1_h * xcosg
+                  dy1_h = dxy1_h * ycosg
 
                   ridelt_l = dx1_l / grid_spacing_m
                   rjdelt_l = dy1_l / grid_spacing_m
@@ -2020,7 +2083,7 @@
      1                      sum(bi_coeff(:,:) * ghic_2d(ic,i1:i2,j1:j2))
      1                                        * solar_corr
 
-                          if(ialt .eq. minalt .and. jazi .eq. 2686)then
+                          if(jazi .eq. maxazi/2 .and. ic .eq. 2)then
                              write(6,*)'gtic check ',gtic(ic,ialt,jazi)
      1                                ,i1,i2,ghic_2d(ic,i1:i2,j1:j2)
      1                                ,bi_coeff,solar_corr
@@ -2201,7 +2264,8 @@
                 endif
                 write(6,113)ls,rk,ht_h,trace_ri(ialt,jazi)
      1                                ,trace_rj(ialt,jazi),trsolalt
-113             format('   ls/rk/ht = ',i4,f8.3,f12.1,' eor trij',3f8.2) 
+113             format('   ls/rk/ht/slalt = ',i4,f8.3,f12.1,' eor trij'
+     1                                       ,3f8.2) 
                 write(6,114)ls,rk,rk_h,rk_m,ht_h,ihit_topo,ihit_bounds
      1                     ,iabove,gc_deg,dslant1_h,dz1_h,tlat,tlon
      1                     ,cvr_path_sum,idebug
@@ -2229,7 +2293,7 @@
               stop
           endif
 
-          aod_ill_dir(ialt,jazi) = sum_aod_ill_dir
+          aod_ill_dir(ialt,jazi) = min(sum_aod_ill_dir,1e30)
           aod_tot(ialt,jazi) = sum_aod
           aod_ill_opac(ialt,jazi) = sum_aod_ill_opac
           aod_ill_opac_potl(ialt,jazi) = sum_aod_ill_opac_potl
@@ -2569,6 +2633,8 @@
      1                                    ,minval(clear_rad_c_nt(3,:,:))
      1                                    ,maxval(clear_rad_c_nt(3,:,:))
 
+!       cloud_rad_w = min(cloud_rad_w,1.)
+
         write(6,*)' Range of cloud_rad_w = ',minval(cloud_rad_w)
      1                                      ,maxval(cloud_rad_w)
 
@@ -2664,6 +2730,14 @@
 
         solalt_last = sol_alt(i,j)
 
+        write(6,*)' Sample of topo_ri and topo_rj'
+        do jazi_sample = minazi,maxazi,10
+           ialt_sample = min(max(-100,minalt),maxalt)
+           write(6,*)ialt_sample,jazi_sample
+     1          ,topo_ri(ialt_sample,jazi_sample)
+     1          ,topo_rj(ialt_sample,jazi_sample)
+        enddo ! jazi_sample
+        
         I4_elapsed = ishow_timer()
 
         write(6,*)' successful return from get_cloud_rays'
