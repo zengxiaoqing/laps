@@ -130,6 +130,7 @@
 
      ntot = 0
      nsteps = 0
+     refraction = 0.5 ! initialize
 
      heights_1d(:) = heights_3d(ni/2,nj/2,:)
 
@@ -502,6 +503,8 @@
        write(6,*)' range of transm_3d = ',arg1,arg2
      endif
 
+!    where(transm_3d(:,:,:) .eq. r_missing_data)transm_3d(:,:,:) = 1.0
+
      I4_elapsed = ishow_timer()
 
      nshadow = 0
@@ -530,6 +533,10 @@
              iverbose = 1
            else
              iverbose = 0
+           endif
+
+           if(iverbose .eq. 1)then
+             write(6,*)' Here iverbose 1 ',i,j,k
            endif
 
            if(transm_3d(i,j,k) .eq. r_missing_data)then
@@ -564,6 +571,10 @@
              endif ! inside horizontal domain
            endif ! missing value
 
+           if(iverbose .eq. 1)then
+             write(6,*)' Here iverbose 2 ',i,j,k,heights_1d(k),ht_agl,transm_3d(i,j,k)
+           endif
+
            if(transm_3d(i,j,k) .eq. 0.)then
              nshadow = nshadow + 1
 !          elseif(transm_3d(i,j,k) .lt. 0.)then
@@ -573,9 +584,33 @@
 !            write(6,*)' ERROR: transm_3d > 1',i,j,k,transm_3d(i,j,k)
 !            stop
            else ! Calculate transm_4d
-             refraction = 0.5 ! typical value near horizon
+!            Direct illumination of the cloud is calculated here
+!            Indirect illumination is factored in via 'scat_frac'
+             obj_alt_thr = .01 ! abs(obj_alt(i,j)) * .00
+             if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr .OR. iverbose .eq. 1)then
+!              ag = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)),patm_k)
+               ag = airmassf(90.-obj_alt(i,j), patm_k)
+
+               if(.true.)then
+                 aero_refht = redp_lvl
+                 obj_alt_app = obj_alt(i,j) + refraction
+                 call get_airmass(obj_alt_app,heights_3d(i,j,k) & ! I 
+                                 ,patm_k,aero_refht,aero_scaleht & ! I
+                                 ,earth_radius,iverbose &          ! I
+                                 ,agdum,ao,aa,refr_deg)            ! O
+               else
+                 aa = 0.
+               endif
+
+               obj_alt_last = obj_alt(i,j)
+               refraction = refr_deg 
+             endif                                                     
 
              obj_alt_cld = obj_alt(i,j) + horz_dep_d + refraction
+
+             if(iverbose .eq. 1)then
+               write(6,*)' Here iverbose 3 ',i,j,k
+             endif
 
 !            Estimate solar extinction/reddening by Rayleigh scattering
 !            at this cloud altitude
@@ -587,25 +622,10 @@
                bint = twi_int
 
              else ! object above horizon
-!              Direct illumination of the cloud is calculated here
-!              Indirect illumination is factored in via 'scat_frac'
-               obj_alt_thr = .01 ! abs(obj_alt(i,j)) * .00
-               if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr .OR. iverbose .eq. 1)then
-!                ag = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)),patm_k)
-                 ag = airmassf(90.-obj_alt(i,j), patm_k)
 
-                 if(.true.)then
-                   aero_refht = redp_lvl
-                   call get_airmass(obj_alt(i,j),heights_3d(i,j,k) & ! I 
-                                   ,patm_k,aero_refht,aero_scaleht & ! I
-                                   ,earth_radius,iverbose &          ! I
-                                   ,agdum,ao,aa,refr_deg)            ! O
-                 else
-                   aa = 0.
-                 endif
-
-                 obj_alt_last = obj_alt(i,j)
-               endif                                                     
+               if(iverbose .eq. 1)then
+                 write(6,*)' Here iverbose 4 ',i,j,k
+               endif
 
                scat_frac = 1.00
                do ic = 1,nc
@@ -619,8 +639,8 @@
                  trans_c(ic) = trans(od_g + od_o + od_a)
 
                  if(iverbose .eq. 1)then
-                   write(6,21)k,ic,heights_3d(i,j,k),obj_alt(i,j),obj_alt_cld
-21                 format(' k/ic/ht/objalt/cld ',i4,i3,f9.0,2f9.2)
+                   write(6,21)i,j,k,ic,heights_3d(i,j,k),obj_alt(i,j),obj_alt_cld
+21                 format(' ijk/ic/ht/objalt/cld ',2i5,i4,i3,f9.0,2f9.2)
                    write(6,22)ag,agdum,ao,aa,od_g,od_o,od_a,trans_c(ic)
 22                 format(' ag/agd/ao/aa/od_g/od_o/od_a/trans',8f9.4)
                  endif
@@ -642,6 +662,12 @@
              transm_4d(i,j,k,1) = transm_3d(i,j,k) * rint
              transm_4d(i,j,k,2) = transm_3d(i,j,k) * gint
              transm_4d(i,j,k,3) = transm_3d(i,j,k) * bint
+
+             if(iverbose .eq. 1)then
+               write(6,23)sol_occ,rint,gint,bint,transm_4d(i,j,k,:)
+23             format(' solocc/rint/gint/bint/transm_4d',f8.3,2x,3f10.5,2x,3f10.5)
+             endif
+
            endif
          enddo ; enddo ! ij
        enddo ! k
