@@ -470,11 +470,16 @@
          obj_alt_last = r_missing_data
 
          do i = 1,ni; do j = 1,nj
-           if(i .eq. ni/2 .and. j .eq. nj/2 .and. k .eq. k)then
+           if(i .eq. idb .and. j .eq. jdb .and. k .eq. k)then
              iverbose = 1
            else
              iverbose = 0
            endif
+
+           if(iverbose .eq. 1)then
+             write(6,*)' Here iverbose 1 ',i,j,k,heights_1d(k),ht_agl,transm_3d(i,j,k)
+           endif
+
            if(transm_3d(i,j,k) .eq. r_missing_data)then
              imiss = imiss + 1
              if(imiss .le. 10 .or. iverbose .eq. 1)then
@@ -544,7 +549,7 @@
 
                  od_o = (o3_du/300.) * ext_o(ic) * aodum
 
-                 trans_c(ic) = trans(od_g + od_a)
+                 trans_c(ic) = trans(od_g + od_o + od_a)
 
                  if(iverbose .eq. 1)then
                    write(6,21)k,ic,obj_alt(i,j)
