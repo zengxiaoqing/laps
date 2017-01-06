@@ -450,7 +450,9 @@
            l_dlow2 = .false.
          endif
 
-         if(altray .le. 10.0)then
+         if(altray .le. -10.0)then
+           azi_d10 = 1.
+         elseif(altray .le. 10.0)then
            azi_d10 = 5.
          else
            azi_d10 = 10.
@@ -501,6 +503,7 @@
                 else
                   idebug_clr = 0
                 endif
+                idebug_clr = idebug_a(ialt,jazi)
 
                 if(idebug_clr .eq. 1)then
                   write(6,68)ialt,jazi,ic,sol_alt,altray,view_azi_deg &
@@ -538,7 +541,7 @@
                     if(idebug_clr .eq. 1)then
                       write(6,681)rlat,rlon,sol_lat,sol_lon,rlat_limb,rlon_limb,gcdist_km
 681                   format(' lat-lon obs/sol/limb = ',6f8.2,' gc = ',f9.0)
-                      write(6,*)'salt/tr/ref',sol_alt,trace_solalt(ialt,jazi),solalt_ref
+                      write(6,*)'salt/tr/ref-1',sol_alt,trace_solalt(ialt,jazi),solalt_ref
                     endif
                   endif
                 else
@@ -782,9 +785,9 @@
             if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
               write(6,*) &
             ' ERROR in skyglow_phys: aod_dir_rat out of bounds',aod_dir_rat
-              write(6,*)' ialt/jazi/altray = ',ialt,jazi,altray
+              write(6,*)' ialt/jazi/altazray = ',ialt,jazi,altray,view_azi_deg
               write(6,*)' aod_ray_dir/aod_ray = ',aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi)
-              stop
+!             stop
             endif
 
             rayleigh_pfunc = rayleigh_pf(elong(ialt,jazi))
@@ -958,9 +961,9 @@
                           solalt_ref = min(solalt_ref,+180.-solalt_ref)
                           solalt_ref = max(solalt_ref,-180.-solalt_ref)
                         endif
-!                       if(idebug_clr .eq. 1)then
-!                         write(6,*)'salt/tr/ref',sol_alt,trace_solalt(ialt,jazi),solalt_ref
-!                       endif
+                        if(idebug_clr .eq. 1)then
+                          write(6,*)'salt/tr/ref-2',sol_alt,trace_solalt(ialt,jazi),solalt_ref
+                        endif
                       endif
 
 !                     Alternative strategy
@@ -993,10 +996,20 @@
                   endif ! call get_clr_src_dir_topo
 
 !                 Normalize by extinction?
-                  aodfo = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi) 
-                  aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
+                  if(aod_2_topo(ialt,jazi) .gt. 0.)then
+                    aodfo = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi) 
+                  else
+                    aodfo = 1.0
+                  endif
 
-                  if(htmsl .gt. 100e3 .and. solalt_ref .lt. 0.)then
+                  if(aod_ill_opac_potl(ialt,jazi) .gt. 0.)then
+                    aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
+                  else
+                    aodf = 1.0
+                  endif
+
+!                 if(htmsl .gt. 500e3 .and. solalt_ref .lt. 0.)then
+                  if(htmsl .gt. 100e3 .and. solalt_ref .lt. twi_alt)then
                     aodf = 1.0
                     radf = 1.0
                   else ! use original values
