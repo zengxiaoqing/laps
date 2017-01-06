@@ -131,8 +131,8 @@
         write(6,*)' range of r_cloud_rad is ',minval(r_cloud_rad),maxval(r_cloud_rad)
 
         idebug_a = 0
-        clear_rad_2nd_c(:,:,:) = 0. ! set (initialize) for testing
-        moon_rad_2nd_c(:,:,:) = 0. ! set (initialize) for testing
+        clear_rad_2nd_c(:,:,:) = 0. ! set (initialize) 
+        moon_rad_2nd_c(:,:,:) = 0. ! set (initialize) 
         rad_moon_sc(:,:,:) = 0.     ! initialize
         ave_rad_toa_c(:,:,:) = 0.   ! initialize
         day_int = day_int0 ! via includes
@@ -145,6 +145,7 @@
         enddo ! ic
 
         patm_o3_msl = patm_o3(htmsl)
+        thr_abv_clds = 100e3
 
 !       htmsl = psatoz(patm*1013.25)
 
@@ -235,7 +236,7 @@
         else ! sun above horizon
           glow_secondary_cld = 1. ! dark default in daytime
 !         2.0 is mean airmasses relative to zenith, 0.5 is 90deg phase func
-          sb_corr = 2.0 * (1.0 - (sind(sol_alt)**0.5)) 
+          sb_corr = 4.0 * (1.0 - (sind(sol_alt)**0.5)) 
           rad_sec_cld(:) = (day_int * ext_g(:) * patm_sfc * 2.0 * 0.5) / 10.**(0.4*sb_corr)
           write(6,23)rad_sec_cld(:)
 23        format('  rad_sec_cld (based on day_int) = ',3f12.0)
@@ -427,8 +428,12 @@
         enddo ! i
         enddo ! j
 
-        if(htmsl .gt. 1000e3)then ! high custom
-            idebug_a(28,1:nj:10) = 1
+        if(htmsl .gt. 100e3)then ! high custom
+            idebug_a(:,:) = 0
+            ialt_debug = ((ni-1)*69)/90 + 1
+            idebug_a(ialt_debug,1:nj:20) = 1
+            iazi_debug = ((nj-1)*100)/360 + 1 
+            idebug_a(1:ni:4,iazi_debug) = 1
         endif
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
@@ -492,8 +497,13 @@
 !               if(airmass_2_topo(i,j) .gt. 0. .OR. transm_obs .lt. 0.9)then
                 if(airmass_2_topo(i,j) .gt. 0.)then ! inside terrain 
 !                 Note that aod_ill_dir discriminates between direct/diffuse
-                  od_atm_a_eff(i,j) = od_atm_a * aod_ill(i,j)     / aod_2_topo(i,j)
-                  od_atm_a_dir(i,j) = od_atm_a * aod_ill_dir(i,j) / aod_2_topo(i,j)
+                  if(aod_2_topo(i,j) .gt. 0.)then
+                    od_atm_a_eff(i,j) = od_atm_a * aod_ill(i,j)     / aod_2_topo(i,j)
+                    od_atm_a_dir(i,j) = od_atm_a * aod_ill_dir(i,j) / aod_2_topo(i,j)
+                  else
+                    od_atm_a_eff(i,j) = 1.0
+                    od_atm_a_dir(i,j) = 1.0
+                  endif
 !                 clear_radf_c_eff(:,i,j) = clear_radf_c(:,i,j) * airmass_2_topo(i,j) / ag
                   ag_2d(i,j) = airmass_2_topo(i,j)
                   if(idebug_a(i,j) .eq. 1)then
@@ -508,17 +518,20 @@
 6                   format(3f9.3,3f10.5,4f9.3)
                   endif
 
-                else ! outside of terrain
+                else ! outside of terrain or domain
                   if(alt_a(i,j) .ge. 0. .and. aa .gt. 0.)then
 !                   od_atm_a_eff(i,j) = (od_atm_a * aod_ill(i,j))     / (aa * od_atm_a)
 !                   od_atm_a_dir(i,j) = (od_atm_a * aod_ill_dir(i,j)) / (aa * od_atm_a)
                     od_atm_a_eff(i,j) = (           aod_ill(i,j))     / (aa           )
                     od_atm_a_dir(i,j) = (           aod_ill_dir(i,j)) / (aa           )
                   else ! might make use of more accurate aa below horizon
-!                   od_atm_a_eff(i,j) = 1.0
-!                   od_atm_a_dir(i,j) = 1.0
-                    od_atm_a_eff(i,j) = (           aod_ill(i,j))     / (aa           )
-                    od_atm_a_dir(i,j) = (           aod_ill_dir(i,j)) / (aa           )
+                    if(aa .gt. 0.)then
+                      od_atm_a_eff(i,j) = (         aod_ill(i,j))     / (aa           )
+                      od_atm_a_dir(i,j) = (         aod_ill_dir(i,j)) / (aa           )
+                    else
+                      od_atm_a_eff(i,j) = 1.0
+                      od_atm_a_dir(i,j) = 1.0
+                    endif
                   endif
                   if((i .eq. isun .AND. j .eq. jsun) .OR. &
                      (alt_a(i,j) .lt. 0. .and. idebug_a(i,j) .eq. 1) .OR. &
@@ -627,7 +640,7 @@
             I4_elapsed = ishow_timer()
 
             isolalt_lo=-11; isolalt_hi=+11
-            write(6,*)' call skyglow_phys for moon testing:'
+            write(6,*)' call skyglow_phys for moon:'
             moonalt_limb_true = moon_alt ! include horz_dep of moon?
             call skyglow_phys(minalt,maxalt,1 &                        ! I
                      ,minazi,maxazi,1,azi_scale &                      ! I
@@ -869,7 +882,7 @@
           iradsec = 0
           if(solalt_ref .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
               if(solalt_ref .lt. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
-                  rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * day_int / 1300. * 7.0
+                  rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * day_int / 1300. ! * 7.0
                   iradsec = 1
               elseif(solalt_ref .ge. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
 !                 sb_corr = 2.0 * (1.0 - (sind(solalt_ref)**0.5)) 
@@ -902,6 +915,9 @@
               btau = 0.10 * cloud_od(i,j)
               cloud_albedo = btau / (1. + btau)
 
+              btau_corr = 0.10 * cloud_od(ni,j)
+              cloud_albedo_corr = btau_corr / (1. + btau_corr)
+
               do ic = 1,nc
                   if(htmsl .ge. 1000e3 .and. .true.)then ! experimental (e.g. DSCOVR)
                       pf_top(ic) = pf_scat(ic,i,j) * (1. - cloud_albedo) & ! thin
@@ -926,11 +942,22 @@
 !                         topo_arg = 2. * gtic(ic,i,j) * albedo_sfc(ic)
                           rad = day_int * 2. * swi_obs/ghi_zen_toa * albedo_sfc(ic)
 !                         rad = day_int * (0.02 * (1. + albedo_sfc(ic))) * pf_scat(ic,i,j)
+
+!                         Estimate of Tr
+!                         rad = day_int * 2. * sind(solalt_ref) * (1. - cloud_albedo)
+!                         rad = day_int * 2. * swi_obs/ghi_zen_toa ! Transmitted by cloud
+
+!                         Use Trprime = Tr / (1. - a * Re)                  
+                          radb_corr = 1. - albedo_sfc(ic) * cloud_albedo_corr
+                          if(radb_corr .gt. 0.)then
+!                           rad = rad / radb_corr ! testing
+                          endif
                       endif
                   else ! secondary scattering term allowed to dominate
                       rad = 0.
                   endif
                   cld_radb(ic) = rad ! + rad_sec_cld(ic)
+
               enddo ! ic
 
               cld_rad(:) = cld_radt(:) * r_cloud_rad(i,j) & 
@@ -955,8 +982,10 @@
                   .OR. (i .eq. isun .and. j .eq. jsun) )then
                if(r_cloud_3d(i,j) .gt. 0. .or. abs(alt_a(i,j)).eq.90.0)then
                   htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
-                  write(6,41)iradsec,solalt_ref,sol_alt,twi_alt,htmin_view
- 41               format(' irs/solalt_ref/solalt/twi_alt/htmin',i3,3f9.4,f11.0)
+                  radb_corr = 1. - albedo_sfc(2) * cloud_albedo_corr
+                  write(6,*)'radb_corr = ',albedo_sfc(2),cloud_albedo_corr,radb_corr
+                  write(6,41)iradsec,solalt_ref,sol_alt,twi_alt,htmin_view,day_int*pf_top(:)*cloud_rad_c(:,i,j)/1e6,rad_sec_cld(:)/1e6,sb_corr
+ 41               format(' irs/solalt_ref/solalt/twi_alt/htmin/cradt/rdsc',i3,3f9.4,f11.0,3f5.0,2x,3f5.0,f6.2)
                   if(iradsec .ge. 10)then
                     write(6,*)' WARNING: irs = ',iradsec,l_solar_eclipse,rad_sec_cld,sph_rad_ave
                   endif
@@ -964,9 +993,9 @@
                    ,trans_c(2),r_cloud_rad(i,j) &
                    ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
                    ,cld_radb(:)/1e6,(cld_rad(:)/1e6)/trans_c(:) &
-                   ,cld_rad(:)/1e6,rad_sec_cld(:)/1e6,sb_corr
+                   ,cld_rad(:)/1e6
  42               format(&
-                  ' elg/pf/br/rint2/trnsc2/rcldrd/cldrdtba/cldrad/rdsc = ',2i5,6f9.3,' c',3f8.5,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f5.0,f6.2)
+                  ' elg/pf/br/rint2/trnsc2/rcldrd/cldrdtba/cldrad = ',2i5,6f9.3,' c',3f8.5,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f5.0,f6.2)
                endif ! cloud present
               endif
 
@@ -974,7 +1003,7 @@
 
               if(htmsl .gt. 100e3)then
                 rad_sec_cld(:) = difftwi(max(solalt_ref,-16.)) * (ext_g(:)/.09) * day_int / 1300. * 7.0
-                iradsec = 1
+                iradsec = 3
                 glow_secondary_cld = log10(rad_sec_cld(2))
               endif
 
@@ -1240,7 +1269,7 @@
 !           cloud attenuation. 'frac_front' should be relatively high
 !           looking at sunlit clouds from above and should be low
 !           looking at shaded clouds from below.
-            if(solalt_ref .gt. -4.5 .OR. htmsl .ge. 1000e3)then 
+            if(solalt_ref .gt. -4.5 .OR. htmsl .ge. thr_abv_clds)then 
 
               if(airmass_2_topo(i,j) .gt. 0.)then ! terrain
                 od2topo_c(ic) = ext_g(ic) * airmass_2_topo(i,j) &
@@ -1293,7 +1322,7 @@
               else
                 frac_clr_2nd = 0.
               endif
-              if(htmsl .le. 1000e3)then 
+              if(htmsl .le. thr_abv_clds)then 
                 arg = ((1. - ramp_cld_nt) * (1. - frac_clr_2nd)) + (1. * frac_clr_2nd)
                 frac_front = frac_front * arg
               endif
@@ -1305,7 +1334,7 @@
               frac_scat = min(max(opac_cloud-cloud_albedo,0.),1.)
             endif
 
-            if(htmsl .ge. 1000e3 .and. .true.)then ! experimental (e.g. DSCOVR)
+            if(htmsl .ge. thr_abv_clds .and. .true.)then ! experimental (e.g. DSCOVR)
                 frac_clr = max(frac_clr,cosd(solalt_ref)**50.0)
 !               frac_clr = frac_clr**sind(solalt_ref**50.0))
                 if(solalt_ref .le. 0.)frac_clr = 1.0
@@ -1618,6 +1647,7 @@
 116           format(2i5,f7.2,2f6.1,f9.3,f11.6,2f7.2,3f6.2,3f8.3,f8.4,f7.1,f9.5,f9.1,f8.3,2f8.5,2f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
 117           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.4,f7.1,f9.3,f8.1,6f7.3,f9.2,2x,3i4,' clrrad',3f10.0,3i4)
 118           format(2i5,f9.4,2f9.3,f9.3,f11.6,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
+              write(6,*)
           endif
 
           sky_rad_a(:,i,j) = sky_rad(:)
