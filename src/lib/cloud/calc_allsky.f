@@ -30,6 +30,8 @@
         use mem_allsky
 
         addlogs(x,y) = log10(10.**x + 10.**y)
+        angdist(p1,p2,dlon) = acosd(sind(p1) * sind(p2)
+     1                      + cosd(p1) * cosd(p2) * cosd(dlon))
 
 !       Input arrays
 !       real clwc_3d(NX_L,NY_L,NZ_L)      ! Control Variable
@@ -310,24 +312,44 @@
 
           do j = minazi,maxazi
           do i = minalt,maxalt
-                trace_solalt(i,j) = solar_alt
-                topo_solalt(i,j) = solar_alt
-                topo_solazi(i,j) = solar_az
+             trace_solalt(i,j) = solar_alt
+             topo_solalt(i,j) = solar_alt
+             topo_solazi(i,j) = solar_az
 
-                itrace = nint(trace_ri(i,j))
-                jtrace = nint(trace_rj(i,j))
-                if(htmsl .gt. 100000. .and. alt_a_roll(i,j) .lt. 0.)then
-                    if(itrace .ge. 1 .and. itrace .le. NX_L .and.
-     1                 jtrace .ge. 1 .and. jtrace .le. NY_L)then
-                        trace_solalt(i,j) = sol_alt_2d(itrace,jtrace)
-                        eobsc_sky(i,j) = eobsc(itrace,jtrace)
-                    endif
+             itrace = nint(trace_ri(i,j))
+             jtrace = nint(trace_rj(i,j))
+             if(htmsl .gt. 100000. .and. alt_a_roll(i,j) .lt. 0.)then
+                if(itrace .ge. 1 .and. itrace .le. NX_L .and.
+     1             jtrace .ge. 1 .and. jtrace .le. NY_L)then
+                   trace_solalt(i,j) = sol_alt_2d(itrace,jtrace)
+                   eobsc_sky(i,j) = eobsc(itrace,jtrace)
+                else ! outside domain - estimate solar altitude at sea level
+                   htmsl = htagl + topo_sfc
+                   if(alt_a_roll(i,j) .eq. -21.)then
+                      iverbose = 1
+                   else
+                      iverbose = 0
+                   endif
+                   call latlon_ray(rlat,rlon,htmsl,alt_a_roll(i,j)
+     1               ,azi_a_roll(i,j),dist_2_topo(i,j),rlat_sfc,rlon_sfc
+     1               ,iverbose,istatus)
+                   solzen_sfc = angdist(rlat_sfc,solar_lat 
+     1                                 ,rlon_sfc-solar_lon)
+                   trace_solalt(i,j) = 90. - solzen_sfc
+                   if(iverbose .eq. 1)then
+                      write(6,41)i,j,alt_a_roll(i,j),azi_a_roll(i,j)
+     1                          ,dist_2_topo(i,j),rlat_sfc,rlon_sfc
+     1                          ,trace_solalt(i,j)
+41                    format(' setting trace_solalt outside domain: '
+     1                      ,2i6,2f9.3,f10.1,3f9.3)
+                   endif
                 endif
+             endif
 
-                itopo = nint(topo_ri(i,j))
-                jtopo = nint(topo_rj(i,j))
-                if(itopo .ge. 1 .and. itopo .le. NX_L .and.
-     1             jtopo .ge. 1 .and. jtopo .le. NY_L)then
+             itopo = nint(topo_ri(i,j))
+             jtopo = nint(topo_rj(i,j))
+             if(itopo .ge. 1 .and. itopo .le. NX_L .and.
+     1          jtopo .ge. 1 .and. jtopo .le. NY_L)then
                     topo_solalt(i,j) = sol_alt_2d(itopo,jtopo)
                     topo_solazi(i,j) = sol_azi_2d(itopo,jtopo)
                     eobsc_sky(i,j) = eobsc(itopo,jtopo)
@@ -341,14 +363,14 @@
                     endif
                     du_a(i,j) = du_2d(itopo,jtopo) ! bilin interp?
                     aod_a(i,j) = aod_2d(itopo,jtopo) ! bilin interp?
-                endif
+             endif
 
-                if(alt_a_roll(i,j) .eq. -90. .and. j .eq. 1)then
-                    write(6,*)' nadir info'
-                    write(6,*)' i/j/lat/lon/lf',itopo,jtopo
+             if(alt_a_roll(i,j) .eq. -90. .and. j .eq. 1)then
+                write(6,*)' nadir info'
+                write(6,*)' i/j/lat/lon/lf',itopo,jtopo
      1                       ,topo_lat(i,j),topo_lon(i,j),topo_lf(i,j)
      1                       ,topo_albedo(:,i,j)
-                endif
+             endif
 
           enddo ! i
           enddo ! j
@@ -436,5 +458,55 @@
 
           endif ! l_binary
 
+          return
+          end
+
+          subroutine latlon_ray(rlat,rlon,htmsl,altray,aziray,tpdist
+     1                         ,tlat,tlon,iverbose,istatus)
+
+          use mem_namelist, ONLY: r_missing_data,earth_radius
+          
+          include 'trigd.inc'
+
+          real*8 tpdist,dslant1_h
+          real*8 dsdst,dradius_start,daltray,dcurvat2
+
+          dcurvat2(dsdst,dradius_start,daltray) = 
+     1        sqrt(dsdst**2 + dradius_start**2 
+     1   - (2D0*dsdst*dradius_start*cosd(90D0+daltray))) - dradius_start   
+
+          dradius_start = earth_radius + htmsl
+
+!         sinarc = sind(90d0+dble(altray))*tpdist/dble(earth_radius)
+
+          dz1_h = dcurvat2(dslant1_h,dradius_start,dble(altray))   
+          gc_deg = asind(cosd(altray)
+     1           *     tpdist / (dradius_start+dz1_h)) 
+          
+          ycost = cosd(aziray)
+
+!         Obtain latlon from spherical geometry
+          TLat = ASinD(ycost*SinD(gc_deg)*CosD(rLat) 
+     1         + SinD(rLat)*CosD(gc_deg))
+
+          CosDLon = (CosD(gc_deg) - SinD(rLat)*SinD(TLat)) 
+     1            / (CosD(rLat)*CosD(TLat))
+          If(Abs(CosDLon).gt.1.)CosDLon=Sign(1.,CosDLon)
+          DLon = ACosD(CosDLon)
+                  
+          If(aziray.ge..0.and.aziray.le.180.)Then ! east
+             TLon=rLon+DLon
+          Else ! west
+             TLon=rLon-DLon
+          EndIf
+
+          if(iverbose .eq. 1)then
+            write(6,11)rlat,rlon,htmsl,altray,aziray,tpdist
+     1                ,dradius_start,dlon,tlat,tlon
+11          format('   latlon_ray ',2f9.3,f10.1,2f9.3,2f10.1,3f9.3)
+          endif
+
+          istatus = 1
+          
           return
           end
