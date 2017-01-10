@@ -440,7 +440,8 @@ C CLOUDS ARE NOW IN MSL
 
               endif
 
-              if(l_parse(amt_ret(i,l),'FEW'))then
+              if(l_parse(amt_ret(i,l),'FEW') .and.
+     1           n_cloud_layers_ret(i) .eq. 1      )then
                   summation_cover=.125
                   call get_layer_cover(summation_cover,cover,istatus)      
                   if(istatus .ne. 1)goto125 ! go to next station
