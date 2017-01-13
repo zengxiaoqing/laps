@@ -556,6 +556,7 @@
                 write(6,*)' Error reading LM2/SC field in plot_allsky'      
                 return
             endif
+!           snow_cover = 0. ! testing
             write(6,*)' range of snow_cover is',
      1                minval(snow_cover),maxval(snow_cover)
 
@@ -781,29 +782,32 @@
         call compare_land_albedo(land_use,NX_L,NY_L,albedo_usgs
      1                          ,albedo_bm,static_albedo)
         
-        write(6,*)' Row of albedo_bm / snow /  albedo /  topo'
+        write(6,*)' Row of albedo_bm / snow / snowalb / albedo / topo'
         jrow = NY_L/2
         do i = 1,NX_L
           do j = 1,NY_L
             if(snow_cover(i,j) .ne. r_missing_data)then
-              if(topo(i,j) .gt. 2000. .and. topo(i,j) .le. 3500.)then
-                snowalb = snow_cover(i,j) * 0.5
+              if(topo(i,j) .gt. 1900. .and. topo(i,j) .le. 3500.)then
+                snowalb = snow_cover(i,j)**2. * 0.7
               else
-                snowalb = snow_cover(i,j) * 0.6
+                snowalb = snow_cover(i,j) * 0.7
               endif
               do ic = 1,3
 !               topo_albedo_2d(ic,i,j) = 
 !    1            max(topo_albedo_2d(ic,i,j),snowalb)
-                topo_albedo_2d(ic,i,j) = snowalb + 
-     1                   (1.0-snowalb) * topo_albedo_2d(ic,i,j)
+                topo_albedo_2d(ic,i,j) = snow_cover(i,j) * snowalb + 
+     1                (1.0-snow_cover(i,j)) * topo_albedo_2d(ic,i,j)
               enddo ! ic
             endif
+            if(j .eq. jrow)then
+              if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
+                write(6,18)i,albedo_bm(2,i,jrow),snow_cover(i,jrow)
+     1                ,snowalb,topo_albedo_2d(2,i,jrow),topo(i,jrow)
+     1                ,lat(i,jrow),lon(i,jrow),nint(land_use(i,jrow))
+18              format(i5,2x,4f9.3,f9.0,4x,2f9.2,i4)
+              endif
+            endif
           enddo ! j
-          if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
-            write(6,18)i,albedo_bm(2,i,jrow),snow_cover(i,jrow)
-     1               ,topo_albedo_2d(2,i,jrow),topo(i,jrow)
-18          format(i5,2x,3f9.3,f9.0)
-          endif
         enddo ! i 
 
         I4_elapsed = ishow_timer()
@@ -1188,7 +1192,7 @@
                 pomag = 2.0
               elseif(polat .eq. -90.)then ! looking down
                 write(6,*)' horz_dep = ',horz_dep
-                pomag = (90. / (90. - horz_dep)) * 0.97
+                pomag = (90. / (90. - horz_dep)) * 0.96
                 pomag = max(pomag,1.0)
               else                        ! looking up
                 pomag = 1.0
