@@ -120,7 +120,7 @@
         real aas_a(isolalt_lo:isolalt_hi)
         real aos_a(isolalt_lo:isolalt_hi)
 
-        icd = 2
+        icd = 3
 
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
@@ -138,6 +138,7 @@
 !       Now read via namelist
 !       fcterm = 0.09 ! range from 0.00 to 0.09 (large aerosol population)
 !                     ! peak phase function of 20 to 110
+        thr_abv_clds = 25e3
 
         patm_ray = patm
 
@@ -520,7 +521,7 @@
                 endif
 
 !               Determine relevant solar altitude along ray
-                if(htmsl .gt. 150e3)then ! highalt strategy
+                if(htmsl .gt. 100e3)then ! highalt strategy
                   if(altray .gt. 0.)then
                     refdist_solalt = 0.
                     solalt_ref = sol_alt
@@ -770,6 +771,15 @@
                 aod_dir_rat = 0.
             endif
 
+            if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
+              write(6,*) &
+            ' WARNING in skyglow_phys: resetting out of bounds aod_dir_rat',aod_dir_rat
+              write(6,*)' ialt/jazi/altazray = ',ialt,jazi,altray,view_azi_deg
+              write(6,*)' aod_ray_dir/aod_ray = ',aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi)
+!             stop
+              aod_dir_rat = 1.0
+            endif
+
 !           Consider arg for sideways scattering from downward diffuse
 !           is ~hg(90.) or an evaluated integral. Use 0.5 for now.
             if(l_solar_eclipse .eqv. .false.)then
@@ -780,14 +790,6 @@
                 arg = aod_dir_rat * ecl_dir_rat(ic)
                 hg2d(ic) = (hg2(ic) * arg) + (0.5 * (1.0 - arg)) 
               enddo ! ic
-            endif
-
-            if(aod_dir_rat .gt. 1.0001 .OR. aod_dir_rat .lt. 0.0)then
-              write(6,*) &
-            ' ERROR in skyglow_phys: aod_dir_rat out of bounds',aod_dir_rat
-              write(6,*)' ialt/jazi/altazray = ',ialt,jazi,altray,view_azi_deg
-              write(6,*)' aod_ray_dir/aod_ray = ',aod_ray_dir(ialt,jazi),aod_ray(ialt,jazi)
-!             stop
             endif
 
             rayleigh_pfunc = rayleigh_pf(elong(ialt,jazi))
@@ -834,8 +836,9 @@
 
                 if(idebug .ge. 1 .AND. &
                                     (ic .eq. ic  .or. altray .eq. 90.))then
+!                 write(6,*)'solalt_ref/twi_alt/cradf ',solalt_ref,twi_alt,clear_radf_c(ic,ialt,jazi)
                   write(6,71)ic,day_inte,elong(ialt,jazi) &
-                      ,sumi_gc(ic),sumi_ac(ic),gasf,radr,aodf,aodfo &
+                      ,sumi_gc(ic),sumi_ac(ic),gasf,radf,aodf,aodfo &
                       ,rayleigh_pfunc,hg2(ic),aod_dir_rat,hg2d(ic) &
                       ,clear_rad_c(ic,ialt,jazi)
 71                format('day_inte/elong/sumi_g/sumi_a/gasf/radf/aodf/aodfo', &
@@ -944,7 +947,7 @@
                       aa_o_aa_90 = 0.
                     endif
 
-                    if(htmsl .gt. 150e3)then ! highalt strategy
+                    if(htmsl .gt. 100e3)then ! highalt strategy
 
 !                     Strategy from above dir_low section
                       if(altray .gt. 0.)then
@@ -1009,7 +1012,7 @@
                   endif
 
 !                 if(htmsl .gt. 500e3 .and. solalt_ref .lt. 0.)then
-                  if(htmsl .gt. 100e3 .and. solalt_ref .lt. twi_alt)then
+                  if(htmsl .gt. thr_abv_clds .and. solalt_ref .lt. twi_alt)then
                     aodf = 1.0
                     radf = 1.0
                   else ! use original values
@@ -1123,7 +1126,7 @@
 !       Apply during daylight eclipses or during low sun / twilight
         if( ( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
             (sol_alt .lt. 100. .and. sol_alt .gt. twi_0) ) .AND. & 
-                                                  htmsl .le. 100e3 )then
+                                                  htmsl .le. thr_abv_clds )then
             write(6,*)'Calling get_sky_rad_ave'
             do ic = 1,nc ! secondary scattering in each color
 !               Good temporal variability, constant for spatial
