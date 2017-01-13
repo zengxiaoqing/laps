@@ -594,7 +594,8 @@
                if(.true.)then
                  aero_refht = redp_lvl
                  obj_alt_app = obj_alt(i,j) + refraction
-                 call get_airmass(obj_alt_app,heights_3d(i,j,k) & ! I 
+                 arght = max(heights_3d(i,j,k),0.)
+                 call get_airmass(obj_alt_app,arght              & ! I 
                                  ,patm_k,aero_refht,aero_scaleht & ! I
                                  ,earth_radius,iverbose &          ! I
                                  ,agdum,ao,aa,refr_deg)            ! O
