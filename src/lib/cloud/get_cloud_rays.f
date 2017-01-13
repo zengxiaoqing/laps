@@ -64,6 +64,8 @@
      1      sqrt(dsdst**2 + dradius_start**2 
      1   - (2D0*dsdst*dradius_start*cosd(90D0+daltray))) - dradius_start      
         horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
+        solocc_f(htmsl,erad,solaltarg) = min(max(
+     1          (solaltarg + horz_depf(htmsl,erad))/0.25 ,0.),1.)
         scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5
 
 !       Airmasses relative to zenith at sea level pressure (true altitude)
@@ -509,6 +511,9 @@
 
         do ii = 1,ni
         do jj = 1,nj
+
+          ghi_2d(ii,jj) = 1e-10 ! initialize to moderately small value
+
 !         if(ii .eq. (ii/10)*10 .and. jj .eq. nj/2)then
           if(ii .eq. i .and. jj .eq. j)then
              idb_solar = 1
@@ -532,7 +537,7 @@
                 cloud_albedo = 1. - transm_tn
                 transm_tn_pr1 = transm_tn
      1                   / (1. - topo_albedo_2d(2,i,j) * cloud_albedo)
-                transm_tn_pr = transm_tn ! tn_pr1 or tn (testing)
+                transm_tn_pr = transm_tn_pr1 ! tn_pr1 or tn (testing)
 
 !               Correct for diffuse radiation at low obj altitude
 !               'solalt_eff' is an empirical function to force the effective
@@ -670,6 +675,12 @@
 
           endif
 
+          if(ghi_2d(ii,jj) .lt. 1e-10)then
+            write(6,*)' WARNING, small ghi_2d ',ii,jj,ghi_2d(ii,jj)
+     1                                         ,sol_alt(ii,jj)
+!           stop
+          endif
+         
         enddo ! jj
         enddo ! ii
         write(6,*)' range of ghi_2d = ',minval(ghi_2d),maxval(ghi_2d)
@@ -818,7 +829,11 @@
           l_box = l_spherical
         endif
 
-        write(6,*)' solalt observer grid = ',sol_alt(i,j)
+        if(sol_alt(i,j) .le. 0. .and. sol_alt(i,j) .ge. twi_alt)then
+          l_box = .true. ! testing
+        endif
+
+        write(6,*)' solalt observer grid / l_box = ',sol_alt(i,j),l_box
 
 !       Used to call skyglow_phys vs skyglow_phys_twi for example
         twi_0 = min(-12.0,-horz_dep_d) ! output
@@ -1023,12 +1038,6 @@
              endif
           endif
 
-!         Zenith / Nadir
-          if(jazi .eq. minazi .and. abs(altray) .eq. 90.)then
-              idebug = 1
-              idebug_a(ialt,jazi) = 1
-          endif
-
 !         Non-verbose (low observer)                    
           if(l_box .eqv. .false.)then
             if(htstart .lt. 7500. .or. altray .gt. 0.0)then
@@ -1036,6 +1045,12 @@
             endif
 !         else ! extra verbose
 !           idebug = 1
+          endif
+
+!         Zenith / Nadir
+          if(jazi .eq. minazi .and. abs(altray) .eq. 90.)then
+              idebug = 1
+              idebug_a(ialt,jazi) = 1
           endif
 
 !         Extra verbose
@@ -1161,8 +1176,8 @@
 12              format('      dz1_l       dz1_h     dxy1_l    dxy1_h  ',
      1           'rinew  rjnew   rk    ht_m   topo_m  ',
      1           ' path     lwc    ice    rain   snow      slant',
-     1           '  cvrpathsum  cloudfrac  am2cld   smcrd  am1_h  cl',
-     1           'd_rd cld_rd_w  aeroext  transm3 aod_sm aod_sm_ill')
+     1           '  cvrpathsum  cloudfrac  am2cld  sumclrd am1_h  cl',
+     1           'd_rd cld_rd_w  aeroext transm3 aod_sm aod_sm_ill')
               endif
 
 !             Initialize ray
@@ -1867,8 +1882,44 @@
                   endif
 
                   if(l_atten_bhd)then ! .true.
+!                   if(transm_3d(inew_m,jnew_m,k_m) .gt. 0.
+!    1                                             .and. .false.)then
+!                     solocc = transm_4d(inew_m,jnew_m,k_m,2) 
+!    1                       / transm_3d(inew_m,jnew_m,k_m) 
+!                   else
+!                     solocc = 1.
+!                   endif
+!                   if(sol_alt(inew_m,jnew_m) .lt. 0.0)then
+!                      shdw_ht = (-sol_alt(inew_m,jnew_m))**2. * 1000.
+!                   else
+!                      shdw_ht = 0.
+!                   endif
+
+                    if(ht_h .gt. ht_l)then ! ascending ray
+                       solaltarg = sol_alt(inew_m,jnew_m) + 1.
+                       solocc_l = solocc_f(max(float(ht_l),0.)
+     1                                    ,earth_radius,solaltarg)
+                       solocc_m = solocc_f(max(float(ht_m),0.)
+     1                                    ,earth_radius,solaltarg)
+                       solocc_h = solocc_f(max(float(ht_h),0.)
+     1                                    ,earth_radius,solaltarg)
+
+!                      horz_dep_l = horz_depf(max(ht_l,0.),earth_radius)
+!                      horz_dep_h = horz_depf(max(ht_h,0.),earth_radius)
+ 
+!                      soloccarg = (ht_h - shdw_ht) / (ht_h-ht_l)
+!                      solocc = min(max(soloccarg,0.),1.)
+                       solocc = (solocc_l + 2. * solocc_m + solocc_h)/4.
+
+                    elseif(ht_m .gt. shdw_ht)then 
+                       solocc = 1.
+                    else
+                       solocc = 0.
+                    endif
+
                     clrrad_inc_pot = airmass2
      1                             * frac_fntcloud ! was just in numerator
+     1                             * solocc
 
 !                   Add term for clear air attenuation
 !                   Keep term for frac_fntcloud?
@@ -2041,6 +2092,8 @@
 !                       frac_ghi_dir = 0.9 *
 !    1                               sind(sol_alt(inew_mb,jnew_m))**0.5
 
+!                       write(6,*)'ghi',inew_mb,jnew_m
+!    1                            ,ghi_2d(inew_mb,jnew_m)
                         if(ghi_2d(inew_mb,jnew_m) .gt. 0.)then
                           frac_ghi_dir = 
      1                   (ghi_2d(inew_mb,jnew_m)-dhi_2d(inew_mb,jnew_m))
@@ -2321,10 +2374,11 @@
             elseif(rkstart .gt. float(nk-1) .and. 
      1             view_altitude_deg .ge. -horz_dep_d)then
               clear_radf_c(:,ialt,jazi) = 1.00 ! correct inaccuracy
-            else
-!             sum_clrrad_pot = airmass1_h
+            elseif(sum_clrrad_pot .gt. 0.)then
               clear_radf_c(:,ialt,jazi) = crep_thr ! secondary scattering in cloud shadow
      1                  + (1.0 - crep_thr) * (sum_clrrad/sum_clrrad_pot)
+            else ! entire ray in Earth's shadow
+              clear_radf_c(:,ialt,jazi) = 1.0
             endif
             if(idebug .eq. 1)then
               write(6,119)rkstart,nk,view_altitude_deg,horz_dep_d
@@ -2641,6 +2695,20 @@
         write(6,*)' Range of clear_radf_c 3 ='
      1                                      ,minval(clear_radf_c(3,:,:))
      1                                      ,maxval(clear_radf_c(3,:,:))
+
+        call get_idx(20.,minalt,alt_scale,ialt_idx)
+        if(ialt_idx .gt. minalt .and. ialt_idx .le. maxalt)then
+          write(6,*)' Range of clear_radf_c +20. ='
+     1                    ,minval(clear_radf_c(3,ialt_idx,:))  
+     1                    ,maxval(clear_radf_c(3,ialt_idx,:))
+        endif
+
+        call get_idx(-20.,minalt,alt_scale,ialt_idx)
+        if(ialt_idx .gt. minalt .and. ialt_idx .le. maxalt)then
+          write(6,*)' Range of clear_radf_c -20. ='
+     1                    ,minval(clear_radf_c(3,ialt_idx,:))  
+     1                    ,maxval(clear_radf_c(3,ialt_idx,:))
+        endif
 
         write(6,*)' Range of topo_gti = ',minval(topo_gti)
      1                                   ,maxval(topo_gti)
