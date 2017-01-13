@@ -1,6 +1,6 @@
 
        subroutine get_camera_clouds(minalt,maxalt,minazi,maxazi,alt_scale,azi_scale, & ! I
-                                    i4time,fname_ppm,mode, &                         ! I
+                                    i4time,fname_ppm,mode, &                           ! I
                                     mask_cyl,istatus)                                  ! O
  
        use ppm
@@ -30,6 +30,8 @@
        j2jazi(i) = minazi+j-1
        azif(jazi) = (jazi-minazi) * azi_scale
 
+!      Executable statements
+       camera_path = '.' ! not needed for mode=2
        mask_cyl = 0
 
        a13name = cvt_i4time_wfo_fname13(i4time)
@@ -84,6 +86,7 @@
 
          do ic = 1,ncol
            write(6,*)
+           write(6,*)' polar view for color ',ic
            do j = 1,nip,25
              write(6,21)ic,j,img_polar(ic,1:nip:25,j)
 21           format(30i4)
@@ -104,6 +107,8 @@
          enddo ! i
 
          do j = 1,njp,10
+             write(6,*)
+             write(6,*)' polar categorical mask'
              write(6,31)j,mask_polar(1:nip:6,j)
 31           format(1x,i3,1x,100i1)
          enddo ! j
@@ -124,14 +129,15 @@
            call system(trim(convert_cmd))
            open(u,file=trim(img_ppm),status='old',err=999)
          else
+           write(6,*)' Opening ',trim(fname_ppm)
            open(u,file=trim(fname_ppm),status='old',err=999)
          endif
 
          read(u,*)   
          read(u,*)iwidth,iheight
          rewind(u)
-         write(6,*)' dynamic dims ',ncol,iwidth,iheight
          ncol = 3
+         write(6,*)' dynamic dims ',ncol,iwidth,iheight
          call read_ppm(u,img_polar,ncol,iwidth,iheight)
          close(u)
          write(6,*)' polar mask has been read into img_polar array'
