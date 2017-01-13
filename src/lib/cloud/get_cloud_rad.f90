@@ -116,24 +116,39 @@
        dju =  cosazi * ((heights_3d(1,1,ku)-ht_ref) * dxy_dh) &
                                                        / grid_spacing_m
 
-!      Convert hydrometeor concentration to backscatter optical depth
-       const_clwc = ((1.5 / rholiq ) / reff_clwc) * bksct_eff_clwc * ds
-       const_cice = ((1.5 / rholiq ) / reff_cice) * bksct_eff_cice * ds
-       const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
-       const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
-
        if(ku .eq. nk)then
-           btau_inc_3d(:,:,2) &
-               = clwc_3d(:,:,ku)*const_clwc + cice_3d(:,:,ku)*const_cice &
-               + rain_3d(:,:,ku)*const_rain + snow_3d(:,:,ku)*const_snow
+         do j = 1,nj
+         do i = 1,ni
+
+!          Convert hydrometeor concentration to backscatter optical depth
+           const_clwc = ((1.5 / rholiq ) / reff_clwc_f(clwc_3d(i,j,ku))) * bksct_eff_clwc * ds
+           const_cice = ((1.5 / rholiq ) / reff_cice_f(cice_3d(i,j,ku))) * bksct_eff_cice * ds
+           const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
+           const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
+
+           btau_inc_3d(i,j,2) &
+               = clwc_3d(i,j,ku)*const_clwc + cice_3d(i,j,ku)*const_cice &
+               + rain_3d(i,j,ku)*const_rain + snow_3d(i,j,ku)*const_snow
+         enddo ! i
+         enddo ! j        
        else
            btau_inc_3d(:,:,2) = btau_inc_3d(:,:,1)  
        endif
 
-       btau_inc_3d(:,:,1) &
-               = clwc_3d(:,:,kl)*const_clwc + cice_3d(:,:,kl)*const_cice &
-               + rain_3d(:,:,kl)*const_rain + snow_3d(:,:,kl)*const_snow
+       do j = 1,nj
+       do i = 1,ni
 
+!        Convert hydrometeor concentration to backscatter optical depth
+         const_clwc = ((1.5 / rholiq ) / reff_clwc_f(clwc_3d(i,j,kl))) * bksct_eff_clwc * ds
+         const_cice = ((1.5 / rholiq ) / reff_cice_f(cice_3d(i,j,kl))) * bksct_eff_cice * ds
+         const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
+         const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
+
+         btau_inc_3d(i,j,1) &
+               = clwc_3d(i,j,kl)*const_clwc + cice_3d(i,j,kl)*const_cice &
+               + rain_3d(i,j,kl)*const_rain + snow_3d(i,j,kl)*const_snow
+       enddo ! i
+       enddo ! j        
        write(6,*)
 
 !      Compare heights to terrain zone (move inside ij loops?)
@@ -224,6 +239,10 @@
            ihit_terrain = ihit_terrain_ref
           endif
 
+          if(idebug .eq. 1)then 
+            write(6,*)'btau_inc_m = ',btau_inc_m
+          endif
+
           if(ihit_terrain .ge. 1)then
             transm_3d(il,jl,kl) = 0. ! terrain shadow
             if(idebug .eq. 1)then
@@ -279,8 +298,8 @@
  
 !             Convert to optical depth via particle size (Stephens' or LAPS thin cloud equation)
 !             od = 3./2. * LWP / reff
-              od_lyr_clwc = (1.5 * (clwc_lyr_int / rholiq )) / reff_clwc
-              od_lyr_cice = (1.5 * (cice_lyr_int / rholiq )) / reff_cice
+              od_lyr_clwc = (1.5 * (clwc_lyr_int / rholiq )) / reff_clwc_f(clwc_m)
+              od_lyr_cice = (1.5 * (cice_lyr_int / rholiq )) / reff_cice_f(cice_m)
               od_lyr_rain = (1.5 * (rain_lyr_int / rholiq )) / reff_rain
               od_lyr_snow = (1.5 * (snow_lyr_int / rhosnow)) / reff_snow
 
@@ -291,7 +310,7 @@
 101           format('k/il/clwc/lwp/od/bks/transm: ',i3,i4,2x,4f9.6,2x,4f7.4,2x,4f7.4,1x,4f9.5)
             endif
 
-          else ! for efficiency
+          else ! for efficiency (btau_inc_m = 0.)
             transm_3d(il,jl,kl) = transm_3d(iu,ju,ku)
 !           if( idebug .eq. 1 .OR. &
 !              (transm_3d(il,jl,kl) .eq. 0. .and. jl .eq. jdb) )then
