@@ -28,7 +28,12 @@
         ztruei = zappi + refractd_app(abs(alt) ,patm)
 
 !       Altitude relative to limb
-        alt_limb = alt + acosd(earth_radius/(earth_radius+htmsl))
+        if(htmsl .ge. 0.)then
+          alt_limb = alt + acosd(earth_radius/(earth_radius+htmsl))
+        else
+          write(6,*)' WARNING in get_airmass, htmsl < 0.'
+          alt_limb = 0.
+        endif
 
 !       Altitude relative to surface normal (emission angle)
         if(alt .ne. 0.)then
