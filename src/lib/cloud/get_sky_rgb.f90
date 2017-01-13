@@ -1,4 +1,5 @@
 
+
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
                    r_cloud_rad,cloud_rad_c,cloud_rad_w,cloud_sfc_c, &   ! I
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobsl,& ! I
@@ -130,6 +131,8 @@
         write(6,*)' l_solar_eclipse = ',l_solar_eclipse
         write(6,*)' range of r_cloud_rad is ',minval(r_cloud_rad),maxval(r_cloud_rad)
 
+        icg = 2
+
         idebug_a = 0
         clear_rad_2nd_c(:,:,:) = 0. ! set (initialize) 
         moon_rad_2nd_c(:,:,:) = 0. ! set (initialize) 
@@ -145,7 +148,7 @@
         enddo ! ic
 
         patm_o3_msl = patm_o3(htmsl)
-        thr_abv_clds = 100e3
+        thr_abv_clds = 25e3
 
 !       htmsl = psatoz(patm*1013.25)
 
@@ -392,8 +395,7 @@
                 altray_limb_rad = altray_limb / radius_limb
                 if(altray_limb_rad .ge. -0.06 .and. altray_limb_rad .le. 0.01)then ! near horizon/limb
                     idebug_a(i,j) = 1
-                elseif(abs(alt_a(i,j)) .le. 20. .AND. &
-                       alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
+                elseif(alt_a(i,j) .eq. float((nint(alt_a(i,j))/1)*1) .and. alt_a(i,j) .ge. 0. .and. alt_a(i,j) .le. 12.)then
                     idebug_a(i,j) = 1
 !               elseif(abs(alt_a(i,j)) .le. 21.)then   
 !                   idebug_a(i,j) = 1
@@ -857,7 +859,7 @@
           idebug = idebug_a(i,j)
 
 !         Determine relevant solar altitude along ray
-          if(htmsl .gt. 150e3)then ! highalt strategy
+          if(htmsl .gt. 100e3)then ! highalt strategy
             if(alt_a(i,j) .gt. 0.)then
               solalt_ref = sol_alt
             else
@@ -899,7 +901,9 @@
                      if(sph_rad_ave(ic) .ne. r_missing_data)rad_sec_cld(ic) = sph_rad_ave(ic)
                   enddo ! ic
                   iradsec = iradsec + 10
-                  if(idebug_a(i,j) .eq. 1 .and. abs(alt_a(i,j)) .eq. 90.0)write(6,*)'iradsec up to',iradsec
+                  if(idebug_a(i,j) .eq. 1 .and. abs(alt_a(i,j)) .eq. 90.0)then
+                     write(6,*)'iradsec up to',iradsec,sph_rad_ave(icg),rad_sec_cld(icg)
+                  endif
               endif
               if((l_solar_eclipse .eqv. .true.) .and. htmsl .gt. 1000e3)then
                   rad_sec_cld(:) = rad_sec_cld(:) * (1.-eobsc_sky(i,j))
@@ -930,7 +934,7 @@
                   cld_radt(ic) = rad * cloud_rad_c(ic,i,j) + rad_sec_cld(ic)
 !                 rint_top(ic) = rad_to_counts(cld_radt(ic))
 
-                  if(solalt_ref .gt. 0.)then
+                  if(solalt_ref .gt. twi_alt)then
 !                     Calculate 'sky_rad_ave' upstream for each color
 !                     topo_arg = sky_rad_ave(ic) * albedo_sfc(ic)
 
@@ -950,11 +954,12 @@
 !                         Use Trprime = Tr / (1. - a * Re)                  
                           radb_corr = 1. - albedo_sfc(ic) * cloud_albedo_corr
                           if(radb_corr .gt. 0.)then
-!                           rad = rad / radb_corr ! testing
+                            rad = rad / radb_corr ! testing
                           endif
                       endif
                   else ! secondary scattering term allowed to dominate
-                      rad = 0.
+                       ! should be modified by a vertical cloud albedo?
+                      rad = 0. ! + rad_sec_cld(ic)
                   endif
                   cld_radb(ic) = rad ! + rad_sec_cld(ic)
 
@@ -995,7 +1000,7 @@
                    ,cld_radb(:)/1e6,(cld_rad(:)/1e6)/trans_c(:) &
                    ,cld_rad(:)/1e6
  42               format(&
-                  ' elg/pf/br/rint2/trnsc2/rcldrd/cldrdtba/cldrad = ',2i5,6f9.3,' c',3f8.5,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0,2x,3f5.0,f6.2)
+                  ' elg/pf/br/rint2/trnsc2/cldrd = ',2i5,6f9.3,' c',3f8.5,2x,'tb-tr-a',3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0)
                endif ! cloud present
               endif
 
