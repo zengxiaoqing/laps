@@ -43,6 +43,8 @@ echo "LAPSPLOT_IN ="$LAPSPLOT_IN
 echo "animate ="$animate
 echo "delay ="$delay
 
+echo "LAPSINSTALLROOT (via export) = $LAPSINSTALLROOT"
+
 echo " "
 echo "setting ulimit"
 ulimit -t 1000
@@ -69,32 +71,32 @@ if test "$NCARG_ROOT" = "allsky"; then
  RESOLUTION_CYL=""
 
  if test "$RESOLUTION" = "180p" || test "$RESOLUTION" = "180pr"; then
-      MODE_ALLSKY=polar
+      export MODE_ALLSKY=polar
       RESOLUTION_POLAR=$RESOLUTION
  elif test "$RESOLUTION" = "180c"; then
-      MODE_ALLSKY=cyl   
+      export MODE_ALLSKY=cyl   
       RESOLUTION_CYL=$RESOLUTION
  elif test "$RESOLUTION" = "360c"; then
-      MODE_ALLSKY=cyl   
+      export MODE_ALLSKY=cyl   
       RESOLUTION_CYL=$RESOLUTION
  elif test "$RESOLUTION" = "360p" || test "$RESOLUTION" = "360pr"; then
-      MODE_ALLSKY=polar 
+      export MODE_ALLSKY=polar 
       RESOLUTION_POLAR=$RESOLUTION
  elif test "$RESOLUTION" = "360b"; then
-      MODE_ALLSKY=both   
+      export MODE_ALLSKY=both   
       RESOLUTION_POLAR=360p
       RESOLUTION_CYL=360c
  elif test "$RESOLUTION" = "180b"; then
-      MODE_ALLSKY=both   
+      export MODE_ALLSKY=both   
       RESOLUTION_POLAR=180p
       RESOLUTION_CYL=180c
  elif test "$RESOLUTION" = "360p180c"; then
-      MODE_ALLSKY=both   
+      export MODE_ALLSKY=both   
       RESOLUTION_POLAR=360p
       RESOLUTION_CYL=180c
  else
       RESOLUTION=360p
-      MODE_ALLSKY=polar
+      export MODE_ALLSKY=polar
  fi
 
  NLOC=`head -5      $LAPSPLOT_IN | tail -1`
@@ -126,12 +128,12 @@ if test "$NCARG_ROOT" = "allsky"; then
 
   if test "$LATLON" = "38.84 -105.04"; then
     echo "Site is Pikes"
-    YDISP=135
-    POINT=12
+    export YDISP=135
+    export POINT=12
   else
     echo "Site is not Pikes"
-    YDISP=20
-    POINT=16
+    export YDISP=20
+    export POINT=16
   fi
 
   echo "YDISP=$YDISP"
@@ -236,55 +238,9 @@ if test "$NCARG_ROOT" = "allsky"; then
   fi
 
 # Annotate Time and GHI
-  ATIME=`head -2 label.$ILOC | tail -1`
-  ATIME=`echo $ATIME | sed 's/^[ \t]*//'` # remove leading spaces
-  GHIUNITS=W/m^2
-  GHI=`head -5 label2.$ILOC | tail -1`$GHIUNITS
-  GHI=`echo $GHI | sed 's/^[ \t]*//'`     # remove leading spaces
-  echo "Annotate Time $ATIME and GHI $GHI"
-  if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-   if test "$IMGGEOM" = "511x511"; then
-    echo 'convert -fill white -annotate +360+503  "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png'
-          convert -fill white -annotate +360+503  "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-   elif test "$IMGGEOM" = "1023x1023"; then
-    convert -fill white -annotate +720+1015 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-   else
-    convert -fill white -annotate +1080+1527 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-   fi
-  fi
-
-  if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    if test $AZI_SCALE == 0.10; then
-      convert -fill yellow -annotate +525+447 "$ATIME"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-    elif test $AZI_SCALE == 0.20; then
-      convert -fill yellow -annotate +918+179 "$ATIME" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-    elif test $AZI_SCALE == 0.25; then
-      if test "$GHI" != ""; then
-        XDISP1=480
-        XDISP2=815
-        convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI" -annotate +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      else
-        echo 'convert -fill yellow -annotate  +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
-              convert -fill yellow -annotate  +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-        echo 'convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
-              convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      fi
-    elif test $AZI_SCALE == 0.50; then
-#     convert -fill yellow -annotate +1550+20 "$ATIME" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      if test "$GHI" != ""; then
-        XDISP1=900
-        XDISP2=1550
-        convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI" -annotate +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      else
-        echo 'convert -fill yellow -annotate  +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
-              convert -fill yellow -annotate  +$XDISP2+$YDISP "$ATIME" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-        echo 'convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
-              convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      fi
-    else
-      convert -fill yellow -annotate +725+20 "$ATIME"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-    fi
-  fi
+  $LAPSINSTALLROOT/etc/www/lapsplot/annotate_allsky.sh
+  echo "returned from annotate_allsky.sh"
+  echo ""
 
 # Annotate Lat/Lon
 # Try and strip off leading blanks?
