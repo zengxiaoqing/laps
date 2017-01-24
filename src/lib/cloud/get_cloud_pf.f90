@@ -37,7 +37,8 @@
 
         scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
 
-        write(6,*)' max of idebug_a (2) = ',maxval(idebug_a)
+        write(6,*)' get_cld_pf: max of idebug_a (2) = ',maxval(idebug_a)
+        write(6,*)'                                                                                         alt    elg      cod     pf_thk1  pf_thk   clwc     rain      rad     radw    radf       pf1     pf2     pfs    trans  sn fctr rn fctrs   pf2'
 
         do j = 1,nj
          do i = 1,ni
@@ -124,7 +125,7 @@
 !                     illuminated                unilluminated
 !           pf_thk = pf_thk*radfrac + hg(-0.,elong_a(i,j)) * (1.-radfrac) &
 !                                       * (2./3. * (1. + sind(alt_a(i,j))))
-            pf_thk = pf_thk*radfrac*alb_clwc + pf_thk_alt*(1.-radfrac) 
+            pf_thk = pf_thk*radfrac*alb_clwc + 2.*pf_thk_alt*(1.-radfrac) 
             pf_thk_a(i,j) = pf_thk
 
             rain_peak = exp(-rad2tau(.06,r_cloud_rad(i,j))/2.)
@@ -216,7 +217,7 @@
           if(airmass_2_topo(i,j) .gt. 0.)then ! cloud in front of terrain
 !             pf_scat(:,i,j) = pf_scat2(:,i,j)**opac(cloud_od_tot)
 !             pf_scat(:,i,j) = pf_scat2(:,i,j)**(r_cloud_rad(i,j)**2.0)
-              pf_scat(:,i,j) = pf_scat2(:,i,j) * radfrac + pf_thk_alt * (1.-radfrac)
+              pf_scat(:,i,j) = pf_scat2(:,i,j) * radfrac + 2. * pf_thk_alt * (1.-radfrac)
           else
               pf_scat(:,i,j) = pf_scat2(:,i,j)
           endif
