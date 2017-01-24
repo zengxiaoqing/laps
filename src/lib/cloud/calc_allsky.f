@@ -133,8 +133,8 @@
         isound = iobs
         jsound = jobs
 
-        swi_obs = swi_2d(iobs,jobs)
-        write(6,*)' swi_2d at observer location = ',swi_obs
+        swi_obs = swi_2d(iobs,jobs) ! initialize
+        write(6,*)' swi_2d at observer location 1 = ',swi_obs,'W/m^2'
         eobsl = eobsc(iobs,jobs)
         write(6,*)' eobsl = ',eobsl
         eobsc_sky = 0. ! initialize
@@ -152,6 +152,7 @@
      1                     ,gtic,dtic,btic,emic                     ! O
      1                     ,topo_ri,topo_rj                         ! O
      1                     ,trace_ri,trace_rj                       ! O
+     1                     ,swi_obs                                 ! O
 !    1                     ,ghi_2d,dhi_2d                           ! O
      1                     ,aod_vrt,aod_2_cloud,aod_2_topo          ! O
      1                     ,dist_2_topo                             ! O
@@ -183,6 +184,9 @@
 
           write(6,*)' Return from get_cloud_rays: ',a9time
      1             ,' aod_vrt is ',aod_vrt
+
+          write(6,*)' observer htagl/htmsl ',htagl,htmsl
+          write(6,*)' swi_2d at observer location 2 = ',swi_obs,'W/m^2'
 
           solalt_limb_true = solar_alt + horz_dep
           write(6,*)' solalt_true = ',solar_alt
@@ -318,7 +322,7 @@
 
              itrace = nint(trace_ri(i,j))
              jtrace = nint(trace_rj(i,j))
-             if(htmsl .gt. 100000. .and. alt_a_roll(i,j) .lt. 0.)then
+             if(htmsl .gt. 7000. .and. alt_a_roll(i,j) .lt. 0.)then
                 if(itrace .ge. 1 .and. itrace .le. NX_L .and.
      1             jtrace .ge. 1 .and. jtrace .le. NY_L)then
                    trace_solalt(i,j) = sol_alt_2d(itrace,jtrace)
