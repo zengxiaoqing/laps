@@ -298,6 +298,8 @@
         l_water_world = .false.
         if(l_parse(directory,'fim'))then
           l_require_all_fields = .false.
+        elseif(l_parse(directory,'rams'))then
+          l_require_all_fields = .false.
         elseif(i4time_ref - i4time_now_gg() .lt. 1e6)then  ! present/past
           l_require_all_fields = .true.
         elseif(i4time_ref - i4time_now_gg() .gt. 75e6)then ! >2.5y future 
@@ -499,6 +501,8 @@
             return
            endif
 
+           i4wdw_sfc = 0
+
            goto500
 
 !          Read Precipitating Ice
@@ -526,9 +530,11 @@
             return
            endif
 
-!         else ! l_test_cloud
-!          write(6,*)' generate idealized cloud fields'
-!          clwc_3d(:,:,14) = .001
+          else ! l_test_cloud
+           write(6,*)' generate idealized cloud fields'
+           clwc_3d(:,:,14) = .000
+           i4time_lwc = i4time_ref
+           i4wdw_sfc = 100000
 
           endif ! l_test_cloud is F
 
@@ -538,7 +544,7 @@
 !           Read in swi data
             ext = 'lcv'
             var_2d = 'SWI'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,i4wdw_sfc,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,swi_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)then
@@ -549,7 +555,7 @@
 !           Read in snow cover data
             ext = 'lm2'
             var_2d = 'SC'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,i4wdw_sfc,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,snow_cover,0,istat_sfc)
             if(istat_sfc .ne. 1 .and. istat_sfc .ne. -1)then
@@ -563,7 +569,7 @@
 !           Read in pw data
             ext = 'lh4'
             var_2d = 'TPW'
-            call get_laps_2dgrid(i4time_lwc,0,i4time_nearest
+            call get_laps_2dgrid(i4time_lwc,i4wdw_sfc,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,pw_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)then
@@ -630,7 +636,7 @@
         else ! l_require_all_fields = F
           if(l_test_cloud)then
             write(6,*)' generate idealized cloud fields'
-            clwc_3d(:,:,14) = .001
+            clwc_3d(:,:,14) = .000 ! .001
           endif
 
           if(l_parse(directory,'fim'))then
@@ -645,6 +651,21 @@
      +                   ,lun_out
      +                   ,istatus)
             write(6,*)' returned from get_fim_data'
+          elseif(l_parse(directory,'rams'))then
+            write(6,*)' Looking for RAMS LWC data in ',trim(directory)
+            filename = '/home/fab/albers/muri/rams_micro_v3.nc'
+            call get_rams_data
+     +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
+     +                   ,i4time_earliest,i4time_latest
+     +                   ,filename
+     +                   ,heights_3d
+     +                   ,clwc_3d
+     +                   ,cice_3d
+     +                   ,rain_3d
+     +                   ,snow_3d
+     +                   ,lun_out
+     +                   ,istatus)
+            write(6,*)' returned from get_rams_data'
           endif
 
           i4time_solar = i4time_ref
@@ -671,7 +692,7 @@
 
           read(lun,*) ! advance through input data
           write(6,*)' Running without cloud and other current data'
-          snow_cover = r_missing_data
+          snow_cover = 0. ! r_missing_data
 
 !         Use standard atmosphere for heights (uniform pressure grid)
           call get_pres_1d(i4time_ref,NZ_L,pres_1d,istatus)
