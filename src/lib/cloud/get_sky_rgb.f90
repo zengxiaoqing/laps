@@ -353,8 +353,8 @@
             azid1 = 90. ; azid2 = 270.
             moon_cond_clr = 0
         endif
-        if(htmsl .gt. 1000e3)then
-            azid1 = 96.5 ; azid2 = 270.0 ! high custom (South Am. tip)
+        if(htmsl .gt. 50e3)then
+            azid1 = 70. ; azid2 = 250.0 ! high custom
         endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2
@@ -430,12 +430,13 @@
         enddo ! i
         enddo ! j
 
-        if(htmsl .gt. 100e3)then ! high custom
+        if(htmsl .gt. 2000. .and. .false.)then ! high custom
             idebug_a(:,:) = 0
-            ialt_debug = ((ni-1)*69)/90 + 1
-            idebug_a(ialt_debug,1:nj:20) = 1
-            iazi_debug = ((nj-1)*100)/360 + 1 
-            idebug_a(1:ni:4,iazi_debug) = 1
+!           ialt_debug = ((ni-1)*(90-10))/180 + 1 + 2 ! -10 degrees alt
+            ialt_debug = ((ni-1)*(90-5))/180 + 1 ! -5 degrees alt
+            idebug_a(ialt_debug,1:nj:8) = 1
+!           iazi_debug = ((nj-1)*70)/360 + 1 
+!           idebug_a(1:ni:4,iazi_debug) = 1
         endif
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
@@ -796,7 +797,7 @@
         I4_elapsed = ishow_timer()
 
         write(6,*)' albedo_sfc = ',albedo_sfc(:)
-        write(6,*)' swi_obs = ',swi_obs
+        write(6,*)' swi_obs = ',swi_obs,'W/m^2'
         write(6,*)
         if(ni .eq. nj)then ! polar
             write(6,*)' slice from SW to NE through midpoint'
@@ -859,7 +860,7 @@
           idebug = idebug_a(i,j)
 
 !         Determine relevant solar altitude along ray
-          if(htmsl .gt. 100e3)then ! highalt strategy
+          if(htmsl .gt. 25e3)then ! highalt strategy
             if(alt_a(i,j) .gt. 0.)then
               solalt_ref = sol_alt
             else
@@ -871,8 +872,9 @@
                 solalt_ref = max(solalt_ref,-180.-solalt_ref)
               endif
             endif
-          else
-            solalt_ref = topo_solalt(i,j)
+          else ! note topo_solalt can be unreliable
+!           solalt_ref = topo_solalt(i,j)
+            solalt_ref = trace_solalt(i,j)
           endif
 
 !         Obtain cloud brightness
@@ -897,13 +899,14 @@
 !                 where(sph_rad_ave(:) .ne. r_missing_data)
 !                    rad_sec_cld(:) = sph_rad_ave(:)
 !                 endwhere
+                  iradsec = iradsec + 10
                   do ic = 1,nc
                      if(sph_rad_ave(ic) .ne. r_missing_data)rad_sec_cld(ic) = sph_rad_ave(ic)
+!                    if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg .and. abs(alt_a(i,j)) .eq. 90.0)then
+                     if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg)then
+                        write(6,*)'iradsec up to',iradsec,sph_rad_ave(icg),rad_sec_cld(icg)
+                     endif
                   enddo ! ic
-                  iradsec = iradsec + 10
-                  if(idebug_a(i,j) .eq. 1 .and. abs(alt_a(i,j)) .eq. 90.0)then
-                     write(6,*)'iradsec up to',iradsec,sph_rad_ave(icg),rad_sec_cld(icg)
-                  endif
               endif
               if((l_solar_eclipse .eqv. .true.) .and. htmsl .gt. 1000e3)then
                   rad_sec_cld(:) = rad_sec_cld(:) * (1.-eobsc_sky(i,j))
@@ -939,9 +942,9 @@
 !                     topo_arg = sky_rad_ave(ic) * albedo_sfc(ic)
 
 !                     Is pf_scat really needed for a less illuminated cloud base?
-                      if(htmsl .gt. 100e3 .and. dist_2_topo(i,j) .gt. 0.)then
+                      if(htmsl .gt. 7000. .and. dist_2_topo(i,j) .gt. 0.)then ! cloud in front of ground
                           topo_arg = 2. * gtic(ic,i,j) * topo_albedo(ic,i,j)
-                          rad = day_int * topo_arg
+                          rad = day_int * topo_arg + rad_sec_cld(ic)
                       else ! cloud lit by light reflecting off of the ground
 !                         topo_arg = 2. * gtic(ic,i,j) * albedo_sfc(ic)
                           rad = day_int * 2. * swi_obs/ghi_zen_toa * albedo_sfc(ic)
@@ -1067,7 +1070,7 @@
                             ,r_cloud_rad(i,j),pf_scat_moon,glow_cld1 &
                             ,glow_cld_moon,glow_cld_nt,glow_cld &
                             ,glow_cld_c(:),cld_rad(:)
-51                format('   salt-rf-tw/cloud_rad_c/crad/pf/glow: cld1|moon|nt|cld|cldc cldrad',2f8.2,2e11.4,9f8.2,3f11.0)
+51                format('   salt-rf/tw/cloud_rad_c/crad/pf/glow: cld1|moon|nt|cld|cldc cldrad',2f8.2,2e11.4,9f8.2,3f11.0)
               endif
 
           endif ! solalt_ref > twi_alt
@@ -1339,10 +1342,13 @@
               frac_scat = min(max(opac_cloud-cloud_albedo,0.),1.)
             endif
 
-            if(htmsl .ge. thr_abv_clds .and. .true.)then ! experimental (e.g. DSCOVR)
-                frac_clr = max(frac_clr,cosd(solalt_ref)**50.0)
+            if(htmsl .ge. 7000. .and. .true.)then ! experimental (e.g. DSCOVR)
+                clr1_thr = -1.0
+                frac_clr1 = max(frac_clr,cosd(solalt_ref-clr1_thr)**50.0)
+                if(solalt_ref .le. clr1_thr)frac_clr1 = 1.0
 !               frac_clr = frac_clr**sind(solalt_ref**50.0))
-                if(solalt_ref .le. 0.)frac_clr = 1.0
+                frac_one = min(max((htmsl-7000.)/18000.,0.),1.)
+                frac_clr = frac_one * frac_clr1 + (1.-frac_one) * frac_clr
 !               emis_arg = max(sind(solalt_ref),0.)
 !               emis_arg = max(emis_arg**0.25,0.5)
 !               frac_cloud = frac_cloud * emis_arg
