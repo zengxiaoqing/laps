@@ -503,7 +503,7 @@
 
 !            Direct illumination of the cloud is calculated here
 !            Indirect illumination is factored in via 'scat_frac'
-             obj_alt_thr = .01 ! abs(obj_alt(i,j)) * .00
+             obj_alt_thr = .00 ! abs(obj_alt(i,j)) * .00
              if(abs(obj_alt(i,j) - obj_alt_last) .gt. obj_alt_thr .OR. iverbose .eq. 1)then
 !              ag = airmassf(cosd(90. - max(obj_alt(i,j),-3.0)),patm_k)
                ag = airmassf(90.-obj_alt(i,j), patm_k)
@@ -598,6 +598,8 @@
          write(6,*)' WARNING: missing points in get_cloud_rad_faces',fractot
 !        stop
      endif
+
+     where(transm_3d .eq. r_missing_data)transm_3d = 0.
 
      I4_elapsed = ishow_timer()
 
