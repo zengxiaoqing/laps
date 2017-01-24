@@ -8,6 +8,7 @@
      1                           ,gtic,dtic,btic,emic                   ! O
      1                           ,topo_ri,topo_rj                       ! O
      1                           ,trace_ri,trace_rj                     ! O
+     1                           ,swi_obs                               ! O
      1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
      1                           ,dist_2_topo                           ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
@@ -1028,8 +1029,10 @@
           endif
 
 !         High custom
-          if(ialt .eq. (maxalt*2+minalt)/3)then
-             if(view_azi_deg .eq. nint(view_azi_deg))then
+!         if(ialt .eq. minalt+(maxalt-minalt)*(90-5)/180)then ! -5 degrees alt
+          if(.false.)then
+             if(view_azi_deg*2. .eq. nint(view_azi_deg*2.) .and.
+     1          view_azi_deg .le. 90.                        )then
                 idebug = 1
                 idebug_a(ialt,jazi) = 1
              else
@@ -1889,19 +1892,19 @@
 !                   else
 !                     solocc = 1.
 !                   endif
-!                   if(sol_alt(inew_m,jnew_m) .lt. 0.0)then
-!                      shdw_ht = (-sol_alt(inew_m,jnew_m))**2. * 1000.
-!                   else
-!                      shdw_ht = 0.
-!                   endif
+                    if(sol_alt(inew_m,jnew_m) .lt. 0.0)then
+                       shdw_ht = (-sol_alt(inew_m,jnew_m))**2. * 1000.
+                    else
+                       shdw_ht = 0.
+                    endif
 
+                    solaltarg = sol_alt(inew_m,jnew_m) + 1.
                     if(ht_h .gt. ht_l)then ! ascending ray
-                       solaltarg = sol_alt(inew_m,jnew_m) + 1.
-                       solocc_l = solocc_f(max(float(ht_l),0.)
+                       solocc_l = solocc_f(max(real(ht_l),0.)
      1                                    ,earth_radius,solaltarg)
-                       solocc_m = solocc_f(max(float(ht_m),0.)
+                       solocc_m = solocc_f(max(real(ht_m),0.)
      1                                    ,earth_radius,solaltarg)
-                       solocc_h = solocc_f(max(float(ht_h),0.)
+                       solocc_h = solocc_f(max(real(ht_h),0.)
      1                                    ,earth_radius,solaltarg)
 
 !                      horz_dep_l = horz_depf(max(ht_l,0.),earth_radius)
@@ -1917,12 +1920,26 @@
                        solocc = 0.
                     endif
 
+!                   Approximation to trans4 / trans3
+                    if(shdw_ht .gt. 0.)then ! twilight
+                      ht_m_eff = max(ht_m,shdw_ht)
+                      amapp = 38. * exp(-min(ht_m_eff/8000.,80.))
+                      trn4app = trans(amapp * 0.14)
+                    elseif(.true.)then      ! daytime
+                      patm_arg = exp(-min(ht_m/8000.,80.))
+                      amapp = airmassf(90.-solaltarg,patm_arg)
+                      trn4app = trans(amapp * 0.14)
+                    else
+                      trn4app = 1.
+                    endif
+
+!                   This weights where we examine illumination fraction
                     clrrad_inc_pot = airmass2
      1                             * frac_fntcloud ! was just in numerator
-     1                             * solocc
+     1                             * solocc        ! MSL solar occultation
+     1                             * trn4app       ! Gas attenuation
 
-!                   Add term for clear air attenuation
-!                   Keep term for frac_fntcloud?
+!                   Apply shadowing by clouds and terrain (above MSL)
                     clrrad_inc = clrrad_inc_pot 
      1                         * transm_3d(inew_m,jnew_m,k_m) 
 
@@ -2515,12 +2532,20 @@
               topo_albedo(:,ialt,jazi) = 
      1                fm * topo_albedo(:,ialt,jazim) 
      1              + fp * topo_albedo(:,ialt,jazip)
-              topo_ri(ialt,jazi) = 
+
+              if(topo_ri(ialt,jazim) .ne. 0. .and.
+     1           topo_ri(ialt,jazip) .ne. 0.      )then 
+                topo_ri(ialt,jazi) = 
      1                fm * topo_ri(ialt,jazim) 
      1              + fp * topo_ri(ialt,jazip)
-              topo_rj(ialt,jazi) = 
+                topo_rj(ialt,jazi) = 
      1                fm * topo_rj(ialt,jazim) 
      1              + fp * topo_rj(ialt,jazip)
+              else
+                topo_ri(ialt,jazi) = 0.
+                topo_rj(ialt,jazi) = 0.
+              endif
+
               trace_ri(ialt,jazi) = 
      1                fm * trace_ri(ialt,jazim) 
      1              + fp * trace_ri(ialt,jazip)
@@ -2640,10 +2665,13 @@
      1         fm * emic(:,ialtm,:) + fp * emic(:,ialtp,:)
             topo_albedo(:,ialt,:) =
      1         fm * topo_albedo(:,ialtm,:) + fp * topo_albedo(:,ialtp,:)
+
+!           Check for zero values
             topo_ri(ialt,:) =
      1         fm * topo_ri(ialtm,:) + fp * topo_ri(ialtp,:)
             topo_rj(ialt,:) =
      1         fm * topo_rj(ialtm,:) + fp * topo_rj(ialtp,:)
+
             trace_ri(ialt,:) =
      1         fm * trace_ri(ialtm,:) + fp * trace_ri(ialtp,:)
             trace_rj(ialt,:) =
@@ -2668,8 +2696,13 @@
      1                                    ,maxval(cloud_od_sp(:,:,isp))
         enddo ! isp
 
-        write(6,*)' Range of r_cloud_rad = ',minval(r_cloud_rad)
-     1                                      ,maxval(r_cloud_rad)
+        write(6,*)' Range of r_cloud_rad 1 = ',minval(r_cloud_rad)
+     1                                        ,maxval(r_cloud_rad)
+
+        where(r_cloud_rad .gt. 1e30)r_cloud_rad = 0.
+
+        write(6,*)' Range of r_cloud_rad 2 = ',minval(r_cloud_rad)
+     1                                        ,maxval(r_cloud_rad)
 
         write(6,*)' Range of cloud_rad_c R =',minval(cloud_rad_c(1,:,:))
      1                                       ,maxval(cloud_rad_c(1,:,:))
@@ -2768,6 +2801,8 @@
             transm_obs = 1
         endif
 
+        swi_obs = ghi_2d(i,j)
+
 !       Terrain shadowing not yet accounted for in this step
         write(6,*)'transm of observer is ',i,j,int(rkstart)+1
      1                                     ,transm_obs
@@ -2799,11 +2834,34 @@
         solalt_last = sol_alt(i,j)
 
         write(6,*)' Sample of topo_ri and topo_rj'
-        do jazi_sample = minazi,maxazi,10
-           ialt_sample = min(max(-100,minalt),maxalt)
-           write(6,*)ialt_sample,jazi_sample
+        do jazi_sample = minazi,maxazi,4
+           ialt_sample = min(max(-5*4,minalt),maxalt) ! -5 degrees alt
+           itopo = nint(topo_ri(ialt_sample,jazi_sample))
+           jtopo = nint(topo_rj(ialt_sample,jazi_sample))
+           if(itopo .ge. 1 .and. itopo .le. ni .and.
+     1        jtopo .ge. 1 .and. jtopo .le. nj       )then
+              solalt_topo = sol_alt(itopo,jtopo)
+           else
+              solalt_topo = 0.
+           endif
+           itrace = nint(trace_ri(ialt_sample,jazi_sample))
+           jtrace = nint(trace_rj(ialt_sample,jazi_sample))
+           if(itrace .ge. 1 .and. itrace .le. ni .and.
+     1        jtrace .ge. 1 .and. jtrace .le. nj       )then
+              solalt_trace = sol_alt(itrace,jtrace)
+           else
+              solalt_trace = 0.
+           endif
+           write(6,321)ialt_sample,jazi_sample
+     1          ,view_alt(ialt_sample,jazi_sample)
+     1          ,view_az(ialt_sample,jazi_sample)
      1          ,topo_ri(ialt_sample,jazi_sample)
      1          ,topo_rj(ialt_sample,jazi_sample)
+     1          ,solalt_topo
+     1          ,trace_ri(ialt_sample,jazi_sample)
+     1          ,trace_rj(ialt_sample,jazi_sample)
+     1          ,solalt_trace
+321        format(2i6,' tp/tr',8f9.2)       
         enddo ! jazi_sample
         
         I4_elapsed = ishow_timer()
