@@ -816,6 +816,7 @@
                   aodfo = min(aod_ill(ialt,jazi)/aod_tot(ialt,jazi),1.0)
 !                 May be large when viewer is in stratosphere
                   aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
+                  aodf = min(aodf,1e8)
                 else
                   aodfo = 1.0
                   aodf = 1.0
@@ -1001,12 +1002,14 @@
 !                 Normalize by extinction?
                   if(aod_2_topo(ialt,jazi) .gt. 0.)then
                     aodfo = aod_ill(ialt,jazi) / aod_2_topo(ialt,jazi) 
+                    aodfo = min(aodfo,1e8)
                   else
                     aodfo = 1.0
                   endif
 
                   if(aod_ill_opac_potl(ialt,jazi) .gt. 0.)then
                     aodf = aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
+                    aodf = min(aodf,1e8)
                   else
                     aodf = 1.0
                   endif
@@ -1090,7 +1093,7 @@
               write(6,111)altray,view_azi_deg,sol_alt,topo_solalt(ialt,jazi) &
                        ,trace_solalt(ialt,jazi),mode_sky,od_a &
                        ,dist_2_topo(ialt,jazi),aodf,aodfo,clear_rad_c(:,ialt,jazi)
-111           format('alt/azi/salt-t-t/mode/od_a/dst/aodf/aodfo/clrrd' &
+111           format('alt/azi/salt-tp-tr/mode/od_a/dst/aodf/aodfo/clrrd' &
                     ,f8.3,f6.1,1x,3f7.2,i3,f12.5,f12.0,2f9.4,3e14.5)
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
