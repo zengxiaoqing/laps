@@ -558,6 +558,7 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
               obsc_limb = obsc_limbc(2)
           else
               r4_obsc = 0.
+              obsc_limb = 0.
           endif
 
           if(idebug .ge. 2)then
