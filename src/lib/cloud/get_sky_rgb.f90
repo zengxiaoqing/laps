@@ -21,7 +21,7 @@
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm
         use cloud_rad, ONLY: ghi_zen_toa
-        use mem_allsky, ONLY: ghi_sim
+        use mem_allsky, ONLY: ghi_sim,l_aero_cld
         include 'trigd.inc'
 
 !       Statement functions
@@ -354,7 +354,7 @@
             moon_cond_clr = 0
         endif
         if(htmsl .gt. 50e3)then
-            azid1 = 70. ; azid2 = 250.0 ! high custom
+            azid1 = 111. ; azid2 = 111. ! high custom
         endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2
@@ -399,18 +399,19 @@
                     idebug_a(i,j) = 1
 !               elseif(abs(alt_a(i,j)) .le. 21.)then   
 !                   idebug_a(i,j) = 1
-                elseif(alt_a(i,j) .ge. -75. .AND. &
+                elseif(alt_a(i,j) .ge. -80. .AND. &
                        alt_a(i,j) .le. -65. .AND. &
                        alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
                     idebug_a(i,j) = 1
+!                   if(alt_a(i,j) .eq. -73.)write(6,*)'debug check 1a',alt_a(i,j),azi_a(i,j),idebug_a(i,j)
                 elseif(cloud_od(i,j) .ge. 5.0 .AND. alt_a(i,j) .le. -89.2)then
                     idebug_a(i,j) = 1
                 elseif(alt_a(i,j) .eq. float((nint(alt_a(i,j))/5)*5))then
                     idebug_a(i,j) = 1
 !               elseif(i .ge. 110 .and. i .le. 130)then
 !                   idebug_a(i,j) = 1
-                elseif(abs(topo_solalt(i,j) - (-4.5)) .le. 8.0 .AND. &
-                        htmsl .gt. 1000e3 .AND. alt_a(i,j) .le. -75.)then
+                elseif(abs(trace_solalt(i,j) - (-4.5)) .le. 8.0 .AND. &
+                        htmsl .gt. 1000e3 .AND. alt_a(i,j) .le. -65. .AND. alt_a(i,j) .ge. -80.)then
                     idebug_a(i,j) = 1
                 endif
             endif
@@ -426,6 +427,8 @@
                azi_a(i,j) .ge. 110.0  .and. azi_a(i,j) .le. 130.0)then
                 idebug_a(i,j) = 1
             endif
+
+!           if(alt_a(i,j) .eq. -73.)write(6,*)'debug check 1b',alt_a(i,j),azi_a(i,j),idebug_a(i,j)
 
         enddo ! i
         enddo ! j
@@ -585,7 +588,7 @@
 
             write(6,*)' range of azi_a = ',minval(azi_a),maxval(azi_a)
                  
-            isolalt_lo=-91; isolalt_hi=+91
+            isolalt_lo=-721; isolalt_hi=+721; del_solalt=0.125
             write(6,*)' call skyglow_phys for daytime or sol_alt > twi_0:'
 
 !           Introduced airmass_2_topo effect in ag_2d
@@ -593,7 +596,7 @@
                      ,minazi,maxazi,1,azi_scale &                      ! I
                      ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,sol_alt,sol_az,alt_a,azi_a,twi_0,twi_alt &       ! I
-                     ,sol_lat,sol_lon,solalt_limb_true &               ! I
+                     ,sol_lat,sol_lon,solalt_limb_true,del_solalt &    ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm,albedo_sfc &                   ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
@@ -642,14 +645,14 @@
 
             I4_elapsed = ishow_timer()
 
-            isolalt_lo=-11; isolalt_hi=+11
+            isolalt_lo=-11; isolalt_hi=+11; del_solalt=1.0
             write(6,*)' call skyglow_phys for moon:'
             moonalt_limb_true = moon_alt ! include horz_dep of moon?
             call skyglow_phys(minalt,maxalt,1 &                        ! I
                      ,minazi,maxazi,1,azi_scale &                      ! I
                      ,minalt,maxalt,minazi,maxazi,idebug_a &           ! I
                      ,moon_alt,moon_az,alt_a,azi_a,twi_0,twi_alt &     ! I
-                     ,sol_lat,sol_lon,moonalt_limb_true &              ! I
+                     ,sol_lat,sol_lon,moonalt_limb_true,del_solalt &   ! I
                      ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt & ! I
                      ,earth_radius,patm,albedo_sfc &                   ! I
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
@@ -845,8 +848,13 @@
           rad_sec_cld(:) = rad_sec_cld_top(:)
 
           sky_rgb(:,i,j) = 0.          
-          clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i) &
-                    + od_a_slant_a(:,i)
+          if(l_aero_cld)then
+            clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i) &
+                      + aod_tot(i,j) * ext_a(:)
+          else
+            clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i) &
+                      + od_a_slant_a(:,i)
+          endif
 
 !         Add airglow to light from surface night lights
           do ic = 1,nc
@@ -858,6 +866,7 @@
           endif
 
           idebug = idebug_a(i,j)
+!         if(i .eq. 69 .and. j .eq. 441)write(6,*)' debug check 1c',alt_a(i,j),azi_a(i,j),idebug_a(i,j),idebug
 
 !         Determine relevant solar altitude along ray
           if(htmsl .gt. 25e3)then ! highalt strategy
@@ -1010,7 +1019,7 @@
           else ! later twilight (clear_rad_c) and nighttime (surface lighting)
 
               if(htmsl .gt. 100e3)then
-                rad_sec_cld(:) = difftwi(max(solalt_ref,-16.)) * (ext_g(:)/.09) * day_int / 1300. * 7.0
+                rad_sec_cld(:) = difftwi(max(solalt_ref,-16.)) * (ext_g(:)/.09) * day_int / 1300. ! * 7.0
                 iradsec = 3
                 glow_secondary_cld = log10(rad_sec_cld(2))
               endif
