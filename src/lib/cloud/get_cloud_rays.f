@@ -898,9 +898,9 @@
             azid1 = moon_azi(i,j)
             azid2 = mod(azid1+180.,360.)
         endif
-!       if(htstart .gt. 1000e3)then
-!           azid1 = 0. ; azid2 = 180. ! custom
-!       endif
+        if(htstart .gt. 100e3)then
+            azid1 = 111. ; azid2 = 111. ! high custom
+        endif
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
 
@@ -1018,7 +1018,7 @@
      1         (abs(altray_limb) / radius_limb .le. 0.04) .or.
      1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
      1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
-     1         (altray .ge. -89.40 .and. altray .le. -89.07) .or.
+     1         (altray .ge. -75.00 .and. altray .le. -70.00) .or.
      1         abs(altray) .eq. 75.) 
 !    1               .AND. altray .eq. nint(altray) 
      1                                                   )then
@@ -1177,9 +1177,9 @@
      1                ,f8.3,2f6.1,i6,2i5,f6.2,2i5,f7.0,l2)                                     
                 write(6,12)                                   
 12              format('      dz1_l       dz1_h     dxy1_l    dxy1_h  ',
-     1           'rinew  rjnew   rk    ht_m   topo_m  ',
-     1           ' path     lwc    ice    rain   snow      slant',
-     1           '  cvrpathsum  cloudfrac  am2cld  sumclrd am1_h  cl',
+     1           'rinew  rjnew   rk    ht_m   topo_m   path     ',
+     1           'lwc    ice    rain   snow      slant  cvrpathsum',
+     1           '  cloudfrac am2cld  sumclrd smclrdp  am1_h  cl',
      1           'd_rd cld_rd_w  aeroext transm3 aod_sm aod_sm_ill')
               endif
 
@@ -2264,7 +2264,7 @@
      1                     ,slant2,cvr_path_sum
      1                     ,r_cloud_3d(ialt,jazi)
      1                     ,sum_am2cld_atten              
-     1                     ,sum_clrrad,airmass1_h
+     1                     ,sum_clrrad,sum_clrrad_pot,airmass1_h
      1                     ,r_cloud_rad(ialt,jazi)
      1                     ,cloud_rad_w(ialt,jazi)
      1                     ,aero_ext_coeff
@@ -2272,7 +2272,7 @@
      1                     ,sum_aod,sum_aod_ill_opac
      1                     ,sum_aod_ill_opac_potl
 101                   format(2f12.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
-     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,3f8.2,2f8.4
+     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,4f8.3,2f8.4
      1                  ,f10.5,4f7.3)
                   endif ! idebug
 
@@ -2401,8 +2401,8 @@
               write(6,119)rkstart,nk,view_altitude_deg,horz_dep_d
      1             ,clear_radf_c(icd,ialt,jazi)
      1             ,aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
-     1             ,sum_clrrad,airmass1_h,dz1_h
-119           format(' alt/dep/radf/aodf/smclrrd/am/dz1_h',f10.2,i3
+     1             ,sum_clrrad,sum_clrrad_pot,airmass1_h,dz1_h
+119           format(' alt/dep/radf/aodf/smclrrd/pot/am/dz1_h',f10.2,i3
      1                                        ,4f9.3,2f9.3,f13.1)
             endif
 
