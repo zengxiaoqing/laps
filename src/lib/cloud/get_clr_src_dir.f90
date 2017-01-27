@@ -213,12 +213,12 @@
      return
      end
 
-     subroutine get_clr_src_dir_low(solalt,solazi,viewalt,viewazi & ! I
-           ,od_g_msl,od_g_vert,od_o_msl,od_o_vert                 & ! I
-           ,od_a_vert,ext_haero,htmsl                             & ! I
-           ,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a &            ! I
-           ,ags_in,aas_in,ags_a,aas_a,isolalt_lo,isolalt_hi &       ! I
-           ,ic,idebug,refdist_solalt,solalt_ref &                   ! I
+     subroutine get_clr_src_dir_low(solalt,solazi,viewalt,viewazi &      ! I
+           ,od_g_msl,od_g_vert,od_o_msl,od_o_vert                 &      ! I
+           ,od_a_vert,ext_haero,htmsl                             &      ! I
+           ,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a &                 ! I
+           ,ags_in,aas_in,ags_a,aas_a,isolalt_lo,isolalt_hi,del_solalt & ! I
+           ,ic,idebug,refdist_solalt,solalt_ref &                        ! I
            ,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
      use mem_namelist, ONLY: earth_radius
@@ -410,7 +410,7 @@
          dsolalt = dsolalt_ref + dsolalt_dxy * xybar
          solalt_step = solalt + dsolalt
          dsolaltb = &
-            max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
+            max(min(dsolalt/del_solalt,float(isolalt_hi)/del_solalt-.0001),float(isolalt_lo)/del_solalt)
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
          fsolalt = dsolaltb - float(isolaltl)
 !        ags = ags_a(isolaltl) * (1.-fsolalt) + ags_a(isolalth) * fsolalt
@@ -530,7 +530,7 @@
            ,emis_ang,r_missing_data &                                  ! I
            ,od_g_msl,od_g_vert,od_o_msl,od_a_vert,htmsl,dist_to_topo & ! I
            ,ssa,agv,aav,aod_ref,redp_lvl,scale_ht_a &                  ! I
-           ,ags_a,aas_a,isolalt_lo,isolalt_hi &                        ! I
+           ,ags_a,aas_a,isolalt_lo,isolalt_hi,del_solalt &             ! I
            ,ic,idebug,nsteps,refdist_solalt,solalt_ref &               ! I
            ,sumi_g,sumi_a,opac_slant,tausum_a)                         ! O
 
@@ -661,7 +661,7 @@
          dsolalt = dsolalt_ref + dsolalt_dxy * xybar
          solalt_step = solalt + dsolalt
          dsolaltb = &
-            max(min(dsolalt,float(isolalt_hi)-.0001),float(isolalt_lo))
+            max(min(dsolalt/del_solalt,float(isolalt_hi)/del_solalt-.0001),float(isolalt_lo)/del_solalt)
          isolaltl = floor(dsolaltb); isolalth = isolaltl + 1
          fsolalt = dsolaltb - float(isolaltl)
          ags = ags_a(isolaltl) * (1.-fsolalt) + ags_a(isolalth) * fsolalt
