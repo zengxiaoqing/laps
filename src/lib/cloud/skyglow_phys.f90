@@ -4,7 +4,7 @@
                    ,jazi_start,jazi_end,jazi_delt,azi_scale        &! I
                    ,minalt,maxalt,minazi,maxazi,idebug_a           &! I
                    ,sol_alt,sol_azi,view_alt,view_az,twi_0,twi_alt &! I
-                   ,sol_lat,sol_lon,solalt_limb_true               &! I
+                   ,sol_lat,sol_lon,solalt_limb_true,del_solalt    &! I
                    ,isolalt_lo,isolalt_hi,topo_solalt,trace_solalt &! I
                    ,earth_radius,patm,sfc_alb_c                    &! I
                    ,aod_vrt,aod_ray,aod_ray_dir                    &! I
@@ -70,7 +70,7 @@
         real ag_2d(minalt:maxalt,minazi:maxazi) ! gas airmass (topo/notopo)
         real aod_ill(minalt:maxalt,minazi:maxazi) ! aerosol illuminated
                                       ! optical depth (slant - topo/notopo)
-        real aod_tot(minalt:maxalt,minazi:maxazi) ! aerosol illuminated
+        real aod_tot(minalt:maxalt,minazi:maxazi) ! aerosol 
                                       ! optical depth (slant - in domain)
         real aod_2_topo(minalt:maxalt,minazi:maxazi) ! slant
         real aod_ray(minalt:maxalt,minazi:maxazi) ! aerosol optical 
@@ -187,7 +187,7 @@
         else
           patm_refht = ztopsa(aero_refht)/1013.25
           do isolalt = isolalt_lo,isolalt_hi
-            sol_alt_a = sol_alt + float(isolalt)
+            sol_alt_a = sol_alt + float(isolalt) * del_solalt
             if(sol_alt_a .gt. 0.)then
               call get_airmass(sol_alt_a,0.,1. &                     ! I
                               ,aero_refht,aero_scaleht &             ! I
@@ -266,6 +266,9 @@
         do ialt = ialt_start,ialt_end
   
          altray = view_alt(ialt,jazi_start)
+
+!        if(altray .eq. -73.)write(6,*)'debug check 2',altray,idebug_a(ialt,:)
+         
          viewalt_limb_true = altray - (-horz_dep)
          if(altray .ge. 0.)then
            htmin_view = htmsl
@@ -559,7 +562,7 @@
                   ag/ag_90,ao,aa_o_aa_90, &
                   aod_ref,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
-                  ags_a,aas_a,isolalt_lo,isolalt_hi,ic,idebug_clr, &
+                  ags_a,aas_a,isolalt_lo,isolalt_hi,del_solalt,ic,idebug_clr, &
                   refdist_solalt,solalt_ref, &
                   srcdir_a(ic,jazi),sumi_g_a(ic,jazi),sumi_a_a(ic,jazi),&
                   opac_slant,nsteps_low,dsl,tausum_a)
@@ -937,6 +940,7 @@
                     else
                       idebug_topo = 0
                     endif
+!                   if(altray .eq. -73.)write(6,*)'debug check 3',altray,jazi,idebug_a(ialt,jazi),idebug_topo
 !                   if(altray .le. -89.07 .and. altray .ge. -89.40 .and. jazi .eq. 2048)then ! limb test
                     if(altray .le. -89.06 .and. altray .ge. -89.40 .and. jazi .eq. 2104)then ! limb test
                       if(ic .eq. icd)idebug_topo = 1
@@ -988,7 +992,7 @@
                      ssa(ic),ag/ag_90,aa_o_aa_90, &                     ! I
                      aod_ref,aero_refht,aero_scaleht, &                 ! I
                      ags_a,aas_a, &                                     ! I
-                     isolalt_lo,isolalt_hi,ic,idebug_topo, &            ! I
+                     isolalt_lo,isolalt_hi,del_solalt,ic,idebug_topo, & ! I
                      nsteps_topo,refdist_solalt,solalt_ref, &           ! I
                      sumi_gct(ic),sumi_act(ic),opac_slant,tausum_a)     ! O
   
