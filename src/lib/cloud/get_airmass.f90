@@ -62,7 +62,7 @@
                       ,patm2,htmin)                           ! O
 
 !       Gas component for Rayleigh Scattering
-        if(alt .lt. -3.)then ! high looking down
+        if(alt .lt. -0.)then ! high looking down
           if(htmin .lt. 0.0)then ! hit ground
             patm_gnd = max(ztopsa(aero_refht)/1013.25,patm) ! assumed ground
             ag = airmassf(zappin,(patm_gnd-patm))
