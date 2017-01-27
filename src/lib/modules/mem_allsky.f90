@@ -23,6 +23,7 @@ MODULE mem_allsky
 
 !     Various non-gridded variables
       real ghi_sim      
+      logical l_aero_cld /.false./ ! treat aerosols more as clouds
 
       PUBLIC alloc_allsky, dealloc_allsky
 
