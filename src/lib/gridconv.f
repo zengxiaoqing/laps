@@ -1814,9 +1814,9 @@ c
 
             endif
 c
-            if(staval.eq.missingflag)then
-               print*,'hinterp_field_2d: staval = missingflag',il,jl
-            endif
+!           if(staval.eq.missingflag)then
+!              print*,'hinterp_field_2d: staval = missingflag',il,jl
+!           endif
 
             flaps(il,jl,k) = staval
 !           return
