@@ -798,6 +798,10 @@ c read in laps lat/lon and topo
 
         I4_elapsed = ishow_timer()
 
+!       Apply upper bound of 0.35 g/m**3
+        slwc = min(slwc,0.35)
+        cice = min(cice,0.35)
+
 !       Calculate and Write Integrated LWC
 !       Note slwc/cice is here in g/m**3
         write(6,*)
@@ -805,11 +809,12 @@ c read in laps lat/lon and topo
         call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
         call integrate_slwc(cice,heights_3d,NX_L,NY_L,NZ_L,cice_int)
 
-        write(6,*)' Integrated slwc range is ',minval(slwc_int)
-     1                                        ,maxval(slwc_int)
+!       1e6 factor converts from metric tons/m**2 to g/m**2 (LWP)
+        write(6,*)' Integrated slwc range (g/m**2) is '
+     1                       ,minval(slwc_int)*1e6,maxval(slwc_int)*1e6
 
-        write(6,*)' Integrated cice range is ',minval(cice_int)
-     1                                        ,maxval(cice_int)
+        write(6,*)' Integrated cice range (g/m**2) is '
+     1                       ,minval(cice_int)*1e6,maxval(cice_int)*1e6
 
 !       Calculate cloud optical depth and cloud albedo
 !       Note the 1e3 term converts units from metric tons per m**2 to kg/m**2
@@ -1354,12 +1359,12 @@ c read in laps lat/lon and topo
         snocnc_max = maxval(snocnc)
         piccnc_max = maxval(piccnc)
 
-        write(6,*)' Max slwc = ',slwc_max
-        write(6,*)' Max cice = ',cice_max
-        write(6,*)' Max pcpcnc = ',pcpcnc_max
-        write(6,*)' Max raicnc = ',raicnc_max
-        write(6,*)' Max snocnc = ',snocnc_max
-        write(6,*)' Max piccnc = ',piccnc_max
+        write(6,*)' Max range (g/m**3) slwc = ',slwc_max*1e3
+        write(6,*)' Max range (g/m**3) cice = ',cice_max*1e3
+        write(6,*)' Max range (g/m**3) pcpcnc = ',pcpcnc_max*1e3
+        write(6,*)' Max range (g/m**3) raicnc = ',raicnc_max*1e3
+        write(6,*)' Max range (g/m**3) snocnc = ',snocnc_max*1e3
+        write(6,*)' Max range (g/m**3) piccnc = ',piccnc_max*1e3
 
         if(slwc_max   .le. 1e6 .AND. cice_max   .le. 1e6 .AND.
      1     pcpcnc_max .le. 1e6 .AND. raicnc_max .le. 1e6 .AND.
