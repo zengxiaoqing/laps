@@ -1090,6 +1090,7 @@ cdoc    Integrates cloud liquid through the column
         real heights_3d(imax,jmax,kmax) ! Input 
         real slwc_int(imax,jmax)  ! LWP in metric tons of water / m**2 
                                   ! Corresponds to a depth in meters
+                                  ! Multiply by 1e6 to get LWP in g/m**2
         real depth(kmax)          ! Local
 
         do j = 1,jmax
