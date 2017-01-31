@@ -1,10 +1,10 @@
 
 
       subroutine get_topo_1s(ni,nj,grid_spacing_m,r8lat,r8lon,topo
-     1                      ,istatus)
+     1                      ,path_to_topt1s,istatus)
 
-!     Read in VIIRS imagery for night lights.
-!     Merging of code in 'get_sfc_glow' and 'land_albedo_bm'
+!     Read in topo tiles
+!     Presently called from 'gridgen_model' software
       use ppm
       use mem_namelist, ONLY: c6_maproj 
 
@@ -17,6 +17,7 @@
       real topo(ni,nj)     ! zenithal ground lighting intensity (wm2sr)
       character*255 directory
       character*255 file,file_bm,file_a(maxtiles)
+      character*(*) path_to_topt1s
       character*10  c10_fname /'nest7grid'/
       character*20 cdum
       character*7 basename
@@ -39,10 +40,10 @@
       integer, allocatable :: img(:,:,:)                   
 !     real array_2d(iwidth,iheight)
       real, allocatable :: array_2d(:,:)                   
-!     ri_mdl/rj_mdl tells us the laps grid point of each image pixel
+
+!     ri_mdl/rj_mdl tells us the model grid point of each image pixel
+      real, allocatable :: ri_mdl(:,:),rj_mdl(:,:)                   
       real, allocatable :: rlat_img(:,:),rlon_img(:,:) 
-      real, allocatable :: ri_mdl(:,:)                   
-      real, allocatable :: rj_mdl(:,:)                   
       u = 11
 
       rlat_laps = r8lat; rlon_laps = r8lon
@@ -59,8 +60,8 @@
       inquire(file=trim(file_bm),exist=l_there)
       write(6,*)' File being inquired is ',trim(file_bm),' ',l_there
 
-      if(l_there)then
-        write(6,*)' topo_1s tile remapped sfc_glow_c file exists'
+      if(l_there)then ! this block not presently used
+        write(6,*)' topo_1s tile remapped topo file exists'
         open(u,file=trim(file_bm),form='unformatted' 
      1      ,status='old',err=999)
         write(6,*)' Successful open, now reading'
@@ -74,46 +75,56 @@
         sfc_glow = sfc_glow_c(2,:,:)
 
       else ! binary file is absent
-        write(6,*)
+       write(6,*)
      1' topo_1s tile file is absent, generate and create it from ppm'       
 
-       file=trim(directory)//'viirs_global_montage_20.ppm' 
-       inquire(file=trim(file),exist=l_there)
-       if(l_there)then                     ! local domain (2.5km pixels)
-         pix_latlon = 1. / 48.             ! 17280x8640 image
-         offset_lat = 0.     ! positional error in remapping
-         offset_lon = 0.     !             "
-         l_global_nl = .true.
+       if(.true.)then
 
-       elseif(c6_maproj .ne. 'latlon')then ! local domain (500m pixels)
-         file=trim(directory)//'viirs_crop.ppm' !         (120 degree tile)
-         file='/Users/albers/data/topo/grdn40w105_1/imgn40w105_1.asc' 
          pix_latlon = 1. / 240.
-         offset_lat = -.008  ! positional error in remapping
-         offset_lon = +.0035 !             "
+         offset_lat = -.000  ! positional error in remapping
+         offset_lon = +.000  !             "
          l_global_nl = .false.
 
+!        Consider dynamic means to get rlat_start and rlon_start
+!        Use domain lat/lon bounds with a 0.2 deg cushion
+         call get_domain_perimeter(ni,nj,c10_fname  
+     1                  ,rlat_laps,rlon_laps,topo_laps_dum
+     1                  ,0.2,rnorth,south,east,west,istatus)
+
+         write(6,*)' perimeter NSEW:',rnorth,south,east,west
+         ilat_start = int(south) + 1
+         ilat_end   = int(rnorth) + 1
+
+         ilon_start = -floor(east)
+         ilon_end   = -floor(west)
+
+         write(6,*)' ilat range dynamic',ilat_start,ilat_end
+         write(6,*)' ilon range dynamic',ilon_start,ilon_end
+
+         ilat_start_co = 39
+         ilat_end_co   = 42
+         ilon_start_co = 103
+         ilon_end_co   = 108
+
+         write(6,*)' co ilat range ',ilat_start_co,ilat_end_co
+         write(6,*)' co ilon range ',ilon_start_co,ilon_end_co
+
          itile = 0
-         do ilat = 40,41   ! 39,41
-         do ilon = 106,106 ! 103,108
+         do ilat = ilat_start,ilat_end
+         do ilon = ilon_start,ilon_end
              itile = itile + 1
              write(basename,11)ilat,ilon
 11           format('n',i2,'w',i3)          
              file_a(itile) =
-     1           '/Users/albers/data/topo/'//basename//'.asc'
+     1           trim(path_to_topt1s)//'/'//basename//'.asc'
              ntiles = itile
          enddo ! ilon
          enddo ! ilat
 
-       else                     ! latlon global projection (9km pixels)
-         file=trim(directory)//'viirs_global_montage.ppm' 
-         pix_latlon = 1. / 12.
-         offset_lat = 0.     ! positional error in remapping
-         offset_lon = 0.     !             "
-         l_global_nl = .true.
-
        endif
 
+!      Process asc tiles derived from ArcGIS 30m topo data
+!      For example, gdal_translate can convert 'adf' files to 'asc'        
        do itile=1,ntiles
 
         file=file_a(itile)
@@ -121,7 +132,7 @@
         write(6,*)' Open for reading ',trim(file)
         write(6,*)' pix_latlon,l_global_nl = ',pix_latlon,l_global_nl
 
-!       Read section of VIIRS Image in PPM format
+!       Read terrain tile in PPM format
         open(u,file=trim(file),status='old',err=999)
         read(u,*)cdum,iwidth
         read(u,*)cdum,iheight
@@ -142,14 +153,6 @@
           allocate(ri_mdl(iwidth,iheight))
           allocate(rj_mdl(iwidth,iheight))
         endif
-
-!       Consider dynamic means to get rlat_start and rlon_start
-!       Use domain lat/lon bounds with a 0.2 deg cushion
-!       call get_domain_perimeter(ni,nj,c10_fname  
-!    1                  ,rlat_laps,rlon_laps,topo_laps_dum
-!    1                  ,0.2,rnorth,south,east,west,istatus)
-
-!       write(6,*)' NSEW',rnorth,south,east,west
 
         rlat_start = yllcorner ! rsouth 
         rlon_start = xllcorner ! west   
@@ -229,7 +232,7 @@
      1                                ,istatus)
 
               if(itile .eq. 1)then
-                if(i .eq. iwidth/2 .and. j .eq. 10*(j/10))then
+                if(j .eq. iheight .and. i .eq. 30*(i/30))then
                   write(6,*)i,j,j1,ri_mdl(i,j1),rj_mdl(i,j1)
                 endif
               endif
@@ -245,8 +248,8 @@
      1         ,ni,nj
      1         ,itile,ntiles,pixsum,npix
      1         ,0.,array_2d,result)
-          write(6,*)' interp result range is ',minval(result)
-     1                                        ,maxval(result)
+          write(6,*)' interp terrain range is ',minval(result)
+     1                                         ,maxval(result)
           i = ni/2
           do j = 1,nj
              write(6,*)i,j,rlat_laps(i,j),result(i,j)
@@ -269,7 +272,7 @@ cdoc   points.
 
 !     Error condition
 999   istatus = 0
-      write(6,*)' error in get_topo_1s'
+      write(6,*)' error in get_topo_1s (check missing file)'
 
 9999  if(allocated(rlat_img))deallocate(rlat_img)
       if(allocated(rlon_img))deallocate(rlon_img)
@@ -292,7 +295,7 @@ cdoc   points.
       real array_2d(ni1,nj1)  ! image grid
       real result(ni2,nj2)    ! model grid
 
-      write(6,*)' ni2/nj2 = ',ni2,nj2
+      write(6,*)' ni2/nj2 (mdl grid) = ',ni2,nj2
 
       if(itile .eq. 1)then
         pixsum = 0.
@@ -300,9 +303,11 @@ cdoc   points.
       endif
 
       rimin = 0.5
-      rimax = float(ni1) + 0.5
+      rimax = float(ni2) + 0.5
       rjmin = 0.5
-      rjmax = float(nj1) + 0.5
+      rjmax = float(nj2) + 0.5
+
+      jtest = nj1
 
       do i = 1,ni1
       do j = 1,nj1
@@ -310,7 +315,7 @@ cdoc   points.
         ri = ri_mdl(i,j)
         rj = rj_mdl(i,j)
 
-        if(i .eq. ni1/2 .and. j .eq. 10*(j/10))then
+        if(i .eq. 30*(i/30) .and. j .eq. jtest)then
           write(6,*)i,j,ri_mdl(i,j),rj_mdl(i,j),rimin,rimax,rjmin,rjmax
         endif
 
@@ -324,7 +329,7 @@ cdoc   points.
           pixsum(iout,jout) = pixsum(iout,jout) + array_2d(i,j)
 
           if(itile .eq. 1)then
-            if(i .eq. ni1/2 .and. j .eq. 10*(j/10))then
+            if(i .eq. 30*(i/30) .and. j .eq. jtest)then
               write(6,*)i,j,ri,rj,npix(iout,jout),pixsum(iout,jout)
             endif
           endif
@@ -342,8 +347,7 @@ cdoc   points.
           else
             result(iout,jout) = r_missing_data
           endif
-          if(i .eq. ni1/2 .and.
-     1       jout .eq. 10*(jout/10)      )then
+          if(i .eq. 30*(i/30) .and. j .eq. jtest)then
             write(6,*)'iout/jout/result',iout,jout,pixsum(iout,jout)
      1                            ,npix(iout,jout),result(iout,jout)
           endif
