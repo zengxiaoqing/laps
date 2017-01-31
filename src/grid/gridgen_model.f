@@ -950,7 +950,7 @@ c
           r8lat(:,:) = lats(:,:,1)
 	  r8lon(:,:) = lons(:,:,1)
           call get_topo_1s(nnxp,nnyp,grid_spacing_m,r8lat,r8lon,topt_out
-     1                    ,istatus)
+     1                    ,path_to_topt30s,istatus)
           if(istatus .ne. 1)then
               write(6,*)' Error in get_topo_1s routine: returning'
               return
