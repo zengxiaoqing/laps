@@ -218,71 +218,10 @@ if test "$NCARG_ROOT" = "allsky"; then
       DIRCYLR=East
   fi
 
-# Annotate Model
-  if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
-    echo "polar IMGGEOM = $IMGGEOM"
-    convert -fill white -annotate +5+20  "Simulated" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-  fi
-
-  if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-      if test $AZI_SCALE == 0.10; then
-          convert -fill yellow -annotate +19+447 "Simulated"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      elif test $AZI_SCALE == 0.20; then
-          convert -fill yellow -annotate +19+179 "Simulated"  -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      elif test $AZI_SCALE == 0.25; then
-          convert -fill yellow -annotate +15+$YDISP  "Simulated"  -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      else
-          convert -fill yellow -annotate +15+20  "Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      fi
-  fi
-
-# Annotate Time and GHI
+# Annotate Model, Time and GHI, LATLON, and Field
   $LAPSINSTALLROOT/etc/www/lapsplot/annotate_allsky.sh
   echo "returned from annotate_allsky.sh"
   echo ""
-
-# Annotate Lat/Lon
-# Try and strip off leading blanks?
-# LATLON="39.99 -105.26"
-  echo "Annotate Lat/Lon $LATLON"
-  if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-   if test "$IMGGEOM" = "511x511"; then
-    echo "convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
-          convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-   elif test "$IMGGEOM" = "1023x1023"; then
-    echo "convert -fill white -annotate +875+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
-          convert -fill white -annotate +875+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-   else
-    echo "convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
-          convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-   fi
-  fi
-
-  if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
-    if test $AZI_SCALE == 0.10; then
-      convert -fill yellow -annotate +820+447 "$LATLON" -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-    elif test $AZI_SCALE == 0.20; then
-      convert -fill yellow -annotate +1434+179 "$LATLON" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-    elif test $AZI_SCALE == 0.25; then
-      convert -fill yellow -annotate +1227+$YDISP "$LATLON" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-    elif test $AZI_SCALE == 0.50; then
-      convert -fill yellow -annotate +1840+20 "$LATLON" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-    else
-      convert -fill yellow -annotate +920+20  "$LATLON" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-    fi
-  fi
-
-# Annotate Field
-  if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    if test "$IMGGEOM" = "511x511"; then
-      convert -fill white -annotate +20+500  "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-    elif test "$IMGGEOM" = "1023x1023"; then
-      convert -fill white -annotate +20+1012 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-    else
-      convert -fill white -annotate +20+1524 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-    fi
-  fi
 
 # if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
 #   convert -fill white -annotate +20+500 "All-Sky"   -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
