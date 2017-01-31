@@ -348,18 +348,23 @@
              cycle
            endif
 
+!          if(gfld%ipdtmpl(10) .eq. 103 .or. gfld%ipdtmpl(10) .eq. 106)then
+           if(gfld%ipdtmpl(10) .eq. 106)then
+             write(6,*)' Potential soil level in GRIB2 file ',gfld%ipdtmpl(10),gfld%ipdtmpl(12),gfld%ipdtmpl(15)
+           endif
+
 ! ------------------------------------
 
-         MATCH_LOOP: do i=1,maxvar ! Max variables found in Vtable,
-                                   ! maxvar is defined in table.mod
+           MATCH_LOOP: do i=1,maxvar ! Max variables found in Vtable,
+                                     ! maxvar is defined in table.mod
 
-           if ( gfld%discipline .eq. g2code(1,i) .and. &  !Discipline 
+            if (gfld%discipline .eq. g2code(1,i) .and. &  !Discipline 
                 gfld%ipdtmpl(1) .eq. g2code(2,i) .and. &  !Category
                 gfld%ipdtmpl(2) .eq. g2code(3,i) .and. &  !Parameter
                 gfld%ipdtmpl(10) .eq. g2code(4,i)) then   !Elevation
 
-            pabbrev=param_get_abbrev(gfld%discipline,gfld%ipdtmpl(1), &
-                                     gfld%ipdtmpl(2))
+              pabbrev=param_get_abbrev(gfld%discipline,gfld%ipdtmpl(1), &
+                                       gfld%ipdtmpl(2))
 
               my_field=namvar(i) 
 
@@ -380,7 +385,7 @@
 		if (j .gt. maxvar ) then
 		  write(6,'(a,i6,a,i6,a)') 'Subsoil level ', &
                      gfld%ipdtmpl(12),' to ',gfld%ipdtmpl(15), &
-                 ' in the GRIB2 file, was not found in the Vtable'
+                 ' in the GRIB2 file, was not found in the Vtable ',myfield
 		endif
 	      endif
 
@@ -403,6 +408,7 @@
                      gfld%ipdtmpl(10).eq.1) then
                  ! Misc near ground/surface levels
                  level=200100.
+                 write(6,*)' soil level g2code matched ',gfld%ipdtmpl(10),gfld%ipdtmpl(12),gfld%ipdtmpl(15)
               else
                  ! Misc near ground/surface levels
                  level=200100.
@@ -444,10 +450,9 @@
               ith=ith+1
               exit MATCH_LOOP
 
-           endif ! Selected param.
+            endif ! Selected param (matched g2code)
 
-
-         enddo MATCH_LOOP
+           enddo MATCH_LOOP
 
          enddo ! 1,numfields
 
