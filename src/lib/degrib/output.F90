@@ -391,18 +391,25 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
 !             Names being mentioned on the right handside are obtained from
 !             the GRIB table.
               if (field.eq.'HGT') then
+                 if(idx .le. 0)write(6,*)' ERROR: 2d data with 3d variable name ',trim(field)
                  htbg(:,:,idx) = scr2d
               elseif (field.eq.'GEOPT') then
+                 if(idx .le. 0)write(6,*)' ERROR: 2d data with 3d variable name ',trim(field)
                  htbg(:,:,idx) = scr2d / grav
               elseif (field.eq.'TT') then
+                 if(idx .le. 0)write(6,*)' ERROR: 2d data with 3d variable name ',trim(field)
                  tpbg(:,:,idx) = scr2d
               elseif (field.eq.'RH') then
+                 if(idx .le. 0)write(6,*)' ERROR: 2d data with 3d variable name ',trim(field)
                  shbg(:,:,idx) = scr2d
               elseif (field.eq.'UU') then
+                 if(idx .le. 0)write(6,*)' ERROR: 2d data with 3d variable name ',trim(field)
                  uwbg(:,:,idx) = scr2d
               elseif (field.eq.'VV') then
+                 if(idx .le. 0)write(6,*)' ERROR: 2d data with 3d variable name ',trim(field)
                  vwbg(:,:,idx) = scr2d
               elseif (field.eq.'VVEL') then
+                 if(idx .le. 0)write(6,*)' ERROR: 2d data with 3d variable name ',trim(field)
                  wwbg(:,:,idx) = scr2d
               elseif (field.eq.'HGT_SFC') then
                  htbg_sfc = scr2d
