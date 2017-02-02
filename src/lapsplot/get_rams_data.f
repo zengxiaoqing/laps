@@ -126,6 +126,7 @@ C
       where (ice .eq. r_missing_data)ice = 0.
       where (rai .eq. r_missing_data)rai = 0.
       where (sno .eq. r_missing_data)sno = 0.
+      where (ht(:,:,z) .eq. r_missing_data)ht(:,:,z) = 20000.
 
       return
       end
