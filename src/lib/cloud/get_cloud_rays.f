@@ -253,6 +253,8 @@
 
         if(lat(1,1) .eq. lat(2,1))then
             l_latlon_grid = .true.
+            rimid = float(ni+1)/2.
+            write(6,*)' latlon grid with rimid = ',rimid
         else
             l_latlon_grid = .false.
         endif
@@ -1530,6 +1532,10 @@
 !                      write(6,62)tlat,tlon,gc_deg,rinew_h,rjnew_h,dlon
 !62                    format('   check latlon',6f9.3)                    
 !                   endif
+
+                    rinew_m = 0.5 * (rinew_l + rinew_h)
+                    rjnew_m = 0.5 * (rjnew_l + rjnew_h)
+
                   else ! assume a lat/lon grid
                     if(tlon .gt. 180.)then
                         tlon1 = tlon - 360.
@@ -1544,6 +1550,15 @@
                     rjnew_h = yinterp(lat(1,1),lat(1,nj)
      1                               ,1.,float(nj),tlat)
                     rjnew_h = min(max(rjnew_h,1.),float(nj))
+
+                    if(abs(rinew_h - rinew_l) .lt. rimid)then
+                      rinew_m = 0.5 * (rinew_l + rinew_h)
+                      rjnew_m = 0.5 * (rjnew_l + rjnew_h)
+                    else
+                      rinew_m = 0.5 * (rinew_l + rinew_h)
+                      rinew_m = modulo((rinew_m+rimid-1.),float(ni))+0.5    
+                      rjnew_m = 0.5 * (rjnew_l + rjnew_h)
+                    endif
                   endif
                  
                  else ! more approximate
@@ -1565,6 +1580,9 @@
                   rjnew_l = rj + rjdelt_l
                   rjnew_h = rj + rjdelt_h
 
+                  rinew_m = 0.5 * (rinew_l + rinew_h)
+                  rjnew_m = 0.5 * (rjnew_l + rjnew_h)
+
                  endif ! l_spherical
 
 !                Can be used to target box boundaries
@@ -1573,9 +1591,6 @@
                    djds = (rjnew_h - rjnew_l) / slant2
                    dhds = (ht_h - ht_l) / slant2
                  endif
-
-                 rinew_m = 0.5 * (rinew_l + rinew_h)
-                 rjnew_m = 0.5 * (rjnew_l + rjnew_h)
 
                  if(ht_m .lt. trace_minalt)then
                    trace_ri(ialt,jazi) = rinew_m
@@ -2834,8 +2849,10 @@
         solalt_last = sol_alt(i,j)
 
         write(6,*)' Sample of topo_ri and topo_rj'
-        do jazi_sample = minazi,maxazi,4
-           ialt_sample = min(max(-5*4,minalt),maxalt) ! -5 degrees alt
+        do ialt_sample = minalt,maxalt
+!          ialt_sample = min(max(-5*4,minalt),maxalt) ! -5 degrees alt
+!          jazi_sample = min(2344,maxazi) ! 2345
+           jazi_sample = (90 * maxazi) / 360
            itopo = nint(topo_ri(ialt_sample,jazi_sample))
            jtopo = nint(topo_rj(ialt_sample,jazi_sample))
            if(itopo .ge. 1 .and. itopo .le. ni .and.
