@@ -2,6 +2,7 @@
        subroutine get_aod_3d(pres_3d,heights_3d,topo_2d,ni,nj,nk,aod,aod_3d)
 
        use mem_namelist, ONLY: redp_lvl,aero_scaleht
+       use mem_allsky, ONLY: mode_aero_cld
 
        include 'rad.inc'
 
@@ -42,6 +43,10 @@
          enddo ! k
        enddo ! j
        enddo ! i
+
+       if(mode_aero_cld .gt. 1)then ! synthetic aerosol plume
+         aod_3d(ni/2+12,nj/2,1:nk-8) = .001
+       endif
 
        return
        end
