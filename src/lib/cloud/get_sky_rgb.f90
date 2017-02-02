@@ -1,6 +1,6 @@
 
 
-        subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &
+        subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &   ! I
                    r_cloud_rad,cloud_rad_c,cloud_rad_w,cloud_sfc_c, &   ! I
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobsl,& ! I
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
@@ -20,8 +20,8 @@
                    sky_rgb)                                             ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm
-        use cloud_rad, ONLY: ghi_zen_toa
-        use mem_allsky, ONLY: ghi_sim,l_aero_cld
+        use cloud_rad ! , ONLY: ghi_zen_toa
+        use mem_allsky, ONLY: ghi_sim,mode_aero_cld
         include 'trigd.inc'
 
 !       Statement functions
@@ -44,7 +44,10 @@
 
         real r_cloud_3d(ni,nj)      ! cloud opacity
         real cloud_od(ni,nj)        ! cloud optical depth
+        real cloud_od_loc(ni,nj)    ! cloud optical depth
         real cloud_od_sp(ni,nj,nsp) ! cloud species optical depth
+        real cloud_od_sp_loc(ni,nj,nsp) ! cloud species optical depth (local)
+        real bksct_eff_a(nsp)
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_w(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat) * trans
         real cloud_rad_c(nc,ni,nj)  ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
@@ -84,6 +87,7 @@
         real aod_ill(ni,nj)         ! aerosol illuminated slant optical depth (topo/notopo)
         real aod_ill_dir(ni,nj)     ! aerosol directly slant illuminated optical depth, atten bhd clds 
         real aod_tot(ni,nj)         ! aerosol slant (in domain) OD
+        real ssa_eff(nc,ni,nj)      ! effective ssa from mixed cloud/aerosols
         real*8 dist_2_topo(ni,nj)   ! distance to topo (m)
         real topo_solalt(ni,nj)     ! solar altitude from ground
         real topo_solazi(ni,nj)     ! solar azimuth from ground
@@ -133,6 +137,12 @@
 
         icg = 2
 
+        bksct_eff_a(1) = bksct_eff_clwc
+        bksct_eff_a(2) = bksct_eff_cice
+        bksct_eff_a(3) = bksct_eff_rain
+        bksct_eff_a(4) = bksct_eff_snow
+!       bksct_eff_a(5) = bksct_eff_graupel
+
         idebug_a = 0
         clear_rad_2nd_c(:,:,:) = 0. ! set (initialize) 
         moon_rad_2nd_c(:,:,:) = 0. ! set (initialize) 
@@ -145,7 +155,17 @@
         do ic = 1,nc
             ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp_a)
             write(6,*)' ic/wa/ext_a ',ic,wa(ic),ext_a(ic)
+            ssa_eff(ic,:,:) = 1.0
         enddo ! ic
+
+        if(mode_aero_cld .eq. 1)then
+            cloud_od_loc(:,:) = cloud_od(:,:)
+            cloud_od_sp_loc(:,:,:) = cloud_od_sp(:,:,:)
+        else ! add aerosols to cloud water
+            cloud_od_loc(:,:) = cloud_od(:,:) + aod_tot(:,:)
+            cloud_od_sp_loc(:,:,1) = cloud_od_sp(:,:,1) + aod_tot(:,:)
+            cloud_od_sp_loc(:,:,2:nsp) = cloud_od_sp(:,:,2:nsp)
+        endif
 
         patm_o3_msl = patm_o3(htmsl)
         thr_abv_clds = 25e3
@@ -356,6 +376,9 @@
         if(htmsl .gt. 50e3)then
             azid1 = 111. ; azid2 = 111. ! high custom
         endif
+        if(mode_aero_cld .gt. 1)then
+            azid1 = 90. ; azid2 = 90. ! aero custom
+        endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2
         write(6,*)' moon_cond_clr = ',moon_cond_clr
@@ -433,13 +456,12 @@
         enddo ! i
         enddo ! j
 
-        if(htmsl .gt. 2000. .and. .false.)then ! high custom
+        if(htmsl .gt. 2000.)then ! high custom
             idebug_a(:,:) = 0
-!           ialt_debug = ((ni-1)*(90-10))/180 + 1 + 2 ! -10 degrees alt
-            ialt_debug = ((ni-1)*(90-5))/180 + 1 ! -5 degrees alt
-            idebug_a(ialt_debug,1:nj:8) = 1
-!           iazi_debug = ((nj-1)*70)/360 + 1 
-!           idebug_a(1:ni:4,iazi_debug) = 1
+!           ialt_debug = ((ni-1)*(90-5))/180 + 1 ! -5 degrees alt
+!           idebug_a(ialt_debug,1:nj:8) = 1
+            jazi_debug = ((nj-1)*90)/360 + 1 
+            idebug_a(1:ni,jazi_debug) = 1
         endif
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
@@ -744,7 +766,7 @@
 
         I4_elapsed = ishow_timer()
 
-        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp & ! I
+        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp_loc & ! I
                        ,emis_ang_a,nsp,airmass_2_topo,idebug_pf,ni,nj &  ! I
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
 
@@ -848,12 +870,14 @@
           rad_sec_cld(:) = rad_sec_cld_top(:)
 
           sky_rgb(:,i,j) = 0.          
-          if(l_aero_cld)then
-            clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i) &
-                      + aod_tot(i,j) * ext_a(:)
-          else
+          if(mode_aero_cld .eq. 1)then
             clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i) &
                       + od_a_slant_a(:,i)
+          elseif(mode_aero_cld .eq. 2)then
+            clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i) &
+                      + aod_tot(i,j) * ext_a(:)
+          elseif(mode_aero_cld .eq. 3)then
+            clr_od(:) = od_g_slant_a(:,i) + od_o_slant_a(:,i)
           endif
 
 !         Add airglow to light from surface night lights
@@ -928,10 +952,12 @@
 !               (0.25 is dark cloud base value)                                  
 !             Use surface albedo equation?
 
-              btau = 0.10 * cloud_od(i,j)
+              btau = 0.10 * cloud_od_loc(i,j)
+!             btau = sum(bksct_eff_a(:) * cloud_od_sp_loc(i,j,:))
               cloud_albedo = btau / (1. + btau)
 
-              btau_corr = 0.10 * cloud_od(ni,j)
+              btau_corr = 0.10 * cloud_od_loc(ni,j)
+!             btau_corr = sum(bksct_eff_a(:) * cloud_od_sp_loc(ni,j,:))
               cloud_albedo_corr = btau_corr / (1. + btau_corr)
 
               do ic = 1,nc
@@ -943,7 +969,7 @@
                   endif
                   rad = day_int * pf_top(ic)
 
-                  cld_radt(ic) = rad * cloud_rad_c(ic,i,j) + rad_sec_cld(ic)
+                  cld_radt(ic) = (rad * cloud_rad_c(ic,i,j) + rad_sec_cld(ic)) * ssa_eff(ic,i,j)
 !                 rint_top(ic) = rad_to_counts(cld_radt(ic))
 
                   if(solalt_ref .gt. twi_alt)then
@@ -953,10 +979,10 @@
 !                     Is pf_scat really needed for a less illuminated cloud base?
                       if(htmsl .gt. 7000. .and. dist_2_topo(i,j) .gt. 0.)then ! cloud in front of ground
                           topo_arg = 2. * gtic(ic,i,j) * topo_albedo(ic,i,j)
-                          rad = day_int * topo_arg + rad_sec_cld(ic)
+                          rad_sfc = day_int * topo_arg + rad_sec_cld(ic)
                       else ! cloud lit by light reflecting off of the ground
 !                         topo_arg = 2. * gtic(ic,i,j) * albedo_sfc(ic)
-                          rad = day_int * 2. * swi_obs/ghi_zen_toa * albedo_sfc(ic)
+                          rad_sfc = day_int * 2. * swi_obs/ghi_zen_toa * albedo_sfc(ic)
 !                         rad = day_int * (0.02 * (1. + albedo_sfc(ic))) * pf_scat(ic,i,j)
 
 !                         Estimate of Tr
@@ -966,14 +992,15 @@
 !                         Use Trprime = Tr / (1. - a * Re)                  
                           radb_corr = 1. - albedo_sfc(ic) * cloud_albedo_corr
                           if(radb_corr .gt. 0.)then
-                            rad = rad / radb_corr ! testing
+                            rad_sfc = rad_sfc / radb_corr ! testing
                           endif
                       endif
                   else ! secondary scattering term allowed to dominate
                        ! should be modified by a vertical cloud albedo?
-                      rad = 0. ! + rad_sec_cld(ic)
+                      rad_sfc = 0. ! + rad_sec_cld(ic)
                   endif
-                  cld_radb(ic) = rad ! + rad_sec_cld(ic)
+!                 cld_radb(ic) = rad_sfc ! + rad_sec_cld(ic)
+                  cld_radb(ic) = (rad * cloud_rad_c(ic,i,j) + rad_sfc) * ssa_eff(ic,i,j)
 
               enddo ! ic
 
@@ -1000,7 +1027,8 @@
                if(r_cloud_3d(i,j) .gt. 0. .or. abs(alt_a(i,j)).eq.90.0)then
                   htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
                   radb_corr = 1. - albedo_sfc(2) * cloud_albedo_corr
-                  write(6,*)'radb_corr = ',albedo_sfc(2),cloud_albedo_corr,radb_corr
+                  write(6,39)btau_corr,albedo_sfc(2),cloud_albedo_corr,radb_corr
+ 39               format(' btau_corr/sfcalb/cldalb_corr/radb_corr = ',4f9.3)
                   write(6,41)iradsec,solalt_ref,sol_alt,twi_alt,htmin_view,day_int*pf_top(:)*cloud_rad_c(:,i,j)/1e6,rad_sec_cld(:)/1e6,sb_corr
  41               format(' irs/solalt_ref/solalt/twi_alt/htmin/cradt/rdsc',i3,3f9.4,f11.0,3f5.0,2x,3f5.0,f6.2)
                   if(iradsec .ge. 10)then
@@ -1314,7 +1342,7 @@
 !           Fade in daytime and if opposite the twilight arch
             frac_cloud = opac_cloud * cloud_visibility**scurve_term  
 
-            btau = 0.10 * cloud_od(i,j)
+            btau = 0.10 * cloud_od_loc(i,j)
             cloud_albedo = btau / (1. + btau)
 
 !           Consider 'frac_clr' also in relation to fraction of airmass 
