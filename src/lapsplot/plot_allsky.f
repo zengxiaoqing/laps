@@ -978,6 +978,7 @@
      1                 ,alm,azm                                      ! O
      1                 ,idebug,0.,earth_radius                       ! I
      1                 ,elgms,moon_mag,rmn                           ! O 
+     1                 ,geo_dec,geo_ra,geo_sublon,geo_dist           ! O
      1                 ,emag,eobsf,eobsl)                            ! O
 
           if(elgms .lt. 1.4)then
@@ -998,6 +999,7 @@
      1                 ,alm,azm                                      ! O
      1                 ,idebug,htagl(iloc),earth_radius              ! I
      1                 ,elgms,moon_mag,rmn                           ! O 
+     1                 ,geo_dec,geo_ra,geo_sublon,geo_dist           ! O
      1                 ,emag,eobsf,eobsl)                            ! O
           write(6,25)alm,azm,elgms,moon_mag,rmn
  25       format('  alt/az/elg/mnmag/rmn = ',2f8.2,f9.4,f8.2,f9.6)
@@ -1021,6 +1023,7 @@
      1                     ,almgrd,azmgrd                              ! O
      1                     ,idebug,0.,earth_radius                     ! I
      1                     ,elggrd,grdmoon_mag,rmn                     ! O
+     1                     ,geo_dec,geo_ra,geo_sublon,geo_dist         ! O
      1                     ,solar_eclipse_magnitude,eobsf,eobsc(i,j))  ! O
 
               if(elggrd .lt. elgmin .and. sol_alt_2d(i,j) .gt. 0.)then
@@ -1187,8 +1190,8 @@
 
 !             Reproject sky_rgb array from cyl to polar    
               do iaz = minazi,maxazi,20
-               write(6,*)'iaz,cyl(maxalt/2,iaz)',iaz
-     1                       ,sky_rgb_cyl(1,maxalt/2,iaz)
+               write(6,*)'iaz,cyl((maxalt+minalt)/2,iaz)',iaz
+     1                       ,sky_rgb_cyl(1,(maxalt+minalt)/2,iaz)
               enddo ! iaz
 
               write(6,*)' Call cyl_to_polar with sky rgb data'
