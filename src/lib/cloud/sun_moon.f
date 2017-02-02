@@ -325,6 +325,7 @@ C
      1                   ,idebug                           ! I
      1                   ,ht,earth_radius                  ! I
      1                   ,elgms_r4,r4_mag,r4_rmn           ! O
+     1                   ,geo_dec,geo_ra,geo_sublon,geo_dist ! O
      1                   ,solar_eclipse_magnitude,r4_obsc,obsc_limb) ! O   
 
       include 'trigd.inc'
@@ -341,7 +342,7 @@ C
       CHARACTER BLANK,TWI,MOON,RISE,SET,signm,signs
       CHARACTER*3 MNTH(12)
       REAL*8 I,M,MAG,LON,LHMSH,
-     1  MXG,MYG,MZG,MXT,MYT,MZT,LAT
+     1  MXG,MYG,MZG,MXT,MYT,MZT,LAT,LST
       INTEGER RAH,DECD,FRAME,ELGMC,ALTDK1
       Character*5 CTT,CTR,CTS,BTT,BMT,C5_BLANK
       character c8_appm*8,c8_apps*8
@@ -359,6 +360,7 @@ C
       real alm_r4,azm_r4,elgms_r4,r4_mag,r4_rmn
       real solar_eclipse_magnitude,ht,earth_radius
       real r4_ratio,r4_obsc,obsc_limb,obsc_limbc(nc)
+      real geo_dec,geo_ra,geo_sublon,geo_dist
 C
       n_loc = 1
       lat = lat_2d(is,js)
@@ -475,6 +477,21 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
       MZT=MZG-TZ
       call xyz_to_polar_r(MXT,MYT,MZT,DECM,RAM,RMN)
       r4_rmn = RMN
+
+!     Geocentric coordinates of moon      
+      call xyz_to_polar_r(MXT,MYT,MZT,DECMG,RAMG,RMNG)
+      geo_dec = DECMG / rpd
+      geo_ra = RAMG / rpd
+      geo_dist = RMNG * km_per_au * 1000. ! meters
+      rlon = 0d0
+!                       day  deg rad
+      call sidereal_time(UT,rlon,LST)
+      geo_sublon = modulo((RAMG-LST)/rpd,360d0)
+      if(idebug .ge. 2)then
+         write(6,*)' RAMG          (deg)',RAMG/rpd
+         write(6,*)' Greenwich LST (deg)',LST/rpd
+         write(6,*)' Geo_sublon    (deg)',geo_sublon
+      endif
 
 !     Insert star in lunar position
 !     DECM = ?
