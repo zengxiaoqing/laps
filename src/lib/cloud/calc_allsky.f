@@ -97,7 +97,7 @@
         real aod_ill(minalt:maxalt,minazi:maxazi)
         real aod_ill_dir(minalt:maxalt,minazi:maxazi)
         real aod_tot(minalt:maxalt,minazi:maxazi)
-        real r_cloud_trans(minalt:maxalt,minazi:maxazi)
+        real r_cloud_rad(minalt:maxalt,minazi:maxazi)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi)
         real cloud_rad_w(minalt:maxalt,minazi:maxazi)
         real cloud_sfc_c(nc,minalt:maxalt,minazi:maxazi)  
@@ -160,7 +160,7 @@
      1                     ,aod_tot,transm_obs,obs_glow_zen         ! O
      1                     ,transm_3d,transm_4d                     ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp         ! O
-     1                     ,r_cloud_trans,cloud_rad_c,cloud_rad_w   ! O
+     1                     ,r_cloud_rad,cloud_rad_c,cloud_rad_w     ! O
      1                     ,clear_rad_c,clear_radf_c,patm           ! O
      1                     ,clear_rad_c_nt                          ! O
      1                     ,airmass_2_cloud_3d,airmass_2_topo_3d    ! O
@@ -316,9 +316,13 @@
 
           do j = minazi,maxazi
           do i = minalt,maxalt
+
+!            Initialize
              trace_solalt(i,j) = solar_alt
              topo_solalt(i,j) = solar_alt
              topo_solazi(i,j) = solar_az
+             topo_lf(i,j) = 1.
+             topo_sc(i,j) = 0.
 
              itrace = nint(trace_ri(i,j))
              jtrace = nint(trace_rj(i,j))
@@ -329,16 +333,25 @@
                    eobsc_sky(i,j) = eobsc(itrace,jtrace)
                 else ! outside domain - estimate solar altitude at sea level
                    htmsl = htagl + topo_sfc
-                   if(alt_a_roll(i,j) .eq. -21.)then
+                   if(azi_a_roll(i,j) .eq. 293.)then
                       iverbose = 1
                    else
                       iverbose = 0
                    endif
-                   call latlon_ray(rlat,rlon,htmsl,alt_a_roll(i,j)
+
+                   if(dist_2_topo(i,j) .gt. 0.)then ! ray hits sfc
+                     call latlon_ray(rlat,rlon,htmsl,alt_a_roll(i,j)
      1               ,azi_a_roll(i,j),dist_2_topo(i,j),rlat_sfc,rlon_sfc
      1               ,iverbose,istatus)
-                   solzen_sfc = angdist(rlat_sfc,solar_lat 
-     1                                 ,rlon_sfc-solar_lon)
+                     solzen_sfc = angdist(rlat_sfc,solar_lat 
+     1                                   ,rlon_sfc-solar_lon)
+                   else                             ! ray misses sfc
+                     gcdist_km = (horz_dep * rpd * earth_radius) / 1000.
+                     call RAzm_Lat_Lon_GM(rlat,rlon,gcdist_km 
+     1                     ,azi_a_roll(i,j),rlat_limb,rlon_limb,istatus)
+                     solzen_sfc = angdist(rlat_limb,sol_lat 
+     1                                   ,rlon_limb-sol_lon)
+                   endif
                    trace_solalt(i,j) = 90. - solzen_sfc
                    if(iverbose .eq. 1)then
                       write(6,41)i,j,alt_a_roll(i,j),azi_a_roll(i,j)
@@ -410,7 +423,7 @@
               call get_sky_rgb(r_cloud_3d    ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
      1                    ,cloud_od_sp,nsp   ! cloud species optical depth
-     1                    ,r_cloud_trans     ! cloud solar transmittance
+     1                    ,r_cloud_rad       ! cloud solar transmittance
      1                    ,cloud_rad_c       ! cloud solar transmittance / color
      1                    ,cloud_rad_w       ! cloud solar transmittance * rad
      1                    ,cloud_sfc_c       ! cld rad from sfc lighting (sru)
@@ -507,7 +520,7 @@
           if(iverbose .eq. 1)then
             write(6,11)rlat,rlon,htmsl,altray,aziray,tpdist
      1                ,dradius_start,dlon,tlat,tlon
-11          format('   latlon_ray ',2f9.3,f10.1,2f9.3,2f10.1,3f9.3)
+11          format('   latlon_ray ',2f9.3,f12.1,2f9.3,2f12.1,3f9.3)
           endif
 
           istatus = 1
