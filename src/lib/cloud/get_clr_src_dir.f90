@@ -415,8 +415,13 @@
          fsolalt = dsolaltb - float(isolaltl)
 !        ags = ags_a(isolaltl) * (1.-fsolalt) + ags_a(isolalth) * fsolalt
 !        aas = aas_a(isolaltl) * (1.-fsolalt) + aas_a(isolalth) * fsolalt
-         ags = logint(ags_a(isolaltl),ags_a(isolalth),fsolalt)
-         aas = logint(aas_a(isolaltl),aas_a(isolalth),fsolalt)
+         if(isolaltl .ge. isolalt_lo .and. isolaltl .le. isolalt_hi)then
+           ags = logint(ags_a(isolaltl),ags_a(isolalth),fsolalt)
+           aas = logint(aas_a(isolaltl),aas_a(isolalth),fsolalt)
+         else
+           write(6,*)' ERROR: with isolalt',isolaltl,isolalt_lo,dsolalt,del_solalt,dsolaltb,float(isolalt_lo)/del_solalt
+           stop
+         endif
 
 !        Considering smoothing out with solar disk
          horz_dep = horz_depf(htbar_msl,earth_radius)
