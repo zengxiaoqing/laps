@@ -125,7 +125,6 @@
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
 !       sfc_alb_c(:) = 0.15  ! pass this in and account for snow cover?
-!       ssa = 0.90
 
 !       aod_bin(1) = .000
 !       aod_bin(2) = .987
@@ -569,7 +568,7 @@
                 if(idebug_clr .eq. 1)then
                   write(6,69)ialt,jazi,ic,sol_alt,trace_solalt(ialt,jazi),altray &
                             ,srcdir(ic),srcdir_a(ic,jazi)
-69                format(' called get_clr_src_dir_low',i6,2i5,3f8.2,2f9.4/)
+69                format(' called get_clr_src_dir_low',i7,2i5,3f8.2,2f9.4/)
                 endif
 
               else ! use generic values for azimuths every 10 degrees
@@ -1037,7 +1036,6 @@
 
                   clear_rad_topo = day_inte * &
                     (sumi_gct(ic) * rayleigh_gnd * radf + &
-!                    sumi_act(ic) * hg2t(ic)     * aodf * ssa) ! take out ssa?
                      sumi_act(ic) * hg2t(ic)     * aodf) 
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,85)ialt,jazi,ic,clear_rad_topo,sumi_gct(ic),sumi_act(ic)
