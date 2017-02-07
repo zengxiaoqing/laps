@@ -521,6 +521,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
      write(6,*)' tdbg_sfc range = ',minval(tdbg_sfc),maxval(tdbg_sfc)
      write(6,*)' shbg_sfc range = ',minval(shbg_sfc),maxval(shbg_sfc)
+     write(6,*)' mslpbg   range = ',minval(mslpbg)  ,maxval(mslpbg)
      write(6,*)' pcpbg    range = ',minval(pcpbg)   ,maxval(pcpbg)    
 
 ! ------------- end convert data ----------------
