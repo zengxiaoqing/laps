@@ -724,7 +724,9 @@ c --- Cloud Water
      .           ,nx_laps,ny_laps,1,1,var,0,lvl_coord
      .           ,units,comment,cw_sfc,istatus)
       if (istatus .ne. 1) then
-         print*,'Error writing interpolated data to LAPS lgb - CW'
+         print*,
+     .      'Warning: not writing interpolated data to LAPS lgb - CW'
+         istatus = 1 ! keep the program running normally
          return
       endif
 
