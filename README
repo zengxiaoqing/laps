@@ -822,8 +822,15 @@
 
          --- 2.2.5.1 High Resolution Terrain (sub-kilometer) ---
 
-     High resolution terrain can be imported (experimentally) into LAPS via
-     two methods, the WRF Wizard (see section 2.2.7), and Topograbber - see
+     Recently the localization was augmented to accept 30 meter terrain data.
+     The procedure involves setting up 1 degree tile data from the USGS in
+     an ArcGIS context, converted from 'adf' format to 'asc'. These tiles are
+     placed into a path containing the string 'topo_1s' and this path is given
+     to the 'path_to_topo_30s' variable in 'nest7grid.parms'. This allows the
+     30m (1s) data to supercede the 900m (30s) data.
+
+     High resolution terrain has also been imported (experimentally) into LAPS
+     via two methods, the WRF Wizard (see section 2.2.7), and Topograbber - see
      http://laps.noaa.gov/topograbber/ 
 
      The WRF Wizard can be used to generate a GEOGRID file on the same grid as
