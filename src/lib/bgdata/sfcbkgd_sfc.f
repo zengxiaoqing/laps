@@ -209,6 +209,7 @@ c KML: END
       real   tbar
       real   td1,td2
       real   p_mb,p_mb_p1,p_mb_m1                                 
+      real   pdry   ! BLS/Iteris - Needed for estimate of sfc pressure before moisture adjustment
       real   G,R
       real   ssh2,make_ssh,make_td
       real   dz,dzp,dtdz
@@ -233,14 +234,20 @@ c
           dz=heightsfc-ter
 c         psfc=p_mb*exp(G/(R*tbar)*dz)
           psfc=psfc/100.                                ! calcs done in mb
-          psfc=psfc*exp(G/(R*tbar)*dz)
-                             
+
+          ! BLS/Iteris - Original code modified psfc directly, only to 
+          ! do it again farther below, which was not correct and leading
+          ! to wacky surface pressures in area of big dz
+          ! ORIG:  psfc=psfc*exp(G/(R*tbar)*dz)
+          pdry=psfc*exp(G/(R*tbar)*dz)
+          
 !         Determine qsfc
+          ! BLS/Iteris - Where pdry is used below used to be psfc (incorrect)
           if(bgm.eq.0.or.bgm.eq.6.or.bgm.eq.8)then      ! sh_sfc is Td
-             qsfc=ssh2(psfc,tsfc-273.15
+             qsfc=ssh2(pdry,tsfc-273.15
      &                  ,sh_sfc-273.15,t_ref)*.001      ! sh is kg/kg
           elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then  ! sh_sfc is RH
-             qsfc=make_ssh(psfc,tsfc-273.15
+             qsfc=make_ssh(pdry,tsfc-273.15
      &                      ,sh_sfc/100.,t_ref)*.001    ! sh is kg/kg
                                            
           else                                          ! sh_sfc is q (kg/kg)
