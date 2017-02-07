@@ -173,6 +173,11 @@ c
       write(6,*)' tdsfc_o range = ',tdsfc_o_min,tdsfc_o_max
       write(6,*)' psfc range = ',minval(psfc),maxval(psfc)
 
+      if(minval(psfc) .lt. 50000.)then
+          write(6,*)' ERROR: psfc is out of bounds'
+          istatus = 0
+      endif
+
       write(6,*)' returning from sfcbkgd...'
       write(6,*)
 
@@ -182,7 +187,7 @@ c
 c----------------------------------------------------------------------------
 c
       subroutine compute_sfc_bgfields(bgm,nx,ny,nz,i,j,k,ter,height
-     &,t,p,q,t_ref,psfc,tsfc,qsfc,qsfc_i_min,qsfc_i_max,istat_qsfc_i
+     &,t,p,q,t_ref,psfc_pa,tsfc,qsfc,qsfc_i_min,qsfc_i_max,istat_qsfc_i
      &,tdsfc_i,istat_tdsfc_i,tdsfc
      &,idebug,ip,jp,nx_pr,ny_pr)
 c
@@ -206,13 +211,14 @@ c
       real   height(nx,ny,nz)  !I, heights of pressure levels 3d
       real   t(nx,ny,nz)       !I, temperatures 3d 
       real   q(nx,ny,nz)       !I, specific humidity 3d
-      real   psfc              !O, output surface pressure, pa
+      real   psfc_pa           !O, output surface pressure, pa
       real   tsfc              !I/O input sfc T, output recomputed T
       real   qsfc              !I   input sfc Q (g/kg)           
       real   tdsfc_i           !I   input sfc Td
       real   tdsfc             !O   hi-res Td (K)           
 
       real   qsfc_l            !L   surface spec hum, Input as q or computed internally (dimensionless)
+      real   psfc_mb           !L 
 
       real   tbar,tsfc_c
       real   td1,td2,tdsfc_c
@@ -237,11 +243,11 @@ c
 
       if(tsfc.lt.500.0.and.t(i,j,k).lt.500.0) then 
 c
-c first guess psfc without moisture consideration
+c first guess psfc_mb without moisture consideration
 c
           tbar=(tsfc+t(i,j,k))*0.5
           dz=height(i,j,k)-ter
-          psfc=p_mb*exp(G/(R*tbar)*dz)
+          psfc_mb=p_mb*exp(G/(R*tbar)*dz)
 
 !         Calculate qsfc_l according to model (bgm=0 for reduced P)
 !         This is used below for virtual temperature and sfc P reduction
@@ -258,13 +264,13 @@ c
                  qsfc_l = 0.0
              else
                  if(idebug .eq. 1)write(6,*)' qsfc is Td: calling ssh2'
-                 qsfc_l=ssh2(psfc,tsfc_c,tdsfc_c,t_ref)*.001 ! kg/kg
+                 qsfc_l=ssh2(psfc_mb,tsfc_c,tdsfc_c,t_ref)*.001 ! kg/kg
              endif
 
            elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then    ! qsfc is RH
 !    1                                .or.bgm.eq.13)then   ! qsfc is RH
              if(idebug .eq. 1)write(6,*)' qsfc is RH: calling make_ssh'
-             qsfc_l=make_ssh(psfc,tsfc-273.15
+             qsfc_l=make_ssh(psfc_mb,tsfc-273.15
      &                      ,qsfc/100.,t_ref)*.001 !kg/kg
 
            else                                            ! qsfc is qsfc
@@ -289,7 +295,7 @@ c
            if(qsfc_l .lt. 0.0 .or. qsfc_l .gt. .050)then
              write(6,*)' WARNING in compute_sfc_bgfields, qsfc_l = '
      1                 ,qsfc_l      
-             psfc =r_missing_data
+             psfc_mb =r_missing_data
              tsfc =r_missing_data
              tdsfc=r_missing_data
            endif
@@ -297,7 +303,7 @@ c
           elseif(istat_tdsfc_i .eq. 1)then ! q is missing, so use td more directly
            tsfc_c  = tsfc-273.15
            tdsfc_c = tdsfc_i-273.15
-           qsfc_l=ssh2(psfc,tsfc_c,tdsfc_c,t_ref)*.001 ! kg/kg
+           qsfc_l=ssh2(psfc_mb,tsfc_c,tdsfc_c,t_ref)*.001 ! kg/kg
 
           else ! both q and td are missing
            qsfc_l = 0.
@@ -308,11 +314,11 @@ c pressure
           tvsfc=tsfc*(1.+0.608*qsfc_l)
           tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
           tbarv=(tvsfc+tvk)*.5
-          psfc=(p_mb*exp(G/(R*tbarv)*dz))*100.  !return units = pa
+          psfc_mb=(p_mb*exp(G/(R*tbarv)*dz))
 
 !         if(j .eq. ny/2)then
-!             write(6,101)i,tvsfc,tvk,tbarv,height(i,j,k),dz,p_mb,psfc
-!    1                   ,(psfc/100.-p_mb) / dz
+!             write(6,101)i,tvsfc,tvk,tbarv,height(i,j,k),dz,p_mb,psfc_pa
+!    1                   ,(psfc_pa/100.-p_mb) / dz
 !101          format(' i,tvsfc,tvk,tbarv,ht,dz,pk,psfc',i4,6f8.2,f9.2
 !    1                                                 ,e15.6)
 !         endif
@@ -335,7 +341,7 @@ c dew point temp
                  write(6,*)' k/tdsfc (C) = ',k,tdsfc               
              endif
 c
-          else ! k=1: calculate tsfc,qsfc and psfc
+          else ! k=1: calculate tsfc,qsfc and psfc_mb
 
              dzp=height(i,j,k+1)-height(i,j,k)
              p_mb_p1 = p(ip,jp,k+1) / 100.
@@ -346,7 +352,7 @@ c
              dtdz=(t(i,j,k)-t(i,j,k+1))/dzp
              tsfc=t(i,j,k)+dtdz*dz
              tbar=(tsfc+t(i,j,k))*0.5
-             psfc=p_mb*exp(G/(R*tbar)*dz)
+             psfc_mb=p_mb*exp(G/(R*tbar)*dz)
              tdsfc=td2+((td1-td2)/dzp)*dz
 
              if(idebug .eq. 1)then
@@ -354,8 +360,15 @@ c
              endif
 
           endif
+
+          if(psfc_mb .ne. r_missing_data)then
+             psfc_pa = psfc_mb * 100.
+          else
+             psfc_pa = r_missing_data
+          endif
+
        else
-          psfc =r_missing_data
+          psfc_pa =r_missing_data
           tsfc =r_missing_data
           tdsfc=r_missing_data
        endif
