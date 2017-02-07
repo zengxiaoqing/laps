@@ -440,6 +440,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  write(6,*)' Filling prbg_sfc with PSFC'
               elseif (field.eq.'PMSL') then
                  mslpbg = scr2d
+                 write(6,*)' Filling mslpbg with PMSL'
               elseif (field.eq.'APCP') then
                  pcpbg = scr2d
                  write(6,*)' Filling pcpbg with APCP'
