@@ -640,8 +640,8 @@
           endif
 
           if(l_parse(directory,'fim'))then
-            write(6,*)' Looking for FIM LWC data in ',trim(directory)
             filename = '/scratch/staging/fab/albers/fimlarge.nc'
+            write(6,*)' Looking for FIM LWC data in ',trim(filename)
             call get_fim_data
      +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
      +                   ,i4time_earliest,i4time_latest
@@ -650,7 +650,8 @@
      +                   ,clwc_3d
      +                   ,lun_out
      +                   ,istatus)
-            write(6,*)' returned from get_fim_data'
+            write(6,*)' returned from get_fim_data ',istatus
+            
           elseif(l_parse(directory,'rams'))then
             write(6,*)' Looking for RAMS LWC data in ',trim(directory)
             filename = '/home/fab/albers/muri/rams_micro_v3.nc'
@@ -691,7 +692,7 @@
           enddo ! i
 
           read(lun,*) ! advance through input data
-          write(6,*)' Running without cloud and other current data'
+          write(6,*)' Running without LAPS cloud and other current data'
           snow_cover = 0. ! r_missing_data
 
 !         Use standard atmosphere for heights (uniform pressure grid)
