@@ -1,5 +1,4 @@
 
-
      subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt,sfc_glow)
 
@@ -363,10 +362,17 @@
 103           format('k/salt/hdep/salt_cld/amk/R/G/B',43x,i4,3f6.2,f8.2,2x,3f6.2)                                   
             endif
 
+!           Absorption coefficients for liquid water (m^-1) are .180, .051, .010 
+            power_trans = .6
+            transm_3d_s = transm_3d(il,jl,kl)
+            transm_spectral_r = transm_3d_s**(power_trans*.180)
+            transm_spectral_g = transm_3d_s**(power_trans*.051)
+            transm_spectral_b = transm_3d_s**(power_trans*.010)
+
 !           Modify transm array for each of 3 colors depending on solar intensity and color
-            transm_4d(il,jl,kl,1) = transm_3d(il,jl,kl) * rint           * eclipse(i,j)
-            transm_4d(il,jl,kl,2) = transm_3d(il,jl,kl) * rint * grn_rat * eclipse(i,j)
-            transm_4d(il,jl,kl,3) = transm_3d(il,jl,kl) * rint * blu_rat * eclipse(i,j)
+            transm_4d(il,jl,kl,1) = transm_3d_s * rint           * eclipse(i,j) * transm_spectral_r
+            transm_4d(il,jl,kl,2) = transm_3d_s * rint * grn_rat * eclipse(i,j) * transm_spectral_g
+            transm_4d(il,jl,kl,3) = transm_3d_s * rint * blu_rat * eclipse(i,j) * transm_spectral_b
 
           else
             transm_4d(il,jl,kl,:) = 0.
