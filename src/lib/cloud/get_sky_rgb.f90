@@ -1030,7 +1030,7 @@
                   write(6,39)btau_corr,albedo_sfc(2),cloud_albedo_corr,radb_corr
  39               format(' btau_corr/sfcalb/cldalb_corr/radb_corr = ',4f9.3)
                   write(6,41)iradsec,solalt_ref,sol_alt,twi_alt,htmin_view,day_int*pf_top(:)*cloud_rad_c(:,i,j)/1e6,rad_sec_cld(:)/1e6,sb_corr
- 41               format(' irs/solalt_ref/solalt/twi_alt/htmin/cradt/rdsc',i3,3f9.4,f11.0,3f5.0,2x,3f5.0,f6.2)
+ 41               format(' irs/solalt_ref/solalt/twi_alt/htmin/cradt/rdsc/sbcr',i3,3f9.4,f11.0,3f6.0,2x,3f5.0,2x,f6.2)
                   if(iradsec .ge. 10)then
                     write(6,*)' WARNING: irs = ',iradsec,l_solar_eclipse,rad_sec_cld,sph_rad_ave
                   endif
