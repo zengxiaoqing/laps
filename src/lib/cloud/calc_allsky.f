@@ -26,8 +26,10 @@
      1                     ,cloud_od,dist_2_topo                    ! O
      1                     ,sky_rgb_cyl,istatus)                    ! O
 
-        include 'trigd.inc'
         use mem_allsky
+        use mem_namelist, ONLY: earth_radius
+
+        include 'trigd.inc'
 
         addlogs(x,y) = log10(10.**x + 10.**y)
         angdist(p1,p2,dlon) = acosd(sind(p1) * sind(p2)
@@ -116,6 +118,9 @@
         logical l_terrain_following
 
         write(6,*)' subroutine calc_allsky...'
+
+        pi = 3.14159265
+        rpd = pi / 180.
 
         ext_g(1) = .090 ! 0.14 * (wa/.55)**(-4)
         ext_g(2) = .144 ! 0.14 * (wa/.55)**(-4)
@@ -333,7 +338,7 @@
                    eobsc_sky(i,j) = eobsc(itrace,jtrace)
                 else ! outside domain - estimate solar altitude at sea level
                    htmsl = htagl + topo_sfc
-                   if(azi_a_roll(i,j) .eq. 293.)then
+                   if(azi_a_roll(i,j) .eq. 90.)then
                       iverbose = 1
                    else
                       iverbose = 0
@@ -345,21 +350,31 @@
      1               ,iverbose,istatus)
                      solzen_sfc = angdist(rlat_sfc,solar_lat 
      1                                   ,rlon_sfc-solar_lon)
+                     trace_solalt(i,j) = 90. - solzen_sfc
+                     if(iverbose .eq. 1)then
+                       write(6,41)i,j,alt_a_roll(i,j),azi_a_roll(i,j)
+     1                          ,dist_2_topo(i,j),rlat_sfc,rlon_sfc
+     1                          ,trace_solalt(i,j)
+41                     format(' setting trace_solalt outside domain: '
+     1                      ,2i6,2f9.3,f10.1,3f9.3)
+                     endif
+
                    else                             ! ray misses sfc
                      gcdist_km = (horz_dep * rpd * earth_radius) / 1000.
                      call RAzm_Lat_Lon_GM(rlat,rlon,gcdist_km 
      1                     ,azi_a_roll(i,j),rlat_limb,rlon_limb,istatus)
-                     solzen_sfc = angdist(rlat_limb,sol_lat 
-     1                                   ,rlon_limb-sol_lon)
-                   endif
-                   trace_solalt(i,j) = 90. - solzen_sfc
-                   if(iverbose .eq. 1)then
-                      write(6,41)i,j,alt_a_roll(i,j),azi_a_roll(i,j)
-     1                          ,dist_2_topo(i,j),rlat_sfc,rlon_sfc
+                     solzen_sfc = angdist(rlat_limb,solar_lat 
+     1                                   ,rlon_limb-solar_lon)
+                     trace_solalt(i,j) = 90. - solzen_sfc
+                     if(iverbose .eq. 1)then
+                       write(6,42)i,j,alt_a_roll(i,j),azi_a_roll(i,j)
+     1                          ,gcdist_km,rlat_limb,rlon_limb
      1                          ,trace_solalt(i,j)
-41                    format(' setting trace_solalt outside domain: '
+42                     format(' setting trace_solalt off limb: '
      1                      ,2i6,2f9.3,f10.1,3f9.3)
-                   endif
+                     endif
+
+                   endif ! dist_2_topo > 0
                 endif
              endif
 
