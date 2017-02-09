@@ -69,6 +69,11 @@ C
      +     i4time_sys, ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
      +     i4time_latest, lun_out, pres_p, clwc_p, istatus)
 
+      write(6,*)' Dimensions: ',NX_L,NY_L,longitude,latitude
+
+      write(6,*)' range of clwc_p (kg/m^3)',minval(clwc_p)
+     +                                     ,maxval(clwc_p)
+
       return
       end
 C
@@ -78,11 +83,14 @@ C
      +     i4time_latest, lun_out, pres_p, clwc_p, istatus)
 
 
+      use constants_laps, ONLY: R
+
       include 'netcdf.inc'
       integer latitude, longitude, time,nf_fid, nf_vid, nf_status
 
       real pres_p(longitude,latitude,21)
       real clwc_p(longitude,latitude,21)
+      real rho_p(longitude,latitude,21)
 
       real pres(longitude,latitude,65)
       real clwc(longitude,latitude,65)
@@ -441,7 +449,25 @@ C
       clwc(:,:,65) = 0. ! CLWMR_65hybridlevel(:,:,1)
 
 !     Vertical Interpolation
-      clwc_p(:,:,10) = clwc(:,:,30)
+      call vinterp_sub(r_missing_data,NX_L,NY_L,NX_L,NY_L
+     .                ,1,NX_L,1,NY_L,21,65
+     .                ,pres_p,pres,clwc,clwc_p)
+
+      write(6,*)' range of input clwc_p',minval(clwc_p)
+     +                                  ,maxval(clwc_p)
+
+!     Fix units to kg/kg as advertised
+      clwc_p = clwc_p * .001
+
+      write(6,*)' range of clwc_p (kg/kg)',minval(clwc_p)
+     +                                    ,maxval(clwc_p)
+
+!     Convert mixing ratio to density (content)
+      rho_p(:,:,:) = pres_p(:,:,:) / (R * 273.15)
+      clwc_p(:,:,:) = clwc_p(:,:,:) * rho_p(:,:,:)
+
+      write(6,*)' range of rho_p (kg/m^3)',minval(rho_p)
+     +                                    ,maxval(rho_p)
 
       return
       end
