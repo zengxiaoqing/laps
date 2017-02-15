@@ -96,10 +96,13 @@
       use ppm
       use mem_namelist, ONLY: c6_maproj 
 
+      include 'wa.inc'
+
 !     Read and interpolate from sector of Blue Marble Image
 !     See code in /scratch/staging/fab/albers/nasa
 
       real albedo(3,ni,nj)    ! Albedo (Red, Green, Blue)
+      real albedo_buff(3,ni,nj) 
       real result(ni,nj)      ! Interpolated image channel
       character*13 cvt_i4time_wfo_fname13,c13_time
       character*2 c2_mn
@@ -282,6 +285,21 @@
           enddo ! i
         enddo ! ic
 
+!       Adjust colors based on wavelengths
+!       BM data is .645, .555, .470 microns
+        albedo_buff(:,:,:) = albedo(:,:,:)
+        red_f = (wa(1) - wa(2)) / (.645 - wa(2))
+        grn_f = 1.0 - red_f
+        write(6,*)' Adjusting R color based on wavelengths',red_f,grn_f
+        albedo(1,:,:) = albedo_buff(1,:,:) * red_f
+     1                + albedo_buff(2,:,:) * grn_f    
+
+        blu_f = (wa(3) - wa(2)) / (.470 - wa(2))
+        grn_f = 1.0 - blu_f
+        write(6,*)' Adjusting B color based on wavelengths',blu_f,grn_f
+        albedo(3,:,:) = albedo_buff(3,:,:) * blu_f
+     1                + albedo_buff(2,:,:) * grn_f    
+        
         write(6,*)' Interpolated albedo: ',albedo(:,ni/2,nj/2)
 
         if(albedo(2,ni/2,nj/2) .gt. 1.0)then
