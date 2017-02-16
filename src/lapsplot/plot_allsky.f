@@ -650,6 +650,7 @@
      +                   ,clwc_3d
      +                   ,lun_out
      +                   ,istatus)
+            istatus_ht = 0
             write(6,*)' returned from get_fim_data ',istatus
             
           elseif(l_parse(directory,'rams'))then
@@ -666,7 +667,10 @@
      +                   ,snow_3d
      +                   ,lun_out
      +                   ,istatus)
+            istatus_ht = 1
             write(6,*)' returned from get_rams_data'
+          else
+            istatus_ht = 0
           endif
 
           i4time_solar = i4time_ref
@@ -696,14 +700,18 @@
           snow_cover = 0. ! r_missing_data
 
 !         Use standard atmosphere for heights (uniform pressure grid)
-          call get_pres_1d(i4time_ref,NZ_L,pres_1d,istatus)
-          if(istatus .ne. 1)then
-            write(6,*)' error getting 1d pressures'
-            return
+          if(istatus_ht .eq. 0)then
+            write(6,*)' Getting 1D pressure levels'
+            call get_pres_1d(i4time_ref,NZ_L,pres_1d,istatus)
+            if(istatus .ne. 1)then
+              write(6,*)' error getting 1d pressures'
+              return
+            endif
+            write(6,*)' Getting 3D heights from 1D pressure levels'
+            do k = 1,NZ_L
+              heights_3d(:,:,k) = psatoz(pres_1d(k)/100.)
+            enddo ! k
           endif
-          do k = 1,NZ_L
-            heights_3d(:,:,k) = psatoz(pres_1d(k)/100.)
-          enddo ! k
 
         endif ! l_require_all_fields is TRUE
 
@@ -1134,7 +1142,7 @@
           deallocate(cloud_od)
           deallocate(dist_2_topo)
 
-          write(6,*)' end of subroutine call block'
+          write(6,*)' end of subroutine call block - write labels'
 
 !           Write time label
             open(53,file='label.'//clun,status='unknown')
