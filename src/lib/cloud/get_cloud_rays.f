@@ -901,7 +901,7 @@
             azid2 = mod(azid1+180.,360.)
         endif
         if(htstart .gt. 100e3)then
-            azid1 = 111. ; azid2 = 111. ! high custom
+            azid1 = 115. ; azid2 = 115. ! high custom
         endif
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
@@ -1560,7 +1560,7 @@
                       rjnew_m = 0.5 * (rjnew_l + rjnew_h)
                     endif
                   endif
-                 
+
                  else ! more approximate
                   dx1_l = dxy1_l * xcosg
                   dy1_l = dxy1_l * ycosg
@@ -2550,9 +2550,24 @@
 
               if(topo_ri(ialt,jazim) .ne. 0. .and.
      1           topo_ri(ialt,jazip) .ne. 0.      )then 
-                topo_ri(ialt,jazi) = 
+
+                if(abs(topo_ri(ialt,jazim) -
+     1                 topo_ri(ialt,jazip)) .lt. rimid)then
+                  topo_ri(ialt,jazi) = 
      1                fm * topo_ri(ialt,jazim) 
      1              + fp * topo_ri(ialt,jazip)
+                else ! cyclic condition
+                  if(topo_ri(ialt,jazip) .gt. topo_ri(ialt,jazim))then
+                    argm = topo_ri(ialt,jazim) + float(ni)
+                    argp = topo_ri(ialt,jazip)
+                  else
+                    argm = topo_ri(ialt,jazim)
+                    argp = topo_ri(ialt,jazip) + float(ni)
+                  endif
+                  topo_ri(ialt,jazi) =
+     1              modulo(fm * argm + fp * argp-0.5, float(ni)) + 0.5
+                endif
+
                 topo_rj(ialt,jazi) = 
      1                fm * topo_rj(ialt,jazim) 
      1              + fp * topo_rj(ialt,jazip)
@@ -2561,9 +2576,23 @@
                 topo_rj(ialt,jazi) = 0.
               endif
 
-              trace_ri(ialt,jazi) = 
+              if(abs(trace_ri(ialt,jazim) -
+     1               trace_ri(ialt,jazip)) .lt. rimid)then
+                trace_ri(ialt,jazi) = 
      1                fm * trace_ri(ialt,jazim) 
      1              + fp * trace_ri(ialt,jazip)
+              else ! cyclic condition
+                if(trace_ri(ialt,jazip) .gt. trace_ri(ialt,jazim))then
+                  argm = trace_ri(ialt,jazim) + float(ni)
+                  argp = trace_ri(ialt,jazip)
+                else
+                  argm = trace_ri(ialt,jazim)
+                  argp = trace_ri(ialt,jazip) + float(ni)
+                endif
+                trace_ri(ialt,jazi) =
+     1              modulo(fm * argm + fp * argp-0.5, float(ni)) + 0.5
+              endif
+
               trace_rj(ialt,jazi) = 
      1                fm * trace_rj(ialt,jazim) 
      1              + fp * trace_rj(ialt,jazip)
@@ -2852,7 +2881,7 @@
         do ialt_sample = minalt,maxalt
 !          ialt_sample = min(max(-5*4,minalt),maxalt) ! -5 degrees alt
 !          jazi_sample = min(2344,maxazi) ! 2345
-           jazi_sample = (90 * maxazi) / 360
+           jazi_sample = (115 * maxazi) / 360
            itopo = nint(topo_ri(ialt_sample,jazi_sample))
            jtopo = nint(topo_rj(ialt_sample,jazi_sample))
            if(itopo .ge. 1 .and. itopo .le. ni .and.
