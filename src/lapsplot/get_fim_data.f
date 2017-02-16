@@ -91,6 +91,7 @@ C
       real pres_p(longitude,latitude,21)
       real clwc_p(longitude,latitude,21)
       real rho_p(longitude,latitude,21)
+      real buff_p(longitude,latitude,21)
 
       real pres(longitude,latitude,65)
       real clwc(longitude,latitude,65)
@@ -466,6 +467,25 @@ C
       rho_p(:,:,:) = pres_p(:,:,:) / (R * 273.15)
       clwc_p(:,:,:) = clwc_p(:,:,:) * rho_p(:,:,:)
 
+      write(6,*)' applying 180 degree offset to clwc_p and pres_p'
+
+!     Apply 180 degree roll to clwc_p
+      do i = 1,NX_L
+         iroll = i+NX_L/2
+         write(6,*)' i/iroll',i,iroll
+         if(iroll .gt. NX_L)iroll = iroll - NX_L   
+         buff_p(i,:,:) = clwc_p(iroll,:,:)
+      enddo ! i
+      clwc_p = buff_p
+
+!     Apply 180 degree roll to pres_p
+      do i = 1,NX_L
+         iroll = i+NX_L/2
+         if(iroll .gt. NX_L)iroll = iroll - NX_L   
+         buff_p(i,:,:) = pres_p(iroll,:,:)
+      enddo ! i
+      pres_p = buff_p
+      
       write(6,*)' range of rho_p (kg/m^3)',minval(rho_p)
      +                                    ,maxval(rho_p)
 
