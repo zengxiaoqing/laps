@@ -665,6 +665,7 @@
 
 !        Update ags,aas
          dsolalt = dsolalt_ref + dsolalt_dxy * xybar
+         dsolalt = min(max(dsolalt,-90.),+90.)
          solalt_step = solalt + dsolalt
          dsolaltb = &
             max(min(dsolalt/del_solalt,float(isolalt_hi)/del_solalt-.0001),float(isolalt_lo)/del_solalt)
