@@ -374,13 +374,13 @@
             moon_cond_clr = 0
         endif
         if(htmsl .gt. 50e3)then
-            azid1 = 111. ; azid2 = 111. ! high custom
+            azid1 = 115. ; azid2 = 115. ! high custom
         endif
         if(mode_aero_cld .gt. 1)then
-            azid1 = 90. ; azid2 = 90. ! aero custom
+            azid1 = 90.  ; azid2 = 90. ! aero custom
         endif
 
-        write(6,*)' azid1/2 are at ',azid1,azid2
+        write(6,*)' azid1/2 are at ',azid1,azid2,htmsl,mode_aero_cld
         write(6,*)' moon_cond_clr = ',moon_cond_clr
 
         if(moon_cond_clr .eq. 0)then ! sun
@@ -460,7 +460,7 @@
             idebug_a(:,:) = 0
 !           ialt_debug = ((ni-1)*(90-5))/180 + 1 ! -5 degrees alt
 !           idebug_a(ialt_debug,1:nj:8) = 1
-            jazi_debug = ((nj-1)*90)/360 + 1 
+            jazi_debug = ((nj-1)*115)/360 + 1 
             idebug_a(1:ni,jazi_debug) = 1
         endif
 
