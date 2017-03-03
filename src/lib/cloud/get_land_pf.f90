@@ -5,7 +5,7 @@
                              ,gtic,dtic,btic &                          ! I
                              ,dist_2_topo,topo_solalt,topo_solazi,azi_scale &       ! I
                              ,sol_alt,sol_azi,nsp,airmass_2_topo &      ! I
-                             ,idebug_a,ni,nj,i4time,rlat,rlon,htmsl &   ! I
+                             ,idebug_pf,ni,nj,i4time,rlat,rlon,htmsl &  ! I
                              ,topo_lat,topo_lon &                       ! I
                              ,pf_land,cld_brdf,emis_ang_a)              ! O
 
@@ -48,7 +48,7 @@
         real btic(nc,ni,nj)         ! spectral terrain beam (direct) NI 
         real*8 dist_2_topo(ni,nj),sinarc     
         real airmass_2_topo(ni,nj)  ! airmass to topo  
-        integer idebug_a(ni,nj)
+        integer idebug_pf(ni,nj)
         real pf_land(nc,ni,nj)      ! anisotropic reflectance factor (ARF)
                                     ! (weighted by direct/diffuse illumination)
         real cld_brdf(nc,ni,nj)
@@ -63,6 +63,8 @@
 
         write(6,*)' subroutine get_lnd_pf... solazi = ',sol_azi
         iwrite = 0
+
+        write(6,*)' sum of idebug_pf = ',sum(idebug_pf)
 
         write(6,*)' call satgeom ',range_m
         range_m = earth_radius + htmsl ! 42155680.00
@@ -236,8 +238,8 @@
 !                ( (abs(azidiff) .lt. azi_scale/2. .or. abs(azidiff) .gt. (180.-azi_scale/2.)) &
 !                         .and. i .eq. (i/5)*5 .and. alt_a(i,j) .lt. 5.) .OR. &
 !               if( (i .eq. (i/40)*40 .AND. j .eq. nj/2) .OR. &
-                if( ((i .eq. (i/40)*40 .OR. i .ge. 240 .and. i .le. 250) .AND. (j .eq. 2161) ) .OR. &
-                       (alt_a(i,j) .eq. -90. .and. j .eq. 2161) .OR. istat_nan .ne. 1)then ! nadir
+                if( (idebug_pf(i,j) .eq. 1) .OR. &
+                       (alt_a(i,j) .eq. -90. .and. j .eq. 2161) .OR. (istat_nan .ne. 1) )then ! nadir
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j),cld_brdf(2,i,j)
 1                 format(/i4,i5,i2,f9.4,4f9.2,9f9.4,f12.0,5f9.2,f9.3)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
