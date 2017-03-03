@@ -458,10 +458,10 @@
 
         if(htmsl .gt. 2000.)then ! high custom
             idebug_a(:,:) = 0
-!           ialt_debug = ((ni-1)*(90-5))/180 + 1 ! -5 degrees alt
-!           idebug_a(ialt_debug,1:nj:8) = 1
-            jazi_debug = ((nj-1)*115)/360 + 1 
-            idebug_a(1:ni,jazi_debug) = 1
+            ialt_debug = ((ni-1)*(90-45))/180 + 1 ! -45 degrees alt
+            idebug_a(ialt_debug,1:100) = 1
+!           jazi_debug = ((nj-1)*115)/360 + 1 
+!           idebug_a(1:ni,jazi_debug) = 1
         endif
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
@@ -748,12 +748,13 @@
         I4_elapsed = ishow_timer()
 
         bkscat_alb = -99.9 ! dummy value to initialize for logging
-        write(6,*)' max of idebug_a (1) = ',maxval(idebug_a)
+        write(6,*)' sum of idebug_a (1) = ',sum(idebug_a)
         if(sol_alt .lt. twi_alt)then
             idebug_pf = 0
         else
             idebug_pf = idebug_a
         endif
+        write(6,*)' sum of idebug_a (1a) = ',sum(idebug_pf)
 
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
                        ,topo_lf,topo_sc,transm_obs                  & ! I
@@ -1735,7 +1736,8 @@
           call get_sp_irrad(sky_rad_a(ic,:,:)*sprad_rat,alt_a,azi_a,elong_a,ni,nj,solidangle_pix,sp_irrad)
           write(6,*)' sp_irrad for color ',ic,sprad_rat,sp_irrad
           if(ic .eq. 2)then
-             sp_irrad_550 = 1.86 ! W/m**2/nm
+             call get_fluxsun(wa(ic),1,1,sp_irrad_550)
+!            sp_irrad_550 = 1.86 ! W/m**2/nm
              ghi_sim = (sp_irrad / sp_irrad_550) * ghi_zen_toa
           endif
         enddo ! ic 
