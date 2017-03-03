@@ -247,8 +247,8 @@
           endif
 
           if(emag .lt. 1.0)then
-            s_mag = -26.74
-            diam_deg = 0.5
+            s_mag = -26.74      ! at mean distance
+            diam_deg = 0.533239 ! at mean distance
             write(6,*)' Sun glow being calculated: '
             l_phase = .false.
             call get_glow_obj(i4time,alt_a_roll,azi_a_roll
