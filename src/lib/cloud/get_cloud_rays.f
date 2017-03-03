@@ -257,6 +257,7 @@
             write(6,*)' latlon grid with rimid = ',rimid
         else
             l_latlon_grid = .false.
+            rimid = float(ni+1)/2.
         endif
 
 !       Initialize
@@ -2878,10 +2879,11 @@
         solalt_last = sol_alt(i,j)
 
         write(6,*)' Sample of topo_ri and topo_rj'
-        do ialt_sample = minalt,maxalt
-!          ialt_sample = min(max(-5*4,minalt),maxalt) ! -5 degrees alt
+        do jazi_sample = minazi,minazi+100
+           ialt_sample = min(max(-45*4,minalt),maxalt) ! -5 degrees alt
 !          jazi_sample = min(2344,maxazi) ! 2345
-           jazi_sample = (115 * maxazi) / 360
+!          jazi_sample = (115 * maxazi) / 360
+
            itopo = nint(topo_ri(ialt_sample,jazi_sample))
            jtopo = nint(topo_rj(ialt_sample,jazi_sample))
            if(itopo .ge. 1 .and. itopo .le. ni .and.
