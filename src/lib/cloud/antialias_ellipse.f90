@@ -51,8 +51,8 @@
        if(iverbose .ge. 1)then
          pi = 3.14159
          area_theo = (pi * radius**2) * aspect_ratio
-         write(6,3)area_sum,area_theo
-3        format(' sum of illuminated area (sq pix): area_sum/theo = ',2f9.5)
+         write(6,3)radius,aspect_ratio,area_sum,area_theo
+3        format(' sum of illuminated area (sq pix): rad/asp/area_sum/theo = ',4f9.5)
        endif
        
        return
