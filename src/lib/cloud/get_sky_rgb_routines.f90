@@ -511,6 +511,8 @@
         radius_deg = diam_deg / 2.0
 
         iwrite = 0
+
+        sum_fraclit = 0.
     
         do ialt = minalt,maxalt
 
@@ -672,8 +674,8 @@
                       aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
 
 !                     Lots of writes can happen with solar eclipses from DSCOVR
-                      if(iwrite .le. 100)then
-!                     if(iwrite .le. 100 .AND. distd .lt. (alt_scale + radius_deg))then
+!                     if(iwrite .le. 100)then
+                      if(iwrite .le. 100 .AND. distd .lt. (radius_deg + alt_scale * 1.42))then
 !                     if(jazi .eq. minazi)then
 !                     if(.true.)then
                         iwrite = iwrite + 1
@@ -726,6 +728,8 @@
                       frac_lit = frac_lit1 
                     endif
 
+                    sum_fraclit = sum_fraclit + frac_lit
+
 !                   write(6,89)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
 89                  format(' altga-t/alt_obj/azig/azi_obj/distd/frac_lit =',i6,i5,6f9.3,2f7.2,f7.4)
 
@@ -748,8 +752,9 @@
                 endif
 
                 if(rmag_per_sqarcsec .ne. r_missing_data)then
-!                 Convert to nanolamberts
-                  glow_nl = v_to_b(rmag_per_sqarcsec)
+!                 Convert to nanolamberts. This has an empirical correction for now based on
+!                 sunlight spread over the spherical solid angle being 3e9nl. Max nl should be 5.542e14
+                  glow_nl = v_to_b(rmag_per_sqarcsec) / 1.17777
                   glow_obj(ialt,jazi) = addlogs(glow_obj(ialt,jazi),log10(glow_nl))
 
 !                 if(.true.)then                          
@@ -774,6 +779,8 @@
             endif ! alt > -2.
           enddo ! jazi
         enddo ! ialt
+
+        write(6,*)' sum_fraclit (pixels) = ',sum_fraclit
 
         write(6,*)' returning from get_glow_obj...'
 
