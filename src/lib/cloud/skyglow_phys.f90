@@ -752,20 +752,35 @@
             sb_corr = 0.0
 
 !           HG illumination
-            do ic = 1,nc
-!             Check assignments in 'mem_namelist.f90'
-!             fb = 0.55**scatter_order  ! aod_asy(3,ic)
-!             g1 = 0.45**scatter_order  ! aod_asy(2,ic)
-!             g2 = 0.962**scatter_order ! aod_asy(1,ic)
-              fb = aod_asy(3,ic)**scatter_order
-              g1 = aod_asy(2,ic)**scatter_order
-              g2 = aod_asy(1,ic)**scatter_order
-              hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2)
+            if(aod_vrt .lt. 5.0)then
+              do ic = 1,nc
+!               Check assignments in 'mem_namelist.f90'
+                fb = aod_asy(3,ic)**scatter_order
+                g1 = aod_asy(2,ic)**scatter_order
+                g2 = aod_asy(1,ic)**scatter_order
+                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2)
 
-!             topo phase function assumes scatter order is non-topo 
-!             value (for now)
-              hg2t(ic) = hg2(ic)
-            enddo 
+!               topo phase function assumes scatter order is non-topo 
+!               value (for now)
+                hg2t(ic) = hg2(ic)
+              enddo 
+
+            else ! use high OD routine calculations
+              do ic = 1,nc
+!               Check assignments in 'mem_namelist.f90'
+                fb = aod_asy(3,ic)**scatter_order
+                g1 = aod_asy(2,ic)**scatter_order
+                g2 = aod_asy(1,ic)**scatter_order
+                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2)
+
+!               topo phase function assumes scatter order is non-topo 
+!               value (for now)
+                hg2t(ic) = hg2(ic)
+              enddo 
+
+              call mscat_phase(od_a,ssa,g,iverbose,gmean,ssa_eff)
+
+            endif
 
             if(aod_ray(ialt,jazi) .gt. 0.)then
                 aod_dir_rat = aod_ray_dir(ialt,jazi) / aod_ray(ialt,jazi)
