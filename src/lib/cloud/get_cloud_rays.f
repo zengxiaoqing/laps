@@ -478,8 +478,10 @@
                 enddo ! jj
                 enddo ! ii
                 write(6,*)' call get_cloud_rad_faces2...'
+                htstart = topo_sfc+htagl  ! MSL
+                horz_dep_d = horz_depf(max(htstart,0.),earth_radius)
                 call get_cloud_rad_faces2(              
-     1            obj_alt,obj_azi,                   ! I
+     1            obj_alt,obj_azi,horz_dep_d,        ! I
      1            sol_alt(i,j),sol_azi(i,j),         ! I 
      1            clwc_3d,cice_3d,rain_3d,snow_3d,   ! I
      1            topo_a,grdasp_ll,                  ! I
@@ -902,7 +904,8 @@
             azid2 = mod(azid1+180.,360.)
         endif
         if(htstart .gt. 100e3)then
-            azid1 = 115. ; azid2 = 115. ! high custom
+            azid1 = sol_azi(i,j)
+            azid2 = azid1
         endif
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
@@ -922,7 +925,7 @@
 !        endif
 
          if(altray .lt. -horz_dep_d)then
-           call get_topo_info(altray,htstart,earth_radius,1
+           call get_topo_info(altray,htstart,earth_radius,0
      1                       ,alt_norm_dum,dist_to_topo)
          else
            dist_to_topo = 0.
@@ -988,20 +991,13 @@
 
          azi_delt_2 = float(jazi_delt) * azi_scale * 0.5
 
-         call get_htmin(altray,patm,htstart,earth_radius,1,patm2,htmin)
+         call get_htmin(altray,patm,htstart,earth_radius,0,patm2,htmin)
 
-         if(htstart .gt. 100000. .and. altray .lt. 0.)then
-          write(6,*)'altray/htmin/dist_to_topo = '
-     1              ,altray,htmin,dist_to_topo
-         endif
-
-         if(altray .eq. -63.5 .or. altray .eq. -87.)then
-          write(6,*)' debug point for altray'
-         endif
-
-!        if(altray .eq. nint(altray) .and. htstart .lt. 40000.)then
+         if(idebug .eq. 1)then
+           write(6,*)'altray/htmin/dist_to_topo = '
+     1               ,altray,htmin,dist_to_topo
            write(6,*)'alt/jazi_delt/grdasp',ialt,altray,jazi_delt,grdasp
-!        endif
+         endif
 
          altray_limb = altray + horz_dep_d
          radius_limb = 90. - horz_dep_d
@@ -1019,6 +1015,8 @@
      1         altray .eq. -7.5 .or.
      1         abs(altray) .eq. 21.00 .or.
      1         (abs(altray_limb) / radius_limb .le. 0.04) .or.
+     1         (altray_limb/radius_limb .lt. .01
+     1               .and. ialt .eq. (ialt/10) * 10)      .or.
      1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
      1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
      1         (altray .ge. -75.00 .and. altray .le. -70.00) .or.
@@ -1060,8 +1058,9 @@
           endif
 
 !         Extra verbose
-          if(altray .le. -60. .and. view_azi_deg .eq. 0.)then
-            write(6,*)'alt/azi = ',altray,view_azi_deg
+          if(idebug .eq. 1)then
+            write(6,*)
+            write(6,*)'alt/azi = ',ialt,jazi,altray,view_azi_deg
           endif
 
 !         Trace towards sky from each grid point
@@ -1170,7 +1169,6 @@
 !             rkdelt = tand(90. - arg)                     
 !             rkdelt = max(min(rkdelt,2.0),0.5)
               
-              if(idebug .eq. 1)write(6,*)
               if(idebug .eq. 1)then
                 if(htagl .gt. 8000e3)I4_elapsed = ishow_timer()
                 write(6,11)altray,view_azi_deg,azigrid,ialt,jazi
@@ -2169,18 +2167,21 @@
      1                      sum(bi_coeff(:,:) * ghic_2d(ic,i1:i2,j1:j2))
      1                                        * solar_corr
 
-                          if(jazi .eq. maxazi/2 .and. ic .eq. 2)then
+                          if(idebug .eq. 1 .and. ic .eq. 2)then
                              write(6,*)'gtic check ',gtic(ic,ialt,jazi)
-     1                                ,i1,i2,ghic_2d(ic,i1:i2,j1:j2)
-     1                                ,bi_coeff,solar_corr
+     1                         ,i1,j1,bnic_2d(ic,i1,j1)
+     1                         ,ghic_2d(ic,i1,j1)
+     1                         ,bhic_2d(ic,i1,j1)
+     1                         ,dhic_2d(ic,i1,j1)
+     1                         ,frac_dir,transm_tn_pr,solar_corr
                              write(6,*)'solar_corr',inew_mb,jnew_m
-     1                                ,sol_alt(inew_mb,jnew_m)
-     1                                ,lat(inew_mb,jnew_m)
-     1                                ,lon(inew_mb,jnew_m)
-     1                                ,ghi_2d(inew_mb,jnew_m)
-     1                                ,dhi_2d(inew_mb,jnew_m)
-     1                                ,alt_norm_int
-     1                                ,solar_corr
+     1                         ,sol_alt(inew_mb,jnew_m)
+     1                         ,lat(inew_mb,jnew_m)
+     1                         ,lon(inew_mb,jnew_m)
+     1                         ,ghi_2d(inew_mb,jnew_m)
+     1                         ,dhi_2d(inew_mb,jnew_m)
+     1                         ,alt_norm_int
+     1                         ,solar_corr
                           endif
 
 !                         City lights on the ground (spec exitance - emic)
