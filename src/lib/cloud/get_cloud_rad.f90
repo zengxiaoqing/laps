@@ -363,6 +363,7 @@
             endif
 
 !           Absorption coefficients for liquid water (m^-1) are .180, .051, .010 
+!           This could depend on SSA
             power_trans = .6
             transm_3d_s = transm_3d(il,jl,kl)
             transm_spectral_r = transm_3d_s**(power_trans*.180)
