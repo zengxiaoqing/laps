@@ -23,6 +23,7 @@
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary,l_terrain_following            ! I
+     1                     ,mode_cloud_mask,camera_cloud_mask       ! I
      1                     ,cloud_od,dist_2_topo                    ! O
      1                     ,sky_rgb_cyl,istatus)                    ! O
 
@@ -60,6 +61,9 @@
         real moon_azi_2d(NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
+        integer camera_cloud_mask(minalt:maxalt,minazi:maxazi)
+        integer sim_cloud_mask(minalt:maxalt,minazi:maxazi)
+        integer diff_cloud_mask(minalt:maxalt,minazi:maxazi)
 
 !       Output arrays
         real sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi) ! Observed Variable
@@ -117,6 +121,10 @@
         logical l_solar_eclipse, l_binary, l_zod, l_phase
         logical l_terrain_following
 
+        integer mode_cloud_mask ! 1 is ignore cloud mask
+                                ! 2 is display cloud mask differences
+                                ! 3 perform cloud mask clearing
+        
         write(6,*)' subroutine calc_allsky...'
 
         pi = 3.14159265
@@ -489,6 +497,65 @@
               continue ! use cloud_od to drive categorical output
 
           endif ! l_binary
+
+!         Cloud mask section
+          if(mode_cloud_mask .eq. 1)then
+              write(6,*)' Skipping camera_cloud_mask processing'
+          else
+              write(6,*)' Showing cloud mask differences'
+      
+              write(6,*)' camera cloud mask...'
+              do ialt = maxalt,minalt,-10
+                 write(6,61)ialt,(camera_cloud_mask(ialt,ia)
+     1                          ,ia=minazi,maxazi,6)
+61               format(1x,i3,1x,300i1)
+              enddo ! ialt
+      
+              do j = minazi,maxazi
+              do i = minalt,maxalt
+                  if(cloud_od(i,j) .gt. 0.3)then
+                      sim_cloud_mask(i,j) = 2
+                  else
+                      sim_cloud_mask(i,j) = 1
+                  endif
+              enddo ! i
+              enddo ! j
+              write(6,*)' simulated cloud mask...'
+              do ialt = maxalt,minalt,-10
+                 write(6,61)ialt,(sim_cloud_mask(ialt,ia)
+     1                          ,ia=minazi,maxazi,6)
+              enddo ! ialt
+      
+              write(6,*)' difference cloud mask...'
+              do j = minazi,maxazi
+              do i = minalt,maxalt
+                  if(camera_cloud_mask(i,j) .eq. 0)then
+                      if(camera_cloud_mask(i,j) .eq. 2 .and.
+     1                   sim_cloud_mask(i,j)    .eq. 1        )then
+                          diff_cloud_mask(i,j) = 2 ! add cloud (potentially)
+                      elseif(camera_cloud_mask(i,j) .eq. 1 .and.
+     1                       sim_cloud_mask(i,j)    .eq. 2        )then
+                          diff_cloud_mask(i,j) = 1 ! clearing
+                      else
+                          diff_cloud_mask(i,j) = 0 ! no change
+                      endif
+                  else
+                      diff_cloud_mask(i,j) = 0     ! no change
+                  endif                      
+              enddo ! i
+              enddo ! j
+              do ialt = maxalt,minalt,-10
+                 write(6,61)ialt,(diff_cloud_mask(ialt,ia)
+     1                          ,ia=minazi,maxazi,6)
+              enddo ! ialt
+
+              if(mode_cloud_mask .eq. 3)then
+                  write(6,*)' Performing camera_cloud_mask clearing'
+!                 call clear_3d_mask()
+              endif
+          endif
+
+          write(6,*)' End of calc_allsky...'
 
           return
           end
