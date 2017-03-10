@@ -307,7 +307,11 @@
            jazi_delt_topo = maxazi-minazi
          else
            jazi_delt_topo = int(1./cosd(altray))
-           jazi_delt_topo = min(jazi_delt_topo,8)
+           if(htmsl .gt. 100e3)then
+             jazi_delt_topo = min(jazi_delt_topo,4)
+           else
+             jazi_delt_topo = min(jazi_delt_topo,8)
+           endif
          endif
          l_topo_a = .false.
          l_topo_a(minazi:maxazi:jazi_delt_topo) = .true.
