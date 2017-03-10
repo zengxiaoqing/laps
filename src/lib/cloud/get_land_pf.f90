@@ -14,6 +14,8 @@
         include 'trigd.inc'
         include 'rad.inc'
 
+        parameter (sph_sqdg = 4. * 180.**2 / pi)
+
 !       Statement functions
         trans(od) = exp(-min(od,80.))
         opac(od) = 1.0 - trans(od)
@@ -54,6 +56,7 @@
         real cld_brdf(nc,ni,nj)
 
         real nonspot
+        real foam(nc) /.026,.026,.026/
 
 !       topo_gti may be too low when sun is near horizon
 !       solar elev    topo_gti
@@ -211,6 +214,11 @@
 
 !             Use approximate specular reflection angle
               glint_radius = 22.
+              glint_sr = pi * (glint_radius * rpd)**2 * sind(max(topo_solalt(i,j),3.))
+              sun_sqdg = pi * (.533239/2.)**2
+              glint_ph = (pi) / glint_sr
+!             glint_ph = ((0.5 * sph_sqdg) / sun_sqdg) / (glint_radius / (0.5*.533239)**2) )
+!             glint_ph = glint_ph / sind(max(topo_solalt(i,j),3.))
 !             argexp = min(specang/glint_radius,8.)
               argexp = min(specang/(glint_radius/2.),8.) ! for new specang
               specamp = exp(-(argexp)**2)
@@ -219,7 +227,15 @@
 
 !             Add sunlight reflecting off the water surface
               arg_glint = opac(phwater * fwater)
-              topo_albedo(ic,i,j) = 0.045 * arg_glint + topo_albedo(ic,i,j) * (1.-arg_glint)
+!             phi_eff = (90. - max(topo_solalt(i,j),0.) ) * rpd
+              phi_eff = (180. - elong_a(i,j)) * rpd * 0.5
+!             alb_glint = .045 / sind(alt_eff)**.75
+              alb_glint = fresnel(1.33,phi_eff)
+              fresnel1 = fresnel(1.33,phi_eff)
+              fresnel2 = foam(ic) * (1. - fresnel1) + (1.-foam(ic)) * fresnel1
+!             topo_albedo(ic,i,j) = fresnel2 ! alb_glint * arg_glint + topo_albedo(ic,i,j) * (1.-arg_glint)
+              topo_albedo(ic,i,j) = fresnel2 * fwater + topo_albedo(ic,i,j) * (1. - fwater)
+              phwater = glint_ph * specamp
 
 !             Ice
               phice = 1.0
@@ -241,7 +257,7 @@
                 if( (idebug_pf(i,j) .eq. 1) .OR. &
                        (alt_a(i,j) .eq. -90. .and. j .eq. 2161) .OR. (istat_nan .ne. 1) )then ! nadir
                   write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j),cld_brdf(2,i,j)
-1                 format(/i4,i5,i2,f9.4,4f9.2,9f9.4,f12.0,5f9.2,f9.3)
+1                 format(/i4,i5,i2,f9.4,4f9.2,9f9.4,f12.0,4f9.2,2f9.3)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
 111               format('   antisolar alt/azi/azeff/elg/elg_a/eff',6f9.2)
 !                 if(abs(emis_ang - emis_ang_a(i,j)) .gt. 0.1 .AND. emis_ang_a(i,j) .gt. 0.)then
@@ -285,4 +301,30 @@
 
         return
         end
+
+
+        real function Fresnel(nWat,phi)
+
+        implicit none
+        real nWat,phi, aRef,aDif,aSum,Rpar,Rper,foam
+
+        foam = 0. ! .026
+        
+        if (phi .ne. 0.) then
+           aRef = ASIN(SIN(phi)/nWat)
+           aDif = phi-aRef
+           aSum = phi+aRef
+           Rpar = TAN(aDif)/TAN(aSum)
+           Rper = SIN(aDif)/SIN(aSum)
+           Fresnel = 0.5*(Rpar*Rpar+Rper*Rper)
+        else
+           aSum = (nwat-1.)/(nWat+1.)
+           Fresnel = aSum*aSum
+        end if
+
+        fresnel = foam * (1. - fresnel) + (1.-foam) * fresnel
+
+        return
+        end 
+
 
