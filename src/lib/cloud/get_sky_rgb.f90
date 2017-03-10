@@ -155,7 +155,11 @@
         do ic = 1,nc
             ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp_a)
             write(6,*)' ic/wa/ext_a ',ic,wa(ic),ext_a(ic)
-            ssa_eff(ic,:,:) = 1.0
+            if(od_atm_a .lt. 5.0)then ! aod_vrt
+               ssa_eff(ic,:,:) = 1.0
+            else
+               ssa_eff(ic,:,:) = 0.1
+            endif
         enddo ! ic
 
         if(mode_aero_cld .eq. 1)then
@@ -374,7 +378,7 @@
             moon_cond_clr = 0
         endif
         if(htmsl .gt. 50e3)then
-            azid1 = 115. ; azid2 = 115. ! high custom
+            azid1 = sol_az  ; azid2 = sol_az ! high custom
         endif
         if(mode_aero_cld .gt. 1)then
             azid1 = 90.  ; azid2 = 90. ! aero custom
@@ -456,7 +460,12 @@
         enddo ! i
         enddo ! j
 
-        if(htmsl .gt. 2000.)then ! high custom
+        if(htmsl .gt. 1000000e3)then ! high custom
+            idebug_a(:,:) = 0
+            iazi_debug = ((nj-1)*nint(azid1))/360 + 1 ! 90 deg azi
+            idebug_a(1:ni/4:5,iazi_debug) = 1
+            write(6,*)' sum of idebug_a (0a) = ',sum(idebug_a)
+        elseif(htmsl .gt. 2000.)then 
             idebug_a(:,:) = 0
             ialt_debug = ((ni-1)*(90-45))/180 + 1 ! -45 degrees alt
             idebug_a(ialt_debug,1:100) = 1
@@ -467,6 +476,8 @@
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
           idebug_a(isun,jsun) = 1
         endif
+
+        write(6,*)' sum of idebug_a (0b) = ',sum(idebug_a)
 
         if(solalt_limb_true .gt. twi_0)then
 
