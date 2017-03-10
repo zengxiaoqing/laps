@@ -1,6 +1,6 @@
      
      subroutine get_cloud_rad_faces2(            &
-                obj_alt,obj_azi,                 & ! I
+                obj_alt,obj_azi,horz_dep_d_obs,  & ! I
                 solalt,solazi,                   & ! I 
                 clwc_3d,cice_3d,rain_3d,snow_3d, & ! I
                 topo_a,grdasp,                   & ! I
@@ -160,7 +160,7 @@
 
 !    Different criteria might be used at high altitude depending on how far
 !    away the limb is, in turn related to horz_dep for the observer
-     if(solalt .ge. twi_alt)then ! daylight or early twilight
+     if(solalt + horz_dep_d_obs .ge. twi_alt)then ! daylight or early twilight
 
       do if = 1,6
        if(grid_spacing_m .lt. 10000.)then
@@ -484,7 +484,7 @@
       enddo ! if
 
      else  ! solalt < twi_alt
-      write(6,*)' solalt < twi_alt, raytrace not needed: ',solalt,twi_alt
+      write(6,*)' solalt < twi_alt, raytrace not needed: ',solalt,horz_dep_d_obs,twi_alt
       I4_elapsed = ishow_timer()
 
      endif ! solalt
@@ -508,7 +508,7 @@
      I4_elapsed = ishow_timer()
 
      nshadow = 0
-     if(solalt .ge. twi_alt)then ! daylight or early twilight
+     if(solalt + horz_dep_d_obs .ge. twi_alt)then ! daylight or early twilight
        imiss = 0
        do k = 1,nk
 !        patm_k = exp(-heights_1d(k)/8000.)
@@ -683,7 +683,7 @@
      write(6,*)' imiss/fracmiss ',imiss,float(imiss)/float(npts)
 
      if(fractot .lt. 1.0)then
-         write(6,*)' WARNING: missing points in get_cloud_rad_faces',fractot
+         write(6,*)' WARNING: missing points in get_cloud_rad_faces2',fractot
 !        stop
      endif
 
