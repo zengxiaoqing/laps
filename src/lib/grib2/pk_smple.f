@@ -89,9 +89,9 @@ C
 C 
          IF(IBIT.GE.31)THEN
             IER=706
-D           WRITE(KFILDO,115)IA(L),IER
-D115        FORMAT(' ****ERROR IN PK_SMPLE.  VALUE ='I12,
-D    1             ' WILL NOT PACK IN 30 BITS.  ERROR CODE =',I5)    
+C           WRITE(KFILDO,115)IA(L),IER
+C115        FORMAT(' ****ERROR IN PK_SMPLE.  VALUE ='I12,
+C    1             ' WILL NOT PACK IN 30 BITS.  ERROR CODE =',I5)    
             GO TO 900
          ENDIF
 C                 
