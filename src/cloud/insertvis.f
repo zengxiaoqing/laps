@@ -232,7 +232,7 @@ cdis
                 cloud_frac_in = clouds_3d(it,jt,k)
 
 !               Clear stronger with low clouds, weaker with high clouds
-                thr_vis_clr = 0.05
+                thr_vis_clr = 0.10
                 if(cld_hts(k) .gt. topo(i,j) + 5000.)then
                     cushion = thr_vis_clr * (1.0 - cloud_frac_uprb) ! 999. ! reduce clearing
 !               Modify the cloud field with the vis input - allow .3 vis err?
