@@ -773,10 +773,10 @@ c read in laps lat/lon and topo
         do j = 1,NY_L
         do i = 1,NX_L
 !           Temperature dependent threshold, we can consider basing this
-!           from saturation vapor density (SVD * .025) = (ES/RT) * .025
-!           where .025 means 2.5% of water saturation
+!           from saturation vapor density (SVD * .025) = (ES/RT) * .10
+!           where .10 means 10% of water saturation
             es_pa = ESL(temp_3d(i,j,k) - 273.15) * 100.
-            cld_ice_ub_gpm3 = 1e3 * .025 * es_pa / (R * temp_3d(i,j,k))
+            cld_ice_ub_gpm3 = 1e3 * .10 * es_pa / (R * temp_3d(i,j,k))
 !           if(temp_3d(i,j,k) .gt. 243.15)then
 !               cld_ice_ub_gpm3 = 0.1
 !           else
