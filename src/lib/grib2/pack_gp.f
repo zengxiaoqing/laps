@@ -301,7 +301,7 @@ C
 C
       IER=0
       IERSAV=0
-D     CALL TIMPR(KFILDO,KFILDO,'START PACK_GP        ')
+C     CALL TIMPR(KFILDO,KFILDO,'START PACK_GP        ')
       CFEED=CHAR(IFEED)
 C
       IRED=0
@@ -311,8 +311,8 @@ C        THIS CASE PACK_GP EXECUTES AGAIN EXCEPT FOR REDUCE.
 C
       IF(INC.LE.0)THEN
          IERSAV=717
-D        WRITE(KFILDO,101)INC
-D101     FORMAT(/' ****INC ='I8,' NOT CORRECT IN PACK_GP.  1 IS USED.')
+C        WRITE(KFILDO,101)INC
+C101     FORMAT(/' ****INC ='I8,' NOT CORRECT IN PACK_GP.  1 IS USED.')
       ENDIF
 C
 C        THERE WILL BE A RESTART OF PACK_GP IF SUBROUTINE REDUCE
@@ -512,9 +512,9 @@ C***        THIS TEST IS THE SAME AS:
 C***     IF(MAXA-MINA.LT.IBXX2(IBITA)-LMISS)GO TO 130
  126  CONTINUE
 C
-D     WRITE(KFILDO,127)MAXA,MINA
-D127  FORMAT(' ****ERROR IN PACK_GP.  VALUE WILL NOT PACK IN 30 BITS.',
-D    1       '  MAXA ='I13,'  MINA ='I13,'.  ERROR AT 127.')
+C     WRITE(KFILDO,127)MAXA,MINA
+C127  FORMAT(' ****ERROR IN PACK_GP.  VALUE WILL NOT PACK IN 30 BITS.',
+C    1       '  MAXA ='I13,'  MINA ='I13,'.  ERROR AT 127.')
       IER=706
       GO TO 900
 C
@@ -643,9 +643,9 @@ C
          IF(MAXB-MINB.LT.IBXX2(IBITB)-LMISS)GO TO 170
  166  CONTINUE
 C
-D     WRITE(KFILDO,167)MAXB,MINB
-D167  FORMAT(' ****ERROR IN PACK_GP.  VALUE WILL NOT PACK IN 30 BITS.',
-D    1       '  MAXB ='I13,'  MINB ='I13,'.  ERROR AT 167.')
+C     WRITE(KFILDO,167)MAXB,MINB
+C167  FORMAT(' ****ERROR IN PACK_GP.  VALUE WILL NOT PACK IN 30 BITS.',
+C    1       '  MAXB ='I13,'  MINB ='I13,'.  ERROR AT 167.')
       IER=706
       GO TO 900
 C
@@ -841,9 +841,9 @@ C***        THIS TEST IS THE SAME AS:
 C***         IF(MAXA-MINA.LT.IBXX2(IBITA)-LMISS)GO TO 177
  176  CONTINUE
 C
-D     WRITE(KFILDO,1760)MAXA,MINA
-D1760 FORMAT(' ****ERROR IN PACK_GP.  VALUE WILL NOT PACK IN 30 BITS.',
-D    1       '  MAXA ='I13,'  MINA ='I13,'.  ERROR AT 1760.')
+C     WRITE(KFILDO,1760)MAXA,MINA
+C1760 FORMAT(' ****ERROR IN PACK_GP.  VALUE WILL NOT PACK IN 30 BITS.',
+C    1       '  MAXA ='I13,'  MINA ='I13,'.  ERROR AT 1760.')
       IER=706
       GO TO 900
 C
@@ -991,10 +991,10 @@ C
  200  LX=LX+1
       IF(LX.LE.NDG)GO TO 205
       LMINPK=LMINPK+LMINPK/2
-D     WRITE(KFILDO,201)NDG,LMINPK,LX
-D201  FORMAT(' ****NDG ='I5,' NOT LARGE ENOUGH.',
-D    1       '  LMINPK IS INCREASED TO 'I3,' FOR THIS FIELD.'/
-D    2       '  LX = 'I10)
+C     WRITE(KFILDO,201)NDG,LMINPK,LX
+C201  FORMAT(' ****NDG ='I5,' NOT LARGE ENOUGH.',
+C    1       '  LMINPK IS INCREASED TO 'I3,' FOR THIS FIELD.'/
+C    2       '  LX = 'I10)
       IERSAV=716
       GO TO 105
 C
@@ -1077,12 +1077,12 @@ C        REMOVE THE REFERENCE VALUE FIRST.
 C
 C        *************************************
 C
-D     WRITE(KFILDO,228)CFEED,LX
-D228  FORMAT(A1,/' *****************************************'
-D    1          /' THE GROUP WIDTHS LBIT( ) FOR ',I8,' GROUPS'
-D    2          /' *****************************************')
-D     WRITE(KFILDO,229) (LBIT(J),J=1,MIN(LX,100))
-D229  FORMAT(/' '20I6)
+C     WRITE(KFILDO,228)CFEED,LX
+C228  FORMAT(A1,/' *****************************************'
+C    1          /' THE GROUP WIDTHS LBIT( ) FOR ',I8,' GROUPS'
+C    2          /' *****************************************')
+C     WRITE(KFILDO,229) (LBIT(J),J=1,MIN(LX,100))
+C229  FORMAT(/' '20I6)
 C
       LBITREF=LBIT(1)
 C
@@ -1098,13 +1098,13 @@ C
 C
       ENDIF
 C
-D     WRITE(KFILDO,241)CFEED,LBITREF
-D241  FORMAT(A1,/' *****************************************'
-D    1          /' THE GROUP WIDTHS LBIT( ) AFTER REMOVING REFERENCE ',
-D    2             I8,
-D    3          /' *****************************************')
-D     WRITE(KFILDO,242) (LBIT(J),J=1,MIN(LX,100))
-D242  FORMAT(/' '20I6)
+C     WRITE(KFILDO,241)CFEED,LBITREF
+C241  FORMAT(A1,/' *****************************************'
+C    1          /' THE GROUP WIDTHS LBIT( ) AFTER REMOVING REFERENCE ',
+C    2             I8,
+C    3          /' *****************************************')
+C     WRITE(KFILDO,242) (LBIT(J),J=1,MIN(LX,100))
+C242  FORMAT(/' '20I6)
 C
       JBIT=0
 C
@@ -1122,12 +1122,12 @@ C        REFERENCE FIRST.
 C
 C        *************************************
 C
-D     WRITE(KFILDO,321)CFEED,LX
-D321  FORMAT(A1,/' *****************************************'
-D    1          /' THE GROUP SIZES NOV( ) FOR ',I8,' GROUPS'
-D    2          /' *****************************************')
-D     WRITE(KFILDO,322) (NOV(J),J=1,MIN(LX,100))
-D322  FORMAT(/' '20I6)
+C     WRITE(KFILDO,321)CFEED,LX
+C321  FORMAT(A1,/' *****************************************'
+C    1          /' THE GROUP SIZES NOV( ) FOR ',I8,' GROUPS'
+C    2          /' *****************************************')
+C     WRITE(KFILDO,322) (NOV(J),J=1,MIN(LX,100))
+C322  FORMAT(/' '20I6)
 C
       NOVREF=NOV(1)
 C
@@ -1143,18 +1143,18 @@ C
 C
       ENDIF
 C
-D     WRITE(KFILDO,406)CFEED,NOVREF
-D406  FORMAT(A1,/' *****************************************'
-D    1          /' THE GROUP SIZES NOV( ) AFTER REMOVING REFERENCE ',I8,
-D    2          /' *****************************************')
-D     WRITE(KFILDO,407) (NOV(J),J=1,MIN(LX,100))
-D407  FORMAT(/' '20I6)
-D     WRITE(KFILDO,408)CFEED
-D408  FORMAT(A1,/' *****************************************'
-D    1          /' THE GROUP REFERENCES JMIN( )'
-D    2          /' *****************************************')
-D     WRITE(KFILDO,409) (JMIN(J),J=1,MIN(LX,100))
-D409  FORMAT(/' '20I6)
+C     WRITE(KFILDO,406)CFEED,NOVREF
+C406  FORMAT(A1,/' *****************************************'
+C    1          /' THE GROUP SIZES NOV( ) AFTER REMOVING REFERENCE ',I8,
+C    2          /' *****************************************')
+C     WRITE(KFILDO,407) (NOV(J),J=1,MIN(LX,100))
+C407  FORMAT(/' '20I6)
+C     WRITE(KFILDO,408)CFEED
+C408  FORMAT(A1,/' *****************************************'
+C    1          /' THE GROUP REFERENCES JMIN( )'
+C    2          /' *****************************************')
+C     WRITE(KFILDO,409) (JMIN(J),J=1,MIN(LX,100))
+C409  FORMAT(/' '20I6)
 C
       KBIT=0
 C
@@ -1182,7 +1182,7 @@ C              PROVIDE FOR A NON FATAL RETURN FROM REDUCE.
 C
       ENDIF         
 C
-D     CALL TIMPR(KFILDO,KFILDO,'END   PACK_GP        ')
+C     CALL TIMPR(KFILDO,KFILDO,'END   PACK_GP        ')
       IF(IERSAV.NE.0)THEN
          IER=IERSAV
          RETURN
