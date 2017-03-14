@@ -183,46 +183,46 @@ C
                NEWBOXP(L)=NEWBOX(L)
  195        CONTINUE
 C
-D           WRITE(KFILDO,197)NEWBOXT,IBXX2(J)
-D197        FORMAT(/' *****************************************'
-D    1             /' THE NUMBER OF NEWBOXES PER GROUP OF THE TOTAL',
-D    2              I10,' FOR GROUP MAXSIZE PLUS 1 ='I10
-D    3             /' *****************************************')
-D           WRITE(KFILDO,198) (NEWBOX(L),L=1,LX)
-D198        FORMAT(/' '20I6/(' '20I6))
+C           WRITE(KFILDO,197)NEWBOXT,IBXX2(J)
+C197        FORMAT(/' *****************************************'
+C    1             /' THE NUMBER OF NEWBOXES PER GROUP OF THE TOTAL',
+C    2              I10,' FOR GROUP MAXSIZE PLUS 1 ='I10
+C    3             /' *****************************************')
+C           WRITE(KFILDO,198) (NEWBOX(L),L=1,LX)
+C198        FORMAT(/' '20I6/(' '20I6))
     
          ENDIF
 C        
-D205     WRITE(KFILDO,209)KBIT,IORIGB
-D209     FORMAT(/' ORIGINAL BITS WITH KBIT OF',I5,' =',I10)
-D        WRITE(KFILDO,210)(N,N=2,10),(IBXX2(N),N=2,10),
-D    1                    (NTOTBT(N),N=2,10),(NBOXJ(N),N=2,10),
-D    2                    (N,N=11,20),(IBXX2(N),N=11,20),
-D    3                    (NTOTBT(N),N=11,20),(NBOXJ(N),N=11,20),
-D    4                    (N,N=21,30),(IBXX2(N),N=11,20),
-D    5                    (NTOTBT(N),N=21,30),(NBOXJ(N),N=21,30)
-D210     FORMAT(/' THE TOTAL BYTES FOR MAXIMUM GROUP LENGTHS BY ROW'//
-D    1      '   J         = THE NUMBER OF BITS PER GROUP LENGTH'/
-D    2      '   IBXX2(J)  = THE MAXIMUM GROUP LENGTH PLUS 1 FOR THIS J'/
-D    3      '   NTOTBT(J) = THE TOTAL BITS FOR THIS J'/
-D    4      '   NBOXJ(J)  = THE NEW GROUPS FOR THIS J'/
-D    5      4(/10X,9I10)/4(/10I10)/4(/10I10))
+C205     WRITE(KFILDO,209)KBIT,IORIGB
+C209     FORMAT(/' ORIGINAL BITS WITH KBIT OF',I5,' =',I10)
+C        WRITE(KFILDO,210)(N,N=2,10),(IBXX2(N),N=2,10),
+C    1                    (NTOTBT(N),N=2,10),(NBOXJ(N),N=2,10),
+C    2                    (N,N=11,20),(IBXX2(N),N=11,20),
+C    3                    (NTOTBT(N),N=11,20),(NBOXJ(N),N=11,20),
+C    4                    (N,N=21,30),(IBXX2(N),N=11,20),
+C    5                    (NTOTBT(N),N=21,30),(NBOXJ(N),N=21,30)
+C210     FORMAT(/' THE TOTAL BYTES FOR MAXIMUM GROUP LENGTHS BY ROW'//
+C    1      '   J         = THE NUMBER OF BITS PER GROUP LENGTH'/
+C    2      '   IBXX2(J)  = THE MAXIMUM GROUP LENGTH PLUS 1 FOR THIS J'/
+C    3      '   NTOTBT(J) = THE TOTAL BITS FOR THIS J'/
+C    4      '   NBOXJ(J)  = THE NEW GROUPS FOR THIS J'/
+C    5      4(/10X,9I10)/4(/10I10)/4(/10I10))
 C
  200  CONTINUE
 C
  250  PIMP=((IORIGB-NTOTBT(JJ))/FLOAT(IORIGB))*100.
-D     WRITE(KFILDO,252)PIMP,KBIT,JJ
-D252  FORMAT(/' PERCENT IMPROVEMENT =',F6.1,
-D    1        ' BY DECREASING GROUP LENGTHS FROM',I4,' TO',I4,' BITS')
+C     WRITE(KFILDO,252)PIMP,KBIT,JJ
+C252  FORMAT(/' PERCENT IMPROVEMENT =',F6.1,
+C    1        ' BY DECREASING GROUP LENGTHS FROM',I4,' TO',I4,' BITS')
       IF(PIMP.GE.2.)THEN
 C
-D        WRITE(KFILDO,255)CFEED,NEWBOXTP,IBXX2(JJ)
-D255     FORMAT(A1,/' *****************************************'
-D    1             /' THE NUMBER OF NEWBOXES PER GROUP OF THE TOTAL',
-D    2             I10,' FOR GROUP MAXSIZE PLUS 1 ='I10
-D    2             /' *****************************************')
-D        WRITE(KFILDO,256) (NEWBOXP(L),L=1,LX)
-D256     FORMAT(/' '20I6)
+C        WRITE(KFILDO,255)CFEED,NEWBOXTP,IBXX2(JJ)
+C255     FORMAT(A1,/' *****************************************'
+C    1             /' THE NUMBER OF NEWBOXES PER GROUP OF THE TOTAL',
+C    2             I10,' FOR GROUP MAXSIZE PLUS 1 ='I10
+C    2             /' *****************************************')
+C        WRITE(KFILDO,256) (NEWBOXP(L),L=1,LX)
+C256     FORMAT(/' '20I6)
 C
 C           ADJUST GROUP LENGTHS FOR MAXIMUM LENGTH OF JJ BITS.
 C           THE MIN PER GROUP AND THE NUMBER OF BITS REQUIRED
@@ -236,11 +236,11 @@ C
          IF(LXNKP.GT.NDG)THEN
 C              DIMENSIONS NOT LARGE ENOUGH.  PROBABLY AN ERROR
 C              OF SOME SORT.  ABORT.
-D           WRITE(KFILDO,257)NDG,LXNPK
+C           WRITE(KFILDO,257)NDG,LXNPK
 C        1         2         3         4         5         6         7 X
-D257        FORMAT(/' DIMENSIONS OF JMIN, ETC. IN REDUCE =',I8,
-D    1              ' NOT LARGE ENOUGH FOR THE EXPANDED NUMBER OF',
-D    2              ' GROUPS =',I8,'.  ABORT REDUCE.')
+C257        FORMAT(/' DIMENSIONS OF JMIN, ETC. IN REDUCE =',I8,
+C    1              ' NOT LARGE ENOUGH FOR THE EXPANDED NUMBER OF',
+C    2              ' GROUPS =',I8,'.  ABORT REDUCE.')
             IER=715
             GO TO 410
 C              AN ABORT CAUSES THE CALLING PROGRAM TO REEXECUTE 
@@ -285,8 +285,8 @@ C***D                 WRITE(KFILDO,287)L,MOVMIN,NOVREF,NEWBOXP(L),NOV(L)
 C***D287              FORMAT(/' AT 287 IN REDUCE--L,MOVMIN,NOVREF,',
 C***D    1                    'NEWBOXP(L),NOV(L)',5I12
 C***D    2                    ' REDUCE ABORTED.')
-D              WRITE(KFILDO,2870)
-D2870          FORMAT(/' AN ERROR IN REDUCE ALGORITHM.  ABORT REDUCE.')
+C              WRITE(KFILDO,2870)
+C2870          FORMAT(/' AN ERROR IN REDUCE ALGORITHM.  ABORT REDUCE.')
                IER=714
                GO TO 410
 C                 AN ABORT CAUSES THE CALLING PROGRAM TO REEXECUTE 
@@ -323,20 +323,20 @@ C           KBIT IS NOW THE NEW NUMBER OF BITS REQUIRED FOR PACKING
 C           GROUP LENGHTS.
       ENDIF
 C
-D     WRITE(KFILDO,406)CFEED,LX
-D406  FORMAT(A1,/' *****************************************'
-D    1          /' THE GROUP SIZES NOV( ) AFTER REDUCTION IN SIZE',
-D    2           ' FOR'I10,' GROUPS',
-D    3          /' *****************************************')
-D     WRITE(KFILDO,407) (NOV(J),J=1,LX)
-D407  FORMAT(/' '20I6)
-D     WRITE(KFILDO,408)CFEED,LX
-D408  FORMAT(A1,/' *****************************************'
-D    1          /' THE GROUP MINIMA JMIN( ) AFTER REDUCTION IN SIZE',
-D    2           ' FOR'I10,' GROUPS',
-D    3          /' *****************************************')
-D     WRITE(KFILDO,409) (JMIN(J),J=1,LX)
-D409  FORMAT(/' '20I6)
+C     WRITE(KFILDO,406)CFEED,LX
+C406  FORMAT(A1,/' *****************************************'
+C    1          /' THE GROUP SIZES NOV( ) AFTER REDUCTION IN SIZE',
+C    2           ' FOR'I10,' GROUPS',
+C    3          /' *****************************************')
+C     WRITE(KFILDO,407) (NOV(J),J=1,LX)
+C407  FORMAT(/' '20I6)
+C     WRITE(KFILDO,408)CFEED,LX
+C408  FORMAT(A1,/' *****************************************'
+C    1          /' THE GROUP MINIMA JMIN( ) AFTER REDUCTION IN SIZE',
+C    2           ' FOR'I10,' GROUPS',
+C    3          /' *****************************************')
+C     WRITE(KFILDO,409) (JMIN(J),J=1,LX)
+C409  FORMAT(/' '20I6)
 C
  410  RETURN
       END
