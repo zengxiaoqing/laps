@@ -210,117 +210,117 @@ C           CONTENTS OF SECTION 7.  SEPARATE SIMPLE, COMPLEX AND
 C           COMPLEX WITH SECOND ORDER DIFFERENCES
 C
          IF(IS5(10).EQ.0)THEN
-D           WRITE(KFILDO,5)
-D5          FORMAT(/' *******************************************'
+C           WRITE(KFILDO,5)
+C5          FORMAT(/' *******************************************'
 C***D           WRITE(KFILDO,5)CFEED
 C***D5          FORMAT(A1,/' *******************************************'
-D    1                /' DATA VALUES FOR SECTIONS 5, 6 - SIMPLE PACKING'
-D    2                /' *******************************************')
-D           WRITE(KFILDO,6)IS5(1),IS5(5),IS5(6),IS5(10),IS5(12),IS5(16),
-D    1                     IS5(18),IS5(20),IS5(21),IS6(6),IS6(1)
-D6          FORMAT(/' 1:LENGTH OF SECTION ',T56,I10,
-D    1      /' 5:NUMBER OF SECTION',T60,I6,
-D    2      /' 6:NUMBER OF ACTUAL DATA POINTS ',T56,I10,
-D    3      /' 10:DATA REPRESENTATION TEMPLATE NUMBER ',T60,I6,
-D    4      /' 12:REFERENCE VALUE ',T54,I12,
-D    5      /' 16:BINARY SCALE FACTOR ',T60,I6,
-D    6      /' 18:DECIMAL SCALE FACTOR ',T60,I6,
-D    7      /' 20:BITS FOR EACH PACKED VALUE',T60,I6,
-D    8      /' 21:TYPE OF VALUES ',T60,I6,
-D    9      /'  6:BITMAP INDICATOR (SECTON 6) ',T60,I6,
-D    A      /'  1:LENGTH OF SECTION 6 ',T56,I10)
+C    1                /' DATA VALUES FOR SECTIONS 5, 6 - SIMPLE PACKING'
+C    2                /' *******************************************')
+C           WRITE(KFILDO,6)IS5(1),IS5(5),IS5(6),IS5(10),IS5(12),IS5(16),
+C    1                     IS5(18),IS5(20),IS5(21),IS6(6),IS6(1)
+C6          FORMAT(/' 1:LENGTH OF SECTION ',T56,I10,
+C    1      /' 5:NUMBER OF SECTION',T60,I6,
+C    2      /' 6:NUMBER OF ACTUAL DATA POINTS ',T56,I10,
+C    3      /' 10:DATA REPRESENTATION TEMPLATE NUMBER ',T60,I6,
+C    4      /' 12:REFERENCE VALUE ',T54,I12,
+C    5      /' 16:BINARY SCALE FACTOR ',T60,I6,
+C    6      /' 18:DECIMAL SCALE FACTOR ',T60,I6,
+C    7      /' 20:BITS FOR EACH PACKED VALUE',T60,I6,
+C    8      /' 21:TYPE OF VALUES ',T60,I6,
+C    9      /'  6:BITMAP INDICATOR (SECTON 6) ',T60,I6,
+C    A      /'  1:LENGTH OF SECTION 6 ',T56,I10)
 C
-D        ELSEIF(IS5(10).EQ.2)THEN           
-D           WRITE(KFILDO,10)
-D10         FORMAT(/' *******************************************'
+C        ELSEIF(IS5(10).EQ.2)THEN           
+C           WRITE(KFILDO,10)
+C10         FORMAT(/' *******************************************'
 C***D           WRITE(KFILDO,10)CFEED
 C***D10         FORMAT(A1,/' *******************************************'
-D    1                /' DATA VALUES FOR SECTION 5 - COMPLEX PACKING'
-D    3                /' *******************************************')
-D           WRITE(KFILDO,20)IS5(1),IS5(5),IS5(6),IS5(10),IS5(12),
-D    1                      IS5(16),IS5(18),IS5(20),IS5(21),IS5(22),
-D    2                      IS5(23),IS5(24),IS5(28),IS5(32),IS5(36),
-D    3                      IS5(37),IS5(38),IS5(42),IS5(43),IS5(47)
-D20         FORMAT(/' 1:LENGTH OF SECTION ',T56,I10,
-D    1      /' 5:NUMBER OF SECTION',T60,I6,
-D    2      /' 6:NUMBER OF ACTUAL DATA POINTS ',T56,I10,
-D    3      /' 10:DATA REPRESENTATION TEMPLATE NUMBER ',T60,I6,
-D    4      /' 12:REFERENCE VALUE ',T60,I6,
-D    5      /' 16:BINARY SCALE FACTOR ',T60,I6,
-D    6      /' 18:DECIMAL SCALE FACTOR ',T60,I6,
-D    7      /' 20:BITS TO PACK GROUP REFERENCES',T60,I6,
-D    8      /' 21:TYPE OF VALUES ',T60,I6,
-D    9      /' 22:SPLITTING METHOD ',T60,I6,
-D    A      /' 23:USE OF MISSING VALUES ',T60,I6,
-D    B      /' 24:PRIMARY MISSING VALUE ',T60,I6,
-D    C      /' 28:SECONDARY MISSING VALUE ',T60,I6,
-D    D      /' 32:NUMBER OF GROUPS ',T58,I8,
-D    E      /' 36:REFERENCE FOR GROUP WIDTHS ',T60,I6,
-D    F      /' 37:BITS TO PACK GROUP WIDTHS ',T60,I6,
-D    G      /' 38:REFERENCE FOR GROUP LENGTHS ',T60,I6,
-D    H      /' 42:LENGTH INCREMENT FOR GROUP LENGTHS ',T60,I6,
-D    I      /' 43:TRUE LENGTH OF LAST GROUP. ',T58,I8,
-D    J      /' 47:BITS TO PACK GROUP LENGTHS ',T60,I6)
+C    1                /' DATA VALUES FOR SECTION 5 - COMPLEX PACKING'
+C    3                /' *******************************************')
+C           WRITE(KFILDO,20)IS5(1),IS5(5),IS5(6),IS5(10),IS5(12),
+C    1                      IS5(16),IS5(18),IS5(20),IS5(21),IS5(22),
+C    2                      IS5(23),IS5(24),IS5(28),IS5(32),IS5(36),
+C    3                      IS5(37),IS5(38),IS5(42),IS5(43),IS5(47)
+C20         FORMAT(/' 1:LENGTH OF SECTION ',T56,I10,
+C    1      /' 5:NUMBER OF SECTION',T60,I6,
+C    2      /' 6:NUMBER OF ACTUAL DATA POINTS ',T56,I10,
+C    3      /' 10:DATA REPRESENTATION TEMPLATE NUMBER ',T60,I6,
+C    4      /' 12:REFERENCE VALUE ',T60,I6,
+C    5      /' 16:BINARY SCALE FACTOR ',T60,I6,
+C    6      /' 18:DECIMAL SCALE FACTOR ',T60,I6,
+C    7      /' 20:BITS TO PACK GROUP REFERENCES',T60,I6,
+C    8      /' 21:TYPE OF VALUES ',T60,I6,
+C    9      /' 22:SPLITTING METHOD ',T60,I6,
+C    A      /' 23:USE OF MISSING VALUES ',T60,I6,
+C    B      /' 24:PRIMARY MISSING VALUE ',T60,I6,
+C    C      /' 28:SECONDARY MISSING VALUE ',T60,I6,
+C    D      /' 32:NUMBER OF GROUPS ',T58,I8,
+C    E      /' 36:REFERENCE FOR GROUP WIDTHS ',T60,I6,
+C    F      /' 37:BITS TO PACK GROUP WIDTHS ',T60,I6,
+C    G      /' 38:REFERENCE FOR GROUP LENGTHS ',T60,I6,
+C    H      /' 42:LENGTH INCREMENT FOR GROUP LENGTHS ',T60,I6,
+C    I      /' 43:TRUE LENGTH OF LAST GROUP. ',T58,I8,
+C    J      /' 47:BITS TO PACK GROUP LENGTHS ',T60,I6)
 C
          ELSEIF(IS5(10).EQ.3)THEN
-D           WRITE(KFILDO,10)
-D15         FORMAT(/' *******************************************'
+C           WRITE(KFILDO,10)
+C15         FORMAT(/' *******************************************'
 C***D           WRITE(KFILDO,10)CFEED
 C***D15         FORMAT(A1,/' *******************************************'
-D    1                /' DATA VALUES FOR SECTION 5 - COMPLEX PACKING'
-D    2                /' WITH SECOND ORDER DIFFERENCES'
-D    3                /' *******************************************')
-D           WRITE(KFILDO,20)IS5(1),IS5(5),IS5(6),IS5(10),IS5(12),
-D    1                      IS5(16),IS5(18),IS5(20),IS5(21),IS5(22),
-D    2                      IS5(23),IS5(24),IS5(28),IS5(32),IS5(36),
-D    3                      IS5(37),IS5(38),IS5(42),IS5(43),IS5(47)
+C    1                /' DATA VALUES FOR SECTION 5 - COMPLEX PACKING'
+C    2                /' WITH SECOND ORDER DIFFERENCES'
+C    3                /' *******************************************')
+C           WRITE(KFILDO,20)IS5(1),IS5(5),IS5(6),IS5(10),IS5(12),
+C    1                      IS5(16),IS5(18),IS5(20),IS5(21),IS5(22),
+C    2                      IS5(23),IS5(24),IS5(28),IS5(32),IS5(36),
+C    3                      IS5(37),IS5(38),IS5(42),IS5(43),IS5(47)
          ENDIF
 C
 C           WRITE IS5(48) AND IS(49) THAT ONLY PERTAIN TO SECOND ORDER
 C           DIFFERENCING.
 C
-D        IF(IS5(10).EQ.3)THEN
-D           WRITE(KFILDO,25)IS5(48),IS5(49)
-D25         FORMAT(' 48:ORDER OF SPATIAL DIFFERENCING ',T60,I6,
-D    1      /' 49:FIELD WIDTH OF SPATIAL DESCRIPTORS ',T60,I6)
-D        ENDIF
+C        IF(IS5(10).EQ.3)THEN
+C           WRITE(KFILDO,25)IS5(48),IS5(49)
+C25         FORMAT(' 48:ORDER OF SPATIAL DIFFERENCING ',T60,I6,
+C    1      /' 49:FIELD WIDTH OF SPATIAL DESCRIPTORS ',T60,I6)
+C        ENDIF
 C
-D        IF(IS5(10).EQ.2)THEN
-D           WRITE(KFILDO,30)
-D30         FORMAT(/' *******************************************'
+C        IF(IS5(10).EQ.2)THEN
+C           WRITE(KFILDO,30)
+C30         FORMAT(/' *******************************************'
 C***D           WRITE(KFILDO,30)CFEED
 C***D30         FORMAT(A1,/' *******************************************'
-D    1                /' DATA VALUES FOR SECTION 7 - COMPLEX PACKING'
-D    3                /' *******************************************')
-D           WRITE(KFILDO,40)IS7(1),IS7(5)
-D40         FORMAT(/' 1:THE NUMBER OF OCTETS IN THIS FIELD ',T57,I9,
-D    1             /' 5:THE NUMBER OF THIS SECTION',T60,I6)
-D        ELSEIF(IS5(10).EQ.3)THEN
-D           WRITE(KFILDO,45)
-D45         FORMAT(/' *******************************************'
+C    1                /' DATA VALUES FOR SECTION 7 - COMPLEX PACKING'
+C    3                /' *******************************************')
+C           WRITE(KFILDO,40)IS7(1),IS7(5)
+C40         FORMAT(/' 1:THE NUMBER OF OCTETS IN THIS FIELD ',T57,I9,
+C    1             /' 5:THE NUMBER OF THIS SECTION',T60,I6)
+C        ELSEIF(IS5(10).EQ.3)THEN
+C           WRITE(KFILDO,45)
+C45         FORMAT(/' *******************************************'
 C***D           WRITE(KFILDO,45)CFEED
 C***D45         FORMAT(A1,/' *******************************************'
-D    1                /' DATA VALUES FOR SECTION 7 - COMPLEX PACKING'
-D    2                /' WITH SECOND ORDER DIFFERENCES'
-D    3                /' *******************************************')
-D           WRITE(KFILDO,50)IS7(1),IS7(5),IS7(6),IS7(7),IS7(8)
-D50         FORMAT(/' 1:THE NUMBER OF OCTETS IN THIS FIELD ',T57,I9,
-D    1             /' 5:THE NUMBER OF THIS SECTION',T60,I6,
-D    2             /' 6:THE FIRST ORIGINAL VALUE IN THE FIELD ',T58,I8,
-D    3             /' 7:THE SECOND ORIGINAL VALUE IN THE FIELD ',T58,I8,
-D    4             /' 8:THE OVERALL MIN OF THE 2ND ORDER DIFF ',T58,I8)
-D        ELSEIF(IS5(10).EQ.0)THEN
-D           WRITE(KFILDO,47)
-D47         FORMAT(/' *******************************************'
+C    1                /' DATA VALUES FOR SECTION 7 - COMPLEX PACKING'
+C    2                /' WITH SECOND ORDER DIFFERENCES'
+C    3                /' *******************************************')
+C           WRITE(KFILDO,50)IS7(1),IS7(5),IS7(6),IS7(7),IS7(8)
+C50         FORMAT(/' 1:THE NUMBER OF OCTETS IN THIS FIELD ',T57,I9,
+C    1             /' 5:THE NUMBER OF THIS SECTION',T60,I6,
+C    2             /' 6:THE FIRST ORIGINAL VALUE IN THE FIELD ',T58,I8,
+C    3             /' 7:THE SECOND ORIGINAL VALUE IN THE FIELD ',T58,I8,
+C    4             /' 8:THE OVERALL MIN OF THE 2ND ORDER DIFF ',T58,I8)
+C        ELSEIF(IS5(10).EQ.0)THEN
+C           WRITE(KFILDO,47)
+C47         FORMAT(/' *******************************************'
 C***D           WRITE(KFILDO,47)CFEED
 C***D47         FORMAT(A1,/' *******************************************'
-D    1                /' DATA VALUES FOR SECTION 7 - SIMPLE PACKING'
-D    3                /' *******************************************')
-D           WRITE(KFILDO,55)IS7(1),IS7(5)
-D55         FORMAT(/' 1:THE NUMBER OF OCTETS IN THIS FIELD ',T57,I9,
-D    1             /' 5:THE NUMBER OF THIS SECTION',T60,I6)
+C    1                /' DATA VALUES FOR SECTION 7 - SIMPLE PACKING'
+C    3                /' *******************************************')
+C           WRITE(KFILDO,55)IS7(1),IS7(5)
+C55         FORMAT(/' 1:THE NUMBER OF OCTETS IN THIS FIELD ',T57,I9,
+C    1             /' 5:THE NUMBER OF THIS SECTION',T60,I6)
 C
-D        ENDIF
+C        ENDIF
 C
       ENDIF
 C
