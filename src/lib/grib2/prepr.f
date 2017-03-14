@@ -256,12 +256,12 @@ CWDT        ENDIF
 C
             CALL PREP_FLT(A,IA,NXY,NVAL,ICLEAN,ID,IE,
      1                    XMINA,JMISSP,JMISSS,XMISSP,XMISSS,IER,*900)
-D           WRITE(KFILDO,10)CFEED
-D10         FORMAT(A1,/' **********************'
-D    1                /' ORIGINAL SCALED VALUES'
-D    2                /' **********************')
-D           WRITE(KFILDO,20) (IA(J),J=1,200)
-D20         FORMAT(/' '20I6)
+C           WRITE(KFILDO,10)CFEED
+C10         FORMAT(A1,/' **********************'
+C    1                /' ORIGINAL SCALED VALUES'
+C    2                /' **********************')
+C           WRITE(KFILDO,20) (IA(J),J=1,200)
+C20         FORMAT(/' '20I6)
 C
          ENDIF
 C
@@ -279,14 +279,14 @@ C           IER.  THIS WILL HAVE BEEN INSERTED INTO JER( , ).
 C           PREPR WILL RETURN TO CALLING PROGRAM WITH THAT IER.
 C           THIS IS A LITTLE DANGEROUS, BUT THE CALLING PROGRAM
 C           PK_GRIB2 JUST CALLS ANOTHER ROUTINE THAT SETS IER = 0.
-D        WRITE(KFILDO,30)CFEED,IS7(8)
-D30      FORMAT(A1,/' ***************************'
-D    1             /' 2ND ORDER DIFFERENCES AFTER'
-D    2             /' THE REMOVAL OF THE FIELD'
-D    3             /' MINIMUM ',I6,
-D    4             /' ***************************')
-D        WRITE(KFILDO,40) (IA(J),J=1,200)
-D40      FORMAT(/' '20I6)
+C        WRITE(KFILDO,30)CFEED,IS7(8)
+C30      FORMAT(A1,/' ***************************'
+C    1             /' 2ND ORDER DIFFERENCES AFTER'
+C    2             /' THE REMOVAL OF THE FIELD'
+C    3             /' MINIMUM ',I6,
+C    4             /' ***************************')
+C        WRITE(KFILDO,40) (IA(J),J=1,200)
+C40      FORMAT(/' '20I6)
       ENDIF
 C
 C        INITIALIZE THE PERTINENT VALUES IN IS5( ) DEPENDING
