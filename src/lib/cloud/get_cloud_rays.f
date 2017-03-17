@@ -50,15 +50,7 @@
 
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
-!       brt(a) = (1.0 - exp(-.14 * a))/.14 ! relative sky brightness (mx~7)
-        brt(a) = (1.0 - exp(-.14 * a))     ! relative sky brightness (mx=1)
-
-        angdif(X,Y)=MOD(X-Y+540.,360.)-180.
-        angleunitvectors(a1,a2,a3,b1,b2,b3) = acosd(a1*b1+a2*b2+a3*b3)
         curvat(hdst,radius) = hdst**2 / (2. * radius)
-        curvat2(sdst,radius_start,altray) = 
-     1       sqrt(sdst**2 + radius_start**2 
-     1         - (2.*sdst*radius_start*cosd(90.+altray))) - radius_start
 
         real*8 dsdst,dradius_start,daltray,dcurvat2
         dcurvat2(dsdst,dradius_start,daltray) = 
@@ -67,7 +59,6 @@
         horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
         solocc_f(htmsl,erad,solaltarg) = min(max(
      1          (solaltarg + horz_depf(htmsl,erad))/0.25 ,0.),1.)
-        scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5
 
 !       Airmasses relative to zenith at sea level pressure (true altitude)
         airmass_cosz(cosz) =  
@@ -160,6 +151,8 @@
         real dhic_2d(nc,ni,nj)      ! (diffuse horizontal)
         real bhic_2d(nc,ni,nj)      ! (direct/beam horizontal) 
         real bnic_2d(nc,ni,nj)      ! (direct/beam normal) 
+        real frac_dir_a(ni,nj)      ! debugging
+        real transm_tn_a(ni,nj)     ! debugging
 
         logical l_solar_eclipse, l_radtran /.false./, l_spherical
         logical l_atten_bhd /.true./, l_box, l_latlon_grid, l_binary
@@ -568,8 +561,9 @@
                 ghi_clr = obj_bri * sind(objalt_eff) * ghi_zen_sfc *ecld
                 ghi_2d(ii,jj) = transm_tn_pr * ghi_clr    
 
-!               Diffuse
-                frac_dir = max(transm_tn**4.,.0039) ! 5 deg circ
+!               Direct / Diffuse
+                frac_dir1 = max(transm_tn**4.,.0039) ! 5 deg circ of sctrd
+                frac_dir = transm_tn + (1.-transm_tn) * frac_dir1
 
                 patm_sfc = ztopsa(topo_a(ii,jj)) / 1013.25
                 sb_corr = 4.0 * (1.0 - (sind(obj_alt(ii,jj))**0.5))
@@ -622,6 +616,9 @@
                    write(6,*)' dhic_2d  observer =',dhic_2d(:,ii,jj)
                    write(6,*)' ghic_2d  observer =',ghic_2d(:,ii,jj)
                 endif
+
+                frac_dir_a(ii,jj) = frac_dir
+                transm_tn_a(ii,jj) = transm_tn
 
                 goto 4 ! we have risen above the terrain
               endif
@@ -904,7 +901,7 @@
             azid2 = mod(azid1+180.,360.)
         endif
         if(htstart .gt. 100e3)then
-            azid1 = sol_azi(i,j)
+            azid1 = int(sol_azi(i,j))
             azid2 = azid1
         endif
 
@@ -1177,8 +1174,8 @@
      1    'Trace the slant path (alt/azi-g/ialt/jazi/jdelt/rkdelt/i/j):'
      1                ,f8.3,2f6.1,i6,2i5,f6.2,2i5,f7.0,l2)                                     
                 write(6,12)                                   
-12              format('      dz1_l       dz1_h     dxy1_l    dxy1_h  ',
-     1           'rinew  rjnew   rk    ht_m   topo_m   path     ',
+12              format('      dz1_l        dz1_h      dxy1_l    dxy1_h',
+     1           '  rinew  rjnew   rk    ht_m   topo_m   path     ',
      1           'lwc    ice    rain   snow      slant  cvrpathsum',
      1           '  cloudfrac am2cld  sumclrd smclrdp  am1_h  cl',
      1           'd_rd cld_rd_w  aeroext transm3 aod_sm aod_sm_ill')
@@ -2168,13 +2165,14 @@
      1                                        * solar_corr
 
                           if(idebug .eq. 1 .and. ic .eq. 2)then
-                             write(6,*)'gtic check ',gtic(ic,ialt,jazi)
-     1                         ,i1,j1,bnic_2d(ic,i1,j1)
+                             write(6,76)gtic(ic,ialt,jazi)
+     1                         ,i1,j1,bnic_2d(ic,i1,j1),bni_clr(ic)
      1                         ,ghic_2d(ic,i1,j1)
      1                         ,bhic_2d(ic,i1,j1)
-     1                         ,dhic_2d(ic,i1,j1)
-     1                         ,frac_dir,transm_tn_pr,solar_corr
-                             write(6,*)'solar_corr',inew_mb,jnew_m
+     1                         ,dhic_2d(ic,i1,j1),frac_dir_a(i1,j1)
+     1                         ,transm_tn_a(i1,j1),solar_corr
+76                           format(' gtic check ',f9.4,2i5,8f9.5)                          
+                             write(6,77)inew_mb,jnew_m
      1                         ,sol_alt(inew_mb,jnew_m)
      1                         ,lat(inew_mb,jnew_m)
      1                         ,lon(inew_mb,jnew_m)
@@ -2182,6 +2180,7 @@
      1                         ,dhi_2d(inew_mb,jnew_m)
      1                         ,alt_norm_int
      1                         ,solar_corr
+77                           format(' solar_corr ',2i5,7f10.4)
                           endif
 
 !                         City lights on the ground (spec exitance - emic)
@@ -2288,7 +2287,7 @@
      1                     ,transm_3d_m
      1                     ,sum_aod,sum_aod_ill_opac
      1                     ,sum_aod_ill_opac_potl
-101                   format(2f12.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
+101                   format(2f13.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
      1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,4f8.3,2f8.4
      1                  ,f10.5,4f7.3)
                   endif ! idebug
@@ -2419,8 +2418,8 @@
      1             ,clear_radf_c(icd,ialt,jazi)
      1             ,aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
      1             ,sum_clrrad,sum_clrrad_pot,airmass1_h,dz1_h
-119           format(' alt/dep/radf/aodf/smclrrd/pot/am/dz1_h',f10.2,i3
-     1                                        ,4f9.3,2f9.3,f13.1)
+119           format(' alt/dep/radf/aodf/smclrrd/pot/am/dz1_h',f11.2,i3
+     1                                         ,2f9.4,2f9.3,2f9.3,f13.1)
             endif
 
           endif
