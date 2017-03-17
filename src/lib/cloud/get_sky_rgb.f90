@@ -124,6 +124,7 @@
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
         real sky_rad_a(nc,ni,nj)
         real sp_rad_a(nc,ni,nj)
+        real radmax(nc)
 
         integer new_color /2/ ! sky_rad can be more fully used still
 
@@ -299,10 +300,10 @@
           endif
           write(6,*)' alt_top,altmidcorr: ',alt_top,altmidcorr
         endif
-        if(sol_alt .gt. altmidcorr)then ! shallow twilight
-          fracerf = (sol_alt - altmidcorr) * (-fracerf0/altmidcorr)
+        if(solalt_limb_true .gt. altmidcorr)then ! shallow twilight
+          fracerf = (solalt_limb_true - altmidcorr) * (-fracerf0/altmidcorr)
         else                            ! deep twilight
-          fracerf = (sol_alt - altmidcorr) * 0.220 
+          fracerf = (solalt_limb_true - altmidcorr) * 0.220 
         endif
         erfterm = (erf(fracerf) + 1.) / 2.
         glwmid = corr2*(1.-erfterm) + corr1*erfterm
@@ -378,7 +379,7 @@
             moon_cond_clr = 0
         endif
         if(htmsl .gt. 50e3)then
-            azid1 = sol_az  ; azid2 = sol_az ! high custom
+            azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
         endif
         if(mode_aero_cld .gt. 1)then
             azid1 = 90.  ; azid2 = 90. ! aero custom
@@ -1721,8 +1722,14 @@
         grn_max = maxval(sky_rgb(1,:,:))
         blu_max = maxval(sky_rgb(2,:,:))
         write(6,*)' max RGB = ',red_max,grn_max,blu_max
-
+       
 !       Consider max RGB values where elong > 5 degrees
+
+        do ic = 1,nc
+          radmax(ic) = maxval(sky_rad_a(ic,:,:))
+        enddo ! ic
+        write(6,*)' max rad = ',radmax(:)
+        write(6,*)' max norm refl = ',radmax(:)/(2. * day_int)
 
 !       Add bounds to rgb values
 !       do j = 1,nj
