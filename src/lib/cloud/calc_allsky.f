@@ -429,8 +429,8 @@
                 endif
               else
                 corr1_in = 9.1
+                if(solar_alt .lt. 0.)corr1_in = 9.26 ! volcanic value
               endif
-              if(solar_alt .lt. 0.)corr1_in = 9.26 ! volcanic value
               corr1_in = corr1_in ! - log10(exposure)
 
               write(6,*)' corr1 in calc_allsky ',corr1_in
