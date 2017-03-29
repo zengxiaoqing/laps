@@ -2,8 +2,9 @@
      subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt,sfc_glow)
 
-     use mem_namelist, ONLY: r_missing_data, earth_radius
+     use mem_namelist, ONLY: r_missing_data, earth_radius, ssa, aod
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
+     use mem_allsky, ONLY: mode_aero_cld
      use cloud_rad ! Cloud Radiation and Microphysics Parameters
      include 'trigd.inc'
 
@@ -342,16 +343,30 @@
               twi_int = .1 * 10.**(+obj_alt_cld * 0.4) ! magnitudes per deg
               rint = twi_int
               grn_rat = 1.0 ; blu_rat = 1.0            
-            elseif(obj_alt_cld .ge. 0.)then            ! low daylight sun
+            elseif(obj_alt_cld .ge. 0.)then            ! daylight sun
 !             Direct illumination of the cloud is calculated here
 !             Indirect illumination is factored in via 'scat_frac'
 !             am = airmassf(cosd(90. - max(obj_alt(il,jl),-3.0)))
               am = airmassf(90.-obj_alt(il,jl),patm_k)
               scat_frac = 1.00
+
+              if(.false.)then
+                aero_refht = redp_lvl
+                obj_alt_app = obj_alt(i,j) + refraction
+                call get_airmass(obj_alt_app,heights_3d(i,j,k),patm_k & ! I 
+                                   ,aero_refht,aero_scaleht &   ! I
+                                   ,earth_radius,iverbose &     ! I
+                                   ,agdum,aodum,aa,refr_deg)    ! O
+              else
+                aa = 0.
+                od_a = 0.
+              endif
+
               do ic = 1,nc
-!               trans_c(ic) = trans(am*ext_g(ic)*patm_k*scat_frac)
-                trans_c(ic) = trans(am*ext_g(ic)       *scat_frac)
+                od_g = am*ext_g(ic)*scat_frac
+                trans_c(ic) = trans(od_g + od_a)
               enddo
+
               rint = trans_c(1)
               grn_rat = trans_c(2) / trans_c(1)
               blu_rat = trans_c(3) / trans_c(1)
