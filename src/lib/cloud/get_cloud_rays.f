@@ -479,6 +479,7 @@
      1            clwc_3d,cice_3d,rain_3d,snow_3d,   ! I
      1            topo_a,grdasp_ll,                  ! I
      1            ni,nj,nk,i,j,                      ! I
+!    1            ni,nj,nk,ni/2,nj/2,                ! I
      1            heights_3d,                        ! I 
      1            sfc_glow,                          ! I
      1            transm_3d,transm_4d)               ! O
@@ -619,7 +620,11 @@
 
                 frac_dir_a(ii,jj) = frac_dir
                 transm_tn_a(ii,jj) = transm_tn
-
+!               if(jj .eq. 516)then
+!                 write(6,*)'ii/jj/kk/transm_tn',ii,jj,kk
+!    1                      ,transm_3d(ii,jj,kk:kk+1),transm_tn_a(ii,jj)
+!               endif
+               
                 goto 4 ! we have risen above the terrain
               endif
             enddo ! kk
