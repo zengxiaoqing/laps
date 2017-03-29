@@ -53,7 +53,7 @@
 
         real twi_trans_c(nc)           ! transmissivity
 
-        real hg2d(nc), alphav_g, alphav_a, hg2(nc), hg2t(nc)
+        real hg2d(nc), alphav_g, alphav_a, hg2(nc), hg2t(nc), ssa_eff(nc)
         real srcdir_90(nc),srcdir(nc),clear_int_c(nc)
         real sumi_gc(nc),sumi_ac(nc)
         real sumi_gct(nc),sumi_act(nc)
@@ -769,6 +769,8 @@
                 hg2t(ic) = hg2(ic)
               enddo 
 
+              ssa_eff(:) = ssa(:)
+
             else ! use high OD routine calculations
               do ic = 1,nc
 !               Check assignments in 'mem_namelist.f90'
@@ -780,9 +782,9 @@
 !               topo phase function assumes scatter order is non-topo 
 !               value (for now)
                 hg2t(ic) = hg2(ic)
-              enddo 
 
-              call mscat_phase(od_a,ssa,g,iverbose,gmean,ssa_eff)
+                call mscat_phase(od_a,ssa(ic),g,idebug,gmean,ssa_eff(ic))
+              enddo 
 
             endif
 
