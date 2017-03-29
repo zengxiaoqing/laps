@@ -185,7 +185,7 @@
        enddo ! ialt
 
        istatus = 1
-       write(6,*)' success in read_camera_clouds'
+       write(6,*)' success in get_camera_clouds'
        return
 
 999    istatus = 0
