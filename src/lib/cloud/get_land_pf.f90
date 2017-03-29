@@ -211,11 +211,16 @@
 !             Water
               g = 0.6 * radfrac
               ampl_w = cosd(alt_a(i,j))
+              turbidity = 1.0
+              frac_aero = turbidity / (1. + turbidity)
+              power_rad = 1.0 ! 0.5 * frac_aero + 1.0 * (1.-frac_aero)
+              radfracw = radfrac**power_rad ! aerosols are effectively 
 
 !             Use approximate specular reflection angle
-              glint_radius = 22.
+              glint_radius = 16.0
               tsolalt_eff = max(topo_solalt(i,j),3.)
   
+!             Compute ARFs relative to amount of incident light reflected 
               if(.false.)then ! original method
                 glint_sr = pi * (glint_radius * rpd)**2 * sind(tsolalt_eff)
                 arf_bw = 2. / glint_sr
@@ -225,8 +230,9 @@
                 pslope = 1. / (2. * pi * sigmax * sigmay) 
                 cos2th = sind(tsolalt_eff) * sind(emis_ang) + cosd(tsolalt_eff) * cosd(emis_ang) * cosd(azidiffg)
                 cosb = (sind(tsolalt_eff) + sind(emis_ang)) / sqrt(2. + 2. * cos2th)
+!               Ratio of reflectance to Fresnel coefficient (max is 3 and should be 6?)
                 arf_bw = pi * pslope / (4. * sind(tsolalt_eff) * sind(emis_ang) * cosb**4.)
-              else           ! new method
+              else           ! old possible method
                 sun_sqdg = pi * (.533239/2.)**2
                 arf_bw = ( (0.5 * sph_sqdg) / sun_sqdg) / (glint_radius / ((0.5*.533239)**2) )
                 arf_bw = arf_bw / sind(tsolalt_eff)
@@ -240,19 +246,28 @@
 
 !             Add sunlight/skylight reflecting off the water surface
 !             arg_glint = opac(phwater * fwater)
-!             phi_eff = (90. - max(topo_solalt(i,j),0.) ) * rpd
-              phi_eff = (180. - elong_a(i,j)) * rpd * 0.5
+              phi_b = (180. - elong_a(i,j)) * rpd * 0.5
 !             alb_glint = .045 / sind(alt_eff)**.75
-              alb_glint = fresnel(1.33,phi_eff)
-              fresnel1 = fresnel(1.33,phi_eff)
+              alb_glint = fresnel(1.33,phi_b)
+              fresnel1 = fresnel(1.33,phi_b)
 !             fresnel2 = foam(ic) * (1. - fresnel1) + (1.-foam(ic)) * fresnel1
-              fresnel2 = foam(ic) * 0.5             + (1.-foam(ic)) * fresnel1
-              arf_dw = fresnel2
-!             topo_albedo(ic,i,j) = fresnel2 ! alb_glint * arg_glint + topo_albedo(ic,i,j) * (1.-arg_glint)
-              topo_albedo(ic,i,j) = fresnel2 * fwater + topo_albedo(ic,i,j) * (1. - fwater)
-              phwater = arf_bw * specamp
-!             phwater = arf_bw * specamp + f(radfrac,arf_dw)
-!             phwater = arf_bw * radfrac + arf_dw * (1. - radfrac)  
+              fresnel2 = foam(ic) * 0.5             + (1.-foam(ic)) * fresnel1 ! black sky albedo
+
+              phi_d = (90. - emis_ang) * rpd
+              fresnel_d = fresnel(1.33,phi_d)                                  ! white sky albedo
+              arf_dw = 1.0 ! fresnel_d / .08
+
+!             smooth_water_albedo = radfracw * fresnel2 + (1. - radfracw) * fresnel_d
+              smooth_water_albedo = .08
+              water_albedo = foam(ic) * 0.5 + (1.-foam(ic)) * smooth_water_albedo
+              fresnel_mean = fresnel2 * radfracw + fresnel_d * (1.-radfracw)     ! "gray" sky albedo
+              fresnel_arf = fresnel_mean / smooth_water_albedo
+
+              topo_albedo(ic,i,j) = smooth_water_albedo * fwater + topo_albedo(ic,i,j) * (1. - fwater)
+
+!             phwater = arf_bw * specamp
+!             phwater = arf_bw * specamp + f(radfracw,arf_dw)
+              phwater = (arf_bw * specamp * radfracw + arf_dw * (1. - radfracw)) * fresnel_arf
 
 !             Ice
               phice = 1.0
@@ -282,8 +297,13 @@
                     write(6,112)emis_ang,emis_ang_a(i,j),azi_fm_lnd_a(i,j),topo_lat(i,j),topo_lon(i,j),topo_solalt(i,j),topo_solazi(i,j),topo_lf(i,j),topo_sc(i,j)
 112                 format('   EMISANG INFO:',9f9.3)
                   endif
-                  write(6,113)ampl_s,fszen,g2,hg_2param,brdf_szen,arf_bs 
-113               format('   SNOW BRDF:',6f9.3)
+                  if(fsnow .gt. 0.01)then
+                    write(6,113)ampl_s,fszen,g2,hg_2param,brdf_szen,arf_bs 
+113                 format('   SNOW BRDF:   ',6f9.3)
+                  elseif(fwater .gt. 0.01)then
+                    write(6,114)fresnel_mean,fresnel_arf,arf_bw,arf_dw,radfracw,specamp,phwater
+114                 format('   WATER BRDF:  ',7f9.3)
+                  endif
                 endif
               endif
 
@@ -291,13 +311,13 @@
 
             enddo ! ic
 
-            if((elong_a(i,j) .gt. 179.8 .and. iwrite .eq. 0) .OR. iwarn .eq. 1)then
+            if(idebug_pf(i,j) .eq. 1 .and. fwater .gt. 0.5)then
                 if(iwarn .eq. 1)write(6,*)' alt_a = ',i,j,alt_a(i,j)
                 write(6,2)elong_a(i,j),topo_gti(i,j),sol_alt,transm_obs,radfrac,fland,fsnow,fwater,spot
-2               format(' elg/tgti/solalt/trnm/radf/fland/fsnow/fwater/fspot',f9.3,8f9.4)
+2               format('   elg/tgti/solalt/trnm/radf/fland/fsnow/fwater/fspot',f9.3,8f9.4)
                 write(6,3)gtic(:,i,j),dtic(:,i,j),btic(:,i,j),iwarn
-!               format(' gtic',3f11.6,'  dtic',3f11.6,'  btic',3f11.6,i3)
-3               format(' gtic',3e12.4,'  dtic',3e12.4,'  btic',3e12.4,i3)
+!               format('   gtic',3f11.6,'  dtic',3f11.6,'  btic',3f11.6,i3)
+3               format('   gtic',3e12.4,'  dtic',3e12.4,'  btic',3e12.4,i3)
                 iwrite = iwrite + 1
             endif
 
