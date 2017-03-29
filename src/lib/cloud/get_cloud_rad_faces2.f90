@@ -104,8 +104,9 @@
      angstrom_exp_a = 2.4 - (fcterm * 15.)
 
      twi_alt = -4.5
-     transm_3d = r_missing_data
 
+!    Initialize
+     transm_3d = r_missing_data
      do k = 1,nk
      do i = 1,ni
      do j = 1,nj
@@ -120,6 +121,8 @@
      enddo ! k
 
      transm_4d = 0.                   
+
+     write(6,*)' transm_3d column 1 = ',transm_3d(idb,jdb,:)
 
      b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
                 + cice_3d * cice2alpha * bksct_eff_cice &
@@ -481,6 +484,8 @@
 
        I4_elapsed = ishow_timer()
 
+       write(6,*)' transm_3d column if = ',if,transm_3d(idb,jdb,:)
+
       enddo ! if
 
      else  ! solalt < twi_alt
@@ -686,6 +691,19 @@
          write(6,*)' WARNING: missing points in get_cloud_rad_faces2',fractot
 !        stop
      endif
+
+!    Finalize
+     do k = 1,nk
+     do i = 1,ni
+     do j = 1,nj
+       if(topo_a(i,j) .gt. heights_3d(i,j,k))then
+         transm_3d(i,j,k) = 0.
+       endif
+     enddo ! j
+     enddo ! i
+     enddo ! k
+
+     write(6,*)' transm_3d column 2 = ',transm_3d(idb,jdb,:)
 
      I4_elapsed = ishow_timer()
 
