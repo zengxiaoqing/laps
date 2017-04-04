@@ -873,6 +873,11 @@
 19      format(' pw_ref,aod,aod_ref = ',3f10.3)
 20      continue
 
+        if(aod_ref .gt. 2.0)then
+           write(6,*)' High aod_ref: set mode_aero_cld = 2'
+           mode_aero_cld = 2
+        endif
+
 !       Get Aersol Extinction Coefficient (3D field)
         call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L,aod_ref
      1                 ,aod_3d)
