@@ -158,7 +158,7 @@
           call get_cloud_rays(i4time_solar,clwc_3d,cice_3d
      1                     ,heights_3d                              ! I
      1                     ,rain_3d,snow_3d                         ! I
-     1                     ,pres_3d,aod_3d,topo_sfc,topo            ! I
+     1                     ,pres_3d,topo_sfc,topo                   ! I
      1                     ,topo_albedo_2d                          ! I
      1                     ,swi_2d                                  ! I
      1                     ,topo_swi,topo_albedo                    ! O
