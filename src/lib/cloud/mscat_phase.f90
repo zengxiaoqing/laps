@@ -9,7 +9,7 @@
 !       (1 - trans_tau) * (1 - trans_tau) * (trans_tau) is scattered only twice
 !       (1 - trans_tau) * (1 - trans_tau) * (1. - trans_tau) is scattered at least thrice
 
-        parameter (n_order=50)
+        parameter (n_order=150)
 
         real frac_order(0:n_order)
         real rel_order(1:n_order)
@@ -22,8 +22,7 @@
         trans_tau = trans(tau)
 
         if(iverbose .ge. 1)then
-           write(6,*)' tau,ssa,trans(tau) = ',tau,ssa,trans(tau)
-           write(6,*)
+           write(6,*)' tau,ssa,g,trans(tau) = ',tau,ssa,g,trans(tau)
            write(6,*)' i-1 p_scat_cum p_ord    g(i)'
         endif
 
@@ -47,18 +46,20 @@
               ginc = -999.
            endif
            if(iverbose .ge. 1)then
-              write(6,11)i,p_scat_cum(i),p_order(i),ginc
+             if(i .le. 10 .or. i .eq. (i/10)*10)then
+               write(6,11)i,p_scat_cum(i),p_order(i),ginc
+             endif
            endif
         enddo
 
-11      format(i3,4f9.5)
+11      format(i4,2x,4f9.5)
 
         ssa_eff = sum(p_order(1:n_order))
         gmean = gsum / osum
 
         if(iverbose .ge. 1)then
            write(6,*)' sum of p_order/ssa_eff is ',ssa_eff
-           write(6,*)' gmean = ', gmean
+           write(6,*)' gsum/osum/gmean = ', gsum, osum, gmean
            write(6,*)
         endif
         
