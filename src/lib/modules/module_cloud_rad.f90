@@ -3,12 +3,14 @@ MODULE cloud_rad
 
 !     Cloud Radiation and Microphysics Parameters
 
-!     Backscattering efficiencies
+!     Backscattering fractions
+!     http://www.ugr.es/~aquiran/ciencia/arti27.pdf (aerosols)
       real, parameter :: bksct_eff_clwc    = .063
       real, parameter :: bksct_eff_cice    = .14
       real, parameter :: bksct_eff_rain    = .063
       real, parameter :: bksct_eff_snow    = .14
       real, parameter :: bksct_eff_graupel = .30
+      real, parameter :: bksct_eff_aero    = .125 
 
 !     Scattering efficiencies
       real, parameter :: q_clwc    = 2.0
