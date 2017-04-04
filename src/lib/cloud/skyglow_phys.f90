@@ -164,7 +164,7 @@
         do ic = 1,nc
             ext_a(ic)  = (wa(ic)/.55)**(-angstrom_exp_a)
             ext_ha(ic) = (wa(ic)/.55)**(-angstrom_exp_ha)
-            write(6,*)' ic/wa/ext_a ',ic,wa(ic),ext_a(ic)
+            write(6,*)' ic/wa/ext_a/aod ',ic,wa(ic),ext_a(ic),aod_vrt*ext_a(ic)
         enddo ! ic
 
 !       Obtain reference values of source term
@@ -343,6 +343,7 @@
              od_g_vert = ext_g(ic) * patm
              od_o_vert = ext_o(ic) * patm_o3(htmsl)
              od_a_vert = aod_vrt * ext_a(ic)
+
 !            if((l_solar_eclipse .eqv. .true.) .AND. ic .eq. icd)then
              if((ic .eq. icd .and. altray .eq. nint(altray)) .OR. &
               altray .eq. 0. .OR. altray .eq. -2. .OR. abs(altray) .eq. 90.)then
@@ -354,6 +355,22 @@
              else
                idebug = 0
              endif
+
+             if(aod_vrt .gt. 5.0)then
+!               od_a_scat = od_a_slant_a(ic,ialt)
+                od_a_scat = aod_ref * ext_a(ic) 
+                gscat = aod_asy(2,ic)
+                if(idebug .gt. 0)then
+                  write(6,*)
+                  write(6,*)' Calling mscat_phase 1 for ialt/ic = ',ialt,ic,od_a_scat,gscat
+                endif
+!               We can still mimic the phase function from 'get_cld_pf' and 'ssa' from 'get_cloud_rad'
+                call mscat_phase(od_a_scat,ssa(ic),gscat,idebug,gmean,ssa_eff(ic))
+                ssa_eff(ic) = ssa_eff(ic) ! * (0.5 + 0.5 * sind(altray))
+             else
+                ssa_eff(ic) = ssa(ic)
+             endif             
+
              if(aa_90 .gt. 0.)then
                  aa_o_aa_90 = aa/aa_90
                  aa_s_o_aa_90 = aa_s/aa_90
@@ -363,7 +380,7 @@
              endif
              call get_clr_src_dir(sol_alt,altray,ext_g(ic), &
                 od_g_vert,od_a_vert,ext_ha(ic), &
-                htmsl,ssa(ic),ag/ag_90,ao,aa_o_aa_90, &
+                htmsl,ssa_eff(ic),ag/ag_90,ao,aa_o_aa_90, &
                 aod_ref,aero_refht,aero_scaleht, &
                 ag_s/ag_90,aa_s_o_aa_90,ic,idebug, &
                 istart,iend, &
@@ -561,7 +578,7 @@
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
                   altray,view_azi_deg, &
                   ext_g(ic),od_g_vert,od_o_msl,od_o_vert, &
-                  od_a_vert,ext_ha(ic),htmsl,ssa(ic), &
+                  od_a_vert,ext_ha(ic),htmsl,ssa_eff(ic), &
                   ag/ag_90,ao,aa_o_aa_90, &
                   aod_ref,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
@@ -782,8 +799,16 @@
 !               topo phase function assumes scatter order is non-topo 
 !               value (for now)
                 hg2t(ic) = hg2(ic)
-
-                call mscat_phase(od_a,ssa(ic),g,idebug,gmean,ssa_eff(ic))
+ 
+!               od_a_scat = od_a_slant_a(ic,ialt)
+                od_a_scat = aod_ref * ext_a(ic) 
+                gscat = aod_asy(2,ic)
+                if(idebug .gt. 0)then
+                  write(6,*)
+                  write(6,*)' Calling mscat_phase 2 for ialt/ic = ',ialt,ic,od_a_scat,gscat
+                endif
+                call mscat_phase(od_a_scat,ssa(ic),gscat,idebug,gmean,ssa_eff(ic))
+                ssa_eff(ic) = ssa_eff(ic) ! * (0.5 + 0.5 * sind(altray))
               enddo 
 
             endif
@@ -858,8 +883,7 @@
                     (rayleigh_gnd   * sumi_gc(ic) * gasf * radf + &
                      hg2d(ic)       * sumi_ac(ic) * aodf   )
 
-                if(idebug .ge. 1 .AND. &
-                                    (ic .eq. ic  .or. altray .eq. 90.))then
+                if(idebug .ge. 1 .OR. clear_rad_c(ic,ialt,jazi) .gt. 1e15)then
 !                 write(6,*)'solalt_ref/twi_alt/cradf ',solalt_ref,twi_alt,clear_radf_c(ic,ialt,jazi)
                   write(6,71)ic,day_inte,elong(ialt,jazi) &
                       ,sumi_gc(ic),sumi_ac(ic),gasf,radf,aodf,aodfo &
@@ -1009,7 +1033,7 @@
                      altray,view_azi_deg,emis_ang,r_missing_data, &     ! I
                      ext_g(ic),od_g_vert,od_o_msl,od_a_vert, &          ! I
                      htmsl,dist_2_topo(ialt,jazi), &                    ! I
-                     ssa(ic),ag/ag_90,aa_o_aa_90, &                     ! I
+                     ssa_eff(ic),ag/ag_90,aa_o_aa_90, &                 ! I
                      aod_ref,aero_refht,aero_scaleht, &                 ! I
                      ags_a,aas_a, &                                     ! I
                      isolalt_lo,isolalt_hi,del_solalt,ic,idebug_topo, & ! I
@@ -1071,7 +1095,7 @@
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
                        ,radf,sumi_act(ic),hg2t(ic) &
-                       ,aodf,aodfo,ssa(ic),clear_rad_topo      
+                       ,aodf,aodfo,ssa_eff(ic),clear_rad_topo      
 91                  format('elg/ig/rayg/radf/ia/hg2t/aodf/aodfo/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,4f9.4,f7.2,3x,f12.0)
                   endif
 
