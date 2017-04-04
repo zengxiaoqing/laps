@@ -3,6 +3,7 @@
            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt,sfc_glow)
 
      use mem_namelist, ONLY: r_missing_data, earth_radius, ssa, aod
+     use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      use mem_allsky, ONLY: mode_aero_cld
      use cloud_rad ! Cloud Radiation and Microphysics Parameters
@@ -27,7 +28,7 @@
      real cice_3d(ni,nj,nk) ! kg/m**3
      real rain_3d(ni,nj,nk) ! kg/m**3
      real snow_3d(ni,nj,nk) ! kg/m**3
-     real btau_inc_3d(ni,nj,2)
+     real btau_inc_3d(nc,ni,nj,2)
      real heights_3d(ni,nj,nk)
      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
      real transm_4d(ni,nj,nk,nc) ! adding 3 color information, account for
@@ -48,6 +49,7 @@
      real bi_coeff(2,2)
      real eclipse(ni,nj) ; logical l_solar_eclipse /.false./
      logical l_terrain_following /.false./
+     logical l_generic /.false./
 
 !    n                                    (number concentration:   m**-3)
 !    sigma                                (cross-section:          m**2)
@@ -125,14 +127,21 @@
            const_cice = ((1.5 / rholiq ) / reff_cice_f(cice_3d(i,j,ku))) * bksct_eff_cice * ds
            const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
            const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
-
-           btau_inc_3d(i,j,2) &
+           const_aero =                                 bksct_eff_aero * ds
+           if(l_generic)then
+             btau_inc_3d(:,i,j,2) &
+               = clwc_3d(i,j,ku)*const_clwc + cice_3d(i,j,ku)*const_cice &
+               + rain_3d(i,j,ku)*const_rain + snow_3d(i,j,ku)*const_snow &
+               + aod_3d(i,j,ku)*const_aero  
+           else
+             btau_inc_3d(:,i,j,2) &
                = clwc_3d(i,j,ku)*const_clwc + cice_3d(i,j,ku)*const_cice &
                + rain_3d(i,j,ku)*const_rain + snow_3d(i,j,ku)*const_snow
+           endif
          enddo ! i
          enddo ! j        
        else
-           btau_inc_3d(:,:,2) = btau_inc_3d(:,:,1)  
+           btau_inc_3d(:,:,:,2) = btau_inc_3d(:,:,:,1)  
        endif
 
        do j = 1,nj
@@ -143,10 +152,18 @@
          const_cice = ((1.5 / rholiq ) / reff_cice_f(cice_3d(i,j,kl))) * bksct_eff_cice * ds
          const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
          const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
+         const_aero =                                 bksct_eff_aero * ds
 
-         btau_inc_3d(i,j,1) &
+         if(l_generic)then
+           btau_inc_3d(:,i,j,1) &
+               = clwc_3d(i,j,kl)*const_clwc + cice_3d(i,j,kl)*const_cice &
+               + rain_3d(i,j,kl)*const_rain + snow_3d(i,j,kl)*const_snow &
+               + aod_3d(i,j,kl)*const_aero  
+         else
+           btau_inc_3d(:,i,j,1) &
                = clwc_3d(i,j,kl)*const_clwc + cice_3d(i,j,kl)*const_cice &
                + rain_3d(i,j,kl)*const_rain + snow_3d(i,j,kl)*const_snow
+         endif
        enddo ! i
        enddo ! j        
        write(6,*)
@@ -193,14 +210,14 @@
           if(heights_3d_il_jl_kl .gt. terr_max)then      ! above
             nsub = 0
             ihit_terrain_ref = 0
-            btau_inc_m = 0.5 * (btau_inc_3d(iu,ju,2 ) + btau_inc_3d(il,jl, 1))   
+            btau_inc_m = 0.5 * (btau_inc_3d(1,iu,ju,2 ) + btau_inc_3d(1,il,jl, 1))   
           elseif(heights_3d(iu,ju,ku) .lt. terr_min)then ! below
             nsub = 0
             ihit_terrain_ref = 1
             btau_inc_m = 0.0                                             
           else                                           ! between                                                  
             nsub = max(nint(dij),1)
-            btau_inc_m = 0.5 * (btau_inc_3d(iu,ju,2 ) + btau_inc_3d(il,jl, 1))   
+            btau_inc_m = 0.5 * (btau_inc_3d(1,iu,ju,2 ) + btau_inc_3d(1,il,jl, 1))   
           endif
 
 !         Check slant ray & terrain within grid box coming toward MSL observer
