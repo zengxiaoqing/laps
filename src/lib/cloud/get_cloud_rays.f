@@ -1,7 +1,7 @@
          
         subroutine get_cloud_rays(i4time,clwc_3d,cice_3d,heights_3d     ! I
      1                           ,rain_3d,snow_3d                       ! I
-     1                           ,pres_3d,aod_3d,topo_sfc,topo_a        ! I
+     1                           ,pres_3d,topo_sfc,topo_a               ! I
      1                           ,topo_albedo_2d                        ! I
      1                           ,swi_2d                                ! I
      1                           ,topo_gti,topo_albedo                  ! O
@@ -38,6 +38,7 @@
      1                           ,istatus)                              ! O
 
         use mem_namelist, ONLY: earth_radius,aero_scaleht,redp_lvl
+        use mem_allsky, ONLY: aod_3d ! (extinction coefficient)         ! I
         use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! O
         use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)   ! L
         use mem_allsky, ONLY: upxrad_3d ! (upward irradiance xcos)      ! L
@@ -90,7 +91,7 @@
         real rain_3d(ni,nj,nk) ! kg/m**3
         real snow_3d(ni,nj,nk) ! kg/m**3
         real cond_3d(ni,nj,nk) ! kg/m**3 (effective LWC)
-        real aod_3d(ni,nj,nk)  ! aerosol extinction coefficient
+!       real aod_3d(ni,nj,nk)  ! aerosol extinction coefficient
         real bi_coeff(2,2),tri_coeff(2,2,2)
         real heights_3d(ni,nj,nk)    ! MSL
         real transm_3d(ni,nj,nk)     ! O
