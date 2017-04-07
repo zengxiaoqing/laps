@@ -610,6 +610,23 @@ c March 2003 added HKO (gms) sat ingest
             return
          endif
 
+      elseif(csattype.eq.'cms')then
+
+         call COMScount2tbNrad_sub(
+     & path_to_raw_sat(1,jtype,ksat)
+     &,n_lines_ir(jtype,ksat),n_pixels_ir(jtype,ksat)        !<-- full array size raw data
+!    &,maxchannel,max_files,nchannels,csatid,csattype
+!    &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
+     &,image_ir
+!    &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
+!    &,image_67,image_12,nimages,nft,ntm,c_type,i4time_data
+     &,istatus)
+
+         if (istatus.eq.0) then
+            print*,'Error returned: COMScount2tbNrad_sub'
+            return
+         endif
+
       endif
 
 c --------------------------------------------------------------------
