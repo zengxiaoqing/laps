@@ -8,7 +8,7 @@
            conf_isjtkc                              "
               satellite_common_lvd           include/satellite_common_lvd.inc
               satdata_lvd_table              include/satdata_lvd_table.for
-       compute_nav_ll                        compute_nav_llij.f
+       compute_nav_llij                      compute_nav_llij.f
            genlvdlut_lvd                     lib/satellite/genlvdlut_lvd.f 
                gen_lut_lambert               lib/satellite/gen_lut_lambert.f
                    get_wfo_nav_parms         lib/satellite/update_gvarimg_parms.f
@@ -40,10 +40,11 @@
                        rdblock_line_elem     rdcdfblock.f    
                            getsat_attributes getsat_attributes.f
                        read_netcdf_sat_head  lib/satellite/readnet.f        
-           read_gms_hko                      read_gms_hko.f
-               get_satdat_attributes         getsat_attributes.f
            read_gms_taiwan                   read_gms_hko.f
                get_satdat_attributes         getsat_attributes.f
+           read_gms_hko                      read_gms_hko.f
+               get_satdat_attributes         getsat_attributes.f
+           COMScount2tbNrad_sub              COMScount2tbNrad_sub.f90
            genbtemplut                       genbtemplut.f
                get_satdat_attributes         getsat_attributes.f
            satdatfill                        satdatfill.f
@@ -113,10 +114,9 @@ The lvd output is in a specific satellite_id subdirectory (currently
 there are four satellites known, one is obsolete: goes08, goes09 [obsolete],
 goes10 and GMS).  lvd  processes more that one satellite simultaneously
 depending on CSATID settings. The satellite data format is activated with namelist
-parameter CSATTYPES. There is a maximum of 4 satellite data format types (GVAR
-[gvr], WFO [wfo], FSL-public [cdf], and AFWA [gwc]). lvd can process all
-four data formats for any satellite simultaneously with the appropriate
-namelist settings of CSATID and CSATTYPES. 
+parameter CSATTYPES. There is variety of allowed data format types.
+LVD can process four data formats for any satellite simultaneously with the 
+appropriate namelist settings of CSATID and CSATTYPES. 
 
 A similar functionality exists for the channel processing which uses
 namelist parameter CCHANNELTYPES. The GOES imagers have five channels which
@@ -129,9 +129,14 @@ channels but the channel switch conforms to the GOES channels as follows:
                       RAW Satellite Data Types
                      -------------------------
 
-lvd accepts goes08, goes09 and goes10 satellite data in several formats: 
+lvd accepts goes08, goes09 and goes10 and other geosynchronous satellite data 
+in several formats: 
 
     1. netcdf public: remapped fsl-conus [lambert] (type=cdf) and 
-                      raw gvar (type=gvr).
+                      raw gvar                     (type=gvr)
     2. wfo SBN: also netcdf and lambert projection (type=wfo)
-    3. AirForce Global Weather Center (type=gwc).
+    3. AirForce Global Weather Center              (type=gwc)
+    4. GVAR NetCDF data with lat/lons added        (type=rll)
+    5  GOES-R NOAAPORT                             (type=gnp)
+    6. KMA COMS satellite                          (type=cms)
+ 
