@@ -601,6 +601,10 @@ c
       print*,'Start conf_isjtkc...'
 
 !     Determine satellites with help of 'satdata_lvd_table'
+
+      write(6,*)' csatid array: ',csatid
+      write(6,*)' satellite_ids array: ',csatid
+
       ISATS=0   
       do i=1,nsats
         do js = 1,maxsat
