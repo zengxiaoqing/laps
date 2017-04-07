@@ -18,7 +18,9 @@
      3  'goesne',
      4  'goesnw',
      5  'goesse',
-     6  'goessw'/
+     6  'goessw',
+     7  'goes16',
+     8  'coms'/
 
       data satellite_types/
      1              'gvr','wfo','cdf','rll',
@@ -36,7 +38,9 @@
      3              'gvr','wfo','cdf','rll',
      4              'gvr','wfo','cdf','rll',
      5              'gvr','wfo','cdf','rll',
-     6              'gvr','wfo','cdf','rll'/
+     6              'gvr','wfo','cdf','rll',
+     7              'gnp','   ','   ','   ',
+     8              'cms','   ','   ','   '/
 
       data satellite_channels/
      1              'vis','4u ','wv ','11u','12u','   ',
@@ -117,4 +121,14 @@
      1              'vis','4u ','wv ','11u','12u','   ',
      2              'vis','i39','iwv','i11','i12','   ',
      3              'vis','4u ','wv ','11u','12u','   ',
-     4              '   ','   ','   ','   ','   ','   '/  !end for goessw
+     4              '   ','   ','   ','   ','   ','   ',  !end for goessw
+
+     1              'vis','4u ','wv ','11u','12u','   ',
+     2              '   ','   ','   ','   ','   ','   ',
+     3              '   ','   ','   ','   ','   ','   ',
+     4              '   ','   ','   ','   ','   ','   ',  !end for goes16
+
+     1              'vis','4u ','wv ','11u','12u','   ',
+     2              '   ','   ','   ','   ','   ','   ',
+     3              '   ','   ','   ','   ','   ','   ',
+     4              '   ','   ','   ','   ','   ','   '/  !end for coms
