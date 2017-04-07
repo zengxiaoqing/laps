@@ -23,7 +23,8 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/satellite/libdebugsatellite.a \
              $(SRCROOT)/src/lib/util/libdebugutil.a
 
 .SUFFIXES:
-.SUFFIXES: .o .c .f .a .F .i .exe
+.SUFFIXES: .o .c .f .f90 .a .F .i .exe
+.f90.o:;    $(FC) $(FLAG) $(FREE) -c $*.f90
 
 EXE = lvd_sat_ingest.exe
 
@@ -38,6 +39,7 @@ SRC = lvd_driver_sub.f \
   readlut.f \
   read_gvarimg_cnt2btemp_lut.f \
   rdcdfblock.f \
+  COMScount2tbNrad_sub.f90 \
   get_cldtop_p_sub.f \
   getcdf_satdat.f \
   getsat_attributes.f \
