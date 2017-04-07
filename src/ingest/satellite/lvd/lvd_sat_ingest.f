@@ -129,7 +129,8 @@ c
             print*,' ',i,' ',TRIM(path_to_raw_sat(i,j,k))
           enddo
 
-          if(trim(c_sat_types(j,k)) .ne. 'rll')then
+          if(trim(c_sat_types(j,k)) .ne. 'rll' .and.
+     &       trim(c_sat_types(j,k)) .ne. 'cms'      )then
  
             call compute_nav_llij(nx_l,ny_l,maxchannel,nchannels,
      &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,gri,grj,
@@ -146,7 +147,8 @@ c
             endif
 
           else
-             print*,' Type is rll, skip compute_nav_llij'
+             print*,' Skip compute_nav_llij for type '
+     &             ,trim(c_sat_types(j,k))
              print*,' Try reading lat/lon arrays from sat data file'
              print*,' For now gri and grj will be blank'            
 
