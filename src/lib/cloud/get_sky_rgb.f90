@@ -983,6 +983,8 @@
 
               do ic = 1,nc
                   if(htmsl .ge. 1000e3 .and. .true.)then ! experimental (e.g. DSCOVR)
+!                     Note the BRDF is presently borrowed from that for snow. A phase function
+!                     component could be added to capture the glory.                     
                       pf_top(ic) = pf_scat(ic,i,j) * (1. - cloud_albedo) & ! thin
                                  + 2. * cld_brdf(ic,i,j) * cloud_albedo * (sind(max(solalt_ref,0.)))**0.6 ! thick / lambert 
                   else
@@ -1749,7 +1751,7 @@
           radmax(ic) = maxval(sky_rad_a(ic,:,:))
         enddo ! ic
         write(6,*)' max rad = ',radmax(:)
-        write(6,*)' max norm refl = ',radmax(:)/(2. * day_int)
+        write(6,*)' max normal reflectance = ',radmax(:)/(2. * day_int)
 
 !       Add bounds to rgb values
 !       do j = 1,nj
