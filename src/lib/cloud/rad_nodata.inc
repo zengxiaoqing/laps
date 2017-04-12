@@ -112,3 +112,13 @@
 
 !       Anisotropic exitance factor for sfc lights (angle above ground looking from lights)
         aef_f(a) = 1. / sind(max(a,+19.47))
+
+!       Microphysics
+        reff_cice_f(cice) = .000034 * (max(cice,1e-6)/1.66e-6)**(+0.14)
+        reff_clwc_f(clwc) = (3. + 8. * (max(clwc,1e-6)*1.00e3)**(+0.50)) / 1e6 
+
+!       Aerosol scattering
+        dhg_gterm(pha,g) = 1. / (1. + g**2 - 2.*g*cosd(pha))**1.5
+        dhg_fterm(pha,g) = (3. * ((cosd(pha))**2) - 1.) / (2. * (1.+g**2)**1.5)
+        dhg(pha,g,f) = (1.-g**2) * (dhg_gterm(pha,g) + f * dhg_fterm(pha,g))
+        dhg2(pha,f,p) = (1.-p) * dhg(pha,g1,f) + p * dhg(pha,g2,f)
