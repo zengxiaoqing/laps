@@ -203,13 +203,18 @@ c               goto 1000
 c           endif
 c           endif
 
-            rlap=centerlat
-            rlov=centerlon
+            rlap=centerlat ! assume standard lat = central lat
+            rlov=centerlon ! assume standard lon = central lon
 
          else
             print*,'Error returned from get_wfo_nav_parms'
             goto 1000
          endif
+
+c goes noaaport
+      elseif(cdtype.eq.'gnp')then
+         continue
+!        call get_attribute_gnp()
 
 c not wfo data type
       elseif(cdtype.eq.'cdf')then
@@ -287,11 +292,11 @@ c           endif
       write(6,*)'ny3    ',ny3
       write(6,*)'nx3mx  ',nx3mx
       write(6,*)'ny3mx  ',ny3mx
-      write(6,*)'rla100 ',rla100
-      write(6,*)'rlo100 ',rlo100
+      write(6,*)'rla100 ',rla100   ! Lower left latitude
+      write(6,*)'rlo100 ',rlo100   ! Lower left longitude
       write(6,*)'rlatin ',rlatin
-      write(6,*)'rlov   ',rlov
-      write(6,*)'rlap   ',rlap
+      write(6,*)'rlov   ',rlov     ! Standard longitude
+      write(6,*)'rlap   ',rlap     ! Standard latitude
 c
 c expand domain lats/lons: extra row and column "laps domain" used
 c to build the domain relative look up table
