@@ -1,5 +1,5 @@
 
-subroutine COMScount2tbNrad_sub(path_to_raw_sat,n_lines_ir,n_pixels_ir,ir1_tb_out,istatus)
+subroutine COMScount2tbNrad_sub(path_to_raw_sat,max_files,n_lines_ir,n_pixels_ir,r_missing_data,image_lat_ir,image_lon_ir,ir1_tb_out,i4time_data,istatus)
 
 
 !****************************************************************************
@@ -40,30 +40,46 @@ integer, parameter :: nx=1934, ny=1544, nbyte=2, numofch=5, sizeofctab=1024
 integer*2, dimension(nx,ny) :: ir1, ir2, wv, swir, vis
 real, dimension(sizeofctab,numofch) :: tb, rad
 real, dimension(nx,ny) :: ir1_tb, ir2_tb, wv_tb, swir_tb, vis_tb, ir1_rad, ir2_rad, wv_rad, swir_rad, vis_rad
-! integer, dimension(nx*ny,2) :: latticepoint
-! real, dimension(nx*ny,2) :: latlon
+integer, dimension(nx*ny,2) :: latticepoint
+real, dimension(nx*ny,2) :: latlon
+real, dimension(nx,ny) :: image_lat_ir,image_lon_ir
+character*12 a12time_coms
+character*13 a13time
+integer cvt_wfo_fname13_i4time
 
 ! Inputs
 character*200 path_to_raw_sat
 
 ! Outputs
+integer i4time_data(max_files)
 real, dimension(n_pixels_ir,n_lines_ir) :: ir1_tb_out
+real, dimension(n_pixels_ir,n_lines_ir) :: ir2_tb_out
+real, dimension(n_pixels_ir,n_lines_ir) :: wv_tb_out
+real, dimension(n_pixels_ir,n_lines_ir) :: swir_tb_out
+real, dimension(n_pixels_ir,n_lines_ir) :: vis_rad_out
+
+write(6,*)' Subroutine COMScounttbNrad ',nx,ny,n_pixels_ir,n_lines_ir
+
+a12time_coms = '201701010000'
+a13time = a12time_coms(1:8)//'_'//a12time_coms(9:12)
+i4time_data(1)=cvt_wfo_fname13_i4time(a13time)
+write(6,*)' Read binary data for ',a12time_coms,' ',a13time,i4time_data(1)
 
 ! Read binary data
 
-open(20,file='trim(path_to_raw_sat)/coms_le1b_ir1_ch1_cn_201701010000.bin',& 
+open(20,file=trim(path_to_raw_sat)//'/coms_le1b_ir1_ch1_cn_'//a12time_coms//'.bin',& 
         form='unformatted', recl=nx*ny*nbyte, access='direct',&
         status='old', convert='big_endian')
-open(21,file='trim(path_to_raw_sat)/coms_le1b_ir2_ch2_cn_201701010000.bin',& 
+open(21,file=trim(path_to_raw_sat)//'/coms_le1b_ir2_ch2_cn_'//a12time_coms//'.bin',& 
         form='unformatted', recl=nx*ny*nbyte, access='direct',&
         status='old', convert='big_endian')
-open(22,file='trim(path_to_raw_sat)/coms_le1b_wv_ch3_cn_201701010000.bin',& 
+open(22,file=trim(path_to_raw_sat)//'/coms_le1b_wv_ch3_cn_'//a12time_coms//'.bin',& 
         form='unformatted', recl=nx*ny*nbyte, access='direct',&
         status='old', convert='big_endian')
-open(23,file='trim(path_to_raw_sat)/coms_le1b_swir_ch4_cn_201701010000.bin',& 
+open(23,file=trim(path_to_raw_sat)//'/coms_le1b_swir_ch4_cn_'//a12time_coms//'.bin',& 
         form='unformatted', recl=nx*ny*nbyte, access='direct',&
         status='old', convert='big_endian')
-open(24,file='trim(path_to_raw_sat)/coms_le1b_vis_ch5_cn_201701010000.bin',& 
+open(24,file=trim(path_to_raw_sat)//'/coms_le1b_vis_ch5_cn_'//a12time_coms//'.bin',& 
         form='unformatted', recl=nx*ny*nbyte, access='direct',&
         status='old', convert='big_endian')
 
@@ -79,10 +95,12 @@ close(23)
 close(24)
 
 
+write(6,*)' Read temperature and radiance table'
+
 ! Read temperature and radiance table
 
-open(10,file='./coms_mi_conversion_table_TB.dat')
-open(11,file='./coms_mi_conversion_table_radiance.dat')
+open(10,file=trim(path_to_raw_sat)//'/coms_mi_conversion_table_TB.dat')
+open(11,file=trim(path_to_raw_sat)//'/coms_mi_conversion_table_radiance.dat')
 
 do i=1, sizeofctab
 	read(10,*) tb(i,1), tb(i,2), tb(i,3), tb(i,4), tb(i,5)
@@ -92,6 +110,7 @@ enddo
 close(10)
 close(11)
 
+write(6,*)' Convert count value to TB and Albedo'
 
 ! Convert count value to TB and Albedo
 
@@ -161,6 +180,10 @@ if(iwrite .eq. 1)then
 
 else
     ir1_tb_out(:,:) = ir1_tb(:,:) 
+    ir2_tb_out(:,:) = ir2_tb(:,:) 
+    wv_tb_out(:,:) = wv_tb(:,:) 
+    swir_tb_out(:,:) = swir_tb(:,:) 
+    vis_rad_out(:,:) = vis_rad(:,:) 
 
 endif
 
@@ -168,11 +191,31 @@ endif
 ! To deal with FD or LA, put proper latitude-longitude table in open command.
 ! Example code uses latitude-longitude table for ENH mode.  
 
-! open(40,file='./cn_latlon.txt')
-! do i=1, nx*ny 
-! 	read(40,'(I4,x,I4,3x,F11.6,3x,F11.6)') latticepoint(i,1), latticepoint(i,2), latlon(i,1), latlon(i,2)
-! enddo 
-! close(40)
+write(6,*)' Read latlon data'
+image_lat_ir = r_missing_data
+image_lon_ir = r_missing_data
 
-return
+open(40,file=trim(path_to_raw_sat)//'/cn_latlon.txt',err=998)
+do i=1, nx*ny 
+  read(40,*)lattice1, lattice2, rlat, rlon
+  ii = lattice1+1
+  jj = lattice2+1
+! write(6,*)lattice1,lattice2,ii,jj,rlat,rlon
+  image_lat_ir(ii,jj) = rlat
+  image_lon_ir(ii,jj) = rlon
+enddo 
+close(40)
+
+write(6,*)' Center ir value ',ir1_tb_out(nx/2,ny/2)
+write(6,*)' Corner ir value ',ir1_tb_out(1,1)
+write(6,*)' Center lat/lon ',image_lat_ir(nx/2,ny/2),image_lon_ir(nx/2,ny/2)
+write(6,*)' Corner lat/lon ',image_lat_ir(1,1),image_lon_ir(1,1)
+
+istatus = 1
+return ! normal return
+
+998 write(6,*)' ERROR reading COMS lat/lon cn_latlon.txt data'
+istatus = 0
+return ! error return
+
 end subroutine COMScount2tbNrad_sub
