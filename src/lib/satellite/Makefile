@@ -34,6 +34,7 @@ SRC=bcdtoint.F \
     genlutps.f \
     genlvdlut_sub.f \
     genlvdlut_lvd.f \
+    get_attr_gnp.f \
     get_attr_satellite.f \
     getsat_boundary.f \
     lvd_file_specifier.f \
