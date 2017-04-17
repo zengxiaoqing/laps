@@ -32,7 +32,7 @@ cdis
       subroutine lvd_driver_sub(nx_l,ny_l,
      &               ksat,jtype,nimages,
      &               chtype,i4time_cur,i_delta_t,
-     &               gri,grj,lvd_status)
+     &               sri,srj,lvd_status)
 c
 c Program drives generation of LAPS lvd.  Processes satellite data.
 c
@@ -170,8 +170,8 @@ c
       real      r12_cnt_to_btemp_lut(0:1023)
       real      r39_cnt_to_btemp_lut(0:1023)
       real      r67_cnt_to_btemp_lut(0:1023)
-      real      gri(nx_l,ny_l,maxchannel)   !Input: i satellite coord at each LAPS grid point    
-      real      grj(nx_l,ny_l,maxchannel)   !Input: j satellite coord at each LAPS grid point    
+      real      sri(nx_l,ny_l,maxchannel)   !Input: i satellite coord at each LAPS grid point    
+      real      srj(nx_l,ny_l,maxchannel)   !Input: j satellite coord at each LAPS grid point    
       real      good_vis_data_thresh
 c
 c dimensions for lvd
@@ -288,12 +288,12 @@ c ---------------------------------------------
 c --------------------------------------------------------------------
 c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
-      if(csattype .eq. 'rll')then ! Java NetCDF files now use this type
-           print *,' Read lat/lon arrays to regenerate gri/grj'
+      if(csattype .eq. 'rll' .or. csattype .eq. 'cms')then ! Java NetCDF files now use this type
+           print *,' Read lat/lon arrays to regenerate sri/srj'
 !          print *,' Set i/j start/end for: ',jtype,ksat,
 !    1               i_end_ir(jtype,ksat),j_end_ir(jtype,ksat)
-!          gri = 100.
-!          grj = 50.                               
+!          sri = 100.
+!          srj = 50.                               
 
 !          if(csatid .eq. 'mtsat')then
 !              i_start_ir(jtype,ksat) =  1                             
@@ -320,7 +320,7 @@ c --------------------------------------------------------------------
      &   csattype.eq.'hko')then
 
          call readlut(csatid,csattype,maxchannel,nchannels,
-     &chtype,nx_l,ny_l,gri,grj,istatus)
+     &chtype,nx_l,ny_l,sri,srj,istatus)
 
 c        if(istatus.eq.1)then
 c           write(6,*)'Grid mapping arrays not obtained: '
@@ -332,21 +332,21 @@ c           write(6,*)'Successfully obtained mapping arrays '
 c        endif
 
          if(csattype.eq.'twn')then  !.or.csattype.eq.'hko')then
-            where (gri .lt. 0.5 .and. gri .gt. 0.0)gri=1.0
-            where (grj .lt. 0.5 .and. gri .gt. 0.0)grj=1.0
+            where (sri .lt. 0.5 .and. sri .gt. 0.0)sri=1.0
+            where (srj .lt. 0.5 .and. sri .gt. 0.0)srj=1.0
          endif 
 
 c sanity "nan" checker for grid mapping arrays.
-           call check_nan3(gri,nx_l,ny_l,maxchannel,nan_flag)
+           call check_nan3(sri,nx_l,ny_l,maxchannel,nan_flag)
            if(nan_flag .ne. 1) then
-            print *,' ERROR: NaN in grid mapping array gri'
+            print *,' ERROR: NaN in grid mapping array sri'
             stop
            endif
 
 c
-           call check_nan3 (grj,nx_l,ny_l,maxchannel,nan_flag)
+           call check_nan3 (srj,nx_l,ny_l,maxchannel,nan_flag)
            if(nan_flag .ne. 1) then
-            print *,' ERROR: NaN in grid mapping array grj'
+            print *,' ERROR: NaN in grid mapping array srj'
             stop
            endif
 
@@ -454,7 +454,7 @@ c Find and read current satellite files... as many as 4 ir channels and vis.
          stop
        endif
       endif
-      if(csattype.eq.'rll')then
+      if(csattype.eq.'rll' .or. csattype.eq.'cms')then
        if(.not.allocated(image_lat_ir))then
         allocate(image_lat_ir(n_ir_lines,n_ir_elem),stat=istat)
         if(istat.ne.0)then
@@ -613,18 +613,32 @@ c March 2003 added HKO (gms) sat ingest
       elseif(csattype.eq.'cms')then
 
          call COMScount2tbNrad_sub(
-     & path_to_raw_sat(1,jtype,ksat)
+     & path_to_raw_sat(1,jtype,ksat),max_files
      &,n_lines_ir(jtype,ksat),n_pixels_ir(jtype,ksat)        !<-- full array size raw data
+     &,r_missing_data
 !    &,maxchannel,max_files,nchannels,csatid,csattype
 !    &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
+     &,image_lat_ir,image_lon_ir
      &,image_ir
 !    &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
-!    &,image_67,image_12,nimages,nft,ntm,c_type,i4time_data
-     &,istatus)
+!    &,image_67,image_12,nimages,nft,ntm,c_type
+     &,i4time_data,istatus)
+
+         nft = istatus
+         ntm = 1
+         c_type(1,1) = 'ir'
+
+         where(image_lat_ir(:,:) .eq. -999.)
+     &         image_lat_ir(:,:) = r_missing_data      
+
+         where(image_lon_ir(:,:) .eq. -999.)
+     &         image_lon_ir(:,:) = r_missing_data      
 
          if (istatus.eq.0) then
             print*,'Error returned: COMScount2tbNrad_sub'
-            return
+         else
+            print*,'Success in COMScount2tbNrad_sub for i4time '
+     &            ,i4time_data(1)
          endif
 
       endif
@@ -736,7 +750,7 @@ c
 c     lsatqc=.true.
       lsatqc=.false.
       if(csattype.eq.'asc'.or.csattype.eq.'gwc'.or.
-     &csattype.eq.'twn'.or.csattype.eq.'hko')lsatqc=.false.
+     &   csattype.eq.'twn'.or.csattype.eq.'hko')lsatqc=.false.
       
       if(lsatqc)then
 
@@ -839,9 +853,10 @@ c ------------------------------------------------------------
        if(csattype.ne.'asc'.and.
      &    csattype.ne.'hko'.and.
      &    csattype.ne.'rll'.and.
+     &    csattype.ne.'cms'.and.
      &    csattype.ne.'ncp')then
           write(6,*)
-          write(6,*)'Convert counts to brightness temps'
+          write(6,*)'Convert counts to brightness temps ',csattype
           do i = 1,nft
           do j = 1,ntm(i)
              if(r_image_status(j,i).le.0.333)then
@@ -941,7 +956,8 @@ c
           write(6,*)'Done with conversion'
           write(6,*)
        else
-          write(6,*)'Cannot convert image to btemps '
+          write(6,*)'No btemps conversion for this csattype '
+     &             ,csattype
        endif
 c
 c ------------------------------------------------------------------------------------------------
@@ -983,7 +999,6 @@ c
          nlf_prev = 1
 
          call make_fnam_lp(i4time_data(i),c_fname,istatus)
-
 c
 c ----------  GMS SATELLITE SWITCH -------
          if(csatid.eq.'gmssat'.and. csattype.ne.'twn'
@@ -1000,11 +1015,11 @@ c ----------  GMS SATELLITE SWITCH -------
               if(r_image_status(j,i).le.0.3333)then
 
 !              Is this needed for coarse LAPS grids using pixel averaging?
-               if(csattype.eq.'rll')then
+               if(csattype.eq.'rll' .or. csattype.eq.'cms')then
                    write(6,*)' Calling latlon_to_grij for IR'
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
-     1                                 gri(1,1,ispec),grj(1,1,ispec),
+     1                                 sri(1,1,ispec),srj(1,1,ispec),
      1                                 n_ir_elem,n_ir_lines,istatus)
                    if(istatus .ne. 1)r_image_status(j,i) = 1.
                endif
@@ -1014,8 +1029,8 @@ c ----------  GMS SATELLITE SWITCH -------
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
      &                      image_ir(1,1,i),
-     &                      gri(1,1,ispec),
-     &                      grj(1,1,ispec),
+     &                      sri(1,1,ispec),
+     &                      srj(1,1,ispec),
      &                      c_type(j,i),
      &                      ta8,tb8,tc8,
      &                      istatus)
@@ -1064,15 +1079,15 @@ c                    endif
               endif
 
             elseif(ispec.eq.2)then
-            if(r_image_status(j,i).lt.0.3333)then
+              if(r_image_status(j,i).lt.0.3333)then
 
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
      &                      image_39(1,1,i),
-     &                      gri(1,1,ispec),
-     &                      grj(1,1,ispec),
+     &                      sri(1,1,ispec),
+     &                      srj(1,1,ispec),
      &                      c_type(j,i),
      &                      ta4,tb4,tb4,
      &                      istatus)
@@ -1109,8 +1124,8 @@ c                    endif
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
      &                      image_12(1,1,i),
-     &                      gri(1,1,ispec),
-     &                      grj(1,1,ispec),
+     &                      sri(1,1,ispec),
+     &                      srj(1,1,ispec),
      &                      c_type(j,i),
      &                      ta12,tb12,tb12,
      &                      istatus)
@@ -1147,8 +1162,8 @@ c                    endif
      &                      n_wv_lines,n_wv_elem,
      &                      r_grid_ratio(j,i),
      &                      image_67(1,1,i),
-     &                      gri(1,1,ispec),
-     &                      grj(1,1,ispec),
+     &                      sri(1,1,ispec),
+     &                      srj(1,1,ispec),
      &                      c_type(j,i),
      &                      ta6,tb6,tb6,
      &                      istatus)
@@ -1184,7 +1199,7 @@ c                    endif
                    write(6,*)' Calling latlon_to_grij for VIS'
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
-     1                                 gri(1,1,ispec),grj(1,1,ispec),
+     1                                 sri(1,1,ispec),srj(1,1,ispec),
      1                                 n_ir_elem,n_ir_lines,istatus)
                    if(istatus .ne. 1)r_image_status(j,i) = 1.
                endif
@@ -1196,8 +1211,8 @@ c                    endif
      &                      n_vis_lines,n_vis_elem,    !array dimensions
      &                      r_grid_ratio(j,i),
      &                      image_vis(1,1,i),
-     &                      gri(1,1,ispec),
-     &                      grj(1,1,ispec),
+     &                      sri(1,1,ispec),
+     &                      srj(1,1,ispec),
      &                      sublat_d,sublon_d,range_m,
      &                      visraw,visnorm,albedo,
      &                      istatus_vis)
