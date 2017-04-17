@@ -118,7 +118,7 @@ c
 
         call array_range(image_ir,elem_dim,line_dim,rmin,rmax
      1                  ,r_missing_data)
-        write(6,*)' image_ir (non-missing) range is ',rmin,rmax
+        write(6,*)' image_ir input (non-missing) range is ',rmin,rmax
 
         if(icnt.gt.(pcnt_msng_thresh*elem_dim*line_dim))then
            lforce_switch=.true.
