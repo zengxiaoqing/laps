@@ -312,6 +312,7 @@ lvd/goeswe lvd/goesea
 lvd/goesnw lvd/goesne
 lvd/goessw lvd/goesse 
 lvd/meteos lvd/gmssat lvd/noaapo lvd/mtsat lvd/fy
+lvd/goes16 lvd/coms
 lw3 lwc lwm ctp msg pig pin prg pro sag vrc vrz snd 
 v01 v02 v03 v04 v05 v06 v07 v08 v09 v10 v11 v12 
 v13 v14 v15 v16 v17 v18 v19 v20 v21 v22 v23 v24
