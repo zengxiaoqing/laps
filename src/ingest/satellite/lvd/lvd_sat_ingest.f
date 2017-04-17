@@ -45,8 +45,8 @@ c
       character   cgeneric_dataroot*255
       character   c_gridfname*50
 
-      real, allocatable :: gri(:,:,:)
-      real, allocatable :: grj(:,:,:)
+      real, allocatable :: sri(:,:,:)
+      real, allocatable :: srj(:,:,:)
 c
 c ========================== START ==============================
 c 
@@ -77,8 +77,8 @@ c this is designed to allow archive data runs!
          i4time_cur=i4time_sys
       endif
 
-      allocate (gri(nx_l,ny_l,maxchannel),
-     &          grj(nx_l,ny_l,maxchannel))
+      allocate (sri(nx_l,ny_l,maxchannel),
+     &          srj(nx_l,ny_l,maxchannel))
 
 c---------------------------------------------------------------
 c Compute array dimensions for ir, vis, and wv.
@@ -132,8 +132,9 @@ c
           if(trim(c_sat_types(j,k)) .ne. 'rll' .and.
      &       trim(c_sat_types(j,k)) .ne. 'cms'      )then
  
+!           Obtain satellite sri/srj pixel coordinates for each model gridpoint
             call compute_nav_llij(nx_l,ny_l,maxchannel,nchannels,
-     &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,gri,grj,
+     &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,sri,srj,
      &nav_status)
 
             if(nav_status.eq.1)then
@@ -150,7 +151,8 @@ c
              print*,' Skip compute_nav_llij for type '
      &             ,trim(c_sat_types(j,k))
              print*,' Try reading lat/lon arrays from sat data file'
-             print*,' For now gri and grj will be blank'            
+             print*,' for computing gri/j. For now sri and srj will'            
+             print*,' be blank'            
 
           endif
 c
@@ -158,7 +160,7 @@ c ================================================================
 c
           call lvd_driver_sub(nx_l,ny_l,k,j,n_images,
      &                      chtype,i4time_cur,i_delta_sat_t_sec,
-     &                      gri,grj,istatus)
+     &                      sri,srj,istatus)
 
           if(istatus.ne.1)then
             print*,'NO data processed by lvd_driver_sub: ',
@@ -185,7 +187,7 @@ c =================================================================
        print*,'!!Check static/satellite_lvd.nl:  NSATS or CSATID'
        print*,'!!Terminating!!'
       endif
-1000  deallocate (gri,grj)
+1000  deallocate (sri,srj)
 
       write(6,*)' Program lvd_sat_ingest complete...'
 
