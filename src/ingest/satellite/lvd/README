@@ -14,6 +14,8 @@
                    get_wfo_nav_parms         lib/satellite/update_gvarimg_parms.f
                        get_attribute_wfo     lib/satellite/get_attr_satellite.f
                    rdcdfhead                 lib/satellite/rdcdfhead.f
+                   get_attribute_gnp         lib/satellite/get_attr_gnp.f
+                   getdudv_lam               lib/nav/getdudv_lam.f
                    get_sat_boundary          lib/satellite/getsat_boundary.f 
                gen_gvarimage_lut             lib/satellite/gen_lut_gvar.f
                    update_gvarimg_parms      lib/satellite/update_gvarimg_parms.f
