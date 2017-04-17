@@ -235,7 +235,7 @@ c
          goto 100
       endif
 c
-c get x dimension
+c get y dimension
 c
       dim_id = NCDID(nf_fid, 'y', rcode)
       if(rcode.ne.0)then
