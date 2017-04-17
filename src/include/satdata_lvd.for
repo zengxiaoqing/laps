@@ -1,3 +1,7 @@
+!     This file is included in subroutine 'config_satellite_lvd' in file
+!     'src/lib/read_namelist.f'. Within the above subroutine these data are
+!     aligned with the /lvd_namelist_cmn/ common block.      
+      
 !     C_SAT_ID(1)='goes08'
 !     C_SAT_ID(2)='meteos'
 !     C_SAT_ID(3)='goes10'
@@ -372,7 +376,7 @@ c -- Inputs to stretch for albedo calc --
 c -- geostationary satellite height (m) above earth surface
 !     SAT_RANGE_M(:)=42155680.00
       SAT_RANGE_M(:)=35786000.00
-c -- sub lat/lon for each geostationary satellite
+c -- sub lat/lon for each geostationary satellite (radians)
       R_SAT_SUB_LAT(1)=0.0
       R_SAT_SUB_LAT(2)=0.0
       R_SAT_SUB_LAT(3)=0.0
@@ -391,6 +395,7 @@ c -- sub lat/lon for each geostationary satellite
       R_SAT_SUB_LON(7)= -2.35619
       R_SAT_SUB_LON(8)= 0.42935
       R_SAT_SUB_LON(9)= 2.530727
+      R_SAT_SUB_LON(18)= 2.443
 c -- these resolution (grid spacing) settings should be available in
 c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_VIS(1,1)=1264.2157
@@ -466,6 +471,7 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_IR(3,6)=0.0
       R_RESOLUTION_X_IR(4,6)=0.0
       R_RESOLUTION_X_IR(4,9)=8000.0
+      R_RESOLUTION_X_IR(:,18)=5000.0
       R_RESOLUTION_Y_IR(1,1)=5053.0898
       R_RESOLUTION_Y_IR(2,1)=4063.6001
       R_RESOLUTION_Y_IR(3,1)=5079.2998
@@ -491,6 +497,7 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_Y_IR(3,6)=0.0
       R_RESOLUTION_Y_IR(4,6)=0.0
       R_RESOLUTION_Y_IR(4,9)=8000.0
+      R_RESOLUTION_Y_IR(:,18)=5000.0
       R_RESOLUTION_X_WV(1,1)=8373.9775
       R_RESOLUTION_X_WV(2,1)=8127.2002
       R_RESOLUTION_X_WV(3,1)=5079.2998
@@ -629,6 +636,7 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_IR(1:4,6)=0
       N_PIXELS_IR(1:4,9)=1375
       N_PIXELS_IR(1:4,10)=1250 ! 1140
+      N_PIXELS_IR(1:4,18)=1934
       N_LINES_IR(1,1)=823
       N_LINES_IR(2,1)=511
       N_LINES_IR(3,1)=897
@@ -645,6 +653,7 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_IR(1:4,6)=0
       N_LINES_IR(1:4,9)=1375
       N_LINES_IR(1:4,10)=1250 ! 1140
+      N_LINES_IR(1:4,18)=1544
       N_PIXELS_WV(1,1)=2000
       N_PIXELS_WV(2,1)=256
       N_PIXELS_WV(3,1)=1201
