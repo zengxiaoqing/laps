@@ -133,11 +133,15 @@
             rain_bin1 = rain_bin1 * rain_peak ! direct lighting
 
             do ic = 1,nc
+
+              pf_thn_clwc & 
+             = clwc_bin1a * hg(asy_clwc(ic)**hgp,elong_a(i,j))& ! corona
+             + clwc_bin1b * hg(.60**hgp         ,elong_a(i,j))&
+             + clwc_bin1c * hg(-.60             ,elong_a(i,j))&
+             + clwc_bin1d * hg(-.00             ,elong_a(i,j))
+
               pf_clwc(ic) &
-             = clwc_bin1a * clwc_bin1 * hg(asy_clwc(ic)**hgp,elong_a(i,j))& ! corona
-             + clwc_bin1b * clwc_bin1 * hg(.60**hgp         ,elong_a(i,j))&
-             + clwc_bin1c * clwc_bin1 * hg(-.60             ,elong_a(i,j))&
-             + clwc_bin1d * clwc_bin1 * hg(-.00             ,elong_a(i,j))&
+             = clwc_bin1  * pf_thn_clwc &
 !            + clwc_bin2  * hg(-0.3    ,elong_a(i,j))  
 !            + clwc_bin2  * 2.0    ! add albedo term?     
              + clwc_bin2  * pf_thk ! add albedo term?     
@@ -147,12 +151,15 @@
               rain_bin1c = -0.35
               rain_bin1d =   .20
 
-              pf_rain(ic) & 
-                     = rain_bin1a * rain_bin1 * hg(0.99**hgp,elong_a(i,j))&
-                     + rain_bin1b * rain_bin1 * hg(0.75**hgp,elong_a(i,j))&
-                     + rain_bin1c * rain_bin1 * hg(0.00     ,elong_a(i,j))&
-                     + rain_bin1d * rain_bin1 * hg(-.20     ,elong_a(i,j))&
-                     + clwc_bin2  * pf_thk ! add albedo term?     
+              pf_thn_rain &
+                     = rain_bin1a * hg(0.99**hgp,elong_a(i,j))&
+                     + rain_bin1b * hg(0.75**hgp,elong_a(i,j))&
+                     + rain_bin1c * hg(0.00     ,elong_a(i,j))&
+                     + rain_bin1d * hg(-.20     ,elong_a(i,j))
+
+              pf_rain(ic) &
+                     = rain_bin1 * pf_thn_rain &
+                     + clwc_bin2 * pf_thk ! add albedo term?     
 
               if(cloud_od_liq .eq. cloud_od_sp(i,j,1))then ! cloud liquid
                   pf_scat1(ic,i,j) = pf_clwc(ic)
@@ -193,10 +200,13 @@
 !         arg2 =  0.45 * fsnow + 0.28 * fcice
           arg2 =  1.0 - (arg1 + arg3 + arg4)
 
-          pf_snow = snow_bin1a * arg1 * hg( .999**hgp,elong_a(i,j)) & ! plates
-                  + snow_bin1a * arg2 * hg( .860**hgp,elong_a(i,j)) &
-                  + snow_bin1a * arg3 * hg( .000     ,elong_a(i,j)) & ! isotropic
-                  + snow_bin1a * arg4 * hg(-.600     ,elong_a(i,j)) & ! backscat
+          pf_thn_snow &
+                  = arg1 * hg( .999**hgp,elong_a(i,j)) & ! plates
+                  + arg2 * hg( .860**hgp,elong_a(i,j)) &
+                  + arg3 * hg( .000     ,elong_a(i,j)) & ! isotropic
+                  + arg4 * hg(-.600     ,elong_a(i,j))   ! backscat
+
+          pf_snow = snow_bin1a * pf_thn_snow &
                   + snow_bin1c * pf_thk
 !                 + snow_bin2  * hg(0.0     ,elong_a(i,j))  
 
