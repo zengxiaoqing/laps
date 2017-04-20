@@ -1,6 +1,7 @@
 
 
         subroutine get_sky_rgb(r_cloud_3d,cloud_od,cloud_od_sp,nsp, &   ! I
+                   cloud_od_sp_w,                                   &   ! I
                    r_cloud_rad,cloud_rad_c,cloud_rad_w,cloud_sfc_c, &   ! I
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobsl,& ! I
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
@@ -46,6 +47,7 @@
         real cloud_od(ni,nj)        ! cloud optical depth
         real cloud_od_loc(ni,nj)    ! cloud optical depth
         real cloud_od_sp(ni,nj,nsp) ! cloud species optical depth
+        real cloud_od_sp_w(ni,nj,nsp) ! cloud species optical depth (weighted)
         real cloud_od_sp_loc(ni,nj,nsp) ! cloud species optical depth (local)
         real bksct_eff_a(nsp)
         real r_cloud_rad(ni,nj)     ! sun to cloud transmissivity (direct+fwd scat)
@@ -120,6 +122,12 @@
         real od_a_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real clr_od(nc), sky_rad_ave(nc), transterm(nc), sph_rad_ave(nc)
         real topovis_c(nc), od2topo_c(nc), moon_rad_ave(nc), star_rad_ave(nc)
+
+!       New aero arrays (local)
+        real aero_od_src(nc,ni,nj)
+        real aero_od_obs(nc,ni,nj)
+        real aero_ssa(nc,ni,nj)
+        real mtr_msa(nc,ni,nj)
 
         real sky_rgb(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
@@ -782,9 +790,20 @@
 
         I4_elapsed = ishow_timer()
 
-        call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp_loc & ! I
+        if(.false.)then
+          call get_cld_pf(elong_a,alt_a,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp_loc & ! I
                        ,emis_ang_a,nsp,airmass_2_topo,idebug_pf,ni,nj &  ! I
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
+        else
+          aero_od_src(:,:,:) = 0.
+          aero_od_obs(:,:,:) = 0.
+          aero_ssa(:,:,:) = 1.
+          call get_scat_pf(elong_a,alt_a,aero_od_src,aero_od_obs,aero_ssa,aero_g         & ! I
+                          ,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp,nsp              & ! I
+                          ,cloud_od_sp_w                                                 & ! I
+                          ,emis_ang_a,airmass_2_topo,idebug_pf,ni,nj                     & ! I
+                          ,pf_scat,mtr_msa)                                                ! O
+        endif
 
         I4_elapsed = ishow_timer()
 
