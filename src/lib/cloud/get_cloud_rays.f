@@ -15,6 +15,7 @@
      1                           ,aod_tot,transm_obs,obs_glow_zen       ! O
      1                           ,transm_3d,transm_4d                   ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
+     1                           ,cloud_od_sp_w                         ! O
      1                           ,r_cloud_rad,cloud_rad_c,cloud_rad_w   ! O
      1                           ,clear_rad_c,clear_radf_c,patm         ! O
      1                           ,clear_rad_c_nt                        ! O
@@ -162,6 +163,7 @@
 
         parameter (nsp = 4)
         real cvr_path_sum_sp(nsp)
+        real cvr_path_sum_sp_w(nsp)
         real wt_sp(nsp) ; data wt_sp /1.0,0.5,0.02,0.0714/
 
         real elong_p(minalt:maxalt,minazi:maxazi)     ! dummy
@@ -171,6 +173,7 @@
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)  ! cloud opacity
         real cloud_od(minalt:maxalt,minazi:maxazi)    ! cloud optical depth
         real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)! cloud species tau
+        real cloud_od_sp_w(minalt:maxalt,minazi:maxazi,nsp)! cloud species tau (front weighted)
         real r_cloud_rad(minalt:maxalt,minazi:maxazi)    ! sun to cloud transmissivity (direct+fwd scat)
         real cloud_rad_c(nc,minalt:maxalt,minazi:maxazi) ! sun to cloud transmissivity (direct+fwd scat) * solar color/int
         real cloud_rad_w(minalt:maxalt,minazi:maxazi)    ! sun to cloud transmissivity (direct+fwd scat) * trans
@@ -1079,6 +1082,7 @@
           icloud = 0
           cvr_path_sum = 0.
           cvr_path_sum_sp = 0.
+          cvr_path_sum_sp_w = 0.
           ltype_1st = 0
           sum_odrad = 0.
           sum_odrad_c = 0.
@@ -1888,6 +1892,7 @@
                     endif
 !                   frac_fntcloud = 1.0
                     frac_fntcloud = trans(cvr_path_sum/.013) ! tau
+!                   cvr_path_sum_sp_w(:) = cvr_path_sum_sp(:)
                   elseif(cvr_path_sum .gt. .013)then 
 !                   frac_fntcloud = 0.0 ! make a more continuous function? 
                     frac_fntcloud = trans(cvr_path_sum/.013) ! tau
@@ -2074,6 +2079,8 @@
                       xcos_last = upxrad_3d_m
                       ycos_last = upyrad_3d_m
 
+                      cvr_path_sum_sp_w(:) = cvr_path_sum_sp(:)
+
                     elseif(cvr_path_sum      .gt.  bks_thr .AND.
      1                     cvr_path_sum_last .le.  bks_thr .AND.
      1                     cvr_path_sum_last .gt.  0.           )then
@@ -2103,6 +2110,10 @@
      1                           ,cloud_rad_w(ialt,jazi)
 71                      format(' last/new/frac/rad/radw',5f9.4)
                       endif
+
+                      cvr_path_sum_sp_w(:)
+     1                       = cvr_path_sum_sp_w(:) * (1.-frac_path)
+     1                       + cvr_path_sum_sp(:)   *  frac_path
 
 !                     xcosup = ???
 !                     ycosup = ???
@@ -2371,6 +2382,7 @@
 !         Store various accumulated sums
           cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
           cloud_od_sp(ialt,jazi,:) = clwc2alpha*cvr_path_sum_sp(:)   
+          cloud_od_sp_w(ialt,jazi,:) = clwc2alpha*cvr_path_sum_sp_w(:)   
           r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
 
           airmass_2_cloud_3d(ialt,jazi) = sum_am2cld_atten
@@ -2479,6 +2491,9 @@
               cloud_od_sp(ialt,jazi,:) = 
      1         fm * cloud_od_sp(ialt,jazim,:) 
      1                                  + fp * cloud_od_sp(ialt,jazip,:)
+              cloud_od_sp_w(ialt,jazi,:) = 
+     1         fm * cloud_od_sp_w(ialt,jazim,:) 
+     1                                + fp * cloud_od_sp_w(ialt,jazip,:)
               r_cloud_rad(ialt,jazi) = 
      1         fm * r_cloud_rad(ialt,jazim)+fp * r_cloud_rad(ialt,jazip)      
               cloud_rad_c(:,ialt,jazi) = 
@@ -2661,6 +2676,9 @@
      1       fm * cloud_od(ialtm,:)   + fp * cloud_od(ialtp,:)
             cloud_od_sp(ialt,:,:) =
      1       fm * cloud_od_sp(ialtm,:,:) + fp * cloud_od_sp(ialtp,:,:)
+            cloud_od_sp_w(ialt,:,:) =
+     1                                fm * cloud_od_sp_w(ialtm,:,:)
+     1                              + fp * cloud_od_sp_w(ialtp,:,:)
             r_cloud_rad(ialt,:) =
      1       fm * r_cloud_rad(ialtm,:)  + fp * r_cloud_rad(ialtp,:)
             cloud_rad_c(:,ialt,:) =
@@ -2670,8 +2688,8 @@
             clear_rad_c(:,ialt,:) =
      1       fm * clear_rad_c(:,ialtm,:) + fp * clear_rad_c(:,ialtp,:)
             clear_rad_c_nt(:,ialt,:) =
-     1         fm * clear_rad_c_nt(:,ialtm,:) 
-     1       + fp * clear_rad_c_nt(:,ialtp,:)
+     1                                fm * clear_rad_c_nt(:,ialtm,:) 
+     1                              + fp * clear_rad_c_nt(:,ialtp,:)
             clear_radf_c(:,ialt,:) =
      1       fm * clear_radf_c(:,ialtm,:) + fp * clear_radf_c(:,ialtp,:)
             airmass_2_cloud_3d(ialt,:) =
@@ -2705,7 +2723,7 @@
      1           fm * aod_tot(ialtm,:) 
      1         + fp * aod_tot(ialtp,:)
             topo_gti(ialt,:) =
-     1         fm * topo_gti(ialtm,:)      + fp * topo_gti(ialtp,:)
+     1         fm * topo_gti(ialtm,:) + fp * topo_gti(ialtp,:)
             gtic(:,ialt,:) =
      1         fm * gtic(:,ialtm,:) + fp * gtic(:,ialtp,:)
             dtic(:,ialt,:) =
