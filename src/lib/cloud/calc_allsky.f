@@ -76,6 +76,7 @@
 
         real r_cloud_3d(minalt:maxalt,minazi:maxazi)
         real cloud_od_sp(minalt:maxalt,minazi:maxazi,nsp)
+        real cloud_od_sp_w(minalt:maxalt,minazi:maxazi,nsp)
         real airmass_2_cloud_3d(minalt:maxalt,minazi:maxazi)
         real airmass_2_topo_3d(minalt:maxalt,minazi:maxazi)
         real topo_swi(minalt:maxalt,minazi:maxazi)
@@ -173,6 +174,7 @@
      1                     ,aod_tot,transm_obs,obs_glow_zen         ! O
      1                     ,transm_3d,transm_4d                     ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp         ! O
+     1                     ,cloud_od_sp_w                           ! O
      1                     ,r_cloud_rad,cloud_rad_c,cloud_rad_w     ! O
      1                     ,clear_rad_c,clear_radf_c,patm           ! O
      1                     ,clear_rad_c_nt                          ! O
@@ -446,6 +448,7 @@
               call get_sky_rgb(r_cloud_3d    ! cloud opacity
      1                    ,cloud_od          ! cloud optical depth
      1                    ,cloud_od_sp,nsp   ! cloud species optical depth
+     1                    ,cloud_od_sp_w     ! front weighted species
      1                    ,r_cloud_rad       ! cloud solar transmittance
      1                    ,cloud_rad_c       ! cloud solar transmittance / color
      1                    ,cloud_rad_w       ! cloud solar transmittance * rad
