@@ -82,7 +82,7 @@
          ncol = 3
          call read_ppm(u,img_polar,ncol,iwidth,iheight)
          close(u)
-         write(6,*)' polar mask has been read into img_polar array'
+         write(6,*)' polar mask (mode 1) has been read into img_polar array'
 
          do ic = 1,ncol
            write(6,*)
@@ -96,9 +96,9 @@
 !        Convert to camera cloud mask image
          do i = 1,nip
          do j = 1,njp
-             if(img_polar(3,i,j) .gt. 200)then
+             if(img_polar(3,i,j) .eq. 220)then
                  mask_polar(i,j) = 2 ! cloud
-             elseif(img_polar(3,i,j) .eq. 255)then
+             elseif(img_polar(3,i,j) .eq. 255 .and. img_polar(2,i,j) .eq. 95)then
                  mask_polar(i,j) = 1 ! clear
              else
                  mask_polar(i,j) = 0 ! unknown
@@ -116,7 +116,7 @@
          write(6,*)' Sum of mask_polar is ',sum(mask_polar)
 
 !        Convert to cylindrical image
-         write(6,*)' Projecting to Cylindrical Mask'
+         write(6,*)' Projecting to Cylindrical Mask using polar_to_cyl'
          call polar_to_cyl(mask_polar,mask_cyl,nip,njp,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale)
 
        elseif(mode .eq. 2)then ! Read cyl mask (if produced by IDL code)
@@ -140,7 +140,7 @@
          write(6,*)' dynamic dims ',ncol,iwidth,iheight
          call read_ppm(u,img_polar,ncol,iwidth,iheight)
          close(u)
-         write(6,*)' polar mask has been read into img_polar array'
+         write(6,*)' polar mask (mode 2) has been read into img_polar array'
 
          do ic = 1,ncol
            write(6,*)
@@ -152,9 +152,9 @@
 !        Convert to camera cloud mask image
          do i = 1,nip
          do j = 1,njp
-             if(img_polar(1,i,j) .gt. 200)then
+             if(img_polar(3,i,j) .eq. 220)then
                  mask_polar(i,j) = 2 ! cloud
-             elseif(img_polar(1,i,j) .eq. 0)then
+             elseif(img_polar(3,i,j) .eq. 255 .and. img_polar(2,i,j) .eq. 95)then
                  mask_polar(i,j) = 1 ! clear
              else
                  mask_polar(i,j) = 0 ! unknown
@@ -169,7 +169,7 @@
          write(6,*)' Sum of mask_polar is ',sum(mask_polar)
 
 !        Convert to cylindrical image
-         write(6,*)' Projecting to Cylindrical Mask'
+         write(6,*)' Projecting to Cylindrical Mask using polar_to_cyl'
          call polar_to_cyl(mask_polar,mask_cyl,nip,njp,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale)
 
        endif
