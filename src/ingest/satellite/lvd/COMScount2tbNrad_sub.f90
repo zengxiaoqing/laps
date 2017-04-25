@@ -1,5 +1,13 @@
 
-subroutine COMScount2tbNrad_sub(path_to_raw_sat,max_files,n_lines_ir,n_pixels_ir,r_missing_data,image_lat_ir,image_lon_ir,ir1_tb_out,i4time_data,istatus)
+subroutine COMScount2tbNrad_sub(path_to_raw_sat,max_files &
+                               ,n_lines_ir,n_pixels_ir &
+                               ,n_vis_lines,n_vis_elem &
+                               ,n_wv_lines,n_wv_elem &
+                               ,r_missing_data &
+                               ,image_lat_ir,image_lon_ir &
+                               ,ir1_tb_out,vis_rad_out &
+                               ,ir2_tb_out,swir_tb_out & ! ,wv_tb_out &
+                               ,i4time_data,istatus)
 
 
 !****************************************************************************
@@ -181,7 +189,7 @@ if(iwrite .eq. 1)then
 else
     ir1_tb_out(:,:) = ir1_tb(:,:) 
     ir2_tb_out(:,:) = ir2_tb(:,:) 
-    wv_tb_out(:,:) = wv_tb(:,:) 
+!   wv_tb_out(:,:) = wv_tb(:,:) 
     swir_tb_out(:,:) = swir_tb(:,:) 
     vis_rad_out(:,:) = vis_rad(:,:) 
 
@@ -191,13 +199,17 @@ endif
 ! To deal with FD or LA, put proper latitude-longitude table in open command.
 ! Example code uses latitude-longitude table for ENH mode.  
 
-write(6,*)' Read latlon data'
+write(6,*)' Initialize latlon data'
 image_lat_ir = r_missing_data
 image_lon_ir = r_missing_data
 
-open(40,file=trim(path_to_raw_sat)//'/cn_latlon.txt',err=998)
+write(6,*)' Open latlon data ',trim(path_to_raw_sat)//'/cn_latlon.txt'
+open(40,file=trim(path_to_raw_sat)//'/cn_latlon.txt',status='old',err=998)
+
+write(6,*)' Read latlon data'
 do i=1, nx*ny 
   read(40,*)lattice1, lattice2, rlat, rlon
+! write(6,*)lattice1,lattice2,rlat,rlon
   ii = lattice1+1
   jj = lattice2+1
 ! write(6,*)lattice1,lattice2,ii,jj,rlat,rlon
