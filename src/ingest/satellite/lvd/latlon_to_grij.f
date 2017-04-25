@@ -188,15 +188,61 @@
                     delt_pt = sqrt((rlat_last-lat_l(il,jl))**2 
      1                           + (rlon_last-lon_l(il,jl))**2)
                     if((dist_min_last - delt_pt) .gt. 1.0)then
-                        i_loop = 0
-                        continue ! return
+                       i_loop = 0
+                       continue ! return
                     else 
-                        call get_closest_point(lat_l(il,jl),lon_l(il,jl)
+                       if(.false.)then
+                          call get_closest_point(
+     1                             lat_l(il,jl),lon_l(il,jl)
      1                            ,r_missing_data           
      1                            ,lat_s,lon_s,nx_s,ny_s 
      1                            ,iclo_loop,i_loop                  ! I/O
      1                            ,rlat_last,rlon_last,dist_min_last ! I/O
      1                            ,iclo,jclo,dist_min)               ! O
+
+                       else ! inlined version for speed
+!                         Check if we've moved far enough since the last
+!                         full calculation
+                          rlat = lat_l(il,jl)
+                          rlon = lon_l(il,jl)
+                          delt_pt = sqrt((rlat_last-rlat)**2 
+     1                                 + (rlon_last-rlon)**2)
+                          if((dist_min_last - delt_pt) .gt. 1.0)then
+                            i_loop = 0
+                            goto 100
+                          endif
+
+                          iclo = 0
+                          jclo = 0
+
+                          dist_min = 999.
+
+                          scale_lon = cosd(rlat)
+
+                          do i = 1,nx_s
+                          do j = 1,ny_s
+                            if(lat_s(i,j) .ne. r_missing_data .AND.
+     1                         lon_s(i,j) .ne. r_missing_data      )then
+                              delta_lat = abs(lat_s(i,j) - rlat)
+                          delta_lon = abs(lon_s(i,j) - rlon) * scale_lon
+                          dist_deg = sqrt(delta_lat**2 + delta_lon**2)
+                              if(dist_deg .lt. dist_min)then
+                                dist_min = dist_deg
+                                iclo = i
+                                jclo = j
+                              endif
+                            endif
+                          enddo ! j
+                          enddo ! i
+
+                          iclo_loop = iclo_loop + 1
+                          i_loop = 1
+
+                          rlat_last = rlat
+                          rlon_last = rlon
+                          dist_min_last = dist_min
+100                       continue
+                       endif ! end of inlined code
                     endif
 
                     if(i_loop .eq. 1)then
@@ -242,8 +288,8 @@
                 endif ! bnorm > 1.1
 
 !               Interpolate to get laps i,j at current guessed sat i,j
-                i1 = min(int(ri_s),nx_s-1); fi = ri_s - i1; i2=i1+1
-                j1 = min(int(rj_s),ny_s-1); fj = rj_s - j1; j2=j1+1
+                i1 = max(min(int(ri_s),nx_s-1),1); fi = ri_s - i1; i2=i1+1
+                j1 = max(min(int(rj_s),ny_s-1),1); fj = rj_s - j1; j2=j1+1
 
                 bi_coeff(1,1) = (1.-fi) * (1.-fj)
                 bi_coeff(2,1) = fi      * (1.-fj)
