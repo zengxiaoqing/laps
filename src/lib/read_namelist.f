@@ -1468,10 +1468,14 @@ c format type 4 (rll)
                   ic=1
                 elseif(cchanneltypes(kk).eq.'4u ')then
                   ic=2
+                elseif(cchanneltypes(kk).eq.'wv ')then
+                  ic=3
                 elseif(cchanneltypes(kk).eq.'10p')then
                   ic=4
                 elseif(cchanneltypes(kk).eq.'11u')then
                   ic=4
+                elseif(cchanneltypes(kk).eq.'12u')then
+                  ic=5
                 endif
 
                 if(ic .gt. 0)then
