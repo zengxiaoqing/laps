@@ -614,19 +614,26 @@ c March 2003 added HKO (gms) sat ingest
 
          call COMScount2tbNrad_sub(
      & path_to_raw_sat(1,jtype,ksat),max_files
-     &,n_lines_ir(jtype,ksat),n_pixels_ir(jtype,ksat)        !<-- full array size raw data
+!    &,n_lines_ir(jtype,ksat),n_pixels_ir(jtype,ksat)        !<-- full array size raw data
+     &,n_ir_lines,n_ir_elem
+     &,n_vis_lines,n_vis_elem
+     &,n_wv_lines,n_wv_elem
      &,r_missing_data
 !    &,maxchannel,max_files,nchannels,csatid,csattype
 !    &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
      &,image_lat_ir,image_lon_ir
-     &,image_ir
+     &,image_ir,image_vis
+     &,image_12,image_39 ! ,image_67
 !    &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
 !    &,image_67,image_12,nimages,nft,ntm,c_type
      &,i4time_data,istatus)
 
          nft = istatus
-         ntm = 1
+         ntm = 2
          c_type(1,1) = 'ir'
+         c_type(2,1) = 'vis'
+         c_type(3,1) = '4u'
+         c_type(4,1) = 'wv'
 
          where(image_lat_ir(:,:) .eq. -999.)
      &         image_lat_ir(:,:) = r_missing_data      
@@ -1195,7 +1202,7 @@ c                    endif
             elseif(ispec.eq.1)then
             if(r_image_status(j,i).lt.0.3333)then
 
-               if(csattype.eq.'rll')then
+               if(csattype.eq.'rll' .or. csattype.eq.'cms')then
                    write(6,*)' Calling latlon_to_grij for VIS'
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
