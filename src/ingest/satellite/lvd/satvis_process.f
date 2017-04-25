@@ -35,11 +35,11 @@ cdis
      &           ni,nj,lat,lon,
      &           n_vis_lines,n_vis_elem,
      &           r_grid_ratio,
-     &           image_vis,
+     &           image_vis,                          ! I
      &           r_llij_lut_ri,
      &           r_llij_lut_rj,
      &           sublat_d,sublon_d,range_m,
-     &           laps_vis_raw,laps_vis_norm,albedo,
+     &           laps_vis_raw,laps_vis_norm,albedo,  ! O
      &           istatus)
 c
 c**************************************************************************
