@@ -17,8 +17,7 @@ c  Prepared by J. Applequist, 8/17/91.
 
 c        Set largest anticipated value of N.
 
-      parameter (nmax=500)
-      dimension a(np,np),b(np,mp),ipiv(nmax),indxr(nmax),indxc(nmax)
+      dimension a(np,np),b(np,mp),ipiv(n),indxr(n),indxc(n)
 
       ierr=0
       do 11 j=1,n
