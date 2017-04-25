@@ -109,6 +109,13 @@ c        rhigh=255.
 
         write(6,*)' Range testing thresholds set to ',rlow,rhigh
 
+      elseif(csattype.eq.'cms')then ! Bad range thresholds
+        if(chtype .eq. 'vis')then 
+          rhigh=1000.
+        endif
+
+        write(6,*)' Range testing thresholds set to ',rlow,rhigh
+
       else
         write(6,*)' Range testing thresholds set to ',rlow,rhigh
 
