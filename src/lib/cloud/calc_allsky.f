@@ -530,31 +530,39 @@
               enddo ! ialt
       
               write(6,*)' difference cloud mask...'
+              nclear_mask = 0
               do j = minazi,maxazi
               do i = minalt,maxalt
-                  if(camera_cloud_mask(i,j) .eq. 0)then
-                      if(camera_cloud_mask(i,j) .eq. 2 .and.
-     1                   sim_cloud_mask(i,j)    .eq. 1        )then
-                          diff_cloud_mask(i,j) = 2 ! add cloud (potentially)
-                      elseif(camera_cloud_mask(i,j) .eq. 1 .and.
-     1                       sim_cloud_mask(i,j)    .eq. 2        )then
-                          diff_cloud_mask(i,j) = 1 ! clearing
-                      else
-                          diff_cloud_mask(i,j) = 0 ! no change
-                      endif
+                  if(camera_cloud_mask(i,j) .eq. 2 .and.
+     1               sim_cloud_mask(i,j)    .eq. 1        )then
+                      diff_cloud_mask(i,j) = 2 ! add cloud (potentially)
+                  elseif(camera_cloud_mask(i,j) .eq. 1 .and.
+     1                   sim_cloud_mask(i,j)    .eq. 2        )then
+                      diff_cloud_mask(i,j) = 1 ! clearing
+                      nclear_mask = nclear_mask + 1
                   else
-                      diff_cloud_mask(i,j) = 0     ! no change
-                  endif                      
+                      diff_cloud_mask(i,j) = 0 ! no change
+                  endif
+!                 if(j .eq. (9*maxazi)/10)then
+!                     write(6,*)i,j,camera_cloud_mask(i,j)
+!    1                         ,sim_cloud_mask(i,j),diff_cloud_mask(i,j)
+!                 endif
               enddo ! i
               enddo ! j
+              write(6,*)' nclear_mask = ',nclear_mask
               do ialt = maxalt,minalt,-10
                  write(6,61)ialt,(diff_cloud_mask(ialt,ia)
      1                          ,ia=minazi,maxazi,6)
               enddo ! ialt
 
               if(mode_cloud_mask .eq. 3)then
-                  write(6,*)' Performing camera_cloud_mask clearing'
-!                 call clear_3d_mask()
+                 write(6,*)' Performing camera_cloud_mask clearing'
+                 call clear_3d_mask(
+     1                       minalt,maxalt,minazi,maxazi         ! I
+     1                      ,alt_scale,azi_scale                 ! I
+     1                      ,htmsl,ri_obs,rj_obs                 ! I
+     1                      ,lat,lon,NX_L,NY_L,NZ_L              ! I
+     1                      ,diff_cloud_mask)                    ! I
               endif
           endif
 
@@ -567,9 +575,9 @@
      1                         ,tlat,tlon,iverbose,istatus)
 
           use mem_namelist, ONLY: r_missing_data,earth_radius
-          
-          include 'trigd.inc'
 
+          include 'trigd.inc'
+          
           real*8 tpdist,dslant1_h
           real*8 dsdst,dradius_start,daltray,dcurvat2
 
@@ -610,5 +618,73 @@
 
           istatus = 1
           
+          return
+          end
+
+          subroutine clear_3d_mask(
+     1                       minalt,maxalt,minazi,maxazi         ! I
+     1                      ,alt_scale,azi_scale                 ! I
+     1                      ,htmsl,ri_obs,rj_obs                 ! I
+     1                      ,lat,lon,NX_L,NY_L,NZ_L              ! I
+     1                      ,diff_cloud_mask)                    ! I
+
+          use mem_allsky ! 3D model grids
+
+          real lat(NX_L,NY_L)
+          real lon(NX_L,NY_L)
+
+          integer diff_cloud_mask(minalt:maxalt,minazi:maxazi)
+
+!         Observer location
+          ht_obs = htmsl
+          call bilinear_laps(ri_obs,rj_obs,NX_L,NY_L,lat,rlat_obs)
+          call bilinear_laps(ri_obs,rj_obs,NX_L,NY_L,lon,rlon_obs)
+
+          write(6,*)' clear_3d_mask: observer lat/lon',rlat_obs,rlon_obs
+
+          nclear = 0
+
+          do k = 1,NZ_L
+          do i = 1,NX_L
+          do j = 1,NY_L      
+
+!           Determine altitude / azimuth of this grid point
+            ht_grid = heights_3d(i,j,k)
+            rlat_grid = lat(i,j)
+            rlon_grid = lon(i,j)
+
+!           Approximate for now that radar travels similarly to light
+            call latlon_to_radar(rlat_grid,rlon_grid,ht_grid    ! I
+     1                          ,azimuth,slant_range,elev       ! O
+     1                          ,rlat_obs,rlon_obs,ht_obs)      ! I
+            
+            ialt = nint(elev    / alt_scale)
+            jazi = nint(azimuth / azi_scale)
+
+            if(ialt .ge. minalt .and. ialt .le. maxalt .AND.
+     1         jazi .ge. minazi .and. jazi .le. maxazi      )then
+              if(diff_cloud_mask(ialt,jazi) .eq. 1)then ! clear this grid point
+                nclear = nclear + 1
+                write(6,11)nclear,i,j,k,rlat_grid,rlon_grid
+     1                    ,elev,azimuth,slant_range,ialt,jazi
+11              format('   clearing',4i5,2f9.2,f10.2,f10.4,f10.0,2i5)          
+                clwc_3d(i,j,k) = 0.
+                cice_3d(i,j,k) = 0.
+                rain_3d(i,j,k) = 0.
+                snow_3d(i,j,k) = 0.
+              elseif(i .eq. nint(ri_obs) .and. k .eq. NZ_L/2)then ! informational
+                write(6,12)nclear,i,j,k,rlat_grid,rlon_grid
+     1                    ,elev,azimuth,slant_range,ialt,jazi
+     1                    ,diff_cloud_mask(ialt,jazi)
+12              format('no clearing',4i5,2f9.2,f10.2,f10.4,f10.0,2i5,i2)
+              endif
+            endif
+
+          enddo ! j
+          enddo ! i
+          enddo ! k
+
+          write(6,*)' clear_3d_mask: nclear = ',nclear
+
           return
           end
