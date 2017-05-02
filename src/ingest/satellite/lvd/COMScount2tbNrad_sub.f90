@@ -52,7 +52,7 @@ integer, dimension(nx*ny,2) :: latticepoint
 real, dimension(nx*ny,2) :: latlon
 real, dimension(nx,ny) :: image_lat_ir,image_lon_ir
 character*12 a12time_coms
-character*13 a13time
+character*13 a13time,fname9_to_wfo_fname13
 integer cvt_wfo_fname13_i4time
 
 ! Inputs
@@ -68,9 +68,17 @@ real, dimension(n_pixels_ir,n_lines_ir) :: vis_rad_out
 
 write(6,*)' Subroutine COMScounttbNrad ',nx,ny,n_pixels_ir,n_lines_ir
 
-a12time_coms = '201701010000'
-a13time = a12time_coms(1:8)//'_'//a12time_coms(9:12)
-i4time_data(1)=cvt_wfo_fname13_i4time(a13time)
+if(.true.)then
+  call get_systime(i4time,a9_time,istatus)
+  i4time_data(1) = i4time
+  a13time = fname9_to_wfo_fname13(a9_time_in)
+  a12time_coms = a13time(1:8)//a13time(10:13)
+else
+  a12time_coms = '201701010000'
+  a13time = a12time_coms(1:8)//'_'//a12time_coms(9:12)
+  i4time_data(1)=cvt_wfo_fname13_i4time(a13time)
+endif
+
 write(6,*)' Read binary data for ',a12time_coms,' ',a13time,i4time_data(1)
 
 ! Read binary data
