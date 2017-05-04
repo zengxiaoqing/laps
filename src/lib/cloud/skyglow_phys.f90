@@ -116,6 +116,10 @@
         real aas_a(isolalt_lo:isolalt_hi)
         real aos_a(isolalt_lo:isolalt_hi)
 
+        parameter (n_order = 30)
+        real rel_order(1:n_order)  ! P of received photon with this order
+        real p_order(0:n_order)    ! P of emitted photon with this order
+
         icd = 3
 
         eobsc(:,:) = 0. ! initialize
@@ -361,7 +365,9 @@
                   write(6,*)' Calling mscat_phase 1 for ialt/ic = ',ialt,ic,od_a_scat,gscat
                 endif
 !               We can still mimic the phase function from 'get_cld_pf' and 'ssa' from 'get_cloud_rad'
-                call mscat_phase(od_a_scat,ssa(ic),gscat,idebug,gmean,ssa_eff(ic))
+                rad = 0.
+                call mscat_phase(od_a_scat,ssa(ic),gscat,idebug,rad &
+                                ,p_order,rel_order,n_order,gmean,ssa_eff(ic))
                 ssa_eff(ic) = ssa_eff(ic) ! * (0.5 + 0.5 * sind(altray))
              else
                 ssa_eff(ic) = ssa(ic)
@@ -803,7 +809,8 @@
                   write(6,*)
                   write(6,*)' Calling mscat_phase 2 for ialt/ic = ',ialt,ic,od_a_scat,gscat
                 endif
-                call mscat_phase(od_a_scat,ssa(ic),gscat,idebug,gmean,ssa_eff(ic))
+                call mscat_phase(od_a_scat,ssa(ic),gscat,idebug,rad &
+                                ,p_order,rel_order,n_order,gmean,ssa_eff(ic))
                 ssa_eff(ic) = ssa_eff(ic) ! * (0.5 + 0.5 * sind(altray))
               enddo 
 
