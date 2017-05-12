@@ -85,7 +85,7 @@ c     include 'satellite_namelist_lvd.cmn'
       integer   len_lvd
 
       character*3 csattype
-      character*3 c_type(maxchannel,max_files)
+      character*3 c_type(maxchannel,max_files) ! channel types/files
       character*3 chtype(maxchannel)
       character*6 csatid
       character*6 csat  !this one used for cld top p path
@@ -236,6 +236,12 @@ c
       lvd_status = 0
       nchannels = 0
 
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne.1)then
+         write(6,*)'error getting r_missing_data'
+         goto 16
+      endif
+
       itstatus=init_timer()
       itstatus=ishow_timer()
 
@@ -310,6 +316,12 @@ c --------------------------------------------------------------------
                i_end_vis(jtype,ksat)   =  n_pixels_vis(jtype,ksat)
                j_start_vis(jtype,ksat) =  1                             
                j_end_vis(jtype,ksat)   =  n_lines_vis(jtype,ksat)                             
+!YL
+               i_start_wv(jtype,ksat) =  1
+               i_end_wv(jtype,ksat)   =  n_pixels_wv(jtype,ksat)
+               j_start_wv(jtype,ksat) =  1
+               j_end_wv(jtype,ksat)   =  n_lines_wv(jtype,ksat) 
+
 !          endif
 
            print *,' Set i/j start/end from pixels/lines: ',jtype,ksat
@@ -623,17 +635,25 @@ c March 2003 added HKO (gms) sat ingest
 !    &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
      &,image_lat_ir,image_lon_ir
      &,image_ir,image_vis
-     &,image_12,image_39 ! ,image_67
+!     &,image_12,image_39 ! ,image_67
+     &,image_12,image_39,image_67
 !    &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
 !    &,image_67,image_12,nimages,nft,ntm,c_type
      &,i4time_data,istatus)
 
          nft = istatus
-         ntm = 2
-         c_type(1,1) = 'ir'
-         c_type(2,1) = 'vis'
-         c_type(3,1) = '4u'
-         c_type(4,1) = 'wv'
+         ntm = 5
+!         c_type(1,1) = 'ir'
+!         c_type(2,1) = 'vis'
+!         c_type(3,1) = '4u'
+!         c_type(4,1) = 'wv'
+!         c_type(5,1) = '12u'
+!YL
+         c_type(1,1) = 'vis'
+         c_type(2,1) = '4u'
+         c_type(3,1) = 'wv'
+         c_type(4,1) = 'ir'
+         c_type(5,1) = '12u'
 
          where(image_lat_ir(:,:) .eq. -999.)
      &         image_lat_ir(:,:) = r_missing_data      
@@ -659,10 +679,14 @@ c --------------------------------
          call lvd_file_specifier(c_type(i,j),ispec,istatus)
          if(ispec.eq.1)then
             r_image_res_m(i,j)=r_resolution_x_vis(jtype,ksat)
+            write(6,*)'YLYL'
+     1               ,jtype,ksat,i,j,r_resolution_x_vis(jtype,ksat)
          elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
             r_image_res_m(i,j)=r_resolution_x_ir(jtype,ksat)
          elseif(ispec.eq.3)then
             r_image_res_m(i,j)=r_resolution_x_wv(jtype,ksat)
+            write(6,*)'YLYL'
+     1               ,jtype,ksat,i,j,r_resolution_x_wv(jtype,ksat)
          endif
 
       enddo
@@ -846,11 +870,6 @@ c
       enddo
       enddo
 c
-      call get_r_missing_data(r_missing_data,istatus)
-      if(istatus.ne.1)then
-         write(6,*)'error getting r_missing_data'
-         goto 16
-      endif
 c
 c ------------------------------------------------------------
 c convert from counts to brightness temps for CDF data use the
@@ -1011,7 +1030,7 @@ c ----------  GMS SATELLITE SWITCH -------
          if(csatid.eq.'gmssat'.and. csattype.ne.'twn'
      &      .and. csattype.ne.'hko')goto 310
 
-
+         write(6,*) 'YL',ntm(i),i,nft
          do j = 1,ntm(i)
 
             n=index(c_type(j,i),' ')-1
@@ -1087,7 +1106,15 @@ c                    endif
 
             elseif(ispec.eq.2)then
               if(r_image_status(j,i).lt.0.3333)then
-
+!YL
+               if(csattype.eq.'rll' .or. csattype.eq.'cms')then
+                   write(6,*)' Calling latlon_to_grij for IR'
+                   call latlon_to_grij(lat,lon,nx_l,ny_l,
+     1                                 image_lat_ir,image_lon_ir,
+     1                                 sri(1,1,ispec),srj(1,1,ispec),
+     1                                 n_ir_elem,n_ir_lines,istatus)
+                   if(istatus .ne. 1)r_image_status(j,i) = 1.
+               endif
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
@@ -1125,7 +1152,15 @@ c                    endif
 
             elseif(ispec.eq.5)then
             if(r_image_status(j,i).lt.0.3333)then
-
+!YL
+               if(csattype.eq.'rll' .or. csattype.eq.'cms')then
+                   write(6,*)' Calling latlon_to_grij for IR'
+                   call latlon_to_grij(lat,lon,nx_l,ny_l,
+     1                                 image_lat_ir,image_lon_ir,
+     1                                 sri(1,1,ispec),srj(1,1,ispec),
+     1                                 n_ir_elem,n_ir_lines,istatus)
+                   if(istatus .ne. 1)r_image_status(j,i) = 1.
+               endif
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
@@ -1163,7 +1198,15 @@ c                    endif
 
             elseif(ispec.eq.3)then
             if(r_image_status(j,i).lt.0.3333)then
-
+!YL
+               if(csattype.eq.'rll' .or. csattype.eq.'cms')then
+                   write(6,*)' Calling latlon_to_grij for IR'
+                   call latlon_to_grij(lat,lon,nx_l,ny_l,
+     1                                 image_lat_ir,image_lon_ir,
+     1                                 sri(1,1,ispec),srj(1,1,ispec),
+     1                                 n_wv_elem,n_wv_lines,istatus)
+                   if(istatus .ne. 1)r_image_status(j,i) = 1.
+               endif
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_wv_lines,n_wv_elem,
@@ -1202,13 +1245,18 @@ c                    endif
             elseif(ispec.eq.1)then
             if(r_image_status(j,i).lt.0.3333)then
 
-               if(csattype.eq.'rll' .or. csattype.eq.'cms')then
+               if(csattype.eq.'rll')then
                    write(6,*)' Calling latlon_to_grij for VIS'
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 sri(1,1,ispec),srj(1,1,ispec),
      1                                 n_ir_elem,n_ir_lines,istatus)
-                   if(istatus .ne. 1)r_image_status(j,i) = 1.
+                   if(istatus .ne. 1)r_image_status(j,i) = 1. ! error
+               elseif(csattype.eq.'cms')then
+                   write(6,*)' Copying latlon_to_grij data for VIS'
+                   sri(:,:,ispec) = sri(:,:,4) ! from IR
+                   srj(:,:,ispec) = srj(:,:,4) ! from IR
+!                  if(istatus .ne. 1)r_image_status(j,i) = 1. ! error
                endif
 
                call process_vis_satellite(csatid,
