@@ -268,11 +268,13 @@ c type wfo and cdf for goes08, goes10, and goes12
       R_LAP(2,5)=25.00000   !goes12/wfo
       R_LAP(3,1)=25.00000   !goes08/cdf
       R_LAP(3,5)=25.00000   !goes12/cdf
+      R_LAP(:,17)=25.00000  !goes16/gnp
       R_LOV(2,1)=-95.00000  !goes08/wfo
       R_LOV(2,3)=-95.00000  !goes10/wfo
       R_LOV(2,5)=-95.00000  !goes12/wfo
       R_LOV(3,1)=-95.00000  !goes08/cdf
       R_LOV(3,6)=+120.00000  !goes08/cdf
+      R_LOV(:,17)=-95.00000  !goes16/gnp
 
 c type gvr and rll for goes08 and goes10. (Soon add goes09 and goes12)
 c                                          but only for gvr [no rll])
@@ -525,6 +527,7 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_WV(2,6)=0.0
       R_RESOLUTION_X_WV(3,6)=0.0
       R_RESOLUTION_X_WV(4,6)=0.0
+      R_RESOLUTION_X_WV(1:4,18)=5000.0
       R_RESOLUTION_Y_WV(1,1)=8373.9775
       R_RESOLUTION_Y_WV(2,1)=8127.2002
       R_RESOLUTION_Y_WV(3,1)=5079.2998
@@ -549,6 +552,7 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_Y_WV(2,6)=0.0
       R_RESOLUTION_Y_WV(3,6)=0.0
       R_RESOLUTION_Y_WV(4,6)=0.0
+      R_RESOLUTION_Y_WV(1:4,18)=5000.0
 c -- navigation parms 1st lat/lon for each type
       R_LO1(1,1)=0.0
       R_LO1(2,1)=-116.48560
