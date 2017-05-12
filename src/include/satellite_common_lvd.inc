@@ -18,11 +18,11 @@
       real   r_sat_sub_lon(maxsat)
       real   sat_range_m(maxsat)
 
-      real   r_la1(maxtype,maxsat)
-      real   r_lo1(maxtype,maxsat)
-      real   r_lap(maxtype,maxsat)
-      real   r_lov(maxtype,maxsat)
-      real   r_latin(maxtype,maxsat)
+      real   r_la1(maxtype,maxsat)   ! lower left latitude
+      real   r_lo1(maxtype,maxsat)   ! lower left longitude
+      real   r_lap(maxtype,maxsat)   ! standard latitude
+      real   r_lov(maxtype,maxsat)   ! standard longitude
+      real   r_latin(maxtype,maxsat) 
 
       integer i_start_vis(maxtype,maxsat)
       integer i_end_vis(maxtype,maxsat)
