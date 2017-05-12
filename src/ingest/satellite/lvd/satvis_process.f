@@ -683,8 +683,22 @@ c for goes8 - make it look like goes7
           do j=1,jmax
           do i=1,imax
             if(laps_vis_norm(i,j).ne.r_missing_data)then
-c for goes8 - make it look like goes7
+c make it look like goes7
               call stretch(0.,1600.,0.,256.,laps_vis_norm(i,j))
+
+            endif
+          enddo
+          enddo
+
+       elseif(trim(csatid) .eq. 'coms')then
+
+          write(6,*)'Stretch vis data prior to normalization ',csatid
+
+          do j=1,jmax
+          do i=1,imax
+            if(laps_vis_norm(i,j).ne.r_missing_data)then
+c make it look like goes7
+              call stretch(0.,400.,10.,256.,laps_vis_norm(i,j))
 
             endif
           enddo
