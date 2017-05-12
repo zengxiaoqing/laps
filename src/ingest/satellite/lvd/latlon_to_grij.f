@@ -43,6 +43,9 @@
 
         call get_r_missing_data(r_missing_data,istatus)
 
+        write(6,*)' lat_s range ',minval(lat_s),maxval(lat_s)
+        write(6,*)' lat_l range ',minval(lat_l),maxval(lat_l)
+
         slatmax = -999.
         slatmin = +999.
         slonmax = -999.
