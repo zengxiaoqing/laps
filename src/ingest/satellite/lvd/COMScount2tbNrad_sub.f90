@@ -6,7 +6,7 @@ subroutine COMScount2tbNrad_sub(path_to_raw_sat,max_files &
                                ,r_missing_data &
                                ,image_lat_ir,image_lon_ir &
                                ,ir1_tb_out,vis_rad_out &
-                               ,ir2_tb_out,swir_tb_out & ! ,wv_tb_out &
+                               ,ir2_tb_out,swir_tb_out,wv_tb_out &
                                ,i4time_data,istatus)
 
 
@@ -71,7 +71,7 @@ write(6,*)' Subroutine COMScounttbNrad ',nx,ny,n_pixels_ir,n_lines_ir
 if(.true.)then
   call get_systime(i4time,a9_time,istatus)
   i4time_data(1) = i4time
-  a13time = fname9_to_wfo_fname13(a9_time_in)
+  a13time = fname9_to_wfo_fname13(a9_time)
   a12time_coms = a13time(1:8)//a13time(10:13)
 else
   a12time_coms = '201701010000'
@@ -230,6 +230,8 @@ write(6,*)' Center ir value ',ir1_tb_out(nx/2,ny/2)
 write(6,*)' Corner ir value ',ir1_tb_out(1,1)
 write(6,*)' Center lat/lon ',image_lat_ir(nx/2,ny/2),image_lon_ir(nx/2,ny/2)
 write(6,*)' Corner lat/lon ',image_lat_ir(1,1),image_lon_ir(1,1)
+write(6,*)' Range lat      ',minval(image_lat_ir),maxval(image_lat_ir)
+write(6,*)' Range lon      ',minval(image_lon_ir),maxval(image_lon_ir)
 
 istatus = 1
 return ! normal return
