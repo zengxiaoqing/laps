@@ -153,6 +153,11 @@
         write(6,*)' eobsl = ',eobsl
         eobsc_sky = 0. ! initialize
 
+        write(6,*)' range of clwc_3d is',minval(clwc_3d),maxval(clwc_3d)
+        write(6,*)' range of cice_3d is',minval(cice_3d),maxval(cice_3d)
+        write(6,*)' max top of cice_3d is',maxval(cice_3d(:,:,NZ_L))
+        write(6,*)' max top of clwc_3d is',maxval(clwc_3d(:,:,NZ_L))
+
         write(6,*)' call get_cloud_rays...'
 
 !         Get line of sight from isound/jsound
@@ -562,7 +567,8 @@
      1                      ,alt_scale,azi_scale                 ! I
      1                      ,htmsl,ri_obs,rj_obs                 ! I
      1                      ,lat,lon,NX_L,NY_L,NZ_L              ! I
-     1                      ,diff_cloud_mask)                    ! I
+     1                      ,diff_cloud_mask                     ! I
+     1                      ,sky_rgb_cyl)                        ! I/O
               endif
           endif
 
@@ -626,14 +632,25 @@
      1                      ,alt_scale,azi_scale                 ! I
      1                      ,htmsl,ri_obs,rj_obs                 ! I
      1                      ,lat,lon,NX_L,NY_L,NZ_L              ! I
-     1                      ,diff_cloud_mask)                    ! I
+     1                      ,diff_cloud_mask                     ! I
+     1                      ,sky_rgb_cyl)                        ! I/O
 
           use mem_allsky ! 3D model grids
 
           real lat(NX_L,NY_L)
           real lon(NX_L,NY_L)
+          real sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi) ! Observed Variable
 
           integer diff_cloud_mask(minalt:maxalt,minazi:maxazi)
+
+!         Color scheme for grid points
+!         Yellow  - no clearing of gridpoint having cloud
+!!        Green   - no clearing of gridpoint having no cloud         
+!         Green   - potential gridpoints for cloud addition
+!         Magenta - clearing of gridpoint having cloud
+!         Orange  - clearing of gridpoint having no cloud
+
+          logical l_draw_grid /.true./
 
 !         Observer location
           ht_obs = htmsl
@@ -643,10 +660,11 @@
           write(6,*)' clear_3d_mask: observer lat/lon',rlat_obs,rlon_obs
 
           nclear = 0
+          nmag = 0; nred = 0; ngrn = 0; nyel = 0
 
-          do k = 1,NZ_L
           do i = 1,NX_L
           do j = 1,NY_L      
+          do k = 1,NZ_L
 
 !           Determine altitude / azimuth of this grid point
             ht_grid = heights_3d(i,j,k)
@@ -660,31 +678,79 @@
             
             ialt = nint(elev    / alt_scale)
             jazi = nint(azimuth / azi_scale)
-
+           
             if(ialt .ge. minalt .and. ialt .le. maxalt .AND.
      1         jazi .ge. minazi .and. jazi .le. maxazi      )then
+
+              cond_max = max(clwc_3d(i,j,k),cice_3d(i,j,k)
+     1                      ,rain_3d(i,j,k),snow_3d(i,j,k))
+               
               if(diff_cloud_mask(ialt,jazi) .eq. 1)then ! clear this grid point
                 nclear = nclear + 1
                 write(6,11)nclear,i,j,k,rlat_grid,rlon_grid
      1                    ,elev,azimuth,slant_range,ialt,jazi
 11              format('   clearing',4i5,2f9.2,f10.2,f10.4,f10.0,2i5)          
+
+                if(l_draw_grid)then
+                  if(cond_max .gt. 0.)then 
+                    sky_rgb_cyl(0,ialt,jazi) = 255. ! magenta
+                    sky_rgb_cyl(1,ialt,jazi) = 0.
+                    sky_rgb_cyl(2,ialt,jazi) = 255.
+                    nmag = nmag + 1
+                  else
+                    sky_rgb_cyl(0,ialt,jazi) = 180. ! red / gray
+                    sky_rgb_cyl(1,ialt,jazi) = 140.
+                    sky_rgb_cyl(2,ialt,jazi) = 140.
+                    nred = nred + 1
+                  endif
+                endif
+               
                 clwc_3d(i,j,k) = 0.
                 cice_3d(i,j,k) = 0.
                 rain_3d(i,j,k) = 0.
                 snow_3d(i,j,k) = 0.
-              elseif(i .eq. nint(ri_obs) .and. k .eq. NZ_L/2)then ! informational
-                write(6,12)nclear,i,j,k,rlat_grid,rlon_grid
-     1                    ,elev,azimuth,slant_range,ialt,jazi
-     1                    ,diff_cloud_mask(ialt,jazi)
-12              format('no clearing',4i5,2f9.2,f10.2,f10.4,f10.0,2i5,i2)
-              endif
-            endif
 
+              else ! no clearing
+                if(i .eq. nint(ri_obs) .and. k .eq. NZ_L/2)then ! informational
+                  write(6,12)nclear,i,j,k,rlat_grid,rlon_grid
+     1                      ,elev,azimuth,slant_range,ialt,jazi
+     1                      ,diff_cloud_mask(ialt,jazi)
+12                format('no clearing',4i5,2f9.2,f10.2,f10.4,f10.0,2i5
+     1                                ,i2)
+                endif
+
+                if(l_draw_grid)then
+                  if(cond_max .gt. 1e-7)then 
+                    rint = 200. + 30. * log10(cond_max / 1e-5)
+                    rint = min(max(rint,0.),255.)
+                    sky_rgb_cyl(0,ialt,jazi) = rint ! yellow
+                    sky_rgb_cyl(1,ialt,jazi) = rint
+                    sky_rgb_cyl(2,ialt,jazi) = 0.
+                  else
+!                   sky_rgb_cyl(0,ialt,jazi) = 120.
+!                   sky_rgb_cyl(1,ialt,jazi) = 205. ! green
+!                   sky_rgb_cyl(2,ialt,jazi) = 120.
+                  endif
+                endif
+
+              endif
+              if(diff_cloud_mask(ialt,jazi) .eq. 2)then ! potential addition
+                if(l_draw_grid)then
+                  sky_rgb_cyl(0,ialt,jazi) = 0.
+                  sky_rgb_cyl(1,ialt,jazi) = 255. ! green
+                  sky_rgb_cyl(2,ialt,jazi) = 0.
+                endif
+              endif
+            endif ! in camera domain
+
+          enddo ! k
           enddo ! j
           enddo ! i
-          enddo ! k
 
           write(6,*)' clear_3d_mask: nclear = ',nclear
+          if(l_draw_grid)then
+            write(6,*)' n red/mag = ',nred,nmag
+          endif
 
           return
           end
