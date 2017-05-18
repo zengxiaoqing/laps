@@ -958,7 +958,8 @@
 !         observer is very high
           iradsec = 0
           if(solalt_ref .ge. twi_alt)then ! Day/twilight from cloud_rad_c array
-              if(solalt_ref .lt. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
+!             if(solalt_ref .lt. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
+              if(solalt_ref .lt. 0.)then
                   rad_sec_cld(:) = difftwi(solalt_ref) * (ext_g(:)/.09) * day_int / 1300. ! * 7.0
                   iradsec = 1
               elseif(solalt_ref .ge. 0. .and. abs(solalt_ref-sol_alt) .gt. .01)then
@@ -968,7 +969,7 @@
                   rad_sec_cld(:) = (day_int * ext_g(:) * patm_sfc * 2.0 * 0.5) / 10.**(0.4*sb_corr)
                   iradsec = 2
               endif
-              if(sol_alt .le. 0.)then ! between shallow twilight and 0.
+              if(sol_alt .le. 0. .and. .false.)then ! between shallow twilight and 0.
 !                 where(sph_rad_ave(:) .ne. r_missing_data)
 !                    rad_sec_cld(:) = sph_rad_ave(:)
 !                 endwhere
@@ -1000,6 +1001,10 @@
 !             btau_corr = sum(bksct_eff_a(:) * cloud_od_sp_loc(ni,j,:))
               cloud_albedo_corr = btau_corr / (1. + btau_corr)
 
+!             'cld_radt' is the radiance of the cloud when fully illuminated
+!             'cld_radb' is the radiance of the cloud when direct or forward scattered
+!             sunlight is not present (e.g. at cloud base). We can consider how this is
+!             being handled with high sun vs during twilight.
               do ic = 1,nc
                   if(htmsl .ge. 1000e3 .and. .true.)then ! experimental (e.g. DSCOVR)
 !                     Note the BRDF is presently borrowed from that for snow. A phase function
@@ -1036,13 +1041,23 @@
                           if(radb_corr .gt. 0.)then
                             rad_sfc = rad_sfc / radb_corr ! testing
                           endif
+
+                          altray_eff = sqrt(altray**2 + 1.5**2)
+                          btau_diffuse = 0.10 * (cloud_od_loc(i,j) * sind(altray_eff))
+                          cloud_albedo_diffuse = btau_diffuse / (1. + btau_diffuse)
+
+!                         Consider diffuse sky light coming through the cloud                          
+                          radb_diffuse = rad_sec_cld(ic) * (1. - cloud_albedo_diffuse) * 0.75 * (1. + sind(altray)**2)
+
                       endif
+
                   else ! secondary scattering term allowed to dominate
                        ! should be modified by a vertical cloud albedo?
                       rad_sfc = 0. ! + rad_sec_cld(ic)
+                      radb_diffuse = 0.
                   endif
 !                 cld_radb(ic) = rad_sfc ! + rad_sec_cld(ic)
-                  cld_radb(ic) = (rad * cloud_rad_c(ic,i,j) + rad_sfc) * ssa_eff(ic,i,j) ! **9.0
+                  cld_radb(ic) = (rad * cloud_rad_c(ic,i,j) + rad_sfc + radb_diffuse) * ssa_eff(ic,i,j) ! **9.0
 
               enddo ! ic
 
@@ -1069,18 +1084,23 @@
                if(r_cloud_3d(i,j) .gt. 0. .or. abs(alt_a(i,j)).eq.90.0)then
                   htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
                   radb_corr = 1. - albedo_sfc(2) * cloud_albedo_corr
-                  write(6,39)btau_corr,albedo_sfc(2),cloud_albedo_corr,radb_corr
- 39               format(' btau_corr/sfcalb/cldalb_corr/radb_corr = ',4f9.3)
-                  write(6,41)iradsec,solalt_ref,sol_alt,twi_alt,htmin_view,day_int*pf_top(:)*cloud_rad_c(:,i,j)/1e6,rad_sec_cld(:)/1e6,sb_corr
- 41               format(' irs/solalt_ref/solalt/twi_alt/htmin/cradt/rdsc/sbcr',i3,3f9.4,f11.0,3f6.0,2x,3f5.0,2x,f6.2)
+                  write(6,39)btau_corr,btau_diffuse,albedo_sfc(2),cloud_albedo_corr,radb_corr,cloud_albedo_diffuse
+ 39               format(' btcorr/btdiff/sfcalb/cldalb_corr/radb_corr/cdalbdf = ',6f9.3)
+                  if(solalt_ref .gt. 0.)then
+                    rscl = 1e6
+                  else
+                    rscl = 1e3
+                  endif
+                  write(6,41)iradsec,solalt_ref,sol_alt,twi_alt,htmin_view,day_int*pf_top(:)*cloud_rad_c(:,i,j)/rscl,rad_sec_cld(:)/rscl,sb_corr
+ 41               format(' irs/solalt_ref/solalt/twi_alt/htmin/cradt/rdsc/sbcr',i3,3f9.4,f11.0,3f6.0,2x,3f6.0,2x,f6.2)
                   if(iradsec .ge. 10)then
                     write(6,*)' WARNING: irs = ',iradsec,l_solar_eclipse,rad_sec_cld,sph_rad_ave
                   endif
                   write(6,42)i,j,elong_a(i,j),cld_brdf(2,i,j),pf_top(2),rintensity(2)&
                    ,trans_c(2),r_cloud_rad(i,j) &
-                   ,cloud_rad_c(:,i,j),cld_radt(:)/1e6 &
-                   ,cld_radb(:)/1e6,(cld_rad(:)/1e6)/trans_c(:) &
-                   ,cld_rad(:)/1e6
+                   ,cloud_rad_c(:,i,j),cld_radt(:)/rscl &
+                   ,cld_radb(:)/rscl,(cld_rad(:)/rscl)/trans_c(:) &
+                   ,cld_rad(:)/rscl
  42               format(&
                   ' elg/pf/br/rint2/trnsc2/cldrd = ',2i5,6f9.3,' c',3f8.5,2x,'tb-tr-a',3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0)
                endif ! cloud present
