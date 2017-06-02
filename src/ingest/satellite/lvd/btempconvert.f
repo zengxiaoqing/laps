@@ -12,8 +12,11 @@ c
        integer nlines
 
        real  image(nelems,nlines)
-       real  rcnt_to_btemp_lut(0:1023)
-       real  r_missing_data
+       real  rcnt_to_btemp_lut(0:4095)
+       real  r_missing_data,rmin,rmax
+
+       call array_range(image,nelems,nlines,rmin,rmax,r_missing_data)
+       write(6,*)' non-missing range before btemp conversion ',rmin,rmax
 
        do j=1,nlines
        do i=1,nelems
@@ -24,6 +27,9 @@ c
 
        enddo
        enddo
+
+       call array_range(image,nelems,nlines,rmin,rmax,r_missing_data)
+       write(6,*)' non-missing range after  btemp conversion ',rmin,rmax
 
        return
        end
