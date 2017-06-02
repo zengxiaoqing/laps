@@ -39,7 +39,7 @@
       if(lvd_index.eq.0)then
          write(6,*)'Error getting lvd_index ',c_type
          istatus = -1
-!        stop ! for debugging
+         stop ! for debugging
       endif
 
       return
