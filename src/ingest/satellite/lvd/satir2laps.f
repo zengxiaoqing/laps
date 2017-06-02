@@ -209,6 +209,12 @@ c
                    Do ii=1,npix
 
                       btemp  = t_array(ii)
+                      if(btemp .le. 0.)then
+                         write(6,*)
+     1                  ' ERROR: btemp too low in satdat2laps_ir ',btemp
+                         return
+                      endif
+
                       pixsum = pixsum + btemp
 
                       if(btemp.gt.wm) then
