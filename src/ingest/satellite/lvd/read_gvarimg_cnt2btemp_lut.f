@@ -6,7 +6,7 @@ c
        integer i,idummy
        integer n,nn,np
        integer icnt
-       real  cnt2btemp(0:1023)
+ 10    real  cnt2btemp(0:4095)
        real  rdummy
        integer istatus
 
