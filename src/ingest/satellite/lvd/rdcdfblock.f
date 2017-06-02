@@ -84,7 +84,7 @@ c -------
 c
 c read line. Switch here discriminates 1-byte versus 2-byte data.
 c
-      if(csat_type.eq.'rll')then
+      if(csat_type.eq.'rll' .or. csat_type.eq.'gnp')then
           write(6,*)'ncid/varid = ',ncid,varid
           write(6,*)'start=',start(1:2),' count=',count(1:2)
           rcode=NF_GET_VARA_INT2(NCID,varid,START,COUNT,data_int2)
