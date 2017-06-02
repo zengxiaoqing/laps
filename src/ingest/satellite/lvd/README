@@ -14,6 +14,7 @@
                    get_wfo_nav_parms         lib/satellite/update_gvarimg_parms.f
                        get_attribute_wfo     lib/satellite/get_attr_satellite.f
                    rdcdfhead                 lib/satellite/rdcdfhead.f
+                   expand_domain             lib/satellite/expand_domain.f
                    get_attribute_gnp         lib/satellite/get_attr_gnp.f
                    getdudv_lam               lib/nav/getdudv_lam.f
                    get_sat_boundary          lib/satellite/getsat_boundary.f 
@@ -47,6 +48,8 @@
            read_gms_hko                      read_gms_hko.f
                get_satdat_attributes         getsat_attributes.f
            COMScount2tbNrad_sub              COMScount2tbNrad_sub.f90
+           get_goes_np_data                  get_goes_np_data.f
+	       read_goes_np_data                  "
            genbtemplut                       genbtemplut.f
                get_satdat_attributes         getsat_attributes.f
            satdatfill                        satdatfill.f
