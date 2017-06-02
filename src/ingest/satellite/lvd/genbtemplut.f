@@ -10,7 +10,8 @@ c
       integer chid,i
       integer istatus
       real  a,b,spc,rad,rcal
-      real    cnt2btemp(0:1023)
+      real    cnt2btemp(0:4095)
+      real offset,scale
 
       istatus=1
 c
@@ -39,6 +40,14 @@ c
             cnt2btemp(i) = (1348.925 - float(i) ) / 5.1417
          enddo
 
+      elseif(ctype.eq.'gnp')then
+         write(6,*)' Generating btemp lut for gnp type'
+         offset = 173.15
+         scale = 0.03931624
+         do i = 0,4095
+           cnt2btemp(i) = float(i) * scale + offset
+         enddo ! i
+         
       elseif(chid.ne.2)then                      !WFO switch; channels 3,4, and 5 have same
                                                  !enhancement curve atm (10-27-99).
          do i=0,180
