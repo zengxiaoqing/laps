@@ -165,11 +165,11 @@ c
       integer   nlf_prev
       integer   in,ncs
 c
-      real      vis_cnt_to_cnt_lut(0:1023)
-      real      ir_cnt_to_btemp_lut(0:1023) !this one is 11u
-      real      r12_cnt_to_btemp_lut(0:1023)
-      real      r39_cnt_to_btemp_lut(0:1023)
-      real      r67_cnt_to_btemp_lut(0:1023)
+      real      vis_cnt_to_cnt_lut(0:4095)
+      real      ir_cnt_to_btemp_lut(0:4095)
+      real      r12_cnt_to_btemp_lut(0:4095)
+      real      r39_cnt_to_btemp_lut(0:4095)
+      real      r67_cnt_to_btemp_lut(0:4095)
       real      sri(nx_l,ny_l,maxchannel)   !Input: i satellite coord at each LAPS grid point    
       real      srj(nx_l,ny_l,maxchannel)   !Input: j satellite coord at each LAPS grid point    
       real      good_vis_data_thresh
@@ -295,7 +295,7 @@ c --------------------------------------------------------------------
 c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
       if(csattype .eq. 'rll' .or. csattype .eq. 'cms')then ! Java NetCDF files now use this type
-           print *,' Read lat/lon arrays to regenerate sri/srj'
+!          print *,' Read lat/lon arrays to regenerate sri/srj'
 !          print *,' Set i/j start/end for: ',jtype,ksat,
 !    1               i_end_ir(jtype,ksat),j_end_ir(jtype,ksat)
 !          sri = 100.
@@ -668,7 +668,34 @@ c March 2003 added HKO (gms) sat ingest
      &            ,i4time_data(1)
          endif
 
-      endif
+      elseif(csattype.eq.'gnp')then
+         call get_goes_np_data
+     +                   (i4time_cur,laps_cycle_time,NX_L,NY_L
+     +                   ,maxchannel,max_files,nchannels
+     +                   ,csatid,csattype,chtype
+     +                   ,path_to_raw_sat(1,jtype,ksat)
+     +                   ,image_ir,n_ir_elem,n_ir_lines
+     +                   ,image_39
+     +                   ,image_vis,n_vis_elem,n_vis_lines
+     +                   ,istatus)
+
+         nft = istatus
+         ntm = 3
+
+         where(image_ir(:,:,:) .eq. 0.)
+     &         image_ir(:,:,:) = r_missing_data      
+
+         where(image_39(:,:,:) .eq. 0.)
+     &         image_39(:,:,:) = r_missing_data      
+
+         where(image_vis(:,:,:) .eq. 0.)
+     &         image_vis(:,:,:) = r_missing_data      
+
+         c_type(1,1) = 'ir'
+         c_type(2,1) = '4u'
+         c_type(3,1) = 'vis'
+
+      endif ! csattype
 
 c --------------------------------------------------------------------
 c Get image resolution information
@@ -697,7 +724,7 @@ c Compute or read ir/vis count to brightness temp (Tb)/vis count-to-count.
 c -----------------------------------------------------------------------
 c
       if(csattype.eq.'cdf'.or.csattype.eq.'wfo'.or.
-     &   csatid.eq.'meteos')then
+     &   csatid.eq.'meteos'.or.csattype.eq.'gnp')then
 
          write(6,*)'Compute ',csatid,' cnt-to-btemp lookup tables'
 
@@ -947,7 +974,7 @@ c ------------------------------------------------------------
              endif
           enddo
           enddo
-          write(6,*)'Done with conversions '
+          write(6,*)'Done with conversions for ',csattype
           write(6,*)
 
        elseif(csattype.eq.'asc'.or.csattype.eq.'rll')then
