@@ -64,7 +64,8 @@ c
             call lvd_file_specifier(c_type(j,i),ispec,istat)
 
             if(ispec .ne. 0)then
-              write(6,*)'set_missing_flag - ispec is: ',ispec     
+               write(6,*)'set_missing_flag - ispec/smsng is: '
+     &                   ,ispec,smsng(ispec)    
             endif
 
             if(ispec.eq.4)then
