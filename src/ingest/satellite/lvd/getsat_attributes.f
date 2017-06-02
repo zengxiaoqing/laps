@@ -62,6 +62,9 @@
          write(6,*)'Error in getsat_attributes'
          write(6,*)'istart, iend, jstart, or jend = 0'
          return
+      else
+         write(6,1)istart,iend,jstart,jend
+1        format(' getsat_attributes i/j start/end',4i6)       
       endif
 
       istatus = 1
