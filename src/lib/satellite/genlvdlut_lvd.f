@@ -68,13 +68,14 @@ c input values "js" (representing the satellite id) and "it" (representing
 c the format type for that satellite) direct this subroutine to
 c compute the appropriate mapping nav arrays.
 c
-      write(6,*)' Subroutine genlvdlut_lvd'
+      write(6,*)'Subroutine genlvdlut_lvd: ',it,js,c_sat_types(it,js)
 
       istatus = -1
 
       if(c_sat_types(it,js).eq.'cdf'.or.
      &   c_sat_types(it,js).eq.'wfo'.or.
-     &   c_sat_types(it,js).eq.'twn')then
+     &   c_sat_types(it,js).eq.'twn'.or.
+     &   c_sat_types(it,js).eq.'gnp')then
 
          do lc=1,maxchannel
 
@@ -82,7 +83,7 @@ c
 
              write(6,59)c_sat_id(js),c_sat_types(it,js),
      &c_channel_types(lc,it,js)
-59          format(1x,'Generate Mapping Arrays: ',a6,"/",a3,"/",a3)
+59          format(/,'Generate Mapping Arrays: ',a6,"/",a3,"/",a3)
 
              call gen_lut_lambert(js,it,lc,nx_l,ny_l,
      & lat,lon,gri(1,1,lc),grj(1,1,lc),istatus)
