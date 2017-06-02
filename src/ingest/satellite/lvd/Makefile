@@ -44,6 +44,7 @@ SRC = lvd_driver_sub.f \
   getcdf_satdat.f \
   getsat_attributes.f \
   getafgwc_satdat.f \
+  get_goes_np_data.f \
   compute_gvarimg_res.f \
   c_time_fnc.f \
   ldlapsdata.f \
