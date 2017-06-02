@@ -698,7 +698,21 @@ c make it look like goes7
           do i=1,imax
             if(laps_vis_norm(i,j).ne.r_missing_data)then
 c make it look like goes7
-              call stretch(0.,400.,10.,256.,laps_vis_norm(i,j))
+              call stretch(0.,440.,10.,256.,laps_vis_norm(i,j))
+
+            endif
+          enddo
+          enddo
+
+       elseif(c_sat_type.eq.'gnp')then
+
+          write(6,*)'Stretch vis data prior to normalization ',csatid
+
+          do j=1,jmax
+          do i=1,imax
+            if(laps_vis_norm(i,j).ne.r_missing_data)then
+c make it look like goes7
+              call stretch(0.,6095.,0.,220.,laps_vis_norm(i,j))
 
             endif
           enddo
