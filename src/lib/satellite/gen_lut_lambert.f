@@ -45,9 +45,10 @@ c
  
       real    dx,dy  !both in km from /public and /WFO SBN
       real    du,dv
-      real    u_orig,v_orig
+      real    u_orig,v_orig,sioffset,sjoffset
+      real    reflat,reflon,refi,refj,refu,refv
       real    pi
-      real    u1,v1
+      real    u1,v1,u2,v2,rlats,rlons
 
       real    lapterm
       real    lovterm
@@ -213,7 +214,33 @@ c           endif
 
 c goes noaaport
       elseif(cdtype.eq.'gnp')then
-         continue
+
+         if(indx.eq.1)then    
+            dx = r_resolution_x_vis(jtype,isat) / 1000. ! km
+            dy = r_resolution_y_vis(jtype,isat) / 1000. ! km
+            nx3 = n_pixels_vis(jtype,isat)
+            ny3 = n_lines_vis(jtype,isat)
+
+         elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
+            dx = r_resolution_x_ir(jtype,isat) / 1000. ! km
+            dy = r_resolution_y_ir(jtype,isat) / 1000. ! km
+            nx3 = n_pixels_ir(jtype,isat)
+            ny3 = n_lines_ir(jtype,isat)
+
+         elseif(indx.eq.3)then
+
+            dx = r_resolution_x_wv(jtype,isat) / 1000. ! km
+            dy = r_resolution_y_wv(jtype,isat) / 1000. ! km
+            nx3 = n_pixels_wv(jtype,isat)
+            ny3 = n_lines_wv(jtype,isat)
+
+         endif
+
+         nx3mx=nx3
+         ny3mx=ny3
+
+         rlap = r_lap(jtype,isat)
+         rlov = r_lov(jtype,isat)
 !        call get_attribute_gnp()
 
 c not wfo data type
@@ -285,9 +312,9 @@ c           endif
 
       endif
 
-      write(6,*)'Satellite Nav Parameters'
-      write(6,*)'dx     ',dx
-      write(6,*)'dy     ',dy
+      write(6,*)'Satellite Nav Parameters (gen_lut_lambert) ',ct
+      write(6,*)'dx (km)',dx
+      write(6,*)'dy (km)',dy
       write(6,*)'nx3    ',nx3
       write(6,*)'ny3    ',ny3
       write(6,*)'nx3mx  ',nx3mx
@@ -338,6 +365,7 @@ c
       elseif(cdtype.eq.'cdf')then
 
 c use original lambert software for fsl-conus in FSL's /public
+         write(6,*)' calling getdudv_lam'
 
          call getdudv_lam(rlov,rlap,dx,dy,
      &rla100,rlo100,du,dv,u_orig,v_orig)
@@ -353,22 +381,101 @@ c use original lambert software for fsl-conus in FSL's /public
          enddo
          enddo
 
+      elseif(cdtype.eq.'gnp')then
+
+c use original lambert software for fsl-conus in FSL's /public
+         if(indx.eq.1)then                               ! vis
+!           centerlat = 42.09345
+!           centerlon = -106.13704
+            reflat = 42.09345
+            reflon = -106.13704
+            refi = 512.5 + 1024. ! center of center tile on upper row
+            refj = 512.5 + 1024. 
+         elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then ! ir
+!           centerlat = 45.302
+!           centerlon = -103.324
+            reflat = 44.764
+            reflon = -115.7397
+            refi = 512.5          ! center of left tile
+            refj = 512.5
+         endif
+
+         write(6,*)' calling getdudv_lam'
+
+         lapterm=(rlap*pi)/180.
+         lovterm=(rlov*pi)/180.
+
+         if(.false.)then ! use center point
+!          Initial calculation of 'u_orig' and 'v_orig' for center
+           call getdudv_lam(rlov,rlap,dx,dy,
+     &                      centerlat,centerlon,du,dv,u_orig,v_orig)
+
+           write(6,*)' u_orig/v_orig at center ',u_orig,v_orig
+
+!          Recalculate 'u_orig' and 'v_orig' for LL sat corner
+           sioffset = float(nx3mx-1) / 2.
+           sjoffset = float(ny3mx-1) / 2.
+           u_orig = u_orig - du * sioffset 
+           v_orig = v_orig - dv * sjoffset
+
+         else ! use reference point
+           call getdudv_lam(rlov,rlap,dx,dy,
+     &                      reflat,reflon,du,dv,refu,refv)
+
+           write(6,*)' refu/refv at reference point ',refu,refv
+           
+!          Recalculate 'u_orig' and 'v_orig' for LL sat corner
+           sioffset = refi - 1.
+           sjoffset = refj - 1.
+           u_orig = refu - du * sioffset 
+           v_orig = refv - dv * sjoffset
+
+         endif
+
+         write(6,*)' nx/ny (model grid) = ',nx,ny
+         write(6,*)' u_orig/v_orig at corner ',u_orig,v_orig
+         u1 = u_orig
+         u2 = u_orig + du * float(nx3mx-1)
+         v1 = v_orig
+         v2 = v_orig + dv * float(ny3mx-1)
+         call uv_to_latlon_lc(u1,v1,rlap,rlap,rlov,rlats,rlons)
+         write(6,*)' lat/lon at ll sat corner ',rlats,rlons
+
+         call uv_to_latlon_lc(u2,v1,rlap,rlap,rlov,rlats,rlons)
+         write(6,*)' lat/lon at lr sat corner ',rlats,rlons
+
+         call uv_to_latlon_lc(u1,v2,rlap,rlap,rlov,rlats,rlons)
+         write(6,*)' lat/lon at ul sat corner ',rlats,rlons
+
+         call uv_to_latlon_lc(u2,v2,rlap,rlap,rlov,rlats,rlons)
+         write(6,*)' lat/lon at ur sat corner ',rlats,rlons
+
+!        For each model grid point obtain the satellite pixel         
+         do j = 1, ny
+         do i = 1, nx
+            latterm=(xlat(i,j)*pi)/180.
+            lonterm=(xlon(i,j)*pi)/180.
+            call getuv_lam(lapterm,lovterm,latterm,lonterm,u,v)
+            call uv_ij(ny3mx,u_orig,v_orig,du,dv,u,v
+     +                ,ri(i,j),rj(i,j))
+         enddo
+         enddo
+
       elseif(cdtype.eq.'twn')then           !only other type is taiwan gms
 
          call  latlon_2_lcij(nx*ny,xlat,xlon,ri,rj)
 
-      endif
+      endif ! cdtype
 
-      write(6,*)'Sat ri/rj corners for domain'
+      write(6,*)'Sat ri/rj for corners of expanded model domain'
       write(6,*)'ri1/rj1 (SW) ',ri(1,1),rj(1,1)
       write(6,*)'ri2/rj2 (SE) ',ri(nx,1),rj(nx,1)
       write(6,*)'ri3/rj3 (NW) ',ri(1,ny),rj(1,ny)
       write(6,*)'ri4/rj4 (NE) ',ri(nx,ny),rj(nx,ny)
-      write(6,*)
 c
 c get new i/j start/end values for this domain
 c
-      call get_sat_boundary(nx,ny,nx,ny,0,nx3mx,ny3mx,
+      call get_sat_boundary(nx,ny,nx,ny,0,ny3mx,nx3mx,
      &ri,rj,linestart,lineend,elemstart,elemend,
      &rls,rle,res,ree,istatus)
 
@@ -503,6 +610,9 @@ c     endif
 
       endif
 
+      write(6,1)ct,indx,elemstart,elemend,linestart,lineend
+1     format(' gen_lut_lambert indx i/j start/end ',a,5i6)
+         
       jstatus = 1
 
 1000  return
