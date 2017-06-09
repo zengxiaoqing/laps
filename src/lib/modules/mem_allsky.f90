@@ -4,10 +4,10 @@ MODULE mem_allsky
 !     Input arrays on model grid
       real, allocatable, dimension(:,:,:) :: pres_3d
       real, allocatable, dimension(:,:,:) :: heights_3d
-      real, allocatable, dimension(:,:,:) :: clwc_3d
-      real, allocatable, dimension(:,:,:) :: cice_3d
-      real, allocatable, dimension(:,:,:) :: rain_3d
-      real, allocatable, dimension(:,:,:) :: snow_3d
+      real, allocatable, dimension(:,:,:) :: clwc_3d    ! kg/m**3
+      real, allocatable, dimension(:,:,:) :: cice_3d    ! kg/m**3
+      real, allocatable, dimension(:,:,:) :: rain_3d    ! kg/m**3
+      real, allocatable, dimension(:,:,:) :: snow_3d    ! kg/m**3
       real, allocatable, dimension(:,:,:) :: aod_3d
 
 !     Local arrays on model grid
