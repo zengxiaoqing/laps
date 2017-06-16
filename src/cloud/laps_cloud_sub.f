@@ -252,6 +252,10 @@ cdis
         real dj_dh_vis(NX_L,NY_L)                      
         real offset_ir_i(NX_L,NY_L)     ! Sat I minus actual I
         real offset_ir_j(NX_L,NY_L)     ! Sat J minus actual J
+        real offset_vis_i(NX_L,NY_L)    ! Sat I minus actual I
+        real offset_vis_j(NX_L,NY_L)    ! Sat J minus actual J
+        real buff(NX_L,NY_L)
+        real cldht_prlx_top(NX_L,NY_L)
         integer i_fill_seams(NX_L,NY_L)
 
         integer istat_39_a(NX_L,NY_L)
@@ -841,6 +845,54 @@ C READ IN SATELLITE DATA
 
         I4_elapsed = ishow_timer()
 
+!       Default (e.g. for GOES-16, COMS)
+        offset_ir_i(:,:) = 0.
+        offset_ir_j(:,:) = 0.
+
+!       Positive I offset will shift the image west        
+!       Positive J offset will shift the image south
+
+        where(abs(subpoint_lon_clo_s8a(:,:)-( -90.)) .lt.  8.) ! GOES 16
+!           offset_ir_i(:,:)  = +1500./grid_spacing_cen_m
+!           offset_ir_j(:,:)  = +1000./grid_spacing_cen_m
+            offset_ir_i(:,:)  = +5500./grid_spacing_cen_m
+            offset_ir_j(:,:)  = +0000./grid_spacing_cen_m
+            offset_vis_i(:,:) =  +500./grid_spacing_cen_m
+            offset_vis_j(:,:) = +2000./grid_spacing_cen_m
+        end where
+        where(abs(subpoint_lon_clo_s8a(:,:)-(-135.)) .lt. 20.) ! GOES W
+            offset_ir_i(:,:)  = -3000./grid_spacing_cen_m
+            offset_ir_j(:,:)  =     0.
+            offset_vis_i(:,:) =     0./grid_spacing_cen_m
+            offset_vis_j(:,:) =     0./grid_spacing_cen_m
+        end where
+        where(abs(subpoint_lon_clo_s8a(:,:)-( -75.)) .lt.  8.) ! GOES E
+            offset_ir_i(:,:)  = +4700./grid_spacing_cen_m
+            offset_ir_j(:,:)  = -3200./grid_spacing_cen_m
+            offset_vis_i(:,:) =     0./grid_spacing_cen_m
+            offset_vis_j(:,:) =     0./grid_spacing_cen_m
+        end where
+
+!       Apply offsets to 11u IR data
+        do i = 1,NX_L
+        do j = 1,NY_L
+            ioff = min(max(i+nint(offset_ir_i(i,j)),1),NX_L)
+            joff = min(max(j+nint(offset_ir_j(i,j)),1),NY_L)
+            buff(i,j) = tb8_k(ioff,joff)
+        enddo ! j
+        enddo ! i
+        tb8_k(:,:) = buff(:,:)
+
+!       Apply offsets to 3.9u data        
+        do i = 1,NX_L
+        do j = 1,NY_L
+            ioff = min(max(i+nint(offset_ir_i(i,j)),1),NX_L)
+            joff = min(max(j+nint(offset_ir_j(i,j)),1),NY_L)
+            buff(i,j) = t39_k(ioff,joff)
+        enddo ! j
+        enddo ! i
+        t39_k(:,:) = buff(:,:)
+
 !       Calculate solar altitude
         do j = 1,NY_L
         do i = 1,NX_L
@@ -867,6 +919,7 @@ C READ IN SATELLITE DATA
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,rlaps_land_frac,topo                                ! I
      1              ,cvr_snow,tgd_sfc_k                                  ! I
+     1              ,offset_vis_i,offset_vis_j                           ! I
      1              ,cloud_frac_vis_a,sat_albedo,ihist_alb               ! O
      1              ,static_albedo,sfc_albedo                            ! O
      1              ,subpoint_lat_clo_vis,subpoint_lon_clo_vis           ! O 
@@ -906,30 +959,31 @@ C READ IN SATELLITE DATA
      1                    ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a  ! I 
      1                    ,r_missing_data                             ! I
      1                    ,di_dh_ir,dj_dh_ir)                         ! I 
-            if(l_corr_parallax .eqv. .false.)then
-                write(6,*)' turn off parallax correction'
-                di_dh_ir = 0. ! for testing
-                dj_dh_ir = 0. ! for testing
-            endif
+        endif
+
+        if(l_corr_parallax .eqv. .false.)then
+            write(6,*)' turn off parallax correction for remainder'
+            di_dh_ir = 0. ! for testing
+            dj_dh_ir = 0. ! for testing
+            di_dh_vis = 0. ! for testing
+            dj_dh_vis = 0. ! for testing
         endif
 
         I4_elapsed = ishow_timer()
 
-        where(subpoint_lon_clo_s8a(:,:) .lt. -105.) ! GOES W
-            offset_ir_i(:,:) = -3000./grid_spacing_cen_m
-            offset_ir_j(:,:) =     0.
-        end where
-        where(subpoint_lon_clo_s8a(:,:) .ge. -105.) ! GOES E
-            offset_ir_i(:,:) = +4700./grid_spacing_cen_m
-            offset_ir_j(:,:) = -3200./grid_spacing_cen_m
-        end where
-        write(6,*)' offset_ir',subpoint_lon_clo_s8a(NX_L/2,NY_L/2)
-     1                        ,offset_ir_i(NX_L/2,NY_L/2)
-     1                        ,offset_ir_j(NX_L/2,NY_L/2)
-        write(6,*)' dij_dh_ir',di_dh_ir(NX_L/2,NY_L/2)
-     1                        ,dj_dh_ir(NX_L/2,NY_L/2)
-        write(6,*)' dij_dh_vis',di_dh_vis(NX_L/2,NY_L/2)
-     1                         ,dj_dh_vis(NX_L/2,NY_L/2)
+        idb = NX_L/2
+        jdb = NY_L/2
+
+        write(6,*)' offset_ir',subpoint_lon_clo_s8a(idb,jdb)
+     1                        ,offset_ir_i(idb,jdb)
+     1                        ,offset_ir_j(idb,jdb)
+        write(6,*)' offset_vis',subpoint_lon_clo_s8a(idb,jdb)
+     1                        ,offset_vis_i(idb,jdb)
+     1                        ,offset_vis_j(idb,jdb)
+        write(6,*)' dij_dh_ir',di_dh_ir(idb,jdb)
+     1                        ,dj_dh_ir(idb,jdb)
+        write(6,*)' dij_dh_vis',di_dh_vis(idb,jdb)
+     1                         ,dj_dh_vis(idb,jdb)
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
@@ -938,7 +992,7 @@ C READ IN SATELLITE DATA
      1       istat_39_a, l_use_39,                                      ! I
      1       di_dh_ir,dj_dh_ir,                                         ! I
      1       di_dh_vis,dj_dh_vis,                                       ! I
-     1       i_fill_seams,                                              ! I
+     1       i_fill_seams,idb,jdb,                                      ! I
      1       offset_ir_i,offset_ir_j,                                   ! I
      1       istat_39_add_a,                                            ! O
      1       tb8_cold_k,                                                ! O
@@ -953,6 +1007,7 @@ C READ IN SATELLITE DATA
      1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,sfc_albedo,  ! I
      1       t_gnd_k,                                                   ! O
      1       cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,             ! O
+     1       cldht_prlx_top,                                            ! O
      1       istatus)                                                   ! O
 
         if(istatus .ne. 1)then
@@ -960,10 +1015,10 @@ C READ IN SATELLITE DATA
             goto999
         endif
 
-        write(6,291)(heights_3d(NX_L/2,NY_L/2,k)
-     1              ,clouds_3d(NX_L/2,NY_L/2,k),k=KCLOUD,1,-1)
+        write(6,291)(heights_3d(idb,jdb,k)
+     1              ,clouds_3d(idb,jdb,k),k=KCLOUD,1,-1)
 291     format(' cldcv section 1b (after insert_sat):'
-     1                  /'    ht      cvr',50(/f8.1,f8.3))
+     1                  /'    ht      cvr',50(/f8.1,f8.3,'   CTR1b'))
 
 !       Cloud cover QC check
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
@@ -1118,7 +1173,7 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
         enddo ! j
         enddo ! i
 
-!       write(6,*)' cldcv section 1c:',clouds_3d(NX_L/2,NY_L/2,:)
+!       write(6,*)' cldcv section 1c:',clouds_3d(idb,jdb,:)
 
 C INSERT RADAR DATA
         if(n_radar_3dref .gt. 0)then
@@ -1152,10 +1207,10 @@ C INSERT RADAR DATA
 
         endif
 
-        write(6,391)(heights_3d(NX_L/2,NY_L/2,k)
-     1              ,clouds_3d(NX_L/2,NY_L/2,k),k=KCLOUD,1,-1)
+        write(6,391)(heights_3d(idb,jdb,k)
+     1              ,clouds_3d(idb,jdb,k),k=KCLOUD,1,-1)
 391     format(' cldcv section 2 (after insert_radar):'
-     1                  /'    ht      cvr',50(/f8.1,f8.3))
+     1                  /'    ht      cvr',50(/f8.1,f8.3,'   CTR2'))
 
         if(i_varadj .eq. 1)then
             write(6,*)' Call cloud_var before insert vis'
@@ -1165,38 +1220,29 @@ C INSERT RADAR DATA
      1                    ,cloud_frac_vis_a
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
      1                    ,r_missing_data                             ! I
-     1                    ,di_dh_vis,dj_dh_vis)                       ! O
-            if(l_corr_parallax .eqv. .false.)then
-                write(6,*)' turn off parallax correction'
-                di_dh_vis = 0. ! for testing
-                dj_dh_vis = 0. ! for testing
-            endif
+     1                    ,di_dh_vis,dj_dh_vis)                       ! I
         endif
-
-        call get_parallax_info(NX_L,NY_L,i4time                          ! I
-     1                        ,lat,lon                                   ! I
-     1                        ,subpoint_lat_clo_vis,subpoint_lon_clo_vis ! I
-     1                        ,di_dh_vis,dj_dh_vis,i_fill_seams)         ! O
 
         I4_elapsed = ishow_timer()
 
 C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
         if(istat_vis .eq. 1 .OR. (istat_t39 .eq. 1 .and. l_use_39) )then
+!       if(.false.)then
             call insert_vis(i4time,clouds_3d,cld_hts
      1        ,topo,cloud_frac_vis_a,sat_albedo,ihist_alb             ! I
-     1        ,istat_39_a,l_use_39                                    ! I
+     1        ,istat_39_a,l_use_39,idb,jdb                            ! I
      1        ,NX_L,NY_L,KCLOUD,r_missing_data                        ! I
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base
      1        ,solar_alt,solar_az                                     ! I
      1        ,di_dh_vis,dj_dh_vis,i_fill_seams                       ! I
-     1        ,cldtop_tb8_m                                           ! I
+     1        ,cldtop_tb8_m,cldht_prlx_top                            ! I
      1        ,cloud_albedo,cloud_od,cloud_op                         ! O
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
         endif
 
-        write(6,491)(heights_3d(NX_L/2,NY_L/2,k)
-     1              ,clouds_3d(NX_L/2,NY_L/2,k),k=KCLOUD,1,-1)
+        write(6,491)(heights_3d(idb,jdb,k)
+     1              ,clouds_3d(idb,jdb,k),k=KCLOUD,1,-1)
 491     format(' cldcv section 3 (after insert_vis):'
      1        /'    ht      cvr',50(/f8.1,f8.3,'   CTR3'))
 
@@ -1359,7 +1405,7 @@ C       EW SLICES
         I4_elapsed = ishow_timer()
 
         do k = 1,NZ_L
-            write(6,101)k,heights_3d(NX_L/2,NY_L/2,k)
+            write(6,101)k,heights_3d(idb,jdb,k)
 101         format(1x,i3,f10.2)
         enddo ! k
 
@@ -1368,7 +1414,7 @@ C       EW SLICES
 !       Write out Cloud Field
         do k=1,KCLOUD
             rlevel = height_to_zcoord2(cld_hts(k),heights_3d
-     1                   ,NX_L,NY_L,NZ_L,NX_L/2,NY_L/2,istatus)   
+     1                   ,NX_L,NY_L,NZ_L,idb,jdb,istatus)   
 
             if(rlevel .le. float(NZ_L))then
                 cld_pres_1d(k) = pressure_of_rlevel(rlevel)
@@ -1521,7 +1567,8 @@ C       EW SLICES
             call get_directory(ext,directory,len_dir)
 
             call move(cloud_base    ,out_array_3d(1,1,1),NX_L,NY_L)
-            call move(cloud_top     ,out_array_3d(1,1,2),NX_L,NY_L)
+!           call move(cloud_top     ,out_array_3d(1,1,2),NX_L,NY_L)
+            call move(cldht_prlx_top,out_array_3d(1,1,2),NX_L,NY_L)
             call move(cloud_ceiling ,out_array_3d(1,1,3),NX_L,NY_L)
 
             call put_clouds_2d(i4time,directory,ext,NX_L,NY_L
@@ -1582,7 +1629,7 @@ C       EW SLICES
                 ioff = min(max(i + nint(offset_ir_i(i,j)),1),NX_L)
                 joff = min(max(j + nint(offset_ir_j(i,j)),1),NX_L)
                 tb8_k_offset(i,j) = tb8_k(ioff,joff)
-                if(i .eq. NX_L/2 .AND. j .eq. NY_L/2)then
+                if(i .eq. idb .AND. j .eq. jdb)then
                     write(6,*)'tb8_offset',i,j,ioff,joff
                     write(6,*)'CTR cloud albedo',cloud_albedo(i,j)
                 endif
@@ -1622,7 +1669,7 @@ C       EW SLICES
             call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
             call move(cvr_snow_cycle,out_array_3d(1,1,2),NX_L,NY_L)
             call move(cvr_water_temp,out_array_3d(1,1,3),NX_L,NY_L)
-            call move(tb8_k_offset  ,out_array_3d(1,1,4),NX_L,NY_L)
+            call move(tb8_k         ,out_array_3d(1,1,4),NX_L,NY_L)
             call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
             call move(sat_albedo    ,out_array_3d(1,1,6),NX_L,NY_L)
             call move(cloud_albedo  ,out_array_3d(1,1,7),NX_L,NY_L)
@@ -1679,7 +1726,7 @@ C       EW SLICES
      1                    ,cloud_frac_vis_a
      1                    ,subpoint_lat_clo_vis,subpoint_lon_clo_vis  ! I 
      1                    ,r_missing_data                             ! I
-     1                    ,di_dh_vis,dj_dh_vis)                       ! O
+     1                    ,di_dh_vis,dj_dh_vis)                       ! I
         endif
 
 999     continue
