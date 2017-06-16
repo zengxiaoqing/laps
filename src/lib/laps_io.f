@@ -1367,7 +1367,7 @@ c
         real    subpoint_lon_sat(maxsat)
         real    cost(imax,jmax,maxsat)
         real    costmin(imax,jmax), fracp, time_diff_sec
-        real    satm_time_wt,satm_subp_wt
+        real    satm_time_wt,satm_subp_wt,sub_term,rcomb_term,rmin_diff
 
         integer   isats(maxsat)
         integer   nsats
@@ -1502,7 +1502,10 @@ c
 
         elseif(nsats .gt.1 .and. (.not. l_mosaic_sat))then
            write(6,*)
-           write(6,*)'Found data for ',nsats,' satellites'
+           write(6,*)'Found data for ',nsats,' satellites '
+     1               ,csatid(1:nsats)
+
+           imn = 0 ! initialize
 
 !          This option may never be exercised since 'i4time_first' is earlier
 !          set to 0.
@@ -1513,7 +1516,7 @@ c
                  i4time_nearest=i4timedata(i)
                  subpoint_lon_clo = subpoint_lon_sat(i)
                  write(6,*)'Returning ',var_2d,' for ',csatid(i),
-     &                     ' ',asc9_tim,' 1'
+     &                     ' ',asc9_tim,' sec1'
                  return
               endif
            enddo
@@ -1522,12 +1525,17 @@ c
 !          showing up earlier in the list of satellite IDs 
 !          (in satdata_lvd_table.for) will be chosen. At present the subpoint
 !          is not considered.
-           min_i4time=i4time_sys
+           rmin_diff=1000000. ! a large number
            do i=1,nsats
               i4time_min=abs(i4timedata(i)-i4time_sys)
-              if(i4time_min.lt.min_i4time)then
+              sub_term = abs(subpoint_lon_sat(i) - lon(imax/2,jmax/2))
+              rcomb_term = float(i4time_min) * satm_time_wt
+     &                   + sub_term          * satm_subp_wt
+              write(6,31)csatid(i),i,i4time_min,sub_term,rcomb_term
+31            format('  i4time/subp terms ',a,i3,i10,f9.2,f10.3)           
+              if(rcomb_term .lt. rmin_diff)then
                  imn=i
-                 min_i4time=i4time_min
+                 rmin_diff=rcomb_term
               endif
            enddo
 
@@ -1537,8 +1545,8 @@ c
               call move(field_2d_lvd(1,1,imn),field_2d,imax,jmax)
               i4time_nearest=i4timedata(imn)
               subpoint_lon_clo = subpoint_lon_sat(imn)
-              write(6,*)'Returning ',var_2d,' for ',csatid(imn),
-     &                  ' ',asc9_tim,' 2'
+              write(6,*)'Returning ',var_2d,' for ',csatid(imn),imn,
+     &                  ' ',asc9_tim,' sec2'
               return
 
            else
@@ -1549,7 +1557,7 @@ c default
               i4time_nearest=i4timedata(1)
               subpoint_lon_clo = subpoint_lon_sat(1)
               write(6,*)'Returning ',var_2d,' for ',csatid(1),
-     &                  ' ',asc9_tim,' 3'
+     &                  ' ',asc9_tim,' sec3'
               return
            endif
 
@@ -1561,7 +1569,7 @@ c default
            subpoint_lon_clo = subpoint_lon_sat(1)
            write(6,*)
            write(6,*)'Returning ',var_2d,' for ',csatid(1), 
-     &                ' ',asc9_tim,' 4'
+     &                ' ',asc9_tim,' sec4'
            return
 
         elseif(nsats.le.0)then
