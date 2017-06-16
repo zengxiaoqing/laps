@@ -39,13 +39,13 @@ cdis
 
         subroutine insert_vis(i4time,clouds_3d,cld_hts
      1      ,topo,cloud_frac_vis_a,albedo,ihist_alb                   ! I
-     1      ,istat_39_a,l_use_39                                      ! I
+     1      ,istat_39_a,l_use_39,idb,jdb                              ! I
      1      ,ni,nj,nk,r_missing_data                                  ! I
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz                ! I
      1      ,istat_radar,radar_ref_3d,klaps,ref_base
      1      ,solar_alt,solar_az
      1      ,di_dh,dj_dh,i_fill_seams                                 ! I
-     1      ,cldtop_tb8_m                                             ! I
+     1      ,cldtop_tb8_m,cldht_prlx_top                              ! I
      1      ,cloud_albedo,cloud_od,cloud_op                           ! O
      1      ,dbz_max_2d,surface_sao_buffer,istatus)
 
@@ -84,6 +84,7 @@ cdis
         real dbz_max_2d(ni,nj)
         real radar_ref_3d(ni,nj,klaps)
         real clouds_3d(ni,nj,nk)
+        real clouds_3d_buf(ni,nj,nk)
         real cld_hts(nk)
         real solar_alt(ni,nj)
         real solar_az(ni,nj)
@@ -91,6 +92,7 @@ cdis
         real di_dh(ni,nj)                      
         real dj_dh(ni,nj)                      
         real cldtop_tb8_m(ni,nj)     ! Input
+        real cldht_prlx_top(ni,nj)
         integer i_fill_seams(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
@@ -105,8 +107,8 @@ cdis
         cloud_od = r_missing_data
         cloud_op = r_missing_data
 
-        mode_prlx = 2
-        cldht_prlx_fixed = 3000.
+        mode_prlx = 3 ! 2 (fixed) or 3 (variable)
+        cldht_prlx_fixed = 10000.
 
         if(l_use_39)then
             write(6,*)' subroutine insert_vis (with 3.9u)...'
@@ -142,16 +144,22 @@ cdis
         diffin_sumsq  = 0.
         diffout_sumsq = 0.
 
+        clouds_3d_buf(:,:,:) = clouds_3d(:,:,:)
+
 !       Horizontal array loop
         do i = 1,ni
         do j = 1,nj    
 
-!         This can be set up for mode_prlx = 3
+!         This can be set up for mode_prlx
 !         if(cldtop_tb8_m(i,j) .ne. r_missing_data)then
-!             cldht_prlx = cldtop_tb8_m(i,j)
+!             cldht_prlx_top(i,j) = cldtop_tb8_m(i,j)
+!             cldht_prlx_top(i,j) = cldht_prlx_fixed
+!         else
+!             cldht_prlx_top(i,j) = cldht_prlx_fixed
 !         endif
+!         cldht_prlx_top(i,j) = min(max(cldtop_tb8_m(i,j),8000.),12000.)
 
-          if(i .eq. ni/2 .AND. j .eq. nj/2)then
+          if(i .eq. idb .AND. j .eq. jdb)then
               idebug = 1
           else
               idebug = 0
@@ -168,7 +176,8 @@ cdis
               if(idebug .eq. 1)then
                   write(6,51)cloud_frac_vis_a(i,j),albedo_eff
      1                       ,trans,cloud_od(i,j),cloud_op(i,j)
-51                format('cf_vis/albedo/trans/od/op',5f9.3)
+     1                       ,cldht_prlx_top(i,j)
+51                format('CTR cf_vis/albedo/trans/od/op/prlx/',6f9.3)
               endif
 
               cloud_albedo(i,j) = albedo_eff
@@ -206,7 +215,9 @@ cdis
             l_39_clr_2d = .false.
 
             do k = 1,nk
-                if(mode_prlx .eq. 2)then
+                if(mode_prlx .eq. 3)then
+                    cldht_prlx = cldht_prlx_top(i,j) ! * 2.
+                elseif(mode_prlx .eq. 2)then
                     cldht_prlx = cldht_prlx_fixed
                 else
                     cldht_prlx = cld_hts(k)
@@ -298,7 +309,7 @@ cdis
                        n_no_ir = n_no_ir + 1
                    endif
 
-                   clouds_3d(itn:itx,jt,k) = cloud_frac_out ! Modify the output
+                   clouds_3d_buf(itn:itx,jt,k) = cloud_frac_out ! Modify output
 !                  if(idebug .eq. 1)then
 !                      write(6,202)
 !    1                   k,cloud_frac_out,cloud_frac_in,cushion
@@ -448,6 +459,8 @@ cdis
 
         enddo ! i
         enddo ! j
+
+        clouds_3d(:,:,:) = clouds_3d_buf(:,:,:)
 
         pct_use_vis = (1.0 - float(n_missing_albedo)/float(ni*nj))*100.       
 
