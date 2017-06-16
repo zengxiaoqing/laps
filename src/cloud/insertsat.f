@@ -46,7 +46,7 @@ c
      1  istat_39_a, l_use_39,                                           ! I
      1  di_dh_ir,dj_dh_ir,                                              ! I
      1  di_dh_vis,dj_dh_vis,                                            ! I
-     1  i_fill_seams,                                                   ! I
+     1  i_fill_seams,idb,jdb,                                           ! I
      1  offset_ir_i,offset_ir_j,                                        ! I
      1  istat_39_add_a,                                                 ! O
      1  tb8_cold_k,                                                     ! O
@@ -59,8 +59,9 @@ c
      1  topo,heights_3d,temp_3d,t_sfc_k,td_sfc_k,pres_sfc_pa,           ! I
      1  t_modelfg,sh_modelfg,pres_3d,                                   ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,sfc_albedo,        ! I
-     1  t_gnd_k                                                         ! O
+     1  t_gnd_k,                                                        ! O
      1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,                  ! O
+     1  cldht_prlx_top,                                                 ! O
      1  istatus)                                                        ! O
 c
 c*************************************************************************
@@ -152,6 +153,7 @@ c
         real heights_3d(imax,jmax,klaps)
         real cloud_frac_co2_a(imax,jmax)
         real cldtop_co2_pa_a(imax,jmax)
+        real cldht_prlx_top(imax,jmax)
 
         integer istat_39_a(imax,jmax)
         integer istat_39_add_a(imax,jmax)
@@ -183,6 +185,7 @@ c
         logical lstat_co2_a(imax,jmax)
         logical l_clear_ir /.true./
         logical l_add_ir /.true./
+        logical l_correct_cldtop /.true./
 
         integer idebug_a(imax,jmax)        ! L
         integer k_terrain(imax,jmax)
@@ -282,7 +285,7 @@ c
         endif
 
 !       Calculate cold filtered temperatures (over ~10km box - mode_sao=2)
-        i_delt = max(1,nint(5000./grid_spacing_m))
+        i_delt = max(1,nint(1000./grid_spacing_m)) ! for tb8_cold_k
         do j = 1,jmax
             jl = max(1   ,j-i_delt)
             jh = min(jmax,j+i_delt)
@@ -376,20 +379,108 @@ c
         write(6,81)
      1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k=kcld,1,-1)
 81      format(' cldcv section 0 (fg/sao):'                
-     1                  /'    ht      cvr',50(/f8.1,f8.3))
+     1                  /'    ht      cvr',50(/f8.1,f8.3,'   CTR0'))
 
-        mode_prlx = 2
-        cldht_prlx_fixed = 3000.
+        mode_prlx = 3 ! 2 (fixed) or 3 (variable)
+        cldht_prlx_fixed = 8000.
+
+        if(mode_prlx .eq. 3)then ! extra call to cloud_top to support region growing
+
+          do j=1,jmax
+          do i=1,imax
+
+           jp10 = j+10
+!          if(j .eq. (j/jskd)*jskd .and. i .eq. (i/iskd)*iskd)then
+           if(i .eq. idb .AND. j .eq. jdb)then
+             idebug_a(i,j) = 1
+             write(6,91)i,j,rlat(i,j),rlon(i,j)
+91           format(/' Debugging at lat/lon ',2i6,2f8.2)
+           else
+             idebug_a(i,j) = 0
+           endif
+           idebug = idebug_a(i,j)
+
+           if(tb8_k(i,j) .ne. r_missing_data)then
+
+!           Compare brightness temp to surface temperature
+            if(idebug .eq. 1)then
+              tb8_c = k_to_c(tb8_k(i,j))
+              t_gnd_c = k_to_c(t_gnd_k(i,j))
+              write(6,111,err=112)i,j,tb8_c,t_gnd_c
+     1                               ,tb8_c-t_gnd_c
+111           format(1x,2i4,' 1st cloud_top call: tb8/sfc'
+     1              ,12x,f8.1,4x,f8.1,8x,f8.1)
+112         endif
+
+!           Calculate cloud top height from Band 8 and/or CO2 slicing method
+            call cloud_top( init_co2,i4time,tb8_k(i,j),idebug
+     1     ,cloud_frac_co2_a(i,j)                                        ! I
+     1     ,t_gnd_k,sfc_albedo,pres_sfc_pa
+     1     ,thresh_ir_diff1,topo(i,j),r_missing_data
+     1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p      
+     1     ,istat_39_a(i,j), l_use_39                                    ! I
+     1     ,istat_39_add_a(i,j),istat_vis_added_a(i,j)                   ! O
+     1     ,cloud_frac_vis_a,istat_vis_potl_a(i,j)                       ! I
+     1     ,di_dh_vis(i,j),dj_dh_vis(i,j)                                ! I
+     1     ,cloud_frac_vis_s                                             ! I
+     1     ,lstat_co2_a(i,j)                                             ! I
+     1     ,t_modelfg,sh_modelfg                                         ! I
+     1     ,pres_3d                                                      ! I
+     1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2        ! O
+     1     ,cldtop_tb8_m(i,j),l_tb8                                      ! O
+     1     ,cldtop_m(i,j),l_cloud_present                                ! O
+     1     ,sat_cover)                                                   ! O
+
+           endif ! tb8_k
+
+!          This can be set up for mode_prlx
+           if(cldtop_tb8_m(i,j) .ne. r_missing_data)then
+!          if(cldtop_m(i,j) .ne. r_missing_data)then
+              cldht_prlx_top(i,j) = cldtop_tb8_m(i,j)
+!             cldht_prlx_top(i,j) = cldtop_m(i,j)
+!             cldht_prlx_top(i,j) = cldht_prlx_fixed
+           else
+!             cldht_prlx_top(i,j) = cldht_prlx_fixed
+              cldht_prlx_top(i,j) = r_missing_data
+           endif
+!          cldht_prlx_top(i,j) =
+!    1                     min(max(cldtop_tb8_m(i,j),3000.),3000.)
+
+          enddo ! i
+          enddo ! j
+
+          if(.false.)then
+
+           call region_grow(cldht_prlx_top,imax,jmax
+     1                     ,r_missing_data,1,30)
+
+           where(cldht_prlx_top(:,:) .eq. r_missing_data)
+            cldht_prlx_top(:,:) = cldht_prlx_fixed
+           endwhere
+
+           n_cross_in = 41 ! 40km box on a side
+           i_l = 1    + n_cross_in/2
+           i_h = imax - n_cross_in/2
+           j_l = 1    + n_cross_in/2
+           j_h = jmax - n_cross_in/2
+           call smooth_cross_laps(imax,jmax,i_l,i_h,j_l,j_h
+     1                           ,cldht_prlx_top,n_cross_in)
+
+         else ! uniform parallax array
+           cldht_prlx_top(:,:) = cldht_prlx_fixed
+
+         endif ! true
+             
+        endif ! true
 
         do j=1,jmax
         do i=1,imax
 
          jp10 = j+10
 !        if(j .eq. (j/jskd)*jskd .and. i .eq. (i/iskd)*iskd)then
-         if(i .eq. imax/2 .AND. j .eq. jmax/2)then
+         if(i .eq. idb .AND. j .eq. jdb)then
              idebug_a(i,j) = 1
              write(6,91)i,j,rlat(i,j),rlon(i,j)
-91           format(/' Debugging at lat/lon ',2i6,2f8.2)
          else
              idebug_a(i,j) = 0
          endif
@@ -407,11 +498,9 @@ c
           if(idebug .eq. 1)then
               tb8_c = k_to_c(tb8_k(i,j))
               t_gnd_c = k_to_c(t_gnd_k(i,j))
-              write(6,111,err=112)i,j,tb8_c,t_gnd_c
-     1                               ,tb8_c-t_gnd_c
-111           format(1x,2i4,' 1st cloud_top call: tb8/sfc'
-     1              ,12x,f8.1,4x,f8.1,8x,f8.1)
-112       endif
+              write(6,111,err=1131)i,j,tb8_c,t_gnd_c
+     1                                ,tb8_c-t_gnd_c
+1131      endif
 
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
           call cloud_top( init_co2,i4time,tb8_k(i,j),idebug
@@ -431,11 +520,6 @@ c
      1     ,cldtop_tb8_m(i,j),l_tb8                                      ! O
      1     ,cldtop_m(i,j),l_cloud_present                                ! O
      1     ,sat_cover)                                                   ! O
-
-!         This can be set up for mode_prlx = 3
-!         if(cldtop_tb8_m(i,j) .ne. r_missing_data)then
-!             cldht_prlx = cldtop_tb8_m(i,j)
-!         endif
 
           if(istat_vis_potl_a(i,j) .eq. 1)then ! vis potl added
               iwrite = iwrite + 1
@@ -491,14 +575,16 @@ c
 
             do k=kcld,1,-1
 
-              if(mode_prlx .eq. 2)then
+              if(mode_prlx .eq. 3)then
+                  cldht_prlx = cldht_prlx_top(i,j)
+              elseif(mode_prlx .eq. 2)then
                   cldht_prlx = cldht_prlx_fixed
               else
                   cldht_prlx = cld_hts(k)
               endif 
                   
-              it = i - nint(di_dh_ir(i,j)*cldht_prlx - offset_ir_i(i,j))
-              jt = j - nint(dj_dh_ir(i,j)*cldht_prlx - offset_ir_j(i,j))
+              it = i - nint(di_dh_ir(i,j)*cldht_prlx)
+              jt = j - nint(dj_dh_ir(i,j)*cldht_prlx)
               it = max(min(it,imax),1)
               jt = max(min(jt,jmax),1)
               if(i_fill_seams(i,j) .ne. 0)then
@@ -766,8 +852,8 @@ c
      1                     ,i,j,mode_sao     
               endif
 
-            elseif(ht_sao_base .eq. r_missing_ht)then 
-!           elseif(.false.)then 
+            elseif(ht_sao_base .eq. r_missing_ht .and.
+     1             l_correct_cldtop .eqv. .true.      )then 
                                                 ! Non-vis Sat with no SAO cloud
               n_no_sao2 = n_no_sao2 + 1
               mode_sao = 2
@@ -1011,7 +1097,9 @@ c
 !           Add satellite cloud to array
             if(ierr .eq. 0)then
               do k=kcld,1,-1
-                if(mode_prlx .eq. 2)then
+                if(mode_prlx .eq. 3)then
+                    cldht_prlx = cldht_prlx_top(i,j)
+                elseif(mode_prlx .eq. 2)then
                     cldht_prlx = cldht_prlx_fixed
                 else
                     cldht_prlx = cld_hts(k)
@@ -1023,10 +1111,8 @@ c
                        it = i - nint(di_dh_vis(i,j) * cldht_prlx)
                        jt = j - nint(dj_dh_vis(i,j) * cldht_prlx)
                    else
-                       it = i - nint(di_dh_ir(i,j) * cldht_prlx
-     1                                             - offset_ir_i(i,j))
-                       jt = j - nint(dj_dh_ir(i,j) * cldht_prlx
-     1                                             - offset_ir_j(i,j))
+                       it = i - nint(di_dh_ir(i,j) * cldht_prlx)
+                       jt = j - nint(dj_dh_ir(i,j) * cldht_prlx)
                    endif
                    it = max(min(it,imax),1)
                    jt = max(min(jt,jmax),1)
@@ -1041,11 +1127,11 @@ c
                    endif
                    cldcv(itn:itx,jt,k)=cover
 !                  if(idebug .eq. 1)then
-                   if(it .eq. imax/2 .AND. jt .eq. jmax/2)then
+                   if(it .eq. idb .AND. jt .eq. jdb)then
 !                  if(it.eq.660 .and. jt.gt.50 .and. jt.lt.120)then
-                       write(6,331)i,j,it,jt,k,cover
+                       write(6,331)i,j,it,jt,k,cover,cldht_prlx
      1                            ,istat_vis_added_a(i,j)
-331                    format(' added ijk/cvr:',5i5,f8.2,i2)
+331                    format(' CTR added ijk/cvr/htprlx:',5i5,2f8.2,i2)       
                    endif
                 endif
               enddo
@@ -1064,10 +1150,10 @@ c
         enddo ! jmax
 
         write(6,332)
-     1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k
+     1  (heights_3d(idb,jdb,k),cldcv(idb,jdb,k),k
      1                                           ,k=kcld,1,-1)
 332     format(' cldcv section 1 (after subtract/add):'
-     1                  /'    ht      cvr    k',50(/f8.1,f8.3,i4))
+     1             /'    ht      cvr    k',50(/f8.1,f8.3,i4,'   CTR1'))
 
 !       Write stats on CO2 and Band 8 (11.2mm) methods
         write(6,*)' n_valid_co2 = '  ,n_valid_co2
@@ -1098,11 +1184,11 @@ c
      1           ,' n_vis_added = ',n_vis_added
 
         write(6,*)'section pt vis potl/added'
-     1        ,istat_vis_potl_a(imax/2,jmax/2)
-     1        ,istat_vis_added_a(imax/2,jmax/2)
+     1        ,istat_vis_potl_a(idb,jdb)
+     1        ,istat_vis_added_a(idb,jdb)
 
         write(6,342)
-     1  (heights_3d(imax/2,jmax/2,k),cldcv(imax/2,jmax/2,k),k=kcld,1,-1)
+     1  (heights_3d(idb,jdb,k),cldcv(idb,jdb,k),k=kcld,1,-1)
 342     format(' cldcv section 1a (comp rad):'
      1                  /'    ht      cvr',50(/f8.1,f8.3))
 
@@ -1435,6 +1521,7 @@ c
             else
                 mode_top = 4
                 l_cloud_present = .false.
+                sat_cover = 0.
             endif
         else                          ! Using Band 8 (11.2mm) data only
             mode_top = 5
