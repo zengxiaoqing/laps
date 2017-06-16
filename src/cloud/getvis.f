@@ -42,6 +42,7 @@ cdis
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
      1                    ,rlaps_land_frac,topo                     ! I
      1                    ,cvr_snow,tgd_sfc_k                       ! I
+     1                    ,offset_vis_i,offset_vis_j                ! I
      1                    ,cloud_frac_vis_a,sat_albedo,ihist_alb    ! O
      1                    ,static_albedo,sfc_albedo                 ! O
      1                    ,subpoint_lat_clo,subpoint_lon_clo        ! O 
@@ -60,6 +61,7 @@ cdis
         real lat(ni,nj), lon(ni,nj)
         real sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
         real static_albedo(ni,nj)   ! Static albedo database
+        real sat_albedo_in(ni,nj)
         real sat_albedo(ni,nj)
         real cvr_snow(ni,nj)
         real tgd_sfc_k(ni,nj)
@@ -67,6 +69,8 @@ cdis
         real topo(ni,nj)
         real subpoint_lat_clo(ni,nj)
         real subpoint_lon_clo(ni,nj)
+        real offset_vis_i(ni,nj)    ! Sat I minus actual I
+        real offset_vis_j(ni,nj)    ! Sat J minus actual J
 
 !       This stuff is for reading VIS data from LVD file
         real solar_alt(ni,nj)
@@ -97,6 +101,7 @@ cdis
         do i = 1,ni
         do j = 1,nj
             sat_albedo(i,j) = r_missing_data
+            sat_albedo_in(i,j) = r_missing_data
             cloud_frac_vis_a(i,j) = r_missing_data
             istat_vis_a(i,j) = 0
         enddo ! j
@@ -134,8 +139,9 @@ cdis
      1                     ,i4time_nearest,lat,lon
      1                     ,subpoint_lat_clo,subpoint_lon_clo      ! O 
      1                     ,EXT,var,units
-     1                     ,comment,ni,nj,sat_albedo,ilevel,istatus)
+     1                     ,comment,ni,nj,sat_albedo_in,ilevel,istatus)
             write(6,*)' istatus from sat_albedo data = ',istatus
+            write(6,*)' comment from get_vis = ',comment
             itry = itry + 1
         enddo ! itry
 
@@ -149,6 +155,9 @@ cdis
 !       Initial test for missing albedo (and partial data coverage)
         do i = 1,ni
         do j = 1,nj
+            ioff = min(max(i+nint(offset_vis_i(i,j)),1),ni)
+            joff = min(max(j+nint(offset_vis_j(i,j)),1),nj)
+            sat_albedo(i,j) = sat_albedo_in(ioff,joff)
             if(sat_albedo(i,j) .eq. r_missing_data .and. 
      1                          (.not. l_use_vis_partial)      )then
                 write(6,*)
