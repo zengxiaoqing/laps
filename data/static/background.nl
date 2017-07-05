@@ -103,9 +103,9 @@ c         allowable names are included above with the allowable values of bgmode
 c         new SBN (bgmodel=4) grid available 5-02 - MesoEta_SBN
 c         For example, if bgmodel = 5, then cmodel = RUC40_NATIVE
 c                      if bgmodel = 2, then cmodel = ETA48_CONUS
-c         If bgmodel = 0 and cmodel = FUA_LAPS then corresponding bgpath must be
+c         If bgmodel = 0 and cmodel = LAPS_FUA then corresponding bgpath must be
 c                                     $LAPS_DATA_ROOT/lapsprd/fua/"model_type"; eg mm5.
-c                                   = FUA_MODEL then lga will process fua/fsf from
+c                                   = MODEL_FUA then lga will process fua/fsf from
 c                                     a different domain. Set bgpath accordingly.
 c               
 c itime_inc = controls time increment for model background.
