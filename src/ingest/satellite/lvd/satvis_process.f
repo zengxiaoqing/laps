@@ -712,7 +712,8 @@ c make it look like goes7
           do i=1,imax
             if(laps_vis_norm(i,j).ne.r_missing_data)then
 c make it look like goes7
-              call stretch(0.,6095.,0.,220.,laps_vis_norm(i,j))
+!             call stretch(0.,4095., 0.,220.,laps_vis_norm(i,j))
+              call stretch(0.,6095.,30.,220.,laps_vis_norm(i,j))
 
             endif
           enddo
