@@ -7,7 +7,7 @@
      +                   ,image_13,n_ir_elem,n_ir_lines
      +                   ,image_07
      +                   ,image_02,n_vis_elem,n_vis_lines
-     +                   ,istatus)
+     +                   ,i4time_goes,istatus)                      ! O
 
       include 'netcdf.inc'
 
@@ -26,7 +26,7 @@
 
       write(6,*)' Subroutine get_goes_np_data ',n_ir_elem,n_ir_lines
 
-      i4time_goes = ((i4time_sys - ilaps_cycle_time)
+      i4time_goes = ((i4time_sys + 0)
      1            / ilaps_cycle_time) * ilaps_cycle_time + i4time_offset
 
 !     Read IR channel 13 data
