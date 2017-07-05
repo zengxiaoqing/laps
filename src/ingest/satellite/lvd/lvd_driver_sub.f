@@ -190,7 +190,7 @@ c
 
       integer ishow_timer
       integer init_timer
-      integer i4time_cur
+      integer i4time_cur,i4time_offset,i4time_goes
       integer i4time_now
       integer i4time_now_gg
       integer i_delta_t
@@ -669,18 +669,26 @@ c March 2003 added HKO (gms) sat ingest
          endif
 
       elseif(csattype.eq.'gnp')then
-         call get_goes_np_data
+         do i4time_offset = -120,+120,60
+           call get_goes_np_data
      +                   (i4time_cur,laps_cycle_time,NX_L,NY_L
+     +                   ,i4time_offset
      +                   ,maxchannel,max_files,nchannels
      +                   ,csatid,csattype,chtype
      +                   ,path_to_raw_sat(1,jtype,ksat)
      +                   ,image_ir,n_ir_elem,n_ir_lines
      +                   ,image_39
      +                   ,image_vis,n_vis_elem,n_vis_lines
-     +                   ,istatus)
+     +                   ,i4time_goes,istatus)                      ! O
+           if(istatus .eq. 1)then
+              write(6,*)' Sucessful return from get_goes_np_data'
+              goto 110
+           endif
+         enddo
 
-         nft = istatus
+110      nft = istatus
          ntm = 3
+         i4time_data(1) = i4time_goes
 
          where(image_ir(:,:,:) .eq. 0.)
      &         image_ir(:,:,:) = r_missing_data      
