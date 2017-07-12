@@ -853,10 +853,10 @@ C READ IN SATELLITE DATA
 !       Positive J offset will shift the image south
 
         where(abs(subpoint_lon_clo_s8a(:,:)-( -90.)) .lt.  8.) ! GOES 16
-!           offset_ir_i(:,:)  = +1500./grid_spacing_cen_m
-!           offset_ir_j(:,:)  = +1000./grid_spacing_cen_m
-            offset_ir_i(:,:)  = +5500./grid_spacing_cen_m
-            offset_ir_j(:,:)  = +0000./grid_spacing_cen_m
+            offset_ir_i(:,:)  = +1500./grid_spacing_cen_m
+            offset_ir_j(:,:)  =  +500./grid_spacing_cen_m
+!           offset_ir_i(:,:)  =  -500./grid_spacing_cen_m
+!           offset_ir_j(:,:)  = +2500./grid_spacing_cen_m
             offset_vis_i(:,:) =  +500./grid_spacing_cen_m
             offset_vis_j(:,:) = +2000./grid_spacing_cen_m
         end where
@@ -971,8 +971,8 @@ C READ IN SATELLITE DATA
 
         I4_elapsed = ishow_timer()
 
-        idb = NX_L/2
-        jdb = NY_L/2
+        idb = (NX_L/2) + 1
+        jdb = (NY_L/2) + 1
 
         write(6,*)' offset_ir',subpoint_lon_clo_s8a(idb,jdb)
      1                        ,offset_ir_i(idb,jdb)
