@@ -449,7 +449,7 @@ c
           enddo ! i
           enddo ! j
 
-          if(.false.)then
+          if(.true.)then
 
            call region_grow(cldht_prlx_top,imax,jmax
      1                     ,r_missing_data,1,30)
@@ -592,12 +592,44 @@ c
                   itx = max(i,it)
 !                 itn = it
 !                 itx = it
-              else
-                  itn = it
-                  itx = it
+              else ! consider gradients
+                  if(mode_prlx .eq. 3)then
+                    ip = min(i+1,imax)
+                    itp = ip - nint(di_dh_ir(ip,j)*cldht_prlx_top(ip,j))
+                    itp = min(max(itp,1),imax)
+                  else
+                    itp = it
+                  endif
+
+!                 if(itp-it .ge. 2 .or. .true.)then
+                  if(itp-it .ge. 2)then
+                    itn = it
+                    itx = min(it+1,imax)
+                  else
+                    itn = it
+                    itx = it
+                  endif
+
+                  if(mode_prlx .eq. 3)then
+                    jp = min(j+1,jmax)
+                    jtp = jp - nint(di_dh_ir(i,jp)*cldht_prlx_top(i,jp))
+                    jtp = min(max(jtp,1),jmax)
+                  else
+                    jtp = jt
+                  endif
+
+!                 if(jtp-jt .ge. 2 .or. .true.)then
+                  if(jtp-jt .ge. 2)then
+                    jtn = jt
+                    jtx = min(jt+1,jmax)
+                  else
+                    jtn = jt
+                    jtx = jt
+                  endif
               endif
 
-              if(cldcv(it,jt,k) .gt. .04)then ! Efficiency test
+!             if(cldcv(it,jt,k) .gt. .04)then ! Efficiency test
+              if(maxval(cldcv(itn:itx,jtn:jtx,k)) .gt. .04)then ! Efficiency test
 
                 z_temp = height_to_zcoord2(cld_hts(k),heights_3d,
      1                                     imax,jmax,klaps,i,j,istatus1)       
@@ -633,7 +665,7 @@ c
                       write(6,*)' Warning in insert_sat, cldcv > 1.0'       
      1                         ,i,j,k,cldcv(it,jt,k)
                       write(6,*)' Resetting cloud cover to 1.0'
-                      cldcv(itn:itx,jt,k) = 1.0
+                      cldcv(itn:itx,jtn:jtx,k) = 1.0
                   endif
 
                   call get_tb8_fwd(temp_grid_point,t_gnd_k(i,j)         ! I   
@@ -682,14 +714,14 @@ c
                   if(cld_hts(k) - topo(i,j) .gt. surface_sao_buffer)then
 !                 if(cld_hts(k) - topo(i,j) .gt. 1200.)then
 !                   if(thresh_tb8_clr .gt. 0.)then ! clear clouds when snow present
-                    if(.true.)then                                                 
-                      cldcv(itn:itx,jt,k)=default_clear_cover
+                    if(.true.)then ! key line for artifacts                                              
+                      cldcv(itn:itx,jtn:jtx,k)=default_clear_cover
                       iclr = 1
                     else ! .false.
 !                     Does satellite still imply at least some cloud?
                       if(tb8_k(i,j) - t_gnd_k(i,j)  .lt. -8.0)then ! Some cloud
                         if(cldcv(it,jt,k) .gt. 0.9)then ! Lower top of solid cld
-                            cldcv(itn:itx,jt,k)=default_clear_cover
+                            cldcv(itn:itx,jtn:jtx,k)=default_clear_cover
                             iclr = 2
                         else                          ! Cover < 0.9, correct it
                             call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)       
@@ -708,7 +740,7 @@ c
      1                            min(t_gnd_k(i,j),t_sfc_k(i,j)-10.0)       
                         if(temp_grid_point .lt. temp_thresh)then
 !                       if(temp_grid_point .lt. t_gnd_k(i,j))then
-                            cldcv(itn:itx,jt,k)=default_clear_cover ! not in inversion, 
+                            cldcv(itn:itx,jtn:jtx,k)=default_clear_cover ! not in inversion, 
                                                                     ! clear it out
                             iclr = 3
                         endif
@@ -731,7 +763,7 @@ c
 
  500        enddo ! k (for clearing clouds)
 
-          endif ! Using Band 8
+          endif ! l_clear_ir
 
 !         Test if we're confident that a cloud is present and we know where
 !         the cloud top is.
@@ -1116,18 +1148,53 @@ c
                    endif
                    it = max(min(it,imax),1)
                    jt = max(min(jt,jmax),1)
+
                    if(i_fill_seams(i,j) .ne. 0)then
                        itn = min(i,it)
                        itx = max(i,it)
 !                      itn = it
 !                      itx = it
-                   else
-                       itn = it
-                       itx = it
+                   else ! consider gradients
+                       if(mode_prlx .eq. 3)then
+                         ip = min(i+1,imax)
+                         itp = ip -
+     1                         nint(di_dh_ir(ip,j)*cldht_prlx_top(ip,j))
+                         itp = min(max(itp,1),imax)
+                       else
+                         itp = it
+                       endif
+
+!                      if(itp-it .ge. 2 .or. .true.)then
+                       if(itp-it .ge. 2)then
+                         itn = it
+                         itx = min(it+1,imax)
+                       else
+                         itn = it
+                         itx = it
+                       endif
+
+                       if(mode_prlx .eq. 3)then
+                         jp = min(j+1,jmax)
+                         jtp = jp -
+     1                         nint(di_dh_ir(i,jp)*cldht_prlx_top(i,jp))
+                         jtp = min(max(jtp,1),jmax)
+                       else
+                         jtp = jt
+                       endif
+
+!                      if(jtp-jt .ge. 2 .or. .true.)then
+                       if(jtp-jt .ge. 2)then
+                         jtn = jt
+                         jtx = min(jt+1,jmax)
+                       else
+                         jtn = jt
+                         jtx = jt
+                       endif
                    endif
-                   cldcv(itn:itx,jt,k)=cover
+
+                   cldcv(itn:itx,jtn:jtx,k)=cover
 !                  if(idebug .eq. 1)then
-                   if(it .eq. idb .AND. jt .eq. jdb)then
+                   if(itn .eq. idb .AND. jtn .eq. jdb)then
 !                  if(it.eq.660 .and. jt.gt.50 .and. jt.lt.120)then
                        write(6,331)i,j,it,jt,k,cover,cldht_prlx
      1                            ,istat_vis_added_a(i,j)
@@ -1142,7 +1209,7 @@ c
                 write(6,*)' Cloud not present for adding at i,j = ',i,j
             endif
 
-          ENDIF ! l_cloud_present (Cloudy)
+          ENDIF ! l_cloud_present (Cloudy) & l_add_ir
 
          endif ! tb8_k(i,j) .ne. r_missing_data
 
@@ -1323,7 +1390,7 @@ c
 !           Correct cloud top temperature for thin clouds using VIS data
             call correct_cldtop_t_rad(tb8_k,t_gnd_k(i,j)               ! I
      1                           ,cloud_frac_vis_s(i,j)                ! I
-     1                           ,istat_vis_potl                       ! I
+     1                           ,istat_vis_potl,idebug                ! I
      1                           ,cldtop_temp_k,istat_vis_corr)        ! O
             if(istatus .eq. -1)then
                 write(6,*)
@@ -2123,10 +2190,13 @@ c
         end
 
         subroutine correct_cldtop_t_rad(tb8_k,t_gnd_k,cloud_frac_vis      ! I
-     1                                 ,istat_vis_potl                    ! I
+     1                                 ,istat_vis_potl,idebug             ! I
      1                                 ,cldtop_temp_k,istatus)            ! O
 
         use cloud_rad
+
+        data iwrite /0/
+        save iwrite
 
         cldtop_temp_k = tb8_k ! default value
         istatus = 0
@@ -2147,12 +2217,15 @@ c
                 cldtop_temp_rad = t_gnd_rad + diff2
 
                 if (cldtop_temp_rad .le. 0.0) then
-                   write(6,*) 'WARNING: cldtop_temp_rad <= 0'
-                   write(6,*) 'tb8_k ',tb8_k, ' tb8_rad ',tb8_rad
-                   write(6,*) 't_gnd_k ',t_gnd_k, ' t_gnd_rad ',
-     1                                              t_gnd_rad
-                   write(6,*) 'cloud_frac_vis ',cloud_frac_vis
-                   write(6,*) 'cloud_opac_i ',cloud_opac_i
+                   if(iwrite .le. 100 .or. idebug .eq. 1)then
+                       write(6,*) 'WARNING: cldtop_temp_rad <= 0'
+                       write(6,*) 'tb8_k ',tb8_k, ' tb8_rad ',tb8_rad
+                       write(6,*) 't_gnd_k ',t_gnd_k, ' t_gnd_rad ',
+     1                                                  t_gnd_rad
+                       write(6,*) 'cloud_frac_vis ',cloud_frac_vis
+                       write(6,*) 'cloud_opac_i ',cloud_opac_i
+                       iwrite = iwrite + 1
+                   endif
                    istatus = -1
                    return
                 endif
