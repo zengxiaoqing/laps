@@ -19,7 +19,8 @@ require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
 require "oputil.pm";                     # supplied in $LAPSINSTALLROOT/etc
 
 use Time::Local;
-use Time::HiRes "usleep";
+    
+#use Time::HiRes "usleep";
 
 #set up some nice variables
 @month=(Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec);
@@ -40,7 +41,9 @@ my $returnAddress = gethostbyaddr($addr2,2) || $ENV{REMOTE_ADDR} ||
 # $web_root is the root directory of the web server and is where the 
 # '$web_root/domains/[list of domains]/private_data' soft links
 # (to each $LAPS_DATA_ROOT) should be set up
-$web_root = "/w3/lapb";
+#$web_root = "/w3/lapb";
+$web_root = "/w3/emb/ruc/gsd-only/laps";
+my $web_url = "https://ruc.noaa.gov/gsd-only/laps";
 
 # request_root is where the '$request_root/lapsplot/scratch' directory tree
 # should be set up
@@ -57,16 +60,16 @@ $ScratchDir = "request/lapsplot/scratch";
 mkdir("$web_root/$ScratchDir", 0777 || die "unable to create $web_root/$ScratchDir");
 
 #change to the proper directory
-chdir ("$thisDir") ||
-          die "Content-type: text/html\n\nCan't cd to $thisDir: $!\n";
+#chdir ("$thisDir") ||
+#         die "Content-type: text/html\n\nCan't cd to $thisDir: $!\n";
 
 # END OF PREAMBLE ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 eval {
  local %SIG;
   $SIG{ALRM}=
-    sub{ $cleanDB=0; print STDOUT "<h2>ALARM: TIMEOUT (60 sec)</H2>"; };
-    alarm 60; 
+    sub{ $cleanDB=0; print STDOUT "<h2>ALARM: TIMEOUT (240 sec)</H2>"; };
+    alarm 240; 
 
 #get calling URL
 $temp = $ENV{'SCRIPT_NAME'};
@@ -215,7 +218,7 @@ $frames=$input{'frames'};
 $delay=$input{'delay'};
 #$ENV{'NewZoom'} = $NewZoom;
 $a9time=$input{'a9time'};
-$forecast_time=$input{'forecast_time'};
+$forecast_time_unsafe=$input{'forecast_time'};
 $zoom=$input{'zoom'};
 $xcen=$input{'xcen'};
 $ycen=$input{'ycen'};
@@ -239,6 +242,8 @@ $link_prefix="<a href=\"$thisURL/$basename?density=$density&thickness=$thickness
 #$domain = $file_in;
 $domain = @domains[0];
 
+#$my @domains_safe = $domains;
+
 $err=0;
 $montage=0;
 my $nmontage = 1;
@@ -258,6 +263,8 @@ $domain_first = $1;
 my $laps_data_root;
 $laps_data_root = "$DomainDir/$domain_first/private_data";
 
+print " laps_data_root is $laps_data_root";
+ 
 #Read desired units
 my $domain_nl;
 my $nl_var;
@@ -285,37 +292,47 @@ if(-e "$laps_data_root/static/lapsplot.nl"){
 my $xcen_safe;
 $xcen =~ /(.*)/;
 $xcen_safe = $1;
+my $xcen_safer = $xcen_safe;
 
 my $ycen_safe;
 $ycen =~ /(.*)/;
 $ycen_safe = $1;
+my $ycen_safer = $ycen_safe;
 
 my $npix_safe;
 $npix =~ /(.*)/;
 $npix_safe = $1;
+my $npix_safer = $npix_safe;
 
 my $zoom_safe;
 $zoom =~ /(.*)/;
 $zoom_safe = $1;
+my $zoom_safer = $zoom_safe;
 
 my $zoom_lapsplot;
 
 my $density_safe;
 $density =~ /(.*)/;
 $density_safe = $1;
+my $density_safer = $density_safe;
 
 my $thickness_safe;
 $thickness =~ /(.*)/;
 $thickness_safe = $1;
+my $thickness_safer = $thickness_safe;
 
 my $delay_safe;
 $delay =~ /(.*)/;
 $delay_safe = $1;
+my $delay_safer = $delay_safe;
 
 my $frames_safe;
 $frames =~ /(.*)/;
 $frames_safe = $1;
 my $frames_orig = $frames_safe;
+my $frames_safer = $frames_safe;
+
+#my $domain_safe = $domain;
 
 print "frames_orig = $frames_orig";
 
@@ -327,6 +344,7 @@ chomp $a9time;
 my $a9time_safe;
 $a9time =~ /(.*)/;
 $a9time_safe = $1;
+my $a9time_safer = $a9time_safe;
 
 my $a9time_orig = $a9time_safe;
 my $a9time_offset;
@@ -338,6 +356,10 @@ my $wgi_file2;
 my $wgi_only = 0;
 my $animate = "no";
 my $sect = "none";
+
+my $forecast_time,forecast_time_unsafe;
+$forecast_time_unsafe =~ /(.*)/;
+$forecast_time = $1;
 
 #print "xcen = $xcen $xcen_safe<br>";
 
@@ -428,7 +450,7 @@ if ($n_levels == 0) {
 EOI
 }
 
-if ($frames_safe ne "1" && $a9time_safe eq "") {
+if ($frames_safe ne "1" && $a9time_safer eq "") {
     $err=1;
     print<<"EOI";
 <h2>Please select a valid end time for multi-frame image...</h2>
@@ -600,9 +622,34 @@ if($err == 0) {
     }
   }
 
+  print " pressure_levels is @pressure_levels | \n"; 
+
+  my @foo = @pressure_levels;
+
+  my (@new);
+
+  foreach my $elem (@foo) {
+    my $pattern = qr(^([a-zA-Z0-9\._]+)$);
+    if ($elem =~ /($pattern)/) {
+       my $newelem = $1;
+       push(@new,$newelem);
+    }elsif($elem eq "sfc/2d"){
+       my $newelem = "sfc/2d";
+       push(@new,$newelem);
+    }else{
+       print("Error detected in $elem\n")
+    }
+  }
+
+  print ("new array is @new\n");
+
+  my @pressure_levels_safe = @new;
+
+  print " pressure_levels_safe is @pressure_levels_safe | \n"; 
+
   while($frames_safe > 0){
 
-    if($a9time_safe ne ""){
+    if($a9time_safer ne ""){
 
 #     Subtract from the a9time based on the frame count 
 #     print "a9time orig = $a9time_orig ";
@@ -619,10 +666,10 @@ if($err == 0) {
 #     print "i4time new = $i4time_new ";
 
 #     Convert offset i4time to a9time
-      $a9time_safe = &laps_tools::i4time_to_a9time($i4time_new);
+      $a9time_safer = &laps_tools::i4time_to_a9time($i4time_new);
 
-      if(($frames_safe == $frames_orig) && ($a9time_safe != $a9time_orig)){ 
-          print " a9time start = $a9time_safe\n";
+      if(($frames_safe == $frames_orig) && ($a9time_safer != $a9time_orig)){ 
+          print " a9time start = $a9time_safer\n";
       }
 
     }
@@ -655,7 +702,7 @@ if($err == 0) {
     }else{
 
 #       If this is blank it means latest time
-        printf LAPSPLOT "$a9time_safe\n";
+        printf LAPSPLOT "$a9time_safer\n";
 #       printf LAPSPLOT " \n";
 
     }
@@ -675,7 +722,7 @@ if($err == 0) {
 #       If length is 9 or 10 we can assume $forecast_time is really initial time and
 #       then subtract initial time from valid time to yield forecast time
 
-        my $i4time_valid = &laps_tools::a9time_to_i4time($a9time_safe);
+        my $i4time_valid = &laps_tools::a9time_to_i4time($a9time_safer);
         my $i4time_initial = &laps_tools::a9time_to_i4time($forecast_time);
         $i4time_fcst = $i4time_valid - $i4time_initial;
 #       print " forecast seconds = $i4time_fcst";
@@ -695,7 +742,7 @@ if($err == 0) {
 #   Correct zoom_safe if it is invalid
 #   if($zoom_safe > 50. && @pressure_levels[0] != "xsect"){$zoom_safe = 1.00;}
 
-    my $a9time_wgi = $a9time_safe;
+    my $a9time_wgi = $a9time_safer;
     $a9time_wgi =~ /(\d\d\d\d\d\d\d\d\d)/;
     $a9time_wgi = $1;
 
@@ -703,9 +750,9 @@ if($err == 0) {
 
     foreach $domain (@domains) {
 
-#     my $domain_safe;
-#     $domain =~ /(.*)/;
-#     $domain_safe = $1;
+      my $domain_safe;
+      $domain =~ /(.*)/;
+      $domain_safe = $1;
 
 #     if($domain ne $domain_first){
 #         printf LAPSPLOT "fc\n"; 
@@ -907,8 +954,12 @@ if($err == 0) {
         }else{ # other source
 
             foreach $field (@fields) {
+ 
+#              print " pressure_levels_safe 1 is @pressure_levels_safe | \n"; 
 
-               foreach $level (@pressure_levels) {
+               foreach $level (@pressure_levels_safe) {
+ 
+#                 print " pressure_levels_safe 1a is @pressure_levels_safe | \n"; 
 
 #                 This was commented out to allow fcst model terrain to be overlain with fcst 850hPa height
 #                 next if (($field eq "ht" || $field eq "HT") && $n_levels > 1 && $level eq "sfc/2d");
@@ -930,6 +981,7 @@ if($err == 0) {
                   }
 
                   if($overlay == 0 || "$level" eq "sndg" || "$level" eq "allsky"){
+#                     print "934: end of pressure_levels error checks $overlay $level $source";
                       if("$level" eq "xsect"){
                           $sect = "xsect";
                           printf LAPSPLOT "xz\n";
@@ -985,21 +1037,20 @@ if($err == 0) {
                       }else{
                           $sect = "hsect";
                           printf LAPSPLOT "hz\n";
+#                         print " 990: zoom_safe in next line";    
+#                         print " 991: zoom_safe is $zoom_safe";    
                           if($zoom_safe < 1.00){$zoom_safe = 1.00;}
                           if($zoom_safe > 50.0){$zoom_safe = 1.00;}
 
-#                         $zoom_lapsplot = $zoom_safe * ( $density_safe**2 );
-#                         printf LAPSPLOT "$zoom_safe,$density_safe\n";
-
-                          $zoom_lapsplot = $zoom_safe * ( $npix/885. );
-
+                          $zoom_lapsplot = $zoom_safer * ( $npix_safer/885. );
                           printf LAPSPLOT "$zoom_lapsplot,$density_safe,$thickness_safe,$xcen_safe,$ycen_safe,$zoom_safe,$size_safe\n";
-
-#                         printf LAPSPLOT "fc\n"; 
-#                         printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
 
                       }
                   }
+
+#                 print " 1006: ";
+ 
+#                 print " pressure_levels_safe 1b is @pressure_levels_safe | \n"; 
 
                   if($sect eq "hsect" || $sect eq "xsect"){
                       print "checking for montage n_sources / n_sources_fields = $n_sources $n_sources_fields n_levels is $n_levels<br>\n";
@@ -1012,7 +1063,7 @@ if($err == 0) {
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
                           }
                           if($i_montage < 1){
@@ -1028,7 +1079,7 @@ if($err == 0) {
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
                           }
                           if($i_montage < 0){
@@ -1045,7 +1096,7 @@ if($err == 0) {
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence     
                               $nmontage++;
                           }
                           if($i_montage < 1){
@@ -1061,7 +1112,7 @@ if($err == 0) {
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence     
 #                             $nmontage++;
                               $nmontage = $n_levels;
                           }
@@ -1078,7 +1129,7 @@ if($err == 0) {
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence     
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence     
 #                             $nmontage++;
                               $nmontage = $n_levels;
                           }
@@ -1097,7 +1148,7 @@ if($err == 0) {
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
                           if($i_montage < 1){
@@ -1113,7 +1164,7 @@ if($err == 0) {
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
                           if($i_montage < 1){
@@ -1132,7 +1183,7 @@ if($err == 0) {
 			  }else{
                               printf LAPSPLOT "fc\n"; 
                           }
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
                           if($i_montage < 1){
@@ -1149,16 +1200,16 @@ if($err == 0) {
                               printf LAPSPLOT "fc\n"; 
                           }
                           $animate = "yes";
-                          if($a9time_safe == $a9time_orig){ # first frame in time sequence
+                          if($a9time_safer == $a9time_orig){ # first frame in time sequence
                               $nmontage++;
                           }
 #                     }elsif($montage == 1 && $nframes > 1 && $field eq uc($field)){
                       }elsif($montage == 1 && $field eq uc($field) && ($source ne "obs" || $field eq "REFLCT") ){
                           $nframes++;
-                          print "montage general case: $nframes $a9time_safe $a9time_last $domain $source $field $level<br>\n";
+                          print "montage general case: $nframes $a9time_safer $a9time_last $domain $source $field $level<br>\n";
 #                         if($frames == $frames_safe || $nframes == 1){ 
-#                         if($a9time_safe eq $a9time_last && $nframes > 1 && $frames == $frames_safe){                       
-                          if($a9time_safe eq $a9time_last && $nframes > 1){                       
+#                         if($a9time_safer eq $a9time_last && $nframes > 1 && $frames == $frames_safe){                       
+                          if($a9time_safer eq $a9time_last && $nframes > 1){                       
                              printf LAPSPLOT "fcf\n"; 
                           }else{ # "q" will do a frame advance
                              printf LAPSPLOT "fc\n"; 
@@ -1168,17 +1219,41 @@ if($err == 0) {
                               $animate = "yes";
                           }
                       }else{
+
+                          print " 1195: fc\n";
                           printf LAPSPLOT "fc\n"; 
                       }
-                      $a9time_last = $a9time_safe;
-                      printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
+                      $a9time_last = $a9time_safer;
+                      print " 1202: a9time_last\n";
+#                     my $privatedir = "$DomainDir/$domain/private_data";
+#                     my $domain_safe = $domain;
+#                     my $privatedir = "$domain_safe/private_data";
+#                     my $privatedir_safe = $privatedir;
+#                     my $privatedir_safe = "$DomainDir/$domain_safe/string";
+
+#                     $file = "$DomainDir/$domain/private_data";      # $file tainted
+#                     $file = "/private_data";      # $file tainted
+#                     unless ($file =~ m#^([\w.-]+)$#) {              # $1 is untainted
+#                        die "filename '$file' has invalid characters.\n";
+#                     }
+                      print " 1203: domain_safe is $domain_safe\n";
+#                     my $privatedir = $1; 		      
+#                     my $privatedir_safe = $privatedir;
+		      
+#                     print " 1207: privatedir_safe is $laps_data_root\n";
+                      printf LAPSPLOT "$DomainDir/$domain_safe/private_data\n"; 
+#                     printf LAPSPLOT "$laps_data_root\n"; 
                   }
+
+ 
+#                 print " pressure_levels_safe 1c is @pressure_levels_safe | \n"; 
 
                   if($sect eq "sndg" || $sect eq "allsky"){
-                      printf LAPSPLOT "$DomainDir/$domain/private_data\n"; 
+                      my $privatedir = $DomainDir/$domain/private_data;
+                      printf LAPSPLOT "$privatedir\n"; 
                   }
 
-#                 print "overlay/level/sect is $overlay $level $sect<br>\n";
+                  print " 1217: overlay/level/sect is $overlay $level $sect<br>\n";
 
                   $overlay = $overlay + 1;
                   $sounding = $sounding + 1;
@@ -3039,6 +3114,7 @@ if($err == 0) {
                            }
 
                         }elsif("$field" eq "SAT_VIS"){ 
+                            print " 3113: SAT_VIS block<br>\n";
                             printf LAPSPLOT "lv\n"; 
                             printf LAPSPLOT "$hhmm\n"; 
                             printf LAPSPLOT "-1\n"; 
@@ -3058,9 +3134,12 @@ if($err == 0) {
                            $obs_sfc = "visibility";   # This is set to prevent station model overlays
 
                        }elsif("$field" eq "SAT_11U" ) { 
+                           print " 3132: SAT_11U block<br>\n";
                            if("$hhmm" =~ "goes" || "$hhmm" =~ "mtsat" || "$hhmm" =~ "meteos") { 
                                printf LAPSPLOT "lv\n"; 
+                               print " 3136: SAT_11U block<br>\n";
                                printf LAPSPLOT "$hhmm\n"; 
+                               print " 3138: SAT_11U block<br>\n";
                                printf LAPSPLOT "-4\n"; 
                                printf LAPSPLOT "S8A\n";
                            }else{
@@ -3069,6 +3148,7 @@ if($err == 0) {
                                printf LAPSPLOT "ov\n"; 
                                printf LAPSPLOT " \n"; 
                            }
+                           print " 3145: SAT_11U block<br>\n";
 
                        }elsif("$field" eq "sat_12u" ) { 
                            printf LAPSPLOT "lv\n"; 
@@ -3343,6 +3423,11 @@ if($err == 0) {
             }elsif("$source" eq "analysis"){
 
                 if("$level" eq "sfc/2d"){            # Surface analyses
+ 
+#                   print " pressure_levels_safe 1d is @pressure_levels_safe | \n"; 
+
+                    print " 3380: in LSX analysis section $field";
+
                     if("$field" eq "CLD_CVR"){ 
                         printf LAPSPLOT "cg\n";  
                         printf LAPSPLOT "0\n"; 
@@ -3575,6 +3660,10 @@ if($err == 0) {
                         printf LAPSPLOT "cla\n";} 
                     elsif("$field" eq "CLD_ALB"){ 
                         printf LAPSPLOT "cai\n";   # LIL 
+                        printf LAPSPLOT "a\n"; 
+                        printf LAPSPLOT "cla\n";} 
+                    elsif("$field" eq "cld_alb"){ 
+                        printf LAPSPLOT "ca\n";   # LIL 
                         printf LAPSPLOT "a\n"; 
                         printf LAPSPLOT "cla\n";} 
                     elsif("$field" eq "LONG_WAVE"){ 
@@ -4189,7 +4278,7 @@ if($err == 0) {
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "a\n"; 
                     }else{ 
-                        print "$source $level mb $field not available (via analysis pressure grid)\n"; 
+                        print "$source $level mb $field not available (via analysis pressure grid)<br>\n"; 
 
                           } # if field
 
@@ -4718,6 +4807,9 @@ if($err == 0) {
                       print "$source not yet available...\n"; 
 
                   } # if source
+ 
+#                 print " pressure_levels_safe 1e is @pressure_levels_safe | \n"; 
+                  print " 4788: end source block ";
 
                   if("$level" eq "allsky"){
                       if($npix_safe == "885"){
@@ -4752,19 +4844,27 @@ if($err == 0) {
     } # foreach domain
   
 #   print "frames_safe at loop end = $frames_safe\n";
+ 
+#   print " pressure_levels_safe 1e1 is @pressure_levels_safe | \n"; 
 
     $frames_safe = $frames_safe - 1;
 
     printf LAPSPLOT "q\n";
+#   print " pressure_levels_safe 1e2 is @pressure_levels_safe | \n"; 
 
   } # while frames > 0
+# print " pressure_levels_safe 1e3 is @pressure_levels_safe | \n"; 
 
   printf LAPSPLOT "q\n";
+# print " pressure_levels_safe 1e4 is @pressure_levels_safe | \n"; 
   close LAPSPLOT;
 
 # $laps_data_root = $DomainDir/$domain/data;
 
 # print "laps_data_root = $laps_data_root<br>";
+  print " 4839: closed LAPSPLOT file ";
+ 
+# print " pressure_levels_safe 1f is @pressure_levels_safe | \n"; 
 
   my $window;
   my $resolution;
@@ -4793,11 +4893,12 @@ if($err == 0) {
     $ydim = @ydim[0];
 #   print "xdim,ydim is $xdim,$ydim<br>\n";
   }
+  print " 4839: after check for nest7grid.parms $laps_data_root/static/$domain_nl";
 
   my $aspect_ratio = ($xdim-1.0) / ($ydim-1.0);
 # print "aspect_ratio is $aspect_ratio<br>\n";
 
-# print "sect/window 4 = $sect $window\n";
+  print "sect/window 4 = $sect $window\n";
 
   my $image_type = "gif";
 
@@ -4829,7 +4930,7 @@ if($err == 0) {
         $yhigh_thresh = 1.0;
     }
 
-#   print "resolution is $resolution<br>\n";
+    print "resolution is $resolution<br>\n";
 
     $xlow  = $xcen_safe - $x_hw;
     $xhigh = $xcen_safe + $x_hw;
@@ -4867,7 +4968,7 @@ if($err == 0) {
 #   $ycen_safe = ($ylow + $yhigh) / 2.0;
 
     $window="$xlow:$ylow:$xhigh:$yhigh";
-#   print "window (corrected) is $window<br>\n";
+    print "window (corrected) is $window<br>\n";
 
   }elsif($sect eq "sndg"){ # Sounding
     $res_y=$npix_safe;
@@ -4902,7 +5003,7 @@ if($err == 0) {
 
   }
 
-# print "sect/window 5 = $sect $window\n";
+  print " 4947: sect/window = $sect $window\n";
 
 # Set Up Machine, Shell, and Image Type
 # my $machine = "jayhawk"; # This won't work until we enable ssh on pubweb@arac
@@ -4912,11 +5013,11 @@ if($err == 0) {
   my $machine = "tst1-100";      # hugo / ren also works but can have long runtimes
   my $shell = " ";
 
-  my $exedir;
-  $exedir = "@prefix@/bin";
+  my $installroot = "@prefix@";
+  my $exedir = "$installroot/bin";
 
   if ($wgi_only == 0) {
-#   print  "$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root $animate $resolution\n";
+    print  " 4961: $request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root $animate $resolution\n";
     if ($montage == 1) {
         if ($ntimes > 1 && $i_montage == 1) {
             $animate = "$nmontage";
@@ -5088,42 +5189,50 @@ if($err == 0) {
 
     } # montage = 1 
 
-
 #   Update log file prior to calling lapsplot
     $returnAddress = ($ENV{'REMOTE_HOST'} || $ENV{REMOTE_ADDR} ||
                   "(Unknown requestor)");
-    $logFile = "$web_root/cgi/laps_anal_products.cgi.log";
-    open(LOG,">>$logFile") ||
-        die "Content-type: text/html\n\nCan't open $logFile: $!\n";
-#   get time for log file
-    $time = time();
-    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
-    $thisMonth=$month[$mon];
-    $nHours=($stopSecs+1-$startSecs)/3600;
-    $year=$year+1900;
-    printf LOG "....$thisMonth $mday %02d\:%02d\:%02d UTC $year  $returnAddress " .
-             " $domain_first $out_sources %s $out_fields %s $out_levels %s $$ calling lapsplot script\n"
-             ,$hour,$min,$sec,
-             $ENV{'REMOTE_USER'};
-    close LOG;
+    $logFile = "$web_root/request/laps_request_products.log";
+#   print " 5133: update log file $logFile";
+#   open(LOG,">>$logFile") ||
+#       die "Content-type: text/html\n\nCan't open $logFile: $!\n";
+##  get time for log file
+#   $time = time();
+#   ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
+#   $thisMonth=$month[$mon];
+#   $nHours=($stopSecs+1-$startSecs)/3600;
+#   $year=$year+1900;
+#   printf LOG "....$thisMonth $mday %02d\:%02d\:%02d UTC $year  $returnAddress " .
+#            " $domain_first $out_sources %s $out_fields %s $out_levels %s $$ calling lapsplot script\n"
+#            ,$hour,$min,$sec,
+#            $ENV{'REMOTE_USER'};
+#   close LOG;
 
+    print " 5153: run lapsplot<br>\n";
 
 #   Run lapsplot
     if ($out_levels =~ "allsky"){
 #       system("@prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
-        system("ssh oplapb\@dlaps-ms1.fsl.noaa.gov @prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+#       system("ssh oplapb\@dlaps-ms1 @prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+        system("ssh oplapb\@dlaps-ms1 $installroot/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+        system("rm -f $web_root/$ScratchDir/gmeta_latest.$image_type; ln -s $web_root/$ScratchDir/gmeta_$$.$image_type $web_root/$ScratchDir/gmeta_latest.$image_type"); 
     }else{
 #       system("@prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
-        system("ssh oplapb\@dlaps-ms1.fsl.noaa.gov @prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+#       my $command = "ssh oplapb\@dlaps-ms1.fsl.noaa.gov @prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1";
+#       my $command = "ssh oplapb\@dlaps-ms1.fsl.noaa.gov date";
+#       print " \ncommand is $command \n";
+        system("ssh oplapb\@dlaps-ms1 $installroot/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+#       system("uname -a; ssh oplapb\@dlaps-ms1 date"); 
     }
     system("rm -f $request_root/lapsplot/lapsplot.in; ln -s $web_root/$ScratchDir/lapsplot.in_$$ $request_root/lapsplot/lapsplot.in; rm -f $request_root/lapsplot/lapsplot.out; ln -s $web_root/$ScratchDir/lapsplot.out_$$ $request_root/lapsplot/lapsplot.out; rm -f $request_root/lapsplot/lapsplot.err; ln -s $web_root/$ScratchDir/lapsplot.err_$$ $request_root/lapsplot/lapsplot.err; rm -f $request_root/lapsplot/loop; ln -s $web_root/$ScratchDir/$$ $request_root/lapsplot/loop");
+    system("echo checking GIF image; ls -l $web_root/$ScratchDir/gmeta_$$.$image_type"); 
     print<<"EOI";
-    <A HREF=\"/$ScratchDir/gmeta_$$.gm\">gmeta file</A>
+    <A HREF=\"$web_url/$ScratchDir/gmeta_$$.gm\">gmeta file</A>
     |
-    <A HREF=\"/$ScratchDir/selected.in_$$\">parms file</A>
+    <A HREF=\"$web_url/$ScratchDir/selected.in_$$\">parms file</A>
     <p>
     <center>
-    <img src=\"/$ScratchDir/gmeta_$$.$image_type\">
+    <img src=\"$web_url/$ScratchDir/gmeta_$$.$image_type\">
 
     </body></html>
 
@@ -5137,8 +5246,10 @@ EOI
 
 EOI
   }
+# print " pressure_levels_safe 2 is @pressure_levels_safe | \n"; 
 
-# print " test output: write selected.in file \n"; 
+  print "<br>\n"; 
+  print "test output: open selected.in file \n"; 
 # print "forecast_time = $forecast_time ";
 # print "hhmm = $hhmm ";
 
@@ -5150,60 +5261,141 @@ EOI
   open(SELECTED,">$logFile") ||
     die "Content-type: text/html\n\nCan't open $logFile: $!\n";
 # printf SELECTED "$domain_first\n";
-  printf SELECTED "@domains\n";
-  printf SELECTED "@sources\n";
-  printf SELECTED "@fields\n";
-  printf SELECTED "@pressure_levels\n";
-  printf SELECTED "$a9time\n";
+  print " test output: write domains in selected.in file \n"; 
+
+  @foo = @domains;
+  @new = ();
+
+  foreach my $elem (@foo) {
+    my $pattern = qr(^([a-zA-Z0-9\._]+)$);
+    if ($elem =~ /($pattern)/) {
+       my $newelem = $1;
+       push(@new,$newelem);
+#   }elsif($elem eq "sfc/2d"){
+#      my $newelem = "sfc/2d";
+#      push(@new,$newelem);
+    }else{
+       print("Error detected in $elem\n")
+    }
+  }
+
+  print ("new array for domains_safe is @new\n");
+	
+  my @domains_safe = @new;
+
+  printf SELECTED "@domains_safe\n";
+
+# printf SELECTED "co\n";
+  print " test output: write sources in selected.in file @sources | \n"; 
+
+  @foo = @sources;
+  @new = ();
+
+  foreach my $elem (@foo) {
+    my $pattern = qr(^([a-zA-Z0-9\._]+)$);
+    if ($elem =~ /($pattern)/) {
+       my $newelem = $1;
+       push(@new,$newelem);
+    }elsif($elem eq "sfc/2d"){
+       my $newelem = "sfc/2d";
+       push(@new,$newelem);
+    }else{
+       print("Error detected in $elem\n")
+    }
+  }
+
+  print ("new array is @new\n");
+	
+  my @sources_safe = @new;
+
+; my @sources_safe = "analysis";
+  printf SELECTED "@sources_safe\n";
+# my @fields_safe = "CAPE";
+  print " fields is @fields | \n"; 
+
+  @foo = @fields;
+  @new = ();
+
+  foreach my $elem (@foo) {
+    my $pattern = qr(^([a-zA-Z0-9\._]+)$);
+    if ($elem =~ /($pattern)/) {
+       my $newelem = $1;
+       push(@new,$newelem);
+    }elsif($elem eq "sfc/2d"){
+       my $newelem = "sfc/2d";
+       push(@new,$newelem);
+    }else{
+       print("Error detected in $elem\n")
+    }
+  }
+
+  print ("new array is @new\n");
+	
+  my @fields_safe = @new;
+  print " fields_safe is @fields_safe | \n"; 
+  printf SELECTED "@fields_safe\n";
+# print " pressure_levels is @pressure_levels | \n"; 
+# my @pressure_levels_safe = "sfc/2d";
+# my @pressure_levels_safe = @pressure_levels;
+  print " pressure_levels_safe is @pressure_levels_safe | \n"; 
+  printf SELECTED "@pressure_levels_safe\n";
+  print " test output: write a9time in selected.in file $a9time_safe\n"; 
+  printf SELECTED "$a9time_safe\n";
+; my $forecast_time_safe = $forecast_time;
+  print " test output: write forecast_time in selected.in file $forecast_time\n"; 
   printf SELECTED "$forecast_time\n";
-  printf SELECTED "$zoom_safe\n";
+  printf SELECTED "1.0\n";
   printf SELECTED "$xcen_safe\n";
   printf SELECTED "$ycen_safe\n";
+  print " test output: write density in selected.in file $density\n"; 
   printf SELECTED "$density_safe\n";
   printf SELECTED "$thickness_safe\n";
 # printf SELECTED "$size_safe\n";
   printf SELECTED "$npix_safe\n";
+  print " test output: write $frames_orig in selected.in file $frames_orig\n"; 
   printf SELECTED "$frames_orig\n";
   printf SELECTED "$delay_safe\n";
   close SELECTED;
 
+  print " test output: link selected.in file \n"; 
+
   system("rm -f $request_root/lapsplot/selected.in; ln -s $web_root/$ScratchDir/selected.in_$$ $request_root/lapsplot/selected.in");
 
+  print " test output: finished selected.in file \n"; 
+
 # get best return address for log
-  $returnAddress = ($ENV{'REMOTE_HOST'} || $ENV{REMOTE_ADDR} ||
-                  "(Unknown requestor)");
+# $returnAddress = ($ENV{'REMOTE_HOST'} || $ENV{REMOTE_ADDR} ||
+#                 "(Unknown requestor)");
 
-  $logFile = "$thisDir/laps_request.log";
-  open(LOG,">>$logFile") ||
-        die "Content-type: text/html\n\nCan't open $logFile: $!\n";
-# get time for log file
-  $time = time();
-  ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
-  $thisMonth=$month[$mon];
-  $nHours=($stopSecs+1-$startSecs)/3600;
-  printf LOG "%02d-$thisMonth-$year-%02d%02dZ $returnAddress " .
-             "%3.1f (%4.1f,%4.1f) ".
-             " $out_levels %s\n"
-             ,$mday,$hour,$min,$density,$thickness,$a9time,$CenterLon,
-             $ENV{'REMOTE_USER'};
-  close LOG;
+# $logFile = "$thisDir/laps_request.log";
+# open(LOG,">>$logFile") ||
+#       die "Content-type: text/html\n\nCan't open $logFile: $!\n";
+# $time = time();
+# ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
+# $thisMonth=$month[$mon];
+# $nHours=($stopSecs+1-$startSecs)/3600;
+# printf LOG "%02d-$thisMonth-$year-%02d%02dZ $returnAddress " .
+#            "%3.1f (%4.1f,%4.1f) ".
+#            " $out_levels %s\n"
+#            ,$mday,$hour,$min,$density,$thickness,$a9time,$CenterLon,
+#            $ENV{'REMOTE_USER'};
+# close LOG;
 
-  $logFile = "$web_root/cgi/laps_anal_products.cgi.log";
-  open(LOG,">>$logFile") ||
-        die "Content-type: text/html\n\nCan't open $logFile: $!\n";
-# get time for log file
-  $time = time();
-  ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
-  $thisMonth=$month[$mon];
-  $nHours=($stopSecs+1-$startSecs)/3600;
-  $year=$year+1900;
-  printf LOG "....$thisMonth $mday %02d\:%02d\:%02d UTC $year  $returnAddress " .
-             " $domain_first $out_sources %s $out_fields %s $out_levels %s $$\n"
-             ,$hour,$min,$sec,
-             $ENV{'REMOTE_USER'};
-  close LOG;
+# $logFile = "$web_root/cgi/laps_anal_products.cgi.log";
+# open(LOG,">>$logFile") ||
+#       die "Content-type: text/html\n\nCan't open $logFile: $!\n";
+# $time = time();
+# ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
+# $thisMonth=$month[$mon];
+# $nHours=($stopSecs+1-$startSecs)/3600;
+# $year=$year+1900;
+# printf LOG "....$thisMonth $mday %02d\:%02d\:%02d UTC $year  $returnAddress " .
+#            " $domain_first $out_sources %s $out_fields %s $out_levels %s $$\n"
+#            ,$hour,$min,$sec,
+#            $ENV{'REMOTE_USER'};
+# close LOG;
 
-  $LOG_USER = $ENV{'REMOTE_USER'};
+# $LOG_USER = $ENV{'REMOTE_USER'};
 
 }else{ # $err
 
@@ -5227,7 +5419,7 @@ EOI
   printf SELECTED "@sources\n";
   printf SELECTED "@fields\n";
   printf SELECTED "@pressure_levels\n";
-  printf SELECTED "$a9time\n";
+  printf SELECTED "$a9time_safe\n";
   printf SELECTED "$hhmm\n";
   printf SELECTED "$zoom_safe\n";
   printf SELECTED "$xcen_safe\n";
@@ -5244,7 +5436,7 @@ EOI
 
 } # $err
 
-#print " test output: End of nph-laps.cgi - calling laps.cgi \n"; 
+print " test output: End of nph-laps.cgi - calling laps.cgi \n"; 
 
 system("$web_root/request/laps.cgi");
 
@@ -5253,4 +5445,21 @@ system("$web_root/request/laps.cgi");
 
 alarm 0;
 
-} #eval 
+sub untaint {
+	my $data = shift;
+	if ($data =~ /^([-\@\w.]+)$/) {
+		$data = $1;
+		return $data;
+	} else {
+		die "check flags\n";
+	}
+}
+
+sub untaint2 {
+	my $data = shift;
+        print " untainting $data | \n"; 
+	return $data;
+}
+
+} #eval
+  
