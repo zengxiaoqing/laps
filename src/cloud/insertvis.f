@@ -228,13 +228,44 @@ cdis
                 it = max(min(it,ni),1)
                 jt = max(min(jt,nj),1)
                 if(i_fill_seams(i,j) .ne. 0)then
-                    itn = min(i,it)
-                    itx = max(i,it)
-!                   itn = it
-!                   itx = it
-                else
+                  itn = min(i,it)
+                  itx = max(i,it)
+!                 itn = it
+!                 itx = it
+                else ! consider gradients
+                  if(mode_prlx .eq. 3)then
+                    ip = min(i+1,ni)
+                    itp = ip - nint(di_dh(ip,j)*cldht_prlx_top(ip,j))
+                    itp = min(max(itp,1),ni)
+                  else
+                    itp = it
+                  endif
+
+!                 if(itp-it .ge. 2 .or. .true.)then
+                  if(itp-it .ge. 2)then
+                    itn = it
+                    itx = min(it+1,ni)
+                  else
                     itn = it
                     itx = it
+                  endif
+
+                  if(mode_prlx .eq. 3)then
+                    jp = min(j+1,nj)
+                    jtp = jp - nint(di_dh(i,jp)*cldht_prlx_top(i,jp))
+                    jtp = min(max(jtp,1),nj)
+                  else
+                    jtp = jt
+                  endif
+
+!                 if(jtp-jt .ge. 2 .or. .true.)then
+                  if(jtp-jt .ge. 2)then
+                    jtn = jt
+                    jtx = min(jt+1,nj)
+                  else
+                    jtn = jt
+                    jtx = jt
+                  endif
                 endif
 
                 call qc_clouds_0d(i,j,k,clouds_3d(it,jt,k)
@@ -309,7 +340,7 @@ cdis
                        n_no_ir = n_no_ir + 1
                    endif
 
-                   clouds_3d_buf(itn:itx,jt,k) = cloud_frac_out ! Modify output
+                   clouds_3d_buf(itn:itx,jtn:jtx,k) = cloud_frac_out ! Modify output
 !                  if(idebug .eq. 1)then
 !                      write(6,202)
 !    1                   k,cloud_frac_out,cloud_frac_in,cushion
