@@ -37,7 +37,8 @@ $default_title="ESRL/GSD/LAPS Data Display (Experimental)";
 
 # $web_root is where the '$web_root/domains/[list of domains]/private_data'
 # soft links (to each $LAPS_DATA_ROOT) should be set up
-$web_root = "/w3/lapb";
+#$web_root = "/w3/lapb";
+$web_root = "/w3/emb/ruc/gsd-only/laps";
 
 # request_root is where the '$request_root/lapsplot/scratch' directory tree
 # should be set up
@@ -65,7 +66,7 @@ my $DomainDir;
 $DomainDir = "$web_root/domains";
 my $laps_data_root;
 $laps_data_root = "$DomainDir/$default_domain/private_data";
-#print "laps_data_root = $laps_data_root<br>";
+print "laps_data_root = $laps_data_root<br>";
 
 #print " test output: Start of laps.cgi \n"; 
 
@@ -96,7 +97,7 @@ my $pres_mb;
 
 #Read model choices for this domain
 $domain_nl = "nest7grid.parms";
-$nl_var    = "fdda_model_source_cmn";
+$nl_var    = "fdda_model_source";
 if(-e "$laps_data_root/static/$domain_nl"){
     @domain_models=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
 }
@@ -114,7 +115,7 @@ if($preferred_model eq "" || $preferred_model eq " " || $preferred_model eq " " 
 }
 
 #print "<br>num_models = $num_models";
-#print "<br>domain_models = @domain_models";
+print "<br>domain_models = @domain_models |";
 #print "<br>preferred_model = $preferred_model";
 
 #Read model directories for this domain
@@ -122,7 +123,7 @@ opendir LAPSPRD, "$laps_data_root/lapsprd/fsf";
 @modellist = readdir LAPSPRD;
 close LAPSPRD;
 @modellist = sort @modellist;
-#print "modellist = $laps_data_root @modellist<br>";
+print " modellist = $laps_data_root/lapsprd/fsf @modellist |<br>";
 
 my $default_time = @lines[4];
 $default_time =~ s/ //g;
@@ -507,6 +508,7 @@ print <<"EOF";
 <option $selected{'c_omega'}> c_omega
 <option $selected{'cape'}> cape
 <option $selected{'cin'}> cin
+<option $selected{'cld_alb'}> cld_alb
 <option $selected{'cld_base'}> cld_base
 <option $selected{'cld_ceil'}> cld_ceil
 <option $selected{'cld_cnd'}> cld_cnd
