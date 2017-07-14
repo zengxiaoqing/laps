@@ -218,6 +218,8 @@ if test "$NCARG_ROOT" = "allsky"; then
       DIRCYLR=East
   fi
 
+  export IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
+
 # Annotate Model, Time and GHI, LATLON, and Field
   $LAPSINSTALLROOT/etc/www/lapsplot/annotate_allsky.sh
   echo "returned from annotate_allsky.sh"
@@ -226,7 +228,7 @@ if test "$NCARG_ROOT" = "allsky"; then
 # if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
 #   convert -fill white -annotate +20+500 "All-Sky"   -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
 # fi
-
+  
 # Annotate Directions
   echo "Annotate Directions"
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
