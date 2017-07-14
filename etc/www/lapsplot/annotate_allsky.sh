@@ -14,7 +14,7 @@
 
 # Annotate Model
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-    IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
+#   IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
     echo "polar IMGGEOM = $IMGGEOM"
     convert -fill white -annotate +5+20  "Simulated" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
