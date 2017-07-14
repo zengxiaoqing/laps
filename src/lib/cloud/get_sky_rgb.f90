@@ -1007,10 +1007,16 @@
 !             being handled with high sun vs during twilight.
               do ic = 1,nc
                   if(htmsl .ge. 1000e3 .and. .true.)then ! experimental (e.g. DSCOVR)
-!                     Note the BRDF is presently borrowed from that for snow. A phase function
-!                     component could be added to capture the glory.                     
-                      pf_top(ic) = pf_scat(ic,i,j) * (1. - cloud_albedo) & ! thin
-                                 + 2. * cld_brdf(ic,i,j) * cloud_albedo * (sind(max(solalt_ref,0.)))**0.6 ! thick / lambert 
+!                     A phase function component could be added to capture the glory.                     
+
+!                     The BRDF term should be invoked for thick clouds that also have
+!                     non-normal incidence (e.g. are horizontal with a low sun). Normal
+!                     incidence sometimes occurs with a low sun hitting cloud sides 
+!                     Note the BRDF is presently borrowed from that for snow.
+
+                      frac_brdf = cloud_albedo ! add geometry term from above comments?
+                      pf_top(ic) = pf_scat(ic,i,j) * (1. - frac_brdf) & ! thin
+                                 + 2. * cld_brdf(ic,i,j) * frac_brdf * (sind(max(solalt_ref,0.)))**0.6 ! thick / lambert 
                   else
                       pf_top(ic) = pf_scat(ic,i,j)
                   endif
