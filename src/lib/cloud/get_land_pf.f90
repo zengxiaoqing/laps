@@ -343,11 +343,16 @@
         real function Fresnel(nWat,phi)
 
         implicit none
-        real nWat,phi, aRef,aDif,aSum,Rpar,Rper,foam
+        real nWat,phi, aRef,aDif,aSum,Rpar,Rper,foam,phi90
+
+        parameter (phi90 = ASIN(1.))
 
         foam = 0. ! .026
         
-        if (phi .ne. 0.) then
+!       Phi is incidence angle in radians
+        if (phi .gt. phi90) then ! exceeds 90 degrees       
+           Fresnel = 1.
+        elseif (phi .ne. 0.) then
            aRef = ASIN(SIN(phi)/nWat)
            aDif = phi-aRef
            aSum = phi+aRef
