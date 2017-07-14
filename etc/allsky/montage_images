@@ -9,7 +9,9 @@ setenv ILOC $3
 setenv LAPSINSTALLROOT $4
 setenv LAPS_SRC_ROOT   /usr/nfs/common/lapb/parallel/laps
 
-setenv LAPS_A13TIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $LAPS_A9TIME -o yyyymmdd_hhmm`
+setenv CAMERA_OFFSET_TIME -60
+setenv LAPS_A13TIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $LAPS_A9TIME -o yyyymmdd_hhmm -t $CAMERA_OFFSET_TIME`
+
 setenv SITESDIR /w3/lapb/allsky/sites
 
 setenv LAPS_ASCIITIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $LAPS_A9TIME -o ascii_time`
@@ -90,7 +92,8 @@ setenv FILE_MODEL_POLAR $ALSDIR/$LAPS_A9TIME.png
 setenv FILE_CAMERA_POLAR $SITESDIR/$SITE/output3/$LAPS_A13TIME\_$SITE.png
 setenv SOLAR_ALT `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c1-8`
 setenv SOLAR_AZ  `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c9-16`
-echo compare_allsky | /usr/local/share/rsi/idl/bin/idl
+#echo compare_allsky | /usr/local/share/rsi/idl/bin/idl
+echo compare_allsky | idl
 echo " "
 echo "run verification plots"                  
 $LAPSINSTALLROOT/etc/verif/allsky_analysis.csh $LAPS_DATA_ROOT co_hi $SITE     
