@@ -128,7 +128,7 @@ cdis
         parameter (thresh_cvr_ceiling = thresh_cvr)
 
         real thresh_thin_lwc_ice     ! Threshold cover for thin cloud LWC/ICE
-        parameter (thresh_thin_lwc_ice = 0.05)
+        parameter (thresh_thin_lwc_ice = 0.050) ! .020
 
         real vis_radar_thresh_cvr,vis_radar_thresh_dbz
         parameter (vis_radar_thresh_cvr = 0.2)  ! 0.2, 0.0
@@ -348,7 +348,10 @@ cdis
 
         ISTAT = INIT_TIMER()
 
-        write(6,*)' Welcome to the laps_deriv_sub (derived cloud prods)'       
+        write(6,*)' Welcome to the laps_deriv_sub (derived cloud prods)'
+
+        idb = (NX_L/2) + 1
+        jdb = (NY_L/2) + 1
 
         call get_static_field_interp('albedo',i4time,NX_L,NY_L 
      1                              ,static_albedo,istatus)
@@ -612,7 +615,7 @@ c read in laps lat/lon and topo
 
         do k = KCLOUD,1,-1
           write(6,*)' clouds_3d_pres CTR (LC3)'
-     1           ,k,clouds_3d(NX_L/2,NY_L/2,k)
+     1           ,k,clouds_3d(idb,jdb,k)
         enddo ! k
 
         call interp_height_pres_fast(NX_L,NY_L,NZ_L,kcloud
@@ -620,7 +623,7 @@ c read in laps lat/lon and topo
 
         do k = NZ_L,1,-1
           write(6,*)' clouds_3d_pres CTR (LCP)'
-     1           ,k,clouds_3d_pres(NX_L/2,NY_L/2,k)
+     1           ,k,clouds_3d_pres(idb,jdb,k)
         enddo ! k
 
         var = 'LCP'
@@ -786,7 +789,7 @@ c read in laps lat/lon and topo
      1         cice(i,j,k) .gt. cld_ice_ub_gpm3      )then
                cice(i,j,k) = cld_ice_ub_gpm3
             endif         
-            if(i .eq. NX_L/2 .and. j .eq. NY_L/2)then
+            if(i .eq. idb .and. j .eq. jdb)then
                 write(6,701)k,temp_3d(i,j,k),es_pa,cld_ice_ub_gpm3
      1                       ,cice(i,j,k),slwc(i,j,k)
 701             format('k/t/e/cld_ice_uprb_gpm3/cice/slwc',i4,f8.2,f8.1
@@ -1214,7 +1217,7 @@ c read in laps lat/lon and topo
             simvis(i,j) = cldalb_out(i,j) + (1.-cldalb_out(i,j))**2 
      1          * (sfc_albedo(i,j)/(1.-cldalb_out(i,j)*sfc_albedo(i,j)))
 
-            if(i .eq. NX_L/2 .AND. j .eq. NY_L/2)then
+            if(i .eq. idb .AND. j .eq. jdb)then
                 cvrmax = maxval(clouds_3d(i,j,:))
                 write(6,1201)cvrmax,cldod_out(i,j),cldalb_in(i,j)
      1                      ,cldalb_out(i,j),sfc_albedo(i,j),simvis(i,j)
@@ -1268,7 +1271,7 @@ c read in laps lat/lon and topo
      1            + d1 * snow_low + e1 * pice_low
             visibility(i,j) = 2.8 / max(alpha,.00004) 
             if(alpha .gt. 0.0002 .AND. iwrite .le. 5 .OR.
-     1             i .eq. NX_L/2 .and. j .eq. NY_L/2      )then
+     1             i .eq. idb .and. j .eq. jdb      )then
                 write(6,*)'visibility terms at',i,j,k_topo
                 write(6,*)slwc_low,cice_low,rain_low,snow_low,pice_low
      1                   ,dbz_low_2d(i,j),alpha,visibility(i,j)
