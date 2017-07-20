@@ -256,6 +256,7 @@ cdis
         real offset_vis_j(NX_L,NY_L)    ! Sat J minus actual J
         real buff(NX_L,NY_L)
         real cldht_prlx_top(NX_L,NY_L)
+        real cldht_prlx_unsm(NX_L,NY_L)
         integer i_fill_seams(NX_L,NY_L)
 
         integer istat_39_a(NX_L,NY_L)
@@ -1007,7 +1008,7 @@ C READ IN SATELLITE DATA
      1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,sfc_albedo,  ! I
      1       t_gnd_k,                                                   ! O
      1       cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,             ! O
-     1       cldht_prlx_top,                                            ! O
+     1       cldht_prlx_top,cldht_prlx_unsm,                            ! O
      1       istatus)                                                   ! O
 
         if(istatus .ne. 1)then
@@ -1566,10 +1567,13 @@ C       EW SLICES
             ext = 'lcb'
             call get_directory(ext,directory,len_dir)
 
-            call move(cloud_base    ,out_array_3d(1,1,1),NX_L,NY_L)
-!           call move(cloud_top     ,out_array_3d(1,1,2),NX_L,NY_L)
-            call move(cldht_prlx_top,out_array_3d(1,1,2),NX_L,NY_L)
-            call move(cloud_ceiling ,out_array_3d(1,1,3),NX_L,NY_L)
+!           call move(cloud_base    ,out_array_3d(1,1,1),NX_L,NY_L)
+            call move(cldht_prlx_top,out_array_3d(1,1,1),NX_L,NY_L)
+
+            call move(cloud_top     ,out_array_3d(1,1,2),NX_L,NY_L)
+
+!           call move(cloud_ceiling ,out_array_3d(1,1,3),NX_L,NY_L)
+            call move(cldht_prlx_unsm,out_array_3d(1,1,3),NX_L,NY_L)
 
             call put_clouds_2d(i4time,directory,ext,NX_L,NY_L
      1                                  ,out_array_3d,istatus)
