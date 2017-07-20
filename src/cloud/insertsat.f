@@ -61,7 +61,7 @@ c
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,sfc_albedo,        ! I
      1  t_gnd_k,                                                        ! O
      1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,ht_sao_top,                  ! O
-     1  cldht_prlx_top,                                                 ! O
+     1  cldht_prlx_top,cldht_prlx_unsm,                                 ! O
      1  istatus)                                                        ! O
 c
 c*************************************************************************
@@ -154,6 +154,7 @@ c
         real cloud_frac_co2_a(imax,jmax)
         real cldtop_co2_pa_a(imax,jmax)
         real cldht_prlx_top(imax,jmax)
+        real cldht_prlx_unsm(imax,jmax)
 
         integer istat_39_a(imax,jmax)
         integer istat_39_add_a(imax,jmax)
@@ -382,7 +383,7 @@ c
      1                  /'    ht      cvr',50(/f8.1,f8.3,'   CTR0'))
 
         mode_prlx = 3 ! 2 (fixed) or 3 (variable)
-        cldht_prlx_fixed = 8000.
+        cldht_prlx_fixed = 3000.
 
         if(mode_prlx .eq. 3)then ! extra call to cloud_top to support region growing
 
@@ -449,7 +450,10 @@ c
           enddo ! i
           enddo ! j
 
+!         We might also insert more terrain heights in areas of missing data
           if(.true.)then
+
+           cldht_prlx_unsm(:,:) = cldht_prlx_top(:,:)
 
            call region_grow(cldht_prlx_top,imax,jmax
      1                     ,r_missing_data,1,30)
@@ -465,6 +469,8 @@ c
            j_h = jmax - n_cross_in/2
            call smooth_cross_laps(imax,jmax,i_l,i_h,j_l,j_h
      1                           ,cldht_prlx_top,n_cross_in)
+
+           cldht_prlx_top(:,:) = cldht_prlx_top(:,:) * 0.7 ! experiment
 
          else ! uniform parallax array
            cldht_prlx_top(:,:) = cldht_prlx_fixed
