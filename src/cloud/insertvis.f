@@ -177,7 +177,7 @@ cdis
                   write(6,51)cloud_frac_vis_a(i,j),albedo_eff
      1                       ,trans,cloud_od(i,j),cloud_op(i,j)
      1                       ,cldht_prlx_top(i,j)
-51                format('CTR cf_vis/albedo/trans/od/op/prlx/',6f9.3)
+51                format(' CTR cf_vis/albedo/trans/od/op/prlx/',6f9.3)
               endif
 
               cloud_albedo(i,j) = albedo_eff
@@ -227,6 +227,13 @@ cdis
                 jt = j - nint(dj_dh(i,j) * cldht_prlx)
                 it = max(min(it,ni),1)
                 jt = max(min(jt,nj),1)
+
+                if(it .eq. idb .AND. jt .eq. jdb)then
+                  idebug = 1
+                else
+                  idebug = 0
+                endif
+
                 if(i_fill_seams(i,j) .ne. 0)then
                   itn = min(i,it)
                   itx = max(i,it)
@@ -273,6 +280,9 @@ cdis
 
                 cloud_frac_in = clouds_3d(it,jt,k)
 
+!               Consider that if 'ir_present_here' is true then cushion
+!               should be non-zero (for high clouds).
+
 !               Clear stronger with low clouds, weaker with high clouds
                 thr_vis_clr = 0.10
                 if(cld_hts(k) .gt. topo(i,j) + 5000.)then
@@ -318,43 +328,53 @@ cdis
                        endif
                    endif
 
-!                  Check for nearby IR cloud signature
+!                  Check for here & near IR cloud signature
                    nsmooth = (int(8000. / grid_spacing_m) / 2) + 1
                    il = max(i-nsmooth,1)
                    ih = min(i+nsmooth,ni)
                    jl = max(j-nsmooth,1)
                    jh = min(j+nsmooth,nj)
 
-                   ir_present = 1
+                   ir_present_here = 1
+                   if(cldtop_tb8_m(i,j) .eq. r_missing_data)then
+                       ir_present_here = 0
+                   endif
+
+                   vis_present_near = 1
+                   
+                   ir_present_near = 1
                    do ii = il,ih
                    do jj = jl,jh
-                       if(cldtop_tb8_m(i,j) .eq. r_missing_data)then
-                           ir_present = 0
+                       if(cldtop_tb8_m(ii,jj) .eq. r_missing_data)then
+                           ir_present_near = 0
                        endif
                    enddo ! jj
                    enddo ! ii
 
-                   if(ir_present .eq. 1)then
+                   if(ir_present_near .eq. 1)then
                        n_ir = n_ir + 1
                    else
                        n_no_ir = n_no_ir + 1
                    endif
 
                    clouds_3d_buf(itn:itx,jtn:jtx,k) = cloud_frac_out ! Modify output
-!                  if(idebug .eq. 1)then
-!                      write(6,202)
-!    1                   k,cloud_frac_out,cloud_frac_in,cushion
-!202                   format(' cloud_frac_out modified out/in/cushion '
-!    1                       ,i4,3f8.2)
-!                  endif
-                else
+                   if(idebug .eq. 1)then
+                       write(6,202)k,itn,jtn,itx,jtx,ir_present_here
+     1                            ,cloud_frac_out,cloud_frac_in,cushion
+202                    format(' cloud_frac_out modified out/in/cushion '
+     1                       ,9x,6i5,3f8.2,' CTR')
+                   endif
+
+                else ! keep cloud_frac the same
                    cloud_frac_out = cloud_frac_in
-!                  if(idebug .eq. 1)then
-!                      write(6,203)k,cloud_frac_out
-!203                   format(' cloud_frac_out kept at                 '
-!    1                       ,i4,f8.2)
-!                  endif
-                endif
+                   if(idebug .eq. 1)then
+                       write(6,203)k,itn,itx,jtn,jtx,ir_present_here
+     1                            ,cloud_frac_out
+203                    format(' cloud_frac_out kept at                 '
+     1                       ,9x,6i5,f8.2,' CTR')
+                   endif
+
+                endif ! modify cloud_frac
 
 !               Update Histograms
                 iscr_frac_in = nint(cloud_frac_in*10.)
@@ -385,12 +405,12 @@ cdis
                 colmaxout = max(colmaxout,cloud_frac_out)
 
                 if(idebug .eq. 1)then
-                    write(6,201)i,j,k,it,jt,di_dh(i,j),dj_dh(i,j)
+                    write(6,201)k,i,j,it,jt,di_dh(i,j),dj_dh(i,j)
      1                         ,cld_hts(k),cloud_frac_in,cloud_frac_out
      1                         ,cloud_frac_uprb,cushion
- 201                format(
-     1               'ijk,it,jt,didh,djdh,cldht,cldfracin/out,uprb,cush'
-     1                    ,5i6,2f9.5,f9.1,2f7.3,2f7.3)
+201                 format(
+     1              ' ijk,it,jt,didh,djdh,cldht,cldfracin/out,uprb,cush'
+     1                    ,i4,4i5,2f9.5,f9.1,2f7.3,2f7.3,' CTR')
                 endif
 
             enddo ! k
