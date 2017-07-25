@@ -31,7 +31,7 @@
            endif
            aod_3d(i,j,k) = alpha_low + alpha_high
          
-           if(i .eq. ni/2 .and. j .eq. nj/2)then
+           if(i .eq. ni/2 .and. j .eq. nj/2 .and. k .gt. 1)then
                if(h_agl .gt. 0.)then
                    ave_aod = 0.5 * (aod_3d(i,j,k)+aod_3d(i,j,k-1))
                    sum_aod = sum_aod + ave_aod       & 
@@ -45,7 +45,12 @@
        enddo ! i
 
        if(mode_aero_cld .gt. 1)then ! synthetic aerosol plume
-         aod_3d(ni/2+12,nj/2,1:nk-8) = .001
+         ext_syn = 0.001
+         iplume = ni/2 + 1
+         jplume = nj/2 + 1
+         iwp = 1
+         write(6,*)' Adding synthetic aerosol plume of',ext_syn,iplume,jplume
+         aod_3d(iplume-iwp:iplume+iwp,jplume-iwp:jplume+iwp,1:nk-8) = ext_syn
        endif
 
        return
