@@ -6874,26 +6874,28 @@ c                   cint = -1.
 
             if(c_type(1:2) .eq. 'cb')then ! Cloud Base
                 var_2d = 'LCB'
-                c_label = 'Cloud Base         m   MSL       '
+!               c_label = 'Cloud Base         m   MSL       '
+                c_label = 'Cloud Prlx Top  (smoothed)       '
                 clow = 0.
                 chigh = 10000.
-                chigh_img = 8000.
+                chigh_img = 16000. ! 8000.
                 cint = 1000.
 
             elseif(c_type(1:2) .eq. 'ct')then
                 var_2d = 'LCT'
                 c_label = 'Cloud Top          m   MSL       '
-                clow = 0.
+                clow = 2000.
                 chigh = 20000.
-                chigh_img = 14000.
+                chigh_img = 16000.
                 cint = 1000.
 
             elseif(c_type(1:2) .eq. 'cc')then ! Cloud Ceiling
                 var_2d = 'CCE'
-                c_label = 'Cloud Ceiling      m   AGL       '
+!               c_label = 'Cloud Ceiling      m   AGL       '
+                c_label = 'Cloud Prlx Top (unsmoothed)      '
                 clow = 0.
                 chigh = 0.
-                chigh_img = 8000.
+                chigh_img = 16000. ! 8000.
                 cint = -100.
 
             endif
