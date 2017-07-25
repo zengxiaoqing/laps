@@ -49,7 +49,7 @@
      real bi_coeff(2,2)
      real eclipse(ni,nj) ; logical l_solar_eclipse /.false./
      logical l_terrain_following /.false./
-     logical l_generic /.false./
+     logical l_generic /.false./ ! tie this to 'mode_aero_cld'?
 
 !    n                                    (number concentration:   m**-3)
 !    sigma                                (cross-section:          m**2)
@@ -58,6 +58,10 @@
 !    tau = K * s = kappa * rho * s        (optical depth:          dimensionless)
 
      eclipse = 1.0 ! Default is no solar eclipse
+
+     if(mode_aero_cld .eq. 3)then
+        l_generic  = .true.
+     endif
 
      clwc_int = 0.
      cice_int = 0.
