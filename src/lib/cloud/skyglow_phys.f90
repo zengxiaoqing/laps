@@ -58,7 +58,7 @@
         real ecl_intd(nc),ecl_dir_rat(nc),ecl_scat(nc),sky_rad_ave(nc)
 
         real clear_rad_c(nc,minalt:maxalt,minazi:maxazi)  ! clear sky illumination
-        real clear_rad_c0(nc,minalt:maxalt,minazi:maxazi) ! clear sky (no eclipse)
+!       real clear_rad_c0(nc,minalt:maxalt,minazi:maxazi) ! clear sky (no eclipse)
         real clear_radf_c(nc,minalt:maxalt,minazi:maxazi)! integrated
                ! fraction of gas illuminated by the sun along line of sight
                ! (consider Earth's shadow + clouds, used when sun is below
@@ -1209,7 +1209,7 @@
                   write(6,*)' single scat clear rad at ic/azi',ic,view_az(ialt_start,jazi_dbg)
                 endif
 
-                clear_rad_ref = clear_rad_c0(ic,maxalt,minazi) ! eclipse
+!               clear_rad_ref = clear_rad_c0(ic,maxalt,minazi) ! eclipse
                 clear_rad_ref = clear_rad_c(ic,maxalt,minazi)  ! no eclipse
 
                 do ialt = ialt_start,ialt_end
@@ -1242,11 +1242,11 @@
                   clear_rad_c(ic,ialt,:) = clear_rad_c(ic,ialt,:) + sky_rad_scat(ic,ialt,:)
                   if(ialt .eq. ialt_end)then ! zenith/high point info
                     scatfrac = sky_rad_scat(ic,maxalt,jazi_dbg) / clear_rad_c(ic,maxalt,jazi_dbg)
-                    ri_over_i0 = clear_rad_c(ic,maxalt,jazi_dbg) / clear_rad_c0(ic,maxalt,jazi_dbg)
-                    ri_over_f0 = clear_rad_c(ic,maxalt,jazi_dbg) / day_int0                            
+!                   ri_over_i0 = clear_rad_c(ic,maxalt,jazi_dbg) / clear_rad_c0(ic,maxalt,jazi_dbg)
+!                   ri_over_f0 = clear_rad_c(ic,maxalt,jazi_dbg) / day_int0                            
                     rmaglim = b_to_maglim(clear_rad_c(2,ialt_end,jazi_dbg))
-                    write(6,201)ic,altray,view_az(ialt_end,jazi_dbg),sph_rad_ave,od_vert,clear_rad_ref,sky_rad_scat(ic,maxalt,jazi_dbg),clear_rad_c(ic,maxalt,jazi_dbg),scatfrac,ri_over_i0
-201                 format(' ic/alt/az/sph_rad_ave/od/c0/scat/rad/rat/scatf/ii0',i2,2f9.2,f11.0,f6.3,f11.0,2f11.0,f7.4,2f10.7)
+                    write(6,201)ic,altray,view_az(ialt_end,jazi_dbg),sph_rad_ave,od_vert,clear_rad_ref,sky_rad_scat(ic,maxalt,jazi_dbg),clear_rad_c(ic,maxalt,jazi_dbg),scatfrac
+201                 format(' ic/alt/az/sph_rad_ave/od/c0/scat/rad/rat/scatf',i2,2f9.2,f11.0,f6.3,f11.0,2f11.0,f7.4,2f10.7)
                     if(ic .eq. icd)then
                       b = clear_rad_c(2,ialt_end,jazi_dbg)
                       write(6,211)b,b_to_v(b),rmaglim
