@@ -44,6 +44,7 @@
         use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)   ! L
         use mem_allsky, ONLY: upxrad_3d ! (upward irradiance xcos)      ! L
         use mem_allsky, ONLY: upyrad_3d ! (upward irradiance ycos)      ! L
+        use mem_allsky, ONLY: mode_aero_cld
         use cloud_rad
 
         include 'trigd.inc'
@@ -745,7 +746,7 @@
         topo_max_ang = 45.0
         topo_max_ht = maxval(topo_a)
 
-!       Relative values using constants from 'module_cloud_rad.f90'
+!       MEE values using constants from 'module_cloud_rad.f90'
 !       Values are 1.5 / (rho * reff)
 !       clwc2alpha = 75. 
         clwc2alpha = 1.5 / (rholiq  * reff_clwc)
@@ -753,13 +754,14 @@
         rain2alpha = 1.5 / (rholiq  * reff_rain)
         snow2alpha = 1.5 / (rhosnow * reff_snow)
 
-        write(6,*)' clwc2alpha is ',clwc2alpha
+        write(6,*)' clwc2alpha (MEE) is ',clwc2alpha
 
         cond_3d = clwc_3d 
      1          + cice_3d * (cice2alpha/clwc2alpha)
      1          + rain_3d * (rain2alpha/clwc2alpha) 
      1          + snow_3d * (snow2alpha/clwc2alpha)
 
+!       MEE relative to clwc
         wt_sp(1) = clwc2alpha/clwc2alpha
         wt_sp(2) = cice2alpha/clwc2alpha
         wt_sp(3) = rain2alpha/clwc2alpha
@@ -806,6 +808,11 @@
                 rkstart = float(kstart) + frach
               endif
             enddo ! k
+            if(kstart .eq. 0)then
+               write(6,*)' ERROR: kstart = 0',htstart,heights_3d(i,j,:)
+               istatus = 0
+               return
+            endif
             patm = (  pres_3d(i,j,kstart)   * fracl 
      1              + pres_3d(i,j,kstart+1) * frach ) / 101325.
           else ! set up extended k values above the domain
@@ -1051,7 +1058,9 @@
 !         Non-verbose (low observer)                    
           if(l_box .eqv. .false.)then
             if(htstart .lt. 7500. .or. altray .gt. 0.0)then
-              idebug = 0 ! ; idebug_a(ialt,jazi) = 0
+              if(mode_aero_cld .lt. 3)then
+                idebug = 0 ! ; idebug_a(ialt,jazi) = 0
+              endif
             endif
 !         else ! extra verbose
 !           idebug = 1
@@ -1059,6 +1068,12 @@
 
 !         Zenith / Nadir
           if(jazi .eq. minazi .and. abs(altray) .eq. 90.)then
+              idebug = 1
+              idebug_a(ialt,jazi) = 1
+          endif
+
+!         Horizon
+          if(jazi .eq. minazi .and. altray .eq. 0.)then
               idebug = 1
               idebug_a(ialt,jazi) = 1
           endif
@@ -1758,7 +1773,15 @@
                       snow_m = 0.
                   endif
 
-                  cvr_path = cond_m                                 
+                  aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
+                  aod_inc = aero_ext_coeff * slant2
+
+                  if(mode_aero_cld .lt. 3)then
+                      cvr_path = cond_m                                 
+                  else
+                      cvr_path = cond_m + aero_ext_coeff / clwc2alpha
+                  endif
+
                   cvr_path_sum_last = cvr_path_sum
                   cvr_path_sum      = cvr_path_sum + cvr_path * slant2
                   cvr_path_sum_sp(1) = 
@@ -1820,8 +1843,6 @@
      1              (cvr_path * slant2 * transm_4d_m(:))
                   endif ! idebug .eq. 1 .OR. cond_m .gt. 0.
 
-                  aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
-
 !                 Assess topo height with respect to ray
 !                 if(ht_m - htstart .le. 1000.)then ! more accurate topo when low
                   if(ht_m   .le. topo_max_ht .AND. 
@@ -1879,7 +1900,6 @@
                       endif
                   endif ! determine if we are hitting topo
 
-                  aod_inc = aero_ext_coeff * slant2
                   sum_aod = sum_aod + aod_inc
 
 !                 Test for hitting tau ~1 (nominal cloud edge)
@@ -2356,7 +2376,8 @@
               enddo ! while kk/rk
 
 !             Extra verbose
-              if(idebug .eq. 1 .and. altray .lt. 0.)then
+              if(idebug .eq. 1 .and.
+     1                (altray .lt. 0. .or. mode_aero_cld .eq. 3) )then
                 itrace = nint(trace_ri(ialt,jazi))
                 jtrace = nint(trace_rj(ialt,jazi))
                 if(itrace .ge. 1 .and. itrace .le. ni .AND.
@@ -2383,7 +2404,13 @@
           cloud_od(ialt,jazi) = clwc2alpha*cvr_path_sum   
           cloud_od_sp(ialt,jazi,:) = clwc2alpha*cvr_path_sum_sp(:)   
           cloud_od_sp_w(ialt,jazi,:) = clwc2alpha*cvr_path_sum_sp_w(:)   
-          r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
+
+          if(mode_aero_cld .lt. 3)then
+              r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
+          else
+              r_cloud_3d(ialt,jazi)
+     1                    = 1.-(exp(-(cloud_od(ialt,jazi)+sum_aod)))
+          endif
 
           airmass_2_cloud_3d(ialt,jazi) = sum_am2cld_atten
 
@@ -2436,8 +2463,9 @@
      1             ,clear_radf_c(icd,ialt,jazi)
      1             ,aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
      1             ,sum_clrrad,sum_clrrad_pot,airmass1_h,dz1_h
-119           format(' alt/dep/radf/aodf/smclrrd/pot/am/dz1_h',f11.2,i3
-     1                                         ,2f9.4,2f9.3,2f9.3,f13.1)
+     1             ,cloud_od(ialt,jazi)
+119           format(' alt/dep/radf/aodf/smclrrd/pot/am/dz1_h/cod'
+     1                      ,f11.2,i3,2f9.4,2f9.3,3f9.3,f13.1,f8.2)
             endif
 
           endif
