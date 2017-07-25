@@ -272,14 +272,20 @@
 !             Ice
               phice = 1.0
 
-              ph1 = phland * fland + phsnow * fsnow + phwater * fwater
+!             Check for valid scenario
+              if(topo_solalt(i,j) .ge. 0.)then ! light source above horizon or land normal
+                ph1 = phland * fland + phsnow * fsnow + phwater * fwater
+              else
+                ph1 = 1.     ! default value
+                phwater = 1. ! default value
+              endif
 
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
 
                 call check_nan(ph1,istat_nan)
                 if(istat_nan .ne. 1)then
-                  write(6,*)' ERROR: NaN in pf_land ',i,j,sinarc
+                  write(6,*)' ERROR: NaN in pf_land ',i,j,sinarc,phi_b/rpd,phi_d/rpd
                 endif
 
 !               if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. (ph1 .lt. 0. .and. dist_2_topo(i,j) .gt. 0.) .OR.&
