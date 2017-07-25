@@ -2,6 +2,7 @@
      +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
      +                   ,i4time_earliest,i4time_latest
      +                   ,filename
+     +                   ,pres_3d
      +                   ,ht_p
      +                   ,clwc_p
      +                   ,cice_p
@@ -15,6 +16,7 @@
       character*(*) filename
 
       integer x, y, z,nf_fid, nf_vid, nf_status
+      real pres_3d(NX_L,NY_L,21)
       real ht_p(NX_L,NY_L,21)
       real clwc_p(NX_L,NY_L,21)
       real cice_p(NX_L,NY_L,21)
@@ -126,6 +128,12 @@ C
       where (ice .eq. r_missing_data)ice = 0.
       where (rai .eq. r_missing_data)rai = 0.
       where (sno .eq. r_missing_data)sno = 0.
+
+!     Fill in missing heights
+      do iz = 1,z-1
+          where (ht(:,:,iz) .eq. r_missing_data)ht(:,:,iz) = iz * 100.
+      enddo 
+
       where (ht(:,:,z) .eq. r_missing_data)ht(:,:,z) = 20000.
 
       return
