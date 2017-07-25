@@ -20,7 +20,7 @@
                    moon_alt,moon_az,moon_mag,corr1_in,exposure, &       ! I
                    sky_rgb)                                             ! O
 
-        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm
+        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa
         use cloud_rad ! , ONLY: ghi_zen_toa
         use mem_allsky, ONLY: ghi_sim,mode_aero_cld
         include 'trigd.inc'
@@ -175,10 +175,10 @@
             cloud_od_loc(:,:) = cloud_od(:,:) + aod_tot(:,:)
             cloud_od_sp_loc(:,:,1) = cloud_od_sp(:,:,1) + aod_tot(:,:)
             cloud_od_sp_loc(:,:,2:nsp) = cloud_od_sp(:,:,2:nsp)
-            ssa_eff(:,:,:) = 1.0
-!           ssa_eff(1,:,:) = 0.95
-!           ssa_eff(2,:,:) = 0.85
-!           ssa_eff(2,:,:) = 0.75
+!           ssa_eff(:,:,:) = 1.0
+            ssa_eff(1,:,:) = ssa(1) ! 0.95
+            ssa_eff(2,:,:) = ssa(2) ! 0.85
+            ssa_eff(3,:,:) = ssa(3) ! 0.75
         endif
 
         patm_o3_msl = patm_o3(htmsl)
@@ -477,7 +477,7 @@
             iazi_debug = ((nj-1)*nint(azid1))/360 + 1 ! 90 deg azi
             idebug_a(1:ni/4:5,iazi_debug) = 1
             write(6,*)' sum of idebug_a (0a) = ',sum(idebug_a)
-        elseif(htmsl .gt. 2000.)then 
+        elseif(htmsl .gt. 20000.)then 
             idebug_a(:,:) = 0
             ialt_debug = ((ni-1)*(90-45))/180 + 1 ! -45 degrees alt
             idebug_a(ialt_debug,1:100) = 1
@@ -795,9 +795,18 @@
                        ,emis_ang_a,nsp,airmass_2_topo,idebug_pf,ni,nj &  ! I
                        ,pf_scat1,pf_scat2,pf_scat,bkscat_alb) ! O
         else
-          aero_od_src(:,:,:) = 0.
-          aero_od_obs(:,:,:) = 0.
-          aero_ssa(:,:,:) = 1.
+          if(mode_aero_cld .lt. 3)then
+            aero_od_src(:,:,:) = 0.
+            aero_od_obs(:,:,:) = 0.
+            aero_ssa(:,:,:) = 1.
+          else
+            do ic = 1,nc
+              aero_od_src(ic,:,:) = aod_tot(:,:)
+              aero_od_obs(ic,:,:) = aod_tot(:,:)
+              aero_ssa(ic,:,:) = ssa(ic)
+            enddo ! ic
+          endif
+
           call get_scat_pf(elong_a,alt_a,aero_od_src,aero_od_obs,aero_ssa,aero_g         & ! I
                           ,r_cloud_rad,cloud_rad_w,cloud_od,cloud_od_sp,nsp              & ! I
                           ,cloud_od_sp_w                                                 & ! I
@@ -894,6 +903,7 @@
           frac_clr_nonua = 1.
            
           altray_limb = alt_a(i,j) + horz_dep
+          altray      = alt_a(i,j)
 
           if(altray_limb .lt. 0.0 .and. emis_ang_a(i,j) .le. 0.)then
             emis_orig = emis_ang_a(i,j)
@@ -1053,13 +1063,15 @@
                           cloud_albedo_diffuse = btau_diffuse / (1. + btau_diffuse)
 
 !                         Consider diffuse sky light coming through the cloud                          
-                          radb_diffuse = rad_sec_cld(ic) * (1. - cloud_albedo_diffuse) * 0.75 * (1. + sind(altray)**2)
+                          radb_diffuse = rad_sec_cld(ic) * (1. - cloud_albedo_diffuse) * 0.75 * (1. + sind(altray_limb)**2)
 
                       endif
 
                   else ! secondary scattering term allowed to dominate
                        ! should be modified by a vertical cloud albedo?
                       rad_sfc = 0. ! + rad_sec_cld(ic)
+                      btau_diffuse = 0.
+                      cloud_albedo_diffuse = 0.
                       radb_diffuse = 0.
                   endif
 !                 cld_radb(ic) = rad_sfc ! + rad_sec_cld(ic)
@@ -1090,8 +1102,8 @@
                if(r_cloud_3d(i,j) .gt. 0. .or. abs(alt_a(i,j)).eq.90.0)then
                   htmin_view = htminf(htmsl,alt_a(i,j),earth_radius)
                   radb_corr = 1. - albedo_sfc(2) * cloud_albedo_corr
-                  write(6,39)btau_corr,btau_diffuse,albedo_sfc(2),cloud_albedo_corr,radb_corr,cloud_albedo_diffuse
- 39               format(' btcorr/btdiff/sfcalb/cldalb_corr/radb_corr/cdalbdf = ',6f9.3)
+                  write(6,39)btau_corr,btau_diffuse,albedo_sfc(2),cloud_albedo_corr,radb_corr,cloud_albedo_diffuse,cloud_od_loc(i,j),aod_tot(i,j)
+ 39               format(' btcorr/btdiff/sfcalb/cldalb_corr/radb_corr/cdalbdf/codloc/aodt = ',8f9.3)
                   if(solalt_ref .gt. 0.)then
                     rscl = 1e6
                   else
@@ -1643,11 +1655,11 @@
               if(.true.)then
 !               Add sun to existing sky radiance (blue extinction)
                 rad_sun_r = 10.**glow_sun(i,j)  &
-                          * trans(cloud_od(i,j) + clr_od(1)) 
+                          * trans(cloud_od_loc(i,j) + clr_od(1)) 
                 rad_sun_g = 10.**glow_sun(i,j)  &
-                          * trans(cloud_od(i,j) + clr_od(2)) 
+                          * trans(cloud_od_loc(i,j) + clr_od(2)) 
                 rad_sun_b = 10.**glow_sun(i,j)  &
-                          * trans(cloud_od(i,j) + clr_od(3)) 
+                          * trans(cloud_od_loc(i,j) + clr_od(3)) 
 
                 sky_rad(1) = sky_rad(1) + rad_sun_r
                 sky_rad(2) = sky_rad(2) + rad_sun_g
@@ -1662,13 +1674,13 @@
 !             Add moon/stars to existing sky radiance (blue extinction?)
               if(sol_alt .gt. 0. .and. (l_solar_eclipse .eqv. .false.))then
                 rad_moon = 10.**glow_moon(i,j)  &
-                          * trans(cloud_od(i,j) + aod_slant(i,j)) 
+                          * trans(cloud_od_loc(i,j) + aod_slant(i,j)) 
                 rad_moon_r = 10.**glow_moon(i,j)  &
-                           * trans(cloud_od(i,j) + clr_od(1)) 
+                           * trans(cloud_od_loc(i,j) + clr_od(1)) 
                 rad_moon_g = 10.**glow_moon(i,j)  &
-                           * trans(cloud_od(i,j) + clr_od(2)) 
+                           * trans(cloud_od_loc(i,j) + clr_od(2)) 
                 rad_moon_b = 10.**glow_moon(i,j)  &
-                           * trans(cloud_od(i,j) + clr_od(3)) 
+                           * trans(cloud_od_loc(i,j) + clr_od(3)) 
 
                 sky_rad(1) = sky_rad(1) + rad_moon_r
                 sky_rad(2) = sky_rad(2) + rad_moon_g
@@ -1680,8 +1692,8 @@
 
 !               Extinction from clouds, gas and aerosols
                 do ic = 1,nc
-                  if(cloud_od(i,j) .gt. 0.)then
-                    transterm(ic) = trans(cloud_od(i,j) + clr_od(ic))
+                  if(cloud_od_loc(i,j) .gt. 0.)then
+                    transterm(ic) = trans(cloud_od_loc(i,j) + clr_od(ic))
                   else
 !                   transterm(ic) = 1.0
                     transterm(ic) = trans(clr_od(ic))
@@ -1753,7 +1765,7 @@
 !             if(sol_alt .ge. -2.0)then      ! daylight
               if(sol_alt .ge. twi_alt)then   ! daylight
                   write(6,116)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
-                      ,pf_top(2),r_cloud_3d(i,j),cloud_od(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
+                      ,pf_top(2),r_cloud_3d(i,j),cloud_od_loc(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
                       ,topo_gti(i,j),topo_albedo(1,i,j),aod_ill(i,j),od2topo_c(2),topo_visibility,cloud_visibility,rintensity_glow &
                       ,nint(sky_rgb(:,i,j)),nint(cld_red),nint(cld_grn),nint(cld_blu)
