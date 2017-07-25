@@ -662,6 +662,7 @@
      +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
      +                   ,i4time_earliest,i4time_latest
      +                   ,filename
+     +                   ,pres_3d
      +                   ,heights_3d
      +                   ,clwc_3d
      +                   ,cice_3d
@@ -873,9 +874,18 @@
 19      format(' pw_ref,aod,aod_ref = ',3f10.3)
 20      continue
 
-        if(aod_ref .gt. 2.0)then
-           write(6,*)' High aod_ref: set mode_aero_cld = 2'
-           mode_aero_cld = 2
+        if(l_parse(directory,'rams'))then
+           mode_aero_cld = 3
+           write(6,*)' RAMS run: set mode_aero_cld = ',mode_aero_cld
+
+!          Zero out hydrometeors (e.g. from RAMS)
+           if(.true.)then
+              write(6,*)' RAMS run: zero out hydrometeors'
+              clwc_3d = 0.
+              cice_3d = 0.
+              rain_3d = 0.
+              snow_3d = 0.
+           endif
         endif
 
 !       Get Aersol Extinction Coefficient (3D field)
