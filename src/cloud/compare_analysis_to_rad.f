@@ -1,6 +1,6 @@
 
         subroutine compare_analysis_to_rad(i4time,ni,nj          ! I
-     1  ,cvr_sao_max,solar_alt,cvr_snow,cloud_albedo             ! I
+     1  ,cvr_sao_max,solar_alt,cvr_snow,cloud_albedo,idb,jdb     ! I
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,td_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns
@@ -172,12 +172,12 @@
         enddo ! i
         enddo ! j
 
-        write(6,*)' solar_alt CTR = ',solar_alt(ni/2,nj/2)
-        write(6,*)' cloud_alb CTR = ',cloud_albedo(ni/2,nj/2)
-        write(6,*)' rad_clr   CTR = ',rad_clr(ni/2,nj/2)
-        write(6,*)' cvr_scl_a CTR = ',cvr_scl_a(ni/2,nj/2)
-        write(6,*)' cvr_rad   CTR = ',cvr_rad(ni/2,nj/2)
-        write(6,*)' swi_2d    CTR = ',swi_2d(ni/2,nj/2)
+        write(6,*)' solar_alt CTR = ',solar_alt(idb,jdb)
+        write(6,*)' cloud_alb CTR = ',cloud_albedo(idb,jdb)
+        write(6,*)' rad_clr   CTR = ',rad_clr(idb,jdb)
+        write(6,*)' cvr_scl_a CTR = ',cvr_scl_a(idb,jdb)
+        write(6,*)' cvr_rad   CTR = ',cvr_rad(idb,jdb)
+        write(6,*)' swi_2d    CTR = ',swi_2d(idb,jdb)
 
         if(.true.)then
             iwrite = 0
