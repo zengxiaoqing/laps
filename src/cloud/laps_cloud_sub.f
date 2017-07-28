@@ -904,6 +904,9 @@ C READ IN SATELLITE DATA
         enddo
         enddo
 
+        idb = (NX_L/2) + 1
+        jdb = (NY_L/2) + 1
+
         icen = NX_L/2
         jcen = NY_L/2
         write(6,*)'solar dec/ha ',solar_dec,solar_ha(icen,jcen),
@@ -916,7 +919,7 @@ C READ IN SATELLITE DATA
 !       Consider passing out parallax info, used with vis & cvr_snow, to be
 !       later used in other ways such as IR
         call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add            ! I
-     1              ,l_use_vis_partial,lat,lon                           ! I
+     1              ,l_use_vis_partial,lat,lon,idb,jdb                   ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,rlaps_land_frac,topo                                ! I
      1              ,cvr_snow,tgd_sfc_k                                  ! I
@@ -971,9 +974,6 @@ C READ IN SATELLITE DATA
         endif
 
         I4_elapsed = ishow_timer()
-
-        idb = (NX_L/2) + 1
-        jdb = (NY_L/2) + 1
 
         write(6,*)' offset_ir',subpoint_lon_clo_s8a(idb,jdb)
      1                        ,offset_ir_i(idb,jdb)
@@ -1619,7 +1619,7 @@ C       EW SLICES
      1   rad_s,solar_ea,obstime,istatus)                           ! O
 
         call compare_analysis_to_rad(i4time,NX_L,NY_L,cvr_sao_max  ! I
-     1  ,solar_alt,cvr_snow,cloud_albedo                           ! I
+     1  ,solar_alt,cvr_snow,cloud_albedo,idb,jdb                   ! I
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,td_sfc_k,cvr_max,r_missing_data
      1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
      1  ,rad_s,n_cld_snd,c_stations,lat_s,lon_s,elev_s
