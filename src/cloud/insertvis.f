@@ -175,9 +175,10 @@ cdis
 
               if(idebug .eq. 1)then
                   write(6,51)cloud_frac_vis_a(i,j),albedo_eff
-     1                       ,trans,cloud_od(i,j),cloud_op(i,j)
-     1                       ,cldht_prlx_top(i,j)
-51                format(' CTR cf_vis/albedo/trans/od/op/prlx/',6f9.3)
+     1                      ,albedo(i,j),trans,cloud_od(i,j)
+     1                      ,cloud_op(i,j),cldht_prlx_top(i,j)
+51                format(' CTR cf_vis/albeff/albsat/trans/od/op/prlx/'
+     1                  ,7f9.3)
               endif
 
               cloud_albedo(i,j) = albedo_eff
