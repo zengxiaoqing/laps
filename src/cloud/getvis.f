@@ -38,7 +38,7 @@ cdis
 cdis 
 
         subroutine get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add ! I
-     1                    ,l_use_vis_partial,lat,lon                ! I
+     1                    ,l_use_vis_partial,lat,lon,idb,jdb        ! I
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
      1                    ,rlaps_land_frac,topo                     ! I
      1                    ,cvr_snow,tgd_sfc_k                       ! I
@@ -212,6 +212,11 @@ cdis
             clear_albedo = sfc_albedo_lwrb(i,j)
             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
      1                                           ,sat_albedo(i,j))
+
+            if(i .eq. idb .and. j .eq. jdb)then
+                write(6,9)clear_albedo,sat_albedo(i,j),cloud_frac_vis
+9               format(' clralb/satalb/cf_vis ',3f9.3,' CTR')
+            endif
 
             iscr_frac_sat = nint(cloud_frac_vis*10.)
             iscr_frac_sat = min(max(iscr_frac_sat,-10),20)
