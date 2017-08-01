@@ -282,7 +282,7 @@ c
 !mp
 	logical categorical, useland
 !mp
-        logical l_topo_wps, l_parse, l_topo_1s
+        logical l_topo_wps, l_parse, l_topo_1s, l_albedo_bm /.false./
 
         integer nnxp,nnyp,mode
         integer ngrids
@@ -1975,67 +1975,83 @@ c ---------------Monthly Albedo Climatology--------------------------
 c type = A
 c
         itstatus=ishow_timer()
+
+        if(c10_grid_f(1:lf).eq.'wrfsi')then
+          IF (c6_maproj .ne. 'rotlat') THEN
+            ialb=96
+          ELSE
+            ialb=87
+          ENDIF
+        else
+          ialb=25
+        endif
+
         print*
-        print*,' Processing albedo climo data'
+        print*,' Processing albedo climo data into ialb/bm = '
+     +        ,ialb,l_albedo_bm
 
-	IF (c6_maproj .ne. 'rotlat') THEN
+        if(.not. l_albedo_bm)then ! obtain albedo from blue marble (BMNG) data
 
-        call proc_geodat(nnxp,nnyp,12,path_to_albedo
-     +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
-     +,GEODAT3D,istatus_alb)
+	  IF (c6_maproj .ne. 'rotlat') THEN
 
-	ELSE
+            call proc_geodat(nnxp,nnyp,12,path_to_albedo
+     +         ,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
+     +         ,GEODAT3D,istatus_alb)                            ! O
 
-	categorical=.FALSE.
-	useland=.TRUE.
-        call alt_hemi_all(nnxp,nnyp,hlat,hlon,
+	  ELSE
+
+	    categorical=.FALSE.
+	    useland=.TRUE.
+            call alt_hemi_all(nnxp,nnyp,hlat,hlon,
      &                       PATH_TO_ALBEDO,
      &                       type,12,grid_spacing_m/1000.,GEODAT3D,
      &                       ADUM2D,categorical,data(1,1,ilndmsk),
      &			     useland)
 
-        istatus_alb=1 !bogus
+            istatus_alb=1 !bogus
 
-	do N=1,12
-	 do J=1,NNYP
-	  do I=1,NNXP
-	   GEODAT3D(I,J,N)=GEODAT3D(I,J,N)*.01
-	  enddo
-	 enddo
-	enddo
+	    do N=1,12
+	     do J=1,NNYP
+	      do I=1,NNXP
+	       GEODAT3D(I,J,N)=GEODAT3D(I,J,N)*.01
+	      enddo
+	     enddo
+	    enddo
 
-        ENDIF
+          ENDIF
 
-        print*,'Done in proc_geodat: albedo'
+          print*,'Done in proc_geodat: albedo'
 
-        if(istatus_alb.ne.1)then
-         print*
-         print*,' Error: Albedo climo data not processed completely'
-         print*,' Error: File(s) missing for albedo data'
-         print*,' Error: Static file not created: albedo missing'
-         print*
-         istatus=0
-         return
-        endif
+          if(istatus_alb.ne.1)then
+           print*
+           print*,' Error: Albedo climo data not processed completely'
+           print*,' Error: File(s) missing for albedo data'
+           print*,' Error: Static file not created: albedo missing'
+           print*
+           istatus=0
+           return
+          endif
 
 c force water points to 0.08 albedo
 
-        do k=1,12
+          do k=1,12
            where(data(:,:,ilndmsk).eq.0.0)GEODAT3D(:,:,k)=0.08
-        enddo
+          enddo
 
-        if(c10_grid_f(1:lf).eq.'wrfsi')then
-        IF (c6_maproj .ne. 'rotlat') THEN
-           ialb=96
-	ELSE
-	   ialb=87
-	ENDIF
-        else
-           ialb=25
-        endif
-        do j=1,12
-           data(:,:,ialb+j)=GEODAT3D(:,:,j)
-        enddo
+          do j=1,12
+              data(:,:,ialb+j)=GEODAT3D(:,:,j)
+          enddo
+
+	else ! use BMNG
+
+	  call i4time_fname_lp('170010000',i4_yrstart,istatus)
+
+          do j=1,12
+            i4_midmonth = i4_yrstart + ((j*30)-15) * 86400 ! approximate
+            call land_albedo_bm(lats(1,1,ns),lons(1,1,ns),nnxp,nnyp
+     +                         ,i4_midmonth,data(:,:,ialb+j),istat_bm)
+          enddo
+	endif
 c
 c ---------------- Max Snow Albedo ------------------
 c type = M
