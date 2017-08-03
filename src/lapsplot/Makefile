@@ -35,6 +35,7 @@ SRC= lapsplot_main.f \
      lapsplot_sub.f \
      array_range.f \
      aski4t.f \
+     get_lapsplot_parms.f \
      hsect.f \
      hsect_img.f \
      xsect.f \
