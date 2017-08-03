@@ -563,12 +563,12 @@
               if(mode_cloud_mask .eq. 3)then
                  write(6,*)' Performing camera_cloud_mask clearing'
                  call clear_3d_mask(
-     1                       minalt,maxalt,minazi,maxazi         ! I
-     1                      ,alt_scale,azi_scale                 ! I
-     1                      ,htmsl,ri_obs,rj_obs                 ! I
-     1                      ,lat,lon,NX_L,NY_L,NZ_L              ! I
-     1                      ,diff_cloud_mask                     ! I
-     1                      ,sky_rgb_cyl)                        ! I/O
+     1                 minalt,maxalt,minazi,maxazi                  ! I
+     1                ,alt_scale,azi_scale                          ! I
+     1                ,htmsl,ri_obs,rj_obs                          ! I
+     1                ,lat,lon,NX_L,NY_L,NZ_L,grid_spacing_m        ! I
+     1                ,diff_cloud_mask                              ! I
+     1                ,sky_rgb_cyl)                                 ! I/O
               endif
           endif
 
@@ -628,12 +628,12 @@
           end
 
           subroutine clear_3d_mask(
-     1                       minalt,maxalt,minazi,maxazi         ! I
-     1                      ,alt_scale,azi_scale                 ! I
-     1                      ,htmsl,ri_obs,rj_obs                 ! I
-     1                      ,lat,lon,NX_L,NY_L,NZ_L              ! I
-     1                      ,diff_cloud_mask                     ! I
-     1                      ,sky_rgb_cyl)                        ! I/O
+     1                  minalt,maxalt,minazi,maxazi             ! I
+     1                 ,alt_scale,azi_scale                     ! I
+     1                 ,htmsl,ri_obs,rj_obs                     ! I
+     1                 ,lat,lon,NX_L,NY_L,NZ_L,grid_spacing_m   ! I
+     1                 ,diff_cloud_mask                         ! I
+     1                 ,sky_rgb_cyl)                            ! I/O
 
           use mem_allsky ! 3D model grids
 
@@ -676,6 +676,13 @@
      1                          ,azimuth,slant_range,elev       ! O
      1                          ,rlat_obs,rlon_obs,ht_obs)      ! I
             
+!           Determine approximate alt/az range covered by the grid box for
+!           option that prevents aliasing            
+
+!           hgrid_alt =
+!           hgrid_azi =
+!           vgrid_alt =             
+
             ialt = nint(elev    / alt_scale)
             jazi = nint(azimuth / azi_scale)
            
