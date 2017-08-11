@@ -38,6 +38,7 @@ SRC= lapsplot_main.f \
      get_lapsplot_parms.f \
      hsect.f \
      hsect_img.f \
+     input_product_info.f \
      xsect.f \
      divergence.f \
      lapsplot.f \
