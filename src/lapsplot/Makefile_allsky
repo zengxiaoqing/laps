@@ -6,7 +6,7 @@
 
 SRCROOT=../..
 
-include $(SRCROOT)/src/include/makefile_static.inc
+include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/cloud/libcloud.a  \
            $(SRCROOT)/src/lib/temp/libtemp.a  \
