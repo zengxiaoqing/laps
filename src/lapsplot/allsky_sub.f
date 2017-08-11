@@ -270,11 +270,23 @@ cdis
             ni_polar = (256 * 2 * (ipolar_sizeparm)) - 1
             nj_polar = (256 * 2 * (ipolar_sizeparm)) - 1
 
+            if(ni_polar .le. 8192)then
+                iplo = 1; iphi = ni_polar; jplo = 1; jphi = nj_polar
+!               iplo = ni_polar-6000; iphi = ni_polar-200
+!               iplo = 3026         ; iphi = ni_polar-3026
+!               jplo = nj_polar-1400; jphi = nj_polar-200
+            else ! crop polar image
+                iplo = 7232         ; iphi = ni_polar-7232
+!               jplo = nj_polar-1600; jphi = nj_polar-400
+                jplo = 400          ; jphi = 1479
+            endif
+
             write(6,*)' call plot_allsky',ni_polar,nj_polar
      1                                   ,ipolar_sizeparm
 
             call plot_allsky(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                        ,ni_polar,nj_polar,ipolar_sizeparm,density
+     1                        ,iplo,iphi,jplo,jphi
      1                        ,r_missing_data,laps_cycle_time
      1                        ,l_polar,l_cyl)       
 
