@@ -395,6 +395,7 @@
         if(mode_aero_cld .gt. 1)then
             azid1 = 90.  ; azid2 = 90. ! aero custom
         endif
+        azid1 = 265.  ; azid2 = 265. ! test custom (Boulder Foothills)
 
         write(6,*)' azid1/2 are at ',azid1,azid2,htmsl,mode_aero_cld
         write(6,*)' moon_cond_clr = ',moon_cond_clr
@@ -1120,7 +1121,7 @@
                    ,cld_radb(:)/rscl,(cld_rad(:)/rscl)/trans_c(:) &
                    ,cld_rad(:)/rscl
  42               format(&
-                  ' elg/pf/br/rint2/trnsc2/cldrd = ',2i5,6f9.3,' c',3f8.5,2x,'tb-tr-a',3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0)
+                  ' elg/br/pf/rint2/trnsc2/cldrd = ',2i5,6f9.3,' c',3f8.5,2x,'tb-tr-a',3f6.0,2x,3f6.0,2x,3f6.0,2x,3f6.0)
                endif ! cloud present
               endif
 
@@ -1579,7 +1580,7 @@
                               ,sky_rad(2) + grn_rad &
                               ,sky_rad(3) + blu_rad
 98                  format( &
-                        ' rtopo/gti/gtic/alb/pf/tsalt/dst/trad/srad   ', &
+                        ' rtopo/gti/gtic/alb/pf/tsalt/tdst/trad/srad   ', &
                     f7.3,f9.1,f9.4,1x,f8.3,f7.2,f9.2,f12.0,2f8.5,3(2x,3f13.0))
                   endif
 
