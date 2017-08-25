@@ -406,6 +406,14 @@
             transm_spectral_g = transm_3d_s**(power_trans*.051)
             transm_spectral_b = transm_3d_s**(power_trans*.010)
 
+            if(mode_aero_cld .eq. 3)then
+              od_eff = albedo_to_btau(1. - transm_3d_s) / .1 ! bkscat efficiency
+              scat_order = od_eff
+              transm_spectral_r = transm_spectral_r * ssa(1)**scat_order
+              transm_spectral_g = transm_spectral_g * ssa(2)**scat_order
+              transm_spectral_b = transm_spectral_b * ssa(3)**scat_order
+            endif
+
 !           Modify transm array for each of 3 colors depending on solar intensity and color
             transm_4d(il,jl,kl,1) = transm_3d_s * rint           * eclipse(i,j) * transm_spectral_r
             transm_4d(il,jl,kl,2) = transm_3d_s * rint * grn_rat * eclipse(i,j) * transm_spectral_g
@@ -424,6 +432,9 @@
 
 !     Check the presence of terrain shadow grid points + add sfc glow
       write(6,*)' heights_3d column = ',heights_3d(idb,jdb,:)
+      if(mode_aero_cld .eq. 3)then
+        write(6,*)' aod_3d column = ',aod_3d(idb,jdb,:)
+      endif
       write(6,*)' transm_3d column = ',transm_3d(idb,jdb,:)
       if(solalt .gt. twi_alt)then                                       
         write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,2)
