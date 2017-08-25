@@ -371,11 +371,11 @@ elseif (namelist_name == 'lapsparms') then
    ht_ha(1)=13000.; ht_ha(2)=13000.; ht_ha(3)=25000.; ht_ha(4)=31000.
 
 !  Single scattering albedo for aerosols
-   ssa(1) = .90 ; ssa(2) = .90 ; ssa(3) = .90 ! non-dust
-!  ssa(1) = .92 ; ssa(2) = .92 ; ssa(3) = .92 ! urban
-!  ssa(1) = .99 ; ssa(2) = .99 ; ssa(3) = .99 ! non-absorbing (sea salt)
-!  ssa(1) = .95 ; ssa(2) = .85 ; ssa(3) = .75 ! hematite dust
-!  ssa(1) = .95 ; ssa(2) = .85 ; ssa(3) = .75 ! smoke
+   ssa(1) = .90  ; ssa(2) = .90 ; ssa(3) = .90 ! non-dust
+!  ssa(1) = .92  ; ssa(2) = .92 ; ssa(3) = .92 ! urban
+!  ssa(1) = .99  ; ssa(2) = .99 ; ssa(3) = .99 ! non-absorbing (sea salt)
+!  ssa(1) = .935 ; ssa(2) = .92 ; ssa(3) = .86 ! hematite dust
+!  ssa(1) = .95  ; ssa(2) = .85 ; ssa(3) = .75 ! smoke
 
 !  fraction of aerosols in each bin & asymmetry factor
 !  Factor of 2 back scatter increase from minimum, peak of 50
