@@ -114,3 +114,4 @@
 !       Microphysics
         reff_cice_f(cice) = .000034 * (max(cice,1e-6)/1.66e-6)**(+0.14)
         reff_clwc_f(clwc) = (3. + 8. * (max(clwc,1e-6)*1.00e3)**(+0.50)) / 1e6 
+        albedo_to_btau(albedo) = -(albedo) / (albedo-1.)
