@@ -142,6 +142,7 @@
         real dhi_2d_cld(nc)
         real bni_clr(nc)
         real bhi_clr(nc)
+        real absorption(nc)
 
 !       Note that 'ghi_2d' and 'dhi_2d' aren't yet returned for wider use.
 !       However they are used to calculate 'topo_gti' and 'gtic' that are 
@@ -538,9 +539,16 @@
               if(transm_3d(ii,jj,kk) .gt. 0. .and. 
      1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
 
+                absorption(:) = 1. - transm_4d(ii,jj,kk,:)
+     1                             / transm_3d(ii,jj,kk)
                 transm_tn = transm_3d(ii,jj,kk)
                 cloud_albedo = 1. - transm_tn
-                transm_tn_pr1 = transm_tn
+
+!               Here we might need only the aerosol absorption and not the
+!               gas scattering. Both of these feed into the present calculation
+!               of absorption.
+
+                transm_tn_pr1 = transm_tn * (1.-absorption(2))
      1                   / (1. - topo_albedo_2d(2,i,j) * cloud_albedo)
                 transm_tn_pr = transm_tn_pr1 ! tn_pr1 or tn (testing)
 
@@ -588,11 +596,14 @@
                 airmass_g = airmassf(90.-obj_alt(ii,jj),patm_sfc)
                 do ic = 1,nc
                   bni_clr(ic) = obj_bri * ecl 
-     1                        * trans(airmass_g * ext_g(ic))
+!    1                        * trans(airmass_g * ext_g(ic))
                 enddo ! ic
-                bnic_2d(:,ii,jj) = bni_clr(:) * frac_dir   
+                bnic_2d(:,ii,jj) = bni_clr(:) * frac_dir
+     1                                        * (1.-absorption(:))
 
                 bhi_clr(:) = bni_clr(:) * sind(obj_alt(ii,jj))
+     1                                  * (1.-absorption(:))
+
                 bhic_2d(:,ii,jj) = 
      1              bnic_2d(:,ii,jj) * sind(obj_alt(ii,jj))
 
@@ -2201,25 +2212,6 @@
      1                      sum(bi_coeff(:,:) * ghic_2d(ic,i1:i2,j1:j2))
      1                                        * solar_corr
 
-                          if(idebug .eq. 1 .and. ic .eq. 2)then
-                             write(6,76)gtic(ic,ialt,jazi)
-     1                         ,i1,j1,bnic_2d(ic,i1,j1),bni_clr(ic)
-     1                         ,ghic_2d(ic,i1,j1)
-     1                         ,bhic_2d(ic,i1,j1)
-     1                         ,dhic_2d(ic,i1,j1),frac_dir_a(i1,j1)
-     1                         ,transm_tn_a(i1,j1),solar_corr
-76                           format(' gtic check ',f9.4,2i5,8f9.5)                          
-                             write(6,77)inew_mb,jnew_m
-     1                         ,sol_alt(inew_mb,jnew_m)
-     1                         ,lat(inew_mb,jnew_m)
-     1                         ,lon(inew_mb,jnew_m)
-     1                         ,ghi_2d(inew_mb,jnew_m)
-     1                         ,dhi_2d(inew_mb,jnew_m)
-     1                         ,alt_norm_int
-     1                         ,solar_corr
-77                           format(' solar_corr ',2i5,7f10.4)
-                          endif
-
 !                         City lights on the ground (spec exitance - emic)
                           if(sol_alt(inew_mb,jnew_m) .lt. twi_alt)then  
 
@@ -2246,6 +2238,30 @@
                           btic(ic,ialt,jazi) = 
      1                      sum(bi_coeff(:,:) * bhic_2d(ic,i1:i2,j1:j2))
      1                                        * solar_corrb
+
+                          if(.true.)then
+                             gtic(ic,ialt,jazi) = btic(ic,ialt,jazi)
+     1                                          + dtic(ic,ialt,jazi)
+                          endif
+
+                          if(idebug .eq. 1 .and. ic .eq. 2)then
+                             write(6,86)gtic(ic,ialt,jazi)
+     1                         ,i1,j1,bnic_2d(ic,i1,j1),bni_clr(ic)
+     1                         ,ghic_2d(ic,i1,j1)
+     1                         ,bhic_2d(ic,i1,j1)
+     1                         ,dhic_2d(ic,i1,j1),frac_dir_a(i1,j1)
+     1                         ,transm_tn_a(i1,j1),solar_corr
+86                           format(' gtic check ',f9.4,2i5,8f9.5)                          
+                             write(6,87)inew_mb,jnew_m
+     1                         ,sol_alt(inew_mb,jnew_m)
+     1                         ,lat(inew_mb,jnew_m)
+     1                         ,lon(inew_mb,jnew_m)
+     1                         ,ghi_2d(inew_mb,jnew_m)
+     1                         ,dhi_2d(inew_mb,jnew_m)
+     1                         ,alt_norm_int
+     1                         ,solar_corr
+87                           format(' solar_corr ',2i5,7f10.4)
+                          endif
 
                       enddo ! ic                
 
