@@ -18,7 +18,7 @@
                    minalt,maxalt,minazi,maxazi, &                       ! I
                    twi_0,horz_dep,solalt_limb_true, &                   ! I
                    moon_alt,moon_az,moon_mag,corr1_in,exposure, &       ! I
-                   sky_rgb)                                             ! O
+                   sky_rgb,sky_sprad,sky_reflectance)                   ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa
         use cloud_rad ! , ONLY: ghi_zen_toa
@@ -130,6 +130,8 @@
         real mtr_msa(nc,ni,nj)
 
         real sky_rgb(0:2,ni,nj)
+        real sky_sprad(0:2,ni,nj)
+        real sky_reflectance(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
         real sky_rad_a(nc,ni,nj)
         real sp_rad_a(nc,ni,nj)
