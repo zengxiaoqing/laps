@@ -67,6 +67,8 @@
 
 !       Output arrays
         real sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi) ! Observed Variable
+        real sky_sprad(0:2,minalt:maxalt,minazi:maxazi) 
+        real sky_reflectance(0:2,minalt:maxalt,minazi:maxazi) 
         real cloud_od(minalt:maxalt,minazi:maxazi)
         real*8 dist_2_topo(minalt:maxalt,minazi:maxazi)
 
@@ -490,7 +492,7 @@
      1                    ,solalt_limb_true
      1                    ,alm,azm,moon_mag  ! moon alt/az/mag
      1                    ,corr1_in,exposure
-     1                    ,sky_rgb_cyl)                                 ! O   
+     1                    ,sky_rgb_cyl,sky_sprad,sky_reflectance)       ! O   
 
 !             Add bounds to rgb values
               do j = minazi,maxazi
