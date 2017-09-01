@@ -176,10 +176,10 @@ if($opt_t){
       exit;
    }
 
-   if($LAPS_TEMPLATE =~ $DATAROOT || $DATAROOT =~ $LAPS_TEMPLATE){
-      print "Error: Template should be separated from DATAROOT\n";
+   if($LAPS_TEMPLATE =~ $LAPS_DATA_ROOT || $LAPS_DATA_ROOT =~ $LAPS_TEMPLATE){
+      print "Error: Template should be separated from LAPS_DATA_ROOT\n";
       print "Template is $LAPS_TEMPLATE\n";
-      print "DATAROOT is $DATAROOT\n";
+      print "LAPS_DATA_ROOT is $LAPS_DATA_ROOT\n";
       print "Terminating.\n";exit;
       exit;
    }
