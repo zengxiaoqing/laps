@@ -76,7 +76,7 @@ C ENTER TIME LOOPS
 !                         day  deg rad
         call sidereal_time(UT,rlon,LST)
 
-        do 1000 i = 1,iter
+        do 1000 ii = 1,iter
 C
 C CALCULATE POSITION OF EARTH (1950 coordinates - antedated)
 840       continue
@@ -308,6 +308,7 @@ C CALCULATE ALT AND AZ of SUN
       else
           solar_eclipse_magnitude = 0.
           r4_obsc = 0.
+          obsc_limbc(:) = 0.
       endif
 
       r4_mag = solar_eclipse_magnitude
@@ -430,7 +431,7 @@ c calculate geocentric topo position including flattening factor
       TY = TY * topo_flag
       TZ = TZ * topo_flag
 
-      do 1000 i = 1,iter
+      do 1000 ii = 1,iter
 C
 C CALCULATE POSITION OF EARTH (1950 coordinates - antedated)
 840   continue
@@ -572,11 +573,12 @@ C CALCULATE POSITION OF MOON (topocentric coordinates of date)
               r4_ratio = diam_moon/diam_sun
               call get_obscuration(solar_eclipse_magnitude,r4_ratio
      1                            ,r4_obsc,obsc_limbc)
-              obsc_limb = obsc_limbc(2)
           else
               r4_obsc = 0.
-              obsc_limb = 0.
+              obsc_limbc(:) = 0.
           endif
+
+          obsc_limb = obsc_limbc(2)
 
           if(idebug .ge. 2)then
              write(6,*)
