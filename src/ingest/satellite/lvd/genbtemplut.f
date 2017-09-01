@@ -42,8 +42,10 @@ c
 
       elseif(ctype.eq.'gnp')then
          write(6,*)' Generating btemp lut for gnp type'
-         offset = 173.15
-         scale = 0.03931624
+!        offset = 173.15
+!        scale = 0.03931624
+         offset = 89.62
+         scale = 0.0614533
          do i = 0,4095
            cnt2btemp(i) = float(i) * scale + offset
          enddo ! i
