@@ -35,12 +35,13 @@ SRC= allsky_main.f \
      allsky_sub.f \
      array_range.f \
      aski4t.f \
+     get_fim_data.f
+     get_navgem_data.f \
      get_rams_data.f \
      lapsplot.f \
      input_product_info.f \
      get_lapsplot_parms.f \
-     plot_allsky.f \
-     get_fim_data.f
+     plot_allsky.f
 
 MAIN=allsky_main.f
 
