@@ -6,6 +6,7 @@
         parameter (n_entries = 34)
 
         real ar(2,n_entries)
+        save ar
 
         integer*4 init
         save init
