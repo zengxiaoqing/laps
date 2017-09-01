@@ -1,6 +1,7 @@
 
 
       subroutine get_topo_1s(ni,nj,grid_spacing_m,r8lat,r8lon,topo
+     1                      ,rnorth,south,east,west                      ! I
      1                      ,path_to_topt1s,istatus)
 
 !     Read in topo tiles
@@ -75,8 +76,7 @@
         sfc_glow = sfc_glow_c(2,:,:)
 
       else ! binary file is absent
-       write(6,*)
-     1' topo_1s tile file is absent, generate and create it from ppm'       
+       write(6,*)' setup array of topo_1s asc files'
 
        if(.true.)then
 
@@ -84,12 +84,6 @@
          offset_lat = -.000  ! positional error in remapping
          offset_lon = +.000  !             "
          l_global_nl = .false.
-
-!        Consider dynamic means to get rlat_start and rlon_start
-!        Use domain lat/lon bounds with a 0.2 deg cushion
-         call get_domain_perimeter(ni,nj,c10_fname  
-     1                  ,rlat_laps,rlon_laps,topo_laps_dum
-     1                  ,0.2,rnorth,south,east,west,istatus)
 
          write(6,*)' perimeter NSEW:',rnorth,south,east,west
          ilat_start = int(south) + 1
@@ -100,14 +94,6 @@
 
          write(6,*)' ilat range dynamic',ilat_start,ilat_end
          write(6,*)' ilon range dynamic',ilon_start,ilon_end
-
-         ilat_start_co = 39
-         ilat_end_co   = 42
-         ilon_start_co = 103
-         ilon_end_co   = 108
-
-         write(6,*)' co ilat range ',ilat_start_co,ilat_end_co
-         write(6,*)' co ilon range ',ilon_start_co,ilon_end_co
 
          itile = 0
          do ilat = ilat_start,ilat_end
