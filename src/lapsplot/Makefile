@@ -62,6 +62,7 @@ SRC= lapsplot_main.f \
      weight_vertical.f \
      ccpfil.f \
      get_fim_data.f \
+     get_navgem_data.f \
      get_rams_data.f \
      callsup_gp.f
 
