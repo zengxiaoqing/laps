@@ -298,9 +298,11 @@
         write(6,*)' time diff is ',i4time_ref - i4time_now_gg()
 
         l_water_world = .false.
-        if(l_parse(directory,'fim'))then
+        if(l_parse(directory,'fim'))then                   ! special routines
           l_require_all_fields = .false.
         elseif(l_parse(directory,'rams'))then
+          l_require_all_fields = .false.
+        elseif(l_parse(directory,'navgem'))then
           l_require_all_fields = .false.
         elseif(i4time_ref - i4time_now_gg() .lt. 1e6)then  ! present/past
           l_require_all_fields = .true.
@@ -672,6 +674,24 @@
      +                   ,istatus)
             istatus_ht = 1
             write(6,*)' returned from get_rams_data'
+
+          elseif(l_parse(directory,'navgem'))then
+            write(6,*)' Looking for NAVGEM data in ',trim(directory)
+            filename = '/home/fab/albers/muri/navgem/file.nc'
+            call get_navgem_data
+     +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L,NZ_L
+     +                   ,i4time_earliest,i4time_latest
+     +                   ,filename
+     +                   ,pres_3d
+     +                   ,clwc_3d
+     +                   ,cice_3d
+     +                   ,rain_3d
+     +                   ,snow_3d
+     +                   ,lun_out
+     +                   ,istatus)
+            istatus_ht = 0 ! we can perhaps try the height_AGL 
+            write(6,*)' returned from get_navgem_data'
+
           else
             istatus_ht = 0
           endif
