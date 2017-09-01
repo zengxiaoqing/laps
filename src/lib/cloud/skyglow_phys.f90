@@ -634,11 +634,12 @@
                   emag_sum = 0.
                   if(abs(altray) .eq. 90. .and. jazi .eq. jazi_start)then
                     iverbose = 2
-                    write(6,*)' Calling sun_eclipse_parms'
                   else
                     iverbose = 0
                   endif
                   do iopac = 1,nopac
+                    write(6,*)
+                    if(iverbose .eq. 2)write(6,*)' Calling sun_eclipse_parms at zenith, iopac = ',iopac
                     call sun_eclipse_parms(i4time,rlat,rlon,htmsl &
                      ,iverbose,altray,view_azi_deg,distecl(iopac,ic) &
                      ,earth_radius,elgms,emag,eobscf,eobsc_a(iopac,ic))
@@ -648,6 +649,7 @@
 
                   eobsc(ic,jazi) = eobsc_sum(ic) / float(nopac)
                   emag_a(jazi)  = emag_sum  / float(nopac)
+                  if(iverbose .eq. 2)write(6,*)' eobsc(ic,jazi) = ',ic,jazi,eobsc(ic,jazi)
 !               else ! fill in from previous azimuth
 !                 jazim1 = max(jazi-1,jazi_start)
 !                 eobsc(ic,jazi) = eobsc(ic,jazim1)
