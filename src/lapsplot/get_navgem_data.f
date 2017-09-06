@@ -10,6 +10,8 @@
      +                   ,lun_out
      +                   ,istatus)
 
+      use mem_allsky, ONLY: aod_3d
+
       include 'netcdf.inc'
 
       character*(*) filename
@@ -24,6 +26,9 @@
       real cice_p(NX_L,NY_L,LVLP)
       real rain_p(NX_L,NY_L,LVLP)
       real snow_p(NX_L,NY_L,LVLP)
+      real coarse_ext_p(NX_L,NY_L,LVLP)
+      real fine_ext_p(NX_L,NY_L,LVLP)
+      real total_ext_p(NX_L,NY_L,LVLP)
 
       if(NZ_L .ne. LVLP)then
         write(6,*)' incorrect vertical levels',NZ_L,LVLP
@@ -84,8 +89,13 @@ C
       endif
       call read_navgem_data(nf_fid, latitude, level, longitude,
      +     i4time_sys, ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
-     +     i4time_latest, lun_out, clwc_p, cice_p, pres_p, LVLP,
-     +     istatus)
+     +     i4time_latest, lun_out, clwc_p, cice_p, pres_p, 
+     +     coarse_ext_p, fine_ext_p, total_ext_p, LVLP, istatus)
+
+      if(.true.)then
+         write(6,*)' Use NAVGEM aerosols'
+         aod_3d(:,:,:) = total_ext_p(:,:,:)
+      endif
 
       return
       end
@@ -93,7 +103,8 @@ C
 C
       subroutine read_navgem_data(nf_fid, latitude, level, longitude,
      +     i4time_sys, ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
-     +     i4time_latest, lun_out, ciw_p, clw_p, pres_p, LVLP, istatus)
+     +     i4time_latest, lun_out, clw_p, ciw_p, pres_p,
+     +     coarse_ext_p, fine_ext_p, total_ext_p, LVLP, istatus)
 
 
       include 'netcdf.inc'
@@ -133,6 +144,9 @@ c
       real pres_p(longitude,latitude,LVLP)
       real ciw_p(longitude,latitude,LVLP)
       real clw_p(longitude,latitude,LVLP)
+      real coarse_ext_p(longitude,latitude,LVLP)
+      real fine_ext_p(longitude,latitude,LVLP)
+      real total_ext_p(longitude,latitude,LVLP)
 
 !     Declarations for 'write_nvg' call
       character a9time_ob_r(recNum)*9
@@ -190,11 +204,35 @@ C
      .                ,1,NX_L,1,NY_L,LVLP,level
      .                ,pres_p,pressure,clw,clw_p)
 
+!     Vertical Interpolation
+      call vinterp_sub(r_missing_data,NX_L,NY_L,NX_L,NY_L
+     .                ,1,NX_L,1,NY_L,LVLP,level
+     .                ,pres_p,pressure,coarse_ext,coarse_ext_p)
+
+!     Vertical Interpolation
+      call vinterp_sub(r_missing_data,NX_L,NY_L,NX_L,NY_L
+     .                ,1,NX_L,1,NY_L,LVLP,level
+     .                ,pres_p,pressure,fine_ext,fine_ext_p)
+
+!     Vertical Interpolation
+      call vinterp_sub(r_missing_data,NX_L,NY_L,NX_L,NY_L
+     .                ,1,NX_L,1,NY_L,LVLP,level
+     .                ,pres_p,pressure,total_ext,total_ext_p)
+
       write(6,*)' range of interp ciw_p',minval(ciw_p)
      +                                  ,maxval(ciw_p)
 
       write(6,*)' range of interp clw_p',minval(clw_p)
      +                                  ,maxval(clw_p)
+
+      write(6,*)' range of interp coarse_ext_p',minval(coarse_ext_p)
+     +                                         ,maxval(coarse_ext_p)
+
+      write(6,*)' range of interp fine_ext_p',minval(fine_ext_p)
+     +                                       ,maxval(fine_ext_p)
+
+      write(6,*)' range of interp total_ext_p',minval(total_ext_p)
+     +                                        ,maxval(total_ext_p)
 
       return
       end
