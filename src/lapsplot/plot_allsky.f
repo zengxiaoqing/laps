@@ -135,6 +135,9 @@
         data ilun /0/
         character*3 clun
  
+        data i_aero_synplume /0/
+        data i_aero_1d /1/
+
         common /image/ n_image
 
         rpd = 3.141592653589/180.
@@ -898,9 +901,26 @@
            mode_aero_cld = 3
            write(6,*)' RAMS run: set mode_aero_cld = ',mode_aero_cld
 
-!          Zero out hydrometeors (e.g. from RAMS)
+           i_aero_synplume = 1
+
+!          Zero out hydrometeors
            if(.true.)then
               write(6,*)' RAMS run: zero out hydrometeors'
+              clwc_3d = 0.
+              cice_3d = 0.
+              rain_3d = 0.
+              snow_3d = 0.
+           endif
+        elseif(l_parse(directory,'navgem'))then
+           mode_aero_cld = 3
+           write(6,*)' NAVGEM run: mode_aero_cld = ',mode_aero_cld
+
+           i_aero_1d = 0 ! retain the 3D aerosols read in from NAVGEM
+           i_aero_synplume = 0
+
+!          Zero out hydrometeors
+           if(.true.)then
+              write(6,*)' NAVGEM run: zero out hydrometeors'
               clwc_3d = 0.
               cice_3d = 0.
               rain_3d = 0.
@@ -910,7 +930,7 @@
 
 !       Get Aersol Extinction Coefficient (3D field)
         call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L,aod_ref
-     1                 ,aod_3d)
+     1                 ,i_aero_synplume,i_aero_1d,aod_3d)
 
         I4_elapsed = ishow_timer()
 
