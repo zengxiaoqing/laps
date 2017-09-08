@@ -242,7 +242,7 @@ c
      1            obs(i)%ff_ea_kt  .gt. 10.)then
 	      uu(i) = badflag
 	      vv(i) = badflag
-	   else
+	   else ! dd_s is true N and dd_rot is grid N
               rlat_dum = -999.
 	      dd_rot = dd_s(i) - projrot_latlon( rlat_dum , lon_s(i)
      1                                                    ,istatus )
