@@ -1759,7 +1759,7 @@ c
 
         integer back_mp,back_sp
 
-!       PRIN is input pressure array, either MSLP or REDP fields
+!       PRIN is input pressure array, either REDP field (mb)
         real prin_bk(ni,nj)                                    ! I
         real prin(ni,nj)                                       ! I
         real prin_diff(ni,nj)                                  ! L
@@ -1768,7 +1768,7 @@ c
         real stnp(ni,nj)                                       ! I/O
 
 
-        write(6,*)' Subroutine pstn_anal'
+        write(6,*)' Subroutine pstn_anal (using pressure in mb)'
 
         call get_r_missing_data(r_missing_data,istatus)
 
@@ -1786,6 +1786,7 @@ c
         if(rmin .lt. 850. .or. rmax .gt. 1100)then
             write(6,*)' Warning: input P analysis range out of bounds'      
      1               ,rmin,rmax
+            write(6,*)' Check if expected for reduced pressure height'      
         endif
 
         if(back_mp .eq. 1)then
@@ -1793,6 +1794,8 @@ c
             if(rmin .lt. 850. .or. rmax .gt. 1100)then
                 write(6,*)' Warning: input P bkgnd range out of bounds'       
      1                   ,rmin,rmax
+                write(6,*)
+     1                 ' Check if expected for reduced pressure height'
             endif
 
             call diff(prin,prin_bk,prin_diff,ni,nj)
