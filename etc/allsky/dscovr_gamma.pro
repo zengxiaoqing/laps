@@ -63,12 +63,12 @@ outfile = 'dscovr_gamma_crop.png'
 ; rcrop  = 199 ; decrease to move image left
 ; tcrop  = 162 ; decrease to move image down
 ; bcrop  = 200 ; increase to move image down
-imean   = 90 
+imean   = 220 ; 90 
 ioffset = 15 ; decrease to move image left
 lcrop  = imean-ioffset 
 rcrop  = imean+ioffset 
 
-jmean  = 90 
+jmean  = 220 ; 90
 joffset = 18 ; increase to move image up
 tcrop  = jmean-joffset
 bcrop  = jmean+joffset
