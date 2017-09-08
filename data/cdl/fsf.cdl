@@ -113,7 +113,7 @@ netcdf fsf {
             slp:_FillValue = 1.e+37f;
             slp:long_name="MSL Pressure          ";
             slp:units="pascals";
-            slp:valid_range= 0.f, 100000.f;
+            slp:valid_range= 0.f, 120000.f;
             slp:LAPS_var="SLP";
             slp:lvl_coord="MSL";
             slp:LAPS_units="PA";
@@ -125,7 +125,7 @@ netcdf fsf {
             p:_FillValue = 1.e+37f;
             p:long_name="Reduced Pressure        ";
             p:units="pascals";
-            p:valid_range= 0.f, 100000.f;
+            p:valid_range= 0.f, 120000.f;
             p:LAPS_var="P";
             p:lvl_coord="MSL";
 	    p:LAPS_units="PA";
@@ -137,7 +137,7 @@ netcdf fsf {
             psf:_FillValue = 1.e+37f;
             psf:long_name="Surface Pressure      ";
             psf:units="pascals";
-            psf:valid_range= 0.f, 100000.f;
+            psf:valid_range= 0.f, 120000.f;
             psf:LAPS_var="PSF";
             psf:lvl_coord="AGL";
             psf:LAPS_units="PA";
