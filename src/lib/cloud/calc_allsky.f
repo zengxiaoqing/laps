@@ -28,7 +28,7 @@
      1                     ,sky_rgb_cyl,istatus)                    ! O
 
         use mem_allsky
-        use mem_namelist, ONLY: earth_radius
+        use mem_namelist, ONLY: earth_radius, ssa
 
         include 'trigd.inc'
 
@@ -159,6 +159,7 @@
         write(6,*)' range of cice_3d is',minval(cice_3d),maxval(cice_3d)
         write(6,*)' max top of cice_3d is',maxval(cice_3d(:,:,NZ_L))
         write(6,*)' max top of clwc_3d is',maxval(clwc_3d(:,:,NZ_L))
+        write(6,*)' ssa values are ',ssa(:)
 
         write(6,*)' call get_cloud_rays...'
 
