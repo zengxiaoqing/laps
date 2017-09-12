@@ -2,7 +2,7 @@
      subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt,sfc_glow)
 
-     use mem_namelist, ONLY: r_missing_data, earth_radius, ssa, aod
+     use mem_namelist, ONLY: r_missing_data, earth_radius, ssa, aod, redp_lvl
      use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      use mem_allsky, ONLY: mode_aero_cld
@@ -344,7 +344,7 @@
           endif
 
           if(ihit_terrain .eq. 0)then
-            topo = 1500. ! generic topo value (possibly redp_lvl?)
+            topo = redp_lvl ! generic topo value
             ht_agl = heights_3d_il_jl_kl - topo
 
 !           See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
@@ -470,7 +470,7 @@
 !             Consider filling in missing transm_4d with low sun
 !             values assuming transm_3d = 1
               if(.true.)then
-                  topo = 1500. ! generic topo value (possibly redp_lvl?)
+                  topo = redp_lvl ! generic topo value
                   ht_agl = heights_3d(i,j,k) - topo
 
 !                 See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
