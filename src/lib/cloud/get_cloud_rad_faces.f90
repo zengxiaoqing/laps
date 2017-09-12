@@ -457,7 +457,7 @@
        do k = 1,nk
 !        patm_k = exp(-heights_1d(k)/8000.)
          patm_k = ztopsa(heights_1d(k)) / 1013.
-         topo = 1500. ! generic topo value (possibly redp_lvl?)
+         topo = redp_lvl ! generic topo value
          ht_agl = heights_1d(k) - topo
 
 !        See http://mintaka.sdsu.edu/GF/explain/atmos_refr/dip.html
