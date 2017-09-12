@@ -56,7 +56,7 @@
                ri_a(ip,jp) = (alt-altmin) / alt_scale + 1.0 ! real I index in CYL array, offset to start at 1
                rj_a(ip,jp) = (azi-azimin) / azi_scale + 1.0 ! real J index in CYL array, offset to start at 1
 
-               if(ip .eq. ni_polar/2)then
+               if(ip .eq. ni_polar/2 .and. jp .eq. (jp/10)*10)then
                    iprint = 1
                else
                    iprint = 0
