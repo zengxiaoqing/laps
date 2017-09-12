@@ -751,6 +751,7 @@
         write(6,*)' cice column = ',cice_3d(i,j,:)
         write(6,*)' rain column = ',rain_3d(i,j,:)
         write(6,*)' snow column = ',snow_3d(i,j,:)
+        write(6,*)' aod_3d column = ',aod_3d(i,j,:)
 
         I4_elapsed = ishow_timer()
 
