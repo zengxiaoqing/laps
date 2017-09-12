@@ -129,8 +129,8 @@
             mtr_ssa(ic,i,j) = (sum(cloud_od_sp(i,j,:) * cloud_ssa_sp(:)) + aero_od_obs(ic,i,j) * aero_ssa(ic,i,j)) / mtr_od_obs(ic,i,j)
             mtr_asy(ic,i,j) = (sum(cloud_od_sp(i,j,:) * cloud_asy_sp(:)) + aero_od_obs(ic,i,j) * aero_asy(ic,i,j)) / mtr_od_obs(ic,i,j)
 
-            scatter_order = max(1.0,mtr_od_obs(ic,i,j))
-            mtr_msa(ic,i,j) = mtr_asy(ic,i,j)**scatter_order
+            scatter_order = sqrt(1.0 + mtr_od_obs(ic,i,j)**2)
+            mtr_msa(ic,i,j) = mtr_ssa(ic,i,j)**scatter_order
 
 !           Aerosol phase function
             fb = aod_asy(3,ic)**scatter_order
