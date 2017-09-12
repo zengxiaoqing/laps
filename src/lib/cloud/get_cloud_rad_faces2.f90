@@ -21,6 +21,10 @@
 
      use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
                             ,aod,aero_scaleht,fcterm,redp_lvl
+     use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
+     use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
+     use mem_allsky, ONLY: mode_aero_cld
+     use cloud_rad ! Cloud Radiation and Microphysics Parameters
      include 'rad.inc'
 
      trans(od) = exp(-min(od,80.))
@@ -65,33 +69,6 @@
      parameter (htluthi = 30000)
      real htlut(htlutlo:htluthi)
 
-!    These parameters can be obtained/updated from the 'cloud_rad' module
-!    Backscattering efficiencies
-     real, parameter :: bksct_eff_clwc    = .063
-     real, parameter :: bksct_eff_cice    = .14
-     real, parameter :: bksct_eff_rain    = .063
-     real, parameter :: bksct_eff_snow    = .14
-     real, parameter :: bksct_eff_graupel = .30
-
-!    Scattering efficiencies
-     real, parameter :: q_clwc    = 2.0
-     real, parameter :: q_cice    = 2.0
-     real, parameter :: q_rain    = 1.0
-     real, parameter :: q_snow    = 1.0
-     real, parameter :: q_graupel = 1.0
-
-!    Densities
-     real, parameter :: rholiq     =   1e3 ! kilograms per cubic meter
-     real, parameter :: rhosnow    = .07e3 ! kilograms per cubic meter
-     real, parameter :: rhograupel = .50e3 ! kilograms per cubic meter
-
-!    Effective radii
-     real, parameter :: reff_clwc    = .000007 ! m
-     real, parameter :: reff_cice    = .000034 ! m
-     real, parameter :: reff_rain    = .000750 ! m
-     real, parameter :: reff_snow    = .004000 ! m
-     real, parameter :: reff_graupel = .010000 ! m
-
      logical l_same_point
 
      clwc2alpha = 1.5 / (rholiq  * reff_clwc)
@@ -124,10 +101,18 @@
 
      write(6,*)' transm_3d column 1 = ',transm_3d(idb,jdb,:)
 
-     b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
-                + cice_3d * cice2alpha * bksct_eff_cice &
-                + rain_3d * rain2alpha * bksct_eff_rain &
-                + snow_3d * snow2alpha * bksct_eff_snow 
+     if(mode_aero_cld .lt. 3)then
+       b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
+                  + cice_3d * cice2alpha * bksct_eff_cice &
+                  + rain_3d * rain2alpha * bksct_eff_rain &
+                  + snow_3d * snow2alpha * bksct_eff_snow 
+     else
+       b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
+                  + cice_3d * cice2alpha * bksct_eff_cice &
+                  + rain_3d * rain2alpha * bksct_eff_rain &
+                  + snow_3d * snow2alpha * bksct_eff_snow &
+                  + aod_3d               * bksct_eff_aero
+     endif
 
      write(6,*)' subroutine get_cloud_rad_faces2: solar alt/az ',solalt,solazi
 
@@ -518,7 +503,7 @@
        do k = 1,nk
 !        patm_k = exp(-heights_1d(k)/8000.)
          patm_k = ztopsa(heights_1d(k)) / 1013.
-         topo = 1500. ! generic topo value (possibly redp_lvl?)
+         topo = redp_lvl ! generic topo value
          ht_agl = heights_1d(k) - topo
          patm_o3_msl = patm_o3(heights_1d(k))
 
