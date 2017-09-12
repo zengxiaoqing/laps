@@ -173,7 +173,7 @@
             cloud_od_loc(:,:) = cloud_od(:,:)
             cloud_od_sp_loc(:,:,:) = cloud_od_sp(:,:,:)
             ssa_eff(:,:,:) = 1.0
-        else ! add aerosols to cloud water
+        elseif(mode_aero_cld .eq. 2)then ! add aerosols to cloud water
             cloud_od_loc(:,:) = cloud_od(:,:) + aod_tot(:,:)
             cloud_od_sp_loc(:,:,1) = cloud_od_sp(:,:,1) + aod_tot(:,:)
             cloud_od_sp_loc(:,:,2:nsp) = cloud_od_sp(:,:,2:nsp)
@@ -181,6 +181,16 @@
             ssa_eff(1,:,:) = ssa(1) ! 0.95
             ssa_eff(2,:,:) = ssa(2) ! 0.85
             ssa_eff(3,:,:) = ssa(3) ! 0.75
+        elseif(mode_aero_cld .eq. 3)then ! aerosols were earlier added to clouds
+            cloud_od_loc(:,:) = cloud_od(:,:)
+            cloud_od_sp_loc(:,:,:) = cloud_od_sp(:,:,:)
+!           ssa_eff(:,:,:) = 1.0
+            ssa_eff(1,:,:) = ssa(1) ! 0.95
+            ssa_eff(2,:,:) = ssa(2) ! 0.85
+            ssa_eff(3,:,:) = ssa(3) ! 0.75
+        else
+            write(6,*)' Unexpected value for mode_aero_cld ',mode_aero_cld
+            stop
         endif
 
         patm_o3_msl = patm_o3(htmsl)
@@ -397,7 +407,7 @@
         if(mode_aero_cld .gt. 1)then
             azid1 = 90.  ; azid2 = 90. ! aero custom
         endif
-        azid1 = 265.  ; azid2 = 265. ! test custom (Boulder Foothills)
+        azid1 = 270.  ; azid2 = 270. ! test custom (Boulder Foothills)
 
         write(6,*)' azid1/2 are at ',azid1,azid2,htmsl,mode_aero_cld
         write(6,*)' moon_cond_clr = ',moon_cond_clr
@@ -1378,9 +1388,14 @@
 !                     Rayleigh  Ozone   Mag per optical depth            
             od_atm_g = (0.1451  + .016) / 1.086
 !           od_2_cloud = (od_atm_g + od_atm_a*ext_a(ic)) * airmass_2_cloud(i,j)
-            od_2_cloud = ext_g(ic) * airmass_2_cloud(i,j) &
-                       + ext_a(ic) * aod_2_cloud(i,j) &
-                       + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
+            if(mode_aero_cld .lt. 3)then
+              od_2_cloud = ext_g(ic) * airmass_2_cloud(i,j) &
+                         + ext_a(ic) * aod_2_cloud(i,j) &
+                         + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
+            else ! clouds and aerosols considered together
+              od_2_cloud = ext_g(ic) * airmass_2_cloud(i,j) &
+                         + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
+            endif
 
 !           Empirical correction to account for bright clouds being visible
             cloud_visibility = exp(-od_2_cloud) ! empirical coeff
@@ -1763,6 +1778,9 @@
               endif
               if(alt_a(i,j) .eq. -90.)then
                   write(6,*)' ******** nadir location ************************* od'
+              endif
+              if(alt_a(i,j) .eq. -90. .or. mode_aero_cld .eq. 3)then
+                  write(6,*)'Reflectance is ',sky_rad(:) / (2. * day_int)
               endif
 
 !             if(sol_alt .ge. -2.0)then      ! daylight
