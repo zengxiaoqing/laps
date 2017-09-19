@@ -11,7 +11,7 @@
 !                            ,pf_scat1,pf_scat2,pf_scat,pf_thk_a) ! O
         include 'trigd.inc'
 
-        use mem_namelist, ONLY: aod_asy
+        use mem_namelist, ONLY: aod_asy, fcterm
 
 !       Statement functions
         trans(od) = exp(-min(od,80.))
@@ -116,7 +116,7 @@
         scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
 
         write(6,*)' get_cld_pf: max of idebug_a (2) = ',maxval(idebug_a)
-        write(6,*)'                                                                                         alt    elg      cod     pf_thk1  pf_thk   clwc     rain      rad     radw    radf       pf1     pf2     pfs    trans  sn fctr rn fctr    pf2'
+        write(6,*)'                                                                                         alt    elg      cod    pf_thn_c  pf_thk   clwc     rain      rad     radw    radf       pf1     pf2     pfs    trans  sn fctr rn fctr    pf2'
         cloud_ssa_sp(:) = 1.0
         cloud_asy_sp(:) = 0.8
 
@@ -136,7 +136,7 @@
             fb = aod_asy(3,ic)**scatter_order
             g1 = aod_asy(2,ic)**scatter_order
             g2 = aod_asy(1,ic)**scatter_order
-            hg2(ic) = dhg2(elong_a(i,j),fb,fcterm2)
+            hg2(ic) = dhg2(elong_a(i,j),fb,fcterm)
 
             if(mtr_od_obs(ic,i,j) .gt. 0.)then
               aero_factor(ic) = aero_od_obs(ic,i,j)/mtr_od_obs(ic,i,j)
@@ -220,7 +220,6 @@
             pf_thk_hr = (1.94 / (10.**(phase_corr * 0.4))) / r_ill
             pf_thk_hr = min(pf_thk_hr,600.0) ! limit fwd scattering peak
 !           pf_thk_hr = min(pf_thk_hr,2.0)   ! limit fwd scattering peak
-            pf_thk1 = pf_thk_hr
 
 !           Eventually sky average r_cloud_rad can help decide the regime for
 !           determination of pf_thk? 'scurve' is also available if needed.
@@ -252,8 +251,7 @@
             rain_bin1 = rain_bin1 * rain_peak ! direct lighting
 
             do ic = 1,nc
-
-              pf_thn_clwc = pf_thn_clwcf(hgp,elong_a(i,j)) 
+              pf_thn_clwc = pf_thn_clwcf(hgp,elong_a(i,j)) * (1.-aero_factor(ic)) + hg2(ic) * aero_factor(ic)
 
               pf_clwc(ic) &
              = clwc_bin1  * pf_thn_clwc &
@@ -450,10 +448,14 @@
           endif ! rain_factor > 0
 
           if(idebug_a(i,j) .eq. 1)then
-              write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk1,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
-101           format(' alt/elg/cod/thk1/thk/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
-              write(6,102)bf,cloud_od_liq,clwc_bin2,alb_clwc,frac_norm,clwc_factor_w,cice_factor_w,rain_factor,snow_factor_w
-102           format(' bf/od/clwc_bin2/alb_clwc/fnrm/',f9.3,f9.4,2f12.6,f9.4,' factorw ',4f9.4)
+!             write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk_hr,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
+              write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thn_clwc,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
+101           format(' alt/elg/cod/thnc/thk/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
+              fb = aod_asy(3,2)**scatter_order
+              g1 = aod_asy(2,2)**scatter_order
+              g2 = aod_asy(1,2)**scatter_order
+              write(6,102)bf,cloud_od_liq,clwc_bin2,alb_clwc,frac_norm,clwc_factor_w,cice_factor_w,rain_factor,snow_factor_w,aero_factor(2),scatter_order,fb,g1,g2,hg2(2)
+102           format(' bf/od/clwc_bin2/alb_clwc/fnrm/',f9.3,f9.4,2f12.6,f9.4,' factorw ',4f9.4,' aerof/sct/hg2 ',6f9.2)
           endif
 
          enddo ! i (altitude)
