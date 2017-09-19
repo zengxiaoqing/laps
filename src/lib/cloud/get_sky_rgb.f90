@@ -403,11 +403,11 @@
         endif
         if(htmsl .gt. 50e3)then
             azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
+            azid1 = 270.  ; azid2 = 270. ! test custom
         endif
         if(mode_aero_cld .gt. 1)then
             azid1 = 90.  ; azid2 = 90. ! aero custom
         endif
-        azid1 = 270.  ; azid2 = 270. ! test custom (Boulder Foothills)
 
         write(6,*)' azid1/2 are at ',azid1,azid2,htmsl,mode_aero_cld
         write(6,*)' moon_cond_clr = ',moon_cond_clr
@@ -1425,7 +1425,7 @@
             if(solalt_ref .gt. -4.5 .OR. htmsl .ge. thr_abv_clds .OR. solalt_ref .lt. -16.)then 
 !           if(solalt_ref .gt. -4.5 .OR. htmsl .ge. thr_abv_clds)then 
 
-              if(airmass_2_topo(i,j) .gt. 0.)then ! terrain
+              if(airmass_2_topo(i,j) .gt. 0. .and. mode_aero_cld .lt. 3)then ! terrain
                 od2topo_c(ic) = ext_g(ic) * airmass_2_topo(i,j) &
                               + ext_a(ic) * aod_2_topo(i,j) &
                               + (1.-patm_o3_msl) * od_o_slant_a(ic,i)
@@ -1646,6 +1646,7 @@
                               ,dist_2_topo(i,j) &
 !                             ,nint(sky_rgb(:,i,j)),red_rad,grn_rad,blu_rad
                               ,red_rad,grn_rad,blu_rad,sky_rad(:)
+!                   write(6,*)' emic/gtic ',emic(:,i,j),gtic(:,i,j)
 99                  format( &
                         ' rtopo/gti/gtic/em/aef/alb/tsalt/dst/trad/srad', &
                            f9.0,f9.4,2f10.7,2f9.3,f9.2,f10.0,2x,3f12.0,2x,3f14.0)
