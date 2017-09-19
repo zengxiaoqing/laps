@@ -518,6 +518,10 @@
         do ii = 1,ni
         do jj = 1,nj
 
+          bhic_2d(:,ii,jj) = 0. ! initialize
+          dhic_2d(:,ii,jj) = 0. ! initialize
+          ghic_2d(:,ii,jj) = 0. ! initialize
+
           ghi_2d(ii,jj) = 1e-10 ! initialize to moderately small value
 
 !         if(ii .eq. (ii/10)*10 .and. jj .eq. nj/2)then
@@ -539,8 +543,13 @@
               if(transm_3d(ii,jj,kk) .gt. 0. .and. 
      1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
 
-                absorption(:) = 1. - transm_4d(ii,jj,kk,:)
-     1                             / transm_3d(ii,jj,kk)
+                if(sol_alt(i,j) .ge. twi_alt)then
+                    absorption(:) = 1. - transm_4d(ii,jj,kk,:)
+     1                                 / transm_3d(ii,jj,kk)
+                else ! absorbing aerosols at night not yet working
+                    absorption(:) = 0.
+                endif
+
                 transm_tn = transm_3d(ii,jj,kk)
                 cloud_albedo = 1. - transm_tn
 
@@ -659,6 +668,7 @@
           endif ! object is above horizon
 
           if(sol_alt(ii,jj) .lt. 0. .and. sol_alt(ii,jj) .gt. -12.)then
+
 !           compare with compare_analysis_to_rad.f (cloud analysis code)
 !           Empirical forumlae for DHI and GHI when the sun is below the horizon.
 !           Note they are equal since the direct is zero.
