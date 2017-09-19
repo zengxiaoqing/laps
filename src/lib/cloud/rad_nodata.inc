@@ -122,4 +122,4 @@
         dhg_gterm(pha,g) = 1. / (1. + g**2 - 2.*g*cosd(pha))**1.5
         dhg_fterm(pha,g) = (3. * ((cosd(pha))**2) - 1.) / (2. * (1.+g**2)**1.5)
         dhg(pha,g,f) = (1.-g**2) * (dhg_gterm(pha,g) + f * dhg_fterm(pha,g))
-        dhg2(pha,f,p) = (1.-p) * dhg(pha,g1,f) + p * dhg(pha,g2,f)
+        dhg2(pha,f,p) = (1.-p) * dhg(pha,g1,f) + p * dhg(pha,g2,f) + 0.28/scatter_order * cosd(pha)
