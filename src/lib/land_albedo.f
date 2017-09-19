@@ -139,6 +139,9 @@
       real, allocatable :: array_2d(:,:)                   
       u = 11
 
+      idb = ni/2 ! min(183,ni)
+      jdb = nj/2 ! min(123,nj)
+
       c13_time = cvt_i4time_wfo_fname13(i4time)
       c2_mn = c13_time(5:6)
 
@@ -272,18 +275,28 @@
      1                         ,array_2d,result)
           do i = 1,ni
           do j = 1,nj
+
+!           http://earthobservatory.nasa.gov/Features/BlueMarble/bmng.pdf
+
             if(result(i,j) .le. 179.)then ! Based on NASA spline
 !             albedo(ic,i,j) = result(i,j) / 716.                  
               albedo(ic,i,j) = .0010 * result(i,j)
      1                       + 6.92e-11 * result(i,j)**4.0
             elseif(result(i,j) .le. 255.)then
-              albedo(ic,i,j) = 0.25 + (result(i,j) - 179.) / 122. 
+!             albedo(ic,i,j) = 0.25 + (result(i,j) - 179.) / 122. 
+              albedo(ic,i,j) = 0.25 + (result(i,j) - 179.)    * .00258
+     1                              + (result(i,j) - 179.)**2 * .000092
             else ! bad / default value
               albedo(ic,i,j) = 0.2
             endif
+
           enddo ! j
           enddo ! i
+          write(6,*)' Color / Count / Albedo ',ic,result(idb,jdb)
+     1                                           ,albedo(ic,idb,jdb)          
         enddo ! ic
+
+        write(6,*)' Initial albedo: ',albedo(:,idb,jdb)
 
 !       Adjust colors based on wavelengths
 !       BM data is .645, .555, .470 microns
@@ -300,9 +313,9 @@
         albedo(3,:,:) = albedo_buff(3,:,:) * blu_f
      1                + albedo_buff(2,:,:) * grn_f    
         
-        write(6,*)' Interpolated albedo: ',albedo(:,ni/2,nj/2)
+        write(6,*)' Adjusted albedo: ',albedo(:,idb,jdb)
 
-        if(albedo(2,ni/2,nj/2) .gt. 1.0)then
+        if(albedo(2,idb,jdb) .gt. 1.0)then
           write(6,*)' ERROR bad interpolated albedo point'
           goto 999
         endif
@@ -556,9 +569,9 @@ cdoc   points.
 !      real result(nx_laps,ny_laps)                     ! O
 
        write(6,*)' Interpolated sfc_glow_c (wm2sr): '
-     1          ,sfc_glow_c(:,ni/2,nj/2)
+     1          ,sfc_glow_c(:,idb,jdb)
 
-       if(sfc_glow_c(2,ni/2,nj/2) .lt. 0.0)then
+       if(sfc_glow_c(2,idb,jdb) .lt. 0.0)then
         write(6,*)' ERROR bad interpolated sfc_glow_c point'
         goto 999
        endif
