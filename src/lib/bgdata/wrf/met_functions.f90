@@ -1,26 +1,26 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  FUNCTION esat(t)
+  FUNCTION esat2(t)
     !Computes saturation vapor pressure (Pa) from temperature
     ! NOTE: Computed with respect to liquid!!!
     USE constants
-    REAL                       :: esat
+    REAL                       :: esat2
     REAL, INTENT(IN)           :: t
     
-    esat = 611.21 * EXP ( (17.502 * (t-t0)) / (t-32.18) )
-  END FUNCTION esat 
+    esat2 = 611.21 * EXP ( (17.502 * (t-t0)) / (t-32.18) )
+  END FUNCTION esat2 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   FUNCTION mixsat(t,p)
     ! Computes saturation vapor mixing ratio as function of Temp and Press
     USE constants
     IMPLICIT NONE
 
-     REAL,EXTERNAL             :: esat
+     REAL,EXTERNAL             :: esat2
      REAL                      :: mixsat
      REAL, INTENT(IN)          :: p
      REAL                      :: satvpr
      REAL, INTENT(IN)          :: t
 
-     satvpr = esat(t)
+     satvpr = esat2(t)
      mixsat = (e*satvpr) / (p-satvpr)
    
    END FUNCTION mixsat
@@ -84,19 +84,19 @@
 
   END FUNCTION tlcl
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  FUNCTION dewpt(t,rh)
+  FUNCTION dewpt2(t,rh)
  
   ! Compute dew point from temperature (K) and RH (fraction)
     USE constants
     IMPLICIT NONE
     
-    REAL                :: dewpt
+    REAL                :: dewpt2
     REAL, INTENT(IN)    :: rh
     REAL, INTENT(IN)    :: t
 
-    dewpt = t / (( -rvolv * ALOG(MAX(rh,0.01)) * t) + 1.0 )
+    dewpt2 = t / (( -rvolv * ALOG(MAX(rh,0.01)) * t) + 1.0 )
 
-  END FUNCTION dewpt
+  END FUNCTION dewpt2
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   FUNCTION relhum(t,mixrat,p)
     ! Computes relative humidity (fraction form)
