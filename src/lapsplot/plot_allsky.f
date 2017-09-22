@@ -11,6 +11,7 @@
      1                        , earth_radius
         use ppm
         use mem_allsky
+        use wrf_lga
 
         include 'trigd.inc'
 
@@ -75,7 +76,7 @@
         character*31  ext
         character*10  units_2d
         character*125 comment_2d
-        character*40 c_model
+        character*40 c_model /''/
         character*9 a9time
         character*24 a24time
         character*5 fcst_hhmm
@@ -154,6 +155,8 @@
 
         I4_elapsed = ishow_timer()
 
+        call GETENV('C_MODEL',c_model)
+
         write(6,*)
         write(6,*)' subroutine plot_allsky: nsmooth/aod is ',nsmooth,aod
         write(6,*)' l_cyl/l_polar = ',l_cyl,l_polar
@@ -217,21 +220,31 @@
                 read(c20_y(1:leny),*)soundlon(iloc)
             endif
 
+            write(6,*)' lat/lon read in =',soundlat(iloc),soundlon(iloc)
+
             call latlon_to_rlapsgrid(soundlat(iloc),soundlon(iloc)
      1                              ,lat,lon,NX_L,NY_L
      1                              ,xsound(iloc),ysound(iloc),istatus)
 
             if(istatus .ne. 1)then
+              if(trim(c_model) .ne. 'hrrr_smoke')then
                 write(6,*)' Station is outside domain - try again...'
                 return
+              else
+                write(6,*)' WARNING: Station is outside domain...'
+              endif
             endif
 
             if(xsound(iloc) .lt. 1. .or. xsound(iloc) .gt. float(NX_L)
      1                              .or.
      1         ysound(iloc) .lt. 1. .or. ysound(iloc) .gt. float(NY_L)    
      1                                                             )then
+              if(trim(c_model) .ne. 'hrrr_smoke')then
                 write(6,*)' Station is outside domain - try again...'
                 return
+              else
+                write(6,*)' WARNING: Station is outside domain...'
+              endif
             endif
 
           else
@@ -306,6 +319,8 @@
         elseif(l_parse(directory,'rams'))then
           l_require_all_fields = .false.
         elseif(l_parse(directory,'navgem'))then
+          l_require_all_fields = .false.
+        elseif(trim(c_model) .ne. '')then
           l_require_all_fields = .false.
         elseif(i4time_ref - i4time_now_gg() .lt. 1e6)then  ! present/past
           l_require_all_fields = .true.
@@ -695,8 +710,19 @@
             istatus_ht = 0 ! we can perhaps try the height_AGL 
             write(6,*)' returned from get_navgem_data'
 
+          elseif(trim(c_model) .eq. 'hrrr_smoke' .or.
+     +           trim(c_model) .eq. 'wrf_chem' .or. 
+     +           trim(c_model) .eq. 'hrrr_ak'         )then
+            filename = 'file.nc'
+            write(6,*)' Looking for WRF SWIM data in ',trim(filename) ! trim(directory)
+            call wrf2swim(filename,i4time_sys,NX_L,NY_L,NZ_L,lat,lon
+     +                   ,pres_1d,istatus )
+            istatus_ht = 0 ! unless we are reading height
+            write(6,*)' returned from wrf2swim for ',trim(c_model)
+
           else
             istatus_ht = 0
+
           endif
 
           i4time_solar = i4time_ref
@@ -944,6 +970,13 @@
 
           ri_obs = xsound(iloc)
           rj_obs = ysound(iloc)
+
+!         Keep inside model domain
+          i_obs = min(max(i_obs,1),NX_L)
+          j_obs = min(max(j_obs,1),NY_L)
+
+          ri_obs = min(max(ri_obs,1.),float(NX_L))
+          rj_obs = min(max(rj_obs,1.),float(NY_L))
 
           rlat = lat(i_obs,j_obs)
           rlon = lon(i_obs,j_obs)
@@ -1291,6 +1324,14 @@
                 pomag = 1.0
               endif
 
+              pox = 0.
+              poy = 0.
+
+!             if(trim(c_model) .eq. 'hrrr_smoke')then
+!               pomag = pomag * 2.
+!               poy = 0.25
+!             endif
+
               write(6,*)'htrat/pomag',htagl(iloc)/earth_radius,pomag
 
               do ic = 0,nc-1
@@ -1298,7 +1339,7 @@
      1                           ,sky_rgb_polar(ic,:,:)
      1                           ,minalt,maxalt,minazi,maxazi
      1                           ,alt_scale,azi_scale,polat,pomag
-     1                           ,alt_a_polar,azi_a_polar
+     1                           ,pox,poy,alt_a_polar,azi_a_polar
      1                           ,iplo,iphi,jplo,jphi
      1                           ,ni_polar,nj_polar)
               enddo ! ic
