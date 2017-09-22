@@ -242,7 +242,7 @@ C
         goto 999
 C
 960     if (flag .ne. 1)
-     1    write (6,*) 'Error reading compressed file...read aborted.'       
+     1    write (6,*) 'Invalid read as compressed file...read aborted.'
         istatus=error(2)
         goto 999
 C
