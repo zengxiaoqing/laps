@@ -52,7 +52,7 @@ debug: $(SRC)
 install: lib
 
 cleanup:
-	rm -f *.o *.mod
+	rm -f *.o
 
 clean:
 	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
