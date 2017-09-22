@@ -1008,6 +1008,8 @@ cdoc    Compute Sfc Precip Type, given both sfc and 3D fields
      1                       ,iflag_slwc,zero,slwc_1d)
 
 cdoc    Determine cloud liquid profile within a given cloud layer
+cdoc    This routine is not operationally called and contains a commented
+cdoc    call to deprecated routine 'laps_slwc_revb'        
 
         real temp_1d(nk)
         real heights_1d(nk)
@@ -1053,10 +1055,10 @@ cdoc    Determine cloud liquid profile within a given cloud layer
 
                     grid_top_k = temp_1d(k)
 
-                    call laps_slwc_revb(cbase_pa,cbase_k
-     1                ,grid_top_pa,grid_top_k,ctop_k
-     1                ,ADIABATIC_LWC,ADJUSTED_LWC,ADJUSTED_SLWC
-     1                ,I_STATUS1,I_STATUS2)
+!                   call laps_slwc_revb(cbase_pa,cbase_k
+!    1                ,grid_top_pa,grid_top_k,ctop_k
+!    1                ,ADIABATIC_LWC,ADJUSTED_LWC,ADJUSTED_SLWC
+!    1                ,I_STATUS1,I_STATUS2)
 
 !                   These three lines are dummied in
 !                   i_status = .true.
