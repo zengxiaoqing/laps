@@ -1,13 +1,15 @@
 MODULE wrf_lga
 
 ! A module containing necessary items to convert a WRF forecast
-! file to LGA for the current LAPS domain
+! file to LGA or to SWIM for the current LAPS domain
 
   USE map_utils
   USE wrf_netcdf
   USE time_utils
   USE constants
   USE horiz_interp
+  USE mem_namelist, ONLY: r_missing_data
+  USE mem_allsky
   IMPLICIT NONE
 
   PRIVATE
@@ -71,6 +73,7 @@ MODULE wrf_lga
   REAL, ALLOCATABLE      :: om_wrfs(:,:,:)
   REAL, ALLOCATABLE      :: rho_wrfs(:,:,:) ! Density
   REAL, ALLOCATABLE      :: mr_wrfs(:,:,:) ! Mixing Ratio
+  REAL, ALLOCATABLE      :: qc_wrfs(:,:,:) ! Cloud Liquid Mixing Ratio
   ! WRF static variables 
   INTEGER                :: cdf,cdp ! added cdp by Wei-Ting (130312)
   TYPE(proj_info)        :: wrfgrid
@@ -83,8 +86,230 @@ MODULE wrf_lga
   REAL                   :: lat1_wrf, lon1_wrf
   REAL                   :: truelat1_wrf, truelat2_wrf, stdlon_wrf
 
-  PUBLIC wrf2lga  
+  PUBLIC wrf2lga, wrf2swim
 CONTAINS
+
+  SUBROUTINE wrf2swim(wrffile_in,i4time,nxl,nyl,nzl,latl,lonl,pres_1d,istatus)
+
+     IMPLICIT NONE
+
+     CHARACTER(LEN=150)           :: wrffile_in 
+     CHARACTER(LEN=256)           :: wrffile
+     INTEGER, INTENT(IN)          :: i4time
+     INTEGER                      :: i4reftime
+     CHARACTER(LEN=13)            :: reftime13
+     INTEGER, INTENT(OUT)         :: istatus
+     INTEGER                      :: k,k1000,bg_valid,icaller
+     INTEGER,EXTERNAL             :: cvt_wfo_fname13_i4time
+     INTEGER                      :: nxl,nyl,nzl
+     REAL                         :: i_ll, j_ll, i_ul, j_ul, i_ur, j_ur, i_lr, j_lr 
+     REAL                         :: latl(nxl,nyl),lonl(nxl,nyl),pres_1d(nzl)
+     LOGICAL                      :: need_hinterp
+      istatus = 1
+
+      wrffile = wrffile_in
+
+     
+     ! Get some LAPS setup stuff
+     rmissingflag = r_missing_data
+     CALL find_domain_name(laps_data_root,laps_domain_name,istatus)
+!    print *, "LAPS_DATA_ROOT = ", TRIM(laps_data_root)
+!    print *, "DOMAIN NAME = ", TRIM(laps_domain_name)
+     print *, "Dims:   ", nxl,nyl,nzl
+     print *, "rmissingflag:   ", rmissingflag
+
+    ! Allocate static fields
+
+     ALLOCATE(pr_laps(nzl))
+     ALLOCATE(lat(nxl,nyl))
+     ALLOCATE(lon(nxl,nyl))
+     ALLOCATE(topo_laps(nxl,nyl))
+     CALL get_laps_domain(nxl,nyl,laps_domain_name,lat,lon,topo_laps,istatus)
+     IF (istatus .NE. 1) THEN
+       PRINT *, "Error reading LAPS static info."
+       RETURN
+     ENDIF
+     pr_laps = pres_1d
+     find_k1000: DO k = 1,nzl
+      IF (NINT(pres_1d(k)) .EQ. 100000) THEN
+        k1000 = k
+        EXIT find_k1000
+      ENDIF
+     ENDDO find_k1000
+
+     ! Print some config stuff
+!    print *, "LAPS_DATA_ROOT = ", TRIM(laps_data_root)
+!    print *, "DOMAIN NAME = ", TRIM(laps_domain_name)
+     print *, "Dims:   ", nxl,nyl,nzl
+
+     ! Get the WRF config
+     CALL open_wrfnc(wrffile,cdf,istatus) 
+     CALL get_wrf2_timeinfo(cdf,reftime,dt,itimestep,tau_hr,tau_min,tau_sec,istatus)
+     reftime13 = reftime(1:4) // reftime(6:7) // reftime(9:13) // reftime(15:16)
+     i4reftime = cvt_wfo_fname13_i4time(reftime13)
+     bg_valid = i4reftime + tau_hr * 3600 + tau_min * 60 + tau_sec
+     CALL get_wrf2_map(cdf,'T',projcode,lat1_wrf,lon1_wrf,stdlon_wrf, &
+             truelat1_wrf,truelat2_wrf,dx_m,dy_m,nxw,nyw,nzw,istatus)
+     CALL map_set(projcode,lat1_wrf,lon1_wrf,dx_m,stdlon_wrf,truelat1_wrf,truelat2_wrf, &
+                  nxw,nyw,wrfgrid)
+ 
+     ! Make sure LAPS domain covers the WRF domain, and see if it is an exact match
+     CALL latlon_to_ij(wrfgrid,lat(1,1),lon(1,1),i_ll,j_ll)
+     CALL latlon_to_ij(wrfgrid,lat(1,nyl),lon(1,nyl),i_ul,j_ul)
+     CALL latlon_to_ij(wrfgrid,lat(nxl,nyl),lon(nxl,nyl),i_ur,j_ur)
+     CALL latlon_to_ij(wrfgrid,lat(nxl,1),lon(nxl,1),i_lr,j_lr)
+     print *, "Location of LAPS corners in WRF domain:"
+     print *, i_ll,j_ll
+     print *, i_ul,j_ul
+     print *, i_ur,j_ur
+     print *, i_lr,j_lr
+     IF (NINT(i_ll) .LT. 1 .OR. NINT(j_ll) .LT. 1  .OR.  &
+         NINT(i_ul) .LT. 1 .OR. NINT(j_ul) .GT. nyw .OR. &
+         NINT(i_ur) .GT. nxw .OR. NINT(j_ur) .GT. nyw .OR. &
+         NINT(i_lr) .GT. nxw .OR. NINT(j_lr) .LT. 1) THEN
+       PRINT *, "LAPS Domain exceeds bounds of WRF background!"
+       istatus = 0 
+       RETURN
+     ELSE
+       need_hinterp = .true.
+       IF (NINT(i_ll) .EQ. 1 .AND. NINT(j_ll) .EQ. 1 .AND. &
+           NINT(i_ul) .EQ. 1 .AND. NINT(j_ul) .EQ. nyw .AND. &
+           NINT(i_ur) .EQ. nxw .AND. NINT(j_ur) .EQ. nyw .AND. &
+           NINT(i_lr) .EQ. nxw .AND. NINT(j_lr) .EQ. 1 ) THEN
+         PRINT *, "Exact match between LAPS and background.  No hinterp needed!"
+         need_hinterp = .false.
+       ENDIF
+     ENDIF
+
+     icentl = nxl/2
+     jcentl = nyl/2
+     icentw = nxw/2
+     jcentw = nyw/2 
+     ! Get WRF on sigma
+     ALLOCATE (pr_wrfs(nxw,nyw,nzw)) 
+     ALLOCATE (ht_wrfs(nxw,nyw,nzw))
+     ALLOCATE (t3_wrfs(nxw,nyw,nzw))
+     ALLOCATE (sh_wrfs(nxw,nyw,nzw)) 
+     ALLOCATE (mr_wrfs(nxw,nyw,nzw))
+     ALLOCATE (rho_wrfs(nxw,nyw,nzw))
+     ALLOCATE (qc_wrfs(nxw,nyw,nzw))
+     ALLOCATE (usf_wrf(nxw,nyw))
+     ALLOCATE (vsf_wrf(nxw,nyw))
+     ALLOCATE (tsf_wrf(nxw,nyw))
+     ALLOCATE (tsk_wrf(nxw,nyw)) ! surface skin temp. (added by Wei-Ting 130312)
+     ALLOCATE (rsf_wrf(nxw,nyw))
+     ALLOCATE (dsf_wrf(nxw,nyw))
+     ALLOCATE (slp_wrf(nxw,nyw))
+     ALLOCATE (psf_wrf(nxw,nyw))
+     ALLOCATE (p_wrf(nxw,nyw))
+     ALLOCATE (pcp_wrf(nxw,nyw)) ! RAINNC+RAINC (added by Wei-Ting 130312)
+     ALLOCATE (topo_wrf(nxw,nyw))
+     ALLOCATE (tvb_wrf(nxw,nyw))
+
+     icaller = 1
+     CALL fill_wrfs(icaller,istatus)
+     IF (istatus .NE. 1) THEN
+       PRINT *, "Problem getting WRF data"
+       RETURN
+     ENDIF
+
+     ! Vertically interpolate to pressure levels
+     PRINT *, "Allocating arrays for WRF on Pressure"
+       ! Allocate wrfp
+     ALLOCATE (ht_wrfp(nxw,nyw,nzl))
+     ALLOCATE (t3_wrfp(nxw,nyw,nzl))
+     ALLOCATE (sh_wrfp(nxw,nyw,nzl))
+     ht_wrfp = rmissingflag
+     t3_wrfp = rmissingflag
+  
+     ! Vertically interpolate
+     PRINT *, "Calling vinterp_wrfarw2p"
+     CALL vinterp_wrfarw2p(istatus)
+     IF (istatus .NE. 1) THEN
+       PRINT *, "Problem vertically interpolating WRF data"
+       RETURN
+     ENDIF
+
+     ! dealloc wrfs
+     print *, "Deallocating WRF sigma var"
+     DEALLOCATE(pr_wrfs,ht_wrfs,sh_wrfs,t3_wrfs,mr_wrfs, &
+        rho_wrfs)
+
+     ! Horizontally interpolate to LAPS grid
+       ! allocate lga/lgb
+
+     print *, "Allocating LGA variables"
+     ALLOCATE(ht(nxl,nyl,nzl))
+     ALLOCATE(sh(nxl,nyl,nzl))
+     ALLOCATE(t3(nxl,nyl,nzl))
+     ! Allocate LGB (2d) variables
+     print *, "Allocating LGB variables"
+     ALLOCATE (usf(nxl,nyl))
+     ALLOCATE (vsf(nxl,nyl))
+     ALLOCATE (tsf(nxl,nyl))
+     ALLOCATE (tsk(nxl,nyl)) ! surface skin temp. (added by Wei-Ting 130312)
+     ALLOCATE (rsf(nxl,nyl))
+     ALLOCATE (dsf(nxl,nyl))
+     ALLOCATE (slp(nxl,nyl))
+     ALLOCATE (psf(nxl,nyl))
+     ALLOCATE (p  (nxl,nyl))
+     ALLOCATE (pcp(nxl,nyl)) ! precitation (added by Wei-Ting 130312)
+     usf = rmissingflag
+     vsf = rmissingflag
+     tsf = rmissingflag
+     tsk = rmissingflag ! surface skin temp. (added by Wei-Ting 130312)
+     dsf = rmissingflag
+     slp = rmissingflag
+     psf = rmissingflag
+     p   = rmissingflag
+     pcp = rmissingflag ! RAINNC+RAINC (added by Wei-Ting 130312)
+
+     IF (need_hinterp) THEN
+       PRINT *, "Problem in wrf2swim: hinterp indicated as needed" 
+       istatus = 0
+       RETURN
+     ELSE
+       ht = ht_wrfp
+       t3 = t3_wrfp
+       sh = sh_wrfp
+       psf = psf_wrf
+       tsf = tsf_wrf
+       tsk = tsk_wrf ! surface skin temp. (added by Wei-Ting 130312)
+       dsf = dsf_wrf
+       rsf = rsf_wrf
+       usf = usf_wrf
+       vsf = vsf_wrf
+       pcp = pcp_wrf ! RAINNC+RAINC (added by Wei-Ting 130312)
+     ENDIF 
+!     pcp = 0 ! since pcp hasn't be used for now, assume that the value is 0
+
+     print *, "Deallocating WRF press vars"
+     DEALLOCATE (ht_wrfp,t3_wrfp,sh_wrfp)
+
+     print *, "Deallocating WRF sfc vars"
+     DEALLOCATE (usf_wrf,vsf_wrf,tsf_wrf,tsk_wrf,rsf_wrf,dsf_wrf,slp_wrf,&
+         psf_wrf,p_wrf,pcp_wrf,tvb_wrf) ! added tsk_wrf & pcp_wrf by Wei-Ting (130312)
+ 
+     ! Create MSLP and reduced pressure
+     print *, "topo/slp/psf/p/tsf/tsk/dsf/rsf/usf/vsf",topo_laps(icentl,jcentl), &
+       slp(icentl,jcentl),psf(icentl,jcentl),p(icentl,jcentl),tsf(icentl,jcentl), &
+       tsk(icentl,jcentl),dsf(icentl,jcentl),rsf(icentl,jcentl),usf(icentl,jcentl), &
+       vsf(icentl,jcentl) ! added tsk by Wei-Ting (130312)
+
+
+
+     print *, "Deallocating LAPS static vars"
+     DEALLOCATE (lat,lon,topo_laps,topo_wrf)
+
+     ! Deallocate memory
+     print *, "Deallocating lga vars"
+     DEALLOCATE(ht,t3,sh,pr_laps)
+     print *, "Deallocating lgb vars"
+     DEALLOCATE(usf,vsf,tsf,tsk,rsf,dsf,slp,psf,p,pcp) ! added tsk & pcp by Wei-Ting (130312)
+     PRINT *, "Successful processing of ", trim(wrffile) ! modified by Wei-Ting
+     PRINT *, "Return from wrf2swim"
+     RETURN 
+  END SUBROUTINE wrf2swim
 
   SUBROUTINE wrf2lga(wrffile,i4time,cmodel,istatus )
 
@@ -96,7 +321,7 @@ CONTAINS
      INTEGER                      :: i4reftime
      CHARACTER(LEN=13)            :: reftime13
      INTEGER, INTENT(OUT)         :: istatus
-     INTEGER                      :: k,k1000,bg_valid
+     INTEGER                      :: k,k1000,bg_valid,icaller
      INTEGER,EXTERNAL             :: cvt_wfo_fname13_i4time
      REAL                         :: i_ll, j_ll, i_ul, j_ul, i_ur, j_ur, i_lr, j_lr 
      LOGICAL                      :: need_hinterp
@@ -216,7 +441,8 @@ CONTAINS
      ALLOCATE (topo_wrf(nxw,nyw))
      ALLOCATE (tvb_wrf(nxw,nyw))
 
-     CALL fill_wrfs(istatus)
+     icaller = 2
+     CALL fill_wrfs(icaller,istatus)
      IF (istatus .NE. 1) THEN
        PRINT *, "Problem getting WRF data"
        RETURN
@@ -247,7 +473,7 @@ CONTAINS
 
      ! dealloc wrfs
      print *, "Deallocating WRF sigma var"
-     DEALLOCATE(pr_wrfs,ht_wrfs,t3_wrfs,u3_wrfs,v3_wrfs,om_wrfs,mr_wrfs, &
+     DEALLOCATE(pr_wrfs,ht_wrfs,sh_wrfs,t3_wrfs,u3_wrfs,v3_wrfs,om_wrfs,mr_wrfs, &
         rho_wrfs)
 
      ! Horizontally interpolate to LAPS grid
@@ -373,24 +599,24 @@ CONTAINS
      RETURN 
   END SUBROUTINE wrf2lga
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE fill_wrfs(istatus)
+  SUBROUTINE fill_wrfs(icaller,istatus)
  
     IMPLICIT NONE
     INTEGER, INTENT(OUT)  :: istatus
-    INTEGER               :: status,i,j,k
+    INTEGER               :: status,i,j,k,icaller
     REAL, ALLOCATABLE     :: dum3d(:,:,:)
     REAL, ALLOCATABLE     :: dum3df(:,:,:)
     REAL, ALLOCATABLE     :: dum3df2(:,:,:)
     REAL, ALLOCATABLE     :: dum2dt1(:,:) ! added by Wei-Ting (130312) to get RAINNC
     REAL, ALLOCATABLE     :: dum2dt2(:,:) ! added by Wei-Ting (130312) to get RAINNC
-    REAL, EXTERNAL        :: mixsat, relhum, dewpt
+    REAL, EXTERNAL        :: mixsat, relhum, dewpt2
     REAL                  :: rh 
     REAL                  :: tvbar, tvbar_nlevs
     REAL, PARAMETER       :: tvbar_thick = 6000.
     ! Varialbles have already been allocated by our driver routine
     ! so just start getting them
     istatus = 1
-    PRINT *, " Allocating arrays"
+    PRINT *, " Allocating arrays ",icaller
     ALLOCATE(dum3d(nxw,nyw,nzw))
     ALLOCATE(dum3df(nxw,nyw,nzw+1))
     ALLOCATE(dum3df2(nxw,nyw,nzw+1))
@@ -473,36 +699,48 @@ CONTAINS
     PRINT *, "Computing SH"
     sh_wrfs = mr_wrfs / (1. + mr_wrfs)
 
+    if(icaller .eq. 1)then
+      PRINT *, "Getting QC"
+      CALL get_wrfnc_3d(cdf, "QCLOUD","T",nxw,nyw,nzw,1,qc_wrfs,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF qc mixing ratio.'
+        istatus = 0
+        RETURN
+      ENDIF
+    endif
+
+    if(icaller .eq. 2)then
     ! Get U on sigma   
-    PRINT *, "Getting U"
-    CALL get_wrfnc_3d(cdf, "U","T",nxw,nyw,nzw,1,u3_wrfs,status)
-    IF (status.NE.0) THEN
-      PRINT *, 'Could not properly obtain WRF U-comp.'
-      istatus = 0
-      RETURN
-    ENDIF
+      PRINT *, "Getting U"
+      CALL get_wrfnc_3d(cdf, "U","T",nxw,nyw,nzw,1,u3_wrfs,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF U-comp.'
+        istatus = 0
+        RETURN
+      ENDIF
 
     ! Get V on sigma
-    PRINT *, "Getting V"
-    CALL get_wrfnc_3d(cdf, "V","T",nxw,nyw,nzw,1,v3_wrfs,status)
-    IF (status.NE.0) THEN
-      PRINT *, 'Could not properly obtain WRF V-comp.'
-      istatus = 0
-      RETURN
-    ENDIF
+      PRINT *, "Getting V"
+      CALL get_wrfnc_3d(cdf, "V","T",nxw,nyw,nzw,1,v3_wrfs,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF V-comp.'
+        istatus = 0
+        RETURN
+      ENDIF
 
     ! Get W on sigma
-    PRINT *, "Getting W"
-    CALL get_wrfnc_3d(cdf, "W","T",nxw,nyw,nzw+1,1,dum3df,status)
-    IF (status.NE.0) THEN
-      PRINT *, 'Could not properly obtain WRF W-comp'
-      istatus = 0
-      RETURN 
-    ENDIF
-    PRINT*, "Destaggering (vertically) w"
-    DO k = 1,nzw
-      om_wrfs(:,:,k) = 0.5*(dum3df(:,:,k)+dum3df(:,:,k+1))
-    ENDDO
+      PRINT *, "Getting W"
+      CALL get_wrfnc_3d(cdf, "W","T",nxw,nyw,nzw+1,1,dum3df,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF W-comp'
+        istatus = 0
+        RETURN 
+      ENDIF
+      PRINT*, "Destaggering (vertically) w"
+      DO k = 1,nzw
+        om_wrfs(:,:,k) = 0.5*(dum3df(:,:,k)+dum3df(:,:,k+1))
+      ENDDO
+    endif 
 
     ! Now, derive density, virtual potential temp, and omega
     PRINT *, "Computing Rho, Theta-V, and Omega"
@@ -510,11 +748,18 @@ CONTAINS
       DO j=1,nyw
         DO i = 1,nxw
           rho_wrfs(i,j,k) = pr_wrfs(i,j,k) / ( r * t3_wrfs(i,j,k)*(1.+0.61*sh_wrfs(i,j,k)))
-          om_wrfs(i,j,k) = -1. * rho_wrfs(i,j,k) * grav * om_wrfs(i,j,k)
+          if(icaller .eq. 2)then
+            om_wrfs(i,j,k) = -1. * rho_wrfs(i,j,k) * grav * om_wrfs(i,j,k)
+          endif
         ENDDO
       ENDDO
     ENDDO
 
+    if(icaller .eq. 1)then ! convert mixing ratio to density
+      PRINT *, "Convert QC to density"
+      qc_wrfs(:,:,:) = qc_wrfs(:,:,:) * rho_wrfs(:,:,:)
+   endif
+   
     ! Get surface fields
     
     PRINT *, "Getting WRF TOPO"
@@ -524,11 +769,13 @@ CONTAINS
       istatus = 0 
       RETURN
     ENDIF
-    PRINT *, "Getting USF"
-    usf_wrf = u3_wrfs(:,:,1)
-    PRINT *, "Getting VSF"
-    vsf_wrf = v3_wrfs(:,:,1)
 
+    if(icaller .eq. 2)then
+      PRINT *, "Getting USF"
+      usf_wrf = u3_wrfs(:,:,1)
+      PRINT *, "Getting VSF"
+      vsf_wrf = v3_wrfs(:,:,1)
+    endif
 
     PRINT *, "Getting PSF"
     CALL get_wrfnc_2d(cdf, "PSFC","T",nxw,nyw,1,psf_wrf,status)
@@ -618,7 +865,7 @@ CONTAINS
           rsf_wrf(i,j) = MIN(rsf_wrf(i,j),mixsat(rsf_wrf(i,j),psf_wrf(i,j)))
           ! Compute dewpoint
           rh = relhum(tsf_wrf(i,j),rsf_wrf(i,j),psf_wrf(i,j))
-          dsf_wrf(i,j) = dewpt(tsf_wrf(i,j),rh)
+          dsf_wrf(i,j) = dewpt2(tsf_wrf(i,j),rh)
           ! Compute tvbar
           tvbar = 0.
           tvbar_nlevs = 0.
@@ -644,10 +891,16 @@ CONTAINS
     print *, "K   PRESS     HEIGHT   TEMP   SH       U       V      OM"
     print *, "--- --------  -------  -----  -------  ------  ------ -----------"
     DO k = 1,nzw
-      PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1,2x,F11.8)'), &
+      if(icaller .eq. 2)then
+        PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1,2x,F11.8)'), &
           k,pr_wrfs(icentw,jcentw,k),ht_wrfs(icentw,jcentw,k), t3_wrfs(icentw,jcentw,k), &
           sh_wrfs(icentw,jcentw,k),u3_wrfs(icentw,jcentw,k),v3_wrfs(icentw,jcentw,k),&
           om_wrfs(icentw,jcentw,k)
+      else
+        PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1,2x,F11.8)'), &
+          k,pr_wrfs(icentw,jcentw,k),ht_wrfs(icentw,jcentw,k), t3_wrfs(icentw,jcentw,k), &
+          sh_wrfs(icentw,jcentw,k)
+      endif
     ENDDO
     PRINT *, "SFC:"
     PRINT ('(F8.1,2x,F7.0,2x,F5.1,2x,F5.1,2x,F5.1,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1)'), &
