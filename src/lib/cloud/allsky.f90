@@ -1,5 +1,5 @@
 
-       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale,polat,pomag,alt_a,azi_a &
+       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale,polat,pomag,pox,poy,alt_a,azi_a &
                               ,iplo,iphi,jplo,jphi,ni_polar,nj_polar)
 
        use mem_namelist, ONLY: r_missing_data
@@ -18,8 +18,8 @@
        altmin = float(minalt) * alt_scale
        azimin = float(minazi) * azi_scale
 
-       ri_polar_mid = ((ni_polar - 1.0) / 2.0) + 1.0
-       rj_polar_mid = ((nj_polar - 1.0) / 2.0) + 1.0
+       ri_polar_mid = ((ni_polar - 1.0) / 2.0) + 1.0 ! - float(ni_polar-1) * poy
+       rj_polar_mid = ((nj_polar - 1.0) / 2.0) + 1.0 ! + float(nj_polar-1) * pox
 
        write(6,*)'cyl_to_polar ',ni_polar,nj_polar,ri_polar_mid,rj_polar_mid,posign
        write(6,*)'minalt,maxalt,minazi,maxazi',minalt,maxalt,minazi,maxazi
@@ -33,6 +33,7 @@
 !      enddo ! iaz
 
        write(6,*)' cyl_to_polar: shape of cyl is ',shape(cyl)
+       write(6,*)' iplo,iphi,jplo,jphi = ',iplo,iphi,jplo,jphi
 
        alt_a = r_missing_data
        azi_a = r_missing_data
@@ -42,8 +43,8 @@
        do ip = iplo,iphi
        do jp = jplo,jphi
            rip = ip; rjp = jp
-           delti = rip-ri_polar_mid
-           deltj = rjp-rj_polar_mid
+           delti = rip - ri_polar_mid + float(ni_polar-1) * poy
+           deltj = rjp - rj_polar_mid - float(nj_polar-1) * pox
            zenith_angle = sqrt(delti**2 + deltj**2) * (90. / ri_polar_mid)
            zenith_angle = zenith_angle / pomag
            alt = (90. - zenith_angle) * posign
@@ -146,7 +147,7 @@
                            sumi = sumi + cyl(icyl,jcyl) * overlap 
                            if(iprint .eq. 1)then
                                write(6,21)jcyl,icyl,ricyl,relpolarcen,relpolarl,relpolarh,cyl(icyl,jcyl),overlap,sumi
-21                             format(i5,i8,f9.3,' relp',3f9.3,' ovr',3f9.3)
+21                             format(i5,i8,f9.3,' relp',3f9.3,' ovr ',3f9.3)
                            endif
                        endif
                    enddo ! icyl
