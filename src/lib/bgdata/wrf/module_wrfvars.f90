@@ -52,7 +52,7 @@ SUBROUTINE wrfpost_get_basic()
   REAL, ALLOCATABLE               :: d1f(:,:,:)
   REAL, ALLOCATABLE               :: d2f(:,:,:)
   REAL, ALLOCATABLE               :: dum2d (:,:)
-  REAL, EXTERNAL                  :: relhum, dewpt, wspd, wdir,mixsat
+  REAL, EXTERNAL                  :: relhum, dewpt2, wspd, wdir,mixsat
   INTEGER :: status, i, j, k, rcode
  
   ALLOCATE (d1 (nx,ny,nz) )
@@ -345,7 +345,7 @@ SUBROUTINE wrfpost_get_basic()
       IF (rh_2m(i,j) .GT. 1.0) THEN
         print *,"i/j/t/p/q/rh = ",i,j,t_2m(i,j),p_sfc(i,j),q_2m(i,j),rh_2m(i,j)
       ENDIF
-      td_2m(i,j) = dewpt(t_2m(i,j),rh_2m(i,j))
+      td_2m(i,j) = dewpt2(t_2m(i,j),rh_2m(i,j))
       rh_2m(i,j) = rh_2m(i,j) * 100.
     ENDDO
   ENDDO
