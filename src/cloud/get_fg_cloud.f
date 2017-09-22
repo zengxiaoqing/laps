@@ -175,6 +175,8 @@ cdis
 !       Remap to cloud height grid and convert to cloud cover
         t_ref = -10. ! colder than this ice saturation is assumed
 
+        write(6,*)' istatus: sh/lwc/ice ',istat_sh,istat_lwc,istat_ice
+
         do k = 1,KCLOUD
         do j = 1,nj
           istat_z = 0
@@ -214,7 +216,7 @@ cdis
                 go to 1000
             endif
 
-            if(istat_lwc .eq. 1 .and. istat_lwc .eq. 1)then
+            if(istat_lwc .eq. 1 .and. istat_ice .eq. 1)then
                 lwc_modelfg =  model_lwc_3d(i,j,iz_laps)   * (1. - frac)
      1                      +  model_lwc_3d(i,j,iz_laps+1)       * frac
 
@@ -232,8 +234,8 @@ cdis
             endif
 
             if(istat_sh .eq. 1)then
-              if(.NOT. (istat_lwc .eq. 1 .and. istat_lwc .eq. 1) 
-     1                          .OR.   mode .eq. 2
+              if(.NOT. (istat_lwc .eq. 1 .and. istat_ice .eq. 1) 
+     1                          .OR.   mode_fg .eq. 2
      1                                                           )then
 !               Find the model temp at this location in the cloud height grid
                 t_modelfg(i,j,k) =  temp_3d(i,j,iz_laps)   * (1. - frac)      
