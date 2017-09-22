@@ -77,7 +77,8 @@ program lga                                      lga.f
          get_wrf2_map                            modules/module_wrf_netcdf.f90
          map_set                                 modules/module_map_utils.f90
          latlon_to_ij                                    "
-         vinterp_wrfarw2p                        wrf/module_wrf_lga.f90
+         fill_wrfs                               wrf/module_wrf_lga.f90
+         vinterp_wrfarw2p                                "                  
          hinterp_wrf2lga                                 "
             interpolate_standard                 lib/modules/module_horiz_interp.f90
          write_lga
