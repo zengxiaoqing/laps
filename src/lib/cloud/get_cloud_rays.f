@@ -922,8 +922,8 @@
         idelt = nint(2. / alt_scale)
         minalt_deg = float(minalt) * alt_scale
         maxalt_deg = float(maxalt) * alt_scale
-        minazi_deg = float(minazi) * alt_scale
-        maxazi_deg = float(maxazi) * alt_scale
+        minazi_deg = float(minazi) * azi_scale
+        maxazi_deg = float(maxazi) * azi_scale
 
         write(6,*)' range of altitudes is ',minalt_deg,maxalt_deg
         write(6,*)' range of azimuths is  ',minazi_deg,maxazi_deg
@@ -1821,6 +1821,18 @@
                     transm_3d_m = sum(tri_coeff(:,:,:) * 
      1                            transm_3d(i1:i2,j1:j2,k1:k2))
 
+                    if(.false.)then
+                      write(6,*)' ERROR transm_3d_m < 0',transm_3d_m
+     1                            ,sum(tri_coeff(:,:,:)),fi,fj,fk
+     1                            ,' tri_coeff '
+     1                            ,tri_coeff(:,:,:),i1,i2,j1,j2,k1,k2
+     1                            ,' transm_3d '
+     1                            ,transm_3d(i1:i2,j1:j2,k1:k2)
+                      stop
+                    else ! prevent negative values from extrapolation
+                      transm_3d_m = max(transm_3d_m,0.)
+                    endif
+
                     sum_odrad = sum_odrad + 
      1                 (cvr_path * slant2 * transm_3d_m)       
 
@@ -2060,6 +2072,13 @@
                   else ! typical case far from topo
                     sum_aod_ill = sum_aod_ill + aero_ext_coeff * slant2
      1                          * transm_3d_m
+
+!                   if(sum_aod_ill .lt. 0.)then
+!                     write(6,*)' ERROR sum_aod_ill < 0',sum_aod_ill
+!    1                            ,aero_ext_coeff,slant2,transm_3d_m
+!                     stop
+!                   endif
+
                     if(transm_3d_m .gt. .1)then
                         transm_3d_dir = exp(log(transm_3d_m)*10.)
                     else
