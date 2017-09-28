@@ -904,6 +904,8 @@
         real azi_a(ni,nj)
         real elong_a(ni,nj)
 
+        real*8 cnt,sum_ghi,sum_dni,sum_diffuse
+
         alt_top = alt_a(ni,1)
 
 !       Average over window
