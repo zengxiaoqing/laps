@@ -17,6 +17,7 @@
 
        altmin = float(minalt) * alt_scale
        azimin = float(minazi) * azi_scale
+       azimax = float(maxazi) * azi_scale
 
        ri_polar_mid = ((ni_polar - 1.0) / 2.0) + 1.0 ! - float(ni_polar-1) * poy
        rj_polar_mid = ((nj_polar - 1.0) / 2.0) + 1.0 ! + float(nj_polar-1) * pox
@@ -26,6 +27,7 @@
        write(6,*)'alt_scale,azi_scale',alt_scale,azi_scale
        write(6,*)'altmin,azimin',altmin,azimin
        write(6,*)'polat,pomag',polat,pomag
+       write(6,*)'pox,poy',pox,poy
        write(6,*)'iplo,iphi,jplo,jphi',iplo,iphi,jplo,jphi
 
 !      do iaz = minazi,maxazi,20
@@ -51,11 +53,19 @@
            if(alt*posign .ge. 0.)then
                azi_last = azi
                azi = atan3d(-deltj*posign,delti) ! minus sign on deltj flips left/right
+
+!              Determine sign convention of azimuth range
+               if(azimin .lt. 0. .and. azi .gt. 180. .and. azi .gt. azimax)then
+                   azi2 = azi - 360.
+               else
+                   azi2 = azi
+               endif
+
 !              i_cyl = nint(alt)    
 !              j_cyl = nint(azi) 
 !              polar(ip,jp) = cyl(i_cyl,j_cyl)
-               ri_a(ip,jp) = (alt-altmin) / alt_scale + 1.0 ! real I index in CYL array, offset to start at 1
-               rj_a(ip,jp) = (azi-azimin) / azi_scale + 1.0 ! real J index in CYL array, offset to start at 1
+               ri_a(ip,jp) = (alt -altmin) / alt_scale + 1.0 ! real I index in CYL array, offset to start at 1
+               rj_a(ip,jp) = (azi2-azimin) / azi_scale + 1.0 ! real J index in CYL array, offset to start at 1
 
                if(ip .eq. ni_polar/2 .and. jp .eq. (jp/10)*10)then
                    iprint = 1
