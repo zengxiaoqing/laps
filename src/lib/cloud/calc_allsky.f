@@ -157,6 +157,8 @@
 
         write(6,*)' range of clwc_3d is',minval(clwc_3d),maxval(clwc_3d)
         write(6,*)' range of cice_3d is',minval(cice_3d),maxval(cice_3d)
+        write(6,*)' range of rain_3d is',minval(rain_3d),maxval(rain_3d)
+        write(6,*)' range of snow_3d is',minval(snow_3d),maxval(snow_3d)
         write(6,*)' max top of cice_3d is',maxval(cice_3d(:,:,NZ_L))
         write(6,*)' max top of clwc_3d is',maxval(clwc_3d(:,:,NZ_L))
         write(6,*)' ssa values are ',ssa(:)
