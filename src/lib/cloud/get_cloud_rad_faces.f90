@@ -303,15 +303,15 @@
              if(transm_3d(id,jd,kd) .ne. r_missing_data)then
                if(id .eq. idlast .and. jd .eq. jdlast .and. kd .eq. kdlast)then
                  if(idebug .eq. 1)write(6,3)s,ri,rj,rk,ht,id,jd,kd             
-3                format('s/ri/rj/rk/ht = ',5f9.2,' same march',3i4)
+3                format('s/ri/rj/rk/ht = ',5f9.2,' same march',3i5)
                else
                  if(idebug .eq. 1)write(6,4)s,ri,rj,rk,ht,id,jd,kd             
-4                format('s/ri/rj/rk/ht = ',5f9.2,' already assigned',3i4)
+4                format('s/ri/rj/rk/ht = ',5f9.2,' already assigned',3i5)
                  goto 9
                endif
              else ! transm_3d is missing
                if(idebug .eq. 1)write(6,5)s,ri,rj,rk,ht,id,jd,kd             
-5              format('s/ri/rj/rk/ht = ',5f9.2,' new',3i4)
+5              format('s/ri/rj/rk/ht = ',5f9.2,' new',3i5)
                nnew = nnew + 1
              endif
 
