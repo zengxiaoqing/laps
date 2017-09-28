@@ -162,6 +162,7 @@
         write(6,*)' l_cyl/l_polar = ',l_cyl,l_polar
         write(6,*)' ipolar_sizeparm = ',ipolar_sizeparm
         write(6,*)' density = ',density
+        write(6,*)' c_model = ',c_model
 
         itd = 2 ! dashed dewpoint lines
 
@@ -692,6 +693,19 @@
      +                   ,istatus)
             istatus_ht = 1
             write(6,*)' returned from get_rams_data'
+            mode_aero_cld = 3
+            write(6,*)' RAMS run: set mode_aero_cld = ',mode_aero_cld
+
+            i_aero_synplume = 1
+
+!           Zero out hydrometeors
+            if(.true.)then
+              write(6,*)' RAMS run: zero out hydrometeors'
+              clwc_3d = 0.
+              cice_3d = 0.
+              rain_3d = 0.
+              snow_3d = 0.
+            endif
 
           elseif(l_parse(directory,'navgem'))then
             write(6,*)' Looking for NAVGEM data in ',trim(directory)
@@ -710,15 +724,49 @@
             istatus_ht = 0 ! we can perhaps try the height_AGL 
             write(6,*)' returned from get_navgem_data'
 
+            mode_aero_cld = 3
+            write(6,*)' NAVGEM run: mode_aero_cld = ',mode_aero_cld
+
+            i_aero_1d = 0 ! retain the 3D aerosols read in from NAVGEM
+            i_aero_synplume = 0
+
+!           Zero out hydrometeors
+            if(.true.)then
+              write(6,*)' NAVGEM run: zero out hydrometeors'
+              clwc_3d = 0.
+              cice_3d = 0.
+              rain_3d = 0.
+              snow_3d = 0.
+            endif
+
           elseif(trim(c_model) .eq. 'hrrr_smoke' .or.
      +           trim(c_model) .eq. 'wrf_chem' .or. 
      +           trim(c_model) .eq. 'hrrr_ak'         )then
+
+            write(6,*)' Getting 1D pressure levels'
+            call get_pres_1d(i4time_sys,NZ_L,pres_1d,istatus)
+
+            if(trim(c_model) .eq. 'hrrr_smoke')then
+              mode_aero_cld = 3
+            endif
+
             filename = 'file.nc'
             write(6,*)' Looking for WRF SWIM data in ',trim(filename) ! trim(directory)
             call wrf2swim(filename,i4time_sys,NX_L,NY_L,NZ_L,lat,lon
      +                   ,pres_1d,istatus )
             istatus_ht = 0 ! unless we are reading height
             write(6,*)' returned from wrf2swim for ',trim(c_model)
+
+            if(trim(c_model) .eq. 'hrrr_smoke')then
+              i_aero_1d = 0 ! retain the 3D aerosols read in
+              i_aero_synplume = 0
+
+              write(6,*)' Zero out hydrometeors'
+              clwc_3d = 0.
+              cice_3d = 0.
+              rain_3d = 0.
+              snow_3d = 0.
+            endif
 
           else
             istatus_ht = 0
@@ -922,37 +970,6 @@
         write(6,19,err=20)pw_ref,aod,aod_ref
 19      format(' pw_ref,aod,aod_ref = ',3f10.3)
 20      continue
-
-        if(l_parse(directory,'rams'))then
-           mode_aero_cld = 3
-           write(6,*)' RAMS run: set mode_aero_cld = ',mode_aero_cld
-
-           i_aero_synplume = 1
-
-!          Zero out hydrometeors
-           if(.true.)then
-              write(6,*)' RAMS run: zero out hydrometeors'
-              clwc_3d = 0.
-              cice_3d = 0.
-              rain_3d = 0.
-              snow_3d = 0.
-           endif
-        elseif(l_parse(directory,'navgem'))then
-           mode_aero_cld = 3
-           write(6,*)' NAVGEM run: mode_aero_cld = ',mode_aero_cld
-
-           i_aero_1d = 0 ! retain the 3D aerosols read in from NAVGEM
-           i_aero_synplume = 0
-
-!          Zero out hydrometeors
-           if(.true.)then
-              write(6,*)' NAVGEM run: zero out hydrometeors'
-              clwc_3d = 0.
-              cice_3d = 0.
-              rain_3d = 0.
-              snow_3d = 0.
-           endif
-        endif
 
 !       Get Aersol Extinction Coefficient (3D field)
         call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L,aod_ref
@@ -1327,10 +1344,11 @@
               pox = 0.
               poy = 0.
 
-!             if(trim(c_model) .eq. 'hrrr_smoke')then
-!               pomag = pomag * 2.
-!               poy = 0.25
-!             endif
+              if(trim(c_model) .eq. 'hrrr_smoke')then
+                pomag = pomag * 2.4
+                poy = +0.6 ! increase moves down
+                pox = +0.1 ! increase moves right
+              endif
 
               write(6,*)'htrat/pomag',htagl(iloc)/earth_radius,pomag
 
