@@ -49,6 +49,8 @@
            enddo ! k
          enddo ! j
          enddo ! i
+       else
+         write(6,*)' Skip aerosols from 1D parameters'
        endif ! mode_aero_cld
 
        if(i_aero_synplume .eq. 1)then ! synthetic aerosol plume
@@ -58,6 +60,8 @@
          iwp = 1
          write(6,*)' Adding synthetic aerosol plume of',ext_syn,iplume,jplume
          aod_3d(iplume-iwp:iplume+iwp,jplume-iwp:jplume+iwp,1:nk-8) = ext_syn
+       else
+         write(6,*)' Skip synthetic aerosol plume'
        endif
 
        return
