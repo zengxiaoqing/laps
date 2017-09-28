@@ -41,7 +41,7 @@ MODULE wrf_lga
   REAL, ALLOCATABLE      :: topo_laps(:,:)
   REAL, ALLOCATABLE      :: lat(:,:)
   REAL, ALLOCATABLE      :: lon(:,:)
-  INTEGER                :: nxl, nyl, nzl
+! INTEGER                :: nxl, nyl, nzl
   CHARACTER(LEN=200)     :: laps_data_root
   CHARACTER(LEN=10)      :: laps_domain_name  
   REAL                   :: redp_lvl
@@ -52,6 +52,11 @@ MODULE wrf_lga
   REAL, ALLOCATABLE      :: u3_wrfp(:,:,:)
   REAL, ALLOCATABLE      :: v3_wrfp(:,:,:)
   REAL, ALLOCATABLE      :: om_wrfp(:,:,:)
+  REAL, ALLOCATABLE      :: qc_wrfp(:,:,:)
+  REAL, ALLOCATABLE      :: qi_wrfp(:,:,:)
+  REAL, ALLOCATABLE      :: qr_wrfp(:,:,:)
+  REAL, ALLOCATABLE      :: qs_wrfp(:,:,:)
+  REAL, ALLOCATABLE      :: aod_wrfp(:,:,:) ! extinction coefficient
   REAL, ALLOCATABLE      :: usf_wrf(:,:)
   REAL, ALLOCATABLE      :: vsf_wrf(:,:)
   REAL, ALLOCATABLE      :: tsf_wrf(:,:)
@@ -66,6 +71,8 @@ MODULE wrf_lga
   ! WRF on native variables
   REAL, ALLOCATABLE      :: pr_wrfs(:,:,:)
   REAL, ALLOCATABLE      :: ht_wrfs(:,:,:)
+  REAL, ALLOCATABLE      :: dz_wrfs(:,:,:) ! If we want layer thicknesses
+  REAL, ALLOCATABLE      :: aod_wrfs(:,:,:)
   REAL, ALLOCATABLE      :: t3_wrfs(:,:,:)
   REAL, ALLOCATABLE      :: sh_wrfs(:,:,:)
   REAL, ALLOCATABLE      :: u3_wrfs(:,:,:)
@@ -74,13 +81,16 @@ MODULE wrf_lga
   REAL, ALLOCATABLE      :: rho_wrfs(:,:,:) ! Density
   REAL, ALLOCATABLE      :: mr_wrfs(:,:,:) ! Mixing Ratio
   REAL, ALLOCATABLE      :: qc_wrfs(:,:,:) ! Cloud Liquid Mixing Ratio
+  REAL, ALLOCATABLE      :: qi_wrfs(:,:,:) ! Cloud Ice Mixing Ratio
+  REAL, ALLOCATABLE      :: qr_wrfs(:,:,:) ! Rain  Mixing Ratio
+  REAL, ALLOCATABLE      :: qs_wrfs(:,:,:) ! Snow Mixing Ratio
   ! WRF static variables 
   INTEGER                :: cdf,cdp ! added cdp by Wei-Ting (130312)
   TYPE(proj_info)        :: wrfgrid
   REAL, ALLOCATABLE      :: topo_wrf(:,:)
   CHARACTER(LEN=19)      :: reftime
   INTEGER                :: tau_hr, tau_min,tau_sec
-  INTEGER                :: itimestep,projcode
+  INTEGER                :: itimestep,projcode,istat_aod
   INTEGER                :: nxw,nyw,nzw
   REAL                   :: dx_m, dy_m,dt
   REAL                   :: lat1_wrf, lon1_wrf
@@ -188,11 +198,16 @@ CONTAINS
      ! Get WRF on sigma
      ALLOCATE (pr_wrfs(nxw,nyw,nzw)) 
      ALLOCATE (ht_wrfs(nxw,nyw,nzw))
+     ALLOCATE (dz_wrfs(nxw,nyw,nzw))
+     ALLOCATE (aod_wrfs(nxw,nyw,nzw))
      ALLOCATE (t3_wrfs(nxw,nyw,nzw))
      ALLOCATE (sh_wrfs(nxw,nyw,nzw)) 
      ALLOCATE (mr_wrfs(nxw,nyw,nzw))
      ALLOCATE (rho_wrfs(nxw,nyw,nzw))
      ALLOCATE (qc_wrfs(nxw,nyw,nzw))
+     ALLOCATE (qi_wrfs(nxw,nyw,nzw))
+     ALLOCATE (qr_wrfs(nxw,nyw,nzw))
+     ALLOCATE (qs_wrfs(nxw,nyw,nzw))
      ALLOCATE (usf_wrf(nxw,nyw))
      ALLOCATE (vsf_wrf(nxw,nyw))
      ALLOCATE (tsf_wrf(nxw,nyw))
@@ -219,12 +234,23 @@ CONTAINS
      ALLOCATE (ht_wrfp(nxw,nyw,nzl))
      ALLOCATE (t3_wrfp(nxw,nyw,nzl))
      ALLOCATE (sh_wrfp(nxw,nyw,nzl))
+     ALLOCATE (qc_wrfp(nxw,nyw,nzl))
+     ALLOCATE (qi_wrfp(nxw,nyw,nzl))
+     ALLOCATE (qr_wrfp(nxw,nyw,nzl))
+     ALLOCATE (qs_wrfp(nxw,nyw,nzl))
+     ALLOCATE (aod_wrfp(nxw,nyw,nzl))
      ht_wrfp = rmissingflag
      t3_wrfp = rmissingflag
+     sh_wrfp = rmissingflag
+     qc_wrfp = rmissingflag
+     qi_wrfp = rmissingflag
+     qr_wrfp = rmissingflag
+     qs_wrfp = rmissingflag
+     aod_wrfp = rmissingflag
   
      ! Vertically interpolate
-     PRINT *, "Calling vinterp_wrfarw2p"
-     CALL vinterp_wrfarw2p(istatus)
+     PRINT *, "Calling vinterp_wrfarw2p ",nzl,pr_laps(1)
+     CALL vinterp_wrfarw2p(icaller,nzl,istatus)
      IF (istatus .NE. 1) THEN
        PRINT *, "Problem vertically interpolating WRF data"
        RETURN
@@ -232,8 +258,8 @@ CONTAINS
 
      ! dealloc wrfs
      print *, "Deallocating WRF sigma var"
-     DEALLOCATE(pr_wrfs,ht_wrfs,sh_wrfs,t3_wrfs,mr_wrfs, &
-        rho_wrfs)
+     DEALLOCATE(pr_wrfs,ht_wrfs,dz_wrfs,aod_wrfs,sh_wrfs,t3_wrfs,mr_wrfs, &  
+        rho_wrfs,qc_wrfs,qi_wrfs,qr_wrfs,qs_wrfs)
 
      ! Horizontally interpolate to LAPS grid
        ! allocate lga/lgb
@@ -272,6 +298,14 @@ CONTAINS
        ht = ht_wrfp
        t3 = t3_wrfp
        sh = sh_wrfp
+       clwc_3d = qc_wrfp
+       cice_3d = qi_wrfp
+       rain_3d = qr_wrfp
+       snow_3d = qs_wrfp
+       if(istat_aod .eq. 1 .and. mode_aero_cld .eq. 3)then
+         write(6,*)' Transferring AOD-3D to all-sky array'
+         aod_3d(:,:,:) = aod_wrfp(:,:,:)
+       endif
        psf = psf_wrf
        tsf = tsf_wrf
        tsk = tsk_wrf ! surface skin temp. (added by Wei-Ting 130312)
@@ -284,7 +318,7 @@ CONTAINS
 !     pcp = 0 ! since pcp hasn't be used for now, assume that the value is 0
 
      print *, "Deallocating WRF press vars"
-     DEALLOCATE (ht_wrfp,t3_wrfp,sh_wrfp)
+     DEALLOCATE (ht_wrfp,t3_wrfp,sh_wrfp,qc_wrfp,qi_wrfp,qr_wrfp,qs_wrfp,aod_wrfp)
 
      print *, "Deallocating WRF sfc vars"
      DEALLOCATE (usf_wrf,vsf_wrf,tsf_wrf,tsk_wrf,rsf_wrf,dsf_wrf,slp_wrf,&
@@ -319,6 +353,7 @@ CONTAINS
      CHARACTER(LEN=12), INTENT(IN) :: cmodel
      INTEGER, INTENT(IN)          :: i4time
      INTEGER                      :: i4reftime
+     INTEGER                      :: nxl,nyl,nzl
      CHARACTER(LEN=13)            :: reftime13
      INTEGER, INTENT(OUT)         :: istatus
      INTEGER                      :: k,k1000,bg_valid,icaller
@@ -464,8 +499,8 @@ CONTAINS
      om_wrfp = rmissingflag
   
      ! Vertically interpolate
-     PRINT *, "Calling vinterp_wrfarw2p"
-     CALL vinterp_wrfarw2p(istatus)
+     PRINT *, "Calling vinterp_wrfarw2p ",nzl,pr_laps(1)
+     CALL vinterp_wrfarw2p(icaller,nzl,istatus)
      IF (istatus .NE. 1) THEN
        PRINT *, "Problem vertically interpolating WRF data"
        RETURN
@@ -528,7 +563,7 @@ CONTAINS
 
        ! call hinterplga
        PRINT *, "Calling hinterp_wrf2lga"
-       CALL hinterp_wrf2lga(istatus)
+       CALL hinterp_wrf2lga(nxl,nyl,nzl,istatus)
        IF (istatus .NE. 1) THEN 
          PRINT *, "Problem in hinterp_wrf2lga" 
          istatus = 0
@@ -561,7 +596,7 @@ CONTAINS
  
      ! Create MSLP and reduced pressure
      print *, "Creating reduced pressure arrays"
-     CALL make_derived_pressures
+     CALL make_derived_pressures(nxl,nyl,nzl)
      print *, "topo/slp/psf/p/tsf/tsk/dsf/rsf/usf/vsf",topo_laps(icentl,jcentl), &
        slp(icentl,jcentl),psf(icentl,jcentl),p(icentl,jcentl),tsf(icentl,jcentl), &
        tsk(icentl,jcentl),dsf(icentl,jcentl),rsf(icentl,jcentl),usf(icentl,jcentl), &
@@ -665,7 +700,23 @@ CONTAINS
     dum3df2 = (dum3df2 + dum3df) / grav
     DO k = 1,nzw
       ht_wrfs(:,:,k) = 0.5 * (dum3df2(:,:,k) + dum3df2(:,:,k+1))
+      if(icaller .eq. 1)then
+        dz_wrfs(:,:,k) = dum3df2(:,:,k+1) - dum3df2(:,:,k)
+      endif
     ENDDO
+  
+    PRINT *, "Getting AOD"
+    CALL get_wrfnc_3d(cdf,"TAOD5503D","T",nxw,nyw,nzw,1,dum3df,status)
+    IF (status.NE.0) THEN
+      PRINT *, 'Could not properly obtain WRF AOD - set to missing'
+      aod_wrfs(:,:,:) = r_missing_data
+      istat_aod = 0
+    ELSE
+      PRINT *, 'Success Reading WRF AOD - divide by dz'
+      aod_wrfs(:,:,:) = dum3df(:,:,:) / dz_wrfs(:,:,:)
+      print *, "Min/Max WRF 3D AOD: ",minval(aod_wrfs),maxval(aod_wrfs)
+      istat_aod = 1
+    ENDIF
 
     ! Get theta and convert to temperature
     PRINT *, "Getting Theta"
@@ -707,6 +758,31 @@ CONTAINS
         istatus = 0
         RETURN
       ENDIF
+
+      PRINT *, "Getting QI"
+      CALL get_wrfnc_3d(cdf, "QICE","T",nxw,nyw,nzw,1,qi_wrfs,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF qi mixing ratio.'
+        istatus = 0
+        RETURN
+      ENDIF
+
+      PRINT *, "Getting QR"
+      CALL get_wrfnc_3d(cdf, "QRAIN","T",nxw,nyw,nzw,1,qr_wrfs,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF qr mixing ratio.'
+        istatus = 0
+        RETURN
+      ENDIF
+
+      PRINT *, "Getting QS"
+      CALL get_wrfnc_3d(cdf, "QSNOW","T",nxw,nyw,nzw,1,qs_wrfs,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF qs mixing ratio.'
+        istatus = 0
+        RETURN
+      ENDIF
+
     endif
 
     if(icaller .eq. 2)then
@@ -756,8 +832,11 @@ CONTAINS
     ENDDO
 
     if(icaller .eq. 1)then ! convert mixing ratio to density
-      PRINT *, "Convert QC to density"
+      PRINT *, "Convert QC,QI,QR,QS to density"
       qc_wrfs(:,:,:) = qc_wrfs(:,:,:) * rho_wrfs(:,:,:)
+      qi_wrfs(:,:,:) = qi_wrfs(:,:,:) * rho_wrfs(:,:,:)
+      qr_wrfs(:,:,:) = qr_wrfs(:,:,:) * rho_wrfs(:,:,:)
+      qs_wrfs(:,:,:) = qs_wrfs(:,:,:) * rho_wrfs(:,:,:)
    endif
    
     ! Get surface fields
@@ -888,18 +967,24 @@ CONTAINS
 
     ! Diagnostics
     PRINT *, "WRF Sigma data from center of WRF domain"
-    print *, "K   PRESS     HEIGHT   TEMP   SH       U       V      OM"
-    print *, "--- --------  -------  -----  -------  ------  ------ -----------"
+    if(icaller .eq. 1)then ! called from 'wrf2swim'
+      print *, "K   PRESS     HEIGHT   DZ     TEMP   SH         QC        QI       QR       QS      AOD"
+      print *, "--- --------  -------  -----  -----  -------    -------   ------   -----    -----   ------"
+    else                   ! called from 'wrf2lga'
+      print *, "K   PRESS     HEIGHT   TEMP   SH       U       V      OM"
+      print *, "--- --------  -------  -----  -------  ------  ------ -----------"
+    endif
     DO k = 1,nzw
-      if(icaller .eq. 2)then
+      if(icaller .eq. 1)then ! called from 'wrf2swim'
+        PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F6.1,2x,f5.1,2x,F7.5,2x,4F9.5,2x,F8.6)'), &
+          k,pr_wrfs(icentw,jcentw,k),ht_wrfs(icentw,jcentw,k),dz_wrfs(icentw,jcentw,k), t3_wrfs(icentw,jcentw,k), &
+          sh_wrfs(icentw,jcentw,k),qc_wrfs(icentw,jcentw,k),qi_wrfs(icentw,jcentw,k), &
+          qr_wrfs(icentw,jcentw,k),qs_wrfs(icentw,jcentw,k),aod_wrfs(icentw,jcentw,k)
+      else                   ! called from 'wrf2lga'
         PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1,2x,F11.8)'), &
           k,pr_wrfs(icentw,jcentw,k),ht_wrfs(icentw,jcentw,k), t3_wrfs(icentw,jcentw,k), &
           sh_wrfs(icentw,jcentw,k),u3_wrfs(icentw,jcentw,k),v3_wrfs(icentw,jcentw,k),&
           om_wrfs(icentw,jcentw,k)
-      else
-        PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1,2x,F11.8)'), &
-          k,pr_wrfs(icentw,jcentw,k),ht_wrfs(icentw,jcentw,k), t3_wrfs(icentw,jcentw,k), &
-          sh_wrfs(icentw,jcentw,k)
       endif
     ENDDO
     PRINT *, "SFC:"
@@ -914,17 +999,19 @@ CONTAINS
     RETURN
   END SUBROUTINE fill_wrfs 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE vinterp_wrfarw2p(istatus)
+  SUBROUTINE vinterp_wrfarw2p(icaller,nzl,istatus)
 
     IMPLICIT NONE
 
     INTEGER, INTENT(OUT)  :: istatus
-    INTEGER  :: i,j,k,ks,kp, ksb,kst
+    INTEGER  :: i,j,k,ks,kp, ksb,kst,icaller,nzl
     REAL     :: lpb,lpt,lp, wgtb, wgtt
     REAL,PARAMETER     :: dTdlnPBase = 50.0
     REAL               :: tvbot, tvbar, deltalnp
     REAL               :: dz
     istatus = 1
+
+    write(6,*)' Subroutine vinterp_wrfarw2p: ',icaller,nzl,pr_laps(1)
 
     ! Loop over horizontal domain, interpolating vertically for each
     ! column
@@ -967,17 +1054,38 @@ CONTAINS
             sh_wrfp(i,j,kp) = wgtb * sh_wrfs(i,j,ksb) + &
                               wgtt * sh_wrfs(i,j,kst)
 
+            if(icaller .eq. 1)then ! called from 'wrf2swim'
+              qc_wrfp(i,j,kp) = wgtb * qc_wrfs(i,j,ksb) + &
+                                wgtt * qc_wrfs(i,j,kst)
+
+              qi_wrfp(i,j,kp) = wgtb * qi_wrfs(i,j,ksb) + &
+                                wgtt * qi_wrfs(i,j,kst)
+
+              qr_wrfp(i,j,kp) = wgtb * qr_wrfs(i,j,ksb) + &
+                                wgtt * qr_wrfs(i,j,kst)
+
+              qs_wrfp(i,j,kp) = wgtb * qs_wrfs(i,j,ksb) + &
+                                wgtt * qs_wrfs(i,j,kst)
+
+              if(istat_aod .eq. 1)then
+                aod_wrfp(i,j,kp) = wgtb * aod_wrfs(i,j,ksb) + &
+                                   wgtt * aod_wrfs(i,j,kst)
+              endif
+
+            else
+
             ! U3
-            u3_wrfp(i,j,kp) = wgtb * u3_wrfs(i,j,ksb) + &
-                              wgtt * u3_wrfs(i,j,kst)
+              u3_wrfp(i,j,kp) = wgtb * u3_wrfs(i,j,ksb) + &
+                                wgtt * u3_wrfs(i,j,kst)
 
             ! V3
-            v3_wrfp(i,j,kp) = wgtb * v3_wrfs(i,j,ksb) + &
-                              wgtt * v3_wrfs(i,j,kst)
+              v3_wrfp(i,j,kp) = wgtb * v3_wrfs(i,j,ksb) + &
+                                wgtt * v3_wrfs(i,j,kst)
  
             ! OM
-            om_wrfp(i,j,kp) = wgtb * om_wrfs(i,j,ksb) + &
-                              wgtt * om_wrfs(i,j,kst)
+              om_wrfp(i,j,kp) = wgtb * om_wrfs(i,j,ksb) + &
+                                wgtt * om_wrfs(i,j,kst)
+            endif
 
 
           ELSEIF (kst .EQ. 1) THEN ! Extrapolate downward
@@ -1001,19 +1109,47 @@ CONTAINS
             t3_wrfp(i,j,kp) = tvbot/(1.+0.61*mr_wrfs(i,j,1))
             ! SH
             sh_wrfp(i,j,kp) = sh_wrfs(i,j,1)
+
+            if(icaller .eq. 1)then ! called from 'wrf2swim'
+              qc_wrfp(i,j,kp) = qc_wrfs(i,j,1)
+              qi_wrfp(i,j,kp) = qi_wrfs(i,j,1)
+              qr_wrfp(i,j,kp) = qr_wrfs(i,j,1)
+              qs_wrfp(i,j,kp) = qs_wrfs(i,j,1)
+              if(istat_aod .eq. 1)then
+                aod_wrfp(i,j,kp) = aod_wrfs(i,j,1)
+              endif
+              
+            else
+            
             ! U3
-            u3_wrfp(i,j,kp) = u3_wrfs(i,j,1)
+              u3_wrfp(i,j,kp) = u3_wrfs(i,j,1)
 
             ! V3
-            v3_wrfp(i,j,kp) = v3_wrfs(i,j,1)
-           ! OM
-            om_wrfp(i,j,kp) = 0.
+              v3_wrfp(i,j,kp) = v3_wrfs(i,j,1)
+
+            ! OM
+              om_wrfp(i,j,kp) = 0.
+
+            endif
+
           ELSE ! kst never got set .. extrapolate upward
             ! Assume isothermal (above tropopause)
             t3_wrfp(i,j,kp) = t3_wrfs(i,j,nzw)
-            u3_wrfp(i,j,kp) = u3_wrfs(i,j,nzw)
-            v3_wrfp(i,j,kp) = v3_wrfs(i,j,nzw)
-            om_wrfp(i,j,kp) = 0.
+
+            if(icaller .eq. 1)then ! called from 'wrf2swim'
+              qc_wrfp(i,j,kp) = qc_wrfs(i,j,nzw)
+              qi_wrfp(i,j,kp) = qi_wrfs(i,j,nzw)
+              qr_wrfp(i,j,kp) = qr_wrfs(i,j,nzw)
+              qs_wrfp(i,j,kp) = qs_wrfs(i,j,nzw)
+              if(istat_aod .eq. 1)then
+                aod_wrfp(i,j,kp) = aod_wrfs(i,j,nzw)
+              endif
+            else
+              u3_wrfp(i,j,kp) = u3_wrfs(i,j,nzw)
+              v3_wrfp(i,j,kp) = v3_wrfs(i,j,nzw)
+              om_wrfp(i,j,kp) = 0.
+            endif
+
             dz = t3_wrfs(i,j,nzw) * rog * ALOG(pr_wrfs(i,j,nzw)/pr_laps(kp))
             ht_wrfp(i,j,kp) = ht_wrfs(i,j,nzw) + dz 
             ! Reduce moisture toward zero
@@ -1031,24 +1167,36 @@ CONTAINS
     ! If we do smoothing, do it here
     
     ! Print some diagnostics
-    PRINT *, "WRF Press data from center of WRF domain"
-    print *, "KP  PRESS     HEIGHT   TEMP   SH       U       V      OM"
-    print *, "--- --------  -------  -----  -------  ------  ------ -----------"
+    PRINT *, "WRF Press data from center of WRF domain ",nzl
+    if(icaller .eq. 1)then ! called from 'wrf2swim'
+      print *, "KP  PRESS     HEIGHT   TEMP   SH        QC       QI      QR       QS"
+      print *, "--- --------  -------  -----  -------   ------   ------  -----    -----"
+    else
+      print *, "KP  PRESS     HEIGHT   TEMP   SH       U       V      OM"
+      print *, "--- --------  -------  -----  -------  ------  ------ -----------"
+    endif
     DO k = 1,nzl
-      PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1,2x,F11.8)'), &
+      if(icaller .eq. 1)then ! called from 'wrf2swim'
+        PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F5.1,2x,F7.5,2x,4F8.5,2x,F6.1,2x,F11.8)'), &
+          k,pr_laps(k),ht_wrfp(icentw,jcentw,k), t3_wrfp(icentw,jcentw,k), &
+          sh_wrfp(icentw,jcentw,k),qc_wrfp(icentw,jcentw,k),qi_wrfp(icentw,jcentw,k), &
+          qr_wrfp(icentw,jcentw,k),qs_wrfp(icentw,jcentw,k)
+      else
+        PRINT ('(I3,1x,F8.1,2x,F7.0,2x,F5.1,2x,F7.5,2x,F6.1,2x,F6.1,2x,F11.8)'), &
           k,pr_laps(k),ht_wrfp(icentw,jcentw,k), t3_wrfp(icentw,jcentw,k), &
           sh_wrfp(icentw,jcentw,k),u3_wrfp(icentw,jcentw,k),v3_wrfp(icentw,jcentw,k),&
           om_wrfp(icentw,jcentw,k)
+      endif
     ENDDO
     
     RETURN
   END SUBROUTINE vinterp_wrfarw2p
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  SUBROUTINE hinterp_wrf2lga(istatus)
+  SUBROUTINE hinterp_wrf2lga(nxl,nyl,nzl,istatus)
 
   IMPLICIT NONE
-  INTEGER, INTENT(OUT)  :: istatus
+  INTEGER, INTENT(OUT)  :: nxl,nyl,nzl,istatus
   INTEGER               :: i,j,k
   REAL, ALLOCATABLE     :: xloc(:,:), yloc(:,:),dum2d(:,:)
   REAL, ALLOCATABLE     :: topo_wrfl(:,:)  ! WRF Topo interpolated to LAPS grid
@@ -1191,10 +1339,10 @@ CONTAINS
   END SUBROUTINE hinterp_wrf2lga
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE make_derived_pressures
+  SUBROUTINE make_derived_pressures(nxl,nyl,nzl)
 
     IMPLICIT NONE
-    INTEGER :: i,j,k
+    INTEGER :: i,j,k,nxl,nyl,nzl
     REAL    :: wgt1, wgt2,lp1,lp2,dz,lp
     DO j = 1, nyl 
       DO i =  1, nxl
