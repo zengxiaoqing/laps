@@ -307,10 +307,8 @@ namelist/lapsprep_nl/ var_prefix, sfcinf, hotstart, balance  &
                   
 
 print*
-print*,'======> Read_namelist_laps: ',trim(namelist_name),nk_laps
+print*,'======> Read_namelist_laps: ',trim(namelist_name)
 print*,'======>          File_name: ',trim(filename)
-print*
-
 
 ! open the namelist file name
 
@@ -408,6 +406,9 @@ elseif (namelist_name == 'lapsparms') then
 !  aod_bin(3) = 0.00   ;   aod_asy(3) = -0.65      
 
    read (12, lapsparms_nl, err=901)
+   write(6,1)nk_laps,nx_l,ny_l
+1  format(' ======> Read from namelist: lapsparms_nl',3i8)
+!  print*,'======> Read from namelist: lapsparms_nl',nk_laps,nx_l,ny_l
    
    ! QC the input variables if desired
    !  .
@@ -488,6 +489,8 @@ else
 endif
 
 close (12)
+
+print*
 
 return
 
