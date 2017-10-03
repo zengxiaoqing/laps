@@ -14,7 +14,7 @@
 
 # Annotate Model
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
-#   IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
+    IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
     echo "polar IMGGEOM = $IMGGEOM"
     convert -fill white -annotate +5+20  "Simulated" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
   fi
@@ -44,6 +44,12 @@
           convert -fill white -annotate +360+503  "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    elif test "$IMGGEOM" = "1023x1023"; then
     convert -fill white -annotate +720+1015 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   elif test "$IMGGEOM" = "1535x1535"; then
+    convert -fill white -annotate +1080+1527 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   elif test "$IMGGEOM" = "2047x2047"; then
+    convert -fill white -annotate +1440+2039 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   elif test "$IMGGEOM" = "2559x2559"; then
+    convert -fill white -annotate +1800+2551 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    else
     convert -fill white -annotate +1080+1527 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    fi
