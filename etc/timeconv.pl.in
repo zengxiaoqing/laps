@@ -7,6 +7,7 @@
 #
 # -i (optional)        format to print date in, yydddhhmm       (default if not specified)
 #                                               mm              (month)
+#                                               yyyymmddhhmm    (12 character date)
 #                                               yyyymmdd_hhmm   (13 character date)
 #                                               yyyy-mm-dd-hhmm (WRFOUT date)
 #                                               yyyymmddhh
@@ -18,6 +19,7 @@
 #                                               yyyymmddhh
 #                                               yyyy_mm_dd_hhmm (lfmpost.pl input format)
 #                                               ascii_time      (mm/dd/yyyy hh:mm)
+#                                               i4time        (seconds since 1970)
 #
 # -t (optional)        add this number of seconds to the input time
 #
@@ -64,7 +66,17 @@ if(defined $opt_a){
       my $mon = substr($opt_a,4,2);
       my $day = substr($opt_a,6,2);
       my $hours = substr($opt_a,8,2);
-      $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,"00","00");
+      $i4time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,"00","00");
+#     my $doy = &laps_tools::get_julian_day($day,$month,$year);
+#     $archive_time = &laps_tools::a9time_to_i4time($a9time);
+
+   }elsif(length($opt_a) == 12){ # yyyymmddhhmm
+      my $year = substr($opt_a,0,4); 
+      my $mon = substr($opt_a,4,2);
+      my $day = substr($opt_a,6,2);
+      my $hours = substr($opt_a,8,2);
+      my $minutes = substr($opt_a,10,2);
+      $i4time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
 #     my $doy = &laps_tools::get_julian_day($day,$month,$year);
 #     $archive_time = &laps_tools::a9time_to_i4time($a9time);
 
@@ -74,7 +86,7 @@ if(defined $opt_a){
       my $day = substr($opt_a,8,2);
       my $hours = substr($opt_a,11,2);
       my $minutes = substr($opt_a,13,2);
-      $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
+      $i4time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
 
    }elsif(length($opt_a) == 9){ # yydddhhmm (a9time format)
       my $a9time = $opt_a;
@@ -184,6 +196,9 @@ if($opt_o eq "mm"){
    $mn="0".$mn if(length($mn)<2);
    print "$mo/$dy/$yr $hr:$mn\n";
 #  print "$yydddhhmm\n";
+
+}elsif($opt_o eq "i4time"){
+   print "$i4time\n";
 
 }else{
    print "$yydddhhmm\n";
