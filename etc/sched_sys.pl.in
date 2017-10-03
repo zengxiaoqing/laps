@@ -28,7 +28,8 @@
 # -f                   format to print date in, yydddhhmm     (default if not specified)
 #                                               mm            (month)
 #                                               yyyymmdd_hhmm (13 character date)
-#                                               yyyymmddhhmm (12 character date)
+#                                               yyyymmddhhmm  (12 character date)
+#                                               yyyy/mm/dd/hhmm (subdirectory date)
 #                                               yyyymmddhh
 #                                               yyyy_mm_dd_hhmm (lfmpost.pl input format)
 #                                               ascii_time      (mm/dd/yyyy hh:mm)
@@ -192,6 +193,28 @@ if($opt_f eq "mm"){
    my $hhmm = substr($yydddhhmm,5,4);
 
    print "$yyyy$mm$dd$hhmm\n";
+
+}elsif($opt_f eq "yyyy/mm/dd/hhmm"){
+   my $yy  = substr($yydddhhmm,0,2);
+   my $yyyy;
+   if($yy < 60){
+       $yyyy = "20".$yy
+   }else{
+       $yyyy = "19".$yy
+   }
+
+   my $ddd = substr($yydddhhmm,2,3);
+   my @mmmdd=&laps_tools::JJJ2MMDD($ddd,$yy);
+   my $mm = @mmmdd[0];
+   $mm="0".$mm if(length($mm)<2);
+
+   my $dd = @mmmdd[1];
+   $dd="0".$dd if(length($dd)<2);
+
+   my $hhmm = substr($yydddhhmm,5,4);
+
+   print "$yyyy/$mm/$dd/$hhmm\n";
+#  print "$yyyy"."/"."$mm"."/"."$dd"."/"."$hhmm\n";
 
 }elsif($opt_f eq "yyyy_mm_dd_hhmm"){
    my $yy  = substr($yydddhhmm,0,2);
