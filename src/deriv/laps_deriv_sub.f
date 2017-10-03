@@ -614,16 +614,16 @@ c read in laps lat/lon and topo
         write(6,*)' Writing out grid in pressure coordinates'
 
         do k = KCLOUD,1,-1
-          write(6,*)' clouds_3d_pres CTR (LC3)'
-     1           ,k,clouds_3d(idb,jdb,k)
+          write(6,601)k,clouds_3d(idb,jdb,k)
+601       format('  clouds_3d      CTR (LC3)',i4,f9.3)      
         enddo ! k
 
         call interp_height_pres_fast(NX_L,NY_L,NZ_L,kcloud
      1  ,clouds_3d_pres,clouds_3d,heights_3d,cld_hts,istatus)
 
         do k = NZ_L,1,-1
-          write(6,*)' clouds_3d_pres CTR (LCP)'
-     1           ,k,clouds_3d_pres(idb,jdb,k)
+          write(6,621)k,clouds_3d_pres(idb,jdb,k),heights_3d(idb,jdb,k)
+621       format('  clouds_3d_pres CTR (LCP)',i4,f9.3,f10.1)      
         enddo ! k
 
         var = 'LCP'
