@@ -1631,7 +1631,7 @@ C       EW SLICES
             do j = 1,NY_L
                 cvr_water_temp(i,j) = r_missing_data
                 ioff = min(max(i + nint(offset_ir_i(i,j)),1),NX_L)
-                joff = min(max(j + nint(offset_ir_j(i,j)),1),NX_L)
+                joff = min(max(j + nint(offset_ir_j(i,j)),1),NY_L)
                 tb8_k_offset(i,j) = tb8_k(ioff,joff)
                 if(i .eq. idb .AND. j .eq. jdb)then
                     write(6,*)'tb8_offset',i,j,ioff,joff
