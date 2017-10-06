@@ -5,19 +5,24 @@ c
        icnt = 0
        istatus = 0       ! error return
 c
+       write(6,*)'Subroutine check - r_missing_data is ',r_missing_data
+
        do j=1,ny_l
        do i=1,nx_l
          if(data(i,j).ne.r_missing_data)goto 10
 c        if(data(i,j).gt.0. .and. data(i,j).lt.bad) go to 10
          if(icnt .ge. -10)then
-           write(6,*)'check missing data on model grid at',i,j
+            write(6,*)' check missing data on model grid at'
+     1               ,i,j,data(i,j)
          endif
          icnt = icnt - 1
-10       enddo !i
+10     enddo !i
        enddo !j
 c
        if(icnt .lt. 0) then
          istatus = icnt
+         write(6,*)' check routine missing data fraction is '
+     1             ,-float(icnt)/float(nx_l*ny_l)          
        else
          istatus = 1
        endif
