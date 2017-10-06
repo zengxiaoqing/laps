@@ -127,7 +127,7 @@ c      ------------------------------
 c In this block the average pixel value is used for remapping the visible
 c satellite to the output LAPS grid.
 c
-          write(6,*)'Image ratio .lt. 0.5'   !0.75'
+          write(6,*)'Image ratio .lt. 0.5 ',r_grid_ratio
           write(6,*)'Use pixel avg for VIS count'
           DO 10 J=1,JMAX
           DO 10 I=1,IMAX
@@ -222,7 +222,7 @@ c      ----------------------------
 c This block bilinearly interpolates four surrounding grid points to the
 c output grid point.
 c
-          write(6,*)'grid ratio .ge. 0.5'  !0.75'
+          write(6,*)'grid ratio .ge. 0.5 ',r_grid_ratio
           write(6,*)'use bilinear interp for VIS count'
           DO 20 J=1,JMAX
           DO 20 I=1,IMAX
