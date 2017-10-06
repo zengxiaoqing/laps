@@ -111,7 +111,7 @@ c
 
        real r_llij_lut_ri(ni,nj)
        real r_llij_lut_rj(ni,nj)
-       real r_grid_ratio
+       real r_grid_ratio, bad_frac
        real image_vis(n_vis_elem,n_vis_lines)
        real albedo_max,albedo_min
        real rspacing_dum
@@ -158,7 +158,7 @@ c
        character*125 comment_2d
        character*9 a9time
 
-       logical       lskpnorm
+       integer mode_norm
 
        include 'satellite_dims_lvd.inc'
        include 'satellite_common_lvd.inc'
@@ -210,9 +210,10 @@ c
        call check(laps_vis_raw,r_missing_data,istatus_v,imax,jmax)
        if(istatus_v .lt. 0) then
           write(6,*)'Bad vis counts detected in process_vis_satellite'
-          write(6,916) istatus_v
+          bad_frac = -float(istatus_v) / float(imax*jmax)
+          write(6,916) istatus_v,bad_frac
           istatus(1) = istatus_v
- 916      format(' +++ WARNING. Visible status = ',i8)
+ 916      format(' +++ WARNING. Visible status/frac = ',i8,f7.3)
        else
           write(6,*)
      1         'All vis data ok on model grid (process_vis_satellite)'         
@@ -723,8 +724,8 @@ c make it look like goes7
 c
 c ready to normalize vis counts to local domain
 c =============================================
-       lskpnorm=.false.
-       if(.not.lskpnorm)then
+       mode_norm = 1
+       if(mode_norm .eq. 1)then
 
           call normalize_brightness(i4time,lat,lon,
      &             laps_vis_norm,imax,jmax,
@@ -743,6 +744,12 @@ c =============================================
      &              ,r_missing_data,istatus_n,imax,jmax)
              istatus(2)=istatus_n  
           endif
+
+       elseif(mode_norm .eq. 2)then
+!         call refl_to_albedo(reflectance,solalt,land_albedo    ! I
+!    1                       ,cloud_albedo)                     ! O
+          continue
+
        else
 
           print*,'Skip Normalization: ',csatid
