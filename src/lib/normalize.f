@@ -570,3 +570,27 @@ C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
 
         return
         end
+
+       subroutine refl_to_albedo(reflectance,solalt,land_albedo    ! I
+     1                          ,cloud_albedo)                     ! O
+
+       include 'trigd.inc'
+
+       real land_albedo
+
+       solalt_eff = max(solalt,6.0)
+
+       reflectance_land = land_albedo * sind(solalt_eff)
+       reflectance_air  = 0.11
+
+!      Cloud albedo = 1 if reflectance = sind(solalt_eff)       
+!      Cloud albedo = 0 if reflectance = reflectance_land+reflectance_air
+
+       zeropoint = reflectance_land + reflectance_air
+       onepoint = sind(solalt_eff)
+
+       cloud_albedo = (reflectance-zeropoint) / (onepoint-zeropoint)
+       cloud_albedo = min(max(cloud_albedo,0.),1.)
+       
+       return
+       end
