@@ -107,9 +107,9 @@ C To fix this, call read_laps instead
 10    read(lun,*,err=11,end=11)kkdim
       go to 12
 11    write(6,*)' Warning: could not read kkdim'
-      call sleep(5)
+      call sleep(2)
       itry = itry + 1
-      if(itry .le. 5)then
+      if(itry .le. 2)then
           close(lun) 
           write(6,*)' Retrying the read'
           go to 5 
