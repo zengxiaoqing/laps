@@ -160,10 +160,10 @@ c
       logical   l_archive_case
 
       integer   i,j,k,l,n,ic
-      integer   ispec
+      integer   ispec,iispec
       integer   nlf,ilf
       integer   nlf_prev
-      integer   in,ncs
+      integer   in,ncs,istat_grij(maxchannel)
 c
       real      vis_cnt_to_cnt_lut(0:4095)
       real      ir_cnt_to_btemp_lut(0:4095)
@@ -1054,6 +1054,8 @@ c
          enddo
       enddo
 
+      istat_grij(:) = 0
+
       do i = 1,nft
 
          nlf = 0
@@ -1072,18 +1074,38 @@ c ----------  GMS SATELLITE SWITCH -------
             if(n.le.0)n=3
             call lvd_file_specifier(c_type(j,i),ispec,istat)
 
+            write(6,*)' image resolution ',i,j,ispec,r_image_res_m(j,i)
+
             if(ispec.eq.4)then
               if(r_image_status(j,i).le.0.3333)then
 
 !              Is this needed for coarse LAPS grids using pixel averaging?
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
-                   write(6,*)' Calling latlon_to_grij for IR'
+                 if(maxval(istat_grij) .eq. 0)then
+                   write(6,*)' Calling latlon_to_grij for VIS ',ispec
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 sri(1,1,ispec),srj(1,1,ispec),
      1                                 n_ir_elem,n_ir_lines,istatus)
-                   if(istatus .ne. 1)r_image_status(j,i) = 1.
-               endif
+                   if(istatus .ne. 1)then
+                      r_image_status(j,i) = 1.
+                      istat_grij(ispec) = 1
+                   endif
+                 else ! try to copy grij data to save time (assume same res)
+                   do iispec = 1,maxchannel
+                     do while(istat_grij(ispec) .eq. 0)
+                       if(istat_grij(ispec) .eq. 1)then
+                         write(6,*)
+     1                           ' Copying latlon_to_grij data for IR '
+     1                           ,iispec,ispec
+                         sri(:,:,ispec) = sri(:,:,iispec)
+                         srj(:,:,ispec) = srj(:,:,iispec)
+                         istat_grij(ispec) = 1
+                       endif
+                     enddo ! while
+                   enddo ! iispec
+                 endif ! istat_grij
+               endif ! csattype
 
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
@@ -1143,13 +1165,32 @@ c                    endif
               if(r_image_status(j,i).lt.0.3333)then
 !YL
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
-                   write(6,*)' Calling latlon_to_grij for IR'
+                 if(maxval(istat_grij) .eq. 0)then
+                   write(6,*)' Calling latlon_to_grij for IR ',ispec
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 sri(1,1,ispec),srj(1,1,ispec),
      1                                 n_ir_elem,n_ir_lines,istatus)
-                   if(istatus .ne. 1)r_image_status(j,i) = 1.
-               endif
+                   if(istatus .ne. 1)then
+                      r_image_status(j,i) = 1.
+                      istat_grij(ispec) = 1
+                   endif
+                 else ! try to copy grij data to save time (assume same res)
+                   do iispec = 1,maxchannel
+                     do while(istat_grij(ispec) .eq. 0)
+                       if(istat_grij(ispec) .eq. 1)then
+                         write(6,*)
+     1                           ' Copying latlon_to_grij data for IR '    
+     1                           ,iispec,ispec
+                         sri(:,:,ispec) = sri(:,:,iispec)
+                         srj(:,:,ispec) = srj(:,:,iispec)
+                         istat_grij(ispec) = 1
+                       endif
+                     enddo ! while
+                   enddo ! iispec
+                 endif ! istat_grij
+               endif ! csattype
+
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
@@ -1189,13 +1230,29 @@ c                    endif
             if(r_image_status(j,i).lt.0.3333)then
 !YL
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
-                   write(6,*)' Calling latlon_to_grij for IR'
+                 if(maxval(istat_grij) .eq. 0)then
+                   write(6,*)' Calling latlon_to_grij for IR ',ispec
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 sri(1,1,ispec),srj(1,1,ispec),
      1                                 n_ir_elem,n_ir_lines,istatus)
                    if(istatus .ne. 1)r_image_status(j,i) = 1.
-               endif
+                 else ! try to copy grij data to save time (assume same res)
+                   do iispec = 1,maxchannel
+                     do while(istat_grij(ispec) .eq. 0)
+                       if(istat_grij(ispec) .eq. 1)then
+                         write(6,*)
+     1                           ' Copying latlon_to_grij data for IR '    
+     1                           ,iispec,ispec
+                         sri(:,:,ispec) = sri(:,:,iispec)
+                         srj(:,:,ispec) = srj(:,:,iispec)
+                         istat_grij(ispec) = 1
+                       endif
+                     enddo ! while
+                   enddo ! iispec
+                 endif ! istat_grij
+               endif             ! csattype
+              
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
@@ -1235,13 +1292,29 @@ c                    endif
             if(r_image_status(j,i).lt.0.3333)then
 !YL
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
-                   write(6,*)' Calling latlon_to_grij for IR'
+                 if(maxval(istat_grij) .eq. 0)then
+                   write(6,*)' Calling latlon_to_grij for IR ',ispec
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 sri(1,1,ispec),srj(1,1,ispec),
      1                                 n_wv_elem,n_wv_lines,istatus)
                    if(istatus .ne. 1)r_image_status(j,i) = 1.
-               endif
+                 else ! try to copy grij data to save time (assume same res)
+                   do iispec = 1,maxchannel
+                     do while(istat_grij(ispec) .eq. 0)
+                       if(istat_grij(ispec) .eq. 1)then
+                         write(6,*)
+     1                           ' Copying latlon_to_grij data for IR '    
+     1                           ,iispec,ispec
+                         sri(:,:,ispec) = sri(:,:,iispec)
+                         srj(:,:,ispec) = srj(:,:,iispec)
+                         istat_grij(ispec) = 1
+                       endif
+                     enddo ! while
+                   enddo ! iispec
+                 endif ! istat_grij
+               endif ! csattype
+
                call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_wv_lines,n_wv_elem,
@@ -1278,21 +1351,34 @@ c                    endif
             endif
 
             elseif(ispec.eq.1)then
-            if(r_image_status(j,i).lt.0.3333)then
+              if(r_image_status(j,i).lt.0.3333)then
 
-               if(csattype.eq.'rll')then
-                   write(6,*)' Calling latlon_to_grij for VIS'
+               if(csattype.eq.'rll' .or. csattype.eq.'cms')then
+                 if(maxval(istat_grij) .eq. 0)then
+                   write(6,*)' Calling latlon_to_grij for VIS ',ispec
                    call latlon_to_grij(lat,lon,nx_l,ny_l,
      1                                 image_lat_ir,image_lon_ir,
      1                                 sri(1,1,ispec),srj(1,1,ispec),
      1                                 n_ir_elem,n_ir_lines,istatus)
-                   if(istatus .ne. 1)r_image_status(j,i) = 1. ! error
-               elseif(csattype.eq.'cms')then
-                   write(6,*)' Copying latlon_to_grij data for VIS'
-                   sri(:,:,ispec) = sri(:,:,4) ! from IR
-                   srj(:,:,ispec) = srj(:,:,4) ! from IR
-!                  if(istatus .ne. 1)r_image_status(j,i) = 1. ! error
-               endif
+                   if(istatus .ne. 1)then
+                      r_image_status(j,i) = 1. ! error
+                      istat_grij(ispec) = 1
+                   endif
+                 else ! try to copy grij data to save time (assume same res)
+                   do iispec = 1,maxchannel
+                     do while(istat_grij(ispec) .eq. 0)
+                       if(istat_grij(ispec) .eq. 1)then
+                         write(6,*)
+     1                           ' Copying latlon_to_grij data for VIS '
+     1                           ,iispec,ispec
+                         sri(:,:,ispec) = sri(:,:,iispec)
+                         srj(:,:,ispec) = srj(:,:,iispec)
+                         istat_grij(ispec) = 1
+                       endif
+                     enddo ! while
+                   enddo ! iispec
+                 endif ! istat_grij
+               endif ! csattype
 
                call process_vis_satellite(csatid,
      &                      csattype,
@@ -1318,6 +1404,8 @@ c
                   var_lvd(nlf) = 'SVS'       ! satellite, visible
                   c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE - RAW'
                   units_lvd(nlf) = 'COUNTS'
+               else
+                  write(6,*)' less than 1% good vis data in status 1'
                endif
 
                if( (nx_l*ny_l+istatus_vis(2)).gt.
@@ -1328,6 +1416,8 @@ c
                   var_lvd(nlf) = 'SVN'       ! satellite, visible, normalized
                   c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE - NORM'
                   units_lvd(nlf) = 'COUNTS'
+               else
+                  write(6,*)' less than 1% good vis data in status 2'
                endif
 
                if( (nx_l*ny_l+istatus_vis(3)) .gt.
@@ -1338,6 +1428,7 @@ c
                   var_lvd(nlf) = 'ALB'       ! albedo
                   c_lvd(nlf)= csatid//' (VISIBLE) ALBEDO'
                else
+                  write(6,*)' less than 1% good vis data in status 3'
                   write(6,*)'ALB not moved',nx_l*ny_l+istatus_vis(3)
      &                                     ,good_vis_data_thresh
                endif
