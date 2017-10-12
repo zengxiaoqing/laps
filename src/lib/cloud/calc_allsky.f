@@ -1,5 +1,5 @@
 
-          subroutine calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
+        subroutine calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
 !    1                     ,heights_3d                              ! I
 !    1                     ,rain_3d,snow_3d                         ! I
 !    1                     ,pres_3d,aod_3d                          ! I
@@ -209,6 +209,10 @@
 
           write(6,*)' Return from get_cloud_rays: ',a9time
      1             ,' aod_vrt is ',aod_vrt
+
+          call add_topo_mask(topo_ri,topo_rj,lat,lon,NX_L,NY_L      ! I
+     1                          ,nc,minalt,maxalt,minazi,maxazi     ! I
+     1                          ,topo_albedo)                       ! I/O
 
           write(6,*)' observer htagl/htmsl ',htagl,htmsl
           write(6,*)' swi_2d at observer location 2 = ',swi_obs,'W/m^2'
@@ -766,3 +770,80 @@
 
           return
           end
+
+        subroutine add_topo_mask(topo_ri,topo_rj,lat,lon,ni,nj          ! I
+     1                          ,nc,minalt,maxalt,minazi,maxazi         ! I
+     1                          ,topo_albedo)                           ! I/O
+
+!       Add high resolution vector albedo information to 'topo_albedo'
+
+        real topo_ri(minalt:maxalt,minazi:maxazi)
+        real topo_rj(minalt:maxalt,minazi:maxazi)
+        real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
+
+        parameter (n_rect = 2)
+
+        real   lat(ni,nj)
+        real   lon(ni,nj)
+        real   lat_rect(n_rect)
+        real   lon_rect(n_rect)
+
+        real*8 width_rect(n_rect)
+        real*8 height_rect(n_rect)
+        real*8 azi_rect(n_rect)
+        real*8 albedo_rect(n_rect)
+
+        real*8 ri_rect,rj_rect,ridelt,rjdelt
+
+        write(6,*)' adding topo mask'
+
+        lat_rect(1) = 39.849
+        lon_rect(1) = -104.674
+        width_rect(1) = 3.0
+        height_rect(1) = 0.2
+        albedo_rect(1) = 1.
+
+        lat_rect(2) = 39.849
+        lon_rect(2) = -104.674
+        width_rect(2) = 2.8
+        height_rect(2) = 0.2
+        albedo_rect(2) = 0.
+
+        do m = 1,n_rect
+          call latlon_to_rlapsgrid(lat_rect(m),lon_rect(m),lat,lon,ni,nj
+     1                            ,r4i_rect,r4j_rect,istatus)
+          ri_rect = r4i_rect
+          rj_rect = r4j_rect
+
+          do ialt = minalt,maxalt
+          do jazi = minazi,maxazi
+            ridelt = topo_ri(ialt,jazi) - ri_rect
+            rjdelt = topo_rj(ialt,jazi) - rj_rect
+
+!           These can be rotated by azimuth, presently is N-S
+            if(abs(ridelt) .lt. height_rect(m)/2.  .AND.
+     1         abs(rjdelt) .lt. width_rect(m)/2.        )then  
+              topo_albedo(:,ialt,jazi) = albedo_rect(m)
+!             if(ialt .eq. -15 .or. ialt .eq. -25)then
+              if(jazi .eq. 40)then
+                 write(6,1)m,ialt,jazi,topo_ri(ialt,jazi)
+     1                                ,topo_rj(ialt,jazi)
+1                format(i2,2i5,2f9.2,' runway added')               
+              endif
+            else
+!             if(ialt .eq. -15 .or. ialt .eq. -25)then
+              if(jazi .eq. 40)then
+                 write(6,2)m,ialt,jazi,topo_ri(ialt,jazi)
+     1                                ,topo_rj(ialt,jazi)
+2                format(i2,2i5,2f9.2,' runway not added')               
+              endif
+              continue
+            endif
+
+          enddo ! jazi
+          enddo ! ialt
+        enddo ! m
+       
+        return
+        end
+      
