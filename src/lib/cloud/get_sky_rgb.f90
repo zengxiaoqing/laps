@@ -401,7 +401,7 @@
             azid1 = 90. ; azid2 = 270.
             moon_cond_clr = 0
         endif
-        if(htmsl .gt. 50e3)then
+        if(htmsl .gt. 50e3 .or. .true.)then
             azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
             azid1 = 270.  ; azid2 = 270. ! test custom
         endif
