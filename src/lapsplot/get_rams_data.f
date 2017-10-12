@@ -98,8 +98,6 @@ C
 
 
 !     Declarations for 'write_zzz' call
-      integer iwmostanum(recNum)
-      character a9time_ob_r(recNum)*9
       logical l_closest_time, l_closest_time_i, l_in_domain
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
