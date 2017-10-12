@@ -94,7 +94,7 @@
      1                         ,albedo,istatus)
 
       use ppm
-      use mem_namelist, ONLY: c6_maproj 
+      use mem_namelist, ONLY: c6_maproj, grid_spacing_m 
 
       include 'wa.inc'
 
@@ -176,13 +176,14 @@
           pix_latlon = 1. / 48.              ! 17280x8640 image
           l_global_bm = .true.
 
-        elseif(c6_maproj .ne. 'latlon')then  ! local domain  (500m pixels)
+        elseif(c6_maproj .ne. 'latlon' .and.
+     1         grid_spacing_m .lt. 8000.)then ! local domain (500-8000m pixels)
           file=trim(directory)//'world.2004' 
      1                        //c2_mn//'.3x21600x21600.crop.ppm'
           pix_latlon = 1. / 240. !                    (90x180 degree tile)
           l_global_bm = .false.
 
-        else                     ! latlon global projection (7.4km pixels)
+        else                     ! latlon global projection (>7.4km pixels)
           file=trim(directory)//'world.2004'//c2_mn//'.3x5400x2700.ppm'
           pix_latlon = 1. / 15.                             
           l_global_bm = .true.
