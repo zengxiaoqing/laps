@@ -124,7 +124,7 @@
 
         real moon_alt(ni,nj)
         real moon_azi(ni,nj)
-        real moon_mag,moon_mag_thr
+        real moon_mag,moon_mag_thr,mean_free_path
 
         real obj_alt(ni,nj)
         real obj_azi(ni,nj)
@@ -801,8 +801,7 @@
 
 !       Set up starting information for ray trace from observer
 
-        if(htagl .eq. 0.)then ! start from sfc
-          htstart = topo_sfc  ! MSL
+        if(.true.)then ! general info
           write(6,*)' i/j/topo_sfc = ',i,j,topo_sfc
           write(6,*)' height column = ',heights_3d(i,j,:)
           do k = 1,nk-1
@@ -811,10 +810,14 @@
                 frach = (topo_sfc - heights_3d(i,j,k)) / 
      1                  (heights_3d(i,j,k+1) - heights_3d(i,j,k))
                 ksfc = k
-                write(6,*)' Start at sfc, ksfc = ',ksfc
                 rksfc = float(ksfc) + frach
             endif
           enddo ! k
+        endif
+
+        if(htagl .eq. 0.)then ! start from sfc
+          htstart = topo_sfc  ! MSL
+          write(6,*)' Start at sfc, ksfc = ',ksfc
           rkstart = rksfc
           patm = pres_3d(i,j,ksfc) / 101325.
         else ! start aloft
@@ -889,27 +892,59 @@
 !       Calculate observer mean free paths
         k_obs = nint(rkstart)
         if(k_obs .le. nk)then
-          aero_ext_coeff = aod_3d(i,j,k_obs)             
+          k_vis = k_obs
+        else
+          k_vis = ksfc
+        endif
+
+        if(.true.)then ! general info
+          aero_ext_coeff = aod_3d(i,j,k_vis) ! m**-1            
+
+          vsb_const = -log(.02)
           if(aero_ext_coeff .gt. 0.)then
-            write(6,5)1.0/aero_ext_coeff,lat(i,j),lon(i,j)
- 5          format(' observer aerosol mean free path / lat / lon = '
-     1               ,e16.3,5x,2f8.2)
+            mean_free_path = 1.0/aero_ext_coeff
+            vsb_mi = mean_free_path / 1609.34 * vsb_const
+            write(6,5)1.0/aero_ext_coeff,vsb_mi,lat(i,j),lon(i,j),k_vis
+ 5          format(
+     1      ' observer aerosol mean free path / vsb / lat / lon / k '
+     1          ,e16.3,'m',2x,f8.2,'mi',5x,2f8.2,i4)
           endif
-          if(clwc_3d(i,j,k_obs) .gt. 0.)then
-            write(6,*)' observer clwc mean free path  = '
-     1               ,1.0/clwc_3d(i,j,k_obs)
+
+!         Will need MEE information for hydrometeors
+          if(clwc_3d(i,j,k_vis) .gt. 0.)then
+            mean_free_path = 1.0/clwc_3d(i,j,k_vis)
+            vsb_mi = mean_free_path / 1609.34 * vsb_const
+            write(6,*)' observer clwc mean free path / vsb = '
+     1                               ,mean_free_path,vsb_mi
+          else
+            write(6,*)' zero clwc visibility obstruction for observer'
           endif
-          if(cice_3d(i,j,k_obs) .gt. 0.)then
-            write(6,*)' observer cice mean free path  = '
-     1               ,1.0/cice_3d(i,j,k_obs)
+
+          if(cice_3d(i,j,k_vis) .gt. 0.)then
+            mean_free_path = 1.0/cice_3d(i,j,k_vis)
+            vsb_mi = mean_free_path / 1609.34 * vsb_const
+            write(6,*)' observer cice mean free path / vsb = '
+     1                               ,mean_free_path,vsb_mi
+          else
+            write(6,*)' zero cice visibility obstruction for observer'
           endif
-          if(rain_3d(i,j,k_obs) .gt. 0.)then
-            write(6,*)' observer rain mean free path  = '
-     1               ,1.0/rain_3d(i,j,k_obs)
+
+          if(rain_3d(i,j,k_vis) .gt. 0.)then
+            mean_free_path = 1.0/rain_3d(i,j,k_vis)
+            vsb_mi = mean_free_path / 1609.34 * vsb_const
+            write(6,*)' observer rain mean free path / vsb = '
+     1                               ,mean_free_path,vsb_mi
+          else
+            write(6,*)' zero rain visibility obstruction for observer'
           endif
-          if(snow_3d(i,j,k_obs) .gt. 0.)then
-            write(6,*)' observer snow mean free path  = '
-     1               ,1.0/snow_3d(i,j,k_obs)
+
+          if(snow_3d(i,j,k_vis) .gt. 0.)then
+            mean_free_path = 1.0/snow_3d(i,j,k_vis)
+            vsb_mi = mean_free_path / 1609.34 * vsb_const
+            write(6,*)' observer snow mean free path / vsb = '
+     1                               ,mean_free_path,vsb_mi
+          else
+            write(6,*)' zero snow visibility obstruction for observer'
           endif
         endif
 
@@ -942,6 +977,7 @@
             azid1 = int(sol_azi(i,j))
             azid2 = azid1
         endif
+        azid1 = 40. ; azid2 = 40.
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
 
@@ -969,13 +1005,20 @@
          dist_2_topo(ialt,:) = dist_to_topo ! initialize
          grdasp = (alt_scale / azi_scale) 
 
+         if(grid_spacing_m .lt. 500.)then
+           topo_alt_max = 13. ! highest terrain elevation angle
+           topo_alt_thresh = max(topo_alt_max,10.)
+         else
+           topo_alt_thresh = 10.
+         endif
+
          if(altray .ge. 20.)then     ! 2 deg alt, 2 deg azi
              if(ialt .eq. (ialt/idelt)*idelt)then
                  jazi_delt = nint(2. / azi_scale)
              else
                  jazi_delt = maxazi
              endif
-         elseif(altray .ge. 10.)then ! alt_scale, 1 deg azi
+         elseif(altray .ge. topo_alt_thresh)then ! alt_scale, 1 deg azi
              jazi_delt = nint(1. / azi_scale)
          elseif(altray .le. -10. .and. htstart .lt. 100000.)then 
              jazi_delt = nint(1. / azi_scale)
@@ -1028,7 +1071,7 @@
 
          call get_htmin(altray,patm,htstart,earth_radius,0,patm2,htmin)
 
-         if(idebug .eq. 1)then
+         if(idebug .eq. 1 .or. altray .eq. nint(altray))then
            write(6,*)'altray/htmin/dist_to_topo = '
      1               ,altray,htmin,dist_to_topo
            write(6,*)'alt/jazi_delt/grdasp',ialt,altray,jazi_delt,grdasp
@@ -1079,7 +1122,7 @@
 
 !         Non-verbose (low observer)                    
           if(l_box .eqv. .false.)then
-            if(htstart .lt. 7500. .or. altray .gt. 0.0)then
+            if(htstart .lt. 25. .or. altray .gt. 0.0)then
               if(mode_aero_cld .lt. 3)then
                 idebug = 0 ! ; idebug_a(ialt,jazi) = 0
               endif
@@ -1146,16 +1189,12 @@
           dist_box = 1e30
 
           if(.true.)then
-!           do k = ksfc,ksfc
               r_cloud_3d(ialt,jazi) = 0.
               cloud_od(ialt,jazi) = 0.
               cloud_od_sp(ialt,jazi,:) = 0.
               
               ri1 = ri
               rj1 = rj
-
-!             ht_sfc = heights_1d(ksfc)
-!             ht_sfc = topo_sfc       
 
               grid_factor = grid_spacing_m / 3000.
 
@@ -2328,23 +2367,30 @@
                           dist_2_topo(ialt,jazi) = dslant1_h 
      1                                  - slant2  * (1d0-frac_step_topo)
 !    1                        sqrt(dxy1_h**2 + dz1_h**2)
+                          topo_ri(ialt,jazi)
+     1                                = rinew_l * (1.-frac_step_topo) 
+     1                                + rinew_h * frac_step_topo
+                          topo_rj(ialt,jazi)
+     1                                = rjnew_l * (1.-frac_step_topo) 
+     1                                + rjnew_h * frac_step_topo
                       endif
 
                       if(idebug .eq. 1)then
                           write(6,91)ht_m,topo_m,frac_step_topo
-     1                                    ,solar_corr  
-     1                                    ,topo_gti(ialt,jazi)
-     1                                    ,topo_albedo(:,ialt,jazi)
-     1                                    ,aod_2_topo(ialt,jazi)
-     1                                    ,dist_2_topo(ialt,jazi)
-     1                                    ,sum_aod_ill_opac     
-     1                                    ,sum_aod_ill_opac_potl 
-     1                                    ,airmass_2_topo_3d(ialt,jazi)
-     1                                    ,gnd_glow(inew_mb,jnew_m)
-     1                                    ,ghi_2d(inew_mb,jnew_m)
-     1                                    ,dhi_2d(inew_mb,jnew_m)
+     1                           ,topo_ri(ialt,jazi),topo_rj(ialt,jazi)
+     1                           ,solar_corr  
+     1                           ,topo_gti(ialt,jazi)
+     1                           ,topo_albedo(:,ialt,jazi)
+     1                           ,aod_2_topo(ialt,jazi)
+     1                           ,dist_2_topo(ialt,jazi)
+     1                           ,sum_aod_ill_opac     
+     1                           ,sum_aod_ill_opac_potl 
+     1                           ,airmass_2_topo_3d(ialt,jazi)
+     1                           ,gnd_glow(inew_mb,jnew_m)
+     1                           ,ghi_2d(inew_mb,jnew_m)
+     1                           ,dhi_2d(inew_mb,jnew_m)
                       endif
-91                    format(' Hit topo',2f8.1,2f8.3,f8.2,4f8.3,f12.0
+91                    format(' Hit topo',2f8.1,4f8.3,f8.2,4f8.3,f12.0
      1                                  ,4f8.3,2f8.1)
                   endif ! hit topo
 
@@ -2978,7 +3024,8 @@
 
         write(6,*)' Sample of topo_ri and topo_rj'
         do jazi_sample = minazi,minazi+100
-           ialt_sample = min(max(-45*4,minalt),maxalt) ! -5 degrees alt
+!          ialt_sample = min(max(-45*4,minalt),maxalt) ! -5 degrees alt
+           ialt_sample = min(max(-15,minalt),maxalt) ! -5 degrees alt
 !          jazi_sample = min(2344,maxazi) ! 2345
 !          jazi_sample = (115 * maxazi) / 360
 
