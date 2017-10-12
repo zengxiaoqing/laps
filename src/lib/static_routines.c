@@ -88,7 +88,7 @@
 *		NC_WRITE	A flag used to open the netCDF file for writing
 *	Returns :
 *		 0 if successful
-*		-1 if an error occurs
+*		-1 if an error occurs 
 ***************************************************************************/
 #ifdef __STDC__
 int cdf_update_stat (int i_cdfid,int i_varid, char *s_field,void *gptr,
