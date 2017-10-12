@@ -539,12 +539,18 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 
         if(len_dir.gt.0) then
            ext='nest7grid'
+!          directory = generic_data_root(1:len_root)//'static/'
+!          call s_len(directory,len_dir)
         else
            ext=grid_fnam
+!          directory = generic_data_root(1:len_root)//'static/'
+!          call s_len(directory,len_dir)
         endif
 
         fdda_model_source = '         '
 
+!       This recursive call may not be needed if we assign the directory
+!       just above.
         call get_directory(ext,directory,len_dir)
 
 ! this is laps specific for nest7grid.parms ... the laps namelist file.
