@@ -738,13 +738,15 @@ fint4 *status;
  
         /* SYSCMD contains "ncgen -o %s %s\0" which
            is 16 char, cdlfile, and fname  + 10 extra  */
-        if (nx_cdl * ny_cdl > 4000000) {
+        if (*nx_lp * *ny_lp > 4000000) {
           syscmd = malloc((strlen(SYSCMD2)+*cdl_len+*s_length+10) * sizeof(char));
           sprintf(syscmd,SYSCMD2, fname, cdlfile);
         } else {
           syscmd = malloc((strlen(SYSCMD)+*cdl_len+*s_length+10) * sizeof(char));
           sprintf(syscmd,SYSCMD, fname, cdlfile);
         }
+        printf("write_cdf_static: nx_lp,ny_lp %d %d \n", *nx_lp,*ny_lp);
+        printf("write_cdf_static: syscmd is %s \n", syscmd);
         free(cdlfile);
  
 /* create output file */
