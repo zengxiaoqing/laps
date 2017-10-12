@@ -72,7 +72,7 @@
 
         character*1 c_prodtype, c_plotobs
         character*3 var_2d
-        character*150  directory, filename
+        character*150  directory, filename, wrfout_full
         character*31  ext
         character*10  units_2d
         character*125 comment_2d
@@ -748,19 +748,24 @@
 
             if(trim(c_model) .eq. 'hrrr_smoke')then
               mode_aero_cld = 3
+              aod = 0.
+              i_aero_1d = 0 ! retain the 3D aerosols read in
             endif
 
-            filename = 'file.nc'
+            if(trim(c_model) .eq. 'hrrr_ak')then
+              call GETENV('WRFOUT_FULL',wrfout_full)
+              filename = trim(wrfout_full)
+            else
+              filename = 'file.nc'
+            endif
+
             write(6,*)' Looking for WRF SWIM data in ',trim(filename) ! trim(directory)
             call wrf2swim(filename,i4time_sys,NX_L,NY_L,NZ_L,lat,lon
      +                   ,pres_1d,istatus )
             istatus_ht = 0 ! unless we are reading height
             write(6,*)' returned from wrf2swim for ',trim(c_model)
 
-            if(trim(c_model) .eq. 'hrrr_smoke')then
-              i_aero_1d = 0 ! retain the 3D aerosols read in
-              i_aero_synplume = 0
-
+            if(trim(c_model) .eq. 'hrrr_smoke' .and. .false.)then
               write(6,*)' Zero out hydrometeors'
               clwc_3d = 0.
               cice_3d = 0.
@@ -918,7 +923,7 @@
           do j = 1,NY_L
             if(snow_cover(i,j) .ne. r_missing_data)then
               if(topo(i,j) .gt. 1900. .and. topo(i,j) .le. 3500.)then
-                snowalb = snow_cover(i,j)**2. * 0.7
+                snowalb = snow_cover(i,j) * 0.4
               else
                 snowalb = snow_cover(i,j) * 0.7
               endif
@@ -982,18 +987,19 @@
         i4time_last = 0.
       
         do iloc = 1,nloc
-          i_obs = nint(xsound(iloc))
-          j_obs = nint(ysound(iloc))
-
           ri_obs = xsound(iloc)
           rj_obs = ysound(iloc)
 
-!         Keep inside model domain
-          i_obs = min(max(i_obs,1),NX_L)
-          j_obs = min(max(j_obs,1),NY_L)
+          if(trim(c_model) .ne. 'hrrr_smoke')then ! Keep inside model domain
+              ri_obs = min(max(ri_obs,1.),float(NX_L))
+              rj_obs = min(max(rj_obs,1.),float(NY_L))
+          else
+              ri_obs = 477.
+              rj_obs = 881.             
+          endif
 
-          ri_obs = min(max(ri_obs,1.),float(NX_L))
-          rj_obs = min(max(rj_obs,1.),float(NY_L))
+          i_obs = nint(ri_obs)
+          j_obs = nint(rj_obs)
 
           rlat = lat(i_obs,j_obs)
           rlon = lon(i_obs,j_obs)
@@ -1039,6 +1045,9 @@
           write(6,*)' ri/rj/topo_sfc ',ri_obs,rj_obs,topo_sfc
           write(6,22)topo_albedo_2d(:,i_obs,j_obs)
 22        format('  albedo RGB of observer ',3f9.3)
+
+          write(6,*)' land use / frac of observer: '
+     1                    ,land_use(i_obs,j_obs),land_frac(i_obs,j_obs)
 
           write(6,*)' snow cover of observer: ',snow_cover(i_obs,j_obs)  
 
