@@ -274,6 +274,7 @@ C
 C **** write out netCDF file
 C
       write(6,*) 'laps_dom_file= ',laps_dom_file
+!     write(6,*) 'writelaps column = ',data(imax/2,jmax/2,:)
       call write_cdf_v3 (file_name,ext,var,comment,asctime,
      1                   cdl_path, static_path, laps_dom_file,
      1                   ldf_len, fn_length,
