@@ -14,11 +14,11 @@
 
        gas_scale_height = 8000.
 
-       write(6,*)' subroutine get_aod_3d: aod/redp_lvl/aero_scaleht = ' &
-                                         ,aod,redp_lvl,aero_scaleht
+       write(6,*)'subroutine get_aod_3d: aod/redp_lvl/aero_scaleht = ' &
+                                        ,aod,redp_lvl,aero_scaleht
 
        write(6,11)mode_aero_cld,i_aero_1d,i_aero_synplume
-11     format(' mode_aero_cld/i_aero_1d/i_aero_synplume = ',3i5)
+11     format('  mode_aero_cld/i_aero_1d/i_aero_synplume = ',3i5)
 
        if(i_aero_1d .eq. 1)then
          write(6,*)' Set aerosols from 1D parameters'
