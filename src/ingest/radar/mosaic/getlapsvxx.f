@@ -186,6 +186,8 @@ c check laps analysis values
 
 30          format(1x,2i5,1x,3f7.1,1x,2(f8.1,1x))
 
+            write(6,*)'midpoint column ',grid_ra_ref_3d(imax/2,jmax/2,:)      
+
             I4_elapsed = ishow_timer()
 
          endif
