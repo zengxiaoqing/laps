@@ -186,6 +186,7 @@ c
 
       Real        grid_mosaic_3dref(nx_l,ny_l,nz_l)
       Real        grid_mosaic_2dref(nx_l,ny_l)
+      Real        grid_mosaic_2dvrc(nx_l,ny_l,2)
       Real        lat(nx_l,ny_l)
       Real        lon(nx_l,ny_l)
       Real        topo(nx_l,ny_l)
@@ -681,6 +682,8 @@ c
           enddo
           enddo
 31        format(2(2x,i4),1x,f8.1)
+
+          write(6,*)'mosaiced column',grid_mosaic_3dref(nx_l/2,ny_l/2,:)
  
           I4_elapsed = ishow_timer()
 
@@ -710,29 +713,14 @@ c
      1                           //' '//cradars
              enddo ! ic
 
-!            call get_directory('vrc',path,lenp)
-!            dir_vrc = path(1:lenp)
-
-!            call write_laps_data(i4time_data,
-!    &                            dir_vrc,
-!    &                            ext_vrc,
-!    &                            nx_l,ny_l,1,1,
-!    &                            var_vrc,
-!    &                            lvl_2d,
-!    &                            lvl_coord_2d,
-!    &                            units_vrc,
-!    &                            comment_vrc,
-!    &                            grid_mosaic_3dref(1,1,1),
-!    &                            istatus)
-
-             call move(grid_mosaic_2dref,grid_mosaic_3dref(1,1,1)
+             call move(grid_mosaic_2dref,grid_mosaic_2dvrc(1,1,1)
      1                ,NX_L,NY_L)       
-             call move(closest_radar_m,grid_mosaic_3dref(1,1,2)
+             call move(closest_radar_m,grid_mosaic_2dvrc(1,1,2)
      1                ,NX_L,NY_L)       
 
              call put_laps_multi_2d(i4time_data,ext_vrc,var_vrc
      1                             ,units_vrc
-     1                             ,comment_vrc,grid_mosaic_3dref(1,1,1)       
+     1                             ,comment_vrc,grid_mosaic_2dvrc(1,1,1)       
      1                             ,NX_L,NY_L,2,istatus)
 
              if(istatus.eq.1)then
@@ -744,15 +732,20 @@ c
                 write(6,*)'VRC not written!'
              end if
 
+             write(6,*)'column after VRC section'
+     1                  ,grid_mosaic_3dref(nx_l/2,ny_l/2,:)
+
           endif
 
           I4_elapsed = ishow_timer()
-
 c
 c vrz output. 
 c
           if(imosaic_3d.eq.1.or.imosaic_3d.eq.2)then
              call clean_radar(grid_mosaic_3dref,nx_l,ny_l,nz_l)
+
+             write(6,*)'cleaned column'
+     1                 ,grid_mosaic_3dref(nx_l/2,ny_l/2,:)
 
              write(6,*)' Output VRZ file, n_valid_radars = '
      1                ,n_valid_radars       
