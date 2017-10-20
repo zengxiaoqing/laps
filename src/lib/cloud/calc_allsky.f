@@ -121,6 +121,7 @@
 
         real ext_g(nc)               ! od per airmass
         real moon_mag,moon_mag_thr
+        real bi_coeff(2,2)
         logical l_solar_eclipse, l_binary, l_zod, l_phase
         logical l_terrain_following
 
@@ -181,7 +182,7 @@
      1                     ,aod_vrt,aod_2_cloud,aod_2_topo          ! O
      1                     ,dist_2_topo                             ! O
      1                     ,aod_ill,aod_ill_dir                     ! O
-     1                     ,aod_tot,transm_obs,obs_glow_zen         ! O
+     1                     ,aod_tot,transm_obs,obs_glow_gnd         ! O
      1                     ,transm_3d,transm_4d                     ! O
      1                     ,r_cloud_3d,cloud_od,cloud_od_sp         ! O
      1                     ,cloud_od_sp_w                           ! O
@@ -209,10 +210,6 @@
 
           write(6,*)' Return from get_cloud_rays: ',a9time
      1             ,' aod_vrt is ',aod_vrt
-
-          call add_topo_mask(topo_ri,topo_rj,lat,lon,NX_L,NY_L      ! I
-     1                          ,nc,minalt,maxalt,minazi,maxazi     ! I
-     1                          ,topo_albedo)                       ! I/O
 
           write(6,*)' observer htagl/htmsl ',htagl,htmsl
           write(6,*)' swi_2d at observer location 2 = ',swi_obs,'W/m^2'
@@ -402,16 +399,40 @@
                 endif
              endif
 
-             itopo = nint(topo_ri(i,j))
-             jtopo = nint(topo_rj(i,j))
+             ritopo = topo_ri(i,j)
+             rjtopo = topo_rj(i,j)
+             itopo = nint(ritopo)
+             jtopo = nint(rjtopo)
+
              if(itopo .ge. 1 .and. itopo .le. NX_L .and.
      1          jtopo .ge. 1 .and. jtopo .le. NY_L)then
                     topo_solalt(i,j) = sol_alt_2d(itopo,jtopo)
                     topo_solazi(i,j) = sol_azi_2d(itopo,jtopo)
                     eobsc_sky(i,j) = eobsc(itopo,jtopo)
-                    topo_lat(i,j) = lat(itopo,jtopo) ! bilin interp?
-                    topo_lon(i,j) = lon(itopo,jtopo) ! bilin interp?
-                    topo_lf(i,j) = land_frac(itopo,jtopo) ! bilin interp?
+                    if(.true.)then ! bilin interp
+                        i1 = max(min(int(ritopo),NX_L-1),1)
+                        fi = ritopo - i1
+                        i2 = i1+1
+                        j1 = max(min(int(rjtopo),NY_L-1),1)
+                        fj = rjtopo - j1
+                        j2 = j1+1
+
+                        bi_coeff(1,1) = (1.-fi) * (1.-fj)
+                        bi_coeff(2,1) = fi      * (1.-fj)
+                        bi_coeff(1,2) = (1.-fi) *     fj 
+                        bi_coeff(2,2) = fi      *     fj 
+                        topo_lf(i,j) = sum(bi_coeff(:,:) 
+     1                               * land_frac(i1:i2,j1:j2))
+                        topo_lat(i,j) = sum(bi_coeff(:,:) 
+     1                                * lat(i1:i2,j1:j2))
+                        topo_lon(i,j) = sum(bi_coeff(:,:) 
+     1                                * lon(i1:i2,j1:j2))
+                    else
+                        topo_lf(i,j) = land_frac(itopo,jtopo) 
+                        topo_lat(i,j) = lat(itopo,jtopo) 
+                        topo_lon(i,j) = lon(itopo,jtopo) 
+                    endif
+
                     if(snow_cover(itopo,jtopo) .ne. r_missing_data)then
                         topo_sc(i,j) = snow_cover(itopo,jtopo)
                     else
@@ -430,6 +451,21 @@
 
           enddo ! i
           enddo ! j
+
+          if(grid_spacing_m .gt. 30.)then
+             call drape_topo_albedo(
+     1                 topo_lat,topo_lon                            ! I
+     1                ,nc,minalt,maxalt,minazi,maxazi               ! I
+     1                ,grid_spacing_m,r_missing_data                ! I
+     1                ,topo_albedo)                                 ! I/O
+          endif
+
+          if(.false.)then
+             call add_topo_mask(topo_ri,topo_rj,lat,lon,NX_L,NY_L   ! I
+     1                          ,nc,minalt,maxalt,minazi,maxazi     ! I
+     1                          ,grid_spacing_m                     ! I
+     1                          ,topo_albedo)                       ! I/O
+          endif
 
           if(l_binary .eqv. .false.)then
               write(6,*)' call get_sky_rgb with cyl data'
@@ -478,7 +514,7 @@
      1                    ,glow_stars        ! starglow
      1                    ,ext_g
      1                    ,aod_vrt,aod_ref 
-     1                    ,transm_obs,obs_glow_zen ! observer illumination
+     1                    ,transm_obs,obs_glow_gnd ! observer illumination
      1                    ,ialt_sun,jazi_sun ! sun location
      1                    ,airmass_2_cloud_3d      
      1                    ,airmass_2_topo_3d      
@@ -773,6 +809,7 @@
 
         subroutine add_topo_mask(topo_ri,topo_rj,lat,lon,ni,nj          ! I
      1                          ,nc,minalt,maxalt,minazi,maxazi         ! I
+     1                          ,grid_spacing_m                         ! I
      1                          ,topo_albedo)                           ! I/O
 
 !       Add high resolution vector albedo information to 'topo_albedo'
@@ -799,14 +836,14 @@
 
         lat_rect(1) = 39.849
         lon_rect(1) = -104.674
-        width_rect(1) = 3.0
-        height_rect(1) = 0.2
+        width_rect(1) = 3000. / grid_spacing_m
+        height_rect(1) = 150. / grid_spacing_m
         albedo_rect(1) = 1.
 
         lat_rect(2) = 39.849
         lon_rect(2) = -104.674
-        width_rect(2) = 2.8
-        height_rect(2) = 0.2
+        width_rect(2) = 2800. / grid_spacing_m
+        height_rect(2) = 150. / grid_spacing_m
         albedo_rect(2) = 0.
 
         do m = 1,n_rect
@@ -847,3 +884,179 @@
         return
         end
       
+
+        subroutine drape_topo_albedo(
+     1                 topo_lat_in,topo_lon_in                       ! I
+     1                ,nc,minalt,maxalt,minazi,maxazi                ! I
+     1                ,grid_spacing_m,r_missing_data                 ! I
+     1                ,topo_albedo)                                  ! I/O
+
+!       Add high resolution vector albedo information to 'topo_albedo'
+
+        use ppm
+
+        real topo_ri(minalt:maxalt,minazi:maxazi)
+        real topo_rj(minalt:maxalt,minazi:maxazi)
+        real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
+
+        real topo_lat_in(minalt:maxalt,minazi:maxazi)
+        real topo_lon_in(minalt:maxalt,minazi:maxazi)
+
+        real nlattile
+
+        real*8 topo_lat(minalt:maxalt,minazi:maxazi)
+        real*8 topo_lon(minalt:maxalt,minazi:maxazi)
+
+        integer, allocatable :: img(:,:,:)                   
+
+        character*255 directory, file_dc, file
+        character*10  c10_fname /'nest7grid'/
+        character*20 adum
+        integer u,u_out
+        logical l_there_dc
+        integer counts(3)
+        real bi_coeff(2,2)
+
+        topo_lat = topo_lat_in
+        topo_lon = topo_lon_in
+
+        write(6,*)' drape topo albedo'
+
+        call get_directory('static',directory,len_dir)
+
+        do itile = 1,3
+        
+          if(itile .eq. 1)then
+            file_dc=trim(directory)//'vhires_dc_crop1.ppm'       
+          elseif(itile .eq. 2)then
+            file_dc=trim(directory)//'vhires_dc_crop2.ppm'       
+          else
+            file_dc=trim(directory)//'vhires_dc_crop3.ppm'       
+          endif
+
+          inquire(file=trim(file_dc),exist=l_there_dc)
+          write(6,*)' File being inquired is ',trim(file_dc),' '
+     1                                        ,l_there_dc      
+          if(l_there_dc)then                   ! Descartes data
+            pix_latlon_we = 1. / 865.954              
+            pix_latlon_sn = 1. / 1130.26
+            file = trim(file_dc)
+            perimeter = 0.05
+          else
+            write(6,*)
+     1        ' Descartes data not present - returning skip drape'
+            return
+          endif
+
+          write(6,*)' Open for reading ',trim(file)
+
+!         Read section of Descartes Image in PPM format
+          u = 11
+          open(u,file=trim(file),status='old',err=999)
+          read(u,*)   
+          read(u,*)iwidth,iheight
+          rewind(u)
+          write(6,*)' dynamic dims ',nc,iwidth,iheight
+          allocate(img(nc,iwidth,iheight))
+          call read_ppm (u,img,nc,iwidth,iheight)
+          read(u,*,end=999)adum,adum,pixdgw
+          read(u,*,end=999)adum,adum,pixdgh
+          read(u,*,end=999)adum,adum,nlattile
+          read(u,*,end=999)adum,adum,wlontile
+          write(6,*)' comment info ',pixdgw,pixdgh,nlattile,wlontile
+          close(u)
+
+          pix_latlon_sn = 1. / pixdgh
+          pix_latlon_we = 1. / pixdgw
+
+          drape_res_m = 110000. * pix_latlon_sn
+          write(6,*)' drape data resolution (m) is ',drape_res_m
+
+          rlat_start = nlattile ! 40.4176  ! rnorth                         
+          rlon_start = wlontile ! -105.806 ! west                          
+          rlat_end = rlat_start - float(iheight) * pix_latlon_sn
+          rlon_end = rlon_start + float(iwidth)  * pix_latlon_we
+
+          write(6,*)' Input image lat range ',rlat_start,rlat_end
+          write(6,*)' Input image lon range ',rlon_start,rlon_end
+
+!         For each ray topo lat/lon, interpolate from image albedo arrays
+          write(6,*)
+          write(6,*)' Sample drape points'
+        
+          do ialt = minalt,maxalt
+          do jazi = minazi,maxazi
+            arglat = topo_lat(ialt,jazi)
+            arglon = topo_lon(ialt,jazi)
+            if(arglat .ne. r_missing_data .and.
+     1         arglon .ne. r_missing_data       )then
+              pix_we = (arglon - rlon_start) / pix_latlon_we
+              pix_sn = (rlat_start - arglat) / pix_latlon_sn
+
+              i1 = int(pix_we)
+              fi = pix_we - i1
+              i2 = i1+1
+              j1 = int(pix_sn)
+              fj = pix_sn - j1
+              j2 = j1+1
+            
+              in = nint(pix_we)
+              jn = nint(pix_sn)
+
+!             Nearest neighbor for now
+              if(i1 .ge. 1 .and. i1 .le. iwidth-1 .and.
+     1           j1 .ge. 1 .and. j1 .le. iheight-1      )then
+
+                if(.false.)then
+                  counts(:) = img(:,in,jn)
+                else ! bilinear interpolation
+                  bi_coeff(1,1) = (1.-fi) * (1.-fj)
+                  bi_coeff(2,1) = fi      * (1.-fj)
+                  bi_coeff(1,2) = (1.-fi) *     fj 
+                  bi_coeff(2,2) = fi      *     fj 
+                  do ic = 1,3
+                    counts(ic) = sum(bi_coeff(:,:)
+     1                         * img(ic,i1:i2,j1:j2))
+                  enddo ! ic
+                endif
+
+                do ic = 1,3
+                  if(counts(ic) .le. 179.)then
+                    topo_albedo(ic,ialt,jazi) = .0010 * counts(ic)
+     1                                      + 6.92e-11 * counts(ic)**4.0
+                  elseif(counts(ic) .le. 255.)then
+                    topo_albedo(ic,ialt,jazi)
+     1                         = 0.25 + (counts(ic) - 179.)    * .00258
+     1                                + (counts(ic) - 179.)**2 * .000092
+                  else ! bad / default value
+                    topo_albedo(ic,ialt,jazi) = 0.2
+                  endif
+                enddo ! ic
+
+                if(jazi .eq. minazi)then
+                  write(6,1)ialt,jazi,arglat,arglon
+     1           ,pix_we,pix_sn,in,jn,counts(:),topo_albedo(:,ialt,jazi)
+1                 format(' Sample drape point',2i7,2f10.4,2f9.2,2i6,2x
+     1                                        ,3i6,3f9.3)
+                endif ! printing point
+              endif ! inside image
+            endif ! valid lat/lon
+          enddo ! jazi
+          enddo ! ialt
+
+          write(6,*)' End of tile ',itile
+
+        enddo ! itile
+
+!       Normal end
+        istatus = 1
+        goto 9999
+
+!       Error condition
+999     istatus = 0
+        write(6,*)' error in drape_topo_albedo'
+
+9999    if(allocated(img))deallocate(img)
+
+        return
+        end
