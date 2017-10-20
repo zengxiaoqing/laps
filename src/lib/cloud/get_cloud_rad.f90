@@ -1,6 +1,6 @@
 
      subroutine get_cloud_rad(obj_alt,obj_azi,solalt,solazi,clwc_3d,cice_3d,rain_3d, &
-           snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt,sfc_glow)
+           snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt)
 
      use mem_namelist, ONLY: r_missing_data, earth_radius, ssa, aod, redp_lvl
      use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
@@ -35,7 +35,6 @@
                                   ! solar intensity at top of cloud
      real obj_alt(ni,nj)
      real obj_azi(ni,nj)
-     real sfc_glow(ni,nj)        ! surface lighting intensity (nl)                 
 
      real clwc_int(ni,nj)
      real cice_int(ni,nj)
@@ -460,7 +459,6 @@
               endif
           endif 
           if(solalt .lt. twi_alt)then ! use red channel for sfc lighting
-!             transm_4d(i,j,k,1) = sfc_glow(i,j) * 0.3 ! nominal backsct
               transm_4d(i,j,k,1) = (uprad_4d(i,j,k,2) / (2.*pi)) * sprad_to_nl(2) 
               if(transm_4d(i,j,k,2) .eq. r_missing_data)then
 !                 write(6,*)' WARNING transm_4d green channel missing',i,j,k
