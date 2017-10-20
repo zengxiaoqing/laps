@@ -12,7 +12,7 @@
      1                           ,aod_vrt,aod_2_cloud,aod_2_topo        ! O
      1                           ,dist_2_topo                           ! O
      1                           ,aod_ill,aod_ill_dir                   ! O
-     1                           ,aod_tot,transm_obs,obs_glow_zen       ! O
+     1                           ,aod_tot,transm_obs,obs_glow_gnd       ! O
      1                           ,transm_3d,transm_4d                   ! O
      1                           ,r_cloud_3d,cloud_od,cloud_od_sp       ! O
      1                           ,cloud_od_sp_w                         ! O
@@ -345,7 +345,7 @@
           write(6,*)' Grnd glow (wm2sr) at observer location is '
      1             ,gnd_glow(i,j)
 
-          obs_glow_zen = sfc_glow(i,j) / 10. ! may be obsolete
+          obs_glow_gnd = gnd_glow(i,j)
 
 !         Get upward radiation from ground lights
           if(icall_uprad .eq. 0)then
@@ -407,12 +407,11 @@
           write(6,*)' Skip call to get_sfc_glow - solalt is'
      1                                                  ,sol_alt(i,j)      
           uprad_4d(:,:,:,:) = 0.
-          obs_glow_zen = 0.
+          obs_glow_gnd = 0.
         endif
 
-!       'obs_glow_zen' may be obsolete by now
-        write(6,*)' obs_glow_zen (pop - nL) at observer location is'
-     1            ,obs_glow_zen
+        write(6,*)' obs_glow_gnd - (wm2sr) at observer location is'
+     1             ,obs_glow_gnd
 
         I4_elapsed = ishow_timer()
 
@@ -431,8 +430,7 @@
      1                    ,rain_3d,snow_3d,topo_a,lat,lon
      1                    ,heights_3d,transm_3d,transm_4d,i,j,ni,nj,nk
 !    1                    ,l_solar_eclipse
-     1                    ,twi_alt   ! I
-     1                    ,sfc_glow) ! I
+     1                    ,twi_alt)  ! I
 
 !           Write out transm_3d field
             var = 'TRN'
@@ -3023,11 +3021,12 @@
         solalt_last = sol_alt(i,j)
 
         write(6,*)' Sample of topo_ri and topo_rj'
-        do jazi_sample = minazi,minazi+100
+        write(6,*)
+     1    ' ialt   jazi         alt      azi      topo_ri     topo_rj'
+        do ialt_sample = minalt,min(minalt+100,maxalt)
 !          ialt_sample = min(max(-45*4,minalt),maxalt) ! -5 degrees alt
-           ialt_sample = min(max(-15,minalt),maxalt) ! -5 degrees alt
-!          jazi_sample = min(2344,maxazi) ! 2345
-!          jazi_sample = (115 * maxazi) / 360
+!          ialt_sample = min(max(-15,minalt),maxalt) ! -5 degrees alt
+           jazi_sample = minazi
 
            itopo = nint(topo_ri(ialt_sample,jazi_sample))
            jtopo = nint(topo_rj(ialt_sample,jazi_sample))
@@ -3054,7 +3053,7 @@
      1          ,trace_ri(ialt_sample,jazi_sample)
      1          ,trace_rj(ialt_sample,jazi_sample)
      1          ,solalt_trace
-321        format(2i6,' tp/tr',8f9.2)       
+321        format(2i6,' tp/tr',2f9.2,6f11.4)       
         enddo ! jazi_sample
         
         I4_elapsed = ishow_timer()
