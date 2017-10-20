@@ -37,7 +37,7 @@
 
         pf_thn_snowf(hgpf,elgf) & 
              = arg1 * hg( .999**hgpf,elgf) & ! plates
-             + arg2 * hg( .860**hgpf,elgf) &
+             + arg2 * hg( .970**hgpf,elgf) &
              + arg3 * hg( .000      ,elgf) & ! isotropic
              + arg4 * hg(-.600      ,elgf)   ! backscat
 
@@ -304,12 +304,12 @@
           snow_bin2 = 1.0 - snow_bin1        ! optically thick snow
 
           arg1 = (0.50 * fsnow + 0.50 * fcice) * 2.**(-(hgp-1.0))
-          arg3 =  0.03 * fsnow + 0.20 * fcice
-          arg4 =  0.02 * fsnow + 0.02 * fcice
+          arg3 =  0.03 * fsnow + 0.25 * fcice                     ! isotropic
+          arg4 =  0.02 * fsnow + 0.04 * fcice
 !         arg2 =  0.45 * fsnow + 0.28 * fcice
           arg2 =  1.0 - (arg1 + arg3 + arg4)
 
-          pf_thn_snow = pf_thn_snowf(hgp,elong_a(i,j)) 
+          pf_thn_snow = pf_thn_snowf(hgp,elong_a(i,j)) + .15 * cosd(elong_a(i,j))
 
           pf_snow = snow_bin1a * pf_thn_snow &
                   + snow_bin1c * pf_thk
