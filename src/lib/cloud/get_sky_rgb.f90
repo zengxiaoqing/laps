@@ -7,7 +7,7 @@
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
                    clear_rad_c_nl, &                                    ! I
                    glow_sun,glow_moon,glow_stars,ext_g, &               ! I
-                   od_atm_a,aod_ref,transm_obs,obs_glow_zen,isun,jsun, &! I
+                   od_atm_a,aod_ref,transm_obs,obs_glow_gnd,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo,swi_obs, &            ! I
                    topo_gti,topo_albedo,gtic,dtic,btic,emic,albedo_sfc,&! I
                    topo_lat,topo_lon,topo_lf,topo_sc, &                 ! I
@@ -226,7 +226,16 @@
         corr1 = corr1_in; corr2 = 3.55  ! darkness of start/end of twilight (gamma)
 !       corr1 = corr1_in; corr2 = 3.25  ! darkness of start/end of twilight (gamma)
 
-        write(6,*)' corr1_in/exposure ',corr1_in,exposure
+!       Correct nighttime exposure for surface night lights
+        corr2_orig = corr2
+        obs_glow_thr = .0006
+        if(obs_glow_gnd .gt. obs_glow_thr)then
+           obs_glow_log = log10(obs_glow_gnd/obs_glow_thr)
+           corr2 = corr2 + obs_glow_log * 0.8
+        endif
+
+        write(6,10)corr1_in,exposure,obs_glow_gnd,corr2_orig,corr2
+10      format('  corr1_in/exposure/obs_glow_gnd/corr2 ',2f9.3,e12.5,2f9.2)
 
         if(sol_alt .le. 0.)then
 
@@ -790,6 +799,7 @@
         else
             idebug_pf = idebug_a
         endif
+        where(alt_a(:,:) .eq. -20. .and. azi_a(:,:) .ge. 90. .and. azi_a(:,:) .le. 180.)idebug_pf(:,:) = 1
         write(6,*)' sum of idebug_a (1a) = ',sum(idebug_pf)
 
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
@@ -849,7 +859,7 @@
 
 !       Add the airglow contribution
         if(.true.)then
-            call get_airglow(alt_a,ni,nj,obs_glow_zen &                ! I
+            call get_airglow(alt_a,ni,nj,obs_glow_gnd &                ! I
                                   ,patm,htmsl,horz_dep &               ! I
                                   ,airmass_2_topo,frac_lp &            ! I
                                   ,clear_rad_c_airglow)                ! O
@@ -1760,6 +1770,7 @@
                   write(6,*)' ******** zenith location ************************ od'
                   write(6,111)clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)
 111               format('clrrad/RGB = ',3f12.0,3i4)
+                  write(6,*)'limiting magnitude is ',rmaglim
               endif
               if(abs(elong_a(i,j) - 90.) .le. 0.5)then
                   write(6,*)' ******** 90 elong location ********************** od'
