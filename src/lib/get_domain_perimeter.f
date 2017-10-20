@@ -43,7 +43,7 @@ cdoc    This version is more generic with static file source.
         west   = max(west  ,-180.)
 
         write(6,101)rnorth,south,east,west
-101     format(1x,' Lat/lon box around LAPS grid - NSEW ',4f9.2)
+101     format(1x,' Lat/lon box around LAPS grid - NSEW ',4f10.3)
 
         return
         end
@@ -92,7 +92,7 @@ cdoc    for when the dateline or poles are near the box.
         west   = max(west  ,-180.)
 
         write(6,101)rnorth,south,east,west
-101     format(1x,' Lat/lon box around LAPS grid - NSEW ',4f9.2)
+101     format(1x,' Lat/lon box around LAPS grid - NSEW ',4f10.3)
 
         return
         end
