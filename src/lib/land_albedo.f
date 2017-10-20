@@ -91,10 +91,10 @@
       end
 
       subroutine land_albedo_bm(rlat_laps,rlon_laps,ni,nj,i4time
-     1                         ,albedo,istatus)
+     1                         ,albedo,bm_counts,istatus)
 
       use ppm
-      use mem_namelist, ONLY: c6_maproj, grid_spacing_m 
+      use mem_namelist, ONLY: c6_maproj 
 
       include 'wa.inc'
 
@@ -102,6 +102,7 @@
 !     See code in /scratch/staging/fab/albers/nasa
 
       real albedo(3,ni,nj)    ! Albedo (Red, Green, Blue)
+      real bm_counts(3,ni,nj) ! Counts (Red, Green, Blue)
       real albedo_buff(3,ni,nj) 
       real result(ni,nj)      ! Interpolated image channel
       character*13 cvt_i4time_wfo_fname13,c13_time
@@ -113,11 +114,11 @@
 !     world.200408.3x5400x2700.png world.200408.3x5400x2700.ppm
 
       character*255 directory
-      character*255 file    ! Blue Marble image data
-      character*255 file_bm ! remapped to model grid
+      character*255 file            ! Blue Marble image data
+      character*255 file_bm,file_dc ! remapped to model grid
       character*10  c10_fname /'nest7grid'/
       integer u,u_out
-      logical l_there, l_global_bm
+      logical l_there, l_global_bm, l_there_dc
 
       integer ncol,iwidth,iheight
       parameter (ncol=3)
@@ -133,9 +134,7 @@
       real rlon_laps(ni,nj)
       real topo_laps_dum(ni,nj)
 
-!     integer img(ncol,iwidth,iheight)                                               
       integer, allocatable :: img(:,:,:)                   
-!     real array_2d(iwidth,iheight)
       real, allocatable :: array_2d(:,:)                   
       u = 11
 
@@ -148,6 +147,7 @@
       write(6,*)' Subroutine land_albedo_bm...',c2_mn
 
       call get_directory('static',directory,len_dir)
+
       file_bm=trim(directory)//'albedo_multispectral_'//c2_mn//'.dat'
       inquire(file=trim(file_bm),exist=l_there)
       write(6,*)' File being inquired is ',trim(file_bm),' ',l_there
@@ -172,21 +172,39 @@
      1                      //c2_mn//'.global_montage.20.ppm'
         inquire(file=trim(file),exist=l_there)
         write(6,*)' File being inquired is ',trim(file),' ',l_there
-        if(l_there)then                      ! local domain (2.5km pixels)
-          pix_latlon = 1. / 48.              ! 17280x8640 image
-          l_global_bm = .true.
 
-        elseif(c6_maproj .ne. 'latlon' .and.
-     1         grid_spacing_m .lt. 8000.)then ! local domain (500-8000m pixels)
+        file_dc=trim(directory)//'vhires_dc_crop.ppm'       
+        inquire(file=trim(file_dc),exist=l_there_dc)
+        write(6,*)' File being inquired is ',trim(file_dc),' '
+     1                                      ,l_there_dc      
+
+        if(l_there_dc)then                   ! Descartes data
+          pix_latlon_we = 1. / 865.954              
+          pix_latlon_sn = 1. / 1130.26
+          l_global_bm = .false.
+          file = trim(file_dc)
+          perimeter = 0.05
+
+        elseif(l_there)then                  ! local domain (2.5km pixels)
+          pix_latlon_we = 1. / 48.           ! 17280x8640 image
+          pix_latlon_sn = pix_latlon_we 
+          l_global_bm = .true.
+          perimeter = 0.2
+
+        elseif(c6_maproj .ne. 'latlon')then  ! local domain  (500m pixels)
           file=trim(directory)//'world.2004' 
      1                        //c2_mn//'.3x21600x21600.crop.ppm'
-          pix_latlon = 1. / 240. !                    (90x180 degree tile)
+          pix_latlon_we = 1. / 240. !                 (90x180 degree tile)
+          pix_latlon_sn = pix_latlon_we 
           l_global_bm = .false.
+          perimeter = 0.2
 
-        else                     ! latlon global projection (>7.4km pixels)
+        else                     ! latlon global projection (7.4km pixels)
           file=trim(directory)//'world.2004'//c2_mn//'.3x5400x2700.ppm'
-          pix_latlon = 1. / 15.                             
+          pix_latlon_we = 1. / 15.                             
+          pix_latlon_sn = pix_latlon_we 
           l_global_bm = .true.
+          perimeter = 0.2
 
         endif
 
@@ -210,21 +228,21 @@
 !       Use domain lat/lon bounds with a 0.2 deg cushion
         call get_domain_perimeter(ni,nj,c10_fname  
      1                  ,rlat_laps,rlon_laps,topo_laps_dum
-     1                  ,0.2,rnorth,south,east,west,istatus)
+     1                  ,perimeter,rnorth,south,east,west,istatus)
 
-        write(6,5)rnorth,south,east,west
-5       format('  NSEW Domain 0.2deg perimeter',4f9.3)                 
+        write(6,5)perimeter,rnorth,south,east,west
+5       format('  NSEW Domain perimeter',5f9.3)                 
 
         if(l_global_bm)then
           rlat_start = +90.                         
           rlon_start = -180.
-          rlat_end = rlat_start - float(iheight) * pix_latlon
-          rlon_end = rlon_start + float(iwidth)  * pix_latlon
+          rlat_end = rlat_start - float(iheight) * pix_latlon_sn
+          rlon_end = rlon_start + float(iwidth)  * pix_latlon_we
         else
           rlat_start = rnorth                         
           rlon_start = west                          
-          rlat_end = rlat_start - float(iheight) * pix_latlon
-          rlon_end = rlon_start + float(iwidth)  * pix_latlon
+          rlat_end = rlat_start - float(iheight) * pix_latlon_sn
+          rlon_end = rlon_start + float(iwidth)  * pix_latlon_we
         endif
 
         write(6,*)' BM PPM lat range: ',rlat_start,rlat_end
@@ -234,8 +252,8 @@
         istatus_img = 1
         do i = 1,ni     
         do j = 1,nj     
-          rj_img(i,j) = (rlat_start - rlat_laps(i,j)) / pix_latlon
-          ri_img(i,j) = (rlon_laps(i,j) - rlon_start) / pix_latlon
+          rj_img(i,j) = (rlat_start - rlat_laps(i,j)) / pix_latlon_sn
+          ri_img(i,j) = (rlon_laps(i,j) - rlon_start) / pix_latlon_we
           if(rlat_laps(i,j) .gt. rlat_start .OR.
      1       rlat_laps(i,j) .lt. rlat_end   .OR.
      1       rlon_laps(i,j) .lt. rlon_start .OR. 
@@ -245,22 +263,31 @@
         enddo ! j
         enddo ! i
 
+        write(6,*)' Image location of domain point',idb,jdb
+     1                                ,ri_img(idb,jdb),rj_img(idb,jdb)
+
+        write(6,*)' Image location of SW domain corner',1,1
+     1                                ,ri_img(1,1),rj_img(1,1)        
+
+        write(6,*)' Image location of NW domain corner',1,nj
+     1                                ,ri_img(1,nj),rj_img(1,nj)        
+
         if(istatus_img .eq. 0)then
           write(6,*)' WARNING: LAPS grid extends outside image'
         else
           write(6,*)' LAPS grid is contained within image'      
         endif
 
-        write(6,*)' Sampling of image ',rlat_start,rlon_start,pix_latlon
+        write(6,*)' Sampling of image ',rlat_start,rlon_start
         do i = 1,iwidth,120
 !       do j = 1,iheight,200
         do j = iheight/2,iheight/2,1
 
-          rlat_img_e = rlat_start - float(j) * pix_latlon
-          rlon_img_e = rlon_start + float(i) * pix_latlon
+          rlat_img_e = rlat_start - float(j) * pix_latlon_sn
+          rlon_img_e = rlon_start + float(i) * pix_latlon_we
 
           write(6,11)i,j,rlat_img_e,rlon_img_e,img(:,i,j)
-11        format(2i6,2x,2f8.3,2x,3i6)
+11        format(2i6,2x,2f9.3,2x,3i6)
 
         enddo ! j
         enddo ! i
@@ -291,10 +318,12 @@
               albedo(ic,i,j) = 0.2
             endif
 
+            bm_counts(ic,i,j) = result(i,j)
+
           enddo ! j
           enddo ! i
-          write(6,*)' Color / Count / Albedo ',ic,result(idb,jdb)
-     1                                           ,albedo(ic,idb,jdb)          
+          write(6,*)' Color / Count / Albedo (observer)',ic
+     1                          ,result(idb,jdb),albedo(ic,idb,jdb)          
         enddo ! ic
 
         write(6,*)' Initial albedo: ',albedo(:,idb,jdb)
@@ -388,9 +417,12 @@
       real, allocatable :: rlat_img(:,:),rlon_img(:,:) 
       real, allocatable :: ri_laps(:,:)                   
       real, allocatable :: rj_laps(:,:)                   
-      u = 11
 
       write(6,*)' Subroutine get_nlights...'
+
+      u = 11
+      idb = ni/2 ! min(183,ni)
+      jdb = nj/2 ! min(123,nj)
 
       call get_directory('static',directory,len_dir)
       file_bm=trim(directory)//'nlights_multispectral.dat'
@@ -554,12 +586,13 @@
 
         do i = 1,ni
         do j = 1,nj
-!         Input unuts are nanoWatts/cm2/sr
+!         Input units are nanoWatts/cm2/sr
           arg1 = result(i,j)                     ! nanoWatts/cm2/sr
           sfc_glow(i,j) = nwcm2sr_to_wm2sr(arg1) ! wm2sr
           sfc_glow_c(ic,i,j) = sfc_glow(i,j)
         enddo ! j
         enddo ! i
+
        enddo ! ic
 
 cdoc   Interpolate 2-d array to find the field values at fractional grid
