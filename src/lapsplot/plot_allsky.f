@@ -49,6 +49,7 @@
         real snow_cover(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
         real albedo_bm(nc,NX_L,NY_L)
+        real bm_counts(nc,NX_L,NY_L)
         integer ialbedo_bm(nc,NX_L,NY_L)
         real albedo_usgs(nc,NX_L,NY_L)
         real lat(NX_L,NY_L)
@@ -221,7 +222,8 @@
                 read(c20_y(1:leny),*)soundlon(iloc)
             endif
 
-            write(6,*)' lat/lon read in =',soundlat(iloc),soundlon(iloc)
+            write(6,*)' observer lat/lon read in =',soundlat(iloc)
+     1                                             ,soundlon(iloc)
 
             call latlon_to_rlapsgrid(soundlat(iloc),soundlon(iloc)
      1                              ,lat,lon,NX_L,NY_L
@@ -752,12 +754,12 @@
               i_aero_1d = 0 ! retain the 3D aerosols read in
             endif
 
-            if(trim(c_model) .eq. 'hrrr_ak')then
+!           if(trim(c_model) .eq. 'hrrr_ak')then
               call GETENV('WRFOUT_FULL',wrfout_full)
               filename = trim(wrfout_full)
-            else
-              filename = 'file.nc'
-            endif
+!           else
+!             filename = 'file.nc'
+!           endif
 
             write(6,*)' Looking for WRF SWIM data in ',trim(filename) ! trim(directory)
             call wrf2swim(filename,i4time_sys,NX_L,NY_L,NZ_L,lat,lon
@@ -856,7 +858,7 @@
         albedo_usgs = albedo_usgs / 1.25
 
         call land_albedo_bm(lat,lon,NX_L,NY_L,i4time_solar
-     1                     ,albedo_bm,istat_bm)
+     1                     ,albedo_bm,bm_counts,istat_bm)
 
         I4_elapsed = ishow_timer()
  
@@ -876,13 +878,14 @@
             topo_albedo_2d = albedo_bm
 
             write(6,*)
-     1          ' Row of multi-spectral albedo (through domain center)'
+     1        ' Row of spectral albedo / counts (through domain center)'
             jrow = NY_L/2
             do i = 1,NX_L
                 if(i .eq. (i/5)*5 .OR. abs(i-NX_L/2) .lt. 20)then
                     write(6,16)i,lat(i,jrow),lon(i,jrow)
-     1                       ,land_frac(i,jrow),topo_albedo_2d(:,i,jrow)
-16                  format(i5,3f9.3,2x,3f9.3)                 
+     1                    ,land_frac(i,jrow),topo_albedo_2d(:,i,jrow)
+     1                    ,bm_counts(:,i,jrow)
+16                  format(i5,3f9.3,2x,3f9.3,2x,3f9.3)                 
                 endif
             enddo ! i
             alb_min = minval(topo_albedo_2d(2,:,jrow))
@@ -1042,7 +1045,7 @@
               call bilinear_laps(ri_obs,rj_obs,NX_L,NY_L,topo,topo_sfc)
           endif
  
-          write(6,*)' ri/rj/topo_sfc ',ri_obs,rj_obs,topo_sfc
+          write(6,*)' observer ri/rj/topo_sfc ',ri_obs,rj_obs,topo_sfc
           write(6,22)topo_albedo_2d(:,i_obs,j_obs)
 22        format('  albedo RGB of observer ',3f9.3)
 
@@ -1324,7 +1327,7 @@
 
               write(6,*)' Call cyl_to_polar with sky rgb data'
 
-              if(htagl(iloc) .le. 18000. .and. 
+              if(htagl(iloc) .le. 500. .and. 
      1                  (maxalt*2 + minalt) .gt. 0)then
                 polat = +90. ! +/-90 for zenith or nadir at center of plot
               else
