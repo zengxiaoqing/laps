@@ -105,11 +105,19 @@
 
             vecmag = sqrt(xave**2 + yave**2 + ht**2)
 
-            xcos(i,j) = xave / vecmag
-            ycos(i,j) = yave / vecmag
+            if(vecmag .le. 0.)then
+               xcos(i,j) = r_missing_data
+               ycos(i,j) = r_missing_data
+            else
+               xcos(i,j) = xave / vecmag
+               ycos(i,j) = yave / vecmag
+            endif
 
             if(i .eq. 1 .and. j .eq. 1)then
                 write(6,*)'xyh ',i,j,xsum,ysum,xave,yave,ht
+                if(xcos(i,j) .eq. r_missing_data)then
+                   write(6,*)' warning in get_uprad_lyr: xcos/ycos has missing value'
+                endif
             endif
 
           endif
