@@ -263,7 +263,8 @@
               fresnel_mean = fresnel2 * radfracw + fresnel_d * (1.-radfracw)     ! "gray" sky albedo
               fresnel_arf = fresnel_mean / smooth_water_albedo
 
-              topo_albedo(ic,i,j) = smooth_water_albedo * fwater + topo_albedo(ic,i,j) * (1. - fwater)
+!             Override geog albedo values over water, based on land fraction
+!             topo_albedo(ic,i,j) = smooth_water_albedo * fwater + topo_albedo(ic,i,j) * (1. - fwater)
 
 !             phwater = arf_bw * specamp
 !             phwater = arf_bw * specamp + f(radfracw,arf_dw)
@@ -273,6 +274,10 @@
               phice = 1.0
 
 !             Check for valid scenario
+              if(alt_a(i,j) .gt. 0.)then
+                phwater = 1. ! default value
+              endif
+
               if(topo_solalt(i,j) .ge. 0.)then ! light source above horizon or land normal
                 ph1 = phland * fland + phsnow * fsnow + phwater * fwater
               else
