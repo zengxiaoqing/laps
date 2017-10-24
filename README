@@ -829,6 +829,16 @@
      to the 'path_to_topo_30s' variable in 'nest7grid.parms'. This allows the
      30m (1s) data to supercede the 900m (30s) data.
 
+     The USGS/ArcGIS tiles can be downloaded by using this interface:
+     https://viewer.nationalmap.gov/basic/?basemap=b1 and choosing Elevation
+     Products (3DEP), and 1 arc-second DEM. The 'gdal_translate' utility can
+     be used to help convert the 1x1 degree 'adf' ArcGrid files into PPM images.
+     This can be done either by manually clicking on the interface or setting
+     up a script that includes a 'wget' command from the server hosting the
+     tiles. Here is an example of a server URL for a 1x1 degree tile:
+
+     https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/1/ArcGrid/USGS_NED_1_n41w106_ArcGrid.zip
+
      High resolution terrain has also been imported (experimentally) into LAPS
      via two methods, the WRF Wizard (see section 2.2.7), and Topograbber - see
      http://laps.noaa.gov/topograbber/ 
