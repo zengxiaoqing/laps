@@ -61,8 +61,8 @@ cdis
         real lat(ni,nj), lon(ni,nj)
         real sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
         real static_albedo(ni,nj)   ! Static albedo database
-        real sat_albedo_in(ni,nj)
-        real sat_albedo(ni,nj)
+        real sat_data_in(ni,nj)
+        real sat_albedo(ni,nj)     
         real cvr_snow(ni,nj)
         real tgd_sfc_k(ni,nj)
         real rlaps_land_frac(ni,nj)
@@ -88,7 +88,8 @@ cdis
 
 !       l_use_vis_add = .false.
         icount_vis_add_potl = 0
-        visthr = 0.0 ! for adding visible
+        visthr = 0.0  ! for adding visible
+        mode_refl = 0 ! 0,1 to use reflectance instead of albedo from LVD       
 
 !       Initialize histograms
         do i = -10,20
@@ -101,7 +102,7 @@ cdis
         do i = 1,ni
         do j = 1,nj
             sat_albedo(i,j) = r_missing_data
-            sat_albedo_in(i,j) = r_missing_data
+            sat_data_in(i,j) = r_missing_data
             cloud_frac_vis_a(i,j) = r_missing_data
             istat_vis_a(i,j) = 0
         enddo ! j
@@ -132,15 +133,19 @@ cdis
             call make_fnam_lp(i4time_try,filename,istatus)
 
             ext = lvd_ext
-            var = 'ALB'
+            if(mode_refl .eq. 0)then
+                var = 'ALB'
+            else
+                var = 'SVS'
+            endif
             ilevel = 0
             call get_laps_2dvar(i4time_try+i4_sat_window_offset
      1                     ,i4_sat_window
      1                     ,i4time_nearest,lat,lon
      1                     ,subpoint_lat_clo,subpoint_lon_clo      ! O 
      1                     ,EXT,var,units
-     1                     ,comment,ni,nj,sat_albedo_in,ilevel,istatus)
-            write(6,*)' istatus from sat_albedo data = ',istatus
+     1                     ,comment,ni,nj,sat_data_in,ilevel,istatus)
+            write(6,*)' istatus from sat data = ',var,istatus
             write(6,*)' comment from get_vis = ',comment
             itry = itry + 1
         enddo ! itry
@@ -157,7 +162,21 @@ cdis
         do j = 1,nj
             ioff = min(max(i+nint(offset_vis_i(i,j)),1),ni)
             joff = min(max(j+nint(offset_vis_j(i,j)),1),nj)
-            sat_albedo(i,j) = sat_albedo_in(ioff,joff)
+
+            if(mode_refl .eq. 0)then
+                sat_albedo(i,j) = sat_data_in(ioff,joff)
+            else
+!               Convert to reflectance
+                reflectance = (sat_data_in(ioff,joff) / 256.) * 1.2
+
+!               Should this be done elsewhere according to how other
+!               routines use sfc_albedo?                
+!               call refl_to_albedo(reflectance,solalt,sfc_albedo(i,j) ! I
+!    1                             ,cloud_albedo)                      ! O
+
+                sat_albedo(i,j) = reflectance
+            endif
+
             if(sat_albedo(i,j) .eq. r_missing_data .and. 
      1                          (.not. l_use_vis_partial)      )then
                 write(6,*)
