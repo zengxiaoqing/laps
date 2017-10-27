@@ -624,7 +624,7 @@
         enddo ! i
         enddo ! j
       enddo ! icity
-      write(6,*)' range of sfc_glow (nl) is ',minval(sfc_glow),maxval(sfc_glow)
-      write(6,*)' range of gnd_glow (nl) is ',minval(gnd_glow),maxval(gnd_glow)
+!     write(6,*)' range of sfc_glow (nl) is ',minval(sfc_glow),maxval(sfc_glow)
+!     write(6,*)' range of gnd_glow (nl) is ',minval(gnd_glow),maxval(gnd_glow)
       return
       end
