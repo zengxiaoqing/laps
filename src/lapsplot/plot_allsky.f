@@ -54,7 +54,10 @@
         real albedo_usgs(nc,NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
+        real*8 dlat(NX_L,NY_L)
+        real*8 dlon(NX_L,NY_L)
         real topo(NX_L,NY_L)
+        real dum_2d(NX_L,NY_L)
         real dx(NX_L,NY_L)
         real dy(NX_L,NY_L)
         real alt_norm(NX_L,NY_L)     ! Solar Alt w.r.t. terrain normal
@@ -130,8 +133,9 @@
         integer maxloc
         parameter (maxloc = 1000)
 
-        real xsound(maxloc),ysound(maxloc)
-        real soundlat(maxloc),soundlon(maxloc)
+        real*8 xsound(maxloc),ysound(maxloc)
+        real*8 soundlat(maxloc),soundlon(maxloc)
+        real fsoundlat(maxloc),fsoundlon(maxloc)
         real htagl(maxloc),corr1_a(maxloc)
 
         data ilun /0/
@@ -180,6 +184,7 @@
             write(6,*)' Error reading LAPS static-lat'
             return
         endif
+        dlat = dble(lat)
 
         var_2d='LON'
         call read_static_grid(NX_L,NY_L,var_2d,lon,istatus)
@@ -187,12 +192,56 @@
             write(6,*)' Error reading LAPS static-lon'
             return
         endif
+        dlon = dble(lon)
 
         var_2d='AVG'
         call read_static_grid(NX_L,NY_L,var_2d,topo,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-topo'
             return
+        endif
+
+!       Topo offset (based on topo_1s data over Colorado)
+        if(grid_spacing_m .le. 30.)then
+          ioff = +2  ! move the terrain eastward this amount
+          joff = +13 ! move the terrain northward this amount
+
+          do idum = 1,NX_L
+          do jdum = 1,NY_L
+            i = min(max(idum-ioff,1),NX_L)
+            j = min(max(jdum-joff,1),NY_L)
+            dum_2d(idum,jdum) = topo(i,j)
+          enddo ! j
+          enddo ! i
+          topo(:,:) = dum_2d(:,:)
+
+!         Find Summits diagnostic near domain center
+          ibox = 13
+          ibox2 = ibox/2
+          imid = NX_L/2
+          jmid = NY_L/2
+          do is = imid-300,imid+300
+          do js = jmid-300,jmid+300
+            topomin = 99999.                
+            topomax = 0.
+            do iis = is-ibox2,is+ibox2
+            do jjs = js-ibox2,js+ibox2
+              if(is .ne. iis .or. js .ne. jjs)then
+                topomax = max(topomax,topo(iis,jjs))
+                topomin = min(topomin,topo(iis,jjs))
+              endif
+            enddo ! jjs
+            enddo ! iis
+            if(topo(is,js) .gt. topomax .and.
+     1         topo(is,js) .gt. topomin+150. .and.
+     1         topo(is,js) .gt. 2430.              )then
+              write(6,14)is,js,lat(is,js),lon(is,js),topo(is,js),topomax
+     1                                                          ,topomin
+14            format(' Peak detected at',2i5,2f11.5,3f9.2)           
+            endif
+          enddo ! js
+          enddo ! is
+
         endif
 
         write(6,*)
@@ -212,6 +261,7 @@
 
           if(l_latlon)then ! x value was flagged as latitude with "l" at the end 
             read(c20_x(1:lenx-1),*)soundlat(iloc)
+            fsoundlat(iloc) = sngl(soundlat(iloc))
 
             write(6,*)' Input longitude for allsky plot...'       
             read(5,*)c20_y
@@ -221,14 +271,14 @@
             else
                 read(c20_y(1:leny),*)soundlon(iloc)
             endif
+            fsoundlon(iloc) = sngl(soundlon(iloc))
 
             write(6,*)' observer lat/lon read in =',soundlat(iloc)
      1                                             ,soundlon(iloc)
 
-            call latlon_to_rlapsgrid(soundlat(iloc),soundlon(iloc)
-     1                              ,lat,lon,NX_L,NY_L
+            call latlon_db_rlapsgrid(soundlat(iloc),soundlon(iloc)
+     1                              ,dlat,dlon,NX_L,NY_L
      1                              ,xsound(iloc),ysound(iloc),istatus)
-
             if(istatus .ne. 1)then
               if(trim(c_model) .ne. 'hrrr_smoke')then
                 write(6,*)' Station is outside domain - try again...'
@@ -238,9 +288,9 @@
               endif
             endif
 
-            if(xsound(iloc) .lt. 1. .or. xsound(iloc) .gt. float(NX_L)
+            if(xsound(iloc) .lt. 1d0 .or. xsound(iloc) .gt. dble(NX_L)
      1                              .or.
-     1         ysound(iloc) .lt. 1. .or. ysound(iloc) .gt. float(NY_L)    
+     1         ysound(iloc) .lt. 1d0 .or. ysound(iloc) .gt. dble(NY_L)    
      1                                                             )then
               if(trim(c_model) .ne. 'hrrr_smoke')then
                 write(6,*)' Station is outside domain - try again...'
@@ -254,7 +304,7 @@
             read(c20_x(1:lenx),*)xsound(iloc)
             write(6,*)' Input y grid point for allsky plot...'
             read(5,*)ysound
-            if(xsound(iloc) .lt. 1.0 .OR. ysound(iloc) .lt. 1.0)then ! scale domain
+            if(xsound(iloc) .lt. 1d0 .OR. ysound(iloc) .lt. 1d0)then ! scale domain
                 write(6,*)' Values less than 1.0, scale to domain'
                 xsound(iloc) = nint(xsound(iloc) * (NX_L-1)) + 1
                 ysound(iloc) = nint(ysound(iloc) * (NY_L-1)) + 1
@@ -267,7 +317,7 @@
 
           read(5,*)htagl(iloc)
 
-          write(6,*)' soundlat/soundlon ',soundlat(iloc),soundlon(iloc)
+          write(6,*)' soundlat/soundlon ',soundlat(iloc),soundlon(iloc)      
           write(6,*)' xsound/ysound ',xsound(iloc),ysound(iloc)
           write(6,*)' htagl ',htagl(iloc)
 
@@ -733,7 +783,7 @@
             i_aero_synplume = 0
 
 !           Zero out hydrometeors
-            if(.true.)then
+            if(.false.)then
               write(6,*)' NAVGEM run: zero out hydrometeors'
               clwc_3d = 0.
               cice_3d = 0.
@@ -1007,8 +1057,8 @@
           rlat = lat(i_obs,j_obs)
           rlon = lon(i_obs,j_obs)
 
-          rlat = soundlat(iloc)
-          rlon = soundlon(iloc)
+          rlat = fsoundlat(iloc)
+          rlon = fsoundlon(iloc)
 
           write(6,*)
           write(6,*)' iloc = ',iloc,rlat,rlon
@@ -1059,10 +1109,10 @@
 
 !         Calculate solar position for all-sky point
           if(.true.)then ! test this again to allow fractional gridpoints?
-              call solar_position(soundlat(iloc),soundlon(iloc)
+              call solar_position(fsoundlat(iloc),fsoundlon(iloc)
      1                           ,i4time_solar,solar_alt     
      1                           ,solar_dec,solar_ha)
-              call equ_to_altaz_d(solar_dec,solar_ha,soundlat(iloc)
+              call equ_to_altaz_d(solar_dec,solar_ha,fsoundlat(iloc)
      1                           ,altdum,solar_az)               
               if(solar_az .lt. 0.)solar_az = solar_az + 360.
               solar_lat = solar_dec
@@ -1327,7 +1377,7 @@
 
               write(6,*)' Call cyl_to_polar with sky rgb data'
 
-              if(htagl(iloc) .le. 500. .and. 
+              if(htagl(iloc) .le. 20.1 .and. 
      1                  (maxalt*2 + minalt) .gt. 0)then
                 polat = +90. ! +/-90 for zenith or nadir at center of plot
               else
