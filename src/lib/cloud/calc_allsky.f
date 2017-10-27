@@ -452,7 +452,7 @@
           enddo ! i
           enddo ! j
 
-          if(grid_spacing_m .gt. 30.)then
+          if(.true.)then
              call drape_topo_albedo(
      1                 topo_lat,topo_lon                            ! I
      1                ,nc,minalt,maxalt,minazi,maxazi               ! I
@@ -944,7 +944,7 @@
             perimeter = 0.05
           else
             write(6,*)
-     1        ' Descartes data not present - returning skip drape'
+     1        ' Descartes data not present - returning from skip drape'
             return
           endif
 
@@ -1043,6 +1043,8 @@
             endif ! valid lat/lon
           enddo ! jazi
           enddo ! ialt
+
+          deallocate(img)
 
           write(6,*)' End of tile ',itile
 
