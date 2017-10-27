@@ -376,7 +376,8 @@
       return
       end
 
-      subroutine get_nlights(ni,nj,grid_spacing_m,lat,lon,gnd_glow)
+      subroutine get_nlights(ni,nj,grid_spacing_m,rlat_laps,rlon_laps
+     1                      ,gnd_glow)
 
 !     Read in VIIRS imagery for night lights.
 !     Merging of code in 'get_sfc_glow' and 'land_albedo_bm'
@@ -384,8 +385,6 @@
       use ppm
       use mem_namelist, ONLY: c6_maproj 
 
-      real lat(ni,nj)
-      real lon(ni,nj)
       real sfc_glow_c(3,ni,nj) ! Sfc Glow (Red, Green, Blue)
       real result(ni,nj)       ! Interpolated image channel
       real sfc_glow(ni,nj)     ! surface lighting intensity of clouds (nl)
@@ -421,8 +420,8 @@
       write(6,*)' Subroutine get_nlights...'
 
       u = 11
-      idb = ni/2 ! min(183,ni)
-      jdb = nj/2 ! min(123,nj)
+      idb = min(893,ni) ! min(878,ni) or ni/2
+      jdb = min(583,nj) ! min(383,nj) or nj/2
 
       call get_directory('static',directory,len_dir)
       file_bm=trim(directory)//'nlights_multispectral.dat'
@@ -493,9 +492,16 @@
 
 !      Consider dynamic means to get rlat_start and rlon_start
 !      Use domain lat/lon bounds with a 0.2 deg cushion
-       call get_domain_perimeter(ni,nj,c10_fname  
+       if(l_global_nl)then
+          rnorth = +90.
+          south = -90.
+          west = -180.
+          east = +180.
+       else
+          call get_domain_perimeter(ni,nj,c10_fname  
      1                  ,rlat_laps,rlon_laps,topo_laps_dum
      1                  ,0.2,rnorth,south,east,west,istatus)
+       endif
 
        write(6,*)' NSEW',rnorth,south,east,west
 
@@ -551,9 +557,20 @@
         if(grid_spacing_m / reslights_m .lt. 1.5)then
 !       if(.true.)then
           write(6,*)' Bilinearly Interpolate ',ic,grid_spacing_m
-     1                                           ,reslights_m
+     1                                        ,reslights_m
+          write(6,*)' lat/lon is ',rlat_laps(idb,jdb),rlon_laps(idb,jdb)
+          write(6,*)' rij_img is ',idb,jdb,ri_img(idb,jdb)
+     1                                    ,rj_img(idb,jdb)
+          iimg = ri_img(idb,jdb)
+          jimg = rj_img(idb,jdb)
+          write(6,*)' array_2d is ',array_2d(iimg:iimg+1,jimg:jimg+1)
+
           call bilinear_laps_2d(ri_img,rj_img,iwidth,iheight,ni,nj 
      1                         ,array_2d,result)
+
+          write(6,*)' result is ',result(idb,jdb)
+     1                           ,nwcm2sr_to_wm2sr(result(idb,jdb))
+          
         else ! pixel average interpolation
 
           if(ic .eq. 1)then
@@ -568,7 +585,7 @@
 
 !             Fill LAPS ri/rj of each image pixel
               call latlon_to_rlapsgrid(rlat_img(i,j),rlon_img(i,j)
-     1                                ,lat,lon,ni,nj
+     1                                ,rlat_laps,rlon_laps,ni,nj
      1                                ,ri_laps(i,j),rj_laps(i,j)
      1                                ,istatus)
 
