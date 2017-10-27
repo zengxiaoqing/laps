@@ -341,9 +341,20 @@
           write(6,*)' Call get_nlights'
           call get_nlights(ni,nj,grid_spacing_m,lat,lon
      1                    ,gnd_glow)
+
+          write(6,*)' range of gnd_glow (nl) is ',minval(gnd_glow)
+     1                                           ,maxval(gnd_glow)
           
-          write(6,*)' Grnd glow (wm2sr) at observer location is '
-     1             ,gnd_glow(i,j)
+          write(6,29)i,j,gnd_glow(i,j)
+29        format('  Grnd glow (wm2sr) at observer location is ',2i5
+     1                                                       ,f10.6)       
+
+          igmin = max( 1,i-120)
+          igmax = min(ni,i+120)
+          do ig = igmin,igmax
+            write(6,30)ig,j,gnd_glow(ig,j),lat(ig,j),lon(ig,j)
+30          format(' Gnd glow at',2i5,f11.5,2f9.3)         
+          enddo ! ig
 
           obs_glow_gnd = gnd_glow(i,j)
 
@@ -462,7 +473,6 @@
      1            topo_a,                            ! I
      1            ni,nj,nk,i,j,                      ! I
      1            heights_3d,                        ! I 
-     1            sfc_glow,                          ! I
      1            transm_3d,transm_4d)               ! O
               else ! consider experimental version for global domain
                 do ii = 1,ni
@@ -2485,7 +2495,7 @@
      1                     ,cvr_path_sum,idebug
 114             format(' end of ray ',
      1      'ls/rk3/ht/ihit-tb/iab/gc/sl1h/dz1h/latlon/cvr/idebug'
-     1              ,i6,3f10.3,f10.1,3i3,f9.3,f12.1,f12.0,2f9.2,f7.2,i3)
+     1              ,i6,3f10.3,f10.1,3i3,f9.3,f13.1,f13.0,2f9.2,f7.2,i3)
               endif        
 
           endif ! true
