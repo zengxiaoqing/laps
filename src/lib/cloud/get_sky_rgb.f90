@@ -231,7 +231,7 @@
         obs_glow_thr = .0006
         if(obs_glow_gnd .gt. obs_glow_thr)then
            obs_glow_log = log10(obs_glow_gnd/obs_glow_thr)
-           corr2 = corr2 + obs_glow_log * 0.8
+           corr2 = corr2 + obs_glow_log * 1.0
         endif
 
         write(6,10)corr1_in,exposure,obs_glow_gnd,corr2_orig,corr2
@@ -499,12 +499,14 @@
             iazi_debug = ((nj-1)*nint(azid1))/360 + 1 ! 90 deg azi
             idebug_a(1:ni/4:5,iazi_debug) = 1
             write(6,*)' sum of idebug_a (0a) = ',sum(idebug_a)
+            if(alt_a(1,1) .eq. -90.)idebug_a(1,1) = 1 ! nadir
         elseif(htmsl .gt. 20000.)then 
             idebug_a(:,:) = 0
             ialt_debug = ((ni-1)*(90-45))/180 + 1 ! -45 degrees alt
             idebug_a(ialt_debug,1:100) = 1
 !           jazi_debug = ((nj-1)*115)/360 + 1 
 !           idebug_a(1:ni,jazi_debug) = 1
+            if(alt_a(1,1) .eq. -90.)idebug_a(1,1) = 1 ! nadir
         endif
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
@@ -1066,6 +1068,7 @@
                       if(htmsl .gt. 7000. .and. dist_2_topo(i,j) .gt. 0.)then ! cloud in front of ground
                           topo_arg = 2. * gtic(ic,i,j) * topo_albedo(ic,i,j)
                           rad_sfc = day_int * topo_arg + rad_sec_cld(ic)
+                          radb_diffuse = 0.
                       else ! cloud lit by light reflecting off of the ground
 !                         topo_arg = 2. * gtic(ic,i,j) * albedo_sfc(ic)
                           rad_sfc = day_int * 2. * swi_obs/ghi_zen_toa * albedo_sfc(ic)
@@ -1087,6 +1090,9 @@
 
 !                         Consider diffuse sky light coming through the cloud                          
                           radb_diffuse = rad_sec_cld(ic) * (1. - cloud_albedo_diffuse) * 0.75 * (1. + sind(altray_limb)**2)
+!                         if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg)then
+!                             write(6,*)'radb debug',radb_diffuse,rad_sec_cld(ic),cloud_albedo_diffuse,altray_limb
+!                         endif
 
                       endif
 
@@ -1099,6 +1105,9 @@
                   endif
 !                 cld_radb(ic) = rad_sfc ! + rad_sec_cld(ic)
                   cld_radb(ic) = (rad * cloud_rad_c(ic,i,j) + rad_sfc + radb_diffuse) * ssa_eff(ic,i,j) ! **9.0
+!                 if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg)then
+!                     write(6,*)'cld_radb debug',cld_radb(ic),rad,cloud_rad_c(ic,i,j),rad_sfc,radb_diffuse,ssa_eff(ic,i,j)
+!                 endif
 
               enddo ! ic
 
