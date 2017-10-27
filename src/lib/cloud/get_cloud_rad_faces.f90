@@ -6,7 +6,6 @@
                 topo_a,                          & ! I
                 ni,nj,nk,idb,jdb,                & ! I
                 heights_3d,                      & ! I 
-                sfc_glow,                        & ! I
                 transm_3d,transm_4d)               ! O
 
      include 'trigd.inc'
@@ -45,7 +44,6 @@
      real obj_alt(ni,nj),obj_azi(ni,nj)
      real topo_a(ni,nj)
      real projrot(ni,nj)
-     real sfc_glow(ni,nj)
 
      real heights_1d(nk)
 
@@ -586,7 +584,6 @@
        enddo ! k
      else ! nighttime: use red channel for sfc lighting
        do k = 1,nk       
-!        transm_4d(:,:,k,1) = sfc_glow(:,:) * 0.3     ! nominal backsct
          transm_4d(:,:,k,1) = (uprad_4d(:,:,k,2) / (2.*pi)) * sprad_to_nl(2)
        enddo ! k
        transm_3d(:,:,:) = 0.
