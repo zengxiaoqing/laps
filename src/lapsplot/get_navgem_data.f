@@ -7,6 +7,7 @@
      +                   ,cice_p
      +                   ,rain_p
      +                   ,snow_p
+!    +                   ,seaice,snow_depth
      +                   ,lun_out
      +                   ,istatus)
 
@@ -29,6 +30,10 @@
       real coarse_ext_p(NX_L,NY_L,LVLP)
       real fine_ext_p(NX_L,NY_L,LVLP)
       real total_ext_p(NX_L,NY_L,LVLP)
+      real seaice(NX_L,NY_L)
+      real snow_depth(NX_L,NY_L)
+
+      write(6,*)' Entered get_navgem_data'
 
       if(NZ_L .ne. LVLP)then
         write(6,*)' incorrect vertical levels',NZ_L,LVLP
@@ -90,7 +95,8 @@ C
       call read_navgem_data(nf_fid, latitude, level, longitude,
      +     i4time_sys, ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
      +     i4time_latest, lun_out, clwc_p, cice_p, pres_p, 
-     +     coarse_ext_p, fine_ext_p, total_ext_p, LVLP, istatus)
+     +     coarse_ext_p, fine_ext_p, total_ext_p, LVLP,
+     +     seaice, snow_depth, istatus)
 
       if(.true.)then
          write(6,*)' Use NAVGEM aerosols'
@@ -104,7 +110,8 @@ C
       subroutine read_navgem_data(nf_fid, latitude, level, longitude,
      +     i4time_sys, ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
      +     i4time_latest, lun_out, clw_p, ciw_p, pres_p,
-     +     coarse_ext_p, fine_ext_p, total_ext_p, LVLP, istatus)
+     +     coarse_ext_p, fine_ext_p, total_ext_p, LVLP,
+     +     seaice, snow_depth, istatus)
 
 
       include 'netcdf.inc'
@@ -139,7 +146,8 @@ C
      +     longitude,  latitude, level), tprec( longitude, latitude),
      +     u( longitude,  latitude, level), v( longitude,  latitude,
      +     level), w( longitude,  latitude, level), wind_speed(
-     +     longitude,  latitude, level)
+     +     longitude,  latitude, level),
+     +     seaice(longitude, latitude), snow_depth(longitude, latitude)
 c
       real pres_p(longitude,latitude,LVLP)
       real ciw_p(longitude,latitude,LVLP)
@@ -176,7 +184,7 @@ c
      +     pressure, ps, q, rh, sigma_a, sigma_b, 
      +     smoke_aot, smoke_ext, smoke_mass_concentration, 
      +     temperature, total_aot, total_ext, tprec, u, v, w, 
-     +     wind_speed)
+     +     wind_speed,seaice,snow_depth)
 C
 C The netcdf variables are filled - your nvg write call may go here
 C
@@ -248,7 +256,7 @@ C
      +     pressure, ps, q, rh, sigma_a, 
      +     sigma_b, smoke_aot, smoke_ext, smoke_mass_concentration, 
      +     temperature, total_aot, total_ext, tprec, u, v, w, 
-     +     wind_speed)
+     +     wind_speed,seaice,snow_depth)
 C
       include 'netcdf.inc'
       integer latitude, level, longitude,nf_fid, nf_vid, nf_status
@@ -281,7 +289,8 @@ C
      +     longitude,  latitude, level), tprec( longitude, latitude),
      +     u( longitude,  latitude, level), v( longitude,  latitude,
      +     level), w( longitude,  latitude, level), wind_speed(
-     +     longitude,  latitude, level)
+     +     longitude,  latitude, level),
+     +     seaice(longitude, latitude), snow_depth(longitude, latitude)
 
 C
 C   Variables of type REAL
@@ -792,6 +801,35 @@ C
         print *, NF_STRERROR(nf_status),' for wind_speed'
        endif
       endif
+
+C
+C     Variable        NETCDF Long Name
+C     seaice
+C
+      nf_status=NF_INQ_VARID(nf_fid,'seaice',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for seaice'
+      else
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,seaice)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for seaice'
+       endif
+      endif
+
+C
+C     Variable        NETCDF Long Name
+C     snow_depth    
+C
+      nf_status=NF_INQ_VARID(nf_fid,'snow_depth',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for snow_depth'
+      else
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,snow_depth)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for snow_depth'
+       endif
+      endif
+
 
 C   Variables of type INT
 C
