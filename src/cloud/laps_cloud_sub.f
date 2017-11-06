@@ -257,7 +257,7 @@ cdis
         real buff(NX_L,NY_L)
         real cldht_prlx_top(NX_L,NY_L)
         real cldht_prlx_unsm(NX_L,NY_L)
-        integer i_fill_seams(NX_L,NY_L)
+        integer i_fill_seams(NX_L,NY_L) ! Differentiate IR/VIS?
 
         integer istat_39_a(NX_L,NY_L)
         integer istat_39_add_a(NX_L,NY_L)
@@ -916,6 +916,12 @@ C READ IN SATELLITE DATA
 !       Cloud cover QC check
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
+        write(6,*)' Call get_parallax_info before insert_sat (IR)'
+        call get_parallax_info(NX_L,NY_L,i4time                          ! I
+     1                        ,lat,lon                                   ! I
+     1                        ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a ! I
+     1                        ,di_dh_ir,dj_dh_ir,i_fill_seams)           ! O
+
 !       Consider passing out parallax info, used with vis & cvr_snow, to be
 !       later used in other ways such as IR
         call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add            ! I
@@ -924,8 +930,9 @@ C READ IN SATELLITE DATA
      1              ,rlaps_land_frac,topo                                ! I
      1              ,cvr_snow,tgd_sfc_k                                  ! I
      1              ,offset_vis_i,offset_vis_j                           ! I
-     1              ,cloud_frac_vis_a,sat_albedo,ihist_alb               ! O
-     1              ,static_albedo,sfc_albedo                            ! O
+     1              ,di_dh_vis,dj_dh_vis                                 ! O
+     1              ,cloud_frac_vis_a,sat_albedo,mode_refl               ! O
+     1              ,ihist_alb,static_albedo,sfc_albedo                  ! O
      1              ,subpoint_lat_clo_vis,subpoint_lon_clo_vis           ! O 
      1              ,comment_alb                                         ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
@@ -940,18 +947,6 @@ C READ IN SATELLITE DATA
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
         call get_pres_3d(i4time,NX_L,NY_L,NZ_L,pres_3d,istatus)
-
-        write(6,*)' Call get_parallax_info before insert_sat (VIS)'
-        call get_parallax_info(NX_L,NY_L,i4time                          ! I
-     1                        ,lat,lon                                   ! I
-     1                        ,subpoint_lat_clo_vis,subpoint_lon_clo_vis ! I
-     1                        ,di_dh_vis,dj_dh_vis,i_fill_seams)         ! O
-
-        write(6,*)' Call get_parallax_info before insert_sat (IR)'
-        call get_parallax_info(NX_L,NY_L,i4time                          ! I
-     1                        ,lat,lon                                   ! I
-     1                        ,subpoint_lat_clo_s8a,subpoint_lon_clo_s8a ! I
-     1                        ,di_dh_ir,dj_dh_ir,i_fill_seams)           ! O
 
         if(i_varadj .eq. 1)then
             write(6,*)' Call cloud_var before insert_sat'
@@ -1230,7 +1225,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
         if(istat_vis .eq. 1 .OR. (istat_t39 .eq. 1 .and. l_use_39) )then
 !       if(.false.)then
             call insert_vis(i4time,clouds_3d,cld_hts
-     1        ,topo,cloud_frac_vis_a,sat_albedo,ihist_alb             ! I
+     1        ,topo,cloud_frac_vis_a,sat_albedo,mode_refl,ihist_alb   ! I
      1        ,istat_39_a,l_use_39,idb,jdb                            ! I
      1        ,NX_L,NY_L,KCLOUD,r_missing_data                        ! I
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
