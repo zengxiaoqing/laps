@@ -38,7 +38,7 @@ cdis
 cdis
 
         subroutine insert_vis(i4time,clouds_3d,cld_hts
-     1      ,topo,cloud_frac_vis_a,albedo,ihist_alb                   ! I
+     1      ,topo,cloud_frac_vis_a,albedo,mode_refl,ihist_alb         ! I
      1      ,istat_39_a,l_use_39,idb,jdb                              ! I
      1      ,ni,nj,nk,r_missing_data                                  ! I
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz                ! I
@@ -96,7 +96,7 @@ cdis
         integer i_fill_seams(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
-        real cloud_frac_vis_a(ni,nj)
+        real cloud_frac_vis_a(ni,nj)  ! presently used rather than 'albedo'
         integer mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
 
