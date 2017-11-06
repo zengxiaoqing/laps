@@ -43,8 +43,9 @@ cdis
      1                    ,rlaps_land_frac,topo                     ! I
      1                    ,cvr_snow,tgd_sfc_k                       ! I
      1                    ,offset_vis_i,offset_vis_j                ! I
-     1                    ,cloud_frac_vis_a,sat_albedo,ihist_alb    ! O
-     1                    ,static_albedo,sfc_albedo                 ! O
+     1                    ,di_dh_vis,dj_dh_vis                      ! O
+     1                    ,cloud_frac_vis_a,sat_albedo,mode_refl    ! O
+     1                    ,ihist_alb,static_albedo,sfc_albedo       ! O
      1                    ,subpoint_lat_clo,subpoint_lon_clo        ! O 
      1                    ,comment                                  ! O
      1                    ,ni,nj,nk,r_missing_data                  ! I
@@ -71,6 +72,10 @@ cdis
         real subpoint_lon_clo(ni,nj)
         real offset_vis_i(ni,nj)    ! Sat I minus actual I
         real offset_vis_j(ni,nj)    ! Sat J minus actual J
+        real di_dh_vis(ni,nj)                      
+        real dj_dh_vis(ni,nj)                      
+        real i_fill_seams(ni,nj)                      
+        real dum2d(ni,nj)                      
 
 !       This stuff is for reading VIS data from LVD file
         real solar_alt(ni,nj)
@@ -157,7 +162,23 @@ cdis
             return
         endif
 
+!       Compute parallax info (now being passed in)
+        write(6,*)' Call get_parallax_info in get_vis (VIS)'
+        call get_parallax_info(ni,nj,i4time                              ! I
+     1                        ,lat,lon                                   ! I
+     1                        ,subpoint_lat_clo,subpoint_lon_clo         ! I
+     1                        ,di_dh_vis,dj_dh_vis,i_fill_seams)         ! O
+
+!       Possibly 'sfc_albedo_lwrb' should be corrected for parallax        
+        if(.false.)then
+            call shift_parallax(di_dh_vis,dj_dh_vis,ni,nj                ! I
+     1                         ,sfc_albedo_lwrb,topo                     ! I
+     1                         ,dum2d)                                   ! O
+            sfc_albedo_lwrb(:,:) = dum2d(:,:)
+        endif
+
 !       Initial test for missing albedo (and partial data coverage)
+!       Loop in satellite i,j (uncorrected for parallax)
         do i = 1,ni
         do j = 1,nj
             ioff = min(max(i+nint(offset_vis_i(i,j)),1),ni)
@@ -191,13 +212,7 @@ cdis
 
         n_missing_albedo = 0
 
-!       Compute parallax info?
-!       call get_parallax_info(ni,nj,i4time                              ! I
-!    1                        ,lat,lon                                   ! I
-!    1                        ,subpoint_lat_clo,subpoint_lon_clo         ! I
-!    1                        ,di_dh,dj_dh,i_fill_seams)                 ! O
-
-!       Horizontal array loop
+!       Loop in satellite i,j (uncorrected for parallax)
         do i = 1,ni
         do j = 1,nj
 
@@ -228,6 +243,7 @@ cdis
      1          ihist_alb_sfc(iscr_alb_sfc) + 1
             endif
 
+!           'cloud_frac_vis' is what's used in 'insert_vis'
             clear_albedo = sfc_albedo_lwrb(i,j)
             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
      1                                           ,sat_albedo(i,j))
@@ -315,7 +331,7 @@ cdis
         character*3 var
         real lat(ni,nj)
         real sfc_albedo(ni,nj)      ! Populated with "reliable" values that
-                                      ! may include land/sea snow/ice
+                                    ! may include land/sea snow/ice
 
         real sfc_albedo_lwrb(ni,nj) ! Populated with lower bound (i.e. from
                                       ! static database)
@@ -411,6 +427,31 @@ cdis
         call stretch2(clear_albedo,cloud_albedo_ref,0.,1.,arg)
 
         albedo_to_cloudfrac2 = arg
+
+        return
+        end
+
+        subroutine shift_parallax(di_dh,dj_dh,ni,nj,field,ht
+     1                           ,field_shift)
+
+        real di_dh(ni,nj)                      
+        real dj_dh(ni,nj)                      
+        real ht(ni,nj)
+        real field(ni,nj)
+        real field_shift(ni,nj)
+
+        field_shift(:,:) = field(:,:)
+
+        do i = 1,ni
+        do j = 1,nj
+            is = i + di_dh(i,j) * ht(i,j)
+            js = j + dj_dh(i,j) * ht(i,j)
+            if(is .ge. 1 .and. is .le. ni .and.
+     1         js .le. 1 .and. js .le. nj      )then
+                field_shift(is,js) = field(i,j)
+            endif
+        enddo ! j
+        enddo ! i
 
         return
         end
