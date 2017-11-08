@@ -122,8 +122,8 @@ do j = 1,nj
     endif
 
     if(idebugsub .eq. 1)then
-        write(6,101)i,j,subpoint_lon_clo_vis(i,j),alt(i,j),azi(i,j),cld_hts(20),di(20),dj(20)
-101     format(' sat i/j/sub/alt/azi/ht/di/dj = ',2i4,6f10.3)
+        write(6,101)i,j,subpoint_lon_clo_vis(i,j),cld_hts(20),di(20),dj(20)
+101     format(' sat i/j/sub/ht/di/dj = ',2i4,4f10.3)
     endif
 
 !   Determine 1D cloud cvr in the column corrected for parallax to compare with
