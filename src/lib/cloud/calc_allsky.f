@@ -911,7 +911,7 @@
 
         character*255 directory, file_dc, file
         character*10  c10_fname /'nest7grid'/
-        character*20 adum
+        character*20 adum,ctype
         integer u,u_out
         logical l_there_dc
         integer counts(3)
@@ -924,14 +924,16 @@
 
         call get_directory('static',directory,len_dir)
 
-        do itile = 1,3
+        do itile = 1,4
         
           if(itile .eq. 1)then
             file_dc=trim(directory)//'vhires_dc_crop1.ppm'       
           elseif(itile .eq. 2)then
             file_dc=trim(directory)//'vhires_dc_crop2.ppm'       
-          else
+          elseif(itile .eq. 3)then
             file_dc=trim(directory)//'vhires_dc_crop3.ppm'       
+          else
+            file_dc=trim(directory)//'vhires_dc_crop4.ppm'       
           endif
 
           inquire(file=trim(file_dc),exist=l_there_dc)
@@ -963,7 +965,9 @@
           read(u,*,end=999)adum,adum,pixdgh
           read(u,*,end=999)adum,adum,nlattile
           read(u,*,end=999)adum,adum,wlontile
+          read(u,*,end=999)adum,adum,ctype
           write(6,*)' comment info ',pixdgw,pixdgh,nlattile,wlontile
+     1                              ,ctype
           close(u)
 
           pix_latlon_sn = 1. / pixdgh
@@ -1033,12 +1037,24 @@
                   endif
                 enddo ! ic
 
+                if(trim(ctype) .eq. 'usda')then
+                  topo_albedo(:,ialt,jazi) = topo_albedo(:,ialt,jazi)
+     1                                     * 0.7
+                endif
+
                 if(jazi .eq. minazi)then
                   write(6,1)ialt,jazi,arglat,arglon
      1           ,pix_we,pix_sn,in,jn,counts(:),topo_albedo(:,ialt,jazi)
 1                 format(' Sample drape point',2i7,2f10.4,2f9.2,2i6,2x
      1                                        ,3i6,3f9.3)
                 endif ! printing point
+
+              else ! outside image
+                if(jazi .eq. minazi)then
+                  write(6,2)ialt,jazi,pix_we,pix_sn,arglat,arglon
+2                 format(' outside image ',2i7,2f11.3,2f10.4)
+                endif              
+
               endif ! inside image
             endif ! valid lat/lon
           enddo ! jazi
