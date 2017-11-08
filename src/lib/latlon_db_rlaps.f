@@ -93,6 +93,13 @@ cdoc    grid south to grid north.
 
         call latlon_db_uv(rlat,rlon,ulaps,vlaps,istatus)
 
+        if(umax .le. umin .or. vmax .le. vmin)then
+            write(6,*)
+     1      ' SEVERE ERROR: uvminmax are off in latlon_db_rlapsgrid'
+            write(6,*)umin,umax,vmin,vmax
+            stop
+        endif
+
         if(uscale .eq. 0d0 .or. vscale .eq. 0d0)then
             write(6,*)
      1        ' SEVERE ERROR: (u|v)scale = 0 in latlon_db_rlapsgrid'
