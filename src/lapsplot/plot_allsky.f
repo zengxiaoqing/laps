@@ -203,8 +203,11 @@
 
 !       Topo offset (based on topo_1s data over Colorado)
         if(grid_spacing_m .le. 30.)then
-          ioff = +2  ! move the terrain eastward this amount
+          ioff = -1  ! move the terrain eastward this amount
           joff = +13 ! move the terrain northward this amount
+
+          ioff = +0  ! move the terrain eastward this amount
+          joff = +12 ! move the terrain northward this amount
 
           do idum = 1,NX_L
           do jdum = 1,NY_L
@@ -373,6 +376,16 @@
           l_require_all_fields = .false.
         elseif(l_parse(directory,'navgem'))then
           l_require_all_fields = .false.
+        elseif(c_model(1:5) .eq. 'cloud')then  ! e.g. cloud_13_13_00001_00002
+          write(6,*)' parse c_model for idealized cloud tests'
+          l_require_all_fields = .false.                   ! 
+          l_test_cloud = .true.
+          read(c_model(7:8),*)lvl1 
+          read(c_model(10:11),*)lvl2
+          read(c_model(13:17),*)clwc_ideal
+          read(c_model(19:23),*)cice_ideal
+          clwc_ideal = clwc_ideal * .00001
+          cice_ideal = cice_ideal * .00001
         elseif(trim(c_model) .ne. '')then
           l_require_all_fields = .false.
         elseif(i4time_ref - i4time_now_gg() .lt. 1e6)then  ! present/past
@@ -381,9 +394,13 @@
           l_require_all_fields = .false.                   ! water only
           l_test_cloud = .false.
           l_water_world = .true.
-        elseif(i4time_ref - i4time_now_gg() .gt. 45e6)then ! >1.5y future
+        elseif(i4time_ref - i4time_now_gg() .gt. 20e6)then ! >0.6y future
           l_require_all_fields = .false.                   ! test clouds
           l_test_cloud = .true.
+          lvl1 = 13
+          lvl2 = 13
+          clwc_ideal = .001
+          cice_ideal = .000
         else                                               ! >10d future
           l_require_all_fields = .false.
         endif
@@ -606,8 +623,8 @@
            endif
 
           else ! l_test_cloud
-           write(6,*)' generate idealized cloud fields'
-           clwc_3d(:,:,14) = .000
+           write(6,*)' generate idealized cloud fields - 1'
+           clwc_3d(:,:,14) = .001 ! 14/775mb .001
            i4time_lwc = i4time_ref
            i4wdw_sfc = 100000
 
@@ -709,10 +726,6 @@
           enddo ! i
 
         else ! l_require_all_fields = F
-          if(l_test_cloud)then
-            write(6,*)' generate idealized cloud fields'
-            clwc_3d(:,:,14) = .000 ! .001
-          endif
 
           if(l_parse(directory,'fim'))then
             filename = '/scratch/staging/fab/albers/fimlarge.nc'
@@ -855,6 +868,12 @@
           read(lun,*) ! advance through input data
           write(6,*)' Running without LAPS cloud and other current data'
           snow_cover = 0. ! r_missing_data
+
+          if(l_test_cloud)then ! recently active section
+            write(6,*)' generate idealized cloud fields - 2'
+            clwc_3d(:,:,lvl1:lvl2) = clwc_ideal ! 13/800mb .001
+            cice_3d(:,:,lvl1:lvl2) = cice_ideal ! 13/800mb .001
+          endif
 
 !         Use standard atmosphere for heights (uniform pressure grid)
           if(istatus_ht .eq. 0)then
