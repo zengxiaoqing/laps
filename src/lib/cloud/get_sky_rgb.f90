@@ -460,8 +460,8 @@
                     idebug_a(i,j) = 1
 !               elseif(abs(alt_a(i,j)) .le. 21.)then   
 !                   idebug_a(i,j) = 1
-                elseif(alt_a(i,j) .ge. -80. .AND. &
-                       alt_a(i,j) .le. -65. .AND. &
+                elseif(alt_a(i,j) .ge. +10. .AND. & ! special alt range
+                       alt_a(i,j) .le. +17. .AND. &
                        alt_a(i,j) .eq. float(nint(alt_a(i,j))))then
                     idebug_a(i,j) = 1
 !                   if(alt_a(i,j) .eq. -73.)write(6,*)'debug check 1a',alt_a(i,j),azi_a(i,j),idebug_a(i,j)
@@ -506,7 +506,7 @@
             idebug_a(ialt_debug,1:100) = 1
 !           jazi_debug = ((nj-1)*115)/360 + 1 
 !           idebug_a(1:ni,jazi_debug) = 1
-            if(alt_a(1,1) .eq. -90.)idebug_a(1,1) = 1 ! nadir
+            if(abs(alt_a(1,1)) .eq. 90.)idebug_a(1,1) = 1 ! nadir/zenith
         endif
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
@@ -830,6 +830,16 @@
               aero_od_obs(ic,:,:) = aod_tot(:,:)
               aero_ssa(ic,:,:) = ssa(ic)
             enddo ! ic
+          endif
+
+          if(solalt_limb_true .lt. twi_alt)then
+            idebug_pf = 0
+          else
+            idebug_pf = idebug_a
+            jhw = 2
+            jpfmin = max(jsun-jhw,1)
+            jpfmax = min(jsun+jhw,nj)
+            idebug_pf(isun,jpfmin:jpfmax) = 1
           endif
 
           call get_scat_pf(elong_a,alt_a,aero_od_src,aero_od_obs,aero_ssa,aero_g         & ! I
