@@ -235,6 +235,7 @@
 !           and ensuring high pf for backscattering with thick clouds
 !           radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
             radfrac = scurve(scurve(scurve(scurve(r_cloud_rad(i,j)))))
+            radfrac_s = radfrac**4.0
             elgfrac = scurve(elong_a(i,j)/180.) ! * radfrac ! need radfrac?
             alb_clwc = alb(0.06*cloud_od_liq) * elgfrac + (1.-elgfrac)
 
@@ -243,7 +244,8 @@
 !                     illuminated                unilluminated
 !           pf_thk = pf_thk*radfrac + hg(-0.,elong_a(i,j)) * (1.-radfrac) &
 !                                       * (2./3. * (1. + sind(alt_a(i,j))))
-            pf_thk = pf_thk_hr*radfrac*alb_clwc + 2.*pf_thk_lr*(1.-radfrac) 
+            pf_thk      = pf_thk_hr*radfrac  *alb_clwc + 2.*pf_thk_lr*(1.-radfrac) 
+            pf_thk_snow = pf_thk_hr*radfrac_s*alb_clwc + 2.*pf_thk_lr*(1.-radfrac_s) 
             pf_thk_a(i,j) = pf_thk
 
             rain_peak = exp(-rad2tau(.06,r_cloud_rad(i,j))/2.)
@@ -296,14 +298,20 @@
           sco = max(cloud_od_snow,1.0) ! multiple scatter order 
           hgp = sco                    ! multiple scatter order
 
-          snow_bin1 = exp(-cloud_od_snow/5.)      ! optically thin snow
-          snow_bin1c = opac(0.10*(sco**1.2 - 1.0))  ! backscattering (thick)
+!         Note the 'snow_bin1c' opac first arg of 0.10 is a potential factor
+!         having an impact on when the solar aureole disappears in thick clouds.
+!         Using 0.20 may reduce the tau value where this occurs. Another factor
+!         is recently changed 'radfrac_s' that affects 'pf_thk_snow'. Another
+!         potential factor (the last coefficient in 'arg1') shows promise in
+!         depending more on cloud OD.          
+          snow_bin1 = exp(-cloud_od_snow/5.)       ! optically thin snow
+          snow_bin1c = opac(0.10*(sco**1.2 - 1.0)) ! backscattering (thick)
           snow_bin1a = (1. - snow_bin1c)
 !         snow_bin1a = 0.50**sco             ! forward peak
 !         snow_bin1b = 1.0 - (snow_bin1a + snow_bin1c) ! mid
           snow_bin2 = 1.0 - snow_bin1        ! optically thick snow
 
-          arg1 = (0.50 * fsnow + 0.50 * fcice) * 2.**(-(hgp-1.0))
+          arg1 = (0.50 * fsnow + 0.50 * fcice) * 2.**(-(hgp-1.0)*0.4)
           arg3 =  0.03 * fsnow + 0.25 * fcice                     ! isotropic
           arg4 =  0.02 * fsnow + 0.04 * fcice
 !         arg2 =  0.45 * fsnow + 0.28 * fcice
@@ -312,8 +320,10 @@
           pf_thn_snow = pf_thn_snowf(hgp,elong_a(i,j)) + .15 * cosd(elong_a(i,j))
 
           pf_snow = snow_bin1a * pf_thn_snow &
-                  + snow_bin1c * pf_thk
+                  + snow_bin1c * pf_thk_snow
 !                 + snow_bin2  * hg(0.0     ,elong_a(i,j))  
+
+          pf_snow1 = pf_snow
 
           elgfrac = scurve(elong_a(i,j)/180.) * snow_bin2
           alb_snow = alb(0.14*cloud_od_snow) ! * elgfrac + (1.-elgfrac)
@@ -456,6 +466,8 @@
               g2 = aod_asy(1,2)**scatter_order
               write(6,102)bf,cloud_od_liq,clwc_bin2,alb_clwc,frac_norm,clwc_factor_w,cice_factor_w,rain_factor,snow_factor_w,aero_factor(2),scatter_order,fb,g1,g2,hg2(2)
 102           format(' bf/od/clwc_bin2/alb_clwc/fnrm/',f9.3,f9.4,2f12.6,f9.4,' factorw ',4f9.4,' aerof/sct/hg2 ',6f9.2)
+              write(6,103)snow_bin1a,snow_bin1c,pf_snow1,pf_snow,radfrac_s,pf_thn_snow,pf_thk_lr,pf_thk_hr,pf_thk_snow
+103           format(' snow: 1a/1c/snow1/snow/radf/lr/hr/thns/thks',9f12.6)
           endif
 
          enddo ! i (altitude)
