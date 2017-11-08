@@ -1095,7 +1095,7 @@
           if((abs(view_azi_deg - azid1) .lt. azi_delt_2 .or. 
      1        abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
      1        (abs(altray) .eq. 12  .or. abs(altray) .eq. 9 .or.
-     1         (altray .ge. -5. .and. altray .le. 9.) .or. 
+     1         (altray .ge. -5. .and. altray .le. 16.) .or. 
      1         ialt .eq. minalt .or. abs(altray) .eq. 14. .or.
      1         abs(altray) .eq. 16. .or.
      1         altray .eq. -7.5 .or.
@@ -1104,13 +1104,14 @@
      1         (altray_limb/radius_limb .lt. .01
      1               .and. ialt .eq. (ialt/10) * 10)      .or.
      1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
-     1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
-     1         (altray .ge. -75.00 .and. altray .le. -70.00) .or.
+     1         abs(altray) .eq. 45. .or. abs(altray) .eq. 60. .or.
+!    1         (altray .ge. -75.00 .and. altray .le. -70.00) .or.
      1         abs(altray) .eq. 75.) 
 !    1               .AND. altray .eq. nint(altray) 
      1                                                   )then
              idebug = 1
              idebug_a(ialt,jazi) = 1
+!            write(6,*)' Set debug for altitude ',altray
           else
              idebug = 0
           endif
@@ -1128,10 +1129,11 @@
              endif
           endif
 
-!         Non-verbose (low observer)                    
-          if(l_box .eqv. .false.)then
+!         Non-verbose (rays above horizon for low observer on larger grid)
+          if((l_box .eqv. .false.) .and. grid_spacing_m .gt. 30.)then
             if(htstart .lt. 25. .or. altray .gt. 0.0)then
               if(mode_aero_cld .lt. 3)then
+!               write(6,*)' Set debug non-verbose'
                 idebug = 0 ! ; idebug_a(ialt,jazi) = 0
               endif
             endif
@@ -1292,7 +1294,11 @@
               ls = 0
               iwrite = 0
               trace_minalt = 1e10
-              cvr_path_thr = 1.0
+              if(grid_spacing_m .le. 30.)then
+                 cvr_path_thr = 2000. 
+              else
+                 cvr_path_thr = 1.0
+              endif
 
               do while((rk .le. float(nk)-rkdelt .or. iabove .eq. 1)
      1           .AND. ihit_topo .eq. 0
