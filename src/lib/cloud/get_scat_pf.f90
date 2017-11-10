@@ -216,6 +216,8 @@
             call phase_func(iplan,isat,phase_angle_d,v10,nm,phase_corr)       
             r_ill = (1. + cosd(phase_angle_d)) / 2.
 
+!           This is designed for 'clwc' though we can consider a similar one
+!           for 'cice'.            
 !           Set to 1 or 2 if we're at cloud base?
             pf_thk_hr = (1.94 / (10.**(phase_corr * 0.4))) / r_ill
             pf_thk_hr = min(pf_thk_hr,600.0) ! limit fwd scattering peak
@@ -235,6 +237,8 @@
 !           and ensuring high pf for backscattering with thick clouds
 !           radfrac = scurve(r_cloud_rad(i,j)**3) ! high for illuminated clouds
             radfrac = scurve(scurve(scurve(scurve(r_cloud_rad(i,j)))))
+!           radfrac_l = scurve(scurve(scurve(scurve(r_cloud_rad(i,j)**1.8))))
+            radfrac_l = scurve(scurve(scurve(scurve(r_cloud_rad(i,j)**2.2))))
             radfrac_s = radfrac**4.0
             elgfrac = scurve(elong_a(i,j)/180.) ! * radfrac ! need radfrac?
             alb_clwc = alb(0.06*cloud_od_liq) * elgfrac + (1.-elgfrac)
@@ -244,7 +248,7 @@
 !                     illuminated                unilluminated
 !           pf_thk = pf_thk*radfrac + hg(-0.,elong_a(i,j)) * (1.-radfrac) &
 !                                       * (2./3. * (1. + sind(alt_a(i,j))))
-            pf_thk      = pf_thk_hr*radfrac  *alb_clwc + 2.*pf_thk_lr*(1.-radfrac) 
+            pf_thk      = pf_thk_hr*radfrac_l*alb_clwc + 2.*pf_thk_lr*(1.-radfrac_l) 
             pf_thk_snow = pf_thk_hr*radfrac_s*alb_clwc + 2.*pf_thk_lr*(1.-radfrac_s) 
             pf_thk_a(i,j) = pf_thk
 
@@ -467,7 +471,7 @@
               write(6,102)bf,cloud_od_liq,clwc_bin2,alb_clwc,frac_norm,clwc_factor_w,cice_factor_w,rain_factor,snow_factor_w,aero_factor(2),scatter_order,fb,g1,g2,hg2(2)
 102           format(' bf/od/clwc_bin2/alb_clwc/fnrm/',f9.3,f9.4,2f12.6,f9.4,' factorw ',4f9.4,' aerof/sct/hg2 ',6f9.2)
               write(6,103)snow_bin1a,snow_bin1c,pf_snow1,pf_snow,radfrac_s,pf_thn_snow,pf_thk_lr,pf_thk_hr,pf_thk_snow
-103           format(' snow: 1a/1c/snow1/snow/radf/lr/hr/thns/thks',9f12.6)
+103           format(' snow: 1a/1c/snow1/snow/radf/thns/lr/hr/thks',9f12.6)
           endif
 
          enddo ! i (altitude)
