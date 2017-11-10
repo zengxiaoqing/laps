@@ -834,12 +834,13 @@
 
           if(solalt_limb_true .lt. twi_alt)then
             idebug_pf = 0
-          else
+          elseif(isun .gt. 0 .and. isun .le. ni .AND. jsun .gt. 0 .and. jsun .le. nj)then
             idebug_pf = idebug_a
-            jhw = 2
-            jpfmin = max(jsun-jhw,1)
-            jpfmax = min(jsun+jhw,nj)
-            idebug_pf(isun,jpfmin:jpfmax) = 1
+            ihw = 40
+            idelt = 4
+            ipfmin = max(isun-ihw,1)
+            ipfmax = min(isun+ihw,ni)
+            idebug_pf(ipfmin:ipfmax:idelt,jsun) = 1
           endif
 
           call get_scat_pf(elong_a,alt_a,aero_od_src,aero_od_obs,aero_ssa,aero_g         & ! I
@@ -1800,8 +1801,8 @@
                   write(6,*)' ******** solar location ************************* od'
                   write(6,112)glow_sun(i,j),10.**glow_sun(i,j),alt_a(i,j) &
                              ,rad_sun_r,rad_sun_g,rad_sun_b &
-                             ,trans(cloud_od(i,j) + aod_slant(i,j)),glwlow 
-112               format('glow_sun/alt/rad_sun/trans',f9.4,e16.6,f9.4,3e16.6,f11.8,f9.4)
+                             ,trans(cloud_od(i,j) + aod_slant(i,j)),glwlow,rad_sun_g/sky_rad(2) 
+112               format('glow_sun/alt/rad_sun/trans/fracsun',f9.4,e16.6,f9.4,3e16.6,f11.8,2f9.4)
                   write(6,*)'od_g_slant = ',od_g_slant_a(:,i)
                   write(6,*)'od_o_slant = ',od_o_slant_a(:,i)
                   write(6,*)'od_a_slant = ',od_a_slant_a(:,i)
