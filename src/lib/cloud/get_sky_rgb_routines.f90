@@ -969,8 +969,9 @@
         elseif(alt_top .gt. 0.)then
           write(6,*)' get_sp_irrad: top above horizon ',alt_top
           area_frac = sind(alt_top)
-          write(6,*)' area_frac/wdw/top = ',area_frac,sky_rad_ave_wdw,sky_rad_ave_top
-          sp_irrad = sky_rad_ave_wdw * area_frac + sky_rad_ave_top * (1.-area_frac)
+          sky_rad_sum_top = sky_rad_ave_top * (1.-area_frac) * 2. * pi * cosd(alt_top)
+          write(6,*)' area_frac/wdw/top = ',area_frac,sky_rad_sum_wdw,sky_rad_sum_top
+          sp_irrad = sky_rad_sum_wdw * area_frac + sky_rad_sum_top
         else
           write(6,*)' get_sp_irrad: top below horizon ',alt_top
           sp_irrad = sky_rad_ave_wdw
