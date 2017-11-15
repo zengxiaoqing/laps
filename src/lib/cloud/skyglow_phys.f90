@@ -190,13 +190,13 @@
             if(sol_alt_a .gt. 0.)then
               call get_airmass(sol_alt_a,0.,1. &                     ! I
                               ,aero_refht,aero_scaleht &             ! I
-                              ,earth_radius,1 &                      ! I
+                              ,earth_radius,0 &                      ! I
                               ,ags_a(isolalt),aos_a(isolalt),aa_dum &! O
                               ,refr_deg)                             ! O
 
               call get_airmass(sol_alt_a,aero_refht,patm_refht &     ! I
                               ,aero_refht,aero_scaleht &             ! I
-                              ,earth_radius,1 &                      ! I
+                              ,earth_radius,0 &                      ! I
                               ,ag_dum,ao_dum,aas_a(isolalt),refr_deg)! O
               write(6,51)isolalt,sol_alt_a,ags_a(isolalt),aos_a(isolalt) &
                                           ,aas_a(isolalt)
@@ -209,7 +209,7 @@
               patmo3_shadow = patm_o3(ht_shadow)
               call get_airmass(sol_alt_a,ht_shadow,patm_shadow &     ! I
                               ,aero_refht,aero_scaleht &             ! I
-                              ,earth_radius,1 &                      ! I
+                              ,earth_radius,0 &                      ! I
                               ,ag_sz,ao_sz,aa_sz,refr_deg)           ! O
               ags_a(isolalt) = ag_sz / patm_shadow
               if(patmo3_shadow .gt. 0.)then
@@ -345,9 +345,10 @@
              od_a_vert = aod_vrt * ext_a(ic)
 
 !            if((l_solar_eclipse .eqv. .true.) .AND. ic .eq. icd)then
-             if((ic .eq. icd .and. altray .eq. nint(altray)) .OR. &
+             if((ic .eq. icd .and. altray/5. .eq. nint(altray/5.)) .OR. &
               altray .eq. 0. .OR. altray .eq. -2. .OR. abs(altray) .eq. 90.)then
                idebug = 1
+               if(altray .eq. 90.)write(6,*)' zenith location (skyglow_phys)'
                write(6,*)' alt/ag/aa =',altray,ag,aa
                write(6,631)altray,ic,istart,iend
 631            format(' call get_clr_src_dir for altitude ',f9.3,i4,2i9)
