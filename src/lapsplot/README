@@ -34,6 +34,7 @@ driver                                            lapsplot_main.f
         plot_allsky                               plot_allsky.f
             solar_position                        lib/sunfuncs.f
             equ_to_altaz_d                        lib/equtoaltazd.f
+            wrf2swim                              lib/bgdata/wrf/module_wrf_lga.f90
             land_albedo_bm                        lib/land_albedo.f
             sun_moon                              lib/cloud/sun_moon.f
                 sun_eclipse_parms                       "
