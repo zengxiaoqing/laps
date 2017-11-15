@@ -1,8 +1,8 @@
 
-       subroutine get_aod_3d(pres_3d,heights_3d,topo_2d,ni,nj,nk,aod &
-                            ,i_aero_synplume,i_aero_1d,aod_3d)
+       subroutine get_aod_3d(pres_3d,heights_3d,topo_2d,ni,nj,nk &
+                            ,aod,aod_ref,i_aero_synplume,i_aero_1d,aod_3d)
 
-       use mem_namelist, ONLY: redp_lvl,aero_scaleht
+       use mem_namelist, ONLY: redp_lvl,aero_scaleht,grid_spacing_m
        use mem_allsky, ONLY: mode_aero_cld
 
        include 'rad.inc'
@@ -11,6 +11,10 @@
        real pres_3d(ni,nj,nk)
        real heights_3d(ni,nj,nk)
        real topo_2d(ni,nj)
+
+       scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0-1
+       fraclim(x,x1,x2) = min(max((x-x1)/(x2-x1),0.),1.)
+       scurvel(x,x1,x2) = scurve(fraclim(x,x1,x2)) ! scurve over bounds
 
        gas_scale_height = 8000.
 
@@ -60,6 +64,19 @@
          iwp = 1
          write(6,*)' Adding synthetic aerosol plume of',ext_syn,iplume,jplume
          aod_3d(iplume-iwp:iplume+iwp,jplume-iwp:jplume+iwp,1:nk-8) = ext_syn
+       elseif(i_aero_synplume .eq. 2)then ! synthetic aerosol gradient
+         ri_full = ni/2 + 40000. / grid_spacing_m
+         ri_none = ni/2 + 30000. / grid_spacing_m
+         write(6,*)' Adding synthetic aerosol gradient ',ni/2,ri_none,ri_full
+         do i = 1,ni
+           aero_scale = max(scurvel(float(i),ri_none,ri_full),.0001)
+           if(i .eq. (i/10) * 10)then
+              write(6,*)' i,aero_scale ',i,aero_scale
+           endif
+           aod_3d(i,:,:) = aod_3d(i,:,:) * aero_scale
+         enddo ! i
+         aod = 0.
+         aod_ref = 0.
        else
          write(6,*)' Skip synthetic aerosol plume'
        endif
