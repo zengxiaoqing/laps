@@ -801,7 +801,9 @@
         else
             idebug_pf = idebug_a
         endif
-        where(alt_a(:,:) .eq. -20. .and. azi_a(:,:) .ge. 90. .and. azi_a(:,:) .le. 180.)idebug_pf(:,:) = 1
+        if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
+            where(alt_a(:,jsun) .le. 0. .and. alt_a(:,jsun) .eq. nint(alt_a(:,jsun)))idebug_pf(:,jsun) = 1
+        endif
         write(6,*)' sum of idebug_a (1a) = ',sum(idebug_pf)
 
         call get_lnd_pf(elong_a,alt_a,azi_a,topo_gti,topo_albedo    & ! I
@@ -1101,9 +1103,9 @@
 
 !                         Consider diffuse sky light coming through the cloud                          
                           radb_diffuse = rad_sec_cld(ic) * (1. - cloud_albedo_diffuse) * 0.75 * (1. + sind(altray_limb)**2)
-!                         if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg)then
-!                             write(6,*)'radb debug',radb_diffuse,rad_sec_cld(ic),cloud_albedo_diffuse,altray_limb
-!                         endif
+                          if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg)then
+                              write(6,*)'radb debug',radb_diffuse,rad_sec_cld(ic),cloud_albedo_diffuse,altray_limb
+                          endif
 
                       endif
 
@@ -1790,7 +1792,7 @@
                   write(6,*)' ******** zenith location ************************ od'
                   write(6,111)clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)
 111               format('clrrad/RGB = ',3f12.0,3i4)
-                  write(6,*)'limiting magnitude is ',rmaglim
+                  write(6,*)'limiting (cloudless) magnitude is ',rmaglim
               endif
               if(abs(elong_a(i,j) - 90.) .le. 0.5)then
                   write(6,*)' ******** 90 elong location ********************** od'
