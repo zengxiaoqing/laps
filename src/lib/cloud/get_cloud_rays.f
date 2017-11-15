@@ -875,6 +875,8 @@
           l_spherical = .false.
         endif
 
+!       Always set to true to eliminate small polar artifact at nadir
+!       if(grid_spacing_m .ge. 9000. .or. .true.)then
         if(grid_spacing_m .ge. 9000.)then
           l_box = .true.
         else
@@ -1095,7 +1097,7 @@
           if((abs(view_azi_deg - azid1) .lt. azi_delt_2 .or. 
      1        abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
      1        (abs(altray) .eq. 12  .or. abs(altray) .eq. 9 .or.
-     1         (altray .ge. -5. .and. altray .le. 16.) .or. 
+     1         (altray .ge. -5. .and. altray .le. 9.) .or. 
      1         ialt .eq. minalt .or. abs(altray) .eq. 14. .or.
      1         abs(altray) .eq. 16. .or.
      1         altray .eq. -7.5 .or.
@@ -1104,14 +1106,13 @@
      1         (altray_limb/radius_limb .lt. .01
      1               .and. ialt .eq. (ialt/10) * 10)      .or.
      1         abs(altray) .eq. 20. .or. abs(altray) .eq. 30. .or.
-     1         abs(altray) .eq. 45. .or. abs(altray) .eq. 60. .or.
-!    1         (altray .ge. -75.00 .and. altray .le. -70.00) .or.
+     1         abs(altray) .eq. 45. .or. abs(altray) .eq. 63.5 .or.
+     1         (altray .ge. -75.00 .and. altray .le. -70.00) .or.
      1         abs(altray) .eq. 75.) 
 !    1               .AND. altray .eq. nint(altray) 
      1                                                   )then
              idebug = 1
              idebug_a(ialt,jazi) = 1
-!            write(6,*)' Set debug for altitude ',altray
           else
              idebug = 0
           endif
@@ -1129,11 +1130,10 @@
              endif
           endif
 
-!         Non-verbose (rays above horizon for low observer on larger grid)
-          if((l_box .eqv. .false.) .and. grid_spacing_m .gt. 30.)then
+!         Non-verbose (low observer)                    
+          if(l_box .eqv. .false.)then
             if(htstart .lt. 25. .or. altray .gt. 0.0)then
               if(mode_aero_cld .lt. 3)then
-!               write(6,*)' Set debug non-verbose'
                 idebug = 0 ! ; idebug_a(ialt,jazi) = 0
               endif
             endif
@@ -1268,7 +1268,7 @@
      1                    ,jazi_delt,rkdelt,i,j,slant2_optimal,l_box
 11              format(
      1    'Trace the slant path (alt/azi-g/ialt/jazi/jdelt/rkdelt/i/j):'
-     1                ,f8.3,2f6.1,i6,2i5,f6.2,2i5,f7.0,l2)                                     
+     1                ,f8.3,2f6.1,i6,2i5,f8.4,2i5,f7.0,l2)                                     
                 write(6,12)                                   
 12              format('      dz1_l        dz1_h      dxy1_l    dxy1_h',
      1           '  rinew  rjnew   rk    ht_m   topo_m   path     ',
@@ -3036,9 +3036,10 @@
 
         solalt_last = sol_alt(i,j)
 
-        write(6,*)' Sample of topo_ri and topo_rj'
+        write(6,*)' Sample of topo_ri, topo_rj, trace_ri, trace_rj'
         write(6,*)
-     1    ' ialt   jazi         alt      azi      topo_ri     topo_rj'
+     1    ' ialt   jazi          alt      azi    topo_ri    topo_rj'
+     1   ,'    solalt_tp  trace_ri   trace_rj  solalt_tr dist_2_topo'
         do ialt_sample = minalt,min(minalt+100,maxalt)
 !          ialt_sample = min(max(-45*4,minalt),maxalt) ! -5 degrees alt
 !          ialt_sample = min(max(-15,minalt),maxalt) ! -5 degrees alt
@@ -3069,7 +3070,8 @@
      1          ,trace_ri(ialt_sample,jazi_sample)
      1          ,trace_rj(ialt_sample,jazi_sample)
      1          ,solalt_trace
-321        format(2i6,' tp/tr',2f9.2,6f11.4)       
+     1          ,dist_2_topo(ialt_sample,jazi_sample)
+321        format(2i6,' tp/tr',2f9.2,7f11.4)       
         enddo ! jazi_sample
         
         I4_elapsed = ishow_timer()
