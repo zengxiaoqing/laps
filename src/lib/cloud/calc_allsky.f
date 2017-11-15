@@ -89,8 +89,10 @@
         real aod_a(minalt:maxalt,minazi:maxazi)
         real topo_ri(minalt:maxalt,minazi:maxazi)
         real topo_rj(minalt:maxalt,minazi:maxazi)
-        real topo_lat(minalt:maxalt,minazi:maxazi)
-        real topo_lon(minalt:maxalt,minazi:maxazi)
+        real*8 topo_lat(minalt:maxalt,minazi:maxazi)
+        real*8 topo_lon(minalt:maxalt,minazi:maxazi)
+        real topo_lat_r4(minalt:maxalt,minazi:maxazi)
+        real topo_lon_r4(minalt:maxalt,minazi:maxazi)
         real trace_ri(minalt:maxalt,minazi:maxazi)
         real trace_rj(minalt:maxalt,minazi:maxazi)
         real topo_solalt(minalt:maxalt,minazi:maxazi)
@@ -121,7 +123,7 @@
 
         real ext_g(nc)               ! od per airmass
         real moon_mag,moon_mag_thr
-        real bi_coeff(2,2)
+        real*8 bi_coeff(2,2),ritopo,rjtopo,fi,fj
         logical l_solar_eclipse, l_binary, l_zod, l_phase
         logical l_terrain_following
 
@@ -417,12 +419,12 @@
                         fj = rjtopo - j1
                         j2 = j1+1
 
-                        bi_coeff(1,1) = (1.-fi) * (1.-fj)
-                        bi_coeff(2,1) = fi      * (1.-fj)
-                        bi_coeff(1,2) = (1.-fi) *     fj 
-                        bi_coeff(2,2) = fi      *     fj 
-                        topo_lf(i,j) = sum(bi_coeff(:,:) 
-     1                               * land_frac(i1:i2,j1:j2))
+                        bi_coeff(1,1) = (1d0-fi) * (1d0-fj)
+                        bi_coeff(2,1) = fi       * (1d0-fj)
+                        bi_coeff(1,2) = (1d0-fi) *      fj 
+                        bi_coeff(2,2) = fi       *      fj 
+                        topo_lf(i,j) = nint(sum(bi_coeff(:,:) 
+     1                               * land_frac(i1:i2,j1:j2)))
                         topo_lat(i,j) = sum(bi_coeff(:,:) 
      1                                * lat(i1:i2,j1:j2))
                         topo_lon(i,j) = sum(bi_coeff(:,:) 
@@ -451,6 +453,9 @@
 
           enddo ! i
           enddo ! j
+
+          topo_lat_r4(:,:) = topo_lat(:,:)
+          topo_lon_r4(:,:) = topo_lon(:,:)
 
           if(.true.)then
              call drape_topo_albedo(
@@ -521,7 +526,7 @@
      1                    ,swi_obs           ! sw at ground below observer 
      1                    ,topo_swi,topo_albedo,gtic,dtic,btic,emic
      1                    ,topo_albedo_2d(:,isound,jsound)
-     1                    ,topo_lat,topo_lon,topo_lf,topo_sc            ! I
+     1                    ,topo_lat_r4,topo_lon_r4,topo_lf,topo_sc      ! I
      1                    ,aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir
      1                    ,aod_tot
      1                    ,dist_2_topo,topo_solalt,topo_solazi
@@ -886,7 +891,7 @@
       
 
         subroutine drape_topo_albedo(
-     1                 topo_lat_in,topo_lon_in                       ! I
+     1                 topo_lat,topo_lon                             ! I
      1                ,nc,minalt,maxalt,minazi,maxazi                ! I
      1                ,grid_spacing_m,r_missing_data                 ! I
      1                ,topo_albedo)                                  ! I/O
@@ -899,13 +904,13 @@
         real topo_rj(minalt:maxalt,minazi:maxazi)
         real topo_albedo(nc,minalt:maxalt,minazi:maxazi)
 
-        real topo_lat_in(minalt:maxalt,minazi:maxazi)
-        real topo_lon_in(minalt:maxalt,minazi:maxazi)
-
         real nlattile
 
         real*8 topo_lat(minalt:maxalt,minazi:maxazi)
         real*8 topo_lon(minalt:maxalt,minazi:maxazi)
+
+        real*8 arglat,arglon,pix_we,pix_sn,rlat_start,rlon_start
+     1        ,pix_latlon_we,pix_latlon_sn
 
         integer, allocatable :: img(:,:,:)                   
 
@@ -916,9 +921,6 @@
         logical l_there_dc
         integer counts(3)
         real bi_coeff(2,2)
-
-        topo_lat = topo_lat_in
-        topo_lon = topo_lon_in
 
         write(6,*)' drape topo albedo'
 
@@ -987,6 +989,8 @@
 !         For each ray topo lat/lon, interpolate from image albedo arrays
           write(6,*)
           write(6,*)' Sample drape points'
+          write(6,*)'                     ialt   jazi      arglat    '
+     1             ,'arglon  pix_we   pix_sn'
         
           do ialt = minalt,maxalt
           do jazi = minazi,maxazi
@@ -1045,7 +1049,7 @@
                 if(jazi .eq. minazi)then
                   write(6,1)ialt,jazi,arglat,arglon
      1           ,pix_we,pix_sn,in,jn,counts(:),topo_albedo(:,ialt,jazi)
-1                 format(' Sample drape point',2i7,2f10.4,2f9.2,2i6,2x
+1                 format(' Sample drape point',2i7,2f12.6,2f9.2,2i6,2x
      1                                        ,3i6,3f9.3)
                 endif ! printing point
 
