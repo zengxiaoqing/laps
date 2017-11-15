@@ -386,7 +386,18 @@
           read(c_model(19:23),*)cice_ideal
           clwc_ideal = clwc_ideal * .00001
           cice_ideal = cice_ideal * .00001
-        elseif(trim(c_model) .ne. '')then
+        elseif(c_model(1:4) .eq. 'aero')then  ! e.g. aero
+          l_require_all_fields = .false.                   ! 
+          mode_aero_cld = 3
+          i_aero_synplume = 2
+        elseif(i4time_ref - i4time_now_gg() .gt. 20e6)then ! >0.6y future
+          l_require_all_fields = .false.                   ! test clouds
+          l_test_cloud = .true.
+          lvl1 = 13
+          lvl2 = 13
+          clwc_ideal = .000
+          cice_ideal = .000
+        elseif(trim(c_model) .ne. '')then                  ! e.g. HRRR-AK
           l_require_all_fields = .false.
         elseif(i4time_ref - i4time_now_gg() .lt. 1e6)then  ! present/past
           l_require_all_fields = .true.
@@ -394,13 +405,6 @@
           l_require_all_fields = .false.                   ! water only
           l_test_cloud = .false.
           l_water_world = .true.
-        elseif(i4time_ref - i4time_now_gg() .gt. 20e6)then ! >0.6y future
-          l_require_all_fields = .false.                   ! test clouds
-          l_test_cloud = .true.
-          lvl1 = 13
-          lvl2 = 13
-          clwc_ideal = .001
-          cice_ideal = .000
         else                                               ! >10d future
           l_require_all_fields = .false.
         endif
@@ -726,6 +730,7 @@
           enddo ! i
 
         else ! l_require_all_fields = F
+          snow_cover = 0. ! initialize
 
           if(l_parse(directory,'fim'))then
             filename = '/scratch/staging/fab/albers/fimlarge.nc'
@@ -826,7 +831,7 @@
 
             write(6,*)' Looking for WRF SWIM data in ',trim(filename) ! trim(directory)
             call wrf2swim(filename,i4time_sys,NX_L,NY_L,NZ_L,lat,lon
-     +                   ,pres_1d,istatus )
+     +                   ,pres_1d,land_frac,snow_cover,istatus)
             istatus_ht = 0 ! unless we are reading height
             write(6,*)' returned from wrf2swim for ',trim(c_model)
 
@@ -867,10 +872,12 @@
 
           read(lun,*) ! advance through input data
           write(6,*)' Running without LAPS cloud and other current data'
-          snow_cover = 0. ! r_missing_data
 
           if(l_test_cloud)then ! recently active section
-            write(6,*)' generate idealized cloud fields - 2'
+            write(6,*)' generate idealized cloud fields - 2',clwc_ideal
+     1                                                      ,cice_ideal
+            clwc_3d(:,:,:) = 0.
+            cice_3d(:,:,:) = 0.
             clwc_3d(:,:,lvl1:lvl2) = clwc_ideal ! 13/800mb .001
             cice_3d(:,:,lvl1:lvl2) = cice_ideal ! 13/800mb .001
           endif
@@ -1044,13 +1051,13 @@
            aod_ref = aod
         endif
 
+!       Get Aersol Extinction Coefficient (3D field)
+        call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L
+     1                 ,aod,aod_ref,i_aero_synplume,i_aero_1d,aod_3d)
+
         write(6,19,err=20)pw_ref,aod,aod_ref
 19      format(' pw_ref,aod,aod_ref = ',3f10.3)
 20      continue
-
-!       Get Aersol Extinction Coefficient (3D field)
-        call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L,aod_ref
-     1                 ,i_aero_synplume,i_aero_1d,aod_3d)
 
         I4_elapsed = ishow_timer()
 
@@ -1120,6 +1127,9 @@
 
           write(6,*)' land use / frac of observer: '
      1                    ,land_use(i_obs,j_obs),land_frac(i_obs,j_obs)
+
+          write(6,*)' array of land frac'
+          call ascii_map(i_obs,j_obs,NX_L,NY_L,land_frac,10,1)
 
           write(6,*)' snow cover of observer: ',snow_cover(i_obs,j_obs)  
 
@@ -1510,3 +1520,22 @@
 
         return
         end
+
+        subroutine ascii_map(i,j,ni,nj,array,ihw,nd)
+
+        real*4 array(ni,nj)
+
+        imin = max(i-ihw,1)
+        imax = min(i+ihw,ni)
+
+        jmin = max(j-ihw,1)
+        jmax = min(j+ihw,nj)
+
+        do jr = jmax,jmin,-1
+           write(6,1)nint(array(imin:imax,jr))
+ 1         format(100i1)
+        enddo ! jr
+        
+        return
+        end
+      
