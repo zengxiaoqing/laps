@@ -65,6 +65,9 @@ MODULE wrf_lga
   REAL, ALLOCATABLE      :: slp_wrf(:,:)
   REAL, ALLOCATABLE      :: psf_wrf(:,:)
   REAL, ALLOCATABLE      :: rsf_wrf(:,:)
+  REAL, ALLOCATABLE      :: lmk_wrf(:,:)
+  REAL, ALLOCATABLE      :: snc_wrf(:,:)
+  REAL, ALLOCATABLE      :: sna_wrf(:,:)
   REAL, ALLOCATABLE      :: p_wrf(:,:)
   REAL, ALLOCATABLE      :: pcp_wrf(:,:) ! RAINNC+RAINC (added by Wei-Ting 130312)
   REAL, ALLOCATABLE      :: tvb_wrf(:,:)  ! Mean virtual temperature in lowest 60mb
@@ -99,7 +102,7 @@ MODULE wrf_lga
   PUBLIC wrf2lga, wrf2swim
 CONTAINS
 
-  SUBROUTINE wrf2swim(wrffile_in,i4time,nxl,nyl,nzl,latl,lonl,pres_1d,istatus)
+  SUBROUTINE wrf2swim(wrffile_in,i4time,nxl,nyl,nzl,latl,lonl,pres_1d,land_frac,snow_cover,istatus)
 
      IMPLICIT NONE
 
@@ -113,7 +116,8 @@ CONTAINS
      INTEGER,EXTERNAL             :: cvt_wfo_fname13_i4time
      INTEGER                      :: nxl,nyl,nzl
      REAL                         :: i_ll, j_ll, i_ul, j_ul, i_ur, j_ur, i_lr, j_lr 
-     REAL                         :: latl(nxl,nyl),lonl(nxl,nyl),pres_1d(nzl)
+     REAL                         :: latl(nxl,nyl),lonl(nxl,nyl),land_frac(nxl,nyl),pres_1d(nzl)
+     REAL                         :: snow_cover(nxl,nyl)
      LOGICAL                      :: need_hinterp
       istatus = 1
 
@@ -213,6 +217,9 @@ CONTAINS
      ALLOCATE (tsf_wrf(nxw,nyw))
      ALLOCATE (tsk_wrf(nxw,nyw)) ! surface skin temp. (added by Wei-Ting 130312)
      ALLOCATE (rsf_wrf(nxw,nyw))
+     ALLOCATE (lmk_wrf(nxw,nyw))
+     ALLOCATE (snc_wrf(nxw,nyw))
+     ALLOCATE (sna_wrf(nxw,nyw))
      ALLOCATE (dsf_wrf(nxw,nyw))
      ALLOCATE (slp_wrf(nxw,nyw))
      ALLOCATE (psf_wrf(nxw,nyw))
@@ -314,6 +321,8 @@ CONTAINS
        usf = usf_wrf
        vsf = vsf_wrf
        pcp = pcp_wrf ! RAINNC+RAINC (added by Wei-Ting 130312)
+       land_frac = lmk_wrf ! land mask
+       snow_cover = snc_wrf * sna_wrf
      ENDIF 
 !     pcp = 0 ! since pcp hasn't be used for now, assume that the value is 0
 
@@ -321,7 +330,7 @@ CONTAINS
      DEALLOCATE (ht_wrfp,t3_wrfp,sh_wrfp,qc_wrfp,qi_wrfp,qr_wrfp,qs_wrfp,aod_wrfp)
 
      print *, "Deallocating WRF sfc vars"
-     DEALLOCATE (usf_wrf,vsf_wrf,tsf_wrf,tsk_wrf,rsf_wrf,dsf_wrf,slp_wrf,&
+     DEALLOCATE (usf_wrf,vsf_wrf,tsf_wrf,tsk_wrf,rsf_wrf,lmk_wrf,snc_wrf,sna_wrf,dsf_wrf,slp_wrf,&
          psf_wrf,p_wrf,pcp_wrf,tvb_wrf) ! added tsk_wrf & pcp_wrf by Wei-Ting (130312)
  
      ! Create MSLP and reduced pressure
@@ -845,6 +854,30 @@ CONTAINS
     CALL get_wrfnc_2d(cdf, "HGT","T",nxw,nyw,1,topo_wrf,status)
     IF (status .NE. 0) THEN
       PRINT *, "Could not get topo from WRF"
+      istatus = 0 
+      RETURN
+    ENDIF
+    
+    PRINT *, "Getting WRF LANDMASK"
+    CALL get_wrfnc_2d(cdf, "LANDMASK","T",nxw,nyw,1,lmk_wrf,status)
+    IF (status .NE. 0) THEN
+      PRINT *, "Could not get land mask from WRF"
+      istatus = 0 
+      RETURN
+    ENDIF
+    
+    PRINT *, "Getting WRF SNOWC"
+    CALL get_wrfnc_2d(cdf, "SNOWC","T",nxw,nyw,1,snc_wrf,status)
+    IF (status .NE. 0) THEN
+      PRINT *, "Could not get snow cover from WRF"
+      istatus = 0 
+      RETURN
+    ENDIF
+    
+    PRINT *, "Getting WRF SNOALB"
+    CALL get_wrfnc_2d(cdf, "SNOALB","T",nxw,nyw,1,sna_wrf,status)
+    IF (status .NE. 0) THEN
+      PRINT *, "Could not get snow albedo from WRF"
       istatus = 0 
       RETURN
     ENDIF
