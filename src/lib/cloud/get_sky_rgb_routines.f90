@@ -906,6 +906,8 @@
 
         real*8 cnt,sum_ghi,sum_dni,sum_diffuse
 
+        sincosint(x) = -0.5 * cosd(x)**2
+
         alt_top = alt_a(ni,1)
 
 !       Average over window
@@ -968,10 +970,10 @@
           sp_irrad = sky_rad_sum_wdw
         elseif(alt_top .gt. 0.)then
           write(6,*)' get_sp_irrad: top above horizon ',alt_top
-          area_frac = sind(alt_top)
-          sky_rad_sum_top = sky_rad_ave_top * (1.-area_frac) * 2. * pi * cosd(alt_top)
+          area_frac = (sincosint(alt_top) - sincosint(0.)) / (sincosint(90.) - sincosint(0.))
+          sky_rad_sum_top = sky_rad_ave_top * (1.-area_frac) * 2. * pi
           write(6,*)' area_frac/wdw/top = ',area_frac,sky_rad_sum_wdw,sky_rad_sum_top
-          sp_irrad = sky_rad_sum_wdw * area_frac + sky_rad_sum_top
+          sp_irrad = sky_rad_sum_wdw + sky_rad_sum_top
         else
           write(6,*)' get_sp_irrad: top below horizon ',alt_top
           sp_irrad = sky_rad_ave_wdw
