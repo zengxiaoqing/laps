@@ -189,7 +189,8 @@ cdis
               if(istat_39_a(i,j) .eq. -1 .and. l_use_39)then
                   cloud_frac_uprb = 0.
               else
-                  cloud_frac_uprb = r_missing_data
+!                 cloud_frac_uprb = r_missing_data          ! prior strategy
+                  cloud_frac_uprb = 0.5                     ! limit IR clouds
               endif
 
           endif
