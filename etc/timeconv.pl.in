@@ -119,6 +119,7 @@ if(defined $opt_t){
 #my $yydddhhmm=&laps_tools::sys_time($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
 
 my $yydddhhmm=&laps_tools::i4time_to_a9time($i4time);
+my $i4time_1970 = $i4time - 315619200; # convert from 1960 to 1970 reference
 
 if($opt_o eq "mm"){
    my $ddd = substr($yydddhhmm,2,3);
@@ -223,7 +224,7 @@ if($opt_o eq "mm"){
 #  print "$yydddhhmm\n";
 
 }elsif($opt_o eq "i4time"){
-   print "$i4time\n";
+   print "$i4time_1970\n";
 
 }else{
    print "$yydddhhmm\n";
