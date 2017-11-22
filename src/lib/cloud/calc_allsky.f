@@ -542,10 +542,28 @@
      1                    ,corr1_in,exposure
      1                    ,sky_rgb_cyl,sky_sprad,sky_reflectance)       ! O   
 
-!             Add bounds to rgb values
+!             Add bounds and scaling to rgb values. Final image should have
+!             either a max of 128 or a green average of 64, whichever represents
+!             a more conservative adjustment.              
+              skymax = maxval(sky_rgb_cyl)
+              if(skymax .lt. 128. .and. skymax .gt. 0.)then
+                final_scaling = 128./skymax
+              else
+                final_scaling = 1.0               
+              endif
+
+              skyave = sum(sky_rgb_cyl(2,:,:)) / float(ni_cyl*nj_cyl)
+              if(skyave .lt. 64. .and. skyave .gt. 0.)then
+                final_scaling = min(final_scaling,64./skyave)
+              else
+                final_scaling = 1.0               
+              endif
+
+              write(6,51)skymax,skyave,final_scaling
+51            format('  max/ave/final_scaling = ',3f9.3)             
+
               do j = minazi,maxazi
               do i = minalt,maxalt
-                final_scaling = 1.0
                 sky_rgb_cyl(:,i,j) = 
      1            max(min(sky_rgb_cyl(:,i,j)*final_scaling,255.),0.)
               enddo ! i
