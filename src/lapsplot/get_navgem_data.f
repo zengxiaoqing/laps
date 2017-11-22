@@ -7,7 +7,7 @@
      +                   ,cice_p
      +                   ,rain_p
      +                   ,snow_p
-!    +                   ,seaice,snow_depth
+     +                   ,seaice,snow_depth
      +                   ,lun_out
      +                   ,istatus)
 
