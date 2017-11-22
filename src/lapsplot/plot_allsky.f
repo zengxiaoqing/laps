@@ -47,6 +47,9 @@
         real land_use(NX_L,NY_L)
         real land_frac(NX_L,NY_L)
         real snow_cover(NX_L,NY_L)
+        real snow_albedo_max(NX_L,NY_L)
+        real snow_depth(NX_L,NY_L)
+        real seaice(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
         real albedo_bm(nc,NX_L,NY_L)
         real bm_counts(nc,NX_L,NY_L)
@@ -148,6 +151,12 @@
 
         rpd = 3.141592653589/180.
 
+!       Initialize
+        snow_cover = r_missing_data        
+        snow_albedo_max = r_missing_data        
+        snow_depth = r_missing_data        
+        seaice = r_missing_data        
+
         call alloc_allsky(NX_L,NY_L,NZ_L,nc,istatus)
 
         if(l_polar .eqv. .true.)then
@@ -246,6 +255,17 @@
           enddo ! is
 
         endif
+
+!       Generate default 'snow_albedo_max' field
+        do i = 1,NX_L
+          do j = 1,NY_L
+            if(topo(i,j) .gt. 1900. .and. topo(i,j) .le. 3500.)then
+              snow_albedo_max(i,j) = 0.4
+            else
+              snow_albedo_max(i,j) = 0.7
+            endif
+          enddo ! j
+        enddo ! i
 
         write(6,*)
         write(6,*)' Input number of all-sky locations...'
@@ -386,10 +406,16 @@
           read(c_model(19:23),*)cice_ideal
           clwc_ideal = clwc_ideal * .00001
           cice_ideal = cice_ideal * .00001
-        elseif(c_model(1:4) .eq. 'aero')then  ! e.g. aero
+        elseif(c_model(1:9) .eq. 'aerocloud')then  
+          l_require_all_fields = .true.                    ! 
+          mode_aero_cld = 3
+          i_aero_synplume = 2
+          read(c_model(11:13),*)aero_synfactor
+        elseif(c_model(1:4) .eq. 'aero')then               ! e.g. aeroloop
           l_require_all_fields = .false.                   ! 
           mode_aero_cld = 3
           i_aero_synplume = 2
+          read(c_model(11:13),*)aero_synfactor
         elseif(i4time_ref - i4time_now_gg() .gt. 20e6)then ! >0.6y future
           l_require_all_fields = .false.                   ! test clouds
           l_test_cloud = .true.
@@ -789,6 +815,7 @@
      +                   ,cice_3d
      +                   ,rain_3d
      +                   ,snow_3d
+     +                   ,seaice,snow_depth
      +                   ,lun_out
      +                   ,istatus)
             istatus_ht = 0 ! we can perhaps try the height_AGL 
@@ -831,7 +858,8 @@
 
             write(6,*)' Looking for WRF SWIM data in ',trim(filename) ! trim(directory)
             call wrf2swim(filename,i4time_sys,NX_L,NY_L,NZ_L,lat,lon
-     +                   ,pres_1d,land_frac,snow_cover,istatus)
+     +           ,pres_1d,land_frac,snow_cover,snow_albedo_max
+     +           ,istatus)
             istatus_ht = 0 ! unless we are reading height
             write(6,*)' returned from wrf2swim for ',trim(c_model)
 
@@ -998,14 +1026,25 @@
         
         write(6,*)' Row of albedo_bm / snow / snowalb / albedo / topo'
         jrow = NY_L/2
+
         do i = 1,NX_L
           do j = 1,NY_L
-            if(snow_cover(i,j) .ne. r_missing_data)then
-              if(topo(i,j) .gt. 1900. .and. topo(i,j) .le. 3500.)then
-                snowalb = snow_cover(i,j) * 0.4
-              else
-                snowalb = snow_cover(i,j) * 0.7
-              endif
+            if(seaice(i,j) .ne. r_missing_data)then ! NAVGEM
+              snowalb = 0.8
+              do ic = 1,3
+                topo_albedo_2d(ic,i,j) = seaice(i,j) * snowalb + 
+     1                (1.0-seaice(i,j)) * topo_albedo_2d(ic,i,j)
+              enddo ! ic
+            elseif(snow_depth(i,j) .ne. r_missing_data)then ! NAVGEM
+              snowalb = 0.8
+              snowcvr = max(snow_depth(i,j) / 0.03,1.0)
+              do ic = 1,3
+                topo_albedo_2d(ic,i,j) = snowcvr * snowalb + 
+     1                (1.0-snowcvr) * topo_albedo_2d(ic,i,j)
+              enddo ! ic
+            elseif(snow_cover(i,j) .ne. r_missing_data)then ! Other models
+!             snowalb = snow_cover(i,j) * snow_albedo_max(i,j)
+              snowalb = snow_albedo_max(i,j)
               do ic = 1,3
 !               topo_albedo_2d(ic,i,j) = 
 !    1            max(topo_albedo_2d(ic,i,j),snowalb)
