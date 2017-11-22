@@ -73,7 +73,7 @@
            if(i .eq. (i/10) * 10)then
               write(6,*)' i,aero_scale ',i,aero_scale
            endif
-           aod_3d(i,:,:) = aod_3d(i,:,:) * aero_scale
+           aod_3d(i,:,:) = aod_3d(i,:,:) * (1.0 + 3.0 * aero_scale)
          enddo ! i
          aod = 0.
          aod_ref = 0.
