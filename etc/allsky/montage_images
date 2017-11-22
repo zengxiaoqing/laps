@@ -22,7 +22,7 @@ setenv LAPS_DATA_ROOT $5
 date -u
 
 echo " "
-echo "starting montage_images script for $SITE..."
+echo "starting montage_images script for $SITE at $LAPS_A9TIME..."
 
 # Process for polar images
 
@@ -88,16 +88,23 @@ cd $LAPSINSTALLROOT/etc/allsky
 setenv ALSDIR $LAPS_DATA_ROOT/lapsprd/www/anal2d/archive/als/$SITE/polar
 echo " "
 echo "test IDL comparison procedure"
+
 setenv FILE_MODEL_POLAR $ALSDIR/$LAPS_A9TIME.png
 setenv FILE_CAMERA_POLAR $SITESDIR/$SITE/output3/$LAPS_A13TIME\_$SITE.png
-setenv SOLAR_ALT `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c1-8`
-setenv SOLAR_AZ  `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c9-16`
-#echo compare_allsky | /usr/local/share/rsi/idl/bin/idl
-echo compare_allsky | idl
-echo " "
-echo "run verification plots"                  
-$LAPSINSTALLROOT/etc/verif/allsky_analysis.csh $LAPS_DATA_ROOT co_hi $SITE     
-echo "returned from verification allsky_analysis.csh"                  
+if ( -e $FILE_MODEL_POLAR && -e $FILE_CAMERA_POLAR )then
+    setenv SOLAR_ALT `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c1-8`
+    setenv SOLAR_AZ  `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c9-16`
+#   echo compare_allsky | /usr/local/share/rsi/idl/bin/idl
+    echo "IDL_DIR is $IDL_DIR"
+    which idl
+    echo compare_allsky | idl
+    echo " "
+    echo "run verification plots"                  
+    $LAPSINSTALLROOT/etc/verif/allsky_analysis.csh $LAPS_DATA_ROOT co_hi $SITE     
+    echo "returned from verification allsky_analysis.csh"                  
+else
+    echo "WARNING: insufficient image output for comparison / verification..."
+endif    
 
 echo "completed montage_images script for $SITE..."
 
