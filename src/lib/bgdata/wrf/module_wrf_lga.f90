@@ -102,7 +102,7 @@ MODULE wrf_lga
   PUBLIC wrf2lga, wrf2swim
 CONTAINS
 
-  SUBROUTINE wrf2swim(wrffile_in,i4time,nxl,nyl,nzl,latl,lonl,pres_1d,land_frac,snow_cover,istatus)
+  SUBROUTINE wrf2swim(wrffile_in,i4time,nxl,nyl,nzl,latl,lonl,pres_1d,land_frac,snow_cover,snow_albedo_max,istatus)
 
      IMPLICIT NONE
 
@@ -117,7 +117,7 @@ CONTAINS
      INTEGER                      :: nxl,nyl,nzl
      REAL                         :: i_ll, j_ll, i_ul, j_ul, i_ur, j_ur, i_lr, j_lr 
      REAL                         :: latl(nxl,nyl),lonl(nxl,nyl),land_frac(nxl,nyl),pres_1d(nzl)
-     REAL                         :: snow_cover(nxl,nyl)
+     REAL                         :: snow_cover(nxl,nyl),snow_albedo_max(nxl,nyl)
      LOGICAL                      :: need_hinterp
       istatus = 1
 
@@ -322,7 +322,8 @@ CONTAINS
        vsf = vsf_wrf
        pcp = pcp_wrf ! RAINNC+RAINC (added by Wei-Ting 130312)
        land_frac = lmk_wrf ! land mask
-       snow_cover = snc_wrf * sna_wrf
+       snow_cover = snc_wrf
+       snow_albedo_max = sna_wrf
      ENDIF 
 !     pcp = 0 ! since pcp hasn't be used for now, assume that the value is 0
 
