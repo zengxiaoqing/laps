@@ -4373,7 +4373,7 @@ c abdel
 
           if(c_type_i .eq. 'od')then
               scale = 1.
-              chigh = +80.
+              chigh = +160.
               cint = -0.2
               colortable = 'linear'
               plot_parms%color_power = 0.50
