@@ -291,7 +291,6 @@
 !         contrast = 70. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
           contrast = 54. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
           write(6,*)' argref/argbri/fraccorr = ',argref,argbri,fraccorr
-          glwlow = 7.3 - argbri
 
         else ! sun above horizon
           glow_secondary_cld = 1. ! dark default in daytime
@@ -301,7 +300,6 @@
           write(6,23)rad_sec_cld(:)
 23        format('  rad_sec_cld (based on day_int) = ',3f12.0)
           argbri = sb_corr * 0.30
-          glwlow = 7.3 - argbri
           write(6,*)' sb_corr/argbri = ',sb_corr,argbri
           contrast = 100.
 
@@ -350,9 +348,8 @@
         glwmid = glwmid - log10(exposure)
 
         offset = 0.
-        glwlow = glwmid - 128. / 100. ! contrast
-        write(6,3)sol_alt,corr1,glwlow,glwmid,contrast,fracerf,erfterm
-3       format('  sol_alt/corr1/glwlow/glwmid/contrast/fracerf/erfterm',f9.2,3f9.3,f9.1,2f9.3)
+        write(6,3)sol_alt,corr1,glwmid,contrast,fracerf,erfterm
+3       format('  sol_alt/corr1/glwmid/contrast/fracerf/erfterm',f9.2,3f9.3,f9.1,2f9.3)
 
         ref_nl = day_int0
         if(new_color .gt. 0)then
@@ -1296,7 +1293,6 @@
                       write(6,55)eobsl,ramp_eobs,glwmid,fstops
 55                    format(' eobsl/ramp_eobs/glwmid/fstops',f9.5,3f9.3)
                   endif
-                  glwlow = arge
                 endif
 
                 call nl_to_RGB(clear_rad_c(:,i,j),glwmid,contrast & 
@@ -1803,7 +1799,7 @@
                   write(6,*)' ******** solar location ************************* od'
                   write(6,112)glow_sun(i,j),10.**glow_sun(i,j),alt_a(i,j) &
                              ,rad_sun_r,rad_sun_g,rad_sun_b &
-                             ,trans(cloud_od(i,j) + aod_slant(i,j)),glwlow,rad_sun_g/sky_rad(2) 
+                             ,trans(cloud_od(i,j) + aod_slant(i,j)),rad_sun_g/sky_rad(2) 
 112               format('glow_sun/alt/rad_sun/trans/fracsun',f9.4,e16.6,f9.4,3e16.6,f11.8,2f9.4)
                   write(6,*)'od_g_slant = ',od_g_slant_a(:,i)
                   write(6,*)'od_o_slant = ',od_o_slant_a(:,i)
