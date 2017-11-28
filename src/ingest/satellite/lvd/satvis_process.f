@@ -35,11 +35,11 @@ cdis
      &           ni,nj,lat,lon,
      &           n_vis_lines,n_vis_elem,
      &           r_grid_ratio,
-     &           image_vis,                          ! I
+     &           image_vis,                                        ! I
      &           r_llij_lut_ri,
      &           r_llij_lut_rj,
      &           sublat_d,sublon_d,range_m,
-     &           laps_vis_raw,laps_vis_norm,albedo,  ! O
+     &           laps_vis_raw,laps_vis_refl,laps_vis_norm,albedo,  ! O
      &           istatus)
 c
 c**************************************************************************
@@ -88,6 +88,7 @@ c
 c..... Grids to put the satellite data on.
 c
        real laps_vis_raw(ni,nj)
+       real laps_vis_refl(ni,nj)
        real laps_vis_norm(ni,nj)
        real laps_vis_norm_natl(ni,nj)
        real albedo(ni,nj)
@@ -252,6 +253,18 @@ c for type 'cdf' by GSD'S ITS group.
 c
 c Currently (2007) type 'cdf' is goes12.
 c
+
+!      Determine reflectance
+       if(c_sat_type .eq. 'gnp')then
+         where(laps_vis_raw(:,:) .ne. r_missing_data)
+             laps_vis_refl(:,:) = 1.0 * laps_vis_raw(:,:) / 4095.
+         endwhere
+       else
+         where(laps_vis_raw(:,:) .ne. r_missing_data)
+             laps_vis_refl(:,:) = 1.2 * laps_vis_raw(:,:) / 255.
+         endwhere
+       endif
+
        if(c_sat_type.eq.'cdf')then
 
           if(csatid.eq.'goes08')isat=1
