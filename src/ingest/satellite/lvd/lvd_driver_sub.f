@@ -130,6 +130,7 @@ c
       real laps_data(nx_l,ny_l,n_lvd_fields_max)
       real visnorm(nx_l,ny_l)
       real visraw(nx_l,ny_l)
+      real visrefl(nx_l,ny_l)
       real albedo(nx_l,ny_l)
       real ta8(nx_l,ny_l)
       real tb8(nx_l,ny_l)
@@ -1390,7 +1391,7 @@ c                    endif
      &                      sri(1,1,ispec),
      &                      srj(1,1,ispec),
      &                      sublat_d,sublon_d,range_m,
-     &                      visraw,visnorm,albedo,
+     &                      visraw,visrefl,visnorm,albedo,
      &                      istatus_vis)
 c
 c *** istatus_v() is < 0. Determine if we have enough vis data.
@@ -1400,10 +1401,11 @@ c
      &              good_vis_data_thresh)then
 
                   nlf=nlf+1
-                  call move(visraw,laps_data(1,1,nlf),nx_l,ny_l)
+!                 call move(visraw,laps_data(1,1,nlf),nx_l,ny_l)
+                  call move(visrefl,laps_data(1,1,nlf),nx_l,ny_l)
                   var_lvd(nlf) = 'SVS'       ! satellite, visible
-                  c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE - RAW'
-                  units_lvd(nlf) = 'COUNTS'
+                  c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE'
+                  units_lvd(nlf) = 'REFLECTANCE'
                else
                   write(6,*)' less than 1% good vis data in status 1'
                endif
