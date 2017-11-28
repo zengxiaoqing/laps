@@ -188,14 +188,15 @@ cdis
                 sat_albedo(i,j) = sat_data_in(ioff,joff)
             else
 !               Convert to reflectance
-                reflectance = (sat_data_in(ioff,joff) / 256.) * 1.2
+!               reflectance = (sat_data_in(ioff,joff) / 256.) * 1.2
+                reflectance = sat_data_in(ioff,joff)
 
 !               Should this be done elsewhere according to how other
 !               routines use sfc_albedo?                
-!               call refl_to_albedo(reflectance,solalt,sfc_albedo(i,j) ! I
-!    1                             ,cloud_albedo)                      ! O
+                call refl_to_albedo2(reflectance,solalt,sfc_albedo(i,j) ! I
+     1                              ,cloud_albedo)                      ! O
 
-                sat_albedo(i,j) = reflectance
+                sat_albedo(i,j) = cloud_albedo
             endif
 
             if(sat_albedo(i,j) .eq. r_missing_data .and. 
@@ -215,6 +216,12 @@ cdis
 !       Loop in satellite i,j (uncorrected for parallax)
         do i = 1,ni
         do j = 1,nj
+
+          rig = float(i) + di_dh_vis(i,j) * topo(i,j)
+          rjg = float(j) + dj_dh_vis(i,j) * topo(i,j)
+
+          ig = min(max(nint(rig),1),ni)
+          jg = min(max(nint(rjg),1),nj)
 
 !         We will now only use the VIS data if the solar alt exceeds 15 deg
 !         7 degrees now used to allow 30 min slack in data availability
@@ -247,9 +254,10 @@ cdis
             clear_albedo = sfc_albedo_lwrb(i,j)
             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
      1                                           ,sat_albedo(i,j))
+!    1                                           ,sat_albedo(ig,jg))
 
             if(i .eq. idb .and. j .eq. jdb)then
-                write(6,9)clear_albedo,sat_albedo(i,j),cloud_frac_vis
+                write(6,9)clear_albedo,sat_albedo(ig,jg),cloud_frac_vis
 9               format(' clralb/satalb/cf_vis ',3f9.3,' CTR')
             endif
 
@@ -455,3 +463,25 @@ cdis
 
         return
         end
+
+        subroutine refl_to_albedo2(reflectance,solalt,sfc_albedo      ! I
+     1                            ,cloud_albedo)                      ! O
+
+        include 'trigd.inc'        
+
+!       Note that two solutions may be possible with low sun
+        if(.true.)then
+          alb_thn = reflectance           ! modify by phase angle?
+          solalt_eff = max(solalt,6.)
+          alb_thk = reflectance / cosd(solalt_eff)
+
+          frac_thk = 1.0 ! cloud_albedo
+          frac_thn = 1.0 - frac_thk
+
+          cloud_albedo = alb_thn * frac_thn + alb_thk * frac_thk
+
+        endif
+
+        return
+        end
+        
