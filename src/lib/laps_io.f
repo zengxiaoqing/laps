@@ -465,7 +465,8 @@ c
         if(ext(1:lenext).eq.'lvd')then
            call config_satellite_lvd(istatus)
            if(istatus.ne.1)then
-              return
+              write(6,*)'WARNING config_satellite_lvd status = ',istatus
+!             return
            endif
 
            call get_laps_sat(maxsat,c_sat_id,isats
@@ -478,6 +479,7 @@ c
               write(6,*)'No data returned from get_laps_sat'
               return
            else
+              write(6,*)'Data is returned from get_laps_sat'
               return
            endif
         endif
