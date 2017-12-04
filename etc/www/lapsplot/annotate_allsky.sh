@@ -12,6 +12,8 @@
   LATLON="`head -1 label2.$ILOC`"
   LATLON=`echo $LATLON | sed 's/^[ \t]*//'` # remove leading spaces
 
+  echo "AZI_SCALE = $AZI_SCALE"
+
 # Annotate Model
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
     IMGGEOM=`identify allsky_polar_$ILOC.png | awk '{print tolower($3)}'`
@@ -26,6 +28,9 @@
           convert -fill yellow -annotate +19+179 "Simulated"  -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       elif test $AZI_SCALE == 0.25; then
           convert -fill yellow -annotate +15+$YDISP  "Simulated"  -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      elif test $AZI_SCALE == 0.50; then
+#         convert -fill yellow -annotate +15+$YDISP  "Simulated"  -pointsize 12 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          echo " "
       else
           convert -fill yellow -annotate +15+20  "Simulated"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       fi
