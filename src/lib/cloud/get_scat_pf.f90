@@ -115,7 +115,7 @@
 
         scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
 
-        write(6,*)' get_cld_pf: max of idebug_a (2) = ',maxval(idebug_a)
+        write(6,*)' get_scat_pf: max of idebug_a (2) = ',maxval(idebug_a)
         write(6,*)'                                                                                         alt    elg      cod    pf_thn_c  pf_thk   clwc     rain      rad     radw    radf       pf1     pf2     pfs    trans  sn fctr rn fctr    pf2'
         cloud_ssa_sp(:) = 1.0
         cloud_asy_sp(:) = 0.8
