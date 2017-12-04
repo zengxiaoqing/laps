@@ -152,6 +152,8 @@
         isound = iobs
         jsound = jobs
 
+        write(6,*)' albedo_sfc - calc_als',topo_albedo_2d(:,iobs,jobs)
+
         swi_obs = swi_2d(iobs,jobs) ! initialize
         write(6,*)' swi_2d at observer location 1 = ',swi_obs,'W/m^2'
         eobsl = eobsc(iobs,jobs)
@@ -209,6 +211,11 @@
      1                     ,l_binary,l_terrain_following            ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,istatus)                                ! O
+
+          if(istatus .ne. 1)then
+             write(6,*)' Bad status back from get_cloud_rays',istatus  
+             return
+          endif
 
           write(6,*)' Return from get_cloud_rays: ',a9time
      1             ,' aod_vrt is ',aod_vrt
