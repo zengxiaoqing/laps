@@ -967,6 +967,12 @@
         I4_elapsed = ishow_timer()
  
         if(istat_bm .eq. 1)then
+
+            if(maxval(albedo_bm) .gt. 1.)then
+               write(6,*)' ERROR: land_albedo_bm has invalid values'
+               stop
+            endif
+
             write(6,*)' Use 3-color albedo based on Blue Marble'
 
 !           Test a flop if needed
