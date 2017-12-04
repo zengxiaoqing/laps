@@ -344,6 +344,13 @@
 
           write(6,*)' range of gnd_glow (nl) is ',minval(gnd_glow)
      1                                           ,maxval(gnd_glow)
+
+          if(minval(gnd_glow) .lt. 0.)then
+             write(6,*)' ERROR: Invalid range of gnd_glow'
+             write(6,*)' Remove/Regenerate nlights_multispectral.dat?'
+             istatus = 0
+             return
+          endif
           
           write(6,29)i,j,gnd_glow(i,j)
 29        format('  Grnd glow (wm2sr) at observer location is ',2i5
@@ -890,7 +897,7 @@
         write(6,*)' solalt observer grid / l_box = ',sol_alt(i,j),l_box
 
 !       Used to call skyglow_phys vs skyglow_phys_twi for example
-        twi_0 = min(-12.0,-horz_dep_d) ! output
+        twi_0 = min(-15.0,-horz_dep_d) ! output
         write(6,*)' twi_0 = ',twi_0
 
         aod_vrt = aod * exp(-(htstart-redp_lvl)/aero_scaleht)
