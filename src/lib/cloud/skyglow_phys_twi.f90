@@ -242,8 +242,9 @@
                 dist_ray_plane_s = linecylp(xcos,ycos,x1_s,earth_radius) 
             endif
 
-            skyref = .000000003 ! smaller values reduce twilight artifacts
-                                ! setting also related to airglow?
+!           skyref = .000000003  ! smaller values reduce twilight artifacts
+            skyref = .0000000003 ! smaller values reduce twilight artifacts
+                                 ! setting also related to airglow?
 
             if(.true.)then ! assume part of atmosphere is illuminated by the sun
               bterm = dist_ray_plane**2 / (2. * earth_radius)
@@ -336,7 +337,7 @@
                 endif
                 clear_int = &
                   max(twi_int*ecl_int*rayleigh*brta*twi_trans_c(1) &
-                                                              ,1e2) ! floor
+                                                              ,2e0) ! floor
                 if(idebug .ge. 2)then
                   write(6,91)elong(ialt,jazi) &
                             ,rayleigh,brta,twi_trans_c(1),twi_int,clear_int
