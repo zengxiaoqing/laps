@@ -198,6 +198,8 @@
         dimension r_km(0:13,0:70)
         character*10 nm(0:13,0:70)
 
+        para(x,x1) = (x-x1)**2
+
         phase_corr = 0.
 
 !       Default phase corrections
@@ -246,17 +248,27 @@
 !               phase_corr = 5.45 - 1.02 * arg
 !           endif
 
-!           Mallama 2006
+!           Mallama 2006 (smoother inflection by S. Albers 2017)
             arg = phase_angle_deg
-            if(phase_angle_deg .le. 163.6)then
+            aint = 163.72d0
+            ahw = 4d0
+            acoeff = .03d0 / ahw
+            if(phase_angle_deg .le. aint)then
                 phase_corr =       -1.04396E-3*arg +3.68682e-4*arg**2
      1                                             -2.81374e-6*arg**3
      1                                             +8.93796e-9*arg**4
+                if(phase_angle_deg .ge. aint-ahw)then
+                   phase_corr =
+     1             phase_corr - para(phase_angle_deg,aint-ahw)*acoeff
+                endif
             else
                 phase_corr = 236.058  -2.81914*arg +8.39034e-3*arg**2
                 phase_corr = phase_corr + 4.38
+                if(phase_angle_deg .le. aint+ahw)then
+                   phase_corr =
+     1             phase_corr - para(phase_angle_deg,aint+ahw)*acoeff
+                endif
             endif
-
 
 !           write(6,*)'phase/phase_corr',phase_angle_deg,phase_corr
         endif
