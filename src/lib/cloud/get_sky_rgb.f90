@@ -310,14 +310,16 @@
 
 !       First arg (altmidcorr) increase will brighten all altitudes
 !       Second arg increase will darken shallow twilight and brighten
-!       deep twilight.
+!       deep twilight?
 !       Higher 'fracerf0' will darken sunrise/set.
+!       Higher 'deepterm' will brighten deep twilight.
 !       Brighten the mid-twilight image with thicker tropospheric aerosols.
 !       Darken the mid-twilight image with thicker stratospheric aerosols?
-        if(.false.)then ! avoid saturation on the bright end
-          altmidcorr = -5.95 + (od_atm_a * 2.5) 
+        if(.false.)then ! avoid twilight saturation on the bright end
+          altmidcorr = -4.45 + (od_atm_a * 2.5) 
           fracerf0 = 0.69 ! value with sun on horizon
-          write(6,*)' altmidcorr: ',altmidcorr
+          deepterm = .100
+          write(6,*)' altmidcorr: ',altmidcorr,fracerf0,deepterm
         else              ! show more like the camera
           alt_top = alt_a(ni,1)
           if(alt_top .eq. 90.)then ! fisheye lens
@@ -328,12 +330,13 @@
             altmidcorr = -4.99 - aod_ha * 20.
             fracerf0 = 0.65  ! value with sun on horizon
           endif
+          deepterm = .220
           write(6,*)' alt_top,altmidcorr: ',alt_top,altmidcorr
         endif
         if(solalt_limb_true .gt. altmidcorr)then ! shallow twilight
           fracerf = (solalt_limb_true - altmidcorr) * (-fracerf0/altmidcorr)
         else                            ! deep twilight
-          fracerf = (solalt_limb_true - altmidcorr) * 0.220 
+          fracerf = (solalt_limb_true - altmidcorr) * deepterm
         endif
         erfterm = (erf(fracerf) + 1.) / 2.
         glwmid = corr2*(1.-erfterm) + corr1*erfterm
@@ -835,11 +838,17 @@
             idebug_pf = 0
           elseif(isun .gt. 0 .and. isun .le. ni .AND. jsun .gt. 0 .and. jsun .le. nj)then
             idebug_pf = idebug_a
-            ihw = 40
-            idelt = 4
-            ipfmin = max(isun-ihw,1)
-            ipfmax = min(isun+ihw,ni)
-            idebug_pf(ipfmin:ipfmax:idelt,jsun) = 1
+            idelt = nint(1./azi_scale)
+            ihw = idelt * 20
+            if(.false.)then ! vertical
+              ipfmin = max(isun-ihw,1)
+              ipfmax = min(isun+ihw,ni)
+              idebug_pf(ipfmin:ipfmax:idelt,jsun) = 1
+            else           ! horizontal
+              jpfmin = max(jsun-ihw,1)
+              jpfmax = min(jsun+ihw,nj)
+              idebug_pf(isun,jpfmin:jpfmax:idelt) = 1
+            endif
           endif
 
           call get_scat_pf(elong_a,alt_a,aero_od_src,aero_od_obs,aero_ssa,aero_g         & ! I
@@ -1101,7 +1110,7 @@
 !                         Consider diffuse sky light coming through the cloud                          
                           radb_diffuse = rad_sec_cld(ic) * (1. - cloud_albedo_diffuse) * 0.75 * (1. + sind(altray_limb)**2)
                           if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg)then
-                              write(6,*)'radb debug',radb_diffuse,rad_sec_cld(ic),cloud_albedo_diffuse,altray_limb
+                              write(6,*)'radb debug',radb_diffuse,rad_sec_cld(ic),cloud_albedo_diffuse,altray_limb,rad_sfc,albedo_sfc(ic)
                           endif
 
                       endif
@@ -1778,7 +1787,7 @@
                 call nl_to_RGB(sky_rad(:),glwmid,contrast & 
                           ,128.,0,rtotal,gtotal,btotal)                        
                 write(6,105)rtotal,gtotal,btotal,sky_rad(:)
-105             format(' total rgb/skyrad should be',3f9.2,94x,3f14.0)
+105             format(' total rgb/skyrad should be',3f9.2,94x,3f16.2)
               endif
 
               rmaglim = b_to_maglim(10.**glow_tot)
@@ -1788,7 +1797,8 @@
                   write(6,*)' ******** zenith location ************************ od'
                   write(6,111)clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)
 111               format('clrrad/RGB = ',3f12.0,3i4)
-                  write(6,*)'limiting (cloudless) magnitude is ',rmaglim
+                  write(6,1111)rmaglim
+1111              format(' limiting (cloudless) magnitude is ',f9.2)
               endif
               if(abs(elong_a(i,j) - 90.) .le. 0.5)then
                   write(6,*)' ******** 90 elong location ********************** od'
