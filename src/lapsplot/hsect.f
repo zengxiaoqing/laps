@@ -2184,9 +2184,9 @@ c
               scale_l = 0.00          ! for image plots
               scale_h = cloud_albedo_a! for image plots
              elseif(var_2d.eq.'SVS')then
-              c_label='VIS counts (raw) - '//c_sat_id(k)
-              scale_l = 35.           ! for image plots
-              scale_h = 210.          ! for image plots
+              c_label='VIS / SVS reflectance -   '//c_sat_id(k)
+              scale_l = 0.0           ! for image plots
+              scale_h = 1.2           ! for image plots
              else
               c_label='VIS counts (normalized) - '//c_sat_id(k)
               scale_l = 20.           ! for image plots
