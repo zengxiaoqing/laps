@@ -2,6 +2,9 @@
 !     'src/lib/read_namelist.f'. Within the above subroutine these data are
 !     aligned with the /lvd_namelist_cmn/ common block.      
       
+
+      parameter (rpd = 3.14159265 / 180.)
+
 !     C_SAT_ID(1)='goes08'
 !     C_SAT_ID(2)='meteos'
 !     C_SAT_ID(3)='goes10'
@@ -398,7 +401,7 @@ c -- sub lat/lon for each geostationary satellite (radians)
       R_SAT_SUB_LON(7)= -2.35619
       R_SAT_SUB_LON(8)= 0.42935
       R_SAT_SUB_LON(9)= 2.530727
-      R_SAT_SUB_LON(17)= -1.5621
+      R_SAT_SUB_LON(17)= -75.2 * rpd
       R_SAT_SUB_LON(18)= 2.443
 c -- these resolution (grid spacing) settings should be available in
 c -- the input satellite data file; but not always so we hardwire here.
