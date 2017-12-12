@@ -46,7 +46,7 @@ netcdf lvd {
             svs:_FillValue = 1.e+37f;
             svs:long_name="visible satellite counts - raw";
             svs:units="counts";
-            svs:valid_range= 0, 255;
+            svs:valid_range= 0, 3;
             svs:LAPS_var="SVS";
             svs:lvl_coord="   ";
             svs:LAPS_units="COUNTS";
