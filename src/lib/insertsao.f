@@ -128,7 +128,8 @@ c
             ista_snd(i) = 0
         enddo ! i
 
-        i4time_database = (i4time / 3600) * 3600
+!       i4time_database = (i4time / 3600) * 3600
+        i4time_database = i4time
 
 !       This section calls a routine 'get_sao' which interfaces with the raw
 !       FSL SAO data in order to create an intermediate cloud layer file (.SAO).
