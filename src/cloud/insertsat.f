@@ -108,7 +108,7 @@ c
 
 !       Threshold for IR cloud detection (SFC temp - IR temp)
         real thresh_ir_diff1
-        parameter (thresh_ir_diff1 = 8.)
+        parameter (thresh_ir_diff1 = 7.)
 
 !       Second threshold for IR cloud detection (SFC temp - IR temp)
         real thresh_ir_diff2
