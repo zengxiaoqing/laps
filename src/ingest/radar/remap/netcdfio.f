@@ -96,6 +96,9 @@ cdis
            return
        endif
 
+!      This is nominally set to zero if input filenames are in UTC
+       i4_input_offset = 0 ! 9*3600
+
        call get_systime_i4(i4time_sys,istatus)
        if(istatus .ne. 1)then ! use wall clock time if systime is not available
            i4time_sys = i4time_now_gg()
@@ -236,6 +239,9 @@ c      Determine output filename extension
      1                                ,istatus)
                endif
 
+               i4times_raw(1:i_nbr_files_raw) =
+     1         i4times_raw(1:i_nbr_files_raw) - i4_input_offset
+
                write(6,*)' # of (1st tilt) raw files = ',i_nbr_files_raw
 
            endif
@@ -353,7 +359,8 @@ c      Determine output filename extension
            endif
 
            if(i4time_process .ne. 0)then
-               call make_fnam_lp(i4time_process,a9_time,istatus)
+               call make_fnam_lp(i4time_process+i4_input_offset,
+     1                           a9_time,istatus)
                write(6,*)' Processing file/a9time ',i_process,a9_time
            else
                write(6,*)' No new filetimes to process'
