@@ -529,7 +529,7 @@ c
 
               ref_value = Reflect(igate,jray)
 
-              IF (abs(ref_value) .lt. REF_MIS_CHECK) THEN
+              IF (abs(ref_value) .lt. REF_MIS_CHECK) THEN ! datum is present
 
 c               grid_ref(io,jo,k) =
 c    :          grid_ref(io,jo,k) + ref_value
