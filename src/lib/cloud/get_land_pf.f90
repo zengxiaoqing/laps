@@ -258,13 +258,13 @@
               arf_dw = 1.0 ! fresnel_d / .08
 
 !             smooth_water_albedo = radfracw * fresnel2 + (1. - radfracw) * fresnel_d
-              smooth_water_albedo = .08
+              smooth_water_albedo = .08 ! .06 may be more correct via NSIDC website
               water_albedo = foam(ic) * 0.5 + (1.-foam(ic)) * smooth_water_albedo
               fresnel_mean = fresnel2 * radfracw + fresnel_d * (1.-radfracw)     ! "gray" sky albedo
               fresnel_arf = fresnel_mean / smooth_water_albedo
 
 !             Override geog albedo values over water, based on land fraction
-!             topo_albedo(ic,i,j) = smooth_water_albedo * fwater + topo_albedo(ic,i,j) * (1. - fwater)
+              topo_albedo(ic,i,j) = water_albedo * fwater + topo_albedo(ic,i,j) * (1. - fwater)
 
 !             phwater = arf_bw * specamp
 !             phwater = arf_bw * specamp + f(radfracw,arf_dw)
