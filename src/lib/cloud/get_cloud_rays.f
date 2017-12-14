@@ -994,7 +994,7 @@
             azid1 = int(sol_azi(i,j))
             azid2 = azid1
         endif
-        azid1 = 40. ; azid2 = 40.
+        azid1 = 212. ; azid2 = 212.
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
 
