@@ -135,6 +135,7 @@
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
         real sky_rad_a(nc,ni,nj)
         real sp_rad_a(nc,ni,nj)
+        real sprad_pix(nc)
         real radmax(nc)
 
         integer new_color /2/ ! sky_rad can be more fully used still
@@ -502,12 +503,13 @@
             if(alt_a(1,1) .eq. -90.)idebug_a(1,1) = 1 ! nadir
         elseif(htmsl .gt. 20000.)then 
             idebug_a(:,:) = 0
-            ialt_debug = ((ni-1)*(90-45))/180 + 1 ! -45 degrees alt
-            idebug_a(ialt_debug,1:100) = 1
-!           jazi_debug = ((nj-1)*115)/360 + 1 
-!           idebug_a(1:ni,jazi_debug) = 1
-            if(abs(alt_a(1,1)) .eq. 90.)idebug_a(1,1) = 1 ! nadir/zenith
+!           ialt_debug = ((ni-1)*(90-45))/180 + 1 ! -45 degrees alt
+!           idebug_a(ialt_debug,1:100) = 1
+            jazi_debug = ((nj-1)*212)/360 + 1 
+            idebug_a(1:ni,jazi_debug) = 1
         endif
+
+        if(abs(alt_a(1,1)) .eq. 90.)idebug_a(1,1) = 1 ! nadir/zenith
 
         if(isun .gt. 0 .and. isun .le. ni .and. jsun .gt. 0 .and. jsun .le. nj)then
           idebug_a(isun,jsun) = 1
@@ -1790,15 +1792,21 @@
 105             format(' total rgb/skyrad should be',3f9.2,94x,3f16.2)
               endif
 
+              do ic = 1,nc
+                call nl_to_sprad(sky_rad(ic),1,wa(ic),sprad_pix(ic))
+              enddo
+
               rmaglim = b_to_maglim(10.**glow_tot)
               call apply_rel_extinction(rmaglim,alt_a(i,j),od_atm_g+od_atm_a)
 
               if(i .eq. ni)then
                   write(6,*)' ******** zenith location ************************ od'
-                  write(6,111)clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)
-111               format('clrrad/RGB = ',3f12.0,3i4)
-                  write(6,1111)rmaglim
-1111              format(' limiting (cloudless) magnitude is ',f9.2)
+                  write(6,111)clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu),sprad_pix(:)
+ 111              format(' clrrad/RGB/sprad (w/m2/sr/nm) =',3f12.0,3i4,3f9.6)
+                  write(6,1111)sprad_pix(:),wa(:)
+1111              format(' spectral radiance at zenith (w/m2/sr/nm) ',3e13.4,' for lambda (microns)',3f6.3)
+                  write(6,1112)rmaglim
+1112              format(' limiting (cloudless) magnitude is ',f9.2)
               endif
               if(abs(elong_a(i,j) - 90.) .le. 0.5)then
                   write(6,*)' ******** 90 elong location ********************** od'
@@ -1879,7 +1887,7 @@
 !       enddo ! i
 !       enddo ! j
 
-!       Convert nl values to spectral radiance
+!       Convert nl values to spectral irradiance and radiance
 !       sky_sprad = f(sky_cyl_nl)
         solidangle_pix = (azi_scale*rpd) * (azi_scale*rpd)
         do ic = 1,nc
@@ -1898,6 +1906,10 @@
 !            sp_irrad_550 = 1.86 ! W/m**2/nm
              ghi_sim = (sp_irrad / sp_irrad_550) * ghi_zen_toa
           endif
+          write(6,*)' counts for 1.0 reflectance is',sprad_rat*6e9
+
+          sky_sprad(ic-1,:,:) = sky_rad_a(ic,:,:) * sprad_rat
+
         enddo ! ic 
 
         write(6,*)
