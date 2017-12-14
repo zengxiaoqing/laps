@@ -254,7 +254,7 @@
           FA(IC)=FA(IC) * .01         ! convert to W/m2/nm
         enddo ! ic
 
-        if(iverbose .eq. 1)write(6,*)'fa sun is ',fa   
+        if(iverbose .eq. 1)write(6,*)'fa sun (W/m2/nm) is ',fa
 
         return
         end
