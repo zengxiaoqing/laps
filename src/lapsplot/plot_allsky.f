@@ -1480,7 +1480,8 @@
               pox = 0.
               poy = 0.
 
-              if(trim(c_model) .eq. 'hrrr_smoke')then
+              if(trim(c_model) .eq. 'hrrr_smoke' .and.
+     1                htagl(iloc) .ge. 10000e3         )then
                 pomag = pomag * 2.4
                 poy = +0.6 ! increase moves down
                 pox = +0.1 ! increase moves right
