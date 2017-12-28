@@ -1855,12 +1855,14 @@
                       snow_m = 0.
                   endif
 
-                  aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
-                  aod_inc = aero_ext_coeff * slant2
-
                   if(mode_aero_cld .lt. 3)then
+                      aero_ext_coeff = aod_3d(inew_m,jnew_m,k_m)             
+                      aod_inc = aero_ext_coeff * slant2
                       cvr_path = cond_m                                 
                   else
+                      aero_ext_coeff = sum(tri_coeff(:,:,:) * 
+     1                                     aod_3d(i1:i2,j1:j2,k1:k2))
+                      aod_inc = aero_ext_coeff * slant2
                       cvr_path = cond_m + aero_ext_coeff / clwc2alpha
                   endif
 
