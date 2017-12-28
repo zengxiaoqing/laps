@@ -425,6 +425,8 @@
           cice_ideal = .000
         elseif(trim(c_model) .ne. '')then                  ! e.g. HRRR-AK
           l_require_all_fields = .false.
+        elseif(grid_spacing_m .le. 30.)then
+          l_require_all_fields = .false.                   ! water only
         elseif(i4time_ref - i4time_now_gg() .lt. 1e6)then  ! present/past
           l_require_all_fields = .true.
         elseif(i4time_ref - i4time_now_gg() .gt. 75e6)then ! >2.5y future 
@@ -863,6 +865,13 @@
             istatus_ht = 0 ! unless we are reading height
             write(6,*)' returned from wrf2swim for ',trim(c_model)
 
+            write(6,*)' aod sample'
+            do is = -10,+10
+              ii = 193 + is
+              jj = 455 + is
+              write(6,*)ii,jj,aod_3d(ii,jj,10:12)
+            enddo
+
             if(trim(c_model) .eq. 'hrrr_smoke' .and. .false.)then
               write(6,*)' Zero out hydrometeors'
               clwc_3d = 0.
@@ -1114,12 +1123,13 @@
           ri_obs = xsound(iloc)
           rj_obs = ysound(iloc)
 
-          if(trim(c_model) .ne. 'hrrr_smoke')then ! Keep inside model domain
+!         if(trim(c_model) .ne. 'hrrr_smoke')then ! Keep inside model domain
+          if(.true.)then
               ri_obs = min(max(ri_obs,1.),float(NX_L))
               rj_obs = min(max(rj_obs,1.),float(NY_L))
-          else
-              ri_obs = 477.
-              rj_obs = 881.             
+!         else
+!             ri_obs = 477.
+!             rj_obs = 881.             
           endif
 
           i_obs = nint(ri_obs)
