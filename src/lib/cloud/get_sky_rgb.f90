@@ -136,6 +136,8 @@
         real sky_rad_a(nc,ni,nj)
         real sp_rad_a(nc,ni,nj)
         real sprad_pix(nc)
+        real counts_one_refl_nl(nc)
+        real counts_one_refl(nc)
         real radmax(nc)
 
         integer new_color /2/ ! sky_rad can be more fully used still
@@ -163,6 +165,8 @@
         ave_rad_toa_c(:,:,:) = 0.   ! initialize
         day_int = day_int0 ! via includes
         topo_visibility = 0.
+        rintensity_glow = -999. ! nearly obsolete variable
+        contrast = -999.        ! nearly obsolete variable
 
         angstrom_exp_a = 2.4 - (fcterm * 15.)
         do ic = 1,nc
@@ -290,7 +294,7 @@
 
           argbri = corr1-argref
 !         contrast = 70. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
-          contrast = 54. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
+!         contrast = 54. + 30. * (abs(sol_alt_eff + 8.)/8.)**2 ! each image
           write(6,*)' argref/argbri/fraccorr = ',argref,argbri,fraccorr
 
         else ! sun above horizon
@@ -302,7 +306,7 @@
 23        format('  rad_sec_cld (based on day_int) = ',3f12.0)
           argbri = sb_corr * 0.30
           write(6,*)' sb_corr/argbri = ',sb_corr,argbri
-          contrast = 100.
+!         contrast = 100.
 
         endif
 
@@ -1378,7 +1382,7 @@
               rintensity_floor = 0. ! 75. + sol_alt
 !             rintensity_glow = max(min(((arg     -7.) * 100.),255.),rintensity_floor)
 !             rintensity_glow = max(min(((arg -argref) * 100.),255.),rintensity_floor)
-              rintensity_glow = max(min(((arg -argref) * contrast + 128.),255.),rintensity_floor)
+!             rintensity_glow = max(min(((arg -argref) * contrast + 128.),255.),rintensity_floor)
 !             rintensity_glow = min(rintensity_glow*star_ratio,255.)              
 
           else ! Night from clear_rad_c array (default flat value of glow)
@@ -1890,6 +1894,12 @@
 !       Convert nl values to spectral irradiance and radiance
 !       sky_sprad = f(sky_cyl_nl)
         solidangle_pix = (azi_scale*rpd) * (azi_scale*rpd)
+
+        counts_one_refl_nl(:) = 6e9
+        call nl_to_RGB(counts_one_refl_nl(:),glwmid,contrast & 
+                      ,128.,1,counts_one_refl(1),counts_one_refl(2),counts_one_refl(3))
+        write(6,*)' counts for 1.0 reflectance is',counts_one_refl(:)
+
         do ic = 1,nc
           write(6,*)
           call get_sky_rad_ave(sky_rad_a(ic,:,:) &
@@ -1906,7 +1916,6 @@
 !            sp_irrad_550 = 1.86 ! W/m**2/nm
              ghi_sim = (sp_irrad / sp_irrad_550) * ghi_zen_toa
           endif
-          write(6,*)' counts for 1.0 reflectance is',sprad_rat*6e9
 
           sky_sprad(ic-1,:,:) = sky_rad_a(ic,:,:) * sprad_rat
 
