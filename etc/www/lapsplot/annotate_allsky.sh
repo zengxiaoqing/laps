@@ -54,7 +54,7 @@
    elif test "$IMGGEOM" = "2047x2047"; then
     convert -fill white -annotate +1440+2039 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    elif test "$IMGGEOM" = "2559x2559"; then
-    convert -fill white -annotate +1800+2551 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    convert -fill white -annotate +2300+2531 "$ATIME" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    else
     convert -fill white -annotate +1080+1527 "$ATIME" -pointsize 15 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    fi
@@ -105,6 +105,9 @@
    elif test "$IMGGEOM" = "1023x1023"; then
     echo "convert -fill white -annotate +875+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
           convert -fill white -annotate +875+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   elif test "$IMGGEOM" = "2559x2559"; then
+    echo "convert -fill white -annotate +2300+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
+          convert -fill white -annotate +2300+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    else
     echo "convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
           convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
@@ -131,6 +134,12 @@
       convert -fill white -annotate +20+500  "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
     elif test "$IMGGEOM" = "1023x1023"; then
       convert -fill white -annotate +20+1012 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    elif test "$IMGGEOM" = "1535x1535"; then
+      convert -fill white -annotate +20+1524 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    elif test "$IMGGEOM" = "2047x2047"; then
+      convert -fill white -annotate +20+1524 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    elif test "$IMGGEOM" = "2559x2559"; then
+      convert -fill white -annotate +20+2531 "All-Sky"   -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
     else
       convert -fill white -annotate +20+1524 "All-Sky"   -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
     fi
