@@ -85,7 +85,7 @@
 !       Convert rintensity to rgb (gamma correction)
         call linearrgb_to_counts(r,g,b,rc,gc,bc)
 
-        if(iverbose .eq. 1)write(6,*)'glwref/contrast = ',glwref,contrast
+        if(iverbose .eq. 1)write(6,*)'glwref = ',glwref
 
 !       if(iverbose .eq. 1)write(6,*)'desired rad = ',desired_rad
 
