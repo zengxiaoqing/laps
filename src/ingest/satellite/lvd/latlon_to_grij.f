@@ -32,6 +32,7 @@
         real x(0:1)
 
         character*1 c_loop
+        character*9 a9time
 
         real bi_coeff(2,2)
 
@@ -118,6 +119,13 @@
 !       Obtain approximate satellite geometry info
         write(6,*)' Calling satgeom...'
         range_m = 42155680.00
+
+!       This 'i4time' will be correct when LVD is run from 'sched.pl' though
+!       it might be different when LVD is run from 'laps_driver.pl'. As long
+!       as 'i4time' is non-negative we should be OK, since it appears that 
+!       only 'emission_angle_d' is used that is independent of 'i4time'.
+        call get_systime(i4time,a9time,istatus)
+
         call satgeom(i4time,lat_l,lon_l,nx_l,ny_l
      1  ,sublat_l,sublon_l,range_m,r_missing_data,Phase_angle_d
      1  ,Specular_ref_angle_d,emission_angle_d,azimuth_d,istatus)
