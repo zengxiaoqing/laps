@@ -42,7 +42,7 @@ c
         Integer         imax,jmax
         Integer         i4time
 
-        Real          r_norm_vis_cnts_in(imax,jmax)
+        Real          r_norm_vis_cnts_in(imax,jmax),solalt_thr_vis
         Real          lat(imax,jmax)
         Real          lon(imax,jmax)
         Real          phase_angle_d(imax,jmax)
@@ -63,6 +63,8 @@ c
         Character*(*)   csatid
 c
 c     ------------------------- BEGIN ---------------------------------
+
+        solalt_thr_vis = 15.
 
         albedo_min=1.0
         albedo_max=0.0
@@ -91,7 +93,7 @@ c29               format(1x,2i3,2x,2f8.2)
 c             end if
 
 !                Test for favorable geometry
-                 if(      solar_alt_d .gt. 15. 
+                 if(      solar_alt_d .gt. solalt_thr_vis
      1                            .AND.
      1          (solar_alt_d .gt. 23. .or. phase_angle_d(i,j) .gt. 20.)
      1                            .AND.
