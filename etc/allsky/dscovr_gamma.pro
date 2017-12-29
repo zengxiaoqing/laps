@@ -12,6 +12,7 @@ earth_out = earth_rgb_ortho
 idim = 2084
 imax = idim-1
 
+; Higher Gamma lowers Green (and other) output
 factor = 0.95
 gamma = 0.45 ; 0.7
 
@@ -31,7 +32,11 @@ FOR J = 0,2047 DO BEGIN
    bog_old = blu_old / grn_old
 
    rog_new = rog_old^0.45
-   bog_new = bog_old^0.65
+
+;  Higher power coefficient raises Blue output
+;  bog_new = bog_old^0.60 ; yields 81/101/137    
+;  bog_new = bog_old^0.50 ; yields 81/101/129    
+   bog_new = bog_old^0.55 ; yields 81/101/129    
 
    red_new = grn_new * rog_new
    blu_new = grn_new * bog_new
