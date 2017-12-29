@@ -41,6 +41,7 @@ c
       character*3   csattypes(maxtype*maxsat)
       character*3   cchanneltypes(maxchannel*maxtype*maxsat)
       character*200 cpath2sat(maxtype*maxsat)
+      real solalt_thr_vis
 
       character   cgeneric_dataroot*255
       character   c_gridfname*50
