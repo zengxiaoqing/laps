@@ -89,6 +89,9 @@
         echo 'convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png'
               convert -fill yellow -annotate  +$XDISP1+$YDISP "$GHI"   -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       fi
+    elif test "$IMGGEOM" = "5761x2881"; then
+      XDISP2=3000
+      convert -fill white -annotate +$XDISP2+$YDISP "$ATIME" -pointsize 25 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
     else
       convert -fill yellow -annotate +725+20 "$ATIME"  -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     fi
