@@ -1179,7 +1179,7 @@
 
         write(6,*)' clearrad1 column:',clear_rad_c(1,minalt:minalt+9,minazi)
 
-!       Apply during daylight eclipses or during low sun / twilight
+!       Apply during daylight eclipses or during any sun / twilight
         if( ( (sol_alt .ge. 0. .and. (l_solar_eclipse .eqv. .true.)) .OR. &
             (sol_alt .lt. 100. .and. sol_alt .gt. twi_0) ) .AND. & 
                                                   htmsl .le. thr_abv_clds )then
@@ -1219,27 +1219,31 @@
                   altray = view_alt(ialt,jazi_start)
                   arg = sind(min(max(altray,1.5),90.))
                   od_slant = od_vert / arg                      
-                  fracg = od_g_vert / od_vert
-                  fraca = od_a_vert / od_vert
                   if(ic .eq. icd)then
                     write(6,*)'alt,od_slant,clear_rad_c',altray,od_slant,clear_rad_c(ic,ialt,jazi_dbg)
                   endif
 
-!                 sphere ave, drk gnd
+!                 sphere ave, any gnd
                   sph_rad_ave = sky_rad_ave(ic) * 0.5 * (1. + sfc_alb_c(ic))
 
                   do jazi = jazi_start,jazi_end
                     if(dist_2_topo(ialt,jazi) .eq. 0d0)then ! unobstructed by terrain
-                      sky_rad_scatg = sph_rad_ave * viewalt_adjust & 
-                                    * fracg * opac(od_slant) * highalt_adjust
-                      sky_rad_scata = (0.4 * sph_rad_ave * viewalt_adjust + 0.6 * clear_rad_c(ic,ialt,jazi)) & 
-                                    * fraca * opac(od_slant) * highalt_adjust
+                      od_slant = od_vert / arg                      
+                      fracg = od_g_vert / od_vert
+                      fraca = od_a_vert / od_vert
+!                     sky_rad_scatg = sph_rad_ave * viewalt_adjust & 
+!                                   * fracg * opac(od_slant) * highalt_adjust
+!                     sky_rad_scata = (0.4 * sph_rad_ave * viewalt_adjust + 0.6 * clear_rad_c(ic,ialt,jazi)) & 
+!                                   * fraca * opac(od_slant) * highalt_adjust
                     else ! topo in path
+                      od_slant_g = ag_2d(ialt,jazi) * ext_g(ic)
                       od_slant_a = aod_2_topo(ialt,jazi)
-                      sky_rad_scatg = 0. ! neglected term for now
-                      sky_rad_scata = sph_rad_ave * opac(od_slant_a) * highalt_adjust * viewalt_adjust
+                      od_slant = od_slant_g + od_slant_a
+!                     sky_rad_scatg = sph_rad_ave * opac(od_slant_g) * highalt_adjust * viewalt_adjust
+!                     sky_rad_scata = sph_rad_ave * opac(od_slant_a) * highalt_adjust * viewalt_adjust
                     endif
-                    sky_rad_scat(ic,ialt,jazi) = sky_rad_scatg + sky_rad_scata
+!                   sky_rad_scat(ic,ialt,jazi) = sky_rad_scatg + sky_rad_scata
+                    sky_rad_scat(ic,ialt,jazi) = sph_rad_ave * opac(od_slant) * highalt_adjust * viewalt_adjust
                   enddo ! jazi
 
                   clear_rad_c(ic,ialt,:) = clear_rad_c(ic,ialt,:) + sky_rad_scat(ic,ialt,:)
