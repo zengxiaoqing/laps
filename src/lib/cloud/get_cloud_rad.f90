@@ -432,11 +432,11 @@
 !     Check the presence of terrain shadow grid points + add sfc glow
       write(6,*)' heights_3d column = ',heights_3d(idb,jdb,:)
       if(mode_aero_cld .eq. 3)then
-        write(6,*)' aod_3d column = ',aod_3d(idb,jdb,:)
+        write(6,*)' aod_3d column =     ',aod_3d(idb,jdb,:)
       endif
-      write(6,*)' transm_3d column = ',transm_3d(idb,jdb,:)
+      write(6,*)' transm_3d column =  ',transm_3d(idb,jdb,:)
       if(solalt .gt. twi_alt)then                                       
-        write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,2)
+        write(6,*)' transm_4d column =  ',transm_4d(idb,jdb,:,2)
       endif
 
 !     if(solalt .lt. -4.)then ! use red channel for sfc lighting
