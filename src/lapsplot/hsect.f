@@ -2058,8 +2058,10 @@ c       include 'satellite_dims_lvd.inc'
 
           call config_satellite_lvd(istatus)
           if(istatus.ne.1)then
-             return
+             write(6,*)'WARNING config_satellite_lvd status = ',istatus
+!            return
           endif
+
 
           write(6,*)' Available Satellites are:'
           do k=1,maxsat
@@ -6874,11 +6876,11 @@ c                   cint = -1.
 
             if(c_type(1:2) .eq. 'cb')then ! Cloud Base
                 var_2d = 'LCB'
-!               c_label = 'Cloud Base         m   MSL       '
-                c_label = 'Cloud Prlx Top  (smoothed)       '
+                c_label = 'Cloud Base         m   MSL       '
+!               c_label = 'Cloud Prlx Top  (smoothed)       '
                 clow = 0.
                 chigh = 10000.
-                chigh_img = 16000. ! 8000.
+                chigh_img = 8000. ! 8000. or 16000.
                 cint = 1000.
 
             elseif(c_type(1:2) .eq. 'ct')then
