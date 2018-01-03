@@ -39,10 +39,11 @@
      real snow_3d(ni,nj,nk)  ! kg/m**3
      real b_alpha_3d(ni,nj,nk) ! m**-1          
      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
+     real transm_3t(ni,nj,nk) ! terrain transmission
      real transm_4d(ni,nj,nk,nc) ! color information added
 
      real obj_alt(ni,nj),obj_azi(ni,nj)
-     real topo_a(ni,nj)
+     real topo_a(ni,nj),terr_max_path_a(ni,nj)
      real projrot(ni,nj)
 
      real heights_1d(nk)
@@ -56,6 +57,8 @@
      parameter (htlutlo = -1000)
      parameter (htluthi = 30000)
      real htlut(htlutlo:htluthi)
+
+     integer*8 nsteps,nfacesteps
 
 !    These parameters can be obtained/updated from the 'cloud_rad' module
 !    Backscattering efficiencies
@@ -92,21 +95,109 @@
      snow2alpha = 1.5 / (rhosnow * reff_snow)
      pice2alpha = 1.5 / (rhograupel * reff_graupel)
 
-     idebug = 0
      angstrom_exp_a = 2.4 - (fcterm * 15.)
 
      twi_alt = -4.5
      transm_3d = r_missing_data
+     transm_3t = 1.0
 
+     terr_max = maxval(topo_a)
+     terr_min = minval(topo_a)
+     terr_max_path_a = 100000. ! initialize
+
+!    Initial terrain effects
+     nsteps = 0
+     nloop_tot = 0
      do k = 1,nk
-     do i = 1,ni
-     do j = 1,nj
-       if(topo_a(i,j) .gt. heights_3d(i,j,k))then
-         transm_3d(i,j,k) = 0.
-       endif
-     enddo ! j
-     enddo ! i
+       I4_elapsed = ishow_timer()
+       nloop = 0
+       
+       do i = 1,ni
+       do j = 1,nj
+         htstart = heights_3d(i,j,k)
+         objalt = obj_alt(i,j)
+         objazi = obj_azi(i,j)
+
+         if(topo_a(i,j) .gt. heights_3d(i,j,k))then             ! below terrain
+           transm_3d(i,j,k) = 0.
+           transm_3t(i,j,k) = 0.
+         elseif(k .ge. 2 .AND. transm_3t(i,j,k-1) .eq. 1.0)then ! underneath level already illuminated
+           continue 
+!        elseif(htstart .gt. terr_max_path(i,j) .and. objalt .gt. 0.)then
+!          continue	   
+         else                                                   ! above terrain and underneath level is dark
+           dids = sind(objazi)*cosd(objalt)/grid_spacing_m
+           djds = cosd(objazi)*cosd(objalt)/grid_spacing_m
+           dhtds =  sind(objalt)                                 
+           dxyds =  cosd(objalt)
+           tan_suntop = tand(objalt+0.25)
+           tan_sunbot = tand(objalt-0.25)
+	   terr_tanalt_max = -1e10
+           nloop = nloop + 1
+           terr_max_path = topo_a(i,j)
+           do is = 1,10000
+              nsteps = nsteps + 1
+              s = float(is) * grid_spacing_m
+              dxy = dxyds * s
+              rinew = float(i) + dids * s
+              rjnew = float(j) + djds * s
+              inew = int(rinew)
+              jnew = int(rjnew)
+              if(inew .lt. 1 .or. inew .ge. ni .or. jnew .lt. 1 .or. jnew .ge. nj)then ! outside domain
+                 goto 101
+	      endif
+
+              curvat_ht = dxy**2 / (2.0*earth_radius)
+              htnew = htstart + dhtds * s + curvat_ht
+
+              terrht = topo_a(int(rinew),int(rjnew)) ! replace with bilinear interp
+!             terr_max_path = max(terr_max_path,terrht)
+              terr_tanalt     = ((terrht   - curvat_ht) - htstart) / dxy
+              terr_tanalt_pot = ((terr_max - curvat_ht) - htstart) / dxy
+              terr_tanalt_max = max(terr_tanalt_max,terr_tanalt)
+
+              if(i .eq. idb .and. j .eq. jdb)then
+                 write(6,103)is,s,inew,jnew,htstart,htnew,terrht    &
+		            ,terr_tanalt,terr_tanalt_max,tan_suntop &
+		            ,terr_tanalt_pot,tan_sunbot
+103              format(i6,f8.0,2i5,3x,3f9.2,3x,3f9.4,3x,2f9.4)
+              endif
+
+              if(htnew .gt. terr_max .and. objalt .gt. 0.)then ! ray now above max terrain with source above horizon
+                 goto 101
+              endif
+
+              if(htnew .lt. terr_min .and. objalt .lt. 0.)then ! ray now below min terrain with source below horizon
+                 goto 101
+              endif
+
+              if(terr_tanalt_max .gt. tan_suntop)then          ! terrain has now completely covered light source
+                 goto 101
+              endif
+
+              if(terr_tanalt_pot .lt. tan_sunbot)then          ! highest potential terrain beyond location doesn't cover light source
+                 goto 101
+              endif
+           enddo ! is
+
+101        continue
+
+           if(terr_tanalt_max .gt. tan_suntop)then
+              transm_3t(i,j,k) = 0.          
+           endif
+
+           if(i .eq. idb .and. j .eq. jdb)then
+              write(6,102)k,is,inew,jnew,transm_3t(i,j,k),terr_tanalt_max,tan_suntop ! ,terr_max_path_a(i,j)
+102           format(' Initial terrain effects for k =',i4,3i6,f9.3,3f9.3)
+           endif
+         endif ! non-trivial point
+       enddo ! j
+       enddo ! i
+       nloop_tot = nloop_tot + nloop
+       write(6,*)' nloop/ht for level ',k,nloop,heights_3d(idb,jdb,k)
      enddo ! k
+
+     write(6,*)' nloop_tot/nsteps = ',nloop_tot,nsteps
 
      transm_4d = 0.                   
 
@@ -154,6 +245,7 @@
      if(solalt .ge. twi_alt)then ! daylight or early twilight
 
       do if = 1,6
+       idebug = 1 ! initialize for first ray trace
        write(6,*)
        is = 1 + (ni-1)*(i1(if)-1)
        ie = 1 + (ni-1)*(i2(if)-1)
@@ -220,8 +312,9 @@
 
 !        Start ray trace at this point
          if(idebug .eq. 1)write(6,1)if,it,jt,kt
-1        format(4i3)
-         do ls = 0,4000 ! max number of ray segments
+1        format('if,it,jt,kt',4i3)
+
+         do ls = 0,10000 ! max number of ray segments
 
            if(ls .eq. 0)then ! values at start of trace                
              objalt = obj_alt(id,jd) + refr_mn
@@ -252,7 +345,7 @@
                stop
              endif
 
-           elseif(objalt .lt. 3.0 .and. if .eq. 1)then
+           elseif(objalt .lt. 4.0 .and. if .eq. 1)then
              scurr = float(ls) * grid_spacing_m
 
            else
@@ -301,7 +394,8 @@
              if(transm_3d(id,jd,kd) .ne. r_missing_data)then
                if(id .eq. idlast .and. jd .eq. jdlast .and. kd .eq. kdlast)then
                  if(idebug .eq. 1)write(6,3)s,ri,rj,rk,ht,id,jd,kd             
-3                format('s/ri/rj/rk/ht = ',5f9.2,' same march',3i5)
+3                format('s/ri/rj/rk/ht = ',5f9.2,' same march point',3i5)
+                 goto 9 ! experimental speedup
                else
                  if(idebug .eq. 1)write(6,4)s,ri,rj,rk,ht,id,jd,kd             
 4                format('s/ri/rj/rk/ht = ',5f9.2,' already assigned',3i5)
@@ -309,7 +403,7 @@
                endif
              else ! transm_3d is missing
                if(idebug .eq. 1)write(6,5)s,ri,rj,rk,ht,id,jd,kd             
-5              format('s/ri/rj/rk/ht = ',5f9.2,' new',3i5)
+5              format('s/ri/rj/rk/ht = ',5f9.2,' new',13x,3i5)
                nnew = nnew + 1
              endif
 
@@ -332,7 +426,7 @@
                l_same_point = .false.
              endif
 
-             if(ht - topo_a(id,jd) .le. 1000. .AND. ihit_terrain .ne. 1)then
+             if(ht - topo_a(id,jd) .le. 1000. .AND. ihit_terrain .ne. 1 .AND. .false.)then
 
 !              Interpolate to get topography at fractional grid point
 
@@ -358,8 +452,8 @@
                endif
              endif
 
-             if(ihit_terrain .eq. 1)then
-               transm_3d(id,jd,kd) = 0.0                      
+             if(transm_3t(id,jd,kd) .eq. 0.)then
+!              transm_3d(id,jd,kd) = 0.0                      
 !              transm_4d(id,jd,kd,:) = 0.0                      
              else ! trace free of terrain
                ds = s - slast
@@ -402,6 +496,8 @@
                endif
 
                transm_3d(id,jd,kd) = 1. - albedo              
+               if(idebug .eq. 1)write(6,8)transm_3d(id,jd,kd),id,jd,kd
+8              format('transm_3d     = ',5x,f9.4,48x,3i5)
              endif
 
              nfacesteps = nfacesteps + 1
@@ -413,6 +509,8 @@
          enddo ! ls
 
 10       continue
+
+         idebug = 0
 
        enddo ! k
        enddo ! j
@@ -432,6 +530,8 @@
       I4_elapsed = ishow_timer()
 
      endif ! solalt
+
+     transm_3d(:,:,:) = transm_3d(:,:,:) * transm_3t(:,:,:)
 
      npts = ni*nj*nk
      fractot = float(ntot)/float(npts)
