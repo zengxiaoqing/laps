@@ -930,7 +930,7 @@
           if(sol_alt .ge. twi_alt)then  ! daylight
             write(6,11)
 11          format('    i   j    alt   azi  elong   pf_scat     opac     od /         species            alb    cloud airmass   rad', &
-                   '   rinten  airtopo   gtitopo topoalb aodill  topood topovis cld_visb   glow      skyrgb')
+                   '   rinten  airtopo   gtitopo topoalb aodill  topood topovis cld_visb clr_rad_2nd skyrgb')
           elseif(sol_alt .ge. -16.)then ! twilight
             write(6,12)
 12          format('    i   j      alt      azi     elong   pf_scat     opac       od      alb     cloud  airmass   rad    ', &
@@ -1380,10 +1380,6 @@
               arg = glow_tot                                  ! experiment?            
 
               rintensity_floor = 0. ! 75. + sol_alt
-!             rintensity_glow = max(min(((arg     -7.) * 100.),255.),rintensity_floor)
-!             rintensity_glow = max(min(((arg -argref) * 100.),255.),rintensity_floor)
-!             rintensity_glow = max(min(((arg -argref) * contrast + 128.),255.),rintensity_floor)
-!             rintensity_glow = min(rintensity_glow*star_ratio,255.)              
 
           else ! Night from clear_rad_c array (default flat value of glow)
             glow_nt = log10(clear_rad_c_tot(2,i,j)) ! log nL           
@@ -1797,6 +1793,11 @@
               endif
 
               do ic = 1,nc
+                if(abs(alt_a(i,j)) .eq. 90.)then
+                  idebug_rad = 1
+                else
+                  idebug_rad = 0
+                endif
                 call nl_to_sprad(sky_rad(ic),1,wa(ic),sprad_pix(ic))
               enddo
 
@@ -1840,7 +1841,7 @@
                   write(6,116)i,j,alt_a(i,j),azi_a(i,j),elong_a(i,j) & 
                       ,pf_top(2),r_cloud_3d(i,j),cloud_od_loc(i,j),cloud_od_sp(i,j,:),bkscat_alb(i,j) &
                       ,frac_cloud,airmass_2_cloud(i,j),r_cloud_rad(i,j),rintensity(1),airmass_2_topo(i,j) &
-                      ,topo_gti(i,j),topo_albedo(1,i,j),aod_ill(i,j),od2topo_c(2),topo_visibility,cloud_visibility,rintensity_glow &
+                      ,topo_gti(i,j),topo_albedo(1,i,j),aod_ill(i,j),od2topo_c(2),topo_visibility,cloud_visibility,clear_rad_2nd_c(2,i,j) &
                       ,nint(sky_rgb(:,i,j)),nint(cld_red),nint(cld_grn),nint(cld_blu)
               elseif(sol_alt .ge. -16.)then ! twilight
                   write(6,117)i,j,alt_a(i,j),azi_a(i,j),elong_s(i,j) & 
@@ -1857,7 +1858,7 @@
                       ,glow_cld_nt,glow_cld_moon,glow_cld,glow_secondary_clr,rmaglim &
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_tot(:,i,j)
               endif
-116           format(2i5,f7.2,2f6.1,f9.3,f11.6,2f7.2,3f6.2,3f8.3,f8.4,f7.1,f9.5,f9.1,f8.3,2f8.5,2f8.3,f9.2,2x,3i4,' cldrgb',1x,3i4)
+116           format(2i5,f7.2,2f6.1,f9.3,f11.6,2f7.2,3f6.2,3f8.3,f8.4,f7.1,f9.5,f9.1,f8.3,2f8.5,2f8.3,f10.0,2x,3i4,' cldrgb',1x,3i4)
 117           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.4,f7.1,f9.3,f8.1,6f7.3,f9.2,2x,3i4,' clrrad',3f10.0,3i4)
 118           format(2i5,f9.4,2f9.3,f9.3,f11.6,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
               write(6,*)
