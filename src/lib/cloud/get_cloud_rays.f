@@ -54,6 +54,7 @@
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
         curvat(hdst,radius) = hdst**2 / (2. * radius)
+        resin(x) = sin(x*1.57079)
 
         real*8 dsdst,dradius_start,daltray,dcurvat2
         dcurvat2(dsdst,dradius_start,daltray) = 
@@ -438,6 +439,7 @@
         grid_size_deg = float(ni) * grid_spacing_m / 110000.
         write(6,*)' grid_size_deg = ',grid_size_deg
 
+!       This is being tested with 3.0 and 4.0 altitude threshold
         if(obj_alt(i,j) .ge. 3.0  .AND. ! as uncorrected for refraction
      1     htagl .lt. 300e3             ! not near geosynchronous
      1                                           )then 
@@ -463,7 +465,7 @@
             write(6,*)' Skip call to get_cloud_rad (newloc = 0)'
           endif
 
-        else ! called if obj_alt < 3.0
+        else ! called if obj_alt < low threshold
             if( (sol_alt(i,j) - twi_alt) * 
      1          (solalt_last  - twi_alt) .le. 0.)then
                 write(6,*)' Crossed twi_alt compared with prior call'
@@ -604,7 +606,12 @@
                 frac_dir = transm_tn + (1.-transm_tn) * frac_dir1
 
                 patm_sfc = ztopsa(topo_a(ii,jj)) / 1013.25
-                sb_corr = 4.0 * (1.0 - (sind(obj_alt(ii,jj))**0.5))
+                if(.false.)then
+                   sb_corr = 4.0 * (1.0 - (sind(obj_alt(ii,jj))**0.5))
+                else
+                   sarg = resin(sind(obj_alt(ii,jj)))
+                   sb_corr = 3.38 * (1.0 - sarg**0.33)
+                endif
                 dhi_grn_clr_frac = ext_g(2) * patm_sfc 
      1                           * 10.**(-0.4*sb_corr)
                 dhi_2d_clear = ghi_zen_toa * ecld * dhi_grn_clr_frac 
@@ -766,8 +773,9 @@
               transm_4d(:,:,k,ic) = transm_4d(:,:,k,ic) * obj_bri_a(:,:) ! correct for sun/moon brightness
              enddo ! k
             enddo ! ic
-            write(6,*)' transm_3d column = ',transm_3d(i,j,:)
-            write(6,*)' transm_4d blue column = ',transm_4d(i,j,:,2)
+            write(6,*)' heights_3d column =  ',heights_3d(i,j,:)
+            write(6,*)' transm_3d column =   ',transm_3d(i,j,:)
+            write(6,*)' transm_4d B column = ',transm_4d(i,j,:,2)
         endif
         write(6,*)' Range of transm_4d(red channel) = '
      1           ,minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
