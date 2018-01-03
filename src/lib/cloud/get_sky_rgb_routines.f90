@@ -1012,7 +1012,7 @@
 !       constant 3e9      ! L (scaling constant, approx solar illuminance 
                           !    spread over a spherical solid angle [nL])
 
-        iverbose = 1
+        iverbose = 0
 
 !       Obtain solar spectral radiance
         call get_fluxsun(wa,nc,iverbose,fa)
