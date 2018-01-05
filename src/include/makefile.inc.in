@@ -57,7 +57,7 @@ DBMTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -ldebugmthermo
 UTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -lutil
 DBUTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -ldebugutil
 
-OTHERLIBS = $(LIBPATHFLAG)$(NETCDF)/lib -lnetcdf -lnetcdff  @OTHERLIBS@
+OTHERLIBS = $(LIBPATHFLAG)$(NETCDF)/lib -lnetcdf @OTHERLIBS@
 
 GRIB2LIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib2 -lgrib2
 DBGRIB2LIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib2 -ldebuggrib2
