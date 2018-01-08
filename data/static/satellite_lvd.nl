@@ -12,6 +12,7 @@
  L_NATIONAL = .FALSE.,
  ISKIP_BILIN = 1,
  I_DELTA_SAT_T_SEC = 900,
+ SOLALT_THR_VIS = 15.,
  I_MSNG_SAT_FLAG =
 0,   0,   0,   0,
 0,   0,   0,   0,
@@ -29,3 +30,7 @@ c          - if you are using GOES 13 data please specify 'goes12' until we upda
 c
 c 'CCHANNELTYPES' - values can be 'vis', '4u', 'wv', '11u' and
 c                   others for 6.7 micron and 12 micron
+c
+c 'SOLALT_THR_VIS' - solar elevation angle should be at least this high to
+c                    allow processing of visibile satellite data in the
+c                    normalization (albedo or reflectance) steps
