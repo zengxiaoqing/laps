@@ -41,7 +41,6 @@ c
       character*3   csattypes(maxtype*maxsat)
       character*3   cchanneltypes(maxchannel*maxtype*maxsat)
       character*200 cpath2sat(maxtype*maxsat)
-      real solalt_thr_vis
 
       character   cgeneric_dataroot*255
       character   c_gridfname*50
@@ -160,8 +159,8 @@ c
 c ================================================================
 c
           call lvd_driver_sub(nx_l,ny_l,k,j,n_images,
-     &                      chtype,i4time_cur,i_delta_sat_t_sec,
-     &                      sri,srj,istatus)
+     &             chtype,i4time_cur,i_delta_sat_t_sec,
+     &             sri,srj,istatus)
 
           if(istatus.ne.1)then
             print*,'NO data processed by lvd_driver_sub: ',
