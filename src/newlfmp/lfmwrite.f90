@@ -78,7 +78,7 @@ if (trim(mtype) /= 'st4') then
 	
   print*,' '
   print*,'Writing 3d fields to netcdf: ',trim(output_file)
-  inquire(FILE=trim(output_dir),EXIST=outdir_defined)
+  inquire(DIRECTORY=trim(output_dir),EXIST=outdir_defined)
   if(outdir_defined .eqv. .false.)then
       write(6,*)' ERROR: output directory does not exist'
       stop
@@ -127,7 +127,7 @@ call cvt_fname_v3(output_dir,gtime,fcst_hhmm,'fsf',3,output_file  &
                  ,fnlen,istatus)
 
 print*,'Writing 2d fields to netcdf: ',trim(output_file)
-inquire(FILE=trim(output_dir),EXIST=outdir_defined)
+inquire(DIRECTORY=trim(output_dir),EXIST=outdir_defined)
 if(outdir_defined .eqv. .false.)then
     write(6,*)' ERROR: output directory does not exist'
     stop
