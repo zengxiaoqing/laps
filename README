@@ -194,9 +194,9 @@
                       --- 2.1.1  NetCDF library  ---
  
      The netCDF package is required for laps, we suggest using version 3.6.0
-     available here: 
+     or higher, including version 4.
 
-     http://www.unidata.ucar.edu/downloads/netcdf/netcdf-3_6_0/index.jsp
+     https://www.unidata.ucar.edu/downloads/netcdf/index.jsp
 
      Once netCDF is properly installed, check that the 'ncdump' and 'ncgen' 
      programs are in your path (e.g. 'which ncdump'), so that 'configure' will 
@@ -210,7 +210,11 @@
      static file called the CDL. This CDL can be GSD's version or someone elses.
 
      If possible, check that your netCDF library is built to be compatible
-     with the same FORTRAN compiler that you are using.
+     with the same FORTRAN compiler that you are using. NetCDF version 4 has
+     a separate library installation having FORTRAN support that should also
+     be installed. After installing this, the -lnetcdff library should be added
+     to the 'src/include/makefile.inc' OTHERLIBS variable if it isn't already
+     added via 'configure'.
 
      The netCDF library contains C routines that are to be linked with the
      LAPS FORTRAN routines. Please see the discussion in section 2.2.2.1 for
@@ -3828,8 +3832,8 @@ Inputs:                                          '*' = essential input
 	lps     3d grid         3D Radar Reflectivity (filled in)
         lsx     2d grid         sfc pressure, temperature
 	lcv     2d grid		column max cloud cover / snow cover
-        lh3     grid            LAPS 3-d Relative Humidity (normally previous 
-                                                                          file)
+        lh3     grid            LAPS 3-d Relative Humidity
+        lh4     grid            TPW (for upslope moisture flux)
         lso     inter data      Sfc (METAR) obs - for precip type verification
 
 	lw3	3d grid		3-D winds (U and V are wrt GRID NORTH)
