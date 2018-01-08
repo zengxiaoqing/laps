@@ -8,7 +8,7 @@
      &                           phase_angle_d,
      &                           specular_ref_angle_d,
      &                           emission_angle_d,
-     &                           rland_frac,
+     &                           rland_frac,solalt_thr_vis,
      &                           albedo_out,
      &                           albedo_min,
      &                           albedo_max,
@@ -64,7 +64,9 @@ c
 c
 c     ------------------------- BEGIN ---------------------------------
 
-        solalt_thr_vis = 15.
+        write(6,*)' solalt_thr_vis (from namelist) =',solalt_thr_vis
+!       solalt_thr_vis = 15.
+!       write(6,*)' solalt_thr_vis (from hardwire) =',solalt_thr_vis
 
         albedo_min=1.0
         albedo_max=0.0
