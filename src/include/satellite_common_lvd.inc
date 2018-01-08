@@ -66,6 +66,7 @@
       real    r_resolution_y_wv(maxtype,maxsat)
       real    vis_cnt_range_in(2,maxsat)
       real    vis_cnt_range_out(2,maxsat)
+      real    solalt_thr_vis
 
 
       common /lvd_namelist_cmn/
@@ -73,7 +74,7 @@
      +isats,itypes,ichannels,
      +nsats,ntypes,nchannel,
      +i_delta_sat_t_sec,i_msng_sat_flag,
-     +sat_range_m,n_images,
+     +sat_range_m,n_images,solalt_thr_vis,
      +r_sat_sub_lat, r_sat_sub_lon,
      +r_la1, r_lo1,
      +r_resolution_x_vis,r_resolution_y_vis,r_resolution_x_ir,
