@@ -1,0 +1,1307 @@
+// ---------------------------------------------------------------------------
+// This software is in the public domain, furnished "as is", without technical
+// support, and with no warranty, express or implied, as to its usefulness for
+// any purpose.
+//
+// laps.cdl  	Local Analysis and Prediction System Model
+//
+// Author: Tom Kent + Jim Ramer
+// ---------------------------------------------------------------------------
+// - For each physical parameter represented here, there are two pieces of
+//   metadata meant to describe which levels it is available on.  The
+//   attribute `levels' is meant to be a human readable format that someone
+//   doing a ncdump can see.  The variable `xxxLevels' is the data that
+//   is parsed by the accessor to determine which 2d slab corresponds to
+//   which level.
+//
+// - The _n3D attribute is how many 2d slabs should be read in to get a
+//   three-dimensional description of this variable.  This will be used
+//   later to optimize access for cross sections and soundings.
+//
+// - The inventory variable is 2d based on record (valid time) and
+//   level.  There is a separate inventory variable for each
+//   meteorological variable.
+// 
+// - The forecast times are stored in the variable valtimeMINUSreftime,
+//   which is dimensioned n_valtimes in size.  n_valtimes should
+//   correspond to the number of records in a completely full file.
+//
+
+netcdf laps
+    {
+
+    dimensions:
+	record 		= UNLIMITED;
+	n_valtimes	= 1;
+	data_variables 	= 49;
+	namelen	 	= 132;
+	charsPerLevel 	= 10;
+	x 		= 61; 
+	y 		= 61;
+
+        // arbitrary counters for number of levels
+        levels_1	= 1;
+        levels_2	= 2;
+        levels_3	= 3;
+        levels_21	= 21;
+        levels_22	= 22;
+        levels_23	= 23;
+
+
+    variables:
+        
+	//      Geopotential height
+	float
+	    gh(record, levels_23, y, x);
+	    gh:long_name = "Geopotential height";
+	    gh:units = "m";
+	    gh:udunits = "meters";
+	    gh:uiname = "geoPotHt";
+	    gh:valid_range = 0.f, 20000.f;
+	    gh:_FillValue = -99999.f;
+	    gh:_n3D = 21;
+            gh:levels = "MB 1100-100 by 50, tw0, lcl";
+        char
+            ghLevels(levels_23, charsPerLevel);
+        char
+            ghInventory(n_valtimes, levels_23);
+	    
+
+	//	Relative Humidity	
+	float
+	    rh(record, levels_22, y, x);
+	    rh:long_name = "Relative Humidity";
+	    rh:units = "%";
+	    rh:udunits = "percent";
+	    rh:uiname = "rh";
+	    rh:valid_range = 0.f, 100.f;
+	    rh:_FillValue = -99999.f;
+	    rh:_n3D = 22;
+            rh:levels = "SFC  MB 1100-100 by 50";
+        char
+            rhLevels(levels_22, charsPerLevel);
+        char
+            rhInventory(n_valtimes, levels_22);    
+
+
+	//	Temperature 	
+  	float
+	    t(record, levels_22, y, x);
+	    t:long_name = "Temperature";
+	    t:units = "K";
+	    t:udunits = "degree_Kelvin";
+	    t:uiname = "T";
+	    t:valid_range = 180.f, 330.f;
+	    t:_FillValue = -99999.f;
+	    t:_n3D = 22;
+            t:levels = "SFC  MB 1100-100 by 50";
+        char
+            tLevels(levels_22, charsPerLevel);
+        char
+            tInventory(n_valtimes, levels_22);
+
+
+	//	u wind component
+	float
+	    uw(record, levels_22, y, x);
+	    uw:long_name = "u wind component";
+	    uw:units = "m/s";
+	    uw:udunits = "meter/sec";
+	    uw:uiname = "uWind";
+	    uw:valid_range = -150.f, 150.f;
+	    uw:_FillValue = -99999.f;
+	    uw:_n3D = 22;
+            uw:levels = "SFC  MB 1100-100 by 50";
+        char
+            uwLevels(levels_22, charsPerLevel);
+        char
+            uwInventory(n_valtimes, levels_22);
+
+	
+	//	v wind component
+	float
+	    vw(record, levels_22, y, x);
+	    vw:long_name = "v wind component";
+	    vw:units = "m/s";
+	    vw:udunits = "meter/sec";
+	    vw:uiname = "vWind";
+	    vw:valid_range = -150.f, 150.f;
+	    vw:_FillValue = -99999.f;
+	    vw:_n3D = 22;
+            vw:levels = "SFC  MB 1100-100 by 50";
+        char
+            vwLevels(levels_22, charsPerLevel);
+        char
+            vwInventory(n_valtimes, levels_22);
+
+	
+	//	pressure vertical velocity 
+	float
+	    pvv(record, levels_22, y, x);
+	    pvv:long_name = "Pressure vertical velocity";
+	    pvv:units = "Pa/s";
+	    pvv:udunits = "pascal/second";
+	    pvv:uiname = "Pvv";
+	    pvv:valid_range = -2.5f, 2.5f;
+	    pvv:_FillValue = -99999.f;
+	    pvv:_n3D = 22;
+            pvv:levels = "SFC  MB 1100-100 by 50";
+        char
+            pvvLevels(levels_22, charsPerLevel);
+        char
+            pvvInventory(n_valtimes, levels_22);
+
+
+        //      specific humidity
+        float
+            sh(record,levels_21,y,x);
+            sh:long_name="specific humidity";
+            sh:units="kg/kg";
+            sh:udunits="";
+            sh:uiname="sh";
+            sh:valid_range= 0.f, 0.1000f;
+            sh:_FillValue = -99999.f;
+	    sh:_n3D = 21;
+            sh:levels = "MB 1100-100 by 50";
+        char
+            shLevels(levels_21, charsPerLevel);
+        char
+            shInventory(n_valtimes, levels_21);
+
+
+        //      LAPS radar reflectivity 
+        float
+            rr(record,levels_21,y,x);
+            rr:long_name="LAPS radar reflectivity";
+            rr:units="dBZ";
+            rr:udunits="";
+            rr:uiname="LapsRRef";
+            rr:valid_range= -20.f, 80.f;
+            rr:_FillValue = -99999.f;
+	    rr:_n3D = 21;
+            rr:levels = "MB 1100-100 by 50";
+        char
+            rrLevels(levels_21, charsPerLevel);
+        char
+            rrInventory(n_valtimes, levels_21);
+
+        
+        //      precipitation type
+        float
+            ptyp(record,levels_21,y,x);
+            ptyp:long_name="precipitation type";
+            ptyp:units="none";
+            ptyp:udunits="";
+            ptyp:uiname="PrecipType";
+            ptyp:valid_range= 0.f, 20.f;
+            ptyp:_FillValue = -99999.f;
+	    ptyp:_n3D = 21;
+            ptyp:levels = "MB 1100-100 by 50";
+        char
+            ptypLevels(levels_21, charsPerLevel);
+        char
+            ptypInventory(n_valtimes, levels_21);
+
+        
+        //      cloud type
+        float
+            ctyp(record,levels_21,y,x);
+            ctyp:long_name="cloud type";
+            ctyp:units="none";
+            ctyp:udunits="";
+            ctyp:uiname="CldType";
+            ctyp:valid_range= 0.f, 20.f;
+            ctyp:_FillValue = -99999.f;
+	    ctyp:_n3D = 21;
+            ctyp:levels = "MB 1100-100 by 50";
+        char
+            ctypLevels(levels_21, charsPerLevel);
+        char
+            ctypInventory(n_valtimes, levels_21);
+
+
+        //      fractional cloud cover pressure coord
+        float
+            ccpc(record,levels_21,y,x);
+            ccpc:long_name="fractional cloud cover pressure coord";
+            ccpc:units="fractional";
+            ccpc:udunits="";
+            ccpc:uiname="FracCldCvr";
+            ccpc:valid_range= 0.f, 100.f;
+            ccpc:_FillValue = -99999.f;
+	    ccpc:_n3D = 21;
+            ccpc:levels = "MB 1100-100 by 50";
+        char
+            ccpcLevels(levels_21, charsPerLevel);
+        char
+            ccpcInventory(n_valtimes, levels_21);
+        
+        
+        //      cloud liquid water
+        float
+            cw(record,levels_21,y,x);
+            cw:long_name="cloud liquid water";
+            cw:units="grams/meter**3";
+            cw:udunits="kilogram/meters3";
+            cw:uiname="CldH20";
+            cw:valid_range= 0.f, 100.f;
+            cw:_FillValue = -99999.f;
+	    cw:_n3D = 21;
+            cw:levels = "MB 1100-100 by 50";
+        char
+            cwLevels(levels_21, charsPerLevel);
+        char
+            cwInventory(n_valtimes, levels_21);
+
+
+        //      cloud ice
+        float
+            cice(record,levels_21,y,x);
+            cice:long_name="cloud ice";
+            cice:units="grams/meter**3";
+            cice:udunits="kilogram/meters3";
+            cice:uiname="CldIce";
+            cice:valid_range= 0.f, 100.f;
+            cice:_FillValue = -99999.f;
+	    cice:_n3D = 21;
+            cice:levels = "MB 1100-100 by 50";
+        char
+            ciceLevels(levels_21, charsPerLevel);
+        char
+            ciceInventory(n_valtimes, levels_21);
+ 
+        
+        //      hydrometeor concentration
+        float
+            hyc(record,levels_21,y,x);
+            hyc:long_name="hydrometeor concentration";
+            hyc:units="grams/meter**3";
+            hyc:udunits="kilogram/meters3";
+            hyc:uiname="HmConc";
+            hyc:valid_range= 0.f, 100.f;
+            hyc:_FillValue = -99999.f;
+	    hyc:_n3D = 21;
+            hyc:levels = "MB 1100-100 by 50";
+        char
+            hycLevels(levels_21, charsPerLevel);
+        char
+            hycInventory(n_valtimes, levels_21);
+
+
+        //      Pressure         //
+        float
+            p(record,levels_2,y,x);
+            p:long_name="pressure";
+	    p:units = "Pa";
+	    p:udunits = "pascal";
+	    p:uiname = "atmP";
+	    p:valid_range = 0.f, 110000.f;
+            p:_FillValue = -99999.f;
+	    p:_n3D = 1;
+            p:levels = "SFC  FH 1500";
+        char
+            pLevels(levels_2, charsPerLevel);
+        char
+            pInventory(n_valtimes, levels_2);
+
+
+        //      MSL Pressure            // 
+        float
+            mslp(record,levels_1,y,x);
+            mslp:long_name="Mean Sea Level Pressure";
+	    mslp:units = "Pa";
+	    mslp:udunits = "pascal";
+	    mslp:uiname = "MSL";
+	    mslp:valid_range = 80000.f, 110000.f;
+            mslp:_FillValue = -99999.f;
+	    mslp:_n3D = 0;
+            mslp:levels = "SFC";
+        char
+            mslpLevels(levels_1, charsPerLevel);
+        char
+            mslpInventory(n_valtimes, levels_1);
+
+        
+        //      surface dewpoint temperature    // 
+        float
+            dpt(record,levels_1,y,x);
+            dpt:long_name="surface dewpoint temperature";
+	    dpt:units = "K";
+	    dpt:udunits = "degree_Kelvin";
+	    dpt:uiname = "Td";
+	    dpt:valid_range = 180.f, 330.f;
+            dpt:_FillValue = -99999.f;
+	    dpt:_n3D = 0;
+            dpt:levels = "SFC";
+        char
+            dptLevels(levels_1, charsPerLevel);
+        char
+            dptInventory(n_valtimes, levels_1);
+
+
+        //     surface Potential temperature   // 
+        float
+            pot(record,levels_1,y,x);
+            pot:long_name="potential temperature";
+	    pot:units = "K";
+	    pot:udunits = "degree_Kelvin";
+	    pot:uiname = "Tp";
+	    pot:valid_range = 180.f, 330.f;
+            pot:_FillValue = -99999.f;
+	    pot:_n3D = 0;
+            pot:levels = "SFC";
+        char
+            potLevels(levels_1, charsPerLevel);
+        char
+            potInventory(n_valtimes, levels_1);
+
+
+        //      Cloud Ceiling           //
+         float
+            cc(record,levels_1,y,x);
+            cc:long_name="cloud ceiling";
+            cc:units="m";
+	    cc:udunits = "meters";
+	    cc:uiname = "CldCeil";
+            cc:valid_range= 0.f, 20000.f;
+            cc:_FillValue = -99999.f;
+	    cc:_n3D = 0;
+            cc:levels = "SFC  MSL";
+        char
+            ccLevels(levels_1, charsPerLevel);
+        char
+            ccInventory(n_valtimes, levels_1);
+
+
+        //      Temperature Advection   // 
+        float
+            tadv(record,levels_1,y,x);
+            tadv:long_name="temperature advection";
+            tadv:units="K/s";
+	    tadv:udunits = "Kelvin/second";
+	    tadv:uiname = "Tadv";
+            tadv:valid_range= -.02f, .02f;
+            tadv:_FillValue = -99999.f;
+	    tadv:_n3D = 0;
+            tadv:levels = "SFC";
+        char
+            tadvLevels(levels_1, charsPerLevel);
+        char
+            tadvInventory(n_valtimes, levels_1);
+
+
+        //      equivalent potential temperature  // 
+        float
+            ept(record,levels_1,y,x);
+            ept:long_name="equivalent potential temperature";
+            ept:units="K";
+	    ept:udunits = "degree_Kelvin";
+	    ept:uiname = "EqPot";
+            ept:valid_range= 180.f, 330.f;
+            ept:_FillValue = -99999.f;
+	    ept:_n3D = 0;
+            ept:levels = "SFC";
+        char
+            eptLevels(levels_1, charsPerLevel);
+        char
+            eptInventory(n_valtimes, levels_1);
+
+
+        //      integrated liquid water 
+        float
+            ilw(record,levels_1,y,x);
+            ilw:long_name="integrated liquid water";
+            ilw:units="grams/meter**3";
+	    ilw:udunits = "kilogram/meters3";
+	    ilw:uiname = "IntLiqH20";
+            ilw:valid_range= 0.f, 2000.f;
+            ilw:_FillValue = -99999.f;
+	    ilw:_n3D = 0;
+            ilw:levels = "SFC";
+        char
+            ilwLevels(levels_1, charsPerLevel);
+        char
+            ilwInventory(n_valtimes, levels_1);
+
+
+        //      moisture convergence            // 
+        float
+            mcon(record,levels_1,y,x);
+            mcon:long_name="moisture convergence";
+            mcon:units="grams/meters**3";
+	    mcon:udunits = "kilogram/meters3";
+	    mcon:uiname = "moistConv";
+            mcon:valid_range= -.01f, .01f;
+            mcon:_FillValue = -99999.f;
+	    mcon:_n3D = 0;
+            mcon:levels = "SFC";
+        char
+            mconLevels(levels_1, charsPerLevel);
+        char
+            mconInventory(n_valtimes, levels_1);
+
+
+        //      potential temperature advection         // 
+        float
+            pta(record,levels_1,y,x);
+            pta:long_name="potential temperature advection";
+            pta:units="K/s";
+	    pta:udunits = "Kelvin/second";
+	    pta:uiname = "PotTadv";
+            pta:valid_range= -.02f, .02f;
+            pta:_FillValue = -99999.f;
+	    pta:_n3D = 0;
+            pta:levels = "SFC";
+        char
+            ptaLevels(levels_1, charsPerLevel);
+        char
+            ptaInventory(n_valtimes, levels_1);
+
+
+        //      lifted index            // 
+        float
+            sli(record,levels_1,y,x);
+            sli:long_name="lifted index";
+	    sli:units = "K";
+	    sli:udunits = "degree_Kelvin";
+	    sli:uiname = "LftInd";
+	    sli:valid_range = -20.f, 20.f;
+            sli:_FillValue = -99999.f;
+	    sli:_n3D = 0;
+            sli:levels = "SFC";
+        char
+            sliLevels(levels_1, charsPerLevel);
+        char
+            sliInventory(n_valtimes, levels_1);
+
+	
+        //      K index      //
+        float
+            ki(record,levels_1,y,x);
+            ki:long_name="K index";
+	    ki:units = "K";
+	    ki:udunits = "degree_Kelvin";
+	    ki:uiname = "KInd";
+	    ki:valid_range = -20.f, 20.f;
+            ki:_FillValue = -99999.f;
+	    ki:_n3D = 1;
+            ki:levels = "EA";
+        char
+            kiLevels(levels_1, charsPerLevel);
+        char
+            kiInventory(n_valtimes, levels_1);
+
+	
+        //      Total totals index      //
+        float
+            ttot(record,levels_1,y,x);
+            ttot:long_name="Total totals index";
+	    ttot:units = "K";
+	    ttot:udunits = "degree_Kelvin";
+	    ttot:uiname = "TotInd";
+	    ttot:valid_range = -20.f, 20.f;
+            ttot:_FillValue = -99999.f;
+	    ttot:_n3D = 1;
+            ttot:levels = "EA";
+        char
+            ttotLevels(levels_1, charsPerLevel);
+        char
+            ttotInventory(n_valtimes, levels_1);
+
+	
+        //      Showalter index      //
+        float
+            shwlt(record,levels_1,y,x);
+            shwlt:long_name="Showalter  index";
+	    shwlt:units = "K";
+	    shwlt:udunits = "degree_Kelvin";
+	    shwlt:uiname = "TotInd";
+	    shwlt:valid_range = -20.f, 20.f;
+            shwlt:_FillValue = -99999.f;
+	    shwlt:_n3D = 1;
+            shwlt:levels = "850MB";
+        char
+            shwltLevels(levels_1, charsPerLevel);
+        char
+            shwltInventory(n_valtimes, levels_1);
+
+	
+	//	Heat Index	  
+        float 
+            hidx(record, levels_1,y, x);
+            hidx:long_name = "Heat index" ;
+	    hidx:units = "K";
+	    hidx:udunits = "degree_Kelvin";
+	    hidx:uiname = "HeatInd";
+	    hidx:valid_range = 270.f, 330.f;
+            hidx:_FillValue = -99999.f;
+	    hidx:_n3D = 0;
+            hidx:levels = "SFC";
+        char
+            hidxLevels(levels_1, charsPerLevel);
+        char
+            hidxInventory(n_valtimes, levels_1);
+
+
+        //      colorado severe storm index     //
+        float
+            cssi(record,levels_1,y,x);
+            cssi:long_name="colorado severe storm index";
+            cssi:units="none";
+	    cssi:udunits = "";
+	    cssi:uiname = "SevStInd";
+            cssi:valid_range= -20000.f, 20000.f;
+            cssi:_FillValue = -99999.f;
+ 	    cssi:_n3D = 0;
+            cssi:levels = "SFC";
+        char
+            cssiLevels(levels_1, charsPerLevel);
+        char
+            cssiInventory(n_valtimes, levels_1);
+
+ 
+        //      positive buoyant energy         //
+        float
+            pbe(record,levels_1,y,x);
+            pbe:long_name="positive buoyant energy";
+            pbe:units="J/kg";
+	    pbe:udunits = "joule/Kilogram";
+	    pbe:uiname = "PosBuoyE";
+            pbe:valid_range= 0.f, 6000.f;
+            pbe:_FillValue = -99999.f;
+ 	    pbe:_n3D = 0;
+            pbe:levels = "SFC";
+        char
+            pbeLevels(levels_1, charsPerLevel);
+        char
+            pbeInventory(n_valtimes, levels_1);
+
+
+        //      negative buoyant energy         // 
+         float
+            nbe(record,levels_1,y,x);
+            nbe:long_name="negative buoyant energy";
+            nbe:units="J/kg";
+	    nbe:udunits = "joule/Kilogram";
+	    nbe:uiname = "NegBuoyE";
+            nbe:valid_range= 0.f, 6000.f;
+            nbe:_FillValue = -99999.f;
+ 	    nbe:_n3D = 0;
+            nbe:levels = "SFC";
+        char
+            nbeLevels(levels_1, charsPerLevel);
+        char
+            nbeInventory(n_valtimes, levels_1);
+
+
+         //      visability              //
+         float
+            vis(record,levels_1,y,x);
+            vis:long_name="visibility";
+	    vis:units = "m";
+	    vis:udunits = "meters";
+	    vis:uiname = "Vis";
+            vis:_FillValue = -99999.f;
+            vis:valid_range= 0.f, 100000.f;
+ 	    vis:_n3D = 0;
+            vis:levels = "SFC";
+        char
+            visLevels(levels_1, charsPerLevel);
+        char
+            visInventory(n_valtimes, levels_1);
+
+
+        //      LAPS cloud cover 
+        float
+            ccov(record,levels_1,y,x);
+            ccov:long_name="LAPS cloud cover";
+            ccov:units="%";
+	    ccov:udunits = "percent";
+	    ccov:uiname = "LapsCldCvr";
+            ccov:valid_range= 0.f, 100.f;
+            ccov:_FillValue = -99999.f;
+ 	    ccov:_n3D = 0;
+            ccov:levels = "SFC";
+        char
+            ccovLevels(levels_1, charsPerLevel);
+        char
+            ccovInventory(n_valtimes, levels_1);
+
+        
+        //      cloud base 
+        float
+            cb(record,levels_1,y,x);
+            cb:long_name="LAPS cloud base";
+            cb:units="m";
+	    cb:udunits = "meters";
+	    cb:uiname = "LapsCldBase";
+            cb:valid_range= 0.f, 10000.f;
+            cb:_FillValue = -99999.f;
+ 	    cb:_n3D = 0;
+            cb:levels = "SFC";
+        char
+            cbLevels(levels_1, charsPerLevel);
+        char
+            cbInventory(n_valtimes, levels_1);
+
+
+        //      cloud top 
+        float
+            ctop(record,levels_1,y,x);
+            ctop:long_name="LAPS cloud top";
+	    ctop:units="m";
+	    ctop:udunits = "meters";
+	    ctop:uiname = "LapsCldTop";
+            ctop:valid_range= 0.f, 50000.f;
+            ctop:_FillValue = -99999.f;
+ 	    ctop:_n3D = 0;
+            ctop:levels = "SFC";
+        char
+            ctopLevels(levels_1, charsPerLevel);
+        char
+            ctopInventory(n_valtimes, levels_1);
+
+
+        //       Max echo tops 
+        float
+            mret(record,levels_1,y,x);
+            mret:long_name="maximum radar echo tops";
+            mret:units="m";
+	    mret:udunits = "meters";
+	    mret:uiname = "MaxRdrEcho";
+            mret:valid_range= 0.f, 50000.f;
+            mret:_FillValue = -99999.f;
+ 	    mret:_n3D = 0;
+            mret:levels = "SFC";
+        char
+            mretLevels(levels_1, charsPerLevel);
+        char
+            mretInventory(n_valtimes, levels_1);
+
+
+        //      Low Level Reflectivity 
+        float
+            llr(record,levels_1,y,x);
+            llr:long_name="low level reflectivity";
+            llr:units="dBZ";
+	    llr:udunits = "";
+	    llr:uiname = "ReflectLL";
+            llr:valid_range= -20.f, 80.f;
+            llr:_FillValue = -99999.f;
+ 	    llr:_n3D = 0;
+            llr:levels = "SFC";
+        char
+            llrLevels(levels_1, charsPerLevel);
+        char
+            llrInventory(n_valtimes, levels_1);
+        
+        
+        //      helicity 
+        float
+            heli(record,levels_1,y,x);
+            heli:long_name="helicity";
+	    heli:units = "m2/s2";
+	    heli:udunits = "meter2/second2";
+	    heli:uiname = "hel";
+	    heli:valid_range = 0.f, 1000.f;
+            heli:_FillValue = -99999.f;
+ 	    heli:_n3D = 0;
+            heli:levels = "SFC";
+        char
+            heliLevels(levels_1, charsPerLevel);
+        char
+            heliInventory(n_valtimes, levels_1);
+
+        
+        //      integrated total precip water 
+        float
+            tpw(record,levels_1,y,x);
+            tpw:long_name="integrated total precipitable water";
+	    tpw:units = "m";
+	    tpw:udunits = "meters";
+	    tpw:uiname = "TotPrecipH20";
+	    tpw:valid_range = 0.f, .01f;
+            tpw:_FillValue = -99999.f;
+ 	    tpw:_n3D = 0;
+            tpw:levels = "SFC";
+        char
+            tpwLevels(levels_1, charsPerLevel);
+        char
+            tpwInventory(n_valtimes, levels_1);
+
+        
+        //      60 min snow accumulation 
+        float
+            s1hr(record,levels_1,y,x);
+            s1hr:long_name="LAPS 60 minute snow accum.";
+            s1hr:units="m";
+	    s1hr:udunits = "meters";
+	    s1hr:uiname = "LapsSnow60";
+            s1hr:valid_range= 0.f, 1.f;
+            s1hr:_FillValue = -99999.f;
+ 	    s1hr:_n3D = 0;
+            s1hr:levels = "SFC";
+        char
+            s1hrLevels(levels_1, charsPerLevel);
+        char
+            s1hrInventory(n_valtimes, levels_1);
+
+        
+        //      storm total accumulation 
+        float
+            stot(record,levels_1,y,x);
+            stot:long_name="storm total snow accumulation";
+            stot:units="m";
+	    stot:udunits = "meters";
+	    stot:uiname = "StmTotSnow";
+            stot:valid_range= 0.f, 10.f;
+            stot:_FillValue = -99999.f;
+ 	    stot:_n3D = 0;
+            stot:levels = "SFC";
+        char
+            stotLevels(levels_1, charsPerLevel);
+        char
+            stotInventory(n_valtimes, levels_1);
+
+        
+        //      60 minute precip accumulation 
+        float
+            pc(record,levels_1,y,x);
+            pc:long_name="LAPS 60 minute precip. accum.";
+            pc:units="m";
+	    pc:udunits = "meters";
+	    pc:uiname = "LapsPrecip60";
+            pc:valid_range= 0.f, .1f;
+            pc:_FillValue = -99999.f;
+ 	    pc:_n3D = 0;
+            pc:levels = "SFC";
+        char
+            pcLevels(levels_1, charsPerLevel);
+        char
+            pcInventory(n_valtimes, levels_1);
+
+        
+        //      storm total precip accum 
+        float
+            stpa(record,levels_1,y,x);
+            stpa:long_name="storm total precip. accum.";
+            stpa:units="m";
+	    stpa:udunits = "meters";
+	    stpa:uiname = "StmTotPrecip";
+            stpa:valid_range= 0.f, 2.f;
+            stpa:_FillValue = -99999.f;
+ 	    stpa:_n3D = 0;
+            stpa:levels = "SFC";
+        char
+            stpaLevels(levels_1, charsPerLevel);
+        char
+            stpaInventory(n_valtimes, levels_1);
+
+
+        //      LAPS surface precip type 
+        float
+            spt(record,levels_1,y,x);
+            spt:long_name="LAPS precip type";
+            spt:units="none";
+	    spt:udunits = "";
+	    spt:uiname = "LapsPrecipTyp";
+            spt:valid_range= 0.f, 20.f;
+            spt:_FillValue = -99999.f;
+ 	    spt:_n3D = 0;
+            spt:levels = "SFC";
+        char
+            sptLevels(levels_1, charsPerLevel);
+        char
+            sptInventory(n_valtimes, levels_1);
+
+
+        //   LAPS surface precip type - low level radar reflectivity modified 
+        float
+            ptt(record,levels_1,y,x);
+            ptt:long_name="LAPS precip type - LL radar ref modified";
+            ptt:units="none";
+	    ptt:udunits = "";
+	    ptt:uiname = "LapsPrecipTypLL";
+            ptt:valid_range= 0.f, 7.f;
+            ptt:_FillValue = -99999.f;
+ 	    ptt:_n3D = 0;
+            ptt:levels = "SFC";
+        char
+            pttLevels(levels_1, charsPerLevel);
+        char
+            pttInventory(n_valtimes, levels_1);
+
+
+        //  	Fire Index 
+        float
+            fd(record,levels_1,y,x);
+            fd:long_name="Fire Index";
+            fd:units="none";
+	    fd:udunits = "";
+	    fd:uiname = "FInd";
+            fd:valid_range= 0.f, 20.f;
+            fd:_FillValue = -99999.f;
+ 	    fd:_n3D = 0;
+            fd:levels = "SFC";
+        char
+            fdLevels(levels_1, charsPerLevel);
+        char
+            fdInventory(n_valtimes, levels_1);
+
+       
+        //     snow cover 
+        float
+            scp(record,levels_1,y,x);
+            scp:long_name="snow cover percentage";
+            scp:units="%";
+	    scp:udunits = "percent";
+	    scp:uiname = "SnCvrPer";
+            scp:valid_range= 0.f, 100.f;
+            scp:_FillValue = -99999.f;
+ 	    scp:_n3D = 0;
+            scp:levels = "SFC";
+        char
+            scpLevels(levels_1, charsPerLevel);
+        char
+            scpInventory(n_valtimes, levels_1);
+
+
+        //      soil moisture 
+        float
+            smc(record,levels_3,y,x);
+            smc:long_name="soil moisture";
+            smc:units="m/m";
+	    smc:udunits = "";
+	    smc:uiname = "soilM";
+            smc:valid_range= 0.f, 1.f;
+            smc:_FillValue = -99999.f;
+ 	    smc:_n3D = 0;
+            smc:levels = "BLS 1 2 3";
+        char
+            smcLevels(levels_3, charsPerLevel);
+        char
+            smcInventory(n_valtimes, levels_3);
+
+
+	//	forecast times
+        int
+            valtimeMINUSreftime(n_valtimes);
+            valtimeMINUSreftime:units = "seconds";
+	
+       //      valid time of the model
+        double 
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+	//	reference time of the model
+	double	
+	    reftime;
+	    reftime:long_name = "reference time";
+	    reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+	
+	//	nice name for originating center
+	char
+	    origin(namelen);
+
+	
+	//	nice name for model
+	char
+	    model(namelen);
+
+
+	//---------------------------------------------------------------
+	//	navigation information
+	//---------------------------------------------------------------
+ 	
+     float
+         staticTopo(y, x) ;
+             staticTopo:units = "meters";
+             staticTopo:long_name = "Topography";
+             staticTopo:_FillValue = -99999.f;
+     float
+         staticCoriolis(y, x) ;
+             staticCoriolis:units = "/second";
+             staticCoriolis:long_name = "Coriolis parameter";
+             staticCoriolis:_FillValue = -99999.f;
+     float
+         staticSpacing(y, x) ;
+             staticSpacing:units = "meters";
+             staticSpacing:long_name = "Grid spacing";
+             staticSpacing:_FillValue = -99999.f;
+
+// global attributes:
+     :cdlDate = "20020221";
+
+     :depictorName = 
+"---------------------------------------------------------------------------";
+     :projIndex = 0 ;
+     :projName = 
+"------------------------------------------";
+     :centralLat = 0.f ;
+     :centralLon = 0.f ;
+     :rotation = 0.f ;
+     :xMin = 0.f ;
+     :xMax = 0.f ;
+     :yMax = 0.f ;
+     :yMin = 0.f ;
+     :lat00 = 0.f ;
+     :lon00 = 0.f ;
+     :latNxNy = 0.f ;
+     :lonNxNy = 0.f ;
+     :dxKm = 0.f ;
+     :dyKm = 0.f ;
+     :latDxDy = 0.f ;
+     :lonDxDy = 0.f ;
+
+    data:
+	origin 		= "FSL";
+	model 		= "LAPS";
+
+	// Forecast times(hrs) are: 0(Analysis)
+	valtimeMINUSreftime = 0;
+
+        ghLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ",
+                          "TW0       ",
+                          "LCL       ";
+        rhLevels	= "SFC       ",
+			  "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        tLevels		= "SFC       ",
+     			  "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        uwLevels	= "SFC       ",
+			  "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        vwLevels	= "SFC       ",
+			  "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+       pvvLevels	= "SFC       ",
+			  "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        shLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        rrLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        ptypLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        ctypLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        ccpcLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        cwLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        ciceLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+        hycLevels	= "MB 1100   ",
+			  "MB 1050   ",
+			  "MB 1000   ",
+                          "MB 950    ",
+                          "MB 900    ",
+                          "MB 850    ",
+                          "MB 800    ",
+                          "MB 750    ",
+                          "MB 700    ",
+                          "MB 650    ",
+                          "MB 600    ",
+                          "MB 550    ",
+                          "MB 500    ",
+                          "MB 450    ",
+                          "MB 400    ",
+                          "MB 350    ",
+                          "MB 300    ",
+                          "MB 250    ",
+                          "MB 200    ",
+                          "MB 150    ",
+                          "MB 100    ";
+	pLevels		= "SFC       ",
+			  "FH 1500   ";
+	mslpLevels	= "SFC       ";
+	dptLevels	= "SFC       ";
+	potLevels	= "SFC       ";
+	ccLevels	= "SFC       ",
+			  "MSL       ";
+	tadvLevels	= "SFC       ";
+	eptLevels	= "SFC       ";
+	ilwLevels	= "SFC       ";
+	mconLevels	= "SFC       ";
+	ptaLevels	= "SFC       ";
+	sliLevels	= "SFC       ";
+	shwltLevels	= "MB 850    ";
+	kiLevels	= "EA        ";
+	ttotLevels	= "EA        ";
+	hidxLevels	= "SFC       ";
+	cssiLevels	= "SFC       ";
+	pbeLevels	= "SFC       ";
+	nbeLevels	= "SFC       ";
+	visLevels	= "SFC       ";
+	ccovLevels	= "SFC       ";
+	cbLevels	= "SFC       ";
+	ctopLevels	= "SFC       ";
+	mretLevels	= "SFC       ";
+	llrLevels	= "SFC       ";
+	heliLevels	= "SFC       ";
+	tpwLevels	= "SFC       ";
+	s1hrLevels	= "SFC       ";
+	stotLevels	= "SFC       ";
+	pcLevels	= "SFC       ";
+	stpaLevels	= "SFC       ";
+	sptLevels	= "SFC       ";
+	pttLevels	= "SFC       ";
+	fdLevels	= "SFC       ";
+	scpLevels	= "SFC       ";
+	smcLevels	= "BLS  1    ",
+			  "BLS  2    ",
+		 	  "BLS  3    ";
+}
+
+
