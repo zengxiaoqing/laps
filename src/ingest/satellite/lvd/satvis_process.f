@@ -31,7 +31,7 @@ cdis
 cdis 
       subroutine process_vis_satellite(csatid,
      &           c_sat_type,
-     &           i4time,
+     &           i4time,                                           ! I
      &           ni,nj,lat,lon,
      &           n_vis_lines,n_vis_elem,
      &           r_grid_ratio,
@@ -794,7 +794,7 @@ c =============================================
      &                    phase_angle_d,
      &                    specular_ref_angle_d,
      &                    emission_angle_d,
-     &                    rland_frac,
+     &                    rland_frac,solalt_thr_vis,
      &                    albedo,
      &                    albedo_min,
      &                    albedo_max,
