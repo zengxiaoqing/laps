@@ -2078,6 +2078,8 @@ c       include 'satellite_dims_lvd.inc'
           read(lun,*)c_sat_plot
           call filter_string(c_sat_plot)
 
+          write(6,*)' Entered satellite is ',c_sat_plot
+
           isl = 1
           ish = maxsat
 
@@ -2435,7 +2437,7 @@ c
               scale_l = 0.00          ! for image plots
               scale_h = cloud_albedo_a! for image plots
             elseif(var_2d_in.eq.'SVS')then
-              c_label='VIS counts (raw) - '//c_sat_id(k)
+              c_label='VIS Reflectance - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 100.          ! for image plots
             elseif(var_2d_in.eq.'D39')then
@@ -8336,7 +8338,7 @@ c abdel
 
         else ! hsect
 
-            if(len_inst .le. 9)then
+            if(len_inst .le. 9 .and. .false.)then
                 c_ul = namelist_parms%c_institution(1:len_inst)
      1                 //' LAPS '//c5_grid
             else
