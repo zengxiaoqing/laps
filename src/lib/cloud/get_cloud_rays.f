@@ -2528,7 +2528,7 @@
           cloud_od_sp(ialt,jazi,:) = clwc2alpha*cvr_path_sum_sp(:)   
           cloud_od_sp_w(ialt,jazi,:) = clwc2alpha*cvr_path_sum_sp_w(:)   
 
-          if(mode_aero_cld .lt. 3)then
+          if(mode_aero_cld .lt. 3 .or. .true.)then ! prevent dble counting
               r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
           else
               r_cloud_3d(ialt,jazi)
