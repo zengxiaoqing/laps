@@ -274,8 +274,8 @@
               phice = 1.0
 
 !             Check for valid scenario
-              if(alt_a(i,j) .gt. 0.)then
-                phwater = 1. ! default value
+              if(alt_a(i,j) .ge. 0.)then
+                phwater = 1. ! default value (light ray wouldn't be hitting water)
               endif
 
               if(topo_solalt(i,j) .ge. 0.)then ! light source above horizon or land normal
@@ -290,7 +290,12 @@
 
                 call check_nan(ph1,istat_nan)
                 if(istat_nan .ne. 1)then
-                  write(6,*)' ERROR: NaN in pf_land ',i,j,sinarc,phi_b/rpd,phi_d/rpd
+                  call check_nan(phwater,istat_nan)
+                  if(istat_nan .ne. 1)then
+                    write(6,*)' ERROR: NaN of phwater in pf_land ',i,j,alt_a(i,j),tsolalt_eff,arf_bw,specamp,radfracw,arf_dw,fresnel_arf
+                  else
+                    write(6,*)' ERROR: NaN of ph1 in pf_land ',i,j,sinarc,phi_b/rpd,phi_d/rpd
+                  endif
                 endif
 
 !               if((i .eq. 64 .and. j .eq. (j/40)*40) .OR. (ph1 .lt. 0. .and. dist_2_topo(i,j) .gt. 0.) .OR.&
