@@ -462,16 +462,17 @@
           endif ! rain_factor > 0
 
           if(idebug_a(i,j) .eq. 1)then
-!             write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thk_hr,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
               write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thn_clwc,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
 101           format(' alt/elg/cod/thnc/thk/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
+              write(6,1011)elong_a(i,j),phase_corr,aero_factor(2),radfrac_l,pf_thk_lr,pf_thk_hr,pf_thk
+1011          format(' elong / phase_corr / aerof / radf_l / pf_thk_lr / pf_thk_hr / pf_thk ',7f9.4)
               fb = aod_asy(3,2)**scatter_order
               g1 = aod_asy(2,2)**scatter_order
               g2 = aod_asy(1,2)**scatter_order
               write(6,102)bf,cloud_od_liq,clwc_bin2,alb_clwc,frac_norm,clwc_factor_w,cice_factor_w,rain_factor,snow_factor_w,aero_factor(2),scatter_order,fb,g1,g2,hg2(2)
 102           format(' bf/od/clwc_bin2/alb_clwc/fnrm/',f9.3,f9.4,2f12.6,f9.4,' factorw ',4f9.4,' aerof/sct/hg2 ',6f9.2)
               write(6,103)snow_bin1a,snow_bin1c,pf_snow1,pf_snow,radfrac_s,pf_thn_snow,pf_thk_lr,pf_thk_hr,pf_thk_snow
-103           format(' snow: 1a/1c/snow1/snow/radf/thns/lr/hr/thks',9f12.6)
+103           format(' snow: 1a/1c/snow1/snow/radf/thns/lr/hr/thks',9f12.6/)
           endif
 
          enddo ! i (altitude)
