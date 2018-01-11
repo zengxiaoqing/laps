@@ -150,7 +150,7 @@
 
         if(sol_alt .gt. 0. .or. .true.)then
             write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
-            write(6,*)' aod_bin = ',aod_bin
+!           write(6,*)' aod_bin = ',aod_bin
             write(6,*)' aod_asy = ',aod_asy
             write(6,*)' htmsl / aero_refht = ',htmsl,aero_refht
             write(6,*)' aod_vrt = ',aod_vrt
