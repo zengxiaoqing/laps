@@ -336,7 +336,7 @@
             fracerf0 = 0.65  ! value with sun on horizon
           endif
           deepterm = .220
-          write(6,*)' alt_top,altmidcorr: ',alt_top,altmidcorr
+          write(6,*)' alt_top,aod_ha,altmidcorr: ',alt_top,aod_ha,altmidcorr
         endif
         if(solalt_limb_true .gt. altmidcorr)then ! shallow twilight
           fracerf = (solalt_limb_true - altmidcorr) * (-fracerf0/altmidcorr)
@@ -1787,7 +1787,8 @@
               if(i .eq. ni)then
 !             if(alt_a(i,j) .gt. 1.7 .and. alt_a(i,j) .le. 2.1)then
                 call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                          ,128.,0,rtotal,gtotal,btotal)                        
+                          ,128.,1,rtotal,gtotal,btotal)                        
+                write(6,*)'sky_rad / glwmid ',sky_rad,glwmid
                 write(6,105)rtotal,gtotal,btotal,sky_rad(:)
 105             format(' total rgb/skyrad should be',3f9.2,94x,3f16.2)
               endif
