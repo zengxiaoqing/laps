@@ -139,6 +139,7 @@
         real counts_one_refl_nl(nc)
         real counts_one_refl(nc)
         real radmax(nc)
+        real xyz(3) ! color coordinates
 
         integer new_color /2/ ! sky_rad can be more fully used still
 
@@ -329,7 +330,7 @@
           alt_top = alt_a(ni,1)
           if(alt_top .eq. 90.)then ! fisheye lens
             altmidcorr = -2.4 ! -3.60
-            fracerf0 = 0.59  ! value with sun on horizon
+            fracerf0 = 0.54  ! value with sun on horizon (.54 for clear air, .59 for bright clouds)
           else                     ! panoramic camera
 !           altmidcorr = -4.69 - aod_ha * 40.
             altmidcorr = -4.99 - aod_ha * 20.
@@ -362,7 +363,7 @@
         ref_nl = day_int0
         if(new_color .gt. 0)then
           call nl_to_RGB(ref_nl(:),glwmid,contrast & 
-                        ,128.,1,ref_red,ref_grn,ref_blu)
+                        ,128.,1,xyz,ref_red,ref_grn,ref_blu)
         else
           ref_red = 240.; ref_grn = 240.; ref_blu = 240.
         endif
@@ -1150,7 +1151,7 @@
 
 !             Informational only
               call nl_to_RGB(cld_rad(:),glwmid,contrast & 
-                        ,128.,0,rintensity(1),rintensity(2),rintensity(3))
+                   ,128.,0,xyz,rintensity(1),rintensity(2),rintensity(3))
 
 !             if( ( idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .eq. nint(alt_a(i,j)) .AND. & 
 !               (abs(alt_a(i,j)).le.40.0 .or. abs(alt_a(i,j)).eq.90.0 .or. abs(alt_a(i,j)+70.).lt.7.) )  &
@@ -1254,7 +1255,7 @@
 
 !         Note cld_rad only newly defined for sol_alt < twi_alt
           call nl_to_RGB(cld_rad(:),glwmid,contrast & 
-                        ,128.,0,cld_red,cld_grn,cld_blu)
+                        ,128.,0,xyz,cld_red,cld_grn,cld_blu)
 
 !         Initialize
           glow_nt = 0.    
@@ -1311,7 +1312,7 @@
                 endif
 
                 call nl_to_RGB(clear_rad_c(:,i,j),glwmid,contrast & 
-                              ,128.,0,clr_red,clr_grn,clr_blu)
+                              ,128.,0,xyz,clr_red,clr_grn,clr_blu)
               endif ! .true.
 
               if(idebug .eq. 1 .AND. (elong_a(i,j) .lt. 0. .or. &
@@ -1580,7 +1581,7 @@
           enddo ! ic
 
           call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                        ,128.,0,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+                 ,128.,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 !         sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
 
 !         Use topo value if airmass to topo > 0
@@ -1645,7 +1646,7 @@
                   sky_rad(3) = sky_rad(3) + blu_rad
  
                   call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                          ,128.,0,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+                    ,128.,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 
               else ! sol_alt < twi_alt
 !                 Nighttime assume topo is lit by city lights (nL)
@@ -1696,7 +1697,7 @@
                   sky_rad(3) = sky_rad(3)*(1.0-topo_viseff) + blu_rad
  
                   call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                          ,128.,0,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+                    ,128.,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 
               endif ! sol_alt
 
@@ -1731,8 +1732,8 @@
                 
 !             Add moon/stars to existing sky radiance (blue extinction?)
               if(sol_alt .gt. 0. .and. (l_solar_eclipse .eqv. .false.))then
-                rad_moon = 10.**glow_moon(i,j)  &
-                          * trans(cloud_od_loc(i,j) + aod_slant(i,j)) 
+!               rad_moon = 10.**glow_moon(i,j)  &
+!                         * trans(cloud_od_loc(i,j) + aod_slant(i,j)) 
                 rad_moon_r = 10.**glow_moon(i,j)  &
                            * trans(cloud_od_loc(i,j) + clr_od(1)) 
                 rad_moon_g = 10.**glow_moon(i,j)  &
@@ -1774,7 +1775,7 @@
               endif
 
               call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                        ,128.,0,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+                 ,128.,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 
 !             if(idebug .eq. 1)then
 !               write(6,100)sky_rad,sky_rgb(:,I,J)
@@ -1787,7 +1788,7 @@
               if(i .eq. ni)then
 !             if(alt_a(i,j) .gt. 1.7 .and. alt_a(i,j) .le. 2.1)then
                 call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                          ,128.,1,rtotal,gtotal,btotal)                        
+                   ,128.,1,xyz,rtotal,gtotal,btotal)
                 write(6,*)'sky_rad / glwmid ',sky_rad,glwmid
                 write(6,105)rtotal,gtotal,btotal,sky_rad(:)
 105             format(' total rgb/skyrad should be',3f9.2,94x,3f16.2)
@@ -1813,6 +1814,8 @@
 1111              format(' spectral radiance at zenith (w/m2/sr/nm) ',3e13.4,' for lambda (microns)',3f6.3)
                   write(6,1112)rmaglim
 1112              format(' limiting (cloudless) magnitude is ',f9.2)
+                  write(6,1113)xyz
+1113              format(' xyz is ',3f9.4)
               endif
               if(abs(elong_a(i,j) - 90.) .le. 0.5)then
                   write(6,*)' ******** 90 elong location ********************** od'
@@ -1823,7 +1826,7 @@
                   write(6,*)' ******** solar location ************************* od'
                   write(6,112)glow_sun(i,j),10.**glow_sun(i,j),alt_a(i,j) &
                              ,rad_sun_r,rad_sun_g,rad_sun_b &
-                             ,trans(cloud_od(i,j) + aod_slant(i,j)),rad_sun_g/sky_rad(2) 
+                             ,trans(cloud_od_loc(i,j) + clr_od(2)),rad_sun_g/sky_rad(2) 
 112               format('glow_sun/alt/rad_sun/trans/fracsun',f9.4,e16.6,f9.4,3e16.6,f11.8,2f9.4)
                   write(6,*)'od_g_slant = ',od_g_slant_a(:,i)
                   write(6,*)'od_o_slant = ',od_o_slant_a(:,i)
@@ -1899,7 +1902,7 @@
 
         counts_one_refl_nl(:) = 6e9
         call nl_to_RGB(counts_one_refl_nl(:),glwmid,contrast & 
-                      ,128.,1,counts_one_refl(1),counts_one_refl(2),counts_one_refl(3))
+           ,128.,1,xyz,counts_one_refl(1),counts_one_refl(2),counts_one_refl(3))
         write(6,*)' counts for 1.0 reflectance is',counts_one_refl(:)
 
         do ic = 1,nc
