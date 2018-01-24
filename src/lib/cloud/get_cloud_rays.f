@@ -100,6 +100,7 @@
         real transm_3d(ni,nj,nk)     ! O
         real transm_4d(ni,nj,nk,nc)  ! O
         real transm_4d_m(nc)
+        real transm_2t(ni,nj)        ! terrain 2D transmission
         real uprad_4d_m(nc)
         real sum_aod_rad_opac(nc)
         real slant2_odc(nc)
@@ -140,6 +141,8 @@
         real ghi_2d(ni,nj)          ! derived from cloud rad 
         real dhi_2d(ni,nj)          ! diffuse horizontal irradiance
         real dhic_clr(nc)
+        real dhic_term_sun(nc)
+        real dhic_term_shade(nc)
         real dhi_2d_cld(nc)
         real bni_clr(nc)
         real bhi_clr(nc)
@@ -283,7 +286,7 @@
         topo_rj = 0.
         trace_ri = 0.
         trace_rj = 0.
-
+        transm_2t = r_missing_data
         idebug_a = 0
 
         icloud_tot = 0                          
@@ -482,7 +485,7 @@
      1            topo_a,                            ! I
      1            ni,nj,nk,i,j,                      ! I
      1            heights_3d,                        ! I 
-     1            transm_3d,transm_4d)               ! O
+     1            transm_2t,transm_3d,transm_4d)     ! O
               else ! consider experimental version for global domain
                 do ii = 1,ni
                 do jj = 1,nj
@@ -555,19 +558,29 @@
             ecld = max(ecl,.0015)
 
             do kk = 1,nk
+              kkp1 = min(kk+1,nk)
+
 !             Consider first point above terrain instead so we can capture
 !             terrain shadowing?
-              if(transm_3d(ii,jj,kk) .gt. 0. .and. 
-     1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
+!             if(transm_3d(ii,jj,kk) .gt. 0. .and. 
+!    1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
+              if(heights_3d(ii,jj,kk) .gt. topo_a(i,j))then
 
-                if(sol_alt(i,j) .ge. twi_alt)then
-                    absorption(:) = 1. - transm_4d(ii,jj,kk,:)
-     1                                 / transm_3d(ii,jj,kk)
+                if(sol_alt(i,j) .ge. twi_alt .and.
+     1             transm_3d(ii,jj,kkp1) .gt. 0. .and.
+     1             transm_3d(ii,jj,kkp1) .ne. r_missing_data)then
+                    absorption(:) = 1. - transm_4d(ii,jj,kkp1,:)
+     1                                 / transm_3d(ii,jj,kkp1)
                 else ! absorbing aerosols at night not yet working
                     absorption(:) = 0.
                 endif
 
-                transm_tn = transm_3d(ii,jj,kk)
+                if(transm_2t(ii,jj) .ne. r_missing_data)then
+                  transm_tn = transm_2t(ii,jj)
+                else
+                  transm_tn = transm_3d(ii,jj,kk)
+                endif
+
                 cloud_albedo = 1. - transm_tn
 
 !               Here we might need only the aerosol absorption and not the
@@ -602,6 +615,7 @@
                 ghi_2d(ii,jj) = transm_tn_pr * ghi_clr    
 
 !               Direct / Diffuse
+!               This takes into account clouds though might also consider terrain
                 frac_dir1 = max(transm_tn**4.,.0039) ! 5 deg circ of sctrd
                 frac_dir = transm_tn + (1.-transm_tn) * frac_dir1
 
@@ -641,28 +655,36 @@
                 colexp = 0.5 ! color based on clearness of sky
                 dhic_clr(:) = dhi_grn_clr_frac * (ext_g(:)/.09)**colexp
 !               dhic_2d(:,ii,jj) = dhi_2d(ii,jj) / ghi_zen_toa
-                dhic_2d(:,ii,jj) 
+                dhic_term_sun
      1             = obj_bri * ecld * dhic_clr(:) * frac_dir   ! clr
      1             + bhi_clr(:) * transm_tn_pr * (1.-frac_dir) ! cld
+                dhic_term_shade = obj_bri * ecld * dhic_clr(:)
+                dhic_2d(:,ii,jj) =    transm_tn  * dhic_term_sun
+     1                           +(1.-transm_tn) * dhic_term_shade
 
-                ghic_clr = ghi_clr / ghi_zen_toa
+!               ghic_clr = ghi_clr / ghi_zen_toa
                 ghic_2d(:,ii,jj) = bhic_2d(:,ii,jj) + dhic_2d(:,ii,jj) 
 
                 if(idb_solar .eq. 1)then
-                   write(6,*)' bhi_clr  observer =',bhi_clr  
-                   write(6,*)' ghi_clr  observer =',ghi_clr  
-                   write(6,*)' ghic_clr observer =',ghic_clr  
-                   write(6,*)' dhic_clr observer =',dhic_clr  
-                   write(6,*)' frac_dir observer =',frac_dir
-                   write(6,*)' transm   observer =',transm_tn
-                   write(6,*)' trnalb   observer ='
+                   write(6,*)' 1st point above terrain under observer'
+                   write(6,*)' bhi_clr   observer =',bhi_clr  
+                   write(6,*)' ghi_clr   observer =',ghi_clr  
+!                  write(6,*)' ghic_clr  observer =',ghic_clr  
+                   write(6,*)' dhic_clr  observer =',dhic_clr  
+                   write(6,*)' frac_dir  observer =',frac_dir
+                   write(6,*)' transm_tn observer =',transm_tn
+                   write(6,*)' trnalb    observer ='
      1                                   ,topo_albedo_2d(2,i,j)
-                   write(6,*)' cldalb   observer =',cloud_albedo
-                   write(6,*)' transm_p observer =',transm_tn_pr1
-                   write(6,*)' ecl      observer =',ecl
-                   write(6,*)' bhic_2d  observer =',bhic_2d(:,ii,jj)
-                   write(6,*)' dhic_2d  observer =',dhic_2d(:,ii,jj)
-                   write(6,*)' ghic_2d  observer =',ghic_2d(:,ii,jj)
+                   write(6,*)' cldalb    observer =',cloud_albedo
+                   write(6,*)' transm_p  observer =',transm_tn_pr1
+                   write(6,*)' ecl       observer =',ecl
+                   write(6,*)' bhic_2d   observer =',bhic_2d(:,ii,jj)
+     1                      ,' W/m^2 ~=',bhic_2d(2,ii,jj)*ghi_zen_toa
+                   write(6,*)' dhic_2d   observer =',dhic_2d(:,ii,jj)
+     1                      ,' W/m^2 ~=',dhic_2d(2,ii,jj)*ghi_zen_toa
+                   write(6,*)' ghic_2d   observer =',ghic_2d(:,ii,jj)
+     1                      ,' W/m^2 ~=',ghic_2d(2,ii,jj)*ghi_zen_toa
+
                 endif
 
                 frac_dir_a(ii,jj) = frac_dir
@@ -731,7 +753,7 @@
 
           endif
 
-          if(ghi_2d(ii,jj) .lt. 1e-10)then
+          if(ghi_2d(ii,jj) .lt. 1e-10 .AND. idb_solar .eq. 1)then
             write(6,*)' WARNING, small ghi_2d ',ii,jj,ghi_2d(ii,jj)
      1                                         ,sol_alt(ii,jj)
 !           stop
@@ -1096,7 +1118,7 @@
 
          call get_htmin(altray,patm,htstart,earth_radius,0,patm2,htmin)
 
-         if(idebug .eq. 1 .or. altray .eq. nint(altray))then
+         if(altray .eq. nint(altray))then
            write(6,*)'altray/htmin/dist_to_topo = '
      1               ,altray,htmin,dist_to_topo
            write(6,*)'alt/jazi_delt/grdasp',ialt,altray,jazi_delt,grdasp
@@ -1164,6 +1186,12 @@
 
 !         Horizon
           if(jazi .eq. minazi .and. altray .eq. 0.)then
+              idebug = 1
+              idebug_a(ialt,jazi) = 1
+          endif
+
+!         Custom
+          if(ialt .eq. -108 .and. jazi .eq. 340)then
               idebug = 1
               idebug_a(ialt,jazi) = 1
           endif
@@ -1297,8 +1325,9 @@
               dz1_h = 0.
               dslant1_h = 0.
               airmass1_h = 0.
-              ihit_topo = 0
-              ihit_bounds = 0
+              ihit_topo = 0       ! hit topo
+              ihit_bounds = 0     ! crossed beyond top of domain
+              ioutside_domain = 0 ! outside horizontal domain
               rk_h = rkstart
               rinew_h = i ! for l_spherical = T
               rjnew_h = j ! for l_spherical = T
@@ -1318,6 +1347,7 @@
               do while((rk .le. float(nk)-rkdelt .or. iabove .eq. 1)
      1           .AND. ihit_topo .eq. 0
      1           .AND. ihit_bounds .eq. 0
+     1           .AND. ioutside_domain .eq. 0
      1           .AND. htmin .lt. 100000.     ! will hit atmosphere
      1           .AND. cvr_path_sum .le. cvr_path_thr) ! Tau < ~75
 
@@ -1359,13 +1389,25 @@
                   kk_l = int(rk_l)
                   frac_l = rk_l - float(kk_l)
 
-                  if(kk_l .ge. nk .or. kk_l .le. 0)then
-                    write(6,*)' ERROR: rk/kk_l',rk,kk_l
-                  endif
+!                 if(kk_l .ge. nk .or. kk_l .le. 0)then
+!                   write(6,*)' ERROR: rk/kk_l',rk,kk_l
+!                 endif
 
                   rk_h = rk
                   kk_h = int(rk_h)
                   frac_h = rk_h - float(kk_h)
+
+                  if(rk_h .gt. float(nk) .or. rk_h .lt. 1.)then
+                    write(6,*)' ERROR: rk_h/kk_h',rk_h,kk_h,ialt,jazi
+                    write(6,*)' ERROR: kk_h is out of bounds '
+     1                       ,ls,iabove
+     1                       ,rkstart,rk_h,nk,rkdelt,ht_h,ht_m,topo_m
+     1                       ,ihit_topo,ihit_bounds,rinew_l,rjnew_l
+     1                       ,rjnew_h,jnew_m
+     1                       ,dy1_l,dy1_h,rj,ycosg
+                    istatus = 0
+                    return
+                  endif
 
                   if(.not. l_terrain_following)then
                     ht_l = heights_1d(kk_l) * (1. - frac_l) 
@@ -1389,7 +1431,7 @@
                       write(6,*)' ERROR: rk_h is out of bounds '
      1                       ,ls,iabove
      1                       ,rkstart,rk_h,nk,rkdelt,ht_h,ht_m,topo_m
-     1                       ,ihit_topo,rjnew_l,rjnew_h,jnew_m
+     1                       ,ihit_topo,rinew_l,rjnew_l,rjnew_h,jnew_m
      1                       ,dy1_l,dy1_h,rj,ycosg
                       istatus = 0
                       return
@@ -1611,7 +1653,7 @@
 
                 cslant = ' '
 
-                ioutside_domain = 0
+!               ioutside_domain = 0
 
                 if(rk_m    .lt. float(nk) .AND.
      1             rk_m    .gt. 1.0            )then ! in vertical domain
@@ -2276,10 +2318,11 @@
      1                    / ghi_2d(inew_mb,jnew_m)
                         else
                           write(6,*)' WARNING: ghi_2d = 0.'
-     1                             ,inew_mb,jnew_m
-     1                             ,sol_alt(inew_mb,jnew_m)
-     1                             ,lat(inew_mb,jnew_m)
-     1                             ,lon(inew_mb,jnew_m)
+     1                         ,inew_mb,jnew_m
+     1                         ,sol_alt(inew_mb,jnew_m)
+     1                         ,lat(inew_mb,jnew_m)
+     1                         ,lon(inew_mb,jnew_m)
+     1                         ,transm_2t(inew_mb,jnew_m)
                           frac_ghi_dir = 1.0
                         endif
 
@@ -2345,6 +2388,9 @@
                           endif
 
                           if(idebug .eq. 1 .and. ic .eq. 2)then
+                             if(altray .eq. -90.)then
+                                write(6,*)' nadir gtic check (observer)'
+                             endif
                              write(6,86)gtic(ic,ialt,jazi)
      1                         ,i1,j1,bnic_2d(ic,i1,j1),bni_clr(ic)
      1                         ,ghic_2d(ic,i1,j1)
@@ -2464,7 +2510,7 @@
                  endif ! in horizontal domain
 
                 else  ! outside vertical domain
-                 ioutside_domain = 1
+!                ioutside_domain = 1
                  if(.not.(iabove .eq. 1 .and. rk_m .gt. float(nk) 
      1                                  .and. rk_h .lt. rk_m)    )then
                      ihit_bounds = 1
@@ -2514,11 +2560,12 @@
 113             format('   ls/rk/ht/slalt = ',i4,f8.3,f12.1,' eor trij'
      1                                       ,3f8.2) 
                 write(6,114)ls,rk,rk_h,rk_m,ht_h,ihit_topo,ihit_bounds
+     1                     ,ioutside_domain
      1                     ,iabove,gc_deg,dslant1_h,dz1_h,tlat,tlon
      1                     ,cvr_path_sum,idebug
 114             format(' end of ray ',
-     1      'ls/rk3/ht/ihit-tb/iab/gc/sl1h/dz1h/latlon/cvr/idebug'
-     1              ,i6,3f10.3,f10.1,3i3,f9.3,f13.1,f13.0,2f9.2,f7.2,i3)
+     1      'ls/rk3/ht/ihit-tbo/iab/gc/sl1h/dz1h/latlon/cvr/idebug'
+     1              ,i6,3f10.3,f10.1,4i3,f9.3,f13.1,f13.0,2f9.2,f7.2,i3)
               endif        
 
           endif ! true
