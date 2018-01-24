@@ -464,8 +464,8 @@
           if(idebug_a(i,j) .eq. 1)then
               write(6,101)i,j,alt_a(i,j),elong_a(i,j),cloud_od_tot,pf_thn_clwc,pf_thk,pf_clwc(2),pf_rain(2),r_cloud_rad(i,j),cloud_rad_w(i,j),radfrac,pf_scat1(2,i,j),pf_scat2(2,i,j),pf_scat(2,i,j),trans_nonsnow,snow_factor,rain_factor,pf_scat(2,i,j)
 101           format(' alt/elg/cod/thnc/thk/clwc/rain/rad/radw/radf/pf1/pf2/pfs/trans/sn/rn fctrs = ',i4,i5,f6.1,f8.2,5f9.3,2x,3f8.4,2x,6f8.3,f9.3)
-              write(6,1011)elong_a(i,j),phase_corr,aero_factor(2),radfrac_l,pf_thk_lr,pf_thk_hr,pf_thk
-1011          format(' elong / phase_corr / aerof / radf_l / pf_thk_lr / pf_thk_hr / pf_thk ',7f9.4)
+              write(6,1011)elong_a(i,j),phase_corr,aero_od_obs(2,i,j),aero_factor(2),radfrac_l,pf_thk_lr,pf_thk_hr,pf_thk
+1011          format(' elong / phase_corr / aod / aerof / radf_l / pf_thk_lr / pf_thk_hr / pf_thk ',8f9.4)
               fb = aod_asy(3,2)**scatter_order
               g1 = aod_asy(2,2)**scatter_order
               g2 = aod_asy(1,2)**scatter_order
