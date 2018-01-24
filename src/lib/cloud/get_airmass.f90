@@ -14,7 +14,7 @@
 !       Refraction (apparent altitude - true altitude)     (refr_deg)
 
         include 'trigd.inc'
-        include 'rad.inc'
+        include 'rad_nodata.inc'
 
 !       Traditional aerosol empirical forumla (valid at H = 1900m)
 !       Try using new relationship that includes scale height
