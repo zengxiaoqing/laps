@@ -1,11 +1,12 @@
 
-        subroutine nl_to_RGB(rad,glwref,contrast,cntref,iverbose,rc,gc,bc)
+        subroutine nl_to_RGB(rad,glwref,contrast,cntref,iverbose,xyz,rc,gc,bc)
 
         include 'wa.inc'
         include 'wac.inc'
 
         real luminance ! candela / m**2
         real luma_of_counts
+        real xyz(3)
         integer init /0/
         save init,fasun
 
@@ -76,6 +77,7 @@
         call get_tricolor(farad,iverbose,xx,yy,zz,x,y,z,luminance)
         if(iverbose .eq. 1)write(6,*)'xyzfarad = ',x,y,z
         if(iverbose .eq. 1)write(6,*)'luminance farad = ',luminance
+        xyz(1) = x; xyz(2) = y; xyz(3) = z
 
 !       Convert xyz to (linear) rgb
         ct = 5780.
