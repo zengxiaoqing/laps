@@ -6,7 +6,7 @@
                 topo_a,                          & ! I
                 ni,nj,nk,idb,jdb,                & ! I
                 heights_3d,                      & ! I 
-                transm_3d,transm_4d)               ! O
+                transm_2t,transm_3d,transm_4d)     ! O
 
      include 'trigd.inc'
 
@@ -39,8 +39,10 @@
      real snow_3d(ni,nj,nk)  ! kg/m**3
      real b_alpha_3d(ni,nj,nk) ! m**-1          
      real transm_3d(ni,nj,nk) ! direct transmission plus forward scattered
-     real transm_3t(ni,nj,nk) ! terrain transmission
+     real transm_3t(ni,nj,nk) ! terrain 3D transmission
+     real transm_2t(ni,nj)    ! terrain 2D transmission
      real transm_4d(ni,nj,nk,nc) ! color information added
+     integer kterr(ni,nj)
 
      real obj_alt(ni,nj),obj_azi(ni,nj)
      real topo_a(ni,nj),terr_max_path_a(ni,nj)
@@ -98,106 +100,19 @@
      angstrom_exp_a = 2.4 - (fcterm * 15.)
 
      twi_alt = -4.5
-     transm_3d = r_missing_data
-     transm_3t = 1.0
 
-     terr_max = maxval(topo_a)
-     terr_min = minval(topo_a)
-     terr_max_path_a = 100000. ! initialize
-
-!    Initial terrain effects
-     nsteps = 0
-     nloop_tot = 0
+!    Initialize transm_3d
+     write(6,*)' initialize transm_3d and kterr'
      do k = 1,nk
-       I4_elapsed = ishow_timer()
-       nloop = 0
-       
-       do i = 1,ni
-       do j = 1,nj
-         htstart = heights_3d(i,j,k)
-         objalt = obj_alt(i,j)
-         objazi = obj_azi(i,j)
-
-         if(topo_a(i,j) .gt. heights_3d(i,j,k))then             ! below terrain
-           transm_3d(i,j,k) = 0.
-           transm_3t(i,j,k) = 0.
-         elseif(k .ge. 2 .AND. transm_3t(i,j,k-1) .eq. 1.0)then ! underneath level already illuminated
-           continue 
-!        elseif(htstart .gt. terr_max_path(i,j) .and. objalt .gt. 0.)then
-!          continue	   
-         else                                                   ! above terrain and underneath level is dark
-           dids = sind(objazi)*cosd(objalt)/grid_spacing_m
-           djds = cosd(objazi)*cosd(objalt)/grid_spacing_m
-           dhtds =  sind(objalt)                                 
-           dxyds =  cosd(objalt)
-           tan_suntop = tand(objalt+0.25)
-           tan_sunbot = tand(objalt-0.25)
-	   terr_tanalt_max = -1e10
-           nloop = nloop + 1
-           terr_max_path = topo_a(i,j)
-           do is = 1,10000
-              nsteps = nsteps + 1
-              s = float(is) * grid_spacing_m
-              dxy = dxyds * s
-              rinew = float(i) + dids * s
-              rjnew = float(j) + djds * s
-              inew = int(rinew)
-              jnew = int(rjnew)
-              if(inew .lt. 1 .or. inew .ge. ni .or. jnew .lt. 1 .or. jnew .ge. nj)then ! outside domain
-                 goto 101
-	      endif
-
-              curvat_ht = dxy**2 / (2.0*earth_radius)
-              htnew = htstart + dhtds * s + curvat_ht
-
-              terrht = topo_a(int(rinew),int(rjnew)) ! replace with bilinear interp
-!             terr_max_path = max(terr_max_path,terrht)
-              terr_tanalt     = ((terrht   - curvat_ht) - htstart) / dxy
-              terr_tanalt_pot = ((terr_max - curvat_ht) - htstart) / dxy
-              terr_tanalt_max = max(terr_tanalt_max,terr_tanalt)
-
-              if(i .eq. idb .and. j .eq. jdb)then
-                 write(6,103)is,s,inew,jnew,htstart,htnew,terrht    &
-		            ,terr_tanalt,terr_tanalt_max,tan_suntop &
-		            ,terr_tanalt_pot,tan_sunbot
-103              format(i6,f8.0,2i5,3x,3f9.2,3x,3f9.4,3x,2f9.4)
-              endif
-
-              if(htnew .gt. terr_max .and. objalt .gt. 0.)then ! ray now above max terrain with source above horizon
-                 goto 101
-              endif
-
-              if(htnew .lt. terr_min .and. objalt .lt. 0.)then ! ray now below min terrain with source below horizon
-                 goto 101
-              endif
-
-              if(terr_tanalt_max .gt. tan_suntop)then          ! terrain has now completely covered light source
-                 goto 101
-              endif
-
-              if(terr_tanalt_pot .lt. tan_sunbot)then          ! highest potential terrain beyond location doesn't cover light source
-                 goto 101
-              endif
-           enddo ! is
-
-101        continue
-
-           if(terr_tanalt_max .gt. tan_suntop)then
-              transm_3t(i,j,k) = 0.          
-           endif
-
-           if(i .eq. idb .and. j .eq. jdb)then
-              write(6,102)k,is,inew,jnew,transm_3t(i,j,k),terr_tanalt_max,tan_suntop ! ,terr_max_path_a(i,j)
-102           format(' Initial terrain effects for k =',i4,3i6,f9.3,3f9.3)
-           endif
-         endif ! non-trivial point
-       enddo ! j
-       enddo ! i
-       nloop_tot = nloop_tot + nloop
-       write(6,*)' nloop/ht for level ',k,nloop,heights_3d(idb,jdb,k)
+         transm_3d(:,:,k) = r_missing_data
+         where(topo_a(:,:) .ge. heights_3d(:,:,k)) ! below terrain
+             transm_3d(:,:,k) = 0.
+             kterr(:,:) = k
+         endwhere
      enddo ! k
 
-     write(6,*)' nloop_tot/nsteps = ',nloop_tot,nsteps
+     write(6,*)' call get_terrain_shadows...'
+     call get_terrain_shadows(heights_3d,topo_a,obj_alt,obj_azi,kterr,ni,nj,nk,idb,jdb,transm_3t,transm_2t)
 
      transm_4d = 0.                   
 
@@ -709,3 +624,153 @@
 !       at 1330UTC -0.45 deg looks OK
 !       at 1315UTC -3.19 deg good illumination - some banding
 !                  turning off ag for transm_4d still has banding
+
+     subroutine get_terrain_shadows(heights_3d,topo_a,obj_alt,obj_azi,kterr,ni,nj,nk,idb,jdb & ! I
+                                   ,transm_3t,transm_2t)                                       ! O
+
+     include 'trigd.inc'
+
+     use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m
+
+     real heights_3d(ni,nj,nk)
+     real transm_3t(ni,nj,nk) ! terrain 3D transmission
+     real transm_2t(ni,nj)    ! terrain 2D transmission
+     real topo_a(ni,nj),terr_max_path_a(ni,nj)
+     real obj_alt(ni,nj),obj_azi(ni,nj)
+     integer kterr(ni,nj)
+
+     write(6,*)' Subroutine get_terrain_shadows'
+     transm_3t = 1.0
+     transm_2t = r_missing_data
+
+     terr_max = maxval(topo_a)
+     terr_min = minval(topo_a)
+     terr_max_path_a = 100000. ! initialize
+
+!    Initial terrain effects
+     nsteps = 0
+     nloop_tot = 0
+     do k = 1,nk
+       I4_elapsed = ishow_timer()
+       nloop = 0
+
+       kunder = max(k-1,1)
+       
+       do i = 1,ni
+       do j = 1,nj
+
+         if(k .eq. kterr(i,j))then
+           htstart = topo_a(i,j)
+         else
+           htstart = heights_3d(i,j,k)
+         endif
+
+         objalt = obj_alt(i,j)
+         objazi = obj_azi(i,j)
+
+         if(topo_a(i,j) .gt. heights_3d(i,j,k))then             ! below terrain
+!          transm_3d(i,j,k) = 0.
+           transm_3t(i,j,k) = 0.
+         elseif(k .ge. 2 .AND. transm_3t(i,j,k-1) .eq. 1.0)then ! underneath level already illuminated
+           continue 
+!        elseif(htstart .gt. terr_max_path(i,j) .and. objalt .gt. 0.)then
+!          continue	   
+         else                                                   ! above terrain and underneath level is dark
+           dids = sind(objazi)*cosd(objalt)/grid_spacing_m
+           djds = cosd(objazi)*cosd(objalt)/grid_spacing_m
+           dhtds =  sind(objalt)                                 
+           dxyds =  cosd(objalt)
+           tan_suntop = tand(objalt+0.25)
+           tan_sunbot = tand(objalt-0.25)
+	   terr_tanalt_max = -1e10
+           nloop = nloop + 1
+           terr_max_path = topo_a(i,j)
+           do is = 1,10000
+              nsteps = nsteps + 1
+              s = float(is) * grid_spacing_m
+              dxy = dxyds * s
+              rinew = float(i) + dids * s
+              rjnew = float(j) + djds * s
+              inew = int(rinew)
+              jnew = int(rjnew)
+              if(inew .lt. 1 .or. inew .ge. ni .or. jnew .lt. 1 .or. jnew .ge. nj)then ! outside domain
+                 goto 101
+	      endif
+
+              curvat_ht = dxy**2 / (2.0*earth_radius)
+              htnew = htstart + dhtds * s + curvat_ht
+
+              terrht = topo_a(int(rinew),int(rjnew)) ! replace with bilinear interp
+!             terr_max_path = max(terr_max_path,terrht)
+              terr_tanalt     = ((terrht   - curvat_ht) - htstart) / dxy
+              terr_tanalt_pot = ((terr_max - curvat_ht) - htstart) / dxy
+              terr_tanalt_max = max(terr_tanalt_max,terr_tanalt)
+
+              if(i .eq. idb .and. j .eq. jdb)then
+                 write(6,103)is,s,inew,jnew,htstart,htnew,terrht    &
+		            ,terr_tanalt,terr_tanalt_max,tan_suntop &
+		            ,terr_tanalt_pot,tan_sunbot
+103              format(i6,f8.0,2i5,3x,3f9.2,3x,3f9.4,3x,2f9.4)
+              endif
+
+              if(htnew .gt. terr_max .and. objalt .gt. 0.)then ! ray now above max terrain with source above horizon
+                 goto 101
+              endif
+
+              if(htnew .lt. terr_min .and. objalt .lt. 0.)then ! ray now below min terrain with source below horizon
+                 goto 101
+              endif
+
+              if(terr_tanalt_max .gt. tan_suntop)then          ! terrain has now completely covered light source
+                 goto 101
+              endif
+
+              if(terr_tanalt_pot .lt. tan_sunbot)then          ! highest potential terrain beyond location doesn't cover light source
+                 goto 101
+              endif
+           enddo ! is
+
+101        continue
+
+!          Special handling at kterr
+           if(k .ne. kterr(i,j))then
+              if(terr_tanalt_max .gt. tan_suntop)then
+                  transm_3t(i,j,k) = 0.          
+              endif
+           else ! k = kterr
+              transm_3t(i,j,k) = 0.          
+              if(terr_tanalt_max .gt. tan_suntop)then
+                  transm_2t(i,j) = 0.          
+              else
+                  transm_2t(i,j) = 1.          
+              endif
+           endif
+
+           if(i .eq. idb .and. j .eq. jdb)then
+              write(6,102)k,kterr(i,j),is,inew,jnew,transm_3t(i,j,k),terr_tanalt_max,tan_suntop ! ,terr_max_path_a(i,j)
+102           format(' Initial terrain effects for k =',2i5,3i6,f9.3,3f9.3)
+              if(k .eq. kterr(i,j))then
+                 write(6,*)' transm_2t = ',transm_2t(i,j)
+              endif
+           endif
+ 
+         endif ! non-trivial point
+
+!        Level is immediately above the terrain. We can consider integrating this by substituting
+!        the terrain height for one of the 3D heights.
+!        if(heights_3d(i,j,kunder) .lt. topo_a(i,j) .and. heights_3d(i,j,k) .ge. topo_a(i,j))then
+!             transm_2t(i,j) = transm_3t(i,j,k)
+!        endif
+
+       enddo ! j
+       enddo ! i
+       nloop_tot = nloop_tot + nloop
+       write(6,*)' nloop/ht for level ',k,nloop,heights_3d(idb,jdb,k)
+     enddo ! k
+
+     write(6,*)' nloop_tot/nsteps = ',nloop_tot,nsteps
+
+     return
+     end
+
+     
