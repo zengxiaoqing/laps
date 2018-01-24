@@ -573,6 +573,15 @@
               do i = minalt,maxalt
                 sky_rgb_cyl(:,i,j) = 
      1            max(min(sky_rgb_cyl(:,i,j)*final_scaling,255.),0.)
+
+                if(.true.)then ! preserve colors in bright saturated areas
+                  colmax = maxval(sky_rgb_cyl(:,i,j))
+                  if(colmax .gt. 255.)then
+                    col_ratio = 255. / colmax
+                    sky_rgb_cyl(:,i,j) = sky_rgb_cyl(:,i,j) * col_ratio                                        
+                  endif                   
+                endif
+
               enddo ! i
               enddo ! j
 
@@ -1081,7 +1090,7 @@
               else ! outside image
                 if(jazi .eq. minazi)then
                   write(6,2)ialt,jazi,pix_we,pix_sn,arglat,arglon
-2                 format(' outside image ',2i7,2f11.3,2f10.4)
+2                 format(' outside image ',2i7,2f13.3,2f10.4)
                 endif              
 
               endif ! inside image
