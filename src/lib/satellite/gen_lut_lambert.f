@@ -390,10 +390,10 @@ c use original lambert software for fsl-conus in FSL's /public
             refi = 512.5 + 1024. ! center of center tile on upper row
             refj = 512.5 + 1024. 
          elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then ! ir
-!           reflat = 44.764
-!           reflon = -115.7397
-            reflat = 45.693
-            reflon = -115.980
+!           reflat = 45.693
+!           reflon = -115.980
+            reflat = 45.8778
+            reflon = -114.5280
             refi = 512.5          ! center of left tile
             refj = 512.5
          endif
