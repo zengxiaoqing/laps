@@ -257,7 +257,7 @@ c
 !      Determine reflectance
        if(c_sat_type .eq. 'gnp')then
          where(laps_vis_raw(:,:) .ne. r_missing_data)
-             laps_vis_refl(:,:) = 1.0 * laps_vis_raw(:,:) / 4095.
+             laps_vis_refl(:,:) = 1.3 * laps_vis_raw(:,:) / 4095.
          endwhere
        else
          where(laps_vis_raw(:,:) .ne. r_missing_data)
@@ -727,7 +727,8 @@ c make it look like goes7
             if(laps_vis_norm(i,j).ne.r_missing_data)then
 c make it look like goes7
 !             call stretch(0.,4095., 0.,220.,laps_vis_norm(i,j))
-              call stretch(0.,6095.,30.,220.,laps_vis_norm(i,j))
+!             call stretch(0.,6095.,30.,220.,laps_vis_norm(i,j))
+              call stretch(0.,4688.,30.,220.,laps_vis_norm(i,j))
 
             endif
           enddo
