@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis 
 
-        subroutine get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add ! I
+        subroutine get_vis(i4time,sol_alt,l_use_vis,l_use_vis_add   ! I
      1                    ,l_use_vis_partial,lat,lon,idb,jdb        ! I
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
      1                    ,rlaps_land_frac,topo                     ! I
@@ -52,7 +52,9 @@ cdis
      1                    ,istat_vis_a                              ! O
      1                    ,istatus)                                 ! O
 
-!       Steve Albers 1997
+!       Steve Albers 1997 through 2018
+
+        use mem_namelist, only: grid_spacing_m
 
         integer ihist_alb(-10:20)
         integer ihist_alb_sfc(-10:20)
@@ -64,6 +66,7 @@ cdis
         real static_albedo(ni,nj)   ! Static albedo database
         real sat_data_in(ni,nj)
         real sat_albedo(ni,nj)     
+        real reflectance(ni,nj)     
         real cvr_snow(ni,nj)
         real tgd_sfc_k(ni,nj)
         real rlaps_land_frac(ni,nj)
@@ -78,7 +81,8 @@ cdis
         real dum2d(ni,nj)                      
 
 !       This stuff is for reading VIS data from LVD file
-        real solar_alt(ni,nj)
+        real sol_alt(ni,nj)
+        real sol_alt_sat(ni,nj)
         real cloud_frac_vis_a(ni,nj)
         integer mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
@@ -94,7 +98,13 @@ cdis
 !       l_use_vis_add = .false.
         icount_vis_add_potl = 0
         visthr = 0.0  ! for adding visible
-        mode_refl = 0 ! 0,1 to use reflectance instead of albedo from LVD       
+        sol_alt_sat(:,:) = sol_alt(:,:)
+
+        if(grid_spacing_m .lt. 1000.)then ! consider namelist 'mode_refl' parm
+            mode_refl = 1 ! 0,1 to use reflectance instead of albedo from LVD       
+        else
+            mode_refl = 0
+        endif
 
 !       Initialize histograms
         do i = -10,20
@@ -189,14 +199,20 @@ cdis
             else
 !               Convert to reflectance
 !               reflectance = (sat_data_in(ioff,joff) / 256.) * 1.2
-                reflectance = sat_data_in(ioff,joff)
+                reflectance(i,j) = sat_data_in(ioff,joff)
 
 !               Should this be done elsewhere according to how other
 !               routines use sfc_albedo?                
-                call refl_to_albedo2(reflectance,solalt,sfc_albedo(i,j) ! I
-     1                              ,cloud_albedo)                      ! O
+                if(sol_alt(i,j) .gt. 7.0)then
+                    call refl_to_albedo2(reflectance(i,j)              ! I
+     1                                  ,sol_alt_sat(i,j)              ! I
+     1                                  ,sfc_albedo(i,j),cloud_albedo) ! O
+                else
+                    cloud_albedo = r_missing_data
+                endif
 
                 sat_albedo(i,j) = cloud_albedo
+                comment = 'Cloud Albedo from Reflectance'
             endif
 
             if(sat_albedo(i,j) .eq. r_missing_data .and. 
@@ -225,10 +241,10 @@ cdis
 
 !         We will now only use the VIS data if the solar alt exceeds 15 deg
 !         7 degrees now used to allow 30 min slack in data availability
-          if(solar_alt(i,j) .lt. 7.0)then
+          if(sol_alt(i,j) .lt. 7.0)then
               if(sat_albedo(i,j) .ne. r_missing_data)then
                   write(6,*)' Error -  sat_albedo not missing:'
-     1                     ,solar_alt(i,j)
+     1                     ,sol_alt(i,j)
                   stop
               endif
 !             sat_albedo(i,j) = r_missing_data
@@ -252,13 +268,28 @@ cdis
 
 !           'cloud_frac_vis' is what's used in 'insert_vis'
             clear_albedo = sfc_albedo_lwrb(i,j)
-            cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
+            if(mode_refl .eq. 0)then
+              cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
      1                                           ,sat_albedo(i,j))
 !    1                                           ,sat_albedo(ig,jg))
+            else ! reflectance mode
+!             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
+!    1                                           ,sat_albedo(i,j)*0.6)
+!    1                                           ,sat_albedo(ig,jg))
+              cloud_frac_vis = (sat_albedo(i,j) - clear_albedo)
+     1                       / (1.0             - clear_albedo)
+              cloud_frac_vis = min(max(cloud_frac_vis,0.),1.)              
+            endif
 
             if(i .eq. idb .and. j .eq. jdb)then
-                write(6,9)clear_albedo,sat_albedo(ig,jg),cloud_frac_vis
-9               format(' clralb/satalb/cf_vis ',3f9.3,' CTR')
+              if(mode_refl .eq. 0)then
+                write(6,91)clear_albedo,sat_albedo(ig,jg),cloud_frac_vis
+91              format(' clralb/satalb/cf_vis ',3f9.3,' CTR')
+              elseif(mode_refl .eq. 1)then
+                write(6,92)reflectance(ig,jg),sol_alt(ig,jg)
+     1                    ,sat_albedo(ig,jg),clear_albedo,cloud_frac_vis
+92              format(' refl/salt/salb/clralb/cf_vis ',5f9.3,' CTR')
+              endif
             endif
 
             iscr_frac_sat = nint(cloud_frac_vis*10.)
@@ -469,11 +500,12 @@ cdis
 
         include 'trigd.inc'        
 
+!       Convert reflectance to cloud (+land) albedo
 !       Note that two solutions may be possible with low sun
         if(.true.)then
           alb_thn = reflectance           ! modify by phase angle?
           solalt_eff = max(solalt,6.)
-          alb_thk = reflectance / cosd(solalt_eff)
+          alb_thk = reflectance / sind(solalt_eff)
 
           frac_thk = 1.0 ! cloud_albedo
           frac_thn = 1.0 - frac_thk
