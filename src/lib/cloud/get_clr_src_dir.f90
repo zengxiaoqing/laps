@@ -1,11 +1,11 @@
 
      subroutine get_clr_src_dir(solalt,viewalt,od_g_msl,od_g_vert,od_a_vert,ext_haero,htmsl,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a,ags,aas,ic,idebug,istart,iend,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
-     use mem_namelist, ONLY: earth_radius
-     use constants_laps, ONLY: R, GRAV
+     use mem_namelist, ONLY: earth_radius, aod_ha
+     use constants_laps, ONLY: R_GAS, GRAV
 
      include 'trigd.inc'
-     include 'rad.inc'
+     include 'rad_nodata.inc'
 
 !    Input idebug for select angles
 
@@ -29,6 +29,7 @@
 
      od_o_msl = (o3_du/300.) * ext_o(ic)
      od_o_vert = od_o_msl * patm_o3(htmsl)
+     alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha))
 
 !    htmin_view = htminf(htmsl,viewalt,earth_radius)
 !    patm_htmsl = ztopsa(htmin_view) / 1013.25
@@ -43,10 +44,10 @@
      od_slant = max(od_slant,1e-30) ! QC check
      r_e = 6371.e3
 
-     scale_ht_g = R * ztotsa(htmsl) / GRAV
+     scale_ht_g = R_GAS * ztotsa(htmsl) / GRAV
      alpha_sfc_g = od_g_vert / scale_ht_g
 
-     scale_ht_g = R * ztotsa(0.) / GRAV
+     scale_ht_g = R_GAS * ztotsa(0.) / GRAV
      alpha_ref_g = od_g_msl  / scale_ht_g
 
      alpha_sfc_a = od_a_vert / scale_ht_a
@@ -75,6 +76,7 @@
          write(6,*)'od_o_msl/vert = ',od_o_msl,od_o_vert
          write(6,*)'od_o_vert = ',od_o_vert
          write(6,*)'od_a_vert = ',od_a_vert
+         write(6,*)'aod_ha/alpha_ha = ',aod_ha,alpha_ha
          write(6,*)'opac_vert = ',opac_vert
          write(6,*)'od_g_slant = ',od_g_slant
          write(6,*)'od_o_slant,ao = ',od_o_slant,ao
@@ -124,7 +126,7 @@
          od_solar_slant_o3 = od_o_msl * patm_o3(htbar_msl) * airmasso(zapp,htbar_msl)
 
          patm_bar = ztopsa(htbar_msl) / 1013.25
-         scale_ht_g = R * ztotsa(htbar_msl) / GRAV
+         scale_ht_g = R_GAS * ztotsa(htbar_msl) / GRAV
          alphabar_g = (od_g_msl * patm_bar) / scale_ht_g
 
 !        od_solar_slant_g = od_g_vert * ags * exp(-htbar/scale_ht_g)
@@ -221,11 +223,11 @@
            ,ic,idebug,refdist_solalt,solalt_ref &                        ! I
            ,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
-     use mem_namelist, ONLY: earth_radius
-     use constants_laps, ONLY: R, GRAV
+     use mem_namelist, ONLY: earth_radius, aod_ha
+     use constants_laps, ONLY: R_GAS, GRAV
 
      include 'trigd.inc'
-     include 'rad.inc'
+     include 'rad_nodata.inc'
 
      real*8 opac_last,opac_curr,tausum,trans,opac,od
      real logint
@@ -259,6 +261,7 @@
 
 !    od_o_msl = (o3_du/300.) * ext_o(ic)
      od_o_vert = od_o_msl * patm_o3(htmsl)
+     alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha))
 
 !    htmin_view = htminf(htmsl,viewalt,earth_radius)
 !    patm_htmsl = ztopsa(htmin_view) / 1013.25
@@ -290,10 +293,10 @@
      od_slant = max(od_slant,1e-30) ! QC check
      r_e = 6371.e3
 
-     scale_ht_g = R * ztotsa(htmsl) / GRAV
+     scale_ht_g = R_GAS * ztotsa(htmsl) / GRAV
      alpha_sfc_g = od_g_vert / scale_ht_g
 
-     scale_ht_g = R * ztotsa(0.) / GRAV
+     scale_ht_g = R_GAS * ztotsa(0.) / GRAV
      alpha_ref_g = od_g_msl  / scale_ht_g
 
 !    scale_ht_a = 1500. ! Input this?
@@ -328,7 +331,7 @@
          write(6,*)'alpha_sfc_g/alpha_ref_g = ',alpha_sfc_g,alpha_ref_g
          write(6,*)'od_o_msl/vert = ',od_o_msl,od_o_vert
          write(6,*)'od_a_vert = ',od_a_vert
-         write(6,*)'alpha_ha / ext_haero = ',alpha_ha,ext_haero
+         write(6,*)'aod_ha / alpha_ha / ext_haero = ',aod_ha,alpha_ha,ext_haero
          write(6,*)'opac_vert = ',opac_vert
          write(6,*)'od_g_slant = ',od_g_slant
          write(6,*)'od_o_slant/ao = ',od_o_slant,ao
@@ -377,7 +380,7 @@
          xybar = (sbar - refdist_solalt) * cosd(viewalt)
 
          patm_bar = ztopsa(htbar_msl) / 1013.25
-         scale_ht_g = R * ztotsa(htbar_msl) / GRAV
+         scale_ht_g = R_GAS * ztotsa(htbar_msl) / GRAV
          alphabar_g = (od_g_msl * patm_bar) / scale_ht_g
 
          alphabar_o = alpha_o3(od_o_msl,htbar_msl)
@@ -541,9 +544,9 @@
            ,sumi_g,sumi_a,opac_slant,tausum_a)                         ! O
 
      use mem_namelist, ONLY: earth_radius
-     use constants_laps, ONLY: R, GRAV
+     use constants_laps, ONLY: R_GAS, GRAV
      include 'trigd.inc'
-     include 'rad.inc'
+     include 'rad_nodata.inc'
 
      trans(od) = exp(-min(od,80.))
      opac(od) = 1.0 - trans(od)
@@ -572,11 +575,11 @@
      radius_earth_eff = earth_radius * (1. + (0.33333 * patm_htmsl))
      radius_start_eff = radius_earth_eff + htmsl
 
-     scale_ht_g = R * ztotsa(htmsl) / GRAV
+     scale_ht_g = R_GAS * ztotsa(htmsl) / GRAV
 !    alpha_sfc_g = od_g_vert / scale_ht_g
 
 !    scale_ht_g = 8000.
-     scale_ht_g = R * ztotsa(0.) / GRAV
+     scale_ht_g = R_GAS * ztotsa(0.) / GRAV
      alpha_ref_g = od_g_msl  / scale_ht_g
 
 !    alpha_sfc_a = od_a_vert / scale_ht_a
@@ -718,7 +721,7 @@
 !        alphabar_g = alpha_sfc_g * exp(-htbar/scale_ht_g) 
 !        alphabar_g = alpha_ref_g * exp(-htbar_msl/scale_ht_g) 
          patm_bar = ztopsa(htbar_msl) / 1013.25
-         scale_ht_g = R * ztotsa(htbar_msl) / GRAV
+         scale_ht_g = R_GAS * ztotsa(htbar_msl) / GRAV
          alphabar_g = (od_g_msl * patm_bar) / scale_ht_g
 
 !        alphabar_a = alpha_sfc_a * exp(-htbar/scale_ht_a)  
