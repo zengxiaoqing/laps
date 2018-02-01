@@ -101,6 +101,7 @@
         real transm_4d(ni,nj,nk,nc)  ! O
         real transm_4d_m(nc)
         real transm_2t(ni,nj)        ! terrain 2D transmission
+        real transm_3d_vint(ni,nj,nk)! L
         real uprad_4d_m(nc)
         real sum_aod_rad_opac(nc)
         real slant2_odc(nc)
@@ -528,6 +529,20 @@
 
         endif
 
+!       Use this version of 'transm_3d' for vertical interpolation
+        transm_3d_vint(:,:,:) = transm_3d(:,:,:)
+        do ii = 1,ni
+        do jj = 1,nj
+          do k = 2,nk
+            if(heights_3d(ii,jj,k) .gt. topo_a(ii,jj))then
+              transm_3d_vint(ii,jj,k-1) = transm_3d(ii,jj,k)
+              goto 41
+            endif
+          enddo ! k
+41        continue
+        enddo ! jj
+        enddo ! ii
+
         I4_elapsed = ishow_timer()
 
 !       Obtain surface rad from 3D cloud rad fields, etc.
@@ -564,7 +579,7 @@
 !             terrain shadowing?
 !             if(transm_3d(ii,jj,kk) .gt. 0. .and. 
 !    1           transm_3d(ii,jj,kk) .ne. r_missing_data)then
-              if(heights_3d(ii,jj,kk) .gt. topo_a(i,j))then
+              if(heights_3d(ii,jj,kk) .gt. topo_a(ii,jj))then
 
                 if(sol_alt(i,j) .ge. twi_alt .and.
      1             transm_3d(ii,jj,kkp1) .gt. 0. .and.
@@ -580,7 +595,7 @@
                 else
                   transm_tn = transm_3d(ii,jj,kk)
                 endif
-
+               
                 cloud_albedo = 1. - transm_tn
 
 !               Here we might need only the aerosol absorption and not the
@@ -678,12 +693,18 @@
                    write(6,*)' cldalb    observer =',cloud_albedo
                    write(6,*)' transm_p  observer =',transm_tn_pr1
                    write(6,*)' ecl       observer =',ecl
-                   write(6,*)' bhic_2d   observer =',bhic_2d(:,ii,jj)
-     1                      ,' W/m^2 ~=',bhic_2d(2,ii,jj)*ghi_zen_toa
-                   write(6,*)' dhic_2d   observer =',dhic_2d(:,ii,jj)
-     1                      ,' W/m^2 ~=',dhic_2d(2,ii,jj)*ghi_zen_toa
-                   write(6,*)' ghic_2d   observer =',ghic_2d(:,ii,jj)
-     1                      ,' W/m^2 ~=',ghic_2d(2,ii,jj)*ghi_zen_toa
+                   write(6,42)bhic_2d(:,ii,jj)
+     1                       ,bhic_2d(2,ii,jj)*ghi_zen_toa
+42                 format(' bhic_2d   observer =',f9.5
+     1                                           ,' W/m^2 ~=',f10.5)
+                   write(6,43)dhic_2d(:,ii,jj)
+     1                       ,dhic_2d(2,ii,jj)*ghi_zen_toa
+43                 format(' dhic_2d   observer =',f9.5
+     1                                           ,' W/m^2 ~=',f10.5)
+                   write(6,44)ghic_2d(:,ii,jj)
+     1                       ,ghic_2d(2,ii,jj)*ghi_zen_toa
+44                 format(' ghic_2d   observer =',f9.5
+     1                                           ,' W/m^2 ~=',f10.5)
 
                 endif
 
@@ -795,9 +816,10 @@
               transm_4d(:,:,k,ic) = transm_4d(:,:,k,ic) * obj_bri_a(:,:) ! correct for sun/moon brightness
              enddo ! k
             enddo ! ic
-            write(6,*)' heights_3d column =  ',heights_3d(i,j,:)
-            write(6,*)' transm_3d column =   ',transm_3d(i,j,:)
-            write(6,*)' transm_4d B column = ',transm_4d(i,j,:,2)
+            write(6,*)' heights_3d column =     ',heights_3d(i,j,:)
+            write(6,*)' transm_3d column =      ',transm_3d(i,j,:)
+            write(6,*)' transm_3d_vint column = ',transm_3d_vint(i,j,:)
+            write(6,*)' transm_4d B column =    ',transm_4d(i,j,:,2)
         endif
         write(6,*)' Range of transm_4d(red channel) = '
      1           ,minval(transm_4d(:,:,:,1)),maxval(transm_4d(:,:,:,1))
@@ -1316,8 +1338,8 @@
 12              format('      dz1_l        dz1_h      dxy1_l    dxy1_h',
      1           '  rinew  rjnew   rk    ht_m   topo_m   path     ',
      1           'lwc    ice    rain   snow      slant  cvrpathsum',
-     1           '  cloudfrac am2cld  sumclrd smclrdp  am1_h  cl',
-     1           'd_rd cld_rd_w  aeroext transm3 aod_sm aod_sm_ill')
+     1           '  cloudfrac am2cld  sumclrd smclrdp  am1_h  cld_rd',
+     1           ' cld_rd_w  aeroext transm3 aod_sm aod_sm_ill/potl')
               endif
 
 !             Initialize ray
@@ -1930,8 +1952,17 @@
 !                 if(idebug .eq. 1 .OR. cond_m .gt. 0.)then
                   if(.true.)then
 
+!                   Can this be unfairly reduced when k1 is below the terrain?
                     transm_3d_m = sum(tri_coeff(:,:,:) * 
-     1                            transm_3d(i1:i2,j1:j2,k1:k2))
+     1                            transm_3d_vint(i1:i2,j1:j2,k1:k2))
+
+                    if(idebug .eq. 1 .and. .false.)then
+                      if(heights_3d(i1,j1,k1) .lt. topo_a(i1,j1))then
+                         write(6,*)
+     1                   ' Warning: suspect transm_3d_m below terrain'
+     1                   ,transm_3d(i1:i2,j1:j2,k1:k2),transm_3d_m
+                      endif
+                    endif
 
                     if(.false.)then
                       write(6,*)' ERROR transm_3d_m < 0',transm_3d_m
@@ -2318,11 +2349,10 @@
      1                    / ghi_2d(inew_mb,jnew_m)
                         else
                           write(6,*)' WARNING: ghi_2d = 0.'
-     1                         ,inew_mb,jnew_m
-     1                         ,sol_alt(inew_mb,jnew_m)
-     1                         ,lat(inew_mb,jnew_m)
-     1                         ,lon(inew_mb,jnew_m)
-     1                         ,transm_2t(inew_mb,jnew_m)
+     1                             ,inew_mb,jnew_m
+     1                             ,sol_alt(inew_mb,jnew_m)
+     1                             ,lat(inew_mb,jnew_m)
+     1                             ,lon(inew_mb,jnew_m)
                           frac_ghi_dir = 1.0
                         endif
 
@@ -2494,8 +2524,8 @@
      1                     ,sum_aod,sum_aod_ill_opac
      1                     ,sum_aod_ill_opac_potl
 101                   format(2f13.1,2f10.1,a1,f6.1,f7.1,f6.2,2f8.1
-     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,4f8.3,2f8.4
-     1                  ,f10.5,4f7.3)
+     1                  ,1x,f7.4,2x,4f7.4,f10.1,2f11.4,4f8.3,2f8.4,f10.5
+     1                  ,4f7.3)
                   endif ! idebug
 
                  else ! outside horizontal domain
@@ -2630,12 +2660,13 @@
             endif
             if(idebug .eq. 1)then
               write(6,119)rkstart,nk,view_altitude_deg,horz_dep_d
+     1             ,cloud_od(ialt,jazi)
      1             ,clear_radf_c(icd,ialt,jazi)
      1             ,aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
      1             ,sum_clrrad,sum_clrrad_pot,airmass1_h,dz1_h
-     1             ,cloud_od(ialt,jazi)
-119           format(' alt/dep/radf/aodf/smclrrd/pot/am/dz1_h/cod'
-     1                      ,f11.2,i3,2f9.4,2f9.3,3f9.3,f13.1,f8.2)
+ 119          format(
+     1          ' rks/nk/alt/dep/cod/radf/aodf/smclrrd/pot/am/dz1_h'
+     1              ,f11.2,i3,2f9.4,2f9.3,3f9.3,f13.1,f8.2)
             endif
 
           endif
