@@ -9,7 +9,7 @@
 
         use mem_namelist, ONLY: earth_radius
         include 'trigd.inc'
-        include 'rad.inc'
+        include 'rad_nodata.inc'
 
         real alt_a(ni,nj)
         real clear_rad_c_nt(nc,ni,nj)      ! night sky brightness
@@ -87,16 +87,7 @@
 
         use mem_namelist, ONLY: earth_radius
         include 'trigd.inc'
-        include 'rad.inc'
-
-!       http://aas.aanda.org/articles/aas/pdf/1998/01/ds1449.pdf (Section 6)
-        am_thsh(z,h,r) = 1./ sqrt( 1.-( (r/(r+h))**2 * (sind(z))**2) )
-
-!       http://www.wolframalpha.com/input/?i=integrate+1%2F%28sqrt%281-%28r%2F%28r%2Bh%29%29%5E2+sin%5E2z%29%29+dh+
-        am_thsh_indefint(z,h,r) = (2.*h**2 + 4.*h*r + r**2 * cosd(2.*z) + r**2) / &
-            (2.*(h+r)*sqrt(1.-r**2*sind(z)**2/(h+r)**2))
-
-        am_thsh_defint(z,h1,h2,r) = am_thsh_indefint(z,h2,r) - am_thsh_indefint(z,h1,r) 
+        include 'rad_nodata.inc'
 
         real airglow(nc),airglow_zen(nc)
 
