@@ -36,6 +36,7 @@ include 'lapsparms.for'
         real aircraft_time_window
         real hydrometeor_scale_pcp
         real hydrometeor_scale_cld
+        real solalt_thr_vis
         integer  maxstns
         integer  N_PIREP
         integer max_snd_grid
@@ -228,7 +229,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
                   ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
-                  ,hydrometeor_scale_pcp,hydrometeor_scale_cld &
+                  ,hydrometeor_scale_pcp,hydrometeor_scale_cld,solalt_thr_vis &
                   ,vert_rad_meso,vert_rad_sao &
                   ,vert_rad_pirep,vert_rad_prof      &
                   ,silavwt_parm,toptwvl_parm &
@@ -361,11 +362,12 @@ elseif (namelist_name == 'lapsparms') then
    l_fsf_gridgen    = .false.
    iverbose = 0
    i_offset_radar = -1
+   solalt_thr_vis = 15.
    aod = 0.05              ! default column aerosol optical depth
    aero_scaleht = 1500.    ! default aerosol scale height (m)
    fcterm = 0.05           ! range from 0.00 to 0.09 for large aerosols
                            ! corresponding phase function peak from 20-110
-   aod_ha = .015           ! high altitude aerosol optical depth
+   aod_ha = .004           ! high altitude aerosol optical depth
    ht_ha(1)=13000.; ht_ha(2)=13000.; ht_ha(3)=25000.; ht_ha(4)=31000.
 
 !  Single scattering albedo for aerosols
