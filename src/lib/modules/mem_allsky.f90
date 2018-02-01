@@ -22,7 +22,8 @@ MODULE mem_allsky
       real, allocatable, dimension(:,:) :: aod_ill_opac_potl
 
 !     Various non-gridded variables
-      real ghi_sim      
+      real ghi_sim
+      real alpha_ha
       integer mode_aero_cld /1/ ! treat aerosols more as clouds [1,2,3]
 
       PUBLIC alloc_allsky, dealloc_allsky
