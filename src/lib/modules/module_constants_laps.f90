@@ -17,7 +17,8 @@ MODULE constants_laps
       REAL,       PARAMETER        :: MPS2MPH  =      2.237
       REAL,       PARAMETER        :: PI       =      3.1415927
       REAL,       PARAMETER        :: P0       =   100000.0
-      REAL,       PARAMETER        :: R        =    287.04
+      REAL,       PARAMETER        :: R_GAS    =    287.04
+      REAL,       PARAMETER        :: R        =    R_GAS
       REAL,       PARAMETER        :: RV       =    461.5
       REAL,       PARAMETER        :: T0       =    273.15
       REAL,       PARAMETER        :: XMISS    = -99999.9
