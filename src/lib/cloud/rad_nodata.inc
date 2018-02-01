@@ -27,6 +27,17 @@
 !       Column integrated value per meter
         scalei_o3(htmsl) = exp(-((htmsl-h_o3)/d_o3)**2) / (sqrt(pi) * d_o3)
 
+!       General Airmass routines
+
+!       http://aas.aanda.org/articles/aas/pdf/1998/01/ds1449.pdf (Section 6)
+        am_thsh(z,h,r) = 1./ sqrt( 1.-( (r/(r+h))**2 * (sind(z))**2) )
+
+!       http://www.wolframalpha.com/input/?i=integrate+1%2F%28sqrt%281-%28r%2F%28r%2Bh%29%29%5E2+sin%5E2z%29%29+dh+
+        am_thsh_indefint(z,h,r) = (2.*h**2 + 4.*h*r + r**2 * cosd(2.*z) + r**2) / &
+            (2.*(h+r)*sqrt(1.-r**2*sind(z)**2/(h+r)**2))
+
+        am_thsh_defint(z,h1,h2,r) = am_thsh_indefint(z,h2,r) - am_thsh_indefint(z,h1,r) 
+
 !       Airmasses estimated for thick shell (both below and above O3 max)
 !       Effective scale height above h_o3 varies with 1./d_o3
         relscale_ht_o3(h) = d_o3 / (max(h+2.5*d_o3,h_o3+100.)-h_o3)
@@ -52,8 +63,8 @@
         parameter (h2_ha = 25000.)
         parameter (h3_ha = 31000.)
 !       parameter (aod_ha = .015)
-        parameter (aod_ha = .004)
-        parameter (alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha)))
+!       parameter (aod_ha = .004)
+!       parameter (alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha)))
         patm_ah(h,h1,h2) = max(min(1.0,(h2-h)/(h2-h1)),0.)
 
 !       Airmasses for thick homogenous elevated shell
