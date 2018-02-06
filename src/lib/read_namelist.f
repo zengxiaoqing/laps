@@ -1,6 +1,7 @@
       subroutine config_satellite_lvd(istatus)
 c
 cdoc  Reads static/satellite_lvd.nl file.
+      use mem_namelist, ONLY: solalt_thr_vis
 
       character nest7grid*150
       include 'satellite_dims_lvd.inc'
@@ -30,9 +31,10 @@ cdoc  Reads static/satellite_lvd.nl file.
 
 !     Initialize
       cchanneltypes = '   '
-      solalt_thr_vis = 15.
+!     solalt_thr_vis = 15.
 
       write(6,*)' Reading LVD namelist in config_satellite_lvd'
+      write(6,*)' solalt_thr_vis (from mem_namelist)= ',solalt_thr_vis
 
       call get_directory(grid_fnam_common,nest7grid,len_dir)
       nest7grid = nest7grid(1:len_dir)//'/satellite_lvd.nl'
