@@ -387,7 +387,9 @@ c use original lambert software for fsl-conus in FSL's /public
          if(indx.eq.1)then                               ! vis
             reflat = 42.09345
             reflon = -106.13704
-            refi = 512.5 + 1024. ! center of center tile on upper row
+            reflat = 44.41494
+            reflon = -104.94388
+            refi = 512.5 + 1024. ! center of center tile on upper row (PBB)
             refj = 512.5 + 1024. 
          elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then ! ir
 !           reflat = 45.693
