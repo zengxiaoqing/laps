@@ -795,7 +795,7 @@ c =============================================
      &                    phase_angle_d,
      &                    specular_ref_angle_d,
      &                    emission_angle_d,
-     &                    rland_frac,solalt_thr_vis,
+     &                    rland_frac,
      &                    albedo,
      &                    albedo_min,
      &                    albedo_max,
