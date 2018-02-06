@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <netcdf.h>
+#include <string.h>
 #define SYSCMD "ncgen -o %s %s"
 
 #define LC3_LEVELS 42
@@ -1022,6 +1023,8 @@ fint4 lm1_levels;
         size_t dim_len;
         long dim_val;
 
+/*      printf("check_grid_dims_v3 location 1 \n");   */
+
 /* determine value in dimension x */
         istatus = nc_inq_dimid(cdfid,"x",&dimid);
         if (istatus != NC_NOERR) {
@@ -1036,9 +1039,11 @@ fint4 lm1_levels;
         dim_val = (long)dim_len;
 
         if (*imax != dim_val) {
-          printf("x dimension in output file does not match IMAX passed in rwl_v3.c: %d %d\n",*imax,dim_val);
+          printf("x dimension in output file does not match IMAX passed in rwl_v3.c: %d %ld\n",*imax,dim_val);
           return -1;
         }
+
+/*      printf("check_grid_dims_v3 location 2 \n");   */
 
 /* determine value in dimension y */
         istatus = nc_inq_dimid(cdfid,"y",&dimid);
@@ -1054,9 +1059,11 @@ fint4 lm1_levels;
         dim_val = (long)dim_len;
 
         if (*jmax != dim_val) {
-          printf("y dimension in output file does not match JMAX passed in rwl_v3.c: %d %d\n",*jmax,dim_val);
+          printf("y dimension in output file does not match JMAX passed in rwl_v3.c: %d %ld\n",*jmax,dim_val);
           return -1;
         }
+
+/*      printf("check_grid_dims_v3 location 3 \n");   */
 
 /* determine value in dimension z */
         istatus = nc_inq_dimid(cdfid,"z",&dimid);
@@ -1071,20 +1078,28 @@ fint4 lm1_levels;
         }
         dim_val = (long)dim_len;
 
+        printf("check_grid_dims_v3 location 4 \n");       
+
 	if (dim_val == 1) {
-          *n_levels = 1;
+          printf("check_grid_dims_v3 location 4a %d \n",*n_levels);
+          *n_levels = 1;   
         }
         else if ((strncmp(ext,"lc3",3) == 0) && (dim_val == (long) LC3_LEVELS)) {
+          printf("check_grid_dims_v3 location 4b \n");
           *n_levels = (fint4) LC3_LEVELS;
         }
         else if ((strncmp(ext,"lm1",3) == 0) && (dim_val == (long) LM1_LEVELS)) {
+          printf("check_grid_dims_v3 location 4c \n");
           *n_levels = (fint4) LM1_LEVELS;
         }
-        else if(dim_val != *n_levels) {
-          printf("Z dimension in output file does not match N_LEVELS passed in rwl_v3.c: %d %d\n",*n_levels,dim_val);
+
+        if(dim_val != *n_levels) {
+          printf("Z dimension in output file does not match N_LEVELS passed in rwl_v3.c: %d %ld\n",*n_levels,dim_val);
           printf("Check CDL, levels namelist, and localization.\n");
           return -1;
         }
+
+        printf("check_grid_dims_v3 location 5 \n");
     
 /* normal return */
 
@@ -2022,6 +2037,15 @@ fint4 *status;
         lc3_levels = (fint4) LC3_LEVELS;
         lm1_levels = (fint4) LM1_LEVELS;
 
+/*      printf("Start of write_cdf_v3 f_filename %s      \n",f_filename);
+        printf("Start of write_cdf_v3 f_static_path %s   \n",f_static_path);
+        printf("Start of write_cdf_v3 f_ldf %s           \n",f_ldf);
+        printf("Start of write_cdf_v3 ldf_len  %d        \n",*ldf_len);
+        printf("Start of write_cdf_v3 fn_length  %d      \n",*fn_length);
+        printf("Start of write_cdf_v3 cdl_path_len  %d   \n",*cdl_path_len);
+        printf("Start of write_cdf_v3 stat_len  %d       \n",*stat_len);
+        printf("Start of write_cdf_v3 imax/jmax  %d %d   \n",*imax,*jmax);  */
+
 /* convert fortran f_file_name into C string filename and f_ext into C ext  */
         filename = malloc(*fn_length + 1);
         ldf = malloc(*ldf_len + 1);
@@ -2173,6 +2197,8 @@ fint4 *status;
 
 /* determine value of namelen dimension in output file  */
 
+        printf("write_cdf_v3 location 3  \n");
+
         istatus = nc_inq_dimid(cdfid,"namelen", &dim_id);
         if (istatus != NC_NOERR) {
 	  *status = -2; /* error in file creation */ 
@@ -2180,6 +2206,8 @@ fint4 *status;
           free(ext);
           return;
         }
+
+        printf("write_cdf_v3 location 3a  \n");
 
         istatus = nc_inq_dimlen(cdfid,dim_id,&dim_len);
         if (istatus != NC_NOERR) {
@@ -2189,6 +2217,8 @@ fint4 *status;
           return;
         }
         name_len = (int)dim_len;
+
+        printf("write_cdf_v3 location 3b \n");
 
 /* file is now open and ready for writing.    */
 /* verify x and y in output file match imax and jmax */
@@ -2200,6 +2230,9 @@ fint4 *status;
 
         istatus = check_grid_dims_v3(cdfid, ext, imax, jmax, n_levels,
                                         lc3_levels, lm1_levels);
+
+        printf("write_cdf_v3 location 3c \n");
+
         if (istatus == -1) {
           *status = -3;
           free(ext);
@@ -2207,6 +2240,8 @@ fint4 *status;
         }
 
 /* write header info only if num_record == 0 */
+
+        printf("write_cdf_v3 location 4  \n");
 
         if (num_record == 0) {
 
@@ -2230,7 +2265,7 @@ fint4 *status;
             free(static_grid);
 
             if (istatus == -1) {
-              printf("Error reading info from static.%s\n", *ldf);
+              printf("Error reading info from static.%s\n", ldf);
               printf("  Some navigation data will be missing from file.\n");
             }
           }
@@ -2251,6 +2286,8 @@ fint4 *status;
             return;
           }
         } /* end if num_record == 0  */
+
+        printf("write_cdf_v3 location 5  \n");
        
 /* convert i_reftime to reftime */
 	  reftime = (double)(*i_reftime);
@@ -2284,6 +2321,8 @@ fint4 *status;
         }
 	missing_grids = 0;
         vptr = var;
+
+/*      printf("write_cdf_v3 location 6  \n"); */
 
 	for (i = 0; i < *kdim; i++) {
 
@@ -2366,6 +2405,8 @@ fint4 *status;
           }
           vptr += (*var_len + 1);
         }
+
+/*      printf("write_cdf_v3 location 7  \n");  */
 
         istatus = nc_close(cdfid);
         if(DEBUG==1) printf("normal close in cdf_write %d\n",istatus);
