@@ -8,7 +8,7 @@
      &                           phase_angle_d,
      &                           specular_ref_angle_d,
      &                           emission_angle_d,
-     &                           rland_frac,solalt_thr_vis,
+     &                           rland_frac,
      &                           albedo_out,
      &                           albedo_min,
      &                           albedo_max,
@@ -28,6 +28,8 @@ c       "             6-Jul-1999           Added Emission_angle_d to argument li
 c
 C***Parameter and variables list
 c
+        use mem_namelist, ONLY: solalt_thr_vis
+
         Implicit None
 
         Real          cld_cnts,cld_albedo,frac,term1,term2
@@ -42,7 +44,7 @@ c
         Integer         imax,jmax
         Integer         i4time
 
-        Real          r_norm_vis_cnts_in(imax,jmax),solalt_thr_vis
+        Real          r_norm_vis_cnts_in(imax,jmax)
         Real          lat(imax,jmax)
         Real          lon(imax,jmax)
         Real          phase_angle_d(imax,jmax)
