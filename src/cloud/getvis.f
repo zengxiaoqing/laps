@@ -54,7 +54,7 @@ cdis
 
 !       Steve Albers 1997 through 2018
 
-        use mem_namelist, only: grid_spacing_m
+        use mem_namelist, only: grid_spacing_m, solalt_thr_vis
 
         integer ihist_alb(-10:20)
         integer ihist_alb_sfc(-10:20)
@@ -189,6 +189,7 @@ cdis
 
 !       Initial test for missing albedo (and partial data coverage)
 !       Loop in satellite i,j (uncorrected for parallax)
+        write(6,*)' solalt_thr_vis (not yet used) = ',solalt_thr_vis
         do i = 1,ni
         do j = 1,nj
             ioff = min(max(i+nint(offset_vis_i(i,j)),1),ni)
