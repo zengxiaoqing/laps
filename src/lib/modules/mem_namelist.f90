@@ -29,6 +29,7 @@ include 'lapsparms.for'
         real    r_missing_data
         integer  MAX_RADARS
         real aod,aod_bin(3),aod_asy(3,3),fcterm,aod_ha,ht_ha(4),ssa(3)
+        real o3_du,h_o3,d_o3
         real aero_scaleht
         real ref_base
         real ref_base_useable
@@ -225,7 +226,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,model_cycle_time, model_fcst_intvl, model_fcst_len &
                   ,purge_time &
                   ,i2_missing_data, iverbose, r_missing_data, MAX_RADARS, i_offset_radar &
-                  ,aod,aod_bin,aod_asy,fcterm,aod_ha,ht_ha,ssa,aero_scaleht &
+                  ,aod,aod_bin,aod_asy,fcterm,aod_ha,ht_ha,ssa,aero_scaleht,o3_du,h_o3,d_o3 &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
                   ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
@@ -369,6 +370,9 @@ elseif (namelist_name == 'lapsparms') then
                            ! corresponding phase function peak from 20-110
    aod_ha = .004           ! high altitude aerosol optical depth
    ht_ha(1)=13000.; ht_ha(2)=13000.; ht_ha(3)=25000.; ht_ha(4)=31000.
+   o3_du = 300.
+   h_o3 = 22000.
+   d_o3 = 11000.
 
 !  Single scattering albedo for aerosols
    ssa(1) = .90  ; ssa(2) = .90 ; ssa(3) = .90 ! non-dust
