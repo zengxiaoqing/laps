@@ -1,7 +1,7 @@
 
      subroutine get_clr_src_dir(solalt,viewalt,od_g_msl,od_g_vert,od_a_vert,ext_haero,htmsl,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a,ags,aas,ic,idebug,istart,iend,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
-     use mem_namelist, ONLY: earth_radius, aod_ha
+     use mem_namelist, ONLY: earth_radius, aod_ha, o3_du,h_o3,d_o3
      use constants_laps, ONLY: R_GAS, GRAV
 
      include 'trigd.inc'
@@ -223,7 +223,7 @@
            ,ic,idebug,refdist_solalt,solalt_ref &                        ! I
            ,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
-     use mem_namelist, ONLY: earth_radius, aod_ha
+     use mem_namelist, ONLY: earth_radius, aod_ha, o3_du,h_o3,d_o3
      use constants_laps, ONLY: R_GAS, GRAV
 
      include 'trigd.inc'
@@ -543,7 +543,7 @@
            ,ic,idebug,nsteps,refdist_solalt,solalt_ref &               ! I
            ,sumi_g,sumi_a,opac_slant,tausum_a)                         ! O
 
-     use mem_namelist, ONLY: earth_radius
+     use mem_namelist, ONLY: earth_radius, o3_du,h_o3,d_o3
      use constants_laps, ONLY: R_GAS, GRAV
      include 'trigd.inc'
      include 'rad_nodata.inc'
