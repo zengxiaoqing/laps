@@ -25,7 +25,7 @@
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      use mem_allsky, ONLY: mode_aero_cld
      use cloud_rad ! Cloud Radiation and Microphysics Parameters
-     include 'rad.inc'
+     include 'rad.inc' ! e.g. for ext_g, ext_o, o3_du
 
      trans(od) = exp(-min(od,80.))
      scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! x/scurve range is 0-1
