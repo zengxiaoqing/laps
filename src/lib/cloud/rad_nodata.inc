@@ -20,9 +20,9 @@
         horz_depf(htmsl,erad) = acosd(erad/(erad+max(htmsl,0.)))
 
 !       Ozone 
-        parameter (o3_du = 300.)
-        parameter (h_o3 = 22000.)
-        parameter (d_o3 = 11000.)
+!       parameter (o3_du = 300.)
+!       parameter (h_o3 = 22000.)
+!       parameter (d_o3 = 11000.)
 
 !       Column integrated value per meter
         scalei_o3(htmsl) = exp(-((htmsl-h_o3)/d_o3)**2) / (sqrt(pi) * d_o3)
