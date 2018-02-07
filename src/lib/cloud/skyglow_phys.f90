@@ -21,7 +21,7 @@
 
         include 'trigd.inc'
 
-        use mem_namelist, ONLY: fcterm, aod_bin, aod_asy, ssa, r_missing_data
+        use mem_namelist, ONLY: fcterm, aod_bin, aod_asy, ssa, r_missing_data, o3_du,h_o3,d_o3
         use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! I
 
 !       Statement Functions
