@@ -151,6 +151,8 @@
        do i = 1,ni
 
 !        Convert hydrometeor concentration to backscatter optical depth
+!        Constants are Mass Backscatter Efficiency MBE * ds = b tau / lwc
+          
          const_clwc = ((1.5 / rholiq ) / reff_clwc_f(clwc_3d(i,j,kl))) * bksct_eff_clwc * ds
          const_cice = ((1.5 / rholiq ) / reff_cice_f(cice_3d(i,j,kl))) * bksct_eff_cice * ds
          const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
