@@ -13,6 +13,8 @@
 !       Airmasses relative to zenith at aero refht         (aa - aerosol)
 !       Refraction (apparent altitude - true altitude)     (refr_deg)
 
+        use mem_namelist, ONLY: o3_du,h_o3,d_o3
+
         include 'trigd.inc'
         include 'rad_nodata.inc'
 
