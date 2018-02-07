@@ -20,7 +20,7 @@
                    moon_alt,moon_az,moon_mag,corr1_in,exposure, &       ! I
                    sky_rgb,sky_sprad,sky_reflectance)                   ! O
 
-        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa
+        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa,o3_du,h_o3,d_o3
         use cloud_rad ! , ONLY: ghi_zen_toa
         use mem_allsky, ONLY: ghi_sim,mode_aero_cld
         include 'trigd.inc'
@@ -330,7 +330,7 @@
           alt_top = alt_a(ni,1)
           if(alt_top .eq. 90.)then ! fisheye lens
             altmidcorr = -2.4 ! -3.60
-            fracerf0 = 0.54  ! value with sun on horizon (.54 for clear air, .59 for bright clouds)
+            fracerf0 = 0.34 ! value with sun on horizon (.54 for clear air, .59 for bright clouds)
           else                     ! panoramic camera
 !           altmidcorr = -4.69 - aod_ha * 40.
             altmidcorr = -4.99 - aod_ha * 20.
@@ -358,7 +358,7 @@
 
         offset = 0.
         write(6,3)sol_alt,corr1,glwmid,contrast,fracerf,erfterm
-3       format('  sol_alt/corr1/glwmid/contrast/fracerf/erfterm',f9.2,3f9.3,f9.1,2f9.3)
+3       format('  sol_alt/corr1/glwmid/contrast/fracerf/erfterm',f9.2,2f9.3,f9.1,2f9.3)
 
         ref_nl = day_int0
         if(new_color .gt. 0)then
@@ -1391,10 +1391,10 @@
 !               Glow from Rayleigh, no clear_rad crepuscular rays yet
 !               argm = glow(i,j) + log10(clear_rad_c(3,i,j)) * 0.15
                 glow_moon_s = glow_moon_sc(i,j)          ! log nL                 
-                glow_tot = addlogs(glow_nt,glow_moon_s)
+!               glow_tot = addlogs(glow_nt,glow_moon_s)
                 clear_rad_c(:,i,j) = clear_rad_c(:,i,j) + rad_moon_sc(:,i,j)
               else
-                glow_tot = glow_nt
+!               glow_tot = glow_nt
                 glow_moon_s = 0.
               endif
 
@@ -1789,9 +1789,11 @@
 !             if(alt_a(i,j) .gt. 1.7 .and. alt_a(i,j) .le. 2.1)then
                 call nl_to_RGB(sky_rad(:),glwmid,contrast & 
                    ,128.,1,xyz,rtotal,gtotal,btotal)
-                write(6,*)'sky_rad / glwmid ',sky_rad,glwmid
-                write(6,105)rtotal,gtotal,btotal,sky_rad(:)
-105             format(' total rgb/skyrad should be',3f9.2,94x,3f16.2)
+                write(6,*)'sky_rad / glwmid for SWIM is  ',sky_rad,glwmid
+                write(6,1051)sky_rad(:) / 6e9
+1051            format(' reflectance for SWIM is ',3f9.4)
+                write(6,1052)rtotal,gtotal,btotal,sky_rad(:)
+1052            format(' total rgb/skyrad should be',3f9.2,94x,3f16.2)
               endif
 
               do ic = 1,nc
@@ -1827,7 +1829,7 @@
                   write(6,112)glow_sun(i,j),10.**glow_sun(i,j),alt_a(i,j) &
                              ,rad_sun_r,rad_sun_g,rad_sun_b &
                              ,trans(cloud_od_loc(i,j) + clr_od(2)),rad_sun_g/sky_rad(2) 
-112               format('glow_sun/alt/rad_sun/trans/fracsun',f9.4,e16.6,f9.4,3e16.6,f11.8,2f9.4)
+112               format('glow_sun/alt/rad_sun/trans/fracsun',f9.4,e16.6,f9.2,3e16.6,f11.8,2f9.4)
                   write(6,*)'od_g_slant = ',od_g_slant_a(:,i)
                   write(6,*)'od_o_slant = ',od_o_slant_a(:,i)
                   write(6,*)'od_a_slant = ',od_a_slant_a(:,i)
@@ -1885,8 +1887,21 @@
         do ic = 1,nc
           radmax(ic) = maxval(sky_rad_a(ic,:,:))
         enddo ! ic
-        write(6,*)' max rad = ',radmax(:)
+
+        do i = 1,ni
+        do j = 1,nj
+           if(sky_rad_a(2,i,j) .eq. radmax(2))then
+              i_radmax = i
+              j_radmax = j
+           endif
+        enddo ! jazi
+        enddo ! ialt
+
+        write(6,121)radmax(:),i_radmax,j_radmax,alt_a(i_radmax,j_radmax),azi_a(i_radmax,j_radmax)
+121     format('  max rad = ',3e16.9,' at ',2i5,3f9.3)
         write(6,*)' max normal reflectance = ',radmax(:)/(2. * day_int)
+
+        sky_reflectance(:,:,:) = sky_rad_a(:,:,:) / (2. * day_int)
 
 !       Add bounds to rgb values
 !       do j = 1,nj
