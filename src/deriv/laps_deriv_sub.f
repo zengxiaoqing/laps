@@ -239,6 +239,8 @@ cdis
         real cldalb_in(NX_L,NY_L)
         real cldalb_out(NX_L,NY_L)
         real cldod_out(NX_L,NY_L)
+        real cldod_out_l(NX_L,NY_L)
+        real cldod_out_i(NX_L,NY_L)
         real visibility(NX_L,NY_L)
         real simvis(NX_L,NY_L)
         real static_albedo(NX_L,NY_L)
@@ -670,6 +672,8 @@ c read in laps lat/lon and topo
         if(istatus .ne. 1)then
             write(6,*)' Bad status return from get_cloud_deriv'
             goto 999
+        else
+            write(6,*)' Good status return from get_cloud_deriv'
         endif
 
         I4_elapsed = ishow_timer()
@@ -703,6 +707,7 @@ c read in laps lat/lon and topo
 !       Calculate "SFC" cloud type
 !       Now this is simply the cloud type of the lowest significant
 !       (> 0.65 cvr) layer present. If a CB is present, it is used instead.
+        write(6,*)' Calculate SFC cloud type'
         do i = 1,NX_L
         do j = 1,NY_L
             r_cld_type_2d(i,j) = 0
@@ -809,6 +814,8 @@ c read in laps lat/lon and topo
 !       Note slwc/cice is here in g/m**3
         write(6,*)
         write(6,*)' Calculating Integrated LWC and CICE'
+
+!       This routine can also return OD using 'reff_clwc_f' and 'reff_cice_f'
         call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
         call integrate_slwc(cice,heights_3d,NX_L,NY_L,NZ_L,cice_int)
 
@@ -820,7 +827,10 @@ c read in laps lat/lon and topo
      1                       ,minval(cice_int)*1e6,maxval(cice_int)*1e6
 
 !       Calculate cloud optical depth and cloud albedo
+!       Constants are Mass Extinction Efficiency (MEE) and Mass Backscatter
+!       Efficiency (MBE).
 !       Note the 1e3 term converts units from metric tons per m**2 to kg/m**2
+
         const_lwp = (1.5 * 1e3) / (rholiq     * reff_clwc)
         const_lwp_bks = const_lwp * bksct_eff_clwc
 
@@ -835,6 +845,8 @@ c read in laps lat/lon and topo
 
         const_gwp = (1.5 * 1e3) / (rhograupel * reff_graupel)
         const_gwp_bks = const_gwp * bksct_eff_graupel
+
+!       Note that TAU = OD = MEE times LWP
 
 !       Cloud amount is opacity of cloud liquid and cloud ice hydrometeors
         do j = 1,NY_L
@@ -1214,16 +1226,26 @@ c read in laps lat/lon and topo
      1                     + const_swp * snow_int(i,j)  
      1                     + const_gwp * pice_int(i,j)  
 
+            cldod_out_l(i,j) = const_lwp * slwc_int(i,j)
+     1                       + const_rwp * rain_int(i,j)  
+
+            cldod_out_i(i,j) = const_iwp * cice_int(i,j)  
+     1                       + const_swp * snow_int(i,j)  
+     1                       + const_gwp * pice_int(i,j)  
+
             simvis(i,j) = cldalb_out(i,j) + (1.-cldalb_out(i,j))**2 
      1          * (sfc_albedo(i,j)/(1.-cldalb_out(i,j)*sfc_albedo(i,j)))
 
             if(i .eq. idb .AND. j .eq. jdb)then
                 cvrmax = maxval(clouds_3d(i,j,:))
-                write(6,1201)cvrmax,cldod_out(i,j),cldalb_in(i,j)
+                write(6,1201)cldod_out(i,j),cldod_out_l(i,j)
+     1                      ,cldod_out_i(i,j)
+ 1201           format(' CTR cloud od/l/i',3f9.3)
+                write(6,1202)cvrmax,cldod_out(i,j),cldalb_in(i,j)
      1                      ,cldalb_out(i,j),sfc_albedo(i,j),simvis(i,j)
- 1201           format(' CTR cloud cvr/od/albi-o/sfcalb/smv:',6f9.3)
-                write(6,1202)slwc_int(i,j),cice_int(i,j)
- 1202           format(' CTR slwc_int/cice_int ',2f10.6)
+ 1202           format(' CTR cloud cvr/od/albi-o/sfcalb/smv:',6f9.3)
+                write(6,1203)slwc_int(i,j),cice_int(i,j)
+ 1203           format(' CTR slwc_int/cice_int ',2f10.6)
             endif
 
         enddo ! i
