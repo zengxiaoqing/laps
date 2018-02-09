@@ -67,6 +67,8 @@ cdis
             call zr(ref_3d(1,1,k),ni,nj,rate_3d(1,1,k))
         enddo ! k
 
+        write(6,*)' c_z2m = ',c_z2m
+
         if(c_z2m .eq. 'albers')then
           do j = 1,nj
           do i = 1,ni
