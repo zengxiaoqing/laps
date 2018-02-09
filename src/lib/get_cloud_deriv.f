@@ -600,6 +600,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
             if(istatus .ne. 1)then
                 write(6,*)'Bad status returned from cpt_pcp_type_3d'
                 return
+            else
+                write(6,*)'Good status returned from cpt_pcp_type_3d'
             endif
 
             I4_elapsed = ishow_timer()
@@ -1087,6 +1089,35 @@ cdoc    call to deprecated routine 'laps_slwc_revb'
      1                           ,slwc_int)            
 
 cdoc    Integrates cloud liquid through the column
+
+        real slwc(imax,jmax,kmax)       ! Input in g/m**3
+        real heights_3d(imax,jmax,kmax) ! Input 
+        real slwc_int(imax,jmax)  ! LWP in metric tons of water / m**2 
+                                  ! Corresponds to a depth in meters
+                                  ! Multiply by 1e6 to get LWP in g/m**2
+        real depth(kmax)          ! Local
+
+        do j = 1,jmax
+        do i = 1,imax
+            slwc_int(i,j) = 0.
+            do k = 1,kmax-1
+                depth(k) = heights_3d(i,j,k+1) - heights_3d(i,j,k) ! meters
+                                                         ! convert units
+                slwc_ave = (slwc(i,j,k) + slwc(i,j,k+1)) * 0.5 * 1e-6 
+                slwc_int(i,j) = slwc_int(i,j) + slwc_ave * depth(k)
+            enddo ! k
+        enddo ! i
+        enddo ! j
+
+        return
+        end
+
+        subroutine integrate_slwc_od(slwc,heights_3d,imax,jmax,kmax
+     1                           ,slwc_int)            
+
+!       Integrates cloud liquid through the column
+!       We can also pass back od depending on the type of hydrometeors
+
 
         real slwc(imax,jmax,kmax)       ! Input in g/m**3
         real heights_3d(imax,jmax,kmax) ! Input 
