@@ -407,7 +407,7 @@
           clwc_ideal = clwc_ideal * .00001
           cice_ideal = cice_ideal * .00001
         elseif(c_model(1:9) .eq. 'aerocloud')then  
-          l_require_all_fields = .true.                    ! 
+          l_require_all_fields = .false.                   ! 
           mode_aero_cld = 3
           i_aero_synplume = 2
           read(c_model(11:13),*)aero_synfactor
