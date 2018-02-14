@@ -1,7 +1,16 @@
 
-        subroutine nl_to_RGB(rad,glwref,contrast,cntref,iverbose,xyz,rc,gc,bc)
+        subroutine nl_to_RGB(rad,glwref,contrast,cntref,wa,iverbose,xyz,rc,gc,bc)
 
-        include 'wa.inc'
+        parameter (nc = 3)
+
+        real wa(nc)                    ! wavelength (um)
+!       data wa    /.615,.546,.450/
+
+!       Luminance of sunlight from 1AU distance uniformly scattered 
+!       throughout a 360 degree sphere. This will be defined as the
+!       spectral radiance matching that of the solar spectrum.
+        parameter (day_int0 = 3e9)
+
         include 'wac.inc'
 
         real luminance ! candela / m**2
@@ -69,12 +78,12 @@
         cdm2(:) = (rad(:)/1e9) * 3183.0988 ! nl to candela/m**2
 
 !       Extrapolate color            
-        call extrap_color(rel_solar,rel_solar_extrap) ! dimensionless
-        farad(:) = fasun(:) * rel_solar_extrap(:)     ! spect irradiance
+        call extrap_color(rel_solar,wa,rel_solar_extrap) ! dimensionless
+        farad(:) = fasun(:) * rel_solar_extrap(:)        ! spect irradiance
         if(iverbose .eq. 1)write(6,*)' farad = ',farad
 
 !       Convert sprad to xyz
-        call get_tricolor(farad,iverbose,xx,yy,zz,x,y,z,luminance)
+        call get_tricolor(farad,iverbose,wa,xx,yy,zz,x,y,z,luminance)
         if(iverbose .eq. 1)write(6,*)'xyzfarad = ',x,y,z
         if(iverbose .eq. 1)write(6,*)'luminance farad = ',luminance
         xyz(1) = x; xyz(2) = y; xyz(3) = z
@@ -116,9 +125,17 @@
         return
         end
 
-        subroutine extrap_color(a_nc,a_nct)
+        subroutine extrap_color(a_nc,wa,a_nct)
 
-        include 'wa.inc'
+        parameter (nc = 3)
+
+        real wa(nc)                    ! wavelength (um)
+
+!       Luminance of sunlight from 1AU distance uniformly scattered 
+!       throughout a 360 degree sphere. This will be defined as the
+!       spectral radiance matching that of the solar spectrum.
+        parameter (day_int0 = 3e9)
+
         include 'wac.inc'
 
         real a_nc(nc), a_nct(nct)
@@ -232,9 +249,6 @@
 
         subroutine get_fluxsun(wa,nc,iverbose,fa)
 
-!       include 'wa.inc'
-!       include 'wac.inc'
-
 !       Returns solar spectral irradiance for selected wavelengths
 
         real fa(nc) ! watts/(m**2 nm)
@@ -261,9 +275,17 @@
         return
         end
 
-        subroutine get_tricolor(fa,iverbose,xc,yc,zc,x,y,z,luminance)
+        subroutine get_tricolor(fa,iverbose,wa,xc,yc,zc,x,y,z,luminance)
 
-        include 'wa.inc'
+        parameter (nc = 3)
+
+        real wa(nc)                    ! wavelength (um)
+
+!       Luminance of sunlight from 1AU distance uniformly scattered 
+!       throughout a 360 degree sphere. This will be defined as the
+!       spectral radiance matching that of the solar spectrum.
+        parameter (day_int0 = 3e9)
+
         include 'wac.inc'
 
 !       Integrate spectral irradiance with the color matching functions
