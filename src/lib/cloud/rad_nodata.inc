@@ -85,16 +85,14 @@
 
         hg(g,pha) = (1.-g**2) / (1. + g**2 - 2.*g*cosd(pha))**1.5
 
-        include 'wa.inc'
-
 !       parameter (nc = 3)
-        real ext_g(nc)               ! od per airmass
-!       data ext_g /.090,.144,.312/  ! 0.14 * (wa/.55)**(-4)              
-!       Multiply values by .006/.038
+        real ext_g(nc)                  ! od per airmass
+
+!       Multiply Earth values by .006/.038
 !       data ext_g /.00142,.00227,.00493/                                       
 
-        real ext_o(nc)               ! od per airmass
-        data ext_o /.037,.029,.001/  ! interp from gflash.bas (300DU)
+!       real ext_o(nc)               ! od per airmass
+!       data ext_o /.037,.029,.001/  ! interp from gflash.bas (300DU)
 
 !       real wa(nc)                  ! wavelength (um)
 !       data wa    /.615,.546,.450/
