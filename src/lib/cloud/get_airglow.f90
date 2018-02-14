@@ -1,8 +1,8 @@
 
-        subroutine get_airglow(alt_a,ni,nj,obs_glow_zen & ! I
-                              ,patm,htmsl,horz_dep &      ! I
-                              ,airmass_2_topo,frac_lp &   ! I
-                              ,clear_rad_c_nt)            ! O
+        subroutine get_airglow(alt_a,ni,nj,nc,obs_glow_zen & ! I
+                              ,patm,htmsl,horz_dep &         ! I
+                              ,airmass_2_topo,frac_lp &      ! I
+                              ,clear_rad_c_nt)               ! O
 
 !       Calculate sky glow due to airglow. This takes into
 !       account the limb when determining airglow. 
@@ -55,7 +55,7 @@
               write(6,*)' get_airglow: patm/obs_glow_zen',patm,obs_glow_zen                    
             endif
 
-            call get_airglow_lyr(htmsl,alt,airglow_zen,ht_lyr,thk_lyr,bot_lyr,top_lyr,flyr_blw,flyr_abv,airglow)
+            call get_airglow_lyr(htmsl,alt,airglow_zen,nc,ht_lyr,thk_lyr,bot_lyr,top_lyr,flyr_blw,flyr_abv,airglow)
             airglow_sum(:) = airglow_sum(:) + airglow(:)
 
           enddo ! ilyr
@@ -83,7 +83,7 @@
         end
        
 
-        subroutine get_airglow_lyr(htmsl,alt,airglow_zen,ht_lyr,thk_lyr,bot_lyr,top_lyr,flyr_blw,flyr_abv,airglow)
+        subroutine get_airglow_lyr(htmsl,alt,airglow_zen,nc,ht_lyr,thk_lyr,bot_lyr,top_lyr,flyr_blw,flyr_abv,airglow)
 
         use mem_namelist, ONLY: earth_radius
         include 'trigd.inc'
