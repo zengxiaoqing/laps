@@ -77,8 +77,11 @@
         include 'wa.inc'
 
 !       parameter (nc = 3)
-        real ext_g(nc)               ! od per airmass
-        data ext_g /.090,.144,.312/  ! 0.14 * (wa/.55)**(-4)              
+
+!       Based on http://web.gps.caltech.edu/~vijay/Papers/Rayleigh_Scattering/Bodhaine-etal-99.pdf
+        real ext_g(nc)                  ! od per airmass
+        data ext_g /.0621,.0999,.2166/  ! 0.097069 * (wa/.55)**(-4)            
+!       data ext_g /.090,.144,.312/     ! 0.14 * (wa/.55)**(-4)
 
         real ext_o(nc)               ! od per airmass
         data ext_o /.037,.029,.001/  ! interp from gflash.bas (300DU)
