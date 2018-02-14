@@ -6,7 +6,8 @@
                    clear_rad_c,l_solar_eclipse,i4time,rlat,rlon,eobsl,& ! I
                    clear_radf_c,patm,patm_sfc,htmsl, &                  ! I
                    clear_rad_c_nl, &                                    ! I
-                   glow_sun,glow_moon,glow_stars,ext_g, &               ! I
+                   glow_sun,glow_moon,glow_stars, &                     ! I
+                   ext_g,ext_o,wa,nc,day_int0, &                        ! I
                    od_atm_a,aod_ref,transm_obs,obs_glow_gnd,isun,jsun, &! I
                    airmass_2_cloud,airmass_2_topo,swi_obs, &            ! I
                    topo_gti,topo_albedo,gtic,dtic,btic,emic,albedo_sfc,&! I
@@ -40,8 +41,9 @@
         difftwi(altf) = & ! W/m**2                      
         4. * exp(0.50 * altf - 0.108 * altf**2 - .0044 * altf**3)
 
-        include 'rad_nodata.inc'
+!       include 'wa.inc'
         include 'wac.inc'
+        include 'rad_nodata.inc'
 
         real r_cloud_3d(ni,nj)      ! cloud opacity
         real cloud_od(ni,nj)        ! cloud optical depth
@@ -135,10 +137,11 @@
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
         real sky_rad_a(nc,ni,nj)
         real sp_rad_a(nc,ni,nj)
-        real sprad_pix(nc)
+        real sprad_pix(nc),wa(nc)
         real counts_one_refl_nl(nc)
         real counts_one_refl(nc)
         real radmax(nc)
+        real ext_o(nc)
         real xyz(3) ! color coordinates
 
         integer new_color /2/ ! sky_rad can be more fully used still
@@ -164,7 +167,7 @@
         moon_rad_2nd_c(:,:,:) = 0. ! set (initialize) 
         rad_moon_sc(:,:,:) = 0.     ! initialize
         ave_rad_toa_c(:,:,:) = 0.   ! initialize
-        day_int = day_int0 ! via includes
+        day_int = day_int0 ! passed in
         topo_visibility = 0.
         rintensity_glow = -999. ! nearly obsolete variable
         contrast = -999.        ! nearly obsolete variable
@@ -363,7 +366,7 @@
         ref_nl = day_int0
         if(new_color .gt. 0)then
           call nl_to_RGB(ref_nl(:),glwmid,contrast & 
-                        ,128.,1,xyz,ref_red,ref_grn,ref_blu)
+                        ,128.,wa,1,xyz,ref_red,ref_grn,ref_blu)
         else
           ref_red = 240.; ref_grn = 240.; ref_blu = 240.
         endif
@@ -678,7 +681,8 @@
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
                      ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
-                     ,aod_ill,aod_2_topo,aod_tot,ext_g &               ! I
+                     ,aod_ill,aod_2_topo,aod_tot &                     ! I
+                     ,ext_g,ext_o,nc,wa,day_int0 &                     ! I
                      ,l_solar_eclipse,i4time,rlat,rlon &               ! I
                      ,clear_radf_c,ag_2d &                             ! I
                      ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
@@ -687,6 +691,7 @@
 
             write(6,*)' range of clear_radf_c(2) is ',minval(clear_radf_c(2,:,:)),maxval(clear_radf_c(2,:,:))
             write(6,*)' range of clear_rad_c(2) is ',minval(clear_rad_c(2,:,:)),maxval(clear_rad_c(2,:,:))
+            write(6,*)' range of clear_rad_2nd_c(2) is ',minval(clear_rad_2nd_c(2,:,:)),maxval(clear_rad_2nd_c(2,:,:))
             if(minval(clear_rad_c(2,:,:)) .le. 0.)then
                 write(6,*)' ERROR: clear_rad_c(2,:,:) has min <= 0.'
             endif
@@ -698,7 +703,7 @@
 
 !           Add sfc_albedo?
             where(sky_rad_ave(:) .ne. r_missing_data)                   
-              sph_rad_ave(:) = sky_rad_ave(:) * 0.5 * (1. + 0.15)
+              sph_rad_ave(:) = sky_rad_ave(:) * 0.5 * (1. + albedo_sfc(:))
             elsewhere
               sph_rad_ave(:) = r_missing_data
             endwhere
@@ -734,7 +739,8 @@
                      ,od_atm_a,od_atm_a_eff,od_atm_a_dir &             ! I
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
                      ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
-                     ,aod_ill,aod_2_topo,aod_tot,ext_g &               ! I
+                     ,aod_ill,aod_2_topo,aod_tot &                     ! I
+                     ,ext_g,ext_o,nc,wa,day_int0 &                     ! I
                      ,.false.,i4time,rlat,rlon &                       ! I
                      ,clear_radf_c,ag_2d &                             ! I
                      ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
@@ -887,10 +893,10 @@
 
 !       Add the airglow contribution
         if(.true.)then
-            call get_airglow(alt_a,ni,nj,obs_glow_gnd &                ! I
-                                  ,patm,htmsl,horz_dep &               ! I
-                                  ,airmass_2_topo,frac_lp &            ! I
-                                  ,clear_rad_c_airglow)                ! O
+            call get_airglow(alt_a,ni,nj,nc,obs_glow_gnd &          ! I
+                                  ,patm,htmsl,horz_dep &            ! I
+                                  ,airmass_2_topo,frac_lp &         ! I
+                                  ,clear_rad_c_airglow)             ! O
             ave_rad_toa_c(:,:,:) = clear_rad_c_airglow(:,:,:)
 
             do ic = 1,nc
@@ -1151,7 +1157,7 @@
 
 !             Informational only
               call nl_to_RGB(cld_rad(:),glwmid,contrast & 
-                   ,128.,0,xyz,rintensity(1),rintensity(2),rintensity(3))
+                   ,128.,wa,0,xyz,rintensity(1),rintensity(2),rintensity(3))
 
 !             if( ( idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .eq. nint(alt_a(i,j)) .AND. & 
 !               (abs(alt_a(i,j)).le.40.0 .or. abs(alt_a(i,j)).eq.90.0 .or. abs(alt_a(i,j)+70.).lt.7.) )  &
@@ -1255,7 +1261,7 @@
 
 !         Note cld_rad only newly defined for sol_alt < twi_alt
           call nl_to_RGB(cld_rad(:),glwmid,contrast & 
-                        ,128.,0,xyz,cld_red,cld_grn,cld_blu)
+                        ,128.,wa,0,xyz,cld_red,cld_grn,cld_blu)
 
 !         Initialize
           glow_nt = 0.    
@@ -1285,8 +1291,8 @@
                 endif
 
                 if(idebug_a(i,j) .ge. 1)then
-                  write(6,54)clear_rad_c(:,i,j),clear_rad_c_tot(:,i,j)
-54                format(' clrradc/nt',3f12.0,3x,3f10.0)
+                  write(6,54)clear_rad_c(:,i,j),clear_rad_c_tot(:,i,j),clear_rad_2nd_c(:,i,j)
+54                format(' clrradc/nt/2nd',3f12.0,3x,3f10.0,3x,3f12.0)
                 endif
 
                 if((l_solar_eclipse .eqv. .true.) .and. eobsl .gt. 0.9)then
@@ -1312,7 +1318,7 @@
                 endif
 
                 call nl_to_RGB(clear_rad_c(:,i,j),glwmid,contrast & 
-                              ,128.,0,xyz,clr_red,clr_grn,clr_blu)
+                              ,128.,wa,0,xyz,clr_red,clr_grn,clr_blu)
               endif ! .true.
 
               if(idebug .eq. 1 .AND. (elong_a(i,j) .lt. 0. .or. &
@@ -1441,7 +1447,21 @@
             cloud_visibility = exp(-od_2_cloud) ! empirical coeff
 
 !           Use clear sky values if cloud cover is less than 0.5
-            opac_cloud = r_cloud_3d(i,j)
+!           For 3D aerosols we can rederive r_cloud_3d accounting for the
+!           aerosol fraction and Angstorm exponent.             
+            opac_cloud = r_cloud_3d(i,j) ! * ext_a(ic) ! for testing (thin 3D aerosol case)
+            if(mode_aero_cld .eq. 3)then
+              if(cloud_od_loc(i,j) .gt. 0.)then
+                aero_frac = aod_tot(i,j) / cloud_od_loc(i,j)
+              else
+                aero_frac = 1.
+              endif
+              cloud_od_hm = cloud_od_loc(i,j) * (1. - aero_frac)
+              cloud_od_aero = cloud_od_loc(i,j) * aero_frac              
+              cloud_od_tmp = cloud_od_aero * ext_a(ic) + cloud_od_hm
+!             cloud_od_tmp = cloud_od_aero * 1.0       + cloud_od_hm
+              opac_cloud = opac(cloud_od_tmp)
+            endif
 !           opac_cloud = 0.0 ; Testing
 
 !           0 by day and 1 by night
@@ -1576,12 +1596,19 @@
 96            format(' od2cld/od2tpo/odclr/aod2cld/aod2tpo/cldalb/almb/em',6f10.4,f8.3,f8.2)
               write(6,97)frac_front,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_scat,frac_clr,frac_clr_2nd,frac_clr_nonua,frac_cloud,scurve_term,clear_rad_c(2,i,j),cld_rad(2),sky_rad(2)
 97            format(' ffnt/rcld/radf/fsct/fclr/fclr2/fclrnua/fcld/scrv/clrrd/cldrd/skyrd',9f7.3,f13.0,2x,f13.0,2x,f13.0,2x,i4)
+              if(clear_rad_c(2,i,j) .gt. 0.)then
+                 fraction_2nd = clear_rad_2nd_c(2,i,j) / clear_rad_c(2,i,j)
+              else
+                 fraction_2nd = 0.
+              endif
+              write(6,971)clear_rad_c(2,i,j),clear_rad_2nd_c(2,i,j),fraction_2nd,clear_rad_2nd_c(:,i,j)
+971           format(' clr_rad_c / clr_rad_2nd_c / frac2 / 2nd_spectral = ',f12.0,f12.0,f9.4,3x,3f12.0)
             endif
 
           enddo ! ic
 
           call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                 ,128.,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+                 ,128.,wa,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 !         sky_rgb(:,I,J) = min(sky_rgb(:,I,J),255.)
 
 !         Use topo value if airmass to topo > 0
@@ -1646,7 +1673,7 @@
                   sky_rad(3) = sky_rad(3) + blu_rad
  
                   call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                    ,128.,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+                    ,128.,wa,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 
               else ! sol_alt < twi_alt
 !                 Nighttime assume topo is lit by city lights (nL)
@@ -1697,7 +1724,7 @@
                   sky_rad(3) = sky_rad(3)*(1.0-topo_viseff) + blu_rad
  
                   call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                    ,128.,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+                    ,128.,wa,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 
               endif ! sol_alt
 
@@ -1775,7 +1802,7 @@
               endif
 
               call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                 ,128.,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
+                 ,128.,wa,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
 
 !             if(idebug .eq. 1)then
 !               write(6,100)sky_rad,sky_rgb(:,I,J)
@@ -1788,7 +1815,7 @@
               if(i .eq. ni)then
 !             if(alt_a(i,j) .gt. 1.7 .and. alt_a(i,j) .le. 2.1)then
                 call nl_to_RGB(sky_rad(:),glwmid,contrast & 
-                   ,128.,1,xyz,rtotal,gtotal,btotal)
+                   ,128.,wa,1,xyz,rtotal,gtotal,btotal)
                 write(6,*)'sky_rad / glwmid for SWIM is  ',sky_rad,glwmid
                 write(6,1051)sky_rad(:) / 6e9
 1051            format(' reflectance for SWIM is ',3f9.4)
@@ -1816,13 +1843,15 @@
 1111              format(' spectral radiance at zenith (w/m2/sr/nm) ',3e13.4,' for lambda (microns)',3f6.3)
                   write(6,1112)rmaglim
 1112              format(' limiting (cloudless) magnitude is ',f9.2)
-                  write(6,1113)xyz
-1113              format(' xyz is ',3f9.4)
               endif
               if(abs(elong_a(i,j) - 90.) .le. 0.5)then
                   write(6,*)' ******** 90 elong location ********************** od'
                   write(6,111)clear_rad_c(:,i,j),nint(clr_red),nint(clr_grn),nint(clr_blu)
               endif
+
+              write(6,1113)xyz
+1113          format(31x,'xyz is ',3f9.4)
+
               if(i .eq. isun .and. j .eq. jsun)then
 !             if(elong_a(i,j) .le. 0.5)then
                   write(6,*)' ******** solar location ************************* od'
@@ -1864,7 +1893,7 @@
                       ,glow_cld_nt,glow_cld_moon,glow_cld,glow_secondary_clr,rmaglim &
                       ,cloud_visibility,rintensity_glow,nint(sky_rgb(:,i,j)),clear_rad_c_tot(:,i,j)
               endif
-116           format(2i5,f7.2,2f6.1,f9.3,f11.6,2f7.2,3f6.2,3f8.3,f8.4,f7.1,f9.5,f9.1,f8.3,2f8.5,2f8.3,f10.0,2x,3i4,' cldrgb',1x,3i4)
+116           format(2i5,f7.2,2f6.1,f9.3,f11.6,2f7.2,3f6.2,3f8.3,f8.4,f7.1,f9.5,f9.1,f8.3,2f8.5,2f8.3,f12.0,1x,3i4,' cldrgb',1x,3i4)
 117           format(2i5,3f9.2,f9.3,f11.6,4f9.3,f9.4,f7.1,f9.3,f8.1,6f7.3,f9.2,2x,3i4,' clrrad',3f10.0,3i4)
 118           format(2i5,f9.4,2f9.3,f9.3,f11.6,4f9.3,f9.6,f7.1,f9.3,f9.3,4f9.3,f9.2,2x,3i4,' clrrad',3f8.2)
               write(6,*)
@@ -1917,7 +1946,7 @@
 
         counts_one_refl_nl(:) = 6e9
         call nl_to_RGB(counts_one_refl_nl(:),glwmid,contrast & 
-           ,128.,1,xyz,counts_one_refl(1),counts_one_refl(2),counts_one_refl(3))
+           ,128.,wa,1,xyz,counts_one_refl(1),counts_one_refl(2),counts_one_refl(3))
         write(6,*)' counts for 1.0 reflectance is',counts_one_refl(:)
 
         do ic = 1,nc
