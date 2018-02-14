@@ -31,6 +31,21 @@
         use mem_namelist, ONLY: earth_radius, ssa
 
         include 'trigd.inc'
+        include 'wa.inc'
+
+        real ext_o(nc)               ! od per airmass
+        data ext_o /.037,.029,.001/  ! interp from gflash.bas (300DU)
+
+        parameter (pi = 3.14159265)
+        parameter (rpd = pi / 180.)
+
+!       Statement Functions
+        trans(od) = exp(-min(od,80.))
+        opac(od) = 1.0 - trans(od)
+
+        real ext_g(nc)                  ! od per airmass
+        rayleigh_pf(theta) =
+     1      (1.00 * ( (1. + cosd(theta)**2) / (4./3.) ) ) + (0.00 * 1.0) 
 
         addlogs(x,y) = log10(10.**x + 10.**y)
         angdist(p1,p2,dlon) = acosd(sind(p1) * sind(p2)
@@ -121,7 +136,6 @@
         real blog_sun_roll(minalt:maxalt,minazi:maxazi)
         real glow_stars(nc,minalt:maxalt,minazi:maxazi)
 
-        real ext_g(nc)               ! od per airmass
         real moon_mag,moon_mag_thr
         real*8 bi_coeff(2,2),ritopo,rjtopo,fi,fj
         logical l_solar_eclipse, l_binary, l_zod, l_phase
@@ -130,15 +144,26 @@
         integer mode_cloud_mask ! 1 is ignore cloud mask
                                 ! 2 is display cloud mask differences
                                 ! 3 perform cloud mask clearing
-        
+
         write(6,*)' subroutine calc_allsky...'
 
-        pi = 3.14159265
-        rpd = pi / 180.
+!       Set up Rayleigh Scattering
+        write(6,*)' Rayleigh PF = ',rayleigh_pf(170.)
+        write(6,*)'       Wa       OD       Tr      Refl    Rmag'
 
-        ext_g(1) = .090 ! 0.14 * (wa/.55)**(-4)
-        ext_g(2) = .144 ! 0.14 * (wa/.55)**(-4)
-        ext_g(3) = .312 ! 0.14 * (wa/.55)**(-4)
+!       Bodhaine et. al "On Rayleigh Optical Depth Calculations", JTECH
+!       http://web.gps.caltech.edu/~vijay/Papers/Rayleigh_Scattering/Bodhaine-etal-99.pdf
+        od_550 = .097069
+!       od_550 = .140
+
+        do ic = 1,nc
+           ext_g(ic) = od_550 * (0.55 / wa(ic))**4.0
+           tr = trans(ext_g(ic))
+           rmag = -log10(tr) * 2.5
+           refl = opac(ext_g(ic)) * 0.5 * rayleigh_pf(170.)
+           write(6,1)ic,wa(ic),ext_g(ic),tr,refl,rmag
+1          format(i3,f9.3,4f9.4)
+        enddo ! ic
 
         iobs = nint(ri_obs)
         jobs = nint(rj_obs)
@@ -197,7 +222,7 @@
      1                     ,htmsl,horz_dep,twi_0                    ! O
 !    1                     ,solalt_limb_true                        ! O
      1                     ,htagl                                   ! I
-     1                     ,aod_ref                                 ! I
+     1                     ,aod_ref,ext_g                           ! I
      1                     ,NX_L,NY_L,NZ_L,isound,jsound,newloc     ! I
      1                     ,ri_obs,rj_obs                           ! I
      1                     ,alt_a_roll,azi_a_roll                   ! I
@@ -524,7 +549,7 @@
      1                    ,blog_sun_roll     ! sunglow
      1                    ,blog_moon_roll    ! moonglow
      1                    ,glow_stars        ! starglow
-     1                    ,ext_g
+     1                    ,ext_g,ext_o,wa,nc,day_int0
      1                    ,aod_vrt,aod_ref 
      1                    ,transm_obs,obs_glow_gnd ! observer illumination
      1                    ,ialt_sun,jazi_sun ! sun location
@@ -580,6 +605,10 @@
                     col_ratio = 255. / colmax
                     sky_rgb_cyl(:,i,j) = sky_rgb_cyl(:,i,j) * col_ratio                                        
                   endif                   
+                endif
+
+                if(.false.)then ! grayscale reflectance image
+                    sky_rgb_cyl(:,i,j) = sky_reflectance(1,i,j) * 200.
                 endif
 
               enddo ! i
