@@ -39,7 +39,7 @@
         am_thsh_defint(z,h1,h2,r) = am_thsh_indefint(z,h2,r) - am_thsh_indefint(z,h1,r) 
 
 !       Airmasses estimated for thick shell (both below and above O3 max)
-!       Effective scale height above h_o3 varies with 1./d_o3
+!       Effective scale height above h_o3 varies with 1./d_o3 
         relscale_ht_o3(h) = d_o3 / (max(h+2.5*d_o3,h_o3+100.)-h_o3)
         hshellf(h) = max(h_o3-h,d_o3/2.5) * min(1.0,relscale_ht_o3(h))
 
