@@ -24,7 +24,7 @@
 !    1                           ,solalt_limb_true                      ! O
      1                           ,htagl                                 ! I
 !    1                           ,elong                                 ! I
-     1                           ,aod                                   ! I
+     1                           ,aod,ext_g                             ! I
      1                           ,ni,nj,nk,i,j,newloc,ri_obs,rj_obs     ! I
      1                           ,view_alt,view_az,sol_alt,sol_azi      ! I
      1                           ,alt_norm                              ! I
@@ -87,7 +87,6 @@
 !       Determine shadow regions of the input 3-D cloud array
 
         real ext_g(nc),twi_trans_c(nc) ! od per airmass, tramsmissivity
-        data ext_g /.090,.144,.312/  ! 0.14 * (wa/.55)**(-4)              
 
         real clwc_3d(ni,nj,nk) ! kg/m**3
         real cice_3d(ni,nj,nk) ! kg/m**3
@@ -165,7 +164,7 @@
 
         logical l_solar_eclipse, l_radtran /.false./, l_spherical
         logical l_atten_bhd /.true./, l_box, l_latlon_grid, l_binary
-        logical l_terrain_following
+        logical l_terrain_following, l_fullres_wdw
         integer idebug_a(minalt:maxalt,minazi:maxazi)
 
         parameter (nsp = 4)
@@ -212,6 +211,13 @@
         real sum_odrad_c(nc)
         real sum_odrad_c_last(nc)
         real minalt_deg,maxalt_deg,minazi_deg,maxazi_deg
+
+!       Interpolation info
+        integer ialt_intl(minalt:maxalt,minazi:maxazi)
+        integer ialt_inth(minalt:maxalt,minazi:maxazi)
+        integer jazi_intl(minalt:maxalt,minazi:maxazi)
+        integer jazi_inth(minalt:maxalt,minazi:maxazi)
+        logical l_pix_trace(minalt:maxalt,minazi:maxazi)
 
         real*8 dslant1_h,dslant2,dz1_l,dz1_h,ht_l,ht_h
 
@@ -1032,6 +1038,26 @@
         write(6,*)' range of altitudes is ',minalt_deg,maxalt_deg
         write(6,*)' range of azimuths is  ',minazi_deg,maxazi_deg
 
+!       Optional setup of hi-res window
+        if(grid_spacing_m .le. 30.)then
+           write(6,*)' Setting up full res window'
+           l_fullres_wdw = .true.
+           azimin_full = 207.
+           azimax_full = 222.
+           altmin_full = 0.
+           altmax_full = 5.
+           jazimin_full = nint(azimin_full / azi_scale)
+           jazimax_full = nint(azimax_full / azi_scale)
+           ialtmin_full = nint(altmin_full / alt_scale)
+           ialtmax_full = nint(altmax_full / alt_scale)
+           jazi_delt_outer = nint(1.0 / azi_scale)
+        else
+           l_fullres_wdw = .false.
+           jazi_delt_outer = 1 ! disabled
+        endif
+
+        l_pix_trace(:,:) = .false.
+
 !       azid1 = 46. ; azid2 = 226.
         azid1 = 90. ; azid2 = 270.
         if(sol_alt(i,j) .gt. 0.)then
@@ -1085,7 +1111,7 @@
              if(ialt .eq. (ialt/idelt)*idelt)then
                  jazi_delt = nint(2. / azi_scale)
              else
-                 jazi_delt = maxazi
+                 jazi_delt = maxazi - minazi
              endif
          elseif(altray .ge. topo_alt_thresh)then ! alt_scale, 1 deg azi
              jazi_delt = nint(1. / azi_scale)
@@ -1140,21 +1166,37 @@
 
          call get_htmin(altray,patm,htstart,earth_radius,0,patm2,htmin)
 
+!        This responds to the presence of inner/outer windows
+         jazi_delt_eff = max(jazi_delt,jazi_delt_outer)
+
          if(altray .eq. nint(altray))then
            write(6,*)'altray/htmin/dist_to_topo = '
      1               ,altray,htmin,dist_to_topo
-           write(6,*)'alt/jazi_delt/grdasp',ialt,altray,jazi_delt,grdasp
+           write(6,52)ialt,altray,jazi_delt,jazi_delt_eff,grdasp
+52         format('alt/jazi_delt/jazi_delt_eff,grdasp',i5,f9.3,2i5,f9.3)
          endif
 
          altray_limb = altray + horz_dep_d
          radius_limb = 90. - horz_dep_d
 
-         do jazi = minazi,maxazi,jazi_delt
-          view_azi_deg = float(jazi) * azi_scale
-          azigrid = modulo(view_azi_deg + projrot,360.)
+!        Determine pixels to trace for this altitude
+         if(jazi_delt .lt. maxazi-minazi)then ! alt ring is traced
+            l_pix_trace(ialt,minazi:maxazi:jazi_delt_eff) = .true.
+         endif
+         if((l_fullres_wdw .eqv. .true.) .and. ialt .ge. ialtmin_full
+     1                   .and. ialt .le. ialtmax_full)then ! fill inner window
+            l_pix_trace(ialt,jazimin_full:jazimax_full) = .true.
+         endif
 
-          if((abs(view_azi_deg - azid1) .lt. azi_delt_2 .or. 
-     1        abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
+         do jazi = minazi,maxazi
+
+          if(l_pix_trace(ialt,jazi))then
+
+           view_azi_deg = float(jazi) * azi_scale
+           azigrid = modulo(view_azi_deg + projrot,360.)
+
+           if((abs(view_azi_deg - azid1) .lt. azi_delt_2 .or. 
+     1         abs(view_azi_deg - azid2) .lt. azi_delt_2      ) .AND.
      1        (abs(altray) .eq. 12  .or. abs(altray) .eq. 9 .or.
      1         (altray .ge. -5. .and. altray .le. 9.) .or. 
      1         ialt .eq. minalt .or. abs(altray) .eq. 14. .or.
@@ -2607,43 +2649,46 @@
 
           if(mode_aero_cld .lt. 3 .or. .true.)then ! prevent dble counting
               r_cloud_3d(ialt,jazi) = 1.-(exp(-cloud_od(ialt,jazi)))
+              if(mode_aero_cld .eq. 3 .and. .false.)then ! 
+                  frac_aod = sum_aod / cloud_od(ialt,jazi)
+              endif
           else
               r_cloud_3d(ialt,jazi)
      1                    = 1.-(exp(-(cloud_od(ialt,jazi)+sum_aod)))
           endif
 
-          airmass_2_cloud_3d(ialt,jazi) = sum_am2cld_atten
+           airmass_2_cloud_3d(ialt,jazi) = sum_am2cld_atten
 
-!         Account for multiple scattering in aod_ill
-          aod_ill(ialt,jazi) = (1.0 - crep_thr) * sum_aod_ill 
-     1                              + crep_thr  * sum_aod
-!         aod_ill(ialt,jazi) = sum_aod_ill
-          if(aod_ill(ialt,jazi) .lt. 0.)then
+!          Account for multiple scattering in aod_ill
+           aod_ill(ialt,jazi) = (1.0 - crep_thr) * sum_aod_ill 
+     1                               + crep_thr  * sum_aod
+!          aod_ill(ialt,jazi) = sum_aod_ill
+           if(aod_ill(ialt,jazi) .lt. 0.)then
               write(6,*)' ERROR aod_ill < 0',ialt,jazi,altray
      1                 ,view_azi_deg,sum_aod,sum_aod_ill
               stop
-          endif
+           endif
 
-          aod_ill_dir(ialt,jazi) = min(sum_aod_ill_dir,1e30)
-          aod_tot(ialt,jazi) = sum_aod
-          aod_ill_opac(ialt,jazi) = sum_aod_ill_opac
-          aod_ill_opac_potl(ialt,jazi) = sum_aod_ill_opac_potl
-          clear_rad_c_nt(:,ialt,jazi) = sum_aod_rad_opac(:) / (4.*pi)
+           aod_ill_dir(ialt,jazi) = min(sum_aod_ill_dir,1e30)
+           aod_tot(ialt,jazi) = sum_aod
+           aod_ill_opac(ialt,jazi) = sum_aod_ill_opac
+           aod_ill_opac_potl(ialt,jazi) = sum_aod_ill_opac_potl
+           clear_rad_c_nt(:,ialt,jazi) = sum_aod_rad_opac(:) / (4.*pi)
 
-          if(r_cloud_3d(ialt,jazi) .gt. .5)then
+           if(r_cloud_3d(ialt,jazi) .gt. .5)then
               icloud = 1
-          else
+           else
               icloud = 0
-          endif
+           endif
 
-          icloud_tot = icloud_tot + icloud
+           icloud_tot = icloud_tot + icloud
 
-!         l_process(ialt,jazi) = .true.
+!          l_process(ialt,jazi) = .true.
 
-!         include '../lib/cloud/skyglow_phys.inc'
+!          include '../lib/cloud/skyglow_phys.inc'
 
-!         if(sol_alt(i,j) .gt. 0.)then
-          if(obj_alt(i,j) .gt. twi_0)then ! experiment
+!          if(sol_alt(i,j) .gt. 0.)then
+           if(obj_alt(i,j) .gt. twi_0)then ! experiment
 
 !           Get clear sky daylight brightness ratio at point
 !           (i.e. fraction of atmosphere illuminated by the sun)
@@ -2669,10 +2714,11 @@
      1              ,f11.2,i3,2f9.4,2f9.3,3f9.3,f13.1,f8.2)
             endif
 
-          endif
+           endif
 
-!         end include 'skyglow.inc'
+!          end include 'skyglow.inc'
 
+          endif ! l_pix_trace is TRUE
          enddo ! jazi
 
 !        I4_elapsed = ishow_timer()
@@ -2697,22 +2743,26 @@
          endif
 
 !        Pixels per degree times 1 and times 2
-         if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4 .OR. 
-     1      jazi_delt .eq. 5 .OR. jazi_delt .eq. 8 .OR.
-     1      jazi_delt .eq. 10 .OR. jazi_delt .eq. 16 .OR.
-     1      jazi_delt .eq. 20 .OR. jazi_delt .eq. 32 .OR.
-     1      jazi_delt .eq. 64 .OR. jazi_delt .eq. 128 .OR.
-     1      jazi_delt .eq. 256 
-     1                                       )then ! fill missing azimuths
+!        if(jazi_delt .eq. 2 .OR. jazi_delt .eq. 4 .OR. 
+!    1      jazi_delt .eq. 5 .OR. jazi_delt .eq. 8 .OR.
+!    1      jazi_delt .eq. 10 .OR. jazi_delt .eq. 16 .OR.
+!    1      jazi_delt .eq. 20 .OR. jazi_delt .eq. 32 .OR.
+!    1      jazi_delt .eq. 64 .OR. jazi_delt .eq. 128 .OR.
+!    1      jazi_delt .eq. 256 
+!    1                                       )then ! fill missing azimuths
+
+        if(jazi_delt_eff .gt. 1 .and.
+     1     jazi_delt_eff .lt. maxazi-minazi  )then ! fill missing azimuths
+
           do jazi = minazi,maxazi
-            call get_interp_parms(minazi,maxazi,jazi_delt,jazi       ! I
+            call get_interp_parms(minazi,maxazi,jazi_delt_eff,jazi   ! I
      1                           ,fm,fp,jazim,jazip,ir,istatus)      ! O
             if(istatus .ne. 1)then
               write(6,*)' ERROR in jazi call: minazi,maxazi,jazi'
               stop
             endif
 
-            if(ir .ne. 0)then
+            if(ir .ne. 0 .and. (.not. l_pix_trace(ialt,jazi)))then
               r_cloud_3d(ialt,jazi) = 
      1         fm * r_cloud_3d(ialt,jazim) + fp * r_cloud_3d(ialt,jazip)
               cloud_od(ialt,jazi) = 
