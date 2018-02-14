@@ -19,9 +19,10 @@
         alb(bt) = bt / (1.+bt)
         rad2tau(b,r) = (1.-r)/(r*b)
 
+        parameter (nc = 3)
         include 'rad_nodata.inc'
 
-        real asy_clwc(nc)  /0.945,0.950,0.955/
+        real asy_clwc(nc) /0.945,0.950,0.955/
 
         pf_thn_clwcf(hgpf,elgf) & 
              = clwc_bin1a * hg(asy_clwc(ic)**hgpf,elgf)& ! corona
