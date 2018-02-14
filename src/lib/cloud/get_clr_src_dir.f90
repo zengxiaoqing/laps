@@ -1,5 +1,5 @@
 
-     subroutine get_clr_src_dir(solalt,viewalt,od_g_msl,od_g_vert,od_a_vert,ext_haero,htmsl,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a,ags,aas,ic,idebug,istart,iend,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
+     subroutine get_clr_src_dir(solalt,viewalt,od_g_msl,od_g_vert,od_a_vert,ext_haero,htmsl,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a,ags,aas,od_o_msl,ic,idebug,istart,iend,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
 
      use mem_namelist, ONLY: earth_radius, aod_ha, o3_du,h_o3,d_o3
      use constants_laps, ONLY: R_GAS, GRAV
@@ -27,7 +27,7 @@
      real aos      ! ozone relative to zenith value for observer ht/solalt
      real aas      ! aero  relative to zenith value for observer ht/solalt
 
-     od_o_msl = (o3_du/300.) * ext_o(ic)
+!    od_o_msl = (o3_du/300.) * ext_o(ic)
      od_o_vert = od_o_msl * patm_o3(htmsl)
      alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha))
 
