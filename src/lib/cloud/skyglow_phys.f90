@@ -10,7 +10,8 @@
                    ,aod_vrt,aod_ray,aod_ray_dir                    &! I
                    ,aod_ref,aero_scaleht,dist_2_topo               &! I
                    ,htmsl,redp_lvl,horz_dep,eobsl                  &! I
-                   ,aod_ill,aod_2_topo,aod_tot,ext_g               &! I
+                   ,aod_ill,aod_2_topo,aod_tot                     &! I
+                   ,ext_g,ext_o,nc,wa,day_int0                     &! I
                    ,l_solar_eclipse,i4time,rlat,rlon               &! I
                    ,clear_radf_c,ag_2d                             &! I
                    ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a   &! O
@@ -38,6 +39,7 @@
         scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! range of x/scurve is 0 to 1
         curvat(hdst,radius) = hdst**2 / (2. * radius)
         expbh(x) = exp(min(x,+80.))
+        wmean(x,y,w) = sqrt((w*x**2 + y**2) / (w + 1.))
 
         real linecyl,linecylp
         linecylp(xcos,ycos,x1,r) = (-(2.*xcos*x1) + sqrt((2.*xcos*x1)**2 - 4. * (xcos**2 + ycos**2) * (x1**2 - r**2))) &
@@ -103,6 +105,7 @@
         parameter (nsteps_topo = 1)
         parameter (nopac = 10)
 
+        real ext_o(nc),wa(nc)
         real distecl(nopac,nc)
         real tausum_a(nsteps)
         real taumid(nopac),opacmid(nopac),eobsc_a(nopac,nc)
@@ -200,7 +203,7 @@
                               ,ag_dum,ao_dum,aas_a(isolalt),refr_deg)! O
               write(6,51)isolalt,sol_alt_a,ags_a(isolalt),aos_a(isolalt) &
                                           ,aas_a(isolalt)
-51            format('isolalt/solalt/ags_a/aos_a/aas_a',i3,f9.2,3f9.4)
+51            format('isolalt/solalt/ags_a/aos_a/aas_a',i5,f9.2,3f9.4)
 
             else ! sun below horizon, elevate to shadow height (eg132396.)
               ht_shadow = curvat(-sol_alt_a*110000.,earth_radius)
@@ -221,7 +224,7 @@
                              * expbh((ht_shadow-aero_refht)/aero_scaleht)
               write(6,52)isolalt,sol_alt_a,ht_shadow,patm_shadow &
                 ,patmo3_shadow,ags_a(isolalt),aos_a(isolalt),aas_a(isolalt)
-52            format('isolalt/solalt/ht/patm/patmo3/ags_a/aos_a/aas_a',i3 &
+52            format('isolalt/solalt/ht/patm/patmo3/ags_a/aos_a/aas_a',i5 &
                                                    ,f9.2,f9.1,2f9.5,3f15.1)
             endif ! solalt > 0
 
@@ -250,11 +253,12 @@
                 aa_s_o_aa_90 = 0.
             endif
             istart = 1; iend = nsteps; ds = 25.
+            od_o_msl = (o3_du/300.) * ext_o(ic)
             call get_clr_src_dir(sol_alt,90.,ext_g(ic), &
                 od_g_vert,od_a_vert,ext_ha(ic), &
                 htmsl,ssa90,ag_90/ag_90,ao_90,aa_90_o_aa_90, &
                 aod_ref,aero_refht,aero_scaleht, &
-                ag_s/ag_90,aa_s_o_aa_90,ic,idebug, &
+                ag_s/ag_90,aa_s_o_aa_90,od_o_msl,ic,idebug, &
                 istart,iend, &
                 srcdir_90(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
                 nsteps,ds,tausum_a)
@@ -381,11 +385,12 @@
                  aa_o_aa_90 = 0.
                  aa_s_o_aa_90 = 0.
              endif
+             od_o_msl = (o3_du/300.) * ext_o(ic)
              call get_clr_src_dir(sol_alt,altray,ext_g(ic), &
                 od_g_vert,od_a_vert,ext_ha(ic), &
                 htmsl,ssa_eff(ic),ag/ag_90,ao,aa_o_aa_90, &
                 aod_ref,aero_refht,aero_scaleht, &
-                ag_s/ag_90,aa_s_o_aa_90,ic,idebug, &
+                ag_s/ag_90,aa_s_o_aa_90,od_o_msl,ic,idebug, &
                 istart,iend, &
                 srcdir(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
                 nsteps,ds,tausum_a)
@@ -442,7 +447,22 @@
 !        Determine aerosol multiple scattering order
 !        altscat = 1.00 * altray + 0.00 * sol_alt
 !        altscat = max(altray,sol_alt)
-         altscat = sqrt(0.5 * (altray**2 + sol_alt**2))
+         if(altray .gt. sol_alt)then  ! looking over sun
+             altscat = sqrt(0.5 * (altray**2 + sol_alt**2))
+         else                         ! looking under sun
+             fracsolalt = sind(max(sol_alt,0.0))
+             altscat_losun = sqrt(0.5 * (altray**2 + sol_alt**2))
+             altscat_hisun = altray
+             altscat = altscat_losun * (1.-fracsolalt) + altscat_hisun * fracsolalt
+
+!            Higher coefficient favors altray, improving the minimum when
+!            sol_alt = 90.
+!            Lower coefficient is more of a geometric mean improving the
+!            maximum under the sun when sol_alt = 60.
+!            altscat = wmean(altray,sol_alt,10.)
+
+!            altscat = sqrt(0.5 * (altray**2 + sol_alt**2))
+         endif
          call get_airmass(altscat,htmsl,patm &         ! I
                          ,aero_refht,aero_scaleht &    ! I
                          ,earth_radius,0 &             ! I
@@ -450,7 +470,7 @@
 !        scatter_order = 1.0 ! f(altray,sol_alt)
          scatter_order = max(aod_vrt*aascat,1.0)**1.0 ! 0.5-1.5
          scatter_order_t = 1.0
-         write(6,*)' altscat/aascat/sco',altscat,aascat,scatter_order
+         write(6,*)'altscat/aascat/sco',altscat,aascat,scatter_order
 
 !        Determine effective asymmetry parameter from multiple scattering
 !        http://www.arm.gov/publications/proceedings/conf15/extended_abs/sakerin_sm.pdf
@@ -1215,6 +1235,10 @@
 !               clear_rad_ref = clear_rad_c0(ic,maxalt,minazi) ! eclipse
                 clear_rad_ref = clear_rad_c(ic,maxalt,minazi)  ! no eclipse
 
+!               sphere ave, any gnd
+                sph_rad_ave = sky_rad_ave(ic) * 0.5 * (1. + sfc_alb_c(ic))
+                write(6,*)' ic / sky_rad_ave / sph_rad_ave ',sky_rad_ave(ic),sph_rad_ave
+
                 do ialt = ialt_start,ialt_end
                   altray = view_alt(ialt,jazi_start)
                   arg = sind(min(max(altray,1.5),90.))
@@ -1222,9 +1246,6 @@
                   if(ic .eq. icd)then
                     write(6,*)'alt,od_slant,clear_rad_c',altray,od_slant,clear_rad_c(ic,ialt,jazi_dbg)
                   endif
-
-!                 sphere ave, any gnd
-                  sph_rad_ave = sky_rad_ave(ic) * 0.5 * (1. + sfc_alb_c(ic))
 
                   do jazi = jazi_start,jazi_end
                     if(dist_2_topo(ialt,jazi) .eq. 0d0)then ! unobstructed by terrain
@@ -1253,7 +1274,7 @@
 !                   ri_over_f0 = clear_rad_c(ic,maxalt,jazi_dbg) / day_int0                            
                     rmaglim = b_to_maglim(clear_rad_c(2,ialt_end,jazi_dbg))
                     write(6,201)ic,altray,view_az(ialt_end,jazi_dbg),sph_rad_ave,od_vert,clear_rad_ref,sky_rad_scat(ic,maxalt,jazi_dbg),clear_rad_c(ic,maxalt,jazi_dbg),scatfrac
-201                 format(' ic/alt/az/sph_rad_ave/od/c0/scat/rad/rat/scatf',i2,2f9.2,f11.0,f6.3,f11.0,2f11.0,f7.4,2f10.7)
+201                 format(' ic/alt/az/sph_rad_ave/od/c0/scat/rad/rat/scatf',i2,2f9.2,f12.0,f6.3,f12.0,2f12.0,f7.4,2f10.7)
                     if(ic .eq. icd)then
                       b = clear_rad_c(2,ialt_end,jazi_dbg)
                       write(6,211)b,b_to_v(b),rmaglim
