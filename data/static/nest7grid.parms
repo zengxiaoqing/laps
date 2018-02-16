@@ -277,3 +277,8 @@ c c8_blpfmt - Specify the format of boundary layer profiler data
 c             If set to 'default' the software will key off of the
 c             value of 'c8_project'. Otherwise it can be
 c             explicitly set to 'MADIS' as an override.
+c
+c 'SOLALT_THR_VIS' - solar elevation angle should be at least this high to
+c                    allow processing of visibile satellite data in the
+c                    normalization (albedo or reflectance) and/or cloud
+c                    analysis steps
