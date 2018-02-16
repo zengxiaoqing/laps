@@ -4427,7 +4427,7 @@ Source directory: 'laps/src/newlfmp' (new default version)
    Additional arguments are needed for the new (default) version of 
    'lfmpost.exe'. 
 
-   lfmpost.exe NAME WRFOUT NEST RCTIME FCSTTIME LAPS_DATA_ROOT
+   lfmpost.exe NAME WRFOUT NEST I4TIME FCSTTIME LAPS_DATA_ROOT [ADVECT_CLD ADVECT_PRECIP]
       NAME - one of "mm5", "wrf", or "wrf2" for MM5, WRFv1.3, 
              or WRFv2, respectively.  
 
@@ -4435,12 +4435,22 @@ Source directory: 'laps/src/newlfmp' (new default version)
 
       NEST - nest number (1 is outer)
 
-      RCTIME - CTIME in seconds of model initialization
+      I4TIME - TIME in seconds of model initialization, seconds since 1-1-1970
 
       FCSTTIME - number of seconds into the forecast
 
       LAPS_DATA_ROOT - LAPS_DATA_ROOT where static files are set up
                        (or the equivalent in the WRF directory)
+
+      ADVECT_CLOUD - optional parameter for advection of clouds instead of the
+                     model forecast output. The advection is activated between
+		     0 seconds and the specified number (e.g. 0900). Use a
+		     value of -1 to turn this off.
+
+      ADVECT_PRECIP - optional parameter for advection of clouds instead of the
+                     model forecast output. The advection is activated between
+		     0 seconds and the specified number (e.g. 0900). Use a
+		     value of -1 to turn this off.
 
    LFMPOST is designed to operate on "incremental" raw model output data, so 
    when you run WRF, be sure to output each time period to a separate file.
