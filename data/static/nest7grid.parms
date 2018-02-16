@@ -22,6 +22,7 @@
 
  l_compress_radar=.true.,                  
  l_use_tamdar=.false.,                  
+ I_OFFSET_RADAR=0,
  I_PERIMETER=10,                  
  c50_lowres_directory='NULL',
 
@@ -126,8 +127,11 @@ c l_accum_gauge - use rain gauges in the precip accumulation analysis
 c                 (beyond point pair comparisons that are done regardless)
 c
 c l_compress_radar - Compress "vxx" radar files using run-length encoding.
-c                    Note that this is experimental and departs from the 
-c                    NetCDF file convention
+c                    If "T" this writes out a compressed ASCII format instead 
+c                    of the NetCDF file format.
+c
+c i_offset_radar - [0 or 1] A 1 setting reduces array size for remapped
+c                  radar data, to be less than the domain array size.
 c
 c l_use_tamdar - Flag to decide to block the use of TAMDAR ACARS research data. 
 c                This flag functions only when the NIMBUS database is being 
