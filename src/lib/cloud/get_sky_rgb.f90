@@ -419,12 +419,12 @@
             azid1 = 90. ; azid2 = 270.
             moon_cond_clr = 0
         endif
-        if(htmsl .gt. 50e3 .or. .true.)then
-            azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
-            azid1 = 270.  ; azid2 = 270. ! test custom
-        endif
         if(mode_aero_cld .gt. 1)then
             azid1 = 90.  ; azid2 = 90. ! aero custom
+        endif
+        if(htmsl .gt. 50e3 .or. .true.)then
+            azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
+            azid1 = 220.  ; azid2 = 220. ! test custom
         endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2,htmsl,mode_aero_cld
@@ -1594,8 +1594,8 @@
             if(idebug_a(i,j) .eq. 1 .AND. alt_a(i,j) .le. 90.0 .AND. ic .eq. 2)then
               write(6,96)od_2_cloud,od2topo_c(2),clr_od(2),aod_2_cloud(i,j),aod_2_topo(i,j),cloud_albedo,altray_limb,emis_ang_a(i,j)
 96            format(' od2cld/od2tpo/odclr/aod2cld/aod2tpo/cldalb/almb/em',6f10.4,f8.3,f8.2)
-              write(6,97)frac_front,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_scat,frac_clr,frac_clr_2nd,frac_clr_nonua,frac_cloud,scurve_term,clear_rad_c(2,i,j),cld_rad(2),sky_rad(2)
-97            format(' ffnt/rcld/radf/fsct/fclr/fclr2/fclrnua/fcld/scrv/clrrd/cldrd/skyrd',9f7.3,f13.0,2x,f13.0,2x,f13.0,2x,i4)
+              write(6,97)frac_front,r_cloud_3d(i,j),clear_radf_c(2,i,j),frac_scat,frac_clr,frac_clr_2nd,frac_clr_nonua,frac_cloud,scurve_term,clear_rad_c(2,i,j),cld_rad(2),sky_rad(2),sky_rad(2)/(2.*day_int)
+97            format(' ffnt/rcld/radf/fsct/fclr/fclr2/fclrnua/fcld/scrv/clrrd/cldrd/skyrd/refl',9f7.3,f13.0,2x,f13.0,2x,f13.0,2x,f10.5)
               if(clear_rad_c(2,i,j) .gt. 0.)then
                  fraction_2nd = clear_rad_2nd_c(2,i,j) / clear_rad_c(2,i,j)
               else
@@ -1654,6 +1654,11 @@
                   red_rad = day_int * rtopo_red*topovis_c(1)*sky_frac_topo
                   grn_rad = day_int * rtopo_grn*topovis_c(2)*sky_frac_topo
                   blu_rad = day_int * rtopo_blu*topovis_c(3)*sky_frac_topo
+
+                  red_refl = red_rad/(2.*day_int)
+                  grn_refl = grn_rad/(2.*day_int)
+                  blu_refl = blu_rad/(2.*day_int)
+
                   if(idebug .eq. 1)then
                     write(6,98)rtopo_grn,topo_gti(i,j),gtic(2,i,j) &
                               ,topo_albedo(2,i,j),pf_land(2,i,j),topo_solalt(i,j) &
@@ -1671,6 +1676,11 @@
                   sky_rad(1) = sky_rad(1) + red_rad
                   sky_rad(2) = sky_rad(2) + grn_rad
                   sky_rad(3) = sky_rad(3) + blu_rad
+
+                  if(idebug .eq. 1)then
+                    write(6,981)red_refl,grn_refl,blu_refl,sky_rad(:)/(2.*day_int)
+981                 format(' reflectance trad/skyrad ',3f10.5,3x,3f10.5)
+                  endif
  
                   call nl_to_RGB(sky_rad(:),glwmid,contrast & 
                     ,128.,wa,0,xyz,sky_rgb(0,I,J),sky_rgb(1,I,J),sky_rgb(2,I,J))
@@ -1867,7 +1877,8 @@
               if(alt_a(i,j) .eq. -90.)then
                   write(6,*)' ******** nadir location ************************* od'
               endif
-              if(alt_a(i,j) .eq. -90. .or. mode_aero_cld .eq. 3)then
+!             if(alt_a(i,j) .eq. -90. .or. mode_aero_cld .eq. 3)then
+              if(.true.)then
                   write(6,*)'Reflectance is ',sky_rad(:) / (2. * day_int)
               endif
 
