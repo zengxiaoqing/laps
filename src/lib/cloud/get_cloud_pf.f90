@@ -94,7 +94,7 @@
             iplan = 3
             isat = 0
             phase_angle_d = 180. - elong_a(i,j)
-            call phase_func(iplan,isat,phase_angle_d,v10,nm,phase_corr)       
+            call phase_func(iplan,isat,phase_angle_d,phase_corr)       
             r_ill = (1. + cosd(phase_angle_d)) / 2.
 
 !           Set to 1 or 2 if we're at cloud base?
