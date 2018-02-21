@@ -3,6 +3,7 @@
            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt)
 
      use mem_namelist, ONLY: r_missing_data, earth_radius, ssa, aod, redp_lvl
+     use mem_allsky, ONLY: ext_g
      use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      use mem_allsky, ONLY: mode_aero_cld
@@ -19,10 +20,8 @@
 
 !    parameter (nc = 3)
 
-!    real ext_g(nc)           ! od per airmass
      real trans_c(nc)         ! transmissivity
      real sprad_to_nl(nc)
-!    data ext_g /.07,.14,.28/ ! refine via Schaeffer
 
      real clwc_3d(ni,nj,nk) ! kg/m**3
      real cice_3d(ni,nj,nk) ! kg/m**3
