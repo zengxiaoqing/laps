@@ -1321,10 +1321,25 @@
           do i = minalt,maxalt
             call get_val(i,minalt,alt_scale,altobj)
             alt_a_roll(i,:) = altobj
+            if(i .eq. minalt .or. i .eq. maxalt)then
+              if(altobj .ne. nint(altobj))then
+                write(6,*)' ERROR: non-integer altitude bound'
+     1                   ,i,alt_scale,altobj
+                return
+              endif
+            endif
           enddo 
+
           do j = minazi,maxazi
             call get_val(j,minazi,azi_scale,aziobj)
             azi_a_roll(:,j) = aziobj
+            if(j .eq. minazi .or. j .eq. maxazi)then
+              if(aziobj .ne. nint(aziobj))then
+                write(6,*)' ERROR: non-integer azimuth bound'
+     1                   ,j,azi_scale,aziobj
+                return
+              endif
+            endif
           enddo
 
           write(6,*)' alt range is ',alt_a_roll(minalt,minazi)
@@ -1491,10 +1506,14 @@
               poy = 0.
 
               if(trim(c_model) .eq. 'hrrr_smoke' .and.
-     1                htagl(iloc) .ge. 10000e3         )then
-                pomag = pomag * 2.4
-                poy = +0.6 ! increase moves down
-                pox = +0.1 ! increase moves right
+     1             htagl(iloc) .ge. 10000e3)then
+                if(abs(rlat) .eq. 0.)then
+                  pomag = pomag * 2.4
+                  poy = +0.6 ! increase moves down
+                  pox = +0.1 ! increase moves right
+                else
+                  pomag = pomag * 8.                 
+                endif
               endif
 
               write(6,*)'htrat/pomag',htagl(iloc)/earth_radius,pomag
