@@ -46,7 +46,7 @@
         call get_physical_data(v10,r_km,nm)       
 
         call phase_func(iplan,isat,phase_angle_deg
-     1                 ,v10,nm,phase_corr)       
+     1                 ,phase_corr)       
 
 !       Saturn
         if(iplan .eq. 6)then
@@ -185,7 +185,7 @@
         end
 
 
-        subroutine phase_func(iplan,isat,phase_angle_deg,v10,nm
+        subroutine phase_func(iplan,isat,phase_angle_deg
      1                       ,phase_corr)       
 
         Implicit real*8(a-z)
@@ -194,9 +194,9 @@
 
         integer iplan,isat,len_ast_root,len_mag_file
 
-        dimension v10(0:13,0:70)
-        dimension r_km(0:13,0:70)
-        character*10 nm(0:13,0:70)
+!       dimension v10(0:13,0:70)
+!       dimension r_km(0:13,0:70)
+!       character*10 nm(0:13,0:70)
 
         para(x,x1) = (x-x1)**2
 
