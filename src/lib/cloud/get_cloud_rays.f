@@ -1159,7 +1159,9 @@
          endif
 
          if(mod((maxazi-minazi),jazi_delt) .ne. 0)then
-             write(6,*)' WARNING: jazi_delt has remainder',jazi_delt
+             write(6,*)' ERROR: jazi_delt has remainder',jazi_delt
+             istatus = 0
+             return
          endif
 
          azi_delt_2 = float(jazi_delt) * azi_scale * 0.5
@@ -2704,10 +2706,15 @@
               clear_radf_c(:,ialt,jazi) = 1.0
             endif
             if(idebug .eq. 1)then
+              if(aod_ill_opac_potl(ialt,jazi) .gt. 0.)then
+                 quotient = aod_ill_opac(ialt,jazi)
+     1                    / aod_ill_opac_potl(ialt,jazi)
+              else
+                 quotient = -999.
+              endif
               write(6,119)rkstart,nk,view_altitude_deg,horz_dep_d
      1             ,cloud_od(ialt,jazi)
-     1             ,clear_radf_c(icd,ialt,jazi)
-     1             ,aod_ill_opac(ialt,jazi)/aod_ill_opac_potl(ialt,jazi)
+     1             ,clear_radf_c(icd,ialt,jazi),quotient
      1             ,sum_clrrad,sum_clrrad_pot,airmass1_h,dz1_h
  119          format(
      1          ' rks/nk/alt/dep/cod/radf/aodf/smclrrd/pot/am/dz1_h'
@@ -2730,7 +2737,7 @@
 !        if(sol_alt(i,j) .le. 0.)then
          if(sol_alt(i,j) .le. twi_0 .and. 
      1      sol_alt(i,j) .ge. (-horz_dep_d - 18.0))then ! narrower range
-!            write(6,*)' args: ',l_solar_eclipse,i4time,rlat,rlon
+!            write(6,*)' args: ',ialt,l_solar_eclipse,i4time,rlat,rlon
              call skyglow_phys_twi(ialt,ialt,1,minazi,maxazi,jazi_delt
      1             ,minalt,maxalt,minazi,maxazi,idebug_a
      1             ,sol_alt(i,j),sol_azi(i,j),view_alt,view_az
@@ -2758,7 +2765,11 @@
             call get_interp_parms(minazi,maxazi,jazi_delt_eff,jazi   ! I
      1                           ,fm,fp,jazim,jazip,ir,istatus)      ! O
             if(istatus .ne. 1)then
-              write(6,*)' ERROR in jazi call: minazi,maxazi,jazi'
+              write(6,120)
+     1                minazi,maxazi,jazi,jazi_delt_outer,jazi_delt_eff
+ 120          format(' ERROR in jazi call: ',
+     1               'minazi/maxazi/jazi/jazi_delt_outer/jazi_delt_eff'
+     1               ,5i8)   
               stop
             endif
 
