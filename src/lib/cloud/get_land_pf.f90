@@ -10,6 +10,7 @@
                              ,pf_land,cld_brdf,emis_ang_a)              ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius
+        use mem_allsky, ONLY: ext_g
         use cloud_rad, ONLY: ghi_zen_toa, zen_kt
         include 'trigd.inc'
         include 'rad.inc'
@@ -288,7 +289,11 @@
 !             if((i .eq. ni-100 .and. j .eq. (j/40)*40) .OR.  &
               if(ic .eq. 2)then
 
-                call check_nan(ph1,istat_nan)
+                if(idebug_pf(i,j) .eq. 1)then
+                  call check_nan(ph1,istat_nan)
+                else
+                  istat_nan = 1
+                endif
                 if(istat_nan .ne. 1)then
                   call check_nan(phwater,istat_nan)
                   if(istat_nan .ne. 1)then
