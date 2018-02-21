@@ -268,7 +268,7 @@
        endif
 
        if(ip .gt. maxidx .OR. im .lt. minidx)then
-           write(6,*)' ERROR in get_interp_parms',minidx,maxidx,idx,im,ip
+           write(6,*)'ERROR in get_interp_parms:',minidx,maxidx,idx,im,ip
            istatus = 0
        endif
 
