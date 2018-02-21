@@ -123,7 +123,7 @@
         real rel_order(1:n_order)  ! P of received photon with this order
         real p_order(0:n_order)    ! P of emitted photon with this order
 
-        icd = 3
+        icd = 2
 
         eobsc(:,:) = 0. ! initialize
         sky_rad_ave = r_missing_data
@@ -1168,6 +1168,14 @@
                        ,dist_2_topo(ialt,jazi),aodf,aodfo,clear_rad_c(:,ialt,jazi)
 111           format('alt/azi/salt-tp-tr/mode/od_a/dst/aodf/aodfo/clrrd' &
                     ,f8.3,f6.1,1x,3f7.2,i3,f12.5,f12.0,2f9.4,3e14.5)
+
+              if(altray .eq. -90.)then
+                write(6,1111)clear_rad_c(:,ialt,jazi) / (2.*day_int0)
+1111            format('nadir clrrd reflectance = ',3f10.5)
+              else
+                write(6,1112)clear_rad_c(:,ialt,jazi) / (2.*day_int0)
+1112            format('clrrd reflectance = ',3f10.5)
+              endif
 
               if(clear_rad_c(1,ialt,jazi) .lt. 0. .or. clear_rad_c(1,ialt,jazi) .gt. 1e20)then
                 write(6,*)' ERROR clrrd(1) out of bounds',clear_rad_c(1,ialt,jazi)
