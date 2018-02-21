@@ -43,7 +43,6 @@
         trans(od) = exp(-min(od,80.))
         opac(od) = 1.0 - trans(od)
 
-        real ext_g(nc)                  ! od per airmass
         rayleigh_pf(theta) =
      1      (1.00 * ( (1. + cosd(theta)**2) / (4./3.) ) ) + (0.00 * 1.0) 
 
@@ -608,7 +607,8 @@
                 endif
 
                 if(.false.)then ! grayscale reflectance image
-                    sky_rgb_cyl(:,i,j) = sky_reflectance(1,i,j) * 200.
+                    sky_rgb_cyl(:,i,j) = sky_reflectance(1,i,j) * 1000.
+                    sky_rgb_cyl(:,i,j) = min(sky_rgb_cyl(:,i,j),255.)
                 endif
 
               enddo ! i
