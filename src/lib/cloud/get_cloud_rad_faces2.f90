@@ -21,11 +21,12 @@
 
      use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
                             ,aod,aero_scaleht,fcterm,redp_lvl
+     use mem_allsky, ONLY: ext_g
      use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      use mem_allsky, ONLY: mode_aero_cld
      use cloud_rad ! Cloud Radiation and Microphysics Parameters
-     include 'rad.inc' ! e.g. for ext_g, ext_o, o3_du
+     include 'rad.inc' ! e.g. for ext_o, o3_du
 
      trans(od) = exp(-min(od,80.))
      scurve(x) = (-0.5 * cos(x*3.14159265)) + 0.5  ! x/scurve range is 0-1
