@@ -318,7 +318,7 @@ cdis
 !               l_polar = .true.
 !               l_cyl = .true.
 !               Exposure will be controlled by density
-                read(lun,*)ipolar_sizeparm,density
+                read(lun,*)ipolar_sizeparm ! ,density
             endif
 
 !           ni_polar = (256 * 2**(ipolar_sizeparm)) - 1
