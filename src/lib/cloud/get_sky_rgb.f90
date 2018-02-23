@@ -422,9 +422,11 @@
         if(mode_aero_cld .gt. 1)then
             azid1 = 90.  ; azid2 = 90. ! aero custom
         endif
-        if(htmsl .gt. 50e3 .or. .true.)then
+        if(htmsl .gt. 50e3)then
             azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
             azid1 = 220.  ; azid2 = 220. ! test custom
+        else
+            azid2 = azid1             
         endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2,htmsl,mode_aero_cld
