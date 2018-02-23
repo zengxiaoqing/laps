@@ -304,12 +304,12 @@
      alpha_ref_a = aod_ref / scale_ht_a
 
      opac_vert = opac(dble(od_g_vert + od_o_vert + od_a_vert))
-     if(opac_vert .eq. 0)then ! very small od
+     if(opac_vert .eq. 0.)then ! very small od
          opac_vert = od_g_vert + od_o_vert + od_a_vert
      endif
 
      opac_slant = opac(dble(od_slant))
-     if(opac_slant .eq. 0)then ! very small od
+     if(opac_slant .eq. 0.)then ! very small od
          opac_slant = od_slant
      endif
 
