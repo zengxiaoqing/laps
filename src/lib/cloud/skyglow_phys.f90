@@ -866,7 +866,12 @@
               enddo ! ic
             endif
 
-            rayleigh_pfunc = rayleigh_pf(elong(ialt,jazi))
+            if(htmsl .le. thr_abv_clds)then
+              rayleigh_pfunc = rayleigh_pf(elong(ialt,jazi))
+            else
+              taur = 0.1
+              rayleigh_pfunc = rayleigh_pf_m(elong(ialt,jazi),taur)
+            endif
             rayleigh_gnd = rayleigh_pfunc + sfc_alb_c(2) * sind(sol_alt)
 
 !           Raising this further will reduce the use of mode_sky = 3
