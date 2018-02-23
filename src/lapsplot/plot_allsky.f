@@ -139,7 +139,7 @@
         real*8 xsound(maxloc),ysound(maxloc)
         real*8 soundlat(maxloc),soundlon(maxloc)
         real fsoundlat(maxloc),fsoundlon(maxloc)
-        real htagl(maxloc),corr1_a(maxloc)
+        real htagl(maxloc),exposure_a(maxloc)
 
         data ilun /0/
         character*3 clun
@@ -338,11 +338,11 @@
             endif
           endif
 
-          read(5,*)htagl(iloc)
+          read(5,*)htagl(iloc),exposure_a(iloc)
 
           write(6,*)' soundlat/soundlon ',soundlat(iloc),soundlon(iloc)      
           write(6,*)' xsound/ysound ',xsound(iloc),ysound(iloc)
-          write(6,*)' htagl ',htagl(iloc)
+          write(6,*)' htagl/exposure_a ',htagl(iloc),exposure_a(iloc)
 
         enddo ! iloc
 
@@ -1354,7 +1354,7 @@
           allocate(aod_ill_opac(minalt:maxalt,minazi:maxazi))
           allocate(aod_ill_opac_potl(minalt:maxalt,minazi:maxazi))
 
-          exposure = density
+          exposure = exposure_a(iloc) ! density
 
           if(l_water_world)then ! water world experimental simulation
             land_frac = 0.
