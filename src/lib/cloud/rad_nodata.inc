@@ -80,8 +80,13 @@
 !       Rayleigh scattering phase function including secondary scattering
 !       This assumes 0.1 effective optical depth / secondary scattering
 !                                   (this can be made variable later)
-!                                        Primary                               Sec atm    
-        rayleigh_pf(theta) = (1.00 * ( (1. + cosd(theta)**2) / (4./3.) ) ) + (0.00 * 1.0) 
+!                                            Primary                               Sec atm    
+        rayleigh_pf(theta)   =           (1.00 * ( (1. + cosd(theta)**2) / (4./3.) ) ) + (0.00 * 1.0) 
+        rayleigh_pf_s(theta) =           (1.00 * ( (1. + cosd(theta)**2) / (4./3.) ) ) + (0.00 * 1.0) 
+
+!       Multiple scattering phase function relates to maximum polarization
+        rayl_mxpol(taur) = exp(-min(taur,80.)) ! equivalent to trans()
+        rayleigh_pf_m(theta,taur) = rayleigh_pf_s(theta) * rayl_mxpol(taur) + 1.0 * (1.0 - rayl_mxpol(taur))
 
         hg(g,pha) = (1.-g**2) / (1. + g**2 - 2.*g*cosd(pha))**1.5
 
