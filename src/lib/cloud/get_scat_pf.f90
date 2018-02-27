@@ -342,16 +342,20 @@
 
           pf_scat2(:,i,j) = pf_snow * snow_factor + pf_scat1(:,i,j) * (1.0 - snow_factor)
 
-!         Suppress/cap phase function if terrain is close in the light ray
-!         Apply when radfrac is low and opacity is low
+!         Suppress/cap phase function (arg_tn set to 1) if terrain is close in the light ray
+!         Apply when radfrac is low ! and opacity is low
 !         if(airmass_2_topo(i,j) .gt. 0. .and. pf_scat2(2,i,j) .gt. 1.0)then ! cloud in front of terrain
           if(airmass_2_topo(i,j) .gt. 0.)then ! cloud in front of terrain
 !             pf_scat(:,i,j) = pf_scat2(:,i,j)**opac(cloud_od_tot)
 !             pf_scat(:,i,j) = pf_scat2(:,i,j)**(r_cloud_rad(i,j)**2.0)
 !             pf_scat(:,i,j) = pf_scat2(:,i,j) * radfrac + 2. * pf_thk_lr * (1.-radfrac)
-              arg_tn = (1. - radfrac) * (1. - opac(cloud_od_tot))
+              arg_tn = (1. - radfrac) ! * (1. - opac(cloud_od_tot))
 !             pf_scat(:,i,j) = pf_scat2(:,i,j) * radfrac + 2. * pf_thk_lr * (1.-radfrac)
               pf_scat(:,i,j) = pf_scat2(:,i,j) * (1.-arg_tn) + 2. * pf_thk_lr * arg_tn
+              if(idebug_a(i,j) .eq. 1)then
+                  write(6,81)radfrac,cloud_od_tot,arg_tn,pf_scat2(2,i,j),pf_thk_lr,pf_scat(2,i,j)
+81                format(' radf/cod/arg_tn/pf_scat2/pf_thk_lr/pf_scat',6f9.4)
+              endif
           else
               pf_scat(:,i,j) = pf_scat2(:,i,j)
           endif
