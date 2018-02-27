@@ -254,10 +254,11 @@
             endif
             istart = 1; iend = nsteps; ds = 25.
             od_o_msl = (o3_du/300.) * ext_o(ic)
+            aod_ref_ang = aod_ref * ext_a(ic)
             call get_clr_src_dir(sol_alt,90.,ext_g(ic), &
                 od_g_vert,od_a_vert,ext_ha(ic), &
                 htmsl,ssa90,ag_90/ag_90,ao_90,aa_90_o_aa_90, &
-                aod_ref,aero_refht,aero_scaleht, &
+                aod_ref_ang,aero_refht,aero_scaleht, &
                 ag_s/ag_90,aa_s_o_aa_90,od_o_msl,ic,idebug, &
                 istart,iend, &
                 srcdir_90(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
@@ -386,10 +387,11 @@
                  aa_s_o_aa_90 = 0.
              endif
              od_o_msl = (o3_du/300.) * ext_o(ic)
+             aod_ref_ang = aod_ref * ext_a(ic)
              call get_clr_src_dir(sol_alt,altray,ext_g(ic), &
                 od_g_vert,od_a_vert,ext_ha(ic), &
                 htmsl,ssa_eff(ic),ag/ag_90,ao,aa_o_aa_90, &
-                aod_ref,aero_refht,aero_scaleht, &
+                aod_ref_ang,aero_refht,aero_scaleht, &
                 ag_s/ag_90,aa_s_o_aa_90,od_o_msl,ic,idebug, &
                 istart,iend, &
                 srcdir(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
@@ -597,13 +599,14 @@
                 endif
 
                 od_o_msl = (o3_du/300.) * ext_o(ic)
+                aod_ref_ang = aod_ref * ext_a(ic)
 
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
                   altray,view_azi_deg, &
                   ext_g(ic),od_g_vert,od_o_msl,od_o_vert, &
                   od_a_vert,ext_ha(ic),htmsl,ssa_eff(ic), &
                   ag/ag_90,ao,aa_o_aa_90, &
-                  aod_ref,aero_refht,aero_scaleht, &
+                  aod_ref_ang,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
                   ags_a,aas_a,isolalt_lo,isolalt_hi,del_solalt,ic,idebug_clr, &
                   refdist_solalt,solalt_ref, &
@@ -800,11 +803,17 @@
 !           HG illumination
             if(aod_vrt .lt. 5.0)then
               do ic = 1,nc
-!               Check assignments in 'mem_namelist.f90'
+
+!               Check assignments in 'mem_namelist.f90' / nest7grid.parms
+!               Dividing 'fcterm2/ext_a(ic)' has the effect of nullifying
+!               the Angstrom exponent for the coarse mode, so coarse mode 
+!               aerosols appear white under forward scattering. An additional
+!               term can be added to the numerator to modify the effect.
+
                 fb = aod_asy(3,ic)**scatter_order
                 g1 = aod_asy(2,ic)**scatter_order
                 g2 = aod_asy(1,ic)**scatter_order
-                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2)
+                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2/ext_a(ic))
 
 !               topo phase function assumes scatter order is non-topo 
 !               value (for now)
@@ -815,11 +824,17 @@
 
             else ! use high OD routine calculations
               do ic = 1,nc
-!               Check assignments in 'mem_namelist.f90'
+
+!               Check assignments in 'mem_namelist.f90' / nest7grid.parms
+!               Dividing 'fcterm2/ext_a(ic)' has the effect of nullifying
+!               the Angstrom exponent for the coarse mode, so coarse mode 
+!               aerosols appear white under forward scattering. An additional
+!               term can be added to the numerator to modify the effect.
+
                 fb = aod_asy(3,ic)**scatter_order
                 g1 = aod_asy(2,ic)**scatter_order
                 g2 = aod_asy(1,ic)**scatter_order
-                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2)
+                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2/ext_a(ic))
 
 !               topo phase function assumes scatter order is non-topo 
 !               value (for now)
@@ -1059,13 +1074,14 @@
                     endif
 
                     od_o_msl = (o3_du/300.) * ext_o(ic)
+                    aod_ref_ang = aod_ref * ext_a(ic)
 
                     call get_clr_src_dir_topo(sol_alt,sol_azi, &        ! I
                      altray,view_azi_deg,emis_ang,r_missing_data, &     ! I
                      ext_g(ic),od_g_vert,od_o_msl,od_a_vert, &          ! I
                      htmsl,dist_2_topo(ialt,jazi), &                    ! I
                      ssa_eff(ic),ag/ag_90,aa_o_aa_90, &                 ! I
-                     aod_ref,aero_refht,aero_scaleht, &                 ! I
+                     aod_ref_ang,aero_refht,aero_scaleht, &             ! I
                      ags_a,aas_a, &                                     ! I
                      isolalt_lo,isolalt_hi,del_solalt,ic,idebug_topo, & ! I
                      nsteps_topo,refdist_solalt,solalt_ref, &           ! I
@@ -1125,9 +1141,9 @@
 
                   if(idebug .ge. 1 .AND. ic .eq. icd)then
                     write(6,91)elong(ialt,jazi),sumi_gct(ic),rayleigh_gnd &
-                       ,radf,sumi_act(ic),hg2t(ic) &
+                       ,radf,sumi_act(ic),hg2t(ic),aod_dir_rat &
                        ,aodf,aodfo,ssa_eff(ic),clear_rad_topo      
-91                  format('elg/ig/rayg/radf/ia/hg2t/aodf/aodfo/ssa/clear_rad_topo =',f7.2,3x,3f9.4,3x,4f9.4,f7.2,3x,f12.0)
+91                  format('elg/ig/rayg/radf/ia/hg2t/aodr/aodf/aodfo/ssa/clrrd2 =',f7.2,3x,3f9.4,3x,5f9.4,f7.2,3x,f12.0)
                   endif
 
                 endif ! hitting topo
