@@ -1977,6 +1977,8 @@
              call get_fluxsun(wa(ic),1,1,sp_irrad_550)
 !            sp_irrad_550 = 1.86 ! W/m**2/nm
              ghi_sim = (sp_irrad / sp_irrad_550) * ghi_zen_toa
+             wvir_factor = 0.9
+             ghi_sim = ghi_sim * wvir_factor
           endif
 
           sky_sprad(ic-1,:,:) = sky_rad_a(ic,:,:) * sprad_rat
