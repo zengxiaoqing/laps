@@ -17,7 +17,7 @@
         include 'trigd.inc'
 
         use mem_namelist, ONLY: aod_bin, aod_asy
-        use mem_allsky, ONLY: ext_g
+        use mem_allsky, ONLY: ext_g, nc
 
 !       Statement Functions
         trans(od) = exp(-min(od,80.))
