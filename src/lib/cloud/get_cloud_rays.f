@@ -44,7 +44,7 @@
         use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)   ! L
         use mem_allsky, ONLY: upxrad_3d ! (upward irradiance xcos)      ! L
         use mem_allsky, ONLY: upyrad_3d ! (upward irradiance ycos)      ! L
-        use mem_allsky, ONLY: mode_aero_cld
+        use mem_allsky, ONLY: mode_aero_cld,nc
         use cloud_rad
 
         include 'trigd.inc'
@@ -247,8 +247,8 @@
 
         I4_elapsed = ishow_timer()
 
-        write(6,3)i,j,htagl,ri_obs,rj_obs     
-3       format(' Subroutine get_cloud_rays... ',2i5,f8.2,2f9.3)
+        write(6,3)i,j,htagl,ri_obs,rj_obs,alt_scale     
+3       format(' Subroutine get_cloud_rays... ',2i5,f8.2,3f9.3)
         
 !       Grid north azimuth - true north value
         projrot = projrot_latlon(rlat,rlon,istatus)
@@ -2949,13 +2949,15 @@
           write(6,*)' Filling missing data in altitude rings'
           write(6,*)' ialtmin/ialtmax/deg = '
      1               ,ialt_min,ialt_max,maxalt_deg
+          write(6,*)' minalt/alt_scale ',minalt,alt_scale
         endif
 
         do ialt = ialt_min,ialt_max ! fill in missing alt rings
           call get_interp_parms(minalt,maxalt,idelt,ialt           ! I
      1                         ,fm,fp,ialtm,ialtp,ir,istatus)      ! O
           if(istatus .ne. 1)then
-            write(6,*)' ERROR in ialt call: minalt,maxalt,ialt'
+            write(6,*)'ERROR in ialt call: minalt,maxalt,ialt'
+     1               ,minalt,maxalt,ialt
             stop
           endif
 
