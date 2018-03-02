@@ -3,6 +3,7 @@
 
      use mem_namelist, ONLY: earth_radius, aod_ha, o3_du,h_o3,d_o3
      use constants_laps, ONLY: R_GAS, GRAV
+     use mem_allsky, ONLY: nc
 
      include 'trigd.inc'
      include 'rad_nodata.inc'
@@ -225,6 +226,7 @@
 
      use mem_namelist, ONLY: earth_radius, aod_ha, o3_du,h_o3,d_o3
      use constants_laps, ONLY: R_GAS, GRAV
+     use mem_allsky, ONLY: nc
 
      include 'trigd.inc'
      include 'rad_nodata.inc'
@@ -545,6 +547,7 @@
 
      use mem_namelist, ONLY: earth_radius, o3_du,h_o3,d_o3
      use constants_laps, ONLY: R_GAS, GRAV
+     use mem_allsky, ONLY: nc
      include 'trigd.inc'
      include 'rad_nodata.inc'
 
