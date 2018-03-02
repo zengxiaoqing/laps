@@ -3,7 +3,7 @@
                             ,aod,aod_ref,i_aero_synplume,i_aero_1d,aod_3d)
 
        use mem_namelist, ONLY: redp_lvl,aero_scaleht,grid_spacing_m
-       use mem_allsky, ONLY: mode_aero_cld
+       use mem_allsky, ONLY: mode_aero_cld,nc
 
        include 'rad.inc'
 
