@@ -18,7 +18,7 @@
      1                     ,moon_mag,moon_mag_thr,elgms             ! I
      1                     ,l_solar_eclipse,eobsc,emag              ! I
      1                     ,rlat,rlon,lat,lon                       ! I
-     1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
+     1                     ,minalt,maxalt,minazi,maxazi,nsp         ! I
      1                     ,ni_cyl,nj_cyl                           ! O
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
