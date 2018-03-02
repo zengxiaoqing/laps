@@ -3,6 +3,8 @@
         subroutine get_starglow(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi,rlat,rlon,alt_scale,azi_scale,horz_dep,l_zod,glow_stars)
 
         include 'trigd.inc'
+
+        use mem_allsky, ONLY: nc
         include 'rad.inc'
 
 !       http://arxiv.org/pdf/astro-ph/9706111.pdf
