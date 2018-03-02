@@ -2,6 +2,7 @@
         subroutine get_uprad_lyr(ni,nj,gnd_radc,ht,uprad_3d,xcos,ycos)
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m 
+        use mem_allsky, ONLY: nc
 
         include 'trigd.inc'
         include 'rad_nodata.inc'
