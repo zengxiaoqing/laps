@@ -4,6 +4,8 @@
                              ,pf_scat1,pf_scat2,pf_scat,pf_thk_a) ! O
         include 'trigd.inc'
 
+        use mem_allsky, ONLY: nc
+
 !       Statement functions
         trans(od) = exp(-min(od,80.))
         opac(od) = 1.0 - trans(od)
