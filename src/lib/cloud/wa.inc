@@ -1,6 +1,6 @@
 !       wa.inc
 
-        parameter (nc = 3)
+!       parameter (nc = 3) ! should be the same as nc declared elsewhere
 
         real wa(nc)                    ! wavelength (um)
         data wa    /.615,.546,.450/    ! normal
