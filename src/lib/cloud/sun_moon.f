@@ -5,6 +5,7 @@
      1                            ,r4_mag,r4_obsc,obsc_limbc)
 
       include 'trigd.inc'
+      use mem_allsky, ONLY: nc
 
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
       include '../../include/astparms.for'
@@ -330,6 +331,7 @@ C
      1                   ,solar_eclipse_magnitude,r4_obsc,obsc_limb) ! O   
 
       include 'trigd.inc'
+      use mem_allsky, ONLY: nc
       IMPLICIT REAL*8(A,B,C,D,E,F,G,H,O,P,Q,R,S,T,U,V,W,X,Y,Z)
 !     include '../util/utilparms.for'
       include '../../include/astparms.for'
@@ -732,6 +734,7 @@ C
 !       www.physics.hmc.edu/faculty/esin/a101/limbdarkening.pdf
 
 !       Optional switch to first Pierce Method in Astrophysical Quantities 
+        use mem_allsky, ONLY: nc
         include 'wa.inc'
 
         parameter (method = 3) ! first Pierce Method
