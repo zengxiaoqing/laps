@@ -14,6 +14,7 @@
 !       Refraction (apparent altitude - true altitude)     (refr_deg)
 
         use mem_namelist, ONLY: o3_du,h_o3,d_o3
+        use mem_allsky, ONLY: nc
 
         include 'trigd.inc'
         include 'rad_nodata.inc'
