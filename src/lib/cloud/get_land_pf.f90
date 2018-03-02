@@ -10,7 +10,7 @@
                              ,pf_land,cld_brdf,emis_ang_a)              ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius
-        use mem_allsky, ONLY: ext_g
+        use mem_allsky, ONLY: ext_g, nc
         use cloud_rad, ONLY: ghi_zen_toa, zen_kt
         include 'trigd.inc'
         include 'rad.inc'
