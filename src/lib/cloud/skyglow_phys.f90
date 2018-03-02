@@ -40,6 +40,7 @@
         curvat(hdst,radius) = hdst**2 / (2. * radius)
         expbh(x) = exp(min(x,+80.))
         wmean(x,y,w) = sqrt((w*x**2 + y**2) / (w + 1.))
+        angsexp_f(g) = min(((0.73 - min(g,0.73))/.04)**0.5,4.0)
 
         real linecyl,linecylp
         linecylp(xcos,ycos,x1,r) = (-(2.*xcos*x1) + sqrt((2.*xcos*x1)**2 - 4. * (xcos**2 + ycos**2) * (x1**2 - r**2))) &
@@ -150,11 +151,15 @@
         fcterm2 = fcterm * (1.0 - ramp_fc_nt)
         angstrom_exp_a = 2.4 - (fcterm * 15.)
         angstrom_exp_ha = 2.0
+        angexp_c = angsexp_f(aod_asy(1,2))
+        angexp_f = angsexp_f(aod_asy(2,2))
 
         if(sol_alt .gt. 0. .or. .true.)then
             write(6,*)' skyglow_phys: i4time is ',i4time,l_solar_eclipse
 !           write(6,*)' aod_bin = ',aod_bin
-            write(6,*)' aod_asy = ',aod_asy
+            do ic = 1,nc
+                write(6,*)' aod_asy = ',ic,aod_asy(ic,:)
+            enddo
             write(6,*)' htmsl / aero_refht = ',htmsl,aero_refht
             write(6,*)' aod_vrt = ',aod_vrt
             write(6,*)' aod_ref = ',aod_ref
@@ -162,6 +167,8 @@
             write(6,*)' fcterm/fcterm2 = ',fcterm,fcterm2
 !           write(6,*)' patm_ray max = ',maxval(patm_ray)
             write(6,*)' angstrom_exp_a = ',angstrom_exp_a
+            write(6,*)' angexp_c = ',angexp_c
+            write(6,*)' angexp_f = ',angexp_f
         endif
 
         do ic = 1,nc
