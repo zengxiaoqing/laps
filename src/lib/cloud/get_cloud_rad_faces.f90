@@ -16,7 +16,7 @@
      use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
                             ,aod,aero_scaleht,fcterm,redp_lvl
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
-     use mem_allsky, ONLY: ext_g
+     use mem_allsky, ONLY: ext_g, nc
      include 'rad.inc' ! e.g. for ext_o, o3_du
 
      trans(od) = exp(-min(od,80.))
