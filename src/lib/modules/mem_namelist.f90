@@ -391,7 +391,7 @@ elseif (namelist_name == 'lapsparms') then
    aod_asy(1,1) = +0.957 ; aod_asy(1,2) = +0.962 ; aod_asy(1,3) = +0.967
 
 !  Fine mode aerosols (rgb)
-   aod_asy(2,1) = +0.44  ; aod_asy(2,2) = +0.45  ; aod_asy(2,3) = +0.46 
+   aod_asy(2,1) = +0.49  ; aod_asy(2,2) = +0.50  ; aod_asy(2,3) = +0.51 
 
 !  Backscattering aerosols
    aod_asy(3,:) = +0.55 
