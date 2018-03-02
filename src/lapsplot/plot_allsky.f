@@ -27,7 +27,6 @@
 !       real snow_3d(NX_L,NY_L,NZ_L)
 !       real aod_3d(NX_L,NY_L,NZ_L)
 
-        parameter (nc = 3)
 !       real transm_3d(NX_L,NY_L,NZ_L)
 !       real transm_4d(NX_L,NY_L,NZ_L,nc) 
 
@@ -1387,7 +1386,7 @@
      1                     ,moon_mag,moon_mag_thr,elgms             ! I
      1                     ,l_solar_eclipse,eobsc,emag              ! I
      1                     ,rlat,rlon,lat,lon                       ! I
-     1                     ,minalt,maxalt,minazi,maxazi,nc,nsp      ! I
+     1                     ,minalt,maxalt,minazi,maxazi,nsp         ! I
      1                     ,ni_cyl,nj_cyl                           ! O
      1                     ,alt_scale,azi_scale                     ! I
      1                     ,grid_spacing_m,r_missing_data           ! I
@@ -1487,7 +1486,7 @@
 
 !             if(ipolar_sizeparm .ge. 3)then
               if(htagl(iloc) .gt. earth_radius*2.5)then
-                pomag = htagl(iloc) / (earth_radius*0.7)
+                pomag = htagl(iloc) / (earth_radius*0.68)
               elseif(htagl(iloc) .gt. earth_radius*1.1)then
                 pomag = 3.0
               elseif(htagl(iloc) .gt. earth_radius*0.75)then
