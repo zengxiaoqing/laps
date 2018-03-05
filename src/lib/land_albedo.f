@@ -94,7 +94,8 @@
      1                         ,albedo,bm_counts,istatus)
 
       use ppm
-      use mem_namelist, ONLY: c6_maproj 
+      use mem_namelist, ONLY: c6_maproj
+      use mem_allsky, ONLY: nc
 
       include 'wa.inc'
 
