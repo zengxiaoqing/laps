@@ -241,6 +241,9 @@ cdis
         real cldod_out(NX_L,NY_L)
         real cldod_out_l(NX_L,NY_L)
         real cldod_out_i(NX_L,NY_L)
+        real odint_l(NX_L,NY_L)
+        real odint_i(NX_L,NY_L)
+        real odint(NX_L,NY_L)
         real visibility(NX_L,NY_L)
         real simvis(NX_L,NY_L)
         real static_albedo(NX_L,NY_L)
@@ -816,8 +819,24 @@ c read in laps lat/lon and topo
         write(6,*)' Calculating Integrated LWC and CICE'
 
 !       This routine can also return OD using 'reff_clwc_f' and 'reff_cice_f'
-        call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
-        call integrate_slwc(cice,heights_3d,NX_L,NY_L,NZ_L,cice_int)
+        if(.true.)then
+          call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
+          call integrate_slwc(cice,heights_3d,NX_L,NY_L,NZ_L,cice_int)
+
+        else ! integrate slwc and check OD
+          ihtype = 1
+          call integrate_slwc_od(slwc,heights_3d,temp_3d      ! I
+     1                               ,imax,jmax,kmax,ihtype   ! I
+     1                               ,slwc_int,odint_l)       ! O
+          ihtype = 2
+          call integrate_slwc_od(cice,heights_3d,temp_3d      ! I
+     1                               ,imax,jmax,kmax,ihtype   ! I
+     1                               ,cice_int,odint_i)       ! O
+          odint = odint_l + odint_i
+          write(6,801)odint(idb,jdb),cldalb_in(idb,jdb)
+801       format(' CTR odint/cldalb_in:',2f9.3)
+
+        endif
 
 !       1e6 factor converts from metric tons/m**2 to g/m**2 (LWP)
         write(6,*)' Integrated slwc range (g/m**2) is '
