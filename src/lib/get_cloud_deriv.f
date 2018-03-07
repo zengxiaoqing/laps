@@ -1112,28 +1112,60 @@ cdoc    Integrates cloud liquid through the column
         return
         end
 
-        subroutine integrate_slwc_od(slwc,heights_3d,imax,jmax,kmax
-     1                           ,slwc_int)            
+        subroutine integrate_slwc_od(slwc,heights_3d,temp_3d ! I
+     1                              ,imax,jmax,kmax,ihtype   ! I
+     1                              ,slwc_int,od)            ! O
 
 !       Integrates cloud liquid through the column
 !       We can also pass back od depending on the type of hydrometeors
 
+        use cloud_rad
 
         real slwc(imax,jmax,kmax)       ! Input in g/m**3
         real heights_3d(imax,jmax,kmax) ! Input 
+        real temp_3d(imax,jmax,kmax)    ! Input
+        integer ihtype                  ! 1 = Cloud Liquid   
+                                        ! 2 = Cloud Ice
+                                        ! 3 = Rain
+                                        ! 4 = Snow
         real slwc_int(imax,jmax)  ! LWP in metric tons of water / m**2 
                                   ! Corresponds to a depth in meters
                                   ! Multiply by 1e6 to get LWP in g/m**2
+        real od(imax,jmax)        ! Optical thickness
         real depth(kmax)          ! Local
+
+!       MEE values using constants from 'module_cloud_rad.f90'
+!       Values are 1.5 / (rho * reff)
+!       clwc2alpha = 75.
+        clwc2alpha = 1.5 / (rholiq  * reff_clwc)
+        cice2alpha = 1.5 / (rholiq  * reff_cice)
+        rain2alpha = 1.5 / (rholiq  * reff_rain)
+        snow2alpha = 1.5 / (rhosnow * reff_snow)
+
+        write(6,*)' clwc2alpha (MEE) is ',clwc2alpha        
 
         do j = 1,jmax
         do i = 1,imax
             slwc_int(i,j) = 0.
+            od(i,j) = 0.
             do k = 1,kmax-1
+
+!               Consider inverting 'reff_clwc_f' and 'reff_cice_f'
+!               const_clwc = ((1.5 / rholiq ) / reff_clwc_f(clwc_3d(i,j,ku))) * bksct_eff_clwc * ds
+!               const_cice = ((1.5 / rholiq ) / reff_cice_f(cice_3d(i,j,ku))) * bksct_eff_cice * ds
+!               const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
+!               const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
+
                 depth(k) = heights_3d(i,j,k+1) - heights_3d(i,j,k) ! meters
                                                          ! convert units
                 slwc_ave = (slwc(i,j,k) + slwc(i,j,k+1)) * 0.5 * 1e-6 
                 slwc_int(i,j) = slwc_int(i,j) + slwc_ave * depth(k)
+
+                if(ihtype .eq. 1)then
+                    od(i,j) = od(i,j) + slwc_ave * clwc2alpha
+                else
+                    od(i,j) = od(i,j) + slwc_ave * cice2alpha
+                endif
             enddo ! k
         enddo ! i
         enddo ! j
