@@ -29,6 +29,7 @@ include 'lapsparms.for'
         real    r_missing_data
         integer  MAX_RADARS
         real aod,aod_bin(3),aod_asy(3,3),fcterm,aod_ha,ht_ha(4),ssa(3)
+        real alpha_ha
         real o3_du,h_o3,d_o3
         real aero_scaleht
         real ref_base
@@ -421,6 +422,7 @@ elseif (namelist_name == 'lapsparms') then
    !  .
    !  .
    !  .
+   alpha_ha = aod_ha / ((ht_ha(3)-ht_ha(2))+0.5*(ht_ha(4)-ht_ha(3)))
 
 elseif (namelist_name == 'wind') then
 
