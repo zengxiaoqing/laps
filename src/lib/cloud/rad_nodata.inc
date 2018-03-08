@@ -129,7 +129,11 @@
 
 !       Microphysics
         reff_cice_f(cice) = .000034 * (max(cice,1e-6)/1.66e-6)**(+0.14)
-        reff_clwc_f(clwc) = (3. + 8. * (max(clwc,1e-6)*1.00e3)**(+0.50)) / 1e6 
+        reff_clwc_f(clwc) = (3. + 8. * (max(clwc,1e-6)*1.00e3)**(+0.50)) / 1e6
+
+	cice_reff_f(reff) = 1.374408e26 * reff**(50./7.)
+	clwc_reff_f(reff) = 1.5625e7 * reff**2 - 93.75 * reff + .000140625
+
         albedo_to_btau(albedo) = -(albedo) / (albedo-1.)
 	
 !       Aerosol scattering
