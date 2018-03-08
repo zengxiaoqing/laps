@@ -851,6 +851,12 @@
 
         write(6,*)' clwc2alpha (MEE) is ',clwc2alpha
 
+!       Updated expressions for MEE
+!       const_clwc = ((1.5 / rholiq ) / reff_clwc_f(clwc_3d(i,j,ku))) * bksct_eff_clwc * ds
+!       const_cice = ((1.5 / rholiq ) / reff_cice_f(cice_3d(i,j,ku))) * bksct_eff_cice * ds
+!       const_rain = ((1.5 / rholiq ) / reff_rain) * bksct_eff_rain * ds
+!       const_snow = ((1.5 / rhosnow) / reff_snow) * bksct_eff_snow * ds
+           
         cond_3d = clwc_3d 
      1          + cice_3d * (cice2alpha/clwc2alpha)
      1          + rain_3d * (rain2alpha/clwc2alpha) 
