@@ -76,8 +76,8 @@
 !              if((azi-50.) * (azi_last-50.) .lt. 0. .OR. ip .eq. 257)then ! cross 50.
 !              if((azi-50.) * (azi_last-50.) .lt. 0. .AND. jp .gt. 265)then ! cross 50.
                if(iprint .eq. 1)then
-                 icyl = nint(ri_a(ip,jp)) - 1 + minalt
-                 jcyl = nint(rj_a(ip,jp)) - 1 + minazi
+                 icyl = nint(ri_a(ip,jp)) + minalt
+                 jcyl = nint(rj_a(ip,jp)) + minazi
                  if(icyl .ge. minalt .and. icyl .le. maxalt .and. jcyl .ge. minazi .and. jcyl .le. maxazi)then
                    write(6,1)ip,jp,alt,azi,ri_a(ip,jp),rj_a(ip,jp),icyl,jcyl,cyl(icyl,jcyl)
                  else
