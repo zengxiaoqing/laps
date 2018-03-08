@@ -3,7 +3,7 @@
 !    1                     ,heights_3d                              ! I
 !    1                     ,rain_3d,snow_3d                         ! I
 !    1                     ,pres_3d,aod_3d                          ! I
-     1                     ,topo_sfc,topo,swi_2d                    ! I
+     1                     ,topo_sfc,topo,swi_2d,pw_2d              ! I
      1                     ,topo_albedo_2d,land_frac,snow_cover     ! I
      1                     ,htagl                                   ! I
      1                     ,aod_ref                                 ! I
@@ -64,6 +64,7 @@
         real du_2d(NX_L,NY_L)
         real aod_2d(NX_L,NY_L)
         real swi_2d(NX_L,NY_L)
+        real pw_2d(NX_L,NY_L)
         real topo_albedo_2d(nc,NX_L,NY_L)
         real alt_a_roll(minalt:maxalt,minazi:maxazi)
         real azi_a_roll(minalt:maxalt,minazi:maxazi)
@@ -180,6 +181,10 @@
 
         swi_obs = swi_2d(iobs,jobs) ! initialize
         write(6,*)' swi_2d at observer location 1 = ',swi_obs,'W/m^2'
+
+        pw_obs = pw_2d(iobs,jobs) ! initialize
+        write(6,*)' pw_2d at observer location = ',pw_obs
+
         eobsl = eobsc(iobs,jobs)
         write(6,*)' eobsl = ',eobsl
         eobsc_sky = 0. ! initialize
