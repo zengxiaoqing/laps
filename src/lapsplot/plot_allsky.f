@@ -1371,7 +1371,7 @@
 !    1                     ,heights_3d                              ! I
 !    1                     ,rain_3d,snow_3d                         ! I
 !    1                     ,pres_3d,aod_3d                          ! I
-     1                     ,topo_sfc,topo,swi_2d                    ! I
+     1                     ,topo_sfc,topo,swi_2d,pw_2d              ! I
      1                     ,topo_albedo_2d,land_frac,snow_cover     ! I
      1                     ,htagl(iloc)                             ! I
      1                     ,aod_ref                                 ! I
