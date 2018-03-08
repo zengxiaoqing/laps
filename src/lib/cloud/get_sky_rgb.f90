@@ -21,7 +21,7 @@
                    moon_alt,moon_az,moon_mag,corr1_in,exposure, &       ! I
                    sky_rgb,sky_sprad,sky_reflectance)                   ! O
 
-        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa,o3_du,h_o3,d_o3
+        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa,o3_du,h_o3,d_o3,aod_ha
         use cloud_rad ! , ONLY: ghi_zen_toa
         use mem_allsky, ONLY: ghi_sim,mode_aero_cld
         include 'trigd.inc'
@@ -361,7 +361,7 @@
 
         offset = 0.
         write(6,3)sol_alt,corr1,glwmid,contrast,fracerf,erfterm
-3       format('  sol_alt/corr1/glwmid/contrast/fracerf/erfterm',f9.2,2f9.3,f9.1,2f9.3)
+3       format('  sol_alt/corr1/glwmid/contrast/fracerf/erfterm',f9.2,2f9.3,f9.1,f9.3,f9.3)
 
         ref_nl = day_int0
         if(new_color .gt. 0)then
@@ -1977,8 +1977,9 @@
              call get_fluxsun(wa(ic),1,1,sp_irrad_550)
 !            sp_irrad_550 = 1.86 ! W/m**2/nm
              ghi_sim = (sp_irrad / sp_irrad_550) * ghi_zen_toa
-             wvir_factor = 0.9
+             wvir_factor = 1.0 - (0.063 * patm)
              ghi_sim = ghi_sim * wvir_factor
+             write(6,*)' patm/wvir_factor ',patm,wvir_factor
           endif
 
           sky_sprad(ic-1,:,:) = sky_rad_a(ic,:,:) * sprad_rat
