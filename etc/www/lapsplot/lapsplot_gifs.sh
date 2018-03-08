@@ -240,6 +240,8 @@ if test "$NCARG_ROOT" = "allsky"; then
    fi
   fi
 
+  POINTCYL=16
+
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
     if test $AZI_SCALE == 0.10; then
       convert -fill orange -annotate  +1050+447   "East"          -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
@@ -247,9 +249,9 @@ if test "$NCARG_ROOT" = "allsky"; then
       convert -fill orange -annotate  +776+179  "$DIRCYL"          -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       echo "WINDOW is larger "$WINDOW
     elif test $AZI_SCALE == 0.25; then
-      convert -fill orange -annotate  +693+$YDISP   "$DIRCYL"          -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      convert -fill orange -annotate  +339+$YDISP   "$DIRCYLL"         -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
-      convert -fill orange -annotate  +1055+$YDISP  "$DIRCYLR"         -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate  +693+$YDISP   "$DIRCYL"          -pointsize $POINTCYL allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate  +339+$YDISP   "$DIRCYLL"         -pointsize $POINTCYL allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate  +1055+$YDISP  "$DIRCYLR"         -pointsize $POINTCYL allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       echo "WINDOW is large "$WINDOW
     elif test $AZI_SCALE == 0.50; then
       convert -fill orange -annotate +1040+20   "$DIRCYL"          -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
