@@ -52,8 +52,8 @@
         parameter (h2_ha = 25000.)
         parameter (h3_ha = 31000.)
 !       parameter (aod_ha = .015)
-        parameter (aod_ha = .004)
-        parameter (alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha)))
+!       parameter (aod_ha = .004)
+!       parameter (alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha)))
         patm_ah(h,h1,h2) = max(min(1.0,(h2-h)/(h2-h1)),0.)
 
 !       Airmasses for thick homogenous elevated shell
