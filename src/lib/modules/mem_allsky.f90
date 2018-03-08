@@ -24,7 +24,6 @@ MODULE mem_allsky
 !     Various non-gridded variables
       parameter (nc = 3)
       real ghi_sim
-      real alpha_ha
       real ext_g(nc)
       integer mode_aero_cld /1/ ! treat aerosols more as clouds [1,2,3]
 
