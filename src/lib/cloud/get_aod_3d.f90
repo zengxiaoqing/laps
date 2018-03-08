@@ -2,7 +2,7 @@
        subroutine get_aod_3d(pres_3d,heights_3d,topo_2d,ni,nj,nk &
                             ,aod,aod_ref,i_aero_synplume,i_aero_1d,aod_3d)
 
-       use mem_namelist, ONLY: redp_lvl,aero_scaleht,grid_spacing_m
+       use mem_namelist, ONLY: redp_lvl,aero_scaleht,grid_spacing_m,aod_ha,ht_ha,alpha_ha
        use mem_allsky, ONLY: mode_aero_cld,nc
 
        include 'rad.inc'
@@ -23,6 +23,15 @@
 
        write(6,11)mode_aero_cld,i_aero_1d,i_aero_synplume
 11     format('  mode_aero_cld/i_aero_1d/i_aero_synplume = ',3i5)
+
+       write(6,*)'aod_ha / alpha_ha new method ',aod_ha,alpha_ha
+
+       alpha_ha = aod_ha / ((h2_ha-h1_ha)+0.5*(h3_ha-h2_ha))
+       write(6,*)'aod_ha / alpha_ha old method ',aod_ha,alpha_ha
+
+!      Transitional assignments if needed
+!      h1_ha = ht_ha(2)
+!      h2_ha = ht_ha(3)
 
        if(i_aero_1d .eq. 1)then
          write(6,*)' Set aerosols from 1D parameters'
