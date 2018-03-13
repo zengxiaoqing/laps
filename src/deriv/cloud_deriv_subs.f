@@ -39,7 +39,7 @@ cdis
 
         subroutine insert_thin_lwc_ice(clouds_3d,clouds_3d_pres
      1        ,heights_3d
-     1        ,temp_3d,cldalb_in,cld_hts,ni,nj,nk,kcld
+     1        ,temp_3d,cldalb_in,cld_hts,ni,nj,nk,kcld,idb,jdb
      1        ,thresh_thin_lwc_ice
      1        ,pres_3d,slwc,cice,istatus)
 
@@ -82,7 +82,7 @@ cdis
 !       Convert from cloud cover to discreet cloud layer indices (cvr to a)
         do i = 1,ni
         do j = 1,nj
-          if(i .eq. ni/2 .AND. j .eq. nj/2)then
+          if(i .eq. idb .AND. j .eq. jdb)then
             idebug = 1
           else
             idebug = 0
@@ -166,10 +166,12 @@ cdis
 !             Should maximum albedo of whole cloud column be used instead of
 !             just this layer?
 !             albarg = min(a(ilyr),0.930) ! bounded cloud fraction
-              albarg = min(maxval(a(1:nlyr)),.930)
-!             if(cldalb_in(i,j) .ne. r_missing_data)then          ! use vis sat
-!                 albarg = min(cldalb_in(i,j),0.930)
-!             endif
+
+              if(cldalb_in(i,j) .ne. r_missing_data)then          ! use vis sat
+                  albarg = min(cldalb_in(i,j),0.930)
+              else
+                  albarg = min(maxval(a(1:nlyr)),.930)
+              endif
 
               call albedo_to_clouds2(albarg
      1                             ,cloud_trans_l,cloud_trans_i
