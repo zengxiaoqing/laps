@@ -39,13 +39,15 @@ include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a \
            $(SRCROOT)/src/lib/util/libutil.a \
+           $(SRCROOT)/src/lib/modules/libmodules.a \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a \
-           $(SRCROOT)/src/lib/modules/libmodules.a
+           $(SRCROOT)/src/lib/liblaps.a 
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
              $(SRCROOT)/src/lib/util/libdebugutil.a \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a \
-             $(SRCROOT)/src/lib/modules/libdebugmodules.a
+             $(SRCROOT)/src/lib/libdebuglaps.a
 
 RM=rm -f 
 
@@ -79,7 +81,7 @@ $(EXE):			$(FOBJS) $(FMOD) $(LAPSLIBS)
 
 debug:	
 	($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
- 	"LAPSLIBS	=	$(DBLAPSLIBS)" 	\
+        "LAPSLIBS	=	$(DBLAPSLIBS)" 	\
 	"FFLAGS         =	$(DBFLAGS)" 	)
 
 lapsprep.o:		$(FMOD)
