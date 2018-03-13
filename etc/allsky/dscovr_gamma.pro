@@ -14,7 +14,7 @@ imax = idim-1
 
 ; Higher Gamma lowers Green (and other) output
 factor = 0.95
-gamma = 0.45 ; 0.7
+gamma = 0.55
 
 FOR I = 0,2047 DO BEGIN
 FOR J = 0,2047 DO BEGIN
@@ -68,12 +68,15 @@ outfile = 'dscovr_gamma_crop.png'
 ; rcrop  = 199 ; decrease to move image left
 ; tcrop  = 162 ; decrease to move image down
 ; bcrop  = 200 ; increase to move image down
-imean   = 220 ; 90 
-ioffset = 15 ; decrease to move image left
+
+imean   = 213 ; 90 (higher is more oblate)
+imean   = 203 ; 90 (higher is more oblate)
+ioffset = 25 ; decrease to move image left
 lcrop  = imean-ioffset 
 rcrop  = imean+ioffset 
 
 jmean  = 220 ; 90
+jmean  = 210 ; 90
 joffset = 18 ; increase to move image up
 tcrop  = jmean-joffset
 bcrop  = jmean+joffset
