@@ -9,7 +9,12 @@ setenv ILOC $3
 setenv LAPSINSTALLROOT $4
 setenv LAPS_SRC_ROOT   /usr/nfs/common/lapb/parallel/laps
 
-setenv CAMERA_OFFSET_TIME -60
+if ($SITE == dsrc) then
+    setenv CAMERA_OFFSET_TIME -60
+else
+    setenv CAMERA_OFFSET_TIME 0
+endif
+
 setenv LAPS_A13TIME `perl $LAPSINSTALLROOT/etc/timeconv.pl -a $LAPS_A9TIME -o yyyymmdd_hhmm -t $CAMERA_OFFSET_TIME`
 
 setenv SITESDIR /w3/lapb/allsky/sites
@@ -65,6 +70,8 @@ if (-e output3c/$LAPS_A13TIME\_$SITE.png) then
           identify output3c/$LAPS_A13TIME\_$SITE.png
 
     ls -l $ALSDIR/$LAPS_A9TIME.png output3c/$LAPS_A13TIME\_$SITE.png output4c/combined_$LAPS_A9TIME.png
+    echo "checking directory output4c"
+    ls -l output4c
 
     if (! -e output3/$LAPS_A13TIME\_$SITE.png) then
         echo "polar image absent - make cylindrical blinking comparison for $SITE..."
@@ -94,7 +101,6 @@ setenv FILE_CAMERA_POLAR $SITESDIR/$SITE/output3/$LAPS_A13TIME\_$SITE.png
 if ( -e $FILE_MODEL_POLAR && -e $FILE_CAMERA_POLAR )then
     setenv SOLAR_ALT `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c1-8`
     setenv SOLAR_AZ  `head -3 $LAPS_DATA_ROOT/lapsprd/www/anal2d/recent/als/label2.$ILOC | tail -1 | cut -c9-16`
-#   echo compare_allsky | /usr/local/share/rsi/idl/bin/idl
     echo "IDL_DIR is $IDL_DIR"
     which idl
     echo compare_allsky | idl
