@@ -770,7 +770,7 @@ c read in laps lat/lon and topo
         write(6,*)
         write(6,*)' Inserting thin clouds into LWC/ICE fields'
         call insert_thin_lwc_ice(clouds_3d,clouds_3d_pres,heights_3d
-     1       ,temp_3d,cldalb_in,cld_hts,NX_L,NY_L,NZ_L,KCLOUD
+     1       ,temp_3d,cldalb_in,cld_hts,NX_L,NY_L,NZ_L,KCLOUD,idb,jdb
      1       ,thresh_thin_lwc_ice       
      1       ,pres_3d,slwc,cice,istatus)
 
@@ -779,10 +779,16 @@ c read in laps lat/lon and topo
             goto 999
         endif
 
-!       Apply temperature dependent upper bound to cloud ice
-        do k = 1,NZ_L
-        do j = 1,NY_L
-        do i = 1,NX_L
+!       Note these bounds can introduce artifacts related to METAR influence.
+!       It would be better to design 'insert_thin_lwc_ice' to put more of        
+!       the hydrometeors at lower levels upstream so limits set here would
+!       have less effect.
+        if(.false.)then
+
+!         Apply temperature dependent upper bound to cloud ice
+          do k = 1,NZ_L
+          do j = 1,NY_L
+          do i = 1,NX_L
 !           Temperature dependent threshold, we can consider basing this
 !           from saturation vapor density (SVD * .025) = (ES/RT) * .10
 !           where .10 means 10% of water saturation
@@ -803,15 +809,17 @@ c read in laps lat/lon and topo
 701             format('k/t/e/cld_ice_uprb_gpm3/cice/slwc',i4,f8.2,f8.1
      1                       ,3f9.5)
             endif
-        enddo
-        enddo
-        enddo
+          enddo
+          enddo
+          enddo
 
-        I4_elapsed = ishow_timer()
+          I4_elapsed = ishow_timer()
 
-!       Apply upper bound of 0.35 g/m**3
-        slwc = min(slwc,0.35)
-        cice = min(cice,0.35)
+!         Apply upper bound of 0.35 g/m**3
+          slwc = min(slwc,0.35)
+          cice = min(cice,0.35)
+
+        endif ! apply bounds
 
 !       Calculate and Write Integrated LWC
 !       Note slwc/cice is here in g/m**3
@@ -819,22 +827,22 @@ c read in laps lat/lon and topo
         write(6,*)' Calculating Integrated LWC and CICE'
 
 !       This routine can also return OD using 'reff_clwc_f' and 'reff_cice_f'
-        if(.true.)then
+        if(.false.)then
           call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
           call integrate_slwc(cice,heights_3d,NX_L,NY_L,NZ_L,cice_int)
 
         else ! integrate slwc and check OD
           ihtype = 1
           call integrate_slwc_od(slwc,heights_3d,temp_3d      ! I
-     1                               ,imax,jmax,kmax,ihtype   ! I
+     1                               ,NX_L,NY_L,NZ_L,ihtype   ! I
      1                               ,slwc_int,odint_l)       ! O
           ihtype = 2
           call integrate_slwc_od(cice,heights_3d,temp_3d      ! I
-     1                               ,imax,jmax,kmax,ihtype   ! I
+     1                               ,NX_L,NY_L,NZ_L,ihtype   ! I
      1                               ,cice_int,odint_i)       ! O
           odint = odint_l + odint_i
           write(6,801)odint(idb,jdb),cldalb_in(idb,jdb)
-801       format(' CTR odint/cldalb_in:',2f9.3)
+801       format(' CTR odint/cldalb_in:',2f9.4)
 
         endif
 
@@ -848,7 +856,8 @@ c read in laps lat/lon and topo
 !       Calculate cloud optical depth and cloud albedo
 !       Constants are Mass Extinction Efficiency (MEE) and Mass Backscatter
 !       Efficiency (MBE).
-!       Note the 1e3 term converts units from metric tons per m**2 to kg/m**2
+!       Note the 1e3 term converts 'slwc_int' or 'clwc_int' units from Mg/m**2
+!       to kg/m**2 (SI units)
 
         const_lwp = (1.5 * 1e3) / (rholiq     * reff_clwc)
         const_lwp_bks = const_lwp * bksct_eff_clwc
@@ -1264,7 +1273,7 @@ c read in laps lat/lon and topo
      1                      ,cldalb_out(i,j),sfc_albedo(i,j),simvis(i,j)
  1202           format(' CTR cloud cvr/od/albi-o/sfcalb/smv:',6f9.3)
                 write(6,1203)slwc_int(i,j),cice_int(i,j)
- 1203           format(' CTR slwc_int/cice_int ',2f10.6)
+ 1203           format(' CTR slwc_int/cice_int (Mg/m**2)',2f10.6)
             endif
 
         enddo ! i
