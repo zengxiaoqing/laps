@@ -169,6 +169,7 @@ SRC	= machine_dependent.F \
           xtimer_lbfgs.f \
           ssh2.f \
           stats_1d.f \
+          stats_2d.f \
           subcon.f \
           sunfuncs.f \
           time_conversions.f \
