@@ -1128,9 +1128,10 @@ cdoc    Integrates cloud liquid through the column
                                         ! 2 = Cloud Ice
                                         ! 3 = Rain
                                         ! 4 = Snow
-        real slwc_int(imax,jmax)  ! LWP in metric tons of water / m**2 
+        real slwc_int(imax,jmax)  ! LWP in metric tons of water (Mg)/m**2 
                                   ! Corresponds to a depth in meters
-                                  ! Multiply by 1e6 to get LWP in g/m**2
+                                  ! Multiply by 1e6 to get LWP in  g/m**2
+                                  ! Multiply by 1e3 to get LWP in kg/m**2 (SI)
         real od(imax,jmax)        ! Optical thickness
         real depth(kmax)          ! Local
 
@@ -1162,9 +1163,9 @@ cdoc    Integrates cloud liquid through the column
                 slwc_int(i,j) = slwc_int(i,j) + slwc_ave * depth(k)
 
                 if(ihtype .eq. 1)then
-                    od(i,j) = od(i,j) + slwc_ave * clwc2alpha
+                    od(i,j) = od(i,j) + slwc_ave * clwc2alpha * 1e3
                 else
-                    od(i,j) = od(i,j) + slwc_ave * cice2alpha
+                    od(i,j) = od(i,j) + slwc_ave * cice2alpha * 1e3
                 endif
             enddo ! k
         enddo ! i
