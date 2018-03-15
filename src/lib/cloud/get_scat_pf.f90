@@ -97,6 +97,7 @@
         real mtr_ssa(nc,ni,nj)
         real mtr_asy(nc,ni,nj)
         real mtr_msa(nc,ni,nj)
+        real bfrac(nc,ni,nj)
 
         real airmass_2_topo(ni,nj)  ! airmass to topo  
         integer idebug_a(ni,nj)
@@ -144,6 +145,8 @@
             else
               aero_factor(ic) = 0.
             endif
+
+            bfrac(ic,i,j) = 0.10 * (1. - aero_factor(ic)) + 0.15 * aero_factor(ic)
             
           enddo ! ic
           
