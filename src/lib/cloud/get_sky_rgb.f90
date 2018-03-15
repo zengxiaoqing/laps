@@ -1062,6 +1062,10 @@
 !               (0.25 is dark cloud base value)                                  
 !             Use surface albedo equation?
 
+!             Note this scatterplot for smoke backscatter fraction vs Angstrom exponent (b = 0.038 A + 0.077)
+!             A ranges from 1.5 to 2.5, b ranges from .13 to .19
+!             https://www.researchgate.net/figure/Backscatter-fraction-b-at-l-550-nm-vs-Angstroem-exponent-of-scattering-a-sp-in-the_fig12_290457249
+
               btau = 0.10 * cloud_od_loc(i,j)
 !             btau = sum(bksct_eff_a(:) * cloud_od_sp_loc(i,j,:))
               cloud_albedo = btau / (1. + btau)
@@ -1090,6 +1094,10 @@
                       pf_top(ic) = pf_scat(ic,i,j)
                   endif
                   rad = day_int * pf_top(ic)
+
+                  if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg)then
+                     write(6,*)'alb dbg: cldalb/mtrmsa ',cloud_albedo,mtr_msa(ic,i,j)
+                  endif
 
                   cld_radt(ic) = (rad * cloud_rad_c(ic,i,j) + rad_sec_cld(ic)) * ssa_eff(ic,i,j) ! **6.0
 !                 rint_top(ic) = rad_to_counts(cld_radt(ic))
