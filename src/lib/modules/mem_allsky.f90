@@ -26,6 +26,7 @@ MODULE mem_allsky
       real ghi_sim
       real ext_g(nc)
       integer mode_aero_cld /1/ ! treat aerosols more as clouds [1,2,3]
+      integer mil,mih,mjl,mjh
 
       PUBLIC alloc_allsky, dealloc_allsky
 
