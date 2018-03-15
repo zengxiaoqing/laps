@@ -3,7 +3,7 @@
            snow_3d,topo_a,lat,lon,heights_3d,transm_3d,transm_4d,idb,jdb,ni,nj,nk,twi_alt)
 
      use mem_namelist, ONLY: r_missing_data, earth_radius, ssa, aod, redp_lvl
-     use mem_allsky, ONLY: ext_g, nc
+     use mem_allsky, ONLY: ext_g, nc, mil, mih, mjl, mjh
      use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      use mem_allsky, ONLY: mode_aero_cld
@@ -100,6 +100,8 @@
      enddo ! ic
      write(6,*)' sprad_to_nl = ',sprad_to_nl 
 
+     write(6,*)' window indices are ',mil,mih,mjl,mjh
+
      do k = nk-1,1,-1
 
        patm_k = ztopsa(heights_3d(idb,jdb,k)) / 1013.
@@ -121,8 +123,8 @@
                                                        / grid_spacing_m
 
        if(ku .eq. nk)then
-         do j = 1,nj
-         do i = 1,ni
+         do j = mjl,mjh
+         do i = mil,mih
 
 !          Convert hydrometeor concentration to backscatter optical depth
            const_clwc = ((1.5 / rholiq ) / reff_clwc_f(clwc_3d(i,j,ku))) * bksct_eff_clwc * ds
@@ -146,8 +148,8 @@
            btau_inc_3d(:,:,:,2) = btau_inc_3d(:,:,:,1)  
        endif
 
-       do j = 1,nj
-       do i = 1,ni
+       do j = mjl,mjh
+       do i = mil,mih
 
 !        Convert hydrometeor concentration to backscatter optical depth
 !        Constants are Mass Backscatter Efficiency MBE * ds = b tau / lwc
@@ -189,7 +191,7 @@
 51     format(' dij,height,terr range',f8.3,3f8.1)
 
 !      Loop through array of slant columns passing through i,j at ht_ref
-       do j = 1,nj
+       do j = mjl,mjh
 
 !       il,ih,jl,jh are offset in reference to MSL height
         rjl = j + djl ; rjl = max(rjl,1.) ; rjl = min(rjl,float(nj))
@@ -197,7 +199,7 @@
         rju = j + dju ; rju = max(rju,1.) ; rju = min(rju,float(nj))
                                              ju = nint(rju)
 
-        do i = 1,ni
+        do i = mil,mih
          ril = i + dil ; ril = max(ril,1.) ; ril = min(ril,float(ni))
                                               il = nint(ril)
          riu = i + diu ; riu = max(riu,1.) ; riu = min(riu,float(ni))
@@ -451,8 +453,8 @@
       day_int = 3e9 ! nl
       do k = 1,nk
         patm_k = ztopsa(heights_3d(idb,jdb,k)) / 1013.
-        do j = 1,nj
-        do i = 1,ni
+        do j = mjl,mjh
+        do i = mil,mih
           if(heights_3d(i,j,k) .gt. topo_a(i,j) .AND. transm_3d(i,j,k) .eq. 0.)then
               n_terr_shadow = n_terr_shadow + 1
               if(n_terr_shadow .le. 10)then
