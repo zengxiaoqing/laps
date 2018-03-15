@@ -14,6 +14,7 @@
         use wrf_lga
 
         include 'trigd.inc'
+        include 'optinc.inc'
 
         addlogs(x,y) = log10(10.**x + 10.**y)
         horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
@@ -70,6 +71,8 @@
         real moon_azi_2d(NX_L,NY_L)
         real moon_mag,moon_mag_thr
 
+        real a_vec(mxopt),a_last(mxopt)
+
         real pres_1d(NZ_L)
 
         real lil_sfc, lic_sfc, lil_cpt, lic_cpt
@@ -92,7 +95,7 @@
         character*11 c_pw
         character*11 c_cape
         character*20 c20_x, c20_y
-        character*255 new_dataroot
+        character*255 new_dataroot, filename_ppm
         logical l_latlon, l_parse, l_plotobs, l_solar_eclipse
         logical l_idl /.false./
         logical l_cyl, l_polar, l_water_world 
@@ -117,11 +120,15 @@
         real, allocatable, dimension(:,:) :: azi_a_roll
         real, allocatable, dimension(:,:) :: cloud_od
         integer, allocatable, dimension(:,:) :: camera_cloud_mask
+        real, allocatable, dimension(:,:,:) :: camera_rgbf
         real*8, allocatable, dimension(:,:) :: dist_2_topo
 
         real alt_a_polar(iplo:iphi,jplo:jphi)
         real azi_a_polar(iplo:iphi,jplo:jphi)
         real elong_a_polar(iplo:iphi,jplo:jphi)
+
+        integer maxloc
+        parameter (maxloc = 1000)
 
         real, allocatable, dimension(:,:,:) :: sky_rgb_polar
         integer, allocatable, dimension(:,:,:) :: isky_rgb_polar
@@ -130,10 +137,8 @@
 
         real, allocatable, dimension(:,:,:) :: sky_rgb_cyl
         integer, allocatable, dimension(:,:,:) :: isky_rgb_cyl
+        real correlation(nc,maxloc)
         integer mode_cloud_mask /1/ ! ignore the mask
-
-        integer maxloc
-        parameter (maxloc = 1000)
 
         real*8 xsound(maxloc),ysound(maxloc)
         real*8 soundlat(maxloc),soundlon(maxloc)
@@ -142,6 +147,7 @@
 
         data ilun /0/
         character*3 clun
+        character*10 clun_loop
  
         data i_aero_synplume /0/
         data i_aero_1d /1/
@@ -154,7 +160,12 @@
         snow_cover = r_missing_data        
         snow_albedo_max = r_missing_data        
         snow_depth = r_missing_data        
-        seaice = r_missing_data        
+        seaice = r_missing_data
+
+        mil = 1
+        mih = NX_L
+        mjl = 1
+        mjh = NY_L
 
         call alloc_allsky(NX_L,NY_L,NZ_L,nc,istatus)
 
@@ -176,6 +187,10 @@
         write(6,*)' ipolar_sizeparm = ',ipolar_sizeparm
         write(6,*)' density = ',density
         write(6,*)' c_model = ',c_model
+
+        if(trim(c_model) .eq. 'optimize')then
+          mode_cloud_mask = 5         
+        endif
 
         itd = 2 ! dashed dewpoint lines
 
@@ -415,6 +430,8 @@
           mode_aero_cld = 3
           i_aero_synplume = 2
           read(c_model(11:13),*)aero_synfactor
+        elseif(trim(c_model) .eq. 'optimize')then          
+          l_require_all_fields = .true.
         elseif(i4time_ref - i4time_now_gg() .gt. 20e6)then ! >0.6y future
           l_require_all_fields = .false.                   ! test clouds
           l_test_cloud = .true.
@@ -848,6 +865,13 @@
               mode_aero_cld = 3
               aod = 0.
               i_aero_1d = 0 ! retain the 3D aerosols read in
+
+!             Speed up in 'get_cloud_rad'
+              mil = 1
+              mih = NX_L/2
+              mjl = NY_L/2
+              mjh = NY_L
+
             endif
 
 !           if(trim(c_model) .eq. 'hrrr_ak')then
@@ -864,12 +888,23 @@
             istatus_ht = 0 ! unless we are reading height
             write(6,*)' returned from wrf2swim for ',trim(c_model)
 
-            write(6,*)' aod sample'
-            do is = -10,+10
-              ii = 193 + is
-              jj = 455 + is
-              write(6,*)ii,jj,aod_3d(ii,jj,10:12)
-            enddo
+            if(trim(c_model) .eq. 'hrrr_smoke')then
+              write(6,*)' aod max at each level'
+              do ka = 1,NZ_L
+                aodmax = maxval(aod_3d(:,:,ka))
+                do ia = 1,NX_L
+                do ja = 1,NY_L
+                  if(aod_3d(ia,ja,ka) .eq. aodmax)then
+                    imaxa = ia
+                    jmaxa = ja 
+                  endif
+                enddo ! ja
+                enddo ! ia
+                write(6,151)ka,pres_1d(ka),aodmax,lat(imaxa,jmaxa)
+     1                                           ,lon(imaxa,jmaxa)
+151             format(i3,f9.0,e13.5,2f9.3)            
+              enddo
+            endif
 
             if(trim(c_model) .eq. 'hrrr_smoke' .and. .false.)then
               write(6,*)' Zero out hydrometeors'
@@ -1165,6 +1200,7 @@
           allocate(azi_a_roll(minalt:maxalt,minazi:maxazi))
           allocate(cloud_od(minalt:maxalt,minazi:maxazi))
           allocate(camera_cloud_mask(minalt:maxalt,minazi:maxazi))
+          allocate(camera_rgbf(nc,minalt:maxalt,minazi:maxazi))
           allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
           allocate(sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
           allocate(isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
@@ -1320,7 +1356,12 @@
           do i = minalt,maxalt
             call get_val(i,minalt,alt_scale,altobj)
             alt_a_roll(i,:) = altobj
-            if(i .eq. minalt .or. i .eq. maxalt)then
+            if(altobj .lt. -90.)then
+               write(6,*)' ERROR: altobj < -90.',i,altobj
+               return
+            endif
+            if(i .eq. minalt .or.
+     1               (i .eq. maxalt .and. maxalt .gt. 0))then
               if(altobj .ne. nint(altobj))then
                 write(6,*)' ERROR: non-integer altitude bound'
      1                   ,i,alt_scale,altobj
@@ -1365,8 +1406,34 @@
             topo_albedo_2d(3,:,:) = .028
           endif
 
-          if(.true.)then
+          if(mode_cloud_mask .eq. 5)then
+            nloops = 6
+            write(6,*)' Optimize mode: initialize',nloops
+            filename_ppm = ''
+
+            nv = 1
+            dstep(:) = 0.1
+            num_stepsize_inc = 0
+            increment_ratio = 5.
+            
+            hm_factor = 1.0
+            a_vec(1) = hm_factor
+            ridisp = 0.
+            a_vec(2) = ridisp
+            rjdisp = 0.
+            a_vec(3) = rjdisp
+          else ! standard run
+            nloops = 1
+
+          endif
+
+          do iloop = 1,nloops
+            if(iloop .gt. 1)then
+                clwc_3d(:,:,:) = clwc_3d(:,:,:) * 0.5
+                cice_3d(:,:,:) = cice_3d(:,:,:) * 0.5
+            endif                
             write(6,*)' call calc_allsky at i4time_solar:',i4time_solar
+     1               ,iloop
             call calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
 !    1                     ,heights_3d                              ! I
 !    1                     ,rain_3d,snow_3d                         ! I
@@ -1392,17 +1459,206 @@
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary,l_terrain_following            ! I
      1                     ,mode_cloud_mask,camera_cloud_mask       ! I
+     1                     ,iloop                                   ! I
      1                     ,cloud_od,dist_2_topo                    ! O
-     1                     ,sky_rgb_cyl,istatus)                    ! O
+     1                     ,camera_rgbf                             ! O
+     1                     ,sky_rgb_cyl,correlation(:,iloc),istatus)! O
             if(istatus .ne. 1)then
               write(6,*)' Error istatus returned from calc_allsky'
               return
             endif
 
-          else
-            continue
+            if(mode_cloud_mask .eq. 4  .or. mode_cloud_mask .eq. 5)then
+              avecorr = sum(correlation(:,1:nloc))/float(nc*nloc)
+              write(6,*)' correlation is ',correlation(:,1:nloc),avecorr
+              write(6,*)' camera_rgbf checksum = '
+     1                  ,sum(min(camera_rgbf,255.))
+            else
+              correlation = 0.
+              avecorr = 0. 
+            endif
 
-          endif ! call calc_allsky
+            if(nloops .gt. 1)then
+              write(clun_loop,44)clun,iloop
+44            format(a3,'_',i3.3)
+            else
+              clun_loop = clun
+            endif
+
+            if(.true.)then ! write labels and images        
+              write(6,*)' end of subroutine call block - write labels'
+
+!             Write time label
+              open(53,file='label.'//trim(clun_loop),status='unknown')
+              write(53,*)a9time
+              write(53,*)a24time(1:17)
+              close(53)
+
+!             Write lat/lon and other info for label
+              open(54,file='label2.'//trim(clun_loop),status='unknown')
+              write(54,54)soundlat(iloc),soundlon(iloc),
+     1                    minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
+     1                    solar_alt,solar_az,alt_scale,azi_scale,
+     1                    ni_polar,nj_polar
+ 54           format(2f8.2/6i8/2f8.2,2f7.2/2i6)
+
+              if(ghi_sim .eq. r_missing_data)then
+                write(54,*)
+              elseif(ghi_sim .gt. 100.)then
+                write(54,55)nint(ghi_sim)
+ 55             format(i4)
+              elseif(ghi_sim .gt. 1.)then
+                write(54,56)ghi_sim
+ 56             format(f8.1)
+              else
+                write(54,57)ghi_sim
+ 57             format(f8.4)
+              endif
+
+              write(54,58)correlation,avecorr
+ 58           format(4f10.3)
+
+              close(54)
+
+              if(l_cyl .eqv. .true.)then
+!               Write all sky for cyl
+                isky_rgb_cyl = sky_rgb_cyl   
+                npts = 3*(maxalt-minalt+1)*(maxazi-minazi+1)
+!               write(6,*)' Write all sky cyl text file ',npts
+!               open(55,file='allsky_rgb_cyl.'//trim(clun_loop),status='unknown')
+!               write(55,*)isky_rgb_cyl           
+!               close(55)
+                write(6,*)' Write all sky cyl ppm file '
+                call writeppm3Matrix(
+     1                isky_rgb_cyl(0,:,:),isky_rgb_cyl(1,:,:)
+     1               ,isky_rgb_cyl(2,:,:)
+     1               ,'allsky_rgb_cyl_'//trim(clun_loop))     
+                do iaz = minazi,maxazi,40
+                  write(6,*)'iaz,cyl(maxalt/1,iaz)',iaz
+     1                       ,isky_rgb_cyl(:,maxalt/1,iaz)
+                enddo ! iaz
+              endif
+
+              if(l_polar .eqv. .true.)then
+
+                allocate(sky_rgb_polar(0:2,iplo:iphi,jplo:jphi))
+                allocate(isky_rgb_polar(0:2,iplo:iphi,jplo:jphi))
+
+!               Reproject sky_rgb array from cyl to polar    
+                do iaz = minazi,maxazi,20
+                  write(6,*)'iaz,cyl((maxalt+minalt)/2,iaz)',iaz
+     1                       ,sky_rgb_cyl(1,(maxalt+minalt)/2,iaz)
+                enddo ! iaz
+
+                write(6,*)' Call cyl_to_polar with sky rgb data'
+
+                if(htagl(iloc) .le. 20.1 .and. 
+     1                  (maxalt*2 + minalt) .gt. 0)then
+                  polat = +90. ! +/-90 for zenith or nadir at center of plot
+                else
+                  polat = -90.
+                endif
+
+                horz_dep = horz_depf(htagl(iloc),earth_radius)
+
+!               if(ipolar_sizeparm .ge. 3)then
+                if(htagl(iloc) .gt. earth_radius*2.5)then
+                  pomag = htagl(iloc) / (earth_radius*0.68)
+                elseif(htagl(iloc) .gt. earth_radius*1.1)then
+                  pomag = 3.0
+                elseif(htagl(iloc) .gt. earth_radius*0.75)then
+                  pomag = 2.5
+                elseif(htagl(iloc) .gt. earth_radius*0.5)then
+                  pomag = 2.0
+                elseif(polat .eq. -90.)then ! looking down
+                  write(6,*)' horz_dep = ',horz_dep
+                  pomag = (90. / (90. - horz_dep)) * 0.96
+                  pomag = max(pomag,1.0)
+                else                        ! looking up
+                  pomag = 1.0
+                endif
+
+                pox = 0.
+                poy = 0.
+
+                if(trim(c_model) .eq. 'hrrr_smoke' .and.
+     1             htagl(iloc) .ge. 10000e3)then
+                  if(abs(rlat) .eq. 0.)then
+                    pomag = pomag * 2.4
+                    poy = +0.6 ! increase moves down
+                    pox = +0.1 ! increase moves right
+                  else
+                    pomag = pomag * 8.                 
+                  endif
+                endif
+
+                write(6,*)'htrat/pomag',htagl(iloc)/earth_radius,pomag
+
+                do ic = 0,nc-1
+                  call cyl_to_polar(sky_rgb_cyl(ic,:,:)
+     1                             ,sky_rgb_polar(ic,:,:)
+     1                             ,minalt,maxalt,minazi,maxazi
+     1                             ,alt_scale,azi_scale,polat,pomag
+     1                             ,pox,poy,alt_a_polar,azi_a_polar
+     1                             ,iplo,iphi,jplo,jphi
+     1                             ,ni_polar,nj_polar)
+                enddo ! ic
+
+!               Write all sky for polar
+                where(sky_rgb_polar .eq. r_missing_data)
+                  sky_rgb_polar = 0.
+                  isky_rgb_polar = 0
+                endwhere
+                isky_rgb_polar = sky_rgb_polar
+                write(6,*)' max polar 1 is ',maxval(sky_rgb_polar)
+     1                                      ,maxval(isky_rgb_polar)
+                write(6,*)' min polar 1 is ',minval(sky_rgb_polar)
+     1                                      ,minval(isky_rgb_polar)
+
+                if(minval(isky_rgb_polar) .lt. 0)then
+                  write(6,*)' WARNING: maxval isky_rgb_polar < 0'
+              
+                  where(isky_rgb_polar .lt. 0)
+                        isky_rgb_polar = 0
+                  endwhere
+                  write(6,*)' max polar 2 is ',maxval(sky_rgb_polar)
+     1                                        ,maxval(isky_rgb_polar)
+                  write(6,*)' min polar 2 is ',minval(sky_rgb_polar)
+     1                                        ,minval(isky_rgb_polar)
+                endif
+
+!               write(6,*)' ipolar array',
+!    1              isky_rgb_polar(2,ni_polar/2,1:nj_polar)
+                nip_crop = iphi-iplo+1
+                njp_crop = jphi-jplo+1
+                npts = 3*nip_crop*njp_crop
+!               write(6,*)' Write all sky polar text file'
+!    1                    ,isky_rgb_polar(:,255,255),npts
+!               open(54,file='allsky_rgb_polar.'//trim(clun_loop),status='unknown')
+!               write(54,*)isky_rgb_polar
+!               close(54)
+                write(6,*)' Write all sky polar ppm file '
+                call writeppm3Matrix(
+     1                  isky_rgb_polar(0,:,:),isky_rgb_polar(1,:,:)
+     1                 ,isky_rgb_polar(2,:,:)
+     1                 ,'allsky_rgb_polar_'//trim(clun_loop))
+
+                deallocate(sky_rgb_polar)
+                deallocate(isky_rgb_polar)
+
+              endif ! l_polar
+
+            endif ! write labels and images
+
+            if(mode_cloud_mask .eq. 5)then
+              write(6,*)'Update a vector and corresponding parameters'
+              call optimize(a,f_merit,depth_this_run)
+              hm_factor = a_vec(1) / a_last(1)
+              ridisp = nint(a_vec(2) - a_last(2))
+              rjdisp = nint(a_vec(3) - a_last(3))
+            endif
+
+          enddo ! call calc_allsky loop
 
           deallocate(aod_ill_opac)
           deallocate(aod_ill_opac_potl)
@@ -1410,167 +1666,8 @@
           deallocate(azi_a_roll)
           deallocate(cloud_od)
           deallocate(camera_cloud_mask)
+          deallocate(camera_rgbf)
           deallocate(dist_2_topo)
-
-          write(6,*)' end of subroutine call block - write labels'
-
-!           Write time label
-            open(53,file='label.'//clun,status='unknown')
-            write(53,*)a9time
-            write(53,*)a24time(1:17)
-            close(53)
-
-
-!           Write lat/lon and other info for label
-            open(54,file='label2.'//clun,status='unknown')
-            write(54,54)soundlat(iloc),soundlon(iloc),
-     1                  minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
-     1                  solar_alt,solar_az,alt_scale,azi_scale,
-     1                  ni_polar,nj_polar
- 54         format(2f8.2/6i8/2f8.2,2f7.2/2i6)
-
-            if(ghi_sim .eq. r_missing_data)then
-                write(54,*)
-            elseif(ghi_sim .gt. 100.)then
-                write(54,55)nint(ghi_sim)
- 55             format(i4)
-            elseif(ghi_sim .gt. 1.)then
-                write(54,56)ghi_sim
- 56             format(f8.1)
-            else
-                write(54,57)ghi_sim
- 57             format(f8.4)
-            endif
-                
-            close(54)
-
-            if(l_cyl .eqv. .true.)then
-!             Write all sky for cyl
-              isky_rgb_cyl = sky_rgb_cyl   
-              npts = 3*(maxalt-minalt+1)*(maxazi-minazi+1)
-!             write(6,*)' Write all sky cyl text file ',npts
-!             open(55,file='allsky_rgb_cyl.'//clun,status='unknown')
-!             write(55,*)isky_rgb_cyl           
-!             close(55)
-              write(6,*)' Write all sky cyl ppm file '
-              call writeppm3Matrix(
-     1                   isky_rgb_cyl(0,:,:),isky_rgb_cyl(1,:,:)
-     1                  ,isky_rgb_cyl(2,:,:),'allsky_rgb_cyl_'//clun)
-              do iaz = minazi,maxazi,40
-               write(6,*)'iaz,cyl(maxalt/1,iaz)',iaz
-     1                       ,isky_rgb_cyl(:,maxalt/1,iaz)
-              enddo ! iaz
-            endif
-
-            if(l_polar .eqv. .true.)then
-
-              allocate(sky_rgb_polar(0:2,iplo:iphi,jplo:jphi))
-              allocate(isky_rgb_polar(0:2,iplo:iphi,jplo:jphi))
-
-!             Reproject sky_rgb array from cyl to polar    
-              do iaz = minazi,maxazi,20
-               write(6,*)'iaz,cyl((maxalt+minalt)/2,iaz)',iaz
-     1                       ,sky_rgb_cyl(1,(maxalt+minalt)/2,iaz)
-              enddo ! iaz
-
-              write(6,*)' Call cyl_to_polar with sky rgb data'
-
-              if(htagl(iloc) .le. 20.1 .and. 
-     1                  (maxalt*2 + minalt) .gt. 0)then
-                polat = +90. ! +/-90 for zenith or nadir at center of plot
-              else
-                polat = -90.
-              endif
-
-              horz_dep = horz_depf(htagl(iloc),earth_radius)
-
-!             if(ipolar_sizeparm .ge. 3)then
-              if(htagl(iloc) .gt. earth_radius*2.5)then
-                pomag = htagl(iloc) / (earth_radius*0.68)
-              elseif(htagl(iloc) .gt. earth_radius*1.1)then
-                pomag = 3.0
-              elseif(htagl(iloc) .gt. earth_radius*0.75)then
-                pomag = 2.5
-              elseif(htagl(iloc) .gt. earth_radius*0.5)then
-                pomag = 2.0
-              elseif(polat .eq. -90.)then ! looking down
-                write(6,*)' horz_dep = ',horz_dep
-                pomag = (90. / (90. - horz_dep)) * 0.96
-                pomag = max(pomag,1.0)
-              else                        ! looking up
-                pomag = 1.0
-              endif
-
-              pox = 0.
-              poy = 0.
-
-              if(trim(c_model) .eq. 'hrrr_smoke' .and.
-     1             htagl(iloc) .ge. 10000e3)then
-                if(abs(rlat) .eq. 0.)then
-                  pomag = pomag * 2.4
-                  poy = +0.6 ! increase moves down
-                  pox = +0.1 ! increase moves right
-                else
-                  pomag = pomag * 8.                 
-                endif
-              endif
-
-              write(6,*)'htrat/pomag',htagl(iloc)/earth_radius,pomag
-
-              do ic = 0,nc-1
-                call cyl_to_polar(sky_rgb_cyl(ic,:,:)
-     1                           ,sky_rgb_polar(ic,:,:)
-     1                           ,minalt,maxalt,minazi,maxazi
-     1                           ,alt_scale,azi_scale,polat,pomag
-     1                           ,pox,poy,alt_a_polar,azi_a_polar
-     1                           ,iplo,iphi,jplo,jphi
-     1                           ,ni_polar,nj_polar)
-              enddo ! ic
-
-!             Write all sky for polar
-              where(sky_rgb_polar .eq. r_missing_data)
-                  sky_rgb_polar = 0.
-                  isky_rgb_polar = 0
-              endwhere
-              isky_rgb_polar = sky_rgb_polar
-              write(6,*)' max polar 1 is ',maxval(sky_rgb_polar)
-     1                                    ,maxval(isky_rgb_polar)
-              write(6,*)' min polar 1 is ',minval(sky_rgb_polar)
-     1                                    ,minval(isky_rgb_polar)
-
-              if(minval(isky_rgb_polar) .lt. 0)then
-                write(6,*)' WARNING: maxval isky_rgb_polar < 0'
-              
-                where(isky_rgb_polar .lt. 0)
-                      isky_rgb_polar = 0
-                endwhere
-                write(6,*)' max polar 2 is ',maxval(sky_rgb_polar)
-     1                                      ,maxval(isky_rgb_polar)
-                write(6,*)' min polar 2 is ',minval(sky_rgb_polar)
-     1                                      ,minval(isky_rgb_polar)
-              endif
-
-!             write(6,*)' ipolar array',
-!    1            isky_rgb_polar(2,ni_polar/2,1:nj_polar)
-              nip_crop = iphi-iplo+1
-              njp_crop = jphi-jplo+1
-              npts = 3*nip_crop*njp_crop
-!             write(6,*)' Write all sky polar text file'
-!    1                  ,isky_rgb_polar(:,255,255),npts
-!             open(54,file='allsky_rgb_polar.'//clun,status='unknown')
-!             write(54,*)isky_rgb_polar
-!             close(54)
-              write(6,*)' Write all sky polar ppm file '
-              call writeppm3Matrix(
-     1                  isky_rgb_polar(0,:,:),isky_rgb_polar(1,:,:)
-     1                 ,isky_rgb_polar(2,:,:),'allsky_rgb_polar_'//clun)
-
-              deallocate(sky_rgb_polar)
-              deallocate(isky_rgb_polar)
-
-            endif ! l_polar
-
-!         endif ! mode_polar = 0 or 2
 
  900      continue
 
