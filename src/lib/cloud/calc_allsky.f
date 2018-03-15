@@ -24,8 +24,10 @@
      1                     ,grid_spacing_m,r_missing_data           ! I
      1                     ,l_binary,l_terrain_following            ! I
      1                     ,mode_cloud_mask,camera_cloud_mask       ! I
+     1                     ,iloop                                   ! I
      1                     ,cloud_od,dist_2_topo                    ! O
-     1                     ,sky_rgb_cyl,istatus)                    ! O
+     1                     ,camera_rgbf                             ! O
+     1                     ,sky_rgb_cyl,correlation,istatus)        ! O
 
         use mem_allsky
         use mem_namelist, ONLY: earth_radius, ssa
@@ -76,6 +78,9 @@
         real moon_azi_2d(NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
+        real camera_rgb(nc,minalt:maxalt,minazi:maxazi)
+        real camera_rgbf(nc,minalt:maxalt,minazi:maxazi)
+        real correlation(nc)
         integer camera_cloud_mask(minalt:maxalt,minazi:maxazi)
         integer sim_cloud_mask(minalt:maxalt,minazi:maxazi)
         integer diff_cloud_mask(minalt:maxalt,minazi:maxazi)
@@ -141,11 +146,16 @@
         logical l_solar_eclipse, l_binary, l_zod, l_phase
         logical l_terrain_following
 
+        character*10 site, fname_ppm
         integer mode_cloud_mask ! 1 is ignore cloud mask
                                 ! 2 is display cloud mask differences
                                 ! 3 perform cloud mask clearing
+                                ! 4 display correlation coefficient
+                                ! 5 correlation coefficient + optimize
 
         write(6,*)' subroutine calc_allsky...'
+
+!       if(mode_cloud_mask .ge. 4)goto 60 ! for testing
 
 !       Set up Rayleigh Scattering
         write(6,*)' Rayleigh PF = ',rayleigh_pf(170.)
@@ -624,10 +634,12 @@
 
           endif ! l_binary
 
+60        continue
+
 !         Cloud mask section
           if(mode_cloud_mask .eq. 1)then
               write(6,*)' Skipping camera_cloud_mask processing'
-          else
+          elseif(mode_cloud_mask .eq. 2 .OR. mode_cloud_mask .eq. 3)then
               write(6,*)' Showing cloud mask differences'
       
               write(6,*)' camera cloud mask...'
@@ -688,6 +700,61 @@
      1                ,diff_cloud_mask                              ! I
      1                ,sky_rgb_cyl)                                 ! I/O
               endif
+
+          else ! mode_cloud_mask = 4 or 5 (correlation)
+              I4_elapsed = ishow_timer()
+
+              if(iloop .eq. 1)then
+                write(6,*)' Reading camera image: mode_cloud_mask'
+     1                    ,mode_cloud_mask
+                mode_cam = 2
+                call get_camsite(rlat,rlon,site)
+!               call get_camera_image(0,10,0,20,nc,                       ! I
+                i4time_camera = i4time_solar - 60
+                call get_camera_image(minalt,maxalt,minazi,maxazi,nc,     ! I
+     1                                alt_scale,azi_scale,                ! I
+     1                                i4time_camera,fname_ppm,mode_cam,   ! I
+     1                                site,                               ! I
+     1                                camera_rgb,istatus)                 ! O
+                if(istatus .eq. 0)then
+                  write(6,*)' return from calc_allsky sans camera image'
+                  return
+                endif
+
+!               Subsample flagged array to account to weight cylindrical projection             
+                iskip_max = 6
+                do ialt = maxalt,minalt,-1
+                  if(ialt .eq. maxalt)then
+                    iskip = iskip_max
+                  else
+                    iskip = nint(1./cosd(alt_a_roll(ialt,minazi)))
+                    iskip = min(iskip,iskip_max)
+                  endif
+                  do jazi = minazi,maxazi
+                    if(jazi .eq. (jazi/iskip)*iskip)then
+                      camera_rgbf(:,ialt,jazi) = camera_rgb(:,ialt,jazi)
+                    else
+                      camera_rgbf(:,ialt,jazi) = r_missing_data
+                    endif
+                  enddo ! jazi
+                enddo ! ialt
+              else
+                write(6,*)' skip cam img read - use saved array:',
+     1                    'mode_cloud_mask=',mode_cloud_mask
+              endif ! iloop
+
+              write(6,*)' Performing correlation calculation (stats_2d)'
+              write(6,*)' camera_rgbf checksum = '
+     1                  ,sum(min(camera_rgbf,255.))
+              do ic = 1,nc
+                call stats_2d(maxalt-minalt+1,maxazi-minazi+1
+     1                       ,camera_rgbf(ic,:,:),sky_rgb_cyl(ic-1,:,:)
+     1                       ,a_t,b_t,xbar,ybar,correlation(ic)
+     1                       ,bias,std,r_missing_data,istatus)
+              enddo
+
+              I4_elapsed = ishow_timer()
+  
           endif
 
           write(6,*)' End of calc_allsky...'
@@ -1147,6 +1214,19 @@
         write(6,*)' error in drape_topo_albedo'
 
 9999    if(allocated(img))deallocate(img)
+
+        return
+        end
+
+        subroutine get_camsite(rlat,rlon,site)
+
+        character*10 site
+
+        if(rlat .gt. 39.9)then
+           site = 'dsrc'
+        else
+           site = 'nrel'
+        endif
 
         return
         end
