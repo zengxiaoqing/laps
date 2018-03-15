@@ -37,8 +37,10 @@ c
 
 c
 c
-c.....  Set up storage variables.
+c.....Set up storage variables.
 c
+        write(6,*)' start stats_2d'
+
         cnt = 0.
         sumxy = 0.
         sumx = 0.
@@ -152,7 +154,10 @@ c
         write(6,*)' ratio of points = ',cnt/(float(ni*nj))
 
         write(6,900)int(cnt),bias,std,r
-900     format(2x,' N/bias/rms/r = ',i8,2f9.2,f9.3/)
+900     format(1x,' N/bias/rms/r = ',i8,2f9.2,f9.3)
+
+        write(6,*)' Success in stats_2d'
+        write(6,*)
 
         return
         end
