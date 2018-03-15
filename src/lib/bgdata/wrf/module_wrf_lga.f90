@@ -648,19 +648,20 @@ CONTAINS
  
     IMPLICIT NONE
     INTEGER, INTENT(OUT)  :: istatus
-    INTEGER               :: status,i,j,k,icaller
+    INTEGER               :: status,i,j,k,icaller,itype_aod
     REAL, ALLOCATABLE     :: dum3d(:,:,:)
     REAL, ALLOCATABLE     :: dum3df(:,:,:)
     REAL, ALLOCATABLE     :: dum3df2(:,:,:)
     REAL, ALLOCATABLE     :: dum2dt1(:,:) ! added by Wei-Ting (130312) to get RAINNC
     REAL, ALLOCATABLE     :: dum2dt2(:,:) ! added by Wei-Ting (130312) to get RAINNC
     REAL, EXTERNAL        :: mixsat, relhum, dewpt2
-    REAL                  :: rh 
+    REAL                  :: rh, tr_conv 
     REAL                  :: tvbar, tvbar_nlevs
     REAL, PARAMETER       :: tvbar_thick = 6000.
     ! Varialbles have already been allocated by our driver routine
     ! so just start getting them
     istatus = 1
+    itype_aod = 2 ! 1 is TAOD5503D, 2 is tracer_1a
     PRINT *, " Allocating arrays ",icaller
     ALLOCATE(dum3d(nxw,nyw,nzw))
     ALLOCATE(dum3df(nxw,nyw,nzw+1))
@@ -716,17 +717,35 @@ CONTAINS
     ENDDO
   
     PRINT *, "Getting AOD"
-    CALL get_wrfnc_3d(cdf,"TAOD5503D","T",nxw,nyw,nzw,1,dum3df,status)
-    IF (status.NE.0) THEN
-      PRINT *, 'Could not properly obtain WRF AOD - set to missing'
-      aod_wrfs(:,:,:) = r_missing_data
-      istat_aod = 0
-    ELSE
-      PRINT *, 'Success Reading WRF AOD - divide by dz'
-      aod_wrfs(:,:,:) = dum3df(:,:,:) / dz_wrfs(:,:,:)
-      print *, "Min/Max WRF 3D AOD: ",minval(aod_wrfs),maxval(aod_wrfs)
-      istat_aod = 1
-    ENDIF
+    if(itype_aod .eq. 1)then
+      CALL get_wrfnc_3d(cdf,"TAOD5503D","T",nxw,nyw,nzw,1,dum3df,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF TAOD5503D - set to missing'
+        aod_wrfs(:,:,:) = r_missing_data
+        istat_aod = 0
+      ELSE
+        PRINT *, 'Success Reading WRF TAOD5503D - divide by dz'
+        aod_wrfs(:,:,:) = dum3df(:,:,:) / dz_wrfs(:,:,:)
+        print *, "Min/Max WRF 3D AOD: ",minval(aod_wrfs),maxval(aod_wrfs)
+        istat_aod = 1
+      ENDIF
+    else
+      CALL get_wrfnc_3d(cdf,"tracer_1a","T",nxw,nyw,nzw,1,dum3df,status)
+      IF (status.NE.0) THEN
+        PRINT *, 'Could not properly obtain WRF tracer_1a - set to missing'
+        aod_wrfs(:,:,:) = r_missing_data
+        istat_aod = 0
+      ELSE
+        PRINT *, 'Success Reading WRF tracer_1a - ,multiply by tr_conv'
+        tr_conv = 1e-9             ! ug/kg to kg/kg (dimensionless)
+        tr_conv = tr_conv * 3.0    ! smoke MEE m^2/g
+        tr_conv = tr_conv * 1000.0 ! smoke MEE m^2/kg
+        print *, "tracer_1a conversion factor (sans rho) is ",tr_conv
+        aod_wrfs(:,:,:) = dum3df(:,:,:) * tr_conv
+        print *, "Min/Max WRF 3D AOD: ",minval(aod_wrfs),maxval(aod_wrfs)
+        istat_aod = 1
+      ENDIF
+    endif
 
     ! Get theta and convert to temperature
     PRINT *, "Getting Theta"
@@ -847,7 +866,13 @@ CONTAINS
       qi_wrfs(:,:,:) = qi_wrfs(:,:,:) * rho_wrfs(:,:,:)
       qr_wrfs(:,:,:) = qr_wrfs(:,:,:) * rho_wrfs(:,:,:)
       qs_wrfs(:,:,:) = qs_wrfs(:,:,:) * rho_wrfs(:,:,:)
-   endif
+      if(itype_aod .eq. 2)then
+        PRINT *, "Apply density conversion to aod to complete conversion to extinction coefficient (m^-1)"
+        PRINT *, "Representative value of density is ",rho_wrfs(1,1,1)
+        aod_wrfs(:,:,:) = aod_wrfs(:,:,:) * rho_wrfs(:,:,:)
+        print *, "Revised Min/Max WRF 3D AOD: ",minval(aod_wrfs),maxval(aod_wrfs)
+      endif
+    endif
    
     ! Get surface fields
     
