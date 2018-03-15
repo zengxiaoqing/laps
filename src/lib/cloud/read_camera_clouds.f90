@@ -232,3 +232,162 @@
 
        return
        end
+
+       subroutine get_camera_image(minalt,maxalt,minazi,maxazi,nc,alt_scale,azi_scale, & ! I
+                                   i4time,fname_ppm,mode,site, &                         ! I
+                                   rcam_rgb,istatus)                                     ! O
+ 
+       use ppm
+
+       parameter (nip = 511)
+       parameter (njp = 511)
+
+       real    rcam_rgb(nc,minalt:maxalt,minazi:maxazi) ! O
+       integer icam_rgb(nc,minazi:maxazi,minalt:maxalt) ! L (flipped dimensions)
+
+       integer img_polar(3,511,511)
+       integer mask_polar(511,511)
+       integer, allocatable :: img(:,:,:)
+       integer u /12/ 
+
+       character*255 imgfile,img_png,img_ppm,convert_cmd,imgdir
+       character*13 a13name, cvt_i4time_wfo_fname13
+       character*9 a9time
+       character*10 fname_ppm
+       character*10 site
+
+!      Statement functions
+       i2ialt(i) = minalt+i-1
+       altf(ialt) = (ialt-minalt) * alt_scale
+
+       j2jazi(i) = minazi+j-1
+       azif(jazi) = (jazi-minazi) * azi_scale
+
+!      Executable statements
+       iverbose = 0
+
+       a13name = cvt_i4time_wfo_fname13(i4time)
+!      a13name = '20171017_1459'
+
+       if(mode .eq. 1)then      ! Read polar observed image in PPM format 
+
+!        imgdir = '/Users/albers/noaa/180309/wwwallsky/cases/17290/output3'
+         imgdir = '/data/fab/projects/allsky/sites/dsrc/output3'
+         img_png = trim(imgdir)//'/'//a13name//'_'//trim(site)//'.png'
+         img_ppm = trim(imgdir)//'/'//a13name//'_'//trim(site)//'.ppm'
+         convert_cmd = 'convert -compress none '//trim(img_png)//' '//trim(img_ppm)
+         write(6,*)trim(convert_cmd)
+         call system(trim(convert_cmd))
+
+         open(u,file=trim(imgfile),status='old',err=999)
+         read(u,*)   
+         read(u,*)iwidth,iheight
+         rewind(u)
+         write(6,*)' dynamic dims ',ncol,iwidth,iheight
+         allocate(img(ncol,iwidth,iheight))
+         call read_ppm(u,img,ncol,iwidth,iheight)
+         close(u)
+         write(6,*)' polar image has been read in'
+
+       elseif(mode .eq. 2)then ! Read cyl observed image in PPM format 
+                               ! (remapped to alt/az grid)
+         imgdir = '/Users/albers/noaa/180309/wwwallsky/cases/17290/output3c'
+         imgdir = '/data/fab/projects/allsky/sites/dsrc/output3c'
+         img_png = trim(imgdir)//'/'//a13name//'_'//trim(site)//'.png'
+         img_ppm = trim(imgdir)//'/'//a13name//'_'//trim(site)//'.ppm'
+!        convert_cmd = 'convert -crop 21x11+0+0 -compress none '//trim(img_png)//' '//trim(img_ppm)
+         convert_cmd = 'convert -compress none '//trim(img_png)//' '//trim(img_ppm)
+         write(6,*)trim(convert_cmd)
+         call system(trim(convert_cmd))
+
+         open(u,file=trim(img_ppm),status='old',err=999)
+         read(u,*)   
+         read(u,*)iwidth,iheight
+         rewind(u)
+         ncol = 3
+         write(6,*)' dynamic dims ',ncol,iwidth,iheight
+         if(iwidth .ne. maxazi-minazi+1)then
+            write(6,*)' ERROR width discrepancy ',iwidth,maxazi-minazi+1
+            istatus = 0
+            return
+         endif
+         if(iheight .ne. maxalt-minalt+1)then
+            write(6,*)' ERROR height discrepancy ',iheight,maxalt-minalt+1
+            istatus = 0
+            return
+         endif
+
+         call read_ppm(u,icam_rgb,ncol,iwidth,iheight)
+         close(u)
+         write(6,*)' cyl image has been read in'
+
+         if(.true.)then ! clean ppm
+           convert_cmd = 'rm -f '//trim(img_ppm)
+           write(6,*)trim(convert_cmd)
+           call system(trim(convert_cmd))
+         endif
+
+         if(iverbose .gt. 0)then
+           do ih = 0,maxalt
+             write(6,1)icam_rgb(:,:,ih)
+1            format(10000(3i4))
+           enddo
+
+           write(6,*)' 0,0',minazi,maxazi
+           write(6,*)icam_rgb(:,minazi,minalt)
+           write(6,*)' minalt',minalt
+           write(6,*)icam_rgb(1,minazi:maxazi:120,minalt)
+           write(6,*)' maxalt',maxalt
+           write(6,*)icam_rgb(1,minazi:maxazi:120,maxalt)
+         endif
+         
+!        Rotate 90 degrees and flip
+         do i = minalt,maxalt
+           ialt_flip = minalt+(maxalt-i)
+           do j = minazi,maxazi
+             rcam_rgb(:,ialt_flip,j) = min(float(icam_rgb(:,j,i)),255.)
+             if(iverbose .gt. 0)then
+               write(6,15)j,i,min(icam_rgb(:,j,i),255),ialt_flip,j,rcam_rgb(:,ialt_flip,j)        
+15             format('j/i -> ialt_flip/j',2i5,2x,3i4,5x,2i5,2x,3f5.0)
+             endif
+           enddo ! j
+         enddo ! i
+
+!      return ! test
+
+         do ic = 1,ncol
+           write(6,*)
+           write(6,*)' cyl view for color ',ic,minazi,maxazi,minalt,maxalt
+           do i = maxalt,minalt,-20
+!            write(6,21)ic,i,nint(rcam_rgb(ic,i,minazi:maxazi:60))
+!            write(6,21)ic,i,nint(rcam_rgb(ic,i,0:1140:60))
+             write(6,21)ic,i,nint(rcam_rgb(ic,i,0:10))
+21           format(30i4)
+           enddo ! j
+         enddo ! ic
+
+         if(iverbose .gt. 0)then
+           do i = maxalt,maxalt-5,-1
+             write(6,*)' upper row ',i
+             do j = minazi,maxazi
+               write(6,22)i,j,nint(rcam_rgb(:,i,j))
+22             format(i5,i5,2x,3i4)
+             enddo ! j
+           enddo ! i
+
+           write(6,*)' 1st column'
+           do i = maxalt,maxalt-40,-1
+             write(6,*)i,nint(rcam_rgb(:,i,0))
+           enddo ! i
+         endif
+       endif ! mode
+
+       istatus = 1
+       write(6,*)' success in get_camera_image'
+       return
+
+999    istatus = 0
+       write(6,*)' ERROR opening image file in get_camera_image'
+       return
+
+       end
