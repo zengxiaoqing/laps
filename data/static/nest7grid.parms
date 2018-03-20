@@ -204,6 +204,12 @@ c
 c aod - aerosol optical depth integrated through the column (treated as a
 c       constant over the horizontal domain)
 c
+c aod_asy - aerosol phase function parameters
+c           columns are: coarse mode asymmetry | fine mode asymmetry | backscattering term
+c               red   row
+c               green row
+c               blue  row
+c
 c max_radar_files_nl - Maximum number of files expected in a radar directory
 c
 c ref_base - Reflectivity dbZ value assigned to areas with no echoes detected
