@@ -245,7 +245,7 @@ c     Yuanfu Changes these integers to integer*8 for super large
 c     minimization:
       integer*8   lws,lr,lz,lt,ld,lxp,lwa,
      +            lwy,lsy,lss,lwt,lwn,lsnd
-      integer*8   i8save(44)
+      integer*8, save :: i8save(44)
 
       if (task .eq. 'START') then
          i8save(1)  = m*n
