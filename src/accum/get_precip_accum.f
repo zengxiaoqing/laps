@@ -8,6 +8,8 @@
      1          ,snow_accum,precip_accum,frac_sum           ! Outputs
      1          ,istatus)                                   ! Output
 
+        use mem_namelist, only: l_accum_fg, l_accum_radar, l_accum_gauge
+
 !       Calculate and return incremental precip for the analysis time cycle
 
 !       Input
@@ -26,7 +28,8 @@
         real closest_radar(imax,jmax)  ! M
 	character var_req*4
 
-        call get_precip_radar(i4time_beg,i4time_end         ! Input
+        if(l_accum_radar .eqv. .true.)then
+          call get_precip_radar(i4time_beg,i4time_end       ! Input
      1          ,imax,jmax,kmax                             ! Input
      1          ,MAX_RADAR_FILES                            ! Input
      1          ,lat,lon,topo                               ! Input
@@ -34,23 +37,33 @@
      1          ,radarext_3d_accum                          ! Input
      1          ,snow_accum,precip_accum,frac_sum           ! Outputs
      1          ,closest_radar                              ! Output
-     1          ,istatus)                                   ! Output
-
+     1          ,istat_radar)                               ! Output
+        else
+          write(6,*)' Skipping call to get_precip_radar'
+          istat_radar = 0
+        endif
+        
 !       Read precip first guess (LGB/FSF). Try 'R01' variable
-        var_req = 'R01'
-        call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m
-     1                     ,istat_bkg)       
+        if(l_accum_fg .eqv. .true.)then
+          var_req = 'R01'
+          call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m
+     1                       ,istat_bkg)       
 
-!       if(istat_bkg .ne. 1)then
-!           var_req = 'PCP'
-!           call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m     
-!    1                         ,istat_bkg)       
-!       endif
+          if(istat_bkg .ne. 1)then
+              var_req = 'PCP'
+              call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m     
+     1                           ,istat_bkg)       
+          endif
 
-!       if(istat_bkg .ne. 1)then
-!           write(6,*)' No model first guess precip, using zero field'       
-!           pcp_bkg_m = 0.
-!       endif
+        else
+          write(6,*)' Skipping call to get_modelfg_2d'
+          istat_bkg = 0
+        endif
+
+        if(istat_bkg .ne. 1)then
+            write(6,*)' No model first guess precip, using zero field'       
+            pcp_bkg_m = 0.
+        endif
 
 !       Compare to gauge values
         if(ilaps_cycle_time .eq. 3600)then
