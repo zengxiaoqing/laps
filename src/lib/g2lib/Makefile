@@ -7,8 +7,8 @@ SRCROOT=../../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-# CDEGRIBFLAGS are -DLINUX, -DIBM, etc; 
-# DEGRIBFLAGS are USE_PNG, USE_JPEG2000 only; 
+# CDEGRIBFLAGS are -DLINUX, -DAIX, etc; 
+# DEGRIBFLAGS are -DUSE_PNG, -DUSE_JPEG2000 only; 
 CFLAGS += $(CDEGRIBFLAGS) $(DEGRIBFLAGS)
 ifndef USECPP
  FFLAGS += $(DEGRIBFLAGS)
