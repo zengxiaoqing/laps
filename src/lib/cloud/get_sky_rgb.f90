@@ -15,7 +15,7 @@
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,topo_solazi,trace_solalt,eobsc_sky, &    ! I
                    alt_a,azi_a,ni,nj,azi_scale,sol_alt,sol_az, &        ! I
-                   sol_lat,sol_lon, &                                   ! I
+                   sol_lat,sol_lon,r_au, &                              ! I
                    minalt,maxalt,minazi,maxazi, &                       ! I
                    twi_0,horz_dep,solalt_limb_true, &                   ! I
                    moon_alt,moon_az,moon_mag,corr1_in,exposure, &       ! I
@@ -1987,7 +1987,8 @@
              ghi_sim = (sp_irrad / sp_irrad_550) * ghi_zen_toa
              wvir_factor = 1.0 - (0.063 * patm)
              ghi_sim = ghi_sim * wvir_factor
-             write(6,*)' patm/wvir_factor ',patm,wvir_factor
+             ghi_sim = ghi_sim / r_au**2
+             write(6,*)' patm/wvir_factor/r_au ',patm,wvir_factor,r_au
           endif
 
           sky_sprad(ic-1,:,:) = sky_rad_a(ic,:,:) * sprad_rat
