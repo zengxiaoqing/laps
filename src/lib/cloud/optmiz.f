@@ -1,4 +1,32 @@
 
+	
+
+	subroutine optimize_wrapper(a,dstep_in,nv_in,f_merit
+     1                             ,init_optimize)
+      
+      	implicit real*8 (a-z)
+	include 'optinc.inc'
+
+	real*8 a(mxopt),dstep_in(mxopt)
+	integer nv_in
+
+	save depth_this_run
+
+	if(init_optimize .eq. 0)then
+           num_stepsize_inc = 0
+           increment_ratio = 5.
+	endif
+
+	nv = nv_in
+	dstep = dstep_in
+
+	call optimize(a,f_merit,depth_this_run)
+
+	dstep_in = dstep
+
+	return
+	end
+
 	subroutine optimize(a,f_merit,depth_this_run)
 
 	implicit real*8 (a-z)
@@ -14,6 +42,12 @@
 
 	data swp_ratio/1.5/
 
+	iverbose = 1
+	if(iverbose .eq. 1)then
+           write(6,*)' a     is ',a(1:nv)
+           write(6,*)' dstep is ',dstep(1:nv)
+	endif
+
 !	Output Logic
 	if(iswp .le. 1)then
             l_extra_output = l_extra1 
@@ -27,10 +61,11 @@
      1	        .and.  ( iterop .lt. 1000
      1          .and.     kswp .le. 1 )
      1	        .and. iterop .ge. 1                       )then
+            d0 = dstep_swp
             write(6,9835)iterop,modeop,iswp,iv,iterswp
      1                  ,cv(iv),dstep(iv),d0,f_merit
 9835	    format(1x,'ip,mp,sw,iv,io,cv,dn,da,f'
-     1     	  ,i6,5i3,5x,2d10.3,d14.6)
+     1            ,i6,5i3,5x,2d10.3,d14.6)
             write(6,9841)(a(j),j=1,nv)
 9841        format(1x,'a(n)s ',7d12.5)
         endif
