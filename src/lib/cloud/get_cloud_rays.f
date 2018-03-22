@@ -1045,7 +1045,7 @@
         write(6,*)' range of azimuths is  ',minazi_deg,maxazi_deg
 
 !       Optional setup of hi-res window
-        if(grid_spacing_m .le. 30.)then
+        if(grid_spacing_m .le. 100.)then
            write(6,*)' Setting up full res window'
            l_fullres_wdw = .true.
            azimin_full = 207.
