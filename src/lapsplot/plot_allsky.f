@@ -14,7 +14,6 @@
         use wrf_lga
 
         include 'trigd.inc'
-        include 'optinc.inc'
 
         addlogs(x,y) = log10(10.**x + 10.**y)
         horz_depf(htmsl,erad) = acosd(erad/(erad+htmsl))
@@ -71,7 +70,9 @@
         real moon_azi_2d(NX_L,NY_L)
         real moon_mag,moon_mag_thr
 
-        real a_vec(mxopt),a_last(mxopt)
+        parameter (mxopt = 10)
+        real*8 a_vec(mxopt),a_last(mxopt),depth_this_run,f_merit
+        real*8 dstep(mxopt)
 
         real pres_1d(NZ_L)
 
@@ -972,6 +973,11 @@
         call make_fnam_lp(i4time_solar,a9time,istatus)
         call cv_i4tim_asc_lp(i4time_solar,a24time,istatus)
 
+        read(a9time(3:5),*)idoy
+        r_au = radnorm(idoy)
+
+        write(6,*)' Solar dist (AU) ',r_au
+
         I4_elapsed = ishow_timer()
 
 !       Consider additional albedo info based on land use 
@@ -1406,32 +1412,76 @@
             topo_albedo_2d(3,:,:) = .028
           endif
 
+!         Setup optimization with single site, for multiple sites we can move
+!         this up before line 1156 (iloc loop)
           if(mode_cloud_mask .eq. 5)then
-            nloops = 6
+            nloops = 99
             write(6,*)' Optimize mode: initialize',nloops
             filename_ppm = ''
 
-            nv = 1
-            dstep(:) = 0.1
-            num_stepsize_inc = 0
-            increment_ratio = 5.
+!           Number and permutation of variables
+            nv = 3
+            n_hm = 1
+            n_id = 2
+            n_jd = 3
+            n_kd = 4
             
-            hm_factor = 1.0
-            a_vec(1) = hm_factor
-            ridisp = 0.
-            a_vec(2) = ridisp
-            rjdisp = 0.
-            a_vec(3) = rjdisp
+            hm_factor = 1.0d0
+            ridisp = 0.d0
+            rjdisp = 0.d0
+            rkdisp = 0.d0
+
+            a_vec(n_hm) = hm_factor
+            a_vec(n_id) = ridisp
+            a_vec(n_jd) = rjdisp
+            a_vec(n_kd) = rkdisp
+
+            dstep(:) = 0d0 ! initialize
+            dstep(n_hm) = 0.2d0 
+            dstep(n_id) = 1d0 
+            dstep(n_jd) = 1d0 
+            dstep(n_kd) = 1d0 
+
+            init_optmiz = 0
+
           else ! standard run
             nloops = 1
 
           endif
 
           do iloop = 1,nloops
-            if(iloop .gt. 1)then
-                clwc_3d(:,:,:) = clwc_3d(:,:,:) * 0.5
-                cice_3d(:,:,:) = cice_3d(:,:,:) * 0.5
+            if(iloop .gt. 1)then ! optimization case
+                write(6,41)iloop,hm_factor,ridisp,rjdisp    
+41              format(' Modify fields for optimization ',i4,3e13.5)
+                
+                clwc_3d(:,:,:) = clwc_3d(:,:,:) * hm_factor
+                cice_3d(:,:,:) = cice_3d(:,:,:) * hm_factor
+
+                ido = nint(ridisp)
+                jdo = nint(rjdisp)
+
+                idl1 = max(1+ido,1)
+                idh1 = min((idl1 + (NX_L-1)),NX_L)
+
+                idl2 = min(max((idl1-ido),1),NX_L)
+                idh2 = min(max((idh1-ido),1),NX_L)
+
+                jdl1 = max(1+ido,1)
+                jdh1 = min((jdl1 + (NY_L-1)),NY_L)
+
+                jdl2 = min(max((jdl1-ido),1),NY_L)
+                jdh2 = min(max((jdh1-ido),1),NY_L)
+
+                write(6,*)' idl1,idh1,idl2,idh2',idl1,idh1,idl2,idh2
+                write(6,*)' jdl1,jdh1,jdl2,jdh2',jdl1,jdh1,jdl2,jdh2
+
+                clwc_3d(idl1:idh1,jdl1:jdh1,:) =
+     1          clwc_3d(idl2:idh2,jdl2:jdh2,:)
+
+                cice_3d(idl1:idh1,jdl1:jdh1,:) =
+     1          cice_3d(idl2:idh2,jdl2:jdh2,:)
             endif                
+
             write(6,*)' call calc_allsky at i4time_solar:',i4time_solar
      1               ,iloop
             call calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
@@ -1447,7 +1497,7 @@
      1                     ,alt_a_roll,azi_a_roll                   ! I
      1                     ,sol_alt_2d,sol_azi_2d                   ! I
      1                     ,solar_alt,solar_az                      ! I
-     1                     ,solar_lat,solar_lon                     ! I
+     1                     ,solar_lat,solar_lon,r_au                ! I
      1                     ,alt_norm                                ! I
      1                     ,moon_alt_2d,moon_azi_2d,alm,azm         ! I
      1                     ,moon_mag,moon_mag_thr,elgms             ! I
@@ -1468,11 +1518,15 @@
               return
             endif
 
+!           For multiple sites we can move this outside 'iloc' loop past
+!           line 1725
             if(mode_cloud_mask .eq. 4  .or. mode_cloud_mask .eq. 5)then
               avecorr = sum(correlation(:,1:nloc))/float(nc*nloc)
-              write(6,*)' correlation is ',correlation(:,1:nloc),avecorr
+              write(6,42)correlation(:,1:nloc),avecorr
+42            format('correlation is ',3f9.6,2x,f9.6)
               write(6,*)' camera_rgbf checksum = '
      1                  ,sum(min(camera_rgbf,255.))
+              f_merit = 1.0 - avecorr
             else
               correlation = 0.
               avecorr = 0. 
@@ -1650,12 +1704,26 @@
 
             endif ! write labels and images
 
+!           For multiple sites we can move this outside the 'iloc' loop past
+!           line 1725
             if(mode_cloud_mask .eq. 5)then
               write(6,*)'Update a vector and corresponding parameters'
-              call optimize(a,f_merit,depth_this_run)
-              hm_factor = a_vec(1) / a_last(1)
-              ridisp = nint(a_vec(2) - a_last(2))
-              rjdisp = nint(a_vec(3) - a_last(3))
+              a_last(:) = a_vec(:)
+
+              write(6,891)a_vec(1:nv),f_merit
+ 891          format(' call optimize: a_vec/f_merit',3e13.5,4x,f9.5)
+              write(6,*)' dstep is ',dstep
+
+              call optimize_wrapper(a_vec,dstep,nv,f_merit
+     1                             ,init_optimize)
+
+              write(6,892)a_vec(1:nv),f_merit
+ 892          format(' ret optimize:  a_vec/f_merit',3e13.5,4x,f9.5)
+
+              hm_factor = a_vec(n_hm) / a_last(n_hm)
+              ridisp = nint(a_vec(n_id) - a_last(n_id))
+              rjdisp = nint(a_vec(n_jd) - a_last(n_jd))
+              rkdisp = nint(a_vec(n_kd) - a_last(n_kd))
             endif
 
           enddo ! call calc_allsky loop
