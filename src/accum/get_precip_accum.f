@@ -80,6 +80,10 @@
      1                               ,ilaps_cycle_time             ! I
      1                               ,closest_radar                ! I
      1                               ,precip_accum)                ! I/O
+        else
+            write(6,*)
+     1            ' Skipping gauge processing given ilaps_cycle_time of'
+     1              ,ilaps_cycle_time
         endif
 
         return
