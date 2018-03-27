@@ -226,8 +226,10 @@ do i=1, nx*ny
 enddo 
 close(40)
 
-write(6,*)' Center ir value ',ir1_tb_out(nx/2,ny/2)
-write(6,*)' Corner ir value ',ir1_tb_out(1,1)
+write(6,*)' Center ir_tb_out value ',ir1_tb_out(nx/2,ny/2)
+write(6,*)' Corner ir_tb_out value ',ir1_tb_out(1,1)
+write(6,*)' Center vis_rad_out value ',vis_rad_out(nx/2,ny/2)
+write(6,*)' Corner vis_rad_out value ',vis_rad_out(1,1)
 write(6,*)' Center lat/lon ',image_lat_ir(nx/2,ny/2),image_lon_ir(nx/2,ny/2)
 write(6,*)' Corner lat/lon ',image_lat_ir(1,1),image_lon_ir(1,1)
 write(6,*)' Range lat      ',minval(image_lat_ir),maxval(image_lat_ir)
