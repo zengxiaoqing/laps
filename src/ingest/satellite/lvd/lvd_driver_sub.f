@@ -1403,6 +1403,7 @@ c
                   nlf=nlf+1
 !                 call move(visraw,laps_data(1,1,nlf),nx_l,ny_l)
                   call move(visrefl,laps_data(1,1,nlf),nx_l,ny_l)
+                  write(6,*)' Using vis reflectance for SVS field'
                   var_lvd(nlf) = 'SVS'       ! satellite, visible
                   c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE'
                   units_lvd(nlf) = 'REFLECTANCE'
