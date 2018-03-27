@@ -35,6 +35,7 @@
         real pcp_laps_in_a(maxsta)! radar/first guess precip of paired obs        
         real gauge_pairs_a(maxsta)! rain gauge reading of paired observations
         character*5 c_field
+        character*24 btime
 
         integer ilaps(maxsta),jlaps(maxsta)
 
@@ -56,6 +57,8 @@
         n_radar = 0
         n_bkg = 0
         n_msg_rdr_bkg = 0
+
+        idebug = 0 ! extra output for debugging (0,1)
 
         do i = 1,ni
         do j = 1,nj
@@ -127,6 +130,10 @@
 
             if(ilaps(iob) .ge. 1 .and. ilaps(iob) .le. ni .and. 
      1         jlaps(iob) .ge. 1 .and. jlaps(iob) .le. nj      )then
+
+                if(idebug .gt. 0 .and. iob .le. 100)then
+                   write(6,*)'gauge in domain',iob,pcp_gauge(iob)
+                endif
 
 !               Convert from meters to inches
                 if(pcp_cmb_m(ilaps(iob),jlaps(iob)) .ne. r_missing_data
