@@ -221,7 +221,8 @@ c
        endif
 
        call array_range(laps_vis_raw,imax,jmax,rmin,rmax,r_missing_data)
-       write(6,*)' range of non-missing vis on model grid is',rmin,rmax
+       write(6,*)' range of non-missing vis_raw on model grid is'
+     1          ,rmin,rmax
 
        do j=1,jmax
        do i=1,imax
@@ -229,7 +230,8 @@ c
        enddo
        enddo
 
-       write(6,*)'vis mdl grid (center) = ',laps_vis_raw(imax/2,jmax/2)
+       write(6,*)'vis_raw mdl grid (center) = '
+     1          ,laps_vis_raw(imax/2,jmax/2)
 c
 c.....       Normalize the VIS data.
 c
@@ -256,10 +258,12 @@ c
 
 !      Determine reflectance
        if(c_sat_type .eq. 'gnp')then
+         write(6,*)' Scaling 4095 vis raw counts = 1.3 reflectance'
          where(laps_vis_raw(:,:) .ne. r_missing_data)
              laps_vis_refl(:,:) = 1.3 * laps_vis_raw(:,:) / 4095.
          endwhere
        else
+         write(6,*)' Scaling 255 vis raw counts = 1.2 reflectance'
          where(laps_vis_raw(:,:) .ne. r_missing_data)
              laps_vis_refl(:,:) = 1.2 * laps_vis_raw(:,:) / 255.
          endwhere
