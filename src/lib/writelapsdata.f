@@ -108,7 +108,7 @@ C
       character*150  static_path
       character*9    laps_dom_file
       character*24   asctime
-      character*20   v_g
+      character*40   v_g
 C
       common         /prt/flag
 C
