@@ -73,7 +73,7 @@
          iwp = 1
          write(6,*)' Adding synthetic aerosol plume of',ext_syn,iplume,jplume
          aod_3d(iplume-iwp:iplume+iwp,jplume-iwp:jplume+iwp,1:nk-8) = ext_syn
-       elseif(i_aero_synplume .eq. 2)then ! synthetic aerosol gradient
+       elseif(i_aero_synplume .eq. 20)then ! synthetic aerosol gradient (CO)
          ri_full = ni/2 + 0000. / grid_spacing_m
          ri_none = ni/2 + 4000. / grid_spacing_m
          write(6,*)' Adding synthetic aerosol gradient ',ni/2,ri_none,ri_full
@@ -92,6 +92,27 @@
               write(6,*)' i,aero_scale ',i,aero_scale,aod_3d(i,nj/2,:)
            endif
          enddo ! i
+         aod = 0.
+         aod_ref = 0.
+       elseif(i_aero_synplume .eq. 2)then ! synthetic aerosol gradient (Gibraltar)
+         rj_full = nj - 100000. / grid_spacing_m
+         rj_none = nj -  80000. / grid_spacing_m
+         write(6,*)' Adding synthetic aerosol gradient ',ni/2,ri_none,ri_full
+         do j = 1,nj
+           aero_scale = max(scurvel(float(j),rj_none,rj_full),.0001)
+           do k = 1,nk
+           do i = 1,ni
+               if(heights_3d(i,j,k) .gt. 2000.)then
+                   aod_3d(i,j,k) = aod_3d(i,j,k) * 0.15
+               else
+                   aod_3d(i,j,k) = aod_3d(i,j,k) * (0.15 + 0.85 * aero_scale)
+               endif
+           enddo ! j
+           enddo ! k
+           if(j .eq. (j/50) * 50)then
+              write(6,*)' j,aero_scale ',j,aero_scale,aod_3d(ni/2,j,:)
+           endif
+         enddo ! j
          aod = 0.
          aod_ref = 0.
        else
