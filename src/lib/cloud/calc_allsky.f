@@ -509,6 +509,8 @@
      1                ,nc,minalt,maxalt,minazi,maxazi               ! I
      1                ,grid_spacing_m,r_missing_data                ! I
      1                ,topo_albedo)                                 ! I/O
+
+             I4_elapsed = ishow_timer()
           endif
 
           if(.false.)then
@@ -704,13 +706,16 @@
           else ! mode_cloud_mask = 4 or 5 (correlation)
               I4_elapsed = ishow_timer()
 
-              if(iloop .eq. 1)then
+              if(iloop .eq. 1 .OR. .true.)then
                 write(6,*)' Reading camera image: mode_cloud_mask'
      1                    ,mode_cloud_mask
                 mode_cam = 2
                 call get_camsite(rlat,rlon,site)
-!               call get_camera_image(0,10,0,20,nc,                       ! I
-                i4time_camera = i4time_solar - 60
+                if(trim(site) .eq. 'dsrc')then
+                  i4time_camera = i4time_solar - 60
+                else
+                  i4time_camera = i4time_solar
+                endif
                 call get_camera_image(minalt,maxalt,minazi,maxazi,nc,     ! I
      1                                alt_scale,azi_scale,                ! I
      1                                i4time_camera,fname_ppm,mode_cam,   ! I
@@ -740,12 +745,18 @@
                 enddo ! ialt
               else
                 write(6,*)' skip cam img read - use saved array:',
-     1                    'mode_cloud_mask=',mode_cloud_mask
+     1                    'mode_cloud_mask=',mode_cloud_mask,iloop
               endif ! iloop
 
+              cam_checksum = sum(min(camera_rgbf,255.))
+              write(6,*)' camera_rgbf checksum = ',cam_checksum
+              if(cam_checksum .gt. 0. .and. cam_checksum .lt. 1.0)then
+                write(6,*)' WARNING: 0 < cam_checksum < 1'
+                istatus = 0
+                return
+              endif
+
               write(6,*)' Performing correlation calculation (stats_2d)'
-              write(6,*)' camera_rgbf checksum = '
-     1                  ,sum(min(camera_rgbf,255.))
               do ic = 1,nc
                 call stats_2d(maxalt-minalt+1,maxazi-minazi+1
      1                       ,camera_rgbf(ic,:,:),sky_rgb_cyl(ic-1,:,:)
