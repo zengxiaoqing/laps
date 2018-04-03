@@ -72,13 +72,13 @@
 
         parameter (mxopt = 10)
         real*8 a_vec(mxopt),a_last(mxopt),depth_this_run,f_merit
-        real*8 dstep(mxopt)
+        real*8 dstep(mxopt),dstep_gran(mxopt)
 
         real pres_1d(NZ_L)
 
         real lil_sfc, lic_sfc, lil_cpt, lic_cpt
   
-        real k_to_c, make_td, make_ssh
+        real k_to_c, make_td, make_ssh, mfpath
 
         character*1 c_prodtype, c_plotobs
         character*3 var_2d
@@ -130,6 +130,9 @@
 
         integer maxloc
         parameter (maxloc = 1000)
+        integer minalt_a(maxloc),maxalt_a(maxloc)
+        integer minazi_a(maxloc),maxazi_a(maxloc)
+        real alt_scale_a(maxloc),azi_scale_a(maxloc)
 
         real, allocatable, dimension(:,:,:) :: sky_rgb_polar
         integer, allocatable, dimension(:,:,:) :: isky_rgb_polar
@@ -318,7 +321,8 @@
      1                              ,dlat,dlon,NX_L,NY_L
      1                              ,xsound(iloc),ysound(iloc),istatus)
             if(istatus .ne. 1)then
-              if(trim(c_model) .ne. 'hrrr_smoke')then
+!             if(trim(c_model) .ne. 'hrrr_smoke')then
+              if(len(c_model) .eq. 0)then
                 write(6,*)' Station is outside domain - try again...'
                 return
               else
@@ -330,7 +334,8 @@
      1                              .or.
      1         ysound(iloc) .lt. 1d0 .or. ysound(iloc) .gt. dble(NY_L)    
      1                                                             )then
-              if(trim(c_model) .ne. 'hrrr_smoke')then
+!             if(trim(c_model) .ne. 'hrrr_smoke')then
+              if(len(c_model) .eq. 0)then
                 write(6,*)' Station is outside domain - try again...'
                 return
               else
@@ -425,12 +430,12 @@
           l_require_all_fields = .false.                   ! 
           mode_aero_cld = 3
           i_aero_synplume = 2
-          read(c_model(11:13),*)aero_synfactor
+!         read(c_model(11:13),*)aero_synfactor
         elseif(c_model(1:4) .eq. 'aero')then               ! e.g. aeroloop
           l_require_all_fields = .false.                   ! 
           mode_aero_cld = 3
           i_aero_synplume = 2
-          read(c_model(11:13),*)aero_synfactor
+!         read(c_model(11:13),*)aero_synfactor
         elseif(trim(c_model) .eq. 'optimize')then          
           l_require_all_fields = .true.
         elseif(i4time_ref - i4time_now_gg() .gt. 20e6)then ! >0.6y future
@@ -890,7 +895,8 @@
             write(6,*)' returned from wrf2swim for ',trim(c_model)
 
             if(trim(c_model) .eq. 'hrrr_smoke')then
-              write(6,*)' aod max at each level'
+              write(6,*)'   aod max, mean free path, vsby at each level'
+              write(6,*)'     m^-1          m                m'
               do ka = 1,NZ_L
                 aodmax = maxval(aod_3d(:,:,ka))
                 do ia = 1,NX_L
@@ -901,9 +907,16 @@
                   endif
                 enddo ! ja
                 enddo ! ia
-                write(6,151)ka,pres_1d(ka),aodmax,lat(imaxa,jmaxa)
-     1                                           ,lon(imaxa,jmaxa)
-151             format(i3,f9.0,e13.5,2f9.3)            
+                if(aodmax .gt. 0.)then
+                  mfpath = 1. / aodmax
+                  vismax =  mfpath * (-log(.02))
+                else
+                  mfpath = 0.
+                  vismax = 0.
+                endif
+                write(6,151)ka,pres_1d(ka),aodmax,mfpath,vismax
+     1                        ,lat(imaxa,jmaxa),lon(imaxa,jmaxa)
+151             format(i3,f9.0,e13.5,2x,2f12.1,2f9.3)            
               enddo
             endif
 
@@ -922,7 +935,10 @@
 
           i4time_solar = i4time_ref
 
+          I4_elapsed = ishow_timer()
+
 !         Calculate solar position for 2D array of grid points
+          write(6,*)' Getting 2D solar position'
           do i = 1,NX_L
           do j = 1,NY_L
             call solar_position(lat(i,j),lon(i,j),i4time_solar
@@ -941,6 +957,8 @@
 
           enddo ! j
           enddo ! i
+
+          I4_elapsed = ishow_timer()
 
           read(lun,*) ! advance through input data
           write(6,*)' Running without LAPS cloud and other current data'
@@ -962,10 +980,12 @@
               write(6,*)' error getting 1d pressures'
               return
             endif
+            I4_elapsed = ishow_timer()
             write(6,*)' Getting 3D heights from 1D pressure levels'
             do k = 1,NZ_L
               heights_3d(:,:,k) = psatoz(pres_1d(k)/100.)
             enddo ! k
+            I4_elapsed = ishow_timer()
           endif
 
         endif ! l_require_all_fields is TRUE
@@ -1158,272 +1178,17 @@
         rlat_last = -999.
         rlon_last = -999.
         i4time_last = 0.
-      
-        do iloc = 1,nloc
-          ri_obs = xsound(iloc)
-          rj_obs = ysound(iloc)
 
-!         if(trim(c_model) .ne. 'hrrr_smoke')then ! Keep inside model domain
-          if(.true.)then
-              ri_obs = min(max(ri_obs,1.),float(NX_L))
-              rj_obs = min(max(rj_obs,1.),float(NY_L))
-!         else
-!             ri_obs = 477.
-!             rj_obs = 881.             
-          endif
-
-          i_obs = nint(ri_obs)
-          j_obs = nint(rj_obs)
-
-          rlat = lat(i_obs,j_obs)
-          rlon = lon(i_obs,j_obs)
-
-          rlat = fsoundlat(iloc)
-          rlon = fsoundlon(iloc)
-
-          write(6,*)
-          write(6,*)' iloc = ',iloc,rlat,rlon
-
-          write(6,*)' Enter minalt,maxalt (e.g. 0,90 0,180)'
-          read(lun,*)minalt,maxalt           
-
-          write(6,*)' Enter minazi,maxazi'                     
-          read(lun,*)minazi,maxazi           
-
-          write(6,*)' Enter alt_scale,azi_scale'               
-          read(lun,*)alt_scale,azi_scale     
-
-          write(6,*)' minalt/maxalt = ',minalt,maxalt
-          write(6,*)' minazi/maxazi = ',minazi,maxazi
-          write(6,*)' alt_scale/azi_scale = ',alt_scale,azi_scale
-
-          if(minazi .eq. maxazi)then
-            write(6,*)' Error minazi = maxazi'
-            stop
-          endif
-
-          allocate(alt_a_roll(minalt:maxalt,minazi:maxazi))
-          allocate(azi_a_roll(minalt:maxalt,minazi:maxazi))
-          allocate(cloud_od(minalt:maxalt,minazi:maxazi))
-          allocate(camera_cloud_mask(minalt:maxalt,minazi:maxazi))
-          allocate(camera_rgbf(nc,minalt:maxalt,minazi:maxazi))
-          allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
-          allocate(sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
-          allocate(isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
-
-          if(.false.)then
-              topo_sfc = topo(i_obs,j_obs)
-          else
-              call bilinear_laps(ri_obs,rj_obs,NX_L,NY_L,topo,topo_sfc)
-          endif
- 
-          write(6,*)' observer ri/rj/topo_sfc ',ri_obs,rj_obs,topo_sfc
-          write(6,22)topo_albedo_2d(:,i_obs,j_obs)
-22        format('  albedo RGB of observer ',3f9.3)
-
-          write(6,*)' land use / frac of observer: '
-     1                    ,land_use(i_obs,j_obs),land_frac(i_obs,j_obs)
-
-          write(6,*)' array of land frac'
-          call ascii_map(i_obs,j_obs,NX_L,NY_L,land_frac,10,1)
-
-          write(6,*)' snow cover of observer: ',snow_cover(i_obs,j_obs)  
-
-          write(6,*)' solar alt/az (2d array)',sol_alt_2d(i_obs,j_obs)       
-     1                                        ,sol_azi_2d(i_obs,j_obs) 
-
-!         Calculate solar position for all-sky point
-          if(.true.)then ! test this again to allow fractional gridpoints?
-              call solar_position(fsoundlat(iloc),fsoundlon(iloc)
-     1                           ,i4time_solar,solar_alt     
-     1                           ,solar_dec,solar_ha)
-              call equ_to_altaz_d(solar_dec,solar_ha,fsoundlat(iloc)
-     1                           ,altdum,solar_az)               
-              if(solar_az .lt. 0.)solar_az = solar_az + 360.
-              solar_lat = solar_dec
-              solar_lon = soundlon(iloc) - solar_ha
-          else ! ensure consistency between both solar positions
-              solar_alt = sol_alt_2d(i_obs,j_obs)
-              solar_az = sol_azi_2d(i_obs,j_obs)              
-          endif
-
-          write(6,*)' solar alt/az (observer)',solar_alt,solar_az
-
-          hdist_loc = sqrt((rlat-rlat_last)**2 + (rlon-rlon_last)**2)
-!         if(solar_alt .gt. 4.0)then
-!             hdist_loc_thr = 0.3
-!         else
-!             hdist_loc_thr = 0.0
-!         endif
-
-          thr1 = ((grid_spacing_m / 10000.) / rpd) * sind(solar_alt) 
-          thr2 = solar_alt * 0.1
-          thr3 = solar_alt - 3.0
-          hdist_loc_thr = max(min(thr1,thr2,thr3),0.0)
-
-          if(hdist_loc .gt. hdist_loc_thr .OR. 
-     1       i4time_solar .ne. i4time_last    )then
-            newloc = 1
-            rlat_last = rlat; rlon_last = rlon
-            i4time_last = i4time_solar
-          else
-            newloc = 0
-          endif
-
-          write(6,*)' i4time_last/i4time_solar = '
-     1               ,i4time_last,i4time_solar
-          write(6,23)hdist_loc,hdist_loc_thr,newloc
-23        format('  hdist_loc/hdist_loc_thr/newloc = ',2f9.3,i3)
-
-          write(6,*)' call sun_moon at observer sfc grid point ',i_obs
-     1                                                          ,j_obs
-          idebug = 2
-          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs   ! I
-     1                 ,alm,azm                                      ! O
-     1                 ,idebug,0.,earth_radius                       ! I
-     1                 ,elgms,moon_mag,rmn                           ! O 
-     1                 ,geo_dec,geo_ra,geo_sublon,geo_dist           ! O
-     1                 ,emag,eobsf,eobsl)                            ! O
-
-          if(elgms .lt. 1.4)then
-            write(6,24)emag,eobsf,eobsl
- 24         format(' NOTE: Solar Eclipse Conditions: mag/obsc = '
-     1            ,f9.6,2f11.6)
-            l_solar_eclipse = .true.
-          elseif(elgms .lt. 0.6)then
-            write(6,*)' NOTE: Possible Solar Eclipse Conditions'
-            l_solar_eclipse = .true.
-          else
-            l_solar_eclipse = .false.
-          endif
-
-          write(6,*)' call sun_moon at observer sfc grid point ',i_obs
-     1                                                          ,j_obs
-          call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs   ! I
-     1                 ,alm,azm                                      ! O
-     1                 ,idebug,htagl(iloc),earth_radius              ! I
-     1                 ,elgms,moon_mag,rmn                           ! O 
-     1                 ,geo_dec,geo_ra,geo_sublon,geo_dist           ! O
-     1                 ,emag,eobsf,eobsl)                            ! O
-          write(6,25)alm,azm,elgms,moon_mag,rmn
- 25       format('  alt/az/elg/mnmag/rmn = ',2f8.2,f9.4,f8.2,f9.6)
-
-!         Consider passing 'topo_flag' into 'sun_moon' to consider either
-!         solar or lunar eclipses
-!         http://www.jgisen.de/eclipse
-
-!         'emag' is solar eclipse magnitude for the observer
-!         'eobsf' is observer obscuration
-!         'eobsl' includes limb darkening for observer obscuration
-
-          if(maxval(sol_alt_2d) .gt. 0. .and. 
-     1       l_solar_eclipse .eqv. .true.)then
-            write(6,*)' Calculate gridded sfc eclipse obscuration'
-            elgmin = 9999.
-            idebug = 0
-            do i = 1,NX_L
-            do j = 1,NY_L
-              call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i,j         ! I
-     1                     ,almgrd,azmgrd                              ! O
-     1                     ,idebug,0.,earth_radius                     ! I
-     1                     ,elggrd,grdmoon_mag,rmn                     ! O
-     1                     ,geo_dec,geo_ra,geo_sublon,geo_dist         ! O
-     1                     ,solar_eclipse_magnitude,eobsf,eobsc(i,j))  ! O
-
-              if(elggrd .lt. elgmin .and. sol_alt_2d(i,j) .gt. 0.)then
-                elgmin = elggrd
-                emagmax = solar_eclipse_magnitude
-                eobsmax = eobsc(i,j)
-                imxecl = i
-                jmxecl = j
-              endif
-
-            enddo ! j
-            enddo ! i
-
-            write(6,*)' range of eobsc is',minval(eobsc),maxval(eobsc)
-            write(6,*)' best elg/mag/eobs ',elgmin,emagmax,eobsmax,
-     1                ' at',i,j,lat(imxecl,jmxecl),lon(imxecl,jmxecl)
-
-          else
-            eobsc = 0.
-          endif
-
-!         l_solar_eclipse = .false. ! test
-
-!         alm = -90.          ! Test for disabling
-!         moon_mag = -4.0    ! Test for disabling
-          moon_mag_thr = -6.0
-
-          moon_alt_2d = alm
-          moon_azi_2d = azm
-
-!         Get alt_a_roll and azi_a_roll arrays
-          do i = minalt,maxalt
-            call get_val(i,minalt,alt_scale,altobj)
-            alt_a_roll(i,:) = altobj
-            if(altobj .lt. -90.)then
-               write(6,*)' ERROR: altobj < -90.',i,altobj
-               return
-            endif
-            if(i .eq. minalt .or.
-     1               (i .eq. maxalt .and. maxalt .gt. 0))then
-              if(altobj .ne. nint(altobj))then
-                write(6,*)' ERROR: non-integer altitude bound'
-     1                   ,i,alt_scale,altobj
-                return
-              endif
-            endif
-          enddo 
-
-          do j = minazi,maxazi
-            call get_val(j,minazi,azi_scale,aziobj)
-            azi_a_roll(:,j) = aziobj
-            if(j .eq. minazi .or. j .eq. maxazi)then
-              if(aziobj .ne. nint(aziobj))then
-                write(6,*)' ERROR: non-integer azimuth bound'
-     1                   ,j,azi_scale,aziobj
-                return
-              endif
-            endif
-          enddo
-
-          write(6,*)' alt range is ',alt_a_roll(minalt,minazi)
-     1                              ,alt_a_roll(maxalt,minazi)
-          write(6,*)' azi range is ',azi_a_roll(minalt,minazi)
-     1                              ,azi_a_roll(minalt,maxazi)
-
-          ilun = ilun + 1
-          write(clun,34)ilun
-34        format(i3.3)
-
-          allocate(aod_ill_opac(minalt:maxalt,minazi:maxazi))
-          allocate(aod_ill_opac_potl(minalt:maxalt,minazi:maxazi))
-
-          exposure = exposure_a(iloc) ! density
-
-          if(l_water_world)then ! water world experimental simulation
-            land_frac = 0.
-            snow_cover = 0.
-            topo = 0.
-            topo_sfc = 0.
-            topo_albedo_2d(1,:,:) = .003
-            topo_albedo_2d(2,:,:) = .007
-            topo_albedo_2d(3,:,:) = .028
-          endif
-
-!         Setup optimization with single site, for multiple sites we can move
-!         this up before line 1156 (iloc loop)
-          if(mode_cloud_mask .eq. 5)then
-            nloops = 99
+        if(mode_cloud_mask .eq. 5)then
+            nloops = 75
             write(6,*)' Optimize mode: initialize',nloops
             filename_ppm = ''
 
 !           Number and permutation of variables
             nv = 3
-            n_hm = 1
             n_id = 2
-            n_jd = 3
+            n_jd = 1
+            n_hm = 3
             n_kd = 4
             
             hm_factor = 1.0d0
@@ -1442,15 +1207,21 @@
             dstep(n_jd) = 1d0 
             dstep(n_kd) = 1d0 
 
-            init_optmiz = 0
+            dstep_gran(n_hm) = 0d0
+            dstep_gran(n_id) = 1d0
+            dstep_gran(n_jd) = 1d0
+            dstep_gran(n_kd) = 1d0
 
-          else ! standard run
+            init_optmiz = 0
+            iexit_optimize = 0
+
+        else ! standard run
             nloops = 1
 
-          endif
+        endif
 
-          do iloop = 1,nloops
-            if(iloop .gt. 1)then ! optimization case
+        do iloop = 1,nloops ! optimization loop
+          if(iloop .gt. 1)then ! optimization case
                 write(6,41)iloop,hm_factor,ridisp,rjdisp    
 41              format(' Modify fields for optimization ',i4,3e13.5)
                 
@@ -1461,26 +1232,299 @@
                 jdo = nint(rjdisp)
 
                 idl1 = max(1+ido,1)
-                idh1 = min((idl1 + (NX_L-1)),NX_L)
+                idh1 = min(NX_L+ido,NX_L)
 
-                idl2 = min(max((idl1-ido),1),NX_L)
-                idh2 = min(max((idh1-ido),1),NX_L)
+                idl2 = max(idl1-ido,1)
+                idh2 = min(idh1-ido,NX_L)
+                    
+                jdl1 = max(1+jdo,1)
+                jdh1 = min(NY_L+jdo,NY_L)
 
-                jdl1 = max(1+ido,1)
-                jdh1 = min((jdl1 + (NY_L-1)),NY_L)
+                jdl2 = max(jdl1-jdo,1)
+                jdh2 = min(jdh1-jdo,NY_L)
 
-                jdl2 = min(max((jdl1-ido),1),NY_L)
-                jdh2 = min(max((jdh1-ido),1),NY_L)
-
-                write(6,*)' idl1,idh1,idl2,idh2',idl1,idh1,idl2,idh2
-                write(6,*)' jdl1,jdh1,jdl2,jdh2',jdl1,jdh1,jdl2,jdh2
+                write(6,42)ido,idl1,idh1,idl2,idh2
+42              format(  ' ido,idl1,idh1,idl2,idh2',5i6)             
+                write(6,43)jdo,jdl1,jdh1,jdl2,jdh2
+43              format(  ' jdo,jdl1,jdh1,jdl2,jdh2',5i6)             
 
                 clwc_3d(idl1:idh1,jdl1:jdh1,:) =
      1          clwc_3d(idl2:idh2,jdl2:jdh2,:)
 
                 cice_3d(idl1:idh1,jdl1:jdh1,:) =
      1          cice_3d(idl2:idh2,jdl2:jdh2,:)
-            endif                
+          endif                
+      
+          do iloc = 1,nloc
+            ri_obs = xsound(iloc)
+            rj_obs = ysound(iloc)
+
+!           if(trim(c_model) .ne. 'hrrr_smoke')then ! Keep inside model domain
+            if(.true.)then
+              ri_obs = min(max(ri_obs,1.),float(NX_L))
+              rj_obs = min(max(rj_obs,1.),float(NY_L))
+!           else
+!               ri_obs = 477.
+!               rj_obs = 881.             
+            endif
+
+            i_obs = nint(ri_obs)
+            j_obs = nint(rj_obs)
+
+            rlat = lat(i_obs,j_obs)
+            rlon = lon(i_obs,j_obs)
+
+            rlat = fsoundlat(iloc)
+            rlon = fsoundlon(iloc)
+
+            write(6,*)
+            write(6,*)' iloc = ',iloc,rlat,rlon
+
+            if(iloop .eq. 1)then
+              write(6,*)' Enter minalt,maxalt (e.g. 0,90 0,180)'
+              read(lun,*)minalt_a(iloc),maxalt_a(iloc)           
+            endif
+            minalt = minalt_a(iloc)
+            maxalt = maxalt_a(iloc)
+
+            if(iloop .eq. 1)then
+              write(6,*)' Enter minazi,maxazi'                     
+              read(lun,*)minazi_a(iloc),maxazi_a(iloc)           
+            endif
+            minazi = minazi_a(iloc)
+            maxazi = maxazi_a(iloc)
+
+            if(iloop .eq. 1)then
+              write(6,*)' Enter alt_scale,azi_scale'               
+              read(lun,*)alt_scale_a(iloc),azi_scale_a(iloc)     
+            endif
+            alt_scale = alt_scale_a(iloc)     
+            azi_scale = azi_scale_a(iloc)     
+
+            write(6,*)' minalt/maxalt = ',minalt,maxalt
+            write(6,*)' minazi/maxazi = ',minazi,maxazi
+            write(6,*)' alt_scale/azi_scale = ',alt_scale,azi_scale
+            if(minazi .eq. maxazi)then
+                write(6,*)' Error minazi = maxazi'
+                stop
+            endif
+
+            allocate(alt_a_roll(minalt:maxalt,minazi:maxazi))
+            allocate(azi_a_roll(minalt:maxalt,minazi:maxazi))
+            allocate(cloud_od(minalt:maxalt,minazi:maxazi))
+            allocate(camera_cloud_mask(minalt:maxalt,minazi:maxazi))
+            allocate(camera_rgbf(nc,minalt:maxalt,minazi:maxazi))
+            allocate(dist_2_topo(minalt:maxalt,minazi:maxazi))
+            allocate(sky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
+            allocate(isky_rgb_cyl(0:2,minalt:maxalt,minazi:maxazi))
+
+            if(.false.)then
+                topo_sfc = topo(i_obs,j_obs)
+            else
+                call bilinear_laps(ri_obs,rj_obs,NX_L,NY_L,topo
+     1                 ,topo_sfc)
+            endif
+ 
+            write(6,*)' observer ri/rj/topo_sfc ',ri_obs,rj_obs
+     1                                             ,topo_sfc
+            write(6,22)topo_albedo_2d(:,i_obs,j_obs)
+22          format('  albedo RGB of observer ',3f9.3)
+
+            write(6,*)' land use / frac of observer: '
+     1                 ,land_use(i_obs,j_obs),land_frac(i_obs,j_obs)
+
+            write(6,*)' array of land frac'
+            call ascii_map(i_obs,j_obs,NX_L,NY_L,land_frac,10,1)
+
+            write(6,*)' snow cover of observer: '
+     1                 ,snow_cover(i_obs,j_obs)  
+
+            write(6,*)' solar alt/az (2d array)'       
+     1                ,sol_alt_2d(i_obs,j_obs),sol_azi_2d(i_obs,j_obs) 
+
+!           Calculate solar position for all-sky point
+            if(.true.)then ! test this again to allow fractional gridpoints?
+                call solar_position(fsoundlat(iloc),fsoundlon(iloc)
+     1                             ,i4time_solar,solar_alt     
+     1                             ,solar_dec,solar_ha)
+                call equ_to_altaz_d(solar_dec,solar_ha,fsoundlat(iloc)
+     1                             ,altdum,solar_az)               
+                if(solar_az .lt. 0.)solar_az = solar_az + 360.
+                  solar_lat = solar_dec
+                  solar_lon = soundlon(iloc) - solar_ha
+            else ! ensure consistency between both solar positions
+                solar_alt = sol_alt_2d(i_obs,j_obs)
+                solar_az = sol_azi_2d(i_obs,j_obs)              
+            endif
+
+            write(6,*)' solar alt/az (observer)',solar_alt,solar_az
+
+            hdist_loc = sqrt((rlat-rlat_last)**2 + (rlon-rlon_last)**2)
+!           if(solar_alt .gt. 4.0)then
+!                 hdist_loc_thr = 0.3
+!           else
+!                 hdist_loc_thr = 0.0
+!           endif
+
+            thr1 = ((grid_spacing_m / 10000.) / rpd) * sind(solar_alt) 
+            thr2 = solar_alt * 0.1
+            thr3 = solar_alt - 3.0
+            hdist_loc_thr = max(min(thr1,thr2,thr3),0.0)
+
+            if(hdist_loc .gt. hdist_loc_thr  .OR. 
+     1         i4time_solar .ne. i4time_last .OR.   
+     1         mode_cloud_mask .eq. 5            )then
+                newloc = 1
+                rlat_last = rlat; rlon_last = rlon
+                i4time_last = i4time_solar
+            else
+                newloc = 0
+            endif
+
+            write(6,*)' i4time_last/i4time_solar = '
+     1                 ,i4time_last,i4time_solar
+            write(6,23)hdist_loc,hdist_loc_thr,newloc
+23          format('  hdist_loc/hdist_loc_thr/newloc = ',2f9.3,i3)
+
+            write(6,*)' call sun_moon at observer sfc grid point '
+     1                                                    ,i_obs,j_obs
+            idebug = 2
+            call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs   ! I
+     1                   ,alm,azm                                      ! O
+     1                   ,idebug,0.,earth_radius                       ! I
+     1                   ,elgms,moon_mag,rmn                           ! O 
+     1                   ,geo_dec,geo_ra,geo_sublon,geo_dist           ! O
+     1                   ,emag,eobsf,eobsl)                            ! O
+
+            if(elgms .lt. 1.4)then
+              write(6,24)emag,eobsf,eobsl
+ 24           format(' NOTE: Solar Eclipse Conditions: mag/obsc = '
+     1              ,f9.6,2f11.6)
+              l_solar_eclipse = .true.
+            elseif(elgms .lt. 0.6)then
+              write(6,*)' NOTE: Possible Solar Eclipse Conditions'
+              l_solar_eclipse = .true.
+            else
+              l_solar_eclipse = .false.
+            endif
+
+            write(6,*)' call sun_moon at observer sfc grid point ',i_obs
+     1                                                            ,j_obs
+            call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i_obs,j_obs   ! I
+     1                   ,alm,azm                                      ! O
+     1                   ,idebug,htagl(iloc),earth_radius              ! I
+     1                   ,elgms,moon_mag,rmn                           ! O 
+     1                   ,geo_dec,geo_ra,geo_sublon,geo_dist           ! O
+     1                   ,emag,eobsf,eobsl)                            ! O
+            write(6,25)alm,azm,elgms,moon_mag,rmn
+ 25         format('  alt/az/elg/mnmag/rmn = ',2f8.2,f9.4,f8.2,f9.6)
+
+!           Consider passing 'topo_flag' into 'sun_moon' to consider either
+!           solar or lunar eclipses
+!           http://www.jgisen.de/eclipse
+
+!           'emag' is solar eclipse magnitude for the observer
+!           'eobsf' is observer obscuration
+!           'eobsl' includes limb darkening for observer obscuration
+
+            if(maxval(sol_alt_2d) .gt. 0. .and. 
+     1       l_solar_eclipse .eqv. .true.)then
+              write(6,*)' Calculate gridded sfc eclipse obscuration'
+              elgmin = 9999.
+              idebug = 0
+              do i = 1,NX_L
+              do j = 1,NY_L
+                call sun_moon(i4time_solar,lat,lon,NX_L,NY_L,i,j         ! I
+     1                       ,almgrd,azmgrd                              ! O
+     1                       ,idebug,0.,earth_radius                     ! I
+     1                       ,elggrd,grdmoon_mag,rmn                     ! O
+     1                       ,geo_dec,geo_ra,geo_sublon,geo_dist         ! O
+     1                       ,solar_eclipse_magnitude,eobsf,eobsc(i,j))  ! O
+
+                if(elggrd .lt. elgmin .and. sol_alt_2d(i,j) .gt. 0.)then
+                  elgmin = elggrd
+                  emagmax = solar_eclipse_magnitude
+                  eobsmax = eobsc(i,j)
+                  imxecl = i
+                  jmxecl = j
+                endif
+
+              enddo ! j
+              enddo ! i
+
+              write(6,*)' range of eobsc is',minval(eobsc),maxval(eobsc)
+              write(6,*)' best elg/mag/eobs ',elgmin,emagmax,eobsmax,
+     1                  ' at',i,j,lat(imxecl,jmxecl),lon(imxecl,jmxecl)
+
+            else
+              eobsc = 0.
+            endif
+
+!           l_solar_eclipse = .false. ! test
+
+!           alm = -90.          ! Test for disabling
+!           moon_mag = -4.0    ! Test for disabling
+            moon_mag_thr = -6.0
+
+            moon_alt_2d = alm
+            moon_azi_2d = azm
+
+!           Get alt_a_roll and azi_a_roll arrays
+            do i = minalt,maxalt
+              call get_val(i,minalt,alt_scale,altobj)
+              alt_a_roll(i,:) = altobj
+              if(altobj .lt. -90.)then
+                write(6,*)' ERROR: altobj < -90.',i,altobj
+                return
+              endif
+              if(i .eq. minalt .or.
+     1                 (i .eq. maxalt .and. maxalt .gt. 0))then
+                if(altobj .ne. nint(altobj))then
+                  write(6,*)' ERROR: non-integer altitude bound'
+     1                     ,i,alt_scale,altobj
+                  return
+                endif
+              endif
+            enddo 
+
+            do j = minazi,maxazi
+              call get_val(j,minazi,azi_scale,aziobj)
+              azi_a_roll(:,j) = aziobj
+              if(j .eq. minazi .or. j .eq. maxazi)then
+                if(aziobj .ne. nint(aziobj))then
+                  write(6,*)' ERROR: non-integer azimuth bound'
+     1                     ,j,azi_scale,aziobj
+                  return
+                endif
+              endif
+            enddo
+
+            write(6,*)' alt range is ',alt_a_roll(minalt,minazi)
+     1                                ,alt_a_roll(maxalt,minazi)
+            write(6,*)' azi range is ',azi_a_roll(minalt,minazi)
+     1                                ,azi_a_roll(minalt,maxazi)
+
+            ilun = ilun + 1
+            write(clun,34)iloc
+34          format(i3.3)
+
+            allocate(aod_ill_opac(minalt:maxalt,minazi:maxazi))
+            allocate(aod_ill_opac_potl(minalt:maxalt,minazi:maxazi))
+
+            exposure = exposure_a(iloc) ! density
+
+            if(l_water_world)then ! water world experimental simulation
+              land_frac = 0.
+              snow_cover = 0.
+              topo = 0.
+              topo_sfc = 0.
+              topo_albedo_2d(1,:,:) = .003
+              topo_albedo_2d(2,:,:) = .007
+              topo_albedo_2d(3,:,:) = .028
+            endif
+
+!           Setup optimization with single site, for multiple sites we can move
+!           this up before line 1156 (iloc loop)
 
             write(6,*)' call calc_allsky at i4time_solar:',i4time_solar
      1               ,iloop
@@ -1520,21 +1564,21 @@
 
 !           For multiple sites we can move this outside 'iloc' loop past
 !           line 1725
+
             if(mode_cloud_mask .eq. 4  .or. mode_cloud_mask .eq. 5)then
-              avecorr = sum(correlation(:,1:nloc))/float(nc*nloc)
-              write(6,42)correlation(:,1:nloc),avecorr
-42            format('correlation is ',3f9.6,2x,f9.6)
+              avecorr = sum(correlation(:,iloc))/float(nc)
+              write(6,46)correlation(:,iloc),avecorr
+46            format('correlation is ',3f9.6,2x,f9.6,' incremental')
               write(6,*)' camera_rgbf checksum = '
      1                  ,sum(min(camera_rgbf,255.))
-              f_merit = 1.0 - avecorr
             else
               correlation = 0.
               avecorr = 0. 
             endif
 
             if(nloops .gt. 1)then
-              write(clun_loop,44)clun,iloop
-44            format(a3,'_',i3.3)
+              write(clun_loop,48)clun,iloop
+48            format(a3,'_',i3.3)
             else
               clun_loop = clun
             endif
@@ -1569,7 +1613,7 @@
  57             format(f8.4)
               endif
 
-              write(54,58)correlation,avecorr
+              write(54,58)correlation(:,iloc),avecorr
  58           format(4f10.3)
 
               close(54)
@@ -1582,7 +1626,7 @@
 !               open(55,file='allsky_rgb_cyl.'//trim(clun_loop),status='unknown')
 !               write(55,*)isky_rgb_cyl           
 !               close(55)
-                write(6,*)' Write all sky cyl ppm file '
+                write(6,*)' Write all sky cyl ppm file ',trim(clun_loop)
                 call writeppm3Matrix(
      1                isky_rgb_cyl(0,:,:),isky_rgb_cyl(1,:,:)
      1               ,isky_rgb_cyl(2,:,:)
@@ -1692,6 +1736,7 @@
 !               write(54,*)isky_rgb_polar
 !               close(54)
                 write(6,*)' Write all sky polar ppm file '
+     1                   ,trim(clun_loop)
                 call writeppm3Matrix(
      1                  isky_rgb_polar(0,:,:),isky_rgb_polar(1,:,:)
      1                 ,isky_rgb_polar(2,:,:)
@@ -1706,52 +1751,73 @@
 
 !           For multiple sites we can move this outside the 'iloc' loop past
 !           line 1725
-            if(mode_cloud_mask .eq. 5)then
+
+            deallocate(aod_ill_opac)
+            deallocate(aod_ill_opac_potl)
+            deallocate(alt_a_roll)
+            deallocate(azi_a_roll)
+            deallocate(cloud_od)
+            deallocate(camera_cloud_mask)
+            deallocate(camera_rgbf)
+            deallocate(dist_2_topo)
+
+ 900        continue
+  
+1000        continue
+
+            write(6,*)' End of plot_allsky for iloc...',iloc
+            write(6,*)
+
+            I4_elapsed = ishow_timer()
+
+            deallocate(sky_rgb_cyl)
+            deallocate(isky_rgb_cyl)
+
+          enddo ! iloc
+
+          if(mode_cloud_mask .eq. 4  .or. mode_cloud_mask .eq. 5)then
+              avecorr = sum(correlation(:,1:nloc))/float(nc*nloc)
+              do iloc = 1,nloc
+                write(6,1842)correlation(:,iloc),avecorr
+1842            format('correlation is ',3f9.6,2x,f9.6,' allcams')
+              enddo ! iloc
+          else
+              correlation = 0.
+              avecorr = 0. 
+          endif
+
+          if(mode_cloud_mask .eq. 5)then
               write(6,*)'Update a vector and corresponding parameters'
               a_last(:) = a_vec(:)
 
-              write(6,891)a_vec(1:nv),f_merit
- 891          format(' call optimize: a_vec/f_merit',3e13.5,4x,f9.5)
-              write(6,*)' dstep is ',dstep
+              f_merit = 1.0 - avecorr
+              f_merit = f_merit + 0.1d0 * (1d0 - a_vec(n_hm))**2
+!             f_merit = f_merit + .1d0 * a_vec(n_id)**2
+!             f_merit = f_merit + .1d0 * a_vec(n_jd)**2
 
-              call optimize_wrapper(a_vec,dstep,nv,f_merit
-     1                             ,init_optimize)
+              if(iexit_optimize .eq. 1)then              
+                  write(6,*)' Signal to stop optimization'
+                  write(6,1891)a_vec(1:nv),f_merit,iloop
+1891              format(' exit optimize: a_vec/f_merit'
+     1                  ,3f10.5,5x,f10.6,i4)
+                  goto 1900
+              endif
 
-              write(6,892)a_vec(1:nv),f_merit
- 892          format(' ret optimize:  a_vec/f_merit',3e13.5,4x,f9.5)
+              call optimize_wrapper(a_vec,dstep,dstep_gran,nv,f_merit
+     1                             ,init_optmiz,iexit_optimize)
+
+              write(6,1892)a_vec(1:nv),f_merit
+1892          format(' ret optimize:  a_vec/f_merit',3e13.5,4x,f9.5)
 
               hm_factor = a_vec(n_hm) / a_last(n_hm)
               ridisp = nint(a_vec(n_id) - a_last(n_id))
               rjdisp = nint(a_vec(n_jd) - a_last(n_jd))
               rkdisp = nint(a_vec(n_kd) - a_last(n_kd))
-            endif
+          endif
 
-          enddo ! call calc_allsky loop
+        enddo ! iloop for optimize
 
-          deallocate(aod_ill_opac)
-          deallocate(aod_ill_opac_potl)
-          deallocate(alt_a_roll)
-          deallocate(azi_a_roll)
-          deallocate(cloud_od)
-          deallocate(camera_cloud_mask)
-          deallocate(camera_rgbf)
-          deallocate(dist_2_topo)
-
- 900      continue
-
-1000      continue
-
-          write(6,*)' End of plot_allsky for iloc...',iloc
-          write(6,*)
-
-          I4_elapsed = ishow_timer()
-
-          deallocate(sky_rgb_cyl)
-          deallocate(isky_rgb_cyl)
-
-        enddo ! iloc
-
-        call dealloc_allsky
+1900    call dealloc_allsky
 
         write(6,*)
         write(6,*)' End of plot_allsky...'
