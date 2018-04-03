@@ -1688,8 +1688,8 @@
                   sky_rad(3) = sky_rad(3) + blu_rad
 
                   if(idebug .eq. 1)then
-                    write(6,981)red_refl,grn_refl,blu_refl,sky_rad(:)/(2.*day_int)
-981                 format(' reflectance trad/skyrad ',3f10.5,3x,3f10.5)
+                    write(6,981)topo_albedo(:,i,j),red_refl,grn_refl,blu_refl,sky_rad(:)/(2.*day_int)
+981                 format(' reflectance talb/trad/skyrad ',3f8.3,5x,3f10.5,5x,3f10.5)
                   endif
  
                   call nl_to_RGB(sky_rad(:),glwmid,contrast & 
