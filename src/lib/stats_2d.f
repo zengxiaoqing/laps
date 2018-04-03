@@ -156,7 +156,11 @@ c
         write(6,900)int(cnt),bias,std,r
 900     format(1x,' N/bias/rms/r = ',i8,2f9.2,f9.3)
 
-        write(6,*)' Success in stats_2d'
+        if(istatus .eq. 1)then
+          write(6,*)' Success in stats_2d'
+        else
+          write(6,*)' WARNING: istatus in stats_2d =',istatus 
+        endif
         write(6,*)
 
         return
