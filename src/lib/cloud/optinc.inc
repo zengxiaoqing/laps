@@ -28,7 +28,7 @@
      1                 ,increment_ratio,v5,step_factor
      1	               ,f_m1,f_m2,l_m1,l_m2,l_swp_extpl_end
 	common /optmiz/ a_ref(mxopt),dstep(mxopt),cv(mxopt)
-     1	               ,cv_ref(mxopt)
+     1	               ,cv_ref(mxopt),dstep_ref(mxopt),dstep_gran(mxopt)
 	common /optmiz/ c1(mxopt),d1(mxopt),e1(mxopt),g1(mxopt),crv(mxopt)
 	common /optmiz/ h1(mxopt)
 	common /optmiz/ mlow(mxopt),mhigh(mxopt),za(mxopt)
