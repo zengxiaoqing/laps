@@ -1,28 +1,92 @@
 
 	
 
-	subroutine optimize_wrapper(a,dstep_in,nv_in,f_merit
-     1                             ,init_optimize)
+	subroutine optimize_wrapper(a,dstep_in,dstep_gran_in
+     1                             ,nv_in,f_merit
+     1                             ,init_optmiz_in,iexit_optimize)
       
       	implicit real*8 (a-z)
 	include 'optinc.inc'
 
-	real*8 a(mxopt),dstep_in(mxopt)
-	integer nv_in
+        integer mxiter
+	parameter (mxiter = 1000)
 
-	save depth_this_run
+	real*8 a(mxopt),dstep_in(mxopt),f_merit_min_a(mxiter)
+        real*8 a_hist(mxopt,mxiter)
+        real*8 dstep_gran_in(mxopt)
+	integer nv_in,iter_prior,init_optmiz_in,iexit_optimize
+        integer iexit_pending /0/
+        integer iterop_min /0/
 
-	if(init_optimize .eq. 0)then
-           num_stepsize_inc = 0
-           increment_ratio = 5.
-	endif
+	save depth_this_run,f_merit_min,f_merit_min_a
+	save iexit_pending,iterop_min
 
 	nv = nv_in
 	dstep = dstep_in
+        dstep_gran = dstep_gran_in
+        init_optmiz = init_optmiz_in       
+
+	if(init_optmiz .eq. 0)then
+           write(6,*)' Subroutine optimize_wrapper initialize...'
+           num_stepsize_inc = 0
+           increment_ratio = 5.
+           depth_this_run = 0.
+           f_merit_min = f_merit
+	   where(a(:) .eq. 0d0)cv_ref(:) = 1
+	   where(a(:) .ne. 0d0)cv_ref(:) = 2
+	endif
+
+        if(f_merit .le. f_merit_min)then
+	   f_merit_min = f_merit
+           iterop_min = iterop
+        endif
+
+	f_merit_min_a(iterop) = f_merit_min
+        a_hist(:,iterop) = a(:)
+
+        write(6,1891)a(1:nv_in),f_merit,f_merit_min,iexit_pending
+     1                                            ,iexit_optimize
+1891	format(' call optimize: a_vec/f_merit-min/iext-pend'
+     1         ,3x,3f10.5,3x,2f10.5,2i3)
+
+	iter_prior = max(iterop-10,1)
+	if(f_merit_min_a(iterop) -
+     1     f_merit_min_a(iter_prior) .gt. -.001d0
+     1	                                    .AND. iswp .ge. 3
+     1                                      .AND. iterswp .eq. 1)then
+            write(6,*)' optimize slow convergence',iswp,iterswp,iterop
+            iexit_pending = 1
+
+            if(iexit_pending .eq. 1)then
+	       write(6,*)' rewind to lowest f_merit so far'
+	       iexit_pending = 1
+               a(:) = a_hist(:,iterop_min)
+               f_merit = f_merit_min
+            endif
+
+            if(modeop .eq. 11 .and. nv .eq. 1)then
+	       write(6,*)' good place to exit optimization (modeop)'
+	       iexit_optimize = 1
+               return
+            endif
+
+            if(iexit_pending .eq. 1)then
+               iterop = iterop + 1
+               iexit_optimize = 1
+               write(6,*)' follow pending iexit to exit optimization'
+     1                   ,iterop
+	       return
+            endif
+
+        endif
 
 	call optimize(a,f_merit,depth_this_run)
 
+        write(6,1)iterop,modeop,f_ref,f_merit,f_merit_min
+1       format(' ip/mp/f_ref/f_merit/f_merit_min = ',2i5,3f11.6)	
+
 	dstep_in = dstep
+        init_optmiz_in = init_optmiz
 
 	return
 	end
@@ -35,7 +99,7 @@
         integer j
         logical l_extra_output,l_extra1 /.true./
 	
-	logical l_c        
+	logical l_c, l_golden /.false./        
 
         character*9 c9_outstring
 	real*8 a(mxopt)
@@ -44,8 +108,10 @@
 
 	iverbose = 1
 	if(iverbose .eq. 1)then
-           write(6,*)' a     is ',a(1:nv)
-           write(6,*)' dstep is ',dstep(1:nv)
+           write(6,11)a(1:nv)
+11	   format(' a     is ',10f10.5)
+           write(6,12)dstep(1:nv)
+12         format(' dstep is ',10f10.5)
 	endif
 
 !	Output Logic
@@ -62,15 +128,16 @@
      1          .and.     kswp .le. 1 )
      1	        .and. iterop .ge. 1                       )then
             d0 = dstep_swp
-            write(6,9835)iterop,modeop,iswp,iv,iterswp
-     1                  ,cv(iv),dstep(iv),d0,f_merit
-9835	    format(1x,'ip,mp,sw,iv,io,cv,dn,da,f'
-     1            ,i6,5i3,5x,2d10.3,d14.6)
+            write(6,9835)iterop,iterswp,iswp,iv,modeop
+     1                  ,cv(iv),dstep_swp,dstep(iv),f_merit
+9835	    format(1x,'io,is,sw,iv,mp,cv|dn,ds|f'
+     1            ,i3,5i3,8x,2f7.2,13x,f10.5)
             write(6,9841)(a(j),j=1,nv)
 9841        format(1x,'a(n)s ',7d12.5)
         endif
 
 	if(init_optmiz .eq. 0)then
+            write(6,*)' Subroutine optmiz initialize...'
             modeop=1
             iswp=1
             g2=1
@@ -91,6 +158,7 @@
             k4 = 8
             swps_per_extrpl = 7
             init_optmiz = 1
+	    dstep_ref(:) = dstep(:)
         endif
 
 	iterop = iterop+1
@@ -109,9 +177,9 @@
 	    d1(j) = 0.
 	    e1(j) = 0.
 	    g1(j) = 0
-	    cv(j) = 2
- 	    cv_ref(j) = 2
-	    dstep(j) = dstep(j)*step_factor
+!           cv(j) = 2
+ 	    cv(j) = cv_ref(j)
+	    dstep(j) = dstep_ref(j) ! dstep(j)*step_factor
 	enddo ! j
 	v5 = num_stepsize_inc
 	k8 = 0
@@ -201,6 +269,7 @@
         anew = 1d10
 21900	amid = f_merit
         aref = a(iv)
+        dstep(iv) = dstep_ref(iv)
         a(iv) = a(iv) + dstep(iv)
         modeop = 3
         return
@@ -231,7 +300,7 @@
             anew = a(iv)+dstep(iv)*(.5-dhigh/(dhigh+dlow))
         else
             anew = a(iv) - f_merit/((dhigh-dlow)/(2.*dstep(iv)))
-	    write(6,*)' Linear Convergence cv(iv) = ',cv(iv),' modeop=10'
+	    write(6,*)' Linear Convergence cv(iv) = ',cv(iv),' modeop=10'       
         endif
 
         if(l_extra_output .eqv. .true.)
@@ -239,16 +308,45 @@
 103     format('  dh,crv,anew',3d15.5)
 
         if((anew - a(iv))*(dhigh-dlow) .gt. 0.)then
-            write(6,*)' Parabolic convergence not well behaved'
+	    write(6,*)
+     1	         ' Parabolic convergence not well behaved (concave down)'
             write(6,*)' a(iv),anew,alow,amid,ahigh,dh,dl',
- 	1	        a(iv),anew,alow,amid,ahigh,dhigh,dlow
+     1	                a(iv),anew,alow,amid,ahigh,dhigh,dlow
+
             if(cv(iv) .ge. 2)then
                 if(abs(anew - a(iv))/dstep(iv) .gt. .01)then
-		    write(6,*)' going to mode 8 (26511) anew/a'
-     1                       ,anew,a(iv)  
+  
+                  if(.false.)then
+	            write(6,*)' going to mode 8 (26511) anew/a'
+     1                         ,anew,a(iv)  
                     goto26511
+                  else ! set vars based on lowest f_merit
+                    amin = min(alow,amid,ahigh)
+                    if(alow .eq. amin)then
+                      write(6,*)' alow is minimum'
+                      a_ref(iv) = aref - dstep(iv)
+                      f_ref = alow
+	            elseif(amid .eq. amin)then
+                      write(6,*)' amid is minimum'
+                      a_ref(iv) = aref 
+                      f_ref = amid
+	            elseif(ahigh .eq. amin)then
+                      write(6,*)' ahigh is minimum'
+                      a_ref(iv) = aref + dstep(iv)
+                      f_ref = ahigh
+                    endif
+ 
+!                   This mimics part of the 26511 block
+                    cv(iv) = cv(iv) - 1
+                    write(6,*)' Switching to convergence mode',cv(iv)
+                    write(6,*)' Modeop = ',modeop
+
+                    write(6,*)' going to mode 8 (26520) new option'
+                    goto26520
+                  endif
+
                 else
-                    write(6,*)' mode 8 bypassed'
+                    write(6,*)' going to mode 8'
                     goto26508
                 endif
             endif
@@ -268,8 +366,12 @@
             if(cv(iv) .eq. 0)then
                 goto26508
             else
-                goto25660
-25660           a(iv) = anew
+                if(cv(iv) .gt. 1)then
+	          a(iv) = anew
+                else
+                  a(iv) = aamid
+                endif
+                write(6,*)' change search to 8 (1)'
                 modeop = 8
                 return
             endif
@@ -290,7 +392,7 @@
         return                                  
 
 23300   if(iswp .eq. 1)then
-           dstep_swp = 10.*dstep(iv)*idir_opt
+           dstep_swp =  4.*dstep(iv)*idir_opt
         else
            dstep_swp =  4.*dstep(iv)*idir_opt
         endif
@@ -313,16 +415,37 @@
 23900   g5=0
         a(iv) = a(iv) + dstep_swp
         dstep_swp = dstep_swp*1.5
+        if(dstep_gran(iv) .gt. 0d0)then
+           dstep_swp = nint(dstep_swp/dstep_gran(iv)) * dstep_gran(iv)
+        endif
         goto23500
 
-!       cv(iv) = 0 or 1
-24100   aahigh = a(iv)
-        aamid = aahigh - dstep_swp
+!       cv(iv) = 0 or 1, start bisection search
+24100   continue
+        aamid = a(iv) - dstep_swp
+        dstep_swp = dstep_swp * 0.5
+        if(dstep_gran(iv) .gt. 0d0)then
+           dstep_swp = nint(dstep_swp/dstep_gran(iv)) * dstep_gran(iv)
+        endif
+	aahigh = aamid + dstep_swp
         aalow = aamid - dstep_swp
         amid = f9
-        goto25200
+	write(6,24111)aalow,aamid,aahigh,dstep_swp   
+24111   format(' Start bisection search',3f10.5,5x,f10.5)	
+!       goto25200
+        a(iv) = aahigh
+        modeop = 6
+	return
 
 24600   dstep_swp = dstep_swp * .5
+        if(dstep_gran(iv) .gt. 0d0)then
+           dstep_swp = nint(dstep_swp/dstep_gran(iv)) * dstep_gran(iv)
+        endif
+        if(dstep_swp .gt. 0)then
+           dstep_swp = max(dstep_swp,+dstep_gran(iv))
+        else
+           dstep_swp = min(dstep_swp,-dstep_gran(iv))
+        endif
         aahigh = aamid + dstep_swp
         aalow = aamid - dstep_swp
         a(iv) = aahigh
@@ -365,7 +488,26 @@
             if(a9 .ge. 2)then
                 crv(iv) = (ahigh - 2.*amid + alow) *
      1                    (dstep(iv)/dstep_swp)**2
-                a(iv) = anew ! formerly 25660
+!               a(iv) = anew ! formerly 25660
+                write(6,*)'change search to 8 (2)'
+                modeop = 8
+                return
+            endif
+
+	    if(dstep_swp .eq. dstep_gran(iv))then
+                write(6,*)'change search to 8 (3)',alow,amid,ahigh
+                amin_trio = min(alow,amid,ahigh)
+                if(amid .eq. amin_trio)then
+                   a(iv) = a(iv) + dstep_swp
+                   f_merit = amid
+                   write(6,*)'resume search with mid value',a(iv)
+                elseif(ahigh .eq. amin_trio)then
+                   a(iv) = a(iv) + 2d0 * dstep_swp
+                   f_merit = ahigh
+                   write(6,*)'resume search with high value',a(iv)
+                else
+                   write(6,*)'resume search with present value',a(iv)
+                endif
                 modeop = 8
                 return
             endif
@@ -397,8 +539,11 @@
         f_merit = amid
 
 !****** Modeop = 8 ***********************************************************
-26508	if(f_merit .le. f_ref)then
-            goto26538
+26508	continue
+
+	write(6,*)' modeop 8: compare f_ref/f_merit',f_ref,f_merit
+	if(f_merit .le. f_ref)then
+            goto26538 ! modeop 12
         else
             goto26511
         endif
@@ -809,5 +954,23 @@
         itervar = 1
         goto27720
 
+        return
 	end
 
+        subroutine golden_search(a1,a2,a3,f1,f2,f3)
+
+!       Assume a2 has the lowest f2
+!       A minimum must exist between a1 and a3
+
+	implicit real*8 (a-h,o-z)
+	
+	dah = a3-a2
+	dal = a2-a1
+
+	if(dah .gt. dal)then ! biggest gap on the right side
+        else                 ! biggest gap on the left side
+	endif
+
+	return
+	end
+	
