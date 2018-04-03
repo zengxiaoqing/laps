@@ -56,6 +56,7 @@
         curvat(hdst,radius) = hdst**2 / (2. * radius)
         resin(x) = sin(x*1.57079)
 
+        real*8 cosdlon,gc_deg,dlon,dtlat,dtlon,drlat
         real*8 dsdst,dradius_start,daltray,dcurvat2
         dcurvat2(dsdst,dradius_start,daltray) = 
      1      sqrt(dsdst**2 + dradius_start**2 
@@ -1048,8 +1049,8 @@
         if(grid_spacing_m .le. 100.)then
            write(6,*)' Setting up full res window'
            l_fullres_wdw = .true.
-           azimin_full = 207.
-           azimax_full = 222.
+           azimin_full = 205.
+           azimax_full = 225.
            altmin_full = 0.
            altmax_full = 5.
            jazimin_full = nint(azimin_full / azi_scale)
@@ -1633,7 +1634,8 @@
                     slant1_h = dslant1_h
                     dz1_h = dcurvat2(dslant1_h,dble(radius_start_eff)
      1                                        ,dble(altray))   
-                    gc_deg = asind(cosd(altray) 
+                    daltray = altray
+                    gc_deg = asind(cosd(daltray) 
      1                     * dslant1_h / (radius_start+dz1_h)) 
                   endif
 
@@ -1704,8 +1706,9 @@
      1              (idebug .eq. 1))then
                   if(ls .le. 15 .or. ls .eq. 100 .or. ls .eq. 1000
      1                          .or. ls .eq. 10000)then
-                    write(6,61)ls,rk,ht_h,dslant1_h,slant1_h
-61                  format('  ls/rk/ht/dsl1/sl1 =',i6,f9.3,f10.0,2f11.0)
+                    write(6,61)ls,rk,ht_h,dslant1_h,slant1_h,rinew_h
+61                  format('  ls/rk/ht/dsl1/sl1/rinew =',i6,f9.3,f10.0
+     1                                           ,2f11.0,f9.3)
                   elseif(altray .eq. -63.5)then
                     write(6,61)ls,rk,ht_h,dslant1_h,slant1_h
 !                   idebug = 1
@@ -1735,12 +1738,14 @@
                   rjnew_l = rjnew_h
 
 !                 Obtain latlon from spherical geometry
-                  TLat = ASinD(ycost*SinD(gc_deg)*CosD(rLat) 
-     1                 + SinD(rLat)*CosD(gc_deg))
+                  dTLat = ASinD(ycost*SinD(gc_deg)*CosD(rLat) 
+     1                  + SinD(rLat)*CosD(gc_deg))
+                  tlat = dtlat
 
-                  CosDLon = (CosD(gc_deg) - SinD(rLat)*SinD(TLat)) 
-     1                    / (CosD(rLat)*CosD(TLat))
-                  If(Abs(CosDLon).gt.1.)CosDLon=Sign(1.,CosDLon)
+                  drlat = rlat
+                  CosDLon = (CosD(gc_deg) - SinD(drLat)*SinD(dTLat)) 
+     1                    / (CosD(drLat)*CosD(dTLat))
+                  If(Abs(CosDLon).gt.1d0)CosDLon=Sign(1d0,CosDLon)
                   DLon = ACosD(CosDLon)
                   
                   If(view_azi_deg.ge..0.and.view_azi_deg.le.180.)Then ! east
