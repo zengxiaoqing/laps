@@ -250,7 +250,7 @@
        integer, allocatable :: img(:,:,:)
        integer u /12/ 
 
-       character*255 imgfile,img_png,img_ppm,convert_cmd,imgdir
+       character*275 imgfile,img_png,img_ppm,convert_cmd,imgdir
        character*13 a13name, cvt_i4time_wfo_fname13
        character*9 a9time
        character*10 fname_ppm
@@ -291,12 +291,16 @@
 
        elseif(mode .eq. 2)then ! Read cyl observed image in PPM format 
                                ! (remapped to alt/az grid)
-         imgdir = '/Users/albers/noaa/180309/wwwallsky/cases/17290/output3c'
-         imgdir = '/data/fab/projects/allsky/sites/dsrc/output3c'
+
+         call get_directory('www',imgdir, imgdir_len)
+         imgdir = trim(imgdir)//'als/'//trim(site)//'/observed/cyl'
+!        imgdir = '/Users/albers/noaa/180323/wwwallsky/cases/17290/output3c'
+!        imgdir = '/data/fab/projects/allsky/sites/dsrc/output3c'
+
          img_png = trim(imgdir)//'/'//a13name//'_'//trim(site)//'.png'
          img_ppm = trim(imgdir)//'/'//a13name//'_'//trim(site)//'.ppm'
 !        convert_cmd = 'convert -crop 21x11+0+0 -compress none '//trim(img_png)//' '//trim(img_ppm)
-         convert_cmd = 'convert -compress none '//trim(img_png)//' '//trim(img_ppm)
+         convert_cmd = 'convert -resize 50% -compress none '//trim(img_png)//' '//trim(img_ppm)
          write(6,*)trim(convert_cmd)
          call system(trim(convert_cmd))
 
