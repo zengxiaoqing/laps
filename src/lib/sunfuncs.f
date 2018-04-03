@@ -167,6 +167,78 @@ C RLNG           I      R*4     Longitude (degrees)
         RETURN
         END
 
+        SUBROUTINE get_solaltaz_2d(rlat_a,rlon_a,i4time,ni,nj,alt,azi)
+
+C Steve Albers Jan 1994
+C Argument      I/O     Type                    Description
+C --------      ---     ----    -----------------------------------------------
+C RLAT           I      R*4     Latitude (degrees)
+C RLNG           I      R*4     Longitude (degrees)
+        include 'trigd.inc'
+        character*9 asc9_time
+
+        real rlat_a(ni,nj)
+        real rlon_a(ni,nj)
+        real alt(ni,nj)
+        real azi(ni,nj)
+
+        PI=3.14159265
+        RPD=PI/180.
+        call make_fnam_lp(i4time,asc9_time,istatus)
+
+        read(asc9_time,1)jd
+1       format(2x,i3)
+
+        read(asc9_time,2)ih
+2       format(5x,i2)
+
+        read(asc9_time,3)im
+3       format(7x,i2)
+
+        EQT=TIMEQ2(i4time)/rpd          ! Equation of Time (Degrees)
+        DEC=SOLDEC2(i4time)/rpd         ! Solar declination (Degrees)
+
+        do i = 1,ni
+        do j = 1,nj
+
+          rlat = rlat_a(i,j)
+          rlon = rlon_a(i,j)
+
+          HRANGLE = (ih-12)*15. + im/4. + rlon + EQT
+
+          COSZEN=SIND(RLAT)*SIND(DEC)+COSD(RLAT)*COSD(DEC)*COSD(HRANGLE)
+          alt(i,j) = 90. - ACOSD(COSZEN)       ! Solar Altitude (Degrees)
+
+!         call equ_to_altaz_d(solar_dec,solar_ha,lat(i,j)
+!    1                       ,altdum,azi(i,j))               
+
+          phi = rlat
+          ha = hrangle
+
+          sindec = SIND(dec)
+          cosdec = COSD(dec)
+          sinphi = SIND(phi)
+          cosphi = COSD(phi)
+          cosha  = COSD(ha)
+
+!         alt=ASIND (sinphi*sindec+cosphi*cosdec*cosha)
+          cosarg = (cosphi*sindec-sinphi*cosdec*cosha)/cosd(alt(i,j))
+          cosarg = min(max(cosarg,-1.),+1.)
+          az =ACOSD(cosarg)
+
+          if(ha .gt. 0. .AND. ha .lt. 180.)az = 360.0 - az
+          azi(i,j) = az
+          if(azi(i,j) .lt. 0.)azi(i,j) = azi(i,j) + 360.
+
+        enddo ! j
+        enddo ! i
+
+!       write(6,*)'jd,ih,im',jd,ih,im
+!       write(6,*)'hrangle,dec,alt',hrangle,dec,alt
+
+        RETURN
+        END
+
 C       J. Wakefield    28 Jan 82       Original version
 
 C***These formulas are from Paltridge and Platt, 1976.  They reference Spencer,
