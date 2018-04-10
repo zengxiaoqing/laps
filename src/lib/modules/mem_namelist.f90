@@ -21,7 +21,7 @@ include 'lapsparms.for'
         real grid_cen_lat
         real grid_cen_lon
         real earth_radius 
-        integer    laps_cycle_time
+        integer    laps_cycle_time, precip_cycle_time
         integer    model_cycle_time, model_fcst_intvl, model_fcst_len
         real purge_time
         integer i2_missing_data
@@ -223,7 +223,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,l_superob_barnes, l_mosaic_sat &
                   ,grid_spacing_m,grid_cen_lat,grid_cen_lon &
                   ,earth_radius &
-                  ,laps_cycle_time &
+                  ,laps_cycle_time,precip_cycle_time &
                   ,model_cycle_time, model_fcst_intvl, model_fcst_len &
                   ,purge_time &
                   ,i2_missing_data, iverbose, r_missing_data, MAX_RADARS, i_offset_radar &
@@ -364,6 +364,7 @@ elseif (namelist_name == 'lapsparms') then
    l_fsf_gridgen    = .false.
    iverbose = 0
    i_offset_radar = -1
+   precip_cycle_time = -1
    solalt_thr_vis = 15.
    aod = 0.05              ! default column aerosol optical depth
    aero_scaleht = 1500.    ! default aerosol scale height (m)
@@ -422,6 +423,8 @@ elseif (namelist_name == 'lapsparms') then
    !  .
    !  .
    !  .
+   if(precip_cycle_time .eq. -1)precip_cycle_time = laps_cycle_time
+
    alpha_ha = aod_ha / ((ht_ha(3)-ht_ha(2))+0.5*(ht_ha(4)-ht_ha(3)))
 
 elseif (namelist_name == 'wind') then
