@@ -37,19 +37,19 @@ netcdf lvd {
             s8c:lvl_coord=" ";
             s8c:LAPS_units="K";
                 	        
-        //	satellite vis counts - raw 
+        //	satellite visible reflectance 
 
 	float                                  
             svs(record,z,y,x);
             svs:navigation_dim = "nav";
             svs:record = "valtime, reftime";
             svs:_FillValue = 1.e+37f;
-            svs:long_name="visible satellite counts - raw";
-            svs:units="counts";
-            svs:valid_range= 0, 3;
+            svs:long_name="visible satellite reflectance";
+            svs:units="    ";
+            svs:valid_range= 0, 100;
             svs:LAPS_var="SVS";
             svs:lvl_coord="   ";
-            svs:LAPS_units="COUNTS";
+            svs:LAPS_units="   ";
                 	        
         //	 satellite vis counts - normalized
 
