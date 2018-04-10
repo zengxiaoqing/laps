@@ -65,7 +65,7 @@ c
 c     Misc interval variables
 c
       integer i,j,igate_lut,iaz,ielev,iran,iz_grid,istatus,len_dir
-      integer I4_elapsed, lenr
+      integer I4_elapsed, lenr, irecl_lutge, irecl_lutar
       integer ioffset,joffset,io,jo
       real rlat_grid,rlon_grid,height_grid
       real rlat_radar,rlon_radar,rheight_radar
@@ -137,6 +137,9 @@ c     Put the coords into common so remap_process can access them
       rlon_radar_cmn = rlon_radar
       rheight_radar_cmn = rheight_radar
       c4_radarname_cmn = c4_radarname      
+
+      irecl_lutge = LUT_GATES * (LUT_ELEVS+1) * 4
+      irecl_lutar = (LUT_AZIMUTHS+1) * (LUT_RANGES+1) * 2 * 4
 c
 c     Generate Gate/Elev to Projran lut
 c
@@ -144,11 +147,13 @@ c
           filename = static_dir(1:len_dir)//'vxx/'
      1             //'gate_elev_to_projran_lut.'//c4_radarname
           write(6,*)' Reading file: ',filename
-          open(11,file=filename,form='unformatted',status='old',err=90)       
+          open(11,file=filename,form='unformatted'
+     1         ,access='direct',recl=irecl_lutge,status='old',err=90)       
           read(11,err=90)gate_elev_to_projran_lut
           close(11)
           goto 110
 90        write(6,*)' Generating LUT - no valid file exists'
+          close(11)
       endif
 
 !     Calculate lut
@@ -171,7 +176,8 @@ c
       ENDDO
 
       if(l_readwrite_lut)then ! Write lut
-          open(12,file=filename,form='unformatted',status='new')
+          open(12,file=filename,form='unformatted',access='direct'
+     1               ,recl=irecl_lutge,status='unknown')
           write(12)gate_elev_to_projran_lut
           close(12)
       endif
@@ -185,11 +191,13 @@ c
           filename = static_dir(1:len_dir)//'vxx/'
      1             //'gate_elev_to_z_lut.'//c4_radarname
           write(6,*)' Reading file: ',filename
-          open(11,file=filename,form='unformatted',status='old',err=190)       
+          open(11,file=filename,form='unformatted',access='direct'
+     1                           ,recl=irecl_lutge,status='old',err=190)
           read(11,err=190)gate_elev_to_z_lut
           close(11)
           goto 210
 190       write(6,*)' Generating LUT - no valid file exists'
+          close(11)
       endif
 
 !     Calculate lut
@@ -218,7 +226,8 @@ c
   200 CONTINUE
 
       if(l_readwrite_lut)then ! Write lut
-          open(12,file=filename,form='unformatted',status='new')
+          open(12,file=filename,form='unformatted',access='direct'
+     1               ,recl=irecl_lutge,status='unknown')
           write(12)gate_elev_to_z_lut
           close(12)
       endif
@@ -232,11 +241,13 @@ c
           filename = static_dir(1:len_dir)//'vxx/'
      1             //'azran_to_ijgrid_lut.'//c4_radarname
           write(6,*)' Reading file: ',filename
-          open(11,file=filename,form='unformatted',status='old',err=290)       
+          open(11,file=filename,form='unformatted',access='direct'
+     1                           ,recl=irecl_lutar,status='old',err=290)
           read(11,err=290)azran_to_igrid_lut,azran_to_jgrid_lut
           close(11)
           goto 310
 290       write(6,*)' Generating LUT - no valid file exists'
+          close(11)
       endif
 
 !     Calculate lut
@@ -305,7 +316,8 @@ c
   300 CONTINUE
 
       if(l_readwrite_lut)then ! Write lut
-          open(12,file=filename,form='unformatted',status='new')
+          open(12,file=filename,form='unformatted',access='direct'
+     1               ,recl=irecl_lutar,status='unknown')
           write(12)azran_to_igrid_lut,azran_to_jgrid_lut
           close(12)
       endif
