@@ -409,7 +409,7 @@
             ver_file = ver_file(1:len)//'qc/laps_sol.ver.'
      1                                //filename(6:9)
             call s_len(ver_file, len)
-            open(iunit,file=ver_file(1:len),status='unknown',err=990)
+            open(iunit,file=ver_file(1:len),status='replace',err=990)
 
             title = 'Solar Radiation (before qc): '
 
