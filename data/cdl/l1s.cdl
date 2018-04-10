@@ -9,14 +9,14 @@ netcdf l1s {
         namelen = 132;
 		
     variables:
-        //	60 min snow accumulation
+        //	precip cycle snow accumulation
 
 	float                                  
             s01(record,z,y,x);
             s01:navigation_dim = "nav";
             s01:record = "valtime, reftime";
             s01:_FillValue = 1.e+37f;
-            s01:long_name="LAPS 60 minute snow accum.";
+            s01:long_name="precip cycle snow accumulation";
             s01:units="meters";
             s01:valid_range= 0.f, 100.f;
             s01:LAPS_var="S01";
@@ -37,14 +37,14 @@ netcdf l1s {
             sto:lvl_coord="MSL";
 	    sto:LAPS_units="M";
                 	        
-        //	60 minute precip accumulation
+        //	precip cycle precip accumulation
 
 	float                                  
             r01(record,z,y,x);
             r01:navigation_dim = "nav";
             r01:record = "valtime, reftime";
             r01:_FillValue = 1.e+37f;
-            r01:long_name="LAPS 60 minute precip. accum.";
+            r01:long_name="precip cycle precip accumulation";
             r01:units="meters";
             r01:valid_range= 0.f, 10.f;
             r01:LAPS_var="R01";
@@ -58,7 +58,7 @@ netcdf l1s {
             rto:navigation_dim = "nav";
             rto:record = "valtime, reftime";
             rto:_FillValue = 1.e+37f;
-            rto:long_name="storm total precip. accum.";
+            rto:long_name="storm total precip accumulation";
             rto:units="meters";
             rto:valid_range= 0.f, 10.f;
             rto:LAPS_var="RTO";
