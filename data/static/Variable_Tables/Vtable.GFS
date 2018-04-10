@@ -20,5 +20,5 @@ Param| Type |Level1|Level2| Name     | Units   | Description                    
   33 | 105  |  10  |      | UU_SFC   | m s-1   | U                 at 10 m               |  0  |  2  |  2  | 103 |
   34 | 105  |  10  |      | VV_SFC   | m s-1   | V                 at 10 m               |  0  |  2  |  3  | 103 |
   39 | 107  | 9950 |      | VVEL_SIG | Pa s-1  | Press Vertical Vel, sigma 0.0995        |  0  |  2  |  8  | 104 |
-  61 |   1  |   0  |      | ACPC     | kg m-2  | Total Precip at Surface                 |  0  |  1  |  8  |   1 |
+  61 |   1  |   0  |      | APCP     | kg m-2  | Total Precip at Surface                 |  0  |  1  |  8  |   1 |
 -----+------+------+------+----------+---------+-----------------------------------------+-----------------------+
