@@ -199,7 +199,7 @@ else
     ir2_tb_out(:,:) = ir2_tb(:,:) 
 !   wv_tb_out(:,:) = wv_tb(:,:) 
     swir_tb_out(:,:) = swir_tb(:,:) 
-    vis_rad_out(:,:) = vis_rad(:,:) 
+    vis_rad_out(:,:) = vis_tb(:,:) / 100.
 
 endif
 
