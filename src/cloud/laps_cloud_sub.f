@@ -237,10 +237,10 @@ cdis
         real tb8_k_offset(NX_L,NY_L)
         real t39_k(NX_L,NY_L)
         real tb8_cold_k(NX_L,NY_L)
-        real sat_albedo(NX_L,NY_L)
+        real sat_albedo(NX_L,NY_L) ! Cloud Albedo from Reflectance/Sfc Alb
         real static_albedo(NX_L,NY_L)              ! Static albedo database
         real sfc_albedo(NX_L,NY_L)           
-        real cloud_frac_vis_a(NX_L,NY_L)
+        real cloud_frac_vis_a(NX_L,NY_L) ! Cloud albedo with clear alb subtracted
         real cloud_frac_co2_a(NX_L,NY_L)
         real subpoint_lat_clo_vis(NX_L,NY_L)
         real subpoint_lon_clo_vis(NX_L,NY_L)
@@ -924,6 +924,10 @@ C READ IN SATELLITE DATA
 
 !       Consider passing out parallax info, used with vis & cvr_snow, to be
 !       later used in other ways such as IR
+!       Returns 'cloud_frac_vis_a' (Cloud albedo with clear alb subtracted)
+!       Returns 'sat_albedo' (Cloud Albedo from Reflectance/Sfc Alb, though)
+!       Sfc Alb isn't yet subtracted). 'sat_albedo' isn't yet used in analysis
+
         call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add            ! I
      1              ,l_use_vis_partial,lat,lon,idb,jdb                   ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
@@ -1224,6 +1228,11 @@ C INSERT RADAR DATA
 C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
         if(istat_vis .eq. 1 .OR. (istat_t39 .eq. 1 .and. l_use_39) )then
 !       if(.false.)then
+
+!           This routine will set 'cloud_albedo' from 'cloud_frac_vis_a'
+!           'sat_albedo isn't yet used but could be used for 'mode_refl=1'
+!           once it is refined with 'sfc_albedo' adjustment
+
             call insert_vis(i4time,clouds_3d,cld_hts
      1        ,topo,cloud_frac_vis_a,sat_albedo,mode_refl,ihist_alb   ! I
      1        ,istat_39_a,l_use_39,idb,jdb                            ! I
@@ -1235,6 +1244,7 @@ C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
      1        ,cldtop_tb8_m,cldht_prlx_top                            ! I
      1        ,cloud_albedo,cloud_od,cloud_op                         ! O
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
+
         endif
 
         write(6,491)(heights_3d(idb,jdb,k)
@@ -1659,8 +1669,8 @@ C       EW SLICES
             comment_a(3) = 'LAPS Clear Sky Water Temp'
             comment_a(4) = comment_tb8
             comment_a(5) = comment_t39
-            comment_a(6) = comment_alb
-            comment_a(7) = 'Cloud Albedo'
+            comment_a(6) = comment_alb     ! ALB
+            comment_a(7) = 'Cloud Albedo'  ! CLA
             comment_a(8) = 'LAPS Radar Quality'
             comment_a(9) = 'Downward Solar Radiation'
 
@@ -1670,8 +1680,8 @@ C       EW SLICES
             call move(cvr_water_temp,out_array_3d(1,1,3),NX_L,NY_L)
             call move(tb8_k         ,out_array_3d(1,1,4),NX_L,NY_L)
             call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
-            call move(sat_albedo    ,out_array_3d(1,1,6),NX_L,NY_L)
-            call move(cloud_albedo  ,out_array_3d(1,1,7),NX_L,NY_L)
+            call move(sat_albedo    ,out_array_3d(1,1,6),NX_L,NY_L) ! ALB
+            call move(cloud_albedo  ,out_array_3d(1,1,7),NX_L,NY_L) ! CLA
             call move(rqc_2d        ,out_array_3d(1,1,8),NX_L,NY_L)
             call move(swi_2d        ,out_array_3d(1,1,9),NX_L,NY_L)
 
