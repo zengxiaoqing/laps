@@ -38,7 +38,7 @@ cdis
 cdis
 
         subroutine insert_vis(i4time,clouds_3d,cld_hts
-     1      ,topo,cloud_frac_vis_a,albedo,mode_refl,ihist_alb         ! I
+     1      ,topo,cloud_frac_vis_a,sat_albedo,mode_refl,ihist_alb     ! I
      1      ,istat_39_a,l_use_39,idb,jdb                              ! I
      1      ,ni,nj,nk,r_missing_data                                  ! I
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz                ! I
@@ -76,8 +76,8 @@ cdis
         integer ihist_colmaxout_sat(-10:20,-10:20)
         integer istat_39_a(ni,nj)
         logical l_use_39, l_39_clr_2d
-        real albedo(ni,nj)            ! Measured from satellite
-        real cloud_albedo(ni,nj)      ! Cloud albedo
+        real sat_albedo(ni,nj)        ! Measured from satellite (not used)
+        real cloud_albedo(ni,nj)      ! Cloud albedo (from cloud_frac_vis_a)
         real cloud_od(ni,nj)          ! Cloud optical depth
         real cloud_op(ni,nj)          ! Cloud opacity
         real topo(ni,nj)
@@ -96,7 +96,7 @@ cdis
         integer i_fill_seams(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
-        real cloud_frac_vis_a(ni,nj)  ! presently used rather than 'albedo'
+        real cloud_frac_vis_a(ni,nj)  ! presently used rather than 'sat_albedo'
         integer mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
 
@@ -175,7 +175,7 @@ cdis
 
               if(idebug .eq. 1)then
                   write(6,51)cloud_frac_vis_a(i,j),albedo_eff
-     1                      ,albedo(i,j),trans,cloud_od(i,j)
+     1                      ,sat_albedo(i,j),trans,cloud_od(i,j)
      1                      ,cloud_op(i,j),cldht_prlx_top(i,j)
 51                format(' CTR cf_vis/albeff/albsat/trans/od/op/prlx/'
      1                  ,7f9.3)
