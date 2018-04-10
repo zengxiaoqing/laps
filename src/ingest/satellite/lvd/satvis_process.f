@@ -262,6 +262,11 @@ c
          where(laps_vis_raw(:,:) .ne. r_missing_data)
              laps_vis_refl(:,:) = 1.3 * laps_vis_raw(:,:) / 4095.
          endwhere
+       elseif(trim(csatid) .eq. 'coms')then
+         write(6,*)' Scaling 1 raw count = 1.0 reflectance'
+         where(laps_vis_raw(:,:) .ne. r_missing_data)
+             laps_vis_refl(:,:) = 1.0 * laps_vis_raw(:,:) / 1.
+         endwhere
        else
          write(6,*)' Scaling 255 vis raw counts = 1.2 reflectance'
          where(laps_vis_raw(:,:) .ne. r_missing_data)
