@@ -65,7 +65,7 @@ cdis
         real sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
         real static_albedo(ni,nj)   ! Static albedo database
         real sat_data_in(ni,nj)
-        real sat_albedo(ni,nj)     
+        real sat_albedo(ni,nj) ! Cloud Albedo from Reflectance/Sfc Alb
         real reflectance(ni,nj)     
         real cvr_snow(ni,nj)
         real tgd_sfc_k(ni,nj)
@@ -83,7 +83,7 @@ cdis
 !       This stuff is for reading VIS data from LVD file
         real sol_alt(ni,nj)
         real sol_alt_sat(ni,nj)
-        real cloud_frac_vis_a(ni,nj)
+        real cloud_frac_vis_a(ni,nj) ! Cloud albedo with clear alb subtracted
         integer mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
         character*9 filename
@@ -205,15 +205,17 @@ cdis
 !               Should this be done elsewhere according to how other
 !               routines use sfc_albedo?                
                 if(sol_alt(i,j) .gt. 7.0)then
+                    iverbose = 0
                     call refl_to_albedo2(reflectance(i,j)              ! I
      1                                  ,sol_alt_sat(i,j)              ! I
-     1                                  ,sfc_albedo(i,j),cloud_albedo) ! O
+     1                                  ,sfc_albedo(i,j),iverbose      ! I
+     1                                  ,cloud_albedo)                 ! O
                 else
                     cloud_albedo = r_missing_data
                 endif
 
                 sat_albedo(i,j) = cloud_albedo
-                comment = 'Cloud Albedo from Reflectance'
+                comment = 'Satellite Cloud Albedo'
             endif
 
             if(sat_albedo(i,j) .eq. r_missing_data .and. 
@@ -277,6 +279,8 @@ cdis
 !             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
 !    1                                           ,sat_albedo(i,j)*0.6)
 !    1                                           ,sat_albedo(ig,jg))
+
+!             Should a Rayleigh correction be included here?
               cloud_frac_vis = (sat_albedo(i,j) - clear_albedo)
      1                       / (1.0             - clear_albedo)
               cloud_frac_vis = min(max(cloud_frac_vis,0.),1.)              
@@ -496,13 +500,20 @@ cdis
         return
         end
 
+       
         subroutine refl_to_albedo2(reflectance,solalt,sfc_albedo      ! I
+     1                            ,iverbose                           ! I
      1                            ,cloud_albedo)                      ! O
 
         include 'trigd.inc'        
 
+        real land_refl
+
 !       Convert reflectance to cloud (+land) albedo
 !       Note that two solutions may be possible with low sun
+!       Sfc_albedo can be accounted for?
+!       This is under development and isn't yet used for the analysis output
+
         if(.true.)then
           alb_thn = reflectance           ! modify by phase angle?
           solalt_eff = max(solalt,6.)
@@ -513,8 +524,15 @@ cdis
 
           cloud_albedo = alb_thn * frac_thn + alb_thk * frac_thk
 
+          land_refl = sind(solalt_eff) * sfc_albedo
+          air_refl = 0.05 ! Approximate Rayleigh for 600nm, near nadir
+
+          if(iverbose .eq. 1)then
+          endif
+
         endif
 
         return
         end
+        
         
