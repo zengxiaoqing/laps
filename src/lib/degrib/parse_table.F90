@@ -91,7 +91,7 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
 
   write (*,*) "PARSE_TABLE:", vtablefn(1:s_length)
   close(10) ! There is an open channel somewhere in LAPS; Yuanfu Xie
-  open(10, file=vtablefn(1:s_length), status='old', form='formatted', iostat=ierr)
+  open(10, file=vtablefn(1:s_length), status='old', iostat=ierr)
 
 ! Check to see that the OPEN worked without error.
 
