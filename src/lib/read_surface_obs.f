@@ -68,7 +68,7 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='old',err=999)
+	open(11,file=infile,status='old',form='formatted',err=999)
 c
 c.....	Read the header.
 c
@@ -188,7 +188,7 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='old',err=999)
+	open(11,file=infile,status='old',form='formatted',err=999)
 c
 c.....	Read the header.
 c
@@ -292,7 +292,7 @@ c
         call s_len(ext,len_ext)
 	infile = infile(1:len) // filetime(1:9) // '.' // ext(1:len_ext)       
 c
-	open(11,file=infile,status='old',err=999)
+	open(11,file=infile,status='old',form='formatted',err=999)
 c
 c.....	Read the header.
 c
@@ -393,7 +393,7 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='old',err=999)
+	open(11,file=infile,status='old',form='formatted',err=999)
 c
 c.....	Read the header.
 c
@@ -490,7 +490,7 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.' // ext
 c
-	open(11,file=infile,status='old',err=999)
+	open(11,file=infile,status='old',form='formatted',err=999)
 c
 c.....	Read the header.
 c
@@ -586,7 +586,7 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='old',err=999)
+	open(11,file=infile,status='old',form='formatted',err=999)
 c
 c.....	Read the header.
 c
@@ -688,7 +688,7 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='old',err=999)
+	open(11,file=infile,status='old',form='formatted',err=999)
 c
 c.....	Read the header.
 c
@@ -815,7 +815,7 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso_qc'
 c
-	open(11,file=infile,status='old',err=999)
+	open(11,file=infile,status='old',form='formatted',err=999)
 c
 c.....	Read the header.
 c
