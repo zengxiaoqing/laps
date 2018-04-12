@@ -442,8 +442,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  mslpbg = scr2d
                  write(6,*)' Filling mslpbg with PMSL'
               elseif (field.eq.'APCP') then
-                 pcpbg = scr2d
-                 write(6,*)' Filling pcpbg with APCP'
+                 pcpbg = scr2d / 1000.
+                 write(6,*)' Filling pcpbg with APCP (converting units to M)'
               elseif (field.eq.'REFC') then
                  crefbg = scr2d
                  write(6,*)' Filling crefbg with REFC'
