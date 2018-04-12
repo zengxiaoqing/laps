@@ -289,6 +289,9 @@ if test "$NCARG_ROOT" = "allsky"; then
 
  done # ILOC loop
 
+#Cleanup
+ rm -f *.ppm 
+
 else
   echo "regular ncar graphics option"
   pwd
