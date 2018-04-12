@@ -1179,7 +1179,7 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
 
         subroutine open_lapsprd_file(lun,i4time,ext,istatus)
 
-!       1997   Steve Albers
+!       1997   Steve Albers (assumed this is for writing files)
 
         character*(*)    ext
         character*150    directory
@@ -1199,10 +1199,10 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
 
         if(len_ext .eq. 3)then
          open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1          ,status='unknown',err=998)
+     1          ,status='replace',err=998)
         else ! length of 4
          open(lun,file=directory(1:len_dir)//filename14(i4time,ext(1:4))
-     1          ,status='unknown',err=998)
+     1          ,status='replace',err=998)
         endif
         go to 999
 
