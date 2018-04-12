@@ -231,7 +231,7 @@ csms$serial(default=ignore)  begin
       call get_rep_pres_intvl(pres_3d,imax,jmax,kmax,rep_pres_intvl
      1                       ,istatus)
 
-      deallocate(pres_3d)
+      if(allocated(pres_3d))deallocate(pres_3d)
 
 !     QC the obs and place in different data structure
       call calc_qced_obs( 
@@ -472,7 +472,8 @@ csms$serial end
      1                              ,istatus)                         ! O
                   if(istatus .ne. 1)return
 
-                  deallocate(varobs_diff_spread)
+                  if(allocated(varobs_diff_spread))
+     1              deallocate(varobs_diff_spread)
                   ialloc_varobs_diff_spread = 0
 
 !                 Combine radar (obs_radar) and non-radar (obs_point_qced) 
@@ -604,7 +605,8 @@ csms$serial end
      1                              ,istatus)                         ! O
                   if(istatus .ne. 1)return
 
-                  deallocate(varobs_diff_spread)
+                  if(allocated(varobs_diff_spread))
+     1              deallocate(varobs_diff_spread)
                   ialloc_varobs_diff_spread = 0
 
 !                 Combine radar (obs_radar_multi) and non-radar (obs_point_qced) 
@@ -747,7 +749,8 @@ csms$insert      print *, 'got to 10 processor=',me
      1                              ,istatus)                         ! O
               if(istatus .ne. 1)return
 
-              deallocate(varobs_diff_spread)
+              if(allocated(varobs_diff_spread))
+     1          deallocate(varobs_diff_spread)
               ialloc_varobs_diff_spread = 0
 
 !             Combine radar (obs_radar) and non-radar (obs_point_qced) 
@@ -798,9 +801,9 @@ csms$serial end
 
       endif ! n_radars
 
-      deallocate(aerr)
-      deallocate(varbuff)
-      deallocate(wt_p_radar)
+      if(allocated(aerr))deallocate(aerr)
+      if(allocated(varbuff))deallocate(varbuff)
+      if(allocated(wt_p_radar))deallocate(wt_p_radar)
 
 csms$serial(default=ignore)  begin              
 
