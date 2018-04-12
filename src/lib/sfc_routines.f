@@ -75,7 +75,7 @@ c
 c
 c.....	Write the file.
 c
-	open(11,file=outfile,status='unknown')
+	open(11,file=outfile,status='replace')
 c
 c.....	Write the header.
 c
