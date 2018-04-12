@@ -84,7 +84,7 @@ c     set istatus failure mode
          return
       endif
       
-      open (unit=22, file=pbfile, form ='formatted')
+      open (unit=22, file=pbfile, status='replace')
       
       write (22,5) filename,i4time
       write (22,6) pb
