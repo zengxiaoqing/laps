@@ -599,9 +599,11 @@
      1                                       ,reslights_m
           call pixelave_interp(ri_laps,rj_laps,iwidth,iheight,ni,nj 
      1                        ,0.,array_2d,result)
-          write(6,*)' Max result value is ',maxval(result)
+          write(6,*)' Max result value is (nanoWatts/cm2/sr)'
+     1               ,maxval(result)
         endif ! interpolation method
 
+!       This conversion should reduce values by 10^5
         do i = 1,ni
         do j = 1,nj
 !         Input units are nanoWatts/cm2/sr
