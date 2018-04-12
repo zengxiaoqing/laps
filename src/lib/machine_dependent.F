@@ -194,10 +194,11 @@ cdoc  based trig functions if they are not intrinsic.
 #endif
       subroutine open_append(lun,file,status,istat)
 
-cdoc  Opens a file for appending
+cdoc  Opens a file for appending (or a new file if non-existent)
 
       integer istat
       character*(*) file,status
+      logical exist
 
       istat=1
 
@@ -206,7 +207,13 @@ cdoc  Opens a file for appending
 #elif defined(IRIX) && !defined(F90)
       open(lun,file=file,status=status,ACCESS='APPEND',err=998)
 #else
-      open(lun,file=file,status=status,POSITION='APPEND',err=998)
+      inquire(file=file, exist=exist)
+      if (exist) then
+        open(lun, file=file, status="old", position="append"
+     1                                   , action="write")
+      else
+        open(lun, file=file, status="new", action="write")
+      end if
 #endif
 
       return
