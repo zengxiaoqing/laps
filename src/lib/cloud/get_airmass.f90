@@ -197,7 +197,7 @@
             htmin_l = ((erad_eff+htmsl) * cosd(alt)) - erad_eff    
             if(alt .gt. -0.25)then ! small angle forumla
               htmin = htmin_s
-            else                 ! large angle formula
+            else                   ! large angle formula
               htmin = htmin_l  
             endif
             htmin = max(htmin,-500.)
