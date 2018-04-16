@@ -38,7 +38,7 @@
 
         pf_thn_snowf(hgpf,elgf) & 
              = arg1 * hg( .999**hgpf,elgf) & ! plates
-             + arg2 * hg( .987**hgpf,elgf) &
+             + arg2 * hg( .991**hgpf,elgf) &
              + arg3 * hg( .000      ,elgf) & ! isotropic
              + arg4 * hg(-.600      ,elgf)   ! backscat
 
