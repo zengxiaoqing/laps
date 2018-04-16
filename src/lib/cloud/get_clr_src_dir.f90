@@ -219,7 +219,7 @@
      subroutine get_clr_src_dir_low(solalt,solazi,viewalt,viewazi &      ! I
            ,od_g_msl,od_g_vert,od_o_msl,od_o_vert                 &      ! I
            ,od_a_vert,ext_haero,htmsl                             &      ! I
-           ,ssa,agv,ao,aav,aod_ref,redp_lvl,scale_ht_a &                 ! I
+           ,ssa,agv,ao,aav,od_a_slant,aod_ref,redp_lvl,scale_ht_a &      ! I
            ,ags_in,aas_in,ags_a,aas_a,isolalt_lo,isolalt_hi,del_solalt & ! I
            ,ic,idebug,refdist_solalt,solalt_ref &                        ! I
            ,srcdir,sumi_g,sumi_a,opac_slant,nsteps,ds,tausum_a)
@@ -289,7 +289,8 @@
 !    Calculate src term of gas+aerosol along ray normalized by TOA radiance
      od_g_slant = od_g_vert * agv        
      od_o_slant = od_o_msl  * ao
-     od_a_slant = od_a_vert * aav        
+!    if(idebug .eq. 1)write(6,*)' od_a_slant1/2 = ',od_a_slant,od_a_vert * aav
+!    od_a_slant = od_a_vert * aav      !  (testing commenting out)
      od_h_slant = od_h_vert * ah
      od_slant = od_g_slant + od_o_slant + od_a_slant + od_h_slant
      od_slant = max(od_slant,1e-30) ! QC check
@@ -339,8 +340,8 @@
          write(6,*)'od_o_slant/ao = ',od_o_slant,ao
          write(6,*)'od_a_slant = ',od_a_slant
          write(6,*)'od_h_vert/slant = ',od_h_vert,od_h_slant
-         write(6,*)'opac_slant = ',opac_slant
          write(6,*)'od_slant = ',od_slant
+         write(6,*)'opac_slant = ',opac_slant
          write(6,*)'istart/ds = ',istart,ds
      endif ! i
 
@@ -354,12 +355,15 @@
      htbotill = -(htmsl + 500.)
 
      if(idebug .eq. 1)then
-       write(6,*)'             sbar    htbar_msl   dtau_g   dtau_a    tausum  dsolalt      ags     aas   od_sol_g  od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'             sbar    htbar_msl   dtau_g   dtau_a    tausum  dsolalt      ags     aas   od_sol_a  od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
 
      dsolalt_dxy = cosd(angdif(solazi,viewazi)) / 110000.
+     if(idebug .eq. 1)then
+         write(6,*)'dsolalt_dxy = ',dsolalt_dxy
+     endif
 
      if(solalt .ge. 0.)then
          frac_iso_a = 1.0
@@ -515,10 +519,10 @@
 !          if(i .le. 10 .or. ((i .eq. (i/25)*25) .and. i .le. 400) .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
            if((i .le. 10 .or. i .eq. (i/25)*25) .and. htbar_msl .gt. 0. .and. htbar_msl .le. 110e3)then
              if(sol_occ.gt.0.)then
-               write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
+               write(6,12)horz_dep,xybar,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
              endif
-12           format(33x,'   horz_dep/solalt/htmin/sol_occ = ',2f8.2,f9.0,f8.3,3f9.4)
-             write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+12           format(33x,'   horz_dep/xybar/solalt/htmin/sol_occ = ',f8.2,f11.0,f8.2,f9.0,f8.3,3f9.4)
+             write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
 11           format(i8,f11.0,f12.1,2e10.3,f8.4,f9.4,f10.2,4f9.4,e9.2,2f11.8,2f9.4,2f9.4)
            endif
          endif
@@ -527,7 +531,7 @@
 900  continue
 
      if(idebug .eq. 1)then
-       write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+       write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
        if(sol_occ.gt.0.)write(6,12)horz_dep,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
      endif
 
@@ -628,8 +632,8 @@
          write(6,*)'aod_ref/redp_lvl/scale_ht_a',aod_ref,redp_lvl,scale_ht_a
          write(6,*)'od_g_slant = ',od_g_slant
          write(6,*)'od_a_slant = ',od_a_slant
-         write(6,*)'opac_slant = ',opac_slant
          write(6,*)'od_slant = ',od_slant
+         write(6,*)'opac_slant = ',opac_slant
          write(6,*)'dist_to_topo = ',dist_to_topo
          write(6,*)'istart/nsteps_topo/ds = ',istart,nsteps_topo,ds
          write(6,*)'htbotill/httopill',htbotill,httopill
