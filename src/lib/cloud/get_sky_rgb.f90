@@ -237,14 +237,15 @@
 
 !       Correct nighttime exposure for surface night lights
         corr2_orig = corr2
-        obs_glow_thr = .0006
+        obs_glow_thr = .006
+        twi_ramp = min(max((twi_alt - sol_alt) / (twi_alt - (-16.)),0.),1.)
         if(obs_glow_gnd .gt. obs_glow_thr)then
            obs_glow_log = log10(obs_glow_gnd/obs_glow_thr)
-           corr2 = corr2 + obs_glow_log * 1.0
+           corr2 = corr2 + obs_glow_log * 1.0 * twi_ramp
         endif
 
-        write(6,10)corr1_in,exposure,obs_glow_gnd,corr2_orig,corr2
-10      format('  corr1_in/exposure/obs_glow_gnd/corr2 ',2f9.3,e12.5,2f9.2)
+        write(6,10)corr1_in,exposure,obs_glow_gnd,corr2_orig,obs_glow_log,twi_ramp,corr2
+10      format('  corr1_in/exposure/obs_glow_gnd/corr2orig/oglog/rmp/corr2 ',2f9.3,e12.5,4f9.2)
 
         if(sol_alt .le. 0.)then
 
@@ -424,7 +425,7 @@
         endif
         if(htmsl .gt. 50e3)then
             azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
-            azid1 = 220.  ; azid2 = 220. ! test custom
+            azid1 = 55.  ; azid2 = 86. ! test custom
         else
             azid2 = azid1             
         endif
@@ -511,7 +512,7 @@
             idebug_a(1:ni/4:5,iazi_debug) = 1
             write(6,*)' sum of idebug_a (0a) = ',sum(idebug_a)
             if(alt_a(1,1) .eq. -90.)idebug_a(1,1) = 1 ! nadir
-        elseif(htmsl .gt. 20000.)then 
+        elseif(htmsl .gt. 20000. .and. .false.)then 
             idebug_a(:,:) = 0
 !           ialt_debug = ((ni-1)*(90-45))/180 + 1 ! -45 degrees alt
 !           idebug_a(ialt_debug,1:100) = 1
