@@ -388,6 +388,8 @@
                 write(6,*)' ialt_sun,jazi_sun = ',ialt_sun,jazi_sun
           endif
 
+          I4_elapsed = ishow_timer()
+
           do j = minazi,maxazi
           do i = minalt,maxalt
 
@@ -400,12 +402,23 @@
 
              itrace = nint(trace_ri(i,j))
              jtrace = nint(trace_rj(i,j))
-             if(htmsl .gt. 7000. .and. alt_a_roll(i,j) .lt. 0.)then
-                if(itrace .ge. 1 .and. itrace .le. NX_L .and.
-     1             jtrace .ge. 1 .and. jtrace .le. NY_L)then
+
+             if(alt_a_roll(i,j) .lt. 0.)then
+               if(htmsl .gt. 7000.)then
+                 if(itrace .ge. 1 .and. itrace .le. NX_L .and.
+     1              jtrace .ge. 1 .and. jtrace .le. NY_L)then
                    trace_solalt(i,j) = sol_alt_2d(itrace,jtrace)
                    eobsc_sky(i,j) = eobsc(itrace,jtrace)
-                else ! outside domain - estimate solar altitude at sea level
+                   itrace_updated = 1
+                 else
+                   itrace_updated = 0
+                 endif
+
+!                else ! outside domain - estimate solar altitude at sea level
+
+                 if(htmsl .gt. 100000. .or. itrace_updated .eq. 0)then
+
+!                  Estimate solar altitude at sea level
                    htmsl = htagl + topo_sfc
                    if(azi_a_roll(i,j) .eq. 90.)then
                       iverbose = 1
@@ -444,8 +457,9 @@
                      endif
 
                    endif ! dist_2_topo > 0
-                endif
-             endif
+                 endif ! htmsl > 100000. OR not updated
+               endif ! htmsl > 7000.
+             endif ! alt_a_roll < 0.
 
              ritopo = topo_ri(i,j)
              rjtopo = topo_rj(i,j)
