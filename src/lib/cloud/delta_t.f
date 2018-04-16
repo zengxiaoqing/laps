@@ -20,7 +20,7 @@
         if(init .eq. 0)then
             call get_directory('static',static_dir,len_dir)
             filename = static_dir(1:len_dir)//'/delta_t.parms'          
-            open(1,file=trim(filename),status='old')
+            open(1,file=trim(filename),status='old',form='formatted')
             read(1,*)ar
             init = 1
         endif
