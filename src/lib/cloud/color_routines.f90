@@ -303,7 +303,7 @@
 
         if(init .eq. 0)then
           call get_directory('static',static_dir,len_dir)
-          open(11,file=trim(static_dir)//'/cie2.txt',status='old')
+          open(11,file=trim(static_dir)//'/cie2.txt',status='old',form='formatted')
 !         open(11,file='cie2.txt',status='old')
           do ict = 1,nct
             read(11,*)inm,x1(ict),y1(ict),z1(ict)
