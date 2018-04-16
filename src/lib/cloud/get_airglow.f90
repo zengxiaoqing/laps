@@ -12,7 +12,7 @@
         include 'rad_nodata.inc'
 
         real alt_a(ni,nj)
-        real clear_rad_c_nt(nc,ni,nj)      ! night sky brightness
+        real clear_rad_c_nt(nc,ni,nj)     ! night sky brightness
                                           ! 3 color radiance (Nanolamberts)
 
         parameter (nlyr = 2)
@@ -150,6 +150,232 @@
           else
             airglow(:) = 0.
           endif
+
+        return
+        end
+
+        subroutine get_aurora(alt_a,ni,nj,nc,obs_glow_zen & ! I
+                             ,patm,htmsl,horz_dep &         ! I
+                             ,airmass_2_topo,frac_lp &      ! I
+                             ,clear_rad_c_nt)               ! O
+
+        parameter (nsfc = 2)
+        parameter (nseg = 2)
+
+        real alt                      ! I elevation angle
+        real htmsl                    ! I observer height MSL
+        real htsfc                    ! I sfc (or layer) height 
+        real earth_radius             ! I earth radius (meters)
+        real r_missing_data           ! I
+        real alt_norm(nseg,nsfc)      ! O elevation angle rel to sfc normal
+        real dist_to_sfc(nseg,nsfc)   ! O distance to sfc (meters)
+        real segl(nseg),segh(nseg)
+
+!       Calculate 
+
+!       Aurora intensity a function of magnetic latitude, longitude, Kp, alt
+
+!       Trace line of sight through sphere at 10000m intervals through region
+!       between 100km and 400km altitude. Determine bounds of ray between
+!       these altitudes (1st/last interection of 400km altitude). There can          
+!       be up to two ray segments through this layer.
+
+        do ialt = -10,-10,-20
+
+          do ihtmsl = 0,450,50
+
+            write(6,*)
+            write(6,*)' htmsl-km    alt   htsfc-km    dist2sfc1    dist2sfc2       dist2gnd      altn1   altn2     seglen'
+
+            htmsl = float(ihtmsl) * 1000.
+            alt = float(ialt)
+
+            iverbose = 1
+
+            call get_aurora_segments(htmsl,alt,earth_radius,iverbose,segl,segh)
+
+          enddo        
+        enddo        
+          
+        return
+        end
+
+        subroutine get_aurora_segments(htmsl,alt,earth_radius,iverbose,segl,segh)
+
+        include 'trigd.inc'
+
+        parameter (nsfc = 2)
+        parameter (nseg = 2)
+
+        real alt                      ! I elevation angle
+        real htmsl                    ! I observer height MSL
+        real htsfc                    ! I sfc (or layer) height 
+        real earth_radius             ! I earth radius (meters)
+        real r_missing_data           ! I
+        real alt_norm(nseg,nsfc)      ! O elevation angle rel to sfc normal
+        real dist_to_sfc(nseg,nsfc)   ! O distance to sfc (meters)
+        real segl(nseg),segh(nseg)
+
+        horz_depf(htmsl,erad) = acosd(erad/(erad+max(htmsl,0.)))
+
+        rlarge = 1e10
+        r_missing_data = 1e37
+        earth_radius = 6370e3
+
+        htsfcl = 100e3
+        htsfch = 400e3
+        htgnd = 0e3
+
+            if(htmsl .le. htsfch .and. htmsl .ge. htsfcl)then
+              inlayer = 1
+            else
+              inlayer = 0
+            endif
+
+!           Determine horz_dep
+            horz_dep = horz_depf(htmsl,earth_radius)
+             
+            if(iverbose .eq. 1)write(6,*)
+
+            if(alt .lt. (-horz_dep))then
+              nseg_pot_ray = 1
+            else
+              nseg_pot_ray = 2
+            endif
+
+            dist_to_gnd = rlarge
+            segl(:) = r_missing_data
+            segh(:) = r_missing_data
+
+!           Test for condition with ground
+            if(htmsl .gt. htgnd .and. alt .le. 0.)then
+                call get_ray_info(alt,htmsl,htgnd,earth_radius,alt_norm &
+                                 ,r_missing_data,dist_to_gnd)
+                if(dist_to_gnd .eq. r_missing_data)dist_to_gnd = rlarge
+            elseif(htmsl .le. htgnd .and. alt .le. 0.)then
+                dist_to_gnd = 0.
+            elseif(htmsl .ge. htgnd .and. alt .ge. 0.)then
+                dist_to_gnd = rlarge
+            endif
+
+            do isfc = 1,2
+              ihtsfc = 100 + (isfc-1) * 300
+              htsfc = float(ihtsfc) * 1000.
+
+              dist_to_sfc(:,isfc) = 0.
+              alt_norm(:,isfc) = r_missing_data
+
+!             Test for condition with surface
+!             rlarge means the surface isn't intersected, zero means ray starts at that surface
+              if(htmsl .gt. htsfc .and. alt .le. 0.)then
+                  call get_ray_info2(alt,htmsl,htsfc,earth_radius,alt_norm(:,isfc) &
+                                    ,r_missing_data,dist_to_sfc(:,isfc))
+              elseif(htmsl .le. htsfc)then
+                  call get_ray_info2(alt,htmsl,htsfc,earth_radius,alt_norm(:,isfc) &
+                                    ,r_missing_data,dist_to_sfc(:,isfc))
+              endif
+
+              if(iverbose .eq. 1)write(6,1)ihtmsl,alt,ihtsfc,dist_to_sfc(:,isfc),dist_to_gnd,alt_norm(:,isfc)
+1             format(i8,f10.3,i8,4x,2f13.0,2x,f13.0,2x,2f8.3,2x,f13.0)
+           enddo        
+
+!          Segment applies before or after the htmin value for downward rays, or segment 1 for upward
+           do iseg = 1,nseg_pot_ray
+              if(iverbose .eq. 1)write(6,*)' potential segment ',iseg,inlayer,dist_to_sfc(iseg,:)
+              if(htmsl .gt. htsfch .and. iseg .eq. 1)then                  ! above upper layer
+                 horz_depl = horz_depf(htmsl-htsfcl,earth_radius+htsfcl)
+                 horz_deph = horz_depf(htmsl-htsfch,earth_radius+htsfch)
+                 if(iverbose .eq. 1)write(6,*)' above upper layer ',-horz_depl,-horz_deph
+                 if(alt .lt. (-horz_deph) .and. alt .gt. (-horz_depl))then ! minimum height is within layer
+                    if(iverbose .eq. 1)write(6,*)' min height is within layer ',iseg,inlayer,dist_to_sfc(iseg,:)
+                    segl(iseg) = dist_to_sfc(1,2)
+                    segh(iseg) = dist_to_sfc(2,2)
+                 endif
+              elseif(inlayer .eq. 0)then                                   ! outside layer
+                 if(dist_to_sfc(iseg,1) .le. rlarge .and. dist_to_sfc(iseg,2) .le. rlarge)then
+                    segl(iseg) = dist_to_sfc(iseg,1)
+                    segh(iseg) = dist_to_sfc(iseg,2)
+                 endif
+              elseif(iseg .eq. 1)then                                      ! in layer and segment = 1
+                 horz_depl = horz_depf(htmsl-htsfcl,earth_radius+htsfcl)
+                 if(iverbose .eq. 1)write(6,*)' within layer horz_dep,horz_depl is',-horz_dep,-horz_depl
+                 if(alt .ge. 0.)then
+                    segl(iseg) = 0.
+                    segh(iseg) = dist_to_sfc(iseg,2)
+                 else
+                    segl(iseg) = 0.
+                    if(alt .lt. 0. .and. alt .gt. (-horz_depl))then        ! minimum height is within layer
+                      segh(iseg) = dist_to_sfc(2,2)
+                      if(iverbose .eq. 1)write(6,*)' minimum height within layer',iseg,segl(iseg),segh(iseg)
+                    else
+                      segh(iseg) = dist_to_sfc(iseg,1)
+                    endif
+                 endif
+              endif
+           enddo
+
+           if(iverbose .eq. 1)write(6,*)'         segments',ihtmsl,alt,segl(1),segh(1),segl(2),segh(2)
+
+        return
+        end
+
+        subroutine get_ray_info2(alt,htmsl,htsfc,earth_radius,alt_norm &
+                                ,r_missing_data,dist_to_sfc)
+
+        include 'trigd.inc'
+
+        real alt                  ! I elevation angle
+        real htmsl                ! I observer height MSL
+        real htsfc                ! I sfc (or layer) height 
+        real earth_radius         ! I earth radius (meters)
+        real r_missing_data       ! I
+        real alt_norm(2)          ! O elevation angle rel to sfc normal
+        real dist_to_sfc(2)       ! O distance to sfc (meters)
+
+!       Altitude relative to surface normal (emission angle)
+        if(alt .ne. 0.)then
+          slope = tand(90. + alt)
+          htrad = (earth_radius+htmsl) / (earth_radius+htsfc)
+          c = htrad * slope
+          call line_ellipse(slope,c,0.,0.,1.,1.,r_missing_data,x1,x2,y1,y2)
+
+          if(y1 .ne. r_missing_data)then
+            gc1 = atan2d(+y1,-x1) ! great circle dist forward to ground pt
+            if(alt .gt. 0.)then
+              alt_norm(1) = alt - gc1
+            else
+              alt_norm(1) = alt + gc1
+            endif
+            distrad = sqrt((htrad+x1)**2 + y1**2)
+            dist_to_sfc(1) = distrad * (earth_radius+htsfc)
+            if(gc1 .lt. 0.)then
+              dist_to_sfc(1) = r_missing_data
+            endif
+          else
+            dist_to_sfc(1) = r_missing_data
+          endif
+
+          if(y2 .ne. r_missing_data)then
+            gc2 = atan2d(+y2,-x2) ! great circle dist forward to ground pt
+            if(alt .gt. 0.)then
+              alt_norm(2) = alt - gc2
+            else
+              alt_norm(2) = alt + gc2
+            endif
+            distrad = sqrt((htrad+x2)**2 + y2**2)
+            dist_to_sfc(2) = distrad * (earth_radius+htsfc)
+            if(gc2 .lt. 0.)then
+              dist_to_sfc(2) = r_missing_data
+            endif
+          else
+            dist_to_sfc(2) = r_missing_data
+          endif
+
+          write(6,1)dist_to_sfc,htrad,x1,y1,x2,y2,gc1,gc2
+ 1        format(' d2sfc,htrad,x1,y1,x2,y2,gc1,gc2 ',2f10.0,5f10.4,2f8.2)
+        else
+          alt_norm(:) = 0.  
+        endif
 
         return
         end
