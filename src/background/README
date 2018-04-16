@@ -81,5 +81,5 @@ program lga                                      lga.f
          vinterp_wrfarw2p                                "                  
          hinterp_wrf2lga                                 "
             interpolate_standard                 lib/modules/module_horiz_interp.f90
-         write_lga
-         write_lgb
+         write_lga                               bgdata/writelgalgb.f
+         write_lgb                                       "
