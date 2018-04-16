@@ -939,8 +939,20 @@
 
 !         Calculate solar position for 2D array of grid points
           write(6,*)' Getting 2D solar position'
-          do i = 1,NX_L
-          do j = 1,NY_L
+          if(.true.)then
+           call get_solaltaz_2d(lat,lon,i4time_solar,NX_L,NY_L
+     1                         ,sol_alt_2d,sol_azi_2d)
+           icen = NX_L/2
+           jcen = NY_L/2
+           write(6,*)' solar alt/az (center)',sol_alt_2d(icen,jcen)
+     1                                       ,sol_azi_2d(icen,jcen)
+
+           swi_2d(:,:) = 1300. * sin(max(sol_alt_2d(:,:)*rpd,0.))
+           write(6,*)' solar swi (center)',swi_2d(icen,jcen)
+
+          else
+           do i = 1,NX_L
+           do j = 1,NY_L
             call solar_position(lat(i,j),lon(i,j),i4time_solar
      1                         ,sol_alt_2d(i,j),solar_dec,solar_ha)
             call equ_to_altaz_d(solar_dec,solar_ha,lat(i,j)
@@ -955,8 +967,9 @@
    
             swi_2d(i,j) = 1300. * sind(max(sol_alt_2d(i,j),0.))
 
-          enddo ! j
-          enddo ! i
+           enddo ! j
+           enddo ! i
+          endif
 
           I4_elapsed = ishow_timer()
 
@@ -1190,6 +1203,7 @@
             n_jd = 1
             n_hm = 3
             n_kd = 4
+            n_ao = 5
             
             hm_factor = 1.0d0
             ridisp = 0.d0
@@ -1200,17 +1214,20 @@
             a_vec(n_id) = ridisp
             a_vec(n_jd) = rjdisp
             a_vec(n_kd) = rkdisp
+            a_vec(n_ao) = aod
 
             dstep(:) = 0d0 ! initialize
             dstep(n_hm) = 0.2d0 
             dstep(n_id) = 1d0 
             dstep(n_jd) = 1d0 
             dstep(n_kd) = 1d0 
+            dstep(n_ao) = 1d-2 
 
             dstep_gran(n_hm) = 0d0
             dstep_gran(n_id) = 1d0
             dstep_gran(n_jd) = 1d0
             dstep_gran(n_kd) = 1d0
+            dstep_gran(n_ao) = 0d0
 
             init_optmiz = 0
             iexit_optimize = 0
@@ -1526,6 +1543,8 @@
 !           Setup optimization with single site, for multiple sites we can move
 !           this up before line 1156 (iloc loop)
 
+            I4_elapsed = ishow_timer()
+
             write(6,*)' call calc_allsky at i4time_solar:',i4time_solar
      1               ,iloop
             call calc_allsky(i4time_solar,exposure ! ,clwc_3d,cice_3d
@@ -1648,7 +1667,7 @@
      1                       ,sky_rgb_cyl(1,(maxalt+minalt)/2,iaz)
                 enddo ! iaz
 
-                write(6,*)' Call cyl_to_polar with sky rgb data'
+!               write(6,*)' Call cyl_to_polar with sky rgb data'
 
                 if(htagl(iloc) .le. 20.1 .and. 
      1                  (maxalt*2 + minalt) .gt. 0)then
@@ -1690,14 +1709,27 @@
                   endif
                 endif
 
+                if(htagl(iloc) .eq. 400000.)then
+                  rotew = +70. ! positive rotation decreases altitude in the south
+                  rotz = +135. ! positive rotation moves counterclockwise (left)
+                  pomag = pomag * 1.8                 
+                  poy = -0.1   ! increase moves down
+                else
+                  rotew = 0.
+                  rotz = 0.
+                endif
+
                 write(6,*)'htrat/pomag',htagl(iloc)/earth_radius,pomag
 
                 do ic = 0,nc-1
+                  write(6,*)' Call cyl_to_polar with sky rgb data',ic
+
                   call cyl_to_polar(sky_rgb_cyl(ic,:,:)
      1                             ,sky_rgb_polar(ic,:,:)
      1                             ,minalt,maxalt,minazi,maxazi
      1                             ,alt_scale,azi_scale,polat,pomag
      1                             ,pox,poy,alt_a_polar,azi_a_polar
+     1                             ,rotew,rotz
      1                             ,iplo,iphi,jplo,jphi
      1                             ,ni_polar,nj_polar)
                 enddo ! ic
@@ -1813,6 +1845,7 @@
               ridisp = nint(a_vec(n_id) - a_last(n_id))
               rjdisp = nint(a_vec(n_jd) - a_last(n_jd))
               rkdisp = nint(a_vec(n_kd) - a_last(n_kd))
+              aod = a_vec(n_ao)
           endif
 
         enddo ! iloop for optimize
