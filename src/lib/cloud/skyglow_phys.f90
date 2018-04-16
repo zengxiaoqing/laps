@@ -261,11 +261,11 @@
             endif
             istart = 1; iend = nsteps; ds = 25.
             od_o_msl = (o3_du/300.) * ext_o(ic)
-            aod_ref_ang = aod_ref * ext_a(ic)
+            aod_ref_angs = aod_ref * ext_a(ic)
             call get_clr_src_dir(sol_alt,90.,ext_g(ic), &
                 od_g_vert,od_a_vert,ext_ha(ic), &
                 htmsl,ssa90,ag_90/ag_90,ao_90,aa_90_o_aa_90, &
-                aod_ref_ang,aero_refht,aero_scaleht, &
+                aod_ref_angs,aero_refht,aero_scaleht, &
                 ag_s/ag_90,aa_s_o_aa_90,od_o_msl,ic,idebug, &
                 istart,iend, &
                 srcdir_90(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
@@ -394,11 +394,11 @@
                  aa_s_o_aa_90 = 0.
              endif
              od_o_msl = (o3_du/300.) * ext_o(ic)
-             aod_ref_ang = aod_ref * ext_a(ic)
+             aod_ref_angs = aod_ref * ext_a(ic)
              call get_clr_src_dir(sol_alt,altray,ext_g(ic), &
                 od_g_vert,od_a_vert,ext_ha(ic), &
                 htmsl,ssa_eff(ic),ag/ag_90,ao,aa_o_aa_90, &
-                aod_ref_ang,aero_refht,aero_scaleht, &
+                aod_ref_angs,aero_refht,aero_scaleht, &
                 ag_s/ag_90,aa_s_o_aa_90,od_o_msl,ic,idebug, &
                 istart,iend, &
                 srcdir(ic),sumi_gc(ic),sumi_ac(ic),opac_slant, &
@@ -560,13 +560,8 @@
                   idebug_clr = 0
                 endif
                 idebug_clr = idebug_a(ialt,jazi)
+!               if(altray .eq. 1.0 .and. view_azi_deg .eq. 140.)idebug_clr = 1 ! testing
 
-                if(idebug_clr .eq. 1)then
-                  write(6,68)ialt,jazi,ic,sol_alt,altray,view_azi_deg &
-                            ,dmintopo,dmaxtopo,ao
-68                format(/' call   get_clr_src_dir_low',i6,2i5,3f8.2,2f9.0,f9.3)
-!                 write(6,*)'sol_azi,azi_ref,jazi_d10',sol_azi,azi_ref,jazi_d10
-                endif
                 if(aa_90 .gt. 0.)then
                   aa_o_aa_90 = aa/aa_90
                   aa_s_o_aa_90 = aa_s/aa_90
@@ -575,8 +570,17 @@
                   aa_s_o_aa_90 = 0.
                 endif
 
+                if(idebug_clr .eq. 1)then
+                  write(6,68)ialt,jazi,ic,sol_alt,altray,view_azi_deg &
+                            ,dmintopo,dmaxtopo,ao
+68                format(/' call   get_clr_src_dir_low',i6,2i5,3f8.2,2f9.0,f9.3)
+                  write(6,681)aa,aa_90,aa_o_aa_90,od_a_slant_a(ic,ialt),aod_ref,aa,ext_a(ic)
+681               format(' aa/aa_90/aa_o_aa_90/od_a_slant/aod/aa/ext',3f10.6,4e12.4)
+!                 write(6,*)'sol_azi,azi_ref,jazi_d10',sol_azi,azi_ref,jazi_d10
+                endif
+
 !               Determine relevant solar altitude along ray
-                if(htmsl .gt. 100e3)then ! highalt strategy
+                if(htmsl .gt. 100e3)then ! highalt strategy (for dir_low)
                   if(altray .gt. 0.)then
                     refdist_solalt = 0.
                     solalt_ref = sol_alt
@@ -584,9 +588,9 @@
 !                   distance to limb
                     refdist_solalt = sqrt( (earth_radius+htmsl)**2 &
                                           - earth_radius**2       )
-                    if(trace_solalt(ialt,jazi) .ne. sol_alt)then ! valid trace
+                    if(trace_solalt(ialt,jazi) .ne. sol_alt .and. .false.)then ! valid trace
                       solalt_ref = trace_solalt(ialt,jazi)
-                    else ! angular distance to htmin
+                    else ! angular distance to htmin (in atmosphere above limb)
                       gcdist_km = (horz_dep * rpd * earth_radius) / 1000.
                       call RAzm_Lat_Lon_GM(rlat,rlon,gcdist_km &
                              ,view_azi_deg,rlat_limb,rlon_limb,istatus)
@@ -595,8 +599,8 @@
                       solalt_ref = 90. - solzen_ref
                     endif
                     if(idebug_clr .eq. 1)then
-                      write(6,681)rlat,rlon,sol_lat,sol_lon,rlat_limb,rlon_limb,gcdist_km
-681                   format(' lat-lon obs/sol/limb = ',6f8.2,' gc = ',f9.0)
+                      write(6,682)rlat,rlon,sol_lat,sol_lon,rlat_limb,rlon_limb,gcdist_km
+682                   format(' lat-lon obs/sol/limb = ',6f8.2,' gc = ',f9.0)
                       write(6,*)'salt/tr/ref-1',sol_alt,trace_solalt(ialt,jazi),solalt_ref
                     endif
                   endif
@@ -606,14 +610,14 @@
                 endif
 
                 od_o_msl = (o3_du/300.) * ext_o(ic)
-                aod_ref_ang = aod_ref * ext_a(ic)
+                aod_ref_angs = aod_ref * ext_a(ic)
 
                 call get_clr_src_dir_low(sol_alt,sol_azi, &
                   altray,view_azi_deg, &
                   ext_g(ic),od_g_vert,od_o_msl,od_o_vert, &
                   od_a_vert,ext_ha(ic),htmsl,ssa_eff(ic), &
-                  ag/ag_90,ao,aa_o_aa_90, &
-                  aod_ref_ang,aero_refht,aero_scaleht, &
+                  ag/ag_90,ao,aa_o_aa_90,od_a_slant_a(ic,ialt), &
+                  aod_ref_angs,aero_refht,aero_scaleht, &
                   ag_s/ag_90,aa_s_o_aa_90, &
                   ags_a,aas_a,isolalt_lo,isolalt_hi,del_solalt,ic,idebug_clr, &
                   refdist_solalt,solalt_ref, &
@@ -708,11 +712,11 @@
           endif
           jazi_interph = jazi_interpl + jazi_d10 
           fazi = (float(jazi) - float(jazi_interpl)) / float(jazi_d10)
-          srcdir(:) = (1.-fazi) * srcdir_a(:,jazi_interpl) & ! testing
+          srcdir(:) = (1.-fazi) * srcdir_a(:,jazi_interpl) & 
                     +     fazi  * srcdir_a(:,jazi_interph)
-          sumi_gc(:) = (1.-fazi) * sumi_g_a(:,jazi_interpl) & ! testing
+          sumi_gc(:) = (1.-fazi) * sumi_g_a(:,jazi_interpl) & 
                      +     fazi  * sumi_g_a(:,jazi_interph)
-          sumi_ac(:) = (1.-fazi) * sumi_a_a(:,jazi_interpl) & ! testing
+          sumi_ac(:) = (1.-fazi) * sumi_a_a(:,jazi_interpl) & 
                      +     fazi  * sumi_a_a(:,jazi_interph)
 
           xs = cosd(sol_alt) * cosd(sol_azi)
@@ -1049,7 +1053,8 @@
                       aa_o_aa_90 = 0.
                     endif
 
-                    if(htmsl .gt. 100e3)then ! highalt strategy
+!                   Determine relevant solar altitude along ray
+                    if(htmsl .gt. 100e3)then ! highalt strategy (for dir_topo)
 
 !                     Strategy from above dir_low section
                       if(altray .gt. 0.)then
@@ -1081,14 +1086,14 @@
                     endif
 
                     od_o_msl = (o3_du/300.) * ext_o(ic)
-                    aod_ref_ang = aod_ref * ext_a(ic)
+                    aod_ref_angs = aod_ref * ext_a(ic)
 
                     call get_clr_src_dir_topo(sol_alt,sol_azi, &        ! I
                      altray,view_azi_deg,emis_ang,r_missing_data, &     ! I
                      ext_g(ic),od_g_vert,od_o_msl,od_a_vert, &          ! I
                      htmsl,dist_2_topo(ialt,jazi), &                    ! I
                      ssa_eff(ic),ag/ag_90,aa_o_aa_90, &                 ! I
-                     aod_ref_ang,aero_refht,aero_scaleht, &             ! I
+                     aod_ref_angs,aero_refht,aero_scaleht, &            ! I
                      ags_a,aas_a, &                                     ! I
                      isolalt_lo,isolalt_hi,del_solalt,ic,idebug_topo, & ! I
                      nsteps_topo,refdist_solalt,solalt_ref, &           ! I
