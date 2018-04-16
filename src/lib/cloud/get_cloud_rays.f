@@ -354,8 +354,8 @@
           call get_nlights(ni,nj,grid_spacing_m,lat,lon
      1                    ,gnd_glow)
 
-          write(6,*)' range of gnd_glow (nl) is ',minval(gnd_glow)
-     1                                           ,maxval(gnd_glow)
+          write(6,*)' range of gnd_glow (wm2sr) is ',minval(gnd_glow)
+     1                                              ,maxval(gnd_glow)
 
           if(minval(gnd_glow) .lt. 0.)then
              write(6,*)' ERROR: Invalid range of gnd_glow'
@@ -1079,7 +1079,7 @@
             azid1 = int(sol_azi(i,j))
             azid2 = azid1
         endif
-        azid1 = 212. ; azid2 = 212.
+        azid1 = 80. ; azid2 = 90.
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
 
