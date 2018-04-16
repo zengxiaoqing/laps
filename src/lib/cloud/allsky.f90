@@ -1,7 +1,8 @@
 
-       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale,polat,pomag,pox,poy,alt_a,azi_a &
+       subroutine cyl_to_polar(cyl,polar,minalt,maxalt,minazi,maxazi,alt_scale,azi_scale,polat,pomag,pox,poy,alt_a,azi_a,rotew,rotz &
                               ,iplo,iphi,jplo,jphi,ni_polar,nj_polar)
 
+       include 'trigd.inc'
        use mem_namelist, ONLY: r_missing_data
 
        real cyl(minalt:maxalt,minazi:maxazi)
@@ -26,7 +27,7 @@
        write(6,*)'minalt,maxalt,minazi,maxazi',minalt,maxalt,minazi,maxazi
        write(6,*)'alt_scale,azi_scale',alt_scale,azi_scale
        write(6,*)'altmin,azimin',altmin,azimin
-       write(6,*)'polat,pomag',polat,pomag
+       write(6,*)'polat,pomag,rotew,rotz',polat,pomag,rotew,rotz
        write(6,*)'pox,poy',pox,poy
        write(6,*)'iplo,iphi,jplo,jphi',iplo,iphi,jplo,jphi
 
@@ -50,17 +51,53 @@
            zenith_angle = sqrt(delti**2 + deltj**2) * (90. / ri_polar_mid)
            zenith_angle = zenith_angle / pomag
            alt = (90. - zenith_angle) * posign
+           azi_last = azi
+           azi = atan3d(-deltj*posign,delti) ! minus sign on deltj flips left/right
+
+!          Determine sign convention of azimuth range
+           if(azimin .lt. 0. .and. azi .gt. 180. .and. azi .gt. azimax)then
+               azi2 = azi - 360. ! azi2 is between -180. and 0.
+           else
+               azi2 = azi
+           endif
+
+!          Perform coordinate rotation (around E-W horizon axis)
+           if(rotew .ne. 0. .or. rotz .ne. 0.)then
+             if(azi2 .ne. azi)then
+                 write(6,*)' software error, negative azi',azi,azi2
+                 stop
+             endif
+
+             alt_orig = alt
+             azi_orig = azi ! between 0 and 360
+
+             sindec = SIND(alt)
+             cosdec = COSD(alt)
+             sinphi = SIND(90.-rotew)
+             cosphi = COSD(90.-rotew)
+             cosha  = COSD(azi)
+
+             alt=ASIND (sinphi*sindec+cosphi*cosdec*cosha)
+             cosarg = (cosphi*sindec-sinphi*cosdec*cosha)/cosd(alt)
+             cosarg = min(max(cosarg,-1.),+1.)
+             azi=180. - ACOSD(cosarg)
+
+             if(modulo(azi_orig,360.) .gt. 180.)then
+                azi = 360.0 - azi
+             endif
+
+!            Apply azimuth rotation at the end
+             azi = modulo(azi + rotz,360.)
+             if(abs(alt) .eq. 90.)azi = azi_orig
+
+             if(ip .eq. ni_polar/2 .and. jp .eq. (jp/50)*50)then
+               write(6,*)'rot',alt_orig,azi_orig,alt,azi
+             endif
+
+             azi2 = azi
+           endif
+           
            if(alt*posign .ge. 0.)then
-               azi_last = azi
-               azi = atan3d(-deltj*posign,delti) ! minus sign on deltj flips left/right
-
-!              Determine sign convention of azimuth range
-               if(azimin .lt. 0. .and. azi .gt. 180. .and. azi .gt. azimax)then
-                   azi2 = azi - 360.
-               else
-                   azi2 = azi
-               endif
-
 !              i_cyl = nint(alt)    
 !              j_cyl = nint(azi) 
 !              polar(ip,jp) = cyl(i_cyl,j_cyl)
