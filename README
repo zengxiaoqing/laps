@@ -1332,12 +1332,14 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                                  - Each 'vxx' file has 3-d reflectivity,
                                    velocity, and nyquist velocity for one 
-                                   radar. Horizontal and vertical gaps are
-                                   filled in for reflectivity while sparse 
-                                   arrays are used for velocity.
+                                   radar. Horizontal gaps are filled in for
+				   reflectivity while vertical gaps will
+				   remain at this stage. Sparse arrays are used
+				   for velocity.
 
            (vrz)                 - 3-D reflectivity mosaic from multiple radars
-                                   ('vxx' files). 
+                                   ('vxx' files). Vertical gaps will now be
+				   filled in.
 
            (ln3)                 - Layer reflectivity and echo tops, from a
                                    single radar or mosaiced from multiple 
