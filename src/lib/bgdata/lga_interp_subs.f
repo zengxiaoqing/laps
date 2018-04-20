@@ -42,7 +42,7 @@ c
       include 'bgdata.inc'
 c
       integer nx,ny,nz
-      integer n,ngrids
+      integer n,ngrids,ngrids_loc
       integer warncnt
 c
       integer   i4time_valid1,
@@ -95,7 +95,7 @@ c
 !!    end by Huiling Yuan, AAA001
 c_______________________________________________________________________________
 c
-      write(6,*)' Subroutine time_interp...'
+      write(6,*)' Subroutine time_interp...',trim(ext),ngrids
 
 !! add Huiling Yuan 20120905, AAA002
 c
@@ -144,7 +144,7 @@ c
          var(1,7)='DSF'
          var(1,8)='P  '
          var(1,9)='TGD'
-         var(1,10)='PCP'
+         var(1,10)='R01'
       endif
 
 
@@ -201,7 +201,7 @@ c
          if(istatus.ne.1) then
             print *, 'ERROR returned from read_laps, time1'
             print *, 'n / ngrids = ',n,ngrids                        
-            stop 'lga_interp'
+            stop 'time_interp'
          endif
 
          call read_laps(time2,time2+fcst2,dir,ext,
@@ -210,7 +210,7 @@ c
          if(istatus.ne.1) then
             print *, 'ERROR returned from read_laps, time2'
             print *, 'n / ngrids = ',n,ngrids                        
-            stop 'lga_interp'
+            stop 'time_interp'
          endif
 c
 c *** Do interpolation with time for each new file.
