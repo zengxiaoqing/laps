@@ -22,11 +22,12 @@ c
 c 'NCHANNEL' - listed for each satellite
 c
 c 'CSATID' - listed for each satellite
-c          - values can be 'goes08', 'goes09', goes10', 'goes11', 'goes12', etc.
+c          - values can be 'goes11', 'goes12', 'goes16', 'coms', 'him8', etc.
 c          - if you are using GOES 13 data please specify 'goes12' until we update the software.
 c
 c 'CSATTYPES' - values listed for each satellite can be as follows:
 c               'gvr' for raw gvar
+c               'rll' for gvar NetCDF with lat/lon arrays
 c               'cdf' for remapped fsl-conus [lambert]
 c               'wfo' for wfo SBN (also netcdf and lambert projection)
 c               'gwc' for AirForce Global Weather Center
