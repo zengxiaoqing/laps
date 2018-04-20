@@ -33,7 +33,7 @@ EXE = lq3driver.x
 
 SRC=module_sfc_structure.f    analq.f            lq3_driver1a.f     rsr.f \
     glsp.f             sh2mr.f            tiros.f \
-    func_o.f             glst.f             lsin.f             slv_laplc.f \
+                         glst.f             lsin.f             slv_laplc.f \
     glstd.f            mak_cld_grid.f     smooth_grid2.f \
     get_laps_gp.f      variational.f         plotfield.f        weight_func.f \
     get_latest_file.f  int_tpw.f          prep_grid.f        write_lh4.f \
