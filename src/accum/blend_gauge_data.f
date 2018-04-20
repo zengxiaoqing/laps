@@ -4,7 +4,7 @@
      1                                 ,lat,lon                    ! I
      1                                 ,pcp_bkg_m                  ! I
      1                                 ,ilaps_cycle_time           ! I
-     1                                 ,closest_radar              ! I
+     1                                 ,closest_radar,istat_radar  ! I
      1                                 ,precip_accum_m)            ! I/O
 
 
@@ -39,10 +39,10 @@
 
         integer ilaps(maxsta),jlaps(maxsta)
 
+        logical l_regression       ! Apply regression of radar/fg & gauges
+
         logical l_accum_bias_ratio ! Apply bias correction as a constant ratio
                                    ! (given we are analyzing radar/fg & gauges)
-
-        logical l_regression       ! Apply regression of radar/fg & gauges
 
         logical l_gauge_only       ! Gauge only analysis
 
@@ -50,9 +50,9 @@
 
         l_gauge_only = (.not. l_accum_fg) .AND. (.not. l_accum_radar) 
      1                                    .AND.        l_accum_gauge
-        l_accum_bias_ratio = .false. 
-        l_regression = .true.
-
+        l_regression = .false.
+        l_accum_bias_ratio = (.not. l_regression) 
+        
 !       Combine background and radar field given radar gap areas
         n_radar = 0
         n_bkg = 0
@@ -78,13 +78,22 @@
         enddo ! j
         enddo ! i
 
+        if(n_radar + n_bkg .eq. 0)l_gauge_only = .true.
+
         write(6,*)
         write(6,*)' Subroutine blend_gauge_data (1hr pcp inches)...'
- 
+
+        write(6,*)' l_accum_fg    = ',l_accum_fg
+        write(6,*)' l_accum_radar = ',l_accum_radar
+        write(6,*)' l_accum_gauge = ',l_accum_gauge
+        write(6,*)' l_gauge_only  = ',l_gauge_only
+        write(6,*)
+        write(6,*)' l_accum_bias_ratio  = ',l_accum_bias_ratio
+        write(6,*)' l_regression        = ',l_regression
+        write(6,*) 
         write(6,*)' Number of radar points = ',n_radar
         write(6,*)' Number of background points = ',n_bkg
         write(6,*)' Number of missing points = ',n_msg_rdr_bkg
-
         write(6,*)
         write(6,*)'   #  Name        Gauge Analyzed  Range'
 
@@ -102,7 +111,7 @@
         do iob = 1,n_obs_b
 
 !           Fill gauge array according to cycle time
-            if(ilaps_cycle_time .eq. 3600)then
+            if(ilaps_cycle_time .le. 3600)then
                 pcp_gauge(iob) = pcp1(iob)
                 c_field = 'pcp1'
             elseif(ilaps_cycle_time .eq. 10800)then
@@ -226,7 +235,18 @@
 
         wt_bkg_a = 5e28
 
-        if(n_msg_rdr_bkg .gt. 0 .or. l_gauge_only)then ! do gauge only analysis
+!       10% threshold allowed to be missing
+        frac_msg_rdr_bkg = float(n_msg_rdr_bkg) / float(ni*nj)
+
+        write(6,*)' n_msg_rdr_bkg = ',n_msg_rdr_bkg
+        write(6,*)' frac_msg_rdr_bkg = ',frac_msg_rdr_bkg
+        write(6,*)' l_gauge_only  = ',l_gauge_only
+
+!       if(n_msg_rdr_bkg .gt. 0 .or. l_gauge_only)then ! do gauge only analysis
+        if(frac_msg_rdr_bkg .gt. .10 .or. l_gauge_only)then ! do gauge only analysis
+            if(istat_radar .eq. 0)then
+                write(6,*)' Radar data unavailable'
+            endif              
             if(n_msg_rdr_bkg .gt. 0)then            
                 write(6,*)' Background/radar field has missing points'
             endif
@@ -270,13 +290,13 @@
 
             precip_accum_m = max(precip_accum_m,0.)
                                                                         
-        elseif(l_regression .and. l_accum_gauge)then 
+        elseif(l_accum_gauge)then 
 
 !           Perform gauge bias analysis
 
             write(6,*)' Performing gauge bias analysis'
 
-            if(.false.)then
+            if(l_accum_bias_ratio)then
                 one = 1.0
                 call precip_barnes_jacket(       c_field              ! I
      1                                           ,ilaps,jlaps         ! I
@@ -289,6 +309,7 @@
      1                                           ,bias_anal,istatus)  ! O
                 write(6,*)' Max Bias Anal: ', MAXVAL(bias_anal)
                 write(6,*)' Min Bias Anal: ', MINVAL(bias_anal)
+                write(6,*)' multiplying precip by bias analysis'
                 precip_accum_m = pcp_cmb_m * bias_anal
 
             else ! do regression of radar/gauge pairs (pcp_gauge,pcp_laps_in_a)
@@ -306,6 +327,9 @@
                         where(pcp_cmb_m .eq. 0.)precip_accum_m = 0.
                     else
                         write(6,*)' regression not applied'
+                        write(6,*)
+     1                   ' Returning radar/background blend (no gauges)'
+                        precip_accum_m = pcp_cmb_m
                     endif
                 else
                     write(6,*)' no gauge/radar pairs for regression'
