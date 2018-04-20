@@ -28,6 +28,9 @@
         real closest_radar(imax,jmax)  ! M
 	character var_req*4
 
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+
         if(l_accum_radar .eqv. .true.)then
           call get_precip_radar(i4time_beg,i4time_end       ! Input
      1          ,imax,jmax,kmax                             ! Input
@@ -35,14 +38,20 @@
      1          ,lat,lon,topo                               ! Input
      1          ,ilaps_cycle_time,grid_spacing_cen_m        ! Input
      1          ,radarext_3d_accum                          ! Input
-     1          ,snow_accum,precip_accum,frac_sum           ! Outputs
+     1          ,snow_accum,precip_accum,frac_sum           ! Output
      1          ,closest_radar                              ! Output
      1          ,istat_radar)                               ! Output
         else
           write(6,*)' Skipping call to get_precip_radar'
           istat_radar = 0
+          precip_accum = r_missing_data
         endif
         
+        if(istat_radar .eq. 0)then
+          write(6,*)' istat_radar = 0, not using radar data'
+          precip_accum = r_missing_data
+        endif
+
 !       Read precip first guess (LGB/FSF). Try 'R01' variable
         if(l_accum_fg .eqv. .true.)then
           var_req = 'R01'
@@ -61,16 +70,27 @@
         endif
 
         if(istat_bkg .ne. 1)then
-            write(6,*)' No model first guess precip, using zero field'       
-            pcp_bkg_m = 0.
+!           write(6,*)' No model first guess precip, using zero field'       
+!           pcp_bkg_m = 0.
+            write(6,*)' No model first guess precip, set to missing'       
+            pcp_bkg_m = r_missing_data
+        else
+            write(6,*)' first guess precip good status'       
+            write(6,*)' range of fg ',minval(pcp_bkg_m)
+     1                               ,maxval(pcp_bkg_m)
+            write(6,*)' setting floor of zero'       
+            pcp_bkg_m = max(pcp_bkg_m,0.)
+            write(6,*)' new range of fg ',minval(pcp_bkg_m)
+     1                                   ,maxval(pcp_bkg_m)
         endif
 
 !       Compare to gauge values
-        if(ilaps_cycle_time .eq. 3600)then
-            call get_maxstns(maxsta,istatus)
-            if(istatus .ne. 1)return
+        if(ilaps_cycle_time .le. 3600)then
+            if(ilaps_cycle_time .lt. 3600)write(6,51)ilaps_cycle_time/60
+ 51         format('  WARNING: assuming gauge data read in as 1hr'
+     1            ,' data is actually every ',i2,' minutes')
 
-            call get_r_missing_data(r_missing_data,istatus)
+            call get_maxstns(maxsta,istatus)
             if(istatus .ne. 1)return
 
             call blend_gauge_data(    i4time_end,imax,jmax,maxsta  ! I
@@ -78,7 +98,7 @@
      1                               ,lat,lon                      ! I
      1                               ,pcp_bkg_m                    ! I
      1                               ,ilaps_cycle_time             ! I
-     1                               ,closest_radar                ! I
+     1                               ,closest_radar,istat_radar    ! I
      1                               ,precip_accum)                ! I/O
         else
             write(6,*)
