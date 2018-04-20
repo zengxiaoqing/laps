@@ -128,10 +128,11 @@ c                 (beyond point pair comparisons that are done regardless)
 c
 c l_compress_radar - Compress "vxx" radar files using run-length encoding.
 c                    If "T" this writes out a compressed ASCII format instead 
-c                    of the NetCDF file format.
+c                    of the NetCDF file format, helping to reduce file sizes.
 c
 c i_offset_radar - [0 or 1] A 1 setting reduces array size for remapped
-c                  radar data, to be less than the domain array size.
+c                  radar data, to be less than the domain array size. This
+c                  helps reduce memory usage.
 c
 c l_use_tamdar - Flag to decide to block the use of TAMDAR ACARS research data. 
 c                This flag functions only when the NIMBUS database is being 
