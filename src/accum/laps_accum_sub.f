@@ -56,6 +56,8 @@ cdis
 !       1997 Jun        Ken Dritz     Changed include of lapsparms.for to
 !                                     include of laps_static_parameters.inc.
 
+        use mem_namelist, only: precip_cycle_time
+
         integer  ss_normal,rtsys_bad_prod,rtsys_no_data
      1                                     ,rtsys_abort_prod
         parameter (ss_normal        =1, ! success
@@ -145,13 +147,8 @@ c read in laps lat/lon and topo
         write(6,*)' Actual grid spacing in domain center = '
      1                              ,grid_spacing_cen_m
 
-        call get_laps_cycle_time(ilaps_cycle_time,istatus)
-        if(istatus .eq. 1)then
-            write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
-        else
-            write(6,*)' Error getting laps_cycle_time'
-            return
-        endif
+        ilaps_cycle_time = precip_cycle_time
+        write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
 
         n_prods = 1
 
