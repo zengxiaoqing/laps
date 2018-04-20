@@ -12,6 +12,8 @@ c tdbg_sfc (model 2m dew point) is now read in during subroutine read_eta_conusc
 c tdbg_sfc array is checked for nan
 c KML: END
 
+      use mem_namelist, ONLY: precip_cycle_time 
+
       implicit none
       include 'netcdf.inc'
 
@@ -34,7 +36,7 @@ c KML: END
       integer i4hr
       integer nan_flag
       integer nf_fid,nf_vid,nf_status
-      integer istatus
+      integer istatus,istat_cyc,laps_cycle_time,ncyc
 
 
 c *** Background model grid data.
@@ -61,7 +63,7 @@ c
       real :: tdbg_sfc(nx_bg,ny_bg)
       real :: tpbg_sfc(nx_bg,ny_bg)
       real :: t_at_sfc(nx_bg,ny_bg)       !Skin/Ground Temperature
-      real :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
+      real :: pcpbg(nx_bg,ny_bg)          !Precip at surface (m)
       real :: crefbg(nx_bg,ny_bg)         !Composite Reflectivity
       real tpw(nx_bg,ny_bg)
       real cwat(nx_bg,ny_bg)
@@ -101,6 +103,7 @@ c     Local variables for the time being
       prbg_sfc = r_missing_data
       tdbg_sfc = r_missing_data
       shbg_sfc = r_missing_data
+      pcpbg = r_missing_data
 
       call s_len(cmodel,lencm)
 
@@ -504,16 +507,26 @@ C WNI-BLS
             prbguv(:,:,:)=prbght(:,:,:) 
             prbgww(:,:,:)=prbght(:,:,:) 
 
-c        write(*, *) "READBGDATA htbg(3,30,1)", htbg(3,30,1)
-c        write(*, *) "READBGDATA tpbg(3,30,1)", tpbg(3,30,1)
-c        write(*, *) "READBGDATA wwbg(3,30,1)", wwbg(3,30,1)
-c        write(*, *) "READBGDATA: shbg_sfc/tdbg_sfc is actually rh?"
-         write(*, *) "READBGDATA shbg_sfc(3,30)", shbg_sfc(3,30)
-         write(*, *) "READBGDATA tdbg_sfc(3,30)", tdbg_sfc(3,30)
-c        do j = 1, nzbg_ht 
-c           write(*, *) "READBGDATA pcpbg(3,",j, pcpbg(3,j)
-c        enddo
+c           write(*, *) "READBGDATA htbg(3,30,1)", htbg(3,30,1)
+c           write(*, *) "READBGDATA tpbg(3,30,1)", tpbg(3,30,1)
+c           write(*, *) "READBGDATA wwbg(3,30,1)", wwbg(3,30,1)
+c           write(*, *) "READBGDATA: shbg_sfc/tdbg_sfc is actually rh?"
+            write(*, *) "READBGDATA shbg_sfc(3,30)", shbg_sfc(3,30)
+            write(*, *) "READBGDATA tdbg_sfc(3,30)", tdbg_sfc(3,30)
+            write(*, *) "READBGDATA pcpbg(3,30)", pcpbg(3,30)
 
+            if(precip_cycle_time .eq. 900)then
+               write(6,*)' Dividing precip based on cycle time'
+               ncyc = 3600 / laps_cycle_time
+               where (pcpbg(:,:) .ne. r_missing_data)
+                  pcpbg(:,:) = pcpbg(:,:) / float(ncyc)
+               endwhere
+            endif
+
+            write(6,*)' Setting a precip floor value of zero'
+            where (pcpbg(:,:) .ne. r_missing_data)
+               pcpbg(:,:) = max(pcpbg(:,:),0.)
+            endwhere
       endif
 c      
 c - 3d fields
@@ -609,6 +622,7 @@ c
 
       write(6,*)' tdbg_sfc range = ',minval(tdbg_sfc),maxval(tdbg_sfc)
       write(6,*)' shbg_sfc range = ',minval(shbg_sfc),maxval(shbg_sfc)
+      write(6,*)' pcpbg range = ',minval(pcpbg),maxval(pcpbg)
       write(6,*)' Returning from read_bgdata'
 
       istatus = 0
