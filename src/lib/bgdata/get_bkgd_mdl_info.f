@@ -17,7 +17,7 @@ c     USE laps_static
       character*200 fpathname_a(maxbgmodels)
       character*200 cfname_internal
       character*200 outdir
-      character*200 vtable,headers_file
+      character*256 vtable,headers_file
       character*132 cmodel
       character*30  projname
       character*13  fname13
