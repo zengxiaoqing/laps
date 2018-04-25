@@ -145,4 +145,6 @@ in several formats:
     4. GVAR NetCDF data with lat/lons added        (type=rll)
     5  GOES-R NOAAPORT                             (type=gnp)
     6. KMA COMS satellite                          (type=cms)
- 
+
+A more comprehensive table showing the supported satellite IDs and Types can be
+found in 'src/includ/satdata_lvd_table.for'.
