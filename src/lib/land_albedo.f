@@ -94,7 +94,7 @@
      1                         ,albedo,bm_counts,istatus)
 
       use ppm
-      use mem_namelist, ONLY: c6_maproj
+      use mem_namelist, ONLY: c6_maproj, grid_spacing_m
       use mem_allsky, ONLY: nc
 
       include 'wa.inc'
@@ -179,20 +179,22 @@
         write(6,*)' File being inquired is ',trim(file_dc),' '
      1                                      ,l_there_dc      
 
-        if(l_there_dc)then                   ! Descartes data
+        if(l_there_dc)then                    ! Descartes data
           pix_latlon_we = 1. / 865.954              
           pix_latlon_sn = 1. / 1130.26
           l_global_bm = .false.
           file = trim(file_dc)
           perimeter = 0.05
 
-        elseif(l_there)then                  ! local domain (2.5km pixels)
-          pix_latlon_we = 1. / 48.           ! 17280x8640 image
-          pix_latlon_sn = pix_latlon_we 
+        elseif(l_there)then                   ! local domain (2.5km pixels)
+          pix_latlon_we = 1. / 48.            ! 17280x8640 image
+          pix_latlon_sn = pix_latlon_we       ! for 2.5km to 7.4km grid
           l_global_bm = .true.
           perimeter = 0.2
 
-        elseif(c6_maproj .ne. 'latlon')then  ! local domain  (500m pixels)
+        elseif(c6_maproj .ne. 'latlon' .and.
+     1         grid_spacing_m .le. 2500.)then ! local domain (~500m pixels)
+                                              ! for 500m to 2.5km grid
           file=trim(directory)//'world.2004' 
      1                        //c2_mn//'.3x21600x21600.crop.ppm'
           pix_latlon_we = 1. / 240. !                 (90x180 degree tile)
@@ -200,12 +202,17 @@
           l_global_bm = .false.
           perimeter = 0.2
 
-        else                     ! latlon global projection (7.4km pixels)
+        elseif(grid_spacing_m .ge. 7400.)then ! 7.4km pixels for >7.4km grid
+                                              ! (or latlon / global projection)
           file=trim(directory)//'world.2004'//c2_mn//'.3x5400x2700.ppm'
           pix_latlon_we = 1. / 15.                             
           pix_latlon_sn = pix_latlon_we 
           l_global_bm = .true.
           perimeter = 0.2
+
+        else
+          write(6,*)' conditions unsatisifed for BMNG land albedo data'
+          goto 999
 
         endif
 
