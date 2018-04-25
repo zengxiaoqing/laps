@@ -100,7 +100,7 @@ cdis
         visthr = 0.0  ! for adding visible
         sol_alt_sat(:,:) = sol_alt(:,:)
 
-        if(grid_spacing_m .lt. 1000.)then ! consider namelist 'mode_refl' parm
+        if(grid_spacing_m .ne. 3000.)then ! consider namelist 'mode_refl' parm
             mode_refl = 1 ! 0,1 to use reflectance instead of albedo from LVD       
         else
             mode_refl = 0
