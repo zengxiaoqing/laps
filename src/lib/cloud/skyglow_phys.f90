@@ -232,7 +232,7 @@
               write(6,52)isolalt,sol_alt_a,ht_shadow,patm_shadow &
                 ,patmo3_shadow,ags_a(isolalt),aos_a(isolalt),aas_a(isolalt)
 52            format('isolalt/solalt/ht/patm/patmo3/ags_a/aos_a/aas_a',i5 &
-                                                   ,f9.2,f9.1,2f9.5,3f15.1)
+                                                   ,f9.2,f9.0,2f9.5,3e13.5)
             endif ! solalt > 0
 
           enddo 
@@ -291,8 +291,18 @@
                          ,aero_refht,aero_scaleht & ! I
                          ,earth_radius,0 &          ! I
                          ,ag,ao,aa,refr_deg)        ! O
-         write(6,63)altray,ag,ao,aa
+         if(altray .eq. nint(altray))write(6,63)altray,ag,ao,aa
 63       format(' returned from get_airmass with alt/ag/ao/aa = ',f9.4,3e12.4)
+
+         if(altray .eq. nint(altray))then
+            iverbose = 1
+         else
+            iverbose = 0
+         endif
+         call get_htmin(altray,patm,htmsl,earth_radius,iverbose & ! I
+                       ,patm_htmin,htmin_view2)                   ! O
+         if(altray .eq. nint(altray))write(6,6311)altray,patm_htmin,htmin_view2,htmin_view
+6311     format(' returned from get_htmin with alt/patmh/htmin2-v = ',f9.4,f9.5,2f9.1)
 
          htsfc = 0.
          call get_ray_info(altray,htmsl,htsfc,earth_radius,emis_ang &
