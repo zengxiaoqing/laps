@@ -536,6 +536,8 @@
           write(6,*)' transm_4d column = ',transm_4d(idb,jdb,:,1)
       endif
 
+      where(transm_4d .eq. r_missing_data)transm_4d = 0.
+
       I4_elapsed = ishow_timer()
 
       write(6,*)' Returning from get_cloud_rad...'
