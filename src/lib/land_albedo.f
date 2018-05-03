@@ -660,6 +660,7 @@ cdoc   points.
 
 !     Error condition
 999   istatus = 0
+      gnd_glow = 0.
       write(6,*)' error in get_nlights'
 
 9999  if(allocated(rlat_img))deallocate(rlat_img)
