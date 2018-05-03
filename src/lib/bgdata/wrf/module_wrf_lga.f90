@@ -102,7 +102,7 @@ MODULE wrf_lga
   PUBLIC wrf2lga, wrf2swim
 CONTAINS
 
-  SUBROUTINE wrf2swim(wrffile_in,i4time,nxl,nyl,nzl,latl,lonl,pres_1d,land_frac,snow_cover,snow_albedo_max,istatus)
+  SUBROUTINE wrf2swim(wrffile_in,i4time,itype_aod,nxl,nyl,nzl,latl,lonl,pres_1d,land_frac,snow_cover,snow_albedo_max,istatus)
 
      IMPLICIT NONE
 
@@ -112,9 +112,10 @@ CONTAINS
      INTEGER                      :: i4reftime
      CHARACTER(LEN=13)            :: reftime13
      INTEGER, INTENT(OUT)         :: istatus
-     INTEGER                      :: k,k1000,bg_valid,icaller
+     INTEGER                      :: k,k1000,bg_valid,icaller,itype_aod
      INTEGER,EXTERNAL             :: cvt_wfo_fname13_i4time
      INTEGER                      :: nxl,nyl,nzl
+     REAL                         :: ricen,rjcen,latwcen,lonwcen
      REAL                         :: i_ll, j_ll, i_ul, j_ul, i_ur, j_ur, i_lr, j_lr 
      REAL                         :: latl(nxl,nyl),lonl(nxl,nyl),land_frac(nxl,nyl),pres_1d(nzl)
      REAL                         :: snow_cover(nxl,nyl),snow_albedo_max(nxl,nyl)
@@ -126,6 +127,9 @@ CONTAINS
      
      ! Get some LAPS setup stuff
      rmissingflag = r_missing_data
+
+     print *, "Subroutine wrf2swim: itype_aod = ",itype_aod
+
      CALL find_domain_name(laps_data_root,laps_domain_name,istatus)
 !    print *, "LAPS_DATA_ROOT = ", TRIM(laps_data_root)
 !    print *, "DOMAIN NAME = ", TRIM(laps_domain_name)
@@ -172,7 +176,14 @@ CONTAINS
      CALL latlon_to_ij(wrfgrid,lat(1,nyl),lon(1,nyl),i_ul,j_ul)
      CALL latlon_to_ij(wrfgrid,lat(nxl,nyl),lon(nxl,nyl),i_ur,j_ur)
      CALL latlon_to_ij(wrfgrid,lat(nxl,1),lon(nxl,1),i_lr,j_lr)
-     print *, "Location of LAPS corners in WRF domain:"
+
+     ricen = (float(nxw) + 1.) / 2.
+     rjcen = (float(nyw) + 1.) / 2.
+     CALL ij_to_latlon(wrfgrid,ricen,rjcen,latwcen,lonwcen)
+     print *, "Lat / Lon of WRF domain center:"
+     print *, latwcen,lonwcen
+
+     print *, "Location of LAPS corners in WRF domain (ll,ul,ur,lr):"
      print *, i_ll,j_ll
      print *, i_ul,j_ul
      print *, i_ur,j_ur
@@ -181,7 +192,8 @@ CONTAINS
          NINT(i_ul) .LT. 1 .OR. NINT(j_ul) .GT. nyw .OR. &
          NINT(i_ur) .GT. nxw .OR. NINT(j_ur) .GT. nyw .OR. &
          NINT(i_lr) .GT. nxw .OR. NINT(j_lr) .LT. 1) THEN
-       PRINT *, "LAPS Domain exceeds bounds of WRF background!"
+       PRINT *, "ERROR: LAPS Domain exceeds bounds of WRF background!"
+       PRINT *, "Consider reducing size of LAPS domain"
        istatus = 0 
        RETURN
      ELSE
@@ -229,7 +241,8 @@ CONTAINS
      ALLOCATE (tvb_wrf(nxw,nyw))
 
      icaller = 1
-     CALL fill_wrfs(icaller,istatus)
+!    itype_aod = 2 ! 1 is TAOD5503D, 2 is tracer_1a
+     CALL fill_wrfs(icaller,itype_aod,istatus)
      IF (istatus .NE. 1) THEN
        PRINT *, "Problem getting WRF data"
        RETURN
@@ -366,7 +379,7 @@ CONTAINS
      INTEGER                      :: nxl,nyl,nzl
      CHARACTER(LEN=13)            :: reftime13
      INTEGER, INTENT(OUT)         :: istatus
-     INTEGER                      :: k,k1000,bg_valid,icaller
+     INTEGER                      :: k,k1000,bg_valid,icaller,itype_aod
      INTEGER,EXTERNAL             :: cvt_wfo_fname13_i4time
      REAL                         :: i_ll, j_ll, i_ul, j_ul, i_ur, j_ur, i_lr, j_lr 
      LOGICAL                      :: need_hinterp
@@ -436,7 +449,7 @@ CONTAINS
      CALL latlon_to_ij(wrfgrid,lat(1,nyl),lon(1,nyl),i_ul,j_ul)
      CALL latlon_to_ij(wrfgrid,lat(nxl,nyl),lon(nxl,nyl),i_ur,j_ur)
      CALL latlon_to_ij(wrfgrid,lat(nxl,1),lon(nxl,1),i_lr,j_lr)
-     print *, "Location of LAPS corners in WRF domain:"
+     print *, "Location of LAPS corners in WRF domain (ll,ul,ur,lr):"
      print *, i_ll,j_ll
      print *, i_ul,j_ul
      print *, i_ur,j_ur
@@ -446,6 +459,7 @@ CONTAINS
          NINT(i_ur) .GT. nxw .OR. NINT(j_ur) .GT. nyw .OR. &
          NINT(i_lr) .GT. nxw .OR. NINT(j_lr) .LT. 1) THEN
        PRINT *, "LAPS Domain exceeds bounds of WRF background!"
+       PRINT *, "Consider reducing size of LAPS domain"
        istatus = 0 
        RETURN
      ELSE
@@ -487,7 +501,8 @@ CONTAINS
      ALLOCATE (tvb_wrf(nxw,nyw))
 
      icaller = 2
-     CALL fill_wrfs(icaller,istatus)
+     itype_aod = 2 ! 1 is TAOD5503D, 2 is tracer_1a (probably a dummy value)
+     CALL fill_wrfs(icaller,itype_aod,istatus)
      IF (istatus .NE. 1) THEN
        PRINT *, "Problem getting WRF data"
        RETURN
@@ -644,7 +659,7 @@ CONTAINS
      RETURN 
   END SUBROUTINE wrf2lga
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE fill_wrfs(icaller,istatus)
+  SUBROUTINE fill_wrfs(icaller,itype_aod,istatus)
  
     IMPLICIT NONE
     INTEGER, INTENT(OUT)  :: istatus
@@ -661,7 +676,6 @@ CONTAINS
     ! Varialbles have already been allocated by our driver routine
     ! so just start getting them
     istatus = 1
-    itype_aod = 2 ! 1 is TAOD5503D, 2 is tracer_1a
     PRINT *, " Allocating arrays ",icaller
     ALLOCATE(dum3d(nxw,nyw,nzw))
     ALLOCATE(dum3df(nxw,nyw,nzw+1))
@@ -729,7 +743,7 @@ CONTAINS
         print *, "Min/Max WRF 3D AOD: ",minval(aod_wrfs),maxval(aod_wrfs)
         istat_aod = 1
       ENDIF
-    else
+    elseif(itype_aod .eq. 2)then
       CALL get_wrfnc_3d(cdf,"tracer_1a","T",nxw,nyw,nzw,1,dum3df,status)
       IF (status.NE.0) THEN
         PRINT *, 'Could not properly obtain WRF tracer_1a - set to missing'
@@ -745,6 +759,16 @@ CONTAINS
         print *, "Min/Max WRF 3D AOD: ",minval(aod_wrfs),maxval(aod_wrfs)
         istat_aod = 1
       ENDIF
+    else
+      print *, 'reading 3-D aerosols from total_ext_file'
+      open(65,file='/Users/albers/data/projects/muri/wrfchem_raw/total_ext_file',status='old',form='unformatted')
+!     read(65)dum3df
+      read(65,err=91)dum3df
+      goto 92
+      close(65)
+91    print *, 'read error - setting dum3df to 0.'
+      dum3df = 0.
+92    print *, 'range of dum3df is',minval(dum3df),maxval(dum3df)
     endif
 
     ! Get theta and convert to temperature
