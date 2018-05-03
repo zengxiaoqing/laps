@@ -5,7 +5,7 @@
 
 !     solve for bearing of location 2 as seen from location 1
 !     north/up is zero bearing with angles counted clockwise
-!     angles are in radians
+!     input and output angles are in degrees
 
       hav(x) = sin(x/2.)**2
       hav_inv(x) = 2. * asin(sqrt(x))
@@ -20,7 +20,7 @@
       s = cos(phib) * sin(deltal)
       c = cos(phia) * sin(phib) - sin(phia) * cos(phib) * cos(deltal) 
  
-      beta = atan2(s,c)
+      beta = atan3(-s,c)
       gcbearing = beta / rpd
 
       hav_theta = hav(phia-phib) + cos(phia) * cos(phib) * hav(deltal)
