@@ -176,7 +176,7 @@
         subroutine get_htmin(alt,patm,htmsl,earth_radius,iverbose & ! I
                             ,patm2,htmin)                           ! O
 
-!       Find minimum MSL height of a light ray compared to Earth sfc
+!       Find minimum MSL height of a light ray (apparent altitude)
 !       Refraction is taken into account
 
         include 'trigd.inc'
@@ -185,6 +185,7 @@
         parameter (rpd=pi/180.)
 
         if(alt .lt. 0)then
+          if(iverbose .eq. 1)write(6,*)' subroutine get_htmin'
           patm2 = patm
           niter = 3; iter = 1
           do while (iter .le. niter)
