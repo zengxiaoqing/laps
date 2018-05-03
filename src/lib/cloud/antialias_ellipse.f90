@@ -137,7 +137,7 @@
 !      ni,nj         half size of pixel box to evaluate               I
 !      aspect_ratio  circle projected onto alt/az grid                I
 !      va            vertex angle of center of illuminated limb       I
-!                    (0 is up, 90 is left) 
+!                    (0 is up, 90 is right) 
 !      array         fractional area of pixels inside ellipse         O
 
        parameter (rpd = 3.14159/180.)
@@ -166,24 +166,24 @@
 
        r_missing_data = 1e37
 
-       do i = -ni,+ni
-       do j = -nj,+nj
+       do i = -ni,+ni ! azimuth direction
+       do j = -nj,+nj ! altitude direction
 
 !        Subdivide grid box into horizontal lines
          sum = 0.
-         if(iverbose .ge. 2)write(6,*)'  i   j    xpix     ypix     rdeg  theta_minor rell1    rell2  aspect_rat rinc'
+         if(iverbose .ge. 2)write(6,*)'  i   j    xpix     ypix     rdeg    th_up   th_minor th_major   rell1    rell2  aspect_rat rinc'
          do isub = 0,9 
          do jsub = 0,9 
-           xpix = ricen + float(i) + float(isub)/10. - 0.45
-           ypix = rjcen + float(j) + float(jsub)/10. - 0.45
+           xpix = -ricen + float(i) + float(isub)/10. - 0.45 ! azimuth direction relative to object
+           ypix = -rjcen + float(j) + float(jsub)/10. - 0.45 ! altitude direction relative to object
 
            xdeg = xpix * azi_scale / aspect_ratio
            ydeg = ypix * alt_scale
 
            rdeg = sqrt(xdeg**2+ydeg**2)
-           theta_up = atan2(xdeg,ydeg)     
-           theta_minor = theta_up + va*rpd
-           theta_major=theta_minor+90.*rpd
+           theta_up = atan3(xdeg,ydeg)     ! theta relative to up direction
+           theta_minor = theta_up - va*rpd ! theta relative to minor axis (illuminated side)
+           theta_major=theta_minor+90.*rpd ! theta relative to major axis
 
 !          Determine r_el1, r_el2 and compare
            rell1 = 0.25
@@ -209,8 +209,8 @@
            else
              rinc = 0.
            endif
-           if(iverbose .ge. 2)write(6,1)i,j,xpix,ypix,rdeg,theta_minor/rpd,rell1,rell2,aspect2,rinc
-1          format(2i4,9f9.3)
+           if(iverbose .ge. 2)write(6,1)i,j,xpix,ypix,rdeg,theta_up/rpd,theta_minor/rpd,theta_major/rpd,rell1,rell2,aspect2,rinc
+1          format(2i4,10f9.3)
            sum = sum + rinc    
          enddo ! jsub
          enddo ! isub
