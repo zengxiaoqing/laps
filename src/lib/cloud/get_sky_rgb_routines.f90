@@ -662,9 +662,13 @@
                         ricen = (azi_obj-azig)/azi_scale
                         rjcen = (alt_obj-altg)/alt_scale
                         aspect_ratio = 1. / cosd(min(abs(alt_obj),89.))
-                        write(6,*)' Calling antialias_phase with iverbose = ',iverbose,distd,distr
-                        call antialias_phase(radius_pix,ricen,rjcen,aspect_ratio,alt_scale,azi_scale,va,rill,frac_lit1,0,0,iverbose)
-                        write(6,*)' frac_lit1 returned ',ialt,jazi,frac_lit1
+                        write(6,*)' Calling antialias_phase with iverbose = ',iverbose,distd,distr,va
+                        call antialias_phase(radius_pix,ricen,rjcen,aspect_ratio,alt_scale,azi_scale,va,rill,frac_lit1m,0,0,iverbose)
+                        call antialias_phase(radius_pix,ricen,rjcen,aspect_ratio,alt_scale,azi_scale,va,1.0 ,frac_lit1e,0,0,0)
+                        earthshine = .00001
+                        frac_lit1 = frac_lit1m + earthshine * frac_lit1e
+                        write(6,86)ialt,jazi,frac_lit1,frac_lit1m,frac_lit1e
+86                      format(' frac_lit1 returned ',2i6,3f9.4)
                         size_glow_sqdg = size_glow_sqdg * rill           
                       else
                         frac_lit1 = 0.
@@ -799,6 +803,7 @@
         real azi_a(ni,nj)
 
         cnt = 0.
+        sum = 0.
 
 !       Compare with -22. - sol_alt (as an integrated magnitude)
 !       Variable would be 'twi_mag'
