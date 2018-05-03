@@ -626,8 +626,8 @@
 
               do j = minazi,maxazi
               do i = minalt,maxalt
-                sky_rgb_cyl(:,i,j) = 
-     1            max(min(sky_rgb_cyl(:,i,j)*final_scaling,255.),0.)
+
+                sky_rgb_cyl(:,i,j) = sky_rgb_cyl(:,i,j)*final_scaling
 
                 if(.true.)then ! preserve colors in bright saturated areas
                   colmax = maxval(sky_rgb_cyl(:,i,j))
@@ -635,6 +635,9 @@
                     col_ratio = 255. / colmax
                     sky_rgb_cyl(:,i,j) = sky_rgb_cyl(:,i,j) * col_ratio                                        
                   endif                   
+                else ! simple clip at 255.
+                    sky_rgb_cyl(:,i,j) = 
+     1                  max(min(sky_rgb_cyl(:,i,j),255.),0.)       
                 endif
 
                 if(.false.)then ! grayscale reflectance image
