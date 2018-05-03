@@ -355,7 +355,7 @@
      htbotill = -(htmsl + 500.)
 
      if(idebug .eq. 1)then
-       write(6,*)'             sbar    htbar_msl   dtau_g   dtau_a    tausum  dsolalt      ags     aas   od_sol_a  od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
+       write(6,*)'             sbar    htbar_msl   dtau_g   dtau_a    tausum  dsolalt      ags     aas   od_sol_g  od_solar  rad        di      sumi_g    sumi_a opac_curr frac_opac sumi_mn sumi_ext'
      endif
 
      opac_curr = 0.
@@ -434,8 +434,10 @@
          endif
 
 !        Considering smoothing out with solar disk
+         patm = exp(-(htbar_msl/scale_ht_g))
+         refr_max = 0.5 * (2.0 - patm) ! consider max apparent refraction
          horz_dep = horz_depf(htbar_msl,earth_radius)
-         if(solalt_step + 0.5 .lt. -horz_dep)then 
+         if(solalt_step + refr_max .lt. -horz_dep)then 
             sol_occ = 0.0 ! invisible
          else
             sol_occ = 1.0 ! visible
@@ -444,12 +446,26 @@
          if(solalt_step .ge. 0.)then
            zapp = 90. - solalt_step
            od_solar_slant_o3 = od_o_msl * patm_o3(htbar_msl) * airmasso(zapp,htbar_msl)
-         elseif(sol_occ .gt. 0.)then
+         elseif(sol_occ .gt. 0.)then ! looking downward with sun above limb
            zappi = 90. + solalt_step
-           patm = exp(-(htbar_msl/scale_ht_g))
+!          patm = exp(-(htbar_msl/scale_ht_g))
            ztruei = zappi + refractd_app(abs(solalt_step) ,patm)
            patmo  = patm_o3(htbar_msl)
-           htmin_ray = htminf(htbar_msl,solalt_step,earth_radius)
+
+!          This can being tested iteratively
+           refr_min_ray = 0.5
+           do iter = 1,5
+             solalt_step_app = solalt_step+refr_min_ray
+             htmin_ray = htminf(htbar_msl,solalt_step_app,earth_radius)
+             htmin_ray0 = max(htmin_ray,0.)
+             patm_min_ray = exp(-(htmin_ray0/scale_ht_g))
+             refr_min_ray_last = refr_min_ray
+             refr_min_ray_new  = 0.5 * patm_min_ray * (2.0 - patm/patm_min_ray)
+             refr_min_ray = 0.5 * refr_min_ray_last + 0.5 * refr_min_ray_new ! damped convergence
+           enddo ! iter
+           solalt_step_app = solalt_step+refr_min_ray
+           htmin_ray = htminf(htbar_msl,solalt_step_app,earth_radius)
+
            patm2o = patm_o3(htmin_ray)
            ztrue0 = 90. + refractd_app(0.,patm2o)
 !          alttrue0 = -refractd_app(0.,patm2o)
@@ -458,6 +474,12 @@
            ao3 = airmasso(ztrue0,htmin_ray) * patm2o ! 0 deg from htmin
            ao_calc = (ao3-ao2) + ao3
            od_solar_slant_o3 = od_o_msl * ao_calc * sol_occ
+
+           ag2 = airmassf(ztruei,patm)         ! upward from observer
+           ag3 = airmassf(ztrue0,patm_min_ray) ! 0 deg from htmin
+           ao_calc = (ag3-ag2) + ag3
+           od_solar_slant_g = od_g_msl * ao_calc * sol_occ ! experimental
+
          else
            od_solar_slant_o3 = 999.
          endif
@@ -471,7 +493,7 @@
                   + od_solar_slant_o3 &
                   + od_a_vert * aas * exp(-htbar/scale_ht_a) * frac_iso_a
            else ! presently testing
-             od_solar_slant_g = od_g_msl * ags * exp(-htbar_msl/scale_ht_g)
+!            od_solar_slant_g = od_g_msl * ags * exp(-htbar_msl/scale_ht_g) ! has artifacts in deep twilight
              od_solar_slant_a = aod_ref  * aas * exp(-(htbar_msl-redp_lvl)/scale_ht_a) * frac_iso_a
              od_solar_slant = od_solar_slant_g &
                             + od_solar_slant_o3 + od_solar_slant_a
@@ -519,10 +541,16 @@
 !          if(i .le. 10 .or. ((i .eq. (i/25)*25) .and. i .le. 400) .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
            if((i .le. 10 .or. i .eq. (i/25)*25) .and. htbar_msl .gt. 0. .and. htbar_msl .le. 110e3)then
              if(sol_occ.gt.0.)then
-               write(6,12)horz_dep,xybar,solalt_step,htmin_ray,sol_occ ! ,ao2,ao3,ao
+
+!              Compare htmin with more accurate routine (inputting apparent alt)
+!              write(6,*)' calling get_htmin'
+               call get_htmin(solalt_step_app,patm,htbar_msl,earth_radius,1  & ! I
+                             ,patm_htmin,htmin_view2)                          ! O
+
+               write(6,12)horz_dep,xybar,solalt_step,refr_min_ray,solalt_step_app,htmin_ray,htmin_view2,sol_occ ! ,ao2,ao3,ao
+12             format(33x,'   horz_dep/xybar/sol|alt-refr-app/htmin-2/sol_occ = ',f8.2,f11.0,3f8.2,2f9.0,f8.3,3f9.4)
              endif
-12           format(33x,'   horz_dep/xybar/solalt/htmin/sol_occ = ',f8.2,f11.0,f8.2,f9.0,f8.3,3f9.4)
-             write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_a,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
+             write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
 11           format(i8,f11.0,f12.1,2e10.3,f8.4,f9.4,f10.2,4f9.4,e9.2,2f11.8,2f9.4,2f9.4)
            endif
          endif
