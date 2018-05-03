@@ -82,7 +82,7 @@
 
         character*1 c_prodtype, c_plotobs
         character*3 var_2d
-        character*150  directory, filename, wrfout_full
+        character*150  directory, filename, wrfout_full, ramsout_full
         character*31  ext
         character*10  units_2d
         character*125 comment_2d
@@ -798,7 +798,9 @@
             
           elseif(l_parse(directory,'rams'))then
             write(6,*)' Looking for RAMS LWC data in ',trim(directory)
-            filename = '/home/fab/albers/muri/rams_micro_v3.nc'
+            call GETENV('RAMSOUT_FULL',ramsout_full)
+            filename = trim(ramsout_full)
+!           filename = '/home/fab/albers/muri/rams_micro_v3.nc'
             call get_rams_data
      +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
      +                   ,i4time_earliest,i4time_latest
@@ -813,7 +815,10 @@
      +                   ,istatus)
             istatus_ht = 1
             write(6,*)' returned from get_rams_data'
+
             mode_aero_cld = 3
+            aod = 0.
+            i_aero_1d = 0 ! retain the 3D aerosols read in
             write(6,*)' RAMS run: set mode_aero_cld = ',mode_aero_cld
 
             i_aero_synplume = 1
@@ -877,7 +882,17 @@
               mih = NX_L/2
               mjl = NY_L/2
               mjh = NY_L
-
+              itype_aod = 2 ! 1 is TAOD5503D, 2 is tracer_1a              
+            elseif(trim(c_model) .eq. 'hrrr_ak')then
+              mode_aero_cld = 3
+              aod = 0.
+              i_aero_1d = 0 ! retain the 3D aerosols read in
+              itype_aod = 2 ! 1 is TAOD5503D, 2 is tracer_1a              
+            elseif(trim(c_model) .eq. 'wrf_chem')then ! MURI
+              mode_aero_cld = 3
+              aod = 0.
+              i_aero_1d = 0 ! retain the 3D aerosols read in
+              itype_aod = 3 ! 1 is TAOD5503D, 2 is tracer_1a, 3 is MURI
             endif
 
 !           if(trim(c_model) .eq. 'hrrr_ak')then
@@ -887,10 +902,16 @@
 !             filename = 'file.nc'
 !           endif
 
+
             write(6,*)' Looking for WRF SWIM data in ',trim(filename) ! trim(directory)
-            call wrf2swim(filename,i4time_sys,NX_L,NY_L,NZ_L,lat,lon
+            call wrf2swim(filename,i4time_sys,itype_aod,NX_L,NY_L,NZ_L
+     +           ,lat,lon    
      +           ,pres_1d,land_frac,snow_cover,snow_albedo_max
      +           ,istatus)
+            if(istatus .ne. 1)then
+               write(6,*)' returning: wrf2swim istatus is ',istatus
+               return
+            endif
             istatus_ht = 0 ! unless we are reading height
             write(6,*)' returned from wrf2swim for ',trim(c_model)
 
