@@ -232,7 +232,7 @@
         twi_alt = -4.5
 
 !       corr1 = corr1_in; corr2 = 3.75  ! darkness of start/end of twilight (gamma)
-        corr1 = corr1_in; corr2 = 3.55  ! darkness of start/end of twilight (gamma)
+        corr1 = corr1_in; corr2 = 3.15  ! darkness of start/end of twilight (gamma)
 !       corr1 = corr1_in; corr2 = 3.25  ! darkness of start/end of twilight (gamma)
 
 !       Correct nighttime exposure for surface night lights
@@ -248,6 +248,8 @@
 10      format('  corr1_in/exposure/obs_glow_gnd/corr2orig/oglog/rmp/corr2 ',2f9.3,e12.5,4f9.2)
 
         if(sol_alt .le. 0.)then
+
+          write(6,*)' Range of clear_rad_c 3 =',minval(clear_rad_c(3,:,:)),maxval(clear_rad_c(3,:,:))
 
 !         Use max sky brightness to calculate a secondary glow (only deep twilight)
           call get_twi_glow_ave(log10(max(clear_rad_c(3,:,:),1.0)) &
@@ -340,7 +342,7 @@
             altmidcorr = -4.99 - aod_ha * 20.
             fracerf0 = 0.65  ! value with sun on horizon
           endif
-          deepterm = .220
+          deepterm = .130
           write(6,*)' alt_top,aod_ha,altmidcorr: ',alt_top,aod_ha,altmidcorr
         endif
         if(solalt_limb_true .gt. altmidcorr)then ! shallow twilight
@@ -421,7 +423,7 @@
             moon_cond_clr = 0
         endif
         if(mode_aero_cld .gt. 1)then
-            azid1 = 90.  ; azid2 = 90. ! aero custom
+            azid1 = 270.  ; azid2 = 270. ! aero custom
         endif
         if(htmsl .gt. 50e3)then
             azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
