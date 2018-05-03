@@ -538,6 +538,9 @@ c
             if(cmodel(1:ic) .eq. 'HRRR')then    
                read(bg_names(j)(10:11),'(i2)')ihour
                read(bg_names(j)(12:13),'(i2)')imin       
+            elseif(cmodel(1:ic) .eq. 'UM' .OR.
+     1             cmodel(1:ic) .eq. 'GUM'     )then
+               read(bg_names(j)(10:11),'(i2)')ihour
             else
                read(bg_names(j)(12:13),'(i2)')ihour
             endif
