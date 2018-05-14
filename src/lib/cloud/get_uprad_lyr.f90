@@ -101,9 +101,14 @@
 
             npts = (iimax - iimin + 1) * (jjmax - jjmin + 1)
 
-            xave = xsum / uprad_3d(i,j,ic) 
-            yave = ysum / uprad_3d(i,j,ic) 
-
+            if(uprad_3d(i,j,ic) .gt. 0.)then
+              xave = xsum / uprad_3d(i,j,ic) 
+              yave = ysum / uprad_3d(i,j,ic) 
+            else
+              xave = 0.
+              yave = 0.             
+            endif
+            
             vecmag = sqrt(xave**2 + yave**2 + ht**2)
 
             if(vecmag .le. 0.)then
