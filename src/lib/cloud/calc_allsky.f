@@ -629,7 +629,7 @@
 
                 sky_rgb_cyl(:,i,j) = sky_rgb_cyl(:,i,j)*final_scaling
 
-                if(.true.)then ! preserve colors in bright saturated areas
+                if(.false.)then ! preserve colors in bright saturated areas
                   colmax = maxval(sky_rgb_cyl(:,i,j))
                   if(colmax .gt. 255.)then
                     col_ratio = 255. / colmax
