@@ -446,6 +446,7 @@
          if(solalt_step .ge. 0.)then
            zapp = 90. - solalt_step
            od_solar_slant_o3 = od_o_msl * patm_o3(htbar_msl) * airmasso(zapp,htbar_msl)
+           od_solar_slant_g = od_g_msl * ags * exp(-htbar_msl/scale_ht_g) ! has artifacts in deep twilight
          elseif(sol_occ .gt. 0.)then ! looking downward with sun above limb
            zappi = 90. + solalt_step
 !          patm = exp(-(htbar_msl/scale_ht_g))
@@ -540,7 +541,7 @@
          if(idebug .eq. 1)then
 !          if(i .le. 10 .or. ((i .eq. (i/25)*25) .and. i .le. 400) .or. i .eq. 500 .or. i .eq. 1000 .or. i .eq. 1500 .or. i .eq. 2000. .or. i .eq. 2500 .or. i .eq. 10000)then
            if((i .le. 10 .or. i .eq. (i/25)*25) .and. htbar_msl .gt. 0. .and. htbar_msl .le. 110e3)then
-             if(sol_occ.gt.0.)then
+             if(sol_occ.gt.0. .and. solalt_step .lt. 0.)then
 
 !              Compare htmin with more accurate routine (inputting apparent alt)
 !              write(6,*)' calling get_htmin'
