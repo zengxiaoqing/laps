@@ -66,7 +66,7 @@ clean:
 distclean: clean
 
 
-.f90.o:;    $(FC) $(DBFLAGS) $(FREE) $(STINC) -c $*.f90
-.F90.o:;    $(FC) $(DBFLAGS) $(FREE) $(STINC) -c $*.F90
-.f.o:;      $(FC) $(DBFLAGS) -c $*.f
-.F.o:;      $(FC) $(DBFLAGS) -c $*.F
+.f90.o:;    $(FC) $(FFLAGS) $(FREE) $(STINC) -c $*.f90
+.F90.o:;    $(FC) $(FFLAGS) $(FREE) $(STINC) -c $*.F90
+.f.o:;      $(FC) $(FFLAGS) -c $*.f
+.F.o:;      $(FC) $(FFLAGS) -c $*.F
