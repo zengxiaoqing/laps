@@ -50,7 +50,8 @@ my $web_url = "https://ruc.noaa.gov/gsd-only/laps";
 $request_root = "$web_root/request"; # current directory of this script
 
 my $ncarg_root;
-$ncarg_root = "/usr/local/apps/ncarg-4.3.1.LINUX9";
+# $ncarg_root = "/usr/local/apps/ncarg-4.3.1.LINUX9";
+$ncarg_root = "/usr";
 
 my $default_domain = "co";
 
@@ -3102,7 +3103,7 @@ if($err == 0) {
 
                         }elsif("$field" eq "SAT_VIS_ALB"){ 
 
-                           if("$hhmm" =~ "goes" || "$hhmm" =~ "mtsat" || "$hhmm" =~ "meteos") { 
+                           if("$hhmm" =~ "goes" || "$hhmm" =~ "mtsat" || "$hhmm" =~ "meteos" || "$hhmm" =~ "coms") { 
                                printf LAPSPLOT "lv\n"; 
                                printf LAPSPLOT "$hhmm\n"; 
                                printf LAPSPLOT "-1\n"; 
@@ -3659,11 +3660,13 @@ if($err == 0) {
 #                       printf LAPSPLOT "a\n"; 
                         printf LAPSPLOT "cla\n";} 
                     elsif("$field" eq "CLD_ALB"){ 
-                        printf LAPSPLOT "cai\n";   # LIL 
-                        printf LAPSPLOT "a\n"; 
-                        printf LAPSPLOT "cla\n";} 
+#                       printf LAPSPLOT "cai\n";   # LIL/CLA 
+#                       printf LAPSPLOT "a\n"; 
+#                       printf LAPSPLOT "cla\n";} 
+                        printf LAPSPLOT "svi\n";   # LIL/SMV
+                        printf LAPSPLOT "a\n";} 
                     elsif("$field" eq "cld_alb"){ 
-                        printf LAPSPLOT "ca\n";   # LIL 
+                        printf LAPSPLOT "ca\n";    # LIL 
                         printf LAPSPLOT "a\n"; 
                         printf LAPSPLOT "cla\n";} 
                     elsif("$field" eq "LONG_WAVE"){ 
@@ -5013,7 +5016,8 @@ if($err == 0) {
   my $machine = "tst1-100";      # hugo / ren also works but can have long runtimes
   my $shell = " ";
 
-  my $installroot = "@prefix@";
+  my $installroot = "/opt/nfs/lapb/parallel/laps";
+# my $installroot = "/opt/nfs/lapb/operational/laps";
   my $exedir = "$installroot/bin";
 
   if ($wgi_only == 0) {
@@ -5214,14 +5218,15 @@ if($err == 0) {
     if ($out_levels =~ "allsky"){
 #       system("@prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
 #       system("ssh oplapb\@dlaps-ms1 @prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
-        system("ssh oplapb\@dlaps-ms1 $installroot/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+        system("ssh albers\@vlaps-ms2.gsd.esrl.noaa.gov $installroot/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root allsky      $animate $zoom_safe 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
         system("rm -f $web_root/$ScratchDir/gmeta_latest.$image_type; ln -s $web_root/$ScratchDir/gmeta_$$.$image_type $web_root/$ScratchDir/gmeta_latest.$image_type"); 
     }else{
 #       system("@prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
 #       my $command = "ssh oplapb\@dlaps-ms1.fsl.noaa.gov @prefix@/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1";
 #       my $command = "ssh oplapb\@dlaps-ms1.fsl.noaa.gov date";
 #       print " \ncommand is $command \n";
-        system("ssh oplapb\@dlaps-ms1 $installroot/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+#(2018) system("ssh oplapb\@dlaps-ms1 $installroot/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
+        system("ssh albers\@vlaps-ms2 $installroot/etc/www/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $delay_safe $exedir $laps_data_root $ncarg_root $animate $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2>&1"); 
 #       system("uname -a; ssh oplapb\@dlaps-ms1 date"); 
     }
     system("rm -f $request_root/lapsplot/lapsplot.in; ln -s $web_root/$ScratchDir/lapsplot.in_$$ $request_root/lapsplot/lapsplot.in; rm -f $request_root/lapsplot/lapsplot.out; ln -s $web_root/$ScratchDir/lapsplot.out_$$ $request_root/lapsplot/lapsplot.out; rm -f $request_root/lapsplot/lapsplot.err; ln -s $web_root/$ScratchDir/lapsplot.err_$$ $request_root/lapsplot/lapsplot.err; rm -f $request_root/lapsplot/loop; ln -s $web_root/$ScratchDir/$$ $request_root/lapsplot/loop");
