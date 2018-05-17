@@ -378,12 +378,11 @@
                  ----  2.1.8.1 Web Display  ---
 
      The 'gmeta' file can be converted into a GIF/JPEG file for web display by 
-     using 'ctrans' in conjunction with the 'netpbm' package of image 
-     conversion programs that can be downloaded at the link just below. Within 
-     this package our web display scripts use the 'rastopnm' and 'ppmtogif' 
-     programs.
+     using 'ctrans' in conjunction with the ImageMagick package programs that
+     can be downloaded at the link just below. Within this package our web
+     display scripts use the 'convert' program.
 
-                   http://netpbm.sourceforge.net/
+                        https://www.imagemagick.org
 
      We have the option of making pre-generated GIF images that can be displayed
      on the web by invoking the 'sched.pl -f dummy' command line argument. 
@@ -408,30 +407,34 @@
      After running 'configure' the following steps will help in setting up
      this web page. 
 
-     1) edit 'etc/www/nph-laps.cgi' and set $web_root to be the root directory
-        of the web server (document root)
+     1) mkdir -p $web_root/request (using the root directory of the web server)
 
-     2) edit 'etc/www/laps.cgi' and set $web_root to be the root directory
-        of the web server
+     2) cp $LAPSINSTALLROOT/etc/www/*laps.cgi $web_root/request
 
-     3) edit 'etc/www/nph-laps.cgi' and set $ncarg_root to be the root directory
+     3) edit '$web_root/request/nph-laps.cgi'
+
+     a) adjust the PATH so one can run 'ctrans' and 'convert'
+
+     b) set $web_root to be the root directory of the web server (document root)
+
+     c) set $web_url to be the top level URL that points to the web root
+        directory
+
+     4) edit '$web_root/request/laps.cgi' and set $web_root to be the root
+        directory of the web server
+
+     5) edit 'etc/www/nph-laps.cgi' and set $ncarg_root to be the root directory
         of the NCL/NCAR Graphics installation
 
-     4) mkdir -p $web_root/request
-
-     5) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/nph-laps.cgi .
-
-     6) cd $web_root/request; ln -s $LAPSINSTALLROOT/etc/www/laps.cgi .
-
-     7) For each DOMAIN NAME (foo):
+     6) For each DOMAIN NAME (foo):
   
      a) mkdir -p $web_root/domains/foo                   
 
      b) cd $web_root/domains/foo; ln -s $LAPS_DATA_ROOT private_data
 
-     8) edit 'etc/www/nph-laps.cgi' and set $default_domain to be your
+     6) edit 'etc/www/nph-laps.cgi' and set $default_domain to be your
         favorite domain 'foo' within the domain list established in 
-        step (7)
+        step (6)
 
      At this point you should hopefully be able to use a web browser and
      run the "on-the-fly" page with something like this URL:
