@@ -302,68 +302,40 @@ else
   fi
 
   if test "$MACHINE" = "AIX"; then
-
 #   Combination for IBM
-    ext1=avs
-    ext2=x
     ext3=gif
     netpbm=no
-
-#   CTRANS=/usr/local/apps/ncarg-4.0.1/bin/ctrans
-
   else
-
-    netpbm=yes
-
-#   Best combination for LINUX
-    ext1=avs
-    ext2=avs
+#   netpbm=yes
+    netpbm=no
     ext3=gif
-
-#   The ones below will run but produce fewer colors in color images for LINUX
-
-#   ext1=sun
-#   ext2=sun
-
-#   ext1=xwd
-#   ext2=xwd
-
-#   Note that sgi will not work in LINUX since we are using gmeta files with WINDOW/RESOLUTION set
-#   ext1=sgi
-#   ext2=sgi
-
-#   ext1=sun
-#   ext2=gif
-
-#   CTRANS=/usr/local/apps/ncarg-4.2.2-pgi/bin/ctrans
-
   fi
 
-  CTRANS=$NCARG_ROOT/bin/ctrans
-
-
-# /usr/local/apps/ncarg-4.0.1/bin/ctrans -verbose -d avs -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/gmeta_$proc.x
-# ctrans -d avs -window 0.0:0.08:1.0:0.92 -resolution 610x512 gmeta > $SCRATCH_DIR/gmeta_$proc.x
-# /usr/local/apps/ncarg-4.0.1/bin/ctrans -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
-# $NCARG_ROOT/bin/ctrans -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION $SCRATCH_DIR/gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
-
-# $CTRANS -verbose -d $ext1 -window $WINDOW -resolution $RESOLUTION $SCRATCH_DIR/$proc/gmeta > $SCRATCH_DIR/gmeta_temp_$proc.$ext2
-
-# ls -l $SCRATCH_DIR/gmeta_temp_$proc.$ext2
+  if test -e /usr/bin/ctrans; then
+    CTRANS=/usr/bin/ctrans
+  elif test -e /usr/local/ncl-6.3.0/bin/ctrans; then
+    CTRANS=/usr/local/ncl-6.3.0/bin/ctrans
+  else
+    CTRANS=ctrans
+  fi
 
   date -u
 
+  echo "lapsplot_gifs.sh: PATH = $PATH"
   echo "lapsplot_gifs.sh: netpbm = $netpbm"
-
-# numimages=`ls -1 *.gif | wc -l`
-# echo "numimages = $numimages"
+  echo "lapsplot_gifs.sh: CTRANS = $CTRANS"
 
 # We assume we are running this script in LINUX and convert will not properly do AVS X on LINUX
-  if test "$netpbm" = "yes" && test "$animate" = "no"; then 
+  if test "$animate" = "no"; then 
     date
-#   echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$proc.gif file"
-    echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$proc.gif"
-    $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$proc.gif
+
+    if test "$netpbm" = "yes"; then 
+      echo "Running $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$proc.$ext3"
+                    $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$proc.$ext3
+    else
+      echo "Running $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | convert - $SCRATCH_DIR/gmeta_$proc.$ext3"
+                    $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | convert - $SCRATCH_DIR/gmeta_$proc.$ext3
+    fi
 
     date -u
 
@@ -371,24 +343,46 @@ else
     echo "Cleanup"
     mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rmdir $SCRATCH_DIR/$proc &
 
-  elif test "$netpbm" = "yes" && test "$animate" != "no"; then 
+  else # animate != no
     date
-    echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun"
-    $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun
+    echo "Running $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun"
+                  $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun
 
 #   Convert multiframe raster image to animated gif
-    $NCARG_ROOT/bin/rassplit gmeta_$proc.sun
+#   $NCARG_ROOT/bin/rassplit gmeta_$proc.sun
+    rassplit gmeta_$proc.sun
 
-#   Convert sun to gif images so convert works better on new server
-    for file in `ls gmeta_$proc.*.sun`; do
+    if test "$netpbm" = "yes"; then 
+
+#     Convert sun to gif images so convert works better on new server
+      for file in `ls gmeta_$proc.*.sun`; do
         ls $file
         rasttopnm $file | ppmtogif > $file.gif
-    done
+      done
 
-    ls -l gmeta_$proc.*.sun.gif
+      ls -l gmeta_$proc.*.sun.gif
+
+    else # animation without netpbm
+#     We are testing the gmeta as input, though we can also try the multiframe raster (.sun) image file
+#     We can have one path to eventually produce an animated GIF and another to produce separate images for a montage
+#     If animate is "yes" we want an animated GIF, otherwise animate is a number of files for a montage of separate images
+#     echo "Under Construction for animation without netpbm, do we get single or multiple image output at this stage?"
+#     echo "Running $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | convert - $SCRATCH_DIR/gmeta_$proc.$ext3"
+#                   $CTRANS -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | convert - $SCRATCH_DIR/gmeta_$proc.$ext3
+#     ls -l gmeta_$proc.*
+
+#     Convert sun to gif images using convert
+      for file in `ls gmeta_$proc.*.sun`; do
+        ls $file
+        convert $file $file.gif
+      done
+
+      ls -l gmeta_$proc.*.sun.gif
+
+    fi
 
 #   Make animation or montage
-    if test "$animate" != "no"; then
+#   if test "$animate" != "no"; then
       numimages=`ls -1 *.$ext3 | wc -l`
       echo "numimages = $numimages"
 
@@ -464,7 +458,7 @@ else
 #   echo "Cleaned up listing of $SCRATCH_DIR/$proc"
 #   ls -l $SCRATCH_DIR/$proc
 
-  fi # netpbm / animate test                        
+# fi # netpbm / animate test                        
 
 fi # allsky option
 
