@@ -203,8 +203,6 @@ C
       real image( nelem, nlines)
 
 !     Declarations for 'write_lvd' call
-      integer iwmostanum(recNum)
-      character a9time_ob_r(recNum)*9
       logical l_closest_time, l_closest_time_i, l_in_domain
       Character*6  csat_id
       Character*3  csat_type
