@@ -1405,7 +1405,7 @@ c
                   call move(visrefl,laps_data(1,1,nlf),nx_l,ny_l)
                   write(6,*)' Using vis reflectance for SVS field'
                   var_lvd(nlf) = 'SVS'       ! satellite, visible
-                  c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE'
+                  c_lvd(nlf)=csatid//' Visible Satellite Reflectance'
                   units_lvd(nlf) = 'REFLECTANCE'
                else
                   write(6,*)' less than 1% good vis data in status 1'
