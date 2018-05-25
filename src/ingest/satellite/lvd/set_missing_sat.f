@@ -233,7 +233,7 @@ c
          image_in(i,j)=image_temp(i,j)
       enddo
       enddo
-      write(6,*)'   # reset to r_missing: ',imiss_status
+      write(6,*)'   # reset to r_missing: ',-imiss_status
       write(6,*)'   # reset to average  : ',istat_status
       istatus=imiss_status+istat_status
 
