@@ -82,8 +82,9 @@ c
       do j=1,mjx-1
       do i=1,miy-1
 c
-      rhoair=prs(i,j,k)*100./
-     & (rgas*virtual(tmk(i,j,k),qvp(i,j,k))) ! air density
+c     Replace virtual call (absent from library) with tvq if units are OK
+!     rhoair=prs(i,j,k)*100./
+!    & (rgas*virtual(tmk(i,j,k),qvp(i,j,k))) ! air density
 c
 c Adjust factor for brightband, where snow or graupel particle
 c scatters like liquid water (alpha=1.0) because it is assumed to
