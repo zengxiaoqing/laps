@@ -185,6 +185,7 @@ c =================================================================
       if(nsat.eq.0)then
        print*,'!!Error: No satellites specified for this lvd run'
        print*,'!!Check static/satellite_lvd.nl:  NSATS or CSATID'
+       print*,'!!Supported CSATIDs:',c_sat_id
        print*,'!!Terminating!!'
       endif
 1000  deallocate (sri,srj)
