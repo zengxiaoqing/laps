@@ -274,7 +274,7 @@ c           n=index(pathname,' ')
             if(gfn_status.eq.1)then
                write(*,*)'Success in GFN (lvd)'
             else
-               write(6,*)'Error GFN (lvd) ',lvd_dir
+               write(6,*)'Error GFN (lvd - wfo) ',lvd_dir
                istatus=-1
                goto 996
             endif
@@ -327,7 +327,7 @@ c
          il=9
          if(c_sat_type.eq.'ncp')il=13
          do i=1,ifiles_sat_raw
-          write(6,*)' Raw filename: ',c_filename_sat(i)
+          write(6,*)' Raw filename: ',trim(c_filename_sat(i))
           write(6,*)' Raw a9time: ',c_filename_sat(i)(in(1)+1:in(1)+il)
           call i4time_fname_lp(c_filename_sat(i)(in(1)+1:in(1)+il),
      &i4time_sat_raw(i),jstatus)
