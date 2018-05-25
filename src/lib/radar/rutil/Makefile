@@ -30,7 +30,7 @@ DEBUGLIB = libdebugrutil.a
 
 
 SRC= \
-    kessler.f90 st4_driver.f90 dbzcalc.f       
+    kessler.f90 dbzcalc.f       
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
