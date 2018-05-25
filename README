@@ -1,7 +1,8 @@
 
   
-      This LAPS README file is viewable on the WWW via the LAPS home 
-      page at http://laps.noaa.gov/
+      This LAPS README file is viewable on the Web at
+      http://stevealbers.net/albers/README_out.html with a clickable table of
+      contents.
 
 
                        TABLE OF CONTENTS  
@@ -117,17 +118,15 @@
 ----------------- 1.0  General LAPS info --------------------------------------
 
      Below is a description of the tar file containing the LAPS data ingest and
-     analysis code. The predictive component of LAPS (MM5, RAMS/SFM, ETA) is
-     set up separately (see Section 3.4). 
+     analysis code. The predictive component of LAPS (e.g. WRF) is set up
+     separately (see Section 3.4). 
 
-     Please note that GSD provides support for LAPS software only if a prior
-     agreement is made to that effect. Additionally, questions concerning LAPS
-     must be asked in reference to the latest released tar file; we cannot 
-     support older versions of LAPS code. It is also recommended that LAPS 
-     users try to take advantage of the latest LAPS updates by periodically 
-     importing a fresh tar file every few months or so. Please check the
-     LAPS Software Page at 'http://laps.noaa.gov/cgi/LAPS_SOFTWARE.cgi'
-     for information about recent releases.
+     Please note that GSD no longer provides support for LAPS, though credit
+     should be given to NOAA/ESRL/GSD, CIRA and CIRES. LAPS is available
+     via GitHub under the Gnu public license. For support it is best to
+     contact others you may know who are familiar with the system. It is
+     recommended that LAPS users try to take advantage of the latest LAPS
+     updates by periodically importing a fresh tar file every few months or so.
 
      A flow chart for the LAPS software can be found at:
      http://laps.noaa.gov/doc/Slide1.png
