@@ -853,7 +853,7 @@ C READ IN SATELLITE DATA
 !       Positive I offset will shift the image west        
 !       Positive J offset will shift the image south
 
-        where(abs(subpoint_lon_clo_s8a(:,:)-( -90.)) .lt.  8.) ! GOES 16
+        where(abs(subpoint_lon_clo_s8a(:,:)-( -75.)) .lt.  8.) ! GOES 16
             offset_ir_i(:,:)  = +1500./grid_spacing_cen_m
             offset_ir_j(:,:)  =  +500./grid_spacing_cen_m
 !           offset_ir_i(:,:)  =  -500./grid_spacing_cen_m
@@ -867,12 +867,12 @@ C READ IN SATELLITE DATA
             offset_vis_i(:,:) =     0./grid_spacing_cen_m
             offset_vis_j(:,:) =     0./grid_spacing_cen_m
         end where
-        where(abs(subpoint_lon_clo_s8a(:,:)-( -75.)) .lt.  8.) ! GOES E
-            offset_ir_i(:,:)  = +4700./grid_spacing_cen_m
-            offset_ir_j(:,:)  = -3200./grid_spacing_cen_m
-            offset_vis_i(:,:) =     0./grid_spacing_cen_m
-            offset_vis_j(:,:) =     0./grid_spacing_cen_m
-        end where
+!       where(abs(subpoint_lon_clo_s8a(:,:)-( -75.)) .lt.  8.) ! GOES E
+!           offset_ir_i(:,:)  = +4700./grid_spacing_cen_m
+!           offset_ir_j(:,:)  = -3200./grid_spacing_cen_m
+!           offset_vis_i(:,:) =     0./grid_spacing_cen_m
+!           offset_vis_j(:,:) =     0./grid_spacing_cen_m
+!       end where
 
 !       Apply offsets to 11u IR data
         do i = 1,NX_L
