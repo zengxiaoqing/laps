@@ -23,6 +23,7 @@
         include 'trigd.inc'
 
         use mem_namelist, ONLY: fcterm, aod_bin, aod_asy, ssa, r_missing_data, o3_du,h_o3,d_o3
+        use mem_namelist, ONLY: fcterm_a, angstrom_exp_a
         use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! I
 
 !       Statement Functions
@@ -148,8 +149,8 @@
         aero_refht = redp_lvl
 
         ramp_fc_nt = min(max((-sol_alt/3.0),0.),1.)               
-        fcterm2 = fcterm * (1.0 - ramp_fc_nt)
-        angstrom_exp_a = 2.4 - (fcterm * 15.)
+        fcterm_a(:) = fcterm * (1.0 - ramp_fc_nt)
+
         angstrom_exp_ha = 2.0
         angexp_c = angsexp_f(aod_asy(1,2))
         angexp_f = angsexp_f(aod_asy(2,2))
@@ -164,7 +165,8 @@
             write(6,*)' aod_vrt = ',aod_vrt
             write(6,*)' aod_ref = ',aod_ref
             write(6,*)' aod_ray max = ',maxval(aod_ray)
-            write(6,*)' fcterm/fcterm2 = ',fcterm,fcterm2
+            write(6,*)' fcterm   = ',fcterm
+            write(6,*)' fcterm_a = ',fcterm_a
 !           write(6,*)' patm_ray max = ',maxval(patm_ray)
             write(6,*)' angstrom_exp_a = ',angstrom_exp_a
             write(6,*)' angexp_c = ',angexp_c
@@ -826,7 +828,7 @@
               do ic = 1,nc
 
 !               Check assignments in 'mem_namelist.f90' / nest7grid.parms
-!               Dividing 'fcterm2/ext_a(ic)' has the effect of nullifying
+!               Dividing 'fcterm_a(ic)/ext_a(ic)' has the effect of nullifying
 !               the Angstrom exponent for the coarse mode, so coarse mode 
 !               aerosols appear white under forward scattering. An additional
 !               term can be added to the numerator to modify the effect.
@@ -834,7 +836,7 @@
                 fb = aod_asy(3,ic)**scatter_order
                 g1 = aod_asy(2,ic)**scatter_order
                 g2 = aod_asy(1,ic)**scatter_order
-                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2/ext_a(ic))
+                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm_a(ic)/ext_a(ic))
 
 !               topo phase function assumes scatter order is non-topo 
 !               value (for now)
@@ -847,7 +849,7 @@
               do ic = 1,nc
 
 !               Check assignments in 'mem_namelist.f90' / nest7grid.parms
-!               Dividing 'fcterm2/ext_a(ic)' has the effect of nullifying
+!               Dividing 'fcterm_a(ic)/ext_a(ic)' has the effect of nullifying
 !               the Angstrom exponent for the coarse mode, so coarse mode 
 !               aerosols appear white under forward scattering. An additional
 !               term can be added to the numerator to modify the effect.
@@ -855,7 +857,7 @@
                 fb = aod_asy(3,ic)**scatter_order
                 g1 = aod_asy(2,ic)**scatter_order
                 g2 = aod_asy(1,ic)**scatter_order
-                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm2/ext_a(ic))
+                hg2(ic) = dhg2(elong(ialt,jazi),fb,fcterm_a(ic)/ext_a(ic))
 
 !               topo phase function assumes scatter order is non-topo 
 !               value (for now)
