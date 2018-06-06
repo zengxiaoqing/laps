@@ -14,6 +14,10 @@
        real ri_a(iplo:iphi,jplo:jphi)
        real rj_a(iplo:iphi,jplo:jphi)
 
+       logical l_stereo /.false./
+
+       rstereo(alt) = tand((90.-alt)/2.) ! 0 at zenith, 1 at horizon
+
        posign = polat / 90.
 
        altmin = float(minalt) * alt_scale
