@@ -31,6 +31,7 @@
 
         use mem_allsky
         use mem_namelist, ONLY: earth_radius, ssa
+        use mem_namelist, ONLY: fcterm, angstrom_exp_a
 
         include 'trigd.inc'
         include 'wa.inc'
@@ -199,6 +200,8 @@
         write(6,*)' eobsl = ',eobsl
         eobsc_sky = 0. ! initialize
 
+        clear_rad_c(:,:,:) = 0. ! initialize
+
         write(6,*)' range of clwc_3d is',minval(clwc_3d),maxval(clwc_3d)
         write(6,*)' range of cice_3d is',minval(cice_3d),maxval(cice_3d)
         write(6,*)' range of rain_3d is',minval(rain_3d),maxval(rain_3d)
@@ -206,6 +209,9 @@
         write(6,*)' max top of cice_3d is',maxval(cice_3d(:,:,NZ_L))
         write(6,*)' max top of clwc_3d is',maxval(clwc_3d(:,:,NZ_L))
         write(6,*)' ssa values are ',ssa(:)
+
+        angstrom_exp_a = 2.4 - (fcterm * 15.)
+        angstrom_exp_a = max(angstrom_exp_a,0.25)        
 
         write(6,*)' call get_cloud_rays...'
 
@@ -342,39 +348,6 @@
 !         Get all sky for cyl   
           ni_cyl = maxalt - minalt + 1
           nj_cyl = maxazi - minazi + 1
-
-          I4_elapsed = ishow_timer()
-
-          if(solar_alt .lt. 0. .OR. l_solar_eclipse .eqv. .true.)then
-              write(6,*)' call get_starglow with cyl data'
-              l_zod = (.not. l_solar_eclipse)
-              call get_starglow(i4time_solar,alt_a_roll,azi_a_roll       ! I
-     1                     ,minalt,maxalt,minazi,maxazi                  ! I
-     1                     ,rlat,rlon,alt_scale,azi_scale,horz_dep       ! I
-     1                     ,l_zod                                        ! I
-     1                     ,glow_stars)                                  ! O
-
-              write(6,*)' range of glow_stars (before) is',
-     1             minval(glow_stars(2,:,:)),maxval(glow_stars(2,:,:))
-
-              write(6,*)' range of moonglow is',
-     1             minval(blog_moon_roll),maxval(blog_moon_roll)
-
-              write(6,*)' Moonglow is being added to starlight'       
-              do j = minazi,maxazi
-              do i = minalt,maxalt
-                do ic = 1,nc
-                  glow_stars(ic,i,j) = 
-     1              addlogs(glow_stars(ic,i,j),blog_moon_roll(i,j))
-                enddo ! ic
-              enddo ! i 
-              enddo ! j 
-
-              write(6,*)' range of glow_stars (after) is',
-     1             minval(glow_stars(2,:,:)),maxval(glow_stars(2,:,:))
-          else
-              glow_stars(:,:,:) = 0. ! initialize
-          endif
 
           I4_elapsed = ishow_timer()
 
@@ -559,6 +532,9 @@
               patm_sfc = max(patm_sfc,patm)
 
               write(6,*)' patm/patm_sfc in calc_allsky ',patm,patm_sfc
+              write(6,*)' Range of clear_rad_c 3 =',
+     1                   minval(clear_rad_c(3,:,:)),
+     1                   maxval(clear_rad_c(3,:,:))
 
               write(6,*)' call get_sky_rgb with cyl data '
      1                   ,l_solar_eclipse
@@ -593,8 +569,8 @@
      1                    ,aod_tot
      1                    ,dist_2_topo,topo_solalt,topo_solazi
      1                    ,trace_solalt,eobsc_sky
-     1                    ,alt_a_roll,azi_a_roll ! I   
-     1                    ,ni_cyl,nj_cyl,azi_scale  
+     1                    ,alt_a_roll,azi_a_roll                        ! I   
+     1                    ,ni_cyl,nj_cyl,alt_scale,azi_scale  
      1                    ,solar_alt,solar_az                           ! I
      1                    ,solar_lat,solar_lon,r_au                     ! I
      1                    ,minalt,maxalt,minazi,maxazi                  ! I
