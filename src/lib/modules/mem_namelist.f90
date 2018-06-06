@@ -29,6 +29,7 @@ include 'lapsparms.for'
         real    r_missing_data
         integer  MAX_RADARS
         real aod,aod_bin(3),aod_asy(3,3),fcterm,aod_ha,ht_ha(4),ssa(3)
+        real fcterm_a(3),angstrom_exp_a
         real alpha_ha
         real o3_du,h_o3,d_o3
         real aero_scaleht
@@ -228,6 +229,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,purge_time &
                   ,i2_missing_data, iverbose, r_missing_data, MAX_RADARS, i_offset_radar &
                   ,aod,aod_bin,aod_asy,fcterm,aod_ha,ht_ha,ssa,aero_scaleht,o3_du,h_o3,d_o3 &
+                  ,fcterm_a,angstrom_exp_a &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
                   ,max_snd_grid,max_snd_levels,redp_lvl,prtop &
@@ -366,10 +368,12 @@ elseif (namelist_name == 'lapsparms') then
    i_offset_radar = -1
    precip_cycle_time = -1
    solalt_thr_vis = 15.
-   aod = 0.05              ! default column aerosol optical depth
+   aod = 0.05              ! default column aerosol optical depth (550nm)
+   angstrom_exp_a = -99.   ! aerosol angstrom exponent (flag value)
    aero_scaleht = 1500.    ! default aerosol scale height (m)
    fcterm = 0.05           ! range from 0.00 to 0.09 for large aerosols
                            ! corresponding phase function peak from 20-110
+   fcterm_a(:) = -99.      ! coarse model term for pair of DHG functions (each wavelength - flag value)
    aod_ha = .004           ! high altitude aerosol optical depth
    ht_ha(1)=13000.; ht_ha(2)=13000.; ht_ha(3)=25000.; ht_ha(4)=31000.
    o3_du = 300.
