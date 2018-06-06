@@ -1,6 +1,6 @@
 
        
-        subroutine get_starglow(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi,rlat,rlon,alt_scale,azi_scale,horz_dep,l_zod,glow_stars)
+        subroutine get_starglow(i4time,alt_a,azi_a,elong_a,minalt,maxalt,minazi,maxazi,rlat,rlon,alt_scale,azi_scale,horz_dep,l_zod,glwmid,glow_stars)
 
         include 'trigd.inc'
 
@@ -26,6 +26,7 @@
 
         real alt_a(minalt:maxalt,minazi:maxazi)
         real azi_a(minalt:maxalt,minazi:maxazi)
+        real elong_a(minalt:maxalt,minazi:maxazi)
         real glow_stars(3,minalt:maxalt,minazi:maxazi) ! log nL
         real rad_stars(3,minalt:maxalt,minazi:maxazi) ! nL
 
@@ -40,20 +41,32 @@
 
         character*20 c_conv
 
-        parameter (nstars = 2000)
+        parameter (nstars = 120000)
         real dec_d(nstars),ra_d(nstars),mag_stars(nstars),bmv(nstars)
         real alt_stars(nstars),azi_stars(nstars),ext_mag(nstars),lst_deg
         real angdif
         real*8 dangdif,jed,r8lon,lst,has(nstars),phi,als,azs,ras,decr,xx,yy
         real*8 dalt,dazi,dha,ddec,dra,sol_meanlon,sol_meananom
 
+        integer*8 n_star_loops
+
         character*20 starnames(nstars)
-        logical l_zod
+        logical l_zod, l_psf /.true./
 
         DANGDIF(XX,YY)=DMOD(XX-YY+9.4247779607694D0,6.2831853071796D0)-3.1415926535897932D0
         ANGDIFD(X,Y)=MOD(X-Y+540.,360.)-180.
 !       addmags(a,b)=log10(10.**(-a*0.4) + 10.**(-b*0.4)) * (-2.5)
         addlogs(x,y) = log10(10.**x + 10.**y)
+
+!       According to Allen's "Astrophysical Quantities" page 134, sky brightness is
+!       given in terms of the number of 10th magnitude stars per square degree in the visual band:
+
+!       Air Glow at Zenith....................40                 (6th mag per square degree)
+!       Zodiacal Light........................100                (5th mag per square degree)
+!       Faint Stars...........................320 on Milky Way
+!                  ........................... 95 Off Milky Way
+!       Diffuse Galactic Light................. 20
+!       Total sky brightness at zenith........290                (130 is 4.5 mag per square deg)
 
         write(6,*)' subroutine get_starglow...'
         write(6,*)' lat/lon = ',rlat,rlon             
@@ -69,7 +82,10 @@
         write(6,*)' sidereal time (deg) = ',lst_deg               
 
 !       Obtain stars data
-        call read_bsc(nstars,ns,dec_d,ra_d,mag_stars,bmv,starnames)
+        call read_hyg(nstars,ns,dec_d,ra_d,mag_stars,bmv,starnames,istat_cat)
+        if(istat_cat .eq. 0)then
+          call read_bsc(nstars,ns,dec_d,ra_d,mag_stars,bmv,starnames)
+        endif
 
         do is = 1,ns        
           RAS = ra_d(is) * rpd
@@ -88,15 +104,14 @@
 
         I4_elapsed = ishow_timer()
 
-!       Obtain planets data
+!       Obtain planets data (placed at end of star arrays)
         do iobj = 2,6
-          if(.true.)then
             ns = ns + 1
-            write(6,*)' Call sun_planet for ',iobj
+            write(6,*)' Call sun_planet for ',iobj,ns 
             call sun_planet(i4time,iobj,rlat,rlon,dec_d(ns),ra_d(ns),alt_stars(ns),azi_stars(ns),elgms_r4,mag_stars(ns))
+            has(ns) = 0. ! this isn't being used since we already have alt/azi
             starnames(ns) = 'planet'
             bmv(ns) = 0.
-          endif
         enddo ! iobj
 
         I4_elapsed = ishow_timer()
@@ -118,9 +133,12 @@
           endif
         enddo ! is
 
+!       Zodiacal light
 !       http://www.ing.iac.es/Astronomy/observing/conditions/skybr/skybr.html
 !       http://aas.aanda.org/articles/aas/pdf/1998/01/ds1449.pdf
 !       http://download.springer.com/static/pdf/80/art%253A10.1186%252FBF03352136.pdf?auth66=1427760212_d8fc6d84b219c957974dd2b221bc226a&ext=.pdf
+!       http://adsabs.harvard.edu/full/1975A%26A....38..405D
+
         glow_stars = 1.0 ! initialize to cosmic background level
 
         sqarcsec_per_sqdeg = 3600.**2
@@ -144,10 +162,20 @@
         call angcoord_2d(c_conv,nalt,nazi,sollon,arg2,dec_a,ra_a,argphi,helioeclipticlat_a,helioeclipticlon_a)
 
         if(l_zod .eqv. .true.)then
-          write(6,*)' Computing Milky Way / Zodiacal Light / Corona'
+          write(6,*)' Computing Milky Way / Zodiacal Light / Corona',horz_dep
         else
           write(6,*)' Skipping Milky Way / Zodiacal Light / Corona'
         endif
+
+        glwmid_mag = (glwmid - 2.925) * 0.4
+        pix_mag = log10((.25/alt_scale)**2) * 2.5
+        ref_mag = 1.3 + pix_mag - glwmid_mag ! higher value has larger fainter stars
+
+!       write(6,*)'star area/radius (deg/vpix)', size_glow_sqdg_st,strad_dg,strad_dg/alt_scale
+        write(6,*)'glwmid_mag / pix_mag / ref_mag',glwmid_mag,pix_mag,ref_mag
+
+        n_anti_calls = 0
+        n_star_loops = 0
 
         do ialt = minalt,maxalt
         do jazi = minazi,maxazi
@@ -155,11 +183,10 @@
            altg = alt_a(ialt,jazi)
            azig = azi_a(ialt,jazi)
 
-           size_glow_sqdg = 0.3  ! empirical middle ground 
-           size_glow_sqdg = 0.5  ! empirical middle ground 
-           size_glow_sqdg = 0.0625  ! alt/az grid
-           size_glow_sqdg = 0.1  ! final polar kernel size?
-
+           if(ialt .eq. (ialt/10)*10 .and. jazi .eq. (ialt/10)*10)then
+             write(6,*)' altg,azig/elong',ialt,jazi,altg,azig,elong_a(ialt,jazi) ! test
+           endif
+          
            if(altg .ge. -horz_dep)then
 
              if(l_zod .eqv. .true.)then
@@ -181,16 +208,19 @@
               if(elon .gt. 180.)elon = 360. - elon
               s10zod_pole = 60. ! high ecliptic latitude
               s10geg_ecliptic =   40. * cosd((elon-180.)/2.)**150.0
-              s10zod_ecliptic =  900. * cosd((elon)/2.0001)**7.7 + 140. + s10geg_ecliptic
+!             s10geg_ecliptic =  400. * cosd((elon-180.)/2.)**150.0 ! test
+              geg_factor = 1. + (40./140.) * cosd((elong_a(ialt,jazi)-180.)/2.)**150.0
+              s10zod_ecliptic =  900. * cosd((elon)/2.0001)**7.7 + 140. ! + s10geg_ecliptic
 !             s10zod_ecliptic = 4000. * cosd((elon)/2.)**16.0 + 150. +
 !             s10geg_ecliptic
 !             Note the gegenschein of s10 = 40 can be added near
-!             helioecliptic 180.
+!             helioecliptic 180. to yield a total of 180 s10 units.
               eclp = 1.9 - 0.9*abs(elon/180.)
               eclp = 1.0  ! control ecliptic sharpness
               ecllatterm = abs(sind(elat))**eclp
               s10zod = 10.**(log10(s10zod_pole) * ecllatterm + &
                              log10(s10zod_ecliptic) * (1.-ecllatterm))
+              s10zod = s10zod * geg_factor
 !             s10zod =            (s10zod_pole) * ecllatterm + &
 !                                 (s10zod_ecliptic) * (1.-ecllatterm) 
 !             s10zod = s10zod*10. ! debug for visibility
@@ -201,8 +231,8 @@
 !             https://www.terrapub.co.jp/journals/EPS/pdf/5006_07/50060493.pdf
 !             "Interplanetary Dust" edited by B. Grun
               sqarcsec_per_sqdeg = 3600.**2
-              size_glow_sqdg = 0.2    ! sun/moon area           
-              delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
+              size_glow_sqdg_sm = 0.2    ! sun/moon area           
+              delta_mag = log10(size_glow_sqdg_sm*sqarcsec_per_sqdeg)*2.5
               distr = sqrt(elat**2 + elon**2)
               distr2 = max(distr,0.40) ! account for pixel size
               srad = distr2/0.25
@@ -239,9 +269,23 @@
 !               glow_stars(ic,ialt,jazi) = log10(10.**glow_stars(ic,ialt,jazi))             
               enddo ! ic
 
-              if((azig .eq. 0.0 .or. azig .eq. 180.) .AND. &
+              iwrite = 0
+
+              if((azig .eq. 0.0 .or. azig .eq. 90. .or. azig .eq. 180. .or. azig .eq. 270.) .AND. &
                   (altg .eq. 0.0 .or. altg .eq. 10. .or. altg .eq. 20. .or. altg .eq. 30. .or. altg .eq. 40. .or. altg .eq. 60. .or. altg .eq. 90.) &
                                                                                                                             )then
+                iwrite = 1
+              endif
+
+              if(elong_a(ialt,jazi) .gt. (180. - alt_scale))then
+                iwrite = 2
+              endif
+
+              if(iwrite .ge. 1)then
+                I4_elapsed = ishow_timer()
+                write(6,*)
+                if(iwrite .eq. 2)write(6,*)' Gegenschein point'
+
                 write(6,71)altg,azig,dec_a(ialt,jazi),ra_a(ialt,jazi) &
                           ,gallat_a(ialt,jazi),gallon_a(ialt,jazi) &
                           ,helioeclipticlat_a(ialt,jazi),helioeclipticlon_a(ialt,jazi)
@@ -255,21 +299,101 @@
               endif
 
              endif ! l_zod
+           endif ! alt > -20.
+        enddo ! jazi
+        enddo ! ialt
 
-             alt_cos = min(altg,89.)
-             alt_dist = alt_scale / 2.0          * 1.3
-             azi_dist = alt_dist / cosd(alt_cos) * 1.3   
+        do is = 1,ns        
+          ialt_star = nint(alt_stars(is)/alt_scale)
+          jazi_star = nint(azi_stars(is)/azi_scale)
 
-             do is = 1,ns        
+          minalt_star = max(ialt_star - 16,minalt)
+          maxalt_star = min(ialt_star + 16,maxalt)
+
+          minazi_star = max(jazi_star - 16,minazi)
+          maxazi_star = min(jazi_star + 16,maxazi)
+
+          do ialt = minalt_star,maxalt_star
+          do jazi = minazi_star,maxazi_star
+
+            altg = alt_a(ialt,jazi)
+            azig = azi_a(ialt,jazi)
+
+            if(altg .ge. -horz_dep)then
+
+!             Threshold box to consider a star
+              alt_cos = min(altg,89.)
+
+                n_star_loops = n_star_loops + 1
+
+!               Consider varying the size with the magnitude
+!               size_glow_sqdg_st = 0.1  ! final polar kernel size?
+!               size_glow_sqdg_st = alt_scale**2
+!               strad_dg = sqrt(size_glow_sqdg_st) / 3.14159
+                
+                strad_dg = alt_scale * 0.4
+
+                if(mag_stars(is) .le. ref_mag)then
+!                  ratio_mid = 10.**(glwmid - 2.925)
+                   ratio_bri = 10.**((ref_mag-mag_stars(is))*0.4)
+                   strad_dg = strad_dg * sqrt(ratio_bri)
+                endif
+
+!               If the PSF is Gaussian then we can note the area under the
+!               curve is 2 * pi * amplitude * sigmax * sigmay                
+                if(.not. l_psf)then
+                   strad_dg = min(strad_dg,0.22)
+                   thr_dist = 1.5
+                else
+                   strad_dg = min(strad_dg,0.33)
+                   thr_dist = 3.5
+                endif
+                size_glow_sqdg_st = 3.14159 * strad_dg**2
+
+!               Radii of ellipse edge
+!               alt_dist = alt_scale / 2.0          * 1.3
+!               azi_dist = alt_dist / cosd(alt_cos) * 1.3   
+                alt_dist = strad_dg
+                azi_dist = strad_dg / cosd(alt_cos)
+
 !               Place star in center of grid box
                 alts = nint(alt_stars(is)/alt_scale) * alt_scale
                 azis = nint(azi_stars(is)/azi_scale) * azi_scale
-                if(abs(alts-altg) .le. alt_dist .AND. abs(azis-azig) .le. azi_dist)then
-                    delta_mag = log10(size_glow_sqdg*sqarcsec_per_sqdeg)*2.5
-                    rmag_per_sqarcsec = mag_stars(is) + delta_mag                  
+                if(abs(alts-altg) .le. thr_dist*alt_dist .AND. abs(azis-azig) .le. thr_dist*azi_dist)then
+                    if(is .le. 20 .or. is .ge. ns-4 .or. is .eq. 272 .or. mag_stars(is) .le. -1.0)then
+                      diste = sqrt( ((alts-altg)/alt_dist)**2 + ((azis-azig)/azi_dist)**2) 
+                      write(6,81)is,mag_stars(is),strad_dg,size_glow_sqdg_st,ialt,jazi,alt_dist,azi_dist,alts-altg,azis-azig,diste
+81                    format(/' sanity 1',i5,f9.1,2f9.3,2i5,5f9.1)
+                      iverb = 1
+                    else
+                      iverb = 0
+                    endif
 
-!                   Convert to log nanolamberts
-                    glow_nl = log10(v_to_b(rmag_per_sqarcsec))
+                    radius_pix = strad_dg/alt_scale ! 0.25 / alt_scale ! 0.25 is radius_deg of moon
+                    ricen = (azis-azig)/azi_scale
+                    rjcen = (alts-altg)/alt_scale
+                    aspect_ratio = 1. / cosd(min(abs(alts),89.))
+                    n_anti_calls = n_anti_calls + 1
+                    if(l_psf)then
+                      dist_dg = sqrt((ricen/aspect_ratio)**2 + rjcen**2) * alt_scale
+                      dist_dg = max(dist_dg,alt_scale*0.3) ! rough Gaussian average of central pixel
+                      frac_lit1 = 0.5 * exp(-((dist_dg/strad_dg)**2))
+                    else
+                      call antialias_ellipse(radius_pix,ricen,rjcen,aspect_ratio,frac_lit1,0,0,iverb)
+                    endif
+
+                    if(frac_lit1 .gt. 0.)then
+                        delta_mag = log10(size_glow_sqdg_st*sqarcsec_per_sqdeg/frac_lit1)*2.5
+                        rmag_per_sqarcsec = mag_stars(is) + delta_mag                  
+
+!                       Convert to log nanolamberts
+                        glow_nl = log10(v_to_b(rmag_per_sqarcsec))
+                    else
+                        delta_mag = 99.
+                        rmag_per_sqarcsec = 99.
+                        glow_nl = 0.
+                    endif
+
                     do ic = 1,3
                       if(ic .eq. 1)then
                         glow_delt = (bmv(is)-0.6) * 0.7 * 0.4
@@ -283,20 +407,23 @@
 
                       glow_stars(ic,ialt,jazi) = log10(10.**glow_stars(ic,ialt,jazi) + 10.**glow_nl)             
 
-                      if((is .le. 50 .or. is .ge. ns-4) .AND. abs(azis-azig) .le. azi_scale)then
+                      if(iverb .eq. 1)then
                         if(ic .eq. 2)then
-                          write(6,91)is,mag_stars(is),bmv(is),rmag_per_sqarcsec,delta_mag,glow_nl,glow_stars(ic,ialt,jazi)
+!                         write(6,*)' sanity 2',is,alt_stars(is),alts,azis
+                          write(6,91)is,mag_stars(is),bmv(is),rmag_per_sqarcsec,delta_mag,glow_nl,glow_stars(ic,ialt,jazi),frac_lit1
 91                        format( &
-                          ' mag/bmv/rmag_per_sqsec/dmag/glow_nl/glow_stars = ',i4,2f8.2,4f10.3)             
+                          ' mag/bmv/rmag_per_sqsec/dmag/glow_nl/glow_stars/flt1 = ',i4,2f8.2,4f10.3,f8.3)             
                         endif
                       endif
 
                     enddo ! ic
                 endif ! within star kernel
-             enddo ! is
-           endif ! alt > -20.
-        enddo ! jazi
-        enddo ! ialt
+            endif ! alt > -horz_dep
+          enddo ! jazi
+          enddo ! ialt
+        enddo ! is
+
+        write(6,*)' number of antialias calls is ',n_anti_calls
 
         rad_stars(:,:,:) = 10.**glow_stars(:,:,:)
  
@@ -410,7 +537,7 @@
 13          format(i4,1x,a10,' ih/im',2i4,2f7.2,' mag/bmv',2f7.1)
         endif
 
-        if(mag_stars(is) .gt. 5.0)then ! magnitude limit
+        if(mag_stars(is) .gt. 99.0)then ! magnitude limit
             is = is - 1
         endif
 
@@ -420,9 +547,88 @@
 
         ns = is
 
-        write(6,*)' read_bsc completing with # stars of ',ns
+        write(6,*)' read_bsc catalog completing with # stars of ',ns
 
         return
+        end
+
+        subroutine read_hyg(nstars,ns,dec_d,ra_d,mag_stars,bmv,starnames,istatus)
+
+!       http://www.projectrho.com/public_html/starmaps/catalogues.php
+!       http://astronexus.com/node/34
+
+        real dec_d(nstars),ra_d(nstars),mag_stars(nstars),bmv(nstars)
+        character*20 starnames(nstars)
+
+        character*150 static_dir,filename
+        character*250 cline
+        character*1 c1_dec
+        character*20 cdum5,cdum6,cdum7,cdum16
+
+        call get_directory('static',static_dir,len_dir)
+        filename = static_dir(1:len_dir)//'/hygdata_v3.csv'          
+
+        is = 0
+        open(51,file=filename,status='old',err=990)
+
+        write(6,*)' reading hyg catalog'
+        
+        read(51,*) ! header line
+        read(51,*) ! Sol
+
+1       continue
+        cdum7 = ''
+!       read(51,*,err=3,end=9)cline
+        read(51,*,err=3,end=9)dum1,dum2,dum3,dum4,cdum5,cdum6,cdum7,dum8,dum9,dum10,dum11,dum12,dum13,dum14,dum15,cdum16,dum17,dum18
+2       format(a)
+3       is = is + 1
+
+        dec_d(is) = dum9
+        ra_d(is) = dum8 * 15.
+
+        starnames(is) = cdum7
+        mag_stars(is) = dum14
+        bmv(is) = dum17
+
+        if(dec_d(is) .eq. 0. .or. ra_d(is) .eq. 0.)then ! QC
+            is = is - 1
+            iqc = 0
+        elseif(mag_stars(is) .eq. 0. .or. mag_stars(is) .lt. -2.0)then ! QC
+            is = is - 1
+            iqc = 0
+        elseif(mag_stars(is) .gt. 1e37)then ! magnitude limit
+            is = is - 1
+            iqc = 0
+        else
+            iqc = 1
+        endif
+
+!       Check failure to read all the variables for Betelgeuse at line 27919
+        if(is .le. 100)then
+            write(6,*)' dum8/9/14 ',nint(dum1),is,dum8,dum9,dum14,iqc
+        endif
+
+        if(mag_stars(is) .lt. 2.0 .and. iqc .eq. 1)then ! magnitude limit
+!           write(6,*)' name is: ',
+!           write(6,*)' mag string is: ',cline(91:95)
+            write(6,*)' dum8/9/14 ',nint(dum1),is,dum8,dum9,dum14,iqc
+            write(6,13)is,starnames(is),dec_d(is),ra_d(is),mag_stars(is),bmv(is)
+13          format(i6,1x,a10,2f7.2,' mag/bmv',2f7.1)
+        endif
+
+        goto 1
+
+9       close(51)
+
+        ns = is
+
+        write(6,*)' read_hyg catalog completing with # stars of ',ns
+        istatus = 1
+        return
+
+990     write(6,*)' read_hyg catalog unavailable'
+        istatus = 0
+        
         end
        
         subroutine get_glow_obj(i4time,alt_a,azi_a,minalt,maxalt,minazi,maxazi &
