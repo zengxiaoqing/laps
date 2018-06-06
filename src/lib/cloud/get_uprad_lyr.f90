@@ -45,11 +45,18 @@
         enddo ! ii
         enddo ! jj
 
-        write(6,*)' range of gnd_radc (red: wm2nm) = ',minval(gnd_radc(1,:,:)),maxval(gnd_radc(1,:,:))
+        gndmax = maxval(gnd_radc(1,:,:))
+
+        write(6,*)' range of gnd_radc (red: wm2nm) = ',minval(gnd_radc(1,:,:)),gndmax
         write(6,*)' range of drad = ',minval(drad),maxval(drad)
         write(6,*)' sum of drad = ',sum(drad)
         sumrad = 0. ! initialize
         uprad_3d(:,:,:) = 0.
+
+        if(gndmax .eq. 0.)then
+           write(6,*)' skip rest of get_uprad'
+           goto999
+        endif
 
         if(iradius .ge. 100)then
           iskip = 10
@@ -144,7 +151,10 @@
         call bilinear_fill(xcos(:,:),ni,nj,iskip,r_missing_data)
         call bilinear_fill(ycos(:,:),ni,nj,iskip,r_missing_data)
 
-        deallocate(drad)
+999     deallocate(drad)
+        deallocate(aef)
+        deallocate(disti_a)
+        deallocate(distj_a)
 
         return
         end
