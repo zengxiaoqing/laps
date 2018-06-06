@@ -2,6 +2,8 @@
         parameter (pi = 3.14159265)
         parameter (rpd = pi / 180.)
 
+        real nl_to_s10
+
 !       Refraction in degrees using apparent altitude    
         refractd_app(altd,patm) = &
                patm * (.0166666 / tand(altd + 7.31/(altd+4.4))) 
@@ -113,6 +115,7 @@
 !       https://irmafiles.nps.gov/reference/holding/476525
         s10_to_magsecsq(s10) = 10. - (2.5 * log10(s10/12.96e6))
         s10_to_nl(x) = x * 0.26189                     ! Chad Moore
+        nl_to_s10(x) = x / 0.26189                     ! Chad Moore
 
         real magsecsq_to_s10
         magsecsq_to_s10(x) = 10.**((18.89075625-x)*0.4)
