@@ -1,24 +1,43 @@
 
-        subroutine get_airglow(alt_a,ni,nj,nc,obs_glow_zen & ! I
-                              ,patm,htmsl,horz_dep &         ! I
-                              ,airmass_2_topo,frac_lp &      ! I
-                              ,clear_rad_c_nt)               ! O
+        subroutine get_airglow(alt_a,ni,nj,nc,obs_glow_zen,i4time & ! I
+                              ,patm,htmsl,horz_dep &                ! I
+                              ,airmass_2_topo,frac_lp &             ! I
+                              ,clear_rad_c_nt)                      ! O
 
 !       Calculate sky glow due to airglow. This takes into
 !       account the limb when determining airglow. 
+
+!       http://adsbit.harvard.edu//full/1997PASP..109.1181K/0001184.000.html
 
         use mem_namelist, ONLY: earth_radius
         include 'trigd.inc'
         include 'rad_nodata.inc'
 
-        real alt_a(ni,nj)
+        real alt_a(ni,nj) 
         real clear_rad_c_nt(nc,ni,nj)     ! night sky brightness
                                           ! 3 color radiance (Nanolamberts)
 
         parameter (nlyr = 2)
 
         real glow_alt(nc),airglow(nc),airglow_zen(nc),airglow_sum(nc)
-        real ht_lyr,thk_lyr,bot_lyr,top_lyr,flyr_abv,flyr_blw
+        double precision jd
+!       real ht_lyr,thk_lyr,bot_lyr,top_lyr,flyr_abv,flyr_blw
+
+!       Compute Astronomical Julian Date
+        call i4time_to_jd(i4time,jd,istatus)
+
+!       Compute Besselian Year
+        by = 1900.0 + (jd - 2415020.31352) / 365.242198781
+
+!       Sunspot Cycle Phase (minimum = 0 degrees)
+        sunspot_cycle_deg = modulo(((by - 2019.0) / 11.0) * 360.,360.)
+        airglow_zen_nl_log = log10(23.334) - log10(49.5/23.334) * cosd(sunspot_cycle_deg)
+        airglow_zen_nl = 10. ** airglow_zen_nl_log ! ranges from 11.0-49.5 with solar cycle
+!       airglow_zen_nl = 0.1 ! test
+
+        write(6,*)' get_airglow: Besselian Year is      ',by,i4time
+        write(6,*)' get_airglow: sunspot cycle (deg) is ',sunspot_cycle_deg
+        write(6,*)' get_airglow: airglow_zen_nl (nL) is ',airglow_zen_nl
 
         do ialt = 1,ni ! Process all azimuths at once for this altitude
 
@@ -29,14 +48,14 @@
 
           do ilyr = 1,nlyr
 
-            if(ilyr .eq. 1)then    ! Molecular Oxygen + Sodium
-              airglow_zen(1) = 75. ! nL (range from ~60-90 with solar cycle)
-              airglow_zen(2) = 75. 
-              airglow_zen(3) = 35. 
+            if(ilyr .eq. 1)then     ! Molecular Oxygen + Sodium
+              airglow_zen(1) = airglow_zen_nl 
+              airglow_zen(2) = airglow_zen_nl 
+              airglow_zen(3) = airglow_zen_nl * .467
               ht_lyr = 85000.
               thk_lyr = 10000.
-            else                   ! Atomic Oxygen
-              airglow_zen(1) = 50. ! nL 
+            else                    ! Atomic Oxygen
+              airglow_zen(1) = airglow_zen_nl * .667 ! nL 
               airglow_zen(2) = 0. 
               airglow_zen(3) = 0. 
               ht_lyr = 225000.
@@ -70,8 +89,10 @@
           if(mod(alt,5.) .eq. 2.)then
 !           write(6,5)alt,h,fracair,obs_glow_zen,airglow(2),glow_alt(2)
 !5          format(' get_airglow: alt/h/fair/obsg/airg/glow alt',f9.2,f10.0,f9.3,3f10.0)
-            write(6,5)alt,obs_glow_zen,airglow(2),glow_alt(2)
-5           format(' get_airglow: alt/obsg/airg/glow alt',f9.2,3f10.0)
+            glow_s10 = nl_to_s10(glow_alt(2))
+            glow_mag = s10_to_magsecsq(glow_s10)
+            write(6,5)alt,obs_glow_zen,airglow(2),glow_alt(2),glow_s10,glow_mag
+5           format(' get_airglow: alt/obsg/airg/glow nl-s10-mag',f9.2,4f10.0,f9.2)
 !           if(htmsl .ge. top_lyr)then ! above airglow
 !             write(6,*)'   horz_dep_airglow = ',horz_dep_airglow
 !           endif
