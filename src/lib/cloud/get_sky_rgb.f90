@@ -14,8 +14,8 @@
                    topo_lat,topo_lon,topo_lf,topo_sc, &                 ! I
                    aod_2_cloud,aod_2_topo,aod_ill,aod_ill_dir,aod_tot, &! I
                    dist_2_topo,topo_solalt,topo_solazi,trace_solalt,eobsc_sky, &    ! I
-                   alt_a,azi_a,ni,nj,azi_scale,sol_alt,sol_az, &        ! I
-                   sol_lat,sol_lon,r_au, &                              ! I
+                   alt_a,azi_a,ni,nj,alt_scale,azi_scale, &             ! I
+                   sol_alt,sol_az,sol_lat,sol_lon,r_au, &               ! I
                    minalt,maxalt,minazi,maxazi, &                       ! I
                    twi_0,horz_dep,solalt_limb_true, &                   ! I
                    moon_alt,moon_az,moon_mag,corr1_in,exposure, &       ! I
@@ -146,7 +146,7 @@
 
         integer new_color /2/ ! sky_rad can be more fully used still
 
-        logical l_solar_eclipse, l_sun_behind_terrain
+        logical l_solar_eclipse, l_zod, l_sun_behind_terrain
 
         write(6,1)sol_alt,horz_dep,solalt_limb_true
 1       format(' get_sky_rgb: sol_alt/horz_dep/solalt_limb_true = ',f9.3,f9.4,f9.3)
@@ -334,12 +334,12 @@
           write(6,*)' altmidcorr: ',altmidcorr,fracerf0,deepterm
         else              ! show more like the camera
           alt_top = alt_a(ni,1)
-          if(alt_top .eq. 90.)then ! fisheye lens
-            altmidcorr = -2.4 ! -3.60
+          if(alt_top .eq. 90. .and. .false.)then ! fisheye lens (with overexposure)
+            altmidcorr = -3.52 - aod_ha * 20. ! -3.60
             fracerf0 = 0.34 ! value with sun on horizon (.54 for clear air, .59 for bright clouds)
           else                     ! panoramic camera
 !           altmidcorr = -4.69 - aod_ha * 40.
-            altmidcorr = -4.99 - aod_ha * 20.
+            altmidcorr = -4.89 - aod_ha * 20.
             fracerf0 = 0.65  ! value with sun on horizon
           endif
           deepterm = .130
@@ -361,7 +361,7 @@
         endif        
 
         glwmid = glwmid - log10(exposure)
-
+        
         offset = 0.
         write(6,3)sol_alt,corr1,glwmid,contrast,fracerf,erfterm
 3       format('  sol_alt/corr1/glwmid/contrast/fracerf/erfterm',f9.2,2f9.3,f9.1,f9.3,f9.3)
@@ -458,6 +458,39 @@
                      ,1,ni,1,nj &                                    ! I
                      ,sol_alt,sol_az,alt_a,azi_a &                   ! I
                      ,elong_s                                 )      ! O
+        endif
+
+        I4_elapsed = ishow_timer()
+
+        if(sol_alt .lt. 0. .OR. l_solar_eclipse .eqv. .true.)then
+              write(6,*)' call get_starglow with cyl data'
+              l_zod = (.not. l_solar_eclipse)
+              call get_starglow(i4time,alt_a,azi_a,elong_s &             ! I
+                           ,minalt,maxalt,minazi,maxazi &                ! I
+                           ,rlat,rlon,alt_scale,azi_scale,horz_dep &     ! I
+                           ,l_zod,glwmid &                               ! I
+                           ,glow_stars)                                  ! O
+
+              write(6,*)' range of glow_stars (before) is', &
+                   minval(glow_stars(2,:,:)),maxval(glow_stars(2,:,:))
+
+              write(6,*)' range of moonglow is', &
+                   minval(glow_moon),maxval(glow_moon)
+
+              write(6,*)' Moonglow is being added to starlight'       
+              do j = 1,nj
+              do i = 1,ni
+                do ic = 1,nc
+                  glow_stars(ic,i,j) = &
+                    addlogs(glow_stars(ic,i,j),glow_moon(i,j))
+                enddo ! ic
+              enddo ! i 
+              enddo ! j 
+
+              write(6,*)' range of glow_stars (after) is', &
+                   minval(glow_stars(2,:,:)),maxval(glow_stars(2,:,:))
+        else
+              glow_stars(:,:,:) = 0. ! initialize
         endif
 
         radius_limb = 90. - horz_dep
@@ -898,7 +931,7 @@
 
 !       Add the airglow contribution
         if(.true.)then
-            call get_airglow(alt_a,ni,nj,nc,obs_glow_gnd &          ! I
+            call get_airglow(alt_a,ni,nj,nc,obs_glow_gnd,i4time &   ! I
                                   ,patm,htmsl,horz_dep &            ! I
                                   ,airmass_2_topo,frac_lp &         ! I
                                   ,clear_rad_c_airglow)             ! O
@@ -1864,8 +1897,10 @@
  111              format(' clrrad/RGB/sprad (w/m2/sr/nm) =',3f12.0,3i4,3f9.6)
                   write(6,1111)sprad_pix(:),wa(:)
 1111              format(' spectral radiance at zenith (w/m2/sr/nm) ',3e13.4,' for lambda (microns)',3f6.3)
-                  write(6,1112)rmaglim
-1112              format(' limiting (cloudless) magnitude is ',f9.2)
+                  s10_zen = nl_to_s10(sky_rad(2))
+                  rmagsqsec_zen = s10_to_magsecsq(s10_zen)
+                  write(6,1112)rmaglim,sky_rad(2),s10_zen,rmagsqsec_zen
+1112              format(' limiting (cloudless) magnitude is ',f5.2,f12.1,' nl',f12.1,' s10 units   ',f5.2,' mag/sqsec')
               endif
               if(abs(elong_a(i,j) - 90.) .le. 0.5)then
                   write(6,*)' ******** 90 elong location ********************** od'
