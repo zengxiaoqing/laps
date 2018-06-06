@@ -1605,6 +1605,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            the hour, one can generally expect only 5-10% of the GPS data to 
            be avaliable via MADIS when the code is configured to seek the data.
 
+           Traditional LAPS 'lq3_driver.x' reads NIMBUS or MADIS GPS, while
+	   STMAS presently reads only NIMBUS GPS files.
+
                       ----   2.3.9  Other Data Sources ---
 
      Radar VAD Algorithm winds (pro)
