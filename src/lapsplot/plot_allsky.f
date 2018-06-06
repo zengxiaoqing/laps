@@ -1658,9 +1658,47 @@
 
               close(54)
 
+              horz_dep = horz_depf(htagl(iloc),earth_radius)
+              solalt_limb_true = solar_alt + horz_dep
+              write(6,*)' solalt_limb_true is',solalt_limb_true
+
               if(l_cyl .eqv. .true.)then
 !               Write all sky for cyl
-                isky_rgb_cyl = sky_rgb_cyl   
+
+                if(solalt_limb_true .lt. -10.0)then
+                   dither = 2.0
+                else
+                   dither = 0.0
+                endif
+
+                if(dither .gt. 0.)then
+
+                   I4_elapsed = ishow_timer()
+
+                   write(6,*)' writing dithered image',dither
+
+                   do ialt = minalt,maxalt
+                   do iaz = minazi,maxazi
+                      arand = rand(0)
+                      skydelt = (-1.0 + (2.0 * arand)) * dither
+                      isky_rgb_cyl(:,ialt,iaz) = sky_rgb_cyl(:,ialt,iaz)
+     1                                         + skydelt
+                      isky_rgb_cyl(:,ialt,iaz) =
+     1                        min(max(isky_rgb_cyl(:,ialt,iaz),0),255)
+
+                      if(iaz .eq. (minazi+maxazi)/2)then
+                         write(6,61)ialt,alt_a_roll(ialt,iaz),arand
+     1                             ,skydelt,sky_rgb_cyl(1,ialt,iaz)
+     1                             ,isky_rgb_cyl(2,ialt,iaz)
+61                       format(' dither ',i4,f6.2,2f7.2,f8.2,i5)
+                      endif
+
+                    enddo ! iaz
+                    enddo ! ialt 
+                else
+                    isky_rgb_cyl = sky_rgb_cyl   
+                endif                                       
+
                 npts = 3*(maxalt-minalt+1)*(maxazi-minazi+1)
 !               write(6,*)' Write all sky cyl text file ',npts
 !               open(55,file='allsky_rgb_cyl.'//trim(clun_loop),status='unknown')
@@ -1696,8 +1734,6 @@
                 else
                   polat = -90.
                 endif
-
-                horz_dep = horz_depf(htagl(iloc),earth_radius)
 
 !               if(ipolar_sizeparm .ge. 3)then
                 if(htagl(iloc) .gt. earth_radius*2.5)then
