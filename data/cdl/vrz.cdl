@@ -6,7 +6,7 @@ netcdf vrz {
 	x = 125,
 	y = 105,
         nav = 1,
-        namelen = 210;
+        namelen = 250;
 		
     variables:
         //	3D radar reflectivity
