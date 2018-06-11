@@ -3,8 +3,8 @@
      &      lat,lon,topo,i4_file_closest,                                ! I
      &      nx_r,ny_r,igrid_r,                                           ! I
      &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,          ! O
-     &      grid_ra_ref,                                                 ! O
-     &      grid_ra_ref_offset,ioffset,joffset,                          ! O
+     &      grid_ra_ref,maxradarg,                                       ! O
+     &      grid_ra_ref_offset,ioffset,joffset,maxradaro,                ! O
      &      l_offset,                                                    ! I
      &      istatus)                                                     ! O
 c
@@ -27,8 +27,9 @@ c
        Integer       ioffset(maxradar)
        Integer       joffset(maxradar)
 
-       Real          grid_ra_ref(imax,jmax,kmax,maxradar)
-       Real          grid_ra_ref_offset(nx_r,ny_r,kmax,maxradar)
+!      Note that only one of maxradarg, maxradaro is non-zero
+       Real          grid_ra_ref(imax,jmax,kmax,maxradarg)
+       Real          grid_ra_ref_offset(nx_r,ny_r,kmax,maxradaro)
        Real          grid_ra_ref_3d(imax,jmax,kmax)             
        Real          rheight_3d (imax,jmax,kmax)
        Real          lat(imax,jmax)
