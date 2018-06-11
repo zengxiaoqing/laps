@@ -5,6 +5,7 @@
      &                            topo,rheight_laps,grid_ra_ref,          ! I
      &                            grid_ra_ref_offset,ioffset,joffset,     ! I
      &                            nx_r,ny_r,                              ! I
+     &                            maxradarsg,maxradarso,                  ! I
      &                            imosaic_3d,                             ! I
      &                            dist_multiradar_2d,                     ! I  
      &                            l_offset,                               ! I
@@ -19,8 +20,8 @@ c (l_low_level = true).
 c
       Real    lat(nx,ny)
       Real    lon(nx,ny)
-      Real    grid_ra_ref(nx,ny,nz,maxradars)
-      Real    grid_ra_ref_offset(nx_r,ny_r,nz,maxradars)
+      Real    grid_ra_ref(nx,ny,nz,maxradarsg)
+      Real    grid_ra_ref_offset(nx_r,ny_r,nz,maxradarso)
       Real    grid_mosaic_2dref(nx,ny)
       Real    dist_multiradar_2d(nx,ny,maxradars)
       Real    closest_radar_m(nx,ny)
