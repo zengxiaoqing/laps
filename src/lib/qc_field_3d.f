@@ -26,7 +26,7 @@
           lower_bound = +70.
           upper_bound = +350.
       elseif(var_2d .eq.'PSF'.or.var_2d.eq.'SLP')then
-          lower_bound = 40000.
+          lower_bound = 30000.  ! including Mount Everest
           upper_bound = 110000.
       else
           lower_bound = -1e10
