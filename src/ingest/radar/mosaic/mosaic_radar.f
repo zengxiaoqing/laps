@@ -251,7 +251,7 @@ c vrz output definitions
 c
       character     dir_vrz*50
       character     ext_vrz*31
-      character     comment_vrz*200
+      character     comment_vrz*240
       character     units_vrz*10
       character     var_vrz*3
 c
@@ -287,11 +287,9 @@ c
       endif
 
       if(.not. l_offset)then
-         allocate(grid_ra_ref(nx_l,ny_l,nz_l,n_radars),STAT=istat_alloc)
-         if(istat_alloc .ne. 0)then
-            write(6,*)' ERROR: Could not allocate grid_ra_ref'      
-            stop
-         endif
+
+         n_radars_grid = n_radars
+         n_radars_offset = 0
 
       else 
          radius_r = 500000. ! 500km max radar radius
@@ -299,15 +297,26 @@ c
 !        nx_r = min(((2 * igrid_r) + 1),nx_l)
 !        ny_r = min(((2 * igrid_r) + 1),ny_l)
 
-         allocate(grid_ra_ref_offset(nx_r,ny_r,nz_l,n_radars)
-     1           ,STAT=istat_alloc)             
-         if(istat_alloc .ne. 0)then
-            write(6,*)' ERROR: Could not allocate grid_ra_ref'      
-                        stop
-         else
-            write(6,*)' Allocated grid_ra_ref_offset ',nx_r,ny_r
-         endif
 
+         n_radars_grid = 0
+         n_radars_offset = n_radars
+
+      endif
+
+      allocate(grid_ra_ref(nx_l,ny_l,nz_l,n_radars_grid)
+     1        ,STAT=istat_alloc)
+      if(istat_alloc .ne. 0)then
+         write(6,*)' ERROR: Could not allocate grid_ra_ref'      
+         stop
+      endif
+
+      allocate(grid_ra_ref_offset(nx_r,ny_r,nz_l,n_radars_offset)
+     1        ,STAT=istat_alloc)             
+      if(istat_alloc .ne. 0)then
+         write(6,*)' ERROR: Could not allocate grid_ra_ref'      
+                     stop
+      else
+         write(6,*)' Allocated grid_ra_ref_offset ',nx_r,ny_r
       endif
 
       istatus = 0
@@ -531,8 +540,8 @@ c ----------------------------------------------------------
      &          rheight_laps,lat,lon,topo,i4_file_closest,               ! I
      &          nx_r,ny_r,igrid_r,                                       ! I
      &          rlat_radar,rlon_radar,rheight_radar,n_valid_radars,      ! O
-     &          grid_ra_ref,                                             ! O
-     &          grid_ra_ref_offset,ioffset,joffset,                      ! O
+     &          grid_ra_ref,n_radars_grid,                               ! O
+     &          grid_ra_ref_offset,ioffset,joffset,n_radars_offset,      ! O
      &          l_offset,                                                ! I
      &          istatus)                                                 ! O
 
@@ -643,6 +652,7 @@ c this subroutine does not yet use the imosaic_3d parameter.
      &                         topo,rheight_laps,grid_ra_ref,             ! I
      &                         grid_ra_ref_offset,ioffset,joffset,        ! I
      &                         nx_r,ny_r,                                 ! I
+     &                         n_radars_grid,n_radars_offset,             ! I
      &                         imosaic_3d,                                ! I
      &                         dist_multiradar_2d,                        ! I  
      &                         l_offset,                                  ! I
@@ -772,7 +782,7 @@ c
 
                  n_ref = 0
 
-!                Write comments in 3 columns each 40 characters wide
+!                Write comments in 6 columns each 40 characters wide
                  nch=40
                  do i_radar = 1,n_valid_radars
                      if(i_radar .le. (nz_l-1) )then ! write in 1st column
@@ -783,6 +793,11 @@ c
      1                                         ,n_ref
      1                                         ,c_radar_id(i_radar)
 1                        format(2f9.3,f8.0,i7,a4)
+
+                         do ip = 1,40
+                            write(6,*)' comment is ',ip,' ',
+     1                             comment_3d(ii)(ip:ip)      
+                         enddo ! ip
 
                      elseif(i_radar .le. 2*(nz_l-1) )then ! write in 2nd column
                          write(comment_tmp,1)rlat_radar(i_radar)
@@ -819,6 +834,15 @@ c
      1                                      ,c_radar_id(i_radar)
                          ii = i_radar - (4*(nz_l-1)) + 1
                          comment_3d(ii)(4*nch+1:5*nch-3) = comment_tmp
+
+                     elseif(i_radar .le. 6*(nz_l-1) )then ! write in 6th column
+                         write(comment_tmp,1)rlat_radar(i_radar)
+     1                                      ,rlon_radar(i_radar)
+     1                                      ,rheight_radar(i_radar)
+     1                                      ,n_ref
+     1                                      ,c_radar_id(i_radar)
+                         ii = i_radar - (5*(nz_l-1)) + 1
+                         comment_3d(ii)(5*nch+1:6*nch-3) = comment_tmp
 
                      else
                          write(6,*)
