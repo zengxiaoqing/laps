@@ -858,8 +858,8 @@ C READ IN SATELLITE DATA
             offset_ir_j(:,:)  =  +500./grid_spacing_cen_m
 !           offset_ir_i(:,:)  =  -500./grid_spacing_cen_m
 !           offset_ir_j(:,:)  = +2500./grid_spacing_cen_m
-            offset_vis_i(:,:) =  +500./grid_spacing_cen_m
-            offset_vis_j(:,:) = +2000./grid_spacing_cen_m
+            offset_vis_i(:,:) = -1500./grid_spacing_cen_m
+            offset_vis_j(:,:) = +3000./grid_spacing_cen_m
         end where
         where(abs(subpoint_lon_clo_s8a(:,:)-(-135.)) .lt. 20.) ! GOES W
             offset_ir_i(:,:)  = -3000./grid_spacing_cen_m
@@ -1678,9 +1678,12 @@ C       EW SLICES
             call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
             call move(cvr_snow_cycle,out_array_3d(1,1,2),NX_L,NY_L)
             call move(cvr_water_temp,out_array_3d(1,1,3),NX_L,NY_L)
+
+!           Offset for navigation though not for parallax
             call move(tb8_k         ,out_array_3d(1,1,4),NX_L,NY_L)
             call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
             call move(sat_albedo    ,out_array_3d(1,1,6),NX_L,NY_L) ! ALB
+
             call move(cloud_albedo  ,out_array_3d(1,1,7),NX_L,NY_L) ! CLA
             call move(rqc_2d        ,out_array_3d(1,1,8),NX_L,NY_L)
             call move(swi_2d        ,out_array_3d(1,1,9),NX_L,NY_L)
