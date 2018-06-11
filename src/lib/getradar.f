@@ -1540,7 +1540,7 @@ cdoc                            calls read_multiradar_3dref.
         character*9 asc9_tim
         character*150 directory
 
-        character*200 comment_3d(kmax)
+        character*240 comment_3d(kmax)
         character*40 comment_tmp
         character*10 units_3d(kmax)           
         character*3 var_3d(kmax)
@@ -1605,11 +1605,16 @@ cdoc                            calls read_multiradar_3dref.
             return
         endif
 
-!       Read comments from 3 columns each 40 characters wide
+!       Read comments from 6 columns each 40 characters wide
         nch=40
         do i_radar = 1,n_radars
             if(i_radar .le. (kmax-1) )then       ! read in 1st column
                 ii = i_radar + 1
+
+!               do ip = 1,40
+!                  write(6,*)' comment is ',ip,' ',comment_3d(ii)(ip:ip)      
+!               enddo ! ip
+
                 read(comment_3d(ii),1)rlat_radar(i_radar)
      1                               ,rlon_radar(i_radar)
      1                               ,rheight_radar(i_radar)
@@ -1659,6 +1664,18 @@ cdoc                            calls read_multiradar_3dref.
             elseif(i_radar .le. 5*(kmax-1) )then ! read in 5th column
                 ii = i_radar - (4*(kmax-1)) + 1
                 comment_tmp = comment_3d(ii)(4*nch+1:nch*5)
+                read(comment_tmp,1)rlat_radar(i_radar)
+     1                            ,rlon_radar(i_radar)
+     1                            ,rheight_radar(i_radar)
+     1                            ,n_ref
+     1                            ,c_radar_id(i_radar)
+
+                write(6,*)' Read radar ',c_radar_id(i_radar)
+     1                   ,' Volume (via 3d-mosaic)'
+
+            elseif(i_radar .le. 6*(kmax-1) )then ! read in 6th column
+                ii = i_radar - (5*(kmax-1)) + 1
+                comment_tmp = comment_3d(ii)(5*nch+1:nch*6)
                 read(comment_tmp,1)rlat_radar(i_radar)
      1                            ,rlon_radar(i_radar)
      1                            ,rheight_radar(i_radar)
