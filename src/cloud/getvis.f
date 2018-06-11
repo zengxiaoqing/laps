@@ -205,7 +205,11 @@ cdis
 !               Should this be done elsewhere according to how other
 !               routines use sfc_albedo?                
                 if(sol_alt(i,j) .gt. 7.0)then
-                    iverbose = 0
+                    if(i .eq. idb .and. j .eq. jdb)then
+                        iverbose = 1
+                    else
+                        iverbose = 0
+                    endif
                     call refl_to_albedo2(reflectance(i,j)              ! I
      1                                  ,sol_alt_sat(i,j)              ! I
      1                                  ,sfc_albedo(i,j),iverbose      ! I
@@ -512,7 +516,7 @@ cdis
 !       Convert reflectance to cloud (+land) albedo
 !       Note that two solutions may be possible with low sun
 !       Sfc_albedo can be accounted for?
-!       This is under development and isn't yet used for the analysis output
+!       This is presently under development and is being called.
 
         if(.true.)then
           alb_thn = reflectance           ! modify by phase angle?
@@ -528,6 +532,9 @@ cdis
           air_refl = 0.05 ! Approximate Rayleigh for 600nm, near nadir
 
           if(iverbose .eq. 1)then
+            write(6,1)reflectance,solalt_eff
+     1               ,land_refl,air_refl,alb_thk,cloud_albedo
+1           format(' refl/salt/land/air/thk/cldalb ',6f9.3,' CTR')
           endif
 
         endif
