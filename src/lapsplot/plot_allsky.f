@@ -802,29 +802,51 @@
             filename = trim(ramsout_full)
 !           filename = '/home/fab/albers/muri/rams_micro_v3.nc'
             call get_rams_data
-     +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
+     +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L,NZ_L
      +                   ,i4time_earliest,i4time_latest
      +                   ,filename
+     +                   ,lat,lon
      +                   ,pres_3d
      +                   ,heights_3d
      +                   ,clwc_3d
      +                   ,cice_3d
      +                   ,rain_3d
      +                   ,snow_3d
+     +                   ,aod_3d
      +                   ,lun_out
      +                   ,istatus)
+            write(6,*)' returned from get_rams_data ',istatus
+            if(istatus .ne. 1)then
+                stop
+            endif
+
             istatus_ht = 1
-            write(6,*)' returned from get_rams_data'
 
             mode_aero_cld = 3
             aod = 0.
+
+            aod_3d = max(aod_3d,1e-9)
+            if(.false.)then ! zero out hydrometeors
+              clwc_3d = max(clwc_3d * 1e-3,0.)
+              cice_3d = max(cice_3d * 1e-3,0.)
+              rain_3d = max(rain_3d * 1e-3,0.)
+              snow_3d = max(snow_3d * 1e-3,0.)
+            endif
+
             i_aero_1d = 0 ! retain the 3D aerosols read in
             write(6,*)' RAMS run: set mode_aero_cld = ',mode_aero_cld
-
-            i_aero_synplume = 1
+            write(6,*)' aod_3d range is ',minval(aod_3d),maxval(aod_3d)
+            write(6,*)' clwc_3d range is ',minval(clwc_3d)
+     1                                    ,maxval(clwc_3d)
+            write(6,*)' cice_3d range is ',minval(cice_3d)
+     1                                    ,maxval(cice_3d)
+            write(6,*)' rain_3d range is ',minval(rain_3d)
+     1                                    ,maxval(rain_3d)
+            write(6,*)' snow_3d range is ',minval(snow_3d)
+     1                                    ,maxval(snow_3d)
 
 !           Zero out hydrometeors
-            if(.true.)then
+            if(.false.)then
               write(6,*)' RAMS run: zero out hydrometeors'
               clwc_3d = 0.
               cice_3d = 0.
@@ -1766,7 +1788,7 @@
                   endif
                 endif
 
-                if(htagl(iloc) .eq. 400000.)then
+                if(htagl(iloc) .eq. 400001.)then
                   rotew = +70. ! positive rotation decreases altitude in the south
                   rotz = +135. ! positive rotation moves counterclockwise (left)
                   pomag = pomag * 1.8                 
