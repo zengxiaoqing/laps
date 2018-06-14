@@ -149,7 +149,13 @@
         aero_refht = redp_lvl
 
         ramp_fc_nt = min(max((-sol_alt/3.0),0.),1.)               
-        fcterm_a(:) = fcterm * (1.0 - ramp_fc_nt)
+        do ic = 1,nc
+            if(fcterm_a(ic) .ge. 0.)then ! valid value in namelist
+                fcterm_a(ic) = fcterm_a(ic) * (1.0 - ramp_fc_nt)
+            else
+                fcterm_a(ic) = fcterm       * (1.0 - ramp_fc_nt)
+            endif
+        enddo ! ic
 
         angstrom_exp_ha = 2.0
         angexp_c = angsexp_f(aod_asy(1,2))
