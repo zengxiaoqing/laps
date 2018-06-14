@@ -169,10 +169,15 @@
         write(6,*)
      1' Blue Marble binary file is absent, generate and create from ppm'
 
-        file=trim(directory)//'world.2004'
+        if(grid_spacing_m .ge. 2500. .and.
+     1     grid_spacing_m .le. 7400.      )then ! mid-range of grid spacing
+          file=trim(directory)//'world.2004'
      1                      //c2_mn//'.global_montage.20.ppm'
-        inquire(file=trim(file),exist=l_there)
-        write(6,*)' File being inquired is ',trim(file),' ',l_there
+          inquire(file=trim(file),exist=l_there)
+          write(6,*)' File being inquired is ',trim(file),' ',l_there
+        else ! outside mid-range of grid spacing
+          l_there = .false.
+        endif
 
         file_dc=trim(directory)//'vhires_dc_crop.ppm'       
         inquire(file=trim(file_dc),exist=l_there_dc)
@@ -195,6 +200,7 @@
         elseif(c6_maproj .ne. 'latlon' .and.
      1         grid_spacing_m .le. 2500.)then ! local domain (~500m pixels)
                                               ! for 500m to 2.5km grid
+          write(6,*)' Looking for 500m BM tile'
           file=trim(directory)//'world.2004' 
      1                        //c2_mn//'.3x21600x21600.crop.ppm'
           pix_latlon_we = 1. / 240. !                 (90x180 degree tile)
