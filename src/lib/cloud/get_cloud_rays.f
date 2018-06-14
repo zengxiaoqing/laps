@@ -451,8 +451,18 @@
         write(6,*)' grid_size_deg = ',grid_size_deg
 
 !       This is being tested with 3.0 and 4.0 altitude threshold
+!       'rad_ht_thresh' could be made dependent on 'obj_alt' or on the
+!       minimum 'obj_alt' over the domain and/or field of view depending
+!       on 'horz_dep'.        
+        
+        if(mode_aero_cld .eq. 3)then
+          rad_ht_thresh = 1000e3
+        else
+          rad_ht_thresh = 300e3
+        endif
+
         if(obj_alt(i,j) .ge. 3.0  .AND. ! as uncorrected for refraction
-     1     htagl .lt. 300e3             ! not near geosynchronous
+     1     htagl .lt. rad_ht_thresh     ! not near geosynchronous
      1                                           )then 
           if(newloc .eq. 1)then
             write(6,*)' call get_cloud_rad (newloc = 1)'
@@ -484,7 +494,8 @@
             endif
 
             if(icall_rad .eq. 0)then
-              if(htagl .le. 300e3)then
+              faces_thresh = 300e3
+              if(htagl .le. faces_thresh)then
                 write(6,*)' call get_cloud_rad_faces...'
                 call get_cloud_rad_faces(              
      1            obj_alt,obj_azi,                   ! I
@@ -947,6 +958,8 @@
           l_spherical = .false.
         endif
 
+        write(6,*)' l_spherical = ',l_spherical
+
 !       Always set to true to eliminate small polar artifact at nadir
 !       if(grid_spacing_m .ge. 9000. .or. .true.)then
         if(grid_spacing_m .ge. 9000.)then
@@ -1079,7 +1092,7 @@
             azid1 = int(sol_azi(i,j))
             azid2 = azid1
         endif
-        azid1 = 80. ; azid2 = 90.
+        azid1 = 0. ; azid2 = 0.
 
         write(6,*)'azid1/azid2 = ',azid1,azid2
 
@@ -1758,10 +1771,11 @@
                   if(.not. l_latlon_grid)then ! speed test
                     call latlon_to_rlapsgrid(tlat,tlon,lat,lon,ni,nj
      1                                      ,rinew_h,rjnew_h,istatus)
-!                   if(idebug .eq. 1)then
-!                      write(6,62)tlat,tlon,gc_deg,rinew_h,rjnew_h,dlon
-!62                    format('   check latlon',6f9.3)                    
-!                   endif
+                    if(idebug .eq. 1)then
+                       write(6,62)tlat,tlon,dlon,gc_deg,rinew_h,rjnew_h
+ 62                    format('   check latlon: tlat|tlon dlon|gc'
+     1                                ,2f9.3,2x,f9.5,f9.3,2x,2f9.3)
+                    endif
 
                     rinew_m = 0.5 * (rinew_l + rinew_h)
                     rjnew_m = 0.5 * (rjnew_l + rjnew_h)
