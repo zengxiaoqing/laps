@@ -107,6 +107,7 @@ SRC	= machine_dependent.F \
           laps_thermo.f \
           lapsgrid.f \
           latlon_db_rlaps.f \
+          latlon_to_gridij.f \
           latlon_to_rlaps.f \
           libdummies.f \
           make_rh.f \
