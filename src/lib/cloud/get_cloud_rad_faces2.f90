@@ -20,7 +20,7 @@
 !    are responding to the 'transm' values.
 
      use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
-                            ,aod,aero_scaleht,fcterm,redp_lvl
+                            ,aod,aero_scaleht,angstrom_exp_a,redp_lvl
      use mem_allsky, ONLY: ext_g,nc
      use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
@@ -79,7 +79,6 @@
      pice2alpha = 1.5 / (rhograupel * reff_graupel)
 
      idebug = 0
-     angstrom_exp_a = 2.4 - (fcterm * 15.)
 
      twi_alt = -4.5
 
