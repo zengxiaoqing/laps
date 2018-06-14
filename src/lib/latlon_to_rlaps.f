@@ -234,6 +234,10 @@ c           cenlon = grid_cen_lon_cmn
         subroutine latlon_to_uv_ps(rlat_in,rlon_in,slat,polat,slon,u,v)
 
         include 'trigd.inc'
+
+!       integer iwrite /0/
+!       save iwrite
+
         if(abs(polat) .eq. 90.)then ! pole at N/S geographic pole
             if(.true.)then
                 polon = slon
@@ -256,6 +260,12 @@ c           cenlon = grid_cen_lon_cmn
                                     ! b has zero angle pointing south
             s = 1.0
 
+!           iwrite = iwrite + 1
+!           if(rlon_in .eq. 53.99)then
+!               write(6,1)rlat_in,rlon_in,b,rlat,rlon
+!1              format('rlat_in | rlon_in | b | rlat | rlon',5f9.4)             
+!           endif
+
         endif
 
         a=90.-rlat
@@ -264,6 +274,12 @@ c           cenlon = grid_cen_lon_cmn
 !       b = angle measured counterclockwise from -v axis (zero angle south)
         u =   r * sind(b)
         v = (-r * cosd(b)) * s
+
+!       if(rlon_in .eq. 53.99)then
+!           write(6,2)rlat_in,rlon_in,b,rlat,rlon,u,v
+!2          format('rlat_in | rlon_in | b | rlat | rlon | u | v'
+!    1            ,5f10.4,2f10.6) 
+!       endif
 
         return
         end
@@ -545,14 +561,15 @@ c           cenlon = grid_cen_lon_cmn
                 projrot_laps = rlon - polon 
 
             else ! abs(polat) .ne. 90.
-                if(grid_cen_lat .eq. polat .and. 
-     1             grid_cen_lon .eq. polon)then ! grid centered on proj pole
+!               if(grid_cen_lat .eq. polat .and. 
+!    1             grid_cen_lon .eq. polon)then ! grid centered on proj pole
+                if(.true.)then
 
                     if(init .eq. 0)then
                         write(6,*)
      1                   ' NOTE: local stereographic projection.'
                         write(6,*)
-     1                   ' Using approximation for "projrot_laps",'
+     1                   ' Using approximation for "projrot_latlon",'
      1                  ,' accurate calculation not yet in place.'
                         init = 1
                     endif
@@ -562,7 +579,7 @@ c           cenlon = grid_cen_lon_cmn
 
                 elseif(.true.)then
                     if(init .eq. 0)then
-                        write(6,*)' ERROR in projrot_laps: '
+                        write(6,*)' ERROR in projrot_latlon: '
                         write(6,*)' This type of local'
      1                  ,' stereographic projection not yet supported.'
                         write(6,*)' Grid should be centered on'
@@ -682,14 +699,15 @@ cdoc                         true north. Units are degrees.
                 projrot_laps(:,:) = rlon(:,:) - polon 
 
             else ! abs(polat) .ne. 90.
-                if(grid_cen_lat .eq. polat .and. 
-     1             grid_cen_lon .eq. polon)then ! grid centered on proj pole
+!               if(grid_cen_lat .eq. polat .and. 
+!    1             grid_cen_lon .eq. polon)then ! grid centered on proj pole
+                if(.true.)then
 
                     if(init .eq. 0)then
                         write(6,*)
      1                   ' NOTE: local stereographic projection.'
                         write(6,*)
-     1                   ' Using approximation for "projrot_laps",'
+     1                   ' Using approximation for "projrot_latlon_2d",'
      1                  ,' accurate calculation not yet in place.'
                         init = 1
                     endif
@@ -703,7 +721,7 @@ cdoc                         true north. Units are degrees.
 
                 elseif(.true.)then
                     if(init .eq. 0)then
-                        write(6,*)' ERROR in projrot_laps: '
+                        write(6,*)' ERROR in projrot_latlon_2d: '
                         write(6,*)' This type of local'
      1                  ,' stereographic projection not yet supported.'
                         write(6,*)' Grid should be centered on'
@@ -828,8 +846,9 @@ cdoc    This routine is being phased out. Please try to use 'projrot_latlon'.
                 projrot_laps = rlon - polon 
 
             else ! abs(polat) .ne. 90.
-                if(grid_cen_lat .eq. polat .and. 
-     1             grid_cen_lon .eq. polon)then ! grid centered on proj pole
+!               if(grid_cen_lat .eq. polat .and. 
+!    1             grid_cen_lon .eq. polon)then ! grid centered on proj pole
+                if(.true.)then
 
                     if(init .eq. 0)then
                         write(6,*)
