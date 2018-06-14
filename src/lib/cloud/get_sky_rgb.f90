@@ -21,7 +21,7 @@
                    moon_alt,moon_az,moon_mag,corr1_in,exposure, &       ! I
                    sky_rgb,sky_sprad,sky_reflectance)                   ! O
 
-        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa,o3_du,h_o3,d_o3,aod_ha
+        use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa,o3_du,h_o3,d_o3,aod_ha,angstrom_exp_a
         use cloud_rad ! , ONLY: ghi_zen_toa
         use mem_allsky, ONLY: ghi_sim,mode_aero_cld
         include 'trigd.inc'
@@ -172,7 +172,7 @@
         rintensity_glow = -999. ! nearly obsolete variable
         contrast = -999.        ! nearly obsolete variable
 
-        angstrom_exp_a = 2.4 - (fcterm * 15.)
+!       angstrom_exp_a = 2.4 - (fcterm * 15.)
         do ic = 1,nc
             ext_a(ic) = (wa(ic)/.55)**(-angstrom_exp_a)
             write(6,*)' ic/wa/ext_a/od_atm ',ic,wa(ic),ext_a(ic),ext_a(ic)*od_atm_a
