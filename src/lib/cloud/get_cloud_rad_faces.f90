@@ -14,9 +14,11 @@
 !    the domain.
 
      use mem_namelist, ONLY: r_missing_data,earth_radius,grid_spacing_m &
-                            ,aod,aero_scaleht,fcterm,redp_lvl
+                            ,aod,aero_scaleht,angstrom_exp_a,redp_lvl
      use mem_allsky, ONLY: uprad_4d ! (upward spectral irradiance)
      use mem_allsky, ONLY: ext_g, nc
+     use mem_allsky, ONLY: aod_3d   ! (extinction coefficient)            ! I
+     use mem_allsky, ONLY: mode_aero_cld
      include 'rad.inc' ! e.g. for ext_o, o3_du
 
      trans(od) = exp(-min(od,80.))
@@ -70,6 +72,7 @@
      real, parameter :: bksct_eff_rain    = .063
      real, parameter :: bksct_eff_snow    = .14
      real, parameter :: bksct_eff_graupel = .30
+     real, parameter :: bksct_eff_aero    = .125 
 
 !    Scattering efficiencies
      real, parameter :: q_clwc    = 2.0
@@ -98,8 +101,6 @@
      snow2alpha = 1.5 / (rhosnow * reff_snow)
      pice2alpha = 1.5 / (rhograupel * reff_graupel)
 
-     angstrom_exp_a = 2.4 - (fcterm * 15.)
-
      twi_alt = -4.5
 
 !    Initialize transm_3d
@@ -122,10 +123,18 @@
        sprad_to_nl(ic) = 1. / sprad
      enddo ! ic
 
-     b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
-                + cice_3d * cice2alpha * bksct_eff_cice &
-                + rain_3d * rain2alpha * bksct_eff_rain &
-                + snow_3d * snow2alpha * bksct_eff_snow 
+     if(mode_aero_cld .lt. 3)then
+       b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
+                  + cice_3d * cice2alpha * bksct_eff_cice &
+                  + rain_3d * rain2alpha * bksct_eff_rain &
+                  + snow_3d * snow2alpha * bksct_eff_snow 
+     else
+       b_alpha_3d = clwc_3d * clwc2alpha * bksct_eff_clwc &
+                  + cice_3d * cice2alpha * bksct_eff_cice &
+                  + rain_3d * rain2alpha * bksct_eff_rain &
+                  + snow_3d * snow2alpha * bksct_eff_snow &
+                  + aod_3d               * bksct_eff_aero
+     endif
 
      write(6,*)' subroutine get_cloud_rad_faces: solar alt/az ',solalt,solazi
 
