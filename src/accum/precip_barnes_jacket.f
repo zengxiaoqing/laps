@@ -26,6 +26,8 @@
         real ob_diff(maxsta)
         real wt_bkg_a(ni,nj)                         
 
+        logical l_boundary(ni,nj)
+
         write(6,*)' Subroutine precip_barnes_jacket for...'
      1           ,c_field      
 
@@ -107,7 +109,17 @@
      1                   ,istatus)                               ! Output
 
         write(6,*)' Adding incremental analysis to background'       
+
+        call array_range(pcp_2d_in,ni,nj,pmin,pmax,r_missing_data)
+        write(6,*)' pcp_2d_in range',pmin,pmax
+
+        call array_range(pcp_bkg_in,ni,nj,pmin,pmax,r_missing_data)
+        write(6,*)' pcp_bkg_in range',pmin,pmax
+        
         call add(pcp_2d_in,pcp_bkg_in,pcp_2d_in,ni,nj)
+
+        write(6,*)' Returning from precip_barnes_jacket'
+        write(6,*)
 
         return
         end
