@@ -8,7 +8,7 @@
            conf_isjtkc                              "
               satellite_common_lvd           include/satellite_common_lvd.inc
               satdata_lvd_table              include/satdata_lvd_table.for
-       compute_nav_llij                      compute_nav_llij.f
+       compute_nav_llij                      compute_nav_llij.f                  (nav luts from parms)
            genlvdlut_lvd                     lib/satellite/genlvdlut_lvd.f 
                gen_lut_lambert               lib/satellite/gen_lut_lambert.f
                    get_wfo_nav_parms         lib/satellite/update_gvarimg_parms.f
@@ -28,6 +28,7 @@
                    lmodel                         "
                    get_sat_boundary          lib/satellite/getsat_boundary.f
                get_lut_mercator              lib/satellite/gen_lut_mercator.f
+               get_lut_ll                    lib/satellite/genlutll.f (nav luts from parms or 1d lat/lon arrays)
                get_lut_ps                    lib/satellite/genlutps.f
        lvd_driver_sub                        lvd_driver_sub.f
            readlut                           readlut.f
@@ -62,7 +63,7 @@
            set_missing_flag                  setmissingflag.f
                set_missing_sat               set_missing_sat.f
            btemp_convert_asc                 btempconv_asc.f
-           latlon_to_grij                    latlon_to_grij.f
+           latlon_to_grij                    latlon_to_grij.f                    (nav luts from 2d lat/lon arrays)
            process_ir_satellite              satir_process.f
                satdat2laps_ir                satir2laps.f 
                check                         check_data.f       
@@ -142,9 +143,10 @@ in several formats:
                       raw gvar                     (type=gvr)
     2. wfo SBN: also netcdf and lambert projection (type=wfo)
     3. AirForce Global Weather Center              (type=gwc)
-    4. GVAR NetCDF data with lat/lons added        (type=rll)
+    4. GVAR NetCDF data with 2-d lat/lons added    (type=rll)
     5  GOES-R NOAAPORT                             (type=gnp)
     6. KMA COMS satellite                          (type=cms)
+    7. Himawari NetCDF on 5km latlon grid          (type=nll) 
 
 A more comprehensive table showing the supported satellite IDs and Types can be
 found in 'src/includ/satdata_lvd_table.for'.
