@@ -466,7 +466,7 @@ c read in laps lat/lon and topo
         end
 
         subroutine get_laps_2d_prior(i4time,ilaps_cycle_time,ext,var
-     1             ,units,comment_r,NX_L,NY_L,field_2d,istatus)
+     1             ,units,comment,NX_L,NY_L,field_2d,istatus)
 
         character*31 EXT
         character*125 comment
