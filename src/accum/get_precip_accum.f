@@ -16,6 +16,7 @@
         real lat(imax,jmax)
         real lon(imax,jmax)
         real topo(imax,jmax)
+        real ldf(imax,jmax)
 
         character*31  radarext_3d_accum
 
@@ -47,9 +48,13 @@
           precip_accum = r_missing_data
         endif
         
-        if(istat_radar .eq. 0)then
-          write(6,*)' istat_radar = 0, not using radar data'
+        if(istat_radar .ne. 1)then
+          write(6,*)' istat_radar != 1, not using radar data'
           precip_accum = r_missing_data
+        else
+          write(6,*)' radar precip good status'       
+          write(6,*)' range of radar ',minval(precip_accum)
+     1                                ,maxval(precip_accum)
         endif
 
 !       Read precip first guess (LGB/FSF). Try 'R01' variable
@@ -93,9 +98,13 @@
             call get_maxstns(maxsta,istatus)
             if(istatus .ne. 1)return
 
+!           This is set to one to disable the land/water weighting for the
+!           precip analysis.
+            ldf(:,:) = 1.0
+
             call blend_gauge_data(    i4time_end,imax,jmax,maxsta  ! I
      1                               ,r_missing_data               ! I
-     1                               ,lat,lon                      ! I
+     1                               ,lat,lon,topo,ldf             ! I
      1                               ,pcp_bkg_m                    ! I
      1                               ,ilaps_cycle_time             ! I
      1                               ,closest_radar,istat_radar    ! I
@@ -490,8 +499,17 @@
      1             ,units_2d,comment_2d,imax,jmax,pres_sfc_pa,istatus)
                 if(istatus .ne. 1)then
                     write(6,*)' Warning: LAPS Sfc Pressure '
-     1                       ,'not available'      
+     1                       ,'not available',istatus      
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
+                    write(6,*)' range of pres_sfc_pa'
+     1                        ,minval(pres_sfc_pa),maxval(pres_sfc_pa)
+                    do i = 1,imax
+                    do j = 1,jmax
+                        if(pres_sfc_pa(i,j) .eq. r_missing_data)then      
+                            write(6,*)i,j,pres_sfc_pa(i,j),topo(i,j)
+                        endif
+                    enddo ! j
+                    enddo ! i
                     return
                 endif
 
