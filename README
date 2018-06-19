@@ -1959,6 +1959,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                 Polar Stereographic:
                     This defines the longitude which is straight up and down 
                     (parallel to the "y" axis) in the map projection.
+
+                    For a rotated polar stereographic projection this is also
+		    the longitude of the projection pole.
                
                 Lambert Conformal:
                     This defines the longitude which is straight up and down 
@@ -2034,7 +2037,14 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                         
                                grid_spacing at projection (south) pole ~ 12km
                                grid_spacing at domain center (-40)     = 10km
-                                                                
+                     
+                    Example 5: grid_spacing_m = 10000.
+                               standard_latitude  =   +90.
+                               standard_latitude2 =   +40.
+                               grid_cen_lat =  +40.
+                   
+                               grid_spacing at projection pole         = 10km
+                               grid_spacing at domain center (+40)     = 10km
 
                     Note that the 'Dx' and 'Dy' values that appear in the 
                     'static.nest7grid' should equal the value of
@@ -2054,9 +2064,13 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
         6) standard_latitude2:
              
                 Polar Stereographic:
-                    This must be set to +90. or -90. and defines the pole 
+                    This usually is set to +90. or -90. and defines the pole 
                     latitude of the polar stereographic projection 
                     (Earth's North or South Pole). 
+
+                    For a rotated polar stereographic projection this is set
+		    to the geographic latitude of the projection pole. This
+		    can be at any geographic location.
 
                 Lambert:
                     For a tangent lambert (e.g. CONUS), set this equal to
