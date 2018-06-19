@@ -1,7 +1,7 @@
 
         subroutine blend_gauge_data(    i4time,ni,nj,maxsta        ! I
      1                                 ,r_missing_data             ! I
-     1                                 ,lat,lon                    ! I
+     1                                 ,lat,lon,topo,ldf           ! I
      1                                 ,pcp_bkg_m                  ! I
      1                                 ,ilaps_cycle_time           ! I
      1                                 ,closest_radar,istat_radar  ! I
@@ -30,6 +30,8 @@
         real closest_radar(ni,nj) ! M
         real lat(ni,nj)
         real lon(ni,nj)
+        real topo(ni,nj)
+        real ldf(ni,nj)
 
         real pcp_gauge(maxsta)    ! relevant time of accumulation is selected
         real pcp_laps_in_a(maxsta)! radar/first guess precip of paired obs        
@@ -50,8 +52,12 @@
 
         l_gauge_only = (.not. l_accum_fg) .AND. (.not. l_accum_radar) 
      1                                    .AND.        l_accum_gauge
+
+!       If both 'l_regression' and 'l_bias_ratio' are F then the gauge increment
+!       analysis can be performed.
         l_regression = .false.
-        l_accum_bias_ratio = (.not. l_regression) 
+        l_accum_bias_ratio = .false. 
+!       l_accum_bias_ratio = (.not. l_regression) 
         
 !       Combine background and radar field given radar gap areas
         n_radar = 0
@@ -235,7 +241,7 @@
 
         wt_bkg_a = 5e28
 
-!       10% threshold allowed to be missing
+!       60% threshold allowed to be missing
         frac_msg_rdr_bkg = float(n_msg_rdr_bkg) / float(ni*nj)
 
         write(6,*)' n_msg_rdr_bkg = ',n_msg_rdr_bkg
@@ -243,7 +249,7 @@
         write(6,*)' l_gauge_only  = ',l_gauge_only
 
 !       if(n_msg_rdr_bkg .gt. 0 .or. l_gauge_only)then ! do gauge only analysis
-        if(frac_msg_rdr_bkg .gt. .10 .or. l_gauge_only)then ! do gauge only analysis
+        if(frac_msg_rdr_bkg .gt. .60 .or. l_gauge_only)then ! do gauge only analysis
             if(istat_radar .eq. 0)then
                 write(6,*)' Radar data unavailable'
             endif              
