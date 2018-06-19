@@ -104,6 +104,10 @@
 # Try and strip off leading blanks?
 # LATLON="39.99 -105.26"
   echo "Annotate Lat/Lon $LATLON"
+  HT2=`echo $HT  | sed 's/^[0\t]*//'` # remove leading zeros
+  HT2=`echo $HT2 | sed 's/\.//'`m     # remove trailing decimal and add 'm'
+  LATLON2="$LATLON $HT2"
+
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
    if test "$IMGGEOM" = "511x511"; then
     echo "convert -fill white -annotate +363+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
@@ -115,8 +119,8 @@
     echo "convert -fill white -annotate +2300+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
           convert -fill white -annotate +2300+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    else
-    echo "convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
-          convert -fill white -annotate +1387+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+    echo "convert -fill white -annotate +1330+20 "$LATLON2" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
+          convert -fill white -annotate +1330+20 "$LATLON2" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    fi
   fi
 
@@ -126,7 +130,7 @@
     elif test $AZI_SCALE == 0.20; then
       convert -fill yellow -annotate +1434+179 "$LATLON" -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.25; then
-      convert -fill yellow -annotate +1227+$YDISP "$LATLON" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill yellow -annotate +1202+$YDISP "$LATLON2" -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     elif test $AZI_SCALE == 0.50; then
       convert -fill yellow -annotate +1840+20 "$LATLON" -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
     else
@@ -158,3 +162,67 @@
       convert -fill white -annotate +20+1524 "$LL"   -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
     fi
   fi
+  
+# Annotate Directions
+  echo "Annotate Directions"
+  DIRCYL=South
+  DIRCYLL=East
+  DIRCYLR=West
+
+  if test "$RESOLUTION_POLAR" = "180pr"; then
+      DIR1=SE
+      DIR2=NE
+      DIR3=NW
+      DIR4=SW
+  fi
+  if test "$RESOLUTION_POLAR" = "360pr"; then # default           
+      DIR1=NW
+      DIR2=SW
+      DIR3=SE
+      DIR4=NE
+  fi
+  if test "$RESOLUTION_POLAR" = "360p"; then # flip left/right
+      DIR1=NE
+      DIR2=SE
+      DIR3=SW
+      DIR4=NW
+  fi
+  if test "$RESOLUTION_POLAR" = "180p"; then # rotate and flip left/right
+      DIR1=SW
+      DIR2=NW
+      DIR3=NE
+      DIR4=SE
+  fi
+  if test "$RESOLUTION_CYL" = "360c"; then # roll horizontally by half the image
+      DIRCYL=North
+      DIRCYLL=West
+      DIRCYLR=East
+  fi
+
+# if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
+#  if test "$IMGGEOM" = "511x511"; then
+#   convert -fill white -annotate +55+60     "$DIR1"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+#   convert -fill white -annotate +40+450    "$DIR2"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+#   convert -fill white -annotate +440+450   "$DIR3"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+#   convert -fill white -annotate +435+60    "$DIR4"            -pointsize 20 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+#  fi
+#  fi
+
+  POINTCYL=16
+
+  if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
+    if test $AZI_SCALE == 0.10; then
+      convert -fill orange -annotate  +1050+447   "East"          -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    elif test $AZI_SCALE == 0.20; then
+      convert -fill orange -annotate  +776+179  "$DIRCYL"          -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    elif test $AZI_SCALE == 0.25; then
+      convert -fill orange -annotate  +693+$YDISP   "$DIRCYL"          -pointsize $POINTCYL allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate  +339+$YDISP   "$DIRCYLL"         -pointsize $POINTCYL allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+      convert -fill orange -annotate  +1055+$YDISP  "$DIRCYLR"         -pointsize $POINTCYL allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    elif test $AZI_SCALE == 0.50; then
+      convert -fill orange -annotate +1040+20   "$DIRCYL"          -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    else
+      convert -fill orange -annotate +520+20    "$DIRCYL"          -pointsize 20 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+    fi
+  fi
+  
