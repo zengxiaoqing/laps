@@ -80,7 +80,7 @@
   
         real k_to_c, make_td, make_ssh, mfpath
 
-        character*1 c_prodtype, c_plotobs
+        character*1 c_prodtype, c_plotobs, c1_lat, c1_lon
         character*3 var_2d
         character*150  directory, filename, wrfout_full, ramsout_full
         character*31  ext
@@ -1654,13 +1654,16 @@
               write(53,*)a24time(1:17)
               close(53)
 
+              c1_lat = 'N'
+              c1_lon = 'E'
+
 !             Write lat/lon and other info for label
               open(54,file='label2.'//trim(clun_loop),status='unknown')
-              write(54,54)soundlat(iloc),soundlon(iloc),
+              write(54,54)soundlat(iloc),c1_lat,soundlon(iloc),c1_lon,
      1                    minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
      1                    solar_alt,solar_az,alt_scale,azi_scale,
      1                    ni_polar,nj_polar
- 54           format(2f8.2/6i8/2f8.2,2f7.2/2i6)
+ 54           format(2(f8.2,a1)/6i8/2f8.2,2f7.2/2i6)
 
               if(ghi_sim .eq. r_missing_data)then
                 write(54,*)
