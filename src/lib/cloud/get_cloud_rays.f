@@ -454,6 +454,8 @@
 !       'rad_ht_thresh' could be made dependent on 'obj_alt' or on the
 !       minimum 'obj_alt' over the domain and/or field of view depending
 !       on 'horz_dep'.        
+        solalt_min_grid = minval(sol_alt(:,:))
+        solalt_min_limb = sol_alt(i,j) - horz_dep_d
         
         if(mode_aero_cld .eq. 3)then
           rad_ht_thresh = 1000e3
