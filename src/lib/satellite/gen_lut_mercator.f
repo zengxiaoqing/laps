@@ -33,6 +33,8 @@ cdis
      &nx_l,ny_l,lat,lon,ri_laps,rj_laps,jstatus)
 c
 c
+c     Returns satellite pixel locations for each point on model (LAPS) domain
+c
       implicit none
 
       integer   nx_l,ny_l
@@ -52,8 +54,8 @@ c
       real    rj(nx_l+2,ny_l+2)
       real    rel_ri(nx_l+2,ny_l+2)
       real    rel_rj(nx_l+2,ny_l+2)
-      real    ri_laps(nx_l,ny_l)
-      real    rj_laps(nx_l,ny_l)
+      real    ri_laps(nx_l,ny_l)         ! Output
+      real    rj_laps(nx_l,ny_l)         ! Output
 
       integer isat,jtype,kchl
 c     integer i,j,n,nc
