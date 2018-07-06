@@ -131,6 +131,7 @@ c
       integer ivar
       integer lend
       integer laps_cycle_time
+      integer iverb /0/
 
       logical first_time
       logical found_lvd_match
@@ -384,6 +385,15 @@ c
                   nfiles_sat(k) = nfiles_sat(k) + 1
                   i4time_sat(nfiles_sat(k),k)=i4time_sat_raw(i)
                   c_type_sat(nfiles_sat(k),k)=c_filename_sat(i)(j:jj)
+                  if(iverb .eq. 1)then
+                     write(6,*)c_filename_sat(i)(j:jj),' ',chtype(k)
+     1                        ,' matches'
+                  endif
+               else
+                  if(iverb .eq. 1)then
+                     write(6,*)c_filename_sat(i)(j:jj),' ',chtype(k)
+     1                        ,' nomatch'
+                  endif
                endif
             enddo
 
