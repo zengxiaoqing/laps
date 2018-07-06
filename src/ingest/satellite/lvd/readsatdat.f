@@ -91,7 +91,8 @@ c
                n=index(c_filename,' ')
             elseif(csat_type.eq.'rll')then
                n=index(c_dir_path(1),' ')-1
-               if(trim(csat_id) .eq. 'mtsat')then ! himawari
+               if(trim(csat_id)     .eq. 'mtsat' .OR.
+     &                 csat_id(1:3) .eq. 'him'        )then ! himawari
                  if(trim(c_type(j,i)) .eq. '10p')then
                    c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
      &                        '_'//c_type(j,i)//'4.nc'
