@@ -76,9 +76,9 @@ cdoc  Reads static/satellite_lvd.nl file.
          print*,'  Attributes of this satellite and type: '
          print*,'  ---------------------------------------'
          print*,'   Latin/Lap/Lov: ',r_latin(j,i),r_lap(j,i),r_lov(j,i)
-         print*,'   vis/ir(x/y) res (km): ', r_resolution_x_vis(j,i),
-     &r_resolution_y_vis(j,i),r_resolution_x_ir(j,i),r_resolution_y_ir
-     &(j,i)
+         print*,'   vis/ir(x/y) resolution (m): ',
+     &                 r_resolution_x_vis(j,i),r_resolution_y_vis(j,i),
+     &                 r_resolution_x_ir(j,i),r_resolution_y_ir(j,i)
          print*,'  ---------------------------------------'
          do k=1,maxchannel
           if(ichannels(k,j,i).eq.1)then
