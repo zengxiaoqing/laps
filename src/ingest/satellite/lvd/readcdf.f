@@ -106,6 +106,7 @@ C
       character*132 grid_type
       character*132 channel_comment_
       character*132 asctime
+      character*10 varname
 c---------------------------------------------------------
 c   code
 
@@ -163,16 +164,25 @@ c   code
          write(6,*)'readcdf longitude range:      '
      1          ,minval(longitude),maxval(longitude)
 
+      elseif(csat_type.eq.'nll')then ! read 1D lat/lon
+         write(6,*)' Read 1D lat/lon arrays (UNDER CONSTRUCTION)'
+
       endif
 
       if(csat_type.eq.'ncp')then
-         rcode = NF_INQ_VARID(ncid,'channel',varid)
+         varname = 'channel'
+      elseif(csat_type.eq.'nll')then
+         varname = 'data'
       else
-         rcode = NF_INQ_VARID(ncid,'image',varid)
+         varname = 'image'
       endif
+
+      rcode = NF_INQ_VARID(ncid,trim(varname),varid)
       if(rcode.ne.NF_NOERR) then
          print *, NF_STRERROR(rcode)
-         print *,'in var image'
+         print *,'in var ',trim(varname)
+      else
+         print *,'varid obtained for ',trim(varname)
       endif
 C
 C    statements to fill image                          
