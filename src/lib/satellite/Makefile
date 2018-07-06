@@ -28,12 +28,15 @@ SRC=bcdtoint.F \
     convert_to_double.f \
     expand_domain.f \
     fc01_conv_pts_el_to_met_1.f \
+    gen_lut_fx.f \
     gen_lut_gvar.f \
     gen_lut_lambert.f \
+    gen_lut_ll.f \
     gen_lut_mercator.f \
     genlutps.f \
     genlvdlut_sub.f \
     genlvdlut_lvd.f \
+    geos_transform_pix.c \
     get_attr_gnp.f \
     get_attr_satellite.f \
     getsat_boundary.f \
