@@ -46,7 +46,7 @@ c these are output (expanded) lat/lon
       real    xlat(kmax,lmax)
       real    xlon(kmax,lmax)
 
-      real    g_space_deg
+      real    g_space_mx,g_space_my,g_space_deg_x,g_space_deg_y
       real    wdw_lat_ns
       real    wdw_lon_ns
       real    wdw_lon_ns_test
@@ -64,8 +64,10 @@ c
       icen = imax/2+1
       jcen = jmax/2+1
 
-      call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
-     &                                  ,g_space_deg,istatus)
+      call get_grid_spacing_actual_xy(lat(icen,jcen),lon(icen,jcen)
+     &                               ,g_space_mx,g_space_my,istatus)
+      g_space_deg_x = g_space_mx/111100.
+      g_space_deg_y = g_space_my/111100.
 c
 c     g_space_deg = sqrt( 
 c    1       (  lat(1,2) - lat(1,1)                   )**2
@@ -73,10 +75,10 @@ c    1     + ( (lon(1,2) - lon(1,1))*cosd(lat(1,1))  )**2
 c    1                         )
 c.....       Define north-south window dimensions
 
-      wdw_lat_ns =  g_space_deg/111100.
+      wdw_lat_ns =  g_space_deg_y
       wdw_lon_ns =  wdw_lat_ns           !g_space_deg  / cosd(xlat(1,1))
 
-c     wdw_lon_ns_test = g_space_deg/111100./cosd(lat(icen,jcen))
+c     wdw_lon_ns_test = g_space_m/111100./cosd(lat(icen,jcen))
 
 c     g_space_deg = sqrt(
 c    1       (  lon(1,2) - lon(1,1)                   )**2
