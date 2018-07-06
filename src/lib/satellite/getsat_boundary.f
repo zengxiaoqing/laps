@@ -57,26 +57,29 @@ c
       enddo
       enddo
 
+      print*,'linestart =         ',ilinestart
       if(ilinestart.lt.0)then
          write(6,*)'WARNING: LAPS exceeds nrthrn Sat bndry!'
-         print*,'linestart = ',ilinestart
          rlinestart=0.0
          istatus = 0
       endif
+
+      print*,'lineend/max_lines = ',ilineend,max_lines
       if(ilineend.gt.max_lines)then
          write(6,*)'WARNING: LAPS exceeds sothrn Sat bndry!'
-         print*,'lineend/max_lines = ',ilineend,max_lines
          istatus = 0
       endif
+
+      print*,'elemstart =         ',ielemstart
       if(ielemstart.lt.0)then
          write(6,*)'WARNING: LAPS exceeds westrn Sat bndry!'
-         print*,'elemstart = ',ielemstart
          relemstart=0.0
          istatus = 0
       endif
+
+      print*,'elemend/max_elems = ',ielemend,max_elems
       if(ielemend.gt.max_elems)then
          write(6,*)'WARNING: LAPS exceeds eastrn Sat bndry!'
-         print*,'elemend/max_elems = ',ielemend,max_elems
          istatus = 0
       endif
 
