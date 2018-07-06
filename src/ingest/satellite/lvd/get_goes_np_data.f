@@ -32,7 +32,9 @@
 !     Read IR channel 13 data
       cfname13 = cvt_i4time_wfo_fname13(i4time_goes)
       filename = trim(path)//'/goes_mosaic_'//cfname13//'_13.nc'
-      write(6,*)'gnp filename is ',trim(filename)
+      write(6,*)'gnp/13 fname is ',trim(filename)
+      filename = trim(path)//'/'//cfname13//'.TIRE13.PAB'
+      write(6,*)'gnp/13 fname is ',trim(filename)
 C
 C  Open netcdf File for reading
 C
@@ -40,7 +42,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),filename
         istatus=0
-        return
+!       return
       endif
 C
 C  Fill all dimension values
@@ -84,7 +86,9 @@ C
 !     Read IR channel 07 data
       cfname13 = cvt_i4time_wfo_fname13(i4time_goes)
       filename = trim(path)//'/goes_mosaic_'//cfname13//'_07.nc'
-      write(6,*)'filename is ',trim(filename)
+      write(6,*)'gnp/07 fname is ',trim(filename)
+      filename = trim(path)//'/'//cfname13//'.TIRE07.PAB'
+      write(6,*)'gnp/07 fname is ',trim(filename)
 C
 C  Open netcdf File for reading
 C
@@ -92,7 +96,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),filename
         istatus=0
-        return
+!       return
       endif
 C
 C  Fill all dimension values
@@ -131,10 +135,13 @@ C
 
       nf_status=nf_close(nf_fid)
 
-!     Read IR channel 02 data
+!     Read VIS channel 02 data
       cfname13 = cvt_i4time_wfo_fname13(i4time_goes)
-      filename = trim(path)//'/goes_mosaic_'//cfname13//'_02.nc'
-      write(6,*)'filename is ',trim(filename)
+!     filename = trim(path)//'/goes_mosaic_'//cfname13//'_02.nc'
+      filename = trim(path)//'/'//cfname13//'.TIRE02.PAB'
+      write(6,*)'gnp/02 fname is ',trim(filename)
+!     filename = trim(path)//'/20180620_1742.TIRE02.PAB' ! new filename test
+!     write(6,*)'gnp/02 fname is ',trim(filename)
 C
 C  Open netcdf File for reading
 C
@@ -207,6 +214,7 @@ C
       Character*6  csat_id
       Character*3  csat_type
       Character*3  chtype
+      Character*20 cvarname
 
       call get_r_missing_data(r_missing_data,istatus)
       if (istatus .ne. 1) then
@@ -216,12 +224,15 @@ C
        
       image = r_missing_data ! initialize
       
-      if(.false.)then
-          call read_goes_np_netcdf(nf_fid, nelem, nlines, image)
-      else
-          nf_status=NF_INQ_VARID(nf_fid,'image',nf_vid)
+      if(.true.)then
+          if(.false.)then
+            cvarname = 'image'
+          else
+            cvarname = 'Sectorized_CMI'
+          endif
+          nf_status=NF_INQ_VARID(nf_fid,trim(cvarname),nf_vid)
           if(nf_status.ne.NF_NOERR) then
-            print *, NF_STRERROR(nf_status),' for image'
+            print *, NF_STRERROR(nf_status),' for ',cvarname
           else
             write(6,*)' call rdblock_line_elem for chtype ',chtype
             call rdblock_line_elem(csat_id,csat_type,chtype,
@@ -231,51 +242,6 @@ C
 C
 C The netcdf variables are filled - your lvd write call may go here
 C
-      return
-      end
-C
-C  Subroutine to read the file 
-C
-      subroutine read_goes_np_netcdf(nf_fid, nelem, nlines, image)
-C
-      include 'netcdf.inc'
-      integer nelem, nlines,nf_fid, nf_vid, nf_status
-      integer image( nelem, nlines)
-
-
-
-
-C   Variables of type REAL
-
-C   Variables of type INT
-C
-C
-C     Variable        NETCDF Long Name
-C     image         
-C
-      nf_status=NF_INQ_VARID(nf_fid,'image',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-       print *, NF_STRERROR(nf_status),' for image'
-      else
-       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,image)
-       if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for image'
-       endif
-      endif
-
-C   Variables of type DOUBLE
-C
-
-
-C   Variables of type CHAR
-C
-
-      nf_status=nf_close(nf_fid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'nf_close'
-      endif
-
       return
       end
 
