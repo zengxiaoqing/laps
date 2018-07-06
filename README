@@ -1270,15 +1270,15 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      GFS Models:
      GFS global longitude-latitude grid (360x181) 1.0 deg (fh 00-180) can be
      found at ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/
-     gfs.{YYYYMMDDHH}{CC}/gfs.t{CC}z.pgrbf{XXX}{.grib2}, and
-     GFS global longitude-latitude grid (720x361) 0.5 deg (fh 00-180) can be
+     gfs.{YYYYMMDD}{CC}/gfs.t{CC}z.pgrbf{XXX}{.grib2}, and
+     GFS global longitude-latitude grid (1440x721) 0.25 deg (fh 00-180) can be
      found at ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/
-     gfs.{YYYYMMDDHH}{CC}/gfs.t{CC}z.pgrb2f{XXX}
+     gfs.{YYYYMMDD}{CC}/gfs.t{CC}z.pgrb2.0p25.f{XXX}
      where CC is the model cycle time (i.e. 00, 06, 12, 18) and XXX is the 
      forecast hour of product from 00 - 180.
 
      The 1.0 degree GFS uses file identifier 'pgrb' (pressure-based grib) and 
-     is now available in grib2 as well when '.grib2' is present. The 0.5 degree
+     is now available in grib2 as well when '.grib2' is present. The 0.25 degree
      GFS uses 'pgrb2' (pressure-based) and is only available in grib2.
 
      RUC Model:
