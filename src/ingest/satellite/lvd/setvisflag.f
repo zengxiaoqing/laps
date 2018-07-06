@@ -5,6 +5,8 @@ c elevation is less than 14 degrees then the visible data is useless
 c even if the file is available. This routine returns lvis_flag = true
 c when the solar elevation angle is less than the threshold.
 c
+       use mem_namelist, ONLY: solalt_thr_vis
+
        implicit None
 c
        integer nx_l,ny_l
@@ -12,25 +14,19 @@ c
        logical   lvis_flag
        real    lat(nx_l,ny_l)
        real    lon(nx_l,ny_l)
+       real    alt(nx_l,ny_l)
+       real    azi(nx_l,ny_l)
 
        integer i,j
-       real    solar_alt_thresh
        real    solar_alt_max
-       real    alt,dec,hrangle
 c
-c
-       solar_alt_thresh=14.0
-       solar_alt_max=0.0
-       do j=1,ny_l
-       do i=1,nx_l
+       call get_solaltaz_2d(lat,lon,i4time,nx_l,ny_l,alt,azi)
+       solar_alt_max = maxval(alt)
 
-          call solar_position(lat(i,j),lon(i,j),i4time,alt,dec,hrangle)
-          if(alt.gt.solar_alt_max)solar_alt_max=alt
+       write(6,*)' max / thresh solar altitude is ',solar_alt_max
+     1                                             ,solalt_thr_vis
 
-       enddo
-       enddo
-
-       if(solar_alt_max.lt.solar_alt_thresh)lvis_flag=.true.
+       if(solar_alt_max.lt.solalt_thr_vis)lvis_flag=.true.
 
        return
        end
