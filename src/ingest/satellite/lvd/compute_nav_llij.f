@@ -68,6 +68,8 @@ c           print*,'Current Version: 9-29-06'
 c           print*,'rewrite satellite_lvd.nl'
 c           print*
 c           call rewrite_satellite_lvd_nl(istatus)
+         else
+            write(6,*)' Returned from genlvdlut_lvd'
          endif
 
          nstatus=1
@@ -104,6 +106,8 @@ c           write(6,*)'Error status returned from check_lut'
 c           goto 910
 c        endif
 c     endif
+
+      print*,' Returning from compute_nav_llij '
 
       goto 1000
 
