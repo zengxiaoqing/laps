@@ -766,6 +766,84 @@ c
 c===============================================================================
 c===============================================================================
 c
+      subroutine fixed_grid
+c
+      integer np,n,isat_fgf
+      integer nx,ny,nz             !No. of FX domain grid points
+ 
+      real   glat(np),glon(np)     !Earth lat, lon (deg N, deg +E)
+      real   fxi(np),fxj(np)       !Lat-lon grid i,j
+      real   diff
+c     real   sw(2),ne(2)
+c     common /llgrid/nx,ny,sw,ne,cgrddef
+
+      real   lat0,lon0,dlat,dlon     !SW corner lat, lon, lat, lon spacing
+      real*8 dlond,dlatd,glond,glatd
+      real*8 scale_x,scale_y,offset_x,offset_y
+      real*8 sub_lon_degrees,fgf_x,fgf_y,xmin,ymin
+      character*1 cgrddef
+
+!     x0,y0,dx,dy are in microradians
+      common /fxgrid/offset_x,offset_y,scale_x,scale_y,xmin,ymin
+     1              ,sub_lon_degrees
+c
+c===============================================================================
+c
+      entry latlon_2_fxij(np,glat,glon,fxi,fxj)
+c_______________________________________________________________________________
+c
+
+      dlond=dlon
+      dlatd=dlat
+      isat_fgf = 1
+
+      do n=1,np
+         glond = glon(n)
+         glatd = glat(n)
+         call earth_to_fgf(isat_fgf,glond,glatd,scale_x,offset_x,scale_y
+     1                    ,offset_y,sub_lon_degrees,fgf_x,fgf_y)
+         fxi(n) = +fgf_x - xmin
+         fxj(n) = -fgf_y - ymin
+         if(n .le. 2)then
+            write(6,*)
+            write(6,*)'latlon_2_fxij first grid points ',n
+            write(6,*)'-----------------------------------'
+            write(6,*)'glatd = ',glatd
+            write(6,*)'glond = ',glond
+            write(6,*)'scale_x = ',scale_x
+            write(6,*)'scale_y = ',scale_y
+            write(6,*)'offset_x = ',offset_x
+            write(6,*)'offset_y = ',offset_y
+            write(6,*)'sub_lon_degrees = ',sub_lon_degrees
+            write(6,*)'fgf_x = ',fgf_x
+            write(6,*)'fgf_y = ',fgf_y
+            write(6,*)'xmin = ',xmin
+            write(6,*)'ymin = ',ymin
+            write(6,*)'fxi(n) = ',fxi(n)
+            write(6,*)'fxj(n) = ',fxj(n)
+            write(6,*)
+         endif
+      enddo ! n
+
+      return
+c
+c===============================================================================
+c
+      entry fxij_2_latlon(np,fxi,fxj,glat,glon)
+c_______________________________________________________________________________
+c
+c Note: if lat0=northern boundary of fx grid set dlat=-dlat
+      do n=1,np
+         glon(n)=(fxi(n)-1.)*dlon+lon0
+         glat(n)=(fxj(n)-1.)*dlat+lat0
+      enddo
+      return
+c
+      end
+c
+c===============================================================================
+c===============================================================================
+c
 
       subroutine cylindrical_equidistant
 c
