@@ -84,7 +84,7 @@ c      Integer j_s(imax*jmax)
        Real Temp
        Real r_grid_ratio
        Real result
-       Logical lforce_switch
+       Logical lforce_switch, l_rhombus /.false./
 c
 c -----------------------------begin--------------------------------
 c
@@ -133,56 +133,63 @@ c
           DO 10 I=1,IMAX
             IF(SV(I,J).NE.0.) GO TO 10
 c
-c compute the line and element for window surrounding LAPS grid point.
+c Compute the line and element for a window surrounding LAPS grid point,
+c using a simple assumption that the satellite grid has the same orientation
+c as the model with a 1:1 aspect ratio.
+c
+c This might also be done by projecting the model grid box onto the satellite
+c grid as a rhombus, and determining whether each satellite point is included in
+c the rhombus.
 c
             if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
      &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 
-            elem_mx = r_llij_lut_ri(i,j) + ((1./r_grid_ratio) * 0.5)
-            elem_mn = r_llij_lut_ri(i,j) - ((1./r_grid_ratio) * 0.5)
-            line_mx = r_llij_lut_rj(i,j) + ((1./r_grid_ratio) * 0.5)
-            line_mn = r_llij_lut_rj(i,j) - ((1./r_grid_ratio) * 0.5)
-            istart = nint(elem_mn+0.5)
-            iend   = int(elem_mx)
-            jstart = nint(line_mn+0.5)
-            jend   = int(line_mx)
+              elem_mx = r_llij_lut_ri(i,j) + ((1./r_grid_ratio) * 0.5)
+              elem_mn = r_llij_lut_ri(i,j) - ((1./r_grid_ratio) * 0.5)
+              line_mx = r_llij_lut_rj(i,j) + ((1./r_grid_ratio) * 0.5)
+              line_mn = r_llij_lut_rj(i,j) - ((1./r_grid_ratio) * 0.5)
+              istart = nint(elem_mn+0.5)
+              iend   = int(elem_mx)
+              jstart = nint(line_mn+0.5)
+              jend   = int(line_mx)
 
-            if(istart .le. 0 .or. jstart .le. 0 .or.
-     &iend .gt. elem_dim .or. jend .gt. line_dim)then
-c              write(*,*)'insufficient data for visible lat/lon sector'
-c              write(*,1020)i,j
-c1020	       format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
+              if(istart .le. 0        .or. jstart .le. 0 .or.
+     &           iend   .gt. elem_dim .or. jend   .gt. line_dim)then
+c               write(*,*)'outside visible lat/lon sector'
+c               write(*,1020)i,j
+c1020	        format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
 
-               insufdata=insufdata+1
-               sv(i,j)=r_missing_data
+                insufdata=insufdata+1
+                sv(i,j)=r_missing_data
 
-c              i_s(insufdata)=i
-c              j_s(insufdata)=j
+c               i_s(insufdata)=i
+c               j_s(insufdata)=j
 
- 	    else
+   	      else
  
 c **** FIND THE AVERAGE VISIBLE PIXELS AROUND GRID POINT
 c
-               Temp = 0.0
-               npix = 0
-               maxpix = 0
+                Temp = 0.0
+                npix = 0
+                maxpix = 0
 
-               DO 3 JJ=jstart,jend
-                  DO 3 II=istart,iend
+                if(.not. l_rhombus)then
+                  DO JJ=jstart,jend
+                  DO II=istart,iend
+                    IF(image_vis(II,JJ) .ne. r_missing_data)then
+                      npix = npix + 1
+                      t_array(npix) = image_vis(II,JJ)
+                    endif
+                  enddo ! ii
+                  enddo ! jj
+                endif ! l_rhombus
 
-                  IF(image_vis(II,JJ) .eq. r_missing_data) GO TO 3
-
-                     npix = npix + 1
-                     t_array(npix) = image_vis(II,JJ)
-
-    3          continue
-
-               if(npix .ge. maxpix)maxpix=npix
+                if(npix .ge. maxpix)maxpix=npix
 c
 c Added 11-6-95... A quality control test on the group of pixels used to
 c                  derive the laps average pixel value.
 c
-               if(npix.ge.2)then
+                if(npix.ge.2)then
 
                   do ii=1,npix
                      temp = temp + t_array(ii)
@@ -190,22 +197,22 @@ c
 
                   sv(i,j) = Temp/ npix
 
-               elseif(npix.eq.1)then
+                elseif(npix.eq.1)then
 
                   sv(i,j) = t_array(npix)
 
-               else
+                else
 
                   sv(i,j) = r_missing_data
 
-               endif
+                endif
 
-Cd             if(i .eq. i/10*10 .and. j .eq. j/10*10)then
+Cd              if(i .eq. i/10*10 .and. j .eq. j/10*10)then
 Cd                write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
 Cd5555            format(1x,2i4,2f10.2,2i5,f10.2)
-Cd             endif
+Cd              endif
 
-            end if
+              end if
 
             else
               sv(i,j)=r_missing_data
