@@ -292,6 +292,7 @@ c ---------------------------------------------
          write(6,*)'Error getting LAPS lat/lon data'
          stop
       end if
+
 c --------------------------------------------------------------------
 c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
@@ -371,6 +372,7 @@ c Determine solar-altitude and set flag for visible sat data availability.
 c This flag will force  this process to not wait for vis data at the end of
 c the day when the sun is setting.
 c
+      write(6,*)' Calling set_vis_flag:'
       lvis_flag = .false.   !assume that it is available
       call set_vis_flag(i4time_cur,lat,lon,nx_l,ny_l,lvis_flag)
       if(lvis_flag)then
@@ -491,7 +493,7 @@ c Find and read current satellite files... as many as 5 ir channels and vis.
 c --------------------------------------------------------------------------
       if(csattype.eq.'cdf'.or.csattype.eq.'gvr'.or.
      &   csattype.eq.'wfo'.or.csattype.eq.'ncp'.or.
-     &                        csattype.eq.'rll')then 
+     &   csattype.eq.'nll'.or.csattype.eq.'rll')then 
 
        write(6,*)'Using getcdf_satdat routine for ',csattype
 
@@ -704,11 +706,18 @@ c March 2003 added HKO (gms) sat ingest
          c_type(2,1) = '4u'
          c_type(3,1) = 'vis'
 
+      else
+         write(6,*)' ERROR: unknown sat type ',csattype
+         lvd_status = 0
+         return
+
       endif ! csattype
 
 c --------------------------------------------------------------------
 c Get image resolution information
 c --------------------------------
+      write(6,*)' Getting image resolution information (m)'
+
       do j = 1,nft
       do i = 1,ntm(j)
 
@@ -719,6 +728,8 @@ c --------------------------------
      1               ,jtype,ksat,i,j,r_resolution_x_vis(jtype,ksat)
          elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
             r_image_res_m(i,j)=r_resolution_x_ir(jtype,ksat)
+            write(6,*)'YLYL'
+     1               ,jtype,ksat,i,j,r_resolution_x_ir(jtype,ksat)
          elseif(ispec.eq.3)then
             r_image_res_m(i,j)=r_resolution_x_wv(jtype,ksat)
             write(6,*)'YLYL'
@@ -912,9 +923,10 @@ c convert from counts to brightness temps for CDF data use the
 c pre-generated lut's. For ascii data divide all by 10.
 c ------------------------------------------------------------
 
-       if(csattype.ne.'asc'.and.
+       if(csattype.ne.'asc'.and. ! exceptions to btemp_convert call
      &    csattype.ne.'hko'.and.
      &    csattype.ne.'rll'.and.
+     &    csattype.ne.'nll'.and.
      &    csattype.ne.'cms'.and.
      &    csattype.ne.'ncp')then
           write(6,*)
@@ -1032,8 +1044,8 @@ c This is insured within the getcdf, getafgwc, etc code.
 c ------------------------------------------------------------------------------------------------
 
       write(6,*)
-      write(6,*)'Ready to remap satellite data'
-      write(6,*)'-----------------------------'
+      write(6,*)'Ready to remap satellite data - nft is ',nft
+      write(6,*)'---------------------------------------'
 c
 c This for output.  LAPS LVD files as indicated.
 c
