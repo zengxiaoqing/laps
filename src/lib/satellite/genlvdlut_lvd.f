@@ -83,10 +83,15 @@ c
 
              write(6,59)c_sat_id(js),c_sat_types(it,js),
      &c_channel_types(lc,it,js)
-59          format(/,'Generate Mapping Arrays: ',a6,"/",a3,"/",a3)
+59           format(/,'Generate Mapping Arrays: ',a6,"/",a3,"/",a3)
 
-             call gen_lut_lambert(js,it,lc,nx_l,ny_l,
-     & lat,lon,gri(1,1,lc),grj(1,1,lc),istatus)
+             if(c_sat_types(it,js).eq.'gnp')then
+                call gen_lut_fx(js,it,lc,nx_l,ny_l,
+     &                lat,lon,gri(1,1,lc),grj(1,1,lc),istatus)
+             else
+                call gen_lut_lambert(js,it,lc,nx_l,ny_l,
+     &                lat,lon,gri(1,1,lc),grj(1,1,lc),istatus)
+             endif
 
              if(istatus.eq.1)then
               write(6,*)'Finished '
@@ -99,7 +104,7 @@ c
 
             else
              write(6,49)c_sat_id(js),c_sat_types(it,js),
-     &c_channel_types(lc,it,js)
+     &                  c_channel_types(lc,it,js)
             endif
 
          enddo
@@ -127,7 +132,7 @@ c
              write(6,49)c_sat_id(js),c_sat_types(it,js),
      &c_channel_types(lc,it,js)
 49           format(3x,a6,"/",a3,"/",a3,1x
-     1                ,'not on in satellite namelist (via ichannels)')       
+     1             ,'inactive in satellite namelist (via ichannels-1)')       
 
             endif
 
@@ -177,7 +182,36 @@ c           enddo
      &c_channel_types(lc,it,js)
                endif
 
-         enddo
+            enddo
+
+      elseif(c_sat_types(it,js).eq.'nll')then
+
+            print*,'Compute mapping arrays for nll'
+            do lc=1,maxchannel
+
+               if(ichannels(lc,it,js).eq.1)then
+
+                  write(6,59)c_sat_id(js),c_sat_types(it,js),
+     &c_channel_types(lc,it,js)
+
+                  call gen_lut_ll(js,it,lc,nx_l,ny_l,
+     & lat,lon,gri(1,1,lc),grj(1,1,lc),istatus)
+
+                  if(istatus.eq.1)then
+                     write(6,*)'LUT generated'
+                  elseif(istatus.eq.0)then
+                     write(*,*)'ir LUT already generated'
+                  else
+                     write(6,*)'Error! LUT not generated ',
+     &c_sat_id(js),'/',c_sat_types(it,js),'/',c_channel_types(lc,it,js)
+                  endif
+
+               else
+                  write(6,49)c_sat_id(js),c_sat_types(it,js),
+     &c_channel_types(lc,it,js)
+               endif
+
+            enddo
 
 c polar orbiter/netcdf/polar stereographic projected data
 c ---------------------------------------------------------
