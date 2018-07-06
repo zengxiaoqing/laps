@@ -57,7 +57,7 @@ c -------------------------------------------------------------------
          print*,'Error returned: find_domain_name'
          goto 900
       endif
-      write(6,*)'Get lat/lon grid'
+      write(6,*)'genlvdlut_sub: Get lat/lon grid'
       call get_laps_domain(nx_l,ny_l,cgrid_fname,lat,lon,topo,istatus)
       if(istatus.ne.1)Then
          write(6,*)'Error - Unable to get lat/lon data'
@@ -133,7 +133,7 @@ c
              write(6,49)c_sat_id(js),c_sat_types(it,js),
      &c_channel_types(lc,it,js)
 49           format(3x,a6,"/",a3,"/",a3,1x
-     1                ,'not on in satellite namelist (via ichannels)')      
+     1                ,'not on in satellite namelist (via ichannels-2)')
             endif
            enddo
 
