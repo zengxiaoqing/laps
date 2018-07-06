@@ -148,7 +148,7 @@ c
        rmin =  abs(r_missing_data)
        rmax = -abs(r_missing_data)
 
-       imsg = 0
+       nmsg = 0
 
        do i = 1,ni
        do j = 1,nj
@@ -156,13 +156,16 @@ c
                rmin = min(rmin,a(i,j))
                rmax = max(rmax,a(i,j))
            else
-               if(imsg .eq. 0)then
+               if(nmsg .eq. 0)then
                    write(6,*)' Missing data detected in array_range'
-                   imsg = 1
                endif
+               nmsg = nmsg + 1
            endif
        enddo ! j
        enddo ! i
+
+       frac_msg = float(nmsg) / (float(ni*nj))
+       write(6,*)' Fraction of array with data is ',1.-frac_msg
 
        return
        end
