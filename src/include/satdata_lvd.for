@@ -403,6 +403,9 @@ c -- sub lat/lon for each geostationary satellite (radians)
       R_SAT_SUB_LON(9)= 2.530727
       R_SAT_SUB_LON(17)= -75.2 * rpd
       R_SAT_SUB_LON(18)= 2.443
+      R_SAT_SUB_LON(19)= 2.443
+      R_SAT_SUB_LON(20)= 2.443
+      R_SAT_SUB_LON(21)= 2.443
 c -- these resolution (grid spacing) settings should be available in
 c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_VIS(1,1)=1264.2157
@@ -431,6 +434,9 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_VIS(4,6)=0.0
       R_RESOLUTION_X_VIS(:,17)=507.94
       R_RESOLUTION_X_VIS(:,18)=5000.0
+      R_RESOLUTION_X_VIS(:,19)=5000.0
+      R_RESOLUTION_X_VIS(:,20)=5000.0
+      R_RESOLUTION_X_VIS(:,21)=5000.0
       R_RESOLUTION_Y_VIS(1,1)=1264.2157
       R_RESOLUTION_Y_VIS(2,1)=1015.9000
       R_RESOLUTION_Y_VIS(3,1)=5079.2998
@@ -457,6 +463,9 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_Y_VIS(4,6)=0.0
       R_RESOLUTION_Y_VIS(:,17)=507.94
       R_RESOLUTION_Y_VIS(:,18)=5000.0
+      R_RESOLUTION_Y_VIS(:,19)=5000.0
+      R_RESOLUTION_Y_VIS(:,20)=5000.0
+      R_RESOLUTION_Y_VIS(:,21)=5000.0
       R_RESOLUTION_X_IR(1,1)=5053.0898
       R_RESOLUTION_X_IR(2,1)=4063.6001
       R_RESOLUTION_X_IR(3,1)=5079.2998
@@ -484,6 +493,9 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_IR(4,9)=8000.0
       R_RESOLUTION_X_IR(:,17)=2031.7625
       R_RESOLUTION_X_IR(:,18)=5000.0
+      R_RESOLUTION_X_IR(:,19)=5000.0
+      R_RESOLUTION_X_IR(:,20)=953.
+      R_RESOLUTION_X_IR(:,21)=953.
       R_RESOLUTION_Y_IR(1,1)=5053.0898
       R_RESOLUTION_Y_IR(2,1)=4063.6001
       R_RESOLUTION_Y_IR(3,1)=5079.2998
@@ -511,6 +523,9 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_Y_IR(4,9)=8000.0
       R_RESOLUTION_Y_IR(:,17)=2031.7625
       R_RESOLUTION_Y_IR(:,18)=5000.0
+      R_RESOLUTION_Y_IR(:,19)=5000.0
+      R_RESOLUTION_Y_IR(:,20)=1100.
+      R_RESOLUTION_Y_IR(:,21)=1100.
       R_RESOLUTION_X_WV(1,1)=8373.9775
       R_RESOLUTION_X_WV(2,1)=8127.2002
       R_RESOLUTION_X_WV(3,1)=5079.2998
@@ -537,6 +552,9 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_X_WV(3,6)=0.0
       R_RESOLUTION_X_WV(4,6)=0.0
       R_RESOLUTION_X_WV(1:4,18)=5000.0
+      R_RESOLUTION_X_WV(1:4,19)=5000.0
+      R_RESOLUTION_X_WV(1:4,20)=5000.0
+      R_RESOLUTION_X_WV(1:4,21)=5000.0
       R_RESOLUTION_Y_WV(1,1)=8373.9775
       R_RESOLUTION_Y_WV(2,1)=8127.2002
       R_RESOLUTION_Y_WV(3,1)=5079.2998
@@ -562,6 +580,9 @@ c -- the input satellite data file; but not always so we hardwire here.
       R_RESOLUTION_Y_WV(3,6)=0.0
       R_RESOLUTION_Y_WV(4,6)=0.0
       R_RESOLUTION_Y_WV(1:4,18)=5000.0
+      R_RESOLUTION_Y_WV(1:4,19)=5000.0
+      R_RESOLUTION_Y_WV(1:4,20)=5000.0
+      R_RESOLUTION_Y_WV(1:4,21)=5000.0
 c -- navigation parms 1st lat/lon for each type
       R_LO1(1,1)=0.0
       R_LO1(2,1)=-116.48560
@@ -615,6 +636,9 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_VIS(4,9)=1375
       N_PIXELS_VIS(1:4,17)=3072
       N_PIXELS_VIS(1:4,18)=1934
+      N_PIXELS_VIS(1:4,19)=1934
+      N_PIXELS_VIS(1:4,20)=8000
+      N_PIXELS_VIS(1:4,21)=8000
       N_LINES_VIS(1,1)=3290
       N_LINES_VIS(1,1)=2042
       N_LINES_VIS(1,1)=897
@@ -639,6 +663,9 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_VIS(1:4,9)=1375
       N_LINES_VIS(1:4,17)=2048
       N_LINES_VIS(1:4,18)=1544
+      N_LINES_VIS(1:4,19)=1544
+      N_LINES_VIS(1:4,20)=6000
+      N_LINES_VIS(1:4,21)=6000
 
       N_PIXELS_IR(1,1)=2000
       N_PIXELS_IR(2,1)=511
@@ -658,6 +685,9 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_IR(1:4,10)=1250 ! 1140
       N_PIXELS_IR(1:4,17)=2048
       N_PIXELS_IR(1:4,18)=1934
+      N_PIXELS_IR(1:4,19)=1934
+      N_PIXELS_IR(1:4,20)=8000
+      N_PIXELS_IR(1:4,21)=8000
       N_LINES_IR(1,1)=823
       N_LINES_IR(2,1)=511
       N_LINES_IR(3,1)=897
@@ -676,6 +706,9 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_IR(1:4,10)=1250 ! 1140
       N_LINES_IR(1:4,17)=1024
       N_LINES_IR(1:4,18)=1544
+      N_LINES_IR(1:4,19)=1544
+      N_LINES_IR(1:4,20)=6000
+      N_LINES_IR(1:4,21)=6000
 
       N_PIXELS_WV(1,1)=2000
       N_PIXELS_WV(2,1)=256
@@ -692,6 +725,9 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_WV(2:4,5)=0
       N_PIXELS_WV(1:4,6)=0
       N_PIXELS_WV(1:4,18)=1934
+      N_PIXELS_WV(1:4,19)=1934
+      N_PIXELS_WV(1:4,20)=8000
+      N_PIXELS_WV(1:4,21)=8000
       N_LINES_WV(1,1)=412
       N_LINES_WV(2,1)=255
       N_LINES_WV(3,1)=897
@@ -707,4 +743,7 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_WV(2:4,5)=0
       N_LINES_WV(1:4,6)=0
       N_LINES_WV(1:4,18)=1544
+      N_LINES_WV(1:4,19)=1544
+      N_LINES_WV(1:4,20)=6000
+      N_LINES_WV(1:4,21)=6000
       IMC(1:6)=0
