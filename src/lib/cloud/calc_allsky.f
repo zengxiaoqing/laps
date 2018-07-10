@@ -210,8 +210,18 @@
         write(6,*)' max top of clwc_3d is',maxval(clwc_3d(:,:,NZ_L))
         write(6,*)' ssa values are ',ssa(:)
 
-        angstrom_exp_a = 2.4 - (fcterm * 15.)
-        angstrom_exp_a = max(angstrom_exp_a,0.25)        
+        if(angstrom_exp_a .eq. -99.)then
+          angstrom_exp_a = 2.4 - (fcterm * 15.)
+          if(angstrom_exp_a .lt. 0.25)then
+            angstrom_exp_a = 0.25
+            write(6,*)' Using floor angstrom_exp_a:',angstrom_exp_a
+          else
+            write(6,*)' Using fcterm angstrom_exp_a:',angstrom_exp_a
+     1                                               ,fcterm
+          endif
+        else
+          write(6,*)' Using namelist angstrom_exp_a:',angstrom_exp_a
+        endif
 
         write(6,*)' call get_cloud_rays...'
 
