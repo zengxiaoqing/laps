@@ -81,9 +81,9 @@
          write(6,*)'opac_vert = ',opac_vert
          write(6,*)'od_g_slant = ',od_g_slant
          write(6,*)'od_o_slant,ao = ',od_o_slant,ao
-!        if(viewalt .ge. 0.)then
+         if(od_o_vert .gt. 0.)then
            write(6,*)'aorel = ',od_o_slant/od_o_vert
-!        endif
+         endif
          write(6,*)'od_a_slant = ',od_a_slant
          write(6,*)'opac_slant = ',opac_slant
          write(6,*)'od_slant = ',od_slant
@@ -170,6 +170,9 @@
 !        Experiment with in tandem with 'skyglow_phys'
 !        rad = 1.0
          rad = trans(od_solar_slant)
+!        bksct_f = 0.2 ! backscatter fraction < 1 allows diffuse light
+!        rad = trans(od_solar_slant * bksct_f)
+
          radg = max(rad,.0001) ! secondary scattering
          rada = max(rad,.00001) ! secondary scattering
          rad = max(rad,.0001) ! secondary scattering
