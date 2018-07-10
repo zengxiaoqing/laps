@@ -23,6 +23,7 @@ MODULE mem_allsky
 
 !     Various non-gridded variables
       parameter (nc = 3)
+      parameter (day_int0 = 3e9) ! solar relative brightness at 1au over sphere
       real ghi_sim
       real ext_g(nc)
       integer mode_aero_cld /1/ ! treat aerosols more as clouds [1,2,3]
