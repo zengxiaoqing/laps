@@ -639,8 +639,13 @@
                                ,alt_obj2,azi_obj2,emag &
                                ,diam_deg,horz_dep,glow_obj)
 
-        include 'trigd.inc'
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl
+        use cloud_rad, ONLY: ghi_zen_toa
+        use mem_allsky, ONLY: day_int0
+
+        include 'trigd.inc'
+
+        parameter (pi = 3.14159265)
 
         real alt_obj_in ! I (true altitude uncorrected for refraction)
         real alt_a(minalt:maxalt,minazi:maxazi)
@@ -721,6 +726,7 @@
         iwrite = 0
 
         sum_fraclit = 0.
+        sum_fraclit_sr = 0.
     
         do ialt = minalt,maxalt
 
@@ -845,9 +851,9 @@
                     rmag_per_sqarcsec = r_missing_data
                   endif
                  
-                elseif(diam_deg .ge. 0.25 .and. diam_deg .lt. 0.75 .and. distd .le. 1.0)then ! regular sun or moon
+                elseif(diam_deg .ge. 0.05 .and. diam_deg .lt. 0.75 .and. distd .le. 1.0)then ! regular sun or moon
                     iblock = 3
-                    size_glow_sqdg = 0.2    ! sun/moon area           
+                    size_glow_sqdg = pi * radius_deg**2 ! sun/moon area           
 
 !                   Calculate fraction of grid box illuminated by object
                     if(htmsl .gt. 100000e3)then ! very simple anti-aliasing 
@@ -940,7 +946,11 @@
                       frac_lit = frac_lit1 
                     endif
 
-                    sum_fraclit = sum_fraclit + frac_lit
+                    sum_fraclit    = sum_fraclit + frac_lit
+
+                    pix_area_sqdg = area_pix * cosd(altg)
+                    pix_area_sr = pix_area_sqdg * (pi/180.)**2
+                    sum_fraclit_sr = sum_fraclit_sr + frac_lit * pix_area_sr
 
 !                   write(6,89)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
 89                  format(' altga-t/alt_obj/azig/azi_obj/distd/frac_lit =',i6,i5,6f9.3,2f7.2,f7.4)
@@ -965,13 +975,13 @@
 
                 if(rmag_per_sqarcsec .ne. r_missing_data)then
 !                 Convert to nanolamberts. This has an empirical correction for now based on
-!                 sunlight spread over the spherical solid angle being 3e9nl. Max nl should be 5.542e14
-                  glow_nl = v_to_b(rmag_per_sqarcsec) / 1.17777
+!                 sunlight spread over the spherical solid angle being 3e9nl. Max nl should be 5.538e14
+                  glow_nl = v_to_b(rmag_per_sqarcsec) / 1.22062
                   glow_obj(ialt,jazi) = addlogs(glow_obj(ialt,jazi),log10(glow_nl))
 
 !                 if(.true.)then                          
 !                 if(abs(alt_obj-altg) .le. 0.15 .and. iwrite .le. 100)then                  
-                  if(iblock.eq.30)then                  
+                  if(iblock.eq.30 .or. iblock .eq. 3)then                  
                       write(6,90)ialt,jazi,altg_app,altg,alt_obj,azig,azi_obj,distd,frac_lit1,frac_lit2,frac_lit
 90                    format(' altga-t/alt_obj/azig/azi_obj/distd/area/frclit =',2i5,6f9.3,2f7.2,f7.4)
 
@@ -992,9 +1002,26 @@
           enddo ! jazi
         enddo ! ialt
 
-        write(6,*)' sum_fraclit (pixels) = ',sum_fraclit
+!       Calculate solar surface brightness for reference
+        sun_radius_deg = 0.5334 / 2.
+        sun_area_sqdg = pi * sun_radius_deg**2
+        sun_area_sr = sun_area_sqdg * (pi/180.)**2
+        sun_area_sphere = sun_area_sr / (4. * pi)
+        sun_nl = day_int0 / sun_area_sphere
+        sun_radiance_calc = ghi_zen_toa / sun_area_sr
+        sun_radiance      = 2.009e7 ! W/m^2/sr (via Wikipedia)
+
+!       Solar radiance (Wikipedia) is 2.009e7 W/m^2/sr
+
+        write(6,93)diam_deg,mag_obj,delta_mag,sun_area_sr,sun_nl,log10(sun_nl)
+93      format(' diam/mag/dmag/sun_sr/sun_nl/glow_sun_nl = ',3f9.3,2e12.4,f9.3,' ***GLOW***')
+
+        write(6,*)' Solar radiance is ',sun_radiance_calc,sun_radiance
+
+        write(6,*)' sum_fraclit (pixels / sr) = ',sum_fraclit,sum_fraclit_sr
 
         write(6,*)' returning from get_glow_obj...'
+        write(6,*)
 
         return
         end 
@@ -1106,13 +1133,22 @@
         return
         end
 
-        subroutine get_sp_irrad(rad,alt_a,azi_a,elong_a,ni,nj,solidangle_pix,sp_irrad)
+        subroutine rad_2_irrad_down(rad,alt_a,azi_a,elong_a,ni,nj,alt_scale,azi_scale,irrad,beam,direct,diffuse)
+
+!       Subroutine name relates to primary output of GHI, with other outputs such as DHI and DNI.          
+
+!       Input units can then be solar relative (to solar irradiance spread out over the full
+!       sphere - 4 pi steradians). The (wideband or spectral) irradiance integrates to 1.
+!       if the input (wideband or spectral) radiance has a value of 2. over the upper
+!       hemisphere - 2 pi steradians).
 
         include 'trigd.inc'
+        use mem_allsky, ONLY: day_int0
 
         parameter (pi=3.14159265)
+        parameter (rpd = pi/180.)
 
-        real rad(ni,nj)
+        real rad(ni,nj),irrad
         real alt_a(ni,nj)
         real azi_a(ni,nj)
         real elong_a(ni,nj)
@@ -1124,30 +1160,43 @@
         alt_top = alt_a(ni,1)
 
 !       Average over window
-        cnt = 0.
+        cnt_ghi = 0.
+        cnt_dni = 0.
+        cnt_diffuse = 0.
+
         sum_ghi = 0.
         sum_dni = 0.
+        sum_bhi = 0.
         sum_diffuse = 0.
+
         do i = 1,ni
           cosi = cosd(alt_a(i,1))
           sini = sind(alt_a(i,1))
+          solidangle_pix = (alt_scale*rpd) * (azi_scale*rpd) * cosi 
+
           if(alt_a(i,1) .ge. 0.)then ! above horizontal
             do j = 1,nj
-                sum_ghi         = sum_ghi     + (rad(i,j) * solidangle_pix * cosi * sini)     
-                if(elong_a(i,j) .le. 5.0)then
-                    sum_dni     = sum_dni     + (rad(i,j) * solidangle_pix * cosi)     
+                sum_ghi         = sum_ghi     + (rad(i,j) * solidangle_pix * sini)     
+
+                if(elong_a(i,j) .le. 2.5)then ! cone of acceptance for solar instrumentation
+                    sum_dni     = sum_dni     + (rad(i,j) * solidangle_pix)     
+                    sum_bhi     = sum_bhi     + (rad(i,j) * solidangle_pix * sini)     
                 else
-                    sum_diffuse = sum_diffuse + (rad(i,j) * solidangle_pix * cosi * sini)     
+                    sum_diffuse = sum_diffuse + (rad(i,j) * solidangle_pix * sini)     
                 endif
-                cnt = cnt + (           solidangle_pix * cosi)
+
+                cnt_ghi = cnt_ghi + (solidangle_pix * sini)
+                cnt_dni = cnt_dni + (solidangle_pix       )
+                cnt_diffuse = cnt_ghi
+
             enddo ! j
-          endif
+          endif ! alt > 0
         enddo ! i
 
-        if(cnt .gt. 0.)then
+        if(cnt_ghi .gt. 0.)then
             sky_rad_sum_wdw = sum_ghi
         else
-            write(6,*)' ERROR in get_sp_irrad'
+            write(6,*)' ERROR in rad_2_irrad_down'
             sky_rad_sum_wdw = 10. 
         endif
 
@@ -1178,18 +1227,29 @@
 !       If needed, the average on the top row is extrapolated for the
 !       portion of the sky above the camera field of view (when alt_top 
 !       is less than 90 degrees).
+
+!       'cnt_ghi' will integrate (via the sin effect) to pi, half of the
+!       2 pi steradians subtended by the upper hemisphere.
+
         if(alt_top .eq. 90.)then
-          write(6,*)' get_sp_irrad: top at zenith ',alt_top
-          sp_irrad = sky_rad_sum_wdw
+          irrad   = sky_rad_sum_wdw / (4. * pi) ! (2. * cnt_ghi)
+          beam    = sum_bhi         / (4. * pi) ! (2. * cnt_ghi)
+          direct  = sum_dni         / (4. * pi) ! (2. * cnt_dni)
+          diffuse = sum_diffuse     / (4. * pi) ! (2. * cnt_ghi)
+          write(6,*)' rad_2_irrad_down: rad | solrel | reflectance sample = ',rad(ni,1),rad(ni,1)*day_int0,rad(ni,1)/2.
+          rad_max = maxval(rad)
+          write(6,*)' rad_2_irrad_down: rad | solrel | reflectance max    = ',rad_max,rad_max*day_int0,rad_max/2.
+          write(6,1)alt_top,sky_rad_sum_wdw,irrad,beam,direct,diffuse,cnt_ghi,cnt_dni
+1         format('  rad_2_irrad_down: top at zenith ',f9.1,5f9.5,' cnt ',2f9.4)
         elseif(alt_top .gt. 0.)then
-          write(6,*)' get_sp_irrad: top above horizon ',alt_top
+          write(6,*)' rad_2_irrad_down: top above horizon ',alt_top
           area_frac = (sincosint(alt_top) - sincosint(0.)) / (sincosint(90.) - sincosint(0.))
           sky_rad_sum_top = sky_rad_ave_top * (1.-area_frac) * 2. * pi
           write(6,*)' area_frac/wdw/top = ',area_frac,sky_rad_sum_wdw,sky_rad_sum_top
-          sp_irrad = sky_rad_sum_wdw + sky_rad_sum_top
+          irrad = sky_rad_sum_wdw + sky_rad_sum_top
         else
-          write(6,*)' get_sp_irrad: top below horizon ',alt_top
-          sp_irrad = sky_rad_ave_wdw
+          write(6,*)' get_irrad: top below horizon ',alt_top
+          irrad = sky_rad_ave_wdw
         endif
 
 !       sp_irrad = sp_irrad * 2. * pi ! solid angle above horizontal
