@@ -111,7 +111,7 @@
         real elong_m(ni,nj)         ! elong of sun or moon
         real elong_s(ni,nj)         ! elong of sun or moon
         integer idebug_a(ni,nj), idebug_pf(ni,nj)
-        real cld_radt(nc), cld_radb(nc), cld_rad(nc), sky_rad(nc), pf_top(nc)
+        real cld_radt(nc), cld_radb(nc), cld_rad(nc), sky_rad(nc), sun_rad(nc), sky_rad_indirect(nc), pf_top(nc)
         real rintensity(nc), cld_rgb_rat(nc), glow_cld_c(nc), ref_nl(nc)
         real rad_sec_cld(nc), rad_sec_cld_top(nc), albedo_sfc(nc)
         real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
@@ -122,7 +122,7 @@
         real od_g_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real od_o_slant_a(nc,ni)    ! use for sun/moon/star attenuation
         real od_a_slant_a(nc,ni)    ! use for sun/moon/star attenuation
-        real clr_od(nc), sky_rad_ave(nc), transterm(nc), sph_rad_ave(nc)
+        real clr_od(nc), clr_od_sun(nc), sky_rad_ave(nc), transterm(nc), sph_rad_ave(nc)
         real topovis_c(nc), od2topo_c(nc), moon_rad_ave(nc), star_rad_ave(nc)
 
 !       New aero arrays (local)
@@ -135,7 +135,7 @@
         real sky_sprad(0:2,ni,nj)
         real sky_reflectance(0:2,ni,nj)
         real moon_alt,moon_az,moon_mag,moonalt_limb_true
-        real sky_rad_a(nc,ni,nj)
+        real sky_rad_a(nc,ni,nj),sun_rad_a(nc,ni,nj),sky_rad_indirect_a(nc,ni,nj)
         real sp_rad_a(nc,ni,nj)
         real sprad_pix(nc),wa(nc)
         real counts_one_refl_nl(nc)
@@ -153,6 +153,10 @@
         write(6,*)' moon alt/az/mag = ',moon_alt,moon_az,moon_mag
         write(6,*)' l_solar_eclipse = ',l_solar_eclipse
         write(6,*)' range of r_cloud_rad is ',minval(r_cloud_rad),maxval(r_cloud_rad)
+        write(6,*)' ni,nj ',ni,nj
+        write(6,*)' sol_alt,sol_az ',sol_alt,sol_az
+        write(6,*)' azi_scale is ',azi_scale 
+        write(6,*)' rlat,rlon is ',rlat,rlon
 
         icg = 2
 
@@ -720,7 +724,7 @@
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
                      ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
                      ,aod_ill,aod_2_topo,aod_tot &                     ! I
-                     ,ext_g,ext_o,nc,wa,day_int0 &                     ! I
+                     ,ext_g,ext_o,nc,wa,day_int0,r_au &                ! I
                      ,l_solar_eclipse,i4time,rlat,rlon &               ! I
                      ,clear_radf_c,ag_2d &                             ! I
                      ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
@@ -730,11 +734,16 @@
             write(6,*)' range of clear_radf_c(2) is ',minval(clear_radf_c(2,:,:)),maxval(clear_radf_c(2,:,:))
             write(6,*)' range of clear_rad_c(2) is ',minval(clear_rad_c(2,:,:)),maxval(clear_rad_c(2,:,:))
             write(6,*)' range of clear_rad_2nd_c(2) is ',minval(clear_rad_2nd_c(2,:,:)),maxval(clear_rad_2nd_c(2,:,:))
+            if(alt_a(maxalt,1) .eq. 90.)then
+                write(6,*)' zenith clear_rad_c(2)     is ',clear_rad_c(2,ni,1),clear_rad_c(2,ni,1)/day_int0
+                write(6,*)' zenith clear_rad_2nd_c(2) is ',clear_rad_2nd_c(2,ni,1),clear_rad_2nd_c(2,ni,1)/day_int0
+            endif
             if(minval(clear_rad_c(2,:,:)) .le. 0.)then
                 write(6,*)' ERROR: clear_rad_c(2,:,:) has min <= 0.'
             endif
             if(jsun .gt. 0 .and. jsun .le. nj)then
-              write(6,*)' clear_rad_c(2) in solar column:',clear_rad_c(2,:,jsun)
+              ialt_skip = 1. / nint(alt_scale)
+              write(6,*)' clear_rad_c(2) in principal plane:',1,ni,ialt_skip,clear_rad_c(2,1:ni:ialt_skip,jsun)
             endif
 !           Returned when 'sol_alt' is between 'twi_0' and 10.
             write(6,*)' sky_rad_ave = ',sky_rad_ave(:)
@@ -778,7 +787,7 @@
                      ,aod_ref,aero_scaleht,dist_2_topo &               ! I
                      ,htmsl,redp_lvl,horz_dep,eobsl &                  ! I
                      ,aod_ill,aod_2_topo,aod_tot &                     ! I
-                     ,ext_g,ext_o,nc,wa,day_int0 &                     ! I
+                     ,ext_g,ext_o,nc,wa,day_int0,r_au &                ! I
                      ,.false.,i4time,rlat,rlon &                       ! I
                      ,clear_radf_c,ag_2d &                             ! I
                      ,od_g_slant_a,od_o_slant_a,od_a_slant_a,ext_a &   ! O
@@ -895,9 +904,10 @@
               ipfmin = max(isun-ihw,1)
               ipfmax = min(isun+ihw,ni)
               idebug_pf(ipfmin:ipfmax:idelt,jsun) = 1
-            else           ! horizontal
+            else           ! horizontal (lldb test)
               jpfmin = max(jsun-ihw,1)
               jpfmax = min(jsun+ihw,nj)
+!             write(6,*)'isun/jsun/jpfmin/jpfmax/idelt/ihw',isun,jsun,jpfmin,jpfmax,idelt,ihw,ni,nj,azi_scale
               idebug_pf(isun,jpfmin:jpfmax:idelt) = 1
             endif
           endif
@@ -1784,10 +1794,13 @@
 
               endif ! sol_alt
 
-              rad_sun = 0.
+!             rad_sun = 0.
+              sky_rad_indirect(:) = sky_rad(:)
+              sun_rad(:) = 0.
 
           else ! not looking at terrain
               od2topo_c(:) = 0.
+              sky_rad_indirect(:) = sky_rad(:)
 
 !             Any refraction can be done up front in 'get_glow_obj'.
 !             This can theoretically be done here multispectrally 
@@ -1803,13 +1816,15 @@
                 rad_sun_b = 10.**glow_sun(i,j)  &
                           * trans(cloud_od_loc(i,j) + clr_od(3)) 
 
-                sky_rad(1) = sky_rad(1) + rad_sun_r
-                sky_rad(2) = sky_rad(2) + rad_sun_g
-                sky_rad(3) = sky_rad(3) + rad_sun_b    
+                sun_rad(1) = rad_sun_r
+                sun_rad(2) = rad_sun_g
+                sun_rad(3) = rad_sun_b
 
-                if(htmsl .gt. 1000e3 .and. glow_sun(i,j) .gt. 2.0)then
-                  write(6,100)i,j,alt_a(i,j),azi_a(i,j),glow_sun(i,j),rad_sun_r,od_g_slant_a(1,i),od_o_slant_a(1,i),od_a_slant_a(1,i),cloud_od(i,j)
-100               format(' sun from space ',i8,i6,f9.4,f9.3,f9.3,f15.0,' od ',4f9.3)
+                sky_rad(:) = sky_rad(:) + sun_rad(:)
+
+                if(glow_sun(i,j) .gt. 2.0)then
+                  write(6,100)i,j,alt_a(i,j),azi_a(i,j),glow_sun(i,j),10.**glow_sun(i,j),rad_sun_r,od_g_slant_a(1,i),od_o_slant_a(2,i),od_a_slant_a(2,i),clr_od(2),cloud_od(i,j)
+100               format(' sun glow / radiance ',i8,i6,f9.4,f9.3,f9.3,2e16.5,' od ',5f9.3)
                 endif
               endif
                 
@@ -1921,6 +1936,7 @@
                   write(6,*)'od_o_slant = ',od_o_slant_a(:,i)
                   write(6,*)'od_a_slant = ',od_a_slant_a(:,i)
                   write(6,*)'clr_od     = ',clr_od(:)
+                  clr_od_sun(:) = clr_od(:)
               endif
               if(alt_a(i,j) .eq. -90.)then
                   write(6,*)' ******** nadir location ************************* od'
@@ -1959,6 +1975,8 @@
           endif
 
           sky_rad_a(:,i,j) = sky_rad(:)
+          sun_rad_a(:,i,j) = sun_rad(:)
+          sky_rad_indirect_a(:,i,j) = sky_rad_indirect(:)
 
         enddo ! i
         enddo ! j
@@ -2001,7 +2019,7 @@
 
 !       Convert nl values to spectral irradiance and radiance
 !       sky_sprad = f(sky_cyl_nl)
-        solidangle_pix = (azi_scale*rpd) * (azi_scale*rpd)
+!       solidangle_pix = (azi_scale*rpd) * (azi_scale*rpd)
 
         counts_one_refl_nl(:) = 6e9
         call nl_to_RGB(counts_one_refl_nl(:),glwmid,contrast & 
@@ -2017,24 +2035,70 @@
           write(6,*)' sky_rad_ave_out for color is ',sky_rad_ave_out
 
           call nl_to_sprad(1.,1,wa(ic),sprad_rat)
-          call get_sp_irrad(sky_rad_a(ic,:,:)*sprad_rat,alt_a,azi_a,elong_a,ni,nj,solidangle_pix,sp_irrad)
-          write(6,*)' sp_irrad for color ',ic,sprad_rat,sp_irrad
+
+          write(6,*)' sprad_rat for color is ',ic,sprad_rat
+
+!         GHI, 'sp_irrad' is the spectral GHI
+          call rad_2_irrad_down(sky_rad_a(ic,:,:)/day_int0,alt_a,azi_a,elong_a,ni,nj,alt_scale,azi_scale,sp_irrad,beam,direct,diffuse)
+          write(6,*)' GHI sp_irrad for color ',ic,sp_irrad
+
+!         https://www.nature.com/articles/srep14376 (GHI and water vapor)
+!         https://www2.pvlighthouse.com.au/calculators/solar%20spectrum%20calculator/solar%20spectrum%20calculator.aspx
+
+          cir_patm = 0.0 ! 0.063 (also consider water vapor factor)
+
           if(ic .eq. 2)then
-             call get_fluxsun(wa(ic),1,1,sp_irrad_550)
+!            GHI, 'sp_irrad' is the spectral GHI
+!            call get_fluxsun(wa(ic),1,1,sp_irrad_550)
 !            sp_irrad_550 = 1.86 ! W/m**2/nm
-             ghi_sim = (sp_irrad / sp_irrad_550) * ghi_zen_toa
-             wvir_factor = 1.0 - (0.063 * patm)
+             ghi_sim = sp_irrad * ghi_zen_toa 
+             wvir_factor = 1.0 - (cir_patm * patm)
              ghi_sim = ghi_sim * wvir_factor
-             ghi_sim = ghi_sim / r_au**2
              write(6,*)' patm/wvir_factor/r_au ',patm,wvir_factor,r_au
+
+!            Diffuse (with 5 deg cone)
+             diffuse_sim = diffuse * ghi_zen_toa 
+             wvir_factor = 1.0 - (cir_patm * patm)
+             diffuse_sim = diffuse_sim * wvir_factor
+             write(6,*)' patm/wvir_factor/r_au ',patm,wvir_factor,r_au
+
+!            Direct (with 5 deg cone)
+             beam_sim = beam * ghi_zen_toa 
+             wvir_factor = 1.0 - (cir_patm * patm)
+             beam_sim = beam_sim * wvir_factor
+             write(6,*)' patm/wvir_factor/r_au ',patm,wvir_factor,r_au
+
+!            Scattered solar radiation, 'sp_irrad' approximates spectral DHI though ignores the 5 degree diameter cone
+             write(6,*)
+             call rad_2_irrad_down(sky_rad_indirect_a(ic,:,:)/day_int0,alt_a,azi_a,elong_a,ni,nj,alt_scale,azi_scale,sp_irrad,beam,direct,diffuse)
+             shi_sim = sp_irrad * ghi_zen_toa 
+             wvir_factor = 1.0 - (cir_patm * patm)
+             shi_sim = shi_sim * wvir_factor
+             write(6,*)' Scattered sp_irrad for color ',ic,sp_irrad
+
+!            Direct solar radiation, 'sp_irrad' approximates spectral BHI (beam/direct horizontal) ignoring the 5 degree diameter cone
+             write(6,*)
+             call rad_2_irrad_down(sun_rad_a(ic,:,:)/day_int0,alt_a,azi_a,elong_a,ni,nj,alt_scale,azi_scale,sp_irrad,beam,direct,diffuse)
+             bhi_sim = sp_irrad * ghi_zen_toa ! solar distance is accounted for by a smaller disk
+             wvir_factor = 1.0 - (cir_patm * patm)
+             bhi_sim = bhi_sim * wvir_factor
+             write(6,*)' Direct sp_irrad for color ',ic,sp_irrad,r_au
+
           endif
 
           sky_sprad(ic-1,:,:) = sky_rad_a(ic,:,:) * sprad_rat
 
         enddo ! ic 
 
+        direct_est = ghi_zen_toa * sind(sol_alt) * trans(clr_od_sun(2)) / r_au**2
+
         write(6,*)
-        write(6,*)' Simulated GHI in w/m**2 is ',ghi_sim
+        write(6,*)' Simulated           GHI in w/m**2 is ',ghi_sim
+        write(6,*)' Scattered            HI in w/m**2 is ',shi_sim
+        write(6,*)' Direct (integrated)  HI in w/m**2 is ',bhi_sim
+        write(6,*)' Direct (estimated)   HI in w/m**2 is ',direct_est ! ,clr_od_sun(2),trans(clr_od(2))
+        write(6,*)' Direct  (<5deg)      HI in w/m**2 is ',beam_sim
+        write(6,*)' Diffuse (>5deg)      HI in w/m**2 is ',diffuse_sim
 
         I4_elapsed = ishow_timer()
 
