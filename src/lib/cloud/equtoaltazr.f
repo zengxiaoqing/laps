@@ -59,14 +59,22 @@
 
             cosha = (cosd(z)*cosd(phi)+sind(z)*sind(phi)*cosd(azi))
      1                 /cosd(dec)
+            cosha = min(max(cosha,-1.),+1.)
+
             cosdec = sqrt(1.-sindec**2)
-            sinha = (sind(azi)*sind(z)) / cosdec
+            if(cosdec .ne. 0.)then
+              sinha = (sind(azi)*sind(z)) / cosdec
+            else
+              sinha = 0.
+            endif
+
             dec = asind(sindec)
             ha = atan3df(sinha,cosha)
             ra = lst - ha
            
             lat2(i,j) = dec
             lon2(i,j) = ra
+
           enddo ! j
           enddo ! i
 
