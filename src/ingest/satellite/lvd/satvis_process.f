@@ -257,12 +257,7 @@ c Currently (2007) type 'cdf' is goes12.
 c
 
 !      Determine reflectance
-       if(c_sat_type .eq. 'gnp')then
-         write(6,*)' Scaling 4095 vis raw counts = 1.3 reflectance'
-         where(laps_vis_raw(:,:) .ne. r_missing_data)
-             laps_vis_refl(:,:) = 1.3 * laps_vis_raw(:,:) / 4095.
-         endwhere
-       elseif(trim(csatid) .eq. 'coms')then
+       if(trim(csatid) .eq. 'coms' .or. c_sat_type .eq. 'gnp')then
          write(6,*)' Scaling 1 raw count = 1.0 reflectance'
          where(laps_vis_raw(:,:) .ne. r_missing_data)
              laps_vis_refl(:,:) = 1.0 * laps_vis_raw(:,:) / 1.
