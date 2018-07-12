@@ -88,12 +88,18 @@ c
           write(6,*)'ncid/varid = ',ncid,varid
           write(6,*)'start=',start(1:2),' count=',count(1:2)
           rcode=NF_GET_VARA_INT2(NCID,varid,START,COUNT,data_int2)
+          if (rcode .ne. NF_NOERR) then
+              print *, NF_STRERROR(rcode)
+          endif
           write(6,*)'center pixel i2: ',data_int2(n_elems/2,n_lines/2)
           write(6,*)'rdblock_line_elem i2 data range: '
      1              ,minval(data_int2),maxval(data_int2)
           data(:,:) = data_int2(:,:)
       else
           rcode=NF_GET_VARA_REAL(NCID,varid,START,COUNT,data)
+          if (rcode .ne. NF_NOERR) then
+              print *, NF_STRERROR(rcode)
+          endif
       endif
 
       write(6,*)'rdblock_line_elem data range: '
