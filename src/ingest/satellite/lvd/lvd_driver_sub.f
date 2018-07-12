@@ -744,7 +744,7 @@ c Compute or read ir/vis count to brightness temp (Tb)/vis count-to-count.
 c -----------------------------------------------------------------------
 c
       if(csattype.eq.'cdf'.or.csattype.eq.'wfo'.or.
-     &   csatid.eq.'meteos'.or.csattype.eq.'gnp')then
+     &   csatid.eq.'meteos'                         )then
 
          write(6,*)'Compute ',csatid,' cnt-to-btemp lookup tables'
 
@@ -928,6 +928,7 @@ c ------------------------------------------------------------
      &    csattype.ne.'rll'.and.
      &    csattype.ne.'nll'.and.
      &    csattype.ne.'cms'.and.
+     &    csattype.ne.'gnp'.and.
      &    csattype.ne.'ncp')then
           write(6,*)
           write(6,*)'Convert counts to brightness temps ',csattype
