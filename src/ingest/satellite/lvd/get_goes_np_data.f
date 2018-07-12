@@ -50,7 +50,7 @@ C
 C
 C Get size of nelem
 C
-      nf_status=NF_INQ_DIMID(nf_fid,'nelem',nf_vid)
+      nf_status=NF_INQ_DIMID(nf_fid,'x',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim nelem'
@@ -63,7 +63,7 @@ C
 C
 C Get size of nlines
 C
-      nf_status=NF_INQ_DIMID(nf_fid,'nlines',nf_vid)
+      nf_status=NF_INQ_DIMID(nf_fid,'y',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim nlines'
@@ -104,7 +104,7 @@ C
 C
 C Get size of nelem
 C
-      nf_status=NF_INQ_DIMID(nf_fid,'nelem',nf_vid)
+      nf_status=NF_INQ_DIMID(nf_fid,'x',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim nelem'
@@ -117,7 +117,7 @@ C
 C
 C Get size of nlines
 C
-      nf_status=NF_INQ_DIMID(nf_fid,'nlines',nf_vid)
+      nf_status=NF_INQ_DIMID(nf_fid,'y',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim nlines'
@@ -157,7 +157,7 @@ C
 C
 C Get size of nelem
 C
-      nf_status=NF_INQ_DIMID(nf_fid,'nelem',nf_vid)
+      nf_status=NF_INQ_DIMID(nf_fid,'x',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim nelem'
@@ -170,7 +170,7 @@ C
 C
 C Get size of nlines
 C
-      nf_status=NF_INQ_DIMID(nf_fid,'nlines',nf_vid)
+      nf_status=NF_INQ_DIMID(nf_fid,'y',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim nlines'
@@ -238,6 +238,32 @@ C
             call rdblock_line_elem(csat_id,csat_type,chtype,
      &                  nf_fid,nf_vid,nelem,nlines,image,istatus)
           endif
+      endif
+
+      if(.true.)then ! read and apply scaling attributes
+          rcode=NF_GET_ATT_REAL(nf_fid,nf_vid,'scale_factor'
+     1                              ,scale_img)
+          if(rcode.ne.NF_NOERR) then
+             write(6,*)'Error reading image scaling attribute'
+             scale_img = 1.0
+             write(6,*)' Use default value for image scale ',scale_img
+          else
+             write(6,*)' Successfully read image scale ',scale_img
+          endif
+
+!         read offset attribute
+          rcode=NF_GET_ATT_REAL(nf_fid,nf_vid,'add_offset'
+     1                              ,offset_img)
+          if(rcode.ne.NF_NOERR) then
+             write(6,*)'Error reading image offset attribute'
+             offset_img = 0.
+             write(6,*)' Use default value for image offset ',offset_img
+          else
+             write(6,*)' Successfully read image offset ',offset_img
+          endif
+
+          image(:,:) = image(:,:) * scale_img + offset_img
+
       endif
 C
 C The netcdf variables are filled - your lvd write call may go here
