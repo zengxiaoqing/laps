@@ -27,6 +27,7 @@
                    setcon                         "
                    lmodel                         "
                    get_sat_boundary          lib/satellite/getsat_boundary.f  
+               get_lut_fx                    lib/satellite/gen_lut_fx.f       (nav luts from parms)
                get_lut_mercator              lib/satellite/gen_lut_mercator.f (nav luts from parms)
                get_lut_ll                    lib/satellite/gen_lut_ll.f       (nav luts from 1d lat/lon arrays)
                    latlon_2_llij             lib/gridconv.f
@@ -53,7 +54,6 @@
            get_goes_np_data                  get_goes_np_data.f
 	       read_goes_np_data                  "
            genbtemplut                       genbtemplut.f
-               get_satdat_attributes         getsat_attributes.f
            satdatfill                        satdatfill.f
                set_missing_sat               set_missing_sat.f
                satdatfill1                   satfill1.f
@@ -148,6 +148,7 @@ in several formats:
     5  GOES-R NOAAPORT                             (type=gnp)
     6. KMA COMS satellite                          (type=cms)
     7. Himawari NetCDF with 1-d lat/lons added     (type=nll)
+    8. Himawari Standard Data (geostationary proj) (type=hsd)
 
 A more comprehensive table showing the supported satellite IDs and Types can be
 found in 'src/includ/satdata_lvd_table.for'.
