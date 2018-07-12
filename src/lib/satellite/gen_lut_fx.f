@@ -116,13 +116,11 @@ c
 
       if(.true.)then ! GOES16 fixed grid data, sector PAB
 
-         if(indx.eq.1.or.indx.eq.3.or.
-     .      indx.eq.4.or.indx.eq.5)then   
+         print*,'setting fixed grid navigation information',indx
 
-            print*,'setting fixed grid navigation information'
-
-            nxfx = 2048.
-            nyfx = 2048.
+         if(indx.eq.1)then ! vis
+            nxfx = 2048
+            nyfx = 2048
             rlatc=(55. + (-5.)) / 2.
             rlonc=(68. + 148. ) / 2.
             xmin = 2048.
@@ -132,7 +130,18 @@ c
             dx = 14. * 1d-6        ! radians
             dy = 14. * 1d-6        ! radians
             sub_lon_degrees = -75.0
-
+         else              ! IR
+            nxfx = 512
+            nyfx = 512
+            rlatc=(55. + (-5.)) / 2.
+            rlonc=(68. + 148. ) / 2.
+            xmin = 512.
+            ymin = 0.
+            offset_x = -101353. * 1d-6 ! radians
+            offset_y = +128323. * 1d-6 ! radians
+            dx = 56. * 1d-6        ! radians
+            dy = 56. * 1d-6        ! radians
+            sub_lon_degrees = -75.0
          endif
 
       endif
@@ -168,7 +177,7 @@ c laps domain as specified in laps lat/lon arrays.
 c
       call  latlon_2_fxij(nx*ny,xlat,xlon,ri,rj)
 
-      write(6,*)'Sat ri/rj corners for domain'
+      write(6,*)'Sat ri/rj for expanded model domain corners'
       write(6,*)'ri1/rj1 (SW) ',ri(1,1),rj(1,1)
       write(6,*)'ri2/rj2 (SE) ',ri(nx,1),rj(nx,1)
       write(6,*)'ri3/rj3 (NW) ',ri(1,ny),rj(1,ny)
