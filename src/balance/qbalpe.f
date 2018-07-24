@@ -335,6 +335,10 @@ c omo is the cloud vertical motion from lco
 
       endif
 
+      write(6,*)' Sample Height Column (lapsphi)'
+      do k = 1,nz
+        write(6,*)k,lapsphi(1,1,k)
+      enddo ! k
 c
 c *** Get LAPS 2D surface pressure.
 c
@@ -719,7 +723,7 @@ c      call diagnose(lapsu,nx,ny,nz,nx/2,ny/2,k,7,'original U ')
 c      call diagnose(lapsv,nx,ny,nz,nx/2,ny/2,k,7,'original V ')
 c      enddo
 
-      if(.false.)then
+      if(.true.)then
 
 c     write out input laps vs balanced laps at center grid point
       print*,'Output u and Input u and diff after balance and destagger'
@@ -742,7 +746,7 @@ c     write out input laps vs balanced laps at center grid point
        write (6,1111) phibs(nx/2,ny/2,k),lapsphi(nx/2,ny/2,k)
      &        ,phibs(nx/2,ny/2,k)-lapsphi(nx/2,ny/2,k)
       enddo
- 1111 format(1x,3f9.2)
+ 1111 format(1x,3f10.2)
 
       endif
       deallocate(lapsphi,lapsu,lapsv,omo)
@@ -760,6 +764,11 @@ c adjust surface temps to account for poor phi estimates below ground
       call move_3d(shbs,sh,nx,ny,nz)
 
       deallocate (phibs,ubs,vbs,tbs,ombs,shbs)
+
+!     write(6,*)' Sample Height Column (phi)'
+!     do k = 1,nz
+!       write(6,*)k,phi(1,1,k)
+!     enddo ! k
 
 c JS> commented 8-21-02.  unsure of need for ps at this point?
 c     call get_laps_2d(i4time_sys,sfcext,'PS ',units,
