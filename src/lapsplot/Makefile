@@ -15,7 +15,8 @@ LAPSLIBS = $(SRCROOT)/src/lib/cloud/libcloud.a  \
            $(SRCROOT)/src/lib/bgdata/libbgdata.a  \
            $(SRCROOT)/src/lib/liblaps.a \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
-           $(SRCROOT)/src/lib/modules/libmodules.a
+           $(SRCROOT)/src/lib/modules/libmodules.a \
+           $(SRCROOT)/src/lib/liblaps.a 
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/cloud/libdebugcloud.a  \
              $(SRCROOT)/src/lib/temp/libdebugtemp.a  \
@@ -24,7 +25,8 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/cloud/libdebugcloud.a  \
              $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a  \
              $(SRCROOT)/src/lib/libdebuglaps.a \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
-             $(SRCROOT)/src/lib/modules/libdebugmodules.a
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a \
+             $(SRCROOT)/src/lib/libdebuglaps.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
