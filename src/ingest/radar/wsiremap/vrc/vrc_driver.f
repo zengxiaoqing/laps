@@ -252,6 +252,7 @@ c
 
            else
              write(6,*)' File is too old for processing: '
+!    1                 ,i4times_recent(k),i4time_cur-5400
      1                 ,trim(c_fnames_recent(k))
 
            endif ! recent enough to consider processing
