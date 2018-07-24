@@ -52,7 +52,9 @@ real  tdbg(nx_bg,ny_bg,nzbg)   !Dewpoint (K)
 real  uwbg(nx_bg,ny_bg,nzbg)   !U-wind (m/s)
 real  vwbg(nx_bg,ny_bg,nzbg)   !V-wind (m/s)
 real  wwbg(nx_bg,ny_bg,nzbg)   !W-wind (pa/s)
-real plvl_grib(maxbglvl) ! Dimension is maxbglvl in 'degrib_nav' routine
+real  lwbg(nx_bg,ny_bg,nzbg)   !Cloud Liquid
+real  icbg(nx_bg,ny_bg,nzbg)   !Cloud Ice
+real  plvl_grib(maxbglvl) ! Dimension is maxbglvl in 'degrib_nav' routine
 
 real  mslpbg(nx_bg,ny_bg)         !mslp  (mb)
 real  htbg_sfc(nx_bg,ny_bg)
@@ -462,6 +464,8 @@ if(.true.)then
 endif ! .true. (formerly l_process_cdf)
 
 write(6,*)' End of lfmregrid_sub'
+
+! stop ! prevent seg fault upon return
 
 return
 
