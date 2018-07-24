@@ -10,9 +10,11 @@ include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a   \
            $(SRCROOT)/src/lib/modules/libmodules.a \
+           $(SRCROOT)/src/lib/satellite/libsatellite.a  \
            $(SRCROOT)/src/lib/radar/wsi_ingest/libwsi.a 
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a   \
+             $(SRCROOT)/src/lib/satellite/libdebugsatellite.a   \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a \
              $(SRCROOT)/src/lib/radar/wsi_ingest/libdebugwsi.a 
 
