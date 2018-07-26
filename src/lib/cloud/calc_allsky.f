@@ -420,8 +420,9 @@
                        write(6,41)i,j,alt_a_roll(i,j),azi_a_roll(i,j)
      1                          ,dist_2_topo(i,j),rlat_sfc,rlon_sfc
      1                          ,trace_solalt(i,j)
-41                     format(' setting trace_solalt outside domain: '
-     1                      ,2i6,2f9.3,f10.1,3f9.3)
+41                    format(
+     1                    ' setting trace_solalt hi or outside domain: '
+     1                      ,2i6,2f9.3,f13.1,3f9.3)
                      endif
 
                    else                             ! ray misses sfc
@@ -779,6 +780,8 @@
           subroutine latlon_ray(rlat,rlon,htmsl,altray,aziray,tpdist
      1                         ,tlat,tlon,iverbose,istatus)
 
+!         Find intersection lat,lon of a light ray with the Earth's surface
+
           use mem_namelist, ONLY: r_missing_data,earth_radius
 
           include 'trigd.inc'
@@ -790,13 +793,14 @@
      1        sqrt(dsdst**2 + dradius_start**2 
      1   - (2D0*dsdst*dradius_start*cosd(90D0+daltray))) - dradius_start   
 
-          dradius_start = earth_radius + htmsl
+!         dradius_start = earth_radius + htmsl
 
 !         sinarc = sind(90d0+dble(altray))*tpdist/dble(earth_radius)
 
-          dz1_h = dcurvat2(dslant1_h,dradius_start,dble(altray))   
-          gc_deg = asind(cosd(altray)
-     1           *     tpdist / (dradius_start+dz1_h)) 
+!         dz1_h = dcurvat2(dslant1_h,dradius_start,dble(altray))   
+          gc_deg = asind(cosd(altray) * tpdist / (earth_radius)) 
+!    1           *     tpdist / (dradius_start+dz1_h)) 
+!    1           *     tpdist / (earth_radius)) 
           
           ycost = cosd(aziray)
 
@@ -817,8 +821,9 @@
 
           if(iverbose .eq. 1)then
             write(6,11)rlat,rlon,htmsl,altray,aziray,tpdist
-     1                ,dradius_start,dlon,tlat,tlon
-11          format('   latlon_ray ',2f9.3,f12.1,2f9.3,2f12.1,3f9.3)
+     1                ,gc_deg,dradius_start,dlon,tlat,tlon
+11          format('   latlon_ray ',2f9.3,f13.1,2f9.3,f13.1,f9.3,
+     1                                    f13.1,3f9.3)
           endif
 
           istatus = 1
