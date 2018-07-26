@@ -1654,16 +1654,27 @@
               write(53,*)a24time(1:17)
               close(53)
 
-              c1_lat = 'N'
-              c1_lon = 'E'
+              if(soundlat(iloc) .gt. 0.)then
+                c1_lat = 'N'
+              else
+                c1_lat = 'S'
+              endif
+
+              if(soundlon(iloc) .gt. 0.)then
+                c1_lon = 'E'
+              else
+                c1_lon = 'W'
+              endif
 
 !             Write lat/lon and other info for label
               open(54,file='label2.'//trim(clun_loop),status='unknown')
-              write(54,54)soundlat(iloc),c1_lat,soundlon(iloc),c1_lon,
+              write(54,54)soundlat(iloc),c1_lat,
+     1                    abs(soundlon(iloc)),c1_lon,
      1                    minalt,maxalt,minazi,maxazi,ni_cyl,nj_cyl,
      1                    solar_alt,solar_az,alt_scale,azi_scale,
-     1                    ni_polar,nj_polar
- 54           format(2(f8.2,a1)/6i8/2f8.2,2f7.2/2i6)
+     1                    ni_polar,nj_polar,
+     1                    htagl(iloc)
+ 54           format(2(f8.2,a1)/6i8/2f8.2,2f7.2/2i6/f10.0)
 
               if(ghi_sim .eq. r_missing_data)then
                 write(54,*)
@@ -1759,6 +1770,8 @@
                 else
                   polat = -90.
                 endif
+                polat_tmp = getenv_real('POLAT',r_missing_data)
+                if(polat_tmp .ne. r_missing_data)polat = polat_tmp
 
 !               if(ipolar_sizeparm .ge. 3)then
                 if(htagl(iloc) .gt. earth_radius*2.5)then
@@ -1791,15 +1804,35 @@
                   endif
                 endif
 
+                rotew = getenv_real('ROTEW',r_missing_data) 
+ 
                 if(htagl(iloc) .eq. 400001.)then
                   rotew = +70. ! positive rotation decreases altitude in the south
                   rotz = +135. ! positive rotation moves counterclockwise (left)
                   pomag = pomag * 1.8                 
                   poy = -0.1   ! increase moves down
+                elseif(rotew .ne. r_missing_data)then
+                  continue
                 else
                   rotew = 0.
                   rotz = 0.
                 endif
+
+                pomag_tmp = getenv_real('POMAG',r_missing_data)
+                if(pomag_tmp .ne. r_missing_data)pomag = pomag_tmp
+
+                pox_tmp = getenv_real('POX',r_missing_data)
+                if(pox_tmp .ne. r_missing_data)pox = pox_tmp
+
+                poy_tmp = getenv_real('POY',r_missing_data)
+                if(poy_tmp .ne. r_missing_data)poy = poy_tmp
+
+                rotz_tmp  = getenv_real('ROTZ',r_missing_data)
+                if(rotz_tmp .ne. r_missing_data)rotz = rotz_tmp
+
+                if(alt_scale .lt. .005)then ! HIGHFLAT regional model
+                  pomag = pomag * 5.
+                endif                
 
                 write(6,*)'htrat/pomag',htagl(iloc)/earth_radius,pomag
 
@@ -1959,3 +1992,22 @@
         return
         end
       
+        function getenv_real(c_env,r_missing_data)
+
+        character(*) c_env
+        character*20 c_value
+
+        call GETENV(c_env,c_value)
+
+        call s_len(c_value,lenv)
+      
+        if(lenv .gt. 0)then
+            read(c_value,*)getenv_real
+        else
+            getenv_real = r_missing_data 
+        endif
+            
+        write(6,*)' getenv_real ',c_env,getenv_real
+
+        return
+        end
