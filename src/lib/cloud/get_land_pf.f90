@@ -7,7 +7,7 @@
                              ,sol_alt,sol_azi,nsp,airmass_2_topo &      ! I
                              ,idebug_pf,ni,nj,i4time,rlat,rlon,htmsl &  ! I
                              ,topo_lat,topo_lon &                       ! I
-                             ,pf_land,cld_brdf,emis_ang_a)              ! O
+                             ,pf_land,cld_arf,emis_ang_a)               ! O
 
         use mem_namelist, ONLY: r_missing_data,earth_radius
         use mem_allsky, ONLY: ext_g, nc
@@ -54,10 +54,11 @@
         integer idebug_pf(ni,nj)
         real pf_land(nc,ni,nj)      ! anisotropic reflectance factor (ARF)
                                     ! (weighted by direct/diffuse illumination)
-        real cld_brdf(nc,ni,nj)
+        real cld_arf(nc,ni,nj)
 
         real nonspot
         real foam(nc) /.026,.026,.026/
+        real ul(nc)   /.003,.008,.035/
 
 !       topo_gti may be too low when sun is near horizon
 !       solar elev    topo_gti
@@ -199,7 +200,8 @@
 
 !             Snow
 !             http://www.sciencedirect.com/science/article/pii/S002240739900028X
-              ampl_s = cosd(alt_a(i,j))
+!             ampl_s = cosd(alt_a(i,j))
+              ampl_s = cosd(emis_ang)
               fszen = sind(topo_solalt(i,j))
               g2 = 0.45 * ampl_s 
               hg_2param = 0.25 * 1.0 + 0.75 * hg_cyl(g2,azidiff)
@@ -207,7 +209,7 @@
               arf_bs = hg_2param * (1.-fszen) + brdf_szen * fszen
               arf_ds = 1.0
               phsnow = arf_bs * radfrac + arf_ds * (1. - radfrac)  
-              cld_brdf(ic,i,j) = 1.0 ! arf_bs
+              cld_arf(ic,i,j) = arf_bs ! 1.0
 
 !             Water
               g = 0.6 * radfrac
@@ -264,12 +266,19 @@
               fresnel_mean = fresnel2 * radfracw + fresnel_d * (1.-radfracw)     ! "gray" sky albedo
               fresnel_arf = fresnel_mean / smooth_water_albedo
 
-!             Override geog albedo values over water, based on land fraction
-              topo_albedo(ic,i,j) = water_albedo * fwater + topo_albedo(ic,i,j) * (1. - fwater)
-
+!             Reflectance / Albedo
 !             phwater = arf_bw * specamp
 !             phwater = arf_bw * specamp + f(radfracw,arf_dw)
               phwater = (arf_bw * specamp * radfracw + arf_dw * (1. - radfracw)) * fresnel_arf
+
+!             Add effect of underlight
+              water_refl = water_albedo * phwater
+              water_refl = water_refl + ul(ic)
+              water_albedo = water_albedo + ul(ic)
+              phwater = water_refl / water_albedo
+
+!             Override geog albedo values over water, based on land fraction
+              topo_albedo(ic,i,j) = water_albedo * fwater + topo_albedo(ic,i,j) * (1. - fwater)
 
 !             Ice
               phice = 1.0
@@ -309,7 +318,7 @@
 !               if( (i .eq. (i/40)*40 .AND. j .eq. nj/2) .OR. &
                 if( (idebug_pf(i,j) .eq. 1) .OR. &
                        (alt_a(i,j) .eq. -90. .and. j .eq. 2161) .OR. (istat_nan .ne. 1) )then ! nadir
-                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j),cld_brdf(2,i,j)
+                  write(6,1)i,j,ic,alt_a(i,j),azi_a(i,j),azi_fm_lnd_a(i,j)+180.,topo_solazi(i,j),azidiffg,ampl_l,fland,fsnow,fwater,phland,phsnow,phwater,ph1,radfrac,dist_2_topo(i,j),gnd_arc,topo_solalt(i,j),emis_ang,specang,topo_albedo(2,i,j),cld_arf(2,i,j)
 1                 format(/i4,i5,i2,f9.4,4f9.2,9f9.4,f12.0,4f9.2,2f9.3)
                   write(6,111)alt_antisolar,azi_antisolar,azi_antisolar_eff,elong_antisolar,elong_a(i,j),elong_eff
 111               format('   antisolar alt/azi/azeff/elg/elg_a/eff',6f9.2)
@@ -318,12 +327,13 @@
                     write(6,112)emis_ang,emis_ang_a(i,j),azi_fm_lnd_a(i,j),topo_lat(i,j),topo_lon(i,j),topo_solalt(i,j),topo_solazi(i,j),topo_lf(i,j),topo_sc(i,j)
 112                 format('   EMISANG INFO:',9f9.3)
                   endif
-                  if(fsnow .gt. 0.01)then
+                  if(fsnow .gt. 0.01 .or. .true.)then
                     write(6,113)ampl_s,fszen,g2,hg_2param,brdf_szen,arf_bs 
-113                 format('   SNOW BRDF:   ',6f9.3)
-                  elseif(fwater .gt. 0.01)then
+113                 format('   SNOW ARF:   ',6f9.3)
+                  endif
+                  if(fwater .gt. 0.01)then
                     write(6,114)fresnel_mean,fresnel_arf,arf_bw,arf_dw,radfracw,specamp,phwater
-114                 format('   WATER BRDF:  ',7f9.3)
+114                 format('   WATER ARF:  ',7f9.3)
                   endif
                 endif
               endif
