@@ -55,7 +55,7 @@
 
         if(gndmax .eq. 0.)then
            write(6,*)' skip rest of get_uprad'
-           goto999
+           goto 999
         endif
 
         if(iradius .ge. 100)then
