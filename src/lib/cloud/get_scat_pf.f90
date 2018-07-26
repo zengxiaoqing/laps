@@ -223,7 +223,7 @@
 !           This is designed for 'clwc' though we can consider a similar one
 !           for 'cice'.            
 !           Set to 1 or 2 if we're at cloud base?
-            pf_thk_hr = (1.94 / (10.**(phase_corr * 0.4))) / r_ill
+            pf_thk_hr = 1. * (1.94 / (10.**(phase_corr * 0.4))) / r_ill
             pf_thk_hr = min(pf_thk_hr,600.0) ! limit fwd scattering peak
 !           pf_thk_hr = min(pf_thk_hr,2.0)   ! limit fwd scattering peak
 
