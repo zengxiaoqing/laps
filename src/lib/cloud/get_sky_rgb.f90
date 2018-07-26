@@ -23,7 +23,7 @@
 
         use mem_namelist, ONLY: r_missing_data,earth_radius,aero_scaleht,redp_lvl,fcterm,ssa,o3_du,h_o3,d_o3,aod_ha,angstrom_exp_a
         use cloud_rad ! , ONLY: ghi_zen_toa
-        use mem_allsky, ONLY: ghi_sim,mode_aero_cld
+        use mem_allsky, ONLY: ghi_sim,mode_aero_cld,nl_2_reflectance
         include 'trigd.inc'
 
 !       Statement functions
@@ -116,7 +116,7 @@
         real rad_sec_cld(nc), rad_sec_cld_top(nc), albedo_sfc(nc)
         real pf_scat(nc,ni,nj), pf_scat1(nc,ni,nj), pf_scat2(nc,ni,nj)
         real pf_land(nc,ni,nj)
-        real cld_brdf(nc,ni,nj)
+        real cld_arf(nc,ni,nj)
         real bkscat_alb(ni,nj)
         real trans_c(nc)            ! transmissivity
         real od_g_slant_a(nc,ni)    ! use for sun/moon/star attenuation
@@ -140,7 +140,7 @@
         real sprad_pix(nc),wa(nc)
         real counts_one_refl_nl(nc)
         real counts_one_refl(nc)
-        real radmax(nc)
+        real radmax(nc),radmax_bks(nc)
         real ext_o(nc)
         real xyz(3) ! color coordinates
 
@@ -431,7 +431,7 @@
         endif
         if(htmsl .gt. 50e3)then
             azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
-            azid1 = 55.  ; azid2 = 86. ! test custom
+            azid1 = 305. ; azid2 = 330. ! test custom
         else
             azid2 = azid1             
         endif
@@ -548,6 +548,8 @@
         if(htmsl .gt. 1000000e3)then ! high custom
             idebug_a(:,:) = 0
             iazi_debug = ((nj-1)*nint(azid1))/360 + 1 ! 90 deg azi
+            idebug_a(1:ni/4:5,iazi_debug) = 1
+            iazi_debug = ((nj-1)*nint(azid2))/360 + 1 ! 90 deg azi
             idebug_a(1:ni/4:5,iazi_debug) = 1
             write(6,*)' sum of idebug_a (0a) = ',sum(idebug_a)
             if(alt_a(1,1) .eq. -90.)idebug_a(1,1) = 1 ! nadir
@@ -873,7 +875,7 @@
                        ,sol_alt,sol_az,nsp,airmass_2_topo           & ! I
                        ,idebug_pf,ni,nj,i4time,rlat,rlon,htmsl      & ! I
                        ,topo_lat,topo_lon                           & ! I
-                       ,pf_land,cld_brdf,emis_ang_a)                  ! O
+                       ,pf_land,cld_arf,emis_ang_a)                   ! O
 
         I4_elapsed = ishow_timer()
 
@@ -1049,7 +1051,7 @@
 
 !         Determine relevant solar altitude along ray
           if(htmsl .gt. 25e3)then ! highalt strategy
-            if(alt_a(i,j) .gt. 0.)then
+            if(alt_a(i,j) .gt. 0. .or. alt_a(i,j) .eq. -90.)then
               solalt_ref = sol_alt
             else
               if(trace_solalt(i,j) .ne. sol_alt)then ! valid trace
@@ -1128,21 +1130,23 @@
                   if(htmsl .ge. 1000e3 .and. .true.)then ! experimental (e.g. DSCOVR)
 !                     A phase function component could be added to capture the glory.                     
 
-!                     The BRDF term should be invoked for thick clouds that also have
+!                     http://www.eeo.ed.ac.uk/abs/Postgraduate/rsip_fundamentals_anis.pdf
+!                     The ARF term should be invoked for thick clouds that also have
 !                     non-normal incidence (e.g. are horizontal with a low sun). Normal
 !                     incidence sometimes occurs with a low sun hitting cloud sides 
-!                     Note the BRDF is presently borrowed from that for snow.
+!                     Note the ARF is presently borrowed from that for snow.
 
-                      frac_brdf = cloud_albedo ! add geometry term from above comments?
-                      pf_top(ic) = pf_scat(ic,i,j) * (1. - frac_brdf) & ! thin
-                                 + 2. * cld_brdf(ic,i,j) * frac_brdf * (sind(max(solalt_ref,0.)))**0.6 ! thick / lambert 
+                      frac_arf = cloud_albedo ! add geometry term from above comments?
+                      pf_top(ic) = pf_scat(ic,i,j) * (1. - frac_arf) & ! thin
+                                 + 4. * cld_arf(ic,i,j) * frac_arf * (sind(max(solalt_ref,0.)))**1.0 ! thick / lambert 
                   else
                       pf_top(ic) = pf_scat(ic,i,j)
                   endif
                   rad = day_int * pf_top(ic)
 
                   if(idebug_a(i,j) .eq. 1 .and. ic .eq. icg)then
-                     write(6,*)'alb dbg: cldalb/mtrmsa ',cloud_albedo,mtr_msa(ic,i,j)
+                     write(6,35)cloud_albedo,frac_arf,solalt_ref,trace_solalt(i,j),cld_arf(ic,i,j),mtr_msa(ic,i,j)
+35                   format(' alb dbg: cldalb/frac_arf/salt-tr/arf/mtrmsa ',6f9.4)
                   endif
 
                   cld_radt(ic) = (rad * cloud_rad_c(ic,i,j) + rad_sec_cld(ic)) * ssa_eff(ic,i,j) ! **6.0
@@ -1234,7 +1238,7 @@
                   if(iradsec .ge. 10)then
                     write(6,*)' WARNING: irs = ',iradsec,l_solar_eclipse,rad_sec_cld,sph_rad_ave
                   endif
-                  write(6,42)i,j,elong_a(i,j),cld_brdf(2,i,j),pf_top(2),rintensity(2)&
+                  write(6,42)i,j,elong_a(i,j),cld_arf(2,i,j),pf_top(2),rintensity(2)&
                    ,trans_c(2),r_cloud_rad(i,j) &
                    ,cloud_rad_c(:,i,j),cld_radt(:)/rscl &
                    ,cld_radb(:)/rscl,(cld_rad(:)/rscl)/trans_c(:) &
@@ -1702,18 +1706,20 @@
 !                 Daytime assume topo is lit by sunlight (W/m**2)
 !                 Add topo brightness to line of sight sky brightness in radiation space
 
-                  rtopo_red = 2. * gtic(1,i,j) * topo_albedo(1,i,j) * pf_land(1,i,j)
-                  rtopo_grn = 2. * gtic(2,i,j) * topo_albedo(2,i,j) * pf_land(2,i,j) 
-                  rtopo_blu = 2. * gtic(3,i,j) * topo_albedo(3,i,j) * pf_land(3,i,j) 
+                  crefl = 4.
+                  rtopo_red = crefl * gtic(1,i,j) * topo_albedo(1,i,j) * pf_land(1,i,j)
+                  rtopo_grn = crefl * gtic(2,i,j) * topo_albedo(2,i,j) * pf_land(2,i,j) 
+                  rtopo_blu = crefl * gtic(3,i,j) * topo_albedo(3,i,j) * pf_land(3,i,j) 
+
                   sky_frac_topo = 1.00               ! hopefully temporary
                   sky_frac_aero = 1.00               ! hopefully temporary
                   red_rad = day_int * rtopo_red*topovis_c(1)*sky_frac_topo
                   grn_rad = day_int * rtopo_grn*topovis_c(2)*sky_frac_topo
                   blu_rad = day_int * rtopo_blu*topovis_c(3)*sky_frac_topo
 
-                  red_refl = red_rad/(2.*day_int)
-                  grn_refl = grn_rad/(2.*day_int)
-                  blu_refl = blu_rad/(2.*day_int)
+                  red_refl = red_rad * nl_2_reflectance
+                  grn_refl = grn_rad * nl_2_reflectance
+                  blu_refl = blu_rad * nl_2_reflectance
 
                   if(idebug .eq. 1)then
                     write(6,98)rtopo_grn,topo_gti(i,j),gtic(2,i,j) &
@@ -1725,7 +1731,7 @@
                               ,sky_rad(2) + grn_rad &
                               ,sky_rad(3) + blu_rad
 98                  format( &
-                        ' rtopo/gti/gtic/alb/pf/tsalt/tdst/trad/srad   ', &
+                        ' rtopo/gti/gtic/alb/pf/tsalt/tdst/trad/crad/srad   ', &
                     f7.3,f9.1,f9.4,1x,f8.3,f7.2,f9.2,f12.0,2f8.5,3(2x,3f13.0))
                   endif
 
@@ -1734,8 +1740,8 @@
                   sky_rad(3) = sky_rad(3) + blu_rad
 
                   if(idebug .eq. 1)then
-                    write(6,981)topo_albedo(:,i,j),red_refl,grn_refl,blu_refl,sky_rad(:)/(2.*day_int)
-981                 format(' reflectance talb/trad/skyrad ',3f8.3,5x,3f10.5,5x,3f10.5)
+                    write(6,981)topo_albedo(:,i,j),red_refl,grn_refl,blu_refl,sky_rad(:)*nl_2_reflectance
+981                 format(' reflectance talb/tref/skyref ',3f8.3,5x,3f10.5,5x,3f10.5)
                   endif
  
                   call nl_to_RGB(sky_rad(:),glwmid,contrast & 
@@ -1888,7 +1894,7 @@
                 call nl_to_RGB(sky_rad(:),glwmid,contrast & 
                    ,128.,wa,1,xyz,rtotal,gtotal,btotal)
                 write(6,*)'sky_rad / glwmid for SWIM is  ',sky_rad,glwmid
-                write(6,1051)sky_rad(:) / 6e9
+                write(6,1051)sky_rad(:) * nl_2_reflectance
 1051            format(' reflectance for SWIM is ',3f9.4)
                 write(6,1052)rtotal,gtotal,btotal,sky_rad(:)
 1052            format(' total rgb/skyrad should be',3f9.2,94x,3f16.2)
@@ -1943,7 +1949,7 @@
               endif
 !             if(alt_a(i,j) .eq. -90. .or. mode_aero_cld .eq. 3)then
               if(.true.)then
-                  write(6,*)'Reflectance is ',sky_rad(:) / (2. * day_int)
+                  write(6,*)'Reflectance is ',sky_rad(:) * nl_2_reflectance
               endif
 
 !             if(sol_alt .ge. -2.0)then      ! daylight
@@ -1990,9 +1996,13 @@
        
 !       Consider max RGB values where elong > 5 degrees
 
+!       Consider max backscatter rad values
+
         do ic = 1,nc
           radmax(ic) = maxval(sky_rad_a(ic,:,:))
         enddo ! ic
+
+        radmax_bks(:) = 0.
 
         do i = 1,ni
         do j = 1,nj
@@ -2000,14 +2010,28 @@
               i_radmax = i
               j_radmax = j
            endif
+           if(elong_a(i,j) .gt. 90.)then
+              radmax_bks(:) = max(radmax_bks(:),sky_rad_a(:,i,j))
+           endif
         enddo ! jazi
         enddo ! ialt
 
         write(6,121)radmax(:),i_radmax,j_radmax,alt_a(i_radmax,j_radmax),azi_a(i_radmax,j_radmax)
 121     format('  max rad = ',3e16.9,' at ',2i5,3f9.3)
-        write(6,*)' max normal reflectance = ',radmax(:)/(2. * day_int)
+        write(6,*)' max normal reflectance = ',radmax(:) * nl_2_reflectance
+        write(6,*)' max backscattered reflectance = ',radmax_bks(:) * nl_2_reflectance
 
-        sky_reflectance(:,:,:) = sky_rad_a(:,:,:) / (2. * day_int)
+!       Note for a Lambertian Reflector:  
+!       radiance = reflectance * irradiance / pi
+!       reflectance = pi * radiance / irradiance
+
+!       radiance units are W/m^2/sr
+!       solar radiance scattered over sphere = ghi_zen_toa / (4 * pi) = day_int0 = 3e9nl
+!       Should this be a 4 in the denominator?
+!       Consider eq 19 in...
+!       https://sentinel.esa.int/documents/247904/349589/OLCI_L2_Rayleigh_Correction_Land.pdf        
+
+        sky_reflectance(:,:,:) = sky_rad_a(:,:,:) * nl_2_reflectance
 
 !       Add bounds to rgb values
 !       do j = 1,nj
@@ -2021,7 +2045,7 @@
 !       sky_sprad = f(sky_cyl_nl)
 !       solidangle_pix = (azi_scale*rpd) * (azi_scale*rpd)
 
-        counts_one_refl_nl(:) = 6e9
+        counts_one_refl_nl(:) = 1. / nl_2_reflectance
         call nl_to_RGB(counts_one_refl_nl(:),glwmid,contrast & 
            ,128.,wa,1,xyz,counts_one_refl(1),counts_one_refl(2),counts_one_refl(3))
         write(6,*)' counts for 1.0 reflectance is',counts_one_refl(:)
