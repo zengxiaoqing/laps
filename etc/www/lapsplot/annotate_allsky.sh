@@ -10,8 +10,9 @@
 
   ALT_SCALE=`head -3 label2.$ILOC | tail -1 | cut -c17-23`
   AZI_SCALE=`head -3 label2.$ILOC | tail -1 | cut -c24-30`
-  LATLON="`head -1 label2.$ILOC`"
+  LATLON=`head -1 label2.$ILOC`
   LATLON=`echo $LATLON | sed 's/^[ \t]*//'` # remove leading spaces
+  HT=`head -5 label2.$ILOC | tail -1`
 
   echo "AZI_SCALE = $AZI_SCALE"
 
@@ -41,7 +42,7 @@
   ATIME=`head -2 label.$ILOC | tail -1`
   ATIME=`echo $ATIME | sed 's/^[ \t]*//'` # remove leading spaces
   GHIUNITS=W/m^2
-  GHI=`head -5 label2.$ILOC | tail -1`$GHIUNITS
+  GHI=`head -6 label2.$ILOC | tail -1`$GHIUNITS
   GHI=`echo $GHI | sed 's/^[ \t]*//'`     # remove leading spaces
   echo "Annotate Time $ATIME and GHI $GHI"
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
@@ -118,9 +119,9 @@
    elif test "$IMGGEOM" = "2559x2559"; then
     echo "convert -fill white -annotate +2300+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
           convert -fill white -annotate +2300+20 "$LATLON" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
-   else
-    echo "convert -fill white -annotate +1330+20 "$LATLON2" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
-          convert -fill white -annotate +1330+20 "$LATLON2" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
+   else # 1535x1535
+    echo "convert -fill white -annotate +1320+20 "$LATLON2" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png"
+          convert -fill white -annotate +1320+20 "$LATLON2" -pointsize 18 allsky_polar_$ILOC.png allsky_polar_$ILOC.png
    fi
   fi
 
