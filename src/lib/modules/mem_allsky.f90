@@ -23,7 +23,11 @@ MODULE mem_allsky
 
 !     Various non-gridded variables
       parameter (nc = 3)
-      parameter (day_int0 = 3e9) ! solar relative brightness at 1au over sphere
+      parameter (day_int0 = 3e9) ! solar relative brightness scaling constant
+
+!     https://www.goes-r.gov/products/ATBDs/baseline/Imagery_v2.0_no_color.pdf
+      real nl_2_reflectance
+      parameter (nl_2_reflectance = 1. / (4. * day_int0))
       real ghi_sim
       real ext_g(nc)
       integer mode_aero_cld /1/ ! treat aerosols more as clouds [1,2,3]
