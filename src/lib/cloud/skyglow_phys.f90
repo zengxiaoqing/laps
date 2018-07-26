@@ -24,7 +24,7 @@
 
         use mem_namelist, ONLY: fcterm, aod_bin, aod_asy, ssa, r_missing_data, o3_du,h_o3,d_o3
         use mem_namelist, ONLY: fcterm_a, angstrom_exp_a
-        use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl            ! I
+        use mem_allsky, ONLY: aod_ill_opac,aod_ill_opac_potl,nl_2_reflectance  ! I
         use cloud_rad, ONLY: ghi_zen_toa
 
 !       Statement Functions
@@ -1253,13 +1253,13 @@
                     ,f8.3,f6.1,1x,3f7.2,i3,f12.5,f12.0,2f9.4,3e14.5)
 
               if(altray .eq. -90.)then
-                write(6,1111)clear_rad_c(:,ialt,jazi) / (2.*day_int0/r_au**2)
+                write(6,1111)clear_rad_c(:,ialt,jazi) * nl_2_reflectance ! / (2.*day_int0/r_au**2)
 1111            format('nadir clrrd reflectance = ',3f10.5)
               elseif(altray .eq. +90.)then
-                write(6,1112)clear_rad_c(:,ialt,jazi) / (2.*day_int0/r_au**2)
+                write(6,1112)clear_rad_c(:,ialt,jazi) * nl_2_reflectance ! / (2.*day_int0/r_au**2)
 1112            format('zenith clrrd reflectance = ',3f10.5)
               else
-                write(6,1113)clear_rad_c(:,ialt,jazi) / (2.*day_int0/r_au**2)
+                write(6,1113)clear_rad_c(:,ialt,jazi) * nl_2_reflectance ! / (2.*day_int0/r_au**2)
 1113            format('clrrd reflectance = ',3f10.5)
               endif
 
