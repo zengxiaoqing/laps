@@ -529,6 +529,22 @@
            od_solar_slant = 999.
            rad = 0. ; di_g = 0. ; di_a = 0. ; di = 0.
 
+!          Secondary twilight
+           solalt_limb = solalt_step + refr_max + horz_dep
+!          rad = .0001 * exp(solalt_limb/1.38)
+           rad = .0100 * exp(solalt_limb/0.69)
+!          rad = .0100 * exp(solalt_limb/0.79)
+           alphabar = alphabar_g + alphabar_o + alphabar_a
+
+           if(alphabar .gt. 0.)then
+             di_g = do * rad       * (alphabar_g / alphabar)
+             di_a = do * rad * ssa * (alphabar_a / alphabar)
+           else
+             di_g = 0.
+             di_a = 0.
+           endif
+           di = di_g + di_a
+
          endif ! sol_occ
 
          sumi_g = sumi_g + di_g
@@ -553,6 +569,8 @@
 
                write(6,12)horz_dep,xybar,solalt_step,refr_min_ray,solalt_step_app,htmin_ray,htmin_view2,sol_occ ! ,ao2,ao3,ao
 12             format(33x,'   horz_dep/xybar/sol|alt-refr-app/htmin-2/sol_occ = ',f8.2,f11.0,3f8.2,2f9.0,f8.3,3f9.4)
+             elseif(solalt_step .lt. 0.)then
+               write(6,*)' secondary twilight saltl|rad|di',solalt_limb,rad,di
              endif
              write(6,11)i,sbar,htbar_msl,alphabar_g*ds,alphabar_a*ds,tausum,dsolalt,ags,aas,od_solar_slant_g,od_solar_slant,rad,di,sumi_g,sumi_a,opac_curr,frac_opac,sumi_mean,sumi_extrap
 11           format(i8,f11.0,f12.1,2e10.3,f8.4,f9.4,f10.2,4f9.4,e9.2,2f11.8,2f9.4,2f9.4)
