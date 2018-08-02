@@ -426,14 +426,14 @@
             azid1 = 90. ; azid2 = 270.
             moon_cond_clr = 0
         endif
-        if(mode_aero_cld .gt. 1)then
-            azid1 = 270.  ; azid2 = 270. ! aero custom
-        endif
         if(htmsl .gt. 50e3)then
             azid1 = int(sol_az)  ; azid2 = int(sol_az) ! high custom
             azid1 = 305. ; azid2 = 330. ! test custom
         else
             azid2 = azid1             
+        endif
+        if(mode_aero_cld .gt. 1)then
+            azid1 = 270.  ; azid2 = 0. ! aero custom
         endif
 
         write(6,*)' azid1/2 are at ',azid1,azid2,htmsl,mode_aero_cld
@@ -506,6 +506,8 @@
                 altray_limb = alt_a(i,j) + horz_dep
                 altray_limb_rad = altray_limb / radius_limb
                 if(altray_limb_rad .ge. -0.06 .and. altray_limb_rad .le. 0.01)then ! near horizon/limb
+                    idebug_a(i,j) = 1
+                elseif((i-1) .eq. 20*((i-1)/20))then
                     idebug_a(i,j) = 1
                 elseif(alt_a(i,j) .eq. float((nint(alt_a(i,j))/1)*1) .and. alt_a(i,j) .ge. 0. .and. alt_a(i,j) .le. 12.)then
                     idebug_a(i,j) = 1
@@ -1949,7 +1951,8 @@
               endif
 !             if(alt_a(i,j) .eq. -90. .or. mode_aero_cld .eq. 3)then
               if(.true.)then
-                  write(6,*)'Reflectance is ',sky_rad(:) * nl_2_reflectance
+                  write(6,113)sky_rad(:) * nl_2_reflectance,topo_lat(i,j),topo_lon(i,j)
+113               format('Reflectance is ',3f9.4,'     at    ',2f7.3)
               endif
 
 !             if(sol_alt .ge. -2.0)then      ! daylight
