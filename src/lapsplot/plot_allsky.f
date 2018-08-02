@@ -1698,14 +1698,14 @@
               solalt_limb_true = solar_alt + horz_dep
               write(6,*)' solalt_limb_true is',solalt_limb_true
 
-              if(l_cyl .eqv. .true.)then
-!               Write all sky for cyl
-
                 if(solalt_limb_true .lt. -10.0)then
                    dither = 2.0
                 else
                    dither = 0.0
                 endif
+
+              if(l_cyl .eqv. .true.)then
+!               Write all sky for cyl
 
                 if(dither .gt. 0.)then
 
@@ -1715,18 +1715,22 @@
 
                    do ialt = minalt,maxalt
                    do iaz = minazi,maxazi
-                      arand = rand(0)
+                   do ic = 1,nc
+                      call random_number(arand)
                       skydelt = (-1.0 + (2.0 * arand)) * dither
-                      isky_rgb_cyl(:,ialt,iaz) = sky_rgb_cyl(:,ialt,iaz)
+                    isky_rgb_cyl(ic,ialt,iaz) = sky_rgb_cyl(ic,ialt,iaz)
      1                                         + skydelt
-                      isky_rgb_cyl(:,ialt,iaz) =
+                   enddo ! ic
+
+                   isky_rgb_cyl(:,ialt,iaz) =
      1                        min(max(isky_rgb_cyl(:,ialt,iaz),0),255)
 
-                      if(iaz .eq. (minazi+maxazi)/2)then
+                   if(iaz .eq. 3*(minazi+maxazi)/4)then
+                         write(6,*)' arand is ',arand
                          write(6,61)ialt,alt_a_roll(ialt,iaz),arand
-     1                             ,skydelt,sky_rgb_cyl(1,ialt,iaz)
-     1                             ,isky_rgb_cyl(2,ialt,iaz)
-61                       format(' dither ',i4,f6.2,2f7.2,f8.2,i5)
+     1                             ,skydelt,sky_rgb_cyl(2,ialt,iaz)
+     1                             ,isky_rgb_cyl(:,ialt,iaz)
+61                       format(' dither ',i4,f6.2,2f7.2,f8.2,3i5)
                       endif
 
                     enddo ! iaz
@@ -1854,7 +1858,37 @@
                   sky_rgb_polar = 0.
                   isky_rgb_polar = 0
                 endwhere
+
+                if(dither .gt. 0.)then
+
+                  I4_elapsed = ishow_timer()
+
+                  write(6,*)' writing dithered image',dither
+
+                  do i = iplo,iphi
+                  do j = jplo,jphi
+                    call random_number(arand)
+                    skydelt = (-1.0 + (2.0 * arand)) * dither
+                    do ic = 1,nc
+                      isky_rgb_polar(ic,i,j) = 
+     1                             sky_rgb_polar(ic,i,j) + skydelt
+                    enddo ! ic
+
+                    isky_rgb_polar(:,ialt,iaz) =
+     1                        min(max(isky_rgb_polar(:,i,j),0),255)
+
+                    if(j .eq. (jplo+jphi)/2)then
+                         write(6,61)i,alt_a_roll(i,j),arand
+     1                             ,skydelt,sky_rgb_polar(2,i,j)
+     1                             ,isky_rgb_polar(:,i,j)
+                    endif
+
+                  enddo ! j
+                  enddo ! i 
+                else
                 isky_rgb_polar = sky_rgb_polar
+                endif                                       
+
                 write(6,*)' max polar 1 is ',maxval(sky_rgb_polar)
      1                                      ,maxval(isky_rgb_polar)
                 write(6,*)' min polar 1 is ',minval(sky_rgb_polar)
