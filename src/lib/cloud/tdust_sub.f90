@@ -5,6 +5,9 @@
 
      real k,kpterm,mu0
 
+!    t is transmittance  (Output)
+!    r is reflectance    (Output)
+
 !    Variable transformation
      g = g_in / (1. + g_in)
      ssa = ssa_in * (1. - g_in**2) / (1. - ssa_in * g_in**2)
@@ -38,6 +41,11 @@
      t = c1 * exp(-k*tau) * (1. + pprime) + c2 * exp(k*tau) * (1.-pprime) - (alpha+beta-1.) * exp(-tau/mu0)
 
      if(iverb .eq. 1)write(6,*)' t is ',t
+
+!    Reflectance Section
+     b = 0.5 * (1. - g_in)         ! backscatter fraction
+     btau = b * tau_in
+     r_nonabs = btau / (1. + btau) ! reflectance (non-absorbing case, black surface)
        
      return
      end
