@@ -173,7 +173,8 @@ c
       real      r67_cnt_to_btemp_lut(0:4095)
       real      sri(nx_l,ny_l,maxchannel)   !Input: i satellite coord at each LAPS grid point    
       real      srj(nx_l,ny_l,maxchannel)   !Input: j satellite coord at each LAPS grid point    
-      real      good_vis_data_thresh
+      real      good_vis_data_thresh,good_vis_data_frac
+      real      good_ir_data_frac      
 c
 c dimensions for lvd
 c
@@ -493,7 +494,8 @@ c Find and read current satellite files... as many as 5 ir channels and vis.
 c --------------------------------------------------------------------------
       if(csattype.eq.'cdf'.or.csattype.eq.'gvr'.or.
      &   csattype.eq.'wfo'.or.csattype.eq.'ncp'.or.
-     &   csattype.eq.'nll'.or.csattype.eq.'rll')then 
+     &     csattype.eq.'nll'.or.csattype.eq.'rll'.or.
+     &     csattype.eq.'jma'                           )then 
 
        write(6,*)'Using getcdf_satdat routine for ',csattype
 
@@ -927,6 +929,7 @@ c ------------------------------------------------------------
      &    csattype.ne.'hko'.and.
      &    csattype.ne.'rll'.and.
      &    csattype.ne.'nll'.and.
+     &    csattype.ne.'jma'.and.
      &    csattype.ne.'cms'.and.
      &    csattype.ne.'gnp'.and.
      &    csattype.ne.'ncp')then
@@ -1089,9 +1092,10 @@ c ----------  GMS SATELLITE SWITCH -------
             call lvd_file_specifier(c_type(j,i),ispec,istat)
 
             write(6,*)' image resolution ',i,j,ispec,r_image_res_m(j,i)
+            good_ir_data_frac = 0.01
 
             if(ispec.eq.4)then
-              if(r_image_status(j,i).le.0.3333)then
+              if(r_image_status(j,i).le.(1.-good_ir_data_frac))then
 
 !              Is this needed for coarse LAPS grids using pixel averaging?
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
@@ -1176,7 +1180,7 @@ c                    endif
               endif
 
             elseif(ispec.eq.2)then
-              if(r_image_status(j,i).lt.0.3333)then
+              if(r_image_status(j,i).lt.(1.-good_ir_data_frac))then
 !YL
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
                  if(maxval(istat_grij) .eq. 0)then
@@ -1241,7 +1245,7 @@ c                    endif
             endif
 
             elseif(ispec.eq.5)then
-            if(r_image_status(j,i).lt.0.3333)then
+            if(r_image_status(j,i).lt.(1.-good_ir_data_frac))then
 !YL
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
                  if(maxval(istat_grij) .eq. 0)then
@@ -1303,7 +1307,7 @@ c                    endif
             endif
 
             elseif(ispec.eq.3)then
-            if(r_image_status(j,i).lt.0.3333)then
+              if(r_image_status(j,i).lt.(1.-good_ir_data_frac))then
 !YL
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
                  if(maxval(istat_grij) .eq. 0)then
@@ -1360,12 +1364,13 @@ c                    endif
                      print*,'No output for this channel: ',c_type(j,k)
                   end if
                endif
-            else
+              else
                write(6,*)'wv image not processed: missing data'
-            endif
+              endif
 
             elseif(ispec.eq.1)then
-              if(r_image_status(j,i).lt.0.3333)then
+              good_vis_data_frac = 0.01
+              if(r_image_status(j,i) .lt. (1.-good_vis_data_frac))then
 
                if(csattype.eq.'rll' .or. csattype.eq.'cms')then
                  if(maxval(istat_grij) .eq. 0)then
@@ -1409,7 +1414,7 @@ c                    endif
 c
 c *** istatus_v() is < 0. Determine if we have enough vis data.
 c
-               good_vis_data_thresh=(nx_l*ny_l)*0.0100
+               good_vis_data_thresh=(nx_l*ny_l)*good_vis_data_frac
                if( (nx_l*ny_l+istatus_vis(1)).gt.
      &              good_vis_data_thresh)then
 
