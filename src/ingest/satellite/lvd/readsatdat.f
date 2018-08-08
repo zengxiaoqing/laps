@@ -71,7 +71,7 @@ c
       REAL    latin_vis,latin_ir,latin_wv
       REAL    lov_vis,lov_ir,lov_wv
 
-      write(6,*)' Subroutine readsatdat...',csat_type,csat_id
+      write(6,*)' Subroutine readsatdat...',csat_type,' ',csat_id
       write(6,*)' nelemir/nlinesir = ',nelemir,nlinesir               
       write(6,*)' nelemvis/nlinesvis = ',nelemvis,nlinesvis               
 
@@ -109,6 +109,10 @@ c
      &                        '_'//c_type(j,i)//'.nc'
                  endif
                endif
+            elseif(csat_type.eq.'jma')then
+               n=index(c_dir_path(1),' ')-1
+               c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
+     &                        '_'//'jma.nc'
             else
                n=index(c_dir_path(1),' ')-1
                c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
