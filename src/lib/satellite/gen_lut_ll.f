@@ -94,9 +94,9 @@ c
       logical     lwrite
       data lwrite /.true./
 
-      real    nxll,nyll,nzll
+      integer nxll,nyll,nzll
       real    dx,dy
-      real    rlatc,rlonc,swlat,swlon,ne(2),lat0,lon0
+      real    rlatc,rlonc,lat0,lon0
       character*1 cgrddef /'N'/ ! latitude ordered N to S 
 
 !     common /mcgrid/rlonc,rlatc,nxll,nyll,sw,ne,dx,dy
@@ -113,12 +113,12 @@ c
 c retrieve the latest nav info from a file if it exists
 c
 
-      if(.true.)then ! Himawari nll data
+      if(cdtype .eq. 'nll')then ! Himawari nll data
 
          if(indx.eq.1.or.indx.eq.3.or.
      .      indx.eq.4.or.indx.eq.5)then   
 
-            print*,'setting himawari navigation information'
+            print*,'setting himawari nll navigation information'
 
             nxll = 8000.
             nyll = 6000.
@@ -126,11 +126,33 @@ c
             rlonc=(68. + 148. ) / 2.
             lat0=+55.
             lon0=+68.
-            dx = 80. / (nxll-1.)
-            dy = 60. / (nyll-1.)
+            dx = 80. / (nxll-1.) ! longitude range
+            dy = 60. / (nyll-1.) ! latitude range
 
          endif
 
+      elseif(cdtype .eq. 'jma')then
+
+         if(indx.eq.1.or.indx.eq.3.or.
+     .      indx.eq.4.or.indx.eq.5)then   
+
+            print*,'setting himawari jma navigation information'
+
+            nxll = 2401.
+            nyll = 2401.
+            rlatc=(60. + (-60.)) / 2.
+            rlonc=(80. + 200. ) / 2.
+            lat0=+55.
+            lon0=+68.
+            dx = 120. / (nxll-1.) ! longitude range
+            dy = 120. / (nyll-1.) ! latitude range
+
+         endif
+
+      else
+         write(6,*)' ERROR: unknown cdtype in gen_lut_ll',cdtype
+         jstatus = 0
+         return
       endif
 
       print*,'gen_lut_ll: Sat Nav Latlon Parameters'
@@ -139,8 +161,6 @@ c
       print*,'nyll:  ',nyll
       print*,'rlatc: ',rlatc
       print*,'rlonc: ',rlonc
-      print*,'SW: ',swlat,swlon
-      print*,'NE: ',ne(1),ne(2)
       print*,'dx:    ',dx
       print*,'dy:    ',dy
 c
