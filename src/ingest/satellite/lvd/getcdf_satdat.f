@@ -380,8 +380,17 @@ c
                endif
             endif
 
+!           Check channel type match in filename
             do k=1,nchannels
-               if(c_filename_sat(i)(j:jj).eq.chtype(k))then
+               if(c_sat_type .eq. 'jma')then ! one file has all channels
+                  nfiles_sat(k) = nfiles_sat(k) + 1
+                  i4time_sat(nfiles_sat(k),k)=i4time_sat_raw(i)
+                  c_type_sat(nfiles_sat(k),k)=chtype(k)
+                  if(iverb .eq. 1)then
+                     write(6,*)c_filename_sat(i)(j:jj),' ',chtype(k)
+     1                        ,' matches'
+                  endif
+               elseif(c_filename_sat(i)(j:jj).eq.chtype(k))then
                   nfiles_sat(k) = nfiles_sat(k) + 1
                   i4time_sat(nfiles_sat(k),k)=i4time_sat_raw(i)
                   c_type_sat(nfiles_sat(k),k)=c_filename_sat(i)(j:jj)
