@@ -634,8 +634,8 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_VIS(3,6)=0
       N_PIXELS_VIS(4,6)=1
       N_PIXELS_VIS(4,9)=1375
-      N_PIXELS_VIS(1:4,17)=3072
-      N_PIXELS_VIS(1:4,18)=1934
+      N_PIXELS_VIS(1:4,17)=2048
+      N_PIXELS_VIS(1:4,18)=2048
       N_PIXELS_VIS(1:4,19)=1934
       N_PIXELS_VIS(1:4,20)=8000
       N_PIXELS_VIS(1:4,21)=8000
@@ -662,7 +662,7 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_VIS(1:4,6)=0
       N_LINES_VIS(1:4,9)=1375
       N_LINES_VIS(1:4,17)=2048
-      N_LINES_VIS(1:4,18)=1544
+      N_LINES_VIS(1:4,18)=2048
       N_LINES_VIS(1:4,19)=1544
       N_LINES_VIS(1:4,20)=6000
       N_LINES_VIS(1:4,21)=6000
@@ -683,8 +683,8 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_IR(1:4,6)=0
       N_PIXELS_IR(1:4,9)=1375
       N_PIXELS_IR(1:4,10)=1250 ! 1140
-      N_PIXELS_IR(1:4,17)=2048
-      N_PIXELS_IR(1:4,18)=1934
+      N_PIXELS_IR(1:4,17)=512
+      N_PIXELS_IR(1:4,18)=512
       N_PIXELS_IR(1:4,19)=1934
       N_PIXELS_IR(1:4,20)=8000
       N_PIXELS_IR(1:4,21)=8000
@@ -704,8 +704,8 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_IR(1:4,6)=0
       N_LINES_IR(1:4,9)=1375
       N_LINES_IR(1:4,10)=1250 ! 1140
-      N_LINES_IR(1:4,17)=1024
-      N_LINES_IR(1:4,18)=1544
+      N_LINES_IR(1:4,17)=512
+      N_LINES_IR(1:4,18)=512
       N_LINES_IR(1:4,19)=1544
       N_LINES_IR(1:4,20)=6000
       N_LINES_IR(1:4,21)=6000
@@ -724,7 +724,8 @@ c -- number of lines and pixels (elements) for each type
       N_PIXELS_WV(1,5)=2000
       N_PIXELS_WV(2:4,5)=0
       N_PIXELS_WV(1:4,6)=0
-      N_PIXELS_WV(1:4,18)=1934
+      N_PIXELS_WV(1:4,17)=512
+      N_PIXELS_WV(1:4,18)=512
       N_PIXELS_WV(1:4,19)=1934
       N_PIXELS_WV(1:4,20)=8000
       N_PIXELS_WV(1:4,21)=8000
@@ -742,7 +743,8 @@ c -- number of lines and pixels (elements) for each type
       N_LINES_WV(1,5)=823
       N_LINES_WV(2:4,5)=0
       N_LINES_WV(1:4,6)=0
-      N_LINES_WV(1:4,18)=1544
+      N_LINES_WV(1:4,17)=512
+      N_LINES_WV(1:4,18)=512
       N_LINES_WV(1:4,19)=1544
       N_LINES_WV(1:4,20)=6000
       N_LINES_WV(1:4,21)=6000
