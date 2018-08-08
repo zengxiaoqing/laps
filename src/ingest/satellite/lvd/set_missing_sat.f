@@ -125,6 +125,15 @@ c        rhigh=255.
 
         write(6,*)' Range testing thresholds set to ',rlow,rhigh
 
+      elseif(csattype.eq.'jma')then ! Bad range thr (previously descaled data)
+        if(chtype .eq. 'vis')then 
+          rhigh=10.0
+        else ! ir
+          rhigh=400.0
+        endif
+
+        write(6,*)' Range testing thresholds set to ',rlow,rhigh
+
       else
         write(6,*)' Range testing thresholds set to ',rlow,rhigh
 
