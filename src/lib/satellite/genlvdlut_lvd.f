@@ -184,9 +184,10 @@ c           enddo
 
             enddo
 
-      elseif(c_sat_types(it,js).eq.'nll')then
+      elseif(c_sat_types(it,js).eq.'nll' .or.
+     &       c_sat_types(it,js).eq.'jma'      )then
 
-            print*,'Compute mapping arrays for nll'
+            print*,'Compute mapping arrays for ',c_sat_types(it,js)
             do lc=1,maxchannel
 
                if(ichannels(lc,it,js).eq.1)then
