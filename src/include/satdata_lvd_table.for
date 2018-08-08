@@ -45,8 +45,8 @@
      7              'gnp','   ','   ','   ',
      8              'gnp','   ','   ','   ',
      9              'cms','   ','   ','   ',
-     .              'rll','nll','   ','   ',
-     1              'rll','nll','   ','   '/
+     .              'rll','nll','jma','   ',
+     1              'rll','nll','jma','   '/
 
       data satellite_channels/
      1              'vis','4u ','wv ','11u','12u','   ',
