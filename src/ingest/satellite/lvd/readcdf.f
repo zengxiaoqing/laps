@@ -75,7 +75,7 @@ C
       REAL      LoV     
       REAL      poLat
       REAL      La2,Lo2,level
-      REAL      scale_img
+      REAL      scale_img,offset_img ! O
       real arg1,arg2
       INTEGER START(10)
       INTEGER COUNT(10)
@@ -164,7 +164,7 @@ c   code
          write(6,*)'readcdf longitude range:      '
      1          ,minval(longitude),maxval(longitude)
 
-      elseif(csat_type.eq.'nll')then ! read 1D lat/lon
+      elseif(csat_type.eq.'nll' .or. csat_type.eq.'jma')then ! read 1D lat/lon
          write(6,*)' Read 1D lat/lon arrays (UNDER CONSTRUCTION)'
 
       endif
@@ -173,6 +173,12 @@ c   code
          varname = 'channel'
       elseif(csat_type.eq.'nll')then
          varname = 'data'
+      elseif(csat_type.eq.'jma')then ! determine varname from chtype
+         if(chtype .eq. '10p')then
+            varname = 'tbb_13'
+         elseif(chtype .eq. 'vis')then
+            varname = 'albedo_03'
+         endif
       else
          varname = 'image'
       endif
@@ -198,7 +204,8 @@ C
          return
       endif
 
-      if(csat_type.eq.'rll')then 
+      if(csat_type.eq.'rll' .or. csat_type.eq.'gnp' 
+     1                      .or. csat_type.eq.'jma')then 
 
 !         read scaling attribute
           rcode=NF_GET_ATT_REAL(ncid,varid,'scale_factor'
@@ -211,6 +218,22 @@ C
              write(6,*)' Successfully read image scale ',scale_img
           endif
 
+!         read offset attribute
+          rcode=NF_GET_ATT_REAL(ncid,varid,'add_offset'
+     1                              ,offset_img)
+          if(rcode.ne.NF_NOERR) then
+             write(6,*)'Error reading image offset attribute'
+             offset_img = 0.
+             write(6,*)' Use default value for image offset ',offset_img
+          else
+             write(6,*)' Successfully read image offset ',offset_img
+          endif
+
+          r4_image(:,:) = r4_image(:,:) * scale_img + offset_img
+
+      endif
+
+      if(csat_type.eq.'rll')then 
           rcode = NF_INQ_VARID(ncid,'lineRes',varid)
           if(rcode.ne.NF_NOERR) then
              print *, NF_STRERROR(rcode)
