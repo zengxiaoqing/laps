@@ -5,6 +5,8 @@
 # Variables $ILOC, $MODE_ALLSKY, $POINT, and $YDISP are inherited from environment
 
   echo "start annotate_allsky.sh for $ILOC"
+  pwd
+
   echo "MODE_ALLSKY = $MODE_ALLSKY"
   echo "POINT = $POINT"
 
@@ -13,8 +15,10 @@
   LATLON=`head -1 label2.$ILOC`
   LATLON=`echo $LATLON | sed 's/^[ \t]*//'` # remove leading spaces
   HT=`head -5 label2.$ILOC | tail -1`
+  CORRELATION=`head -7 label2.$ILOC | tail -1 | awk '{print $4}'`
 
   echo "AZI_SCALE = $AZI_SCALE"
+  echo "CORRELATION = $CORRELATION"
 
 # Annotate Model
   if test "$MODE_ALLSKY" = "polar" || test "$MODE_ALLSKY" = "both"; then
@@ -24,12 +28,17 @@
   fi
 
   if test "$MODE_ALLSKY" = "cyl" || test "$MODE_ALLSKY" = "both"; then
+      if test $CORRELATION != 0.000; then
+          SIMSTRING="Simulated                   r = $CORRELATION"
+      else
+          SIMSTRING="Simulated"
+      fi
       if test $AZI_SCALE == 0.10; then
           convert -fill yellow -annotate +19+447 "Simulated"  -pointsize 16 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       elif test $AZI_SCALE == 0.20; then
           convert -fill yellow -annotate +19+179 "Simulated"  -pointsize 14 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       elif test $AZI_SCALE == 0.25; then
-          convert -fill yellow -annotate +15+$YDISP  "Simulated"  -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
+          convert -fill yellow -annotate +15+$YDISP  "$SIMSTRING"  -pointsize $POINT allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
       elif test $AZI_SCALE == 0.50; then
 #         convert -fill yellow -annotate +15+$YDISP  "Simulated"  -pointsize 12 allsky_cyl_$ILOC.png allsky_cyl_$ILOC.png
           echo " "
