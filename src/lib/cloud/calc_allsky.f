@@ -727,8 +727,11 @@
      1                                camera_rgb,istatus)                 ! O
                 if(istatus .eq. 0)then
                   write(6,*)' return from calc_allsky sans camera image'
+                  istatus = 1 ! keep going anyway in parent routine
                   return
                 endif
+
+                I4_elapsed = ishow_timer()
 
 !               Subsample flagged array to account to weight cylindrical projection             
                 iskip_max = 6
