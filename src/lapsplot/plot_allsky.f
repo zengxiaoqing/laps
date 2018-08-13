@@ -142,7 +142,7 @@
         real, allocatable, dimension(:,:,:) :: sky_rgb_cyl
         integer, allocatable, dimension(:,:,:) :: isky_rgb_cyl
         real correlation(nc,maxloc)
-        integer mode_cloud_mask /1/ ! ignore the mask
+        integer mode_cloud_mask /4/ ! ignore the mask
 
         real*8 xsound(maxloc),ysound(maxloc)
         real*8 soundlat(maxloc),soundlon(maxloc)
@@ -184,6 +184,9 @@
         I4_elapsed = ishow_timer()
 
         call GETENV('C_MODEL',c_model)
+
+        aod_tmp  = getenv_real('AOD',r_missing_data)
+        if(aod_tmp .ne. r_missing_data)aod = aod_tmp
 
         write(6,*)
         write(6,*)' subroutine plot_allsky: nsmooth/aod is ',nsmooth,aod
@@ -285,6 +288,8 @@
           enddo ! j
         enddo ! i
 
+        write(6,*)' line 290 aod is ',aod
+
         write(6,*)
         write(6,*)' Input number of all-sky locations...'
         read(lun,*)nloc
@@ -316,6 +321,9 @@
 
             write(6,*)' observer lat/lon read in =',soundlat(iloc)
      1                                             ,soundlon(iloc)
+
+
+            write(6,*)' line 330 aod is ',aod
 
             call latlon_db_rlapsgrid(soundlat(iloc),soundlon(iloc)
      1                              ,dlat,dlon,NX_L,NY_L
@@ -366,6 +374,8 @@
 
         enddo ! iloc
 
+        write(6,*)' line 370 aod is ',aod
+
  40     continue
 !40     write(6,*)' Enter c_plotobs'
 !       read(5,*)c_plotobs
@@ -398,10 +408,15 @@
             else
                 write(6,*)' Forced config to ',new_dataroot(1:lenroot)
             endif
+
+            aod_tmp  = getenv_real('AOD',r_missing_data)
+            if(aod_tmp .ne. r_missing_data)aod = aod_tmp
         endif
 
         tlow_c = -30.
         thigh_c = +50.
+
+        write(6,*)' line 410 aod is ',aod
 
 !       Get 3-D pressure field
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
@@ -432,9 +447,9 @@
           i_aero_synplume = 2
 !         read(c_model(11:13),*)aero_synfactor
         elseif(c_model(1:4) .eq. 'aero')then               ! e.g. aeroloop
-          l_require_all_fields = .false.                   ! 
-          mode_aero_cld = 3
-          i_aero_synplume = 2
+          l_require_all_fields = .true.                    ! 
+!         mode_aero_cld = 3
+!         i_aero_synplume = 2
 !         read(c_model(11:13),*)aero_synfactor
         elseif(trim(c_model) .eq. 'optimize')then          
           l_require_all_fields = .true.
@@ -1217,7 +1232,7 @@
            write(6,*)' aod is < 0, use as scale factor with pw_ref'
            aod_ref = pw_ref * (-aod)
         else
-           write(6,*)' aod is >= 0, use directly for aod_ref'
+           write(6,*)' aod is >= 0, use directly for aod_ref',aod
            aod_ref = aod
         endif
 
@@ -1313,6 +1328,12 @@
 
                 cice_3d(idl1:idh1,jdl1:jdh1,:) =
      1          cice_3d(idl2:idh2,jdl2:jdh2,:)
+
+!               Get Aersol Extinction Coefficient (3D field)
+                if(n_ao .le. nv)then
+                  call get_aod_3d(pres_3d,heights_3d,topo,NX_L,NY_L,NZ_L
+     1                   ,aod,aod_ref,i_aero_synplume,i_aero_1d,aod_3d)
+                endif
           endif                
       
           do iloc = 1,nloc
