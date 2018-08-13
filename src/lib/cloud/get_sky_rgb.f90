@@ -1831,8 +1831,8 @@
                 sky_rad(:) = sky_rad(:) + sun_rad(:)
 
                 if(glow_sun(i,j) .gt. 2.0)then
-                  write(6,100)i,j,alt_a(i,j),azi_a(i,j),glow_sun(i,j),10.**glow_sun(i,j),rad_sun_r,od_g_slant_a(1,i),od_o_slant_a(2,i),od_a_slant_a(2,i),clr_od(2),cloud_od(i,j)
-100               format(' sun glow / radiance ',i8,i6,f9.4,f9.3,f9.3,2e16.5,' od ',5f9.3)
+                  write(6,100)i,j,alt_a(i,j),azi_a(i,j),glow_sun(i,j),10.**glow_sun(i,j),rad_sun_r,od_g_slant_a(2,i),od_o_slant_a(2,i),od_a_slant_a(2,i),clr_od(:),cloud_od(i,j)
+100               format(' sun glow / radiance ',i8,i6,f9.4,f9.3,f9.3,2e16.5,' od goa',3f9.3,' od clr ',3f9.3,' od cld ',f9.3)
                 endif
               endif
                 
