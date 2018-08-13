@@ -269,6 +269,8 @@
        a13name = cvt_i4time_wfo_fname13(i4time)
 !      a13name = '20171017_1459'
 
+       write(6,*)' Subroutine get_camera_image - mode ',mode ! ,trim(fname_ppm)
+
        if(mode .eq. 1)then      ! Read polar observed image in PPM format 
 
 !        imgdir = '/Users/albers/noaa/180309/wwwallsky/cases/17290/output3'
@@ -300,7 +302,7 @@
          img_png = trim(imgdir)//'/'//a13name//'_'//trim(site)//'.png'
          img_ppm = trim(imgdir)//'/'//a13name//'_'//trim(site)//'.ppm'
 !        convert_cmd = 'convert -crop 21x11+0+0 -compress none '//trim(img_png)//' '//trim(img_ppm)
-         convert_cmd = 'convert -resize 50% -compress none '//trim(img_png)//' '//trim(img_ppm)
+         convert_cmd = 'convert -resize 100% -compress none '//trim(img_png)//' '//trim(img_ppm)
          write(6,*)trim(convert_cmd)
          call system(trim(convert_cmd))
 
